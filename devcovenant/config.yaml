@@ -1,0 +1,63 @@
+# DevCovenant Configuration
+# Selector metadata accepts comma-separated strings or YAML lists (see
+# devcovenant/README.md for the canonical `include_*`/`exclude_*` keys). Use
+# the same names here when overriding policy defaults.
+
+paths:
+  # Markdown document that carries the policy definitions.
+  policy_definitions: AGENTS.md
+  # Registry file storing the synchronized policy hashes.
+  registry_file: devcovenant/registry.json
+
+engine:
+  master_update: true
+  fix_threshold: warning
+  fail_threshold: warning
+  auto_fix_enabled: true
+  parallel_checks: true
+  verbose: true
+  pre_commit_all_files: true
+  # File suffixes traversed when gathering the repo inventory.
+  file_suffixes:
+    - .py
+    - .md
+    - .rst
+    - .txt
+    - .yml
+    - .yaml
+    - .js
+    - .json
+  ignore_dirs:
+    - .git
+    - .venv
+    - .python
+    - output
+    - logs
+    - build
+    - dist
+    - node_modules
+    - __pycache__
+    - .pytest_cache
+    - .cache
+    - .venv.lock
+
+self_enforcement:
+  enabled: true
+  policy_prefix: "devcov-"
+
+hooks:
+  pre_commit: true
+  pre_push: false
+
+reporting:
+  show_policy_links: true
+  audit_trail: true
+  use_colors: true
+
+ignore:
+  patterns: []
+
+policies:
+  managed-bench:
+    expected_virtualenvs:
+      - ../frappe-bench/env

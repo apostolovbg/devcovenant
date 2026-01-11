@@ -1,0 +1,22 @@
+[project]
+name = "devcovenant"
+version = "0.1.1"
+description = "Self-enforcing development policy engine"
+requires-python = ">=3.10"
+dependencies = [
+  "PyYAML>=6.0.2",
+  "semver>=3.0.2",
+]
+
+[tool.black]
+line-length = 79
+
+[tool.isort]
+profile = "black"
+line_length = 79
+
+[tool.ruff]
+line-length = 79
+
+[tool.ruff.format]
+line-length = 79
