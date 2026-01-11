@@ -1,6 +1,6 @@
 # DevCovenant Reference
 **Last Updated:** 2026-01-11
-**Version:** 0.1.1
+**Version:** 0.2.0
 
 <!-- DEVCOV:BEGIN -->
 This reference document is maintained by DevCovenant. Edit only outside the
@@ -34,11 +34,15 @@ Core components:
 - `devcovenant/cli.py` exposes `check`, `sync`, `test`, and `update-hashes`.
 
 Policy scripts live in three folders:
-- `devcovenant/core/policy_scripts/`: built-in policies shipped by
-  DevCovenant.
-- `devcovenant/core/fixers/`: built-in auto-fixers for common policies.
-- `devcovenant/core/policy_scripts/`: compatibility shims for legacy policies.
-- `devcovenant/custom/policy_scripts/`: repo-specific policies.
+- `devcovenant/core/policy_scripts/`: built-in policies shipped by DevCovenant.
+- `devcovenant/core/policy_scripts/fixers/`: built-in auto-fixers kept beside
+  each policy they support.
+- `devcovenant/core/fixers/`: compatibility wrappers that re-export those
+  fixers so legacy imports keep working.
+- `devcovenant/custom/policy_scripts/`:
+  repo-specific policies.
+- `devcovenant/custom/fixers/`:
+  optional fixers defined by the target repository.
 - `devcovenant/common_policy_patches/`: patch scripts for built-ins (Python
   preferred; JSON/YAML supported).
 
@@ -150,8 +154,14 @@ DevCovenant-managed blocks are wrapped as:
 <!-- DEVCOV:END -->
 ```
 
-Install and uninstall scripts insert and remove these blocks without touching
-user-written content outside the markers.
+Install, update, and uninstall scripts insert or remove these regions so the
+surrounding human-authored content stays untouched. Policy reminders such as
+`documentation-growth-tracking`, `policy-text-presence`, and
+`last-updated-placement` direct contributors back to these markers whenever
+managed docs must grow or a policy’s prose drifts.
+- Wrap new policy guidance in a fresh block and add the standard
+  `Last Updated / Version` header so validators such as
+  `last-updated-placement` can find the timestamp.
 
 ## Repository Standards
 - `AGENTS.md` is the single source of truth for policies.

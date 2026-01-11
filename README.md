@@ -1,6 +1,6 @@
 # DevCovenant
 **Last Updated:** 2026-01-11
-**Version:** 0.1.1
+**Version:** 0.2.0
 
 <!-- DEVCOV:BEGIN -->
 **Read first:** `AGENTS.md` is the canonical source of truth. See
@@ -51,9 +51,13 @@ eliminates that by making the documentation itself the executable spec.
 - `SPEC.md`: product requirements and functional expectations.
 - `devcovenant/`: engine, CLI, and policy scripts.
   - `core/`: DevCovenant core engine and built-in policy scripts.
-  - `core/policy_scripts/`: built-in policies shipped by DevCovenant.
-  - `core/fixers/`: built-in auto-fixers.
+  - `core/policy_scripts/`: built-in policy scripts.
+  - `core/policy_scripts/fixers/`: built-in auto-fixers shipped alongside
+    each policy.
+  - `core/fixers/`: compatibility wrappers that re-export the fixers for
+    older code.
   - `custom/policy_scripts/`: repo-specific policies.
+  - `custom/fixers/`: repo-specific fixers (optional).
   - `common_policy_patches/`: patch scripts for built-ins (Python preferred;
     JSON/YAML supported).
 - `tools/`: thin wrappers that invoke `python3 -m devcovenant`.
@@ -108,6 +112,16 @@ DevCovenant expects the following sequence in enforced repos:
 
 When policy blocks change, set `updated: true`, run
 `python3 -m devcovenant.cli update-hashes`, then reset the flag.
+
+## Documentation Blocks
+Every managed doc (`AGENTS.md`, `README.md`, `DEVCOVENANT.md`, `SPEC.md`,
+`PLAN.md`, etc.) contains a `<!-- DEVCOV:BEGIN -->` / `<!-- DEVCOV:END -->`
+region. The installer injects guidance there while leaving the rest of the file
+untouched. Policy reminders such as `documentation-growth-tracking` and
+`policy-text-presence` point contributors back to these regions whenever the
+docs must grow or sync with updated policies. When adding content, place it
+outside the managed block unless you are intentionally editing the automation
+instructions.
 
 ## Core Exclusion
 User repos should keep DevCovenant core excluded from enforcement so updates

@@ -1,6 +1,6 @@
 # DevCovenant Development Guide
 **Last Updated:** 2026-01-11
-**Version:** 0.1.1
+**Version:** 0.2.0
 <!-- DEVCOV:BEGIN -->
 # Message from Human, do not edit:
 
@@ -19,6 +19,16 @@ Editable section. Preserve any user notes found in the repo when installing.
 If none exist, replace this text with repo-specific development notes.
 
 <!-- DEVCOV:BEGIN -->
+## Table of Contents
+1. [Overview](#overview)
+2. [Program Overview](#program-overview)
+3. [Install and First-Run Guidance](#install-and-first-run-guidance)
+4. [Severity Baseline](#severity-baseline)
+5. [Editable Notes (record decisions
+   here)](#editable-notes-record-decisions-here)
+6. [Workflow](#workflow)
+7. [Development Policy](#development-policy-devcovenant-and-laws)
+
 ## Overview
 This document is the single source of truth for DevCovenant policy. Every
 rule that the engine enforces is written here in plain language with a
@@ -66,30 +76,72 @@ When you edit policy blocks, set `updated: true`, update scripts/tests, run
 `python3 -m devcovenant.cli update-hashes`, then reset `updated: false`.
 Finally, run the pre-commit and test gates in order.
 
-## Table of Contents
-1. [Overview](#overview)
-2. [Program Overview](#program-overview)
-3. [Install and First-Run Guidance](#install-and-first-run-guidance)
-4. [Severity Baseline](#severity-baseline)
-5. [Editable Notes (record decisions
-   here)](#editable-notes-record-decisions-here)
-6. [Workflow](#workflow)
-7. [Development Policy](#development-policy-devcovenant-and-laws)
-
 # DO NOT EDIT FROM HERE TO END UNLESS EXPLICITLY REQUESTED BY A HUMAN!
 
-# DEVELOPMENT POLICY (DevCovenant and Laws)
+# DEV(COVENANT) DEVELOPMENT POLICY MANAGEMENT AND ENFORCEMENT
 
 **IMPORTANT: READ FROM HERE TO THE END OF THE DOCUMENT AT THE BEGINNING OF
 EVERY DEVELOPMENT SESSION**
 
-DevCovenant is self-enforcing. Use this workflow:
-- `python3 tools/run_pre_commit.py --phase start`
-- `python3 tools/run_tests.py`
-- `python3 tools/run_pre_commit.py --phase end`
+**Workflow primer**
+- Start each session with `python3 tools/run_pre_commit.py --phase start`.
+- Run `python3 tools/run_tests.py` after work concludes.
+- Finish with `python3 tools/run_pre_commit.py --phase end`.
+- Updating policy text? Set `updated: true`, sync hashes via
+  `python3 -m devcovenant.cli update-hashes`, then reset the flag.
 
-When policy blocks change, set `updated: true`, run
-`python3 -m devcovenant.cli update-hashes`, then reset the flag to `false`.
+**Session checklist**
+- Document decisions inside the editable section above `<!-- DEVCOV:BEGIN -->`.
+- Keep `AGENTS.md` as the canonical policy source and link to it from derived
+  docs.
+- Preserve human-authored prose around the managed blocks; only edit automation
+  guidance through the installer or the CLI.
+- All policy changes must have matching script/test updates before the commit.
+
+**DevCovenant sessions**
+- AI agents run `python3 devcovenant_check.py check --mode=startup` at session
+  start to detect policy-text drift and sync issues. Fix them before doing any
+  other work.
+- Developers revisit this section after receiving sync issues or policy
+  warnings so the workflow remains consistent across repos.
+
+**Standard commands**
+- `python3 -m devcovenant.cli check` – full validation.
+- `python3 -m devcovenant.cli check --mode pre-commit`.
+- `python3 -m devcovenant.cli check --fix` when auto-fixes are available.
+- `python3 -m devcovenant.cli install --target <repo>` installs DevCovenant.
+- `python3 -m devcovenant.cli uninstall --target <repo>`.
+- `python3 -m devcovenant.cli restore-stock-text --policy <id>` when policy
+  prose diverges from code.
+
+**DevCovenant enforcement**
+1. Policies defined here are parsed by `devcovenant/core/parser.py` and hashed
+   into `devcovenant/registry.json`.
+2. `devcovenant/core/engine.py` runs the checks and auto-fixers.
+3. `devcovenant/core/fixers/` hosts auto-fix logic for built-in policies.
+   Legacy imports can continue using the compatibility wrappers there.
+   Repo-specific fixers may live under `devcovenant/custom/fixers`.
+4. Built-in policies live in `devcovenant/core/policy_scripts/`.
+   Custom policies go in `devcovenant/custom/policy_scripts/`, and patches
+   live under `devcovenant/common_policy_patches/`.
+
+**Sync expectations**
+- When a policy block changes, DevCovenant highlights the diff and records an
+  `updated: true` status. Update the corresponding script/test before resetting
+  the flag.
+- The `policy-text-presence` policy enforces that every policy block includes
+  descriptive prose immediately after the metadata.
+- The `stock-policy-text-sync` reminder prevents drifting from the canonical
+  wording located in `devcovenant/core/stock_policy_texts.json`.
+
+**Documentation blocks**
+- Managed sections are wrapped with
+  `<!-- DEVCOV:BEGIN -->` / `<!-- DEVCOV:END -->`.
+- Install/update/uninstall scripts inject those blocks while leaving other
+  content untouched.
+- Policy reminders (e.g., `documentation-growth-tracking`,
+  `policy-text-presence`, `last-updated-placement`) point authors back to
+  these blocks whenever updates are required.
 
 ---
 

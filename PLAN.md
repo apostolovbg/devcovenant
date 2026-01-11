@@ -1,6 +1,6 @@
 # DevCovenant Delivery Plan
 **Last Updated:** 2026-01-11
-**Version:** 0.1.1
+**Version:** 0.2.0
 
 This plan tracks the migration of DevCovenant into a standalone, self-enforcing
 product. It is written to be executable: each phase lists concrete outputs and
@@ -31,12 +31,11 @@ its own policies and documentation quality.
 
 ## Phase 1: Foundation
 Deliverables:
-- Package core code under `devcovenant/`.
-- Split core implementation into `devcovenant/core` and keep repo-facing
-  configuration, patches, and docs at the root of `devcovenant/`.
-- Provide `AGENTS.md`, `DEVCOVENANT.md`, `README.md`, `CONTRIBUTING.md`.
-- Add `VERSION`, `CHANGELOG.md`, `CITATION.cff`, `LICENSE`.
-- Enforce pre-commit, tests, and CI for this repo.
+- Package the core engine under `devcovenant/core/` and keep installables,
+  docs, and patches under `devcovenant/` so the project can self-host.
+- Deliver AGENTS/README/DEVCOVENANT/CONTRIBUTING headers with `devcov`
+  markers plus VERSION, CHANGELOG, CITATION, and LICENSE files in place.
+- Gate the repo with pre-commit + tests.
 
 Validation:
 - `python3 tools/run_pre_commit.py --phase start`
@@ -45,31 +44,32 @@ Validation:
 
 ## Phase 2: Installer and Uninstaller
 Deliverables:
-- `tools/install_devcovenant.py` with manifest tracking and CLI-only modes
-  for empty vs. existing repos.
-- Explicit CLI options to preserve/overwrite docs, config, and metadata files
-  (LICENSE, VERSION, CITATION, pyproject).
-- Update-safe installs that preserve `custom/policy_scripts`,
-  `common_policy_patches`, and `config.yaml` by default.
-- `tools/uninstall_devcovenant.py` that strips managed blocks safely.
-- Install/update modes that avoid overwriting user docs unless requested.
-- CI templates that install pre-commit, pytest, PyYAML, and semver so hooks
-  and tests run in GitHub Actions.
-- Default installs to `devcov_core_include: false` in
-  `devcovenant/config.yaml`.
+- Provide CLI install/uninstall commands (`devcovenant install`, `uninstall`)
+  with manifest tracking, `devcov_core_include` switches, and doc/config/mode
+  flags.
+- Preserve user docs via `devcov begin`/`end` markers unless the user
+  explicitly requests overwrites (`--force-docs`, `--force-config`, etc.).
+- Default installs keep `devcov_core_include: false`, add GPL-3.0
+  (if missing), and inject standard CI workflows that install pre-commit,
+  pytest, PyYAML, and semver.
+- Ensure no compatibility shims remain—everything time-critical runs through
+  CLI commands and manifest-controlled modules.
+- Provide an uninstall helper that removes `devcov` sections while leaving
+  existing human-written content untouched.
 
 Validation:
 - Install into a scratch repo and confirm docs are preserved.
 - Uninstall and confirm managed blocks are removed.
-- Reinstall over an existing repo with custom scripts and confirm they
-  remain intact.
+- Reinstall over an existing repo and confirm custom policies/fixers remain.
 
 ## Phase 3: Policy Schema Standardization
 Deliverables:
-- Enforce standard metadata fields in every policy block.
-- Document policy-specific fields consistently.
-- Standardize `apply` as the policy activation flag and remove waiver-only
-  metadata.
+- Require shared selectors metadata for every policy and keep the `apply`
+  activation flag so policies can toggle without removing definitions.
+- Emit `fiducial` policy reminders and offer a CLI-driven `restore-stock-text`
+  helper when policy prose diverges from scripts.
+- Track policy text hashes so the engine refuses to proceed when policies
+  describe different rules than the code.
 
 Validation:
 - Update `devcovenant/core/parser.py` and tests.
@@ -77,9 +77,13 @@ Validation:
 
 ## Phase 4: Policy Packs and API
 Deliverables:
-- Formal policy API for custom checks and fixers.
-- Built-in policy pack in `core/policy_scripts/`.
-- Stable extension points for repo-specific policies and patches.
+- Formal policy API that surfaces selectors, metadata, and fixers for every
+  policy.
+- Maintain built-in checks under `core/policy_scripts/` and core fixers under
+  `core/fixers/`.
+- Allow repositories to contribute custom policies/fixers from
+  `custom/policy_scripts/` and `custom/fixers/` without mutating the stock
+  implementation.
 
 Validation:
 - Add an example custom policy using the new API.
@@ -88,9 +92,16 @@ Validation:
 ## Phase 5: Publishing and Migration
 Deliverables:
 - Publish to PyPI and document GitHub install path.
-- Migrate Copernican, GCV-ERP custom, and infra repos to standalone.
-- Keep compatibility shims during transition.
+- Migrate Copernican, GCV-ERP custom, and infra repos
+  to the standalone install.
+- Remove compatibility shims once the new CLI approach is validated.
+- Ensure the standalone engine runs in these repos as if freshly installed.
 
 Validation:
 - Each repo installs DevCovenant from the standalone source.
 - Pre-commit, tests, and CI pass with no policy drift.
+
+## Next Steps
+- Finalize the Copernican and GCV-ERP migrations so they install this
+  standalone DevCovenant as if from scratch while keeping their policy
+  configuration in sync.

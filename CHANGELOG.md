@@ -8,6 +8,59 @@ chronological order. Record timestamps as ISO dates (`YYYY-MM-DD`).
 
 ## Log changes here
 
+## Version 0.2.0
+- 2026-01-15: Ensured the CI workflow installs PyYAML so required tooling matches
+  the SPEC installation guidance. (AI assistant)
+  Files:
+  .github/workflows/ci.yml
+- 2026-01-14: Relocated the built-in fixers beside their policies, kept
+  compatibility stubs, and refreshed all docs/tests to describe the new layout
+  while bumping SPEC/PLAN/README/DEVCOVENANT to v0.2.0. (AI assistant)
+  Files:
+  README.md
+  DEVCOVENANT.md
+  SPEC.md
+  PLAN.md
+  devcovenant/core/policy_scripts/fixers/dependency_license_sync.py
+  devcovenant/core/policy_scripts/fixers/last_updated_placement.py
+  devcovenant/core/policy_scripts/fixers/no_future_dates.py
+  devcovenant/core/policy_scripts/fixers/raw_string_escapes.py
+  devcovenant/core/fixers/dependency_license_sync.py
+  devcovenant/core/fixers/last_updated_placement.py
+  devcovenant/core/fixers/no_future_dates.py
+  devcovenant/core/fixers/raw_string_escapes.py
+  devcovenant/tests/test_policies/test_raw_string_escapes.py
+  devcovenant/tests/test_policies/test_no_future_dates.py
+- 2026-01-14: Added install/uninstall manifest coverage and `devcov_core_include`
+  toggling tests to prove the CLI-driven installer records options properly.
+  Files:
+  devcovenant/core/tests/test_install.py
+- 2026-01-11: Documented the workflow block in AGENTS.md and noted that
+  `devcovenant/core/engine.py` now loads fixers via the new layout. (AI assistant)
+  Files:
+  AGENTS.md
+  devcovenant/core/engine.py
+- 2026-01-11: Bumped DevCovenant version markup and metadata files to 0.2.0 so
+  the engine overrides remain consistent. (AI assistant)
+  Files:
+  CONTRIBUTING.md
+  devcovenant/README.md
+  devcovenant/common_policy_patches/README.md
+  devcovenant/custom/policy_scripts/README.md
+  pyproject.toml
+  VERSION
+  CITATION.cff
+  LICENSE
+
+## Version 0.1.2
+- 2026-01-13: Updated SPEC.md and PLAN.md to capture the CLI-driven install/
+  uninstall lifecycle, the core/custom layout, the new `apply`/`devcov_core_include`
+  behaviors, and the `devcov begin`/`end` documentation blocks so forthcoming
+  work can finish the CLI/fixer refactors. (AI assistant)
+  Files:
+  SPEC.md
+  PLAN.md
+
 ## Version 0.1.1
 - 2026-01-11: Finalized the core/user layout, moved fixers into
   `devcovenant/core`, expanded core exclusion paths, and refreshed structure

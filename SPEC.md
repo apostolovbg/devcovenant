@@ -1,6 +1,6 @@
 # DevCovenant Specification
 **Last Updated:** 2026-01-11
-**Version:** 0.1.1
+**Version:** 0.2.0
 
 This specification defines what DevCovenant must do for both the standalone
 project and for any repository that installs it.
@@ -38,6 +38,14 @@ install, and reversible without losing user documentation.
   repositories and options to preserve or overwrite docs/config/metadata.
 - Support multi-language repos via configurable language profiles that extend
   the engine’s file suffix inventory.
+- Expose management commands (`install`, `uninstall`, `restore-stock-text`,
+  `sync`, `update-hashes`) so every action happens through DevCovenant’s CLI.
+- Organize built-in components under `devcovenant/core/` and keep repo-facing
+  extensions in `devcovenant/custom/`, including `policy_scripts` and `fixers`.
+- Load auto-fixers from `core/fixers` and allow repositories to add helpers
+  within `custom/fixers`.
+- Inject DevCovenant-managed documentation via `devcov begin` / `devcov end`
+  markers and standardized headers so installs never need manual edits.
 
 ## Policy Requirements
 - Every policy definition must include descriptive text.
@@ -49,11 +57,18 @@ install, and reversible without losing user documentation.
   without removing the definition.
 - Policies with status `fiducial` must be enforced and emit a reminder that
   includes the policy text on every run.
+- Policy definitions must expose the shared selectors (`include_*`,
+  `exclude_*`, `force_include_*`, `watch_*`) so repositories can reason about
+  scope consistently.
+- `devcov_core_include`, stored in `config.yaml`, governs whether the
+  `devcovenant/core/` tree is scanned by policies. User installs default to
+  `false` so DevCovenant can update itself without triggering violations
+  against its own implementation.
 
 ## Installation Requirements
 - Install the full DevCovenant toolchain into the target repo.
 - Preserve existing user documentation unless explicitly overridden.
-- Inject DevCovenant-managed doc blocks using DEVCOV markers.
+- Inject DevCovenant-managed doc blocks using `devcov` markers.
 - Track installations with `.devcov/install_manifest.json`.
 - If no license exists, install a GPL-3.0 license by default.
 - Default user installs to `devcov_core_include: false` so core files remain
@@ -64,6 +79,14 @@ install, and reversible without losing user documentation.
   unless explicitly overridden.
 - Install or update CI workflows to ensure pre-commit, pytest, PyYAML, and
   semver dependencies are available for checks.
+- Provide an uninstall routine that strips DevCovenant-managed blocks from
+  documentation, optionally removing the inserted sections while leaving the
+  rest of the file untouched.
+- Rewrite existing files only when install-time switches demand it; otherwise
+  fold DevCovenant additions into reserved regions marked with `devcov begin`
+  / `devcov end` so user content survives updates.
+- Operate purely through CLI commands; no compatibility shims or loose scripts
+  should remain on disk after installation.
 
 ## Non-Functional Requirements
 - The engine must run quickly enough for pre-commit usage.

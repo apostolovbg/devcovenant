@@ -148,20 +148,21 @@ class DevCovenantEngine:
     def _load_fixers(self) -> List[PolicyFixer]:
         """Dynamically import all policy fixers bundled with DevCovenant."""
         fixers: List[PolicyFixer] = []
-        try:
-            package = importlib.import_module(
-                "devcovenant.core.policy_scripts.fixers"
-            )
-        except ModuleNotFoundError:
+        packages = []
+        for pkg_name in (
+            "devcovenant.core.fixers",
+            "devcovenant.custom.fixers",
+        ):
             try:
-                package = importlib.import_module("devcovenant.core.fixers")
+                packages.append(importlib.import_module(pkg_name))
             except ModuleNotFoundError:
-                return fixers
-
-        for module_info in pkgutil.iter_modules(package.__path__):
-            if module_info.ispkg or module_info.name.startswith("_"):
                 continue
-            module_name = f"{package.__name__}.{module_info.name}"
+
+        for package in packages:
+            for module_info in pkgutil.iter_modules(package.__path__):
+                if module_info.ispkg or module_info.name.startswith("_"):
+                    continue
+                module_name = f"{package.__name__}.{module_info.name}"
             try:
                 module = importlib.import_module(module_name)
             except Exception:
