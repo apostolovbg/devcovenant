@@ -2,106 +2,95 @@
 **Last Updated:** 2026-01-11
 **Version:** 0.2.0
 
-This plan tracks the migration of DevCovenant into a standalone, self-enforcing
-product. It is written to be executable: each phase lists concrete outputs and
-validation steps.
+This plan tracks the roadmap from a working standalone repository to a
+polished, publishable package that anyone can install and then inject into a
+target repository with a single command.
 
 ## Table of Contents
 1. [Overview](#overview)
 2. [Workflow](#workflow)
-3. [Phase 1: Foundation](#phase-1-foundation)
-4. [Phase 2: Installer and Uninstaller](#phase-2-installer-and-uninstaller)
-5. [Phase 3: Policy Schema
-   Standardization](#phase-3-policy-schema-standardization)
-6. [Phase 4: Policy Packs and
-   API](#phase-4-policy-packs-and-api)
-7. [Phase 5: Publishing and
-   Migration](#phase-5-publishing-and-migration)
+3. [Phase 1: Packaging & PyPI Publication](#phase-1-packaging--pypi-publication)
+4. [Phase 2: Installer / CLI Experience](#phase-2-installer--cli-experience)
+5. [Phase 3: Migration Guide for Existing Repos](#phase-3-migration-guide-for-existing-repos)
+6. [PyPI Registration](#pypi-registration)
+7. [Next Steps](#next-steps)
 
 ## Overview
-DevCovenant is being spun out from multiple production repos. The goal is a
-stable, standalone engine that can install into any repository while enforcing
-its own policies and documentation quality.
+DevCovenant already enforces its policies, keeps policy text in sync, and
+protects its own documentation. This plan now prioritizes packaging, publication,
+and user-friendly installation before sweeping the anchored production repos
+forward to the new release.
 
 ## Workflow
-- Keep `AGENTS.md` as the policy source of truth.
-- Update policy scripts and tests whenever policies change.
-- Keep installation safe and reversible with a manifest.
-- Require pre-commit + tests at the start and end of each change window.
+- Always gate changes with `python3 tools/run_pre_commit.py --phase start`,
+  `python3 tools/run_tests.py`, and `python3 tools/run_pre_commit.py --phase end`.
+- Keep `AGENTS.md` + policy scripts in sync; update hashes when prose changes.
+- Preserve installer manifests and custom policy scripts during updates.
+- Treat the changelog as the contract for release notes whenever files change.
 
-## Phase 1: Foundation
+## Phase 1: Packaging & PyPI Publication
 Deliverables:
-- Package the core engine under `devcovenant/core/` and keep installables,
-  docs, and patches under `devcovenant/` so the project can self-host.
-- Deliver AGENTS/README/DEVCOVENANT/CONTRIBUTING headers with `devcov`
-  markers plus VERSION, CHANGELOG, CITATION, and LICENSE files in place.
-- Gate the repo with pre-commit + tests.
+- Finalize `pyproject.toml` metadata (long description, classifiers, license,
+  keywords) so `python -m build` produces a clean wheel + sdist.
+- Add automated builds/publishing (GitHub Actions or similar) that run `python
+  -m build` and `twine check`, then upload with `twine upload dist/*` on tagged
+  releases.
+- Publish DevCovenant to PyPI (or TestPyPI for a dry run) and document the
+  recommended install command (`pip install devcovenant` plus `python3 -m
+  devcovenant.cli install --target <repo>`).
+- Keep release notes in `CHANGELOG.md` and mention any files touched by the
+  packaging work.
 
 Validation:
-- `python3 tools/run_pre_commit.py --phase start`
-- `python3 tools/run_tests.py`
-- `python3 tools/run_pre_commit.py --phase end`
+- Run `python -m build` locally and `twine check dist/*`.
+- Test installing the built wheel from a local `pip install dist/devcovenant-*`.
+- Confirm the new CLI bundle works and installs clean docs/manifests into a
+  fresh repo.
 
-## Phase 2: Installer and Uninstaller
+## Phase 2: Installer / CLI Experience
 Deliverables:
-- Provide CLI install/uninstall commands (`devcovenant install`, `uninstall`)
-  with manifest tracking, `devcov_core_include` switches, and doc/config/mode
-  flags.
-- Preserve user docs via `devcov begin`/`end` markers unless the user
-  explicitly requests overwrites (`--force-docs`, `--force-config`, etc.).
-- Default installs keep `devcov_core_include: false`, add GPL-3.0
-  (if missing), and inject standard CI workflows that install pre-commit,
-  pytest, PyYAML, and semver.
-- Ensure no compatibility shims remain—everything time-critical runs through
-  CLI commands and manifest-controlled modules.
-- Provide an uninstall helper that removes `devcov` sections while leaving
-  existing human-written content untouched.
+- Ensure the CLI entry point (e.g., `devcovenant.cli`) exposes install/uninstall,
+  and document those commands in README + docs.
+- Bundle helper scripts (`tools/run_pre_commit.py`, `tools/run_tests.py`,
+  `devcov_check.py`, etc.) so installs mimic the repository layout.
+- Document how custom policy scripts/fixers stay in `devcovenant/custom/` and how
+  the installer preserves them (`--preserve-custom` behavior).
+- Publish or mention prebuilt installers (scripts, wrappers) so users can run the
+  install command without hunting for files.
 
 Validation:
-- Install into a scratch repo and confirm docs are preserved.
-- Uninstall and confirm managed blocks are removed.
-- Reinstall over an existing repo and confirm custom policies/fixers remain.
+- Run the installer on a scratch repo and verify the manifest, docs, and custom
+  scripts are preserved.
+- Confirm `devcovenant check --mode startup` runs inside the installed tree.
 
-## Phase 3: Policy Schema Standardization
+## Phase 3: Migration Guide for Existing Repos
 Deliverables:
-- Require shared selectors metadata for every policy and keep the `apply`
-  activation flag so policies can toggle without removing definitions.
-- Emit `fiducial` policy reminders and offer a CLI-driven `restore-stock-text`
-  helper when policy prose diverges from scripts.
-- Track policy text hashes so the engine refuses to proceed when policies
-  describe different rules than the code.
+- Outline step-by-step migration plans for Copernican, GCV-ERP custom, and
+  GCV-ERP infra, including any policy or config adjustments required.
+- Capture QA steps (pre-commit/tests) so those repos pass DevFlow gates after the
+  upgrade.
+- Include guidance on re-running `devcovenant install` with `--preserve-custom`
+  to keep existing scripts/policy patches untouched.
 
 Validation:
-- Update `devcovenant/core/parser.py` and tests.
-- Add a migration checklist for downstream repos.
+- Each of the three repos installs the new release from PyPI and runs the gate
+  sequence without policy drift.
+- Custom scripts remain executable in their `custom/` directories after the
+  migration.
 
-## Phase 4: Policy Packs and API
-Deliverables:
-- Formal policy API that surfaces selectors, metadata, and fixers for every
-  policy.
-- Maintain built-in checks under `core/policy_scripts/` and core fixers under
-  `core/fixers/`.
-- Allow repositories to contribute custom policies/fixers from
-  `custom/policy_scripts/` and `custom/fixers/` without mutating the stock
-  implementation.
-
-Validation:
-- Add an example custom policy using the new API.
-- Ensure patch overrides work without modifying core scripts.
-
-## Phase 5: Publishing and Migration
-Deliverables:
-- Publish to PyPI and document GitHub install path.
-- Migrate Copernican, GCV-ERP custom, and infra repos
-  to the standalone install.
-- Remove compatibility shims once the new CLI approach is validated.
-- Ensure the standalone engine runs in these repos as if freshly installed.
-
-Validation:
-- Each repo installs DevCovenant from the standalone source.
-- Pre-commit, tests, and CI pass with no policy drift.
+## PyPI Registration
+- Yes, you must register an account on https://pypi.org/ (or use an existing one)
+  to upload releases.
+- Create an API token scoped to the `devcovenant` project and store it securely
+  (CI secrets, keyring, etc.).
+- Use `twine upload --username __token__ --password <token>` or configure your
+  automation to reference the token so future releases happen without manual
+  logins.
 
 ## Next Steps
-- Finalize the Copernican and GCV-ERP migrations so they install this
-  standalone DevCovenant as if from scratch while keeping their policy
-  configuration in sync.
+- Publish the first packaged release to PyPI and update README/CHANGELOG with the
+  install instructions.
+- Coordinate with Copernican, GCV-ERP custom, and infra teams to migrate their
+  installs.
+- Keep monitoring `devcovenant` releases and ensure each new version updates the
+  policy registry (`python3 -m devcovenant.cli update-hashes`).

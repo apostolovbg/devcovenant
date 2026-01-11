@@ -34,12 +34,19 @@ documentation synchronized.
 
 ## Quick Start
 If DevCovenant is installed, start with (use `python3` unless `python`
-already points to Python 3):
+already points to Python 3); install the published release first if you
+haven’t installed it yet:
 ```bash
+pip install devcovenant
+python3 -m devcovenant.cli install --target .
 python3 tools/run_pre_commit.py --phase start
 python3 tools/run_tests.py
 python3 tools/run_pre_commit.py --phase end
 ```
+
+If you built DevCovenant locally, `pip install dist/devcovenant-*` before
+running `python3 -m devcovenant.cli install --target .` so the wheel files
+are reused.
 
 ## Workflow
 Adoption workflow for an existing repo:
@@ -153,6 +160,7 @@ helpers simply forward the arguments to the CLI for compatibility.
 
 Use `--fix` to apply auto-fixes when available. The CLI exits non-zero when
 blocking violations exist.
+
 
 ## Adding or Updating Policies
 Policy definitions live in `AGENTS.md`:
