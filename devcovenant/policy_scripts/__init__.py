@@ -1,1 +1,1 @@
-"""Policy check scripts."""
+"""Compatibility shims for legacy policy_scripts imports."""

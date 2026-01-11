@@ -98,3 +98,34 @@ chronological order. Record timestamps as ISO dates (`YYYY-MM-DD`).
   tools/uninstall_devcovenant.py
   tools/update_lock.py
   tools/update_test_status.py
+  devcovenant/common_policy_patches/README.md
+  devcovenant/common_policy_patches/__init__.py
+  devcovenant/common_policy_scripts/__init__.py
+  devcovenant/common_policy_scripts/changelog_coverage.py
+  devcovenant/common_policy_scripts/dependency_license_sync.py
+  devcovenant/common_policy_scripts/devcov_self_enforcement.py
+  devcovenant/common_policy_scripts/devcov_structure_guard.py
+  devcovenant/common_policy_scripts/devflow_run_gates.py
+  devcovenant/common_policy_scripts/docstring_and_comment_coverage.py
+  devcovenant/common_policy_scripts/documentation_growth_tracking.py
+  devcovenant/common_policy_scripts/gcv_script_naming.py
+  devcovenant/common_policy_scripts/last_updated_placement.py
+  devcovenant/common_policy_scripts/line_length_limit.py
+  devcovenant/common_policy_scripts/managed_bench.py
+  devcovenant/common_policy_scripts/name_clarity.py
+  devcovenant/common_policy_scripts/new_modules_need_tests.py
+  devcovenant/common_policy_scripts/no_future_dates.py
+  devcovenant/common_policy_scripts/patches_txt_sync.py
+  devcovenant/common_policy_scripts/raw_string_escapes.py
+  devcovenant/common_policy_scripts/read_only_directories.py
+  devcovenant/common_policy_scripts/security_compliance_notes.py
+  devcovenant/common_policy_scripts/security_scanner.py
+  devcovenant/common_policy_scripts/semantic_version_scope.py
+  devcovenant/common_policy_scripts/track_test_status.py
+  devcovenant/common_policy_scripts/version_sync.py
+  devcovenant/custom_policy_scripts/README.md
+  devcovenant/custom_policy_scripts/__init__.py
+  devcovenant/policy_locations.py
+  devcovenant/policy_scripts/devcov_structure_guard.py
+  devcovenant/tests/test_policy_patches.py
+  devcovenant/tests/test_policies/test_devcov_structure_guard.py

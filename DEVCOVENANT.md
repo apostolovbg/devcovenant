@@ -2,57 +2,118 @@
 **Last Updated:** 2026-01-11
 **Version:** 0.1.1
 
-This document describes how DevCovenant works, how policies are structured,
-and how to install, update, or remove it from other repositories. Keep
-`AGENTS.md` as the canonical source of truth for policy definitions.
+<!-- DEVCOVENANT:BEGIN -->
+This reference document is maintained by DevCovenant. Edit only outside the
+managed blocks or update via the install script.
+<!-- DEVCOVENANT:END -->
 
-## 1. What DevCovenant Is
-DevCovenant is a policy engine that reads human-readable rules, validates
-repository state, and enforces consistency. Each policy has a plain-language
-statement and a machine-readable metadata block.
+This document explains DevCovenant's architecture, policy schema, and
+installation lifecycle. `AGENTS.md` remains the canonical source of truth for
+policy definitions.
 
-## 2. Core Architecture
+## 1. Purpose
+DevCovenant enforces the policies written in `AGENTS.md`. It prevents drift
+between what a repo claims to enforce and what its tooling actually enforces.
+
+## 2. Architecture Overview
+Core components:
 - `devcovenant/parser.py` reads policy blocks from `AGENTS.md`.
-- `devcovenant/registry.json` stores policy hashes to detect drift.
-- `devcovenant/policy_scripts/` implements checks and optional fixes.
-- `devcovenant/cli.py` drives check/fix commands.
+- `devcovenant/registry.json` stores hashes for policy text and scripts.
+- `devcovenant/engine.py` orchestrates checks, fixes, and reporting.
+- `devcovenant/cli.py` exposes `check`, `sync`, `test`, and `update-hashes`.
+
+Policy scripts live in three folders:
+- `devcovenant/common_policy_scripts/`: built-in policies shipped by
+  DevCovenant.
+- `devcovenant/custom_policy_scripts/`: repo-specific policies.
+- `devcovenant/common_policy_patches/`: YAML overrides for built-in defaults.
+
+Script resolution order is custom → common → compatibility shim.
+Option resolution order is config → patch → policy metadata → script defaults.
 
 ## 3. Policy Schema
-Each policy block has two sections:
+Each policy block includes:
 
 ### 3.1 Standard fields
-These apply to every policy and are always present:
-- `id`, `status`, `severity`, `apply`, `auto_fix`, `updated`
-- `applies_to`, `enforcement`, `waiver` (legacy until `apply` replaces it)
+Standard fields apply to all policies:
+- `id`, `status`, `severity`, `auto_fix`, `updated`, `applies_to`
+- `enforcement`, `waiver` (legacy), `apply` (planned replacement)
 - `include_prefixes`, `exclude_prefixes`, `include_globs`, `exclude_globs`
 - `include_suffixes`, `exclude_suffixes`, `force_include_globs`
 - `force_exclude_globs`, `notes`
 
 ### 3.2 Policy-specific fields
-Each policy can define its own extra keys (for example `version_file`,
-`changelog_file`, or `required_commands`). Document them inside the policy
-block so contributors learn how to extend the system.
+Each policy can define its own keys (for example `version_file`,
+`required_commands`, or `changelog_file`). Document these in the policy block
+so contributors understand how to extend the system.
 
-## 4. Install, Update, Uninstall
-- Install: `python tools/install_devcovenant.py --target <repo>`
-- Update: re-run install; it updates core files and avoids overwriting
-  existing project docs (AGENTS, README, VERSION, etc.).
-- Uninstall: `python tools/uninstall_devcovenant.py --target <repo>`
+## 4. Policy Lifecycle
+Statuses communicate how a policy should be handled:
+- `new`: needs script and tests.
+- `active`: enforced.
+- `updated`: policy text changed; update scripts/tests, then reset.
+- `deprecated`: still defined but not enforced long term.
+- `deleted`: no longer used.
 
-The install script records an `.devcovenant/install_manifest.json` so updates
-and removals are predictable and safe.
+When editing a policy block, set `updated: true`, run
+`python -m devcovenant.cli update-hashes`, then set it back to `false`.
 
-## 5. Self-Enforcement
-This repo is enforced by DevCovenant itself. The required workflow is:
+## 5. Install, Update, Uninstall
+DevCovenant is installed into a target repo by copying the full tooling
+(including common/custom/patch scripts) plus workflow helpers and metadata.
+
+Install:
+```bash
+python tools/install_devcovenant.py --target /path/to/repo
+```
+
+Update:
+```bash
+python tools/install_devcovenant.py --target /path/to/repo
+```
+
+Force overwrites when needed:
+```bash
+python tools/install_devcovenant.py --target /path/to/repo --force-docs
+python tools/install_devcovenant.py --target /path/to/repo --force-config
+```
+
+Uninstall:
+```bash
+python tools/uninstall_devcovenant.py --target /path/to/repo
+```
+
+Uninstall and remove installed docs:
+```bash
+python tools/uninstall_devcovenant.py --target /path/to/repo --remove-docs
+```
+
+The installer creates `.devcovenant/install_manifest.json` to track what was
+installed and which docs were modified.
+
+## 6. Documentation Blocks
+DevCovenant-managed blocks are wrapped as:
+```
+<!-- DEVCOVENANT:BEGIN -->
+... managed content ...
+<!-- DEVCOVENANT:END -->
+```
+
+Install and uninstall scripts insert and remove these blocks without touching
+user-written content outside the markers.
+
+## 7. Self-Enforcement (Dogfooding)
+This repo enforces itself through DevCovenant. Required workflow:
 1. `python tools/run_pre_commit.py --phase start`
 2. `python tools/run_tests.py`
 3. `python tools/run_pre_commit.py --phase end`
 
-## 6. Repository Standards
-- `AGENTS.md` is the canonical source of truth.
-- Keep versions and last-updated timestamps synchronized across docs.
-- Enforce 79-character lines for code and docs unless explicitly overridden.
+## 8. Repository Standards
+- `AGENTS.md` is the single source of truth for policies.
+- Versions and last-updated headers must stay synchronized.
+- Code and documentation adhere to a 79-character line limit unless
+  explicitly overridden in a policy.
 
-## 7. Roadmap
-See `PLAN.md` for the staged roadmap to full standalone packaging and the
-migration of downstream repos.
+## 9. Roadmap
+See `PLAN.md` for the staged roadmap toward a fully standalone distribution
+and downstream migration plan.

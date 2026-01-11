@@ -10,6 +10,7 @@ import sys
 from pathlib import Path
 
 from .parser import PolicyParser
+from .policy_locations import resolve_script_location
 from .registry import PolicyRegistry
 
 _UPDATED_PATTERN = re.compile(r"^(\s*updated:\s*)true\s*$", re.MULTILINE)
@@ -83,17 +84,14 @@ def update_registry_hashes(repo_root: Path | None = None) -> int:
             continue
 
         # Determine script path
-        script_name = policy.policy_id.replace("-", "_")
-        script_path = (
-            repo_root / "devcovenant" / "policy_scripts" / f"{script_name}.py"
-        )
-
-        if not script_path.exists():
+        location = resolve_script_location(repo_root, policy.policy_id)
+        if location is None:
             print(
-                f"Warning: Policy script not found: {script_path}",
+                f"Warning: Policy script not found for {policy.policy_id}",
                 file=sys.stderr,
             )
             continue
+        script_path = location.path
 
         # Update hash using the correct calculation (policy text + script)
         registry.update_policy_hash(

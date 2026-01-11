@@ -6,7 +6,7 @@ import tempfile
 from pathlib import Path
 
 from devcovenant.base import CheckContext
-from devcovenant.policy_scripts.devcov_self_enforcement import (
+from devcovenant.common_policy_scripts.devcov_self_enforcement import (
     DevCovenantSelfEnforcementCheck,
 )
 
@@ -17,14 +17,19 @@ def test_policy_with_test_passes():
         repo_root = Path(tmpdir)
 
         # Create devcovenant structure
-        (repo_root / "devcovenant" / "policy_scripts").mkdir(parents=True)
+        (repo_root / "devcovenant" / "common_policy_scripts").mkdir(
+            parents=True
+        )
         (repo_root / "devcovenant" / "tests" / "test_policies").mkdir(
             parents=True
         )
 
         # Create a policy script
         policy_script = (
-            repo_root / "devcovenant" / "policy_scripts" / "test-policy.py"
+            repo_root
+            / "devcovenant"
+            / "common_policy_scripts"
+            / "test-policy.py"
         )
         policy_script.write_text("# Test policy")
 
@@ -51,14 +56,19 @@ def test_policy_without_test_fails():
         repo_root = Path(tmpdir)
 
         # Create devcovenant structure
-        (repo_root / "devcovenant" / "policy_scripts").mkdir(parents=True)
+        (repo_root / "devcovenant" / "common_policy_scripts").mkdir(
+            parents=True
+        )
         (repo_root / "devcovenant" / "tests" / "test_policies").mkdir(
             parents=True
         )
 
         # Create a policy script WITHOUT test
         policy_script = (
-            repo_root / "devcovenant" / "policy_scripts" / "test-policy.py"
+            repo_root
+            / "devcovenant"
+            / "common_policy_scripts"
+            / "test-policy.py"
         )
         policy_script.write_text("# Test policy")
 

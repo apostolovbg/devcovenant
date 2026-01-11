@@ -19,4 +19,3 @@ line_length = 79
 line-length = 79
 
 [tool.ruff.format]
-line-length = 79

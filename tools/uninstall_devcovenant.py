@@ -9,6 +9,8 @@ import shutil
 from pathlib import Path
 
 MANIFEST_PATH = ".devcovenant/install_manifest.json"
+BLOCK_BEGIN = "<!-- DEVCOVENANT:BEGIN -->"
+BLOCK_END = "<!-- DEVCOVENANT:END -->"
 
 
 def _remove_path(target: Path) -> None:
@@ -18,6 +20,19 @@ def _remove_path(target: Path) -> None:
         return
     if target.exists():
         target.unlink()
+
+
+def _strip_block(path: Path) -> bool:
+    """Remove DevCovenant block markers from a file."""
+    if not path.exists():
+        return False
+    text = path.read_text(encoding="utf-8")
+    if BLOCK_BEGIN not in text or BLOCK_END not in text:
+        return False
+    before, rest = text.split(BLOCK_BEGIN, 1)
+    _block, after = rest.split(BLOCK_END, 1)
+    path.write_text(f"{before}{after}", encoding="utf-8")
+    return True
 
 
 def main() -> None:
@@ -31,18 +46,16 @@ def main() -> None:
         help="Target repository path (default: current directory).",
     )
     parser.add_argument(
-        "--preserve-docs",
+        "--remove-docs",
         action="store_true",
-        help="Preserve README/AGENTS/metadata files.",
+        help="Delete doc files that were installed by DevCovenant.",
     )
     args = parser.parse_args()
 
     target_root = Path(args.target).resolve()
     manifest_file = target_root / MANIFEST_PATH
     if not manifest_file.exists():
-        raise SystemExit(
-            f"Install manifest not found at {manifest_file}."
-        )
+        raise SystemExit(f"Install manifest not found at {manifest_file}.")
 
     manifest = json.loads(manifest_file.read_text(encoding="utf-8"))
     installed = manifest.get("installed", {})
@@ -53,7 +66,11 @@ def main() -> None:
     for rel_path in installed.get("config", []):
         _remove_path(target_root / rel_path)
 
-    if not args.preserve_docs:
+    doc_blocks = manifest.get("doc_blocks", [])
+    for rel_path in doc_blocks:
+        _strip_block(target_root / rel_path)
+
+    if args.remove_docs:
         for rel_path in installed.get("docs", []):
             _remove_path(target_root / rel_path)
 

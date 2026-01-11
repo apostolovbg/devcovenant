@@ -15,6 +15,7 @@ import yaml
 
 from .base import CheckContext, PolicyCheck, PolicyFixer, Violation
 from .parser import PolicyDefinition, PolicyParser
+from .policy_locations import patch_path, resolve_script_location
 from .registry import PolicyRegistry, PolicySyncIssue
 
 
@@ -295,7 +296,14 @@ class DevCovenantEngine:
                     config_overrides = context.get_policy_config(
                         policy.policy_id
                     )
-                    checker.set_options(options, config_overrides)
+                    patch_overrides = self._load_patch_overrides(
+                        policy.policy_id
+                    )
+                    checker.set_options(
+                        options,
+                        config_overrides,
+                        patch_overrides,
+                    )
                     policy_violations = checker.check(context)
                     violations.extend(policy_violations)
                     if not policy_violations:
@@ -455,18 +463,13 @@ class DevCovenantEngine:
         Returns:
             PolicyCheck instance or None if not found
         """
-        # Convert hyphens to underscores for Python module names
-        script_name = policy_id.replace("-", "_")
-        script_path = (
-            self.devcovenant_dir / "policy_scripts" / f"{script_name}.py"
-        )
-
-        if not script_path.exists():
+        location = resolve_script_location(self.repo_root, policy_id)
+        if location is None:
             return None
 
         # Load the module
         spec = importlib.util.spec_from_file_location(
-            f"devcovenant.policy_scripts.{policy_id}", script_path
+            location.module, location.path
         )
         if spec and spec.loader:
             module = importlib.util.module_from_spec(spec)
@@ -496,6 +499,20 @@ class DevCovenantEngine:
                 continue
             options[key] = self._parse_metadata_value(raw_value)
         return options
+
+    def _load_patch_overrides(self, policy_id: str) -> Dict[str, Any]:
+        """Load policy patch overrides from common_policy_patches."""
+        path = patch_path(self.repo_root, policy_id)
+        if not path.exists():
+            return {}
+        try:
+            with open(path, "r", encoding="utf-8") as handle:
+                patch_data = yaml.safe_load(handle) or {}
+        except OSError:
+            return {}
+        if not isinstance(patch_data, dict):
+            return {}
+        return patch_data
 
     @staticmethod
     def _parse_metadata_value(raw_value: str) -> Any:

@@ -7,6 +7,7 @@ from textwrap import dedent
 from types import SimpleNamespace
 
 import pytest
+
 from devcovenant.base import CheckContext
 from devcovenant.policy_scripts.changelog_coverage import (
     ChangelogCoverageCheck,

@@ -10,6 +10,7 @@ from pathlib import Path
 from typing import Dict, List, Optional
 
 from .parser import PolicyDefinition
+from .policy_locations import resolve_script_location
 
 
 @dataclass
@@ -112,16 +113,13 @@ class PolicyRegistry:
 
             # Determine script path
             # Convert hyphens to underscores for Python module names
-            script_name = policy.policy_id.replace("-", "_")
-            script_path = (
-                self.repo_root
-                / "devcovenant"
-                / "policy_scripts"
-                / f"{script_name}.py"
+            location = resolve_script_location(
+                self.repo_root, policy.policy_id
             )
+            script_path = location.path if location else Path()
 
             # Check if script exists
-            script_exists = script_path.exists()
+            script_exists = location is not None and script_path.exists()
 
             # Get current hash from registry
             current_hash = None

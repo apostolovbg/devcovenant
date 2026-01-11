@@ -7,8 +7,11 @@ Read `DEVCOVENANT.md` first for architecture and workflow. This file is the
 canonical policy source of truth.
 #
 
-Edit and write here.
+Notes here are effectively obligatory. Treat this section as the living memory
+of the project: decisions, conventions, and rationale should be recorded here
+as soon as they are made.
 
+<!-- DEVCOVENANT:BEGIN -->
 # DO NOT EDIT FROM HERE TO END UNLESS EXPLICITLY REQUESTED BY A HUMAN!
 
 # DEVELOPMENT POLICY (DevCovenant and Laws)
@@ -42,6 +45,23 @@ registry_file: devcovenant/registry.json
 ```
 
 DevCovenant must keep its registry synchronized with policy definitions.
+
+---
+
+## Policy: DevCovenant Structure Guard
+
+```policy-def
+id: devcov-structure-guard
+status: active
+severity: error
+auto_fix: false
+updated: false
+applies_to: *
+enforcement: active
+waiver: false
+```
+
+Ensure the DevCovenant repo keeps the required structure and tooling files.
 
 ---
 
@@ -103,6 +123,8 @@ waiver: false
 version_file: VERSION
 readme_files: README.md,AGENTS.md,DEVCOVENANT.md,CONTRIBUTING.md,PLAN.md
   devcovenant/README.md,devcovenant/waivers/README.md
+  devcovenant/common_policy_patches/README.md
+  devcovenant/custom_policy_scripts/README.md
 citation_file: CITATION.cff
 pyproject_files: pyproject.toml
 license_files: LICENSE
@@ -128,6 +150,8 @@ waiver: false
 include_suffixes: .md
 allowed_globs: README.md,AGENTS.md,DEVCOVENANT.md,CONTRIBUTING.md,PLAN.md
   devcovenant/README.md,devcovenant/waivers/README.md
+  devcovenant/common_policy_patches/README.md
+  devcovenant/custom_policy_scripts/README.md
 ```
 
 ---
@@ -267,3 +291,5 @@ exclude_globs: tests/**,**/tests/**
 enforcement: active
 waiver: false
 ```
+
+<!-- DEVCOVENANT:END -->

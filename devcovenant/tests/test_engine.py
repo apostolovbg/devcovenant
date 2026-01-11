@@ -31,7 +31,7 @@ def test_engine_check_no_violations():
         # Create structure
         devcov_dir = repo_root / "devcovenant"
         devcov_dir.mkdir()
-        (devcov_dir / "policy_scripts").mkdir()
+        (devcov_dir / "common_policy_scripts").mkdir()
         config_text = "engine:\n  fail_threshold: error"
         (devcov_dir / "config.yaml").write_text(config_text)
 

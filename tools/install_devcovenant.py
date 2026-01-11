@@ -37,6 +37,23 @@ DOC_PATHS = [
 ]
 
 MANIFEST_PATH = ".devcovenant/install_manifest.json"
+BLOCK_BEGIN = "<!-- DEVCOVENANT:BEGIN -->"
+BLOCK_END = "<!-- DEVCOVENANT:END -->"
+
+DOC_BLOCKS = {
+    "README.md": (
+        f"{BLOCK_BEGIN}\n"
+        "**Read first:** `AGENTS.md` is the canonical source of truth. "
+        "See `DEVCOVENANT.md` for architecture and lifecycle details.\n"
+        f"{BLOCK_END}\n"
+    ),
+    "CONTRIBUTING.md": (
+        f"{BLOCK_BEGIN}\n"
+        "**Read first:** `AGENTS.md` is canonical. `DEVCOVENANT.md` explains "
+        "the architecture and lifecycle.\n"
+        f"{BLOCK_END}\n"
+    ),
+}
 
 
 def _copy_path(source: Path, target: Path) -> None:
@@ -70,6 +87,31 @@ def _install_paths(
     return installed
 
 
+def _inject_block(path: Path, block: str) -> bool:
+    """Insert or replace a DevCovenant block in a documentation file."""
+    if not path.exists():
+        return False
+    text = path.read_text(encoding="utf-8")
+    if BLOCK_BEGIN in text and BLOCK_END in text:
+        before, _rest = text.split(BLOCK_BEGIN, 1)
+        _old_block, after = _rest.split(BLOCK_END, 1)
+        updated = f"{before}{block}{after}"
+        if updated == text:
+            return False
+        path.write_text(updated, encoding="utf-8")
+        return True
+
+    lines = text.splitlines(keepends=True)
+    insert_at = 0
+    for index, line in enumerate(lines):
+        if line.lstrip().startswith("#"):
+            insert_at = index + 1
+            break
+    lines.insert(insert_at, block)
+    path.write_text("".join(lines), encoding="utf-8")
+    return True
+
+
 def main() -> None:
     """CLI entry point."""
     parser = argparse.ArgumentParser(
@@ -98,6 +140,7 @@ def main() -> None:
     is_update = manifest_file.exists()
 
     installed: dict[str, list[str]] = {"core": [], "config": [], "docs": []}
+    doc_blocks: list[str] = []
 
     installed["core"] = _install_paths(
         repo_root,
@@ -120,6 +163,11 @@ def main() -> None:
         skip_existing=is_update and not args.force_docs,
     )
 
+    for doc_name, block in DOC_BLOCKS.items():
+        target = target_root / doc_name
+        if _inject_block(target, block):
+            doc_blocks.append(doc_name)
+
     manifest_file.parent.mkdir(parents=True, exist_ok=True)
     manifest_file.write_text(
         json.dumps(
@@ -127,6 +175,7 @@ def main() -> None:
                 "updated_at": datetime.now(timezone.utc).isoformat(),
                 "mode": "update" if is_update else "install",
                 "installed": installed,
+                "doc_blocks": doc_blocks,
             },
             indent=2,
             sort_keys=True,
