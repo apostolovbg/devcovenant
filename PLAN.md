@@ -91,6 +91,8 @@ Validation:
   logins.
 
 ## Next Steps
+- Prepare a pre-release review, ensuring the gate sequence runs cleanly on the
+  current working tree and all policy hashes are synced.
 - Publish the first packaged release to PyPI.
 - Update README/CHANGELOG with the install instructions.
 - Coordinate with Copernican, GCV-ERP custom, and infra teams to migrate their

@@ -161,6 +161,34 @@ helpers simply forward the arguments to the CLI for compatibility.
 Use `--fix` to apply auto-fixes when available. The CLI exits non-zero when
 blocking violations exist.
 
+## Pre-release Review
+Before tagging a release, confirm the following areas:
+
+1. **Gate enforcement**
+   - `tools/run_pre_commit.py --phase start` succeeded on the current tree.
+   - `python3 tools/run_tests.py` and `tools/run_pre_commit.py --phase end`
+     followed, so the gate sequence completed.
+   - The `devflow-run-gates` policy now treats every doc or code edit as
+     requiring the status file so skipped runs are blocked.
+2. **Policy sync**
+   - `python3 -m devcovenant.cli update-hashes` ran after policy changes.
+   - `devcovenant/registry.json` reflects the new hashes.
+   - `devcov-check` passes.
+3. **Packaging**
+   - `python -m build` and `twine check dist/*` succeed locally
+     for wheel+sdist.
+   - The `publish.yml` workflow publishes on `v*` tags using the
+     `PYPI_API_TOKEN`.
+4. **Documentation**
+   - README, SPEC, PLAN, and `CHANGELOG.md` describe the mandatory workflow,
+     gates, and migration roadmap for downstream repos.
+5. **Changelog coverage**
+   - Each touched file appears in `CHANGELOG.md:11-20`.
+   - Entries remain newest-first so release notes are chronological.
+
+Rerun these steps in a clean tree before pushing a release tag.
+This ensures nothing under the new contract slips through.
+
 
 ## Adding or Updating Policies
 Policy definitions live in `AGENTS.md`:

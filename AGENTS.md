@@ -83,6 +83,17 @@ through the gated workflow (
 Treat the workflow as mandatory for every commit, even when only documentation
 or metadata is touched.
 
+## Release Readiness Review
+- Confirm the gate sequence (pre-commit start → tests → pre-commit end)
+  runs cleanly whenever changes touch docs, policies, or code. The updated
+  `devflow-run-gates` policy will catch any skipped steps.
+- The changelog must record every touched file, and
+  `devcovenant/registry.json` must be refreshed via
+  `python3 -m devcovenant.cli update-hashes` before tagging a release.
+- Build artifacts locally (`python -m build`, `twine check dist/*`) and verify
+  the `publish.yml` workflow publishes using the `PYPI_API_TOKEN` secret before
+  pushing the release tag.
+
 # DO NOT EDIT FROM HERE TO END UNLESS EXPLICITLY REQUESTED BY A HUMAN!
 
 # DEV(COVENANT) DEVELOPMENT POLICY MANAGEMENT AND ENFORCEMENT

@@ -31,6 +31,22 @@ install, and reversible without losing user documentation.
 - Use `python3` for helper scripts when available (`python` only if it points
   to Python 3 on the host system).
 
+## Release Readiness Review
+- Confirm `tools/run_pre_commit.py --phase start` completes successfully before
+  tagging a release candidate. Run `python3 tools/run_tests.py` and ensure
+  `tools/run_pre_commit.py --phase end` finishes as well. The
+  `devflow-run-gates` policy enforces these gates even for documentation
+  changes.
+- Ensure policy hashes are up-to-date
+  (`python3 -m devcovenant.cli update-hashes`).
+- The changelog must mention every file touched during the prep work.
+- The registry (`devcovenant/registry.json`) should reflect the new hashes.
+- Build artifacts with `python -m build`.
+- Validate the wheel and sdist via `twine check dist/*`.
+- Run the `publish.yml` workflow before the public release so reproduction is
+  straightforward.
+- Target a test tag and ensure the workflow uses `PYPI_API_TOKEN`.
+
 ## Functional Requirements
 - Parse policy definitions from `AGENTS.md`.
 - Run policy scripts and report violations by severity.
