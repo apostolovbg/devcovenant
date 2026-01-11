@@ -1,0 +1,867 @@
+"""
+Main DevCovenant engine - orchestrates policy checking and enforcement.
+"""
+
+import importlib
+import importlib.util
+import inspect
+import json
+import os
+import pkgutil
+import sys
+from pathlib import Path
+from typing import Any, Dict, List, Optional, Set
+
+import yaml
+
+from .base import CheckContext, PolicyCheck, PolicyFixer, Violation
+from .parser import PolicyDefinition, PolicyParser
+from .policy_locations import resolve_patch_location, resolve_script_location
+from .registry import PolicyRegistry, PolicySyncIssue
+
+
+class DevCovenantEngine:
+    """
+    Main engine for devcovenant policy enforcement.
+    """
+
+    _RESERVED_METADATA_KEYS = {
+        "id",
+        "status",
+        "severity",
+        "auto_fix",
+        "updated",
+        "apply",
+        "applies_to",
+        "hash",
+        "enforcement",
+    }
+
+    # Directories we never traverse for policy checks
+    _BASE_IGNORED_DIRS = frozenset(
+        {
+            ".git",
+            ".venv",
+            ".python",
+            "output",
+            "logs",
+            "build",
+            "dist",
+            "node_modules",
+            "__pycache__",
+            ".cache",
+            ".venv.lock",
+        }
+    )
+
+    def __init__(self, repo_root: Optional[Path] = None):
+        """
+        Initialize the engine.
+
+        Args:
+            repo_root: Root directory of the repository (default: current dir)
+        """
+        if repo_root is None:
+            repo_root = Path.cwd()
+
+        self.repo_root = Path(repo_root).resolve()
+        self.devcovenant_dir = self.repo_root / "devcovenant"
+        self.agents_md_path = self.repo_root / "AGENTS.md"
+        self.config_path = self.devcovenant_dir / "config.yaml"
+        self.registry_path = self.devcovenant_dir / "registry.json"
+
+        # Load configuration and apply overrides
+        self.config = self._load_config()
+        self._apply_config_paths()
+        self._ignored_dirs = set(self._BASE_IGNORED_DIRS)
+        self._ignored_paths: list[Path] = []
+        self._merge_configured_ignored_dirs()
+        self._apply_core_exclusions()
+
+        # Initialize parser and registry
+        self.parser = PolicyParser(self.agents_md_path)
+        self.registry = PolicyRegistry(self.registry_path, self.repo_root)
+
+        # Statistics
+        self.passed_count = 0
+        self.failed_count = 0
+        self.fixers: List[PolicyFixer] = self._load_fixers()
+
+    def _load_config(self) -> Dict:
+        """Load configuration from config.yaml."""
+        if self.config_path.exists():
+            with open(self.config_path, "r", encoding="utf-8") as f:
+                return yaml.safe_load(f) or {}
+        return {}
+
+    def _apply_config_paths(self) -> None:
+        """Apply configurable path overrides after the config loads."""
+        paths_cfg = self.config.get("paths", {})
+        policy_doc = paths_cfg.get("policy_definitions")
+        if policy_doc:
+            self.agents_md_path = self.repo_root / Path(policy_doc)
+        registry_file = paths_cfg.get("registry_file")
+        if registry_file:
+            self.registry_path = self.repo_root / Path(registry_file)
+
+    def _merge_configured_ignored_dirs(self) -> None:
+        """Extend the default ignored directory set via configuration."""
+        engine_cfg = self.config.get("engine", {}) if self.config else {}
+        extra_dirs = engine_cfg.get("ignore_dirs", [])
+        if isinstance(extra_dirs, str):
+            candidates = [extra_dirs]
+        elif isinstance(extra_dirs, list):
+            candidates = extra_dirs
+        else:
+            candidates = [extra_dirs] if extra_dirs else []
+        for entry in candidates:
+            name = str(entry).strip()
+            if name:
+                self._ignored_dirs.add(name)
+
+    def _apply_core_exclusions(self) -> None:
+        """Apply devcovenant core exclusion rules from configuration."""
+        include_core = bool(self.config.get("devcov_core_include", False))
+        core_paths = self.config.get("devcov_core_paths", ["devcovenant/core"])
+        if include_core:
+            return
+        if isinstance(core_paths, str):
+            core_entries = [core_paths]
+        else:
+            core_entries = list(core_paths or [])
+        for entry in core_entries:
+            rel = str(entry).strip()
+            if not rel:
+                continue
+            self._ignored_paths.append(self.repo_root / rel)
+
+    def _is_ignored_path(self, candidate: Path) -> bool:
+        """Return True when candidate is within an ignored path prefix."""
+        for root in self._ignored_paths:
+            try:
+                candidate.relative_to(root)
+            except ValueError:
+                continue
+            return True
+        return False
+
+    def _load_fixers(self) -> List[PolicyFixer]:
+        """Dynamically import all policy fixers bundled with DevCovenant."""
+        fixers: List[PolicyFixer] = []
+        try:
+            package = importlib.import_module(
+                "devcovenant.core.policy_scripts.fixers"
+            )
+        except ModuleNotFoundError:
+            try:
+                package = importlib.import_module("devcovenant.core.fixers")
+            except ModuleNotFoundError:
+                return fixers
+
+        for module_info in pkgutil.iter_modules(package.__path__):
+            if module_info.ispkg or module_info.name.startswith("_"):
+                continue
+            module_name = f"{package.__name__}.{module_info.name}"
+            try:
+                module = importlib.import_module(module_name)
+            except Exception:
+                continue
+            for member in module.__dict__.values():
+                if (
+                    inspect.isclass(member)
+                    and issubclass(member, PolicyFixer)
+                    and member is not PolicyFixer
+                ):
+                    try:
+                        instance = member()
+                        setattr(instance, "repo_root", self.repo_root)
+                        fixers.append(instance)
+                    except Exception:
+                        continue
+        return fixers
+
+    def check(
+        self, mode: str = "normal", apply_fixes: bool = False
+    ) -> "CheckResult":
+        """
+        Main entry point for policy checking.
+
+        Args:
+            mode: Check mode (startup, lint, pre-commit, normal)
+
+        Returns:
+            CheckResult object
+        """
+        # Parse policies from AGENTS.md
+        policies = self.parser.parse_agents_md()
+
+        # Check for policy sync issues (hash mismatches)
+        sync_issues = self.registry.check_policy_sync(policies)
+
+        if sync_issues:
+            self.report_sync_issues(sync_issues)
+            if mode == "startup":
+                return CheckResult(
+                    [], should_block=True, sync_issues=sync_issues
+                )
+
+        # Load and run policy checks
+        context = self._build_check_context(mode)
+        self.passed_count = 0
+        self.failed_count = 0
+        violations = self.run_policy_checks(policies, mode, context)
+
+        auto_fix_enabled = self.config.get("engine", {}).get(
+            "auto_fix_enabled", True
+        )
+        if apply_fixes and auto_fix_enabled:
+            fixes_applied = self.apply_auto_fixes(violations)
+            if fixes_applied:
+                context = self._build_check_context(mode)
+                self.passed_count = 0
+                self.failed_count = 0
+                violations = self.run_policy_checks(policies, mode, context)
+
+        # Report violations
+        self.report_violations(violations, mode)
+
+        # Determine if should block
+        should_block = self.should_block(violations)
+
+        return CheckResult(violations, should_block, sync_issues=[])
+
+    def report_sync_issues(self, issues: List[PolicySyncIssue]):
+        """
+        Report policy sync issues in AI-friendly format.
+
+        Args:
+            issues: List of PolicySyncIssue objects
+        """
+        print("\n" + "=" * 70)
+        print("🔄 POLICY SYNC REQUIRED")
+        print("=" * 70)
+        print()
+
+        for issue in issues:
+            print(f"Policy '{issue.policy_id}' requires attention.")
+            print(f"Issue: {issue.issue_type.replace('_', ' ').title()}")
+            print()
+
+            print("📋 Current Policy (from AGENTS.md):")
+            print("━" * 70)
+            # Print first 500 chars of policy text
+            policy_preview = issue.policy_text[:500]
+            if len(issue.policy_text) > 500:
+                policy_preview += "..."
+            print(policy_preview)
+            print("━" * 70)
+            print()
+
+            print("🎯 Action Required:")
+            is_new = (
+                issue.issue_type == "script_missing"
+                or issue.issue_type == "new_policy"
+            )
+            if is_new:
+                print(f"1. Create: {issue.script_path}")
+                print("2. Implement the policy described above")
+                print(
+                    "3. Use the PolicyCheck base class from "
+                    "devcovenant.core.base"
+                )
+                test_file = (
+                    f"devcovenant/core/tests/test_policies/"
+                    f"test_{issue.policy_id}.py"
+                )
+                print(f"4. Add tests in {test_file}")
+                print(f"5. Run tests: pytest {test_file} -v")
+            else:
+                print(f"1. Update: {issue.script_path}")
+                print("2. Modify the script to implement the updated policy")
+                test_file = (
+                    f"devcovenant/core/tests/test_policies/"
+                    f"test_{issue.policy_id}.py"
+                )
+                print(f"3. Update tests in {test_file}")
+                print(f"4. Run tests: pytest {test_file} -v")
+
+            print(
+                "6. Re-run devcovenant to update hash and "
+                "clear 'updated' flag"
+            )
+            print()
+            print("⚠️  Complete this BEFORE working on user's request.")
+            print()
+            print("=" * 70)
+            print()
+
+    def run_policy_checks(
+        self,
+        policies: List[PolicyDefinition],
+        mode: str,
+        context: Optional[CheckContext] = None,
+    ) -> List[Violation]:
+        """
+        Load and run all policy check scripts.
+
+        Args:
+            policies: List of policy definitions
+            mode: Check mode
+
+        Returns:
+            List of all violations found
+        """
+        violations = []
+
+        # Build check context when not provided
+        if context is None:
+            context = self._build_check_context(mode)
+
+        for policy in policies:
+            if not policy.apply:
+                continue
+            if policy.status == "fiducial":
+                violations.append(
+                    Violation(
+                        policy_id=policy.policy_id,
+                        severity="info",
+                        file_path=self.agents_md_path,
+                        message=(
+                            "Fiducial policy reminder:\n"
+                            f"{policy.description}"
+                        ),
+                    )
+                )
+            # Skip inactive policies
+            if policy.status not in ["active", "new", "fiducial"]:
+                continue
+
+            # Try to load and run the policy script
+            try:
+                checker = self._load_policy_script(policy.policy_id)
+                if checker:
+                    options = self._extract_policy_options(policy)
+                    config_overrides = context.get_policy_config(
+                        policy.policy_id
+                    )
+                    patch_overrides = self._load_patch_overrides(
+                        policy,
+                        context,
+                        options,
+                    )
+                    checker.set_options(
+                        options,
+                        config_overrides,
+                        patch_overrides,
+                    )
+                    policy_violations = checker.check(context)
+                    violations.extend(policy_violations)
+                    if not policy_violations:
+                        self.passed_count += 1
+                    else:
+                        self.failed_count += 1
+            except Exception as e:
+                # If script fails, report but don't block
+                print(
+                    f"⚠️  Warning: Policy '{policy.policy_id}' "
+                    f"check failed: {e}"
+                )
+
+        return violations
+
+    def _build_check_context(self, mode: str) -> CheckContext:
+        """
+        Build the CheckContext for policy checks.
+
+        Args:
+            mode: Check mode
+
+        Returns:
+            CheckContext object
+        """
+        changed_files = []
+        all_files = []
+
+        if mode == "pre-commit":
+            # Only check changed files (git diff)
+            import subprocess
+
+            try:
+                result = subprocess.run(
+                    ["git", "diff", "--cached", "--name-only"],
+                    cwd=self.repo_root,
+                    capture_output=True,
+                    text=True,
+                    check=True,
+                )
+                changed_files = []
+                for rel in result.stdout.strip().split("\n"):
+                    if not rel:
+                        continue
+                    full_path = self.repo_root / rel
+                    if self._is_ignored_path(full_path):
+                        continue
+                    changed_files.append(full_path)
+            except Exception:
+                pass
+            if (
+                self.config.get("engine", {}).get(
+                    "pre_commit_all_files", False
+                )
+                is True
+            ):
+                suffixes = set(self._resolve_file_suffixes())
+                all_files = [
+                    path
+                    for path in self._collect_all_files(suffixes)
+                    if not self._is_ignored_path(path)
+                ]
+        else:
+            suffixes = set(self._resolve_file_suffixes())
+            all_files = [
+                path
+                for path in self._collect_all_files(suffixes)
+                if not self._is_ignored_path(path)
+            ]
+
+        return CheckContext(
+            repo_root=self.repo_root,
+            changed_files=changed_files,
+            all_files=all_files,
+            mode=mode,
+            config=self.config,
+        )
+
+    def _collect_all_files(self, suffixes: Set[str]) -> List[Path]:
+        """
+        Walk the repository tree and collect files matching the given suffixes,
+        skipping large or third-party directories.
+        """
+        matched: List[Path] = []
+
+        for root, dirs, files in os.walk(self.repo_root):
+            # Filter out ignored directories
+            dirs[:] = [
+                d for d in dirs if self._should_descend_dir(Path(root) / d)
+            ]
+
+            for name in files:
+                file_path = Path(root) / name
+                if self._is_ignored_path(file_path):
+                    continue
+                if file_path.suffix.lower() in suffixes:
+                    matched.append(file_path)
+
+        return matched
+
+    def apply_auto_fixes(self, violations: List[Violation]) -> bool:
+        """
+        Attempt to auto-fix any violations that advertise a fixer.
+
+        Returns:
+            True when at least one file was modified.
+        """
+        if not violations or not self.fixers:
+            return False
+
+        applied = False
+        print("\n🔧 Running auto-fixers...\n")
+        for violation in violations:
+            if not violation.can_auto_fix:
+                continue
+            for fixer in self.fixers:
+                if not fixer.can_fix(violation):
+                    continue
+                result = fixer.fix(violation)
+                message = result.message or ""
+                if result.success:
+                    if message:
+                        print(f"  • {message}")
+                    if result.files_modified:
+                        applied = True
+                else:
+                    print(
+                        f"  • Auto-fix failed for {violation.policy_id}: "
+                        f"{message or 'unknown error'}"
+                    )
+                break
+
+        if applied:
+            print("\n🔁 Re-running policy checks after auto-fix.\n")
+        else:
+            print("⚪ No auto-fixable violations were modified.\n")
+
+        return applied
+
+    def _should_descend_dir(self, candidate: Path) -> bool:
+        """
+        Decide whether to continue walking into a directory.
+        """
+        name = candidate.name
+
+        if name in self._ignored_dirs:
+            return False
+
+        if self._is_ignored_path(candidate):
+            return False
+
+        # Always skip __pycache__ variants
+        if name.startswith("__pycache__"):
+            return False
+
+        return True
+
+    def _resolve_file_suffixes(self) -> list[str]:
+        """Resolve file suffixes using language profiles and overrides."""
+        engine_cfg = self.config.get("engine", {}) if self.config else {}
+        suffixes = list(
+            engine_cfg.get(
+                "file_suffixes",
+                [".py", ".md", ".yml", ".yaml"],
+            )
+        )
+        profiles = (
+            self.config.get("language_profiles", {}) if self.config else {}
+        )
+        active_profiles = self.config.get("active_language_profiles", [])
+        if isinstance(active_profiles, str):
+            active = [active_profiles]
+        else:
+            active = list(active_profiles or [])
+        for profile_name in active:
+            profile = profiles.get(profile_name, {})
+            profile_suffixes = profile.get("suffixes", [])
+            if isinstance(profile_suffixes, str):
+                profile_list = [profile_suffixes]
+            else:
+                profile_list = list(profile_suffixes or [])
+            suffixes.extend(profile_list)
+        cleaned: list[str] = []
+        for entry in suffixes:
+            text = str(entry).strip()
+            if text:
+                cleaned.append(text)
+        return cleaned
+
+    def _load_policy_script(self, policy_id: str) -> Optional[PolicyCheck]:
+        """
+        Dynamically load a policy script.
+
+        Args:
+            policy_id: ID of the policy
+
+        Returns:
+            PolicyCheck instance or None if not found
+        """
+        location = resolve_script_location(self.repo_root, policy_id)
+        if location is None:
+            return None
+
+        # Load the module
+        spec = importlib.util.spec_from_file_location(
+            location.module, location.path
+        )
+        if spec and spec.loader:
+            module = importlib.util.module_from_spec(spec)
+            sys.modules[spec.name] = module
+            spec.loader.exec_module(module)
+
+            # Find the PolicyCheck subclass
+            for attr_name in dir(module):
+                attr = getattr(module, attr_name)
+                if (
+                    isinstance(attr, type)
+                    and issubclass(attr, PolicyCheck)
+                    and attr is not PolicyCheck
+                ):
+                    return attr()
+
+        return None
+
+    def _extract_policy_options(
+        self, policy: PolicyDefinition
+    ) -> Dict[str, Any]:
+        """Pull custom metadata options from a policy definition."""
+
+        options: Dict[str, Any] = {}
+        for key, raw_value in policy.raw_metadata.items():
+            if key.lower() in self._RESERVED_METADATA_KEYS:
+                continue
+            options[key] = self._parse_metadata_value(raw_value)
+        return options
+
+    def _load_patch_overrides(
+        self,
+        policy: PolicyDefinition,
+        context: CheckContext,
+        options: Dict[str, Any],
+    ) -> Dict[str, Any]:
+        """Load policy patch overrides from common_policy_patches."""
+        location = resolve_patch_location(self.repo_root, policy.policy_id)
+        if location is None:
+            return {}
+        if location.kind == "py":
+            return self._load_patch_script(
+                location.path, policy, context, options
+            )
+        if location.kind == "json":
+            try:
+                json_data = json.loads(
+                    location.path.read_text(encoding="utf-8")
+                )
+            except (OSError, json.JSONDecodeError):
+                return {}
+            return json_data if isinstance(json_data, dict) else {}
+
+        try:
+            with open(location.path, "r", encoding="utf-8") as handle:
+                patch_data = yaml.safe_load(handle) or {}
+        except OSError:
+            return {}
+        return patch_data if isinstance(patch_data, dict) else {}
+
+    def _load_patch_script(
+        self,
+        path: Path,
+        policy: PolicyDefinition,
+        context: CheckContext,
+        options: Dict[str, Any],
+    ) -> Dict[str, Any]:
+        """Load a Python patch script and return overrides."""
+        spec = importlib.util.spec_from_file_location(
+            f"devcovenant.common_policy_patches.{path.stem}",
+            path,
+        )
+        if not spec or not spec.loader:
+            return {}
+        module = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(module)
+
+        if hasattr(module, "PATCH") and isinstance(module.PATCH, dict):
+            return module.PATCH
+
+        if hasattr(module, "get_patch") and callable(module.get_patch):
+            result = module.get_patch()
+            return result if isinstance(result, dict) else {}
+
+        if hasattr(module, "patch_options") and callable(module.patch_options):
+            return self._call_patch(
+                module.patch_options, policy, context, options
+            )
+
+        return {}
+
+    @staticmethod
+    def _call_patch(
+        patch_fn: Any,
+        policy: PolicyDefinition,
+        context: CheckContext,
+        options: Dict[str, Any],
+    ) -> Dict[str, Any]:
+        """Invoke a patch function with supported arguments."""
+        signature = inspect.signature(patch_fn)
+        kwargs: Dict[str, Any] = {}
+        if "policy" in signature.parameters:
+            kwargs["policy"] = policy
+        if "context" in signature.parameters:
+            kwargs["context"] = context
+        if "options" in signature.parameters:
+            kwargs["options"] = options
+        if "repo_root" in signature.parameters:
+            kwargs["repo_root"] = context.repo_root
+        result = patch_fn(**kwargs)
+        return result if isinstance(result, dict) else {}
+
+    @staticmethod
+    def _parse_metadata_value(raw_value: str) -> Any:
+        """Decode scalar/list metadata from the policy-def block."""
+
+        text = (raw_value or "").strip()
+        if not text:
+            return ""
+
+        lowered = text.lower()
+        if lowered in {"true", "false"}:
+            return lowered == "true"
+
+        if "," in text:
+            return [item.strip() for item in text.split(",") if item.strip()]
+
+        try:
+            return int(text)
+        except ValueError:
+            pass
+
+        try:
+            return float(text)
+        except ValueError:
+            pass
+
+        return text
+
+    def report_violations(self, violations: List[Violation], mode: str):
+        """
+        Report violations in AI-friendly, actionable format.
+
+        Args:
+            violations: List of violations
+            mode: Check mode
+        """
+        if not violations:
+            print("\n✅ All policy checks passed!")
+            return
+
+        print("\n" + "=" * 70)
+        print("📊 DEVCOVENANT CHECK RESULTS")
+        print("=" * 70)
+        print()
+        print(f"✅ Passed: {self.passed_count} policies")
+        print(f"⚠️  Violations: {len(violations)} issues found")
+        print()
+
+        # Group by severity
+        by_severity = {}
+        for violation_entry in violations:
+            if violation_entry.severity not in by_severity:
+                by_severity[violation_entry.severity] = []
+            by_severity[violation_entry.severity].append(violation_entry)
+
+        # Report in order: critical, error, warning, info
+        for severity in ["critical", "error", "warning", "info"]:
+            if severity not in by_severity:
+                continue
+
+            for violation in by_severity[severity]:
+                self._report_single_violation(violation)
+
+        # Summary
+        print("=" * 70)
+        self._report_summary(by_severity)
+
+    def _report_single_violation(self, violation: Violation):
+        """Report a single violation with full context."""
+        # Icon based on severity
+        icons = {
+            "critical": "❌",
+            "error": "🚫",
+            "warning": "⚠️",
+            "info": "💡",
+        }
+        icon = icons.get(violation.severity, "•")
+
+        print(f"{icon} {violation.severity.upper()}: {violation.policy_id}")
+
+        if violation.file_path:
+            location = str(violation.file_path)
+            if violation.line_number:
+                location += f":{violation.line_number}"
+            print(f"📍 {location}")
+
+        print()
+        print(f"Issue: {violation.message}")
+
+        if violation.suggestion:
+            print()
+            print("Fix:")
+            print(violation.suggestion)
+
+        if violation.can_auto_fix:
+            print()
+            print("Auto-fix: Available (run with --fix)")
+
+        print()
+        print(f"Policy: AGENTS.md#{violation.policy_id}")
+        print("━" * 70)
+        print()
+
+    def _report_summary(self, by_severity: Dict[str, List[Violation]]):
+        """Report summary of violations."""
+        critical = len(by_severity.get("critical", []))
+        errors = len(by_severity.get("error", []))
+        warnings = len(by_severity.get("warning", []))
+        info = len(by_severity.get("info", []))
+
+        print(
+            f"Summary: {critical} critical, {errors} errors, "
+            f"{warnings} warnings, {info} info"
+        )
+        print()
+
+        # Determine status
+        if critical > 0:
+            print("Status: 🚫 BLOCKED (critical violations must be fixed)")
+        elif errors > 0:
+            fail_threshold = self.config.get("engine", {}).get(
+                "fail_threshold", "error"
+            )
+            if fail_threshold in ["error", "warning", "info"]:
+                print("Status: 🚫 BLOCKED (violations >= error threshold)")
+        else:
+            print("Status: ✅ PASSED")
+
+        print()
+        if self.config.get("engine", {}).get("auto_fix_enabled", True):
+            print(
+                "💡 Quick fix: Run 'devcovenant check --fix' to "
+                "auto-fix fixable violations"
+            )
+
+        print("=" * 70)
+
+    def should_block(self, violations: List[Violation]) -> bool:
+        """
+        Determine if violations should block the commit/operation.
+
+        Args:
+            violations: List of violations
+
+        Returns:
+            True if should block
+        """
+        if not violations:
+            return False
+
+        fail_threshold = self.config.get("engine", {}).get(
+            "fail_threshold", "error"
+        )
+
+        # Map severity to numeric level
+        severity_levels = {
+            "critical": 4,
+            "error": 3,
+            "warning": 2,
+            "info": 1,
+        }
+
+        threshold_level = severity_levels.get(fail_threshold, 3)
+
+        # Check if any violation meets or exceeds threshold
+        for violation in violations:
+            violation_level = severity_levels.get(violation.severity, 1)
+            if violation_level >= threshold_level:
+                return True
+
+        return False
+
+
+class CheckResult:
+    """Result of a devcovenant check operation."""
+
+    def __init__(
+        self,
+        violations: List[Violation],
+        should_block: bool,
+        sync_issues: List[PolicySyncIssue],
+    ):
+        """Store the check result metadata for later inspection."""
+        self.violations = violations
+        self.should_block = should_block
+        self.sync_issues = sync_issues
+
+    def has_sync_issues(self) -> bool:
+        """Check if there are policy sync issues."""
+        return len(self.sync_issues) > 0
+
+    def has_violations(self) -> bool:
+        """Check if there are any violations."""
+        return len(self.violations) > 0

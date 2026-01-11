@@ -50,4 +50,5 @@ dist/
 
 # DevCovenant
 devcovenant/test_status.json
+.devcov/install_manifest.json
 .devcovenant/install_manifest.json

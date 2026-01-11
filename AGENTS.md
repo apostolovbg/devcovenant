@@ -1,17 +1,81 @@
 # DevCovenant Development Guide
 **Last Updated:** 2026-01-11
 **Version:** 0.1.1
-
+<!-- DEVCOV:BEGIN -->
 # Message from Human, do not edit:
+
 Read `DEVCOVENANT.md` first for architecture and workflow. This file is the
 canonical policy source of truth.
+
+Taking development notes is effectively obligatory; treat it as required.
+The editable notes section starts immediately after `<!-- DEVCOV:END -->`.
+When installing DevCovenant into a repo, preserve any existing notes and
+place them in the editable section below. If none exist, insert a reminder
+to record decisions there.
 #
+<!-- DEVCOV:END -->
 
-Notes here are effectively obligatory. Treat this section as the living memory
-of the project: decisions, conventions, and rationale should be recorded here
-as soon as they are made.
+Editable section. Preserve any user notes found in the repo when installing.
+If none exist, replace this text with repo-specific development notes.
 
-<!-- DEVCOVENANT:BEGIN -->
+<!-- DEVCOV:BEGIN -->
+## Overview
+This document is the single source of truth for DevCovenant policy. Every
+rule that the engine enforces is written here in plain language with a
+structured policy block beneath it.
+
+## Program Overview
+DevCovenant is a policy engine that binds documentation to enforcement. The
+parser reads policy blocks, the registry stores hashes, and the engine runs
+policy scripts while the CLI coordinates checks and fixes. Policies are
+implemented in three layers: built-in scripts in
+`devcovenant/core/policy_scripts` (with built-in fixers in
+`devcovenant/core/fixers`), repo-specific scripts in
+`devcovenant/custom/policy_scripts`, and patch scripts in
+`devcovenant/common_policy_patches` (Python preferred; JSON/YAML supported).
+
+DevCovenant core lives under `devcovenant/core`. User repos must keep core
+exclusion enabled via `devcov_core_include: false` in `devcovenant/config.yaml`
+so the engine can update itself safely. Only the DevCovenant repo should set
+`devcov_core_include: true`.
+
+## Install and First-Run Guidance
+Always install DevCovenant on a fresh branch. Start with error-level blocking
+only, clear all error-level violations, then ask the human owner whether to
+address warnings or raise the block level.
+
+## Severity Baseline
+Use error severity for drift-critical policies (version sync, last-updated,
+changelog coverage, devflow gates, and registry checks). Use warning severity
+for code style and documentation quality. Use info severity for growth-only
+reminders. Default block level should be `error` during initial adoption.
+
+## Editable Notes (record decisions here)
+Treat this section as mandatory working memory. If a decision influences
+architecture, policy definitions, or installation behavior, capture it here
+immediately so future edits have context.
+
+Record:
+- why a policy exists or changed
+- trade-offs and alternatives that were rejected
+- compatibility concerns for existing repos
+- any manual steps that cannot be inferred from code
+
+## Workflow
+When you edit policy blocks, set `updated: true`, update scripts/tests, run
+`python3 -m devcovenant.cli update-hashes`, then reset `updated: false`.
+Finally, run the pre-commit and test gates in order.
+
+## Table of Contents
+1. [Overview](#overview)
+2. [Program Overview](#program-overview)
+3. [Install and First-Run Guidance](#install-and-first-run-guidance)
+4. [Severity Baseline](#severity-baseline)
+5. [Editable Notes (record decisions
+   here)](#editable-notes-record-decisions-here)
+6. [Workflow](#workflow)
+7. [Development Policy](#development-policy-devcovenant-and-laws)
+
 # DO NOT EDIT FROM HERE TO END UNLESS EXPLICITLY REQUESTED BY A HUMAN!
 
 # DEVELOPMENT POLICY (DevCovenant and Laws)
@@ -20,12 +84,12 @@ as soon as they are made.
 EVERY DEVELOPMENT SESSION**
 
 DevCovenant is self-enforcing. Use this workflow:
-- `python tools/run_pre_commit.py --phase start`
-- `python tools/run_tests.py`
-- `python tools/run_pre_commit.py --phase end`
+- `python3 tools/run_pre_commit.py --phase start`
+- `python3 tools/run_tests.py`
+- `python3 tools/run_pre_commit.py --phase end`
 
 When policy blocks change, set `updated: true`, run
-`python devcovenant/update_hashes.py`, then reset the flag to `false`.
+`python3 -m devcovenant.cli update-hashes`, then reset the flag to `false`.
 
 ---
 
@@ -39,7 +103,7 @@ auto_fix: false
 updated: false
 applies_to: devcovenant/**
 enforcement: active
-waiver: false
+apply: true
 policy_definitions: AGENTS.md
 registry_file: devcovenant/registry.json
 ```
@@ -58,10 +122,50 @@ auto_fix: false
 updated: false
 applies_to: *
 enforcement: active
-waiver: false
+apply: true
 ```
 
 Ensure the DevCovenant repo keeps the required structure and tooling files.
+
+---
+
+## Policy: Policy Text Presence
+
+```policy-def
+id: policy-text-presence
+status: active
+severity: error
+auto_fix: false
+updated: false
+applies_to: AGENTS.md
+enforcement: active
+apply: true
+policy_definitions: AGENTS.md
+```
+
+Every policy definition must include descriptive text immediately after the
+`policy-def` block. Empty policy descriptions are not allowed.
+
+---
+
+## Policy: Stock Policy Text Sync
+
+```policy-def
+id: stock-policy-text-sync
+status: active
+severity: warning
+auto_fix: false
+updated: false
+applies_to: AGENTS.md
+enforcement: active
+apply: true
+policy_definitions: AGENTS.md
+stock_texts_file: devcovenant/core/stock_policy_texts.json
+```
+
+If a built-in policy text is edited from its stock wording, DevCovenant must
+raise a warning and instruct the agent to either restore the stock text or
+patch the policy implementation to match the new meaning.
 
 ---
 
@@ -75,9 +179,9 @@ auto_fix: false
 updated: false
 applies_to: *
 enforcement: active
-waiver: false
+apply: true
 status_file: devcovenant/test_status.json
-required_commands: pre-commit run --all-files,pytest
+required_commands: pytest
   python -m unittest discover
 code_extensions: .py,.md,.rst,.txt,.yml,.yaml,.json,.toml,.cff
 require_pre_commit_start: true
@@ -88,6 +192,10 @@ pre_commit_end_epoch_key: pre_commit_end_epoch
 pre_commit_start_command_key: pre_commit_start_command
 pre_commit_end_command_key: pre_commit_end_command
 ```
+
+DevCovenant must record and enforce the standard workflow: pre-commit start,
+tests, then pre-commit end. The policy reads the status file to ensure each
+gate ran and that no required command was skipped.
 
 ---
 
@@ -101,11 +209,15 @@ auto_fix: false
 updated: false
 applies_to: *
 enforcement: active
-waiver: false
+apply: true
 main_changelog: CHANGELOG.md
 skipped_files: CHANGELOG.md,.gitignore,.pre-commit-config.yaml
 collections: __none__
 ```
+
+Every substantive change must be recorded in the changelog entry for the
+current version. This policy prevents untracked updates and keeps release
+notes aligned with repository changes.
 
 ---
 
@@ -119,12 +231,13 @@ auto_fix: false
 updated: false
 applies_to: *
 enforcement: active
-waiver: false
+apply: true
 version_file: VERSION
-readme_files: README.md,AGENTS.md,DEVCOVENANT.md,CONTRIBUTING.md,PLAN.md
-  devcovenant/README.md,devcovenant/waivers/README.md
+readme_files: README.md,AGENTS.md,DEVCOVENANT.md,CONTRIBUTING.md,SPEC.md
+  PLAN.md
+  devcovenant/README.md
   devcovenant/common_policy_patches/README.md
-  devcovenant/custom_policy_scripts/README.md
+  devcovenant/custom/policy_scripts/README.md
 citation_file: CITATION.cff
 pyproject_files: pyproject.toml
 license_files: LICENSE
@@ -133,6 +246,10 @@ runtime_roots: __none__
 changelog_file: CHANGELOG.md
 changelog_header_prefix: ## Version
 ```
+
+All version-bearing files must match the canonical `VERSION` value, and
+version bumps must move forward. The policy also flags hard-coded runtime
+versions and ensures changelog releases reflect the current version.
 
 ---
 
@@ -146,13 +263,18 @@ auto_fix: true
 updated: false
 applies_to: *.md
 enforcement: active
-waiver: false
+apply: true
 include_suffixes: .md
-allowed_globs: README.md,AGENTS.md,DEVCOVENANT.md,CONTRIBUTING.md,PLAN.md
-  devcovenant/README.md,devcovenant/waivers/README.md
+allowed_globs: README.md,AGENTS.md,DEVCOVENANT.md,CONTRIBUTING.md,SPEC.md
+  PLAN.md
+  devcovenant/README.md
   devcovenant/common_policy_patches/README.md
-  devcovenant/custom_policy_scripts/README.md
+  devcovenant/custom/policy_scripts/README.md
 ```
+
+Docs must include a `Last Updated` header near the top so readers can trust
+recency. The auto-fix keeps timestamps current while respecting allowed
+locations.
 
 ---
 
@@ -166,12 +288,17 @@ auto_fix: false
 updated: false
 applies_to: *
 enforcement: active
-waiver: false
+apply: true
 max_length: 79
 include_suffixes: .py,.md,.rst,.txt,.yml,.yaml,.json,.toml,.cff
 exclude_prefixes: build,dist,node_modules
 exclude_globs: CHANGELOG.md,devcovenant/registry.json
+  devcovenant/core/stock_policy_texts.json
+  tools/templates/LICENSE_GPL-3.0.txt
 ```
+
+Keep lines within the configured maximum so documentation and code remain
+readable. Reflow long sentences or wrap lists rather than ignoring the limit.
 
 ---
 
@@ -185,10 +312,13 @@ auto_fix: false
 updated: false
 applies_to: *.py
 enforcement: active
-waiver: false
+apply: true
 include_suffixes: .py
 exclude_prefixes: build,dist,node_modules
 ```
+
+Python modules, classes, and functions must include a docstring or a nearby
+explanatory comment. This keeps intent visible even as code evolves.
 
 ---
 
@@ -202,9 +332,13 @@ auto_fix: false
 updated: false
 applies_to: *.py
 enforcement: active
-waiver: false
+apply: true
 exclude_prefixes: build,dist,node_modules
 ```
+
+Identifiers should be descriptive enough to communicate intent without
+reading their implementation. Avoid cryptic or overly short names unless
+explicitly justified.
 
 ---
 
@@ -218,13 +352,16 @@ auto_fix: false
 updated: false
 applies_to: *
 enforcement: active
-waiver: false
+apply: true
 include_suffixes: .py
 include_prefixes: devcovenant
-exclude_prefixes: build,dist,node_modules,tests,devcovenant/tests
-exclude_globs: devcovenant_check.py
-watch_dirs: tests,devcovenant/tests
+exclude_prefixes: build,dist,node_modules,tests,devcovenant/core/tests
+exclude_globs: devcov_check.py
+watch_dirs: tests,devcovenant/core/tests
 ```
+
+New or modified modules in the watched locations must have corresponding
+tests. Test modules (files starting with `test_`) are exempt from the rule.
 
 ---
 
@@ -238,12 +375,46 @@ auto_fix: false
 updated: false
 applies_to: *
 enforcement: active
-waiver: false
-include_prefixes: devcovenant,tools
-exclude_prefixes: devcovenant/tests
+apply: true
+include_prefixes: devcovenant,tools,.github
+exclude_prefixes: devcovenant/core/tests
+user_facing_prefixes: devcovenant,tools,.github
+user_facing_exclude_prefixes: devcovenant/core/tests,tests
+user_facing_suffixes: .py,.js,.ts,.tsx,.vue,.go,.rs,.java,.kt,.swift,.rb
+  .php,.cs,.yml,.yaml,.json,.toml
+user_facing_files: devcov_check.py,.pre-commit-config.yaml,pyproject.toml
+user_facing_globs: .github/workflows/*.yml,.github/workflows/*.yaml
+user_facing_keywords: api,endpoint,endpoints,route,routes,routing,service
+  services,controller,controllers,handler,handlers,client,clients,webhook
+  webhooks,integration,integrations,sdk,cli,ui,view,views,page,pages,screen
+  screens,form,forms,workflow,workflows
 user_visible_files: README.md,DEVCOVENANT.md,CONTRIBUTING.md,AGENTS.md
-  PLAN.md,devcovenant/README.md
+  SPEC.md,PLAN.md,devcovenant/README.md
+  devcovenant/common_policy_patches/README.md
+  devcovenant/custom/policy_scripts/README.md
+doc_quality_files: README.md,DEVCOVENANT.md,CONTRIBUTING.md,AGENTS.md
+  SPEC.md,PLAN.md,devcovenant/README.md
+  devcovenant/common_policy_patches/README.md
+  devcovenant/custom/policy_scripts/README.md
+required_headings: Table of Contents,Overview,Workflow
+require_toc: true
+min_section_count: 3
+min_word_count: 120
+quality_severity: warning
+require_mentions: true
+mention_severity: warning
+mention_min_length: 3
+mention_stopwords: devcovenant,tools,common,custom,policy,policies,script
+  scripts,py,js,ts,json,yml,yaml,toml,md,readme,plan,spec
 ```
+
+When user-facing files change (as defined by the user-facing selectors and
+keywords), the documentation set listed here must be updated. User-facing
+includes API surfaces, integration touchpoints, and any behavior that affects
+the user's experience or workflow. Updated docs should mention the relevant
+components by name so readers can find changes quickly. The policy also
+enforces documentation quality standards such as required headings, a table
+of contents, and minimum depth.
 
 ---
 
@@ -257,9 +428,12 @@ auto_fix: false
 updated: false
 applies_to: *
 enforcement: active
-waiver: false
+apply: true
 include_globs: __none__
 ```
+
+Protect declared read-only directories from modification. If a directory must
+be editable, update this policy definition first.
 
 ---
 
@@ -273,8 +447,11 @@ auto_fix: true
 updated: false
 applies_to: *
 enforcement: active
-waiver: false
+apply: true
 ```
+
+Dates in changelogs or documentation must not be in the future. Auto-fixers
+should correct accidental placeholders to today’s date.
 
 ---
 
@@ -289,7 +466,13 @@ updated: false
 applies_to: *.py
 exclude_globs: tests/**,**/tests/**
 enforcement: active
-waiver: false
+apply: true
 ```
 
-<!-- DEVCOVENANT:END -->
+Scan Python files for risky constructs like `eval`, `exec`, or `shell=True`.
+Use the documented allow-comment only when a security review approves the
+exception.
+
+---
+
+<!-- DEVCOV:END -->

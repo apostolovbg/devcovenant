@@ -2,18 +2,18 @@
 **Last Updated:** 2026-01-11
 **Version:** 0.1.1
 
-<!-- DEVCOVENANT:BEGIN -->
+<!-- DEVCOV:BEGIN -->
 **Read first:** `AGENTS.md` is the canonical source of truth. See
 `DEVCOVENANT.md` for architecture and lifecycle details.
-<!-- DEVCOVENANT:END -->
+<!-- DEVCOV:END -->
 
 DevCovenant is a self-enforcing policy system that keeps human-readable
 standards and automated checks in lockstep. It was born inside the Copernican
-Suite, matured through dogfooding in production repos, and is now a standalone
+Suite, hardened through dogfooding in production repos, and is now a standalone
 project focused on stability and portability.
 
-If you installed DevCovenant into another repo, read the user-facing guide at
-`devcovenant/README.md` inside that repo.
+If you install DevCovenant into another repository, the user-facing guide lives
+in that repo at `devcovenant/README.md`.
 
 ## Table of Contents
 1. [Overview](#overview)
@@ -21,94 +21,138 @@ If you installed DevCovenant into another repo, read the user-facing guide at
 3. [How It Works](#how-it-works)
 4. [Repo Layout](#repo-layout)
 5. [Install, Update, Uninstall](#install-update-uninstall)
-6. [Using DevCovenant in a Repo](#using-devcovenant-in-a-repo)
-7. [History and Dogfooding](#history-and-dogfooding)
-8. [License](#license)
+6. [Workflow](#workflow)
+7. [Core Exclusion](#core-exclusion)
+8. [Using DevCovenant in Other Repos](#using-devcovenant-in-other-repos)
+9. [History and Dogfooding](#history-and-dogfooding)
+10. [License](#license)
 
 ## Overview
-DevCovenant turns policy documents into executable checks. It reads the policy
-blocks in `AGENTS.md`, synchronizes them into a registry, and runs checks that
-use the same source text to enforce behavior.
-
-Key capabilities:
-- Single source of truth: policy text and enforcement stay aligned.
-- Drift detection: hash registry flags when policy and code diverge.
-- Flexible severity: warn, block, or auto-fix depending on policy.
-- Policy evolution: new, updated, deprecated, and deleted states are tracked.
+DevCovenant turns policy documents into executable checks. It reads policy
+blocks from `AGENTS.md`, syncs them into a hash registry, and runs scripts that
+implement those same policies. The result is a single source of truth that
+prevents drift between documentation and enforcement.
 
 ## Why DevCovenant
-Teams often document rules in one place and enforce them somewhere else. That
-creates drift, ambiguity, and hidden requirements. DevCovenant fixes this by
-making the documentation itself the executable spec.
+Most teams document rules in one place and enforce them elsewhere. That leads
+to drift, hidden requirements, and inconsistent enforcement. DevCovenant
+eliminates that by making the documentation itself the executable spec.
 
 ## How It Works
-1. `AGENTS.md` stores policy definitions and metadata.
-2. `devcovenant/parser.py` extracts policy blocks and hashes them.
-3. `devcovenant/registry.json` records those hashes alongside script hashes.
-4. `devcovenant/engine.py` runs checks from policy scripts.
-5. Pre-commit and CI run the same engine and rules.
+1. `AGENTS.md` stores policy definitions and metadata blocks.
+2. `devcovenant/core/parser.py` extracts and hashes each policy definition.
+3. `devcovenant/registry.json` records the policy and script hashes.
+4. `devcovenant/core/engine.py` runs policy scripts and reports violations.
+5. Pre-commit and CI run the same engine with the same policy source.
 
 ## Repo Layout
 - `AGENTS.md`: canonical policy definitions for this repo.
 - `DEVCOVENANT.md`: architecture, schema, and lifecycle reference.
-- `devcovenant/`: engine, CLI, and policy script layout.
-  - `common_policy_scripts/`: built-in policy scripts.
-  - `custom_policy_scripts/`: repo-specific policy scripts.
-  - `common_policy_patches/`: YAML overrides for built-in policies.
-- `tools/`: install, uninstall, and workflow helpers.
+- `SPEC.md`: product requirements and functional expectations.
+- `devcovenant/`: engine, CLI, and policy scripts.
+  - `core/`: DevCovenant core engine and built-in policy scripts.
+  - `core/policy_scripts/`: built-in policies shipped by DevCovenant.
+  - `core/fixers/`: built-in auto-fixers.
+  - `custom/policy_scripts/`: repo-specific policies.
+  - `common_policy_patches/`: patch scripts for built-ins (Python preferred;
+    JSON/YAML supported).
+- `tools/`: thin wrappers that invoke `python3 -m devcovenant`.
 
 ## Install, Update, Uninstall
-Install DevCovenant into a target repository:
+Install DevCovenant into a target repository (use `python3` if available):
 ```bash
-python tools/install_devcovenant.py --target /path/to/repo
+python3 -m devcovenant install --target /path/to/repo
 ```
 
 Update an existing installation without overwriting docs/config:
 ```bash
-python tools/install_devcovenant.py --target /path/to/repo
+python3 -m devcovenant install --target /path/to/repo
 ```
 
 Force overwrite docs or config when needed:
 ```bash
-python tools/install_devcovenant.py --target /path/to/repo --force-docs
-python tools/install_devcovenant.py --target /path/to/repo --force-config
+python3 -m devcovenant install --target /path/to/repo --force-docs
+python3 -m devcovenant install --target /path/to/repo --force-config
 ```
+
+The `tools/install_devcovenant.py` helper is just a thin wrapper around the
+CLI, so older automation can keep calling it.
 
 Uninstall and remove DevCovenant-managed blocks from docs:
 ```bash
-python tools/uninstall_devcovenant.py --target /path/to/repo
+python3 tools/uninstall_devcovenant.py --target /path/to/repo
 ```
 
 Remove installed docs as well:
 ```bash
-python tools/uninstall_devcovenant.py --target /path/to/repo --remove-docs
+python3 tools/uninstall_devcovenant.py --target /path/to/repo --remove-docs
 ```
 
-The installer records an `.devcovenant/install_manifest.json` to make updates
-and removals safe and predictable.
+The installer records an `.devcov/install_manifest.json` so updates and
+removals remain safe and predictable. If the target repo has no license file,
+DevCovenant installs a GPL-3.0 license by default and will not overwrite an
+existing license unless forced. When a file must be replaced, the installer
+renames the existing file to `*_old.*` before writing the new one.
 
-## Using DevCovenant in a Repo
+## Workflow
+Adoption guidance:
+- Install DevCovenant on a fresh branch.
+- Fix all error-level violations first.
+- After errors are cleared, ask the repo owner whether to address warnings or
+  raise the block level.
+
+DevCovenant expects the following sequence in enforced repos:
+1. `python3 tools/run_pre_commit.py --phase start`
+2. `python3 tools/run_tests.py`
+3. `python3 tools/run_pre_commit.py --phase end`
+
+When policy blocks change, set `updated: true`, run
+`python3 -m devcovenant.cli update-hashes`, then reset the flag.
+
+## Core Exclusion
+User repos should keep DevCovenant core excluded from enforcement so updates
+remain safe. The installer writes the following into
+`devcovenant/config.yaml`:
+```yaml
+devcov_core_include: false
+devcov_core_paths:
+  - devcovenant/core
+  - devcovenant/__init__.py
+  - devcovenant/__main__.py
+  - devcovenant/cli.py
+  - devcov_check.py
+  - tools/run_pre_commit.py
+  - tools/run_tests.py
+  - tools/update_test_status.py
+  - tools/install_devcovenant.py
+  - tools/uninstall_devcovenant.py
+```
+
+Only the DevCovenant repo should set `devcov_core_include: true`. Do not
+change or prune the core path list in user repos unless you are actively
+developing DevCovenant.
+
+Use `language_profiles` and `active_language_profiles` in
+`devcovenant/config.yaml` to extend file suffix coverage for multi-language
+projects.
+
+## Using DevCovenant in Other Repos
 Common commands:
 ```bash
-python -m devcovenant.cli check
-python -m devcovenant.cli check --mode pre-commit
-python -m devcovenant.cli check --fix
-python -m devcovenant.cli update-hashes
+python3 -m devcovenant.cli check
+python3 -m devcovenant.cli check --mode pre-commit
+python3 -m devcovenant.cli check --fix
+python3 -m devcovenant.cli update-hashes
+python3 -m devcovenant.cli restore-stock-text --policy <id>
 ```
 
-When DevCovenant is enforced, the expected workflow is:
-1. `python tools/run_pre_commit.py --phase start`
-2. `python tools/run_tests.py`
-3. `python tools/run_pre_commit.py --phase end`
-
-The user-facing guide in `devcovenant/README.md` covers policy authoring,
-patching built-ins, and troubleshooting.
+See `devcovenant/README.md` in the target repo for the full user guide.
 
 ## History and Dogfooding
-DevCovenant originated inside the Copernican Suite and was hardened by using
-it in real repos (including the GCV-ERP custom/infra stack). This repo
-continues that dogfooding: policies enforce the project that ships them.
+DevCovenant originated inside the Copernican Suite, then expanded to other
+production repos (including the GCV-ERP custom and infra stacks). This repo
+continues that dogfooding by enforcing itself with its own policy engine.
 
 ## License
-This project is released under the DevCovenant License v1.0. Redistribution
-is prohibited without explicit written permission.
+This project is released under the DevCovenant License v1.0. Redistribution is
+prohibited without explicit written permission.

@@ -3,6 +3,41 @@
 # devcovenant/README.md for the canonical `include_*`/`exclude_*` keys). Use
 # the same names here when overriding policy defaults.
 
+# DevCovenant core exclusion guard. For user repos, keep `devcov_core_include`
+# set to false so core files stay out of enforcement and remain update-safe.
+# Do not edit the core path list in user repos; only the DevCovenant repo
+# should enable core inclusion.
+devcov_core_include: true
+devcov_core_paths:
+  - devcovenant/core
+  - devcovenant/__init__.py
+  - devcovenant/__main__.py
+  - devcovenant/cli.py
+  - devcov_check.py
+  - tools/run_pre_commit.py
+  - tools/run_tests.py
+  - tools/update_test_status.py
+  - tools/install_devcovenant.py
+  - tools/uninstall_devcovenant.py
+
+# Optional language profiles for multi-language repos. Activate profiles to
+# augment `engine.file_suffixes` without rewriting the full list.
+language_profiles:
+  python:
+    suffixes: [.py, .pyi]
+  javascript:
+    suffixes: [.js, .jsx, .ts, .tsx]
+  frontend:
+    suffixes: [.vue, .svelte]
+  docs:
+    suffixes: [.md, .rst, .txt]
+  data:
+    suffixes: [.json, .yml, .yaml, .toml]
+active_language_profiles:
+  - python
+  - docs
+  - data
+
 paths:
   # Markdown document that carries the policy definitions.
   policy_definitions: AGENTS.md
