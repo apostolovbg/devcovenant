@@ -11,15 +11,6 @@ from typing import Iterable, List
 from devcovenant.core.base import CheckContext, PolicyCheck, Violation
 
 _DEFAULT_STATUS = Path("devcovenant") / "test_status.json"
-_DEFAULT_EXTENSIONS = {
-    ".py",
-    ".pyi",
-    ".rs",
-    ".c",
-    ".cpp",
-    ".h",
-    ".hpp",
-}
 _DEFAULT_COMMANDS = ["pytest", "python -m unittest discover"]
 _DEFAULT_PRE_COMMIT_COMMAND = "pre-commit run --all-files"
 _DEFAULT_PRE_COMMIT_START_KEY = "pre_commit_start_epoch"
@@ -34,11 +25,9 @@ def _resolve_status_path(policy: "DevflowRunGates") -> Path:
     return Path(raw)
 
 
-def _code_extensions(policy: "DevflowRunGates") -> set[str]:
+def _code_extensions(policy: "DevflowRunGates") -> set[str] | None:
     """Return the set of extensions considered code for gating purposes."""
-    entries_option = policy.get_option(
-        "code_extensions", list(_DEFAULT_EXTENSIONS)
-    )
+    entries_option = policy.get_option("code_extensions")
     if isinstance(entries_option, str):
         entries = [entries_option]
     else:
@@ -78,12 +67,14 @@ def _load_test_status(status_file: Path) -> dict | None:
         return None
 
 
-def _latest_code_mtime(files: Iterable[Path], extensions: set[str]) -> float:
+def _latest_code_mtime(
+    files: Iterable[Path], extensions: set[str] | None
+) -> float:
     """Return the newest modification time among code-like files."""
 
     latest = 0.0
     for path in files:
-        if path.suffix.lower() not in extensions:
+        if extensions and path.suffix.lower() not in extensions:
             continue
         try:
             stat = path.stat()
@@ -93,12 +84,14 @@ def _latest_code_mtime(files: Iterable[Path], extensions: set[str]) -> float:
     return latest
 
 
-def _earliest_code_mtime(files: Iterable[Path], extensions: set[str]) -> float:
+def _earliest_code_mtime(
+    files: Iterable[Path], extensions: set[str] | None
+) -> float:
     """Return the oldest modification time among code-like files."""
 
     earliest: float | None = None
     for path in files:
-        if path.suffix.lower() not in extensions:
+        if extensions and path.suffix.lower() not in extensions:
             continue
         try:
             stat = path.stat()

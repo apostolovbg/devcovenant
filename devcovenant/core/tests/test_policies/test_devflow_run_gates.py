@@ -120,12 +120,12 @@ def test_requires_pre_commit_end(tmp_path: Path) -> None:
     )
 
 
-def test_non_code_changes_do_not_require_tests(tmp_path: Path) -> None:
-    """Non-code changes should not require test status."""
+def test_any_change_requires_tests(tmp_path: Path) -> None:
+    """Any change, even documentation, should require test status."""
     ctx = make_ctx(tmp_path, ["docs/readme.md"])
     check = DevflowRunGates()
     violations = check.check(ctx)
-    assert not violations
+    assert violations
 
 
 def test_custom_status_path(tmp_path: Path) -> None:

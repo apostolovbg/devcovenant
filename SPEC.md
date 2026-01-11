@@ -24,6 +24,10 @@ install, and reversible without losing user documentation.
 - Policy changes require updates to scripts and tests.
 - Hash synchronization prevents policy/script drift.
 - The standard gate sequence is pre-commit start → tests → pre-commit end.
+- The gate sequence must run for every repository change (code, config,
+  or docs).
+  If a repo lacks automated tests, still run the pre-commit hooks and note the
+  absence before finishing the workflow.
 - Use `python3` for helper scripts when available (`python` only if it points
   to Python 3 on the host system).
 

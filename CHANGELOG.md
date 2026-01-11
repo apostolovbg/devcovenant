@@ -9,6 +9,15 @@ chronological order. Record timestamps as ISO dates (`YYYY-MM-DD`).
 ## Log changes here
 
 ## Version 0.2.0
+- 2026-01-16: Mandated the pre-commit/tests gate for every change, updated DevFlow
+  run-gates policy+tests to treat docs as code, and synchronized the registry.
+  Files:
+  AGENTS.md
+  SPEC.md
+  devcovenant/core/policy_scripts/devflow_run_gates.py
+  devcovenant/core/tests/test_policies/test_devflow_run_gates.py
+  devcovenant/registry.json
+  devcovenant/core/stock_policy_texts.json
 - 2026-01-15: Fixed the structure guard test so it only creates each required
   directory once and no longer raises `FileExistsError`. (AI assistant)
   Files:

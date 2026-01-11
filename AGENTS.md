@@ -76,6 +76,13 @@ When you edit policy blocks, set `updated: true`, update scripts/tests, run
 `python3 -m devcovenant.cli update-hashes`, then reset `updated: false`.
 Finally, run the pre-commit and test gates in order.
 
+Any change in the repo—code, configuration, or documentation—must still run
+through the gated workflow (
+`tools/run_pre_commit.py --phase start`, tests,
+`tools/run_pre_commit.py --phase end`).
+Treat the workflow as mandatory for every commit, even when only documentation
+or metadata is touched.
+
 # DO NOT EDIT FROM HERE TO END UNLESS EXPLICITLY REQUESTED BY A HUMAN!
 
 # DEV(COVENANT) DEVELOPMENT POLICY MANAGEMENT AND ENFORCEMENT
@@ -89,6 +96,9 @@ EVERY DEVELOPMENT SESSION**
 - Finish with `python3 tools/run_pre_commit.py --phase end`.
 - Updating policy text? Set `updated: true`, sync hashes via
   `python3 -m devcovenant.cli update-hashes`, then reset the flag.
+- Treat this gate sequence as obligatory for every repo change, even doc-only
+  edits; if no tests exist, run the script that would normally cover them and
+  note that in the session checklist.
 
 **Session checklist**
 - Document decisions inside the editable section above `<!-- DEVCOV:BEGIN -->`.
@@ -235,7 +245,6 @@ apply: true
 status_file: devcovenant/test_status.json
 required_commands: pytest
   python -m unittest discover
-code_extensions: .py,.md,.rst,.txt,.yml,.yaml,.json,.toml,.cff
 require_pre_commit_start: true
 require_pre_commit_end: true
 pre_commit_command: pre-commit run --all-files
@@ -248,6 +257,8 @@ pre_commit_end_command_key: pre_commit_end_command
 DevCovenant must record and enforce the standard workflow: pre-commit start,
 tests, then pre-commit end. The policy reads the status file to ensure each
 gate ran and that no required command was skipped.
+This check is enforced for every repository change (including
+documentation-only updates) so the gate sequence cannot be skipped.
 
 ---
 
