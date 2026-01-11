@@ -9,6 +9,10 @@ chronological order. Record timestamps as ISO dates (`YYYY-MM-DD`).
 ## Log changes here
 
 ## Version 0.2.0
+- 2026-01-15: Fixed the structure guard test so it only creates each required
+  directory once and no longer raises `FileExistsError`. (AI assistant)
+  Files:
+  devcovenant/core/tests/test_policies/test_devcov_structure_guard.py
 - 2026-01-15: Ensured the CI workflow installs PyYAML so required tooling matches
   the SPEC installation guidance. (AI assistant)
   Files:

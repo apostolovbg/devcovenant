@@ -17,9 +17,6 @@ def test_structure_guard_passes_with_required_paths():
         (repo_root / "devcovenant" / "core" / "policy_scripts").mkdir(
             parents=True
         )
-        (repo_root / "devcovenant" / "core" / "policy_scripts").mkdir(
-            parents=True
-        )
         (repo_root / "devcovenant" / "custom" / "policy_scripts").mkdir(
             parents=True
         )
