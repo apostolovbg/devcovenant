@@ -2,6 +2,7 @@
 name = "devcovenant"
 version = "0.2.1"
 description = "Self-enforcing development policy engine"
+readme = "README.md"
 requires-python = ">=3.10"
 dependencies = [
   "PyYAML>=6.0.2",
@@ -19,7 +20,3 @@ line_length = 79
 line-length = 79
 
 [tool.ruff.format]
-
-[tool.setuptools.metadata]
-long_description = "file: LONG_DESCRIPTION.md"
-long_description_content_type = "text/markdown"

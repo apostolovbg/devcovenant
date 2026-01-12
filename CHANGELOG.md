@@ -27,6 +27,7 @@ chronological order. Record timestamps as ISO dates (`YYYY-MM-DD`).
 -  CITATION.cff
 -  LICENSE
 -  CHANGELOG.md
+-  LONG_DESCRIPTION.md
 -  devcovenant/registry.json
 
 ## Version 0.2.0
