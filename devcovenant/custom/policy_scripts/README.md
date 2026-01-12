@@ -1,6 +1,6 @@
 # Custom Policy Scripts
 **Last Updated:** 2026-01-12
-**Version:** 0.2.4
+**Version:** 0.2.5
 
 Place repo-specific policy scripts here. If a policy id matches a built-in
 policy, the custom version takes precedence.

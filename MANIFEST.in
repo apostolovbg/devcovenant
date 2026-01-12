@@ -15,3 +15,4 @@ include devcovenant/README.md
 include devcovenant/common_policy_patches/README.md
 include devcovenant/custom/policy_scripts/README.md
 include devcovenant/registry.json
+recursive-include devcovenant/templates *

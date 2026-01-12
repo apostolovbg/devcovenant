@@ -8,6 +8,56 @@ chronological order. Record timestamps as ISO dates (`YYYY-MM-DD`).
 
 ## Log changes here
 
+## Version 0.2.5
+- 2026-01-12: Reworked the installer to merge README headers and standard
+  sections, preserve SPEC/PLAN content with updated headers, back up and
+  replace CHANGELOG/CONTRIBUTING, prompt for VERSION/CITATION, and merge
+  `.gitignore`; added packaged templates, new CLI args, and installer tests.
+  Files:
+  AGENTS.md
+  CHANGELOG.md
+  DEVCOVENANT.md
+  MANIFEST.in
+  SPEC.md
+  devcovenant/README.md
+  devcovenant/cli.py
+  devcovenant/core/install.py
+  devcovenant/core/tests/test_install.py
+  devcovenant/templates/.github/workflows/ci.yml
+  devcovenant/templates/.pre-commit-config.yaml
+  devcovenant/templates/AGENTS.md
+  devcovenant/templates/CONTRIBUTING.md
+  devcovenant/templates/DEVCOVENANT.md
+  devcovenant/templates/VERSION
+  devcovenant/templates/devcov_check.py
+  devcovenant/templates/tools/install_devcovenant.py
+  devcovenant/templates/tools/run_pre_commit.py
+  devcovenant/templates/tools/run_tests.py
+  devcovenant/templates/tools/uninstall_devcovenant.py
+  devcovenant/templates/tools/update_test_status.py
+  devcovenant/templates/tools/templates/LICENSE_GPL-3.0.txt
+- 2026-01-12: Bumped every doc/version marker to 0.2.5 so the published CLI,
+  installer and policy templates remain in sync across repos; updated the
+  installer to preserve existing `AGENTS.md` notes in the editable section
+  instead of overwriting them.
+  Files:
+  AGENTS.md
+  CITATION.cff
+  CHANGELOG.md
+  CONTRIBUTING.md
+  DEVCOVENANT.md
+  LICENSE
+  PLAN.md
+  README.md
+  SPEC.md
+  VERSION
+  devcovenant/README.md
+  devcovenant/common_policy_patches/README.md
+  devcovenant/core/install.py
+  devcovenant/custom/policy_scripts/README.md
+  pyproject.toml
+  devcovenant/registry.json
+
 ## Version 0.2.4
 - 2026-02-04: Ensure the PyPI package ships the `devcovenant` module and the
   policy docs/templates so the install command and console script can run

@@ -1,6 +1,6 @@
 # DevCovenant Specification
 **Last Updated:** 2026-01-12
-**Version:** 0.2.4
+**Version:** 0.2.5
 
 This specification defines what DevCovenant must do for both the standalone
 project and for any repository that installs it.
@@ -91,10 +91,19 @@ install, and reversible without losing user documentation.
 
 ## Installation Requirements
 - Install the full DevCovenant toolchain into the target repo.
-- Preserve existing user documentation unless explicitly overridden.
+- Preserve existing user documentation unless explicitly overridden; README,
+  SPEC, and PLAN are merged with standard headers while keeping content intact.
+- Replace `CHANGELOG.md` and `CONTRIBUTING.md` with standard templates after
+  backing up existing files as `*_old.*`.
 - Inject DevCovenant-managed doc blocks using `devcov` markers.
 - Track installations with `.devcov/install_manifest.json`.
 - If no license exists, install a GPL-3.0 license by default.
+- Prompt for VERSION when missing (x.x or x.x.x, normalized to x.x.0).
+- Prompt to create `CITATION.cff`; if skipped, disable citation enforcement in
+  `AGENTS.md`.
+- Regenerate `.gitignore` from a universal baseline and merge existing entries
+  under a preserved section.
+- Stamp `Last Updated` headers with the UTC install date.
 - Default user installs to `devcov_core_include: false` so core files remain
   excluded from enforcement and update-safe.
 - Treat `SPEC.md` and `PLAN.md` as required documentation files during

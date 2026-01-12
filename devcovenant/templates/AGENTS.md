@@ -35,11 +35,6 @@ instructions with DevCovenant, its applied policies (and in general).
 
 # EDITABLE SECTION
 
-- 2026-01-12: Installer now merges README headers/sections, preserves SPEC/PLAN
-  content while updating headers, backs up CHANGELOG/CONTRIBUTING as `*_old.*`,
-  merges `.gitignore`, and prompts for VERSION/CITATION (disabling citation
-  enforcement when skipped).
-
 <!-- DEVCOV:BEGIN -->
 ## Table of Contents
 1. [Overview](#overview)

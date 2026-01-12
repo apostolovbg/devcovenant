@@ -1,7 +1,7 @@
 # DevCovenant (Repository Guide)
 **Last Updated:** 2026-01-12
-**Version:** 0.2.4
-**DevCovenant Version:** 0.2.4
+**Version:** 0.2.5
+**DevCovenant Version:** 0.2.5
 **Status:** Active Development
 **License:** DevCovenant License v1.0
 
@@ -160,6 +160,21 @@ helpers simply forward the arguments to the CLI for compatibility.
 
 Use `--fix` to apply auto-fixes when available. The CLI exits non-zero when
 blocking violations exist.
+
+Installer behavior highlights:
+- `README.md` is preserved and receives a standard header plus DevCovenant
+  sections (Table of Contents, Overview, Workflow, DevCovenant).
+- `SPEC.md` and `PLAN.md` keep existing content but receive updated headers; if
+  missing, minimal standard templates are created.
+- `CHANGELOG.md` and `CONTRIBUTING.md` are backed up (`*_old.*`) and replaced
+  with standard DevCovenant templates (including logging examples).
+- `VERSION` is created on demand (prompting for x.x or x.x.x, normalized to
+  x.x.0). If `CITATION.cff` is skipped, citation enforcement is disabled.
+- `.gitignore` is regenerated from a universal template and merges user
+  entries under a preserved section.
+- `Last Updated` headers always use the UTC install date.
+Use `--version` and `--citation-mode` to pre-seed metadata and avoid prompts
+during automated installs.
 
 ## Pre-release Review
 Before tagging a release, confirm the following areas:

@@ -100,6 +100,11 @@ def main():
         help="Version mode override for install command.",
     )
     parser.add_argument(
+        "--version",
+        dest="version_value",
+        help="Version to use when creating VERSION for install.",
+    )
+    parser.add_argument(
         "--pyproject-mode",
         choices=("inherit", "preserve", "overwrite", "skip"),
         help="Pyproject mode override for install command.",
@@ -108,6 +113,11 @@ def main():
         "--ci-mode",
         choices=("inherit", "preserve", "overwrite", "skip"),
         help="CI workflow mode override for install command.",
+    )
+    parser.add_argument(
+        "--citation-mode",
+        choices=("prompt", "create", "skip"),
+        help="How to handle CITATION.cff when it is missing.",
     )
     parser.add_argument(
         "--preserve-custom",
@@ -214,10 +224,14 @@ def main():
             install_args.extend(["--license-mode", args.license_mode])
         if args.version_mode:
             install_args.extend(["--version-mode", args.version_mode])
+        if args.version_value:
+            install_args.extend(["--version", args.version_value])
         if args.pyproject_mode:
             install_args.extend(["--pyproject-mode", args.pyproject_mode])
         if args.ci_mode:
             install_args.extend(["--ci-mode", args.ci_mode])
+        if args.citation_mode:
+            install_args.extend(["--citation-mode", args.citation_mode])
         if args.preserve_custom is not None:
             if args.preserve_custom:
                 install_args.append("--preserve-custom")

@@ -12,7 +12,18 @@ def test_install_records_manifest_with_core_excluded(tmp_path: Path) -> None:
     target = tmp_path / "repo"
     target.mkdir()
     try:
-        install.main(["--target", str(target), "--mode", "empty"])
+        install.main(
+            [
+                "--target",
+                str(target),
+                "--mode",
+                "empty",
+                "--version",
+                "0.1.0",
+                "--citation-mode",
+                "skip",
+            ]
+        )
         manifest = target / install.MANIFEST_PATH
         assert manifest.exists()
         manifest_data = json.loads(manifest.read_text())
@@ -42,3 +53,47 @@ def test_update_core_config_text_toggles_include_flag() -> None:
     )
     assert changed_again
     assert "devcov_core_include: false" in updated_again
+
+
+def test_install_preserves_readme_content(tmp_path: Path) -> None:
+    """Existing README content should remain after install."""
+    target = tmp_path / "repo"
+    target.mkdir()
+    readme = target / "README.md"
+    readme.write_text("# Example\nCustom content.\n", encoding="utf-8")
+    install.main(
+        [
+            "--target",
+            str(target),
+            "--mode",
+            "existing",
+            "--version",
+            "1.2.3",
+            "--citation-mode",
+            "skip",
+        ]
+    )
+    updated = readme.read_text(encoding="utf-8")
+    assert "Custom content." in updated
+    assert "**Last Updated:**" in updated
+    assert install.BLOCK_BEGIN in updated
+
+
+def test_install_disables_citation_when_skipped(tmp_path: Path) -> None:
+    """CITATION enforcement should be disabled when skipped."""
+    target = tmp_path / "repo"
+    target.mkdir()
+    install.main(
+        [
+            "--target",
+            str(target),
+            "--mode",
+            "empty",
+            "--version",
+            "0.3.0",
+            "--citation-mode",
+            "skip",
+        ]
+    )
+    agents_text = (target / "AGENTS.md").read_text(encoding="utf-8")
+    assert "citation_file: __none__" in agents_text
