@@ -1,6 +1,6 @@
 # DevCovenant Specification
-**Last Updated:** 2026-01-11
-**Version:** 0.2.1
+**Last Updated:** 2026-01-12
+**Version:** 0.2.2
 
 This specification defines what DevCovenant must do for both the standalone
 project and for any repository that installs it.
@@ -77,6 +77,10 @@ install, and reversible without losing user documentation.
   without removing the definition.
 - Policies with status `fiducial` must be enforced and emit a reminder that
   includes the policy text on every run.
+- The dependency-license-sync policy ensures dependency manifests refresh
+  `THIRD_PARTY_LICENSES.md` and the `licenses/` directory, and that the
+  `## License Report` section records every change so summaries stay aligned
+  with the tracked dependencies.
 - Policy definitions must expose the shared selectors (`include_*`,
   `exclude_*`, `force_include_*`, `watch_*`) so repositories can reason about
   scope consistently.
@@ -99,6 +103,10 @@ install, and reversible without losing user documentation.
   unless explicitly overridden.
 - Install or update CI workflows to ensure pre-commit, pytest, PyYAML, and
   semver dependencies are available for checks.
+- Track dependencies in `requirements.in`, `requirements.lock`, and
+  `pyproject.toml`. Keep `THIRD_PARTY_LICENSES.md` and the `licenses/`
+  directory synchronized with those manifests so each dependency change also
+  refreshes the recorded license text and the `## License Report`.
 - Provide an uninstall routine that strips DevCovenant-managed blocks from
   documentation, optionally removing the inserted sections while leaving the
   rest of the file untouched.

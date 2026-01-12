@@ -1,6 +1,6 @@
 # DevCovenant
-**Last Updated:** 2026-01-11
-**Version:** 0.2.1
+**Last Updated:** 2026-01-12
+**Version:** 0.2.2
 
 <!-- DEVCOV:BEGIN -->
 **Read first:** `AGENTS.md` is the canonical source of truth. See
@@ -61,6 +61,14 @@ eliminates that by making the documentation itself the executable spec.
   - `common_policy_patches/`: patch scripts for built-ins (Python preferred;
     JSON/YAML supported).
 - `tools/`: thin wrappers that invoke `python3 -m devcovenant`.
+
+## Dependency and License Tracking
+DevCovenant records runtime dependencies in `requirements.in` with pinned
+versions in `requirements.lock` and metadata in `pyproject.toml`. Every time
+those manifests change, the dependency-license-sync policy requires refreshing
+`THIRD_PARTY_LICENSES.md` (see the `## License Report` section) and the text
+files under `licenses/`. Those assets keep third-party licenses visible so
+reviewers and installers know what the project ships.
 
 ## Install, Update, Uninstall
 Install DevCovenant into a target repository (use `python3` if available):

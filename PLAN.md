@@ -1,6 +1,6 @@
 # DevCovenant Delivery Plan
-**Last Updated:** 2026-01-11
-**Version:** 0.2.1
+**Last Updated:** 2026-01-12
+**Version:** 0.2.2
 
 This plan tracks the roadmap of a working standalone repository to a polished,
 publishable package that anyone can install.
@@ -40,6 +40,10 @@ Deliverables:
 - Publish DevCovenant to PyPI (or TestPyPI for a dry run) and document the
   recommended install command (`pip install devcovenant` plus
   `python3 -m devcovenant.cli install --target <repo>`).
+- Track runtime dependencies via `requirements.in`, `requirements.lock`, and
+  `pyproject.toml`, and keep `THIRD_PARTY_LICENSES.md` plus the `licenses/`
+  directory refreshed for every dependency change to satisfy the
+  dependency-license-sync policy.
 - Keep release notes in `CHANGELOG.md` and mention any files touched by the
   packaging work.
 
@@ -100,3 +104,6 @@ Validation:
 - Keep monitoring `devcovenant` releases.
 - Ensure each new version updates the policy registry
   (`python3 -m devcovenant.cli update-hashes`).
+- Keep `THIRD_PARTY_LICENSES.md` and the `licenses/` directory synchronized
+  with any changes to dependency manifests so the dependency-license-sync
+  policy passes before tagging a release.

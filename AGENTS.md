@@ -1,6 +1,6 @@
 # DevCovenant Development Guide
-**Last Updated:** 2026-01-11
-**Version:** 0.2.1
+**Last Updated:** 2026-01-12
+**Version:** 0.2.2
 <!-- DEVCOV:BEGIN -->
 # Message from Human, do not edit:
 
@@ -80,13 +80,20 @@ Any change in the repo—code, configuration, or documentation—must still run
 through the gated workflow (
 `tools/run_pre_commit.py --phase start`, tests,
 `tools/run_pre_commit.py --phase end`).
-Treat the workflow as mandatory for every commit, even when only documentation
-or metadata is touched.
+Whenever dependency manifests such as `requirements.in`, `requirements.lock`,
+or `pyproject.toml` are updated, refresh `THIRD_PARTY_LICENSES.md` along with
+the `licenses/` directory before committing so the dependency-license-sync
+policy remains satisfied. Treat the workflow as mandatory for every commit,
+even when only documentation or metadata is touched.
 
 ## Release Readiness Review
 - Confirm the gate sequence (pre-commit start → tests → pre-commit end)
   runs cleanly whenever changes touch docs, policies, or code. The updated
   `devflow-run-gates` policy will catch any skipped steps.
+- Whenever dependency manifests change, update `THIRD_PARTY_LICENSES.md`,
+  refresh the `licenses/` directory, and confirm the dependency-license-sync
+  policy reports no violations before tagging a release. The policy looks for a
+  `## License Report` section that mentions every touched manifest.
 - The changelog must record every touched file, and
   `devcovenant/registry.json` must be refreshed via
   `python3 -m devcovenant.cli update-hashes` before tagging a release.
@@ -199,6 +206,30 @@ apply: true
 ```
 
 Ensure the DevCovenant repo keeps the required structure and tooling files.
+
+---
+
+## Policy: Dependency License Sync
+
+```policy-def
+id: dependency-license-sync
+status: active
+severity: error
+auto_fix: true
+updated: false
+applies_to: *
+enforcement: active
+apply: true
+dependency_files: requirements.in,requirements.lock,pyproject.toml
+third_party_file: THIRD_PARTY_LICENSES.md
+licenses_dir: licenses
+report_heading: ## License Report
+```
+
+Maintain the third-party license table alongside `requirements.in`,
+`requirements.lock`, and `pyproject.toml`. The policy points reviewers to the
+`licenses/` directory and its `## License Report` section so every dependency
+change touches both the license text and the cited manifest.
 
 ---
 

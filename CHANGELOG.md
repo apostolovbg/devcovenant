@@ -8,6 +8,41 @@ chronological order. Record timestamps as ISO dates (`YYYY-MM-DD`).
 
 ## Log changes here
 
+## Version 0.2.2
+- 2026-01-31: Added pinned dependency manifests, the third-party license
+  report, and the dependency-license-sync policy so PyYAML and semver stay
+  documented alongside versioned metadata for 0.2.2.
+  Files:
+  requirements.in
+  requirements.lock
+  THIRD_PARTY_LICENSES.md
+  licenses/PyYAML-6.0.2.txt
+  licenses/semver-3.0.2.txt
+  AGENTS.md
+  README.md
+  CONTRIBUTING.md
+  DEVCOVENANT.md
+  SPEC.md
+  PLAN.md
+  pyproject.toml
+  VERSION
+  CITATION.cff
+  CHANGELOG.md
+  devcovenant/README.md
+  devcovenant/common_policy_patches/README.md
+  devcovenant/custom/policy_scripts/README.md
+  devcovenant/registry.json
+- 2026-01-12: Released DevCovenant 0.2.2 after confirming the gate sequence,
+  dependency-license-sync refresh, and changelog updates; publish workflow can
+  run once PyPI tokens prove healthy.
+  Files:
+  AGENTS.md
+  README.md
+  SPEC.md
+  PLAN.md
+  CHANGELOG.md
+  pyproject.toml
+
 ## Version 0.2.1
 - 2026-01-11: Published follow-up release with refreshed metadata so PyPI
   surfaces the README description and the mandatory gate documentation

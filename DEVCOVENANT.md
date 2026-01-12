@@ -1,6 +1,6 @@
 # DevCovenant Reference
-**Last Updated:** 2026-01-11
-**Version:** 0.2.1
+**Last Updated:** 2026-01-12
+**Version:** 0.2.2
 
 <!-- DEVCOV:BEGIN -->
 This reference document is maintained by DevCovenant. Edit only outside the

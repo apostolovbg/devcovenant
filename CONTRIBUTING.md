@@ -1,6 +1,6 @@
 # Contributing
-**Last Updated:** 2026-01-11
-**Version:** 0.2.1
+**Last Updated:** 2026-01-12
+**Version:** 0.2.2
 
 <!-- DEVCOV:BEGIN -->
 **Read first:** `AGENTS.md` is canonical. `DEVCOVENANT.md` explains the
