@@ -9,9 +9,9 @@ chronological order. Record timestamps as ISO dates (`YYYY-MM-DD`).
 ## Log changes here
 
 ## Version 0.2.4
-- 2026-02-04: Ensure the PyPI package ships the `devcovenant` package so the
-  console script can import `devcovenant.cli` instead of throwing
-  `ModuleNotFoundError`.
+- 2026-02-04: Ensure the PyPI package ships the `devcovenant` module and the
+  policy docs/templates so the install command and console script can run
+  without `ModuleNotFoundError`.
   Files:
   AGENTS.md
   CITATION.cff

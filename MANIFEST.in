@@ -1,0 +1,17 @@
+include AGENTS.md
+include README.md
+include CONTRIBUTING.md
+include DEVCOVENANT.md
+include SPEC.md
+include PLAN.md
+include CHANGELOG.md
+include CITATION.cff
+include LICENSE
+include VERSION
+include THIRD_PARTY_LICENSES.md
+include requirements.in
+include requirements.lock
+include devcovenant/README.md
+include devcovenant/common_policy_patches/README.md
+include devcovenant/custom/policy_scripts/README.md
+include devcovenant/registry.json
