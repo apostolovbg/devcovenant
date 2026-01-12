@@ -9,6 +9,11 @@ chronological order. Record timestamps as ISO dates (`YYYY-MM-DD`).
 ## Log changes here
 
 ## Version 0.2.2
+- 2026-02-02: Restricted package discovery to the `devcovenant` root so
+  `licenses/` stays repo-only while Python packaging looks only under the
+  module folder.
+  Files:
+  pyproject.toml
 - 2026-01-31: Added pinned dependency manifests, the third-party license
   report, and the dependency-license-sync policy so PyYAML and semver stay
   documented alongside versioned metadata for 0.2.2.
