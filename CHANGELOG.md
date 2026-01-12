@@ -8,9 +8,31 @@ chronological order. Record timestamps as ISO dates (`YYYY-MM-DD`).
 
 ## Log changes here
 
+## Version 0.2.1
+- 2026-01-11: Published follow-up release with refreshed metadata so PyPI
+  surfaces the README description and the mandatory gate documentation
+  remains synced.
+-  Files:
+-  pyproject.toml
+-  VERSION
+-  README.md
+-  AGENTS.md
+-  DEVCOVENANT.md
+-  SPEC.md
+-  PLAN.md
+-  CONTRIBUTING.md
+-  devcovenant/README.md
+-  devcovenant/common_policy_patches/README.md
+-  devcovenant/custom/policy_scripts/README.md
+-  CITATION.cff
+-  LICENSE
+-  CHANGELOG.md
+-  devcovenant/registry.json
+
 ## Version 0.2.0
-- 2026-01-16: Mandated the pre-commit/tests gate for every change, updated DevFlow
-  run-gates policy+tests to treat docs as code, and synchronized the registry.
+- 2026-01-16: Mandated the pre-commit/tests gate for every change, updated
+  DevFlow run-gates policy+tests to treat docs as code, and synchronized the
+  registry.
   Files:
   AGENTS.md
   SPEC.md
@@ -22,8 +44,8 @@ chronological order. Record timestamps as ISO dates (`YYYY-MM-DD`).
   directory once and no longer raises `FileExistsError`. (AI assistant)
   Files:
   devcovenant/core/tests/test_policies/test_devcov_structure_guard.py
-- 2026-01-15: Ensured the CI workflow installs PyYAML so required tooling matches
-  the SPEC installation guidance. (AI assistant)
+- 2026-01-15: Ensured the CI workflow installs PyYAML so required tooling
+  matches the SPEC installation guidance. (AI assistant)
   Files:
   .github/workflows/ci.yml
 - 2026-01-14: Relocated the built-in fixers beside their policies, kept
@@ -44,12 +66,14 @@ chronological order. Record timestamps as ISO dates (`YYYY-MM-DD`).
   devcovenant/core/fixers/raw_string_escapes.py
   devcovenant/tests/test_policies/test_raw_string_escapes.py
   devcovenant/tests/test_policies/test_no_future_dates.py
-- 2026-01-14: Added install/uninstall manifest coverage and `devcov_core_include`
-  toggling tests to prove the CLI-driven installer records options properly.
+- 2026-01-14: Added install/uninstall manifest coverage and
+  `devcov_core_include` toggling tests to prove the CLI-driven installer
+  records options properly.
   Files:
   devcovenant/core/tests/test_install.py
 - 2026-01-11: Documented the workflow block in AGENTS.md and noted that
-  `devcovenant/core/engine.py` now loads fixers via the new layout. (AI assistant)
+  `devcovenant/core/engine.py` now loads fixers via the new layout. (AI
+  assistant)
   Files:
   AGENTS.md
   devcovenant/core/engine.py
@@ -67,9 +91,10 @@ chronological order. Record timestamps as ISO dates (`YYYY-MM-DD`).
 
 ## Version 0.1.2
 - 2026-01-13: Updated SPEC.md and PLAN.md to capture the CLI-driven install/
-  uninstall lifecycle, the core/custom layout, the new `apply`/`devcov_core_include`
-  behaviors, and the `devcov begin`/`end` documentation blocks so forthcoming
-  work can finish the CLI/fixer refactors. (AI assistant)
+  uninstall lifecycle, the core/custom layout, and the new `apply`/
+  `devcov_core_include` behaviors.
+  The `devcov begin`/`end` documentation blocks ensure the CLI/fixer refactors
+  can finish. (AI assistant)
   Files:
   SPEC.md
   PLAN.md
@@ -83,6 +108,7 @@ chronological order. Record timestamps as ISO dates (`YYYY-MM-DD`).
   .pre-commit-config.yaml
   AGENTS.md
   CHANGELOG.md
+  devcovenant/registry.json
   CONTRIBUTING.md
   DEVCOVENANT.md
   PLAN.md

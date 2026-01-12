@@ -1,7 +1,9 @@
 [project]
 name = "devcovenant"
-version = "0.2.0"
+version = "0.2.1"
 description = "Self-enforcing development policy engine"
+long_description = "file: LONG_DESCRIPTION.md"
+long_description_content_type = "text/markdown"
 requires-python = ">=3.10"
 dependencies = [
   "PyYAML>=6.0.2",

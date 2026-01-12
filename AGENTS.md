@@ -1,6 +1,6 @@
 # DevCovenant Development Guide
 **Last Updated:** 2026-01-11
-**Version:** 0.2.0
+**Version:** 0.2.1
 <!-- DEVCOV:BEGIN -->
 # Message from Human, do not edit:
 

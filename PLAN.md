@@ -1,6 +1,6 @@
 # DevCovenant Delivery Plan
 **Last Updated:** 2026-01-11
-**Version:** 0.2.0
+**Version:** 0.2.1
 
 This plan tracks the roadmap of a working standalone repository to a polished,
 publishable package that anyone can install.

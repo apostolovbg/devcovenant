@@ -1,6 +1,6 @@
 # DevCovenant Specification
 **Last Updated:** 2026-01-11
-**Version:** 0.2.0
+**Version:** 0.2.1
 
 This specification defines what DevCovenant must do for both the standalone
 project and for any repository that installs it.
