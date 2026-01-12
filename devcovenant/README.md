@@ -1,7 +1,7 @@
 # DevCovenant (Repository Guide)
 **Last Updated:** 2026-01-12
-**Version:** 0.2.3
-**DevCovenant Version:** 0.2.3
+**Version:** 0.2.4
+**DevCovenant Version:** 0.2.4
 **Status:** Active Development
 **License:** DevCovenant License v1.0
 

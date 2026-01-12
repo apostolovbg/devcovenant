@@ -6,7 +6,27 @@ latest version header so entries stay newest-first (descending dates). Always
 confirm the actual current date before logging new changes and keep entries in
 chronological order. Record timestamps as ISO dates (`YYYY-MM-DD`).
 
--## Log changes here
+## Log changes here
+
+## Version 0.2.4
+- 2026-02-04: Ensure the PyPI package ships the `devcovenant` package so the
+  console script can import `devcovenant.cli` instead of throwing
+  `ModuleNotFoundError`.
+  Files:
+  AGENTS.md
+  CITATION.cff
+  CHANGELOG.md
+  CONTRIBUTING.md
+  DEVCOVENANT.md
+  LICENSE
+  PLAN.md
+  README.md
+  SPEC.md
+  VERSION
+  devcovenant/README.md
+  devcovenant/common_policy_patches/README.md
+  devcovenant/custom/policy_scripts/README.md
+  pyproject.toml
 
 ## Version 0.2.3
 - 2026-01-12: Bumped documentation and tooling for 0.2.3 so the published CLI
