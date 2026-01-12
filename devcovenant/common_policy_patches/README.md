@@ -1,6 +1,6 @@
 # Common Policy Patches
 **Last Updated:** 2026-01-12
-**Version:** 0.2.2
+**Version:** 0.2.3
 
 Patch scripts override built-in policy metadata without modifying the core
 policy scripts. Each patch is typically a Python file named after the policy

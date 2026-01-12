@@ -1,6 +1,6 @@
 # DevCovenant
 **Last Updated:** 2026-01-12
-**Version:** 0.2.2
+**Version:** 0.2.3
 
 <!-- DEVCOV:BEGIN -->
 **Read first:** `AGENTS.md` is the canonical source of truth. See

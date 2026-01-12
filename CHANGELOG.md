@@ -6,9 +6,33 @@ latest version header so entries stay newest-first (descending dates). Always
 confirm the actual current date before logging new changes and keep entries in
 chronological order. Record timestamps as ISO dates (`YYYY-MM-DD`).
 
-## Log changes here
+-## Log changes here
 
+## Version 0.2.3
+- 2026-01-12: Bumped documentation and tooling for 0.2.3 so the published CLI
+  entry point works (`devcovenant --help`) and the policy docs/regression
+  instructions are up to date.
+  Files:
+  AGENTS.md
+  README.md
+  SPEC.md
+  PLAN.md
+  CONTRIBUTING.md
+  DEVCOVENANT.md
+  devcovenant/README.md
+  devcovenant/common_policy_patches/README.md
+  devcovenant/custom/policy_scripts/README.md
+  pyproject.toml
+  VERSION
+  CITATION.cff
+  LICENSE
+  CHANGELOG.md
+  devcovenant/registry.json
 ## Version 0.2.2
+- 2026-02-03: Added the `devcovenant` console script entry point so pip
+  installs provide the documented CLI command.
+  Files:
+  pyproject.toml
 - 2026-02-02: Restricted package discovery to the `devcovenant` root so
   `licenses/` stays repo-only while Python packaging looks only under the
   module folder.
