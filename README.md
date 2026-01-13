@@ -170,4 +170,34 @@ Use `language_profiles` and `active_language_profiles` in
 projects.
 
 ## Dependency and License Tracking
-DevCovenant records 
+DevCovenant records runtime dependencies in `requirements.in` with pinned
+versions in `requirements.lock` and metadata in `pyproject.toml`. Every time
+those manifests change, the dependency-license-sync policy requires refreshing
+`THIRD_PARTY_LICENSES.md` (see the `## License Report` section) and the text
+files under `licenses/`. Those assets keep third-party licenses visible so
+reviewers and installers know what the project ships.
+
+## Using DevCovenant in Other Repos
+Common commands:
+```bash
+devcovenant check
+
+devcovenant check --mode pre-commit
+
+devcovenant check --fix
+
+devcovenant update-hashes
+
+devcovenant restore-stock-text --policy <id>
+```
+
+See `devcovenant/README.md` in the target repo for the full user guide.
+
+## History and Dogfooding
+DevCovenant originated inside the Copernican Suite, then expanded to other
+production repos (including the GCV-ERP custom and infra stacks). This repo
+continues that dogfooding by enforcing itself with its own policy engine.
+
+## License
+This project is released under the DevCovenant License v1.0. Redistribution is
+prohibited without explicit written permission.

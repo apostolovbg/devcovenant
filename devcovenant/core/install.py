@@ -1287,4 +1287,10 @@ def main(argv=None) -> None:
             indent=2,
             sort_keys=True,
         )
-        
+        + "\n",
+        encoding="utf-8",
+    )
+
+
+if __name__ == "__main__":
+    main()

@@ -126,4 +126,5 @@ hashes synchronized so drift is detectable and reversible.
 
 ## Non-Functional Requirements
 - Checks must be fast enough for pre-commit usage on typical repos.
-- Violations must be clear, 
+- Violations must be clear, actionable, and reference the policy source.
+- Install and uninstall operations must be deterministic and reversible.

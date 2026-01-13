@@ -943,4 +943,15 @@ chronological order. Record timestamps as ISO dates (`YYYY-MM-DD`).
   devcovenant/common_policy_scripts/no_future_dates.py
   devcovenant/common_policy_scripts/patches_txt_sync.py
   devcovenant/common_policy_scripts/raw_string_escapes.py
-  devcovena
+  devcovenant/common_policy_scripts/read_only_directories.py
+  devcovenant/common_policy_scripts/security_compliance_notes.py
+  devcovenant/common_policy_scripts/security_scanner.py
+  devcovenant/common_policy_scripts/semantic_version_scope.py
+  devcovenant/common_policy_scripts/track_test_status.py
+  devcovenant/common_policy_scripts/version_sync.py
+  devcovenant/custom/policy_scripts/README.md
+  devcovenant/custom/policy_scripts/__init__.py
+  devcovenant/policy_locations.py
+  devcovenant/policy_scripts/devcov_structure_guard.py
+  devcovenant/tests/test_policy_patches.py
+  devcovenant/tests/test_policies/test_devcov_structure_guard.py

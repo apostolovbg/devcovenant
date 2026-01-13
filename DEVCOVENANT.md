@@ -206,4 +206,7 @@ managed docs must grow or a policy’s prose drifts.
   suffix coverage for multi-language projects.
 - Dependency manifests (`requirements.in`, `requirements.lock`,
   `pyproject.toml`) must remain aligned with `THIRD_PARTY_LICENSES.md` and the
-  `licen
+  `licenses/` directory whenever dependencies change.
+
+## Roadmap
+See `PLAN.md` for the staged roadmap and migration sequencing.

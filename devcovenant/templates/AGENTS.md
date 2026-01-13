@@ -563,4 +563,47 @@ apply: true
 include_globs: __none__
 ```
 
-Protect declared 
+Protect declared read-only directories from modification. If a directory must
+be editable, update this policy definition first.
+
+---
+
+## Policy: No Future Dates
+
+```policy-def
+id: no-future-dates
+status: active
+severity: error
+auto_fix: true
+updated: false
+applies_to: *
+enforcement: active
+apply: true
+```
+
+Dates in changelogs or documentation must not be in the future. Auto-fixers
+should correct accidental placeholders to today’s date.
+
+---
+
+## Policy: Security Scanner
+
+```policy-def
+id: security-scanner
+status: active
+severity: error
+auto_fix: false
+updated: false
+applies_to: *.py
+exclude_globs: tests/**,**/tests/**
+enforcement: active
+apply: true
+```
+
+Scan Python files for risky constructs like `eval`, `exec`, or `shell=True`.
+Use the documented allow-comment only when a security review approves the
+exception.
+
+---
+
+<!-- DEVCOV:END -->

@@ -200,4 +200,95 @@ Only the DevCovenant repo should set `devcov_core_include: true`.
 For multi-language repos, configure `language_profiles` and
 `active_language_profiles` in `devcovenant/config.yaml` to extend the
 engine’s file suffix inventory without rewriting the full list. Each profile
-can provide a `suffixes` list that is merged into `engine.file_suffi
+can provide a `suffixes` list that is merged into `engine.file_suffixes`.
+
+## Check Modes and Exit Codes
+Run checks through the CLI:
+```bash
+devcovenant check
+
+devcovenant check --mode startup
+
+devcovenant check --mode pre-commit
+```
+
+- `startup` is used at session start to detect drift early.
+- `lint` focuses on faster checks and avoids heavy operations.
+- `pre-commit` matches the gating workflow.
+- `normal` is the default for full enforcement.
+
+`check` exits non-zero if blocking violations or sync issues exist. Use
+`devcovenant check --fix` to apply auto-fixes when available.
+
+## Auto-Fix Behavior
+Policies that declare `auto_fix: true` may include fixers. When `--fix` is
+supplied, DevCovenant applies fixers in place and then reruns the checks.
+Fixer logic lives beside the policy scripts under
+`devcovenant/core/policy_scripts/fixers/` and is re-exported from
+`devcovenant/core/fixers/` for compatibility.
+
+## Policy Registry and Stock Text
+Policy definitions in `AGENTS.md` are hashed into
+`devcovenant/registry.json`. When policy text changes, set `updated: true`,
+update scripts and tests, then run:
+```bash
+devcovenant update-hashes
+```
+
+Stock policy wording is stored in `devcovenant/core/stock_policy_texts.json`.
+Restore it with:
+```bash
+devcovenant restore-stock-text --policy <id>
+```
+
+## Policy Scripts, Fixers, and Patches
+Policy scripts resolve in this order:
+1. `devcovenant/custom/policy_scripts/`
+2. `devcovenant/core/policy_scripts/`
+
+Patch scripts in `devcovenant/common_policy_patches/` override metadata
+without touching core scripts. Use the `PATCH` dict, `get_patch()`, or
+`patch_options(...)` entry points.
+
+## DevFlow Gates and Test Status
+DevCovenant enforces the gate sequence for every change:
+1. `python3 tools/run_pre_commit.py --phase start`
+2. `python3 tools/run_tests.py`
+3. `python3 tools/run_pre_commit.py --phase end`
+
+The status file at `devcovenant/test_status.json` records timestamps and
+commands. The `devflow-run-gates` policy reads it to enforce the workflow.
+
+## Dependency and License Tracking
+Runtime dependencies are recorded in `requirements.in`, pinned in
+`requirements.lock`, and mirrored in `pyproject.toml`. When those files
+change, update `THIRD_PARTY_LICENSES.md` and the license texts in `licenses/`.
+The dependency-license-sync policy checks that the license report includes
+all touched manifests under `## License Report`.
+
+## Templates and Packaging
+When installed from PyPI, DevCovenant copies templates from
+`devcovenant/templates/`. The templates include docs, config defaults, tools,
+and license text. When running from source, the installer falls back to the
+repo files if templates are unavailable.
+
+## Uninstall Behavior
+Uninstall removes DevCovenant-managed blocks and, when requested, deletes
+installed docs. Use:
+```bash
+devcovenant uninstall --target /path/to/repo
+
+devcovenant uninstall --target /path/to/repo --remove-docs
+```
+
+## CI and Automation
+The recommended CI workflow runs the same gate sequence used locally. Ensure
+PyYAML and semver are installed so policy scripts and dependency checks run
+cleanly. For tagged releases, run `python -m build` and `twine check dist/*`
+before publishing.
+
+## Troubleshooting
+- Missing console script: use `python3 -m devcovenant`.
+- Policy drift: run `devcovenant update-hashes`.
+- Missing scripts: confirm the policy id matches the script filename.
+- Unexpected violations: review policy metadata and patch scripts.
