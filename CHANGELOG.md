@@ -9,6 +9,45 @@ chronological order. Record timestamps as ISO dates (`YYYY-MM-DD`).
 ## Log changes here
 
 ## Version 0.2.5
+- 2026-01-12: Added an install behavior cheat sheet to README and documented
+  installer defaults in the managed AGENTS section so install behavior stays
+  clear.
+  Files:
+  AGENTS.md
+  CHANGELOG.md
+  README.md
+  devcovenant/templates/AGENTS.md
+- 2026-01-12: Documented and enforced `DEVCOVENANT.md` replacement on install,
+  expanded the repo guide with comprehensive installer and CLI details, and
+  synced reference docs and templates to match the new behavior.
+  Files:
+  AGENTS.md
+  CHANGELOG.md
+  DEVCOVENANT.md
+  README.md
+  SPEC.md
+  devcovenant/README.md
+  devcovenant/core/install.py
+  devcovenant/templates/DEVCOVENANT.md
+- 2026-01-12: Expanded and harmonized documentation with current CLI and
+  installer behavior, updated template docs, and corrected `devcov_check.py`
+  usage guidance to match the CLI requirement.
+  Files:
+  AGENTS.md
+  CHANGELOG.md
+  CONTRIBUTING.md
+  DEVCOVENANT.md
+  PLAN.md
+  README.md
+  SPEC.md
+  devcov_check.py
+  devcovenant/README.md
+  devcovenant/common_policy_patches/README.md
+  devcovenant/custom/policy_scripts/README.md
+  devcovenant/templates/AGENTS.md
+  devcovenant/templates/CONTRIBUTING.md
+  devcovenant/templates/devcov_check.py
+  devcovenant/templates/DEVCOVENANT.md
 - 2026-01-12: Reworked the installer to merge README headers and standard
   sections, preserve SPEC/PLAN content with updated headers, back up and
   replace CHANGELOG/CONTRIBUTING, prompt for VERSION/CITATION, and merge
@@ -904,15 +943,4 @@ chronological order. Record timestamps as ISO dates (`YYYY-MM-DD`).
   devcovenant/common_policy_scripts/no_future_dates.py
   devcovenant/common_policy_scripts/patches_txt_sync.py
   devcovenant/common_policy_scripts/raw_string_escapes.py
-  devcovenant/common_policy_scripts/read_only_directories.py
-  devcovenant/common_policy_scripts/security_compliance_notes.py
-  devcovenant/common_policy_scripts/security_scanner.py
-  devcovenant/common_policy_scripts/semantic_version_scope.py
-  devcovenant/common_policy_scripts/track_test_status.py
-  devcovenant/common_policy_scripts/version_sync.py
-  devcovenant/custom/policy_scripts/README.md
-  devcovenant/custom/policy_scripts/__init__.py
-  devcovenant/policy_locations.py
-  devcovenant/policy_scripts/devcov_structure_guard.py
-  devcovenant/tests/test_policy_patches.py
-  devcovenant/tests/test_policies/test_devcov_structure_guard.py
+  devcovena

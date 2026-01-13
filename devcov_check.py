@@ -3,10 +3,10 @@
 Convenience wrapper to run devcovenant checks.
 
 Usage:
-    python devcov_check.py              # Normal check
-    python devcov_check.py --startup    # Startup (AI)
-    python devcov_check.py --lint       # Lint mode
-    python devcov_check.py --fix        # Auto-fix
+    python devcov_check.py check                 # Normal check
+    python devcov_check.py check --mode startup  # Startup mode
+    python devcov_check.py check --mode lint     # Lint mode
+    python devcov_check.py check --fix           # Auto-fix
 """
 
 import sys

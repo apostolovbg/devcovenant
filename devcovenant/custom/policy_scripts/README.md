@@ -20,7 +20,7 @@ repo or organization. Keep them minimal and document their metadata inside the
 1. Create the policy block in `AGENTS.md`.
 2. Implement the policy in this folder.
 3. Add tests under `devcovenant/core/tests/test_policies/`.
-4. Run `python3 -m devcovenant.cli update-hashes`.
+4. Run `devcovenant update-hashes` after updating policy text.
 
 ## Naming Rules
 Policy scripts are named after the policy id, using snake case. For example,

@@ -7,9 +7,9 @@ This reference document is maintained by DevCovenant. Edit only outside the
 managed blocks or update via the install script.
 <!-- DEVCOV:END -->
 
-This document explains DevCovenant's architecture, policy schema, and
-installation lifecycle. `AGENTS.md` remains the canonical source of truth for
-policy definitions.
+This document explains DevCovenant's architecture, policy schema, and the
+install/update/uninstall lifecycle. `AGENTS.md` remains the canonical source
+of truth for policy definitions.
 
 ## Table of Contents
 1. [Overview](#overview)
@@ -31,23 +31,26 @@ Core components:
 - `devcovenant/core/parser.py` reads policy blocks from `AGENTS.md`.
 - `devcovenant/registry.json` stores hashes for policy text and scripts.
 - `devcovenant/core/engine.py` orchestrates checks, fixes, and reporting.
-- `devcovenant/cli.py` exposes `check`, `sync`, `test`, and `update-hashes`.
+- `devcovenant/cli.py` exposes `check`, `sync`, `test`, `update-hashes`,
+  `restore-stock-text`, `install`, and `uninstall`.
+- `devcovenant/core/install.py` and `devcovenant/core/uninstall.py` implement
+  install/update/remove behavior.
 
 Policy scripts live in three folders:
 - `devcovenant/core/policy_scripts/`: built-in policies shipped by DevCovenant.
 - `devcovenant/core/policy_scripts/fixers/`: built-in auto-fixers kept beside
   each policy they support.
-- `devcovenant/core/fixers/`: compatibility wrappers that re-export those
-  fixers so legacy imports keep working.
-- `devcovenant/custom/policy_scripts/`:
-  repo-specific policies.
-- `devcovenant/custom/fixers/`:
-  optional fixers defined by the target repository.
+- `devcovenant/core/fixers/`: compatibility wrappers for legacy imports.
+- `devcovenant/custom/policy_scripts/`: repo-specific policies.
+- `devcovenant/custom/fixers/`: repo-specific fixers (optional).
 - `devcovenant/common_policy_patches/`: patch scripts for built-ins (Python
   preferred; JSON/YAML supported).
 
-Script resolution order is custom → common → compatibility shim.
-Option resolution order is config → patch → policy metadata → script defaults.
+Script resolution order is custom → core. Option resolution order is
+config → patch → policy metadata → script defaults.
+
+Templates and installer assets live under `devcovenant/templates/` so packaged
+installs have access to standard docs, config files, and helper scripts.
 
 ## Policy Schema
 Each policy block includes:
@@ -75,76 +78,83 @@ Statuses communicate how a policy should be handled:
 - `deleted`: no longer used.
 
 When editing a policy block, set `updated: true`, run
-`python3 -m devcovenant.cli update-hashes`, then set it back to `false`.
+`devcovenant update-hashes`, then set it back to `false`.
 
 Stock policy text is stored in `devcovenant/core/stock_policy_texts.json`.
-Use `python3 -m devcovenant.cli restore-stock-text --policy <id>` to revert
-edited stock text back to its canonical wording.
+Use `devcovenant restore-stock-text --policy <id>` to revert edited text back
+to its canonical wording.
 
 ## Install, Update, Uninstall
 DevCovenant installs the full tooling stack into a target repo, including the
 common/custom/patch policy folders and workflow helpers.
 
-Install (use `python3` if available):
+Install (use `python3` if `devcovenant` is not on your PATH):
 ```bash
-python3 tools/install_devcovenant.py --target /path/to/repo
+devcovenant install --target /path/to/repo
+python3 -m devcovenant install --target /path/to/repo
 ```
 
-Update:
+Update (same command; defaults preserve docs/config in existing repos):
 ```bash
-python3 tools/install_devcovenant.py --target /path/to/repo
+devcovenant install --target /path/to/repo
 ```
 
 Force overwrites when needed:
 ```bash
-python3 tools/install_devcovenant.py --target /path/to/repo --force-docs
-python3 tools/install_devcovenant.py --target /path/to/repo --force-config
+devcovenant install --target /path/to/repo --force-docs
+
+devcovenant install --target /path/to/repo --force-config
 ```
 
 CLI modes let you handle empty vs. existing repos explicitly:
 ```bash
-python3 tools/install_devcovenant.py --target /path/to/repo --mode empty
-python3 tools/install_devcovenant.py --target /path/to/repo --mode existing
+devcovenant install --target /path/to/repo --install-mode empty
+
+devcovenant install --target /path/to/repo --install-mode existing
 ```
 
 Fine-grained control for existing repos:
 ```bash
-python3 tools/install_devcovenant.py --target /path/to/repo \
+devcovenant install --target /path/to/repo \
   --docs-mode preserve --config-mode preserve --metadata-mode preserve
 ```
 
 Uninstall:
 ```bash
-python3 tools/uninstall_devcovenant.py --target /path/to/repo
+devcovenant uninstall --target /path/to/repo
 ```
 
 Uninstall and remove installed docs:
 ```bash
-python3 tools/uninstall_devcovenant.py --target /path/to/repo --remove-docs
+devcovenant uninstall --target /path/to/repo --remove-docs
 ```
+
+The `tools/install_devcovenant.py` and `tools/uninstall_devcovenant.py` files
+are compatibility wrappers that simply forward arguments to the CLI.
 
 The installer creates `.devcov/install_manifest.json` to track what was
 installed and which docs were modified. If a target repo lacks a license file,
-DevCovenant installs GPL-3.0 by default and will not overwrite an existing
-license unless forced. When overwrite is requested, the installer renames the
-existing file to `*_old.*` before writing a replacement.
+DevCovenant installs a GPL-3.0 license by default and will not overwrite an
+existing license unless forced. When overwrite is requested, the installer
+renames the existing file to `*_old.*` before writing a replacement.
 
 Install behavior highlights:
-- `README.md` keeps existing content but gets a standard header plus the
-  DevCovenant sections (Table of Contents, Overview, Workflow, DevCovenant).
+- `README.md` keeps existing content but gets a standard header plus a managed
+  block (Table of Contents, Overview, Workflow, DevCovenant) when missing.
+- `DEVCOVENANT.md` is always backed up to `*_old.*` and replaced by the
+  template to keep the reference text canonical.
 - `SPEC.md` and `PLAN.md` keep existing content but receive updated headers; if
-  missing, minimal standard templates are created.
+  missing, minimal templates are created.
 - `CHANGELOG.md` and `CONTRIBUTING.md` are backed up (`*_old.*`) and replaced
   with standard DevCovenant templates (including logging examples).
-- If `VERSION` is missing, the installer prompts for a version (x.x or x.x.x,
-  normalized to x.x.0). All standard docs get that version header.
+- If `VERSION` is missing, the installer prompts for a version (`x.x` or
+  `x.x.x`, normalized to `x.x.0`). All standard docs get that version header.
 - If `CITATION.cff` is missing, the installer prompts to create it; skipping
   disables citation enforcement in `AGENTS.md`.
 - `.gitignore` is regenerated from a universal template and merges existing
   user entries under a preserved section.
 - `Last Updated` headers are stamped with the UTC install date.
-Use `--version` and `--citation-mode` to pre-seed install metadata and avoid
-interactive prompts during automated installs.
+- `--version` and `--citation-mode` pre-seed metadata and avoid prompts.
 
 DevCovenant core lives under `devcovenant/core`, plus the wrapper entrypoints
 and install tools listed in `devcov_core_paths`. The installer sets
@@ -162,6 +172,9 @@ DevCovenant expects this gate sequence in enforced repos:
 1. `python3 tools/run_pre_commit.py --phase start`
 2. `python3 tools/run_tests.py`
 3. `python3 tools/run_pre_commit.py --phase end`
+
+At session start, run `python3 devcov_check.py check --mode startup` or
+`devcovenant check --mode startup` to detect policy drift early.
 
 ## Documentation Blocks
 DevCovenant-managed blocks are wrapped as:
@@ -191,7 +204,6 @@ managed docs must grow or a policy’s prose drifts.
   the impacted components by name.
 - `devcovenant/config.yaml` may declare language profiles to extend file
   suffix coverage for multi-language projects.
-
-## Roadmap
-See `PLAN.md` for the staged roadmap toward a fully standalone distribution
-and downstream migration plan.
+- Dependency manifests (`requirements.in`, `requirements.lock`,
+  `pyproject.toml`) must remain aligned with `THIRD_PARTY_LICENSES.md` and the
+  `licen

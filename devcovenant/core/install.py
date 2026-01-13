@@ -85,9 +85,9 @@ def _utc_today() -> str:
     return datetime.now(timezone.utc).date().isoformat()
 
 
-def _normalize_version(value: str) -> str:
+def _normalize_version(version_text: str) -> str:
     """Normalize user version input to MAJOR.MINOR.PATCH."""
-    text = value.strip()
+    text = version_text.strip()
     if not _VERSION_INPUT_PATTERN.match(text):
         raise ValueError(
             "Version must be in MAJOR.MINOR or MAJOR.MINOR.PATCH format."
@@ -421,13 +421,13 @@ def _render_citation_template(repo_name: str, version: str) -> str:
     """Return a CITATION.cff template for the target repo."""
     return (
         "cff-version: 1.2.0\n"
-        "message: \"If you use this software, please cite it.\"\n"
-        f"title: \"{repo_name}\"\n"
-        f"version: \"{version}\"\n"
+        'message: "If you use this software, please cite it."\n'
+        f'title: "{repo_name}"\n'
+        f'version: "{version}"\n'
         "preferred-citation:\n"
         "  type: software\n"
-        f"  title: \"{repo_name}\"\n"
-        f"  version: \"{version}\"\n"
+        f'  title: "{repo_name}"\n'
+        f'  version: "{version}"\n'
     )
 
 
@@ -513,7 +513,7 @@ def _build_readme_block(
 
 
 def _update_policy_block_value(
-    text: str, policy_id: str, key: str, value: str
+    text: str, policy_id: str, key: str, field_value: str
 ) -> str:
     """Update a policy-def block field value."""
     marker = "```policy-def"
@@ -536,12 +536,12 @@ def _update_policy_block_value(
             stripped = line.strip()
             if stripped.startswith(f"{key}:"):
                 prefix = line[: line.find(stripped)]
-                updated_lines.append(f"{prefix}{key}: {value}")
+                updated_lines.append(f"{prefix}{key}: {field_value}")
                 found_key = True
             else:
                 updated_lines.append(line)
         if not found_key:
-            updated_lines.append(f"{key}: {value}")
+            updated_lines.append(f"{key}: {field_value}")
         updated_block = "\n".join(updated_lines)
         return text[:start] + updated_block + text[end:]
     return text
@@ -553,7 +553,10 @@ def _disable_citation_in_agents(path: Path) -> bool:
         return False
     text = path.read_text(encoding="utf-8")
     updated = _update_policy_block_value(
-        text, policy_id="version-sync", key="citation_file", value="__none__"
+        text,
+        policy_id="version-sync",
+        key="citation_file",
+        field_value="__none__",
     )
     if updated == text:
         return False
@@ -1188,15 +1191,17 @@ def main(argv=None) -> None:
     devcov_template = _resolve_source_path(
         repo_root, template_root, "DEVCOVENANT.md"
     )
-    if devcov_path.exists():
-        _apply_standard_header(devcov_path, last_updated, target_version)
-    elif devcov_template.exists():
+    if devcov_template.exists():
+        if devcov_path.exists():
+            _rename_existing_file(devcov_path)
         devcov_text = devcov_template.read_text(encoding="utf-8")
         devcov_text = _ensure_standard_header(
             devcov_text, last_updated, target_version
         )
         devcov_path.write_text(devcov_text, encoding="utf-8")
         installed["docs"].append("DEVCOVENANT.md")
+    elif devcov_path.exists():
+        _apply_standard_header(devcov_path, last_updated, target_version)
 
     spec_path = target_root / "SPEC.md"
     if spec_path.exists():
@@ -1282,10 +1287,4 @@ def main(argv=None) -> None:
             indent=2,
             sort_keys=True,
         )
-        + "\n",
-        encoding="utf-8",
-    )
-
-
-if __name__ == "__main__":
-    main()
+        

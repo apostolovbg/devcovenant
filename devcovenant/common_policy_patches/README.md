@@ -15,14 +15,15 @@ with the same basename are also supported.
 
 ## Overview
 Use patches when you want to adjust built-in policy behavior without editing
-core scripts. Patch scripts run before policy metadata is finalized and after
-`config.yaml`, so they are a clean, repo-local override layer.
+core scripts. Patch scripts run after `config.yaml` is loaded, so they are a
+clean, repo-local override layer.
 
 ## Workflow
 1. Create a patch file named after the policy id.
 2. Implement one of the supported patch entry points (Python) or supply a
    JSON/YAML dict for static overrides.
 3. Run the standard DevCovenant workflow to validate changes.
+4. If policy definitions changed, run `devcovenant update-hashes`.
 
 ## Patch API
 Patch scripts can provide overrides in one of three ways:

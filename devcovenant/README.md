@@ -13,100 +13,169 @@ should remain dedicated to the repository's actual project.
 1. [Overview](#overview)
 2. [Quick Start](#quick-start)
 3. [Workflow](#workflow)
-4. [Severity and Block Levels](#severity-and-block-levels)
-5. [Agent Prompt Recipes](#agent-prompt-recipes)
-6. [Where Policies Live](#where-policies-live)
-7. [Policy Script Layout](#policy-script-layout)
-8. [Core Exclusion](#core-exclusion)
-9. [Running Checks](#running-checks)
-10. [Adding or Updating Policies](#adding-or-updating-policies)
-11. [Patching Built-In Policies](#patching-built-in-policies)
-12. [Documentation Growth Tracking](#documentation-growth-tracking)
-13. [CI and Automation](#ci-and-automation)
-14. [Troubleshooting](#troubleshooting)
-15. [Uninstall](#uninstall)
+4. [CLI Entry Points](#cli-entry-points)
+5. [CLI Command Reference](#cli-command-reference)
+6. [Install Modes and Options](#install-modes-and-options)
+7. [Installer Behavior (File by File)](#installer-behavior-file-by-file)
+8. [Install Manifest](#install-manifest)
+9. [Managed Documentation Blocks](#managed-documentation-blocks)
+10. [Editable Notes in AGENTS](#editable-notes-in-agents)
+11. [Core Exclusion and Config](#core-exclusion-and-config)
+12. [Language Profiles](#language-profiles)
+13. [Check Modes and Exit Codes](#check-modes-and-exit-codes)
+14. [Auto-Fix Behavior](#auto-fix-behavior)
+15. [Policy Registry and Stock Text](#policy-registry-and-stock-text)
+16. [Policy Scripts, Fixers, and Patches](#policy-scripts-fixers-and-patches)
+17. [DevFlow Gates and Test Status](#devflow-gates-and-test-status)
+18. [Dependency and License Tracking](#dependency-and-license-tracking)
+19. [Templates and Packaging](#templates-and-packaging)
+20. [Uninstall Behavior](#uninstall-behavior)
+21. [CI and Automation](#ci-and-automation)
+22. [Troubleshooting](#troubleshooting)
 
 ## Overview
-DevCovenant enforces the policies written in `AGENTS.md`. It reads those
-policies, validates them against their scripts, and reports actionable
-violations. The system is designed to keep policy text, enforcement logic, and
-documentation synchronized.
+DevCovenant enforces the policies written in `AGENTS.md`. It parses those
+policies, validates them against their scripts, and reports violations with
+clear severity levels. The system is designed to keep policy text,
+enforcement logic, and documentation synchronized.
 
 ## Quick Start
 If DevCovenant is installed, start with (use `python3` unless `python`
-already points to Python 3); install the published release first if you
-haven’t installed it yet:
+already points to Python 3):
 ```bash
 pip install devcovenant
-python3 -m devcovenant.cli install --target .
+
+devcovenant install --target .
+
 python3 tools/run_pre_commit.py --phase start
 python3 tools/run_tests.py
 python3 tools/run_pre_commit.py --phase end
 ```
 
 If you built DevCovenant locally, `pip install dist/devcovenant-*` before
-running `python3 -m devcovenant.cli install --target .` so the wheel files
-are reused.
+running `devcovenant install --target .` so the wheel files are reused.
 
 ## Workflow
-Adoption workflow for an existing repo:
-1. Create a new branch dedicated to the initial DevCovenant rollout.
-2. Run DevCovenant in default mode (error-level blocking only).
-3. Fix all error-level violations first.
-4. Ask the repo owner how to handle warnings and info-level rules.
-5. Merge only after the error set is clean and expectations are agreed.
+DevCovenant requires the gated workflow for every change, including
+documentation updates:
+1. `python3 tools/run_pre_commit.py --phase start`
+2. `python3 tools/run_tests.py`
+3. `python3 tools/run_pre_commit.py --phase end`
 
-If the repo has no license file, the installer writes a GPL-3.0 license by
-default. Replace it if your project requires a different license.
+When policy text changes, set `updated: true`, update scripts/tests, run
+`devcovenant update-hashes`, then reset the flag.
 
-When policies change:
-1. Update the policy text in `AGENTS.md`.
-2. Set `updated: true` in the policy block.
-3. Update the policy script and tests.
-4. Run `python3 -m devcovenant.cli update-hashes`.
-5. Reset `updated: false` and run the workflow gates.
+## CLI Entry Points
+DevCovenant ships both a console script and a module entry:
+```bash
+devcovenant --help
+python3 -m devcovenant --help
+```
 
-## Severity and Block Levels
-Recommended defaults during adoption:
-- Error: version sync, last-updated, changelog coverage, devflow gates,
-  registry sync, read-only boundaries, and security policies.
-- Warning: code style, documentation quality, naming clarity.
-- Info: documentation growth reminders.
+Use the module entry if the console script is not on your PATH.
 
-Default block level should be `error` so the agent is not overwhelmed during
-first adoption. Raise the block level to `warning` or `info` only after the
-error backlog is cleared and the repo owner approves.
+## CLI Command Reference
+The primary commands are:
+- `devcovenant check` (default enforcement)
+- `devcovenant check --mode startup|lint|pre-commit|normal`
+- `devcovenant check --fix` (apply auto-fixes when allowed)
+- `devcovenant sync` (startup sync check)
+- `devcovenant test` (runs `pytest devcovenant/core/tests/`)
+- `devcovenant update-hashes` (refresh `devcovenant/registry.json`)
+- `devcovenant restore-stock-text --policy <id>`
+- `devcovenant restore-stock-text --all`
+- `devcovenant install --target <path>`
+- `devcovenant uninstall --target <path>`
 
-## Agent Prompt Recipes
-Use the following prompts with an AI agent:
-- "Solve all error-level violations." (default adoption step)
-- "List warning-level violations and ask me before fixing."
-- "Add a new policy called <name> with severity <level>."
-- "Disable policy <id> for now."
-- "Raise severity of <id> to error."
-- "Lower severity of <id> to warning."
-- "Enable documentation quality checks for <file set>."
-- "Update hashes after policy changes."
-- "Restore stock policy text for <id>."
+The `tools/*.py` helpers are compatibility wrappers that forward to the CLI.
 
-## Where Policies Live
-`AGENTS.md` is the canonical policy document. Every policy is defined there in
-plain language plus a `policy-def` metadata block. DevCovenant parses those
-blocks and enforces them.
+## Install Modes and Options
+The installer can run in three modes:
+- `--install-mode auto`: infer install vs. update based on the target.
+- `--install-mode empty`: treat the repo as new.
+- `--install-mode existing`: treat the repo as a pre-existing install.
 
-## Policy Script Layout
-DevCovenant installs the full engine and scripts inside the repo:
-- `devcovenant/core/`: DevCovenant core engine and built-in policy scripts.
-- `devcovenant/core/policy_scripts/`: built-in checks shipped with DevCovenant.
-- `devcovenant/core/fixers/`: built-in auto-fixers.
-- `devcovenant/custom/policy_scripts/`: repo-specific checks.
-- `devcovenant/common_policy_patches/`: patch scripts for built-ins (Python
-  preferred; JSON/YAML supported).
+Docs, config, and metadata handling defaults are derived from the mode:
+- `--docs-mode preserve|overwrite`
+- `--config-mode preserve|overwrite`
+- `--metadata-mode preserve|overwrite|skip`
 
-Script resolution order is custom → core. Option
-resolution order is config → patch → policy metadata → script defaults.
+Targeted overrides:
+- `--license-mode inherit|preserve|overwrite|skip`
+- `--version-mode inherit|preserve|overwrite|skip`
+- `--pyproject-mode inherit|preserve|overwrite|skip`
+- `--ci-mode inherit|preserve|overwrite|skip`
+- `--citation-mode prompt|create|skip`
+- `--preserve-custom` / `--no-preserve-custom`
+- `--force-docs` / `--force-config`
+- `--version <x.x|x.x.x>` to avoid prompts when `VERSION` is missing.
 
-## Core Exclusion
+## Installer Behavior (File by File)
+When DevCovenant installs into an existing repo, the following behaviors
+apply:
+
+- `devcovenant/`: core engine always installs; `custom/` and
+  `common_policy_patches/` are preserved by default on existing installs.
+- `devcov_check.py`, `tools/run_pre_commit.py`, `tools/run_tests.py`,
+  `tools/update_test_status.py`: always overwritten from the package.
+- `.pre-commit-config.yaml`, `.github/workflows/ci.yml`: preserved when
+  `--config-mode preserve`, otherwise overwritten. Use `--ci-mode skip` to
+  skip CI installs.
+- `.gitignore`: regenerated from the universal baseline and merged with any
+  existing user entries under a preserved block.
+- `AGENTS.md`: always replaced by the template. If an existing file is found,
+  the editable section content is preserved under `# EDITABLE SECTION`.
+- `README.md`: existing content is preserved, headers are refreshed, and the
+  managed block is inserted to add missing sections.
+- `DEVCOVENANT.md`: always backed up to `*_old.*` and replaced by the template.
+- `SPEC.md`, `PLAN.md`: existing content is preserved while headers are
+  updated; missing files are created from minimal templates.
+- `CHANGELOG.md`, `CONTRIBUTING.md`: always backed up to `*_old.*` and
+  replaced by the standard templates.
+- `VERSION`: created on demand. Accepts `x.x` or `x.x.x` and normalizes to
+  `x.x.0`. `--version` avoids prompts.
+- `LICENSE`: created from the GPL-3.0 template if missing. Overwritten only
+  when the license mode requests it, and the original is backed up first.
+- `CITATION.cff`: created if missing and approved by prompt (or if
+  `--citation-mode create` is used). If skipped, citation enforcement is
+  disabled in `AGENTS.md` by setting `version-sync.citation_file: __none__`.
+- `pyproject.toml`: preserved or overwritten based on `--pyproject-mode`.
+- `.devcov/install_manifest.json`: always written with install metadata.
+
+All `Last Updated` headers are stamped with the UTC install date.
+
+## Install Manifest
+The installer writes `.devcov/install_manifest.json` with:
+- `updated_at`: ISO timestamp in UTC.
+- `mode`: `install` or `update`.
+- `installed`: lists of installed paths by group (`core`, `config`, `docs`).
+- `doc_blocks`: list of docs that received managed blocks.
+- `options`: resolved install options (docs/config/metadata modes, version,
+  citation mode, core inclusion, and preservation flags).
+
+Use this file to audit what DevCovenant changed in the target repo.
+
+## Managed Documentation Blocks
+DevCovenant-managed blocks are wrapped as:
+```
+<!-- DEVCOV:BEGIN -->
+... managed content ...
+<!-- DEVCOV:END -->
+```
+
+The installer inserts or replaces these blocks while leaving surrounding text
+untouched. Policies like `documentation-growth-tracking` and
+`policy-text-presence` depend on these markers, so do not edit them manually
+outside of the DevCovenant workflow.
+
+## Editable Notes in AGENTS
+`AGENTS.md` contains a dedicated editable section, located just below the
+first `<!-- DEVCOV:END -->` marker and labeled `# EDITABLE SECTION` when the
+file is installed. The installer preserves any existing notes in that region
+and reinserts them on subsequent installs. Use this area for repo-specific
+working memory, decisions, and constraints.
+
+## Core Exclusion and Config
 User repos should keep DevCovenant core excluded from enforcement so updates
 remain safe. The installer sets this automatically in
 `devcovenant/config.yaml`:
@@ -125,167 +194,10 @@ devcov_core_paths:
   - tools/uninstall_devcovenant.py
 ```
 
-Only the DevCovenant repo should set `devcov_core_include: true`. Do not
-change or prune the core path list in user repos unless you are actively
-developing DevCovenant.
+Only the DevCovenant repo should set `devcov_core_include: true`.
 
+## Language Profiles
 For multi-language repos, configure `language_profiles` and
 `active_language_profiles` in `devcovenant/config.yaml` to extend the
-engine’s file suffix inventory without rewriting the full list.
-
-## Running Checks
-Common commands (use `python3` if available):
-```bash
-python3 -m devcovenant.cli check
-python3 -m devcovenant.cli check --mode lint
-python3 -m devcovenant.cli check --mode pre-commit
-python3 -m devcovenant.cli check --fix
-python3 -m devcovenant.cli restore-stock-text --policy <id>
-python3 -m devcovenant.cli restore-stock-text --all
-```
-
-## Install & Uninstall
-Install DevCovenant into another repository:
-```bash
-python3 -m devcovenant install --target /path/to/repo
-```
-
-Uninstall:
-```bash
-python3 -m devcovenant uninstall --target /path/to/repo
-```
-
-The `tools/install_devcovenant.py` and `tools/uninstall_devcovenant.py`
-helpers simply forward the arguments to the CLI for compatibility.
-
-Use `--fix` to apply auto-fixes when available. The CLI exits non-zero when
-blocking violations exist.
-
-Installer behavior highlights:
-- `README.md` is preserved and receives a standard header plus DevCovenant
-  sections (Table of Contents, Overview, Workflow, DevCovenant).
-- `SPEC.md` and `PLAN.md` keep existing content but receive updated headers; if
-  missing, minimal standard templates are created.
-- `CHANGELOG.md` and `CONTRIBUTING.md` are backed up (`*_old.*`) and replaced
-  with standard DevCovenant templates (including logging examples).
-- `VERSION` is created on demand (prompting for x.x or x.x.x, normalized to
-  x.x.0). If `CITATION.cff` is skipped, citation enforcement is disabled.
-- `.gitignore` is regenerated from a universal template and merges user
-  entries under a preserved section.
-- `Last Updated` headers always use the UTC install date.
-Use `--version` and `--citation-mode` to pre-seed metadata and avoid prompts
-during automated installs.
-
-## Pre-release Review
-Before tagging a release, confirm the following areas:
-
-1. **Gate enforcement**
-   - `tools/run_pre_commit.py --phase start` succeeded on the current tree.
-   - `python3 tools/run_tests.py` and `tools/run_pre_commit.py --phase end`
-     followed, so the gate sequence completed.
-   - The `devflow-run-gates` policy now treats every doc or code edit as
-     requiring the status file so skipped runs are blocked.
-2. **Policy sync**
-   - `python3 -m devcovenant.cli update-hashes` ran after policy changes.
-   - `devcovenant/registry.json` reflects the new hashes.
-   - `devcov-check` passes.
-3. **Packaging**
-   - `python -m build` and `twine check dist/*` succeed locally
-     for wheel+sdist.
-   - The `publish.yml` workflow publishes on `v*` tags using the
-     `PYPI_API_TOKEN`.
-4. **Documentation**
-   - README, SPEC, PLAN, and `CHANGELOG.md` describe the mandatory workflow,
-     gates, and migration roadmap for downstream repos.
-5. **Changelog coverage**
-   - Each touched file appears in `CHANGELOG.md:11-20`.
-   - Entries remain newest-first so release notes are chronological.
-
-Rerun these steps in a clean tree before pushing a release tag.
-This ensures nothing under the new contract slips through.
-
-
-## Adding or Updating Policies
-Policy definitions live in `AGENTS.md`:
-```markdown
-## Policy: Example Policy
-
-```policy-def
-id: example-policy
-status: active
-severity: error
-auto_fix: false
-updated: false
-apply: true
-applies_to: *.py
-```
-
-Explain the rule in plain language.
-```
-
-Built-in policies belong in `core/policy_scripts/`. Repo-specific
-policies belong in `custom/policy_scripts/`. Always add tests under
-`devcovenant/core/tests/test_policies/`.
-
-Set `apply: false` to disable a policy without deleting it. Use status
-`fiducial` to keep the policy enforced while also emitting a reminder with the
-policy text on every run.
-
-## Patching Built-In Policies
-Create a patch file named after the policy id. Python patches are preferred,
-but JSON or YAML files with the same basename are supported for static
-overrides:
-```
-common_policy_patches/<policy_id>.py
-```
-
-Supported entry points (choose one):
-- `PATCH`: module-level dict of overrides.
-- `get_patch() -> dict`: return an overrides dict.
-- `patch_options(options, policy, context, repo_root) -> dict`: compute
-  overrides dynamically using any subset of those arguments.
-
-Example:
-```python
-def patch_options(options, **kwargs):
-    return {"max_length": 100, "include_prefixes": ["src"]}
-```
-
-Patch scripts override built-in defaults without editing the core script.
-
-## Documentation Growth Tracking
-The documentation growth policy treats user-facing files as any code or
-configuration that affects user interactions, API surfaces, integrations, or
-workflow behavior. Configure it with:
-- `user_facing_prefixes`, `user_facing_globs`, `user_facing_suffixes`,
-  `user_facing_files`, `user_facing_keywords` (and the
-  `user_facing_exclude_*` variants).
-- `user_visible_files` to declare which docs must be updated.
-
-When user-facing files change, at least one doc in the declared set must be
-edited. If `require_mentions` is enabled, those docs must mention the changed
-components by name (tokens derived from the file path). Use
-`mention_stopwords` and `mention_min_length` to tune the token matching. The
-policy can also enforce quality gates like required headings, minimum section
-count, and minimum word count.
-
-## CI and Automation
-CI should run:
-- `python3 tools/run_pre_commit.py --phase start`
-- `python3 tools/run_tests.py`
-- `python3 tools/run_pre_commit.py --phase end`
-
-The pre-commit hook uses the same engine and policy set.
-
-## Troubleshooting
-- Policy drift: run `python3 -m devcovenant.cli update-hashes`.
-- Missing scripts: confirm the policy id matches the script filename.
-- Unexpected violations: check metadata in `AGENTS.md` and patch files.
-
-## Uninstall
-Run the uninstall script from the DevCovenant source repo:
-```bash
-python3 tools/uninstall_devcovenant.py --target /path/to/repo
-```
-
-Use `--remove-docs` to delete docs that were installed by DevCovenant.
+engine’s file suffix inventory without rewriting the full list. Each profile
+can provide a `suffixes` list that is merged into `engine.file_suffi

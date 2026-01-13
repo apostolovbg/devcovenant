@@ -1,6 +1,4 @@
 # DevCovenant Development Guide
-**Last Updated:** 2026-01-12
-**Version:** 0.2.5
 <!-- DEVCOV:BEGIN -->
 # Message from Human, do not edit:
 
@@ -43,7 +41,8 @@ instructions with DevCovenant, its applied policies (and in general).
 4. [Severity Baseline](#severity-baseline)
 5. [Editable Notes](#editable-notes-record-decisions-here)
 6. [Workflow](#workflow)
-7. [Development Policy](#development-policy-devcovenant-and-laws)
+7. [Installer Behavior Reference](#installer-behavior-reference)
+8. [Development Policy](#development-policy-devcovenant-and-laws)
 
 ## Overview
 This document is the single source of truth for DevCovenant policy. Every
@@ -78,7 +77,7 @@ reminders. Default block level should be `error` during initial adoption.
 
 ## Workflow
 When you edit policy blocks, set `updated: true`, update scripts/tests, run
-`python3 -m devcovenant.cli update-hashes`, then reset `updated: false`.
+`devcovenant update-hashes`, then reset `updated: false`.
 Finally, run the pre-commit and test gates in order.
 
 Any change in the repo—code, configuration, or documentation—must still run
@@ -95,6 +94,22 @@ Keep the “Last Updated” fields and changelog headers on the current date
 before running the gates; the `no-future-dates` policy blocks timestamps
 set later than today, so double-check the dates before you touch those docs.
 
+
+## Installer Behavior Reference
+DevCovenant installs and updates standard docs in a predictable way.
+Use the Install Behavior Cheat Sheet in `README.md` and the full
+details in `devcovenant/README.md` when preparing new repos or
+upgrades. Key defaults:
+- `AGENTS.md` is replaced by the template; editable notes are
+  preserved under `# EDITABLE SECTION`.
+- `README.md` is preserved, headers refreshed, and the managed block
+  inserted when required sections are missing.
+- `DEVCOVENANT.md`, `CHANGELOG.md`, and `CONTRIBUTING.md` are backed
+  up to `*_old.*` and replaced by the standard templates.
+- `SPEC.md` and `PLAN.md` keep content with updated headers, or are
+  created if missing.
+- `.gitignore` is regenerated and merges user entries under a
+  preserved block.
 ## Release Readiness Review
 - Confirm the gate sequence (pre-commit start → tests → pre-commit end)
   runs cleanly whenever changes touch docs, policies, or code. The updated
@@ -105,7 +120,7 @@ set later than today, so double-check the dates before you touch those docs.
   `## License Report` section that mentions every touched manifest.
 - The changelog must record every touched file, and
   `devcovenant/registry.json` must be refreshed via
-  `python3 -m devcovenant.cli update-hashes` before tagging a release.
+  `devcovenant update-hashes` before tagging a release.
 - Build artifacts locally (`python -m build`, `twine check dist/*`) and verify
   the `publish.yml` workflow publishes using the `PYPI_API_TOKEN` secret before
   pushing the release tag.
@@ -122,7 +137,7 @@ EVERY DEVELOPMENT SESSION**
 - Run `python3 tools/run_tests.py` after work concludes.
 - Finish with `python3 tools/run_pre_commit.py --phase end`.
 - Updating policy text? Set `updated: true`, sync hashes via
-  `python3 -m devcovenant.cli update-hashes`, then reset the flag.
+  `devcovenant update-hashes`, then reset the flag.
 - Treat this gate sequence as obligatory for every repo change, even doc-only
   edits; if no tests exist, run the script that would normally cover them and
   note that in the session checklist.
@@ -136,19 +151,21 @@ EVERY DEVELOPMENT SESSION**
 - All policy changes must have matching script/test updates before the commit.
 
 **DevCovenant sessions**
-- AI agents run `python3 devcovenant_check.py check --mode=startup` at session
-  start to detect policy-text drift and sync issues. Fix them before doing any
-  other work.
+- AI agents run `python3 devcov_check.py check --mode startup` at session start
+  to detect policy-text drift and sync issues. Fix them before doing any other
+  work.
 - Developers revisit this section after receiving sync issues or policy
   warnings so the workflow remains consistent across repos.
 
 **Standard commands**
-- `python3 -m devcovenant.cli check` – full validation.
-- `python3 -m devcovenant.cli check --mode pre-commit`.
-- `python3 -m devcovenant.cli check --fix` when auto-fixes are available.
-- `python3 -m devcovenant.cli install --target <repo>` installs DevCovenant.
-- `python3 -m devcovenant.cli uninstall --target <repo>`.
-- `python3 -m devcovenant.cli restore-stock-text --policy <id>` when policy
+Use `python3 -m devcovenant` if the `devcovenant` console script is not on
+your PATH.
+- `devcovenant check` – full validation.
+- `devcovenant check --mode pre-commit`.
+- `devcovenant check --fix` when auto-fixes are available.
+- `devcovenant install --target <repo>` installs DevCovenant.
+- `devcovenant uninstall --target <repo>`.
+- `devcovenant restore-stock-text --policy <id>` when policy
   prose diverges from code.
 
 **DevCovenant enforcement**
@@ -546,47 +563,4 @@ apply: true
 include_globs: __none__
 ```
 
-Protect declared read-only directories from modification. If a directory must
-be editable, update this policy definition first.
-
----
-
-## Policy: No Future Dates
-
-```policy-def
-id: no-future-dates
-status: active
-severity: error
-auto_fix: true
-updated: false
-applies_to: *
-enforcement: active
-apply: true
-```
-
-Dates in changelogs or documentation must not be in the future. Auto-fixers
-should correct accidental placeholders to today’s date.
-
----
-
-## Policy: Security Scanner
-
-```policy-def
-id: security-scanner
-status: active
-severity: error
-auto_fix: false
-updated: false
-applies_to: *.py
-exclude_globs: tests/**,**/tests/**
-enforcement: active
-apply: true
-```
-
-Scan Python files for risky constructs like `eval`, `exec`, or `shell=True`.
-Use the documented allow-comment only when a security review approves the
-exception.
-
----
-
-<!-- DEVCOV:END -->
+Protect declared 

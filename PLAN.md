@@ -2,24 +2,24 @@
 **Last Updated:** 2026-01-12
 **Version:** 0.2.5
 
-This plan tracks the roadmap of a working standalone repository to a polished,
-publishable package that anyone can install.
-It can then be injected into a target repository with a single command.
+This plan tracks the roadmap from a working standalone repository to a
+polished, published package that anyone can install and roll out across
+existing repos with minimal friction.
 
 ## Table of Contents
 1. [Overview](#overview)
 2. [Workflow](#workflow)
-3. [Phase 1: Packaging & PyPI](#phase-1-packaging--pypi)
-4. [Phase 2: Installer & CLI Experience](#phase-2-installer--cli-experience)
-5. [Phase 3: Migration Guide](#phase-3-migration-guide-for-existing-repos)
-6. [PyPI Registration](#pypi-registration)
-7. [Next Steps](#next-steps)
+3. [Current State](#current-state)
+4. [Phase 1: Release Hygiene](#phase-1-release-hygiene)
+5. [Phase 2: Installer and Docs](#phase-2-installer-and-docs)
+6. [Phase 3: Migration Guide](#phase-3-migration-guide)
+7. [Phase 4: Post-Release Support](#phase-4-post-release-support)
+8. [Next Steps](#next-steps)
 
 ## Overview
 DevCovenant already enforces its policies, keeps policy text in sync, and
-protects its own documentation. This plan now prioritizes packaging,
-publication, and user-friendly installation before sweeping the anchored
-production repos forward to the new release.
+protects its own documentation. This plan focuses on release readiness,
+installer reliability, and clear migration steps for production repos.
 
 ## Workflow
 - Always gate changes with
@@ -30,80 +30,61 @@ production repos forward to the new release.
 - Preserve installer manifests and custom policy scripts during updates.
 - Treat the changelog as the contract for release notes whenever files change.
 
-## Phase 1: Packaging & PyPI
+## Current State
+- Packaging uses `pyproject.toml` with a console script entry point.
+- Templates for docs/config/tools are bundled under `devcovenant/templates/`.
+- The installer merges README headers, preserves SPEC/PLAN content, and
+  backs up and replaces `CHANGELOG.md` and `CONTRIBUTING.md` by default.
+- The CLI exposes install/uninstall, update-hashes, and restore-stock-text.
+
+## Phase 1: Release Hygiene
 Deliverables:
-- Finalize `pyproject.toml` metadata (long description, classifiers, license,
-  keywords) so `python -m build` produces a clean wheel + sdist.
-- Add automated builds/publishing (GitHub Actions or similar) that run
-  `python -m build` and `twine check`.
-- Upload with `twine upload dist/*` on tagged releases.
-- Publish DevCovenant to PyPI (or TestPyPI for a dry run) and document the
-  recommended install command (`pip install devcovenant` plus
-  `python3 -m devcovenant.cli install --target <repo>`).
-- Track runtime dependencies via `requirements.in`, `requirements.lock`, and
-  `pyproject.toml`, and keep `THIRD_PARTY_LICENSES.md` plus the `licenses/`
-  directory refreshed for every dependency change to satisfy the
-  dependency-license-sync policy.
-- Keep release notes in `CHANGELOG.md` and mention any files touched by the
-  packaging work.
+- Validate `python -m build` and `twine check dist/*` in a clean environment.
+- Confirm the `devcovenant` console script runs on Python 3.10+.
+- Ensure `MANIFEST.in` includes templates and policy assets.
+- Verify `requirements.in`, `requirements.lock`, and `pyproject.toml` remain
+  aligned with `THIRD_PARTY_LICENSES.md` and `licenses/`.
+- Confirm `publish.yml` uses the correct PyPI token and tags.
 
 Validation:
-- Run `python -m build` locally and `twine check dist/*`.
-- Test installing the built wheel from a local
-  `pip install dist/devcovenant-*`.
-- Confirm the new CLI bundle works and installs clean docs/manifests into a
-  fresh repo.
+- Install the wheel into a clean virtual environment.
+- Run `devcovenant --help` and `devcovenant check --mode startup`.
+- Install into a scratch repo and verify docs, config, and manifest output.
 
-## Phase 2: Installer / CLI Experience
+## Phase 2: Installer and Docs
 Deliverables:
-- Ensure the CLI entry point `devcovenant.cli` exposes install/uninstall.
-- Document those commands in README + docs.
-- Bundle helper scripts (`tools/run_pre_commit.py`, `tools/run_tests.py`,
-  `devcov_check.py`, etc.) so installs mimic the repository layout.
-- Document how custom policy scripts/fixers stay in `devcovenant/custom/`.
-- Show how the installer preserves them (`--preserve-custom` behavior).
-- Publish or mention prebuilt installers (scripts, wrappers).
-- Explain how users can run the install command without hunting for files.
+- Keep `SPEC.md`, `DEVCOVENANT.md`, and `devcovenant/README.md` aligned with
+  current install behavior and CLI options.
+- Keep template copies in sync with their root equivalents.
+- Expand documentation around install modes, prompts, and backups.
+- Capture edge cases (missing VERSION, skipped CITATION) in tests.
 
 Validation:
-- Run the installer on a scratch repo and verify the manifest, docs, and custom
-  scripts are preserved.
-- Confirm `devcovenant check --mode startup` runs inside the installed tree.
+- Run installer in `empty` and `existing` modes and verify outcomes.
+- Confirm editable notes in `AGENTS.md` are preserved on reinstall.
 
-## Phase 3: Migration Guide for Existing Repos
+## Phase 3: Migration Guide
 Deliverables:
 - Outline step-by-step migration plans for Copernican, GCV-ERP custom, and
-  GCV-ERP infra, including any policy or config adjustments required.
+  GCV-ERP infra, including policy or config adjustments required.
 - Capture QA steps (pre-commit/tests) so those repos pass DevFlow gates after
   the upgrade.
-- Include guidance on re-running `devcovenant install` with `--preserve-custom`
-  to keep existing scripts/policy patches untouched.
+- Document `--preserve-custom` behavior to keep existing custom policies and
+  patches intact.
 
 Validation:
-- Each of the three repos installs the new release from PyPI and runs the gate
-  sequence without policy drift.
+- Each repo installs the release from PyPI and runs the gate sequence without
+  policy drift.
 - Custom scripts remain executable in their `custom/` directories after the
   migration.
 
-## PyPI Registration
-- Yes, you must register an account on PyPI (or use an existing one)
-  to upload releases.
-- Create an API token scoped to the `devcovenant` project and store it securely
-  (CI secrets, keyring, etc.).
-- Use `twine upload --username __token__ --password <token>` or configure your
-  automation to reference the token so future releases happen without manual
-  logins.
+## Phase 4: Post-Release Support
+Deliverables:
+- Track issues from first adopters and document fixes.
+- Monitor packaging regressions (entry points, templates, metadata).
+- Maintain clear release notes in `CHANGELOG.md` and tag migrations.
 
 ## Next Steps
-- Prepare a pre-release review, ensuring the gate sequence runs cleanly on the
-  current working tree and all policy hashes are synced.
-- Publish the first packaged release to PyPI.
-- Update README/CHANGELOG with the install instructions.
-- Coordinate with Copernican, GCV-ERP custom, and infra teams to migrate their
-  installs.
-- Keep monitoring `devcovenant` releases.
-- Ensure each new version updates the policy registry
-  (`python3 -m devcovenant.cli update-hashes`).
-- Keep `THIRD_PARTY_LICENSES.md` and the `licenses/` directory synchronized
-  with any changes to dependency manifests so the dependency-license-sync
-  policy passes before tagging a release.
+- Run a clean build and confirm the publish workflow succeeds end-to-end.
+- Keep documentation updated to reflect install prompts and defaults.
+- Draft migration playbooks for the three legacy repos.
