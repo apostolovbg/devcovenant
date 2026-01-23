@@ -6,6 +6,7 @@ Ensures required DevCovenant files and directories are present.
 
 from typing import List
 
+from devcovenant.core import manifest as manifest_module
 from devcovenant.core.base import CheckContext, PolicyCheck, Violation
 
 
@@ -17,36 +18,24 @@ class DevCovenantStructureGuardCheck(PolicyCheck):
 
     def check(self, context: CheckContext) -> List[Violation]:
         """Check for required DevCovenant files and directories."""
-        required = [
-            "AGENTS.md",
-            "DEVCOVENANT.md",
-            "README.md",
-            "SPEC.md",
-            "PLAN.md",
-            "VERSION",
-            "CHANGELOG.md",
-            "devcov_check.py",
-            "devcovenant/core",
-            "devcovenant/core/policy_scripts",
-            "devcovenant/core/policy_scripts",
-            "devcovenant/custom/policy_scripts",
-            "devcovenant/common_policy_patches",
-            "devcovenant/core/fixers",
-            "devcovenant/__init__.py",
-            "devcovenant/cli.py",
-            "devcovenant/config.yaml",
-            "devcovenant/__main__.py",
-            "devcovenant/registry.json",
-            "devcovenant/core/stock_policy_texts.json",
-            "tools/run_pre_commit.py",
-            "tools/run_tests.py",
-            "tools/update_test_status.py",
-            "tools/install_devcovenant.py",
-            "tools/uninstall_devcovenant.py",
-            "tools/templates/LICENSE_GPL-3.0.txt",
-        ]
+        manifest = manifest_module.ensure_manifest(context.repo_root)
+        if manifest is None:
+            required_dirs = []
+            required_files = ["devcovenant"]
+            required_docs = ["AGENTS.md"]
+        else:
+            core = manifest.get("core", {})
+            docs = manifest.get("docs", {})
+            required_dirs = core.get("dirs", [])
+            required_files = core.get("files", [])
+            required_docs = docs.get("core", [])
+
         missing = []
-        for rel_path in required:
+        for rel_path in required_dirs:
+            path = context.repo_root / rel_path
+            if not path.is_dir():
+                missing.append(rel_path)
+        for rel_path in list(required_files) + list(required_docs):
             path = context.repo_root / rel_path
             if not path.exists():
                 missing.append(rel_path)
@@ -62,8 +51,8 @@ class DevCovenantStructureGuardCheck(PolicyCheck):
                 file_path=context.repo_root / missing[0],
                 message=message,
                 suggestion=(
-                    "Run tools/install_devcovenant.py --target . "
-                    "--force-docs --force-config"
+                    "Run python3 -m devcovenant update --target . "
+                    "--docs-mode overwrite --force-config"
                 ),
                 can_auto_fix=False,
             )

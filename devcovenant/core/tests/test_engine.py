@@ -44,3 +44,28 @@ def test_engine_check_no_violations():
 
         # Should have no violations and not block
         assert result.should_block is False
+
+
+def test_custom_override_skips_core_fixers(tmp_path: Path) -> None:
+    """Core fixers should be skipped when a custom override exists."""
+    repo_root = tmp_path
+    (repo_root / "devcovenant" / "custom" / "policy_scripts").mkdir(
+        parents=True
+    )
+    (
+        repo_root
+        / "devcovenant"
+        / "custom"
+        / "policy_scripts"
+        / "no_future_dates.py"
+    ).write_text("# custom override\n", encoding="utf-8")
+    (repo_root / "AGENTS.md").write_text("# Test\n", encoding="utf-8")
+
+    engine = DevCovenantEngine(repo_root=repo_root)
+    core_fixers = [
+        fixer
+        for fixer in engine.fixers
+        if fixer.policy_id == "no-future-dates"
+        and getattr(fixer, "_origin", "") == "core"
+    ]
+    assert not core_fixers

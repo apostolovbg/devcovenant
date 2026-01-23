@@ -1,15 +1,16 @@
 #!/usr/bin/env python3
-"""Install or update DevCovenant in a target repository."""
+"""Install DevCovenant in a target repository."""
 
 from __future__ import annotations
 
 import argparse
-import json
 import re
 import shutil
 import tempfile
 from datetime import datetime, timezone
 from pathlib import Path
+
+from devcovenant.core import manifest as manifest_module
 
 DEV_COVENANT_DIR = "devcovenant"
 CORE_PATHS = [
@@ -29,7 +30,6 @@ CONFIG_PATHS = [
 DOC_PATHS = [
     "AGENTS.md",
     "README.md",
-    "DEVCOVENANT.md",
     "CONTRIBUTING.md",
     "SPEC.md",
     "PLAN.md",
@@ -39,21 +39,18 @@ DOC_PATHS = [
 METADATA_PATHS = [
     "VERSION",
     "LICENSE",
-    "CITATION.cff",
     "pyproject.toml",
 ]
 
-MANIFEST_PATH = ".devcov/install_manifest.json"
-LEGACY_MANIFEST_PATH = ".devcovenant/install_manifest.json"
 BLOCK_BEGIN = "<!-- DEVCOV:BEGIN -->"
 BLOCK_END = "<!-- DEVCOV:END -->"
-LICENSE_TEMPLATE = "tools/templates/LICENSE_GPL-3.0.txt"
+LICENSE_TEMPLATE = "LICENSE_GPL-3.0.txt"
 TEMPLATE_ROOT_NAME = "templates"
 GITIGNORE_USER_BEGIN = "# --- User entries (preserved) ---"
 GITIGNORE_USER_END = "# --- End user entries ---"
 DEFAULT_PRESERVE_PATHS = [
     "custom/policy_scripts",
-    "common_policy_patches",
+    "custom/fixers",
     "config.yaml",
 ]
 
@@ -68,8 +65,6 @@ _DEFAULT_CORE_PATHS = [
     "tools/run_pre_commit.py",
     "tools/run_tests.py",
     "tools/update_test_status.py",
-    "tools/install_devcovenant.py",
-    "tools/uninstall_devcovenant.py",
 ]
 
 _VERSION_INPUT_PATTERN = re.compile(r"^\d+\.\d+(\.\d+)?$")
@@ -78,6 +73,15 @@ _LAST_UPDATED_PATTERN = re.compile(
     re.IGNORECASE,
 )
 _VERSION_PATTERN = re.compile(r"^\s*\*\*Version:\*\*", re.IGNORECASE)
+
+_DOC_NAME_MAP = {
+    "README": "README.md",
+    "AGENTS": "AGENTS.md",
+    "CONTRIBUTING": "CONTRIBUTING.md",
+    "SPEC": "SPEC.md",
+    "PLAN": "PLAN.md",
+    "CHANGELOG": "CHANGELOG.md",
+}
 
 
 def _utc_today() -> str:
@@ -95,6 +99,33 @@ def _normalize_version(version_text: str) -> str:
     if text.count(".") == 1:
         return f"{text}.0"
     return text
+
+
+def _normalize_doc_name(raw: str) -> str:
+    """Normalize a doc selector to its canonical key."""
+    text = raw.strip()
+    if not text:
+        return ""
+    upper = text.upper()
+    if upper.endswith(".MD"):
+        upper = upper.rsplit(".", 1)[0]
+    return upper
+
+
+def _parse_doc_names(raw: str | None) -> set[str] | None:
+    """Parse a comma-separated list of doc names."""
+    if raw is None:
+        return None
+    entries = [part.strip() for part in raw.split(",")]
+    names: set[str] = set()
+    for entry in entries:
+        if not entry:
+            continue
+        normalized = _normalize_doc_name(entry)
+        if normalized not in _DOC_NAME_MAP:
+            raise ValueError(f"Unknown doc name: {entry}")
+        names.add(normalized)
+    return names
 
 
 def _prompt_version() -> str:
@@ -302,12 +333,36 @@ def _render_gitignore(user_text: str) -> str:
     )
 
 
+def _build_doc_metadata_lines(doc_id: str, doc_type: str) -> list[str]:
+    """Return metadata lines for a managed doc block."""
+    return [
+        f"**Doc ID:** {doc_id}",
+        f"**Doc Type:** {doc_type}",
+        "**Managed By:** DevCovenant",
+    ]
+
+
+def _build_doc_block(
+    doc_id: str, doc_type: str, extra_lines: list[str] | None = None
+) -> str:
+    """Return a small managed block for a document."""
+    lines = [BLOCK_BEGIN]
+    lines.extend(_build_doc_metadata_lines(doc_id, doc_type))
+    if extra_lines:
+        lines.append("")
+        lines.extend(extra_lines)
+    lines.append(BLOCK_END)
+    return "\n".join(lines) + "\n"
+
+
 def _render_spec_template(version: str, date_stamp: str) -> str:
     """Return a minimal SPEC.md template."""
+    doc_block = _build_doc_block("SPEC", "specification")
     return (
         "# Specification\n"
         f"**Last Updated:** {date_stamp}\n"
         f"**Version:** {version}\n\n"
+        f"{doc_block}\n"
         "This specification captures the required behavior for this "
         "repository.\n"
         "It describes what the system must do, the constraints it must "
@@ -348,10 +403,12 @@ def _render_spec_template(version: str, date_stamp: str) -> str:
 
 def _render_plan_template(version: str, date_stamp: str) -> str:
     """Return a minimal PLAN.md template."""
+    doc_block = _build_doc_block("PLAN", "plan")
     return (
         "# Plan\n"
         f"**Last Updated:** {date_stamp}\n"
         f"**Version:** {version}\n\n"
+        f"{doc_block}\n"
         "This plan tracks the roadmap for the repository. It should "
         "enumerate\n"
         "upcoming milestones, sequencing decisions, and the work needed to "
@@ -385,19 +442,29 @@ def _render_plan_template(version: str, date_stamp: str) -> str:
 
 def _render_changelog_template(version: str, date_stamp: str) -> str:
     """Return a standard CHANGELOG.md template."""
+    changelog_block = _build_doc_block(
+        "CHANGELOG",
+        "changelog",
+        extra_lines=[
+            "## How to Log Changes",
+            "Add one line for each substantive change under the current "
+            "version header.",
+            "Keep entries newest-first and record dates in ISO format "
+            "(`YYYY-MM-DD`).",
+            "Example entry:",
+            f"- {date_stamp}: Updated dependency manifests and license "
+            "report.",
+            "  Files:",
+            "  requirements.in",
+            "  requirements.lock",
+            "  THIRD_PARTY_LICENSES.md",
+            "  devcovenant/core/policy_scripts/",
+            "    documentation_growth_tracking.py",
+        ],
+    )
     return (
         "# Changelog\n\n"
-        "## How to Log Changes\n"
-        "Add one line for each substantive change under the current version "
-        "header.\n"
-        "Keep entries newest-first and record dates in ISO format "
-        "(`YYYY-MM-DD`).\n"
-        "Example entry:\n"
-        f"- {date_stamp}: Updated dependency manifests and license report.\n"
-        "  Files:\n"
-        "  requirements.in\n"
-        "  requirements.lock\n"
-        "  THIRD_PARTY_LICENSES.md\n\n"
+        f"{changelog_block}\n"
         "## Log changes here\n\n"
         f"## Version {version}\n"
         f"- {date_stamp}: Initialized DevCovenant policy scaffolding and "
@@ -405,29 +472,12 @@ def _render_changelog_template(version: str, date_stamp: str) -> str:
         "  Files:\n"
         "  AGENTS.md\n"
         "  README.md\n"
-        "  SPEC.md\n"
-        "  PLAN.md\n"
         "  CHANGELOG.md\n"
         "  CONTRIBUTING.md\n"
-        "  DEVCOVENANT.md\n"
         "  devcovenant/\n"
         "  tools/\n"
         "  .github/\n"
         "  .pre-commit-config.yaml\n"
-    )
-
-
-def _render_citation_template(repo_name: str, version: str) -> str:
-    """Return a CITATION.cff template for the target repo."""
-    return (
-        "cff-version: 1.2.0\n"
-        'message: "If you use this software, please cite it."\n'
-        f'title: "{repo_name}"\n'
-        f'version: "{version}"\n'
-        "preferred-citation:\n"
-        "  type: software\n"
-        f'  title: "{repo_name}"\n'
-        f'  version: "{version}"\n'
     )
 
 
@@ -451,11 +501,15 @@ def _build_readme_block(
     if has_devcovenant or include_devcovenant:
         toc_headings.append("DevCovenant")
 
-    lines = [
-        BLOCK_BEGIN,
-        "**DevCovenant:** `AGENTS.md` is canonical. See "
-        "`devcovenant/README.md`.",
-    ]
+    lines = [BLOCK_BEGIN]
+    lines.extend(_build_doc_metadata_lines("README", "repo-readme"))
+    lines.extend(
+        [
+            "",
+            "**DevCovenant:** `AGENTS.md` is canonical. See "
+            "`devcovenant/README.md`.",
+        ]
+    )
 
     if include_toc:
         lines.extend(["", "## Table of Contents"])
@@ -545,23 +599,6 @@ def _update_policy_block_value(
         updated_block = "\n".join(updated_lines)
         return text[:start] + updated_block + text[end:]
     return text
-
-
-def _disable_citation_in_agents(path: Path) -> bool:
-    """Disable citation enforcement in AGENTS.md."""
-    if not path.exists():
-        return False
-    text = path.read_text(encoding="utf-8")
-    updated = _update_policy_block_value(
-        text,
-        policy_id="version-sync",
-        key="citation_file",
-        field_value="__none__",
-    )
-    if updated == text:
-        return False
-    path.write_text(updated, encoding="utf-8")
-    return True
 
 
 def _normalize_core_paths(paths: list[str]) -> list[str]:
@@ -853,10 +890,240 @@ def _inject_block(path: Path, block: str) -> bool:
     return True
 
 
+def _ensure_doc_block(path: Path, doc_id: str, doc_type: str) -> bool:
+    """Ensure a doc metadata block exists near the top of the file."""
+    if not path.exists():
+        return False
+    text = path.read_text(encoding="utf-8")
+    lines = text.splitlines(keepends=True)
+
+    insert_at = 0
+    for index, line in enumerate(lines):
+        if line.lstrip().startswith("#"):
+            insert_at = index + 1
+            while insert_at < len(lines):
+                candidate = lines[insert_at].strip()
+                if not candidate:
+                    insert_at += 1
+                    continue
+                if _LAST_UPDATED_PATTERN.match(candidate):
+                    insert_at += 1
+                    continue
+                if _VERSION_PATTERN.match(candidate):
+                    insert_at += 1
+                    continue
+                break
+            break
+
+    if insert_at < len(lines) and lines[insert_at].lstrip().startswith(
+        BLOCK_BEGIN
+    ):
+        return False
+
+    block = _build_doc_block(doc_id, doc_type)
+    lines.insert(insert_at, block)
+    if insert_at + 1 < len(lines) and lines[insert_at + 1].strip():
+        lines.insert(insert_at + 1, "\n")
+    path.write_text("".join(lines), encoding="utf-8")
+    return True
+
+
+def _ensure_changelog_block(
+    path: Path, last_updated: str, version: str
+) -> bool:
+    """Ensure the changelog uses the managed block layout."""
+    if not path.exists():
+        return False
+    text = path.read_text(encoding="utf-8")
+    log_marker = re.search(r"^## Log changes here\s*$", text, re.MULTILINE)
+    if log_marker:
+        log_section = text[log_marker.start() :].lstrip()
+    else:
+        version_marker = re.search(r"^## Version\b", text, re.MULTILINE)
+        if version_marker:
+            log_section = (
+                "## Log changes here\n\n" + text[version_marker.start() :]
+            )
+        else:
+            log_section = (
+                "## Log changes here\n\n"
+                f"## Version {version}\n"
+                f"- {last_updated}: Initialized changelog entries.\n"
+            )
+
+    header = (
+        "# Changelog\n"
+        f"**Last Updated:** {last_updated}\n"
+        f"**Version:** {version}\n\n"
+    )
+    changelog_block = _build_doc_block(
+        "CHANGELOG",
+        "changelog",
+        extra_lines=[
+            "## How to Log Changes",
+            "Add one line for each substantive change under the current "
+            "version header.",
+            "Keep entries newest-first and record dates in ISO format "
+            "(`YYYY-MM-DD`).",
+            "Example entry:",
+            f"- {last_updated}: Updated dependency manifests and license "
+            "report.",
+            "  Files:",
+            "  requirements.in",
+            "  requirements.lock",
+            "  THIRD_PARTY_LICENSES.md",
+            "  devcovenant/core/policy_scripts/",
+            "    documentation_growth_tracking.py",
+        ],
+    )
+    updated = header + changelog_block + "\n" + log_section.lstrip()
+    if updated == text:
+        return False
+    path.write_text(updated, encoding="utf-8")
+    return True
+
+
+def _extract_blocks(text: str) -> list[str]:
+    """Return all managed blocks from text in order."""
+    blocks: list[str] = []
+    start = 0
+    while True:
+        begin = text.find(BLOCK_BEGIN, start)
+        if begin == -1:
+            break
+        end = text.find(BLOCK_END, begin)
+        if end == -1:
+            break
+        end += len(BLOCK_END)
+        blocks.append(text[begin:end])
+        start = end
+    return blocks
+
+
+def _replace_blocks(text: str, template_blocks: list[str]) -> tuple[str, bool]:
+    """Replace managed blocks in text using template blocks in order."""
+    if not template_blocks:
+        return text, False
+    start = 0
+    index = 0
+    updated = False
+    parts: list[str] = []
+    while True:
+        begin = text.find(BLOCK_BEGIN, start)
+        if begin == -1:
+            parts.append(text[start:])
+            break
+        end = text.find(BLOCK_END, begin)
+        if end == -1:
+            parts.append(text[start:])
+            break
+        end += len(BLOCK_END)
+        parts.append(text[start:begin])
+        if index < len(template_blocks):
+            parts.append(template_blocks[index])
+            if text[begin:end] != template_blocks[index]:
+                updated = True
+        else:
+            parts.append(text[begin:end])
+        index += 1
+        start = end
+    if index < len(template_blocks):
+        if parts and not parts[-1].endswith("\n"):
+            parts.append("\n")
+        parts.append("\n\n".join(template_blocks[index:]) + "\n")
+        updated = True
+    return "".join(parts), updated
+
+
+def _sync_blocks_from_template(target: Path, template_text: str) -> bool:
+    """Update all managed blocks in target from template text."""
+    if not target.exists():
+        return False
+    template_blocks = _extract_blocks(template_text)
+    if not template_blocks:
+        return False
+    current = target.read_text(encoding="utf-8")
+    updated_text, changed = _replace_blocks(current, template_blocks)
+    if changed:
+        target.write_text(updated_text, encoding="utf-8")
+    return changed
+
+
+def _extract_policy_sections(text: str) -> list[tuple[str, str]]:
+    """Return policy ids with their full section text."""
+    policy_pattern = re.compile(
+        r"(##\s+Policy:\s+[^\n]+\n\n```policy-def\n(.*?)\n```\n\n"
+        r".*?)(?=\n---\n|\n##|\Z)",
+        re.DOTALL,
+    )
+    sections: list[tuple[str, str]] = []
+    for match in policy_pattern.finditer(text):
+        metadata = match.group(2)
+        policy_id = ""
+        for line in metadata.splitlines():
+            stripped = line.strip()
+            if stripped.startswith("id:"):
+                policy_id = stripped.split(":", 1)[1].strip()
+                break
+        sections.append((policy_id, match.group(1).rstrip()))
+    return sections
+
+
+def _append_missing_policies(
+    agents_path: Path, template_text: str
+) -> list[str]:
+    """Append missing policy sections from the template."""
+    current = agents_path.read_text(encoding="utf-8")
+    existing = _extract_policy_sections(current)
+    existing_ids = {policy_id for policy_id, _section in existing if policy_id}
+    template_sections = _extract_policy_sections(template_text)
+    missing_sections = [
+        section
+        for policy_id, section in template_sections
+        if policy_id and policy_id not in existing_ids
+    ]
+    if not missing_sections:
+        return []
+    tail = current.rstrip()
+    separator = "\n\n---\n\n" if existing else "\n\n"
+    tail = tail + separator + "\n\n---\n\n".join(missing_sections) + "\n"
+    agents_path.write_text(tail, encoding="utf-8")
+    return [
+        policy_id
+        for policy_id, _section in template_sections
+        if policy_id and policy_id not in existing_ids
+    ]
+
+
+def _extract_block(text: str) -> str | None:
+    """Return the managed block from text, if present."""
+    if BLOCK_BEGIN not in text or BLOCK_END not in text:
+        return None
+    _before, rest = text.split(BLOCK_BEGIN, 1)
+    block_body, _after = rest.split(BLOCK_END, 1)
+    return f"{BLOCK_BEGIN}{block_body}{BLOCK_END}"
+
+
+def _sync_block(path: Path, block: str | None) -> bool:
+    """Replace or insert the managed block in a file."""
+    if not block or not path.exists():
+        return False
+    text = path.read_text(encoding="utf-8")
+    if BLOCK_BEGIN in text and BLOCK_END in text:
+        before, rest = text.split(BLOCK_BEGIN, 1)
+        _old_block, after = rest.split(BLOCK_END, 1)
+        updated = f"{before}{block}{after}"
+        if updated != text:
+            path.write_text(updated, encoding="utf-8")
+            return True
+        return False
+    return _inject_block(path, block)
+
+
 def main(argv=None) -> None:
     """CLI entry point."""
     parser = argparse.ArgumentParser(
-        description="Install or update DevCovenant in a target repository."
+        description="Install DevCovenant in a target repository."
     )
     parser.add_argument(
         "--target",
@@ -874,6 +1141,22 @@ def main(argv=None) -> None:
         choices=("preserve", "overwrite"),
         default=None,
         help="How to handle docs in existing repos.",
+    )
+    parser.add_argument(
+        "--docs-include",
+        default=None,
+        help="Comma-separated doc names to target for overwrite.",
+    )
+    parser.add_argument(
+        "--docs-exclude",
+        default=None,
+        help="Comma-separated doc names to exclude from overwrite.",
+    )
+    parser.add_argument(
+        "--policy-mode",
+        choices=("preserve", "append-missing", "overwrite"),
+        default=None,
+        help="How to handle policy blocks during install/update.",
     )
     parser.add_argument(
         "--config-mode",
@@ -918,16 +1201,25 @@ def main(argv=None) -> None:
         help="Override the config mode for CI workflow files.",
     )
     parser.add_argument(
-        "--citation-mode",
-        choices=("prompt", "create", "skip"),
-        default="prompt",
-        help="How to handle CITATION.cff when it is missing.",
+        "--include-spec",
+        action="store_true",
+        help="Create SPEC.md when missing.",
+    )
+    parser.add_argument(
+        "--include-plan",
+        action="store_true",
+        help="Create PLAN.md when missing.",
     )
     parser.add_argument(
         "--preserve-custom",
         action=argparse.BooleanOptionalAction,
         default=None,
-        help="Preserve custom policy scripts and patches during updates.",
+        help="Preserve custom policy scripts and fixers during install.",
+    )
+    parser.add_argument(
+        "--allow-existing",
+        action="store_true",
+        help=argparse.SUPPRESS,
     )
     parser.add_argument(
         "--force-docs",
@@ -945,18 +1237,31 @@ def main(argv=None) -> None:
     repo_root = package_root.parent
     template_root = package_root / TEMPLATE_ROOT_NAME
     target_root = Path(args.target).resolve()
-    manifest_file = target_root / MANIFEST_PATH
-    legacy_manifest = target_root / LEGACY_MANIFEST_PATH
-    has_manifest = manifest_file.exists() or legacy_manifest.exists()
+    manifest_file = manifest_module.manifest_path(target_root)
+    legacy_paths = manifest_module.legacy_manifest_paths(target_root)
+    has_manifest = manifest_file.exists() or any(
+        path.exists() for path in legacy_paths
+    )
     has_existing = has_manifest or (target_root / DEV_COVENANT_DIR).exists()
     if args.mode == "auto":
         mode = "existing" if has_existing else "empty"
     else:
         mode = args.mode
 
+    if has_existing and not args.allow_existing:
+        raise SystemExit(
+            "DevCovenant install detected. Use `devcovenant update` to "
+            "refresh an existing repo, or `devcovenant uninstall` before a "
+            "fresh install."
+        )
+
+    if args.allow_existing:
+        mode = "existing"
+
     docs_mode = args.docs_mode
     config_mode = args.config_mode
     metadata_mode = args.metadata_mode
+    policy_mode = args.policy_mode
 
     if args.force_docs:
         docs_mode = "overwrite"
@@ -965,13 +1270,47 @@ def main(argv=None) -> None:
 
     if docs_mode is None:
         docs_mode = "overwrite" if mode == "empty" else "preserve"
+    if policy_mode is None:
+        policy_mode = "overwrite" if mode == "empty" else "preserve"
+    try:
+        docs_include = _parse_doc_names(args.docs_include)
+        docs_exclude = _parse_doc_names(args.docs_exclude) or set()
+    except ValueError as exc:
+        raise SystemExit(str(exc)) from exc
+
+    spec_path = target_root / "SPEC.md"
+    plan_path = target_root / "PLAN.md"
+    include_spec = bool(args.include_spec) or spec_path.exists()
+    include_plan = bool(args.include_plan) or plan_path.exists()
+    if docs_include:
+        include_spec = include_spec or ("SPEC" in docs_include)
+        include_plan = include_plan or ("PLAN" in docs_include)
+
+    required_docs = set(_DOC_NAME_MAP.keys())
+    if not include_spec:
+        required_docs.discard("SPEC")
+    if not include_plan:
+        required_docs.discard("PLAN")
+
+    overwrite_targets = (
+        set(docs_include) if docs_include is not None else set(required_docs)
+    )
+    overwrite_targets -= docs_exclude
+    if not include_spec:
+        overwrite_targets.discard("SPEC")
+    if not include_plan:
+        overwrite_targets.discard("PLAN")
+
+    def _should_overwrite(doc_name: str) -> bool:
+        """Return True when overwrite mode targets the doc name."""
+        return docs_mode == "overwrite" and doc_name in overwrite_targets
+
     agents_path = target_root / "AGENTS.md"
     existing_agents_text = None
     if agents_path.exists():
         existing_agents_text = _extract_editable_notes(
             agents_path.read_text(encoding="utf-8")
         )
-        docs_mode = "overwrite"
     if config_mode is None:
         config_mode = "overwrite" if mode == "empty" else "preserve"
     if metadata_mode is None:
@@ -1107,23 +1446,6 @@ def main(argv=None) -> None:
             if not license_existed:
                 installed["docs"].append("LICENSE")
 
-    citation_path = target_root / "CITATION.cff"
-    citation_existed = citation_path.exists()
-    create_citation = False
-    if not citation_existed and metadata_mode != "skip":
-        if args.citation_mode == "create":
-            create_citation = True
-        elif args.citation_mode == "prompt":
-            create_citation = _prompt_yes_no(
-                "Create CITATION.cff for this repository?"
-            )
-    if create_citation:
-        citation_path.write_text(
-            _render_citation_template(repo_name, target_version),
-            encoding="utf-8",
-        )
-        installed["docs"].append("CITATION.cff")
-
     if pyproject_mode != "skip":
         pyproject_sources = {
             "pyproject.toml": _resolve_source_path(
@@ -1142,21 +1464,27 @@ def main(argv=None) -> None:
             )
         )
 
-    agents_template = _resolve_source_path(
-        repo_root, template_root, "AGENTS.md"
-    )
+        agents_template = _resolve_source_path(
+            repo_root, template_root, "AGENTS.md"
+        )
     agents_existed = agents_path.exists()
+    agents_text = ""
     if agents_template.exists():
         agents_text = agents_template.read_text(encoding="utf-8")
-        agents_path.write_text(agents_text, encoding="utf-8")
-        if not agents_existed:
-            installed["docs"].append("AGENTS.md")
+    if not agents_existed or policy_mode == "overwrite":
+        if agents_text:
+            agents_path.write_text(agents_text, encoding="utf-8")
+            if not agents_existed:
+                installed["docs"].append("AGENTS.md")
+            _apply_standard_header(agents_path, last_updated, target_version)
+            if existing_agents_text:
+                _preserve_editable_section(agents_path, existing_agents_text)
+    else:
         _apply_standard_header(agents_path, last_updated, target_version)
-        if existing_agents_text:
-            _preserve_editable_section(agents_path, existing_agents_text)
-
-    if not (citation_existed or create_citation):
-        _disable_citation_in_agents(agents_path)
+        if agents_text:
+            _sync_blocks_from_template(agents_path, agents_text)
+            if policy_mode == "append-missing":
+                _append_missing_policies(agents_path, agents_text)
 
     readme_path = target_root / "README.md"
     if not readme_path.exists():
@@ -1187,71 +1515,91 @@ def main(argv=None) -> None:
     if BLOCK_BEGIN in readme_path.read_text(encoding="utf-8"):
         doc_blocks.append("README.md")
 
-    devcov_path = target_root / "DEVCOVENANT.md"
-    devcov_template = _resolve_source_path(
-        repo_root, template_root, "DEVCOVENANT.md"
-    )
-    if devcov_template.exists():
-        if devcov_path.exists():
-            _rename_existing_file(devcov_path)
-        devcov_text = devcov_template.read_text(encoding="utf-8")
-        devcov_text = _ensure_standard_header(
-            devcov_text, last_updated, target_version
-        )
-        devcov_path.write_text(devcov_text, encoding="utf-8")
-        installed["docs"].append("DEVCOVENANT.md")
-    elif devcov_path.exists():
-        _apply_standard_header(devcov_path, last_updated, target_version)
+    if include_spec:
+        spec_path = target_root / "SPEC.md"
+        if spec_path.exists() and not _should_overwrite("SPEC"):
+            _apply_standard_header(spec_path, last_updated, target_version)
+            _ensure_doc_block(spec_path, "SPEC", "specification")
+        else:
+            if spec_path.exists():
+                _rename_existing_file(spec_path)
+            spec_path.write_text(
+                _render_spec_template(target_version, last_updated),
+                encoding="utf-8",
+            )
+            installed["docs"].append("SPEC.md")
+        if BLOCK_BEGIN in spec_path.read_text(encoding="utf-8"):
+            doc_blocks.append("SPEC.md")
 
-    spec_path = target_root / "SPEC.md"
-    if spec_path.exists():
-        _apply_standard_header(spec_path, last_updated, target_version)
-    else:
-        spec_path.write_text(
-            _render_spec_template(target_version, last_updated),
-            encoding="utf-8",
-        )
-        installed["docs"].append("SPEC.md")
-
-    plan_path = target_root / "PLAN.md"
-    if plan_path.exists():
-        _apply_standard_header(plan_path, last_updated, target_version)
-    else:
-        plan_path.write_text(
-            _render_plan_template(target_version, last_updated),
-            encoding="utf-8",
-        )
-        installed["docs"].append("PLAN.md")
+    if include_plan:
+        plan_path = target_root / "PLAN.md"
+        if plan_path.exists() and not _should_overwrite("PLAN"):
+            _apply_standard_header(plan_path, last_updated, target_version)
+            _ensure_doc_block(plan_path, "PLAN", "plan")
+        else:
+            if plan_path.exists():
+                _rename_existing_file(plan_path)
+            plan_path.write_text(
+                _render_plan_template(target_version, last_updated),
+                encoding="utf-8",
+            )
+            installed["docs"].append("PLAN.md")
+        if BLOCK_BEGIN in plan_path.read_text(encoding="utf-8"):
+            doc_blocks.append("PLAN.md")
 
     changelog_path = target_root / "CHANGELOG.md"
-    if changelog_path.exists():
+    if not changelog_path.exists():
+        changelog_path.write_text(
+            _render_changelog_template(target_version, last_updated),
+            encoding="utf-8",
+        )
+        installed["docs"].append("CHANGELOG.md")
+    elif _should_overwrite("CHANGELOG"):
         _rename_existing_file(changelog_path)
-    changelog_path.write_text(
-        _render_changelog_template(target_version, last_updated),
-        encoding="utf-8",
-    )
-    installed["docs"].append("CHANGELOG.md")
+        changelog_path.write_text(
+            _render_changelog_template(target_version, last_updated),
+            encoding="utf-8",
+        )
+        installed["docs"].append("CHANGELOG.md")
+    else:
+        _ensure_changelog_block(changelog_path, last_updated, target_version)
+    if BLOCK_BEGIN in changelog_path.read_text(encoding="utf-8"):
+        doc_blocks.append("CHANGELOG.md")
 
     contributing_path = target_root / "CONTRIBUTING.md"
     contributing_template = _resolve_source_path(
         repo_root, template_root, "CONTRIBUTING.md"
     )
     if contributing_template.exists():
-        if contributing_path.exists():
-            _rename_existing_file(contributing_path)
-        contributing_text = contributing_template.read_text(encoding="utf-8")
-        contributing_text = _ensure_standard_header(
-            contributing_text, last_updated, target_version
-        )
-        contributing_path.write_text(contributing_text, encoding="utf-8")
-        installed["docs"].append("CONTRIBUTING.md")
-        if BLOCK_BEGIN in contributing_text and BLOCK_END in contributing_text:
-            doc_blocks.append("CONTRIBUTING.md")
+        if contributing_path.exists() and not _should_overwrite(
+            "CONTRIBUTING"
+        ):
+            _apply_standard_header(
+                contributing_path, last_updated, target_version
+            )
+            template_block = _extract_block(
+                contributing_template.read_text(encoding="utf-8")
+            )
+            _sync_block(contributing_path, template_block)
+        else:
+            if contributing_path.exists():
+                _rename_existing_file(contributing_path)
+            contributing_text = contributing_template.read_text(
+                encoding="utf-8"
+            )
+            contributing_text = _ensure_standard_header(
+                contributing_text, last_updated, target_version
+            )
+            contributing_path.write_text(contributing_text, encoding="utf-8")
+            installed["docs"].append("CONTRIBUTING.md")
+            if (
+                BLOCK_BEGIN in contributing_text
+                and BLOCK_END in contributing_text
+            ):
+                doc_blocks.append("CONTRIBUTING.md")
 
     internal_docs = [
         "devcovenant/README.md",
-        "devcovenant/common_policy_patches/README.md",
-        "devcovenant/custom/policy_scripts/README.md",
     ]
     for rel_path in internal_docs:
         _apply_standard_header(
@@ -1262,34 +1610,29 @@ def main(argv=None) -> None:
             target_root / "devcovenant/README.md", devcovenant_version
         )
 
-    manifest_file.parent.mkdir(parents=True, exist_ok=True)
-    manifest_file.write_text(
-        json.dumps(
-            {
-                "updated_at": datetime.now(timezone.utc).isoformat(),
-                "mode": "update" if mode == "existing" else "install",
-                "installed": installed,
-                "doc_blocks": doc_blocks,
-                "options": {
-                    "docs_mode": docs_mode,
-                    "config_mode": config_mode,
-                    "metadata_mode": metadata_mode,
-                    "license_mode": license_mode,
-                    "version_mode": version_mode,
-                    "target_version": target_version,
-                    "pyproject_mode": pyproject_mode,
-                    "ci_mode": ci_mode,
-                    "citation_mode": args.citation_mode,
-                    "preserve_custom": preserve_custom,
-                    "devcov_core_include": include_core,
-                },
-            },
-            indent=2,
-            sort_keys=True,
-        )
-        + "\n",
-        encoding="utf-8",
+    manifest = manifest_module.build_manifest(
+        options={
+            "docs_mode": docs_mode,
+            "config_mode": config_mode,
+            "metadata_mode": metadata_mode,
+            "license_mode": license_mode,
+            "version_mode": version_mode,
+            "target_version": target_version,
+            "pyproject_mode": pyproject_mode,
+            "ci_mode": ci_mode,
+            "docs_include": sorted(docs_include or []),
+            "docs_exclude": sorted(docs_exclude or []),
+            "policy_mode": policy_mode,
+            "include_spec": include_spec,
+            "include_plan": include_plan,
+            "preserve_custom": preserve_custom,
+            "devcov_core_include": include_core,
+        },
+        installed=installed,
+        doc_blocks=doc_blocks,
+        mode="update" if mode == "existing" else "install",
     )
+    manifest_module.write_manifest(target_root, manifest)
 
 
 if __name__ == "__main__":

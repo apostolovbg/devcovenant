@@ -1,0 +1,65 @@
+{
+  "core": {
+    "dirs": [
+      "devcovenant",
+      "devcovenant/core",
+      "devcovenant/core/policy_scripts",
+      "devcovenant/core/fixers",
+      "devcovenant/templates"
+    ],
+    "files": [
+      "devcovenant/__init__.py",
+      "devcovenant/__main__.py",
+      "devcovenant/cli.py",
+      "devcovenant/config.yaml",
+      "devcovenant/registry.json",
+      "devcovenant/README.md",
+      "devcovenant/manifest.json",
+      "devcovenant/core/stock_policy_texts.yaml",
+      "devcovenant/templates/LICENSE_GPL-3.0.txt",
+      "devcov_check.py",
+      "tools/run_pre_commit.py",
+      "tools/run_tests.py",
+      "tools/update_test_status.py"
+    ]
+  },
+  "custom": {
+    "dirs": [
+      "devcovenant/custom",
+      "devcovenant/custom/policy_scripts",
+      "devcovenant/custom/fixers"
+    ],
+    "files": []
+  },
+  "doc_blocks": [
+    "AGENTS.md",
+    "README.md",
+    "CHANGELOG.md",
+    "CONTRIBUTING.md",
+    "SPEC.md",
+    "PLAN.md",
+    "devcovenant/README.md"
+  ],
+  "docs": {
+    "core": [
+      "AGENTS.md",
+      "README.md",
+      "CHANGELOG.md",
+      "CONTRIBUTING.md"
+    ],
+    "custom": [],
+    "optional": [
+      "SPEC.md",
+      "PLAN.md"
+    ]
+  },
+  "generated": {
+    "dirs": [],
+    "files": [
+      "devcovenant/registry.json",
+      "devcovenant/test_status.json"
+    ]
+  },
+  "schema_version": 1,
+  "updated_at": "2026-01-23T07:08:00.352798+00:00"
+}

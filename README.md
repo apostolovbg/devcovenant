@@ -1,10 +1,14 @@
 # DevCovenant
-**Last Updated:** 2026-01-12
-**Version:** 0.2.5
+**Last Updated:** 2026-01-23
+**Version:** 0.2.6
 
 <!-- DEVCOV:BEGIN -->
+**Doc ID:** README
+**Doc Type:** repo-readme
+**Managed By:** DevCovenant
+
 **Read first:** `AGENTS.md` is the canonical source of truth. See
-`DEVCOVENANT.md` for architecture and lifecycle details.
+`devcovenant/README.md` for usage and update workflow details.
 <!-- DEVCOV:END -->
 
 DevCovenant is a self-enforcing policy system that keeps human-readable
@@ -22,13 +26,12 @@ lives in that repo at `devcovenant/README.md`.
 4. [Repo Layout](#repo-layout)
 5. [CLI Entry Points](#cli-entry-points)
 6. [Install, Update, Uninstall](#install-update-uninstall)
-7. [Install Behavior Cheat Sheet](#install-behavior-cheat-sheet)
-8. [Workflow](#workflow)
-9. [Core Exclusion](#core-exclusion)
-10. [Dependency and License Tracking](#dependency-and-license-tracking)
-11. [Using DevCovenant in Other Repos](#using-devcovenant-in-other-repos)
-12. [History and Dogfooding](#history-and-dogfooding)
-13. [License](#license)
+7. [Workflow](#workflow)
+8. [Core Exclusion](#core-exclusion)
+9. [Dependency and License Tracking](#dependency-and-license-tracking)
+10. [Using DevCovenant in Other Repos](#using-devcovenant-in-other-repos)
+11. [History and Dogfooding](#history-and-dogfooding)
+12. [License](#license)
 
 ## Overview
 DevCovenant turns policy documents into executable checks. It reads policy
@@ -46,26 +49,22 @@ eliminates that by making the documentation itself the executable spec.
 2. `devcovenant/core/parser.py` extracts and hashes each policy definition.
 3. `devcovenant/registry.json` records the policy and script hashes.
 4. `devcovenant/core/engine.py` runs policy scripts and reports violations.
-5. Pre-commit and CI run the same engine with the same policy source.
+5. Policy scripts resolve custom → core, and custom overrides suppress core
+   fixers for that policy.
+6. Pre-commit and CI run the same engine with the same policy source.
 
 ## Repo Layout
 - `AGENTS.md`: canonical policy definitions for this repo.
-- `DEVCOVENANT.md`: architecture, schema, and lifecycle reference.
-- `SPEC.md`: product requirements and functional expectations.
-- `PLAN.md`: staged roadmap and migration sequencing.
+- `SPEC.md`: product requirements (optional in user repos).
+- `PLAN.md`: staged roadmap (optional in user repos).
 - `devcovenant/`: engine, CLI, policy scripts, templates, and config.
   - `core/`: DevCovenant core engine and built-in policy scripts.
   - `core/policy_scripts/`: built-in policy scripts.
-  - `core/policy_scripts/fixers/`: built-in auto-fixers shipped alongside
-    each policy.
-  - `core/fixers/`: compatibility wrappers that re-export fixers for older
-    code.
+  - `core/fixers/`: built-in auto-fixers for core policies.
   - `custom/policy_scripts/`: repo-specific policies.
   - `custom/fixers/`: repo-specific fixers (optional).
-  - `common_policy_patches/`: patch scripts for built-ins (Python preferred;
-    JSON/YAML supported).
   - `templates/`: packaged install templates for docs, configs, and tools.
-- `tools/`: thin wrappers that invoke `devcovenant` commands.
+- `tools/`: workflow helpers (pre-commit/test gates and status updates).
 
 ## CLI Entry Points
 DevCovenant ships both a console script and a module entry:
@@ -83,50 +82,60 @@ Install DevCovenant into a target repository:
 devcovenant install --target /path/to/repo
 ```
 
-Update an existing installation without overwriting docs/config:
+Update an existing installation while preserving policy blocks and
+metadata:
 ```bash
-devcovenant install --target /path/to/repo
+devcovenant update --target /path/to/repo --policy-mode preserve
+```
+
+Append missing stock policies without overwriting existing ones (the
+default update behavior):
+```bash
+devcovenant update --target /path/to/repo --policy-mode append-missing
 ```
 
 Force overwrite docs or config when needed:
 ```bash
-devcovenant install --target /path/to/repo --force-docs
+devcovenant update --target /path/to/repo --force-docs
 
-devcovenant install --target /path/to/repo --force-config
+devcovenant update --target /path/to/repo --force-config
 ```
 
-The `tools/install_devcovenant.py` helper is a thin wrapper around the CLI, so
-older automation can keep calling it. Uninstall is similar:
+
+Normalize policy metadata to include every supported key (empty values
+fall back to defaults):
+```bash
+devcovenant normalize-metadata
+```
+Schema defaults come from `devcovenant/templates/AGENTS.md`. Use
+`--schema` to point at another file and `--no-set-updated` if you do not
+want `updated: true` applied to changed policies.
+
+Selector roles
+--------------
+Use `selector_roles` in policy metadata to declare selector roles. Each
+role produces `role_globs`, `role_files`, and `role_dirs`. Custom role
+names are supported and interpreted by policy scripts. Normalization will
+infer roles from legacy selector keys and insert the role triplets without
+overwriting values.
+
+
+Uninstall uses the same CLI:
 ```bash
 devcovenant uninstall --target /path/to/repo
 ```
 
-The installer records `.devcov/install_manifest.json` so updates and removals
+The installer records `devcovenant/manifest.json` so updates and removals
 remain safe and predictable. If the target repo has no license file,
 DevCovenant installs a GPL-3.0 license by default and will not overwrite an
 existing license unless forced. When a file must be replaced, the installer
 renames the existing file to `*_old.*` before writing the new one.
-`DEVCOVENANT.md` is always replaced so the reference doc stays canonical.
+Optional docs `SPEC.md` and `PLAN.md` are created only when
+`--include-spec` or `--include-plan` are supplied; otherwise existing
+files are preserved.
+See `devcovenant/README.md` for the full install/update reference.
 
 
-## Install Behavior Cheat Sheet
-- `AGENTS.md`: replaced by template; editable notes preserved under
-  `# EDITABLE SECTION`.
-- `README.md`: content preserved, headers refreshed, managed block
-  inserted when required sections are missing.
-- `DEVCOVENANT.md`: backed up to `*_old.*` and replaced by the template.
-- `SPEC.md` and `PLAN.md`: content preserved with refreshed headers,
-  created if missing.
-- `CHANGELOG.md` and `CONTRIBUTING.md`: backed up and replaced by the
-  standard templates.
-- `.gitignore`: regenerated and merges user entries under a preserved
-  block.
-- `VERSION`: created or updated on demand; `x.x` is normalized to `x.x.0`.
-- `LICENSE`: created from the GPL-3.0 template if missing; overwrite
-  only when explicitly requested.
-- `CITATION.cff`: created on prompt or via `--citation-mode create`; when
-  skipped, citation enforcement is disabled in `AGENTS.md`.
-- `.devcov/install_manifest.json`: always written with install metadata.
 ## Workflow
 Adoption guidance:
 - Install DevCovenant on a fresh branch.
@@ -157,8 +166,6 @@ devcov_core_paths:
   - tools/run_pre_commit.py
   - tools/run_tests.py
   - tools/update_test_status.py
-  - tools/install_devcovenant.py
-  - tools/uninstall_devcovenant.py
 ```
 
 Only the DevCovenant repo should set `devcov_core_include: true`. Do not

@@ -23,7 +23,7 @@ class StockPolicyTextSyncCheck(PolicyCheck):
         """Compare policy text to the stock text map."""
         agents_rel = Path(self.get_option("policy_definitions", "AGENTS.md"))
         stock_rel = self.get_option(
-            "stock_texts_file", "devcovenant/core/stock_policy_texts.json"
+            "stock_texts_file", "devcovenant/core/stock_policy_texts.yaml"
         )
         agents_path = context.repo_root / agents_rel
         if not agents_path.exists():
@@ -38,7 +38,7 @@ class StockPolicyTextSyncCheck(PolicyCheck):
                     file_path=agents_path,
                     message=(
                         "Stock policy text map is missing. Regenerate "
-                        "devcovenant/core/stock_policy_texts.json."
+                        "devcovenant/core/stock_policy_texts.yaml."
                     ),
                 )
             ]
@@ -46,6 +46,8 @@ class StockPolicyTextSyncCheck(PolicyCheck):
         parser = PolicyParser(agents_path)
         violations: List[Violation] = []
         for policy in parser.parse_agents_md():
+            if policy.custom:
+                continue
             canonical = stock_texts.get(policy.policy_id)
             if canonical is None:
                 continue
@@ -59,12 +61,12 @@ class StockPolicyTextSyncCheck(PolicyCheck):
                     message=(
                         "Stock policy text differs from canonical. "
                         f"Policy '{policy.policy_id}' should use stock text "
-                        "or be patched to match its new meaning."
+                        "or be marked custom with matching enforcement."
                     ),
                     suggestion=(
                         "Run `python3 -m devcovenant.cli restore-stock-text "
-                        f"--policy {policy.policy_id}` or add a patch that "
-                        "aligns enforcement with the edited text."
+                        f"--policy {policy.policy_id}` or set `custom: true` "
+                        "and provide a custom policy script."
                     ),
                 )
             )

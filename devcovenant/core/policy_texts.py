@@ -2,10 +2,11 @@
 
 from __future__ import annotations
 
-import json
 import re
 from pathlib import Path
 from typing import Dict, Iterable, List
+
+import yaml
 
 from devcovenant.core.parser import PolicyParser
 
@@ -14,7 +15,7 @@ _POLICY_BLOCK_RE = re.compile(
     r"(.*?)(?=\n---\n|\n##|\Z)",
     re.DOTALL,
 )
-_DEFAULT_STOCK_TEXTS = Path("devcovenant/core/stock_policy_texts.json")
+_DEFAULT_STOCK_TEXTS = Path("devcovenant/core/stock_policy_texts.yaml")
 
 
 def _parse_metadata_block(block: str) -> Dict[str, str]:
@@ -59,7 +60,10 @@ def load_stock_texts(
     path = stock_texts_path(repo_root, stock_texts_rel)
     if not path.exists():
         return {}
-    return json.loads(path.read_text(encoding="utf-8"))
+    stock_texts_data = yaml.safe_load(path.read_text(encoding="utf-8"))
+    if not stock_texts_data:
+        return {}
+    return dict(stock_texts_data)
 
 
 def build_stock_texts(agents_path: Path) -> Dict[str, str]:
@@ -80,8 +84,13 @@ def save_stock_texts(
     """Write the stock policy text map to disk."""
     path = stock_texts_path(repo_root, stock_texts_rel)
     path.parent.mkdir(parents=True, exist_ok=True)
-    payload = json.dumps(texts, indent=2, sort_keys=True)
-    path.write_text(payload + "\n", encoding="utf-8")
+    payload = yaml.safe_dump(
+        texts,
+        sort_keys=True,
+        allow_unicode=False,
+        width=60,
+    )
+    path.write_text(payload, encoding="utf-8")
     return path
 
 

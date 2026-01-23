@@ -17,8 +17,6 @@ devcov_core_paths:
   - tools/run_pre_commit.py
   - tools/run_tests.py
   - tools/update_test_status.py
-  - tools/install_devcovenant.py
-  - tools/uninstall_devcovenant.py
 
 # Optional language profiles for multi-language repos. Activate profiles to
 # augment `engine.file_suffixes` without rewriting the full list.

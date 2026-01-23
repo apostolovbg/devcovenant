@@ -140,7 +140,6 @@ class PolicyCheck(ABC):
         """Initialise storage for metadata/config-driven options."""
         self.metadata_options: Dict[str, Any] = {}
         self.policy_config: Dict[str, Any] = {}
-        self.patch_overrides: Dict[str, Any] = {}
 
     @abstractmethod
     def check(self, context: CheckContext) -> List[Violation]:
@@ -172,7 +171,6 @@ class PolicyCheck(ABC):
         self,
         metadata_options: Dict[str, Any] | None,
         config_overrides: Dict[str, Any] | None,
-        patch_overrides: Dict[str, Any] | None = None,
     ) -> None:
         """
         Store policy options coming from AGENTS.md and config.yaml.
@@ -183,7 +181,6 @@ class PolicyCheck(ABC):
 
         self.metadata_options = metadata_options or {}
         self.policy_config = config_overrides or {}
-        self.patch_overrides = patch_overrides or {}
 
     def get_option(self, key: str, default: Any = None) -> Any:
         """
@@ -193,17 +190,27 @@ class PolicyCheck(ABC):
         policy-def metadata, which in turn falls back to the default.
         """
 
+        def is_empty(candidate: Any) -> bool:
+            """Return True when a value is an empty placeholder."""
+            if candidate is None:
+                return True
+            if isinstance(candidate, str):
+                return candidate.strip() == ""
+            if isinstance(candidate, dict):
+                return not candidate
+            if isinstance(candidate, (list, tuple, set)):
+                if not candidate:
+                    return True
+                return all(not str(item).strip() for item in candidate)
+            return False
+
         if key in self.policy_config:
             candidate = self.policy_config[key]
-            if candidate is not None:
-                return candidate
-        if key in self.patch_overrides:
-            candidate = self.patch_overrides[key]
-            if candidate is not None:
+            if not is_empty(candidate):
                 return candidate
         if key in self.metadata_options:
             candidate = self.metadata_options[key]
-            if candidate is not None:
+            if not is_empty(candidate):
                 return candidate
         return default
 

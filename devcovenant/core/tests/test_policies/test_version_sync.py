@@ -38,6 +38,7 @@ class TestVersionSyncPolicy(unittest.TestCase):
                 "runtime_entrypoints": ["project.py"],
                 "runtime_roots": ["project_lib"],
                 "changelog_file": "CHANGELOG.md",
+                "optional_files": "docs/README.md",
             },
             {},
         )
@@ -55,12 +56,6 @@ class TestVersionSyncPolicy(unittest.TestCase):
         readme.parent.mkdir(parents=True, exist_ok=True)
         readme.write_text(f"**Version:** {version}\n")
         return readme
-
-    def _write_citation(self, root: Path, version: str) -> Path:
-        """Write a minimal two-entry CITATION.cff."""
-        citation = root / "CITATION.cff"
-        citation.write_text(f'version: "{version}"\nversion: "{version}"\n')
-        return citation
 
     def _write_license(self, root: Path, path: str, version: str) -> Path:
         """Write a license file that declares the version."""
@@ -84,7 +79,6 @@ class TestVersionSyncPolicy(unittest.TestCase):
             self._write_pyproject(repo_root, "1.0.0", "app/pyproject.toml")
             self._write_license(repo_root, "LICENSE", "1.0.0")
             self._write_license(repo_root, "app/license.txt", "1.0.0")
-            self._write_citation(repo_root, "1.0.0")
             self._write_changelog(repo_root, "1.0.0")
 
             context = CheckContext(repo_root=repo_root)
@@ -93,6 +87,33 @@ class TestVersionSyncPolicy(unittest.TestCase):
 
             mismatch = [v for v in violations if "does not match" in v.message]
             self.assertTrue(mismatch)
+
+    def test_allows_missing_optional_files(self):
+        """Optional metadata files can be absent without violations."""
+        with tempfile.TemporaryDirectory() as tmpdir:
+            repo_root = Path(tmpdir)
+
+            version_dir = repo_root / "project_lib"
+            version_dir.mkdir()
+            (version_dir / "VERSION").write_text("1.0.0\n")
+
+            self._write_readme(repo_root, "README.md", "1.0.0")
+            self._write_pyproject(repo_root, "1.0.0")
+            self._write_pyproject(repo_root, "1.0.0", "app/pyproject.toml")
+            self._write_license(repo_root, "LICENSE", "1.0.0")
+            self._write_license(repo_root, "app/license.txt", "1.0.0")
+            self._write_changelog(repo_root, "1.0.0")
+
+            context = CheckContext(repo_root=repo_root)
+            policy = self._policy()
+            violations = policy.check(context)
+
+            missing = [
+                v
+                for v in violations
+                if "Required metadata file missing" in v.message
+            ]
+            self.assertEqual(missing, [])
 
     def test_allows_matching_versions(self):
         """Policy should pass when versions match everywhere."""
@@ -109,7 +130,6 @@ class TestVersionSyncPolicy(unittest.TestCase):
             self._write_pyproject(repo_root, "1.0.0", "app/pyproject.toml")
             self._write_license(repo_root, "LICENSE", "1.0.0")
             self._write_license(repo_root, "app/license.txt", "1.0.0")
-            self._write_citation(repo_root, "1.0.0")
             self._write_changelog(repo_root, "1.0.0")
 
             context = CheckContext(repo_root=repo_root)
@@ -136,7 +156,6 @@ class TestVersionSyncPolicy(unittest.TestCase):
             self._write_pyproject(repo_root, "1.0.0", "app/pyproject.toml")
             self._write_license(repo_root, "LICENSE", "1.0.0")
             self._write_license(repo_root, "app/license.txt", "1.0.0")
-            self._write_citation(repo_root, "1.0.0")
             self._write_changelog(repo_root, "1.0.0")
 
             runtime_file = repo_root / "project.py"
@@ -169,7 +188,6 @@ class TestVersionSyncPolicy(unittest.TestCase):
             self._write_pyproject(repo_root, "1.0.0", "app/pyproject.toml")
             self._write_license(repo_root, "LICENSE", "1.0.0")
             self._write_license(repo_root, "app/license.txt", "1.0.0")
-            self._write_citation(repo_root, "1.0.0")
             self._write_changelog(repo_root, "1.0.0")
 
             context = CheckContext(repo_root=repo_root)

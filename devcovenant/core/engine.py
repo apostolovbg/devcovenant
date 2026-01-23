@@ -5,7 +5,6 @@ Main DevCovenant engine - orchestrates policy checking and enforcement.
 import importlib
 import importlib.util
 import inspect
-import json
 import os
 import pkgutil
 import sys
@@ -15,8 +14,9 @@ from typing import Any, Dict, List, Optional, Set
 import yaml
 
 from .base import CheckContext, PolicyCheck, PolicyFixer, Violation
+from .manifest import ensure_manifest
 from .parser import PolicyDefinition, PolicyParser
-from .policy_locations import resolve_patch_location, resolve_script_location
+from .policy_locations import resolve_script_location
 from .registry import PolicyRegistry, PolicySyncIssue
 
 
@@ -32,6 +32,7 @@ class DevCovenantEngine:
         "auto_fix",
         "updated",
         "apply",
+        "custom",
         "applies_to",
         "hash",
         "enforcement",
@@ -78,6 +79,8 @@ class DevCovenantEngine:
         self._merge_configured_ignored_dirs()
         self._apply_core_exclusions()
 
+        ensure_manifest(self.repo_root)
+
         # Initialize parser and registry
         self.parser = PolicyParser(self.agents_md_path)
         self.registry = PolicyRegistry(self.registry_path, self.repo_root)
@@ -85,6 +88,9 @@ class DevCovenantEngine:
         # Statistics
         self.passed_count = 0
         self.failed_count = 0
+        self._custom_policy_overrides = (
+            self._discover_custom_policy_overrides()
+        )
         self.fixers: List[PolicyFixer] = self._load_fixers()
 
     def _load_config(self) -> Dict:
@@ -135,6 +141,20 @@ class DevCovenantEngine:
                 continue
             self._ignored_paths.append(self.repo_root / rel)
 
+    def _discover_custom_policy_overrides(self) -> set[str]:
+        """Return policy ids overridden by custom policy scripts."""
+        overrides: set[str] = set()
+        custom_dir = (
+            self.repo_root / "devcovenant" / "custom" / "policy_scripts"
+        )
+        if not custom_dir.exists():
+            return overrides
+        for path in custom_dir.glob("*.py"):
+            if path.name.startswith("_") or path.name == "__init__.py":
+                continue
+            overrides.add(path.stem.replace("_", "-"))
+        return overrides
+
     def _is_ignored_path(self, candidate: Path) -> bool:
         """Return True when candidate is within an ignored path prefix."""
         for root in self._ignored_paths:
@@ -159,26 +179,38 @@ class DevCovenantEngine:
                 continue
 
         for package in packages:
+            origin = (
+                "custom"
+                if package.__name__.endswith("custom.fixers")
+                else "core"
+            )
             for module_info in pkgutil.iter_modules(package.__path__):
                 if module_info.ispkg or module_info.name.startswith("_"):
                     continue
                 module_name = f"{package.__name__}.{module_info.name}"
-            try:
-                module = importlib.import_module(module_name)
-            except Exception:
-                continue
-            for member in module.__dict__.values():
-                if (
-                    inspect.isclass(member)
-                    and issubclass(member, PolicyFixer)
-                    and member is not PolicyFixer
-                ):
-                    try:
-                        instance = member()
-                        setattr(instance, "repo_root", self.repo_root)
-                        fixers.append(instance)
-                    except Exception:
-                        continue
+                try:
+                    module = importlib.import_module(module_name)
+                except Exception:
+                    continue
+                for member in module.__dict__.values():
+                    if (
+                        inspect.isclass(member)
+                        and issubclass(member, PolicyFixer)
+                        and member is not PolicyFixer
+                    ):
+                        try:
+                            instance = member()
+                            if (
+                                origin == "core"
+                                and instance.policy_id
+                                in self._custom_policy_overrides
+                            ):
+                                continue
+                            setattr(instance, "repo_root", self.repo_root)
+                            setattr(instance, "_origin", origin)
+                            fixers.append(instance)
+                        except Exception:
+                            continue
         return fixers
 
     def check(
@@ -345,16 +377,7 @@ class DevCovenantEngine:
                     config_overrides = context.get_policy_config(
                         policy.policy_id
                     )
-                    patch_overrides = self._load_patch_overrides(
-                        policy,
-                        context,
-                        options,
-                    )
-                    checker.set_options(
-                        options,
-                        config_overrides,
-                        patch_overrides,
-                    )
+                    checker.set_options(options, config_overrides)
                     policy_violations = checker.check(context)
                     violations.extend(policy_violations)
                     if not policy_violations:
@@ -590,88 +613,6 @@ class DevCovenantEngine:
                 continue
             options[key] = self._parse_metadata_value(raw_value)
         return options
-
-    def _load_patch_overrides(
-        self,
-        policy: PolicyDefinition,
-        context: CheckContext,
-        options: Dict[str, Any],
-    ) -> Dict[str, Any]:
-        """Load policy patch overrides from common_policy_patches."""
-        location = resolve_patch_location(self.repo_root, policy.policy_id)
-        if location is None:
-            return {}
-        if location.kind == "py":
-            return self._load_patch_script(
-                location.path, policy, context, options
-            )
-        if location.kind == "json":
-            try:
-                json_data = json.loads(
-                    location.path.read_text(encoding="utf-8")
-                )
-            except (OSError, json.JSONDecodeError):
-                return {}
-            return json_data if isinstance(json_data, dict) else {}
-
-        try:
-            with open(location.path, "r", encoding="utf-8") as handle:
-                patch_data = yaml.safe_load(handle) or {}
-        except OSError:
-            return {}
-        return patch_data if isinstance(patch_data, dict) else {}
-
-    def _load_patch_script(
-        self,
-        path: Path,
-        policy: PolicyDefinition,
-        context: CheckContext,
-        options: Dict[str, Any],
-    ) -> Dict[str, Any]:
-        """Load a Python patch script and return overrides."""
-        spec = importlib.util.spec_from_file_location(
-            f"devcovenant.common_policy_patches.{path.stem}",
-            path,
-        )
-        if not spec or not spec.loader:
-            return {}
-        module = importlib.util.module_from_spec(spec)
-        spec.loader.exec_module(module)
-
-        if hasattr(module, "PATCH") and isinstance(module.PATCH, dict):
-            return module.PATCH
-
-        if hasattr(module, "get_patch") and callable(module.get_patch):
-            result = module.get_patch()
-            return result if isinstance(result, dict) else {}
-
-        if hasattr(module, "patch_options") and callable(module.patch_options):
-            return self._call_patch(
-                module.patch_options, policy, context, options
-            )
-
-        return {}
-
-    @staticmethod
-    def _call_patch(
-        patch_fn: Any,
-        policy: PolicyDefinition,
-        context: CheckContext,
-        options: Dict[str, Any],
-    ) -> Dict[str, Any]:
-        """Invoke a patch function with supported arguments."""
-        signature = inspect.signature(patch_fn)
-        kwargs: Dict[str, Any] = {}
-        if "policy" in signature.parameters:
-            kwargs["policy"] = policy
-        if "context" in signature.parameters:
-            kwargs["context"] = context
-        if "options" in signature.parameters:
-            kwargs["options"] = options
-        if "repo_root" in signature.parameters:
-            kwargs["repo_root"] = context.repo_root
-        result = patch_fn(**kwargs)
-        return result if isinstance(result, dict) else {}
 
     @staticmethod
     def _parse_metadata_value(raw_value: str) -> Any:

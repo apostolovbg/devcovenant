@@ -22,6 +22,7 @@ class PolicyDefinition:
         auto_fix: Whether auto-fixing is enabled
         updated: Whether the policy has been updated (triggers script sync)
         apply: Whether the policy should be evaluated
+        custom: Whether the policy uses custom enforcement text
         applies_to: File patterns this policy applies to (optional)
         description: Full policy text
         hash_from_file: Hash stored in AGENTS.md (if present)
@@ -35,6 +36,7 @@ class PolicyDefinition:
     auto_fix: bool
     updated: bool
     apply: bool
+    custom: bool
     description: str
     applies_to: Optional[str] = None
     hash_from_file: Optional[str] = None
@@ -84,6 +86,8 @@ class PolicyParser:
             metadata = self._parse_metadata_block(metadata_block)
             apply_raw = metadata.get("apply", "true")
             apply_flag = apply_raw.strip().lower() == "true"
+            custom_raw = metadata.get("custom", "false")
+            custom_flag = custom_raw.strip().lower() == "true"
 
             # Create policy definition
             policy = PolicyDefinition(
@@ -94,6 +98,7 @@ class PolicyParser:
                 auto_fix=metadata.get("auto_fix", "false").lower() == "true",
                 updated=metadata.get("updated", "false").lower() == "true",
                 apply=apply_flag,
+                custom=custom_flag,
                 description=description,
                 applies_to=metadata.get("applies_to"),
                 hash_from_file=metadata.get("hash"),

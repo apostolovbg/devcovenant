@@ -1,6 +1,12 @@
 # DevCovenant Specification
-**Last Updated:** 2026-01-12
-**Version:** 0.2.5
+**Last Updated:** 2026-01-23
+**Version:** 0.2.6
+
+<!-- DEVCOV:BEGIN -->
+**Doc ID:** SPEC
+**Doc Type:** specification
+**Managed By:** DevCovenant
+<!-- DEVCOV:END -->
 
 This specification defines the required behavior for the DevCovenant engine,
 CLI, installer, and managed documentation. The codebase is the source of
@@ -37,35 +43,46 @@ hashes synchronized so drift is detectable and reversible.
   follows each `policy-def` block.
 - Hash policy definitions and scripts into `devcovenant/registry.json`.
 - Expose `restore-stock-text` to reset policy prose to canonical wording.
+- Support `custom: true/false` metadata to mark custom policy prose that
+  bypasses stock text sync checks.
+- Maintain a canonical metadata schema that lists all supported keys (common
+  and policy-specific) so every policy block can be normalized on demand.
 
 ### Engine behavior
 - Load policy scripts from `devcovenant/core/policy_scripts/` with support for
-  custom overrides in `devcovenant/custom/policy_scripts/` and patch scripts
-  in `devcovenant/common_policy_patches/`.
+  custom overrides in `devcovenant/custom/policy_scripts/`.
+- When a custom policy script exists, it fully replaces the built-in policy
+  and suppresses core fixers for that policy.
 - Respect `apply`, `severity`, `status`, and `enforcement` metadata for each
   policy.
 - Support `startup`, `lint`, `pre-commit`, and `normal` modes.
 - Apply auto-fixers when allowed, using fixers located under
-  `devcovenant/core/policy_scripts/fixers/` and compatibility wrappers in
-  `devcovenant/core/fixers/`.
+  `devcovenant/core/fixers/` and any custom fixers under
+  `devcovenant/custom/fixers/`.
 
 ### CLI commands
 - Provide a console entry point (`devcovenant`) and module entry
   (`python3 -m devcovenant`) that both route to the same CLI.
 - Supported commands: `check`, `sync`, `test`, `update-hashes`,
-  `restore-stock-text`, `install`, `uninstall`.
+  `restore-stock-text`, `install`, `update`, `uninstall`,
+  `normalize-metadata`.
 - `check` exits non-zero when blocking violations or sync issues are present.
 - `sync` runs a startup-mode check and reports drift.
 - `test` runs `pytest` against `devcovenant/core/tests/`.
 - `install` and `uninstall` delegate to `devcovenant/core/install.py` and
   `devcovenant/core/uninstall.py`.
+- `update` supports managed-block-only refreshes and policy-mode control.
+- `normalize-metadata` inserts any missing policy keys with safe placeholders
+  while preserving existing values.
 
 ### Documentation management
 - Every managed doc must include `Last Updated` and `Version` headers.
 - `devcovenant/README.md` also includes `DevCovenant Version`, sourced from
   the installer package version.
-- Managed blocks are wrapped in `<!-- DEVCOV:BEGIN -->` and
-  `<!-- DEVCOV:END -->`.
+- Every managed doc must include a top-of-file managed block inserted just
+  below the header lines. The block records the `Doc ID`, `Doc Type`, and
+  management ownership, and uses the standard markers:
+  `<!-- DEVCOV:BEGIN -->` and `<!-- DEVCOV:END -->`.
 
 ### Configuration and extension
 - `devcovenant/config.yaml` must support `devcov_core_include` and
@@ -77,44 +94,49 @@ hashes synchronized so drift is detectable and reversible.
 - Every policy definition includes descriptive prose immediately after the
   metadata block.
 - Built-in policies have canonical text stored in
-  `devcovenant/core/stock_policy_texts.json`.
+  `devcovenant/core/stock_policy_texts.yaml`.
 - `apply: false` disables enforcement without removing definitions.
 - `fiducial` policies remain enforced and always surface their policy text.
 - Selector keys (`include_*`, `exclude_*`, `force_*`, `watch_*`) are supported
   across policy definitions for consistent scoping.
+- Policy metadata normalization must be able to add missing keys without
+  changing existing values or policy text.
 
 ## Installation Requirements
 - Install the full DevCovenant toolchain into the target repo, including the
   `devcovenant/` tree, `tools/` helpers, and CI workflow templates.
 - Use packaged templates from `devcovenant/templates/` when installed from
   PyPI; fall back to repo files when running from source.
-- Install modes: `auto`, `empty`, `existing`; use mode-specific defaults for
-  docs, config, and metadata handling.
-- Preserve custom policy scripts and patches by default on existing installs
+- Install modes: `auto`, `empty`; use mode-specific defaults for docs,
+  config, and metadata handling. Use `devcovenant update` for existing repos.
+- Update mode defaults to preserving policy blocks and metadata; managed blocks
+  can be refreshed independently of policy definitions.
+- Preserve custom policy scripts and fixers by default on existing installs
   (`--preserve-custom`), with explicit overrides available.
 - `AGENTS.md` is always written from the template; if a prior `AGENTS.md`
   exists, preserve its editable section under `# EDITABLE SECTION`.
 - `README.md` keeps user content, receives the standard header, and gains a
   managed block with missing sections (Table of Contents, Overview, Workflow,
   DevCovenant).
-- `DEVCOVENANT.md` is always backed up to `*_old.*` and replaced by the
-  standard template during install or update.
-- `SPEC.md` and `PLAN.md` keep content when present (header-only update) and
-  are created from minimal templates when missing.
-- `CHANGELOG.md` and `CONTRIBUTING.md` are backed up as `*_old.*` and replaced
-  with standard DevCovenant templates.
+- `SPEC.md` and `PLAN.md` are optional. Existing files get header refreshes;
+  missing files are created only when `--include-spec` or `--include-plan`
+  are supplied.
+- `CHANGELOG.md` and `CONTRIBUTING.md` are replaced only when docs mode
+  overwrites; otherwise content is preserved with refreshed headers and
+  managed blocks.
 - `VERSION` is created on demand. Accept `x.x` or `x.x.x`, normalize to
   `x.x.0`, and apply across headers.
 - If no license exists, install the GPL-3.0 template with a `Project Version`
   header. Only overwrite licenses when explicitly requested.
-- If `CITATION.cff` is missing, prompt to create it. When skipped, disable
-  citation enforcement in `AGENTS.md` by setting
-  `version-sync.citation_file: __none__`.
 - Regenerate `.gitignore` from a universal baseline and merge existing user
   entries under a preserved block.
 - Stamp `Last Updated` values using the UTC install date.
-- Write `.devcov/install_manifest.json` with installed paths, options, and the
-  UTC timestamp of the install or update.
+- Support partial doc overwrites via `--docs-include` / `--docs-exclude`, so
+  only selected docs are replaced when docs mode overwrites.
+- Support policy update modes via `--policy-mode preserve|append-missing|`
+  `overwrite`.
+- Write `devcovenant/manifest.json` with the core layout, doc types, installed
+  paths, options, and the UTC timestamp of the install or update.
 
 ## Packaging Requirements
 - Ship `devcovenant` as a pure-Python package with a console script entry.

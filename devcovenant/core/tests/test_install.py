@@ -1,10 +1,11 @@
 """Regression tests for the installer manifest helpers."""
 
-import json
 import shutil
 from pathlib import Path
 
 from devcovenant.core import install
+from devcovenant.core import manifest as manifest_module
+from devcovenant.core import update
 
 
 def test_install_records_manifest_with_core_excluded(tmp_path: Path) -> None:
@@ -20,13 +21,11 @@ def test_install_records_manifest_with_core_excluded(tmp_path: Path) -> None:
                 "empty",
                 "--version",
                 "0.1.0",
-                "--citation-mode",
-                "skip",
             ]
         )
-        manifest = target / install.MANIFEST_PATH
+        manifest = manifest_module.manifest_path(target)
         assert manifest.exists()
-        manifest_data = json.loads(manifest.read_text())
+        manifest_data = manifest_module.load_manifest(target)
         assert manifest_data["options"]["devcov_core_include"] is False
         assert "core" in manifest_data["installed"]
         assert "docs" in manifest_data["installed"]
@@ -56,21 +55,17 @@ def test_update_core_config_text_toggles_include_flag() -> None:
 
 
 def test_install_preserves_readme_content(tmp_path: Path) -> None:
-    """Existing README content should remain after install."""
+    """Existing README content should remain after update."""
     target = tmp_path / "repo"
     target.mkdir()
     readme = target / "README.md"
     readme.write_text("# Example\nCustom content.\n", encoding="utf-8")
-    install.main(
+    update.main(
         [
             "--target",
             str(target),
-            "--mode",
-            "existing",
             "--version",
             "1.2.3",
-            "--citation-mode",
-            "skip",
         ]
     )
     updated = readme.read_text(encoding="utf-8")
@@ -79,8 +74,19 @@ def test_install_preserves_readme_content(tmp_path: Path) -> None:
     assert install.BLOCK_BEGIN in updated
 
 
-def test_install_disables_citation_when_skipped(tmp_path: Path) -> None:
-    """CITATION enforcement should be disabled when skipped."""
+def test_install_skips_spec_and_plan_by_default(tmp_path: Path) -> None:
+    """SPEC and PLAN are optional unless explicitly included."""
+    target = tmp_path / "repo"
+    target.mkdir()
+    install.main(
+        ["--target", str(target), "--mode", "empty", "--version", "0.5.0"]
+    )
+    assert not (target / "SPEC.md").exists()
+    assert not (target / "PLAN.md").exists()
+
+
+def test_install_creates_optional_spec_and_plan(tmp_path: Path) -> None:
+    """SPEC and PLAN are created when explicitly requested."""
     target = tmp_path / "repo"
     target.mkdir()
     install.main(
@@ -90,10 +96,108 @@ def test_install_disables_citation_when_skipped(tmp_path: Path) -> None:
             "--mode",
             "empty",
             "--version",
-            "0.3.0",
-            "--citation-mode",
-            "skip",
+            "0.6.0",
+            "--include-spec",
+            "--include-plan",
         ]
     )
-    agents_text = (target / "AGENTS.md").read_text(encoding="utf-8")
-    assert "citation_file: __none__" in agents_text
+    assert (target / "SPEC.md").exists()
+    assert (target / "PLAN.md").exists()
+
+
+def _write_custom_agents(path: Path) -> None:
+    """Write a minimal AGENTS.md with custom policy content."""
+    content = """# AGENTS
+**Last Updated:** 2026-01-01
+**Version:** 0.1.0
+
+<!-- DEVCOV:BEGIN -->
+Managed block A.
+<!-- DEVCOV:END -->
+
+# EDITABLE SECTION
+
+Custom notes.
+
+<!-- DEVCOV:BEGIN -->
+Managed block B.
+<!-- DEVCOV:END -->
+
+## Policy: Custom
+
+```policy-def
+id: custom-policy
+status: active
+severity: warning
+auto_fix: false
+updated: false
+applies_to: *
+enforcement: active
+apply: true
+custom: true
+```
+
+Custom policy description.
+"""
+    path.write_text(content, encoding="utf-8")
+
+
+def test_policy_mode_preserve_keeps_policy_text(tmp_path: Path) -> None:
+    """Preserve mode should keep policy blocks intact."""
+    target = tmp_path / "repo"
+    target.mkdir()
+    agents_path = target / "AGENTS.md"
+    _write_custom_agents(agents_path)
+    install.main(
+        [
+            "--target",
+            str(target),
+            "--mode",
+            "existing",
+            "--allow-existing",
+            "--version",
+            "0.2.0",
+            "--policy-mode",
+            "preserve",
+        ]
+    )
+    updated = agents_path.read_text(encoding="utf-8")
+    assert "Custom policy description." in updated
+    assert "## Policy: Version Synchronization" not in updated
+
+
+def test_policy_mode_append_missing_adds_policies(tmp_path: Path) -> None:
+    """Append mode should add missing policy sections from the template."""
+    target = tmp_path / "repo"
+    target.mkdir()
+    agents_path = target / "AGENTS.md"
+    _write_custom_agents(agents_path)
+    install.main(
+        [
+            "--target",
+            str(target),
+            "--mode",
+            "existing",
+            "--allow-existing",
+            "--version",
+            "0.2.0",
+            "--policy-mode",
+            "append-missing",
+        ]
+    )
+    updated = agents_path.read_text(encoding="utf-8")
+    assert "Custom policy description." in updated
+    assert "## Policy: Version Synchronization" in updated
+
+
+def test_update_defaults_append_missing(tmp_path: Path) -> None:
+    """Update should append missing policies by default."""
+    target = tmp_path / "repo"
+    target.mkdir()
+    agents_path = target / "AGENTS.md"
+    _write_custom_agents(agents_path)
+    (target / "VERSION").write_text("0.1.0\n", encoding="utf-8")
+    update.main(["--target", str(target)])
+    updated = agents_path.read_text(encoding="utf-8")
+    assert "Custom policy description." in updated
+    assert "## Policy: Version Synchronization" in updated

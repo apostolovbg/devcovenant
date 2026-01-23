@@ -72,22 +72,25 @@ class VersionSyncCheck(PolicyCheck):
             self._resolve_path(context.repo_root, path)
             for path in raw_license_paths
         ]
-        citation_option = self.get_option("citation_file", "CITATION.cff")
-        citation_file = None
-        if citation_option and str(citation_option).strip() != "__none__":
-            citation_file = self._resolve_path(
-                context.repo_root,
-                Path(str(citation_option)),
+        readme_paths = [path for path in readme_paths if path.exists()]
+        pyproject_paths = [path for path in pyproject_paths if path.exists()]
+        license_paths = [path for path in license_paths if path.exists()]
+
+        optional_paths = {
+            self._resolve_path(context.repo_root, path)
+            for path in self._path_list(
+                self.get_option("optional_files", None)
             )
+        }
 
         required_targets = [version_file, changelog_file]
-        if citation_file is not None:
-            required_targets.append(citation_file)
         required_targets.extend(readme_paths)
         required_targets.extend(pyproject_paths)
         required_targets.extend(license_paths)
         for target in required_targets:
             if not target.exists():
+                if target in optional_paths:
+                    continue
                 violations.append(
                     Violation(
                         policy_id=self.policy_id,
@@ -189,53 +192,6 @@ class VersionSyncCheck(PolicyCheck):
                         ),
                     )
                 )
-
-        # CITATION.cff
-        if citation_file is not None:
-            try:
-                citation_text = citation_file.read_text(encoding="utf-8")
-            except OSError as exc:
-                violations.append(
-                    Violation(
-                        policy_id=self.policy_id,
-                        severity="error",
-                        file_path=citation_file,
-                        message=f"Cannot read CITATION.cff: {exc}",
-                    )
-                )
-            else:
-                citation_regex = r"version:\s*\"(?P<version>\d+\.\d+\.\d+)\""
-                citation_pattern = re.compile(citation_regex)
-                citation_matches = citation_pattern.findall(citation_text)
-                if len(citation_matches) < 2:
-                    violations.append(
-                        Violation(
-                            policy_id=self.policy_id,
-                            severity="error",
-                            file_path=citation_file,
-                            message=(
-                                "Must declare project and preferred-citation "
-                                "versions"
-                            ),
-                        )
-                    )
-                else:
-                    unique_versions = set(citation_matches)
-                    if len(unique_versions) != 1 or (
-                        version not in unique_versions
-                    ):
-                        violations.append(
-                            Violation(
-                                policy_id=self.policy_id,
-                                severity="error",
-                                file_path=citation_file,
-                                message=(
-                                    f"Versions {unique_versions} out of sync "
-                                    f"with {version_file.name} ({version})"
-                                ),
-                            )
-                        )
-
         # License files
         for path in license_paths:
             try:

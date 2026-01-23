@@ -1,14 +1,491 @@
 # Changelog
+**Last Updated:** 2026-01-23
+**Version:** 0.2.6
+
+<!-- DEVCOV:BEGIN -->
+**Doc ID:** CHANGELOG
+**Doc Type:** changelog
+**Managed By:** DevCovenant
 
 ## How to Log Changes
-Add one line for each substantive commit or pull request directly under the
-latest version header so entries stay newest-first (descending dates). Always
-confirm the actual current date before logging new changes and keep entries in
-chronological order. Record timestamps as ISO dates (`YYYY-MM-DD`).
+Add one line for each substantive change under the current version header.
+Keep entries newest-first and record dates in ISO format (`YYYY-MM-DD`).
+Example entry:
+- 2026-01-23: Updated dependency manifests and license report.
+  Files:
+  requirements.in
+  requirements.lock
+  THIRD_PARTY_LICENSES.md
+  devcovenant/core/policy_scripts/
+    documentation_growth_tracking.py
+<!-- DEVCOV:END -->
 
 ## Log changes here
 
+## Version 0.2.6
+- 2026-01-23: Marked Phases A-E as complete in the 0.2.6 plan. (AI assistant)
+  Files:
+  CHANGELOG.md
+  PLAN.md
+- 2026-01-23: Switched stock policy text storage to YAML, shortened
+  registry hash storage to satisfy line limits, and expanded changelog
+  examples for long paths. (AI assistant)
+  Files:
+  AGENTS.md
+  CHANGELOG.md
+  SPEC.md
+  devcovenant/README.md
+  devcovenant/core/install.py
+  devcovenant/core/manifest.py
+  devcovenant/core/policy_scripts/stock_policy_text_sync.py
+  devcovenant/core/policy_texts.py
+  devcovenant/core/registry.py
+  devcovenant/core/stock_policy_texts.json
+  devcovenant/core/stock_policy_texts.yaml
+  devcovenant/core/tests/test_policies/test_stock_policy_text_sync.py
+  devcovenant/manifest.json
+  devcovenant/registry.json
+  devcovenant/templates/AGENTS.md
+- 2026-01-23: Added doc metadata blocks for managed docs, updated
+  installer handling for spec/plan/changelog blocks, and refreshed
+  documentation plus manifest tracking. (AI assistant)
+  Files:
+  AGENTS.md
+  CHANGELOG.md
+  CITATION.cff
+  CONTRIBUTING.md
+  DEVCOVENANT.md
+  LICENSE
+  MANIFEST.in
+  PLAN.md
+  README.md
+  SPEC.md
+  VERSION
+  devcovenant/README.md
+  devcovenant/cli.py
+  devcovenant/common_policy_patches/README.md
+  devcovenant/common_policy_patches/__init__.py
+  devcovenant/config.yaml
+  devcovenant/core/base.py
+  devcovenant/core/engine.py
+  devcovenant/core/install.py
+  devcovenant/core/manifest.py
+  devcovenant/core/metadata_normalizer.py
+  devcovenant/core/parser.py
+  devcovenant/core/policy_locations.py
+  devcovenant/core/policy_scripts/devcov_structure_guard.py
+  devcovenant/core/policy_scripts/stock_policy_text_sync.py
+  devcovenant/core/policy_scripts/version_sync.py
+  devcovenant/core/stock_policy_texts.json
+  devcovenant/core/tests/test_base.py
+  devcovenant/core/tests/test_engine.py
+  devcovenant/core/tests/test_install.py
+  devcovenant/core/tests/test_metadata_normalizer.py
+  devcovenant/core/tests/test_policies/test_devcov_structure_guard.py
+  devcovenant/core/tests/test_policies/test_stock_policy_text_sync.py
+  devcovenant/core/tests/test_policies/test_version_sync.py
+  devcovenant/core/tests/test_policy_patches.py
+  devcovenant/core/uninstall.py
+  devcovenant/core/update.py
+  devcovenant/custom/policy_scripts/README.md
+  devcovenant/manifest.json
+  devcovenant/registry.json
+  devcovenant/templates/AGENTS.md
+  devcovenant/templates/CONTRIBUTING.md
+  devcovenant/templates/DEVCOVENANT.md
+  devcovenant/templates/LICENSE_GPL-3.0.txt
+  devcovenant/templates/VERSION
+  devcovenant/templates/tools/install_devcovenant.py
+  devcovenant/templates/tools/templates/LICENSE_GPL-3.0.txt
+  devcovenant/templates/tools/uninstall_devcovenant.py
+  pyproject.toml
+  tools/install_devcovenant.py
+  tools/templates/LICENSE_GPL-3.0.txt
+  tools/uninstall_devcovenant.py
+- 2026-01-22: Tracked `devcovenant/manifest.json` in-repo and added a
+  manifest schema summary to devcovenant docs. (AI assistant)
+  Files:
+  CHANGELOG.md
+  devcovenant/README.md
+  devcovenant/manifest.json
+- 2026-01-22: Added manifest-driven structure validation, switched
+  install/update/uninstall to `devcovenant/manifest.json`, and refreshed
+  docs/tests/spec to match. (AI assistant)
+  Files:
+  CHANGELOG.md
+  README.md
+  SPEC.md
+  devcovenant/README.md
+  devcovenant/core/engine.py
+  devcovenant/core/install.py
+  devcovenant/core/manifest.py
+  devcovenant/core/policy_scripts/devcov_structure_guard.py
+  devcovenant/core/tests/test_install.py
+  devcovenant/core/tests/test_policies/test_devcov_structure_guard.py
+  devcovenant/core/uninstall.py
+  devcovenant/registry.json
+- 2026-01-22: Removed managed-blocks-only mode, set updates to append
+  missing policies with automatic metadata normalization, and updated
+  CLI/tests/docs to match. (AI assistant)
+  Files:
+  CHANGELOG.md
+  PLAN.md
+  README.md
+  devcovenant/README.md
+  devcovenant/cli.py
+  devcovenant/core/install.py
+  devcovenant/core/update.py
+  devcovenant/core/tests/test_install.py
+- 2026-01-22: Migrated legacy selector metadata into selector roles and
+  expanded normalization tests and docs to cover user-facing roles.
+  (AI assistant)
+  Files:
+  CHANGELOG.md
+  PLAN.md
+  devcovenant/README.md
+  devcovenant/core/metadata_normalizer.py
+  devcovenant/core/tests/test_metadata_normalizer.py
+- 2026-01-22: Confirmed Phase B by adding managed-blocks-only coverage
+  in installer tests and updating the plan status. (AI assistant)
+  Files:
+  CHANGELOG.md
+  PLAN.md
+  devcovenant/core/tests/test_install.py
+- 2026-01-22: Filled in missing policy metadata keys, introduced empty
+  metadata fallback behavior, and added selector-role defaults for
+  documentation-growth-tracking. (AI assistant)
+  Files:
+  AGENTS.md
+  CHANGELOG.md
+  PLAN.md
+  README.md
+  devcovenant/README.md
+  devcovenant/core/base.py
+  devcovenant/core/tests/test_base.py
+  devcovenant/templates/AGENTS.md
+- 2026-01-22: Added selector role normalization, legacy selector migration,
+  and documentation updates for selector roles. (AI assistant)
+  Files:
+  CHANGELOG.md
+  README.md
+  devcovenant/README.md
+  devcovenant/core/metadata_normalizer.py
+  devcovenant/core/tests/test_metadata_normalizer.py
+- 2026-01-22: Marked Phase A and Phase B as not done in the plan.
+  (AI assistant)
+  Files:
+  CHANGELOG.md
+  PLAN.md
+- 2026-01-22: Noted that custom selector roles are supported in the plan.
+  (AI assistant)
+  Files:
+  CHANGELOG.md
+  PLAN.md
+- 2026-01-22: Rewrote the plan to codify target update behavior, selector
+  roles, core refresh rules, and dynamic structure validation. (AI assistant)
+  Files:
+  CHANGELOG.md
+  PLAN.md
+- 2026-01-22: Documented the target update behavior, selector roles, and
+  policy migration workflow in the plan. (AI assistant)
+  Files:
+  CHANGELOG.md
+  PLAN.md
+- 2026-01-22: Clarified that default updates run metadata normalization so
+  core policy updates remain compatible while preserving values. (AI assistant)
+  Files:
+  CHANGELOG.md
+  PLAN.md
+- 2026-01-22: Clarified that default updates do not alter policy metadata and
+  key changes require explicit normalization. (AI assistant)
+  Files:
+  CHANGELOG.md
+  PLAN.md
+- 2026-01-22: Updated the plan to migrate legacy selector keys into
+  selector roles and reorder remaining phases. (AI assistant)
+  Files:
+  CHANGELOG.md
+  PLAN.md
+- 2026-01-22: Planned selector role normalization with `selector_roles` and
+  globs/files/dirs triplets, including user-visible roles. (AI assistant)
+  Files:
+  CHANGELOG.md
+  PLAN.md
+- 2026-01-22: Expanded the plan to require selector-key completeness in
+  metadata normalization and document the key taxonomy. (AI assistant)
+  Files:
+  CHANGELOG.md
+  PLAN.md
+- 2026-01-22: Rewrote the 0.2.6 plan to reflect policy replacement,
+  managed-environment, and SemVer enablement sequencing with updated
+  acceptance criteria and risks. (AI assistant)
+  Files:
+  CHANGELOG.md
+  PLAN.md
+- 2026-01-22: Expanded the plan with metadata completeness,
+  policy replacement, and deprecation workflow guidance. (AI assistant)
+  Files:
+  CHANGELOG.md
+  PLAN.md
+- 2026-01-22: Documented that SemVer scope enforcement ships disabled by
+  default with guidance for enabling it and keeping it on for releases.
+  (AI assistant)
+  Files:
+  CHANGELOG.md
+  PLAN.md
+- 2026-01-22: Added plan items for a unified managed-environment policy and
+  SemVer scope enforcement aligned with MAJOR/MINOR/PATCH intent.
+  (AI assistant)
+  Files:
+  CHANGELOG.md
+  PLAN.md
+- 2026-01-22: Planned install defaults for CONTRIBUTING/CHANGELOG,
+  version bootstrapping, and managed-block placement guidance for changelog
+  updates. (AI assistant)
+  Files:
+  CHANGELOG.md
+  PLAN.md
+- 2026-01-22: Implemented policy-mode and managed-block-only update
+  controls, plus installer logic and tests to preserve or append policy
+  blocks safely during updates. (AI assistant)
+  Files:
+  CHANGELOG.md
+  PLAN.md
+  README.md
+  devcovenant/README.md
+  devcovenant/cli.py
+  devcovenant/core/install.py
+  devcovenant/core/update.py
+  devcovenant/core/tests/test_install.py
+- 2026-01-22: Added metadata normalization tooling and CLI support to
+  standardize policy blocks, plus docs and plan updates describing the
+  new schema workflow. (AI assistant)
+  Files:
+  CHANGELOG.md
+  PLAN.md
+  README.md
+  devcovenant/README.md
+  devcovenant/cli.py
+  devcovenant/core/metadata_normalizer.py
+  devcovenant/core/tests/test_metadata_normalizer.py
+- 2026-01-22: Removed DEVCOVENANT/CITATION artifacts, made SPEC/PLAN
+  optional, and updated install/update tooling plus version-sync handling
+  to match the streamlined documentation flow. (AI assistant)
+  Files:
+  AGENTS.md
+  CHANGELOG.md
+  CITATION.cff
+  CONTRIBUTING.md
+  DEVCOVENANT.md
+  LICENSE
+  MANIFEST.in
+  PLAN.md
+  README.md
+  SPEC.md
+  VERSION
+  devcovenant/README.md
+  devcovenant/cli.py
+  devcovenant/common_policy_patches/README.md
+  devcovenant/common_policy_patches/__init__.py
+  devcovenant/config.yaml
+  devcovenant/core/base.py
+  devcovenant/core/engine.py
+  devcovenant/core/install.py
+  devcovenant/core/parser.py
+  devcovenant/core/policy_locations.py
+  devcovenant/core/policy_scripts/devcov_structure_guard.py
+  devcovenant/core/policy_scripts/stock_policy_text_sync.py
+  devcovenant/core/policy_scripts/version_sync.py
+  devcovenant/core/stock_policy_texts.json
+  devcovenant/core/tests/test_engine.py
+  devcovenant/core/tests/test_install.py
+  devcovenant/core/tests/test_policies/test_devcov_structure_guard.py
+  devcovenant/core/tests/test_policies/test_stock_policy_text_sync.py
+  devcovenant/core/tests/test_policies/test_version_sync.py
+  devcovenant/core/tests/test_policy_patches.py
+  devcovenant/core/uninstall.py
+  devcovenant/core/update.py
+  devcovenant/custom/policy_scripts/README.md
+  devcovenant/registry.json
+  devcovenant/templates/AGENTS.md
+  devcovenant/templates/CONTRIBUTING.md
+  devcovenant/templates/DEVCOVENANT.md
+  devcovenant/templates/LICENSE_GPL-3.0.txt
+  devcovenant/templates/VERSION
+  devcovenant/templates/tools/install_devcovenant.py
+  devcovenant/templates/tools/templates/LICENSE_GPL-3.0.txt
+  devcovenant/templates/tools/uninstall_devcovenant.py
+  pyproject.toml
+  tools/install_devcovenant.py
+  tools/templates/LICENSE_GPL-3.0.txt
+  tools/uninstall_devcovenant.py
+- 2026-01-22: Consolidated 0.2.6 documentation, templates, and update
+  workflow guidance to reflect custom overrides, managed-block-only updates,
+  and the removal of patch-based policy artifacts. (AI assistant)
+  Files:
+  AGENTS.md
+  CHANGELOG.md
+  CONTRIBUTING.md
+  LICENSE
+  MANIFEST.in
+  PLAN.md
+  README.md
+  SPEC.md
+  VERSION
+  devcovenant/README.md
+  devcovenant/cli.py
+  devcovenant/common_policy_patches/README.md
+  devcovenant/common_policy_patches/__init__.py
+  devcovenant/config.yaml
+  devcovenant/core/base.py
+  devcovenant/core/engine.py
+  devcovenant/core/install.py
+  devcovenant/core/parser.py
+  devcovenant/core/policy_locations.py
+  devcovenant/core/policy_scripts/devcov_structure_guard.py
+  devcovenant/core/policy_scripts/stock_policy_text_sync.py
+  devcovenant/core/stock_policy_texts.json
+  devcovenant/core/tests/test_engine.py
+  devcovenant/core/tests/test_install.py
+  devcovenant/core/tests/test_policies/test_devcov_structure_guard.py
+  devcovenant/core/tests/test_policies/test_stock_policy_text_sync.py
+  devcovenant/core/tests/test_policy_patches.py
+  devcovenant/core/uninstall.py
+  devcovenant/core/update.py
+  devcovenant/custom/policy_scripts/README.md
+  devcovenant/registry.json
+  devcovenant/templates/AGENTS.md
+  devcovenant/templates/CONTRIBUTING.md
+  devcovenant/templates/LICENSE_GPL-3.0.txt
+  devcovenant/templates/VERSION
+  devcovenant/templates/tools/install_devcovenant.py
+  devcovenant/templates/tools/templates/LICENSE_GPL-3.0.txt
+  devcovenant/templates/tools/uninstall_devcovenant.py
+  pyproject.toml
+  tools/install_devcovenant.py
+  tools/templates/LICENSE_GPL-3.0.txt
+  tools/uninstall_devcovenant.py
+- 2026-01-22: Refined the 0.2.6 plan and docs to describe safe update
+  modes, metadata normalization, and managed-block-only refreshes.
+  (AI assistant)
+  Files:
+  CHANGELOG.md
+  PLAN.md
+  README.md
+  SPEC.md
+  devcovenant/README.md
+- 2026-01-22: Removed legacy install/uninstall wrappers, moved the GPL
+  template into `devcovenant/templates`, and updated structure checks,
+  config, and docs to match the CLI-only workflow. (AI assistant)
+  Files:
+  AGENTS.md
+  CHANGELOG.md
+  CONTRIBUTING.md
+  LICENSE
+  MANIFEST.in
+  PLAN.md
+  README.md
+  SPEC.md
+  VERSION
+  devcovenant/README.md
+  devcovenant/cli.py
+  devcovenant/common_policy_patches/README.md
+  devcovenant/common_policy_patches/__init__.py
+  devcovenant/config.yaml
+  devcovenant/core/base.py
+  devcovenant/core/engine.py
+  devcovenant/core/install.py
+  devcovenant/core/parser.py
+  devcovenant/core/policy_locations.py
+  devcovenant/core/policy_scripts/devcov_structure_guard.py
+  devcovenant/core/policy_scripts/stock_policy_text_sync.py
+  devcovenant/core/stock_policy_texts.json
+  devcovenant/core/tests/test_engine.py
+  devcovenant/core/tests/test_install.py
+  devcovenant/core/tests/test_policies/test_devcov_structure_guard.py
+  devcovenant/core/tests/test_policies/test_stock_policy_text_sync.py
+  devcovenant/core/tests/test_policy_patches.py
+  devcovenant/core/uninstall.py
+  devcovenant/core/update.py
+  devcovenant/custom/policy_scripts/README.md
+  devcovenant/registry.json
+  devcovenant/templates/AGENTS.md
+  devcovenant/templates/CONTRIBUTING.md
+  devcovenant/templates/LICENSE_GPL-3.0.txt
+  devcovenant/templates/VERSION
+  devcovenant/templates/tools/install_devcovenant.py
+  devcovenant/templates/tools/templates/LICENSE_GPL-3.0.txt
+  devcovenant/templates/tools/uninstall_devcovenant.py
+  pyproject.toml
+  tools/install_devcovenant.py
+  tools/templates/LICENSE_GPL-3.0.txt
+  tools/uninstall_devcovenant.py
+- 2026-01-22: Added doc-targeting flags for partial overwrites and made
+  docs/tests adjusted accordingly.
+  (AI assistant)
+  Files:
+  CHANGELOG.md
+  README.md
+  SPEC.md
+  devcovenant/README.md
+  devcovenant/cli.py
+  devcovenant/core/install.py
+  devcovenant/core/update.py
+  devcovenant/core/tests/test_install.py
+- 2026-01-22: Simplified contributing guidance to a minimal entry point
+  (AI assistant)
+  Files:
+  CONTRIBUTING.md
+  devcovenant/templates/CONTRIBUTING.md
+- 2026-01-22: Removed patch overrides in favor of custom policy overrides,
+  added a dedicated update command, and refreshed installer/uninstaller
+  handling, fixer resolution, and documentation to match the new flow.
+  (AI assistant)
+  Files:
+  AGENTS.md
+  CHANGELOG.md
+  CONTRIBUTING.md
+  LICENSE
+  MANIFEST.in
+  PLAN.md
+  README.md
+  SPEC.md
+  VERSION
+  devcovenant/README.md
+  devcovenant/cli.py
+  devcovenant/common_policy_patches/README.md
+  devcovenant/common_policy_patches/__init__.py
+  devcovenant/core/base.py
+  devcovenant/core/engine.py
+  devcovenant/core/install.py
+  devcovenant/core/parser.py
+  devcovenant/core/policy_locations.py
+  devcovenant/core/policy_scripts/devcov_structure_guard.py
+  devcovenant/core/policy_scripts/stock_policy_text_sync.py
+  devcovenant/core/stock_policy_texts.json
+  devcovenant/core/tests/test_engine.py
+  devcovenant/core/tests/test_install.py
+  devcovenant/core/tests/test_policies/test_devcov_structure_guard.py
+  devcovenant/core/tests/test_policies/test_stock_policy_text_sync.py
+  devcovenant/core/tests/test_policy_patches.py
+  devcovenant/core/uninstall.py
+  devcovenant/core/update.py
+  devcovenant/custom/policy_scripts/README.md
+  devcovenant/registry.json
+  devcovenant/templates/AGENTS.md
+  devcovenant/templates/VERSION
+  pyproject.toml
+
 ## Version 0.2.5
+- 2026-01-22: Planned a dedicated update command, stricter install
+  behavior, and resilient uninstall handling for user repos.
+  (AI assistant)
+  Files:
+  PLAN.md
+- 2026-01-22: Rewrote `PLAN.md` with the 0.2.6 development plan and
+  user repo update path. (AI assistant)
+  Files:
+  PLAN.md
 - 2026-01-12: Added an install behavior cheat sheet to README and documented
   installer defaults in the managed AGENTS section so install behavior stays
   clear.
@@ -17,18 +494,15 @@ chronological order. Record timestamps as ISO dates (`YYYY-MM-DD`).
   CHANGELOG.md
   README.md
   devcovenant/templates/AGENTS.md
-- 2026-01-12: Documented and enforced `DEVCOVENANT.md` replacement on install,
   expanded the repo guide with comprehensive installer and CLI details, and
   synced reference docs and templates to match the new behavior.
   Files:
   AGENTS.md
   CHANGELOG.md
-  DEVCOVENANT.md
   README.md
   SPEC.md
   devcovenant/README.md
   devcovenant/core/install.py
-  devcovenant/templates/DEVCOVENANT.md
 - 2026-01-12: Expanded and harmonized documentation with current CLI and
   installer behavior, updated template docs, and corrected `devcov_check.py`
   usage guidance to match the CLI requirement.
@@ -36,7 +510,6 @@ chronological order. Record timestamps as ISO dates (`YYYY-MM-DD`).
   AGENTS.md
   CHANGELOG.md
   CONTRIBUTING.md
-  DEVCOVENANT.md
   PLAN.md
   README.md
   SPEC.md
@@ -47,15 +520,12 @@ chronological order. Record timestamps as ISO dates (`YYYY-MM-DD`).
   devcovenant/templates/AGENTS.md
   devcovenant/templates/CONTRIBUTING.md
   devcovenant/templates/devcov_check.py
-  devcovenant/templates/DEVCOVENANT.md
 - 2026-01-12: Reworked the installer to merge README headers and standard
   sections, preserve SPEC/PLAN content with updated headers, back up and
-  replace CHANGELOG/CONTRIBUTING, prompt for VERSION/CITATION, and merge
   `.gitignore`; added packaged templates, new CLI args, and installer tests.
   Files:
   AGENTS.md
   CHANGELOG.md
-  DEVCOVENANT.md
   MANIFEST.in
   SPEC.md
   devcovenant/README.md
@@ -66,7 +536,6 @@ chronological order. Record timestamps as ISO dates (`YYYY-MM-DD`).
   devcovenant/templates/.pre-commit-config.yaml
   devcovenant/templates/AGENTS.md
   devcovenant/templates/CONTRIBUTING.md
-  devcovenant/templates/DEVCOVENANT.md
   devcovenant/templates/VERSION
   devcovenant/templates/devcov_check.py
   devcovenant/templates/tools/install_devcovenant.py
@@ -81,10 +550,8 @@ chronological order. Record timestamps as ISO dates (`YYYY-MM-DD`).
   instead of overwriting them.
   Files:
   AGENTS.md
-  CITATION.cff
   CHANGELOG.md
   CONTRIBUTING.md
-  DEVCOVENANT.md
   LICENSE
   PLAN.md
   README.md
@@ -103,10 +570,8 @@ chronological order. Record timestamps as ISO dates (`YYYY-MM-DD`).
   without `ModuleNotFoundError`.
   Files:
   AGENTS.md
-  CITATION.cff
   CHANGELOG.md
   CONTRIBUTING.md
-  DEVCOVENANT.md
   LICENSE
   PLAN.md
   README.md
@@ -127,13 +592,11 @@ chronological order. Record timestamps as ISO dates (`YYYY-MM-DD`).
   SPEC.md
   PLAN.md
   CONTRIBUTING.md
-  DEVCOVENANT.md
   devcovenant/README.md
   devcovenant/common_policy_patches/README.md
   devcovenant/custom/policy_scripts/README.md
   pyproject.toml
   VERSION
-  CITATION.cff
   LICENSE
   CHANGELOG.md
   devcovenant/registry.json
@@ -159,12 +622,10 @@ chronological order. Record timestamps as ISO dates (`YYYY-MM-DD`).
   AGENTS.md
   README.md
   CONTRIBUTING.md
-  DEVCOVENANT.md
   SPEC.md
   PLAN.md
   pyproject.toml
   VERSION
-  CITATION.cff
   CHANGELOG.md
   devcovenant/README.md
   devcovenant/common_policy_patches/README.md
@@ -190,14 +651,12 @@ chronological order. Record timestamps as ISO dates (`YYYY-MM-DD`).
 -  VERSION
 -  README.md
 -  AGENTS.md
--  DEVCOVENANT.md
 -  SPEC.md
 -  PLAN.md
 -  CONTRIBUTING.md
 -  devcovenant/README.md
 -  devcovenant/common_policy_patches/README.md
 -  devcovenant/custom/policy_scripts/README.md
--  CITATION.cff
 -  LICENSE
 -  CHANGELOG.md
 -  LONG_DESCRIPTION.md
@@ -227,7 +686,6 @@ chronological order. Record timestamps as ISO dates (`YYYY-MM-DD`).
   while bumping SPEC/PLAN/README/DEVCOVENANT to v0.2.0. (AI assistant)
   Files:
   README.md
-  DEVCOVENANT.md
   SPEC.md
   PLAN.md
   devcovenant/core/policy_scripts/fixers/dependency_license_sync.py
@@ -260,7 +718,6 @@ chronological order. Record timestamps as ISO dates (`YYYY-MM-DD`).
   devcovenant/custom/policy_scripts/README.md
   pyproject.toml
   VERSION
-  CITATION.cff
   LICENSE
 
 ## Version 0.1.2
@@ -284,7 +741,6 @@ chronological order. Record timestamps as ISO dates (`YYYY-MM-DD`).
   CHANGELOG.md
   devcovenant/registry.json
   CONTRIBUTING.md
-  DEVCOVENANT.md
   PLAN.md
   README.md
   SPEC.md
@@ -422,7 +878,6 @@ chronological order. Record timestamps as ISO dates (`YYYY-MM-DD`).
   AGENTS.md
   CHANGELOG.md
   CONTRIBUTING.md
-  DEVCOVENANT.md
   PLAN.md
   README.md
   devcovenant/README.md
@@ -659,7 +1114,6 @@ chronological order. Record timestamps as ISO dates (`YYYY-MM-DD`).
   AGENTS.md
   CHANGELOG.md
   CONTRIBUTING.md
-  DEVCOVENANT.md
   PLAN.md
   README.md
   SPEC.md
@@ -680,7 +1134,6 @@ chronological order. Record timestamps as ISO dates (`YYYY-MM-DD`).
   Files:
   AGENTS.md
   CHANGELOG.md
-  DEVCOVENANT.md
   PLAN.md
   SPEC.md
   devcovenant/README.md
@@ -729,7 +1182,6 @@ chronological order. Record timestamps as ISO dates (`YYYY-MM-DD`).
   AGENTS.md
   CHANGELOG.md
   CONTRIBUTING.md
-  DEVCOVENANT.md
   PLAN.md
   README.md
   SPEC.md
@@ -769,7 +1221,6 @@ chronological order. Record timestamps as ISO dates (`YYYY-MM-DD`).
   AGENTS.md
   CHANGELOG.md
   CONTRIBUTING.md
-  DEVCOVENANT.md
   PLAN.md
   README.md
   devcovenant/README.md
@@ -792,7 +1243,6 @@ chronological order. Record timestamps as ISO dates (`YYYY-MM-DD`).
   AGENTS.md
   CHANGELOG.md
   CONTRIBUTING.md
-  DEVCOVENANT.md
   README.md
   devcovenant/README.md
   tools/install_devcovenant.py
@@ -803,7 +1253,6 @@ chronological order. Record timestamps as ISO dates (`YYYY-MM-DD`).
   AGENTS.md
   CHANGELOG.md
   CONTRIBUTING.md
-  DEVCOVENANT.md
   PLAN.md
   README.md
   devcovenant/README.md
@@ -823,7 +1272,6 @@ chronological order. Record timestamps as ISO dates (`YYYY-MM-DD`).
   AGENTS.md
   CHANGELOG.md
   CONTRIBUTING.md
-  DEVCOVENANT.md
   PLAN.md
   README.md
   devcovenant/README.md
@@ -843,9 +1291,7 @@ chronological order. Record timestamps as ISO dates (`YYYY-MM-DD`).
   .pre-commit-config.yaml
   AGENTS.md
   CHANGELOG.md
-  CITATION.cff
   CONTRIBUTING.md
-  DEVCOVENANT.md
   LICENSE
   PLAN.md
   README.md

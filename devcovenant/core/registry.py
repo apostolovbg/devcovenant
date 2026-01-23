@@ -64,11 +64,33 @@ class PolicyRegistry:
         else:
             self._data = {"policies": {}, "metadata": {"version": "1.0.0"}}
 
+    def _normalize_registry_hashes(self) -> None:
+        """Normalize stored hashes to the list form."""
+        policies = self._data.get("policies", {})
+        for policy_data in policies.values():
+            raw_hash = policy_data.get("hash")
+            normalized = self._normalize_hash_value(raw_hash)
+            if normalized:
+                policy_data["hash"] = self._split_hash(normalized)
+
     def save(self):
         """Save the registry to disk."""
+        self._normalize_registry_hashes()
         self.registry_path.parent.mkdir(parents=True, exist_ok=True)
         with open(self.registry_path, "w", encoding="utf-8") as f:
             json.dump(self._data, f, indent=2)
+
+    def _normalize_hash_value(self, hash_value: object) -> str | None:
+        """Normalize stored hash values to a string."""
+        if isinstance(hash_value, list):
+            return "".join(str(part) for part in hash_value)
+        if isinstance(hash_value, str):
+            return hash_value
+        return None
+
+    def _split_hash(self, hash_value: str) -> list[str]:
+        """Split hashes into shorter chunks for JSON formatting."""
+        return [hash_value[i : i + 32] for i in range(0, len(hash_value), 32)]
 
     def calculate_full_hash(
         self, policy_text: str, script_content: str
@@ -124,9 +146,8 @@ class PolicyRegistry:
             # Get current hash from registry
             current_hash = None
             if policy.policy_id in self._data.get("policies", {}):
-                current_hash = self._data["policies"][policy.policy_id].get(
-                    "hash"
-                )
+                raw_hash = self._data["policies"][policy.policy_id].get("hash")
+                current_hash = self._normalize_hash_value(raw_hash)
 
             # Determine if there's an issue
             issue_type = None
@@ -191,6 +212,17 @@ class PolicyRegistry:
 
         return issues
 
+    def _compact_script_path(self, script_path: Path) -> str:
+        """Return a shorter script path for registry storage."""
+        devcov_root = self.repo_root / "devcovenant"
+        try:
+            return str(script_path.relative_to(devcov_root))
+        except ValueError:
+            try:
+                return str(script_path.relative_to(self.repo_root))
+            except ValueError:
+                return str(script_path)
+
     def update_policy_hash(
         self, policy_id: str, policy_text: str, script_path: Path
     ):
@@ -214,9 +246,9 @@ class PolicyRegistry:
             self._data["policies"] = {}
 
         self._data["policies"][policy_id] = {
-            "hash": new_hash,
+            "hash": self._split_hash(new_hash),
             "last_updated": datetime.now(timezone.utc).isoformat(),
-            "script_path": str(script_path.relative_to(self.repo_root)),
+            "script_path": self._compact_script_path(script_path),
         }
 
         self.save()
@@ -231,4 +263,7 @@ class PolicyRegistry:
         Returns:
             Hash string or None if not found
         """
-        return self._data.get("policies", {}).get(policy_id, {}).get("hash")
+        raw_hash = (
+            self._data.get("policies", {}).get(policy_id, {}).get("hash")
+        )
+        return self._normalize_hash_value(raw_hash)
