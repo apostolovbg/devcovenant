@@ -12,4 +12,7 @@ include requirements.lock
 include devcovenant/README.md
 include devcovenant/registry.json
 include devcovenant/core/policy_replacements.yaml
-recursive-include devcovenant/templates *
+include devcovenant/core/profile_catalog.yaml
+include devcovenant/core/policy_assets.yaml
+recursive-include devcovenant/core/templates *
+recursive-include devcovenant/custom/templates *

@@ -270,7 +270,7 @@ profile_scopes:
 ### Policy assets and templates
 Policy-required files are created or updated only when the policy is enabled
 and its profile scopes match the active profiles. Templates live under
-`devcovenant/templates/` and are selected by profile.
+`devcovenant/core/templates/` and are selected by profile.
 
 Examples:
 - `dependency-license-sync` (enabled) creates or refreshes
@@ -344,39 +344,32 @@ Run uninstall before install? [y/N]
 
 ### Remaining Phases (in order)
 
-#### Phase K: Profile-aware install and asset merges
-- Define a profile catalog and prompt for one or more active profiles during
-  install; store the selection in config and the manifest.
-- Add `profile_scopes` to every policy block and normalize legacy policies
-  to use `profile_scopes: global` when global; apply policies when any
-  active profile matches.
-- Introduce a policy asset map that lists templates and merge rules per
-  policy/profile combination.
-- Skip asset creation when a policy is disabled or outside the active profiles.
-- Expand templates for language/framework-specific repo files (requirements,
-  lock files, CI, pre-commit) and keep them under
-  `devcovenant/core/templates/profiles/` with shared assets in
-  `devcovenant/core/templates/global/`, mirrored by
-  `devcovenant/custom/templates/` for overrides.
-- Implement repo-root checks and local-version warnings for the PATH CLI.
 
-#### Phase G: Tests and validation
-- Add tests for selector-role migration and key renaming.
-- Add tests for update behavior (append-missing + core refresh).
-- Add tests for manifest creation/refresh and structure guard usage.
-- Verify update behavior against at least two real repos.
-
-#### Phase I: Managed environment policy
-- Introduce a single `managed-environment` policy that replaces
-  repo-specific variants (bench/venv).
-- Drive behavior via metadata so each repo describes its required environment
-  without custom policy text.
-- When the policy is enabled, warn if `expected_paths` or `command_hints` are
-  empty; strongly advise filling them in for clarity and support.
-- Update docs and templates to reference the unified policy, and ensure the
-  standard managed block above policy sections references the unified name.
-- Add install-time language profiles to populate selector defaults and
-  document how to declare mixed-language repos.
+#### Phase L: Profile-driven config + gitignore assets
+- Ship exemplar `devcovenant/custom/profile_catalog.yaml` and
+  `devcovenant/custom/policy_assets.yaml` with ready-to-fill sections.
+- Document override precedence: custom profile/catalog entries and
+  policy assets replace core entries when names match.
+- Move profile assets out of policy assets: profiles own their templates
+  under `templates/profiles/<profile>/`, while policy assets remain under
+  `templates/policies/<policy>/`.
+- Add per-profile policy metadata overlays in the profile catalog so
+  profile-specific files (for example, Python `pyproject.toml` or JS
+  `package.json`) extend global policies like version-sync or
+  dependency-license-sync.
+- Require custom assets to live under
+  `devcovenant/custom/templates/{global,profiles,policies}/` with the same
+  layout as core; custom templates override core templates by matching
+  path.
+- Generate `devcovenant/config.yaml` from active profiles instead of
+  Python-centric defaults; merge profile defaults for mixed repos and
+  aggregate file suffix coverage across all active profiles.
+- Add profile-scoped `.gitignore` fragments and merge ordering:
+  global → profiles (deterministic order) → OS → user block.
+- Update install/update to apply `.gitignore` profile assets with the
+  same merge semantics as other managed assets.
+- Add an explicit policy scope map (global-only vs profile-scoped) and
+  document how profile overlays merge into base metadata.
 
 #### Phase J: SemVer scope enforcement
 - Rework the semantic version scope policy to validate MAJOR/MINOR/PATCH
@@ -387,7 +380,66 @@ Run uninstall before install? [y/N]
 - Reuse normalized metadata fields to declare scope markers and exclusions.
 - Update tests and docs to reflect the SemVer rules.
 
+### Policy Scope Map (initial)
+Global-only
+  (profile_scopes: global only):
+- devcov-self-enforcement
+- devcov-structure-guard
+- policy-text-presence
+- stock-policy-text-sync
+- devflow-run-gates
+- changelog-coverage
+- no-future-dates
+- read-only-directories
+- managed-environment
+- semantic-version-scope (off by default)
+
+Global + profile overlays
+  (profile_scopes: global + language/framework):
+- version-sync (profile overlays define dependency/version files)
+- dependency-license-sync (profile overlays define manifests)
+- last-updated-placement (profiles may add or omit docs)
+- documentation-growth-tracking (profiles expand user-facing scopes)
+- line-length-limit (profiles extend suffix lists)
+
+Python-only
+  (profile_scopes: python only):
+- docstring-and-comment-coverage
+- name-clarity
+- new-modules-need-tests
+- security-scanner
+
+
+
 ### Completed Phases
+#### Phase I: Managed environment policy (done)
+- Replaced bench/venv policies with `managed-environment`, driven by
+  metadata (`expected_paths`, `expected_interpreters`, `required_commands`,
+  `command_hints`) and off by default.
+- Updated docs and templates to reference the unified policy and the
+  managed-environment guidance in the managed AGENTS block.
+
+#### Phase G: Tests and validation (done)
+- Added tests for selector-role migration and metadata normalization.
+- Added tests for update behavior (append-missing + core refresh).
+- Added tests for manifest creation/refresh, structure guard usage, and
+  profile-aware asset installation.
+
+#### Phase K: Profile-aware install and asset merges (done)
+- Added a profile catalog and interactive profile selection on install,
+  recording active profiles in config and the manifest.
+- Introduced `profile_scopes` for every policy and normalized legacy entries
+  to `profile_scopes: global`; policies now apply when any active profile
+  matches.
+- Shipped `policy_assets.yaml` to map templates and merge rules by
+  policy/profile, and wired the installer to apply those assets.
+- Skipped asset creation when a policy is disabled or outside the active
+  profiles, including policy-scoped assets.
+- Expanded profile templates under `devcovenant/core/templates/profiles/`,
+  with shared assets in `devcovenant/core/templates/global/` and overrides
+  in `devcovenant/custom/templates/`.
+- Enforced repo-root detection and CLI version mismatch warnings for
+  PATH-based usage.
 
 #### Phase E: DevCovenant manifest + structure validation (done)
 - Defined a non-hidden DevCovenant manifest under `devcovenant/` and
@@ -466,6 +518,10 @@ Run uninstall before install? [y/N]
 - Update nested docs (`devcovenant/README.md`, templates).
 - Document safe update flags and policy-mode semantics.
 - Document metadata schema, selector roles, and normalization behavior.
+- Document policy scope categories (global-only, profile-scoped, language
+  scoped) and include the initial scope list for stock policies.
+- Document profile metadata overlays for policy files (version sync,
+  dependency tracking, doc scopes) and how overlay merging works.
 - Document the enforced install/update behavior for
   `CONTRIBUTING.md` and `CHANGELOG.md`, including `_old.md` backups and the
   changelog managed-block marker placement.
@@ -551,7 +607,5 @@ DevCovenant block (immediately below the header):
   normalization steps until fixed.
 
 ## Next Steps
-- Phase K: profile-aware install + templates layout + asset resolution.
-- Phase G: validate updates in two real repos.
-- Phase I: managed-environment policy.
+- Phase L: profile-driven config + gitignore assets.
 - Phase J: SemVer scope enforcement.

@@ -11,9 +11,13 @@ import tempfile
 from datetime import datetime, timezone
 from pathlib import Path
 
+import yaml
+
 from devcovenant.core import cli_options
 from devcovenant.core import manifest as manifest_module
 from devcovenant.core import uninstall
+from devcovenant.core.parser import PolicyParser
+from devcovenant.core.profiles import resolve_profile_suffixes
 
 DEV_COVENANT_DIR = "devcovenant"
 CORE_PATHS = [
@@ -48,7 +52,13 @@ BLOCK_BEGIN = "<!-- DEVCOV:BEGIN -->"
 BLOCK_END = "<!-- DEVCOV:END -->"
 LICENSE_TEMPLATE = "LICENSE_GPL-3.0.txt"
 TEMPLATE_ROOT_NAME = "templates"
+TEMPLATE_GLOBAL_DIR = "global"
+TEMPLATE_PROFILES_DIR = "profiles"
+TEMPLATE_POLICIES_DIR = "policies"
+PROFILE_CATALOG_FILE = "profile_catalog.yaml"
+POLICY_ASSETS_FILE = "policy_assets.yaml"
 DEFAULT_BOOTSTRAP_VERSION = "0.0.1"
+DEFAULT_PROFILE_SELECTION = ["python", "docs", "data"]
 GITIGNORE_USER_BEGIN = "# --- User entries (preserved) ---"
 GITIGNORE_USER_END = "# --- End user entries ---"
 DEFAULT_PRESERVE_PATHS = [
@@ -171,6 +181,345 @@ def _parse_policy_ids(raw: str | None) -> list[str]:
     return [entry for entry in entries if entry]
 
 
+def _load_yaml(path: Path) -> dict:
+    """Load YAML data from path or return an empty dict."""
+    if not path.exists():
+        return {}
+    try:
+        return yaml.safe_load(path.read_text(encoding="utf-8")) or {}
+    except Exception:
+        return {}
+
+
+def _normalize_profile_name(raw: str) -> str:
+    """Normalize a profile name for matching."""
+    return str(raw or "").strip().lower()
+
+
+def _load_profile_catalog(package_root: Path, target_root: Path) -> dict:
+    """Load the profile catalog from core and custom sources."""
+    catalog: dict[str, dict] = {}
+    core_path = package_root / "core" / PROFILE_CATALOG_FILE
+    core_data = _load_yaml(core_path)
+    for name, meta in (core_data.get("profiles") or {}).items():
+        catalog[_normalize_profile_name(name)] = dict(meta or {})
+    custom_path = package_root / "custom" / PROFILE_CATALOG_FILE
+    custom_data = _load_yaml(custom_path)
+    for name, meta in (custom_data.get("profiles") or {}).items():
+        catalog[_normalize_profile_name(name)] = dict(meta or {})
+    custom_dir = (
+        target_root
+        / DEV_COVENANT_DIR
+        / "custom"
+        / "templates"
+        / TEMPLATE_PROFILES_DIR
+    )
+    if custom_dir.exists():
+        for entry in custom_dir.iterdir():
+            if entry.is_dir():
+                catalog.setdefault(_normalize_profile_name(entry.name), {})
+    return catalog
+
+
+def _load_active_profiles(target_root: Path) -> list[str]:
+    """Load active profiles from the target config when available."""
+    config_path = target_root / DEV_COVENANT_DIR / "config.yaml"
+    config_data = _load_yaml(config_path)
+    profiles = (
+        config_data.get("profiles", {})
+        if isinstance(config_data, dict)
+        else {}
+    )
+    active = profiles.get("active", [])
+    if isinstance(active, str):
+        candidates = [active]
+    elif isinstance(active, list):
+        candidates = active
+    else:
+        candidates = [active] if active else []
+    normalized = []
+    for entry in candidates:
+        normalized_value = _normalize_profile_name(entry)
+        if normalized_value and normalized_value != "__none__":
+            normalized.append(normalized_value)
+    return sorted(set(normalized))
+
+
+def _flatten_profile_names(catalog: dict) -> list[str]:
+    """Return a sorted list of catalog profile names."""
+    return sorted(name for name in catalog.keys() if name)
+
+
+def _parse_profile_selection(raw: str, profiles: list[str]) -> list[str]:
+    """Parse a selection string into profile names."""
+    tokens = [part.strip() for part in raw.replace(" ", ",").split(",")]
+    selected: list[str] = []
+    for token in tokens:
+        if not token:
+            continue
+        if token.isdigit():
+            index = int(token)
+            if 1 <= index <= len(profiles):
+                selected.append(profiles[index - 1])
+            continue
+        normalized = _normalize_profile_name(token)
+        if normalized in profiles:
+            selected.append(normalized)
+    return sorted(set(selected))
+
+
+def _prompt_profiles(catalog: dict) -> list[str]:
+    """Prompt for profile selection from the catalog."""
+    profiles = _flatten_profile_names(catalog)
+    if not profiles:
+        return list(DEFAULT_PROFILE_SELECTION)
+    if not sys.stdin.isatty():
+        return list(DEFAULT_PROFILE_SELECTION)
+    print("Available profiles (select one or more):")
+    for idx, name in enumerate(profiles, start=1):
+        print(f"{idx}) {name}")
+    while True:
+        raw = input("Selection: ").strip()
+        if not raw:
+            return list(DEFAULT_PROFILE_SELECTION)
+        selected = _parse_profile_selection(raw, profiles)
+        if selected:
+            return selected
+        print("Please enter one or more profile names or numbers.")
+
+
+def _resolve_template_path(
+    target_root: Path,
+    core_root: Path,
+    rel_path: str,
+    *,
+    profile: str | None = None,
+    policy_id: str | None = None,
+) -> Path:
+    """Resolve a template path with custom overrides."""
+    candidates: list[Path] = []
+    custom_root = (
+        target_root / DEV_COVENANT_DIR / "custom" / TEMPLATE_ROOT_NAME
+    )
+    rel_path = rel_path.lstrip("/")
+    prefixed = (
+        rel_path.startswith(f"{TEMPLATE_GLOBAL_DIR}/")
+        or rel_path.startswith(f"{TEMPLATE_PROFILES_DIR}/")
+        or rel_path.startswith(f"{TEMPLATE_POLICIES_DIR}/")
+    )
+    if prefixed:
+        prefixed_candidates = [
+            custom_root / rel_path,
+            core_root / rel_path,
+        ]
+        for candidate in prefixed_candidates:
+            if candidate.exists():
+                return candidate
+        return target_root / rel_path
+    if policy_id:
+        candidates.append(
+            custom_root / TEMPLATE_POLICIES_DIR / policy_id / rel_path
+        )
+    if profile:
+        candidates.append(
+            custom_root / TEMPLATE_PROFILES_DIR / profile / rel_path
+        )
+    candidates.append(custom_root / TEMPLATE_GLOBAL_DIR / rel_path)
+    if policy_id:
+        candidates.append(
+            core_root / TEMPLATE_POLICIES_DIR / policy_id / rel_path
+        )
+    if profile:
+        candidates.append(
+            core_root / TEMPLATE_PROFILES_DIR / profile / rel_path
+        )
+    candidates.append(core_root / TEMPLATE_GLOBAL_DIR / rel_path)
+    for candidate in candidates:
+        if candidate.exists():
+            return candidate
+    return target_root / rel_path
+
+
+def _parse_profile_scopes(raw: str | None) -> list[str]:
+    """Parse profile_scopes metadata into a normalized list."""
+    if not raw:
+        return ["global"]
+    scopes = [entry.strip() for entry in raw.split(",")]
+    return [entry for entry in scopes if entry]
+
+
+def _load_policy_metadata(agents_path: Path) -> dict[str, dict[str, object]]:
+    """Return policy apply flags and profile scopes from AGENTS.md."""
+    if not agents_path.exists():
+        return {}
+    parser = PolicyParser(agents_path)
+    metadata: dict[str, dict[str, object]] = {}
+    for policy in parser.parse_agents_md():
+        if not policy.policy_id:
+            continue
+        scopes = _parse_profile_scopes(
+            policy.raw_metadata.get("profile_scopes")
+        )
+        metadata[policy.policy_id] = {
+            "apply": policy.apply,
+            "profile_scopes": scopes,
+        }
+    return metadata
+
+
+def _policy_profile_match(
+    scopes: list[str], active_profiles: list[str]
+) -> bool:
+    """Return True if the policy scopes match any active profile."""
+    if "global" in scopes:
+        return True
+    active = set(active_profiles)
+    return any(scope in active for scope in scopes)
+
+
+def _load_policy_assets(package_root: Path, target_root: Path) -> dict:
+    """Load policy asset mappings from core/custom definitions."""
+    assets: dict = {"global": [], "profiles": {}, "policies": {}}
+    core_path = package_root / "core" / POLICY_ASSETS_FILE
+    core_data = _load_yaml(core_path)
+    for key in assets:
+        if key in core_data:
+            assets[key] = core_data[key]
+    custom_path = package_root / "custom" / POLICY_ASSETS_FILE
+    custom_data = _load_yaml(custom_path)
+    for key, asset_value in (custom_data or {}).items():
+        if key in {"global", "profiles", "policies"} and asset_value:
+            assets[key] = asset_value
+    target_custom = (
+        target_root / DEV_COVENANT_DIR / "custom" / POLICY_ASSETS_FILE
+    )
+    if target_custom.exists():
+        target_data = _load_yaml(target_custom)
+        for key, asset_value in (target_data or {}).items():
+            if key in {"global", "profiles", "policies"} and asset_value:
+                assets[key] = asset_value
+    return assets
+
+
+def _clean_asset_entries(entries: list[dict] | list[str]) -> list[dict]:
+    """Normalize asset entries, skipping placeholders."""
+    if not entries:
+        return []
+    if entries == ["__none__"]:
+        return []
+    cleaned: list[dict] = []
+    for entry in entries:
+        if isinstance(entry, str):
+            if entry == "__none__":
+                continue
+            cleaned.append(
+                {"path": entry, "template": entry, "mode": "replace"}
+            )
+            continue
+        if isinstance(entry, dict):
+            cleaned.append(entry)
+    return cleaned
+
+
+def _merge_text_assets(existing: str, incoming: str) -> str:
+    """Merge template lines into an existing text blob."""
+    existing_lines = [line.rstrip() for line in existing.splitlines()]
+    incoming_lines = [line.rstrip() for line in incoming.splitlines()]
+    merged = list(existing_lines)
+    for line in incoming_lines:
+        if line and line not in merged:
+            merged.append(line)
+    return "\n".join(merged).rstrip() + "\n"
+
+
+def _apply_asset(
+    template_path: Path,
+    target_path: Path,
+    mode: str,
+) -> bool:
+    """Apply a template asset to the target path."""
+    if not template_path.exists():
+        return False
+    mode_text = (mode or "replace").lower()
+    if target_path.exists():
+        if mode_text == "skip":
+            return False
+        if mode_text == "merge":
+            existing = target_path.read_text(encoding="utf-8")
+            incoming = template_path.read_text(encoding="utf-8")
+            merged = _merge_text_assets(existing, incoming)
+            if merged != existing:
+                _rename_existing_file(target_path)
+                target_path.write_text(merged, encoding="utf-8")
+                return True
+            return False
+        _rename_existing_file(target_path)
+    target_path.parent.mkdir(parents=True, exist_ok=True)
+    shutil.copy2(template_path, target_path)
+    return True
+
+
+def _apply_profile_assets(
+    package_root: Path,
+    template_root: Path,
+    target_root: Path,
+    active_profiles: list[str],
+    disabled_policies: set[str],
+    policy_metadata: dict[str, dict[str, object]],
+) -> list[str]:
+    """Install profile and policy assets based on selection."""
+    assets = _load_policy_assets(package_root, target_root)
+    installed: list[str] = []
+    for entry in _clean_asset_entries(assets.get("global", [])):
+        template_path = _resolve_template_path(
+            target_root,
+            template_root,
+            entry.get("template", ""),
+        )
+        target_path = target_root / entry.get("path", "")
+        if _apply_asset(
+            template_path, target_path, entry.get("mode", "replace")
+        ):
+            installed.append(str(target_path.relative_to(target_root)))
+    profile_assets = assets.get("profiles", {}) or {}
+    for profile in active_profiles:
+        for entry in _clean_asset_entries(profile_assets.get(profile, [])):
+            template_path = _resolve_template_path(
+                target_root,
+                template_root,
+                entry.get("template", ""),
+                profile=profile,
+            )
+            target_path = target_root / entry.get("path", "")
+            if _apply_asset(
+                template_path, target_path, entry.get("mode", "replace")
+            ):
+                installed.append(str(target_path.relative_to(target_root)))
+    policy_assets = assets.get("policies", {}) or {}
+    for policy_id, entries in policy_assets.items():
+        if policy_id in disabled_policies:
+            continue
+        policy_info = policy_metadata.get(policy_id)
+        if policy_info and not policy_info.get("apply", True):
+            continue
+        scopes = policy_info.get("profile_scopes") if policy_info else None
+        if scopes and not _policy_profile_match(scopes, active_profiles):
+            continue
+        for entry in _clean_asset_entries(entries):
+            template_path = _resolve_template_path(
+                target_root,
+                template_root,
+                entry.get("template", ""),
+                policy_id=policy_id,
+            )
+            target_path = target_root / entry.get("path", "")
+            if _apply_asset(
+                template_path, target_path, entry.get("mode", "replace")
+            ):
+                installed.append(str(target_path.relative_to(target_root)))
+    return installed
+
+
 def _prompt_version() -> str | None:
     """Prompt the user for a version override."""
     while True:
@@ -228,16 +577,10 @@ def _prompt_yes_no(prompt: str, default: bool = False) -> bool:
 
 
 def _resolve_source_path(
-    repo_root: Path, template_root: Path, rel_path: str
+    target_root: Path, template_root: Path, rel_path: str
 ) -> Path:
     """Return the source path for rel_path with template fallback."""
-    candidate = repo_root / rel_path
-    if candidate.exists():
-        return candidate
-    template = template_root / rel_path
-    if template.exists():
-        return template
-    return candidate
+    return _resolve_template_path(target_root, template_root, rel_path)
 
 
 def _remove_legacy_paths(target_root: Path, paths: list[str]) -> None:
@@ -440,7 +783,7 @@ def _build_doc_block(
         lines.append("")
         lines.extend(extra_lines)
     lines.append(BLOCK_END)
-    return "\n".join(lines) + "\n"
+    return "\n".join(lines)
 
 
 def _render_spec_template(version: str, date_stamp: str) -> str:
@@ -651,7 +994,7 @@ def _build_readme_block(
         )
 
     lines.append(BLOCK_END)
-    return "\n".join(lines) + "\n"
+    return "\n".join(lines)
 
 
 def _update_policy_block_value(
@@ -767,6 +1110,97 @@ def _apply_core_config(target_root: Path, include_core: bool) -> bool:
         text,
         include_core=include_core,
         core_paths=_DEFAULT_CORE_PATHS,
+    )
+    if not changed:
+        return False
+    _rename_existing_file(config_path)
+    config_path.write_text(updated, encoding="utf-8")
+    return True
+
+
+def _format_profile_list(active_profiles: list[str]) -> list[str]:
+    """Return a normalized profile list for config storage."""
+    if not active_profiles:
+        return ["__none__"]
+    return list(active_profiles)
+
+
+def _format_profile_block(
+    active_profiles: list[str],
+    profile_catalog: dict[str, dict],
+) -> list[str]:
+    """Return the profiles block for config.yaml."""
+    profiles = _format_profile_list(active_profiles)
+    suffixes = resolve_profile_suffixes(profile_catalog, active_profiles)
+    cleaned: list[str] = []
+    for entry in suffixes:
+        suffix_value = str(entry).strip()
+        if not suffix_value:
+            continue
+        if suffix_value not in cleaned:
+            cleaned.append(suffix_value)
+    if not cleaned:
+        cleaned = ["__none__"]
+    block = ["profiles:", "  active:"]
+    for profile in profiles:
+        block.append(f"    - {profile}")
+    block.append("  generated:")
+    block.append("    file_suffixes:")
+    for suffix in cleaned:
+        block.append(f"      - {suffix}")
+    return block
+
+
+def _update_profile_config_text(
+    text: str,
+    active_profiles: list[str],
+    profile_catalog: dict[str, dict],
+) -> tuple[str, bool]:
+    """Update profile selection inside config.yaml text."""
+    lines = text.splitlines()
+    profile_block = _format_profile_block(active_profiles, profile_catalog)
+    updated_lines: list[str] = []
+    found_profiles = False
+    index = 0
+    while index < len(lines):
+        line = lines[index]
+        if line.strip().startswith("profiles:"):
+            found_profiles = True
+            updated_lines.extend(profile_block)
+            index += 1
+            while index < len(lines):
+                next_line = lines[index]
+                if next_line.startswith("  "):
+                    index += 1
+                    continue
+                if not next_line.strip():
+                    index += 1
+                    continue
+                break
+            continue
+        updated_lines.append(line)
+        index += 1
+
+    if not found_profiles:
+        if updated_lines and updated_lines[-1].strip():
+            updated_lines.append("")
+        updated_lines.extend(profile_block)
+    updated = "\n".join(updated_lines).rstrip() + "\n"
+    return updated, updated != text
+
+
+def _apply_profile_config(
+    target_root: Path,
+    active_profiles: list[str],
+    profile_catalog: dict[str, dict],
+) -> bool:
+    """Ensure profile selection is recorded in config.yaml."""
+    config_path = target_root / DEV_COVENANT_DIR / "config.yaml"
+    if not config_path.exists():
+        return False
+    text = config_path.read_text(encoding="utf-8")
+    updated, changed = _update_profile_config_text(
+        text, active_profiles, profile_catalog
     )
     if not changed:
         return False
@@ -1208,7 +1642,6 @@ def _extract_policy_id(metadata: str) -> str:
         stripped = line.strip()
         if stripped.startswith("id:"):
             return stripped.split(":", 1)[1].strip()
-    return ""
 
 
 def _apply_policy_disables(
@@ -1345,7 +1778,7 @@ def main(argv=None) -> None:
 
     package_root = Path(__file__).resolve().parents[1]
     repo_root = package_root.parent
-    template_root = package_root / TEMPLATE_ROOT_NAME
+    template_root = package_root / "core" / TEMPLATE_ROOT_NAME
     target_root = Path(args.target).resolve()
     _reset_backup_state(target_root)
     manifest_file = manifest_module.manifest_path(target_root)
@@ -1465,7 +1898,7 @@ def main(argv=None) -> None:
     repo_name = target_root.name
 
     source_version_path = _resolve_source_path(
-        repo_root, template_root, "VERSION"
+        target_root, template_root, "VERSION"
     )
     devcovenant_version = None
     if source_version_path.exists():
@@ -1505,12 +1938,25 @@ def main(argv=None) -> None:
     else:
         target_version = detected_version
 
-    installed: dict[str, list[str]] = {"core": [], "config": [], "docs": []}
+    profile_catalog = _load_profile_catalog(package_root, target_root)
+    if mode == "existing":
+        active_profiles = _load_active_profiles(target_root)
+        if not active_profiles:
+            active_profiles = _prompt_profiles(profile_catalog)
+    else:
+        active_profiles = _prompt_profiles(profile_catalog)
+
+    installed: dict[str, list[str]] = {
+        "core": [],
+        "config": [],
+        "docs": [],
+        "assets": [],
+    }
     doc_blocks: list[str] = []
 
     core_files = [path for path in CORE_PATHS if path != DEV_COVENANT_DIR]
     core_sources = {
-        path: _resolve_source_path(repo_root, template_root, path)
+        path: _resolve_source_path(target_root, template_root, path)
         for path in core_files
     }
     installed["core"].extend(
@@ -1540,7 +1986,7 @@ def main(argv=None) -> None:
             path for path in config_paths if path != ".github/workflows/ci.yml"
         ]
     config_sources = {
-        path: _resolve_source_path(repo_root, template_root, path)
+        path: _resolve_source_path(target_root, template_root, path)
         for path in config_paths
     }
     installed["config"] = _install_paths(
@@ -1568,6 +2014,7 @@ def main(argv=None) -> None:
 
     include_core = target_root == repo_root
     _apply_core_config(target_root, include_core)
+    _apply_profile_config(target_root, active_profiles, profile_catalog)
 
     version_existed = version_path.exists()
     if version_mode != "skip" and (
@@ -1585,7 +2032,7 @@ def main(argv=None) -> None:
         if license_existed and license_mode == "overwrite":
             _rename_existing_file(license_path)
         license_template = _resolve_source_path(
-            repo_root, template_root, LICENSE_TEMPLATE
+            target_root, template_root, LICENSE_TEMPLATE
         )
         if license_template.exists():
             license_body = license_template.read_text(encoding="utf-8")
@@ -1599,7 +2046,7 @@ def main(argv=None) -> None:
     if pyproject_mode != "skip":
         pyproject_sources = {
             "pyproject.toml": _resolve_source_path(
-                repo_root, template_root, "pyproject.toml"
+                target_root, template_root, "pyproject.toml"
             )
         }
         installed["docs"].extend(
@@ -1615,7 +2062,7 @@ def main(argv=None) -> None:
         )
 
         agents_template = _resolve_source_path(
-            repo_root, template_root, "AGENTS.md"
+            target_root, template_root, "AGENTS.md"
         )
     agents_existed = agents_path.exists()
     agents_text = ""
@@ -1637,6 +2084,17 @@ def main(argv=None) -> None:
                 _append_missing_policies(agents_path, agents_text)
 
     disabled_policies = _apply_policy_disables(agents_path, disable_policies)
+    policy_metadata = _load_policy_metadata(agents_path)
+    installed["assets"].extend(
+        _apply_profile_assets(
+            package_root,
+            template_root,
+            target_root,
+            active_profiles,
+            set(disabled_policies),
+            policy_metadata,
+        )
+    )
 
     readme_path = target_root / "README.md"
     if not readme_path.exists():
@@ -1720,7 +2178,7 @@ def main(argv=None) -> None:
 
     contributing_path = target_root / "CONTRIBUTING.md"
     contributing_template = _resolve_source_path(
-        repo_root, template_root, "CONTRIBUTING.md"
+        target_root, template_root, "CONTRIBUTING.md"
     )
     if contributing_template.exists():
         if contributing_path.exists() and not _should_overwrite(
@@ -1786,6 +2244,8 @@ def main(argv=None) -> None:
         doc_blocks=doc_blocks,
         mode="update" if mode == "existing" else "install",
     )
+    manifest["profiles"]["active"] = list(active_profiles)
+    manifest["profiles"]["catalog"] = sorted(profile_catalog.keys())
     manifest_module.write_manifest(target_root, manifest)
 
     backups = _backup_log()

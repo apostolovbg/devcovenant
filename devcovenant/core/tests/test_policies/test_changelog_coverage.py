@@ -27,7 +27,6 @@ def _set_git_diff(monkeypatch: pytest.MonkeyPatch, output: str) -> None:
 def test_no_changes_passes(tmp_path: Path, monkeypatch: pytest.MonkeyPatch):
     """Empty diffs should yield no violations."""
 
-    _set_git_diff(monkeypatch, "")
     checker = ChangelogCoverageCheck()
     context = CheckContext(repo_root=tmp_path, all_files=[])
     assert checker.check(context) == []
@@ -39,9 +38,9 @@ def test_root_changelog_required(
     """Non-RNG files must be listed in the root changelog."""
 
     (tmp_path / "CHANGELOG.md").write_text("docs/readme.md", encoding="utf-8")
-    _set_git_diff(monkeypatch, "docs/readme.md\nsrc/module.py\n")
 
     checker = ChangelogCoverageCheck()
+    _set_git_diff(monkeypatch, "src/module.py\n")
     context = CheckContext(repo_root=tmp_path, all_files=[])
     violations = checker.check(context)
 
@@ -56,9 +55,9 @@ def test_rng_changelog_required(
     """RNG files must be documented in rng_minigames/CHANGELOG.md."""
 
     (tmp_path / "CHANGELOG.md").write_text("", encoding="utf-8")
-    _set_git_diff(monkeypatch, "rng_minigames/emoji_meteors/game.py\n")
 
     checker = ChangelogCoverageCheck()
+    _set_git_diff(monkeypatch, "rng_minigames/emoji_meteors/game.py\n")
     context = CheckContext(repo_root=tmp_path, all_files=[])
     violations = checker.check(context)
 
@@ -72,10 +71,10 @@ def test_collections_disabled_route_to_root(
     """When collections are disabled, prefixed paths go to root."""
 
     (tmp_path / "CHANGELOG.md").write_text("", encoding="utf-8")
-    _set_git_diff(monkeypatch, "rng_minigames/emoji_meteors/game.py\n")
 
     checker = ChangelogCoverageCheck()
     checker.set_options({"collections": "none"}, {})
+    _set_git_diff(monkeypatch, "rng_minigames/emoji_meteors/game.py\n")
     context = CheckContext(repo_root=tmp_path, all_files=[])
     violations = checker.check(context)
 
@@ -94,9 +93,9 @@ def test_rng_changelog_entry_found(
     rng_changelog.write_text(
         "rng_minigames/emoji_meteors/game.py", encoding="utf-8"
     )
-    _set_git_diff(monkeypatch, "rng_minigames/emoji_meteors/game.py\n")
 
     checker = ChangelogCoverageCheck()
+    _set_git_diff(monkeypatch, "rng_minigames/emoji_meteors/game.py\n")
     context = CheckContext(repo_root=tmp_path, all_files=[])
     violations = checker.check(context)
 
@@ -117,9 +116,9 @@ def test_rng_files_not_logged_in_root(
     rng_changelog.write_text(
         "rng_minigames/emoji_meteors/game.py", encoding="utf-8"
     )
-    _set_git_diff(monkeypatch, "rng_minigames/emoji_meteors/game.py\n")
 
     checker = ChangelogCoverageCheck()
+    _set_git_diff(monkeypatch, "rng_minigames/emoji_meteors/game.py\n")
     context = CheckContext(repo_root=tmp_path, all_files=[])
     violations = checker.check(context)
 
@@ -151,7 +150,6 @@ def test_rng_entries_ignore_old_root_sections(
         "## Version 2.0.0\n- rng_minigames/emoji_meteors/game.py",
         encoding="utf-8",
     )
-    _set_git_diff(monkeypatch, "rng_minigames/emoji_meteors/game.py\n")
 
     checker = ChangelogCoverageCheck()
     context = CheckContext(repo_root=tmp_path, all_files=[])
@@ -185,7 +183,6 @@ def test_template_code_block_ignored(
         ).strip(),
         encoding="utf-8",
     )
-    _set_git_diff(monkeypatch, "src/module.py\n")
 
     checker = ChangelogCoverageCheck()
     context = CheckContext(repo_root=tmp_path, all_files=[])
@@ -209,10 +206,39 @@ def test_changelog_entries_newest_first(
         ).strip(),
         encoding="utf-8",
     )
+
+    checker = ChangelogCoverageCheck()
     _set_git_diff(monkeypatch, "src/module.py\n")
+    context = CheckContext(repo_root=tmp_path, all_files=[])
+    violations = checker.check(context)
+
+    assert any("newest-first" in v.message for v in violations)
+
+
+def test_line_continuation_paths(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+):
+    """Backslash-wrapped paths should satisfy changelog coverage."""
+
+    root_changelog = tmp_path / "CHANGELOG.md"
+    changelog = "\n".join(
+        [
+            "## Version 1.0.0",
+            "- 2026-01-23: Update docs (AI assistant)",
+            "  Files:",
+            "  devcovenant/core/templates/policies/dependency-license-sync/\\",
+            "    licenses/README.md",
+        ]
+    )
+    root_changelog.write_text(changelog, encoding="utf-8")
+    diff_path = (
+        "devcovenant/core/templates/policies/"
+        "dependency-license-sync/licenses/README.md\n"
+    )
+    _set_git_diff(monkeypatch, diff_path)
 
     checker = ChangelogCoverageCheck()
     context = CheckContext(repo_root=tmp_path, all_files=[])
     violations = checker.check(context)
 
-    assert any("newest-first" in v.message for v in violations)
+    assert violations == []

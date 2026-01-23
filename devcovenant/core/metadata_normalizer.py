@@ -25,6 +25,7 @@ _COMMON_KEYS = [
     "enforcement",
     "apply",
     "custom",
+    "profile_scopes",
 ]
 
 _COMMON_DEFAULTS: Dict[str, List[str]] = {
@@ -36,6 +37,7 @@ _COMMON_DEFAULTS: Dict[str, List[str]] = {
     "enforcement": ["active"],
     "apply": ["true"],
     "custom": ["false"],
+    "profile_scopes": ["global"],
 }
 
 _ROLE_SUFFIXES: Tuple[str, ...] = ("globs", "files", "dirs")

@@ -1,12 +1,12 @@
-"""Tests for the managed bench environment policy."""
+"""Tests for the managed environment policy."""
 
 import sys
 from pathlib import Path
 
 from devcovenant.core.base import CheckContext
-from devcovenant.core.policy_scripts import managed_bench
+from devcovenant.core.policy_scripts import managed_environment
 
-ManagedBenchCheck = managed_bench.ManagedBenchCheck
+ManagedEnvironmentCheck = managed_environment.ManagedEnvironmentCheck
 
 
 def test_detects_external_interpreter(tmp_path: Path, monkeypatch):
@@ -18,15 +18,22 @@ def test_detects_external_interpreter(tmp_path: Path, monkeypatch):
     monkeypatch.setenv("VIRTUAL_ENV", str(fake_python.parent))
     monkeypatch.setattr(sys, "executable", str(fake_python))
 
-    checker = ManagedBenchCheck()
+    checker = ManagedEnvironmentCheck()
+    checker.set_options(
+        {
+            "expected_paths": [".venv"],
+            "command_hints": ["source .venv/bin/activate"],
+        },
+        {},
+    )
     context = CheckContext(repo_root=tmp_path, changed_files=[])
     violations = checker.check(context)
     assert violations
-    assert "virtual environment" in violations[0].message.lower()
+    assert any(v.severity == "error" for v in violations)
 
 
-def test_allows_managed_bench(tmp_path: Path, monkeypatch):
-    """Managed bench paths should be accepted."""
+def test_allows_managed_environment(tmp_path: Path, monkeypatch):
+    """Managed environment paths should be accepted."""
     managed = tmp_path / ".venv"
     managed.mkdir()
     venv_python = managed / "bin"
@@ -36,6 +43,13 @@ def test_allows_managed_bench(tmp_path: Path, monkeypatch):
     monkeypatch.setenv("VIRTUAL_ENV", str(managed))
     monkeypatch.setattr(sys, "executable", str(venv_executable))
 
-    checker = ManagedBenchCheck()
+    checker = ManagedEnvironmentCheck()
+    checker.set_options(
+        {
+            "expected_paths": [".venv"],
+            "command_hints": ["source .venv/bin/activate"],
+        },
+        {},
+    )
     context = CheckContext(repo_root=tmp_path, changed_files=[])
     assert checker.check(context) == []

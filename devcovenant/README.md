@@ -98,7 +98,8 @@ The primary commands are:
 - `devcovenant update --target <path>`
 - `devcovenant uninstall --target <path>`
 
-Normalize-metadata uses `devcovenant/templates/AGENTS.md` as the schema.
+Normalize-metadata uses `devcovenant/core/templates/global/AGENTS.md`
+as the schema.
 Empty metadata values (blank strings or empty lists) are treated as unset,
 so defaults still apply. Use `--schema` to point at a different AGENTS file
 and `--no-set-updated` to avoid flipping `updated: true` on changed policy
@@ -334,14 +335,90 @@ devcov_core_paths:
 
 Only the DevCovenant repo should set `devcov_core_include: true`.
 
-## Language Profiles
-DevCovenant ships default profiles for common stacks in
-`devcovenant/config.yaml`. Set `active_language_profiles` to one or more
-entries (Python, JavaScript, frontend, docs, data) to extend
-`engine.file_suffixes` without rewriting the full list. Mixed repos can list
-multiple profiles, and custom profiles can be added when your stack is not
-covered by the defaults. Keep this list current so policy selectors match
-the repo’s actual language mix.
+### Config schema (profile-generated)
+`devcovenant/config.yaml` is generated from global defaults plus the
+active profiles. The installer writes `profiles.active` and a computed
+`profiles.generated.file_suffixes` list so the config reflects the
+active profile selection. Global sections provide knobs that apply to
+every repo:
+
+- `profiles`: active profiles and generated suffixes.
+- `paths`: policy definitions, registry, manifest, template roots.
+- `docs`: managed block markers and optional doc toggles.
+- `install` / `update`: default behaviors for CLI commands.
+- `engine`: scanning defaults, thresholds, and ignore dirs.
+- `hooks`, `reporting`, `ignore`, `self_enforcement`: runtime toggles.
+- `policies`: per-policy overrides (apply, severity, selectors).
+
+When multiple profiles are active, the generated suffix list is the
+union of each profile's catalog suffixes. Profile-specific config
+fragments can be added later under custom templates when needed.
+
+## Profiles and Scopes
+DevCovenant uses install profiles to tailor policy applicability and assets.
+Profiles are defined in `devcovenant/core/profile_catalog.yaml`, and custom
+profiles can be added via `devcovenant/custom/profile_catalog.yaml` or by
+creating a folder under `devcovenant/custom/templates/profiles/<name>`.
+
+Install prompts for one or more active profiles and stores the selection in
+`devcovenant/config.yaml` under `profiles.active`. Active profiles:
+- extend `engine.file_suffixes` with catalog suffixes,
+- gate policies via `profile_scopes` metadata,
+- select profile assets listed in `devcovenant/core/policy_assets.yaml`.
+
+Example configuration:
+```yaml
+profiles:
+  active:
+    - python
+    - docs
+    - data
+```
+
+Mixed repos can list multiple profiles. Global policies set
+`profile_scopes: global` and always apply, while profile-scoped policies
+apply only when one of their scopes matches an active profile.
+
+### Creating a custom profile (exhaustive)
+Custom profiles are optional and live entirely inside the repo's
+`devcovenant/custom/` tree. They let you ship profile-specific assets and
+metadata without editing DevCovenant core.
+
+1) Add profile metadata in `devcovenant/custom/profile_catalog.yaml`:
+```yaml
+profiles:
+  frappe:
+    label: "Frappe/ERPNext"
+    description: "Bench-managed Python app"
+    file_suffixes: [".py", ".json", ".js"]
+```
+
+2) Add profile assets in `devcovenant/custom/policy_assets.yaml`:
+```yaml
+profiles:
+  frappe:
+    - path: requirements.in
+      template: profiles/frappe/requirements.in
+      mode: merge
+```
+
+3) Add the templates themselves:
+```
+devcovenant/custom/templates/profiles/frappe/requirements.in
+```
+
+4) Activate the profile in `devcovenant/config.yaml`:
+```yaml
+profiles:
+  active:
+    - frappe
+    - docs
+```
+
+Notes:
+- Template resolution always prefers custom templates over core templates.
+- Profiles are additive: multiple active profiles can contribute assets
+  and policy applicability at once.
 
 ## Check Modes and Exit Codes
 Run checks through the CLI:
@@ -390,6 +467,49 @@ Custom scripts fully replace the built-in policy. Built-in fixers live under
 `devcovenant/core/fixers`, custom fixers live under
 `devcovenant/custom/fixers`, and core fixers are skipped whenever a custom
 policy override exists.
+
+### Creating a custom policy (override or brand-new)
+Custom policies are defined in `AGENTS.md` with `custom: true` and implemented
+under `devcovenant/custom/`. Overrides replace core policies; brand-new
+policies live only in custom.
+
+1) Add the policy block to `AGENTS.md` (set `custom: true`):
+```policy-def
+id: my-policy
+status: active
+severity: warning
+auto_fix: false
+updated: false
+apply: true
+custom: true
+```
+
+2) Implement the checker:
+```
+devcovenant/custom/policy_scripts/my-policy.py
+```
+
+3) (Optional) add a fixer:
+```
+devcovenant/custom/fixers/my-policy.py
+```
+
+4) (Optional) attach assets in `devcovenant/custom/policy_assets.yaml`:
+```yaml
+policies:
+  my-policy:
+    - path: docs/README.md
+      template: policies/my-policy/README.md
+      mode: replace
+```
+
+5) Provide the templates:
+```
+devcovenant/custom/templates/policies/my-policy/README.md
+```
+
+Custom policy assets are applied only when the policy is active
+(`apply: true`) and its `profile_scopes` intersect the active profiles.
 
 ## Core Policy Guide
 DevCovenant ships a default policy set that enforces disciplined workflows
@@ -481,9 +601,10 @@ code.
 ### Managed Environment (optional)
 Enforces usage of a declared managed environment (venv, bench, conda, etc.).
 This policy is shipped off by default; enable it only after filling in
-`expected_paths` and `command_hints`. When enabled, DevCovenant emits a
-warning if those metadata fields are empty to nudge teams toward precise
-setup guidance.
+`expected_paths`, `expected_interpreters`, and `command_hints`.
+`required_commands` should list the tooling that must be on PATH.
+When enabled, DevCovenant emits warnings if the metadata is incomplete or
+required commands are missing so teams refine their setup guidance.
 
 ## DevFlow Gates and Test Status
 DevCovenant enforces the gate sequence for every change:
@@ -502,10 +623,29 @@ The dependency-license-sync policy checks that the license report includes
 all touched manifests under `## License Report`.
 
 ## Templates and Packaging
-When installed from PyPI, DevCovenant copies templates from
-`devcovenant/templates/`. The templates include docs, config defaults, tools,
-and license text. When running from source, the installer falls back to the
-repo files if templates are unavailable.
+DevCovenant ships templates under `devcovenant/core/templates/` with
+three layers: `global/` (shared docs/config/tools),
+`profiles/<profile>/` (profile-specific assets), and
+`policies/<policy>/` (policy-scoped assets). Custom overrides live under
+`devcovenant/custom/templates/` with the same layout.
+
+Asset selection is driven by `devcovenant/core/policy_assets.yaml` and the
+active profiles recorded in config. Assets for disabled policies or
+inactive profiles are skipped.
+
+### Template precedence and resolution
+When DevCovenant resolves a template path, it checks in this order:
+1) `devcovenant/custom/templates/policies/<policy>/...`
+2) `devcovenant/custom/templates/profiles/<profile>/...`
+3) `devcovenant/custom/templates/global/...`
+4) `devcovenant/core/templates/policies/<policy>/...`
+5) `devcovenant/core/templates/profiles/<profile>/...`
+6) `devcovenant/core/templates/global/...`
+
+If the template path already includes `profiles/` or `policies/`, the path is
+resolved directly against the custom and core template roots. This lets
+policy assets and profile assets point to their template files explicitly
+without needing additional rewrites.
 
 ## Uninstall Behavior
 Uninstall removes DevCovenant-managed blocks and, when requested, deletes

@@ -272,3 +272,71 @@ def test_update_writes_manifest(tmp_path: Path) -> None:
     manifest = manifest_module.load_manifest(target)
     assert manifest
     assert manifest.get("mode") == "update"
+
+
+def test_policy_assets_skip_when_disabled(tmp_path: Path) -> None:
+    """Disabled policies should not install their assets."""
+    target = tmp_path / "repo"
+    target.mkdir()
+    install.main(
+        [
+            "--target",
+            str(target),
+            "--mode",
+            "empty",
+            "--version",
+            "0.7.0",
+            "--disable-policy",
+            "dependency-license-sync",
+        ]
+    )
+    assert not (target / "THIRD_PARTY_LICENSES.md").exists()
+    assert not (target / "licenses" / "README.md").exists()
+
+
+def test_profile_assets_installed_for_active_profiles(
+    tmp_path: Path,
+) -> None:
+    """Active profile assets should be installed by default."""
+    target = tmp_path / "repo"
+    target.mkdir()
+    install.main(
+        [
+            "--target",
+            str(target),
+            "--mode",
+            "empty",
+            "--version",
+            "0.7.1",
+        ]
+    )
+    assert (target / "requirements.in").exists()
+    assert (target / "requirements.lock").exists()
+
+
+def test_profile_assets_skip_when_profile_inactive(
+    tmp_path: Path,
+) -> None:
+    """Inactive profiles should not install their assets."""
+    target = tmp_path / "repo"
+    target.mkdir()
+    config_dir = target / "devcovenant"
+    config_dir.mkdir(parents=True, exist_ok=True)
+    config = config_dir / "config.yaml"
+    config.write_text(
+        "profiles:\n  active:\n    - docs\n",
+        encoding="utf-8",
+    )
+    install.main(
+        [
+            "--target",
+            str(target),
+            "--mode",
+            "existing",
+            "--allow-existing",
+            "--version",
+            "0.7.2",
+        ]
+    )
+    assert not (target / "requirements.in").exists()
+    assert not (target / "requirements.lock").exists()

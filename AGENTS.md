@@ -57,7 +57,8 @@ instructions with DevCovenant, its applied policies (and in general).
 5. [Editable Notes](#editable-notes-record-decisions-here)
 6. [Workflow](#workflow)
 7. [Installer Behavior Reference](#installer-behavior-reference)
-8. [Development Policy](#development-policy-devcovenant-and-laws)
+8. [Policy Management and
+   Enforcement](#devcovenant-policy-management-and-enforcement)
 
 ## Overview
 This document is the single source of truth for DevCovenant policy. Every
@@ -142,79 +143,46 @@ preparing new repos or upgrades. Key defaults:
 
 # DO NOT EDIT FROM HERE TO END UNLESS EXPLICITLY REQUESTED BY A HUMAN!
 
-# DEV(COVENANT) DEVELOPMENT POLICY MANAGEMENT AND ENFORCEMENT
+# DevCovenant Policy Management and Enforcement
 
-**IMPORTANT: READ FROM HERE TO THE END OF THE DOCUMENT AT THE BEGINNING OF
-EVERY DEVELOPMENT SESSION**
+This section is managed by DevCovenant and captures the workflow and
+enforcement expectations used by the policy engine. For architecture and
+installer details, see `devcovenant/README.md`.
 
-**Workflow primer**
-- Start each session with `python3 tools/run_pre_commit.py --phase start`.
-- Run `python3 tools/run_tests.py` after work concludes.
-- Finish with `python3 tools/run_pre_commit.py --phase end`.
-- Updating policy text? Set `updated: true`, sync hashes via
+**Managed environment rule (metadata-driven).**
+When `managed-environment` is active, run tooling inside the environment
+declared in its metadata (`expected_paths`, `expected_interpreters`,
+`required_commands`, `command_hints`). Examples include virtualenv, bench,
+conda, poetry/pipx, or containerized Python. Use the provided command
+hints in that policy.
+
+**Required workflow**
+- Start each session: `python3 tools/run_pre_commit.py --phase start`
+- Run tests: `python3 tools/run_tests.py`
+- End session: `python3 tools/run_pre_commit.py --phase end`
+- When policy text changes, set `updated: true`, run
   `devcovenant update-hashes`, then reset the flag.
-- Treat this gate sequence as obligatory for every repo change, even doc-only
-  edits; if no tests exist, run the script that would normally cover them and
-  note that in the session checklist.
 
 **Session checklist**
-- Document decisions inside the editable section above `<!-- DEVCOV:BEGIN -->`.
-- Keep `AGENTS.md` as the canonical policy source and link to it from derived
-  docs.
-- Preserve human-authored prose around the managed blocks; only edit automation
-  guidance through the installer or the CLI.
-- All policy changes must have matching script/test updates before the commit.
-
-**DevCovenant sessions**
-- AI agents run `python3 -m devcovenant check --mode startup` at session start
-  to detect policy-text drift and sync issues. Fix them before doing any other
-  work.
-- Developers revisit this section after receiving sync issues or policy
-  warnings so the workflow remains consistent across repos.
+- Log decisions in the editable section above.
+- Keep `AGENTS.md` as the canonical policy source.
+- Sync policy text, scripts, and tests before committing.
 
 **Standard commands**
 Use `python3 -m devcovenant` if the `devcovenant` console script is not on
 your PATH.
-- `devcovenant check` – full validation.
-- `devcovenant check --mode pre-commit`.
-- `devcovenant check --fix` when auto-fixes are available.
-- `devcovenant install --target <repo>` installs DevCovenant.
-- `devcovenant update --target <repo>` updates an existing install.
-- `devcovenant uninstall --target <repo>`.
-- `devcovenant restore-stock-text --policy <id>` when policy
-  prose diverges from code.
+- `devcovenant check`
+- `devcovenant check --mode pre-commit`
+- `devcovenant check --fix`
+- `devcovenant install --target <repo>`
+- `devcovenant update --target <repo>`
+- `devcovenant uninstall --target <repo>`
+- `devcovenant restore-stock-text --policy <id>`
 
-**DevCovenant enforcement**
-1. Policies defined here are parsed by `devcovenant/core/parser.py` and hashed
-   into `devcovenant/registry.json`.
-2. `devcovenant/core/engine.py` runs the checks and auto-fixers.
-3. `devcovenant/core/fixers/` hosts auto-fix logic for built-in policies.
-   Legacy imports can continue using the compatibility wrappers there.
-   Repo-specific fixers may live under `devcovenant/custom/fixers`.
-4. Built-in policies live in `devcovenant/core/policy_scripts/`.
-   Custom policies go in `devcovenant/custom/policy_scripts/` and fully
-   override the built-in policy behavior.
-
-**Sync expectations**
-- When a policy block changes, DevCovenant highlights the diff and records an
-  `updated: true` status. Update the corresponding script/test before resetting
-  the flag.
-- The `policy-text-presence` policy enforces that every policy block includes
-  descriptive prose immediately after the metadata.
-- The `stock-policy-text-sync` reminder prevents drifting from the canonical
-  wording located in `devcovenant/core/stock_policy_texts.yaml` unless the
-  policy is marked `custom: true`.
-
-**Documentation blocks**
-- Managed sections are wrapped with
-  `<!-- DEVCOV:BEGIN -->` / `<!-- DEVCOV:END -->`.
-- Install/update/uninstall scripts inject those blocks while leaving other
-  content untouched.
-- Policy reminders (e.g., `documentation-growth-tracking`,
-  `policy-text-presence`, `last-updated-placement`) point authors back to
-  these blocks whenever updates are required.
-
----
+**Managed blocks**
+Managed sections are wrapped with `<!-- DEVCOV:BEGIN -->` and
+`<!-- DEVCOV:END -->`. Install/update/uninstall scripts refresh those
+blocks while leaving surrounding content intact.
 
 ## Policy: DevCovenant Self-Enforcement
 
@@ -228,6 +196,7 @@ applies_to: devcovenant/**
 enforcement: active
 apply: true
 custom: false
+profile_scopes: global
 policy_definitions: AGENTS.md
 registry_file: devcovenant/registry.json
 ```
@@ -248,6 +217,7 @@ applies_to: *
 enforcement: active
 apply: true
 custom: false
+profile_scopes: global
 ```
 
 Ensure the DevCovenant repo keeps the required structure and tooling files.
@@ -266,6 +236,7 @@ applies_to: *
 enforcement: active
 apply: true
 custom: false
+profile_scopes: global
 dependency_files: requirements.in,requirements.lock,pyproject.toml
 third_party_file: THIRD_PARTY_LICENSES.md
 licenses_dir: licenses
@@ -291,6 +262,7 @@ applies_to: AGENTS.md
 enforcement: active
 apply: true
 custom: false
+profile_scopes: global
 policy_definitions: AGENTS.md
 ```
 
@@ -311,6 +283,7 @@ applies_to: AGENTS.md
 enforcement: active
 apply: true
 custom: false
+profile_scopes: global
 policy_definitions: AGENTS.md
 stock_texts_file: devcovenant/core/stock_policy_texts.yaml
 ```
@@ -333,6 +306,7 @@ applies_to: *
 enforcement: active
 apply: true
 custom: false
+profile_scopes: global
 test_status_file: devcovenant/test_status.json
 required_commands: pytest
   python -m unittest discover
@@ -354,6 +328,33 @@ documentation-only updates) so the gate sequence cannot be skipped.
 
 ---
 
+## Policy: Managed Environment
+
+```policy-def
+id: managed-environment
+status: active
+severity: error
+auto_fix: false
+updated: false
+applies_to: *
+enforcement: active
+apply: false
+custom: false
+profile_scopes: global
+expected_paths:
+expected_interpreters:
+required_commands:
+command_hints:
+```
+
+DevCovenant must run from the managed environment described in this
+policy's metadata. Use expected_paths for virtualenv or bench roots,
+expected_interpreters for explicit interpreter locations, and
+required_commands or command_hints to guide contributors. When enabled
+with empty metadata, the policy emits a warning so teams fill the
+required context.
+
+
 ## Policy: Changelog Coverage
 
 ```policy-def
@@ -366,6 +367,7 @@ applies_to: *
 enforcement: active
 apply: true
 custom: false
+profile_scopes: global
 main_changelog: CHANGELOG.md
 skipped_files: CHANGELOG.md,.gitignore,.pre-commit-config.yaml
 collections: __none__
@@ -389,6 +391,7 @@ applies_to: *
 enforcement: active
 apply: true
 custom: false
+profile_scopes: global
 version_file: VERSION
 readme_files: README.md,AGENTS.md,CONTRIBUTING.md,SPEC.md
   PLAN.md
@@ -424,6 +427,7 @@ applies_to: *.md
 enforcement: active
 apply: true
 custom: false
+profile_scopes: global
 include_suffixes: .md
 allowed_globs: README.md,AGENTS.md,CONTRIBUTING.md,CHANGELOG.md
   SPEC.md,PLAN.md
@@ -454,10 +458,11 @@ applies_to: *
 enforcement: active
 apply: true
 custom: false
+profile_scopes: global
 max_length: 79
 include_suffixes: .py,.md,.rst,.txt,.yml,.yaml,.json,.toml,.cff
 exclude_prefixes: build,dist,node_modules
-exclude_globs: devcovenant/templates/LICENSE_GPL-3.0.txt
+exclude_globs: devcovenant/core/templates/global/LICENSE_GPL-3.0.txt
 include_prefixes:
 include_globs:
 exclude_suffixes:
@@ -481,6 +486,7 @@ applies_to: *.py
 enforcement: active
 apply: true
 custom: false
+profile_scopes: global
 include_suffixes: .py
 exclude_prefixes: build,dist,node_modules
 include_prefixes:
@@ -507,6 +513,7 @@ applies_to: *.py
 enforcement: active
 apply: true
 custom: false
+profile_scopes: global
 exclude_prefixes: build,dist,node_modules
 include_suffixes:
 include_prefixes:
@@ -534,9 +541,11 @@ applies_to: *
 enforcement: active
 apply: true
 custom: false
+profile_scopes: global
 include_suffixes: .py
 include_prefixes: devcovenant
 exclude_prefixes: build,dist,node_modules,tests,devcovenant/core/tests
+  devcovenant/core/templates,devcovenant/custom/templates,devcovenant/templates
 exclude_globs:
 watch_dirs: tests,devcovenant/core/tests
 include_globs:
@@ -562,6 +571,7 @@ applies_to: *
 enforcement: active
 apply: true
 custom: false
+profile_scopes: global
 selector_roles: user_facing,user_visible,doc_quality
 include_prefixes: devcovenant,tools,.github
 exclude_prefixes: devcovenant/core/tests
@@ -626,6 +636,7 @@ applies_to: *
 enforcement: active
 apply: true
 custom: false
+profile_scopes: global
 include_globs: __none__
 include_suffixes:
 include_prefixes:
@@ -652,6 +663,7 @@ applies_to: *
 enforcement: active
 apply: true
 custom: false
+profile_scopes: global
 ```
 
 Dates in changelogs or documentation must not be in the future. Auto-fixers
@@ -672,6 +684,7 @@ exclude_globs: tests/**,**/tests/**
 enforcement: active
 apply: true
 custom: false
+profile_scopes: global
 include_suffixes:
 include_prefixes:
 include_globs:

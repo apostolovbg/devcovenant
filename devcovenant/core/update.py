@@ -299,7 +299,11 @@ def main(argv=None) -> None:
 
     target_root = Path(args.target).resolve()
     schema_path = (
-        Path(__file__).resolve().parents[1] / "templates" / "AGENTS.md"
+        Path(__file__).resolve().parents[1]
+        / "core"
+        / "templates"
+        / "global"
+        / "AGENTS.md"
     )
     agents_path = target_root / "AGENTS.md"
 

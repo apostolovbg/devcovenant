@@ -112,7 +112,7 @@ fall back to defaults):
 ```bash
 devcovenant normalize-metadata
 ```
-Schema defaults come from `devcovenant/templates/AGENTS.md`. Use
+Schema defaults come from `devcovenant/core/templates/global/AGENTS.md`. Use
 `--schema` to point at another file and `--no-set-updated` if you do not
 want `updated: true` applied to changed policies.
 

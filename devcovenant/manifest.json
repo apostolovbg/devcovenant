@@ -5,20 +5,33 @@
       "devcovenant/core",
       "devcovenant/core/policy_scripts",
       "devcovenant/core/fixers",
-      "devcovenant/templates"
+      "devcovenant/core/templates",
+      "devcovenant/core/templates/global",
+      "devcovenant/core/templates/profiles",
+      "devcovenant/core/templates/policies"
     ],
     "files": [
-      "devcovenant/README.md",
       "devcovenant/__init__.py",
       "devcovenant/__main__.py",
       "devcovenant/cli.py",
       "devcovenant/config.yaml",
-      "devcovenant/core/cli_options.py",
+      "devcovenant/registry.json",
+      "devcovenant/README.md",
+      "devcovenant/manifest.json",
       "devcovenant/core/stock_policy_texts.yaml",
       "devcovenant/core/policy_replacements.yaml",
-      "devcovenant/manifest.json",
-      "devcovenant/registry.json",
-      "devcovenant/templates/LICENSE_GPL-3.0.txt",
+      "devcovenant/core/cli_options.py",
+      "devcovenant/core/profile_catalog.yaml",
+      "devcovenant/core/policy_assets.yaml",
+      "devcovenant/core/templates/global/AGENTS.md",
+      "devcovenant/core/templates/global/CONTRIBUTING.md",
+      "devcovenant/core/templates/global/LICENSE_GPL-3.0.txt",
+      "devcovenant/core/templates/global/VERSION",
+      "devcovenant/core/templates/global/.pre-commit-config.yaml",
+      "devcovenant/core/templates/global/.github/workflows/ci.yml",
+      "devcovenant/core/templates/global/tools/run_pre_commit.py",
+      "devcovenant/core/templates/global/tools/run_tests.py",
+      "devcovenant/core/templates/global/tools/update_test_status.py",
       "tools/run_pre_commit.py",
       "tools/run_tests.py",
       "tools/update_test_status.py"
@@ -28,7 +41,11 @@
     "dirs": [
       "devcovenant/custom",
       "devcovenant/custom/policy_scripts",
-      "devcovenant/custom/fixers"
+      "devcovenant/custom/fixers",
+      "devcovenant/custom/templates",
+      "devcovenant/custom/templates/global",
+      "devcovenant/custom/templates/profiles",
+      "devcovenant/custom/templates/policies"
     ],
     "files": []
   },
@@ -72,5 +89,5 @@
     "catalog": []
   },
   "schema_version": 2,
-  "updated_at": "2026-01-23T13:16:45.015600+00:00"
+  "updated_at": "2026-01-23T14:53:55.609186+00:00"
 }

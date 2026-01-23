@@ -34,6 +34,25 @@ def _find_markers(content: str) -> tuple[int | None, list[int]]:
     return log_index, version_positions
 
 
+def _collapse_line_continuations(section: str) -> str:
+    """Collapse backslash-continued lines into full strings."""
+    lines = section.splitlines()
+    merged: list[str] = []
+    buffer = ""
+    for line in lines:
+        current = line
+        if buffer:
+            current = buffer + current.lstrip()
+            buffer = ""
+        if current.rstrip().endswith("\\"):
+            buffer = current.rstrip()[:-1]
+            continue
+        merged.append(current)
+    if buffer:
+        merged.append(buffer)
+    return "\n".join(merged)
+
+
 def _latest_section(content: str) -> str:
     """Return the newest version section from a changelog."""
 
@@ -173,6 +192,11 @@ class ChangelogCoverageCheck(PolicyCheck):
         root_section = (
             _latest_section(root_content) if root_content is not None else None
         )
+        section_for_matching = (
+            _collapse_line_continuations(root_section)
+            if root_section is not None
+            else ""
+        )
         if root_section:
             order_issue = _find_order_violation(root_section)
             if order_issue:
@@ -213,7 +237,9 @@ class ChangelogCoverageCheck(PolicyCheck):
                 )
             else:
                 missing = [
-                    path for path in main_files if path not in root_section
+                    path
+                    for path in main_files
+                    if path not in section_for_matching
                 ]
                 if missing:
                     files_str = ", ".join(missing)

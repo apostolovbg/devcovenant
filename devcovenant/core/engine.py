@@ -17,6 +17,7 @@ from .base import CheckContext, PolicyCheck, PolicyFixer, Violation
 from .manifest import ensure_manifest
 from .parser import PolicyDefinition, PolicyParser
 from .policy_locations import resolve_script_location
+from .profiles import load_profile_catalog, resolve_profile_suffixes
 from .registry import PolicyRegistry, PolicySyncIssue
 
 
@@ -33,6 +34,7 @@ class DevCovenantEngine:
         "updated",
         "apply",
         "custom",
+        "profile_scopes",
         "applies_to",
         "hash",
         "enforcement",
@@ -78,6 +80,9 @@ class DevCovenantEngine:
         self._ignored_paths: list[Path] = []
         self._merge_configured_ignored_dirs()
         self._apply_core_exclusions()
+
+        self._profile_catalog = load_profile_catalog(self.repo_root)
+        self._active_profiles = self._resolve_active_profiles()
 
         ensure_manifest(self.repo_root)
 
@@ -140,6 +145,44 @@ class DevCovenantEngine:
             if not rel:
                 continue
             self._ignored_paths.append(self.repo_root / rel)
+
+    def _resolve_active_profiles(self) -> list[str]:
+        """Return the normalized list of active profiles."""
+        profiles_cfg = self.config.get("profiles", {}) if self.config else {}
+        active = profiles_cfg.get("active", [])
+        if isinstance(active, str):
+            candidates = [active]
+        elif isinstance(active, list):
+            candidates = active
+        else:
+            candidates = [active] if active else []
+        normalized: list[str] = []
+        for entry in candidates:
+            normalized_value = str(entry or "").strip().lower()
+            if not normalized_value or normalized_value == "__none__":
+                continue
+            normalized.append(normalized_value)
+        return sorted(set(normalized))
+
+    def _policy_applies_to_profiles(self, policy: PolicyDefinition) -> bool:
+        """Return True when a policy applies to active profiles."""
+        raw_scopes = policy.raw_metadata.get("profile_scopes", "")
+        if raw_scopes:
+            parsed = self._parse_metadata_value(raw_scopes)
+            if isinstance(parsed, list):
+                scopes = [str(item).strip().lower() for item in parsed if item]
+            else:
+                text = str(parsed or "").strip().lower()
+                scopes = [text] if text else []
+        else:
+            scopes = []
+        if not scopes:
+            scopes = ["global"]
+        if "global" in scopes:
+            return True
+        if not self._active_profiles:
+            return False
+        return any(profile in scopes for profile in self._active_profiles)
 
     def _discover_custom_policy_overrides(self) -> set[str]:
         """Return policy ids overridden by custom policy scripts."""
@@ -353,6 +396,8 @@ class DevCovenantEngine:
         for policy in policies:
             if not policy.apply:
                 continue
+            if not self._policy_applies_to_profiles(policy):
+                continue
             if policy.status == "fiducial":
                 violations.append(
                     Violation(
@@ -536,7 +581,7 @@ class DevCovenantEngine:
         return True
 
     def _resolve_file_suffixes(self) -> list[str]:
-        """Resolve file suffixes using language profiles and overrides."""
+        """Resolve file suffixes using profiles and overrides."""
         engine_cfg = self.config.get("engine", {}) if self.config else {}
         suffixes = list(
             engine_cfg.get(
@@ -544,22 +589,10 @@ class DevCovenantEngine:
                 [".py", ".md", ".yml", ".yaml"],
             )
         )
-        profiles = (
-            self.config.get("language_profiles", {}) if self.config else {}
+        profile_suffixes = resolve_profile_suffixes(
+            self._profile_catalog, self._active_profiles
         )
-        active_profiles = self.config.get("active_language_profiles", [])
-        if isinstance(active_profiles, str):
-            active = [active_profiles]
-        else:
-            active = list(active_profiles or [])
-        for profile_name in active:
-            profile = profiles.get(profile_name, {})
-            profile_suffixes = profile.get("suffixes", [])
-            if isinstance(profile_suffixes, str):
-                profile_list = [profile_suffixes]
-            else:
-                profile_list = list(profile_suffixes or [])
-            suffixes.extend(profile_list)
+        suffixes.extend(profile_suffixes)
         cleaned: list[str] = []
         for entry in suffixes:
             text = str(entry).strip()

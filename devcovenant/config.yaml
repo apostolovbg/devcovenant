@@ -1,7 +1,7 @@
 # DevCovenant Configuration
 # Selector metadata accepts comma-separated strings or YAML lists (see
-# devcovenant/README.md for the canonical `include_*`/`exclude_*` keys). Use
-# the same names here when overriding policy defaults.
+# devcovenant/README.md for the canonical selector keys). Use the same
+# names here when overriding policy defaults.
 
 # DevCovenant core exclusion guard. For user repos, keep `devcov_core_include`
 # set to false so core files stay out of enforcement and remain update-safe.
@@ -17,29 +17,44 @@ devcov_core_paths:
   - tools/run_tests.py
   - tools/update_test_status.py
 
-# Optional language profiles for multi-language repos. Activate profiles to
-# augment `engine.file_suffixes` without rewriting the full list.
-language_profiles:
-  python:
-    suffixes: [.py, .pyi]
-  javascript:
-    suffixes: [.js, .jsx, .ts, .tsx]
-  frontend:
-    suffixes: [.vue, .svelte]
-  docs:
-    suffixes: [.md, .rst, .txt]
-  data:
-    suffixes: [.json, .yml, .yaml, .toml]
-active_language_profiles:
-  - python
-  - docs
-  - data
+profiles:
+  active:
+    - python
+    - docs
+    - data
+  generated:
+    file_suffixes:
+      - __none__
 
 paths:
-  # Markdown document that carries the policy definitions.
   policy_definitions: AGENTS.md
-  # Registry file storing the synchronized policy hashes.
   registry_file: devcovenant/registry.json
+  manifest_file: devcovenant/manifest.json
+  templates_root: devcovenant/core/templates
+  custom_templates_root: devcovenant/custom/templates
+
+docs:
+  managed_blocks:
+    begin: "<!-- DEVCOV:BEGIN -->"
+    end: "<!-- DEVCOV:END -->"
+  optional:
+    spec: true
+    plan: true
+
+install:
+  include_spec: true
+  include_plan: true
+  allow_existing: false
+  auto_uninstall: false
+  preserve_custom: true
+  config_mode: preserve
+  doc_mode: preserve
+  metadata_mode: preserve
+  disable_policy: []
+
+update:
+  preserve_custom: true
+  refresh_core: true
 
 engine:
   master_update: true
@@ -49,16 +64,14 @@ engine:
   parallel_checks: true
   verbose: true
   pre_commit_all_files: true
-  # File suffixes traversed when gathering the repo inventory.
   file_suffixes:
-    - .py
     - .md
     - .rst
     - .txt
     - .yml
     - .yaml
-    - .js
     - .json
+    - .toml
   ignore_dirs:
     - .git
     - .venv
@@ -90,6 +103,9 @@ ignore:
   patterns: []
 
 policies:
-  managed-bench:
-    expected_virtualenvs:
-      - ../frappe-bench/env
+  managed-environment:
+    apply: false
+    expected_paths: []
+    expected_interpreters: []
+    required_commands: []
+    command_hints: []

@@ -3,13 +3,51 @@ Command-line interface for devcovenant.
 """
 
 import argparse
+import re
 import sys
 from pathlib import Path
 
+from devcovenant import __version__ as package_version
 from devcovenant.core.engine import DevCovenantEngine
 
 
-def main():
+def _find_git_root(path: Path) -> Path | None:
+    """Return the nearest git root for a path."""
+    current = path.resolve()
+    for candidate in [current] + list(current.parents):
+        if (candidate / ".git").exists():
+            return candidate
+    return None
+
+
+def _read_local_version(repo_root: Path) -> str | None:
+    """Read the local devcovenant version from repo_root."""
+    init_path = repo_root / "devcovenant" / "__init__.py"
+    if not init_path.exists():
+        return None
+    pattern = re.compile(r'__version__\s*=\s*["\']([^"\']+)["\']')
+    match = pattern.search(init_path.read_text(encoding="utf-8"))
+    if match:
+        return match.group(1).strip()
+    return None
+
+
+def _warn_version_mismatch(repo_root: Path) -> None:
+    """Warn when the local devcovenant version differs from the CLI."""
+    local_version = _read_local_version(repo_root)
+    if not local_version:
+        return
+    if local_version != package_version:
+        message = (
+            "⚠️  Local DevCovenant version differs from CLI.\n"
+            f"   Local: {local_version}\n"
+            f"   CLI:   {package_version}\n"
+            "Use the local version via `python3 -m devcovenant` or update."
+        )
+        print(message)
+
+
+def main() -> None:
     """Main CLI entry point."""
     parser = argparse.ArgumentParser(
         description="DevCovenant - Self-enforcing policy system",
@@ -77,7 +115,7 @@ def main():
         default=None,
         help=(
             "Schema source for normalize-metadata (default: "
-            "devcovenant/templates/AGENTS.md)."
+            "devcovenant/core/templates/global/AGENTS.md)."
         ),
     )
     parser.add_argument(
@@ -180,6 +218,32 @@ def main():
 
     args = parser.parse_args()
 
+    repo_target = args.repo
+    if args.command in {"install", "update", "uninstall"}:
+        repo_target = args.target
+    repo_root = _find_git_root(repo_target)
+    if repo_root is None:
+        print("DevCovenant commands must run inside a git repository.")
+        sys.exit(1)
+    args.repo = repo_root
+    if args.command in {"install", "update", "uninstall"}:
+        args.target = repo_root
+    if args.command in {
+        "check",
+        "sync",
+        "test",
+        "update-hashes",
+        "normalize-metadata",
+        "restore-stock-text",
+    }:
+        if not (repo_root / "devcovenant").exists():
+            print(
+                "DevCovenant is not installed in this repo. "
+                "Run `devcovenant install --target .` first."
+            )
+            sys.exit(1)
+    _warn_version_mismatch(repo_root)
+
     # Initialize engine
     engine = DevCovenantEngine(repo_root=args.repo)
 
@@ -236,7 +300,11 @@ def main():
         agents_path = args.repo / args.agents
         if args.schema is None:
             schema_path = (
-                Path(__file__).resolve().parent / "templates" / "AGENTS.md"
+                Path(__file__).resolve().parent
+                / "core"
+                / "templates"
+                / "global"
+                / "AGENTS.md"
             )
         else:
             schema_path = Path(args.schema)

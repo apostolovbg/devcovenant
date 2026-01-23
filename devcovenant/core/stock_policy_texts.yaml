@@ -30,6 +30,13 @@ devflow-run-gates: 'DevCovenant must record and enforce the standard
   This check is enforced for every repository change (including
 
   documentation-only updates) so the gate sequence cannot be skipped.'
+managed-environment: |
+  DevCovenant must run from the managed environment described in this
+  policy's metadata. Use expected_paths for virtualenv or bench roots,
+  expected_interpreters for explicit interpreter locations, and
+  required_commands or command_hints to guide contributors. When enabled
+  with empty metadata, the policy emits a warning so teams fill the
+  required context.
 docstring-and-comment-coverage: 'Python modules, classes, and
   functions must include a docstring or a nearby
 

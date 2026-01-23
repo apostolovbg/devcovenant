@@ -20,7 +20,10 @@ DEFAULT_CORE_DIRS = [
     "devcovenant/core",
     "devcovenant/core/policy_scripts",
     "devcovenant/core/fixers",
-    "devcovenant/templates",
+    "devcovenant/core/templates",
+    "devcovenant/core/templates/global",
+    "devcovenant/core/templates/profiles",
+    "devcovenant/core/templates/policies",
 ]
 
 DEFAULT_CORE_FILES = [
@@ -34,7 +37,17 @@ DEFAULT_CORE_FILES = [
     "devcovenant/core/stock_policy_texts.yaml",
     "devcovenant/core/policy_replacements.yaml",
     "devcovenant/core/cli_options.py",
-    "devcovenant/templates/LICENSE_GPL-3.0.txt",
+    "devcovenant/core/profile_catalog.yaml",
+    "devcovenant/core/policy_assets.yaml",
+    "devcovenant/core/templates/global/AGENTS.md",
+    "devcovenant/core/templates/global/CONTRIBUTING.md",
+    "devcovenant/core/templates/global/LICENSE_GPL-3.0.txt",
+    "devcovenant/core/templates/global/VERSION",
+    "devcovenant/core/templates/global/.pre-commit-config.yaml",
+    "devcovenant/core/templates/global/.github/workflows/ci.yml",
+    "devcovenant/core/templates/global/tools/run_pre_commit.py",
+    "devcovenant/core/templates/global/tools/run_tests.py",
+    "devcovenant/core/templates/global/tools/update_test_status.py",
     "tools/run_pre_commit.py",
     "tools/run_tests.py",
     "tools/update_test_status.py",
@@ -58,6 +71,10 @@ DEFAULT_CUSTOM_DIRS = [
     "devcovenant/custom",
     "devcovenant/custom/policy_scripts",
     "devcovenant/custom/fixers",
+    "devcovenant/custom/templates",
+    "devcovenant/custom/templates/global",
+    "devcovenant/custom/templates/profiles",
+    "devcovenant/custom/templates/policies",
 ]
 
 DEFAULT_CUSTOM_FILES: list[str] = []

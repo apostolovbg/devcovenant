@@ -87,15 +87,38 @@ hashes synchronized so drift is detectable and reversible.
 ### Configuration and extension
 - `devcovenant/config.yaml` must support `devcov_core_include` and
   `devcov_core_paths` for core exclusion.
-- Language profiles are defined in `language_profiles` and activated via
-  `active_language_profiles` to extend file suffix coverage.
+- Config is generated from global defaults plus active profiles and must
+  include `profiles.generated.file_suffixes` so profile selections are
+  visible to users and tooling.
+- Config should expose global knobs for `paths`, `docs`, `install`,
+  `update`, `engine`, `hooks`, `reporting`, `ignore`, and `policies` so
+  repos can tune behavior without editing core scripts.
+- The profile catalog lives in `devcovenant/core/profile_catalog.yaml`.
+  Active profiles are recorded under `profiles.active` in config and
+  extend file suffix coverage through the catalog definitions.
+- Custom profiles can be declared in `devcovenant/custom/profile_catalog.yaml`
+  and by adding templates under
+  `devcovenant/custom/templates/profiles/<name>/`.
+- Profile and policy assets are declared in
+  `devcovenant/core/policy_assets.yaml` with custom overrides in
+  `devcovenant/custom/policy_assets.yaml`. Assets
+  reference templates under `devcovenant/core/templates/` and
+  `devcovenant/custom/templates/` and are applied only when a policy is
+  enabled and its `profile_scopes` match active profiles.
 
 ## Policy Requirements
 - Every policy definition includes descriptive prose immediately after the
   metadata block.
 - Built-in policies have canonical text stored in
   `devcovenant/core/stock_policy_texts.yaml`.
+- Policies declare `profile_scopes` metadata to gate applicability;
+  global policies use `profile_scopes: global`.
 - `apply: false` disables enforcement without removing definitions.
+- Provide a `managed-environment` policy (off by default) that
+  enforces execution inside the expected environment when
+  `apply: true`. It must warn when `expected_paths` or
+  `expected_interpreters` are empty, warn when `command_hints`
+  are missing, and report missing `required_commands` as warnings.
 - `fiducial` policies remain enforced and always surface their policy text.
 - Selector keys (`include_*`, `exclude_*`, `force_*`, `watch_*`) are supported
   across policy definitions for consistent scoping.
@@ -111,7 +134,7 @@ hashes synchronized so drift is detectable and reversible.
 ## Installation Requirements
 - Install the full DevCovenant toolchain into the target repo, including the
   `devcovenant/` tree, `tools/` helpers, and CI workflow templates.
-- Use packaged templates from `devcovenant/templates/` when installed from
+- Use packaged templates from `devcovenant/core/templates/` when installed from
   PyPI; fall back to repo files when running from source.
 - Install modes: `auto`, `empty`; use mode-specific defaults for docs,
   config, and metadata handling. Use `devcovenant update` for existing repos.

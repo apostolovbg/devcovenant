@@ -1,0 +1,59 @@
+# DevCovenant policy/profile asset map
+version: 1
+global:
+  - __none__
+profiles:
+  python:
+    - path: requirements.in
+      template: profiles/python/requirements.in
+      mode: merge
+    - path: requirements.lock
+      template: profiles/python/requirements.lock
+      mode: merge
+  javascript:
+    - path: package.json
+      template: profiles/javascript/package.json
+      mode: replace
+  typescript:
+    - path: package.json
+      template: profiles/typescript/package.json
+      mode: replace
+    - path: tsconfig.json
+      template: profiles/typescript/tsconfig.json
+      mode: replace
+  go:
+    - path: go.mod
+      template: profiles/go/go.mod
+      mode: replace
+  rust:
+    - path: Cargo.toml
+      template: profiles/rust/Cargo.toml
+      mode: replace
+  java:
+    - path: build.gradle
+      template: profiles/java/build.gradle
+      mode: replace
+  kotlin:
+    - path: build.gradle.kts
+      template: profiles/kotlin/build.gradle.kts
+      mode: replace
+  dotnet:
+    - path: global.json
+      template: profiles/dotnet/global.json
+      mode: replace
+  php:
+    - path: composer.json
+      template: profiles/php/composer.json
+      mode: replace
+  ruby:
+    - path: Gemfile
+      template: profiles/ruby/Gemfile
+      mode: replace
+policies:
+  dependency-license-sync:
+    - path: THIRD_PARTY_LICENSES.md
+      template: policies/dependency-license-sync/THIRD_PARTY_LICENSES.md
+      mode: replace
+    - path: licenses/README.md
+      template: policies/dependency-license-sync/licenses/README.md
+      mode: replace
