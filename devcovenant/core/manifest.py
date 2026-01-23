@@ -32,8 +32,9 @@ DEFAULT_CORE_FILES = [
     "devcovenant/README.md",
     "devcovenant/manifest.json",
     "devcovenant/core/stock_policy_texts.yaml",
+    "devcovenant/core/policy_replacements.yaml",
+    "devcovenant/core/cli_options.py",
     "devcovenant/templates/LICENSE_GPL-3.0.txt",
-    "devcov_check.py",
     "tools/run_pre_commit.py",
     "tools/run_tests.py",
     "tools/update_test_status.py",
@@ -119,6 +120,8 @@ def build_manifest(
         manifest["options"] = options
     if installed is not None:
         manifest["installed"] = installed
+    if "notifications" not in manifest:
+        manifest["notifications"] = []
     if doc_blocks is not None:
         manifest["doc_blocks"] = doc_blocks
     return manifest

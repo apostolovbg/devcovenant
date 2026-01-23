@@ -2,13 +2,12 @@
 
 from __future__ import annotations
 
-from dataclasses import dataclass
 import re
-
-from devcovenant.core.selectors import _normalize_globs
+from dataclasses import dataclass
 from pathlib import Path
 from typing import Dict, Iterable, List, Sequence, Tuple
 
+from devcovenant.core.selectors import _normalize_globs
 
 _POLICY_BLOCK_RE = re.compile(
     r"(##\s+Policy:\s+[^\n]+\n\n)```policy-def\n(.*?)\n```\n\n"
@@ -321,9 +320,7 @@ def normalize_agents_metadata(
         normalized_order, normalized_values = _normalize_values(
             policy_id, order, values, schema
         )
-        rendered = _render_metadata_block(
-            normalized_order, normalized_values
-        )
+        rendered = _render_metadata_block(normalized_order, normalized_values)
         if rendered != metadata_block and set_updated:
             normalized_values["updated"] = ["true"]
             rendered = _render_metadata_block(

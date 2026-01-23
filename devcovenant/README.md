@@ -120,11 +120,12 @@ The `tools/*.py` scripts support the repo workflow (pre-commit/test gates).
 ## Install Modes and Options
 Install is for new repos. Use `devcovenant update` to refresh existing
 installs. Install supports:
-- `--install-mode auto`: infer new vs. existing and refuse if already
-  installed.
-- `--install-mode empty`: treat the repo as new.
+- `--mode auto`: infer new vs. existing and refuse if already installed.
+- `--mode empty`: treat the repo as new.
+- `--mode existing`: reserved for update flows.
 
-Docs, config, and metadata handling defaults are derived from the mode:
+Docs, config, and metadata handling defaults are derived from the mode.
+Use `devcovenant update` when DevCovenant is already installed.
 - `--docs-mode preserve|overwrite`
 - `--config-mode preserve|overwrite`
 - `--metadata-mode preserve|overwrite|skip`
@@ -143,7 +144,7 @@ Targeted overrides:
 - `--include-spec` / `--include-plan` (create optional SPEC/PLAN docs)
 - `--preserve-custom` / `--no-preserve-custom`
 - `--force-docs` / `--force-config`
-- `--version <x.x|x.x.x>` to avoid prompts when `VERSION` is missing.
+- `--version <x.x|x.x.x>` to set the initial VERSION (defaults to 0.0.1).
 Doc selectors use extension-less names like `README` or `AGENTS`.
 
 ## Install Behavior Reference
@@ -151,8 +152,8 @@ The installer keeps repo content intact by default and only
 overwrites when explicitly instructed. Summary:
 - `AGENTS.md`: replaced by template; editable notes preserved.
 - `README.md`: content preserved; headers refreshed; managed block added.
-- `CHANGELOG.md` / `CONTRIBUTING.md`: preserved unless docs overwrite is
-  requested, in which case originals are backed up as `*_old.*`.
+- `CHANGELOG.md` / `CONTRIBUTING.md`: always replaced on install with
+  `*_old.md` backups; updates only refresh managed blocks.
 - `SPEC.md` / `PLAN.md`: optional; created only with `--include-spec` or
   `--include-plan`, otherwise preserved if they already exist.
 - `.gitignore`: regenerated and merged with a preserved user block.
@@ -164,7 +165,7 @@ repos; it preserves content by default and refreshes managed blocks.
 
 - `devcovenant/`: core engine always installs; `custom/` scripts and fixers
   are preserved by default on updates.
-- `devcov_check.py`, `tools/run_pre_commit.py`, `tools/run_tests.py`,
+- `tools/run_pre_commit.py`, `tools/run_tests.py`,
   `tools/update_test_status.py`: always overwritten from the package.
 - `.pre-commit-config.yaml`, `.github/workflows/ci.yml`: preserved when
   `--config-mode preserve`, otherwise overwritten. Use `--ci-mode skip` to
@@ -178,12 +179,12 @@ repos; it preserves content by default and refreshes managed blocks.
 - `SPEC.md`, `PLAN.md`: optional; existing content is preserved while
   headers refresh. Use `--include-spec` / `--include-plan` to create
   them when missing.
-- `CHANGELOG.md`, `CONTRIBUTING.md`: replaced only when docs mode overwrites;
-  otherwise content is preserved while headers and managed blocks refresh.
-- `--docs-include` / `--docs-exclude` limit which docs are overwritten when
-  `--docs-mode overwrite` is selected.
+- `CHANGELOG.md`, `CONTRIBUTING.md`: always replaced on install with
+  `*_old.md` backups; updates only refresh managed blocks.
+- `--docs-include` / `--docs-exclude` limit overwrites for other docs;
+  they do not bypass the install defaults for CHANGELOG/CONTRIBUTING.
 - `VERSION`: created on demand. Accepts `x.x` or `x.x.x` and normalizes to
-  `x.x.0`. `--version` avoids prompts.
+  `x.x.0`. Defaults to `0.0.1` when missing and no `--version` is given.
 - `LICENSE`: created from the GPL-3.0 template if missing. Overwritten only
   when the license mode requests it, and the original is backed up first.
 - `pyproject.toml`: preserved or overwritten based on `--pyproject-mode`.
@@ -258,6 +259,23 @@ DevCovenant-managed blocks are wrapped as:
 <!-- DEVCOV:END -->
 ```
 
+## Policy Replacement Workflow
+DevCovenant can retire core policies via the replacement map in
+`devcovenant/core/policy_replacements.yaml`. During `devcovenant update`:
+- Enabled replaced policies (`apply: true`) are moved to
+  `devcovenant/custom/`, marked `custom: true`, and flagged
+  `status: deprecated`. Their last-known core scripts/fixers are
+  copied into the custom folders.
+- Disabled replaced policies are removed from `AGENTS.md` and any custom
+  scripts/fixers for that policy are deleted.
+- Newly added stock policies are appended (default update behavior) and
+  reported in the update notices.
+
+Update notices are printed to stdout and appended to
+`devcovenant/manifest.json` under `notifications`. Deprecated policies
+are not enforced by default; set them back to `status: active` if you
+need to keep enforcing legacy behavior.
+
 Every managed doc receives a top-of-file block just below the standard header
 lines (`Last Updated`, `Version`, and any additional header markers). The
 installer inserts or replaces these blocks while leaving surrounding text
@@ -283,7 +301,6 @@ devcov_core_paths:
   - devcovenant/__init__.py
   - devcovenant/__main__.py
   - devcovenant/cli.py
-  - devcov_check.py
   - tools/run_pre_commit.py
   - tools/run_tests.py
   - tools/update_test_status.py

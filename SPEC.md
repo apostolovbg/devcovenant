@@ -31,8 +31,8 @@ hashes synchronized so drift is detectable and reversible.
 ## Workflow
 - Run the gated workflow for every change: pre-commit start, tests,
   pre-commit end.
-- Run a startup check at session start (`devcov_check.py check --mode
-  startup` or `python3 -m devcovenant check --mode startup`).
+- Run a startup check at session start (`python3 -m devcovenant check --mode
+  startup`).
 - When policy text changes, set `updated: true`, update scripts/tests, run
   `devcovenant update-hashes`, then reset `updated: false`.
 - Log every change in `CHANGELOG.md` under the current version header.
@@ -101,6 +101,12 @@ hashes synchronized so drift is detectable and reversible.
   across policy definitions for consistent scoping.
 - Policy metadata normalization must be able to add missing keys without
   changing existing values or policy text.
+- Support policy replacement metadata via
+  `devcovenant/core/policy_replacements.yaml`. During updates, replaced
+  policies move to custom and are marked deprecated when enabled; disabled
+  policies are removed along with their custom scripts and fixers.
+- Record update notices (replacements and new stock policies) in
+  `devcovenant/manifest.json` and print them to stdout.
 
 ## Installation Requirements
 - Install the full DevCovenant toolchain into the target repo, including the

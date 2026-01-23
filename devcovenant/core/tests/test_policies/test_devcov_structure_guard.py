@@ -42,3 +42,32 @@ def test_structure_guard_reports_missing_paths():
 
         assert violations
         assert violations[0].policy_id == "devcov-structure-guard"
+
+
+def test_structure_guard_uses_manifest_docs() -> None:
+    """Guard should use manifest doc lists when present."""
+    with tempfile.TemporaryDirectory() as tmpdir:
+        repo_root = Path(tmpdir)
+        manifest = manifest_module.build_manifest()
+        manifest_module.write_manifest(repo_root, manifest)
+
+        for rel_path in manifest["core"]["dirs"]:
+            (repo_root / rel_path).mkdir(parents=True, exist_ok=True)
+        for rel_path in manifest["core"]["files"]:
+            path = repo_root / rel_path
+            path.parent.mkdir(parents=True, exist_ok=True)
+            if not path.exists():
+                path.write_text("#")
+
+        docs = manifest["docs"]["core"]
+        for rel_path in docs:
+            if rel_path == "README.md":
+                continue
+            (repo_root / rel_path).write_text("#")
+
+        checker = DevCovenantStructureGuardCheck()
+        context = CheckContext(repo_root=repo_root)
+        violations = checker.check(context)
+
+        assert violations
+        assert "README.md" in violations[0].message

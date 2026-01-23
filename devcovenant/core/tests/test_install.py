@@ -201,3 +201,47 @@ def test_update_defaults_append_missing(tmp_path: Path) -> None:
     updated = agents_path.read_text(encoding="utf-8")
     assert "Custom policy description." in updated
     assert "## Policy: Version Synchronization" in updated
+
+
+def test_update_removes_legacy_root_paths(tmp_path: Path) -> None:
+    """Update should remove legacy root-level files."""
+    target = tmp_path / "repo"
+    target.mkdir()
+    legacy = target / "devcov_check.py"
+    legacy.write_text("legacy", encoding="utf-8")
+
+    update.main(["--target", str(target), "--version", "0.2.0"])
+
+    assert not legacy.exists()
+
+
+def test_update_refreshes_core_files(tmp_path: Path) -> None:
+    """Update should refresh core files from the package."""
+    target = tmp_path / "repo"
+    target.mkdir()
+    core_dir = target / "devcovenant"
+    core_dir.mkdir()
+    cli_path = core_dir / "cli.py"
+    cli_path.write_text("# legacy\n", encoding="utf-8")
+
+    update.main(["--target", str(target), "--version", "0.2.0"])
+
+    source_root = Path(install.__file__).resolve().parents[2]
+    source_cli = source_root / "devcovenant" / "cli.py"
+    assert cli_path.read_text(encoding="utf-8") == source_cli.read_text(
+        "utf-8"
+    )
+
+
+def test_update_writes_manifest(tmp_path: Path) -> None:
+    """Update should refresh or create the install manifest."""
+    target = tmp_path / "repo"
+    target.mkdir()
+
+    update.main(["--target", str(target), "--version", "0.2.0"])
+
+    manifest_path = manifest_module.manifest_path(target)
+    assert manifest_path.exists()
+    manifest = manifest_module.load_manifest(target)
+    assert manifest
+    assert manifest.get("mode") == "update"

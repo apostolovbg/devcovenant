@@ -11,4 +11,5 @@ include requirements.in
 include requirements.lock
 include devcovenant/README.md
 include devcovenant/registry.json
+include devcovenant/core/policy_replacements.yaml
 recursive-include devcovenant/templates *

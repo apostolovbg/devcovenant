@@ -10,12 +10,12 @@ import tempfile
 from datetime import datetime, timezone
 from pathlib import Path
 
+from devcovenant.core import cli_options
 from devcovenant.core import manifest as manifest_module
 
 DEV_COVENANT_DIR = "devcovenant"
 CORE_PATHS = [
     DEV_COVENANT_DIR,
-    "devcov_check.py",
     "tools/run_pre_commit.py",
     "tools/run_tests.py",
     "tools/update_test_status.py",
@@ -46,6 +46,7 @@ BLOCK_BEGIN = "<!-- DEVCOV:BEGIN -->"
 BLOCK_END = "<!-- DEVCOV:END -->"
 LICENSE_TEMPLATE = "LICENSE_GPL-3.0.txt"
 TEMPLATE_ROOT_NAME = "templates"
+DEFAULT_BOOTSTRAP_VERSION = "0.0.1"
 GITIGNORE_USER_BEGIN = "# --- User entries (preserved) ---"
 GITIGNORE_USER_END = "# --- End user entries ---"
 DEFAULT_PRESERVE_PATHS = [
@@ -61,10 +62,13 @@ _DEFAULT_CORE_PATHS = [
     "devcovenant/__init__.py",
     "devcovenant/__main__.py",
     "devcovenant/cli.py",
-    "devcov_check.py",
     "tools/run_pre_commit.py",
     "tools/run_tests.py",
     "tools/update_test_status.py",
+]
+
+LEGACY_ROOT_PATHS = [
+    "devcov_check.py",
 ]
 
 _VERSION_INPUT_PATTERN = re.compile(r"^\d+\.\d+(\.\d+)?$")
@@ -128,16 +132,6 @@ def _parse_doc_names(raw: str | None) -> set[str] | None:
     return names
 
 
-def _prompt_version() -> str:
-    """Prompt for a version until the input is valid."""
-    while True:
-        raw = input("Enter current version (x.x or x.x.x): ").strip()
-        try:
-            return _normalize_version(raw)
-        except ValueError:
-            print("Invalid version. Use x.x or x.x.x.")
-
-
 def _prompt_yes_no(prompt: str, default: bool = False) -> bool:
     """Prompt for a yes/no answer and return the response."""
     suffix = "Y/n" if default else "y/N"
@@ -163,6 +157,17 @@ def _resolve_source_path(
     if template.exists():
         return template
     return candidate
+
+
+def _remove_legacy_paths(target_root: Path, paths: list[str]) -> None:
+    """Remove legacy paths left behind by older installs."""
+    for rel_path in paths:
+        target = target_root / rel_path
+        if target.is_dir():
+            shutil.rmtree(target)
+            continue
+        if target.exists():
+            target.unlink()
 
 
 def _strip_devcov_block(text: str) -> str:
@@ -1125,111 +1130,11 @@ def main(argv=None) -> None:
     parser = argparse.ArgumentParser(
         description="Install DevCovenant in a target repository."
     )
-    parser.add_argument(
-        "--target",
-        default=".",
-        help="Target repository path (default: current directory).",
-    )
-    parser.add_argument(
-        "--mode",
-        choices=("auto", "empty", "existing"),
-        default="auto",
-        help="Install mode (auto detects existing installs).",
-    )
-    parser.add_argument(
-        "--docs-mode",
-        choices=("preserve", "overwrite"),
-        default=None,
-        help="How to handle docs in existing repos.",
-    )
-    parser.add_argument(
-        "--docs-include",
-        default=None,
-        help="Comma-separated doc names to target for overwrite.",
-    )
-    parser.add_argument(
-        "--docs-exclude",
-        default=None,
-        help="Comma-separated doc names to exclude from overwrite.",
-    )
-    parser.add_argument(
-        "--policy-mode",
-        choices=("preserve", "append-missing", "overwrite"),
-        default=None,
-        help="How to handle policy blocks during install/update.",
-    )
-    parser.add_argument(
-        "--config-mode",
-        choices=("preserve", "overwrite"),
-        default=None,
-        help="How to handle config files in existing repos.",
-    )
-    parser.add_argument(
-        "--metadata-mode",
-        choices=("preserve", "overwrite", "skip"),
-        default=None,
-        help="How to handle metadata files in existing repos.",
-    )
-    parser.add_argument(
-        "--license-mode",
-        choices=("inherit", "preserve", "overwrite", "skip"),
-        default="inherit",
-        help="Override the metadata mode for LICENSE.",
-    )
-    parser.add_argument(
-        "--version-mode",
-        choices=("inherit", "preserve", "overwrite", "skip"),
-        default="inherit",
-        help="Override the metadata mode for VERSION.",
-    )
-    parser.add_argument(
-        "--version",
-        dest="version_value",
-        default=None,
-        help="Version to use when creating VERSION for new installs.",
-    )
-    parser.add_argument(
-        "--pyproject-mode",
-        choices=("inherit", "preserve", "overwrite", "skip"),
-        default="inherit",
-        help="Override the metadata mode for pyproject.toml.",
-    )
-    parser.add_argument(
-        "--ci-mode",
-        choices=("inherit", "preserve", "overwrite", "skip"),
-        default="inherit",
-        help="Override the config mode for CI workflow files.",
-    )
-    parser.add_argument(
-        "--include-spec",
-        action="store_true",
-        help="Create SPEC.md when missing.",
-    )
-    parser.add_argument(
-        "--include-plan",
-        action="store_true",
-        help="Create PLAN.md when missing.",
-    )
-    parser.add_argument(
-        "--preserve-custom",
-        action=argparse.BooleanOptionalAction,
-        default=None,
-        help="Preserve custom policy scripts and fixers during install.",
-    )
-    parser.add_argument(
-        "--allow-existing",
-        action="store_true",
-        help=argparse.SUPPRESS,
-    )
-    parser.add_argument(
-        "--force-docs",
-        action="store_true",
-        help="Overwrite docs and metadata on update.",
-    )
-    parser.add_argument(
-        "--force-config",
-        action="store_true",
-        help="Overwrite config files on update.",
+    cli_options.add_install_update_args(
+        parser,
+        defaults=cli_options.DEFAULT_INSTALL_DEFAULTS,
+        include_mode=True,
+        include_allow_existing=True,
     )
     args = parser.parse_args(argv)
 
@@ -1292,10 +1197,16 @@ def main(argv=None) -> None:
     if not include_plan:
         required_docs.discard("PLAN")
 
+    always_overwrite_docs = set()
+    if mode != "existing":
+        always_overwrite_docs = {"CHANGELOG", "CONTRIBUTING"}
+
     overwrite_targets = (
         set(docs_include) if docs_include is not None else set(required_docs)
     )
+    overwrite_targets |= always_overwrite_docs
     overwrite_targets -= docs_exclude
+    docs_exclude -= always_overwrite_docs
     if not include_spec:
         overwrite_targets.discard("SPEC")
     if not include_plan:
@@ -1303,6 +1214,8 @@ def main(argv=None) -> None:
 
     def _should_overwrite(doc_name: str) -> bool:
         """Return True when overwrite mode targets the doc name."""
+        if doc_name in always_overwrite_docs:
+            return True
         return docs_mode == "overwrite" and doc_name in overwrite_targets
 
     agents_path = target_root / "AGENTS.md"
@@ -1353,12 +1266,12 @@ def main(argv=None) -> None:
         requested_version = _normalize_version(args.version_value)
 
     if version_mode == "overwrite":
-        target_version = requested_version or _prompt_version()
+        target_version = requested_version or DEFAULT_BOOTSTRAP_VERSION
     elif version_mode == "preserve" and existing_version:
         target_version = existing_version
     else:
         target_version = (
-            existing_version or requested_version or _prompt_version()
+            existing_version or requested_version or DEFAULT_BOOTSTRAP_VERSION
         )
 
     installed: dict[str, list[str]] = {"core": [], "config": [], "docs": []}
@@ -1386,6 +1299,9 @@ def main(argv=None) -> None:
             source_overrides=core_sources,
         )
     )
+
+    if mode == "existing":
+        _remove_legacy_paths(target_root, LEGACY_ROOT_PATHS)
 
     config_paths = [path for path in CONFIG_PATHS if path != ".gitignore"]
     if ci_mode == "skip":

@@ -159,7 +159,7 @@ by uninstalling and reinstalling with the intended installer arguments.
   paths disappear, new core paths appear, and manual migrations self-heal on
   first DevCovenant run.
 
-### Phase F: Update/install/uninstall convergence
+### Phase F: Update/install/uninstall convergence (done)
 - Share a unified flag schema across install/update/uninstall (single parser
   or shared option registry) so default behavior is consistent.
 - Install refuses to run on existing installs and directs users to update or
@@ -173,21 +173,20 @@ by uninstalling and reinstalling with the intended installer arguments.
 - Version handling: reuse existing `VERSION`, otherwise create `VERSION` with
   `0.0.1` when no version argument is supplied.
 
-### Phase G: Tests and validation
-- Add tests for selector-role migration and key renaming.
-- Add tests for target update behavior (append-missing + core refresh).
-- Add tests for manifest creation/refresh and structure guard validation.
-- Verify update behavior against at least two real repos.
+### Phase G: Tests and validation (in progress)
+- Added tests for selector-role migration and key renaming.
+- Added tests for update behavior (append-missing + core refresh).
+- Added tests for manifest creation/refresh and structure guard usage.
+- Verify update behavior against at least two real repos. (pending)
 
-### Phase H: Policy replacement and deprecation workflow
-- When a core policy is replaced, mark the old policy as deprecated and
-  move it to custom with `custom: true` if it is enabled in the repo.
-- Move associated fixers alongside the policy when it is migrated to custom;
-  update hashes afterward.
-- If the deprecated policy is not enabled, remove it entirely (policy and
-  fixer) and notify the user of the replacement.
-- Notify users when new stock policies are added and record the notice in the
-  update summary for the repo.
+### Phase H: Policy replacement and deprecation workflow (done)
+- Added a replacement map (`devcovenant/core/policy_replacements.yaml`)
+  and update logic to migrate or remove replaced policies.
+- Replaced policies now move to custom with `custom: true` +
+  `status: deprecated` when enabled; disabled ones are removed along with
+  their custom scripts/fixers.
+- Update notices are printed and stored in the manifest.
+- Tests cover replacement migration/removal and notification logging.
 
 ### Phase I: Managed environment policy
 - Introduce a single `managed-environment` policy that replaces
@@ -274,11 +273,6 @@ DevCovenant block (immediately below the header):
   normalization steps until fixed.
 
 ## Next Steps
-- Finish Phase C: selector-role migration in normalizer.
-- Finish Phase D: target update behavior alignment.
-- Finish Phase E: dynamic structure validation.
-- Finish Phase F: update/install guardrails.
-- Complete Phase G validation and repo verification.
-- Implement Phase H policy replacement workflow.
+- Complete Phase G validation by verifying updates in two real repos.
 - Implement Phase I managed-environment policy.
 - Implement Phase J SemVer scope enforcement.

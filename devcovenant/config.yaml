@@ -13,7 +13,6 @@ devcov_core_paths:
   - devcovenant/__init__.py
   - devcovenant/__main__.py
   - devcovenant/cli.py
-  - devcov_check.py
   - tools/run_pre_commit.py
   - tools/run_tests.py
   - tools/update_test_status.py

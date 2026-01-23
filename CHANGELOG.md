@@ -23,6 +23,78 @@ Example entry:
 ## Log changes here
 
 ## Version 0.2.6
+- 2026-01-23: Implemented the policy replacement workflow, added
+  replacement metadata, and expanded Phase H test coverage while
+  refreshing documentation and manifests. (AI assistant)
+  Files:
+  AGENTS.md
+  CHANGELOG.md
+  MANIFEST.in
+  PLAN.md
+  README.md
+  SPEC.md
+  devcov_check.py
+  devcovenant/README.md
+  devcovenant/config.yaml
+  devcovenant/core/cli_options.py
+  devcovenant/core/install.py
+  devcovenant/core/manifest.py
+  devcovenant/core/metadata_normalizer.py
+  devcovenant/core/policy_replacements.py
+  devcovenant/core/policy_replacements.yaml
+  devcovenant/core/tests/test_devcov_check.py
+  devcovenant/core/tests/test_install.py
+  devcovenant/core/tests/test_metadata_normalizer.py
+  devcovenant/core/tests/test_policies/test_devcov_structure_guard.py
+  devcovenant/core/tests/test_policy_replacements.py
+  devcovenant/core/uninstall.py
+  devcovenant/core/update.py
+  devcovenant/manifest.json
+  devcovenant/templates/AGENTS.md
+  devcovenant/templates/devcov_check.py
+- 2026-01-23: Added Phase G tests for selector-role migration, update
+  refresh behavior, and structure-guard manifest validation, plus
+  refreshed the plan status. (AI assistant)
+  Files:
+  CHANGELOG.md
+  PLAN.md
+  devcovenant/core/tests/test_install.py
+  devcovenant/core/tests/test_metadata_normalizer.py
+  devcovenant/core/tests/test_policies/test_devcov_structure_guard.py
+- 2026-01-23: Removed the root devcov_check wrapper in favor of the
+  `python3 -m devcovenant` CLI, updated installer manifests, and
+  refreshed documentation/policy metadata accordingly. (AI assistant)
+  Files:
+  CHANGELOG.md
+  AGENTS.md
+  README.md
+  SPEC.md
+  devcov_check.py
+  devcovenant/README.md
+  devcovenant/config.yaml
+  devcovenant/core/install.py
+  devcovenant/core/manifest.py
+  devcovenant/core/tests/test_devcov_check.py
+  devcovenant/core/uninstall.py
+  devcovenant/manifest.json
+  devcovenant/templates/AGENTS.md
+  devcovenant/templates/devcov_check.py
+- 2026-01-23: Unified install/update/uninstall CLI options, enforced
+  install-time changelog/contributing replacement, and clarified
+  version bootstrapping defaults. (AI assistant)
+  Files:
+  CHANGELOG.md
+  PLAN.md
+  README.md
+  devcovenant/README.md
+  devcovenant/core/cli_options.py
+  devcovenant/core/install.py
+  devcovenant/core/manifest.py
+  devcovenant/core/metadata_normalizer.py
+  devcovenant/core/tests/test_metadata_normalizer.py
+  devcovenant/core/uninstall.py
+  devcovenant/core/update.py
+  devcovenant/manifest.json
 - 2026-01-23: Marked Phases A-E as complete in the 0.2.6 plan. (AI assistant)
   Files:
   CHANGELOG.md

@@ -82,6 +82,11 @@ Install DevCovenant into a target repository:
 devcovenant install --target /path/to/repo
 ```
 
+Install is intended for new repos. Existing installs should use
+`devcovenant update` or uninstall/reinstall. On install,
+`CHANGELOG.md` and `CONTRIBUTING.md` are replaced with `_old.md`
+backups, and `VERSION` defaults to `0.0.1` when missing.
+
 Update an existing installation while preserving policy blocks and
 metadata:
 ```bash
@@ -162,7 +167,6 @@ devcov_core_paths:
   - devcovenant/__init__.py
   - devcovenant/__main__.py
   - devcovenant/cli.py
-  - devcov_check.py
   - tools/run_pre_commit.py
   - tools/run_tests.py
   - tools/update_test_status.py

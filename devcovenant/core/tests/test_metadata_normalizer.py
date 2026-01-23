@@ -123,6 +123,7 @@ def test_normalize_adds_selector_roles(tmp_path: Path) -> None:
     assert "include_files:" in updated
     assert "include_dirs:" in updated
 
+
 def test_normalize_migrates_guarded_paths(tmp_path: Path) -> None:
     """Guarded paths are migrated into guarded selector roles."""
     agents_path = tmp_path / "AGENTS.md"
@@ -130,8 +131,7 @@ def test_normalize_migrates_guarded_paths(tmp_path: Path) -> None:
     _write_schema(schema_path, "sample-policy")
     _write_agents(
         agents_path,
-        "id: sample-policy\n"
-        "guarded_paths: secrets/**,ops/**\n",
+        "id: sample-policy\n" "guarded_paths: secrets/**,ops/**\n",
     )
 
     normalize_agents_metadata(agents_path, schema_path)
@@ -208,3 +208,22 @@ def test_normalize_migrates_user_facing_roles(tmp_path: Path) -> None:
     assert "user_facing_dirs:" in updated
     assert "user_facing_exclude_dirs: tests/**" in updated
     assert "user_facing_exclude_globs:" in updated
+
+
+def test_normalize_migrates_exclude_prefixes(tmp_path: Path) -> None:
+    """Legacy exclude prefixes should migrate into selector roles."""
+    agents_path = tmp_path / "AGENTS.md"
+    schema_path = tmp_path / "schema.md"
+    _write_schema(schema_path, "sample-policy")
+    _write_agents(
+        agents_path,
+        "id: sample-policy\n" "exclude_prefixes: tests\n",
+    )
+
+    normalize_agents_metadata(agents_path, schema_path)
+    updated = agents_path.read_text(encoding="utf-8")
+
+    assert "selector_roles: exclude" in updated
+    assert "exclude_globs: tests/**" in updated
+    assert "exclude_files:" in updated
+    assert "exclude_dirs:" in updated

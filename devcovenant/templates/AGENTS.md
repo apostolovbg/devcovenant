@@ -160,7 +160,7 @@ Do not run repo tooling with system Python.
 - All policy changes must have matching script/test updates before the commit.
 
 **DevCovenant sessions**
-- AI agents run `python3 devcov_check.py check --mode startup` at session start
+- AI agents run `python3 -m devcovenant check --mode startup` at session start
   to detect policy-text drift and sync issues. Fix them before doing any other
   work.
 - Developers revisit this section after receiving sync issues or policy
@@ -529,7 +529,7 @@ custom: false
 include_suffixes: .py
 include_prefixes: devcovenant
 exclude_prefixes: build,dist,node_modules,tests,devcovenant/core/tests
-exclude_globs: devcov_check.py
+exclude_globs:
 watch_dirs: tests,devcovenant/core/tests
 include_globs:
 exclude_suffixes:
@@ -561,7 +561,8 @@ user_facing_prefixes: devcovenant,tools,.github
 user_facing_exclude_prefixes: devcovenant/core/tests,tests
 user_facing_suffixes: .py,.js,.ts,.tsx,.vue,.go,.rs,.java,.kt,.swift,.rb
   .php,.cs,.yml,.yaml,.json,.toml
-user_facing_files: devcov_check.py,.pre-commit-config.yaml,pyproject.toml
+user_facing_files: devcovenant/cli.py,devcovenant/__main__.py,
+  .pre-commit-config.yaml,pyproject.toml
 user_facing_globs: .github/workflows/*.yml,.github/workflows/*.yaml
 user_facing_keywords: api,endpoint,endpoints,route,routes,routing,service
   services,controller,controllers,handler,handlers,client,clients,webhook

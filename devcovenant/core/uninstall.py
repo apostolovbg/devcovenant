@@ -7,11 +7,11 @@ import argparse
 import shutil
 from pathlib import Path
 
+from devcovenant.core import cli_options
 from devcovenant.core import manifest as manifest_module
 
 FALLBACK_CORE_PATHS = [
     "devcovenant",
-    "devcov_check.py",
     "tools/run_pre_commit.py",
     "tools/run_tests.py",
     "tools/update_test_status.py",
@@ -57,11 +57,7 @@ def main(argv=None) -> None:
     parser = argparse.ArgumentParser(
         description="Uninstall DevCovenant using its install manifest."
     )
-    parser.add_argument(
-        "--target",
-        default=".",
-        help="Target repository path (default: current directory).",
-    )
+    cli_options.add_target_arg(parser)
     parser.add_argument(
         "--remove-docs",
         action="store_true",
