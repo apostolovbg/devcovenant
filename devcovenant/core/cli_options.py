@@ -2,10 +2,9 @@
 
 from __future__ import annotations
 
+import argparse
 from dataclasses import dataclass
 from typing import Iterable
-
-import argparse
 
 DOCS_MODE_CHOICES = ("preserve", "overwrite")
 POLICY_MODE_CHOICES = ("preserve", "append-missing", "overwrite")
@@ -79,6 +78,17 @@ def add_install_update_args(
             default="auto",
             help="Install mode (auto detects existing installs).",
         )
+    parser.add_argument(
+        "--disable-policy",
+        default=None,
+        help="Comma-separated policy ids to disable on install/update.",
+    )
+    parser.add_argument(
+        "--auto-uninstall",
+        action="store_true",
+        help="Automatically uninstall when existing DevCovenant artifacts"
+        " are detected during install.",
+    )
     parser.add_argument(
         "--docs-mode",
         choices=DOCS_MODE_CHOICES,
@@ -191,6 +201,10 @@ def build_install_args(
         install_args.append("--allow-existing")
     if args.docs_mode is not None:
         install_args.extend(["--docs-mode", args.docs_mode])
+    if args.disable_policy:
+        install_args.extend(["--disable-policy", args.disable_policy])
+    if args.auto_uninstall:
+        install_args.append("--auto-uninstall")
     if args.docs_include:
         install_args.extend(["--docs-include", args.docs_include])
     if args.docs_exclude:

@@ -51,9 +51,7 @@ def test_update_migrates_replaced_policy(
     agents_path = target / "AGENTS.md"
     _write_agents(agents_path, "true")
 
-    core_scripts = (
-        target / "devcovenant" / "core" / "policy_scripts"
-    )
+    core_scripts = target / "devcovenant" / "core" / "policy_scripts"
     core_scripts.mkdir(parents=True, exist_ok=True)
     script_path = core_scripts / "old_policy.py"
     script_path.write_text("print('legacy')\n", encoding="utf-8")
@@ -76,11 +74,7 @@ def test_update_migrates_replaced_policy(
     assert "custom: true" in updated
 
     custom_script = (
-        target
-        / "devcovenant"
-        / "custom"
-        / "policy_scripts"
-        / "old_policy.py"
+        target / "devcovenant" / "custom" / "policy_scripts" / "old_policy.py"
     )
     assert custom_script.exists()
     assert "legacy" in custom_script.read_text(encoding="utf-8")
@@ -105,9 +99,7 @@ def test_update_removes_disabled_replaced_policy(
     agents_path = target / "AGENTS.md"
     _write_agents(agents_path, "false")
 
-    custom_scripts = (
-        target / "devcovenant" / "custom" / "policy_scripts"
-    )
+    custom_scripts = target / "devcovenant" / "custom" / "policy_scripts"
     custom_scripts.mkdir(parents=True, exist_ok=True)
     custom_script = custom_scripts / "old_policy.py"
     custom_script.write_text("# custom\n", encoding="utf-8")

@@ -115,6 +115,10 @@ hashes synchronized so drift is detectable and reversible.
   PyPI; fall back to repo files when running from source.
 - Install modes: `auto`, `empty`; use mode-specific defaults for docs,
   config, and metadata handling. Use `devcovenant update` for existing repos.
+- When install finds DevCovenant artifacts, it refuses to proceed unless
+  `--auto-uninstall` is supplied or the user confirms the uninstall prompt.
+- `--disable-policy` sets `apply: false` for listed policy IDs during
+  install/update.
 - Update mode defaults to preserving policy blocks and metadata; managed blocks
   can be refreshed independently of policy definitions.
 - Preserve custom policy scripts and fixers by default on existing installs
@@ -127,22 +131,26 @@ hashes synchronized so drift is detectable and reversible.
 - `SPEC.md` and `PLAN.md` are optional. Existing files get header refreshes;
   missing files are created only when `--include-spec` or `--include-plan`
   are supplied.
-- `CHANGELOG.md` and `CONTRIBUTING.md` are replaced only when docs mode
-  overwrites; otherwise content is preserved with refreshed headers and
-  managed blocks.
-- `VERSION` is created on demand. Accept `x.x` or `x.x.x`, normalize to
-  `x.x.0`, and apply across headers.
+- `CHANGELOG.md` and `CONTRIBUTING.md` are always replaced on install
+  (backing up to `*_old.md`); updates refresh managed blocks only.
+- `VERSION` is created on demand. Prefer an existing VERSION, otherwise
+  read version fields from `pyproject.toml`, otherwise prompt. If prompting
+  is skipped, default to `0.0.1`. The `--version` flag overrides detection
+  and accepts `x.x` or `x.x.x` (normalized to `x.x.0`).
 - If no license exists, install the GPL-3.0 template with a `Project Version`
   header. Only overwrite licenses when explicitly requested.
 - Regenerate `.gitignore` from a universal baseline and merge existing user
   entries under a preserved block.
+- Always back up overwritten or merged files as `*_old.*`, even when
+  merges succeed, and report the backups at the end of install.
 - Stamp `Last Updated` values using the UTC install date.
 - Support partial doc overwrites via `--docs-include` / `--docs-exclude`, so
   only selected docs are replaced when docs mode overwrites.
 - Support policy update modes via `--policy-mode preserve|append-missing|`
   `overwrite`.
-- Write `devcovenant/manifest.json` with the core layout, doc types, installed
-  paths, options, and the UTC timestamp of the install or update.
+- Write `devcovenant/manifest.json` with the core layout, doc types,
+  installed paths, options, active profiles, policy asset mappings, and
+  the UTC timestamp of the install or update.
 
 ## Packaging Requirements
 - Ship `devcovenant` as a pure-Python package with a console script entry.

@@ -94,7 +94,7 @@ def build_manifest(
 ) -> Dict[str, Any]:
     """Build a default manifest payload."""
     manifest: Dict[str, Any] = {
-        "schema_version": 1,
+        "schema_version": 2,
         "updated_at": _utc_now(),
         "core": {
             "dirs": list(DEFAULT_CORE_DIRS),
@@ -112,6 +112,15 @@ def build_manifest(
         "generated": {
             "dirs": list(DEFAULT_GENERATED_DIRS),
             "files": list(DEFAULT_GENERATED_FILES),
+        },
+        "profiles": {
+            "active": [],
+            "catalog": [],
+        },
+        "policy_assets": {
+            "global": [],
+            "profiles": {},
+            "policies": {},
         },
     }
     if mode:

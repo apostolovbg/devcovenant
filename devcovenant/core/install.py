@@ -6,12 +6,14 @@ from __future__ import annotations
 import argparse
 import re
 import shutil
+import sys
 import tempfile
 from datetime import datetime, timezone
 from pathlib import Path
 
 from devcovenant.core import cli_options
 from devcovenant.core import manifest as manifest_module
+from devcovenant.core import uninstall
 
 DEV_COVENANT_DIR = "devcovenant"
 CORE_PATHS = [
@@ -87,6 +89,35 @@ _DOC_NAME_MAP = {
     "CHANGELOG": "CHANGELOG.md",
 }
 
+_BACKUP_ROOT: Path | None = None
+_BACKUP_LOG: list[str] = []
+_BACKUP_ORIGINALS: set[Path] = set()
+
+
+def _reset_backup_state(root: Path) -> None:
+    """Reset backup tracking for the install session."""
+    global _BACKUP_ROOT, _BACKUP_LOG, _BACKUP_ORIGINALS
+    _BACKUP_ROOT = root
+    _BACKUP_LOG = []
+    _BACKUP_ORIGINALS = set()
+
+
+def _record_backup(path: Path) -> None:
+    """Record a backup path for install logging."""
+    if _BACKUP_ROOT is None:
+        return
+    try:
+        label = str(path.relative_to(_BACKUP_ROOT))
+    except ValueError:
+        label = str(path)
+    if label not in _BACKUP_LOG:
+        _BACKUP_LOG.append(label)
+
+
+def _backup_log() -> list[str]:
+    """Return the collected backup log entries."""
+    return list(_BACKUP_LOG)
+
 
 def _utc_today() -> str:
     """Return today's UTC date as an ISO string."""
@@ -130,6 +161,56 @@ def _parse_doc_names(raw: str | None) -> set[str] | None:
             raise ValueError(f"Unknown doc name: {entry}")
         names.add(normalized)
     return names
+
+
+def _parse_policy_ids(raw: str | None) -> list[str]:
+    """Parse a comma-separated list of policy ids."""
+    if raw is None:
+        return []
+    entries = [part.strip() for part in raw.split(",")]
+    return [entry for entry in entries if entry]
+
+
+def _prompt_version() -> str | None:
+    """Prompt the user for a version override."""
+    while True:
+        raw = input(
+            "Enter version (MAJOR.MINOR[.PATCH]) or blank to skip: "
+        ).strip()
+        if not raw:
+            return None
+        try:
+            return _normalize_version(raw)
+        except ValueError as exc:
+            print(str(exc))
+
+
+def _read_pyproject_version(path: Path) -> str | None:
+    """Extract a version from pyproject.toml when present."""
+    if not path.exists():
+        return None
+    try:
+        lines = path.read_text(encoding="utf-8").splitlines()
+    except OSError:
+        return None
+    section = None
+    for raw in lines:
+        stripped = raw.strip()
+        if not stripped or stripped.startswith("#"):
+            continue
+        if stripped.startswith("[") and stripped.endswith("]"):
+            section = stripped.strip("[]")
+            continue
+        if section not in {"project", "tool.poetry"}:
+            continue
+        if stripped.startswith("version") and "=" in stripped:
+            key, _, raw_value = stripped.partition("=")
+            if key.strip() != "version":
+                continue
+            candidate = raw_value.strip().strip('"').strip("'")
+            if candidate:
+                return candidate
+    return None
 
 
 def _prompt_yes_no(prompt: str, default: bool = False) -> bool:
@@ -233,6 +314,7 @@ def _apply_standard_header(
     updated = _ensure_standard_header(text, last_updated, version, title)
     if updated == text:
         return False
+    _rename_existing_file(path)
     path.write_text(updated, encoding="utf-8")
     return True
 
@@ -251,6 +333,7 @@ def _update_devcovenant_version(path: Path, devcov_version: str) -> bool:
     )
     if updated == text:
         return False
+    _rename_existing_file(path)
     path.write_text(updated, encoding="utf-8")
     return True
 
@@ -687,6 +770,7 @@ def _apply_core_config(target_root: Path, include_core: bool) -> bool:
     )
     if not changed:
         return False
+    _rename_existing_file(config_path)
     config_path.write_text(updated, encoding="utf-8")
     return True
 
@@ -704,10 +788,12 @@ def _copy_path(source: Path, target: Path) -> None:
     shutil.copy2(source, target)
 
 
-def _rename_existing_file(target: Path) -> None:
+def _rename_existing_file(target: Path) -> Path | None:
     """Rename an existing file to preserve it before overwriting."""
     if not target.exists() or target.is_dir():
-        return
+        return None
+    if target in _BACKUP_ORIGINALS:
+        return None
     suffix = target.suffix
     stem = target.stem
     candidate = target.with_name(f"{stem}_old{suffix}")
@@ -716,6 +802,9 @@ def _rename_existing_file(target: Path) -> None:
         candidate = target.with_name(f"{stem}_old{index}{suffix}")
         index += 1
     target.rename(candidate)
+    _BACKUP_ORIGINALS.add(target)
+    _record_backup(candidate)
+    return candidate
 
 
 def _copy_dir_contents(source: Path, target: Path) -> None:
@@ -869,6 +958,7 @@ def _inject_block(path: Path, block: str) -> bool:
         updated = f"{before}{block}{after}"
         if updated == text:
             return False
+        _rename_existing_file(path)
         path.write_text(updated, encoding="utf-8")
         return True
 
@@ -891,6 +981,8 @@ def _inject_block(path: Path, block: str) -> bool:
                 break
             break
     lines.insert(insert_at, block)
+    _rename_existing_file(path)
+    _rename_existing_file(path)
     path.write_text("".join(lines), encoding="utf-8")
     return True
 
@@ -984,6 +1076,7 @@ def _ensure_changelog_block(
     updated = header + changelog_block + "\n" + log_section.lstrip()
     if updated == text:
         return False
+    _rename_existing_file(path)
     path.write_text(updated, encoding="utf-8")
     return True
 
@@ -1050,8 +1143,116 @@ def _sync_blocks_from_template(target: Path, template_text: str) -> bool:
     current = target.read_text(encoding="utf-8")
     updated_text, changed = _replace_blocks(current, template_blocks)
     if changed:
+        _rename_existing_file(target)
         target.write_text(updated_text, encoding="utf-8")
     return changed
+
+
+def _parse_metadata_block(
+    block: str,
+) -> tuple[list[str], dict[str, list[str]]]:
+    """Return ordered keys and per-key values from metadata."""
+    order: list[str] = []
+    values: dict[str, list[str]] = {}
+    current_key = ""
+    for line in block.splitlines():
+        stripped = line.strip()
+        if not stripped:
+            continue
+        if ":" in stripped:
+            key, raw_value = stripped.split(":", 1)
+            key = key.strip()
+            value_text = raw_value.strip()
+            order.append(key)
+            values[key] = [] if not value_text else [value_text]
+            current_key = key
+            continue
+        if current_key:
+            values[current_key].append(stripped)
+    return order, values
+
+
+def _render_metadata_block(
+    keys: list[str], values: dict[str, list[str]]
+) -> str:
+    """Render a policy-def block from ordered keys and values."""
+    lines: list[str] = []
+    for key in keys:
+        entries = values.get(key, [])
+        if not entries:
+            lines.append(f"{key}:")
+            continue
+        first = entries[0]
+        if first:
+            lines.append(f"{key}: {first}")
+        else:
+            lines.append(f"{key}:")
+        for extra in entries[1:]:
+            lines.append(f"  {extra}")
+    return "\n".join(lines)
+
+
+def _ensure_key(
+    keys: list[str], values: dict[str, list[str]], key: str
+) -> None:
+    """Ensure a metadata key exists in order and value map."""
+    if key not in values:
+        values[key] = []
+    if key not in keys:
+        keys.append(key)
+
+
+def _extract_policy_id(metadata: str) -> str:
+    """Return the policy id from a metadata block."""
+    for line in metadata.splitlines():
+        stripped = line.strip()
+        if stripped.startswith("id:"):
+            return stripped.split(":", 1)[1].strip()
+    return ""
+
+
+def _apply_policy_disables(
+    agents_path: Path, disable_ids: list[str]
+) -> list[str]:
+    """Disable policies by setting apply: false in AGENTS.md."""
+    if not disable_ids or not agents_path.exists():
+        return []
+    disable_set = {
+        policy_id.strip() for policy_id in disable_ids if policy_id.strip()
+    }
+    if not disable_set:
+        return []
+    text = agents_path.read_text(encoding="utf-8")
+    policy_pattern = re.compile(
+        r"(##\s+Policy:\s+[^\n]+\n\n```policy-def\n)(.*?)(\n```\n\n)",
+        re.DOTALL,
+    )
+    disabled: list[str] = []
+    changed = False
+
+    def _replace(match: re.Match[str]) -> str:
+        """Apply the disable list to matching policy metadata."""
+        nonlocal changed
+        metadata = match.group(2)
+        policy_id = _extract_policy_id(metadata)
+        if policy_id not in disable_set:
+            return match.group(0)
+        keys, values = _parse_metadata_block(metadata)
+        _ensure_key(keys, values, "apply")
+        values["apply"] = ["false"]
+        disabled.append(policy_id)
+        changed = True
+        rendered = _render_metadata_block(keys, values)
+        return match.group(1) + rendered + match.group(3)
+
+    updated = policy_pattern.sub(_replace, text)
+    if changed:
+        agents_path.write_text(updated, encoding="utf-8")
+    missing = sorted(disable_set - set(disabled))
+    if missing:
+        missing_list = ", ".join(missing)
+        print(f"Warning: policy ids not found for disable: {missing_list}")
+    return disabled
 
 
 def _extract_policy_sections(text: str) -> list[tuple[str, str]]:
@@ -1092,6 +1293,7 @@ def _append_missing_policies(
     tail = current.rstrip()
     separator = "\n\n---\n\n" if existing else "\n\n"
     tail = tail + separator + "\n\n---\n\n".join(missing_sections) + "\n"
+    _rename_existing_file(agents_path)
     agents_path.write_text(tail, encoding="utf-8")
     return [
         policy_id
@@ -1119,6 +1321,7 @@ def _sync_block(path: Path, block: str | None) -> bool:
         _old_block, after = rest.split(BLOCK_END, 1)
         updated = f"{before}{block}{after}"
         if updated != text:
+            _rename_existing_file(path)
             path.write_text(updated, encoding="utf-8")
             return True
         return False
@@ -1138,10 +1341,13 @@ def main(argv=None) -> None:
     )
     args = parser.parse_args(argv)
 
+    disable_policies = _parse_policy_ids(args.disable_policy)
+
     package_root = Path(__file__).resolve().parents[1]
     repo_root = package_root.parent
     template_root = package_root / TEMPLATE_ROOT_NAME
     target_root = Path(args.target).resolve()
+    _reset_backup_state(target_root)
     manifest_file = manifest_module.manifest_path(target_root)
     legacy_paths = manifest_module.legacy_manifest_paths(target_root)
     has_manifest = manifest_file.exists() or any(
@@ -1154,11 +1360,24 @@ def main(argv=None) -> None:
         mode = args.mode
 
     if has_existing and not args.allow_existing:
-        raise SystemExit(
-            "DevCovenant install detected. Use `devcovenant update` to "
-            "refresh an existing repo, or `devcovenant uninstall` before a "
-            "fresh install."
-        )
+        auto_uninstall = args.auto_uninstall
+        if not auto_uninstall and sys.stdin.isatty():
+            auto_uninstall = _prompt_yes_no(
+                "DevCovenant artifacts detected. Run uninstall first?",
+                default=False,
+            )
+        if auto_uninstall:
+            uninstall.main(["--target", str(target_root)])
+            has_existing = False
+            mode = "empty"
+        else:
+            raise SystemExit(
+                "DevCovenant install detected. Use `devcovenant update` to "
+                "refresh an existing repo, or `devcovenant uninstall` "
+                "before a "
+                "fresh install. Use --auto-uninstall to proceed "
+                "automatically."
+            )
 
     if args.allow_existing:
         mode = "existing"
@@ -1265,14 +1484,26 @@ def main(argv=None) -> None:
     if args.version_value:
         requested_version = _normalize_version(args.version_value)
 
-    if version_mode == "overwrite":
-        target_version = requested_version or DEFAULT_BOOTSTRAP_VERSION
-    elif version_mode == "preserve" and existing_version:
+    pyproject_version = _read_pyproject_version(target_root / "pyproject.toml")
+    if pyproject_version:
+        try:
+            pyproject_version = _normalize_version(pyproject_version)
+        except ValueError:
+            pyproject_version = None
+
+    detected_version = existing_version or pyproject_version
+    if requested_version:
+        detected_version = requested_version
+    if not detected_version:
+        if sys.stdin.isatty():
+            detected_version = _prompt_version()
+        if not detected_version:
+            detected_version = DEFAULT_BOOTSTRAP_VERSION
+
+    if version_mode == "preserve" and existing_version:
         target_version = existing_version
     else:
-        target_version = (
-            existing_version or requested_version or DEFAULT_BOOTSTRAP_VERSION
-        )
+        target_version = detected_version
 
     installed: dict[str, list[str]] = {"core": [], "config": [], "docs": []}
     doc_blocks: list[str] = []
@@ -1330,7 +1561,10 @@ def main(argv=None) -> None:
     if not gitignore_path.exists():
         installed["config"].append(".gitignore")
     gitignore_path.parent.mkdir(parents=True, exist_ok=True)
-    gitignore_path.write_text(gitignore_text, encoding="utf-8")
+    if not gitignore_path.exists() or existing_gitignore != gitignore_text:
+        if gitignore_path.exists():
+            _rename_existing_file(gitignore_path)
+        gitignore_path.write_text(gitignore_text, encoding="utf-8")
 
     include_core = target_root == repo_root
     _apply_core_config(target_root, include_core)
@@ -1401,6 +1635,8 @@ def main(argv=None) -> None:
             _sync_blocks_from_template(agents_path, agents_text)
             if policy_mode == "append-missing":
                 _append_missing_policies(agents_path, agents_text)
+
+    disabled_policies = _apply_policy_disables(agents_path, disable_policies)
 
     readme_path = target_root / "README.md"
     if not readme_path.exists():
@@ -1543,12 +1779,20 @@ def main(argv=None) -> None:
             "include_plan": include_plan,
             "preserve_custom": preserve_custom,
             "devcov_core_include": include_core,
+            "disable_policies": sorted(disabled_policies),
+            "auto_uninstall": bool(args.auto_uninstall),
         },
         installed=installed,
         doc_blocks=doc_blocks,
         mode="update" if mode == "existing" else "install",
     )
     manifest_module.write_manifest(target_root, manifest)
+
+    backups = _backup_log()
+    if backups:
+        print("Backed up files before overwrite/merge:")
+        for entry in backups:
+            print(f"- {entry}")
 
 
 if __name__ == "__main__":

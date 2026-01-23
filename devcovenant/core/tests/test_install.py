@@ -1,5 +1,6 @@
 """Regression tests for the installer manifest helpers."""
 
+import re
 import shutil
 from pathlib import Path
 
@@ -26,6 +27,8 @@ def test_install_records_manifest_with_core_excluded(tmp_path: Path) -> None:
         manifest = manifest_module.manifest_path(target)
         assert manifest.exists()
         manifest_data = manifest_module.load_manifest(target)
+        assert "profiles" in manifest_data
+        assert "policy_assets" in manifest_data
         assert manifest_data["options"]["devcov_core_include"] is False
         assert "core" in manifest_data["installed"]
         assert "docs" in manifest_data["installed"]
@@ -103,6 +106,30 @@ def test_install_creates_optional_spec_and_plan(tmp_path: Path) -> None:
     )
     assert (target / "SPEC.md").exists()
     assert (target / "PLAN.md").exists()
+
+
+def test_disable_policy_sets_apply_false(tmp_path: Path) -> None:
+    """Disable-policy should set apply: false for listed policies."""
+    target = tmp_path / "repo"
+    target.mkdir()
+    install.main(
+        [
+            "--target",
+            str(target),
+            "--mode",
+            "empty",
+            "--version",
+            "0.6.1",
+            "--disable-policy",
+            "changelog-coverage",
+        ]
+    )
+    agents_text = (target / "AGENTS.md").read_text(encoding="utf-8")
+    assert "id: changelog-coverage" in agents_text
+    assert re.search(
+        r"id:\s*changelog-coverage[\s\S]*?apply:\s*false",
+        agents_text,
+    )
 
 
 def _write_custom_agents(path: Path) -> None:

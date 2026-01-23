@@ -34,12 +34,13 @@ should remain dedicated to the repository's actual project.
 15. [Auto-Fix Behavior](#auto-fix-behavior)
 16. [Policy Registry and Stock Text](#policy-registry-and-stock-text)
 17. [Policy Scripts and Fixers](#policy-scripts-and-fixers)
-18. [DevFlow Gates and Test Status](#devflow-gates-and-test-status)
-19. [Dependency and License Tracking](#dependency-and-license-tracking)
-20. [Templates and Packaging](#templates-and-packaging)
-21. [Uninstall Behavior](#uninstall-behavior)
-22. [CI and Automation](#ci-and-automation)
-23. [Troubleshooting](#troubleshooting)
+18. [Core Policy Guide](#core-policy-guide)
+19. [DevFlow Gates and Test Status](#devflow-gates-and-test-status)
+20. [Dependency and License Tracking](#dependency-and-license-tracking)
+21. [Templates and Packaging](#templates-and-packaging)
+22. [Uninstall Behavior](#uninstall-behavior)
+23. [CI and Automation](#ci-and-automation)
+24. [Troubleshooting](#troubleshooting)
 
 ## Overview
 DevCovenant enforces the policies written in `AGENTS.md`. It parses those
@@ -120,7 +121,8 @@ The `tools/*.py` scripts support the repo workflow (pre-commit/test gates).
 ## Install Modes and Options
 Install is for new repos. Use `devcovenant update` to refresh existing
 installs. Install supports:
-- `--mode auto`: infer new vs. existing and refuse if already installed.
+- `--mode auto`: infer new vs. existing and refuse if already installed
+  unless you approve auto-uninstall.
 - `--mode empty`: treat the repo as new.
 - `--mode existing`: reserved for update flows.
 
@@ -144,7 +146,10 @@ Targeted overrides:
 - `--include-spec` / `--include-plan` (create optional SPEC/PLAN docs)
 - `--preserve-custom` / `--no-preserve-custom`
 - `--force-docs` / `--force-config`
-- `--version <x.x|x.x.x>` to set the initial VERSION (defaults to 0.0.1).
+- `--disable-policy id1,id2` to set `apply: false` on listed policies.
+- `--auto-uninstall` to uninstall when existing artifacts are detected.
+- `--version <x.x|x.x.x>` to set the initial VERSION (defaults to 0.0.1
+  when no VERSION/pyproject version is found and prompting is skipped).
 Doc selectors use extension-less names like `README` or `AGENTS`.
 
 ## Install Behavior Reference
@@ -183,8 +188,11 @@ repos; it preserves content by default and refreshes managed blocks.
   `*_old.md` backups; updates only refresh managed blocks.
 - `--docs-include` / `--docs-exclude` limit overwrites for other docs;
   they do not bypass the install defaults for CHANGELOG/CONTRIBUTING.
-- `VERSION`: created on demand. Accepts `x.x` or `x.x.x` and normalizes to
-  `x.x.0`. Defaults to `0.0.1` when missing and no `--version` is given.
+- `VERSION`: created on demand. The installer prefers an existing VERSION,
+  otherwise falls back to a version found in `pyproject.toml`, otherwise
+  prompts. If prompting is skipped, it defaults to `0.0.1`. The `--version`
+  flag overrides detection and accepts `x.x` or `x.x.x` (normalized to
+  `x.x.0`).
 - `LICENSE`: created from the GPL-3.0 template if missing. Overwritten only
   when the license mode requests it, and the original is backed up first.
 - `pyproject.toml`: preserved or overwritten based on `--pyproject-mode`.
@@ -192,6 +200,9 @@ repos; it preserves content by default and refreshes managed blocks.
   update, or first-run checks.
 
 All `Last Updated` headers are stamped with the UTC install date.
+
+Any file that is overwritten or merged during install is backed up
+as `*_old.*`, and the installer prints the backup list at the end.
 
 ## Install Manifest
 The installer writes `devcovenant/manifest.json` with:
@@ -202,10 +213,14 @@ The installer writes `devcovenant/manifest.json` with:
 - `docs`: doc paths grouped by type (`core`, `optional`, `custom`).
 - `custom`: allowed user-writable paths (`devcovenant/custom/**`).
 - `generated`: generated files such as registries or test status.
+- `profiles`: active profiles and the catalog snapshot recorded at install.
+- `policy_assets`: profile/policy asset mappings recorded by install or
+  update for audit and cleanup.
 - `installed`: lists of installed paths by group (`core`, `config`, `docs`).
 - `doc_blocks`: list of docs that received managed blocks.
 - `options`: resolved install options (docs/config/metadata modes, version,
-  core inclusion, and preservation flags).
+  core inclusion, preservation flags, disabled policies, and auto-uninstall
+  settings).
 
 Use this file to audit what DevCovenant changed in the target repo. The
 structure guard reads it to validate core layout and managed docs. If the
@@ -215,7 +230,7 @@ it automatically.
 Manifest schema (summary):
 ```json
 {
-  "schema_version": 1,
+  "schema_version": 2,
   "updated_at": "2026-01-22T00:00:00Z",
   "mode": "install|update",
   "core": {
@@ -235,6 +250,15 @@ Manifest schema (summary):
     "dirs": [],
     "files": ["devcovenant/registry.json"]
   },
+  "profiles": {
+    "active": [],
+    "catalog": []
+  },
+  "policy_assets": {
+    "global": [],
+    "profiles": {},
+    "policies": {}
+  },
   "installed": {
     "core": [],
     "config": [],
@@ -242,7 +266,9 @@ Manifest schema (summary):
   },
   "doc_blocks": ["AGENTS.md"],
   "options": {
-    "policy_mode": "append-missing"
+    "policy_mode": "append-missing",
+    "disable_policies": [],
+    "auto_uninstall": false
   }
 }
 ```
@@ -309,10 +335,13 @@ devcov_core_paths:
 Only the DevCovenant repo should set `devcov_core_include: true`.
 
 ## Language Profiles
-For multi-language repos, configure `language_profiles` and
-`active_language_profiles` in `devcovenant/config.yaml` to extend the
-engine’s file suffix inventory without rewriting the full list. Each profile
-can provide a `suffixes` list that is merged into `engine.file_suffixes`.
+DevCovenant ships default profiles for common stacks in
+`devcovenant/config.yaml`. Set `active_language_profiles` to one or more
+entries (Python, JavaScript, frontend, docs, data) to extend
+`engine.file_suffixes` without rewriting the full list. Mixed repos can list
+multiple profiles, and custom profiles can be added when your stack is not
+covered by the defaults. Keep this list current so policy selectors match
+the repo’s actual language mix.
 
 ## Check Modes and Exit Codes
 Run checks through the CLI:
@@ -361,6 +390,100 @@ Custom scripts fully replace the built-in policy. Built-in fixers live under
 `devcovenant/core/fixers`, custom fixers live under
 `devcovenant/custom/fixers`, and core fixers are skipped whenever a custom
 policy override exists.
+
+## Core Policy Guide
+DevCovenant ships a default policy set that enforces disciplined workflows
+without requiring per-repo scripting. Each policy is metadata-driven in
+`AGENTS.md` so repos can tune scope or disable a policy with `apply: false`.
+The summary below explains intent, defaults, and impact.
+
+### DevCovenant Self-Enforcement
+Keeps `devcovenant/registry.json` synchronized with the policy blocks in
+`AGENTS.md`. Default severity is `error` with `apply: true` so drift in policy
+text or hashes cannot go unnoticed.
+
+### DevCovenant Structure Guard
+Validates the core DevCovenant layout using the manifest, ensuring required
+core files and managed docs are present. This keeps updates safe by detecting
+missing or altered core assets early.
+
+### Dependency License Sync
+Tracks dependency manifests (`requirements.in`, `requirements.lock`,
+`pyproject.toml`) and ensures license artifacts are refreshed. Default config
+expects `THIRD_PARTY_LICENSES.md` plus the `licenses/` directory so dependency
+changes always carry their license audit trail.
+
+### Policy Text Presence
+Requires each policy block to include descriptive prose immediately after the
+metadata. This keeps `AGENTS.md` readable and makes future policy edits
+intentional.
+
+### Stock Policy Text Sync
+Warns when the built-in policy text diverges from the stock wording stored in
+`devcovenant/core/stock_policy_texts.yaml`. Use it to keep the prose aligned
+with the core implementation unless a custom rewrite is intended.
+
+### DevFlow Run Gates
+Enforces the session workflow (pre-commit start, tests, pre-commit end) by
+reading `devcovenant/test_status.json`. Default required commands are
+`pytest` and `python -m unittest discover`, with timestamps compared against
+recent code changes.
+
+### Changelog Coverage
+Requires every changed file to be listed in the latest changelog entry.
+Defaults target `CHANGELOG.md`, skipping the changelog file itself so release
+notes stay complete and traceable.
+
+### Version Synchronization
+Keeps `VERSION`, docs, and other version-bearing files aligned with the latest
+changelog header. It prevents backward or mismatched version bumps so repo
+metadata never drifts.
+
+### Last Updated Placement
+Ensures documentation files listed in the metadata carry a `Last Updated`
+header near the top. Defaults allow only approved docs and auto-fix the date
+when needed.
+
+### Line Length Limit
+Keeps lines within the configured max length (default 79) for readability.
+Scopes are metadata-driven so teams can tighten or relax limits per file type.
+
+### Docstring and Comment Coverage
+Requires docstrings or adjacent explanatory comments for Python modules,
+classes, and functions. Defaults focus on `.py` files and skip vendor output.
+
+### Name Clarity
+Warns on vague identifiers in code. It encourages descriptive naming without
+blocking commits unless the repo raises its severity threshold.
+
+### New Modules Need Tests
+Ensures new modules are accompanied by tests. Defaults watch Python files
+outside test directories and require matching `test_*.py` entries.
+
+### Documentation Growth Tracking
+When user-facing files change, requires updates to the documentation set. It
+uses selector roles (`user_facing`, `user_visible`, `doc_quality`) so policies
+can identify API-facing paths and enforce minimum doc depth.
+
+### Read-Only Directories
+Protects declared directories from edits. Defaults to no protected paths, but
+teams can list vendor or dataset folders to make them immutable.
+
+### No Future Dates
+Guards against future timestamps in docs and changelogs. Auto-fix rewrites
+invalid dates to the current UTC day.
+
+### Security Scanner
+Flags risky Python constructs like `eval`, `exec`, or `shell=True`. Defaults
+scan `.py` files outside tests to keep unsafe patterns out of production
+code.
+
+### Managed Environment (optional)
+Enforces usage of a declared managed environment (venv, bench, conda, etc.).
+This policy is shipped off by default; enable it only after filling in
+`expected_paths` and `command_hints`. When enabled, DevCovenant emits a
+warning if those metadata fields are empty to nudge teams toward precise
+setup guidance.
 
 ## DevFlow Gates and Test Status
 DevCovenant enforces the gate sequence for every change:

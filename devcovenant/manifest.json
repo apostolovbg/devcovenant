@@ -62,6 +62,15 @@
     ]
   },
   "notifications": [],
-  "schema_version": 1,
-  "updated_at": "2026-01-23T07:08:00.352798+00:00"
+  "policy_assets": {
+    "global": [],
+    "policies": {},
+    "profiles": {}
+  },
+  "profiles": {
+    "active": [],
+    "catalog": []
+  },
+  "schema_version": 2,
+  "updated_at": "2026-01-23T13:16:45.015600+00:00"
 }
