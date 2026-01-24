@@ -57,14 +57,18 @@ eliminates that by making the documentation itself the executable spec.
 - `AGENTS.md`: canonical policy definitions for this repo.
 - `SPEC.md`: product requirements (optional in user repos).
 - `PLAN.md`: staged roadmap (optional in user repos).
-- `devcovenant/`: engine, CLI, policy scripts, templates, and config.
-  - `core/`: DevCovenant core engine and built-in policy scripts.
-  - `core/policy_scripts/`: built-in policy scripts.
-  - `core/fixers/`: built-in auto-fixers for core policies.
-  - `custom/policy_scripts/`: repo-specific policies.
-  - `custom/fixers/`: repo-specific fixers (optional).
-  - `templates/`: packaged install templates for docs, configs, and tools.
+- `devcovenant/`: engine, CLI, policy implementations, profiles, assets, and
+  config.
+  - `core/`: DevCovenant core engine, built-in policies, and profiles.
+  - `core/policies/`: built-in policy implementations; each policy folder
+    contains `<policy>.py`, `tests/`, `fixers/`, and `assets/`.
+  - `core/profiles/`: profile definitions (`profile.yaml`) plus `assets/`.
+  - `custom/policies/`: repo-specific policy overrides (same layout as core).
+  - `custom/profiles/`: repo-specific profile overrides and assets.
+  - `registry/`: generated registry files (`registry.json`, `manifest.json`,
+    `profile_catalog.yaml`, `policy_assets.yaml`, `test_status.json`).
 - `tools/`: workflow helpers (pre-commit/test gates and status updates).
+
 
 ## CLI Entry Points
 DevCovenant ships both a console script and a module entry:
@@ -112,9 +116,10 @@ fall back to defaults):
 ```bash
 devcovenant normalize-metadata
 ```
-Schema defaults come from `devcovenant/core/templates/global/AGENTS.md`. Use
-`--schema` to point at another file and `--no-set-updated` if you do not
-want `updated: true` applied to changed policies.
+Schema defaults come from
+`devcovenant/core/profiles/global/assets/AGENTS.md`. Use `--schema` to
+point at another file and `--no-set-updated` if you do not want
+`updated: true` applied to changed policies.
 
 Selector roles
 --------------
@@ -176,9 +181,8 @@ Only the DevCovenant repo should set `devcov_core_include: true`. Do not
 change or prune the core path list in user repos unless you are actively
 implementing DevCovenant itself.
 
-Use `language_profiles` and `active_language_profiles` in
-`devcovenant/config.yaml` to extend file suffix coverage for multi-language
-projects.
+Use `profiles.active` in `devcovenant/config.yaml` to extend file suffix
+coverage for multi-language projects.
 
 ## Dependency and License Tracking
 DevCovenant records runtime dependencies in `requirements.in` with pinned

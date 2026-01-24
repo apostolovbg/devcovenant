@@ -11,5 +11,7 @@ include requirements.in
 include requirements.lock
 include devcovenant/README.md
 include devcovenant/registry/*
-recursive-include devcovenant/core/templates *
-recursive-include devcovenant/custom/templates *
+recursive-include devcovenant/core/profiles *
+recursive-include devcovenant/core/policies *
+recursive-include devcovenant/custom/profiles *
+recursive-include devcovenant/custom/policies *

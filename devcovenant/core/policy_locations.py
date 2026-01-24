@@ -31,13 +31,21 @@ def iter_script_locations(
     candidates = [
         (
             "custom",
-            devcov_dir / "custom" / "policy_scripts" / f"{script_name}.py",
-            f"devcovenant.custom.policy_scripts.{script_name}",
+            devcov_dir
+            / "custom"
+            / "policies"
+            / script_name
+            / f"{script_name}.py",
+            f"devcovenant.custom.policies.{script_name}.{script_name}",
         ),
         (
             "core",
-            devcov_dir / "core" / "policy_scripts" / f"{script_name}.py",
-            f"devcovenant.core.policy_scripts.{script_name}",
+            devcov_dir
+            / "core"
+            / "policies"
+            / script_name
+            / f"{script_name}.py",
+            f"devcovenant.core.policies.{script_name}.{script_name}",
         ),
     ]
     for kind, path, module in candidates:

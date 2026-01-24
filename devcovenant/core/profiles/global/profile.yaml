@@ -1,0 +1,7 @@
+name: global
+display_name: Global
+description: Global always-on profile.
+suffixes: []
+ignore_dirs: []
+assets: []
+policy_overlays: {}

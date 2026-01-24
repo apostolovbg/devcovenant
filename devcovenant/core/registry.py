@@ -216,12 +216,20 @@ class PolicyRegistry:
         """Return a shorter script path for registry storage."""
         devcov_root = self.repo_root / "devcovenant"
         try:
-            return str(script_path.relative_to(devcov_root))
+            relative = script_path.relative_to(devcov_root)
         except ValueError:
             try:
                 return str(script_path.relative_to(self.repo_root))
             except ValueError:
                 return str(script_path)
+
+        parts = relative.parts
+        if len(parts) >= 4 and parts[1] == "policies":
+            scope = parts[0]
+            policy_name = parts[2]
+            if relative.name == f"{policy_name}.py":
+                return f"{scope}/{policy_name}.py"
+        return str(relative)
 
     def update_policy_hash(
         self, policy_id: str, policy_text: str, script_path: Path

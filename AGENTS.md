@@ -42,7 +42,7 @@ instructions with DevCovenant, its applied policies (and in general).
 
 - 2026-01-22: Removed `DEVCOVENANT.md` and `CITATION.cff`; documentation now
   lives in `README.md` and `devcovenant/README.md`, and citation support is
-  fully removed from the CLI and templates.
+  fully removed from the CLI and assets.
 - 2026-01-22: SPEC/PLAN are optional docs; they are created only when
   `--include-spec` or `--include-plan` is supplied, and policies treat them as
   optional when absent.
@@ -70,11 +70,12 @@ DevCovenant is a policy engine that binds documentation to enforcement. The
 parser reads policy blocks, the registry stores hashes, and the engine runs
 policy scripts while the CLI coordinates checks and fixes. Policies are
 implemented in two layers: built-in scripts in
-`devcovenant/core/policy_scripts` (with built-in fixers in
-`devcovenant/core/fixers`), repo-specific scripts in
-`devcovenant/custom/policy_scripts`, and repo-specific fixers in
-`devcovenant/custom/fixers`. A custom policy script with the same id fully
-overrides the core policy, and core fixers are skipped for that override.
+`devcovenant/core/policies/<policy>/<policy>.py` (with fixers in
+`devcovenant/core/policies/<policy>/fixers`), repo-specific scripts in
+`devcovenant/custom/policies/<policy>/<policy>.py`, and repo-specific
+fixers in `devcovenant/custom/policies/<policy>/fixers`. A custom policy
+script with the same id fully overrides the core policy, and core fixers
+are skipped for that override.
 
 DevCovenant core lives under `devcovenant/core`. User repos must keep core
 exclusion enabled via `devcov_core_include: false` in `devcovenant/config.yaml`
@@ -121,7 +122,7 @@ preparing new repos or upgrades. Key defaults:
 - `README.md` is preserved, headers refreshed, and the managed block
   inserted when required sections are missing.
 - `CHANGELOG.md` and `CONTRIBUTING.md` are backed up to `*_old.*` and
-  replaced by the standard templates.
+  replaced by the standard assets and managed blocks.
 - `SPEC.md` and `PLAN.md` are optional. When present, their content is
   preserved and headers are refreshed.
 - `.gitignore` is regenerated from global, profile, and OS fragments,
@@ -584,7 +585,7 @@ profile_scopes: global
 max_length: 79
 include_suffixes: .py,.md,.rst,.txt,.yml,.yaml,.json,.toml,.cff
 exclude_prefixes: build,dist,node_modules
-exclude_globs: devcovenant/core/templates/global/LICENSE_GPL-3.0.txt
+exclude_globs: devcovenant/core/profiles/global/assets/LICENSE_GPL-3.0.txt
 include_prefixes:
 include_globs:
 exclude_suffixes:
@@ -667,7 +668,7 @@ profile_scopes: python
 include_suffixes: .py
 include_prefixes: devcovenant
 exclude_prefixes: build,dist,node_modules,tests,devcovenant/core/tests
-  devcovenant/core/templates,devcovenant/custom/templates,devcovenant/templates
+  devcovenant/core/profiles,devcovenant/custom/profiles
 exclude_globs:
 watch_dirs: tests,devcovenant/core/tests
 include_globs:

@@ -6,7 +6,6 @@ import importlib
 import importlib.util
 import inspect
 import os
-import pkgutil
 import sys
 from pathlib import Path
 from typing import Any, Dict, List, Optional, Set
@@ -187,15 +186,16 @@ class DevCovenantEngine:
     def _discover_custom_policy_overrides(self) -> set[str]:
         """Return policy ids overridden by custom policy scripts."""
         overrides: set[str] = set()
-        custom_dir = (
-            self.repo_root / "devcovenant" / "custom" / "policy_scripts"
-        )
+        custom_dir = self.repo_root / "devcovenant" / "custom" / "policies"
         if not custom_dir.exists():
             return overrides
-        for path in custom_dir.glob("*.py"):
-            if path.name.startswith("_") or path.name == "__init__.py":
+        for policy_dir in custom_dir.iterdir():
+            if not policy_dir.is_dir():
                 continue
-            overrides.add(path.stem.replace("_", "-"))
+            script_path = policy_dir / f"{policy_dir.name}.py"
+            if not script_path.exists():
+                continue
+            overrides.add(policy_dir.name.replace("_", "-"))
         return overrides
 
     def _is_ignored_path(self, candidate: Path) -> bool:
@@ -209,51 +209,54 @@ class DevCovenantEngine:
         return False
 
     def _load_fixers(self) -> List[PolicyFixer]:
-        """Dynamically import all policy fixers bundled with DevCovenant."""
+        """Dynamically import policy fixers bundled with DevCovenant."""
         fixers: List[PolicyFixer] = []
-        packages = []
-        for pkg_name in (
-            "devcovenant.core.fixers",
-            "devcovenant.custom.fixers",
-        ):
-            try:
-                packages.append(importlib.import_module(pkg_name))
-            except ModuleNotFoundError:
+        roots = [
+            ("custom", self.repo_root / "devcovenant" / "custom" / "policies"),
+            ("core", self.repo_root / "devcovenant" / "core" / "policies"),
+        ]
+        for origin, root in roots:
+            if not root.exists():
                 continue
-
-        for package in packages:
-            origin = (
-                "custom"
-                if package.__name__.endswith("custom.fixers")
-                else "core"
-            )
-            for module_info in pkgutil.iter_modules(package.__path__):
-                if module_info.ispkg or module_info.name.startswith("_"):
+            for policy_dir in root.iterdir():
+                if not policy_dir.is_dir() or policy_dir.name.startswith("_"):
                     continue
-                module_name = f"{package.__name__}.{module_info.name}"
-                try:
-                    module = importlib.import_module(module_name)
-                except Exception:
+                policy_id = policy_dir.name.replace("_", "-")
+                if (
+                    origin == "core"
+                    and policy_id in self._custom_policy_overrides
+                ):
                     continue
-                for member in module.__dict__.values():
+                fixers_dir = policy_dir / "fixers"
+                if not fixers_dir.exists():
+                    continue
+                for module_file in fixers_dir.glob("*.py"):
                     if (
-                        inspect.isclass(member)
-                        and issubclass(member, PolicyFixer)
-                        and member is not PolicyFixer
+                        module_file.name.startswith("_")
+                        or module_file.name == "__init__.py"
                     ):
-                        try:
-                            instance = member()
-                            if (
-                                origin == "core"
-                                and instance.policy_id
-                                in self._custom_policy_overrides
-                            ):
+                        continue
+                    module_name = (
+                        f"devcovenant.{origin}.policies."
+                        f"{policy_dir.name}.fixers.{module_file.stem}"
+                    )
+                    try:
+                        module = importlib.import_module(module_name)
+                    except Exception:
+                        continue
+                    for member in module.__dict__.values():
+                        if (
+                            inspect.isclass(member)
+                            and issubclass(member, PolicyFixer)
+                            and member is not PolicyFixer
+                        ):
+                            try:
+                                instance = member()
+                                setattr(instance, "repo_root", self.repo_root)
+                                setattr(instance, "_origin", origin)
+                                fixers.append(instance)
+                            except Exception:
                                 continue
-                            setattr(instance, "repo_root", self.repo_root)
-                            setattr(instance, "_origin", origin)
-                            fixers.append(instance)
-                        except Exception:
-                            continue
         return fixers
 
     def check(

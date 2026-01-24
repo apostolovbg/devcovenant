@@ -50,21 +50,22 @@ METADATA_PATHS = [
 BLOCK_BEGIN = "<!-- DEVCOV:BEGIN -->"
 BLOCK_END = "<!-- DEVCOV:END -->"
 LICENSE_TEMPLATE = "LICENSE_GPL-3.0.txt"
-TEMPLATE_ROOT_NAME = "templates"
-TEMPLATE_GLOBAL_DIR = "global"
-TEMPLATE_PROFILES_DIR = "profiles"
-TEMPLATE_POLICIES_DIR = "policies"
 POLICY_ASSET_MANIFEST = "policy_assets.yaml"
 PROFILE_MANIFEST_NAME = "profile.yaml"
-GITIGNORE_BASE_TEMPLATE = "global/gitignore_base.txt"
-GITIGNORE_OS_TEMPLATE = "global/gitignore_os.txt"
+PROFILE_ROOT_NAME = "profiles"
+POLICY_ROOT_NAME = "policies"
+PROFILE_ASSETS_DIR = "assets"
+POLICY_ASSETS_DIR = "assets"
+GLOBAL_PROFILE_NAME = "global"
+GITIGNORE_BASE_TEMPLATE = "gitignore_base.txt"
+GITIGNORE_OS_TEMPLATE = "gitignore_os.txt"
 DEFAULT_BOOTSTRAP_VERSION = "0.0.1"
 DEFAULT_PROFILE_SELECTION = ["python", "docs", "data"]
 GITIGNORE_USER_BEGIN = "# --- User entries (preserved) ---"
 GITIGNORE_USER_END = "# --- End user entries ---"
 DEFAULT_PRESERVE_PATHS = [
-    "custom/policy_scripts",
-    "custom/fixers",
+    "custom/policies",
+    "custom/profiles",
     "config.yaml",
 ]
 
@@ -82,6 +83,11 @@ _DEFAULT_CORE_PATHS = [
 
 LEGACY_ROOT_PATHS = [
     "devcov_check.py",
+    "devcovenant/core/policy_scripts",
+    "devcovenant/custom/policy_scripts",
+    "devcovenant/core/fixers",
+    "devcovenant/core/templates",
+    "devcovenant/custom/templates",
 ]
 
 _VERSION_INPUT_PATTERN = re.compile(r"^\d+\.\d+(\.\d+)?$")
@@ -199,16 +205,8 @@ def _normalize_profile_name(raw: str) -> str:
 
 def _load_profile_catalog(package_root: Path, target_root: Path) -> dict:
     """Load the profile catalog by scanning template roots."""
-    core_root = (
-        package_root / "core" / TEMPLATE_ROOT_NAME / TEMPLATE_PROFILES_DIR
-    )
-    custom_root = (
-        target_root
-        / DEV_COVENANT_DIR
-        / "custom"
-        / TEMPLATE_ROOT_NAME
-        / TEMPLATE_PROFILES_DIR
-    )
+    core_root = package_root / "core" / PROFILE_ROOT_NAME
+    custom_root = target_root / DEV_COVENANT_DIR / "custom" / PROFILE_ROOT_NAME
     return profiles.discover_profiles(
         target_root, core_root=core_root, custom_root=custom_root
     )
@@ -289,44 +287,57 @@ def _resolve_template_path(
     profile: str | None = None,
     policy_id: str | None = None,
 ) -> Path:
-    """Resolve a template path with custom overrides."""
-    candidates: list[Path] = []
-    custom_root = (
-        target_root / DEV_COVENANT_DIR / "custom" / TEMPLATE_ROOT_NAME
-    )
+    """Resolve an asset template path with custom overrides."""
     rel_path = rel_path.lstrip("/")
-    prefixed = (
-        rel_path.startswith(f"{TEMPLATE_GLOBAL_DIR}/")
-        or rel_path.startswith(f"{TEMPLATE_PROFILES_DIR}/")
-        or rel_path.startswith(f"{TEMPLATE_POLICIES_DIR}/")
-    )
+    custom_root = target_root / DEV_COVENANT_DIR / "custom"
+    core_profiles = core_root / PROFILE_ROOT_NAME
+    core_policies = core_root / POLICY_ROOT_NAME
+    candidates: list[Path] = []
+    prefixed = rel_path.startswith(
+        f"{PROFILE_ROOT_NAME}/"
+    ) or rel_path.startswith(f"{POLICY_ROOT_NAME}/")
     if prefixed:
-        prefixed_candidates = [
-            custom_root / rel_path,
-            core_root / rel_path,
-        ]
-        for candidate in prefixed_candidates:
-            if candidate.exists():
-                return candidate
+        custom_candidate = custom_root / rel_path
+        core_candidate = core_root / rel_path
+        if custom_candidate.exists():
+            return custom_candidate
+        if core_candidate.exists():
+            return core_candidate
         return target_root / rel_path
     if policy_id:
         candidates.append(
-            custom_root / TEMPLATE_POLICIES_DIR / policy_id / rel_path
+            custom_root
+            / POLICY_ROOT_NAME
+            / policy_id
+            / POLICY_ASSETS_DIR
+            / rel_path
         )
     if profile:
         candidates.append(
-            custom_root / TEMPLATE_PROFILES_DIR / profile / rel_path
+            custom_root
+            / PROFILE_ROOT_NAME
+            / profile
+            / PROFILE_ASSETS_DIR
+            / rel_path
         )
-    candidates.append(custom_root / TEMPLATE_GLOBAL_DIR / rel_path)
+    candidates.append(
+        custom_root
+        / PROFILE_ROOT_NAME
+        / GLOBAL_PROFILE_NAME
+        / PROFILE_ASSETS_DIR
+        / rel_path
+    )
     if policy_id:
         candidates.append(
-            core_root / TEMPLATE_POLICIES_DIR / policy_id / rel_path
+            core_policies / policy_id / POLICY_ASSETS_DIR / rel_path
         )
     if profile:
         candidates.append(
-            core_root / TEMPLATE_PROFILES_DIR / profile / rel_path
+            core_profiles / profile / PROFILE_ASSETS_DIR / rel_path
         )
-    candidates.append(core_root / TEMPLATE_GLOBAL_DIR / rel_path)
+    candidates.append(
+        core_profiles / GLOBAL_PROFILE_NAME / PROFILE_ASSETS_DIR / rel_path
+    )
     for candidate in candidates:
         if candidate.exists():
             return candidate
@@ -371,42 +382,32 @@ def _policy_profile_match(
 
 
 def _load_policy_assets(package_root: Path, target_root: Path) -> dict:
-    """Load policy asset mappings from policy templates."""
+    """Load policy asset mappings from policy folders."""
     assets: dict = {"global": [], "policies": {}}
-    core_root = (
-        package_root / "core" / TEMPLATE_ROOT_NAME / TEMPLATE_POLICIES_DIR
-    )
-    custom_root = (
-        target_root
-        / DEV_COVENANT_DIR
-        / "custom"
-        / TEMPLATE_ROOT_NAME
-        / TEMPLATE_POLICIES_DIR
-    )
-    policy_ids: set[str] = set()
-    for root in (core_root, custom_root):
+    core_root = package_root / "core" / POLICY_ROOT_NAME
+    custom_root = target_root / DEV_COVENANT_DIR / "custom" / POLICY_ROOT_NAME
+    policy_dirs: dict[str, Path] = {}
+    for root in (custom_root, core_root):
         if not root.exists():
             continue
         for entry in root.iterdir():
-            if entry.is_dir():
-                policy_ids.add(entry.name)
-    template_root = package_root / "core" / TEMPLATE_ROOT_NAME
-    for policy_id in sorted(policy_ids):
-        manifest_path = _resolve_template_path(
-            target_root,
-            template_root,
-            POLICY_ASSET_MANIFEST,
-            policy_id=policy_id,
-        )
+            if not entry.is_dir():
+                continue
+            policy_dirs.setdefault(entry.name, entry)
+    for policy_name, policy_dir in sorted(policy_dirs.items()):
+        manifest_path = policy_dir / POLICY_ASSETS_DIR / POLICY_ASSET_MANIFEST
         if not manifest_path.exists():
             continue
-        data = _load_yaml(manifest_path)
-        if isinstance(data, dict):
-            entries = data.get("assets") or data.get("entries")
+        asset_manifest = _load_yaml(manifest_path)
+        if isinstance(asset_manifest, dict):
+            entries = asset_manifest.get("assets") or asset_manifest.get(
+                "entries"
+            )
         else:
-            entries = data
+            entries = asset_manifest
         cleaned = _clean_asset_entries(entries or [])
         if cleaned:
+            policy_id = policy_name.replace("_", "-")
             assets["policies"][policy_id] = cleaned
     return assets
 
@@ -425,17 +426,16 @@ def _load_profile_manifest(
     target_root: Path,
     profile: str,
 ) -> dict:
-    """Load a profile manifest from custom/core templates."""
-    template_root = package_root / "core" / TEMPLATE_ROOT_NAME
-    manifest_path = _resolve_template_path(
-        target_root,
-        template_root,
-        PROFILE_MANIFEST_NAME,
-        profile=profile,
-    )
-    if not manifest_path.exists():
-        return {}
-    return _load_yaml(manifest_path) or {}
+    """Load a profile manifest from custom/core profiles."""
+    core_root = package_root / "core" / PROFILE_ROOT_NAME
+    custom_root = target_root / DEV_COVENANT_DIR / "custom" / PROFILE_ROOT_NAME
+    custom_manifest = custom_root / profile / PROFILE_MANIFEST_NAME
+    core_manifest = core_root / profile / PROFILE_MANIFEST_NAME
+    if custom_manifest.exists():
+        return _load_yaml(custom_manifest) or {}
+    if core_manifest.exists():
+        return _load_yaml(core_manifest) or {}
+    return {}
 
 
 def _load_profile_manifests(
@@ -753,7 +753,7 @@ def _load_gitignore_fragment(
     *,
     profile: str | None = None,
 ) -> str:
-    """Return a gitignore fragment from templates when present."""
+    """Return a gitignore fragment from profile assets when present."""
     fragment_path = _resolve_template_path(
         target_root,
         template_root,
@@ -932,7 +932,7 @@ def _render_changelog_template(version: str, date_stamp: str) -> str:
             "  requirements.in",
             "  requirements.lock",
             "  THIRD_PARTY_LICENSES.md",
-            "  devcovenant/core/policy_scripts/",
+            "  devcovenant/core/policies/documentation_growth_tracking/",
             "    documentation_growth_tracking.py",
         ],
     )
@@ -1680,7 +1680,7 @@ def _ensure_changelog_block(
             "  requirements.in",
             "  requirements.lock",
             "  THIRD_PARTY_LICENSES.md",
-            "  devcovenant/core/policy_scripts/",
+            "  devcovenant/core/policies/documentation_growth_tracking/",
             "    documentation_growth_tracking.py",
         ],
     )
@@ -1955,7 +1955,7 @@ def main(argv=None) -> None:
 
     package_root = Path(__file__).resolve().parents[1]
     repo_root = package_root.parent
-    template_root = package_root / "core" / TEMPLATE_ROOT_NAME
+    template_root = package_root / "core"
     target_root = Path(args.target).resolve()
     _reset_backup_state(target_root)
     manifest_file = manifest_module.manifest_path(target_root)
@@ -2144,15 +2144,9 @@ def main(argv=None) -> None:
             preserve_existing=preserve_custom,
         )
     )
-    core_profile_root = (
-        package_root / "core" / TEMPLATE_ROOT_NAME / TEMPLATE_PROFILES_DIR
-    )
+    core_profile_root = package_root / "core" / PROFILE_ROOT_NAME
     custom_profile_root = (
-        target_root
-        / DEV_COVENANT_DIR
-        / "custom"
-        / TEMPLATE_ROOT_NAME
-        / TEMPLATE_PROFILES_DIR
+        target_root / DEV_COVENANT_DIR / "custom" / PROFILE_ROOT_NAME
     )
     profiles.write_profile_catalog(
         target_root,

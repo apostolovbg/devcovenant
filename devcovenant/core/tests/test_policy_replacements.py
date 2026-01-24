@@ -51,14 +51,14 @@ def test_update_migrates_replaced_policy(
     agents_path = target / "AGENTS.md"
     _write_agents(agents_path, "true")
 
-    core_scripts = target / "devcovenant" / "core" / "policy_scripts"
+    core_scripts = target / "devcovenant" / "core" / "policies" / "old_policy"
     core_scripts.mkdir(parents=True, exist_ok=True)
     script_path = core_scripts / "old_policy.py"
     script_path.write_text("print('legacy')\n", encoding="utf-8")
 
-    core_fixers = target / "devcovenant" / "core" / "fixers"
+    core_fixers = core_scripts / "fixers"
     core_fixers.mkdir(parents=True, exist_ok=True)
-    fixer_path = core_fixers / "old_policy.py"
+    fixer_path = core_fixers / "global.py"
     fixer_path.write_text("# fixer\n", encoding="utf-8")
 
     monkeypatch.setattr(
@@ -74,13 +74,24 @@ def test_update_migrates_replaced_policy(
     assert "custom: true" in updated
 
     custom_script = (
-        target / "devcovenant" / "custom" / "policy_scripts" / "old_policy.py"
+        target
+        / "devcovenant"
+        / "custom"
+        / "policies"
+        / "old_policy"
+        / "old_policy.py"
     )
     assert custom_script.exists()
     assert "legacy" in custom_script.read_text(encoding="utf-8")
 
     custom_fixer = (
-        target / "devcovenant" / "custom" / "fixers" / "old_policy.py"
+        target
+        / "devcovenant"
+        / "custom"
+        / "policies"
+        / "old_policy"
+        / "fixers"
+        / "global.py"
     )
     assert custom_fixer.exists()
 
@@ -99,7 +110,9 @@ def test_update_removes_disabled_replaced_policy(
     agents_path = target / "AGENTS.md"
     _write_agents(agents_path, "false")
 
-    custom_scripts = target / "devcovenant" / "custom" / "policy_scripts"
+    custom_scripts = (
+        target / "devcovenant" / "custom" / "policies" / "old_policy"
+    )
     custom_scripts.mkdir(parents=True, exist_ok=True)
     custom_script = custom_scripts / "old_policy.py"
     custom_script.write_text("# custom\n", encoding="utf-8")

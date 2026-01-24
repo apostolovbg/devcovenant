@@ -19,12 +19,10 @@ LEGACY_MANIFEST_PATHS = [
 DEFAULT_CORE_DIRS = [
     "devcovenant",
     "devcovenant/core",
-    "devcovenant/core/policy_scripts",
-    "devcovenant/core/fixers",
-    "devcovenant/core/templates",
-    "devcovenant/core/templates/global",
-    "devcovenant/core/templates/profiles",
-    "devcovenant/core/templates/policies",
+    "devcovenant/core/policies",
+    "devcovenant/core/profiles",
+    "devcovenant/core/profiles/global",
+    "devcovenant/core/profiles/global/assets",
     "devcovenant/registry",
 ]
 
@@ -37,20 +35,19 @@ DEFAULT_CORE_FILES = [
     "devcovenant/registry/stock_policy_texts.yaml",
     "devcovenant/registry/policy_replacements.yaml",
     "devcovenant/core/cli_options.py",
-    "devcovenant/core/templates/global/AGENTS.md",
-    "devcovenant/core/templates/global/CONTRIBUTING.md",
-    "devcovenant/core/templates/global/LICENSE_GPL-3.0.txt",
-    "devcovenant/core/templates/global/VERSION",
-    "devcovenant/core/templates/global/.pre-commit-config.yaml",
-    "devcovenant/core/templates/global/.github/workflows/ci.yml",
-    "devcovenant/core/templates/global/gitignore_base.txt",
-    "devcovenant/core/templates/global/gitignore_os.txt",
-    "devcovenant/core/templates/global/tools/run_pre_commit.py",
-    "devcovenant/core/templates/global/tools/run_tests.py",
-    "devcovenant/core/templates/global/tools/update_test_status.py",
-    "devcovenant/core/templates/README.md",
-    "devcovenant/core/templates/profiles/README.md",
-    "devcovenant/core/templates/policies/README.md",
+    "devcovenant/core/profiles/global/assets/AGENTS.md",
+    "devcovenant/core/profiles/global/assets/CONTRIBUTING.md",
+    "devcovenant/core/profiles/global/assets/LICENSE_GPL-3.0.txt",
+    "devcovenant/core/profiles/global/assets/VERSION",
+    "devcovenant/core/profiles/global/assets/.pre-commit-config.yaml",
+    "devcovenant/core/profiles/global/assets/.github/workflows/ci.yml",
+    "devcovenant/core/profiles/global/assets/gitignore_base.txt",
+    "devcovenant/core/profiles/global/assets/gitignore_os.txt",
+    "devcovenant/core/profiles/global/assets/tools/run_pre_commit.py",
+    "devcovenant/core/profiles/global/assets/tools/run_tests.py",
+    "devcovenant/core/profiles/global/assets/tools/update_test_status.py",
+    "devcovenant/core/profiles/README.md",
+    "devcovenant/core/policies/README.md",
     "tools/run_pre_commit.py",
     "tools/run_tests.py",
     "tools/update_test_status.py",
@@ -72,17 +69,13 @@ DEFAULT_DOCS_CUSTOM: list[str] = []
 
 DEFAULT_CUSTOM_DIRS = [
     "devcovenant/custom",
-    "devcovenant/custom/policy_scripts",
-    "devcovenant/custom/fixers",
-    "devcovenant/custom/templates",
-    "devcovenant/custom/templates/global",
-    "devcovenant/custom/templates/profiles",
-    "devcovenant/custom/templates/policies",
+    "devcovenant/custom/policies",
+    "devcovenant/custom/profiles",
 ]
 
 DEFAULT_CUSTOM_FILES = [
-    "devcovenant/custom/templates/profiles/README.md",
-    "devcovenant/custom/templates/policies/README.md",
+    "devcovenant/custom/profiles/README.md",
+    "devcovenant/custom/policies/README.md",
 ]
 
 DEFAULT_GENERATED_FILES = [

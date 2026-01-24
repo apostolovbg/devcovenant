@@ -37,7 +37,7 @@ should remain dedicated to the repository's actual project.
 18. [Core Policy Guide](#core-policy-guide)
 19. [DevFlow Gates and Test Status](#devflow-gates-and-test-status)
 20. [Dependency and License Tracking](#dependency-and-license-tracking)
-21. [Templates and Packaging](#templates-and-packaging)
+21. [Assets and Packaging](#assets-and-packaging)
 22. [Uninstall Behavior](#uninstall-behavior)
 23. [CI and Automation](#ci-and-automation)
 24. [Troubleshooting](#troubleshooting)
@@ -98,7 +98,7 @@ The primary commands are:
 - `devcovenant update --target <path>`
 - `devcovenant uninstall --target <path>`
 
-Normalize-metadata uses `devcovenant/core/templates/global/AGENTS.md`
+Normalize-metadata uses `devcovenant/core/profiles/global/assets/AGENTS.md`
 as the schema.
 Empty metadata values (blank strings or empty lists) are treated as unset,
 so defaults still apply. Use `--schema` to point at a different AGENTS file
@@ -156,7 +156,7 @@ Doc selectors use extension-less names like `README` or `AGENTS`.
 ## Install Behavior Reference
 The installer keeps repo content intact by default and only
 overwrites when explicitly instructed. Summary:
-- `AGENTS.md`: replaced by template; editable notes preserved.
+- `AGENTS.md`: replaced by the stock asset; editable notes preserved.
 - `README.md`: content preserved; headers refreshed; managed block added.
 - `CHANGELOG.md` / `CONTRIBUTING.md`: always replaced on install with
   `*_old.md` backups; updates only refresh managed blocks.
@@ -179,8 +179,8 @@ repos; it preserves content by default and refreshes managed blocks.
   skip CI installs.
 - `.gitignore`: regenerated from global, profile, and OS fragments,
   then merged with existing user entries under a preserved block.
-- `AGENTS.md`: always replaced by the template. If an existing file is found,
-  the editable section content is preserved under `# EDITABLE SECTION`.
+- `AGENTS.md`: always replaced by the stock asset. If an existing file is
+  found, the editable section content is preserved under `# EDITABLE SECTION`.
 - `README.md`: existing content is preserved, headers are refreshed, and the
   managed block is inserted to add missing sections.
 - `SPEC.md`, `PLAN.md`: optional; existing content is preserved while
@@ -195,7 +195,7 @@ repos; it preserves content by default and refreshes managed blocks.
   prompts. If prompting is skipped, it defaults to `0.0.1`. The `--version`
   flag overrides detection and accepts `x.x` or `x.x.x` (normalized to
   `x.x.0`).
-- `LICENSE`: created from the GPL-3.0 template if missing. Overwritten only
+- `LICENSE`: created from the GPL-3.0 asset if missing. Overwritten only
   when the license mode requests it, and the original is backed up first.
 - `pyproject.toml`: preserved or overwritten based on `--pyproject-mode`.
 - `devcovenant/registry/manifest.json`: always written or refreshed by install,
@@ -218,7 +218,7 @@ The installer writes `devcovenant/registry/manifest.json` with:
 - `profiles`: active profiles and the catalog snapshot recorded at install.
 - `policy_assets`: policy-scoped asset mappings recorded by install or
   update for audit and cleanup. Profile assets are resolved from profile
-  manifests under `templates/profiles/`.
+  manifests under `profiles/`.
 - `installed`: lists of installed paths by group (`core`, `config`, `docs`).
 - `doc_blocks`: list of docs that received managed blocks.
 - `options`: resolved install options (docs/config/metadata modes, version,
@@ -344,7 +344,7 @@ active profile selection. Global sections provide knobs that apply to
 every repo:
 
 - `profiles`: active profiles and generated suffixes.
-- `paths`: policy definitions, registry, manifest, template roots.
+- `paths`: policy definitions, registry, manifest, profile/policy roots.
 - `docs`: managed block markers and optional doc toggles.
 - `install` / `update`: default behaviors for CLI commands.
 - `engine`: scanning defaults, thresholds, and ignore dirs.
@@ -357,19 +357,18 @@ supply policy metadata overlays that are merged into `config.yaml`.
 
 ## Profiles and Scopes
 DevCovenant uses install profiles to tailor policy applicability and assets.
-Profiles are discovered from template folders and summarized in the generated
+Profiles are discovered from profile folders and summarized in the
 catalog at `devcovenant/registry/profile_catalog.yaml`. That catalog is
 regenerated on install/update, so treat it as read-only output.
 
-Each profile can ship a profile manifest at
-`devcovenant/core/templates/profiles/<profile>/profile.yaml`. The manifest
-lists profile assets and per-policy metadata overlays. Custom profile
-manifests in `devcovenant/custom/templates/profiles/<profile>/profile.yaml`
-override the core manifest when both exist. See the template indexes for
-layout and examples:
-- `devcovenant/core/templates/README.md`
-- `devcovenant/core/templates/profiles/README.md`
-- `devcovenant/core/templates/policies/README.md`
+Each profile ships a profile manifest at
+`devcovenant/core/profiles/<profile>/profile.yaml`. The manifest lists profile
+assets and per-policy metadata overlays. Custom profile manifests in
+`devcovenant/custom/profiles/<profile>/profile.yaml` override the core manifest
+when both exist. See the profile and policy asset references for layout and
+examples:
+- `devcovenant/core/profiles/README.md`
+- `devcovenant/core/policies/README.md`
 
 Install prompts for one or more active profiles and stores the selection in
 `devcovenant/config.yaml` under `profiles.active`. Active profiles:
@@ -388,8 +387,8 @@ profiles:
 ```
 
 Mixed repos can list multiple profiles. Global policies set
-`profile_scopes: global` and always apply, while profile-scoped policies
-apply only when one of their scopes matches an active profile.
+`profile_scopes: global` and always apply, while profile-scoped policies apply
+only when one of their scopes matches an active profile.
 
 ### Creating a custom profile (exhaustive)
 Custom profiles are optional and live entirely inside the repo's
@@ -397,7 +396,7 @@ Custom profiles are optional and live entirely inside the repo's
 metadata without editing DevCovenant core.
 
 1) Define the profile manifest:
-`devcovenant/custom/templates/profiles/frappe/profile.yaml`
+`devcovenant/custom/profiles/frappe/profile.yaml`
 ```yaml
 version: 1
 profile: frappe
@@ -416,15 +415,15 @@ policy_overlays:
       - requirements.in
 ```
 
-2) Add the templates themselves (including optional `.gitignore` fragments):
+2) Add the profile assets (including optional `.gitignore` fragments):
 ```
-devcovenant/custom/templates/profiles/frappe/requirements.in
-devcovenant/custom/templates/profiles/frappe/.gitignore
+devcovenant/custom/profiles/frappe/requirements.in
+devcovenant/custom/profiles/frappe/.gitignore
 ```
 
 3) If a policy needs custom assets, add
-`devcovenant/custom/templates/policies/<policy>/policy_assets.yaml` and any
-referenced templates under the same policy folder.
+`devcovenant/custom/policies/<policy>/assets/policy_assets.yaml` and any
+referenced assets under the same policy folder.
 
 4) Activate the profile in `devcovenant/config.yaml`:
 ```yaml
@@ -435,12 +434,13 @@ profiles:
 ```
 
 Notes:
-- Template resolution always prefers custom templates over core templates.
+- Asset resolution always prefers custom assets over core assets.
 - Profiles are additive: multiple active profiles can contribute assets and
   metadata overlays at once.
-- `devcovenant/custom/templates/global/` exists to override global templates
+- `devcovenant/custom/profiles/global/assets/` exists to override global assets
   (for example, a repo-specific AGENTS.md or README.md). Use it when a repo
   needs to deviate from the stock global assets while still keeping updates.
+
 ## Check Modes and Exit Codes
 Run checks through the CLI:
 ```bash
@@ -462,8 +462,8 @@ devcovenant check --mode pre-commit
 ## Auto-Fix Behavior
 Policies that declare `auto_fix: true` may include fixers. When `--fix` is
 supplied, DevCovenant applies fixers in place and then reruns the checks.
-Fixer logic lives under `devcovenant/core/fixers/`, and custom fixers can
-live under `devcovenant/custom/fixers/`.
+Fixer logic lives under `devcovenant/core/policies/<policy>/fixers/`.
+Custom fixers live under `devcovenant/custom/policies/<policy>/fixers/`.
 
 ## Policy Registry and Stock Text
 Policy definitions in `AGENTS.md` are hashed into
@@ -482,13 +482,13 @@ devcovenant restore-stock-text --policy <id>
 
 ## Policy Scripts and Fixers
 Policy scripts resolve in this order:
-1. `devcovenant/custom/policy_scripts/`
-2. `devcovenant/core/policy_scripts/`
+1. `devcovenant/custom/policies/`
+2. `devcovenant/core/policies/`
 
-Custom scripts fully replace the built-in policy. Built-in fixers live under
-`devcovenant/core/fixers`, custom fixers live under
-`devcovenant/custom/fixers`, and core fixers are skipped whenever a custom
-policy override exists.
+Custom scripts fully replace the built-in policy. Fixers live under each
+policy (`devcovenant/core/policies/<policy>/fixers/` for core and
+`devcovenant/custom/policies/<policy>/fixers/` for custom overrides). Core
+fixers are skipped whenever a custom policy override exists.
 
 ### Creating a custom policy (override or brand-new)
 Custom policies are defined in `AGENTS.md` with `custom: true` and implemented
@@ -508,16 +508,22 @@ custom: true
 
 2) Implement the checker:
 ```
-devcovenant/custom/policy_scripts/my-policy.py
+devcovenant/custom/policies/my_policy/my_policy.py
 ```
 
-3) (Optional) add a fixer:
+3) Add tests:
 ```
-devcovenant/custom/fixers/my-policy.py
+devcovenant/custom/policies/my_policy/tests/test_my_policy.py
 ```
 
-4) (Optional) attach assets with a per-policy manifest:
-`devcovenant/custom/templates/policies/my-policy/policy_assets.yaml`
+4) (Optional) add fixers:
+```
+devcovenant/custom/policies/my_policy/fixers/global.py
+devcovenant/custom/policies/my_policy/fixers/python.py
+```
+
+5) (Optional) attach assets with a per-policy manifest:
+`devcovenant/custom/policies/my_policy/assets/policy_assets.yaml`
 ```yaml
 assets:
   - path: docs/README.md
@@ -525,13 +531,14 @@ assets:
     mode: replace
 ```
 
-5) Provide the templates alongside the manifest:
+6) Provide the assets alongside the manifest:
 ```
-devcovenant/custom/templates/policies/my-policy/README.md
+devcovenant/custom/policies/my_policy/assets/README.md
 ```
 
 Custom policy assets are applied only when the policy is active
 (`apply: true`) and its `profile_scopes` intersect the active profiles.
+
 
 ## Core Policy Guide
 DevCovenant ships a default policy set that enforces disciplined workflows
@@ -656,39 +663,35 @@ change, update `THIRD_PARTY_LICENSES.md` and the license texts in `licenses/`.
 The dependency-license-sync policy checks that the license report includes
 all touched manifests under `## License Report`.
 
-## Templates and Packaging
-DevCovenant ships templates under `devcovenant/core/templates/` with
-three layers: `global/` (shared docs/config/tools),
-`profiles/<profile>/` (profile-specific assets), and
-`policies/<policy>/` (policy-scoped assets). Each profile folder can
-include a `profile.yaml` manifest that declares assets and policy
-overlays. Custom overrides live under `devcovenant/custom/templates/`
-with the same layout, including `custom/templates/global/` for
-overriding global templates.
+## Assets and Packaging
+DevCovenant ships core assets under `devcovenant/core/profiles/` and
+`devcovenant/core/policies/`. Profiles supply `profile.yaml` plus `assets/`,
+while policies supply `assets/` folders with `policy_assets.yaml`. Custom
+overrides live under `devcovenant/custom/profiles/` and
+`devcovenant/custom/policies/`, mirroring the core layout.
 
-Use the template indexes for detailed structure and examples:
-- `devcovenant/core/templates/README.md`
-- `devcovenant/core/templates/profiles/README.md`
-- `devcovenant/core/templates/policies/README.md`
+Use the asset references for structure and examples:
+- `devcovenant/core/profiles/README.md`
+- `devcovenant/core/policies/README.md`
 
 Asset selection is driven by per-policy `policy_assets.yaml` manifests,
-compiled into `devcovenant/registry/policy_assets.yaml`, plus profile
-manifests under `templates/profiles/`. Assets for disabled policies or
-inactive profiles are skipped.
+compiled into `devcovenant/registry/policy_assets.yaml`, plus profile manifests
+under the profile folders. Assets for disabled policies or inactive profiles
+are skipped.
 
-### Template precedence and resolution
-When DevCovenant resolves a template path, it checks in this order:
-1) `devcovenant/custom/templates/policies/<policy>/...`
-2) `devcovenant/custom/templates/profiles/<profile>/...`
-3) `devcovenant/custom/templates/global/...`
-4) `devcovenant/core/templates/policies/<policy>/...`
-5) `devcovenant/core/templates/profiles/<profile>/...`
-6) `devcovenant/core/templates/global/...`
+### Asset precedence and resolution
+When DevCovenant resolves an asset path, it checks in this order:
+1) `devcovenant/custom/policies/<policy>/assets/...`
+2) `devcovenant/custom/profiles/<profile>/assets/...`
+3) `devcovenant/custom/profiles/global/assets/...`
+4) `devcovenant/core/policies/<policy>/assets/...`
+5) `devcovenant/core/profiles/<profile>/assets/...`
+6) `devcovenant/core/profiles/global/assets/...`
 
-If the template path already includes `profiles/` or `policies/`, the path is
-resolved directly against the custom and core template roots. This lets
-policy assets and profile assets point to their template files explicitly
-without needing additional rewrites.
+If the path already includes `profiles/` or `policies/`, it resolves directly
+against the custom and core roots so profile and policy assets can point to
+files explicitly without additional rewriting.
+
 
 ## Uninstall Behavior
 Uninstall removes DevCovenant-managed blocks and, when requested, deletes

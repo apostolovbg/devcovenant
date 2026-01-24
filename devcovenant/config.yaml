@@ -31,8 +31,10 @@ paths:
   policy_definitions: AGENTS.md
   registry_file: devcovenant/registry/registry.json
   manifest_file: devcovenant/registry/manifest.json
-  templates_root: devcovenant/core/templates
-  custom_templates_root: devcovenant/custom/templates
+  core_profiles_root: devcovenant/core/profiles
+  custom_profiles_root: devcovenant/custom/profiles
+  core_policies_root: devcovenant/core/policies
+  custom_policies_root: devcovenant/custom/policies
 
 docs:
   managed_blocks:

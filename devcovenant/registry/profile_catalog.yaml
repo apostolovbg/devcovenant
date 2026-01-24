@@ -1,144 +1,240 @@
-generated_at: '2026-01-24T06:41:25.638099+00:00'
+generated_at: '2026-01-24T10:48:10.313605+00:00'
 profiles:
   angular:
     active: false
     assets: []
     assets_available: []
     category: framework
-    path: devcovenant/core/templates/profiles/angular
+    ignore_dirs:
+    - node_modules
+    - dist
+    - .angular
+    path: devcovenant/core/profiles/angular
     policy_overlays: {}
     profile: angular
     source: core
+    suffixes:
+    - .ts
+    - .html
+    - .css
+    - .scss
     version: 1
   ansible:
     active: false
     assets: []
     assets_available: []
     category: ops
-    path: devcovenant/core/templates/profiles/ansible
+    ignore_dirs:
+    - .ansible
+    path: devcovenant/core/profiles/ansible
     policy_overlays: {}
     profile: ansible
     source: core
+    suffixes:
+    - .yml
+    - .yaml
+    - .j2
+    - .ini
     version: 1
   bash:
     active: false
     assets: []
     assets_available: []
     category: language
-    path: devcovenant/core/templates/profiles/bash
+    ignore_dirs: []
+    path: devcovenant/core/profiles/bash
     policy_overlays: {}
     profile: bash
     source: core
+    suffixes:
+    - .sh
+    - .bash
+    - .zsh
     version: 1
   c:
     active: false
     assets: []
     assets_available: []
     category: language
-    path: devcovenant/core/templates/profiles/c
+    ignore_dirs:
+    - build
+    - out
+    path: devcovenant/core/profiles/c
     policy_overlays: {}
     profile: c
     source: core
+    suffixes:
+    - .c
+    - .h
     version: 1
   clojure:
     active: false
     assets: []
     assets_available: []
     category: language
-    path: devcovenant/core/templates/profiles/clojure
+    ignore_dirs:
+    - target
+    - .cpcache
+    path: devcovenant/core/profiles/clojure
     policy_overlays: {}
     profile: clojure
     source: core
+    suffixes:
+    - .clj
+    - .cljs
+    - .cljc
+    - .edn
     version: 1
   cobol:
     active: false
     assets: []
     assets_available: []
     category: language
-    path: devcovenant/core/templates/profiles/cobol
+    ignore_dirs:
+    - build
+    path: devcovenant/core/profiles/cobol
     policy_overlays: {}
     profile: cobol
     source: core
+    suffixes:
+    - .cob
+    - .cbl
+    - .cpy
     version: 1
   cpp:
     active: false
     assets: []
     assets_available: []
     category: language
-    path: devcovenant/core/templates/profiles/cpp
+    ignore_dirs:
+    - build
+    - out
+    path: devcovenant/core/profiles/cpp
     policy_overlays: {}
     profile: cpp
     source: core
+    suffixes:
+    - .cpp
+    - .cc
+    - .cxx
+    - .hpp
+    - .hxx
+    - .hh
     version: 1
   crystal:
     active: false
     assets: []
     assets_available: []
     category: language
-    path: devcovenant/core/templates/profiles/crystal
+    ignore_dirs:
+    - lib
+    - .crystal
+    path: devcovenant/core/profiles/crystal
     policy_overlays: {}
     profile: crystal
     source: core
+    suffixes:
+    - .cr
     version: 1
   csharp:
     active: false
     assets: []
     assets_available: []
     category: language
-    path: devcovenant/core/templates/profiles/csharp
+    ignore_dirs:
+    - bin
+    - obj
+    path: devcovenant/core/profiles/csharp
     policy_overlays: {}
     profile: csharp
     source: core
+    suffixes:
+    - .cs
     version: 1
   dart:
     active: false
     assets: []
     assets_available: []
     category: language
-    path: devcovenant/core/templates/profiles/dart
+    ignore_dirs:
+    - .dart_tool
+    - build
+    path: devcovenant/core/profiles/dart
     policy_overlays: {}
     profile: dart
     source: core
+    suffixes:
+    - .dart
     version: 1
   data:
     active: true
     assets: []
     assets_available: []
     category: ops
-    path: devcovenant/core/templates/profiles/data
+    ignore_dirs:
+    - data/raw
+    - data/tmp
+    - data/cache
+    path: devcovenant/core/profiles/data
     policy_overlays: {}
     profile: data
     source: core
+    suffixes:
+    - .csv
+    - .tsv
+    - .json
+    - .ndjson
+    - .parquet
+    - .avro
     version: 1
   django:
     active: false
     assets: []
     assets_available: []
     category: framework
-    path: devcovenant/core/templates/profiles/django
+    ignore_dirs:
+    - same as python + .static_cache
+    path: devcovenant/core/profiles/django
     policy_overlays: {}
     profile: django
     source: core
+    suffixes:
+    - .html
+    - .css
+    - .js
     version: 1
   docker:
     active: false
     assets: []
     assets_available: []
     category: ops
-    path: devcovenant/core/templates/profiles/docker
+    ignore_dirs: []
+    path: devcovenant/core/profiles/docker
     policy_overlays: {}
     profile: docker
     source: core
+    suffixes:
+    - .dockerignore
+    - .yml
+    - .yaml
     version: 1
   docs:
     active: true
     assets: []
     assets_available: []
     category: ops
-    path: devcovenant/core/templates/profiles/docs
+    ignore_dirs:
+    - _site
+    - site
+    - build
+    path: devcovenant/core/profiles/docs
     policy_overlays: {}
     profile: docs
     source: core
+    suffixes:
+    - .md
+    - .rst
+    - .txt
     version: 1
   dotnet:
     active: false
@@ -147,107 +243,193 @@ profiles:
       path: global.json
       template: global.json
     assets_available:
-    - devcovenant/core/templates/profiles/dotnet/.gitignore
-    - devcovenant/core/templates/profiles/dotnet/global.json
+    - devcovenant/core/profiles/dotnet/assets/.gitignore
+    - devcovenant/core/profiles/dotnet/assets/global.json
     category: language
-    path: devcovenant/core/templates/profiles/dotnet
+    ignore_dirs:
+    - bin
+    - obj
+    path: devcovenant/core/profiles/dotnet
     policy_overlays:
       dependency-license-sync:
         dependency_files:
         - global.json
     profile: dotnet
     source: core
+    suffixes:
+    - .cs
+    - .fs
+    - .vb
     version: 1
   elixir:
     active: false
     assets: []
     assets_available: []
     category: language
-    path: devcovenant/core/templates/profiles/elixir
+    ignore_dirs:
+    - _build
+    - deps
+    path: devcovenant/core/profiles/elixir
     policy_overlays: {}
     profile: elixir
     source: core
+    suffixes:
+    - .ex
+    - .exs
     version: 1
   erlang:
     active: false
     assets: []
     assets_available: []
     category: language
-    path: devcovenant/core/templates/profiles/erlang
+    ignore_dirs:
+    - _build
+    - deps
+    path: devcovenant/core/profiles/erlang
     policy_overlays: {}
     profile: erlang
     source: core
+    suffixes:
+    - .erl
+    - .hrl
     version: 1
   express:
     active: false
     assets: []
     assets_available: []
     category: framework
-    path: devcovenant/core/templates/profiles/express
+    ignore_dirs:
+    - node_modules
+    - dist
+    path: devcovenant/core/profiles/express
     policy_overlays: {}
     profile: express
     source: core
+    suffixes:
+    - .js
     version: 1
   fastapi:
     active: false
     assets: []
     assets_available: []
     category: framework
-    path: devcovenant/core/templates/profiles/fastapi
+    ignore_dirs:
+    - python defaults + .venv
+    path: devcovenant/core/profiles/fastapi
     policy_overlays: {}
     profile: fastapi
     source: core
+    suffixes:
+    - .json
+    - .yaml
     version: 1
   flask:
     active: false
     assets: []
     assets_available: []
     category: framework
-    path: devcovenant/core/templates/profiles/flask
+    ignore_dirs:
+    - python defaults
+    path: devcovenant/core/profiles/flask
     policy_overlays: {}
     profile: flask
     source: core
+    suffixes:
+    - .html
+    - .css
+    - .js
     version: 1
   flutter:
     active: false
     assets: []
     assets_available: []
     category: framework
-    path: devcovenant/core/templates/profiles/flutter
+    ignore_dirs:
+    - .dart_tool
+    - build
+    path: devcovenant/core/profiles/flutter
     policy_overlays: {}
     profile: flutter
     source: core
+    suffixes:
+    - .dart
     version: 1
   fortran:
     active: false
     assets: []
     assets_available: []
     category: language
-    path: devcovenant/core/templates/profiles/fortran
+    ignore_dirs:
+    - build
+    path: devcovenant/core/profiles/fortran
     policy_overlays: {}
     profile: fortran
     source: core
+    suffixes:
+    - .f
+    - .f90
+    - .f95
+    - .f03
+    - .f08
     version: 1
   frappe:
     active: false
     assets: []
     assets_available: []
     category: framework
-    path: devcovenant/core/templates/profiles/frappe
+    ignore_dirs:
+    - python + node + site caches
+    path: devcovenant/core/profiles/frappe
     policy_overlays: {}
     profile: frappe
     source: core
+    suffixes:
+    - .py
+    - .js
+    - .json
+    - .md
     version: 1
   fsharp:
     active: false
     assets: []
     assets_available: []
     category: language
-    path: devcovenant/core/templates/profiles/fsharp
+    ignore_dirs:
+    - bin
+    - obj
+    path: devcovenant/core/profiles/fsharp
     policy_overlays: {}
     profile: fsharp
     source: core
+    suffixes:
+    - .fs
+    - .fsx
     version: 1
+  global:
+    active: false
+    assets: []
+    assets_available:
+    - devcovenant/core/profiles/global/assets/.github/workflows/ci.yml
+    - devcovenant/core/profiles/global/assets/.pre-commit-config.yaml
+    - devcovenant/core/profiles/global/assets/AGENTS.md
+    - devcovenant/core/profiles/global/assets/CONTRIBUTING.md
+    - devcovenant/core/profiles/global/assets/LICENSE_GPL-3.0.txt
+    - devcovenant/core/profiles/global/assets/VERSION
+    - devcovenant/core/profiles/global/assets/gitignore_base.txt
+    - devcovenant/core/profiles/global/assets/gitignore_os.txt
+    - devcovenant/core/profiles/global/assets/tools/run_pre_commit.py
+    - devcovenant/core/profiles/global/assets/tools/run_tests.py
+    - devcovenant/core/profiles/global/assets/tools/update_test_status.py
+    category: unknown
+    description: Global always-on profile.
+    display_name: Global
+    ignore_dirs: []
+    name: global
+    path: devcovenant/core/profiles/global
+    policy_overlays: {}
+    profile: global
+    source: core
+    suffixes: []
   go:
     active: false
     assets:
@@ -255,36 +437,52 @@ profiles:
       path: go.mod
       template: go.mod
     assets_available:
-    - devcovenant/core/templates/profiles/go/.gitignore
-    - devcovenant/core/templates/profiles/go/go.mod
+    - devcovenant/core/profiles/go/assets/.gitignore
+    - devcovenant/core/profiles/go/assets/go.mod
     category: language
-    path: devcovenant/core/templates/profiles/go
+    ignore_dirs:
+    - bin
+    - pkg
+    - vendor
+    path: devcovenant/core/profiles/go
     policy_overlays:
       dependency-license-sync:
         dependency_files:
         - go.mod
     profile: go
     source: core
+    suffixes:
+    - .go
     version: 1
   groovy:
     active: false
     assets: []
     assets_available: []
     category: language
-    path: devcovenant/core/templates/profiles/groovy
+    ignore_dirs:
+    - build
+    path: devcovenant/core/profiles/groovy
     policy_overlays: {}
     profile: groovy
     source: core
+    suffixes:
+    - .groovy
     version: 1
   haskell:
     active: false
     assets: []
     assets_available: []
     category: language
-    path: devcovenant/core/templates/profiles/haskell
+    ignore_dirs:
+    - dist-newstyle
+    - .stack-work
+    path: devcovenant/core/profiles/haskell
     policy_overlays: {}
     profile: haskell
     source: core
+    suffixes:
+    - .hs
+    - .lhs
     version: 1
   java:
     active: false
@@ -293,16 +491,21 @@ profiles:
       path: build.gradle
       template: build.gradle
     assets_available:
-    - devcovenant/core/templates/profiles/java/.gitignore
-    - devcovenant/core/templates/profiles/java/build.gradle
+    - devcovenant/core/profiles/java/assets/.gitignore
+    - devcovenant/core/profiles/java/assets/build.gradle
     category: language
-    path: devcovenant/core/templates/profiles/java
+    ignore_dirs:
+    - target
+    - build
+    path: devcovenant/core/profiles/java
     policy_overlays:
       dependency-license-sync:
         dependency_files:
         - build.gradle
     profile: java
     source: core
+    suffixes:
+    - .java
     version: 1
   javascript:
     active: false
@@ -311,26 +514,41 @@ profiles:
       path: package.json
       template: package.json
     assets_available:
-    - devcovenant/core/templates/profiles/javascript/.gitignore
-    - devcovenant/core/templates/profiles/javascript/package.json
+    - devcovenant/core/profiles/javascript/assets/.gitignore
+    - devcovenant/core/profiles/javascript/assets/package.json
     category: language
-    path: devcovenant/core/templates/profiles/javascript
+    ignore_dirs:
+    - node_modules
+    - dist
+    - build
+    - coverage
+    - .cache
+    path: devcovenant/core/profiles/javascript
     policy_overlays:
       dependency-license-sync:
         dependency_files:
         - package.json
     profile: javascript
     source: core
+    suffixes:
+    - .js
+    - .jsx
+    - .mjs
+    - .cjs
     version: 1
   julia:
     active: false
     assets: []
     assets_available: []
     category: language
-    path: devcovenant/core/templates/profiles/julia
+    ignore_dirs:
+    - .julia
+    path: devcovenant/core/profiles/julia
     policy_overlays: {}
     profile: julia
     source: core
+    suffixes:
+    - .jl
     version: 1
   kotlin:
     active: false
@@ -339,156 +557,237 @@ profiles:
       path: build.gradle.kts
       template: build.gradle.kts
     assets_available:
-    - devcovenant/core/templates/profiles/kotlin/.gitignore
-    - devcovenant/core/templates/profiles/kotlin/build.gradle.kts
+    - devcovenant/core/profiles/kotlin/assets/.gitignore
+    - devcovenant/core/profiles/kotlin/assets/build.gradle.kts
     category: language
-    path: devcovenant/core/templates/profiles/kotlin
+    ignore_dirs:
+    - build
+    path: devcovenant/core/profiles/kotlin
     policy_overlays:
       dependency-license-sync:
         dependency_files:
         - build.gradle.kts
     profile: kotlin
     source: core
+    suffixes:
+    - .kt
+    - .kts
     version: 1
   kubernetes:
     active: false
     assets: []
     assets_available: []
     category: ops
-    path: devcovenant/core/templates/profiles/kubernetes
+    ignore_dirs:
+    - charts/
+    path: devcovenant/core/profiles/kubernetes
     policy_overlays: {}
     profile: kubernetes
     source: core
+    suffixes:
+    - .yml
+    - .yaml
     version: 1
   laravel:
     active: false
     assets: []
     assets_available: []
     category: framework
-    path: devcovenant/core/templates/profiles/laravel
+    ignore_dirs:
+    - vendor
+    - storage
+    path: devcovenant/core/profiles/laravel
     policy_overlays: {}
     profile: laravel
     source: core
+    suffixes:
+    - .php
+    - .blade.php
     version: 1
   lisp:
     active: false
     assets: []
     assets_available: []
     category: language
-    path: devcovenant/core/templates/profiles/lisp
+    ignore_dirs:
+    - build
+    path: devcovenant/core/profiles/lisp
     policy_overlays: {}
     profile: lisp
     source: core
+    suffixes:
+    - .lisp
+    - .lsp
     version: 1
   lua:
     active: false
     assets: []
     assets_available: []
     category: language
-    path: devcovenant/core/templates/profiles/lua
+    ignore_dirs:
+    - build
+    path: devcovenant/core/profiles/lua
     policy_overlays: {}
     profile: lua
     source: core
+    suffixes:
+    - .lua
     version: 1
   matlab:
     active: false
     assets: []
     assets_available: []
     category: language
-    path: devcovenant/core/templates/profiles/matlab
+    ignore_dirs:
+    - build
+    path: devcovenant/core/profiles/matlab
     policy_overlays: {}
     profile: matlab
     source: core
+    suffixes:
+    - .m
     version: 1
   micronaut:
     active: false
     assets: []
     assets_available: []
     category: framework
-    path: devcovenant/core/templates/profiles/micronaut
+    ignore_dirs:
+    - build
+    path: devcovenant/core/profiles/micronaut
     policy_overlays: {}
     profile: micronaut
     source: core
+    suffixes:
+    - .java
+    - .kt
+    - .yml
     version: 1
   nestjs:
     active: false
     assets: []
     assets_available: []
     category: framework
-    path: devcovenant/core/templates/profiles/nestjs
+    ignore_dirs:
+    - node_modules
+    - dist
+    path: devcovenant/core/profiles/nestjs
     policy_overlays: {}
     profile: nestjs
     source: core
+    suffixes:
+    - .ts
     version: 1
   nextjs:
     active: false
     assets: []
     assets_available: []
     category: framework
-    path: devcovenant/core/templates/profiles/nextjs
+    ignore_dirs:
+    - .next
+    - node_modules
+    path: devcovenant/core/profiles/nextjs
     policy_overlays: {}
     profile: nextjs
     source: core
+    suffixes:
+    - .js
+    - .jsx
+    - .ts
+    - .tsx
     version: 1
   nim:
     active: false
     assets: []
     assets_available: []
     category: language
-    path: devcovenant/core/templates/profiles/nim
+    ignore_dirs:
+    - nimcache
+    path: devcovenant/core/profiles/nim
     policy_overlays: {}
     profile: nim
     source: core
+    suffixes:
+    - .nim
     version: 1
   nuxt:
     active: false
     assets: []
     assets_available: []
     category: framework
-    path: devcovenant/core/templates/profiles/nuxt
+    ignore_dirs:
+    - .nuxt
+    - node_modules
+    path: devcovenant/core/profiles/nuxt
     policy_overlays: {}
     profile: nuxt
     source: core
+    suffixes:
+    - .vue
+    - .ts
     version: 1
   objective-c:
     active: false
     assets: []
     assets_available: []
     category: language
-    path: devcovenant/core/templates/profiles/objective-c
+    ignore_dirs:
+    - build
+    path: devcovenant/core/profiles/objective-c
     policy_overlays: {}
     profile: objective-c
     source: core
+    suffixes:
+    - .m
+    - .mm
+    - .h
     version: 1
   ocaml:
     active: false
     assets: []
     assets_available: []
     category: language
-    path: devcovenant/core/templates/profiles/ocaml
+    ignore_dirs:
+    - _build
+    path: devcovenant/core/profiles/ocaml
     policy_overlays: {}
     profile: ocaml
     source: core
+    suffixes:
+    - .ml
+    - .mli
     version: 1
   pascal:
     active: false
     assets: []
     assets_available: []
     category: language
-    path: devcovenant/core/templates/profiles/pascal
+    ignore_dirs:
+    - build
+    path: devcovenant/core/profiles/pascal
     policy_overlays: {}
     profile: pascal
     source: core
+    suffixes:
+    - .pas
+    - .pp
+    - .dpr
     version: 1
   perl:
     active: false
     assets: []
     assets_available: []
     category: language
-    path: devcovenant/core/templates/profiles/perl
+    ignore_dirs:
+    - local
+    - blib
+    path: devcovenant/core/profiles/perl
     policy_overlays: {}
     profile: perl
     source: core
+    suffixes:
+    - .pl
+    - .pm
     version: 1
   php:
     active: false
@@ -497,36 +796,51 @@ profiles:
       path: composer.json
       template: composer.json
     assets_available:
-    - devcovenant/core/templates/profiles/php/.gitignore
-    - devcovenant/core/templates/profiles/php/composer.json
+    - devcovenant/core/profiles/php/assets/.gitignore
+    - devcovenant/core/profiles/php/assets/composer.json
     category: language
-    path: devcovenant/core/templates/profiles/php
+    ignore_dirs:
+    - vendor
+    path: devcovenant/core/profiles/php
     policy_overlays:
       dependency-license-sync:
         dependency_files:
         - composer.json
     profile: php
     source: core
+    suffixes:
+    - .php
     version: 1
   powershell:
     active: false
     assets: []
     assets_available: []
     category: language
-    path: devcovenant/core/templates/profiles/powershell
+    ignore_dirs: []
+    path: devcovenant/core/profiles/powershell
     policy_overlays: {}
     profile: powershell
     source: core
+    suffixes:
+    - .ps1
+    - .psm1
+    - .psd1
     version: 1
   prolog:
     active: false
     assets: []
     assets_available: []
     category: language
-    path: devcovenant/core/templates/profiles/prolog
+    ignore_dirs:
+    - build
+    path: devcovenant/core/profiles/prolog
     policy_overlays: {}
     profile: prolog
     source: core
+    suffixes:
+    - .pl
+    - .pro
+    - .prolog
     version: 1
   python:
     active: true
@@ -538,11 +852,18 @@ profiles:
       path: requirements.lock
       template: requirements.lock
     assets_available:
-    - devcovenant/core/templates/profiles/python/.gitignore
-    - devcovenant/core/templates/profiles/python/requirements.in
-    - devcovenant/core/templates/profiles/python/requirements.lock
+    - devcovenant/core/profiles/python/assets/.gitignore
+    - devcovenant/core/profiles/python/assets/requirements.in
+    - devcovenant/core/profiles/python/assets/requirements.lock
     category: language
-    path: devcovenant/core/templates/profiles/python
+    ignore_dirs:
+    - .venv
+    - __pycache__
+    - .pytest_cache
+    - .mypy_cache
+    - build
+    - dist
+    path: devcovenant/core/profiles/python
     policy_overlays:
       dependency-license-sync:
         dependency_files:
@@ -550,46 +871,77 @@ profiles:
         - requirements.lock
     profile: python
     source: core
+    suffixes:
+    - .py
+    - .pyi
+    - .pyw
+    - .ipynb
     version: 1
   quarkus:
     active: false
     assets: []
     assets_available: []
     category: framework
-    path: devcovenant/core/templates/profiles/quarkus
+    ignore_dirs:
+    - target
+    - build
+    path: devcovenant/core/profiles/quarkus
     policy_overlays: {}
     profile: quarkus
     source: core
+    suffixes:
+    - .java
+    - .properties
+    - .yml
     version: 1
   r:
     active: false
     assets: []
     assets_available: []
     category: language
-    path: devcovenant/core/templates/profiles/r
+    ignore_dirs:
+    - .Rproj.user
+    path: devcovenant/core/profiles/r
     policy_overlays: {}
     profile: r
     source: core
+    suffixes:
+    - .r
+    - .R
     version: 1
   rails:
     active: false
     assets: []
     assets_available: []
     category: framework
-    path: devcovenant/core/templates/profiles/rails
+    ignore_dirs:
+    - log
+    - tmp
+    - vendor/bundle
+    path: devcovenant/core/profiles/rails
     policy_overlays: {}
     profile: rails
     source: core
+    suffixes:
+    - .rb
+    - .erb
     version: 1
   react:
     active: false
     assets: []
     assets_available: []
     category: framework
-    path: devcovenant/core/templates/profiles/react
+    ignore_dirs:
+    - node_modules
+    - dist
+    - build
+    path: devcovenant/core/profiles/react
     policy_overlays: {}
     profile: react
     source: core
+    suffixes:
+    - .jsx
+    - .tsx
     version: 1
   ruby:
     active: false
@@ -598,16 +950,22 @@ profiles:
       path: Gemfile
       template: Gemfile
     assets_available:
-    - devcovenant/core/templates/profiles/ruby/.gitignore
-    - devcovenant/core/templates/profiles/ruby/Gemfile
+    - devcovenant/core/profiles/ruby/assets/.gitignore
+    - devcovenant/core/profiles/ruby/assets/Gemfile
     category: language
-    path: devcovenant/core/templates/profiles/ruby
+    ignore_dirs:
+    - .bundle
+    - vendor/bundle
+    path: devcovenant/core/profiles/ruby
     policy_overlays:
       dependency-license-sync:
         dependency_files:
         - Gemfile
     profile: ruby
     source: core
+    suffixes:
+    - .rb
+    - .rake
     version: 1
   rust:
     active: false
@@ -616,106 +974,155 @@ profiles:
       path: Cargo.toml
       template: Cargo.toml
     assets_available:
-    - devcovenant/core/templates/profiles/rust/.gitignore
-    - devcovenant/core/templates/profiles/rust/Cargo.toml
+    - devcovenant/core/profiles/rust/assets/.gitignore
+    - devcovenant/core/profiles/rust/assets/Cargo.toml
     category: language
-    path: devcovenant/core/templates/profiles/rust
+    ignore_dirs:
+    - target
+    path: devcovenant/core/profiles/rust
     policy_overlays:
       dependency-license-sync:
         dependency_files:
         - Cargo.toml
     profile: rust
     source: core
+    suffixes:
+    - .rs
     version: 1
   scala:
     active: false
     assets: []
     assets_available: []
     category: language
-    path: devcovenant/core/templates/profiles/scala
+    ignore_dirs:
+    - target
+    - project/target
+    path: devcovenant/core/profiles/scala
     policy_overlays: {}
     profile: scala
     source: core
+    suffixes:
+    - .scala
     version: 1
   scheme:
     active: false
     assets: []
     assets_available: []
     category: language
-    path: devcovenant/core/templates/profiles/scheme
+    ignore_dirs:
+    - build
+    path: devcovenant/core/profiles/scheme
     policy_overlays: {}
     profile: scheme
     source: core
+    suffixes:
+    - .scm
+    - .ss
     version: 1
   spring:
     active: false
     assets: []
     assets_available: []
     category: framework
-    path: devcovenant/core/templates/profiles/spring
+    ignore_dirs:
+    - target
+    - build
+    path: devcovenant/core/profiles/spring
     policy_overlays: {}
     profile: spring
     source: core
+    suffixes:
+    - .java
+    - .properties
+    - .yml
     version: 1
   sql:
     active: false
     assets: []
     assets_available: []
     category: ops
-    path: devcovenant/core/templates/profiles/sql
+    ignore_dirs: []
+    path: devcovenant/core/profiles/sql
     policy_overlays: {}
     profile: sql
     source: core
+    suffixes:
+    - .sql
     version: 1
   suffixes:
     active: false
     assets: []
     assets_available: []
     category: ops
-    path: devcovenant/core/templates/profiles/suffixes
+    ignore_dirs: []
+    path: devcovenant/core/profiles/suffixes
     policy_overlays: {}
     profile: suffixes
     source: core
+    suffixes: []
     version: 1
   svelte:
     active: false
     assets: []
     assets_available: []
     category: framework
-    path: devcovenant/core/templates/profiles/svelte
+    ignore_dirs:
+    - node_modules
+    - dist
+    path: devcovenant/core/profiles/svelte
     policy_overlays: {}
     profile: svelte
     source: core
+    suffixes:
+    - .svelte
+    - .js
+    - .ts
     version: 1
   swift:
     active: false
     assets: []
     assets_available: []
     category: language
-    path: devcovenant/core/templates/profiles/swift
+    ignore_dirs:
+    - .build
+    path: devcovenant/core/profiles/swift
     policy_overlays: {}
     profile: swift
     source: core
+    suffixes:
+    - .swift
     version: 1
   symfony:
     active: false
     assets: []
     assets_available: []
     category: framework
-    path: devcovenant/core/templates/profiles/symfony
+    ignore_dirs:
+    - var
+    - vendor
+    path: devcovenant/core/profiles/symfony
     policy_overlays: {}
     profile: symfony
     source: core
+    suffixes:
+    - .php
+    - .twig
     version: 1
   terraform:
     active: false
     assets: []
     assets_available: []
     category: ops
-    path: devcovenant/core/templates/profiles/terraform
+    ignore_dirs:
+    - .terraform
+    path: devcovenant/core/profiles/terraform
     policy_overlays: {}
     profile: terraform
     source: core
+    suffixes:
+    - .tf
+    - .tfvars
+    - .hcl
     version: 1
   typescript:
     active: false
@@ -727,35 +1134,54 @@ profiles:
       path: tsconfig.json
       template: tsconfig.json
     assets_available:
-    - devcovenant/core/templates/profiles/typescript/.gitignore
-    - devcovenant/core/templates/profiles/typescript/package.json
-    - devcovenant/core/templates/profiles/typescript/tsconfig.json
+    - devcovenant/core/profiles/typescript/assets/.gitignore
+    - devcovenant/core/profiles/typescript/assets/package.json
+    - devcovenant/core/profiles/typescript/assets/tsconfig.json
     category: language
-    path: devcovenant/core/templates/profiles/typescript
+    ignore_dirs:
+    - node_modules
+    - dist
+    - build
+    path: devcovenant/core/profiles/typescript
     policy_overlays:
       dependency-license-sync:
         dependency_files:
         - package.json
     profile: typescript
     source: core
+    suffixes:
+    - .ts
+    - .tsx
     version: 1
   vue:
     active: false
     assets: []
     assets_available: []
     category: framework
-    path: devcovenant/core/templates/profiles/vue
+    ignore_dirs:
+    - node_modules
+    - dist
+    path: devcovenant/core/profiles/vue
     policy_overlays: {}
     profile: vue
     source: core
+    suffixes:
+    - .vue
+    - .js
+    - .ts
     version: 1
   zig:
     active: false
     assets: []
     assets_available: []
     category: language
-    path: devcovenant/core/templates/profiles/zig
+    ignore_dirs:
+    - zig-cache
+    - zig-out
+    path: devcovenant/core/profiles/zig
     policy_overlays: {}
     profile: zig
     source: core
+    suffixes:
+    - .zig
     version: 1

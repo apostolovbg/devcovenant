@@ -31,7 +31,7 @@ def test_engine_check_no_violations():
         # Create structure
         devcov_dir = repo_root / "devcovenant"
         devcov_dir.mkdir()
-        (devcov_dir / "core" / "policy_scripts").mkdir(parents=True)
+        (devcov_dir / "core" / "policies" / "test_policy").mkdir(parents=True)
         config_text = "engine:\n  fail_threshold: error"
         (devcov_dir / "config.yaml").write_text(config_text)
 
@@ -49,14 +49,15 @@ def test_engine_check_no_violations():
 def test_custom_override_skips_core_fixers(tmp_path: Path) -> None:
     """Core fixers should be skipped when a custom override exists."""
     repo_root = tmp_path
-    (repo_root / "devcovenant" / "custom" / "policy_scripts").mkdir(
-        parents=True
-    )
+    (
+        repo_root / "devcovenant" / "custom" / "policies" / "no_future_dates"
+    ).mkdir(parents=True)
     (
         repo_root
         / "devcovenant"
         / "custom"
-        / "policy_scripts"
+        / "policies"
+        / "no_future_dates"
         / "no_future_dates.py"
     ).write_text("# custom override\n", encoding="utf-8")
     (repo_root / "AGENTS.md").write_text("# Test\n", encoding="utf-8")

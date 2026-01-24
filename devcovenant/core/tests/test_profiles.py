@@ -28,7 +28,6 @@ def test_load_profile_catalog_merges_core_and_custom(tmp_path: Path) -> None:
         tmp_path
         / "devcovenant"
         / "core"
-        / "templates"
         / "profiles"
         / "python"
         / "profile.yaml"
@@ -37,7 +36,6 @@ def test_load_profile_catalog_merges_core_and_custom(tmp_path: Path) -> None:
         tmp_path
         / "devcovenant"
         / "custom"
-        / "templates"
         / "profiles"
         / "python"
         / "profile.yaml"
@@ -45,10 +43,10 @@ def test_load_profile_catalog_merges_core_and_custom(tmp_path: Path) -> None:
     _write_yaml(core_manifest, core_yaml)
     _write_yaml(custom_manifest, custom_yaml)
 
-    custom_templates = (
-        tmp_path / "devcovenant" / "custom" / "templates" / "profiles" / "zig"
+    custom_profile_dir = (
+        tmp_path / "devcovenant" / "custom" / "profiles" / "zig"
     )
-    custom_templates.mkdir(parents=True, exist_ok=True)
+    custom_profile_dir.mkdir(parents=True, exist_ok=True)
 
     catalog = profiles.load_profile_catalog(tmp_path)
 

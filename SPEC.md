@@ -66,6 +66,12 @@ hashes synchronized so drift is detectable and reversible.
 - Apply auto-fixers when allowed, using fixers located under
   `devcovenant/core/policies/<id>/fixers/` and any custom fixers under
   `devcovenant/custom/policies/<id>/fixers/`.
+- Fixers are language-aware: policy fixers live in per-policy folders as
+  `fixers/global.py` plus optional language-specific files (for example
+  `fixers/python.py`, `fixers/js.py`). When no language-specific fixer is
+  available, the engine falls back to `global.py`.
+- Not every policy ships with a fixer. Some policies will remain fixerless
+  by design and are documented as such in the core policy guide.
 
 ### CLI commands
 - Provide a console entry point (`devcovenant`) and module entry
@@ -150,7 +156,7 @@ hashes synchronized so drift is detectable and reversible.
 
 ## Installation Requirements
 - Install the full DevCovenant toolchain into the target repo, including the
-  `devcovenant/` tree, `tools/` helpers, and CI workflow templates.
+  `devcovenant/` tree, `tools/` helpers, and CI workflow assets.
 - Use packaged assets from `devcovenant/core/profiles/` and
   `devcovenant/core/policies/` when installed from PyPI; fall back to repo
   files when running from source.

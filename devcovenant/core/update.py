@@ -160,8 +160,8 @@ def _build_replacement_plan(
 
 
 def _policy_script_name(policy_id: str) -> str:
-    """Return the script filename for a policy id."""
-    return f"{policy_id.replace('-', '_')}.py"
+    """Return the script name for a policy id."""
+    return policy_id.replace("-", "_")
 
 
 def _snapshot_policy_sources(
@@ -173,12 +173,23 @@ def _snapshot_policy_sources(
     for policy_id in policy_ids:
         script_name = _policy_script_name(policy_id)
         script_path = (
-            repo_root / "devcovenant" / "core" / "policy_scripts" / script_name
+            repo_root
+            / "devcovenant"
+            / "core"
+            / "policies"
+            / script_name
+            / f"{script_name}.py"
         )
         if script_path.exists():
             scripts[policy_id] = script_path.read_text(encoding="utf-8")
         fixer_path = (
-            repo_root / "devcovenant" / "core" / "fixers" / script_name
+            repo_root
+            / "devcovenant"
+            / "core"
+            / "policies"
+            / script_name
+            / "fixers"
+            / "global.py"
         )
         if fixer_path.exists():
             fixers[policy_id] = fixer_path.read_text(encoding="utf-8")
@@ -192,18 +203,20 @@ def _write_custom_sources(
 ) -> None:
     """Write captured policy sources into custom directories."""
     script_name = _policy_script_name(policy_id)
+    policy_dir = (
+        repo_root / "devcovenant" / "custom" / "policies" / script_name
+    )
     if policy_id in sources.scripts:
-        custom_dir = repo_root / "devcovenant" / "custom" / "policy_scripts"
-        custom_dir.mkdir(parents=True, exist_ok=True)
-        custom_path = custom_dir / script_name
+        policy_dir.mkdir(parents=True, exist_ok=True)
+        custom_path = policy_dir / f"{script_name}.py"
         if not custom_path.exists():
             custom_path.write_text(
                 sources.scripts[policy_id], encoding="utf-8"
             )
     if policy_id in sources.fixers:
-        fixer_dir = repo_root / "devcovenant" / "custom" / "fixers"
+        fixer_dir = policy_dir / "fixers"
         fixer_dir.mkdir(parents=True, exist_ok=True)
-        fixer_path = fixer_dir / script_name
+        fixer_path = fixer_dir / "global.py"
         if not fixer_path.exists():
             fixer_path.write_text(sources.fixers[policy_id], encoding="utf-8")
 
@@ -211,11 +224,11 @@ def _write_custom_sources(
 def _remove_custom_sources(repo_root: Path, policy_id: str) -> None:
     """Remove custom policy sources for a policy."""
     script_name = _policy_script_name(policy_id)
-    for rel_dir in (
-        "devcovenant/custom/policy_scripts",
-        "devcovenant/custom/fixers",
+    for rel_path in (
+        f"devcovenant/custom/policies/{script_name}/{script_name}.py",
+        f"devcovenant/custom/policies/{script_name}/fixers/global.py",
     ):
-        target = repo_root / rel_dir / script_name
+        target = repo_root / rel_path
         if target.exists():
             target.unlink()
 
@@ -301,8 +314,9 @@ def main(argv=None) -> None:
     schema_path = (
         Path(__file__).resolve().parents[1]
         / "core"
-        / "templates"
+        / "profiles"
         / "global"
+        / "assets"
         / "AGENTS.md"
     )
     agents_path = target_root / "AGENTS.md"

@@ -35,7 +35,7 @@ core policy changes never break user repos. Policy metadata must be complete:
 all supported keys appear in blocks (even when empty), and keys can be added
 or renamed through normalization without overriding user values.
 
-A full refresh of DevCovenant (core + docs + templates) should be achievable
+A full refresh of DevCovenant (core + docs + assets) should be achievable
 by uninstalling and reinstalling with the intended installer arguments.
 
 ## Workflow
@@ -99,7 +99,11 @@ by uninstalling and reinstalling with the intended installer arguments.
   `devcovenant/core/profiles/<profile>/assets/`, with global assets living
   under `devcovenant/core/profiles/global/assets/`. Mirror the same layout
   under `devcovenant/custom/` so custom overrides replace core when ids
-  match. Avoid packaging templates at the repo root.
+  match. Avoid packaging assets at the repo root.
+- Fixers are language-aware and live under each policy folder as
+  `fixers/global.py` plus optional language-specific files (for example
+  `fixers/python.py`, `fixers/js.py`). When present, custom fixers override
+  core, and core fixers are skipped for custom policy overrides.
 - Require global applicability via `profile_scopes: global` (no separate
   global key).
 - Version discovery order: `VERSION` file, then version fields in
@@ -117,7 +121,7 @@ by uninstalling and reinstalling with the intended installer arguments.
 - Core DevCovenant files (everything under `devcovenant/` except `custom/`)
   are refreshed on update; deprecated core paths are removed.
 - Any file containing `DEVCOV` blocks is treated as block-managed: managed
-  blocks refresh from templates, non-block content is preserved.
+  blocks refresh from assets, non-block content is preserved.
 - DevCovenant-managed docs must include a standard header block (title, last
   updated, version) followed immediately by a small `DEVCOV` block. Updates
   must merge existing `DEVCOV` blocks (add missing fields, refresh values)
@@ -160,7 +164,7 @@ must not be hard-coded in `config.yaml`.
 
 ### Profile selection
 Install prompts for one or more profiles from the generated catalog. The
-catalog is built by scanning profile manifests in core/custom templates.
+catalog is built by scanning profile manifests in core/custom assets.
 Multiple profiles are allowed, and the chosen values are stored as
 `active_profiles` (in addition to always-on profiles `global`, `data`,
 `docs`, and `suffixes`). This is the only interactive prompt besides
@@ -321,7 +325,7 @@ Examples:
 
 ### Policy and profile layout
 Policies and profiles are grouped by scope to keep installs predictable and
-to avoid shipping templates at the package root. Layout:
+to avoid shipping assets at the package root. Layout:
 ```text
 devcovenant/core/policies/<policy>/
   <policy>.py
@@ -392,6 +396,9 @@ Run uninstall before install? [y/N]
    - Move profile assets into `devcovenant/*/profiles/<profile>/assets/` with
      `global/assets/` as the shared baseline.
    - Update loaders, fixers, tests, and registry paths to match the new layout.
+   - Define language-aware fixer lookup (`fixers/<lang>.py` + `global.py`)
+     and document which policies ship fixers versus remaining fixerless by
+     design (aligned with human review).
 2. Apply `PROFILE_POLICY_DRAFT.md` to real profile manifests and policy
    metadata.
    - Populate suffixes, ignore dirs, assets, and policy overlays in every
@@ -467,7 +474,7 @@ Profile-scoped (language/framework specific):
 
 Custom profiles and policies:
 - Custom profiles define their own assets and policy metadata overlays in
-  custom catalogs and templates; matching core entries are overridden.
+  custom catalogs and assets; matching core entries are overridden.
 - Custom policies should list profile_scopes explicitly and may reuse
   overlay files from profile assets when applicable.
 
@@ -478,11 +485,13 @@ Follow-up implementation tasks:
 - Populate profile assets and metadata overlays so each shipped profile is
   complete (dependency manifests, build files, ignore fragments, and
   profile-specific docs).
+- Implement fixers for as many policies as feasible, with explicit review
+  and documentation for any policies that intentionally remain fixerless.
 
 ## Release Readiness
 - Run `python -m build` and `twine check dist/*`.
 - Confirm console entry points work with `python3 -m devcovenant`.
-- Validate `MANIFEST.in` includes updated templates and assets.
+- Validate `MANIFEST.in` includes updated assets and assets.
 - Ensure dependency manifests + `THIRD_PARTY_LICENSES.md` stay aligned.
 - Confirm policy replacement notifications appear before release tags.
 - Confirm structure manifest updates ship with core updates.
@@ -511,7 +520,7 @@ Follow-up implementation tasks:
 - Profile selection prompts run at install and are stored in config.
 - `profile_scopes` gates policy applicability and asset creation.
 - `profile_scopes: global` marks explicit global policies.
-- Template layout uses `templates/global` and `templates/profiles`.
+- Template layout uses `profiles/global/assets` and `profiles`.
 - Version discovery follows VERSION → pyproject/profile → prompt → 0.0.1.
 - Install respects `--disable-policy` and skips disabled policy assets.
 - Install prompts to auto-uninstall when artifacts exist and honors
@@ -540,7 +549,7 @@ Follow-up implementation tasks:
 - Remove static `devcovenant/registry/profile_catalog.yaml` and
   `devcovenant/registry/policy_assets.yaml` as sources of truth.
 - Generate `devcovenant/registry/profile_catalog.yaml` by scanning
-  profile manifests in core/custom templates, capturing `name`,
+  profile manifests in core/custom assets, capturing `name`,
   `category`, `suffixes`, `source`, `active`, and
   `assets_available`.
 - Generate `devcovenant/registry/policy_assets.yaml` from per-policy
@@ -556,12 +565,12 @@ Follow-up implementation tasks:
   migration behavior from legacy paths.
 ### L: Profile-driven config + gitignore assets
 - Support custom profile and policy assets under
-  `devcovenant/custom/templates/` so overrides take precedence over core.
+  `devcovenant/custom/` so overrides take precedence over core.
 - Move profile assets into per-profile `profile.yaml` manifests under
-  `devcovenant/core/templates/profiles/<profile>/` with optional
+  `devcovenant/core/profiles/<profile>/` with optional
   `.gitignore` fragments and profile-scoped assets.
 - Add `gitignore_base.txt` and `gitignore_os.txt` under
-  `templates/global/`, and assemble `.gitignore` in this order:
+  `profiles/global/assets/`, and assemble `.gitignore` in this order:
   global base → profile fragments → OS fragment → user section.
 - Apply profile policy overlays from profile manifests to
   `devcovenant/config.yaml` so profile metadata drives policy scope.
@@ -572,7 +581,7 @@ Follow-up implementation tasks:
 - Replaced bench/venv policies with `managed-environment`, driven by
   metadata (`expected_paths`, `expected_interpreters`, `required_commands`,
   `command_hints`) and off by default.
-- Updated docs and templates to reference the unified policy and the
+- Updated docs and assets to reference the unified policy and the
   managed-environment guidance in the managed AGENTS block.
 
 ### G: Tests and validation
@@ -591,9 +600,9 @@ Follow-up implementation tasks:
   to apply those assets with custom overrides taking precedence.
 - Skipped asset creation when a policy is disabled or outside the active
   profiles, including policy-scoped assets.
-- Expanded profile templates under `devcovenant/core/templates/profiles/`,
-  with shared assets in `devcovenant/core/templates/global/` and overrides
-  in `devcovenant/custom/templates/`.
+- Expanded profile assets under `devcovenant/core/profiles/`,
+  with shared assets in `devcovenant/core/profiles/global/assets/` and
+  overrides in `devcovenant/custom/`.
 - Enforced repo-root detection and CLI version mismatch warnings for
   PATH-based usage.
 

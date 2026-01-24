@@ -115,7 +115,7 @@ def main() -> None:
         default=None,
         help=(
             "Schema source for normalize-metadata (default: "
-            "devcovenant/core/templates/global/AGENTS.md)."
+            "devcovenant/core/profiles/global/assets/AGENTS.md)."
         ),
     )
     parser.add_argument(
@@ -302,8 +302,9 @@ def main() -> None:
             schema_path = (
                 Path(__file__).resolve().parent
                 / "core"
-                / "templates"
+                / "profiles"
                 / "global"
+                / "assets"
                 / "AGENTS.md"
             )
         else:

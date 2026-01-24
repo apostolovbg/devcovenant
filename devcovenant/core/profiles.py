@@ -10,8 +10,8 @@ import yaml
 
 PROFILE_MANIFEST_NAME = "profile.yaml"
 REGISTRY_CATALOG = Path("devcovenant/registry/profile_catalog.yaml")
-CORE_PROFILE_ROOT = Path("devcovenant/core/templates/profiles")
-CUSTOM_PROFILE_ROOT = Path("devcovenant/custom/templates/profiles")
+CORE_PROFILE_ROOT = Path("devcovenant/core/profiles")
+CUSTOM_PROFILE_ROOT = Path("devcovenant/custom/profiles")
 
 
 def _utc_now() -> str:
@@ -52,7 +52,9 @@ def _relative_path(path: Path, base: Path) -> str:
 def _profile_assets(profile_dir: Path, repo_root: Path) -> list[str]:
     """List asset files under a profile directory."""
     assets: list[str] = []
-    for entry in profile_dir.rglob("*"):
+    assets_root = profile_dir / "assets"
+    scan_root = assets_root if assets_root.exists() else profile_dir
+    for entry in scan_root.rglob("*"):
         if not entry.is_file():
             continue
         if entry.name == PROFILE_MANIFEST_NAME:
@@ -130,12 +132,12 @@ def _normalize_catalog(catalog: Dict[str, Dict]) -> Dict[str, Dict]:
 
 
 def load_profile_catalog(repo_root: Path) -> Dict[str, Dict]:
-    """Load the merged profile catalog from registry or templates."""
+    """Load the merged profile catalog from registry or profile roots."""
     registry_path = repo_root / REGISTRY_CATALOG
     if registry_path.exists():
-        data = _load_yaml(registry_path)
-        if isinstance(data, dict) and data:
-            return _normalize_catalog(data)
+        catalog_data = _load_yaml(registry_path)
+        if isinstance(catalog_data, dict) and catalog_data:
+            return _normalize_catalog(catalog_data)
     return discover_profiles(repo_root)
 
 
