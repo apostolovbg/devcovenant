@@ -115,8 +115,10 @@ by uninstalling and reinstalling with the intended installer arguments.
   never deletes user-owned repo files; profile-created files are removed
   only if recorded as DevCovenant-managed.
 - Split the registry into tracked `devcovenant/registry/global/` and
-  gitignored `devcovenant/registry/local/`, placing ephemeral state
-  (for example `test_status.json`) under local.
+  gitignored `devcovenant/registry/local/`. Global keeps only curated
+  registries (`stock_policy_texts.yaml`, `policy_replacements.yaml`) while
+  local holds generated files (`registry.json`, `manifest.json`,
+  `profile_catalog.yaml`, `policy_assets.yaml`, `test_status.json`).
 - Populate profile gitignore fragments for every shipped profile so
   registry-local files and other local artifacts are ignored by default.
 
@@ -148,11 +150,12 @@ by uninstalling and reinstalling with the intended installer arguments.
 - `devcov-structure-guard` validates against an update-shipped structure
   manifest instead of hard-coded globs.
 - The registry is split into `devcovenant/registry/global/` (tracked) and
-  `devcovenant/registry/local/` (gitignored). Global stores the policy
-  registry, manifest, profile catalog, policy assets, replacements, and
-  stock policy texts. Local stores `test_status.json` and other ephemeral
-  caches. Install/update/uninstall refresh global, create local, and migrate
-  legacy paths into the global registry.
+  `devcovenant/registry/local/` (gitignored). Global stores curated
+  registries (`stock_policy_texts.yaml`, `policy_replacements.yaml`). Local
+  stores generated artifacts (`registry.json`, `manifest.json`,
+  `profile_catalog.yaml`, `policy_assets.yaml`, `test_status.json`). Update
+  and install regenerate local, refresh global, and migrate legacy paths into
+  the new layout.
 - Update/install/uninstall share the same flag schema; update reuses install
   defaults when appropriate, and uninstall uses the manifest to remove only
   managed assets while preserving user content.
@@ -412,9 +415,12 @@ Run uninstall before install? [y/N]
      config and installers.
 3. Registry split and catalogs.
    - Split the registry into tracked `registry/global/` and gitignored
-     `registry/local/`, moving `test_status.json` and other ephemeral files.
+     `registry/local/`. Global keeps curated registries
+     (`stock_policy_texts.yaml`, `policy_replacements.yaml`). Local holds
+     generated files (`registry.json`, `manifest.json`, `profile_catalog.yaml`,
+     `policy_assets.yaml`, `test_status.json`).
    - Update manifest, structure guard, and update/install/uninstall to reflect
-     the split and to migrate legacy paths into `registry/global/`.
+     the split and to migrate legacy paths into the new layout.
    - Generate profile catalogs and policy assets from profile manifests and
      policy assets; avoid stubs by completing each profile pass before moving
      on.
@@ -527,8 +533,10 @@ Follow-up implementation tasks:
 - Deprecated policies migrate or delete with user notification.
 - New stock policies trigger user notifications.
 - Structure guard validates against the update-shipped manifest.
-- Registry folder houses generated artifacts (policy registry, manifest,
-  test status, profile catalog, policy assets) and is refreshed on update.
+- Registry uses `registry/global/` for curated registries and
+  `registry/local/` for generated artifacts (`registry.json`, `manifest.json`,
+  `profile_catalog.yaml`, `policy_assets.yaml`, `test_status.json`), with
+  local content gitignored by default.
 - Every merge or overwrite creates an `*_old.*` backup.
 - Profile selection prompts run at install and are stored in config.
 - `profile_scopes` gates policy applicability and asset creation.

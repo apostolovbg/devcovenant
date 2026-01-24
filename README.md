@@ -165,6 +165,10 @@ DevCovenant expects the following sequence in enforced repos:
 2. `python3 tools/run_tests.py`
 3. `python3 tools/run_pre_commit.py --phase end`
 
+During `--phase end`, if pre-commit modifies files, the script automatically
+reruns `tools/run_tests.py` before recording the end timestamp so tests always
+post-date any auto-fixes.
+
 When policy blocks change, set `updated: true`, run
 `devcovenant update-hashes`, then reset the flag.
 

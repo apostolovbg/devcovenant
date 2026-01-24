@@ -46,6 +46,29 @@ def _run_command(command: str, env: dict[str, str] | None = None) -> None:
         raise SystemExit(exc.returncode)
 
 
+def _git_diff(repo_root: Path) -> str:
+    """Return the current git diff, or an empty string when unavailable."""
+    try:
+        result = subprocess.run(
+            ["git", "diff", "--binary"],
+            cwd=repo_root,
+            check=False,
+            capture_output=True,
+            text=True,
+        )
+    except OSError:
+        return ""
+    if result.returncode != 0:
+        return ""
+    return result.stdout
+
+
+def _run_tests(repo_root: Path, env: dict[str, str]) -> None:
+    """Run the repository test runner."""
+    command = [sys.executable, str(repo_root / "tools" / "run_tests.py")]
+    subprocess.run(command, check=True, env=env)
+
+
 def main() -> None:
     """CLI entry point."""
     parser = argparse.ArgumentParser(
@@ -75,13 +98,22 @@ def main() -> None:
 
     env = os.environ.copy()
     env["DEVCOV_DEVFLOW_PHASE"] = args.phase
+    start_ts = _utc_now() if args.phase == "start" else None
+    diff_before = _git_diff(repo_root)
     _run_command(args.command, env=env)
+    diff_after = _git_diff(repo_root)
+    if args.phase == "end" and diff_before != diff_after:
+        _run_tests(repo_root, env)
 
     payload = _load_status(status_path)
     now = _utc_now()
     prefix = f"pre_commit_{args.phase}"
-    payload[f"{prefix}_utc"] = now.isoformat()
-    payload[f"{prefix}_epoch"] = now.timestamp()
+    if start_ts is not None:
+        payload[f"{prefix}_utc"] = start_ts.isoformat()
+        payload[f"{prefix}_epoch"] = start_ts.timestamp()
+    else:
+        payload[f"{prefix}_utc"] = now.isoformat()
+        payload[f"{prefix}_epoch"] = now.timestamp()
     payload[f"{prefix}_command"] = args.command.strip()
     payload[f"{prefix}_notes"] = args.notes.strip()
     status_path.write_text(
