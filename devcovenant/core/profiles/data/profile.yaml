@@ -12,5 +12,19 @@ ignore_dirs:
 - data/raw
 - data/tmp
 - data/cache
-assets: []
-policy_overlays: {}
+assets:
+- path: data/README.md
+  template: data/README.md
+  mode: replace
+- path: data/manifest.json
+  template: data/manifest.json
+  mode: replace
+policy_overlays:
+  line-length-limit:
+    include_suffixes:
+    - .csv
+    - .tsv
+    - .json
+    - .ndjson
+    - .parquet
+    - .avro

@@ -10,5 +10,23 @@ ignore_dirs:
 - node_modules
 - dist
 - .angular
-assets: []
-policy_overlays: {}
+assets:
+- path: angular.json
+  template: angular.json
+  mode: replace
+- path: tsconfig.json
+  template: tsconfig.json
+  mode: replace
+policy_overlays:
+  documentation-growth-tracking:
+    user_facing_suffixes:
+    - .ts
+    - .html
+    - .css
+    - .scss
+  line-length-limit:
+    include_suffixes:
+    - .ts
+    - .html
+    - .css
+    - .scss

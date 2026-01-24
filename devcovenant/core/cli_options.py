@@ -167,7 +167,7 @@ def add_install_update_args(
         "--preserve-custom",
         action=argparse.BooleanOptionalAction,
         default=defaults.preserve_custom,
-        help="Preserve custom policy scripts and fixers during install.",
+        help="Preserve custom policy overrides and fixers during install.",
     )
     if include_allow_existing:
         parser.add_argument(

@@ -1,0 +1,3 @@
+# DevCovenant profile ignores
+dist-newstyle
+.stack-work

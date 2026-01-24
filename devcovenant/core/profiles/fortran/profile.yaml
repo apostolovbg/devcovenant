@@ -10,4 +10,18 @@ suffixes:
 ignore_dirs:
 - build
 assets: []
-policy_overlays: {}
+policy_overlays:
+  documentation-growth-tracking:
+    user_facing_suffixes:
+    - .f
+    - .f90
+    - .f95
+    - .f03
+    - .f08
+  line-length-limit:
+    include_suffixes:
+    - .f
+    - .f90
+    - .f95
+    - .f03
+    - .f08

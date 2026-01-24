@@ -7,5 +7,16 @@ suffixes:
 ignore_dirs:
 - .nuxt
 - node_modules
-assets: []
-policy_overlays: {}
+assets:
+- path: nuxt.config.ts
+  template: nuxt.config.ts
+  mode: replace
+policy_overlays:
+  documentation-growth-tracking:
+    user_facing_suffixes:
+    - .vue
+    - .ts
+  line-length-limit:
+    include_suffixes:
+    - .vue
+    - .ts

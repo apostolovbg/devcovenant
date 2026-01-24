@@ -5,6 +5,20 @@ suffixes:
 - .yml
 - .yaml
 ignore_dirs:
-- charts/
-assets: []
-policy_overlays: {}
+- charts
+assets:
+- path: Chart.yaml
+  template: Chart.yaml
+  mode: replace
+- path: values.yaml
+  template: values.yaml
+  mode: replace
+policy_overlays:
+  documentation-growth-tracking:
+    user_facing_suffixes:
+    - .yml
+    - .yaml
+  line-length-limit:
+    include_suffixes:
+    - .yml
+    - .yaml

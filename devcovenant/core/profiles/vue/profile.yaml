@@ -8,5 +8,21 @@ suffixes:
 ignore_dirs:
 - node_modules
 - dist
-assets: []
-policy_overlays: {}
+assets:
+- path: vue.config.js
+  template: vue.config.js
+  mode: replace
+- path: package.json
+  template: package.json
+  mode: replace
+policy_overlays:
+  documentation-growth-tracking:
+    user_facing_suffixes:
+    - .vue
+    - .js
+    - .ts
+  line-length-limit:
+    include_suffixes:
+    - .vue
+    - .js
+    - .ts

@@ -4,5 +4,14 @@ category: ops
 suffixes:
 - .sql
 ignore_dirs: []
-assets: []
-policy_overlays: {}
+assets:
+- path: schema.sql
+  template: schema.sql
+  mode: replace
+policy_overlays:
+  documentation-growth-tracking:
+    user_facing_suffixes:
+    - .sql
+  line-length-limit:
+    include_suffixes:
+    - .sql

@@ -6,4 +6,10 @@ suffixes:
 ignore_dirs:
 - build
 assets: []
-policy_overlays: {}
+policy_overlays:
+  documentation-growth-tracking:
+    user_facing_suffixes:
+    - .m
+  line-length-limit:
+    include_suffixes:
+    - .m

@@ -12,7 +12,23 @@ assets:
 - path: global.json
   template: global.json
   mode: replace
+- path: packages.lock.json
+  template: packages.lock.json
+  mode: replace
 policy_overlays:
   dependency-license-sync:
     dependency_files:
-    - global.json
+    - packages.lock.json
+  devflow-run-gates:
+    required_commands:
+    - dotnet test
+  documentation-growth-tracking:
+    user_facing_suffixes:
+    - .cs
+    - .fs
+    - .vb
+  line-length-limit:
+    include_suffixes:
+    - .cs
+    - .fs
+    - .vb

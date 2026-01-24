@@ -7,4 +7,14 @@ suffixes:
 - .zsh
 ignore_dirs: []
 assets: []
-policy_overlays: {}
+policy_overlays:
+  documentation-growth-tracking:
+    user_facing_suffixes:
+    - .sh
+    - .bash
+    - .zsh
+  line-length-limit:
+    include_suffixes:
+    - .sh
+    - .bash
+    - .zsh

@@ -13,4 +13,15 @@ assets:
 policy_overlays:
   dependency-license-sync:
     dependency_files:
+    - pom.xml
     - build.gradle
+  devflow-run-gates:
+    required_commands:
+    - mvn test
+    - gradle test
+  documentation-growth-tracking:
+    user_facing_suffixes:
+    - .java
+  line-length-limit:
+    include_suffixes:
+    - .java

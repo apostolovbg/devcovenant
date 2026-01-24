@@ -11,7 +11,22 @@ assets:
 - path: Gemfile
   template: Gemfile
   mode: replace
+- path: Gemfile.lock
+  template: Gemfile.lock
+  mode: replace
 policy_overlays:
   dependency-license-sync:
     dependency_files:
     - Gemfile
+    - Gemfile.lock
+  devflow-run-gates:
+    required_commands:
+    - bundle exec rake test
+  documentation-growth-tracking:
+    user_facing_suffixes:
+    - .rb
+    - .rake
+  line-length-limit:
+    include_suffixes:
+    - .rb
+    - .rake

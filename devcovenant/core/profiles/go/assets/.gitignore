@@ -1,2 +1,4 @@
-bin/
-pkg/
+# DevCovenant profile ignores
+bin
+pkg
+vendor

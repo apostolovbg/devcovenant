@@ -8,5 +8,16 @@ ignore_dirs:
 - log
 - tmp
 - vendor/bundle
-assets: []
-policy_overlays: {}
+assets:
+- path: Gemfile
+  template: Gemfile
+  mode: replace
+policy_overlays:
+  documentation-growth-tracking:
+    user_facing_suffixes:
+    - .rb
+    - .erb
+  line-length-limit:
+    include_suffixes:
+    - .rb
+    - .erb

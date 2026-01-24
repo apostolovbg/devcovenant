@@ -7,5 +7,19 @@ suffixes:
 ignore_dirs:
 - vendor
 - storage
-assets: []
-policy_overlays: {}
+assets:
+- path: artisan
+  template: artisan
+  mode: replace
+- path: composer.json
+  template: composer.json
+  mode: replace
+policy_overlays:
+  documentation-growth-tracking:
+    user_facing_suffixes:
+    - .php
+    - .blade.php
+  line-length-limit:
+    include_suffixes:
+    - .php
+    - .blade.php

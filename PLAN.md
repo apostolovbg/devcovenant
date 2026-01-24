@@ -117,8 +117,9 @@ by uninstalling and reinstalling with the intended installer arguments.
 - Split the registry into tracked `devcovenant/registry/global/` and
   gitignored `devcovenant/registry/local/`. Global keeps only curated
   registries (`stock_policy_texts.yaml`, `policy_replacements.yaml`) while
-  local holds generated files (`registry.json`, `manifest.json`,
-  `profile_catalog.yaml`, `policy_assets.yaml`, `test_status.json`).
+  local holds auto-generated files (`registry.json`, `manifest.json`,
+  `profile_catalog.yaml`, `policy_assets.yaml`, `test_status.json`) that
+  must remain local-only (not committed).
 - Populate profile gitignore fragments for every shipped profile so
   registry-local files and other local artifacts are ignored by default.
 
@@ -152,10 +153,10 @@ by uninstalling and reinstalling with the intended installer arguments.
 - The registry is split into `devcovenant/registry/global/` (tracked) and
   `devcovenant/registry/local/` (gitignored). Global stores curated
   registries (`stock_policy_texts.yaml`, `policy_replacements.yaml`). Local
-  stores generated artifacts (`registry.json`, `manifest.json`,
-  `profile_catalog.yaml`, `policy_assets.yaml`, `test_status.json`). Update
-  and install regenerate local, refresh global, and migrate legacy paths into
-  the new layout.
+  stores auto-generated artifacts (`registry.json`, `manifest.json`,
+  `profile_catalog.yaml`, `policy_assets.yaml`, `test_status.json`) that
+  must remain local-only. Update and install regenerate local, refresh
+  global, and migrate legacy paths into the new layout.
 - Update/install/uninstall share the same flag schema; update reuses install
   defaults when appropriate, and uninstall uses the manifest to remove only
   managed assets while preserving user content.

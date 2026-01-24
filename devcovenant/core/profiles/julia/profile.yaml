@@ -5,5 +5,21 @@ suffixes:
 - .jl
 ignore_dirs:
 - .julia
-assets: []
-policy_overlays: {}
+assets:
+- path: Project.toml
+  template: Project.toml
+  mode: replace
+- path: Manifest.toml
+  template: Manifest.toml
+  mode: replace
+policy_overlays:
+  dependency-license-sync:
+    dependency_files:
+    - Project.toml
+    - Manifest.toml
+  documentation-growth-tracking:
+    user_facing_suffixes:
+    - .jl
+  line-length-limit:
+    include_suffixes:
+    - .jl

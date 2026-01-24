@@ -8,5 +8,18 @@ suffixes:
 ignore_dirs:
 - node_modules
 - dist
-assets: []
-policy_overlays: {}
+assets:
+- path: svelte.config.js
+  template: svelte.config.js
+  mode: replace
+policy_overlays:
+  documentation-growth-tracking:
+    user_facing_suffixes:
+    - .svelte
+    - .js
+    - .ts
+  line-length-limit:
+    include_suffixes:
+    - .svelte
+    - .js
+    - .ts

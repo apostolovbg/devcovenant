@@ -7,6 +7,31 @@ suffixes:
 - .json
 - .md
 ignore_dirs:
-- python + node + site caches
-assets: []
-policy_overlays: {}
+- .venv
+- __pycache__
+- .pytest_cache
+- .mypy_cache
+- build
+- dist
+- node_modules
+- sites
+assets:
+- path: hooks.py
+  template: hooks.py
+  mode: replace
+- path: modules.txt
+  template: modules.txt
+  mode: replace
+policy_overlays:
+  documentation-growth-tracking:
+    user_facing_suffixes:
+    - .py
+    - .js
+    - .json
+    - .md
+  line-length-limit:
+    include_suffixes:
+    - .py
+    - .js
+    - .json
+    - .md

@@ -8,5 +8,16 @@ ignore_dirs:
 - node_modules
 - dist
 - build
-assets: []
-policy_overlays: {}
+assets:
+- path: package.json
+  template: package.json
+  mode: replace
+policy_overlays:
+  documentation-growth-tracking:
+    user_facing_suffixes:
+    - .jsx
+    - .tsx
+  line-length-limit:
+    include_suffixes:
+    - .jsx
+    - .tsx

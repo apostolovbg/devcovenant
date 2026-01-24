@@ -7,4 +7,14 @@ suffixes:
 - .psd1
 ignore_dirs: []
 assets: []
-policy_overlays: {}
+policy_overlays:
+  documentation-growth-tracking:
+    user_facing_suffixes:
+    - .ps1
+    - .psm1
+    - .psd1
+  line-length-limit:
+    include_suffixes:
+    - .ps1
+    - .psm1
+    - .psd1

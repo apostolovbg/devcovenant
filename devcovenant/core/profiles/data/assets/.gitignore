@@ -1,0 +1,4 @@
+# DevCovenant profile ignores
+data/raw
+data/tmp
+data/cache

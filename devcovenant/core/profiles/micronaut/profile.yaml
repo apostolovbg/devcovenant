@@ -5,7 +5,23 @@ suffixes:
 - .java
 - .kt
 - .yml
+- .yaml
 ignore_dirs:
 - build
-assets: []
-policy_overlays: {}
+assets:
+- path: application.yml
+  template: application.yml
+  mode: replace
+policy_overlays:
+  documentation-growth-tracking:
+    user_facing_suffixes:
+    - .java
+    - .kt
+    - .yml
+    - .yaml
+  line-length-limit:
+    include_suffixes:
+    - .java
+    - .kt
+    - .yml
+    - .yaml

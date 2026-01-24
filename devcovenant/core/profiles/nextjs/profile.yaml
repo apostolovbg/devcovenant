@@ -9,5 +9,23 @@ suffixes:
 ignore_dirs:
 - .next
 - node_modules
-assets: []
-policy_overlays: {}
+assets:
+- path: next.config.js
+  template: next.config.js
+  mode: replace
+- path: tsconfig.json
+  template: tsconfig.json
+  mode: replace
+policy_overlays:
+  documentation-growth-tracking:
+    user_facing_suffixes:
+    - .js
+    - .jsx
+    - .ts
+    - .tsx
+  line-length-limit:
+    include_suffixes:
+    - .js
+    - .jsx
+    - .ts
+    - .tsx

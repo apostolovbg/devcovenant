@@ -2,10 +2,44 @@ version: 1
 profile: django
 category: framework
 suffixes:
+- .py
 - .html
 - .css
 - .js
 ignore_dirs:
-- same as python + .static_cache
-assets: []
-policy_overlays: {}
+- .venv
+- __pycache__
+- .pytest_cache
+- .mypy_cache
+- build
+- dist
+- .static_cache
+assets:
+- path: manage.py
+  template: manage.py
+  mode: replace
+- path: settings.py
+  template: settings.py
+  mode: replace
+- path: urls.py
+  template: urls.py
+  mode: replace
+- path: wsgi.py
+  template: wsgi.py
+  mode: replace
+- path: asgi.py
+  template: asgi.py
+  mode: replace
+policy_overlays:
+  documentation-growth-tracking:
+    user_facing_suffixes:
+    - .py
+    - .html
+    - .css
+    - .js
+  line-length-limit:
+    include_suffixes:
+    - .py
+    - .html
+    - .css
+    - .js

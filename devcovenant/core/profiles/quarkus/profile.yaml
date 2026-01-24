@@ -5,8 +5,24 @@ suffixes:
 - .java
 - .properties
 - .yml
+- .yaml
 ignore_dirs:
 - target
 - build
-assets: []
-policy_overlays: {}
+assets:
+- path: application.properties
+  template: application.properties
+  mode: replace
+policy_overlays:
+  documentation-growth-tracking:
+    user_facing_suffixes:
+    - .java
+    - .properties
+    - .yml
+    - .yaml
+  line-length-limit:
+    include_suffixes:
+    - .java
+    - .properties
+    - .yml
+    - .yaml

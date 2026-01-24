@@ -1,6 +1,6 @@
-name: global
-display_name: Global
-description: Global always-on profile.
+version: 1
+profile: global
+category: core
 suffixes: []
 ignore_dirs: []
 assets: []

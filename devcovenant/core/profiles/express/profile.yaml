@@ -6,5 +6,20 @@ suffixes:
 ignore_dirs:
 - node_modules
 - dist
-assets: []
-policy_overlays: {}
+assets:
+- path: app.js
+  template: app.js
+  mode: replace
+- path: server.js
+  template: server.js
+  mode: replace
+- path: package.json
+  template: package.json
+  mode: replace
+policy_overlays:
+  documentation-growth-tracking:
+    user_facing_suffixes:
+    - .js
+  line-length-limit:
+    include_suffixes:
+    - .js

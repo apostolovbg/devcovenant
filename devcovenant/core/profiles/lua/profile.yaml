@@ -5,5 +5,14 @@ suffixes:
 - .lua
 ignore_dirs:
 - build
-assets: []
-policy_overlays: {}
+assets:
+- path: project.rockspec
+  template: project.rockspec
+  mode: replace
+policy_overlays:
+  documentation-growth-tracking:
+    user_facing_suffixes:
+    - .lua
+  line-length-limit:
+    include_suffixes:
+    - .lua

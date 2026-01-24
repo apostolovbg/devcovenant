@@ -9,7 +9,20 @@ assets:
 - path: Cargo.toml
   template: Cargo.toml
   mode: replace
+- path: Cargo.lock
+  template: Cargo.lock
+  mode: replace
 policy_overlays:
   dependency-license-sync:
     dependency_files:
     - Cargo.toml
+    - Cargo.lock
+  devflow-run-gates:
+    required_commands:
+    - cargo test
+  documentation-growth-tracking:
+    user_facing_suffixes:
+    - .rs
+  line-length-limit:
+    include_suffixes:
+    - .rs

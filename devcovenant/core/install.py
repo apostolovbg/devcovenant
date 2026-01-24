@@ -86,6 +86,7 @@ LEGACY_ROOT_PATHS = [
     "devcovenant/core/policy_scripts",
     "devcovenant/custom/policy_scripts",
     "devcovenant/core/fixers",
+    "devcovenant/custom/fixers",
     "devcovenant/core/templates",
     "devcovenant/custom/templates",
 ]

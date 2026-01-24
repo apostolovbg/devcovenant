@@ -1,0 +1,4 @@
+# DevCovenant profile ignores
+node_modules
+dist
+.angular

@@ -11,5 +11,24 @@ suffixes:
 ignore_dirs:
 - build
 - out
-assets: []
-policy_overlays: {}
+assets:
+- path: CMakeLists.txt
+  template: CMakeLists.txt
+  mode: replace
+policy_overlays:
+  documentation-growth-tracking:
+    user_facing_suffixes:
+    - .cpp
+    - .cc
+    - .cxx
+    - .hpp
+    - .hxx
+    - .hh
+  line-length-limit:
+    include_suffixes:
+    - .cpp
+    - .cc
+    - .cxx
+    - .hpp
+    - .hxx
+    - .hh

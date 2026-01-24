@@ -7,5 +7,19 @@ suffixes:
 ignore_dirs:
 - local
 - blib
-assets: []
-policy_overlays: {}
+assets:
+- path: cpanfile
+  template: cpanfile
+  mode: replace
+policy_overlays:
+  dependency-license-sync:
+    dependency_files:
+    - cpanfile
+  documentation-growth-tracking:
+    user_facing_suffixes:
+    - .pl
+    - .pm
+  line-length-limit:
+    include_suffixes:
+    - .pl
+    - .pm

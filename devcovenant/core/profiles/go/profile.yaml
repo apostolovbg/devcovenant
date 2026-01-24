@@ -11,7 +11,20 @@ assets:
 - path: go.mod
   template: go.mod
   mode: replace
+- path: go.sum
+  template: go.sum
+  mode: replace
 policy_overlays:
   dependency-license-sync:
     dependency_files:
     - go.mod
+    - go.sum
+  devflow-run-gates:
+    required_commands:
+    - go test ./...
+  documentation-growth-tracking:
+    user_facing_suffixes:
+    - .go
+  line-length-limit:
+    include_suffixes:
+    - .go

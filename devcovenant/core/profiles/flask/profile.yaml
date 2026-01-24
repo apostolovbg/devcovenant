@@ -2,10 +2,31 @@ version: 1
 profile: flask
 category: framework
 suffixes:
+- .py
 - .html
 - .css
 - .js
 ignore_dirs:
-- python defaults
-assets: []
-policy_overlays: {}
+- .venv
+- __pycache__
+- .pytest_cache
+- .mypy_cache
+- build
+- dist
+assets:
+- path: app.py
+  template: app.py
+  mode: replace
+policy_overlays:
+  documentation-growth-tracking:
+    user_facing_suffixes:
+    - .py
+    - .html
+    - .css
+    - .js
+  line-length-limit:
+    include_suffixes:
+    - .py
+    - .html
+    - .css
+    - .js

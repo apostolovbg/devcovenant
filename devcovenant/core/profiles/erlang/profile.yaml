@@ -7,5 +7,26 @@ suffixes:
 ignore_dirs:
 - _build
 - deps
-assets: []
-policy_overlays: {}
+assets:
+- path: rebar.config
+  template: rebar.config
+  mode: replace
+- path: rebar.lock
+  template: rebar.lock
+  mode: replace
+policy_overlays:
+  dependency-license-sync:
+    dependency_files:
+    - rebar.config
+    - rebar.lock
+  devflow-run-gates:
+    required_commands:
+    - rebar3 ct
+  documentation-growth-tracking:
+    user_facing_suffixes:
+    - .erl
+    - .hrl
+  line-length-limit:
+    include_suffixes:
+    - .erl
+    - .hrl

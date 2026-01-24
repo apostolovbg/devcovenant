@@ -1,2 +1,3 @@
-.bundle/
-vendor/bundle/
+# DevCovenant profile ignores
+.bundle
+vendor/bundle

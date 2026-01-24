@@ -7,5 +7,16 @@ suffixes:
 ignore_dirs:
 - bin
 - obj
-assets: []
-policy_overlays: {}
+assets:
+- path: Project.fsproj
+  template: Project.fsproj
+  mode: replace
+policy_overlays:
+  documentation-growth-tracking:
+    user_facing_suffixes:
+    - .fs
+    - .fsx
+  line-length-limit:
+    include_suffixes:
+    - .fs
+    - .fsx

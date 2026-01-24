@@ -5,5 +5,14 @@ suffixes:
 - .nim
 ignore_dirs:
 - nimcache
-assets: []
-policy_overlays: {}
+assets:
+- path: project.nimble
+  template: project.nimble
+  mode: replace
+policy_overlays:
+  documentation-growth-tracking:
+    user_facing_suffixes:
+    - .nim
+  line-length-limit:
+    include_suffixes:
+    - .nim

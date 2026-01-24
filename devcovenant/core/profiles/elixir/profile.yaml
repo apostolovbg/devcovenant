@@ -7,5 +7,26 @@ suffixes:
 ignore_dirs:
 - _build
 - deps
-assets: []
-policy_overlays: {}
+assets:
+- path: mix.exs
+  template: mix.exs
+  mode: replace
+- path: mix.lock
+  template: mix.lock
+  mode: replace
+policy_overlays:
+  dependency-license-sync:
+    dependency_files:
+    - mix.exs
+    - mix.lock
+  devflow-run-gates:
+    required_commands:
+    - mix test
+  documentation-growth-tracking:
+    user_facing_suffixes:
+    - .ex
+    - .exs
+  line-length-limit:
+    include_suffixes:
+    - .ex
+    - .exs

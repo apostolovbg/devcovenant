@@ -9,5 +9,13 @@ ignore_dirs:
 - _site
 - site
 - build
-assets: []
-policy_overlays: {}
+assets:
+- path: mkdocs.yml
+  template: mkdocs.yml
+  mode: replace
+policy_overlays:
+  line-length-limit:
+    include_suffixes:
+    - .md
+    - .rst
+    - .txt

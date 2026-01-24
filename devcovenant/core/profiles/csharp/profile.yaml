@@ -6,5 +6,14 @@ suffixes:
 ignore_dirs:
 - bin
 - obj
-assets: []
-policy_overlays: {}
+assets:
+- path: Project.csproj
+  template: Project.csproj
+  mode: replace
+policy_overlays:
+  documentation-growth-tracking:
+    user_facing_suffixes:
+    - .cs
+  line-length-limit:
+    include_suffixes:
+    - .cs

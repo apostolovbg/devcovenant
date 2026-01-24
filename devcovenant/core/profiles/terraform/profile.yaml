@@ -7,5 +7,21 @@ suffixes:
 - .hcl
 ignore_dirs:
 - .terraform
-assets: []
-policy_overlays: {}
+assets:
+- path: main.tf
+  template: main.tf
+  mode: replace
+- path: variables.tf
+  template: variables.tf
+  mode: replace
+policy_overlays:
+  documentation-growth-tracking:
+    user_facing_suffixes:
+    - .tf
+    - .tfvars
+    - .hcl
+  line-length-limit:
+    include_suffixes:
+    - .tf
+    - .tfvars
+    - .hcl

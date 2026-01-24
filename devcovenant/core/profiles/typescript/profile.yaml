@@ -19,3 +19,17 @@ policy_overlays:
   dependency-license-sync:
     dependency_files:
     - package.json
+    - package-lock.json
+    - yarn.lock
+    - pnpm-lock.yaml
+  devflow-run-gates:
+    required_commands:
+    - npm test
+  documentation-growth-tracking:
+    user_facing_suffixes:
+    - .ts
+    - .tsx
+  line-length-limit:
+    include_suffixes:
+    - .ts
+    - .tsx

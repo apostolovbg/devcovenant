@@ -7,5 +7,19 @@ suffixes:
 ignore_dirs:
 - build
 - out
-assets: []
-policy_overlays: {}
+assets:
+- path: Makefile
+  template: Makefile
+  mode: replace
+- path: CMakeLists.txt
+  template: CMakeLists.txt
+  mode: replace
+policy_overlays:
+  documentation-growth-tracking:
+    user_facing_suffixes:
+    - .c
+    - .h
+  line-length-limit:
+    include_suffixes:
+    - .c
+    - .h

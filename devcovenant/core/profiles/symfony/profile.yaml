@@ -7,5 +7,16 @@ suffixes:
 ignore_dirs:
 - var
 - vendor
-assets: []
-policy_overlays: {}
+assets:
+- path: composer.json
+  template: composer.json
+  mode: replace
+policy_overlays:
+  documentation-growth-tracking:
+    user_facing_suffixes:
+    - .php
+    - .twig
+  line-length-limit:
+    include_suffixes:
+    - .php
+    - .twig

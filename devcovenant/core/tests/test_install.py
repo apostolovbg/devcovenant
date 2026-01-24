@@ -236,10 +236,14 @@ def test_update_removes_legacy_root_paths(tmp_path: Path) -> None:
     target.mkdir()
     legacy = target / "devcov_check.py"
     legacy.write_text("legacy", encoding="utf-8")
+    legacy_dir = target / "devcovenant" / "custom" / "fixers"
+    legacy_dir.mkdir(parents=True, exist_ok=True)
+    (legacy_dir / "__init__.py").write_text("legacy", encoding="utf-8")
 
     update.main(["--target", str(target), "--version", "0.2.0"])
 
     assert not legacy.exists()
+    assert not legacy_dir.exists()
 
 
 def test_update_refreshes_core_files(tmp_path: Path) -> None:

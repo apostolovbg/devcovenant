@@ -5,5 +5,17 @@ suffixes:
 - .groovy
 ignore_dirs:
 - build
-assets: []
-policy_overlays: {}
+assets:
+- path: build.gradle
+  template: build.gradle
+  mode: replace
+policy_overlays:
+  dependency-license-sync:
+    dependency_files:
+    - build.gradle
+  documentation-growth-tracking:
+    user_facing_suffixes:
+    - .groovy
+  line-length-limit:
+    include_suffixes:
+    - .groovy

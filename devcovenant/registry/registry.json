@@ -5,7 +5,7 @@
         "46302bc67fe0958bc0f96efc414cd9aa",
         "c07f1403e98b91a0a9aee787fca9b7bf"
       ],
-      "last_updated": "2026-01-24T12:49:26.413985+00:00",
+      "last_updated": "2026-01-24T13:28:27.489818+00:00",
       "script_path": "core/changelog_coverage.py"
     },
     "line-length-limit": {
@@ -13,7 +13,7 @@
         "7c38570b617ff97c190d9f670e6ee102",
         "4c03733565edeb95712dd5068988308c"
       ],
-      "last_updated": "2026-01-24T12:49:26.417371+00:00",
+      "last_updated": "2026-01-24T13:28:27.493699+00:00",
       "script_path": "core/line_length_limit.py"
     },
     "last-updated-placement": {
@@ -21,7 +21,7 @@
         "da6302c132dddb302a3ec123eae35340",
         "4e9365b2808bd017261181f0e1ae2032"
       ],
-      "last_updated": "2026-01-24T12:49:26.416412+00:00",
+      "last_updated": "2026-01-24T13:28:27.492763+00:00",
       "script_path": "core/last_updated_placement.py"
     },
     "devcov-self-enforcement": {
@@ -29,7 +29,7 @@
         "e1388b01d7766eb2883406f893dfec8b",
         "c1b06bd4017a38437731424c5a957ddd"
       ],
-      "last_updated": "2026-01-24T12:49:26.402179+00:00",
+      "last_updated": "2026-01-24T13:28:27.481975+00:00",
       "script_path": "core/devcov_self_enforcement.py"
     },
     "no-future-dates": {
@@ -37,7 +37,7 @@
         "69794e0df4755c4fb5ff220dac78fa02",
         "2a26ad6f784e019437962234433fe3df"
       ],
-      "last_updated": "2026-01-24T12:49:26.421389+00:00",
+      "last_updated": "2026-01-24T13:28:27.497797+00:00",
       "script_path": "core/no_future_dates.py"
     },
     "version-sync": {
@@ -45,7 +45,7 @@
         "b687015e8fb6bc8f1862da32951dac7e",
         "cc0984eb266dc519347176cb565f746c"
       ],
-      "last_updated": "2026-01-24T12:49:26.414753+00:00",
+      "last_updated": "2026-01-24T13:28:27.491154+00:00",
       "script_path": "core/version_sync.py"
     },
     "new-modules-need-tests": {
@@ -53,7 +53,7 @@
         "ca999a4bb546eca7128b5336355b7ca0",
         "c17bfe992c1672c564fc56a99ed89eb0"
       ],
-      "last_updated": "2026-01-24T12:49:26.419403+00:00",
+      "last_updated": "2026-01-24T13:28:27.495912+00:00",
       "script_path": "core/new_modules_need_tests.py"
     },
     "read-only-directories": {
@@ -61,7 +61,7 @@
         "aec37932e1da849990809d6bebf8b0ab",
         "79453ab5a5e95c535f95e0541c3aef92"
       ],
-      "last_updated": "2026-01-24T12:49:26.420688+00:00",
+      "last_updated": "2026-01-24T13:28:27.497168+00:00",
       "script_path": "core/read_only_directories.py"
     },
     "dependency-license-sync": {
@@ -69,7 +69,7 @@
         "8dfc6c89c4d0680dd9dc4c36749dc2af",
         "49dd7c28604e8f7bafe2bbac00c8d405"
       ],
-      "last_updated": "2026-01-24T12:49:26.408271+00:00",
+      "last_updated": "2026-01-24T13:28:27.484076+00:00",
       "script_path": "core/dependency_license_sync.py"
     },
     "documentation-growth-tracking": {
@@ -77,7 +77,7 @@
         "ab4e35f31554916b4b3e76263d076fb7",
         "2d32b45b7c46a2c8cac5e92dbcf1b77f"
       ],
-      "last_updated": "2026-01-24T12:49:26.420054+00:00",
+      "last_updated": "2026-01-24T13:28:27.496555+00:00",
       "script_path": "core/documentation_growth_tracking.py"
     },
     "name-clarity": {
@@ -85,7 +85,7 @@
         "d9f3fa37cc61e4561e3394e63d7b018f",
         "25c61c44bbc0b75202af9c823ec50c44"
       ],
-      "last_updated": "2026-01-24T12:49:26.418768+00:00",
+      "last_updated": "2026-01-24T13:28:27.495288+00:00",
       "script_path": "core/name_clarity.py"
     },
     "security-compliance-notes": {
@@ -101,7 +101,7 @@
         "51b01c5a11d3801639ec9b038ce4a219",
         "6ed589aa2de4805889f2a9e57c00db05"
       ],
-      "last_updated": "2026-01-24T12:49:26.422042+00:00",
+      "last_updated": "2026-01-24T13:28:27.498413+00:00",
       "script_path": "core/security_scanner.py"
     },
     "semantic-version-scope": {
@@ -109,7 +109,7 @@
         "48da03c78716fcca9d441e749cc72504",
         "76b82a49e135a00d7a39fb9bcc576699"
       ],
-      "last_updated": "2026-01-24T12:49:26.415627+00:00",
+      "last_updated": "2026-01-24T13:28:27.492049+00:00",
       "script_path": "core/semantic_version_scope.py"
     },
     "devflow-run-gates": {
@@ -117,7 +117,7 @@
         "ba5b176c84b404e14ce97280f9a3b47d",
         "0a97f5826ac68a239007fa42ef3705e2"
       ],
-      "last_updated": "2026-01-24T12:49:26.412137+00:00",
+      "last_updated": "2026-01-24T13:28:27.488423+00:00",
       "script_path": "core/devflow_run_gates.py"
     },
     "docstring-and-comment-coverage": {
@@ -125,7 +125,7 @@
         "7efe15c1cd95013c9f08f19c3ffe70a2",
         "c66a0b8b077a8f19c1bf31c8843028a2"
       ],
-      "last_updated": "2026-01-24T12:49:26.418078+00:00",
+      "last_updated": "2026-01-24T13:28:27.494655+00:00",
       "script_path": "core/docstring_and_comment_coverage.py"
     },
     "track-test-status": {
@@ -165,7 +165,7 @@
         "e6c5cb69b784a1a809221dc417aa0aea",
         "c618fb16d783d6904f85c1eb06908151"
       ],
-      "last_updated": "2026-01-24T12:49:26.407115+00:00",
+      "last_updated": "2026-01-24T13:28:27.483451+00:00",
       "script_path": "core/devcov_structure_guard.py"
     },
     "policy-text-presence": {
@@ -173,7 +173,7 @@
         "e4897b4f7c47ed05fc93f92ac9c2ea71",
         "61942d7ea845c229bd7382c6e6bb5f37"
       ],
-      "last_updated": "2026-01-24T12:49:26.410263+00:00",
+      "last_updated": "2026-01-24T13:28:27.486882+00:00",
       "script_path": "core/policy_text_presence.py"
     },
     "stock-policy-text-sync": {
@@ -181,7 +181,7 @@
         "1f8a83ee4ec52076284acd32645c878a",
         "383492eafa00e4ae6e72227fc6bbff1a"
       ],
-      "last_updated": "2026-01-24T12:49:26.411483+00:00",
+      "last_updated": "2026-01-24T13:28:27.487739+00:00",
       "script_path": "core/stock_policy_text_sync.py"
     },
     "managed-environment": {
@@ -189,7 +189,7 @@
         "ebba8914fdae3b289a10547a54b17a32",
         "45fc384a0f2f7025f0cb2b2280af548b"
       ],
-      "last_updated": "2026-01-24T12:49:26.413320+00:00",
+      "last_updated": "2026-01-24T13:28:27.489084+00:00",
       "script_path": "core/managed_environment.py"
     }
   },

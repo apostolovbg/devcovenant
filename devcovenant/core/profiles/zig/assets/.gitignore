@@ -1,0 +1,3 @@
+# DevCovenant profile ignores
+zig-cache
+zig-out
