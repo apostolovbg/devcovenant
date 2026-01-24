@@ -1,5 +1,9 @@
 version: 1
 profile: julia
 category: language
+suffixes:
+- .jl
+ignore_dirs:
+- .julia
 assets: []
 policy_overlays: {}

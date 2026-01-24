@@ -1,5 +1,5 @@
 # DevCovenant Development Plan
-**Last Updated:** 2026-01-23
+**Last Updated:** 2026-01-24
 **Version:** 0.2.6
 
 <!-- DEVCOV:BEGIN -->
@@ -19,13 +19,13 @@ complete and easy to fill in.
 3. [Goals for 0.2.6](#goals-for-026)
 4. [Target Update Behavior](#target-update-behavior)
 5. [Install Profiles and Assets (draft)](#install-profiles-and-assets-draft)
-6. [Implementation Plan](#implementation-plan)
-7. [Documentation and Templates](#documentation-and-templates)
+6. [Remaining Work (ordered)](#remaining-work-ordered)
+7. [Policy Scope Map (reference)](#policy-scope-map-reference)
 8. [Release Readiness](#release-readiness)
 9. [User Repo Update Path](#user-repo-update-path)
 10. [Acceptance Criteria](#acceptance-criteria)
 11. [Risks and Backout](#risks-and-backout)
-12. [Next Steps](#next-steps)
+12. [Completed Work](#completed-work)
 
 ## Overview
 DevCovenant already supports core policies, custom overrides, and an update
@@ -69,6 +69,9 @@ by uninstalling and reinstalling with the intended installer arguments.
   policy disabled by default.
 - Keep the default policy set unchanged; use install-time language profiles
   to tailor selector defaults for common stacks (and mixed repos).
+- Define profile manifests (`profile.yaml`) as the source of file suffixes,
+  tool commands, and per-policy overrides; generate config from active
+  profiles instead of hard-coded suffix lists.
 - Keep custom overrides stable while core policies evolve.
 - Provide a first-class policy replacement workflow (deprecate/migrate/remove)
   when core policies are superseded.
@@ -78,7 +81,8 @@ by uninstalling and reinstalling with the intended installer arguments.
 - Always back up any merged or overwritten file as `*_old.*`, even when a
   merge succeeds.
 - Install prompts for one or more profiles from the available list and
-  records the selection in config.
+  records the selection in config, while `global`, `data`, `docs`, and
+  `suffixes` profiles remain always-on and cannot be disabled.
 - Add `profile_scopes` metadata to every policy; apply policies when any
   active profile matches; use `profile_scopes: global` for global policies.
 - Policy-specific assets are created or updated only when the policy is
@@ -90,11 +94,12 @@ by uninstalling and reinstalling with the intended installer arguments.
   `devcovenant/`, and warns on version mismatches.
 - Template coverage expands to language/framework profiles with repo
   system files (requirements, CI, pre-commit, etc.).
-- Organize templates into `devcovenant/core/templates/global/`,
-  `devcovenant/core/templates/profiles/<profile>/`, and
-  `devcovenant/core/templates/policies/<policy>/`; mirror with
-  `devcovenant/custom/templates/` for overrides, and avoid template files
-  at the package root unless required for packaging.
+- Organize core policy code under `devcovenant/core/policies/<policy>/`
+  (script, adapters, tests, fixers, and assets) and profile assets under
+  `devcovenant/core/profiles/<profile>/assets/`, with global assets living
+  under `devcovenant/core/profiles/global/assets/`. Mirror the same layout
+  under `devcovenant/custom/` so custom overrides replace core when ids
+  match. Avoid packaging templates at the repo root.
 - Require global applicability via `profile_scopes: global` (no separate
   global key).
 - Version discovery order: `VERSION` file, then version fields in
@@ -131,10 +136,13 @@ by uninstalling and reinstalling with the intended installer arguments.
   policy is available.
 - `devcov-structure-guard` validates against an update-shipped structure
   manifest instead of hard-coded globs.
-- A persistent DevCovenant manifest file under `devcovenant/` records the
-  installed core layout, managed docs, optional docs, and allowed custom
-  directories; install/update/uninstall all read and update the same manifest
-  so structure validation and cleanup are consistent.
+- A persistent DevCovenant registry folder under `devcovenant/registry/`
+  records generated state (policy registry, manifest, test status, profile
+  catalog, and policy assets). Install/update/uninstall read and update these
+  files so structure validation and cleanup are consistent. Legacy paths
+  (for example `devcovenant/registry/registry.json` or
+`devcovenant/registry/manifest.json`)
+  migrate into the registry folder on first update.
 - Update/install/uninstall share the same flag schema; update reuses install
   defaults when appropriate, and uninstall uses the manifest to remove only
   managed assets while preserving user content.
@@ -145,10 +153,18 @@ DevCovenant installs policy assets and repo system files based on active
 profiles. Profiles are selected at install time and recorded in config so
 future updates can apply the same profile-aware rules.
 
+Profile manifests (`profile.yaml`) are the source of file suffixes, default
+commands, and per-policy metadata overlays. Config is generated from the
+active profiles plus global defaults; language suffixes and tool commands
+must not be hard-coded in `config.yaml`.
+
 ### Profile selection
-Install prompts for one or more profiles from the available catalog. Multiple
-profiles are allowed, and the chosen values are stored as `active_profiles`.
-This is the only interactive prompt besides auto-uninstall.
+Install prompts for one or more profiles from the generated catalog. The
+catalog is built by scanning profile manifests in core/custom templates.
+Multiple profiles are allowed, and the chosen values are stored as
+`active_profiles` (in addition to always-on profiles `global`, `data`,
+`docs`, and `suffixes`). This is the only interactive prompt besides
+auto-uninstall.
 
 Example prompt:
 ```text
@@ -167,9 +183,28 @@ Available profiles (select one or more):
 Selection: 1,3,4
 ```
 
-### Profile catalog (shipped examples)
-Profiles are open-ended, lowercase, and user-extendable. The stock catalog
-ships with common languages, frameworks, and tooling; any name is valid.
+### Profile manifests
+- Each profile ships a `profile.yaml` that declares suffixes, default
+  commands (test/lint/build), and per-policy metadata overrides.
+- Overrides merge into policy metadata only when that profile is active.
+- Mixed repos apply overlays from every active profile in the order
+  selected; when assets collide, custom overrides core and profile assets
+  override policy assets.
+
+### Profile catalog (generated)
+Profiles are discovered by scanning profile manifests in
+`devcovenant/core/profiles/<name>/profile.yaml` and
+`devcovenant/custom/profiles/<name>/profile.yaml`. Custom
+manifests override core when names match. On install/update (and on first
+run when missing), DevCovenant generates a catalog under
+`devcovenant/registry/profile_catalog.yaml` (or `.json`) with:
+- `name`, `category`, `suffixes`
+- `source` (core/custom)
+- `active` (based on config)
+- `assets_available` (whether assets exist for the profile)
+
+Profiles are open-ended, lowercase, and user-extendable. The shipped set
+is derived from core manifests (not a static catalog).
 
 Language profiles (shipped):
 ```text
@@ -267,10 +302,13 @@ profile_scopes:
   - global
 ```
 
-### Policy assets and templates
+### Policy assets and policy folders (generated map)
 Policy-required files are created or updated only when the policy is enabled
-and its profile scopes match the active profiles. Templates live under
-`devcovenant/core/templates/` and are selected by profile.
+and its profile scopes match the active profiles. The policy asset catalog
+is generated into `devcovenant/registry/policy_assets.yaml` (or `.json`) on
+install/update by scanning per-policy asset manifests that live inside each
+policy folder (`devcovenant/core/policies/<policy>/assets/`). Custom policy
+folders override core when ids match.
 
 Examples:
 - `dependency-license-sync` (enabled) creates or refreshes
@@ -281,23 +319,30 @@ Examples:
 - `changelog-coverage` installs `CHANGELOG.md` from the template.
 - `managed-environment` uses metadata only and does not create files.
 
-### Template layout and asset mapping
-Templates are grouped by scope to keep installs predictable and to avoid
-shipping templates at the package root. Layout:
+### Policy and profile layout
+Policies and profiles are grouped by scope to keep installs predictable and
+to avoid shipping templates at the package root. Layout:
 ```text
-devcovenant/core/templates/global/
-devcovenant/core/templates/profiles/<profile>/
-devcovenant/core/templates/policies/<policy>/
-devcovenant/custom/templates/global/
-devcovenant/custom/templates/profiles/<profile>/
-devcovenant/custom/templates/policies/<policy>/
+devcovenant/core/policies/<policy>/
+  <policy>.py
+  adapters/
+  tests/
+  fixers/
+  assets/
+devcovenant/core/profiles/global/assets/
+devcovenant/core/profiles/<profile>/assets/
+devcovenant/custom/policies/<policy>/
+devcovenant/custom/profiles/global/assets/
+devcovenant/custom/profiles/<profile>/assets/
 ```
-Global templates cover shared docs and tooling; profile templates cover
-language/framework-specific assets (requirements, CI, pre-commit, etc.),
-and policy templates cover assets required by a specific policy. Custom
-templates override core templates when the folder names match. A policy
-asset map (planned) links policies + profiles to template sets.
-Any custom profile or policy template folder is preserved on update.
+Adapters are loaded from `adapters/` under each policy folder; custom
+adapters override core when the policy id and language match.
+Global profile assets cover shared docs and tooling; profile assets cover
+language/framework-specific assets (requirements, CI, pre-commit, etc.);
+policy assets cover files required by a specific policy. Custom policy and
+profile folders override core when names match. The generated policy asset
+catalog (stored under `devcovenant/registry/`) links policies + profiles to
+asset sets. Any custom policy or profile folder is preserved on update.
 
 ### Version discovery order
 Install checks for version metadata in this order:
@@ -340,21 +385,36 @@ Example prompt:
 DevCovenant artifacts detected in this repo.
 Run uninstall before install? [y/N]
 ```
-## Implementation Plan
+## Remaining Work (ordered)
+1. Migrate to the policy/profile folder layout.
+   - Move policy modules into `devcovenant/*/policies/<id>/` with `adapters/`,
+     `tests/`, `fixers/`, and `assets/` subfolders.
+   - Move profile assets into `devcovenant/*/profiles/<profile>/assets/` with
+     `global/assets/` as the shared baseline.
+   - Update loaders, fixers, tests, and registry paths to match the new layout.
+2. Apply `PROFILE_POLICY_DRAFT.md` to real profile manifests and policy
+   metadata.
+   - Populate suffixes, ignore dirs, assets, and policy overlays in every
+     `profile.yaml`.
+   - Fill `profile_scopes` for every policy block in `AGENTS.md`.
+   - Keep always-on profiles (`global`, `data`, `docs`, `suffixes`) enforced in
+     config and installers.
+3. Profile-driven config, catalogs, and assets.
+   - Generate config from the active profiles plus always-on profiles.
+   - Generate registry catalogs from profile manifests and policy assets from
+     policy folders.
+4. Documentation alignment.
+   - Update root and nested docs for the new layout and adapter model.
+   - Refresh template indexes and managed block guidance.
+5. Packaging and verification.
+   - Update `MANIFEST.in` for the new policy/profile layout.
+   - Extend tests to cover adapter lookup, new paths, and profile overlays.
 
-### Remaining Phases (in order)
-
-
-#### Phase J: SemVer scope enforcement
-- Rework the semantic version scope policy to validate MAJOR/MINOR/PATCH
-  intent (breaking API vs feature vs bugfix).
-- Keep the policy present but off by default; document how to enable it
-  for public releases (or on demand) and advise against disabling it once
-  enabled.
-- Reuse normalized metadata fields to declare scope markers and exclusions.
-- Update tests and docs to reflect the SemVer rules.
-
-### Policy Scope Map (stock, versioned)
+## Policy Scope Map (reference)
+Profile overlays apply on top of the base policy metadata when the
+corresponding profile is active. The map below is the checklist for
+`profile_scopes` assignments; actual selector globs come from the
+profile manifests and are merged into each policy at install/update.
 This map is a planning checklist. The authoritative scope list is the
 `profile_scopes:` metadata in each policy block. Every stock policy must
 list all profiles where it is valid.
@@ -419,172 +479,6 @@ Follow-up implementation tasks:
   complete (dependency manifests, build files, ignore fragments, and
   profile-specific docs).
 
-
-### Completed Phases
-#### Phase L: Profile-driven config + gitignore assets
-- Ship exemplar `devcovenant/custom/profile_catalog.yaml` and
-  `devcovenant/custom/policy_assets.yaml` so custom profiles and policy
-  assets can override core entries by name.
-- Move profile assets into per-profile `profile.yaml` manifests under
-  `devcovenant/core/templates/profiles/<profile>/` with optional
-  `.gitignore` fragments and profile-scoped assets.
-- Add `gitignore_base.txt` and `gitignore_os.txt` under
-  `templates/global/`, and assemble `.gitignore` in this order:
-  global base → profile fragments → OS fragment → user section.
-- Apply profile policy overlays from profile manifests to
-  `devcovenant/config.yaml` so profile metadata drives policy scope.
-- Update docs/specs to describe profile manifests, overlay merging, and
-  gitignore merge behavior.
-
-#### Phase I: Managed environment policy (done)
-- Replaced bench/venv policies with `managed-environment`, driven by
-  metadata (`expected_paths`, `expected_interpreters`, `required_commands`,
-  `command_hints`) and off by default.
-- Updated docs and templates to reference the unified policy and the
-  managed-environment guidance in the managed AGENTS block.
-
-#### Phase G: Tests and validation (done)
-- Added tests for selector-role migration and metadata normalization.
-- Added tests for update behavior (append-missing + core refresh).
-- Added tests for manifest creation/refresh, structure guard usage, and
-  profile-aware asset installation.
-
-#### Phase K: Profile-aware install and asset merges (done)
-- Added a profile catalog and interactive profile selection on install,
-  recording active profiles in config and the manifest.
-- Introduced `profile_scopes` for every policy and normalized legacy entries
-  to `profile_scopes: global`; policies now apply when any active profile
-  matches.
-- Shipped `policy_assets.yaml` to map templates and merge rules by
-  policy/profile, and wired the installer to apply those assets.
-- Skipped asset creation when a policy is disabled or outside the active
-  profiles, including policy-scoped assets.
-- Expanded profile templates under `devcovenant/core/templates/profiles/`,
-  with shared assets in `devcovenant/core/templates/global/` and overrides
-  in `devcovenant/custom/templates/`.
-- Enforced repo-root detection and CLI version mismatch warnings for
-  PATH-based usage.
-
-#### Phase E: DevCovenant manifest + structure validation (done)
-- Defined a non-hidden DevCovenant manifest under `devcovenant/` and
-  ensured it is created on install/update or first run when missing.
-- Manifest schema now tracks core layout, managed docs, active profiles,
-  and policy asset mappings.
-- Structure guard validates against the manifest, treating `custom/` as
-  allowed user-writable scope.
-- Install/update/uninstall refresh the manifest so deprecated core paths
-  disappear and new core paths appear.
-
-#### Phase F: Update/install/uninstall convergence (done)
-- Share a unified flag schema across install/update/uninstall (single parser
-  or shared option registry) so default behavior is consistent.
-- Install refuses to run on existing installs and directs users to update or
-  uninstall; uninstall remains idempotent and can recover from partial
-  installs.
-- Add `--disable-policy` and `--auto-uninstall` to the shared option set;
-  install prompts for auto-uninstall when artifacts exist.
-- Always back up merged or overwritten files as `*_old.*`, even on successful
-  merges, and note the backups in install logs.
-- Update reuses install defaults when appropriate (force docs/config) and
-  writes them into the manifest for future updates.
-- Default install behavior replaces `CONTRIBUTING.md` and `CHANGELOG.md`,
-  backing up prior files as `*_old.md`; no preserve option is exposed for
-  these two docs.
-- Version handling: prefer an existing `VERSION`, otherwise read version
-  fields from `pyproject.toml` or profile-specific files, otherwise prompt;
-  default to `0.0.1` when nothing is found and prompting is skipped.
-
-#### Phase A: Policy metadata schema + normalization (done)
-- Defined a canonical metadata schema using template policy blocks, with
-  every script-supported key present (empty values preserve defaults).
-- Added `devcovenant normalize-metadata` to insert missing keys in order
-  without changing existing values.
-- Standardize selector roles so `user_visible`, `user_facing`, and
-  `doc_quality` are declared via `selector_roles` and stored as role-specific
-  globs/files/dirs instead of ad-hoc policy keys.
-- Normalization marks changed policies with `updated: true` and preserves
-  repo-authored severity/threshold values.
-
-#### Phase B: Safe update modes for policy blocks (done)
-- Implemented `--policy-mode` with preserve/append-missing/overwrite.
-- Added `--managed-blocks-only` to refresh managed blocks without touching
-  policies or metadata (to be removed per target behavior).
-- Update/install flows now preserve policy blocks unless overwrite is
-  explicitly requested.
-
-#### Phase C: Selector-role migration (normalizer) (done)
-- Migrate selector-ish keys into selector-role triplets (for example
-  `guarded_paths`, `user_visible_*`, `user_facing_*`, `doc_quality_*`).
-- Map legacy selector keys into `selector_roles` so policies remain consistent
-  after updates and installs.
-- Warn when selector keys appear without declared selector roles.
-
-#### Phase D: Target update behavior alignment (done)
-- Remove `--managed-blocks-only` from CLI and update flows.
-- Make `append-missing` the default policy-mode for updates.
-- Ensure update refreshes core DevCovenant files while preserving custom.
-- Delete deprecated core files/folders during update.
-- Treat all block-containing files as block-managed.
-- Enforce changelog block placement with editable content preserved.
-- Ensure metadata normalization runs during default update.
-
-#### Phase H: Policy replacement and deprecation workflow (done)
-- Added a replacement map (`devcovenant/core/policy_replacements.yaml`)
-  and update logic to migrate or remove replaced policies.
-- Replaced policies now move to custom with `custom: true` +
-  `status: deprecated` when enabled; disabled ones are removed along with
-  their custom scripts/fixers.
-- Update notices are printed and stored in the manifest.
-- Tests cover replacement migration/removal and notification logging.
-
-## Documentation and Templates
-- Update root docs (`README.md`, `SPEC.md`, `PLAN.md`).
-- Update nested docs (`devcovenant/README.md`, templates).
-- Document safe update flags and policy-mode semantics.
-- Document metadata schema, selector roles, and normalization behavior.
-- Document policy scope categories (global-only, profile-scoped, language
-  scoped) and include the initial scope list for stock policies.
-- Document profile metadata overlays for policy files (version sync,
-  dependency tracking, doc scopes) and how overlay merging works.
-- Document the enforced install/update behavior for
-  `CONTRIBUTING.md` and `CHANGELOG.md`, including `_old.md` backups and the
-  changelog managed-block marker placement.
-- Document the policy replacement workflow, structure manifest behavior, and
-  managed-environment policy.
-- Document template layout (`core/templates` + `custom/templates`) and how
-  profile- and policy-scoped assets are selected during install/update.
-- Document the version discovery order and default `0.0.1` fallback.
-- Document profile selection prompts, `profile_scopes`, and how mixed
-  profiles affect policy applicability and assets.
-- Document policy asset templates and the rule that disabled policies do
-  not create or update their files.
-- Document the `*_old.*` backup rule for every merge or overwrite.
-- Document the PATH CLI repo-root checks, local version warnings, and the
-  `--auto-uninstall` flow.
-- Add a core policy guide in `devcovenant/README.md` describing each stock
-  policy: intent, usage, default config, and expected repo impact.
-- Document how to enable the SemVer scope policy and why it should stay on
-  after public release.
-- Document Doc Types (core/optional/custom) in managed blocks, and clarify
-  that `CITATION.cff` is custom-only and not installed by default.
-- Draft and publish the standard managed doc header and DevCovenant block.
-
-### Managed Doc Header and Block (draft)
-Required header for every DevCovenant-managed doc:
-```md
-# <Title>
-```
-
-DevCovenant block (immediately below the header):
-```md
-<!-- DEVCOV:BEGIN -->
-**Doc ID:** PLAN
-**Doc Type:** plan
-**Managed By:** DevCovenant
-<!-- DEVCOV:END -->
-
-```
-
 ## Release Readiness
 - Run `python -m build` and `twine check dist/*`.
 - Confirm console entry points work with `python3 -m devcovenant`.
@@ -611,6 +505,8 @@ DevCovenant block (immediately below the header):
 - Deprecated policies migrate or delete with user notification.
 - New stock policies trigger user notifications.
 - Structure guard validates against the update-shipped manifest.
+- Registry folder houses generated artifacts (policy registry, manifest,
+  test status, profile catalog, policy assets) and is refreshed on update.
 - Every merge or overwrite creates an `*_old.*` backup.
 - Profile selection prompts run at install and are stored in config.
 - `profile_scopes` gates policy applicability and asset creation.
@@ -630,5 +526,145 @@ DevCovenant block (immediately below the header):
 - If update behavior regresses, revert to `append-missing` plus explicit
   normalization steps until fixed.
 
-## Next Steps
-- Phase J: SemVer scope enforcement.
+## Completed Work
+### J: SemVer scope enforcement
+- Rework the semantic version scope policy to validate MAJOR/MINOR/PATCH
+  intent (breaking API vs feature vs bugfix).
+- Keep the policy present but off by default; document how to enable it
+  for public releases (or on demand) and advise against disabling it once
+  enabled.
+- Reuse normalized metadata fields to declare scope markers and exclusions.
+- Update tests and docs to reflect the SemVer rules.
+
+### M: Generated catalogs + registry layout
+- Remove static `devcovenant/registry/profile_catalog.yaml` and
+  `devcovenant/registry/policy_assets.yaml` as sources of truth.
+- Generate `devcovenant/registry/profile_catalog.yaml` by scanning
+  profile manifests in core/custom templates, capturing `name`,
+  `category`, `suffixes`, `source`, `active`, and
+  `assets_available`.
+- Generate `devcovenant/registry/policy_assets.yaml` from per-policy
+  asset manifests, with custom overrides taking precedence.
+- Create `devcovenant/registry/` and migrate registry artifacts into it:
+  `registry.json` (policy registry),
+  `manifest.json`, `test_status.json`, `profile_catalog.yaml`,
+  and `policy_assets.yaml`.
+- Update CLI, install, update, and engine paths to read/write the
+  registry folder and to regenerate catalogs on install/update and
+  first run when missing.
+- Document the registry layout and generation rules, including
+  migration behavior from legacy paths.
+### L: Profile-driven config + gitignore assets
+- Support custom profile and policy assets under
+  `devcovenant/custom/templates/` so overrides take precedence over core.
+- Move profile assets into per-profile `profile.yaml` manifests under
+  `devcovenant/core/templates/profiles/<profile>/` with optional
+  `.gitignore` fragments and profile-scoped assets.
+- Add `gitignore_base.txt` and `gitignore_os.txt` under
+  `templates/global/`, and assemble `.gitignore` in this order:
+  global base → profile fragments → OS fragment → user section.
+- Apply profile policy overlays from profile manifests to
+  `devcovenant/config.yaml` so profile metadata drives policy scope.
+- Update docs/specs to describe profile manifests, overlay merging, and
+  gitignore merge behavior.
+
+### I: Managed environment policy
+- Replaced bench/venv policies with `managed-environment`, driven by
+  metadata (`expected_paths`, `expected_interpreters`, `required_commands`,
+  `command_hints`) and off by default.
+- Updated docs and templates to reference the unified policy and the
+  managed-environment guidance in the managed AGENTS block.
+
+### G: Tests and validation
+- Added tests for selector-role migration and metadata normalization.
+- Added tests for update behavior (append-missing + core refresh).
+- Added tests for manifest creation/refresh, structure guard usage, and
+  profile-aware asset installation.
+
+### K: Profile-aware install and asset merges
+- Added a profile catalog and interactive profile selection on install,
+  recording active profiles in config and the manifest.
+- Introduced `profile_scopes` for every policy and normalized legacy entries
+  to `profile_scopes: global`; policies now apply when any active profile
+  matches.
+- Added per-policy `policy_assets.yaml` manifests and wired the installer
+  to apply those assets with custom overrides taking precedence.
+- Skipped asset creation when a policy is disabled or outside the active
+  profiles, including policy-scoped assets.
+- Expanded profile templates under `devcovenant/core/templates/profiles/`,
+  with shared assets in `devcovenant/core/templates/global/` and overrides
+  in `devcovenant/custom/templates/`.
+- Enforced repo-root detection and CLI version mismatch warnings for
+  PATH-based usage.
+
+### E: DevCovenant manifest + structure validation
+- Defined a non-hidden DevCovenant manifest under `devcovenant/` and
+  ensured it is created on install/update or first run when missing.
+- Manifest schema now tracks core layout, managed docs, active profiles,
+  and policy asset mappings.
+- Structure guard validates against the manifest, treating `custom/` as
+  allowed user-writable scope.
+- Install/update/uninstall refresh the manifest so deprecated core paths
+  disappear and new core paths appear.
+
+### F: Update/install/uninstall convergence
+- Share a unified flag schema across install/update/uninstall (single parser
+  or shared option registry) so default behavior is consistent.
+- Install refuses to run on existing installs and directs users to update or
+  uninstall; uninstall remains idempotent and can recover from partial
+  installs.
+- Add `--disable-policy` and `--auto-uninstall` to the shared option set;
+  install prompts for auto-uninstall when artifacts exist.
+- Always back up merged or overwritten files as `*_old.*`, even on successful
+  merges, and note the backups in install logs.
+- Update reuses install defaults when appropriate (force docs/config) and
+  writes them into the manifest for future updates.
+- Default install behavior replaces `CONTRIBUTING.md` and `CHANGELOG.md`,
+  backing up prior files as `*_old.md`; no preserve option is exposed for
+  these two docs.
+- Version handling: prefer an existing `VERSION`, otherwise read version
+  fields from `pyproject.toml` or profile-specific files, otherwise prompt;
+  default to `0.0.1` when nothing is found and prompting is skipped.
+
+### A: Policy metadata schema + normalization
+- Defined a canonical metadata schema using template policy blocks, with
+  every script-supported key present (empty values preserve defaults).
+- Added `devcovenant normalize-metadata` to insert missing keys in order
+  without changing existing values.
+- Standardize selector roles so `user_visible`, `user_facing`, and
+  `doc_quality` are declared via `selector_roles` and stored as role-specific
+  globs/files/dirs instead of ad-hoc policy keys.
+- Normalization marks changed policies with `updated: true` and preserves
+  repo-authored severity/threshold values.
+
+### B: Safe update modes for policy blocks
+- Implemented `--policy-mode` with preserve/append-missing/overwrite.
+- Added `--managed-blocks-only` to refresh managed blocks without touching
+  policies or metadata (to be removed per target behavior).
+- Update/install flows now preserve policy blocks unless overwrite is
+  explicitly requested.
+
+### C: Selector-role migration (normalizer)
+- Migrate selector-ish keys into selector-role triplets (for example
+  `guarded_paths`, `user_visible_*`, `user_facing_*`, `doc_quality_*`).
+- Map legacy selector keys into `selector_roles` so policies remain consistent
+  after updates and installs.
+- Warn when selector keys appear without declared selector roles.
+
+### D: Target update behavior alignment
+- Remove `--managed-blocks-only` from CLI and update flows.
+- Make `append-missing` the default policy-mode for updates.
+- Ensure update refreshes core DevCovenant files while preserving custom.
+- Delete deprecated core files/folders during update.
+- Treat all block-containing files as block-managed.
+- Enforce changelog block placement with editable content preserved.
+- Ensure metadata normalization runs during default update.
+
+### H: Policy replacement and deprecation workflow
+- Added a replacement map (`devcovenant/registry/policy_replacements.yaml`)
+  and update logic to migrate or remove replaced policies.
+- Replaced policies now move to custom with `custom: true` +
+  `status: deprecated` when enabled; disabled ones are removed along with
+  their custom scripts/fixers.
+- Update notices are printed and stored in the manifest.
+- Tests cover replacement migration/removal and notification logging.

@@ -1,5 +1,10 @@
 version: 1
 profile: fastapi
 category: framework
+suffixes:
+- .json
+- .yaml
+ignore_dirs:
+- python defaults + .venv
 assets: []
 policy_overlays: {}

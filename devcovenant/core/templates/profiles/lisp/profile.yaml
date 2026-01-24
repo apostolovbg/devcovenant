@@ -1,5 +1,10 @@
 version: 1
 profile: lisp
 category: language
+suffixes:
+- .lisp
+- .lsp
+ignore_dirs:
+- build
 assets: []
 policy_overlays: {}

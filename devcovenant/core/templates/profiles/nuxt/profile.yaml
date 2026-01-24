@@ -1,5 +1,11 @@
 version: 1
 profile: nuxt
 category: framework
+suffixes:
+- .vue
+- .ts
+ignore_dirs:
+- .nuxt
+- node_modules
 assets: []
 policy_overlays: {}

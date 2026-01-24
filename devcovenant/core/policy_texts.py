@@ -15,7 +15,7 @@ _POLICY_BLOCK_RE = re.compile(
     r"(.*?)(?=\n---\n|\n##|\Z)",
     re.DOTALL,
 )
-_DEFAULT_STOCK_TEXTS = Path("devcovenant/core/stock_policy_texts.yaml")
+_DEFAULT_STOCK_TEXTS = Path("devcovenant/registry/stock_policy_texts.yaml")
 
 
 def _parse_metadata_block(block: str) -> Dict[str, str]:
@@ -76,6 +76,20 @@ def build_stock_texts(agents_path: Path) -> Dict[str, str]:
     return texts
 
 
+def _render_stock_texts(texts: Dict[str, str]) -> str:
+    """Render stock policy texts as YAML literal blocks."""
+    lines: list[str] = []
+    for key in sorted(texts):
+        lines.append(f"{key}: |")
+        raw = texts[key].rstrip("\n")
+        if raw:
+            for line in raw.splitlines():
+                lines.append(f"  {line.rstrip()}")
+        else:
+            lines.append("  ")
+    return "\n".join(lines) + "\n"
+
+
 def save_stock_texts(
     repo_root: Path,
     texts: Dict[str, str],
@@ -84,13 +98,8 @@ def save_stock_texts(
     """Write the stock policy text map to disk."""
     path = stock_texts_path(repo_root, stock_texts_rel)
     path.parent.mkdir(parents=True, exist_ok=True)
-    payload = yaml.safe_dump(
-        texts,
-        sort_keys=True,
-        allow_unicode=False,
-        width=60,
-    )
-    path.write_text(payload, encoding="utf-8")
+    rendered = _render_stock_texts(texts)
+    path.write_text(rendered, encoding="utf-8")
     return path
 
 

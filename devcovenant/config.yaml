@@ -13,6 +13,7 @@ devcov_core_paths:
   - devcovenant/__init__.py
   - devcovenant/__main__.py
   - devcovenant/cli.py
+  - devcovenant/registry
   - tools/run_pre_commit.py
   - tools/run_tests.py
   - tools/update_test_status.py
@@ -28,8 +29,8 @@ profiles:
 
 paths:
   policy_definitions: AGENTS.md
-  registry_file: devcovenant/registry.json
-  manifest_file: devcovenant/manifest.json
+  registry_file: devcovenant/registry/registry.json
+  manifest_file: devcovenant/registry/manifest.json
   templates_root: devcovenant/core/templates
   custom_templates_root: devcovenant/custom/templates
 

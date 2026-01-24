@@ -15,9 +15,8 @@ import yaml
 
 from devcovenant.core import cli_options
 from devcovenant.core import manifest as manifest_module
-from devcovenant.core import uninstall
+from devcovenant.core import profiles, uninstall
 from devcovenant.core.parser import PolicyParser
-from devcovenant.core.profiles import resolve_profile_suffixes
 
 DEV_COVENANT_DIR = "devcovenant"
 CORE_PATHS = [
@@ -55,8 +54,7 @@ TEMPLATE_ROOT_NAME = "templates"
 TEMPLATE_GLOBAL_DIR = "global"
 TEMPLATE_PROFILES_DIR = "profiles"
 TEMPLATE_POLICIES_DIR = "policies"
-PROFILE_CATALOG_FILE = "profile_catalog.yaml"
-POLICY_ASSETS_FILE = "policy_assets.yaml"
+POLICY_ASSET_MANIFEST = "policy_assets.yaml"
 PROFILE_MANIFEST_NAME = "profile.yaml"
 GITIGNORE_BASE_TEMPLATE = "global/gitignore_base.txt"
 GITIGNORE_OS_TEMPLATE = "global/gitignore_os.txt"
@@ -200,28 +198,20 @@ def _normalize_profile_name(raw: str) -> str:
 
 
 def _load_profile_catalog(package_root: Path, target_root: Path) -> dict:
-    """Load the profile catalog from core and custom sources."""
-    catalog: dict[str, dict] = {}
-    core_path = package_root / "core" / PROFILE_CATALOG_FILE
-    core_data = _load_yaml(core_path)
-    for name, meta in (core_data.get("profiles") or {}).items():
-        catalog[_normalize_profile_name(name)] = dict(meta or {})
-    custom_path = package_root / "custom" / PROFILE_CATALOG_FILE
-    custom_data = _load_yaml(custom_path)
-    for name, meta in (custom_data.get("profiles") or {}).items():
-        catalog[_normalize_profile_name(name)] = dict(meta or {})
-    custom_dir = (
+    """Load the profile catalog by scanning template roots."""
+    core_root = (
+        package_root / "core" / TEMPLATE_ROOT_NAME / TEMPLATE_PROFILES_DIR
+    )
+    custom_root = (
         target_root
         / DEV_COVENANT_DIR
         / "custom"
-        / "templates"
+        / TEMPLATE_ROOT_NAME
         / TEMPLATE_PROFILES_DIR
     )
-    if custom_dir.exists():
-        for entry in custom_dir.iterdir():
-            if entry.is_dir():
-                catalog.setdefault(_normalize_profile_name(entry.name), {})
-    return catalog
+    return profiles.discover_profiles(
+        target_root, core_root=core_root, custom_root=custom_root
+    )
 
 
 def _load_active_profiles(target_root: Path) -> list[str]:
@@ -381,27 +371,53 @@ def _policy_profile_match(
 
 
 def _load_policy_assets(package_root: Path, target_root: Path) -> dict:
-    """Load policy asset mappings from core/custom definitions."""
+    """Load policy asset mappings from policy templates."""
     assets: dict = {"global": [], "policies": {}}
-    core_path = package_root / "core" / POLICY_ASSETS_FILE
-    core_data = _load_yaml(core_path)
-    for key in assets:
-        if key in core_data:
-            assets[key] = core_data[key]
-    custom_path = package_root / "custom" / POLICY_ASSETS_FILE
-    custom_data = _load_yaml(custom_path)
-    for key, asset_value in (custom_data or {}).items():
-        if key in assets and asset_value:
-            assets[key] = asset_value
-    target_custom = (
-        target_root / DEV_COVENANT_DIR / "custom" / POLICY_ASSETS_FILE
+    core_root = (
+        package_root / "core" / TEMPLATE_ROOT_NAME / TEMPLATE_POLICIES_DIR
     )
-    if target_custom.exists():
-        target_data = _load_yaml(target_custom)
-        for key, asset_value in (target_data or {}).items():
-            if key in assets and asset_value:
-                assets[key] = asset_value
+    custom_root = (
+        target_root
+        / DEV_COVENANT_DIR
+        / "custom"
+        / TEMPLATE_ROOT_NAME
+        / TEMPLATE_POLICIES_DIR
+    )
+    policy_ids: set[str] = set()
+    for root in (core_root, custom_root):
+        if not root.exists():
+            continue
+        for entry in root.iterdir():
+            if entry.is_dir():
+                policy_ids.add(entry.name)
+    template_root = package_root / "core" / TEMPLATE_ROOT_NAME
+    for policy_id in sorted(policy_ids):
+        manifest_path = _resolve_template_path(
+            target_root,
+            template_root,
+            POLICY_ASSET_MANIFEST,
+            policy_id=policy_id,
+        )
+        if not manifest_path.exists():
+            continue
+        data = _load_yaml(manifest_path)
+        if isinstance(data, dict):
+            entries = data.get("assets") or data.get("entries")
+        else:
+            entries = data
+        cleaned = _clean_asset_entries(entries or [])
+        if cleaned:
+            assets["policies"][policy_id] = cleaned
     return assets
+
+
+def _write_policy_assets_registry(target_root: Path, assets: dict) -> Path:
+    """Write policy asset mappings into the registry."""
+    path = target_root / DEV_COVENANT_DIR / "registry" / "policy_assets.yaml"
+    path.parent.mkdir(parents=True, exist_ok=True)
+    payload = yaml.safe_dump(assets, sort_keys=True, allow_unicode=False)
+    path.write_text(payload, encoding="utf-8")
+    return path
 
 
 def _load_profile_manifest(
@@ -1157,8 +1173,10 @@ def _format_profile_block(
     profile_catalog: dict[str, dict],
 ) -> list[str]:
     """Return the profiles block for config.yaml."""
-    profiles = _format_profile_list(active_profiles)
-    suffixes = resolve_profile_suffixes(profile_catalog, active_profiles)
+    profile_list = _format_profile_list(active_profiles)
+    suffixes = profiles.resolve_profile_suffixes(
+        profile_catalog, active_profiles
+    )
     cleaned: list[str] = []
     for entry in suffixes:
         suffix_value = str(entry).strip()
@@ -1169,7 +1187,7 @@ def _format_profile_block(
     if not cleaned:
         cleaned = ["__none__"]
     block = ["profiles:", "  active:"]
-    for profile in profiles:
+    for profile in profile_list:
         block.append(f"    - {profile}")
     block.append("  generated:")
     block.append("    file_suffixes:")
@@ -2126,6 +2144,25 @@ def main(argv=None) -> None:
             preserve_existing=preserve_custom,
         )
     )
+    core_profile_root = (
+        package_root / "core" / TEMPLATE_ROOT_NAME / TEMPLATE_PROFILES_DIR
+    )
+    custom_profile_root = (
+        target_root
+        / DEV_COVENANT_DIR
+        / "custom"
+        / TEMPLATE_ROOT_NAME
+        / TEMPLATE_PROFILES_DIR
+    )
+    profiles.write_profile_catalog(
+        target_root,
+        profiles.build_profile_catalog(
+            target_root,
+            active_profiles,
+            core_root=core_profile_root,
+            custom_root=custom_profile_root,
+        ),
+    )
     installed["core"].extend(
         _install_paths(
             repo_root,
@@ -2267,6 +2304,8 @@ def main(argv=None) -> None:
             policy_metadata,
         )
     )
+    policy_assets = _load_policy_assets(package_root, target_root)
+    _write_policy_assets_registry(target_root, policy_assets)
 
     readme_path = target_root / "README.md"
     if not readme_path.exists():

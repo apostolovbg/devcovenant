@@ -1,5 +1,11 @@
 version: 1
 profile: cobol
 category: language
+suffixes:
+- .cob
+- .cbl
+- .cpy
+ignore_dirs:
+- build
 assets: []
 policy_overlays: {}

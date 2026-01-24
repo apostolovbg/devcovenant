@@ -1,5 +1,10 @@
 version: 1
 profile: express
 category: framework
+suffixes:
+- .js
+ignore_dirs:
+- node_modules
+- dist
 assets: []
 policy_overlays: {}

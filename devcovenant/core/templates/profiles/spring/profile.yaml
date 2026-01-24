@@ -1,5 +1,12 @@
 version: 1
 profile: spring
 category: framework
+suffixes:
+- .java
+- .properties
+- .yml
+ignore_dirs:
+- target
+- build
 assets: []
 policy_overlays: {}

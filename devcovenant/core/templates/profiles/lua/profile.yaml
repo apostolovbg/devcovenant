@@ -1,5 +1,9 @@
 version: 1
 profile: lua
 category: language
+suffixes:
+- .lua
+ignore_dirs:
+- build
 assets: []
 policy_overlays: {}

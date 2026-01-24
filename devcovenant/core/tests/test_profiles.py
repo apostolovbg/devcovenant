@@ -13,27 +13,37 @@ def _write_yaml(path: Path, content: str) -> None:
 
 
 def test_load_profile_catalog_merges_core_and_custom(tmp_path: Path) -> None:
-    """Custom profile entries override core catalog data."""
+    """Custom profile manifests override core profile data."""
     core_yaml = """
-    profiles:
-      python:
-        suffixes: [".py"]
-      docs:
-        suffixes: ["__none__"]
+    version: 1
+    profile: python
+    suffixes: [".py"]
     """
     custom_yaml = """
-    profiles:
-      python:
-        suffixes: [".py", ".pyi"]
-      lua:
-        suffixes: [".lua"]
+    version: 1
+    profile: python
+    suffixes: [".py", ".pyi"]
     """
-    core_catalog = tmp_path / "devcovenant" / "core" / "profile_catalog.yaml"
-    custom_catalog = (
-        tmp_path / "devcovenant" / "custom" / "profile_catalog.yaml"
+    core_manifest = (
+        tmp_path
+        / "devcovenant"
+        / "core"
+        / "templates"
+        / "profiles"
+        / "python"
+        / "profile.yaml"
     )
-    _write_yaml(core_catalog, core_yaml)
-    _write_yaml(custom_catalog, custom_yaml)
+    custom_manifest = (
+        tmp_path
+        / "devcovenant"
+        / "custom"
+        / "templates"
+        / "profiles"
+        / "python"
+        / "profile.yaml"
+    )
+    _write_yaml(core_manifest, core_yaml)
+    _write_yaml(custom_manifest, custom_yaml)
 
     custom_templates = (
         tmp_path / "devcovenant" / "custom" / "templates" / "profiles" / "zig"
@@ -43,7 +53,7 @@ def test_load_profile_catalog_merges_core_and_custom(tmp_path: Path) -> None:
     catalog = profiles.load_profile_catalog(tmp_path)
 
     assert catalog["python"]["suffixes"] == [".py", ".pyi"]
-    assert "lua" in catalog
+    assert catalog["python"]["source"] == "custom"
     assert "zig" in catalog
 
 

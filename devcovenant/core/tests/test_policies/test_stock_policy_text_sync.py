@@ -29,7 +29,9 @@ def _write_stock_texts(path: Path, mapping: dict[str, str]) -> None:
 def test_stock_policy_text_matches(tmp_path: Path) -> None:
     """Matching stock text should pass."""
     agents_path = tmp_path / "AGENTS.md"
-    stock_path = tmp_path / "devcovenant" / "core" / "stock_policy_texts.yaml"
+    stock_path = (
+        tmp_path / "devcovenant" / "registry" / "stock_policy_texts.yaml"
+    )
     stock_path.parent.mkdir(parents=True)
     _write_stock_texts(stock_path, {"example-policy": "Stock text"})
     _write_agents(
@@ -56,7 +58,7 @@ Stock text
     checker.set_options(
         {
             "policy_definitions": "AGENTS.md",
-            "stock_texts_file": "devcovenant/core/stock_policy_texts.yaml",
+            "stock_texts_file": "devcovenant/registry/stock_policy_texts.yaml",
         },
         {},
     )
@@ -68,7 +70,9 @@ Stock text
 def test_stock_policy_text_differs(tmp_path: Path) -> None:
     """Different stock text should raise a violation."""
     agents_path = tmp_path / "AGENTS.md"
-    stock_path = tmp_path / "devcovenant" / "core" / "stock_policy_texts.yaml"
+    stock_path = (
+        tmp_path / "devcovenant" / "registry" / "stock_policy_texts.yaml"
+    )
     stock_path.parent.mkdir(parents=True)
     _write_stock_texts(stock_path, {"example-policy": "Stock text"})
     _write_agents(
@@ -95,7 +99,7 @@ Custom text
     checker.set_options(
         {
             "policy_definitions": "AGENTS.md",
-            "stock_texts_file": "devcovenant/core/stock_policy_texts.yaml",
+            "stock_texts_file": "devcovenant/registry/stock_policy_texts.yaml",
         },
         {},
     )
@@ -133,7 +137,7 @@ Stock text
     checker.set_options(
         {
             "policy_definitions": "AGENTS.md",
-            "stock_texts_file": "devcovenant/core/stock_policy_texts.yaml",
+            "stock_texts_file": "devcovenant/registry/stock_policy_texts.yaml",
         },
         {},
     )
@@ -147,7 +151,9 @@ Stock text
 def test_custom_policy_skips_stock_text_check(tmp_path: Path) -> None:
     """Custom policies should skip stock text sync."""
     agents_path = tmp_path / "AGENTS.md"
-    stock_path = tmp_path / "devcovenant" / "core" / "stock_policy_texts.yaml"
+    stock_path = (
+        tmp_path / "devcovenant" / "registry" / "stock_policy_texts.yaml"
+    )
     stock_path.parent.mkdir(parents=True)
     _write_stock_texts(stock_path, {"example-policy": "Stock text"})
     _write_agents(
@@ -175,7 +181,7 @@ Custom text
     checker.set_options(
         {
             "policy_definitions": "AGENTS.md",
-            "stock_texts_file": "devcovenant/core/stock_policy_texts.yaml",
+            "stock_texts_file": "devcovenant/registry/stock_policy_texts.yaml",
         },
         {},
     )

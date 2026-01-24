@@ -1,6 +1,12 @@
 version: 1
 profile: ruby
 category: language
+suffixes:
+- .rb
+- .rake
+ignore_dirs:
+- .bundle
+- vendor/bundle
 assets:
 - path: Gemfile
   template: Gemfile

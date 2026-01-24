@@ -1,5 +1,9 @@
 version: 1
 profile: swift
 category: language
+suffixes:
+- .swift
+ignore_dirs:
+- .build
 assets: []
 policy_overlays: {}

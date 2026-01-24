@@ -1,6 +1,11 @@
 version: 1
 profile: java
 category: language
+suffixes:
+- .java
+ignore_dirs:
+- target
+- build
 assets:
 - path: build.gradle
   template: build.gradle

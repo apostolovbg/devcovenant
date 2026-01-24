@@ -1,5 +1,10 @@
 version: 1
 profile: docker
 category: ops
+suffixes:
+- .dockerignore
+- .yml
+- .yaml
+ignore_dirs: []
 assets: []
 policy_overlays: {}

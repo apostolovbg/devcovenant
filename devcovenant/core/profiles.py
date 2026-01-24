@@ -2,12 +2,21 @@
 
 from __future__ import annotations
 
+from datetime import datetime, timezone
 from pathlib import Path
 from typing import Dict, List
 
 import yaml
 
-_PROFILE_CATALOG_FILE = "profile_catalog.yaml"
+PROFILE_MANIFEST_NAME = "profile.yaml"
+REGISTRY_CATALOG = Path("devcovenant/registry/profile_catalog.yaml")
+CORE_PROFILE_ROOT = Path("devcovenant/core/templates/profiles")
+CUSTOM_PROFILE_ROOT = Path("devcovenant/custom/templates/profiles")
+
+
+def _utc_now() -> str:
+    """Return the current UTC timestamp."""
+    return datetime.now(timezone.utc).isoformat()
 
 
 def _load_yaml(path: Path) -> dict:
@@ -20,45 +29,133 @@ def _load_yaml(path: Path) -> dict:
         return {}
 
 
-def load_profile_catalog(repo_root: Path) -> Dict[str, Dict]:
-    """Load the merged profile catalog from core and custom sources."""
+def _normalize_profile_name(raw: str) -> str:
+    """Normalize a profile name for matching."""
+    return str(raw or "").strip().lower()
+
+
+def _iter_profile_dirs(root: Path) -> list[Path]:
+    """Return profile directories beneath a root."""
+    if not root.exists():
+        return []
+    return [entry for entry in root.iterdir() if entry.is_dir()]
+
+
+def _relative_path(path: Path, base: Path) -> str:
+    """Return a relative path when possible."""
+    try:
+        return str(path.relative_to(base))
+    except ValueError:
+        return str(path)
+
+
+def _profile_assets(profile_dir: Path, repo_root: Path) -> list[str]:
+    """List asset files under a profile directory."""
+    assets: list[str] = []
+    for entry in profile_dir.rglob("*"):
+        if not entry.is_file():
+            continue
+        if entry.name == PROFILE_MANIFEST_NAME:
+            continue
+        assets.append(_relative_path(entry, repo_root))
+    return sorted(assets)
+
+
+def discover_profiles(
+    repo_root: Path,
+    *,
+    core_root: Path | None = None,
+    custom_root: Path | None = None,
+) -> Dict[str, Dict]:
+    """Discover profiles from core/custom template roots."""
     catalog: Dict[str, Dict] = {}
-    core_path = repo_root / "devcovenant" / "core" / _PROFILE_CATALOG_FILE
-    core_data = _load_yaml(core_path)
-    for name, meta in (core_data.get("profiles") or {}).items():
-        catalog[str(name).strip().lower()] = dict(meta or {})
+    core_root = core_root or (repo_root / CORE_PROFILE_ROOT)
+    custom_root = custom_root or (repo_root / CUSTOM_PROFILE_ROOT)
 
-    custom_path = repo_root / "devcovenant" / "custom" / _PROFILE_CATALOG_FILE
-    custom_data = _load_yaml(custom_path)
-    for name, meta in (custom_data.get("profiles") or {}).items():
-        catalog[str(name).strip().lower()] = dict(meta or {})
-
-    custom_dir = (
-        repo_root / "devcovenant" / "custom" / "templates" / "profiles"
-    )
-    if custom_dir.exists():
-        for entry in custom_dir.iterdir():
-            if entry.is_dir():
-                catalog.setdefault(entry.name.strip().lower(), {})
-
+    for source, root in (("core", core_root), ("custom", custom_root)):
+        for entry in _iter_profile_dirs(root):
+            manifest_path = entry / PROFILE_MANIFEST_NAME
+            manifest = _load_yaml(manifest_path)
+            meta = dict(manifest) if isinstance(manifest, dict) else {}
+            name = _normalize_profile_name(meta.get("profile") or entry.name)
+            if not name:
+                continue
+            meta.setdefault("profile", name)
+            if "category" not in meta:
+                meta["category"] = (
+                    "custom" if source == "custom" else "unknown"
+                )
+            meta["source"] = source
+            meta["path"] = _relative_path(entry, repo_root)
+            meta["assets_available"] = _profile_assets(entry, repo_root)
+            catalog[name] = meta
     return catalog
+
+
+def build_profile_catalog(
+    repo_root: Path,
+    active_profiles: list[str] | None = None,
+    *,
+    core_root: Path | None = None,
+    custom_root: Path | None = None,
+) -> Dict[str, Dict]:
+    """Build a profile catalog payload for registry output."""
+    catalog = discover_profiles(
+        repo_root, core_root=core_root, custom_root=custom_root
+    )
+    active = {
+        _normalize_profile_name(name)
+        for name in (active_profiles or [])
+        if name
+    }
+    for name, meta in catalog.items():
+        meta["active"] = name in active
+    return {"generated_at": _utc_now(), "profiles": catalog}
+
+
+def write_profile_catalog(repo_root: Path, catalog: Dict[str, Dict]) -> Path:
+    """Write the profile catalog into the registry folder."""
+    path = repo_root / REGISTRY_CATALOG
+    path.parent.mkdir(parents=True, exist_ok=True)
+    payload = yaml.safe_dump(catalog, sort_keys=True, allow_unicode=False)
+    path.write_text(payload, encoding="utf-8")
+    return path
+
+
+def _normalize_catalog(catalog: Dict[str, Dict]) -> Dict[str, Dict]:
+    """Normalize profile catalogs that include a top-level profiles key."""
+    if "profiles" in catalog and isinstance(catalog["profiles"], dict):
+        return catalog["profiles"]
+    return catalog
+
+
+def load_profile_catalog(repo_root: Path) -> Dict[str, Dict]:
+    """Load the merged profile catalog from registry or templates."""
+    registry_path = repo_root / REGISTRY_CATALOG
+    if registry_path.exists():
+        data = _load_yaml(registry_path)
+        if isinstance(data, dict) and data:
+            return _normalize_catalog(data)
+    return discover_profiles(repo_root)
 
 
 def list_profiles(catalog: Dict[str, Dict]) -> List[str]:
     """Return a sorted list of profile names."""
-    return sorted(name for name in catalog.keys() if name)
+    normalized = _normalize_catalog(catalog)
+    return sorted(name for name in normalized.keys() if name)
 
 
 def resolve_profile_suffixes(
     catalog: Dict[str, Dict], active_profiles: List[str]
 ) -> List[str]:
     """Return file suffixes associated with active profiles."""
+    normalized_catalog = _normalize_catalog(catalog)
     suffixes: List[str] = []
-    normalized = {
-        str(name).strip().lower() for name in active_profiles if name
+    active = {
+        _normalize_profile_name(name) for name in active_profiles if name
     }
-    for name in normalized:
-        meta = catalog.get(name, {})
+    for name in active:
+        meta = normalized_catalog.get(name, {})
         raw = meta.get("suffixes") or []
         for entry in raw:
             suffix_value = str(entry).strip()

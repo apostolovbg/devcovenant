@@ -1,5 +1,14 @@
 version: 1
 profile: angular
 category: framework
+suffixes:
+- .ts
+- .html
+- .css
+- .scss
+ignore_dirs:
+- node_modules
+- dist
+- .angular
 assets: []
 policy_overlays: {}

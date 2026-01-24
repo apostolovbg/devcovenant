@@ -1,5 +1,11 @@
 version: 1
 profile: objective-c
 category: language
+suffixes:
+- .m
+- .mm
+- .h
+ignore_dirs:
+- build
 assets: []
 policy_overlays: {}

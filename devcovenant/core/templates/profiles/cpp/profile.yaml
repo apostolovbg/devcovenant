@@ -1,5 +1,15 @@
 version: 1
 profile: cpp
 category: language
+suffixes:
+- .cpp
+- .cc
+- .cxx
+- .hpp
+- .hxx
+- .hh
+ignore_dirs:
+- build
+- out
 assets: []
 policy_overlays: {}

@@ -1,5 +1,9 @@
 version: 1
 profile: nim
 category: language
+suffixes:
+- .nim
+ignore_dirs:
+- nimcache
 assets: []
 policy_overlays: {}

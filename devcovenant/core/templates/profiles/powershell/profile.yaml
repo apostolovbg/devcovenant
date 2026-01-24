@@ -1,5 +1,10 @@
 version: 1
 profile: powershell
 category: language
+suffixes:
+- .ps1
+- .psm1
+- .psd1
+ignore_dirs: []
 assets: []
 policy_overlays: {}

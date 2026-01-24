@@ -1,6 +1,10 @@
 version: 1
 profile: rust
 category: language
+suffixes:
+- .rs
+ignore_dirs:
+- target
 assets:
 - path: Cargo.toml
   template: Cargo.toml

@@ -1,5 +1,10 @@
 version: 1
 profile: r
 category: language
+suffixes:
+- .r
+- .R
+ignore_dirs:
+- .Rproj.user
 assets: []
 policy_overlays: {}

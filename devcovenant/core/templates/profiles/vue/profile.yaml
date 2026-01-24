@@ -1,5 +1,12 @@
 version: 1
 profile: vue
 category: framework
+suffixes:
+- .vue
+- .js
+- .ts
+ignore_dirs:
+- node_modules
+- dist
 assets: []
 policy_overlays: {}

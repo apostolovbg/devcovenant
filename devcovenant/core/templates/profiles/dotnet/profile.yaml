@@ -1,6 +1,13 @@
 version: 1
 profile: dotnet
 category: language
+suffixes:
+- .cs
+- .fs
+- .vb
+ignore_dirs:
+- bin
+- obj
 assets:
 - path: global.json
   template: global.json

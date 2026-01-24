@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Record the latest full test run in devcovenant/test_status.json."""
+"""Record the latest test run in the status registry."""
 
 from __future__ import annotations
 
@@ -38,7 +38,7 @@ def _current_sha(repo_root: Path) -> str:
 def main() -> None:
     """CLI entry point."""
     parser = argparse.ArgumentParser(
-        description="Update devcovenant/test_status.json after running tests."
+        description="Update test_status.json after running tests."
     )
     parser.add_argument(
         "--command",
@@ -56,7 +56,7 @@ def main() -> None:
     args = parser.parse_args()
 
     repo_root = Path(__file__).resolve().parents[1]
-    status_path = repo_root / "devcovenant" / "test_status.json"
+    status_path = repo_root / "devcovenant" / "registry" / "test_status.json"
     status_path.parent.mkdir(parents=True, exist_ok=True)
 
     now = _utc_now()

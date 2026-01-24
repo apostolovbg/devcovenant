@@ -1,5 +1,12 @@
 version: 1
 profile: rails
 category: framework
+suffixes:
+- .rb
+- .erb
+ignore_dirs:
+- log
+- tmp
+- vendor/bundle
 assets: []
 policy_overlays: {}

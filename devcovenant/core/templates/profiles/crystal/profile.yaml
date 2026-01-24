@@ -1,5 +1,10 @@
 version: 1
 profile: crystal
 category: language
+suffixes:
+- .cr
+ignore_dirs:
+- lib
+- .crystal
 assets: []
 policy_overlays: {}

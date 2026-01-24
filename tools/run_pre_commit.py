@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Run pre-commit and record the run in devcovenant/test_status.json."""
+"""Run pre-commit and record the run in the test status registry."""
 
 from __future__ import annotations
 
@@ -70,7 +70,7 @@ def main() -> None:
     args = parser.parse_args()
 
     repo_root = Path(__file__).resolve().parents[1]
-    status_path = repo_root / "devcovenant" / "test_status.json"
+    status_path = repo_root / "devcovenant" / "registry" / "test_status.json"
     status_path.parent.mkdir(parents=True, exist_ok=True)
 
     env = os.environ.copy()

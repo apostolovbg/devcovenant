@@ -1,5 +1,11 @@
 version: 1
 profile: symfony
 category: framework
+suffixes:
+- .php
+- .twig
+ignore_dirs:
+- var
+- vendor
 assets: []
 policy_overlays: {}

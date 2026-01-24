@@ -10,7 +10,7 @@ from typing import Iterable, List
 
 from devcovenant.core.base import CheckContext, PolicyCheck, Violation
 
-_DEFAULT_STATUS = Path("devcovenant") / "test_status.json"
+_DEFAULT_STATUS = Path("devcovenant") / "registry" / "test_status.json"
 _DEFAULT_COMMANDS = ["pytest", "python -m unittest discover"]
 _DEFAULT_PRE_COMMIT_COMMAND = "pre-commit run --all-files"
 _DEFAULT_PRE_COMMIT_START_KEY = "pre_commit_start_epoch"
@@ -160,9 +160,9 @@ class DevflowRunGates(PolicyCheck):
                     severity="error",
                     file_path=status_rel,
                     message=(
-                        "Code changed but devcovenant/test_status.json is "
-                        "missing; run `python3 tools/run_tests.py` before "
-                        "replying."
+                        "Code changed but "
+                        "devcovenant/registry/test_status.json is missing; "
+                        "run `python3 tools/run_tests.py` before replying."
                     ),
                 )
             )

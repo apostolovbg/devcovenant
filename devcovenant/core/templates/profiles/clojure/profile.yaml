@@ -1,5 +1,13 @@
 version: 1
 profile: clojure
 category: language
+suffixes:
+- .clj
+- .cljs
+- .cljc
+- .edn
+ignore_dirs:
+- target
+- .cpcache
 assets: []
 policy_overlays: {}

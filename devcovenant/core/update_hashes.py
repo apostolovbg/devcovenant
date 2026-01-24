@@ -1,8 +1,8 @@
-"""Update DevCovenant policy script hashes in registry.json.
+"""Update DevCovenant policy script hashes.
 
-This utility automatically computes SHA256 hashes for all policy scripts
-combined with their policy text from AGENTS.md and updates the registry.json
-file.
+This utility computes SHA256 hashes for all policy scripts combined
+with their policy text from AGENTS.md and updates
+devcovenant/registry/registry.json.
 """
 
 import re
@@ -41,7 +41,7 @@ def _ensure_trailing_newline(path: Path) -> bool:
 
 
 def update_registry_hashes(repo_root: Path | None = None) -> int:
-    """Update all policy script hashes in registry.json.
+    """Update policy script hashes in the registry.
 
     Args:
         repo_root: Repository root path (defaults to script parent directory)
@@ -53,7 +53,7 @@ def update_registry_hashes(repo_root: Path | None = None) -> int:
         repo_root = Path(__file__).resolve().parents[2]
 
     agents_md_path = repo_root / "AGENTS.md"
-    registry_path = repo_root / "devcovenant" / "registry.json"
+    registry_path = repo_root / "devcovenant" / "registry" / "registry.json"
 
     if not agents_md_path.exists():
         print(
@@ -102,20 +102,28 @@ def update_registry_hashes(repo_root: Path | None = None) -> int:
 
     if updated == 0:
         print("All policy hashes are up to date.")
-    if updated == 0:
         reset = _reset_updated_flags(agents_md_path)
         if reset:
             print("Reset updated flags in AGENTS.md.")
         if _ensure_trailing_newline(registry_path):
-            print("Ensured trailing newline in registry.json.")
+            print(
+                "Ensured trailing newline in "
+                "devcovenant/registry/registry.json."
+            )
         return 0
 
-    print(f"\nUpdated {updated} policy hash(es) in registry.json")
+    print(
+        "\nUpdated "
+        f"{updated} policy hash(es) in "
+        "devcovenant/registry/registry.json"
+    )
     reset = _reset_updated_flags(agents_md_path)
     if reset:
         print("Reset updated flags in AGENTS.md.")
     if _ensure_trailing_newline(registry_path):
-        print("Ensured trailing newline in registry.json.")
+        print(
+            "Ensured trailing newline in devcovenant/registry/registry.json."
+        )
     return 0
 
 

@@ -1,5 +1,10 @@
 version: 1
 profile: scala
 category: language
+suffixes:
+- .scala
+ignore_dirs:
+- target
+- project/target
 assets: []
 policy_overlays: {}

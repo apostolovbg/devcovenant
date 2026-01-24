@@ -1,5 +1,10 @@
 version: 1
 profile: flutter
 category: framework
+suffixes:
+- .dart
+ignore_dirs:
+- .dart_tool
+- build
 assets: []
 policy_overlays: {}

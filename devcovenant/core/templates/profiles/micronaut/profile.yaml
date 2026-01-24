@@ -1,5 +1,11 @@
 version: 1
 profile: micronaut
 category: framework
+suffixes:
+- .java
+- .kt
+- .yml
+ignore_dirs:
+- build
 assets: []
 policy_overlays: {}

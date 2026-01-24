@@ -1,5 +1,10 @@
 version: 1
 profile: zig
 category: language
+suffixes:
+- .zig
+ignore_dirs:
+- zig-cache
+- zig-out
 assets: []
 policy_overlays: {}

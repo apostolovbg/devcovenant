@@ -1,0 +1,91 @@
+{
+  "core": {
+    "dirs": [
+      "devcovenant",
+      "devcovenant/core",
+      "devcovenant/core/policy_scripts",
+      "devcovenant/core/fixers",
+      "devcovenant/core/templates",
+      "devcovenant/core/templates/global",
+      "devcovenant/core/templates/profiles",
+      "devcovenant/core/templates/policies",
+      "devcovenant/registry"
+    ],
+    "files": [
+      "devcovenant/__init__.py",
+      "devcovenant/__main__.py",
+      "devcovenant/cli.py",
+      "devcovenant/config.yaml",
+      "devcovenant/README.md",
+      "devcovenant/registry/stock_policy_texts.yaml",
+      "devcovenant/registry/policy_replacements.yaml",
+      "devcovenant/core/cli_options.py",
+      "devcovenant/core/templates/global/AGENTS.md",
+      "devcovenant/core/templates/global/CONTRIBUTING.md",
+      "devcovenant/core/templates/global/LICENSE_GPL-3.0.txt",
+      "devcovenant/core/templates/global/VERSION",
+      "devcovenant/core/templates/global/.pre-commit-config.yaml",
+      "devcovenant/core/templates/global/.github/workflows/ci.yml",
+      "devcovenant/core/templates/global/gitignore_base.txt",
+      "devcovenant/core/templates/global/gitignore_os.txt",
+      "devcovenant/core/templates/global/tools/run_pre_commit.py",
+      "devcovenant/core/templates/global/tools/run_tests.py",
+      "devcovenant/core/templates/global/tools/update_test_status.py",
+      "devcovenant/core/templates/README.md",
+      "devcovenant/core/templates/profiles/README.md",
+      "devcovenant/core/templates/policies/README.md",
+      "tools/run_pre_commit.py",
+      "tools/run_tests.py",
+      "tools/update_test_status.py"
+    ]
+  },
+  "custom": {
+    "dirs": [
+      "devcovenant/custom",
+      "devcovenant/custom/policy_scripts",
+      "devcovenant/custom/fixers",
+      "devcovenant/custom/templates",
+      "devcovenant/custom/templates/global",
+      "devcovenant/custom/templates/profiles",
+      "devcovenant/custom/templates/policies"
+    ],
+    "files": [
+      "devcovenant/custom/templates/profiles/README.md",
+      "devcovenant/custom/templates/policies/README.md"
+    ]
+  },
+  "docs": {
+    "core": [
+      "AGENTS.md",
+      "README.md",
+      "CHANGELOG.md",
+      "CONTRIBUTING.md"
+    ],
+    "custom": [],
+    "optional": [
+      "SPEC.md",
+      "PLAN.md"
+    ]
+  },
+  "generated": {
+    "dirs": [],
+    "files": [
+      "devcovenant/registry/registry.json",
+      "devcovenant/registry/test_status.json",
+      "devcovenant/registry/manifest.json",
+      "devcovenant/registry/profile_catalog.yaml",
+      "devcovenant/registry/policy_assets.yaml"
+    ]
+  },
+  "notifications": [],
+  "policy_assets": {
+    "global": [],
+    "policies": {}
+  },
+  "profiles": {
+    "active": [],
+    "catalog": []
+  },
+  "schema_version": 2,
+  "updated_at": "2026-01-24T06:21:15.998981+00:00"
+}

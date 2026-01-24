@@ -1,6 +1,18 @@
 version: 1
 profile: python
 category: language
+suffixes:
+- .py
+- .pyi
+- .pyw
+- .ipynb
+ignore_dirs:
+- .venv
+- __pycache__
+- .pytest_cache
+- .mypy_cache
+- build
+- dist
 assets:
 - path: requirements.in
   template: requirements.in

@@ -1,5 +1,9 @@
 version: 1
 profile: matlab
 category: language
+suffixes:
+- .m
+ignore_dirs:
+- build
 assets: []
 policy_overlays: {}

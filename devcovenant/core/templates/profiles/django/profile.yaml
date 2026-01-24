@@ -1,5 +1,11 @@
 version: 1
 profile: django
 category: framework
+suffixes:
+- .html
+- .css
+- .js
+ignore_dirs:
+- same as python + .static_cache
 assets: []
 policy_overlays: {}

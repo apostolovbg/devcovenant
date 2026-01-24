@@ -1,5 +1,11 @@
 version: 1
 profile: terraform
 category: ops
+suffixes:
+- .tf
+- .tfvars
+- .hcl
+ignore_dirs:
+- .terraform
 assets: []
 policy_overlays: {}

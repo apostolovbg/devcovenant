@@ -1,5 +1,11 @@
 version: 1
 profile: haskell
 category: language
+suffixes:
+- .hs
+- .lhs
+ignore_dirs:
+- dist-newstyle
+- .stack-work
 assets: []
 policy_overlays: {}

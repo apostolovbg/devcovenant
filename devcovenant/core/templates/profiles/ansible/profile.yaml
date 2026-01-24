@@ -1,5 +1,12 @@
 version: 1
 profile: ansible
 category: ops
+suffixes:
+- .yml
+- .yaml
+- .j2
+- .ini
+ignore_dirs:
+- .ansible
 assets: []
 policy_overlays: {}

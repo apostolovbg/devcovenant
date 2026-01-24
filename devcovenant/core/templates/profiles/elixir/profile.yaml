@@ -1,5 +1,11 @@
 version: 1
 profile: elixir
 category: language
+suffixes:
+- .ex
+- .exs
+ignore_dirs:
+- _build
+- deps
 assets: []
 policy_overlays: {}

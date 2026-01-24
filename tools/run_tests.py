@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Run the project test suites and update devcovenant/test_status.json."""
+"""Run test suites and update the test status registry."""
 
 from __future__ import annotations
 

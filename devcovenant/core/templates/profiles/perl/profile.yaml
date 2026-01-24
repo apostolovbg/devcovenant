@@ -1,5 +1,11 @@
 version: 1
 profile: perl
 category: language
+suffixes:
+- .pl
+- .pm
+ignore_dirs:
+- local
+- blib
 assets: []
 policy_overlays: {}

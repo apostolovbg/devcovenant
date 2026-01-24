@@ -1,5 +1,11 @@
 version: 1
 profile: laravel
 category: framework
+suffixes:
+- .php
+- .blade.php
+ignore_dirs:
+- vendor
+- storage
 assets: []
 policy_overlays: {}

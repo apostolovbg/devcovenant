@@ -1,4 +1,4 @@
-"""Ensure devcovenant/test_status.json is refreshed after test runs."""
+"""Ensure devcovenant/registry/test_status.json is refreshed."""
 
 from __future__ import annotations
 
@@ -10,7 +10,7 @@ from typing import Iterable, List
 from devcovenant.core.base import CheckContext, PolicyCheck, Violation
 from devcovenant.core.selectors import build_watchlists
 
-STATUS_RELATIVE = Path("devcovenant") / "test_status.json"
+STATUS_RELATIVE = Path("devcovenant") / "registry" / "test_status.json"
 
 
 def _requires_status_update(
@@ -66,7 +66,7 @@ class TrackTestStatusCheck(PolicyCheck):
     version = "1.0.0"
 
     def check(self, context: CheckContext) -> List[Violation]:
-        """Ensure code changes update devcovenant/test_status.json."""
+        """Ensure code changes update devcovenant/registry/test_status.json."""
         repo_root = context.repo_root
         changed_files: Iterable[Path] = context.changed_files or []
         relevant_change = False
@@ -117,7 +117,10 @@ class TrackTestStatusCheck(PolicyCheck):
                     severity="error",
                     file_path=status_path,
                     line_number=1,
-                    message=f"devcovenant/test_status.json is invalid: {exc}",
+                    message=(
+                        "devcovenant/registry/test_status.json is "
+                        f"invalid: {exc}"
+                    ),
                 )
             ]
 

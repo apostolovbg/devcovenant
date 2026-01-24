@@ -1,6 +1,12 @@
 version: 1
 profile: go
 category: language
+suffixes:
+- .go
+ignore_dirs:
+- bin
+- pkg
+- vendor
 assets:
 - path: go.mod
   template: go.mod

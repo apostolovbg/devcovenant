@@ -1,5 +1,12 @@
 version: 1
 profile: react
 category: framework
+suffixes:
+- .jsx
+- .tsx
+ignore_dirs:
+- node_modules
+- dist
+- build
 assets: []
 policy_overlays: {}

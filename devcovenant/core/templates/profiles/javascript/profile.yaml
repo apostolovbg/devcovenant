@@ -1,6 +1,17 @@
 version: 1
 profile: javascript
 category: language
+suffixes:
+- .js
+- .jsx
+- .mjs
+- .cjs
+ignore_dirs:
+- node_modules
+- dist
+- build
+- coverage
+- .cache
 assets:
 - path: package.json
   template: package.json

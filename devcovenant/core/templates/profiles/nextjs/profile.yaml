@@ -1,5 +1,13 @@
 version: 1
 profile: nextjs
 category: framework
+suffixes:
+- .js
+- .jsx
+- .ts
+- .tsx
+ignore_dirs:
+- .next
+- node_modules
 assets: []
 policy_overlays: {}

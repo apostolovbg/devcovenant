@@ -1,5 +1,10 @@
 version: 1
 profile: ocaml
 category: language
+suffixes:
+- .ml
+- .mli
+ignore_dirs:
+- _build
 assets: []
 policy_overlays: {}

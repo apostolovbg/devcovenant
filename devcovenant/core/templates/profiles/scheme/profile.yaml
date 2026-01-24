@@ -1,5 +1,10 @@
 version: 1
 profile: scheme
 category: language
+suffixes:
+- .scm
+- .ss
+ignore_dirs:
+- build
 assets: []
 policy_overlays: {}

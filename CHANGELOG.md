@@ -1,5 +1,5 @@
 # Changelog
-**Last Updated:** 2026-01-23
+**Last Updated:** 2026-01-24
 **Version:** 0.2.6
 
 <!-- DEVCOV:BEGIN -->
@@ -28,6 +28,560 @@ Example entry:
 ## Log changes here
 
 ## Version 0.2.6
+- 2026-01-24: Applied profile scope metadata and populated profile
+  manifests with suffix/ignore data. (AI assistant)
+  Files:
+  AGENTS.md
+  devcovenant/core/templates/global/AGENTS.md
+  devcovenant/core/templates/profiles/angular/profile.yaml
+  devcovenant/core/templates/profiles/ansible/profile.yaml
+  devcovenant/core/templates/profiles/bash/profile.yaml
+  devcovenant/core/templates/profiles/c/profile.yaml
+  devcovenant/core/templates/profiles/clojure/profile.yaml
+  devcovenant/core/templates/profiles/cobol/profile.yaml
+  devcovenant/core/templates/profiles/cpp/profile.yaml
+  devcovenant/core/templates/profiles/crystal/profile.yaml
+  devcovenant/core/templates/profiles/csharp/profile.yaml
+  devcovenant/core/templates/profiles/dart/profile.yaml
+  devcovenant/core/templates/profiles/data/profile.yaml
+  devcovenant/core/templates/profiles/django/profile.yaml
+  devcovenant/core/templates/profiles/docker/profile.yaml
+  devcovenant/core/templates/profiles/docs/profile.yaml
+  devcovenant/core/templates/profiles/dotnet/profile.yaml
+  devcovenant/core/templates/profiles/elixir/profile.yaml
+  devcovenant/core/templates/profiles/erlang/profile.yaml
+  devcovenant/core/templates/profiles/express/profile.yaml
+  devcovenant/core/templates/profiles/fastapi/profile.yaml
+  devcovenant/core/templates/profiles/flask/profile.yaml
+  devcovenant/core/templates/profiles/flutter/profile.yaml
+  devcovenant/core/templates/profiles/fortran/profile.yaml
+  devcovenant/core/templates/profiles/frappe/profile.yaml
+  devcovenant/core/templates/profiles/fsharp/profile.yaml
+  devcovenant/core/templates/profiles/go/profile.yaml
+  devcovenant/core/templates/profiles/groovy/profile.yaml
+  devcovenant/core/templates/profiles/haskell/profile.yaml
+  devcovenant/core/templates/profiles/java/profile.yaml
+  devcovenant/core/templates/profiles/javascript/profile.yaml
+  devcovenant/core/templates/profiles/julia/profile.yaml
+  devcovenant/core/templates/profiles/kotlin/profile.yaml
+  devcovenant/core/templates/profiles/kubernetes/profile.yaml
+  devcovenant/core/templates/profiles/laravel/profile.yaml
+  devcovenant/core/templates/profiles/lisp/profile.yaml
+  devcovenant/core/templates/profiles/lua/profile.yaml
+  devcovenant/core/templates/profiles/matlab/profile.yaml
+  devcovenant/core/templates/profiles/micronaut/profile.yaml
+  devcovenant/core/templates/profiles/nestjs/profile.yaml
+  devcovenant/core/templates/profiles/nextjs/profile.yaml
+  devcovenant/core/templates/profiles/nim/profile.yaml
+  devcovenant/core/templates/profiles/nuxt/profile.yaml
+  devcovenant/core/templates/profiles/objective-c/profile.yaml
+  devcovenant/core/templates/profiles/ocaml/profile.yaml
+  devcovenant/core/templates/profiles/pascal/profile.yaml
+  devcovenant/core/templates/profiles/perl/profile.yaml
+  devcovenant/core/templates/profiles/php/profile.yaml
+  devcovenant/core/templates/profiles/powershell/profile.yaml
+  devcovenant/core/templates/profiles/prolog/profile.yaml
+  devcovenant/core/templates/profiles/python/profile.yaml
+  devcovenant/core/templates/profiles/quarkus/profile.yaml
+  devcovenant/core/templates/profiles/r/profile.yaml
+  devcovenant/core/templates/profiles/rails/profile.yaml
+  devcovenant/core/templates/profiles/react/profile.yaml
+  devcovenant/core/templates/profiles/ruby/profile.yaml
+  devcovenant/core/templates/profiles/rust/profile.yaml
+  devcovenant/core/templates/profiles/scala/profile.yaml
+  devcovenant/core/templates/profiles/scheme/profile.yaml
+  devcovenant/core/templates/profiles/spring/profile.yaml
+  devcovenant/core/templates/profiles/sql/profile.yaml
+  devcovenant/core/templates/profiles/suffixes/profile.yaml
+  devcovenant/core/templates/profiles/svelte/profile.yaml
+  devcovenant/core/templates/profiles/swift/profile.yaml
+  devcovenant/core/templates/profiles/symfony/profile.yaml
+  devcovenant/core/templates/profiles/terraform/profile.yaml
+  devcovenant/core/templates/profiles/typescript/profile.yaml
+  devcovenant/core/templates/profiles/vue/profile.yaml
+  devcovenant/core/templates/profiles/zig/profile.yaml
+- 2026-01-24: Reordered the plan with remaining and completed
+  work. (AI assistant)
+  Files:
+  CHANGELOG.md
+  PLAN.md
+- 2026-01-24: Documented adapter locations in plan/spec. (AI assistant)
+  Files:
+  CHANGELOG.md
+  PLAN.md
+  SPEC.md
+- 2026-01-24: Clarified policy/profile asset hierarchy in the profile
+  draft. (AI assistant)
+  Files:
+  CHANGELOG.md
+  PROFILE_POLICY_DRAFT.md
+- 2026-01-24: Aligned plan/spec with the policy folder layout. (AI assistant)
+  Files:
+  CHANGELOG.md
+  PLAN.md
+  SPEC.md
+- 2026-01-24: Clarified always-on profiles in the policy draft. (AI assistant)
+  Files:
+  CHANGELOG.md
+  PROFILE_POLICY_DRAFT.md
+- 2026-01-24: Marked docs as always-on and clarified the global
+  baseline profile. (AI assistant)
+  Files:
+  CHANGELOG.md
+  PLAN.md
+  PROFILE_POLICY_DRAFT.md
+- 2026-01-24: Marked always-on profiles and updated install
+  guidance. (AI assistant)
+  Files:
+  CHANGELOG.md
+  PLAN.md
+  PROFILE_POLICY_DRAFT.md
+- 2026-01-24: Updated SemVer scope policy and release guidance,
+  plus profile-scoped planning updates. (AI assistant)
+  Files:
+  CHANGELOG.md
+  AGENTS.md
+  MANIFEST.in
+  PLAN.md
+  README.md
+  SPEC.md
+  devcovenant/README.md
+  devcovenant/config.yaml
+  devcovenant/core/install.py
+  devcovenant/core/manifest.py
+  devcovenant/core/policy_assets.yaml
+  devcovenant/core/policy_replacements.py
+  devcovenant/core/policy_replacements.yaml
+  devcovenant/core/policy_scripts/devflow_run_gates.py
+  devcovenant/core/policy_scripts/stock_policy_text_sync.py
+  devcovenant/core/policy_scripts/track_test_status.py
+  devcovenant/core/policy_texts.py
+  devcovenant/core/profile_catalog.yaml
+  devcovenant/core/profiles.py
+  devcovenant/core/stock_policy_texts.yaml
+  devcovenant/core/templates/README.md
+  devcovenant/core/templates/global/AGENTS.md
+  devcovenant/core/templates/global/tools/run_pre_commit.py
+  devcovenant/core/templates/global/tools/run_tests.py
+  devcovenant/core/templates/global/tools/update_test_status.py
+  devcovenant/core/templates/policies/README.md
+  devcovenant/core/templates/policies/dependency-license-sync/\
+    policy_assets.yaml
+  devcovenant/core/templates/profiles/README.md
+  devcovenant/core/templates/profiles/angular/README.md
+  devcovenant/core/templates/profiles/ansible/README.md
+  devcovenant/core/templates/profiles/bash/README.md
+  devcovenant/core/templates/profiles/c/README.md
+  devcovenant/core/templates/profiles/clojure/README.md
+  devcovenant/core/templates/profiles/cobol/README.md
+  devcovenant/core/templates/profiles/cpp/README.md
+  devcovenant/core/templates/profiles/crystal/README.md
+  devcovenant/core/templates/profiles/csharp/README.md
+  devcovenant/core/templates/profiles/dart/README.md
+  devcovenant/core/templates/profiles/data/README.md
+  devcovenant/core/templates/profiles/django/README.md
+  devcovenant/core/templates/profiles/docker/README.md
+  devcovenant/core/templates/profiles/docs/README.md
+  devcovenant/core/templates/profiles/dotnet/README.md
+  devcovenant/core/templates/profiles/elixir/README.md
+  devcovenant/core/templates/profiles/erlang/README.md
+  devcovenant/core/templates/profiles/express/README.md
+  devcovenant/core/templates/profiles/fastapi/README.md
+  devcovenant/core/templates/profiles/flask/README.md
+  devcovenant/core/templates/profiles/flutter/README.md
+  devcovenant/core/templates/profiles/fortran/README.md
+  devcovenant/core/templates/profiles/frappe/README.md
+  devcovenant/core/templates/profiles/fsharp/README.md
+  devcovenant/core/templates/profiles/go/README.md
+  devcovenant/core/templates/profiles/groovy/README.md
+  devcovenant/core/templates/profiles/haskell/README.md
+  devcovenant/core/templates/profiles/java/README.md
+  devcovenant/core/templates/profiles/javascript/README.md
+  devcovenant/core/templates/profiles/julia/README.md
+  devcovenant/core/templates/profiles/kotlin/README.md
+  devcovenant/core/templates/profiles/kubernetes/README.md
+  devcovenant/core/templates/profiles/laravel/README.md
+  devcovenant/core/templates/profiles/lisp/README.md
+  devcovenant/core/templates/profiles/lua/README.md
+  devcovenant/core/templates/profiles/matlab/README.md
+  devcovenant/core/templates/profiles/micronaut/README.md
+  devcovenant/core/templates/profiles/nestjs/README.md
+  devcovenant/core/templates/profiles/nextjs/README.md
+  devcovenant/core/templates/profiles/nim/README.md
+  devcovenant/core/templates/profiles/nuxt/README.md
+  devcovenant/core/templates/profiles/objective-c/README.md
+  devcovenant/core/templates/profiles/ocaml/README.md
+  devcovenant/core/templates/profiles/pascal/README.md
+  devcovenant/core/templates/profiles/perl/README.md
+  devcovenant/core/templates/profiles/php/README.md
+  devcovenant/core/templates/profiles/powershell/README.md
+  devcovenant/core/templates/profiles/prolog/README.md
+  devcovenant/core/templates/profiles/python/README.md
+  devcovenant/core/templates/profiles/quarkus/README.md
+  devcovenant/core/templates/profiles/r/README.md
+  devcovenant/core/templates/profiles/rails/README.md
+  devcovenant/core/templates/profiles/react/README.md
+  devcovenant/core/templates/profiles/ruby/README.md
+  devcovenant/core/templates/profiles/rust/README.md
+  devcovenant/core/templates/profiles/scala/README.md
+  devcovenant/core/templates/profiles/scheme/README.md
+  devcovenant/core/templates/profiles/spring/README.md
+  devcovenant/core/templates/profiles/sql/README.md
+  devcovenant/core/templates/profiles/suffixes/README.md
+  devcovenant/core/templates/profiles/svelte/README.md
+  devcovenant/core/templates/profiles/swift/README.md
+  devcovenant/core/templates/profiles/symfony/README.md
+  devcovenant/core/templates/profiles/terraform/README.md
+  devcovenant/core/templates/profiles/typescript/README.md
+  devcovenant/core/templates/profiles/vue/README.md
+  devcovenant/core/templates/profiles/zig/README.md
+  devcovenant/core/tests/test_policies/test_devflow_run_gates.py
+  devcovenant/core/tests/test_policies/test_stock_policy_text_sync.py
+  devcovenant/core/tests/test_profiles.py
+  devcovenant/core/update_hashes.py
+  devcovenant/custom/policy_assets.yaml
+  devcovenant/custom/templates/policies/README.md
+  devcovenant/custom/templates/profiles/README.md
+  devcovenant/manifest.json
+  devcovenant/registry.json
+  devcovenant/registry/manifest.json
+  devcovenant/registry/policy_assets.yaml
+  devcovenant/registry/policy_replacements.yaml
+  devcovenant/registry/profile_catalog.yaml
+  devcovenant/registry/registry.json
+  devcovenant/registry/stock_policy_texts.yaml
+  devcovenant/registry/test_status.json
+  tools/run_pre_commit.py
+  tools/run_tests.py
+  tools/update_test_status.py
+- 2026-01-24: Planned dynamic profile/policy catalogs and registry
+  layout updates. (AI assistant)
+  Files:
+  CHANGELOG.md
+  PLAN.md
+  SPEC.md
+  devcovenant/README.md
+  devcovenant/core/manifest.py
+  devcovenant/core/templates/README.md
+  devcovenant/core/templates/policies/README.md
+  devcovenant/core/templates/profiles/README.md
+  devcovenant/core/templates/profiles/angular/README.md
+  devcovenant/core/templates/profiles/ansible/README.md
+  devcovenant/core/templates/profiles/bash/README.md
+  devcovenant/core/templates/profiles/c/README.md
+  devcovenant/core/templates/profiles/clojure/README.md
+  devcovenant/core/templates/profiles/cobol/README.md
+  devcovenant/core/templates/profiles/cpp/README.md
+  devcovenant/core/templates/profiles/crystal/README.md
+  devcovenant/core/templates/profiles/csharp/README.md
+  devcovenant/core/templates/profiles/dart/README.md
+  devcovenant/core/templates/profiles/data/README.md
+  devcovenant/core/templates/profiles/django/README.md
+  devcovenant/core/templates/profiles/docker/README.md
+  devcovenant/core/templates/profiles/docs/README.md
+  devcovenant/core/templates/profiles/dotnet/README.md
+  devcovenant/core/templates/profiles/elixir/README.md
+  devcovenant/core/templates/profiles/erlang/README.md
+  devcovenant/core/templates/profiles/express/README.md
+  devcovenant/core/templates/profiles/fastapi/README.md
+  devcovenant/core/templates/profiles/flask/README.md
+  devcovenant/core/templates/profiles/flutter/README.md
+  devcovenant/core/templates/profiles/fortran/README.md
+  devcovenant/core/templates/profiles/frappe/README.md
+  devcovenant/core/templates/profiles/fsharp/README.md
+  devcovenant/core/templates/profiles/go/README.md
+  devcovenant/core/templates/profiles/groovy/README.md
+  devcovenant/core/templates/profiles/haskell/README.md
+  devcovenant/core/templates/profiles/java/README.md
+  devcovenant/core/templates/profiles/javascript/README.md
+  devcovenant/core/templates/profiles/julia/README.md
+  devcovenant/core/templates/profiles/kotlin/README.md
+  devcovenant/core/templates/profiles/kubernetes/README.md
+  devcovenant/core/templates/profiles/laravel/README.md
+  devcovenant/core/templates/profiles/lisp/README.md
+  devcovenant/core/templates/profiles/lua/README.md
+  devcovenant/core/templates/profiles/matlab/README.md
+  devcovenant/core/templates/profiles/micronaut/README.md
+  devcovenant/core/templates/profiles/nestjs/README.md
+  devcovenant/core/templates/profiles/nextjs/README.md
+  devcovenant/core/templates/profiles/nim/README.md
+  devcovenant/core/templates/profiles/nuxt/README.md
+  devcovenant/core/templates/profiles/objective-c/README.md
+  devcovenant/core/templates/profiles/ocaml/README.md
+  devcovenant/core/templates/profiles/pascal/README.md
+  devcovenant/core/templates/profiles/perl/README.md
+  devcovenant/core/templates/profiles/php/README.md
+  devcovenant/core/templates/profiles/powershell/README.md
+  devcovenant/core/templates/profiles/prolog/README.md
+  devcovenant/core/templates/profiles/python/README.md
+  devcovenant/core/templates/profiles/quarkus/README.md
+  devcovenant/core/templates/profiles/r/README.md
+  devcovenant/core/templates/profiles/rails/README.md
+  devcovenant/core/templates/profiles/react/README.md
+  devcovenant/core/templates/profiles/ruby/README.md
+  devcovenant/core/templates/profiles/rust/README.md
+  devcovenant/core/templates/profiles/scala/README.md
+  devcovenant/core/templates/profiles/scheme/README.md
+  devcovenant/core/templates/profiles/spring/README.md
+  devcovenant/core/templates/profiles/sql/README.md
+  devcovenant/core/templates/profiles/suffixes/README.md
+  devcovenant/core/templates/profiles/svelte/README.md
+  devcovenant/core/templates/profiles/swift/README.md
+  devcovenant/core/templates/profiles/symfony/README.md
+  devcovenant/core/templates/profiles/terraform/README.md
+  devcovenant/core/templates/profiles/typescript/README.md
+  devcovenant/core/templates/profiles/vue/README.md
+  devcovenant/core/templates/profiles/zig/README.md
+  devcovenant/custom/policy_assets.yaml
+  devcovenant/custom/profile_catalog.yaml
+  devcovenant/custom/templates/policies/README.md
+  devcovenant/custom/templates/profiles/README.md
+- 2026-01-24: Expanded template documentation and removed per-profile
+  README stubs. (AI assistant)
+  Files:
+  CHANGELOG.md
+  PLAN.md
+  SPEC.md
+  devcovenant/README.md
+  devcovenant/core/manifest.py
+  devcovenant/core/templates/README.md
+  devcovenant/core/templates/policies/README.md
+  devcovenant/core/templates/profiles/README.md
+  devcovenant/core/templates/profiles/angular/README.md
+  devcovenant/core/templates/profiles/ansible/README.md
+  devcovenant/core/templates/profiles/bash/README.md
+  devcovenant/core/templates/profiles/c/README.md
+  devcovenant/core/templates/profiles/clojure/README.md
+  devcovenant/core/templates/profiles/cobol/README.md
+  devcovenant/core/templates/profiles/cpp/README.md
+  devcovenant/core/templates/profiles/crystal/README.md
+  devcovenant/core/templates/profiles/csharp/README.md
+  devcovenant/core/templates/profiles/dart/README.md
+  devcovenant/core/templates/profiles/data/README.md
+  devcovenant/core/templates/profiles/django/README.md
+  devcovenant/core/templates/profiles/docker/README.md
+  devcovenant/core/templates/profiles/docs/README.md
+  devcovenant/core/templates/profiles/dotnet/README.md
+  devcovenant/core/templates/profiles/elixir/README.md
+  devcovenant/core/templates/profiles/erlang/README.md
+  devcovenant/core/templates/profiles/express/README.md
+  devcovenant/core/templates/profiles/fastapi/README.md
+  devcovenant/core/templates/profiles/flask/README.md
+  devcovenant/core/templates/profiles/flutter/README.md
+  devcovenant/core/templates/profiles/fortran/README.md
+  devcovenant/core/templates/profiles/frappe/README.md
+  devcovenant/core/templates/profiles/fsharp/README.md
+  devcovenant/core/templates/profiles/go/README.md
+  devcovenant/core/templates/profiles/groovy/README.md
+  devcovenant/core/templates/profiles/haskell/README.md
+  devcovenant/core/templates/profiles/java/README.md
+  devcovenant/core/templates/profiles/javascript/README.md
+  devcovenant/core/templates/profiles/julia/README.md
+  devcovenant/core/templates/profiles/kotlin/README.md
+  devcovenant/core/templates/profiles/kubernetes/README.md
+  devcovenant/core/templates/profiles/laravel/README.md
+  devcovenant/core/templates/profiles/lisp/README.md
+  devcovenant/core/templates/profiles/lua/README.md
+  devcovenant/core/templates/profiles/matlab/README.md
+  devcovenant/core/templates/profiles/micronaut/README.md
+  devcovenant/core/templates/profiles/nestjs/README.md
+  devcovenant/core/templates/profiles/nextjs/README.md
+  devcovenant/core/templates/profiles/nim/README.md
+  devcovenant/core/templates/profiles/nuxt/README.md
+  devcovenant/core/templates/profiles/objective-c/README.md
+  devcovenant/core/templates/profiles/ocaml/README.md
+  devcovenant/core/templates/profiles/pascal/README.md
+  devcovenant/core/templates/profiles/perl/README.md
+  devcovenant/core/templates/profiles/php/README.md
+  devcovenant/core/templates/profiles/powershell/README.md
+  devcovenant/core/templates/profiles/prolog/README.md
+  devcovenant/core/templates/profiles/python/README.md
+  devcovenant/core/templates/profiles/quarkus/README.md
+  devcovenant/core/templates/profiles/r/README.md
+  devcovenant/core/templates/profiles/rails/README.md
+  devcovenant/core/templates/profiles/react/README.md
+  devcovenant/core/templates/profiles/ruby/README.md
+  devcovenant/core/templates/profiles/rust/README.md
+  devcovenant/core/templates/profiles/scala/README.md
+  devcovenant/core/templates/profiles/scheme/README.md
+  devcovenant/core/templates/profiles/spring/README.md
+  devcovenant/core/templates/profiles/sql/README.md
+  devcovenant/core/templates/profiles/suffixes/README.md
+  devcovenant/core/templates/profiles/svelte/README.md
+  devcovenant/core/templates/profiles/swift/README.md
+  devcovenant/core/templates/profiles/symfony/README.md
+  devcovenant/core/templates/profiles/terraform/README.md
+  devcovenant/core/templates/profiles/typescript/README.md
+  devcovenant/core/templates/profiles/vue/README.md
+  devcovenant/core/templates/profiles/zig/README.md
+  devcovenant/custom/policy_assets.yaml
+  devcovenant/custom/profile_catalog.yaml
+  devcovenant/custom/templates/policies/README.md
+  devcovenant/custom/templates/profiles/README.md
+- 2026-01-24: Consolidated template docs and added custom template
+  indexes plus profile catalogs. (AI assistant)
+  Files:
+  CHANGELOG.md
+  PLAN.md
+  SPEC.md
+  devcovenant/README.md
+  devcovenant/core/manifest.py
+  devcovenant/core/templates/README.md
+  devcovenant/core/templates/policies/README.md
+  devcovenant/core/templates/profiles/README.md
+  devcovenant/core/templates/profiles/angular/README.md
+  devcovenant/core/templates/profiles/ansible/README.md
+  devcovenant/core/templates/profiles/bash/README.md
+  devcovenant/core/templates/profiles/c/README.md
+  devcovenant/core/templates/profiles/clojure/README.md
+  devcovenant/core/templates/profiles/cobol/README.md
+  devcovenant/core/templates/profiles/cpp/README.md
+  devcovenant/core/templates/profiles/crystal/README.md
+  devcovenant/core/templates/profiles/csharp/README.md
+  devcovenant/core/templates/profiles/dart/README.md
+  devcovenant/core/templates/profiles/data/README.md
+  devcovenant/core/templates/profiles/django/README.md
+  devcovenant/core/templates/profiles/docker/README.md
+  devcovenant/core/templates/profiles/docs/README.md
+  devcovenant/core/templates/profiles/dotnet/README.md
+  devcovenant/core/templates/profiles/elixir/README.md
+  devcovenant/core/templates/profiles/erlang/README.md
+  devcovenant/core/templates/profiles/express/README.md
+  devcovenant/core/templates/profiles/fastapi/README.md
+  devcovenant/core/templates/profiles/flask/README.md
+  devcovenant/core/templates/profiles/flutter/README.md
+  devcovenant/core/templates/profiles/fortran/README.md
+  devcovenant/core/templates/profiles/frappe/README.md
+  devcovenant/core/templates/profiles/fsharp/README.md
+  devcovenant/core/templates/profiles/go/README.md
+  devcovenant/core/templates/profiles/groovy/README.md
+  devcovenant/core/templates/profiles/haskell/README.md
+  devcovenant/core/templates/profiles/java/README.md
+  devcovenant/core/templates/profiles/javascript/README.md
+  devcovenant/core/templates/profiles/julia/README.md
+  devcovenant/core/templates/profiles/kotlin/README.md
+  devcovenant/core/templates/profiles/kubernetes/README.md
+  devcovenant/core/templates/profiles/laravel/README.md
+  devcovenant/core/templates/profiles/lisp/README.md
+  devcovenant/core/templates/profiles/lua/README.md
+  devcovenant/core/templates/profiles/matlab/README.md
+  devcovenant/core/templates/profiles/micronaut/README.md
+  devcovenant/core/templates/profiles/nestjs/README.md
+  devcovenant/core/templates/profiles/nextjs/README.md
+  devcovenant/core/templates/profiles/nim/README.md
+  devcovenant/core/templates/profiles/nuxt/README.md
+  devcovenant/core/templates/profiles/objective-c/README.md
+  devcovenant/core/templates/profiles/ocaml/README.md
+  devcovenant/core/templates/profiles/pascal/README.md
+  devcovenant/core/templates/profiles/perl/README.md
+  devcovenant/core/templates/profiles/php/README.md
+  devcovenant/core/templates/profiles/powershell/README.md
+  devcovenant/core/templates/profiles/prolog/README.md
+  devcovenant/core/templates/profiles/python/README.md
+  devcovenant/core/templates/profiles/quarkus/README.md
+  devcovenant/core/templates/profiles/r/README.md
+  devcovenant/core/templates/profiles/rails/README.md
+  devcovenant/core/templates/profiles/react/README.md
+  devcovenant/core/templates/profiles/ruby/README.md
+  devcovenant/core/templates/profiles/rust/README.md
+  devcovenant/core/templates/profiles/scala/README.md
+  devcovenant/core/templates/profiles/scheme/README.md
+  devcovenant/core/templates/profiles/spring/README.md
+  devcovenant/core/templates/profiles/sql/README.md
+  devcovenant/core/templates/profiles/suffixes/README.md
+  devcovenant/core/templates/profiles/svelte/README.md
+  devcovenant/core/templates/profiles/swift/README.md
+  devcovenant/core/templates/profiles/symfony/README.md
+  devcovenant/core/templates/profiles/terraform/README.md
+  devcovenant/core/templates/profiles/typescript/README.md
+  devcovenant/core/templates/profiles/vue/README.md
+  devcovenant/core/templates/profiles/zig/README.md
+  devcovenant/custom/policy_assets.yaml
+  devcovenant/custom/profile_catalog.yaml
+  devcovenant/custom/templates/policies/README.md
+  devcovenant/custom/templates/profiles/README.md
+- 2026-01-24: Consolidated template docs, added custom catalogs,
+  and clarified global override behavior. (AI assistant)
+  Files:
+  CHANGELOG.md
+  PLAN.md
+  SPEC.md
+  devcovenant/README.md
+  devcovenant/core/manifest.py
+  devcovenant/core/templates/README.md
+  devcovenant/core/templates/policies/README.md
+  devcovenant/core/templates/profiles/README.md
+  devcovenant/core/templates/profiles/angular/README.md
+  devcovenant/core/templates/profiles/ansible/README.md
+  devcovenant/core/templates/profiles/bash/README.md
+  devcovenant/core/templates/profiles/c/README.md
+  devcovenant/core/templates/profiles/clojure/README.md
+  devcovenant/core/templates/profiles/cobol/README.md
+  devcovenant/core/templates/profiles/cpp/README.md
+  devcovenant/core/templates/profiles/crystal/README.md
+  devcovenant/core/templates/profiles/csharp/README.md
+  devcovenant/core/templates/profiles/dart/README.md
+  devcovenant/core/templates/profiles/data/README.md
+  devcovenant/core/templates/profiles/django/README.md
+  devcovenant/core/templates/profiles/docker/README.md
+  devcovenant/core/templates/profiles/docs/README.md
+  devcovenant/core/templates/profiles/dotnet/README.md
+  devcovenant/core/templates/profiles/elixir/README.md
+  devcovenant/core/templates/profiles/erlang/README.md
+  devcovenant/core/templates/profiles/express/README.md
+  devcovenant/core/templates/profiles/fastapi/README.md
+  devcovenant/core/templates/profiles/flask/README.md
+  devcovenant/core/templates/profiles/flutter/README.md
+  devcovenant/core/templates/profiles/fortran/README.md
+  devcovenant/core/templates/profiles/frappe/README.md
+  devcovenant/core/templates/profiles/fsharp/README.md
+  devcovenant/core/templates/profiles/go/README.md
+  devcovenant/core/templates/profiles/groovy/README.md
+  devcovenant/core/templates/profiles/haskell/README.md
+  devcovenant/core/templates/profiles/java/README.md
+  devcovenant/core/templates/profiles/javascript/README.md
+  devcovenant/core/templates/profiles/julia/README.md
+  devcovenant/core/templates/profiles/kotlin/README.md
+  devcovenant/core/templates/profiles/kubernetes/README.md
+  devcovenant/core/templates/profiles/laravel/README.md
+  devcovenant/core/templates/profiles/lisp/README.md
+  devcovenant/core/templates/profiles/lua/README.md
+  devcovenant/core/templates/profiles/matlab/README.md
+  devcovenant/core/templates/profiles/micronaut/README.md
+  devcovenant/core/templates/profiles/nestjs/README.md
+  devcovenant/core/templates/profiles/nextjs/README.md
+  devcovenant/core/templates/profiles/nim/README.md
+  devcovenant/core/templates/profiles/nuxt/README.md
+  devcovenant/core/templates/profiles/objective-c/README.md
+  devcovenant/core/templates/profiles/ocaml/README.md
+  devcovenant/core/templates/profiles/pascal/README.md
+  devcovenant/core/templates/profiles/perl/README.md
+  devcovenant/core/templates/profiles/php/README.md
+  devcovenant/core/templates/profiles/powershell/README.md
+  devcovenant/core/templates/profiles/prolog/README.md
+  devcovenant/core/templates/profiles/python/README.md
+  devcovenant/core/templates/profiles/quarkus/README.md
+  devcovenant/core/templates/profiles/r/README.md
+  devcovenant/core/templates/profiles/rails/README.md
+  devcovenant/core/templates/profiles/react/README.md
+  devcovenant/core/templates/profiles/ruby/README.md
+  devcovenant/core/templates/profiles/rust/README.md
+  devcovenant/core/templates/profiles/scala/README.md
+  devcovenant/core/templates/profiles/scheme/README.md
+  devcovenant/core/templates/profiles/spring/README.md
+  devcovenant/core/templates/profiles/sql/README.md
+  devcovenant/core/templates/profiles/suffixes/README.md
+  devcovenant/core/templates/profiles/svelte/README.md
+  devcovenant/core/templates/profiles/swift/README.md
+  devcovenant/core/templates/profiles/symfony/README.md
+  devcovenant/core/templates/profiles/terraform/README.md
+  devcovenant/core/templates/profiles/typescript/README.md
+  devcovenant/core/templates/profiles/vue/README.md
+  devcovenant/core/templates/profiles/zig/README.md
+  devcovenant/custom/policy_assets.yaml
+  devcovenant/custom/profile_catalog.yaml
+  devcovenant/custom/templates/policies/README.md
+  devcovenant/custom/templates/profiles/README.md
 - 2026-01-23: Added profile manifests, gitignore fragments, and
   profile overlays, plus managed-environment guidance and template
   refreshes. (AI assistant)
@@ -40,7 +594,7 @@ Example entry:
   devcovenant/README.md
   devcovenant/core/install.py
   devcovenant/core/manifest.py
-  devcovenant/core/policy_assets.yaml
+  devcovenant/registry/policy_assets.yaml
   devcovenant/core/policy_scripts/managed_environment.py
   devcovenant/core/profiles.py
   devcovenant/core/templates/global/AGENTS.md
@@ -194,7 +748,7 @@ Example entry:
   devcovenant/core/tests/test_policies/test_managed_environment.py
   devcovenant/core/tests/test_profiles.py
   devcovenant/custom/policy_assets.yaml
-  devcovenant/registry.json
+  devcovenant/registry/registry.json
 - 2026-01-23: Embedded the policy scope map and language scanner tasks
   into the Phase L planning checklist.
   (AI assistant)
@@ -229,7 +783,7 @@ Example entry:
   devcovenant/core/policy_scripts/managed_environment.py
   devcovenant/core/tests/test_policies/test_managed_environment.py
   devcovenant/core/templates/global/AGENTS.md
-  devcovenant/core/stock_policy_texts.yaml
+  devcovenant/registry/stock_policy_texts.yaml
   devcovenant/core/policy_scripts/managed_bench.py
   devcovenant/core/tests/test_policies/test_managed_bench.py
   CHANGELOG.md
@@ -286,9 +840,9 @@ devcovenant/core/engine.py
 devcovenant/core/install.py
 devcovenant/core/manifest.py
 devcovenant/core/metadata_normalizer.py
-devcovenant/core/policy_assets.yaml
+devcovenant/registry/policy_assets.yaml
 devcovenant/core/policy_scripts/changelog_coverage.py
-devcovenant/core/profile_catalog.yaml
+devcovenant/registry/profile_catalog.yaml
 devcovenant/core/profiles.py
 devcovenant/core/templates/global/.github/workflows/ci.yml
 devcovenant/core/templates/global/.pre-commit-config.yaml
@@ -384,8 +938,8 @@ devcovenant/core/templates/profiles/zig/README.md
 devcovenant/core/tests/test_policies/test_changelog_coverage.py
 devcovenant/core/tests/test_profiles.py
 devcovenant/core/update.py
-devcovenant/manifest.json
-devcovenant/registry.json
+devcovenant/registry/manifest.json
+devcovenant/registry/registry.json
 devcovenant/templates/.github/workflows/ci.yml
 devcovenant/templates/.pre-commit-config.yaml
 devcovenant/templates/AGENTS.md
@@ -409,7 +963,7 @@ devcovenant/core/tests/test_install.py
   devcovenant/core/manifest.py
   devcovenant/core/tests/test_install.py
   devcovenant/core/tests/test_policy_replacements.py
-  devcovenant/manifest.json
+  devcovenant/registry/manifest.json
 - 2026-01-23: Added manifest support for profiles and policy assets,
   updated schema docs, and aligned tests/spec. (AI assistant)
   Files:
@@ -421,7 +975,7 @@ devcovenant/core/tests/test_install.py
   devcovenant/core/manifest.py
   devcovenant/core/tests/test_install.py
   devcovenant/core/tests/test_policy_replacements.py
-  devcovenant/manifest.json
+  devcovenant/registry/manifest.json
 - 2026-01-23: Reordered the plan phases to separate completed and
   remaining work without revisit markers. (AI assistant)
   Files:

@@ -1,5 +1,11 @@
 version: 1
 profile: prolog
 category: language
+suffixes:
+- .pl
+- .pro
+- .prolog
+ignore_dirs:
+- build
 assets: []
 policy_overlays: {}

@@ -1,5 +1,16 @@
 version: 1
 profile: data
 category: ops
+suffixes:
+- .csv
+- .tsv
+- .json
+- .ndjson
+- .parquet
+- .avro
+ignore_dirs:
+- data/raw
+- data/tmp
+- data/cache
 assets: []
 policy_overlays: {}

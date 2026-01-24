@@ -1,5 +1,10 @@
 version: 1
 profile: nestjs
 category: framework
+suffixes:
+- .ts
+ignore_dirs:
+- node_modules
+- dist
 assets: []
 policy_overlays: {}

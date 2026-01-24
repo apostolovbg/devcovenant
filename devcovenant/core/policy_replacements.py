@@ -8,7 +8,7 @@ from typing import Dict
 
 import yaml
 
-_DEFAULT_REPLACEMENTS = Path("devcovenant/core/policy_replacements.yaml")
+_DEFAULT_REPLACEMENTS = Path("devcovenant/registry/policy_replacements.yaml")
 
 
 @dataclass(frozen=True)

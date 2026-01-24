@@ -1,5 +1,5 @@
 # DevCovenant (Repository Guide)
-**Last Updated:** 2026-01-23
+**Last Updated:** 2026-01-24
 **Version:** 0.2.6
 
 **DevCovenant Version:** 0.2.6
@@ -90,7 +90,7 @@ The primary commands are:
 - `devcovenant check --fix` (apply auto-fixes when allowed)
 - `devcovenant sync` (startup sync check)
 - `devcovenant test` (runs `pytest devcovenant/core/tests/`)
-- `devcovenant update-hashes` (refresh `devcovenant/registry.json`)
+- `devcovenant update-hashes` (refresh `devcovenant/registry/registry.json`)
 - `devcovenant normalize-metadata` (insert missing metadata keys)
 - `devcovenant restore-stock-text --policy <id>`
 - `devcovenant restore-stock-text --all`
@@ -198,7 +198,7 @@ repos; it preserves content by default and refreshes managed blocks.
 - `LICENSE`: created from the GPL-3.0 template if missing. Overwritten only
   when the license mode requests it, and the original is backed up first.
 - `pyproject.toml`: preserved or overwritten based on `--pyproject-mode`.
-- `devcovenant/manifest.json`: always written or refreshed by install,
+- `devcovenant/registry/manifest.json`: always written or refreshed by install,
   update, or first-run checks.
 
 All `Last Updated` headers are stamped with the UTC install date.
@@ -207,7 +207,7 @@ Any file that is overwritten or merged during install is backed up
 as `*_old.*`, and the installer prints the backup list at the end.
 
 ## Install Manifest
-The installer writes `devcovenant/manifest.json` with:
+The installer writes `devcovenant/registry/manifest.json` with:
 - `schema_version`: manifest schema version.
 - `updated_at`: ISO timestamp in UTC.
 - `mode`: `install` or `update`.
@@ -251,7 +251,7 @@ Manifest schema (summary):
   },
   "generated": {
     "dirs": [],
-    "files": ["devcovenant/registry.json"]
+    "files": ["devcovenant/registry/registry.json"]
   },
   "profiles": {
     "active": [],
@@ -289,7 +289,7 @@ DevCovenant-managed blocks are wrapped as:
 
 ## Policy Replacement Workflow
 DevCovenant can retire core policies via the replacement map in
-`devcovenant/core/policy_replacements.yaml`. During `devcovenant update`:
+`devcovenant/registry/policy_replacements.yaml`. During `devcovenant update`:
 - Enabled replaced policies (`apply: true`) are moved to
   `devcovenant/custom/`, marked `custom: true`, and flagged
   `status: deprecated`. Their last-known core scripts/fixers are
@@ -300,7 +300,7 @@ DevCovenant can retire core policies via the replacement map in
   reported in the update notices.
 
 Update notices are printed to stdout and appended to
-`devcovenant/manifest.json` under `notifications`. Deprecated policies
+`devcovenant/registry/manifest.json` under `notifications`. Deprecated policies
 are not enforced by default; set them back to `status: active` if you
 need to keep enforcing legacy behavior.
 
@@ -357,15 +357,19 @@ supply policy metadata overlays that are merged into `config.yaml`.
 
 ## Profiles and Scopes
 DevCovenant uses install profiles to tailor policy applicability and assets.
-Profiles are defined in `devcovenant/core/profile_catalog.yaml`, and custom
-profiles can be added via `devcovenant/custom/profile_catalog.yaml` or by
-creating a folder under `devcovenant/custom/templates/profiles/<name>`.
+Profiles are discovered from template folders and summarized in the generated
+catalog at `devcovenant/registry/profile_catalog.yaml`. That catalog is
+regenerated on install/update, so treat it as read-only output.
 
 Each profile can ship a profile manifest at
 `devcovenant/core/templates/profiles/<profile>/profile.yaml`. The manifest
 lists profile assets and per-policy metadata overlays. Custom profile
 manifests in `devcovenant/custom/templates/profiles/<profile>/profile.yaml`
-override the core manifest when both exist.
+override the core manifest when both exist. See the template indexes for
+layout and examples:
+- `devcovenant/core/templates/README.md`
+- `devcovenant/core/templates/profiles/README.md`
+- `devcovenant/core/templates/policies/README.md`
 
 Install prompts for one or more active profiles and stores the selection in
 `devcovenant/config.yaml` under `profiles.active`. Active profiles:
@@ -392,23 +396,16 @@ Custom profiles are optional and live entirely inside the repo's
 `devcovenant/custom/` tree. They let you ship profile-specific assets and
 metadata without editing DevCovenant core.
 
-1) Add profile metadata in `devcovenant/custom/profile_catalog.yaml`:
-```yaml
-profiles:
-  frappe:
-    category: framework
-    suffixes:
-      - .py
-      - .json
-      - .js
-```
-
-2) Define assets and overlays in a profile manifest:
+1) Define the profile manifest:
 `devcovenant/custom/templates/profiles/frappe/profile.yaml`
 ```yaml
 version: 1
 profile: frappe
 category: framework
+suffixes:
+  - .py
+  - .json
+  - .js
 assets:
   - path: requirements.in
     template: requirements.in
@@ -419,17 +416,17 @@ policy_overlays:
       - requirements.in
 ```
 
-3) Add the templates themselves (including optional `.gitignore` fragments):
+2) Add the templates themselves (including optional `.gitignore` fragments):
 ```
 devcovenant/custom/templates/profiles/frappe/requirements.in
 devcovenant/custom/templates/profiles/frappe/.gitignore
 ```
 
-4) If a policy requires assets, declare them in
-`devcovenant/custom/policy_assets.yaml` and add templates under
-`devcovenant/custom/templates/policies/<policy>/...`.
+3) If a policy needs custom assets, add
+`devcovenant/custom/templates/policies/<policy>/policy_assets.yaml` and any
+referenced templates under the same policy folder.
 
-5) Activate the profile in `devcovenant/config.yaml`:
+4) Activate the profile in `devcovenant/config.yaml`:
 ```yaml
 profiles:
   active:
@@ -441,7 +438,9 @@ Notes:
 - Template resolution always prefers custom templates over core templates.
 - Profiles are additive: multiple active profiles can contribute assets and
   metadata overlays at once.
-
+- `devcovenant/custom/templates/global/` exists to override global templates
+  (for example, a repo-specific AGENTS.md or README.md). Use it when a repo
+  needs to deviate from the stock global assets while still keeping updates.
 ## Check Modes and Exit Codes
 Run checks through the CLI:
 ```bash
@@ -468,13 +467,14 @@ live under `devcovenant/custom/fixers/`.
 
 ## Policy Registry and Stock Text
 Policy definitions in `AGENTS.md` are hashed into
-`devcovenant/registry.json`. When policy text changes, set `updated: true`,
-update scripts and tests, then run:
+`devcovenant/registry/registry.json`. When policy text changes, set
+`updated: true`, update scripts and tests, then run:
 ```bash
 devcovenant update-hashes
 ```
 
-Stock policy wording is stored in `devcovenant/core/stock_policy_texts.yaml`.
+Stock policy wording is stored in
+`devcovenant/registry/stock_policy_texts.yaml`.
 Restore it with:
 ```bash
 devcovenant restore-stock-text --policy <id>
@@ -516,16 +516,16 @@ devcovenant/custom/policy_scripts/my-policy.py
 devcovenant/custom/fixers/my-policy.py
 ```
 
-4) (Optional) attach assets in `devcovenant/custom/policy_assets.yaml`:
+4) (Optional) attach assets with a per-policy manifest:
+`devcovenant/custom/templates/policies/my-policy/policy_assets.yaml`
 ```yaml
-policies:
-  my-policy:
-    - path: docs/README.md
-      template: policies/my-policy/README.md
-      mode: replace
+assets:
+  - path: docs/README.md
+    template: README.md
+    mode: replace
 ```
 
-5) Provide the templates:
+5) Provide the templates alongside the manifest:
 ```
 devcovenant/custom/templates/policies/my-policy/README.md
 ```
@@ -540,8 +540,9 @@ without requiring per-repo scripting. Each policy is metadata-driven in
 The summary below explains intent, defaults, and impact.
 
 ### DevCovenant Self-Enforcement
-Keeps `devcovenant/registry.json` synchronized with the policy blocks in
-`AGENTS.md`. Default severity is `error` with `apply: true` so drift in policy
+Keeps `devcovenant/registry/registry.json` synchronized with the policy
+blocks in `AGENTS.md`. Default severity is `error` with `apply: true` so
+drift in policy
 text or hashes cannot go unnoticed.
 
 ### DevCovenant Structure Guard
@@ -561,13 +562,14 @@ metadata. This keeps `AGENTS.md` readable and makes future policy edits
 intentional.
 
 ### Stock Policy Text Sync
-Warns when the built-in policy text diverges from the stock wording stored in
-`devcovenant/core/stock_policy_texts.yaml`. Use it to keep the prose aligned
-with the core implementation unless a custom rewrite is intended.
+Warns when the built-in policy text diverges from the stock wording stored
+in `devcovenant/registry/stock_policy_texts.yaml`. Use it to keep the
+prose aligned with the core implementation unless a custom rewrite is
+intended.
 
 ### DevFlow Run Gates
 Enforces the session workflow (pre-commit start, tests, pre-commit end) by
-reading `devcovenant/test_status.json`. Default required commands are
+reading `devcovenant/registry/test_status.json`. Default required commands are
 `pytest` and `python -m unittest discover`, with timestamps compared against
 recent code changes.
 
@@ -580,6 +582,15 @@ notes stay complete and traceable.
 Keeps `VERSION`, docs, and other version-bearing files aligned with the latest
 changelog header. It prevents backward or mismatched version bumps so repo
 metadata never drifts.
+
+### Semantic Version Scope (optional)
+Validates that the latest changelog entry declares one SemVer scope tag
+(`semver:major`, `semver:minor`, or `semver:patch`) and that the bump
+matches the change from the previous version. Use `major` for
+API-breaking releases, `minor` for backward-compatible feature work, and
+`patch` for bug fixes or docs-only adjustments. The policy ships disabled
+(`apply: false`) and should only be enabled when release discipline is
+required.
 
 ### Last Updated Placement
 Ensures documentation files listed in the metadata carry a `Last Updated`
@@ -634,8 +645,9 @@ DevCovenant enforces the gate sequence for every change:
 2. `python3 tools/run_tests.py`
 3. `python3 tools/run_pre_commit.py --phase end`
 
-The status file at `devcovenant/test_status.json` records timestamps and
-commands. The `devflow-run-gates` policy reads it to enforce the workflow.
+The status file at `devcovenant/registry/test_status.json` records
+timestamps and commands. The `devflow-run-gates` policy reads it to enforce
+the workflow.
 
 ## Dependency and License Tracking
 Runtime dependencies are recorded in `requirements.in`, pinned in
@@ -651,11 +663,18 @@ three layers: `global/` (shared docs/config/tools),
 `policies/<policy>/` (policy-scoped assets). Each profile folder can
 include a `profile.yaml` manifest that declares assets and policy
 overlays. Custom overrides live under `devcovenant/custom/templates/`
-with the same layout.
+with the same layout, including `custom/templates/global/` for
+overriding global templates.
 
-Asset selection is driven by `devcovenant/core/policy_assets.yaml` for
-policy-scoped assets and profile manifests under `templates/profiles/`.
-Assets for disabled policies or inactive profiles are skipped.
+Use the template indexes for detailed structure and examples:
+- `devcovenant/core/templates/README.md`
+- `devcovenant/core/templates/profiles/README.md`
+- `devcovenant/core/templates/policies/README.md`
+
+Asset selection is driven by per-policy `policy_assets.yaml` manifests,
+compiled into `devcovenant/registry/policy_assets.yaml`, plus profile
+manifests under `templates/profiles/`. Assets for disabled policies or
+inactive profiles are skipped.
 
 ### Template precedence and resolution
 When DevCovenant resolves a template path, it checks in this order:

@@ -1,5 +1,11 @@
 version: 1
 profile: fsharp
 category: language
+suffixes:
+- .fs
+- .fsx
+ignore_dirs:
+- bin
+- obj
 assets: []
 policy_overlays: {}

@@ -1,5 +1,12 @@
 version: 1
 profile: frappe
 category: framework
+suffixes:
+- .py
+- .js
+- .json
+- .md
+ignore_dirs:
+- python + node + site caches
 assets: []
 policy_overlays: {}

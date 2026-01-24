@@ -1,5 +1,10 @@
 version: 1
 profile: csharp
 category: language
+suffixes:
+- .cs
+ignore_dirs:
+- bin
+- obj
 assets: []
 policy_overlays: {}

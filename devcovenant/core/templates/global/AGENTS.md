@@ -124,7 +124,7 @@ preparing new repos or upgrades. Key defaults:
   policy reports no violations before tagging a release. The policy looks for a
   `## License Report` section that mentions every touched manifest.
 - The changelog must record every touched file, and
-  `devcovenant/registry.json` must be refreshed via
+  `devcovenant/registry/registry.json` must be refreshed via
   `devcovenant update-hashes` before tagging a release.
 - Build artifacts locally (`python -m build`, `twine check dist/*`) and verify
   the `publish.yml` workflow publishes using the `PYPI_API_TOKEN` secret before
@@ -187,7 +187,7 @@ apply: true
 custom: false
 profile_scopes: global
 policy_definitions: AGENTS.md
-registry_file: devcovenant/registry.json
+registry_file: devcovenant/registry/registry.json
 ```
 
 DevCovenant must keep its registry synchronized with policy definitions.
@@ -225,7 +225,30 @@ applies_to: *
 enforcement: active
 apply: true
 custom: false
-profile_scopes: global
+profile_scopes: python
+  javascript
+  typescript
+  java
+  kotlin
+  scala
+  groovy
+  dotnet
+  csharp
+  fsharp
+  php
+  ruby
+  go
+  rust
+  swift
+  dart
+  flutter
+  elixir
+  erlang
+  haskell
+  clojure
+  julia
+  ocaml
+  crystal
 dependency_files: requirements.in,requirements.lock,pyproject.toml
 third_party_file: THIRD_PARTY_LICENSES.md
 licenses_dir: licenses
@@ -274,7 +297,7 @@ apply: true
 custom: false
 profile_scopes: global
 policy_definitions: AGENTS.md
-stock_texts_file: devcovenant/core/stock_policy_texts.yaml
+stock_texts_file: devcovenant/registry/stock_policy_texts.yaml
 ```
 
 If a built-in policy text is edited from its stock wording, DevCovenant must
@@ -296,7 +319,31 @@ enforcement: active
 apply: true
 custom: false
 profile_scopes: global
-test_status_file: devcovenant/test_status.json
+  python
+  javascript
+  typescript
+  java
+  kotlin
+  scala
+  groovy
+  dotnet
+  csharp
+  fsharp
+  php
+  ruby
+  go
+  rust
+  swift
+  dart
+  flutter
+  elixir
+  erlang
+  haskell
+  clojure
+  julia
+  ocaml
+  crystal
+test_status_file: devcovenant/registry/test_status.json
 required_commands: pytest
   python -m unittest discover
 require_pre_commit_start: true
@@ -381,6 +428,28 @@ enforcement: active
 apply: true
 custom: false
 profile_scopes: global
+  docs
+  data
+  python
+  javascript
+  typescript
+  java
+  kotlin
+  scala
+  groovy
+  dotnet
+  csharp
+  fsharp
+  php
+  ruby
+  go
+  rust
+  swift
+  dart
+  flutter
+  terraform
+  docker
+  kubernetes
 version_file: VERSION
 readme_files: README.md,AGENTS.md,CONTRIBUTING.md,SPEC.md
   PLAN.md
@@ -404,6 +473,35 @@ releases reflect the current version.
 
 ---
 
+## Policy: Semantic Version Scope
+
+```policy-def
+id: semantic-version-scope
+status: active
+severity: error
+auto_fix: false
+updated: false
+applies_to: *
+enforcement: active
+apply: false
+custom: false
+profile_scopes: global
+version_file: VERSION
+changelog_file: CHANGELOG.md
+ignored_prefixes:
+```
+
+When enabled, the latest changelog entry must include exactly one
+`[semver:major|minor|patch]` tag that matches the version bump. Use
+`major` for API-breaking releases, `minor` for backward-compatible feature
+work, and `patch` for bug fixes or documentation-only updates. The tag
+must match the bump from the previous version, and `VERSION` must be
+updated whenever the changelog declares a release scope. The policy ships
+disabled (`apply: false`) and should only be enabled for release
+processes that enforce SemVer discipline.
+
+---
+
 ## Policy: Last Updated Placement
 
 ```policy-def
@@ -417,6 +515,8 @@ enforcement: active
 apply: true
 custom: false
 profile_scopes: global
+  docs
+  data
 include_suffixes: .md
 allowed_globs: README.md,AGENTS.md,CONTRIBUTING.md,SPEC.md
   PLAN.md
@@ -446,6 +546,28 @@ enforcement: active
 apply: true
 custom: false
 profile_scopes: global
+  docs
+  data
+  python
+  javascript
+  typescript
+  go
+  rust
+  java
+  kotlin
+  scala
+  groovy
+  dotnet
+  csharp
+  fsharp
+  php
+  ruby
+  swift
+  dart
+  terraform
+  docker
+  kubernetes
+  ansible
 max_length: 79
 include_suffixes: .py,.md,.rst,.txt,.yml,.yaml,.json,.toml,.cff
 exclude_prefixes: build,dist,node_modules
@@ -473,7 +595,7 @@ applies_to: *.py
 enforcement: active
 apply: true
 custom: false
-profile_scopes: global
+profile_scopes: python
 include_suffixes: .py
 exclude_prefixes: build,dist,node_modules
 include_prefixes:
@@ -500,7 +622,7 @@ applies_to: *.py
 enforcement: active
 apply: true
 custom: false
-profile_scopes: global
+profile_scopes: python
 exclude_prefixes: build,dist,node_modules
 include_suffixes:
 include_prefixes:
@@ -528,7 +650,7 @@ applies_to: *
 enforcement: active
 apply: true
 custom: false
-profile_scopes: global
+profile_scopes: python
 include_suffixes: .py
 include_prefixes: devcovenant
 exclude_prefixes: build,dist,node_modules,tests,devcovenant/core/tests
@@ -559,6 +681,28 @@ enforcement: active
 apply: true
 custom: false
 profile_scopes: global
+  docs
+  data
+  python
+  javascript
+  typescript
+  go
+  rust
+  java
+  kotlin
+  scala
+  groovy
+  dotnet
+  csharp
+  fsharp
+  php
+  ruby
+  swift
+  dart
+  terraform
+  docker
+  kubernetes
+  ansible
 selector_roles: user_facing,user_visible,doc_quality
 include_prefixes: devcovenant,tools,.github
 exclude_prefixes: devcovenant/core/tests
@@ -671,7 +815,7 @@ exclude_globs: tests/**,**/tests/**
 enforcement: active
 apply: true
 custom: false
-profile_scopes: global
+profile_scopes: python
 include_suffixes:
 include_prefixes:
 include_globs:

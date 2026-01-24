@@ -1,5 +1,9 @@
 version: 1
 profile: groovy
 category: language
+suffixes:
+- .groovy
+ignore_dirs:
+- build
 assets: []
 policy_overlays: {}

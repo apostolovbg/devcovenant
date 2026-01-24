@@ -1,5 +1,5 @@
 # DevCovenant Specification
-**Last Updated:** 2026-01-23
+**Last Updated:** 2026-01-24
 **Version:** 0.2.6
 
 <!-- DEVCOV:BEGIN -->
@@ -41,24 +41,31 @@ hashes synchronized so drift is detectable and reversible.
 ### Policy definitions and registry
 - Parse policy blocks from `AGENTS.md` and capture the descriptive text that
   follows each `policy-def` block.
-- Hash policy definitions and scripts into `devcovenant/registry.json`.
+- Hash policy definitions and scripts into
+  `devcovenant/registry/registry.json`.
 - Expose `restore-stock-text` to reset policy prose to canonical wording.
 - Support `custom: true/false` metadata to mark custom policy prose that
   bypasses stock text sync checks.
+- Provide an optional semantic-version-scope policy (`apply: false` by
+  default) that requires one SemVer scope tag in the latest changelog
+  entry and matches the bump to major/minor/patch semantics.
 - Maintain a canonical metadata schema that lists all supported keys (common
   and policy-specific) so every policy block can be normalized on demand.
 
 ### Engine behavior
-- Load policy scripts from `devcovenant/core/policy_scripts/` with support for
-  custom overrides in `devcovenant/custom/policy_scripts/`.
-- When a custom policy script exists, it fully replaces the built-in policy
+- Load policy modules from `devcovenant/core/policies/<id>/<id>.py` with
+  custom overrides in `devcovenant/custom/policies/<id>/<id>.py`.
+- Load language adapters from `devcovenant/core/policies/<id>/adapters/`
+  with custom overrides in `devcovenant/custom/policies/<id>/adapters/`.
+  Custom adapters override core for the same policy + language.
+- When a custom policy module exists, it fully replaces the built-in policy
   and suppresses core fixers for that policy.
 - Respect `apply`, `severity`, `status`, and `enforcement` metadata for each
   policy.
 - Support `startup`, `lint`, `pre-commit`, and `normal` modes.
 - Apply auto-fixers when allowed, using fixers located under
-  `devcovenant/core/fixers/` and any custom fixers under
-  `devcovenant/custom/fixers/`.
+  `devcovenant/core/policies/<id>/fixers/` and any custom fixers under
+  `devcovenant/custom/policies/<id>/fixers/`.
 
 ### CLI commands
 - Provide a console entry point (`devcovenant`) and module entry
@@ -93,29 +100,34 @@ hashes synchronized so drift is detectable and reversible.
 - Config should expose global knobs for `paths`, `docs`, `install`,
   `update`, `engine`, `hooks`, `reporting`, `ignore`, and `policies` so
   repos can tune behavior without editing core scripts.
-- The profile catalog lives in `devcovenant/core/profile_catalog.yaml`.
-  Active profiles are recorded under `profiles.active` in config and
-  extend file suffix coverage through the catalog definitions.
-- Custom profiles can be declared in `devcovenant/custom/profile_catalog.yaml`
-  and by adding a profile manifest plus templates under
-  `devcovenant/custom/templates/profiles/<name>/`.
-- Policy assets are declared in `devcovenant/core/policy_assets.yaml`
-  with custom overrides in `devcovenant/custom/policy_assets.yaml`.
-  Policy assets reference templates under the `templates/policies/`
-  folders and install only when a policy is enabled and its
-  `profile_scopes` match active profiles.
+- The profile catalog is generated into
+  `devcovenant/registry/profile_catalog.yaml` by scanning profile manifests.
+  Active profiles are recorded under `profiles.active` in config and extend
+  file suffix coverage through catalog definitions.
+- Custom profiles are declared by adding a profile manifest plus assets
+  under `devcovenant/custom/profiles/<name>/`.
+- Profile assets live under `devcovenant/core/profiles/<name>/assets/` and
+  `devcovenant/custom/profiles/<name>/assets/`, with `global/assets/`
+  covering shared docs and tooling.
+- Policy assets are declared inside policy folders under
+  `devcovenant/core/policies/<policy>/assets/`. Install/update compiles
+  the results into `devcovenant/registry/policy_assets.yaml`. Custom
+  overrides live under `devcovenant/custom/policies/<policy>/assets/`.
+  Assets install only when a policy is enabled and its `profile_scopes`
+  match active profiles.
+- Template indexes live at `devcovenant/core/profiles/README.md` and
+  `devcovenant/core/policies/README.md`.
 - Profile assets and policy overlays live in profile manifests at
-  `devcovenant/core/templates/profiles/<name>/profile.yaml`, with
-  custom overrides under
-  `devcovenant/custom/templates/profiles/<name>/profile.yaml`. Profile
-  assets are applied for active profiles, and profile overlays merge
-  into `config.yaml` under `policies`.
+  `devcovenant/core/profiles/<name>/profile.yaml`, with custom overrides
+  under `devcovenant/custom/profiles/<name>/profile.yaml`. Profile assets
+  are applied for active profiles, and profile overlays merge into
+  `config.yaml` under `policies`.
 
 ## Policy Requirements
 - Every policy definition includes descriptive prose immediately after the
   metadata block.
 - Built-in policies have canonical text stored in
-  `devcovenant/core/stock_policy_texts.yaml`.
+  `devcovenant/registry/stock_policy_texts.yaml`.
 - Policies declare `profile_scopes` metadata to gate applicability;
   global policies use `profile_scopes: global`.
 - `apply: false` disables enforcement without removing definitions.
@@ -130,17 +142,18 @@ hashes synchronized so drift is detectable and reversible.
 - Policy metadata normalization must be able to add missing keys without
   changing existing values or policy text.
 - Support policy replacement metadata via
-  `devcovenant/core/policy_replacements.yaml`. During updates, replaced
+  `devcovenant/registry/policy_replacements.yaml`. During updates, replaced
   policies move to custom and are marked deprecated when enabled; disabled
   policies are removed along with their custom scripts and fixers.
 - Record update notices (replacements and new stock policies) in
-  `devcovenant/manifest.json` and print them to stdout.
+  `devcovenant/registry/manifest.json` and print them to stdout.
 
 ## Installation Requirements
 - Install the full DevCovenant toolchain into the target repo, including the
   `devcovenant/` tree, `tools/` helpers, and CI workflow templates.
-- Use packaged templates from `devcovenant/core/templates/` when installed from
-  PyPI; fall back to repo files when running from source.
+- Use packaged assets from `devcovenant/core/profiles/` and
+  `devcovenant/core/policies/` when installed from PyPI; fall back to repo
+  files when running from source.
 - Install modes: `auto`, `empty`; use mode-specific defaults for docs,
   config, and metadata handling. Use `devcovenant update` for existing repos.
 - When install finds DevCovenant artifacts, it refuses to proceed unless
@@ -176,14 +189,14 @@ hashes synchronized so drift is detectable and reversible.
   only selected docs are replaced when docs mode overwrites.
 - Support policy update modes via `--policy-mode preserve|append-missing|`
   `overwrite`.
-- Write `devcovenant/manifest.json` with the core layout, doc types,
+- Write `devcovenant/registry/manifest.json` with the core layout, doc types,
   installed paths, options, active profiles, policy asset mappings,
   and the UTC timestamp of the install or update. Profile manifests
   drive profile assets and overlays, even when not listed as assets.
 
 ## Packaging Requirements
 - Ship `devcovenant` as a pure-Python package with a console script entry.
-- Include templates and policy assets in the sdist and wheel.
+- Include profile assets and policy assets in the sdist and wheel.
 - Require Python 3.10+ and declare runtime dependencies in
   `requirements.in`, `requirements.lock`, and `pyproject.toml`.
 - Keep `THIRD_PARTY_LICENSES.md` and `licenses/` synchronized with dependency

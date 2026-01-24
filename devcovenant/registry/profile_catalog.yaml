@@ -1,0 +1,761 @@
+generated_at: '2026-01-24T06:41:25.638099+00:00'
+profiles:
+  angular:
+    active: false
+    assets: []
+    assets_available: []
+    category: framework
+    path: devcovenant/core/templates/profiles/angular
+    policy_overlays: {}
+    profile: angular
+    source: core
+    version: 1
+  ansible:
+    active: false
+    assets: []
+    assets_available: []
+    category: ops
+    path: devcovenant/core/templates/profiles/ansible
+    policy_overlays: {}
+    profile: ansible
+    source: core
+    version: 1
+  bash:
+    active: false
+    assets: []
+    assets_available: []
+    category: language
+    path: devcovenant/core/templates/profiles/bash
+    policy_overlays: {}
+    profile: bash
+    source: core
+    version: 1
+  c:
+    active: false
+    assets: []
+    assets_available: []
+    category: language
+    path: devcovenant/core/templates/profiles/c
+    policy_overlays: {}
+    profile: c
+    source: core
+    version: 1
+  clojure:
+    active: false
+    assets: []
+    assets_available: []
+    category: language
+    path: devcovenant/core/templates/profiles/clojure
+    policy_overlays: {}
+    profile: clojure
+    source: core
+    version: 1
+  cobol:
+    active: false
+    assets: []
+    assets_available: []
+    category: language
+    path: devcovenant/core/templates/profiles/cobol
+    policy_overlays: {}
+    profile: cobol
+    source: core
+    version: 1
+  cpp:
+    active: false
+    assets: []
+    assets_available: []
+    category: language
+    path: devcovenant/core/templates/profiles/cpp
+    policy_overlays: {}
+    profile: cpp
+    source: core
+    version: 1
+  crystal:
+    active: false
+    assets: []
+    assets_available: []
+    category: language
+    path: devcovenant/core/templates/profiles/crystal
+    policy_overlays: {}
+    profile: crystal
+    source: core
+    version: 1
+  csharp:
+    active: false
+    assets: []
+    assets_available: []
+    category: language
+    path: devcovenant/core/templates/profiles/csharp
+    policy_overlays: {}
+    profile: csharp
+    source: core
+    version: 1
+  dart:
+    active: false
+    assets: []
+    assets_available: []
+    category: language
+    path: devcovenant/core/templates/profiles/dart
+    policy_overlays: {}
+    profile: dart
+    source: core
+    version: 1
+  data:
+    active: true
+    assets: []
+    assets_available: []
+    category: ops
+    path: devcovenant/core/templates/profiles/data
+    policy_overlays: {}
+    profile: data
+    source: core
+    version: 1
+  django:
+    active: false
+    assets: []
+    assets_available: []
+    category: framework
+    path: devcovenant/core/templates/profiles/django
+    policy_overlays: {}
+    profile: django
+    source: core
+    version: 1
+  docker:
+    active: false
+    assets: []
+    assets_available: []
+    category: ops
+    path: devcovenant/core/templates/profiles/docker
+    policy_overlays: {}
+    profile: docker
+    source: core
+    version: 1
+  docs:
+    active: true
+    assets: []
+    assets_available: []
+    category: ops
+    path: devcovenant/core/templates/profiles/docs
+    policy_overlays: {}
+    profile: docs
+    source: core
+    version: 1
+  dotnet:
+    active: false
+    assets:
+    - mode: replace
+      path: global.json
+      template: global.json
+    assets_available:
+    - devcovenant/core/templates/profiles/dotnet/.gitignore
+    - devcovenant/core/templates/profiles/dotnet/global.json
+    category: language
+    path: devcovenant/core/templates/profiles/dotnet
+    policy_overlays:
+      dependency-license-sync:
+        dependency_files:
+        - global.json
+    profile: dotnet
+    source: core
+    version: 1
+  elixir:
+    active: false
+    assets: []
+    assets_available: []
+    category: language
+    path: devcovenant/core/templates/profiles/elixir
+    policy_overlays: {}
+    profile: elixir
+    source: core
+    version: 1
+  erlang:
+    active: false
+    assets: []
+    assets_available: []
+    category: language
+    path: devcovenant/core/templates/profiles/erlang
+    policy_overlays: {}
+    profile: erlang
+    source: core
+    version: 1
+  express:
+    active: false
+    assets: []
+    assets_available: []
+    category: framework
+    path: devcovenant/core/templates/profiles/express
+    policy_overlays: {}
+    profile: express
+    source: core
+    version: 1
+  fastapi:
+    active: false
+    assets: []
+    assets_available: []
+    category: framework
+    path: devcovenant/core/templates/profiles/fastapi
+    policy_overlays: {}
+    profile: fastapi
+    source: core
+    version: 1
+  flask:
+    active: false
+    assets: []
+    assets_available: []
+    category: framework
+    path: devcovenant/core/templates/profiles/flask
+    policy_overlays: {}
+    profile: flask
+    source: core
+    version: 1
+  flutter:
+    active: false
+    assets: []
+    assets_available: []
+    category: framework
+    path: devcovenant/core/templates/profiles/flutter
+    policy_overlays: {}
+    profile: flutter
+    source: core
+    version: 1
+  fortran:
+    active: false
+    assets: []
+    assets_available: []
+    category: language
+    path: devcovenant/core/templates/profiles/fortran
+    policy_overlays: {}
+    profile: fortran
+    source: core
+    version: 1
+  frappe:
+    active: false
+    assets: []
+    assets_available: []
+    category: framework
+    path: devcovenant/core/templates/profiles/frappe
+    policy_overlays: {}
+    profile: frappe
+    source: core
+    version: 1
+  fsharp:
+    active: false
+    assets: []
+    assets_available: []
+    category: language
+    path: devcovenant/core/templates/profiles/fsharp
+    policy_overlays: {}
+    profile: fsharp
+    source: core
+    version: 1
+  go:
+    active: false
+    assets:
+    - mode: replace
+      path: go.mod
+      template: go.mod
+    assets_available:
+    - devcovenant/core/templates/profiles/go/.gitignore
+    - devcovenant/core/templates/profiles/go/go.mod
+    category: language
+    path: devcovenant/core/templates/profiles/go
+    policy_overlays:
+      dependency-license-sync:
+        dependency_files:
+        - go.mod
+    profile: go
+    source: core
+    version: 1
+  groovy:
+    active: false
+    assets: []
+    assets_available: []
+    category: language
+    path: devcovenant/core/templates/profiles/groovy
+    policy_overlays: {}
+    profile: groovy
+    source: core
+    version: 1
+  haskell:
+    active: false
+    assets: []
+    assets_available: []
+    category: language
+    path: devcovenant/core/templates/profiles/haskell
+    policy_overlays: {}
+    profile: haskell
+    source: core
+    version: 1
+  java:
+    active: false
+    assets:
+    - mode: replace
+      path: build.gradle
+      template: build.gradle
+    assets_available:
+    - devcovenant/core/templates/profiles/java/.gitignore
+    - devcovenant/core/templates/profiles/java/build.gradle
+    category: language
+    path: devcovenant/core/templates/profiles/java
+    policy_overlays:
+      dependency-license-sync:
+        dependency_files:
+        - build.gradle
+    profile: java
+    source: core
+    version: 1
+  javascript:
+    active: false
+    assets:
+    - mode: replace
+      path: package.json
+      template: package.json
+    assets_available:
+    - devcovenant/core/templates/profiles/javascript/.gitignore
+    - devcovenant/core/templates/profiles/javascript/package.json
+    category: language
+    path: devcovenant/core/templates/profiles/javascript
+    policy_overlays:
+      dependency-license-sync:
+        dependency_files:
+        - package.json
+    profile: javascript
+    source: core
+    version: 1
+  julia:
+    active: false
+    assets: []
+    assets_available: []
+    category: language
+    path: devcovenant/core/templates/profiles/julia
+    policy_overlays: {}
+    profile: julia
+    source: core
+    version: 1
+  kotlin:
+    active: false
+    assets:
+    - mode: replace
+      path: build.gradle.kts
+      template: build.gradle.kts
+    assets_available:
+    - devcovenant/core/templates/profiles/kotlin/.gitignore
+    - devcovenant/core/templates/profiles/kotlin/build.gradle.kts
+    category: language
+    path: devcovenant/core/templates/profiles/kotlin
+    policy_overlays:
+      dependency-license-sync:
+        dependency_files:
+        - build.gradle.kts
+    profile: kotlin
+    source: core
+    version: 1
+  kubernetes:
+    active: false
+    assets: []
+    assets_available: []
+    category: ops
+    path: devcovenant/core/templates/profiles/kubernetes
+    policy_overlays: {}
+    profile: kubernetes
+    source: core
+    version: 1
+  laravel:
+    active: false
+    assets: []
+    assets_available: []
+    category: framework
+    path: devcovenant/core/templates/profiles/laravel
+    policy_overlays: {}
+    profile: laravel
+    source: core
+    version: 1
+  lisp:
+    active: false
+    assets: []
+    assets_available: []
+    category: language
+    path: devcovenant/core/templates/profiles/lisp
+    policy_overlays: {}
+    profile: lisp
+    source: core
+    version: 1
+  lua:
+    active: false
+    assets: []
+    assets_available: []
+    category: language
+    path: devcovenant/core/templates/profiles/lua
+    policy_overlays: {}
+    profile: lua
+    source: core
+    version: 1
+  matlab:
+    active: false
+    assets: []
+    assets_available: []
+    category: language
+    path: devcovenant/core/templates/profiles/matlab
+    policy_overlays: {}
+    profile: matlab
+    source: core
+    version: 1
+  micronaut:
+    active: false
+    assets: []
+    assets_available: []
+    category: framework
+    path: devcovenant/core/templates/profiles/micronaut
+    policy_overlays: {}
+    profile: micronaut
+    source: core
+    version: 1
+  nestjs:
+    active: false
+    assets: []
+    assets_available: []
+    category: framework
+    path: devcovenant/core/templates/profiles/nestjs
+    policy_overlays: {}
+    profile: nestjs
+    source: core
+    version: 1
+  nextjs:
+    active: false
+    assets: []
+    assets_available: []
+    category: framework
+    path: devcovenant/core/templates/profiles/nextjs
+    policy_overlays: {}
+    profile: nextjs
+    source: core
+    version: 1
+  nim:
+    active: false
+    assets: []
+    assets_available: []
+    category: language
+    path: devcovenant/core/templates/profiles/nim
+    policy_overlays: {}
+    profile: nim
+    source: core
+    version: 1
+  nuxt:
+    active: false
+    assets: []
+    assets_available: []
+    category: framework
+    path: devcovenant/core/templates/profiles/nuxt
+    policy_overlays: {}
+    profile: nuxt
+    source: core
+    version: 1
+  objective-c:
+    active: false
+    assets: []
+    assets_available: []
+    category: language
+    path: devcovenant/core/templates/profiles/objective-c
+    policy_overlays: {}
+    profile: objective-c
+    source: core
+    version: 1
+  ocaml:
+    active: false
+    assets: []
+    assets_available: []
+    category: language
+    path: devcovenant/core/templates/profiles/ocaml
+    policy_overlays: {}
+    profile: ocaml
+    source: core
+    version: 1
+  pascal:
+    active: false
+    assets: []
+    assets_available: []
+    category: language
+    path: devcovenant/core/templates/profiles/pascal
+    policy_overlays: {}
+    profile: pascal
+    source: core
+    version: 1
+  perl:
+    active: false
+    assets: []
+    assets_available: []
+    category: language
+    path: devcovenant/core/templates/profiles/perl
+    policy_overlays: {}
+    profile: perl
+    source: core
+    version: 1
+  php:
+    active: false
+    assets:
+    - mode: replace
+      path: composer.json
+      template: composer.json
+    assets_available:
+    - devcovenant/core/templates/profiles/php/.gitignore
+    - devcovenant/core/templates/profiles/php/composer.json
+    category: language
+    path: devcovenant/core/templates/profiles/php
+    policy_overlays:
+      dependency-license-sync:
+        dependency_files:
+        - composer.json
+    profile: php
+    source: core
+    version: 1
+  powershell:
+    active: false
+    assets: []
+    assets_available: []
+    category: language
+    path: devcovenant/core/templates/profiles/powershell
+    policy_overlays: {}
+    profile: powershell
+    source: core
+    version: 1
+  prolog:
+    active: false
+    assets: []
+    assets_available: []
+    category: language
+    path: devcovenant/core/templates/profiles/prolog
+    policy_overlays: {}
+    profile: prolog
+    source: core
+    version: 1
+  python:
+    active: true
+    assets:
+    - mode: merge
+      path: requirements.in
+      template: requirements.in
+    - mode: merge
+      path: requirements.lock
+      template: requirements.lock
+    assets_available:
+    - devcovenant/core/templates/profiles/python/.gitignore
+    - devcovenant/core/templates/profiles/python/requirements.in
+    - devcovenant/core/templates/profiles/python/requirements.lock
+    category: language
+    path: devcovenant/core/templates/profiles/python
+    policy_overlays:
+      dependency-license-sync:
+        dependency_files:
+        - requirements.in
+        - requirements.lock
+    profile: python
+    source: core
+    version: 1
+  quarkus:
+    active: false
+    assets: []
+    assets_available: []
+    category: framework
+    path: devcovenant/core/templates/profiles/quarkus
+    policy_overlays: {}
+    profile: quarkus
+    source: core
+    version: 1
+  r:
+    active: false
+    assets: []
+    assets_available: []
+    category: language
+    path: devcovenant/core/templates/profiles/r
+    policy_overlays: {}
+    profile: r
+    source: core
+    version: 1
+  rails:
+    active: false
+    assets: []
+    assets_available: []
+    category: framework
+    path: devcovenant/core/templates/profiles/rails
+    policy_overlays: {}
+    profile: rails
+    source: core
+    version: 1
+  react:
+    active: false
+    assets: []
+    assets_available: []
+    category: framework
+    path: devcovenant/core/templates/profiles/react
+    policy_overlays: {}
+    profile: react
+    source: core
+    version: 1
+  ruby:
+    active: false
+    assets:
+    - mode: replace
+      path: Gemfile
+      template: Gemfile
+    assets_available:
+    - devcovenant/core/templates/profiles/ruby/.gitignore
+    - devcovenant/core/templates/profiles/ruby/Gemfile
+    category: language
+    path: devcovenant/core/templates/profiles/ruby
+    policy_overlays:
+      dependency-license-sync:
+        dependency_files:
+        - Gemfile
+    profile: ruby
+    source: core
+    version: 1
+  rust:
+    active: false
+    assets:
+    - mode: replace
+      path: Cargo.toml
+      template: Cargo.toml
+    assets_available:
+    - devcovenant/core/templates/profiles/rust/.gitignore
+    - devcovenant/core/templates/profiles/rust/Cargo.toml
+    category: language
+    path: devcovenant/core/templates/profiles/rust
+    policy_overlays:
+      dependency-license-sync:
+        dependency_files:
+        - Cargo.toml
+    profile: rust
+    source: core
+    version: 1
+  scala:
+    active: false
+    assets: []
+    assets_available: []
+    category: language
+    path: devcovenant/core/templates/profiles/scala
+    policy_overlays: {}
+    profile: scala
+    source: core
+    version: 1
+  scheme:
+    active: false
+    assets: []
+    assets_available: []
+    category: language
+    path: devcovenant/core/templates/profiles/scheme
+    policy_overlays: {}
+    profile: scheme
+    source: core
+    version: 1
+  spring:
+    active: false
+    assets: []
+    assets_available: []
+    category: framework
+    path: devcovenant/core/templates/profiles/spring
+    policy_overlays: {}
+    profile: spring
+    source: core
+    version: 1
+  sql:
+    active: false
+    assets: []
+    assets_available: []
+    category: ops
+    path: devcovenant/core/templates/profiles/sql
+    policy_overlays: {}
+    profile: sql
+    source: core
+    version: 1
+  suffixes:
+    active: false
+    assets: []
+    assets_available: []
+    category: ops
+    path: devcovenant/core/templates/profiles/suffixes
+    policy_overlays: {}
+    profile: suffixes
+    source: core
+    version: 1
+  svelte:
+    active: false
+    assets: []
+    assets_available: []
+    category: framework
+    path: devcovenant/core/templates/profiles/svelte
+    policy_overlays: {}
+    profile: svelte
+    source: core
+    version: 1
+  swift:
+    active: false
+    assets: []
+    assets_available: []
+    category: language
+    path: devcovenant/core/templates/profiles/swift
+    policy_overlays: {}
+    profile: swift
+    source: core
+    version: 1
+  symfony:
+    active: false
+    assets: []
+    assets_available: []
+    category: framework
+    path: devcovenant/core/templates/profiles/symfony
+    policy_overlays: {}
+    profile: symfony
+    source: core
+    version: 1
+  terraform:
+    active: false
+    assets: []
+    assets_available: []
+    category: ops
+    path: devcovenant/core/templates/profiles/terraform
+    policy_overlays: {}
+    profile: terraform
+    source: core
+    version: 1
+  typescript:
+    active: false
+    assets:
+    - mode: replace
+      path: package.json
+      template: package.json
+    - mode: replace
+      path: tsconfig.json
+      template: tsconfig.json
+    assets_available:
+    - devcovenant/core/templates/profiles/typescript/.gitignore
+    - devcovenant/core/templates/profiles/typescript/package.json
+    - devcovenant/core/templates/profiles/typescript/tsconfig.json
+    category: language
+    path: devcovenant/core/templates/profiles/typescript
+    policy_overlays:
+      dependency-license-sync:
+        dependency_files:
+        - package.json
+    profile: typescript
+    source: core
+    version: 1
+  vue:
+    active: false
+    assets: []
+    assets_available: []
+    category: framework
+    path: devcovenant/core/templates/profiles/vue
+    policy_overlays: {}
+    profile: vue
+    source: core
+    version: 1
+  zig:
+    active: false
+    assets: []
+    assets_available: []
+    category: language
+    path: devcovenant/core/templates/profiles/zig
+    policy_overlays: {}
+    profile: zig
+    source: core
+    version: 1

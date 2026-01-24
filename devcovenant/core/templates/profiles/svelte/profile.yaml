@@ -1,5 +1,12 @@
 version: 1
 profile: svelte
 category: framework
+suffixes:
+- .svelte
+- .js
+- .ts
+ignore_dirs:
+- node_modules
+- dist
 assets: []
 policy_overlays: {}

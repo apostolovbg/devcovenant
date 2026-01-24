@@ -9,10 +9,11 @@ from typing import Any, Dict
 
 DEV_COVENANT_DIR = "devcovenant"
 MANIFEST_FILENAME = "manifest.json"
-MANIFEST_REL_PATH = f"{DEV_COVENANT_DIR}/{MANIFEST_FILENAME}"
+MANIFEST_REL_PATH = f"{DEV_COVENANT_DIR}/registry/{MANIFEST_FILENAME}"
 LEGACY_MANIFEST_PATHS = [
     ".devcov/install_manifest.json",
     ".devcovenant/install_manifest.json",
+    "devcovenant/manifest.json",
 ]
 
 DEFAULT_CORE_DIRS = [
@@ -24,6 +25,7 @@ DEFAULT_CORE_DIRS = [
     "devcovenant/core/templates/global",
     "devcovenant/core/templates/profiles",
     "devcovenant/core/templates/policies",
+    "devcovenant/registry",
 ]
 
 DEFAULT_CORE_FILES = [
@@ -31,14 +33,10 @@ DEFAULT_CORE_FILES = [
     "devcovenant/__main__.py",
     "devcovenant/cli.py",
     "devcovenant/config.yaml",
-    "devcovenant/registry.json",
     "devcovenant/README.md",
-    "devcovenant/manifest.json",
-    "devcovenant/core/stock_policy_texts.yaml",
-    "devcovenant/core/policy_replacements.yaml",
+    "devcovenant/registry/stock_policy_texts.yaml",
+    "devcovenant/registry/policy_replacements.yaml",
     "devcovenant/core/cli_options.py",
-    "devcovenant/core/profile_catalog.yaml",
-    "devcovenant/core/policy_assets.yaml",
     "devcovenant/core/templates/global/AGENTS.md",
     "devcovenant/core/templates/global/CONTRIBUTING.md",
     "devcovenant/core/templates/global/LICENSE_GPL-3.0.txt",
@@ -50,6 +48,9 @@ DEFAULT_CORE_FILES = [
     "devcovenant/core/templates/global/tools/run_pre_commit.py",
     "devcovenant/core/templates/global/tools/run_tests.py",
     "devcovenant/core/templates/global/tools/update_test_status.py",
+    "devcovenant/core/templates/README.md",
+    "devcovenant/core/templates/profiles/README.md",
+    "devcovenant/core/templates/policies/README.md",
     "tools/run_pre_commit.py",
     "tools/run_tests.py",
     "tools/update_test_status.py",
@@ -80,13 +81,16 @@ DEFAULT_CUSTOM_DIRS = [
 ]
 
 DEFAULT_CUSTOM_FILES = [
-    "devcovenant/custom/profile_catalog.yaml",
-    "devcovenant/custom/policy_assets.yaml",
+    "devcovenant/custom/templates/profiles/README.md",
+    "devcovenant/custom/templates/policies/README.md",
 ]
 
 DEFAULT_GENERATED_FILES = [
-    "devcovenant/registry.json",
-    "devcovenant/test_status.json",
+    "devcovenant/registry/registry.json",
+    "devcovenant/registry/test_status.json",
+    "devcovenant/registry/manifest.json",
+    "devcovenant/registry/profile_catalog.yaml",
+    "devcovenant/registry/policy_assets.yaml",
 ]
 
 DEFAULT_GENERATED_DIRS: list[str] = []

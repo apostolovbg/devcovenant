@@ -1,5 +1,11 @@
 version: 1
 profile: c
 category: language
+suffixes:
+- .c
+- .h
+ignore_dirs:
+- build
+- out
 assets: []
 policy_overlays: {}

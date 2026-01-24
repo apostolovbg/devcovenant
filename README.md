@@ -47,7 +47,7 @@ eliminates that by making the documentation itself the executable spec.
 ## How It Works
 1. `AGENTS.md` stores policy definitions and metadata blocks.
 2. `devcovenant/core/parser.py` extracts and hashes each policy definition.
-3. `devcovenant/registry.json` records the policy and script hashes.
+3. `devcovenant/registry/registry.json` records the policy and script hashes.
 4. `devcovenant/core/engine.py` runs policy scripts and reports violations.
 5. Policy scripts resolve custom → core, and custom overrides suppress core
    fixers for that policy.
@@ -130,8 +130,8 @@ Uninstall uses the same CLI:
 devcovenant uninstall --target /path/to/repo
 ```
 
-The installer records `devcovenant/manifest.json` so updates and removals
-remain safe and predictable. If the target repo has no license file,
+The installer records `devcovenant/registry/manifest.json` so updates and
+removals remain safe and predictable. If the target repo has no license file,
 DevCovenant installs a GPL-3.0 license by default and will not overwrite an
 existing license unless forced. When a file must be replaced, the installer
 renames the existing file to `*_old.*` before writing the new one.

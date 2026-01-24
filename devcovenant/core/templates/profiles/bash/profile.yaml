@@ -1,5 +1,10 @@
 version: 1
 profile: bash
 category: language
+suffixes:
+- .sh
+- .bash
+- .zsh
+ignore_dirs: []
 assets: []
 policy_overlays: {}

@@ -1,6 +1,11 @@
 version: 1
 profile: kotlin
 category: language
+suffixes:
+- .kt
+- .kts
+ignore_dirs:
+- build
 assets:
 - path: build.gradle.kts
   template: build.gradle.kts

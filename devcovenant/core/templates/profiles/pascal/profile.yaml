@@ -1,5 +1,11 @@
 version: 1
 profile: pascal
 category: language
+suffixes:
+- .pas
+- .pp
+- .dpr
+ignore_dirs:
+- build
 assets: []
 policy_overlays: {}
