@@ -42,6 +42,8 @@ by uninstalling and reinstalling with the intended installer arguments.
 - Run `python3 tools/run_pre_commit.py --phase start` before edits.
 - Run `python3 tools/run_tests.py` after edits.
 - Finish with `python3 tools/run_pre_commit.py --phase end`.
+- Do not leave stubs. If a task cannot be completed in one pass, negotiate
+  the sub-steps and record the split in this plan before stopping.
 - When policy text changes, set `updated: true`, run
   `devcovenant update-hashes`, then reset the flag.
 
@@ -112,6 +114,11 @@ by uninstalling and reinstalling with the intended installer arguments.
 - Uninstall removes only DevCovenant-managed assets (per manifest) and
   never deletes user-owned repo files; profile-created files are removed
   only if recorded as DevCovenant-managed.
+- Split the registry into tracked `devcovenant/registry/global/` and
+  gitignored `devcovenant/registry/local/`, placing ephemeral state
+  (for example `test_status.json`) under local.
+- Populate profile gitignore fragments for every shipped profile so
+  registry-local files and other local artifacts are ignored by default.
 
 ## Target Update Behavior
 - Default update runs metadata normalization. If a key is added or renamed,
@@ -140,17 +147,15 @@ by uninstalling and reinstalling with the intended installer arguments.
   policy is available.
 - `devcov-structure-guard` validates against an update-shipped structure
   manifest instead of hard-coded globs.
-- A persistent DevCovenant registry folder under `devcovenant/registry/`
-  records generated state (policy registry, manifest, test status, profile
-  catalog, and policy assets). Install/update/uninstall read and update these
-  files so structure validation and cleanup are consistent. Legacy paths
-  (for example `devcovenant/registry/registry.json` or
-`devcovenant/registry/manifest.json`)
-  migrate into the registry folder on first update.
+- The registry is split into `devcovenant/registry/global/` (tracked) and
+  `devcovenant/registry/local/` (gitignored). Global stores the policy
+  registry, manifest, profile catalog, policy assets, replacements, and
+  stock policy texts. Local stores `test_status.json` and other ephemeral
+  caches. Install/update/uninstall refresh global, create local, and migrate
+  legacy paths into the global registry.
 - Update/install/uninstall share the same flag schema; update reuses install
   defaults when appropriate, and uninstall uses the manifest to remove only
   managed assets while preserving user content.
-
 
 ## Install Profiles and Assets (draft)
 DevCovenant installs policy assets and repo system files based on active
@@ -396,26 +401,34 @@ Run uninstall before install? [y/N]
    - Move profile assets into `devcovenant/*/profiles/<profile>/assets/` with
      `global/assets/` as the shared baseline.
    - Update loaders, fixers, tests, and registry paths to match the new layout.
-   - Define language-aware fixer lookup (`fixers/<lang>.py` + `global.py`)
-     and document which policies ship fixers versus remaining fixerless by
-     design (aligned with human review).
+   - Define language-aware fixer lookup (`fixers/<lang>.py` + `global.py`).
 2. Apply `PROFILE_POLICY_DRAFT.md` to real profile manifests and policy
    metadata.
    - Populate suffixes, ignore dirs, assets, and policy overlays in every
      `profile.yaml`.
+   - Populate profile gitignore fragments for every shipped profile.
    - Fill `profile_scopes` for every policy block in `AGENTS.md`.
    - Keep always-on profiles (`global`, `data`, `docs`, `suffixes`) enforced in
      config and installers.
-3. Profile-driven config, catalogs, and assets.
+3. Registry split and catalogs.
+   - Split the registry into tracked `registry/global/` and gitignored
+     `registry/local/`, moving `test_status.json` and other ephemeral files.
+   - Update manifest, structure guard, and update/install/uninstall to reflect
+     the split and to migrate legacy paths into `registry/global/`.
+   - Generate profile catalogs and policy assets from profile manifests and
+     policy assets; avoid stubs by completing each profile pass before moving
+     on.
+4. Profile-driven config.
    - Generate config from the active profiles plus always-on profiles.
-   - Generate registry catalogs from profile manifests and policy assets from
-     policy folders.
-4. Documentation alignment.
-   - Update root and nested docs for the new layout and adapter model.
+   - Merge profile overlays into policy metadata on install/update.
+5. Documentation alignment.
+   - Update root and nested docs for the new layout, registry split, profile
+     overlays, and adapter model.
    - Refresh template indexes and managed block guidance.
-5. Packaging and verification.
+6. Packaging and verification.
    - Update `MANIFEST.in` for the new policy/profile layout.
-   - Extend tests to cover adapter lookup, new paths, and profile overlays.
+   - Extend tests to cover adapter lookup, new paths, profile overlays, and
+     registry split behavior.
 
 ## Policy Scope Map (reference)
 Profile overlays apply on top of the base policy metadata when the
@@ -536,7 +549,7 @@ Follow-up implementation tasks:
   normalization steps until fixed.
 
 ## Completed Work
-### J: SemVer scope enforcement
+### SemVer scope enforcement
 - Rework the semantic version scope policy to validate MAJOR/MINOR/PATCH
   intent (breaking API vs feature vs bugfix).
 - Keep the policy present but off by default; document how to enable it
@@ -545,7 +558,7 @@ Follow-up implementation tasks:
 - Reuse normalized metadata fields to declare scope markers and exclusions.
 - Update tests and docs to reflect the SemVer rules.
 
-### M: Generated catalogs + registry layout
+### Generated catalogs + registry layout
 - Remove static `devcovenant/registry/profile_catalog.yaml` and
   `devcovenant/registry/policy_assets.yaml` as sources of truth.
 - Generate `devcovenant/registry/profile_catalog.yaml` by scanning
@@ -563,7 +576,8 @@ Follow-up implementation tasks:
   first run when missing.
 - Document the registry layout and generation rules, including
   migration behavior from legacy paths.
-### L: Profile-driven config + gitignore assets
+
+### Profile-driven config + gitignore assets
 - Support custom profile and policy assets under
   `devcovenant/custom/` so overrides take precedence over core.
 - Move profile assets into per-profile `profile.yaml` manifests under
@@ -577,20 +591,20 @@ Follow-up implementation tasks:
 - Update docs/specs to describe profile manifests, overlay merging, and
   gitignore merge behavior.
 
-### I: Managed environment policy
+### Managed environment policy
 - Replaced bench/venv policies with `managed-environment`, driven by
   metadata (`expected_paths`, `expected_interpreters`, `required_commands`,
   `command_hints`) and off by default.
 - Updated docs and assets to reference the unified policy and the
   managed-environment guidance in the managed AGENTS block.
 
-### G: Tests and validation
+### Tests and validation
 - Added tests for selector-role migration and metadata normalization.
 - Added tests for update behavior (append-missing + core refresh).
 - Added tests for manifest creation/refresh, structure guard usage, and
   profile-aware asset installation.
 
-### K: Profile-aware install and asset merges
+### Profile-aware install and asset merges
 - Added a profile catalog and interactive profile selection on install,
   recording active profiles in config and the manifest.
 - Introduced `profile_scopes` for every policy and normalized legacy entries
@@ -606,7 +620,7 @@ Follow-up implementation tasks:
 - Enforced repo-root detection and CLI version mismatch warnings for
   PATH-based usage.
 
-### E: DevCovenant manifest + structure validation
+### DevCovenant manifest + structure validation
 - Defined a non-hidden DevCovenant manifest under `devcovenant/` and
   ensured it is created on install/update or first run when missing.
 - Manifest schema now tracks core layout, managed docs, active profiles,
@@ -616,7 +630,7 @@ Follow-up implementation tasks:
 - Install/update/uninstall refresh the manifest so deprecated core paths
   disappear and new core paths appear.
 
-### F: Update/install/uninstall convergence
+### Update/install/uninstall convergence
 - Share a unified flag schema across install/update/uninstall (single parser
   or shared option registry) so default behavior is consistent.
 - Install refuses to run on existing installs and directs users to update or
@@ -635,7 +649,7 @@ Follow-up implementation tasks:
   fields from `pyproject.toml` or profile-specific files, otherwise prompt;
   default to `0.0.1` when nothing is found and prompting is skipped.
 
-### A: Policy metadata schema + normalization
+### Policy metadata schema + normalization
 - Defined a canonical metadata schema using template policy blocks, with
   every script-supported key present (empty values preserve defaults).
 - Added `devcovenant normalize-metadata` to insert missing keys in order
@@ -646,21 +660,21 @@ Follow-up implementation tasks:
 - Normalization marks changed policies with `updated: true` and preserves
   repo-authored severity/threshold values.
 
-### B: Safe update modes for policy blocks
+### Safe update modes for policy blocks
 - Implemented `--policy-mode` with preserve/append-missing/overwrite.
 - Added `--managed-blocks-only` to refresh managed blocks without touching
   policies or metadata (to be removed per target behavior).
 - Update/install flows now preserve policy blocks unless overwrite is
   explicitly requested.
 
-### C: Selector-role migration (normalizer)
+### Selector-role migration (normalizer)
 - Migrate selector-ish keys into selector-role triplets (for example
   `guarded_paths`, `user_visible_*`, `user_facing_*`, `doc_quality_*`).
 - Map legacy selector keys into `selector_roles` so policies remain consistent
   after updates and installs.
 - Warn when selector keys appear without declared selector roles.
 
-### D: Target update behavior alignment
+### Target update behavior alignment
 - Remove `--managed-blocks-only` from CLI and update flows.
 - Make `append-missing` the default policy-mode for updates.
 - Ensure update refreshes core DevCovenant files while preserving custom.
@@ -669,7 +683,7 @@ Follow-up implementation tasks:
 - Enforce changelog block placement with editable content preserved.
 - Ensure metadata normalization runs during default update.
 
-### H: Policy replacement and deprecation workflow
+### Policy replacement and deprecation workflow
 - Added a replacement map (`devcovenant/registry/policy_replacements.yaml`)
   and update logic to migrate or remove replaced policies.
 - Replaced policies now move to custom with `custom: true` +

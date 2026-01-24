@@ -1,6 +1,13 @@
 # DevCovenant
 **Last Updated:** 2026-01-23
 **Version:** 0.2.6
+<p align="center">
+  <img
+src="https://raw.githubusercontent.com/apostolovbg/devcovenant/main/banner.png"
+    alt="DevCovenant"
+    style="width: 100%;"
+  />
+</p>
 
 <!-- DEVCOV:BEGIN -->
 **Doc ID:** README
