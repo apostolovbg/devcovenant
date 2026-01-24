@@ -124,8 +124,8 @@ preparing new repos or upgrades. Key defaults:
   replaced by the standard templates.
 - `SPEC.md` and `PLAN.md` are optional. When present, their content is
   preserved and headers are refreshed.
-- `.gitignore` is regenerated and merges user entries under a
-  preserved block.
+- `.gitignore` is regenerated from global, profile, and OS fragments,
+  then merged with user entries under a preserved block.
 ## Release Readiness Review
 - Confirm the gate sequence (pre-commit start → tests → pre-commit end)
   runs cleanly whenever changes touch docs, policies, or code. The updated

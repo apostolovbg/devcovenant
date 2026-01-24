@@ -1,7 +1,7 @@
 """Profile catalog helpers for DevCovenant."""
 
-from pathlib import Path
 import textwrap
+from pathlib import Path
 
 from devcovenant.core import profiles
 
@@ -28,9 +28,7 @@ def test_load_profile_catalog_merges_core_and_custom(tmp_path: Path) -> None:
       lua:
         suffixes: [".lua"]
     """
-    core_catalog = (
-        tmp_path / "devcovenant" / "core" / "profile_catalog.yaml"
-    )
+    core_catalog = tmp_path / "devcovenant" / "core" / "profile_catalog.yaml"
     custom_catalog = (
         tmp_path / "devcovenant" / "custom" / "profile_catalog.yaml"
     )
@@ -38,12 +36,7 @@ def test_load_profile_catalog_merges_core_and_custom(tmp_path: Path) -> None:
     _write_yaml(custom_catalog, custom_yaml)
 
     custom_templates = (
-        tmp_path
-        / "devcovenant"
-        / "custom"
-        / "templates"
-        / "profiles"
-        / "zig"
+        tmp_path / "devcovenant" / "custom" / "templates" / "profiles" / "zig"
     )
     custom_templates.mkdir(parents=True, exist_ok=True)
 

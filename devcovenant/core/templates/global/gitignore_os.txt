@@ -1,0 +1,6 @@
+# OS-specific ignores (DevCovenant)
+.DS_Store
+.AppleDouble
+.LSOverride
+Thumbs.db
+Desktop.ini

@@ -14,6 +14,10 @@ the same stack, tooling, and directory layout. If your repo mixes
 languages, combine profiles and adjust the policy metadata after install.
 
 ## Template Contents
+The profile manifest (`profile.yaml`) captures the assets and policy
+overlays for this profile. Keep it aligned with the template files in
+this directory.
+
 List the files that typically ship with this profile. This placeholder
 README reminds maintainers to keep those assets current and aligned with
 DevCovenant expectations. Templates are copied into target repos and can

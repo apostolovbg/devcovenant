@@ -42,12 +42,12 @@ class ManagedEnvironmentCheck(PolicyCheck):
                     "expected_interpreters are configured.",
                 )
             )
-        if not command_hints:
+        if not required_commands and not command_hints:
             warnings.append(
                 self._warning(
                     repo_root,
-                    "managed-environment is enabled, but command_hints is "
-                    "empty.",
+                    "managed-environment is enabled, but no command_hints or "
+                    "required_commands are configured.",
                 )
             )
         if required_commands:
@@ -94,11 +94,7 @@ class ManagedEnvironmentCheck(PolicyCheck):
             "DevCovenant must run from the managed environment declared by "
             "managed-environment metadata." + guidance
         )
-        primary_path = (
-            resolved_paths[0]
-            if resolved_paths
-            else repo_root
-        )
+        primary_path = resolved_paths[0] if resolved_paths else repo_root
         return warnings + [
             Violation(
                 policy_id=self.policy_id,
@@ -113,15 +109,11 @@ class ManagedEnvironmentCheck(PolicyCheck):
         """Normalize metadata entries into a list of strings."""
         if isinstance(entries, str):
             return [
-                entry.strip()
-                for entry in entries.split(",")
-                if entry.strip()
+                entry.strip() for entry in entries.split(",") if entry.strip()
             ]
         if isinstance(entries, (list, tuple, set)):
             return [
-                str(entry).strip()
-                for entry in entries
-                if str(entry).strip()
+                str(entry).strip() for entry in entries if str(entry).strip()
             ]
         return []
 

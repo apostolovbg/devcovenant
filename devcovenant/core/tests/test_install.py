@@ -340,3 +340,27 @@ def test_profile_assets_skip_when_profile_inactive(
     )
     assert not (target / "requirements.in").exists()
     assert not (target / "requirements.lock").exists()
+
+
+def test_profile_overlays_update_policy_config(
+    tmp_path: Path,
+) -> None:
+    """Profile overlays should populate policy config defaults."""
+    target = tmp_path / "repo"
+    target.mkdir()
+    install.main(
+        [
+            "--target",
+            str(target),
+            "--mode",
+            "empty",
+            "--version",
+            "0.8.0",
+        ]
+    )
+    config_text = (target / "devcovenant" / "config.yaml").read_text(
+        encoding="utf-8"
+    )
+    assert "dependency-license-sync" in config_text
+    assert "dependency_files:" in config_text
+    assert "requirements.in" in config_text

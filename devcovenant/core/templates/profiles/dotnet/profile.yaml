@@ -1,0 +1,11 @@
+version: 1
+profile: dotnet
+category: language
+assets:
+- path: global.json
+  template: global.json
+  mode: replace
+policy_overlays:
+  dependency-license-sync:
+    dependency_files:
+    - global.json

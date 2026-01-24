@@ -1,0 +1,14 @@
+version: 1
+profile: typescript
+category: language
+assets:
+- path: package.json
+  template: package.json
+  mode: replace
+- path: tsconfig.json
+  template: tsconfig.json
+  mode: replace
+policy_overlays:
+  dependency-license-sync:
+    dependency_files:
+    - package.json

@@ -53,3 +53,39 @@ def test_allows_managed_environment(tmp_path: Path, monkeypatch):
     )
     context = CheckContext(repo_root=tmp_path, changed_files=[])
     assert checker.check(context) == []
+
+
+def test_warns_when_metadata_empty(tmp_path: Path):
+    """Empty metadata should emit warning guidance."""
+    checker = ManagedEnvironmentCheck()
+    checker.set_options({}, {})
+    context = CheckContext(repo_root=tmp_path, changed_files=[])
+    violations = checker.check(context)
+
+    assert violations
+    assert all(v.severity == "warning" for v in violations)
+    assert any("expected_paths" in v.message for v in violations)
+    assert any("command_hints" in v.message for v in violations)
+
+
+def test_required_commands_replace_hint_warning(tmp_path: Path, monkeypatch):
+    """Required commands suppress the missing-hints warning."""
+    managed = tmp_path / ".venv"
+    managed.mkdir()
+    venv_python = managed / "bin"
+    venv_python.mkdir()
+    venv_executable = venv_python / "python"
+    venv_executable.write_text("", encoding="utf-8")
+    monkeypatch.setenv("VIRTUAL_ENV", str(managed))
+    monkeypatch.setattr(sys, "executable", str(venv_executable))
+
+    checker = ManagedEnvironmentCheck()
+    checker.set_options(
+        {
+            "expected_paths": [".venv"],
+            "required_commands": ["python3"],
+        },
+        {},
+    )
+    context = CheckContext(repo_root=tmp_path, changed_files=[])
+    assert checker.check(context) == []

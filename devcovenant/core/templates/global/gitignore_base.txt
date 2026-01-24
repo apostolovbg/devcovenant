@@ -1,0 +1,71 @@
+# DevCovenant base ignores
+"
+    "
+"
+    "# Editor settings
+"
+    ".idea/
+"
+    ".vscode/
+"
+    "*.swp
+"
+    "*.swo
+"
+    "*.swn
+"
+    "*.tmp
+"
+    "*.bak
+"
+    "
+"
+    "# Environment files
+"
+    ".env
+"
+    ".env.*
+"
+    "!.env.example
+"
+    "
+"
+    "# Build artifacts
+"
+    "build/
+"
+    "dist/
+"
+    "out/
+"
+    "coverage/
+"
+    "reports/
+"
+    "
+"
+    "# Logs
+"
+    "*.log
+"
+    "
+"
+    "# Misc
+"
+    ".cache/
+"
+    "tmp/
+"
+    "temp/
+",
+    encoding='utf-8',
+)
+os_path.write_text(
+    .DS_Store
+.AppleDouble
+.LSOverride
+Thumbs.db
+Desktop.ini
+ehthumbs.db
+Icon?
+*.lnk

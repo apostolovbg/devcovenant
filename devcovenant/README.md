@@ -162,7 +162,8 @@ overwrites when explicitly instructed. Summary:
   `*_old.md` backups; updates only refresh managed blocks.
 - `SPEC.md` / `PLAN.md`: optional; created only with `--include-spec` or
   `--include-plan`, otherwise preserved if they already exist.
-- `.gitignore`: regenerated and merged with a preserved user block.
+- `.gitignore`: regenerated from global, profile, and OS fragments,
+  then merged with a preserved user block.
 - Config files: preserved unless `--config-mode overwrite` (or forced).
 
 ## Installer Behavior (File by File)
@@ -176,8 +177,8 @@ repos; it preserves content by default and refreshes managed blocks.
 - `.pre-commit-config.yaml`, `.github/workflows/ci.yml`: preserved when
   `--config-mode preserve`, otherwise overwritten. Use `--ci-mode skip` to
   skip CI installs.
-- `.gitignore`: regenerated from the universal baseline and merged with any
-  existing user entries under a preserved block.
+- `.gitignore`: regenerated from global, profile, and OS fragments,
+  then merged with existing user entries under a preserved block.
 - `AGENTS.md`: always replaced by the template. If an existing file is found,
   the editable section content is preserved under `# EDITABLE SECTION`.
 - `README.md`: existing content is preserved, headers are refreshed, and the
@@ -215,8 +216,9 @@ The installer writes `devcovenant/manifest.json` with:
 - `custom`: allowed user-writable paths (`devcovenant/custom/**`).
 - `generated`: generated files such as registries or test status.
 - `profiles`: active profiles and the catalog snapshot recorded at install.
-- `policy_assets`: profile/policy asset mappings recorded by install or
-  update for audit and cleanup.
+- `policy_assets`: policy-scoped asset mappings recorded by install or
+  update for audit and cleanup. Profile assets are resolved from profile
+  manifests under `templates/profiles/`.
 - `installed`: lists of installed paths by group (`core`, `config`, `docs`).
 - `doc_blocks`: list of docs that received managed blocks.
 - `options`: resolved install options (docs/config/metadata modes, version,
@@ -257,7 +259,6 @@ Manifest schema (summary):
   },
   "policy_assets": {
     "global": [],
-    "profiles": {},
     "policies": {}
   },
   "installed": {
@@ -351,8 +352,8 @@ every repo:
 - `policies`: per-policy overrides (apply, severity, selectors).
 
 When multiple profiles are active, the generated suffix list is the
-union of each profile's catalog suffixes. Profile-specific config
-fragments can be added later under custom templates when needed.
+union of each profile's catalog suffixes. Profile manifests can also
+supply policy metadata overlays that are merged into `config.yaml`.
 
 ## Profiles and Scopes
 DevCovenant uses install profiles to tailor policy applicability and assets.
@@ -360,11 +361,18 @@ Profiles are defined in `devcovenant/core/profile_catalog.yaml`, and custom
 profiles can be added via `devcovenant/custom/profile_catalog.yaml` or by
 creating a folder under `devcovenant/custom/templates/profiles/<name>`.
 
+Each profile can ship a profile manifest at
+`devcovenant/core/templates/profiles/<profile>/profile.yaml`. The manifest
+lists profile assets and per-policy metadata overlays. Custom profile
+manifests in `devcovenant/custom/templates/profiles/<profile>/profile.yaml`
+override the core manifest when both exist.
+
 Install prompts for one or more active profiles and stores the selection in
 `devcovenant/config.yaml` under `profiles.active`. Active profiles:
 - extend `engine.file_suffixes` with catalog suffixes,
 - gate policies via `profile_scopes` metadata,
-- select profile assets listed in `devcovenant/core/policy_assets.yaml`.
+- install profile assets declared in profile manifests,
+- apply profile metadata overlays into `config.yaml`.
 
 Example configuration:
 ```yaml
@@ -388,26 +396,40 @@ metadata without editing DevCovenant core.
 ```yaml
 profiles:
   frappe:
-    label: "Frappe/ERPNext"
-    description: "Bench-managed Python app"
-    file_suffixes: [".py", ".json", ".js"]
+    category: framework
+    suffixes:
+      - .py
+      - .json
+      - .js
 ```
 
-2) Add profile assets in `devcovenant/custom/policy_assets.yaml`:
+2) Define assets and overlays in a profile manifest:
+`devcovenant/custom/templates/profiles/frappe/profile.yaml`
 ```yaml
-profiles:
-  frappe:
-    - path: requirements.in
-      template: profiles/frappe/requirements.in
-      mode: merge
+version: 1
+profile: frappe
+category: framework
+assets:
+  - path: requirements.in
+    template: requirements.in
+    mode: merge
+policy_overlays:
+  dependency-license-sync:
+    dependency_files:
+      - requirements.in
 ```
 
-3) Add the templates themselves:
+3) Add the templates themselves (including optional `.gitignore` fragments):
 ```
 devcovenant/custom/templates/profiles/frappe/requirements.in
+devcovenant/custom/templates/profiles/frappe/.gitignore
 ```
 
-4) Activate the profile in `devcovenant/config.yaml`:
+4) If a policy requires assets, declare them in
+`devcovenant/custom/policy_assets.yaml` and add templates under
+`devcovenant/custom/templates/policies/<policy>/...`.
+
+5) Activate the profile in `devcovenant/config.yaml`:
 ```yaml
 profiles:
   active:
@@ -417,8 +439,8 @@ profiles:
 
 Notes:
 - Template resolution always prefers custom templates over core templates.
-- Profiles are additive: multiple active profiles can contribute assets
-  and policy applicability at once.
+- Profiles are additive: multiple active profiles can contribute assets and
+  metadata overlays at once.
 
 ## Check Modes and Exit Codes
 Run checks through the CLI:
@@ -626,12 +648,14 @@ all touched manifests under `## License Report`.
 DevCovenant ships templates under `devcovenant/core/templates/` with
 three layers: `global/` (shared docs/config/tools),
 `profiles/<profile>/` (profile-specific assets), and
-`policies/<policy>/` (policy-scoped assets). Custom overrides live under
-`devcovenant/custom/templates/` with the same layout.
+`policies/<policy>/` (policy-scoped assets). Each profile folder can
+include a `profile.yaml` manifest that declares assets and policy
+overlays. Custom overrides live under `devcovenant/custom/templates/`
+with the same layout.
 
-Asset selection is driven by `devcovenant/core/policy_assets.yaml` and the
-active profiles recorded in config. Assets for disabled policies or
-inactive profiles are skipped.
+Asset selection is driven by `devcovenant/core/policy_assets.yaml` for
+policy-scoped assets and profile manifests under `templates/profiles/`.
+Assets for disabled policies or inactive profiles are skipped.
 
 ### Template precedence and resolution
 When DevCovenant resolves a template path, it checks in this order:

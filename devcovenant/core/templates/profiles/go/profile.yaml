@@ -1,0 +1,11 @@
+version: 1
+profile: go
+category: language
+assets:
+- path: go.mod
+  template: go.mod
+  mode: replace
+policy_overlays:
+  dependency-license-sync:
+    dependency_files:
+    - go.mod

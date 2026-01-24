@@ -1,0 +1,15 @@
+version: 1
+profile: python
+category: language
+assets:
+- path: requirements.in
+  template: requirements.in
+  mode: merge
+- path: requirements.lock
+  template: requirements.lock
+  mode: merge
+policy_overlays:
+  dependency-license-sync:
+    dependency_files:
+    - requirements.in
+    - requirements.lock

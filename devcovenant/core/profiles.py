@@ -23,26 +23,18 @@ def _load_yaml(path: Path) -> dict:
 def load_profile_catalog(repo_root: Path) -> Dict[str, Dict]:
     """Load the merged profile catalog from core and custom sources."""
     catalog: Dict[str, Dict] = {}
-    core_path = (
-        repo_root / "devcovenant" / "core" / _PROFILE_CATALOG_FILE
-    )
+    core_path = repo_root / "devcovenant" / "core" / _PROFILE_CATALOG_FILE
     core_data = _load_yaml(core_path)
     for name, meta in (core_data.get("profiles") or {}).items():
         catalog[str(name).strip().lower()] = dict(meta or {})
 
-    custom_path = (
-        repo_root / "devcovenant" / "custom" / _PROFILE_CATALOG_FILE
-    )
+    custom_path = repo_root / "devcovenant" / "custom" / _PROFILE_CATALOG_FILE
     custom_data = _load_yaml(custom_path)
     for name, meta in (custom_data.get("profiles") or {}).items():
         catalog[str(name).strip().lower()] = dict(meta or {})
 
     custom_dir = (
-        repo_root
-        / "devcovenant"
-        / "custom"
-        / "templates"
-        / "profiles"
+        repo_root / "devcovenant" / "custom" / "templates" / "profiles"
     )
     if custom_dir.exists():
         for entry in custom_dir.iterdir():
@@ -63,9 +55,7 @@ def resolve_profile_suffixes(
     """Return file suffixes associated with active profiles."""
     suffixes: List[str] = []
     normalized = {
-        str(name).strip().lower()
-        for name in active_profiles
-        if name
+        str(name).strip().lower() for name in active_profiles if name
     }
     for name in normalized:
         meta = catalog.get(name, {})

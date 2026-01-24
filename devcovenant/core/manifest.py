@@ -45,6 +45,8 @@ DEFAULT_CORE_FILES = [
     "devcovenant/core/templates/global/VERSION",
     "devcovenant/core/templates/global/.pre-commit-config.yaml",
     "devcovenant/core/templates/global/.github/workflows/ci.yml",
+    "devcovenant/core/templates/global/gitignore_base.txt",
+    "devcovenant/core/templates/global/gitignore_os.txt",
     "devcovenant/core/templates/global/tools/run_pre_commit.py",
     "devcovenant/core/templates/global/tools/run_tests.py",
     "devcovenant/core/templates/global/tools/update_test_status.py",
@@ -77,7 +79,10 @@ DEFAULT_CUSTOM_DIRS = [
     "devcovenant/custom/templates/policies",
 ]
 
-DEFAULT_CUSTOM_FILES: list[str] = []
+DEFAULT_CUSTOM_FILES = [
+    "devcovenant/custom/profile_catalog.yaml",
+    "devcovenant/custom/policy_assets.yaml",
+]
 
 DEFAULT_GENERATED_FILES = [
     "devcovenant/registry.json",
@@ -136,7 +141,6 @@ def build_manifest(
         },
         "policy_assets": {
             "global": [],
-            "profiles": {},
             "policies": {},
         },
     }

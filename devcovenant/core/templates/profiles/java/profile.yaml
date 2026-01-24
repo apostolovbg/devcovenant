@@ -1,0 +1,11 @@
+version: 1
+profile: java
+category: language
+assets:
+- path: build.gradle
+  template: build.gradle
+  mode: replace
+policy_overlays:
+  dependency-license-sync:
+    dependency_files:
+    - build.gradle

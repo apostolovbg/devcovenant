@@ -57,6 +57,9 @@ TEMPLATE_PROFILES_DIR = "profiles"
 TEMPLATE_POLICIES_DIR = "policies"
 PROFILE_CATALOG_FILE = "profile_catalog.yaml"
 POLICY_ASSETS_FILE = "policy_assets.yaml"
+PROFILE_MANIFEST_NAME = "profile.yaml"
+GITIGNORE_BASE_TEMPLATE = "global/gitignore_base.txt"
+GITIGNORE_OS_TEMPLATE = "global/gitignore_os.txt"
 DEFAULT_BOOTSTRAP_VERSION = "0.0.1"
 DEFAULT_PROFILE_SELECTION = ["python", "docs", "data"]
 GITIGNORE_USER_BEGIN = "# --- User entries (preserved) ---"
@@ -379,7 +382,7 @@ def _policy_profile_match(
 
 def _load_policy_assets(package_root: Path, target_root: Path) -> dict:
     """Load policy asset mappings from core/custom definitions."""
-    assets: dict = {"global": [], "profiles": {}, "policies": {}}
+    assets: dict = {"global": [], "policies": {}}
     core_path = package_root / "core" / POLICY_ASSETS_FILE
     core_data = _load_yaml(core_path)
     for key in assets:
@@ -388,7 +391,7 @@ def _load_policy_assets(package_root: Path, target_root: Path) -> dict:
     custom_path = package_root / "custom" / POLICY_ASSETS_FILE
     custom_data = _load_yaml(custom_path)
     for key, asset_value in (custom_data or {}).items():
-        if key in {"global", "profiles", "policies"} and asset_value:
+        if key in assets and asset_value:
             assets[key] = asset_value
     target_custom = (
         target_root / DEV_COVENANT_DIR / "custom" / POLICY_ASSETS_FILE
@@ -396,9 +399,43 @@ def _load_policy_assets(package_root: Path, target_root: Path) -> dict:
     if target_custom.exists():
         target_data = _load_yaml(target_custom)
         for key, asset_value in (target_data or {}).items():
-            if key in {"global", "profiles", "policies"} and asset_value:
+            if key in assets and asset_value:
                 assets[key] = asset_value
     return assets
+
+
+def _load_profile_manifest(
+    package_root: Path,
+    target_root: Path,
+    profile: str,
+) -> dict:
+    """Load a profile manifest from custom/core templates."""
+    template_root = package_root / "core" / TEMPLATE_ROOT_NAME
+    manifest_path = _resolve_template_path(
+        target_root,
+        template_root,
+        PROFILE_MANIFEST_NAME,
+        profile=profile,
+    )
+    if not manifest_path.exists():
+        return {}
+    return _load_yaml(manifest_path) or {}
+
+
+def _load_profile_manifests(
+    package_root: Path,
+    target_root: Path,
+    active_profiles: list[str],
+) -> dict[str, dict]:
+    """Load profile manifests for active profiles."""
+    manifests: dict[str, dict] = {}
+    for profile in active_profiles:
+        if not profile or profile == "__none__":
+            continue
+        manifest = _load_profile_manifest(package_root, target_root, profile)
+        if manifest:
+            manifests[profile] = manifest
+    return manifests
 
 
 def _clean_asset_entries(entries: list[dict] | list[str]) -> list[dict]:
@@ -464,6 +501,7 @@ def _apply_profile_assets(
     template_root: Path,
     target_root: Path,
     active_profiles: list[str],
+    profile_manifests: dict[str, dict],
     disabled_policies: set[str],
     policy_metadata: dict[str, dict[str, object]],
 ) -> list[str]:
@@ -481,9 +519,10 @@ def _apply_profile_assets(
             template_path, target_path, entry.get("mode", "replace")
         ):
             installed.append(str(target_path.relative_to(target_root)))
-    profile_assets = assets.get("profiles", {}) or {}
-    for profile in active_profiles:
-        for entry in _clean_asset_entries(profile_assets.get(profile, [])):
+
+    for profile, manifest in profile_manifests.items():
+        entries = _clean_asset_entries(manifest.get("assets", []))
+        for entry in entries:
             template_path = _resolve_template_path(
                 target_root,
                 template_root,
@@ -495,6 +534,7 @@ def _apply_profile_assets(
                 template_path, target_path, entry.get("mode", "replace")
             ):
                 installed.append(str(target_path.relative_to(target_root)))
+
     policy_assets = assets.get("policies", {}) or {}
     for policy_id, entries in policy_assets.items():
         if policy_id in disabled_policies:
@@ -690,76 +730,63 @@ def _extract_user_gitignore(text: str) -> str:
     return text.strip("\n")
 
 
-def _render_gitignore(user_text: str) -> str:
-    """Render a universal gitignore and append preserved user entries."""
-    base_lines = [
-        "# DevCovenant standard ignores",
-        "",
-        "# OS artifacts",
-        ".DS_Store",
-        ".AppleDouble",
-        ".LSOverride",
-        "Thumbs.db",
-        "Desktop.ini",
-        "ehthumbs.db",
-        "Icon?",
-        "*.lnk",
-        "",
-        "# Editor settings",
-        ".idea/",
-        ".vscode/",
-        "*.swp",
-        "*.swo",
-        "*.swn",
-        "*.tmp",
-        "*.bak",
-        "",
-        "# Python",
-        "__pycache__/",
-        "*.py[cod]",
-        ".pytest_cache/",
-        ".mypy_cache/",
-        ".ruff_cache/",
-        ".tox/",
-        ".nox/",
-        ".venv/",
-        "venv/",
-        ".env",
-        ".env.*",
-        "!.env.example",
-        ".coverage",
-        ".coverage.*",
-        "htmlcov/",
-        "dist/",
-        "build/",
-        "*.egg-info/",
-        ".eggs/",
-        "",
-        "# Node",
-        "node_modules/",
-        "npm-debug.log*",
-        "yarn-debug.log*",
-        "pnpm-debug.log*",
-        "",
-        "# Go",
-        "bin/",
-        "pkg/",
-        "",
-        "# Rust",
-        "target/",
-        "",
-        "# Logs",
-        "*.log",
-        "",
-        "# Misc",
-        ".cache/",
-        "tmp/",
-        "temp/",
-    ]
-    base_text = "\n".join(base_lines).rstrip() + "\n"
+def _load_gitignore_fragment(
+    target_root: Path,
+    template_root: Path,
+    rel_path: str,
+    *,
+    profile: str | None = None,
+) -> str:
+    """Return a gitignore fragment from templates when present."""
+    fragment_path = _resolve_template_path(
+        target_root,
+        template_root,
+        rel_path,
+        profile=profile,
+    )
+    if not fragment_path.exists():
+        return ""
+    return fragment_path.read_text(encoding="utf-8").strip("\n")
+
+
+def _render_gitignore(
+    user_text: str,
+    target_root: Path,
+    template_root: Path,
+    active_profiles: list[str],
+) -> str:
+    """Render a profile-aware gitignore and append user entries."""
+    fragments: list[str] = []
+    base_text = _load_gitignore_fragment(
+        target_root,
+        template_root,
+        GITIGNORE_BASE_TEMPLATE,
+    )
+    if base_text:
+        fragments.append(base_text)
+    for profile in sorted(active_profiles):
+        if not profile or profile == "__none__":
+            continue
+        profile_text = _load_gitignore_fragment(
+            target_root,
+            template_root,
+            ".gitignore",
+            profile=profile,
+        )
+        if profile_text:
+            fragments.append(f"# Profile: {profile}\n{profile_text}")
+    os_text = _load_gitignore_fragment(
+        target_root,
+        template_root,
+        GITIGNORE_OS_TEMPLATE,
+    )
+    if os_text:
+        fragments.append(os_text)
+
+    base = "\n\n".join(fragments).rstrip() + "\n"
     user_block = _extract_user_gitignore(user_text)
     return (
-        f"{base_text}\n{GITIGNORE_USER_BEGIN}\n{user_block}\n"
+        f"{base}\n{GITIGNORE_USER_BEGIN}\n{user_block}\n"
         f"{GITIGNORE_USER_END}\n"
     )
 
@@ -1187,6 +1214,138 @@ def _update_profile_config_text(
         updated_lines.extend(profile_block)
     updated = "\n".join(updated_lines).rstrip() + "\n"
     return updated, updated != text
+
+
+def _normalize_overlay_list(raw_value: object) -> list[str]:
+    """Normalize a metadata overlay entry into a list."""
+    if raw_value is None:
+        return []
+    if isinstance(raw_value, list):
+        items = [str(item).strip() for item in raw_value]
+    elif isinstance(raw_value, str):
+        parts = [part.strip() for part in raw_value.split(",")]
+        items = [part for part in parts if part]
+    else:
+        items = [str(raw_value).strip()]
+    return [item for item in items if item and item != "__none__"]
+
+
+def _merge_overlay_value(existing: object, incoming: object) -> object:
+    """Merge an incoming overlay value into an existing value."""
+    if incoming is None:
+        return existing
+    if isinstance(existing, list) or isinstance(incoming, list):
+        merged: list[str] = []
+        for entry in _normalize_overlay_list(existing):
+            if entry not in merged:
+                merged.append(entry)
+        for entry in _normalize_overlay_list(incoming):
+            if entry not in merged:
+                merged.append(entry)
+        return merged
+    if existing not in (None, "", "__none__"):
+        return existing
+    return incoming
+
+
+def _merge_overlay_map(
+    base: dict[str, object], overlay: dict[str, object]
+) -> dict[str, object]:
+    """Merge an overlay mapping into a base mapping."""
+    merged = dict(base)
+    for key, overlay_value in (overlay or {}).items():
+        merged[key] = _merge_overlay_value(merged.get(key), overlay_value)
+    return merged
+
+
+def _collect_profile_overlays(
+    profile_manifests: dict[str, dict],
+) -> dict[str, dict[str, object]]:
+    """Collect policy metadata overlays from active profiles."""
+    overlays: dict[str, dict[str, object]] = {}
+    for manifest in profile_manifests.values():
+        raw_overlays = manifest.get("policy_overlays") or {}
+        if raw_overlays == "__none__":
+            continue
+        for policy_id, overlay in raw_overlays.items():
+            if not overlay or overlay == "__none__":
+                continue
+            existing = overlays.get(policy_id, {})
+            overlays[policy_id] = _merge_overlay_map(existing, overlay)
+    return overlays
+
+
+def _build_policies_block(policies: dict[str, object]) -> list[str]:
+    """Return the policies block for config.yaml."""
+    if not policies:
+        return []
+    block = yaml.safe_dump(
+        {"policies": policies},
+        sort_keys=False,
+    ).rstrip()
+    return block.splitlines()
+
+
+def _update_policies_config_text(
+    text: str, policies: dict[str, object]
+) -> tuple[str, bool]:
+    """Update policy overrides inside config.yaml text."""
+    block_lines = _build_policies_block(policies)
+    if not block_lines:
+        return text, False
+    lines = text.splitlines()
+    updated_lines: list[str] = []
+    found_policies = False
+    index = 0
+    while index < len(lines):
+        line = lines[index]
+        if line.strip().startswith("policies:"):
+            found_policies = True
+            updated_lines.extend(block_lines)
+            index += 1
+            while index < len(lines):
+                next_line = lines[index]
+                if next_line.startswith("  "):
+                    index += 1
+                    continue
+                if not next_line.strip():
+                    index += 1
+                    continue
+                break
+            continue
+        updated_lines.append(line)
+        index += 1
+
+    if not found_policies:
+        if updated_lines and updated_lines[-1].strip():
+            updated_lines.append("")
+        updated_lines.extend(block_lines)
+    updated = "\n".join(updated_lines).rstrip() + "\n"
+    return updated, updated != text
+
+
+def _apply_profile_policy_overlays(
+    target_root: Path,
+    overlays: dict[str, dict[str, object]],
+) -> bool:
+    """Apply profile policy overlays to config.yaml."""
+    if not overlays:
+        return False
+    config_path = target_root / DEV_COVENANT_DIR / "config.yaml"
+    if not config_path.exists():
+        return False
+    text = config_path.read_text(encoding="utf-8")
+    config_data = yaml.safe_load(text) or {}
+    policies = config_data.get("policies") or {}
+    for policy_id, overlay in overlays.items():
+        current = policies.get(policy_id, {}) or {}
+        policies[policy_id] = _merge_overlay_map(current, overlay)
+    updated, changed = _update_policies_config_text(text, policies)
+    if not changed:
+        return False
+    _rename_existing_file(config_path)
+    config_path.write_text(updated, encoding="utf-8")
+    return True
 
 
 def _apply_profile_config(
@@ -2003,7 +2162,12 @@ def main(argv=None) -> None:
         if gitignore_path.exists()
         else ""
     )
-    gitignore_text = _render_gitignore(existing_gitignore)
+    gitignore_text = _render_gitignore(
+        existing_gitignore,
+        target_root,
+        template_root,
+        active_profiles,
+    )
     if not gitignore_path.exists():
         installed["config"].append(".gitignore")
     gitignore_path.parent.mkdir(parents=True, exist_ok=True)
@@ -2085,12 +2249,20 @@ def main(argv=None) -> None:
 
     disabled_policies = _apply_policy_disables(agents_path, disable_policies)
     policy_metadata = _load_policy_metadata(agents_path)
+    profile_manifests = _load_profile_manifests(
+        package_root,
+        target_root,
+        active_profiles,
+    )
+    profile_overlays = _collect_profile_overlays(profile_manifests)
+    _apply_profile_policy_overlays(target_root, profile_overlays)
     installed["assets"].extend(
         _apply_profile_assets(
             package_root,
             template_root,
             target_root,
             active_profiles,
+            profile_manifests,
             set(disabled_policies),
             policy_metadata,
         )

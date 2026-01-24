@@ -1,0 +1,11 @@
+version: 1
+profile: php
+category: language
+assets:
+- path: composer.json
+  template: composer.json
+  mode: replace
+policy_overlays:
+  dependency-license-sync:
+    dependency_files:
+    - composer.json

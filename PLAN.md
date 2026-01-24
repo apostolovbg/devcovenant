@@ -345,32 +345,6 @@ Run uninstall before install? [y/N]
 ### Remaining Phases (in order)
 
 
-#### Phase L: Profile-driven config + gitignore assets
-- Ship exemplar `devcovenant/custom/profile_catalog.yaml` and
-  `devcovenant/custom/policy_assets.yaml` with ready-to-fill sections.
-- Document override precedence: custom profile/catalog entries and
-  policy assets replace core entries when names match.
-- Move profile assets out of policy assets: profiles own their templates
-  under `templates/profiles/<profile>/`, while policy assets remain under
-  `templates/policies/<policy>/`.
-- Add per-profile policy metadata overlays in the profile catalog so
-  profile-specific files (for example, Python `pyproject.toml` or JS
-  `package.json`) extend global policies like version-sync or
-  dependency-license-sync.
-- Require custom assets to live under
-  `devcovenant/custom/templates/{global,profiles,policies}/` with the same
-  layout as core; custom templates override core templates by matching
-  path.
-- Generate `devcovenant/config.yaml` from active profiles instead of
-  Python-centric defaults; merge profile defaults for mixed repos and
-  aggregate file suffix coverage across all active profiles.
-- Add profile-scoped `.gitignore` fragments and merge ordering:
-  global → profiles (deterministic order) → OS → user block.
-- Update install/update to apply `.gitignore` profile assets with the
-  same merge semantics as other managed assets.
-- Add an explicit policy scope map (global-only vs profile-scoped) and
-  document how profile overlays merge into base metadata.
-
 #### Phase J: SemVer scope enforcement
 - Rework the semantic version scope policy to validate MAJOR/MINOR/PATCH
   intent (breaking API vs feature vs bugfix).
@@ -380,9 +354,16 @@ Run uninstall before install? [y/N]
 - Reuse normalized metadata fields to declare scope markers and exclusions.
 - Update tests and docs to reflect the SemVer rules.
 
-### Policy Scope Map (initial)
-Global-only
-  (profile_scopes: global only):
+### Policy Scope Map (stock, versioned)
+This map is a planning checklist. The authoritative scope list is the
+`profile_scopes:` metadata in each policy block. Every stock policy must
+list all profiles where it is valid.
+
+Asset precedence when paths collide:
+1) profile assets override policy assets
+2) custom overrides core (for both assets and catalogs)
+
+Global-only (profile_scopes: global only):
 - devcov-self-enforcement
 - devcov-structure-guard
 - policy-text-presence
@@ -393,25 +374,68 @@ Global-only
 - read-only-directories
 - managed-environment
 - semantic-version-scope (off by default)
+- policy-replacements (update-only, no runtime enforcement)
 
-Global + profile overlays
-  (profile_scopes: global + language/framework):
-- version-sync (profile overlays define dependency/version files)
-- dependency-license-sync (profile overlays define manifests)
-- last-updated-placement (profiles may add or omit docs)
-- documentation-growth-tracking (profiles expand user-facing scopes)
-- line-length-limit (profiles extend suffix lists)
+Global + profile overlays (profile_scopes include global + profiles):
+- version-sync
+  profiles: python,django,flask,fastapi,frappe
+  javascript,typescript,express,nestjs,nextjs,nuxt,angular,react,vue,svelte
+  php,laravel,symfony
+  ruby,rails
+  java,kotlin,spring,quarkus,micronaut
+  go,rust,csharp,dotnet
+  dart,flutter
+  swift,scala,clojure,elixir,erlang
+- dependency-license-sync
+  same profile scopes as version-sync
+- last-updated-placement
+  profiles: global + docs,data,ansible,docker,kubernetes,terraform,sql
+- documentation-growth-tracking
+  profiles: global + all user-facing language/framework profiles
+- line-length-limit
+  profiles: global + all profiles (suffix coverage via profiles)
 
-Python-only
-  (profile_scopes: python only):
+Profile-scoped (language/framework specific):
 - docstring-and-comment-coverage
+  profiles: python,django,flask,fastapi,frappe
 - name-clarity
+  profiles: python,django,flask,fastapi,frappe
 - new-modules-need-tests
+  profiles: python,django,flask,fastapi,frappe
 - security-scanner
+  profiles: python,django,flask,fastapi,frappe
 
+Custom profiles and policies:
+- Custom profiles define their own assets and policy metadata overlays in
+  custom catalogs and templates; matching core entries are overridden.
+- Custom policies should list profile_scopes explicitly and may reuse
+  overlay files from profile assets when applicable.
+
+Follow-up implementation tasks:
+- Add language-specific AST/scanner adapters so the Python-only policies
+  can expand to additional languages (name clarity, docstrings, tests,
+  security scanning).
+- Populate profile assets and metadata overlays so each shipped profile is
+  complete (dependency manifests, build files, ignore fragments, and
+  profile-specific docs).
 
 
 ### Completed Phases
+#### Phase L: Profile-driven config + gitignore assets
+- Ship exemplar `devcovenant/custom/profile_catalog.yaml` and
+  `devcovenant/custom/policy_assets.yaml` so custom profiles and policy
+  assets can override core entries by name.
+- Move profile assets into per-profile `profile.yaml` manifests under
+  `devcovenant/core/templates/profiles/<profile>/` with optional
+  `.gitignore` fragments and profile-scoped assets.
+- Add `gitignore_base.txt` and `gitignore_os.txt` under
+  `templates/global/`, and assemble `.gitignore` in this order:
+  global base → profile fragments → OS fragment → user section.
+- Apply profile policy overlays from profile manifests to
+  `devcovenant/config.yaml` so profile metadata drives policy scope.
+- Update docs/specs to describe profile manifests, overlay merging, and
+  gitignore merge behavior.
+
 #### Phase I: Managed environment policy (done)
 - Replaced bench/venv policies with `managed-environment`, driven by
   metadata (`expected_paths`, `expected_interpreters`, `required_commands`,
@@ -607,5 +631,4 @@ DevCovenant block (immediately below the header):
   normalization steps until fixed.
 
 ## Next Steps
-- Phase L: profile-driven config + gitignore assets.
 - Phase J: SemVer scope enforcement.

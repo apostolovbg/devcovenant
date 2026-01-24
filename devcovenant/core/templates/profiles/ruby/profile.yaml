@@ -1,0 +1,11 @@
+version: 1
+profile: ruby
+category: language
+assets:
+- path: Gemfile
+  template: Gemfile
+  mode: replace
+policy_overlays:
+  dependency-license-sync:
+    dependency_files:
+    - Gemfile

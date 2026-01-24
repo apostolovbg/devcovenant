@@ -1,0 +1,11 @@
+version: 1
+profile: rust
+category: language
+assets:
+- path: Cargo.toml
+  template: Cargo.toml
+  mode: replace
+policy_overlays:
+  dependency-license-sync:
+    dependency_files:
+    - Cargo.toml

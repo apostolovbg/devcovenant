@@ -5,7 +5,7 @@
         "46302bc67fe0958bc0f96efc414cd9aa",
         "c07f1403e98b91a0a9aee787fca9b7bf"
       ],
-      "last_updated": "2026-01-23T18:52:34.486670+00:00",
+      "last_updated": "2026-01-23T20:55:43.502032+00:00",
       "script_path": "core/policy_scripts/changelog_coverage.py"
     },
     "line-length-limit": {
@@ -13,7 +13,7 @@
         "7c38570b617ff97c190d9f670e6ee102",
         "4c03733565edeb95712dd5068988308c"
       ],
-      "last_updated": "2026-01-23T18:52:34.491960+00:00",
+      "last_updated": "2026-01-23T20:55:43.504585+00:00",
       "script_path": "core/policy_scripts/line_length_limit.py"
     },
     "last-updated-placement": {
@@ -21,7 +21,7 @@
         "da6302c132dddb302a3ec123eae35340",
         "4e9365b2808bd017261181f0e1ae2032"
       ],
-      "last_updated": "2026-01-23T18:52:34.490775+00:00",
+      "last_updated": "2026-01-23T20:55:43.503937+00:00",
       "script_path": "core/policy_scripts/last_updated_placement.py"
     },
     "devcov-self-enforcement": {
@@ -29,7 +29,7 @@
         "b08de6ad1c97c93d38c831b5ecccbfdf",
         "5a501a6938de2c15474b17f06d25e40e"
       ],
-      "last_updated": "2026-01-23T18:52:34.481259+00:00",
+      "last_updated": "2026-01-23T20:55:43.493874+00:00",
       "script_path": "core/policy_scripts/devcov_self_enforcement.py"
     },
     "no-future-dates": {
@@ -37,7 +37,7 @@
         "69794e0df4755c4fb5ff220dac78fa02",
         "2a26ad6f784e019437962234433fe3df"
       ],
-      "last_updated": "2026-01-23T18:52:34.497985+00:00",
+      "last_updated": "2026-01-23T20:55:43.511953+00:00",
       "script_path": "core/policy_scripts/no_future_dates.py"
     },
     "version-sync": {
@@ -45,7 +45,7 @@
         "b687015e8fb6bc8f1862da32951dac7e",
         "cc0984eb266dc519347176cb565f746c"
       ],
-      "last_updated": "2026-01-23T18:52:34.487361+00:00",
+      "last_updated": "2026-01-23T20:55:43.503106+00:00",
       "script_path": "core/policy_scripts/version_sync.py"
     },
     "new-modules-need-tests": {
@@ -53,7 +53,7 @@
         "ca999a4bb546eca7128b5336355b7ca0",
         "c17bfe992c1672c564fc56a99ed89eb0"
       ],
-      "last_updated": "2026-01-23T18:52:34.495018+00:00",
+      "last_updated": "2026-01-23T20:55:43.508118+00:00",
       "script_path": "core/policy_scripts/new_modules_need_tests.py"
     },
     "read-only-directories": {
@@ -61,7 +61,7 @@
         "aec37932e1da849990809d6bebf8b0ab",
         "79453ab5a5e95c535f95e0541c3aef92"
       ],
-      "last_updated": "2026-01-23T18:52:34.496848+00:00",
+      "last_updated": "2026-01-23T20:55:43.510723+00:00",
       "script_path": "core/policy_scripts/read_only_directories.py"
     },
     "dependency-license-sync": {
@@ -69,7 +69,7 @@
         "04b82c0044075373bb448027ab4e2e82",
         "df8277d1152a57a9eb562d79d736405d"
       ],
-      "last_updated": "2026-01-23T18:52:34.483416+00:00",
+      "last_updated": "2026-01-23T20:55:43.497037+00:00",
       "script_path": "core/policy_scripts/dependency_license_sync.py"
     },
     "documentation-growth-tracking": {
@@ -77,7 +77,7 @@
         "ab4e35f31554916b4b3e76263d076fb7",
         "2d32b45b7c46a2c8cac5e92dbcf1b77f"
       ],
-      "last_updated": "2026-01-23T18:52:34.495878+00:00",
+      "last_updated": "2026-01-23T20:55:43.509121+00:00",
       "script_path": "core/policy_scripts/documentation_growth_tracking.py"
     },
     "name-clarity": {
@@ -85,7 +85,7 @@
         "d9f3fa37cc61e4561e3394e63d7b018f",
         "25c61c44bbc0b75202af9c823ec50c44"
       ],
-      "last_updated": "2026-01-23T18:52:34.494092+00:00",
+      "last_updated": "2026-01-23T20:55:43.507350+00:00",
       "script_path": "core/policy_scripts/name_clarity.py"
     },
     "security-compliance-notes": {
@@ -101,7 +101,7 @@
         "51b01c5a11d3801639ec9b038ce4a219",
         "6ed589aa2de4805889f2a9e57c00db05"
       ],
-      "last_updated": "2026-01-23T18:52:34.498899+00:00",
+      "last_updated": "2026-01-23T20:55:43.513087+00:00",
       "script_path": "core/policy_scripts/security_scanner.py"
     },
     "semantic-version-scope": {
@@ -117,7 +117,7 @@
         "e5b6f25ef052f671e5680b2c8e2dcbf7",
         "02cd2baabf73f4f9e99de7a87f51ce9f"
       ],
-      "last_updated": "2026-01-23T18:52:34.485370+00:00",
+      "last_updated": "2026-01-23T20:55:43.500592+00:00",
       "script_path": "core/policy_scripts/devflow_run_gates.py"
     },
     "docstring-and-comment-coverage": {
@@ -125,7 +125,7 @@
         "7efe15c1cd95013c9f08f19c3ffe70a2",
         "c66a0b8b077a8f19c1bf31c8843028a2"
       ],
-      "last_updated": "2026-01-23T18:52:34.493089+00:00",
+      "last_updated": "2026-01-23T20:55:43.506416+00:00",
       "script_path": "core/policy_scripts/docstring_and_comment_coverage.py"
     },
     "track-test-status": {
@@ -165,7 +165,7 @@
         "e6c5cb69b784a1a809221dc417aa0aea",
         "c618fb16d783d6904f85c1eb06908151"
       ],
-      "last_updated": "2026-01-23T18:52:34.482751+00:00",
+      "last_updated": "2026-01-23T20:55:43.496360+00:00",
       "script_path": "core/policy_scripts/devcov_structure_guard.py"
     },
     "policy-text-presence": {
@@ -173,7 +173,7 @@
         "e4897b4f7c47ed05fc93f92ac9c2ea71",
         "61942d7ea845c229bd7382c6e6bb5f37"
       ],
-      "last_updated": "2026-01-23T18:52:34.484050+00:00",
+      "last_updated": "2026-01-23T20:55:43.499178+00:00",
       "script_path": "core/policy_scripts/policy_text_presence.py"
     },
     "stock-policy-text-sync": {
@@ -181,15 +181,15 @@
         "b31245d0b37565e34b348a573dd1ca25",
         "07555779abbf7f28821b1ea926e59887"
       ],
-      "last_updated": "2026-01-23T18:52:34.484686+00:00",
+      "last_updated": "2026-01-23T20:55:43.499847+00:00",
       "script_path": "core/policy_scripts/stock_policy_text_sync.py"
     },
     "managed-environment": {
       "hash": [
-        "0917586ab99474f1cf4ef00281b7d5c2",
-        "6147a8f840c62d948b74b607c8fff251"
+        "ebba8914fdae3b289a10547a54b17a32",
+        "45fc384a0f2f7025f0cb2b2280af548b"
       ],
-      "last_updated": "2026-01-23T18:52:34.485992+00:00",
+      "last_updated": "2026-01-23T20:55:43.501302+00:00",
       "script_path": "core/policy_scripts/managed_environment.py"
     }
   },

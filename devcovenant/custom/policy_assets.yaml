@@ -1,0 +1,27 @@
+# DevCovenant custom policy asset overrides
+"
+    "version: 1
+"
+    "global:
+"
+    "  - __none__
+"
+    "policies:
+"
+    "  __example__:
+"
+    "    - path: __none__
+"
+    "      template: __none__
+"
+    "      mode: replace
+",
+    encoding='utf-8',
+)
+profile_catalog.write_text(
+    version: 1
+profiles:
+  __example__:
+    category: language
+    suffixes:
+      - __none__

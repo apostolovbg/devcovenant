@@ -97,14 +97,19 @@ hashes synchronized so drift is detectable and reversible.
   Active profiles are recorded under `profiles.active` in config and
   extend file suffix coverage through the catalog definitions.
 - Custom profiles can be declared in `devcovenant/custom/profile_catalog.yaml`
-  and by adding templates under
+  and by adding a profile manifest plus templates under
   `devcovenant/custom/templates/profiles/<name>/`.
-- Profile and policy assets are declared in
-  `devcovenant/core/policy_assets.yaml` with custom overrides in
-  `devcovenant/custom/policy_assets.yaml`. Assets
-  reference templates under `devcovenant/core/templates/` and
-  `devcovenant/custom/templates/` and are applied only when a policy is
-  enabled and its `profile_scopes` match active profiles.
+- Policy assets are declared in `devcovenant/core/policy_assets.yaml`
+  with custom overrides in `devcovenant/custom/policy_assets.yaml`.
+  Policy assets reference templates under the `templates/policies/`
+  folders and install only when a policy is enabled and its
+  `profile_scopes` match active profiles.
+- Profile assets and policy overlays live in profile manifests at
+  `devcovenant/core/templates/profiles/<name>/profile.yaml`, with
+  custom overrides under
+  `devcovenant/custom/templates/profiles/<name>/profile.yaml`. Profile
+  assets are applied for active profiles, and profile overlays merge
+  into `config.yaml` under `policies`.
 
 ## Policy Requirements
 - Every policy definition includes descriptive prose immediately after the
@@ -162,8 +167,8 @@ hashes synchronized so drift is detectable and reversible.
   and accepts `x.x` or `x.x.x` (normalized to `x.x.0`).
 - If no license exists, install the GPL-3.0 template with a `Project Version`
   header. Only overwrite licenses when explicitly requested.
-- Regenerate `.gitignore` from a universal baseline and merge existing user
-  entries under a preserved block.
+- Regenerate `.gitignore` from global, profile, and OS fragments, then
+  merge existing user entries under a preserved block.
 - Always back up overwritten or merged files as `*_old.*`, even when
   merges succeed, and report the backups at the end of install.
 - Stamp `Last Updated` values using the UTC install date.
@@ -172,8 +177,9 @@ hashes synchronized so drift is detectable and reversible.
 - Support policy update modes via `--policy-mode preserve|append-missing|`
   `overwrite`.
 - Write `devcovenant/manifest.json` with the core layout, doc types,
-  installed paths, options, active profiles, policy asset mappings, and
-  the UTC timestamp of the install or update.
+  installed paths, options, active profiles, policy asset mappings,
+  and the UTC timestamp of the install or update. Profile manifests
+  drive profile assets and overlays, even when not listed as assets.
 
 ## Packaging Requirements
 - Ship `devcovenant` as a pure-Python package with a console script entry.
