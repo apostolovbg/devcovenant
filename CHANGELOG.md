@@ -9,6 +9,12 @@ chronological order. Record timestamps as ISO dates (`YYYY-MM-DD`).
 ## Log changes here
 
 ## Version 0.2.5
+- 2026-01-24: Added the DevCovenant banner image and documented it
+  in the README header so the repo landing page shows branding.
+  Files:
+  CHANGELOG.md
+  README.md
+  banner.png
 - 2026-01-12: Added an install behavior cheat sheet to README and documented
   installer defaults in the managed AGENTS section so install behavior stays
   clear.
