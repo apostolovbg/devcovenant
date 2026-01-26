@@ -276,7 +276,7 @@ def main() -> None:
 
         try:
             result = subprocess.run(
-                ["pytest", "devcovenant/core/tests/", "-v"],
+                ["pytest", "tests/", "-v"],
                 cwd=args.repo,
                 check=True,
             )

@@ -93,7 +93,7 @@ The primary commands are:
 - `devcovenant check --mode startup|lint|pre-commit|normal`
 - `devcovenant check --fix` (apply auto-fixes when allowed)
 - `devcovenant sync` (startup sync check)
-- `devcovenant test` (runs `pytest devcovenant/core/tests/`)
+- `devcovenant test` (runs `pytest tests/`)
 - `devcovenant update-hashes` (refresh `devcovenant/registry/registry.json`)
 - `devcovenant normalize-metadata` (insert missing metadata keys)
 - `devcovenant restore-stock-text --policy <id>`
@@ -393,6 +393,17 @@ profiles:
 Mixed repos can list multiple profiles. Global policies set
 `profile_scopes: global` and always apply, while profile-scoped policies apply
 only when one of their scopes matches an active profile.
+
+### Profile test layout
+The DevCovenant repo mirrors the `devcovenant/` package structure under the
+root-level `tests/devcovenant` tree. Each major area (`core`, `custom`,
+`core/profiles`, etc.) has a counterpart there so future interpreter/scanner
+modules under `devcovenant/core/profiles` or `devcovenant/custom/profiles`
+can rely on colocated tests (for example
+`tests/devcovenant/core/profiles/test_profiles.py` and
+`tests/devcovenant/custom/profiles/test_custom_profiles.py`). This layout also
+helps the `new-modules-need-tests` policy find coverage without additional
+configuration.
 
 ### Creating a custom profile (exhaustive)
 Custom profiles are optional and live entirely inside the repo's

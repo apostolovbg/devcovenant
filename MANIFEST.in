@@ -15,3 +15,4 @@ recursive-include devcovenant/core/profiles *
 recursive-include devcovenant/core/policies *
 recursive-include devcovenant/custom/profiles *
 recursive-include devcovenant/custom/policies *
+recursive-include tests *

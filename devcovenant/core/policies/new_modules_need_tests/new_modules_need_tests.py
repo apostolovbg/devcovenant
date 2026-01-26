@@ -76,12 +76,27 @@ class NewModulesNeedTestsCheck(PolicyCheck):
             deleted,
         ) = self._collect_repo_changes(context.repo_root)
         module_selector = SelectorSet.from_policy(
-            self, defaults={"include_suffixes": [".py"]}
+            self,
+            defaults={
+                "include_suffixes": [".py"],
+                "exclude_prefixes": ["tests"],
+            },
         )
-        _, watch_dirs = build_watchlists(
+        _, configured_watch_dirs = build_watchlists(
             self, defaults={"watch_dirs": ["tests"]}
         )
-        tests_dirs = watch_dirs or ["tests"]
+        _, prefixed_tests_dirs = build_watchlists(
+            self,
+            prefix="tests_",
+            defaults={"watch_dirs": configured_watch_dirs or ["tests"]},
+        )
+        tests_dirs = (
+            prefixed_tests_dirs
+            if prefixed_tests_dirs
+            else configured_watch_dirs
+            if configured_watch_dirs
+            else ["tests"]
+        )
         tests_label = (
             ", ".join(sorted(tests_dirs))
             if len(tests_dirs) > 1

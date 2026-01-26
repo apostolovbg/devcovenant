@@ -81,7 +81,8 @@ hashes synchronized so drift is detectable and reversible.
   `normalize-metadata`.
 - `check` exits non-zero when blocking violations or sync issues are present.
 - `sync` runs a startup-mode check and reports drift.
-- `test` runs `pytest` against `devcovenant/core/tests/`.
+- `test` runs `pytest` against `tests/`, which now hosts the relocated policy and
+  engine suites under `tests/devcovenant/`.
 - `install` and `uninstall` delegate to `devcovenant/core/install.py` and
   `devcovenant/core/uninstall.py`.
 - `update` supports managed-block-only refreshes and policy-mode control.
@@ -207,6 +208,15 @@ hashes synchronized so drift is detectable and reversible.
   `requirements.in`, `requirements.lock`, and `pyproject.toml`.
 - Keep `THIRD_PARTY_LICENSES.md` and `licenses/` synchronized with dependency
   changes so the dependency-license-sync policy passes.
+- DevCovenant's own test suites live under the repository root `tests/`
+  tree (e.g., `tests/devcovenant/core/...`); tooling should continue to ship
+  that directory via `MANIFEST.in` while keeping it outside the installable
+  `devcovenant` package.
+- The tests tree mirrors the package layout (core/custom and their profile
+  directories) so interpreter or scanner modules in `devcovenant/core/profiles`
+  or `devcovenant/custom/profiles` can rely on corresponding suites under
+  `tests/devcovenant/core/profiles/` and
+  `tests/devcovenant/custom/profiles/`.
 
 ## Non-Functional Requirements
 - Checks must be fast enough for pre-commit usage on typical repos.

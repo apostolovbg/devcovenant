@@ -213,7 +213,7 @@ id: devcov-structure-guard
 status: active
 severity: error
 auto_fix: false
-updated: false
+updated: true
 applies_to: *
 enforcement: active
 apply: true
@@ -663,14 +663,22 @@ updated: false
 applies_to: *
 enforcement: active
 apply: true
-custom: false
+custom: true
 profile_scopes: python
 include_suffixes: .py
 include_prefixes: devcovenant
-exclude_prefixes: build,dist,node_modules,tests,devcovenant/core/tests
-  devcovenant/core/profiles,devcovenant/custom/profiles
+exclude_prefixes:
+  - build
+  - dist
+  - node_modules
+  - tests
+  - devcovenant/core/profiles
+  - devcovenant/custom/profiles
 exclude_globs:
-watch_dirs: tests,devcovenant/core/tests
+watch_dirs:
+  - tests
+tests_watch_dirs:
+  - tests
 include_globs:
 exclude_suffixes:
 force_include_globs:
@@ -679,6 +687,10 @@ watch_files:
 
 New or modified modules in the watched locations must have corresponding
 tests. Test modules (files starting with `test_`) are exempt from the rule.
+
+The `tests_watch_dirs` metadata keeps `tests/` as the default watch list,
+so the policy covers `tests/devcovenant/core/profiles/` and the
+`tests/devcovenant/custom/profiles/` suites that mirror the package layout.
 
 ---
 
@@ -719,9 +731,9 @@ profile_scopes: global
   ansible
 selector_roles: user_facing,user_visible,doc_quality
 include_prefixes: devcovenant,tools,.github
-exclude_prefixes: devcovenant/core/tests
+exclude_prefixes: tests
 user_facing_prefixes: devcovenant,tools,.github
-user_facing_exclude_prefixes: devcovenant/core/tests,tests
+user_facing_exclude_prefixes: tests
 user_facing_suffixes: .py,.js,.ts,.tsx,.vue,.go,.rs,.java,.kt,.swift,.rb
   .php,.cs,.yml,.yaml,.json,.toml
 user_facing_files: devcovenant/cli.py,devcovenant/__main__.py,

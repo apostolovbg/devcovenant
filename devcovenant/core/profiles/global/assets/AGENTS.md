@@ -650,14 +650,23 @@ updated: false
 applies_to: *
 enforcement: active
 apply: true
-custom: false
+custom: true
+updated: false
 profile_scopes: python
 include_suffixes: .py
 include_prefixes: devcovenant
-exclude_prefixes: build,dist,node_modules,tests,devcovenant/core/tests
-  devcovenant/core/profiles,devcovenant/custom/profiles
+exclude_prefixes:
+  - build
+  - dist
+  - node_modules
+  - tests
+  - devcovenant/core/profiles
+  - devcovenant/custom/profiles
 exclude_globs:
-watch_dirs: tests,devcovenant/core/tests
+watch_dirs:
+  - tests
+tests_watch_dirs:
+  - tests
 include_globs:
 exclude_suffixes:
 force_include_globs:
@@ -706,9 +715,9 @@ profile_scopes: global
   ansible
 selector_roles: user_facing,user_visible,doc_quality
 include_prefixes: devcovenant,tools,.github
-exclude_prefixes: devcovenant/core/tests
+exclude_prefixes: tests
 user_facing_prefixes: devcovenant,tools,.github
-user_facing_exclude_prefixes: devcovenant/core/tests,tests
+user_facing_exclude_prefixes: tests
 user_facing_suffixes: .py,.js,.ts,.tsx,.vue,.go,.rs,.java,.kt,.swift,.rb
   .php,.cs,.yml,.yaml,.json,.toml
 user_facing_files: devcovenant/cli.py,devcovenant/__main__.py,

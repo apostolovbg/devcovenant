@@ -57,6 +57,10 @@ by uninstalling and reinstalling with the intended installer arguments.
   roles (empty when unused). Custom selector roles are supported.
 - Streamlined install defaults: `CONTRIBUTING.md` and `CHANGELOG.md` are
   always replaced on install, with `*_old.md` backups.
+- Decouple the DevCovenant test suites from the installable package by keeping
+  them inside a root-level `tests/` tree (mirroring `tests/devcovenant/...`)
+  and documenting how metadata (for example, `tests_watch_dirs`) targets that
+  directory so tooling picks it up automatically.
 - Deterministic version bootstrap: use existing `VERSION`, otherwise create
   `VERSION` with `0.0.1` when no version argument is supplied.
 - Standardize doc headers and managed blocks: every DevCovenant-managed doc
@@ -628,6 +632,14 @@ Follow-up implementation tasks:
   overrides in `devcovenant/custom/`.
 - Enforced repo-root detection and CLI version mismatch warnings for
   PATH-based usage.
+
+### Tests mirror package layout
+- Mirrored the `devcovenant/core` profile helpers under
+  `tests/devcovenant/core/profiles/` so the test tree follows the package
+  layout and future interpreter/scanner modules in profile subfolders can rely
+  on colocated suites.
+- Added a custom-profile test under `tests/devcovenant/custom/profiles/` so
+  the tests configuration also covers `devcovenant/custom/profiles`.
 
 ### DevCovenant manifest + structure validation
 - Defined a non-hidden DevCovenant manifest under `devcovenant/` and

@@ -349,7 +349,7 @@ class DevCovenantEngine:
                     "devcovenant.core.base"
                 )
                 test_file = (
-                    f"devcovenant/core/tests/test_policies/"
+                    f"tests/devcovenant/core/tests/test_policies/"
                     f"test_{issue.policy_id}.py"
                 )
                 print(f"4. Add tests in {test_file}")
@@ -358,7 +358,7 @@ class DevCovenantEngine:
                 print(f"1. Update: {issue.script_path}")
                 print("2. Modify the script to implement the updated policy")
                 test_file = (
-                    f"devcovenant/core/tests/test_policies/"
+                    f"tests/devcovenant/core/tests/test_policies/"
                     f"test_{issue.policy_id}.py"
                 )
                 print(f"3. Update tests in {test_file}")
