@@ -61,6 +61,11 @@ by uninstalling and reinstalling with the intended installer arguments.
   them inside a root-level `tests/` tree (mirroring `tests/devcovenant/...`)
   and documenting how metadata (for example, `tests_watch_dirs`) targets that
   directory so tooling picks it up automatically.
+- Build a scanner roadmap for 2.6.0 so every language/environment that needs
+  security/quality scanners (name-clarity, docstring, tests, security, etc.)
+  can register a metadata-driven adapter. The scanners will be distributed
+  alongside their language profile assets and reachable via unified
+  metadata in the policy DSL expansion.
 - Deterministic version bootstrap: use existing `VERSION`, otherwise create
   `VERSION` with `0.0.1` when no version argument is supplied.
 - Standardize doc headers and managed blocks: every DevCovenant-managed doc
@@ -319,6 +324,32 @@ profile_scopes:
   - global
 ```
 
+### Profile completion focus for 2.6.0
+Language profiles must reach feature parity with their corresponding policies.
+For 2.6.0, the workplan fills in the following:
+1. **Language coverage:** finalize metadata and assets for every shipped
+   language profile (python, javascript, typescript, go, rust, java/kotlin,
+   scala, groovy, c/c++, swift, csharp/fsharp/dotnet, php, ruby, elixir,
+   erlang, clojure, haskell, ocaml, dart, flutter, r, matlab, julia, perl,
+   bash, powershell, nim, zig, crystal, scheme, lisp, prolog). Each profile
+   gets template `.gitignore` fragments, dependency/tool manifests, and
+   policy overlays so selectors, scanners, and `tests_watch_dirs` pick the
+   right paths.
+2. **Framework/API/ops profiles:** add scoped profiles for REST, FastAPI,
+   Flask, Django, Rails, Phoenix/Elixir, Spring/Quarkus/Micronaut,
+   Express/NestJS/Next, React/Vue/Svelte, and Terraform/Kubernetes/Docker so
+   installers can opt into API conventions, CI snippets, and pipeline assets.
+3. **Data/db profiles:** track SQL, NoSQL, data-science (`science`) and
+   database-specific (PostgreSQL, MySQL, Oracle, MongoDB) profiles so tooling
+   ships the matching `CITATION.md`, data samples, and license notes.
+4. **Science profile:** introduce a profile named `science` that brings a
+   `CITATION.md` asset plus metadata overlays for `analysis` tooling, Kaggle
+   workflows, and academic-friendly dependencies.
+5. **Scanner adapters:** stakeholders ship language-specific scanners
+   (name clarity, docstrings, security) via the corresponding profiles so each
+   active profile can declare the needed scanner metadata without hard-coding
+   paths.
+
 ### Policy assets and policy folders (generated map)
 Policy-required files are created or updated only when the policy is enabled
 and its profile scopes match the active profiles. The policy asset catalog
@@ -528,6 +559,16 @@ Follow-up implementation tasks:
 5. Log changes in the repo changelog.
 6. For a full refresh, run `devcovenant uninstall` and reinstall with the
    intended installer arguments.
+
+## Future (beyond 2.6.0)
+- Version 0.2.7 explores turning most stock policies (version-sync,
+  changelog-coverage, last-updated-placement, dependency-license-sync,
+  documentation-growth-tracking, etc.) into metadata-driven DSL primitives
+  surfaced through `devcovenant/config.yaml`. That DSL will expose knobs for
+  selectors, file locations, version watching, and doc behavior so repos can
+  tune policies without reauthoring policy blocks. Policies that still need
+  custom code or language-specific logic remain in `AGENTS.md`, but their
+  metadata collapses into portable DSL entries and reusable templates.
 
 ## Acceptance Criteria
 - Managed blocks refresh without altering policy values by default.

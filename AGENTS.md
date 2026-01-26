@@ -48,6 +48,13 @@ instructions with DevCovenant, its applied policies (and in general).
   optional when absent.
 - 2026-01-22: Update runs overwrite `devcovenant/` docs while preserving
   editable notes and managed blocks in repo-level docs.
+- 2026-01-26: Noted repo tests live under `/tests` outside the package and are
+  driven by metadata selectors (e.g., `tests_watch_dirs`), so policy/profile
+  suites can move freely without hard-coded paths.
+- 2026-01-26: PLAN/SPEC now describe the scanner roadmap, the science profile
+  (including a `CITATION.md` asset), the additional framework/API/database
+  profiles, and the upcoming 0.2.7 metadata-driven DSL for stock policies while
+  keeping custom policy prose editable in AGENTS.
 <!-- DEVCOV:BEGIN -->
 ## Table of Contents
 1. [Overview](#overview)
@@ -142,9 +149,24 @@ preparing new repos or upgrades. Key defaults:
   the `publish.yml` workflow publishes using the `PYPI_API_TOKEN` secret before
   pushing the release tag.
 
-# DO NOT EDIT FROM HERE TO END UNLESS EXPLICITLY REQUESTED BY A HUMAN!
-
 # DevCovenant Policy Management and Enforcement
+
+DevCovenant enforces the same workflow everywhere. Start each session with
+`python3 tools/run_pre_commit.py --phase start`, make edits, run
+`python3 tools/run_tests.py`, and finish with
+`python3 tools/run_pre_commit.py --phase end`. Skipping the gating sequence
+is not allowed, but if a turn requires only discussion (no code changes),
+you may skip commands yet still consider running the start gate to assess the
+repo state before replying.  When a managed environment is declared
+(virtualenv, bench, conda, poetry/pipx, etc.), use the paths, interpreters,
+and command hints described in that policy so your tooling runs inside the
+expected runtime. If the project needs a development server (web UI, API,
+data tooling), bring it up as part of the normal workflow before testing
+changes.
+
+For command references, release instructions, and architecture details,
+check `devcovenant/README.md`; this section stays focused on the enforced
+workflow and live policies.
 
 This section is managed by DevCovenant and captures the workflow and
 enforcement expectations used by the policy engine. For architecture and
@@ -213,7 +235,7 @@ id: devcov-structure-guard
 status: active
 severity: error
 auto_fix: false
-updated: true
+updated: false
 applies_to: *
 enforcement: active
 apply: true
@@ -360,7 +382,7 @@ required_commands: pytest
   python -m unittest discover
 require_pre_commit_start: true
 require_pre_commit_end: true
-pre_commit_command: pre-commit run --all-files
+pre_commit_command: python3 -m pre_commit run --all-files
 pre_commit_start_epoch_key: pre_commit_start_epoch
 pre_commit_end_epoch_key: pre_commit_end_epoch
 pre_commit_start_command_key: pre_commit_start_command

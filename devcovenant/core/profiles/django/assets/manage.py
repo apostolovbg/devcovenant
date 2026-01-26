@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 """Django management entry point stub for DevCovenant profiles."""
+
 import os
 import sys
 

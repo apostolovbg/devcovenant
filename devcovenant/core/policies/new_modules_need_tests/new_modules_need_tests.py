@@ -90,13 +90,12 @@ class NewModulesNeedTestsCheck(PolicyCheck):
             prefix="tests_",
             defaults={"watch_dirs": configured_watch_dirs or ["tests"]},
         )
-        tests_dirs = (
-            prefixed_tests_dirs
-            if prefixed_tests_dirs
-            else configured_watch_dirs
-            if configured_watch_dirs
-            else ["tests"]
-        )
+        if prefixed_tests_dirs:
+            tests_dirs = prefixed_tests_dirs
+        elif configured_watch_dirs:
+            tests_dirs = configured_watch_dirs
+        else:
+            tests_dirs = ["tests"]
         tests_label = (
             ", ".join(sorted(tests_dirs))
             if len(tests_dirs) > 1

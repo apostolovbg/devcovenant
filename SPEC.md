@@ -81,8 +81,11 @@ hashes synchronized so drift is detectable and reversible.
   `normalize-metadata`.
 - `check` exits non-zero when blocking violations or sync issues are present.
 - `sync` runs a startup-mode check and reports drift.
-- `test` runs `pytest` against `tests/`, which now hosts the relocated policy and
-  engine suites under `tests/devcovenant/`.
+- `test` runs `pytest` against `tests/`, which now hosts the relocated policy
+  and engine suites under `tests/devcovenant/`.
+  That root-level tree mirrors the package layout and sits outside the
+  installable `devcovenant` package, so only source distributions (via
+  `MANIFEST.in`) carry it.
 - `install` and `uninstall` delegate to `devcovenant/core/install.py` and
   `devcovenant/core/uninstall.py`.
 - `update` supports managed-block-only refreshes and policy-mode control.
@@ -97,6 +100,11 @@ hashes synchronized so drift is detectable and reversible.
   below the header lines. The block records the `Doc ID`, `Doc Type`, and
   management ownership, and uses the standard markers:
   `<!-- DEVCOV:BEGIN -->` and `<!-- DEVCOV:END -->`.
+- `AGENTS.md` opens with a concise “operational orientation” outlining the
+  enforced workflow (pre-commit start/tests/pre-commit end) and the managed
+  environment expectations. It points readers to `devcovenant/README.md` for
+  the broader command set so agents know how to interact with the repo before
+  reaching the policy blocks.
 
 ### Configuration and extension
 - `devcovenant/config.yaml` must support `devcov_core_include` and
@@ -211,7 +219,10 @@ hashes synchronized so drift is detectable and reversible.
 - DevCovenant's own test suites live under the repository root `tests/`
   tree (e.g., `tests/devcovenant/core/...`); tooling should continue to ship
   that directory via `MANIFEST.in` while keeping it outside the installable
-  `devcovenant` package.
+  `devcovenant` package. Policies reuse metadata (e.g., `tests_watch_dirs`,
+  `selector_roles`, and policy-specific selector options) so the suite can
+  move freely under `tests/` without hard-coded paths. Profile or repo
+  overrides set these metadata values when they relocate tests elsewhere.
 - The tests tree mirrors the package layout (core/custom and their profile
   directories) so interpreter or scanner modules in `devcovenant/core/profiles`
   or `devcovenant/custom/profiles` can rely on corresponding suites under
@@ -222,3 +233,12 @@ hashes synchronized so drift is detectable and reversible.
 - Checks must be fast enough for pre-commit usage on typical repos.
 - Violations must be clear, actionable, and reference the policy source.
 - Install and uninstall operations must be deterministic and reversible.
+
+## Future Direction
+- Version 0.2.7 moves more stock policies onto a metadata-driven DSL surfaced
+  via `devcovenant/config.yaml`. That lets `AGENTS.md` focus on documentation
+  text while selectors, version boundaries, and runtime paths become
+  configurable knobs.
+- Expect the DSL to replace hard-coded policy metadata (version watching, docs
+  location, selectors) with reusable templates keyed by active profiles, while
+  still allowing true custom policies to live inside `devcovenant/custom/`.
