@@ -121,4 +121,39 @@ class TestNewModulesNeedTestsPolicy(unittest.TestCase):
             policy = self._configured_policy()
             violations = policy.check(context)
 
+        self.assertEqual(len(violations), 0)
+
+    @patch("subprocess.check_output")
+    def test_support_directories_ignored(self, mock_subprocess):
+        """Policy should ignore support directories such as adapters."""
+        with tempfile.TemporaryDirectory() as tmpdir:
+            repo_root = Path(tmpdir)
+            module_path = (
+                repo_root
+                / "devcovenant"
+                / "core"
+                / "policies"
+                / "docstring_and_comment_coverage"
+                / "adapters"
+                / "__init__.py"
+            )
+            module_path.parent.mkdir(parents=True, exist_ok=True)
+            module_path.write_text("", encoding="utf-8")
+
+            mock_subprocess.return_value = (
+                "A  devcovenant/core/policies/docstring_and_comment_coverage/"
+                "adapters/__init__.py\n"
+            )
+
+            context = CheckContext(repo_root=repo_root)
+            policy = NewModulesNeedTestsCheck()
+            policy.set_options(
+                {
+                    "include_prefixes": ["devcovenant"],
+                    "include_suffixes": [".py"],
+                },
+                {},
+            )
+            violations = policy.check(context)
+
             self.assertEqual(len(violations), 0)

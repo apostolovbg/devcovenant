@@ -102,10 +102,20 @@ class NewModulesNeedTestsCheck(PolicyCheck):
             else tests_dirs[0]
         )
 
+        skip_segments = {"adapters", "fixers", "assets", "tests"}
+
         def _is_library_or_engine_module(path: Path) -> bool:
             """Return True when motion paths point at core Python modules."""
             if path.suffix != ".py":
                 return False
+            try:
+                rel = path.relative_to(context.repo_root)
+            except ValueError:
+                rel = path
+            rel_parts = rel.parts
+            if rel_parts and rel_parts[0] == "devcovenant":
+                if any(segment in skip_segments for segment in rel_parts):
+                    return False
             return module_selector.matches(path, context.repo_root)
 
         def _collect_changed_tests(paths: Set[Path]) -> List[Path]:

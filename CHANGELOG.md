@@ -29,6 +29,13 @@ Example entry:
 
 ## Version 0.2.6
 
+- 2026-01-26: Relocated the changelog-coverage suite beneath the policy folder
+  so policy tests stay with their implementation.
+  Files:
+  devcovenant/core/policies/changelog_coverage/tests/changelog_coverage_impl.py
+  tests/devcovenant/core/policies/changelog_coverage/tests/\
+    test_changelog_coverage.py
+
 - 2026-01-26: Relocated DevCovenant's core test modules outside the package so
   they now live under `tests/devcovenant/core/tests/`. Files:
   devcovenant/core/tests/__init__.py
@@ -37,6 +44,12 @@ Example entry:
   devcovenant/core/tests/test_metadata_normalizer.py
   devcovenant/core/tests/test_parser.py
   devcovenant/core/tests/test_selectors.py
+
+- 2026-01-26: Added a regression test ensuring `new-modules-need-tests` ignores
+  support directories such as `adapters/`.
+  Files:
+  tests/devcovenant/core/policies/new_modules_need_tests/tests/\
+    test_new_modules_need_tests.py
 
 - 2026-01-24: Populated profile manifests and assets for
   language/framework templates. (AI assistant)

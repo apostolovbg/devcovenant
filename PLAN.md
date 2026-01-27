@@ -436,11 +436,23 @@ Run uninstall before install? [y/N]
 ## Remaining Work (ordered)
 1. Migrate to the policy/profile folder layout.
    - Move policy modules into `devcovenant/*/policies/<id>/` with `adapters/`,
-     `tests/`, `fixers/`, and `assets/` subfolders.
+     `tests/`, `fixers/`, and `assets/` subfolders. Start by migrating one
+     policy (e.g., `changelog_coverage`) to validate new loaders, then sweep
+     the rest with the same pattern. _`changelog_coverage` now houses its test
+     suite under `devcovenant/core/policies/changelog_coverage/tests/`
+     (`changelog_coverage_impl.py`).
+  The mirrored file in
+  `tests/devcovenant/core/policies/changelog_coverage/tests/`
+  re-exports the suite so pytest discovery still works.
    - Move profile assets into `devcovenant/*/profiles/<profile>/assets/` with
-     `global/assets/` as the shared baseline.
+     `global/assets/` as the shared baseline; keep each profile’s manifest and
+     `assets/` folder next to one another so installers can read a single path.
    - Update loaders, fixers, tests, and registry paths to match the new layout.
-   - Define language-aware fixer lookup (`fixers/<lang>.py` + `global.py`).
+     Adjust `devcovenant/core/profiles/global/assets/AGENTS.md` if path lists
+     change.
+   - Define language-aware fixer lookup (`fixers/<lang>.py` + `global.py`),
+     populating each policy’s `fixers/` subfolder so future adapters plug in by
+     convention (no stubs after the initial scaffolding).
 2. Apply `PROFILE_POLICY_DRAFT.md` to real profile manifests and policy
    metadata.
    - Populate suffixes, ignore dirs, assets, and policy overlays in every
