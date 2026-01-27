@@ -162,6 +162,15 @@ hashes synchronized so drift is detectable and reversible.
   policies are removed along with their custom scripts and fixers.
 - Record update notices (replacements and new stock policies) in
   `devcovenant/registry/manifest.json` and print them to stdout.
+- Treat the collective `<!--POLICIES-BEGIN-->`/`<!--POLICIES-END-->` block as a
+  managed unit that install/update commands refresh from `devcovenant/core/`
+  assets. Provide a per-policy `freeze` override that copies the policy’s
+  modules, descriptors, and assets into `devcovenant/custom/` (with
+  `custom: true`) when true and removes those files when the flag clears,
+  always rerunning `devcovenant update-hashes` (and any needed registry fixes)
+  so the registry records the custom copy. Auto-fixers should be devised for
+  every policy and wired through the per-policy adapters so they work across
+  every language/profile combination that the policy supports.
 
 ## Installation Requirements
 - Install the full DevCovenant toolchain into the target repo, including the

@@ -148,6 +148,8 @@ Managed sections are wrapped with `<!-- DEVCOV:BEGIN -->` and
 `<!-- DEVCOV:END -->`. Install/update/uninstall scripts refresh those
 blocks while leaving surrounding content intact.
 
+<!--POLICIES-BEGIN-->
+
 ## Policy: DevCovenant Self-Enforcement
 
 ```policy-def
@@ -493,9 +495,9 @@ profile_scopes: global
   docs
   data
 include_suffixes: .md
-allowed_globs: README.md,AGENTS.md,CONTRIBUTING.md,CHANGELOG.md
-  SPEC.md,PLAN.md
-  devcovenant/README.md
+allowed_globs: >
+  README.md,AGENTS.md,CONTRIBUTING.md,CHANGELOG.md,SPEC.md,PLAN.md,
+  devcovenant/README.md,devcovenant/core/profiles/global/assets/*.yaml
 allowed_files:
 allowed_suffixes:
 required_files:
@@ -546,9 +548,12 @@ profile_scopes: global
   kubernetes
   ansible
 max_length: 79
-include_suffixes: .py,.md,.rst,.txt,.yml,.yaml,.json,.toml,.cff
+include_suffixes: >
+  .py,.md,.rst,.txt,.yml,.yaml,.json,.toml,.cff
 exclude_prefixes: build,dist,node_modules
-exclude_globs: devcovenant/core/profiles/global/assets/LICENSE_GPL-3.0.txt
+exclude_globs: >
+  devcovenant/core/profiles/global/assets/LICENSE_GPL-3.0.txt,
+  devcovenant/core/profiles/global/assets/*.yaml
 include_prefixes:
 include_globs:
 exclude_suffixes:
@@ -820,3 +825,5 @@ exception.
 ---
 
 <!-- DEVCOV:END -->
+
+<!--POLICIES-END-->

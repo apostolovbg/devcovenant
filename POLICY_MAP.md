@@ -1,0 +1,172 @@
+# Policy Map
+**Version:** 0.2.6
+
+## Purpose
+This reference mirrors the policy definitions in `AGENTS.md` and highlights
+the metadata handles, managed assets, and profile coverage for every policy
+shiped by DevCovenant 0.2.6. Use this map together with `PROFILE_MAP.md` as
+an at-a-glance index when you need to know which policies are active under
+which profiles, what configuration knobs they expose, and what files they
+expect to keep in sync.
+
+## Global policies
+Global policies apply regardless of any user-selected profile. Installers
+and updates always refresh their assets and metadata. They expose the standard
+keys (`apply`, `severity`, `status`, `custom`, `profile_scopes`) plus the
+policy-specific handles listed below.
+
+### devcov-self-enforcement
+- **Metadata handles:** `applies_to`, `profile_scopes`, `registry_file`
+- **Assets:** `devcovenant/registry/registry.json` (policy hash registry)
+- **Profiles:** `global`
+
+### devcov-structure-guard
+- **Metadata handles:** `enforcement`, `profile_scopes`, `code_extensions`
+- **Assets:** `devcovenant/registry/manifest.json`
+  plus the structure manifest produced by installs
+- **Profiles:** `global`
+
+### policy-text-presence
+- **Metadata handles:** `policy_definitions`, `profile_scopes`
+- **Assets:** `AGENTS.md` (policy prose)
+- **Profiles:** `global`
+
+### stock-policy-text-sync
+- **Metadata handles:** `policy_definitions`, `stock_texts_file`,
+  `profile_scopes`
+- **Assets:** `devcovenant/registry/stock_policy_texts.yaml`
+- **Profiles:** `global`
+
+### devflow-run-gates
+- **Metadata handles:** `test_status_file`, `required_commands`,
+  `pre_commit_command`, `require_pre_commit_start`,
+  `require_pre_commit_end`, `profile_scopes`
+- **Assets:** `tools/run_pre_commit.py`, `tools/run_tests.py`,
+  `devcovenant/registry/test_status.json`
+- **Profiles:** `global` + every profile that declares `devflow`
+  metadata (see `PROFILE_MAP.md`)
+
+### changelog-coverage
+- **Metadata handles:** `main_changelog`, `skipped_files`, `collections`,
+  `profile_scopes`
+- **Assets:** `CHANGELOG.md`
+- **Profiles:** `global`
+
+### no-future-dates
+- **Metadata handles:** `profile_scopes`
+- **Assets:** none (logic only)
+- **Profiles:** `global`
+
+### read-only-directories
+- **Metadata handles:** `include_globs`, `exclude_globs`, `profile_scopes`
+- **Assets:** none (enforcement only)
+- **Profiles:** `global`
+
+### managed-environment
+- **Metadata handles:** `expected_paths`, `expected_interpreters`,
+  `required_commands`, `command_hints`, `profile_scopes`
+- **Assets:** none (metadata-driven expectation)
+- **Profiles:** `global`
+
+### semantic-version-scope (off by default)
+- **Metadata handles:** `version_file`, `changelog_file`, `ignored_prefixes`,
+  `profile_scopes`
+- **Assets:** `CHANGELOG.md`, `VERSION`
+- **Profiles:** `global` (disabled unless requested)
+
+### profile-policy-map
+- **Metadata handles:** `profile_map_file`, `policy_map_file`, `profile_scopes`
+- **Assets:** `PROFILE_MAP.md`, `POLICY_MAP.md`
+- **Profiles:** `global`
+
+### managed-doc-assets
+- **Metadata handles:** `profile_scopes`, `applies_to`
+- **Assets:** `devcovenant/core/profiles/global/assets/*.yaml`
+- **Profiles:** `global`
+
+## Global + profile overlays
+These policies always run but expose extra behavior when profiles supply
+additional metadata. They still use the global `profile_scopes` key plus
+policy-specific handles listed below.
+
+### version-sync
+- **Metadata handles:** `version_file`, `readme_files`, `optional_files`,
+  `pyproject_files`, `license_files`, `changelog_file`,
+  `changelog_header_prefix`, `profile_scopes`
+- **Assets:** `VERSION`, `README.md`, `AGENTS.md`, `CHANGELOG.md`, `LICENSE`,
+  `devcovenant/README.md`
+- **Profiles:** `global`, `docs`, `data`, `python`, `javascript`,
+  `typescript`, `go`, `rust`, `java`, `kotlin`, `scala`, `groovy`,
+  `dotnet`, `csharp`, `fsharp`, `php`, `ruby`, `swift`, `dart`,
+  `flutter`, `terraform`, `docker`, `kubernetes`, `ansible`, `science`
+
+### dependency-license-sync
+- **Metadata handles:** `dependency_files`, `third_party_file`, `licenses_dir`,
+  `report_heading`, `profile_scopes`
+- **Assets:** dependency manifests (`requirements.*`, `pyproject.toml`,
+  lockfiles), `THIRD_PARTY_LICENSES.md`, `licenses/`
+- **Profiles:** languages that ship declarative dependencies (see
+  `PROFILE_MAP.md` for precise coverage)
+
+### last-updated-placement
+- **Metadata handles:** `allowed_globs`, `required_globs`, `profile_scopes`
+- **Assets:** all managed `.md` docs referenced in
+  AGENTS/README/CHANGELOG/PLAN/SPEC
+- **Profiles:** `global`, `docs`, `data`
+
+### documentation-growth-tracking
+- **Metadata handles:** `selector_roles`, `user_facing_files`,
+  `user_visible_files`, `doc_quality_files`, `required_headings`,
+  `user_facing_keywords`, `profile_scopes`
+- **Assets:** documentation files (README, AGENTS, SPEC, PLAN, CONTRIBUTING,
+  docs folder contents)
+- **Profiles:** `global`, `docs`, `data`, plus every user-facing
+  language/framework/data profile listed in `PROFILE_MAP.md`
+
+### line-length-limit
+- **Metadata handles:** `max_length`, `include_suffixes`, `profile_scopes`
+- **Assets:** any source/document files matching `include_suffixes`
+- **Profiles:** `global`, `docs`, `data`, `python`, `javascript`, `typescript`,
+  `go`, `rust`, `java`, `kotlin`, `scala`, `groovy`, `dotnet`, `csharp`,
+  `fsharp`, `php`, `ruby`, `swift`, `dart`, `terraform`, `docker`,
+  `kubernetes`, `ansible`
+
+## Profile-scoped policies
+These only run when their owning profile(s) are active. Each exposes the
+standard metadata keys plus the specific selectors below.
+
+### docstring-and-comment-coverage
+- **Metadata handles:** `include_suffixes`, `profile_scopes`
+- **Assets:** scanner adapters (e.g., `scanners/python.py`),
+  no files are written
+- **Profiles:** `python` (future coverage for `go`, `rust`, `java`, `csharp`,
+  `javascript`, `typescript`)
+
+### name-clarity
+- **Metadata handles:** `include_suffixes`, `profile_scopes`
+- **Assets:** scanner adapters + supporting configs
+- **Profiles:** `python` (planned extension to other languages when adapters
+  arrive)
+
+### new-modules-need-tests
+- **Metadata handles:** `include_suffixes`, `watch_dirs`, `tests_watch_dirs`,
+  `profile_scopes`
+- **Assets:** `tests/` tree (mirrors `devcovenant/core` and
+  `devcovenant/custom` subtrees)
+- **Profiles:** `python`, `django`, `flask`, `fastapi`, `frappe`
+
+### security-scanner
+- **Metadata handles:** `exclude_globs`, `profile_scopes`
+- **Assets:** scanner scripts (located next to the policy) for each supported
+  language
+- **Profiles:** `python`, `django`, `flask`, `fastapi`, `frappe`
+
+## Using the map + AGENTS.md
+Refer to `AGENTS.md` for the canonical policy prose and all additional handles
+not listed above. Whenever a profile consumes a policy that requires assets
+(docs, manifests, scanners), the asset location is recorded in the policy’s
+`assets/` folder plus the profile manifest under
+`devcovenant/core/profiles/<profile>/profile.yaml`. Keep both `POLICY_MAP.md`
+and `PROFILE_MAP.md` near your desk whenever you’re shaping new profiles or
+policies—they are the two quick references that save the full `AGENTS.md`
+dive when you just need coverage data.

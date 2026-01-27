@@ -1,0 +1,12 @@
+header_lines:
+- '# DevCovenant Development Plan'
+- '**Last Updated:** 2026-01-24'
+- '**Version:** 0.2.6'
+doc_id: PLAN
+doc_type: plan
+managed_by: DevCovenant
+managed_block: '**Doc ID:** PLAN
+
+  **Doc Type:** plan
+
+  **Managed By:** DevCovenant'

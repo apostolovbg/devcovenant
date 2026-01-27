@@ -1,0 +1,30 @@
+header_lines:
+- '# DevCovenant Development Guide'
+- '**Last Updated:** 2026-01-23'
+- '**Version:** 0.2.6'
+doc_id: AGENTS
+doc_type: policy-source
+managed_by: DevCovenant
+managed_block: '**Doc ID:** AGENTS
+
+  **Doc Type:** policy-source
+
+  **Managed By:** DevCovenant
+
+
+  # Message from Human, do not edit:
+
+
+  Read `README.md` and `devcovenant/README.md` first for architecture and
+
+  workflow. This file is the canonical policy source of truth.
+
+
+  Use `PROFILE_MAP.md` as the authoritative profile catalog and `POLICY_MAP.md`
+
+  for a quick rundown of metadata handles, assets, and profile coverage for each
+
+  policy before diving into `AGENTS.md`.
+
+
+  Taking development notes is effectively obligatory; treat it as required.'

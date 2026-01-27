@@ -1,0 +1,12 @@
+header_lines:
+- '# DevCovenant Specification'
+- '**Last Updated:** 2026-01-24'
+- '**Version:** 0.2.6'
+doc_id: SPEC
+doc_type: specification
+managed_by: DevCovenant
+managed_block: '**Doc ID:** SPEC
+
+  **Doc Type:** specification
+
+  **Managed By:** DevCovenant'

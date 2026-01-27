@@ -16,16 +16,17 @@ complete and easy to fill in.
 ## Table of Contents
 1. [Overview](#overview)
 2. [Workflow](#workflow)
-3. [Goals for 0.2.6](#goals-for-026)
-4. [Target Update Behavior](#target-update-behavior)
-5. [Install Profiles and Assets (draft)](#install-profiles-and-assets-draft)
-6. [Remaining Work (ordered)](#remaining-work-ordered)
-7. [Policy Scope Map (reference)](#policy-scope-map-reference)
-8. [Release Readiness](#release-readiness)
-9. [User Repo Update Path](#user-repo-update-path)
-10. [Acceptance Criteria](#acceptance-criteria)
-11. [Risks and Backout](#risks-and-backout)
-12. [Completed Work](#completed-work)
+3. [Next Steps](#next-steps)
+4. [Goals for 0.2.6](#goals-for-026)
+5. [Target Update Behavior](#target-update-behavior)
+6. [Install Profiles and Assets (draft)](#install-profiles-and-assets-draft)
+7. [Remaining Work (ordered)](#remaining-work-ordered)
+8. [Policy Scope Map (reference)](#policy-scope-map-reference)
+9. [Release Readiness](#release-readiness)
+10. [User Repo Update Path](#user-repo-update-path)
+11. [Acceptance Criteria](#acceptance-criteria)
+12. [Risks and Backout](#risks-and-backout)
+13. [Completed Work](#completed-work)
 
 ## Overview
 DevCovenant already supports core policies, custom overrides, and an update
@@ -46,6 +47,23 @@ by uninstalling and reinstalling with the intended installer arguments.
   the sub-steps and record the split in this plan before stopping.
 - When policy text changes, set `updated: true`, run
   `devcovenant update-hashes`, then reset the flag.
+
+## Next Steps
+- Capture the managed-document asset automation and the new
+  `<!--POLICIES-BEGIN-->`/`<!--POLICIES-END-->` wrapper inside PLAN and SPEC
+  so installs and updates can regenerate the managed section blocks from the
+  repository’s YAML descriptors. Point readers at the global asset catalog
+  for the canonical doc list.
+- Define how install/update/runtime commands honor a per-policy `freeze`
+  metadata knob: when `freeze: true`, the policy (scripts, descriptors, assets)
+  must be mirrored under `devcovenant/custom/` with `custom: true`, and when
+  `freeze` is cleared the custom artifacts should be removed automatically;
+  document how these transitions trigger `devcovenant update-hashes` so the
+  registry stays in sync.
+- Sketch the rollout of auto-fixers for every policy: each fixer must leverage
+  the policy’s adapters so it can re-run inside every language/profile surface
+  that the policy supports, enabling the engine to heal common violations even
+  in multi-profile repos.
 
 ## Goals for 0.2.6
 - Safe updates: refresh managed blocks without altering policy values.

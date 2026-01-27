@@ -1,0 +1,16 @@
+header_lines:
+- '# Changelog'
+- '**Last Updated:** 2026-01-24'
+- '**Version:** 0.2.6'
+doc_id: CHANGELOG
+doc_type: changelog
+managed_by: DevCovenant
+managed_block: "**Doc ID:** CHANGELOG\n**Doc Type:** changelog\n**Managed By:** DevCovenant\n\
+  \n## How to Log Changes\nAdd one line for each substantive change under the current\
+  \ version header.\nKeep entries newest-first and record dates in ISO format (`YYYY-MM-DD`).\n\
+  Example entry:\n- 2026-01-23: Updated dependency manifests and license report.\n\
+  \  Files:\n  requirements.in\n  requirements.lock\n  THIRD_PARTY_LICENSES.md\n \
+  \ devcovenant/core/policies/documentation_growth_tracking/\\\n    documentation_growth_tracking.py\n\
+  \  Long paths should be wrapped with a trailing \\\n  backslash and continued on\
+  \ the next indented line.\n  Example:\n  devcovenant/core/policies/dependency_license_sync/assets/\\\
+  \n    licenses/README.md"
