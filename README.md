@@ -54,7 +54,7 @@ eliminates that by making the documentation itself the executable spec.
 ## How It Works
 1. `AGENTS.md` stores policy definitions and metadata blocks.
 2. `devcovenant/core/parser.py` extracts and hashes each policy definition.
-3. `devcovenant/registry/policy_registry.yaml` records policy/script hashes along with
+3. `devcovenant/registry/local/policy_registry.yaml` records policy/script hashes along with
    metadata handles, profile coverage, asset hints, and core/custom origin for
    every policy (enabled or disabled).
 4. `devcovenant/core/engine.py` runs policy scripts and reports violations.
@@ -124,7 +124,7 @@ devcovenant update --target /path/to/repo --force-config
 Skip all doc/policy/metadata writes by appending `--no-touch` to `install` or
 `update`. That flag copies just the `devcovenant/` package (including the default
 `devcovenant/config.yaml`), leaves the rest of the repo untouched, and still
-records the run in `devcovenant/registry/manifest.json` so you can finish the
+records the run in `devcovenant/registry/local/manifest.json` so you can finish the
 install later when you are ready:
 
 ```bash
@@ -157,7 +157,7 @@ Uninstall uses the same CLI:
 devcovenant uninstall --target /path/to/repo
 ```
 
-The installer records `devcovenant/registry/manifest.json` so updates and
+The installer records `devcovenant/registry/local/manifest.json` so updates and
 removals remain safe and predictable. If the target repo has no license file,
 DevCovenant installs a GPL-3.0 license by default and will not overwrite an
 existing license unless forced. When a file must be replaced, the installer
@@ -208,7 +208,9 @@ change or prune the core path list in user repos unless you are actively
 implementing DevCovenant itself.
 
 Use `profiles.active` in `devcovenant/config.yaml` to extend file suffix
-coverage for multi-language projects.
+coverage for multi-language projects. Set `version.override` when you want
+config-driven installs to emit a specific project version in generated assets
+(for example, `pyproject.toml`) before a `VERSION` file exists.
 
 The DevCovenant repository activates a dedicated `devcovenant` profile that
 overrides `new-modules-need-tests` metadata so the `devcovenant/**` sources and

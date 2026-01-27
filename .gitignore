@@ -49,6 +49,6 @@ dist/
 *~
 
 # DevCovenant
-devcovenant/test_status.json
+devcovenant/registry/local/
 .devcov/install_manifest.json
 .devcovenant/install_manifest.json

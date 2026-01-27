@@ -23,6 +23,12 @@ assets:
 - path: .python-version
   template: .python-version
   mode: replace
+- path: pyproject.toml
+  template: pyproject.toml
+  mode: replace
+- path: venv.md
+  template: venv.md
+  mode: replace
 policy_overlays:
   dependency-license-sync:
     dependency_files:

@@ -94,7 +94,7 @@ The primary commands are:
 - `devcovenant check --fix` (apply auto-fixes when allowed)
 - `devcovenant sync` (startup sync check)
 - `devcovenant test` (runs `pytest tests/`)
-- `devcovenant update-policy-registry` (refresh `devcovenant/registry/policy_registry.yaml`)
+- `devcovenant update-policy-registry` (refresh `devcovenant/registry/local/policy_registry.yaml`)
 - `devcovenant normalize-metadata` (insert missing metadata keys)
 - `devcovenant restore-stock-text --policy <id>`
 - `devcovenant restore-stock-text --all`
@@ -202,7 +202,7 @@ repos; it preserves content by default and refreshes managed blocks.
 - `LICENSE`: created from the GPL-3.0 asset if missing. Overwritten only
   when the license mode requests it, and the original is backed up first.
 - `pyproject.toml`: preserved or overwritten based on `--pyproject-mode`.
-- `devcovenant/registry/manifest.json`: always written or refreshed by install,
+- `devcovenant/registry/local/manifest.json`: always written or refreshed by install,
   update, or first-run checks.
 
 All `Last Updated` headers are stamped with the UTC install date.
@@ -211,7 +211,7 @@ Any file that is overwritten or merged during install is backed up
 as `*_old.*`, and the installer prints the backup list at the end.
 
 ## Install Manifest
-The installer writes `devcovenant/registry/manifest.json` with:
+The installer writes `devcovenant/registry/local/manifest.json` with:
 - `schema_version`: manifest schema version.
 - `updated_at`: ISO timestamp in UTC.
 - `mode`: `install` or `update`.
@@ -255,7 +255,7 @@ Manifest schema (summary):
   },
   "generated": {
     "dirs": [],
-    "files": ["devcovenant/registry/policy_registry.yaml"]
+    "files": ["devcovenant/registry/local/policy_registry.yaml"]
   },
   "profiles": {
     "active": [],
@@ -293,7 +293,7 @@ DevCovenant-managed blocks are wrapped as:
 
 ## Policy Replacement Workflow
 DevCovenant can retire core policies via the replacement map in
-`devcovenant/registry/policy_replacements.yaml`. During `devcovenant update`:
+`devcovenant/registry/global/policy_replacements.yaml`. During `devcovenant update`:
 - Enabled replaced policies (`apply: true`) are moved to
   `devcovenant/custom/`, marked `custom: true`, and flagged
   `status: deprecated`. Their last-known core scripts/fixers are
@@ -304,7 +304,7 @@ DevCovenant can retire core policies via the replacement map in
   reported in the update notices.
 
 Update notices are printed to stdout and appended to
-`devcovenant/registry/manifest.json` under `notifications`. Deprecated policies
+`devcovenant/registry/local/manifest.json` under `notifications`. Deprecated policies
 are not enforced by default; set them back to `status: active` if you
 need to keep enforcing legacy behavior.
 
@@ -362,7 +362,7 @@ supply policy metadata overlays that are merged into `config.yaml`.
 ## Profiles and Scopes
 DevCovenant uses install profiles to tailor policy applicability and assets.
 Profiles are discovered from profile folders and summarized in the
-catalog at `devcovenant/registry/profile_catalog.yaml`. That catalog is
+catalog at `devcovenant/registry/local/profile_catalog.yaml`. That catalog is
 regenerated on install/update, so treat it as read-only output.
 
 Each profile ships a profile manifest at
@@ -482,7 +482,7 @@ Custom fixers live under `devcovenant/custom/policies/<policy>/fixers/`.
 
 ## Policy Registry and Stock Text
 Policy definitions in `AGENTS.md` are hashed into
-`devcovenant/registry/policy_registry.yaml` along with metadata handles, asset
+`devcovenant/registry/local/policy_registry.yaml` along with metadata handles, asset
 hints, profile coverage, and core/custom sourcing for every policy (enabled or
 disabled). When policy text changes, set `updated: true`, update scripts and
 tests, then run:
@@ -491,7 +491,7 @@ devcovenant update-policy-registry
 ```
 
 Stock policy wording is stored in
-`devcovenant/registry/stock_policy_texts.yaml`.
+`devcovenant/registry/global/stock_policy_texts.yaml`.
 Restore it with:
 ```bash
 devcovenant restore-stock-text --policy <id>
@@ -564,7 +564,7 @@ without requiring per-repo scripting. Each policy is metadata-driven in
 The summary below explains intent, defaults, and impact.
 
 ### DevCovenant Self-Enforcement
-Keeps `devcovenant/registry/policy_registry.yaml` synchronized with the policy
+Keeps `devcovenant/registry/local/policy_registry.yaml` synchronized with the policy
 blocks in `AGENTS.md`. Default severity is `error` with `apply: true` so
 drift in policy
 text or hashes cannot go unnoticed.
@@ -587,13 +587,13 @@ intentional.
 
 ### Stock Policy Text Sync
 Warns when the built-in policy text diverges from the stock wording stored
-in `devcovenant/registry/stock_policy_texts.yaml`. Use it to keep the
+in `devcovenant/registry/global/stock_policy_texts.yaml`. Use it to keep the
 prose aligned with the core implementation unless a custom rewrite is
 intended.
 
 ### DevFlow Run Gates
 Enforces the session workflow (pre-commit start, tests, pre-commit end) by
-reading `devcovenant/registry/test_status.json`. Default required commands are
+reading `devcovenant/registry/local/test_status.json`. Default required commands are
 `pytest` and `python -m unittest discover`, with timestamps compared against
 recent code changes.
 
@@ -669,7 +669,7 @@ DevCovenant enforces the gate sequence for every change:
 2. `python3 tools/run_tests.py`
 3. `python3 tools/run_pre_commit.py --phase end`
 
-The status file at `devcovenant/registry/test_status.json` records
+The status file at `devcovenant/registry/local/test_status.json` records
 timestamps and commands. The `devflow-run-gates` policy reads it to enforce
 the workflow.
 
@@ -692,7 +692,7 @@ Use the asset references for structure and examples:
 - `devcovenant/core/policies/README.md`
 
 Asset selection is driven by per-policy `policy_assets.yaml` manifests,
-compiled into `devcovenant/registry/policy_assets.yaml`, plus profile manifests
+compiled into `devcovenant/registry/local/policy_assets.yaml`, plus profile manifests
 under the profile folders. Assets for disabled policies or inactive profiles
 are skipped.
 

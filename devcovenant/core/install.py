@@ -61,7 +61,8 @@ GLOBAL_PROFILE_NAME = "global"
 GITIGNORE_BASE_TEMPLATE = "gitignore_base.txt"
 GITIGNORE_OS_TEMPLATE = "gitignore_os.txt"
 DEFAULT_BOOTSTRAP_VERSION = "0.0.1"
-DEFAULT_PROFILE_SELECTION = ["python", "docs", "data"]
+DEFAULT_ON_PROFILES = ["docs", "data", "suffixes"]
+DEFAULT_PROFILE_SELECTION = ["python", *DEFAULT_ON_PROFILES]
 GITIGNORE_USER_BEGIN = "# --- User entries (preserved) ---"
 GITIGNORE_USER_END = "# --- End user entries ---"
 DEFAULT_PRESERVE_PATHS = [
@@ -236,6 +237,35 @@ def _load_active_profiles(target_root: Path) -> list[str]:
         if normalized_value and normalized_value != "__none__":
             normalized.append(normalized_value)
     return sorted(set(normalized))
+
+
+def _load_config_version_override(target_root: Path) -> str | None:
+    """Return the configured version override from config.yaml when set."""
+    config_path = target_root / DEV_COVENANT_DIR / "config.yaml"
+    if not config_path.exists():
+        return None
+    config_data = _load_yaml(config_path)
+    if not isinstance(config_data, dict):
+        return None
+    version_block = config_data.get("version")
+    candidates: list[str | None] = []
+    if isinstance(version_block, dict):
+        candidates.append(version_block.get("override"))
+        candidates.append(version_block.get("value"))
+        candidates.append(version_block.get("project"))
+    elif isinstance(version_block, str):
+        candidates.append(version_block)
+    for candidate in candidates:
+        if not isinstance(candidate, str):
+            continue
+        candidate = candidate.strip()
+        if not candidate:
+            continue
+        try:
+            return _normalize_version(candidate)
+        except ValueError:
+            continue
+    return None
 
 
 def _flatten_profile_names(catalog: dict) -> list[str]:
@@ -416,7 +446,7 @@ def _load_policy_assets(package_root: Path, target_root: Path) -> dict:
 
 def _write_policy_assets_registry(target_root: Path, assets: dict) -> Path:
     """Write policy asset mappings into the registry."""
-    path = target_root / DEV_COVENANT_DIR / "registry" / "policy_assets.yaml"
+    path = manifest_module.policy_assets_path(target_root)
     path.parent.mkdir(parents=True, exist_ok=True)
     payload = yaml.safe_dump(assets, sort_keys=True, allow_unicode=False)
     path.write_text(payload, encoding="utf-8")
@@ -487,21 +517,43 @@ def _merge_text_assets(existing: str, incoming: str) -> str:
     return "\n".join(merged).rstrip() + "\n"
 
 
+def _render_template_text(
+    template_path: Path, context: dict[str, str] | None
+) -> str | None:
+    """Return rendered template text when context is provided."""
+    if not context:
+        return None
+    try:
+        text = template_path.read_text(encoding="utf-8")
+    except UnicodeDecodeError:
+        return None
+    for key, value in context.items():
+        placeholder = f"{{{{{key}}}}}"
+        text = text.replace(placeholder, value)
+    return text
+
+
 def _apply_asset(
     template_path: Path,
     target_path: Path,
     mode: str,
+    render_context: dict[str, str] | None = None,
 ) -> bool:
     """Apply a template asset to the target path."""
     if not template_path.exists():
         return False
     mode_text = (mode or "replace").lower()
+    rendered = _render_template_text(template_path, render_context)
     if target_path.exists():
         if mode_text == "skip":
             return False
         if mode_text == "merge":
             existing = target_path.read_text(encoding="utf-8")
-            incoming = template_path.read_text(encoding="utf-8")
+            incoming = (
+                rendered
+                if rendered is not None
+                else template_path.read_text(encoding="utf-8")
+            )
             merged = _merge_text_assets(existing, incoming)
             if merged != existing:
                 _rename_existing_file(target_path)
@@ -510,6 +562,9 @@ def _apply_asset(
             return False
         _rename_existing_file(target_path)
     target_path.parent.mkdir(parents=True, exist_ok=True)
+    if rendered is not None:
+        target_path.write_text(rendered, encoding="utf-8")
+        return True
     shutil.copy2(template_path, target_path)
     return True
 
@@ -522,6 +577,7 @@ def _apply_profile_assets(
     profile_manifests: dict[str, dict],
     disabled_policies: set[str],
     policy_metadata: dict[str, dict[str, object]],
+    asset_context: dict[str, str] | None = None,
 ) -> list[str]:
     """Install profile and policy assets based on selection."""
     assets = _load_policy_assets(package_root, target_root)
@@ -534,7 +590,10 @@ def _apply_profile_assets(
         )
         target_path = target_root / entry.get("path", "")
         if _apply_asset(
-            template_path, target_path, entry.get("mode", "replace")
+            template_path,
+            target_path,
+            entry.get("mode", "replace"),
+            render_context=asset_context,
         ):
             installed.append(str(target_path.relative_to(target_root)))
 
@@ -549,7 +608,10 @@ def _apply_profile_assets(
             )
             target_path = target_root / entry.get("path", "")
             if _apply_asset(
-                template_path, target_path, entry.get("mode", "replace")
+                template_path,
+                target_path,
+                entry.get("mode", "replace"),
+                render_context=asset_context,
             ):
                 installed.append(str(target_path.relative_to(target_root)))
 
@@ -572,7 +634,10 @@ def _apply_profile_assets(
             )
             target_path = target_root / entry.get("path", "")
             if _apply_asset(
-                template_path, target_path, entry.get("mode", "replace")
+                template_path,
+                target_path,
+                entry.get("mode", "replace"),
+                render_context=asset_context,
             ):
                 installed.append(str(target_path.relative_to(target_root)))
     return installed
@@ -2174,9 +2239,14 @@ def main(argv=None) -> None:
         except ValueError:
             pyproject_version = None
 
-    detected_version = existing_version or pyproject_version
+    config_override = _load_config_version_override(target_root)
+    detected_version: str | None = None
     if requested_version:
         detected_version = requested_version
+    elif config_override:
+        detected_version = config_override
+    else:
+        detected_version = existing_version or pyproject_version
     if not detected_version:
         if sys.stdin.isatty():
             detected_version = _prompt_version()
@@ -2395,6 +2465,10 @@ def main(argv=None) -> None:
     )
     profile_overlays = _collect_profile_overlays(profile_manifests)
     _apply_profile_policy_overlays(target_root, profile_overlays)
+    asset_context = {
+        "version": target_version,
+        "project_version": target_version,
+    }
     installed["assets"].extend(
         _apply_profile_assets(
             package_root,
@@ -2404,6 +2478,7 @@ def main(argv=None) -> None:
             profile_manifests,
             set(disabled_policies),
             policy_metadata,
+            asset_context=asset_context,
         )
     )
     policy_assets = _load_policy_assets(package_root, target_root)

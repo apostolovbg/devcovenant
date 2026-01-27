@@ -58,7 +58,7 @@ Stock text
     checker.set_options(
         {
             "policy_definitions": "AGENTS.md",
-            "stock_texts_file": "devcovenant/registry/stock_policy_texts.yaml",
+            "stock_texts_file": "devcovenant/registry/global/stock_policy_texts.yaml",
         },
         {},
     )
@@ -99,7 +99,7 @@ Custom text
     checker.set_options(
         {
             "policy_definitions": "AGENTS.md",
-            "stock_texts_file": "devcovenant/registry/stock_policy_texts.yaml",
+            "stock_texts_file": "devcovenant/registry/global/stock_policy_texts.yaml",
         },
         {},
     )
@@ -137,7 +137,7 @@ Stock text
     checker.set_options(
         {
             "policy_definitions": "AGENTS.md",
-            "stock_texts_file": "devcovenant/registry/stock_policy_texts.yaml",
+            "stock_texts_file": "devcovenant/registry/global/stock_policy_texts.yaml",
         },
         {},
     )
@@ -181,7 +181,7 @@ Custom text
     checker.set_options(
         {
             "policy_definitions": "AGENTS.md",
-            "stock_texts_file": "devcovenant/registry/stock_policy_texts.yaml",
+            "stock_texts_file": "devcovenant/registry/global/stock_policy_texts.yaml",
         },
         {},
     )

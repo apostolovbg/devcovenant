@@ -9,7 +9,7 @@ from typing import Dict, List
 import yaml
 
 PROFILE_MANIFEST_NAME = "profile.yaml"
-REGISTRY_CATALOG = Path("devcovenant/registry/profile_catalog.yaml")
+REGISTRY_CATALOG = Path("devcovenant/registry/local/profile_catalog.yaml")
 CORE_PROFILE_ROOT = Path("devcovenant/core/profiles")
 CUSTOM_PROFILE_ROOT = Path("devcovenant/custom/profiles")
 

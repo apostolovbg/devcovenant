@@ -42,7 +42,7 @@ hashes synchronized so drift is detectable and reversible.
 - Parse policy blocks from `AGENTS.md` and capture the descriptive text that
   follows each `policy-def` block.
 - Hash policy definitions and scripts into
-  `devcovenant/registry/policy_registry.yaml`.
+  `devcovenant/registry/local/policy_registry.yaml`.
 - Expose `restore-stock-text` to reset policy prose to canonical wording.
 - Support `custom: true/false` metadata to mark custom policy prose that
   bypasses stock text sync checks.
@@ -118,11 +118,18 @@ hashes synchronized so drift is detectable and reversible.
 - Config is generated from global defaults plus active profiles and must
   include `profiles.generated.file_suffixes` so profile selections are
   visible to users and tooling.
+- Config exposes `version.override` so config-driven installs can declare
+  the project version that templated assets (for example, `pyproject.toml`)
+  should use when no `VERSION` file exists yet.
+- The `global` profile is always active. Other shipped defaults (`docs`,
+  `data`, `suffixes`) are enabled by default but can be trimmed from
+  `profiles.active` when a user wants to stop applying their assets or
+  metadata overlays.
 - Config should expose global knobs for `paths`, `docs`, `install`,
   `update`, `engine`, `hooks`, `reporting`, `ignore`, and `policies` so
   repos can tune behavior without editing core scripts.
 - The profile catalog is generated into
-  `devcovenant/registry/profile_catalog.yaml` by scanning profile manifests.
+  `devcovenant/registry/local/profile_catalog.yaml` by scanning profile manifests.
   Active profiles are recorded under `profiles.active` in config and extend
   file suffix coverage through catalog definitions.
 - Custom profiles are declared by adding a profile manifest plus assets
@@ -132,7 +139,7 @@ hashes synchronized so drift is detectable and reversible.
   covering shared docs and tooling.
 - Policy assets are declared inside policy folders under
   `devcovenant/core/policies/<policy>/assets/`. Install/update compiles
-  the results into `devcovenant/registry/policy_assets.yaml`. Custom
+  the results into `devcovenant/registry/local/policy_assets.yaml`. Custom
   overrides live under `devcovenant/custom/policies/<policy>/assets/`.
   Assets install only when a policy is enabled and its `profile_scopes`
   match active profiles.
@@ -148,7 +155,7 @@ hashes synchronized so drift is detectable and reversible.
 - Every policy definition includes descriptive prose immediately after the
   metadata block.
 - Built-in policies have canonical text stored in
-  `devcovenant/registry/stock_policy_texts.yaml`.
+  `devcovenant/registry/global/stock_policy_texts.yaml`.
 - Policies declare `profile_scopes` metadata to gate applicability;
   global policies use `profile_scopes: global`.
 - `apply: false` disables enforcement without removing definitions.
@@ -163,11 +170,11 @@ hashes synchronized so drift is detectable and reversible.
 - Policy metadata normalization must be able to add missing keys without
   changing existing values or policy text.
 - Support policy replacement metadata via
-  `devcovenant/registry/policy_replacements.yaml`. During updates, replaced
+  `devcovenant/registry/global/policy_replacements.yaml`. During updates, replaced
   policies move to custom and are marked deprecated when enabled; disabled
   policies are removed along with their custom scripts and fixers.
 - Record update notices (replacements and new stock policies) in
-  `devcovenant/registry/manifest.json` and print them to stdout.
+  `devcovenant/registry/local/manifest.json` and print them to stdout.
 - Treat the collective `<!--POLICIES-BEGIN-->`/`<!--POLICIES-END-->` block as a
   managed unit that install/update commands refresh from `devcovenant/core/`
   assets. Provide a per-policy `freeze` override that copies the policy’s
@@ -177,7 +184,7 @@ hashes synchronized so drift is detectable and reversible.
   so the registry records the custom copy. Auto-fixers should be devised for
   every policy and wired through the per-policy adapters so they work across
   every language/profile combination that the policy supports.
-- Generate `devcovenant/registry/policy_registry.yaml` dynamically from
+- Generate `devcovenant/registry/local/policy_registry.yaml` dynamically from
   `refresh_policies` and `update_policy_registry`. The YAML tracks every
   policy (enabled or disabled) with its metadata handles, asset hints,
   profile scopes, core/custom source, enabled flag, and script hashes so the
@@ -225,7 +232,7 @@ hashes synchronized so drift is detectable and reversible.
   only selected docs are replaced when docs mode overwrites.
 - Support policy update modes via `--policy-mode preserve|append-missing|`
   `overwrite`.
-- Write `devcovenant/registry/manifest.json` with the core layout, doc types,
+- Write `devcovenant/registry/local/manifest.json` with the core layout, doc types,
   installed paths, options, active profiles, policy asset mappings,
   and the UTC timestamp of the install or update. Profile manifests
   drive profile assets and overlays, even when not listed as assets.

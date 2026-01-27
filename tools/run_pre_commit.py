@@ -93,7 +93,9 @@ def main() -> None:
     args = parser.parse_args()
 
     repo_root = Path(__file__).resolve().parents[1]
-    status_path = repo_root / "devcovenant" / "registry" / "test_status.json"
+    status_path = (
+        repo_root / "devcovenant" / "registry" / "local" / "test_status.json"
+    )
     status_path.parent.mkdir(parents=True, exist_ok=True)
 
     env = os.environ.copy()

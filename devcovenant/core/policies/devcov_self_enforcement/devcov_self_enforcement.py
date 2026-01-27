@@ -25,7 +25,7 @@ class DevCovenantSelfEnforcementCheck(PolicyCheck):
         """
         policy_defs_path = self.get_option("policy_definitions", "AGENTS.md")
         registry_path = self.get_option(
-            "registry_file", "devcovenant/registry/policy_registry.yaml"
+            "registry_file", "devcovenant/registry/local/policy_registry.yaml"
         )
 
         policy_defs = context.repo_root / str(policy_defs_path)

@@ -1,0 +1,14 @@
+[project]
+name = "python-application"
+version = "{{version}}"
+description = "A placeholder python project created by DevCovenant."
+readme = "README.md"
+authors = ["DevCovenant <devcovenant@example.com>"]
+license = { text = "MIT" }
+keywords = ["devcovenant", "policy", "python"]
+
+[tool.poetry.dependencies]
+python = "^3.8"
+
+[tool.poetry.dev-dependencies]
+pytest = "^7.0"

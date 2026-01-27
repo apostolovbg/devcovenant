@@ -114,8 +114,9 @@ by uninstalling and reinstalling with the intended installer arguments.
 - Always back up any merged or overwritten file as `*_old.*`, even when a
   merge succeeds.
 - Install prompts for one or more profiles from the available list and
-  records the selection in config, while `global`, `data`, `docs`, and
-  `suffixes` profiles remain always-on and cannot be disabled.
+  records the selection in config, while `global` stays always-on and
+  `data`, `docs`, and `suffixes` are enabled by default but can be removed
+  by editing `devcovenant/config.yaml`.
 - Add `profile_scopes` metadata to every policy; apply policies when any
   active profile matches; use `profile_scopes: global` for global policies.
 - Policy-specific assets are created or updated only when the policy is
@@ -210,9 +211,9 @@ must not be hard-coded in `config.yaml`.
 Install prompts for one or more profiles from the generated catalog. The
 catalog is built by scanning profile manifests in core/custom assets.
 Multiple profiles are allowed, and the chosen values are stored as
-`active_profiles` (in addition to always-on profiles `global`, `data`,
-`docs`, and `suffixes`). This is the only interactive prompt besides
-auto-uninstall.
+`active_profiles` (global is implicitly always-on, while `data`, `docs`,
+and `suffixes` are enabled by default but can be removed via config). This
+is the only interactive prompt besides auto-uninstall.
 
 Example prompt:
 ```text
@@ -245,7 +246,7 @@ Profiles are discovered by scanning profile manifests in
 `devcovenant/custom/profiles/<name>/profile.yaml`. Custom
 manifests override core when names match. On install/update (and on first
 run when missing), DevCovenant generates a catalog under
-`devcovenant/registry/profile_catalog.yaml` (or `.json`) with:
+`devcovenant/registry/local/profile_catalog.yaml` (or `.json`) with:
 - `name`, `category`, `suffixes`
 - `source` (core/custom)
 - `active` (based on config)
@@ -379,7 +380,7 @@ For 2.6.0, the workplan fills in the following:
 ### Policy assets and policy folders (generated map)
 Policy-required files are created or updated only when the policy is enabled
 and its profile scopes match the active profiles. The policy asset catalog
-is generated into `devcovenant/registry/policy_assets.yaml` (or `.json`) on
+is generated into `devcovenant/registry/local/policy_assets.yaml` (or `.json`) on
 install/update by scanning per-policy asset manifests that live inside each
 policy folder (`devcovenant/core/policies/<policy>/assets/`). Custom policy
 folders override core when ids match.
@@ -477,33 +478,24 @@ Run uninstall before install? [y/N]
    - Define language-aware fixer lookup (`fixers/<lang>.py` + `global.py`),
      populating each policy’s `fixers/` subfolder so future adapters plug in by
      convention (no stubs after the initial scaffolding).
-2. Apply `PROFILE_POLICY_DRAFT.md` to real profile manifests and policy
-   metadata.
+2. Apply `PROFILE_MAP.md` and `POLICY_MAP.md` as the canonical sources for
+   profile manifests and policy metadata.
    - Populate suffixes, ignore dirs, assets, and policy overlays in every
-     `profile.yaml`.
+     `profile.yaml` according to `PROFILE_MAP.md`.
    - Populate profile gitignore fragments for every shipped profile.
-   - Fill `profile_scopes` for every policy block in `AGENTS.md`.
-   - Keep always-on profiles (`global`, `data`, `docs`, `suffixes`) enforced in
-     config and installers.
-3. Registry split and catalogs.
-   - Split the registry into tracked `registry/global/` and gitignored
-     `registry/local/`. Global keeps curated registries
-     (`stock_policy_texts.yaml`, `policy_replacements.yaml`). Local holds
-     generated files (`policy_registry.yaml`, `manifest.json`, `profile_catalog.yaml`,
-     `policy_assets.yaml`, `test_status.json`).
-   - Update manifest, structure guard, and update/install/uninstall to reflect
-     the split and to migrate legacy paths into the new layout.
-   - Generate profile catalogs and policy assets from profile manifests and
-     policy assets; avoid stubs by completing each profile pass before moving
-     on.
-4. Profile-driven config.
-   - Generate config from the active profiles plus always-on profiles.
+   - Fill `profile_scopes` for every policy block in `AGENTS.md` based on
+     `POLICY_MAP.md`.
+   - Keep `global` always-on while `data`, `docs`, and `suffixes` remain default-on
+     but configurable via `devcovenant/config.yaml`.
+3. Profile-driven config.
+   - Generate config from the active profiles plus the global default and any
+     default-on profiles (docs/data/suffixes) unless the user removes them.
    - Merge profile overlays into policy metadata on install/update.
-5. Documentation alignment.
+4. Documentation alignment.
    - Update root and nested docs for the new layout, registry split, profile
      overlays, and adapter model.
    - Refresh template indexes and managed block guidance.
-6. Packaging and verification.
+5. Packaging and verification.
    - Update `MANIFEST.in` for the new policy/profile layout.
    - Extend tests to cover adapter lookup, new paths, profile overlays, and
      registry split behavior.
@@ -649,18 +641,18 @@ Follow-up implementation tasks:
 - Update tests and docs to reflect the SemVer rules.
 
 ### Generated catalogs + registry layout
-- Remove static `devcovenant/registry/profile_catalog.yaml` and
-  `devcovenant/registry/policy_assets.yaml` as sources of truth.
-- Generate `devcovenant/registry/profile_catalog.yaml` by scanning
+- Remove static `devcovenant/registry/local/profile_catalog.yaml` and
+  `devcovenant/registry/local/policy_assets.yaml` as sources of truth.
+- Generate `devcovenant/registry/local/profile_catalog.yaml` by scanning
   profile manifests in core/custom assets, capturing `name`,
   `category`, `suffixes`, `source`, `active`, and
   `assets_available`.
-- Generate `devcovenant/registry/policy_assets.yaml` from per-policy
+- Generate `devcovenant/registry/local/policy_assets.yaml` from per-policy
   asset manifests, with custom overrides taking precedence.
-- Create `devcovenant/registry/` and migrate registry artifacts into it:
-  `policy_registry.yaml` (policy registry),
-  `manifest.json`, `test_status.json`, `profile_catalog.yaml`,
-  and `policy_assets.yaml`.
+  - Create `devcovenant/registry/global/` for curated registries (`stock_policy_texts.yaml`,
+    `policy_replacements.yaml`) and `devcovenant/registry/local/` for generated artifacts
+    (`policy_registry.yaml`, `manifest.json`, `profile_catalog.yaml`, `policy_assets.yaml`,
+    `test_status.json`), with local files gitignored so only curated assets remain tracked.
 - Update CLI, install, update, and engine paths to read/write the
   registry folder and to regenerate catalogs on install/update and
   first run when missing.
@@ -672,7 +664,7 @@ Follow-up implementation tasks:
   enabled and disabled sections, normalizes metadata key order, and
   touches `updated: true` for active policy tweaks so the pipeline stays
   in sync.
-- `update_policy_registry` produces `devcovenant/registry/policy_registry.yaml`
+- `update_policy_registry` produces `devcovenant/registry/local/policy_registry.yaml`
   with every policy (enabled or not), recording metadata handles, profile
   coverage, asset pointers, core/custom origin, enabled flag, and script
   hashes so the registry mirrors `POLICY_MAP.md` without relying on a
@@ -793,7 +785,7 @@ Follow-up implementation tasks:
 - Ensure metadata normalization runs during default update.
 
 ### Policy replacement and deprecation workflow
-- Added a replacement map (`devcovenant/registry/policy_replacements.yaml`)
+- Added a replacement map (`devcovenant/registry/global/policy_replacements.yaml`)
   and update logic to migrate or remove replaced policies.
 - Replaced policies now move to custom with `custom: true` +
   `status: deprecated` when enabled; disabled ones are removed along with

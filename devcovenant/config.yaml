@@ -23,19 +23,36 @@ profiles:
     - python
     - docs
     - data
+    - suffixes
     - devcovenant
   generated:
     file_suffixes:
-      - __none__
+      - .py
+      - .pyi
+      - .pyw
+      - .ipynb
+      - .md
+      - .rst
+      - .txt
+      - .csv
+      - .tsv
+      - .json
+      - .ndjson
+      - .parquet
+      - .avro
 
 paths:
   policy_definitions: AGENTS.md
-  registry_file: devcovenant/registry/policy_registry.yaml
-  manifest_file: devcovenant/registry/manifest.json
+  registry_file: devcovenant/registry/local/policy_registry.yaml
+  manifest_file: devcovenant/registry/local/manifest.json
   core_profiles_root: devcovenant/core/profiles
   custom_profiles_root: devcovenant/custom/profiles
   core_policies_root: devcovenant/core/policies
   custom_policies_root: devcovenant/custom/policies
+
+version:
+  # Set a specific project version for generated assets and templated files.
+  override: null
 
 docs:
   managed_blocks:
@@ -113,7 +130,44 @@ policies:
     expected_interpreters: []
     required_commands: []
     command_hints: []
+  dependency-license-sync:
+    dependency_files:
+      - requirements.in
+      - requirements.lock
+      - pyproject.toml
+  devflow-run-gates:
+    required_commands:
+      - pytest
+      - python -m unittest discover
+  documentation-growth-tracking:
+    user_facing_suffixes:
+      - .py
+  docstring-and-comment-coverage:
+    include_suffixes:
+      - .py
+  line-length-limit:
+    include_suffixes:
+      - .py
+      - .pyi
+      - .pyw
+      - .ipynb
+      - .md
+      - .rst
+      - .txt
+      - .csv
+      - .tsv
+      - .json
+      - .ndjson
+      - .parquet
+      - .avro
+    exclude_globs:
+      - devcovenant/registry/**
+  name-clarity:
+    include_suffixes:
+      - .py
   new-modules-need-tests:
+    include_suffixes:
+      - .py
     exclude_prefixes:
       - build
       - dist
@@ -127,3 +181,9 @@ policies:
       - tests
       - tests/devcovenant/core
       - tests/devcovenant/custom
+  security-scanner:
+    include_suffixes:
+      - .py
+  version-sync:
+    pyproject_files:
+      - pyproject.toml

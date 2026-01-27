@@ -1,9 +1,0 @@
-global: []
-policies:
-  dependency-license-sync:
-  - mode: merge
-    path: THIRD_PARTY_LICENSES.md
-    template: THIRD_PARTY_LICENSES.md
-  - mode: replace
-    path: licenses/README.md
-    template: licenses/README.md

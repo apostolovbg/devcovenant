@@ -1,4 +1,4 @@
-"""Update DevCovenant policy registry (policy_registry.yaml)."""
+"""Update DevCovenant policy registry (devcovenant/registry/local/policy_registry.yaml)."""
 
 from __future__ import annotations
 
@@ -9,6 +9,7 @@ from pathlib import Path
 from .parser import PolicyParser
 from .policy_locations import resolve_script_location
 from .registry import PolicyRegistry
+from . import manifest as manifest_module
 
 _UPDATED_PATTERN = re.compile(r"^(\s*updated:\s*)true\s*$", re.MULTILINE)
 
@@ -38,15 +39,13 @@ def _ensure_trailing_newline(path: Path) -> bool:
 
 
 def update_policy_registry(repo_root: Path | None = None) -> int:
-    """Update policy hashes in devcovenant/registry/policy_registry.yaml."""
+    """Update policy hashes in devcovenant/registry/local/policy_registry.yaml."""
 
     if repo_root is None:
         repo_root = Path(__file__).resolve().parents[2]
 
     agents_md_path = repo_root / "AGENTS.md"
-    registry_path = (
-        repo_root / "devcovenant" / "registry" / "policy_registry.yaml"
-    )
+    registry_path = manifest_module.policy_registry_path(repo_root)
 
     if not agents_md_path.exists():
         print(

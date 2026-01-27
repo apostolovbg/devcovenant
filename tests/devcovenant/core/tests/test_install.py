@@ -134,6 +134,28 @@ def test_install_creates_optional_spec_and_plan(tmp_path: Path) -> None:
     assert (target / "PLAN.md").exists()
 
 
+def test_profile_assets_use_target_version(tmp_path: Path) -> None:
+    """Profile assets sow the target version into templated files."""
+    target = tmp_path / "repo"
+    target.mkdir()
+    version_value = "2.4.5"
+    install.main(
+        [
+            "--target",
+            str(target),
+            "--mode",
+            "empty",
+            "--version",
+            version_value,
+        ]
+    )
+    pyproject = target / "pyproject.toml"
+    assert pyproject.exists()
+    assert f'version = "{version_value}"' in pyproject.read_text(
+        encoding="utf-8"
+    )
+
+
 def test_disable_policy_sets_apply_false(tmp_path: Path) -> None:
     """Disable-policy should set apply: false for listed policies."""
     target = tmp_path / "repo"

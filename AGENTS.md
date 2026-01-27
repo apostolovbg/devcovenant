@@ -136,7 +136,7 @@ commands, and metadata through their manifests.
 - Update `THIRD_PARTY_LICENSES.md`, refresh `licenses/`, and cite touched
   manifests in the `## License Report` before tagging a release.
 - Log every touched file in the current `CHANGELOG.md` entry and refresh
-  `devcovenant/registry/policy_registry.yaml` via
+  `devcovenant/registry/local/policy_registry.yaml` via
   `devcovenant update-policy-registry` before releasing.
 - Build artifacts locally (`python -m build`, `twine check dist/*`) and verify
   `.github/workflows/publish.yml` publishes with `PYPI_API_TOKEN`.
@@ -255,7 +255,7 @@ apply: true
 custom: false
 profile_scopes: global
 policy_definitions: AGENTS.md
-registry_file: devcovenant/registry/policy_registry.yaml
+registry_file: devcovenant/registry/local/policy_registry.yaml
 ```
 
 DevCovenant must keep its registry synchronized with policy definitions.
@@ -320,7 +320,7 @@ profile_scopes: global
   julia
   ocaml
   crystal
-test_status_file: devcovenant/registry/test_status.json
+test_status_file: devcovenant/registry/local/test_status.json
 required_commands: pytest
   python -m unittest discover
 require_pre_commit_start: true
@@ -614,7 +614,6 @@ exclude_globs: >
   dist/**
   node_modules/**
   devcovenant/core/profiles/global/assets/LICENSE_GPL-3.0.txt
-  devcovenant/registry/policy_registry.yaml
 include_prefixes:
 include_globs: *.>
   *.py
@@ -852,7 +851,7 @@ apply: true
 custom: false
 profile_scopes: global
 policy_definitions: AGENTS.md
-stock_texts_file: devcovenant/registry/stock_policy_texts.yaml
+stock_texts_file: devcovenant/registry/global/stock_policy_texts.yaml
 ```
 
 If a built-in policy text is edited from its stock wording, DevCovenant must

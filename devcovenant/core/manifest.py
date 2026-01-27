@@ -9,7 +9,13 @@ from typing import Any, Dict
 
 DEV_COVENANT_DIR = "devcovenant"
 MANIFEST_FILENAME = "manifest.json"
-MANIFEST_REL_PATH = f"{DEV_COVENANT_DIR}/registry/{MANIFEST_FILENAME}"
+GLOBAL_REGISTRY_DIR = f"{DEV_COVENANT_DIR}/registry/global"
+LOCAL_REGISTRY_DIR = f"{DEV_COVENANT_DIR}/registry/local"
+MANIFEST_REL_PATH = f"{LOCAL_REGISTRY_DIR}/{MANIFEST_FILENAME}"
+POLICY_REGISTRY_FILENAME = "policy_registry.yaml"
+PROFILE_CATALOG_FILENAME = "profile_catalog.yaml"
+POLICY_ASSETS_FILENAME = "policy_assets.yaml"
+TEST_STATUS_FILENAME = "test_status.json"
 LEGACY_MANIFEST_PATHS = [
     ".devcov/install_manifest.json",
     ".devcovenant/install_manifest.json",
@@ -23,7 +29,7 @@ DEFAULT_CORE_DIRS = [
     "devcovenant/core/profiles",
     "devcovenant/core/profiles/global",
     "devcovenant/core/profiles/global/assets",
-    "devcovenant/registry",
+    GLOBAL_REGISTRY_DIR,
 ]
 
 DEFAULT_CORE_FILES = [
@@ -32,8 +38,8 @@ DEFAULT_CORE_FILES = [
     "devcovenant/cli.py",
     "devcovenant/config.yaml",
     "devcovenant/README.md",
-    "devcovenant/registry/stock_policy_texts.yaml",
-    "devcovenant/registry/policy_replacements.yaml",
+    f"{GLOBAL_REGISTRY_DIR}/stock_policy_texts.yaml",
+    f"{GLOBAL_REGISTRY_DIR}/policy_replacements.yaml",
     "devcovenant/core/cli_options.py",
     "devcovenant/core/profiles/global/assets/AGENTS.md",
     "devcovenant/core/profiles/global/assets/CONTRIBUTING.md",
@@ -79,14 +85,48 @@ DEFAULT_CUSTOM_FILES = [
 ]
 
 DEFAULT_GENERATED_FILES = [
-    "devcovenant/registry/policy_registry.yaml",
-    "devcovenant/registry/test_status.json",
-    "devcovenant/registry/manifest.json",
-    "devcovenant/registry/profile_catalog.yaml",
-    "devcovenant/registry/policy_assets.yaml",
+    f"{LOCAL_REGISTRY_DIR}/{POLICY_REGISTRY_FILENAME}",
+    f"{LOCAL_REGISTRY_DIR}/{TEST_STATUS_FILENAME}",
+    f"{LOCAL_REGISTRY_DIR}/{MANIFEST_FILENAME}",
+    f"{LOCAL_REGISTRY_DIR}/{PROFILE_CATALOG_FILENAME}",
+    f"{LOCAL_REGISTRY_DIR}/{POLICY_ASSETS_FILENAME}",
 ]
 
-DEFAULT_GENERATED_DIRS: list[str] = []
+DEFAULT_GENERATED_DIRS: list[str] = [LOCAL_REGISTRY_DIR]
+
+
+def _registry_root(repo_root: Path, rel_dir: str) -> Path:
+    return repo_root / rel_dir
+
+
+def global_registry_root(repo_root: Path) -> Path:
+    """Return the path to the global registry directory."""
+    return _registry_root(repo_root, GLOBAL_REGISTRY_DIR)
+
+
+def local_registry_root(repo_root: Path) -> Path:
+    """Return the path to the local registry directory."""
+    return _registry_root(repo_root, LOCAL_REGISTRY_DIR)
+
+
+def policy_registry_path(repo_root: Path) -> Path:
+    """Return the policy registry path inside the local registry."""
+    return local_registry_root(repo_root) / POLICY_REGISTRY_FILENAME
+
+
+def profile_catalog_path(repo_root: Path) -> Path:
+    """Return the profile catalog path inside the local registry."""
+    return local_registry_root(repo_root) / PROFILE_CATALOG_FILENAME
+
+
+def policy_assets_path(repo_root: Path) -> Path:
+    """Return the policy assets mapping path inside the local registry."""
+    return local_registry_root(repo_root) / POLICY_ASSETS_FILENAME
+
+
+def test_status_path(repo_root: Path) -> Path:
+    """Return the test running status file path inside the local registry."""
+    return local_registry_root(repo_root) / TEST_STATUS_FILENAME
 
 
 def _utc_now() -> str:
