@@ -60,8 +60,10 @@ def main() -> None:
             "check",
             "sync",
             "test",
-            "update-hashes",
+            "update-policy-registry",
+            "update-policy-registry",
             "restore-stock-text",
+            "refresh-policies",
             "normalize-metadata",
             "install",
             "update",
@@ -122,6 +124,17 @@ def main() -> None:
         "--no-set-updated",
         action="store_true",
         help="Do not set updated: true when metadata changes.",
+    )
+    parser.add_argument(
+        "--metadata",
+        choices=("stock", "preserve"),
+        default=None,
+        help="Metadata strategy used by refresh-policies (stock/preserve).",
+    )
+    parser.add_argument(
+        "--skip-policy-refresh",
+        action="store_true",
+        help="Skip refresh-policies during install/update.",
     )
     parser.add_argument(
         "--install-mode",
@@ -232,7 +245,7 @@ def main() -> None:
         "check",
         "sync",
         "test",
-        "update-hashes",
+        "update-policy-registry",
         "normalize-metadata",
         "restore-stock-text",
     }:
@@ -285,19 +298,24 @@ def main() -> None:
             print(f"❌ Test execution failed: {e}")
             sys.exit(1)
 
-    elif args.command == "update-hashes":
-        # Update policy script hashes in registry.json
-        from devcovenant.core.update_hashes import update_registry_hashes
+        sys.exit(0)
 
-        result = update_registry_hashes(args.repo)
-        sys.exit(result)
-
-    elif args.command == "normalize-metadata":
-        from devcovenant.core.metadata_normalizer import (
-            normalize_agents_metadata,
+    elif args.command in ("update-policy-registry", "update-hashes"):
+        from devcovenant.core.update_policy_registry import (
+            update_policy_registry,
         )
 
-        agents_path = args.repo / args.agents
+        if args.command == "update-hashes":
+            print(
+                "The update-hashes command is deprecated. "
+                "Use update-policy-registry instead."
+            )
+        result = update_policy_registry(args.repo)
+        sys.exit(result)
+
+    elif args.command in ("refresh-policies", "normalize-metadata"):
+        from devcovenant.core.refresh_policies import refresh_policies
+
         if args.schema is None:
             schema_path = (
                 Path(__file__).resolve().parent
@@ -311,25 +329,41 @@ def main() -> None:
             schema_path = Path(args.schema)
             if not schema_path.is_absolute():
                 schema_path = args.repo / schema_path
+        agents_path = args.repo / args.agents
         if not schema_path.exists():
             print(f"Schema file not found: {schema_path}")
             sys.exit(1)
 
-        result = normalize_agents_metadata(
+        metadata_mode = args.metadata or (
+            "stock" if args.command == "normalize-metadata" else "preserve"
+        )
+        result = refresh_policies(
             agents_path,
             schema_path,
+            metadata_mode=metadata_mode,
             set_updated=not args.no_set_updated,
         )
+        if args.command == "normalize-metadata":
+            print(
+                "normalize-metadata is now deprecated. "
+                "Use refresh-policies (defaulting to preserve mode)."
+            )
         if result.skipped_policies:
             print("Skipped policies with missing ids:")
             for policy_id in result.skipped_policies:
                 print(f"- {policy_id}")
         if result.changed_policies:
             joined = ", ".join(result.changed_policies)
-            print(f"Updated metadata for: {joined}")
-            print("Run `devcovenant update-hashes` to refresh the registry.")
+            print(
+                f"Updated metadata for: {joined} "
+                f"({result.metadata_mode} mode)"
+            )
+            print(
+                "Run `devcovenant update-policy-registry` "
+                "to refresh the registry."
+            )
         else:
-            print("No metadata updates were required.")
+            print("Policy metadata already matched the requested layout.")
         sys.exit(0)
 
     elif args.command == "restore-stock-text":
@@ -390,6 +424,8 @@ def main() -> None:
             install_args.append("--force-docs")
         if args.force_config:
             install_args.append("--force-config")
+        if args.skip_policy_refresh:
+            install_args.append("--skip-policy-refresh")
 
         from devcovenant.core.install import main as install_main
 
@@ -433,6 +469,8 @@ def main() -> None:
             update_args.append("--force-docs")
         if args.force_config:
             update_args.append("--force-config")
+        if args.skip_policy_refresh:
+            update_args.append("--skip-policy-refresh")
 
         from devcovenant.core.update import main as update_main
 

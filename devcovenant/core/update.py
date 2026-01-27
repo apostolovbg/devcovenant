@@ -12,8 +12,9 @@ from typing import Dict, List, Tuple
 
 from devcovenant.core import cli_options, install
 from devcovenant.core import manifest as manifest_module
-from devcovenant.core import metadata_normalizer, policy_replacements
+from devcovenant.core import policy_replacements
 from devcovenant.core.parser import PolicyParser
+from devcovenant.core.refresh_policies import refresh_policies
 
 _POLICY_BLOCK_RE = re.compile(
     r"(##\s+Policy:\s+[^\n]+\n\n)```policy-def\n(.*?)\n```\n\n"
@@ -373,9 +374,13 @@ def main(argv=None) -> None:
     _record_notifications(target_root, notifications)
     _print_notifications(notifications)
 
-    metadata_normalizer.normalize_agents_metadata(
-        agents_path, schema_path, set_updated=True
-    )
+    if not args.skip_policy_refresh:
+        refresh_policies(
+            agents_path,
+            schema_path,
+            metadata_mode="preserve",
+            set_updated=True,
+        )
 
 
 if __name__ == "__main__":

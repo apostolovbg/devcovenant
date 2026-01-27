@@ -29,10 +29,67 @@ Example entry:
 
 ## Version 0.2.6
 
+- 2026-01-27: Added a repo-only `devcovenant` profile so the published
+  `devcovenant/**` sources stay covered by `new-modules-need-tests`.
+  The mirrored `tests/devcovenant/**` suites now receive the same coverage.
+  Documented the profile in `README.md` and `PROFILE_MAP.md`.
+  Files:
+  devcovenant/custom/profiles/devcovenant/profile.yaml
+  devcovenant/config.yaml
+  README.md
+  PROFILE_MAP.md
+
+- 2026-01-27: Removed policy-level test helpers from `devcovenant/core/policies/*/tests`
+  and moved them under `tests/devcovenant/`. Files:
+  devcovenant/core/policies/new_modules_need_tests/tests/new_modules_need_tests_impl.py
+  devcovenant/core/policies/changelog_coverage/tests/changelog_coverage_impl.py
+  tests/devcovenant/core/policies/changelog_coverage/tests/changelog_coverage_impl.py
+
+- 2026-01-27: Added live policy map automation so `refresh-policies`/
+  `update-policy-registry` keep every policy’s metadata, profile coverage,
+  enabled state, core/custom origin, and script hash clustered in
+  `devcovenant/registry/policy_registry.yaml`. The registry pulls data from
+  `AGENTS.md` and drives the engine.
+  Files:
+  AGENTS.md
+  README.md
+  devcovenant/README.md
+  SPEC.md
+  PLAN.md
+  POLICY_MAP.md
+  devcovenant/README.md
+  devcovenant/cli.py
+  devcovenant/config.yaml
+  devcovenant/core/cli_options.py
+  devcovenant/core/engine.py
+  devcovenant/core/install.py
+  devcovenant/core/manifest.py
+  devcovenant/core/refresh_policies.py
+  devcovenant/core/update_policy_registry.py
+  devcovenant/core/registry.py
+  devcovenant/core/policies/devcov_self_enforcement/devcov_self_enforcement.py
+  devcovenant/core/update.py
+  devcovenant/registry/manifest.json
+  devcovenant/registry/policy_registry.yaml
+  tests/devcovenant/core/tests/test_refresh_policies.py
+  tests/devcovenant/core/policies/devcov_self_enforcement/tests/\
+    test_devcov_self_enforcement.py
+
+- 2026-01-27: Removed the legacy `metadata_normalizer` artifacts and the
+  outdated managed_doc_assets coverage in favor of the new refresh/registry
+  flow, keeping policy metadata parity and regression tests in sync.
+  Files:
+  devcovenant/core/metadata_normalizer.py
+  devcovenant/custom/policies/managed_doc_assets/managed_doc_assets.py
+  devcovenant/registry/registry.json
+  tests/devcovenant/core/tests/test_metadata_normalizer.py
+  tests/devcovenant/custom/policies/test_managed_doc_assets.py
+
 - 2026-01-26: Relocated the changelog-coverage suite beneath the policy folder
   so policy tests stay with their implementation.
   Files:
-  devcovenant/core/policies/changelog_coverage/tests/changelog_coverage_impl.py
+  tests/devcovenant/core/policies/changelog_coverage/tests/\
+    changelog_coverage_impl.py
   tests/devcovenant/core/policies/changelog_coverage/tests/\
     test_changelog_coverage.py
 
@@ -41,7 +98,7 @@ Example entry:
   devcovenant/core/tests/__init__.py
   devcovenant/core/tests/test_base.py
   devcovenant/core/tests/test_main_entrypoint.py
-  devcovenant/core/tests/test_metadata_normalizer.py
+  tests/devcovenant/core/tests/test_refresh_policies.py
   devcovenant/core/tests/test_parser.py
   devcovenant/core/tests/test_selectors.py
 
@@ -275,7 +332,7 @@ Example entry:
   devcovenant/core/profiles/zig/profile.yaml
   devcovenant/core/tests/test_install.py
   devcovenant/custom/fixers/__init__.py
-  devcovenant/registry/registry.json
+  devcovenant/registry/policy_registry.yaml
   devcovenant/registry/test_status.json
 
 - 2026-01-24: Removed legacy policy script/fixer folders and
@@ -715,7 +772,7 @@ Example entry:
   devcovenant/custom/templates/profiles/README.md
   devcovenant/registry/manifest.json
   devcovenant/registry/profile_catalog.yaml
-  devcovenant/registry/registry.json
+  devcovenant/registry/policy_registry.yaml
   devcovenant/registry/test_status.json
 - 2026-01-24: Documented language-aware fixers and fixer
   expectations in plan/spec. (AI assistant)
@@ -937,12 +994,12 @@ Example entry:
   devcovenant/custom/templates/policies/README.md
   devcovenant/custom/templates/profiles/README.md
   devcovenant/manifest.json
-  devcovenant/registry.json
+  devcovenant/policy_registry.yaml
   devcovenant/registry/manifest.json
   devcovenant/registry/policy_assets.yaml
   devcovenant/registry/policy_replacements.yaml
   devcovenant/registry/profile_catalog.yaml
-  devcovenant/registry/registry.json
+  devcovenant/registry/policy_registry.yaml
   devcovenant/registry/stock_policy_texts.yaml
   devcovenant/registry/test_status.json
   tools/run_pre_commit.py
@@ -1442,7 +1499,7 @@ Example entry:
   devcovenant/core/tests/test_policies/test_managed_environment.py
   devcovenant/core/tests/test_profiles.py
   devcovenant/custom/policy_assets.yaml
-  devcovenant/registry/registry.json
+  devcovenant/registry/policy_registry.yaml
 - 2026-01-23: Embedded the policy scope map and language scanner tasks
   into the Phase L planning checklist.
   (AI assistant)
@@ -1533,7 +1590,7 @@ devcovenant/config.yaml
 devcovenant/core/engine.py
 devcovenant/core/install.py
 devcovenant/core/manifest.py
-devcovenant/core/metadata_normalizer.py
+devcovenant/core/refresh_policies.py
 devcovenant/registry/policy_assets.yaml
 devcovenant/core/policy_scripts/changelog_coverage.py
 devcovenant/registry/profile_catalog.yaml
@@ -1633,7 +1690,7 @@ devcovenant/core/tests/test_policies/test_changelog_coverage.py
 devcovenant/core/tests/test_profiles.py
 devcovenant/core/update.py
 devcovenant/registry/manifest.json
-devcovenant/registry/registry.json
+devcovenant/registry/policy_registry.yaml
 devcovenant/templates/.github/workflows/ci.yml
 devcovenant/templates/.pre-commit-config.yaml
 devcovenant/templates/AGENTS.md

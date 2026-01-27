@@ -1,0 +1,21 @@
+version: 1
+profile: devcovenant
+category: repo
+suffixes: []
+ignore_dirs: []
+assets: []
+policy_overlays:
+  new-modules-need-tests:
+    exclude_prefixes:
+      - build
+      - dist
+      - node_modules
+      - tests
+    watch_dirs:
+      - tests
+      - tests/devcovenant/core
+      - tests/devcovenant/custom
+    tests_watch_dirs:
+      - tests
+      - tests/devcovenant/core
+      - tests/devcovenant/custom

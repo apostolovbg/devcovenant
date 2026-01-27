@@ -3,7 +3,6 @@
 from pathlib import Path
 
 import yaml
-import pytest
 
 from devcovenant.core.base import CheckContext
 from devcovenant.custom.policies.managed_doc_assets.managed_doc_assets import (
@@ -58,12 +57,7 @@ def test_managed_doc_assets_passes_when_descriptors_match(
 
     doc_info = policy._extract_doc_info(doc_path)
     assets_dir = (
-        repo_root
-        / "devcovenant"
-        / "core"
-        / "profiles"
-        / "global"
-        / "assets"
+        repo_root / "devcovenant" / "core" / "profiles" / "global" / "assets"
     )
     _write_descriptor(
         assets_dir,
@@ -91,12 +85,7 @@ def test_managed_doc_assets_detects_descriptor_drift(tmp_path: Path) -> None:
     context = CheckContext(repo_root=repo_root)
 
     assets_dir = (
-        repo_root
-        / "devcovenant"
-        / "core"
-        / "profiles"
-        / "global"
-        / "assets"
+        repo_root / "devcovenant" / "core" / "profiles" / "global" / "assets"
     )
     _write_descriptor(
         assets_dir,

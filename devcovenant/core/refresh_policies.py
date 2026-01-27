@@ -1,4 +1,4 @@
-"""Normalize policy metadata blocks against a canonical schema."""
+"""Refresh policy metadata and grouping inside AGENTS.md."""
 
 from __future__ import annotations
 
@@ -9,6 +9,8 @@ from typing import Dict, Iterable, List, Sequence, Tuple
 
 from devcovenant.core.selectors import _normalize_globs
 
+_POLICIES_BEGIN = "<!--POLICIES-BEGIN-->"
+_POLICIES_END = "<!--POLICIES-END-->"
 _POLICY_BLOCK_RE = re.compile(
     r"(##\s+Policy:\s+[^\n]+\n\n)```policy-def\n(.*?)\n```\n\n"
     r"(.*?)(?=\n---\n|\n##|\Z)",
@@ -61,6 +63,13 @@ _LEGACY_ROLE_KEY = {
     "doc_quality_dirs": ("doc_quality", "dirs"),
 }
 
+_METADATA_MODES = ("preserve", "stock")
+
+_GROUP_COMMENTS: Dict[int, str] = {
+    0: "Enabled policies",
+    1: "Disabled policies",
+}
+
 
 @dataclass(frozen=True)
 class PolicySchema:
@@ -71,18 +80,30 @@ class PolicySchema:
 
 
 @dataclass(frozen=True)
-class NormalizeResult:
-    """Summary of normalization changes."""
+class RefreshResult:
+    """Summary of refresh work."""
 
     changed_policies: Tuple[str, ...]
     skipped_policies: Tuple[str, ...]
     updated: bool
+    metadata_mode: str
+
+
+@dataclass
+class _PolicyEntry:
+    """Track a policy block's key attributes during refresh."""
+
+    policy_id: str
+    text: str
+    group: int
+    changed: bool
+    custom: bool
 
 
 def _parse_metadata_block(
     block: str,
 ) -> Tuple[List[str], Dict[str, List[str]]]:
-    """Return ordered keys and per-key line values from a policy-def block."""
+    """Return ordered keys and per-key line values from a metadata block."""
     order: List[str] = []
     values: Dict[str, List[str]] = {}
     current_key = ""
@@ -269,6 +290,8 @@ def _normalize_values(
     current_order: List[str],
     current_values: Dict[str, List[str]],
     schema: Dict[str, PolicySchema],
+    metadata_mode: str,
+    is_custom: bool,
 ) -> Tuple[List[str], Dict[str, List[str]]]:
     """Return normalized metadata order and values for a policy."""
     if policy_id in schema:
@@ -279,63 +302,159 @@ def _normalize_values(
         defaults = _COMMON_DEFAULTS
 
     extras = [key for key in current_order if key not in schema_keys]
+    if is_custom:
+        ordered_keys = [
+            key for key in schema_keys if key in current_values
+        ] + extras
+        ordered_values = {
+            key: list(current_values[key])
+            for key in ordered_keys
+            if key in current_values
+        }
+        return ordered_keys, ordered_values
+
     ordered_keys = schema_keys + extras
     values: Dict[str, List[str]] = {}
+    use_stock = metadata_mode == "stock"
     for key in ordered_keys:
-        if key in current_values:
-            values[key] = current_values[key]
-        elif key in defaults:
-            values[key] = list(defaults[key])
+        current = current_values.get(key, [])
+        canonical = list(defaults.get(key, []))
+        if use_stock and canonical:
+            values[key] = list(canonical)
+        elif current:
+            values[key] = list(current)
+        elif canonical:
+            values[key] = list(canonical)
         else:
             values[key] = []
     return _apply_selector_roles(ordered_keys, values)
 
 
-def normalize_agents_metadata(
+def _assemble_sections(entries: List[_PolicyEntry]) -> str:
+    """Build a policy block with enabled/disabled sections."""
+    if not entries:
+        return ""
+
+    sections_text: List[str] = []
+
+    for group_index, comment in _GROUP_COMMENTS.items():
+        group_entries = [
+            entry for entry in entries if entry.group == group_index
+        ]
+        if not group_entries:
+            continue
+        sorted_entries = sorted(group_entries, key=lambda item: item.policy_id)
+        if sections_text:
+            sections_text.append("\n\n")
+        sections_text.append(f"<!-- {comment} -->\n\n")
+        for idx, entry in enumerate(sorted_entries):
+            if idx > 0:
+                sections_text.append("\n\n---\n\n")
+            sections_text.append(entry.text)
+
+    final = "".join(sections_text)
+    if not final.endswith("\n"):
+        final += "\n"
+    return final
+
+
+def _locate_policy_block(text: str) -> Tuple[int, int, str]:
+    """Return the start/end spans and content of the policy block."""
+    try:
+        start = text.index(_POLICIES_BEGIN)
+        end = text.index(_POLICIES_END, start + len(_POLICIES_BEGIN))
+    except ValueError:
+        raise ValueError("Policy block markers not found in AGENTS.md")
+    block_start = start + len(_POLICIES_BEGIN)
+    block_text = text[block_start:end]
+    return block_start, end, block_text
+
+
+def refresh_policies(
     agents_path: Path,
     schema_path: Path,
     *,
+    metadata_mode: str = "preserve",
     set_updated: bool = True,
-) -> NormalizeResult:
-    """Normalize policy metadata blocks in AGENTS.md against schema."""
+) -> RefreshResult:
+    """Refresh the policy block metadata and ordering inside AGENTS.md."""
+    if metadata_mode not in _METADATA_MODES:
+        raise ValueError(f"Unsupported metadata mode: {metadata_mode}")
     if not agents_path.exists():
-        return NormalizeResult((), (), False)
+        return RefreshResult((), (), False, metadata_mode)
 
     schema = _build_schema(schema_path)
     content = agents_path.read_text(encoding="utf-8")
+    try:
+        block_start, block_end, block_text = _locate_policy_block(content)
+    except ValueError:
+        return RefreshResult((), (), False, metadata_mode)
+
     changed: List[str] = []
     skipped: List[str] = []
+    entries: List[_PolicyEntry] = []
 
-    def _replace(match: re.Match[str]) -> str:
-        """Return the updated policy block."""
+    for match in _POLICY_BLOCK_RE.finditer(block_text):
         heading = match.group(1)
         metadata_block = match.group(2).strip()
-        description = match.group(3)
+        description = match.group(3).rstrip()
         order, values = _parse_metadata_block(metadata_block)
-        policy_id = ""
-        if "id" in values and values["id"]:
-            policy_id = values["id"][0]
+        policy_id = values.get("id", [""])[0] if values.get("id") else ""
         if not policy_id:
             skipped.append("unknown")
-            return match.group(0)
+            continue
 
+        custom_flag = (
+            values.get("custom", ["false"])[0].strip().lower() == "true"
+        )
+        apply_flag = values.get("apply", ["true"])[0].strip().lower() == "true"
         normalized_order, normalized_values = _normalize_values(
-            policy_id, order, values, schema
+            policy_id,
+            order,
+            values,
+            schema,
+            metadata_mode,
+            custom_flag,
         )
         rendered = _render_metadata_block(normalized_order, normalized_values)
-        if rendered != metadata_block and set_updated:
+        metadata_changed = rendered != metadata_block
+        if metadata_changed and set_updated and apply_flag and not custom_flag:
             normalized_values["updated"] = ["true"]
             rendered = _render_metadata_block(
                 normalized_order, normalized_values
             )
-        if rendered != metadata_block:
+            metadata_changed = rendered != metadata_block
+        final_text = (
+            f"{heading}```policy-def\n{rendered}\n```\n\n{description}\n"
+        )
+        group = 0 if apply_flag else 1
+        entries.append(
+            _PolicyEntry(
+                policy_id=policy_id,
+                text=final_text,
+                group=group,
+                changed=metadata_changed,
+                custom=custom_flag,
+            )
+        )
+        if metadata_changed:
             changed.append(policy_id)
-        return f"{heading}```policy-def\n{rendered}\n```\n\n{description}"
 
-    updated = False
-    updated_content, count = _POLICY_BLOCK_RE.subn(_replace, content)
-    if count and updated_content != content:
-        agents_path.write_text(updated_content, encoding="utf-8")
-        updated = True
+    if not entries:
+        return RefreshResult((), tuple(skipped), False, metadata_mode)
 
-    return NormalizeResult(tuple(changed), tuple(skipped), updated)
+    new_block = _assemble_sections(entries)
+    block_clean = block_text.strip()
+    new_block_clean = new_block.strip()
+    prefix = content[:block_start]
+    suffix = content[block_end:]
+    rebuilt = (
+        f"{prefix}\n{new_block.rstrip()}\n{suffix}"
+        if not prefix.endswith("\n")
+        else f"{prefix}{new_block.rstrip()}\n{suffix}"
+    )
+    agents_path.write_text(rebuilt, encoding="utf-8")
+    updated = new_block_clean != block_clean
+    return RefreshResult(
+        tuple(changed), tuple(skipped), updated, metadata_mode
+    )

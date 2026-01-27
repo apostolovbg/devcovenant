@@ -17,6 +17,7 @@ from devcovenant.core import cli_options
 from devcovenant.core import manifest as manifest_module
 from devcovenant.core import profiles, uninstall
 from devcovenant.core.parser import PolicyParser
+from devcovenant.core.refresh_policies import refresh_policies
 
 DEV_COVENANT_DIR = "devcovenant"
 CORE_PATHS = [
@@ -1958,6 +1959,9 @@ def main(argv=None) -> None:
     repo_root = package_root.parent
     template_root = package_root / "core"
     target_root = Path(args.target).resolve()
+    schema_path = (
+        package_root / "core" / "profiles" / "global" / "assets" / "AGENTS.md"
+    )
     _reset_backup_state(target_root)
     manifest_file = manifest_module.manifest_path(target_root)
     legacy_paths = manifest_module.legacy_manifest_paths(target_root)
@@ -2424,6 +2428,14 @@ def main(argv=None) -> None:
     if devcovenant_version:
         _update_devcovenant_version(
             target_root / "devcovenant/README.md", devcovenant_version
+        )
+
+    if not args.skip_policy_refresh:
+        refresh_policies(
+            agents_path,
+            schema_path,
+            metadata_mode="preserve",
+            set_updated=True,
         )
 
     manifest = manifest_module.build_manifest(

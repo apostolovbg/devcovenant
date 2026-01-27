@@ -185,6 +185,11 @@ def add_install_update_args(
         action="store_true",
         help="Overwrite config files on update.",
     )
+    parser.add_argument(
+        "--skip-policy-refresh",
+        action="store_true",
+        help="Do not run refresh-policies during install/update.",
+    )
 
 
 def build_install_args(
@@ -238,6 +243,8 @@ def build_install_args(
         install_args.append("--force-docs")
     if args.force_config:
         install_args.append("--force-config")
+    if getattr(args, "skip_policy_refresh", False):
+        install_args.append("--skip-policy-refresh")
     return install_args
 
 

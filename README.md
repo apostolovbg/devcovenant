@@ -54,7 +54,9 @@ eliminates that by making the documentation itself the executable spec.
 ## How It Works
 1. `AGENTS.md` stores policy definitions and metadata blocks.
 2. `devcovenant/core/parser.py` extracts and hashes each policy definition.
-3. `devcovenant/registry/registry.json` records the policy and script hashes.
+3. `devcovenant/registry/policy_registry.yaml` records policy/script hashes along with
+   metadata handles, profile coverage, asset hints, and core/custom origin for
+   every policy (enabled or disabled).
 4. `devcovenant/core/engine.py` runs policy scripts and reports violations.
 5. Policy scripts resolve custom → core, and custom overrides suppress core
    fixers for that policy.
@@ -72,8 +74,10 @@ eliminates that by making the documentation itself the executable spec.
   - `core/profiles/`: profile definitions (`profile.yaml`) plus `assets/`.
   - `custom/policies/`: repo-specific policy overrides (same layout as core).
   - `custom/profiles/`: repo-specific profile overrides and assets.
-  - `registry/`: generated registry files (`registry.json`, `manifest.json`,
-    `profile_catalog.yaml`, `policy_assets.yaml`, `test_status.json`).
+  - `registry/`: generated registry files (`policy_registry.yaml`, `manifest.json`,
+    `profile_catalog.yaml`, `policy_assets.yaml`, `test_status.json`) that now
+    include the live policy map metadata so tooling can read policy coverage
+    without parsing `AGENTS.md`.
 - `tools/`: workflow helpers (pre-commit/test gates and status updates).
 
 
@@ -170,7 +174,7 @@ reruns `tools/run_tests.py` before recording the end timestamp so tests always
 post-date any auto-fixes.
 
 When policy blocks change, set `updated: true`, run
-`devcovenant update-hashes`, then reset the flag.
+`devcovenant update-policy-registry`, then reset the flag.
 
 ## Core Exclusion
 User repos should keep DevCovenant core excluded from enforcement so updates
@@ -195,6 +199,22 @@ implementing DevCovenant itself.
 Use `profiles.active` in `devcovenant/config.yaml` to extend file suffix
 coverage for multi-language projects.
 
+The DevCovenant repository activates a dedicated `devcovenant` profile that
+overrides `new-modules-need-tests` metadata so the `devcovenant/**` sources and
+the mirrored `tests/devcovenant/**` suites (core/custom policies and profiles)
+stay aligned.
+
+That profile also contributes a `.gitignore` fragment so `devcovenant/config.yaml`
+remains local to this repo. User repos that do not enable that profile continue
+to commit `devcovenant/config.yaml`, ensuring their runtime configuration
+travels with their source tree.
+
+For a “no-touch” install, copy the `devcovenant/` package into the target repo,
+adjust `devcovenant/config.yaml` to taste, and run `devcovenant install --target`
+later; the installer honors any existing config unless `--force-config` is
+supplied. This lets teams pre-seed their configuration before DevCovenant
+runs for the first time.
+
 ## Dependency and License Tracking
 DevCovenant records runtime dependencies in `requirements.in` with pinned
 versions in `requirements.lock` and metadata in `pyproject.toml`. Every time
@@ -212,7 +232,7 @@ devcovenant check --mode pre-commit
 
 devcovenant check --fix
 
-devcovenant update-hashes
+devcovenant update-policy-registry
 
 devcovenant restore-stock-text --policy <id>
 ```

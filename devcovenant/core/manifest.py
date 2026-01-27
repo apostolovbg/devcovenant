@@ -79,7 +79,7 @@ DEFAULT_CUSTOM_FILES = [
 ]
 
 DEFAULT_GENERATED_FILES = [
-    "devcovenant/registry/registry.json",
+    "devcovenant/registry/policy_registry.yaml",
     "devcovenant/registry/test_status.json",
     "devcovenant/registry/manifest.json",
     "devcovenant/registry/profile_catalog.yaml",

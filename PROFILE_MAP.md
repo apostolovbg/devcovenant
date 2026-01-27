@@ -344,3 +344,14 @@ Each language profile includes:
 - Policies:
   - `line-length-limit` covers `.pl`.
   - Doc growth tracks `.pl` and `.yap`.
+
+### Profile: devcovenant (repo-specific)
+- Base: global + python + docs + data, tuned for DevCovenant’s own sources.
+- Assets: metadata-only overlay in
+  `devcovenant/custom/profiles/devcovenant/profile.yaml`.
+Policy overlays:
+  - `new-modules-need-tests`: trims the exclusion list and points both
+    `watch_dirs` and `tests_watch_dirs` at `tests/devcovenant/core` and
+    `tests/devcovenant/custom` so the mirrored adapters remain covered.
+- Gitignore: none beyond the aggregate fragments from the active base
+  profile set.

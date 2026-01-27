@@ -52,7 +52,9 @@ def _write_policy_script(repo_root: Path) -> Path:
 
 def _write_registry(repo_root: Path, agents_path: Path) -> None:
     """Write a registry with matching hashes for the demo policy."""
-    registry_path = repo_root / "devcovenant" / "registry" / "registry.json"
+    registry_path = (
+        repo_root / "devcovenant" / "registry" / "policy_registry.yaml"
+    )
     parser = PolicyParser(agents_path)
     policies = parser.parse_agents_md()
     registry = PolicyRegistry(registry_path, repo_root)
@@ -98,7 +100,7 @@ def test_registry_missing_entry_fails():
         _write_policy_script(repo_root)
 
         registry_path = (
-            repo_root / "devcovenant" / "registry" / "registry.json"
+            repo_root / "devcovenant" / "registry" / "policy_registry.yaml"
         )
         registry = PolicyRegistry(registry_path, repo_root)
         registry._data.setdefault("policies", {})["demo-policy"] = {

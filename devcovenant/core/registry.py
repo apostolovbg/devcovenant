@@ -3,11 +3,12 @@ Registry for tracking policy hashes and sync status.
 """
 
 import hashlib
-import json
 from dataclasses import dataclass
 from datetime import datetime, timezone
 from pathlib import Path
 from typing import Dict, List, Optional
+
+import yaml
 
 from .parser import PolicyDefinition
 from .policy_locations import resolve_script_location
@@ -48,7 +49,7 @@ class PolicyRegistry:
         Initialize the registry.
 
         Args:
-            registry_path: Path to registry.json
+            registry_path: Path to policy_registry.yaml
             repo_root: Root directory of the repository
         """
         self.registry_path = registry_path
@@ -60,25 +61,29 @@ class PolicyRegistry:
         """Load the registry from disk."""
         if self.registry_path.exists():
             with open(self.registry_path, "r", encoding="utf-8") as f:
-                self._data = json.load(f)
+                self._data = yaml.safe_load(f) or {}
         else:
-            self._data = {"policies": {}, "metadata": {"version": "1.0.0"}}
+            self._data = {}
+        if "policies" not in self._data:
+            self._data["policies"] = {}
+        if "metadata" not in self._data:
+            self._data["metadata"] = {"version": "1.0.0"}
 
     def _normalize_registry_hashes(self) -> None:
-        """Normalize stored hashes to the list form."""
+        """Normalize stored hashes to string form."""
         policies = self._data.get("policies", {})
         for policy_data in policies.values():
             raw_hash = policy_data.get("hash")
             normalized = self._normalize_hash_value(raw_hash)
             if normalized:
-                policy_data["hash"] = self._split_hash(normalized)
+                policy_data["hash"] = normalized
 
     def save(self):
         """Save the registry to disk."""
         self._normalize_registry_hashes()
         self.registry_path.parent.mkdir(parents=True, exist_ok=True)
         with open(self.registry_path, "w", encoding="utf-8") as f:
-            json.dump(self._data, f, indent=2)
+            yaml.safe_dump(self._data, f, sort_keys=False)
 
     def _normalize_hash_value(self, hash_value: object) -> str | None:
         """Normalize stored hash values to a string."""
@@ -87,10 +92,6 @@ class PolicyRegistry:
         if isinstance(hash_value, str):
             return hash_value
         return None
-
-    def _split_hash(self, hash_value: str) -> list[str]:
-        """Split hashes into shorter chunks for JSON formatting."""
-        return [hash_value[i : i + 32] for i in range(0, len(hash_value), 32)]
 
     def calculate_full_hash(
         self, policy_text: str, script_content: str
@@ -130,7 +131,11 @@ class PolicyRegistry:
 
         for policy in policies:
             # Skip deleted or deprecated policies
-            if policy.status in ["deleted", "deprecated"]:
+            if policy.status in ["deleted", "deprecated"] or not policy.apply:
+                continue
+
+            # Skip policies explicitly turned off
+            if not policy.apply:
                 continue
 
             # Determine script path
@@ -231,33 +236,76 @@ class PolicyRegistry:
                 return f"{scope}/{policy_name}.py"
         return str(relative)
 
-    def update_policy_hash(
-        self, policy_id: str, policy_text: str, script_path: Path
+    def _split_metadata_values(self, raw_value: str) -> List[str]:
+        """Split metadata values on commas and newlines."""
+        items: List[str] = []
+        for part in raw_value.replace("\n", ",").split(","):
+            normalized = part.strip()
+            if normalized:
+                items.append(normalized)
+        return items
+
+    def _extract_asset_values(self, metadata: Dict[str, str]) -> List[str]:
+        """Return metadata values that look like asset paths."""
+        candidates: List[str] = []
+        for metadata_value in metadata.values():
+            for token in self._split_metadata_values(metadata_value):
+                normalized = token.strip()
+                lowered = normalized.lower()
+                if "/" in normalized or lowered.endswith(
+                    (".md", ".yaml", ".yml", ".json", ".zip")
+                ):
+                    candidates.append(normalized)
+        return sorted(dict.fromkeys(candidates))
+
+    def _split_profiles(self, raw_value: str) -> List[str]:
+        """Return normalized profile scopes."""
+        return [
+            scope.strip()
+            for scope in raw_value.replace("\n", ",").split(",")
+            if scope.strip()
+        ]
+
+    def update_policy_entry(
+        self,
+        policy: PolicyDefinition,
+        script_location,
     ):
         """
-        Update the hash for a policy after its script has been updated.
+        Update a policy entry in the registry.
 
         Args:
-            policy_id: ID of the policy
-            policy_text: Current policy text
-            script_path: Path to the policy script
+            policy: Policy metadata from AGENTS.md.
+            script_location: Located script info (or None).
         """
-        # Read script
-        with open(script_path, "r", encoding="utf-8") as f:
-            script_content = f.read()
+        entry = self._data["policies"].setdefault(policy.policy_id, {})
+        entry["status"] = policy.status
+        entry["enabled"] = policy.apply
+        entry["custom"] = policy.custom
+        entry["description"] = policy.name
+        entry["metadata_handles"] = sorted(policy.raw_metadata.keys())
+        entry["profiles"] = self._split_profiles(
+            policy.raw_metadata.get("profile_scopes", "")
+        )
+        entry["metadata"] = dict(policy.raw_metadata)
+        entry["assets"] = self._extract_asset_values(policy.raw_metadata)
+        entry["core"] = False
+        entry["script_exists"] = False
+        entry["last_updated"] = entry.get("last_updated")
 
-        # Calculate new hash
-        new_hash = self.calculate_full_hash(policy_text, script_content)
-
-        # Update registry
-        if "policies" not in self._data:
-            self._data["policies"] = {}
-
-        self._data["policies"][policy_id] = {
-            "hash": self._split_hash(new_hash),
-            "last_updated": datetime.now(timezone.utc).isoformat(),
-            "script_path": self._compact_script_path(script_path),
-        }
+        if script_location and script_location.path.exists():
+            script_path = script_location.path
+            script_content = script_path.read_text(encoding="utf-8")
+            entry["hash"] = self.calculate_full_hash(
+                policy.description, script_content
+            )
+            entry["script_path"] = self._compact_script_path(script_path)
+            entry["script_exists"] = True
+            entry["core"] = script_location.kind == "core"
+            entry["last_updated"] = datetime.now(timezone.utc).isoformat()
+        else:
+            entry["hash"] = entry.get("hash")
+            entry["script_path"] = None
 
         self.save()
 

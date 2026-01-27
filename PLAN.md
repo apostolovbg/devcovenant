@@ -46,7 +46,7 @@ by uninstalling and reinstalling with the intended installer arguments.
 - Do not leave stubs. If a task cannot be completed in one pass, negotiate
   the sub-steps and record the split in this plan before stopping.
 - When policy text changes, set `updated: true`, run
-  `devcovenant update-hashes`, then reset the flag.
+  `devcovenant update-policy-registry`, then reset the flag.
 
 ## Next Steps
 - Capture the managed-document asset automation and the new
@@ -54,11 +54,15 @@ by uninstalling and reinstalling with the intended installer arguments.
   so installs and updates can regenerate the managed section blocks from the
   repository’s YAML descriptors. Point readers at the global asset catalog
   for the canonical doc list.
+- Document how the AGENTS policy block (the DevCovenant-managed
+  `<!--POLICIES-->` region) should stay out of the general managed-block
+  automation until we flesh out the policy handling workflow, keeping the
+  manual AGENTS reorder as the current source of truth.
 - Define how install/update/runtime commands honor a per-policy `freeze`
   metadata knob: when `freeze: true`, the policy (scripts, descriptors, assets)
   must be mirrored under `devcovenant/custom/` with `custom: true`, and when
   `freeze` is cleared the custom artifacts should be removed automatically;
-  document how these transitions trigger `devcovenant update-hashes` so the
+  document how these transitions trigger `devcovenant update-policy-registry` so the
   registry stays in sync.
 - Sketch the rollout of auto-fixers for every policy: each fixer must leverage
   the policy’s adapters so it can re-run inside every language/profile surface
@@ -144,7 +148,7 @@ by uninstalling and reinstalling with the intended installer arguments.
 - Split the registry into tracked `devcovenant/registry/global/` and
   gitignored `devcovenant/registry/local/`. Global keeps only curated
   registries (`stock_policy_texts.yaml`, `policy_replacements.yaml`) while
-  local holds auto-generated files (`registry.json`, `manifest.json`,
+  local holds auto-generated files (`policy_registry.yaml`, `manifest.json`,
   `profile_catalog.yaml`, `policy_assets.yaml`, `test_status.json`) that
   must remain local-only (not committed).
 - Populate profile gitignore fragments for every shipped profile so
@@ -159,6 +163,10 @@ by uninstalling and reinstalling with the intended installer arguments.
   are refreshed on update; deprecated core paths are removed.
 - Any file containing `DEVCOV` blocks is treated as block-managed: managed
   blocks refresh from assets, non-block content is preserved.
+- The AGENTS policy block (the `<!--POLICIES-->` chunk) is treated as a
+  separate DevCovenant-managed unit that the normal block automation skips
+  until the policy-handling workflow lands; the manual AGENTS order is the
+  authoritative layout for now.
 - DevCovenant-managed docs must include a standard header block (title, last
   updated, version) followed immediately by a small `DEVCOV` block. Updates
   must merge existing `DEVCOV` blocks (add missing fields, refresh values)
@@ -180,7 +188,7 @@ by uninstalling and reinstalling with the intended installer arguments.
 - The registry is split into `devcovenant/registry/global/` (tracked) and
   `devcovenant/registry/local/` (gitignored). Global stores curated
   registries (`stock_policy_texts.yaml`, `policy_replacements.yaml`). Local
-  stores auto-generated artifacts (`registry.json`, `manifest.json`,
+  stores auto-generated artifacts (`policy_registry.yaml`, `manifest.json`,
   `profile_catalog.yaml`, `policy_assets.yaml`, `test_status.json`) that
   must remain local-only. Update and install regenerate local, refresh
   global, and migrate legacy paths into the new layout.
@@ -456,12 +464,10 @@ Run uninstall before install? [y/N]
    - Move policy modules into `devcovenant/*/policies/<id>/` with `adapters/`,
      `tests/`, `fixers/`, and `assets/` subfolders. Start by migrating one
      policy (e.g., `changelog_coverage`) to validate new loaders, then sweep
-     the rest with the same pattern. _`changelog_coverage` now houses its test
-     suite under `devcovenant/core/policies/changelog_coverage/tests/`
-     (`changelog_coverage_impl.py`).
-  The mirrored file in
-  `tests/devcovenant/core/policies/changelog_coverage/tests/`
-  re-exports the suite so pytest discovery still works.
+     the rest with the same pattern. `_changelog_coverage` now keeps its
+     handwritten helper under `tests/devcovenant/core/policies/changelog_coverage/tests/`
+     (`changelog_coverage_impl.py`), with the policy-level test stub merely
+     re-exporting that module so pytest discovery continues to succeed.
    - Move profile assets into `devcovenant/*/profiles/<profile>/assets/` with
      `global/assets/` as the shared baseline; keep each profile’s manifest and
      `assets/` folder next to one another so installers can read a single path.
@@ -483,7 +489,7 @@ Run uninstall before install? [y/N]
    - Split the registry into tracked `registry/global/` and gitignored
      `registry/local/`. Global keeps curated registries
      (`stock_policy_texts.yaml`, `policy_replacements.yaml`). Local holds
-     generated files (`registry.json`, `manifest.json`, `profile_catalog.yaml`,
+     generated files (`policy_registry.yaml`, `manifest.json`, `profile_catalog.yaml`,
      `policy_assets.yaml`, `test_status.json`).
    - Update manifest, structure guard, and update/install/uninstall to reflect
      the split and to migrate legacy paths into the new layout.
@@ -584,7 +590,7 @@ Follow-up implementation tasks:
 ## User Repo Update Path
 1. Run `devcovenant update` (default behavior includes normalization).
 2. Review policy notices for deprecated or newly available policies.
-3. Run `devcovenant update-hashes` if policy text changes were applied.
+3. Run `devcovenant update-policy-registry` if policy text changes were applied.
 4. Re-run pre-commit and tests.
 5. Log changes in the repo changelog.
 6. For a full refresh, run `devcovenant uninstall` and reinstall with the
@@ -610,7 +616,7 @@ Follow-up implementation tasks:
 - New stock policies trigger user notifications.
 - Structure guard validates against the update-shipped manifest.
 - Registry uses `registry/global/` for curated registries and
-  `registry/local/` for generated artifacts (`registry.json`, `manifest.json`,
+  `registry/local/` for generated artifacts (`policy_registry.yaml`, `manifest.json`,
   `profile_catalog.yaml`, `policy_assets.yaml`, `test_status.json`), with
   local content gitignored by default.
 - Every merge or overwrite creates an `*_old.*` backup.
@@ -652,7 +658,7 @@ Follow-up implementation tasks:
 - Generate `devcovenant/registry/policy_assets.yaml` from per-policy
   asset manifests, with custom overrides taking precedence.
 - Create `devcovenant/registry/` and migrate registry artifacts into it:
-  `registry.json` (policy registry),
+  `policy_registry.yaml` (policy registry),
   `manifest.json`, `test_status.json`, `profile_catalog.yaml`,
   and `policy_assets.yaml`.
 - Update CLI, install, update, and engine paths to read/write the
@@ -660,6 +666,17 @@ Follow-up implementation tasks:
   first run when missing.
 - Document the registry layout and generation rules, including
   migration behavior from legacy paths.
+
+### Policy map automation
+- `refresh_policies` now regenerates the `AGENTS.md` policy block with
+  enabled and disabled sections, normalizes metadata key order, and
+  touches `updated: true` for active policy tweaks so the pipeline stays
+  in sync.
+- `update_policy_registry` produces `devcovenant/registry/policy_registry.yaml`
+  with every policy (enabled or not), recording metadata handles, profile
+  coverage, asset pointers, core/custom origin, enabled flag, and script
+  hashes so the registry mirrors `POLICY_MAP.md` without relying on a
+  separate document.
 
 ### Profile-driven config + gitignore assets
 - Support custom profile and policy assets under

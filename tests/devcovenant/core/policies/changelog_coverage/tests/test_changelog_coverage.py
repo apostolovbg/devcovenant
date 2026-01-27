@@ -3,7 +3,7 @@
 from importlib import import_module
 
 _module = import_module(
-    "devcovenant.core.policies.changelog_coverage.tests."
+    "tests.devcovenant.core.policies.changelog_coverage.tests."
     "changelog_coverage_impl"
 )
 for _name in dir(_module):

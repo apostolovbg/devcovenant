@@ -34,7 +34,7 @@ hashes synchronized so drift is detectable and reversible.
 - Run a startup check at session start (`python3 -m devcovenant check --mode
   startup`).
 - When policy text changes, set `updated: true`, update scripts/tests, run
-  `devcovenant update-hashes`, then reset `updated: false`.
+  `devcovenant update-policy-registry`, then reset `updated: false`.
 - Log every change in `CHANGELOG.md` under the current version header.
 
 ## Functional Requirements
@@ -42,7 +42,7 @@ hashes synchronized so drift is detectable and reversible.
 - Parse policy blocks from `AGENTS.md` and capture the descriptive text that
   follows each `policy-def` block.
 - Hash policy definitions and scripts into
-  `devcovenant/registry/registry.json`.
+  `devcovenant/registry/policy_registry.yaml`.
 - Expose `restore-stock-text` to reset policy prose to canonical wording.
 - Support `custom: true/false` metadata to mark custom policy prose that
   bypasses stock text sync checks.
@@ -76,7 +76,7 @@ hashes synchronized so drift is detectable and reversible.
 ### CLI commands
 - Provide a console entry point (`devcovenant`) and module entry
   (`python3 -m devcovenant`) that both route to the same CLI.
-- Supported commands: `check`, `sync`, `test`, `update-hashes`,
+- Supported commands: `check`, `sync`, `test`, `update-policy-registry`,
   `restore-stock-text`, `install`, `update`, `uninstall`,
   `normalize-metadata`.
 - `check` exits non-zero when blocking violations or sync issues are present.
@@ -105,6 +105,12 @@ hashes synchronized so drift is detectable and reversible.
   environment expectations. It points readers to `devcovenant/README.md` for
   the broader command set so agents know how to interact with the repo before
   reaching the policy blocks.
+- The policy block is the text between
+  `<!--POLICIES-BEGIN-->` and `<!--POLICIES-END-->` inside `AGENTS.md`; treat it
+  as a dedicated DevCovenant-managed unit that the standard managed-block
+  automation leaves untouched until we flesh out the tailored
+  policy-handling workflow. Keep the manual AGENTS reorder as the
+  authoritative layout for now.
 
 ### Configuration and extension
 - `devcovenant/config.yaml` must support `devcov_core_include` and
@@ -167,10 +173,16 @@ hashes synchronized so drift is detectable and reversible.
   assets. Provide a per-policy `freeze` override that copies the policy’s
   modules, descriptors, and assets into `devcovenant/custom/` (with
   `custom: true`) when true and removes those files when the flag clears,
-  always rerunning `devcovenant update-hashes` (and any needed registry fixes)
+  always rerunning `devcovenant update-policy-registry` (and any needed registry fixes)
   so the registry records the custom copy. Auto-fixers should be devised for
   every policy and wired through the per-policy adapters so they work across
   every language/profile combination that the policy supports.
+- Generate `devcovenant/registry/policy_registry.yaml` dynamically from
+  `refresh_policies` and `update_policy_registry`. The YAML tracks every
+  policy (enabled or disabled) with its metadata handles, asset hints,
+  profile scopes, core/custom source, enabled flag, and script hashes so the
+  registry is the canonical policy map without requiring a separate reference
+  document.
 
 ## Installation Requirements
 - Install the full DevCovenant toolchain into the target repo, including the

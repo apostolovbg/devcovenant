@@ -23,13 +23,14 @@ profiles:
     - python
     - docs
     - data
+    - devcovenant
   generated:
     file_suffixes:
       - __none__
 
 paths:
   policy_definitions: AGENTS.md
-  registry_file: devcovenant/registry/registry.json
+  registry_file: devcovenant/registry/policy_registry.yaml
   manifest_file: devcovenant/registry/manifest.json
   core_profiles_root: devcovenant/core/profiles
   custom_profiles_root: devcovenant/custom/profiles
@@ -112,3 +113,17 @@ policies:
     expected_interpreters: []
     required_commands: []
     command_hints: []
+  new-modules-need-tests:
+    exclude_prefixes:
+      - build
+      - dist
+      - node_modules
+      - tests
+    watch_dirs:
+      - tests
+      - tests/devcovenant/core
+      - tests/devcovenant/custom
+    tests_watch_dirs:
+      - tests
+      - tests/devcovenant/core
+      - tests/devcovenant/custom

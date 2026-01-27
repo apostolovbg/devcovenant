@@ -76,7 +76,7 @@ reruns `tools/run_tests.py` before recording the end timestamp so tests always
 post-date any auto-fixes.
 
 When policy text changes, set `updated: true`, update scripts/tests, run
-`devcovenant update-hashes`, then reset the flag.
+`devcovenant update-policy-registry`, then reset the flag.
 
 ## CLI Entry Points
 DevCovenant ships both a console script and a module entry:
@@ -94,7 +94,7 @@ The primary commands are:
 - `devcovenant check --fix` (apply auto-fixes when allowed)
 - `devcovenant sync` (startup sync check)
 - `devcovenant test` (runs `pytest tests/`)
-- `devcovenant update-hashes` (refresh `devcovenant/registry/registry.json`)
+- `devcovenant update-policy-registry` (refresh `devcovenant/registry/policy_registry.yaml`)
 - `devcovenant normalize-metadata` (insert missing metadata keys)
 - `devcovenant restore-stock-text --policy <id>`
 - `devcovenant restore-stock-text --all`
@@ -255,7 +255,7 @@ Manifest schema (summary):
   },
   "generated": {
     "dirs": [],
-    "files": ["devcovenant/registry/registry.json"]
+    "files": ["devcovenant/registry/policy_registry.yaml"]
   },
   "profiles": {
     "active": [],
@@ -482,10 +482,12 @@ Custom fixers live under `devcovenant/custom/policies/<policy>/fixers/`.
 
 ## Policy Registry and Stock Text
 Policy definitions in `AGENTS.md` are hashed into
-`devcovenant/registry/registry.json`. When policy text changes, set
-`updated: true`, update scripts and tests, then run:
+`devcovenant/registry/policy_registry.yaml` along with metadata handles, asset
+hints, profile coverage, and core/custom sourcing for every policy (enabled or
+disabled). When policy text changes, set `updated: true`, update scripts and
+tests, then run:
 ```bash
-devcovenant update-hashes
+devcovenant update-policy-registry
 ```
 
 Stock policy wording is stored in
@@ -562,7 +564,7 @@ without requiring per-repo scripting. Each policy is metadata-driven in
 The summary below explains intent, defaults, and impact.
 
 ### DevCovenant Self-Enforcement
-Keeps `devcovenant/registry/registry.json` synchronized with the policy
+Keeps `devcovenant/registry/policy_registry.yaml` synchronized with the policy
 blocks in `AGENTS.md`. Default severity is `error` with `apply: true` so
 drift in policy
 text or hashes cannot go unnoticed.
@@ -725,6 +727,6 @@ before publishing.
 
 ## Troubleshooting
 - Missing console script: use `python3 -m devcovenant`.
-- Policy drift: run `devcovenant update-hashes`.
+- Policy drift: run `devcovenant update-policy-registry`.
 - Missing scripts: confirm the policy id matches the script filename.
 - Unexpected violations: review policy metadata and custom overrides.

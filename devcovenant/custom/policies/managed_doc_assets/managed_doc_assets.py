@@ -52,9 +52,7 @@ class ManagedDocAssetsCheck(PolicyCheck):
             descriptor_path = assets_dir / entry["descriptor"]
 
             if not doc_path.is_file():
-                violations.append(
-                    self._missing_doc_violation(doc_path)
-                )
+                violations.append(self._missing_doc_violation(doc_path))
                 continue
 
             if not descriptor_path.is_file():
@@ -194,13 +192,13 @@ class ManagedDocAssetsCheck(PolicyCheck):
                 stripped = line.rstrip()
                 managed_block_lines.append(stripped)
                 if stripped.startswith("**Doc ID:**"):
-                    metadata["doc_id"] = stripped.split(
-                        "**Doc ID:**", 1
-                    )[1].strip()
+                    metadata["doc_id"] = stripped.split("**Doc ID:**", 1)[
+                        1
+                    ].strip()
                 elif stripped.startswith("**Doc Type:**"):
-                    metadata["doc_type"] = stripped.split(
-                        "**Doc Type:**", 1
-                    )[1].strip()
+                    metadata["doc_type"] = stripped.split("**Doc Type:**", 1)[
+                        1
+                    ].strip()
                 elif stripped.startswith("**Managed By:**"):
                     metadata["managed_by"] = stripped.split(
                         "**Managed By:**", 1

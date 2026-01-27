@@ -86,7 +86,7 @@ commands, and metadata through their manifests.
   perform your work, execute `python3 tools/run_tests.py`, and close with
   `python3 tools/run_pre_commit.py --phase end`.
 - When policy text changes, mark `updated: true`, refresh scripts/tests, run
-  `devcovenant update-hashes`, then reset the flag to keep the registry aligned
+  `devcovenant update-policy-registry`, then reset the flag to keep the registry aligned
   with policy prose.
 - Update `THIRD_PARTY_LICENSES.md` and the `licenses/` directory whenever
   dependency manifests (`requirements.in`, `requirements.lock`,
@@ -115,7 +115,7 @@ commands, and metadata through their manifests.
 - Update `THIRD_PARTY_LICENSES.md`, refresh `licenses/`, and cite touched
   manifests in the `## License Report` before tagging a release.
 - Log every touched file in the current `CHANGELOG.md` entry and refresh
-  `devcovenant/registry/registry.json` via `devcovenant update-hashes` before
+  `devcovenant/registry/policy_registry.yaml` via `devcovenant update-policy-registry` before
   releasing.
 - Build artifacts locally (`python -m build`, `twine check dist/*`) and verify
   `.github/workflows/publish.yml` publishes with `PYPI_API_TOKEN`.
@@ -144,7 +144,7 @@ apply: true
 custom: false
 profile_scopes: global
 policy_definitions: AGENTS.md
-registry_file: devcovenant/registry/registry.json
+registry_file: devcovenant/registry/policy_registry.yaml
 ```
 
 DevCovenant must keep its registry synchronized with policy definitions.

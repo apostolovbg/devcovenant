@@ -25,7 +25,7 @@ class DevCovenantSelfEnforcementCheck(PolicyCheck):
         """
         policy_defs_path = self.get_option("policy_definitions", "AGENTS.md")
         registry_path = self.get_option(
-            "registry_file", "devcovenant/registry/registry.json"
+            "registry_file", "devcovenant/registry/policy_registry.yaml"
         )
 
         policy_defs = context.repo_root / str(policy_defs_path)
@@ -50,7 +50,7 @@ class DevCovenantSelfEnforcementCheck(PolicyCheck):
                     severity="error",
                     file_path=registry_file,
                     message="Policy registry file is missing.",
-                    suggestion="Run `devcovenant update-hashes`.",
+                    suggestion="Run `devcovenant update-policy-registry`.",
                     can_auto_fix=False,
                 )
             ]
@@ -71,13 +71,13 @@ class DevCovenantSelfEnforcementCheck(PolicyCheck):
                     "Policy registry missing entry for policy "
                     f"'{issue.policy_id}'."
                 )
-                suggestion = "Run `devcovenant update-hashes`."
+                suggestion = "Run `devcovenant update-policy-registry`."
             else:
                 message = (
                     "Policy registry hash mismatch for policy "
                     f"'{issue.policy_id}'."
                 )
-                suggestion = "Run `devcovenant update-hashes`."
+                suggestion = "Run `devcovenant update-policy-registry`."
 
             violations.append(
                 Violation(

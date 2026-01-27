@@ -1,0 +1,4 @@
+# DevCovenant repo-specific ignores
+# Keep the generated config local so we don't commit it while
+# still allowing user installs to retain their configuration.
+devcovenant/config.yaml

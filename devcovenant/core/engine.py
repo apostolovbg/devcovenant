@@ -70,7 +70,7 @@ class DevCovenantEngine:
         self.devcovenant_dir = self.repo_root / "devcovenant"
         self.agents_md_path = self.repo_root / "AGENTS.md"
         self.config_path = self.devcovenant_dir / "config.yaml"
-        self.registry_path = self.devcovenant_dir / "registry.json"
+        self.registry_path = self.devcovenant_dir / "policy_registry.yaml"
 
         # Load configuration and apply overrides
         self.config = self._load_config()
