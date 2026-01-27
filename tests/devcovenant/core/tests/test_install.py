@@ -36,6 +36,32 @@ def test_install_records_manifest_with_core_excluded(tmp_path: Path) -> None:
         shutil.rmtree(target, ignore_errors=True)
 
 
+def test_install_no_touch_only_copies_package(tmp_path: Path) -> None:
+    """`--no-touch` installs only the DevCovenant package and manifest."""
+    target = tmp_path / "repo"
+    target.mkdir()
+    try:
+        install.main(
+            [
+                "--target",
+                str(target),
+                "--mode",
+                "empty",
+                "--version",
+                "0.1.1",
+                "--no-touch",
+            ]
+        )
+        assert (target / "devcovenant").exists()
+        assert not (target / "AGENTS.md").exists()
+        manifest_path = manifest_module.manifest_path(target)
+        assert manifest_path.exists()
+        manifest_data = manifest_module.load_manifest(target)
+        assert manifest_data["installed"]["docs"] == []
+    finally:
+        shutil.rmtree(target, ignore_errors=True)
+
+
 def test_update_core_config_text_toggles_include_flag() -> None:
     """Toggling the include flag rewrites the config block."""
     original = "# comment\n"

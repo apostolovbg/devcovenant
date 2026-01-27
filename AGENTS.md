@@ -614,6 +614,7 @@ exclude_globs: >
   dist/**
   node_modules/**
   devcovenant/core/profiles/global/assets/LICENSE_GPL-3.0.txt
+  devcovenant/registry/policy_registry.yaml
 include_prefixes:
 include_globs: *.>
   *.py

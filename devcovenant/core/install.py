@@ -1940,6 +1940,69 @@ def _sync_block(path: Path, block: str | None) -> bool:
     return _inject_block(path, block)
 
 
+def _build_manifest_options(
+    *,
+    docs_mode: str,
+    config_mode: str,
+    metadata_mode: str,
+    license_mode: str,
+    version_mode: str,
+    target_version: str,
+    pyproject_mode: str,
+    ci_mode: str,
+    docs_include: set[str] | None,
+    docs_exclude: set[str],
+    policy_mode: str,
+    include_spec: bool,
+    include_plan: bool,
+    preserve_custom: bool,
+    devcov_core_include: bool,
+    disabled_policies: list[str],
+    auto_uninstall: bool,
+) -> dict[str, object]:
+    """Return the manifest options payload for the install run."""
+    return {
+        "docs_mode": docs_mode,
+        "config_mode": config_mode,
+        "metadata_mode": metadata_mode,
+        "license_mode": license_mode,
+        "version_mode": version_mode,
+        "target_version": target_version,
+        "pyproject_mode": pyproject_mode,
+        "ci_mode": ci_mode,
+        "docs_include": sorted(docs_include or []),
+        "docs_exclude": sorted(docs_exclude),
+        "policy_mode": policy_mode,
+        "include_spec": include_spec,
+        "include_plan": include_plan,
+        "preserve_custom": preserve_custom,
+        "devcov_core_include": devcov_core_include,
+        "disable_policies": sorted(disabled_policies),
+        "auto_uninstall": auto_uninstall,
+    }
+
+
+def _finalize_manifest(
+    target_root: Path,
+    options: dict[str, object],
+    installed: dict[str, list[str]],
+    doc_blocks: list[str],
+    mode: str,
+    active_profiles: list[str],
+    profile_catalog: dict[str, dict],
+) -> None:
+    """Write the manifest file for the install/update run."""
+    manifest = manifest_module.build_manifest(
+        options=options,
+        installed=installed,
+        doc_blocks=doc_blocks,
+        mode=mode,
+    )
+    manifest["profiles"]["active"] = list(active_profiles)
+    manifest["profiles"]["catalog"] = sorted(profile_catalog.keys())
+    manifest_module.write_manifest(target_root, manifest)
+
+
 def main(argv=None) -> None:
     """CLI entry point."""
     parser = argparse.ArgumentParser(
@@ -1952,13 +2015,16 @@ def main(argv=None) -> None:
         include_allow_existing=True,
     )
     args = parser.parse_args(argv)
+    no_touch = bool(getattr(args, "no_touch", False))
 
     disable_policies = _parse_policy_ids(args.disable_policy)
+    disabled_policies = list(disable_policies)
 
     package_root = Path(__file__).resolve().parents[1]
     repo_root = package_root.parent
     template_root = package_root / "core"
     target_root = Path(args.target).resolve()
+    include_core = target_root == repo_root
     schema_path = (
         package_root / "core" / "profiles" / "global" / "assets" / "AGENTS.md"
     )
@@ -1996,6 +2062,8 @@ def main(argv=None) -> None:
 
     if args.allow_existing:
         mode = "existing"
+
+    manifest_mode = "update" if mode == "existing" else "install"
 
     docs_mode = args.docs_mode
     config_mode = args.config_mode
@@ -2175,6 +2243,42 @@ def main(argv=None) -> None:
     if mode == "existing":
         _remove_legacy_paths(target_root, LEGACY_ROOT_PATHS)
 
+    if no_touch:
+        options = _build_manifest_options(
+            docs_mode=docs_mode,
+            config_mode=config_mode,
+            metadata_mode=metadata_mode,
+            license_mode=license_mode,
+            version_mode=version_mode,
+            target_version=target_version,
+            pyproject_mode=pyproject_mode,
+            ci_mode=ci_mode,
+            docs_include=docs_include,
+            docs_exclude=docs_exclude,
+            policy_mode=policy_mode,
+            include_spec=include_spec,
+            include_plan=include_plan,
+            preserve_custom=preserve_custom,
+            devcov_core_include=include_core,
+            disabled_policies=disabled_policies,
+            auto_uninstall=bool(args.auto_uninstall),
+        )
+        _finalize_manifest(
+            target_root,
+            options,
+            installed,
+            doc_blocks,
+            manifest_mode,
+            active_profiles,
+            profile_catalog,
+        )
+        backups = _backup_log()
+        if backups:
+            print("Backed up files before overwrite/merge:")
+            for entry in backups:
+                print(f"- {entry}")
+        return
+
     config_paths = [path for path in CONFIG_PATHS if path != ".gitignore"]
     if ci_mode == "skip":
         config_paths = [
@@ -2212,7 +2316,6 @@ def main(argv=None) -> None:
             _rename_existing_file(gitignore_path)
         gitignore_path.write_text(gitignore_text, encoding="utf-8")
 
-    include_core = target_root == repo_root
     _apply_core_config(target_root, include_core)
     _apply_profile_config(target_root, active_profiles, profile_catalog)
 
@@ -2438,33 +2541,34 @@ def main(argv=None) -> None:
             set_updated=True,
         )
 
-    manifest = manifest_module.build_manifest(
-        options={
-            "docs_mode": docs_mode,
-            "config_mode": config_mode,
-            "metadata_mode": metadata_mode,
-            "license_mode": license_mode,
-            "version_mode": version_mode,
-            "target_version": target_version,
-            "pyproject_mode": pyproject_mode,
-            "ci_mode": ci_mode,
-            "docs_include": sorted(docs_include or []),
-            "docs_exclude": sorted(docs_exclude or []),
-            "policy_mode": policy_mode,
-            "include_spec": include_spec,
-            "include_plan": include_plan,
-            "preserve_custom": preserve_custom,
-            "devcov_core_include": include_core,
-            "disable_policies": sorted(disabled_policies),
-            "auto_uninstall": bool(args.auto_uninstall),
-        },
-        installed=installed,
-        doc_blocks=doc_blocks,
-        mode="update" if mode == "existing" else "install",
+    options = _build_manifest_options(
+        docs_mode=docs_mode,
+        config_mode=config_mode,
+        metadata_mode=metadata_mode,
+        license_mode=license_mode,
+        version_mode=version_mode,
+        target_version=target_version,
+        pyproject_mode=pyproject_mode,
+        ci_mode=ci_mode,
+        docs_include=docs_include,
+        docs_exclude=docs_exclude,
+        policy_mode=policy_mode,
+        include_spec=include_spec,
+        include_plan=include_plan,
+        preserve_custom=preserve_custom,
+        devcov_core_include=include_core,
+        disabled_policies=disabled_policies,
+        auto_uninstall=bool(args.auto_uninstall),
     )
-    manifest["profiles"]["active"] = list(active_profiles)
-    manifest["profiles"]["catalog"] = sorted(profile_catalog.keys())
-    manifest_module.write_manifest(target_root, manifest)
+    _finalize_manifest(
+        target_root,
+        options,
+        installed,
+        doc_blocks,
+        manifest_mode,
+        active_profiles,
+        profile_catalog,
+    )
 
     backups = _backup_log()
     if backups:

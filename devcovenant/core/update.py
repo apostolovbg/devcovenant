@@ -338,6 +338,9 @@ def main(argv=None) -> None:
     )
     install.main(install_args)
 
+    if getattr(args, "no_touch", False):
+        return
+
     migrated, removed = _rewrite_agents_for_replacements(
         agents_path, plan.migrate, plan.remove
     )

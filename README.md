@@ -121,6 +121,17 @@ devcovenant update --target /path/to/repo --force-docs
 devcovenant update --target /path/to/repo --force-config
 ```
 
+Skip all doc/policy/metadata writes by appending `--no-touch` to `install` or
+`update`. That flag copies just the `devcovenant/` package (including the default
+`devcovenant/config.yaml`), leaves the rest of the repo untouched, and still
+records the run in `devcovenant/registry/manifest.json` so you can finish the
+install later when you are ready:
+
+```bash
+devcovenant install --target /path/to/repo --no-touch
+devcovenant update --target /path/to/repo --no-touch
+```
+
 
 Normalize policy metadata to include every supported key (empty values
 fall back to defaults):
