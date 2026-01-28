@@ -106,6 +106,8 @@ commands, and metadata through their manifests.
 - Run `python3 devcovenant/core/run_pre_commit.py --phase start` before editing files,
   perform your work, execute `python3 devcovenant/core/run_tests.py`, and close with
   `python3 devcovenant/core/run_pre_commit.py --phase end`.
+- Use `python3 -m devcovenant` instead of `devcovenant` when the console
+  script is not on your PATH.
 - When policy text changes, mark `updated: true`, refresh scripts/tests, run
   `devcovenant update-policy-registry`, then reset the flag to keep the registry aligned
   with policy prose.
@@ -152,7 +154,7 @@ Managed sections are wrapped with `<!-- DEVCOV:BEGIN -->` and
 blocks while leaving surrounding content intact.
 
 <!-- DEVCOV:END -->
-<!--POLICIES:BEGIN-->
+<!-- DEVCOV-POLICIES:BEGIN -->
 
 ## Policy: Changelog Coverage
 
@@ -162,7 +164,6 @@ status: active
 severity: error
 auto_fix: false
 updated: false
-applies_to: *
 enforcement: active
 apply: true
 custom: false
@@ -193,7 +194,6 @@ status: active
 severity: error
 auto_fix: true
 updated: false
-applies_to: *
 enforcement: active
 apply: true
 custom: false
@@ -249,7 +249,6 @@ status: active
 severity: error
 auto_fix: false
 updated: false
-applies_to: devcovenant/**
 enforcement: active
 apply: true
 custom: false
@@ -271,7 +270,6 @@ status: active
 severity: error
 auto_fix: false
 updated: false
-applies_to: *
 enforcement: active
 apply: true
 custom: false
@@ -291,7 +289,6 @@ status: active
 severity: error
 auto_fix: false
 updated: false
-applies_to: *
 enforcement: active
 apply: true
 custom: false
@@ -350,7 +347,6 @@ status: active
 severity: error
 auto_fix: false
 updated: false
-applies_to: *.py
 enforcement: active
 apply: true
 custom: false
@@ -387,7 +383,6 @@ status: active
 severity: info
 auto_fix: false
 updated: false
-applies_to: *
 enforcement: active
 apply: true
 custom: false
@@ -522,7 +517,6 @@ status: active
 severity: error
 auto_fix: true
 updated: false
-applies_to: *.md
 enforcement: active
 apply: true
 custom: false
@@ -576,7 +570,6 @@ status: active
 severity: warning
 auto_fix: false
 updated: false
-applies_to: *
 enforcement: active
 apply: true
 custom: false
@@ -650,7 +643,6 @@ status: active
 severity: warning
 auto_fix: false
 updated: false
-applies_to: *.py
 enforcement: active
 apply: true
 custom: false
@@ -688,7 +680,6 @@ status: active
 severity: error
 auto_fix: false
 updated: false
-applies_to: *
 enforcement: active
 apply: true
 custom: true
@@ -729,7 +720,6 @@ status: active
 severity: error
 auto_fix: true
 updated: false
-applies_to: *
 enforcement: active
 apply: true
 custom: false
@@ -750,7 +740,6 @@ status: active
 severity: error
 auto_fix: false
 updated: false
-applies_to: AGENTS.md
 enforcement: active
 apply: true
 custom: false
@@ -772,7 +761,6 @@ status: active
 severity: error
 auto_fix: false
 updated: false
-applies_to: *
 enforcement: active
 apply: true
 custom: false
@@ -799,6 +787,27 @@ be editable, update this policy definition first.
 
 ---
 
+## Policy: README Sync
+
+```policy-def
+id: readme-sync
+status: active
+severity: error
+auto_fix: true
+updated: false
+enforcement: active
+apply: true
+custom: true
+profile_scopes: global
+```
+
+Ensure `devcovenant/README.md` mirrors `README.md` with repository-only
+sections removed via the `<!-- REPO-ONLY:BEGIN -->` / `<!-- REPO-ONLY:END -->`
+markers. Auto-fix rewrites the packaged guide from the repo README.
+
+
+---
+
 ## Policy: Security Scanner
 
 ```policy-def
@@ -807,7 +816,6 @@ status: active
 severity: error
 auto_fix: false
 updated: false
-applies_to: *.py
 exclude_globs: tests/**,**/tests/**
   tests/**
   **/tests/**
@@ -845,7 +853,6 @@ status: active
 severity: warning
 auto_fix: false
 updated: false
-applies_to: AGENTS.md
 enforcement: active
 apply: true
 custom: false
@@ -869,7 +876,6 @@ status: active
 severity: error
 auto_fix: false
 updated: false
-applies_to: *
 enforcement: active
 apply: true
 custom: false
@@ -940,7 +946,6 @@ status: active
 severity: error
 auto_fix: false
 updated: false
-applies_to: *
 enforcement: active
 apply: false
 custom: false
@@ -969,7 +974,6 @@ status: active
 severity: error
 auto_fix: false
 updated: false
-applies_to: *
 enforcement: active
 apply: false
 custom: false
@@ -997,4 +1001,4 @@ processes that enforce SemVer discipline.
 
 
 
-<!--POLICIES:END-->
+<!-- DEVCOV-POLICIES:END -->

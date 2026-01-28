@@ -57,7 +57,7 @@ Each policy block includes:
 
 ### Standard fields
 Standard fields apply to all policies:
-- `id`, `status`, `severity`, `auto_fix`, `updated`, `applies_to`
+- `id`, `status`, `severity`, `auto_fix`, `updated`
 - `enforcement`, `apply` (true/false policy activation)
 - `include_prefixes`, `exclude_prefixes`, `include_globs`, `exclude_globs`
 - `include_suffixes`, `exclude_suffixes`, `force_include_globs`
@@ -88,11 +88,13 @@ to its canonical wording.
 DevCovenant installs the full tooling stack into a target repo, including the
 common/custom/patch policy folders and workflow helpers.
 
-Install (use `python3` if `devcovenant` is not on your PATH):
+Install:
 ```bash
 devcovenant install --target /path/to/repo
-python3 -m devcovenant install --target /path/to/repo
 ```
+
+If the console script is not on your PATH, use `python3 -m devcovenant`
+instead of `devcovenant` for CLI commands.
 
 Update (same command; defaults preserve docs/config in existing repos):
 ```bash
@@ -173,7 +175,7 @@ DevCovenant expects this gate sequence in enforced repos:
 2. `python3 devcovenant/core/run_tests.py`
 3. `python3 devcovenant/core/run_pre_commit.py --phase end`
 
-At session start, run `python3 devcov_check.py check --mode startup` or
+At session start, run `python3 -m devcovenant.core.check check --mode startup` or
 `devcovenant check --mode startup` to detect policy drift early.
 
 ## Documentation Blocks

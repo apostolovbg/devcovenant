@@ -35,5 +35,7 @@ python3 devcovenant/core/run_pre_commit.py --phase start
 python3 devcovenant/core/run_tests.py
 python3 devcovenant/core/run_pre_commit.py --phase end
 ```
+If the console script is not on your PATH, use `python3 -m devcovenant`
+instead of `devcovenant` for CLI commands.
 If the gate sequence fails, fix the violations and rerun the full sequence
 before submitting changes.

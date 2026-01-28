@@ -17,6 +17,7 @@ devcov_core_paths:
   - devcovenant/core/run_pre_commit.py
   - devcovenant/core/run_tests.py
   - devcovenant/core/update_test_status.py
+  - devcovenant/core/check.py
 
 profiles:
   active:
@@ -122,7 +123,7 @@ reporting:
 ignore:
   patterns: []
 
-policies:
+autogen_metadata_overrides:
   managed-environment:
     apply: false
     expected_paths: []
@@ -186,3 +187,4 @@ policies:
   version-sync:
     pyproject_files:
     - pyproject.toml
+user_metadata_overrides: {}

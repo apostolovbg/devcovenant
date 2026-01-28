@@ -30,14 +30,18 @@ lives in that repo at `devcovenant/README.md`.
 1. [Overview](#overview)
 2. [Why DevCovenant](#why-devcovenant)
 3. [How It Works](#how-it-works)
+<!-- REPO-ONLY:BEGIN -->
 4. [Repo Layout](#repo-layout)
+<!-- REPO-ONLY:END -->
 5. [CLI Entry Points](#cli-entry-points)
 6. [Install, Update, Uninstall](#install-update-uninstall)
 7. [Workflow](#workflow)
 8. [Core Exclusion](#core-exclusion)
 9. [Dependency and License Tracking](#dependency-and-license-tracking)
 10. [Using DevCovenant in Other Repos](#using-devcovenant-in-other-repos)
+<!-- REPO-ONLY:BEGIN -->
 11. [History and Dogfooding](#history-and-dogfooding)
+<!-- REPO-ONLY:END -->
 12. [License](#license)
 
 ## Overview
@@ -62,6 +66,7 @@ eliminates that by making the documentation itself the executable spec.
    fixers for that policy.
 6. Pre-commit and CI run the same engine with the same policy source.
 
+<!-- REPO-ONLY:BEGIN -->
 ## Repo Layout
 - `AGENTS.md`: canonical policy definitions for this repo.
 - `SPEC.md`: product requirements (optional in user repos).
@@ -78,7 +83,9 @@ eliminates that by making the documentation itself the executable spec.
     `profile_catalog.yaml`, `policy_assets.yaml`, `test_status.json`) that now
     include the live policy map metadata so tooling can read policy coverage
     without parsing `AGENTS.md`.
-- `tools/`: workflow helpers (pre-commit/test gates and status updates).
+- `core/*.py`: workflow helpers (pre-commit/test gates, status updates, and
+  the check wrapper).
+<!-- REPO-ONLY:END -->
 
 
 ## CLI Entry Points
@@ -201,6 +208,7 @@ devcov_core_paths:
   - devcovenant/core/run_pre_commit.py
   - devcovenant/core/run_tests.py
   - devcovenant/core/update_test_status.py
+  - devcovenant/core/check.py
 ```
 
 Only the DevCovenant repo should set `devcov_core_include: true`. Do not
@@ -252,10 +260,12 @@ devcovenant restore-stock-text --policy <id>
 
 See `devcovenant/README.md` in the target repo for the full user guide.
 
+<!-- REPO-ONLY:BEGIN -->
 ## History and Dogfooding
 DevCovenant originated inside the Copernican Suite, then expanded to other
 production repos (including the GCV-ERP custom and infra stacks). This repo
 continues that dogfooding by enforcing itself with its own policy engine.
+<!-- REPO-ONLY:END -->
 
 ## License
 This project is released under the DevCovenant License v1.0. Redistribution is

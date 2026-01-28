@@ -206,7 +206,6 @@ status: active
 severity: warning
 auto_fix: false
 updated: false
-applies_to: *
 enforcement: active
 apply: true
 custom: true

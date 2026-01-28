@@ -138,7 +138,6 @@ status: active
 severity: error
 auto_fix: false
 updated: false
-applies_to: devcovenant/**
 enforcement: active
 apply: true
 custom: false
@@ -159,7 +158,6 @@ status: active
 severity: error
 auto_fix: false
 updated: false
-applies_to: *
 enforcement: active
 apply: true
 custom: false
@@ -178,7 +176,6 @@ status: active
 severity: error
 auto_fix: true
 updated: false
-applies_to: *
 enforcement: active
 apply: true
 custom: false
@@ -227,7 +224,6 @@ status: active
 severity: error
 auto_fix: false
 updated: false
-applies_to: AGENTS.md
 enforcement: active
 apply: true
 custom: false
@@ -248,7 +244,6 @@ status: active
 severity: warning
 auto_fix: false
 updated: false
-applies_to: AGENTS.md
 enforcement: active
 apply: true
 custom: false
@@ -271,7 +266,6 @@ status: active
 severity: error
 auto_fix: false
 updated: false
-applies_to: *
 enforcement: active
 apply: true
 custom: false
@@ -329,7 +323,6 @@ status: active
 severity: error
 auto_fix: false
 updated: false
-applies_to: *
 enforcement: active
 apply: false
 custom: false
@@ -356,7 +349,6 @@ status: active
 severity: error
 auto_fix: false
 updated: false
-applies_to: *
 enforcement: active
 apply: true
 custom: false
@@ -380,7 +372,6 @@ status: active
 severity: error
 auto_fix: false
 updated: false
-applies_to: *
 enforcement: active
 apply: true
 custom: false
@@ -438,7 +429,6 @@ status: active
 severity: error
 auto_fix: false
 updated: false
-applies_to: *
 enforcement: active
 apply: false
 custom: false
@@ -467,7 +457,6 @@ status: active
 severity: error
 auto_fix: true
 updated: false
-applies_to: *.md
 enforcement: active
 apply: true
 custom: false
@@ -498,7 +487,6 @@ status: active
 severity: warning
 auto_fix: false
 updated: false
-applies_to: *
 enforcement: active
 apply: true
 custom: false
@@ -548,7 +536,6 @@ status: active
 severity: error
 auto_fix: false
 updated: false
-applies_to: *.py
 enforcement: active
 apply: true
 custom: false
@@ -575,7 +562,6 @@ status: active
 severity: warning
 auto_fix: false
 updated: false
-applies_to: *.py
 enforcement: active
 apply: true
 custom: false
@@ -603,7 +589,6 @@ status: active
 severity: error
 auto_fix: false
 updated: false
-applies_to: *
 enforcement: active
 apply: true
 custom: true
@@ -642,7 +627,6 @@ status: active
 severity: info
 auto_fix: false
 updated: false
-applies_to: *
 enforcement: active
 apply: true
 custom: false
@@ -729,7 +713,6 @@ status: active
 severity: error
 auto_fix: false
 updated: false
-applies_to: *
 enforcement: active
 apply: true
 custom: false
@@ -756,7 +739,6 @@ status: active
 severity: error
 auto_fix: true
 updated: false
-applies_to: *
 enforcement: active
 apply: true
 custom: false
@@ -776,7 +758,6 @@ status: active
 severity: error
 auto_fix: false
 updated: false
-applies_to: *.py
 exclude_globs: tests/**,**/tests/**
 enforcement: active
 apply: true

@@ -35,7 +35,6 @@ class DevCovenantEngine:
         "apply",
         "custom",
         "profile_scopes",
-        "applies_to",
         "hash",
         "enforcement",
     }

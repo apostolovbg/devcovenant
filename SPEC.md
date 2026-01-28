@@ -75,7 +75,11 @@ hashes synchronized so drift is detectable and reversible.
 
 ### CLI commands
 - Provide a console entry point (`devcovenant`) and module entry
-  (`python3 -m devcovenant`) that both route to the same CLI.
+  (`python3 -m devcovenant`) that both route to the same CLI. Docs should
+  default to the console entry point and mention the `python3 -m ...` form
+  once as the fallback when the CLI is not on PATH.
+- Documentation should use `python3` (not `python`) for all source-based
+  workflows and command examples.
 - Supported commands: `check`, `sync`, `test`, `update-policy-registry`,
   `restore-stock-text`, `install`, `update`, `uninstall`,
   `normalize-metadata`.
@@ -106,7 +110,7 @@ hashes synchronized so drift is detectable and reversible.
   the broader command set so agents know how to interact with the repo before
   reaching the policy blocks.
 - The policy block is the text between
-  `<!--POLICIES:BEGIN-->` and `<!--POLICIES:END-->` inside `AGENTS.md` and
+  `<!-- DEVCOV-POLICIES:BEGIN -->` and `<!-- DEVCOV-POLICIES:END -->` inside `AGENTS.md` and
   must be treated as a dedicated DevCovenant-managed unit. Policy entries
   are ordered alphabetically (no enabled/disabled grouping) and list every
   available policy, including custom overrides (automatically marked with
@@ -132,12 +136,13 @@ hashes synchronized so drift is detectable and reversible.
   `profiles.active` when a user wants to stop applying their assets or
   metadata overlays.
 - Config should expose global knobs for `paths`, `docs`, `install`,
-  `update`, `engine`, `hooks`, `reporting`, `ignore`, and `policies` so
-  repos can tune behavior without editing core scripts. Every generated
-  config must list every known knob (even if the default value is blank)
-  so the file doubles as an override template that documents every
-  supported option; only the policy overrides section remains optional to
-  avoid overwhelming the document.
+  `update`, `engine`, `hooks`, `reporting`, `ignore`,
+  `autogen_metadata_overrides`, and `user_metadata_overrides` so repos can
+  tune behavior without editing core scripts. Every generated config must
+  list every known knob (even if the default value is blank) so the file
+  doubles as an override template that documents every supported option;
+  only the policy overrides sections may remain empty to avoid
+  overwhelming the document.
 - The profile catalog is generated into
   `devcovenant/registry/local/profile_catalog.yaml` by scanning profile manifests.
   Active profiles are recorded under `profiles.active` in config and extend
@@ -159,7 +164,17 @@ hashes synchronized so drift is detectable and reversible.
   `devcovenant/core/profiles/<name>/profile.yaml`, with custom overrides
   under `devcovenant/custom/profiles/<name>/profile.yaml`. Profile assets
   are applied for active profiles, and profile overlays merge into
-  `config.yaml` under `policies`.
+  `config.yaml` under `autogen_metadata_overrides` (with
+  `user_metadata_overrides` taking precedence when set).
+- A lightweight check wrapper ships as `devcovenant/core/check.py` and can
+  be invoked with `python3 -m devcovenant.core.check` to run the CLI from
+  source installs.
+- Managed-document templates include stock non-managed text for each
+  devcovenant-managed doc, injected only when the target doc is missing,
+  empty, or a single-line placeholder. Otherwise only managed blocks are
+  refreshed. `AGENTS.md` is a special case: the stock `# EDITABLE SECTION`
+  header is always inserted ahead of preserved user text so the editable
+  notes remain anchored beneath the marker.
 
 ## Policy Requirements
 - Every policy definition includes descriptive prose immediately after the
@@ -168,6 +183,10 @@ hashes synchronized so drift is detectable and reversible.
   `devcovenant/registry/global/stock_policy_texts.yaml`.
 - Policies declare `profile_scopes` metadata to gate applicability;
   global policies use `profile_scopes: global`.
+- Custom policy `readme-sync` enforces that `devcovenant/README.md` mirrors
+  `README.md` with repository-only blocks removed via
+  `<!-- REPO-ONLY:BEGIN -->` / `<!-- REPO-ONLY:END -->` markers. Its auto-fix
+  rewrites the packaged guide from the repo README.
 - The policy list is generated from the active profiles/config and includes
   every available core/custom policy. Entries are ordered alphabetically and
   custom overrides are marked with `custom: true`.
@@ -188,7 +207,7 @@ hashes synchronized so drift is detectable and reversible.
   policies are removed along with their custom scripts and fixers.
 - Record update notices (replacements and new stock policies) in
   `devcovenant/registry/local/manifest.json` and print them to stdout.
-- Treat the collective `<!--POLICIES-BEGIN-->`/`<!--POLICIES-END-->` block as a
+- Treat the collective `<!-- DEVCOV-POLICIES:BEGIN -->`/`<!-- DEVCOV-POLICIES:END -->` block as a
   managed unit that install/update commands refresh from `devcovenant/core/`
   assets. Provide a per-policy `freeze` override that copies the policy’s
   modules, descriptors, and assets into `devcovenant/custom/` (with
@@ -273,22 +292,29 @@ hashes synchronized so drift is detectable and reversible.
   `requirements.in`, `requirements.lock`, and `pyproject.toml`.
 - Keep `THIRD_PARTY_LICENSES.md` and `licenses/` synchronized with dependency
   changes so the dependency-license-sync policy passes.
-- DevCovenant's own test suites live under the repository root `tests/`
-  tree (e.g., `tests/devcovenant/core/...`); tooling should continue to ship
-  that directory via `MANIFEST.in` while keeping it outside the installable
-  `devcovenant` package. Policies reuse metadata (e.g., `tests_watch_dirs`,
-  `selector_roles`, and policy-specific selector options) so the suite can
-  move freely under `tests/` without hard-coded paths. Profile or repo
-  overrides set these metadata values when they relocate tests elsewhere.
+- DevCovenant's own test suites live under `tests/devcovenant/` in the
+  DevCovenant repo only. Tests are not shipped in packages; `tests/` is
+  created on demand when the `new-modules-need-tests` policy is active.
+  User repos exclude `devcovenant/**` from test enforcement except
+  `devcovenant/custom/**`, which is included. When needed, user repos create
+  `tests/devcovenant/custom/` to cover custom policy/profile code. Policies
+  reuse metadata (for example,
+  `tests_watch_dirs`, `selector_roles`, and policy-specific selector options)
+  so the suite can move without hard-coded paths. Profile or repo overrides
+  set these metadata values when they relocate tests elsewhere.
 - The tests tree mirrors the package layout (core/custom and their profile
-  directories) so interpreter or scanner modules in `devcovenant/core/profiles`
-  or `devcovenant/custom/profiles` can rely on corresponding suites under
-  `tests/devcovenant/core/profiles/` and
+  directories) under `tests/devcovenant/` so interpreter or scanner modules
+  in `devcovenant/core/profiles` or `devcovenant/custom/profiles` can rely on
+  corresponding suites under `tests/devcovenant/core/profiles/` and
   `tests/devcovenant/custom/profiles/`.
 - The `new-modules-need-tests` policy explicitly requires unit tests. The
   repository continues to run both `pytest` and `python -m unittest discover`,
   but newly added coverage must be unit-level and existing policy tests
   should be converted to unit suites over time.
+- User repos keep an always-on `devcov-exclude` profile that excludes
+  `devcovenant/**` from test enforcement except `devcovenant/custom/**`.
+  When `devcov_core_include` is true, the `devcov-exclude` profile is ignored
+  so the DevCovenant repo can test core code.
 
 ## Non-Functional Requirements
 - Checks must be fast enough for pre-commit usage on typical repos.

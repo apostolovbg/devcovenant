@@ -20,7 +20,7 @@ keys (`apply`, `severity`, `status`, `custom`, `profile_scopes`) plus the
 policy-specific handles listed below.
 
 ### devcov-self-enforcement
-- **Metadata handles:** `applies_to`, `profile_scopes`, `registry_file`
+- **Metadata handles:** `profile_scopes`, `registry_file`
 - **Assets:** `devcovenant/registry/local/policy_registry.yaml` (policy hash registry)
 - **Profiles:** `global`
 
@@ -84,9 +84,14 @@ policy-specific handles listed below.
 - **Profiles:** `global`
 
 ### managed-doc-assets
-- **Metadata handles:** `profile_scopes`, `applies_to`
+- **Metadata handles:** `profile_scopes`
 - **Assets:** `devcovenant/core/profiles/global/assets/*.yaml`
 - **Profiles:** `global`
+
+### readme-sync
+- **Metadata handles:** `profile_scopes`
+- **Assets:** `README.md`, `devcovenant/README.md`
+- **Profiles:** `global` (custom policy)
 
 ## Global + profile overlays
 These policies always run but expose extra behavior when profiles supply

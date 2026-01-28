@@ -25,6 +25,7 @@ CORE_PATHS = [
     "devcovenant/core/run_pre_commit.py",
     "devcovenant/core/run_tests.py",
     "devcovenant/core/update_test_status.py",
+    "devcovenant/core/check.py",
 ]
 
 CONFIG_PATHS = [
@@ -81,6 +82,7 @@ _DEFAULT_CORE_PATHS = [
     "devcovenant/core/run_pre_commit.py",
     "devcovenant/core/run_tests.py",
     "devcovenant/core/update_test_status.py",
+    "devcovenant/core/check.py",
 ]
 
 LEGACY_ROOT_PATHS = [
@@ -1360,32 +1362,36 @@ def _collect_profile_overlays(
     return overlays
 
 
-def _build_policies_block(policies: dict[str, object]) -> list[str]:
-    """Return the policies block for config.yaml."""
-    if not policies:
+def _build_metadata_overrides_block(
+    block_key: str, overrides: dict[str, object] | None
+) -> list[str]:
+    """Return a config block for policy metadata overrides."""
+    if overrides is None:
         return []
+    if not isinstance(overrides, dict):
+        overrides = {}
     block = yaml.safe_dump(
-        {"policies": policies},
+        {block_key: overrides},
         sort_keys=False,
     ).rstrip()
     return block.splitlines()
 
 
-def _update_policies_config_text(
-    text: str, policies: dict[str, object]
+def _update_metadata_overrides_config_text(
+    text: str, block_key: str, overrides: dict[str, object] | None
 ) -> tuple[str, bool]:
-    """Update policy overrides inside config.yaml text."""
-    block_lines = _build_policies_block(policies)
+    """Update a metadata overrides block inside config.yaml text."""
+    block_lines = _build_metadata_overrides_block(block_key, overrides)
     if not block_lines:
         return text, False
     lines = text.splitlines()
     updated_lines: list[str] = []
-    found_policies = False
+    found_block = False
     index = 0
     while index < len(lines):
         line = lines[index]
-        if line.strip().startswith("policies:"):
-            found_policies = True
+        if line.strip().startswith(f"{block_key}:"):
+            found_block = True
             updated_lines.extend(block_lines)
             index += 1
             while index < len(lines):
@@ -1401,7 +1407,7 @@ def _update_policies_config_text(
         updated_lines.append(line)
         index += 1
 
-    if not found_policies:
+    if not found_block:
         if updated_lines and updated_lines[-1].strip():
             updated_lines.append("")
         updated_lines.extend(block_lines)
@@ -1409,23 +1415,62 @@ def _update_policies_config_text(
     return updated, updated != text
 
 
+def _remove_legacy_policies_block(text: str) -> tuple[str, bool]:
+    """Remove the legacy policies block from config.yaml text."""
+    lines = text.splitlines()
+    updated_lines: list[str] = []
+    removed = False
+    index = 0
+    while index < len(lines):
+        line = lines[index]
+        if line.strip().startswith("policies:"):
+            removed = True
+            index += 1
+            while index < len(lines):
+                next_line = lines[index]
+                if next_line.startswith("  ") or not next_line.strip():
+                    index += 1
+                    continue
+                break
+            continue
+        updated_lines.append(line)
+        index += 1
+    updated = "\n".join(updated_lines).rstrip() + "\n"
+    return updated, removed
+
+
 def _apply_profile_policy_overlays(
     target_root: Path,
     overlays: dict[str, dict[str, object]],
 ) -> bool:
     """Apply profile policy overlays to config.yaml."""
-    if not overlays:
-        return False
     config_path = target_root / DEV_COVENANT_DIR / "config.yaml"
     if not config_path.exists():
         return False
     text = config_path.read_text(encoding="utf-8")
     config_data = yaml.safe_load(text) or {}
-    policies = config_data.get("policies") or {}
-    for policy_id, overlay in overlays.items():
-        current = policies.get(policy_id, {}) or {}
-        policies[policy_id] = _merge_overlay_map(current, overlay)
-    updated, changed = _update_policies_config_text(text, policies)
+    user_overrides = config_data.get("user_metadata_overrides")
+    autogen_overrides = config_data.get("autogen_metadata_overrides")
+    legacy_overrides = config_data.get("policies")
+    if not isinstance(user_overrides, dict):
+        if isinstance(legacy_overrides, dict):
+            user_overrides = legacy_overrides
+        else:
+            user_overrides = {}
+    if not isinstance(autogen_overrides, dict):
+        autogen_overrides = {}
+    for policy_id, overlay in (overlays or {}).items():
+        current = autogen_overrides.get(policy_id, {}) or {}
+        autogen_overrides[policy_id] = _merge_overlay_map(current, overlay)
+    updated, changed = _update_metadata_overrides_config_text(
+        text, "autogen_metadata_overrides", autogen_overrides
+    )
+    updated, user_changed = _update_metadata_overrides_config_text(
+        updated, "user_metadata_overrides", user_overrides
+    )
+    changed = changed or user_changed
+    updated, removed_legacy = _remove_legacy_policies_block(updated)
+    changed = changed or removed_legacy
     if not changed:
         return False
     _rename_existing_file(config_path)
@@ -1451,6 +1496,22 @@ def _apply_profile_config(
     _rename_existing_file(config_path)
     config_path.write_text(updated, encoding="utf-8")
     return True
+
+
+def apply_autogen_metadata_overrides(
+    target_root: Path, package_root: Path | None = None
+) -> bool:
+    """Refresh autogen policy overrides based on active profiles."""
+    if package_root is None:
+        package_root = Path(__file__).resolve().parents[1]
+    active_profiles = _load_active_profiles(target_root)
+    if "global" not in active_profiles:
+        active_profiles = ["global", *active_profiles]
+    manifests = _load_profile_manifests(
+        package_root, target_root, active_profiles
+    )
+    overlays = _collect_profile_overlays(manifests)
+    return _apply_profile_policy_overlays(target_root, overlays)
 
 
 def _copy_path(source: Path, target: Path) -> None:

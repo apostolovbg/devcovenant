@@ -77,10 +77,30 @@ class CheckContext:
 
     def get_policy_config(self, policy_id: str) -> Dict[str, Any]:
         """Return the configuration dictionary for a specific policy."""
-        policies = self.config.get("policies", {}) if self.config else {}
-        entry = policies.get(policy_id, {})
-        # Always return a dictionary to avoid cascading None checks.
-        return entry if isinstance(entry, dict) else {}
+        if not self.config:
+            return {}
+        user_overrides = self.config.get("user_metadata_overrides")
+        autogen_overrides = self.config.get("autogen_metadata_overrides")
+        has_explicit_overrides = (
+            isinstance(user_overrides, dict)
+            or isinstance(autogen_overrides, dict)
+        )
+        if not has_explicit_overrides:
+            legacy = self.config.get("policies", {})
+            entry = legacy.get(policy_id, {}) if isinstance(legacy, dict) else {}
+            return entry if isinstance(entry, dict) else {}
+        merged: Dict[str, Any] = {}
+        autogen_entry = {}
+        if isinstance(autogen_overrides, dict):
+            autogen_entry = autogen_overrides.get(policy_id, {}) or {}
+        user_entry = {}
+        if isinstance(user_overrides, dict):
+            user_entry = user_overrides.get(policy_id, {}) or {}
+        if isinstance(autogen_entry, dict):
+            merged.update(autogen_entry)
+        if isinstance(user_entry, dict):
+            merged.update(user_entry)
+        return merged
 
 
 @dataclass

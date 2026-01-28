@@ -7,6 +7,7 @@ from typing import Tuple
 
 from devcovenant.core import manifest as manifest_module
 from devcovenant.core import profiles
+from devcovenant.core.install import apply_autogen_metadata_overrides
 from devcovenant.core.refresh_policies import refresh_policies, RefreshResult
 from devcovenant.core.update_policy_registry import update_policy_registry
 
@@ -55,6 +56,8 @@ def refresh_all(
     catalog = profiles.build_profile_catalog(repo_root)
     profiles.write_profile_catalog(repo_root, catalog)
     print("Rebuilt profile catalog at", profiles.REGISTRY_CATALOG)
+    if apply_autogen_metadata_overrides(repo_root):
+        print("Updated autogen metadata overrides in config.yaml")
     return 0
 
 

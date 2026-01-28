@@ -11,8 +11,8 @@ import yaml
 
 from devcovenant.core.selector_helpers import _normalize_globs
 
-_POLICIES_BEGIN = "<!--POLICIES:BEGIN-->"
-_POLICIES_END = "<!--POLICIES:END-->"
+_POLICIES_BEGIN = "<!-- DEVCOV-POLICIES:BEGIN -->"
+_POLICIES_END = "<!-- DEVCOV-POLICIES:END -->"
 _POLICY_BLOCK_RE = re.compile(
     r"(##\s+Policy:\s+[^\n]+\n\n)```policy-def\n(.*?)\n```\n\n"
     r"(.*?)(?=\n---\n|\n##|\Z)",
@@ -25,7 +25,6 @@ _COMMON_KEYS = [
     "severity",
     "auto_fix",
     "updated",
-    "applies_to",
     "enforcement",
     "apply",
     "custom",
@@ -37,7 +36,6 @@ _COMMON_DEFAULTS: Dict[str, List[str]] = {
     "severity": ["warning"],
     "auto_fix": ["false"],
     "updated": ["false"],
-    "applies_to": ["*"],
     "enforcement": ["active"],
     "apply": ["true"],
     "custom": ["false"],

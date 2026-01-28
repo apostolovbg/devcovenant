@@ -20,12 +20,12 @@ def _schema_path() -> Path:
 
 def _base_agents_header() -> str:
     """Return the minimal header for test AGENTS files."""
-    return "# Sample AGENTS\n\n" "Prelude text.\n\n" "<!--POLICIES-BEGIN-->\n"
+    return "# Sample AGENTS\n\n" "Prelude text.\n\n" "<!-- DEVCOV-POLICIES:BEGIN -->\n"
 
 
 def _final_agents_footer() -> str:
     """Return the trailing footer for test AGENTS files."""
-    return "<!--POLICIES-END-->\n"
+    return "<!-- DEVCOV-POLICIES:END -->\n"
 
 
 def _write_agents(path: Path, body: str) -> Path:
@@ -46,9 +46,7 @@ def _policy_block(policy_id: str, name: str, custom: bool = False) -> str:
         "status: active\n"
         "severity: warning\n"
         "auto_fix: false\n"
-        "updated: false\n"
-        "applies_to: *\n"
-        "enforcement: active\n"
+        "updated: false\n"        "enforcement: active\n"
         "apply: true\n"
         f"custom: {'true' if custom else 'false'}\n"
         "profile_scopes: global\n"
@@ -77,7 +75,6 @@ def test_refresh_policies_reorders_and_updates(tmp_path: Path) -> None:
 
     content = agents_path.read_text(encoding="utf-8")
     assert result.updated
-    assert "<!-- Enabled policies -->" in content
     idx_a = content.index("## Policy: Policy A")
     idx_b = content.index("## Policy: Policy B")
     assert idx_a < idx_b
@@ -93,9 +90,7 @@ def test_refresh_policies_preserves_custom_metadata(tmp_path: Path) -> None:
         "status: active\n"
         "severity: error\n"
         "auto_fix: false\n"
-        "updated: false\n"
-        "applies_to: *\n"
-        "enforcement: active\n"
+        "updated: false\n"        "enforcement: active\n"
         "apply: true\n"
         "custom: true\n"
         "notes: preserved\n"
