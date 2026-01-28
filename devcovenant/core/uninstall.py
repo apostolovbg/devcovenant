@@ -12,9 +12,9 @@ from devcovenant.core import manifest as manifest_module
 
 FALLBACK_CORE_PATHS = [
     "devcovenant",
-    "tools/run_pre_commit.py",
-    "tools/run_tests.py",
-    "tools/update_test_status.py",
+    "devcovenant/core/tools/run_pre_commit.py",
+    "devcovenant/core/tools/run_tests.py",
+    "devcovenant/core/tools/update_test_status.py",
 ]
 FALLBACK_CONFIG_PATHS = [
     ".pre-commit-config.yaml",

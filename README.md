@@ -176,12 +176,12 @@ Adoption guidance:
   raise the block level.
 
 DevCovenant expects the following sequence in enforced repos:
-1. `python3 tools/run_pre_commit.py --phase start`
-2. `python3 tools/run_tests.py`
-3. `python3 tools/run_pre_commit.py --phase end`
+1. `python3 devcovenant/core/tools/run_pre_commit.py --phase start`
+2. `python3 devcovenant/core/tools/run_tests.py`
+3. `python3 devcovenant/core/tools/run_pre_commit.py --phase end`
 
 During `--phase end`, if pre-commit modifies files, the script automatically
-reruns `tools/run_tests.py` before recording the end timestamp so tests always
+reruns `devcovenant/core/tools/run_tests.py` before recording the end timestamp so tests always
 post-date any auto-fixes.
 
 When policy blocks change, set `updated: true`, run
@@ -198,9 +198,9 @@ devcov_core_paths:
   - devcovenant/__init__.py
   - devcovenant/__main__.py
   - devcovenant/cli.py
-  - tools/run_pre_commit.py
-  - tools/run_tests.py
-  - tools/update_test_status.py
+  - devcovenant/core/tools/run_pre_commit.py
+  - devcovenant/core/tools/run_tests.py
+  - devcovenant/core/tools/update_test_status.py
 ```
 
 Only the DevCovenant repo should set `devcov_core_include: true`. Do not

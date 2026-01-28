@@ -56,9 +56,9 @@ pip install devcovenant
 
 devcovenant install --target .
 
-python3 tools/run_pre_commit.py --phase start
-python3 tools/run_tests.py
-python3 tools/run_pre_commit.py --phase end
+python3 devcovenant/core/tools/run_pre_commit.py --phase start
+python3 devcovenant/core/tools/run_tests.py
+python3 devcovenant/core/tools/run_pre_commit.py --phase end
 ```
 
 If you built DevCovenant locally, `pip install dist/devcovenant-*` before
@@ -67,12 +67,12 @@ running `devcovenant install --target .` so the wheel files are reused.
 ## Workflow
 DevCovenant requires the gated workflow for every change, including
 documentation updates:
-1. `python3 tools/run_pre_commit.py --phase start`
-2. `python3 tools/run_tests.py`
-3. `python3 tools/run_pre_commit.py --phase end`
+1. `python3 devcovenant/core/tools/run_pre_commit.py --phase start`
+2. `python3 devcovenant/core/tools/run_tests.py`
+3. `python3 devcovenant/core/tools/run_pre_commit.py --phase end`
 
 During `--phase end`, if pre-commit modifies files, the script automatically
-reruns `tools/run_tests.py` before recording the end timestamp so tests always
+reruns `devcovenant/core/tools/run_tests.py` before recording the end timestamp so tests always
 post-date any auto-fixes.
 
 When policy text changes, set `updated: true`, update scripts/tests, run
@@ -176,8 +176,8 @@ repos; it preserves content by default and refreshes managed blocks.
 
 - `devcovenant/`: core engine always installs; `custom/` scripts and fixers
   are preserved by default on updates.
-- `tools/run_pre_commit.py`, `tools/run_tests.py`,
-  `tools/update_test_status.py`: always overwritten from the package.
+- `devcovenant/core/tools/run_pre_commit.py`, `devcovenant/core/tools/run_tests.py`,
+  `devcovenant/core/tools/update_test_status.py`: always overwritten from the package.
 - `.pre-commit-config.yaml`, `.github/workflows/ci.yml`: preserved when
   `--config-mode preserve`, otherwise overwritten. Use `--ci-mode skip` to
   skip CI installs.
@@ -333,9 +333,9 @@ devcov_core_paths:
   - devcovenant/__init__.py
   - devcovenant/__main__.py
   - devcovenant/cli.py
-  - tools/run_pre_commit.py
-  - tools/run_tests.py
-  - tools/update_test_status.py
+  - devcovenant/core/tools/run_pre_commit.py
+  - devcovenant/core/tools/run_tests.py
+  - devcovenant/core/tools/update_test_status.py
 ```
 
 Only the DevCovenant repo should set `devcov_core_include: true`.
@@ -665,9 +665,9 @@ required commands are missing so teams refine their setup guidance.
 
 ## DevFlow Gates and Test Status
 DevCovenant enforces the gate sequence for every change:
-1. `python3 tools/run_pre_commit.py --phase start`
-2. `python3 tools/run_tests.py`
-3. `python3 tools/run_pre_commit.py --phase end`
+1. `python3 devcovenant/core/tools/run_pre_commit.py --phase start`
+2. `python3 devcovenant/core/tools/run_tests.py`
+3. `python3 devcovenant/core/tools/run_pre_commit.py --phase end`
 
 The status file at `devcovenant/registry/local/test_status.json` records
 timestamps and commands. The `devflow-run-gates` policy reads it to enforce

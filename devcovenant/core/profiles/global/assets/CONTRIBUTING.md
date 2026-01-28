@@ -29,9 +29,9 @@ change, including documentation-only updates.
 ## Workflow
 Follow the canonical gate sequence (details in `devcovenant/README.md`):
 ```bash
-python3 tools/run_pre_commit.py --phase start
-python3 tools/run_tests.py
-python3 tools/run_pre_commit.py --phase end
+python3 devcovenant/core/tools/run_pre_commit.py --phase start
+python3 devcovenant/core/tools/run_tests.py
+python3 devcovenant/core/tools/run_pre_commit.py --phase end
 ```
 If the gate sequence fails, fix the violations and rerun the full sequence
 before submitting changes.

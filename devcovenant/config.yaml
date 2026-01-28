@@ -14,9 +14,9 @@ devcov_core_paths:
   - devcovenant/__main__.py
   - devcovenant/cli.py
   - devcovenant/registry
-  - tools/run_pre_commit.py
-  - tools/run_tests.py
-  - tools/update_test_status.py
+  - devcovenant/core/tools/run_pre_commit.py
+  - devcovenant/core/tools/run_tests.py
+  - devcovenant/core/tools/update_test_status.py
 
 profiles:
   active:

@@ -61,9 +61,9 @@ instructions with DevCovenant, its applied policies (and in general).
 <!-- DEVCOV:BEGIN -->
 ## Operational Orientation
 Running DevCovenant uses a fixed sequence: begin with
-`python3 tools/run_pre_commit.py --phase start`, make edits, run
-`python3 tools/run_tests.py`, and finish with
-`python3 tools/run_pre_commit.py --phase end`. The `devflow-run-gates`
+`python3 devcovenant/core/tools/run_pre_commit.py --phase start`, make edits, run
+`python3 devcovenant/core/tools/run_tests.py`, and finish with
+`python3 devcovenant/core/tools/run_pre_commit.py --phase end`. The `devflow-run-gates`
 policy records those commands; any deviation blocks progress. Discussion-only
 turns may skip tests, yet triggering the start gate still snapshots the repo
 state.
@@ -103,9 +103,9 @@ adapters, and fixers sit beside the scripts, and profiles configure suffixes,
 commands, and metadata through their manifests.
 
 ## Workflow
-- Run `python3 tools/run_pre_commit.py --phase start` before editing files,
-  perform your work, execute `python3 tools/run_tests.py`, and close with
-  `python3 tools/run_pre_commit.py --phase end`.
+- Run `python3 devcovenant/core/tools/run_pre_commit.py --phase start` before editing files,
+  perform your work, execute `python3 devcovenant/core/tools/run_tests.py`, and close with
+  `python3 devcovenant/core/tools/run_pre_commit.py --phase end`.
 - When policy text changes, mark `updated: true`, refresh scripts/tests, run
   `devcovenant update-policy-registry`, then reset the flag to keep the registry aligned
   with policy prose.

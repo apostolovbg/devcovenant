@@ -193,7 +193,7 @@ hashes synchronized so drift is detectable and reversible.
 
 ## Installation Requirements
 - Install the full DevCovenant toolchain into the target repo, including the
-  `devcovenant/` tree, `tools/` helpers, and CI workflow assets.
+  `devcovenant/` tree, `devcovenant/core/tools` helpers, and CI workflow assets.
 - Use packaged assets from `devcovenant/core/profiles/` and
   `devcovenant/core/policies/` when installed from PyPI; fall back to repo
   files when running from source.
