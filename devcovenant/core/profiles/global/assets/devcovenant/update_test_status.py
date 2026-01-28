@@ -47,7 +47,7 @@ def main() -> None:
         required=True,
         help=(
             "Command used to run the suites "
-            '(e.g., "pytest && python -m unittest discover").'
+            '(e.g., "pytest && python3 -m unittest discover").'
         ),
     )
     parser.add_argument(

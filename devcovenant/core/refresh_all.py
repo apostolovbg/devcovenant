@@ -3,16 +3,15 @@
 from __future__ import annotations
 
 from pathlib import Path
-from typing import Tuple
 
-from devcovenant.core import manifest as manifest_module
 from devcovenant.core import profiles
 from devcovenant.core.install import apply_autogen_metadata_overrides
-from devcovenant.core.refresh_policies import refresh_policies, RefreshResult
+from devcovenant.core.refresh_policies import refresh_policies
 from devcovenant.core.update_policy_registry import update_policy_registry
 
 
 def _schema_path(repo_root: Path) -> Path:
+    """Return the default schema path for refresh-policies."""
     return (
         repo_root
         / "devcovenant"
@@ -30,6 +29,7 @@ def refresh_all(
     metadata_mode: str = "preserve",
     schema_path: Path | None = None,
 ) -> int:
+    """Refresh policies, registry, and profile catalog."""
     if repo_root is None:
         repo_root = Path(__file__).resolve().parents[2]
     agents_path = repo_root / "AGENTS.md"
@@ -62,6 +62,7 @@ def refresh_all(
 
 
 def main() -> int:
+    """CLI entry point."""
     return refresh_all()
 
 

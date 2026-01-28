@@ -31,8 +31,8 @@ assets:
 ```
 
 Install/update compiles all per-policy manifests into
-`devcovenant/registry/local/policy_assets.yaml` so the registry reflects the active
-asset map.
+`devcovenant/registry/local/policy_assets.yaml` so the registry reflects the
+active asset map.
 
 ## Workflow
 When adding or adjusting a policy asset, update the policy assets manifest, add

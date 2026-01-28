@@ -1,5 +1,5 @@
 # DevCovenant Development Guide
-**Last Updated:** 2026-01-23
+**Last Updated:** 2026-01-28
 **Version:** 0.2.6
 
 <!-- DEVCOV:BEGIN -->
@@ -7,35 +7,39 @@
 **Doc Type:** policy-source
 **Managed By:** DevCovenant
 
-# Message from Human, do not edit:
+# Message from DevCovanant's Human, read first and do not edit:
 
-Read `README.md` and `devcovenant/README.md` first for architecture and
-workflow. This file is the canonical policy source of truth.
+This document is the absolute source of truth for developers - both 
+human and AI, who work on this repository. It is something like the Law of 
+The Land - the canonical policy source of truth for this repository, 
+and the policies that live in it are managed by DevCovenant. Failure to 
+understand all the instructions in this document _will_ lead to failed 
+commits. 
 
-Taking development notes is effectively obligatory; treat it as required.
-The editable notes section starts immediately after `<!-- DEVCOV:END -->`.
+After `AGENTS.md`, read `README.md` to learn about the very project that 
+lives in this repository - the reason of its entire existence.
+
+In the end `devcovenant/README.md` to learn how to work with DevCovenant. 
+It can be pesky at first, but it's the price we should pay to avoid docs, 
+code and feature drift under AI-assisted development, as well as 
+general repository hygiene and 
+
+Taking development notes below is effectively obligatory. Updating them 
+regularly to reflect current development hurdles and events is not a bad 
+idea either.
+
+The editable notes section starts immediately after the end of this 
+message and the next `<!-- DEVCOV:END -->` narker that you will see.
 When installing DevCovenant into a repo, preserve any existing notes and
-place them in the editable section below. If none exist, insert a reminder
-to record decisions there.
-#
+place them in the editable section below. Do not edit between 
+`DEVCOV*:BEGIN` and `DEVCOV*:END` markers markers in any file, no matter 
+the style in which they have or have not been commented out.
 
+Have a fruitful development session and read all documents end-to-end. 
+Be sure to always follow pre-commit start - test - end routine unless 
+instructed otherwise - every time when you will change even one bit in 
+this repo. 
 
-<a id="editable-notes-record-decisions-here"></a>
-### Editable notes (repo-specific)
-
-
-Just below the DEVCOV:END marker after this paragraph is the editable section
-that the installer and repo maintainers use for working memory. Keep any
-existing notes entered by previous maintainers, or replace the text with new
-decision logs when installing into a new repo. Because the rest of `AGENTS.md`
-below is managed by DevCovenant, do not move or overwrite anything after the
-`DEVCOV:BEGIN` marker when documenting repo-specific decisions here. The
-editable section is after the `DEVCOV:END` below and before the `DEVCOV:BEGIN`
-after it. It is marked by `# EDITABLE SECTION` if `AGENTS.md` is not present
-in the repo at DevCovenant installation. If a user `AGENTS.md` is present,
-its contents are preserved in the editable section. It is strongly advised
-that they be revised right after installation, so there are no conflicting
-instructions with DevCovenant, its applied policies (and in general).
 <!-- DEVCOV:END -->
 
 # EDITABLE SECTION
@@ -58,12 +62,14 @@ instructions with DevCovenant, its applied policies (and in general).
 - 2026-01-27: Reordered AGENTS sections and markers as intended; the
   policy block remains a special DevCovenant-managed area that general block
   automation should avoid until we flesh out the policy handling workflow.
+
 <!-- DEVCOV:BEGIN -->
+
 ## Operational Orientation
 Running DevCovenant uses a fixed sequence: begin with
-`python3 devcovenant/core/run_pre_commit.py --phase start`, make edits, run
-`python3 devcovenant/core/run_tests.py`, and finish with
-`python3 devcovenant/core/run_pre_commit.py --phase end`. The `devflow-run-gates`
+`python3 devcovenant/run_pre_commit.py --phase start`, make edits, run
+`python3 devcovenant/run_tests.py`, and finish with
+`python3 devcovenant/run_pre_commit.py --phase end`. The `devflow-run-gates`
 policy records those commands; any deviation blocks progress. Discussion-only
 turns may skip tests, yet triggering the start gate still snapshots the repo
 state.
@@ -103,14 +109,14 @@ adapters, and fixers sit beside the scripts, and profiles configure suffixes,
 commands, and metadata through their manifests.
 
 ## Workflow
-- Run `python3 devcovenant/core/run_pre_commit.py --phase start` before editing files,
-  perform your work, execute `python3 devcovenant/core/run_tests.py`, and close with
-  `python3 devcovenant/core/run_pre_commit.py --phase end`.
+- Run `python3 devcovenant/run_pre_commit.py --phase start` before editing
+  files, perform your work, execute `python3 devcovenant/run_tests.py`, and
+  close with `python3 devcovenant/run_pre_commit.py --phase end`.
 - Use `python3 -m devcovenant` instead of `devcovenant` when the console
   script is not on your PATH.
 - When policy text changes, mark `updated: true`, refresh scripts/tests, run
-  `devcovenant update-policy-registry`, then reset the flag to keep the registry aligned
-  with policy prose.
+  `devcovenant update-policy-registry`, then reset the flag to keep the
+  registry aligned with policy prose.
 - Update `THIRD_PARTY_LICENSES.md` and the `licenses/` directory whenever
   dependency manifests (`requirements.in`, `requirements.lock`,
   `pyproject.toml`) change so the dependency-license-sync policy passes.
@@ -140,7 +146,7 @@ commands, and metadata through their manifests.
 - Log every touched file in the current `CHANGELOG.md` entry and refresh
   `devcovenant/registry/local/policy_registry.yaml` via
   `devcovenant update-policy-registry` before releasing.
-- Build artifacts locally (`python -m build`, `twine check dist/*`) and verify
+- Build artifacts locally (`python3 -m build`, `twine check dist/*`) and verify
   `.github/workflows/publish.yml` publishes with `PYPI_API_TOKEN`.
 
 ## Policy Management and Enforcement
@@ -153,8 +159,10 @@ Managed sections are wrapped with `<!-- DEVCOV:BEGIN -->` and
 `<!-- DEVCOV:END -->`. Install/update/uninstall scripts refresh those
 blocks while leaving surrounding content intact.
 
+
 <!-- DEVCOV:END -->
 <!-- DEVCOV-POLICIES:BEGIN -->
+
 
 ## Policy: Changelog Coverage
 
@@ -317,9 +325,9 @@ profile_scopes: global
   julia
   ocaml
   crystal
-test_status_file: devcovenant/registry/local/test_status.json
+test_status_file: .devcov-state/test_status.json
 required_commands: pytest
-  python -m unittest discover
+  python3 -m unittest discover
 require_pre_commit_start: true
 require_pre_commit_end: true
 pre_commit_command: python3 -m pre_commit run --all-files
@@ -556,8 +564,9 @@ required_dirs:
 ```
 
 Docs must include a `Last Updated` header near the top so readers can trust
-recency. The auto-fix keeps timestamps current while respecting allowed
-locations.
+recency. The auto-fix refreshes that header to today's UTC date whenever a
+managed document is touched so the recorded timestamp always matches the
+latest change.
 
 
 ---
@@ -602,11 +611,12 @@ include_suffixes: >
 exclude_prefixes: build,dist,node_modules
 exclude_globs: >
   devcovenant/core/profiles/global/assets/LICENSE_GPL-3.0.txt,
-  devcovenant/core/profiles/global/assets/*.yaml
-  build/**
-  dist/**
+  devcovenant/core/profiles/global/assets/*.yaml,
+  devcovenant/core/stock_policy_texts.json,
+  devcovenant/registry.json,
+  build/**,
+  dist/**,
   node_modules/**
-  devcovenant/core/profiles/global/assets/LICENSE_GPL-3.0.txt
 include_prefixes:
 include_globs: *.>
   *.py

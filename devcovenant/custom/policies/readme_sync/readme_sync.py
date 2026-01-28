@@ -6,14 +6,16 @@ Ensure devcovenant/README.md mirrors README.md with repo-only blocks removed.
 
 from __future__ import annotations
 
-from pathlib import Path
 from typing import List, Tuple
 
 from devcovenant.core.base import CheckContext, PolicyCheck, Violation
 
 
 class ReadmeSyncCheck(PolicyCheck):
-    """Verify devcovenant/README.md matches README.md without repo-only blocks."""
+    """Verify devcovenant/README.md matches README.md.
+
+    Repo-only blocks are removed before comparison.
+    """
 
     policy_id = "readme-sync"
     version = "0.1.0"
@@ -112,7 +114,10 @@ class ReadmeSyncCheck(PolicyCheck):
         if has_begin and not has_end:
             return None, "README.md has an unclosed repo-only block."
         if has_end and not has_begin:
-            return None, "README.md has a repo-only end marker without a begin."
+            return (
+                None,
+                "README.md has a repo-only end marker without a begin.",
+            )
 
         stripped = text
         while True:

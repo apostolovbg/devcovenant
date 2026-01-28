@@ -22,9 +22,9 @@ from devcovenant.core.refresh_policies import refresh_policies
 DEV_COVENANT_DIR = "devcovenant"
 CORE_PATHS = [
     DEV_COVENANT_DIR,
-    "devcovenant/core/run_pre_commit.py",
-    "devcovenant/core/run_tests.py",
-    "devcovenant/core/update_test_status.py",
+    "devcovenant/run_pre_commit.py",
+    "devcovenant/run_tests.py",
+    "devcovenant/update_test_status.py",
     "devcovenant/core/check.py",
 ]
 
@@ -79,9 +79,9 @@ _DEFAULT_CORE_PATHS = [
     "devcovenant/__init__.py",
     "devcovenant/__main__.py",
     "devcovenant/cli.py",
-    "devcovenant/core/run_pre_commit.py",
-    "devcovenant/core/run_tests.py",
-    "devcovenant/core/update_test_status.py",
+    "devcovenant/run_pre_commit.py",
+    "devcovenant/run_tests.py",
+    "devcovenant/update_test_status.py",
     "devcovenant/core/check.py",
 ]
 
@@ -375,7 +375,7 @@ def _resolve_template_path(
     for candidate in candidates:
         if candidate.exists():
             return candidate
-    return target_root / rel_path
+    return core_root / rel_path
 
 
 def _parse_profile_scopes(raw: str | None) -> list[str]:
@@ -529,9 +529,9 @@ def _render_template_text(
         text = template_path.read_text(encoding="utf-8")
     except UnicodeDecodeError:
         return None
-    for key, value in context.items():
+    for key, replacement in context.items():
         placeholder = f"{{{{{key}}}}}"
-        text = text.replace(placeholder, value)
+        text = text.replace(placeholder, replacement)
     return text
 
 
@@ -1081,9 +1081,9 @@ def _build_readme_block(
                 "## Workflow",
                 "DevCovenant enforces a gated workflow for every change, "
                 "including docs:",
-                "1. `python3 devcovenant/core/run_pre_commit.py --phase start`",
-                "2. `python3 devcovenant/core/run_tests.py`",
-                "3. `python3 devcovenant/core/run_pre_commit.py --phase end`",
+                "1. `python3 devcovenant/run_pre_commit.py --phase start`",
+                "2. `python3 devcovenant/run_tests.py`",
+                "3. `python3 devcovenant/run_pre_commit.py --phase end`",
                 "Record changes in `CHANGELOG.md` and keep `AGENTS.md` in "
                 "sync with",
                 "policy updates.",

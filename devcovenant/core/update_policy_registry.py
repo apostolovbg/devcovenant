@@ -1,4 +1,7 @@
-"""Update DevCovenant policy registry (devcovenant/registry/local/policy_registry.yaml)."""
+"""Update DevCovenant policy registry.
+
+Uses devcovenant/registry/local/policy_registry.yaml.
+"""
 
 from __future__ import annotations
 
@@ -39,7 +42,10 @@ def _ensure_trailing_newline(path: Path) -> bool:
 
 
 def update_policy_registry(repo_root: Path | None = None) -> int:
-    """Update policy hashes in devcovenant/registry/local/policy_registry.yaml."""
+    """Update policy hashes.
+
+    Writes devcovenant/registry/local/policy_registry.yaml.
+    """
 
     if repo_root is None:
         repo_root = Path(__file__).resolve().parents[2]

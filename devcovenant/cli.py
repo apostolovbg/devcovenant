@@ -362,15 +362,10 @@ def main() -> None:
     elif args.command == "refresh-all":
         from devcovenant.core.refresh_all import refresh_all
 
-        result = refresh_all(args.repo, metadata_mode=args.metadata or "preserve")
+        result = refresh_all(
+            args.repo, metadata_mode=args.metadata or "preserve"
+        )
         sys.exit(result)
-            print(
-                "Run `devcovenant update-policy-registry` "
-                "to refresh the registry."
-            )
-        else:
-            print("Policy metadata already matched the requested layout.")
-        sys.exit(0)
 
     elif args.command == "restore-stock-text":
         from devcovenant.core.policy_texts import restore_stock_texts

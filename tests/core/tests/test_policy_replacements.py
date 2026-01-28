@@ -15,7 +15,8 @@ def _write_agents(path: Path, apply_value: str) -> None:
         "status: active\n"
         "severity: warning\n"
         "auto_fix: false\n"
-        "updated: false\n"        "enforcement: active\n"
+        "updated: false\n"
+        "enforcement: active\n"
         f"apply: {apply_value}\n"
         "custom: false\n"
     )

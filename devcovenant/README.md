@@ -1,5 +1,5 @@
 # DevCovenant
-**Last Updated:** 2026-01-23
+**Last Updated:** 2026-01-28
 **Version:** 0.2.6
 <p align="center">
   <img
@@ -54,9 +54,9 @@ eliminates that by making the documentation itself the executable spec.
 ## How It Works
 1. `AGENTS.md` stores policy definitions and metadata blocks.
 2. `devcovenant/core/parser.py` extracts and hashes each policy definition.
-3. `devcovenant/registry/local/policy_registry.yaml` records policy/script hashes along with
-   metadata handles, profile coverage, asset hints, and core/custom origin for
-   every policy (enabled or disabled).
+3. `devcovenant/registry/local/policy_registry.yaml` records policy/script
+   hashes along with metadata handles, profile coverage, asset hints, and
+   core/custom origin for every policy (enabled or disabled).
 4. `devcovenant/core/engine.py` runs policy scripts and reports violations.
 5. Policy scripts resolve custom → core, and custom overrides suppress core
    fixers for that policy.
@@ -71,6 +71,16 @@ python3 -m devcovenant --help
 
 Both entry points execute the same CLI. Use `python3 -m devcovenant` when the
 console script is not on your PATH.
+
+## Document assets
+The `global` profile installs AGENTS.md, README.md, SPEC.md, PLAN.md,
+CHANGELOG.md, CONTRIBUTING.md, and `devcovenant/README.md` by default from the
+YAML descriptors in `devcovenant/core/profiles/global/assets/`. Use the new
+`doc_assets.autogen` and `doc_assets.user` config sections to pin which docs the
+profile refreshes versus which remain manual overrides. Whenever these docs are
+touched, the `last-updated-placement` policy (with its fixer) refreshes the
+`**Last Updated:** YYYY-MM-DD` header to the current UTC date so the recorded
+timestamp always matches the latest edit.
 
 ## Install, Update, Uninstall
 Install DevCovenant into a target repository:
@@ -103,10 +113,10 @@ devcovenant update --target /path/to/repo --force-config
 ```
 
 Skip all doc/policy/metadata writes by appending `--no-touch` to `install` or
-`update`. That flag copies just the `devcovenant/` package (including the default
-`devcovenant/config.yaml`), leaves the rest of the repo untouched, and still
-records the run in `devcovenant/registry/local/manifest.json` so you can finish the
-install later when you are ready:
+`update`. That flag copies just the `devcovenant/` package (including the
+default `devcovenant/config.yaml`), leaves the rest of the repo untouched,
+and still records the run in `devcovenant/registry/local/manifest.json` so
+you can finish the install later when you are ready:
 
 ```bash
 devcovenant install --target /path/to/repo --no-touch
@@ -157,13 +167,13 @@ Adoption guidance:
   raise the block level.
 
 DevCovenant expects the following sequence in enforced repos:
-1. `python3 devcovenant/core/run_pre_commit.py --phase start`
-2. `python3 devcovenant/core/run_tests.py`
-3. `python3 devcovenant/core/run_pre_commit.py --phase end`
+1. `python3 devcovenant/run_pre_commit.py --phase start`
+2. `python3 devcovenant/run_tests.py`
+3. `python3 devcovenant/run_pre_commit.py --phase end`
 
 During `--phase end`, if pre-commit modifies files, the script automatically
-reruns `devcovenant/core/run_tests.py` before recording the end timestamp so tests always
-post-date any auto-fixes.
+reruns `devcovenant/run_tests.py` before recording the end timestamp so
+tests always post-date any auto-fixes.
 
 When policy blocks change, set `updated: true`, run
 `devcovenant update-policy-registry`, then reset the flag.
@@ -179,9 +189,9 @@ devcov_core_paths:
   - devcovenant/__init__.py
   - devcovenant/__main__.py
   - devcovenant/cli.py
-  - devcovenant/core/run_pre_commit.py
-  - devcovenant/core/run_tests.py
-  - devcovenant/core/update_test_status.py
+  - devcovenant/run_pre_commit.py
+  - devcovenant/run_tests.py
+  - devcovenant/update_test_status.py
   - devcovenant/core/check.py
 ```
 

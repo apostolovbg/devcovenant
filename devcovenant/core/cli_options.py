@@ -193,7 +193,10 @@ def add_install_update_args(
     parser.add_argument(
         "--no-touch",
         action="store_true",
-        help="Install/update only the DevCovenant package and leave docs/config untouched.",
+        help=(
+            "Install/update only the DevCovenant package and leave "
+            "docs/config untouched."
+        ),
     )
 
 

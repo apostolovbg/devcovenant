@@ -14,9 +14,9 @@ devcov_core_paths:
   - devcovenant/__main__.py
   - devcovenant/cli.py
   - devcovenant/registry
-  - devcovenant/core/run_pre_commit.py
-  - devcovenant/core/run_tests.py
-  - devcovenant/core/update_test_status.py
+  - devcovenant/run_pre_commit.py
+  - devcovenant/run_tests.py
+  - devcovenant/update_test_status.py
 
 profiles:
   active:
@@ -80,7 +80,7 @@ update:
 engine:
   master_update: true
   fix_threshold: warning
-  fail_threshold: warning
+  fail_threshold: error
   auto_fix_enabled: true
   parallel_checks: true
   verbose: true
@@ -138,7 +138,7 @@ policies:
   devflow-run-gates:
     required_commands:
       - pytest
-      - python -m unittest discover
+      - python3 -m unittest discover
   documentation-growth-tracking:
     user_facing_suffixes:
       - .py

@@ -12,6 +12,8 @@ import subprocess
 import sys
 from pathlib import Path
 
+from devcovenant.core import manifest as manifest_module
+
 
 def _utc_now() -> _dt.datetime:
     """Return the current UTC time."""
@@ -65,7 +67,7 @@ def _git_diff(repo_root: Path) -> str:
 
 def _run_tests(repo_root: Path, env: dict[str, str]) -> None:
     """Run the repository test runner."""
-    command = [sys.executable, str(repo_root / "tools" / "run_tests.py")]
+    command = [sys.executable, str(repo_root / "devcovenant" / "run_tests.py")]
     subprocess.run(command, check=True, env=env)
 
 
@@ -93,9 +95,7 @@ def main() -> None:
     args = parser.parse_args()
 
     repo_root = Path(__file__).resolve().parents[1]
-    status_path = (
-        repo_root / "devcovenant" / "registry" / "local" / "test_status.json"
-    )
+    status_path = manifest_module.test_status_path(repo_root)
     status_path.parent.mkdir(parents=True, exist_ok=True)
 
     env = os.environ.copy()

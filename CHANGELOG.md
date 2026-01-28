@@ -1,5 +1,5 @@
 # Changelog
-**Last Updated:** 2026-01-24
+**Last Updated:** 2026-01-28
 **Version:** 0.2.6
 
 <!-- DEVCOV:BEGIN -->
@@ -29,6 +29,92 @@ Example entry:
 
 ## Version 0.2.6
 
+- 2026-01-28: Moved user-facing helper scripts to `devcovenant/` root, removed
+  `devcovenant/core/tools/`, and aligned manifests, assets, policies, and
+  docs to the new command surface and python3 usage.
+  Files:
+  AGENTS.md
+  CHANGELOG.md
+  CONTRIBUTING.md
+  PLAN.md
+  POLICY_MAP.md
+  PROFILE_MAP.md
+  README.md
+  SPEC.md
+  devcovenant/README.md
+  devcovenant/cli.py
+  devcovenant/config.yaml
+  devcovenant/config_old.yaml
+  devcovenant/core/base.py
+  devcovenant/core/cli_options.py
+  devcovenant/core/install.py
+  devcovenant/core/manifest.py
+  devcovenant/core/policies/devflow_run_gates/devflow_run_gates.py
+  devcovenant/core/policies/last_updated_placement/fixers/global.py
+  devcovenant/core/policies/track_test_status/track_test_status.py
+  devcovenant/core/profiles/global/assets/AGENTS.md
+  devcovenant/core/profiles/global/assets/AGENTS.yaml
+  devcovenant/core/profiles/global/assets/CHANGELOG.yaml
+  devcovenant/core/profiles/global/assets/CONTRIBUTING.md
+  devcovenant/core/profiles/global/assets/CONTRIBUTING.yaml
+  devcovenant/core/profiles/global/assets/PLAN.yaml
+  devcovenant/core/profiles/global/assets/README.yaml
+  devcovenant/core/profiles/global/assets/SPEC.yaml
+  devcovenant/core/profiles/python/assets/venv.md
+  devcovenant/core/profiles/python/profile.yaml
+  devcovenant/core/refresh_all.py
+  devcovenant/core/refresh_policies.py
+  devcovenant/core/run_pre_commit.py
+  devcovenant/core/run_tests.py
+  devcovenant/core/tools/run_pre_commit.py
+  devcovenant/core/tools/run_tests.py
+  devcovenant/core/tools/update_lock.py
+  devcovenant/core/tools/update_test_status.py
+  devcovenant/core/uninstall.py
+  devcovenant/core/update_policy_registry.py
+  devcovenant/core/update_test_status.py
+  devcovenant/custom/policies/readme_sync/readme_sync.py
+  devcovenant/registry/local/manifest.json
+  devcovenant/registry/local/policy_registry.yaml
+  devcovenant/run_pre_commit.py
+  devcovenant/run_tests.py
+  devcovenant/update_lock.py
+  devcovenant/update_test_status.py
+  DEVCOVENANT.md
+  tests/core/policies/devflow_run_gates/tests/test_devflow_run_gates.py
+  tests/core/policies/last_updated_placement/tests/test_last_updated_placement.py
+  tests/core/policies/stock_policy_text_sync/tests/test_stock_policy_text_sync.py
+  tests/core/policies/track_test_status/tests/test_track_test_status.py
+  tests/core/tests/test_policy_replacements.py
+  tests/core/tests/test_refresh_policies.py
+  tests/custom/policies/test_readme_sync.py
+
+- 2026-01-28: Moved the workflow helpers (`run_pre_commit`, `run_tests`,
+  `update_lock`, `update_test_status`) out of `devcovenant/core/tools` into
+  `devcovenant/core/` and synchronized every doc/manifest/asset that
+  referenced the old path. Rebuilt the profile-managed copies so the global
+  profile still packages the helpers under
+  `devcovenant/core/profiles/global/assets/devcovenant/core/`.
+  Renamed the selector helpers module to `selector_helpers` and refreshed the
+  selector tests accordingly.
+  Files:
+  devcovenant/core/run_pre_commit.py
+  devcovenant/core/run_tests.py
+  devcovenant/core/update_lock.py
+  devcovenant/core/update_test_status.py
+  devcovenant/core/selector_helpers.py
+  tests/core/tests/test_selectors.py
+  devcovenant/core/profiles/global/assets/devcovenant/core/run_pre_commit.py
+  devcovenant/core/profiles/global/assets/devcovenant/core/run_tests.py
+  devcovenant/core/profiles/global/assets/devcovenant/core/update_lock.py
+  devcovenant/core/profiles/global/assets/devcovenant/core/\
+    update_test_status.py
+  devcovenant/cli.py
+  devcovenant/config.yaml
+  devcovenant/core/cli_options.py
+  devcovenant/core/engine.py
+  devcovenant/core/install.py
+
 - 2026-01-27: Added a repo-only `devcovenant` profile so the published
   `devcovenant/**` sources stay covered by `new-modules-need-tests`.
   The mirrored `tests/devcovenant/**` suites now receive the same coverage.
@@ -39,11 +125,15 @@ Example entry:
   README.md
   PROFILE_MAP.md
 
-- 2026-01-27: Removed policy-level test helpers from `devcovenant/core/policies/*/tests`
-  and moved them under `tests/devcovenant/`. Files:
-  devcovenant/core/policies/new_modules_need_tests/tests/new_modules_need_tests_impl.py
-  devcovenant/core/policies/changelog_coverage/tests/changelog_coverage_impl.py
-  tests/devcovenant/core/policies/changelog_coverage/tests/changelog_coverage_impl.py
+- 2026-01-27: Removed policy-level test helpers from
+  `devcovenant/core/policies/*/tests` and moved them under
+  `tests/devcovenant/`. Files:
+  devcovenant/core/policies/new_modules_need_tests/tests/\
+    new_modules_need_tests_impl.py
+  devcovenant/core/policies/changelog_coverage/tests/\
+    changelog_coverage_impl.py
+  tests/devcovenant/core/policies/changelog_coverage/tests/\
+    changelog_coverage_impl.py
 
 - 2026-01-27: Added live policy map automation so `refresh-policies`/
   `update-policy-registry` keep every policy’s metadata, profile coverage,
@@ -59,29 +149,6 @@ Example entry:
   POLICY_MAP.md
   devcovenant/README.md
 
-- 2026-01-28: Moved the workflow helpers (`run_pre_commit`, `run_tests`,
-  `update_lock`, `update_test_status`) out of `devcovenant/core/tools` into
-  `devcovenant/core/` and synchronized every doc/manifest/asset that referenced
-  the old path. Rebuilt the profile-managed copies so the global profile still
-  packages the helpers under `devcovenant/core/profiles/global/assets/devcovenant/core/`.
-  Renamed the selector helpers module to `selector_helpers` and refreshed the
-  selector tests accordingly.
-  Files:
-  devcovenant/core/run_pre_commit.py
-  devcovenant/core/run_tests.py
-  devcovenant/core/update_lock.py
-  devcovenant/core/update_test_status.py
-  devcovenant/core/selector_helpers.py
-  tests/core/tests/test_selectors.py
-  devcovenant/core/profiles/global/assets/devcovenant/core/run_pre_commit.py
-  devcovenant/core/profiles/global/assets/devcovenant/core/run_tests.py
-  devcovenant/core/profiles/global/assets/devcovenant/core/update_lock.py
-  devcovenant/core/profiles/global/assets/devcovenant/core/update_test_status.py
-  devcovenant/cli.py
-  devcovenant/config.yaml
-  devcovenant/core/cli_options.py
-  devcovenant/core/engine.py
-  devcovenant/core/install.py
   devcovenant/core/manifest.py
   devcovenant/core/refresh_policies.py
   devcovenant/core/update_policy_registry.py

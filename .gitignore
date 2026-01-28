@@ -51,6 +51,7 @@ dist/
 
 # DevCovenant
 devcovenant/registry/local/
+.devcov-state/
 .devcov/install_manifest.json
 .devcovenant/install_manifest.json
 

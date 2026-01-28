@@ -36,7 +36,6 @@ def main() -> None:
     )
     args = parser.parse_args()
 
-    repo_root = Path(__file__).resolve().parents[1]
     for command in DEFAULT_COMMANDS:
         print(f"Running: {' '.join(command)}")
         allow_codes = {0}
@@ -44,11 +43,12 @@ def main() -> None:
             allow_codes.add(5)
         _run_command(command, allow_codes=allow_codes)
 
-    command_str = "pytest && python -m unittest discover"
+    command_str = "pytest && python3 -m unittest discover"
     print("Recording test status…")
     update_cmd = [
         sys.executable,
-        str(repo_root / "tools" / "update_test_status.py"),
+        "-m",
+        "devcovenant.update_test_status",
         "--command",
         command_str,
     ]

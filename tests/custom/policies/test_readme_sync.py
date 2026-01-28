@@ -3,9 +3,7 @@
 from pathlib import Path
 
 from devcovenant.core.base import CheckContext
-from devcovenant.custom.policies.readme_sync.readme_sync import (
-    ReadmeSyncCheck,
-)
+from devcovenant.custom.policies.readme_sync.readme_sync import ReadmeSyncCheck
 
 
 def _write_readmes(repo_root: Path, repo_text: str, target_text: str) -> None:
@@ -17,7 +15,7 @@ def _write_readmes(repo_root: Path, repo_text: str, target_text: str) -> None:
 
 
 def test_readme_sync_passes_when_synced(tmp_path: Path) -> None:
-    """Pass when repo README matches devcovenant README minus repo-only blocks."""
+    """Pass when README matches devcovenant README minus repo-only blocks."""
     policy = ReadmeSyncCheck()
     repo_text = "\n".join(
         [

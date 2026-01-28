@@ -1,4 +1,4 @@
-"""Ensure devcovenant/registry/local/test_status.json is refreshed."""
+"""Ensure .devcov-state/test_status.json is refreshed."""
 
 from __future__ import annotations
 
@@ -10,9 +10,7 @@ from typing import Iterable, List
 from devcovenant.core.base import CheckContext, PolicyCheck, Violation
 from devcovenant.core.selector_helpers import build_watchlists
 
-STATUS_RELATIVE = (
-    Path("devcovenant") / "registry" / "local" / "test_status.json"
-)
+STATUS_RELATIVE = Path(".devcov-state") / "test_status.json"
 
 
 def _requires_status_update(
@@ -68,7 +66,7 @@ class TrackTestStatusCheck(PolicyCheck):
     version = "1.0.0"
 
     def check(self, context: CheckContext) -> List[Violation]:
-        """Ensure code changes update devcovenant/registry/local/test_status.json."""
+        """Ensure code changes update the test status registry."""
         repo_root = context.repo_root
         changed_files: Iterable[Path] = context.changed_files or []
         relevant_change = False
@@ -103,7 +101,7 @@ class TrackTestStatusCheck(PolicyCheck):
                     line_number=1,
                     message=(
                         "Code changes require a fresh test status update. "
-                        "Run `python3 devcovenant/core/run_tests.py` "
+                        "Run `python3 devcovenant/run_tests.py` "
                         "so the suite executes and "
                         "the status file is refreshed."
                     ),
@@ -120,8 +118,7 @@ class TrackTestStatusCheck(PolicyCheck):
                     file_path=status_path,
                     line_number=1,
                     message=(
-                        "devcovenant/registry/local/test_status.json is "
-                        f"invalid: {exc}"
+                        f"{status_relative.as_posix()} is invalid: {exc}"
                     ),
                 )
             ]

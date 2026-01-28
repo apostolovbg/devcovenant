@@ -36,6 +36,8 @@ def test_requires_tests_for_code_change(tmp_path: Path) -> None:
     check = DevflowRunGates()
     violations = check.check(ctx)
     assert violations, "missing test_status should trigger a violation"
+    status_path = tmp_path / ".devcov-state" / "test_status.json"
+    assert status_path.exists()
 
 
 def test_start_phase_skips_missing_status(tmp_path: Path, monkeypatch) -> None:
@@ -50,14 +52,14 @@ def test_start_phase_skips_missing_status(tmp_path: Path, monkeypatch) -> None:
 def test_passes_when_tests_are_fresh(tmp_path: Path) -> None:
     """Recent test runs should satisfy the gate."""
     ctx = make_ctx(tmp_path, ["src/example.py"])
-    status_path = tmp_path / "devcovenant" / "registry" / "test_status.json"
+    status_path = tmp_path / ".devcov-state" / "test_status.json"
     status_path.parent.mkdir(parents=True, exist_ok=True)
     code_mtime = (tmp_path / "src" / "example.py").stat().st_mtime
     now = code_mtime + 10
     status = {
         "last_run_utc": "2025-12-27T00:00:00Z",
         "last_run_epoch": now,
-        "commands": ["pytest", "python -m unittest discover"],
+        "commands": ["pytest", "python3 -m unittest discover"],
         "pre_commit_start_utc": "2025-12-26T00:00:00Z",
         "pre_commit_start_epoch": code_mtime - 10,
         "pre_commit_start_command": "pre-commit run --all-files",
@@ -75,13 +77,13 @@ def test_passes_when_tests_are_fresh(tmp_path: Path) -> None:
 def test_requires_pre_commit_start(tmp_path: Path) -> None:
     """Missing start pre-commit should trigger a violation."""
     ctx = make_ctx(tmp_path, ["src/example.py"])
-    status_path = tmp_path / "devcovenant" / "registry" / "test_status.json"
+    status_path = tmp_path / ".devcov-state" / "test_status.json"
     status_path.parent.mkdir(parents=True, exist_ok=True)
     code_mtime = (tmp_path / "src" / "example.py").stat().st_mtime
     status = {
         "last_run_utc": "2025-12-27T00:00:00Z",
         "last_run_epoch": code_mtime + 10,
-        "commands": ["pytest", "python -m unittest discover"],
+        "commands": ["pytest", "python3 -m unittest discover"],
         "pre_commit_end_utc": "2025-12-27T00:00:00Z",
         "pre_commit_end_epoch": code_mtime + 5,
         "pre_commit_end_command": "pre-commit run --all-files",
@@ -99,13 +101,13 @@ def test_requires_pre_commit_start(tmp_path: Path) -> None:
 def test_requires_pre_commit_end(tmp_path: Path) -> None:
     """Missing end pre-commit should trigger a violation."""
     ctx = make_ctx(tmp_path, ["src/example.py"])
-    status_path = tmp_path / "devcovenant" / "registry" / "test_status.json"
+    status_path = tmp_path / ".devcov-state" / "test_status.json"
     status_path.parent.mkdir(parents=True, exist_ok=True)
     code_mtime = (tmp_path / "src" / "example.py").stat().st_mtime
     status = {
         "last_run_utc": "2025-12-27T00:00:00Z",
         "last_run_epoch": code_mtime + 10,
-        "commands": ["pytest", "python -m unittest discover"],
+        "commands": ["pytest", "python3 -m unittest discover"],
         "pre_commit_start_utc": "2025-12-26T00:00:00Z",
         "pre_commit_start_epoch": code_mtime - 10,
         "pre_commit_start_command": "pre-commit run --all-files",

@@ -21,7 +21,8 @@ policy-specific handles listed below.
 
 ### devcov-self-enforcement
 - **Metadata handles:** `profile_scopes`, `registry_file`
-- **Assets:** `devcovenant/registry/local/policy_registry.yaml` (policy hash registry)
+- **Assets:** `devcovenant/registry/local/policy_registry.yaml`
+  (policy hash registry)
 - **Profiles:** `global`
 
 ### devcov-structure-guard
@@ -45,7 +46,7 @@ policy-specific handles listed below.
 - **Metadata handles:** `test_status_file`, `required_commands`,
   `pre_commit_command`, `require_pre_commit_start`,
   `require_pre_commit_end`, `profile_scopes`
-- **Assets:** `devcovenant/core/run_pre_commit.py`, `devcovenant/core/run_tests.py`,
+- **Assets:** `devcovenant/run_pre_commit.py`, `devcovenant/run_tests.py`,
   `devcovenant/registry/local/test_status.json`
 - **Profiles:** `global` + every profile that declares `devflow`
   metadata (see `PROFILE_MAP.md`)

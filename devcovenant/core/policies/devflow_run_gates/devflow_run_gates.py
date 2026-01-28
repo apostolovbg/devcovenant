@@ -11,10 +11,8 @@ from typing import Iterable, List
 
 from devcovenant.core.base import CheckContext, PolicyCheck, Violation
 
-_DEFAULT_STATUS = (
-    Path("devcovenant") / "registry" / "local" / "test_status.json"
-)
-_DEFAULT_COMMANDS = ["pytest", "python -m unittest discover"]
+_DEFAULT_STATUS = Path(".devcov-state") / "test_status.json"
+_DEFAULT_COMMANDS = ["pytest", "python3 -m unittest discover"]
 _DEFAULT_PRE_COMMIT_COMMAND = "pre-commit run --all-files"
 _DEFAULT_PRE_COMMIT_START_KEY = "pre_commit_start_epoch"
 _DEFAULT_PRE_COMMIT_END_KEY = "pre_commit_end_epoch"
@@ -86,13 +84,22 @@ def _required_commands(policy: "DevflowRunGates") -> list[str]:
 
 def _load_test_status(status_file: Path) -> dict | None:
     """Return the parsed test status file, or None when missing/invalid."""
-
     if not status_file.is_file():
         return None
     try:
-        return json.loads(status_file.read_text(encoding="utf-8"))
+        payload = json.loads(status_file.read_text(encoding="utf-8"))
     except Exception:
         return None
+    return payload if isinstance(payload, dict) else None
+
+
+def _ensure_status_file(status_file: Path) -> bool:
+    """Create the status file if missing; return True when created."""
+    if status_file.exists():
+        return False
+    status_file.parent.mkdir(parents=True, exist_ok=True)
+    status_file.write_text("{}\n", encoding="utf-8")
+    return True
 
 
 def _latest_code_mtime(
@@ -186,7 +193,9 @@ class DevflowRunGates(PolicyCheck):
         if phase == "start":
             return violations
 
-        status = _load_test_status(repo_root / status_rel)
+        status_path = repo_root / status_rel
+        _ensure_status_file(status_path)
+        status = _load_test_status(status_path)
         if not status:
             violations.append(
                 Violation(
@@ -195,8 +204,9 @@ class DevflowRunGates(PolicyCheck):
                     file_path=status_rel,
                     message=(
                         "Code changed but "
-                        "devcovenant/registry/local/test_status.json is missing; "
-                        "run `python3 devcovenant/core/run_tests.py` before replying."
+                        ".devcov-state/test_status.json is missing or empty; "
+                        "run `python3 devcovenant/run_tests.py` before "
+                        "replying."
                     ),
                 )
             )
@@ -237,8 +247,8 @@ class DevflowRunGates(PolicyCheck):
                         file_path=status_rel,
                         message=(
                             "Session start pre-commit run is missing. Run "
-                            "`python3 devcovenant/core/run_pre_commit.py --phase start` "
-                            "before editing code."
+                            "`python3 devcovenant/run_pre_commit.py "
+                            "--phase start` before editing code."
                         ),
                     )
                 )
@@ -250,8 +260,9 @@ class DevflowRunGates(PolicyCheck):
                         file_path=status_rel,
                         message=(
                             "Session start pre-commit run occurred after "
-                            "code changes. Run `python3 tools/run_pre_commit."
-                            "py --phase start` before editing code and rerun "
+                            "code changes. Run `python3 devcovenant/"
+                            "run_pre_commit.py --phase start` before editing "
+                            "code and rerun "
                             "after resetting the session."
                         ),
                     )
@@ -268,7 +279,8 @@ class DevflowRunGates(PolicyCheck):
                             "Session start pre-commit command is missing or "
                             f"does not include `{pre_commit_command}`. "
                             "Re-run the start gate with "
-                            "`python3 devcovenant/core/run_pre_commit.py --phase start`."
+                            "`python3 devcovenant/run_pre_commit.py "
+                            "--phase start`."
                         ),
                     )
                 )
@@ -286,8 +298,8 @@ class DevflowRunGates(PolicyCheck):
                         file_path=status_rel,
                         message=(
                             "Session end pre-commit run is missing. Run "
-                            "`python3 devcovenant/core/run_pre_commit.py --phase end` "
-                            "before replying."
+                            "`python3 devcovenant/run_pre_commit.py --phase "
+                            "end` before replying."
                         ),
                     )
                 )
@@ -299,8 +311,9 @@ class DevflowRunGates(PolicyCheck):
                         file_path=status_rel,
                         message=(
                             "Session end pre-commit run predates code "
-                            "changes. Run `python3 devcovenant/core/run_pre_commit.py "
-                            "--phase end` after edits complete."
+                            "changes. Run `python3 devcovenant/"
+                            "run_pre_commit.py --phase end` after edits "
+                            "complete."
                         ),
                     )
                 )
@@ -316,7 +329,8 @@ class DevflowRunGates(PolicyCheck):
                             "Session end pre-commit command is missing or "
                             f"does not include `{pre_commit_command}`. "
                             "Re-run the end gate with "
-                            "`python3 devcovenant/core/run_pre_commit.py --phase end`."
+                            "`python3 devcovenant/run_pre_commit.py --phase "
+                            "end`."
                         ),
                     )
                 )
@@ -345,7 +359,7 @@ class DevflowRunGates(PolicyCheck):
                     message=(
                         "Latest recorded test status is missing required "
                         f"commands: {', '.join(missing)}. Run "
-                        "`python3 devcovenant/core/run_tests.py` before replying."
+                        "`python3 devcovenant/run_tests.py` before replying."
                     ),
                 )
             )
@@ -359,8 +373,9 @@ class DevflowRunGates(PolicyCheck):
                     message=(
                         "Code changed after the last recorded test run "
                         f"({last_run or 'unknown'}); rerun "
-                        "`python3 devcovenant/core/run_tests.py` so tests post-date the "
-                        f"newest code change (latest code mtime: {when}Z)."
+                        "`python3 devcovenant/run_tests.py` so tests "
+                        "post-date the newest code change (latest code "
+                        f"mtime: {when}Z)."
                     ),
                 )
             )

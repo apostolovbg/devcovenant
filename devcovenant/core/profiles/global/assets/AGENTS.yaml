@@ -1,6 +1,6 @@
 header_lines:
 - '# DevCovenant Development Guide'
-- '**Last Updated:** 2026-01-23'
+- '**Last Updated:** 2026-01-28'
 - '**Version:** 0.2.6'
 doc_id: AGENTS
 doc_type: policy-source
@@ -22,7 +22,8 @@ managed_block: '**Doc ID:** AGENTS
 
   Use `PROFILE_MAP.md` as the authoritative profile catalog and `POLICY_MAP.md`
 
-  for a quick rundown of metadata handles, assets, and profile coverage for each
+  for a quick rundown of metadata handles, assets, and profile coverage for
+  each
 
   policy before diving into `AGENTS.md`.
 

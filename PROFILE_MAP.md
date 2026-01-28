@@ -118,7 +118,7 @@ Each language profile includes:
 - Policy overlays:
   - `dependency-license-sync`: `requirements.*`, `pyproject.toml`.
 - `devflow-run-gates`: `required_commands=pytest` plus
-  `python -m unittest discover`.
+  `python3 -m unittest discover`.
   - `documentation-growth-tracking`: track `.py` and `docs/` references.
   - `line-length-limit`, `name-clarity`, `docstring-and-comment-coverage`,
     `new-modules-need-tests`, `security-scanner`: include `.py` suffix.

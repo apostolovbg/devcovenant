@@ -60,7 +60,7 @@ def test_accepts_recent_status(tmp_path: Path):
     status_path = tmp_path / STATUS_RELATIVE
     payload = {
         "last_run": "2025-12-24T12:00:00+00:00",
-        "command": "pytest && python -m unittest discover",
+        "command": "pytest && python3 -m unittest discover",
         "sha": "a" * 40,
         "notes": "",
     }

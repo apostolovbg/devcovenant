@@ -1,5 +1,5 @@
 # DevCovenant Specification
-**Last Updated:** 2026-01-24
+**Last Updated:** 2026-01-28
 **Version:** 0.2.6
 
 <!-- DEVCOV:BEGIN -->
@@ -31,6 +31,8 @@ hashes synchronized so drift is detectable and reversible.
 ## Workflow
 - Run the gated workflow for every change: pre-commit start, tests,
   pre-commit end.
+- Devflow gate status is stored in `.devcov-state/test_status.json`, created
+  on demand, and treated as gitignored state.
 - Run a startup check at session start (`python3 -m devcovenant check --mode
   startup`).
 - When policy text changes, set `updated: true`, update scripts/tests, run
@@ -96,6 +98,53 @@ hashes synchronized so drift is detectable and reversible.
 - `normalize-metadata` inserts any missing policy keys with safe placeholders
   while preserving existing values.
 
+### Install, update, refresh model
+- `install` bootstraps DevCovenant into a repo. It must detect existing
+  DevCovenant artifacts and refuse to proceed (or redirect to `update`)
+  unless the user explicitly confirms or supplies `--auto-uninstall`.
+- `update` refreshes DevCovenant-managed content without changing user
+  metadata: refresh managed blocks, regenerate registries, update bundled
+  assets, and leave user overrides intact. It must not overwrite an existing
+  `devcovenant/` folder with itself.
+- `refresh` (via `refresh-all`) rebuilds registries and policy metadata from
+  the current config/profile state without forcing stock defaults. It is the
+  explicit “regenerate from existing config” command.
+- “Restore to stock metadata/profile configuration” is a separate command
+  (planned) and must not be conflated with `update` or `refresh`.
+- Source-based usage must use `python3 -m devcovenant ...` when invoking
+  from a repo checkout; the installed CLI is the default for packaged usage.
+
+#### Install/update scenarios
+1. Empty repo: `install` lays down default config, managed docs, and policy
+   scaffolding.
+2. Non-empty repo: `install` injects managed blocks and default docs only
+   when missing/empty/placeholder; preserved user content stays intact.
+3. Existing DevCovenant: `install` routes to `update`/`refresh` and avoids
+   mangling user config or custom policies.
+
+#### Command matrix (behavioral intent)
+- `install`: bootstrap DevCovenant in a repo (no config changes beyond defaults;
+  refresh managed docs; rebuild registries).
+- `update`: refresh DevCovenant-managed content (no config changes; refresh
+  managed docs; rebuild registries).
+- `refresh-all`: rebuild registries/metadata from current config (no config
+  changes; no managed doc refresh).
+- `reset-to-stock` (planned): restore stock metadata/profile config (updates
+  config, docs, and registries).
+
+### Command/script placement
+- User-facing, runnable commands live at the `devcovenant/` root and are
+  exposed through the CLI (and callable via `python3 -m devcovenant`).
+- Implementation logic lives under `devcovenant/core/` as internal modules.
+- `devcovenant/core/tools/` is not a public entrypoint surface; any helper
+  meant for users must have a CLI command and a top-level module.
+- CLI-exposed command modules include (non-exhaustive): `check.py`,
+  `sync.py`, `test.py`, `install.py`, `update.py`, `uninstall.py`,
+  `refresh_all.py`, `refresh_policies.py`, `update_policy_registry.py`,
+  `update_lock.py`, `update_test_status.py`, `run_pre_commit.py`,
+  `run_tests.py`, and `restore_stock_text.py`. The corresponding
+  implementations live under `devcovenant/core/`.
+
 ### Documentation management
 - Every managed doc must include `Last Updated` and `Version` headers.
 - `devcovenant/README.md` also includes `DevCovenant Version`, sourced from
@@ -109,18 +158,22 @@ hashes synchronized so drift is detectable and reversible.
   environment expectations. It points readers to `devcovenant/README.md` for
   the broader command set so agents know how to interact with the repo before
   reaching the policy blocks.
-- The policy block is the text between
-  `<!-- DEVCOV-POLICIES:BEGIN -->` and `<!-- DEVCOV-POLICIES:END -->` inside `AGENTS.md` and
-  must be treated as a dedicated DevCovenant-managed unit. Policy entries
-  are ordered alphabetically (no enabled/disabled grouping) and list every
-  available policy, including custom overrides (automatically marked with
+- The policy block is the text between `<!-- DEVCOV-POLICIES:BEGIN -->` and
+  `<!-- DEVCOV-POLICIES:END -->` inside `AGENTS.md` and must be treated as a
+  dedicated DevCovenant-managed unit. Policy entries are ordered
+  alphabetically (no enabled/disabled grouping) and list every available
+  policy, including custom overrides (automatically marked with
   `custom: true`).
-- Managed documents are generated from YAML assets that supply the full
-  document structure, including managed blocks and policy block scaffolding.
-  Outside-of-block stock text is injected only when a target document is
-  missing, empty, or effectively a single-line placeholder; otherwise
-  install/update/refresh only regenerate the managed blocks (with the policy
-  block treated separately per the marker rule above).
+- Managed documents (AGENTS.md, README.md, SPEC.md, PLAN.md, CHANGELOG.md,
+  CONTRIBUTING.md, and devcovenant/README.md) are generated from YAML assets
+  that supply the full document structure, header metadata, and managed
+  block scaffolding. Outside-of-block stock text is injected only when a
+  target document is missing, empty, or effectively a single-line placeholder;
+  otherwise install/update/refresh regenerate only the managed blocks.
+- The `last-updated-placement` policy runs with auto-fix enabled so touched
+  managed docs receive a UTC `Last Updated` header update during each run
+  (`python3 devcovenant check --fix`), keeping the timestamp aligned with the
+  latest change.
 
 ### Configuration and extension
 - `devcovenant/config.yaml` must support `devcov_core_include` and
@@ -143,6 +196,12 @@ hashes synchronized so drift is detectable and reversible.
   doubles as an override template that documents every supported option;
   only the policy overrides sections may remain empty to avoid
   overwhelming the document.
+- Config also exposes `doc_assets` (with `autogen` and `user` lists) so
+  repositories can drive which managed docs the active profiles (for example,
+  `global`, `docs`, `devcovenant`) synthesize versus which remain purely
+  user-maintained. This mirrors the policy override structure (`autogen_metadata_overrides`
+  and `user_metadata_overrides`) so teams can lift the default curated assets
+  into their own configs when needed.
 - The profile catalog is generated into
   `devcovenant/registry/local/profile_catalog.yaml` by scanning profile manifests.
   Active profiles are recorded under `profiles.active` in config and extend
@@ -228,9 +287,9 @@ hashes synchronized so drift is detectable and reversible.
 
 ## Installation Requirements
 - Install the full DevCovenant toolchain into the target repo, including the
-  `devcovenant/` tree, `devcovenant/core/run_pre_commit.py`,
-  `devcovenant/core/run_tests.py`, `devcovenant/core/update_lock.py`, and
-  `devcovenant/core/update_test_status.py` helpers, and CI workflow assets.
+  `devcovenant/` tree, `devcovenant/run_pre_commit.py`,
+  `devcovenant/run_tests.py`, `devcovenant/update_lock.py`, and
+  `devcovenant/update_test_status.py` helpers, and CI workflow assets.
 - Use packaged assets from `devcovenant/core/profiles/` and
   `devcovenant/core/policies/` when installed from PyPI; fall back to repo
   files when running from source.
@@ -308,7 +367,7 @@ hashes synchronized so drift is detectable and reversible.
   corresponding suites under `tests/devcovenant/core/profiles/` and
   `tests/devcovenant/custom/profiles/`.
 - The `new-modules-need-tests` policy explicitly requires unit tests. The
-  repository continues to run both `pytest` and `python -m unittest discover`,
+  repository continues to run both `pytest` and `python3 -m unittest discover`,
   but newly added coverage must be unit-level and existing policy tests
   should be converted to unit suites over time.
 - User repos keep an always-on `devcov-exclude` profile that excludes

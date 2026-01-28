@@ -1,5 +1,5 @@
 # Contributing
-**Last Updated:** 2026-01-23
+**Last Updated:** 2026-01-28
 **Version:** 0.2.6
 
 <!-- DEVCOV:BEGIN -->
@@ -31,9 +31,9 @@ change, including documentation-only updates.
 ## Workflow
 Follow the canonical gate sequence (details in `devcovenant/README.md`):
 ```bash
-python3 devcovenant/core/run_pre_commit.py --phase start
-python3 devcovenant/core/run_tests.py
-python3 devcovenant/core/run_pre_commit.py --phase end
+python3 devcovenant/run_pre_commit.py --phase start
+python3 devcovenant/run_tests.py
+python3 devcovenant/run_pre_commit.py --phase end
 ```
 If the console script is not on your PATH, use `python3 -m devcovenant`
 instead of `devcovenant` for CLI commands.

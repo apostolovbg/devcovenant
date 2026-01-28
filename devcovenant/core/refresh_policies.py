@@ -113,9 +113,9 @@ def _load_active_profiles(repo_root: Path) -> List[str]:
     if not config_path.exists():
         return ["global"]
     try:
-        config_data = yaml.safe_load(
-            config_path.read_text(encoding="utf-8")
-        ) or {}
+        config_data = (
+            yaml.safe_load(config_path.read_text(encoding="utf-8")) or {}
+        )
     except Exception:
         return ["global"]
     profiles_block = (
@@ -157,12 +157,7 @@ def _discover_policy_sources(repo_root: Path) -> Dict[str, Dict[str, bool]]:
     """Return discovered policy ids and whether custom overrides exist."""
     policies: Dict[str, Dict[str, bool]] = {}
     for source in ("core", "custom"):
-        root = (
-            repo_root
-            / "devcovenant"
-            / source
-            / "policies"
-        )
+        root = repo_root / "devcovenant" / source / "policies"
         if not root.exists():
             continue
         for entry in root.iterdir():
@@ -193,26 +188,25 @@ def _load_stock_texts(repo_root: Path) -> Dict[str, str]:
     )
     if yaml_path.exists():
         try:
-            data = yaml.safe_load(
+            yaml_payload = yaml.safe_load(
                 yaml_path.read_text(encoding="utf-8")
             )
-            if isinstance(data, dict):
-                return {str(k): str(v) for k, v in data.items()}
+            if isinstance(yaml_payload, dict):
+                return {
+                    str(key): str(value) for key, value in yaml_payload.items()
+                }
         except Exception:
             pass
-    json_path = (
-        repo_root
-        / "devcovenant"
-        / "core"
-        / "stock_policy_texts.json"
-    )
+    json_path = repo_root / "devcovenant" / "core" / "stock_policy_texts.json"
     if json_path.exists():
         try:
             import json
 
-            data = json.loads(json_path.read_text(encoding="utf-8"))
-            if isinstance(data, dict):
-                return {str(k): str(v) for k, v in data.items()}
+            json_payload = json.loads(json_path.read_text(encoding="utf-8"))
+            if isinstance(json_payload, dict):
+                return {
+                    str(key): str(value) for key, value in json_payload.items()
+                }
         except Exception:
             pass
     return {}
@@ -583,12 +577,8 @@ def refresh_policies(
         if not _scopes_match(scopes, active_profiles):
             skipped.append(policy_id)
             continue
-        rendered = _render_metadata_block(
-            normalized_order, normalized_values
-        )
-        description = stock_texts.get(
-            policy_id, "Policy description pending."
-        )
+        rendered = _render_metadata_block(normalized_order, normalized_values)
+        description = stock_texts.get(policy_id, "Policy description pending.")
         heading = f"## Policy: {policy_id.replace('-', ' ').title()}\n\n"
         final_text = (
             f"{heading}```policy-def\n{rendered}\n```\n\n{description}\n"
