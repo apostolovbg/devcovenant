@@ -7,10 +7,12 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Dict, Iterable, List, Sequence, Tuple
 
+import yaml
+
 from devcovenant.core.selector_helpers import _normalize_globs
 
-_POLICIES_BEGIN = "<!--POLICIES-BEGIN-->"
-_POLICIES_END = "<!--POLICIES-END-->"
+_POLICIES_BEGIN = "<!--POLICIES:BEGIN-->"
+_POLICIES_END = "<!--POLICIES:END-->"
 _POLICY_BLOCK_RE = re.compile(
     r"(##\s+Policy:\s+[^\n]+\n\n)```policy-def\n(.*?)\n```\n\n"
     r"(.*?)(?=\n---\n|\n##|\Z)",
@@ -65,10 +67,7 @@ _LEGACY_ROLE_KEY = {
 
 _METADATA_MODES = ("preserve", "stock")
 
-_GROUP_COMMENTS: Dict[int, str] = {
-    0: "Enabled policies",
-    1: "Disabled policies",
-}
+_GROUP_COMMENTS: Dict[int, str] = {}
 
 
 @dataclass(frozen=True)
@@ -98,6 +97,127 @@ class _PolicyEntry:
     group: int
     changed: bool
     custom: bool
+
+
+def _policy_id_from_dir(dir_name: str) -> str:
+    """Convert a policy directory name into a policy id."""
+    return dir_name.replace("_", "-").strip()
+
+
+def _normalize_profile_name(raw: object) -> str:
+    """Normalize a profile name for matching."""
+    return str(raw or "").strip().lower()
+
+
+def _load_active_profiles(repo_root: Path) -> List[str]:
+    """Load active profiles from config.yaml, ensuring global is present."""
+    config_path = repo_root / "devcovenant" / "config.yaml"
+    if not config_path.exists():
+        return ["global"]
+    try:
+        config_data = yaml.safe_load(
+            config_path.read_text(encoding="utf-8")
+        ) or {}
+    except Exception:
+        return ["global"]
+    profiles_block = (
+        config_data.get("profiles", {})
+        if isinstance(config_data, dict)
+        else {}
+    )
+    active = profiles_block.get("active", [])
+    if isinstance(active, str):
+        candidates = [active]
+    elif isinstance(active, list):
+        candidates = active
+    else:
+        candidates = [active] if active else []
+    normalized = []
+    for entry in candidates:
+        name = _normalize_profile_name(entry)
+        if name and name != "__none__":
+            normalized.append(name)
+    if "global" not in normalized:
+        normalized.append("global")
+    return sorted(set(normalized))
+
+
+def _scopes_match(scopes: List[str], active_profiles: List[str]) -> bool:
+    """Return True when any scope matches the active profiles."""
+    if not scopes:
+        return True
+    for scope in scopes:
+        normalized = _normalize_profile_name(scope)
+        if not normalized:
+            continue
+        if normalized == "global" or normalized in active_profiles:
+            return True
+    return False
+
+
+def _discover_policy_sources(repo_root: Path) -> Dict[str, Dict[str, bool]]:
+    """Return discovered policy ids and whether custom overrides exist."""
+    policies: Dict[str, Dict[str, bool]] = {}
+    for source in ("core", "custom"):
+        root = (
+            repo_root
+            / "devcovenant"
+            / source
+            / "policies"
+        )
+        if not root.exists():
+            continue
+        for entry in root.iterdir():
+            if not entry.is_dir():
+                continue
+            script = entry / f"{entry.name}.py"
+            if not script.exists():
+                continue
+            policy_id = _policy_id_from_dir(entry.name)
+            record = policies.setdefault(
+                policy_id, {"custom": False, "core": False}
+            )
+            if source == "custom":
+                record["custom"] = True
+            else:
+                record["core"] = True
+    return policies
+
+
+def _load_stock_texts(repo_root: Path) -> Dict[str, str]:
+    """Load stock policy text from YAML or JSON assets."""
+    yaml_path = (
+        repo_root
+        / "devcovenant"
+        / "registry"
+        / "global"
+        / "stock_policy_texts.yaml"
+    )
+    if yaml_path.exists():
+        try:
+            data = yaml.safe_load(
+                yaml_path.read_text(encoding="utf-8")
+            )
+            if isinstance(data, dict):
+                return {str(k): str(v) for k, v in data.items()}
+        except Exception:
+            pass
+    json_path = (
+        repo_root
+        / "devcovenant"
+        / "core"
+        / "stock_policy_texts.json"
+    )
+    if json_path.exists():
+        try:
+            import json
+
+            data = json.loads(json_path.read_text(encoding="utf-8"))
+            if isinstance(data, dict):
+                return {str(k): str(v) for k, v in data.items()}
+        except Exception:
+            pass
+    return {}
 
 
 def _parse_metadata_block(
@@ -331,27 +451,16 @@ def _normalize_values(
 
 
 def _assemble_sections(entries: List[_PolicyEntry]) -> str:
-    """Build a policy block with enabled/disabled sections."""
+    """Build a policy block ordered alphabetically."""
     if not entries:
         return ""
 
+    sorted_entries = sorted(entries, key=lambda item: item.policy_id)
     sections_text: List[str] = []
-
-    for group_index, comment in _GROUP_COMMENTS.items():
-        group_entries = [
-            entry for entry in entries if entry.group == group_index
-        ]
-        if not group_entries:
-            continue
-        sorted_entries = sorted(group_entries, key=lambda item: item.policy_id)
-        if sections_text:
-            sections_text.append("\n\n")
-        sections_text.append(f"<!-- {comment} -->\n\n")
-        for idx, entry in enumerate(sorted_entries):
-            if idx > 0:
-                sections_text.append("\n\n---\n\n")
-            sections_text.append(entry.text)
-
+    for idx, entry in enumerate(sorted_entries):
+        if idx > 0:
+            sections_text.append("\n\n---\n\n")
+        sections_text.append(entry.text)
     final = "".join(sections_text)
     if not final.endswith("\n"):
         final += "\n"
@@ -383,7 +492,11 @@ def refresh_policies(
     if not agents_path.exists():
         return RefreshResult((), (), False, metadata_mode)
 
+    repo_root = agents_path.parent
     schema = _build_schema(schema_path)
+    stock_texts = _load_stock_texts(repo_root)
+    discovered = _discover_policy_sources(repo_root)
+    active_profiles = _load_active_profiles(repo_root)
     content = agents_path.read_text(encoding="utf-8")
     try:
         block_start, block_end, block_text = _locate_policy_block(content)
@@ -393,6 +506,7 @@ def refresh_policies(
     changed: List[str] = []
     skipped: List[str] = []
     entries: List[_PolicyEntry] = []
+    seen_ids: set[str] = set()
 
     for match in _POLICY_BLOCK_RE.finditer(block_text):
         heading = match.group(1)
@@ -404,6 +518,7 @@ def refresh_policies(
             skipped.append("unknown")
             continue
 
+        seen_ids.add(policy_id)
         custom_flag = (
             values.get("custom", ["false"])[0].strip().lower() == "true"
         )
@@ -416,6 +531,12 @@ def refresh_policies(
             metadata_mode,
             custom_flag,
         )
+        scopes = _split_values(normalized_values.get("profile_scopes", []))
+        if not scopes:
+            scopes = ["global"]
+        if not _scopes_match(scopes, active_profiles):
+            skipped.append(policy_id)
+            continue
         rendered = _render_metadata_block(normalized_order, normalized_values)
         metadata_changed = rendered != metadata_block
         if metadata_changed and set_updated and apply_flag and not custom_flag:
@@ -427,18 +548,63 @@ def refresh_policies(
         final_text = (
             f"{heading}```policy-def\n{rendered}\n```\n\n{description}\n"
         )
-        group = 0 if apply_flag else 1
         entries.append(
             _PolicyEntry(
                 policy_id=policy_id,
                 text=final_text,
-                group=group,
+                group=0,
                 changed=metadata_changed,
                 custom=custom_flag,
             )
         )
         if metadata_changed:
             changed.append(policy_id)
+
+    for policy_id, source_flags in sorted(discovered.items()):
+        if policy_id in seen_ids:
+            continue
+        base_values: Dict[str, List[str]] = {"id": [policy_id]}
+        if source_flags.get("custom"):
+            base_values["custom"] = ["true"]
+        normalized_order, normalized_values = _normalize_values(
+            policy_id,
+            list(base_values.keys()),
+            base_values,
+            schema,
+            metadata_mode,
+            False,
+        )
+        if source_flags.get("custom"):
+            normalized_values["custom"] = ["true"]
+            if "custom" not in normalized_order:
+                normalized_order.append("custom")
+        normalized_values.setdefault("id", [policy_id])
+        scopes = _split_values(normalized_values.get("profile_scopes", []))
+        if not scopes:
+            scopes = ["global"]
+        if not _scopes_match(scopes, active_profiles):
+            skipped.append(policy_id)
+            continue
+        rendered = _render_metadata_block(
+            normalized_order, normalized_values
+        )
+        description = stock_texts.get(
+            policy_id, "Policy description pending."
+        )
+        heading = f"## Policy: {policy_id.replace('-', ' ').title()}\n\n"
+        final_text = (
+            f"{heading}```policy-def\n{rendered}\n```\n\n{description}\n"
+        )
+        entries.append(
+            _PolicyEntry(
+                policy_id=policy_id,
+                text=final_text,
+                group=0,
+                changed=True,
+                custom=bool(source_flags.get("custom")),
+            )
+        )
+        changed.append(policy_id)
 
     if not entries:
         return RefreshResult((), tuple(skipped), False, metadata_mode)

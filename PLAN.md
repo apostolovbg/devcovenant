@@ -50,6 +50,15 @@ subtree; this keeps the repo tests manageable while adhering to the spec.
 - Policy metadata: normalize all selector keys, expose missing keys in
   AGENTS policy blocks without changing values, and enforce the policy block
   as a managed unit separate from other doc blocks.
+- Policy ordering: keep AGENTS policy entries alphabetized with no
+  enabled/disabled grouping, list all available policies derived from the
+  active profiles/config, and ensure custom overrides are listed with
+  `custom: true`.
+- Documentation generation: treat YAML assets as the full source for managed
+  documents (including policy block scaffolding). Inject outside-of-block
+  stock text only when the target doc is missing, empty, or a single-line
+  placeholder; otherwise refresh managed blocks only, with the policy block
+  handled via `<!--POLICIES:BEGIN-->` / `<!--POLICIES:END-->`.
 - Policy registry: make `devcovenant/registry/local/policy_registry.yaml`
   the sole hash store, and delete the legacy `devcovenant/registry.json`
   along with `update_hashes.py`.
@@ -103,6 +112,10 @@ subtree; this keeps the repo tests manageable while adhering to the spec.
 3. **Phase 3 – Policy lifecycle & registry automation**
    - Split the registry into tracked `devcovenant/registry/global/` (stock policy texts, replacements) and gitignored `devcovenant/registry/local/` (policy_registry, manifest, catalog, assets, test status).
    - Ensure `refresh_policies` + `update-policy-registry` populate every policy entry (active or disabled) with metadata handles, profile scopes, asset hints, script hashes, and core/custom flags.
+   - Remove enabled/disabled grouping in AGENTS policy blocks and sort all
+     policies alphabetically; list all available policies (core/custom) as
+     derived from the active profiles/config and mark overrides as
+     `custom: true`.
    - Implement policy replacements/notifications: migrating replaced policies to `custom/` with `custom: true`, removing disabled policies, and logging announcements in `manifest.json` while printing notices on update.
    - Support the `freeze` metadata knob that copies policy code/fixers/assets into `devcovenant/custom/` when true and removes them (and the registry entry) when false, rerunning `devcovenant update-policy-registry` each time.
    - Retire the legacy `devcovenant/registry.json` artifact and remove the

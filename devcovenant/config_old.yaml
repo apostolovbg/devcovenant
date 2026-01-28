@@ -20,26 +20,27 @@ devcov_core_paths:
 
 profiles:
   active:
-    - data
-    - devcovenant
-    - docs
     - python
+    - docs
+    - data
     - suffixes
+    - devcovenant
   generated:
     file_suffixes:
       - .py
       - .pyi
       - .pyw
       - .ipynb
+      - .md
+      - .rst
+      - .txt
       - .csv
       - .tsv
       - .json
       - .ndjson
       - .parquet
       - .avro
-      - .md
-      - .rst
-      - .txt
+
 paths:
   policy_definitions: AGENTS.md
   registry_file: devcovenant/registry/local/policy_registry.yaml
@@ -131,58 +132,58 @@ policies:
     command_hints: []
   dependency-license-sync:
     dependency_files:
-    - requirements.in
-    - requirements.lock
-    - pyproject.toml
+      - requirements.in
+      - requirements.lock
+      - pyproject.toml
   devflow-run-gates:
     required_commands:
-    - pytest
-    - python -m unittest discover
+      - pytest
+      - python -m unittest discover
   documentation-growth-tracking:
     user_facing_suffixes:
-    - .py
+      - .py
   docstring-and-comment-coverage:
     include_suffixes:
-    - .py
+      - .py
   line-length-limit:
     include_suffixes:
-    - .py
-    - .pyi
-    - .pyw
-    - .ipynb
-    - .md
-    - .rst
-    - .txt
-    - .csv
-    - .tsv
-    - .json
-    - .ndjson
-    - .parquet
-    - .avro
+      - .py
+      - .pyi
+      - .pyw
+      - .ipynb
+      - .md
+      - .rst
+      - .txt
+      - .csv
+      - .tsv
+      - .json
+      - .ndjson
+      - .parquet
+      - .avro
     exclude_globs:
-    - devcovenant/registry/**
+      - devcovenant/registry/**
   name-clarity:
     include_suffixes:
-    - .py
+      - .py
   new-modules-need-tests:
     include_suffixes:
-    - .py
+      - .py
     exclude_prefixes:
-    - build
-    - dist
-    - node_modules
-    - tests
+      - build
+      - dist
+      - node_modules
+      - tests
     watch_dirs:
-    - tests
-    - tests/devcovenant/core
-    - tests/devcovenant/custom
+      - tests
+      - tests/devcovenant/core
+      - tests/devcovenant/custom
     tests_watch_dirs:
-    - tests
-    - tests/devcovenant/core
-    - tests/devcovenant/custom
+      - tests
+      - tests/devcovenant/core
+      - tests/devcovenant/custom
   security-scanner:
     include_suffixes:
-    - .py
+      - .py
   version-sync:
     pyproject_files:
-    - pyproject.toml
+      - pyproject.toml

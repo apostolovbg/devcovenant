@@ -106,11 +106,17 @@ hashes synchronized so drift is detectable and reversible.
   the broader command set so agents know how to interact with the repo before
   reaching the policy blocks.
 - The policy block is the text between
-  `<!--POLICIES-BEGIN-->` and `<!--POLICIES-END-->` inside `AGENTS.md`; treat it
-  as a dedicated DevCovenant-managed unit that the standard managed-block
-  automation leaves untouched until we flesh out the tailored
-  policy-handling workflow. Keep the manual AGENTS reorder as the
-  authoritative layout for now.
+  `<!--POLICIES:BEGIN-->` and `<!--POLICIES:END-->` inside `AGENTS.md` and
+  must be treated as a dedicated DevCovenant-managed unit. Policy entries
+  are ordered alphabetically (no enabled/disabled grouping) and list every
+  available policy, including custom overrides (automatically marked with
+  `custom: true`).
+- Managed documents are generated from YAML assets that supply the full
+  document structure, including managed blocks and policy block scaffolding.
+  Outside-of-block stock text is injected only when a target document is
+  missing, empty, or effectively a single-line placeholder; otherwise
+  install/update/refresh only regenerate the managed blocks (with the policy
+  block treated separately per the marker rule above).
 
 ### Configuration and extension
 - `devcovenant/config.yaml` must support `devcov_core_include` and
@@ -162,6 +168,9 @@ hashes synchronized so drift is detectable and reversible.
   `devcovenant/registry/global/stock_policy_texts.yaml`.
 - Policies declare `profile_scopes` metadata to gate applicability;
   global policies use `profile_scopes: global`.
+- The policy list is generated from the active profiles/config and includes
+  every available core/custom policy. Entries are ordered alphabetically and
+  custom overrides are marked with `custom: true`.
 - `apply: false` disables enforcement without removing definitions.
 - Provide a `managed-environment` policy (off by default) that
   enforces execution inside the expected environment when

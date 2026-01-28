@@ -1,3 +1,4 @@
+# Profile: data
 # macOS
 .DS_Store
 .AppleDouble
@@ -52,3 +53,234 @@ dist/
 devcovenant/registry/local/
 .devcov/install_manifest.json
 .devcovenant/install_manifest.json
+
+# Profile: devcovenant
+# DevCovenant repo-specific ignores
+# Keep the generated config local so we don't commit it while
+# still allowing user installs to retain their configuration.
+devcovenant/config.yaml
+
+# Profile: docs
+# macOS
+.DS_Store
+.AppleDouble
+.LSOverride
+Icon
+._*
+.Spotlight-V100
+.Trashes
+.fseventsd
+.AppleDB
+.AppleDesktop
+Network Trash Folder
+Temporary Items
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+.pytest_cache/
+.mypy_cache/
+.pyre/
+.pytype/
+.coverage
+coverage.xml
+htmlcov/
+.cache/
+.ipynb_checkpoints/
+*.egg-info/
+.eggs/
+
+# Virtual environments
+.venv/
+venv/
+ENV/
+env/
+
+# Node
+node_modules/
+
+# Logs
+*.log
+
+# Build artifacts
+build/
+dist/
+
+# Editor/OS temp files
+*.swp
+*~
+
+# DevCovenant
+devcovenant/registry/local/
+.devcov/install_manifest.json
+.devcovenant/install_manifest.json
+
+# Profile: python
+# macOS
+.DS_Store
+.AppleDouble
+.LSOverride
+Icon
+._*
+.Spotlight-V100
+.Trashes
+.fseventsd
+.AppleDB
+.AppleDesktop
+Network Trash Folder
+Temporary Items
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+.pytest_cache/
+.mypy_cache/
+.pyre/
+.pytype/
+.coverage
+coverage.xml
+htmlcov/
+.cache/
+.ipynb_checkpoints/
+*.egg-info/
+.eggs/
+
+# Virtual environments
+.venv/
+venv/
+ENV/
+env/
+
+# Node
+node_modules/
+
+# Logs
+*.log
+
+# Build artifacts
+build/
+dist/
+
+# Editor/OS temp files
+*.swp
+*~
+
+# DevCovenant
+devcovenant/registry/local/
+.devcov/install_manifest.json
+.devcovenant/install_manifest.json
+
+# Profile: suffixes
+# macOS
+.DS_Store
+.AppleDouble
+.LSOverride
+Icon
+._*
+.Spotlight-V100
+.Trashes
+.fseventsd
+.AppleDB
+.AppleDesktop
+Network Trash Folder
+Temporary Items
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+.pytest_cache/
+.mypy_cache/
+.pyre/
+.pytype/
+.coverage
+coverage.xml
+htmlcov/
+.cache/
+.ipynb_checkpoints/
+*.egg-info/
+.eggs/
+
+# Virtual environments
+.venv/
+venv/
+ENV/
+env/
+
+# Node
+node_modules/
+
+# Logs
+*.log
+
+# Build artifacts
+build/
+dist/
+
+# Editor/OS temp files
+*.swp
+*~
+
+# DevCovenant
+devcovenant/registry/local/
+.devcov/install_manifest.json
+.devcovenant/install_manifest.json
+
+# --- User entries (preserved) ---
+# macOS
+.DS_Store
+.AppleDouble
+.LSOverride
+Icon
+._*
+.Spotlight-V100
+.Trashes
+.fseventsd
+.AppleDB
+.AppleDesktop
+Network Trash Folder
+Temporary Items
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+.pytest_cache/
+.mypy_cache/
+.pyre/
+.pytype/
+.coverage
+coverage.xml
+htmlcov/
+.cache/
+.ipynb_checkpoints/
+*.egg-info/
+.eggs/
+
+# Virtual environments
+.venv/
+venv/
+ENV/
+env/
+
+# Node
+node_modules/
+
+# Logs
+*.log
+
+# Build artifacts
+build/
+dist/
+
+# Editor/OS temp files
+*.swp
+*~
+
+# DevCovenant
+devcovenant/registry/local/
+.devcov/install_manifest.json
+.devcovenant/install_manifest.json
+# --- End user entries ---

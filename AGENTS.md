@@ -151,8 +151,8 @@ Managed sections are wrapped with `<!-- DEVCOV:BEGIN -->` and
 `<!-- DEVCOV:END -->`. Install/update/uninstall scripts refresh those
 blocks while leaving surrounding content intact.
 
-<!--POLICIES-BEGIN-->
-<!-- Enabled policies -->
+<!-- DEVCOV:END -->
+<!--POLICIES:BEGIN-->
 
 ## Policy: Changelog Coverage
 
@@ -991,3 +991,10 @@ must match the bump from the previous version, and `VERSION` must be
 updated whenever the changelog declares a release scope. The policy ships
 disabled (`apply: false`) and should only be enabled for release
 processes that enforce SemVer discipline.
+
+
+---
+
+
+
+<!--POLICIES:END-->
