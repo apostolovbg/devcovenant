@@ -48,6 +48,13 @@ Example entry:
   devcovenant/core/base.py
   devcovenant/core/cli_options.py
   devcovenant/core/install.py
+
+- 2026-01-28: Documented the global profile’s helper packaging so the
+  installer keeps bundling `devcovenant/run_pre_commit.py` and
+  `devcovenant/run_tests.py` in its doc assets.
+  Files:
+  devcovenant/core/profiles/global/assets/devcovenant/run_pre_commit.py
+  devcovenant/core/profiles/global/assets/devcovenant/run_tests.py
   devcovenant/core/manifest.py
   devcovenant/core/policies/devflow_run_gates/devflow_run_gates.py
   devcovenant/core/policies/last_updated_placement/fixers/global.py
@@ -81,6 +88,28 @@ Example entry:
   devcovenant/update_lock.py
   devcovenant/update_test_status.py
   DEVCOVENANT.md
+  tests/core/policies/devflow_run_gates/tests/test_devflow_run_gates.py
+  tests/core/policies/last_updated_placement/tests/test_last_updated_placement.py
+  tests/core/policies/stock_policy_text_sync/tests/test_stock_policy_text_sync.py
+  tests/core/policies/track_test_status/tests/test_track_test_status.py
+  tests/core/tests/test_policy_replacements.py
+  tests/core/tests/test_refresh_policies.py
+  tests/custom/policies/test_readme_sync.py
+
+- 2026-01-28: Added policy freeze automation, canonical schema metadata, and
+  retired the legacy registry storage so policy hashes live solely inside the
+  local registry directory.
+  Files:
+  devcovenant/core/policy_freeze.py
+  devcovenant/core/policy_schema.py
+  devcovenant/core/parser.py
+  devcovenant/core/update_policy_registry.py
+  devcovenant/core/manifest.py
+  devcovenant/registry/global/policy_metadata_schema.yaml
+  tests/core/tests/test_policy_freeze.py
+  tests/core/tests/test_policy_schema.py
+  devcovenant/core/update_hashes.py
+  devcovenant/registry.json
   tests/core/policies/devflow_run_gates/tests/test_devflow_run_gates.py
   tests/core/policies/last_updated_placement/tests/test_last_updated_placement.py
   tests/core/policies/stock_policy_text_sync/tests/test_stock_policy_text_sync.py
@@ -197,7 +226,6 @@ Example entry:
   Files:
   devcovenant/core/metadata_normalizer.py
   devcovenant/custom/policies/managed_doc_assets/managed_doc_assets.py
-  devcovenant/registry/registry.json
   tests/devcovenant/core/tests/test_metadata_normalizer.py
   tests/devcovenant/custom/policies/test_managed_doc_assets.py
 

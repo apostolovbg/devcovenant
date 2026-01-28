@@ -7,38 +7,36 @@
 **Doc Type:** policy-source
 **Managed By:** DevCovenant
 
-# Message from DevCovanant's Human, read first and do not edit:
+# Message from DevCovenant's Human, read first and do not edit:
 
-This document is the absolute source of truth for developers - both 
-human and AI, who work on this repository. It is something like the Law of 
-The Land - the canonical policy source of truth for this repository, 
-and the policies that live in it are managed by DevCovenant. Failure to 
-understand all the instructions in this document _will_ lead to failed 
-commits. 
+This document is the absolute source of truth for everyone who works in
+this repository—human and AI alike. Think of it as the Law of the Land:
+the canonical policy source for this repo, and the policies it holds are
+managed by DevCovenant. Failing to follow the instructions here will
+cause commits to fail.
 
-After `AGENTS.md`, read `README.md` to learn about the very project that 
-lives in this repository - the reason of its entire existence.
+After `AGENTS.md`, read `README.md` to learn about the project that
+lives in this repository and what it aims to solve.
 
-In the end `devcovenant/README.md` to learn how to work with DevCovenant. 
-It can be pesky at first, but it's the price we should pay to avoid docs, 
-code and feature drift under AI-assisted development, as well as 
-general repository hygiene and 
+When you are ready to interact with DevCovenant itself, open
+`devcovenant/README.md`. It can be finicky at first, but that is the
+price of keeping docs, code, and features in sync under AI-assisted
+development.
 
-Taking development notes below is effectively obligatory. Updating them 
-regularly to reflect current development hurdles and events is not a bad 
-idea either.
+Taking development notes below is effectively obligatory. Updating them
+frequently to describe current hurdles and events is good practice.
 
-The editable notes section starts immediately after the end of this 
-message and the next `<!-- DEVCOV:END -->` narker that you will see.
-When installing DevCovenant into a repo, preserve any existing notes and
-place them in the editable section below. Do not edit between 
-`DEVCOV*:BEGIN` and `DEVCOV*:END` markers markers in any file, no matter 
-the style in which they have or have not been commented out.
+The editable notes section starts immediately after this message and
+before the next `<!-- DEVCOV:END -->` marker. When installing
+DevCovenant into a repo, preserve any existing notes and place them in
+that section. Never edit between `DEVCOV*:BEGIN` and
+`DEVCOV*:END` markers in any file—regardless of how they are styled.
 
-Have a fruitful development session and read all documents end-to-end. 
-Be sure to always follow pre-commit start - test - end routine unless 
-instructed otherwise - every time when you will change even one bit in 
-this repo. 
+Have a productive session and read the docs end-to-end. Always run the
+gate commands in the right order - ALWAYS start your edits session with
+`start`, do your edits, then run your tests if any, then `end`. This
+ensures devflow policy compliance and accepted commits. Read this entire
+document and you will get it!
 
 <!-- DEVCOV:END -->
 
@@ -67,7 +65,8 @@ this repo.
 
 ## Operational Orientation
 Running DevCovenant uses a fixed sequence: begin with
-`python3 devcovenant/run_pre_commit.py --phase start`, make edits, run
+`python3 devcovenant/run_pre_commit.py --phase start`,
+_only then make any edits_, then run
 `python3 devcovenant/run_tests.py`, and finish with
 `python3 devcovenant/run_pre_commit.py --phase end`. The `devflow-run-gates`
 policy records those commands; any deviation blocks progress. Discussion-only
@@ -75,9 +74,15 @@ turns may skip tests, yet triggering the start gate still snapshots the repo
 state.
 
 Follow the `managed-environment` metadata (virtualenv, bench, conda, poetry,
-etc.) for interpreters, paths, and command hints. If a change requires
-services (web servers, APIs, databases, data pipelines, etc.), launch them
-before the test gate so the suite exercises the running stack. Stock policies
+etc.) for interpreters, paths, and command hints.
+
+_WARNING: IMPORTANT BEHAVIOR REMINDER:_
+
+_If a change requires services (web servers, APIs, databases,_
+_data pipelines, etc.), launch them before the test gate so the suite_
+_exercises the running stack!_
+
+Stock policies
 such as `devflow-run-gates`, `version-sync`, `dependency-license-sync`,
 `changelog-coverage`, and `managed-environment` guard critical invariants;
 consult `devcovenant/README.md` for the broader command catalog, architecture
@@ -564,10 +569,8 @@ required_dirs:
 ```
 
 Docs must include a `Last Updated` header near the top so readers can trust
-recency. The auto-fix refreshes that header to today's UTC date whenever a
-managed document is touched so the recorded timestamp always matches the
-latest change.
-
+recency. The auto-fix keeps timestamps current while respecting allowed
+locations.
 
 ---
 
@@ -613,7 +616,6 @@ exclude_globs: >
   devcovenant/core/profiles/global/assets/LICENSE_GPL-3.0.txt,
   devcovenant/core/profiles/global/assets/*.yaml,
   devcovenant/core/stock_policy_texts.json,
-  devcovenant/registry.json,
   build/**,
   dist/**,
   node_modules/**

@@ -8,8 +8,10 @@ from __future__ import annotations
 import re
 import sys
 from pathlib import Path
+from typing import Iterable
 
 from . import manifest as manifest_module
+from . import policy_freeze
 from .parser import PolicyParser
 from .policy_locations import resolve_script_location
 from .registry import PolicyRegistry
@@ -41,7 +43,12 @@ def _ensure_trailing_newline(path: Path) -> bool:
     return True
 
 
-def update_policy_registry(repo_root: Path | None = None) -> int:
+def update_policy_registry(
+    repo_root: Path | None = None,
+    *,
+    rerun: bool = False,
+    skip_freeze: bool = False,
+) -> int:
     """Update policy hashes.
 
     Writes devcovenant/registry/local/policy_registry.yaml.
@@ -92,7 +99,28 @@ def update_policy_registry(repo_root: Path | None = None) -> int:
     if _ensure_trailing_newline(registry_path):
         print(f"Ensured trailing newline in {registry_path}.")
 
+    if not skip_freeze:
+        freeze_changed, freeze_messages = policy_freeze.apply_policy_freeze(
+            repo_root, policies
+        )
+        if freeze_messages:
+            manifest_module.append_notifications(repo_root, freeze_messages)
+            _print_freeze_messages(freeze_messages)
+        if freeze_changed and not rerun:
+            return update_policy_registry(
+                repo_root, rerun=True, skip_freeze=True
+            )
+
     return 0
+
+
+def _print_freeze_messages(messages: Iterable[str]) -> None:
+    """Print freeze-related notifications."""
+    if not messages:
+        return
+    print("\nPolicy freeze notices:")
+    for message in messages:
+        print(f"- {message}")
 
 
 def main() -> int:

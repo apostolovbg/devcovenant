@@ -52,7 +52,10 @@ hashes synchronized so drift is detectable and reversible.
   default) that requires one SemVer scope tag in the latest changelog
   entry and matches the bump to major/minor/patch semantics.
 - Maintain a canonical metadata schema that lists all supported keys (common
-  and policy-specific) so every policy block can be normalized on demand.
+-  and policy-specific) as well as every available policy ID (core and
+-  custom) so normalization can add missing keys, keep the alphabetic policy
+-  list intact, and signal the presence of custom policies without mutating
+-  user-supplied metadata or policy text.
 
 ### Engine behavior
 - Load policy modules from `devcovenant/core/policies/<id>/<id>.py` with

@@ -14,6 +14,7 @@ from pathlib import Path
 
 from devcovenant.core import manifest as manifest_module
 
+
 def _utc_now() -> _dt.datetime:
     """Return the current UTC time."""
     return _dt.datetime.now(tz=_dt.timezone.utc)
@@ -93,7 +94,14 @@ def main() -> None:
     )
     args = parser.parse_args()
 
-    repo_root = Path(__file__).resolve().parents[1]
+    candidate_root = Path.cwd()
+    project_markers = ("AGENTS.md", "README.md", "CHANGELOG.md")
+    if not any(
+        (candidate_root / marker).exists() for marker in project_markers
+    ):
+        repo_root = Path(__file__).resolve().parents[2]
+    else:
+        repo_root = candidate_root
     status_path = manifest_module.test_status_path(repo_root)
     status_path.parent.mkdir(parents=True, exist_ok=True)
 

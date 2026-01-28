@@ -23,6 +23,7 @@ class PolicyDefinition:
         updated: Whether the policy has been updated (triggers script sync)
         apply: Whether the policy should be evaluated
         custom: Whether the policy uses custom enforcement text
+        freeze: Whether the policy should be frozen into custom overrides
         description: Full policy text
         hash_from_file: Hash stored in AGENTS.md (if present)
         raw_metadata: Raw metadata dict from the policy-def block
@@ -37,6 +38,7 @@ class PolicyDefinition:
     apply: bool
     custom: bool
     description: str
+    freeze: bool = False
     hash_from_file: Optional[str] = None
     raw_metadata: Dict[str, str] = field(default_factory=dict)
 
@@ -88,6 +90,8 @@ class PolicyParser:
             custom_flag = custom_raw.strip().lower() == "true"
 
             # Create policy definition
+            freeze_raw = metadata.get("freeze", "false")
+            freeze_flag = freeze_raw.strip().lower() == "true"
             policy = PolicyDefinition(
                 policy_id=metadata.get("id", ""),
                 name=name,
@@ -98,6 +102,7 @@ class PolicyParser:
                 apply=apply_flag,
                 custom=custom_flag,
                 description=description,
+                freeze=freeze_flag,
                 hash_from_file=metadata.get("hash"),
                 raw_metadata=metadata,
             )

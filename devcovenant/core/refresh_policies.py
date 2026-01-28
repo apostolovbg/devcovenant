@@ -2,22 +2,21 @@
 
 from __future__ import annotations
 
-import re
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Dict, Iterable, List, Sequence, Tuple
 
 import yaml
 
+from devcovenant.core.policy_schema import (
+    POLICY_BLOCK_RE,
+    PolicySchema,
+    parse_metadata_block,
+)
 from devcovenant.core.selector_helpers import _normalize_globs
 
 _POLICIES_BEGIN = "<!-- DEVCOV-POLICIES:BEGIN -->"
 _POLICIES_END = "<!-- DEVCOV-POLICIES:END -->"
-_POLICY_BLOCK_RE = re.compile(
-    r"(##\s+Policy:\s+[^\n]+\n\n)```policy-def\n(.*?)\n```\n\n"
-    r"(.*?)(?=\n---\n|\n##|\Z)",
-    re.DOTALL,
-)
 
 _COMMON_KEYS = [
     "id",
@@ -28,6 +27,7 @@ _COMMON_KEYS = [
     "enforcement",
     "apply",
     "custom",
+    "freeze",
     "profile_scopes",
 ]
 
@@ -39,6 +39,7 @@ _COMMON_DEFAULTS: Dict[str, List[str]] = {
     "enforcement": ["active"],
     "apply": ["true"],
     "custom": ["false"],
+    "freeze": ["false"],
     "profile_scopes": ["global"],
 }
 
@@ -66,14 +67,6 @@ _LEGACY_ROLE_KEY = {
 _METADATA_MODES = ("preserve", "stock")
 
 _GROUP_COMMENTS: Dict[int, str] = {}
-
-
-@dataclass(frozen=True)
-class PolicySchema:
-    """Schema for a policy metadata block."""
-
-    keys: Tuple[str, ...]
-    defaults: Dict[str, List[str]]
 
 
 @dataclass(frozen=True)
@@ -210,30 +203,6 @@ def _load_stock_texts(repo_root: Path) -> Dict[str, str]:
         except Exception:
             pass
     return {}
-
-
-def _parse_metadata_block(
-    block: str,
-) -> Tuple[List[str], Dict[str, List[str]]]:
-    """Return ordered keys and per-key line values from a metadata block."""
-    order: List[str] = []
-    values: Dict[str, List[str]] = {}
-    current_key = ""
-    for line in block.splitlines():
-        stripped = line.strip()
-        if not stripped:
-            continue
-        if ":" in stripped:
-            key, raw_value = stripped.split(":", 1)
-            key = key.strip()
-            value_text = raw_value.strip()
-            order.append(key)
-            values[key] = [] if not value_text else [value_text]
-            current_key = key
-            continue
-        if current_key:
-            values[current_key].append(stripped)
-    return order, values
 
 
 def _render_metadata_block(
@@ -385,9 +354,9 @@ def _build_schema(template_path: Path) -> Dict[str, PolicySchema]:
     if not template_path.exists():
         return schema
     content = template_path.read_text(encoding="utf-8")
-    for match in _POLICY_BLOCK_RE.finditer(content):
+    for match in POLICY_BLOCK_RE.finditer(content):
         metadata_block = match.group(2).strip()
-        order, values = _parse_metadata_block(metadata_block)
+        order, values = parse_metadata_block(metadata_block)
         policy_id = ""
         if "id" in values and values["id"]:
             policy_id = values["id"][0]
@@ -500,11 +469,11 @@ def refresh_policies(
     entries: List[_PolicyEntry] = []
     seen_ids: set[str] = set()
 
-    for match in _POLICY_BLOCK_RE.finditer(block_text):
+    for match in POLICY_BLOCK_RE.finditer(block_text):
         heading = match.group(1)
         metadata_block = match.group(2).strip()
         description = match.group(3).rstrip()
-        order, values = _parse_metadata_block(metadata_block)
+        order, values = parse_metadata_block(metadata_block)
         policy_id = values.get("id", [""])[0] if values.get("id") else ""
         if not policy_id:
             skipped.append("unknown")

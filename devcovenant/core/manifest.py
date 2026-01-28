@@ -5,7 +5,7 @@ from __future__ import annotations
 import json
 from datetime import datetime, timezone
 from pathlib import Path
-from typing import Any, Dict
+from typing import Any, Dict, Iterable
 
 DEV_COVENANT_DIR = "devcovenant"
 MANIFEST_FILENAME = "manifest.json"
@@ -224,6 +224,18 @@ def write_manifest(repo_root: Path, manifest: Dict[str, Any]) -> Path:
         encoding="utf-8",
     )
     return path
+
+
+def append_notifications(repo_root: Path, messages: Iterable[str]) -> None:
+    """Append notification messages to the manifest."""
+    manifest = load_manifest(repo_root)
+    if not manifest:
+        return
+    notifications = manifest.setdefault("notifications", [])
+    timestamp = datetime.now(timezone.utc).isoformat()
+    for message in messages:
+        notifications.append({"timestamp": timestamp, "message": message})
+    write_manifest(repo_root, manifest)
 
 
 def ensure_manifest(repo_root: Path) -> Dict[str, Any] | None:

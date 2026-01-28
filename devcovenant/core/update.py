@@ -276,21 +276,6 @@ def _rewrite_agents_for_replacements(
     return tuple(migrated), tuple(removed)
 
 
-def _record_notifications(target_root: Path, messages: List[str]) -> None:
-    """Persist update notifications in the manifest."""
-    if not messages:
-        return
-    manifest = manifest_module.load_manifest(target_root)
-    if not manifest:
-        return
-    notifications = manifest.get("notifications", [])
-    timestamp = _utc_now()
-    for message in messages:
-        notifications.append({"timestamp": timestamp, "message": message})
-    manifest["notifications"] = notifications
-    manifest_module.write_manifest(target_root, manifest)
-
-
 def _print_notifications(messages: List[str]) -> None:
     """Print update notifications to stdout."""
     if not messages:
@@ -374,7 +359,8 @@ def main(argv=None) -> None:
         joined = ", ".join(plan.new_stock)
         notifications.append(f"New stock policies available: {joined}.")
 
-    _record_notifications(target_root, notifications)
+    if notifications:
+        manifest_module.append_notifications(target_root, notifications)
     _print_notifications(notifications)
 
     if not args.skip_policy_refresh:

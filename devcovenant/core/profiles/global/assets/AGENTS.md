@@ -521,7 +521,6 @@ exclude_globs: >
   devcovenant/core/profiles/global/assets/LICENSE_GPL-3.0.txt,
   devcovenant/core/profiles/global/assets/*.yaml,
   devcovenant/core/stock_policy_texts.json,
-  devcovenant/registry.json,
   build/**,
   dist/**,
   node_modules/**

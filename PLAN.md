@@ -55,7 +55,7 @@ It is the checklist we consult before declaring the spec satisfied.
 - [done] Every change gets logged into `CHANGELOG.md` under the current version.
 
 ### Functional requirements
-- [not done] Maintain a canonical metadata schema enumerating every selector/metadata key so policy normalization can add missing keys without changing existing values.
+- [not done] Maintain a canonical metadata schema enumerating every selector/metadata key so policy normalization can add missing keys without changing existing values; document every supported policy (including true custom policies) so the normalized block lists every policy alphabetically and reports custom overrides without mutating user-specified metadata or policy text.
 - [done] Follow the policy module/adapters/fixer loading rules described in SPEC.
 - [done] Respect `apply`, `severity`, `status`, and `enforcement` metadata across all policies.
 - [done] Support `startup`, `lint`, `pre-commit`, and `normal` modes along with the available fixers.

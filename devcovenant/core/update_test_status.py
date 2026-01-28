@@ -57,7 +57,7 @@ def main() -> None:
     )
     args = parser.parse_args()
 
-    repo_root = Path(__file__).resolve().parents[1]
+    repo_root = Path(__file__).resolve().parents[2]
     status_path = manifest_module.test_status_path(repo_root)
     status_path.parent.mkdir(parents=True, exist_ok=True)
 
