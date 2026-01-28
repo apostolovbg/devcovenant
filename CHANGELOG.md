@@ -58,6 +58,25 @@ Example entry:
   PLAN.md
   POLICY_MAP.md
   devcovenant/README.md
+
+- 2026-01-28: Moved the workflow helpers (`run_pre_commit`, `run_tests`,
+  `update_lock`, `update_test_status`) out of `devcovenant/core/tools` into
+  `devcovenant/core/` and synchronized every doc/manifest/asset that referenced
+  the old path. Rebuilt the profile-managed copies so the global profile still
+  packages the helpers under `devcovenant/core/profiles/global/assets/devcovenant/core/`.
+  Renamed the selector helpers module to `selector_helpers` and refreshed the
+  selector tests accordingly.
+  Files:
+  devcovenant/core/run_pre_commit.py
+  devcovenant/core/run_tests.py
+  devcovenant/core/update_lock.py
+  devcovenant/core/update_test_status.py
+  devcovenant/core/selector_helpers.py
+  tests/core/tests/test_selectors.py
+  devcovenant/core/profiles/global/assets/devcovenant/core/run_pre_commit.py
+  devcovenant/core/profiles/global/assets/devcovenant/core/run_tests.py
+  devcovenant/core/profiles/global/assets/devcovenant/core/update_lock.py
+  devcovenant/core/profiles/global/assets/devcovenant/core/update_test_status.py
   devcovenant/cli.py
   devcovenant/config.yaml
   devcovenant/core/cli_options.py
