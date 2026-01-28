@@ -194,6 +194,9 @@ hashes synchronized so drift is detectable and reversible.
   profile scopes, core/custom source, enabled flag, and script hashes so the
   registry is the canonical policy map without requiring a separate reference
   document.
+- The legacy `devcovenant/registry.json` storage and the accompanying
+  `update_hashes.py` helper have been retired so policy hashes live solely
+  inside `devcovenant/registry/local/policy_registry.yaml`.
 
 ## Installation Requirements
 - Install the full DevCovenant toolchain into the target repo, including the
@@ -249,6 +252,10 @@ hashes synchronized so drift is detectable and reversible.
   the existing `devcovenant/` folder, refreshing only configs, managed docs,
   and metadata. The optional `devcovenant/config_override` path remains a
   temporary override for experimentation.
+- Add a `refresh-all` command that runs `refresh-policies` (defaulting to
+  preserve metadata mode), updates `devcovenant/registry/local/policy_registry.yaml`,
+  and rebuilds `devcovenant/registry/local/profile_catalog.yaml` so the
+  profile/catalog state stays current without a full install/update run.
 
 ## Packaging Requirements
 - Ship `devcovenant` as a pure-Python package with a console script entry.
@@ -269,6 +276,10 @@ hashes synchronized so drift is detectable and reversible.
   or `devcovenant/custom/profiles` can rely on corresponding suites under
   `tests/devcovenant/core/profiles/` and
   `tests/devcovenant/custom/profiles/`.
+- The `new-modules-need-tests` policy explicitly requires unit tests. The
+  repository continues to run both `pytest` and `python -m unittest discover`,
+  but newly added coverage must be unit-level and existing policy tests
+  should be converted to unit suites over time.
 
 ## Non-Functional Requirements
 - Checks must be fast enough for pre-commit usage on typical repos.

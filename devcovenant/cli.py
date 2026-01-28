@@ -61,9 +61,9 @@ def main() -> None:
             "sync",
             "test",
             "update-policy-registry",
-            "update-policy-registry",
             "restore-stock-text",
             "refresh-policies",
+            "refresh-all",
             "normalize-metadata",
             "install",
             "update",
@@ -358,6 +358,12 @@ def main() -> None:
                 f"Updated metadata for: {joined} "
                 f"({result.metadata_mode} mode)"
             )
+
+    elif args.command == "refresh-all":
+        from devcovenant.core.refresh_all import refresh_all
+
+        result = refresh_all(args.repo, metadata_mode=args.metadata or "preserve")
+        sys.exit(result)
             print(
                 "Run `devcovenant update-policy-registry` "
                 "to refresh the registry."

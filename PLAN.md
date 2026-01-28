@@ -32,6 +32,47 @@ subtree; this keeps the repo tests manageable while adhering to the spec.
 - Drive configuration, registries, and managed docs from profile metadata so
   the system auto-updates policy overlays, suffix lists, version knobs, and
   asset catalogs as profiles change.
+- Reiterate that install/update obey the self-install/self-refresh workflow:
+  when the CLI runs from the source tree, it refreshes that repo in place,
+  and when started from a packaged `devcovenant` on `PATH` it updates the
+  working repository (including the post-`--no-touch` scenario where the
+  repo merely has the `devcovenant/` folder); configs/docs/metadata alone
+  are touched rather than overwriting the existing `devcovenant/` folder.
+
+## Spec compliance checklist
+- Configuration: generate a complete `devcovenant/config.yaml` that lists
+  every supported knob (even if blank), includes `profiles.generated` data,
+  and propagates `version.override` into templated assets before VERSION
+  exists.
+- Profiles: rebuild `devcovenant/registry/local/profile_catalog.yaml` from
+  core/custom manifests, mark active profiles, and ensure assets are listed
+  per profile.
+- Policy metadata: normalize all selector keys, expose missing keys in
+  AGENTS policy blocks without changing values, and enforce the policy block
+  as a managed unit separate from other doc blocks.
+- Policy registry: make `devcovenant/registry/local/policy_registry.yaml`
+  the sole hash store, and delete the legacy `devcovenant/registry.json`
+  along with `update_hashes.py`.
+- Policy lifecycle: implement replacements from
+  `devcovenant/registry/global/policy_replacements.yaml`, and support the
+  `freeze` override that copies policies into `devcovenant/custom/`.
+- Managed environment: keep the `managed-environment` policy off by
+  default, but warn on missing metadata when enabled.
+- Install/update: ensure docs/managed blocks behave as specified
+  (`AGENTS.md` template with preserved editable section, optional SPEC/PLAN,
+  backups to `*_old.*`, `Last Updated` stamping, and doc include/exclude).
+- Assets: compile policy assets into
+  `devcovenant/registry/local/policy_assets.yaml` and apply only when the
+  policy is enabled and profile scopes match.
+- Packaging: ship tests under top-level `tests/` in sdist only, keep
+  `THIRD_PARTY_LICENSES.md`/`licenses/` in sync with dependency changes, and
+  enforce Python 3.10+ metadata.
+- Tests: treat `new-modules-need-tests` as unit-test-only, keep running
+  both `pytest` and `python -m unittest discover`, and convert existing
+  policy tests to unit-style suites as part of the migration.
+- CLI: verify `refresh-all` exists, `refresh-policies` defaults to preserve,
+  and deprecations (`normalize-metadata`, `update-hashes`) are removed or
+  redirected as specified.
 
 ## Workflow
 - Always run `python3 devcovenant/core/run_pre_commit.py --phase start` before editing.
@@ -58,11 +99,15 @@ subtree; this keeps the repo tests manageable while adhering to the spec.
    - Regenerate `devcovenant/config.yaml` so `profiles.active`, `profiles.generated.file_suffixes`, and the `policies` block always reflect the selected profiles.
    - Merge gitignore fragments from global+active profiles into `.gitignore` and ensure profile overlays supply `policy_overlays`, dependencies, required commands, and suffix lists.
    - Propagate the configured `version.override` into template assets and policy generation so generated files (e.g., `pyproject.toml`, policy assets) use the same release version.
+   - Describe the new `refresh-all` helper that runs `refresh-policies` in preserve mode, updates the policy registry, and rebuilds the profile catalog without a full install/update.
 3. **Phase 3 – Policy lifecycle & registry automation**
    - Split the registry into tracked `devcovenant/registry/global/` (stock policy texts, replacements) and gitignored `devcovenant/registry/local/` (policy_registry, manifest, catalog, assets, test status).
    - Ensure `refresh_policies` + `update-policy-registry` populate every policy entry (active or disabled) with metadata handles, profile scopes, asset hints, script hashes, and core/custom flags.
    - Implement policy replacements/notifications: migrating replaced policies to `custom/` with `custom: true`, removing disabled policies, and logging announcements in `manifest.json` while printing notices on update.
    - Support the `freeze` metadata knob that copies policy code/fixers/assets into `devcovenant/custom/` when true and removes them (and the registry entry) when false, rerunning `devcovenant update-policy-registry` each time.
+   - Retire the legacy `devcovenant/registry.json` artifact and remove the
+     `update_hashes.py` helper so policy hashes live only in the local
+     policy registry.
 4. **Phase 4 – CLI, engine, and managed-doc compliance**
    - Validate CLI commands (`check`, `sync`, `test`, `update-policy-registry`, `restore-stock-text`, `normalize-metadata`, `install`, `update`, `uninstall`) all behave per SPEC, especially around `apply`, `severity`, `status`, fixers, and adapters.
    - Keep policy fixers language-aware (`fixers/global.py` plus optional `<lang>.py`) and let custom fixers override core ones.
