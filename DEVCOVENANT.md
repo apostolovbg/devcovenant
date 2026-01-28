@@ -169,9 +169,9 @@ Adoption guidance:
 - After errors are cleared, ask the repo owner how to handle warnings and info.
 
 DevCovenant expects this gate sequence in enforced repos:
-1. `python3 devcovenant/core/tools/run_pre_commit.py --phase start`
-2. `python3 devcovenant/core/tools/run_tests.py`
-3. `python3 devcovenant/core/tools/run_pre_commit.py --phase end`
+1. `python3 devcovenant/core/run_pre_commit.py --phase start`
+2. `python3 devcovenant/core/run_tests.py`
+3. `python3 devcovenant/core/run_pre_commit.py --phase end`
 
 At session start, run `python3 devcov_check.py check --mode startup` or
 `devcovenant check --mode startup` to detect policy drift early.

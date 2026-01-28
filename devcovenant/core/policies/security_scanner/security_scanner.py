@@ -4,7 +4,7 @@ import re
 from typing import List, Sequence
 
 from devcovenant.core.base import CheckContext, PolicyCheck, Violation
-from devcovenant.core.selectors import SelectorSet
+from devcovenant.core.selector_helpers import SelectorSet
 
 PATTERNS = [
     (

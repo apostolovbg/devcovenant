@@ -49,14 +49,14 @@ DEFAULT_CORE_FILES = [
     "devcovenant/core/profiles/global/assets/.github/workflows/ci.yml",
     "devcovenant/core/profiles/global/assets/gitignore_base.txt",
     "devcovenant/core/profiles/global/assets/gitignore_os.txt",
-    "devcovenant/core/profiles/global/assets/devcovenant/core/tools/run_pre_commit.py",
-    "devcovenant/core/profiles/global/assets/devcovenant/core/tools/run_tests.py",
-    "devcovenant/core/profiles/global/assets/devcovenant/core/tools/update_test_status.py",
+    "devcovenant/core/profiles/global/assets/devcovenant/core/run_pre_commit.py",
+    "devcovenant/core/profiles/global/assets/devcovenant/core/run_tests.py",
+    "devcovenant/core/profiles/global/assets/devcovenant/core/update_test_status.py",
     "devcovenant/core/profiles/README.md",
     "devcovenant/core/policies/README.md",
-    "devcovenant/core/tools/run_pre_commit.py",
-    "devcovenant/core/tools/run_tests.py",
-    "devcovenant/core/tools/update_test_status.py",
+    "devcovenant/core/run_pre_commit.py",
+    "devcovenant/core/run_tests.py",
+    "devcovenant/core/update_test_status.py",
 ]
 
 DEFAULT_DOCS_CORE = [

@@ -8,7 +8,7 @@ from pathlib import Path
 from typing import Iterable, List
 
 from devcovenant.core.base import CheckContext, PolicyCheck, Violation
-from devcovenant.core.selectors import build_watchlists
+from devcovenant.core.selector_helpers import build_watchlists
 
 STATUS_RELATIVE = (
     Path("devcovenant") / "registry" / "local" / "test_status.json"
@@ -103,7 +103,7 @@ class TrackTestStatusCheck(PolicyCheck):
                     line_number=1,
                     message=(
                         "Code changes require a fresh test status update. "
-                        "Run `python3 devcovenant/core/tools/run_tests.py` "
+                        "Run `python3 devcovenant/core/run_tests.py` "
                         "so the suite executes and "
                         "the status file is refreshed."
                     ),

@@ -6,7 +6,7 @@ from pathlib import Path, PurePosixPath
 from typing import Iterable, List, Sequence
 
 from devcovenant.core.base import CheckContext, PolicyCheck, Violation
-from devcovenant.core.selectors import SelectorSet
+from devcovenant.core.selector_helpers import SelectorSet
 
 
 def _normalize_list(raw: object | None) -> List[str]:

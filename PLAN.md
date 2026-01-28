@@ -34,10 +34,10 @@ subtree; this keeps the repo tests manageable while adhering to the spec.
   asset catalogs as profiles change.
 
 ## Workflow
-- Always run `python3 devcovenant/core/tools/run_pre_commit.py --phase start` before editing.
-- Run `python3 devcovenant/core/tools/run_tests.py` (which in turn runs `pytest` against
+- Always run `python3 devcovenant/core/run_pre_commit.py --phase start` before editing.
+- Run `python3 devcovenant/core/run_tests.py` (which in turn runs `pytest` against
   `tests/` with the mirrored structure).
-- Finish with `python3 devcovenant/core/tools/run_pre_commit.py --phase end` to satisfy
+- Finish with `python3 devcovenant/core/run_pre_commit.py --phase end` to satisfy
   `devflow-run-gates`.
 - Flag policy text changes with `updated: true`, run `devcovenant update-policy-registry`, then reset the flag.
 
@@ -50,9 +50,9 @@ subtree; this keeps the repo tests manageable while adhering to the spec.
    - Keep profile manifests/assets under `devcovenant/{core,custom}/profiles/<name>/assets/`.
    - Update `MANIFEST.in` and `pyproject.toml` so only the core package tree and
      the top-level `tests/` mirror are bundled.
-   - Move the previous `tools/` helpers into `devcovenant/core/tools/` and update
-     every reference so the CLI, docs, and managed assets point to the in-package
-     tooling instead of an external `tools` directory.
+  - Move the previous `tools/` helpers into `devcovenant/core/` and update
+    every reference so the CLI, docs, and managed assets point to the in-package
+    tooling instead of an external `tools` directory.
 2. **Phase 2 – Profile catalog, config, and overlays**
    - Rebuild `devcovenant/registry/local/profile_catalog.yaml` on every install/update via `profiles.discover_profiles`.
    - Regenerate `devcovenant/config.yaml` so `profiles.active`, `profiles.generated.file_suffixes`, and the `policies` block always reflect the selected profiles.
@@ -69,7 +69,7 @@ subtree; this keeps the repo tests manageable while adhering to the spec.
    - Enforce the documentation rules (header with `Version`/`Last Updated`, `<!-- DEVCOV:BEGIN-->` blocks, AGENTS policy block special handling). Document the `policy block` as a managed unit distinct from other blocks.
 5. **Phase 5 – Packaging/tests/validation**
    - Keep tests outside the package while shipping them via `MANIFEST.in`; confirm the mirrored `tests/` tree is packaged only in source builds.
-   - Run `python3 -m devcovenant update --target .` plus `python3 devcovenant/core/tools/run_tests.py` to validate the updated layout, registry automation, config generation, overlays, and metadata normalization.
+   - Run `python3 -m devcovenant update --target .` plus `python3 devcovenant/core/run_tests.py` to validate the updated layout, registry automation, config generation, overlays, and metadata normalization.
    - Ensure `.gitignore` covers the auto-generated registry files and profile-specific tmp artifacts.
 
 ## Specification trace
@@ -84,7 +84,7 @@ Map SPEC requirements to the phases above:
 - Use the mirrored `tests/` tree for policy engine tests (`pytest tests/...`).
 - After each phase run `python3 -m devcovenant update --target .` to ensure installers pick up the new layout/config/registry.
 - Regenerate `devcovenant/registry/local/policy_registry.yaml` and `manifest.json` to confirm the automation works end-to-end.
-- Whenever managed docs change, rerun the pre-commit workflow (`devcovenant/core/tools/run_pre_commit.py --phase start/end`) and `devcovenant/core/tools/run_tests.py` to keep the policy pipelines happy.
+- Whenever managed docs change, rerun the pre-commit workflow (`devcovenant/core/run_pre_commit.py --phase start/end`) and `devcovenant/core/run_tests.py` to keep the policy pipelines happy.
 
 ## Release readiness
 - Update `CHANGELOG.md` with every net change under the current version header (no future dates).

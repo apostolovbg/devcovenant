@@ -45,7 +45,7 @@ policy-specific handles listed below.
 - **Metadata handles:** `test_status_file`, `required_commands`,
   `pre_commit_command`, `require_pre_commit_start`,
   `require_pre_commit_end`, `profile_scopes`
-- **Assets:** `devcovenant/core/tools/run_pre_commit.py`, `devcovenant/core/tools/run_tests.py`,
+- **Assets:** `devcovenant/core/run_pre_commit.py`, `devcovenant/core/run_tests.py`,
   `devcovenant/registry/local/test_status.json`
 - **Profiles:** `global` + every profile that declares `devflow`
   metadata (see `PROFILE_MAP.md`)

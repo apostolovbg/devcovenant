@@ -93,13 +93,13 @@ Example entry:
   devcovenant/core/policy_texts.py
   devcovenant/core/policies/devflow_run_gates/devflow_run_gates.py
   devcovenant/core/policies/track_test_status/track_test_status.py
-  devcovenant/core/profiles/global/assets/devcovenant/core/devcovenant/core/tools/run_pre_commit.py
-  devcovenant/core/profiles/global/assets/devcovenant/core/devcovenant/core/tools/update_test_status.py
+  devcovenant/core/profiles/global/assets/devcovenant/core/devcovenant/core/run_pre_commit.py
+  devcovenant/core/profiles/global/assets/devcovenant/core/devcovenant/core/update_test_status.py
   devcovenant/core/profiles/python/assets/pyproject.toml
   devcovenant/core/profiles/python/assets/venv.md
   devcovenant/core/profiles/python/profile.yaml
-  devcovenant/core/devcovenant/core/tools/run_pre_commit.py
-  devcovenant/core/devcovenant/core/tools/update_test_status.py
+  devcovenant/core/devcovenant/core/run_pre_commit.py
+  devcovenant/core/devcovenant/core/update_test_status.py
   devcovenant/registry/global/stock_policy_texts.yaml
   devcovenant/registry/global/policy_replacements.yaml
   POLICY_MAP.md
@@ -589,9 +589,9 @@ Example entry:
   devcovenant/core/profiles/global/assets/VERSION
   devcovenant/core/profiles/global/assets/gitignore_base.txt
   devcovenant/core/profiles/global/assets/gitignore_os.txt
-  devcovenant/core/profiles/global/assets/devcovenant/core/devcovenant/core/tools/run_pre_commit.py
-  devcovenant/core/profiles/global/assets/devcovenant/core/devcovenant/core/tools/run_tests.py
-  devcovenant/core/profiles/global/assets/devcovenant/core/devcovenant/core/tools/update_test_status.py
+  devcovenant/core/profiles/global/assets/devcovenant/core/devcovenant/core/run_pre_commit.py
+  devcovenant/core/profiles/global/assets/devcovenant/core/devcovenant/core/run_tests.py
+  devcovenant/core/profiles/global/assets/devcovenant/core/devcovenant/core/update_test_status.py
   devcovenant/core/profiles/global/profile.yaml
   devcovenant/core/profiles/go/assets/.gitignore
   devcovenant/core/profiles/go/assets/go.mod
@@ -666,9 +666,9 @@ Example entry:
   devcovenant/core/templates/global/VERSION
   devcovenant/core/templates/global/gitignore_base.txt
   devcovenant/core/templates/global/gitignore_os.txt
-  devcovenant/core/templates/global/devcovenant/core/devcovenant/core/tools/run_pre_commit.py
-  devcovenant/core/templates/global/devcovenant/core/devcovenant/core/tools/run_tests.py
-  devcovenant/core/templates/global/devcovenant/core/devcovenant/core/tools/update_test_status.py
+  devcovenant/core/templates/global/devcovenant/core/devcovenant/core/run_pre_commit.py
+  devcovenant/core/templates/global/devcovenant/core/devcovenant/core/run_tests.py
+  devcovenant/core/templates/global/devcovenant/core/devcovenant/core/update_test_status.py
   devcovenant/core/templates/policies/README.md
   devcovenant/core/templates/policies/dependency-license-sync\
   /THIRD_PARTY_LICENSES.md
@@ -942,9 +942,9 @@ Example entry:
   devcovenant/core/stock_policy_texts.yaml
   devcovenant/core/templates/README.md
   devcovenant/core/templates/global/AGENTS.md
-  devcovenant/core/templates/global/devcovenant/core/devcovenant/core/tools/run_pre_commit.py
-  devcovenant/core/templates/global/devcovenant/core/devcovenant/core/tools/run_tests.py
-  devcovenant/core/templates/global/devcovenant/core/devcovenant/core/tools/update_test_status.py
+  devcovenant/core/templates/global/devcovenant/core/devcovenant/core/run_pre_commit.py
+  devcovenant/core/templates/global/devcovenant/core/devcovenant/core/run_tests.py
+  devcovenant/core/templates/global/devcovenant/core/devcovenant/core/update_test_status.py
   devcovenant/core/templates/policies/README.md
   devcovenant/core/templates/policies/dependency-license-sync/\
     policy_assets.yaml
@@ -1032,9 +1032,9 @@ Example entry:
   devcovenant/registry/local/policy_registry.yaml
   devcovenant/registry/global/stock_policy_texts.yaml
   devcovenant/registry/local/test_status.json
-  devcovenant/core/devcovenant/core/tools/run_pre_commit.py
-  devcovenant/core/devcovenant/core/tools/run_tests.py
-  devcovenant/core/devcovenant/core/tools/update_test_status.py
+  devcovenant/core/devcovenant/core/run_pre_commit.py
+  devcovenant/core/devcovenant/core/run_tests.py
+  devcovenant/core/devcovenant/core/update_test_status.py
 - 2026-01-24: Planned dynamic profile/policy catalogs and registry
   layout updates. (AI assistant)
   Files:
@@ -1631,9 +1631,9 @@ devcovenant/core/templates/global/AGENTS.md
 devcovenant/core/templates/global/CONTRIBUTING.md
 devcovenant/core/templates/global/LICENSE_GPL-3.0.txt
 devcovenant/core/templates/global/VERSION
-devcovenant/core/templates/global/devcovenant/core/devcovenant/core/tools/run_pre_commit.py
-devcovenant/core/templates/global/devcovenant/core/devcovenant/core/tools/run_tests.py
-devcovenant/core/templates/global/devcovenant/core/devcovenant/core/tools/update_test_status.py
+devcovenant/core/templates/global/devcovenant/core/devcovenant/core/run_pre_commit.py
+devcovenant/core/templates/global/devcovenant/core/devcovenant/core/run_tests.py
+devcovenant/core/templates/global/devcovenant/core/devcovenant/core/update_test_status.py
 devcovenant/core/templates/policies/dependency-license-sync/\
   THIRD_PARTY_LICENSES.md
 devcovenant/core/templates/policies/dependency-license-sync/licenses/README.md
@@ -1727,9 +1727,9 @@ devcovenant/templates/AGENTS.md
 devcovenant/templates/CONTRIBUTING.md
 devcovenant/templates/LICENSE_GPL-3.0.txt
 devcovenant/templates/VERSION
-devcovenant/templates/devcovenant/core/devcovenant/core/tools/run_pre_commit.py
-devcovenant/templates/devcovenant/core/devcovenant/core/tools/run_tests.py
-devcovenant/templates/devcovenant/core/devcovenant/core/tools/update_test_status.py
+devcovenant/templates/devcovenant/core/devcovenant/core/run_pre_commit.py
+devcovenant/templates/devcovenant/core/devcovenant/core/run_tests.py
+devcovenant/templates/devcovenant/core/devcovenant/core/update_test_status.py
 devcovenant/core/tests/test_install.py
 - 2026-01-23: Implemented Phase F install/update convergence with
   auto-uninstall prompts, disable-policy support, version discovery

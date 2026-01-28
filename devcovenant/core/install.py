@@ -22,9 +22,9 @@ from devcovenant.core.refresh_policies import refresh_policies
 DEV_COVENANT_DIR = "devcovenant"
 CORE_PATHS = [
     DEV_COVENANT_DIR,
-    "devcovenant/core/tools/run_pre_commit.py",
-    "devcovenant/core/tools/run_tests.py",
-    "devcovenant/core/tools/update_test_status.py",
+    "devcovenant/core/run_pre_commit.py",
+    "devcovenant/core/run_tests.py",
+    "devcovenant/core/update_test_status.py",
 ]
 
 CONFIG_PATHS = [
@@ -78,9 +78,9 @@ _DEFAULT_CORE_PATHS = [
     "devcovenant/__init__.py",
     "devcovenant/__main__.py",
     "devcovenant/cli.py",
-    "devcovenant/core/tools/run_pre_commit.py",
-    "devcovenant/core/tools/run_tests.py",
-    "devcovenant/core/tools/update_test_status.py",
+    "devcovenant/core/run_pre_commit.py",
+    "devcovenant/core/run_tests.py",
+    "devcovenant/core/update_test_status.py",
 ]
 
 LEGACY_ROOT_PATHS = [
@@ -1079,9 +1079,9 @@ def _build_readme_block(
                 "## Workflow",
                 "DevCovenant enforces a gated workflow for every change, "
                 "including docs:",
-                "1. `python3 devcovenant/core/tools/run_pre_commit.py --phase start`",
-                "2. `python3 devcovenant/core/tools/run_tests.py`",
-                "3. `python3 devcovenant/core/tools/run_pre_commit.py --phase end`",
+                "1. `python3 devcovenant/core/run_pre_commit.py --phase start`",
+                "2. `python3 devcovenant/core/run_tests.py`",
+                "3. `python3 devcovenant/core/run_pre_commit.py --phase end`",
                 "Record changes in `CHANGELOG.md` and keep `AGENTS.md` in "
                 "sync with",
                 "policy updates.",

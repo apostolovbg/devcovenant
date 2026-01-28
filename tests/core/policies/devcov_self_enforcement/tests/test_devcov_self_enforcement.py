@@ -53,7 +53,11 @@ def _write_policy_script(repo_root: Path) -> Path:
 def _write_registry(repo_root: Path, agents_path: Path) -> None:
     """Write a registry with matching hashes for the demo policy."""
     registry_path = (
-        repo_root / "devcovenant" / "registry" / "local" / "policy_registry.yaml"
+        repo_root
+        / "devcovenant"
+        / "registry"
+        / "local"
+        / "policy_registry.yaml"
     )
     parser = PolicyParser(agents_path)
     policies = parser.parse_agents_md()

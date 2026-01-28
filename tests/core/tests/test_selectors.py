@@ -1,7 +1,7 @@
 """Tests for the shared selector helpers."""
 
 from devcovenant.core.base import PolicyCheck
-from devcovenant.core.selectors import SelectorSet, build_watchlists
+from devcovenant.core.selector_helpers import SelectorSet, build_watchlists
 
 
 class DummyPolicy(PolicyCheck):

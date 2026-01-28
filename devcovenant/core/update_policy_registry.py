@@ -6,10 +6,10 @@ import re
 import sys
 from pathlib import Path
 
+from . import manifest as manifest_module
 from .parser import PolicyParser
 from .policy_locations import resolve_script_location
 from .registry import PolicyRegistry
-from . import manifest as manifest_module
 
 _UPDATED_PATTERN = re.compile(r"^(\s*updated:\s*)true\s*$", re.MULTILINE)
 

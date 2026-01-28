@@ -7,7 +7,7 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Dict, Iterable, List, Sequence, Tuple
 
-from devcovenant.core.selectors import _normalize_globs
+from devcovenant.core.selector_helpers import _normalize_globs
 
 _POLICIES_BEGIN = "<!--POLICIES-BEGIN-->"
 _POLICIES_END = "<!--POLICIES-END-->"

@@ -3,8 +3,7 @@
 from importlib import import_module
 
 _module = import_module(
-    "tests.core.policies.changelog_coverage.tests."
-    "changelog_coverage_impl"
+    "tests.core.policies.changelog_coverage.tests." "changelog_coverage_impl"
 )
 for _name in dir(_module):
     if _name.startswith("test_"):

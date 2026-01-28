@@ -6,7 +6,7 @@ import tokenize
 from typing import Set
 
 from devcovenant.core.base import CheckContext, PolicyCheck, Violation
-from devcovenant.core.selectors import SelectorSet
+from devcovenant.core.selector_helpers import SelectorSet
 
 
 def _collect_comment_lines(source: str) -> Set[int]:

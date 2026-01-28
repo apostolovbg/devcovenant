@@ -127,7 +127,11 @@ hashes synchronized so drift is detectable and reversible.
   metadata overlays.
 - Config should expose global knobs for `paths`, `docs`, `install`,
   `update`, `engine`, `hooks`, `reporting`, `ignore`, and `policies` so
-  repos can tune behavior without editing core scripts.
+  repos can tune behavior without editing core scripts. Every generated
+  config must list every known knob (even if the default value is blank)
+  so the file doubles as an override template that documents every
+  supported option; only the policy overrides section remains optional to
+  avoid overwhelming the document.
 - The profile catalog is generated into
   `devcovenant/registry/local/profile_catalog.yaml` by scanning profile manifests.
   Active profiles are recorded under `profiles.active` in config and extend
@@ -193,7 +197,9 @@ hashes synchronized so drift is detectable and reversible.
 
 ## Installation Requirements
 - Install the full DevCovenant toolchain into the target repo, including the
-  `devcovenant/` tree, `devcovenant/core/tools` helpers, and CI workflow assets.
+  `devcovenant/` tree, `devcovenant/core/run_pre_commit.py`,
+  `devcovenant/core/run_tests.py`, `devcovenant/core/update_lock.py`, and
+  `devcovenant/core/update_test_status.py` helpers, and CI workflow assets.
 - Use packaged assets from `devcovenant/core/profiles/` and
   `devcovenant/core/policies/` when installed from PyPI; fall back to repo
   files when running from source.
@@ -236,6 +242,13 @@ hashes synchronized so drift is detectable and reversible.
   installed paths, options, active profiles, policy asset mappings,
   and the UTC timestamp of the install or update. Profile manifests
   drive profile assets and overlays, even when not listed as assets.
+- Install and update share a unified self-install/self-refresh workflow. Whatever
+  command runs operates on the host repository: invoking the installed package
+  (on `PATH`) targets the current working repo, while running `python3` inside
+  the DevCovenant source tree updates that repo in place without overwriting
+  the existing `devcovenant/` folder, refreshing only configs, managed docs,
+  and metadata. The optional `devcovenant/config_override` path remains a
+  temporary override for experimentation.
 
 ## Packaging Requirements
 - Ship `devcovenant` as a pure-Python package with a console script entry.

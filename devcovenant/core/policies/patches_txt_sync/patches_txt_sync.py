@@ -6,7 +6,7 @@ from pathlib import Path
 from typing import Dict, Iterable, List, Optional, Set, Tuple
 
 from devcovenant.core.base import CheckContext, PolicyCheck, Violation
-from devcovenant.core.selectors import SelectorSet
+from devcovenant.core.selector_helpers import SelectorSet
 
 
 class PatchesTxtSyncCheck(PolicyCheck):

@@ -12,8 +12,8 @@ from typing import Any, Dict, List, Optional, Set
 
 import yaml
 
-from .base import CheckContext, PolicyCheck, PolicyFixer, Violation
 from . import manifest as manifest_module
+from .base import CheckContext, PolicyCheck, PolicyFixer, Violation
 from .manifest import ensure_manifest
 from .parser import PolicyDefinition, PolicyParser
 from .policy_locations import resolve_script_location
@@ -71,7 +71,9 @@ class DevCovenantEngine:
         self.devcovenant_dir = self.repo_root / "devcovenant"
         self.agents_md_path = self.repo_root / "AGENTS.md"
         self.config_path = self.devcovenant_dir / "config.yaml"
-        self.registry_path = manifest_module.policy_registry_path(self.repo_root)
+        self.registry_path = manifest_module.policy_registry_path(
+            self.repo_root
+        )
 
         # Load configuration and apply overrides
         self.config = self._load_config()

@@ -8,7 +8,7 @@ include/exclude metadata (suffixes, prefixes and globs).
 from typing import List
 
 from devcovenant.core.base import CheckContext, PolicyCheck, Violation
-from devcovenant.core.selectors import SelectorSet
+from devcovenant.core.selector_helpers import SelectorSet
 
 
 class LineLengthLimitCheck(PolicyCheck):

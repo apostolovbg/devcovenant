@@ -6,7 +6,7 @@ from pathlib import Path
 from typing import List, Set
 
 from devcovenant.core.base import CheckContext, PolicyCheck, Violation
-from devcovenant.core.selectors import SelectorSet, build_watchlists
+from devcovenant.core.selector_helpers import SelectorSet, build_watchlists
 
 
 class NewModulesNeedTestsCheck(PolicyCheck):

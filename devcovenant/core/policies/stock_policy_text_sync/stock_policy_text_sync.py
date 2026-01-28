@@ -23,7 +23,8 @@ class StockPolicyTextSyncCheck(PolicyCheck):
         """Compare policy text to the stock text map."""
         agents_rel = Path(self.get_option("policy_definitions", "AGENTS.md"))
         stock_rel = self.get_option(
-            "stock_texts_file", "devcovenant/registry/global/stock_policy_texts.yaml"
+            "stock_texts_file",
+            "devcovenant/registry/global/stock_policy_texts.yaml",
         )
         agents_path = context.repo_root / agents_rel
         if not agents_path.exists():

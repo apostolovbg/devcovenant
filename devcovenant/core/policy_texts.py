@@ -15,7 +15,9 @@ _POLICY_BLOCK_RE = re.compile(
     r"(.*?)(?=\n---\n|\n##|\Z)",
     re.DOTALL,
 )
-_DEFAULT_STOCK_TEXTS = Path("devcovenant") / "registry" / "global" / "stock_policy_texts.yaml"
+_DEFAULT_STOCK_TEXTS = (
+    Path("devcovenant") / "registry" / "global" / "stock_policy_texts.yaml"
+)
 
 
 def _parse_metadata_block(block: str) -> Dict[str, str]:
