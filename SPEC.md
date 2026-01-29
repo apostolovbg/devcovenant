@@ -126,14 +126,15 @@ hashes synchronized so drift is detectable and reversible.
    mangling user config or custom policies.
 
 #### Command matrix (behavioral intent)
-- `install`: bootstrap DevCovenant in a repo (no config changes beyond defaults;
-  refresh managed docs; rebuild registries).
-- `update`: refresh DevCovenant-managed content (no config changes; refresh
-  managed docs; rebuild registries).
-- `refresh-all`: rebuild registries/metadata from current config (no config
-  changes; no managed doc refresh).
-- `reset-to-stock` (planned): restore stock metadata/profile config (updates
-  config, docs, and registries).
+- `install`: bootstrap DevCovenant in a repo.
+  It makes no config changes beyond defaults, refreshes managed docs, and
+  rebuilds registries.
+- `update`: refresh DevCovenant-managed content without changing config.
+  It refreshes managed docs and rebuilds registries.
+- `refresh-all`: rebuild registries/metadata from the current config without
+  touching managed docs.
+- `reset-to-stock` (planned): restore stock metadata/profile config, updating
+  config, docs, and registries.
 
 ### Command/script placement
 - User-facing, runnable commands live at the `devcovenant/` root and are
@@ -199,15 +200,17 @@ hashes synchronized so drift is detectable and reversible.
   doubles as an override template that documents every supported option;
   only the policy overrides sections may remain empty to avoid
   overwhelming the document.
-- Config also exposes `doc_assets` (with `autogen` and `user` lists) so
-  repositories can drive which managed docs the active profiles (for example,
+- Config also exposes `doc_assets` (with `autogen` and `user` lists).
+  Repositories can drive which managed docs the active profiles (for example,
   `global`, `docs`, `devcovenant`) synthesize versus which remain purely
-  user-maintained. This mirrors the policy override structure (`autogen_metadata_overrides`
-  and `user_metadata_overrides`) so teams can lift the default curated assets
-  into their own configs when needed.
+  user-maintained.
+- This mirrors the policy override structure (`autogen_metadata_overrides` and
+  `user_metadata_overrides`) so teams can lift the default curated assets into
+  their own configs when needed.
 - The profile catalog is generated into
-  `devcovenant/registry/local/profile_catalog.yaml` by scanning profile manifests.
-  Active profiles are recorded under `profiles.active` in config and extend
+  `devcovenant/registry/local/profile_catalog.yaml` by scanning
+  profile manifests.
+- Active profiles are recorded under `profiles.active` in config and extend
   file suffix coverage through catalog definitions.
 - Custom profiles are declared by adding a profile manifest plus assets
   under `devcovenant/custom/profiles/<name>/`.
@@ -218,7 +221,30 @@ hashes synchronized so drift is detectable and reversible.
   `devcovenant/core/policies/<policy>/assets/`. Install/update compiles
   the results into `devcovenant/registry/local/policy_assets.yaml`. Custom
   overrides live under `devcovenant/custom/policies/<policy>/assets/`.
-  Assets install only when a policy is enabled and its `profile_scopes`
+
+### Pre-commit configuration by profile
+- Each profile can declare a `precommit` fragment describing the repos
+  and hooks it requires; the fragments are cataloged inside
+  `devcovenant/registry/local/profile_catalog.yaml` under the profile
+  manifest metadata so installs can regenerate `.pre-commit-config.yaml`
+  whenever profile selections change.
+- The merge order for `.pre-commit-config.yaml` is:
+-  1. global profile defaults and the shared base fragment managed by
+     DevCovenant, ensuring a consistent baseline.
+-  2. active profile fragments (in the order listed in `profiles.active`).
+-  3. overrides supplied via `config.yaml` / `config_old.yaml`
+     (matching the existing metadata override pattern).
+-  4. a user-provided `.pre-commit-config.yaml` that may exist at the repo
+     root, allowing manual overrides without touching generated assets.
+- The CLI merges the fragments into `.pre-commit-config.yaml` before running
+  the hooks. `devcovenant/registry/local/manifest.json` records the resolved
+  hook set so commands such as `run_pre_commit.py` know which config to
+  execute and can rerun the merge if profiles change during a session.
+- Include a “Pre-commit config refactor” phase in `PLAN.md` that references
+  this SPEC section and clarifies the merge metadata keys.
+- Add tests verifying the generated config matches the manifest for sample
+  profile combinations.
+- Assets install only when a policy is enabled and its `profile_scopes`
   match active profiles.
 - Template indexes live at `devcovenant/core/profiles/README.md` and
   `devcovenant/core/policies/README.md`.
@@ -264,20 +290,23 @@ hashes synchronized so drift is detectable and reversible.
 - Policy metadata normalization must be able to add missing keys without
   changing existing values or policy text.
 - Support policy replacement metadata via
-  `devcovenant/registry/global/policy_replacements.yaml`. During updates, replaced
-  policies move to custom and are marked deprecated when enabled; disabled
-  policies are removed along with their custom scripts and fixers.
+  `devcovenant/registry/global/policy_replacements.yaml`.
+  During updates, replaced policies move to custom and are marked deprecated
+  when enabled; disabled policies are removed along with their custom scripts
+  and fixers.
 - Record update notices (replacements and new stock policies) in
   `devcovenant/registry/local/manifest.json` and print them to stdout.
-- Treat the collective `<!-- DEVCOV-POLICIES:BEGIN -->`/`<!-- DEVCOV-POLICIES:END -->` block as a
-  managed unit that install/update commands refresh from `devcovenant/core/`
-  assets. Provide a per-policy `freeze` override that copies the policy’s
-  modules, descriptors, and assets into `devcovenant/custom/` (with
-  `custom: true`) when true and removes those files when the flag clears,
-  always rerunning `devcovenant update-policy-registry` (and any needed registry fixes)
-  so the registry records the custom copy. Auto-fixers should be devised for
-  every policy and wired through the per-policy adapters so they work across
-  every language/profile combination that the policy supports.
+- Treat the collective `<!-- DEVCOV-POLICIES:BEGIN -->` /
+  `<!-- DEVCOV-POLICIES:END -->` block as a managed unit that install/update
+  commands refresh from `devcovenant/core/` assets.
+  Provide a per-policy `freeze`
+  override that copies the policy’s modules, descriptors, and assets into
+  `devcovenant/custom/` (with `custom: true`) when true and removes those files
+  when the flag clears.
+  Always rerun `devcovenant update-policy-registry` (and any needed registry
+  fixes) so the registry records the custom copy. Auto-fixers should be devised
+  for every policy and wired through the per-policy adapters.
+  They work across every language/profile combination that the policy supports.
 - Generate `devcovenant/registry/local/policy_registry.yaml` dynamically from
   `refresh_policies` and `update_policy_registry`. The YAML tracks every
   policy (enabled or disabled) with its metadata handles, asset hints,
@@ -287,6 +316,46 @@ hashes synchronized so drift is detectable and reversible.
 - The legacy `devcovenant/registry.json` storage and the accompanying
   `update_hashes.py` helper have been retired so policy hashes live solely
   inside `devcovenant/registry/local/policy_registry.yaml`.
+
+-### Policy definition YAML
+- Each policy (core, frozen, or custom) ships with a `policy.yaml` that
+  contains:
+  ```
+  id: changelog-coverage
+  text: |
+    Every substantive change must be recorded ...
+  metadata:
+    severity: error
+    profile_scopes: [global]
+    include_suffixes: [.md]
+    selectors:
+      include_files: [...]
+    overrules: [...]
+  defaults:
+    enforcement: active
+  ```
+- `metadata` keys align with the canonical schema in
+  `devcovenant/registry/global/policy_metadata_schema.yaml`. There is no
+  standalone `status`/`updated`: provenance (core vs. frozen/custom path)
+  determines whether the generated entry is marked as custom and whether
+  updates replace the text automatically.
+- Loader logic synthesizes policy entries directly from these YAML files,
+  allows `config.yaml` overrides to merge on top of `metadata`, and regenerates
+  `AGENTS.md` plus `policy_registry.yaml` from the same source so the policy
+  truths live in code/YAML instead of hand-editing AGENTS.
+- When DevCovenant removes a core policy, the updater copies it to
+  `devcovenant/custom/policies/` (or a frozen overlay defined in config), sets
+  `custom: true` because of the loading path, and reruns `update-policy-registry`
+  rather than relying on manual flag flips.
+- `config.yaml` exposes `do_not_apply_policies` and `freeze_core_policies` as
+  multi-line lists. The refresh step injects these IDs into the generated
+  metadata so `apply` flips to `false` or `freeze` becomes `true` as needed. When
+  a custom policy ID is listed under `freeze_core_policies`, the generator removes
+  it from the list and reports that custom texts don’t need freezing.
+- `policy_overrides` in `config.yaml` allows repositories to reconfigure `severity`,
+  `enforcement`, selectors, and any other schema keys per policy without touching
+  the YAML text; DevCovenant merges overrides before emitting AGENTS or writing
+  the registry.
 
 ## Installation Requirements
 - Install the full DevCovenant toolchain into the target repo, including the
@@ -331,21 +400,26 @@ hashes synchronized so drift is detectable and reversible.
   only selected docs are replaced when docs mode overwrites.
 - Support policy update modes via `--policy-mode preserve|append-missing|`
   `overwrite`.
-- Write `devcovenant/registry/local/manifest.json` with the core layout, doc types,
-  installed paths, options, active profiles, policy asset mappings,
-  and the UTC timestamp of the install or update. Profile manifests
-  drive profile assets and overlays, even when not listed as assets.
-- Install and update share a unified self-install/self-refresh workflow. Whatever
-  command runs operates on the host repository: invoking the installed package
-  (on `PATH`) targets the current working repo, while running `python3` inside
-  the DevCovenant source tree updates that repo in place without overwriting
-  the existing `devcovenant/` folder, refreshing only configs, managed docs,
-  and metadata. The optional `devcovenant/config_override` path remains a
-  temporary override for experimentation.
-- Add a `refresh-all` command that runs `refresh-policies` (defaulting to
-  preserve metadata mode), updates `devcovenant/registry/local/policy_registry.yaml`,
-  and rebuilds `devcovenant/registry/local/profile_catalog.yaml` so the
-  profile/catalog state stays current without a full install/update run.
+- Write `devcovenant/registry/local/manifest.json` with the core layout,
+  doc types, installed paths, options, active profiles, and policy asset
+  mappings.
+- Record the UTC timestamp of the install or update.
+- Profile manifests drive profile assets and overlays, even when not listed
+  as assets.
+- Install and update share a unified self-install/self-refresh workflow.
+  Whatever command runs operates on the host repository: invoking the installed
+  package (on `PATH`) targets the current working repo.
+  Running `python3` inside the DevCovenant source tree updates that repo in
+  place without overwriting the existing `devcovenant/` folder, refreshing only
+  configs, managed docs, and metadata. The optional
+  `devcovenant/config_override` path remains a temporary override for
+  experimentation.
+- Add a `refresh-all` command that runs `refresh-policies`.
+  It defaults to preserve metadata mode, updates
+  `devcovenant/registry/local/policy_registry.yaml`, and rebuilds
+  `devcovenant/registry/local/profile_catalog.yaml`.
+  That keeps the profile/catalog state current without a full
+  install/update run.
 
 ## Packaging Requirements
 - Ship `devcovenant` as a pure-Python package with a console script entry.

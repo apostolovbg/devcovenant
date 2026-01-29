@@ -104,11 +104,13 @@ console script is not on your PATH.
 The `global` profile installs AGENTS.md, README.md, SPEC.md, PLAN.md,
 CHANGELOG.md, CONTRIBUTING.md, and `devcovenant/README.md` by default from the
 YAML descriptors in `devcovenant/core/profiles/global/assets/`. Use the new
-`doc_assets.autogen` and `doc_assets.user` config sections to pin which docs the
-profile refreshes versus which remain manual overrides. Whenever these docs are
-touched, the `last-updated-placement` policy (with its fixer) refreshes the
-`**Last Updated:** YYYY-MM-DD` header to the current UTC date so the recorded
-timestamp always matches the latest edit.
+`doc_assets.autogen` and `doc_assets.user` config sections to pin
+which docs the profile refreshes.
+Keep the other docs as manual overrides.
+Whenever these docs are touched, the `last-updated-placement` policy refreshes
+the `**Last Updated:** YYYY-MM-DD` header via its fixer.
+It sets the value to the current UTC date so the recorded timestamp matches the
+latest edit.
 
 ## Install, Update, Uninstall
 Install DevCovenant into a target repository:
@@ -228,25 +230,26 @@ change or prune the core path list in user repos unless you are actively
 implementing DevCovenant itself.
 
 Use `profiles.active` in `devcovenant/config.yaml` to extend file suffix
-coverage for multi-language projects. Set `version.override` when you want
-config-driven installs to emit a specific project version in generated assets
-(for example, `pyproject.toml`) before a `VERSION` file exists.
+coverage for multi-language projects.
+Set `version.override` when you want config-driven installs to emit a specific
+project version in generated assets (for example, `pyproject.toml`).
+Apply that override before any `VERSION` file exists.
 
-The DevCovenant repository activates a dedicated `devcovenant` profile that
-overrides `new-modules-need-tests` metadata so the `devcovenant/**` sources and
-the mirrored `tests/devcovenant/**` suites (core/custom policies and profiles)
-stay aligned.
+The DevCovenant repository activates a dedicated `devcovenant` profile.
+It overrides `new-modules-need-tests` metadata so the `devcovenant/**` sources
+and the mirrored `tests/devcovenant/**` suites (core/custom policies and
+profiles) stay aligned.
 
-That profile also contributes a `.gitignore` fragment so `devcovenant/config.yaml`
-remains local to this repo. User repos that do not enable that profile continue
-to commit `devcovenant/config.yaml`, ensuring their runtime configuration
-travels with their source tree.
+That profile also contributes a `.gitignore` fragment that keeps
+`devcovenant/config.yaml` local to this repo. User repos that do not enable
+that profile continue to commit `devcovenant/config.yaml`, ensuring their
+runtime configuration travels with their source tree.
 
 For a “no-touch” install, copy the `devcovenant/` package into the target repo,
-adjust `devcovenant/config.yaml` to taste, and run `devcovenant install --target`
-later; the installer honors any existing config unless `--force-config` is
-supplied. This lets teams pre-seed their configuration before DevCovenant
-runs for the first time.
+adjust `devcovenant/config.yaml` to taste, and run
+`devcovenant install --target` later. The installer honors any existing config
+unless `--force-config` is supplied, letting teams pre-seed their configuration
+before DevCovenant runs for the first time.
 
 ## Dependency and License Tracking
 DevCovenant records runtime dependencies in `requirements.in` with pinned

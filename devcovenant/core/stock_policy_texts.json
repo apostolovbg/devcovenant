@@ -9,7 +9,7 @@
   "line-length-limit": "Keep lines within the configured maximum so documentation and code remain\nreadable. Reflow long sentences or wrap lists rather than ignoring the limit.",
   "name-clarity": "Identifiers should be descriptive enough to communicate intent without\nreading their implementation. Avoid cryptic or overly short names unless\nexplicitly justified.",
   "new-modules-need-tests": "New or modified modules in the watched locations must have corresponding\ntests. Test modules (files starting with `test_`) are exempt from the rule.",
-  "no-future-dates": "Dates in changelogs or documentation must not be in the future. Auto-fixers\nshould correct accidental placeholders to today\u2019s date.",
+  "no-future-dates": "Dates in changelogs or documentation must not be in the future. Auto-fixers\nshould correct accidental placeholders to today’s date.",
   "policy-text-presence": "Every policy definition must include descriptive text immediately after the\n`policy-def` block. Empty policy descriptions are not allowed.",
   "read-only-directories": "Protect declared read-only directories from modification. If a directory must\nbe editable, update this policy definition first.",
   "security-scanner": "Scan Python files for risky constructs like `eval`, `exec`, or `shell=True`.\nUse the documented allow-comment only when a security review approves the\nexception.",

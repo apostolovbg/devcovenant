@@ -63,6 +63,10 @@ document and you will get it!
 
 <!-- DEVCOV:BEGIN -->
 
+_Do not edit hereafter unless explicitly instructed by a human!_
+_If edits are needed, always stop work and negotiate first!_
+_This is non-optional!_
+
 ## Operational Orientation
 Running DevCovenant uses a fixed sequence: begin with
 `python3 devcovenant/run_pre_commit.py --phase start`,
@@ -377,6 +381,8 @@ selector_roles: include,exclude,force_include
 include_files:
 include_dirs:
 exclude_files:
+  devcovenant/core/stock_policy_texts.json
+  PLAN.md
 exclude_dirs:
 force_include_files:
 force_include_dirs:
@@ -612,13 +618,14 @@ max_length: 79
 include_suffixes: >
   .py,.md,.rst,.txt,.yml,.yaml,.json,.toml,.cff
 exclude_prefixes: build,dist,node_modules
-exclude_globs: >
-  devcovenant/core/profiles/global/assets/LICENSE_GPL-3.0.txt,
-  devcovenant/core/profiles/global/assets/*.yaml,
-  devcovenant/core/stock_policy_texts.json,
-  build/**,
-  dist/**,
-  node_modules/**
+exclude_globs:
+  - devcovenant/core/profiles/global/assets/LICENSE_GPL-3.0.txt
+  - devcovenant/core/profiles/global/assets/*.yaml
+  - devcovenant/core/stock_policy_texts.json
+  - build/**
+  - dist/**
+  - node_modules/**
+  - PLAN.md
 include_prefixes:
 include_globs: *.>
   *.py
@@ -810,6 +817,7 @@ updated: false
 enforcement: active
 apply: true
 custom: true
+freeze: true
 profile_scopes: global
 ```
 

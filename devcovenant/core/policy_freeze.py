@@ -17,25 +17,13 @@ def _script_name(policy_id: str) -> str:
 def _core_policy_dir(repo_root: Path, policy_id: str) -> Path:
     """Return the core policy directory for the given policy."""
     script_name = _script_name(policy_id)
-    return (
-        repo_root
-        / "devcovenant"
-        / "core"
-        / "policies"
-        / script_name
-    )
+    return repo_root / "devcovenant" / "core" / "policies" / script_name
 
 
 def _custom_policy_dir(repo_root: Path, policy_id: str) -> Path:
     """Return the custom override directory for the given policy."""
     script_name = _script_name(policy_id)
-    return (
-        repo_root
-        / "devcovenant"
-        / "custom"
-        / "policies"
-        / script_name
-    )
+    return repo_root / "devcovenant" / "custom" / "policies" / script_name
 
 
 def _copy_policy_dir(core_dir: Path, custom_dir: Path) -> bool:

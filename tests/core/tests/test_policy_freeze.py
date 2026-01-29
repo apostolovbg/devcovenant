@@ -2,7 +2,7 @@
 
 from pathlib import Path
 
-from devcovenant.core import policy_freeze, parser
+from devcovenant.core import parser, policy_freeze
 
 
 def _policy_definition(
@@ -27,11 +27,7 @@ def test_copy_and_remove_freeze_override(tmp_path: Path) -> None:
     """Freeze copies the core policy tree and unfreeze removes it."""
     repo_root = tmp_path / "repo"
     core_dir = (
-        repo_root
-        / "devcovenant"
-        / "core"
-        / "policies"
-        / "freeze_example"
+        repo_root / "devcovenant" / "core" / "policies" / "freeze_example"
     )
     core_dir.mkdir(parents=True, exist_ok=True)
     script_file = core_dir / "freeze_example.py"
@@ -45,11 +41,7 @@ def test_copy_and_remove_freeze_override(tmp_path: Path) -> None:
         repo_root, [freeze_policy]
     )
     custom_dir = (
-        repo_root
-        / "devcovenant"
-        / "custom"
-        / "policies"
-        / "freeze_example"
+        repo_root / "devcovenant" / "custom" / "policies" / "freeze_example"
     )
     assert changed is True
     assert messages

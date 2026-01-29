@@ -115,8 +115,8 @@ commands, and metadata through their manifests.
 - Update `THIRD_PARTY_LICENSES.md`, refresh `licenses/`, and cite touched
   manifests in the `## License Report` before tagging a release.
 - Log every touched file in the current `CHANGELOG.md` entry and refresh
-  `devcovenant/registry/local/policy_registry.yaml` via `devcovenant update-policy-registry` before
-  releasing.
+  `devcovenant/registry/local/policy_registry.yaml` via
+  `devcovenant update-policy-registry` before releasing.
 - Build artifacts locally (`python3 -m build`, `twine check dist/*`) and
   verify `.github/workflows/publish.yml` publishes with `PYPI_API_TOKEN`.
 
@@ -517,13 +517,14 @@ profile_scopes: global
 max_length: 79
 include_suffixes: .py,.md,.rst,.txt,.yml,.yaml,.json,.toml,.cff
 exclude_prefixes: build,dist,node_modules
-exclude_globs: >
-  devcovenant/core/profiles/global/assets/LICENSE_GPL-3.0.txt,
-  devcovenant/core/profiles/global/assets/*.yaml,
-  devcovenant/core/stock_policy_texts.json,
-  build/**,
-  dist/**,
-  node_modules/**
+exclude_globs:
+  - devcovenant/core/profiles/global/assets/LICENSE_GPL-3.0.txt
+  - devcovenant/core/profiles/global/assets/*.yaml
+ - devcovenant/core/stock_policy_texts.json
+ - build/**
+ - dist/**
+ - node_modules/**
+  - PLAN.md
 include_prefixes:
 include_globs:
 exclude_suffixes:

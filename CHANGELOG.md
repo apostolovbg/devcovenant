@@ -29,6 +29,11 @@ Example entry:
 
 ## Version 0.2.6
 
+- 2026-01-29: Reformatted `devcovenant/core/stock_policy_texts.json` with
+  inline indentation to keep line lengths short and JSON parsing intact.
+  Files:
+  devcovenant/core/stock_policy_texts.json
+
 - 2026-01-28: Moved user-facing helper scripts to `devcovenant/` root, removed
   `devcovenant/core/tools/`, and aligned manifests, assets, policies, and
   docs to the new command surface and python3 usage.
@@ -89,12 +94,20 @@ Example entry:
   devcovenant/update_test_status.py
   DEVCOVENANT.md
   tests/core/policies/devflow_run_gates/tests/test_devflow_run_gates.py
-  tests/core/policies/last_updated_placement/tests/test_last_updated_placement.py
-  tests/core/policies/stock_policy_text_sync/tests/test_stock_policy_text_sync.py
+  tests/core/policies/last_updated_placement/tests/\
+    test_last_updated_placement.py
+  tests/core/policies/stock_policy_text_sync/tests/\
+    test_stock_policy_text_sync.py
   tests/core/policies/track_test_status/tests/test_track_test_status.py
   tests/core/tests/test_policy_replacements.py
   tests/core/tests/test_refresh_policies.py
   tests/custom/policies/test_readme_sync.py
+
+- 2026-01-28: Restored the `readme-sync` script and fixer so README mirroring
+  remains enforced with the managed README asset.
+  Files:
+  devcovenant/custom/policies/readme_sync/readme_sync.py
+  devcovenant/custom/policies/readme_sync/fixers/global.py
 
 - 2026-01-28: Added policy freeze automation, canonical schema metadata, and
   retired the legacy registry storage so policy hashes live solely inside the
@@ -111,8 +124,10 @@ Example entry:
   devcovenant/core/update_hashes.py
   devcovenant/registry.json
   tests/core/policies/devflow_run_gates/tests/test_devflow_run_gates.py
-  tests/core/policies/last_updated_placement/tests/test_last_updated_placement.py
-  tests/core/policies/stock_policy_text_sync/tests/test_stock_policy_text_sync.py
+  tests/core/policies/last_updated_placement/tests/\
+    test_last_updated_placement.py
+  tests/core/policies/stock_policy_text_sync/tests/\
+    test_stock_policy_text_sync.py
   tests/core/policies/track_test_status/tests/test_track_test_status.py
   tests/core/tests/test_policy_replacements.py
   tests/core/tests/test_refresh_policies.py
@@ -167,8 +182,8 @@ Example entry:
 - 2026-01-27: Added live policy map automation so `refresh-policies`/
   `update-policy-registry` keep every policy’s metadata, profile coverage,
   enabled state, core/custom origin, and script hash clustered in
-  `devcovenant/registry/local/policy_registry.yaml`. The registry pulls data from
-  `AGENTS.md` and drives the engine.
+  `devcovenant/registry/local/policy_registry.yaml`.
+  The registry pulls data from `AGENTS.md` and drives the engine.
   Files:
   AGENTS.md
   README.md
@@ -208,8 +223,10 @@ Example entry:
   devcovenant/core/policy_texts.py
   devcovenant/core/policies/devflow_run_gates/devflow_run_gates.py
   devcovenant/core/policies/track_test_status/track_test_status.py
-  devcovenant/core/profiles/global/assets/devcovenant/core/devcovenant/core/run_pre_commit.py
-  devcovenant/core/profiles/global/assets/devcovenant/core/devcovenant/core/update_test_status.py
+  devcovenant/core/profiles/global/assets/devcovenant/core/\
+    devcovenant/core/run_pre_commit.py
+  devcovenant/core/profiles/global/assets/devcovenant/core/\
+    devcovenant/core/update_test_status.py
   devcovenant/core/profiles/python/assets/pyproject.toml
   devcovenant/core/profiles/python/assets/venv.md
   devcovenant/core/profiles/python/profile.yaml
@@ -703,9 +720,12 @@ Example entry:
   devcovenant/core/profiles/global/assets/VERSION
   devcovenant/core/profiles/global/assets/gitignore_base.txt
   devcovenant/core/profiles/global/assets/gitignore_os.txt
-  devcovenant/core/profiles/global/assets/devcovenant/core/devcovenant/core/run_pre_commit.py
-  devcovenant/core/profiles/global/assets/devcovenant/core/devcovenant/core/run_tests.py
-  devcovenant/core/profiles/global/assets/devcovenant/core/devcovenant/core/update_test_status.py
+  devcovenant/core/profiles/global/assets/devcovenant/core/\
+    devcovenant/core/run_pre_commit.py
+  devcovenant/core/profiles/global/assets/devcovenant/core/\
+    devcovenant/core/run_tests.py
+  devcovenant/core/profiles/global/assets/devcovenant/core/\
+    devcovenant/core/update_test_status.py
   devcovenant/core/profiles/global/profile.yaml
   devcovenant/core/profiles/go/assets/.gitignore
   devcovenant/core/profiles/go/assets/go.mod
@@ -780,9 +800,12 @@ Example entry:
   devcovenant/core/templates/global/VERSION
   devcovenant/core/templates/global/gitignore_base.txt
   devcovenant/core/templates/global/gitignore_os.txt
-  devcovenant/core/templates/global/devcovenant/core/devcovenant/core/run_pre_commit.py
-  devcovenant/core/templates/global/devcovenant/core/devcovenant/core/run_tests.py
-  devcovenant/core/templates/global/devcovenant/core/devcovenant/core/update_test_status.py
+  devcovenant/core/templates/global/devcovenant/core/devcovenant/core/\
+    run_pre_commit.py
+  devcovenant/core/templates/global/devcovenant/core/devcovenant/core/\
+    run_tests.py
+  devcovenant/core/templates/global/devcovenant/core/devcovenant/core/\
+    update_test_status.py
   devcovenant/core/templates/policies/README.md
   devcovenant/core/templates/policies/dependency-license-sync\
   /THIRD_PARTY_LICENSES.md
@@ -1056,9 +1079,12 @@ Example entry:
   devcovenant/core/stock_policy_texts.yaml
   devcovenant/core/templates/README.md
   devcovenant/core/templates/global/AGENTS.md
-  devcovenant/core/templates/global/devcovenant/core/devcovenant/core/run_pre_commit.py
-  devcovenant/core/templates/global/devcovenant/core/devcovenant/core/run_tests.py
-  devcovenant/core/templates/global/devcovenant/core/devcovenant/core/update_test_status.py
+  devcovenant/core/templates/global/devcovenant/core/devcovenant/core/\
+    run_pre_commit.py
+  devcovenant/core/templates/global/devcovenant/core/devcovenant/core/\
+    run_tests.py
+  devcovenant/core/templates/global/devcovenant/core/devcovenant/core/\
+    update_test_status.py
   devcovenant/core/templates/policies/README.md
   devcovenant/core/templates/policies/dependency-license-sync/\
     policy_assets.yaml
@@ -1745,9 +1771,12 @@ devcovenant/core/templates/global/AGENTS.md
 devcovenant/core/templates/global/CONTRIBUTING.md
 devcovenant/core/templates/global/LICENSE_GPL-3.0.txt
 devcovenant/core/templates/global/VERSION
-devcovenant/core/templates/global/devcovenant/core/devcovenant/core/run_pre_commit.py
-devcovenant/core/templates/global/devcovenant/core/devcovenant/core/run_tests.py
-devcovenant/core/templates/global/devcovenant/core/devcovenant/core/update_test_status.py
+  devcovenant/core/templates/global/devcovenant/core/devcovenant/core/\
+    run_pre_commit.py
+  devcovenant/core/templates/global/devcovenant/core/devcovenant/core/\
+    run_tests.py
+  devcovenant/core/templates/global/devcovenant/core/devcovenant/core/\
+    update_test_status.py
 devcovenant/core/templates/policies/dependency-license-sync/\
   THIRD_PARTY_LICENSES.md
 devcovenant/core/templates/policies/dependency-license-sync/licenses/README.md

@@ -10,8 +10,6 @@ policies:
     - auto_fix
     - updated
     - enforcement
-    - apply
-    - custom
     - profile_scopes
     - main_changelog
     - skipped_files
