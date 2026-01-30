@@ -141,6 +141,39 @@ policies:
       - global
       policy_definitions:
       - AGENTS.md
+  devcov-raw-string-escapes:
+    keys:
+    - id
+    - status
+    - severity
+    - auto_fix
+    - updated
+    - enforcement
+    - apply
+    - custom
+    - freeze
+    - profile_scopes
+    defaults:
+      id:
+      - devcov-raw-string-escapes
+      status:
+      - active
+      severity:
+      - warning
+      auto_fix:
+      - 'false'
+      updated:
+      - 'false'
+      enforcement:
+      - active
+      apply:
+      - 'true'
+      custom:
+      - 'true'
+      freeze:
+      - 'false'
+      profile_scopes:
+      - devcovrepo
   devcov-self-enforcement:
     keys:
     - id
@@ -623,39 +656,6 @@ policies:
       - tests/**
       force_include_files: []
       force_include_dirs: []
-  gcv-script-naming:
-    keys:
-    - id
-    - status
-    - severity
-    - auto_fix
-    - updated
-    - enforcement
-    - apply
-    - custom
-    - freeze
-    - profile_scopes
-    defaults:
-      id:
-      - gcv-script-naming
-      status:
-      - active
-      severity:
-      - warning
-      auto_fix:
-      - 'false'
-      updated:
-      - 'false'
-      enforcement:
-      - active
-      apply:
-      - 'true'
-      custom:
-      - 'false'
-      freeze:
-      - 'false'
-      profile_scopes:
-      - global
   last-updated-placement:
     keys:
     - id
@@ -872,7 +872,7 @@ policies:
       custom:
       - 'true'
       profile_scopes:
-      - devcovenant
+      - devcovrepo
   managed-environment:
     keys:
     - id
@@ -1124,7 +1124,7 @@ policies:
       custom:
       - 'true'
       profile_scopes:
-      - devcovenant
+      - devcovrepo
   raw-string-escapes:
     keys:
     - id
@@ -1157,7 +1157,7 @@ policies:
       freeze:
       - 'false'
       profile_scopes:
-      - devcovrepo
+      - python
   read-only-directories:
     keys:
     - id
@@ -1251,39 +1251,6 @@ policies:
       - 'true'
       freeze:
       - 'true'
-      profile_scopes:
-      - global
-  security-compliance-notes:
-    keys:
-    - id
-    - status
-    - severity
-    - auto_fix
-    - updated
-    - enforcement
-    - apply
-    - custom
-    - freeze
-    - profile_scopes
-    defaults:
-      id:
-      - security-compliance-notes
-      status:
-      - active
-      severity:
-      - warning
-      auto_fix:
-      - 'false'
-      updated:
-      - 'false'
-      enforcement:
-      - active
-      apply:
-      - 'true'
-      custom:
-      - 'false'
-      freeze:
-      - 'false'
       profile_scopes:
       - global
   security-scanner:

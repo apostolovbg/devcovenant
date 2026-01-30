@@ -29,6 +29,8 @@ assets:
 - path: venv.md
   template: venv.md
   mode: replace
+autogen_do_not_apply:
+- raw-string-escapes
 policy_overlays:
   dependency-license-sync:
     dependency_files:

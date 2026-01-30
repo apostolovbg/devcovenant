@@ -222,7 +222,8 @@ def metadata_value_list(raw_value: object) -> List[str]:
 class PolicyControl:
     """Config-driven overrides for policy metadata."""
 
-    do_not_apply: set[str]
+    autogen_do_not_apply: set[str]
+    manual_force_apply: set[str]
     freeze_core: set[str]
     overrides: Dict[str, Dict[str, List[str]]]
 
@@ -249,12 +250,17 @@ def load_policy_control_config(repo_root: Path) -> PolicyControl:
 
     config_path = repo_root / "devcovenant" / "config.yaml"
     if not config_path.exists():
-        return PolicyControl(set(), set(), {})
+        return PolicyControl(set(), set(), set(), {})
     try:
         payload = yaml.safe_load(config_path.read_text(encoding="utf-8")) or {}
     except Exception:
         payload = {}
-    do_not_apply = _normalize_policy_list(payload.get("do_not_apply_policies"))
+    autogen_do_not_apply = _normalize_policy_list(
+        payload.get("autogen_do_not_apply")
+    )
+    manual_force_apply = _normalize_policy_list(
+        payload.get("manual_force_apply")
+    )
     freeze_core = _normalize_policy_list(payload.get("freeze_core_policies"))
     overrides_block = payload.get("policy_overrides") or {}
     overrides: Dict[str, Dict[str, List[str]]] = {}
@@ -267,7 +273,9 @@ def load_policy_control_config(repo_root: Path) -> PolicyControl:
                 normalized[key] = metadata_value_list(raw_override)
             if normalized:
                 overrides[str(policy_id)] = normalized
-    return PolicyControl(do_not_apply, freeze_core, overrides)
+    return PolicyControl(
+        autogen_do_not_apply, manual_force_apply, freeze_core, overrides
+    )
 
 
 def _ensure_metadata_key(
@@ -299,9 +307,13 @@ def apply_policy_control_overrides(
         existing = values.get(key, [])
         values[key] = _merge_values(existing, override_values)
 
-    if policy_id in control.do_not_apply:
+    if policy_id in control.autogen_do_not_apply:
         _ensure_metadata_key(order, values, "apply")
         values["apply"] = ["false"]
+
+    if policy_id in control.manual_force_apply:
+        _ensure_metadata_key(order, values, "apply")
+        values["apply"] = ["true"]
 
     if policy_id in control.freeze_core and core_available:
         custom_flag = (

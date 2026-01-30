@@ -52,6 +52,8 @@ def apply_policy_freeze(
     changed = False
     messages: List[str] = []
     for policy in policies:
+        if getattr(policy, "custom", False):
+            continue
         freeze_flag = getattr(policy, "freeze", False)
         core_dir = _core_policy_dir(repo_root, policy.policy_id)
         custom_dir = _custom_policy_dir(repo_root, policy.policy_id)

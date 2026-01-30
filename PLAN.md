@@ -103,6 +103,9 @@ It is the checklist we consult before declaring the spec satisfied.
   `devcovenant/registry/global/stock_policy_texts.yaml`.
 - [done] Custom policy `readme-sync` enforces the README mirroring
   and repo-only block stripping.
+- [done] `devcov-parity-guard` replaces the old stock-policy text check and
+  compares AGENTS policy text to descriptor YAML prose for core and custom
+  policies.
 - [done] Policy replacement metadata from
   `devcovenant/registry/global/policy_replacements.yaml` is applied.
   Replaced policies move to `custom/` with `custom: true` and are marked
@@ -120,9 +123,11 @@ It is the checklist we consult before declaring the spec satisfied.
   `devcovenant/registry/local/manifest.json` and print them during updates.
 - [not done] `managed-environment` remains off by default.
   Warn when required metadata or command hints are absent.
+- [done] Dogfood-only policies (`patches-txt-sync`, `gcv-script-naming`,
+  `security-compliance-notes`) are removed from the DevCovenant repo.
 
 ### Policy metadata redesign
-- [not done] Define per-policy YAML descriptors that include the managed
+- [done] Define per-policy YAML descriptors that include the managed
   prose, selector metadata, and a `metadata` block whose keys describe the
   schema while also supplying the baseline values that feed into AGENTS and
   the registry. The canonical schema no longer lives in a separate hand-written
@@ -133,23 +138,27 @@ It is the checklist we consult before declaring the spec satisfied.
   as `profile_scopes`, `selector_roles`, or `enforcement`, while the generator
   records the final `apply`/`freeze`/`severity` values after applying
   overrides.
-- [not done] Introduce config keys `do_not_apply_policies`,
-  `freeze_core_policies`, and `policy_overrides` so the active profile can flip
-  `apply`/`freeze` and mutate `enforcement`, `severity`, selectors, or any
-  schema value without editing the policy YAMLs. The refresh command merges
-  those lists/maps before emitting AGENTS and registry entries so docs remain
-  declarative.
-- [not done] Record every policy in
+- [done] Introduce config keys `autogen_do_not_apply`,
+  `manual_force_apply`, `freeze_core_policies`, and `policy_overrides` so the
+  active profile can flip `apply`/`freeze` and mutate `enforcement`,
+  `severity`, selectors, or any schema value without editing the policy YAMLs.
+  The refresh command merges those lists/maps before emitting AGENTS and
+  registry entries so docs remain declarative.
+- [done] Record every policy in
   `devcovenant/registry/local/policy_registry.yaml` with two blocks per entry:
   `metadata_schema` (keys declared under `metadata`)
   and `metadata_values` (resolved defaults plus merged overrides, apply/freeze,
   hashes, asset hints, and custom/core origins). The generator and AGENTS
   templating read from that unified source so enforcement always matches the
   registry.
-- [not done] When DevCovenant removes a core policy, copy it into
+- [done] When DevCovenant removes a core policy, copy it into
   `devcovenant/custom/policies/` (or a frozen overlay prescribed in config),
   mark the new entry as `custom`, and rerun `update-policy-registry` so all
   downstream artifacts report the deprecation rather than leaving dangling IDs.
+- [done] Scope `raw-string-escapes` to the python profile and default it to
+  `apply: false` via the python profile’s `autogen_do_not_apply` list.
+  Add the repo-only `devcov-raw-string-escapes` custom policy for
+  DevCovenant’s own enforcement.
 
 ### Installation & documentation
 - [not done] Install modes `auto`/`empty`.
@@ -197,9 +206,15 @@ It is the checklist we consult before declaring the spec satisfied.
   prefixed folders/policies and recreating the user-facing `devcovuser` profile
   so repo-specific overrides never ship.
 
-- [not done] Describe the `devcovuser` profile and wiring so user repos
-  can keep `devcovenant/**` out of enforcement while still covering
+- [done] Describe the `devcovuser`/`devcovrepo` profiles and wiring so user
+  repos keep `devcovenant/**` out of enforcement while still covering
   `devcovenant/custom/**`.
+- [done] Describe how install/update/refresh regenerate `devcovenant/custom`
+  and `tests/devcovenant` while pruning `devcovrepo`-prefixed overrides when
+  `devcov_core_include` is false.
+- [done] Document how the `devcovrepo` profile adds `devcovenant/docs` to
+  documentation-growth-tracking and how `devcovuser` controls the
+  `tests/devcovenant/**` mirror.
 
 ### Packaging & testing
 - [not done] Ship DevCovenant as a pure-Python package with a console script

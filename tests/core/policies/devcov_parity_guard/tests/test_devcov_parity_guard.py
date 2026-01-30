@@ -5,9 +5,7 @@ from pathlib import Path
 import yaml
 
 from devcovenant.core.base import CheckContext
-from devcovenant.core.policies.devcov_parity_guard import (
-    devcov_parity_guard,
-)
+from devcovenant.core.policies.devcov_parity_guard import devcov_parity_guard
 
 
 def _write_agents(path: Path, text: str) -> None:
@@ -37,11 +35,7 @@ def test_descriptor_text_matches_agents(tmp_path: Path) -> None:
     """Matching descriptor text should pass."""
     agents_path = tmp_path / "AGENTS.md"
     policy_dir = (
-        tmp_path
-        / "devcovenant"
-        / "core"
-        / "policies"
-        / "example_policy"
+        tmp_path / "devcovenant" / "core" / "policies" / "example_policy"
     )
     policy_dir.mkdir(parents=True)
     _write_policy_script(policy_dir / "example_policy.py")
@@ -79,11 +73,7 @@ def test_descriptor_text_differs(tmp_path: Path) -> None:
     """Mismatched descriptor text should raise a warning."""
     agents_path = tmp_path / "AGENTS.md"
     policy_dir = (
-        tmp_path
-        / "devcovenant"
-        / "core"
-        / "policies"
-        / "example_policy"
+        tmp_path / "devcovenant" / "core" / "policies" / "example_policy"
     )
     policy_dir.mkdir(parents=True)
     _write_policy_script(policy_dir / "example_policy.py")

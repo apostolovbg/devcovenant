@@ -10,6 +10,7 @@ import sys
 import tempfile
 from datetime import datetime, timezone
 from pathlib import Path
+from typing import Iterable
 
 import yaml
 
@@ -1349,6 +1350,84 @@ def _merge_overlay_map(
     return merged
 
 
+def _normalize_policy_list(raw_value: object | None) -> list[str]:
+    """Normalize a list/string value into a list of policy ids."""
+    if raw_value is None:
+        return []
+    if isinstance(raw_value, str):
+        token = raw_value.strip()
+        return [token] if token else []
+    items: list[str] = []
+    if isinstance(raw_value, Iterable):
+        for entry in raw_value:
+            token = str(entry or "").strip()
+            if token:
+                items.append(token)
+    return items
+
+
+def _collect_profile_autogen_disable(
+    profile_manifests: dict[str, dict],
+) -> list[str]:
+    """Collect autogen_do_not_apply policy ids from active profiles."""
+    combined: list[str] = []
+    for manifest in profile_manifests.values():
+        raw = manifest.get("autogen_do_not_apply")
+        if raw == "__none__":
+            continue
+        combined.extend(_normalize_policy_list(raw))
+    deduped: list[str] = []
+    seen = set()
+    for entry in combined:
+        if entry in seen:
+            continue
+        seen.add(entry)
+        deduped.append(entry)
+    return deduped
+
+
+def _update_policy_list_config_text(
+    text: str, key: str, items: list[str]
+) -> tuple[str, bool]:
+    """Update a list-valued config key inside config.yaml text."""
+    lines = text.splitlines()
+    updated_lines: list[str] = []
+    found = False
+    index = 0
+    while index < len(lines):
+        line = lines[index]
+        stripped = line.strip()
+        if stripped.startswith(f"{key}:"):
+            found = True
+            if items:
+                updated_lines.append(f"{key}:")
+                for item in items:
+                    updated_lines.append(f"  - {item}")
+            else:
+                updated_lines.append(f"{key}: []")
+            index += 1
+            while index < len(lines):
+                next_line = lines[index]
+                if next_line.startswith("  -") or not next_line.strip():
+                    index += 1
+                    continue
+                break
+            continue
+        updated_lines.append(line)
+        index += 1
+    if not found:
+        if updated_lines and updated_lines[-1].strip():
+            updated_lines.append("")
+        if items:
+            updated_lines.append(f"{key}:")
+            for item in items:
+                updated_lines.append(f"  - {item}")
+        else:
+            updated_lines.append(f"{key}: []")
+    updated = "\n".join(updated_lines).rstrip() + "\n"
+    return updated, updated != text
+
+
 def _collect_profile_overlays(
     profile_manifests: dict[str, dict],
 ) -> dict[str, dict[str, object]]:
@@ -1482,6 +1561,25 @@ def _apply_profile_policy_overlays(
     return True
 
 
+def _apply_profile_policy_lists(
+    target_root: Path,
+    autogen_do_not_apply: list[str],
+) -> bool:
+    """Update autogen policy disable lists inside config.yaml."""
+    config_path = target_root / DEV_COVENANT_DIR / "config.yaml"
+    if not config_path.exists():
+        return False
+    text = config_path.read_text(encoding="utf-8")
+    updated, changed = _update_policy_list_config_text(
+        text, "autogen_do_not_apply", autogen_do_not_apply
+    )
+    if not changed:
+        return False
+    _rename_existing_file(config_path)
+    config_path.write_text(updated, encoding="utf-8")
+    return True
+
+
 def _apply_profile_config(
     target_root: Path,
     active_profiles: list[str],
@@ -1515,7 +1613,12 @@ def apply_autogen_metadata_overrides(
         package_root, target_root, active_profiles
     )
     overlays = _collect_profile_overlays(manifests)
-    return _apply_profile_policy_overlays(target_root, overlays)
+    changed = _apply_profile_policy_overlays(target_root, overlays)
+    autogen_do_not_apply = _collect_profile_autogen_disable(manifests)
+    list_changed = _apply_profile_policy_lists(
+        target_root, autogen_do_not_apply
+    )
+    return changed or list_changed
 
 
 def _copy_path(source: Path, target: Path) -> None:

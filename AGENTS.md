@@ -298,6 +298,28 @@ DevCovenant warns so the policy prose and its implementation stay aligned.
 
 ---
 
+## Policy: Devcov Raw String Escapes
+
+```policy-def
+id: devcov-raw-string-escapes
+status: active
+severity: warning
+auto_fix: false
+updated: false
+enforcement: active
+apply: true
+custom: true
+freeze: false
+profile_scopes: devcovrepo
+```
+
+Warn when DevCovenant repo Python strings contain bare backslashes.
+This repo-only policy keeps the raw-string guidance active without
+forcing it on user repos.
+
+
+---
+
 ## Policy: DevCovenant Self-Enforcement
 
 ```policy-def
@@ -630,26 +652,6 @@ of contents, and minimum depth.
 
 ---
 
-## Policy: Gcv Script Naming
-
-```policy-def
-id: gcv-script-naming
-status: active
-severity: warning
-auto_fix: false
-updated: false
-enforcement: active
-apply: true
-custom: false
-freeze: false
-profile_scopes: global
-```
-
-Policy description pending.
-
-
----
-
 ## Policy: Last Updated Placement
 
 ```policy-def
@@ -782,6 +784,26 @@ force_include_dirs:
 
 Keep lines within the configured maximum so documentation and code remain
 readable. Reflow long sentences or wrap lists rather than ignoring the limit.
+
+
+---
+
+## Policy: Managed Doc Assets
+
+```policy-def
+id: managed-doc-assets
+severity: error
+auto_fix: false
+enforcement: active
+apply: true
+custom: true
+profile_scopes: devcovrepo
+```
+
+Ensure AGENTS.md, README.md, PLAN.md, SPEC.md, CHANGELOG.md, and
+CONTRIBUTING.md remain the authoritative sources for their managed-block
+descriptors under `devcovenant/core/profiles/global/assets/` so documentation
+generation is deterministic.
 
 
 ---
@@ -935,6 +957,25 @@ Every policy definition must include descriptive text immediately after the
 
 ---
 
+## Policy: Profile Policy Map
+
+```policy-def
+id: profile-policy-map
+severity: error
+auto_fix: false
+enforcement: active
+apply: true
+custom: true
+profile_scopes: devcovrepo
+```
+
+Make sure PROFILE_MAP.md and POLICY_MAP.md document every shipped
+profile and policy so contributors and installers always see
+accurate short-form references that stay in sync with the code.
+
+
+---
+
 ## Policy: Raw String Escapes
 
 ```policy-def
@@ -944,10 +985,10 @@ severity: warning
 auto_fix: false
 updated: false
 enforcement: active
-apply: true
+apply: false
 custom: false
 freeze: false
-profile_scopes: devcovrepo
+profile_scopes: python
 ```
 
 Policy description pending.
@@ -1010,26 +1051,6 @@ Ensure `devcovenant/README.md` mirrors `README.md` with repository-only
 sections removed via the `<!-- REPO-ONLY:BEGIN -->` /
 `<!-- REPO-ONLY:END -->` markers. Auto-fix rewrites the packaged guide from
 the repo README.
-
-
----
-
-## Policy: Security Compliance Notes
-
-```policy-def
-id: security-compliance-notes
-status: active
-severity: warning
-auto_fix: false
-updated: false
-enforcement: active
-apply: true
-custom: false
-freeze: false
-profile_scopes: global
-```
-
-Policy description pending.
 
 
 ---

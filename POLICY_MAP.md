@@ -57,24 +57,6 @@ policy-specific handles listed below.
 - **Assets:** `.devcov-state/test_status.json`
 - **Profiles:** `global`
 
-### security-compliance-notes
-- **Metadata handles:** `id`, `status`, `severity`, `auto_fix`, `updated`,
-  `enforcement`, `apply`, `custom`, `freeze`, `profile_scopes`
-- **Assets:** `security_changes.md` (default log file)
-- **Profiles:** `global`
-
-### gcv-script-naming
-- **Metadata handles:** `id`, `status`, `severity`, `auto_fix`, `updated`,
-  `enforcement`, `apply`, `custom`, `freeze`, `profile_scopes`
-- **Assets:** none (enforcement only)
-- **Profiles:** `global`
-
-### raw-string-escapes
-- **Metadata handles:** `id`, `status`, `severity`, `auto_fix`, `updated`,
-  `enforcement`, `apply`, `custom`, `freeze`, `profile_scopes`
-- **Assets:** none (enforcement only)
-- **Profiles:** `global`
-
 ### changelog-coverage
 - **Metadata handles:** `main_changelog`, `skipped_files`, `collections`,
   `profile_scopes`
@@ -176,6 +158,12 @@ standard metadata keys plus the specific selectors below.
 - **Profiles:** `python` (future coverage for `go`, `rust`, `java`, `csharp`,
   `javascript`, `typescript`)
 
+### raw-string-escapes
+- **Metadata handles:** `id`, `status`, `severity`, `auto_fix`, `updated`,
+  `enforcement`, `apply`, `custom`, `freeze`, `profile_scopes`
+- **Assets:** none (enforcement only)
+- **Profiles:** `python` (disabled by `autogen_do_not_apply` by default)
+
 ### name-clarity
 - **Metadata handles:** `include_suffixes`, `profile_scopes`
 - **Assets:** scanner adapters + supporting configs
@@ -188,6 +176,11 @@ standard metadata keys plus the specific selectors below.
 - **Assets:** `tests/` tree (mirrors `devcovenant/core` and
   `devcovenant/custom` subtrees)
 - **Profiles:** `python`, `django`, `flask`, `fastapi`, `frappe`
+
+### devcov-raw-string-escapes (repo-only)
+- **Metadata handles:** `profile_scopes`
+- **Assets:** none (custom policy)
+- **Profiles:** `devcovrepo`
 
 ### security-scanner
 - **Metadata handles:** `exclude_globs`, `profile_scopes`

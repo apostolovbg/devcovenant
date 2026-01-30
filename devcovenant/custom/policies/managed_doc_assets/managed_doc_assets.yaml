@@ -12,4 +12,4 @@ metadata:
   apply: 'true'
   custom: 'true'
   profile_scopes:
-    - devcovenant
+    - devcovrepo

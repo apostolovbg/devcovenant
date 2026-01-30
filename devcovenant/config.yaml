@@ -117,7 +117,9 @@ reporting:
   audit_trail: true
   use_colors: true
 
-do_not_apply_policies: []
+autogen_do_not_apply:
+  - raw-string-escapes
+manual_force_apply: []
 freeze_core_policies: []
 policy_overrides: {}
 

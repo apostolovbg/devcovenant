@@ -11,4 +11,4 @@ metadata:
   custom: 'false'
   freeze: 'false'
   profile_scopes:
-    - devcovrepo
+    - python

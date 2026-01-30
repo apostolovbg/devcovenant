@@ -29,14 +29,68 @@ Example entry:
 
 ## Version 0.2.6
 
-- 2026-01-30: Scoped `raw-string-escapes` to the `devcovrepo` profile so it is
-  no longer treated as a global policy.
+- 2026-01-30: Removed dogfood-only policies, added the repo-only
+  `devcov-raw-string-escapes` policy, and implemented the
+  `autogen_do_not_apply`/`manual_force_apply` config flow with python
+  profile defaults for `raw-string-escapes`.
   Files:
   CHANGELOG.md
   AGENTS.md
+  PLAN.md
+  SPEC.md
+  POLICY_MAP.md
+  devcovenant/config.yaml
+  devcovenant/core/refresh_policies.py
+  devcovenant/core/install.py
+  devcovenant/core/policy_freeze.py
   devcovenant/core/policies/raw_string_escapes/\
     raw_string_escapes.yaml
+  devcovenant/core/profiles/python/profile.yaml
+  devcovenant/core/profiles/global/assets/AGENTS.yaml
+  devcovenant/core/profiles/global/assets/CHANGELOG.yaml
+  devcovenant/registry/global/policy_metadata_schema.yaml
+  tests/core/policies/devcov_parity_guard/tests/\
+    test_devcov_parity_guard.py
+  devcovenant/custom/policies/managed_doc_assets/\
+    managed_doc_assets.yaml
+  devcovenant/custom/policies/profile_policy_map/\
+    profile_policy_map.yaml
+  devcovenant/custom/policies/devcov_raw_string_escapes/__init__.py
+  devcovenant/custom/policies/devcov_raw_string_escapes/\
+    devcov_raw_string_escapes.py
+  devcovenant/custom/policies/devcov_raw_string_escapes/\
+    devcov_raw_string_escapes.yaml
+  devcovenant/core/policies/gcv_script_naming/\
+    gcv_script_naming.py
+  devcovenant/core/policies/gcv_script_naming/__init__.py
+  devcovenant/core/policies/gcv_script_naming/adapters/__init__.py
+  devcovenant/core/policies/gcv_script_naming/fixers/__init__.py
+  devcovenant/core/policies/gcv_script_naming/assets/.gitkeep
+  devcovenant/core/policies/gcv_script_naming/\
+    gcv_script_naming.yaml
+  devcovenant/core/policies/security_compliance_notes/\
+    security_compliance_notes.py
+  devcovenant/core/policies/security_compliance_notes/__init__.py
+  devcovenant/core/policies/security_compliance_notes/adapters/__init__.py
+  devcovenant/core/policies/security_compliance_notes/fixers/__init__.py
+  devcovenant/core/policies/security_compliance_notes/assets/.gitkeep
+  devcovenant/core/policies/security_compliance_notes/\
+    security_compliance_notes.yaml
+  tests/core/policies/gcv_script_naming/tests/\
+    test_gcv_script_naming.py
+  tests/core/policies/gcv_script_naming/__init__.py
+  tests/core/policies/gcv_script_naming/tests/__init__.py
+  tests/core/policies/security_compliance_notes/tests/\
+    test_security_compliance_notes.py
+  tests/core/policies/security_compliance_notes/__init__.py
+  tests/core/policies/security_compliance_notes/tests/__init__.py
   devcovenant/registry/local/policy_registry.yaml
+- 2026-01-30: Updated PLAN/SPEC to reflect completed devcovrepo/devcovuser
+  documentation and to scope raw-string-escapes follow-up work.
+  Files:
+  CHANGELOG.md
+  PLAN.md
+  SPEC.md
 - 2026-01-30: Removed the dogfood-only `patches-txt-sync` policy, rebuilt
   metadata schema generation to prefer descriptor YAMLs, and refreshed
   policy registry outputs plus devcov scaffolding refresh logic.

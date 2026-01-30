@@ -1,31 +1,28 @@
 header_lines:
 - '# DevCovenant Development Guide'
-- '**Last Updated:** 2026-01-28'
+- '**Last Updated:** 2026-01-30'
 - '**Version:** 0.2.6'
 doc_id: AGENTS
 doc_type: policy-source
 managed_by: DevCovenant
-managed_block: '**Doc ID:** AGENTS
-
-  **Doc Type:** policy-source
-
-  **Managed By:** DevCovenant
-
-
-  # Message from Human, do not edit:
-
-
-  Read `README.md` and `devcovenant/README.md` first for architecture and
-
-  workflow. This file is the canonical policy source of truth.
-
-
-  Use `PROFILE_MAP.md` as the authoritative profile catalog and `POLICY_MAP.md`
-
-  for a quick rundown of metadata handles, assets, and profile coverage for
-  each
-
-  policy before diving into `AGENTS.md`.
-
-
-  Taking development notes is effectively obligatory; treat it as required.'
+managed_block: "**Doc ID:** AGENTS\n**Doc Type:** policy-source\n**Managed By:** DevCovenant\n\
+  \n# Message from DevCovenant's Human, read first and do not edit:\n\nThis document\
+  \ is the absolute source of truth for everyone who works in\nthis repository\u2014\
+  human and AI alike. Think of it as the Law of the Land:\nthe canonical policy source\
+  \ for this repo, and the policies it holds are\nmanaged by DevCovenant. Failing\
+  \ to follow the instructions here will\ncause commits to fail.\n\nAfter `AGENTS.md`,\
+  \ read `README.md` to learn about the project that\nlives in this repository and\
+  \ what it aims to solve.\n\nWhen you are ready to interact with DevCovenant itself,\
+  \ open\n`devcovenant/README.md`. It can be finicky at first, but that is the\nprice\
+  \ of keeping docs, code, and features in sync under AI-assisted\ndevelopment.\n\n\
+  Taking development notes below is effectively obligatory. Updating them\nfrequently\
+  \ to describe current hurdles and events is good practice.\n\nThe editable notes\
+  \ section starts immediately after this message and\nafter the `DEVCOV:END` marker,\
+  \ up to the next `DEVCOV:BEGIN`.\nWhen installing DevCovenant into a repo, the installer\
+  \ preserves any\nexisting `AGENTS.md` content in that section. Never edit between\n\
+  `DEVCOV*:BEGIN` and `DEVCOV*:END` markers in any file, regardless of how\nthey are\
+  \ styled.\n\nHave a productive session and read the docs end-to-end. Always run\
+  \ the\ngate commands in the right order - ALWAYS start your edits session with\n\
+  `start`, do your edits, then run your tests if any, then `end`. This\nensures devflow\
+  \ policy compliance and accepted commits. Read this entire\ndocument and you will\
+  \ get it!"

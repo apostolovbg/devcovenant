@@ -307,6 +307,11 @@ Devflow gate status is stored in `.devcov-state/test_status.json`, created
   across policy definitions for consistent scoping.
 - Policy metadata normalization must be able to add missing keys without
   changing existing values or policy text.
+- `devcov-parity-guard` replaces the legacy stock-text policy and compares
+  AGENTS policy prose to descriptor YAML text for both core and custom
+  policies.
+- Dogfood-only policies (`patches-txt-sync`, `gcv-script-naming`,
+  `security-compliance-notes`) are not shipped in the DevCovenant repo.
 - Support policy replacement metadata via
   `devcovenant/registry/global/policy_replacements.yaml`.
   During updates, replaced policies move to custom and are marked deprecated
@@ -373,8 +378,10 @@ Devflow gate status is stored in `.devcov-state/test_status.json`, created
 - marks the new copy as `custom`, and reruns `update-policy-registry` so the
 - management docs, notices, and registry reflect the deprecated version.
 - `config.yaml` exposes:
-  - `do_not_apply_policies`: multi-line list whose entries become
-    `apply: false` in the resolved metadata block.
+  - `autogen_do_not_apply`: multi-line list whose entries become
+    `apply: false` in the resolved metadata block (profile-driven defaults).
+  - `manual_force_apply`: manual override list that flips `apply: true`
+    even when `autogen_do_not_apply` disables a policy.
   - `freeze_core_policies`: list whose IDs toggle `freeze: true`; when a
     custom policy appears here, the generator drops it and reports that
     custom texts do not need freezing.
@@ -389,6 +396,12 @@ Devflow gate status is stored in `.devcov-state/test_status.json`, created
   `profiles.active` list (plus `global`). The normalization pipeline
   trims scope values before writing the `metadata_values` block so the
   canonical registry reflects the active profile surface.
+- `raw-string-escapes` remains a core policy, but it is scoped to `python`
+  metadata only and defaults to `apply: false` via the python profile’s
+  `autogen_do_not_apply` overlay. Users can enable it via
+  `manual_force_apply`.
+- Add a repo-specific `devcov-raw-string-escapes` custom policy for the
+  DevCovenant repo only; do not ship that custom policy in user installs.
 
 ## Installation Requirements
 - Install the full DevCovenant toolchain into the target repo, including the
