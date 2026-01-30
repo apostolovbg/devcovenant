@@ -1,10 +1,15 @@
 version: 1
-profile: devcovenant
+profile: devcovrepo
 category: repo
 suffixes: []
 ignore_dirs: []
 assets: []
 policy_overlays:
+  documentation-growth-tracking:
+    user_visible_dirs:
+      - devcovenant/docs
+    doc_quality_dirs:
+      - devcovenant/docs
   line-length-limit:
     exclude_globs:
       - devcovenant/registry/**

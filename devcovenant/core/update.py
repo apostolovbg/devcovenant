@@ -5,6 +5,8 @@ from __future__ import annotations
 
 import argparse
 import re
+import shutil
+import sys
 from dataclasses import dataclass
 from datetime import datetime, timezone
 from pathlib import Path
@@ -19,6 +21,7 @@ from devcovenant.core.refresh_policies import (
     policy_metadata_schema_path,
     refresh_policies,
 )
+from devcovenant.core.update_policy_registry import update_policy_registry
 
 _POLICY_BLOCK_RE = re.compile(
     r"(##\s+Policy:\s+[^\n]+\n\n)```policy-def\n(.*?)\n```\n\n"
@@ -40,8 +43,7 @@ class ReplacementPlan:
 class PolicySources:
     """Captured policy sources for migration."""
 
-    scripts: Dict[str, str]
-    fixers: Dict[str, str]
+    files: Dict[str, Dict[str, bytes]]
 
 
 def _utc_now() -> str:
@@ -173,32 +175,23 @@ def _snapshot_policy_sources(
     repo_root: Path, policy_ids: Tuple[str, ...]
 ) -> PolicySources:
     """Capture existing core policy scripts and fixers for migration."""
-    scripts: Dict[str, str] = {}
-    fixers: Dict[str, str] = {}
+    files: Dict[str, Dict[str, bytes]] = {}
     for policy_id in policy_ids:
         script_name = _policy_script_name(policy_id)
-        script_path = (
-            repo_root
-            / "devcovenant"
-            / "core"
-            / "policies"
-            / script_name
-            / f"{script_name}.py"
+        policy_dir = (
+            repo_root / "devcovenant" / "core" / "policies" / script_name
         )
-        if script_path.exists():
-            scripts[policy_id] = script_path.read_text(encoding="utf-8")
-        fixer_path = (
-            repo_root
-            / "devcovenant"
-            / "core"
-            / "policies"
-            / script_name
-            / "fixers"
-            / "global.py"
-        )
-        if fixer_path.exists():
-            fixers[policy_id] = fixer_path.read_text(encoding="utf-8")
-    return PolicySources(scripts=scripts, fixers=fixers)
+        if not policy_dir.exists():
+            continue
+        captured: Dict[str, bytes] = {}
+        for path in policy_dir.rglob("*"):
+            if not path.is_file():
+                continue
+            rel_path = str(path.relative_to(policy_dir))
+            captured[rel_path] = path.read_bytes()
+        if captured:
+            files[policy_id] = captured
+    return PolicySources(files=files)
 
 
 def _write_custom_sources(
@@ -211,31 +204,26 @@ def _write_custom_sources(
     policy_dir = (
         repo_root / "devcovenant" / "custom" / "policies" / script_name
     )
-    if policy_id in sources.scripts:
-        policy_dir.mkdir(parents=True, exist_ok=True)
-        custom_path = policy_dir / f"{script_name}.py"
-        if not custom_path.exists():
-            custom_path.write_text(
-                sources.scripts[policy_id], encoding="utf-8"
-            )
-    if policy_id in sources.fixers:
-        fixer_dir = policy_dir / "fixers"
-        fixer_dir.mkdir(parents=True, exist_ok=True)
-        fixer_path = fixer_dir / "global.py"
-        if not fixer_path.exists():
-            fixer_path.write_text(sources.fixers[policy_id], encoding="utf-8")
+    if policy_dir.exists():
+        return
+    captured = sources.files.get(policy_id)
+    if not captured:
+        return
+    policy_dir.mkdir(parents=True, exist_ok=True)
+    for rel_path, payload in captured.items():
+        target = policy_dir / rel_path
+        target.parent.mkdir(parents=True, exist_ok=True)
+        target.write_bytes(payload)
 
 
 def _remove_custom_sources(repo_root: Path, policy_id: str) -> None:
     """Remove custom policy sources for a policy."""
     script_name = _policy_script_name(policy_id)
-    for rel_path in (
-        f"devcovenant/custom/policies/{script_name}/{script_name}.py",
-        f"devcovenant/custom/policies/{script_name}/fixers/global.py",
-    ):
-        target = repo_root / rel_path
-        if target.exists():
-            target.unlink()
+    policy_dir = (
+        repo_root / "devcovenant" / "custom" / "policies" / script_name
+    )
+    if policy_dir.exists():
+        shutil.rmtree(policy_dir)
 
 
 def _rewrite_agents_for_replacements(
@@ -376,6 +364,9 @@ def main(argv=None) -> None:
             set_updated=True,
         )
         export_metadata_schema(target_root)
+        result = update_policy_registry(target_root, skip_freeze=True)
+        if result != 0:
+            sys.exit(result)
 
 
 if __name__ == "__main__":

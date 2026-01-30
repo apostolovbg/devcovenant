@@ -207,10 +207,14 @@ Set `version.override` when you want config-driven installs to emit a specific
 project version in generated assets (for example, `pyproject.toml`).
 Apply that override before any `VERSION` file exists.
 
-The DevCovenant repository activates a dedicated `devcovenant` profile.
+The DevCovenant repository activates a dedicated `devcovrepo` profile.
 It overrides `new-modules-need-tests` metadata so the `devcovenant/**` sources
 and the mirrored `tests/devcovenant/**` suites (core/custom policies and
 profiles) stay aligned.
+
+User repositories that do not enable `devcovrepo` instead keep the
+`devcovuser` profile active so `devcovenant/**` stays out of enforcement while
+`devcovenant/custom/**` continues to run.
 
 That profile also contributes a `.gitignore` fragment that keeps
 `devcovenant/config.yaml` local to this repo. User repos that do not enable

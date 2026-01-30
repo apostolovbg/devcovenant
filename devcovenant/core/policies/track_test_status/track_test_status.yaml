@@ -1,0 +1,13 @@
+id: track-test-status
+text: Policy description pending.
+metadata:
+  id: track-test-status
+  status: active
+  severity: warning
+  auto_fix: 'false'
+  updated: 'false'
+  enforcement: active
+  apply: 'true'
+  custom: 'false'
+  freeze: 'false'
+  profile_scopes: global

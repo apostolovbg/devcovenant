@@ -1,0 +1,14 @@
+id: raw-string-escapes
+text: Policy description pending.
+metadata:
+  id: raw-string-escapes
+  status: active
+  severity: warning
+  auto_fix: 'false'
+  updated: 'false'
+  enforcement: active
+  apply: 'true'
+  custom: 'false'
+  freeze: 'false'
+  profile_scopes:
+    - devcovrepo

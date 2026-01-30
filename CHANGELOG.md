@@ -1,5 +1,5 @@
 # Changelog
-**Last Updated:** 2026-01-28
+**Last Updated:** 2026-01-30
 **Version:** 0.2.6
 
 <!-- DEVCOV:BEGIN -->
@@ -29,6 +29,89 @@ Example entry:
 
 ## Version 0.2.6
 
+- 2026-01-30: Scoped `raw-string-escapes` to the `devcovrepo` profile so it is
+  no longer treated as a global policy.
+  Files:
+  CHANGELOG.md
+  AGENTS.md
+  devcovenant/core/policies/raw_string_escapes/\
+    raw_string_escapes.yaml
+  devcovenant/registry/local/policy_registry.yaml
+- 2026-01-30: Removed the dogfood-only `patches-txt-sync` policy, rebuilt
+  metadata schema generation to prefer descriptor YAMLs, and refreshed
+  policy registry outputs plus devcov scaffolding refresh logic.
+  Files:
+  CHANGELOG.md
+  AGENTS.md
+  POLICY_MAP.md
+  devcovenant/core/refresh_policies.py
+  devcovenant/core/refresh_all.py
+  devcovenant/core/policies/changelog_coverage/changelog_coverage.yaml
+  devcovenant/core/policies/gcv_script_naming/gcv_script_naming.yaml
+  devcovenant/core/policies/raw_string_escapes/raw_string_escapes.yaml
+  devcovenant/core/policies/security_compliance_notes/\
+    security_compliance_notes.yaml
+  devcovenant/core/policies/track_test_status/track_test_status.yaml
+  devcovenant/custom/policies/managed_doc_assets/managed_doc_assets.yaml
+  devcovenant/custom/policies/profile_policy_map/profile_policy_map.yaml
+  devcovenant/core/policies/patches_txt_sync/patches_txt_sync.py
+  devcovenant/core/policies/patches_txt_sync/__init__.py
+  devcovenant/core/policies/patches_txt_sync/adapters/__init__.py
+  devcovenant/core/policies/patches_txt_sync/fixers/__init__.py
+  devcovenant/core/policies/patches_txt_sync/assets/.gitkeep
+  tests/core/policies/patches_txt_sync/__init__.py
+  tests/core/policies/patches_txt_sync/tests/test_patches_txt_sync.py
+  tests/core/policies/patches_txt_sync/tests/__init__.py
+  devcovenant/registry/global/policy_metadata_schema.yaml
+  devcovenant/registry/local/policy_registry.yaml
+  devcovenant/core/parser.py
+- 2026-01-30: Renamed `stock-policy-text-sync` to `devcov-parity-guard`,
+  updated the policy to compare AGENTS text against descriptor metadata, and
+  refreshed the registry/metadata references to match the new policy id.
+  Files:
+  CHANGELOG.md
+  AGENTS.md
+  POLICY_MAP.md
+  devcovenant/core/policies/devcov_parity_guard/devcov_parity_guard.py
+  devcovenant/core/policies/devcov_parity_guard/devcov_parity_guard.yaml
+  devcovenant/core/policies/devcov_parity_guard/__init__.py
+  devcovenant/core/profiles/global/assets/AGENTS.md
+  devcovenant/registry/global/policy_metadata_schema.yaml
+  devcovenant/registry/global/stock_policy_texts.yaml
+  devcovenant/core/stock_policy_texts.json
+  tests/core/policies/devcov_parity_guard/tests/test_devcov_parity_guard.py
+  tests/core/policies/devcov_parity_guard/tests/__init__.py
+  devcovenant/core/policies/stock_policy_text_sync/adapters/__init__.py
+  devcovenant/core/policies/stock_policy_text_sync/assets/.gitkeep
+  devcovenant/core/policies/stock_policy_text_sync/fixers/__init__.py
+  devcovenant/core/policies/stock_policy_text_sync/stock_policy_text_sync.yaml
+  tests/core/policies/stock_policy_text_sync/__init__.py
+  tests/core/policies/stock_policy_text_sync/tests/__init__.py
+- 2026-01-30: Fixed policy metadata override handling, expanded update
+  replacements to copy full policy descriptors into custom overrides, and
+  ensured install/update rebuild devcovenant custom/test scaffolding while
+  pruning devcovrepo-only overrides when core inclusion is disabled.
+  Files:
+  CHANGELOG.md
+  devcovenant/core/refresh_policies.py
+  devcovenant/core/update.py
+  devcovenant/core/install.py
+  devcovenant/custom/profiles/devcovrepo/profile.yaml
+- 2026-01-30: Renamed the repo-specific profile to `devcovrepo` and
+  introduced the `devcovuser` profile so repo and user installs can keep
+  DevCovenant artifacts separated while maintaining the config overrides.
+  Files:
+  CHANGELOG.md
+  PROFILE_MAP.md
+  README.md
+  SPEC.md
+  PLAN.md
+  devcovenant/config.yaml
+  devcovenant/custom/profiles/devcovrepo/profile.yaml
+  devcovenant/custom/profiles/devcovrepo/assets/.gitignore
+  devcovenant/custom/profiles/devcovuser/profile.yaml
+  devcovenant/custom/profiles/devcovenant/assets/.gitignore
+  devcovenant/README.md
 - 2026-01-29: Made `SPEC.md` and `PLAN.md` part of the normal profile-driven
   doc assets, removed the `--include-spec/--include-plan` flags and the
   deprecated `config_old.yaml`, and extended the install tests to cover the
@@ -60,6 +143,22 @@ Example entry:
   devcovenant/core/update_hashes.py
   devcovenant/registry.json
   devcovenant/registry/global/policy_metadata_schema.yaml
+
+- 2026-01-29: Refreshed policy metadata handling, canonicalized the schema,
+  and recorded the new descriptor imports plus a python3-based pre-commit
+  command so DevFlow gates see `python3 -m pre_commit`. Entries now flow
+  through `refresh_policies`, `update-policy-registry`, `install`, `update`,
+  and `cli` helpers so the same schema and start command propagate everywhere.
+  Files:
+  devcovenant/core/refresh_policies.py
+  devcovenant/core/update_policy_registry.py
+  devcovenant/core/registry.py
+  devcovenant/core/policy_descriptor.py
+  devcovenant/core/run_pre_commit.py
+  devcovenant/core/install.py
+  devcovenant/core/update.py
+  devcovenant/cli.py
+  devcovenant/core/refresh_all.py
 
 - 2026-01-28: Moved user-facing helper scripts to `devcovenant/` root, removed
   `devcovenant/core/tools/`, and aligned manifests, assets, policies, and

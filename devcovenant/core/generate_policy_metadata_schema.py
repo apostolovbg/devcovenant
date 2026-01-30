@@ -17,9 +17,7 @@ def main() -> int:
     parser.add_argument(
         "--output",
         type=Path,
-        help=(
-            "Override the output path (defaults to the registry location)."
-        ),
+        help=("Override the output path (defaults to the registry location)."),
     )
     args = parser.parse_args()
     repo_root = Path(__file__).resolve().parents[2]

@@ -6,11 +6,12 @@ import hashlib
 from dataclasses import dataclass
 from datetime import datetime, timezone
 from pathlib import Path
-from typing import Dict, List, Optional
+from typing import Dict, List, Optional, Tuple
 
 import yaml
 
 from .parser import PolicyDefinition
+from .policy_descriptor import PolicyDescriptor
 from .policy_locations import resolve_script_location
 from .policy_schema import PolicySchema
 
@@ -268,12 +269,62 @@ class PolicyRegistry:
             if scope.strip()
         ]
 
+    def _metadata_default_values(self, raw_value: object | None) -> List[str]:
+        """Normalize a metadata default into a list of strings."""
+
+        if raw_value is None:
+            return []
+        if isinstance(raw_value, list):
+            return [str(item) for item in raw_value if str(item)]
+        return [str(raw_value)]
+
+    def _schema_payload(
+        self,
+        descriptor: PolicyDescriptor | None,
+        schema: PolicySchema | None,
+        metadata: Dict[str, str],
+    ) -> Tuple[List[str], Dict[str, List[str]]]:
+        """
+        Build schema metadata keys and defaults.
+
+        Args:
+            descriptor: Descriptor metadata (if available).
+            schema: Already resolved schema (if available).
+            metadata: The resolved metadata map for fallback.
+        """
+
+        if schema:
+            defaults: Dict[str, List[str]] = {}
+            for key in schema.keys:
+                raw_default = schema.defaults.get(key)
+                defaults[key] = list(raw_default) if raw_default else []
+            return list(schema.keys), defaults
+
+        if descriptor:
+            descriptor_keys = list(descriptor.metadata.keys())
+            defaults = {
+                key: self._metadata_default_values(
+                    descriptor.metadata.get(key)
+                )
+                for key in descriptor_keys
+            }
+            return descriptor_keys, defaults
+
+        fallback_keys = list(metadata.keys())
+        defaults = {
+            key: self._metadata_default_values(metadata.get(key))
+            for key in fallback_keys
+        }
+        return fallback_keys, defaults
+
     def update_policy_entry(
         self,
         policy: PolicyDefinition,
         script_location,
-        descriptor=None,
+        descriptor: PolicyDescriptor | None = None,
         schema: PolicySchema | None = None,
+        *,
+        resolved_metadata: Dict[str, str] | None = None,
     ):
         """
         Update a policy entry in the registry.
@@ -288,28 +339,28 @@ class PolicyRegistry:
         entry["custom"] = policy.custom
         entry["description"] = policy.name
         entry["policy_text"] = policy.description
-        ordered_keys: List[str] = []
-        if schema:
-            ordered_keys.extend(schema.keys)
-        elif descriptor:
-            ordered_keys.extend(descriptor.metadata.keys())
-        extras = [
-            key for key in policy.raw_metadata if key not in ordered_keys
-        ]
+        metadata_map = dict(resolved_metadata or policy.raw_metadata)
+        schema_keys, schema_defaults = self._schema_payload(
+            descriptor, schema, metadata_map
+        )
+        ordered_keys = list(schema_keys)
+        extras = [key for key in metadata_map if key not in ordered_keys]
         ordered_keys.extend(extras)
         entry["metadata_handles"] = list(ordered_keys)
         entry["profiles"] = self._split_profiles(
-            policy.raw_metadata.get("profile_scopes", "")
+            metadata_map.get("profile_scopes", "")
         )
-        metadata_values: Dict[str, List[str]] = {}
-        for key in ordered_keys:
-            metadata_values[key] = self._split_metadata_values(
-                policy.raw_metadata.get(key, "")
-            )
-        entry["metadata_schema"] = list(ordered_keys)
+        metadata_values: Dict[str, List[str]] = {
+            key: self._split_metadata_values(metadata_map.get(key, ""))
+            for key in ordered_keys
+        }
+        entry["metadata_schema"] = {
+            "keys": list(schema_keys),
+            "defaults": schema_defaults,
+        }
         entry["metadata_values"] = metadata_values
-        entry["metadata"] = dict(policy.raw_metadata)
-        entry["assets"] = self._extract_asset_values(policy.raw_metadata)
+        entry["metadata"] = dict(metadata_map)
+        entry["assets"] = self._extract_asset_values(metadata_map)
         entry["core"] = False
         entry["script_exists"] = False
         entry["last_updated"] = entry.get("last_updated")

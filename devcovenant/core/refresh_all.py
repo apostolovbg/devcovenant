@@ -4,8 +4,16 @@ from __future__ import annotations
 
 from pathlib import Path
 
+import yaml
+
+from devcovenant.core import manifest as manifest_module
 from devcovenant.core import profiles
-from devcovenant.core.install import apply_autogen_metadata_overrides
+from devcovenant.core.install import (
+    _ensure_custom_tree,
+    _ensure_tests_mirror,
+    _prune_devcovrepo_overrides,
+    apply_autogen_metadata_overrides,
+)
 from devcovenant.core.refresh_policies import (
     export_metadata_schema,
     policy_metadata_schema_path,
@@ -66,7 +74,35 @@ def refresh_all(
     print("Rebuilt profile catalog at", profiles.REGISTRY_CATALOG)
     if apply_autogen_metadata_overrides(repo_root):
         print("Updated autogen metadata overrides in config.yaml")
+    include_core = _load_devcov_core_include(repo_root)
+    _ensure_custom_tree(repo_root)
+    _ensure_tests_mirror(repo_root, include_core)
+    removed_overrides = _prune_devcovrepo_overrides(repo_root, include_core)
+    if removed_overrides:
+        manifest_module.append_notifications(
+            repo_root,
+            [
+                (
+                    "Removed devcovrepo-prefixed overrides:"
+                    f" {', '.join(removed_overrides)}"
+                )
+            ],
+        )
     return 0
+
+
+def _load_devcov_core_include(repo_root: Path) -> bool:
+    """Return devcov_core_include from config.yaml when present."""
+    config_path = repo_root / "devcovenant" / "config.yaml"
+    if not config_path.exists():
+        return False
+    try:
+        payload = yaml.safe_load(config_path.read_text(encoding="utf-8")) or {}
+    except Exception:
+        return False
+    if not isinstance(payload, dict):
+        return False
+    return bool(payload.get("devcov_core_include", False))
 
 
 def main() -> int:

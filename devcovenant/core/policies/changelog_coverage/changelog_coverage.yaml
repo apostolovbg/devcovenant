@@ -4,6 +4,7 @@ text: |
   current version. This policy prevents untracked updates and keeps release
   notes aligned with repository changes.
 metadata:
+  id: changelog-coverage
   severity: error
   auto_fix: false
   enforcement: active

@@ -1,5 +1,5 @@
 # DevCovenant Development Guide
-**Last Updated:** 2026-01-28
+**Last Updated:** 2026-01-30
 **Version:** 0.2.6
 
 <!-- DEVCOV:BEGIN -->
@@ -195,23 +195,18 @@ blocks while leaving surrounding content intact.
 
 <!-- DEVCOV:END -->
 <!-- DEVCOV-POLICIES:BEGIN -->
-
-
 ## Policy: Changelog Coverage
 
 ```policy-def
 id: changelog-coverage
-status: active
 severity: error
-auto_fix: false
-updated: false
+auto_fix: False
 enforcement: active
-apply: true
-custom: false
+apply: True
+custom: False
 profile_scopes: global
 main_changelog: CHANGELOG.md
-skipped_files: CHANGELOG.md,.gitignore,.pre-commit-config.yaml
-  CHANGELOG.md
+skipped_files: CHANGELOG.md
   .gitignore
   .pre-commit-config.yaml
 collections: __none__
@@ -262,8 +257,7 @@ profile_scopes: python
   julia
   ocaml
   crystal
-dependency_files: requirements.in,requirements.lock,pyproject.toml
-  requirements.in
+dependency_files: requirements.in
   requirements.lock
   pyproject.toml
 third_party_file: THIRD_PARTY_LICENSES.md
@@ -278,6 +272,28 @@ Maintain the third-party license table alongside `requirements.in`,
 `requirements.lock`, and `pyproject.toml`. The policy points reviewers to the
 `licenses/` directory and its `## License Report` section so every dependency
 change touches both the license text and the cited manifest.
+
+
+---
+
+## Policy: Devcov Parity Guard
+
+```policy-def
+id: devcov-parity-guard
+status: active
+severity: warning
+auto_fix: false
+updated: false
+enforcement: active
+apply: true
+custom: false
+profile_scopes: global
+policy_definitions: AGENTS.md
+```
+
+Ensure the policy text recorded in AGENTS matches the descriptor text
+shipped alongside each policy (core or custom). When the two drift,
+DevCovenant warns so the policy prose and its implementation stay aligned.
 
 
 ---
@@ -393,7 +409,9 @@ apply: true
 custom: false
 profile_scopes: python
 include_suffixes: .py
-exclude_prefixes: build,dist,node_modules
+exclude_prefixes: build
+  dist
+  node_modules
 include_prefixes:
 include_globs: *.py
 exclude_suffixes:
@@ -401,7 +419,9 @@ exclude_globs: build/**
   dist/**
   node_modules/**
 force_include_globs:
-selector_roles: include,exclude,force_include
+selector_roles: include
+  exclude
+  force_include
 include_files:
 include_dirs:
 exclude_files:
@@ -450,20 +470,40 @@ profile_scopes: global
   docker
   kubernetes
   ansible
-selector_roles: user_facing,user_visible,doc_quality
-include_prefixes: devcovenant,tools,.github
+selector_roles: user_facing
+  user_visible
+  doc_quality
+include_prefixes: devcovenant
+  tools
+  .github
 exclude_prefixes: tests
-user_facing_prefixes: devcovenant,tools,.github
+user_facing_prefixes: devcovenant
+  tools
+  .github
 user_facing_exclude_prefixes: tests
-user_facing_suffixes: .py,.js,.ts,.tsx,.vue,.go,.rs,.java,.kt,.swift,.rb
-  .php,.cs,.yml,.yaml,.json,.toml
-user_facing_files: devcovenant/cli.py,devcovenant/__main__.py,
-  .pre-commit-config.yaml,pyproject.toml
-  devcovenant/cli.py
+user_facing_suffixes: .py
+  .js
+  .ts
+  .tsx
+  .vue
+  .go
+  .rs
+  .java
+  .kt
+  .swift
+  .rb
+  .php
+  .cs
+  .yml
+  .yaml
+  .json
+  .toml
+user_facing_files: devcovenant/cli.py
   devcovenant/__main__.py
   .pre-commit-config.yaml
   pyproject.toml
-user_facing_globs: .github/workflows/*.yml,.github/workflows/*.yaml
+user_facing_globs: .github/workflows/*.yml
+  .github/workflows/*.yaml
   *.py
   *.js
   *.ts
@@ -481,29 +521,52 @@ user_facing_globs: .github/workflows/*.yml,.github/workflows/*.yaml
   *.yaml
   *.json
   *.toml
-  .github/workflows/*.yml
-  .github/workflows/*.yaml
-user_facing_keywords: api,endpoint,endpoints,route,routes,routing,service
-  services,controller,controllers,handler,handlers,client,clients,webhook
-  webhooks,integration,integrations,sdk,cli,ui,view,views,page,pages,screen
-  screens,form,forms,workflow,workflows
-user_visible_files: README.md,CONTRIBUTING.md,AGENTS.md
-  SPEC.md,PLAN.md,devcovenant/README.md
-  README.md
+user_facing_keywords: api
+  endpoint
+  endpoints
+  route
+  routes
+  routing
+  service
+  services
+  controller
+  controllers
+  handler
+  handlers
+  client
+  clients
+  webhook
+  webhooks
+  integration
+  integrations
+  sdk
+  cli
+  ui
+  view
+  views
+  page
+  pages
+  screen
+  screens
+  form
+  forms
+  workflow
+  workflows
+user_visible_files: README.md
   CONTRIBUTING.md
   AGENTS.md
   SPEC.md
   PLAN.md
   devcovenant/README.md
-doc_quality_files: README.md,CONTRIBUTING.md,AGENTS.md
-  SPEC.md,PLAN.md,devcovenant/README.md
-  README.md
+doc_quality_files: README.md
   CONTRIBUTING.md
   AGENTS.md
   SPEC.md
   PLAN.md
   devcovenant/README.md
-required_headings: Table of Contents,Overview,Workflow
+required_headings: Table of Contents
+  Overview
+  Workflow
 require_toc: true
 min_section_count: 3
 min_word_count: 120
@@ -511,8 +574,25 @@ quality_severity: warning
 require_mentions: true
 mention_severity: warning
 mention_min_length: 3
-mention_stopwords: devcovenant,tools,common,custom,policy,policies,script
-  scripts,py,js,ts,json,yml,yaml,toml,md,readme,plan,spec
+mention_stopwords: devcovenant
+  tools
+  common
+  custom
+  policy
+  policies
+  script
+  scripts
+  py
+  js
+  ts
+  json
+  yml
+  yaml
+  toml
+  md
+  readme
+  plan
+  spec
 include_suffixes:
 include_globs: devcovenant/**
   tools/**
@@ -550,6 +630,26 @@ of contents, and minimum depth.
 
 ---
 
+## Policy: Gcv Script Naming
+
+```policy-def
+id: gcv-script-naming
+status: active
+severity: warning
+auto_fix: false
+updated: false
+enforcement: active
+apply: true
+custom: false
+freeze: false
+profile_scopes: global
+```
+
+Policy description pending.
+
+
+---
+
 ## Policy: Last Updated Placement
 
 ```policy-def
@@ -566,8 +666,6 @@ profile_scopes: global
   data
 include_suffixes: .md
 allowed_globs: >
-  README.md,AGENTS.md,CONTRIBUTING.md,CHANGELOG.md,SPEC.md,PLAN.md,
-  devcovenant/README.md,devcovenant/core/profiles/global/assets/*.yaml
   README.md
   AGENTS.md
   CONTRIBUTING.md
@@ -579,16 +677,16 @@ allowed_globs: >
 allowed_files:
 allowed_suffixes:
 required_files:
-required_globs: README.md,AGENTS.md,CONTRIBUTING.md,CHANGELOG.md
-  SPEC.md,PLAN.md
-  devcovenant/README.md
-  README.md
+required_globs: README.md
   AGENTS.md
   CONTRIBUTING.md
   CHANGELOG.md
   SPEC.md
   PLAN.md
-selector_roles: include,allowed,required
+  devcovenant/README.md
+selector_roles: include
+  allowed
+  required
 include_globs: *.md
 include_files:
 include_dirs:
@@ -599,6 +697,7 @@ required_dirs:
 Docs must include a `Last Updated` header near the top so readers can trust
 recency. The auto-fix keeps timestamps current while respecting allowed
 locations.
+
 
 ---
 
@@ -638,17 +737,25 @@ profile_scopes: global
   ansible
 max_length: 79
 include_suffixes: >
-  .py,.md,.rst,.txt,.yml,.yaml,.json,.toml,.cff
-exclude_prefixes: build,dist,node_modules
-exclude_globs:
-  - devcovenant/core/profiles/global/assets/LICENSE_GPL-3.0.txt
-  - devcovenant/core/profiles/global/assets/*.yaml
-  - devcovenant/core/stock_policy_texts.json
-  - devcovenant/core/policies/**
-  - devcovenant/custom/policies/**
-  - build/**
-  - dist/**
-  - node_modules/**
+  .py
+  .md
+  .rst
+  .txt
+  .yml
+  .yaml
+  .json
+  .toml
+  .cff
+exclude_prefixes: build
+  dist
+  node_modules
+exclude_globs: >
+  devcovenant/core/profiles/global/assets/LICENSE_GPL-3.0.txt
+  devcovenant/core/profiles/global/assets/*.yaml
+  devcovenant/core/stock_policy_texts.json
+  build/**
+  dist/**
+  node_modules/**
 include_prefixes:
 include_globs: *.>
   *.py
@@ -662,7 +769,9 @@ include_globs: *.>
   *.cff
 exclude_suffixes:
 force_include_globs:
-selector_roles: include,exclude,force_include
+selector_roles: include
+  exclude
+  force_include
 include_files:
 include_dirs:
 exclude_files:
@@ -673,6 +782,34 @@ force_include_dirs:
 
 Keep lines within the configured maximum so documentation and code remain
 readable. Reflow long sentences or wrap lists rather than ignoring the limit.
+
+
+---
+
+## Policy: Managed Environment
+
+```policy-def
+id: managed-environment
+status: active
+severity: error
+auto_fix: false
+updated: false
+enforcement: active
+apply: false
+custom: false
+profile_scopes: global
+expected_paths:
+expected_interpreters:
+required_commands:
+command_hints:
+```
+
+DevCovenant must run from the managed environment described in this
+policy's metadata. Use expected_paths for virtualenv or bench roots,
+expected_interpreters for explicit interpreter locations, and
+required_commands or command_hints to guide contributors. When enabled
+with empty metadata, the policy emits a warning so teams fill the
+required context.
 
 
 ---
@@ -689,7 +826,9 @@ enforcement: active
 apply: true
 custom: false
 profile_scopes: python
-exclude_prefixes: build,dist,node_modules
+exclude_prefixes: build
+  dist
+  node_modules
 include_suffixes:
 include_prefixes:
 include_globs:
@@ -698,7 +837,9 @@ exclude_globs: build/**
   dist/**
   node_modules/**
 force_include_globs:
-selector_roles: exclude,include,force_include
+selector_roles: exclude
+  include
+  force_include
 exclude_files:
 exclude_dirs:
 include_files:
@@ -725,7 +866,6 @@ updated: false
 enforcement: active
 apply: true
 custom: true
-updated: false
 profile_scopes: python
 include_suffixes: .py
 include_prefixes: devcovenant
@@ -795,6 +935,26 @@ Every policy definition must include descriptive text immediately after the
 
 ---
 
+## Policy: Raw String Escapes
+
+```policy-def
+id: raw-string-escapes
+status: active
+severity: warning
+auto_fix: false
+updated: false
+enforcement: active
+apply: true
+custom: false
+freeze: false
+profile_scopes: devcovrepo
+```
+
+Policy description pending.
+
+
+---
+
 ## Policy: Read-Only Directories
 
 ```policy-def
@@ -814,7 +974,9 @@ exclude_suffixes:
 exclude_prefixes:
 exclude_globs:
 force_include_globs:
-selector_roles: include,exclude,force_include
+selector_roles: include
+  exclude
+  force_include
 include_files:
 include_dirs:
 exclude_files:
@@ -845,8 +1007,29 @@ profile_scopes: global
 ```
 
 Ensure `devcovenant/README.md` mirrors `README.md` with repository-only
-sections removed via the `<!-- REPO-ONLY:BEGIN -->` / `<!-- REPO-ONLY:END -->`
-markers. Auto-fix rewrites the packaged guide from the repo README.
+sections removed via the `<!-- REPO-ONLY:BEGIN -->` /
+`<!-- REPO-ONLY:END -->` markers. Auto-fix rewrites the packaged guide from
+the repo README.
+
+
+---
+
+## Policy: Security Compliance Notes
+
+```policy-def
+id: security-compliance-notes
+status: active
+severity: warning
+auto_fix: false
+updated: false
+enforcement: active
+apply: true
+custom: false
+freeze: false
+profile_scopes: global
+```
+
+Policy description pending.
 
 
 ---
@@ -859,8 +1042,7 @@ status: active
 severity: error
 auto_fix: false
 updated: false
-exclude_globs: tests/**,**/tests/**
-  tests/**
+exclude_globs: tests/**
   **/tests/**
 enforcement: active
 apply: true
@@ -872,7 +1054,9 @@ include_globs:
 exclude_suffixes:
 exclude_prefixes:
 force_include_globs:
-selector_roles: exclude,include,force_include
+selector_roles: exclude
+  include
+  force_include
 exclude_files:
 exclude_dirs:
 include_files:
@@ -888,10 +1072,43 @@ exception.
 
 ---
 
-## Policy: Stock Policy Text Sync
+## Policy: Semantic Version Scope
 
 ```policy-def
-id: stock-policy-text-sync
+id: semantic-version-scope
+status: active
+severity: error
+auto_fix: false
+updated: false
+enforcement: active
+apply: false
+custom: false
+profile_scopes: global
+version_file: VERSION
+changelog_file: CHANGELOG.md
+ignored_prefixes:
+selector_roles: ignored
+ignored_globs:
+ignored_files:
+ignored_dirs:
+```
+
+When enabled, the latest changelog entry must include exactly one
+`[semver:major|minor|patch]` tag that matches the version bump. Use
+`major` for API-breaking releases, `minor` for backward-compatible feature
+work, and `patch` for bug fixes or documentation-only updates. The tag
+must match the bump from the previous version, and `VERSION` must be
+updated whenever the changelog declares a release scope. The policy ships
+disabled (`apply: false`) and should only be enabled for release
+processes that enforce SemVer discipline.
+
+
+---
+
+## Policy: Track Test Status
+
+```policy-def
+id: track-test-status
 status: active
 severity: warning
 auto_fix: false
@@ -899,14 +1116,11 @@ updated: false
 enforcement: active
 apply: true
 custom: false
+freeze: false
 profile_scopes: global
-policy_definitions: AGENTS.md
-stock_texts_file: devcovenant/registry/global/stock_policy_texts.yaml
 ```
 
-If a built-in policy text is edited from its stock wording, DevCovenant must
-raise a warning and instruct the agent to either restore the stock text or
-mark the policy `custom: true` and provide a matching custom implementation.
+Policy description pending.
 
 
 ---
@@ -946,15 +1160,13 @@ profile_scopes: global
   docker
   kubernetes
 version_file: VERSION
-readme_files: README.md,AGENTS.md,CONTRIBUTING.md,SPEC.md
-  PLAN.md
-  devcovenant/README.md
-  README.md
+readme_files: README.md
   AGENTS.md
   CONTRIBUTING.md
   SPEC.md
-optional_files: SPEC.md,PLAN.md
-  SPEC.md
+  PLAN.md
+  devcovenant/README.md
+optional_files: SPEC.md
   PLAN.md
 pyproject_files: pyproject.toml
 license_files: LICENSE
@@ -964,7 +1176,10 @@ changelog_file: CHANGELOG.md
 changelog_header_prefix: ## Version
 readme_file:
 pyproject_file:
-selector_roles: readme,optional,pyproject,license
+selector_roles: readme
+  optional
+  pyproject
+  license
 readme_globs:
 readme_dirs:
 optional_globs:
@@ -980,68 +1195,4 @@ version bumps must move forward. Files listed under `optional_files` are
 only enforced when present (for example, SPEC/PLAN in user repos). The
 policy also flags hard-coded runtime versions and ensures changelog
 releases reflect the current version.
-
-## Policy: Managed Environment
-
-```policy-def
-id: managed-environment
-status: active
-severity: error
-auto_fix: false
-updated: false
-enforcement: active
-apply: false
-custom: false
-profile_scopes: global
-expected_paths:
-expected_interpreters:
-required_commands:
-command_hints:
-```
-
-DevCovenant must run from the managed environment described in this
-policy's metadata. Use expected_paths for virtualenv or bench roots,
-expected_interpreters for explicit interpreter locations, and
-required_commands or command_hints to guide contributors. When enabled
-with empty metadata, the policy emits a warning so teams fill the
-required context.
-
-
----
-
-## Policy: Semantic Version Scope
-
-```policy-def
-id: semantic-version-scope
-status: active
-severity: error
-auto_fix: false
-updated: false
-enforcement: active
-apply: false
-custom: false
-profile_scopes: global
-version_file: VERSION
-changelog_file: CHANGELOG.md
-ignored_prefixes:
-selector_roles: ignored
-ignored_globs:
-ignored_files:
-ignored_dirs:
-```
-
-When enabled, the latest changelog entry must include exactly one
-`[semver:major|minor|patch]` tag that matches the version bump. Use
-`major` for API-breaking releases, `minor` for backward-compatible feature
-work, and `patch` for bug fixes or documentation-only updates. The tag
-must match the bump from the previous version, and `VERSION` must be
-updated whenever the changelog declares a release scope. The policy ships
-disabled (`apply: false`) and should only be enabled for release
-processes that enforce SemVer discipline.
-
-
----
-
-
-
 <!-- DEVCOV-POLICIES:END -->

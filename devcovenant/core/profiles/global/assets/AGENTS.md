@@ -236,10 +236,10 @@ Every policy definition must include descriptive text immediately after the
 
 ---
 
-## Policy: Stock Policy Text Sync
+## Policy: Devcov Parity Guard
 
 ```policy-def
-id: stock-policy-text-sync
+id: devcov-parity-guard
 status: active
 severity: warning
 auto_fix: false
@@ -249,12 +249,11 @@ apply: true
 custom: false
 profile_scopes: global
 policy_definitions: AGENTS.md
-stock_texts_file: devcovenant/registry/global/stock_policy_texts.yaml
 ```
 
-If a built-in policy text is edited from its stock wording, DevCovenant must
-raise a warning and instruct the agent to either restore the stock text or
-mark the policy `custom: true` and provide a matching custom implementation.
+Ensure the policy text recorded in AGENTS matches the descriptor text
+shipped alongside each policy (core or custom). When the two drift,
+DevCovenant warns so the policy prose and its implementation stay aligned.
 
 ---
 

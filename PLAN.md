@@ -52,6 +52,8 @@ It is the checklist we consult before declaring the spec satisfied.
 - [done] Gated workflow: `pre-commit start`, tests (`pytest` +
   `python3 -m unittest discover`), and `pre-commit end` are required for every
   change.
+- Clarify that the start gate only needs to execute before edits; it may
+  detect outstanding violations and does not have to leave a clean tree.
 - [done] Startup check (`python3 -m devcovenant check --mode startup`).
 - [done] Policy edits set `updated: true`.
   Run `devcovenant update-policy-registry`.
@@ -95,13 +97,13 @@ It is the checklist we consult before declaring the spec satisfied.
   handling the `<!-- DEVCOV-POLICIES -->` block separately.
 
 ### Policy requirements
-- [not done] Policy metadata normalization must add missing keys while
-  preserving existing text and values.
+- [done] Policy metadata normalization now emits schema + value blocks
+  while keeping existing text values intact.
 - [done] Built-in policies have canonical text in
   `devcovenant/registry/global/stock_policy_texts.yaml`.
 - [done] Custom policy `readme-sync` enforces the README mirroring
   and repo-only block stripping.
-- [not done] Policy replacement metadata from
+- [done] Policy replacement metadata from
   `devcovenant/registry/global/policy_replacements.yaml` is applied.
   Replaced policies move to `custom/` with `custom: true` and are marked
   deprecated when enabled.
@@ -177,11 +179,27 @@ It is the checklist we consult before declaring the spec satisfied.
   Asset metadata lands in `policy_assets.yaml`.
 - [not done] Profile-driven pre-commit config turns metadata into hooks and
   documents the “Pre-commit config refactor” phase.
-- [not done] Ensure the custom `devcovenant` profile treats `devcovenant/docs`
+- [not done] Ensure the custom `devcovrepo` profile treats `devcovenant/docs`
   as part of the documentation growth tracking surface. The profile’s metadata
   overlays for `documentation-growth-tracking` should list `devcovenant/docs`
   so the policy ensures the folder grows with useful content, no BS, and is yet
   another documented signal about how to use overrides/custom policies.
+- [not done] Describe how `devcovuser`/`devcovrepo` metadata control the
+- [not done] Describe how `devcovuser`/`devcovrepo` metadata control
+  the `tests/devcovenant/**` mirror: `devcovuser` only mirrors
+  whole `devcovenant/**` tree when `devcov_core_include` is true.
+- [not done] Confirm that `tests/devcovenant/custom/**` mirrors the
+  `devcovuser`/`devcovrepo` overlays, documenting how refresh rebuilds that
+  tree from the global assets so users can see which suites belong to
+  DevCovenant vs. the host project.
+- [not done] Define how install/update/refresh regenerate `devcovenant/custom`
+  and `tests/devcovenant` from core assets while deleting any `devcovrepo`
+  prefixed folders/policies and recreating the user-facing `devcovuser` profile
+  so repo-specific overrides never ship.
+
+- [not done] Describe the `devcovuser` profile and wiring so user repos
+  can keep `devcovenant/**` out of enforcement while still covering
+  `devcovenant/custom/**`.
 
 ### Packaging & testing
 - [not done] Ship DevCovenant as a pure-Python package with a console script
@@ -195,11 +213,15 @@ It is the checklist we consult before declaring the spec satisfied.
 Below is every missing SPEC requirement, ordered by dependency.
 
 1. **Canonical metadata schema & normalization.**
-   Build the metadata schema and normalize AGENTS blocks.
+   Build the metadata schema, normalize AGENTS blocks, and ensure metadata
+   overlays dedupe existing values when configuration or profile fragments
+   merge during normalization.
 2. **Policy registry + replacements + `freeze`.**
-   The registry already stores every hash (without `registry.json` or
-   `update_hashes`), so the next focus is wiring replacements and the `freeze`
-   toggle so metadata+assets stay in sync across builds.
+   [done] Metadata_schema/metadata_values blocks are emitted, config overrides
+   propagate to apply/freeze, replacements/freeze copies rerun the registry
+   refresh, and the registry records only the profile scopes matching the
+   active configuration surface. The canonical map then reflects what is
+   actually applied.
 3. **End-phase rerun guarantees.**
    Implement the new workflow from SPEC: detect when end-phase hooks or
    DevCovenant autofixers change files.
@@ -216,7 +238,13 @@ Below is every missing SPEC requirement, ordered by dependency.
    Implement `install`, `update`, `refresh-all`, and `reset-to-stock`.
    Include policy and docs overrides plus CLI mode distinctions.
 8. **Config & profile asset generation.**
-   Generate `devcovenant/config.yaml` with knobs, doc assets, and catalogs.
+   Generate `devcovenant/config.yaml` with knobs, doc assets, and catalogs,
+   and codify how install/update/refresh recreate `devcovenant/custom`, rebuild
+   `tests/devcovenant/custom` (mirroring the policy/profile overlays), delete
+   `devcovrepo`-prefixed overrides unless `devcov_core_include` is true, and
+   note the default config is materialized from the `devcovuser` profile
+   descriptor asset while profile overlays fill in autogen metadata during
+   install.
 9. **Profile-driven pre-commit config.**
    Store hook fragments, merge them with overrides, and record metadata.
 10. **CLI command placement cleanup.**

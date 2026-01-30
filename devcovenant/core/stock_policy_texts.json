@@ -118,14 +118,6 @@
     "disabled (`apply: false`) and should only be enabled for release",
     "processes that enforce SemVer discipline."
   ],
-  "stock-policy-text-sync": [
-    "If a built-in policy text is edited from its stock wording,",
-    "DevCovenant must",
-    "raise a warning and instruct the agent to either restore the stock",
-    "text or",
-    "mark the policy `custom: true` and provide a matching custom",
-    "implementation."
-  ],
   "version-sync": [
     "All version-bearing files must match the canonical `VERSION` value,",
     "and",
@@ -134,5 +126,11 @@
     "only enforced when present (for example, SPEC/PLAN in user repos). The",
     "policy also flags hard-coded runtime versions and ensures changelog",
     "releases reflect the current version."
+  ],
+  "devcov-parity-guard": [
+    "Ensure the policy text recorded in AGENTS matches the descriptor",
+    "text shipped alongside each policy (core or custom). When the two",
+    "drift, DevCovenant warns so the policy prose and its",
+    "implementation stay aligned."
   ]
 }

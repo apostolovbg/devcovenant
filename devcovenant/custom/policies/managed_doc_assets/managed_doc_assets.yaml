@@ -5,6 +5,7 @@ text: |
   descriptors under `devcovenant/core/profiles/global/assets/` so documentation
   generation is deterministic.
 metadata:
+  id: managed-doc-assets
   severity: error
   auto_fix: 'false'
   enforcement: active

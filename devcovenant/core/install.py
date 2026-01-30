@@ -1668,6 +1668,60 @@ def _install_devcovenant_dir(
     return installed
 
 
+def _ensure_custom_tree(target_root: Path) -> None:
+    """Ensure devcovenant/custom and its policy/profile dirs exist."""
+    custom_root = target_root / DEV_COVENANT_DIR / "custom"
+    policies_dir = custom_root / "policies"
+    profiles_dir = custom_root / "profiles"
+    policies_dir.mkdir(parents=True, exist_ok=True)
+    profiles_dir.mkdir(parents=True, exist_ok=True)
+    init_path = custom_root / "__init__.py"
+    if not init_path.exists():
+        init_path.write_text(
+            "# Custom DevCovenant overrides.\n", encoding="utf-8"
+        )
+
+
+def _ensure_tests_mirror(target_root: Path, include_core: bool) -> None:
+    """Ensure tests/devcovenant mirrors the expected structure."""
+    tests_root = target_root / "tests" / "devcovenant"
+    custom_root = tests_root / "custom"
+    core_root = tests_root / "core"
+    custom_root.mkdir(parents=True, exist_ok=True)
+    if include_core:
+        core_root.mkdir(parents=True, exist_ok=True)
+    elif core_root.exists():
+        shutil.rmtree(core_root)
+    for path in (tests_root, custom_root):
+        init_path = path / "__init__.py"
+        if not init_path.exists():
+            init_path.write_text(
+                "# DevCovenant test mirror.\n", encoding="utf-8"
+            )
+
+
+def _prune_devcovrepo_overrides(
+    target_root: Path, include_core: bool
+) -> list[str]:
+    """Remove devcovrepo-prefixed overrides unless core is enabled."""
+    if include_core:
+        return []
+    removed: list[str] = []
+    custom_root = target_root / DEV_COVENANT_DIR / "custom"
+    for folder in ("policies", "profiles"):
+        root = custom_root / folder
+        if not root.exists():
+            continue
+        for entry in root.iterdir():
+            if not entry.is_dir():
+                continue
+            name = entry.name.lower()
+            if name.startswith("devcovrepo"):
+                shutil.rmtree(entry)
+                removed.append(str(entry.relative_to(target_root)))
+    return removed
+
+
 def _install_paths(
     repo_root: Path,
     target_root: Path,
@@ -2429,6 +2483,19 @@ def main(argv=None) -> None:
 
     _apply_core_config(target_root, include_core)
     _apply_profile_config(target_root, active_profiles, profile_catalog)
+    _ensure_custom_tree(target_root)
+    _ensure_tests_mirror(target_root, include_core)
+    removed_overrides = _prune_devcovrepo_overrides(target_root, include_core)
+    if removed_overrides:
+        manifest_module.append_notifications(
+            target_root,
+            [
+                (
+                    "Removed devcovrepo-prefixed overrides:"
+                    f" {', '.join(removed_overrides)}"
+                )
+            ],
+        )
 
     version_existed = version_path.exists()
     if version_mode != "skip" and (

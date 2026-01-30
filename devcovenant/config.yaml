@@ -5,6 +5,8 @@
 
 # DevCovenant core exclusion guard. For user repos, keep `devcov_core_include`
 # set to false so core files stay out of enforcement and remain update-safe.
+# User repos should also activate the `devcovuser` profile so DevCovenant
+# artifacts stay excluded while `devcov/custom/` remains covered.
 # Do not edit the core path list in user repos; only the DevCovenant repo
 # should enable core inclusion.
 devcov_core_include: true
@@ -22,7 +24,7 @@ devcov_core_paths:
 profiles:
   active:
     - data
-    - devcovenant
+    - devcovrepo
     - docs
     - python
     - suffixes
@@ -114,6 +116,10 @@ reporting:
   show_policy_links: true
   audit_trail: true
   use_colors: true
+
+do_not_apply_policies: []
+freeze_core_policies: []
+policy_overrides: {}
 
 ignore:
   patterns: []

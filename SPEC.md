@@ -31,6 +31,9 @@ hashes synchronized so drift is detectable and reversible.
 ## Workflow
 - Run the gated workflow for every change: pre-commit start, tests,
   pre-commit end.
+- `pre-commit --phase start` must run before edits but is not required to leave
+  the tree clean; it simply captures a gate snapshot and identifies existing
+  issues. Later phases still rerun hooks/tests until the workspace is clean.
 - If end-phase hooks or DevCovenant autofixers change the working tree, rerun
   the required tests (and rerun hooks if needed) until the repo is clean, then
   record only that final successful pass in `.devcov-state/test_status.json`.
@@ -182,7 +185,7 @@ Devflow gate status is stored in `.devcov-state/test_status.json`, created
   (`python3 devcovenant check --fix`), keeping the timestamp aligned with the
   latest change.
 - To capture the deep knowledge we accumulate while evolving DevCovenant, the
-  custom `devcovenant` profile must extend `documentation-growth-tracking` so
+  custom `devcovrepo` profile must extend `documentation-growth-tracking` so
   it explicitly monitors `devcovenant/docs` alongside the usual docs.
   `README.md` remains the quick-start/priority logic surface, but the policy
   keeps `devcovenant/docs` healthy—full of constructive narratives, overrides,
@@ -199,6 +202,10 @@ Devflow gate status is stored in `.devcov-state/test_status.json`, created
 - Config exposes `version.override` so config-driven installs can declare
   the project version that templated assets (for example, `pyproject.toml`)
   should use when no `VERSION` file exists yet.
+- Provide the dedicated `devcovrepo`/`devcovuser` profiles so the DevCovenant
+  repository can opt into its own test overrides while user repositories keep
+  `devcovenant/**` out of enforcement while still keeping
+  `devcovenant/custom/**` monitored.
 - The `global` profile is always active. Other shipped defaults (`docs`,
   `data`, `suffixes`) are enabled by default but can be trimmed from
   `profiles.active` when a user wants to stop applying their assets or
@@ -375,6 +382,13 @@ Devflow gate status is stored in `.devcov-state/test_status.json`, created
     `severity`, `enforcement`, selectors, or any other inferred schema key
     without touching the YAML text. Overrides merge before AGENTS/registry
     generation so user edits stay declarative.
+- Config-defined metadata overlays merge with the existing metadata
+  values, deduplicating any repeats, so the generators do not repeat
+  identical entries when the overrides merely augment the base schema.
+- `policy_registry.yaml` only records the `profile_scopes` matching the current
+  `profiles.active` list (plus `global`). The normalization pipeline
+  trims scope values before writing the `metadata_values` block so the
+  canonical registry reflects the active profile surface.
 
 ## Installation Requirements
 - Install the full DevCovenant toolchain into the target repo, including the
@@ -394,6 +408,23 @@ Devflow gate status is stored in `.devcov-state/test_status.json`, created
   can be refreshed independently of policy definitions.
 - Preserve custom policy scripts and fixers by default on existing installs
   (`--preserve-custom`), with explicit overrides available.
+- When an install/update runs, it deletes any `devcovrepo`-prefixed custom
+  policies or profiles inside `devcovenant/custom` unless `devcov_core_include`
+  is set to true. The refresh/installer regenerates `devcovenant/custom` and
+  `tests/devcovenant` from the global asset, and recreates the default config
+  by materializing the `devcovuser` profile descriptor (the YAML asset that
+  describes the metadata schema—actual values are filled by profile-driven
+  overlays during install). That keeps repo-only overrides local while giving
+  downstream installs a clean baseline they can edit.
+- User repositories (and this repo when treated as a user repo) must maintain
+  the mirror tree under `tests/devcovenant/**`. When `devcov_core_include` is
+  false the `devcovuser` profile mirrors just `devcovenant/custom/**` so only
+  custom extensions are tracked, leaving `tests/**` for project tests. When
+  `devcov_core_include` is true, the `devcovrepo` profile adds overlays so the
+  entire `devcovenant/**` tree (including core scripts) is mirrored under
+  `tests/devcovenant/`. The install/update/refresh workflow rebuilds those
+  on demand, and treated as gitignored state.
+  unless the override flag allows them.
 - `AGENTS.md` is always written from the template; if a prior `AGENTS.md`
   exists, preserve its editable section under `# EDITABLE SECTION`.
 - `README.md` keeps user content, receives the standard header, and gains a
@@ -466,9 +497,9 @@ Devflow gate status is stored in `.devcov-state/test_status.json`, created
   repository continues to run both `pytest` and `python3 -m unittest discover`,
   but newly added coverage must be unit-level and existing policy tests
   should be converted to unit suites over time.
-- User repos keep an always-on `devcov-exclude` profile that excludes
+- User repos keep an always-on `devcovuser` profile that excludes
   `devcovenant/**` from test enforcement except `devcovenant/custom/**`.
-  When `devcov_core_include` is true, the `devcov-exclude` profile is ignored
+  When `devcov_core_include` is true, the `devcovuser` profile is ignored
   so the DevCovenant repo can test core code.
 
 ## Non-Functional Requirements

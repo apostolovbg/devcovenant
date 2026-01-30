@@ -115,10 +115,16 @@ def main() -> None:
         _run_command(args.command, env=env)
         diff_after = _git_diff(repo_root)
         if args.phase == "end" and diff_before != diff_after:
+            print(
+                "Detected changes after pre-commit; rerunning tests "
+                "and hooks."
+            )
             _run_tests(repo_root, env)
             attempt += 1
             if attempt >= max_attempts:
+                print("Maximum rerun attempts reached; stopping here.")
                 break
+            print("Rerunning pre-commit hooks to verify clean tree...")
             continue
         break
 

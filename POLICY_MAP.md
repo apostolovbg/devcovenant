@@ -36,10 +36,10 @@ policy-specific handles listed below.
 - **Assets:** `AGENTS.md` (policy prose)
 - **Profiles:** `global`
 
-### stock-policy-text-sync
-- **Metadata handles:** `policy_definitions`, `stock_texts_file`,
-  `profile_scopes`
-- **Assets:** `devcovenant/registry/global/stock_policy_texts.yaml`
+### devcov-parity-guard
+- **Metadata handles:** `policy_definitions`, `profile_scopes`
+- **Assets:** policy descriptors under `devcovenant/core/policies/**` and
+  `devcovenant/custom/policies/**`
 - **Profiles:** `global`
 
 ### devflow-run-gates
@@ -50,6 +50,30 @@ policy-specific handles listed below.
   `devcovenant/registry/local/test_status.json`
 - **Profiles:** `global` + every profile that declares `devflow`
   metadata (see `PROFILE_MAP.md`)
+
+### track-test-status
+- **Metadata handles:** `id`, `status`, `severity`, `auto_fix`, `updated`,
+  `enforcement`, `apply`, `custom`, `freeze`, `profile_scopes`
+- **Assets:** `.devcov-state/test_status.json`
+- **Profiles:** `global`
+
+### security-compliance-notes
+- **Metadata handles:** `id`, `status`, `severity`, `auto_fix`, `updated`,
+  `enforcement`, `apply`, `custom`, `freeze`, `profile_scopes`
+- **Assets:** `security_changes.md` (default log file)
+- **Profiles:** `global`
+
+### gcv-script-naming
+- **Metadata handles:** `id`, `status`, `severity`, `auto_fix`, `updated`,
+  `enforcement`, `apply`, `custom`, `freeze`, `profile_scopes`
+- **Assets:** none (enforcement only)
+- **Profiles:** `global`
+
+### raw-string-escapes
+- **Metadata handles:** `id`, `status`, `severity`, `auto_fix`, `updated`,
+  `enforcement`, `apply`, `custom`, `freeze`, `profile_scopes`
+- **Assets:** none (enforcement only)
+- **Profiles:** `global`
 
 ### changelog-coverage
 - **Metadata handles:** `main_changelog`, `skipped_files`, `collections`,

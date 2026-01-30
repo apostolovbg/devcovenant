@@ -5,6 +5,7 @@ text: |
   accurate short-form references that stay in sync with the code.
 
 metadata:
+  id: profile-policy-map
   severity: error
   auto_fix: 'false'
   enforcement: active

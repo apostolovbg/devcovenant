@@ -9,7 +9,7 @@ from typing import Dict, Iterable, Optional
 
 import yaml
 
-from .parser import PolicyParser
+from .parser import PolicyDefinition, PolicyParser
 from .policy_locations import iter_script_locations, resolve_script_location
 
 
@@ -51,9 +51,7 @@ def load_policy_descriptor(
     return None
 
 
-def _descriptor_path_for(
-    repo_root: Path, policy: "PolicyDefinition"
-) -> Path:
+def _descriptor_path_for(repo_root: Path, policy: "PolicyDefinition") -> Path:
     """Return the YAML descriptor path for a given policy definition."""
     location = resolve_script_location(repo_root, policy.policy_id)
     if location is not None:

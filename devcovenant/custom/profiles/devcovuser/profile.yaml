@@ -1,0 +1,12 @@
+version: 1
+profile: devcovuser
+category: user
+suffixes: []
+ignore_dirs: []
+assets: []
+policy_overlays:
+  new-modules-need-tests:
+    exclude_prefixes:
+      - devcovenant
+    include_prefixes:
+      - devcovenant/custom

@@ -1,6 +1,7 @@
 policies:
   changelog-coverage:
     keys:
+    - id
     - severity
     - auto_fix
     - enforcement
@@ -11,6 +12,8 @@ policies:
     - skipped_files
     - collections
     defaults:
+      id:
+      - changelog-coverage
       severity:
       - error
       auto_fix:
@@ -105,6 +108,39 @@ policies:
       - dependency
       dependency_globs: []
       dependency_dirs: []
+  devcov-parity-guard:
+    keys:
+    - id
+    - status
+    - severity
+    - auto_fix
+    - updated
+    - enforcement
+    - apply
+    - custom
+    - profile_scopes
+    - policy_definitions
+    defaults:
+      id:
+      - devcov-parity-guard
+      status:
+      - active
+      severity:
+      - warning
+      auto_fix:
+      - 'false'
+      updated:
+      - 'false'
+      enforcement:
+      - active
+      apply:
+      - 'true'
+      custom:
+      - 'false'
+      profile_scopes:
+      - global
+      policy_definitions:
+      - AGENTS.md
   devcov-self-enforcement:
     keys:
     - id
@@ -587,6 +623,39 @@ policies:
       - tests/**
       force_include_files: []
       force_include_dirs: []
+  gcv-script-naming:
+    keys:
+    - id
+    - status
+    - severity
+    - auto_fix
+    - updated
+    - enforcement
+    - apply
+    - custom
+    - freeze
+    - profile_scopes
+    defaults:
+      id:
+      - gcv-script-naming
+      status:
+      - active
+      severity:
+      - warning
+      auto_fix:
+      - 'false'
+      updated:
+      - 'false'
+      enforcement:
+      - active
+      apply:
+      - 'true'
+      custom:
+      - 'false'
+      freeze:
+      - 'false'
+      profile_scopes:
+      - global
   last-updated-placement:
     keys:
     - id
@@ -782,6 +851,7 @@ policies:
       force_include_dirs: []
   managed-doc-assets:
     keys:
+    - id
     - severity
     - auto_fix
     - enforcement
@@ -789,6 +859,8 @@ policies:
     - custom
     - profile_scopes
     defaults:
+      id:
+      - managed-doc-assets
       severity:
       - error
       auto_fix:
@@ -1031,6 +1103,7 @@ policies:
       - AGENTS.md
   profile-policy-map:
     keys:
+    - id
     - severity
     - auto_fix
     - enforcement
@@ -1038,6 +1111,8 @@ policies:
     - custom
     - profile_scopes
     defaults:
+      id:
+      - profile-policy-map
       severity:
       - error
       auto_fix:
@@ -1050,6 +1125,39 @@ policies:
       - 'true'
       profile_scopes:
       - devcovenant
+  raw-string-escapes:
+    keys:
+    - id
+    - status
+    - severity
+    - auto_fix
+    - updated
+    - enforcement
+    - apply
+    - custom
+    - freeze
+    - profile_scopes
+    defaults:
+      id:
+      - raw-string-escapes
+      status:
+      - active
+      severity:
+      - warning
+      auto_fix:
+      - 'false'
+      updated:
+      - 'false'
+      enforcement:
+      - active
+      apply:
+      - 'true'
+      custom:
+      - 'false'
+      freeze:
+      - 'false'
+      profile_scopes:
+      - devcovrepo
   read-only-directories:
     keys:
     - id
@@ -1143,6 +1251,39 @@ policies:
       - 'true'
       freeze:
       - 'true'
+      profile_scopes:
+      - global
+  security-compliance-notes:
+    keys:
+    - id
+    - status
+    - severity
+    - auto_fix
+    - updated
+    - enforcement
+    - apply
+    - custom
+    - freeze
+    - profile_scopes
+    defaults:
+      id:
+      - security-compliance-notes
+      status:
+      - active
+      severity:
+      - warning
+      auto_fix:
+      - 'false'
+      updated:
+      - 'false'
+      enforcement:
+      - active
+      apply:
+      - 'true'
+      custom:
+      - 'false'
+      freeze:
+      - 'false'
       profile_scopes:
       - global
   security-scanner:
@@ -1255,7 +1396,7 @@ policies:
       ignored_globs: []
       ignored_files: []
       ignored_dirs: []
-  stock-policy-text-sync:
+  track-test-status:
     keys:
     - id
     - status
@@ -1265,12 +1406,11 @@ policies:
     - enforcement
     - apply
     - custom
+    - freeze
     - profile_scopes
-    - policy_definitions
-    - stock_texts_file
     defaults:
       id:
-      - stock-policy-text-sync
+      - track-test-status
       status:
       - active
       severity:
@@ -1285,12 +1425,10 @@ policies:
       - 'true'
       custom:
       - 'false'
+      freeze:
+      - 'false'
       profile_scopes:
       - global
-      policy_definitions:
-      - AGENTS.md
-      stock_texts_file:
-      - devcovenant/registry/global/stock_policy_texts.yaml
   version-sync:
     keys:
     - id
