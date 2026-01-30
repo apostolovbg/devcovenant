@@ -29,10 +29,37 @@ Example entry:
 
 ## Version 0.2.6
 
+- 2026-01-29: Made `SPEC.md` and `PLAN.md` part of the normal profile-driven
+  doc assets, removed the `--include-spec/--include-plan` flags and the
+  deprecated `config_old.yaml`, and extended the install tests to cover the
+  new behavior.
+  Files:
+  AGENTS.md
+  README.md
+  SPEC.md
+  PLAN.md
+  devcovenant/README.md
+  devcovenant/cli.py
+  devcovenant/core/cli_options.py
+  devcovenant/core/install.py
+  devcovenant/config.yaml
+  devcovenant/config_old.yaml
+  tests/core/tests/test_install.py
+
 - 2026-01-29: Reformatted `devcovenant/core/stock_policy_texts.json` with
   inline indentation to keep line lengths short and JSON parsing intact.
   Files:
   devcovenant/core/stock_policy_texts.json
+
+- 2026-01-29: Removed the legacy `devcovenant/registry.json` and
+  `devcovenant/core/update_hashes.py`. Added the new generator
+  `devcovenant/core/generate_policy_metadata_schema.py` so the schema is
+  always derived from the descriptor YAMLs.
+  Files:
+  devcovenant/core/generate_policy_metadata_schema.py
+  devcovenant/core/update_hashes.py
+  devcovenant/registry.json
+  devcovenant/registry/global/policy_metadata_schema.yaml
 
 - 2026-01-28: Moved user-facing helper scripts to `devcovenant/` root, removed
   `devcovenant/core/tools/`, and aligned manifests, assets, policies, and

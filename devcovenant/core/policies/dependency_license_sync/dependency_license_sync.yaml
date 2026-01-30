@@ -1,0 +1,50 @@
+id: dependency-license-sync
+text: |
+  Maintain the third-party license table alongside `requirements.in`,
+  `requirements.lock`, and `pyproject.toml`. The policy points reviewers to the
+  `licenses/` directory and its `## License Report` section so every dependency
+  change touches both the license text and the cited manifest.
+metadata:
+  id: dependency-license-sync
+  status: active
+  severity: error
+  auto_fix: 'true'
+  updated: 'false'
+  enforcement: active
+  apply: 'true'
+  custom: 'false'
+  profile_scopes:
+    - python
+    - javascript
+    - typescript
+    - java
+    - kotlin
+    - scala
+    - groovy
+    - dotnet
+    - csharp
+    - fsharp
+    - php
+    - ruby
+    - go
+    - rust
+    - swift
+    - dart
+    - flutter
+    - elixir
+    - erlang
+    - haskell
+    - clojure
+    - julia
+    - ocaml
+    - crystal
+  dependency_files:
+    - requirements.in
+    - requirements.lock
+    - pyproject.toml
+  third_party_file: THIRD_PARTY_LICENSES.md
+  licenses_dir: licenses
+  report_heading: '## License Report'
+  selector_roles: dependency
+  dependency_globs: []
+  dependency_dirs: []

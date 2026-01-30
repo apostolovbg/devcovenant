@@ -1,0 +1,85 @@
+id: line-length-limit
+text: |
+  Keep lines within the configured maximum so documentation and code remain
+  readable. Reflow long sentences or wrap lists rather than ignoring the limit.
+metadata:
+  id: line-length-limit
+  status: active
+  severity: warning
+  auto_fix: 'false'
+  updated: 'false'
+  enforcement: active
+  apply: 'true'
+  custom: 'false'
+  profile_scopes:
+    - global
+    - docs
+    - data
+    - python
+    - javascript
+    - typescript
+    - go
+    - rust
+    - java
+    - kotlin
+    - scala
+    - groovy
+    - dotnet
+    - csharp
+    - fsharp
+    - php
+    - ruby
+    - swift
+    - dart
+    - terraform
+    - docker
+    - kubernetes
+    - ansible
+  max_length: '79'
+  include_suffixes:
+    - '>'
+    - .py
+    - .md
+    - .rst
+    - .txt
+    - .yml
+    - .yaml
+    - .json
+    - .toml
+    - .cff
+  exclude_prefixes:
+    - build
+    - dist
+    - node_modules
+  exclude_globs:
+    - '>'
+    - devcovenant/core/profiles/global/assets/LICENSE_GPL-3.0.txt
+    - devcovenant/core/profiles/global/assets/*.yaml
+    - devcovenant/core/stock_policy_texts.json
+    - build/**
+    - dist/**
+    - node_modules/**
+  include_prefixes: []
+  include_globs:
+    - '*.>'
+    - '*.py'
+    - '*.md'
+    - '*.rst'
+    - '*.txt'
+    - '*.yml'
+    - '*.yaml'
+    - '*.json'
+    - '*.toml'
+    - '*.cff'
+  exclude_suffixes: []
+  force_include_globs: []
+  selector_roles:
+    - include
+    - exclude
+    - force_include
+  include_files: []
+  include_dirs: []
+  exclude_files: []
+  exclude_dirs: []
+  force_include_files: []
+  force_include_dirs: []

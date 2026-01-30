@@ -198,16 +198,6 @@ def main() -> None:
         help="CI workflow mode override for install command.",
     )
     parser.add_argument(
-        "--include-spec",
-        action="store_true",
-        help="Create SPEC.md when missing.",
-    )
-    parser.add_argument(
-        "--include-plan",
-        action="store_true",
-        help="Create PLAN.md when missing.",
-    )
-    parser.add_argument(
         "--preserve-custom",
         action=argparse.BooleanOptionalAction,
         default=None,
@@ -314,17 +304,23 @@ def main() -> None:
         sys.exit(result)
 
     elif args.command in ("refresh-policies", "normalize-metadata"):
-        from devcovenant.core.refresh_policies import refresh_policies
+        from devcovenant.core.refresh_policies import (
+            export_metadata_schema,
+            policy_metadata_schema_path,
+            refresh_policies,
+        )
 
         if args.schema is None:
-            schema_path = (
-                Path(__file__).resolve().parent
-                / "core"
-                / "profiles"
-                / "global"
-                / "assets"
-                / "AGENTS.md"
-            )
+            schema_path = policy_metadata_schema_path(args.repo)
+            if not schema_path.exists():
+                schema_path = (
+                    Path(__file__).resolve().parent
+                    / "core"
+                    / "profiles"
+                    / "global"
+                    / "assets"
+                    / "AGENTS.md"
+                )
         else:
             schema_path = Path(args.schema)
             if not schema_path.is_absolute():
@@ -343,6 +339,7 @@ def main() -> None:
             metadata_mode=metadata_mode,
             set_updated=not args.no_set_updated,
         )
+        export_metadata_schema(args.repo)
         if args.command == "normalize-metadata":
             print(
                 "normalize-metadata is now deprecated. "
@@ -412,10 +409,6 @@ def main() -> None:
             install_args.extend(["--pyproject-mode", args.pyproject_mode])
         if args.ci_mode:
             install_args.extend(["--ci-mode", args.ci_mode])
-        if args.include_spec:
-            install_args.append("--include-spec")
-        if args.include_plan:
-            install_args.append("--include-plan")
         if args.preserve_custom is not None:
             if args.preserve_custom:
                 install_args.append("--preserve-custom")
@@ -457,10 +450,6 @@ def main() -> None:
             update_args.extend(["--pyproject-mode", args.pyproject_mode])
         if args.ci_mode:
             update_args.extend(["--ci-mode", args.ci_mode])
-        if args.include_spec:
-            update_args.append("--include-spec")
-        if args.include_plan:
-            update_args.append("--include-plan")
         if args.preserve_custom is not None:
             if args.preserve_custom:
                 update_args.append("--preserve-custom")

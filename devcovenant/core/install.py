@@ -17,7 +17,11 @@ from devcovenant.core import cli_options
 from devcovenant.core import manifest as manifest_module
 from devcovenant.core import profiles, uninstall
 from devcovenant.core.parser import PolicyParser
-from devcovenant.core.refresh_policies import refresh_policies
+from devcovenant.core.refresh_policies import (
+    export_metadata_schema,
+    policy_metadata_schema_path,
+    refresh_policies,
+)
 
 DEV_COVENANT_DIR = "devcovenant"
 CORE_PATHS = [
@@ -2079,8 +2083,6 @@ def _build_manifest_options(
     docs_include: set[str] | None,
     docs_exclude: set[str],
     policy_mode: str,
-    include_spec: bool,
-    include_plan: bool,
     preserve_custom: bool,
     devcov_core_include: bool,
     disabled_policies: list[str],
@@ -2099,8 +2101,6 @@ def _build_manifest_options(
         "docs_include": sorted(docs_include or []),
         "docs_exclude": sorted(docs_exclude),
         "policy_mode": policy_mode,
-        "include_spec": include_spec,
-        "include_plan": include_plan,
         "preserve_custom": preserve_custom,
         "devcov_core_include": devcov_core_include,
         "disable_policies": sorted(disabled_policies),
@@ -2151,9 +2151,7 @@ def main(argv=None) -> None:
     template_root = package_root / "core"
     target_root = Path(args.target).resolve()
     include_core = target_root == repo_root
-    schema_path = (
-        package_root / "core" / "profiles" / "global" / "assets" / "AGENTS.md"
-    )
+    schema_path = policy_metadata_schema_path(target_root)
     _reset_backup_state(target_root)
     manifest_file = manifest_module.manifest_path(target_root)
     legacy_paths = manifest_module.legacy_manifest_paths(target_root)
@@ -2211,19 +2209,7 @@ def main(argv=None) -> None:
     except ValueError as exc:
         raise SystemExit(str(exc)) from exc
 
-    spec_path = target_root / "SPEC.md"
-    plan_path = target_root / "PLAN.md"
-    include_spec = bool(args.include_spec) or spec_path.exists()
-    include_plan = bool(args.include_plan) or plan_path.exists()
-    if docs_include:
-        include_spec = include_spec or ("SPEC" in docs_include)
-        include_plan = include_plan or ("PLAN" in docs_include)
-
     required_docs = set(_DOC_NAME_MAP.keys())
-    if not include_spec:
-        required_docs.discard("SPEC")
-    if not include_plan:
-        required_docs.discard("PLAN")
 
     always_overwrite_docs = set()
     if mode != "existing":
@@ -2235,10 +2221,6 @@ def main(argv=None) -> None:
     overwrite_targets |= always_overwrite_docs
     overwrite_targets -= docs_exclude
     docs_exclude -= always_overwrite_docs
-    if not include_spec:
-        overwrite_targets.discard("SPEC")
-    if not include_plan:
-        overwrite_targets.discard("PLAN")
 
     def _should_overwrite(doc_name: str) -> bool:
         """Return True when overwrite mode targets the doc name."""
@@ -2387,8 +2369,6 @@ def main(argv=None) -> None:
             docs_include=docs_include,
             docs_exclude=docs_exclude,
             policy_mode=policy_mode,
-            include_spec=include_spec,
-            include_plan=include_plan,
             preserve_custom=preserve_custom,
             devcov_core_include=include_core,
             disabled_policies=disabled_policies,
@@ -2574,37 +2554,35 @@ def main(argv=None) -> None:
     if BLOCK_BEGIN in readme_path.read_text(encoding="utf-8"):
         doc_blocks.append("README.md")
 
-    if include_spec:
-        spec_path = target_root / "SPEC.md"
-        if spec_path.exists() and not _should_overwrite("SPEC"):
-            _apply_standard_header(spec_path, last_updated, target_version)
-            _ensure_doc_block(spec_path, "SPEC", "specification")
-        else:
-            if spec_path.exists():
-                _rename_existing_file(spec_path)
-            spec_path.write_text(
-                _render_spec_template(target_version, last_updated),
-                encoding="utf-8",
-            )
-            installed["docs"].append("SPEC.md")
-        if BLOCK_BEGIN in spec_path.read_text(encoding="utf-8"):
-            doc_blocks.append("SPEC.md")
+    spec_path = target_root / "SPEC.md"
+    if spec_path.exists() and not _should_overwrite("SPEC"):
+        _apply_standard_header(spec_path, last_updated, target_version)
+        _ensure_doc_block(spec_path, "SPEC", "specification")
+    else:
+        if spec_path.exists():
+            _rename_existing_file(spec_path)
+        spec_path.write_text(
+            _render_spec_template(target_version, last_updated),
+            encoding="utf-8",
+        )
+        installed["docs"].append("SPEC.md")
+    if BLOCK_BEGIN in spec_path.read_text(encoding="utf-8"):
+        doc_blocks.append("SPEC.md")
 
-    if include_plan:
-        plan_path = target_root / "PLAN.md"
-        if plan_path.exists() and not _should_overwrite("PLAN"):
-            _apply_standard_header(plan_path, last_updated, target_version)
-            _ensure_doc_block(plan_path, "PLAN", "plan")
-        else:
-            if plan_path.exists():
-                _rename_existing_file(plan_path)
-            plan_path.write_text(
-                _render_plan_template(target_version, last_updated),
-                encoding="utf-8",
-            )
-            installed["docs"].append("PLAN.md")
-        if BLOCK_BEGIN in plan_path.read_text(encoding="utf-8"):
-            doc_blocks.append("PLAN.md")
+    plan_path = target_root / "PLAN.md"
+    if plan_path.exists() and not _should_overwrite("PLAN"):
+        _apply_standard_header(plan_path, last_updated, target_version)
+        _ensure_doc_block(plan_path, "PLAN", "plan")
+    else:
+        if plan_path.exists():
+            _rename_existing_file(plan_path)
+        plan_path.write_text(
+            _render_plan_template(target_version, last_updated),
+            encoding="utf-8",
+        )
+        installed["docs"].append("PLAN.md")
+    if BLOCK_BEGIN in plan_path.read_text(encoding="utf-8"):
+        doc_blocks.append("PLAN.md")
 
     changelog_path = target_root / "CHANGELOG.md"
     if not changelog_path.exists():
@@ -2676,6 +2654,7 @@ def main(argv=None) -> None:
             metadata_mode="preserve",
             set_updated=True,
         )
+        export_metadata_schema(target_root)
 
     options = _build_manifest_options(
         docs_mode=docs_mode,
@@ -2689,8 +2668,6 @@ def main(argv=None) -> None:
         docs_include=docs_include,
         docs_exclude=docs_exclude,
         policy_mode=policy_mode,
-        include_spec=include_spec,
-        include_plan=include_plan,
         preserve_custom=preserve_custom,
         devcov_core_include=include_core,
         disabled_policies=disabled_policies,

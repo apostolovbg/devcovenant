@@ -110,35 +110,44 @@ It is the checklist we consult before declaring the spec satisfied.
   refreshed from assets. A per-policy `freeze` override copies scripts to
   `devcovenant/custom/` and reruns `devcovenant update-policy-registry` when
   toggled.
-- [not done] `devcovenant/registry/local/policy_registry.yaml` is the sole
-  hash store; the legacy `registry.json` and `update_hashes` helper have been
-  removed. The YAML tracks every policy (enabled or disabled) with hashes,
-  asset hints, profile scopes, and core/custom origin.
+- [done] `devcovenant/registry/local/policy_registry.yaml` is the
+  sole hash store. The legacy `registry.json` and `update_hashes.py` helper
+  have been retired and removed; the registry now records hashes, asset
+  hints, profile scopes, and core/custom origins.
 - [not done] Record update notices (replacements/new stock policies) inside
   `devcovenant/registry/local/manifest.json` and print them during updates.
 - [not done] `managed-environment` remains off by default.
   Warn when required metadata or command hints are absent.
 
 ### Policy metadata redesign
-- [not done] Define per-policy YAML descriptors that include the canonical
-  text, selector metadata, and defaults derived from the policy metadata schema
-  (`devcovenant/registry/global/policy_metadata_schema.yaml`).
-- [not done] Remove `status`/`updated` keys from metadata; use provenance
-  (core vs. frozen/custom path) to determine `custom`/`apply` behavior while
-  exposing `freeze`, `enforcement`, `profile_scopes`, and other switches via
-  `config.yaml` overlays.
-- [not done] Introduce config keys `do_not_apply_policies` and
-  `freeze_core_policies` under `config.yaml` so the active profile can flip
-  `apply`/`freeze` across many policies without touching AGENTS. Removing a
-  policy from `freeze_core_policies` unfreezes it, while adding a custom policy
-  to that list triggers a reminder that custom policies are not touched by the
-  generator.
-- [not done] Allow `policy_overrides` in `config.yaml` to tweak metadata such
-  as `enforcement`, `severity`, and selector filters; DevCovenant merges these
-  overrides on top of the YAML defaults before regenerating AGENTS/registry.
-- [not done] Autogenerate `AGENTS.md` and the registry from the same YAML files
-  so the policy engine checks scripts/text against the loaded definitions and
-  the AGENTS block is never edited manually.
+- [not done] Define per-policy YAML descriptors that include the managed
+  prose, selector metadata, and a `metadata` block whose keys describe the
+  schema while also supplying the baseline values that feed into AGENTS and
+  the registry. The canonical schema no longer lives in a separate hand-written
+  file; it is inferred from the keys declared inside each policy’s `metadata`.
+- [not done] Use provenance (core vs. frozen/custom loading path) to derive
+  `custom`/`apply`/`freeze` in the generated metadata instead of retaining
+  explicit `status` or `updated` keys. `metadata` may still expose knobs such
+  as `profile_scopes`, `selector_roles`, or `enforcement`, while the generator
+  records the final `apply`/`freeze`/`severity` values after applying
+  overrides.
+- [not done] Introduce config keys `do_not_apply_policies`,
+  `freeze_core_policies`, and `policy_overrides` so the active profile can flip
+  `apply`/`freeze` and mutate `enforcement`, `severity`, selectors, or any
+  schema value without editing the policy YAMLs. The refresh command merges
+  those lists/maps before emitting AGENTS and registry entries so docs remain
+  declarative.
+- [not done] Record every policy in
+  `devcovenant/registry/local/policy_registry.yaml` with two blocks per entry:
+  `metadata_schema` (keys declared under `metadata`)
+  and `metadata_values` (resolved defaults plus merged overrides, apply/freeze,
+  hashes, asset hints, and custom/core origins). The generator and AGENTS
+  templating read from that unified source so enforcement always matches the
+  registry.
+- [not done] When DevCovenant removes a core policy, copy it into
+  `devcovenant/custom/policies/` (or a frozen overlay prescribed in config),
+  mark the new entry as `custom`, and rerun `update-policy-registry` so all
+  downstream artifacts report the deprecation rather than leaving dangling IDs.
 
 ### Installation & documentation
 - [not done] Install modes `auto`/`empty`.
@@ -168,6 +177,11 @@ It is the checklist we consult before declaring the spec satisfied.
   Asset metadata lands in `policy_assets.yaml`.
 - [not done] Profile-driven pre-commit config turns metadata into hooks and
   documents the “Pre-commit config refactor” phase.
+- [not done] Ensure the custom `devcovenant` profile treats `devcovenant/docs`
+  as part of the documentation growth tracking surface. The profile’s metadata
+  overlays for `documentation-growth-tracking` should list `devcovenant/docs`
+  so the policy ensures the folder grows with useful content, no BS, and is yet
+  another documented signal about how to use overrides/custom policies.
 
 ### Packaging & testing
 - [not done] Ship DevCovenant as a pure-Python package with a console script
@@ -183,27 +197,34 @@ Below is every missing SPEC requirement, ordered by dependency.
 1. **Canonical metadata schema & normalization.**
    Build the metadata schema and normalize AGENTS blocks.
 2. **Policy registry + replacements + `freeze`.**
-   Move hashes into `policy_registry.yaml`, drop `registry.json`, and add
-   replacements plus the `freeze` toggle.
-3. **Managed document asset generation.**
+   The registry already stores every hash (without `registry.json` or
+   `update_hashes`), so the next focus is wiring replacements and the `freeze`
+   toggle so metadata+assets stay in sync across builds.
+3. **End-phase rerun guarantees.**
+   Implement the new workflow from SPEC: detect when end-phase hooks or
+   DevCovenant autofixers change files.
+   Rerun the tests (and hooks if necessary) until the tree is clean.
+   Record `pre_commit_end_*` only when that final pass succeeds so the devflow
+   gates reflect a real clean run.
+4. **Managed document asset generation.**
    Let YAML assets rebuild doc templates and preserve non-policy text.
-4. **Doc asset stamping & last-updated auto-fixer.**
+5. **Doc asset stamping & last-updated auto-fixer.**
    Hook `last-updated-placement` to stamp UTC headers consistently.
-5. **Documentation sync & readme-sync policy.**
+6. **Documentation sync & readme-sync policy.**
    Keep `devcovenant/README.md` mirroring `/README.md` with auto-fixes.
-6. **Install/update/refresher command matrix.**
+7. **Install/update/refresher command matrix.**
    Implement `install`, `update`, `refresh-all`, and `reset-to-stock`.
    Include policy and docs overrides plus CLI mode distinctions.
-7. **Config & profile asset generation.**
+8. **Config & profile asset generation.**
    Generate `devcovenant/config.yaml` with knobs, doc assets, and catalogs.
-8. **Profile-driven pre-commit config.**
+9. **Profile-driven pre-commit config.**
    Store hook fragments, merge them with overrides, and record metadata.
-9. **CLI command placement cleanup.**
+10. **CLI command placement cleanup.**
    Keep CLI helpers inside `devcovenant/`, expose the standard commands.
-10. **Testing infrastructure.**
+11. **Testing infrastructure.**
    Mirror `tests/devcovenant/` to the package layout and respect the
    `new-modules-need-tests` policy exclusions.
-11. **Packaging & licensing guardrails.**
+12. **Packaging & licensing guardrails.**
    Build artifacts with assets, enforce GPL-3.0 when needed, and sync licenses.
 
 ## Execution notes

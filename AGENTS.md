@@ -27,10 +27,11 @@ Taking development notes below is effectively obligatory. Updating them
 frequently to describe current hurdles and events is good practice.
 
 The editable notes section starts immediately after this message and
-before the next `<!-- DEVCOV:END -->` marker. When installing
-DevCovenant into a repo, preserve any existing notes and place them in
-that section. Never edit between `DEVCOV*:BEGIN` and
-`DEVCOV*:END` markers in any file—regardless of how they are styled.
+after the `DEVCOV:END` marker, up to the next `DEVCOV:BEGIN`.
+When installing DevCovenant into a repo, the installer preserves any
+existing `AGENTS.md` content in that section. Never edit between
+`DEVCOV*:BEGIN` and `DEVCOV*:END` markers in any file, regardless of how
+they are styled.
 
 Have a productive session and read the docs end-to-end. Always run the
 gate commands in the right order - ALWAYS start your edits session with
@@ -45,9 +46,9 @@ document and you will get it!
 - 2026-01-22: Removed `DEVCOVENANT.md` and `CITATION.cff`; documentation now
   lives in `README.md` and `devcovenant/README.md`, and citation support is
   fully removed from the CLI and assets.
-- 2026-01-22: SPEC/PLAN are optional docs; they are created only when
-  `--include-spec` or `--include-plan` is supplied, and policies treat them as
-  optional when absent.
+- 2026-01-22: SPEC/PLAN are managed alongside the other profile-driven doc
+  assets. There is no include flag; profiles, policies, and config decide when
+  to refresh them.
 - 2026-01-22: Update runs overwrite `devcovenant/` docs while preserving
   editable notes and managed blocks in repo-level docs.
 - 2026-01-26: Noted repo tests live under `/tests` outside the package and are
@@ -63,11 +64,22 @@ document and you will get it!
 
 <!-- DEVCOV:BEGIN -->
 
-_Do not edit hereafter unless explicitly instructed by a human!_
-_If edits are needed, always stop work and negotiate first!_
-_This is non-optional!_
+## THE DEV COVENANT
 
-## Operational Orientation
+- We are human and AI developers working on this project together.
+- We obey every AGENTS.md and DevCovenant instruction.
+- We maintain flawless repo hygiene to prevent drift and keep integrity strong.
+- We never edit anything inside managed `<!-- DEVCOV* -->` blocks.
+- We read AGENTS.md on every task so we stay current with the development
+  policies.
+- We follow the documented workflow precisely and read README/SPEC/PLAN after
+  AGENTS.md before we start editing.
+- We proactively follow policies while working and stay happy when DevCovenant
+  is happy after edits.
+- We treat any change to repository content as an edit that must obey our
+  gates.
+
+## Obligatory Workflow
 Running DevCovenant uses a fixed sequence: begin with
 `python3 devcovenant/run_pre_commit.py --phase start`,
 _only then make any edits_, then run
@@ -76,6 +88,18 @@ _only then make any edits_, then run
 policy records those commands; any deviation blocks progress. Discussion-only
 turns may skip tests, yet triggering the start gate still snapshots the repo
 state.
+
+This workflow is non-negotiable. Failing to follow it causes failed commits,
+extra gate reruns, and major non-compliance with repository policy.
+
+Multiple violations degrade team culture, so stay polite and courteous;
+follow the rules, keep the repository clean, and ask for help instead of
+looping whenever you cannot clear the gates.
+
+## Managed Environment
+If your project lives in a managed environment, work and run DevCovenant
+from that environment (the pre-commit hook uses the devcovenant config by
+default).
 
 Follow the `managed-environment` metadata (virtualenv, bench, conda, poetry,
 etc.) for interpreters, paths, and command hints.
@@ -140,8 +164,8 @@ commands, and metadata through their manifests.
   a managed block for DevCovenant details.
 - `CHANGELOG.md` and `CONTRIBUTING.md` refresh their managed blocks on install
   and are backed up as `*_old.*`.
-- Optional docs (`SPEC.md`, `PLAN.md`) remain untouched unless
-  `--include-spec` / `--include-plan` is supplied.
+- Managed docs (`SPEC.md`, `PLAN.md`, etc.) remain under profile/metadata
+  control.
 - `.gitignore` merges generated fragments with user entries under a preserved
   block, while installs record chosen profiles plus the immovable `global`,
   `data`, `docs`, and `suffixes` profiles.
@@ -381,8 +405,6 @@ selector_roles: include,exclude,force_include
 include_files:
 include_dirs:
 exclude_files:
-  devcovenant/core/stock_policy_texts.json
-  PLAN.md
 exclude_dirs:
 force_include_files:
 force_include_dirs:
@@ -622,10 +644,11 @@ exclude_globs:
   - devcovenant/core/profiles/global/assets/LICENSE_GPL-3.0.txt
   - devcovenant/core/profiles/global/assets/*.yaml
   - devcovenant/core/stock_policy_texts.json
+  - devcovenant/core/policies/**
+  - devcovenant/custom/policies/**
   - build/**
   - dist/**
   - node_modules/**
-  - PLAN.md
 include_prefixes:
 include_globs: *.>
   *.py

@@ -1,0 +1,22 @@
+id: managed-environment
+text: |
+  DevCovenant must run from the managed environment described in this
+  policy's metadata. Use expected_paths for virtualenv or bench roots,
+  expected_interpreters for explicit interpreter locations, and
+  required_commands or command_hints to guide contributors. When enabled
+  with empty metadata, the policy emits a warning so teams fill the
+  required context.
+metadata:
+  id: managed-environment
+  status: active
+  severity: error
+  auto_fix: 'false'
+  updated: 'false'
+  enforcement: active
+  apply: 'false'
+  custom: 'false'
+  profile_scopes: global
+  expected_paths: []
+  expected_interpreters: []
+  required_commands: []
+  command_hints: []

@@ -1,0 +1,37 @@
+id: docstring-and-comment-coverage
+text: |
+  Python modules, classes, and functions must include a docstring or a nearby
+  explanatory comment. This keeps intent visible even as code evolves.
+metadata:
+  id: docstring-and-comment-coverage
+  status: active
+  severity: error
+  auto_fix: 'false'
+  updated: 'false'
+  enforcement: active
+  apply: 'true'
+  custom: 'false'
+  profile_scopes: python
+  include_suffixes: .py
+  exclude_prefixes:
+    - build
+    - dist
+    - node_modules
+  include_prefixes: []
+  include_globs: '*.py'
+  exclude_suffixes: []
+  exclude_globs:
+    - build/**
+    - dist/**
+    - node_modules/**
+  force_include_globs: []
+  selector_roles:
+    - include
+    - exclude
+    - force_include
+  include_files: []
+  include_dirs: []
+  exclude_files: []
+  exclude_dirs: []
+  force_include_files: []
+  force_include_dirs: []

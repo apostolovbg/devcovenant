@@ -1,0 +1,38 @@
+id: name-clarity
+text: |
+  Identifiers should be descriptive enough to communicate intent without
+  reading their implementation. Avoid cryptic or overly short names unless
+  explicitly justified.
+metadata:
+  id: name-clarity
+  status: active
+  severity: warning
+  auto_fix: 'false'
+  updated: 'false'
+  enforcement: active
+  apply: 'true'
+  custom: 'false'
+  profile_scopes: python
+  exclude_prefixes:
+    - build
+    - dist
+    - node_modules
+  include_suffixes: []
+  include_prefixes: []
+  include_globs: []
+  exclude_suffixes: []
+  exclude_globs:
+    - build/**
+    - dist/**
+    - node_modules/**
+  force_include_globs: []
+  selector_roles:
+    - exclude
+    - include
+    - force_include
+  exclude_files: []
+  exclude_dirs: []
+  include_files: []
+  include_dirs: []
+  force_include_files: []
+  force_include_dirs: []

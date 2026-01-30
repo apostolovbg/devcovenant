@@ -154,11 +154,11 @@ The installer records `devcovenant/registry/local/manifest.json` so updates and
 removals remain safe and predictable. If the target repo has no license file,
 DevCovenant installs a GPL-3.0 license by default and will not overwrite an
 existing license unless forced. When a file must be replaced, the installer
-renames the existing file to `*_old.*` before writing the new one.
-Optional docs `SPEC.md` and `PLAN.md` are created only when
-`--include-spec` or `--include-plan` are supplied; otherwise existing
-files are preserved.
-See `devcovenant/README.md` for the full install/update reference.
+renames the existing file to `*_old.*` before writing the new one. Managed
+docs such as `SPEC.md` and `PLAN.md` are part of the profile-driven doc asset
+graph, so they are generated (and refreshed) alongside the other auto-managed
+documents—there is no special CLI flag to toggle them. See
+`devcovenant/README.md` for the full install/update reference.
 
 
 ## Workflow

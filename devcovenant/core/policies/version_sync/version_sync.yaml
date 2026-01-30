@@ -1,0 +1,72 @@
+id: version-sync
+text: |
+  All version-bearing files must match the canonical `VERSION` value, and
+  version bumps must move forward. Files listed under `optional_files` are
+  only enforced when present (for example, SPEC/PLAN in user repos). The
+  policy also flags hard-coded runtime versions and ensures changelog
+  releases reflect the current version.
+metadata:
+  id: version-sync
+  status: active
+  severity: error
+  auto_fix: 'false'
+  updated: 'false'
+  enforcement: active
+  apply: 'true'
+  custom: 'false'
+  profile_scopes:
+    - global
+    - docs
+    - data
+    - python
+    - javascript
+    - typescript
+    - java
+    - kotlin
+    - scala
+    - groovy
+    - dotnet
+    - csharp
+    - fsharp
+    - php
+    - ruby
+    - go
+    - rust
+    - swift
+    - dart
+    - flutter
+    - terraform
+    - docker
+    - kubernetes
+  version_file: VERSION
+  readme_files:
+    - README.md
+    - AGENTS.md
+    - CONTRIBUTING.md
+    - SPEC.md
+    - PLAN.md
+    - devcovenant/README.md
+  optional_files:
+    - SPEC.md
+    - PLAN.md
+  pyproject_files: pyproject.toml
+  license_files: LICENSE
+  runtime_entrypoints: __none__
+  runtime_roots: __none__
+  changelog_file: CHANGELOG.md
+  changelog_header_prefix: '## Version'
+  readme_file: []
+  pyproject_file: []
+  selector_roles:
+    - readme
+    - optional
+    - pyproject
+    - license
+  readme_globs: []
+  readme_dirs: []
+  optional_globs: []
+  optional_dirs: []
+  pyproject_globs: []
+  pyproject_dirs: []
+  license_globs: []
+  license_dirs: []

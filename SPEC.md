@@ -31,7 +31,10 @@ hashes synchronized so drift is detectable and reversible.
 ## Workflow
 - Run the gated workflow for every change: pre-commit start, tests,
   pre-commit end.
-- Devflow gate status is stored in `.devcov-state/test_status.json`, created
+- If end-phase hooks or DevCovenant autofixers change the working tree, rerun
+  the required tests (and rerun hooks if needed) until the repo is clean, then
+  record only that final successful pass in `.devcov-state/test_status.json`.
+Devflow gate status is stored in `.devcov-state/test_status.json`, created
   on demand, and treated as gitignored state.
 - Run a startup check at session start (`python3 -m devcovenant check --mode
   startup`).
@@ -178,6 +181,14 @@ hashes synchronized so drift is detectable and reversible.
   managed docs receive a UTC `Last Updated` header update during each run
   (`python3 devcovenant check --fix`), keeping the timestamp aligned with the
   latest change.
+- To capture the deep knowledge we accumulate while evolving DevCovenant, the
+  custom `devcovenant` profile must extend `documentation-growth-tracking` so
+  it explicitly monitors `devcovenant/docs` alongside the usual docs.
+  `README.md` remains the quick-start/priority logic surface, but the policy
+  keeps `devcovenant/docs` healthy—full of constructive narratives, overrides,
+  custom-profile pointers, and advanced workflows—without drifting into noise.
+  List the folder in the profile overlay so the policy treats it like any other
+  managed doc target.
 
 ### Configuration and extension
 - `devcovenant/config.yaml` must support `devcov_core_include` and
@@ -230,10 +241,10 @@ hashes synchronized so drift is detectable and reversible.
   whenever profile selections change.
 - The merge order for `.pre-commit-config.yaml` is:
 -  1. global profile defaults and the shared base fragment managed by
-     DevCovenant, ensuring a consistent baseline.
+-     DevCovenant, ensuring a consistent baseline.
 -  2. active profile fragments (in the order listed in `profiles.active`).
--  3. overrides supplied via `config.yaml` / `config_old.yaml`
-     (matching the existing metadata override pattern).
+-  3. overrides supplied via `config.yaml`.
+-     They follow the existing metadata override pattern.
 -  4. a user-provided `.pre-commit-config.yaml` that may exist at the repo
      root, allowing manual overrides without touching generated assets.
 - The CLI merges the fragments into `.pre-commit-config.yaml` before running
@@ -314,12 +325,14 @@ hashes synchronized so drift is detectable and reversible.
   registry is the canonical policy map without requiring a separate reference
   document.
 - The legacy `devcovenant/registry.json` storage and the accompanying
-  `update_hashes.py` helper have been retired so policy hashes live solely
-  inside `devcovenant/registry/local/policy_registry.yaml`.
+- `update_hashes.py` helper were retired and removed, leaving
+- `devcovenant/registry/local/policy_registry.yaml` as the single
+- canonical hash store.
+
 
 -### Policy definition YAML
 - Each policy (core, frozen, or custom) ships with a `policy.yaml` that
-  contains:
+- contains:
   ```
   id: changelog-coverage
   text: |
@@ -331,31 +344,37 @@ hashes synchronized so drift is detectable and reversible.
     selectors:
       include_files: [...]
     overrules: [...]
-  defaults:
     enforcement: active
   ```
-- `metadata` keys align with the canonical schema in
-  `devcovenant/registry/global/policy_metadata_schema.yaml`. There is no
-  standalone `status`/`updated`: provenance (core vs. frozen/custom path)
-  determines whether the generated entry is marked as custom and whether
-  updates replace the text automatically.
+- Metadata keys double as the canonical schema for that policy:
+- whatever appears under `metadata` automatically becomes part of the
+- `metadata_schema` block inside
+  `devcovenant/registry/local/policy_registry.yaml` and is consumed by
+  generators and overrides. The resolved metadata (merged defaults, overrides,
+  apply/freeze, selectors, severity, hashes, and asset hints) lives in the
+  companion `metadata_values` block so downstream tooling can read both schema
+  and values from the same entry. No separate `status`/`updated` flags are
+  required because provenance (core vs. frozen/custom loading path)
+  determines whether the generated entry is marked `custom` and whether
+  future updates automatically refresh the stock text.
 - Loader logic synthesizes policy entries directly from these YAML files,
-  allows `config.yaml` overrides to merge on top of `metadata`, and regenerates
-  `AGENTS.md` plus `policy_registry.yaml` from the same source so the policy
-  truths live in code/YAML instead of hand-editing AGENTS.
+- merges `config.yaml` overrides on top of `metadata`, and regenerates
+- both `AGENTS.md` and `policy_registry.yaml` from the same source so policy
+- truth lives in YAML instead of ad-hoc hand-editing.
 - When DevCovenant removes a core policy, the updater copies it to
-  `devcovenant/custom/policies/` (or a frozen overlay defined in config), sets
-  `custom: true` because of the loading path, and reruns `update-policy-registry`
-  rather than relying on manual flag flips.
-- `config.yaml` exposes `do_not_apply_policies` and `freeze_core_policies` as
-  multi-line lists. The refresh step injects these IDs into the generated
-  metadata so `apply` flips to `false` or `freeze` becomes `true` as needed. When
-  a custom policy ID is listed under `freeze_core_policies`, the generator removes
-  it from the list and reports that custom texts don’t need freezing.
-- `policy_overrides` in `config.yaml` allows repositories to reconfigure `severity`,
-  `enforcement`, selectors, and any other schema keys per policy without touching
-  the YAML text; DevCovenant merges overrides before emitting AGENTS or writing
-  the registry.
+- `devcovenant/custom/policies/` (or a frozen overlay defined in config),
+- marks the new copy as `custom`, and reruns `update-policy-registry` so the
+- management docs, notices, and registry reflect the deprecated version.
+- `config.yaml` exposes:
+  - `do_not_apply_policies`: multi-line list whose entries become
+    `apply: false` in the resolved metadata block.
+  - `freeze_core_policies`: list whose IDs toggle `freeze: true`; when a
+    custom policy appears here, the generator drops it and reports that
+    custom texts do not need freezing.
+  - `policy_overrides`: a keyed map (policy ID → overrides) that reconfigures
+    `severity`, `enforcement`, selectors, or any other inferred schema key
+    without touching the YAML text. Overrides merge before AGENTS/registry
+    generation so user edits stay declarative.
 
 ## Installation Requirements
 - Install the full DevCovenant toolchain into the target repo, including the
@@ -380,9 +399,9 @@ hashes synchronized so drift is detectable and reversible.
 - `README.md` keeps user content, receives the standard header, and gains a
   managed block with missing sections (Table of Contents, Overview, Workflow,
   DevCovenant).
-- `SPEC.md` and `PLAN.md` are optional. Existing files get header refreshes;
-  missing files are created only when `--include-spec` or `--include-plan`
-  are supplied.
+- `SPEC.md` and `PLAN.md` are always part of the profile-driven doc assets.
+  Existing files receive header refreshes; missing files are created during
+  each install/update run without extra CLI toggles.
 - `CHANGELOG.md` and `CONTRIBUTING.md` are always replaced on install
   (backing up to `*_old.md`); updates refresh managed blocks only.
 - `VERSION` is created on demand. Prefer an existing VERSION, otherwise

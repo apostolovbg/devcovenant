@@ -1,0 +1,21 @@
+id: changelog-coverage
+text: |
+  Every substantive change must be recorded in the changelog entry for the
+  current version. This policy prevents untracked updates and keeps release
+  notes aligned with repository changes.
+metadata:
+  severity: error
+  auto_fix: false
+  enforcement: active
+  apply: true
+  custom: false
+  profile_scopes:
+    - global
+  main_changelog:
+    - CHANGELOG.md
+  skipped_files:
+    - CHANGELOG.md
+    - .gitignore
+    - .pre-commit-config.yaml
+  collections:
+    - __none__

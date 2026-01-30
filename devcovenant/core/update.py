@@ -14,7 +14,11 @@ from devcovenant.core import cli_options, install
 from devcovenant.core import manifest as manifest_module
 from devcovenant.core import policy_replacements
 from devcovenant.core.parser import PolicyParser
-from devcovenant.core.refresh_policies import refresh_policies
+from devcovenant.core.refresh_policies import (
+    export_metadata_schema,
+    policy_metadata_schema_path,
+    refresh_policies,
+)
 
 _POLICY_BLOCK_RE = re.compile(
     r"(##\s+Policy:\s+[^\n]+\n\n)```policy-def\n(.*?)\n```\n\n"
@@ -297,7 +301,7 @@ def main(argv=None) -> None:
     args = parser.parse_args(argv)
 
     target_root = Path(args.target).resolve()
-    schema_path = (
+    template_path = (
         Path(__file__).resolve().parents[1]
         / "core"
         / "profiles"
@@ -305,6 +309,7 @@ def main(argv=None) -> None:
         / "assets"
         / "AGENTS.md"
     )
+    schema_path = policy_metadata_schema_path(target_root)
     agents_path = target_root / "AGENTS.md"
 
     existing_policies = _collect_policies(agents_path)
@@ -312,7 +317,7 @@ def main(argv=None) -> None:
         Path(__file__).resolve().parents[2]
     )
     plan = _build_replacement_plan(
-        existing_policies, replacements, schema_path
+        existing_policies, replacements, template_path
     )
     sources = _snapshot_policy_sources(target_root, plan.migrate)
 
@@ -370,6 +375,7 @@ def main(argv=None) -> None:
             metadata_mode="preserve",
             set_updated=True,
         )
+        export_metadata_schema(target_root)
 
 
 if __name__ == "__main__":

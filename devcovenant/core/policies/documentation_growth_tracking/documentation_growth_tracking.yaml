@@ -1,0 +1,202 @@
+id: documentation-growth-tracking
+text: |
+  When user-facing files change (as defined by the user-facing selectors and
+  keywords), the documentation set listed here must be updated. User-facing
+  includes API surfaces, integration touchpoints, and any behavior that affects
+  the user's experience or workflow. Updated docs should mention the relevant
+  components by name so readers can find changes quickly. The policy also
+  enforces documentation quality standards such as required headings, a table
+  of contents, and minimum depth.
+metadata:
+  id: documentation-growth-tracking
+  status: active
+  severity: info
+  auto_fix: 'false'
+  updated: 'false'
+  enforcement: active
+  apply: 'true'
+  custom: 'false'
+  profile_scopes:
+    - global
+    - docs
+    - data
+    - python
+    - javascript
+    - typescript
+    - go
+    - rust
+    - java
+    - kotlin
+    - scala
+    - groovy
+    - dotnet
+    - csharp
+    - fsharp
+    - php
+    - ruby
+    - swift
+    - dart
+    - terraform
+    - docker
+    - kubernetes
+    - ansible
+  selector_roles:
+    - user_facing
+    - user_visible
+    - doc_quality
+  include_prefixes:
+    - devcovenant
+    - tools
+    - .github
+  exclude_prefixes: tests
+  user_facing_prefixes:
+    - devcovenant
+    - tools
+    - .github
+  user_facing_exclude_prefixes: tests
+  user_facing_suffixes:
+    - .py
+    - .js
+    - .ts
+    - .tsx
+    - .vue
+    - .go
+    - .rs
+    - .java
+    - .kt
+    - .swift
+    - .rb
+    - .php
+    - .cs
+    - .yml
+    - .yaml
+    - .json
+    - .toml
+  user_facing_files:
+    - devcovenant/cli.py
+    - devcovenant/__main__.py
+    - .pre-commit-config.yaml
+    - pyproject.toml
+  user_facing_globs:
+    - .github/workflows/*.yml
+    - .github/workflows/*.yaml
+    - '*.py'
+    - '*.js'
+    - '*.ts'
+    - '*.tsx'
+    - '*.vue'
+    - '*.go'
+    - '*.rs'
+    - '*.java'
+    - '*.kt'
+    - '*.swift'
+    - '*.rb'
+    - '*.php'
+    - '*.cs'
+    - '*.yml'
+    - '*.yaml'
+    - '*.json'
+    - '*.toml'
+  user_facing_keywords:
+    - api
+    - endpoint
+    - endpoints
+    - route
+    - routes
+    - routing
+    - service
+    - services
+    - controller
+    - controllers
+    - handler
+    - handlers
+    - client
+    - clients
+    - webhook
+    - webhooks
+    - integration
+    - integrations
+    - sdk
+    - cli
+    - ui
+    - view
+    - views
+    - page
+    - pages
+    - screen
+    - screens
+    - form
+    - forms
+    - workflow
+    - workflows
+  user_visible_files:
+    - README.md
+    - CONTRIBUTING.md
+    - AGENTS.md
+    - SPEC.md
+    - PLAN.md
+    - devcovenant/README.md
+  doc_quality_files:
+    - README.md
+    - CONTRIBUTING.md
+    - AGENTS.md
+    - SPEC.md
+    - PLAN.md
+    - devcovenant/README.md
+  required_headings:
+    - Table of Contents
+    - Overview
+    - Workflow
+  require_toc: 'true'
+  min_section_count: '3'
+  min_word_count: '120'
+  quality_severity: warning
+  require_mentions: 'true'
+  mention_severity: warning
+  mention_min_length: '3'
+  mention_stopwords:
+    - devcovenant
+    - tools
+    - common
+    - custom
+    - policy
+    - policies
+    - script
+    - scripts
+    - py
+    - js
+    - ts
+    - json
+    - yml
+    - yaml
+    - toml
+    - md
+    - readme
+    - plan
+    - spec
+  include_suffixes: []
+  include_globs:
+    - devcovenant/**
+    - tools/**
+    - .github/**
+  exclude_suffixes: []
+  exclude_globs: tests/**
+  force_include_globs: []
+  user_facing_exclude_globs: []
+  user_facing_exclude_suffixes: []
+  user_facing_dirs:
+    - devcovenant/**
+    - tools/**
+    - .github/**
+  user_visible_globs: []
+  user_visible_dirs: []
+  doc_quality_globs: []
+  doc_quality_dirs: []
+  include_files: []
+  include_dirs: []
+  exclude_files: []
+  exclude_dirs: []
+  user_facing_exclude_files: []
+  user_facing_exclude_dirs: tests/**
+  force_include_files: []
+  force_include_dirs: []

@@ -154,16 +154,6 @@ def add_install_update_args(
         help="Override the config mode for CI workflow files.",
     )
     parser.add_argument(
-        "--include-spec",
-        action="store_true",
-        help="Create SPEC.md when missing.",
-    )
-    parser.add_argument(
-        "--include-plan",
-        action="store_true",
-        help="Create PLAN.md when missing.",
-    )
-    parser.add_argument(
         "--preserve-custom",
         action=argparse.BooleanOptionalAction,
         default=defaults.preserve_custom,
@@ -238,10 +228,6 @@ def build_install_args(
         install_args.extend(["--pyproject-mode", args.pyproject_mode])
     if args.ci_mode is not None:
         install_args.extend(["--ci-mode", args.ci_mode])
-    if args.include_spec:
-        install_args.append("--include-spec")
-    if args.include_plan:
-        install_args.append("--include-plan")
     if args.preserve_custom is not None:
         if args.preserve_custom:
             install_args.append("--preserve-custom")

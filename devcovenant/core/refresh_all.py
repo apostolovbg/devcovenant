@@ -6,12 +6,19 @@ from pathlib import Path
 
 from devcovenant.core import profiles
 from devcovenant.core.install import apply_autogen_metadata_overrides
-from devcovenant.core.refresh_policies import refresh_policies
+from devcovenant.core.refresh_policies import (
+    export_metadata_schema,
+    policy_metadata_schema_path,
+    refresh_policies,
+)
 from devcovenant.core.update_policy_registry import update_policy_registry
 
 
 def _schema_path(repo_root: Path) -> Path:
-    """Return the default schema path for refresh-policies."""
+    """Return the schema path used for refresh-policies runs."""
+    canonical = policy_metadata_schema_path(repo_root)
+    if canonical.exists():
+        return canonical
     return (
         repo_root
         / "devcovenant"
@@ -40,6 +47,7 @@ def refresh_all(
         metadata_mode=metadata_mode,
         set_updated=True,
     )
+    export_metadata_schema(repo_root)
     if result.changed_policies:
         joined = ", ".join(result.changed_policies)
         print(

@@ -1,42 +1,34 @@
-# Canonical policy metadata schema
-# Generated from devcovenant/core/profiles/global/assets/AGENTS.md
-
 policies:
   changelog-coverage:
     keys:
-    - id
-    - status
     - severity
     - auto_fix
-    - updated
     - enforcement
+    - apply
+    - custom
     - profile_scopes
     - main_changelog
     - skipped_files
     - collections
     defaults:
-      id:
-      - changelog-coverage
-      status:
-      - active
       severity:
       - error
       auto_fix:
-      - 'false'
-      updated:
-      - 'false'
+      - 'False'
       enforcement:
       - active
       apply:
-      - 'true'
+      - 'True'
       custom:
-      - 'false'
+      - 'False'
       profile_scopes:
       - global
       main_changelog:
       - CHANGELOG.md
       skipped_files:
-      - CHANGELOG.md,.gitignore,.pre-commit-config.yaml
+      - CHANGELOG.md
+      - .gitignore
+      - .pre-commit-config.yaml
       collections:
       - __none__
   dependency-license-sync:
@@ -54,6 +46,9 @@ policies:
     - third_party_file
     - licenses_dir
     - report_heading
+    - selector_roles
+    - dependency_globs
+    - dependency_dirs
     defaults:
       id:
       - dependency-license-sync
@@ -97,13 +92,19 @@ policies:
       - ocaml
       - crystal
       dependency_files:
-      - requirements.in,requirements.lock,pyproject.toml
+      - requirements.in
+      - requirements.lock
+      - pyproject.toml
       third_party_file:
       - THIRD_PARTY_LICENSES.md
       licenses_dir:
       - licenses
       report_heading:
       - '## License Report'
+      selector_roles:
+      - dependency
+      dependency_globs: []
+      dependency_dirs: []
   devcov-self-enforcement:
     keys:
     - id
@@ -244,7 +245,7 @@ policies:
       require_pre_commit_end:
       - 'true'
       pre_commit_command:
-      - pre-commit run --all-files
+      - python3 -m pre_commit run --all-files
       pre_commit_start_epoch_key:
       - pre_commit_start_epoch
       pre_commit_end_epoch_key:
@@ -272,6 +273,13 @@ policies:
     - exclude_suffixes
     - exclude_globs
     - force_include_globs
+    - selector_roles
+    - include_files
+    - include_dirs
+    - exclude_files
+    - exclude_dirs
+    - force_include_files
+    - force_include_dirs
     defaults:
       id:
       - docstring-and-comment-coverage
@@ -294,12 +302,28 @@ policies:
       include_suffixes:
       - .py
       exclude_prefixes:
-      - build,dist,node_modules
+      - build
+      - dist
+      - node_modules
       include_prefixes: []
-      include_globs: []
+      include_globs:
+      - '*.py'
       exclude_suffixes: []
-      exclude_globs: []
+      exclude_globs:
+      - build/**
+      - dist/**
+      - node_modules/**
       force_include_globs: []
+      selector_roles:
+      - include
+      - exclude
+      - force_include
+      include_files: []
+      include_dirs: []
+      exclude_files: []
+      exclude_dirs: []
+      force_include_files: []
+      force_include_dirs: []
   documentation-growth-tracking:
     keys:
     - id
@@ -343,6 +367,14 @@ policies:
     - user_visible_dirs
     - doc_quality_globs
     - doc_quality_dirs
+    - include_files
+    - include_dirs
+    - exclude_files
+    - exclude_dirs
+    - user_facing_exclude_files
+    - user_facing_exclude_dirs
+    - force_include_files
+    - force_include_dirs
     defaults:
       id:
       - documentation-growth-tracking
@@ -385,36 +417,114 @@ policies:
       - kubernetes
       - ansible
       selector_roles:
-      - user_facing,user_visible,doc_quality
+      - user_facing
+      - user_visible
+      - doc_quality
       include_prefixes:
-      - devcovenant,tools,.github
+      - devcovenant
+      - tools
+      - .github
       exclude_prefixes:
       - tests
       user_facing_prefixes:
-      - devcovenant,tools,.github
+      - devcovenant
+      - tools
+      - .github
       user_facing_exclude_prefixes:
       - tests
       user_facing_suffixes:
-      - .py,.js,.ts,.tsx,.vue,.go,.rs,.java,.kt,.swift,.rb
-      - .php,.cs,.yml,.yaml,.json,.toml
+      - .py
+      - .js
+      - .ts
+      - .tsx
+      - .vue
+      - .go
+      - .rs
+      - .java
+      - .kt
+      - .swift
+      - .rb
+      - .php
+      - .cs
+      - .yml
+      - .yaml
+      - .json
+      - .toml
       user_facing_files:
-      - devcovenant/cli.py,devcovenant/__main__.py,
-      - .pre-commit-config.yaml,pyproject.toml
+      - devcovenant/cli.py
+      - devcovenant/__main__.py
+      - .pre-commit-config.yaml
+      - pyproject.toml
       user_facing_globs:
-      - .github/workflows/*.yml,.github/workflows/*.yaml
+      - .github/workflows/*.yml
+      - .github/workflows/*.yaml
+      - '*.py'
+      - '*.js'
+      - '*.ts'
+      - '*.tsx'
+      - '*.vue'
+      - '*.go'
+      - '*.rs'
+      - '*.java'
+      - '*.kt'
+      - '*.swift'
+      - '*.rb'
+      - '*.php'
+      - '*.cs'
+      - '*.yml'
+      - '*.yaml'
+      - '*.json'
+      - '*.toml'
       user_facing_keywords:
-      - api,endpoint,endpoints,route,routes,routing,service
-      - services,controller,controllers,handler,handlers,client,clients,webhook
-      - webhooks,integration,integrations,sdk,cli,ui,view,views,page,pages,screen
-      - screens,form,forms,workflow,workflows
+      - api
+      - endpoint
+      - endpoints
+      - route
+      - routes
+      - routing
+      - service
+      - services
+      - controller
+      - controllers
+      - handler
+      - handlers
+      - client
+      - clients
+      - webhook
+      - webhooks
+      - integration
+      - integrations
+      - sdk
+      - cli
+      - ui
+      - view
+      - views
+      - page
+      - pages
+      - screen
+      - screens
+      - form
+      - forms
+      - workflow
+      - workflows
       user_visible_files:
-      - README.md,CONTRIBUTING.md,AGENTS.md
-      - SPEC.md,PLAN.md,devcovenant/README.md
+      - README.md
+      - CONTRIBUTING.md
+      - AGENTS.md
+      - SPEC.md
+      - PLAN.md
+      - devcovenant/README.md
       doc_quality_files:
-      - README.md,CONTRIBUTING.md,AGENTS.md
-      - SPEC.md,PLAN.md,devcovenant/README.md
+      - README.md
+      - CONTRIBUTING.md
+      - AGENTS.md
+      - SPEC.md
+      - PLAN.md
+      - devcovenant/README.md
       required_headings:
-      - Table of Contents,Overview,Workflow
+      - Table of Contents
+      - Overview
+      - Workflow
       require_toc:
       - 'true'
       min_section_count:
@@ -430,20 +540,53 @@ policies:
       mention_min_length:
       - '3'
       mention_stopwords:
-      - devcovenant,tools,common,custom,policy,policies,script
-      - scripts,py,js,ts,json,yml,yaml,toml,md,readme,plan,spec
+      - devcovenant
+      - tools
+      - common
+      - custom
+      - policy
+      - policies
+      - script
+      - scripts
+      - py
+      - js
+      - ts
+      - json
+      - yml
+      - yaml
+      - toml
+      - md
+      - readme
+      - plan
+      - spec
       include_suffixes: []
-      include_globs: []
+      include_globs:
+      - devcovenant/**
+      - tools/**
+      - .github/**
       exclude_suffixes: []
-      exclude_globs: []
+      exclude_globs:
+      - tests/**
       force_include_globs: []
       user_facing_exclude_globs: []
       user_facing_exclude_suffixes: []
-      user_facing_dirs: []
+      user_facing_dirs:
+      - devcovenant/**
+      - tools/**
+      - .github/**
       user_visible_globs: []
       user_visible_dirs: []
       doc_quality_globs: []
       doc_quality_dirs: []
+      include_files: []
+      include_dirs: []
+      exclude_files: []
+      exclude_dirs: []
+      user_facing_exclude_files: []
+      user_facing_exclude_dirs:
+      - tests/**
+      force_include_files: []
+      force_include_dirs: []
   last-updated-placement:
     keys:
     - id
@@ -461,6 +604,12 @@ policies:
     - allowed_suffixes
     - required_files
     - required_globs
+    - selector_roles
+    - include_globs
+    - include_files
+    - include_dirs
+    - allowed_dirs
+    - required_dirs
     defaults:
       id:
       - last-updated-placement
@@ -485,13 +634,36 @@ policies:
       include_suffixes:
       - .md
       allowed_globs:
-      - README.md,AGENTS.md,CONTRIBUTING.md,SPEC.md
+      - '>'
+      - README.md
+      - AGENTS.md
+      - CONTRIBUTING.md
+      - CHANGELOG.md
+      - SPEC.md
       - PLAN.md
       - devcovenant/README.md
+      - devcovenant/core/profiles/global/assets/*.yaml
       allowed_files: []
       allowed_suffixes: []
       required_files: []
-      required_globs: []
+      required_globs:
+      - README.md
+      - AGENTS.md
+      - CONTRIBUTING.md
+      - CHANGELOG.md
+      - SPEC.md
+      - PLAN.md
+      - devcovenant/README.md
+      selector_roles:
+      - include
+      - allowed
+      - required
+      include_globs:
+      - '*.md'
+      include_files: []
+      include_dirs: []
+      allowed_dirs: []
+      required_dirs: []
   line-length-limit:
     keys:
     - id
@@ -511,6 +683,13 @@ policies:
     - include_globs
     - exclude_suffixes
     - force_include_globs
+    - selector_roles
+    - include_files
+    - include_dirs
+    - exclude_files
+    - exclude_dirs
+    - force_include_files
+    - force_include_dirs
     defaults:
       id:
       - line-length-limit
@@ -555,21 +734,73 @@ policies:
       max_length:
       - '79'
       include_suffixes:
-      - .py,.md,.rst,.txt,.yml,.yaml,.json,.toml,.cff
+      - '>'
+      - .py
+      - .md
+      - .rst
+      - .txt
+      - .yml
+      - .yaml
+      - .json
+      - .toml
+      - .cff
       exclude_prefixes:
-      - build,dist,node_modules
+      - build
+      - dist
+      - node_modules
       exclude_globs:
       - '>'
-      - devcovenant/core/profiles/global/assets/LICENSE_GPL-3.0.txt,
-      - devcovenant/core/profiles/global/assets/*.yaml,
-      - devcovenant/core/stock_policy_texts.json,
-      - build/**,
-      - dist/**,
+      - devcovenant/core/profiles/global/assets/LICENSE_GPL-3.0.txt
+      - devcovenant/core/profiles/global/assets/*.yaml
+      - devcovenant/core/stock_policy_texts.json
+      - build/**
+      - dist/**
       - node_modules/**
       include_prefixes: []
-      include_globs: []
+      include_globs:
+      - '*.>'
+      - '*.py'
+      - '*.md'
+      - '*.rst'
+      - '*.txt'
+      - '*.yml'
+      - '*.yaml'
+      - '*.json'
+      - '*.toml'
+      - '*.cff'
       exclude_suffixes: []
       force_include_globs: []
+      selector_roles:
+      - include
+      - exclude
+      - force_include
+      include_files: []
+      include_dirs: []
+      exclude_files: []
+      exclude_dirs: []
+      force_include_files: []
+      force_include_dirs: []
+  managed-doc-assets:
+    keys:
+    - severity
+    - auto_fix
+    - enforcement
+    - apply
+    - custom
+    - profile_scopes
+    defaults:
+      severity:
+      - error
+      auto_fix:
+      - 'false'
+      enforcement:
+      - active
+      apply:
+      - 'true'
+      custom:
+      - 'true'
+      profile_scopes:
+      - devcovenant
   managed-environment:
     keys:
     - id
@@ -626,6 +857,13 @@ policies:
     - exclude_suffixes
     - exclude_globs
     - force_include_globs
+    - selector_roles
+    - exclude_files
+    - exclude_dirs
+    - include_files
+    - include_dirs
+    - force_include_files
+    - force_include_dirs
     defaults:
       id:
       - name-clarity
@@ -646,13 +884,28 @@ policies:
       profile_scopes:
       - python
       exclude_prefixes:
-      - build,dist,node_modules
+      - build
+      - dist
+      - node_modules
       include_suffixes: []
       include_prefixes: []
       include_globs: []
       exclude_suffixes: []
-      exclude_globs: []
+      exclude_globs:
+      - build/**
+      - dist/**
+      - node_modules/**
       force_include_globs: []
+      selector_roles:
+      - exclude
+      - include
+      - force_include
+      exclude_files: []
+      exclude_dirs: []
+      include_files: []
+      include_dirs: []
+      force_include_files: []
+      force_include_dirs: []
   new-modules-need-tests:
     keys:
     - id
@@ -663,7 +916,6 @@ policies:
     - enforcement
     - apply
     - custom
-    - updated
     - profile_scopes
     - include_suffixes
     - include_prefixes
@@ -699,17 +951,17 @@ policies:
       include_prefixes:
       - devcovenant
       exclude_prefixes:
-      - '- build'
-      - '- dist'
-      - '- node_modules'
-      - '- tests'
-      - '- devcovenant/core/profiles'
-      - '- devcovenant/custom/profiles'
+      - build
+      - dist
+      - node_modules
+      - tests
+      - devcovenant/core/profiles
+      - devcovenant/custom/profiles
       exclude_globs: []
       watch_dirs:
-      - '- tests'
+      - tests
       tests_watch_dirs:
-      - '- tests'
+      - tests
       include_globs: []
       exclude_suffixes: []
       force_include_globs: []
@@ -777,6 +1029,27 @@ policies:
       - global
       policy_definitions:
       - AGENTS.md
+  profile-policy-map:
+    keys:
+    - severity
+    - auto_fix
+    - enforcement
+    - apply
+    - custom
+    - profile_scopes
+    defaults:
+      severity:
+      - error
+      auto_fix:
+      - 'false'
+      enforcement:
+      - active
+      apply:
+      - 'true'
+      custom:
+      - 'true'
+      profile_scopes:
+      - devcovenant
   read-only-directories:
     keys:
     - id
@@ -795,6 +1068,13 @@ policies:
     - exclude_prefixes
     - exclude_globs
     - force_include_globs
+    - selector_roles
+    - include_files
+    - include_dirs
+    - exclude_files
+    - exclude_dirs
+    - force_include_files
+    - force_include_dirs
     defaults:
       id:
       - read-only-directories
@@ -822,6 +1102,49 @@ policies:
       exclude_prefixes: []
       exclude_globs: []
       force_include_globs: []
+      selector_roles:
+      - include
+      - exclude
+      - force_include
+      include_files: []
+      include_dirs: []
+      exclude_files: []
+      exclude_dirs: []
+      force_include_files: []
+      force_include_dirs: []
+  readme-sync:
+    keys:
+    - id
+    - status
+    - severity
+    - auto_fix
+    - updated
+    - enforcement
+    - apply
+    - custom
+    - freeze
+    - profile_scopes
+    defaults:
+      id:
+      - readme-sync
+      status:
+      - active
+      severity:
+      - error
+      auto_fix:
+      - 'true'
+      updated:
+      - 'false'
+      enforcement:
+      - active
+      apply:
+      - 'true'
+      custom:
+      - 'true'
+      freeze:
+      - 'true'
+      profile_scopes:
+      - global
   security-scanner:
     keys:
     - id
@@ -840,6 +1163,13 @@ policies:
     - exclude_suffixes
     - exclude_prefixes
     - force_include_globs
+    - selector_roles
+    - exclude_files
+    - exclude_dirs
+    - include_files
+    - include_dirs
+    - force_include_files
+    - force_include_dirs
     defaults:
       id:
       - security-scanner
@@ -852,7 +1182,8 @@ policies:
       updated:
       - 'false'
       exclude_globs:
-      - tests/**,**/tests/**
+      - tests/**
+      - '**/tests/**'
       enforcement:
       - active
       apply:
@@ -867,6 +1198,16 @@ policies:
       exclude_suffixes: []
       exclude_prefixes: []
       force_include_globs: []
+      selector_roles:
+      - exclude
+      - include
+      - force_include
+      exclude_files: []
+      exclude_dirs: []
+      include_files: []
+      include_dirs: []
+      force_include_files: []
+      force_include_dirs: []
   semantic-version-scope:
     keys:
     - id
@@ -881,6 +1222,10 @@ policies:
     - version_file
     - changelog_file
     - ignored_prefixes
+    - selector_roles
+    - ignored_globs
+    - ignored_files
+    - ignored_dirs
     defaults:
       id:
       - semantic-version-scope
@@ -905,6 +1250,11 @@ policies:
       changelog_file:
       - CHANGELOG.md
       ignored_prefixes: []
+      selector_roles:
+      - ignored
+      ignored_globs: []
+      ignored_files: []
+      ignored_dirs: []
   stock-policy-text-sync:
     keys:
     - id
@@ -963,6 +1313,15 @@ policies:
     - changelog_header_prefix
     - readme_file
     - pyproject_file
+    - selector_roles
+    - readme_globs
+    - readme_dirs
+    - optional_globs
+    - optional_dirs
+    - pyproject_globs
+    - pyproject_dirs
+    - license_globs
+    - license_dirs
     defaults:
       id:
       - version-sync
@@ -1007,11 +1366,15 @@ policies:
       version_file:
       - VERSION
       readme_files:
-      - README.md,AGENTS.md,CONTRIBUTING.md,SPEC.md
+      - README.md
+      - AGENTS.md
+      - CONTRIBUTING.md
+      - SPEC.md
       - PLAN.md
       - devcovenant/README.md
       optional_files:
-      - SPEC.md,PLAN.md
+      - SPEC.md
+      - PLAN.md
       pyproject_files:
       - pyproject.toml
       license_files:
@@ -1026,3 +1389,16 @@ policies:
       - '## Version'
       readme_file: []
       pyproject_file: []
+      selector_roles:
+      - readme
+      - optional
+      - pyproject
+      - license
+      readme_globs: []
+      readme_dirs: []
+      optional_globs: []
+      optional_dirs: []
+      pyproject_globs: []
+      pyproject_dirs: []
+      license_globs: []
+      license_dirs: []

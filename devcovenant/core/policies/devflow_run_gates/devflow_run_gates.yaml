@@ -1,0 +1,54 @@
+id: devflow-run-gates
+text: |
+  DevCovenant must record and enforce the standard workflow: pre-commit start,
+  tests, then pre-commit end. The policy reads the status file to ensure each
+  gate ran and that no required command was skipped.
+  This check is enforced for every repository change (including
+  documentation-only updates) so the gate sequence cannot be skipped.
+metadata:
+  id: devflow-run-gates
+  status: active
+  severity: error
+  auto_fix: 'false'
+  updated: 'false'
+  enforcement: active
+  apply: 'true'
+  custom: 'false'
+  profile_scopes:
+    - global
+    - python
+    - javascript
+    - typescript
+    - java
+    - kotlin
+    - scala
+    - groovy
+    - dotnet
+    - csharp
+    - fsharp
+    - php
+    - ruby
+    - go
+    - rust
+    - swift
+    - dart
+    - flutter
+    - elixir
+    - erlang
+    - haskell
+    - clojure
+    - julia
+    - ocaml
+    - crystal
+  test_status_file: .devcov-state/test_status.json
+  required_commands:
+    - pytest
+    - python3 -m unittest discover
+  require_pre_commit_start: 'true'
+  require_pre_commit_end: 'true'
+  pre_commit_command: python3 -m pre_commit run --all-files
+  pre_commit_start_epoch_key: pre_commit_start_epoch
+  pre_commit_end_epoch_key: pre_commit_end_epoch
+  pre_commit_start_command_key: pre_commit_start_command
+  pre_commit_end_command_key: pre_commit_end_command
+  code_extensions: []

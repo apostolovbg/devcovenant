@@ -58,13 +58,8 @@ docs:
   managed_blocks:
     begin: "<!-- DEVCOV:BEGIN -->"
     end: "<!-- DEVCOV:END -->"
-  optional:
-    spec: false
-    plan: false
 
 install:
-  include_spec: true
-  include_plan: true
   allow_existing: false
   auto_uninstall: false
   preserve_custom: true

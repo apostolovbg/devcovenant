@@ -84,7 +84,7 @@ def main() -> None:
     )
     parser.add_argument(
         "--command",
-        default="pre-commit run --all-files",
+        default="python3 -m pre_commit run --all-files",
         help="Pre-commit command to execute and record.",
     )
     parser.add_argument(
@@ -108,11 +108,19 @@ def main() -> None:
     env = os.environ.copy()
     env["DEVCOV_DEVFLOW_PHASE"] = args.phase
     start_ts = _utc_now() if args.phase == "start" else None
-    diff_before = _git_diff(repo_root)
-    _run_command(args.command, env=env)
-    diff_after = _git_diff(repo_root)
-    if args.phase == "end" and diff_before != diff_after:
-        _run_tests(repo_root, env)
+    attempt = 0
+    max_attempts = 3
+    while True:
+        diff_before = _git_diff(repo_root)
+        _run_command(args.command, env=env)
+        diff_after = _git_diff(repo_root)
+        if args.phase == "end" and diff_before != diff_after:
+            _run_tests(repo_root, env)
+            attempt += 1
+            if attempt >= max_attempts:
+                break
+            continue
+        break
 
     payload = _load_status(status_path)
     now = _utc_now()

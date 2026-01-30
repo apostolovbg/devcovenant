@@ -13,7 +13,9 @@ from typing import Iterable
 from . import manifest as manifest_module
 from . import policy_freeze
 from .parser import PolicyParser
+from .policy_descriptor import load_policy_descriptor
 from .policy_locations import resolve_script_location
+from .refresh_policies import load_metadata_schema
 from .registry import PolicyRegistry
 
 _UPDATED_PATTERN = re.compile(r"^(\s*updated:\s*)true\s*$", re.MULTILINE)
@@ -69,6 +71,7 @@ def update_policy_registry(
 
     parser = PolicyParser(agents_md_path)
     policies = parser.parse_agents_md()
+    schema_map = load_metadata_schema(repo_root)
 
     registry = PolicyRegistry(registry_path, repo_root)
 
@@ -83,7 +86,13 @@ def update_policy_registry(
             )
         else:
             updated += 1
-        registry.update_policy_entry(policy, location)
+        descriptor = load_policy_descriptor(repo_root, policy.policy_id)
+        registry.update_policy_entry(
+            policy,
+            location,
+            descriptor,
+            schema=schema_map.get(policy.policy_id),
+        )
         script_name = (
             location.path.name if location is not None else "<missing>"
         )

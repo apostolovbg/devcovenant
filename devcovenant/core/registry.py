@@ -12,6 +12,7 @@ import yaml
 
 from .parser import PolicyDefinition
 from .policy_locations import resolve_script_location
+from .policy_schema import PolicySchema
 
 
 @dataclass
@@ -236,10 +237,11 @@ class PolicyRegistry:
                 return f"{scope}/{policy_name}.py"
         return str(relative)
 
-    def _split_metadata_values(self, raw_value: str) -> List[str]:
+    def _split_metadata_values(self, raw_value: object) -> List[str]:
         """Split metadata values on commas and newlines."""
         items: List[str] = []
-        for part in raw_value.replace("\n", ",").split(","):
+        text = str(raw_value) if raw_value is not None else ""
+        for part in text.replace("\n", ",").split(","):
             normalized = part.strip()
             if normalized:
                 items.append(normalized)
@@ -270,6 +272,8 @@ class PolicyRegistry:
         self,
         policy: PolicyDefinition,
         script_location,
+        descriptor=None,
+        schema: PolicySchema | None = None,
     ):
         """
         Update a policy entry in the registry.
@@ -283,10 +287,27 @@ class PolicyRegistry:
         entry["enabled"] = policy.apply
         entry["custom"] = policy.custom
         entry["description"] = policy.name
-        entry["metadata_handles"] = sorted(policy.raw_metadata.keys())
+        entry["policy_text"] = policy.description
+        ordered_keys: List[str] = []
+        if schema:
+            ordered_keys.extend(schema.keys)
+        elif descriptor:
+            ordered_keys.extend(descriptor.metadata.keys())
+        extras = [
+            key for key in policy.raw_metadata if key not in ordered_keys
+        ]
+        ordered_keys.extend(extras)
+        entry["metadata_handles"] = list(ordered_keys)
         entry["profiles"] = self._split_profiles(
             policy.raw_metadata.get("profile_scopes", "")
         )
+        metadata_values: Dict[str, List[str]] = {}
+        for key in ordered_keys:
+            metadata_values[key] = self._split_metadata_values(
+                policy.raw_metadata.get(key, "")
+            )
+        entry["metadata_schema"] = list(ordered_keys)
+        entry["metadata_values"] = metadata_values
         entry["metadata"] = dict(policy.raw_metadata)
         entry["assets"] = self._extract_asset_values(policy.raw_metadata)
         entry["core"] = False

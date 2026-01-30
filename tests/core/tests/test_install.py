@@ -103,19 +103,8 @@ def test_install_preserves_readme_content(tmp_path: Path) -> None:
     assert install.BLOCK_BEGIN in updated
 
 
-def test_install_skips_spec_and_plan_by_default(tmp_path: Path) -> None:
-    """SPEC and PLAN are optional unless explicitly included."""
-    target = tmp_path / "repo"
-    target.mkdir()
-    install.main(
-        ["--target", str(target), "--mode", "empty", "--version", "0.5.0"]
-    )
-    assert not (target / "SPEC.md").exists()
-    assert not (target / "PLAN.md").exists()
-
-
-def test_install_creates_optional_spec_and_plan(tmp_path: Path) -> None:
-    """SPEC and PLAN are created when explicitly requested."""
+def test_install_creates_spec_and_plan(tmp_path: Path) -> None:
+    """SPEC and PLAN are generated for every install by default."""
     target = tmp_path / "repo"
     target.mkdir()
     install.main(
@@ -126,8 +115,6 @@ def test_install_creates_optional_spec_and_plan(tmp_path: Path) -> None:
             "empty",
             "--version",
             "0.6.0",
-            "--include-spec",
-            "--include-plan",
         ]
     )
     assert (target / "SPEC.md").exists()

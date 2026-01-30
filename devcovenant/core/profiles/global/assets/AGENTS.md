@@ -102,8 +102,8 @@ commands, and metadata through their manifests.
   a managed block for DevCovenant details.
 - `CHANGELOG.md` and `CONTRIBUTING.md` refresh their managed blocks on install
   and are backed up as `*_old.*`.
-- Optional docs (`SPEC.md`, `PLAN.md`) remain untouched unless
-  `--include-spec` / `--include-plan` is supplied.
+- Managed docs (`SPEC.md`, `PLAN.md`, etc.) remain under profile/metadata
+  control.
 - `.gitignore` merges generated fragments with user entries under a preserved
   block, while installs record chosen profiles plus the immovable `global`,
   `data`, `docs`, and `suffixes` profiles.

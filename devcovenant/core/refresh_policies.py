@@ -8,6 +8,10 @@ from typing import Dict, Iterable, List, Sequence, Tuple
 
 import yaml
 
+from devcovenant.core.policy_descriptor import (
+    PolicyDescriptor,
+    load_policy_descriptor,
+)
 from devcovenant.core.policy_schema import (
     POLICY_BLOCK_RE,
     PolicySchema,
@@ -67,6 +71,41 @@ _LEGACY_ROLE_KEY = {
 _METADATA_MODES = ("preserve", "stock")
 
 _GROUP_COMMENTS: Dict[int, str] = {}
+POLICY_METADATA_SCHEMA_FILENAME = "policy_metadata_schema.yaml"
+
+
+def policy_metadata_schema_path(repo_root: Path) -> Path:
+    """Return the canonical metadata schema file path."""
+    return (
+        repo_root
+        / "devcovenant"
+        / "registry"
+        / "global"
+        / POLICY_METADATA_SCHEMA_FILENAME
+    )
+
+
+def _template_agents_path(repo_root: Path) -> Path:
+    """Return the global template AGENTS file inside the core assets."""
+    return (
+        repo_root
+        / "devcovenant"
+        / "core"
+        / "profiles"
+        / "global"
+        / "assets"
+        / "AGENTS.md"
+    )
+
+
+def _choose_schema_source(repo_root: Path, schema_path: Path | None) -> Path:
+    """Resolve the schema source path, preferring the canonical file."""
+    if schema_path and schema_path.exists():
+        return schema_path
+    canonical = policy_metadata_schema_path(repo_root)
+    if canonical.exists():
+        return canonical
+    return _template_agents_path(repo_root)
 
 
 @dataclass(frozen=True)
@@ -170,6 +209,69 @@ def _discover_policy_sources(repo_root: Path) -> Dict[str, Dict[str, bool]]:
     return policies
 
 
+def _metadata_value_list(raw_value: object) -> List[str]:
+    """Return the metadata value as a list of strings."""
+    if raw_value is None:
+        return []
+    if isinstance(raw_value, list):
+        return [str(item) for item in raw_value if str(item)]
+    return [str(raw_value)]
+
+
+def _load_schema_from_yaml(schema_path: Path) -> Dict[str, PolicySchema]:
+    """Load a metadata schema payload from the canonical YAML file."""
+    schema: Dict[str, PolicySchema] = {}
+    if not schema_path.exists():
+        return schema
+    try:
+        payload = yaml.safe_load(schema_path.read_text(encoding="utf-8"))
+    except Exception:
+        return schema
+    if not isinstance(payload, dict):
+        return schema
+    policies = payload.get("policies")
+    if not isinstance(policies, dict):
+        return schema
+    for policy_id, entry in policies.items():
+        if not isinstance(entry, dict):
+            continue
+        keys = tuple(entry.get("keys", ()))
+        defaults_block = entry.get("defaults", {})
+        defaults: Dict[str, List[str]] = {}
+        if isinstance(defaults_block, dict):
+            for key in keys:
+                defaults[key] = _metadata_value_list(defaults_block.get(key))
+        schema[policy_id] = PolicySchema(keys, defaults)
+    return schema
+
+
+def _descriptor_schema_map(
+    descriptors: Dict[str, PolicyDescriptor],
+) -> Dict[str, PolicySchema]:
+    """Build schema entries for each policy descriptor."""
+    schema: Dict[str, PolicySchema] = {}
+    for policy_id, descriptor in descriptors.items():
+        metadata = descriptor.metadata or {}
+        keys = tuple(metadata.keys())
+        defaults: Dict[str, List[str]] = {}
+        for key in keys:
+            defaults[key] = _metadata_value_list(metadata.get(key))
+        schema[policy_id] = PolicySchema(keys, defaults)
+    return schema
+
+
+def _load_descriptors(
+    repo_root: Path, discovered: Dict[str, Dict[str, bool]]
+) -> Dict[str, PolicyDescriptor]:
+    """Load descriptors for every discovered policy script."""
+    descriptors: Dict[str, PolicyDescriptor] = {}
+    for policy_id in discovered:
+        descriptor = load_policy_descriptor(repo_root, policy_id)
+        if descriptor:
+            descriptors[policy_id] = descriptor
+    return descriptors
+
+
 def _load_stock_texts(repo_root: Path) -> Dict[str, str]:
     """Load stock policy text from YAML or JSON assets."""
     yaml_path = (
@@ -197,9 +299,15 @@ def _load_stock_texts(repo_root: Path) -> Dict[str, str]:
 
             json_payload = json.loads(json_path.read_text(encoding="utf-8"))
             if isinstance(json_payload, dict):
-                return {
-                    str(key): str(value) for key, value in json_payload.items()
-                }
+                normalized: Dict[str, str] = {}
+                for key, payload_value in json_payload.items():
+                    if isinstance(payload_value, list):
+                        normalized[key] = "\n".join(
+                            str(item) for item in payload_value
+                        )
+                    else:
+                        normalized[key] = str(payload_value)
+                return normalized
         except Exception:
             pass
     return {}
@@ -348,22 +456,89 @@ def _apply_selector_roles(
     return new_order, values
 
 
-def _build_schema(template_path: Path) -> Dict[str, PolicySchema]:
+def _build_schema(
+    template_path: Path,
+    descriptors: Dict[str, PolicyDescriptor],
+) -> Dict[str, PolicySchema]:
     """Build policy schema mapping from the template AGENTS file."""
     schema: Dict[str, PolicySchema] = {}
-    if not template_path.exists():
-        return schema
-    content = template_path.read_text(encoding="utf-8")
-    for match in POLICY_BLOCK_RE.finditer(content):
-        metadata_block = match.group(2).strip()
-        order, values = parse_metadata_block(metadata_block)
-        policy_id = ""
-        if "id" in values and values["id"]:
-            policy_id = values["id"][0]
-        if not policy_id:
-            continue
-        schema[policy_id] = PolicySchema(tuple(order), values)
+    if template_path.exists() and template_path.suffix in {".yaml", ".yml"}:
+        schema = _load_schema_from_yaml(template_path)
+    elif template_path.exists():
+        content = template_path.read_text(encoding="utf-8")
+        for match in POLICY_BLOCK_RE.finditer(content):
+            metadata_block = match.group(2).strip()
+            order, values = parse_metadata_block(metadata_block)
+            policy_id = ""
+            if "id" in values and values["id"]:
+                policy_id = values["id"][0]
+            if not policy_id:
+                continue
+            schema[policy_id] = PolicySchema(tuple(order), values)
+    descriptor_schemas = _descriptor_schema_map(descriptors)
+    for policy_id, descriptor_entry in descriptor_schemas.items():
+        schema.setdefault(policy_id, descriptor_entry)
     return schema
+
+
+def build_metadata_schema(repo_root: Path) -> Dict[str, PolicySchema]:
+    """Return the metadata schema derived from AGENTS and descriptors."""
+
+    template_path = (
+        repo_root
+        / "devcovenant"
+        / "core"
+        / "profiles"
+        / "global"
+        / "assets"
+        / "AGENTS.md"
+    )
+    discovered = _discover_policy_sources(repo_root)
+    descriptors = _load_descriptors(repo_root, discovered)
+    return _build_schema(template_path, descriptors)
+
+
+def export_metadata_schema(
+    repo_root: Path,
+    *,
+    schema: Dict[str, PolicySchema] | None = None,
+    output_path: Path | None = None,
+) -> Path:
+    """Write the metadata schema YAML under devcovenant/registry/global."""
+
+    schema = schema or build_metadata_schema(repo_root)
+    payload: Dict[str, object] = {"policies": {}}
+    for policy_id in sorted(schema):
+        entry = schema[policy_id]
+        defaults: Dict[str, List[str]] = {}
+        for key in entry.keys:
+            defaults[key] = list(entry.defaults.get(key, []))
+        payload["policies"][policy_id] = {
+            "keys": list(entry.keys),
+            "defaults": defaults,
+        }
+    if output_path is None:
+        output_path = (
+            repo_root
+            / "devcovenant"
+            / "registry"
+            / "global"
+            / "policy_metadata_schema.yaml"
+        )
+    output_path.parent.mkdir(parents=True, exist_ok=True)
+    output_path.write_text(
+        yaml.safe_dump(payload, sort_keys=False, allow_unicode=True),
+        encoding="utf-8",
+    )
+    return output_path
+
+
+def load_metadata_schema(repo_root: Path) -> Dict[str, PolicySchema]:
+    """Return the canonical metadata schema, loading the YAML if available."""
+    schema_path = policy_metadata_schema_path(repo_root)
+    if schema_path.exists():
+        return _load_schema_from_yaml(schema_path)
+    return build_metadata_schema(repo_root)
 
 
 def _normalize_values(
@@ -454,9 +629,11 @@ def refresh_policies(
         return RefreshResult((), (), False, metadata_mode)
 
     repo_root = agents_path.parent
-    schema = _build_schema(schema_path)
-    stock_texts = _load_stock_texts(repo_root)
     discovered = _discover_policy_sources(repo_root)
+    descriptors = _load_descriptors(repo_root, discovered)
+    schema_source = _choose_schema_source(repo_root, schema_path)
+    schema = _build_schema(schema_source, descriptors)
+    stock_texts = _load_stock_texts(repo_root)
     active_profiles = _load_active_profiles(repo_root)
     content = agents_path.read_text(encoding="utf-8")
     try:
@@ -472,12 +649,18 @@ def refresh_policies(
     for match in POLICY_BLOCK_RE.finditer(block_text):
         heading = match.group(1)
         metadata_block = match.group(2).strip()
-        description = match.group(3).rstrip()
+        existing_description = match.group(3).rstrip()
         order, values = parse_metadata_block(metadata_block)
         policy_id = values.get("id", [""])[0] if values.get("id") else ""
         if not policy_id:
             skipped.append("unknown")
             continue
+        descriptor = descriptors.get(policy_id)
+        description = (
+            descriptor.text.strip()
+            if descriptor and descriptor.text
+            else existing_description
+        )
 
         seen_ids.add(policy_id)
         custom_flag = (
@@ -547,7 +730,13 @@ def refresh_policies(
             skipped.append(policy_id)
             continue
         rendered = _render_metadata_block(normalized_order, normalized_values)
-        description = stock_texts.get(policy_id, "Policy description pending.")
+        descriptor = descriptors.get(policy_id)
+        if descriptor and descriptor.text:
+            description = descriptor.text.strip()
+        else:
+            description = stock_texts.get(
+                policy_id, "Policy description pending."
+            )
         heading = f"## Policy: {policy_id.replace('-', ' ').title()}\n\n"
         final_text = (
             f"{heading}```policy-def\n{rendered}\n```\n\n{description}\n"
