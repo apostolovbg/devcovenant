@@ -389,6 +389,9 @@ Devflow gate status is stored in `.devcov-state/test_status.json`, created
     `severity`, `enforcement`, selectors, or any other inferred schema key
     without touching the YAML text. Overrides merge before AGENTS/registry
     generation so user edits stay declarative.
+  - `manual_force_apply` overrides `autogen_do_not_apply` during registry
+    generation so the resolved `apply` flag is always derived from the active
+    config lists rather than hand-edited policy metadata.
 - Config-defined metadata overlays merge with the existing metadata
   values, deduplicating any repeats, so the generators do not repeat
   identical entries when the overrides merely augment the base schema.
@@ -417,10 +420,17 @@ Devflow gate status is stored in `.devcov-state/test_status.json`, created
   `--auto-uninstall` is supplied or the user confirms the uninstall prompt.
 - `--disable-policy` sets `apply: false` for listed policy IDs during
   install/update.
+- Managed docs (AGENTS/README/PLAN/SPEC/CHANGELOG) refresh their headers and
+  managed blocks on install/update/refresh with UTC timestamps. Installs
+  create missing files while preserving any existing user content; updates
+  and refreshes always preserve user content outside managed blocks.
 - Update mode defaults to preserving policy blocks and metadata; managed blocks
   can be refreshed independently of policy definitions.
 - Preserve custom policy scripts and fixers by default on existing installs
   (`--preserve-custom`), with explicit overrides available.
+- `devcovenant/config.yaml` is generated only when missing. Autogen sections
+  are clearly marked and may be updated; user-controlled settings and
+  overrides are preserved to allow installs from an existing config.
 - When an install/update runs, it deletes any `devcovrepo`-prefixed custom
   policies or profiles inside `devcovenant/custom` unless `devcov_core_include`
   is set to true. The refresh/installer regenerates `devcovenant/custom` and
@@ -435,9 +445,16 @@ Devflow gate status is stored in `.devcov-state/test_status.json`, created
   custom extensions are tracked, leaving `tests/**` for project tests. When
   `devcov_core_include` is true, the `devcovrepo` profile adds overlays so the
   entire `devcovenant/**` tree (including core scripts) is mirrored under
-  `tests/devcovenant/`. The install/update/refresh workflow rebuilds those
-  on demand, and treated as gitignored state.
-  unless the override flag allows them.
+  `tests/devcovenant/`. Install/update/refresh only touch
+  `tests/devcovenant/**`, leaving all other `tests/**` entries intact.
+- Runtime-required artifacts (
+  `devcovenant/registry/local/policy_registry.yaml`,
+  `devcovenant/registry/local/manifest.json`,
+  and `.devcov-state/test_status.json`
+) are generated from `devcovuser` assets during install/update/refresh. They
+  are generated from `devcovuser` assets during install/update/refresh. They
+  are tracked in this repo for CI/builds, excluded from packages, and
+  regenerated when missing.
 - `AGENTS.md` is always written from the template; if a prior `AGENTS.md`
   exists, preserve its editable section under `# EDITABLE SECTION`.
 - `README.md` keeps user content, receives the standard header, and gains a

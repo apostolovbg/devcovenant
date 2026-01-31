@@ -116,6 +116,14 @@ _DOC_NAME_MAP = {
     "CHANGELOG": "CHANGELOG.md",
 }
 
+_MANAGED_DOCS = (
+    "AGENTS.md",
+    "CONTRIBUTING.md",
+    "SPEC.md",
+    "PLAN.md",
+    "CHANGELOG.md",
+)
+
 _BACKUP_ROOT: Path | None = None
 _BACKUP_LOG: list[str] = []
 _BACKUP_ORIGINALS: set[Path] = set()
@@ -903,6 +911,103 @@ def _build_doc_block(
     return "\n".join(lines)
 
 
+def _doc_asset_path(target_root: Path, doc_name: str) -> Path:
+    """Return the asset descriptor path for a managed doc."""
+    assets_root = (
+        target_root / "devcovenant" / "core" / "profiles" / "global" / "assets"
+    )
+    doc_id = Path(doc_name).stem
+    return assets_root / f"{doc_id}.yaml"
+
+
+def _load_doc_descriptor(
+    target_root: Path, doc_name: str
+) -> dict[str, object] | None:
+    """Load the descriptor YAML for a managed document."""
+    path = _doc_asset_path(target_root, doc_name)
+    if not path.exists():
+        return None
+    try:
+        payload = yaml.safe_load(path.read_text(encoding="utf-8"))
+    except Exception:
+        return None
+    if not isinstance(payload, dict):
+        return None
+    return payload
+
+
+def _ensure_header_lines(path: Path, header_lines: list[str]) -> bool:
+    """Ensure the document starts with the provided header lines."""
+    if not header_lines or not path.exists():
+        return False
+    text = path.read_text(encoding="utf-8")
+    lines = text.splitlines()
+    rest_index = 0
+    while rest_index < len(lines):
+        if lines[rest_index].strip() == "":
+            rest_index += 1
+            break
+        rest_index += 1
+    while rest_index < len(lines) and lines[rest_index].strip() == "":
+        rest_index += 1
+    rest = lines[rest_index:]
+    updated_lines = header_lines + [""] + rest
+    updated_text = "\n".join(updated_lines).rstrip() + "\n"
+    if updated_text == text:
+        return False
+    _rename_existing_file(path)
+    path.write_text(updated_text, encoding="utf-8")
+    return True
+
+
+def _sync_doc_from_descriptor(target_root: Path, doc_name: str) -> bool:
+    """Sync a managed document from its descriptor asset."""
+    descriptor = _load_doc_descriptor(target_root, doc_name)
+    if not descriptor:
+        return False
+    doc_path = target_root / doc_name
+    header_lines = descriptor.get("header_lines") or []
+    doc_id = descriptor.get("doc_id")
+    doc_type = descriptor.get("doc_type")
+    managed_block = descriptor.get("managed_block", "")
+    extra_lines = [line.rstrip() for line in managed_block.splitlines()]
+    template_block = (
+        _build_doc_block(doc_id, doc_type, extra_lines)
+        if doc_id and doc_type
+        else ""
+    )
+    if not doc_path.exists():
+        lines: list[str] = []
+        if header_lines:
+            lines.extend(header_lines)
+        lines.append("")
+        if template_block:
+            lines.append(template_block)
+        text = "\n".join(lines).rstrip() + "\n"
+        doc_path.write_text(text, encoding="utf-8")
+        return True
+    changed = False
+    if header_lines:
+        changed |= _ensure_header_lines(doc_path, header_lines)
+    if template_block:
+        changed |= _sync_blocks_from_template(doc_path, template_block)
+    return changed
+
+
+def sync_managed_doc_assets(
+    target_root: Path,
+    doc_names: Iterable[str] | None = None,
+) -> list[str]:
+    """Ensure the managed docs reflect their descriptor assets."""
+
+    names = tuple(doc_names or _MANAGED_DOCS)
+    updated: list[str] = []
+    for doc_name in names:
+        if _sync_doc_from_descriptor(target_root, doc_name):
+            updated.append(doc_name)
+    return updated
+
+
 def _render_spec_template(version: str, date_stamp: str) -> str:
     """Return a minimal SPEC.md template."""
     doc_block = _build_doc_block("SPEC", "specification")
@@ -1401,8 +1506,8 @@ def _update_policy_list_config_text(
             found = True
             if items:
                 updated_lines.append(f"{key}:")
-                for item in items:
-                    updated_lines.append(f"  - {item}")
+                for entry in items:
+                    updated_lines.append(f"  - {entry}")
             else:
                 updated_lines.append(f"{key}: []")
             index += 1
@@ -1420,8 +1525,8 @@ def _update_policy_list_config_text(
             updated_lines.append("")
         if items:
             updated_lines.append(f"{key}:")
-            for item in items:
-                updated_lines.append(f"  - {item}")
+            for entry in items:
+                updated_lines.append(f"  - {entry}")
         else:
             updated_lines.append(f"{key}: []")
     updated = "\n".join(updated_lines).rstrip() + "\n"

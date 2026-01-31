@@ -91,6 +91,13 @@ Example entry:
   CHANGELOG.md
   PLAN.md
   SPEC.md
+- 2026-01-30: Clarified managed doc/header refresh, config autogen behavior,
+  runtime-required registry artifacts, and tests/devcovenant mirror rules in
+  PLAN/SPEC.
+  Files:
+  CHANGELOG.md
+  PLAN.md
+  SPEC.md
 - 2026-01-30: Removed the dogfood-only `patches-txt-sync` policy, rebuilt
   metadata schema generation to prefer descriptor YAMLs, and refreshed
   policy registry outputs plus devcov scaffolding refresh logic.

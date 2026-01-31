@@ -74,6 +74,35 @@ def test_passes_when_tests_are_fresh(tmp_path: Path) -> None:
     assert not violations
 
 
+def test_start_after_edit_is_warning(tmp_path: Path) -> None:
+    """A start recorded after edits should emit a warning, not an error."""
+
+    ctx = make_ctx(tmp_path, ["src/example.py"])
+    status_path = tmp_path / ".devcov-state" / "test_status.json"
+    status_path.parent.mkdir(parents=True, exist_ok=True)
+    code_mtime = (tmp_path / "src" / "example.py").stat().st_mtime
+    status = {
+        "last_run_utc": "2025-12-27T00:00:00Z",
+        "last_run_epoch": code_mtime + 10,
+        "commands": ["pytest", "python3 -m unittest discover"],
+        "pre_commit_start_utc": "2025-12-28T00:00:00Z",
+        "pre_commit_start_epoch": code_mtime + 20,  # after edit
+        "pre_commit_start_command": "pre-commit run --all-files",
+        "pre_commit_end_utc": "2025-12-27T00:00:00Z",
+        "pre_commit_end_epoch": code_mtime + 5,
+        "pre_commit_end_command": "pre-commit run --all-files",
+    }
+    status_path.write_text(json.dumps(status), encoding="utf-8")
+
+    check = DevflowRunGates()
+    violations = check.check(ctx)
+    assert any(
+        v.severity == "warning"
+        and "Start was recorded after edits" in v.message
+        for v in violations
+    )
+
+
 def test_requires_pre_commit_start(tmp_path: Path) -> None:
     """Missing start pre-commit should trigger a violation."""
     ctx = make_ctx(tmp_path, ["src/example.py"])

@@ -363,7 +363,7 @@ def _descriptor_schema_map(
         keys = tuple(metadata.keys())
         defaults: Dict[str, List[str]] = {}
         for key in keys:
-            defaults[key] = metadata_value_list(metadata.get(key))
+            defaults[key] = _dedupe(metadata_value_list(metadata.get(key)))
         schema[policy_id] = PolicySchema(keys, defaults)
     return schema
 
@@ -693,6 +693,8 @@ def _normalize_values(
             for key in ordered_keys
             if key in current_values
         }
+        for key in ordered_values:
+            ordered_values[key] = _dedupe(ordered_values[key])
         return ordered_keys, ordered_values
 
     ordered_keys = schema_keys + extras
@@ -702,11 +704,11 @@ def _normalize_values(
         current = current_values.get(key, [])
         canonical = list(defaults.get(key, []))
         if use_stock and canonical:
-            values[key] = list(canonical)
+            values[key] = _dedupe(list(canonical))
         elif current:
-            values[key] = list(current)
+            values[key] = _dedupe(list(current))
         elif canonical:
-            values[key] = list(canonical)
+            values[key] = _dedupe(list(canonical))
         else:
             values[key] = []
     return _apply_selector_roles(ordered_keys, values)

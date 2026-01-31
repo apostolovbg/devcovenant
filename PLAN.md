@@ -176,11 +176,17 @@ It is the checklist we consult before declaring the spec satisfied.
   `CONTRIBUTING.md` sync from YAML assets with new managed blocks.
 - [not done] `SPEC.md`/`PLAN.md` rebuild when missing.
   Keep user edits otherwise.
+- [not done] Install/update/refresh regenerate only managed doc headers and
+  managed blocks (UTC dates) while preserving user content outside those
+  blocks; installs create missing docs without discarding existing content.
 - [not done] `VERSION` creation prefers existing file, then `pyproject.toml`.
   Prompt (default `0.0.1`). `--version` overrides detection.
 - [not done] `LICENSE` falls back to the GPL-3.0 template when missing.
 - [not done] `.gitignore` is rebuilt from fragments while merging user entries.
 - [not done] Every managed doc gets its `Last Updated` header stamped in UTC.
+- [not done] `devcovenant/config.yaml` is generated only when missing; autogen
+  sections are marked and refreshed while user overrides stay intact so
+  installs from existing configs remain possible.
 - [not done] Config exposes `devcov_core_include`, `devcov_core_paths`, and
   `doc_assets` with `profiles.generated.file_suffixes`.
 - [not done] Profile and policy assets live under `core/` and `custom/`.
@@ -205,6 +211,10 @@ It is the checklist we consult before declaring the spec satisfied.
   and `tests/devcovenant` from core assets while deleting any `devcovrepo`
   prefixed folders/policies and recreating the user-facing `devcovuser` profile
   so repo-specific overrides never ship.
+- [not done] Runtime-required artifacts (`devcovenant/registry/local/` entries
+  and `.devcov-state/test_status.json`) are generated from `devcovuser` assets,
+  tracked in this repo for CI/builds, excluded from packages, and recreated
+  during install/update/refresh when missing.
 
 - [done] Describe the `devcovuser`/`devcovrepo` profiles and wiring so user
   repos keep `devcovenant/**` out of enforcement while still covering
@@ -228,9 +238,9 @@ It is the checklist we consult before declaring the spec satisfied.
 Below is every missing SPEC requirement, ordered by dependency.
 
 1. **Canonical metadata schema & normalization.**
-   Build the metadata schema, normalize AGENTS blocks, and ensure metadata
-   overlays dedupe existing values when configuration or profile fragments
-   merge during normalization.
+   [done] Build the metadata schema, normalize AGENTS blocks, and ensure
+   metadata overlays dedupe existing values when configuration or profile
+   fragments merge during normalization.
 2. **Policy registry + replacements + `freeze`.**
    [done] Metadata_schema/metadata_values blocks are emitted, config overrides
    propagate to apply/freeze, replacements/freeze copies rerun the registry

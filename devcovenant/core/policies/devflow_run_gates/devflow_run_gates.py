@@ -253,17 +253,18 @@ class DevflowRunGates(PolicyCheck):
                     )
                 )
             elif earliest_code_mtime and start_ts > earliest_code_mtime:
+                # Shame timeout: do not block, but make the developer wait.
+                time.sleep(10)
                 violations.append(
                     Violation(
                         policy_id=self.policy_id,
-                        severity="error",
+                        severity="warning",
                         file_path=status_rel,
                         message=(
-                            "Session start pre-commit run occurred after "
-                            "code changes. Run `python3 devcovenant/"
-                            "run_pre_commit.py --phase start` before editing "
-                            "code and rerun "
-                            "after resetting the session."
+                            "Start was recorded after edits. The gates will "
+                            "clear because you ran start→tests→end, but run "
+                            "`python3 devcovenant/run_pre_commit.py --phase "
+                            "start` before editing next time."
                         ),
                     )
                 )
