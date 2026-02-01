@@ -85,6 +85,35 @@ Example entry:
   tests/core/policies/docstring_and_comment_coverage/tests/\
     test_docstring_and_comment_coverage.py
   POLICY_MAP.md
+- 2026-02-01: Extended new-modules-need-tests and security-scanner to JS/TS/\
+  Go/Rust/Java/C# with adapters, profile overlays, and tests.
+  Files:
+  devcovenant/core/policies/new_modules_need_tests/new_modules_need_tests.py
+  devcovenant/core/policies/new_modules_need_tests/new_modules_need_tests.yaml
+  devcovenant/core/policies/new_modules_need_tests/adapters/javascript.py
+  devcovenant/core/policies/new_modules_need_tests/adapters/typescript.py
+  devcovenant/core/policies/new_modules_need_tests/adapters/go.py
+  devcovenant/core/policies/new_modules_need_tests/adapters/rust.py
+  devcovenant/core/policies/new_modules_need_tests/adapters/java.py
+  devcovenant/core/policies/new_modules_need_tests/adapters/csharp.py
+  devcovenant/core/policies/security_scanner/security_scanner.py
+  devcovenant/core/policies/security_scanner/security_scanner.yaml
+  devcovenant/core/policies/security_scanner/adapters/javascript.py
+  devcovenant/core/policies/security_scanner/adapters/typescript.py
+  devcovenant/core/policies/security_scanner/adapters/go.py
+  devcovenant/core/policies/security_scanner/adapters/rust.py
+  devcovenant/core/policies/security_scanner/adapters/java.py
+  devcovenant/core/policies/security_scanner/adapters/csharp.py
+  devcovenant/core/profiles/javascript/javascript.yaml
+  devcovenant/core/profiles/typescript/typescript.yaml
+  devcovenant/core/profiles/go/go.yaml
+  devcovenant/core/profiles/rust/rust.yaml
+  devcovenant/core/profiles/java/java.yaml
+  devcovenant/core/profiles/csharp/csharp.yaml
+  tests/core/policies/new_modules_need_tests/tests/\
+    test_new_modules_need_tests.py
+  tests/core/policies/security_scanner/tests/test_security_scanner.py
+  POLICY_MAP.md
   devcovenant/registry/local/policy_registry.yaml
   devcovenant/custom/policies/profile_policy_map/profile_policy_map.py
   devcovenant/custom/policies/profile_policy_map/profile_policy_map.yaml

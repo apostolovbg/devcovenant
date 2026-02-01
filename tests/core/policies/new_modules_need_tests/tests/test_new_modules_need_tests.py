@@ -157,3 +157,57 @@ class TestNewModulesNeedTestsPolicy(unittest.TestCase):
             violations = policy.check(context)
 
             self.assertEqual(len(violations), 0)
+
+
+@patch("subprocess.check_output")
+def test_js_modules_require_tests(mock_subprocess):
+    """JS modules should trigger violations without tests."""
+    with tempfile.TemporaryDirectory() as tmpdir:
+        repo_root = Path(tmpdir)
+        module = repo_root / "src" / "widget.js"
+        module.parent.mkdir(parents=True, exist_ok=True)
+        module.write_text("export const x = 1;\n")
+
+        mock_subprocess.return_value = "A  src/widget.js\n"
+
+        policy = NewModulesNeedTestsCheck()
+        policy.set_options(
+            {"include_prefixes": ["src"], "include_suffixes": [".js"]},
+            {},
+        )
+        context = CheckContext(repo_root=repo_root)
+        violations = policy.check(context)
+        assert violations
+
+        tests = repo_root / "tests"
+        tests.mkdir()
+        (tests / "widget.test.js").write_text("test('ok', ()=>{});\n")
+        mock_subprocess.return_value = (
+            "A  src/widget.js\nM  tests/widget.test.js\n"
+        )
+        assert policy.check(context) == []
+
+
+@patch("subprocess.check_output")
+def test_go_modules_require_tests(mock_subprocess):
+    """Go modules should require *_test.go."""
+    with tempfile.TemporaryDirectory() as tmpdir:
+        repo_root = Path(tmpdir)
+        module = repo_root / "pkg" / "calc.go"
+        module.parent.mkdir(parents=True, exist_ok=True)
+        module.write_text("package pkg\n")
+
+        mock_subprocess.return_value = "A  pkg/calc.go\n"
+
+        policy = NewModulesNeedTestsCheck()
+        policy.set_options(
+            {"include_prefixes": ["pkg"], "include_suffixes": [".go"]},
+            {},
+        )
+        context = CheckContext(repo_root=repo_root)
+        violations = policy.check(context)
+        assert violations
+
+        (module.parent / "calc_test.go").write_text("package pkg\n")
+        mock_subprocess.return_value = "A  pkg/calc.go\nM  pkg/calc_test.go\n"
+        assert policy.check(context) == []

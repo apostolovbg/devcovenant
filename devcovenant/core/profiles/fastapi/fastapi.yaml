@@ -21,18 +21,52 @@ assets:
     template: openapi.json
     mode: replace
 policy_overlays:
+  dependency-license-sync:
+    dependency_files:
+      - requirements.in
+      - requirements.lock
+      - pyproject.toml
+  devflow-run-gates:
+    required_commands:
+      - pytest
+      - python3 -m unittest discover
   documentation-growth-tracking:
     user_facing_suffixes:
       - .py
       - .json
       - .yaml
       - .yml
+    user_facing_keywords:
+      - endpoint
+      - endpoints
+      - route
+      - routes
+      - handler
+      - handlers
   line-length-limit:
     include_suffixes:
       - .py
       - .json
       - .yaml
       - .yml
+  security-scanner:
+    include_suffixes:
+      - .py
+  name-clarity:
+    include_suffixes:
+      - .py
+  docstring-and-comment-coverage:
+    include_suffixes:
+      - .py
+  new-modules-need-tests:
+    include_suffixes:
+      - .py
 policies:
+  - dependency-license-sync
+  - devflow-run-gates
   - documentation-growth-tracking
   - line-length-limit
+  - security-scanner
+  - name-clarity
+  - docstring-and-comment-coverage
+  - new-modules-need-tests

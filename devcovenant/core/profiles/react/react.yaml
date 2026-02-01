@@ -22,6 +22,22 @@ policy_overlays:
   devflow-run-gates:
     required_commands:
       - npm test
+  name-clarity:
+    include_suffixes:
+      - .jsx
+      - .tsx
+  docstring-and-comment-coverage:
+    include_suffixes:
+      - .jsx
+      - .tsx
+  new-modules-need-tests:
+    include_suffixes:
+      - .jsx
+      - .tsx
+  security-scanner:
+    include_suffixes:
+      - .jsx
+      - .tsx
   documentation-growth-tracking:
     user_facing_suffixes:
       - .jsx
@@ -33,5 +49,9 @@ policy_overlays:
 policies:
   - dependency-license-sync
   - devflow-run-gates
+  - name-clarity
+  - docstring-and-comment-coverage
+  - new-modules-need-tests
+  - security-scanner
   - documentation-growth-tracking
   - line-length-limit

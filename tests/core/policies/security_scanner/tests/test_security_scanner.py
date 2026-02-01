@@ -81,3 +81,42 @@ def test_non_python_files_are_ignored(tmp_path: Path):
     )
     context = CheckContext(repo_root=tmp_path, changed_files=[target])
     assert checker.check(context) == []
+
+
+def test_adapters_flag_risky_patterns(tmp_path: Path):
+    """Non-Python adapters should detect risky constructs."""
+    cases = [
+        (".js", "const x = eval('2+2');\n"),
+        (".ts", "const x = eval('2+2');\n"),
+        (".go", 'package main\nimport "os/exec"\n'),
+        (".rs", "unsafe { let x = 1; }\n"),
+        (
+            ".java",
+            'class Demo { void r(){ Runtime.getRuntime().exec("ls");}}\n',
+        ),
+        (
+            ".cs",
+            (
+                "class Demo { void R(){ System.Diagnostics.Process.Start("
+                '"ls");}}\n'
+            ),
+        ),
+    ]
+
+    for suffix, source in cases:
+        path = tmp_path / "project_lib" / f"sample{suffix}"
+        path.parent.mkdir(parents=True, exist_ok=True)
+        path.write_text(source, encoding="utf-8")
+
+        checker = SecurityScannerCheck()
+        checker.set_options(
+            {
+                "include_suffixes": [suffix],
+                "exclude_globs": [],
+                "exclude_prefixes": [],
+            },
+            {},
+        )
+        context = CheckContext(repo_root=tmp_path, changed_files=[path])
+        violations = checker.check(context)
+        assert violations, f"expected violation for {suffix}"

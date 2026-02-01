@@ -15,7 +15,18 @@ metadata:
   enforcement: active
   apply: 'true'
   custom: 'false'
-  profile_scopes: python
+  profile_scopes:
+    - python
+    - django
+    - flask
+    - fastapi
+    - frappe
+    - javascript
+    - typescript
+    - go
+    - rust
+    - java
+    - csharp
   include_suffixes: []
   include_prefixes: []
   include_globs: []

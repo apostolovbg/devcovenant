@@ -25,9 +25,24 @@ policy_overlays:
   docstring-and-comment-coverage:
     include_suffixes:
       - .java
+  new-modules-need-tests:
+    include_suffixes:
+      - .java
+  security-scanner:
+    include_suffixes:
+      - .java
   documentation-growth-tracking:
     user_facing_suffixes:
       - .java
+    user_facing_keywords:
+      - controller
+      - controllers
+      - service
+      - services
+      - endpoint
+      - endpoints
+      - handler
+      - handlers
   line-length-limit:
     include_suffixes:
       - .java
@@ -36,5 +51,7 @@ policies:
   - devflow-run-gates
   - name-clarity
   - docstring-and-comment-coverage
+  - new-modules-need-tests
+  - security-scanner
   - documentation-growth-tracking
   - line-length-limit

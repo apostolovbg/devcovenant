@@ -26,6 +26,15 @@ policy_overlays:
   documentation-growth-tracking:
     user_facing_suffixes:
       - .php
+    user_facing_keywords:
+      - controller
+      - controllers
+      - service
+      - services
+      - route
+      - routes
+      - endpoint
+      - endpoints
   line-length-limit:
     include_suffixes:
       - .php

@@ -28,9 +28,23 @@ policy_overlays:
   docstring-and-comment-coverage:
     include_suffixes:
       - .go
+  new-modules-need-tests:
+    include_suffixes:
+      - .go
+  security-scanner:
+    include_suffixes:
+      - .go
   documentation-growth-tracking:
     user_facing_suffixes:
       - .go
+    user_facing_keywords:
+      - handler
+      - handlers
+      - middleware
+      - service
+      - services
+      - endpoint
+      - endpoints
   line-length-limit:
     include_suffixes:
       - .go
@@ -39,5 +53,7 @@ policies:
   - devflow-run-gates
   - name-clarity
   - docstring-and-comment-coverage
+  - new-modules-need-tests
+  - security-scanner
   - documentation-growth-tracking
   - line-length-limit

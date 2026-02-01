@@ -26,9 +26,22 @@ policy_overlays:
   docstring-and-comment-coverage:
     include_suffixes:
       - .rs
+  new-modules-need-tests:
+    include_suffixes:
+      - .rs
+  security-scanner:
+    include_suffixes:
+      - .rs
   documentation-growth-tracking:
     user_facing_suffixes:
       - .rs
+    user_facing_keywords:
+      - handler
+      - handlers
+      - endpoint
+      - endpoints
+      - service
+      - services
   line-length-limit:
     include_suffixes:
       - .rs
@@ -37,5 +50,7 @@ policies:
   - devflow-run-gates
   - name-clarity
   - docstring-and-comment-coverage
+  - new-modules-need-tests
+  - security-scanner
   - documentation-growth-tracking
   - line-length-limit

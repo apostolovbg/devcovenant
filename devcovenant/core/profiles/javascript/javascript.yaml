@@ -38,12 +38,34 @@ policy_overlays:
       - .jsx
       - .mjs
       - .cjs
+  new-modules-need-tests:
+    include_suffixes:
+      - .js
+      - .jsx
+  security-scanner:
+    include_suffixes:
+      - .js
+      - .jsx
+      - .mjs
+      - .cjs
   documentation-growth-tracking:
     user_facing_suffixes:
       - .js
       - .jsx
       - .mjs
       - .cjs
+    user_facing_keywords:
+      - api
+      - endpoint
+      - endpoints
+      - route
+      - routes
+      - controller
+      - controllers
+      - handler
+      - handlers
+      - component
+      - components
   line-length-limit:
     include_suffixes:
       - .js
@@ -55,5 +77,7 @@ policies:
   - devflow-run-gates
   - name-clarity
   - docstring-and-comment-coverage
+  - new-modules-need-tests
+  - security-scanner
   - documentation-growth-tracking
   - line-length-limit

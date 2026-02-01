@@ -170,7 +170,8 @@ standard metadata keys plus the specific selectors below.
   `profile_scopes`
 - **Assets:** `tests/` tree (mirrors `devcovenant/core` and
   `devcovenant/custom` subtrees)
-- **Profiles:** `python`, `django`, `flask`, `fastapi`, `frappe`
+- **Profiles:** `python`, `django`, `flask`, `fastapi`, `frappe`,
+  `javascript`, `typescript`, `go`, `rust`, `java`, `csharp`
 
 ### devcov-raw-string-escapes (repo-only)
 - **Metadata handles:** `profile_scopes`
@@ -181,7 +182,8 @@ standard metadata keys plus the specific selectors below.
 - **Metadata handles:** `exclude_globs`, `profile_scopes`
 - **Assets:** scanner scripts (located next to the policy) for each supported
   language
-- **Profiles:** `python`, `django`, `flask`, `fastapi`, `frappe`
+- **Profiles:** `python`, `django`, `flask`, `fastapi`, `frappe`,
+  `javascript`, `typescript`, `go`, `rust`, `java`, `csharp`
 
 ## Using the map + AGENTS.md
 Refer to `AGENTS.md` for the canonical policy prose and all additional handles
