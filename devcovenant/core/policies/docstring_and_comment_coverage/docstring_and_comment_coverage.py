@@ -1,39 +1,25 @@
-"""Enforce docstrings/comments across files selected via policy metadata."""
+"""Enforce docstrings/comments via language adapters."""
 
-import ast
-import io
-import tokenize
-from typing import Set
+from __future__ import annotations
+
+import importlib
+from pathlib import Path
+from typing import List
 
 from devcovenant.core.base import CheckContext, PolicyCheck, Violation
 from devcovenant.core.selector_helpers import SelectorSet
 
-
-def _collect_comment_lines(source: str) -> Set[int]:
-    """Return the line numbers that contain standalone comments."""
-    lines: Set[int] = set()
-    reader = io.StringIO(source).readline
-    try:
-        for token in tokenize.generate_tokens(reader):
-            if token.type == tokenize.COMMENT:
-                lines.add(token.start[0])
-    except tokenize.TokenError:
-        pass
-    return lines
+PYTHON_SUFFIXES = {".py", ".pyi", ".pyw"}
 
 
-def _has_comment_before(
-    line: int, comment_lines: Set[int], lookback: int = 3
-) -> bool:
-    """Check whether a comment exists in the lines immediately preceding
-    the given line."""
-    for offset in range(lookback + 1):
-        target = line - offset
-        if target <= 0:
-            continue
-        if target in comment_lines:
-            return True
-    return False
+def _adapter_for(path: Path):
+    """Return the adapter module for a given file path, or None."""
+    if path.suffix.lower() in PYTHON_SUFFIXES:
+        return importlib.import_module(
+            "devcovenant.core.policies."
+            "docstring_and_comment_coverage.adapters.python"
+        )
+    return None
 
 
 class DocstringAndCommentCoverageCheck(PolicyCheck):
@@ -50,10 +36,10 @@ class DocstringAndCommentCoverageCheck(PolicyCheck):
         }
         return SelectorSet.from_policy(self, defaults=defaults)
 
-    def check(self, context: CheckContext):
+    def check(self, context: CheckContext) -> List[Violation]:
         """Detect functions, classes or modules without documentation."""
         files = context.all_files or context.changed_files or []
-        violations = []
+        violations: List[Violation] = []
         selector = self._build_selector()
 
         for path in files:
@@ -62,60 +48,21 @@ class DocstringAndCommentCoverageCheck(PolicyCheck):
             if not selector.matches(path, context.repo_root):
                 continue
 
+            adapter = _adapter_for(path)
+            if adapter is None:
+                continue
+
             try:
                 source = path.read_text(encoding="utf-8")
             except OSError:
                 continue
 
-            comment_lines = _collect_comment_lines(source)
-
-            try:
-                module_node = ast.parse(source)
-            except SyntaxError:
-                continue
-
-            module_doc = ast.get_docstring(module_node)
-            if not module_doc and not _has_comment_before(
-                1, comment_lines, lookback=5
-            ):
-                violations.append(
-                    Violation(
-                        policy_id=self.policy_id,
-                        severity="error",
-                        file_path=path,
-                        message=(
-                            "Module lacks a descriptive top-level docstring "
-                            "or preceding comment."
-                        ),
-                    )
+            violations.extend(
+                adapter.check_file(
+                    path=path,
+                    source=source,
+                    policy_id=self.policy_id,
                 )
-
-            for node in ast.walk(module_node):
-                if isinstance(node, (ast.FunctionDef, ast.AsyncFunctionDef)):
-                    symbol = node.name
-                    symbol_type = "function"
-                elif isinstance(node, ast.ClassDef):
-                    symbol = node.name
-                    symbol_type = "class"
-                else:
-                    continue
-
-                if ast.get_docstring(node):
-                    continue
-
-                if _has_comment_before(node.lineno, comment_lines):
-                    continue
-
-                violations.append(
-                    Violation(
-                        policy_id=self.policy_id,
-                        severity="error",
-                        file_path=path,
-                        message=(
-                            f"{symbol_type.title()} '{symbol}' is missing "
-                            "a docstring or adjacent explanatory comment."
-                        ),
-                    )
-                )
+            )
 
         return violations

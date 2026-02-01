@@ -158,8 +158,10 @@ Devflow gate status is stored in `.devcov-state/test_status.json`, created
   `run_tests.py`, and `restore_stock_text.py`. `run_tests.py` executes the
   merged `devflow-run-gates.required_commands` list resolved from profiles
   and config (defaults remain pytest + unittest) and records the exact command
-  string to `update_test_status`. The corresponding
-  implementations live under `devcovenant/core/`.
+  string to `update_test_status`. The corresponding implementations live under
+  `devcovenant/core/`. Language-aware policies delegate parsing/checking to
+  per-language adapters under `devcovenant/core/policies/<policy>/adapters/
+  <lang>.py`; core policy modules remain language-agnostic.
 
 ### Documentation management
 - Every managed doc must include `Last Updated` and `Version` headers.

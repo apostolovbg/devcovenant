@@ -1,31 +1,24 @@
-"""Detect suspicious symbols that historically trigger compliance risks."""
+"""Detect suspicious constructs via language adapters."""
 
-import re
-from typing import List, Sequence
+from __future__ import annotations
+
+import importlib
+from pathlib import Path
+from typing import List
 
 from devcovenant.core.base import CheckContext, PolicyCheck, Violation
 from devcovenant.core.selector_helpers import SelectorSet
 
-PATTERNS = [
-    (
-        re.compile(r"\beval\s*\("),
-        "Avoid `eval`; prefer safer alternatives.",
-    ),
-    (
-        re.compile(r"\bexec\s*\("),
-        "Avoid `exec`; prefer explicit parsing.",
-    ),
-    (
-        re.compile(r"\bpickle\.loads\s*\("),
-        "Avoid untrusted `pickle.loads`.",
-    ),
-    (
-        re.compile(r"\bsubprocess\.run\s*\([^)]*shell\s*=\s*True"),
-        "Avoid `shell=True` in subprocess calls.",
-    ),
-]
+PYTHON_SUFFIXES = {".py", ".pyi", ".pyw"}
 
-ALLOW_COMMENT = "security-scanner: allow"
+
+def _adapter_for(path: Path):
+    """Return adapter module for a given file path, or None."""
+    if path.suffix.lower() in PYTHON_SUFFIXES:
+        return importlib.import_module(
+            "devcovenant.core.policies.security_scanner.adapters.python"
+        )
+    return None
 
 
 class SecurityScannerCheck(PolicyCheck):
@@ -35,7 +28,7 @@ class SecurityScannerCheck(PolicyCheck):
     version = "1.0.0"
 
     def check(self, context: CheckContext) -> List[Violation]:
-        """Search repository Python modules for risky expressions."""
+        """Search repository modules using adapters."""
         violations: List[Violation] = []
         files = context.all_files or context.changed_files or []
         selector = SelectorSet.from_policy(
@@ -52,37 +45,17 @@ class SecurityScannerCheck(PolicyCheck):
             if not selector.matches(path, context.repo_root):
                 continue
 
+            adapter = _adapter_for(path)
+            if adapter is None:
+                continue
+
             text = path.read_text(encoding="utf-8")
-            lines = text.splitlines()
-            for pattern, reason in PATTERNS:
-                for match in pattern.finditer(text):
-                    line_index = text.count("\n", 0, match.start())
-                    if _has_allow_comment(lines, line_index):
-                        continue
-                    violations.append(
-                        Violation(
-                            policy_id=self.policy_id,
-                            severity="error",
-                            file_path=path,
-                            line_number=line_index + 1,
-                            message=(
-                                "Insecure construct detected: "
-                                f"{reason} (pattern `{pattern.pattern}`). "
-                                "Review the compliance rationale before "
-                                "committing."
-                            ),
-                        )
-                    )
+            violations.extend(
+                adapter.check_file(
+                    path=path,
+                    source=text,
+                    policy_id=self.policy_id,
+                )
+            )
 
         return violations
-
-
-def _has_allow_comment(lines: Sequence[str], line_index: int) -> bool:
-    """Return True when this or a nearby line carries the allow flag."""
-    for offset in (0, -1, -2):
-        idx = line_index + offset
-        if not (0 <= idx < len(lines)):
-            continue
-        if ALLOW_COMMENT in lines[idx]:
-            return True
-    return False

@@ -86,6 +86,14 @@ Example entry:
   devcovenant/core/run_tests.py
   SPEC.md
   PLAN.md
+  devcovenant/core/policies/docstring_and_comment_coverage/docstring_and_comment_coverage.py
+  devcovenant/core/policies/docstring_and_comment_coverage/adapters/python.py
+  devcovenant/core/policies/name_clarity/name_clarity.py
+  devcovenant/core/policies/name_clarity/adapters/python.py
+  devcovenant/core/policies/security_scanner/security_scanner.py
+  devcovenant/core/policies/security_scanner/adapters/python.py
+  devcovenant/core/policies/new_modules_need_tests/new_modules_need_tests.py
+  devcovenant/core/policies/new_modules_need_tests/adapters/python.py
 
 - 2026-02-01: Tracked the new per-profile descriptors and managed doc assets to
   align metadata with PROFILE_MAP/POLICY_MAP.

@@ -1,6 +1,8 @@
-"""Ensure modules under `module_roots` keep tests rooted beneath
-`tests_root`."""
+"""Ensure modules under module roots keep tests alongside (adapter-driven)."""
 
+from __future__ import annotations
+
+import importlib
 import subprocess
 from pathlib import Path
 from typing import List, Set
@@ -8,9 +10,20 @@ from typing import List, Set
 from devcovenant.core.base import CheckContext, PolicyCheck, Violation
 from devcovenant.core.selector_helpers import SelectorSet, build_watchlists
 
+PYTHON_SUFFIXES = {".py", ".pyi", ".pyw"}
+
+
+def _adapter_for(path: Path):
+    """Return adapter module for a given file path, or None."""
+    if path.suffix.lower() in PYTHON_SUFFIXES:
+        return importlib.import_module(
+            "devcovenant.core.policies.new_modules_need_tests.adapters.python"
+        )
+    return None
+
 
 class NewModulesNeedTestsCheck(PolicyCheck):
-    """Ensure new Python modules ship with accompanying tests."""
+    """Ensure new modules ship with accompanying tests via adapters."""
 
     policy_id = "new-modules-need-tests"
     version = "1.1.0"
@@ -18,7 +31,7 @@ class NewModulesNeedTestsCheck(PolicyCheck):
     def _collect_repo_changes(
         self, repo_root: Path
     ) -> tuple[Set[Path], Set[Path], Set[Path]]:
-        """Return added and modified files reported by Git."""
+        """Return added, modified, deleted files reported by Git."""
         try:
             output = subprocess.check_output(
                 ["git", "status", "--porcelain", "--untracked-files=all"],
@@ -54,34 +67,15 @@ class NewModulesNeedTestsCheck(PolicyCheck):
 
         return added, modified, deleted
 
-    def _existing_tests(
-        self, repo_root: Path, tests_dirs: List[str]
-    ) -> List[Path]:
-        """Return existing test files under the configured roots."""
-        test_files: List[Path] = []
-        for test_dir in tests_dirs:
-            root = repo_root / test_dir
-            if not root.exists():
-                continue
-            test_files.extend(root.rglob("test_*.py"))
-        return test_files
-
     def check(self, context: CheckContext) -> List[Violation]:
-        """Check that new Python modules have corresponding tests."""
-        violations = []
+        """Check that new modules have corresponding tests."""
+        violations: List[Violation] = []
 
-        (
-            added,
-            modified,
-            deleted,
-        ) = self._collect_repo_changes(context.repo_root)
-        module_selector = SelectorSet.from_policy(
-            self,
-            defaults={
-                "include_suffixes": [".py"],
-                "exclude_prefixes": ["tests"],
-            },
+        added, modified, deleted = self._collect_repo_changes(
+            context.repo_root
         )
+
+        module_selector = SelectorSet.from_policy(self)
         _, configured_watch_dirs = build_watchlists(
             self, defaults={"watch_dirs": ["tests"]}
         )
@@ -96,115 +90,21 @@ class NewModulesNeedTestsCheck(PolicyCheck):
             tests_dirs = configured_watch_dirs
         else:
             tests_dirs = ["tests"]
-        tests_label = (
-            ", ".join(sorted(tests_dirs))
-            if len(tests_dirs) > 1
-            else tests_dirs[0]
+
+        adapter = importlib.import_module(
+            "devcovenant.core.policies.new_modules_need_tests.adapters.python"
         )
 
-        skip_segments = {"adapters", "fixers", "assets", "tests"}
-
-        def _is_library_or_engine_module(path: Path) -> bool:
-            """Return True when motion paths point at core Python modules."""
-            if path.suffix != ".py":
-                return False
-            try:
-                rel = path.relative_to(context.repo_root)
-            except ValueError:
-                rel = path
-            rel_parts = rel.parts
-            if rel_parts and rel_parts[0] == "devcovenant":
-                if any(segment in skip_segments for segment in rel_parts):
-                    return False
-            return module_selector.matches(path, context.repo_root)
-
-        def _collect_changed_tests(paths: Set[Path]) -> List[Path]:
-            """Collect touched files that live under tests/."""
-            tests = []
-            for path in paths:
-                try:
-                    rel = path.relative_to(context.repo_root).as_posix()
-                except ValueError:
-                    continue
-                if any(
-                    rel == test_dir or rel.startswith(f"{test_dir}/")
-                    for test_dir in tests_dirs
-                ):
-                    tests.append(path)
-            return tests
-
-        # Find new Python modules outside tests/
-        new_modules = []
-        for path in added:
-            if _is_library_or_engine_module(path):
-                new_modules.append(path)
-
-        removed_modules = []
-        for path in deleted:
-            if _is_library_or_engine_module(path):
-                removed_modules.append(path)
-
-        tests_changed = _collect_changed_tests(added | modified | deleted)
-
-        if new_modules and not self._existing_tests(
-            context.repo_root, tests_dirs
-        ):
-            targets = ", ".join(
-                sorted(
-                    path.relative_to(context.repo_root).as_posix()
-                    for path in new_modules
-                )
+        violations.extend(
+            adapter.check_changes(
+                context=context,
+                policy_id=self.policy_id,
+                selector=module_selector,
+                tests_dirs=tests_dirs,
+                added=added,
+                modified=modified,
+                deleted=deleted,
             )
-            violations.append(
-                Violation(
-                    policy_id=self.policy_id,
-                    severity="error",
-                    file_path=new_modules[0],
-                    message=(
-                        "No tests found under "
-                        f"{tests_label}; add test_*.py files "
-                        f"before adding modules: {targets}"
-                    ),
-                )
-            )
-            return violations
-
-        if new_modules and not tests_changed:
-            targets = ", ".join(
-                sorted(
-                    path.relative_to(context.repo_root).as_posix()
-                    for path in new_modules
-                )
-            )
-            violations.append(
-                Violation(
-                    policy_id=self.policy_id,
-                    severity="error",
-                    file_path=new_modules[0],
-                    message=(
-                        f"Add or update tests under {tests_label}/ "
-                        f"for new modules: {targets}"
-                    ),
-                )
-            )
-
-        if removed_modules and not tests_changed:
-            targets = ", ".join(
-                sorted(
-                    path.relative_to(context.repo_root).as_posix()
-                    for path in removed_modules
-                )
-            )
-            violations.append(
-                Violation(
-                    policy_id=self.policy_id,
-                    severity="error",
-                    file_path=removed_modules[0],
-                    message=(
-                        f"Adjust tests under {tests_label}/ "
-                        f"when removing modules: {targets}"
-                    ),
-                )
-            )
+        )
 
         return violations

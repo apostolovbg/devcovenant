@@ -333,6 +333,15 @@ Below is every missing SPEC requirement, ordered by dependency.
 - Run `python3 -m devcovenant check --fix` when doc assets or `last-updated`
   are modified.
 
+## Outstanding work
+- Extract language-specific logic from docstring-and-comment-coverage,
+  name-clarity, new-modules-need-tests, and security-scanner into adapters
+  (`devcovenant/core/policies/<policy>/adapters/<lang>.py`) and keep core
+  policy modules language-agnostic.
+- Build adapters for other languages listed in POLICY_MAP scopes (beyond
+  python) or trim scopes to the languages we actually support to avoid false
+  coverage claims.
+
 ## Release readiness
 - Confirm `manifest.json` logs layout, docs, and UTC timestamp before release.
 - Verify `CHANGELOG.md` reflects the current version.
