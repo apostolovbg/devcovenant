@@ -1,0 +1,35 @@
+version: 1
+profile: docker
+category: ops
+suffixes:
+  - Dockerfile
+  - .dockerignore
+  - .yml
+  - .yaml
+ignore_dirs: []
+assets:
+  - path: Dockerfile
+    template: Dockerfile
+    mode: replace
+  - path: docker-compose.yml
+    template: docker-compose.yml
+    mode: replace
+  - path: .dockerignore
+    template: .dockerignore
+    mode: replace
+policy_overlays:
+  devflow-run-gates:
+    required_commands:
+      - docker compose config
+  documentation-growth-tracking:
+    user_facing_suffixes:
+      - .yml
+      - .yaml
+  line-length-limit:
+    include_suffixes:
+      - .yml
+      - .yaml
+policies:
+  - devflow-run-gates
+  - documentation-growth-tracking
+  - line-length-limit

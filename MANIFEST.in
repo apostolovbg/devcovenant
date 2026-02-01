@@ -7,6 +7,7 @@ include CHANGELOG.md
 include LICENSE
 include VERSION
 include THIRD_PARTY_LICENSES.md
+include CITATION.cff
 include requirements.in
 include requirements.lock
 include devcovenant/README.md

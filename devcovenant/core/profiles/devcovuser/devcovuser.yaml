@@ -1,0 +1,15 @@
+version: 1
+profile: devcovuser
+category: core
+suffixes: []
+ignore_dirs: []
+assets: []
+policy_overlays:
+  new-modules-need-tests:
+    exclude_prefixes:
+      - devcovenant
+    include_prefixes:
+      - devcovenant/custom
+autogen_do_not_apply: []
+policies:
+  - new-modules-need-tests

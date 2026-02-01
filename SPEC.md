@@ -1,5 +1,5 @@
 # DevCovenant Specification
-**Last Updated:** 2026-01-28
+**Last Updated:** 2026-02-01
 **Version:** 0.2.6
 
 <!-- DEVCOV:BEGIN -->
@@ -34,6 +34,9 @@ hashes synchronized so drift is detectable and reversible.
 - `pre-commit --phase start` must run before edits but is not required to leave
   the tree clean; it simply captures a gate snapshot and identifies existing
   issues. Later phases still rerun hooks/tests until the workspace is clean.
+- If start is recorded after edits, the gate issues a warning and brief pause
+  instead of blocking, but a clean `start → tests → end` run is still required
+  to pass.
 - If end-phase hooks or DevCovenant autofixers change the working tree, rerun
   the required tests (and rerun hooks if needed) until the repo is clean, then
   record only that final successful pass in `.devcov-state/test_status.json`.
@@ -152,7 +155,10 @@ Devflow gate status is stored in `.devcov-state/test_status.json`, created
   `sync.py`, `test.py`, `install.py`, `update.py`, `uninstall.py`,
   `refresh_all.py`, `refresh_policies.py`, `update_policy_registry.py`,
   `update_lock.py`, `update_test_status.py`, `run_pre_commit.py`,
-  `run_tests.py`, and `restore_stock_text.py`. The corresponding
+  `run_tests.py`, and `restore_stock_text.py`. `run_tests.py` executes the
+  merged `devflow-run-gates.required_commands` list resolved from profiles
+  and config (defaults remain pytest + unittest) and records the exact command
+  string to `update_test_status`. The corresponding
   implementations live under `devcovenant/core/`.
 
 ### Documentation management
@@ -287,8 +293,12 @@ Devflow gate status is stored in `.devcov-state/test_status.json`, created
   metadata block.
 - Built-in policies have canonical text stored in
   `devcovenant/registry/global/stock_policy_texts.yaml`.
-- Policies declare `profile_scopes` metadata to gate applicability;
-  global policies use `profile_scopes: global`.
+- Policies are activated by profiles: a policy is in scope only when a profile
+  lists it (or config overlays add it). Core policy YAMLs do not hard-code
+  `profile_scopes`; scopes are derived from profiles plus config overlays
+  during registry generation.
+Profiles are explicit—no inheritance or family defaults; each profile lists
+its own assets, suffixes, policies, and overlays.
 - Custom policy `readme-sync` enforces that `devcovenant/README.md` mirrors
   `README.md` with repository-only blocks removed via
   `<!-- REPO-ONLY:BEGIN -->` / `<!-- REPO-ONLY:END -->` markers. Its auto-fix
@@ -306,7 +316,11 @@ Devflow gate status is stored in `.devcov-state/test_status.json`, created
 - Selector keys (`include_*`, `exclude_*`, `force_*`, `watch_*`) are supported
   across policy definitions for consistent scoping.
 - Policy metadata normalization must be able to add missing keys without
-  changing existing values or policy text.
+  changing existing values or policy text. Move broad suffix/prefix/glob
+  defaults out of base policies into profile overlays (python/docs/lang-
+  specific, devcovrepo) so policy YAMLs carry only minimal/common scope.
+  Audit all policies and relocate hard-coded metadata into profiles where
+  appropriate.
 - `devcov-parity-guard` replaces the legacy stock-text policy and compares
   AGENTS policy prose to descriptor YAML text for both core and custom
   policies.
@@ -332,18 +346,22 @@ Devflow gate status is stored in `.devcov-state/test_status.json`, created
   They work across every language/profile combination that the policy supports.
 - Generate `devcovenant/registry/local/policy_registry.yaml` dynamically from
   `refresh_policies` and `update_policy_registry`. The YAML tracks every
-  policy (enabled or disabled) with its metadata handles, asset hints,
-  profile scopes, core/custom source, enabled flag, and script hashes so the
-  registry is the canonical policy map without requiring a separate reference
-  document.
+  policy (enabled or disabled) with its metadata schema (from the policy YAML
+  `metadata` keys), resolved metadata values (merged defaults/overrides,
+  apply/freeze, selectors, severity, hashes, asset hints, provenance), profile
+  scopes, and enabled flag so the registry is the canonical policy map.
 - The legacy `devcovenant/registry.json` storage and the accompanying
 - `update_hashes.py` helper were retired and removed, leaving
 - `devcovenant/registry/local/policy_registry.yaml` as the single
-- canonical hash store.
+- canonical hash store. Any residual legacy artifacts in the tree
+- should be deleted during the cleanup phase (registry.json,
+- config_old.yaml, GPL license template) and removed from manifests,
+- schemas, and policy references so refresh/install no longer expect
+- them.
 
 
 -### Policy definition YAML
-- Each policy (core, frozen, or custom) ships with a `policy.yaml` that
+- Each policy (core, frozen, or custom) ships with a `<policy>.yaml` that
 - contains:
   ```
   id: changelog-coverage
@@ -395,6 +413,12 @@ Devflow gate status is stored in `.devcov-state/test_status.json`, created
 - Config-defined metadata overlays merge with the existing metadata
   values, deduplicating any repeats, so the generators do not repeat
   identical entries when the overrides merely augment the base schema.
+- Core profiles stay immutable; to attach a custom policy to a core profile,
+  use `profile_overlays.<profile>.custom_policies` in config. Registry
+  generation adds those policy IDs to the profile’s scope; profile-specific
+  metadata for custom policies should live in custom profiles, not in config.
+- Generated configs must list every supported key, even when empty, including
+  the `profile_overlays` section, so users see all available hooks.
 - `policy_registry.yaml` only records the `profile_scopes` matching the current
   `profiles.active` list (plus `global`). The normalization pipeline
   trims scope values before writing the `metadata_values` block so the
@@ -469,7 +493,7 @@ Devflow gate status is stored in `.devcov-state/test_status.json`, created
   read version fields from `pyproject.toml`, otherwise prompt. If prompting
   is skipped, default to `0.0.1`. The `--version` flag overrides detection
   and accepts `x.x` or `x.x.x` (normalized to `x.x.0`).
-- If no license exists, install the GPL-3.0 template with a `Project Version`
+- If no license exists, install the MIT template with a `Project Version`
   header. Only overwrite licenses when explicitly requested.
 - Regenerate `.gitignore` from global, profile, and OS fragments, then
   merge existing user entries under a preserved block.
@@ -482,10 +506,14 @@ Devflow gate status is stored in `.devcov-state/test_status.json`, created
   `overwrite`.
 - Write `devcovenant/registry/local/manifest.json` with the core layout,
   doc types, installed paths, options, active profiles, and policy asset
-  mappings.
 - Record the UTC timestamp of the install or update.
-- Profile manifests drive profile assets and overlays, even when not listed
-  as assets.
+- Core profile manifests (`devcovenant/core/profiles/<profile>/<profile>.yaml`)
+  are shipped as static, authoritative descriptors. `devcovenant update`
+  keeps user repos on the latest shipped descriptors, but `refresh-*` commands
+  do not rewrite them. `PROFILE_MAP.md` and `POLICY_MAP.md` are reference
+  tables only—authors consult them when manually populating profile YAMLs;
+  they are not a source-of-truth that is materialized into the manifests.
+  Generic `profile.yaml` stubs are still invalid once normalization runs.
 - Install and update share a unified self-install/self-refresh workflow.
   Whatever command runs operates on the host repository: invoking the installed
   package (on `PATH`) targets the current working repo.
@@ -504,8 +532,15 @@ Devflow gate status is stored in `.devcov-state/test_status.json`, created
 ## Packaging Requirements
 - Ship `devcovenant` as a pure-Python package with a console script entry.
 - Include profile assets and policy assets in the sdist and wheel.
+- Include `CITATION.cff` in sdists/wheels so citation metadata is available to
+  consumers (MIT license; authors Black Epsilon Ltd. and Apostol Apostolov).
 - Require Python 3.10+ and declare runtime dependencies in
-  `requirements.in`, `requirements.lock`, and `pyproject.toml`.
+  `requirements.in`, `requirements.lock`, and `pyproject.toml`; publish
+  classifiers through Python 3.14.
+- Publish with MIT license metadata (`license = { file = "LICENSE" }`,
+  `License :: OSI Approved :: MIT License` classifier) and ensure CITATION
+  authors/license/version stay aligned; version-sync enforces this under the
+  `devcovrepo` profile.
 - Keep `THIRD_PARTY_LICENSES.md` and `licenses/` synchronized with dependency
   changes so the dependency-license-sync policy passes.
 - DevCovenant's own test suites live under `tests/devcovenant/` in the
@@ -527,10 +562,11 @@ Devflow gate status is stored in `.devcov-state/test_status.json`, created
   repository continues to run both `pytest` and `python3 -m unittest discover`,
   but newly added coverage must be unit-level and existing policy tests
   should be converted to unit suites over time.
-- User repos keep an always-on `devcovuser` profile that excludes
+- User repos keep a default-on `devcovuser` profile that excludes
   `devcovenant/**` from test enforcement except `devcovenant/custom/**`.
-  When `devcov_core_include` is true, the `devcovuser` profile is ignored
-  so the DevCovenant repo can test core code.
+  When `devcov_core_include` is true (DevCovenant’s own repo), disable
+  `devcovuser` and enable `devcovrepo` so the full `devcovenant/**` tree
+  (code and tests) is mirrored and enforced.
 
 ## Non-Functional Requirements
 - Checks must be fast enough for pre-commit usage on typical repos.

@@ -1,0 +1,34 @@
+version: 1
+profile: flutter
+category: framework
+suffixes:
+  - .dart
+ignore_dirs:
+  - .dart_tool
+  - build
+assets:
+  - path: pubspec.yaml
+    template: pubspec.yaml
+    mode: replace
+  - path: pubspec.lock
+    template: pubspec.lock
+    mode: replace
+policy_overlays:
+  dependency-license-sync:
+    dependency_files:
+      - pubspec.yaml
+      - pubspec.lock
+  devflow-run-gates:
+    required_commands:
+      - flutter test
+  documentation-growth-tracking:
+    user_facing_suffixes:
+      - .dart
+  line-length-limit:
+    include_suffixes:
+      - .dart
+policies:
+  - dependency-license-sync
+  - devflow-run-gates
+  - documentation-growth-tracking
+  - line-length-limit

@@ -1,0 +1,37 @@
+version: 1
+profile: symfony
+category: framework
+suffixes:
+  - .php
+  - .twig
+ignore_dirs:
+  - var
+  - vendor
+assets:
+  - path: composer.json
+    template: composer.json
+    mode: replace
+  - path: composer.lock
+    template: composer.lock
+    mode: replace
+policy_overlays:
+  dependency-license-sync:
+    dependency_files:
+      - composer.json
+      - composer.lock
+  devflow-run-gates:
+    required_commands:
+      - phpunit
+  documentation-growth-tracking:
+    user_facing_suffixes:
+      - .php
+      - .twig
+  line-length-limit:
+    include_suffixes:
+      - .php
+      - .twig
+policies:
+  - dependency-license-sync
+  - devflow-run-gates
+  - documentation-growth-tracking
+  - line-length-limit

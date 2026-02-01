@@ -1,0 +1,28 @@
+version: 1
+profile: objective-c
+category: language
+suffixes:
+  - .m
+  - .mm
+  - .h
+ignore_dirs:
+  - build
+assets: []
+policy_overlays:
+  devflow-run-gates:
+    required_commands:
+      - xcodebuild test
+  documentation-growth-tracking:
+    user_facing_suffixes:
+      - .m
+      - .mm
+      - .h
+  line-length-limit:
+    include_suffixes:
+      - .m
+      - .mm
+      - .h
+policies:
+  - devflow-run-gates
+  - documentation-growth-tracking
+  - line-length-limit

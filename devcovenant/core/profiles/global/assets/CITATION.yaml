@@ -1,0 +1,20 @@
+header_lines:
+- 'cff-version: 1.2.0'
+- 'message: "If you use this software, please cite it."'
+- 'title: "DevCovenant"'
+doc_id: CITATION
+doc_type: citation
+managed_by: DevCovenant
+managed_block: |-
+  cff-version: 1.2.0
+  message: "If you use this software, please cite it."
+  title: "DevCovenant"
+  version: "0.2.6"
+  preferred-citation:
+    type: software
+    title: "DevCovenant"
+    version: "0.2.6"
+    authors:
+      - name: "Black Epsilon Ltd."
+      - name: "Apostol Apostolov"
+    license: "MIT"

@@ -819,7 +819,6 @@ policies:
       - node_modules
       exclude_globs:
       - '>'
-      - devcovenant/core/profiles/global/assets/LICENSE_GPL-3.0.txt
       - devcovenant/core/profiles/global/assets/*.yaml
       - devcovenant/core/stock_policy_texts.json
       - build/**
@@ -1101,30 +1100,6 @@ policies:
       - global
       policy_definitions:
       - AGENTS.md
-  profile-policy-map:
-    keys:
-    - id
-    - severity
-    - auto_fix
-    - enforcement
-    - apply
-    - custom
-    - profile_scopes
-    defaults:
-      id:
-      - profile-policy-map
-      severity:
-      - error
-      auto_fix:
-      - 'false'
-      enforcement:
-      - active
-      apply:
-      - 'true'
-      custom:
-      - 'true'
-      profile_scopes:
-      - devcovrepo
   raw-string-escapes:
     keys:
     - id

@@ -109,7 +109,7 @@ def main() -> None:
     env["DEVCOV_DEVFLOW_PHASE"] = args.phase
     start_ts = _utc_now() if args.phase == "start" else None
     attempt = 0
-    max_attempts = 3
+    max_attempts = 5
     while True:
         diff_before = _git_diff(repo_root)
         _run_command(args.command, env=env)
@@ -122,8 +122,11 @@ def main() -> None:
             _run_tests(repo_root, env)
             attempt += 1
             if attempt >= max_attempts:
-                print("Maximum rerun attempts reached; stopping here.")
-                break
+                print(
+                    "Maximum rerun attempts reached; tree still dirty. "
+                    "Failing end gate."
+                )
+                raise SystemExit(1)
             print("Rerunning pre-commit hooks to verify clean tree...")
             continue
         break

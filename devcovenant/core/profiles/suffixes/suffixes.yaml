@@ -1,0 +1,8 @@
+version: 1
+profile: suffixes
+category: ops
+suffixes: []
+ignore_dirs: []
+assets: []
+policy_overlays: {}
+policies: []

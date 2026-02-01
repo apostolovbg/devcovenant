@@ -1,7 +1,0 @@
-version: 1
-profile: global
-category: core
-suffixes: []
-ignore_dirs: []
-assets: []
-policy_overlays: {}

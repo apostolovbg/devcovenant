@@ -1,0 +1,27 @@
+version: 1
+profile: lisp
+category: language
+suffixes:
+  - .lisp
+  - .lsp
+ignore_dirs:
+  - build
+assets: []
+policy_overlays:
+  devflow-run-gates:
+    required_commands:
+      - >-
+        sbcl --non-interactive --eval "(require 'asdf)" --eval
+        "(asdf:test-system :app)"
+  documentation-growth-tracking:
+    user_facing_suffixes:
+      - .lisp
+      - .lsp
+  line-length-limit:
+    include_suffixes:
+      - .lisp
+      - .lsp
+policies:
+  - devflow-run-gates
+  - documentation-growth-tracking
+  - line-length-limit

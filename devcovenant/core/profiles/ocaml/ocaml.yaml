@@ -1,0 +1,35 @@
+version: 1
+profile: ocaml
+category: language
+suffixes:
+  - .ml
+  - .mli
+ignore_dirs:
+  - _build
+assets:
+  - path: dune
+    template: dune
+    mode: replace
+  - path: opam
+    template: opam
+    mode: replace
+policy_overlays:
+  dependency-license-sync:
+    dependency_files:
+      - opam
+  devflow-run-gates:
+    required_commands:
+      - dune runtest
+  documentation-growth-tracking:
+    user_facing_suffixes:
+      - .ml
+      - .mli
+  line-length-limit:
+    include_suffixes:
+      - .ml
+      - .mli
+policies:
+  - dependency-license-sync
+  - devflow-run-gates
+  - documentation-growth-tracking
+  - line-length-limit

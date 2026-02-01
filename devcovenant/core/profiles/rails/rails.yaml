@@ -1,0 +1,44 @@
+version: 1
+profile: rails
+category: framework
+suffixes:
+  - .rb
+  - .erb
+ignore_dirs:
+  - log
+  - tmp
+  - vendor/bundle
+assets:
+  - path: Gemfile
+    template: Gemfile
+    mode: replace
+  - path: Gemfile.lock
+    template: Gemfile.lock
+    mode: replace
+  - path: Rakefile
+    template: Rakefile
+    mode: replace
+  - path: config.ru
+    template: config.ru
+    mode: replace
+policy_overlays:
+  dependency-license-sync:
+    dependency_files:
+      - Gemfile
+      - Gemfile.lock
+  devflow-run-gates:
+    required_commands:
+      - bundle exec rake test
+  documentation-growth-tracking:
+    user_facing_suffixes:
+      - .rb
+      - .erb
+  line-length-limit:
+    include_suffixes:
+      - .rb
+      - .erb
+policies:
+  - dependency-license-sync
+  - devflow-run-gates
+  - documentation-growth-tracking
+  - line-length-limit

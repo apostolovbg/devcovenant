@@ -1,0 +1,38 @@
+version: 1
+profile: fastapi
+category: framework
+suffixes:
+  - .py
+  - .json
+  - .yaml
+  - .yml
+ignore_dirs:
+  - .venv
+  - __pycache__
+  - .pytest_cache
+  - .mypy_cache
+  - build
+  - dist
+assets:
+  - path: main.py
+    template: main.py
+    mode: replace
+  - path: openapi.json
+    template: openapi.json
+    mode: replace
+policy_overlays:
+  documentation-growth-tracking:
+    user_facing_suffixes:
+      - .py
+      - .json
+      - .yaml
+      - .yml
+  line-length-limit:
+    include_suffixes:
+      - .py
+      - .json
+      - .yaml
+      - .yml
+policies:
+  - documentation-growth-tracking
+  - line-length-limit

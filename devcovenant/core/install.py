@@ -56,9 +56,9 @@ METADATA_PATHS = [
 
 BLOCK_BEGIN = "<!-- DEVCOV:BEGIN -->"
 BLOCK_END = "<!-- DEVCOV:END -->"
-LICENSE_TEMPLATE = "LICENSE_GPL-3.0.txt"
+LICENSE_TEMPLATE = "LICENSE"
 POLICY_ASSET_MANIFEST = "policy_assets.yaml"
-PROFILE_MANIFEST_NAME = "profile.yaml"
+PROFILE_MANIFEST_FALLBACK = "profile.yaml"
 PROFILE_ROOT_NAME = "profiles"
 POLICY_ROOT_NAME = "policies"
 PROFILE_ASSETS_DIR = "assets"
@@ -476,8 +476,9 @@ def _load_profile_manifest(
     """Load a profile manifest from custom/core profiles."""
     core_root = package_root / "core" / PROFILE_ROOT_NAME
     custom_root = target_root / DEV_COVENANT_DIR / "custom" / PROFILE_ROOT_NAME
-    custom_manifest = custom_root / profile / PROFILE_MANIFEST_NAME
-    core_manifest = core_root / profile / PROFILE_MANIFEST_NAME
+    manifest_name = f"{profile}.yaml"
+    custom_manifest = custom_root / profile / manifest_name
+    core_manifest = core_root / profile / manifest_name
     if custom_manifest.exists():
         return _load_yaml(custom_manifest) or {}
     if core_manifest.exists():

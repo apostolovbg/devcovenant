@@ -1,0 +1,23 @@
+version: 1
+profile: bash
+category: language
+suffixes:
+  - .sh
+  - .bash
+  - .zsh
+ignore_dirs: []
+assets: []
+policy_overlays:
+  documentation-growth-tracking:
+    user_facing_suffixes:
+      - .sh
+      - .bash
+      - .zsh
+  line-length-limit:
+    include_suffixes:
+      - .sh
+      - .bash
+      - .zsh
+policies:
+  - documentation-growth-tracking
+  - line-length-limit

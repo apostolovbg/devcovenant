@@ -57,46 +57,47 @@ active-profile fragments (base first, derived second) → OS fragment
 (`devcovenant/core/profiles/global/assets/gitignore_os.txt`).
 
 ## Default-on profiles
-Only `global` stays truly always-on; `docs`, `data`, and `suffixes` install as
-defaults. Remove them from `profiles.active` and rerun `devcovenant update`
+Only `global` stays truly always-on; `docs`, `data`, and `suffixes` install
+as defaults. Remove them from `profiles.active` and rerun `devcovenant update`
 to drop their assets/overlays.
 ### Profile: global (baseline)
 - Base: applied to every install by default.
-- Assets: canonical `AGENTS.md`, theme-ready README headers, `CHANGELOG.md`,
-  `CONTRIBUTING.md`, `LICENSE`, `VERSION`, `.pre-commit-config.yaml`,
-  `.github/workflows/ci.yml`, `devcovenant/README.md`, `tools/` helpers,
-  `devcovenant/core/profiles/global/assets/gitignore_fragment.txt`.
+- Assets (from `global/global.yaml`): `AGENTS.md`, `README.md`, `CHANGELOG.md`,
+  `CONTRIBUTING.md`, `SPEC.md`, `PLAN.md`, `LICENSE`, `VERSION`,
+  `devcovenant/README.md`, `.pre-commit-config.yaml`, `.github/workflows/ci.
+  yml`,
+  and the merged gitignore fragment.
 - Policy overlays:
-  - `version-sync`: `version_file=VERSION`, `readme_files` + `changelog_file` +
-    `license_files` also declare the baseline artifacts to watch.
-  - `last-updated-placement`: requires headers in every managed doc.
-- Policies (always applied): core global policies + overlay metadata.
-- Gitignore fragment: OS/editor cleanup plus fallback to the global tooling
-  entries.
+  - `version-sync`: `version_file=VERSION`, managed docs in `readme_files`,
+    `changelog_file=CHANGELOG.md`, `license_files=LICENSE`.
+  - `last-updated-placement`: allowed globs mirror the managed docs above.
+  - `documentation-growth-tracking`: `user_visible_files` mirror the managed
+    docs above.
+- Gitignore fragment: OS/editor/tooling cleanup merged into `.gitignore`.
 
-### Profile: docs (default) (default)
+### Profile: docs (default)
 - Base: global.
-- Assets: `docs/` scaffolding (mkdocs.yml, docs/landing sample) and doc-focused
-  README sections.
+- Assets: `docs/assets/mkdocs.yml`.
 - Policy overlays:
-  - `line-length-limit`: `include_suffixes=.md,.rst,.txt,.adoc`.
-- `documentation-growth-tracking`: `doc_quality_files` tracks
-  README.md, CONTRIBUTING.md, AGENTS.md, SPEC.md, PLAN.md, and
-  `devcovenant/README.md`, while `user_visible_files` adds docs folder globs.
+  - `line-length-limit`: `include_suffixes` expanded to `.md,.rst,.txt`.
+  - `documentation-growth-tracking`: inherits global doc set; no extra dirs.
 - Gitignore additions: `_site/`, `site/`, `build/`.
 
-### Profile: data (default) (default)
+### Profile: data (default)
 - Base: global.
-- Assets: `data/README.md`, `data/manifest.csv`, sample dataset stub.
-- Policy overlays:
-- `line-length-limit` and `documentation-growth-tracking` now cover
-  `.csv`, `.tsv`, `.json`, `.ndjson`, `.parquet`, and `.avro`.
+- Assets: none (overlay-only profile).
+- Policy overlays (from `data/data.yaml`):
+  - `line-length-limit`: exclude `data/**`.
+  - `documentation-growth-tracking`: exclude `data/**`.
+  - `security-scanner`: exclude `data/**`.
+  - `name-clarity`: exclude `data/**`.
+  - `new-modules-need-tests`: exclude `data/**` and drop it from watch dirs.
 - Gitignore fragment: `data/raw/`, `data/tmp/`, `data/cache/`.
 
-### Profile: suffixes (default) (default)
-- Base: global (overlay bucket only).
-- Assets: suffix mapping JSON that installers introspect for templates.
-- Policy overlays: share suffix coverage with the selected languages.
+### Profile: suffixes (default)
+- Base: global (overlay helper only).
+- Assets: suffix mapping JSON for installers.
+- Policy overlays: none.
 - Gitignore fragment: none beyond global.
 
 ## Language profiles
@@ -114,24 +115,18 @@ Each language profile includes:
 
 ### Profile: python
 - Suffixes: `.py,.pyi,.pyw,.ipynb`.
-- Assets: `pyproject.toml`, `requirements.in`, `requirements.lock`, `venv.md`.
-- Policy overlays:
-  - `dependency-license-sync`: `requirements.*`, `pyproject.toml`.
-- `devflow-run-gates`: `required_commands=pytest` plus
-  `python3 -m unittest discover`.
-  - `documentation-growth-tracking`: track `.py` and `docs/` references.
-  - `line-length-limit`, `name-clarity`, `docstring-and-comment-coverage`,
-    `new-modules-need-tests`, `security-scanner`: include `.py` suffix.
+- Assets: `pyproject.toml`, `requirements.in`, `requirements.lock`.
+- Policy overlays (from `python/python.yaml`):
+  - `dependency-license-sync`: watch `requirements.in`, `requirements.lock`,
+    and `pyproject.toml`.
+  - `devflow-run-gates`: `required_commands=["pytest","python3 -m unittest d
+  iscover"]`.
+  - `documentation-growth-tracking`, `line-length-limit`, `name-clarity`,
+    `docstring-and-comment-coverage`, `new-modules-need-tests`,
+    `security-scanner`: include `.py` suffix; tests watch `tests`.
   - `version-sync`: `pyproject_files=pyproject.toml`.
-- Gitignore entries:
-  `- .venv/`
-  `- __pycache__/`
-  `- .mypy_cache/`
-  `- .pytest_cache/`
-  `- build/`
-  `- dist/`
-  `- *.egg-info/`
-- Scanner scripts: python adapters for docstrings/names/tests/security.
+- Gitignore: `.venv/`, `__pycache__/`, `.mypy_cache/`, `.pytest_cache/`,
+  `build/`, `dist/`, `*.egg-info/`.
 
 ### Profile: django
 - Base: python.
@@ -164,29 +159,22 @@ Each language profile includes:
 ### JavaScript family
 - Scopes: javascript, typescript, react, nextjs, vue, nuxt, svelte,
   angular, nestjs, express, node.
-- Shared assets:
-  - `package.json`
-  - lockfiles (`package-lock.json`, `yarn.lock`, `pnpm-lock.yaml`)
-  - tooling (`tsconfig.json`, `webpack.config.js`, `vite.config.ts`,
-    `next.config.js`, `vue.config.js`, `nest-cli.json`)
+- Shared assets: `package.json`; lockfiles (`package-lock.json`, `yarn.lock`,
+  `pnpm-lock.yaml`); tooling configs (`tsconfig.json`, `webpack.config.js`,
+  `vite.config.ts`, `next.config.js`, `vue.config.js`, `nest-cli.json`).
 - Shared gitignore: `node_modules/`, `dist/`, `build/`, `.cache/`, `.turbo/`,
   `.parcel-cache/`, `.next/`, `.nuxt/`, `coverage/`, `*.log`.
-- Policy overlays:
-  - `dependency-license-sync`: package + lock files.
-  - `devflow-run-gates`: `npm test`/`yarn test` defaults.
-  - `documentation-growth-tracking`: `.js,.jsx,.ts,.tsx,.vue` (adds `.svelte`).
-  - `line-length-limit`: include the same suffixes.
+- Policy overlays (see per-profile YAML):
+  - javascript: dependency/license sync on package + lock files; devflow gate
+    `npm test`; doc-growth/line-length/name-clarity/new-tests for `.js`.
+  - typescript: inherit JS overlays, add `.ts/.tsx` coverage and `tsconfig.j
+  son` asset.
+  - react: inherit TS overlays, add `.jsx/.tsx` coverage and framework configs
+    (e.g., `vite.config.*`).
 - Scanner policies (future): `name-clarity`, `security-scanner`,
-  `new-modules-need-tests` adopt JS/TS adapters once implemented.
-- Individual frameworks add assets:
-  - Angular (`angular.json`, `tsconfig.app.json`)
-  - React (`vite.config.*`)
-  - Next.js (`next.config.js`)
-  - Nuxt (`nuxt.config.ts`)
-  - Vue (`vue.config.js`)
-  - Svelte (`svelte.config.js`)
-  - NestJS (`nest-cli.json`, `tsconfig.build.json`)
-  - Express (`app.js`, `server.js`)
+  `new-modules-need-tests` get JS/TS adapters when shipped.
+- Individual frameworks add assets (nextjs, vue, nuxt, svelte, angular,
+  nestjs, express, node) using the shared patterns above.
 
 ### Profile: go
 - Suffixes: `.go`.
@@ -348,21 +336,32 @@ Each language profile includes:
 ### Profile: devcovrepo (repo-specific)
 - Base: global + python + docs + data, tuned for DevCovenant’s own sources.
 - Assets: metadata-only overlay in
-  `devcovenant/custom/profiles/devcovrepo/profile.yaml`.
+  `devcovenant/custom/profiles/devcovrepo/devcovrepo.yaml`.
 - Policy overlays:
   - `new-modules-need-tests`: trims the exclusion list and points both
     `watch_dirs` and `tests_watch_dirs` at `tests/devcovenant/core` and
     `tests/devcovenant/custom` so the mirrored adapters remain covered.
 - Gitignore: none beyond the aggregate fragments from the active base
   profile set.
+- Activation: enabled only when `devcov_core_include: true` (dogfooding in the
+  DevCovenant repo); not shipped/active in user installs.
 
 ### Profile: devcovuser (user-focused)
 - Base: global + docs + data (keeps interpreter languages optional for users).
 - Assets: metadata-only overlay in
-  `devcovenant/custom/profiles/devcovuser/profile.yaml`.
+  `devcovenant/core/profiles/devcovuser/devcovuser.yaml` (core, always
+  shipped).
 - Policy overlays:
   - `new-modules-need-tests`: excludes `devcovenant/**` while including
     `devcovenant/custom/**` so user-side policies do not enforce the tooling
     tree but still monitor custom additions.
 - Gitignore: none beyond the aggregate fragments from the active base
   profile set.
+- Activation: default-on in user installs; automatically disabled when
+  `devcov_core_include: true` so `devcovrepo` can enforce the full
+  `devcovenant/**` tree during self-dogfood.
+- Shared assets: `package.json`; lockfiles (`package-lock.json`, `yarn.lock`,
+  `pnpm-lock.yaml`); tooling configs (`tsconfig.json`, `webpack.config.js`,
+  `vite.config.ts`, `next.config.js`, `vue.config.js`, `nest-cli.json`).
+  - typescript: inherit JS overlays; add `.ts/.tsx` coverage and
+    `tsconfig.json`.

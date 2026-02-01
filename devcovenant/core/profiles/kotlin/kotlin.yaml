@@ -1,0 +1,34 @@
+version: 1
+profile: kotlin
+category: language
+suffixes:
+  - .kt
+  - .kts
+ignore_dirs:
+  - build
+assets:
+  - path: build.gradle.kts
+    template: build.gradle.kts
+    mode: replace
+policy_overlays:
+  dependency-license-sync:
+    dependency_files:
+      - build.gradle.kts
+      - build.gradle
+      - pom.xml
+  devflow-run-gates:
+    required_commands:
+      - gradle test
+  documentation-growth-tracking:
+    user_facing_suffixes:
+      - .kt
+      - .kts
+  line-length-limit:
+    include_suffixes:
+      - .kt
+      - .kts
+policies:
+  - dependency-license-sync
+  - devflow-run-gates
+  - documentation-growth-tracking
+  - line-length-limit

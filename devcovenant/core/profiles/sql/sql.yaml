@@ -1,0 +1,20 @@
+version: 1
+profile: sql
+category: ops
+suffixes:
+  - .sql
+ignore_dirs: []
+assets:
+  - path: schema.sql
+    template: schema.sql
+    mode: replace
+policy_overlays:
+  documentation-growth-tracking:
+    user_facing_suffixes:
+      - .sql
+  line-length-limit:
+    include_suffixes:
+      - .sql
+policies:
+  - documentation-growth-tracking
+  - line-length-limit

@@ -85,11 +85,6 @@ policy-specific handles listed below.
 - **Assets:** `CHANGELOG.md`, `VERSION`
 - **Profiles:** `global` (disabled unless requested)
 
-### profile-policy-map
-- **Metadata handles:** `profile_map_file`, `policy_map_file`, `profile_scopes`
-- **Assets:** `PROFILE_MAP.md`, `POLICY_MAP.md`
-- **Profiles:** `global`
-
 ### managed-doc-assets
 - **Metadata handles:** `profile_scopes`
 - **Assets:** `devcovenant/core/profiles/global/assets/*.yaml`

@@ -1,0 +1,36 @@
+version: 1
+profile: php
+category: language
+suffixes:
+  - .php
+ignore_dirs:
+  - vendor
+assets:
+  - path: composer.json
+    template: composer.json
+    mode: replace
+  - path: composer.lock
+    template: composer.lock
+    mode: replace
+  - path: phpunit.xml
+    template: phpunit.xml
+    mode: replace
+policy_overlays:
+  dependency-license-sync:
+    dependency_files:
+      - composer.json
+      - composer.lock
+  devflow-run-gates:
+    required_commands:
+      - phpunit
+  documentation-growth-tracking:
+    user_facing_suffixes:
+      - .php
+  line-length-limit:
+    include_suffixes:
+      - .php
+policies:
+  - dependency-license-sync
+  - devflow-run-gates
+  - documentation-growth-tracking
+  - line-length-limit

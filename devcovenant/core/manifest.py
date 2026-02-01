@@ -44,7 +44,6 @@ DEFAULT_CORE_FILES = [
     "devcovenant/core/cli_options.py",
     "devcovenant/core/profiles/global/assets/AGENTS.md",
     "devcovenant/core/profiles/global/assets/CONTRIBUTING.md",
-    "devcovenant/core/profiles/global/assets/LICENSE_GPL-3.0.txt",
     "devcovenant/core/profiles/global/assets/VERSION",
     "devcovenant/core/profiles/global/assets/.pre-commit-config.yaml",
     "devcovenant/core/profiles/global/assets/.github/workflows/ci.yml",

@@ -32,6 +32,8 @@ class ManagedDocAssetsCheck(PolicyCheck):
             {"doc": "SPEC.md", "descriptor": "SPEC.yaml"},
             {"doc": "CHANGELOG.md", "descriptor": "CHANGELOG.yaml"},
             {"doc": "CONTRIBUTING.md", "descriptor": "CONTRIBUTING.yaml"},
+            {"doc": "LICENSE", "descriptor": "LICENSE.yaml"},
+            {"doc": "CITATION.cff", "descriptor": "CITATION.yaml"},
         ]
 
     def check(self, context: CheckContext) -> List[Violation]:
@@ -204,10 +206,16 @@ class ManagedDocAssetsCheck(PolicyCheck):
                         "**Managed By:**", 1
                     )[1].strip()
 
+        managed_block = "\n".join(managed_block_lines).rstrip()
+        if not managed_block_lines:
+            managed_block = text.rstrip()
+        if not metadata["doc_id"]:
+            metadata["doc_id"] = doc_path.stem.upper()
+
         return {
             "doc_id": metadata["doc_id"],
             "doc_type": metadata["doc_type"],
             "managed_by": metadata["managed_by"],
             "header_lines": header_lines,
-            "managed_block": "\n".join(managed_block_lines).rstrip(),
+            "managed_block": managed_block,
         }

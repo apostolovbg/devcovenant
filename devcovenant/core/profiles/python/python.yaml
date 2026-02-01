@@ -1,0 +1,77 @@
+version: 1
+profile: python
+category: language
+suffixes:
+  - .py
+  - .pyi
+  - .pyw
+  - .ipynb
+ignore_dirs:
+  - .venv
+  - __pycache__
+  - .pytest_cache
+  - .mypy_cache
+  - build
+  - dist
+assets:
+  - path: requirements.in
+    template: requirements.in
+    mode: merge
+  - path: requirements.lock
+    template: requirements.lock
+    mode: merge
+  - path: .python-version
+    template: .python-version
+    mode: replace
+  - path: pyproject.toml
+    template: pyproject.toml
+    mode: replace
+  - path: venv.md
+    template: venv.md
+    mode: replace
+autogen_do_not_apply:
+  - raw-string-escapes
+policy_overlays:
+  dependency-license-sync:
+    dependency_files:
+      - requirements.in
+      - requirements.lock
+      - pyproject.toml
+  devflow-run-gates:
+    required_commands:
+      - pytest
+      - python3 -m unittest discover
+  documentation-growth-tracking:
+    user_facing_suffixes:
+      - .py
+  line-length-limit:
+    include_suffixes:
+      - .py
+  version-sync:
+    pyproject_files:
+      - pyproject.toml
+  security-scanner:
+    include_suffixes:
+      - .py
+  new-modules-need-tests:
+    include_suffixes:
+      - .py
+    watch_dirs:
+      - tests
+  docstring-and-comment-coverage:
+    include_suffixes:
+      - .py
+  name-clarity:
+    include_suffixes:
+      - .py
+policies:
+  - dependency-license-sync
+  - devflow-run-gates
+  - docstring-and-comment-coverage
+  - documentation-growth-tracking
+  - line-length-limit
+  - name-clarity
+  - new-modules-need-tests
+  - raw-string-escapes
+  - security-scanner
+  - version-sync

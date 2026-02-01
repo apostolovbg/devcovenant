@@ -1,0 +1,30 @@
+version: 1
+profile: devcovrepo
+category: repo
+suffixes: []
+ignore_dirs: []
+assets: []
+policy_overlays:
+  documentation-growth-tracking:
+    user_visible_dirs:
+      - devcovenant/docs
+    doc_quality_dirs:
+      - devcovenant/docs
+  line-length-limit:
+    exclude_globs:
+      - devcovenant/registry/**
+  new-modules-need-tests:
+    exclude_prefixes:
+      - build
+      - dist
+      - node_modules
+      - tests
+    watch_dirs:
+      - tests
+      - tests/devcovenant/core
+      - tests/devcovenant/custom
+    tests_watch_dirs:
+      - tests
+      - tests/devcovenant/core
+      - tests/devcovenant/custom
+autogen_do_not_apply: []

@@ -80,9 +80,10 @@ def test_selector_without_includes_matches_everything(tmp_path):
 
 def test_build_watchlists_normalizes_paths():
     """Watchlists should normalize mixed path separators."""
+    backslash = "\\"  # escaped once; f-string yields backslash in path literal
     policy = make_policy(
         watch_files="README.md, docs/guide.md ",
-        watch_dirs=["project_lib", "engines\\custom"],
+        watch_dirs=["project_lib", f"engines{backslash}custom"],
     )
     files, dirs = build_watchlists(policy)
     assert files == ["README.md", "docs/guide.md"]

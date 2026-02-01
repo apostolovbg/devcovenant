@@ -1,0 +1,39 @@
+version: 1
+profile: dotnet
+category: language
+suffixes:
+  - .cs
+  - .fs
+  - .vb
+ignore_dirs:
+  - bin
+  - obj
+assets:
+  - path: global.json
+    template: global.json
+    mode: replace
+  - path: packages.lock.json
+    template: packages.lock.json
+    mode: replace
+policy_overlays:
+  dependency-license-sync:
+    dependency_files:
+      - packages.lock.json
+  devflow-run-gates:
+    required_commands:
+      - dotnet test
+  documentation-growth-tracking:
+    user_facing_suffixes:
+      - .cs
+      - .fs
+      - .vb
+  line-length-limit:
+    include_suffixes:
+      - .cs
+      - .fs
+      - .vb
+policies:
+  - dependency-license-sync
+  - devflow-run-gates
+  - documentation-growth-tracking
+  - line-length-limit

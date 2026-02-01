@@ -1,0 +1,46 @@
+version: 1
+profile: angular
+category: framework
+suffixes:
+  - .ts
+  - .html
+  - .css
+  - .scss
+ignore_dirs:
+  - node_modules
+  - dist
+  - .angular
+assets:
+  - path: angular.json
+    template: angular.json
+    mode: replace
+  - path: tsconfig.json
+    template: tsconfig.json
+    mode: replace
+policy_overlays:
+  dependency-license-sync:
+    dependency_files:
+      - package.json
+      - package-lock.json
+      - yarn.lock
+      - pnpm-lock.yaml
+  devflow-run-gates:
+    required_commands:
+      - npm test
+  documentation-growth-tracking:
+    user_facing_suffixes:
+      - .ts
+      - .html
+      - .css
+      - .scss
+  line-length-limit:
+    include_suffixes:
+      - .ts
+      - .html
+      - .css
+      - .scss
+policies:
+  - dependency-license-sync
+  - devflow-run-gates
+  - documentation-growth-tracking
+  - line-length-limit

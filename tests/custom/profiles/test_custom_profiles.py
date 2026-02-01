@@ -20,7 +20,7 @@ def test_custom_profile_manifest_is_discovered(tmp_path: Path) -> None:
         / "custom"
         / "profiles"
         / "customlang"
-        / "profile.yaml"
+        / "customlang.yaml"
     )
     _write_yaml(
         custom_manifest,

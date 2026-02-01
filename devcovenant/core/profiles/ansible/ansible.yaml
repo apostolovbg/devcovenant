@@ -1,0 +1,37 @@
+version: 1
+profile: ansible
+category: ops
+suffixes:
+  - .yml
+  - .yaml
+  - .j2
+  - .ini
+ignore_dirs:
+  - .ansible
+assets:
+  - path: ansible.cfg
+    template: ansible.cfg
+    mode: replace
+  - path: inventory.ini
+    template: inventory.ini
+    mode: replace
+policy_overlays:
+  devflow-run-gates:
+    required_commands:
+      - ansible-lint
+  documentation-growth-tracking:
+    user_facing_suffixes:
+      - .yml
+      - .yaml
+      - .j2
+      - .ini
+  line-length-limit:
+    include_suffixes:
+      - .yml
+      - .yaml
+      - .j2
+      - .ini
+policies:
+  - devflow-run-gates
+  - documentation-growth-tracking
+  - line-length-limit

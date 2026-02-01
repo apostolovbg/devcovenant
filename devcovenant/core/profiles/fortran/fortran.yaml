@@ -1,0 +1,30 @@
+version: 1
+profile: fortran
+category: language
+suffixes:
+  - .f
+  - .f90
+  - .f95
+  - .f03
+  - .f08
+ignore_dirs:
+  - build
+assets: []
+policy_overlays:
+  documentation-growth-tracking:
+    user_facing_suffixes:
+      - .f
+      - .f90
+      - .f95
+      - .f03
+      - .f08
+  line-length-limit:
+    include_suffixes:
+      - .f
+      - .f90
+      - .f95
+      - .f03
+      - .f08
+policies:
+  - documentation-growth-tracking
+  - line-length-limit

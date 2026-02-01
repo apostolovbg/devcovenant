@@ -29,6 +29,182 @@ Example entry:
 
 ## Version 0.2.6
 
+- 2026-02-01: Retired the profile-policy-map custom policy and clarified that
+  core profile YAMLs are static descriptors (PROFILE/POLICY maps are references
+  only); aligned SPEC/PLAN/AGENTS and registries accordingly.
+  Files:
+  AGENTS.md
+  PLAN.md
+  POLICY_MAP.md
+  SPEC.md
+  devcovenant/registry/global/policy_metadata_schema.yaml
+  devcovenant/registry/local/policy_registry.yaml
+  devcovenant/custom/policies/profile_policy_map/profile_policy_map.py
+  devcovenant/custom/policies/profile_policy_map/profile_policy_map.yaml
+  tests/custom/policies/test_profile_policy_map.py
+
+- 2026-02-01: Filled key profile descriptors from stubs (data exclusions, Rails
+  manifest/policies, Angular/JVM build gates, Quarkus assets) to match the
+  reference guidance.
+  Files:
+  devcovenant/core/profiles/data/data.yaml
+  devcovenant/core/profiles/rails/rails.yaml
+  devcovenant/core/profiles/angular/angular.yaml
+  devcovenant/core/profiles/quarkus/quarkus.yaml
+  devcovenant/core/profiles/express/express.yaml
+  devcovenant/core/profiles/nestjs/nestjs.yaml
+  devcovenant/core/profiles/react/react.yaml
+  devcovenant/core/profiles/nextjs/nextjs.yaml
+  devcovenant/core/profiles/vue/vue.yaml
+  devcovenant/core/profiles/nuxt/nuxt.yaml
+  devcovenant/core/profiles/svelte/svelte.yaml
+  devcovenant/core/profiles/flutter/flutter.yaml
+  devcovenant/core/profiles/dart/dart.yaml
+  devcovenant/core/profiles/kotlin/kotlin.yaml
+  devcovenant/core/profiles/scala/scala.yaml
+  devcovenant/core/profiles/groovy/groovy.yaml
+  devcovenant/core/profiles/csharp/csharp.yaml
+  devcovenant/core/profiles/fsharp/fsharp.yaml
+  devcovenant/core/profiles/laravel/laravel.yaml
+  devcovenant/core/profiles/symfony/symfony.yaml
+  devcovenant/core/profiles/spring/spring.yaml
+  devcovenant/core/profiles/micronaut/micronaut.yaml
+  devcovenant/core/profiles/php/php.yaml
+  devcovenant/core/profiles/terraform/terraform.yaml
+  devcovenant/core/profiles/docker/docker.yaml
+  devcovenant/core/profiles/kubernetes/kubernetes.yaml
+  devcovenant/core/profiles/ansible/ansible.yaml
+  devcovenant/core/profiles/objective-c/objective-c.yaml
+  devcovenant/core/profiles/swift/swift.yaml
+  devcovenant/core/profiles/zig/zig.yaml
+  devcovenant/core/profiles/ocaml/ocaml.yaml
+  devcovenant/core/profiles/nim/nim.yaml
+  devcovenant/core/profiles/lua/lua.yaml
+  devcovenant/core/profiles/perl/perl.yaml
+  devcovenant/core/profiles/r/r.yaml
+  devcovenant/core/profiles/lisp/lisp.yaml
+  devcovenant/core/run_tests.py
+  SPEC.md
+  PLAN.md
+
+- 2026-02-01: Tracked the new per-profile descriptors and managed doc assets to
+  align metadata with PROFILE_MAP/POLICY_MAP.
+  Files:
+  devcovenant/core/profiles/global/assets/CITATION.yaml
+  devcovenant/core/profiles/global/assets/LICENSE.yaml
+  devcovenant/core/profiles/global/global.yaml
+  devcovenant/core/profiles/angular/angular.yaml
+  devcovenant/core/profiles/ansible/ansible.yaml
+  devcovenant/core/profiles/bash/bash.yaml
+  devcovenant/core/profiles/c/c.yaml
+  devcovenant/core/profiles/clojure/clojure.yaml
+  devcovenant/core/profiles/cobol/cobol.yaml
+  devcovenant/core/profiles/cpp/cpp.yaml
+  devcovenant/core/profiles/crystal/crystal.yaml
+  devcovenant/core/profiles/csharp/csharp.yaml
+  devcovenant/core/profiles/dart/dart.yaml
+  devcovenant/core/profiles/data/data.yaml
+  devcovenant/core/profiles/devcovuser/devcovuser.yaml
+  devcovenant/core/profiles/django/django.yaml
+  devcovenant/core/profiles/docker/docker.yaml
+  devcovenant/core/profiles/docs/docs.yaml
+  devcovenant/core/profiles/dotnet/dotnet.yaml
+  devcovenant/core/profiles/elixir/elixir.yaml
+  devcovenant/core/profiles/erlang/erlang.yaml
+  devcovenant/core/profiles/express/express.yaml
+  devcovenant/core/profiles/fastapi/fastapi.yaml
+  devcovenant/core/profiles/flask/flask.yaml
+  devcovenant/core/profiles/flutter/flutter.yaml
+  devcovenant/core/profiles/fortran/fortran.yaml
+  devcovenant/core/profiles/frappe/frappe.yaml
+  devcovenant/core/profiles/fsharp/fsharp.yaml
+  devcovenant/core/profiles/go/go.yaml
+  devcovenant/core/profiles/groovy/groovy.yaml
+  devcovenant/core/profiles/haskell/haskell.yaml
+  devcovenant/core/profiles/java/java.yaml
+  devcovenant/core/profiles/javascript/javascript.yaml
+  devcovenant/core/profiles/julia/julia.yaml
+  devcovenant/core/profiles/kotlin/kotlin.yaml
+  devcovenant/core/profiles/kubernetes/kubernetes.yaml
+  devcovenant/core/profiles/laravel/laravel.yaml
+  devcovenant/core/profiles/lisp/lisp.yaml
+  devcovenant/core/profiles/lua/lua.yaml
+  devcovenant/core/profiles/matlab/matlab.yaml
+  devcovenant/core/profiles/micronaut/micronaut.yaml
+  devcovenant/core/profiles/nestjs/nestjs.yaml
+  devcovenant/core/profiles/nextjs/nextjs.yaml
+  devcovenant/core/profiles/nim/nim.yaml
+  devcovenant/core/profiles/nuxt/nuxt.yaml
+  devcovenant/core/profiles/objective-c/objective-c.yaml
+  devcovenant/core/profiles/ocaml/ocaml.yaml
+  devcovenant/core/profiles/pascal/pascal.yaml
+  devcovenant/core/profiles/perl/perl.yaml
+  devcovenant/core/profiles/php/php.yaml
+  devcovenant/core/profiles/powershell/powershell.yaml
+  devcovenant/core/profiles/prolog/prolog.yaml
+  devcovenant/core/profiles/python/python.yaml
+  devcovenant/core/profiles/quarkus/quarkus.yaml
+  devcovenant/core/profiles/r/r.yaml
+  devcovenant/core/profiles/rails/rails.yaml
+  devcovenant/core/profiles/react/react.yaml
+  devcovenant/core/profiles/ruby/ruby.yaml
+  devcovenant/core/profiles/rust/rust.yaml
+  devcovenant/core/profiles/scala/scala.yaml
+  devcovenant/core/profiles/scheme/scheme.yaml
+  devcovenant/core/profiles/spring/spring.yaml
+  devcovenant/core/profiles/sql/sql.yaml
+  devcovenant/core/profiles/suffixes/suffixes.yaml
+  devcovenant/core/profiles/svelte/svelte.yaml
+  devcovenant/core/profiles/swift/swift.yaml
+  devcovenant/core/profiles/symfony/symfony.yaml
+  devcovenant/core/profiles/terraform/terraform.yaml
+  devcovenant/core/profiles/typescript/typescript.yaml
+  devcovenant/core/profiles/vue/vue.yaml
+  devcovenant/core/profiles/zig/zig.yaml
+- 2026-02-01: Synced dependency license records and metadata classifiers; added
+  AUTO_LICENSE_SYNC marker to license assets and declared Python 3.13/3.14
+  support in PyPI classifiers.
+  Files:
+  THIRD_PARTY_LICENSES.md
+  licenses/AUTO_LICENSE_SYNC.txt
+  pyproject.toml
+  devcovenant/custom/profiles/devcovrepo/devcovrepo.yaml
+- 2026-02-01: Added per-profile descriptors (`<profile>.yaml`) for all core
+  and custom profiles, refreshed the profile catalog, and wired loaders to
+  prefer the new filenames while keeping the old `profile.yaml` fallback.
+  Files:
+  PROFILE_MAP.md
+  devcovenant/core/profiles.py
+  devcovenant/core/install.py
+  devcovenant/registry/local/profile_catalog.yaml
+  devcovenant/core/profiles/*/*.yaml
+  devcovenant/custom/profiles/devcovrepo/devcovrepo.yaml
+  devcovenant/custom/profiles/devcovuser/devcovuser.yaml
+  tests/core/profiles/test_profiles.py
+  tests/custom/profiles/test_custom_profiles.py
+  devcovenant/core/policies/line_length_limit/line_length_limit.yaml
+  devcovenant/core/profiles/javascript/javascript.yaml
+  devcovenant/core/profiles/typescript/typescript.yaml
+  devcovenant/core/profiles/react/react.yaml
+  devcovenant/core/profiles/data/data.yaml
+- 2026-02-01: Removed the temporary helper script
+  `devcovenant/core/generate_policy_metadata_schema.py`; schema generation now
+  runs inside the refresh pipeline.
+  Files:
+  devcovenant/core/generate_policy_metadata_schema.py
+- 2026-01-31: Switched DevCovenant to MIT (assets, docs, PyPI metadata) and
+  refreshed citation authors/license/version.
+  Files:
+  LICENSE
+  devcovenant/core/profiles/global/assets/LICENSE_GPL-3.0.txt
+  README.md
+  devcovenant/README.md
+  pyproject.toml
+  CITATION.cff
+- 2026-01-31: Cleaned raw-string-escapes test fixtures to avoid policy/flake8
+  noise while preserving coverage of bare-backslash detection.
+  Files:
+  tests/core/policies/raw_string_escapes/tests/test_raw_string_escapes.py
 - 2026-01-30: Removed dogfood-only policies, added the repo-only
   `devcov-raw-string-escapes` policy, and implemented the
   `autogen_do_not_apply`/`manual_force_apply` config flow with python
@@ -196,7 +372,7 @@ Example entry:
   devcovenant/core/stock_policy_texts.json
 
 - 2026-01-29: Removed the legacy `devcovenant/registry.json` and
-  `devcovenant/core/update_hashes.py`. Added the new generator
+  `devcovenant/core/update_hashes.py`. Added the helper
   `devcovenant/core/generate_policy_metadata_schema.py` so the schema is
   always derived from the descriptor YAMLs.
   Files:

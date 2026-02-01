@@ -30,7 +30,7 @@ def test_load_profile_catalog_merges_core_and_custom(tmp_path: Path) -> None:
         / "core"
         / "profiles"
         / "python"
-        / "profile.yaml"
+        / "python.yaml"
     )
     custom_manifest = (
         tmp_path
@@ -38,7 +38,7 @@ def test_load_profile_catalog_merges_core_and_custom(tmp_path: Path) -> None:
         / "custom"
         / "profiles"
         / "python"
-        / "profile.yaml"
+        / "python.yaml"
     )
     _write_yaml(core_manifest, core_yaml)
     _write_yaml(custom_manifest, custom_yaml)

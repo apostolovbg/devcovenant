@@ -1,0 +1,40 @@
+version: 1
+profile: laravel
+category: framework
+suffixes:
+  - .php
+  - .blade.php
+ignore_dirs:
+  - vendor
+  - storage
+assets:
+  - path: artisan
+    template: artisan
+    mode: replace
+  - path: composer.json
+    template: composer.json
+    mode: replace
+  - path: composer.lock
+    template: composer.lock
+    mode: replace
+policy_overlays:
+  dependency-license-sync:
+    dependency_files:
+      - composer.json
+      - composer.lock
+  devflow-run-gates:
+    required_commands:
+      - phpunit
+  documentation-growth-tracking:
+    user_facing_suffixes:
+      - .php
+      - .blade.php
+  line-length-limit:
+    include_suffixes:
+      - .php
+      - .blade.php
+policies:
+  - dependency-license-sync
+  - devflow-run-gates
+  - documentation-growth-tracking
+  - line-length-limit

@@ -1,0 +1,31 @@
+version: 1
+profile: csharp
+category: language
+suffixes:
+  - .cs
+ignore_dirs:
+  - bin
+  - obj
+assets:
+  - path: Project.csproj
+    template: Project.csproj
+    mode: replace
+policy_overlays:
+  dependency-license-sync:
+    dependency_files:
+      - Project.csproj
+      - packages.lock.json
+  devflow-run-gates:
+    required_commands:
+      - dotnet test
+  documentation-growth-tracking:
+    user_facing_suffixes:
+      - .cs
+  line-length-limit:
+    include_suffixes:
+      - .cs
+policies:
+  - dependency-license-sync
+  - devflow-run-gates
+  - documentation-growth-tracking
+  - line-length-limit

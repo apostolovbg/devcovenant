@@ -1,0 +1,18 @@
+version: 1
+profile: matlab
+category: language
+suffixes:
+  - .m
+ignore_dirs:
+  - build
+assets: []
+policy_overlays:
+  documentation-growth-tracking:
+    user_facing_suffixes:
+      - .m
+  line-length-limit:
+    include_suffixes:
+      - .m
+policies:
+  - documentation-growth-tracking
+  - line-length-limit

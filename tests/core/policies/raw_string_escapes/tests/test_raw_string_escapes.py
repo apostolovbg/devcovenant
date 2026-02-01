@@ -23,7 +23,7 @@ def _write_module(tmp_path: Path, source: str) -> Path:
 
 def test_detects_suspicious_backslash(tmp_path: Path):
     """Warn when regex uses bare backslashes."""
-    source = 'pattern = "\\s+\\."'
+    source = r'pattern = "\\s+\\."'
     target = _write_module(tmp_path, source)
     context = CheckContext(
         repo_root=tmp_path,
@@ -40,7 +40,7 @@ def test_detects_suspicious_backslash(tmp_path: Path):
 
 def test_allows_raw_strings(tmp_path: Path):
     """Allow raw strings with backslashes."""
-    source = 'regex = r"\\s+"'
+    source = r'regex = r"\s+"'
     target = _write_module(tmp_path, source)
     context = CheckContext(
         repo_root=tmp_path,
@@ -53,7 +53,7 @@ def test_allows_raw_strings(tmp_path: Path):
 
 def test_allows_standard_escape_sequences(tmp_path: Path):
     """Permit standard escaped sequences."""
-    source = 'line = "\\n"'
+    source = r'line = "\n"'
     target = _write_module(tmp_path, source)
     context = CheckContext(
         repo_root=tmp_path,
@@ -66,7 +66,7 @@ def test_allows_standard_escape_sequences(tmp_path: Path):
 
 def test_auto_fix_double_escapes_backslashes(tmp_path: Path):
     """Auto-fix should double unknown escapes."""
-    source = 'path = "C:\\project\\data"'
+    source = r'path = "C:\project\data"'
     target = _write_module(tmp_path, source)
     context = CheckContext(repo_root=tmp_path, changed_files=[target])
     checker = RawStringEscapesCheck()
@@ -76,5 +76,5 @@ def test_auto_fix_double_escapes_backslashes(tmp_path: Path):
     result = fixer.fix(violations[0])
     assert result.success
     updated = target.read_text()
-    assert "\\\\project" in updated
-    assert "\\\\data" in updated
+    assert r"\\project" in updated
+    assert r"\\data" in updated

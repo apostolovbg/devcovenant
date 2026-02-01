@@ -1,0 +1,33 @@
+version: 1
+profile: perl
+category: language
+suffixes:
+  - .pl
+  - .pm
+ignore_dirs:
+  - local
+  - blib
+assets:
+  - path: cpanfile
+    template: cpanfile
+    mode: replace
+policy_overlays:
+  dependency-license-sync:
+    dependency_files:
+      - cpanfile
+  devflow-run-gates:
+    required_commands:
+      - prove -r t
+  documentation-growth-tracking:
+    user_facing_suffixes:
+      - .pl
+      - .pm
+  line-length-limit:
+    include_suffixes:
+      - .pl
+      - .pm
+policies:
+  - dependency-license-sync
+  - devflow-run-gates
+  - documentation-growth-tracking
+  - line-length-limit

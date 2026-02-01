@@ -180,7 +180,7 @@ devcovenant uninstall --target /path/to/repo
 
 The installer records `devcovenant/registry/local/manifest.json` so updates and
 removals remain safe and predictable. If the target repo has no license file,
-DevCovenant installs a GPL-3.0 license by default and will not overwrite an
+DevCovenant installs an MIT license by default and will not overwrite an
 existing license unless forced. When a file must be replaced, the installer
 renames the existing file to `*_old.*` before writing the new one. Managed
 docs such as `SPEC.md` and `PLAN.md` are part of the profile-driven doc asset

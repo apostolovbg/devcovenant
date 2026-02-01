@@ -8,7 +8,7 @@ from typing import Dict, List
 
 import yaml
 
-PROFILE_MANIFEST_NAME = "profile.yaml"
+PROFILE_MANIFEST_FALLBACK = None
 REGISTRY_CATALOG = Path("devcovenant/registry/local/profile_catalog.yaml")
 CORE_PROFILE_ROOT = Path("devcovenant/core/profiles")
 CUSTOM_PROFILE_ROOT = Path("devcovenant/custom/profiles")
@@ -57,10 +57,15 @@ def _profile_assets(profile_dir: Path, repo_root: Path) -> list[str]:
     for entry in scan_root.rglob("*"):
         if not entry.is_file():
             continue
-        if entry.name == PROFILE_MANIFEST_NAME:
+        if entry.name == f"{profile_dir.name}.yaml":
             continue
         assets.append(_relative_path(entry, repo_root))
     return sorted(assets)
+
+
+def _manifest_path(profile_dir: Path) -> Path:
+    """Return the preferred manifest path for a profile directory."""
+    return profile_dir / f"{profile_dir.name}.yaml"
 
 
 def discover_profiles(
@@ -76,7 +81,7 @@ def discover_profiles(
 
     for source, root in (("core", core_root), ("custom", custom_root)):
         for entry in _iter_profile_dirs(root):
-            manifest_path = entry / PROFILE_MANIFEST_NAME
+            manifest_path = _manifest_path(entry)
             manifest = _load_yaml(manifest_path)
             meta = dict(manifest) if isinstance(manifest, dict) else {}
             name = _normalize_profile_name(meta.get("profile") or entry.name)

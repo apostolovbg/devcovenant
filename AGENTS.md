@@ -1,5 +1,5 @@
 # DevCovenant Development Guide
-**Last Updated:** 2026-01-30
+**Last Updated:** 2026-02-01
 **Version:** 0.2.6
 
 <!-- DEVCOV:BEGIN -->
@@ -953,26 +953,6 @@ policy_definitions: AGENTS.md
 
 Every policy definition must include descriptive text immediately after the
 `policy-def` block. Empty policy descriptions are not allowed.
-
-
----
-
-## Policy: Profile Policy Map
-
-```policy-def
-id: profile-policy-map
-severity: error
-auto_fix: false
-enforcement: active
-apply: true
-custom: true
-profile_scopes: devcovrepo
-```
-
-Make sure PROFILE_MAP.md and POLICY_MAP.md document every shipped
-profile and policy so contributors and installers always see
-accurate short-form references that stay in sync with the code.
-
 
 ---
 

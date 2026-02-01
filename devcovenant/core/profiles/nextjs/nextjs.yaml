@@ -1,0 +1,48 @@
+version: 1
+profile: nextjs
+category: framework
+suffixes:
+  - .js
+  - .jsx
+  - .ts
+  - .tsx
+ignore_dirs:
+  - .next
+  - node_modules
+assets:
+  - path: package.json
+    template: package.json
+    mode: replace
+  - path: next.config.js
+    template: next.config.js
+    mode: replace
+  - path: tsconfig.json
+    template: tsconfig.json
+    mode: replace
+policy_overlays:
+  dependency-license-sync:
+    dependency_files:
+      - package.json
+      - package-lock.json
+      - yarn.lock
+      - pnpm-lock.yaml
+  devflow-run-gates:
+    required_commands:
+      - npm test
+  documentation-growth-tracking:
+    user_facing_suffixes:
+      - .js
+      - .jsx
+      - .ts
+      - .tsx
+  line-length-limit:
+    include_suffixes:
+      - .js
+      - .jsx
+      - .ts
+      - .tsx
+policies:
+  - dependency-license-sync
+  - devflow-run-gates
+  - documentation-growth-tracking
+  - line-length-limit

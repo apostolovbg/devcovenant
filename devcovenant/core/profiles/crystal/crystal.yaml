@@ -1,0 +1,30 @@
+version: 1
+profile: crystal
+category: language
+suffixes:
+  - .cr
+ignore_dirs:
+  - lib
+  - .crystal
+assets:
+  - path: shard.yml
+    template: shard.yml
+    mode: replace
+  - path: shard.lock
+    template: shard.lock
+    mode: replace
+policy_overlays:
+  dependency-license-sync:
+    dependency_files:
+      - shard.yml
+      - shard.lock
+  documentation-growth-tracking:
+    user_facing_suffixes:
+      - .cr
+  line-length-limit:
+    include_suffixes:
+      - .cr
+policies:
+  - dependency-license-sync
+  - documentation-growth-tracking
+  - line-length-limit

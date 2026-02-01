@@ -1,0 +1,29 @@
+version: 1
+profile: nim
+category: language
+suffixes:
+  - .nim
+ignore_dirs:
+  - nimcache
+assets:
+  - path: project.nimble
+    template: project.nimble
+    mode: replace
+policy_overlays:
+  dependency-license-sync:
+    dependency_files:
+      - project.nimble
+  devflow-run-gates:
+    required_commands:
+      - nimble test
+  documentation-growth-tracking:
+    user_facing_suffixes:
+      - .nim
+  line-length-limit:
+    include_suffixes:
+      - .nim
+policies:
+  - dependency-license-sync
+  - devflow-run-gates
+  - documentation-growth-tracking
+  - line-length-limit

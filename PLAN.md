@@ -1,5 +1,5 @@
 # DevCovenant Development Plan
-**Last Updated:** 2026-01-28
+**Last Updated:** 2026-02-01
 **Version:** 0.2.6
 
 <!-- DEVCOV:BEGIN -->
@@ -54,6 +54,9 @@ It is the checklist we consult before declaring the spec satisfied.
   change.
 - Clarify that the start gate only needs to execute before edits; it may
   detect outstanding violations and does not have to leave a clean tree.
+- Start recorded after edits now yields a warning (with a brief pause) instead
+  of blocking, but a clean `start → tests → end` run is still required to clear
+  the gate.
 - [done] Startup check (`python3 -m devcovenant check --mode startup`).
 - [done] Policy edits set `updated: true`.
   Run `devcovenant update-policy-registry`.
@@ -125,6 +128,15 @@ It is the checklist we consult before declaring the spec satisfied.
   Warn when required metadata or command hints are absent.
 - [done] Dogfood-only policies (`patches-txt-sync`, `gcv-script-naming`,
   `security-compliance-notes`) are removed from the DevCovenant repo.
+- [not done] Per-profile descriptors (`<profile>.yaml`) must be populated
+  manually (maps are reference only); many profiles are still stubs and need
+  real assets/overlays before marking complete.
+- [not done] Profile-first scoping: policy scopes come only from profiles
+  (and config `profile_overlays.<profile>.custom_policies`), not from policy
+  YAML defaults. Core profiles remain immutable; custom policies can be
+  attached via the overlay mechanism or by defining a custom profile with the
+  desired metadata. Profiles are explicit—no inheritance/family defaults; each
+  profile must list its own assets, suffixes, policies, and overlays.
 
 ### Policy metadata redesign
 - [done] Define per-policy YAML descriptors that include the managed
@@ -200,13 +212,17 @@ It is the checklist we consult before declaring the spec satisfied.
   so the policy ensures the folder grows with useful content, no BS, and is yet
   another documented signal about how to use overrides/custom policies.
 - [not done] Describe how `devcovuser`/`devcovrepo` metadata control the
-- [not done] Describe how `devcovuser`/`devcovrepo` metadata control
-  the `tests/devcovenant/**` mirror: `devcovuser` only mirrors
-  whole `devcovenant/**` tree when `devcov_core_include` is true.
-- [not done] Confirm that `tests/devcovenant/custom/**` mirrors the
-  `devcovuser`/`devcovrepo` overlays, documenting how refresh rebuilds that
-  tree from the global assets so users can see which suites belong to
-  DevCovenant vs. the host project.
+  `tests/devcovenant/**` mirror: `devcovuser` (user installs) mirrors only
+  `devcovenant/custom/**`; when `devcov_core_include` is true (DevCovenant’s
+  own repo), disable `devcovuser` entirely and let `devcovrepo` mirror the
+  full `devcovenant/**` tree.
+- [not done] Test mirroring rules: with `devcovuser` active, mirror only
+  `devcovenant/custom/**` into `tests/devcovenant/custom/**`; when
+  `devcov_core_include` enables `devcovrepo`, mirror the full
+  `devcovenant/**` tree into `tests/devcovenant/**` (no extra
+  `tests/devcovenant/tests/` level). Document how refresh/update rebuild these
+  mirrors so it’s clear which suites belong to DevCovenant versus the host
+  project.
 - [not done] Define how install/update/refresh regenerate `devcovenant/custom`
   and `tests/devcovenant` from core assets while deleting any `devcovrepo`
   prefixed folders/policies and recreating the user-facing `devcovuser` profile
@@ -229,8 +245,11 @@ It is the checklist we consult before declaring the spec satisfied.
 ### Packaging & testing
 - [not done] Ship DevCovenant as a pure-Python package with a console script
   entry.
-- [not done] Keep `requirements.*` aligned with `THIRD_PARTY_LICENSES.md`.
-  Sync `licenses/` accordingly.
+- [done] Keep `requirements.*` aligned with `THIRD_PARTY_LICENSES.md` and sync
+  `licenses/` (license report + AUTO_LICENSE_SYNC marker) whenever manifests
+  change.
+- [done] Publish PyPI classifiers through Python 3.14 (runtime still
+  `requires-python >=3.10`).
 - [not done] Run `pytest` and `python3 -m unittest discover`, mirroring the
   `tests/devcovenant/` layout unless `devcov_core_include` unblocks core.
 
@@ -278,7 +297,27 @@ Below is every missing SPEC requirement, ordered by dependency.
    Mirror `tests/devcovenant/` to the package layout and respect the
    `new-modules-need-tests` policy exclusions.
 12. **Packaging & licensing guardrails.**
-   Build artifacts with assets, enforce GPL-3.0 when needed, and sync licenses.
+   [done] Switch DevCovenant to MIT (assets, docs, PyPI metadata) and sync
+   CITATION.
+   [done] Ship CITATION.cff in sdists/wheels.
+   Build artifacts with assets, enforce MIT when needed, and sync
+   licenses/CITATION.
+13. **Legacy debris cleanup.**
+   Remove obsolete artifacts (e.g., `devcovenant/registry.json`,
+   `devcovenant/config_old.yaml`, and the unused GPL license asset) from the
+   tree, update manifests/install lists, and drop policy/schema references so
+   refresh/install no longer expect them.
+14. **Profile maps → profile descriptors.**
+    Keep core profile YAMLs as the shipped source of truth; `PROFILE_MAP.md`
+    / `POLICY_MAP.md` are reference tables for authors to manually populate
+    policies, suffixes, assets, and overlays. Descriptors stay named
+    `<profile>.yaml`; refresh does not re-materialize maps into manifests.
+15. **Registry/metadata cleanup.**
+    Drop `metadata_handles` from the policy registry (schema already comes
+    from policy YAMLs) and move broad suffix/prefix/glob defaults out of base
+    policies into profile overlays (python/docs/lang-specific and devcovrepo).
+    Audit remaining policies for hard-coded metadata that should live in
+    profiles instead.
 
 ## Execution notes
 - Move completed SPEC bullets to `[done]` with a short note.
@@ -288,6 +327,8 @@ Below is every missing SPEC requirement, ordered by dependency.
 ## Testing and validation
 - Run `devcovenant.run_pre_commit --phase start`, `devcovenant.run_tests`,
   and `devcovenant.run_pre_commit --phase end` for every change.
+- `run_tests` should execute the active `devflow-run-gates.required_commands`
+  (from profiles/config) so mixed stacks get all required suites recorded.
 - Write `.devcov-state/test_status.json` before the final pre-commit phase.
 - Run `python3 -m devcovenant check --fix` when doc assets or `last-updated`
   are modified.
