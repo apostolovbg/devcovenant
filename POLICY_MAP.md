@@ -150,8 +150,8 @@ standard metadata keys plus the specific selectors below.
 - **Metadata handles:** `include_suffixes`, `profile_scopes`
 - **Assets:** scanner adapters (e.g., `scanners/python.py`),
   no files are written
-- **Profiles:** `python` (future coverage for `go`, `rust`, `java`, `csharp`,
-  `javascript`, `typescript`)
+- **Profiles:** `python`, `javascript`, `typescript`, `go`, `rust`, `java`,
+  `csharp`
 
 ### raw-string-escapes
 - **Metadata handles:** `id`, `status`, `severity`, `auto_fix`, `updated`,

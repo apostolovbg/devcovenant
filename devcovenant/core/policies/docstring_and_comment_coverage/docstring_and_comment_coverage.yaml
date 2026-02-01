@@ -11,8 +11,15 @@ metadata:
   enforcement: active
   apply: 'true'
   custom: 'false'
-  profile_scopes: python
-  include_suffixes: .py
+  profile_scopes:
+    - python
+    - javascript
+    - typescript
+    - go
+    - rust
+    - java
+    - csharp
+  include_suffixes: []
   exclude_prefixes:
     - build
     - dist

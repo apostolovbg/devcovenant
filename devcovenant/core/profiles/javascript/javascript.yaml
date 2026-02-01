@@ -32,6 +32,12 @@ policy_overlays:
       - .jsx
       - .mjs
       - .cjs
+  docstring-and-comment-coverage:
+    include_suffixes:
+      - .js
+      - .jsx
+      - .mjs
+      - .cjs
   documentation-growth-tracking:
     user_facing_suffixes:
       - .js
@@ -48,5 +54,6 @@ policies:
   - dependency-license-sync
   - devflow-run-gates
   - name-clarity
+  - docstring-and-comment-coverage
   - documentation-growth-tracking
   - line-length-limit

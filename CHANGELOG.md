@@ -60,6 +60,31 @@ Example entry:
   devcovenant/core/profiles/rust/rust.yaml
   devcovenant/core/profiles/java/java.yaml
   devcovenant/core/profiles/csharp/csharp.yaml
+- 2026-02-01: Added doc/comment coverage adapters for JS/TS/Go/Rust/Java/C#
+  and enabled the policy across corresponding profiles.
+  Files:
+  devcovenant/core/policies/docstring_and_comment_coverage/\
+    docstring_and_comment_coverage.py
+  devcovenant/core/policies/docstring_and_comment_coverage/\
+    docstring_and_comment_coverage.yaml
+  devcovenant/core/policies/docstring_and_comment_coverage/adapters/\
+    javascript.py
+  devcovenant/core/policies/docstring_and_comment_coverage/adapters/\
+    typescript.py
+  devcovenant/core/policies/docstring_and_comment_coverage/adapters/go.py
+  devcovenant/core/policies/docstring_and_comment_coverage/adapters/rust.py
+  devcovenant/core/policies/docstring_and_comment_coverage/adapters/java.py
+  devcovenant/core/policies/docstring_and_comment_coverage/adapters/\
+    csharp.py
+  devcovenant/core/profiles/javascript/javascript.yaml
+  devcovenant/core/profiles/typescript/typescript.yaml
+  devcovenant/core/profiles/go/go.yaml
+  devcovenant/core/profiles/rust/rust.yaml
+  devcovenant/core/profiles/java/java.yaml
+  devcovenant/core/profiles/csharp/csharp.yaml
+  tests/core/policies/docstring_and_comment_coverage/tests/\
+    test_docstring_and_comment_coverage.py
+  POLICY_MAP.md
   devcovenant/registry/local/policy_registry.yaml
   devcovenant/custom/policies/profile_policy_map/profile_policy_map.py
   devcovenant/custom/policies/profile_policy_map/profile_policy_map.yaml

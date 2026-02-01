@@ -4,22 +4,65 @@ from __future__ import annotations
 
 import importlib
 from pathlib import Path
-from typing import List
+from typing import Dict, List
 
 from devcovenant.core.base import CheckContext, PolicyCheck, Violation
 from devcovenant.core.selector_helpers import SelectorSet
 
-PYTHON_SUFFIXES = {".py", ".pyi", ".pyw"}
+ADAPTER_BY_SUFFIX: Dict[str, str] = {
+    ".py": (
+        "devcovenant.core.policies."
+        "docstring_and_comment_coverage.adapters.python"
+    ),
+    ".pyi": (
+        "devcovenant.core.policies."
+        "docstring_and_comment_coverage.adapters.python"
+    ),
+    ".pyw": (
+        "devcovenant.core.policies."
+        "docstring_and_comment_coverage.adapters.python"
+    ),
+    ".js": (
+        "devcovenant.core.policies."
+        "docstring_and_comment_coverage.adapters.javascript"
+    ),
+    ".jsx": (
+        "devcovenant.core.policies."
+        "docstring_and_comment_coverage.adapters.javascript"
+    ),
+    ".ts": (
+        "devcovenant.core.policies."
+        "docstring_and_comment_coverage.adapters.typescript"
+    ),
+    ".tsx": (
+        "devcovenant.core.policies."
+        "docstring_and_comment_coverage.adapters.typescript"
+    ),
+    ".go": (
+        "devcovenant.core.policies."
+        "docstring_and_comment_coverage.adapters.go"
+    ),
+    ".rs": (
+        "devcovenant.core.policies."
+        "docstring_and_comment_coverage.adapters.rust"
+    ),
+    ".java": (
+        "devcovenant.core.policies."
+        "docstring_and_comment_coverage.adapters.java"
+    ),
+    ".cs": (
+        "devcovenant.core.policies."
+        "docstring_and_comment_coverage.adapters.csharp"
+    ),
+}
 
 
 def _adapter_for(path: Path):
     """Return the adapter module for a given file path, or None."""
-    if path.suffix.lower() in PYTHON_SUFFIXES:
-        return importlib.import_module(
-            "devcovenant.core.policies."
-            "docstring_and_comment_coverage.adapters.python"
-        )
-    return None
+    module_path = ADAPTER_BY_SUFFIX.get(path.suffix.lower())
+    if not module_path:
+        return None
+    return importlib.import_module(module_path)
 
 
 class DocstringAndCommentCoverageCheck(PolicyCheck):
@@ -27,7 +70,7 @@ class DocstringAndCommentCoverageCheck(PolicyCheck):
 
     policy_id = "docstring-and-comment-coverage"
     version = "1.0.0"
-    DEFAULT_SUFFIXES = [".py"]
+    DEFAULT_SUFFIXES = list(ADAPTER_BY_SUFFIX.keys())
 
     def _build_selector(self) -> SelectorSet:
         """Return the unified selector for this policy."""

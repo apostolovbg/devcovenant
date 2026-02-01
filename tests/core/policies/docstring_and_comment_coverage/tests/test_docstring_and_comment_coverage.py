@@ -117,24 +117,41 @@ def test_metadata_skip_prefixes(tmp_path: Path):
 
 
 def test_non_python_files_are_skipped(tmp_path: Path):
-    """Non-Python files without adapters should be ignored."""
-    target = tmp_path / "project_lib" / "frontend" / "component.js"
-    target.parent.mkdir(parents=True, exist_ok=True)
-    target.write_text("export const x = 1;\n", encoding="utf-8")
+    """Non-Python files should be checked via adapters."""
+    cases = [
+        (".js", "// ok\nfunction good() {}\n", "function bad() {}\n"),
+        (
+            ".ts",
+            "// ok\nfunction good(): void {}\n",
+            "function bad(): void {}\n",
+        ),
+        (".go", "// ok\nfunc good() {}\n", "func bad() {}\n"),
+        (".rs", "/// ok\nfn good() {}\n", "fn bad() {}\n"),
+        (".java", "/** ok */\nclass Good {}\n", "class Bad {}\n"),
+        (".cs", "/// ok\nclass Good {}\n", "class Bad {}\n"),
+    ]
 
-    checker = DocstringAndCommentCoverageCheck()
-    checker.set_options(
-        {
-            "include_suffixes": [".py", ".js"],
-            "include_prefixes": ["project_lib"],
-        },
-        {},
-    )
-    context = CheckContext(
-        repo_root=tmp_path,
-        changed_files=[target],
-        all_files=[target],
-    )
-    violations = checker.check(context)
+    for suffix, good_src, bad_src in cases:
+        good = tmp_path / "project_lib" / f"good{suffix}"
+        bad = tmp_path / "project_lib" / f"bad{suffix}"
+        good.parent.mkdir(parents=True, exist_ok=True)
+        good.write_text(good_src, encoding="utf-8")
+        bad.write_text(bad_src, encoding="utf-8")
 
-    assert violations == []
+        checker = DocstringAndCommentCoverageCheck()
+        checker.set_options(
+            {
+                "include_suffixes": [suffix],
+                "include_prefixes": ["project_lib"],
+            },
+            {},
+        )
+        context = CheckContext(
+            repo_root=tmp_path,
+            changed_files=[good, bad],
+            all_files=[good, bad],
+        )
+        violations = checker.check(context)
+
+        assert any(v.file_path == bad for v in violations)
+        assert not any(v.file_path == good for v in violations)

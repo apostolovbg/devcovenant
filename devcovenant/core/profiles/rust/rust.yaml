@@ -23,6 +23,9 @@ policy_overlays:
   name-clarity:
     include_suffixes:
       - .rs
+  docstring-and-comment-coverage:
+    include_suffixes:
+      - .rs
   documentation-growth-tracking:
     user_facing_suffixes:
       - .rs
@@ -33,5 +36,6 @@ policies:
   - dependency-license-sync
   - devflow-run-gates
   - name-clarity
+  - docstring-and-comment-coverage
   - documentation-growth-tracking
   - line-length-limit

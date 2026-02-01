@@ -25,6 +25,9 @@ policy_overlays:
   name-clarity:
     include_suffixes:
       - .go
+  docstring-and-comment-coverage:
+    include_suffixes:
+      - .go
   documentation-growth-tracking:
     user_facing_suffixes:
       - .go
@@ -35,5 +38,6 @@ policies:
   - dependency-license-sync
   - devflow-run-gates
   - name-clarity
+  - docstring-and-comment-coverage
   - documentation-growth-tracking
   - line-length-limit

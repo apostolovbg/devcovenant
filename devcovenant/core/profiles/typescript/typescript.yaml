@@ -29,6 +29,10 @@ policy_overlays:
     include_suffixes:
       - .ts
       - .tsx
+  docstring-and-comment-coverage:
+    include_suffixes:
+      - .ts
+      - .tsx
   documentation-growth-tracking:
     user_facing_suffixes:
       - .ts
@@ -41,5 +45,6 @@ policies:
   - dependency-license-sync
   - devflow-run-gates
   - name-clarity
+  - docstring-and-comment-coverage
   - documentation-growth-tracking
   - line-length-limit
