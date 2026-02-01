@@ -70,9 +70,7 @@ def check_changes(
     violations: List[Violation] = []
     repo_root = context.repo_root
     tests_label = (
-        ", ".join(sorted(tests_dirs))
-        if len(tests_dirs) > 1
-        else tests_dirs[0]
+        ", ".join(sorted(tests_dirs)) if len(tests_dirs) > 1 else tests_dirs[0]
     )
 
     new_modules = [p for p in added if _is_module(p, selector, repo_root)]

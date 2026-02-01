@@ -162,8 +162,8 @@ standard metadata keys plus the specific selectors below.
 ### name-clarity
 - **Metadata handles:** `include_suffixes`, `profile_scopes`
 - **Assets:** scanner adapters + supporting configs
-- **Profiles:** `python` (planned extension to other languages when adapters
-  arrive)
+- **Profiles:** `python`, `javascript`, `typescript`, `go`, `rust`, `java`,
+  `csharp`
 
 ### new-modules-need-tests
 - **Metadata handles:** `include_suffixes`, `watch_dirs`, `tests_watch_dirs`,

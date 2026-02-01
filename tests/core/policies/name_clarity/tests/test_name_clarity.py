@@ -2,6 +2,8 @@
 
 from pathlib import Path
 
+import pytest
+
 from devcovenant.core.base import CheckContext
 from devcovenant.core.policies.name_clarity import name_clarity
 
@@ -75,3 +77,65 @@ def test_ignores_vendor_files(tmp_path: Path):
     context = CheckContext(repo_root=tmp_path, changed_files=[path])
 
     assert _configured_policy().check(context) == []
+
+
+def test_non_python_files_use_placeholder_adapters(tmp_path: Path):
+    """Non-Python files should be checked via adapters."""
+    cases = [
+        (".js", "const foo = 1;"),
+        (".ts", "const foo: number = 1;"),
+        (".go", "package main\nfunc main() { var foo = 1 }"),
+        (".rs", "fn main() { let foo = 1; }"),
+        (".java", "class Demo { void run() { int foo = 1; } }"),
+        (".cs", "class Demo { void Run() { var foo = 1; } }"),
+    ]
+
+    for suffix, code in cases:
+        path = tmp_path / "project_lib" / f"sample{suffix}"
+        path.parent.mkdir(parents=True, exist_ok=True)
+        path.write_text(code, encoding="utf-8")
+
+        policy = NameClarityCheck()
+        policy.set_options(
+            {
+                "include_suffixes": [suffix],
+                "include_prefixes": ["project_lib"],
+                "exclude_prefixes": [],
+            },
+            {},
+        )
+        context = CheckContext(repo_root=tmp_path, changed_files=[path])
+        violations = policy.check(context)
+        assert violations, f"expected violation for {suffix}"
+
+
+@pytest.mark.parametrize(
+    ("suffix", "code"),
+    [
+        (".js", "for (let i = 0; i < 3; i++) { const x = i; }"),
+        (".ts", "for (let i = 0; i < 3; i++) { const x = i; }"),
+        (".go", "package main\nfunc main() { for i := 0; i < 3; i++ { } }"),
+        (".rs", "fn main() { for i in 0..3 { let x = i; } }"),
+        (".java", "class Demo { void run() { for (int i=0;i<3;i++) {} } }"),
+        (".cs", "class Demo { void Run(){ for(int i=0;i<3;i++){} } }"),
+    ],
+)
+def test_non_python_short_loop_counters_allowed(
+    tmp_path: Path, suffix: str, code: str
+):
+    """Short loop counters remain allowed across adapters."""
+    path = tmp_path / "project_lib" / f"loop{suffix}"
+    path.parent.mkdir(parents=True, exist_ok=True)
+    path.write_text(code, encoding="utf-8")
+
+    policy = NameClarityCheck()
+    policy.set_options(
+        {
+            "include_suffixes": [suffix],
+            "include_prefixes": ["project_lib"],
+            "exclude_prefixes": [],
+        },
+        {},
+    )
+    context = CheckContext(repo_root=tmp_path, changed_files=[path])
+    assert policy.check(context) == []

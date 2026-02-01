@@ -26,6 +26,12 @@ policy_overlays:
   devflow-run-gates:
     required_commands:
       - npm test
+  name-clarity:
+    include_suffixes:
+      - .js
+      - .jsx
+      - .mjs
+      - .cjs
   documentation-growth-tracking:
     user_facing_suffixes:
       - .js
@@ -41,5 +47,6 @@ policy_overlays:
 policies:
   - dependency-license-sync
   - devflow-run-gates
+  - name-clarity
   - documentation-growth-tracking
   - line-length-limit

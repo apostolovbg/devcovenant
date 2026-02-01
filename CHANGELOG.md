@@ -38,6 +38,28 @@ Example entry:
   POLICY_MAP.md
   SPEC.md
   devcovenant/registry/global/policy_metadata_schema.yaml
+- 2026-02-01: Implemented name-clarity adapters for JS/TS/Go/Rust/Java/C#,
+  expanded default suffix coverage, and added adapter tests.
+  Files:
+  devcovenant/core/policies/name_clarity/name_clarity.py
+  devcovenant/core/policies/name_clarity/name_clarity.yaml
+  devcovenant/core/policies/name_clarity/adapters/javascript.py
+  devcovenant/core/policies/name_clarity/adapters/typescript.py
+  devcovenant/core/policies/name_clarity/adapters/go.py
+  devcovenant/core/policies/name_clarity/adapters/rust.py
+  devcovenant/core/policies/name_clarity/adapters/java.py
+  devcovenant/core/policies/name_clarity/adapters/csharp.py
+  tests/core/policies/name_clarity/tests/test_name_clarity.py
+  POLICY_MAP.md
+- 2026-02-01: Enabled name-clarity policy across JS/TS/Go/Rust/Java/C#
+  profiles with overlays keyed to their suffixes.
+  Files:
+  devcovenant/core/profiles/javascript/javascript.yaml
+  devcovenant/core/profiles/typescript/typescript.yaml
+  devcovenant/core/profiles/go/go.yaml
+  devcovenant/core/profiles/rust/rust.yaml
+  devcovenant/core/profiles/java/java.yaml
+  devcovenant/core/profiles/csharp/csharp.yaml
   devcovenant/registry/local/policy_registry.yaml
   devcovenant/custom/policies/profile_policy_map/profile_policy_map.py
   devcovenant/custom/policies/profile_policy_map/profile_policy_map.yaml
@@ -86,7 +108,8 @@ Example entry:
   devcovenant/core/run_tests.py
   SPEC.md
   PLAN.md
-  devcovenant/core/policies/docstring_and_comment_coverage/docstring_and_comment_coverage.py
+  devcovenant/core/policies/docstring_and_comment_coverage/\
+docstring_and_comment_coverage.py
   devcovenant/core/policies/docstring_and_comment_coverage/adapters/python.py
   devcovenant/core/policies/name_clarity/name_clarity.py
   devcovenant/core/policies/name_clarity/adapters/python.py
@@ -94,6 +117,17 @@ Example entry:
   devcovenant/core/policies/security_scanner/adapters/python.py
   devcovenant/core/policies/new_modules_need_tests/new_modules_need_tests.py
   devcovenant/core/policies/new_modules_need_tests/adapters/python.py
+  devcovenant/core/policies/new_modules_need_tests/new_modules_need_tests.yaml
+  devcovenant/core/policies/name_clarity/adapters/javascript.py
+  devcovenant/core/policies/name_clarity/adapters/typescript.py
+  devcovenant/core/policies/name_clarity/adapters/go.py
+  devcovenant/core/policies/name_clarity/adapters/rust.py
+  devcovenant/core/policies/name_clarity/adapters/java.py
+  devcovenant/core/policies/name_clarity/adapters/csharp.py
+  tests/core/policies/docstring_and_comment_coverage/tests/\
+test_docstring_and_comment_coverage.py
+  tests/core/policies/name_clarity/tests/test_name_clarity.py
+  tests/core/policies/security_scanner/tests/test_security_scanner.py
 
 - 2026-02-01: Tracked the new per-profile descriptors and managed doc assets to
   align metadata with PROFILE_MAP/POLICY_MAP.

@@ -23,8 +23,6 @@ metadata:
     - dist
     - node_modules
     - tests
-    - devcovenant/core/profiles
-    - devcovenant/custom/profiles
   exclude_globs: []
   watch_dirs: tests
   tests_watch_dirs: tests

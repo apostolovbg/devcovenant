@@ -114,3 +114,27 @@ def test_metadata_skip_prefixes(tmp_path: Path):
     assert (
         not violations
     ), "Metadata exclusions should allow repo-specific gaps"
+
+
+def test_non_python_files_are_skipped(tmp_path: Path):
+    """Non-Python files without adapters should be ignored."""
+    target = tmp_path / "project_lib" / "frontend" / "component.js"
+    target.parent.mkdir(parents=True, exist_ok=True)
+    target.write_text("export const x = 1;\n", encoding="utf-8")
+
+    checker = DocstringAndCommentCoverageCheck()
+    checker.set_options(
+        {
+            "include_suffixes": [".py", ".js"],
+            "include_prefixes": ["project_lib"],
+        },
+        {},
+    )
+    context = CheckContext(
+        repo_root=tmp_path,
+        changed_files=[target],
+        all_files=[target],
+    )
+    violations = checker.check(context)
+
+    assert violations == []

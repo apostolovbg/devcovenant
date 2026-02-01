@@ -62,3 +62,22 @@ def test_ignores_tests(tmp_path: Path):
     checker = _configured_policy()
     context = CheckContext(repo_root=tmp_path, changed_files=[target])
     assert checker.check(context) == []
+
+
+def test_non_python_files_are_ignored(tmp_path: Path):
+    """Files without adapters should be ignored."""
+    target = tmp_path / "project_lib" / "ui" / "component.js"
+    target.parent.mkdir(parents=True, exist_ok=True)
+    target.write_text("console.log('safe');\n", encoding="utf-8")
+
+    checker = _configured_policy()
+    checker.set_options(
+        {
+            "include_suffixes": [".py", ".js"],
+            "exclude_globs": [],
+            "exclude_prefixes": [],
+        },
+        {},
+    )
+    context = CheckContext(repo_root=tmp_path, changed_files=[target])
+    assert checker.check(context) == []

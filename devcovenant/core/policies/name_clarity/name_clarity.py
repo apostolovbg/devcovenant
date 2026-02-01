@@ -9,24 +9,35 @@ from typing import List
 from devcovenant.core.base import CheckContext, PolicyCheck, Violation
 from devcovenant.core.selector_helpers import SelectorSet
 
-PYTHON_SUFFIXES = {".py", ".pyi", ".pyw"}
+ADAPTER_BY_SUFFIX = {
+    ".py": "devcovenant.core.policies.name_clarity.adapters.python",
+    ".pyi": "devcovenant.core.policies.name_clarity.adapters.python",
+    ".pyw": "devcovenant.core.policies.name_clarity.adapters.python",
+    ".js": "devcovenant.core.policies.name_clarity.adapters.javascript",
+    ".jsx": "devcovenant.core.policies.name_clarity.adapters.javascript",
+    ".ts": "devcovenant.core.policies.name_clarity.adapters.typescript",
+    ".tsx": "devcovenant.core.policies.name_clarity.adapters.typescript",
+    ".go": "devcovenant.core.policies.name_clarity.adapters.go",
+    ".rs": "devcovenant.core.policies.name_clarity.adapters.rust",
+    ".java": "devcovenant.core.policies.name_clarity.adapters.java",
+    ".cs": "devcovenant.core.policies.name_clarity.adapters.csharp",
+}
 
 
 def _adapter_for(path: Path):
     """Return adapter module for the given file path, or None."""
-    if path.suffix.lower() in PYTHON_SUFFIXES:
-        return importlib.import_module(
-            "devcovenant.core.policies.name_clarity.adapters.python"
-        )
-    return None
+    module_path = ADAPTER_BY_SUFFIX.get(path.suffix.lower())
+    if not module_path:
+        return None
+    return importlib.import_module(module_path)
 
 
 class NameClarityCheck(PolicyCheck):
     """Warn when placeholder or overly short identifiers are introduced."""
 
     policy_id = "name-clarity"
-    version = "1.1.0"
-    DEFAULT_SUFFIXES = [".py"]
+    version = "1.2.0"
+    DEFAULT_SUFFIXES = list(ADAPTER_BY_SUFFIX.keys())
 
     def _selector(self) -> SelectorSet:
         """Return selector describing files enforced by the policy."""

@@ -19,6 +19,9 @@ policy_overlays:
     required_commands:
       - mvn test
       - gradle test
+  name-clarity:
+    include_suffixes:
+      - .java
   documentation-growth-tracking:
     user_facing_suffixes:
       - .java
@@ -28,5 +31,6 @@ policy_overlays:
 policies:
   - dependency-license-sync
   - devflow-run-gates
+  - name-clarity
   - documentation-growth-tracking
   - line-length-limit

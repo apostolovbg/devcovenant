@@ -18,6 +18,9 @@ policy_overlays:
   devflow-run-gates:
     required_commands:
       - dotnet test
+  name-clarity:
+    include_suffixes:
+      - .cs
   documentation-growth-tracking:
     user_facing_suffixes:
       - .cs
@@ -27,5 +30,6 @@ policy_overlays:
 policies:
   - dependency-license-sync
   - devflow-run-gates
+  - name-clarity
   - documentation-growth-tracking
   - line-length-limit

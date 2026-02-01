@@ -5,8 +5,8 @@ from __future__ import annotations
 import ast
 import io
 import tokenize
-from typing import List, Set
 from pathlib import Path
+from typing import List, Set
 
 from devcovenant.core.base import Violation
 
