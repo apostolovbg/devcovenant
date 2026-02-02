@@ -54,6 +54,16 @@ Example entry:
   devcovenant/core/profiles/suffixes/suffixes.yaml
   devcovenant/core/profiles.py
   tests/core/profiles/test_profiles.py
+- 2026-02-02: Switched all profile .gitignore assets to merge mode, fixed
+  objective-c/flutter asset manifests, and expanded POLICY_MAP/PROFILE_MAP
+  into full reference guides.
+  Files:
+  POLICY_MAP.md
+  PROFILE_MAP.md
+  devcovenant/core/profiles/devcovuser/devcovuser.yaml
+  devcovenant/core/profiles/devcovuser/assets/.gitignore
+  devcovenant/core/profiles/flutter/flutter.yaml
+  devcovenant/core/profiles/objective-c/objective-c.yaml
 - 2026-02-01: Made all policies explicitly profile-activated (global now lists
   every global policy), expanded POLICY_MAP/PROFILE_MAP details, and updated
   SPEC/PLAN plus config defaults.
