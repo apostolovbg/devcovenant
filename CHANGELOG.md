@@ -1,5 +1,5 @@
 # Changelog
-**Last Updated:** 2026-02-01
+**Last Updated:** 2026-02-02
 **Version:** 0.2.6
 
 <!-- DEVCOV:BEGIN -->
@@ -29,6 +29,23 @@ Example entry:
 
 ## Version 0.2.6
 
+- 2026-02-02: Aligned docs/data profiles with doc-quality policies and added
+  dependency-license-sync coverage for Objective-C (Podfile/lock manifests).
+  Files:
+  devcovenant/core/profiles/docs/docs.yaml
+  devcovenant/core/profiles/data/data.yaml
+  devcovenant/core/profiles/objective-c/objective-c.yaml
+- 2026-02-02: Updated POLICY_MAP/PROFILE_MAP to reflect the doc/data/
+  objective-c policy expectations and manifest overlays.
+  Files:
+  POLICY_MAP.md
+  PROFILE_MAP.md
+- 2026-02-02: Clarified dependency-license-sync as profile-scoped (not global)
+  and removed it from the global profile; map now documents per-profile
+  activation only.
+  Files:
+  POLICY_MAP.md
+  devcovenant/core/profiles/global/global.yaml
 - 2026-02-02: Added version-sync activation to all retained profiles per
   POLICY_MAP coverage.
   Files:

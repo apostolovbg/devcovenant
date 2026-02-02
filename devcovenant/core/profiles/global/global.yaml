@@ -21,4 +21,3 @@ policies:
   - documentation-growth-tracking
   - line-length-limit
   - version-sync
-  - dependency-license-sync

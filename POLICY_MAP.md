@@ -39,11 +39,11 @@ opt-in via custom profiles or config overrides—never implicit via `global`.
   devcovenant/README.md, LICENSE, pyproject.toml; Metadata: version_file,
   readme_files, optional_files, pyproject_files, license_files, changelog_
   file, header_prefix.
-- dependency-license-sync — Assets: dependency manifests, THIRD_PARTY_
-  LICENSES.md, licenses/; Metadata: dependency_files, third_party_file,
-  licenses_dir, report_heading.
 
 ## Profile-Scoped Core Policies
+- dependency-license-sync — Profiles: python, javascript, typescript, java,
+  csharp, php, ruby, go, rust, swift, dart, flutter, fastapi, frappe,
+  objective-c. Overlays must reference each ecosystem’s manifest files.
 - docstring-and-comment-coverage — Adapters per language; Metadata: include/
   exclude selectors. Profiles: python, javascript, typescript, go, rust, java,
   csharp.

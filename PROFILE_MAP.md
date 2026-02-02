@@ -13,8 +13,9 @@ inheritance. Custom policies stay opt-in via custom profiles/config.
 - docs — Assets: mkdocs.yml, doc .gitignore. Policies: version-sync,
   documentation-growth-tracking, line-length-limit, last-updated-placement.
 - data — Assets: data/README.md, data/manifest.json, .gitignore. Policies:
-  documentation-growth-tracking, security-scanner (excluded data), name-
-  clarity, new-modules-need-tests (excluded), line-length-limit, version-sync.
+  documentation-growth-tracking, last-updated-placement, security-scanner
+  (excluded data), name-clarity, new-modules-need-tests (excluded),
+  line-length-limit, version-sync.
 - suffixes — Assets: suffixes.txt (merge). Policies: version-sync.
 - devcovuser (custom-use) — Assets: .gitignore (merge placeholder). Policies:
   new-modules-need-tests with excludes to keep devcovenant core out.
@@ -79,8 +80,9 @@ inheritance. Custom policies stay opt-in via custom profiles/config.
 - swift — Assets: Package.swift, .gitignore; Policies: dependency-license-
   sync, devflow-run-gates (swift test), doc-growth, line-length-limit,
   version-sync.
-- objective-c — Assets: .gitignore, Podfile; Policies: devflow-run-gates
-  (xcodebuild test), doc-growth, line-length-limit, version-sync.
+- objective-c — Assets: .gitignore, Podfile; Policies: dependency-license-
+  sync (Podfile/lock), devflow-run-gates (xcodebuild test), doc-growth, line-
+  length-limit, version-sync.
 
 ## Custom Profiles
 - devcovrepo — see Core Profiles above; activates custom policies.

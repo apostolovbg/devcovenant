@@ -38,6 +38,7 @@ policy_overlays:
       - data/**
 policies:
   - documentation-growth-tracking
+  - last-updated-placement
   - security-scanner
   - name-clarity
   - new-modules-need-tests

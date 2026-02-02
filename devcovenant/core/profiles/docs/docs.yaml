@@ -21,4 +21,6 @@ policy_overlays:
       - .txt
 policies:
   - line-length-limit
+  - documentation-growth-tracking
+  - last-updated-placement
   - version-sync

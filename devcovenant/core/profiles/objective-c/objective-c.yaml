@@ -28,8 +28,13 @@ policy_overlays:
       - .m
       - .mm
       - .h
+  dependency-license-sync:
+    dependency_files:
+      - Podfile
+      - Podfile.lock
 policies:
   - devflow-run-gates
+  - dependency-license-sync
   - documentation-growth-tracking
   - line-length-limit
   - version-sync
