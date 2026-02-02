@@ -33,6 +33,11 @@ Example entry:
   POLICY_MAP coverage.
   Files:
   devcovenant/core/profiles/*/*.yaml
+- 2026-02-02: Ensured update/refresh notifications always persist by creating
+  manifest.json on demand and added a regression test.
+  Files:
+  devcovenant/core/manifest.py
+  tests/core/tests/test_manifest.py
 - 2026-02-01: Made all policies explicitly profile-activated (global now lists
   every global policy), expanded POLICY_MAP/PROFILE_MAP details, and updated
   SPEC/PLAN plus config defaults.

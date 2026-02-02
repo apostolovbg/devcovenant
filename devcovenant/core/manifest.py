@@ -227,7 +227,7 @@ def write_manifest(repo_root: Path, manifest: Dict[str, Any]) -> Path:
 
 def append_notifications(repo_root: Path, messages: Iterable[str]) -> None:
     """Append notification messages to the manifest."""
-    manifest = load_manifest(repo_root)
+    manifest = ensure_manifest(repo_root)
     if not manifest:
         return
     notifications = manifest.setdefault("notifications", [])
