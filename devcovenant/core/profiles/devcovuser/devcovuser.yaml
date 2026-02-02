@@ -3,7 +3,10 @@ profile: devcovuser
 category: core
 suffixes: []
 ignore_dirs: []
-assets: []
+assets:
+  - path: .gitignore
+    template: .gitignore
+    mode: replace
 policy_overlays:
   new-modules-need-tests:
     exclude_prefixes:

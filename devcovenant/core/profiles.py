@@ -68,6 +68,11 @@ def _manifest_path(profile_dir: Path) -> Path:
     return profile_dir / f"{profile_dir.name}.yaml"
 
 
+def load_profile(manifest_path: Path) -> dict:
+    """Load a single profile manifest from disk."""
+    return _load_yaml(manifest_path)
+
+
 def discover_profiles(
     repo_root: Path,
     *,

@@ -1,5 +1,5 @@
 # DevCovenant Development Plan
-**Last Updated:** 2026-02-01
+**Last Updated:** 2026-02-02
 **Version:** 0.2.6
 
 <!-- DEVCOV:BEGIN -->
@@ -122,7 +122,7 @@ It is the checklist we consult before declaring the spec satisfied.
   sole hash store. The legacy `registry.json` and `update_hashes.py` helper
   have been retired and removed; the registry now records hashes, asset
   hints, profile scopes, and core/custom origins.
-- [not done] Record update notices (replacements/new stock policies) inside
+- [done] Record update notices (replacements/new stock policies) inside
   `devcovenant/registry/local/manifest.json` and print them during updates.
 - [not done] `managed-environment` remains off by default.
   Warn when required metadata or command hints are absent.

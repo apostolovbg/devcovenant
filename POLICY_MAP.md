@@ -7,13 +7,16 @@ profiles that activate it. Activation is explicit: a policy runs only if a
 profile lists it under `policies:` (global counts as a profile).
 
 ## Global Policies (activated by `global`)
-- devcov-self-enforcement — registry sync; assets: registry/local/policy_registry.yaml
+- devcov-self-enforcement — registry sync; assets:
+  registry/local/policy_registry.yaml
 - devcov-structure-guard — repo layout; assets: registry/local/manifest.json
 - policy-text-presence — AGENTS.md prose guard
 - devcov-parity-guard — policy text vs descriptors
-- devflow-run-gates — gate recorder; assets: run_pre_commit.py, run_tests.py,
-  .devcov-state/test_status.json; overlays per profile for required_commands
-- track-test-status — records last test run; asset: .devcov-state/test_status.json
+- devflow-run-gates — gate recorder; assets: run_pre_commit.py,
+  run_tests.py, .devcov-state/test_status.json; overlays per profile for
+  required_commands
+- track-test-status — records last test run; asset:
+  .devcov-state/test_status.json
 - changelog-coverage — ensures CHANGELOG entries
 - no-future-dates — blocks future timestamps
 - read-only-directories — protects declared paths

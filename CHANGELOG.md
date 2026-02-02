@@ -38,6 +38,22 @@ Example entry:
   Files:
   devcovenant/core/manifest.py
   tests/core/tests/test_manifest.py
+  devcovenant/core/profiles/flutter/assets/pubspec.lock
+  devcovenant/core/profiles/csharp/assets/packages.lock.json
+- 2026-02-02: Added starter assets for flutter (.gitignore) and objective-c
+  (Podfile) to improve profile completeness.
+  Files:
+  devcovenant/core/profiles/flutter/assets/.gitignore
+  devcovenant/core/profiles/objective-c/assets/Podfile
+- 2026-02-02: Filled remaining profile assets (devcovuser .gitignore, suffixes
+  suffixes.txt) and made profile asset checks dynamic.
+  Files:
+  devcovenant/core/profiles/devcovuser/assets/.gitignore
+  devcovenant/core/profiles/suffixes/assets/suffixes.txt
+  devcovenant/core/profiles/devcovuser/devcovuser.yaml
+  devcovenant/core/profiles/suffixes/suffixes.yaml
+  devcovenant/core/profiles.py
+  tests/core/profiles/test_profiles.py
 - 2026-02-01: Made all policies explicitly profile-activated (global now lists
   every global policy), expanded POLICY_MAP/PROFILE_MAP details, and updated
   SPEC/PLAN plus config defaults.

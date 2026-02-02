@@ -3,7 +3,10 @@ profile: suffixes
 category: ops
 suffixes: []
 ignore_dirs: []
-assets: []
+assets:
+  - path: suffixes.txt
+    template: suffixes.txt
+    mode: replace
 policy_overlays: {}
 policies:
   - version-sync

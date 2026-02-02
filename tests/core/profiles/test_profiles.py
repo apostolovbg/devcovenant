@@ -3,6 +3,8 @@
 import textwrap
 from pathlib import Path
 
+import yaml
+
 from devcovenant.core import profiles
 
 
@@ -69,3 +71,47 @@ def test_resolve_profile_suffixes_ignores_placeholders() -> None:
     }
     resolved = profiles.resolve_profile_suffixes(catalog, ["docs", "python"])
     assert resolved == [".py", ".pyi"]
+
+
+def test_version_sync_listed_in_scoped_profiles() -> None:
+    """Profiles that scope version-sync must list it explicitly."""
+    repo_root = Path(__file__).resolve().parents[3]
+    vsync_meta = yaml.safe_load(
+        (
+            repo_root
+            / "devcovenant"
+            / "core"
+            / "policies"
+            / "version_sync"
+            / "version_sync.yaml"
+        ).read_text(encoding="utf-8")
+    )
+    scoped = set(vsync_meta["metadata"].get("profile_scopes", []))
+    catalog = profiles.build_profile_catalog(repo_root)
+    entries = catalog["profiles"] if "profiles" in catalog else catalog
+
+    for name, meta in entries.items():
+        if name not in scoped:
+            continue
+        manifest_path = repo_root / meta["path"] / f"{name}.yaml"
+        manifest = profiles.load_profile(manifest_path)
+        policies = set(manifest.get("policies", []))
+        assert (
+            "version-sync" in policies
+        ), f"profile {name} (scoped for version-sync) must list version-sync"
+
+
+def test_profiles_have_assets_unless_exempt() -> None:
+    """Most profiles should ship assets; allow a few explicit exceptions."""
+    exempt = {"devcovuser", "suffixes"}
+    repo_root = Path(__file__).resolve().parents[3]
+    catalog = profiles.build_profile_catalog(repo_root)
+    for name, meta in (
+        catalog["profiles"].items()
+        if "profiles" in catalog
+        else catalog.items()
+    ):
+        if name in exempt:
+            continue
+        assets = meta.get("assets_available", [])
+        assert assets, f"profile {name} should include assets_available"
