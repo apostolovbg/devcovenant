@@ -134,6 +134,9 @@ It is the checklist we consult before declaring the spec satisfied.
   frappe, dart, flutter, swift, objective-c) and updated
   PROFILE_MAP/POLICY_MAP/SPEC to describe the change. Retired stacks are to be
   reintroduced only as custom profiles.
+- [not done] Materialize expanded POLICY_MAP/PROFILE_MAP expectations: ensure
+  profiles/policies/assets/adapters/fixers match the reference maps and keep
+  the maps authoritative for future additions.
 - [not done] Per-profile descriptors (`<profile>.yaml`) must be populated
   manually (maps are reference only); many profiles are still stubs and need
   real assets/overlays before marking complete.

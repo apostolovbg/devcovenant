@@ -301,7 +301,9 @@ Devflow gate status is stored in `.devcov-state/test_status.json`, created
   policy YAMLs retain `profile_scopes` as documentation; effective scopes are
   derived from profiles plus config overlays during registry generation.
   Custom policies are activated only via custom profiles or config overrides,
-  not by the `global` profile.
+  not by the `global` profile. POLICY_MAP.md and PROFILE_MAP.md are the
+  authoritative references for required assets, adapters, policies, and
+  overlays; keep them aligned with the manifests and code.
 Profiles are explicit—no inheritance or family defaults; each profile lists
 its own assets, suffixes, policies, and overlays.
 - Custom policy `readme-sync` enforces that `devcovenant/README.md` mirrors

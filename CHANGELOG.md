@@ -64,6 +64,11 @@ Example entry:
   devcovenant/core/profiles/devcovuser/assets/.gitignore
   devcovenant/core/profiles/flutter/flutter.yaml
   devcovenant/core/profiles/objective-c/objective-c.yaml
+- 2026-02-02: Wove the expanded policy/profile maps into SPEC and PLAN (maps
+  declared authoritative references; new PLAN task to materialize them).
+  Files:
+  SPEC.md
+  PLAN.md
 - 2026-02-01: Made all policies explicitly profile-activated (global now lists
   every global policy), expanded POLICY_MAP/PROFILE_MAP details, and updated
   SPEC/PLAN plus config defaults.
