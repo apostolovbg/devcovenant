@@ -6,7 +6,7 @@ ignore_dirs: []
 assets:
   - path: .gitignore
     template: .gitignore
-    mode: replace
+    mode: merge
 policy_overlays:
   new-modules-need-tests:
     exclude_prefixes:

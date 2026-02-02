@@ -1,47 +1,84 @@
 # Policy Map
-**Version:** 0.2.6 (slim catalog)
+**Version:** 0.2.6
 
-## Overview
-Each policy below lists its key metadata knobs, managed assets, and the
-profiles that activate it. Activation is explicit: a policy runs only if a
-profile lists it under `policies:` (global counts as a profile).
+## Purpose
+Authoritative reference for how each policy MUST be activated and configured.
+Use this to keep profiles, adapters, assets, and metadata aligned. Policies
+run only when a profile lists them under `policies:`. Custom policies are
+opt-in via custom profiles or config overrides—never implicit via `global`.
 
-## Global Policies (activated by `global`)
-- devcov-self-enforcement — registry sync; assets:
-  registry/local/policy_registry.yaml
-- devcov-structure-guard — repo layout; assets: registry/local/manifest.json
-- policy-text-presence — AGENTS.md prose guard
-- devcov-parity-guard — policy text vs descriptors
-- devflow-run-gates — gate recorder; assets: run_pre_commit.py,
-  run_tests.py, .devcov-state/test_status.json; overlays per profile for
-  required_commands
-- track-test-status — records last test run; asset:
-  .devcov-state/test_status.json
-- changelog-coverage — ensures CHANGELOG entries
-- no-future-dates — blocks future timestamps
-- read-only-directories — protects declared paths
-- managed-environment — warns on missing env hints
-- semantic-version-scope (disabled) — semver tag enforcement; assets: VERSION,
-  CHANGELOG.md
-- last-updated-placement — enforces header placement
-- documentation-growth-tracking — doc quality/mentions; overlays per profile
-- line-length-limit — 79-char soft cap
-- version-sync — version coherence across VERSION, README, etc.
-- dependency-license-sync — licenses + manifests stay in sync
+## Core Policies (global-activated)
+- devcov-self-enforcement — Assets: registry/local/policy_registry.yaml;
+  Metadata: profile_scopes, registry_file.
+- devcov-structure-guard — Assets: registry/local/manifest.json; Metadata:
+  enforcement, profile_scopes, code_extensions.
+- policy-text-presence — Assets: AGENTS.md; Metadata: policy_definitions,
+  profile_scopes.
+- devcov-parity-guard — Assets: policy descriptors; Metadata: policy_
+  definitions, profile_scopes.
+- devflow-run-gates — Assets: run_pre_commit.py, run_tests.py, .devcov-state/
+  test_status.json; Metadata: test_status_file, required_commands, require_
+  pre_commit_start/end, pre_commit_command, epoch/command keys.
+- track-test-status — Assets: .devcov-state/test_status.json; Metadata:
+  profile_scopes.
+- changelog-coverage — Assets: CHANGELOG.md; Metadata: main_changelog,
+  skipped_files, profile_scopes.
+- no-future-dates — Logic-only; Metadata: profile_scopes.
+- read-only-directories — Metadata: include_globs, profile_scopes.
+- managed-environment — Metadata: expected_paths, expected_interpreters,
+  required_commands, command_hints (apply: false by default).
+- semantic-version-scope — Assets: VERSION, CHANGELOG.md; Metadata: version_
+  file, changelog_file, profile_scopes (apply: false).
+- last-updated-placement — Assets: managed docs; Metadata: allowed_globs,
+  profile_scopes.
+- documentation-growth-tracking — Metadata: selector roles, required_headings,
+  min_word_count, mention rules; overlays expected per profile for user_
+  facing suffixes/keywords.
+- line-length-limit — Metadata: max_length, selectors, profile_scopes.
+- version-sync — Assets: VERSION, README/AGENTS/CONTRIBUTING/SPEC/PLAN/
+  devcovenant/README.md, LICENSE, pyproject.toml; Metadata: version_file,
+  readme_files, optional_files, pyproject_files, license_files, changelog_
+  file, header_prefix.
+- dependency-license-sync — Assets: dependency manifests, THIRD_PARTY_
+  LICENSES.md, licenses/; Metadata: dependency_files, third_party_file,
+  licenses_dir, report_heading.
 
-## Profile-Scoped Policies
-- docstring-and-comment-coverage — Profiles: python, javascript, typescript,
-  go, rust, java, csharp; knobs: include/exclude selectors.
-- name-clarity — Profiles: python, javascript, typescript, go, rust, java,
-  csharp; knobs: selector roles, suffixes.
-- new-modules-need-tests — Profiles: python, javascript, typescript, go, rust,
-  java, csharp, fastapi, frappe; knobs: tests_watch_dirs, include/exclude.
-- security-scanner — Profiles: python, javascript, typescript, go, rust, java,
-  csharp, fastapi, frappe; knobs: include/exclude selectors.
-- raw-string-escapes — Profile: python (apply disabled by default); checks
-  for unsafe escapes.
+## Profile-Scoped Core Policies
+- docstring-and-comment-coverage — Adapters per language; Metadata: include/
+  exclude selectors. Profiles: python, javascript, typescript, go, rust, java,
+  csharp.
+- name-clarity — Adapters per language; Metadata: selectors. Profiles: python,
+  javascript, typescript, go, rust, java, csharp.
+- new-modules-need-tests — Adapters per language; Metadata: tests_watch_dirs,
+  include/exclude selectors. Profiles: python, javascript, typescript, go,
+  rust, java, csharp, fastapi, frappe.
+- security-scanner — Adapters per language; Metadata: include/exclude
+  selectors. Profiles: python, javascript, typescript, go, rust, java, csharp,
+  fastapi, frappe.
+- raw-string-escapes — Metadata: apply default false; Profile: python.
 
-- Repo-only custom policies (activated by `devcovrepo` profile or config):
-  managed-doc-assets, readme-sync, devcov-raw-string-escapes.
-- devflow-run-gates — gate recorder; assets: run_pre_commit.py, run_tests.py,
-  .devcov-state/test_status.json; overlays per profile for required_commands
+## Custom Policies (repo-only, opt-in via `devcovrepo` or config)
+- managed-doc-assets — Managed doc descriptors.
+- readme-sync — Mirrors README into package README with repo-only blocks
+  stripped.
+- devcov-raw-string-escapes — Repo-only raw string guard.
+
+## Adapters (by policy)
+- docstring-and-comment-coverage: python, javascript, typescript, go, rust,
+  java, csharp adapters under policy/adapters/.
+- name-clarity: adapters for python, javascript, typescript, go, rust, java,
+  csharp under policy/adapters/.
+- new-modules-need-tests: adapters for python, javascript, typescript; shared
+  logic covers others via selectors where applicable.
+- security-scanner: language-specific adapters for python/js/ts/go/rust/java/
+  csharp.
+
+## Required Metadata Keys (summary)
+- Enforcement/activation: status, severity, apply, enforcement, profile_scopes.
+- Selectors: include/exclude prefixes/globs/suffixes, selector_roles.
+- Commands: required_commands, command_hints (devflow-run-gates, managed-
+  environment).
+- Dependency/license: dependency_files, third_party_file, licenses_dir.
+- Versioning: version_file, readme_files, optional_files, pyproject_files,
+  license_files, changelog_file.
+- Docs quality: required_headings, min_word_count, mention rules.

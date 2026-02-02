@@ -7,6 +7,9 @@ ignore_dirs:
   - .dart_tool
   - build
 assets:
+  - path: .gitignore
+    template: .gitignore
+    mode: merge
   - path: pubspec.yaml
     template: pubspec.yaml
     mode: replace

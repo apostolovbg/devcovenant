@@ -7,7 +7,13 @@ suffixes:
   - .h
 ignore_dirs:
   - build
-assets: []
+assets:
+  - path: .gitignore
+    template: .gitignore
+    mode: merge
+  - path: Podfile
+    template: Podfile
+    mode: replace
 policy_overlays:
   devflow-run-gates:
     required_commands:
