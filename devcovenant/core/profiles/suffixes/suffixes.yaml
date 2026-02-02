@@ -5,4 +5,5 @@ suffixes: []
 ignore_dirs: []
 assets: []
 policy_overlays: {}
-policies: []
+policies:
+  - version-sync

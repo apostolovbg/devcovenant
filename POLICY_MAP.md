@@ -40,3 +40,5 @@ profile lists it under `policies:` (global counts as a profile).
 
 - Repo-only custom policies (activated by `devcovrepo` profile or config):
   managed-doc-assets, readme-sync, devcov-raw-string-escapes.
+- devflow-run-gates — gate recorder; assets: run_pre_commit.py, run_tests.py,
+  .devcov-state/test_status.json; overlays per profile for required_commands

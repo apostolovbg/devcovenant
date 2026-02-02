@@ -29,3 +29,4 @@ policies:
   - devflow-run-gates
   - documentation-growth-tracking
   - line-length-limit
+  - version-sync

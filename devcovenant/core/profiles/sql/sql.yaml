@@ -18,3 +18,4 @@ policy_overlays:
 policies:
   - documentation-growth-tracking
   - line-length-limit
+  - version-sync

@@ -70,3 +70,4 @@ policies:
   - name-clarity
   - docstring-and-comment-coverage
   - new-modules-need-tests
+  - version-sync

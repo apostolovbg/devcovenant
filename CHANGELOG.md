@@ -29,6 +29,10 @@ Example entry:
 
 ## Version 0.2.6
 
+- 2026-02-02: Added version-sync activation to all retained profiles per
+  POLICY_MAP coverage.
+  Files:
+  devcovenant/core/profiles/*/*.yaml
 - 2026-02-01: Made all policies explicitly profile-activated (global now lists
   every global policy), expanded POLICY_MAP/PROFILE_MAP details, and updated
   SPEC/PLAN plus config defaults.

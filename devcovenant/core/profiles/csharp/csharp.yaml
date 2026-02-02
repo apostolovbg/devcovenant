@@ -54,3 +54,4 @@ policies:
   - security-scanner
   - documentation-growth-tracking
   - line-length-limit
+  - version-sync

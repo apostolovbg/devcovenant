@@ -42,3 +42,4 @@ policies:
   - name-clarity
   - new-modules-need-tests
   - line-length-limit
+  - version-sync

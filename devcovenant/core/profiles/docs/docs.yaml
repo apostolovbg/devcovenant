@@ -21,3 +21,4 @@ policy_overlays:
       - .txt
 policies:
   - line-length-limit
+  - version-sync
