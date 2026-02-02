@@ -1,5 +1,5 @@
 # Changelog
-**Last Updated:** 2026-01-30
+**Last Updated:** 2026-02-01
 **Version:** 0.2.6
 
 <!-- DEVCOV:BEGIN -->
@@ -29,6 +29,31 @@ Example entry:
 
 ## Version 0.2.6
 
+- 2026-02-01: Made all policies explicitly profile-activated (global now lists
+  every global policy), expanded POLICY_MAP/PROFILE_MAP details, and updated
+  SPEC/PLAN plus config defaults.
+  Files:
+  POLICY_MAP.md
+  PROFILE_MAP.md
+  SPEC.md
+  PLAN.md
+  devcovenant/core/profiles/global/global.yaml (custom policies remain in
+  devcovrepo/config, not global)
+  devcovenant/config.yaml
+- 2026-02-01: Trimmed stock profiles to a core set and refreshed maps/README.
+  Adjusted scopes for new-modules-need-tests and security-scanner.
+  Files:
+  POLICY_MAP.md
+  PROFILE_MAP.md
+  devcovenant/core/profiles/README.md
+  devcovenant/core/policies/dependency_license_sync/\
+    dependency_license_sync.yaml
+  devcovenant/core/policies/documentation_growth_tracking/\
+    documentation_growth_tracking.yaml
+  devcovenant/core/policies/version_sync/version_sync.yaml
+  devcovenant/core/policies/new_modules_need_tests/new_modules_need_tests.yaml
+  devcovenant/core/policies/security_scanner/security_scanner.yaml
+  devcovenant/core/profiles/*
 - 2026-02-01: Retired the profile-policy-map custom policy and clarified that
   core profile YAMLs are static descriptors (PROFILE/POLICY maps are references
   only); aligned SPEC/PLAN/AGENTS and registries accordingly.

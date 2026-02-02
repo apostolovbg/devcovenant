@@ -17,8 +17,6 @@ metadata:
   custom: 'true'
   profile_scopes:
     - python
-    - django
-    - flask
     - fastapi
     - frappe
     - javascript
@@ -34,7 +32,9 @@ metadata:
     - dist
     - node_modules
     - tests
-  exclude_globs: []
+    - devcovenant/core/profiles
+  exclude_globs:
+    - devcovenant/core/profiles/**
   watch_dirs: tests
   tests_watch_dirs: tests
   include_globs: []

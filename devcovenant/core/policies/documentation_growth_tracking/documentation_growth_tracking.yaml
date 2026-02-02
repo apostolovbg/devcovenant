@@ -26,12 +26,7 @@ metadata:
     - go
     - rust
     - java
-    - kotlin
-    - scala
-    - groovy
-    - dotnet
     - csharp
-    - fsharp
     - php
     - ruby
     - swift
@@ -39,7 +34,11 @@ metadata:
     - terraform
     - docker
     - kubernetes
-    - ansible
+    - sql
+    - fastapi
+    - frappe
+    - flutter
+    - objective-c
   selector_roles:
     - user_facing
     - user_visible

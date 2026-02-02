@@ -17,8 +17,6 @@ metadata:
   custom: 'false'
   profile_scopes:
     - python
-    - django
-    - flask
     - fastapi
     - frappe
     - javascript

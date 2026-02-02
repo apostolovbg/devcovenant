@@ -18,16 +18,12 @@ metadata:
     - global
     - docs
     - data
+    - suffixes
     - python
     - javascript
     - typescript
     - java
-    - kotlin
-    - scala
-    - groovy
-    - dotnet
     - csharp
-    - fsharp
     - php
     - ruby
     - go
@@ -38,6 +34,10 @@ metadata:
     - terraform
     - docker
     - kubernetes
+    - sql
+    - fastapi
+    - frappe
+    - objective-c
   version_file: VERSION
   readme_files:
     - README.md

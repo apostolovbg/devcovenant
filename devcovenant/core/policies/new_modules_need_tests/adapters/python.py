@@ -43,6 +43,8 @@ def _collect_changed_tests(
 
 def _is_module(path: Path, selector: SelectorSet, repo_root: Path) -> bool:
     """Return True when path represents a Python module to track."""
+    if "devcovenant/core/profiles/" in path.as_posix():
+        return False
     if path.suffix.lower() not in PY_SUFFIXES:
         return False
     try:

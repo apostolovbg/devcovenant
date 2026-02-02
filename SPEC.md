@@ -296,9 +296,12 @@ Devflow gate status is stored in `.devcov-state/test_status.json`, created
 - Built-in policies have canonical text stored in
   `devcovenant/registry/global/stock_policy_texts.yaml`.
 - Policies are activated by profiles: a policy is in scope only when a profile
-  lists it (or config overlays add it). Core policy YAMLs do not hard-code
-  `profile_scopes`; scopes are derived from profiles plus config overlays
-  during registry generation.
+  lists it (or config overlays add it). There is no implicit execution; the
+  `global` profile must be active and must list every global policy. Core
+  policy YAMLs retain `profile_scopes` as documentation; effective scopes are
+  derived from profiles plus config overlays during registry generation.
+  Custom policies are activated only via custom profiles or config overrides,
+  not by the `global` profile.
 Profiles are explicit—no inheritance or family defaults; each profile lists
 its own assets, suffixes, policies, and overlays.
 - Custom policy `readme-sync` enforces that `devcovenant/README.md` mirrors
@@ -516,6 +519,10 @@ its own assets, suffixes, policies, and overlays.
   tables only—authors consult them when manually populating profile YAMLs;
   they are not a source-of-truth that is materialized into the manifests.
   Generic `profile.yaml` stubs are still invalid once normalization runs.
+- The stock catalog is intentionally slim: global, docs, data, suffixes,
+  python, javascript, typescript, java, go, rust, php, ruby, csharp, sql,
+  docker, terraform, kubernetes, fastapi, frappe, dart, flutter, swift,
+  objective-c. Retired stacks should be added back as custom profiles.
 - Install and update share a unified self-install/self-refresh workflow.
   Whatever command runs operates on the host repository: invoking the installed
   package (on `PATH`) targets the current working repo.

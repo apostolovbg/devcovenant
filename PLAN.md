@@ -128,15 +128,21 @@ It is the checklist we consult before declaring the spec satisfied.
   Warn when required metadata or command hints are absent.
 - [done] Dogfood-only policies (`patches-txt-sync`, `gcv-script-naming`,
   `security-compliance-notes`) are removed from the DevCovenant repo.
+- [done] Reduced the stock profile catalog to a slim, maintained set
+  (global, docs, data, suffixes, python, javascript, typescript, java, go,
+  rust, php, ruby, csharp, sql, docker, terraform, kubernetes, fastapi,
+  frappe, dart, flutter, swift, objective-c) and updated
+  PROFILE_MAP/POLICY_MAP/SPEC to describe the change. Retired stacks are to be
+  reintroduced only as custom profiles.
 - [not done] Per-profile descriptors (`<profile>.yaml`) must be populated
   manually (maps are reference only); many profiles are still stubs and need
   real assets/overlays before marking complete.
-- [not done] Profile-first scoping: policy scopes come only from profiles
-  (and config `profile_overlays.<profile>.custom_policies`), not from policy
-  YAML defaults. Core profiles remain immutable; custom policies can be
-  attached via the overlay mechanism or by defining a custom profile with the
-  desired metadata. Profiles are explicit—no inheritance/family defaults; each
-  profile must list its own assets, suffixes, policies, and overlays.
+- [done] Profile-first scoping: policies run only when a profile lists them
+  (including `global`, which now activates all global policies explicitly).
+  Policy `profile_scopes` stay as documentation only. Profiles are explicit—no
+  inheritance; each profile lists its own assets, suffixes, policies, and
+  overlays. Custom policies remain opt-in via custom profiles or config
+  overrides (not implicitly active in `global`).
 
 ### Policy metadata redesign
 - [done] Define per-policy YAML descriptors that include the managed

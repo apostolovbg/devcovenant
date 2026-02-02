@@ -28,3 +28,10 @@ policy_overlays:
       - tests/devcovenant/core
       - tests/devcovenant/custom
 autogen_do_not_apply: []
+policies:
+  - documentation-growth-tracking
+  - line-length-limit
+  - new-modules-need-tests
+  - devcov-raw-string-escapes
+  - managed-doc-assets
+  - readme-sync

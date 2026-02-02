@@ -23,6 +23,7 @@ devcov_core_paths:
 
 profiles:
   active:
+    - global
     - data
     - devcovrepo
     - docs

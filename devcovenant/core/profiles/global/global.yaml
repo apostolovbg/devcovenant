@@ -5,4 +5,20 @@ suffixes: []
 ignore_dirs: []
 assets: []
 policy_overlays: {}
-policies: []
+policies:
+  - devcov-self-enforcement
+  - devcov-structure-guard
+  - policy-text-presence
+  - devcov-parity-guard
+  - devflow-run-gates
+  - track-test-status
+  - changelog-coverage
+  - no-future-dates
+  - read-only-directories
+  - managed-environment
+  - semantic-version-scope
+  - last-updated-placement
+  - documentation-growth-tracking
+  - line-length-limit
+  - version-sync
+  - dependency-license-sync

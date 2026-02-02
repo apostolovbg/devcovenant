@@ -14,6 +14,8 @@ SUFFIXES = {".ts", ".tsx"}
 
 def _is_module(path: Path, selector: SelectorSet, repo_root: Path) -> bool:
     """Return True when the path is a TS module under enforcement."""
+    if "devcovenant/core/profiles/" in path.as_posix():
+        return False
     if path.suffix.lower() not in SUFFIXES:
         return False
     return selector.matches(path, repo_root)

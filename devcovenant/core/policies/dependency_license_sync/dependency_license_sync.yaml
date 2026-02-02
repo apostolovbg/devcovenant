@@ -18,12 +18,7 @@ metadata:
     - javascript
     - typescript
     - java
-    - kotlin
-    - scala
-    - groovy
-    - dotnet
     - csharp
-    - fsharp
     - php
     - ruby
     - go
@@ -31,13 +26,9 @@ metadata:
     - swift
     - dart
     - flutter
-    - elixir
-    - erlang
-    - haskell
-    - clojure
-    - julia
-    - ocaml
-    - crystal
+    - fastapi
+    - frappe
+    - objective-c
   dependency_files:
     - requirements.in
     - requirements.lock

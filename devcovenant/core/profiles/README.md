@@ -1,30 +1,36 @@
-# Profiles
-
-## Table of Contents
-1. Overview
-2. Structure
-3. Workflow
+# DevCovenant Profiles
 
 ## Overview
-Profiles describe repository shapes (languages, frameworks, and data layouts)
-so DevCovenant can select the right policy scopes, suffixes, ignores, and
-profile-specific assets. Core profiles live under
-`devcovenant/core/profiles/<profile>/`. Custom overrides live under
-`devcovenant/custom/profiles/<profile>/` and take precedence when the same
-profile name exists in both locations. The `global` profile is always active
-and supplies baseline assets such as standard docs and tooling helpers.
+This directory holds the stock profiles after the catalog reduction. Each
+profile folder contains `profile.yaml`, optional assets, and a gitignore
+fragment. Profiles activate policies explicitly through the `policies:` list
+plus `policy_overlays` for per-profile metadata. Global policies apply to all
+profiles automatically.
 
-## Structure
-Each profile folder contains:
-- `profile.yaml` describing suffixes, ignores, and policy overlays.
-- `assets/` containing files that should be installed when the profile is
-  active (for example, framework configs or language-specific assets).
+## Table of Contents
+- How profiles are organized
+- Activation rules
+- Workflow expectations
 
-Profile assets override policy assets when they declare the same path, so
-framework-specific files win over generic defaults.
+## How profiles are organized
+Profiles live in `devcovenant/core/profiles/<name>/`. Only the following
+profiles remain: global, docs, data, suffixes, devcovuser, python,
+javascript, typescript, java, go, rust, php, ruby, csharp, sql, docker,
+terraform, kubernetes, fastapi, frappe, dart, flutter, swift, objective-c.
+
+## Activation rules
+A policy runs for a profile when the profile lists it under `policies:`.
+Policy `profile_scopes` document intent but do not auto-activate. Overlays
+supply per-profile settings (suffixes, required commands, dependency files).
+
+## Workflow expectations
+Managed docs and policies are kept in sync via `devcovenant/run_pre_commit.py`
+(start/tests/end). When adding or editing profiles, refresh POLICY_MAP and
+PROFILE_MAP and run the gate sequence before committing.
 
 ## Workflow
-When adding or updating a profile, adjust its `profile.yaml`, update any assets
-in the `assets/` folder, and refresh the generated profile catalog. Ensure
-install/update logic can resolve the profile assets and that the manifest lists
-any new required paths.
+- Run `python3 devcovenant/run_pre_commit.py --phase start` before edits.
+- Make changes and keep POLICY_MAP/PROFILE_MAP aligned with the active
+  profiles.
+- Run `python3 devcovenant/run_tests.py`.
+- Finish with `python3 devcovenant/run_pre_commit.py --phase end`.

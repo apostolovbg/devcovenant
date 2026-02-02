@@ -21,12 +21,7 @@ metadata:
     - go
     - rust
     - java
-    - kotlin
-    - scala
-    - groovy
-    - dotnet
     - csharp
-    - fsharp
     - php
     - ruby
     - swift
@@ -34,7 +29,11 @@ metadata:
     - terraform
     - docker
     - kubernetes
-    - ansible
+    - sql
+    - fastapi
+    - frappe
+    - flutter
+    - objective-c
   max_length: '79'
   include_suffixes:
     - .py
