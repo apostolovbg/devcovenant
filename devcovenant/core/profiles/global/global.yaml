@@ -4,7 +4,29 @@ category: core
 suffixes: []
 ignore_dirs: []
 assets: []
-policy_overlays: {}
+policy_overlays:
+  documentation-growth-tracking:
+    user_facing_suffixes:
+      - .py
+      - .js
+      - .ts
+      - .tsx
+      - .vue
+      - .go
+      - .rs
+      - .java
+      - .kt
+      - .swift
+      - .rb
+      - .php
+      - .cs
+      - .yml
+      - .yaml
+      - .json
+      - .toml
+      - .md
+      - .rst
+      - .txt
 policies:
   - devcov-self-enforcement
   - devcov-structure-guard

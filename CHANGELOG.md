@@ -40,6 +40,22 @@ Example entry:
   Files:
   POLICY_MAP.md
   PROFILE_MAP.md
+- 2026-02-02: Added documentation-growth-tracking overlays for docs/global
+  profiles to enumerate user-facing suffixes explicitly.
+  Files:
+  devcovenant/core/profiles/docs/docs.yaml
+  devcovenant/core/profiles/global/global.yaml
+- 2026-02-02: Generated canonical policy metadata schema from descriptors and
+  added regression test to keep it in sync.
+  Files:
+  devcovenant/core/generate_policy_metadata_schema.py
+  devcovenant/registry/global/policy_metadata_schema.yaml
+  tests/core/tests/test_policy_metadata_schema.py
+  PLAN.md
+- 2026-02-02: Marked PLAN tasks for map materialization and profile descriptor
+  completion as done after aligning profiles/policies with reference maps.
+  Files:
+  PLAN.md
 - 2026-02-02: Clarified dependency-license-sync as profile-scoped (not global)
   and removed it from the global profile; map now documents per-profile
   activation only.

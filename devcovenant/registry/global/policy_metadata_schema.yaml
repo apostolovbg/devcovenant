@@ -1,5 +1,28 @@
 policies:
   changelog-coverage:
+    defaults:
+      apply:
+      - true
+      auto_fix:
+      - false
+      collections:
+      - __none__
+      custom:
+      - false
+      enforcement:
+      - active
+      id:
+      - changelog-coverage
+      main_changelog:
+      - CHANGELOG.md
+      profile_scopes:
+      - global
+      severity:
+      - error
+      skipped_files:
+      - CHANGELOG.md
+      - .gitignore
+      - .pre-commit-config.yaml
     keys:
     - id
     - severity
@@ -11,30 +34,54 @@ policies:
     - main_changelog
     - skipped_files
     - collections
+  dependency-license-sync:
     defaults:
-      id:
-      - changelog-coverage
-      severity:
-      - error
+      apply:
+      - 'true'
       auto_fix:
-      - 'False'
+      - 'true'
+      custom:
+      - 'false'
+      dependency_dirs: []
+      dependency_files:
+      - requirements.in
+      - requirements.lock
+      - pyproject.toml
+      dependency_globs: []
       enforcement:
       - active
-      apply:
-      - 'True'
-      custom:
-      - 'False'
+      id:
+      - dependency-license-sync
+      licenses_dir:
+      - licenses
       profile_scopes:
-      - global
-      main_changelog:
-      - CHANGELOG.md
-      skipped_files:
-      - CHANGELOG.md
-      - .gitignore
-      - .pre-commit-config.yaml
-      collections:
-      - __none__
-  dependency-license-sync:
+      - python
+      - javascript
+      - typescript
+      - java
+      - csharp
+      - php
+      - ruby
+      - go
+      - rust
+      - swift
+      - dart
+      - flutter
+      - fastapi
+      - frappe
+      - objective-c
+      report_heading:
+      - '## License Report'
+      selector_roles:
+      - dependency
+      severity:
+      - error
+      status:
+      - active
+      third_party_file:
+      - THIRD_PARTY_LICENSES.md
+      updated:
+      - 'false'
     keys:
     - id
     - status
@@ -52,24 +99,163 @@ policies:
     - selector_roles
     - dependency_globs
     - dependency_dirs
+  devcov-parity-guard:
     defaults:
-      id:
-      - dependency-license-sync
-      status:
-      - active
-      severity:
-      - error
-      auto_fix:
+      apply:
       - 'true'
-      updated:
+      auto_fix:
+      - 'false'
+      custom:
       - 'false'
       enforcement:
       - active
+      id:
+      - devcov-parity-guard
+      policy_definitions:
+      - AGENTS.md
+      profile_scopes:
+      - global
+      severity:
+      - warning
+      status:
+      - active
+      updated:
+      - 'false'
+    keys:
+    - id
+    - status
+    - severity
+    - auto_fix
+    - updated
+    - enforcement
+    - apply
+    - custom
+    - profile_scopes
+    - policy_definitions
+  devcov-raw-string-escapes:
+    defaults:
       apply:
       - 'true'
+      auto_fix:
+      - 'false'
+      custom:
+      - 'true'
+      enforcement:
+      - active
+      freeze:
+      - 'false'
+      id:
+      - devcov-raw-string-escapes
+      profile_scopes:
+      - devcovrepo
+      severity:
+      - warning
+      status:
+      - active
+      updated:
+      - 'false'
+    keys:
+    - id
+    - status
+    - severity
+    - auto_fix
+    - updated
+    - enforcement
+    - apply
+    - custom
+    - freeze
+    - profile_scopes
+  devcov-self-enforcement:
+    defaults:
+      apply:
+      - 'true'
+      auto_fix:
+      - 'false'
       custom:
       - 'false'
+      enforcement:
+      - active
+      id:
+      - devcov-self-enforcement
+      policy_definitions:
+      - AGENTS.md
       profile_scopes:
+      - global
+      registry_file:
+      - devcovenant/registry/local/policy_registry.yaml
+      severity:
+      - error
+      status:
+      - active
+      updated:
+      - 'false'
+    keys:
+    - id
+    - status
+    - severity
+    - auto_fix
+    - updated
+    - enforcement
+    - apply
+    - custom
+    - profile_scopes
+    - policy_definitions
+    - registry_file
+  devcov-structure-guard:
+    defaults:
+      apply:
+      - 'true'
+      auto_fix:
+      - 'false'
+      custom:
+      - 'false'
+      enforcement:
+      - active
+      id:
+      - devcov-structure-guard
+      profile_scopes:
+      - global
+      severity:
+      - error
+      status:
+      - active
+      updated:
+      - 'false'
+    keys:
+    - id
+    - status
+    - severity
+    - auto_fix
+    - updated
+    - enforcement
+    - apply
+    - custom
+    - profile_scopes
+  devflow-run-gates:
+    defaults:
+      apply:
+      - 'true'
+      auto_fix:
+      - 'false'
+      code_extensions: []
+      custom:
+      - 'false'
+      enforcement:
+      - active
+      id:
+      - devflow-run-gates
+      pre_commit_command:
+      - python3 -m pre_commit run --all-files
+      pre_commit_end_command_key:
+      - pre_commit_end_command
+      pre_commit_end_epoch_key:
+      - pre_commit_end_epoch
+      pre_commit_start_command_key:
+      - pre_commit_start_command
+      pre_commit_start_epoch_key:
+      - pre_commit_start_epoch
+      profile_scopes:
+      - global
       - python
       - javascript
       - typescript
@@ -94,153 +280,21 @@ policies:
       - julia
       - ocaml
       - crystal
-      dependency_files:
-      - requirements.in
-      - requirements.lock
-      - pyproject.toml
-      third_party_file:
-      - THIRD_PARTY_LICENSES.md
-      licenses_dir:
-      - licenses
-      report_heading:
-      - '## License Report'
-      selector_roles:
-      - dependency
-      dependency_globs: []
-      dependency_dirs: []
-  devcov-parity-guard:
-    keys:
-    - id
-    - status
-    - severity
-    - auto_fix
-    - updated
-    - enforcement
-    - apply
-    - custom
-    - profile_scopes
-    - policy_definitions
-    defaults:
-      id:
-      - devcov-parity-guard
-      status:
-      - active
-      severity:
-      - warning
-      auto_fix:
-      - 'false'
-      updated:
-      - 'false'
-      enforcement:
-      - active
-      apply:
+      require_pre_commit_end:
       - 'true'
-      custom:
-      - 'false'
-      profile_scopes:
-      - global
-      policy_definitions:
-      - AGENTS.md
-  devcov-raw-string-escapes:
-    keys:
-    - id
-    - status
-    - severity
-    - auto_fix
-    - updated
-    - enforcement
-    - apply
-    - custom
-    - freeze
-    - profile_scopes
-    defaults:
-      id:
-      - devcov-raw-string-escapes
-      status:
-      - active
-      severity:
-      - warning
-      auto_fix:
-      - 'false'
-      updated:
-      - 'false'
-      enforcement:
-      - active
-      apply:
+      require_pre_commit_start:
       - 'true'
-      custom:
-      - 'true'
-      freeze:
-      - 'false'
-      profile_scopes:
-      - devcovrepo
-  devcov-self-enforcement:
-    keys:
-    - id
-    - status
-    - severity
-    - auto_fix
-    - updated
-    - enforcement
-    - apply
-    - custom
-    - profile_scopes
-    - policy_definitions
-    - registry_file
-    defaults:
-      id:
-      - devcov-self-enforcement
-      status:
-      - active
+      required_commands:
+      - pytest
+      - python3 -m unittest discover
       severity:
       - error
-      auto_fix:
-      - 'false'
-      updated:
-      - 'false'
-      enforcement:
-      - active
-      apply:
-      - 'true'
-      custom:
-      - 'false'
-      profile_scopes:
-      - global
-      policy_definitions:
-      - AGENTS.md
-      registry_file:
-      - devcovenant/registry/local/policy_registry.yaml
-  devcov-structure-guard:
-    keys:
-    - id
-    - status
-    - severity
-    - auto_fix
-    - updated
-    - enforcement
-    - apply
-    - custom
-    - profile_scopes
-    defaults:
-      id:
-      - devcov-structure-guard
       status:
       - active
-      severity:
-      - error
-      auto_fix:
-      - 'false'
+      test_status_file:
+      - .devcov-state/test_status.json
       updated:
       - 'false'
-      enforcement:
-      - active
-      apply:
-      - 'true'
-      custom:
-      - 'false'
-      profile_scopes:
-      - global
-  devflow-run-gates:
     keys:
     - id
     - status
@@ -261,139 +315,56 @@ policies:
     - pre_commit_start_command_key
     - pre_commit_end_command_key
     - code_extensions
-    defaults:
-      id:
-      - devflow-run-gates
-      status:
-      - active
-      severity:
-      - error
-      auto_fix:
-      - 'false'
-      updated:
-      - 'false'
-      enforcement:
-      - active
-      apply:
-      - 'true'
-      custom:
-      - 'false'
-      profile_scopes:
-      - global
-      - python
-      - javascript
-      - typescript
-      - java
-      - kotlin
-      - scala
-      - groovy
-      - dotnet
-      - csharp
-      - fsharp
-      - php
-      - ruby
-      - go
-      - rust
-      - swift
-      - dart
-      - flutter
-      - elixir
-      - erlang
-      - haskell
-      - clojure
-      - julia
-      - ocaml
-      - crystal
-      test_status_file:
-      - .devcov-state/test_status.json
-      required_commands:
-      - pytest
-      - python3 -m unittest discover
-      require_pre_commit_start:
-      - 'true'
-      require_pre_commit_end:
-      - 'true'
-      pre_commit_command:
-      - python3 -m pre_commit run --all-files
-      pre_commit_start_epoch_key:
-      - pre_commit_start_epoch
-      pre_commit_end_epoch_key:
-      - pre_commit_end_epoch
-      pre_commit_start_command_key:
-      - pre_commit_start_command
-      pre_commit_end_command_key:
-      - pre_commit_end_command
-      code_extensions: []
   docstring-and-comment-coverage:
-    keys:
-    - id
-    - status
-    - severity
-    - auto_fix
-    - updated
-    - enforcement
-    - apply
-    - custom
-    - profile_scopes
-    - include_suffixes
-    - exclude_prefixes
-    - include_prefixes
-    - include_globs
-    - exclude_suffixes
-    - exclude_globs
-    - force_include_globs
-    - selector_roles
-    - include_files
-    - include_dirs
-    - exclude_files
-    - exclude_dirs
-    - force_include_files
-    - force_include_dirs
     defaults:
-      id:
-      - docstring-and-comment-coverage
-      status:
-      - active
-      severity:
-      - error
+      apply:
+      - 'true'
       auto_fix:
       - 'false'
-      updated:
+      custom:
       - 'false'
       enforcement:
       - active
-      apply:
-      - 'true'
-      custom:
-      - 'false'
-      profile_scopes:
-      - python
-      include_suffixes:
-      - .py
-      exclude_prefixes:
-      - build
-      - dist
-      - node_modules
-      include_prefixes: []
-      include_globs:
-      - '*.py'
-      exclude_suffixes: []
+      exclude_dirs: []
+      exclude_files: []
       exclude_globs:
       - build/**
       - dist/**
       - node_modules/**
+      exclude_prefixes:
+      - build
+      - dist
+      - node_modules
+      exclude_suffixes: []
+      force_include_dirs: []
+      force_include_files: []
       force_include_globs: []
+      id:
+      - docstring-and-comment-coverage
+      include_dirs: []
+      include_files: []
+      include_globs:
+      - '*.py'
+      include_prefixes: []
+      include_suffixes: []
+      profile_scopes:
+      - python
+      - javascript
+      - typescript
+      - go
+      - rust
+      - java
+      - csharp
       selector_roles:
       - include
       - exclude
       - force_include
-      include_files: []
-      include_dirs: []
-      exclude_files: []
-      exclude_dirs: []
-      force_include_files: []
-      force_include_dirs: []
-  documentation-growth-tracking:
+      severity:
+      - error
+      status:
+      - active
+      updated:
+      - 'false'
     keys:
     - id
     - status
@@ -404,63 +375,90 @@ policies:
     - apply
     - custom
     - profile_scopes
-    - selector_roles
-    - include_prefixes
-    - exclude_prefixes
-    - user_facing_prefixes
-    - user_facing_exclude_prefixes
-    - user_facing_suffixes
-    - user_facing_files
-    - user_facing_globs
-    - user_facing_keywords
-    - user_visible_files
-    - doc_quality_files
-    - required_headings
-    - require_toc
-    - min_section_count
-    - min_word_count
-    - quality_severity
-    - require_mentions
-    - mention_severity
-    - mention_min_length
-    - mention_stopwords
     - include_suffixes
+    - exclude_prefixes
+    - include_prefixes
     - include_globs
     - exclude_suffixes
     - exclude_globs
     - force_include_globs
-    - user_facing_exclude_globs
-    - user_facing_exclude_suffixes
-    - user_facing_dirs
-    - user_visible_globs
-    - user_visible_dirs
-    - doc_quality_globs
-    - doc_quality_dirs
+    - selector_roles
     - include_files
     - include_dirs
     - exclude_files
     - exclude_dirs
-    - user_facing_exclude_files
-    - user_facing_exclude_dirs
     - force_include_files
     - force_include_dirs
+  documentation-growth-tracking:
     defaults:
-      id:
-      - documentation-growth-tracking
-      status:
-      - active
-      severity:
-      - info
-      auto_fix:
-      - 'false'
-      updated:
-      - 'false'
-      enforcement:
-      - active
       apply:
       - 'true'
+      auto_fix:
+      - 'false'
       custom:
       - 'false'
+      doc_quality_dirs: []
+      doc_quality_files:
+      - README.md
+      - CONTRIBUTING.md
+      - AGENTS.md
+      - SPEC.md
+      - PLAN.md
+      - devcovenant/README.md
+      doc_quality_globs: []
+      enforcement:
+      - active
+      exclude_dirs: []
+      exclude_files: []
+      exclude_globs:
+      - tests/**
+      exclude_prefixes:
+      - tests
+      exclude_suffixes: []
+      force_include_dirs: []
+      force_include_files: []
+      force_include_globs: []
+      id:
+      - documentation-growth-tracking
+      include_dirs: []
+      include_files: []
+      include_globs:
+      - devcovenant/**
+      - tools/**
+      - .github/**
+      include_prefixes:
+      - devcovenant
+      - tools
+      - .github
+      include_suffixes: []
+      mention_min_length:
+      - '3'
+      mention_severity:
+      - warning
+      mention_stopwords:
+      - devcovenant
+      - tools
+      - common
+      - custom
+      - policy
+      - policies
+      - script
+      - scripts
+      - py
+      - js
+      - ts
+      - json
+      - yml
+      - yaml
+      - toml
+      - md
+      - readme
+      - plan
+      - spec
+      min_section_count:
+      - '3'
+      min_word_count:
+      - '120'
       profile_scopes:
       - global
       - docs
@@ -471,12 +469,7 @@ policies:
       - go
       - rust
       - java
-      - kotlin
-      - scala
-      - groovy
-      - dotnet
       - csharp
-      - fsharp
       - php
       - ruby
       - swift
@@ -484,41 +477,42 @@ policies:
       - terraform
       - docker
       - kubernetes
-      - ansible
+      - sql
+      - fastapi
+      - frappe
+      - flutter
+      - objective-c
+      quality_severity:
+      - warning
+      require_mentions:
+      - 'true'
+      require_toc:
+      - 'true'
+      required_headings:
+      - Table of Contents
+      - Overview
+      - Workflow
       selector_roles:
       - user_facing
       - user_visible
       - doc_quality
-      include_prefixes:
-      - devcovenant
-      - tools
-      - .github
-      exclude_prefixes:
-      - tests
-      user_facing_prefixes:
-      - devcovenant
-      - tools
-      - .github
+      severity:
+      - info
+      status:
+      - active
+      updated:
+      - 'false'
+      user_facing_dirs:
+      - devcovenant/**
+      - tools/**
+      - .github/**
+      user_facing_exclude_dirs:
+      - tests/**
+      user_facing_exclude_files: []
+      user_facing_exclude_globs: []
       user_facing_exclude_prefixes:
       - tests
-      user_facing_suffixes:
-      - .py
-      - .js
-      - .ts
-      - .tsx
-      - .vue
-      - .go
-      - .rs
-      - .java
-      - .kt
-      - .swift
-      - .rb
-      - .php
-      - .cs
-      - .yml
-      - .yaml
-      - .json
-      - .toml
+      user_facing_exclude_suffixes: []
       user_facing_files:
       - devcovenant/cli.py
       - devcovenant/__main__.py
@@ -576,6 +570,29 @@ policies:
       - forms
       - workflow
       - workflows
+      user_facing_prefixes:
+      - devcovenant
+      - tools
+      - .github
+      user_facing_suffixes:
+      - .py
+      - .js
+      - .ts
+      - .tsx
+      - .vue
+      - .go
+      - .rs
+      - .java
+      - .kt
+      - .swift
+      - .rb
+      - .php
+      - .cs
+      - .yml
+      - .yaml
+      - .json
+      - .toml
+      user_visible_dirs: []
       user_visible_files:
       - README.md
       - CONTRIBUTING.md
@@ -583,80 +600,112 @@ policies:
       - SPEC.md
       - PLAN.md
       - devcovenant/README.md
-      doc_quality_files:
+      user_visible_globs: []
+    keys:
+    - id
+    - status
+    - severity
+    - auto_fix
+    - updated
+    - enforcement
+    - apply
+    - custom
+    - profile_scopes
+    - selector_roles
+    - include_prefixes
+    - exclude_prefixes
+    - user_facing_prefixes
+    - user_facing_exclude_prefixes
+    - user_facing_suffixes
+    - user_facing_files
+    - user_facing_globs
+    - user_facing_keywords
+    - user_visible_files
+    - doc_quality_files
+    - required_headings
+    - require_toc
+    - min_section_count
+    - min_word_count
+    - quality_severity
+    - require_mentions
+    - mention_severity
+    - mention_min_length
+    - mention_stopwords
+    - include_suffixes
+    - include_globs
+    - exclude_suffixes
+    - exclude_globs
+    - force_include_globs
+    - user_facing_exclude_globs
+    - user_facing_exclude_suffixes
+    - user_facing_dirs
+    - user_visible_globs
+    - user_visible_dirs
+    - doc_quality_globs
+    - doc_quality_dirs
+    - include_files
+    - include_dirs
+    - exclude_files
+    - exclude_dirs
+    - user_facing_exclude_files
+    - user_facing_exclude_dirs
+    - force_include_files
+    - force_include_dirs
+  last-updated-placement:
+    defaults:
+      allowed_dirs: []
+      allowed_files: []
+      allowed_globs:
+      - '>'
       - README.md
-      - CONTRIBUTING.md
       - AGENTS.md
+      - CONTRIBUTING.md
+      - CHANGELOG.md
       - SPEC.md
       - PLAN.md
       - devcovenant/README.md
-      required_headings:
-      - Table of Contents
-      - Overview
-      - Workflow
-      require_toc:
+      - devcovenant/core/profiles/global/assets/*.yaml
+      allowed_suffixes: []
+      apply:
       - 'true'
-      min_section_count:
-      - '3'
-      min_word_count:
-      - '120'
-      quality_severity:
-      - warning
-      require_mentions:
+      auto_fix:
       - 'true'
-      mention_severity:
-      - warning
-      mention_min_length:
-      - '3'
-      mention_stopwords:
-      - devcovenant
-      - tools
-      - common
-      - custom
-      - policy
-      - policies
-      - script
-      - scripts
-      - py
-      - js
-      - ts
-      - json
-      - yml
-      - yaml
-      - toml
-      - md
-      - readme
-      - plan
-      - spec
-      include_suffixes: []
-      include_globs:
-      - devcovenant/**
-      - tools/**
-      - .github/**
-      exclude_suffixes: []
-      exclude_globs:
-      - tests/**
-      force_include_globs: []
-      user_facing_exclude_globs: []
-      user_facing_exclude_suffixes: []
-      user_facing_dirs:
-      - devcovenant/**
-      - tools/**
-      - .github/**
-      user_visible_globs: []
-      user_visible_dirs: []
-      doc_quality_globs: []
-      doc_quality_dirs: []
-      include_files: []
+      custom:
+      - 'false'
+      enforcement:
+      - active
+      id:
+      - last-updated-placement
       include_dirs: []
-      exclude_files: []
-      exclude_dirs: []
-      user_facing_exclude_files: []
-      user_facing_exclude_dirs:
-      - tests/**
-      force_include_files: []
-      force_include_dirs: []
-  last-updated-placement:
+      include_files: []
+      include_globs:
+      - '*.md'
+      include_suffixes:
+      - .md
+      profile_scopes:
+      - global
+      - docs
+      - data
+      required_dirs: []
+      required_files: []
+      required_globs:
+      - README.md
+      - AGENTS.md
+      - CONTRIBUTING.md
+      - CHANGELOG.md
+      - SPEC.md
+      - PLAN.md
+      - devcovenant/README.md
+      selector_roles:
+      - include
+      - allowed
+      - required
+      severity:
+      - error
+      status:
+      - active
+      updated:
+      - 'false'
     keys:
     - id
     - status
@@ -679,61 +728,93 @@ policies:
     - include_dirs
     - allowed_dirs
     - required_dirs
+  line-length-limit:
     defaults:
-      id:
-      - last-updated-placement
-      status:
-      - active
-      severity:
-      - error
-      auto_fix:
+      apply:
       - 'true'
-      updated:
+      auto_fix:
+      - 'false'
+      custom:
       - 'false'
       enforcement:
       - active
-      apply:
-      - 'true'
-      custom:
-      - 'false'
+      exclude_dirs: []
+      exclude_files: []
+      exclude_globs:
+      - devcovenant/core/profiles/global/assets/*.yaml
+      - devcovenant/core/stock_policy_texts.json
+      - build/**
+      - dist/**
+      - node_modules/**
+      exclude_prefixes:
+      - build
+      - dist
+      - node_modules
+      exclude_suffixes: []
+      force_include_dirs: []
+      force_include_files: []
+      force_include_globs: []
+      id:
+      - line-length-limit
+      include_dirs: []
+      include_files: []
+      include_globs:
+      - '*.>'
+      - '*.py'
+      - '*.md'
+      - '*.rst'
+      - '*.txt'
+      - '*.yml'
+      - '*.yaml'
+      - '*.json'
+      - '*.toml'
+      - '*.cff'
+      include_prefixes: []
+      include_suffixes:
+      - .py
+      - .md
+      - .rst
+      - .txt
+      - .yml
+      - .yaml
+      - .json
+      - .toml
+      - .cff
+      max_length:
+      - '79'
       profile_scopes:
       - global
       - docs
       - data
-      include_suffixes:
-      - .md
-      allowed_globs:
-      - '>'
-      - README.md
-      - AGENTS.md
-      - CONTRIBUTING.md
-      - CHANGELOG.md
-      - SPEC.md
-      - PLAN.md
-      - devcovenant/README.md
-      - devcovenant/core/profiles/global/assets/*.yaml
-      allowed_files: []
-      allowed_suffixes: []
-      required_files: []
-      required_globs:
-      - README.md
-      - AGENTS.md
-      - CONTRIBUTING.md
-      - CHANGELOG.md
-      - SPEC.md
-      - PLAN.md
-      - devcovenant/README.md
+      - python
+      - javascript
+      - typescript
+      - go
+      - rust
+      - java
+      - csharp
+      - php
+      - ruby
+      - swift
+      - dart
+      - terraform
+      - docker
+      - kubernetes
+      - sql
+      - fastapi
+      - frappe
+      - flutter
+      - objective-c
       selector_roles:
       - include
-      - allowed
-      - required
-      include_globs:
-      - '*.md'
-      include_files: []
-      include_dirs: []
-      allowed_dirs: []
-      required_dirs: []
-  line-length-limit:
+      - exclude
+      - force_include
+      severity:
+      - warning
+      status:
+      - active
+      updated:
+      - 'false'
     keys:
     - id
     - status
@@ -759,96 +840,22 @@ policies:
     - exclude_dirs
     - force_include_files
     - force_include_dirs
+  managed-doc-assets:
     defaults:
-      id:
-      - line-length-limit
-      status:
-      - active
-      severity:
-      - warning
-      auto_fix:
-      - 'false'
-      updated:
-      - 'false'
-      enforcement:
-      - active
       apply:
       - 'true'
-      custom:
+      auto_fix:
       - 'false'
+      custom:
+      - 'true'
+      enforcement:
+      - active
+      id:
+      - managed-doc-assets
       profile_scopes:
-      - global
-      - docs
-      - data
-      - python
-      - javascript
-      - typescript
-      - go
-      - rust
-      - java
-      - kotlin
-      - scala
-      - groovy
-      - dotnet
-      - csharp
-      - fsharp
-      - php
-      - ruby
-      - swift
-      - dart
-      - terraform
-      - docker
-      - kubernetes
-      - ansible
-      max_length:
-      - '79'
-      include_suffixes:
-      - '>'
-      - .py
-      - .md
-      - .rst
-      - .txt
-      - .yml
-      - .yaml
-      - .json
-      - .toml
-      - .cff
-      exclude_prefixes:
-      - build
-      - dist
-      - node_modules
-      exclude_globs:
-      - '>'
-      - devcovenant/core/profiles/global/assets/*.yaml
-      - devcovenant/core/stock_policy_texts.json
-      - build/**
-      - dist/**
-      - node_modules/**
-      include_prefixes: []
-      include_globs:
-      - '*.>'
-      - '*.py'
-      - '*.md'
-      - '*.rst'
-      - '*.txt'
-      - '*.yml'
-      - '*.yaml'
-      - '*.json'
-      - '*.toml'
-      - '*.cff'
-      exclude_suffixes: []
-      force_include_globs: []
-      selector_roles:
-      - include
-      - exclude
-      - force_include
-      include_files: []
-      include_dirs: []
-      exclude_files: []
-      exclude_dirs: []
-      force_include_files: []
-      force_include_dirs: []
-  managed-doc-assets:
+      - devcovrepo
+      severity:
+      - error
     keys:
     - id
     - severity
@@ -857,22 +864,30 @@ policies:
     - apply
     - custom
     - profile_scopes
+  managed-environment:
     defaults:
-      id:
-      - managed-doc-assets
-      severity:
-      - error
+      apply:
+      - 'false'
       auto_fix:
+      - 'false'
+      command_hints: []
+      custom:
       - 'false'
       enforcement:
       - active
-      apply:
-      - 'true'
-      custom:
-      - 'true'
+      expected_interpreters: []
+      expected_paths: []
+      id:
+      - managed-environment
       profile_scopes:
-      - devcovrepo
-  managed-environment:
+      - global
+      required_commands: []
+      severity:
+      - error
+      status:
+      - active
+      updated:
+      - 'false'
     keys:
     - id
     - status
@@ -887,30 +902,55 @@ policies:
     - expected_interpreters
     - required_commands
     - command_hints
+  name-clarity:
     defaults:
-      id:
-      - managed-environment
-      status:
-      - active
-      severity:
-      - error
-      auto_fix:
-      - 'false'
-      updated:
-      - 'false'
-      enforcement:
-      - active
       apply:
+      - 'true'
+      auto_fix:
       - 'false'
       custom:
       - 'false'
+      enforcement:
+      - active
+      exclude_dirs: []
+      exclude_files: []
+      exclude_globs:
+      - build/**
+      - dist/**
+      - node_modules/**
+      exclude_prefixes:
+      - build
+      - dist
+      - node_modules
+      exclude_suffixes: []
+      force_include_dirs: []
+      force_include_files: []
+      force_include_globs: []
+      id:
+      - name-clarity
+      include_dirs: []
+      include_files: []
+      include_globs: []
+      include_prefixes: []
+      include_suffixes: []
       profile_scopes:
-      - global
-      expected_paths: []
-      expected_interpreters: []
-      required_commands: []
-      command_hints: []
-  name-clarity:
+      - python
+      - javascript
+      - typescript
+      - go
+      - rust
+      - java
+      - csharp
+      selector_roles:
+      - exclude
+      - include
+      - force_include
+      severity:
+      - warning
+      status:
+      - active
+      updated:
+      - 'false'
     keys:
     - id
     - status
@@ -935,49 +975,53 @@ policies:
     - include_dirs
     - force_include_files
     - force_include_dirs
+  new-modules-need-tests:
     defaults:
-      id:
-      - name-clarity
-      status:
-      - active
-      severity:
-      - warning
-      auto_fix:
-      - 'false'
-      updated:
-      - 'false'
-      enforcement:
-      - active
       apply:
       - 'true'
-      custom:
+      auto_fix:
       - 'false'
-      profile_scopes:
-      - python
+      custom:
+      - 'true'
+      enforcement:
+      - active
+      exclude_globs:
+      - devcovenant/core/profiles/**
       exclude_prefixes:
       - build
       - dist
       - node_modules
-      include_suffixes: []
-      include_prefixes: []
-      include_globs: []
+      - tests
+      - devcovenant/core/profiles
       exclude_suffixes: []
-      exclude_globs:
-      - build/**
-      - dist/**
-      - node_modules/**
       force_include_globs: []
-      selector_roles:
-      - exclude
-      - include
-      - force_include
-      exclude_files: []
-      exclude_dirs: []
-      include_files: []
-      include_dirs: []
-      force_include_files: []
-      force_include_dirs: []
-  new-modules-need-tests:
+      id:
+      - new-modules-need-tests
+      include_globs: []
+      include_prefixes:
+      - devcovenant
+      include_suffixes: []
+      profile_scopes:
+      - python
+      - fastapi
+      - frappe
+      - javascript
+      - typescript
+      - go
+      - rust
+      - java
+      - csharp
+      severity:
+      - error
+      status:
+      - active
+      tests_watch_dirs:
+      - tests
+      updated:
+      - 'false'
+      watch_dirs:
+      - tests
+      watch_files: []
     keys:
     - id
     - status
@@ -998,46 +1042,26 @@ policies:
     - exclude_suffixes
     - force_include_globs
     - watch_files
+  no-future-dates:
     defaults:
-      id:
-      - new-modules-need-tests
-      status:
-      - active
-      severity:
-      - error
+      apply:
+      - 'true'
       auto_fix:
-      - 'false'
-      updated:
+      - 'true'
+      custom:
       - 'false'
       enforcement:
       - active
-      apply:
-      - 'true'
-      custom:
-      - 'true'
+      id:
+      - no-future-dates
       profile_scopes:
-      - python
-      include_suffixes:
-      - .py
-      include_prefixes:
-      - devcovenant
-      exclude_prefixes:
-      - build
-      - dist
-      - node_modules
-      - tests
-      - devcovenant/core/profiles
-      - devcovenant/custom/profiles
-      exclude_globs: []
-      watch_dirs:
-      - tests
-      tests_watch_dirs:
-      - tests
-      include_globs: []
-      exclude_suffixes: []
-      force_include_globs: []
-      watch_files: []
-  no-future-dates:
+      - global
+      severity:
+      - error
+      status:
+      - active
+      updated:
+      - 'false'
     keys:
     - id
     - status
@@ -1048,26 +1072,28 @@ policies:
     - apply
     - custom
     - profile_scopes
+  policy-text-presence:
     defaults:
-      id:
-      - no-future-dates
-      status:
-      - active
-      severity:
-      - error
-      auto_fix:
+      apply:
       - 'true'
-      updated:
+      auto_fix:
+      - 'false'
+      custom:
       - 'false'
       enforcement:
       - active
-      apply:
-      - 'true'
-      custom:
-      - 'false'
+      id:
+      - policy-text-presence
+      policy_definitions:
+      - AGENTS.md
       profile_scopes:
       - global
-  policy-text-presence:
+      severity:
+      - error
+      status:
+      - active
+      updated:
+      - 'false'
     keys:
     - id
     - status
@@ -1079,28 +1105,28 @@ policies:
     - custom
     - profile_scopes
     - policy_definitions
+  raw-string-escapes:
     defaults:
-      id:
-      - policy-text-presence
-      status:
-      - active
-      severity:
-      - error
+      apply:
+      - 'true'
       auto_fix:
       - 'false'
-      updated:
+      custom:
       - 'false'
       enforcement:
       - active
-      apply:
-      - 'true'
-      custom:
+      freeze:
       - 'false'
+      id:
+      - raw-string-escapes
       profile_scopes:
-      - global
-      policy_definitions:
-      - AGENTS.md
-  raw-string-escapes:
+      - python
+      severity:
+      - warning
+      status:
+      - active
+      updated:
+      - 'false'
     keys:
     - id
     - status
@@ -1112,90 +1138,90 @@ policies:
     - custom
     - freeze
     - profile_scopes
+  read-only-directories:
     defaults:
-      id:
-      - raw-string-escapes
-      status:
-      - active
-      severity:
-      - warning
+      apply:
+      - 'true'
       auto_fix:
       - 'false'
-      updated:
+      custom:
       - 'false'
       enforcement:
       - active
-      apply:
-      - 'true'
-      custom:
-      - 'false'
-      freeze:
-      - 'false'
-      profile_scopes:
-      - python
-  read-only-directories:
-    keys:
-    - id
-    - status
-    - severity
-    - auto_fix
-    - updated
-    - enforcement
-    - apply
-    - custom
-    - profile_scopes
-    - include_globs
-    - include_suffixes
-    - include_prefixes
-    - exclude_suffixes
-    - exclude_prefixes
-    - exclude_globs
-    - force_include_globs
-    - selector_roles
-    - include_files
-    - include_dirs
-    - exclude_files
-    - exclude_dirs
-    - force_include_files
-    - force_include_dirs
-    defaults:
+      exclude_dirs: []
+      exclude_files: []
+      exclude_globs: []
+      exclude_prefixes: []
+      exclude_suffixes: []
+      force_include_dirs: []
+      force_include_files: []
+      force_include_globs: []
       id:
       - read-only-directories
-      status:
-      - active
-      severity:
-      - error
-      auto_fix:
-      - 'false'
-      updated:
-      - 'false'
-      enforcement:
-      - active
-      apply:
-      - 'true'
-      custom:
-      - 'false'
-      profile_scopes:
-      - global
+      include_dirs: []
+      include_files: []
       include_globs:
       - __none__
-      include_suffixes: []
       include_prefixes: []
-      exclude_suffixes: []
-      exclude_prefixes: []
-      exclude_globs: []
-      force_include_globs: []
+      include_suffixes: []
+      profile_scopes:
+      - global
       selector_roles:
       - include
       - exclude
       - force_include
-      include_files: []
-      include_dirs: []
-      exclude_files: []
-      exclude_dirs: []
-      force_include_files: []
-      force_include_dirs: []
+      severity:
+      - error
+      status:
+      - active
+      updated:
+      - 'false'
+    keys:
+    - id
+    - status
+    - severity
+    - auto_fix
+    - updated
+    - enforcement
+    - apply
+    - custom
+    - profile_scopes
+    - include_globs
+    - include_suffixes
+    - include_prefixes
+    - exclude_suffixes
+    - exclude_prefixes
+    - exclude_globs
+    - force_include_globs
+    - selector_roles
+    - include_files
+    - include_dirs
+    - exclude_files
+    - exclude_dirs
+    - force_include_files
+    - force_include_dirs
   readme-sync:
+    defaults:
+      apply:
+      - 'true'
+      auto_fix:
+      - 'true'
+      custom:
+      - 'true'
+      enforcement:
+      - active
+      freeze:
+      - 'true'
+      id:
+      - readme-sync
+      profile_scopes:
+      - global
+      severity:
+      - error
+      status:
+      - active
+      updated:
+      - 'false'
     keys:
     - id
     - status
@@ -1207,91 +1233,107 @@ policies:
     - custom
     - freeze
     - profile_scopes
+  security-scanner:
     defaults:
-      id:
-      - readme-sync
-      status:
-      - active
-      severity:
-      - error
-      auto_fix:
+      apply:
       - 'true'
-      updated:
+      auto_fix:
+      - 'false'
+      custom:
       - 'false'
       enforcement:
       - active
-      apply:
-      - 'true'
-      custom:
-      - 'true'
-      freeze:
-      - 'true'
-      profile_scopes:
-      - global
-  security-scanner:
-    keys:
-    - id
-    - status
-    - severity
-    - auto_fix
-    - updated
-    - exclude_globs
-    - enforcement
-    - apply
-    - custom
-    - profile_scopes
-    - include_suffixes
-    - include_prefixes
-    - include_globs
-    - exclude_suffixes
-    - exclude_prefixes
-    - force_include_globs
-    - selector_roles
-    - exclude_files
-    - exclude_dirs
-    - include_files
-    - include_dirs
-    - force_include_files
-    - force_include_dirs
-    defaults:
-      id:
-      - security-scanner
-      status:
-      - active
-      severity:
-      - error
-      auto_fix:
-      - 'false'
-      updated:
-      - 'false'
+      exclude_dirs: []
+      exclude_files: []
       exclude_globs:
       - tests/**
       - '**/tests/**'
-      enforcement:
-      - active
-      apply:
-      - 'true'
-      custom:
-      - 'false'
+      exclude_prefixes: []
+      exclude_suffixes: []
+      force_include_dirs: []
+      force_include_files: []
+      force_include_globs: []
+      id:
+      - security-scanner
+      include_dirs: []
+      include_files: []
+      include_globs: []
+      include_prefixes: []
+      include_suffixes: []
       profile_scopes:
       - python
-      include_suffixes: []
-      include_prefixes: []
-      include_globs: []
-      exclude_suffixes: []
-      exclude_prefixes: []
-      force_include_globs: []
+      - fastapi
+      - frappe
+      - javascript
+      - typescript
+      - go
+      - rust
+      - java
+      - csharp
       selector_roles:
       - exclude
       - include
       - force_include
-      exclude_files: []
-      exclude_dirs: []
-      include_files: []
-      include_dirs: []
-      force_include_files: []
-      force_include_dirs: []
+      severity:
+      - error
+      status:
+      - active
+      updated:
+      - 'false'
+    keys:
+    - id
+    - status
+    - severity
+    - auto_fix
+    - updated
+    - exclude_globs
+    - enforcement
+    - apply
+    - custom
+    - profile_scopes
+    - include_suffixes
+    - include_prefixes
+    - include_globs
+    - exclude_suffixes
+    - exclude_prefixes
+    - force_include_globs
+    - selector_roles
+    - exclude_files
+    - exclude_dirs
+    - include_files
+    - include_dirs
+    - force_include_files
+    - force_include_dirs
   semantic-version-scope:
+    defaults:
+      apply:
+      - 'false'
+      auto_fix:
+      - 'false'
+      changelog_file:
+      - CHANGELOG.md
+      custom:
+      - 'false'
+      enforcement:
+      - active
+      id:
+      - semantic-version-scope
+      ignored_dirs: []
+      ignored_files: []
+      ignored_globs: []
+      ignored_prefixes: []
+      profile_scopes:
+      - global
+      selector_roles:
+      - ignored
+      severity:
+      - error
+      status:
+      - active
+      updated:
+      - 'false'
+      version_file:
+      - VERSION
     keys:
     - id
     - status
@@ -1309,36 +1351,28 @@ policies:
     - ignored_globs
     - ignored_files
     - ignored_dirs
+  track-test-status:
     defaults:
-      id:
-      - semantic-version-scope
-      status:
-      - active
-      severity:
-      - error
-      auto_fix:
-      - 'false'
-      updated:
-      - 'false'
-      enforcement:
-      - active
       apply:
+      - 'true'
+      auto_fix:
       - 'false'
       custom:
       - 'false'
+      enforcement:
+      - active
+      freeze:
+      - 'false'
+      id:
+      - track-test-status
       profile_scopes:
       - global
-      version_file:
-      - VERSION
-      changelog_file:
-      - CHANGELOG.md
-      ignored_prefixes: []
-      selector_roles:
-      - ignored
-      ignored_globs: []
-      ignored_files: []
-      ignored_dirs: []
-  track-test-status:
+      severity:
+      - warning
+      status:
+      - active
+      updated:
+      - 'false'
     keys:
     - id
     - status
@@ -1350,28 +1384,87 @@ policies:
     - custom
     - freeze
     - profile_scopes
+  version-sync:
     defaults:
-      id:
-      - track-test-status
-      status:
-      - active
-      severity:
-      - warning
+      apply:
+      - 'true'
       auto_fix:
       - 'false'
-      updated:
+      changelog_file:
+      - CHANGELOG.md
+      changelog_header_prefix:
+      - '## Version'
+      custom:
       - 'false'
       enforcement:
       - active
-      apply:
-      - 'true'
-      custom:
-      - 'false'
-      freeze:
-      - 'false'
+      id:
+      - version-sync
+      license_dirs: []
+      license_files:
+      - LICENSE
+      license_globs: []
+      optional_dirs: []
+      optional_files:
+      - SPEC.md
+      - PLAN.md
+      optional_globs: []
       profile_scopes:
       - global
-  version-sync:
+      - docs
+      - data
+      - suffixes
+      - python
+      - javascript
+      - typescript
+      - java
+      - csharp
+      - php
+      - ruby
+      - go
+      - rust
+      - swift
+      - dart
+      - flutter
+      - terraform
+      - docker
+      - kubernetes
+      - sql
+      - fastapi
+      - frappe
+      - objective-c
+      pyproject_dirs: []
+      pyproject_file: []
+      pyproject_files:
+      - pyproject.toml
+      pyproject_globs: []
+      readme_dirs: []
+      readme_file: []
+      readme_files:
+      - README.md
+      - AGENTS.md
+      - CONTRIBUTING.md
+      - SPEC.md
+      - PLAN.md
+      - devcovenant/README.md
+      readme_globs: []
+      runtime_entrypoints:
+      - __none__
+      runtime_roots:
+      - __none__
+      selector_roles:
+      - readme
+      - optional
+      - pyproject
+      - license
+      severity:
+      - error
+      status:
+      - active
+      updated:
+      - 'false'
+      version_file:
+      - VERSION
     keys:
     - id
     - status
@@ -1402,83 +1495,3 @@ policies:
     - pyproject_dirs
     - license_globs
     - license_dirs
-    defaults:
-      id:
-      - version-sync
-      status:
-      - active
-      severity:
-      - error
-      auto_fix:
-      - 'false'
-      updated:
-      - 'false'
-      enforcement:
-      - active
-      apply:
-      - 'true'
-      custom:
-      - 'false'
-      profile_scopes:
-      - global
-      - docs
-      - data
-      - python
-      - javascript
-      - typescript
-      - java
-      - kotlin
-      - scala
-      - groovy
-      - dotnet
-      - csharp
-      - fsharp
-      - php
-      - ruby
-      - go
-      - rust
-      - swift
-      - dart
-      - flutter
-      - terraform
-      - docker
-      - kubernetes
-      version_file:
-      - VERSION
-      readme_files:
-      - README.md
-      - AGENTS.md
-      - CONTRIBUTING.md
-      - SPEC.md
-      - PLAN.md
-      - devcovenant/README.md
-      optional_files:
-      - SPEC.md
-      - PLAN.md
-      pyproject_files:
-      - pyproject.toml
-      license_files:
-      - LICENSE
-      runtime_entrypoints:
-      - __none__
-      runtime_roots:
-      - __none__
-      changelog_file:
-      - CHANGELOG.md
-      changelog_header_prefix:
-      - '## Version'
-      readme_file: []
-      pyproject_file: []
-      selector_roles:
-      - readme
-      - optional
-      - pyproject
-      - license
-      readme_globs: []
-      readme_dirs: []
-      optional_globs: []
-      optional_dirs: []
-      pyproject_globs: []
-      pyproject_dirs: []
-      license_globs: []
-      license_dirs: []

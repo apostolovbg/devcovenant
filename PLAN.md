@@ -65,7 +65,7 @@ It is the checklist we consult before declaring the spec satisfied.
   Record it under the current version entry.
 
 ### Functional requirements
-- [not done] Maintain a canonical metadata schema that enumerates every
+- [done] Maintain a canonical metadata schema that enumerates every
   selector/metadata key so policy normalization can add missing keys without
   changing existing values.
 - [not done] Document every supported policy (including true custom policies)
@@ -134,12 +134,12 @@ It is the checklist we consult before declaring the spec satisfied.
   frappe, dart, flutter, swift, objective-c) and updated
   PROFILE_MAP/POLICY_MAP/SPEC to describe the change. Retired stacks are to be
   reintroduced only as custom profiles.
-- [not done] Materialize expanded POLICY_MAP/PROFILE_MAP expectations: ensure
+- [done] Materialize expanded POLICY_MAP/PROFILE_MAP expectations: ensure
   profiles/policies/assets/adapters/fixers match the reference maps and keep
   the maps authoritative for future additions.
-- [not done] Per-profile descriptors (`<profile>.yaml`) must be populated
-  manually (maps are reference only); many profiles are still stubs and need
-  real assets/overlays before marking complete.
+- [done] Per-profile descriptors (`<profile>.yaml`) must be populated manually
+  (maps are reference only); stubs have been fleshed out with real assets and
+  overlays for the retained catalog.
 - [done] Profile-first scoping: policies run only when a profile lists them
   (including `global`, which now activates all global policies explicitly).
   Policy `profile_scopes` stay as documentation only. Profiles are explicit—no
