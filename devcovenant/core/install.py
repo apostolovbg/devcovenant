@@ -904,10 +904,14 @@ def _build_doc_block(
 ) -> str:
     """Return a small managed block for a document."""
     lines = [BLOCK_BEGIN]
-    lines.extend(_build_doc_metadata_lines(doc_id, doc_type))
-    if extra_lines:
-        lines.append("")
+    if extra_lines and extra_lines[0].strip().startswith("**Doc ID:**"):
+        # Descriptor already supplies the metadata lines.
         lines.extend(extra_lines)
+    else:
+        lines.extend(_build_doc_metadata_lines(doc_id, doc_type))
+        if extra_lines:
+            lines.append("")
+            lines.extend(extra_lines)
     lines.append(BLOCK_END)
     return "\n".join(lines)
 

@@ -1,17 +1,14 @@
 header_lines:
 - '# Contributing'
-- '**Last Updated:** 2026-01-28'
+- '**Last Updated:** 2026-02-02'
 - '**Version:** 0.2.6'
 doc_id: CONTRIBUTING
 doc_type: contributing-guide
 managed_by: DevCovenant
-managed_block: '**Doc ID:** CONTRIBUTING
-
+managed_block: |-
+  **Doc ID:** CONTRIBUTING
   **Doc Type:** contributing-guide
-
   **Managed By:** DevCovenant
 
-
   **Read first:** `AGENTS.md` is canonical. See `devcovenant/README.md`
-
-  for install/update guidance and workflow details.'
+  for install/update guidance and workflow details.

@@ -8,6 +8,9 @@ from typing import Dict, Iterable, List, Sequence, Tuple
 
 import yaml
 
+from devcovenant.core.generate_policy_metadata_schema import (
+    write_schema as generate_policy_metadata_schema,
+)
 from devcovenant.core.policy_descriptor import (
     PolicyDescriptor,
     load_policy_descriptor,
@@ -80,7 +83,7 @@ def policy_metadata_schema_path(repo_root: Path) -> Path:
         repo_root
         / "devcovenant"
         / "registry"
-        / "global"
+        / "local"
         / POLICY_METADATA_SCHEMA_FILENAME
     )
 
@@ -646,7 +649,7 @@ def export_metadata_schema(
             repo_root
             / "devcovenant"
             / "registry"
-            / "global"
+            / "local"
             / "policy_metadata_schema.yaml"
         )
     output_path.parent.mkdir(parents=True, exist_ok=True)
@@ -757,6 +760,8 @@ def refresh_policies(
         return RefreshResult((), (), False, metadata_mode)
 
     repo_root = agents_path.parent
+    # Keep the canonical schema in sync with current descriptors before use.
+    generate_policy_metadata_schema(repo_root)
     discovered = _discover_policy_sources(repo_root)
     descriptors = _load_descriptors(repo_root, discovered)
     control = load_policy_control_config(repo_root)

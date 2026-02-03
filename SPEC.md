@@ -1,5 +1,5 @@
 # DevCovenant Specification
-**Last Updated:** 2026-02-01
+**Last Updated:** 2026-02-02
 **Version:** 0.2.6
 
 <!-- DEVCOV:BEGIN -->
@@ -61,10 +61,13 @@ Devflow gate status is stored in `.devcov-state/test_status.json`, created
   default) that requires one SemVer scope tag in the latest changelog
   entry and matches the bump to major/minor/patch semantics.
 - Maintain a canonical metadata schema that lists all supported keys (common
--  and policy-specific) as well as every available policy ID (core and
--  custom) so normalization can add missing keys, keep the alphabetic policy
--  list intact, and signal the presence of custom policies without mutating
--  user-supplied metadata or policy text.
+  and policy-specific) as well as every available policy ID (core and
+  custom) so normalization can add missing keys, keep the alphabetic policy
+  list intact, and signal the presence of custom policies without mutating
+  user-supplied metadata or policy text. The schema lives under
+  `devcovenant/registry/local/policy_metadata_schema.yaml`, is ignored by VCS,
+  and is regenerated automatically at engine startup and during policy
+  refresh/update so CI and users never rely on a packaged copy.
 
 ### Engine behavior
 - Load policy modules from `devcovenant/core/policies/<id>/<id>.py` with

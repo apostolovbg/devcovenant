@@ -5,8 +5,7 @@ header_lines:
 doc_id: PLAN
 doc_type: plan
 managed_by: DevCovenant
-managed_block: '**Doc ID:** PLAN
-
+managed_block: |-
+  **Doc ID:** PLAN
   **Doc Type:** plan
-
-  **Managed By:** DevCovenant'
+  **Managed By:** DevCovenant

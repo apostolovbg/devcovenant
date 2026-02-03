@@ -1,13 +1,6 @@
 # DevCovenant
-**Last Updated:** 2026-01-28
+**Last Updated:** 2026-02-02
 **Version:** 0.2.6
-<p align="center">
-  <img
-src="https://raw.githubusercontent.com/apostolovbg/devcovenant/main/banner.png"
-    alt="DevCovenant"
-    style="width: 100%;"
-  />
-</p>
 
 <!-- DEVCOV:BEGIN -->
 **Doc ID:** README
@@ -200,6 +193,9 @@ DevCovenant expects the following sequence in enforced repos:
 1. `python3 devcovenant/run_pre_commit.py --phase start`
 2. `python3 devcovenant/run_tests.py`
 3. `python3 devcovenant/run_pre_commit.py --phase end`
+
+Shortcut: `devcovenant test` runs the same pytest + unittest sequence and
+records status via the test runner wrapper.
 
 During `--phase end`, if pre-commit modifies files, the script automatically
 reruns `devcovenant/run_tests.py` before recording the end timestamp so

@@ -49,9 +49,39 @@ Example entry:
   added regression test to keep it in sync.
   Files:
   devcovenant/core/generate_policy_metadata_schema.py
-  devcovenant/registry/global/policy_metadata_schema.yaml
+  devcovenant/registry/local/policy_metadata_schema.yaml
   tests/core/tests/test_policy_metadata_schema.py
   PLAN.md
+- 2026-02-02: refresh_policies now regenerates the canonical metadata schema
+  before rebuilding AGENTS policy blocks to keep descriptors and schema
+  aligned.
+  Files:
+  devcovenant/core/refresh_policies.py
+- 2026-02-02: Moved policy_metadata_schema.yaml to registry/local,
+  auto-generated on every run (engine startup/refresh) so CI/users never rely
+  on a packaged schema copy.
+  Files:
+  devcovenant/core/generate_policy_metadata_schema.py
+  devcovenant/core/refresh_policies.py
+  devcovenant/core/engine.py
+  devcovenant/registry/local/policy_metadata_schema.yaml
+  devcovenant/registry/global/policy_metadata_schema.yaml
+- 2026-02-02: `devcovenant test` now delegates to the full test runner
+  (pytest + unittest discover) to match devflow gates.
+  Files:
+  devcovenant/cli.py
+- 2026-02-02: Regenerated managed docs from YAML assets, removed duplicated
+  managed blocks, and refreshed Last Updated headers.
+  Files:
+  AGENTS.md
+  CONTRIBUTING.md
+  SPEC.md
+  devcovenant/core/profiles/global/assets/AGENTS.yaml
+  devcovenant/core/profiles/global/assets/CONTRIBUTING.yaml
+  devcovenant/core/profiles/global/assets/SPEC.yaml
+  devcovenant/core/profiles/global/assets/PLAN.yaml
+  devcovenant/core/profiles/global/assets/README.yaml
+  devcovenant/core/profiles/global/assets/CHANGELOG.yaml
 - 2026-02-02: Marked PLAN tasks for map materialization and profile descriptor
   completion as done after aligning profiles/policies with reference maps.
   Files:
@@ -135,7 +165,7 @@ Example entry:
   PLAN.md
   POLICY_MAP.md
   SPEC.md
-  devcovenant/registry/global/policy_metadata_schema.yaml
+  devcovenant/registry/local/policy_metadata_schema.yaml
 - 2026-02-01: Implemented name-clarity adapters for JS/TS/Go/Rust/Java/C#,
   expanded default suffix coverage, and added adapter tests.
   Files:
@@ -418,7 +448,7 @@ test_docstring_and_comment_coverage.py
   devcovenant/core/profiles/python/profile.yaml
   devcovenant/core/profiles/global/assets/AGENTS.yaml
   devcovenant/core/profiles/global/assets/CHANGELOG.yaml
-  devcovenant/registry/global/policy_metadata_schema.yaml
+  devcovenant/registry/local/policy_metadata_schema.yaml
   tests/core/policies/devcov_parity_guard/tests/\
     test_devcov_parity_guard.py
   devcovenant/custom/policies/managed_doc_assets/\
@@ -493,7 +523,7 @@ test_docstring_and_comment_coverage.py
   tests/core/policies/patches_txt_sync/__init__.py
   tests/core/policies/patches_txt_sync/tests/test_patches_txt_sync.py
   tests/core/policies/patches_txt_sync/tests/__init__.py
-  devcovenant/registry/global/policy_metadata_schema.yaml
+  devcovenant/registry/local/policy_metadata_schema.yaml
   devcovenant/registry/local/policy_registry.yaml
   devcovenant/core/parser.py
 - 2026-01-30: Renamed `stock-policy-text-sync` to `devcov-parity-guard`,
@@ -507,7 +537,7 @@ test_docstring_and_comment_coverage.py
   devcovenant/core/policies/devcov_parity_guard/devcov_parity_guard.yaml
   devcovenant/core/policies/devcov_parity_guard/__init__.py
   devcovenant/core/profiles/global/assets/AGENTS.md
-  devcovenant/registry/global/policy_metadata_schema.yaml
+  devcovenant/registry/local/policy_metadata_schema.yaml
   devcovenant/registry/global/stock_policy_texts.yaml
   devcovenant/core/stock_policy_texts.json
   tests/core/policies/devcov_parity_guard/tests/test_devcov_parity_guard.py
@@ -573,7 +603,7 @@ test_docstring_and_comment_coverage.py
   devcovenant/core/generate_policy_metadata_schema.py
   devcovenant/core/update_hashes.py
   devcovenant/registry.json
-  devcovenant/registry/global/policy_metadata_schema.yaml
+  devcovenant/registry/local/policy_metadata_schema.yaml
 
 - 2026-01-29: Refreshed policy metadata handling, canonicalized the schema,
   and recorded the new descriptor imports plus a python3-based pre-commit
@@ -675,7 +705,7 @@ test_docstring_and_comment_coverage.py
   devcovenant/core/parser.py
   devcovenant/core/update_policy_registry.py
   devcovenant/core/manifest.py
-  devcovenant/registry/global/policy_metadata_schema.yaml
+  devcovenant/registry/local/policy_metadata_schema.yaml
   tests/core/tests/test_policy_freeze.py
   tests/core/tests/test_policy_schema.py
   devcovenant/core/update_hashes.py

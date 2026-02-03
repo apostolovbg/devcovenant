@@ -15,9 +15,11 @@ def _normalize(metadata_value):
 
 
 def test_policy_metadata_schema_matches_descriptors():
-    """Schema lists exactly the metadata keys/defaults from every policy YAML."""
+    """
+    Schema lists exactly the metadata keys/defaults from every policy YAML.
+    """
     repo = Path(__file__).resolve().parents[3]
-    schema_path = repo / "devcovenant" / "registry" / "global"
+    schema_path = repo / "devcovenant" / "registry" / "local"
     schema_path = schema_path / "policy_metadata_schema.yaml"
     schema = yaml.safe_load(schema_path.read_text())["policies"]
 
@@ -40,9 +42,9 @@ def test_policy_metadata_schema_matches_descriptors():
             policy_id = descriptor_data.get("id")
             if not policy_id:
                 policy_id = entry.name.replace("_", "-")
-            assert policy_id in schema, (
-                f"Schema missing policy {policy_id} described in {descriptor}"
-            )
+            assert (
+                policy_id in schema
+            ), f"Schema missing policy {policy_id} described in {descriptor}"
             schema_entry = schema[policy_id]
             assert set(schema_entry["keys"]) == set(
                 metadata.keys()

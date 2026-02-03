@@ -1,13 +1,13 @@
 """Generate the canonical policy metadata schema from policy descriptors.
 
-This keeps `devcovenant/registry/global/policy_metadata_schema.yaml`
+This keeps `devcovenant/registry/local/policy_metadata_schema.yaml`
 in sync with the `metadata:` blocks declared in each policy YAML.
 """
 
 from __future__ import annotations
 
 from pathlib import Path
-from typing import Dict, List, Mapping, MutableMapping, Sequence, Tuple
+from typing import Dict, List, Mapping, MutableMapping, Sequence
 
 import yaml
 
@@ -68,7 +68,7 @@ def write_schema(repo_root: Path) -> Path:
         repo_root
         / "devcovenant"
         / "registry"
-        / "global"
+        / "local"
         / POLICY_METADATA_SCHEMA_FILENAME
     )
     out_path.parent.mkdir(parents=True, exist_ok=True)

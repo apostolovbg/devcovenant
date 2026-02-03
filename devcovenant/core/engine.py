@@ -12,6 +12,10 @@ from typing import Any, Dict, List, Optional, Set
 
 import yaml
 
+from devcovenant.core.generate_policy_metadata_schema import (
+    write_schema as generate_policy_metadata_schema,
+)
+
 from . import manifest as manifest_module
 from .base import CheckContext, PolicyCheck, PolicyFixer, Violation
 from .manifest import ensure_manifest
@@ -84,6 +88,9 @@ class DevCovenantEngine:
 
         self._profile_catalog = load_profile_catalog(self.repo_root)
         self._active_profiles = self._resolve_active_profiles()
+
+        # Keep local metadata schema up to date for every run (CI-safe).
+        generate_policy_metadata_schema(self.repo_root)
 
         ensure_manifest(self.repo_root)
 

@@ -274,21 +274,16 @@ def main() -> None:
             sys.exit(0)
 
     elif args.command == "test":
-        # Run devcovenant's own tests
+        # Run devcovenant's own tests (pytest + unittest) and record status
         import subprocess
 
+        cmd = [sys.executable, "-m", "devcovenant.run_tests"]
         try:
-            result = subprocess.run(
-                ["pytest", "tests/", "-v"],
-                cwd=args.repo,
-                check=True,
-            )
+            result = subprocess.run(cmd, cwd=args.repo, check=True)
             sys.exit(result.returncode)
         except Exception as e:
             print(f"❌ Test execution failed: {e}")
             sys.exit(1)
-
-        sys.exit(0)
 
     elif args.command in ("update-policy-registry", "update-hashes"):
         from devcovenant.core.update_policy_registry import (
