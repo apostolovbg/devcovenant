@@ -77,6 +77,31 @@ def _latest_section(content: str) -> str:
     return content[start:next_start]
 
 
+def _first_entry(section: str) -> tuple[str | None, str]:
+    """
+    Return (date, entry_text) for the newest entry in a section.
+
+    Assumes entries start with "- YYYY-MM-DD:"; returns (None, "") if none.
+    """
+    lines = section.splitlines()
+    start = None
+    for idx, line in enumerate(lines):
+        date_match = _DATE_PATTERN.match(line)
+        if date_match:
+            start = idx
+            entry_date = date_match.group(1)
+            break
+    if start is None:
+        return None, ""
+    end = len(lines)
+    for j in range(start + 1, len(lines)):
+        if _DATE_PATTERN.match(lines[j]):
+            end = j
+            break
+    entry_text = "\n".join(lines[start:end])
+    return entry_date, entry_text
+
+
 _DATE_PATTERN = re.compile(r"^\s*-\s*(\d{4}-\d{2}-\d{2})\b")
 
 
@@ -197,6 +222,11 @@ class ChangelogCoverageCheck(PolicyCheck):
             if root_section is not None
             else ""
         )
+        first_date, first_entry = (
+            _first_entry(section_for_matching)
+            if section_for_matching
+            else (None, "")
+        )
         if root_section:
             order_issue = _find_order_violation(root_section)
             if order_issue:
@@ -236,10 +266,27 @@ class ChangelogCoverageCheck(PolicyCheck):
                     )
                 )
             else:
+                today = date.today().isoformat()
+                if first_date != today:
+                    violations.append(
+                        Violation(
+                            policy_id=self.policy_id,
+                            severity="error",
+                            file_path=root_changelog,
+                            message=(
+                                "Log a fresh changelog entry dated today "
+                                f"({today}) for this change."
+                            ),
+                            suggestion=(
+                                "Add a new entry at the top of the current "
+                                f"version section dated {today} and list all "
+                                "touched files."
+                            ),
+                            can_auto_fix=False,
+                        )
+                    )
                 missing = [
-                    path
-                    for path in main_files
-                    if path not in section_for_matching
+                    path for path in main_files if path not in first_entry
                 ]
                 if missing:
                     files_str = ", ".join(missing)
@@ -277,6 +324,11 @@ class ChangelogCoverageCheck(PolicyCheck):
                 _latest_section(changelog_content)
                 if changelog_content
                 else None
+            )
+            entry_date, entry_text = (
+                _first_entry(_collapse_line_continuations(changelog_section))
+                if changelog_section
+                else (None, "")
             )
             if changelog_section:
                 order_issue = _find_order_violation(changelog_section)
@@ -321,10 +373,32 @@ class ChangelogCoverageCheck(PolicyCheck):
                         )
                     )
                 else:
+                    today = date.today().isoformat()
+                    prefix_label = entry.get("prefix", "") or "collection"
+                    if entry_date != today:
+                        violations.append(
+                            Violation(
+                                policy_id=self.policy_id,
+                                severity="error",
+                                file_path=changelog_path,
+                                message=(
+                                    "Log a fresh entry dated "
+                                    f"{today} for changes under "
+                                    f"{prefix_label}."
+                                ),
+                                suggestion=(
+                                    "Add a new dated entry at the top of the "
+                                    f"{changelog_rel.as_posix()} section "
+                                    "covering these files: "
+                                    f"{', '.join(files_for_collection)}"
+                                ),
+                                can_auto_fix=False,
+                            )
+                        )
                     missing_entries = [
                         path
                         for path in files_for_collection
-                        if path not in changelog_section
+                        if path not in entry_text
                     ]
                     if missing_entries:
                         files_str = ", ".join(missing_entries)

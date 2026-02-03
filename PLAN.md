@@ -1,5 +1,5 @@
 # DevCovenant Development Plan
-**Last Updated:** 2026-02-02
+**Last Updated:** 2026-02-03
 **Version:** 0.2.6
 
 <!-- DEVCOV:BEGIN -->
@@ -52,11 +52,11 @@ It is the checklist we consult before declaring the spec satisfied.
 - [done] Gated workflow: `pre-commit start`, tests (`pytest` +
   `python3 -m unittest discover`), and `pre-commit end` are required for every
   change.
-- Clarify that the start gate only needs to execute before edits; it may
-  detect outstanding violations and does not have to leave a clean tree.
+- Clarify that the start gate only needs to execute before edits; it may detect
+  outstanding violations and does not have to leave a clean tree.
 - Start recorded after edits now yields a warning (with a brief pause) instead
-  of blocking, but a clean `start → tests → end` run is still required to clear
-  the gate.
+  of blocking, but a clean `start → tests → end` run is still required to
+  clear the gate.
 - [done] Startup check (`python3 -m devcovenant check --mode startup`).
 - [done] Policy edits set `updated: true`.
   Run `devcovenant update-policy-registry`.
@@ -75,17 +75,17 @@ It is the checklist we consult before declaring the spec satisfied.
   in SPEC.
 - [done] Respect `apply`, `severity`, `status`, and `enforcement` metadata.
   Apply those settings across all policies.
-- [done] Support `startup`, `lint`, `pre-commit`, and `normal` modes along with
-  the available fixers.
+- [done] Collapse execution into two modes: `audit` (no auto-fix) and `fix`
+  (auto-fix permitted). Both share the same policy set and exit non-zero on
+  blocking violations or sync issues.
 - [done] Provide both `devcovenant` console entry and `python3 -m devcovenant`
   module entry, with docs defaulting to the console path.
-- [not done] `test` runs `pytest` + `python3 -m unittest discover` while
-  respecting the `tests/devcovenant/` layout and keeping those suites out of
-  packages.
-- [not done] `check` exits non-zero when blocking violations exist.
-- [not done] `sync` runs a startup-mode check and reports drift.
-- [not done] `normalize-metadata` inserts all supported keys safely.
-  Leave existing text untouched.
+- [done] `test` runs `pytest` + `python3 -m unittest discover` while respecting
+  the `tests/devcovenant/` layout and keeping those suites out of packages.
+- [done] `check` exits non-zero when blocking violations exist (audit/fix
+  modes).
+- [done] Metadata normalization handled by refresh/update; no separate
+  `normalize-metadata` command needed.
 - [not done] Every managed doc must include `Last Updated`/`Version` headers.
   Ensure each file also has top-of-file managed blocks.
   Include `Doc ID`, `Doc Type`, and owner metadata in those blocks.
@@ -142,17 +142,18 @@ It is the checklist we consult before declaring the spec satisfied.
   overlays for the retained catalog.
 - [done] Profile-first scoping: policies run only when a profile lists them
   (including `global`, which now activates all global policies explicitly).
-  Policy `profile_scopes` stay as documentation only. Profiles are explicit—no
-  inheritance; each profile lists its own assets, suffixes, policies, and
-  overlays. Custom policies remain opt-in via custom profiles or config
-  overrides (not implicitly active in `global`).
+  Policy `profile_scopes` stay as documentation only. Profiles are
+  explicit—no inheritance; each profile lists its own assets, suffixes,
+  policies, and overlays. Custom policies remain opt-in via custom profiles
+  or config overrides (not implicitly active in `global`).
 
 ### Policy metadata redesign
 - [done] Define per-policy YAML descriptors that include the managed
   prose, selector metadata, and a `metadata` block whose keys describe the
   schema while also supplying the baseline values that feed into AGENTS and
-  the registry. The canonical schema no longer lives in a separate hand-written
-  file; it is inferred from the keys declared inside each policy’s `metadata`.
+  the registry. The canonical schema no longer lives in a separate
+  hand-written file; it is inferred from the keys declared inside each
+  policy’s `metadata`.
 - [not done] Use provenance (core vs. frozen/custom loading path) to derive
   `custom`/`apply`/`freeze` in the generated metadata instead of retaining
   explicit `status` or `updated` keys. `metadata` may still expose knobs such
@@ -216,10 +217,10 @@ It is the checklist we consult before declaring the spec satisfied.
 - [not done] Profile-driven pre-commit config turns metadata into hooks and
   documents the “Pre-commit config refactor” phase.
 - [not done] Ensure the custom `devcovrepo` profile treats `devcovenant/docs`
-  as part of the documentation growth tracking surface. The profile’s metadata
-  overlays for `documentation-growth-tracking` should list `devcovenant/docs`
-  so the policy ensures the folder grows with useful content, no BS, and is yet
-  another documented signal about how to use overrides/custom policies.
+  as part of the documentation growth tracking surface. The profile’s
+  metadata overlays for `documentation-growth-tracking` should list
+  `devcovenant/docs` so the policy ensures the folder grows with useful
+  content and documents how to use overrides/custom policies.
 - [not done] Describe how `devcovuser`/`devcovrepo` metadata control the
   `tests/devcovenant/**` mirror: `devcovuser` (user installs) mirrors only
   `devcovenant/custom/**`; when `devcov_core_include` is true (DevCovenant’s
@@ -331,7 +332,8 @@ Below is every missing SPEC requirement, ordered by dependency.
 ## Execution notes
 - Move completed SPEC bullets to `[done]` with a short note.
 - List remaining work in “Outstanding work” by dependency.
-- Keep README/AGENTS/SPEC docs current and let the fixer bump “Last Updated”.
+- Keep README/AGENTS/SPEC docs current and let the fixer bump “Last
+  Updated”.
 
 ## Testing and validation
 - Run `devcovenant.run_pre_commit --phase start`, `devcovenant.run_tests`,

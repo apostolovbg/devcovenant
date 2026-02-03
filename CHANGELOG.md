@@ -1,5 +1,5 @@
 # Changelog
-**Last Updated:** 2026-02-02
+**Last Updated:** 2026-02-03
 **Version:** 0.2.6
 
 <!-- DEVCOV:BEGIN -->
@@ -29,6 +29,30 @@ Example entry:
 
 ## Version 0.2.6
 
+- 2026-02-03: Enforced daily, file-complete changelog coverage; simplified
+  check modes to audit/fix; regenerated managed docs and synced README
+  descriptors.
+  Files:
+  PLAN.md
+  SPEC.md
+  AGENTS.md
+  CONTRIBUTING.md
+  README.md
+  devcovenant/README.md
+  devcovenant/cli.py
+  devcovenant/core/engine.py
+  devcovenant/core/generate_policy_metadata_schema.py
+  devcovenant/core/install.py
+  devcovenant/core/refresh_policies.py
+  devcovenant/core/policies/changelog_coverage/changelog_coverage.py
+  devcovenant/core/profiles/global/assets/AGENTS.yaml
+  devcovenant/core/profiles/global/assets/CHANGELOG.yaml
+  devcovenant/core/profiles/global/assets/CONTRIBUTING.yaml
+  devcovenant/core/profiles/global/assets/PLAN.yaml
+  devcovenant/core/profiles/global/assets/README.yaml
+  devcovenant/core/profiles/global/assets/SPEC.yaml
+  tests/core/policies/changelog_coverage/tests/changelog_coverage_impl.py
+  tests/core/policies/changelog_coverage/tests/test_changelog_coverage.py
 - 2026-02-02: Aligned docs/data profiles with doc-quality policies and added
   dependency-license-sync coverage for Objective-C (Podfile/lock manifests).
   Files:

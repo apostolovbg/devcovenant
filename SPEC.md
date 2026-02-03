@@ -1,5 +1,5 @@
 # DevCovenant Specification
-**Last Updated:** 2026-02-02
+**Last Updated:** 2026-02-03
 **Version:** 0.2.6
 
 <!-- DEVCOV:BEGIN -->
@@ -34,9 +34,9 @@ hashes synchronized so drift is detectable and reversible.
 - `pre-commit --phase start` must run before edits but is not required to leave
   the tree clean; it simply captures a gate snapshot and identifies existing
   issues. Later phases still rerun hooks/tests until the workspace is clean.
-- If start is recorded after edits, the gate issues a warning and brief pause
-  instead of blocking, but a clean `start → tests → end` run is still required
-  to pass.
+- If start is recorded after edits, the gate issues a warning and brief
+  pause instead of blocking, but a clean `start → tests → end` run is still
+  required to pass.
 - If end-phase hooks or DevCovenant autofixers change the working tree, rerun
   the required tests (and rerun hooks if needed) until the repo is clean, then
   record only that final successful pass in `.devcov-state/test_status.json`.
@@ -97,21 +97,21 @@ Devflow gate status is stored in `.devcov-state/test_status.json`, created
   once as the fallback when the CLI is not on PATH.
 - Documentation should use `python3` (not `python`) for all source-based
   workflows and command examples.
-- Supported commands: `check`, `sync`, `test`, `update-policy-registry`,
-  `restore-stock-text`, `install`, `update`, `uninstall`,
-  `normalize-metadata`.
-- `check` exits non-zero when blocking violations or sync issues are present.
-- `sync` runs a startup-mode check and reports drift.
-- `test` runs `pytest` against `tests/`, which now hosts the relocated policy
-  and engine suites under `tests/devcovenant/`.
-  That root-level tree mirrors the package layout and sits outside the
-  installable `devcovenant` package, so only source distributions (via
-  `MANIFEST.in`) carry it.
+- Supported commands: `check`, `test`, `update-policy-registry`,
+  `restore-stock-text`, `install`, `update`, `uninstall`.
+- `check` runs in two modes:
+  - `audit` (default): no auto-fixes; exits non-zero on blocking violations or
+    sync issues.
+  - `fix`: allows policy fixers; still exits non-zero if blocking issues
+    remain.
+- `test` runs `pytest` plus `python3 -m unittest discover` against `tests/`
+  (mirrors the package layout under `tests/devcovenant/` but stays outside the
+  installable package).
 - `install` and `uninstall` delegate to `devcovenant/core/install.py` and
   `devcovenant/core/uninstall.py`.
 - `update` supports managed-block-only refreshes and policy-mode control.
-- `normalize-metadata` inserts any missing policy keys with safe placeholders
-  while preserving existing values.
+- Explicit normalize-metadata command is unnecessary; refresh/update already
+  normalize metadata via descriptors + overrides + schema.
 
 ### Install, update, refresh model
 - `install` bootstraps DevCovenant into a repo. It must detect existing
@@ -199,10 +199,10 @@ Devflow gate status is stored in `.devcov-state/test_status.json`, created
   custom `devcovrepo` profile must extend `documentation-growth-tracking` so
   it explicitly monitors `devcovenant/docs` alongside the usual docs.
   `README.md` remains the quick-start/priority logic surface, but the policy
-  keeps `devcovenant/docs` healthy—full of constructive narratives, overrides,
-  custom-profile pointers, and advanced workflows—without drifting into noise.
-  List the folder in the profile overlay so the policy treats it like any other
-  managed doc target.
+  keeps `devcovenant/docs` healthy—full of constructive narratives,
+  overrides, custom-profile pointers, and advanced workflows—without
+  drifting into noise. List the folder in the profile overlay so the policy
+  treats it like any other managed doc target.
 
 ### Configuration and extension
 - `devcovenant/config.yaml` must support `devcov_core_include` and
