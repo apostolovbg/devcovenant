@@ -1,5 +1,5 @@
 # DevCovenant Development Guide
-**Last Updated:** 2026-02-02
+**Last Updated:** 2026-02-03
 **Version:** 0.2.6
 
 <!-- DEVCOV:BEGIN -->
@@ -214,9 +214,11 @@ skipped_globs:
 skipped_dirs:
 ```
 
-Every substantive change must be recorded in the changelog entry for the
-current version. This policy prevents untracked updates and keeps release
-notes aligned with repository changes.
+Every change must be logged in the latest changelog entry dated today,
+under the current version, with every touched path listed in its Files
+block. Collection prefixes (when enabled) must be logged in their own
+changelog; prefixed files may not appear in the root changelog. This keeps
+release notes daily, file-complete, and traceable.
 
 
 ---
@@ -236,12 +238,7 @@ profile_scopes: python
   javascript
   typescript
   java
-  kotlin
-  scala
-  groovy
-  dotnet
   csharp
-  fsharp
   php
   ruby
   go
@@ -249,13 +246,9 @@ profile_scopes: python
   swift
   dart
   flutter
-  elixir
-  erlang
-  haskell
-  clojure
-  julia
-  ocaml
-  crystal
+  fastapi
+  frappe
+  objective-c
 dependency_files: requirements.in
   requirements.lock
   pyproject.toml
@@ -429,7 +422,13 @@ enforcement: active
 apply: true
 custom: false
 profile_scopes: python
-include_suffixes: .py
+  javascript
+  typescript
+  go
+  rust
+  java
+  csharp
+include_suffixes:
 exclude_prefixes: build
   dist
   node_modules
@@ -477,12 +476,7 @@ profile_scopes: global
   go
   rust
   java
-  kotlin
-  scala
-  groovy
-  dotnet
   csharp
-  fsharp
   php
   ruby
   swift
@@ -490,7 +484,11 @@ profile_scopes: global
   terraform
   docker
   kubernetes
-  ansible
+  sql
+  fastapi
+  frappe
+  flutter
+  objective-c
 selector_roles: user_facing
   user_visible
   doc_quality
@@ -722,12 +720,7 @@ profile_scopes: global
   go
   rust
   java
-  kotlin
-  scala
-  groovy
-  dotnet
   csharp
-  fsharp
   php
   ruby
   swift
@@ -735,10 +728,13 @@ profile_scopes: global
   terraform
   docker
   kubernetes
-  ansible
+  sql
+  fastapi
+  frappe
+  flutter
+  objective-c
 max_length: 79
-include_suffixes: >
-  .py
+include_suffixes: .py
   .md
   .rst
   .txt
@@ -750,9 +746,7 @@ include_suffixes: >
 exclude_prefixes: build
   dist
   node_modules
-exclude_globs: >
-  devcovenant/core/profiles/global/assets/LICENSE_GPL-3.0.txt
-  devcovenant/core/profiles/global/assets/*.yaml
+exclude_globs: devcovenant/core/profiles/global/assets/*.yaml
   devcovenant/core/stock_policy_texts.json
   build/**
   dist/**
@@ -847,6 +841,12 @@ enforcement: active
 apply: true
 custom: false
 profile_scopes: python
+  javascript
+  typescript
+  go
+  rust
+  java
+  csharp
 exclude_prefixes: build
   dist
   node_modules
@@ -888,15 +888,22 @@ enforcement: active
 apply: true
 custom: true
 profile_scopes: python
-include_suffixes: .py
+  fastapi
+  frappe
+  javascript
+  typescript
+  go
+  rust
+  java
+  csharp
+include_suffixes:
 include_prefixes: devcovenant
 exclude_prefixes: build
   dist
   node_modules
   tests
   devcovenant/core/profiles
-  devcovenant/custom/profiles
-exclude_globs:
+exclude_globs: devcovenant/core/profiles/**
 watch_dirs: tests
 tests_watch_dirs: tests
 include_globs:
@@ -952,6 +959,7 @@ policy_definitions: AGENTS.md
 
 Every policy definition must include descriptive text immediately after the
 `policy-def` block. Empty policy descriptions are not allowed.
+
 
 ---
 
@@ -1048,6 +1056,14 @@ enforcement: active
 apply: true
 custom: false
 profile_scopes: python
+  fastapi
+  frappe
+  javascript
+  typescript
+  go
+  rust
+  java
+  csharp
 include_suffixes:
 include_prefixes:
 include_globs:
@@ -1139,16 +1155,12 @@ custom: false
 profile_scopes: global
   docs
   data
+  suffixes
   python
   javascript
   typescript
   java
-  kotlin
-  scala
-  groovy
-  dotnet
   csharp
-  fsharp
   php
   ruby
   go
@@ -1159,6 +1171,10 @@ profile_scopes: global
   terraform
   docker
   kubernetes
+  sql
+  fastapi
+  frappe
+  objective-c
 version_file: VERSION
 readme_files: README.md
   AGENTS.md

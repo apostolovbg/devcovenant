@@ -137,6 +137,12 @@ It is the checklist we consult before declaring the spec satisfied.
 - [done] Materialize expanded POLICY_MAP/PROFILE_MAP expectations: ensure
   profiles/policies/assets/adapters/fixers match the reference maps and keep
   the maps authoritative for future additions.
+- [done] Align POLICY_MAP scopes with retained profiles: add fastapi,
+  frappe, objective-c, and sql where supported (dependency-license-sync,
+  docstring-and-comment-coverage, name-clarity, new-modules-need-tests,
+  security-scanner, documentation-growth-tracking, line-length-limit,
+  version-sync) and trim deprecated stacks (kotlin/scala/groovy/dotnet/
+  fsharp/elixir/erlang/haskell/clojure/julia/ocaml/crystal/ansible).
 - [done] Per-profile descriptors (`<profile>.yaml`) must be populated manually
   (maps are reference only); stubs have been fleshed out with real assets and
   overlays for the retained catalog.
@@ -226,6 +232,9 @@ It is the checklist we consult before declaring the spec satisfied.
   `devcovenant/custom/**`; when `devcov_core_include` is true (DevCovenant’s
   own repo), disable `devcovuser` entirely and let `devcovrepo` mirror the
   full `devcovenant/**` tree.
+- [done] Exclude vendored code from `devcovuser` by default (`vendor`,
+  `third_party`, `node_modules`) so user installs avoid scanning bundled
+  dependencies.
 - [not done] Test mirroring rules: with `devcovuser` active, mirror only
   `devcovenant/custom/**` into `tests/devcovenant/custom/**`; when
   `devcov_core_include` enables `devcovrepo`, mirror the full

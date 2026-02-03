@@ -1,8 +1,10 @@
 id: changelog-coverage
 text: |
-  Every substantive change must be recorded in the changelog entry for the
-  current version. This policy prevents untracked updates and keeps release
-  notes aligned with repository changes.
+  Every change must be logged in the latest changelog entry dated today,
+  under the current version, with every touched path listed in its Files
+  block. Collection prefixes (when enabled) must be logged in their own
+  changelog; prefixed files may not appear in the root changelog. This keeps
+  release notes daily, file-complete, and traceable.
 metadata:
   id: changelog-coverage
   severity: error

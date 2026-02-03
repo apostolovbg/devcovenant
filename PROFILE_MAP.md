@@ -17,7 +17,8 @@ inheritance. Custom policies stay opt-in via custom profiles/config.
   (excluded data), name-clarity, new-modules-need-tests (excluded),
   line-length-limit, version-sync.
 - suffixes — Assets: suffixes.txt (merge). Policies: version-sync.
-- devcovuser (custom-use) — Assets: .gitignore (merge placeholder). Policies:
+- devcovuser (custom-use) — Assets: .gitignore (merge placeholder); ignores
+  vendored trees (`vendor`, `third_party`, `node_modules`). Policies:
   new-modules-need-tests with excludes to keep devcovenant core out.
 - devcovrepo (custom) — Assets: .gitignore placeholder. Policies: doc-growth,
   line-length, new-modules-need-tests, devcov-raw-string-escapes, managed-

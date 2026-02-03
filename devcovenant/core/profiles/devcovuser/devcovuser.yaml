@@ -2,7 +2,10 @@ version: 1
 profile: devcovuser
 category: core
 suffixes: []
-ignore_dirs: []
+ignore_dirs:
+  - vendor
+  - third_party
+  - node_modules
 assets:
   - path: .gitignore
     template: .gitignore

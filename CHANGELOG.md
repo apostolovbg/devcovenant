@@ -45,12 +45,16 @@ Example entry:
   devcovenant/core/install.py
   devcovenant/core/refresh_policies.py
   devcovenant/core/policies/changelog_coverage/changelog_coverage.py
+  devcovenant/core/policies/changelog_coverage/changelog_coverage.yaml
   devcovenant/core/profiles/global/assets/AGENTS.yaml
   devcovenant/core/profiles/global/assets/CHANGELOG.yaml
   devcovenant/core/profiles/global/assets/CONTRIBUTING.yaml
   devcovenant/core/profiles/global/assets/PLAN.yaml
   devcovenant/core/profiles/global/assets/README.yaml
   devcovenant/core/profiles/global/assets/SPEC.yaml
+  devcovenant/registry/local/policy_registry.yaml
+  devcovenant/core/profiles/devcovuser/devcovuser.yaml
+  PROFILE_MAP.md
   tests/core/policies/changelog_coverage/tests/changelog_coverage_impl.py
   tests/core/policies/changelog_coverage/tests/test_changelog_coverage.py
 - 2026-02-02: Aligned docs/data profiles with doc-quality policies and added

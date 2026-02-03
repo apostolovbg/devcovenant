@@ -307,6 +307,12 @@ Devflow gate status is stored in `.devcov-state/test_status.json`, created
   not by the `global` profile. POLICY_MAP.md and PROFILE_MAP.md are the
   authoritative references for required assets, adapters, policies, and
   overlays; keep them aligned with the manifests and code.
+- POLICY_MAP scopes mirror the retained profile catalog: add fastapi, frappe,
+  objective-c, and sql where supported (dependency-license-sync, docstring-
+  and-comment-coverage, name-clarity, new-modules-need-tests, security-
+  scanner, documentation-growth-tracking, line-length-limit, version-sync)
+  and remove deprecated stacks (kotlin, scala, groovy, dotnet, fsharp, elixir,
+  erlang, haskell, clojure, julia, ocaml, crystal, ansible).
 Profiles are explicit—no inheritance or family defaults; each profile lists
 its own assets, suffixes, policies, and overlays.
 - Custom policy `readme-sync` enforces that `devcovenant/README.md` mirrors
@@ -581,6 +587,8 @@ its own assets, suffixes, policies, and overlays.
   When `devcov_core_include` is true (DevCovenant’s own repo), disable
   `devcovuser` and enable `devcovrepo` so the full `devcovenant/**` tree
   (code and tests) is mirrored and enforced.
+- `devcovuser` ignores vendored trees (`vendor`, `third_party`,
+  `node_modules`) by default so scans and tests skip bundled dependencies.
 
 ## Non-Functional Requirements
 - Checks must be fast enough for pre-commit usage on typical repos.
