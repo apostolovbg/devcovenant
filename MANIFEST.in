@@ -12,6 +12,7 @@ include requirements.in
 include requirements.lock
 include devcovenant/README.md
 include devcovenant/registry/*
+exclude devcovenant/config.yaml
 recursive-include devcovenant/core/profiles *
 recursive-include devcovenant/core/policies *
 recursive-include devcovenant/custom/profiles *

@@ -91,6 +91,29 @@ def refresh_all(
     return 0
 
 
+def refresh_registry(
+    repo_root: Path | None = None,
+    *,
+    schema_path: Path | None = None,
+) -> int:
+    """Refresh only registry assets without touching AGENTS or docs."""
+    if repo_root is None:
+        repo_root = Path(__file__).resolve().parents[2]
+    # Regenerate schema to keep descriptors aligned.
+    export_metadata_schema(repo_root)
+    # Update registry hashes/metadata without toggling AGENTS updated flags.
+    result = update_policy_registry(
+        repo_root, skip_freeze=True, reset_updated_flags=False
+    )
+    if result != 0:
+        return result
+    # Rebuild profile catalog (lives under registry/local/, gitignored).
+    catalog = profiles.build_profile_catalog(repo_root)
+    profiles.write_profile_catalog(repo_root, catalog)
+    print("Registry-only refresh completed (schema, hashes, profile catalog).")
+    return 0
+
+
 def _load_devcov_core_include(repo_root: Path) -> bool:
     """Return devcov_core_include from config.yaml when present."""
     config_path = repo_root / "devcovenant" / "config.yaml"

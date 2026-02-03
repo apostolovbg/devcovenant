@@ -313,6 +313,10 @@ Devflow gate status is stored in `.devcov-state/test_status.json`, created
   scanner, documentation-growth-tracking, line-length-limit, version-sync)
   and remove deprecated stacks (kotlin, scala, groovy, dotnet, fsharp, elixir,
   erlang, haskell, clojure, julia, ocaml, crystal, ansible).
+- A registry-only refresh runs at the start of every devcovenant invocation,
+  regenerating `devcovenant/registry/local/*` (hashes, manifest, metadata
+  schema) and only materializing `config.yaml` when missing; it skips AGENTS
+  and managed docs to keep the worktree clean during CI and local runs.
 Profiles are explicit—no inheritance or family defaults; each profile lists
 its own assets, suffixes, policies, and overlays.
 - Custom policy `readme-sync` enforces that `devcovenant/README.md` mirrors
@@ -342,6 +346,10 @@ its own assets, suffixes, policies, and overlays.
   policies.
 - Dogfood-only policies (`patches-txt-sync`, `gcv-script-naming`,
   `security-compliance-notes`) are not shipped in the DevCovenant repo.
+- Keep `devcovenant/config.yaml` tracked for CI use, but exclude it from
+  built artifacts via `MANIFEST.in` so packages do not ship the repo config;
+  user installs still auto-generate config when missing and preserve user
+  overrides when present.
 - Support policy replacement metadata via
   `devcovenant/registry/global/policy_replacements.yaml`.
   During updates, replaced policies move to custom and are marked deprecated

@@ -61,6 +61,7 @@ def main() -> None:
             "sync",
             "test",
             "update-policy-registry",
+            "refresh-registry",
             "restore-stock-text",
             "refresh-policies",
             "refresh-all",
@@ -245,6 +246,19 @@ def main() -> None:
                 "Run `devcovenant install --target .` first."
             )
             sys.exit(1)
+
+    # Lightweight registry refresh (no AGENTS/docs writes) on every invocation
+    try:
+        from devcovenant.core.update_policy_registry import (
+            update_policy_registry,
+        )
+
+        update_policy_registry(
+            args.repo, skip_freeze=True, reset_updated_flags=False
+        )
+    except Exception as exc:
+        print(f"Warning: registry refresh skipped ({exc})")
+
     _warn_version_mismatch(repo_root)
 
     # Initialize engine
@@ -296,6 +310,12 @@ def main() -> None:
                 "Use update-policy-registry instead."
             )
         result = update_policy_registry(args.repo)
+        sys.exit(result)
+
+    elif args.command == "refresh-registry":
+        from devcovenant.core.refresh_all import refresh_registry
+
+        result = refresh_registry(args.repo)
         sys.exit(result)
 
     elif args.command in ("refresh-policies", "normalize-metadata"):

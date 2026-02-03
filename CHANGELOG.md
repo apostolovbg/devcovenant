@@ -56,8 +56,14 @@ Example entry:
   devcovenant/core/profiles/devcovuser/devcovuser.yaml
   PROFILE_MAP.md
   devcovenant/core/profiles/php/assets/phpunit.xml
+  devcovenant/custom/profiles/devcovrepo/devcovrepo.yaml
+  devcovenant/custom/profiles/devcovrepo/assets/docs/README.md
+  devcovenant/docs/README.md
+  devcovenant/core/update_policy_registry.py
+  devcovenant/core/refresh_all.py
   tests/core/policies/changelog_coverage/tests/changelog_coverage_impl.py
   tests/core/policies/changelog_coverage/tests/test_changelog_coverage.py
+  MANIFEST.in
 - 2026-02-02: Aligned docs/data profiles with doc-quality policies and added
   dependency-license-sync coverage for Objective-C (Podfile/lock manifests).
   Files:

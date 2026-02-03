@@ -3,7 +3,10 @@ profile: devcovrepo
 category: repo
 suffixes: []
 ignore_dirs: []
-assets: []
+assets:
+  - path: devcovenant/docs/README.md
+    template: docs/README.md
+    mode: replace
 policy_overlays:
   documentation-growth-tracking:
     user_visible_dirs:

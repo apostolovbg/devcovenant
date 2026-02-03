@@ -195,9 +195,12 @@ It is the checklist we consult before declaring the spec satisfied.
 - Leave the `devcovenant/` tree intact.
 - [not done] `update` preserves policy blocks and metadata.
   Provide independent doc refresh controls (`--docs-include/exclude`).
-- [not done] `refresh-all` regenerates registries/policies without writing
-  managed docs.
-  Default to preserve metadata mode.
+- [done] Introduce a registry-only refresh mode that regenerates
+  `devcovenant/registry/local/*` (hashes, manifest, metadata schema) and
+  re-materializes `config.yaml` only when missing, while skipping AGENTS and
+  managed docs. Run this registry-only refresh automatically at the start of
+  every devcovenant invocation (including CI) so state is rebuilt without
+  dirtying working trees. Default to preserve metadata mode.
 - [not done] `AGENTS.md` always uses the template.
   Preserve the `# EDITABLE SECTION` text when it already exists.
 - [not done] `README.md`, `SPEC.md`, `PLAN.md`, `CHANGELOG.md`, and
@@ -212,9 +215,11 @@ It is the checklist we consult before declaring the spec satisfied.
 - [not done] `LICENSE` falls back to the GPL-3.0 template when missing.
 - [not done] `.gitignore` is rebuilt from fragments while merging user entries.
 - [not done] Every managed doc gets its `Last Updated` header stamped in UTC.
-- [not done] `devcovenant/config.yaml` is generated only when missing; autogen
+- [done] `devcovenant/config.yaml` is generated only when missing; autogen
   sections are marked and refreshed while user overrides stay intact so
-  installs from existing configs remain possible.
+  installs from existing configs remain possible. Keep the repo’s tracked
+  config available for CI, but exclude it from built artifacts via
+  `MANIFEST.in` so packages do not ship the repo config.
 - [not done] Config exposes `devcov_core_include`, `devcov_core_paths`, and
   `doc_assets` with `profiles.generated.file_suffixes`.
 - [not done] Profile and policy assets live under `core/` and `custom/`.
@@ -222,11 +227,11 @@ It is the checklist we consult before declaring the spec satisfied.
   Asset metadata lands in `policy_assets.yaml`.
 - [not done] Profile-driven pre-commit config turns metadata into hooks and
   documents the “Pre-commit config refactor” phase.
-- [not done] Ensure the custom `devcovrepo` profile treats `devcovenant/docs`
-  as part of the documentation growth tracking surface. The profile’s
-  metadata overlays for `documentation-growth-tracking` should list
-  `devcovenant/docs` so the policy ensures the folder grows with useful
-  content and documents how to use overrides/custom policies.
+- [done] Ensure the custom `devcovrepo` profile treats `devcovenant/docs`
+  as part of the documentation growth tracking surface and ships a
+  starter doc (`devcovenant/docs/README.md`) via profile assets so the
+  folder grows with useful content and documents how to use overrides and
+  custom policies.
 - [not done] Describe how `devcovuser`/`devcovrepo` metadata control the
   `tests/devcovenant/**` mirror: `devcovuser` (user installs) mirrors only
   `devcovenant/custom/**`; when `devcov_core_include` is true (DevCovenant’s

@@ -166,6 +166,7 @@ def update_policy_registry(
     *,
     rerun: bool = False,
     skip_freeze: bool = False,
+    reset_updated_flags: bool = True,
 ) -> int:
     """Update policy hashes.
 
@@ -232,7 +233,7 @@ def update_policy_registry(
     else:
         print("\nUpdated " f"{updated} policy hash(es) in {registry_path}")
 
-    if _reset_updated_flags(agents_md_path):
+    if reset_updated_flags and _reset_updated_flags(agents_md_path):
         print("Reset updated flags in AGENTS.md.")
     if _ensure_trailing_newline(registry_path):
         print(f"Ensured trailing newline in {registry_path}.")
@@ -246,7 +247,10 @@ def update_policy_registry(
             _print_freeze_messages(freeze_messages)
         if freeze_changed and not rerun:
             return update_policy_registry(
-                repo_root, rerun=True, skip_freeze=True
+                repo_root,
+                rerun=True,
+                skip_freeze=True,
+                reset_updated_flags=reset_updated_flags,
             )
 
     return 0
