@@ -55,6 +55,7 @@ Example entry:
   devcovenant/registry/local/policy_registry.yaml
   devcovenant/core/profiles/devcovuser/devcovuser.yaml
   PROFILE_MAP.md
+  devcovenant/core/profiles/php/assets/phpunit.xml
   tests/core/policies/changelog_coverage/tests/changelog_coverage_impl.py
   tests/core/policies/changelog_coverage/tests/test_changelog_coverage.py
 - 2026-02-02: Aligned docs/data profiles with doc-quality policies and added

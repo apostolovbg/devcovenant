@@ -45,9 +45,9 @@ inheritance. Custom policies stay opt-in via custom profiles/config.
   license-sync, devflow-run-gates, doc/comment coverage, name-clarity,
   new-modules-need-tests, security-scanner, doc-growth, line-length-limit,
   version-sync.
-- php — Assets: composer.json, composer.lock, .gitignore; Policies:
-  dependency-license-sync, devflow-run-gates, doc-growth, line-length-limit,
-  version-sync.
+- php — Assets: composer.json, composer.lock, phpunit.xml, .gitignore;
+  Policies: dependency-license-sync, devflow-run-gates, doc-growth, line-
+  length-limit, version-sync.
 - ruby — Assets: Gemfile, Gemfile.lock, .gitignore; Policies: dependency-
   license-sync, devflow-run-gates, doc-growth, line-length-limit, version-
   sync.
