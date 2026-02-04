@@ -40,7 +40,7 @@ metadata:
     - julia
     - ocaml
     - crystal
-  test_status_file: .devcov-state/test_status.json
+  test_status_file: devcovenant/registry/local/test_status.json
   required_commands:
     - pytest
     - python3 -m unittest discover

@@ -1,179 +1,72 @@
-# Profile: data
-# macOS
-.DS_Store
-.AppleDouble
-.LSOverride
-Icon
-._*
-.Spotlight-V100
-.Trashes
-.fseventsd
-.AppleDB
-.AppleDesktop
-Network Trash Folder
-Temporary Items
+# DevCovenant base ignores
 
-# Python
-__pycache__/
-*.py[cod]
-*$py.class
-.pytest_cache/
-.mypy_cache/
-.pyre/
-.pytype/
-.coverage
-coverage.xml
-htmlcov/
-.cache/
-.ipynb_checkpoints/
-*.egg-info/
-.eggs/
+# Editor settings
+.idea/
+.vscode/
+*.swp
+*.swo
+*.swn
+*.tmp
+*.bak
 
-# Virtual environments
-.venv/
-venv/
-ENV/
-env/
-
-# Node
-node_modules/
-
-# Logs
-*.log
+# Environment files
+.env
+.env.*
+!.env.example
 
 # Build artifacts
 build/
 dist/
+out/
+coverage/
+reports/
 
-# Editor/OS temp files
-*.swp
-*~
+# Logs
+*.log
+
+# Misc
+.cache/
+tmp/
+temp/
 
 # DevCovenant
 devcovenant/registry/local/
-.devcov-state/
 .devcov/install_manifest.json
 .devcovenant/install_manifest.json
 
-# Profile: devcovenant
+# Profile: data
+# DevCovenant profile ignores
+data/raw
+data/tmp
+data/cache
+
+# Profile: devcovrepo
 # DevCovenant repo-specific ignores
-# Keep the generated config local so we don't commit it while
-# still allowing user installs to retain their configuration.
-devcovenant/config.yaml
+# Keep this fragment minimal; config.yaml stays tracked.
 
 # Profile: docs
-# macOS
-.DS_Store
-.AppleDouble
-.LSOverride
-Icon
-._*
-.Spotlight-V100
-.Trashes
-.fseventsd
-.AppleDB
-.AppleDesktop
-Network Trash Folder
-Temporary Items
+# DevCovenant profile ignores
+_site
+site
+build
 
-# Python
-__pycache__/
-*.py[cod]
-*$py.class
-.pytest_cache/
-.mypy_cache/
-.pyre/
-.pytype/
-.coverage
-coverage.xml
-htmlcov/
-.cache/
-.ipynb_checkpoints/
-*.egg-info/
-.eggs/
-
-# Virtual environments
-.venv/
-venv/
-ENV/
-env/
-
-# Node
-node_modules/
-
-# Logs
-*.log
-
-# Build artifacts
-build/
-dist/
-
-# Editor/OS temp files
-*.swp
-*~
-
-# DevCovenant
-devcovenant/registry/local/
-.devcov/install_manifest.json
-.devcovenant/install_manifest.json
+# Profile: global
+# DevCovenant profile ignores
 
 # Profile: python
-# macOS
-.DS_Store
-.AppleDouble
-.LSOverride
-Icon
-._*
-.Spotlight-V100
-.Trashes
-.fseventsd
-.AppleDB
-.AppleDesktop
-Network Trash Folder
-Temporary Items
-
-# Python
-__pycache__/
-*.py[cod]
-*$py.class
-.pytest_cache/
-.mypy_cache/
-.pyre/
-.pytype/
-.coverage
-coverage.xml
-htmlcov/
-.cache/
-.ipynb_checkpoints/
-*.egg-info/
-.eggs/
-
-# Virtual environments
-.venv/
-venv/
-ENV/
-env/
-
-# Node
-node_modules/
-
-# Logs
-*.log
-
-# Build artifacts
-build/
-dist/
-
-# Editor/OS temp files
-*.swp
-*~
-
-# DevCovenant
-devcovenant/registry/local/
-.devcov/install_manifest.json
-.devcovenant/install_manifest.json
+# DevCovenant profile ignores
+.venv
+__pycache__
+.pytest_cache
+.mypy_cache
+build
+dist
 
 # Profile: suffixes
+# DevCovenant profile ignores
+
+# OS-specific ignores (DevCovenant)
+
 # macOS
 .DS_Store
 .AppleDouble
@@ -188,100 +81,20 @@ Icon
 Network Trash Folder
 Temporary Items
 
-# Python
-__pycache__/
-*.py[cod]
-*$py.class
-.pytest_cache/
-.mypy_cache/
-.pyre/
-.pytype/
-.coverage
-coverage.xml
-htmlcov/
-.cache/
-.ipynb_checkpoints/
-*.egg-info/
-.eggs/
+# Windows
+Thumbs.db
+Desktop.ini
+ehthumbs.db
+Icon?
+*.lnk
+$RECYCLE.BIN/
 
-# Virtual environments
-.venv/
-venv/
-ENV/
-env/
-
-# Node
-node_modules/
-
-# Logs
-*.log
-
-# Build artifacts
-build/
-dist/
-
-# Editor/OS temp files
-*.swp
-*~
-
-# DevCovenant
-devcovenant/registry/local/
-.devcov/install_manifest.json
-.devcovenant/install_manifest.json
+# Linux
+.directory
+.Trash-*
+.fuse_hidden*
+.nfs*
 
 # --- User entries (preserved) ---
-# macOS
-.DS_Store
-.AppleDouble
-.LSOverride
-Icon
-._*
-.Spotlight-V100
-.Trashes
-.fseventsd
-.AppleDB
-.AppleDesktop
-Network Trash Folder
-Temporary Items
 
-# Python
-__pycache__/
-*.py[cod]
-*$py.class
-.pytest_cache/
-.mypy_cache/
-.pyre/
-.pytype/
-.coverage
-coverage.xml
-htmlcov/
-.cache/
-.ipynb_checkpoints/
-*.egg-info/
-.eggs/
-
-# Virtual environments
-.venv/
-venv/
-ENV/
-env/
-
-# Node
-node_modules/
-
-# Logs
-*.log
-
-# Build artifacts
-build/
-dist/
-
-# Editor/OS temp files
-*.swp
-*~
-
-# DevCovenant
-devcovenant/registry/local/
-.devcov/install_manifest.json
-.devcovenant/install_manifest.json
 # --- End user entries ---

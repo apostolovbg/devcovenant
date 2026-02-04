@@ -16,11 +16,12 @@ opt-in via custom profiles or config overrides—never implicit via `global`.
   profile_scopes.
 - devcov-parity-guard — Assets: policy descriptors; Metadata: policy_
   definitions, profile_scopes.
-- devflow-run-gates — Assets: run_pre_commit.py, run_tests.py, .devcov-state/
-  test_status.json; Metadata: test_status_file, required_commands, require_
+- devflow-run-gates — Assets: run_pre_commit.py, run_tests.py,
+  devcovenant/registry/local/test_status.json; Metadata: test_status_file,
+  required_commands, require_
   pre_commit_start/end, pre_commit_command, epoch/command keys.
-- track-test-status — Assets: .devcov-state/test_status.json; Metadata:
-  profile_scopes.
+- track-test-status — Assets: devcovenant/registry/local/test_status.json;
+  Metadata: profile_scopes.
 - changelog-coverage — Assets: CHANGELOG.md; Metadata: main_changelog,
   skipped_files, profile_scopes.
 - no-future-dates — Logic-only; Metadata: profile_scopes.

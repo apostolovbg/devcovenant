@@ -752,6 +752,7 @@ def refresh_policies(
     *,
     metadata_mode: str = "preserve",
     set_updated: bool = True,
+    repo_root: Path | None = None,
 ) -> RefreshResult:
     """Refresh the policy block metadata and ordering inside AGENTS.md."""
     if metadata_mode not in _METADATA_MODES:
@@ -759,7 +760,7 @@ def refresh_policies(
     if not agents_path.exists():
         return RefreshResult((), (), False, metadata_mode)
 
-    repo_root = agents_path.parent
+    repo_root = repo_root or agents_path.parent
     # Keep the canonical schema in sync with current descriptors before use.
     generate_policy_metadata_schema(repo_root)
     discovered = _discover_policy_sources(repo_root)

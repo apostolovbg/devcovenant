@@ -293,12 +293,12 @@ profile_scopes: global
   julia
   ocaml
   crystal
-test_status_file: .devcov-state/test_status.json
+test_status_file: devcovenant/registry/local/test_status.json
 required_commands: pytest
   python3 -m unittest discover
 require_pre_commit_start: true
 require_pre_commit_end: true
-pre_commit_command: pre-commit run --all-files
+pre_commit_command: python3 -m pre_commit run --all-files
 pre_commit_start_epoch_key: pre_commit_start_epoch
 pre_commit_end_epoch_key: pre_commit_end_epoch
 pre_commit_start_command_key: pre_commit_start_command

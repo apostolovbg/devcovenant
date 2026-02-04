@@ -76,8 +76,8 @@ eliminates that by making the documentation itself the executable spec.
     `manifest.json`, `profile_catalog.yaml`, `policy_assets.yaml`) that
     include live policy map metadata so tooling can read policy coverage
     without parsing `AGENTS.md`.
-- `.devcov-state/`: ephemeral state such as `test_status.json` for the
-  devflow gates.
+- `devcovenant/registry/local/`: ephemeral local state such as
+  `test_status.json` for the devflow gates.
 - `core/*.py`: workflow helpers (pre-commit/test gates, status updates, and
   the check wrapper).
 <!-- REPO-ONLY:END -->

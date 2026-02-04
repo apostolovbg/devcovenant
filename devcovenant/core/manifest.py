@@ -11,7 +11,6 @@ DEV_COVENANT_DIR = "devcovenant"
 MANIFEST_FILENAME = "manifest.json"
 GLOBAL_REGISTRY_DIR = f"{DEV_COVENANT_DIR}/registry/global"
 LOCAL_REGISTRY_DIR = f"{DEV_COVENANT_DIR}/registry/local"
-STATE_DIR = ".devcov-state"
 MANIFEST_REL_PATH = f"{LOCAL_REGISTRY_DIR}/{MANIFEST_FILENAME}"
 POLICY_REGISTRY_FILENAME = "policy_registry.yaml"
 PROFILE_CATALOG_FILENAME = "profile_catalog.yaml"
@@ -89,13 +88,13 @@ DEFAULT_CUSTOM_FILES = [
 
 DEFAULT_GENERATED_FILES = [
     f"{LOCAL_REGISTRY_DIR}/{POLICY_REGISTRY_FILENAME}",
-    f"{STATE_DIR}/{TEST_STATUS_FILENAME}",
+    f"{LOCAL_REGISTRY_DIR}/{TEST_STATUS_FILENAME}",
     f"{LOCAL_REGISTRY_DIR}/{MANIFEST_FILENAME}",
     f"{LOCAL_REGISTRY_DIR}/{PROFILE_CATALOG_FILENAME}",
     f"{LOCAL_REGISTRY_DIR}/{POLICY_ASSETS_FILENAME}",
 ]
 
-DEFAULT_GENERATED_DIRS: list[str] = [LOCAL_REGISTRY_DIR, STATE_DIR]
+DEFAULT_GENERATED_DIRS: list[str] = [LOCAL_REGISTRY_DIR]
 
 
 def _registry_root(repo_root: Path, rel_dir: str) -> Path:
@@ -129,8 +128,8 @@ def policy_assets_path(repo_root: Path) -> Path:
 
 
 def test_status_path(repo_root: Path) -> Path:
-    """Return the test running status file path inside the state directory."""
-    return repo_root / STATE_DIR / TEST_STATUS_FILENAME
+    """Return the test running status file path inside the local registry."""
+    return local_registry_root(repo_root) / TEST_STATUS_FILENAME
 
 
 def _utc_now() -> str:

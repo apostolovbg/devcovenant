@@ -1,5 +1,5 @@
 # DevCovenant Specification
-**Last Updated:** 2026-02-03
+**Last Updated:** 2026-02-04
 **Version:** 0.2.6
 
 <!-- DEVCOV:BEGIN -->
@@ -39,9 +39,10 @@ hashes synchronized so drift is detectable and reversible.
   required to pass.
 - If end-phase hooks or DevCovenant autofixers change the working tree, rerun
   the required tests (and rerun hooks if needed) until the repo is clean, then
-  record only that final successful pass in `.devcov-state/test_status.json`.
-Devflow gate status is stored in `.devcov-state/test_status.json`, created
-  on demand, and treated as gitignored state.
+  record only that final successful pass in
+  `devcovenant/registry/local/test_status.json`. Devflow gate status is
+  stored in `devcovenant/registry/local/test_status.json`, created on demand,
+  and treated as gitignored state.
 - Run a startup check at session start (`python3 -m devcovenant check --mode
   startup`).
 - When policy text changes, set `updated: true`, update scripts/tests, run
@@ -123,7 +124,8 @@ Devflow gate status is stored in `.devcov-state/test_status.json`, created
   `devcovenant/` folder with itself.
 - `refresh` (via `refresh-all`) rebuilds registries and policy metadata from
   the current config/profile state without forcing stock defaults. It is the
-  explicit “regenerate from existing config” command.
+  explicit “regenerate from existing config” command and also regenerates
+  `.gitignore` from profile fragments while preserving any user entries.
 - “Restore to stock metadata/profile configuration” is a separate command
   (planned) and must not be conflated with `update` or `refresh`.
 - Source-based usage must use `python3 -m devcovenant ...` when invoking
@@ -144,7 +146,7 @@ Devflow gate status is stored in `.devcov-state/test_status.json`, created
 - `update`: refresh DevCovenant-managed content without changing config.
   It refreshes managed docs and rebuilds registries.
 - `refresh-all`: rebuild registries/metadata from the current config without
-  touching managed docs.
+  touching managed docs, and regenerate `.gitignore` from profile fragments.
 - `reset-to-stock` (planned): restore stock metadata/profile config, updating
   config, docs, and registries.
 
@@ -498,9 +500,8 @@ its own assets, suffixes, policies, and overlays.
 - Runtime-required artifacts (
   `devcovenant/registry/local/policy_registry.yaml`,
   `devcovenant/registry/local/manifest.json`,
-  and `.devcov-state/test_status.json`
+  and `devcovenant/registry/local/test_status.json`
 ) are generated from `devcovuser` assets during install/update/refresh. They
-  are generated from `devcovuser` assets during install/update/refresh. They
   are tracked in this repo for CI/builds, excluded from packages, and
   regenerated when missing.
 - `AGENTS.md` is always written from the template; if a prior `AGENTS.md`

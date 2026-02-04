@@ -1,5 +1,5 @@
 # DevCovenant Development Guide
-**Last Updated:** 2026-02-03
+**Last Updated:** 2026-02-04
 **Version:** 0.2.6
 
 <!-- DEVCOV:BEGIN -->
@@ -388,7 +388,7 @@ profile_scopes: global
   julia
   ocaml
   crystal
-test_status_file: .devcov-state/test_status.json
+test_status_file: devcovenant/registry/local/test_status.json
 required_commands: pytest
   python3 -m unittest discover
 require_pre_commit_start: true

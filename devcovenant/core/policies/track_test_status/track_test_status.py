@@ -1,4 +1,4 @@
-"""Ensure .devcov-state/test_status.json is refreshed."""
+"""Ensure devcovenant/registry/local/test_status.json is refreshed."""
 
 from __future__ import annotations
 
@@ -10,7 +10,9 @@ from typing import Iterable, List
 from devcovenant.core.base import CheckContext, PolicyCheck, Violation
 from devcovenant.core.selector_helpers import build_watchlists
 
-STATUS_RELATIVE = Path(".devcov-state") / "test_status.json"
+STATUS_RELATIVE = (
+    Path("devcovenant") / "registry" / "local" / "test_status.json"
+)
 
 
 def _requires_status_update(

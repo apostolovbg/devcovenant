@@ -1,5 +1,5 @@
 # DevCovenant Development Plan
-**Last Updated:** 2026-02-03
+**Last Updated:** 2026-02-04
 **Version:** 0.2.6
 
 <!-- DEVCOV:BEGIN -->
@@ -86,6 +86,8 @@ It is the checklist we consult before declaring the spec satisfied.
   modes).
 - [done] Metadata normalization handled by refresh/update; no separate
   `normalize-metadata` command needed.
+- [done] `refresh-all` regenerates `.gitignore` from profile fragments while
+  preserving any user-provided entries.
 - [not done] Every managed doc must include `Last Updated`/`Version` headers.
   Ensure each file also has top-of-file managed blocks.
   Include `Doc ID`, `Doc Type`, and owner metadata in those blocks.
@@ -193,6 +195,8 @@ It is the checklist we consult before declaring the spec satisfied.
 - Refuse install when DevCovenant already exists unless `--auto-uninstall`.
 - Share an install/update workflow touching only configs, docs, and metadata.
 - Leave the `devcovenant/` tree intact.
+- [not done] Install/update should run `refresh-all` at the end so registries
+  and `.gitignore` are regenerated from the latest profile state.
 - [not done] `update` preserves policy blocks and metadata.
   Provide independent doc refresh controls (`--docs-include/exclude`).
 - [done] Introduce a registry-only refresh mode that regenerates
@@ -252,9 +256,9 @@ It is the checklist we consult before declaring the spec satisfied.
   prefixed folders/policies and recreating the user-facing `devcovuser` profile
   so repo-specific overrides never ship.
 - [not done] Runtime-required artifacts (`devcovenant/registry/local/` entries
-  and `.devcov-state/test_status.json`) are generated from `devcovuser` assets,
-  tracked in this repo for CI/builds, excluded from packages, and recreated
-  during install/update/refresh when missing.
+  and `devcovenant/registry/local/test_status.json`) are generated from
+  `devcovuser` assets, tracked in this repo for CI/builds, excluded from
+  packages, and recreated during install/update/refresh when missing.
 
 - [done] Describe the `devcovuser`/`devcovrepo` profiles and wiring so user
   repos keep `devcovenant/**` out of enforcement while still covering
@@ -354,7 +358,8 @@ Below is every missing SPEC requirement, ordered by dependency.
   and `devcovenant.run_pre_commit --phase end` for every change.
 - `run_tests` should execute the active `devflow-run-gates.required_commands`
   (from profiles/config) so mixed stacks get all required suites recorded.
-- Write `.devcov-state/test_status.json` before the final pre-commit phase.
+- Write `devcovenant/registry/local/test_status.json` before the final
+  pre-commit phase.
 - Run `python3 -m devcovenant check --fix` when doc assets or `last-updated`
   are modified.
 

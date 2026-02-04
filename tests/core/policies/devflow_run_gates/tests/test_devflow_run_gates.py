@@ -36,7 +36,9 @@ def test_requires_tests_for_code_change(tmp_path: Path) -> None:
     check = DevflowRunGates()
     violations = check.check(ctx)
     assert violations, "missing test_status should trigger a violation"
-    status_path = tmp_path / ".devcov-state" / "test_status.json"
+    status_path = (
+        tmp_path / "devcovenant" / "registry" / "local" / "test_status.json"
+    )
     assert status_path.exists()
 
 
@@ -52,7 +54,9 @@ def test_start_phase_skips_missing_status(tmp_path: Path, monkeypatch) -> None:
 def test_passes_when_tests_are_fresh(tmp_path: Path) -> None:
     """Recent test runs should satisfy the gate."""
     ctx = make_ctx(tmp_path, ["src/example.py"])
-    status_path = tmp_path / ".devcov-state" / "test_status.json"
+    status_path = (
+        tmp_path / "devcovenant" / "registry" / "local" / "test_status.json"
+    )
     status_path.parent.mkdir(parents=True, exist_ok=True)
     code_mtime = (tmp_path / "src" / "example.py").stat().st_mtime
     now = code_mtime + 10
@@ -78,7 +82,9 @@ def test_start_after_edit_is_warning(tmp_path: Path) -> None:
     """A start recorded after edits should emit a warning, not an error."""
 
     ctx = make_ctx(tmp_path, ["src/example.py"])
-    status_path = tmp_path / ".devcov-state" / "test_status.json"
+    status_path = (
+        tmp_path / "devcovenant" / "registry" / "local" / "test_status.json"
+    )
     status_path.parent.mkdir(parents=True, exist_ok=True)
     code_mtime = (tmp_path / "src" / "example.py").stat().st_mtime
     status = {
@@ -106,7 +112,9 @@ def test_start_after_edit_is_warning(tmp_path: Path) -> None:
 def test_requires_pre_commit_start(tmp_path: Path) -> None:
     """Missing start pre-commit should trigger a violation."""
     ctx = make_ctx(tmp_path, ["src/example.py"])
-    status_path = tmp_path / ".devcov-state" / "test_status.json"
+    status_path = (
+        tmp_path / "devcovenant" / "registry" / "local" / "test_status.json"
+    )
     status_path.parent.mkdir(parents=True, exist_ok=True)
     code_mtime = (tmp_path / "src" / "example.py").stat().st_mtime
     status = {
@@ -130,7 +138,9 @@ def test_requires_pre_commit_start(tmp_path: Path) -> None:
 def test_requires_pre_commit_end(tmp_path: Path) -> None:
     """Missing end pre-commit should trigger a violation."""
     ctx = make_ctx(tmp_path, ["src/example.py"])
-    status_path = tmp_path / ".devcov-state" / "test_status.json"
+    status_path = (
+        tmp_path / "devcovenant" / "registry" / "local" / "test_status.json"
+    )
     status_path.parent.mkdir(parents=True, exist_ok=True)
     code_mtime = (tmp_path / "src" / "example.py").stat().st_mtime
     status = {

@@ -1,5 +1,5 @@
 # Changelog
-**Last Updated:** 2026-02-03
+**Last Updated:** 2026-02-04
 **Version:** 0.2.6
 
 <!-- DEVCOV:BEGIN -->
@@ -28,6 +28,36 @@ Example entry:
 ## Log changes here
 
 ## Version 0.2.6
+
+- 2026-02-04: Relocated test_status.json into the local registry, refreshed
+  devflow/track-test-status wiring, repaired gitignore templates/refresh, and
+  removed legacy registry/config files.
+  Files:
+  .gitignore
+  AGENTS.md
+  CHANGELOG.md
+  PLAN.md
+  POLICY_MAP.md
+  README.md
+  SPEC.md
+  devcovenant/config_old.yaml
+  devcovenant/registry.json
+  devcovenant/custom/profiles/devcovrepo/assets/.gitignore
+  devcovenant/core/manifest.py
+  devcovenant/core/policies/devflow_run_gates/devflow_run_gates.py
+  devcovenant/core/policies/devflow_run_gates/devflow_run_gates.yaml
+  devcovenant/core/policies/track_test_status/track_test_status.py
+  devcovenant/core/profiles/global/assets/.gitignore
+  devcovenant/core/profiles/global/assets/AGENTS.md
+  devcovenant/core/profiles/global/assets/AGENTS.yaml
+  devcovenant/core/profiles/global/assets/CHANGELOG.yaml
+  devcovenant/core/profiles/global/assets/gitignore_base.txt
+  devcovenant/core/profiles/global/assets/gitignore_os.txt
+  devcovenant/core/profiles/global/assets/PLAN.yaml
+  devcovenant/core/profiles/global/assets/SPEC.yaml
+  devcovenant/core/refresh_all.py
+  devcovenant/core/refresh_policies.py
+  tests/core/policies/devflow_run_gates/tests/test_devflow_run_gates.py
 
 - 2026-02-03: Enforced daily, file-complete changelog coverage; simplified
   check modes to audit/fix; regenerated managed docs and synced README
