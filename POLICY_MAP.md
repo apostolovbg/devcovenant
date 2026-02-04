@@ -28,18 +28,19 @@ opt-in via custom profiles or config overrides—never implicit via `global`.
 - read-only-directories — Metadata: include_globs, profile_scopes.
 - managed-environment — Metadata: expected_paths, expected_interpreters,
   required_commands, command_hints (apply: false by default).
-- semantic-version-scope — Assets: VERSION, CHANGELOG.md; Metadata: version_
-  file, changelog_file, profile_scopes (apply: false).
+- semantic-version-scope — Assets: devcovenant/VERSION, CHANGELOG.md;
+  Metadata: version_file, changelog_file, profile_scopes (apply: false).
 - last-updated-placement — Assets: managed docs; Metadata: allowed_globs,
   profile_scopes.
-- documentation-growth-tracking — Metadata: selector roles, required_headings,
-  min_word_count, mention rules; overlays expected per profile for user_
-  facing suffixes/keywords.
+- documentation-growth-tracking — Metadata: selector roles,
+  required_headings, min_word_count, mention rules; overlays expected per
+  profile for user_facing suffixes/keywords.
 - line-length-limit — Metadata: max_length, selectors, profile_scopes.
-- version-sync — Assets: VERSION, README/AGENTS/CONTRIBUTING/SPEC/PLAN/
-  devcovenant/README.md, LICENSE, pyproject.toml; Metadata: version_file,
-  readme_files, optional_files, pyproject_files, license_files, changelog_
-  file, header_prefix.
+- version-sync — Assets: devcovenant/VERSION,
+  README/AGENTS/CONTRIBUTING/SPEC/PLAN/devcovenant/README.md,
+  LICENSE, pyproject.toml; Metadata: version_file, readme_files,
+  optional_files, pyproject_files, license_files, changelog_file,
+  header_prefix.
 
 ## Profile-Scoped Core Policies
 - dependency-license-sync — Profiles: python, javascript, typescript, java,
@@ -48,8 +49,8 @@ opt-in via custom profiles or config overrides—never implicit via `global`.
 - docstring-and-comment-coverage — Adapters per language; Metadata: include/
   exclude selectors. Profiles: python, javascript, typescript, go, rust, java,
   csharp.
-- name-clarity — Adapters per language; Metadata: selectors. Profiles: python,
-  javascript, typescript, go, rust, java, csharp.
+- name-clarity — Adapters per language; Metadata: selectors. Profiles:
+  python, javascript, typescript, go, rust, java, csharp.
 - new-modules-need-tests — Adapters per language; Metadata: tests_watch_dirs,
   include/exclude selectors. Profiles: python, javascript, typescript, go,
   rust, java, csharp, fastapi, frappe.

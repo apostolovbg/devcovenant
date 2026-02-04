@@ -4,10 +4,10 @@ text: |
   `[semver:major|minor|patch]` tag that matches the version bump. Use
   `major` for API-breaking releases, `minor` for backward-compatible feature
   work, and `patch` for bug fixes or documentation-only updates. The tag
-  must match the bump from the previous version, and `VERSION` must be
-  updated whenever the changelog declares a release scope. The policy ships
-  disabled (`apply: false`) and should only be enabled for release
-  processes that enforce SemVer discipline.
+  must match the bump from the previous version, and `devcovenant/VERSION`
+  must be updated whenever the changelog declares a release scope. The
+  policy ships disabled (`apply: false`) and should only be enabled for
+  release processes that enforce SemVer discipline.
 metadata:
   id: semantic-version-scope
   status: active
@@ -18,7 +18,7 @@ metadata:
   apply: 'false'
   custom: 'false'
   profile_scopes: global
-  version_file: VERSION
+  version_file: devcovenant/VERSION
   changelog_file: CHANGELOG.md
   ignored_prefixes: []
   selector_roles: ignored

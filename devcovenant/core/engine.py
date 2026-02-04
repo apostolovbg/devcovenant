@@ -21,7 +21,11 @@ from .base import CheckContext, PolicyCheck, PolicyFixer, Violation
 from .manifest import ensure_manifest
 from .parser import PolicyDefinition, PolicyParser
 from .policy_locations import resolve_script_location
-from .profiles import load_profile_catalog, resolve_profile_suffixes
+from .profiles import (
+    load_profile_catalog,
+    resolve_profile_ignore_dirs,
+    resolve_profile_suffixes,
+)
 from .registry import PolicyRegistry, PolicySyncIssue
 
 
@@ -88,6 +92,7 @@ class DevCovenantEngine:
 
         self._profile_catalog = load_profile_catalog(self.repo_root)
         self._active_profiles = self._resolve_active_profiles()
+        self._merge_profile_ignored_dirs()
 
         # Keep local metadata schema up to date for every run (CI-safe).
         generate_policy_metadata_schema(self.repo_root)
@@ -209,6 +214,9 @@ class DevCovenantEngine:
 
     def _is_ignored_path(self, candidate: Path) -> bool:
         """Return True when candidate is within an ignored path prefix."""
+        for part in candidate.parts:
+            if part in self._ignored_dirs:
+                return True
         for root in self._ignored_paths:
             try:
                 candidate.relative_to(root)
@@ -216,6 +224,16 @@ class DevCovenantEngine:
                 continue
             return True
         return False
+
+    def _merge_profile_ignored_dirs(self) -> None:
+        """Extend ignored directories with active profile declarations."""
+        ignored = resolve_profile_ignore_dirs(
+            self._profile_catalog, self._active_profiles
+        )
+        for entry in ignored:
+            name = str(entry).strip()
+            if name:
+                self._ignored_dirs.add(name)
 
     def _load_fixers(self) -> List[PolicyFixer]:
         """Dynamically import policy fixers bundled with DevCovenant."""

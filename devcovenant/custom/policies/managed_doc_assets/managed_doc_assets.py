@@ -33,7 +33,6 @@ class ManagedDocAssetsCheck(PolicyCheck):
             {"doc": "CHANGELOG.md", "descriptor": "CHANGELOG.yaml"},
             {"doc": "CONTRIBUTING.md", "descriptor": "CONTRIBUTING.yaml"},
             {"doc": "LICENSE", "descriptor": "LICENSE.yaml"},
-            {"doc": "CITATION.cff", "descriptor": "CITATION.yaml"},
         ]
 
     def check(self, context: CheckContext) -> List[Violation]:

@@ -29,6 +29,73 @@ Example entry:
 
 ## Version 0.2.6
 
+- 2026-02-04: Moved VERSION into devcovenant/, updated packaging scope,
+  removed .devcov-state usage, and refreshed version policy paths.
+  Files:
+  AGENTS.md
+  CITATION.cff
+  MANIFEST.in
+  PLAN.md
+  POLICY_MAP.md
+  PROFILE_MAP.md
+  README.md
+  SPEC.md
+  devcovenant/README.md
+  devcovenant/VERSION
+  devcovenant/cli.py
+  devcovenant/config.yaml
+  devcovenant/core/cli_options.py
+  devcovenant/core/engine.py
+  devcovenant/core/install.py
+  devcovenant/core/manifest.py
+  devcovenant/core/policies/changelog_coverage/changelog_coverage.py
+  devcovenant/core/policies/changelog_coverage/changelog_coverage.yaml
+  devcovenant/core/policies/semantic_version_scope/semantic_version_scope.yaml
+  devcovenant/core/policies/version_sync/version_sync.yaml
+  devcovenant/core/profiles.py
+  devcovenant/core/profiles/devcovuser/devcovuser.yaml
+  devcovenant/core/profiles/global/assets/CITATION.yaml
+  devcovenant/core/profiles/global/assets/VERSION
+  devcovenant/core/refresh_all.py
+  devcovenant/core/refresh_policies.py
+  devcovenant/core/stock_policy_texts.json
+  devcovenant/core/update.py
+  devcovenant/custom/policies/managed_doc_assets/managed_doc_assets.py
+  devcovenant/registry/global/stock_policy_texts.yaml
+  tests/core/policies/changelog_coverage/tests/test_changelog_coverage.py
+  tests/core/tests/test_engine.py
+  tests/core/tests/test_install.py
+  tests/core/tests/test_policy_replacements.py
+  tests/core/tests/test_refresh_policies.py
+
+- 2026-02-04: Accelerated install tests, tightened changelog coverage, and
+  added CLI stage output.
+  Files:
+  AGENTS.md
+  CITATION.cff
+  MANIFEST.in
+  PLAN.md
+  SPEC.md
+  devcovenant/cli.py
+  devcovenant/config.yaml
+  devcovenant/core/cli_options.py
+  devcovenant/core/engine.py
+  devcovenant/core/install.py
+  devcovenant/core/policies/changelog_coverage/changelog_coverage.py
+  devcovenant/core/policies/changelog_coverage/changelog_coverage.yaml
+  devcovenant/core/profiles.py
+  devcovenant/core/profiles/devcovuser/devcovuser.yaml
+  devcovenant/core/profiles/global/assets/CITATION.yaml
+  devcovenant/core/refresh_all.py
+  devcovenant/core/refresh_policies.py
+  devcovenant/core/update.py
+  devcovenant/custom/policies/managed_doc_assets/managed_doc_assets.py
+  tests/core/policies/changelog_coverage/tests/test_changelog_coverage.py
+  tests/core/tests/test_engine.py
+  tests/core/tests/test_install.py
+  tests/core/tests/test_policy_replacements.py
+  tests/core/tests/test_refresh_policies.py
+
 - 2026-02-04: Relocated test_status.json into the local registry, refreshed
   devflow/track-test-status wiring, repaired gitignore templates/refresh, and
   removed legacy registry/config files.
@@ -36,27 +103,45 @@ Example entry:
   .gitignore
   AGENTS.md
   CHANGELOG.md
+  CITATION.cff
+  MANIFEST.in
   PLAN.md
   POLICY_MAP.md
   README.md
   SPEC.md
+  devcovenant/config.yaml
   devcovenant/config_old.yaml
   devcovenant/registry.json
+  devcovenant/registry/local/policy_metadata_schema.yaml
+  devcovenant/custom/policies/managed_doc_assets/managed_doc_assets.py
   devcovenant/custom/profiles/devcovrepo/assets/.gitignore
+  devcovenant/cli.py
+  devcovenant/core/cli_options.py
+  devcovenant/core/engine.py
+  devcovenant/core/install.py
   devcovenant/core/manifest.py
+  devcovenant/core/policies/changelog_coverage/changelog_coverage.py
+  devcovenant/core/policies/changelog_coverage/changelog_coverage.yaml
   devcovenant/core/policies/devflow_run_gates/devflow_run_gates.py
   devcovenant/core/policies/devflow_run_gates/devflow_run_gates.yaml
   devcovenant/core/policies/track_test_status/track_test_status.py
+  devcovenant/core/profiles/devcovuser/devcovuser.yaml
   devcovenant/core/profiles/global/assets/.gitignore
   devcovenant/core/profiles/global/assets/AGENTS.md
   devcovenant/core/profiles/global/assets/AGENTS.yaml
   devcovenant/core/profiles/global/assets/CHANGELOG.yaml
+  devcovenant/core/profiles/global/assets/CITATION.yaml
   devcovenant/core/profiles/global/assets/gitignore_base.txt
   devcovenant/core/profiles/global/assets/gitignore_os.txt
   devcovenant/core/profiles/global/assets/PLAN.yaml
   devcovenant/core/profiles/global/assets/SPEC.yaml
+  devcovenant/core/profiles.py
   devcovenant/core/refresh_all.py
   devcovenant/core/refresh_policies.py
+  devcovenant/core/update.py
+  tests/core/policies/changelog_coverage/tests/test_changelog_coverage.py
+  tests/core/tests/test_engine.py
+  tests/core/tests/test_refresh_policies.py
   tests/core/policies/devflow_run_gates/tests/test_devflow_run_gates.py
 
 - 2026-02-03: Enforced daily, file-complete changelog coverage; simplified

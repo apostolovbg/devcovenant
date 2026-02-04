@@ -1,7 +1,8 @@
 id: version-sync
 text: |
-  All version-bearing files must match the canonical `VERSION` value, and
-  version bumps must move forward. Files listed under `optional_files` are
+  All version-bearing files must match the canonical
+  `devcovenant/VERSION` value, and version bumps must move forward. Files
+  listed under `optional_files` are
   only enforced when present (for example, SPEC/PLAN in user repos). The
   policy also flags hard-coded runtime versions and ensures changelog
   releases reflect the current version.
@@ -38,7 +39,7 @@ metadata:
     - fastapi
     - frappe
     - objective-c
-  version_file: VERSION
+  version_file: devcovenant/VERSION
   readme_files:
     - README.md
     - AGENTS.md

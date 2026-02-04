@@ -112,14 +112,14 @@
     "`major` for API-breaking releases, `minor` for backward-compatible",
     "feature",
     "work, and `patch` for bug fixes or documentation-only updates. The tag",
-    "must match the bump from the previous version, and `VERSION` must be",
-    "updated whenever the changelog declares a release scope. The policy",
-    "ships",
-    "disabled (`apply: false`) and should only be enabled for release",
-    "processes that enforce SemVer discipline."
+    "must match the bump from the previous version, and `devcovenant/VERSION`",
+    "must be updated whenever the changelog declares a release scope. The",
+    "policy ships disabled (`apply: false`) and should only be enabled for",
+    "release processes that enforce SemVer discipline."
   ],
   "version-sync": [
-    "All version-bearing files must match the canonical `VERSION` value,",
+    "All version-bearing files must match the canonical",
+    "`devcovenant/VERSION` value,",
     "and",
     "version bumps must move forward. Files listed under `optional_files`",
     "are",

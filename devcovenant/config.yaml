@@ -68,7 +68,6 @@ install:
   preserve_custom: true
   config_mode: preserve
   doc_mode: preserve
-  metadata_mode: preserve
   disable_policy: []
 
 update:

@@ -9,20 +9,27 @@ from devcovenant.core import manifest as manifest_module
 from devcovenant.core import update
 
 
+def _with_skip_refresh(args: list[str]) -> list[str]:
+    """Append the skip-refresh flag to speed up installer tests."""
+    return [*args, "--skip-refresh"]
+
+
 def test_install_records_manifest_with_core_excluded(tmp_path: Path) -> None:
     """Installer run on an empty repo records its manifest and options."""
     target = tmp_path / "repo"
     target.mkdir()
     try:
         install.main(
-            [
-                "--target",
-                str(target),
-                "--mode",
-                "empty",
-                "--version",
-                "0.1.0",
-            ]
+            _with_skip_refresh(
+                [
+                    "--target",
+                    str(target),
+                    "--mode",
+                    "empty",
+                    "--version",
+                    "0.1.0",
+                ]
+            )
         )
         manifest = manifest_module.manifest_path(target)
         assert manifest.exists()
@@ -42,15 +49,17 @@ def test_install_no_touch_only_copies_package(tmp_path: Path) -> None:
     target.mkdir()
     try:
         install.main(
-            [
-                "--target",
-                str(target),
-                "--mode",
-                "empty",
-                "--version",
-                "0.1.1",
-                "--no-touch",
-            ]
+            _with_skip_refresh(
+                [
+                    "--target",
+                    str(target),
+                    "--mode",
+                    "empty",
+                    "--version",
+                    "0.1.1",
+                    "--no-touch",
+                ]
+            )
         )
         assert (target / "devcovenant").exists()
         assert not (target / "AGENTS.md").exists()
@@ -90,12 +99,14 @@ def test_install_preserves_readme_content(tmp_path: Path) -> None:
     readme = target / "README.md"
     readme.write_text("# Example\nCustom content.\n", encoding="utf-8")
     update.main(
-        [
-            "--target",
-            str(target),
-            "--version",
-            "1.2.3",
-        ]
+        _with_skip_refresh(
+            [
+                "--target",
+                str(target),
+                "--version",
+                "1.2.3",
+            ]
+        )
     )
     updated = readme.read_text(encoding="utf-8")
     assert "Custom content." in updated
@@ -108,14 +119,16 @@ def test_install_creates_spec_and_plan(tmp_path: Path) -> None:
     target = tmp_path / "repo"
     target.mkdir()
     install.main(
-        [
-            "--target",
-            str(target),
-            "--mode",
-            "empty",
-            "--version",
-            "0.6.0",
-        ]
+        _with_skip_refresh(
+            [
+                "--target",
+                str(target),
+                "--mode",
+                "empty",
+                "--version",
+                "0.6.0",
+            ]
+        )
     )
     assert (target / "SPEC.md").exists()
     assert (target / "PLAN.md").exists()
@@ -127,14 +140,16 @@ def test_profile_assets_use_target_version(tmp_path: Path) -> None:
     target.mkdir()
     version_value = "2.4.5"
     install.main(
-        [
-            "--target",
-            str(target),
-            "--mode",
-            "empty",
-            "--version",
-            version_value,
-        ]
+        _with_skip_refresh(
+            [
+                "--target",
+                str(target),
+                "--mode",
+                "empty",
+                "--version",
+                version_value,
+            ]
+        )
     )
     pyproject = target / "pyproject.toml"
     assert pyproject.exists()
@@ -148,16 +163,18 @@ def test_disable_policy_sets_apply_false(tmp_path: Path) -> None:
     target = tmp_path / "repo"
     target.mkdir()
     install.main(
-        [
-            "--target",
-            str(target),
-            "--mode",
-            "empty",
-            "--version",
-            "0.6.1",
-            "--disable-policy",
-            "changelog-coverage",
-        ]
+        _with_skip_refresh(
+            [
+                "--target",
+                str(target),
+                "--mode",
+                "empty",
+                "--version",
+                "0.6.1",
+                "--disable-policy",
+                "changelog-coverage",
+            ]
+        )
     )
     agents_text = (target / "AGENTS.md").read_text(encoding="utf-8")
     assert "id: changelog-coverage" in agents_text
@@ -210,17 +227,19 @@ def test_policy_mode_preserve_keeps_policy_text(tmp_path: Path) -> None:
     agents_path = target / "AGENTS.md"
     _write_custom_agents(agents_path)
     install.main(
-        [
-            "--target",
-            str(target),
-            "--mode",
-            "existing",
-            "--allow-existing",
-            "--version",
-            "0.2.0",
-            "--policy-mode",
-            "preserve",
-        ]
+        _with_skip_refresh(
+            [
+                "--target",
+                str(target),
+                "--mode",
+                "existing",
+                "--allow-existing",
+                "--version",
+                "0.2.0",
+                "--policy-mode",
+                "preserve",
+            ]
+        )
     )
     updated = agents_path.read_text(encoding="utf-8")
     assert "Custom policy description." in updated
@@ -234,17 +253,19 @@ def test_policy_mode_append_missing_adds_policies(tmp_path: Path) -> None:
     agents_path = target / "AGENTS.md"
     _write_custom_agents(agents_path)
     install.main(
-        [
-            "--target",
-            str(target),
-            "--mode",
-            "existing",
-            "--allow-existing",
-            "--version",
-            "0.2.0",
-            "--policy-mode",
-            "append-missing",
-        ]
+        _with_skip_refresh(
+            [
+                "--target",
+                str(target),
+                "--mode",
+                "existing",
+                "--allow-existing",
+                "--version",
+                "0.2.0",
+                "--policy-mode",
+                "append-missing",
+            ]
+        )
     )
     updated = agents_path.read_text(encoding="utf-8")
     assert "Custom policy description." in updated
@@ -257,8 +278,10 @@ def test_update_defaults_append_missing(tmp_path: Path) -> None:
     target.mkdir()
     agents_path = target / "AGENTS.md"
     _write_custom_agents(agents_path)
-    (target / "VERSION").write_text("0.1.0\n", encoding="utf-8")
-    update.main(["--target", str(target)])
+    version_dir = target / "devcovenant"
+    version_dir.mkdir(parents=True, exist_ok=True)
+    (version_dir / "VERSION").write_text("0.1.0\n", encoding="utf-8")
+    update.main(_with_skip_refresh(["--target", str(target)]))
     updated = agents_path.read_text(encoding="utf-8")
     assert "Custom policy description." in updated
     assert "## Policy: Version Synchronization" in updated
@@ -274,7 +297,9 @@ def test_update_removes_legacy_root_paths(tmp_path: Path) -> None:
     legacy_dir.mkdir(parents=True, exist_ok=True)
     (legacy_dir / "__init__.py").write_text("legacy", encoding="utf-8")
 
-    update.main(["--target", str(target), "--version", "0.2.0"])
+    update.main(
+        _with_skip_refresh(["--target", str(target), "--version", "0.2.0"])
+    )
 
     assert not legacy.exists()
     assert not legacy_dir.exists()
@@ -289,7 +314,9 @@ def test_update_refreshes_core_files(tmp_path: Path) -> None:
     cli_path = core_dir / "cli.py"
     cli_path.write_text("# legacy\n", encoding="utf-8")
 
-    update.main(["--target", str(target), "--version", "0.2.0"])
+    update.main(
+        _with_skip_refresh(["--target", str(target), "--version", "0.2.0"])
+    )
 
     source_root = Path(install.__file__).resolve().parents[2]
     source_cli = source_root / "devcovenant" / "cli.py"
@@ -303,7 +330,9 @@ def test_update_writes_manifest(tmp_path: Path) -> None:
     target = tmp_path / "repo"
     target.mkdir()
 
-    update.main(["--target", str(target), "--version", "0.2.0"])
+    update.main(
+        _with_skip_refresh(["--target", str(target), "--version", "0.2.0"])
+    )
 
     manifest_path = manifest_module.manifest_path(target)
     assert manifest_path.exists()
@@ -317,16 +346,18 @@ def test_policy_assets_skip_when_disabled(tmp_path: Path) -> None:
     target = tmp_path / "repo"
     target.mkdir()
     install.main(
-        [
-            "--target",
-            str(target),
-            "--mode",
-            "empty",
-            "--version",
-            "0.7.0",
-            "--disable-policy",
-            "dependency-license-sync",
-        ]
+        _with_skip_refresh(
+            [
+                "--target",
+                str(target),
+                "--mode",
+                "empty",
+                "--version",
+                "0.7.0",
+                "--disable-policy",
+                "dependency-license-sync",
+            ]
+        )
     )
     assert not (target / "THIRD_PARTY_LICENSES.md").exists()
     assert not (target / "licenses" / "README.md").exists()
@@ -339,14 +370,16 @@ def test_profile_assets_installed_for_active_profiles(
     target = tmp_path / "repo"
     target.mkdir()
     install.main(
-        [
-            "--target",
-            str(target),
-            "--mode",
-            "empty",
-            "--version",
-            "0.7.1",
-        ]
+        _with_skip_refresh(
+            [
+                "--target",
+                str(target),
+                "--mode",
+                "empty",
+                "--version",
+                "0.7.1",
+            ]
+        )
     )
     assert (target / "requirements.in").exists()
     assert (target / "requirements.lock").exists()
@@ -366,15 +399,17 @@ def test_profile_assets_skip_when_profile_inactive(
         encoding="utf-8",
     )
     install.main(
-        [
-            "--target",
-            str(target),
-            "--mode",
-            "existing",
-            "--allow-existing",
-            "--version",
-            "0.7.2",
-        ]
+        _with_skip_refresh(
+            [
+                "--target",
+                str(target),
+                "--mode",
+                "existing",
+                "--allow-existing",
+                "--version",
+                "0.7.2",
+            ]
+        )
     )
     assert not (target / "requirements.in").exists()
     assert not (target / "requirements.lock").exists()
@@ -387,14 +422,16 @@ def test_profile_overlays_update_policy_config(
     target = tmp_path / "repo"
     target.mkdir()
     install.main(
-        [
-            "--target",
-            str(target),
-            "--mode",
-            "empty",
-            "--version",
-            "0.8.0",
-        ]
+        _with_skip_refresh(
+            [
+                "--target",
+                str(target),
+                "--mode",
+                "empty",
+                "--version",
+                "0.8.0",
+            ]
+        )
     )
     config_text = (target / "devcovenant" / "config.yaml").read_text(
         encoding="utf-8"

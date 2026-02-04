@@ -9,7 +9,6 @@ from typing import Iterable
 DOCS_MODE_CHOICES = ("preserve", "overwrite")
 POLICY_MODE_CHOICES = ("preserve", "append-missing", "overwrite")
 CONFIG_MODE_CHOICES = ("preserve", "overwrite")
-METADATA_MODE_CHOICES = ("preserve", "overwrite", "skip")
 INHERIT_MODE_CHOICES = ("inherit", "preserve", "overwrite", "skip")
 
 
@@ -20,7 +19,6 @@ class InstallUpdateDefaults:
     docs_mode: str | None
     policy_mode: str | None
     config_mode: str | None
-    metadata_mode: str | None
     license_mode: str
     version_mode: str
     pyproject_mode: str
@@ -32,7 +30,6 @@ DEFAULT_INSTALL_DEFAULTS = InstallUpdateDefaults(
     docs_mode=None,
     policy_mode=None,
     config_mode=None,
-    metadata_mode=None,
     license_mode="inherit",
     version_mode="inherit",
     pyproject_mode="inherit",
@@ -44,7 +41,6 @@ DEFAULT_UPDATE_DEFAULTS = InstallUpdateDefaults(
     docs_mode="preserve",
     policy_mode="append-missing",
     config_mode="preserve",
-    metadata_mode="preserve",
     license_mode="inherit",
     version_mode="inherit",
     pyproject_mode="inherit",
@@ -118,12 +114,6 @@ def add_install_update_args(
         help="How to handle config files in existing repos.",
     )
     parser.add_argument(
-        "--metadata-mode",
-        choices=METADATA_MODE_CHOICES,
-        default=defaults.metadata_mode,
-        help="How to handle metadata files in existing repos.",
-    )
-    parser.add_argument(
         "--license-mode",
         choices=INHERIT_MODE_CHOICES,
         default=defaults.license_mode,
@@ -133,13 +123,13 @@ def add_install_update_args(
         "--version-mode",
         choices=INHERIT_MODE_CHOICES,
         default=defaults.version_mode,
-        help="Override the metadata mode for VERSION.",
+        help="Override the metadata mode for devcovenant/VERSION.",
     )
     parser.add_argument(
         "--version",
         dest="version_value",
         default=None,
-        help="Version to use when creating VERSION for new installs.",
+        help="Version to use when creating devcovenant/VERSION for installs.",
     )
     parser.add_argument(
         "--pyproject-mode",
@@ -181,6 +171,11 @@ def add_install_update_args(
         help="Do not run refresh-policies during install/update.",
     )
     parser.add_argument(
+        "--skip-refresh",
+        action="store_true",
+        help="Skip the final refresh-all step during install/update.",
+    )
+    parser.add_argument(
         "--no-touch",
         action="store_true",
         help=(
@@ -216,8 +211,6 @@ def build_install_args(
         install_args.extend(["--policy-mode", args.policy_mode])
     if args.config_mode is not None:
         install_args.extend(["--config-mode", args.config_mode])
-    if args.metadata_mode is not None:
-        install_args.extend(["--metadata-mode", args.metadata_mode])
     if args.license_mode is not None:
         install_args.extend(["--license-mode", args.license_mode])
     if args.version_mode is not None:
@@ -239,6 +232,8 @@ def build_install_args(
         install_args.append("--force-config")
     if getattr(args, "skip_policy_refresh", False):
         install_args.append("--skip-policy-refresh")
+    if getattr(args, "skip_refresh", False):
+        install_args.append("--skip-refresh")
     if getattr(args, "no_touch", False):
         install_args.append("--no-touch")
     return install_args

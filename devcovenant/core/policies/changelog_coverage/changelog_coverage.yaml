@@ -1,17 +1,18 @@
 id: changelog-coverage
 text: |
-  Every change must be logged in the latest changelog entry dated today,
-  under the current version, with every touched path listed in its Files
-  block. Collection prefixes (when enabled) must be logged in their own
-  changelog; prefixed files may not appear in the root changelog. This keeps
-  release notes daily, file-complete, and traceable.
+  Every change must be logged in a new changelog entry dated today, under the
+  current version, with a descriptive summary (at least three words) and a
+  Files block that lists only the touched paths for this change. Collection
+  prefixes (when enabled) must be logged in their own changelog; prefixed
+  files may not appear in the root changelog. This keeps release notes daily,
+  file-complete, and traceable.
 metadata:
   id: changelog-coverage
   severity: error
-  auto_fix: false
+  auto_fix: 'false'
   enforcement: active
-  apply: true
-  custom: false
+  apply: 'true'
+  custom: 'false'
   profile_scopes:
     - global
   main_changelog:
@@ -20,5 +21,6 @@ metadata:
     - CHANGELOG.md
     - .gitignore
     - .pre-commit-config.yaml
+  skipped_prefixes: []
   collections:
     - __none__

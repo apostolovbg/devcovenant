@@ -5,16 +5,18 @@ include SPEC.md
 include PLAN.md
 include CHANGELOG.md
 include LICENSE
-include VERSION
 include THIRD_PARTY_LICENSES.md
-include CITATION.cff
 include requirements.in
 include requirements.lock
 include devcovenant/README.md
-include devcovenant/registry/*
+include devcovenant/VERSION
+recursive-include devcovenant/docs *
+recursive-include devcovenant/registry/global *
 exclude devcovenant/config.yaml
+exclude devcovenant/registry/local/*
 recursive-include devcovenant/core/profiles *
 recursive-include devcovenant/core/policies *
-recursive-include devcovenant/custom/profiles *
-recursive-include devcovenant/custom/policies *
-recursive-include tests *
+recursive-exclude devcovenant/custom *
+recursive-exclude devcovenant/registry/local *
+recursive-exclude tests *
+recursive-exclude .devcov-state *

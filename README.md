@@ -114,7 +114,7 @@ devcovenant install --target /path/to/repo
 Install is intended for new repos. Existing installs should use
 `devcovenant update` or uninstall/reinstall. On install,
 `CHANGELOG.md` and `CONTRIBUTING.md` are replaced with `_old.md`
-backups, and `VERSION` defaults to `0.0.1` when missing.
+backups, and `devcovenant/VERSION` defaults to `0.0.1` when missing.
 
 Update an existing installation while preserving policy blocks and
 metadata:
@@ -229,7 +229,7 @@ Use `profiles.active` in `devcovenant/config.yaml` to extend file suffix
 coverage for multi-language projects.
 Set `version.override` when you want config-driven installs to emit a specific
 project version in generated assets (for example, `pyproject.toml`).
-Apply that override before any `VERSION` file exists.
+Apply that override before any `devcovenant/VERSION` file exists.
 
 The DevCovenant repository activates a dedicated `devcovrepo` profile.
 It overrides `new-modules-need-tests` metadata so the `devcovenant/**` sources

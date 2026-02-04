@@ -14,7 +14,7 @@ from typing import Dict, List, Tuple
 
 from devcovenant.core import cli_options, install
 from devcovenant.core import manifest as manifest_module
-from devcovenant.core import policy_replacements
+from devcovenant.core import policy_replacements, profiles
 from devcovenant.core.parser import PolicyParser
 from devcovenant.core.refresh_policies import (
     export_metadata_schema,
@@ -287,6 +287,7 @@ def main(argv=None) -> None:
         defaults=cli_options.DEFAULT_UPDATE_DEFAULTS,
     )
     args = parser.parse_args(argv)
+    skip_refresh = bool(getattr(args, "skip_refresh", False))
 
     target_root = Path(args.target).resolve()
     template_path = (
@@ -360,13 +361,28 @@ def main(argv=None) -> None:
         refresh_policies(
             agents_path,
             schema_path,
-            metadata_mode="preserve",
             set_updated=True,
         )
         export_metadata_schema(target_root)
         result = update_policy_registry(target_root, skip_freeze=True)
         if result != 0:
             sys.exit(result)
+
+    if not skip_refresh:
+        from devcovenant.core import refresh_all as refresh_all_module
+
+        if args.skip_policy_refresh:
+            refresh_all_module.refresh_registry(
+                target_root, schema_path=schema_path
+            )
+            refreshed_catalog = profiles.build_profile_catalog(target_root)
+            include_core = target_root == Path(__file__).resolve().parents[2]
+            refresh_all_module.refresh_config(
+                target_root, refreshed_catalog, include_core
+            )
+            refresh_all_module.refresh_gitignore(target_root)
+        else:
+            refresh_all_module.refresh_all(target_root)
 
 
 if __name__ == "__main__":

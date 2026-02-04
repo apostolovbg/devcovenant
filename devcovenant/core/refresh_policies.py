@@ -71,8 +71,6 @@ _LEGACY_ROLE_KEY = {
     "doc_quality_dirs": ("doc_quality", "dirs"),
 }
 
-_METADATA_MODES = ("preserve", "stock")
-
 _GROUP_COMMENTS: Dict[int, str] = {}
 POLICY_METADATA_SCHEMA_FILENAME = "policy_metadata_schema.yaml"
 
@@ -118,7 +116,6 @@ class RefreshResult:
     changed_policies: Tuple[str, ...]
     skipped_policies: Tuple[str, ...]
     updated: bool
-    metadata_mode: str
 
 
 @dataclass
@@ -675,11 +672,10 @@ def _normalize_values(
     current_order: List[str],
     current_values: Dict[str, List[str]],
     schema: Dict[str, PolicySchema],
-    metadata_mode: str,
-    is_custom: bool,
 ) -> Tuple[List[str], Dict[str, List[str]]]:
     """Return normalized metadata order and values for a policy."""
-    if policy_id in schema:
+    policy_in_schema = policy_id in schema
+    if policy_in_schema:
         schema_keys = list(schema[policy_id].keys)
         defaults = schema[policy_id].defaults
     else:
@@ -687,28 +683,28 @@ def _normalize_values(
         defaults = _COMMON_DEFAULTS
 
     extras = [key for key in current_order if key not in schema_keys]
-    if is_custom:
-        ordered_keys = [
-            key for key in schema_keys if key in current_values
-        ] + extras
-        ordered_values = {
-            key: list(current_values[key])
-            for key in ordered_keys
-            if key in current_values
-        }
-        for key in ordered_values:
-            ordered_values[key] = _dedupe(ordered_values[key])
-        return ordered_keys, ordered_values
-
     ordered_keys = schema_keys + extras
     values: Dict[str, List[str]] = {}
-    use_stock = metadata_mode == "stock"
     for key in ordered_keys:
         current = current_values.get(key, [])
         canonical = list(defaults.get(key, []))
-        if use_stock and canonical:
-            values[key] = _dedupe(list(canonical))
-        elif current:
+        if policy_in_schema:
+            if current:
+                values[key] = _dedupe(list(current))
+            elif canonical:
+                values[key] = _dedupe(list(canonical))
+            else:
+                values[key] = []
+            continue
+
+        if key in schema_keys:
+            if canonical:
+                values[key] = _dedupe(list(canonical))
+            else:
+                values[key] = []
+            continue
+
+        if current:
             values[key] = _dedupe(list(current))
         elif canonical:
             values[key] = _dedupe(list(canonical))
@@ -750,15 +746,12 @@ def refresh_policies(
     agents_path: Path,
     schema_path: Path,
     *,
-    metadata_mode: str = "preserve",
     set_updated: bool = True,
     repo_root: Path | None = None,
 ) -> RefreshResult:
     """Refresh the policy block metadata and ordering inside AGENTS.md."""
-    if metadata_mode not in _METADATA_MODES:
-        raise ValueError(f"Unsupported metadata mode: {metadata_mode}")
     if not agents_path.exists():
-        return RefreshResult((), (), False, metadata_mode)
+        return RefreshResult((), (), False)
 
     repo_root = repo_root or agents_path.parent
     # Keep the canonical schema in sync with current descriptors before use.
@@ -774,7 +767,7 @@ def refresh_policies(
     try:
         block_start, block_end, block_text = _locate_policy_block(content)
     except ValueError:
-        return RefreshResult((), (), False, metadata_mode)
+        return RefreshResult((), (), False)
 
     changed: List[str] = []
     skipped: List[str] = []
@@ -815,16 +808,11 @@ def refresh_policies(
             control,
             core_available=core_available,
         )
-        custom_for_norm = (
-            values.get("custom", ["false"])[0].strip().lower() == "true"
-        )
         normalized_order, normalized_values = _normalize_values(
             policy_id,
             order,
             values,
             schema,
-            metadata_mode,
-            custom_for_norm,
         )
         apply_flag = (
             normalized_values.get("apply", ["true"])[0].strip().lower()
@@ -886,17 +874,11 @@ def refresh_policies(
             control,
             core_available=core_available,
         )
-        custom_override_flag = (
-            override_values.get("custom", ["false"])[0].strip().lower()
-            == "true"
-        )
         normalized_order, normalized_values = _normalize_values(
             policy_id,
             override_order,
             override_values,
             schema,
-            metadata_mode,
-            custom_override_flag,
         )
         if source_flags.get("custom"):
             normalized_values["custom"] = ["true"]
@@ -937,7 +919,7 @@ def refresh_policies(
         changed.append(policy_id)
 
     if not entries:
-        return RefreshResult((), tuple(skipped), False, metadata_mode)
+        return RefreshResult((), tuple(skipped), False)
 
     new_block = _assemble_sections(entries)
     block_clean = block_text.strip()
@@ -951,6 +933,4 @@ def refresh_policies(
     )
     agents_path.write_text(rebuilt, encoding="utf-8")
     updated = new_block_clean != block_clean
-    return RefreshResult(
-        tuple(changed), tuple(skipped), updated, metadata_mode
-    )
+    return RefreshResult(tuple(changed), tuple(skipped), updated)

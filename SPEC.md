@@ -42,7 +42,8 @@ hashes synchronized so drift is detectable and reversible.
   record only that final successful pass in
   `devcovenant/registry/local/test_status.json`. Devflow gate status is
   stored in `devcovenant/registry/local/test_status.json`, created on demand,
-  and treated as gitignored state.
+  and treated as gitignored state. Do not create `.devcov-state`; keep all
+  runtime state under `devcovenant/registry/local`.
 - Run a startup check at session start (`python3 -m devcovenant check --mode
   startup`).
 - When policy text changes, set `updated: true`, update scripts/tests, run
@@ -108,6 +109,8 @@ hashes synchronized so drift is detectable and reversible.
 - `test` runs `pytest` plus `python3 -m unittest discover` against `tests/`
   (mirrors the package layout under `tests/devcovenant/` but stays outside the
   installable package).
+- CLI output emits stage banners and short status steps (registry refresh,
+  engine init, command execution) so runs are traceable without flooding.
 - `install` and `uninstall` delegate to `devcovenant/core/install.py` and
   `devcovenant/core/uninstall.py`.
 - `update` supports managed-block-only refreshes and policy-mode control.
@@ -125,7 +128,9 @@ hashes synchronized so drift is detectable and reversible.
 - `refresh` (via `refresh-all`) rebuilds registries and policy metadata from
   the current config/profile state without forcing stock defaults. It is the
   explicit “regenerate from existing config” command and also regenerates
-  `.gitignore` from profile fragments while preserving any user entries.
+  `.gitignore` from profile fragments while preserving any user entries. It
+  refreshes config autogen sections (profiles.generated, core paths, and
+  metadata overlays) while preserving user overrides.
 - “Restore to stock metadata/profile configuration” is a separate command
   (planned) and must not be conflated with `update` or `refresh`.
 - Source-based usage must use `python3 -m devcovenant ...` when invoking
@@ -142,11 +147,16 @@ hashes synchronized so drift is detectable and reversible.
 #### Command matrix (behavioral intent)
 - `install`: bootstrap DevCovenant in a repo.
   It makes no config changes beyond defaults, refreshes managed docs, and
-  rebuilds registries.
+  rebuilds registries. It finishes by running `refresh-all` to regenerate
+  registries, config autogen sections, and `.gitignore`.
 - `update`: refresh DevCovenant-managed content without changing config.
-  It refreshes managed docs and rebuilds registries.
+  It refreshes managed docs and rebuilds registries, then runs `refresh-all`
+  to regenerate registries, config autogen sections, and `.gitignore`.
+- `install`/`update` accept `--skip-refresh` to bypass the final refresh-all
+  step for test harnesses; default behavior still runs refresh-all.
 - `refresh-all`: rebuild registries/metadata from the current config without
-  touching managed docs, and regenerate `.gitignore` from profile fragments.
+  touching managed docs, refresh config autogen sections, and regenerate
+  `.gitignore` from profile fragments.
 - `reset-to-stock` (planned): restore stock metadata/profile config, updating
   config, docs, and registries.
 
@@ -214,7 +224,7 @@ hashes synchronized so drift is detectable and reversible.
   visible to users and tooling.
 - Config exposes `version.override` so config-driven installs can declare
   the project version that templated assets (for example, `pyproject.toml`)
-  should use when no `VERSION` file exists yet.
+  should use when no `devcovenant/VERSION` file exists yet.
 - Provide the dedicated `devcovrepo`/`devcovuser` profiles so the DevCovenant
   repository can opt into its own test overrides while user repositories keep
   `devcovenant/**` out of enforcement while still keeping
@@ -328,6 +338,10 @@ its own assets, suffixes, policies, and overlays.
 - The policy list is generated from the active profiles/config and includes
   every available core/custom policy. Entries are ordered alphabetically and
   custom overrides are marked with `custom: true`.
+- `changelog-coverage` requires a fresh topmost entry per change. The newest
+  entry must be dated today, include a descriptive summary (three or more
+  words), and contain a `Files:` block listing exactly the touched paths.
+  Changelog entries remain newest-first (descending dates).
 - `apply: false` disables enforcement without removing definitions.
 - Provide a `managed-environment` policy (off by default) that
   enforces execution inside the expected environment when
@@ -514,10 +528,11 @@ its own assets, suffixes, policies, and overlays.
   each install/update run without extra CLI toggles.
 - `CHANGELOG.md` and `CONTRIBUTING.md` are always replaced on install
   (backing up to `*_old.md`); updates refresh managed blocks only.
-- `VERSION` is created on demand. Prefer an existing VERSION, otherwise
-  read version fields from `pyproject.toml`, otherwise prompt. If prompting
-  is skipped, default to `0.0.1`. The `--version` flag overrides detection
-  and accepts `x.x` or `x.x.x` (normalized to `x.x.0`).
+- `devcovenant/VERSION` is created on demand. Prefer an existing
+  `devcovenant/VERSION`, otherwise read version fields from
+  `pyproject.toml`, otherwise prompt. If prompting is skipped, default to
+  `0.0.1`. The `--version` flag overrides detection and accepts `x.x` or
+  `x.x.x` (normalized to `x.x.0`).
 - If no license exists, install the MIT template with a `Project Version`
   header. Only overwrite licenses when explicitly requested.
 - Regenerate `.gitignore` from global, profile, and OS fragments, then
@@ -552,7 +567,8 @@ its own assets, suffixes, policies, and overlays.
   `devcovenant/config_override` path remains a temporary override for
   experimentation.
 - Add a `refresh-all` command that runs `refresh-policies`.
-  It defaults to preserve metadata mode, updates
+  It fully regenerates policy metadata blocks from descriptors plus
+  overrides (no manual edits), updates
   `devcovenant/registry/local/policy_registry.yaml`, and rebuilds
   `devcovenant/registry/local/profile_catalog.yaml`.
   That keeps the profile/catalog state current without a full
@@ -560,16 +576,14 @@ its own assets, suffixes, policies, and overlays.
 
 ## Packaging Requirements
 - Ship `devcovenant` as a pure-Python package with a console script entry.
+- Ship the user-facing `devcovenant/docs/` guides inside the package.
 - Include profile assets and policy assets in the sdist and wheel.
-- Include `CITATION.cff` in sdists/wheels so citation metadata is available to
-  consumers (MIT license; authors Black Epsilon Ltd. and Apostol Apostolov).
 - Require Python 3.10+ and declare runtime dependencies in
   `requirements.in`, `requirements.lock`, and `pyproject.toml`; publish
   classifiers through Python 3.14.
 - Publish with MIT license metadata (`license = { file = "LICENSE" }`,
-  `License :: OSI Approved :: MIT License` classifier) and ensure CITATION
-  authors/license/version stay aligned; version-sync enforces this under the
-  `devcovrepo` profile.
+  `License :: OSI Approved :: MIT License` classifier); version-sync enforces
+  this under the `devcovrepo` profile.
 - Keep `THIRD_PARTY_LICENSES.md` and `licenses/` synchronized with dependency
   changes so the dependency-license-sync policy passes.
 - DevCovenant's own test suites live under `tests/devcovenant/` in the
@@ -598,6 +612,9 @@ its own assets, suffixes, policies, and overlays.
   (code and tests) is mirrored and enforced.
 - `devcovuser` ignores vendored trees (`vendor`, `third_party`,
   `node_modules`) by default so scans and tests skip bundled dependencies.
+- `devcovuser` also skips vendored DevCovenant core paths in
+  changelog-coverage (and other scan-based policies) while leaving
+  `devcovenant/custom/**` enforced for user-defined extensions.
 
 ## Non-Functional Requirements
 - Checks must be fast enough for pre-commit usage on typical repos.

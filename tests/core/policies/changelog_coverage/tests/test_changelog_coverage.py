@@ -33,6 +33,20 @@ def test_no_changes_passes(tmp_path: Path, monkeypatch: pytest.MonkeyPatch):
     assert checker.check(context) == []
 
 
+def test_skipped_prefixes_ignore_paths(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+):
+    """Configured skipped prefixes should bypass coverage checks."""
+
+    checker = ChangelogCoverageCheck()
+    checker.set_options({"skipped_prefixes": ["devcovenant/core"]}, {})
+    _set_git_diff(monkeypatch, "devcovenant/core/check.py\n")
+    context = CheckContext(repo_root=tmp_path, all_files=[])
+    violations = checker.check(context)
+
+    assert violations == []
+
+
 def test_root_changelog_required(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch
 ):
@@ -55,9 +69,10 @@ def test_root_changelog_required(
     context = CheckContext(repo_root=tmp_path, all_files=[])
     violations = checker.check(context)
 
-    assert len(violations) == 1
-    assert "CHANGELOG.md" in violations[0].message
-    assert "src/module.py" in violations[0].message
+    assert violations
+    messages = " ".join(v.message for v in violations)
+    assert "src/module.py" in messages
+    assert "docs/readme.md" in messages
 
 
 def test_rng_changelog_required(
@@ -92,8 +107,36 @@ def test_collections_disabled_route_to_root(
     context = CheckContext(repo_root=tmp_path, all_files=[])
     violations = checker.check(context)
 
-    assert len(violations) == 1
-    assert "CHANGELOG.md" in violations[0].message
+    assert violations
+    messages = " ".join(v.message for v in violations)
+    assert "CHANGELOG.md" in messages
+    assert "Files" in messages
+
+
+def test_changelog_requires_descriptive_summary(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+):
+    """Latest entry must include a real summary sentence."""
+
+    today = date.today().isoformat()
+    changelog_text = (
+        "## Version 1.0.0\n"
+        f"- {today}: Fix bug\n"
+        "  Files:\n"
+        "  src/module.py\n"
+    )
+    (tmp_path / "CHANGELOG.md").write_text(
+        changelog_text,
+        encoding="utf-8",
+    )
+
+    checker = ChangelogCoverageCheck()
+    _set_git_diff(monkeypatch, "src/module.py\n")
+    context = CheckContext(repo_root=tmp_path, all_files=[])
+    violations = checker.check(context)
+
+    assert violations
+    assert any("descriptive summary" in v.message for v in violations)
 
 
 def test_rng_changelog_entry_found(
@@ -107,7 +150,7 @@ def test_rng_changelog_entry_found(
     today = date.today().isoformat()
     rng_text = (
         "## Version 1.0.0\n"
-        f"- {today}: rng\n"
+        f"- {today}: rng update logged\n"
         "  Files:\n"
         "  rng_minigames/emoji_meteors/game.py\n"
     )
@@ -133,7 +176,7 @@ def test_rng_files_not_logged_in_root(
     today = date.today().isoformat()
     rng_entry = (
         "## Version 1.0.0\n"
-        f"- {today}: rng\n"
+        f"- {today}: rng update logged\n"
         "  Files:\n"
         "  rng_minigames/emoji_meteors/game.py\n"
     )

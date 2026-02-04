@@ -11,6 +11,8 @@ from devcovenant.core import profiles
 from devcovenant.core.install import (
     GITIGNORE_USER_BEGIN,
     GITIGNORE_USER_END,
+    _apply_core_config,
+    _apply_profile_config,
     _ensure_custom_tree,
     _ensure_tests_mirror,
     _load_active_profiles,
@@ -84,10 +86,28 @@ def refresh_gitignore(repo_root: Path) -> bool:
     return True
 
 
+def refresh_config(
+    repo_root: Path, profile_catalog: dict[str, dict], include_core: bool
+) -> bool:
+    """Refresh config.yaml from active profiles while preserving overrides."""
+    config_path = repo_root / "devcovenant" / "config.yaml"
+    if not config_path.exists():
+        return False
+    active_profiles = _load_active_profiles(repo_root)
+    if "global" not in active_profiles:
+        active_profiles.append("global")
+    active_profiles = sorted(set(active_profiles))
+    changed = _apply_core_config(repo_root, include_core)
+    profile_changed = _apply_profile_config(
+        repo_root, active_profiles, profile_catalog
+    )
+    overlay_changed = apply_autogen_metadata_overrides(repo_root)
+    return changed or profile_changed or overlay_changed
+
+
 def refresh_all(
     repo_root: Path | None = None,
     *,
-    metadata_mode: str = "preserve",
     schema_path: Path | None = None,
     registry_only: bool = False,
 ) -> int:
@@ -101,16 +121,12 @@ def refresh_all(
     result = refresh_policies(
         agents_path,
         schema,
-        metadata_mode=metadata_mode,
         set_updated=True,
     )
     export_metadata_schema(repo_root)
     if result.changed_policies:
         joined = ", ".join(result.changed_policies)
-        print(
-            f"refresh-policies updated metadata for: {joined}"
-            f" ({result.metadata_mode} mode)"
-        )
+        print(f"refresh-policies updated metadata for: {joined}")
     if result.skipped_policies:
         print("Skipped policies with missing ids:")
         for policy_id in result.skipped_policies:
@@ -121,11 +137,11 @@ def refresh_all(
     catalog = profiles.build_profile_catalog(repo_root)
     profiles.write_profile_catalog(repo_root, catalog)
     print("Rebuilt profile catalog at", profiles.REGISTRY_CATALOG)
-    if apply_autogen_metadata_overrides(repo_root):
-        print("Updated autogen metadata overrides in config.yaml")
+    include_core = _load_devcov_core_include(repo_root)
+    if refresh_config(repo_root, catalog, include_core):
+        print("Refreshed config.yaml from active profiles.")
     if refresh_gitignore(repo_root):
         print("Regenerated .gitignore from profile fragments.")
-    include_core = _load_devcov_core_include(repo_root)
     _ensure_custom_tree(repo_root)
     _ensure_tests_mirror(repo_root, include_core)
     removed_overrides = _prune_devcovrepo_overrides(repo_root, include_core)

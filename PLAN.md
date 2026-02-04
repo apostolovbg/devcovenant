@@ -88,6 +88,12 @@ It is the checklist we consult before declaring the spec satisfied.
   `normalize-metadata` command needed.
 - [done] `refresh-all` regenerates `.gitignore` from profile fragments while
   preserving any user-provided entries.
+- [done] CLI emits stage banners and status steps (registry refresh, engine
+  init, command execution) for traceable runs without flooding output.
+- [done] Install/update accept `--skip-refresh` to bypass the final
+  refresh-all step for fast test harnesses; default runs still refresh.
+- [done] `devcovenant/VERSION` is the canonical version file; install/update
+  populate it and policies point at the in-package path.
 - [not done] Every managed doc must include `Last Updated`/`Version` headers.
   Ensure each file also has top-of-file managed blocks.
   Include `Doc ID`, `Doc Type`, and owner metadata in those blocks.
@@ -104,6 +110,12 @@ It is the checklist we consult before declaring the spec satisfied.
 ### Policy requirements
 - [done] Policy metadata normalization now emits schema + value blocks
   while keeping existing text values intact.
+- [done] `changelog-coverage` enforces one fresh entry per change (dated
+  today, descriptive summary, `Files:` block listing only touched paths) and
+  keeps entries newest-first.
+- [done] Runtime state lives under `devcovenant/registry/local`; the legacy
+  `.devcov-state` directory is removed.
+- [done] Ship `devcovenant/docs/` as user-facing guides in the package.
 - [done] Built-in policies have canonical text in
   `devcovenant/registry/global/stock_policy_texts.yaml`.
 - [done] Custom policy `readme-sync` enforces the README mirroring
@@ -195,16 +207,19 @@ It is the checklist we consult before declaring the spec satisfied.
 - Refuse install when DevCovenant already exists unless `--auto-uninstall`.
 - Share an install/update workflow touching only configs, docs, and metadata.
 - Leave the `devcovenant/` tree intact.
-- [not done] Install/update should run `refresh-all` at the end so registries
+- [done] Install/update should run `refresh-all` at the end so registries
   and `.gitignore` are regenerated from the latest profile state.
-- [not done] `update` preserves policy blocks and metadata.
-  Provide independent doc refresh controls (`--docs-include/exclude`).
+- [not done] `update` regenerates policy blocks from descriptors plus
+  overrides (no manual edits). Provide independent doc refresh controls
+  (`--docs-include/exclude`).
 - [done] Introduce a registry-only refresh mode that regenerates
   `devcovenant/registry/local/*` (hashes, manifest, metadata schema) and
   re-materializes `config.yaml` only when missing, while skipping AGENTS and
   managed docs. Run this registry-only refresh automatically at the start of
   every devcovenant invocation (including CI) so state is rebuilt without
-  dirtying working trees. Default to preserve metadata mode.
+  dirtying working trees. Policy blocks are fully managed by refresh.
+- [done] `refresh-all` now refreshes config autogen sections (profiles block,
+  core paths, and metadata overlays) while preserving user overrides.
 - [not done] `AGENTS.md` always uses the template.
   Preserve the `# EDITABLE SECTION` text when it already exists.
 - [not done] `README.md`, `SPEC.md`, `PLAN.md`, `CHANGELOG.md`, and
@@ -214,7 +229,8 @@ It is the checklist we consult before declaring the spec satisfied.
 - [not done] Install/update/refresh regenerate only managed doc headers and
   managed blocks (UTC dates) while preserving user content outside those
   blocks; installs create missing docs without discarding existing content.
-- [not done] `VERSION` creation prefers existing file, then `pyproject.toml`.
+- [not done] `devcovenant/VERSION` creation prefers existing file, then
+  `pyproject.toml`.
   Prompt (default `0.0.1`). `--version` overrides detection.
 - [not done] `LICENSE` falls back to the GPL-3.0 template when missing.
 - [not done] `.gitignore` is rebuilt from fragments while merging user entries.
@@ -244,6 +260,9 @@ It is the checklist we consult before declaring the spec satisfied.
 - [done] Exclude vendored code from `devcovuser` by default (`vendor`,
   `third_party`, `node_modules`) so user installs avoid scanning bundled
   dependencies.
+- [done] Honor profile `ignore_dirs` in the engine and skip DevCovenant core
+  paths in changelog-coverage for `devcovuser` so vendored DevCovenant code
+  stays out of user changelog requirements.
 - [not done] Test mirroring rules: with `devcovuser` active, mirror only
   `devcovenant/custom/**` into `tests/devcovenant/custom/**`; when
   `devcov_core_include` enables `devcovrepo`, mirror the full
@@ -325,11 +344,9 @@ Below is every missing SPEC requirement, ordered by dependency.
    Mirror `tests/devcovenant/` to the package layout and respect the
    `new-modules-need-tests` policy exclusions.
 12. **Packaging & licensing guardrails.**
-   [done] Switch DevCovenant to MIT (assets, docs, PyPI metadata) and sync
-   CITATION.
-   [done] Ship CITATION.cff in sdists/wheels.
-   Build artifacts with assets, enforce MIT when needed, and sync
-   licenses/CITATION.
+   [done] Switch DevCovenant to MIT (assets, docs, PyPI metadata).
+   Build artifacts with assets, enforce MIT when needed, and sync licensing
+   notices.
 13. **Legacy debris cleanup.**
    Remove obsolete artifacts (e.g., `devcovenant/registry.json`,
    `devcovenant/config_old.yaml`, and the unused GPL license asset) from the

@@ -11,6 +11,18 @@ from devcovenant import __version__ as package_version
 from devcovenant.core.engine import DevCovenantEngine
 
 
+def _print_banner(title: str, emoji: str) -> None:
+    """Print a readable stage banner."""
+    print("\n" + "=" * 70)
+    print(f"{emoji} {title}")
+    print("=" * 70)
+
+
+def _print_step(message: str, emoji: str = "•") -> None:
+    """Print a short, single-line status step."""
+    print(f"{emoji} {message}")
+
+
 def _find_git_root(path: Path) -> Path | None:
     """Return the nearest git root for a path."""
     current = path.resolve()
@@ -127,12 +139,6 @@ def main() -> None:
         help="Do not set updated: true when metadata changes.",
     )
     parser.add_argument(
-        "--metadata",
-        choices=("stock", "preserve"),
-        default=None,
-        help="Metadata strategy used by refresh-policies (stock/preserve).",
-    )
-    parser.add_argument(
         "--skip-policy-refresh",
         action="store_true",
         help="Skip refresh-policies during install/update.",
@@ -177,11 +183,6 @@ def main() -> None:
         help="Config mode for install command.",
     )
     parser.add_argument(
-        "--metadata-mode",
-        choices=("preserve", "overwrite", "skip"),
-        help="Metadata mode for install command.",
-    )
-    parser.add_argument(
         "--license-mode",
         choices=("inherit", "preserve", "overwrite", "skip"),
         help="License mode override for install command.",
@@ -194,7 +195,7 @@ def main() -> None:
     parser.add_argument(
         "--version",
         dest="version_value",
-        help="Version to use when creating VERSION for install.",
+        help="Version to use when creating devcovenant/VERSION for install.",
     )
     parser.add_argument(
         "--pyproject-mode",
@@ -256,6 +257,12 @@ def main() -> None:
             sys.exit(1)
 
     # Lightweight registry refresh (no AGENTS/docs writes) on every invocation
+    _print_banner("DevCovenant run", "🚀")
+    _print_step(f"Command: {args.command}", "🧭")
+    if args.command == "check":
+        _print_step(f"Mode: {args.mode}", "🔧")
+        _print_step(f"Auto-fix: {'enabled' if args.fix else 'disabled'}", "🛠️")
+    _print_step("Refreshing local registry", "🔄")
     try:
         from devcovenant.core.update_policy_registry import (
             update_policy_registry,
@@ -264,17 +271,23 @@ def main() -> None:
         update_policy_registry(
             args.repo, skip_freeze=True, reset_updated_flags=False
         )
+        _print_step("Registry refresh complete", "✅")
     except Exception as exc:
-        print(f"Warning: registry refresh skipped ({exc})")
+        _print_step(f"Registry refresh skipped ({exc})", "⚠️")
 
     _warn_version_mismatch(repo_root)
 
     # Initialize engine
+    _print_step("Initializing engine", "🧠")
     engine = DevCovenantEngine(repo_root=args.repo)
+    _print_step("Engine ready", "✅")
 
     # Execute command
     if args.command == "check":
+        _print_banner("Policy checks", "🔍")
+        _print_step("Running policy checks", "▶️")
         result = engine.check(mode=args.mode, apply_fixes=args.fix)
+        _print_step("Policy checks complete", "🏁")
 
         # Exit with error code if blocked
         if result.should_block or result.has_sync_issues():
@@ -283,6 +296,8 @@ def main() -> None:
             sys.exit(0)
 
     elif args.command == "sync":
+        _print_banner("Policy sync", "🔗")
+        _print_step("Running startup sync check", "▶️")
         # Force a sync check
         result = engine.check(mode="startup")
         if result.has_sync_issues():
@@ -296,6 +311,8 @@ def main() -> None:
             sys.exit(0)
 
     elif args.command == "test":
+        _print_banner("DevCovenant tests", "🧪")
+        _print_step("Running pytest + unittest discover", "▶️")
         # Run devcovenant's own tests (pytest + unittest) and record status
         import subprocess
 
@@ -312,6 +329,7 @@ def main() -> None:
             update_policy_registry,
         )
 
+        _print_banner("Policy registry update", "🧾")
         if args.command == "update-hashes":
             print(
                 "The update-hashes command is deprecated. "
@@ -323,6 +341,7 @@ def main() -> None:
     elif args.command == "refresh-registry":
         from devcovenant.core.refresh_all import refresh_registry
 
+        _print_banner("Registry refresh", "🔄")
         result = refresh_registry(args.repo)
         sys.exit(result)
 
@@ -333,6 +352,7 @@ def main() -> None:
             refresh_policies,
         )
 
+        _print_banner("Policy metadata refresh", "🧩")
         if args.schema is None:
             schema_path = policy_metadata_schema_path(args.repo)
             if not schema_path.exists():
@@ -353,20 +373,16 @@ def main() -> None:
             print(f"Schema file not found: {schema_path}")
             sys.exit(1)
 
-        metadata_mode = args.metadata or (
-            "stock" if args.command == "normalize-metadata" else "preserve"
-        )
         result = refresh_policies(
             agents_path,
             schema_path,
-            metadata_mode=metadata_mode,
             set_updated=not args.no_set_updated,
         )
         export_metadata_schema(args.repo)
         if args.command == "normalize-metadata":
             print(
                 "normalize-metadata is now deprecated. "
-                "Use refresh-policies (defaulting to preserve mode)."
+                "Use refresh-policies instead."
             )
         if result.skipped_policies:
             print("Skipped policies with missing ids:")
@@ -374,24 +390,19 @@ def main() -> None:
                 print(f"- {policy_id}")
         if result.changed_policies:
             joined = ", ".join(result.changed_policies)
-            print(
-                f"Updated metadata for: {joined} "
-                f"({result.metadata_mode} mode)"
-            )
+            print(f"Updated metadata for: {joined}")
 
     elif args.command == "refresh-all":
         from devcovenant.core.refresh_all import refresh_all
 
-        result = refresh_all(
-            args.repo,
-            metadata_mode=args.metadata or "preserve",
-            registry_only=args.registry_only,
-        )
+        _print_banner("Refresh all", "🔄")
+        result = refresh_all(args.repo, registry_only=args.registry_only)
         sys.exit(result)
 
     elif args.command == "restore-stock-text":
         from devcovenant.core.policy_texts import restore_stock_texts
 
+        _print_banner("Restore stock policy text", "🧬")
         if not args.policy and not args.all:
             print("Provide --policy <id> or --all.")
             sys.exit(1)
@@ -409,6 +420,7 @@ def main() -> None:
         print(f"Restored stock policy text for: {restored_list}")
         sys.exit(0)
     elif args.command == "install":
+        _print_banner("Install DevCovenant", "📦")
         install_args = ["--target", str(args.target)]
         if args.install_mode:
             install_args.extend(["--mode", args.install_mode])
@@ -422,8 +434,6 @@ def main() -> None:
             install_args.extend(["--policy-mode", args.policy_mode])
         if args.config_mode:
             install_args.extend(["--config-mode", args.config_mode])
-        if args.metadata_mode:
-            install_args.extend(["--metadata-mode", args.metadata_mode])
         if args.license_mode:
             install_args.extend(["--license-mode", args.license_mode])
         if args.version_mode:
@@ -452,6 +462,7 @@ def main() -> None:
         sys.exit(0)
 
     elif args.command == "update":
+        _print_banner("Update DevCovenant", "⬆️")
         update_args = ["--target", str(args.target)]
         if args.docs_mode:
             update_args.extend(["--docs-mode", args.docs_mode])
@@ -463,8 +474,6 @@ def main() -> None:
             update_args.extend(["--policy-mode", args.policy_mode])
         if args.config_mode:
             update_args.extend(["--config-mode", args.config_mode])
-        if args.metadata_mode:
-            update_args.extend(["--metadata-mode", args.metadata_mode])
         if args.license_mode:
             update_args.extend(["--license-mode", args.license_mode])
         if args.version_mode:
@@ -493,6 +502,7 @@ def main() -> None:
         sys.exit(0)
 
     elif args.command == "uninstall":
+        _print_banner("Uninstall DevCovenant", "🧹")
         uninstall_args = ["--target", str(args.target)]
         if args.remove_docs:
             uninstall_args.append("--remove-docs")

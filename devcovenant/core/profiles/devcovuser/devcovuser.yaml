@@ -11,6 +11,17 @@ assets:
     template: .gitignore
     mode: merge
 policy_overlays:
+  changelog-coverage:
+    skipped_prefixes:
+      - devcovenant/core
+      - devcovenant/__init__.py
+      - devcovenant/__main__.py
+      - devcovenant/cli.py
+      - devcovenant/registry
+      - devcovenant/run_pre_commit.py
+      - devcovenant/run_tests.py
+      - devcovenant/update_test_status.py
+      - devcovenant/core/check.py
   new-modules-need-tests:
     exclude_prefixes:
       - devcovenant

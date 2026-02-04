@@ -175,3 +175,23 @@ def resolve_profile_suffixes(
                 continue
             suffixes.append(suffix_value)
     return suffixes
+
+
+def resolve_profile_ignore_dirs(
+    catalog: Dict[str, Dict], active_profiles: List[str]
+) -> List[str]:
+    """Return ignored directory names from active profiles."""
+    normalized_catalog = _normalize_catalog(catalog)
+    ignored: List[str] = []
+    active = {
+        _normalize_profile_name(name) for name in active_profiles if name
+    }
+    for name in active:
+        meta = normalized_catalog.get(name, {})
+        raw = meta.get("ignore_dirs") or []
+        for entry in raw:
+            dir_value = str(entry).strip()
+            if not dir_value or dir_value == "__none__":
+                continue
+            ignored.append(dir_value)
+    return ignored

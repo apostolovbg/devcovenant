@@ -8,8 +8,8 @@ inheritance. Custom policies stay opt-in via custom profiles/config.
 
 ## Core Profiles
 - global — Assets: managed doc descriptors, tooling scripts (.pre-commit,
-  CI workflow, VERSION, gitignore fragments). Policies: all core global
-  policies. Mode: static, update keeps descriptors current.
+  CI workflow, devcovenant/VERSION, gitignore fragments). Policies: all core
+  global policies. Mode: static, update keeps descriptors current.
 - docs — Assets: mkdocs.yml, doc .gitignore. Policies: version-sync,
   documentation-growth-tracking, line-length-limit, last-updated-placement.
 - data — Assets: data/README.md, data/manifest.json, .gitignore. Policies:
@@ -30,9 +30,10 @@ inheritance. Custom policies stay opt-in via custom profiles/config.
   doc/comment coverage, name-clarity, new-modules-need-tests, security-
   scanner, documentation-growth-tracking, line-length-limit, version-sync,
   raw-string-escapes.
-- javascript — Assets: package.json, .gitignore; Policies: dependency-license-
-  sync, devflow-run-gates, doc/comment coverage, name-clarity, new-modules-
-  need-tests, security-scanner, doc-growth, line-length-limit, version-sync.
+- javascript — Assets: package.json, .gitignore; Policies:
+  dependency-license-sync, devflow-run-gates, doc/comment coverage,
+  name-clarity, new-modules-need-tests, security-scanner, doc-growth,
+  line-length-limit, version-sync.
 - typescript — Assets: package.json, tsconfig.json, .gitignore; Policies:
   same as javascript.
 - java — Assets: build.gradle, .gitignore; Policies: dependency-license-sync,
@@ -92,5 +93,5 @@ inheritance. Custom policies stay opt-in via custom profiles/config.
 - All .gitignore assets use merge mode to preserve user entries.
 - Assets listed above are required for profile completeness; updates must keep
   modes (replace/merge) consistent with policy needs.
-- Profiles listed under a policy’s profile_scopes MUST list that policy unless
-  explicitly excluded via config overrides.
+- Profiles listed under a policy’s profile_scopes MUST list that policy
+  unless explicitly excluded via config overrides.

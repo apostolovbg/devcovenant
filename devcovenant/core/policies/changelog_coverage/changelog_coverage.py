@@ -103,6 +103,50 @@ def _first_entry(section: str) -> tuple[str | None, str]:
 
 
 _DATE_PATTERN = re.compile(r"^\s*-\s*(\d{4}-\d{2}-\d{2})\b")
+_SUMMARY_WORDS_MIN = 3
+
+
+def _extract_entry_summary(entry_text: str) -> str:
+    """Return the summary text from the first entry line."""
+    for line in entry_text.splitlines():
+        match = _DATE_PATTERN.match(line)
+        if not match:
+            continue
+        if ":" in line:
+            return line.split(":", 1)[1].strip()
+        return ""
+    return ""
+
+
+def _summary_is_descriptive(summary: str) -> bool:
+    """Return True when the summary looks like a real description."""
+    words = re.findall(r"[A-Za-z]{2,}", summary)
+    return len(words) >= _SUMMARY_WORDS_MIN
+
+
+def _extract_entry_files(entry_text: str) -> list[str]:
+    """Extract file paths from a Files: block inside an entry."""
+    files: list[str] = []
+    lines = entry_text.splitlines()
+    for idx, line in enumerate(lines):
+        if line.strip().lower().startswith("files:"):
+            remainder = line.split(":", 1)[1].strip()
+            if remainder:
+                files.append(remainder)
+            for follow in lines[idx + 1 :]:
+                if _DATE_PATTERN.match(follow) or follow.lstrip().startswith(
+                    "##"
+                ):
+                    return files
+                stripped = follow.strip()
+                if not stripped:
+                    continue
+                if stripped.startswith("-"):
+                    stripped = stripped[1:].strip()
+                if stripped:
+                    files.append(stripped)
+            return files
+    return files
 
 
 def _find_order_violation(section: str) -> tuple[str, str] | None:
@@ -164,6 +208,20 @@ class ChangelogCoverageCheck(PolicyCheck):
             }
         else:
             skip_files = set(skip_option or [])
+        skip_prefix_option = self.get_option("skipped_prefixes", [])
+        if isinstance(skip_prefix_option, str):
+            skip_prefixes = [
+                entry.strip()
+                for entry in skip_prefix_option.split(",")
+                if entry.strip()
+            ]
+        else:
+            skip_prefixes = [
+                str(entry).strip()
+                for entry in (skip_prefix_option or [])
+                if str(entry).strip()
+            ]
+        skip_prefixes = [entry.rstrip("/") for entry in skip_prefixes if entry]
 
         collections = self._resolve_collections(
             self.get_option(
@@ -194,6 +252,11 @@ class ChangelogCoverageCheck(PolicyCheck):
 
         for file_path in changed_files:
             if file_path in skip_files:
+                continue
+            if any(
+                file_path == prefix or file_path.startswith(f"{prefix}/")
+                for prefix in skip_prefixes
+            ):
                 continue
             assigned = False
             for index, entry in enumerate(collections):
@@ -285,8 +348,44 @@ class ChangelogCoverageCheck(PolicyCheck):
                             can_auto_fix=False,
                         )
                     )
+                summary = _extract_entry_summary(first_entry)
+                if not _summary_is_descriptive(summary):
+                    violations.append(
+                        Violation(
+                            policy_id=self.policy_id,
+                            severity="error",
+                            file_path=root_changelog,
+                            message=(
+                                "Provide a descriptive summary for the latest "
+                                "changelog entry (at least three words)."
+                            ),
+                            suggestion=(
+                                "Update the latest entry summary so it "
+                                "describes the change in plain language."
+                            ),
+                            can_auto_fix=False,
+                        )
+                    )
+                entry_files = _extract_entry_files(first_entry)
+                if not entry_files:
+                    violations.append(
+                        Violation(
+                            policy_id=self.policy_id,
+                            severity="error",
+                            file_path=root_changelog,
+                            message=(
+                                "Latest changelog entry must include a "
+                                "Files: block listing all touched paths."
+                            ),
+                            suggestion=(
+                                "Add a Files: block under the latest entry "
+                                "and list each modified path."
+                            ),
+                            can_auto_fix=False,
+                        )
+                    )
                 missing = [
-                    path for path in main_files if path not in first_entry
+                    path for path in main_files if path not in entry_files
                 ]
                 if missing:
                     files_str = ", ".join(missing)
@@ -304,6 +403,28 @@ class ChangelogCoverageCheck(PolicyCheck):
                                 "Add entries to "
                                 f"{main_changelog_rel.as_posix()} "
                                 f"documenting changes to: {files_str}"
+                            ),
+                            can_auto_fix=False,
+                        )
+                    )
+                extra = [
+                    path for path in entry_files if path not in main_files
+                ]
+                if extra:
+                    files_str = ", ".join(extra)
+                    violations.append(
+                        Violation(
+                            policy_id=self.policy_id,
+                            severity="error",
+                            file_path=root_changelog,
+                            message=(
+                                "Latest changelog entry lists files not in "
+                                f"the current change: {files_str}"
+                            ),
+                            suggestion=(
+                                "Move those paths into a separate entry and "
+                                "keep the latest entry focused on this "
+                                "change only."
                             ),
                             can_auto_fix=False,
                         )
@@ -395,10 +516,47 @@ class ChangelogCoverageCheck(PolicyCheck):
                                 can_auto_fix=False,
                             )
                         )
+                    summary = _extract_entry_summary(entry_text)
+                    if not _summary_is_descriptive(summary):
+                        violations.append(
+                            Violation(
+                                policy_id=self.policy_id,
+                                severity="error",
+                                file_path=changelog_path,
+                                message=(
+                                    "Provide a descriptive summary for the "
+                                    f"latest {prefix_label} changelog entry "
+                                    "(at least three words)."
+                                ),
+                                suggestion=(
+                                    "Update the latest entry summary so it "
+                                    "describes the change in plain language."
+                                ),
+                                can_auto_fix=False,
+                            )
+                        )
+                    entry_files = _extract_entry_files(entry_text)
+                    if not entry_files:
+                        violations.append(
+                            Violation(
+                                policy_id=self.policy_id,
+                                severity="error",
+                                file_path=changelog_path,
+                                message=(
+                                    "Latest changelog entry must include a "
+                                    "Files: block listing all touched paths."
+                                ),
+                                suggestion=(
+                                    "Add a Files: block under the latest "
+                                    "entry and list each modified path."
+                                ),
+                                can_auto_fix=False,
+                            )
+                        )
                     missing_entries = [
                         path
                         for path in files_for_collection
-                        if path not in entry_text
+                        if path not in entry_files
                     ]
                     if missing_entries:
                         files_str = ", ".join(missing_entries)
@@ -415,6 +573,30 @@ class ChangelogCoverageCheck(PolicyCheck):
                                     "Add entries to "
                                     f"{changelog_rel.as_posix()} documenting "
                                     f"changes to: {files_str}"
+                                ),
+                                can_auto_fix=False,
+                            )
+                        )
+                    extra_entries = [
+                        path
+                        for path in entry_files
+                        if path not in files_for_collection
+                    ]
+                    if extra_entries:
+                        files_str = ", ".join(extra_entries)
+                        violations.append(
+                            Violation(
+                                policy_id=self.policy_id,
+                                severity="error",
+                                file_path=changelog_path,
+                                message=(
+                                    "Latest changelog entry lists files not "
+                                    f"in the current change: {files_str}"
+                                ),
+                                suggestion=(
+                                    "Move those paths into a separate entry "
+                                    "and keep the latest entry focused on "
+                                    "this change only."
                                 ),
                                 can_auto_fix=False,
                             )

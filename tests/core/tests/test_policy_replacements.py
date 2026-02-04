@@ -8,6 +8,11 @@ from devcovenant.core import manifest as manifest_module
 from devcovenant.core import policy_replacements, update
 
 
+def _with_skip_refresh(args: list[str]) -> list[str]:
+    """Append the skip-refresh flag to speed up update tests."""
+    return [*args, "--skip-refresh"]
+
+
 def _write_agents(path: Path, apply_value: str) -> None:
     """Write a minimal AGENTS.md file with one policy."""
     metadata = (
@@ -66,7 +71,9 @@ def test_update_migrates_replaced_policy(
         lambda _root: replacement_map,
     )
 
-    update.main(["--target", str(target), "--version", "0.2.0"])
+    update.main(
+        _with_skip_refresh(["--target", str(target), "--version", "0.2.0"])
+    )
 
     updated = agents_path.read_text(encoding="utf-8")
     assert "status: deprecated" in updated
@@ -122,7 +129,9 @@ def test_update_removes_disabled_replaced_policy(
         lambda _root: replacement_map,
     )
 
-    update.main(["--target", str(target), "--version", "0.2.0"])
+    update.main(
+        _with_skip_refresh(["--target", str(target), "--version", "0.2.0"])
+    )
 
     updated = agents_path.read_text(encoding="utf-8")
     assert "old-policy" not in updated

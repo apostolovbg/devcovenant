@@ -199,26 +199,28 @@ blocks while leaving surrounding content intact.
 ```policy-def
 id: changelog-coverage
 severity: error
-auto_fix: False
+auto_fix: false
 enforcement: active
-apply: True
-custom: False
+apply: true
+custom: false
 profile_scopes: global
 main_changelog: CHANGELOG.md
 skipped_files: CHANGELOG.md
   .gitignore
   .pre-commit-config.yaml
+skipped_prefixes:
 collections: __none__
 selector_roles: skipped
 skipped_globs:
 skipped_dirs:
 ```
 
-Every change must be logged in the latest changelog entry dated today,
-under the current version, with every touched path listed in its Files
-block. Collection prefixes (when enabled) must be logged in their own
-changelog; prefixed files may not appear in the root changelog. This keeps
-release notes daily, file-complete, and traceable.
+Every change must be logged in a new changelog entry dated today, under the
+current version, with a descriptive summary (at least three words) and a
+Files block that lists only the touched paths for this change. Collection
+prefixes (when enabled) must be logged in their own changelog; prefixed
+files may not appear in the root changelog. This keeps release notes daily,
+file-complete, and traceable.
 
 
 ---
@@ -904,12 +906,26 @@ exclude_prefixes: build
   tests
   devcovenant/core/profiles
 exclude_globs: devcovenant/core/profiles/**
+  build/**
+  dist/**
+  node_modules/**
+  tests/**
 watch_dirs: tests
 tests_watch_dirs: tests
-include_globs:
+include_globs: devcovenant/**
 exclude_suffixes:
 force_include_globs:
 watch_files:
+selector_roles: include,exclude,watch,tests_watch,force_include
+include_files:
+include_dirs:
+exclude_files:
+exclude_dirs:
+watch_globs:
+tests_watch_globs:
+tests_watch_files:
+force_include_files:
+force_include_dirs:
 ```
 
 New or modified modules in the watched locations must have corresponding
@@ -1100,7 +1116,7 @@ enforcement: active
 apply: false
 custom: false
 profile_scopes: global
-version_file: VERSION
+version_file: devcovenant/VERSION
 changelog_file: CHANGELOG.md
 ignored_prefixes:
 selector_roles: ignored
@@ -1113,10 +1129,10 @@ When enabled, the latest changelog entry must include exactly one
 `[semver:major|minor|patch]` tag that matches the version bump. Use
 `major` for API-breaking releases, `minor` for backward-compatible feature
 work, and `patch` for bug fixes or documentation-only updates. The tag
-must match the bump from the previous version, and `VERSION` must be
-updated whenever the changelog declares a release scope. The policy ships
-disabled (`apply: false`) and should only be enabled for release
-processes that enforce SemVer discipline.
+must match the bump from the previous version, and `devcovenant/VERSION`
+must be updated whenever the changelog declares a release scope. The
+policy ships disabled (`apply: false`) and should only be enabled for
+release processes that enforce SemVer discipline.
 
 
 ---
@@ -1175,7 +1191,7 @@ profile_scopes: global
   fastapi
   frappe
   objective-c
-version_file: VERSION
+version_file: devcovenant/VERSION
 readme_files: README.md
   AGENTS.md
   CONTRIBUTING.md
@@ -1206,8 +1222,9 @@ license_globs:
 license_dirs:
 ```
 
-All version-bearing files must match the canonical `VERSION` value, and
-version bumps must move forward. Files listed under `optional_files` are
+All version-bearing files must match the canonical
+`devcovenant/VERSION` value, and version bumps must move forward. Files
+listed under `optional_files` are
 only enforced when present (for example, SPEC/PLAN in user repos). The
 policy also flags hard-coded runtime versions and ensures changelog
 releases reflect the current version.

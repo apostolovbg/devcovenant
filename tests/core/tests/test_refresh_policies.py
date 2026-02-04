@@ -74,7 +74,6 @@ def test_refresh_policies_reorders_and_updates(tmp_path: Path) -> None:
     result = refresh_policies(
         agents_path,
         _schema_path(),
-        metadata_mode="preserve",
         set_updated=True,
     )
 
@@ -85,8 +84,8 @@ def test_refresh_policies_reorders_and_updates(tmp_path: Path) -> None:
     assert idx_a < idx_b
 
 
-def test_refresh_policies_preserves_custom_metadata(tmp_path: Path) -> None:
-    """Custom policies keep their metadata values, even in stock mode."""
+def test_refresh_policies_normalizes_custom_metadata(tmp_path: Path) -> None:
+    """Custom policies are normalized to stock defaults when unmanaged."""
     agents_path = tmp_path / "AGENTS.md"
     custom_block = (
         "## Policy: Custom Policy\n\n"
@@ -108,11 +107,10 @@ def test_refresh_policies_preserves_custom_metadata(tmp_path: Path) -> None:
     refresh_policies(
         agents_path,
         _schema_path(),
-        metadata_mode="stock",
         set_updated=True,
     )
 
     updated_text = agents_path.read_text(encoding="utf-8")
-    assert "severity: error" in updated_text
-    assert "custom: true" in updated_text
+    assert "severity: warning" in updated_text
+    assert "custom: false" in updated_text
     assert "notes: preserved" in updated_text

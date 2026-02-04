@@ -49,7 +49,7 @@ DOC_PATHS = [
 ]
 
 METADATA_PATHS = [
-    "VERSION",
+    "devcovenant/VERSION",
     "LICENSE",
     "pyproject.toml",
 ]
@@ -2341,7 +2341,6 @@ def _build_manifest_options(
     *,
     docs_mode: str,
     config_mode: str,
-    metadata_mode: str,
     license_mode: str,
     version_mode: str,
     target_version: str,
@@ -2359,7 +2358,6 @@ def _build_manifest_options(
     return {
         "docs_mode": docs_mode,
         "config_mode": config_mode,
-        "metadata_mode": metadata_mode,
         "license_mode": license_mode,
         "version_mode": version_mode,
         "target_version": target_version,
@@ -2409,6 +2407,7 @@ def main(argv=None) -> None:
     )
     args = parser.parse_args(argv)
     no_touch = bool(getattr(args, "no_touch", False))
+    skip_refresh = bool(getattr(args, "skip_refresh", False))
 
     disable_policies = _parse_policy_ids(args.disable_policy)
     disabled_policies = list(disable_policies)
@@ -2458,7 +2457,6 @@ def main(argv=None) -> None:
 
     docs_mode = args.docs_mode
     config_mode = args.config_mode
-    metadata_mode = args.metadata_mode
     policy_mode = args.policy_mode
 
     if args.force_docs:
@@ -2503,12 +2501,10 @@ def main(argv=None) -> None:
         )
     if config_mode is None:
         config_mode = "overwrite" if mode == "empty" else "preserve"
-    if metadata_mode is None:
-        metadata_mode = "overwrite" if mode == "empty" else "preserve"
 
     def _resolve_override(override_value: str) -> str:
-        """Return the resolved metadata mode for a CLI override."""
-        return metadata_mode if override_value == "inherit" else override_value
+        """Return the resolved mode for a CLI override."""
+        return config_mode if override_value == "inherit" else override_value
 
     license_mode = _resolve_override(args.license_mode)
     version_mode = _resolve_override(args.version_mode)
@@ -2522,9 +2518,7 @@ def main(argv=None) -> None:
     last_updated = _utc_today()
     repo_name = target_root.name
 
-    source_version_path = _resolve_source_path(
-        target_root, template_root, "VERSION"
-    )
+    source_version_path = package_root / "VERSION"
     devcovenant_version = None
     if source_version_path.exists():
         devcovenant_version = source_version_path.read_text(
@@ -2533,7 +2527,7 @@ def main(argv=None) -> None:
     else:
         devcovenant_version = "0.0.0"
 
-    version_path = target_root / "VERSION"
+    version_path = target_root / DEV_COVENANT_DIR / "VERSION"
     existing_version = None
     if version_path.exists():
         existing_version = version_path.read_text(encoding="utf-8").strip()
@@ -2627,7 +2621,6 @@ def main(argv=None) -> None:
         options = _build_manifest_options(
             docs_mode=docs_mode,
             config_mode=config_mode,
-            metadata_mode=metadata_mode,
             license_mode=license_mode,
             version_mode=version_mode,
             target_version=target_version,
@@ -2716,7 +2709,7 @@ def main(argv=None) -> None:
     ):
         version_path.write_text(f"{target_version}\n", encoding="utf-8")
         if not version_existed:
-            installed["docs"].append("VERSION")
+            installed["core"].append(f"{DEV_COVENANT_DIR}/VERSION")
 
     license_path = target_root / "LICENSE"
     license_existed = license_path.exists()
@@ -2931,7 +2924,6 @@ def main(argv=None) -> None:
         refresh_policies(
             agents_path,
             schema_path,
-            metadata_mode="preserve",
             set_updated=True,
         )
         export_metadata_schema(target_root)
@@ -2939,7 +2931,6 @@ def main(argv=None) -> None:
     options = _build_manifest_options(
         docs_mode=docs_mode,
         config_mode=config_mode,
-        metadata_mode=metadata_mode,
         license_mode=license_mode,
         version_mode=version_mode,
         target_version=target_version,
@@ -2962,6 +2953,21 @@ def main(argv=None) -> None:
         active_profiles,
         profile_catalog,
     )
+
+    if not skip_refresh:
+        from devcovenant.core import refresh_all as refresh_all_module
+
+        if args.skip_policy_refresh:
+            refresh_all_module.refresh_registry(
+                target_root, schema_path=schema_path
+            )
+            refreshed_catalog = profiles.build_profile_catalog(target_root)
+            refresh_all_module.refresh_config(
+                target_root, refreshed_catalog, include_core
+            )
+            refresh_all_module.refresh_gitignore(target_root)
+        else:
+            refresh_all_module.refresh_all(target_root)
 
     backups = _backup_log()
     if backups:
