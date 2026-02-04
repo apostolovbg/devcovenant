@@ -43,12 +43,15 @@ def refresh_all(
     *,
     metadata_mode: str = "preserve",
     schema_path: Path | None = None,
+    registry_only: bool = False,
 ) -> int:
     """Refresh policies, registry, and profile catalog."""
     if repo_root is None:
         repo_root = Path(__file__).resolve().parents[2]
     agents_path = repo_root / "AGENTS.md"
     schema = schema_path or _schema_path(repo_root)
+    if registry_only:
+        return refresh_registry(repo_root, schema_path=schema)
     result = refresh_policies(
         agents_path,
         schema,

@@ -158,6 +158,14 @@ def main() -> None:
         help="Comma-separated doc names to exclude from overwrite.",
     )
     parser.add_argument(
+        "--registry-only",
+        action="store_true",
+        help=(
+            "Registry-only refresh (skip AGENTS/docs) when running"
+            " refresh-all."
+        ),
+    )
+    parser.add_argument(
         "--policy-mode",
         choices=("preserve", "append-missing", "overwrite"),
         default=None,
@@ -375,7 +383,9 @@ def main() -> None:
         from devcovenant.core.refresh_all import refresh_all
 
         result = refresh_all(
-            args.repo, metadata_mode=args.metadata or "preserve"
+            args.repo,
+            metadata_mode=args.metadata or "preserve",
+            registry_only=args.registry_only,
         )
         sys.exit(result)
 
