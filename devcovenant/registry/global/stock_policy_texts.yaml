@@ -4,12 +4,10 @@ changelog-coverage: |
   current version. This policy prevents untracked updates and keeps
   release notes aligned with repository changes.
 dependency-license-sync: |
-  Maintain the third-party license table alongside `requirements.in`,
-  `requirements.lock`, and `pyproject.toml`. The policy points reviewers
-  to
-  the
-  `licenses/` directory and its `## License Report` section so every
-  change touches both the license text and the cited manifest.
+  Maintain the third-party license table alongside the dependency manifests
+  configured by the active profiles or config overrides. The policy points
+  reviewers to the `licenses/` directory and its `## License Report` section so
+  every dependency change touches both the license text and the cited manifest.
 devcov-parity-guard: |
   Ensure the policy text recorded in AGENTS matches the descriptor text
   shipped alongside each policy (core or custom). When the two drift,

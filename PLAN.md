@@ -1,5 +1,5 @@
 # DevCovenant Development Plan
-**Last Updated:** 2026-02-04
+**Last Updated:** 2026-02-05
 **Version:** 0.2.6
 
 <!-- DEVCOV:BEGIN -->
@@ -116,6 +116,9 @@ It is the checklist we consult before declaring the spec satisfied.
 - [done] Runtime state lives under `devcovenant/registry/local`; the legacy
   `.devcov-state` directory is removed.
 - [done] Ship `devcovenant/docs/` as user-facing guides in the package.
+- [done] `dependency-license-sync` uses profile/config overlays to supply
+  dependency manifests; the core policy metadata stays general and the
+  devcovrepo profile declares DevCovenant’s dependency files.
 - [done] Built-in policies have canonical text in
   `devcovenant/registry/global/stock_policy_texts.yaml`.
 - [done] Custom policy `readme-sync` enforces the README mirroring

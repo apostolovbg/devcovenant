@@ -5,7 +5,6 @@ from typing import List
 
 from devcovenant.core.base import CheckContext, PolicyCheck, Violation
 
-DEPENDENCY_FILES = {"requirements.in", "requirements.lock", "pyproject.toml"}
 THIRD_PARTY = Path("THIRD_PARTY_LICENSES.md")
 LICENSES_DIR = "licenses"
 LICENSE_REPORT_HEADING = "## License Report"
@@ -56,13 +55,17 @@ class DependencyLicenseSyncCheck(PolicyCheck):
         if not files:
             return []
 
-        dependency_files_opt = self.get_option(
-            "dependency_files", DEPENDENCY_FILES
-        )
+        dependency_files_opt = self.get_option("dependency_files", [])
         if isinstance(dependency_files_opt, str):
-            dependency_files = {dependency_files_opt}
+            dependency_files = {dependency_files_opt.strip()}
         else:
-            dependency_files = set(dependency_files_opt or DEPENDENCY_FILES)
+            dependency_files = {
+                str(entry).strip()
+                for entry in (dependency_files_opt or [])
+                if str(entry).strip()
+            }
+        if not dependency_files:
+            return []
 
         third_party_rel = Path(
             self.get_option("third_party_file", str(THIRD_PARTY))

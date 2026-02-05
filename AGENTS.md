@@ -1,5 +1,5 @@
 # DevCovenant Development Guide
-**Last Updated:** 2026-02-04
+**Last Updated:** 2026-02-05
 **Version:** 0.2.6
 
 <!-- DEVCOV:BEGIN -->
@@ -251,9 +251,7 @@ profile_scopes: python
   fastapi
   frappe
   objective-c
-dependency_files: requirements.in
-  requirements.lock
-  pyproject.toml
+dependency_files:
 third_party_file: THIRD_PARTY_LICENSES.md
 licenses_dir: licenses
 report_heading: ## License Report
@@ -262,10 +260,10 @@ dependency_globs:
 dependency_dirs:
 ```
 
-Maintain the third-party license table alongside `requirements.in`,
-`requirements.lock`, and `pyproject.toml`. The policy points reviewers to the
-`licenses/` directory and its `## License Report` section so every dependency
-change touches both the license text and the cited manifest.
+Maintain the third-party license table alongside the dependency manifests
+configured by the active profiles or config overrides. The policy points
+reviewers to the `licenses/` directory and its `## License Report` section so
+every dependency change touches both the license text and the cited manifest.
 
 
 ---

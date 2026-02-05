@@ -32,7 +32,9 @@ includes `<name>.yaml` plus any asset templates. The YAML includes:
 ## Assets and Overlays
 Assets are path-template pairs, rendered with a `mode` that controls how
 files are merged or replaced. Overlays apply after policy defaults so each
-profile can adjust selectors without rewriting the policy descriptor.
+profile can adjust selectors without rewriting the policy descriptor. This
+is where dependency manifests for `dependency-license-sync` should be
+declared per ecosystem.
 
 ## Examples
 ```yaml

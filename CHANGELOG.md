@@ -1,5 +1,5 @@
 # Changelog
-**Last Updated:** 2026-02-04
+**Last Updated:** 2026-02-05
 **Version:** 0.2.6
 
 <!-- DEVCOV:BEGIN -->
@@ -28,6 +28,36 @@ Example entry:
 ## Log changes here
 
 ## Version 0.2.6
+
+- 2026-02-05: Generalized dependency-license-sync metadata, shifted manifest
+  lists into profiles, and updated docs/spec/plan guidance.
+  Files:
+  AGENTS.md
+  PLAN.md
+  POLICY_MAP.md
+  README.md
+  SPEC.md
+  devcovenant/README.md
+  devcovenant/core/policies/dependency_license_sync/\
+    dependency_license_sync.py
+  devcovenant/core/policies/dependency_license_sync/\
+    dependency_license_sync.yaml
+  devcovenant/core/profiles/global/assets/AGENTS.yaml
+  devcovenant/core/profiles/global/assets/CHANGELOG.yaml
+  devcovenant/core/profiles/global/assets/PLAN.yaml
+  devcovenant/core/profiles/global/assets/README.yaml
+  devcovenant/core/profiles/global/assets/SPEC.yaml
+  devcovenant/core/stock_policy_texts.json
+  devcovenant/custom/profiles/devcovrepo/assets/docs/config.md
+  devcovenant/custom/profiles/devcovrepo/assets/docs/policies.md
+  devcovenant/custom/profiles/devcovrepo/assets/docs/profiles.md
+  devcovenant/custom/profiles/devcovrepo/devcovrepo.yaml
+  devcovenant/docs/config.md
+  devcovenant/docs/policies.md
+  devcovenant/docs/profiles.md
+  devcovenant/registry/global/stock_policy_texts.yaml
+  tests/core/policies/dependency_license_sync/tests/\
+    test_dependency_license_sync.py
 
 - 2026-02-04: Expanded DevCovenant docs and linked the detailed guide set
   from the main README while wiring the devcovrepo profile to track the

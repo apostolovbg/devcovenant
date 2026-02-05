@@ -45,7 +45,8 @@ opt-in via custom profiles or config overrides—never implicit via `global`.
 ## Profile-Scoped Core Policies
 - dependency-license-sync — Profiles: python, javascript, typescript, java,
   csharp, php, ruby, go, rust, swift, dart, flutter, fastapi, frappe,
-  objective-c. Overlays must reference each ecosystem’s manifest files.
+  objective-c. Overlays must reference each ecosystem’s manifest files; the
+  policy defaults are intentionally general.
 - docstring-and-comment-coverage — Adapters per language; Metadata: include/
   exclude selectors. Profiles: python, javascript, typescript, go, rust, java,
   csharp.

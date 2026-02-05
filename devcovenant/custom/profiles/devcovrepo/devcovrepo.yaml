@@ -35,6 +35,11 @@ assets:
     template: docs/troubleshooting.md
     mode: replace
 policy_overlays:
+  dependency-license-sync:
+    dependency_files:
+      - requirements.in
+      - requirements.lock
+      - pyproject.toml
   documentation-growth-tracking:
     user_visible_files:
       - devcovenant/docs/README.md
@@ -81,6 +86,7 @@ policy_overlays:
       - tests/devcovenant/custom
 autogen_do_not_apply: []
 policies:
+  - dependency-license-sync
   - documentation-growth-tracking
   - line-length-limit
   - new-modules-need-tests

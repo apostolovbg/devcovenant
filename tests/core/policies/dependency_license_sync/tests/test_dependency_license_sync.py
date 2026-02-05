@@ -27,10 +27,29 @@ def _setup_repo(tmp_path: Path) -> Path:
     return tmp_path
 
 
+def _build_checker() -> dependency_license_sync.DependencyLicenseSyncCheck:
+    """Create a checker with dependency manifests configured."""
+    checker = dependency_license_sync.DependencyLicenseSyncCheck()
+    checker.set_options(
+        metadata_options={
+            "dependency_files": [
+                "requirements.in",
+                "requirements.lock",
+                "pyproject.toml",
+            ],
+            "third_party_file": "THIRD_PARTY_LICENSES.md",
+            "licenses_dir": "licenses",
+            "report_heading": "## License Report",
+        },
+        config_overrides=None,
+    )
+    return checker
+
+
 def test_requires_license_table_update(tmp_path: Path):
     """Dependency changes without touching the license table fail."""
     repo = _setup_repo(tmp_path)
-    checker = dependency_license_sync.DependencyLicenseSyncCheck()
+    checker = _build_checker()
     context = CheckContext(
         repo_root=repo,
         changed_files=[repo / "requirements.in"],
@@ -53,7 +72,7 @@ def test_passes_when_report_and_license_refreshed(tmp_path: Path):
     new_license = repo / "licenses" / "example.txt"
     new_license.write_text("MIT\n", encoding="utf-8")
 
-    checker = dependency_license_sync.DependencyLicenseSyncCheck()
+    checker = _build_checker()
     context = CheckContext(
         repo_root=repo,
         changed_files=[
@@ -77,7 +96,7 @@ def test_report_mentions_all_changed_files(tmp_path: Path):
         encoding="utf-8",
     )
 
-    checker = dependency_license_sync.DependencyLicenseSyncCheck()
+    checker = _build_checker()
     context = CheckContext(
         repo_root=repo,
         changed_files=[

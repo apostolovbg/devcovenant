@@ -1,5 +1,5 @@
 # DevCovenant Specification
-**Last Updated:** 2026-02-04
+**Last Updated:** 2026-02-05
 **Version:** 0.2.6
 
 <!-- DEVCOV:BEGIN -->
@@ -325,6 +325,9 @@ hashes synchronized so drift is detectable and reversible.
   scanner, documentation-growth-tracking, line-length-limit, version-sync)
   and remove deprecated stacks (kotlin, scala, groovy, dotnet, fsharp, elixir,
   erlang, haskell, clojure, julia, ocaml, crystal, ansible).
+- `dependency-license-sync` must be manifest-agnostic: profiles or config
+  overlays provide `dependency_files`, while the core policy metadata remains
+  general. The devcovrepo profile sets DevCovenant’s own dependency manifests.
 - A registry-only refresh runs at the start of every devcovenant invocation,
   regenerating `devcovenant/registry/local/*` (hashes, manifest, metadata
   schema) and only materializing `config.yaml` when missing; it skips AGENTS
@@ -585,7 +588,8 @@ its own assets, suffixes, policies, and overlays.
   `License :: OSI Approved :: MIT License` classifier); version-sync enforces
   this under the `devcovrepo` profile.
 - Keep `THIRD_PARTY_LICENSES.md` and `licenses/` synchronized with dependency
-  changes so the dependency-license-sync policy passes.
+  changes as defined by the active profile overlays so the
+  dependency-license-sync policy passes.
 - DevCovenant's own test suites live under `tests/devcovenant/` in the
   DevCovenant repo only. Tests are not shipped in packages; `tests/` is
   created on demand when the `new-modules-need-tests` policy is active.

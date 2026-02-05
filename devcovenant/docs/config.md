@@ -30,6 +30,9 @@ The core sections are:
 Overrides merge in the order: policy defaults, profile overlays, then
 config overrides. This lets a repo adjust a policy without editing core
 files or the policy descriptor.
+For dependency and license tracking, the active profiles supply the
+`dependency-license-sync` manifest list; use config overrides when your
+repo has custom manifest names.
 
 ## Examples
 ```yaml

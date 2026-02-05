@@ -1,5 +1,5 @@
 # DevCovenant
-**Last Updated:** 2026-02-04
+**Last Updated:** 2026-02-05
 **Version:** 0.2.6
 
 <!-- DEVCOV:BEGIN -->
@@ -16,8 +16,8 @@ standards and automated checks in lockstep. It was born inside the Copernican
 Suite, hardened through dogfooding in production repos, and is now a
 standalone project focused on stability and portability.
 
-If you install DevCovenant into another repository, the user-facing guide
-lives in that repo at `devcovenant/README.md`.
+If you install DevCovenant into a repository, the user-facing guide lives
+at `devcovenant/README.md`.
 
 ## Table of Contents
 1. [Overview](#overview)
@@ -30,7 +30,7 @@ lives in that repo at `devcovenant/README.md`.
 8. [Workflow](#workflow)
 9. [Core Exclusion](#core-exclusion)
 10. [Dependency and License Tracking](#dependency-and-license-tracking)
-11. [Using DevCovenant in Other Repos](#using-devcovenant-in-other-repos)
+11. [Using DevCovenant](#using-devcovenant)
 12. [License](#license)
 <!-- REPO-ONLY:BEGIN -->
 Repo-only:
@@ -264,14 +264,15 @@ unless `--force-config` is supplied, letting teams pre-seed their configuration
 before DevCovenant runs for the first time.
 
 ## Dependency and License Tracking
-DevCovenant records runtime dependencies in `requirements.in` with pinned
-versions in `requirements.lock` and metadata in `pyproject.toml`. Every time
-those manifests change, the dependency-license-sync policy requires refreshing
-`THIRD_PARTY_LICENSES.md` (see the `## License Report` section) and the text
-files under `licenses/`. Those assets keep third-party licenses visible so
-reviewers and installers know what the project ships.
+DevCovenant tracks dependencies using the manifest files defined by the
+active profiles (for example `requirements.in`/`pyproject.toml` for Python or
+`package.json` for JavaScript). When those manifests change, the
+dependency-license-sync policy requires refreshing `THIRD_PARTY_LICENSES.md`
+(see the `## License Report` section) and the text files under `licenses/`.
+Use profile overlays or config overrides to adjust which dependency files are
+in scope for a given repo.
 
-## Using DevCovenant in Other Repos
+## Using DevCovenant
 Common commands:
 ```bash
 devcovenant check
@@ -285,7 +286,7 @@ devcovenant update-policy-registry
 devcovenant restore-stock-text --policy <id>
 ```
 
-See `devcovenant/README.md` in the target repo for the full user guide.
+See `devcovenant/README.md` for the full user guide.
 <!-- REPO-ONLY:BEGIN -->
 ## History and Dogfooding
 DevCovenant originated inside the Copernican Suite, then expanded to other
