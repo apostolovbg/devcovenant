@@ -7,8 +7,57 @@ assets:
   - path: devcovenant/docs/README.md
     template: docs/README.md
     mode: replace
+  - path: devcovenant/docs/installation.md
+    template: docs/installation.md
+    mode: replace
+  - path: devcovenant/docs/config.md
+    template: docs/config.md
+    mode: replace
+  - path: devcovenant/docs/profiles.md
+    template: docs/profiles.md
+    mode: replace
+  - path: devcovenant/docs/policies.md
+    template: docs/policies.md
+    mode: replace
+  - path: devcovenant/docs/adapters.md
+    template: docs/adapters.md
+    mode: replace
+  - path: devcovenant/docs/registry.md
+    template: docs/registry.md
+    mode: replace
+  - path: devcovenant/docs/refresh.md
+    template: docs/refresh.md
+    mode: replace
+  - path: devcovenant/docs/workflow.md
+    template: docs/workflow.md
+    mode: replace
+  - path: devcovenant/docs/troubleshooting.md
+    template: docs/troubleshooting.md
+    mode: replace
 policy_overlays:
   documentation-growth-tracking:
+    user_visible_files:
+      - devcovenant/docs/README.md
+      - devcovenant/docs/installation.md
+      - devcovenant/docs/config.md
+      - devcovenant/docs/profiles.md
+      - devcovenant/docs/policies.md
+      - devcovenant/docs/adapters.md
+      - devcovenant/docs/registry.md
+      - devcovenant/docs/refresh.md
+      - devcovenant/docs/workflow.md
+      - devcovenant/docs/troubleshooting.md
+    doc_quality_files:
+      - devcovenant/docs/README.md
+      - devcovenant/docs/installation.md
+      - devcovenant/docs/config.md
+      - devcovenant/docs/profiles.md
+      - devcovenant/docs/policies.md
+      - devcovenant/docs/adapters.md
+      - devcovenant/docs/registry.md
+      - devcovenant/docs/refresh.md
+      - devcovenant/docs/workflow.md
+      - devcovenant/docs/troubleshooting.md
     user_visible_dirs:
       - devcovenant/docs
     doc_quality_dirs:

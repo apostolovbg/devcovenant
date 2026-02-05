@@ -29,6 +29,44 @@ Example entry:
 
 ## Version 0.2.6
 
+- 2026-02-04: Expanded DevCovenant docs and linked the detailed guide set
+  from the main README while wiring the devcovrepo profile to track the
+  full docs catalog.
+  Files:
+  README.md
+  devcovenant/README.md
+  devcovenant/core/profiles/global/assets/README.yaml
+  devcovenant/custom/profiles/devcovrepo/devcovrepo.yaml
+  devcovenant/custom/profiles/devcovrepo/assets/docs/README.md
+  devcovenant/custom/profiles/devcovrepo/assets/docs/\
+    adapters.md
+  devcovenant/custom/profiles/devcovrepo/assets/docs/\
+    config.md
+  devcovenant/custom/profiles/devcovrepo/assets/docs/\
+    installation.md
+  devcovenant/custom/profiles/devcovrepo/assets/docs/\
+    policies.md
+  devcovenant/custom/profiles/devcovrepo/assets/docs/\
+    profiles.md
+  devcovenant/custom/profiles/devcovrepo/assets/docs/\
+    refresh.md
+  devcovenant/custom/profiles/devcovrepo/assets/docs/\
+    registry.md
+  devcovenant/custom/profiles/devcovrepo/assets/docs/\
+    troubleshooting.md
+  devcovenant/custom/profiles/devcovrepo/assets/docs/\
+    workflow.md
+  devcovenant/docs/README.md
+  devcovenant/docs/adapters.md
+  devcovenant/docs/config.md
+  devcovenant/docs/installation.md
+  devcovenant/docs/policies.md
+  devcovenant/docs/profiles.md
+  devcovenant/docs/refresh.md
+  devcovenant/docs/registry.md
+  devcovenant/docs/troubleshooting.md
+  devcovenant/docs/workflow.md
+
 - 2026-02-04: Moved VERSION into devcovenant/, updated packaging scope,
   removed .devcov-state usage, and refreshed version policy paths.
   Files:

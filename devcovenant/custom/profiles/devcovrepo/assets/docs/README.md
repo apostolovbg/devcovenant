@@ -3,27 +3,31 @@
 ## Table of Contents
 - [Overview](#overview)
 - [Workflow](#workflow)
-- [Suggested Layout](#suggested-layout)
-- [Guidelines](#guidelines)
+- [Doc Catalog](#doc-catalog)
+- [Conventions](#conventions)
 
 ## Overview
-This folder holds deeper, repo-specific documentation that complements the
-top-level README: design notes, adapter guides, release rituals, and
-troubleshooting playbooks. It is shipped by the devcovrepo profile and
-monitored by documentation-growth-tracking overlays.
+This folder holds the detailed, user-facing guides for DevCovenant.
+`devcovenant/README.md` remains the top-level guide, while these docs
+explain the deeper mechanics, profiles, policies, and workflows.
 
 ## Workflow
-Treat this directory like code: add new files as topics emerge, keep headings
-structured, and link directly to code/policy locations. Changes here should be
-captured in the changelog and kept consistent with profiles/maps.
+Treat these files like code: update them alongside any behavior changes,
+add examples for new flags or metadata, and keep cross-links current.
+Updates here are tracked by the `documentation-growth-tracking` policy.
 
-## Suggested Layout
-- `architecture.md` — engine and registry flow.
-- `policies.md` — writing/adapting policies and tests.
-- `profiles.md` — profile catalog conventions and asset expectations.
-- `release.md` — release steps and required checks.
+## Doc Catalog
+- `installation.md` — install, update, uninstall, and no-touch runs.
+- `config.md` — config structure, overrides, and profile selection.
+- `profiles.md` — profile anatomy, assets, overlays, and suffixes.
+- `policies.md` — policy descriptors, metadata, and custom policies.
+- `adapters.md` — adapter design and language-specific logic.
+- `registry.md` — local registry files and how they are refreshed.
+- `refresh.md` — refresh-all vs registry-only behavior.
+- `workflow.md` — required gates, pre-commit, and test runners.
+- `troubleshooting.md` — common errors and how to resolve them.
 
-## Guidelines
-- Keep entries concise and actionable; link to code paths and policies.
-- Maintain clear headings so doc-growth tracking can score depth.
-- Prefer one topic per file; expand the layout list as the surface grows.
+## Conventions
+- Keep headings consistent and link back to code paths where useful.
+- Prefer short, copy-pasteable examples over long prose.
+- Keep the newest information aligned with `SPEC.md` and `PLAN.md`.

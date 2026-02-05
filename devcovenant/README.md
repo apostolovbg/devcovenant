@@ -1,5 +1,5 @@
 # DevCovenant
-**Last Updated:** 2026-02-02
+**Last Updated:** 2026-02-04
 **Version:** 0.2.6
 
 <!-- DEVCOV:BEGIN -->
@@ -23,14 +23,14 @@ lives in that repo at `devcovenant/README.md`.
 1. [Overview](#overview)
 2. [Why DevCovenant](#why-devcovenant)
 3. [How It Works](#how-it-works)
-
-5. [CLI Entry Points](#cli-entry-points)
-6. [Install, Update, Uninstall](#install-update-uninstall)
-7. [Workflow](#workflow)
-8. [Core Exclusion](#core-exclusion)
-9. [Dependency and License Tracking](#dependency-and-license-tracking)
-10. [Using DevCovenant in Other Repos](#using-devcovenant-in-other-repos)
-
+4. [Document assets](#document-assets)
+5. [Extended Docs](#extended-docs)
+6. [CLI Entry Points](#cli-entry-points)
+7. [Install, Update, Uninstall](#install-update-uninstall)
+8. [Workflow](#workflow)
+9. [Core Exclusion](#core-exclusion)
+10. [Dependency and License Tracking](#dependency-and-license-tracking)
+11. [Using DevCovenant in Other Repos](#using-devcovenant-in-other-repos)
 12. [License](#license)
 
 ## Overview
@@ -76,6 +76,19 @@ Whenever these docs are touched, the `last-updated-placement` policy refreshes
 the `**Last Updated:** YYYY-MM-DD` header via its fixer.
 It sets the value to the current UTC date so the recorded timestamp matches the
 latest edit.
+
+## Extended Docs
+Detailed guides live in `devcovenant/docs/` and are meant to be referenced
+from day-to-day development. Start here:
+- `devcovenant/docs/installation.md` for install and update flows.
+- `devcovenant/docs/config.md` for config structure and overrides.
+- `devcovenant/docs/profiles.md` for profile anatomy and overlays.
+- `devcovenant/docs/policies.md` for policy descriptors and scripts.
+- `devcovenant/docs/adapters.md` for language-specific adapter design.
+- `devcovenant/docs/registry.md` for registry files and refresh semantics.
+- `devcovenant/docs/refresh.md` for refresh-all vs registry-only runs.
+- `devcovenant/docs/workflow.md` for the enforced gate sequence.
+- `devcovenant/docs/troubleshooting.md` for common errors and fixes.
 
 ## Install, Update, Uninstall
 Install DevCovenant into a target repository:
