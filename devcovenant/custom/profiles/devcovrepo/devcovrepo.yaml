@@ -41,7 +41,11 @@ policy_overlays:
       - requirements.lock
       - pyproject.toml
   documentation-growth-tracking:
+    user_facing_files:
+      - devcovenant/cli.py
+      - devcovenant/__main__.py
     user_visible_files:
+      - devcovenant/README.md
       - devcovenant/docs/README.md
       - devcovenant/docs/installation.md
       - devcovenant/docs/config.md
@@ -53,6 +57,7 @@ policy_overlays:
       - devcovenant/docs/workflow.md
       - devcovenant/docs/troubleshooting.md
     doc_quality_files:
+      - devcovenant/README.md
       - devcovenant/docs/README.md
       - devcovenant/docs/installation.md
       - devcovenant/docs/config.md
@@ -69,8 +74,18 @@ policy_overlays:
       - devcovenant/docs
   line-length-limit:
     exclude_globs:
+      - devcovenant/core/profiles/global/assets/*.yaml
+      - devcovenant/core/stock_policy_texts.json
       - devcovenant/registry/**
+  last-updated-placement:
+    allowed_globs:
+      - devcovenant/README.md
+      - devcovenant/core/profiles/global/assets/*.yaml
+    required_globs:
+      - devcovenant/README.md
   new-modules-need-tests:
+    include_prefixes:
+      - devcovenant
     exclude_prefixes:
       - build
       - dist
@@ -84,6 +99,12 @@ policy_overlays:
       - tests
       - tests/devcovenant/core
       - tests/devcovenant/custom
+  version-sync:
+    version_file: devcovenant/VERSION
+    readme_files:
+      - devcovenant/README.md
+  semantic-version-scope:
+    version_file: devcovenant/VERSION
 autogen_do_not_apply: []
 policies:
   - dependency-license-sync

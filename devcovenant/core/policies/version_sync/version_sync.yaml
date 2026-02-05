@@ -1,9 +1,8 @@
 id: version-sync
 text: |
-  All version-bearing files must match the canonical
-  `devcovenant/VERSION` value, and version bumps must move forward. Files
-  listed under `optional_files` are
-  only enforced when present (for example, SPEC/PLAN in user repos). The
+  All version-bearing files must match the canonical version file (default
+  `VERSION` or a configured override), and version bumps must move forward.
+  Files listed under `optional_files` are only enforced when present. The
   policy also flags hard-coded runtime versions and ensures changelog
   releases reflect the current version.
 metadata:
@@ -39,19 +38,11 @@ metadata:
     - fastapi
     - frappe
     - objective-c
-  version_file: devcovenant/VERSION
-  readme_files:
-    - README.md
-    - AGENTS.md
-    - CONTRIBUTING.md
-    - SPEC.md
-    - PLAN.md
-    - devcovenant/README.md
-  optional_files:
-    - SPEC.md
-    - PLAN.md
-  pyproject_files: pyproject.toml
-  license_files: LICENSE
+  version_file: VERSION
+  readme_files: []
+  optional_files: []
+  pyproject_files: []
+  license_files: []
   runtime_entrypoints: __none__
   runtime_roots: __none__
   changelog_file: CHANGELOG.md

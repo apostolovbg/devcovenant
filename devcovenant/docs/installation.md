@@ -26,9 +26,10 @@ entry is not available.
 
 ## Install Modes
 - `devcovenant install --target /path/to/repo` installs a full baseline.
-- Install writes new docs into the repo, backing up existing files as
-  `*_old.*` when replacements are required.
-- Install seeds `devcovenant/VERSION` when missing.
+- Install writes new docs into the repo. Use `--backup-existing` to keep
+  `*_old.*` copies before overwriting; default runs replace files in-place.
+- Install seeds the configured version file (default `VERSION`) when
+  missing.
 
 ## Update Behavior
 - Update refreshes managed docs, registries, and config defaults while

@@ -43,59 +43,13 @@ metadata:
     - user_facing
     - user_visible
     - doc_quality
-  include_prefixes:
-    - devcovenant
-    - tools
-    - .github
-  exclude_prefixes: tests
-  user_facing_prefixes:
-    - devcovenant
-    - tools
-    - .github
-  user_facing_exclude_prefixes: tests
-  user_facing_suffixes:
-    - .py
-    - .js
-    - .ts
-    - .tsx
-    - .vue
-    - .go
-    - .rs
-    - .java
-    - .kt
-    - .swift
-    - .rb
-    - .php
-    - .cs
-    - .yml
-    - .yaml
-    - .json
-    - .toml
-  user_facing_files:
-    - devcovenant/cli.py
-    - devcovenant/__main__.py
-    - .pre-commit-config.yaml
-    - pyproject.toml
-  user_facing_globs:
-    - .github/workflows/*.yml
-    - .github/workflows/*.yaml
-    - '*.py'
-    - '*.js'
-    - '*.ts'
-    - '*.tsx'
-    - '*.vue'
-    - '*.go'
-    - '*.rs'
-    - '*.java'
-    - '*.kt'
-    - '*.swift'
-    - '*.rb'
-    - '*.php'
-    - '*.cs'
-    - '*.yml'
-    - '*.yaml'
-    - '*.json'
-    - '*.toml'
+  include_prefixes: []
+  exclude_prefixes: []
+  user_facing_prefixes: []
+  user_facing_exclude_prefixes: []
+  user_facing_suffixes: []
+  user_facing_files: []
+  user_facing_globs: []
   user_facing_keywords:
     - api
     - endpoint
@@ -128,20 +82,8 @@ metadata:
     - forms
     - workflow
     - workflows
-  user_visible_files:
-    - README.md
-    - CONTRIBUTING.md
-    - AGENTS.md
-    - SPEC.md
-    - PLAN.md
-    - devcovenant/README.md
-  doc_quality_files:
-    - README.md
-    - CONTRIBUTING.md
-    - AGENTS.md
-    - SPEC.md
-    - PLAN.md
-    - devcovenant/README.md
+  user_visible_files: []
+  doc_quality_files: []
   required_headings:
     - Table of Contents
     - Overview
@@ -174,19 +116,13 @@ metadata:
     - plan
     - spec
   include_suffixes: []
-  include_globs:
-    - devcovenant/**
-    - tools/**
-    - .github/**
+  include_globs: []
   exclude_suffixes: []
-  exclude_globs: tests/**
+  exclude_globs: []
   force_include_globs: []
   user_facing_exclude_globs: []
   user_facing_exclude_suffixes: []
-  user_facing_dirs:
-    - devcovenant/**
-    - tools/**
-    - .github/**
+  user_facing_dirs: []
   user_visible_globs: []
   user_visible_dirs: []
   doc_quality_globs: []
@@ -196,6 +132,6 @@ metadata:
   exclude_files: []
   exclude_dirs: []
   user_facing_exclude_files: []
-  user_facing_exclude_dirs: tests/**
+  user_facing_exclude_dirs: []
   force_include_files: []
   force_include_dirs: []

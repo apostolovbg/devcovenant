@@ -144,6 +144,11 @@ def main() -> None:
         help="Skip refresh-policies during install/update.",
     )
     parser.add_argument(
+        "--backup-existing",
+        action="store_true",
+        help="Create *_old backups before overwriting files.",
+    )
+    parser.add_argument(
         "--install-mode",
         choices=("auto", "empty", "existing"),
         help="Install mode for install command (default: auto).",
@@ -396,7 +401,11 @@ def main() -> None:
         from devcovenant.core.refresh_all import refresh_all
 
         _print_banner("Refresh all", "🔄")
-        result = refresh_all(args.repo, registry_only=args.registry_only)
+        result = refresh_all(
+            args.repo,
+            registry_only=args.registry_only,
+            backup_existing=args.backup_existing,
+        )
         sys.exit(result)
 
     elif args.command == "restore-stock-text":
@@ -455,6 +464,8 @@ def main() -> None:
             install_args.append("--force-config")
         if args.skip_policy_refresh:
             install_args.append("--skip-policy-refresh")
+        if args.backup_existing:
+            install_args.append("--backup-existing")
 
         from devcovenant.core.install import main as install_main
 
@@ -495,6 +506,8 @@ def main() -> None:
             update_args.append("--force-config")
         if args.skip_policy_refresh:
             update_args.append("--skip-policy-refresh")
+        if args.backup_existing:
+            update_args.append("--backup-existing")
 
         from devcovenant.core.update import main as update_main
 

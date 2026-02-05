@@ -23,24 +23,27 @@ opt-in via custom profiles or config overrides—never implicit via `global`.
 - track-test-status — Assets: devcovenant/registry/local/test_status.json;
   Metadata: profile_scopes.
 - changelog-coverage — Assets: CHANGELOG.md; Metadata: main_changelog,
-  skipped_files, profile_scopes.
+  skipped_files, skipped_globs, summary_words_min, profile_scopes.
 - no-future-dates — Logic-only; Metadata: profile_scopes.
 - read-only-directories — Metadata: include_globs, profile_scopes.
 - managed-environment — Metadata: expected_paths, expected_interpreters,
   required_commands, command_hints (apply: false by default).
-- semantic-version-scope — Assets: devcovenant/VERSION, CHANGELOG.md;
-  Metadata: version_file, changelog_file, profile_scopes (apply: false).
+- semantic-version-scope — Assets: VERSION (profile override),
+  CHANGELOG.md; Metadata: version_file, changelog_file, profile_scopes
+  (apply: false).
 - last-updated-placement — Assets: managed docs; Metadata: allowed_globs,
   profile_scopes.
 - documentation-growth-tracking — Metadata: selector roles,
   required_headings, min_word_count, mention rules; overlays expected per
-  profile for user_facing suffixes/keywords.
+  profile for user_facing suffixes/keywords and doc sets (global provides
+  the baseline, devcovrepo adds devcovenant docs).
 - line-length-limit — Metadata: max_length, selectors, profile_scopes.
-- version-sync — Assets: devcovenant/VERSION,
-  README/AGENTS/CONTRIBUTING/SPEC/PLAN/devcovenant/README.md,
-  LICENSE, pyproject.toml; Metadata: version_file, readme_files,
-  optional_files, pyproject_files, license_files, changelog_file,
-  header_prefix.
+- version-sync — Assets: VERSION (profile override),
+  README/AGENTS/CONTRIBUTING/SPEC/PLAN, LICENSE; language profiles add
+  pyproject.toml or other manifests; devcovrepo overlays add
+  devcovenant/README.md + devcovenant/VERSION. Metadata: version_file,
+  readme_files, optional_files, pyproject_files, license_files,
+  changelog_file, header_prefix.
 
 ## Profile-Scoped Core Policies
 - dependency-license-sync — Profiles: python, javascript, typescript, java,
@@ -71,8 +74,8 @@ opt-in via custom profiles or config overrides—never implicit via `global`.
   java, csharp adapters under policy/adapters/.
 - name-clarity: adapters for python, javascript, typescript, go, rust, java,
   csharp under policy/adapters/.
-- new-modules-need-tests: adapters for python, javascript, typescript; shared
-  logic covers others via selectors where applicable.
+- new-modules-need-tests: adapters for python, javascript, typescript, go,
+  rust, java, csharp; shared logic covers others via selectors.
 - security-scanner: language-specific adapters for python/js/ts/go/rust/java/
   csharp.
 

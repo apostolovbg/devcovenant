@@ -176,6 +176,11 @@ def add_install_update_args(
         help="Skip the final refresh-all step during install/update.",
     )
     parser.add_argument(
+        "--backup-existing",
+        action="store_true",
+        help="Create *_old backups before overwriting files.",
+    )
+    parser.add_argument(
         "--no-touch",
         action="store_true",
         help=(
@@ -234,6 +239,8 @@ def build_install_args(
         install_args.append("--skip-policy-refresh")
     if getattr(args, "skip_refresh", False):
         install_args.append("--skip-refresh")
+    if getattr(args, "backup_existing", False):
+        install_args.append("--backup-existing")
     if getattr(args, "no_touch", False):
         install_args.append("--no-touch")
     return install_args

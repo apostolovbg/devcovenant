@@ -22,6 +22,8 @@ policy_overlays:
       - devcovenant/run_tests.py
       - devcovenant/update_test_status.py
       - devcovenant/core/check.py
+    skipped_globs:
+      - "*_old.*"
   new-modules-need-tests:
     exclude_prefixes:
       - devcovenant

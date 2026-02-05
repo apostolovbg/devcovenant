@@ -29,6 +29,57 @@ Example entry:
 
 ## Version 0.2.6
 
+- 2026-02-05: Updated defaults, backup flow, and changelog rules with meta now.
+  Refreshed policy text, updated docs/maps for profile-driven version files,
+  made backup creation opt-in via `--backup-existing`, and added configurable
+  changelog summary length with `_old` file exclusions.
+  Files:
+  AGENTS.md
+  PLAN.md
+  POLICY_MAP.md
+  PROFILE_MAP.md
+  README.md
+  SPEC.md
+  devcovenant/README.md
+  devcovenant/cli.py
+  devcovenant/config.yaml
+  devcovenant/core/cli_options.py
+  devcovenant/core/install.py
+  devcovenant/core/policies/changelog_coverage/changelog_coverage.py
+  devcovenant/core/policies/changelog_coverage/changelog_coverage.yaml
+  devcovenant/core/policies/docstring_and_comment_coverage/\
+    docstring_and_comment_coverage.yaml
+  devcovenant/core/policies/documentation_growth_tracking/\
+    documentation_growth_tracking.yaml
+  devcovenant/core/policies/last_updated_placement/\
+    last_updated_placement.yaml
+  devcovenant/core/policies/line_length_limit/line_length_limit.yaml
+  devcovenant/core/policies/new_modules_need_tests/\
+    new_modules_need_tests.yaml
+  devcovenant/core/policies/security_scanner/security_scanner.yaml
+  devcovenant/core/policies/semantic_version_scope/\
+    semantic_version_scope.yaml
+  devcovenant/core/policies/version_sync/version_sync.yaml
+  devcovenant/core/profiles/devcovuser/devcovuser.yaml
+  devcovenant/core/profiles/global/global.yaml
+  devcovenant/core/refresh_all.py
+  devcovenant/core/stock_policy_texts.json
+  devcovenant/core/update.py
+  devcovenant/custom/profiles/devcovrepo/assets/docs/config.md
+  devcovenant/custom/profiles/devcovrepo/assets/docs/\
+    installation.md
+  devcovenant/custom/profiles/devcovrepo/assets/docs/\
+    policies.md
+  devcovenant/custom/profiles/devcovrepo/assets/docs/\
+    profiles.md
+  devcovenant/custom/profiles/devcovrepo/devcovrepo.yaml
+  devcovenant/docs/config.md
+  devcovenant/docs/installation.md
+  devcovenant/docs/policies.md
+  devcovenant/docs/profiles.md
+  devcovenant/registry/global/stock_policy_texts.yaml
+  tests/core/policies/changelog_coverage/tests/test_changelog_coverage.py
+
 - 2026-02-05: Generalized dependency-license-sync metadata, shifted manifest
   lists into profiles, and updated docs/spec/plan guidance.
   Files:

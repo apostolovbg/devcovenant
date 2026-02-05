@@ -92,8 +92,11 @@ It is the checklist we consult before declaring the spec satisfied.
   init, command execution) for traceable runs without flooding output.
 - [done] Install/update accept `--skip-refresh` to bypass the final
   refresh-all step for fast test harnesses; default runs still refresh.
-- [done] `devcovenant/VERSION` is the canonical version file; install/update
-  populate it and policies point at the in-package path.
+- [done] Backups are opt-in via `--backup-existing`; default runs overwrite
+  files in-place without creating `*_old.*` copies.
+- [done] Version tracking defaults live in profiles: `global` points at
+  `VERSION` plus the core doc set, while `devcovrepo` overrides the
+  version file to `devcovenant/VERSION`.
 - [not done] Every managed doc must include `Last Updated`/`Version` headers.
   Ensure each file also has top-of-file managed blocks.
   Include `Doc ID`, `Doc Type`, and owner metadata in those blocks.
@@ -111,8 +114,9 @@ It is the checklist we consult before declaring the spec satisfied.
 - [done] Policy metadata normalization now emits schema + value blocks
   while keeping existing text values intact.
 - [done] `changelog-coverage` enforces one fresh entry per change (dated
-  today, descriptive summary, `Files:` block listing only touched paths) and
-  keeps entries newest-first.
+  today, descriptive summary with configurable minimum word count (default
+  10), `Files:` block listing only touched paths) and keeps entries
+  newest-first.
 - [done] Runtime state lives under `devcovenant/registry/local`; the legacy
   `.devcov-state` directory is removed.
 - [done] Ship `devcovenant/docs/` as user-facing guides in the package.
@@ -232,8 +236,8 @@ It is the checklist we consult before declaring the spec satisfied.
 - [not done] Install/update/refresh regenerate only managed doc headers and
   managed blocks (UTC dates) while preserving user content outside those
   blocks; installs create missing docs without discarding existing content.
-- [not done] `devcovenant/VERSION` creation prefers existing file, then
-  `pyproject.toml`.
+- [not done] Version file creation prefers an existing configured version
+  file (default `VERSION`, devcovrepo override), then `pyproject.toml`.
   Prompt (default `0.0.1`). `--version` overrides detection.
 - [not done] `LICENSE` falls back to the GPL-3.0 template when missing.
 - [not done] `.gitignore` is rebuilt from fragments while merging user entries.
@@ -351,10 +355,9 @@ Below is every missing SPEC requirement, ordered by dependency.
    Build artifacts with assets, enforce MIT when needed, and sync licensing
    notices.
 13. **Legacy debris cleanup.**
-   Remove obsolete artifacts (e.g., `devcovenant/registry.json`,
-   `devcovenant/config_old.yaml`, and the unused GPL license asset) from the
-   tree, update manifests/install lists, and drop policy/schema references so
-   refresh/install no longer expect them.
+   Remove obsolete artifacts (e.g., `devcovenant/registry.json` and the
+   unused GPL license asset) from the tree, update manifests/install lists,
+   and drop policy/schema references so refresh/install no longer expect them.
 14. **Profile maps → profile descriptors.**
     Keep core profile YAMLs as the shipped source of truth; `PROFILE_MAP.md`
     / `POLICY_MAP.md` are reference tables for authors to manually populate

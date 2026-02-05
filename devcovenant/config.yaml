@@ -142,9 +142,82 @@ autogen_metadata_overrides:
     required_commands:
     - pytest
     - python3 -m unittest discover
+  changelog-coverage:
+    summary_words_min: 10
   documentation-growth-tracking:
     user_facing_suffixes:
     - .py
+    - .md
+    - .rst
+    - .txt
+    - .js
+    - .ts
+    - .tsx
+    - .vue
+    - .go
+    - .rs
+    - .java
+    - .kt
+    - .swift
+    - .rb
+    - .php
+    - .cs
+    - .yml
+    - .yaml
+    - .json
+    - .toml
+    exclude_prefixes:
+    - data
+    user_facing_files:
+    - devcovenant/cli.py
+    - devcovenant/__main__.py
+    - .pre-commit-config.yaml
+    - pyproject.toml
+    user_visible_files:
+    - devcovenant/README.md
+    - devcovenant/docs/README.md
+    - devcovenant/docs/installation.md
+    - devcovenant/docs/config.md
+    - devcovenant/docs/profiles.md
+    - devcovenant/docs/policies.md
+    - devcovenant/docs/adapters.md
+    - devcovenant/docs/registry.md
+    - devcovenant/docs/refresh.md
+    - devcovenant/docs/workflow.md
+    - devcovenant/docs/troubleshooting.md
+    - README.md
+    - CONTRIBUTING.md
+    - AGENTS.md
+    - SPEC.md
+    - PLAN.md
+    doc_quality_files:
+    - devcovenant/README.md
+    - devcovenant/docs/README.md
+    - devcovenant/docs/installation.md
+    - devcovenant/docs/config.md
+    - devcovenant/docs/profiles.md
+    - devcovenant/docs/policies.md
+    - devcovenant/docs/adapters.md
+    - devcovenant/docs/registry.md
+    - devcovenant/docs/refresh.md
+    - devcovenant/docs/workflow.md
+    - devcovenant/docs/troubleshooting.md
+    - README.md
+    - CONTRIBUTING.md
+    - AGENTS.md
+    - SPEC.md
+    - PLAN.md
+    user_visible_dirs:
+    - devcovenant/docs
+    doc_quality_dirs:
+    - devcovenant/docs
+    user_facing_globs:
+    - .github/workflows/*.yml
+    - .github/workflows/*.yaml
+    user_facing_exclude_prefixes:
+    - tests
+    user_facing_exclude_dirs:
+    - tests/**
   docstring-and-comment-coverage:
     include_suffixes:
     - .py
@@ -165,9 +238,14 @@ autogen_metadata_overrides:
     - .avro
     exclude_globs:
     - devcovenant/registry/**
+    - data/**
+    - devcovenant/core/profiles/global/assets/*.yaml
+    - devcovenant/core/stock_policy_texts.json
   name-clarity:
     include_suffixes:
     - .py
+    exclude_prefixes:
+    - data
   new-modules-need-tests:
     include_suffixes:
     - .py
@@ -176,6 +254,7 @@ autogen_metadata_overrides:
     - dist
     - node_modules
     - tests
+    - data
     watch_dirs:
     - tests
     - tests/devcovenant/core
@@ -184,14 +263,50 @@ autogen_metadata_overrides:
     - tests
     - tests/devcovenant/core
     - tests/devcovenant/custom
+    include_prefixes:
+    - devcovenant
   security-scanner:
     include_suffixes:
     - .py
+    exclude_prefixes:
+    - data
   version-sync:
     pyproject_files:
     - pyproject.toml
+    version_file: devcovenant/VERSION
+    readme_files:
+    - devcovenant/README.md
+    - README.md
+    - AGENTS.md
+    - CONTRIBUTING.md
+    - SPEC.md
+    - PLAN.md
+    optional_files:
+    - SPEC.md
+    - PLAN.md
+    license_files:
+    - LICENSE
+  last-updated-placement:
+    allowed_globs:
+    - devcovenant/README.md
+    - devcovenant/core/profiles/global/assets/*.yaml
+    - README.md
+    - AGENTS.md
+    - CONTRIBUTING.md
+    - CHANGELOG.md
+    - SPEC.md
+    - PLAN.md
+    required_globs:
+    - devcovenant/README.md
+    - README.md
+    - AGENTS.md
+    - CONTRIBUTING.md
+    - CHANGELOG.md
+    - SPEC.md
+    - PLAN.md
+  semantic-version-scope:
+    version_file: devcovenant/VERSION
 user_metadata_overrides: {}
-
 doc_assets:
   autogen:
     - AGENTS.md

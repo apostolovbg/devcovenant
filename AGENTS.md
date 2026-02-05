@@ -208,19 +208,20 @@ main_changelog: CHANGELOG.md
 skipped_files: CHANGELOG.md
   .gitignore
   .pre-commit-config.yaml
+skipped_globs:
 skipped_prefixes:
+summary_words_min: 10
 collections: __none__
 selector_roles: skipped
-skipped_globs:
 skipped_dirs:
 ```
 
 Every change must be logged in a new changelog entry dated today, under the
-current version, with a descriptive summary (at least three words) and a
-Files block that lists only the touched paths for this change. Collection
-prefixes (when enabled) must be logged in their own changelog; prefixed
-files may not appear in the root changelog. This keeps release notes daily,
-file-complete, and traceable.
+current version, with a descriptive summary (minimum word count configured
+via metadata, default 10 words) and a Files block that lists only the
+touched paths for this change. Collection prefixes (when enabled) must be
+logged in their own changelog; prefixed files may not appear in the root
+changelog. This keeps release notes daily, file-complete, and traceable.
 
 
 ---
@@ -433,7 +434,7 @@ exclude_prefixes: build
   dist
   node_modules
 include_prefixes:
-include_globs: *.py
+include_globs:
 exclude_suffixes:
 exclude_globs: build/**
   dist/**
@@ -450,8 +451,9 @@ force_include_files:
 force_include_dirs:
 ```
 
-Python modules, classes, and functions must include a docstring or a nearby
-explanatory comment. This keeps intent visible even as code evolves.
+Source files must include a docstring or nearby explanatory comment so
+intent stays visible even as code evolves. Adapters decide how each
+language satisfies the requirement.
 
 
 ---
@@ -492,54 +494,13 @@ profile_scopes: global
 selector_roles: user_facing
   user_visible
   doc_quality
-include_prefixes: devcovenant
-  tools
-  .github
-exclude_prefixes: tests
-user_facing_prefixes: devcovenant
-  tools
-  .github
-user_facing_exclude_prefixes: tests
-user_facing_suffixes: .py
-  .js
-  .ts
-  .tsx
-  .vue
-  .go
-  .rs
-  .java
-  .kt
-  .swift
-  .rb
-  .php
-  .cs
-  .yml
-  .yaml
-  .json
-  .toml
-user_facing_files: devcovenant/cli.py
-  devcovenant/__main__.py
-  .pre-commit-config.yaml
-  pyproject.toml
-user_facing_globs: .github/workflows/*.yml
-  .github/workflows/*.yaml
-  *.py
-  *.js
-  *.ts
-  *.tsx
-  *.vue
-  *.go
-  *.rs
-  *.java
-  *.kt
-  *.swift
-  *.rb
-  *.php
-  *.cs
-  *.yml
-  *.yaml
-  *.json
-  *.toml
+include_prefixes:
+exclude_prefixes:
+user_facing_prefixes:
+user_facing_exclude_prefixes:
+user_facing_suffixes:
+user_facing_files:
+user_facing_globs:
 user_facing_keywords: api
   endpoint
   endpoints
@@ -571,18 +532,8 @@ user_facing_keywords: api
   forms
   workflow
   workflows
-user_visible_files: README.md
-  CONTRIBUTING.md
-  AGENTS.md
-  SPEC.md
-  PLAN.md
-  devcovenant/README.md
-doc_quality_files: README.md
-  CONTRIBUTING.md
-  AGENTS.md
-  SPEC.md
-  PLAN.md
-  devcovenant/README.md
+user_visible_files:
+doc_quality_files:
 required_headings: Table of Contents
   Overview
   Workflow
@@ -613,17 +564,13 @@ mention_stopwords: devcovenant
   plan
   spec
 include_suffixes:
-include_globs: devcovenant/**
-  tools/**
-  .github/**
+include_globs:
 exclude_suffixes:
-exclude_globs: tests/**
+exclude_globs:
 force_include_globs:
 user_facing_exclude_globs:
 user_facing_exclude_suffixes:
-user_facing_dirs: devcovenant/**
-  tools/**
-  .github/**
+user_facing_dirs:
 user_visible_globs:
 user_visible_dirs:
 doc_quality_globs:
@@ -633,7 +580,7 @@ include_dirs:
 exclude_files:
 exclude_dirs:
 user_facing_exclude_files:
-user_facing_exclude_dirs: tests/**
+user_facing_exclude_dirs:
 force_include_files:
 force_include_dirs:
 ```
@@ -671,8 +618,6 @@ allowed_globs: >
   CHANGELOG.md
   SPEC.md
   PLAN.md
-  devcovenant/README.md
-  devcovenant/core/profiles/global/assets/*.yaml
 allowed_files:
 allowed_suffixes:
 required_files:
@@ -682,7 +627,6 @@ required_globs: README.md
   CHANGELOG.md
   SPEC.md
   PLAN.md
-  devcovenant/README.md
 selector_roles: include
   allowed
   required
@@ -746,9 +690,7 @@ include_suffixes: .py
 exclude_prefixes: build
   dist
   node_modules
-exclude_globs: devcovenant/core/profiles/global/assets/*.yaml
-  devcovenant/core/stock_policy_texts.json
-  build/**
+exclude_globs: build/**
   dist/**
   node_modules/**
 include_prefixes:
@@ -897,20 +839,18 @@ profile_scopes: python
   java
   csharp
 include_suffixes:
-include_prefixes: devcovenant
+include_prefixes:
 exclude_prefixes: build
   dist
   node_modules
   tests
-  devcovenant/core/profiles
-exclude_globs: devcovenant/core/profiles/**
-  build/**
+exclude_globs: build/**
   dist/**
   node_modules/**
   tests/**
 watch_dirs: tests
 tests_watch_dirs: tests
-include_globs: devcovenant/**
+include_globs:
 exclude_suffixes:
 force_include_globs:
 watch_files:
@@ -928,10 +868,8 @@ force_include_dirs:
 
 New or modified modules in the watched locations must have corresponding
 tests. Test modules (files starting with `test_`) are exempt from the rule.
-
-The `tests_watch_dirs` metadata keeps `tests/` as the default watch list,
-so the policy covers `tests/devcovenant/core/profiles/` and the
-`tests/devcovenant/custom/profiles/` suites that mirror the package layout.
+The `tests_watch_dirs` metadata defaults to `tests/`, keeping the watch
+list aligned with typical test layouts unless overridden.
 
 
 ---
@@ -1095,9 +1033,9 @@ force_include_files:
 force_include_dirs:
 ```
 
-Scan Python files for risky constructs like `eval`, `exec`, or `shell=True`.
-Use the documented allow-comment only when a security review approves the
-exception.
+Scan source files for risky constructs like `eval`, `exec`, or
+`shell=True`. Use the documented allow-comment only when a security
+review approves the exception.
 
 
 ---
@@ -1114,7 +1052,7 @@ enforcement: active
 apply: false
 custom: false
 profile_scopes: global
-version_file: devcovenant/VERSION
+version_file: VERSION
 changelog_file: CHANGELOG.md
 ignored_prefixes:
 selector_roles: ignored
@@ -1127,10 +1065,10 @@ When enabled, the latest changelog entry must include exactly one
 `[semver:major|minor|patch]` tag that matches the version bump. Use
 `major` for API-breaking releases, `minor` for backward-compatible feature
 work, and `patch` for bug fixes or documentation-only updates. The tag
-must match the bump from the previous version, and `devcovenant/VERSION`
-must be updated whenever the changelog declares a release scope. The
-policy ships disabled (`apply: false`) and should only be enabled for
-release processes that enforce SemVer discipline.
+must match the bump from the previous version, and the configured
+version file must be updated whenever the changelog declares a release
+scope. The policy ships disabled (`apply: false`) and should only be
+enabled for release processes that enforce SemVer discipline.
 
 
 ---
@@ -1189,17 +1127,11 @@ profile_scopes: global
   fastapi
   frappe
   objective-c
-version_file: devcovenant/VERSION
-readme_files: README.md
-  AGENTS.md
-  CONTRIBUTING.md
-  SPEC.md
-  PLAN.md
-  devcovenant/README.md
-optional_files: SPEC.md
-  PLAN.md
-pyproject_files: pyproject.toml
-license_files: LICENSE
+version_file: VERSION
+readme_files:
+optional_files:
+pyproject_files:
+license_files:
 runtime_entrypoints: __none__
 runtime_roots: __none__
 changelog_file: CHANGELOG.md
@@ -1220,10 +1152,9 @@ license_globs:
 license_dirs:
 ```
 
-All version-bearing files must match the canonical
-`devcovenant/VERSION` value, and version bumps must move forward. Files
-listed under `optional_files` are
-only enforced when present (for example, SPEC/PLAN in user repos). The
+All version-bearing files must match the canonical version file (default
+`VERSION` or a configured override), and version bumps must move forward.
+Files listed under `optional_files` are only enforced when present. The
 policy also flags hard-coded runtime versions and ensures changelog
 releases reflect the current version.
 <!-- DEVCOV-POLICIES:END -->

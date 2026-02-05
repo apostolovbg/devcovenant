@@ -47,6 +47,20 @@ def test_skipped_prefixes_ignore_paths(
     assert violations == []
 
 
+def test_skipped_globs_ignore_paths(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+):
+    """Configured skipped globs should bypass coverage checks."""
+
+    checker = ChangelogCoverageCheck()
+    checker.set_options({"skipped_globs": ["*_old.*"]}, {})
+    _set_git_diff(monkeypatch, "devcovenant/config_old.yaml\n")
+    context = CheckContext(repo_root=tmp_path, all_files=[])
+    violations = checker.check(context)
+
+    assert violations == []
+
+
 def test_root_changelog_required(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch
 ):
@@ -139,6 +153,32 @@ def test_changelog_requires_descriptive_summary(
     assert any("descriptive summary" in v.message for v in violations)
 
 
+def test_summary_word_minimum_can_be_configured(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+):
+    """Configurable summary word minimum should be honored."""
+
+    today = date.today().isoformat()
+    changelog_text = (
+        "## Version 1.0.0\n"
+        f"- {today}: Fix bug\n"
+        "  Files:\n"
+        "  src/module.py\n"
+    )
+    (tmp_path / "CHANGELOG.md").write_text(
+        changelog_text,
+        encoding="utf-8",
+    )
+
+    checker = ChangelogCoverageCheck()
+    checker.set_options({"summary_words_min": 2}, {})
+    _set_git_diff(monkeypatch, "src/module.py\n")
+    context = CheckContext(repo_root=tmp_path, all_files=[])
+    violations = checker.check(context)
+
+    assert violations == []
+
+
 def test_rng_changelog_entry_found(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch
 ):
@@ -148,9 +188,10 @@ def test_rng_changelog_entry_found(
     rng_changelog = tmp_path / "rng_minigames" / "CHANGELOG.md"
     rng_changelog.parent.mkdir(parents=True, exist_ok=True)
     today = date.today().isoformat()
+    summary = "rng update logged for coverage policy with extra detail today"
     rng_text = (
         "## Version 1.0.0\n"
-        f"- {today}: rng update logged\n"
+        f"- {today}: {summary}\n"
         "  Files:\n"
         "  rng_minigames/emoji_meteors/game.py\n"
     )
@@ -174,9 +215,10 @@ def test_rng_files_not_logged_in_root(
 
     root_changelog = tmp_path / "CHANGELOG.md"
     today = date.today().isoformat()
+    summary = "rng update logged for coverage policy with extra detail today"
     rng_entry = (
         "## Version 1.0.0\n"
-        f"- {today}: rng update logged\n"
+        f"- {today}: {summary}\n"
         "  Files:\n"
         "  rng_minigames/emoji_meteors/game.py\n"
     )
@@ -295,10 +337,13 @@ def test_line_continuation_paths(
     """Backslash-wrapped paths should satisfy changelog coverage."""
 
     root_changelog = tmp_path / "CHANGELOG.md"
+    summary = (
+        "Update docs with extra guidance for coverage tests today entries"
+    )
     changelog = "\n".join(
         [
             "## Version 1.0.0",
-            f"- {date.today().isoformat()}: Update docs (AI assistant)",
+            f"- {date.today().isoformat()}: {summary}",
             "  Files:",
             "  devcovenant/core/policies/dependency_license_sync/assets/\\",
             "    licenses/README.md",

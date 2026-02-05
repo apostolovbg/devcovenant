@@ -1,8 +1,8 @@
 id: security-scanner
 text: |
-  Scan Python files for risky constructs like `eval`, `exec`, or `shell=True`.
-  Use the documented allow-comment only when a security review approves the
-  exception.
+  Scan source files for risky constructs like `eval`, `exec`, or
+  `shell=True`. Use the documented allow-comment only when a security
+  review approves the exception.
 metadata:
   id: security-scanner
   status: active

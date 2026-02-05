@@ -33,6 +33,10 @@ files or the policy descriptor.
 For dependency and license tracking, the active profiles supply the
 `dependency-license-sync` manifest list; use config overrides when your
 repo has custom manifest names.
+Version tracking defaults also come from profiles (for example, the
+global profile sets baseline readme/license files while custom profiles
+can override the `version_file`). Use config overrides to point
+`version-sync` at a different file or document set.
 
 ## Examples
 ```yaml

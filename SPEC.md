@@ -224,7 +224,7 @@ hashes synchronized so drift is detectable and reversible.
   visible to users and tooling.
 - Config exposes `version.override` so config-driven installs can declare
   the project version that templated assets (for example, `pyproject.toml`)
-  should use when no `devcovenant/VERSION` file exists yet.
+  should use when no version file exists yet.
 - Provide the dedicated `devcovrepo`/`devcovuser` profiles so the DevCovenant
   repository can opt into its own test overrides while user repositories keep
   `devcovenant/**` out of enforcement while still keeping
@@ -342,9 +342,10 @@ its own assets, suffixes, policies, and overlays.
   every available core/custom policy. Entries are ordered alphabetically and
   custom overrides are marked with `custom: true`.
 - `changelog-coverage` requires a fresh topmost entry per change. The newest
-  entry must be dated today, include a descriptive summary (three or more
-  words), and contain a `Files:` block listing exactly the touched paths.
-  Changelog entries remain newest-first (descending dates).
+  entry must be dated today, include a descriptive summary (minimum word
+  count configurable via metadata, default 10), and contain a `Files:` block
+  listing exactly the touched paths. Changelog entries remain newest-first
+  (descending dates).
 - `apply: false` disables enforcement without removing definitions.
 - Provide a `managed-environment` policy (off by default) that
   enforces execution inside the expected environment when
@@ -394,16 +395,15 @@ its own assets, suffixes, policies, and overlays.
   apply/freeze, selectors, severity, hashes, asset hints, provenance), profile
   scopes, and enabled flag so the registry is the canonical policy map.
 - The legacy `devcovenant/registry.json` storage and the accompanying
-- `update_hashes.py` helper were retired and removed, leaving
-- `devcovenant/registry/local/policy_registry.yaml` as the single
-- canonical hash store. Any residual legacy artifacts in the tree
-- should be deleted during the cleanup phase (registry.json,
-- config_old.yaml, GPL license template) and removed from manifests,
-- schemas, and policy references so refresh/install no longer expect
-- them.
+  `update_hashes.py` helper were retired and removed, leaving
+  `devcovenant/registry/local/policy_registry.yaml` as the single
+  canonical hash store. Any residual legacy artifacts in the tree should be
+  deleted (registry.json, prior `*_old` backups, GPL license template) and
+  removed from manifests, schemas, and policy references so refresh/install
+  no longer expect them. Backups are opt-in via `--backup-existing`.
 
 
--### Policy definition YAML
+### Policy definition YAML
 - Each policy (core, frozen, or custom) ships with a `<policy>.yaml` that
 - contains:
   ```
@@ -531,17 +531,19 @@ its own assets, suffixes, policies, and overlays.
   each install/update run without extra CLI toggles.
 - `CHANGELOG.md` and `CONTRIBUTING.md` are always replaced on install
   (backing up to `*_old.md`); updates refresh managed blocks only.
-- `devcovenant/VERSION` is created on demand. Prefer an existing
-  `devcovenant/VERSION`, otherwise read version fields from
-  `pyproject.toml`, otherwise prompt. If prompting is skipped, default to
-  `0.0.1`. The `--version` flag overrides detection and accepts `x.x` or
-  `x.x.x` (normalized to `x.x.0`).
+- The configured version file (default `VERSION`, overridden by profile
+  overlays like `devcovrepo`) is created on demand. Prefer an existing
+  version file, otherwise read version fields from `pyproject.toml`,
+  otherwise prompt. If prompting is skipped, default to `0.0.1`. The
+  `--version` flag overrides detection and accepts `x.x` or `x.x.x`
+  (normalized to `x.x.0`).
 - If no license exists, install the MIT template with a `Project Version`
   header. Only overwrite licenses when explicitly requested.
 - Regenerate `.gitignore` from global, profile, and OS fragments, then
   merge existing user entries under a preserved block.
-- Always back up overwritten or merged files as `*_old.*`, even when
-  merges succeed, and report the backups at the end of install.
+- Default runs overwrite in-place without creating `*_old.*` backups.
+  When `--backup-existing` is set, back up overwritten or merged files as
+  `*_old.*` and report the backups at the end of install.
 - Stamp `Last Updated` values using the UTC install date.
 - Support partial doc overwrites via `--docs-include` / `--docs-exclude`, so
   only selected docs are replaced when docs mode overwrites.

@@ -98,8 +98,10 @@ devcovenant install --target /path/to/repo
 
 Install is intended for new repos. Existing installs should use
 `devcovenant update` or uninstall/reinstall. On install,
-`CHANGELOG.md` and `CONTRIBUTING.md` are replaced with `_old.md`
-backups, and `devcovenant/VERSION` defaults to `0.0.1` when missing.
+`CHANGELOG.md` and `CONTRIBUTING.md` are replaced when needed. Pass
+`--backup-existing` to keep `_old.md` copies; otherwise files overwrite
+in-place. The configured version file (default `VERSION`) defaults to
+`0.0.1` when missing.
 
 Update an existing installation while preserving policy blocks and
 metadata:
@@ -159,9 +161,10 @@ devcovenant uninstall --target /path/to/repo
 The installer records `devcovenant/registry/local/manifest.json` so updates and
 removals remain safe and predictable. If the target repo has no license file,
 DevCovenant installs an MIT license by default and will not overwrite an
-existing license unless forced. When a file must be replaced, the installer
-renames the existing file to `*_old.*` before writing the new one. Managed
-docs such as `SPEC.md` and `PLAN.md` are part of the profile-driven doc asset
+existing license unless forced. When `--backup-existing` is set, the
+installer renames the existing file to `*_old.*` before writing the new one.
+Managed docs such as `SPEC.md` and `PLAN.md` are part of the profile-driven
+doc asset
 graph, so they are generated (and refreshed) alongside the other auto-managed
 documents—there is no special CLI flag to toggle them. See
 `devcovenant/README.md` for the full install/update reference.
@@ -214,7 +217,7 @@ Use `profiles.active` in `devcovenant/config.yaml` to extend file suffix
 coverage for multi-language projects.
 Set `version.override` when you want config-driven installs to emit a specific
 project version in generated assets (for example, `pyproject.toml`).
-Apply that override before any `devcovenant/VERSION` file exists.
+Apply that override before any `VERSION` file exists.
 
 The DevCovenant repository activates a dedicated `devcovrepo` profile.
 It overrides `new-modules-need-tests` metadata so the `devcovenant/**` sources

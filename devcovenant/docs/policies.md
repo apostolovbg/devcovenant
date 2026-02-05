@@ -31,8 +31,9 @@ profile_scopes:
   - global
 ```
 Profiles supply policy-specific metadata such as dependency manifest lists
-(`dependency-license-sync`) or selector scopes. Config overrides can adjust
-those values without editing the policy descriptor.
+(`dependency-license-sync`), version-sync file lists, or selector scopes.
+Config overrides can adjust those values without editing the policy
+descriptor.
 
 ## Scripts, Fixers, Adapters
 - `policy.py` implements the check.

@@ -8,8 +8,9 @@ inheritance. Custom policies stay opt-in via custom profiles/config.
 
 ## Core Profiles
 - global — Assets: managed doc descriptors, tooling scripts (.pre-commit,
-  CI workflow, devcovenant/VERSION, gitignore fragments). Policies: all core
-  global policies. Mode: static, update keeps descriptors current.
+  CI workflow, gitignore fragments). Policies: all core global policies.
+  Overlays: version-sync defaults (VERSION + core docs), doc-growth
+  defaults. Mode: static, update keeps descriptors current.
 - docs — Assets: mkdocs.yml, doc .gitignore. Policies: version-sync,
   documentation-growth-tracking, line-length-limit, last-updated-placement.
 - data — Assets: data/README.md, data/manifest.json, .gitignore. Policies:
@@ -22,7 +23,8 @@ inheritance. Custom policies stay opt-in via custom profiles/config.
   new-modules-need-tests with excludes to keep devcovenant core out.
 - devcovrepo (custom) — Assets: .gitignore placeholder. Policies: doc-growth,
   line-length, new-modules-need-tests, devcov-raw-string-escapes, managed-
-  doc-assets, readme-sync.
+  doc-assets, readme-sync. Overlays: devcovenant docs tracking,
+  devcovenant/VERSION for version-sync.
 
 ## Language / Framework Profiles
 - python — Assets: requirements.in/lock, pyproject.toml, .python-version,

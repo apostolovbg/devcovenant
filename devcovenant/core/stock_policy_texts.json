@@ -1,15 +1,19 @@
 {
   "changelog-coverage": [
-    "Every substantive change must be recorded in the changelog entry for",
-    "the",
-    "current version. This policy prevents untracked updates and keeps",
-    "release notes aligned with repository changes."
+    "Every change must be logged in a new changelog entry dated today,",
+    "under the current version, with a descriptive summary (minimum word",
+    "count configured via metadata, default 10 words) and a Files block",
+    "that lists only the touched paths for this change. Collection",
+    "prefixes (when enabled) must be logged in their own changelog;",
+    "prefixed files may not appear in the root changelog. This keeps",
+    "release notes daily, file-complete, and traceable."
   ],
   "dependency-license-sync": [
-    "Maintain the third-party license table alongside the dependency manifests",
-    "configured by the active profiles or config overrides. The policy points",
-    "reviewers to the `licenses/` directory and its `## License Report` section so",
-    "every dependency change touches both the license text and the cited manifest."
+    "Maintain the third-party license table alongside the dependency",
+    "manifests configured by the active profiles or config overrides. The",
+    "policy points reviewers to the `licenses/` directory and its",
+    "`## License Report` section so every dependency change touches both",
+    "the license text and the cited manifest."
   ],
   "devcov-parity-guard": [
     "Ensure the policy text recorded in AGENTS matches the descriptor",
@@ -35,9 +39,9 @@
     "documentation-only updates) so the gate sequence cannot be skipped."
   ],
   "docstring-and-comment-coverage": [
-    "Python modules, classes, and functions must include a docstring or a",
-    "nearby",
-    "explanatory comment. This keeps intent visible even as code evolves."
+    "Source files must include a docstring or nearby explanatory comment so",
+    "intent stays visible even as code evolves. Adapters decide how each",
+    "language satisfies the requirement."
   ],
   "documentation-growth-tracking": [
     "When user-facing files change (as defined by the user-facing selectors",
@@ -85,7 +89,8 @@
     "New or modified modules in the watched locations must have",
     "corresponding",
     "tests. Test modules (files starting with `test_`) are exempt from the",
-    "rule."
+    "rule. The `tests_watch_dirs` metadata defaults to `tests/`, keeping the",
+    "watch list aligned with typical test layouts unless overridden."
   ],
   "no-future-dates": [
     "Dates in changelogs or documentation must not be in the future. Auto-",
@@ -104,11 +109,9 @@
     "be editable, update this policy definition first."
   ],
   "security-scanner": [
-    "Scan Python files for risky constructs like `eval`, `exec`, or",
-    "`shell=True`.",
-    "Use the documented allow-comment only when a security review approves",
-    "the",
-    "exception."
+    "Scan source files for risky constructs like `eval`, `exec`, or",
+    "`shell=True`. Use the documented allow-comment only when a security",
+    "review approves the exception."
   ],
   "semantic-version-scope": [
     "When enabled, the latest changelog entry must include exactly one",
@@ -116,19 +119,16 @@
     "`major` for API-breaking releases, `minor` for backward-compatible",
     "feature",
     "work, and `patch` for bug fixes or documentation-only updates. The tag",
-    "must match the bump from the previous version, and `devcovenant/VERSION`",
-    "must be updated whenever the changelog declares a release scope. The",
-    "policy ships disabled (`apply: false`) and should only be enabled for",
-    "release processes that enforce SemVer discipline."
+    "must match the bump from the previous version, and the configured",
+    "version file must be updated whenever the changelog declares a release",
+    "scope. The policy ships disabled (`apply: false`) and should only be",
+    "enabled for release processes that enforce SemVer discipline."
   ],
   "version-sync": [
-    "All version-bearing files must match the canonical",
-    "`devcovenant/VERSION` value,",
-    "and",
-    "version bumps must move forward. Files listed under `optional_files`",
-    "are",
-    "only enforced when present (for example, SPEC/PLAN in user repos). The",
-    "policy also flags hard-coded runtime versions and ensures changelog",
-    "releases reflect the current version."
+    "All version-bearing files must match the canonical version file",
+    "(default `VERSION` or a configured override), and version bumps must",
+    "move forward. Files listed under `optional_files` are only enforced",
+    "when present. The policy also flags hard-coded runtime versions and",
+    "ensures changelog releases reflect the current version."
   ]
 }

@@ -382,7 +382,10 @@ def main(argv=None) -> None:
             )
             refresh_all_module.refresh_gitignore(target_root)
         else:
-            refresh_all_module.refresh_all(target_root)
+            refresh_all_module.refresh_all(
+                target_root,
+                backup_existing=bool(getattr(args, "backup_existing", False)),
+            )
 
 
 if __name__ == "__main__":

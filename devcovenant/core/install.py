@@ -127,6 +127,13 @@ _MANAGED_DOCS = (
 _BACKUP_ROOT: Path | None = None
 _BACKUP_LOG: list[str] = []
 _BACKUP_ORIGINALS: set[Path] = set()
+_BACKUPS_ENABLED = False
+
+
+def _set_backups_enabled(enabled: bool) -> None:
+    """Enable or disable backup file creation."""
+    global _BACKUPS_ENABLED
+    _BACKUPS_ENABLED = bool(enabled)
 
 
 def _reset_backup_state(root: Path) -> None:
@@ -1746,6 +1753,8 @@ def _copy_path(source: Path, target: Path) -> None:
 
 def _rename_existing_file(target: Path) -> Path | None:
     """Rename an existing file to preserve it before overwriting."""
+    if not _BACKUPS_ENABLED:
+        return None
     if not target.exists() or target.is_dir():
         return None
     if target in _BACKUP_ORIGINALS:
@@ -2406,6 +2415,7 @@ def main(argv=None) -> None:
         include_allow_existing=True,
     )
     args = parser.parse_args(argv)
+    _set_backups_enabled(bool(getattr(args, "backup_existing", False)))
     no_touch = bool(getattr(args, "no_touch", False))
     skip_refresh = bool(getattr(args, "skip_refresh", False))
 
@@ -2967,7 +2977,10 @@ def main(argv=None) -> None:
             )
             refresh_all_module.refresh_gitignore(target_root)
         else:
-            refresh_all_module.refresh_all(target_root)
+            refresh_all_module.refresh_all(
+                target_root,
+                backup_existing=bool(getattr(args, "backup_existing", False)),
+            )
 
     backups = _backup_log()
     if backups:

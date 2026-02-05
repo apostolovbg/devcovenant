@@ -6,6 +6,16 @@ ignore_dirs: []
 assets: []
 policy_overlays:
   documentation-growth-tracking:
+    user_facing_files:
+      - .pre-commit-config.yaml
+      - pyproject.toml
+    user_facing_globs:
+      - .github/workflows/*.yml
+      - .github/workflows/*.yaml
+    user_facing_exclude_prefixes:
+      - tests
+    user_facing_exclude_dirs:
+      - tests/**
     user_facing_suffixes:
       - .py
       - .js
@@ -27,6 +37,48 @@ policy_overlays:
       - .md
       - .rst
       - .txt
+    user_visible_files:
+      - README.md
+      - CONTRIBUTING.md
+      - AGENTS.md
+      - SPEC.md
+      - PLAN.md
+    doc_quality_files:
+      - README.md
+      - CONTRIBUTING.md
+      - AGENTS.md
+      - SPEC.md
+      - PLAN.md
+  version-sync:
+    version_file: VERSION
+    readme_files:
+      - README.md
+      - AGENTS.md
+      - CONTRIBUTING.md
+      - SPEC.md
+      - PLAN.md
+    optional_files:
+      - SPEC.md
+      - PLAN.md
+    license_files:
+      - LICENSE
+  last-updated-placement:
+    allowed_globs:
+      - README.md
+      - AGENTS.md
+      - CONTRIBUTING.md
+      - CHANGELOG.md
+      - SPEC.md
+      - PLAN.md
+  changelog-coverage:
+    summary_words_min: 10
+    required_globs:
+      - README.md
+      - AGENTS.md
+      - CONTRIBUTING.md
+      - CHANGELOG.md
+      - SPEC.md
+      - PLAN.md
 policies:
   - devcov-self-enforcement
   - devcov-structure-guard

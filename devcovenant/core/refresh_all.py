@@ -18,6 +18,7 @@ from devcovenant.core.install import (
     _load_active_profiles,
     _prune_devcovrepo_overrides,
     _render_gitignore,
+    _set_backups_enabled,
     apply_autogen_metadata_overrides,
 )
 from devcovenant.core.refresh_policies import (
@@ -110,10 +111,12 @@ def refresh_all(
     *,
     schema_path: Path | None = None,
     registry_only: bool = False,
+    backup_existing: bool = False,
 ) -> int:
     """Refresh policies, registry, and profile catalog."""
     if repo_root is None:
         repo_root = Path(__file__).resolve().parents[2]
+    _set_backups_enabled(backup_existing)
     agents_path = repo_root / "AGENTS.md"
     schema = schema_path or _schema_path(repo_root)
     if registry_only:

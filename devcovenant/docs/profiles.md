@@ -34,7 +34,9 @@ Assets are path-template pairs, rendered with a `mode` that controls how
 files are merged or replaced. Overlays apply after policy defaults so each
 profile can adjust selectors without rewriting the policy descriptor. This
 is where dependency manifests for `dependency-license-sync` should be
-declared per ecosystem.
+declared per ecosystem. Version-sync and documentation-growth defaults
+also live in profile overlays so stacks can tune their version files and
+doc surfaces.
 
 ## Examples
 ```yaml

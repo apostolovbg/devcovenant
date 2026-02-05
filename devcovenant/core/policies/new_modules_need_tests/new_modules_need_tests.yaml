@@ -2,10 +2,8 @@ id: new-modules-need-tests
 text: |
   New or modified modules in the watched locations must have corresponding
   tests. Test modules (files starting with `test_`) are exempt from the rule.
-
-  The `tests_watch_dirs` metadata keeps `tests/` as the default watch list,
-  so the policy covers `tests/devcovenant/core/profiles/` and the
-  `tests/devcovenant/custom/profiles/` suites that mirror the package layout.
+  The `tests_watch_dirs` metadata defaults to `tests/`, keeping the watch
+  list aligned with typical test layouts unless overridden.
 metadata:
   id: new-modules-need-tests
   status: active
@@ -26,15 +24,13 @@ metadata:
     - java
     - csharp
   include_suffixes: []
-  include_prefixes: devcovenant
+  include_prefixes: []
   exclude_prefixes:
     - build
     - dist
     - node_modules
     - tests
-    - devcovenant/core/profiles
-  exclude_globs:
-    - devcovenant/core/profiles/**
+  exclude_globs: []
   watch_dirs: tests
   tests_watch_dirs: tests
   include_globs: []

@@ -5,6 +5,7 @@ Routes each changed file to the proper changelog based on the metadata-defined
 `main_changelog`, `skipped_files` and `collections` options.
 """
 
+import fnmatch
 import re
 import subprocess
 from datetime import date
@@ -103,7 +104,6 @@ def _first_entry(section: str) -> tuple[str | None, str]:
 
 
 _DATE_PATTERN = re.compile(r"^\s*-\s*(\d{4}-\d{2}-\d{2})\b")
-_SUMMARY_WORDS_MIN = 3
 
 
 def _extract_entry_summary(entry_text: str) -> str:
@@ -118,10 +118,38 @@ def _extract_entry_summary(entry_text: str) -> str:
     return ""
 
 
-def _summary_is_descriptive(summary: str) -> bool:
+def _summary_is_descriptive(summary: str, minimum_words: int) -> bool:
     """Return True when the summary looks like a real description."""
     words = re.findall(r"[A-Za-z]{2,}", summary)
-    return len(words) >= _SUMMARY_WORDS_MIN
+    return len(words) >= minimum_words
+
+
+def _normalize_globs(raw_value: object) -> list[str]:
+    """Normalize a metadata glob value into a list."""
+    if raw_value is None:
+        return []
+    if isinstance(raw_value, str):
+        return [entry.strip() for entry in raw_value.split(",") if entry]
+    if isinstance(raw_value, list):
+        return [
+            str(entry).strip() for entry in raw_value if str(entry).strip()
+        ]
+    return [str(raw_value).strip()]
+
+
+def _parse_min_words(raw_value: object, default: int) -> int:
+    """Parse the minimum summary word count."""
+    if raw_value is None:
+        return default
+    try:
+        if isinstance(raw_value, list):
+            if not raw_value:
+                return default
+            raw_value = raw_value[0]
+        parsed_value = int(str(raw_value).strip())
+        return parsed_value if parsed_value > 0 else default
+    except (TypeError, ValueError):
+        return default
 
 
 def _extract_entry_files(entry_text: str) -> list[str]:
@@ -222,6 +250,10 @@ class ChangelogCoverageCheck(PolicyCheck):
                 if str(entry).strip()
             ]
         skip_prefixes = [entry.rstrip("/") for entry in skip_prefixes if entry]
+        skip_globs = _normalize_globs(self.get_option("skipped_globs", []))
+        summary_words_min = _parse_min_words(
+            self.get_option("summary_words_min"), default=10
+        )
 
         collections = self._resolve_collections(
             self.get_option(
@@ -256,6 +288,10 @@ class ChangelogCoverageCheck(PolicyCheck):
             if any(
                 file_path == prefix or file_path.startswith(f"{prefix}/")
                 for prefix in skip_prefixes
+            ):
+                continue
+            if skip_globs and any(
+                fnmatch.fnmatch(file_path, pattern) for pattern in skip_globs
             ):
                 continue
             assigned = False
@@ -349,7 +385,7 @@ class ChangelogCoverageCheck(PolicyCheck):
                         )
                     )
                 summary = _extract_entry_summary(first_entry)
-                if not _summary_is_descriptive(summary):
+                if not _summary_is_descriptive(summary, summary_words_min):
                     violations.append(
                         Violation(
                             policy_id=self.policy_id,
@@ -357,7 +393,8 @@ class ChangelogCoverageCheck(PolicyCheck):
                             file_path=root_changelog,
                             message=(
                                 "Provide a descriptive summary for the latest "
-                                "changelog entry (at least three words)."
+                                "changelog entry (at least "
+                                f"{summary_words_min} words)."
                             ),
                             suggestion=(
                                 "Update the latest entry summary so it "
@@ -517,7 +554,7 @@ class ChangelogCoverageCheck(PolicyCheck):
                             )
                         )
                     summary = _extract_entry_summary(entry_text)
-                    if not _summary_is_descriptive(summary):
+                    if not _summary_is_descriptive(summary, summary_words_min):
                         violations.append(
                             Violation(
                                 policy_id=self.policy_id,
@@ -526,7 +563,8 @@ class ChangelogCoverageCheck(PolicyCheck):
                                 message=(
                                     "Provide a descriptive summary for the "
                                     f"latest {prefix_label} changelog entry "
-                                    "(at least three words)."
+                                    "(at least "
+                                    f"{summary_words_min} words)."
                                 ),
                                 suggestion=(
                                     "Update the latest entry summary so it "

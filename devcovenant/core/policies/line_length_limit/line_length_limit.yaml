@@ -50,8 +50,6 @@ metadata:
     - dist
     - node_modules
   exclude_globs:
-    - devcovenant/core/profiles/global/assets/*.yaml
-    - devcovenant/core/stock_policy_texts.json
     - build/**
     - dist/**
     - node_modules/**
