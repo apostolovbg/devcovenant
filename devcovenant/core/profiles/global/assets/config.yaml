@@ -107,8 +107,7 @@ reporting:
   audit_trail: true
   use_colors: true
 
-autogen_disable: []
-manual_force_enable: []
+policy_state: {}
 freeze_core_policies: []
 policy_overrides: {}
 

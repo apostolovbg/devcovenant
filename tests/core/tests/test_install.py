@@ -4,6 +4,8 @@ import re
 import shutil
 from pathlib import Path
 
+import yaml
+
 from devcovenant.core import deploy, install
 from devcovenant.core import manifest as manifest_module
 from devcovenant.core import update, upgrade
@@ -101,6 +103,34 @@ def test_update_core_config_text_toggles_include_flag() -> None:
     )
     assert changed_again
     assert "devcov_core_include: false" in updated_again
+
+
+def test_apply_profile_policy_state_does_not_migrate_legacy_keys(
+    tmp_path: Path,
+) -> None:
+    """Legacy activation keys are removed without changing policy_state."""
+    config_dir = tmp_path / "devcovenant"
+    config_dir.mkdir(parents=True)
+    config_path = config_dir / "config.yaml"
+    config_path.write_text(
+        (
+            "policy_state:\n"
+            "  managed-environment: false\n"
+            "autogen_disable:\n"
+            "  - raw-string-escapes\n"
+            "manual_force_enable:\n"
+            "  - managed-environment\n"
+        ),
+        encoding="utf-8",
+    )
+
+    changed = install._apply_profile_policy_state(tmp_path, {})
+
+    assert changed
+    payload = yaml.safe_load(config_path.read_text(encoding="utf-8")) or {}
+    assert payload.get("policy_state") == {"managed-environment": False}
+    assert "autogen_disable" not in payload
+    assert "manual_force_enable" not in payload
 
 
 def test_install_preserves_readme_content(tmp_path: Path) -> None:

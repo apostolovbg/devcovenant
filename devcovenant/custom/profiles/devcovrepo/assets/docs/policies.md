@@ -10,8 +10,8 @@
 ## Overview
 Policies are the enforcement units in DevCovenant. Each policy has a YAML
 descriptor that documents its purpose and metadata, plus a script that
-implements the check. Policies are activated only when a profile lists
-them.
+implements the check. Policies are activated by config `policy_state`,
+while profiles provide metadata overlays.
 
 ## Workflow
 1. Edit the policy descriptor to update metadata and prose.
@@ -27,8 +27,6 @@ id: changelog-coverage
 severity: error
 auto_fix: false
 enabled: true
-profile_scopes:
-  - global
 ```
 Profiles supply policy-specific metadata such as dependency manifest lists
 (`dependency-license-sync`), version-sync file lists, or selector scopes.

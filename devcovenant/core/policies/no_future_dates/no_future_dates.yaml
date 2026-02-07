@@ -7,4 +7,3 @@ metadata:
   severity: error
   auto_fix: 'true'
   enforcement: active
-  profile_scopes: global

@@ -34,6 +34,140 @@ Example entry:
 ## Version 0.2.6
 
 - 2026-02-07:
+  Change: Removed legacy policy override fallback behavior and legacy
+  activation migration paths.
+  Why: Clarified config-driven activation so `policy_state` remains the
+  single authoritative enable/disable control.
+  Impact: Added regression tests and clarified runtime registry state wording
+  in the specification.
+  Files:
+  .gitignore_old
+  PLAN.md
+  POLICY_MAP.md
+  PROFILE_MAP.md
+  SPEC.md
+  devcovenant/.gitignore
+  devcovenant/config.yaml
+  devcovenant/core/base.py
+  devcovenant/core/engine.py
+  devcovenant/core/install.py
+  devcovenant/core/policies/changelog_coverage/changelog_coverage.yaml
+  devcovenant/core/policies/dependency_license_sync/\
+    dependency_license_sync.yaml
+  devcovenant/core/policies/devcov_integrity_guard/devcov_integrity_guard.yaml
+  devcovenant/core/policies/devcov_structure_guard/devcov_structure_guard.yaml
+  devcovenant/core/policies/devflow_run_gates/devflow_run_gates.yaml
+  devcovenant/core/policies/docstring_and_comment_coverage/\
+    docstring_and_comment_coverage.yaml
+  devcovenant/core/policies/documentation_growth_tracking/\
+    documentation_growth_tracking.yaml
+  devcovenant/core/policies/last_updated_placement/last_updated_placement.yaml
+  devcovenant/core/policies/line_length_limit/line_length_limit.yaml
+  devcovenant/core/policies/managed_environment/managed_environment.yaml
+  devcovenant/core/policies/name_clarity/name_clarity.yaml
+  devcovenant/core/policies/new_modules_need_tests/new_modules_need_tests.yaml
+  devcovenant/core/policies/no_future_dates/no_future_dates.yaml
+  devcovenant/core/policies/raw_string_escapes/raw_string_escapes.yaml
+  devcovenant/core/policies/read_only_directories/read_only_directories.yaml
+  devcovenant/core/policies/security_scanner/security_scanner.yaml
+  devcovenant/core/policies/semantic_version_scope/semantic_version_scope.yaml
+  devcovenant/core/policies/version_sync/version_sync.yaml
+  devcovenant/core/profiles/README.md
+  devcovenant/core/profiles/devcovuser/devcovuser.yaml
+  devcovenant/core/profiles/flutter/assets/pubspec.lock
+  devcovenant/core/profiles/global/assets/config.yaml
+  devcovenant/core/profiles/global/global.yaml
+  devcovenant/core/profiles/python/python.yaml
+  devcovenant/core/refresh_policies.py
+  devcovenant/custom/policies/devcov_raw_string_escapes/\
+    devcov_raw_string_escapes.yaml
+  devcovenant/custom/policies/managed_doc_assets/managed_doc_assets.yaml
+  devcovenant/custom/policies/readme_sync/readme_sync.yaml
+  devcovenant/custom/profiles/devcovrepo/assets/.gitignore
+  devcovenant/custom/profiles/devcovrepo/assets/docs/config.md
+  devcovenant/custom/profiles/devcovrepo/assets/docs/policies.md
+  devcovenant/custom/profiles/devcovrepo/devcovrepo.yaml
+  devcovenant/docs/config.md
+  devcovenant/docs/policies.md
+  devcovenant/registry/local/manifest.json
+  devcovenant/registry/local/policy_registry.yaml
+  devcovenant/registry/local/profile_registry.yaml
+  devcovenant/registry/local/test_status.json
+  tests/core/policies/devcov_integrity_guard/tests/\
+    test_devcov_integrity_guard.py
+  tests/core/policies/devflow_run_gates/tests/test_devflow_run_gates.py
+  tests/core/policies/line_length_limit/tests/test_line_length_limit.py
+  tests/core/profiles/test_profiles.py
+  tests/core/tests/test_base.py
+  tests/core/tests/test_install.py
+  tests/core/tests/test_refresh_policies.py
+
+- 2026-02-07:
+  Change: Refactored policy activation to use policy_state and removed
+  profile-scope metadata keys.
+  Why: Streamlined activation rules so config controls policy enablement
+  uniformly for core and custom policies.
+  Impact: Updated runtime, install, docs, and tests to keep activation and
+  overlays consistent.
+  Files:
+  PLAN.md
+  POLICY_MAP.md
+  PROFILE_MAP.md
+  .gitignore_old
+  devcovenant/config.yaml
+  devcovenant/.gitignore
+  devcovenant/core/engine.py
+  devcovenant/core/install.py
+  devcovenant/core/policies/changelog_coverage/changelog_coverage.yaml
+  devcovenant/core/policies/dependency_license_sync/\
+    dependency_license_sync.yaml
+  devcovenant/core/policies/devcov_integrity_guard/\
+    devcov_integrity_guard.yaml
+  devcovenant/core/policies/devcov_structure_guard/devcov_structure_guard.yaml
+  devcovenant/core/policies/devflow_run_gates/devflow_run_gates.yaml
+  devcovenant/core/policies/docstring_and_comment_coverage/\
+    docstring_and_comment_coverage.yaml
+  devcovenant/core/policies/documentation_growth_tracking/\
+    documentation_growth_tracking.yaml
+  devcovenant/core/policies/last_updated_placement/last_updated_placement.yaml
+  devcovenant/core/policies/line_length_limit/line_length_limit.yaml
+  devcovenant/core/policies/managed_environment/managed_environment.yaml
+  devcovenant/core/policies/name_clarity/name_clarity.yaml
+  devcovenant/core/policies/new_modules_need_tests/new_modules_need_tests.yaml
+  devcovenant/core/policies/no_future_dates/no_future_dates.yaml
+  devcovenant/core/policies/raw_string_escapes/raw_string_escapes.yaml
+  devcovenant/core/policies/read_only_directories/read_only_directories.yaml
+  devcovenant/core/policies/security_scanner/security_scanner.yaml
+  devcovenant/core/policies/semantic_version_scope/semantic_version_scope.yaml
+  devcovenant/core/policies/version_sync/version_sync.yaml
+  devcovenant/core/profiles/README.md
+  devcovenant/core/profiles/global/assets/config.yaml
+  devcovenant/core/profiles/devcovuser/devcovuser.yaml
+  devcovenant/core/profiles/flutter/assets/pubspec.lock
+  devcovenant/core/profiles/global/global.yaml
+  devcovenant/core/profiles/python/python.yaml
+  devcovenant/core/refresh_policies.py
+  devcovenant/custom/policies/devcov_raw_string_escapes/\
+    devcov_raw_string_escapes.yaml
+  devcovenant/custom/policies/managed_doc_assets/managed_doc_assets.yaml
+  devcovenant/custom/policies/readme_sync/readme_sync.yaml
+  devcovenant/custom/profiles/devcovrepo/assets/.gitignore
+  devcovenant/custom/profiles/devcovrepo/assets/docs/config.md
+  devcovenant/custom/profiles/devcovrepo/assets/docs/policies.md
+  devcovenant/custom/profiles/devcovrepo/devcovrepo.yaml
+  devcovenant/docs/config.md
+  devcovenant/docs/policies.md
+  devcovenant/registry/local/manifest.json
+  devcovenant/registry/local/policy_registry.yaml
+  devcovenant/registry/local/profile_registry.yaml
+  devcovenant/registry/local/test_status.json
+  SPEC.md
+  tests/core/policies/devcov_integrity_guard/tests/\
+    test_devcov_integrity_guard.py
+  tests/core/profiles/test_profiles.py
+  tests/core/tests/test_refresh_policies.py
+
+- 2026-02-07:
   Change: Updated PLAN and SPEC to keep activation migration tasks explicit.
   Why: Clarified immediate scope-removal work so implementation order stays
   aligned.

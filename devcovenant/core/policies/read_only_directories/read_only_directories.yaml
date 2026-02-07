@@ -7,7 +7,6 @@ metadata:
   severity: error
   auto_fix: 'false'
   enforcement: active
-  profile_scopes: global
   include_globs: __none__
   include_suffixes: []
   include_prefixes: []

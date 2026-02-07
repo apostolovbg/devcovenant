@@ -31,7 +31,6 @@ _COMMON_KEYS = [
     "enabled",
     "custom",
     "freeze",
-    "profile_scopes",
 ]
 
 _COMMON_DEFAULTS: Dict[str, List[str]] = {
@@ -41,7 +40,6 @@ _COMMON_DEFAULTS: Dict[str, List[str]] = {
     "enabled": ["true"],
     "custom": ["false"],
     "freeze": ["false"],
-    "profile_scopes": ["global"],
     "status": ["active"],
 }
 
@@ -148,8 +146,7 @@ def metadata_value_list(raw_value: object) -> List[str]:
 class PolicyControl:
     """Config-driven policy control flags."""
 
-    autogen_disable: set[str]
-    manual_force_enable: set[str]
+    policy_state: Dict[str, bool]
     freeze_core: set[str]
 
 
@@ -299,19 +296,15 @@ def _load_metadata_overrides(
 
 def _collect_profile_overlays(
     repo_root: Path, active_profiles: List[str]
-) -> Tuple[Dict[str, Dict[str, Tuple[List[str], bool]]], set[str]]:
-    """Collect policy overlays and disable lists from the profile registry."""
+) -> Dict[str, Dict[str, Tuple[List[str], bool]]]:
+    """Collect policy overlays from the profile registry."""
 
     registry = profiles.discover_profiles(repo_root)
     overlays: Dict[str, Dict[str, Tuple[List[str], bool]]] = {}
-    disabled: set[str] = set()
     for profile in active_profiles:
         meta = registry.get(profile)
         if not isinstance(meta, dict):
             continue
-        raw_disable = meta.get("autogen_disable")
-        if raw_disable not in (None, "__none__"):
-            disabled |= _normalize_policy_list(raw_disable)
         raw_overlays = meta.get("policy_overlays") or {}
         if raw_overlays == "__none__" or not isinstance(raw_overlays, dict):
             continue
@@ -334,21 +327,35 @@ def _collect_profile_overlays(
                     policy_map[key_name] = (merged, True)
                 else:
                     policy_map[key_name] = (list(values), False)
-    return overlays, disabled
+    return overlays
 
 
-def load_policy_control_config(
-    payload: Dict[str, object], profile_disabled: set[str]
-) -> PolicyControl:
+def _normalize_policy_state(raw_value: object) -> Dict[str, bool]:
+    """Normalize policy_state config into a boolean map."""
+    if not isinstance(raw_value, dict):
+        return {}
+    normalized: Dict[str, bool] = {}
+    for policy_id, enabled_value in raw_value.items():
+        key = str(policy_id or "").strip()
+        if not key:
+            continue
+        if isinstance(enabled_value, bool):
+            normalized[key] = enabled_value
+            continue
+        token = str(enabled_value).strip().lower()
+        if token in {"true", "1", "yes", "y", "on"}:
+            normalized[key] = True
+        elif token in {"false", "0", "no", "n", "off"}:
+            normalized[key] = False
+    return normalized
+
+
+def load_policy_control_config(payload: Dict[str, object]) -> PolicyControl:
     """Load enabled/freeze control values for policies."""
 
-    autogen_disable = _normalize_policy_list(payload.get("autogen_disable"))
-    autogen_disable |= profile_disabled
-    manual_force_enable = _normalize_policy_list(
-        payload.get("manual_force_enable")
-    )
+    policy_state = _normalize_policy_state(payload.get("policy_state"))
     freeze_core = _normalize_policy_list(payload.get("freeze_core_policies"))
-    return PolicyControl(autogen_disable, manual_force_enable, freeze_core)
+    return PolicyControl(policy_state, freeze_core)
 
 
 def build_metadata_context(repo_root: Path) -> MetadataContext:
@@ -356,11 +363,9 @@ def build_metadata_context(repo_root: Path) -> MetadataContext:
 
     payload = _load_config_payload(repo_root)
     active_profiles = _load_active_profiles(payload)
-    profile_overlays, profile_disabled = _collect_profile_overlays(
-        repo_root, active_profiles
-    )
+    profile_overlays = _collect_profile_overlays(repo_root, active_profiles)
     autogen_overrides, user_overrides = _load_metadata_overrides(payload)
-    control = load_policy_control_config(payload, profile_disabled)
+    control = load_policy_control_config(payload)
     template_defaults = _load_template_metadata(
         _template_agents_path(repo_root)
     )
@@ -396,13 +401,11 @@ def apply_policy_control(
 ) -> Tuple[List[str], Dict[str, List[str]]]:
     """Apply enabled/force/freeze controls to metadata values."""
 
-    if policy_id in control.autogen_disable:
+    if policy_id in control.policy_state:
         _ensure_metadata_key(order, values, "enabled")
-        values["enabled"] = ["false"]
-
-    if policy_id in control.manual_force_enable:
-        _ensure_metadata_key(order, values, "enabled")
-        values["enabled"] = ["true"]
+        values["enabled"] = [
+            "true" if control.policy_state[policy_id] else "false"
+        ]
 
     if policy_id in control.freeze_core and core_available:
         custom_flag = (

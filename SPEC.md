@@ -47,7 +47,7 @@ hashes synchronized so drift is detectable and reversible.
 - Run a startup check at session start (`python3 -m devcovenant check --mode
   startup`).
 - When policy text changes, update scripts/tests and run
-  `devcovenant update-policy-registry` so hashes stay aligned.
+  `devcovenant refresh_registry` so hashes stay aligned.
 - Log every change in `CHANGELOG.md` under the current version header.
 
 ## Functional Requirements
@@ -56,7 +56,11 @@ hashes synchronized so drift is detectable and reversible.
   follows each `policy-def` block.
 - Hash policy definitions and scripts into
   `devcovenant/registry/local/policy_registry.yaml`.
-- Expose `restore-stock-text` to reset policy prose to canonical wording.
+- Treat policy descriptor `text` fields as the canonical policy prose source.
+- Remove legacy stock-text restore infrastructure (`stock_policy_texts.*` and
+  `restore-stock-text`) now that policy text is descriptor-driven.
+- `refresh-policies` must fail when descriptor policy text is missing; no
+  stock-text fallback is allowed.
 - Support `custom: true/false` metadata to mark custom policy prose that
   bypasses stock text sync checks.
 - Provide an optional semantic-version-scope policy (disabled by default in
@@ -98,9 +102,8 @@ hashes synchronized so drift is detectable and reversible.
   once as the fallback when the CLI is not on PATH.
 - Documentation should use `python3` (not `python`) for all source-based
   workflows and command examples.
-- Supported commands: `check`, `test`, `update-policy-registry`,
-  `restore-stock-text`, `install`, `deploy`, `update`, `upgrade`,
-  `refresh`, `undeploy`, and `uninstall`.
+- Supported commands: `check`, `test`, `refresh_registry`, `install`,
+  `deploy`, `update`, `upgrade`, `refresh`, `undeploy`, and `uninstall`.
 - `check` runs in two modes:
   - `audit` (default): no auto-fixes; exits non-zero on blocking violations or
     sync issues.
@@ -178,15 +181,22 @@ hashes synchronized so drift is detectable and reversible.
 ### Command/script placement
 - User-facing, runnable commands live at the `devcovenant/` root and are
   exposed through the CLI (and callable via `python3 -m devcovenant`).
+- File-path command usage is a supported interface and must continue to work
+  (`python3 devcovenant/run_pre_commit.py ...` and
+  `python3 devcovenant/run_tests.py`).
 - Implementation logic lives under `devcovenant/core/` as internal modules.
 - `devcovenant/core/tools/` is not a public entrypoint surface; any helper
   meant for users must have a CLI command and a top-level module.
+- CLI-exposed modules at the package root are real implementations, not
+  forwarding wrappers.
+- Avoid duplicate same-name command modules across `devcovenant/` and
+  `devcovenant/core/`.
 - CLI-exposed command modules include (non-exhaustive): `check.py`,
   `sync.py`, `test.py`, `install.py`, `deploy.py`, `update.py`, `upgrade.py`,
   `refresh.py`, `uninstall.py`, `undeploy.py`, `refresh_all.py`,
-  `refresh_policies.py`, `update_policy_registry.py`, `update_lock.py`,
-  `update_test_status.py`, `run_pre_commit.py`, `run_tests.py`, and
-  `restore_stock_text.py`. `run_tests.py` executes the merged
+  `refresh_policies.py`, `refresh_registry.py`, `update_lock.py`,
+  `update_test_status.py`, `run_pre_commit.py`, and `run_tests.py`.
+  `run_tests.py` executes the merged
   `devflow-run-gates.required_commands` list resolved from profiles and
   config (defaults remain pytest + unittest) and records the exact command
   string to `update_test_status`. The corresponding implementations live under
@@ -329,8 +339,8 @@ hashes synchronized so drift is detectable and reversible.
 ## Policy Requirements
 - Every policy definition includes descriptive prose immediately after the
   metadata block.
-- Built-in policies have canonical text stored in
-  `devcovenant/registry/global/stock_policy_texts.yaml`.
+- Built-in policy prose is canonical in descriptor YAML `text` fields
+  (`devcovenant/core/policies/<policy>/<policy>.yaml`).
 - Policies are activated only by config (`policy_state`), not by policy/profile
   scopes. `AGENTS.md` still lists every policy (core + custom); the resolved
   `enabled` flag reflects config state.
@@ -393,7 +403,7 @@ its own assets, suffixes, policies, and overlays.
   During updates, replaced policies move to custom and are marked deprecated
   when enabled; disabled policies are removed along with their custom scripts
   and fixers.
-- Record update notices (replacements and new stock policies) in
+- Record update notices (replacements and new policies) in
   `devcovenant/registry/local/manifest.json` and print them to stdout.
 - Treat the collective `<!-- DEVCOV-POLICIES:BEGIN -->` /
   `<!-- DEVCOV-POLICIES:END -->` block as a managed unit that install/update
@@ -402,12 +412,12 @@ its own assets, suffixes, policies, and overlays.
   override that copies the policy’s modules, descriptors, and assets into
   `devcovenant/custom/` (with `custom: true`) when true and removes those files
   when the flag clears.
-  Always rerun `devcovenant update-policy-registry` (and any needed registry
+  Always rerun `devcovenant refresh_registry` (and any needed registry
   fixes) so the registry records the custom copy. Auto-fixers should be devised
   for every policy and wired through the per-policy adapters.
   They work across every language/profile combination that the policy supports.
 - Generate `devcovenant/registry/local/policy_registry.yaml` dynamically from
-  `refresh_policies` and `update_policy_registry`. The registry is a derived
+  `refresh_policies` and `refresh_registry`. The registry is a derived
   cache that mirrors AGENTS: it stores hashes, script paths, assets, and the
   resolved metadata map for every policy (enabled or disabled). It does not
   carry a separate schema/handles/values layer.
@@ -446,7 +456,7 @@ its own assets, suffixes, policies, and overlays.
   runtime use.
 - When DevCovenant removes a core policy, the updater copies it to
   `devcovenant/custom/policies/` (or a frozen overlay defined in config),
-  marks the new copy as `custom`, and reruns `update-policy-registry` so the
+  marks the new copy as `custom`, and reruns `refresh_registry` so the
   management docs, notices, and registry reflect the deprecated version.
 - `config.yaml` exposes:
   - `policy_state`: policy ID → `true|false` activation map (authoritative).

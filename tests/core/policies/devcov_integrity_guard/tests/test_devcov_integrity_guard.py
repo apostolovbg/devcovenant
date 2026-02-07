@@ -56,7 +56,7 @@ def _write_descriptor(repo_root: Path, text_value: str) -> None:
     payload = {
         "id": "demo-policy",
         "text": text_value,
-        "metadata": {"id": "demo-policy", "profile_scopes": ["global"]},
+        "metadata": {"id": "demo-policy"},
     }
     _write(
         descriptor_path,

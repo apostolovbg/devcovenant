@@ -110,7 +110,7 @@ def test_configurable_suffixes_and_threshold():
             repo_root=temp_dir,
             all_files=[notes],
             config={
-                "policies": {
+                "user_metadata_overrides": {
                     "line-length-limit": {
                         "max_length": 10,
                         "include_suffixes": [".txt"],
@@ -142,7 +142,7 @@ def test_custom_skip_prefix():
             repo_root=temp_dir,
             all_files=[target],
             config={
-                "policies": {
+                "user_metadata_overrides": {
                     "line-length-limit": {
                         "include_suffixes": [".md"],
                         "exclude_prefixes": ["docs/generated"],

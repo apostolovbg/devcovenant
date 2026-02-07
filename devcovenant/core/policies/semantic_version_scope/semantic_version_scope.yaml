@@ -13,7 +13,6 @@ metadata:
   severity: error
   auto_fix: 'false'
   enforcement: active
-  profile_scopes: global
   version_file: VERSION
   changelog_file: CHANGELOG.md
   ignored_prefixes: []

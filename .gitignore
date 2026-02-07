@@ -46,8 +46,6 @@ data/cache
 # Profile: devcovrepo
 # DevCovenant repo-specific ignores
 # Keep this fragment minimal; config.yaml stays tracked.
-!devcovenant/registry/local/
-!devcovenant/registry/local/**
 
 # Profile: docs
 # DevCovenant profile ignores

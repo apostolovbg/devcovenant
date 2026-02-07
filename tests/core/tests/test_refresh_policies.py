@@ -53,7 +53,6 @@ def _policy_block(policy_id: str, name: str, custom: bool = False) -> str:
         "enforcement: active\n"
         "enabled: true\n"
         f"custom: {'true' if custom else 'false'}\n"
-        "profile_scopes: global\n"
         "```\n\n"
         f"{name} description.\n"
     )

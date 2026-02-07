@@ -8,5 +8,3 @@ metadata:
   severity: warning
   auto_fix: 'false'
   enforcement: active
-  profile_scopes:
-    - devcovrepo

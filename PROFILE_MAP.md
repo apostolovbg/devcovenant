@@ -96,5 +96,5 @@ inheritance. Custom policies stay opt-in via custom profiles/config.
 - All .gitignore assets use merge mode to preserve user entries.
 - Assets listed above are required for profile completeness; updates must keep
   modes (replace/merge) consistent with policy needs.
-- Profiles listed under a policy’s profile_scopes MUST list that policy
-  unless explicitly excluded via config overrides.
+- Profiles SHOULD list every policy they overlay in `policies:`. Runtime
+  activation is controlled by config `policy_state`.

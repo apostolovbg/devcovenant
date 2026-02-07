@@ -1,4 +1,2 @@
 # DevCovenant repo-specific ignores
 # Keep this fragment minimal; config.yaml stays tracked.
-!devcovenant/registry/local/
-!devcovenant/registry/local/**

@@ -12,7 +12,6 @@ metadata:
   auto_fix: 'false'
   enforcement: active
   enabled: 'false'
-  profile_scopes: global
   expected_paths: []
   expected_interpreters: []
   required_commands: []

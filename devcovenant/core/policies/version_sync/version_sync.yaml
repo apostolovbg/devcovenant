@@ -10,30 +10,6 @@ metadata:
   severity: error
   auto_fix: 'false'
   enforcement: active
-  profile_scopes:
-    - global
-    - docs
-    - data
-    - suffixes
-    - python
-    - javascript
-    - typescript
-    - java
-    - csharp
-    - php
-    - ruby
-    - go
-    - rust
-    - swift
-    - dart
-    - flutter
-    - terraform
-    - docker
-    - kubernetes
-    - sql
-    - fastapi
-    - frappe
-    - objective-c
   version_file: VERSION
   readme_files: []
   optional_files: []

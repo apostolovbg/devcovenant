@@ -8,10 +8,6 @@ metadata:
   severity: error
   auto_fix: 'true'
   enforcement: active
-  profile_scopes:
-    - global
-    - docs
-    - data
   include_suffixes: .md
   allowed_globs:
     - '>'

@@ -8,14 +8,6 @@ metadata:
   severity: warning
   auto_fix: 'false'
   enforcement: active
-  profile_scopes:
-    - python
-    - javascript
-    - typescript
-    - go
-    - rust
-    - java
-    - csharp
   exclude_prefixes:
     - build
     - dist

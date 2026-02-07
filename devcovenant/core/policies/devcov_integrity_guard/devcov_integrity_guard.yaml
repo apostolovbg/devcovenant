@@ -8,7 +8,6 @@ metadata:
   severity: error
   auto_fix: 'false'
   enforcement: active
-  profile_scopes: global
   policy_definitions: AGENTS.md
   registry_file: devcovenant/registry/local/policy_registry.yaml
   test_status_file: devcovenant/registry/local/test_status.json

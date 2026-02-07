@@ -19,9 +19,9 @@ javascript, typescript, java, go, rust, php, ruby, csharp, sql, docker,
 terraform, kubernetes, fastapi, frappe, dart, flutter, swift, objective-c.
 
 ## Activation rules
-A policy runs for a profile when the profile lists it under `policies:`.
-Policy `profile_scopes` document intent but do not auto-activate. Overlays
-supply per-profile settings (suffixes, required commands, dependency files).
+A policy is activated by config `policy_state`. Profiles provide policy
+metadata overlays and assets (suffixes, required commands, dependency files)
+without directly toggling policy activation.
 
 ## Workflow expectations
 Managed docs and policies are kept in sync via `devcovenant/run_pre_commit.py`

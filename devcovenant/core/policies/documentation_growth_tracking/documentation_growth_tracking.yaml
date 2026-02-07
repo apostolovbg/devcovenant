@@ -12,29 +12,6 @@ metadata:
   severity: info
   auto_fix: 'false'
   enforcement: active
-  profile_scopes:
-    - global
-    - docs
-    - data
-    - python
-    - javascript
-    - typescript
-    - go
-    - rust
-    - java
-    - csharp
-    - php
-    - ruby
-    - swift
-    - dart
-    - terraform
-    - docker
-    - kubernetes
-    - sql
-    - fastapi
-    - frappe
-    - flutter
-    - objective-c
   selector_roles:
     - user_facing
     - user_visible

@@ -16,22 +16,6 @@ metadata:
   severity: error
   auto_fix: 'true'
   enforcement: active
-  profile_scopes:
-    - python
-    - javascript
-    - typescript
-    - java
-    - csharp
-    - php
-    - ruby
-    - go
-    - rust
-    - swift
-    - dart
-    - flutter
-    - fastapi
-    - frappe
-    - objective-c
   dependency_files: []
   third_party_file: THIRD_PARTY_LICENSES.md
   licenses_dir: licenses

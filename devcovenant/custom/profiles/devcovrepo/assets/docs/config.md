@@ -13,7 +13,7 @@ and install/update knobs. The file is tracked in the repo so CI and other
 contributors use the same enforcement settings. Generated registry files
 can be rebuilt, but config stays under version control.
 When the file is missing, DevCovenant seeds a generic stub from the
-`devcovuser` profile asset and marks it as generic until reviewed.
+`global` profile asset and marks it as generic until reviewed.
 
 ## Workflow
 1. Choose profiles that match the repo tech stack.
@@ -28,8 +28,7 @@ The core sections are:
 - `doc_assets` for autogen vs. user-managed doc lists.
 - `autogen_metadata_overrides` for profile-derived metadata overlays.
 - `user_metadata_overrides` for per-policy overrides applied last.
-- `autogen_disable` to disable a policy by default.
-- `manual_force_enable` to force a policy on.
+- `policy_state` for authoritative policy on/off activation.
 - `freeze_core_policies` to copy policy logic into custom overlays.
 - `pre_commit` for `.pre-commit-config.yaml` enablement and overrides.
 - `install.generic_config` to guard deploys until the config is reviewed.

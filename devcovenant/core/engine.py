@@ -38,7 +38,6 @@ class DevCovenantEngine:
         "updated",
         "enabled",
         "custom",
-        "profile_scopes",
         "hash",
         "enforcement",
     }
@@ -169,26 +168,6 @@ class DevCovenantEngine:
                 continue
             normalized.append(normalized_value)
         return sorted(set(normalized))
-
-    def _policy_applies_to_profiles(self, policy: PolicyDefinition) -> bool:
-        """Return True when a policy applies to active profiles."""
-        raw_scopes = policy.raw_metadata.get("profile_scopes", "")
-        if raw_scopes:
-            parsed = self._parse_metadata_value(raw_scopes)
-            if isinstance(parsed, list):
-                scopes = [str(item).strip().lower() for item in parsed if item]
-            else:
-                text = str(parsed or "").strip().lower()
-                scopes = [text] if text else []
-        else:
-            scopes = []
-        if not scopes:
-            scopes = ["global"]
-        if "global" in scopes:
-            return True
-        if not self._active_profiles:
-            return False
-        return any(profile in scopes for profile in self._active_profiles)
 
     def _discover_custom_policy_overrides(self) -> set[str]:
         """Return policy ids overridden by custom policy scripts."""
@@ -418,8 +397,6 @@ class DevCovenantEngine:
 
         for policy in policies:
             if not policy.enabled:
-                continue
-            if not self._policy_applies_to_profiles(policy):
                 continue
             if policy.status == "fiducial":
                 violations.append(

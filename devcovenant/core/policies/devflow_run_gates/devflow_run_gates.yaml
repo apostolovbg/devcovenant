@@ -10,32 +10,6 @@ metadata:
   severity: error
   auto_fix: 'false'
   enforcement: active
-  profile_scopes:
-    - global
-    - python
-    - javascript
-    - typescript
-    - java
-    - kotlin
-    - scala
-    - groovy
-    - dotnet
-    - csharp
-    - fsharp
-    - php
-    - ruby
-    - go
-    - rust
-    - swift
-    - dart
-    - flutter
-    - elixir
-    - erlang
-    - haskell
-    - clojure
-    - julia
-    - ocaml
-    - crystal
   test_status_file: devcovenant/registry/local/test_status.json
   required_commands:
     - pytest

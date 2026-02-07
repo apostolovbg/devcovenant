@@ -7,9 +7,6 @@ ignore_dirs:
   - third_party
   - node_modules
 assets:
-  - path: devcovenant/config.yaml
-    template: config.yaml
-    mode: skip
   - path: .gitignore
     template: .gitignore
     mode: merge
@@ -77,6 +74,5 @@ policy_overlays:
       - devcovenant
     include_prefixes:
       - devcovenant/custom
-autogen_disable: []
 policies:
   - new-modules-need-tests

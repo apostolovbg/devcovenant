@@ -122,9 +122,9 @@ reporting:
   audit_trail: true
   use_colors: true
 
-autogen_disable:
-  - raw-string-escapes
-manual_force_enable: []
+policy_state:
+  managed-environment: false
+  raw-string-escapes: false
 freeze_core_policies: []
 policy_overrides: {}
 

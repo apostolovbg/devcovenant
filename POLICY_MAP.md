@@ -4,36 +4,35 @@
 ## Purpose
 Authoritative reference for how each policy MUST be activated and configured.
 Use this to keep profiles, adapters, assets, and metadata aligned. Policies
-run only when a profile lists them under `policies:`. Custom policies are
-opt-in via custom profiles or config overrides—never implicit via `global`.
+are activated via config `policy_state`. Profiles provide metadata overlays
+and assets; custom policies are opt-in via custom profiles or config overrides.
 
 ## Core Policies (global-activated)
 - devcov-integrity-guard — Assets: AGENTS.md, policy descriptors,
   registry/local/policy_registry.yaml, devcovenant/registry/local/
   test_status.json; Metadata: policy_definitions, registry_file,
-  test_status_file, watch_dirs, watch_files, profile_scopes.
+  test_status_file, watch_dirs, watch_files.
 - devcov-structure-guard — Assets: registry/local/manifest.json; Metadata:
-  enforcement, profile_scopes, code_extensions.
+  enforcement, code_extensions.
 - devflow-run-gates — Assets: run_pre_commit.py, run_tests.py,
   devcovenant/registry/local/test_status.json; Metadata: test_status_file,
   required_commands, require_
   pre_commit_start/end, pre_commit_command, epoch/command keys.
 - changelog-coverage — Assets: CHANGELOG.md; Metadata: main_changelog,
-  skipped_files, skipped_globs, summary_labels, summary_verbs, profile_scopes.
-- no-future-dates — Logic-only; Metadata: profile_scopes.
-- read-only-directories — Metadata: include_globs, profile_scopes.
+  skipped_files, skipped_globs, summary_labels, summary_verbs.
+- no-future-dates — Logic-only.
+- read-only-directories — Metadata: include_globs.
 - managed-environment — Metadata: expected_paths, expected_interpreters,
   required_commands, command_hints (enabled: false by default).
 - semantic-version-scope — Assets: VERSION (profile override),
-  CHANGELOG.md; Metadata: version_file, changelog_file, profile_scopes
+  CHANGELOG.md; Metadata: version_file, changelog_file
   (enabled: false).
-- last-updated-placement — Assets: managed docs; Metadata: allowed_globs,
-  profile_scopes.
+- last-updated-placement — Assets: managed docs; Metadata: allowed_globs.
 - documentation-growth-tracking — Metadata: selector roles,
   required_headings, min_word_count, mention rules; overlays expected per
   profile for user_facing suffixes/keywords and doc sets (global provides
   the baseline, devcovrepo adds devcovenant docs).
-- line-length-limit — Metadata: max_length, selectors, profile_scopes.
+- line-length-limit — Metadata: max_length, selectors.
 - version-sync — Assets: VERSION (profile override),
   README/AGENTS/CONTRIBUTING/SPEC/PLAN, LICENSE; language profiles add
   pyproject.toml or other manifests; devcovrepo overlays add
@@ -78,7 +77,7 @@ opt-in via custom profiles or config overrides—never implicit via `global`.
   csharp.
 
 ## Required Metadata Keys (summary)
-- Enforcement/activation: status, severity, apply, enforcement, profile_scopes.
+- Enforcement/activation: status, severity, enabled, enforcement.
 - Selectors: include/exclude prefixes/globs/suffixes, selector_roles.
 - Commands: required_commands, command_hints (devflow-run-gates, managed-
   environment).

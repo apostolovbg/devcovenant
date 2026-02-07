@@ -58,7 +58,7 @@ It is the checklist we consult before declaring the spec satisfied.
   of blocking, but a clean `start → tests → end` run is still required to
   clear the gate.
 - [done] Startup check (`python3 -m devcovenant check --mode startup`).
-- [done] Policy edits run `devcovenant update-policy-registry` after updating
+- [done] Policy edits run `devcovenant refresh_registry` after updating
   scripts/tests so hashes stay aligned.
 - [done] Every change gets logged into `CHANGELOG.md`.
   Record it under the current version entry.
@@ -125,8 +125,9 @@ It is the checklist we consult before declaring the spec satisfied.
 - [done] `dependency-license-sync` uses profile/config overlays to supply
   dependency manifests; the core policy metadata stays general and the
   devcovrepo profile declares DevCovenant’s dependency files.
-- [done] Built-in policies have canonical text in
-  `devcovenant/registry/global/stock_policy_texts.yaml`.
+- [not done] Remove stock-text legacy plumbing (`stock_policy_texts.*` and
+  `restore-stock-text`) and make descriptor `text` fields the only canonical
+  policy prose source.
 - [done] Custom policy `readme-sync` enforces the README mirroring
   and repo-only block stripping.
 - [done] Consolidated `devcov-parity-guard`, `devcov-self-enforcement`,
@@ -140,13 +141,13 @@ It is the checklist we consult before declaring the spec satisfied.
 - [not done] The collective `<!-- DEVCOV-POLICIES:BEGIN -->`/
   `<!-- DEVCOV-POLICIES:END -->` block is treated as a managed unit and
   refreshed from assets. A per-policy `freeze` override copies scripts to
-  `devcovenant/custom/` and reruns `devcovenant update-policy-registry` when
+  `devcovenant/custom/` and reruns `devcovenant refresh_registry` when
   toggled.
 - [done] `devcovenant/registry/local/policy_registry.yaml` is the
   sole hash store. The legacy `registry.json` and `update_hashes.py` helper
   have been retired and removed; the registry now records hashes, asset
   hints, profile scopes, core/custom origins, and resolved metadata.
-- [done] Record update notices (replacements/new stock policies) inside
+- [done] Record update notices (replacements/new policies) inside
   `devcovenant/registry/local/manifest.json` and print them during updates.
 - [done] `managed-environment` remains off by default via policy metadata
   (`enabled: false`). When enabled, it warns if required metadata or
@@ -204,7 +205,7 @@ It is the checklist we consult before declaring the spec satisfied.
   key/value lines, with multi-value metadata emitted on continuation lines.
 - [done] When DevCovenant removes a core policy, copy it into
   `devcovenant/custom/policies/` (or a frozen overlay prescribed in config),
-  mark the new entry as `custom`, and rerun `update-policy-registry` so all
+  mark the new entry as `custom`, and rerun `refresh_registry` so all
   downstream artifacts report the deprecation rather than leaving dangling IDs.
 - [not done] Keep `raw-string-escapes` and `devcov-raw-string-escapes`, but
   control both via config `policy_state` (no scope keys, no autogen disable
@@ -367,10 +368,17 @@ Below is every missing SPEC requirement, ordered by dependency.
    `run_tests` executes the required command list for mixed stacks.
 9. **CLI command placement cleanup.** [not done]
    Keep CLI helpers inside `devcovenant/` and expose the standard commands.
+   Keep CLI-exposed root modules as real implementations (no forwarding
+   wrappers), avoid duplicate same-name root/core command modules, and preserve
+   file-path command usage.
 10. **Legacy debris cleanup.** [not done]
-   Remove obsolete artifacts (e.g., `devcovenant/registry.json` and the GPL
-   template) from manifests/install lists and policy references.
-11. **Adapter expansion.** [not done]
+   Remove obsolete artifacts (e.g., `devcovenant/registry.json`, stock-text
+   restore files such as `stock_policy_texts.*`, and related restore command
+   plumbing) from manifests/install lists and policy references.
+11. **Registry command consolidation.** [not done]
+   Make `refresh_registry` the canonical registry command and remove legacy
+   `update-policy-registry` command paths.
+12. **Adapter expansion.** [not done]
    Extract language-specific logic into adapters for the core policies and
    build adapters for languages listed in POLICY_MAP (or trim scopes).
 
@@ -383,6 +391,10 @@ Below is every missing SPEC requirement, ordered by dependency.
 ## Testing and validation
 - Run `devcovenant.run_pre_commit --phase start`, `devcovenant.run_tests`,
   and `devcovenant.run_pre_commit --phase end` for every change.
+- Verify file-path commands remain supported:
+  `python3 devcovenant/run_pre_commit.py --phase start`,
+  `python3 devcovenant/run_tests.py`,
+  `python3 devcovenant/run_pre_commit.py --phase end`.
 - `run_tests` should execute the active `devflow-run-gates.required_commands`
   (from profiles/config) so mixed stacks get all required suites recorded.
 - Write `devcovenant/registry/local/test_status.json` before the final

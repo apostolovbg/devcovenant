@@ -11,16 +11,6 @@ metadata:
     - tests/**
     - '**/tests/**'
   enforcement: active
-  profile_scopes:
-    - python
-    - fastapi
-    - frappe
-    - javascript
-    - typescript
-    - go
-    - rust
-    - java
-    - csharp
   include_suffixes: []
   include_prefixes: []
   include_globs: []

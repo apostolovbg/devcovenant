@@ -175,7 +175,7 @@ def test_custom_status_path(tmp_path: Path) -> None:
         tmp_path,
         ["src/example.py"],
         config={
-            "policies": {
+            "user_metadata_overrides": {
                 "devflow-run-gates": {
                     "test_status_file": "alt/status.json",
                     "required_commands": ["pytest"],

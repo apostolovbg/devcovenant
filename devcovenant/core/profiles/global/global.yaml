@@ -4,6 +4,9 @@ category: core
 suffixes: []
 ignore_dirs: []
 assets:
+  - path: devcovenant/config.yaml
+    template: config.yaml
+    mode: skip
   - path: devcovenant/registry/local/manifest.json
     mode: generate
     generator: manifest

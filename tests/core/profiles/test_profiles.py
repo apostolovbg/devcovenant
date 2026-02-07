@@ -3,8 +3,6 @@
 import textwrap
 from pathlib import Path
 
-import yaml
-
 from devcovenant.core import profiles
 
 
@@ -73,32 +71,32 @@ def test_resolve_profile_suffixes_ignores_placeholders() -> None:
     assert resolved == [".py", ".pyi"]
 
 
-def test_version_sync_listed_in_scoped_profiles() -> None:
-    """Profiles that scope version-sync must list it explicitly."""
+def test_profile_overlays_reference_known_policies() -> None:
+    """Profiles should only overlay policies that exist in the policy tree."""
     repo_root = Path(__file__).resolve().parents[3]
-    vsync_meta = yaml.safe_load(
-        (
-            repo_root
-            / "devcovenant"
-            / "core"
-            / "policies"
-            / "version_sync"
-            / "version_sync.yaml"
-        ).read_text(encoding="utf-8")
-    )
-    scoped = set(vsync_meta["metadata"].get("profile_scopes", []))
+    known_policies = set()
+    for root in (
+        repo_root / "devcovenant" / "core" / "policies",
+        repo_root / "devcovenant" / "custom" / "policies",
+    ):
+        for policy_dir in root.iterdir():
+            if not policy_dir.is_dir():
+                continue
+            known_policies.add(policy_dir.name.replace("_", "-"))
+
     registry = profiles.build_profile_registry(repo_root)
     entries = registry["profiles"] if "profiles" in registry else registry
 
     for name, meta in entries.items():
-        if name not in scoped:
-            continue
         manifest_path = repo_root / meta["path"] / f"{name}.yaml"
         manifest = profiles.load_profile(manifest_path)
-        policies = set(manifest.get("policies", []))
-        assert (
-            "version-sync" in policies
-        ), f"profile {name} (scoped for version-sync) must list version-sync"
+        overlays = manifest.get("policy_overlays", {})
+        if not isinstance(overlays, dict):
+            continue
+        for policy_id in overlays:
+            assert (
+                policy_id in known_policies
+            ), f"profile {name} overlays unknown policy {policy_id}"
 
 
 def test_profiles_have_assets_unless_exempt() -> None:

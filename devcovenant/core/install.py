@@ -445,16 +445,8 @@ def _resolve_template_path(
     return core_root / rel_path
 
 
-def _parse_profile_scopes(raw: str | None) -> list[str]:
-    """Parse profile_scopes metadata into a normalized list."""
-    if not raw:
-        return ["global"]
-    scopes = [entry.strip() for entry in raw.split(",")]
-    return [entry for entry in scopes if entry]
-
-
 def _load_policy_metadata(agents_path: Path) -> dict[str, dict[str, object]]:
-    """Return policy enabled flags and profile scopes from AGENTS.md."""
+    """Return policy enabled flags from AGENTS.md."""
     if not agents_path.exists():
         return {}
     parser = PolicyParser(agents_path)
@@ -462,24 +454,10 @@ def _load_policy_metadata(agents_path: Path) -> dict[str, dict[str, object]]:
     for policy in parser.parse_agents_md():
         if not policy.policy_id:
             continue
-        scopes = _parse_profile_scopes(
-            policy.raw_metadata.get("profile_scopes")
-        )
         metadata[policy.policy_id] = {
             "enabled": policy.enabled,
-            "profile_scopes": scopes,
         }
     return metadata
-
-
-def _policy_profile_match(
-    scopes: list[str], active_profiles: list[str]
-) -> bool:
-    """Return True if the policy scopes match any active profile."""
-    if "global" in scopes:
-        return True
-    active = set(active_profiles)
-    return any(scope in active for scope in scopes)
 
 
 def _load_policy_assets(
@@ -668,9 +646,6 @@ def _apply_profile_assets(
             continue
         policy_info = policy_metadata.get(policy_id)
         if policy_info and not policy_info.get("enabled", True):
-            continue
-        scopes = policy_info.get("profile_scopes") if policy_info else None
-        if scopes and not _policy_profile_match(scopes, active_profiles):
             continue
         for entry in _clean_asset_entries(entries):
             template_path = _resolve_template_path(
@@ -1716,10 +1691,10 @@ def _ensure_config_from_profile(
     target_root: Path,
     template_root: Path,
     *,
-    profile: str = "devcovuser",
+    profile: str = "global",
     force: bool = False,
 ) -> bool:
-    """Ensure devcovenant/config.yaml exists from a profile asset."""
+    """Ensure devcovenant/config.yaml exists from the global profile asset."""
     config_path = target_root / DEV_COVENANT_DIR / "config.yaml"
     if config_path.exists() and not force:
         return False
@@ -1931,46 +1906,46 @@ def _merge_overlay_map(
     return merged
 
 
-def _normalize_policy_list(raw_value: object | None) -> list[str]:
-    """Normalize a list/string value into a list of policy ids."""
-    if raw_value is None:
-        return []
-    if isinstance(raw_value, str):
-        token = raw_value.strip()
-        return [token] if token else []
-    items: list[str] = []
-    if isinstance(raw_value, Iterable):
-        for entry in raw_value:
-            token = str(entry or "").strip()
-            if token:
-                items.append(token)
-    return items
+def _normalize_policy_state_map(raw_value: object | None) -> dict[str, bool]:
+    """Normalize a policy_state map into boolean policy flags."""
+    if not isinstance(raw_value, dict):
+        return {}
+    normalized: dict[str, bool] = {}
+    for policy_id, enabled_value in raw_value.items():
+        key = str(policy_id or "").strip()
+        if not key:
+            continue
+        if isinstance(enabled_value, bool):
+            normalized[key] = enabled_value
+            continue
+        token = str(enabled_value).strip().lower()
+        if token in {"true", "1", "yes", "y", "on"}:
+            normalized[key] = True
+        elif token in {"false", "0", "no", "n", "off"}:
+            normalized[key] = False
+    return normalized
 
 
-def _collect_profile_autogen_disable(
+def _collect_profile_policy_state(
     profile_manifests: dict[str, dict],
-) -> list[str]:
-    """Collect autogen_disable policy ids from active profiles."""
-    combined: list[str] = []
+) -> dict[str, bool]:
+    """Collect profile-declared policy_state defaults."""
+    merged: dict[str, bool] = {}
     for manifest in profile_manifests.values():
-        raw = manifest.get("autogen_disable")
-        if raw == "__none__":
-            continue
-        combined.extend(_normalize_policy_list(raw))
-    deduped: list[str] = []
-    seen = set()
-    for entry in combined:
-        if entry in seen:
-            continue
-        seen.add(entry)
-        deduped.append(entry)
-    return deduped
+        raw_state = manifest.get("policy_state")
+        profile_state = _normalize_policy_state_map(raw_state)
+        for policy_id, state in profile_state.items():
+            merged[policy_id] = state
+    return merged
 
 
-def _update_policy_list_config_text(
-    text: str, key: str, items: list[str]
+def _update_policy_state_config_text(
+    text: str, policy_state: dict[str, bool]
 ) -> tuple[str, bool]:
-    """Update a list-valued config key inside config.yaml text."""
+    """Update the policy_state block inside config.yaml text."""
+    block = {"policy_state": policy_state}
+    block_text = yaml.safe_dump(block, sort_keys=False).rstrip()
+    block_lines = block_text.splitlines()
     lines = text.splitlines()
     updated_lines: list[str] = []
     found = False
@@ -1978,18 +1953,13 @@ def _update_policy_list_config_text(
     while index < len(lines):
         line = lines[index]
         stripped = line.strip()
-        if stripped.startswith(f"{key}:"):
+        if stripped.startswith("policy_state:"):
             found = True
-            if items:
-                updated_lines.append(f"{key}:")
-                for entry in items:
-                    updated_lines.append(f"  - {entry}")
-            else:
-                updated_lines.append(f"{key}: []")
+            updated_lines.extend(block_lines)
             index += 1
             while index < len(lines):
                 next_line = lines[index]
-                if next_line.startswith("  -") or not next_line.strip():
+                if next_line.startswith("  ") or not next_line.strip():
                     index += 1
                     continue
                 break
@@ -1999,12 +1969,7 @@ def _update_policy_list_config_text(
     if not found:
         if updated_lines and updated_lines[-1].strip():
             updated_lines.append("")
-        if items:
-            updated_lines.append(f"{key}:")
-            for entry in items:
-                updated_lines.append(f"  - {entry}")
-        else:
-            updated_lines.append(f"{key}: []")
+        updated_lines.extend(block_lines)
     updated = "\n".join(updated_lines).rstrip() + "\n"
     return updated, updated != text
 
@@ -2142,18 +2107,50 @@ def _apply_profile_policy_overlays(
     return True
 
 
-def _apply_profile_policy_lists(
+def _remove_legacy_policy_control_keys(text: str) -> tuple[str, bool]:
+    """Remove legacy activation keys from config.yaml text."""
+    legacy_keys = {"autogen_disable:", "manual_force_enable:"}
+    lines = text.splitlines()
+    updated_lines: list[str] = []
+    removed = False
+    index = 0
+    while index < len(lines):
+        line = lines[index]
+        stripped = line.strip()
+        if any(stripped.startswith(key) for key in legacy_keys):
+            removed = True
+            index += 1
+            while index < len(lines):
+                next_line = lines[index]
+                if next_line.startswith("  -") or not next_line.strip():
+                    index += 1
+                    continue
+                break
+            continue
+        updated_lines.append(line)
+        index += 1
+    updated = "\n".join(updated_lines).rstrip() + "\n"
+    return updated, removed
+
+
+def _apply_profile_policy_state(
     target_root: Path,
-    autogen_disable: list[str],
+    profile_policy_state: dict[str, bool],
 ) -> bool:
-    """Update autogen policy disable lists inside config.yaml."""
+    """Update policy_state defaults inside config.yaml."""
     config_path = target_root / DEV_COVENANT_DIR / "config.yaml"
     if not config_path.exists():
         return False
     text = config_path.read_text(encoding="utf-8")
-    updated, changed = _update_policy_list_config_text(
-        text, "autogen_disable", autogen_disable
+    config_data = yaml.safe_load(text) or {}
+    existing_state = _normalize_policy_state_map(
+        config_data.get("policy_state")
     )
+    for policy_id, state in profile_policy_state.items():
+        existing_state.setdefault(policy_id, state)
+    updated, changed = _update_policy_state_config_text(text, existing_state)
+    updated, removed_legacy = _remove_legacy_policy_control_keys(updated)
+    changed = changed or removed_legacy
     if not changed:
         return False
     _rename_existing_file(config_path)
@@ -2195,9 +2192,9 @@ def apply_autogen_metadata_overrides(
     )
     overlays = _collect_profile_overlays(manifests)
     changed = _apply_profile_policy_overlays(target_root, overlays)
-    autogen_disable = _collect_profile_autogen_disable(manifests)
-    list_changed = _apply_profile_policy_lists(target_root, autogen_disable)
-    return changed or list_changed
+    profile_state = _collect_profile_policy_state(manifests)
+    state_changed = _apply_profile_policy_state(target_root, profile_state)
+    return changed or state_changed
 
 
 def _copy_path(source: Path, target: Path) -> None:
@@ -2719,48 +2716,32 @@ def _extract_policy_id(metadata: str) -> str:
             return stripped.split(":", 1)[1].strip()
 
 
-def _apply_policy_disables(
-    agents_path: Path, disable_ids: list[str]
+def _apply_policy_state_disables(
+    target_root: Path, disable_ids: list[str]
 ) -> list[str]:
-    """Disable policies by setting enabled: false in AGENTS.md."""
-    if not disable_ids or not agents_path.exists():
+    """Disable policies by setting policy_state entries in config.yaml."""
+    if not disable_ids:
+        return []
+    config_path = target_root / DEV_COVENANT_DIR / "config.yaml"
+    if not config_path.exists():
         return []
     disable_set = {
         policy_id.strip() for policy_id in disable_ids if policy_id.strip()
     }
     if not disable_set:
         return []
-    text = agents_path.read_text(encoding="utf-8")
-    policy_pattern = re.compile(
-        r"(##\s+Policy:\s+[^\n]+\n\n```policy-def\n)(.*?)(\n```\n\n)",
-        re.DOTALL,
-    )
-    disabled: list[str] = []
-    changed = False
-
-    def _replace(match: re.Match[str]) -> str:
-        """Apply the disable list to matching policy metadata."""
-        nonlocal changed
-        metadata = match.group(2)
-        policy_id = _extract_policy_id(metadata)
-        if policy_id not in disable_set:
-            return match.group(0)
-        keys, values = _parse_metadata_block(metadata)
-        _ensure_key(keys, values, "enabled")
-        values["enabled"] = ["false"]
-        disabled.append(policy_id)
-        changed = True
-        rendered = _render_metadata_block(keys, values)
-        return match.group(1) + rendered + match.group(3)
-
-    updated = policy_pattern.sub(_replace, text)
+    text = config_path.read_text(encoding="utf-8")
+    payload = yaml.safe_load(text) or {}
+    policy_state = _normalize_policy_state_map(payload.get("policy_state"))
+    for policy_id in sorted(disable_set):
+        policy_state[policy_id] = False
+    updated, changed = _update_policy_state_config_text(text, policy_state)
+    updated, removed_legacy = _remove_legacy_policy_control_keys(updated)
+    changed = changed or removed_legacy
     if changed:
-        agents_path.write_text(updated, encoding="utf-8")
-    missing = sorted(disable_set - set(disabled))
-    if missing:
-        missing_list = ", ".join(missing)
-        print(f"Warning: policy ids not found for disable: {missing_list}")
-    return disabled
+        _rename_existing_file(config_path)
+        config_path.write_text(updated, encoding="utf-8")
+    return sorted(disable_set)
 
 
 def _extract_policy_sections(text: str) -> list[tuple[str, str]]:
@@ -3382,7 +3363,9 @@ def main(argv=None) -> None:
         if agents_template:
             _append_missing_policies(agents_path, agents_template)
 
-    disabled_policies = _apply_policy_disables(agents_path, disable_policies)
+    disabled_policies = _apply_policy_state_disables(
+        target_root, disable_policies
+    )
     policy_metadata = _load_policy_metadata(agents_path)
     profile_manifests = _load_profile_manifests(
         package_root,

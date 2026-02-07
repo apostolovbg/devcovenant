@@ -81,15 +81,6 @@ class CheckContext:
             return {}
         user_overrides = self.config.get("user_metadata_overrides")
         autogen_overrides = self.config.get("autogen_metadata_overrides")
-        has_explicit_overrides = isinstance(
-            user_overrides, dict
-        ) or isinstance(autogen_overrides, dict)
-        if not has_explicit_overrides:
-            legacy = self.config.get("policies", {})
-            entry = (
-                legacy.get(policy_id, {}) if isinstance(legacy, dict) else {}
-            )
-            return entry if isinstance(entry, dict) else {}
         merged: Dict[str, Any] = {}
         autogen_entry = {}
         if isinstance(autogen_overrides, dict):
