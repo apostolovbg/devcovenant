@@ -1,4 +1,4 @@
-"""Profile catalog helpers for DevCovenant."""
+"""Profile registry helpers for DevCovenant."""
 
 import textwrap
 from pathlib import Path
@@ -14,7 +14,7 @@ def _write_yaml(path: Path, content: str) -> None:
     path.write_text(textwrap.dedent(content).lstrip(), encoding="utf-8")
 
 
-def test_load_profile_catalog_merges_core_and_custom(tmp_path: Path) -> None:
+def test_load_profile_registry_merges_core_and_custom(tmp_path: Path) -> None:
     """Custom profile manifests override core profile data."""
     core_yaml = """
     version: 1
@@ -50,26 +50,26 @@ def test_load_profile_catalog_merges_core_and_custom(tmp_path: Path) -> None:
     )
     custom_profile_dir.mkdir(parents=True, exist_ok=True)
 
-    catalog = profiles.load_profile_catalog(tmp_path)
+    registry = profiles.load_profile_registry(tmp_path)
 
-    assert catalog["python"]["suffixes"] == [".py", ".pyi"]
-    assert catalog["python"]["source"] == "custom"
-    assert "zig" in catalog
+    assert registry["python"]["suffixes"] == [".py", ".pyi"]
+    assert registry["python"]["source"] == "custom"
+    assert "zig" in registry
 
 
-def test_list_profiles_sorts_catalog() -> None:
+def test_list_profiles_sorts_registry() -> None:
     """Profile list is sorted for stable prompts."""
-    catalog = {"lua": {}, "python": {}, "zig": {}}
-    assert profiles.list_profiles(catalog) == ["lua", "python", "zig"]
+    registry = {"lua": {}, "python": {}, "zig": {}}
+    assert profiles.list_profiles(registry) == ["lua", "python", "zig"]
 
 
 def test_resolve_profile_suffixes_ignores_placeholders() -> None:
     """Suffix resolution skips empty and placeholder entries."""
-    catalog = {
+    registry = {
         "python": {"suffixes": [".py", ".pyi"]},
         "docs": {"suffixes": ["__none__", " "]},
     }
-    resolved = profiles.resolve_profile_suffixes(catalog, ["docs", "python"])
+    resolved = profiles.resolve_profile_suffixes(registry, ["docs", "python"])
     assert resolved == [".py", ".pyi"]
 
 
@@ -87,8 +87,8 @@ def test_version_sync_listed_in_scoped_profiles() -> None:
         ).read_text(encoding="utf-8")
     )
     scoped = set(vsync_meta["metadata"].get("profile_scopes", []))
-    catalog = profiles.build_profile_catalog(repo_root)
-    entries = catalog["profiles"] if "profiles" in catalog else catalog
+    registry = profiles.build_profile_registry(repo_root)
+    entries = registry["profiles"] if "profiles" in registry else registry
 
     for name, meta in entries.items():
         if name not in scoped:
@@ -105,11 +105,11 @@ def test_profiles_have_assets_unless_exempt() -> None:
     """Most profiles should ship assets; allow a few explicit exceptions."""
     exempt = {"devcovuser", "suffixes"}
     repo_root = Path(__file__).resolve().parents[3]
-    catalog = profiles.build_profile_catalog(repo_root)
+    registry = profiles.build_profile_registry(repo_root)
     for name, meta in (
-        catalog["profiles"].items()
-        if "profiles" in catalog
-        else catalog.items()
+        registry["profiles"].items()
+        if "profiles" in registry
+        else registry.items()
     ):
         if name in exempt:
             continue

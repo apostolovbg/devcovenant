@@ -5,38 +5,20 @@ Uses devcovenant/registry/local/policy_registry.yaml.
 
 from __future__ import annotations
 
-import re
 import sys
 from pathlib import Path
-from typing import Dict, Iterable, List
-
-import yaml
+from typing import Iterable, List
 
 from . import manifest as manifest_module
 from . import policy_freeze
-from .parser import PolicyDefinition, PolicyParser
-from .policy_descriptor import PolicyDescriptor, load_policy_descriptor
-from .policy_locations import resolve_script_location
+from .parser import PolicyParser
+from .policy_descriptor import load_policy_descriptor
+from .policy_locations import iter_script_locations, resolve_script_location
 from .refresh_policies import (
-    PolicyControl,
-    apply_policy_control_overrides,
-    descriptor_metadata_order_values,
-    load_metadata_schema,
-    load_policy_control_config,
+    build_metadata_context,
+    resolve_policy_metadata_map,
 )
 from .registry import PolicyRegistry
-
-_UPDATED_PATTERN = re.compile(r"^(\s*updated:\s*)true\s*$", re.MULTILINE)
-
-
-def _reset_updated_flags(agents_md_path: Path) -> bool:
-    """Reset updated flags in AGENTS.md after registry refresh."""
-    text = agents_md_path.read_text(encoding="utf-8")
-    updated = _UPDATED_PATTERN.sub(r"\1false", text)
-    if updated == text:
-        return False
-    agents_md_path.write_text(updated, encoding="utf-8")
-    return True
 
 
 def _ensure_trailing_newline(path: Path) -> bool:
@@ -65,108 +47,11 @@ def _split_metadata_values(raw_value: object | None) -> List[str]:
     return items
 
 
-def _normalize_profile_name(raw: object | None) -> str:
-    """Return a normalized profile name for comparison."""
-
-    return str(raw or "").strip().lower()
-
-
-def _load_active_profiles(repo_root: Path) -> List[str]:
-    """Return the list of active profiles from config.yaml."""
-
-    config_path = repo_root / "devcovenant" / "config.yaml"
-    if not config_path.exists():
-        return ["global"]
-    try:
-        payload = yaml.safe_load(config_path.read_text(encoding="utf-8")) or {}
-    except Exception:
-        return ["global"]
-    profiles_block = {}
-    if isinstance(payload, dict):
-        profiles_block = payload.get("profiles", {}) or {}
-    active = profiles_block.get("active", [])
-    if isinstance(active, str):
-        candidates = [active]
-    elif isinstance(active, list):
-        candidates = active
-    else:
-        candidates = [active] if active else []
-    normalized: List[str] = []
-    for candidate in candidates:
-        normalized_name = _normalize_profile_name(candidate)
-        if normalized_name and normalized_name != "__none__":
-            normalized.append(normalized_name)
-    if "global" not in normalized:
-        normalized.append("global")
-    return sorted(dict.fromkeys(normalized))
-
-
-def _filter_profile_scopes(raw_value: str, active_profiles: List[str]) -> str:
-    """Keep only scopes that match the active profiles."""
-
-    normalized_targets = set(active_profiles)
-    filtered: List[str] = []
-    seen: set[str] = set()
-    for scope in _split_metadata_values(raw_value):
-        normalized = _normalize_profile_name(scope)
-        if not normalized:
-            continue
-        if normalized == "global" or normalized in normalized_targets:
-            if scope not in seen:
-                filtered.append(scope)
-                seen.add(scope)
-    if not filtered:
-        filtered = ["global"]
-    return ", ".join(filtered)
-
-
-def _resolve_policy_metadata(
-    policy: PolicyDefinition,
-    descriptor: PolicyDescriptor | None,
-    control: PolicyControl,
-    core_available: bool,
-) -> Dict[str, str]:
-    """Return the resolved metadata map after applying config overrides."""
-
-    if descriptor:
-        base_order, base_values = descriptor_metadata_order_values(descriptor)
-    else:
-        base_order = list(policy.raw_metadata.keys())
-        base_values = {
-            key: _split_metadata_values(policy.raw_metadata.get(key))
-            for key in base_order
-        }
-        if not base_order:
-            base_order = ["id"]
-            base_values = {"id": [policy.policy_id]}
-
-    base_order = list(base_order)
-    base_values = {
-        key: list(vals) if vals is not None else []
-        for key, vals in base_values.items()
-    }
-    override_order, resolved = apply_policy_control_overrides(
-        base_order,
-        base_values,
-        policy.policy_id,
-        control,
-        core_available=core_available,
-    )
-    if not override_order:
-        override_order = base_order
-    result: Dict[str, str] = {}
-    for key in override_order:
-        entries = resolved.get(key, [])
-        result[key] = ", ".join(entries)
-    return result
-
-
 def update_policy_registry(
     repo_root: Path | None = None,
     *,
     rerun: bool = False,
     skip_freeze: bool = False,
-    reset_updated_flags: bool = True,
 ) -> int:
     """Update policy hashes.
 
@@ -188,15 +73,23 @@ def update_policy_registry(
 
     parser = PolicyParser(agents_md_path)
     policies = parser.parse_agents_md()
-    schema_map = load_metadata_schema(repo_root)
-    control = load_policy_control_config(repo_root)
-    active_profiles = _load_active_profiles(repo_root)
+    context = build_metadata_context(repo_root)
 
     registry = PolicyRegistry(registry_path, repo_root)
 
     updated = 0
+    seen_policy_ids: set[str] = set()
     for policy in policies:
+        seen_policy_ids.add(policy.policy_id)
         location = resolve_script_location(repo_root, policy.policy_id)
+        core_available = any(
+            loc.kind == "core" and loc.path.exists()
+            for loc in iter_script_locations(repo_root, policy.policy_id)
+        )
+        custom_available = any(
+            loc.kind == "custom" and loc.path.exists()
+            for loc in iter_script_locations(repo_root, policy.policy_id)
+        )
         if location is None:
             print(
                 f"Notice: Policy script missing for {policy.policy_id}. "
@@ -206,21 +99,24 @@ def update_policy_registry(
         else:
             updated += 1
         descriptor = load_policy_descriptor(repo_root, policy.policy_id)
-        core_available = bool(location is not None and location.kind == "core")
-        resolved_metadata = _resolve_policy_metadata(
-            policy,
+        current_order = list(policy.raw_metadata.keys())
+        current_values = {
+            key: _split_metadata_values(policy.raw_metadata.get(key))
+            for key in current_order
+        }
+        _, resolved_metadata = resolve_policy_metadata_map(
+            policy.policy_id,
+            current_order,
+            current_values,
             descriptor,
-            control,
-            core_available,
-        )
-        resolved_metadata["profile_scopes"] = _filter_profile_scopes(
-            resolved_metadata.get("profile_scopes", ""), active_profiles
+            context,
+            core_available=core_available,
+            custom_policy=bool(custom_available and not core_available),
         )
         registry.update_policy_entry(
             policy,
             location,
             descriptor,
-            schema=schema_map.get(policy.policy_id),
             resolved_metadata=resolved_metadata,
         )
         script_name = (
@@ -228,13 +124,20 @@ def update_policy_registry(
         )
         print(f"Recorded {policy.policy_id}: {script_name}")
 
+    stale_ids = sorted(
+        set(registry._data.get("policies", {}).keys()) - seen_policy_ids
+    )
+    for stale_id in stale_ids:
+        registry._data["policies"].pop(stale_id, None)
+        print(f"Removed stale policy entry: {stale_id}")
+    if stale_ids:
+        registry.save()
+
     if updated == 0:
         print("All policy hashes are up to date.")
     else:
         print("\nUpdated " f"{updated} policy hash(es) in {registry_path}")
 
-    if reset_updated_flags and _reset_updated_flags(agents_md_path):
-        print("Reset updated flags in AGENTS.md.")
     if _ensure_trailing_newline(registry_path):
         print(f"Ensured trailing newline in {registry_path}.")
 
@@ -250,7 +153,6 @@ def update_policy_registry(
                 repo_root,
                 rerun=True,
                 skip_freeze=True,
-                reset_updated_flags=reset_updated_flags,
             )
 
     return 0

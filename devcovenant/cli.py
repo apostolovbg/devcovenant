@@ -79,8 +79,12 @@ def main() -> None:
             "refresh-all",
             "normalize-metadata",
             "install",
+            "deploy",
             "update",
+            "upgrade",
+            "refresh",
             "uninstall",
+            "undeploy",
         ],
         help="Command to run",
     )
@@ -129,14 +133,9 @@ def main() -> None:
         type=Path,
         default=None,
         help=(
-            "Schema source for normalize-metadata (default: "
+            "Schema source for refresh-policies (default: "
             "devcovenant/core/profiles/global/assets/AGENTS.md)."
         ),
-    )
-    parser.add_argument(
-        "--no-set-updated",
-        action="store_true",
-        help="Do not set updated: true when metadata changes.",
     )
     parser.add_argument(
         "--skip-policy-refresh",
@@ -237,14 +236,30 @@ def main() -> None:
     args = parser.parse_args()
 
     repo_target = args.repo
-    if args.command in {"install", "update", "uninstall"}:
+    if args.command in {
+        "install",
+        "deploy",
+        "update",
+        "upgrade",
+        "refresh",
+        "uninstall",
+        "undeploy",
+    }:
         repo_target = args.target
     repo_root = _find_git_root(repo_target)
     if repo_root is None:
         print("DevCovenant commands must run inside a git repository.")
         sys.exit(1)
     args.repo = repo_root
-    if args.command in {"install", "update", "uninstall"}:
+    if args.command in {
+        "install",
+        "deploy",
+        "update",
+        "upgrade",
+        "refresh",
+        "uninstall",
+        "undeploy",
+    }:
         args.target = repo_root
     if args.command in {
         "check",
@@ -253,6 +268,11 @@ def main() -> None:
         "update-policy-registry",
         "normalize-metadata",
         "restore-stock-text",
+        "deploy",
+        "update",
+        "upgrade",
+        "refresh",
+        "undeploy",
     }:
         if not (repo_root / "devcovenant").exists():
             print(
@@ -273,9 +293,7 @@ def main() -> None:
             update_policy_registry,
         )
 
-        update_policy_registry(
-            args.repo, skip_freeze=True, reset_updated_flags=False
-        )
+        update_policy_registry(args.repo, skip_freeze=True)
         _print_step("Registry refresh complete", "✅")
     except Exception as exc:
         _print_step(f"Registry refresh skipped ({exc})", "⚠️")
@@ -351,39 +369,24 @@ def main() -> None:
         sys.exit(result)
 
     elif args.command in ("refresh-policies", "normalize-metadata"):
-        from devcovenant.core.refresh_policies import (
-            export_metadata_schema,
-            policy_metadata_schema_path,
-            refresh_policies,
-        )
+        from devcovenant.core.refresh_policies import refresh_policies
 
         _print_banner("Policy metadata refresh", "🧩")
         if args.schema is None:
-            schema_path = policy_metadata_schema_path(args.repo)
-            if not schema_path.exists():
-                schema_path = (
-                    Path(__file__).resolve().parent
-                    / "core"
-                    / "profiles"
-                    / "global"
-                    / "assets"
-                    / "AGENTS.md"
-                )
+            schema_path = None
         else:
             schema_path = Path(args.schema)
             if not schema_path.is_absolute():
                 schema_path = args.repo / schema_path
+            if not schema_path.exists():
+                print(f"Schema file not found: {schema_path}")
+                sys.exit(1)
         agents_path = args.repo / args.agents
-        if not schema_path.exists():
-            print(f"Schema file not found: {schema_path}")
-            sys.exit(1)
 
         result = refresh_policies(
             agents_path,
             schema_path,
-            set_updated=not args.no_set_updated,
         )
-        export_metadata_schema(args.repo)
         if args.command == "normalize-metadata":
             print(
                 "normalize-metadata is now deprecated. "
@@ -407,6 +410,13 @@ def main() -> None:
             backup_existing=args.backup_existing,
         )
         sys.exit(result)
+
+    elif args.command == "refresh":
+        _print_banner("Registry refresh", "🔄")
+        from devcovenant.core.refresh import main as refresh_main
+
+        refresh_main(argv=["--target", str(args.target)])
+        sys.exit(0)
 
     elif args.command == "restore-stock-text":
         from devcovenant.core.policy_texts import restore_stock_texts
@@ -472,8 +482,50 @@ def main() -> None:
         install_main(argv=install_args)
         sys.exit(0)
 
+    elif args.command == "deploy":
+        _print_banner("Deploy DevCovenant", "🚀")
+        deploy_args = ["--target", str(args.target)]
+        if args.docs_mode:
+            deploy_args.extend(["--docs-mode", args.docs_mode])
+        if args.docs_include:
+            deploy_args.extend(["--docs-include", args.docs_include])
+        if args.docs_exclude:
+            deploy_args.extend(["--docs-exclude", args.docs_exclude])
+        if args.policy_mode:
+            deploy_args.extend(["--policy-mode", args.policy_mode])
+        if args.config_mode:
+            deploy_args.extend(["--config-mode", args.config_mode])
+        if args.license_mode:
+            deploy_args.extend(["--license-mode", args.license_mode])
+        if args.version_mode:
+            deploy_args.extend(["--version-mode", args.version_mode])
+        if args.version_value:
+            deploy_args.extend(["--version", args.version_value])
+        if args.pyproject_mode:
+            deploy_args.extend(["--pyproject-mode", args.pyproject_mode])
+        if args.ci_mode:
+            deploy_args.extend(["--ci-mode", args.ci_mode])
+        if args.preserve_custom is not None:
+            if args.preserve_custom:
+                deploy_args.append("--preserve-custom")
+            else:
+                deploy_args.append("--no-preserve-custom")
+        if args.force_docs:
+            deploy_args.append("--force-docs")
+        if args.force_config:
+            deploy_args.append("--force-config")
+        if args.skip_policy_refresh:
+            deploy_args.append("--skip-policy-refresh")
+        if args.backup_existing:
+            deploy_args.append("--backup-existing")
+
+        from devcovenant.core.deploy import main as deploy_main
+
+        deploy_main(argv=deploy_args)
+        sys.exit(0)
+
     elif args.command == "update":
-        _print_banner("Update DevCovenant", "⬆️")
+        _print_banner("Update DevCovenant", "🔁")
         update_args = ["--target", str(args.target)]
         if args.docs_mode:
             update_args.extend(["--docs-mode", args.docs_mode])
@@ -514,6 +566,48 @@ def main() -> None:
         update_main(argv=update_args)
         sys.exit(0)
 
+    elif args.command == "upgrade":
+        _print_banner("Upgrade DevCovenant", "⬆️")
+        upgrade_args = ["--target", str(args.target)]
+        if args.docs_mode:
+            upgrade_args.extend(["--docs-mode", args.docs_mode])
+        if args.docs_include:
+            upgrade_args.extend(["--docs-include", args.docs_include])
+        if args.docs_exclude:
+            upgrade_args.extend(["--docs-exclude", args.docs_exclude])
+        if args.policy_mode:
+            upgrade_args.extend(["--policy-mode", args.policy_mode])
+        if args.config_mode:
+            upgrade_args.extend(["--config-mode", args.config_mode])
+        if args.license_mode:
+            upgrade_args.extend(["--license-mode", args.license_mode])
+        if args.version_mode:
+            upgrade_args.extend(["--version-mode", args.version_mode])
+        if args.version_value:
+            upgrade_args.extend(["--version", args.version_value])
+        if args.pyproject_mode:
+            upgrade_args.extend(["--pyproject-mode", args.pyproject_mode])
+        if args.ci_mode:
+            upgrade_args.extend(["--ci-mode", args.ci_mode])
+        if args.preserve_custom is not None:
+            if args.preserve_custom:
+                upgrade_args.append("--preserve-custom")
+            else:
+                upgrade_args.append("--no-preserve-custom")
+        if args.force_docs:
+            upgrade_args.append("--force-docs")
+        if args.force_config:
+            upgrade_args.append("--force-config")
+        if args.skip_policy_refresh:
+            upgrade_args.append("--skip-policy-refresh")
+        if args.backup_existing:
+            upgrade_args.append("--backup-existing")
+
+        from devcovenant.core.upgrade import main as upgrade_main
+
+        upgrade_main(argv=upgrade_args)
+        sys.exit(0)
+
     elif args.command == "uninstall":
         _print_banner("Uninstall DevCovenant", "🧹")
         uninstall_args = ["--target", str(args.target)]
@@ -522,6 +616,13 @@ def main() -> None:
         from devcovenant.core.uninstall import main as uninstall_main
 
         uninstall_main(argv=uninstall_args)
+        sys.exit(0)
+
+    elif args.command == "undeploy":
+        _print_banner("Undeploy DevCovenant", "🧽")
+        from devcovenant.core.undeploy import main as undeploy_main
+
+        undeploy_main(argv=["--target", str(args.target)])
         sys.exit(0)
 
 

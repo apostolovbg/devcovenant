@@ -1,5 +1,5 @@
 # DevCovenant Development Plan
-**Last Updated:** 2026-02-05
+**Last Updated:** 2026-02-07
 **Version:** 0.2.6
 
 <!-- DEVCOV:BEGIN -->
@@ -36,11 +36,11 @@ trace.
   outside the installable package.
 - Drive configuration, registries, and managed docs from profile metadata so
   all knobs, selectors, and assets flow from the active profiles.
-- Install/update obey the self-install/self-refresh workflow: running the
-  CLI from a source checkout updates that repo in place while running the
-  packaged command refreshes whatever repo the user pointed at. Config/
-  docs/metadata alone are touched during an update so we never overwrite the
-  existing `devcovenant/` tree.
+- Install/deploy/update/upgrade/refresh follow the lifecycle model: `install`
+  writes a generic config stub, `deploy` activates docs/assets, `update`
+  refreshes managed content without touching core files, `upgrade` explicitly
+  replaces core files, and `refresh` is registry-only. `undeploy` removes
+  managed blocks while keeping core + config; `uninstall` removes everything.
 - Documentation defaults to `devcovenant --help` examples while mentioning
   `python3 -m devcovenant --help` once per doc as the fallback.
 
@@ -58,22 +58,20 @@ It is the checklist we consult before declaring the spec satisfied.
   of blocking, but a clean `start → tests → end` run is still required to
   clear the gate.
 - [done] Startup check (`python3 -m devcovenant check --mode startup`).
-- [done] Policy edits set `updated: true`.
-  Run `devcovenant update-policy-registry`.
-  Then reset the flag.
+- [done] Policy edits run `devcovenant update-policy-registry` after updating
+  scripts/tests so hashes stay aligned.
 - [done] Every change gets logged into `CHANGELOG.md`.
   Record it under the current version entry.
 
 ### Functional requirements
-- [done] Maintain a canonical metadata schema that enumerates every
-  selector/metadata key so policy normalization can add missing keys without
-  changing existing values.
-- [not done] Document every supported policy (including true custom policies)
-  so the normalized block lists every policy alphabetically and reports custom
-  overrides without mutating user-specified metadata or policy text.
+- [done] Emit resolved policy metadata (policy defaults → profile overlays
+  → config overrides) into AGENTS and the policy registry for every policy.
+  Include every common key and policy-specific key (even when empty), keep the
+  policy list alphabetical, and manage the policy block so users never edit it
+  directly.
 - [done] Follow the policy module/adapters/fixer loading rules described
   in SPEC.
-- [done] Respect `apply`, `severity`, `status`, and `enforcement` metadata.
+- [done] Respect `enabled`, `severity`, `status`, and `enforcement` metadata.
   Apply those settings across all policies.
 - [done] Collapse execution into two modes: `audit` (no auto-fix) and `fix`
   (auto-fix permitted). Both share the same policy set and exit non-zero on
@@ -88,10 +86,15 @@ It is the checklist we consult before declaring the spec satisfied.
   `normalize-metadata` command needed.
 - [done] `refresh-all` regenerates `.gitignore` from profile fragments while
   preserving any user-provided entries.
+- [done] `refresh-all` rebuilds registries/metadata without touching managed
+  docs; doc syncing moves to install/update or a docs refresh path.
 - [done] CLI emits stage banners and status steps (registry refresh, engine
   init, command execution) for traceable runs without flooding output.
-- [done] Install/update accept `--skip-refresh` to bypass the final
-  refresh-all step for fast test harnesses; default runs still refresh.
+- [done] Lifecycle commands match SPEC: `install` writes a generic config
+  stub (guarded by `install.generic_config`), `deploy` activates docs/assets,
+  `update` refreshes managed content without core changes, `upgrade`
+  replaces core explicitly, `refresh` is registry-only, `undeploy` removes
+  managed blocks, and `uninstall` removes the core footprint.
 - [done] Backups are opt-in via `--backup-existing`; default runs overwrite
   files in-place without creating `*_old.*` copies.
 - [done] Version tracking defaults live in profiles: `global` points at
@@ -104,19 +107,18 @@ It is the checklist we consult before declaring the spec satisfied.
   Mention the module entry whenever you discuss source-based usage.
 - [not done] `devcovenant/README.md` includes the packaged
   `DevCovenant Version` value.
-- [not done] Managed documents are generated from YAML assets.
+- [done] Managed documents are generated from YAML assets.
   Inject stock non-managed text only when the target doc is missing, empty, or
   a single-line placeholder.
   Otherwise install/update commands refresh just the managed blocks while
   handling the `<!-- DEVCOV-POLICIES -->` block separately.
 
 ### Policy requirements
-- [done] Policy metadata normalization now emits schema + value blocks
-  while keeping existing text values intact.
+- [done] Policy metadata normalization emits a single resolved metadata
+  map (no schema/value split) while keeping existing policy text intact.
 - [done] `changelog-coverage` enforces one fresh entry per change (dated
-  today, descriptive summary with configurable minimum word count (default
-  10), `Files:` block listing only touched paths) and keeps entries
-  newest-first.
+  today, Change/Why/Impact summary lines each containing an action verb,
+  `Files:` block listing only touched paths) and keeps entries newest-first.
 - [done] Runtime state lives under `devcovenant/registry/local`; the legacy
   `.devcov-state` directory is removed.
 - [done] Ship `devcovenant/docs/` as user-facing guides in the package.
@@ -127,9 +129,10 @@ It is the checklist we consult before declaring the spec satisfied.
   `devcovenant/registry/global/stock_policy_texts.yaml`.
 - [done] Custom policy `readme-sync` enforces the README mirroring
   and repo-only block stripping.
-- [done] `devcov-parity-guard` replaces the old stock-policy text check and
-  compares AGENTS policy text to descriptor YAML prose for core and custom
-  policies.
+- [done] Consolidated `devcov-parity-guard`, `devcov-self-enforcement`,
+  `policy-text-presence`, and `track-test-status` into
+  `devcov-integrity-guard`, which now owns policy prose checks, descriptor
+  parity, registry sync, and optional watched-file status validation.
 - [done] Policy replacement metadata from
   `devcovenant/registry/global/policy_replacements.yaml` is applied.
   Replaced policies move to `custom/` with `custom: true` and are marked
@@ -142,14 +145,15 @@ It is the checklist we consult before declaring the spec satisfied.
 - [done] `devcovenant/registry/local/policy_registry.yaml` is the
   sole hash store. The legacy `registry.json` and `update_hashes.py` helper
   have been retired and removed; the registry now records hashes, asset
-  hints, profile scopes, and core/custom origins.
+  hints, profile scopes, core/custom origins, and resolved metadata.
 - [done] Record update notices (replacements/new stock policies) inside
   `devcovenant/registry/local/manifest.json` and print them during updates.
-- [not done] `managed-environment` remains off by default.
-  Warn when required metadata or command hints are absent.
+- [done] `managed-environment` remains off by default via policy metadata
+  (`enabled: false`). When enabled, it warns if required metadata or
+  command hints are absent.
 - [done] Dogfood-only policies (`patches-txt-sync`, `gcv-script-naming`,
   `security-compliance-notes`) are removed from the DevCovenant repo.
-- [done] Reduced the stock profile catalog to a slim, maintained set
+- [done] Reduced the stock profile registry to a slim, maintained set
   (global, docs, data, suffixes, python, javascript, typescript, java, go,
   rust, php, ruby, csharp, sql, docker, terraform, kubernetes, fastapi,
   frappe, dart, flutter, swift, objective-c) and updated
@@ -166,7 +170,7 @@ It is the checklist we consult before declaring the spec satisfied.
   fsharp/elixir/erlang/haskell/clojure/julia/ocaml/crystal/ansible).
 - [done] Per-profile descriptors (`<profile>.yaml`) must be populated manually
   (maps are reference only); stubs have been fleshed out with real assets and
-  overlays for the retained catalog.
+  overlays for the retained registry.
 - [done] Profile-first scoping: policies run only when a profile lists them
   (including `global`, which now activates all global policies explicitly).
   Policy `profile_scopes` stay as documentation only. Profiles are
@@ -181,61 +185,69 @@ It is the checklist we consult before declaring the spec satisfied.
   the registry. The canonical schema no longer lives in a separate
   hand-written file; it is inferred from the keys declared inside each
   policy’s `metadata`.
-- [not done] Use provenance (core vs. frozen/custom loading path) to derive
-  `custom`/`apply`/`freeze` in the generated metadata instead of retaining
+- [done] Use provenance (core vs. frozen/custom loading path) to derive
+  `custom`/`enabled`/`freeze` in the generated metadata instead of retaining
   explicit `status` or `updated` keys. `metadata` may still expose knobs such
   as `profile_scopes`, `selector_roles`, or `enforcement`, while the generator
-  records the final `apply`/`freeze`/`severity` values after applying
+  records the final `enabled`/`freeze`/`severity` values after applying
   overrides.
-- [done] Introduce config keys `autogen_do_not_apply`,
-  `manual_force_apply`, `freeze_core_policies`, and `policy_overrides` so the
-  active profile can flip `apply`/`freeze` and mutate `enforcement`,
-  `severity`, selectors, or any schema value without editing the policy YAMLs.
-  The refresh command merges those lists/maps before emitting AGENTS and
-  registry entries so docs remain declarative.
+- [done] Introduce config keys `autogen_disable`,
+  `manual_force_enable`, `freeze_core_policies`, and
+  `user_metadata_overrides` so the active profile can flip `enabled`/`freeze`
+  and mutate `enforcement`, `severity`, selectors, or any schema value without
+  editing the policy YAMLs. The refresh command merges those lists/maps before
+  emitting AGENTS and registry entries so docs remain declarative.
 - [done] Record every policy in
-  `devcovenant/registry/local/policy_registry.yaml` with two blocks per entry:
-  `metadata_schema` (keys declared under `metadata`)
-  and `metadata_values` (resolved defaults plus merged overrides, apply/freeze,
-  hashes, asset hints, and custom/core origins). The generator and AGENTS
-  templating read from that unified source so enforcement always matches the
-  registry.
+  `devcovenant/registry/local/policy_registry.yaml` with a single resolved
+  metadata map (no schema/value split). The generator and AGENTS templating
+  read from that unified source so enforcement always matches the registry.
+- [done] Render resolved policy metadata in AGENTS using vertical YAML-style
+  key/value lines, with multi-value metadata emitted on continuation lines.
 - [done] When DevCovenant removes a core policy, copy it into
   `devcovenant/custom/policies/` (or a frozen overlay prescribed in config),
   mark the new entry as `custom`, and rerun `update-policy-registry` so all
   downstream artifacts report the deprecation rather than leaving dangling IDs.
 - [done] Scope `raw-string-escapes` to the python profile and default it to
-  `apply: false` via the python profile’s `autogen_do_not_apply` list.
+  `enabled: false` via the python profile’s `autogen_disable` list.
   Add the repo-only `devcov-raw-string-escapes` custom policy for
   DevCovenant’s own enforcement.
 
 ### Installation & documentation
-- [not done] Install modes `auto`/`empty`.
-- Refuse install when DevCovenant already exists unless `--auto-uninstall`.
-- Share an install/update workflow touching only configs, docs, and metadata.
-- Leave the `devcovenant/` tree intact.
-- [done] Install/update should run `refresh-all` at the end so registries
-  and `.gitignore` are regenerated from the latest profile state.
+- [done] Implement the lifecycle commands per SPEC: `install`, `deploy`,
+  `update`, `upgrade`, `refresh`, `undeploy`, and `uninstall`.
+- [done] `install` always runs, writes a generic config stub (flagged by
+  `install.generic_config`), and prompts to `upgrade` when a newer core
+  exists (never deploys docs/assets).
+- [done] `deploy` requires a non-generic config and materializes managed
+  docs/assets/registries, then runs `refresh`.
+- [done] `update` refreshes managed content without touching core files.
+- [done] `upgrade` replaces core files and applies policy replacements,
+  then runs `update`.
+- [done] `refresh` is registry-only and runs inside deploy/update.
+- [done] `undeploy` removes managed blocks/registries while keeping core.
+- [done] `uninstall` removes DevCovenant core plus managed blocks.
+- [not done] `reset-to-stock` restores stock metadata/profile configuration
+  after the lifecycle work stabilizes.
 - [not done] `update` regenerates policy blocks from descriptors plus
-  overrides (no manual edits). Provide independent doc refresh controls
-  (`--docs-include/exclude`).
+  overrides (no manual edits) without requiring extra CLI flags.
 - [done] Introduce a registry-only refresh mode that regenerates
-  `devcovenant/registry/local/*` (hashes, manifest, metadata schema) and
+  `devcovenant/registry/local/*` (hashes, manifest, resolved metadata) and
   re-materializes `config.yaml` only when missing, while skipping AGENTS and
   managed docs. Run this registry-only refresh automatically at the start of
   every devcovenant invocation (including CI) so state is rebuilt without
   dirtying working trees. Policy blocks are fully managed by refresh.
 - [done] `refresh-all` now refreshes config autogen sections (profiles block,
   core paths, and metadata overlays) while preserving user overrides.
-- [not done] `AGENTS.md` always uses the template.
-  Preserve the `# EDITABLE SECTION` text when it already exists.
+- [not done] `AGENTS.md` always regenerates from the managed template and
+  resolved metadata. Preserve the `# EDITABLE SECTION` text when it already
+  exists; never allow manual edits in the policy block.
 - [not done] `README.md`, `SPEC.md`, `PLAN.md`, `CHANGELOG.md`, and
   `CONTRIBUTING.md` sync from YAML assets with new managed blocks.
 - [not done] `SPEC.md`/`PLAN.md` rebuild when missing.
   Keep user edits otherwise.
-- [not done] Install/update/refresh regenerate only managed doc headers and
+- [not done] `deploy`/`update` regenerate only managed doc headers and
   managed blocks (UTC dates) while preserving user content outside those
-  blocks; installs create missing docs without discarding existing content.
+  blocks; `refresh` skips docs entirely.
 - [not done] Version file creation prefers an existing configured version
   file (default `VERSION`, devcovrepo override), then `pyproject.toml`.
   Prompt (default `0.0.1`). `--version` overrides detection.
@@ -250,9 +262,11 @@ It is the checklist we consult before declaring the spec satisfied.
 - [not done] Config exposes `devcov_core_include`, `devcov_core_paths`, and
   `doc_assets` with `profiles.generated.file_suffixes`.
 - [not done] Profile and policy assets live under `core/` and `custom/`.
-  Catalog entries go to `devcovenant/registry/local/profile_catalog.yaml`.
-  Asset metadata lands in `policy_assets.yaml`.
-- [not done] Profile-driven pre-commit config turns metadata into hooks and
+  Registry entries go to `devcovenant/registry/local/profile_registry.yaml`.
+  Policy asset entries are read directly from policy descriptors.
+- [done] Profile-driven pre-commit config turns profile YAML fragments into
+  the generated hook set (global owns the DevCovenant hook baseline, no
+  user-managed `.pre-commit-config.yaml`), applies profile exclusions, and
   documents the “Pre-commit config refactor” phase.
 - [done] Ensure the custom `devcovrepo` profile treats `devcovenant/docs`
   as part of the documentation growth tracking surface and ships a
@@ -270,6 +284,11 @@ It is the checklist we consult before declaring the spec satisfied.
 - [done] Honor profile `ignore_dirs` in the engine and skip DevCovenant core
   paths in changelog-coverage for `devcovuser` so vendored DevCovenant code
   stays out of user changelog requirements.
+- [not done] Expand `devcovuser` overlays to exclude `devcovenant/**` from
+  noise-prone policies (changelog-coverage, version-sync,
+  last-updated-placement, documentation-growth-tracking, line-length-limit)
+  while explicitly keeping `devcovenant/custom/**` and
+  `tests/devcovenant/custom/**` enforced by code-style/security policies.
 - [not done] Test mirroring rules: with `devcovuser` active, mirror only
   `devcovenant/custom/**` into `tests/devcovenant/custom/**`; when
   `devcov_core_include` enables `devcovrepo`, mirror the full
@@ -281,9 +300,9 @@ It is the checklist we consult before declaring the spec satisfied.
   and `tests/devcovenant` from core assets while deleting any `devcovrepo`
   prefixed folders/policies and recreating the user-facing `devcovuser` profile
   so repo-specific overrides never ship.
-- [not done] Runtime-required artifacts (`devcovenant/registry/local/` entries
-  and `devcovenant/registry/local/test_status.json`) are generated from
-  `devcovuser` assets, tracked in this repo for CI/builds, excluded from
+- [done] Runtime-required artifacts (`devcovenant/registry/local/` entries
+  and `devcovenant/registry/local/test_status.json`) are generated from the
+  global profile assets, tracked in this repo for CI/builds, excluded from
   packages, and recreated during install/update/refresh when missing.
 
 - [done] Describe the `devcovuser`/`devcovrepo` profiles and wiring so user
@@ -310,65 +329,48 @@ It is the checklist we consult before declaring the spec satisfied.
 ## Outstanding work (dependency order)
 Below is every missing SPEC requirement, ordered by dependency.
 
-1. **Canonical metadata schema & normalization.**
-   [done] Build the metadata schema, normalize AGENTS blocks, and ensure
-   metadata overlays dedupe existing values when configuration or profile
-   fragments merge during normalization.
-2. **Policy registry + replacements + `freeze`.**
-   [done] Metadata_schema/metadata_values blocks are emitted, config overrides
-   propagate to apply/freeze, replacements/freeze copies rerun the registry
-   refresh, and the registry records only the profile scopes matching the
-   active configuration surface. The canonical map then reflects what is
-   actually applied.
-3. **End-phase rerun guarantees.**
-   Implement the new workflow from SPEC: detect when end-phase hooks or
-   DevCovenant autofixers change files.
-   Rerun the tests (and hooks if necessary) until the tree is clean.
-   Record `pre_commit_end_*` only when that final pass succeeds so the devflow
-   gates reflect a real clean run.
-4. **Managed document asset generation.**
-   Let YAML assets rebuild doc templates and preserve non-policy text.
-5. **Doc asset stamping & last-updated auto-fixer.**
-   Hook `last-updated-placement` to stamp UTC headers consistently.
-6. **Documentation sync & readme-sync policy.**
-   Keep `devcovenant/README.md` mirroring `/README.md` with auto-fixes.
-7. **Install/update/refresher command matrix.**
-   Implement `install`, `update`, `refresh-all`, and `reset-to-stock`.
-   Include policy and docs overrides plus CLI mode distinctions.
-8. **Config & profile asset generation.**
-   Generate `devcovenant/config.yaml` with knobs, doc assets, and catalogs,
-   and codify how install/update/refresh recreate `devcovenant/custom`, rebuild
-   `tests/devcovenant/custom` (mirroring the policy/profile overlays), delete
-   `devcovrepo`-prefixed overrides unless `devcov_core_include` is true, and
-   note the default config is materialized from the `devcovuser` profile
-   descriptor asset while profile overlays fill in autogen metadata during
-   install.
-9. **Profile-driven pre-commit config.**
-   Store hook fragments, merge them with overrides, and record metadata.
-10. **CLI command placement cleanup.**
-   Keep CLI helpers inside `devcovenant/`, expose the standard commands.
-11. **Testing infrastructure.**
-   Mirror `tests/devcovenant/` to the package layout and respect the
-   `new-modules-need-tests` policy exclusions.
-12. **Packaging & licensing guardrails.**
-   [done] Switch DevCovenant to MIT (assets, docs, PyPI metadata).
-   Build artifacts with assets, enforce MIT when needed, and sync licensing
-   notices.
-13. **Legacy debris cleanup.**
-   Remove obsolete artifacts (e.g., `devcovenant/registry.json` and the
-   unused GPL license asset) from the tree, update manifests/install lists,
-   and drop policy/schema references so refresh/install no longer expect them.
-14. **Profile maps → profile descriptors.**
-    Keep core profile YAMLs as the shipped source of truth; `PROFILE_MAP.md`
-    / `POLICY_MAP.md` are reference tables for authors to manually populate
-    policies, suffixes, assets, and overlays. Descriptors stay named
-    `<profile>.yaml`; refresh does not re-materialize maps into manifests.
-15. **Registry/metadata cleanup.**
-    Drop `metadata_handles` from the policy registry (schema already comes
-    from policy YAMLs) and move broad suffix/prefix/glob defaults out of base
-    policies into profile overlays (python/docs/lang-specific and devcovrepo).
-    Audit remaining policies for hard-coded metadata that should live in
-    profiles instead.
+1. **Config/schema coverage and registries.** [not done]
+   Expose `devcov_core_include`, `devcov_core_paths`, `doc_assets`, and
+   `profiles.generated.file_suffixes`; ensure profile/policy assets live under
+   `core/` and `custom/` with registries emitted to
+   `profile_registry.yaml`.
+2. **Managed policy block regeneration.** [not done]
+   Treat the `<!-- DEVCOV-POLICIES -->` block as a managed unit, have `update`
+   regenerate policy blocks from descriptors + overrides without extra flags,
+   and always regenerate AGENTS from the managed template while preserving the
+   editable section.
+3. **Managed docs pipeline completion.** [not done]
+   Ensure all managed docs include `Last Updated`/`Version` headers and
+   top-of-file managed blocks; update docs to mention `python3` usage; ensure
+   `devcovenant/README.md` includes the packaged DevCovenant Version; and
+   sync `README.md`, `SPEC.md`, `PLAN.md`, `CHANGELOG.md`, and
+   `CONTRIBUTING.md` from YAML assets (rebuild SPEC/PLAN when missing) while
+   deploy/update refresh only managed blocks + headers.
+4. **Gitignore regeneration.** [not done]
+   Rebuild `.gitignore` from profile fragments while preserving user entries.
+5. **Noise control + mirrors for devcovuser/devcovrepo.** [not done]
+   Expand `devcovuser` overlays to exclude `devcovenant/**` from noise-prone
+   policies while keeping `devcovenant/custom/**` and
+   `tests/devcovenant/custom/**` enforced; define mirror rules for
+   devcovuser vs devcovrepo and how install/update/refresh regenerate
+   `devcovenant/custom` and `tests/devcovenant/**` while pruning devcovrepo
+   overrides when `devcov_core_include` is false; document the mirror
+   behavior.
+6. **Lifecycle extras and environment gating.** [not done]
+   Implement `reset-to-stock`, keep `managed-environment` off by default with
+   warnings when metadata is missing, and define version-file fallback and
+   license fallback behaviors.
+7. **Packaging & test execution.** [not done]
+   Ship a pure-Python package with a console script entry and ensure
+   `run_tests` executes the required command list for mixed stacks.
+8. **CLI command placement cleanup.** [not done]
+   Keep CLI helpers inside `devcovenant/` and expose the standard commands.
+9. **Legacy debris cleanup.** [not done]
+   Remove obsolete artifacts (e.g., `devcovenant/registry.json` and the GPL
+   template) from manifests/install lists and policy references.
+10. **Adapter expansion.** [not done]
+   Extract language-specific logic into adapters for the core policies and
+   build adapters for languages listed in POLICY_MAP (or trim scopes).
 
 ## Execution notes
 - Move completed SPEC bullets to `[done]` with a short note.
@@ -385,15 +387,6 @@ Below is every missing SPEC requirement, ordered by dependency.
   pre-commit phase.
 - Run `python3 -m devcovenant check --fix` when doc assets or `last-updated`
   are modified.
-
-## Outstanding work
-- Extract language-specific logic from docstring-and-comment-coverage,
-  name-clarity, new-modules-need-tests, and security-scanner into adapters
-  (`devcovenant/core/policies/<policy>/adapters/<lang>.py`) and keep core
-  policy modules language-agnostic.
-- Build adapters for other languages listed in POLICY_MAP scopes (beyond
-  python) or trim scopes to the languages we actually support to avoid false
-  coverage claims.
 
 ## Release readiness
 - Confirm `manifest.json` logs layout, docs, and UTC timestamp before release.

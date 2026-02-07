@@ -3,11 +3,7 @@ text: |
   Ensure the DevCovenant repo keeps the required structure and tooling files.
 metadata:
   id: devcov-structure-guard
-  status: active
   severity: error
   auto_fix: 'false'
-  updated: 'false'
   enforcement: active
-  apply: 'true'
-  custom: 'false'
   profile_scopes: global

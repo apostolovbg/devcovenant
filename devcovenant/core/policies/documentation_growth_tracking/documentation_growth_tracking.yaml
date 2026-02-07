@@ -9,13 +9,9 @@ text: |
   of contents, and minimum depth.
 metadata:
   id: documentation-growth-tracking
-  status: active
   severity: info
   auto_fix: 'false'
-  updated: 'false'
   enforcement: active
-  apply: 'true'
-  custom: 'false'
   profile_scopes:
     - global
     - docs

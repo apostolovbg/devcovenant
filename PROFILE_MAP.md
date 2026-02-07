@@ -8,7 +8,8 @@ inheritance. Custom policies stay opt-in via custom profiles/config.
 
 ## Core Profiles
 - global — Assets: managed doc descriptors, tooling scripts (.pre-commit,
-  CI workflow, gitignore fragments). Policies: all core global policies.
+  CI workflow, gitignore fragments). Policies: all core global policies,
+  including `devcov-integrity-guard` as the unified integrity check.
   Overlays: version-sync defaults (VERSION + core docs), doc-growth
   defaults. Mode: static, update keeps descriptors current.
 - docs — Assets: mkdocs.yml, doc .gitignore. Policies: version-sync,

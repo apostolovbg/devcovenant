@@ -13,8 +13,7 @@ GLOBAL_REGISTRY_DIR = f"{DEV_COVENANT_DIR}/registry/global"
 LOCAL_REGISTRY_DIR = f"{DEV_COVENANT_DIR}/registry/local"
 MANIFEST_REL_PATH = f"{LOCAL_REGISTRY_DIR}/{MANIFEST_FILENAME}"
 POLICY_REGISTRY_FILENAME = "policy_registry.yaml"
-PROFILE_CATALOG_FILENAME = "profile_catalog.yaml"
-POLICY_ASSETS_FILENAME = "policy_assets.yaml"
+PROFILE_REGISTRY_FILENAME = "profile_registry.yaml"
 TEST_STATUS_FILENAME = "test_status.json"
 LEGACY_MANIFEST_PATHS = [
     ".devcov/install_manifest.json",
@@ -90,8 +89,7 @@ DEFAULT_GENERATED_FILES = [
     f"{LOCAL_REGISTRY_DIR}/{POLICY_REGISTRY_FILENAME}",
     f"{LOCAL_REGISTRY_DIR}/{TEST_STATUS_FILENAME}",
     f"{LOCAL_REGISTRY_DIR}/{MANIFEST_FILENAME}",
-    f"{LOCAL_REGISTRY_DIR}/{PROFILE_CATALOG_FILENAME}",
-    f"{LOCAL_REGISTRY_DIR}/{POLICY_ASSETS_FILENAME}",
+    f"{LOCAL_REGISTRY_DIR}/{PROFILE_REGISTRY_FILENAME}",
 ]
 
 DEFAULT_GENERATED_DIRS: list[str] = [LOCAL_REGISTRY_DIR]
@@ -117,14 +115,9 @@ def policy_registry_path(repo_root: Path) -> Path:
     return local_registry_root(repo_root) / POLICY_REGISTRY_FILENAME
 
 
-def profile_catalog_path(repo_root: Path) -> Path:
-    """Return the profile catalog path inside the local registry."""
-    return local_registry_root(repo_root) / PROFILE_CATALOG_FILENAME
-
-
-def policy_assets_path(repo_root: Path) -> Path:
-    """Return the policy assets mapping path inside the local registry."""
-    return local_registry_root(repo_root) / POLICY_ASSETS_FILENAME
+def profile_registry_path(repo_root: Path) -> Path:
+    """Return the profile registry path inside the local registry."""
+    return local_registry_root(repo_root) / PROFILE_REGISTRY_FILENAME
 
 
 def test_status_path(repo_root: Path) -> Path:
@@ -177,11 +170,7 @@ def build_manifest(
         },
         "profiles": {
             "active": [],
-            "catalog": [],
-        },
-        "policy_assets": {
-            "global": [],
-            "policies": {},
+            "registry": [],
         },
     }
     if mode:

@@ -4,13 +4,9 @@ text: |
   be editable, update this policy definition first.
 metadata:
   id: read-only-directories
-  status: active
   severity: error
   auto_fix: 'false'
-  updated: 'false'
   enforcement: active
-  apply: 'true'
-  custom: 'false'
   profile_scopes: global
   include_globs: __none__
   include_suffixes: []

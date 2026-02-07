@@ -63,6 +63,7 @@ docs:
     end: "<!-- DEVCOV:END -->"
 
 install:
+  generic_config: false
   allow_existing: false
   auto_uninstall: false
   preserve_custom: true
@@ -112,14 +113,18 @@ hooks:
   pre_commit: true
   pre_push: false
 
+pre_commit:
+  enabled: true
+  overrides: {}
+
 reporting:
   show_policy_links: true
   audit_trail: true
   use_colors: true
 
-autogen_do_not_apply:
+autogen_disable:
   - raw-string-escapes
-manual_force_apply: []
+manual_force_enable: []
 freeze_core_policies: []
 policy_overrides: {}
 
@@ -127,12 +132,6 @@ ignore:
   patterns: []
 
 autogen_metadata_overrides:
-  managed-environment:
-    apply: false
-    expected_paths: []
-    expected_interpreters: []
-    required_commands: []
-    command_hints: []
   dependency-license-sync:
     dependency_files:
     - requirements.in
@@ -142,8 +141,87 @@ autogen_metadata_overrides:
     required_commands:
     - pytest
     - python3 -m unittest discover
+    skipped_globs:
+    - devcovenant/registry/local/**
   changelog-coverage:
-    summary_words_min: 10
+    required_globs:
+    - README.md
+    - AGENTS.md
+    - CONTRIBUTING.md
+    - CHANGELOG.md
+    - SPEC.md
+    - PLAN.md
+    summary_verbs:
+    - add
+    - added
+    - adjust
+    - adjusted
+    - align
+    - aligned
+    - amend
+    - amended
+    - automate
+    - automated
+    - build
+    - built
+    - bump
+    - bumped
+    - clean
+    - cleaned
+    - clarify
+    - clarified
+    - consolidate
+    - consolidated
+    - correct
+    - corrected
+    - create
+    - created
+    - define
+    - defined
+    - deprecate
+    - deprecated
+    - document
+    - documented
+    - drop
+    - dropped
+    - enable
+    - enabled
+    - expand
+    - expanded
+    - fix
+    - fixed
+    - harden
+    - hardened
+    - improve
+    - improved
+    - introduce
+    - introduced
+    - migrate
+    - migrated
+    - normalize
+    - normalized
+    - refactor
+    - refactored
+    - remove
+    - removed
+    - rename
+    - renamed
+    - replace
+    - replaced
+    - restructure
+    - restructured
+    - revise
+    - revised
+    - streamline
+    - streamlined
+    - support
+    - supported
+    - update
+    - updated
+    - upgrade
+    - upgraded
+    - wrap
+    - wrapped
   documentation-growth-tracking:
     user_facing_suffixes:
     - .py
@@ -316,4 +394,4 @@ doc_assets:
     - CHANGELOG.md
     - CONTRIBUTING.md
     - devcovenant/README.md
-  user: {}
+  user: []

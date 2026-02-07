@@ -17,11 +17,10 @@ class PolicyDefinition:
     Attributes:
         policy_id: Unique identifier for the policy
         name: Human-readable name
-        status: Policy status (new, active, updated, deprecated, deleted)
+        status: Policy status (new, active, deprecated, deleted, fiducial)
         severity: Enforcement level (critical, error, warning, info)
         auto_fix: Whether auto-fixing is enabled
-        updated: Whether the policy has been updated (triggers script sync)
-        apply: Whether the policy should be evaluated
+        enabled: Whether the policy should be evaluated
         custom: Whether the policy uses custom enforcement text
         freeze: Whether the policy should be frozen into custom overrides
         description: Full policy text
@@ -34,8 +33,7 @@ class PolicyDefinition:
     status: str
     severity: str
     auto_fix: bool
-    updated: bool
-    apply: bool
+    enabled: bool
     custom: bool
     description: str
     freeze: bool = False
@@ -84,8 +82,8 @@ class PolicyParser:
 
             # Parse metadata
             metadata = self._parse_metadata_block(metadata_block)
-            apply_raw = metadata.get("apply", "true")
-            apply_flag = apply_raw.strip().lower() == "true"
+            enabled_raw = metadata.get("enabled", "true")
+            enabled_flag = enabled_raw.strip().lower() == "true"
             custom_raw = metadata.get("custom", "false")
             custom_flag = custom_raw.strip().lower() == "true"
 
@@ -98,8 +96,7 @@ class PolicyParser:
                 status=metadata.get("status", "active"),
                 severity=metadata.get("severity", "warning"),
                 auto_fix=metadata.get("auto_fix", "false").lower() == "true",
-                updated=metadata.get("updated", "false").lower() == "true",
-                apply=apply_flag,
+                enabled=enabled_flag,
                 custom=custom_flag,
                 description=description,
                 freeze=freeze_flag,

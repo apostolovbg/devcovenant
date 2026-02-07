@@ -26,7 +26,7 @@ normalized into AGENTS and the local registry. Example metadata:
 id: changelog-coverage
 severity: error
 auto_fix: false
-apply: true
+enabled: true
 profile_scopes:
   - global
 ```

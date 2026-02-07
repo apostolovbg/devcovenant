@@ -4,13 +4,9 @@ text: |
   readable. Reflow long sentences or wrap lists rather than ignoring the limit.
 metadata:
   id: line-length-limit
-  status: active
   severity: warning
   auto_fix: 'false'
-  updated: 'false'
   enforcement: active
-  apply: 'true'
-  custom: 'false'
   profile_scopes:
     - global
     - docs

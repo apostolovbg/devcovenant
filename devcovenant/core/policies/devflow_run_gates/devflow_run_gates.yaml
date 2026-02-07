@@ -7,13 +7,9 @@ text: |
   documentation-only updates) so the gate sequence cannot be skipped.
 metadata:
   id: devflow-run-gates
-  status: active
   severity: error
   auto_fix: 'false'
-  updated: 'false'
   enforcement: active
-  apply: 'true'
-  custom: 'false'
   profile_scopes:
     - global
     - python
@@ -52,3 +48,4 @@ metadata:
   pre_commit_start_command_key: pre_commit_start_command
   pre_commit_end_command_key: pre_commit_end_command
   code_extensions: []
+  skipped_globs: []

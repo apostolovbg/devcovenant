@@ -5,13 +5,9 @@ text: |
   language satisfies the requirement.
 metadata:
   id: docstring-and-comment-coverage
-  status: active
   severity: error
   auto_fix: 'false'
-  updated: 'false'
   enforcement: active
-  apply: 'true'
-  custom: 'false'
   profile_scopes:
     - python
     - javascript

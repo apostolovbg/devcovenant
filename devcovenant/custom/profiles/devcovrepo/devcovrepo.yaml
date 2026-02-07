@@ -105,7 +105,7 @@ policy_overlays:
       - devcovenant/README.md
   semantic-version-scope:
     version_file: devcovenant/VERSION
-autogen_do_not_apply: []
+autogen_disable: []
 policies:
   - dependency-license-sync
   - documentation-growth-tracking

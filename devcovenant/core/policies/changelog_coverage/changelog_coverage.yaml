@@ -1,18 +1,17 @@
 id: changelog-coverage
 text: |
   Every change must be logged in a new changelog entry dated today, under the
-  current version, with a descriptive summary (minimum word count configured
-  via metadata, default 10 words) and a Files block that lists only the
-  touched paths for this change. Collection prefixes (when enabled) must be
-  logged in their own changelog; prefixed files may not appear in the root
-  changelog. This keeps release notes daily, file-complete, and traceable.
+  current version, with a three-line summary labeled Change/Why/Impact. Each
+  summary line must include an action verb listed in the summary_verbs
+  metadata and a Files block that lists only the touched paths for this
+  change. Collection prefixes (when enabled) must be logged in their own
+  changelog; prefixed files may not appear in the root changelog. This keeps
+  release notes daily, file-complete, and traceable.
 metadata:
   id: changelog-coverage
   severity: error
-  auto_fix: 'false'
+  auto_fix: 'true'
   enforcement: active
-  apply: 'true'
-  custom: 'false'
   profile_scopes:
     - global
   main_changelog:
@@ -23,6 +22,10 @@ metadata:
     - .pre-commit-config.yaml
   skipped_globs: []
   skipped_prefixes: []
-  summary_words_min: "10"
+  summary_labels:
+    - Change
+    - Why
+    - Impact
+  summary_verbs: []
   collections:
     - __none__

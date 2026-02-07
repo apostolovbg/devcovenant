@@ -176,6 +176,21 @@ def add_install_update_args(
         help="Skip the final refresh-all step during install/update.",
     )
     parser.add_argument(
+        "--skip-core",
+        action="store_true",
+        help=argparse.SUPPRESS,
+    )
+    parser.add_argument(
+        "--deploy",
+        action="store_true",
+        help=argparse.SUPPRESS,
+    )
+    parser.add_argument(
+        "--require-non-generic",
+        action="store_true",
+        help=argparse.SUPPRESS,
+    )
+    parser.add_argument(
         "--backup-existing",
         action="store_true",
         help="Create *_old backups before overwriting files.",
@@ -243,6 +258,10 @@ def build_install_args(
         install_args.append("--backup-existing")
     if getattr(args, "no_touch", False):
         install_args.append("--no-touch")
+    if getattr(args, "deploy", False):
+        install_args.append("--deploy")
+    if getattr(args, "require_non_generic", False):
+        install_args.append("--require-non-generic")
     return install_args
 
 

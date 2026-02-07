@@ -8,29 +8,25 @@ run only when a profile lists them under `policies:`. Custom policies are
 opt-in via custom profiles or config overrides—never implicit via `global`.
 
 ## Core Policies (global-activated)
-- devcov-self-enforcement — Assets: registry/local/policy_registry.yaml;
-  Metadata: profile_scopes, registry_file.
+- devcov-integrity-guard — Assets: AGENTS.md, policy descriptors,
+  registry/local/policy_registry.yaml, devcovenant/registry/local/
+  test_status.json; Metadata: policy_definitions, registry_file,
+  test_status_file, watch_dirs, watch_files, profile_scopes.
 - devcov-structure-guard — Assets: registry/local/manifest.json; Metadata:
   enforcement, profile_scopes, code_extensions.
-- policy-text-presence — Assets: AGENTS.md; Metadata: policy_definitions,
-  profile_scopes.
-- devcov-parity-guard — Assets: policy descriptors; Metadata: policy_
-  definitions, profile_scopes.
 - devflow-run-gates — Assets: run_pre_commit.py, run_tests.py,
   devcovenant/registry/local/test_status.json; Metadata: test_status_file,
   required_commands, require_
   pre_commit_start/end, pre_commit_command, epoch/command keys.
-- track-test-status — Assets: devcovenant/registry/local/test_status.json;
-  Metadata: profile_scopes.
 - changelog-coverage — Assets: CHANGELOG.md; Metadata: main_changelog,
-  skipped_files, skipped_globs, summary_words_min, profile_scopes.
+  skipped_files, skipped_globs, summary_labels, summary_verbs, profile_scopes.
 - no-future-dates — Logic-only; Metadata: profile_scopes.
 - read-only-directories — Metadata: include_globs, profile_scopes.
 - managed-environment — Metadata: expected_paths, expected_interpreters,
-  required_commands, command_hints (apply: false by default).
+  required_commands, command_hints (enabled: false by default).
 - semantic-version-scope — Assets: VERSION (profile override),
   CHANGELOG.md; Metadata: version_file, changelog_file, profile_scopes
-  (apply: false).
+  (enabled: false).
 - last-updated-placement — Assets: managed docs; Metadata: allowed_globs,
   profile_scopes.
 - documentation-growth-tracking — Metadata: selector roles,
@@ -44,6 +40,8 @@ opt-in via custom profiles or config overrides—never implicit via `global`.
   devcovenant/README.md + devcovenant/VERSION. Metadata: version_file,
   readme_files, optional_files, pyproject_files, license_files,
   changelog_file, header_prefix.
+
+`devcov-integrity-guard` is the active replacement for legacy integrity checks.
 
 ## Profile-Scoped Core Policies
 - dependency-license-sync — Profiles: python, javascript, typescript, java,

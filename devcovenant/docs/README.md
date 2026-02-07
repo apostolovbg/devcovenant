@@ -17,7 +17,7 @@ add examples for new flags or metadata, and keep cross-links current.
 Updates here are tracked by the `documentation-growth-tracking` policy.
 
 ## Doc Catalog
-- `installation.md` — install, update, uninstall, and no-touch runs.
+- `installation.md` — install, deploy, update, upgrade, and no-touch runs.
 - `config.md` — config structure, overrides, and profile selection.
 - `profiles.md` — profile anatomy, assets, overlays, and suffixes.
 - `policies.md` — policy descriptors, metadata, and custom policies.

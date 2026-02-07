@@ -3,56 +3,59 @@
 ## Table of Contents
 - [Overview](#overview)
 - [Workflow](#workflow)
-- [Install Modes](#install-modes)
-- [Update Behavior](#update-behavior)
+- [Lifecycle Commands](#lifecycle-commands)
 - [No-touch Runs](#no-touch-runs)
 - [Examples](#examples)
-- [Uninstall](#uninstall)
+- [Undeploy and Uninstall](#undeploy-and-uninstall)
 
 ## Overview
-DevCovenant installs into a target repository by copying the package and
-materializing managed documents, registries, and config. Install is for
-first-time setup. Update refreshes the same artifacts without replacing
-`devcovenant/` unless you force it. Source checkouts and the packaged CLI
-share the same commands; use `python3 -m devcovenant` when the console
-entry is not available.
+DevCovenant separates installation of the core from deployment of managed
+docs and assets. Install copies `devcovenant/` and writes a generic config
+stub. Deploy activates managed docs, policy blocks, registries, and the
+generated `.gitignore`. Update refreshes managed content without replacing
+core files. Upgrade replaces the core when a newer version is available and
+then runs update. Refresh rebuilds registries and config autogen data only.
+
+Use `python3 -m devcovenant` when the console entry is not available.
 
 ## Workflow
-1. Choose a target repository path.
-2. Run `devcovenant install` for a new repo or `devcovenant update` for an
-   existing install.
-3. Run the enforced gates: pre-commit start, tests, pre-commit end.
-4. Review and commit the generated docs and registries.
+1. Run `install` to copy the core and generate a generic config stub.
+2. Edit `devcovenant/config.yaml` and set `install.generic_config: false`.
+3. Run `deploy` to activate managed docs, registries, and gitignore.
+4. Use `update` for managed refreshes or `upgrade` for core updates.
 
-## Install Modes
-- `devcovenant install --target /path/to/repo` installs a full baseline.
-- Install writes new docs into the repo. Use `--backup-existing` to keep
-  `*_old.*` copies before overwriting; default runs replace files in-place.
-- Install seeds the configured version file (default `VERSION`) when
-  missing.
-
-## Update Behavior
-- Update refreshes managed docs, registries, and config defaults while
-  preserving policy text and overrides.
-- `--force-docs` or `--force-config` override existing files.
-- `--skip-refresh` avoids the final refresh-all step when a fast run is
-  needed for tests.
+## Lifecycle Commands
+- `install`: copy the core plus a generic config stub. It never deploys
+  managed docs/assets. If a newer core is available, install prompts for
+  `upgrade` first.
+- `deploy`: requires a non-generic config (`install.generic_config: false`).
+  It writes managed docs/assets/registries, regenerates `.gitignore`, and
+  runs a registry refresh.
+- `update`: refresh managed docs/assets/registries using the existing core.
+  It never upgrades core files.
+- `upgrade`: replace core files when the source version is newer, apply
+  policy replacements, then run `update`.
+- `refresh`: registry-only regeneration plus config autogen refresh.
+- `undeploy`: remove managed blocks/registries and generated `.gitignore`
+  fragments while keeping core + config.
 
 ## No-touch Runs
-Use `--no-touch` to copy only the package into the target repo while
-recording the run in the local manifest. This mode is useful for staged
-rollouts where you want to apply the doc/config changes later.
+`--no-touch` copies only the DevCovenant package and records the run in the
+local manifest. Use it to stage a later deploy.
 
 ## Examples
 ```bash
 devcovenant install --target /path/to/repo
+# edit devcovenant/config.yaml (set install.generic_config: false)
+devcovenant deploy --target /path/to/repo
 
-devcovenant update --target /path/to/repo --policy-mode append-missing
+devcovenant update --target /path/to/repo
+devcovenant upgrade --target /path/to/repo
 
-python3 -m devcovenant update --target /path/to/repo --force-docs
+python3 -m devcovenant refresh --target /path/to/repo
 ```
 
-## Uninstall
-Uninstall reverses the installation steps and removes managed artifacts.
-Use it to roll back a broken install, then rerun install or update to
-restore a clean baseline.
+## Undeploy and Uninstall
+`undeploy` removes managed blocks and registries but keeps the core so you
+can adjust config and redeploy. `uninstall` removes the entire DevCovenant
+footprint from the repo.

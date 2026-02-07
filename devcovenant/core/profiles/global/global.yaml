@@ -3,7 +3,67 @@ profile: global
 category: core
 suffixes: []
 ignore_dirs: []
-assets: []
+assets:
+  - path: devcovenant/registry/local/manifest.json
+    mode: generate
+    generator: manifest
+    if_missing: true
+  - path: devcovenant/registry/local/policy_registry.yaml
+    mode: generate
+    generator: policy_registry
+  - path: devcovenant/registry/local/profile_registry.yaml
+    mode: generate
+    generator: profile_registry
+  - path: devcovenant/registry/local/test_status.json
+    mode: generate
+    generator: test_status
+    if_missing: true
+pre_commit:
+  default_language_version:
+    python: python3.14
+  repos:
+    - repo: https://github.com/psf/black
+      rev: 24.4.2
+      hooks:
+        - id: black
+          args: [--line-length, "79"]
+    - repo: https://github.com/pycqa/isort
+      rev: 5.12.0
+      hooks:
+        - id: isort
+          args: [--profile, black, --line-length, "79"]
+    - repo: https://github.com/astral-sh/ruff-pre-commit
+      rev: v0.4.4
+      hooks:
+        - id: ruff
+          args: [--fix, --exit-non-zero-on-fix, --line-length, "79"]
+        - id: ruff-format
+          args: [--line-length, "79"]
+    - repo: https://github.com/pre-commit/pre-commit-hooks
+      rev: v4.6.0
+      hooks:
+        - id: check-merge-conflict
+        - id: check-yaml
+        - id: end-of-file-fixer
+        - id: trailing-whitespace
+          args: [--markdown-linebreak-ext=md]
+    - repo: https://github.com/pycqa/flake8
+      rev: 6.1.0
+      hooks:
+        - id: flake8
+          args: [--max-line-length=79, "--extend-ignore=E203,W503"]
+    - repo: local
+      hooks:
+        - id: devcovenant
+          name: enforce repository policies (DevCovenant)
+          entry: python3 -m devcovenant.cli check --mode=pre-commit
+          language: python
+          additional_dependencies:
+            - PyYAML==6.0.2
+            - semver==3.0.2
+          types: [text]
+          pass_filenames: false
+          always_run: true
 policy_overlays:
   documentation-growth-tracking:
     user_facing_files:
@@ -71,7 +131,77 @@ policy_overlays:
       - SPEC.md
       - PLAN.md
   changelog-coverage:
-    summary_words_min: 10
+    summary_verbs:
+      - add
+      - added
+      - adjust
+      - adjusted
+      - align
+      - aligned
+      - amend
+      - amended
+      - automate
+      - automated
+      - build
+      - built
+      - bump
+      - bumped
+      - clean
+      - cleaned
+      - clarify
+      - clarified
+      - consolidate
+      - consolidated
+      - correct
+      - corrected
+      - create
+      - created
+      - define
+      - defined
+      - deprecate
+      - deprecated
+      - document
+      - documented
+      - drop
+      - dropped
+      - enable
+      - enabled
+      - expand
+      - expanded
+      - fix
+      - fixed
+      - harden
+      - hardened
+      - improve
+      - improved
+      - introduce
+      - introduced
+      - migrate
+      - migrated
+      - normalize
+      - normalized
+      - refactor
+      - refactored
+      - remove
+      - removed
+      - rename
+      - renamed
+      - replace
+      - replaced
+      - restructure
+      - restructured
+      - revise
+      - revised
+      - streamline
+      - streamlined
+      - support
+      - supported
+      - update
+      - updated
+      - upgrade
+      - upgraded
+      - wrap
+      - wrapped
     required_globs:
       - README.md
       - AGENTS.md
@@ -79,13 +209,13 @@ policy_overlays:
       - CHANGELOG.md
       - SPEC.md
       - PLAN.md
+  devflow-run-gates:
+    skipped_globs:
+      - devcovenant/registry/local/**
 policies:
-  - devcov-self-enforcement
+  - devcov-integrity-guard
   - devcov-structure-guard
-  - policy-text-presence
-  - devcov-parity-guard
   - devflow-run-gates
-  - track-test-status
   - changelog-coverage
   - no-future-dates
   - read-only-directories

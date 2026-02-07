@@ -6,13 +6,9 @@ text: |
   list aligned with typical test layouts unless overridden.
 metadata:
   id: new-modules-need-tests
-  status: active
   severity: error
   auto_fix: 'false'
-  updated: 'false'
   enforcement: active
-  apply: 'true'
-  custom: 'true'
   profile_scopes:
     - python
     - fastapi

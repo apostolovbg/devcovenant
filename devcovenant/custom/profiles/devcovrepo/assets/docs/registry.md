@@ -21,9 +21,9 @@ cache: do not edit it by hand.
 ## Local Registry Contents
 The main files under `devcovenant/registry/local/` are:
 - `policy_registry.yaml` for policy hashes and resolved metadata.
-- `policy_metadata_schema.yaml` for the normalized schema keys.
-- `profile_catalog.yaml` for the active profile inventory.
+- `profile_registry.yaml` for the active profile inventory.
 - `manifest.json` for install/update tracking and notices.
+- `test_status.json` for devflow gate/test run state.
 
 ## Global Registry Assets
 The global registry directory under `devcovenant/registry/global/` ships

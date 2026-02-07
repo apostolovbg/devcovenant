@@ -34,6 +34,9 @@ devcovenant/registry/local/
 .devcov/install_manifest.json
 .devcovenant/install_manifest.json
 
+# Profile: global
+# DevCovenant profile ignores
+
 # Profile: data
 # DevCovenant profile ignores
 data/raw
@@ -43,15 +46,14 @@ data/cache
 # Profile: devcovrepo
 # DevCovenant repo-specific ignores
 # Keep this fragment minimal; config.yaml stays tracked.
+!devcovenant/registry/local/
+!devcovenant/registry/local/**
 
 # Profile: docs
 # DevCovenant profile ignores
 _site
 site
 build
-
-# Profile: global
-# DevCovenant profile ignores
 
 # Profile: python
 # DevCovenant profile ignores

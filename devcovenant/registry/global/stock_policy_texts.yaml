@@ -10,13 +10,6 @@ dependency-license-sync: |
   configured by the active profiles or config overrides. The policy points
   reviewers to the `licenses/` directory and its `## License Report` section so
   every dependency change touches both the license text and the cited manifest.
-devcov-parity-guard: |
-  Ensure the policy text recorded in AGENTS matches the descriptor text
-  shipped alongside each policy (core or custom). When the two drift,
-  DevCovenant warns so the policy prose and its implementation stay aligned.
-devcov-self-enforcement: |
-  DevCovenant must keep its registry synchronized with policy
-  definitions.
 devcov-structure-guard: |
   Ensure the DevCovenant repo keeps the required structure
   and tooling files.
@@ -79,10 +72,6 @@ no-future-dates: |
   Dates in changelogs or documentation must not be in the future. Auto-
   fixers
   should correct accidental placeholders to today’s date.
-policy-text-presence: |
-  Every policy definition must include descriptive text immediately
-  after the
-  `policy-def` block. Empty policy descriptions are not allowed.
 read-only-directories: |
   Protect declared read-only directories from modification. If a
   directory
@@ -100,7 +89,7 @@ semantic-version-scope: |
   work, and `patch` for bug fixes or documentation-only updates. The tag
   must match the bump from the previous version, and the configured
   version file must be updated whenever the changelog declares a release
-  scope. The policy ships disabled (`apply: false`) and should only be
+  scope. The policy ships disabled (`enabled: false`) and should only be
   enabled for release processes that enforce SemVer discipline.
 version-sync: |
   All version-bearing files must match the canonical version file

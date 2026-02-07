@@ -1,0 +1,119 @@
+# DevCovenant Configuration (generic devcovuser stub)
+# Generated only when missing. Set install.generic_config: false once
+# reviewed so deploy can proceed.
+
+devcov_core_include: false
+devcov_core_paths:
+  - devcovenant/core
+  - devcovenant/__init__.py
+  - devcovenant/__main__.py
+  - devcovenant/cli.py
+  - devcovenant/registry
+  - devcovenant/run_pre_commit.py
+  - devcovenant/run_tests.py
+  - devcovenant/update_test_status.py
+  - devcovenant/core/check.py
+
+profiles:
+  active:
+    - global
+    - devcovuser
+    - python
+    - docs
+    - data
+    - suffixes
+  generated:
+    file_suffixes:
+      - __none__
+
+paths:
+  policy_definitions: AGENTS.md
+  registry_file: devcovenant/registry/local/policy_registry.yaml
+  manifest_file: devcovenant/registry/local/manifest.json
+  core_profiles_root: devcovenant/core/profiles
+  custom_profiles_root: devcovenant/custom/profiles
+  core_policies_root: devcovenant/core/policies
+  custom_policies_root: devcovenant/custom/policies
+
+version:
+  override: null
+
+docs:
+  managed_blocks:
+    begin: "<!-- DEVCOV:BEGIN -->"
+    end: "<!-- DEVCOV:END -->"
+
+doc_assets:
+  autogen: []
+  user: []
+
+install:
+  generic_config: true
+  allow_existing: false
+  auto_uninstall: false
+  preserve_custom: true
+  config_mode: preserve
+  doc_mode: preserve
+  disable_policy: []
+
+update:
+  preserve_custom: true
+  refresh_core: true
+
+engine:
+  master_update: true
+  fix_threshold: warning
+  fail_threshold: error
+  auto_fix_enabled: true
+  parallel_checks: true
+  verbose: true
+  pre_commit_all_files: true
+  file_suffixes:
+    - .md
+    - .rst
+    - .txt
+    - .yml
+    - .yaml
+    - .json
+    - .toml
+  ignore_dirs:
+    - .git
+    - .venv
+    - .python
+    - output
+    - logs
+    - build
+    - dist
+    - node_modules
+    - __pycache__
+    - .pytest_cache
+    - .cache
+    - .venv.lock
+
+self_enforcement:
+  enabled: true
+  policy_prefix: "devcov-"
+
+hooks:
+  pre_commit: true
+  pre_push: false
+
+pre_commit:
+  enabled: true
+  overrides: {}
+
+reporting:
+  show_policy_links: true
+  audit_trail: true
+  use_colors: true
+
+autogen_disable: []
+manual_force_enable: []
+freeze_core_policies: []
+policy_overrides: {}
+
+ignore:
+  patterns: []
+
+autogen_metadata_overrides: {}
+user_metadata_overrides: {}

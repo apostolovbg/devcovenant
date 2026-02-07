@@ -6,17 +6,13 @@ text: |
   work, and `patch` for bug fixes or documentation-only updates. The tag
   must match the bump from the previous version, and the configured
   version file must be updated whenever the changelog declares a release
-  scope. The policy ships disabled (`apply: false`) and should only be
+  scope. The policy ships disabled (`enabled: false`) and should only be
   enabled for release processes that enforce SemVer discipline.
 metadata:
   id: semantic-version-scope
-  status: active
   severity: error
   auto_fix: 'false'
-  updated: 'false'
   enforcement: active
-  apply: 'false'
-  custom: 'false'
   profile_scopes: global
   version_file: VERSION
   changelog_file: CHANGELOG.md

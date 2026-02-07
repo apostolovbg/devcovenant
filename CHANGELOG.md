@@ -1,5 +1,5 @@
 # Changelog
-**Last Updated:** 2026-02-05
+**Last Updated:** 2026-02-07
 **Version:** 0.2.6
 
 <!-- DEVCOV:BEGIN -->
@@ -8,10 +8,14 @@
 **Managed By:** DevCovenant
 
 ## How to Log Changes
-Add one line for each substantive change under the current version header.
+Add one entry for each substantive change under the current version header.
 Keep entries newest-first and record dates in ISO format (`YYYY-MM-DD`).
+Each entry must include Change/Why/Impact summary lines with action verbs.
 Example entry:
-- 2026-01-23: Updated dependency manifests and license report.
+- 2026-01-23:
+  Change: Updated dependency manifests and license report.
+  Why: Clarified dependency sources for release audits.
+  Impact: Maintainers see updated dependency state in logs.
   Files:
   requirements.in
   requirements.lock
@@ -29,12 +33,13 @@ Example entry:
 
 ## Version 0.2.6
 
-- 2026-02-05: Updated defaults, backup flow, and changelog rules with meta now.
-  Refreshed policy text, updated docs/maps for profile-driven version files,
-  made backup creation opt-in via `--backup-existing`, and added configurable
-  changelog summary length with `_old` file exclusions.
+- 2026-02-07:
+  Change: Updated changelog-coverage to require Change/Why/Impact verbs.
+  Why: Clarified summary expectations to avoid vague entries.
+  Impact: Users see updated change notes with explicit actions.
   Files:
   AGENTS.md
+  CONTRIBUTING.md
   PLAN.md
   POLICY_MAP.md
   PROFILE_MAP.md
@@ -44,41 +49,999 @@ Example entry:
   devcovenant/cli.py
   devcovenant/config.yaml
   devcovenant/core/cli_options.py
+  devcovenant/core/deploy.py
+  devcovenant/core/engine.py
+  devcovenant/core/generate_policy_metadata_schema.py
   devcovenant/core/install.py
+  devcovenant/core/manifest.py
+  devcovenant/core/parser.py
+  devcovenant/core/policies/README.md
   devcovenant/core/policies/changelog_coverage/changelog_coverage.py
   devcovenant/core/policies/changelog_coverage/changelog_coverage.yaml
+  devcovenant/core/policies/changelog_coverage/fixers/__init__.py
+  devcovenant/core/policies/changelog_coverage/fixers/global.py
+  devcovenant/core/policies/dependency_license_sync/assets/policy_assets.yaml
+  devcovenant/core/policies/dependency_license_sync/\
+    dependency_license_sync.yaml
+  devcovenant/core/policies/devcov_integrity_guard/__init__.py
+  devcovenant/core/policies/devcov_integrity_guard/adapters/__init__.py
+  devcovenant/core/policies/devcov_integrity_guard/assets/.gitkeep
+  devcovenant/core/policies/devcov_integrity_guard/devcov_integrity_guard.py
+  devcovenant/core/policies/devcov_integrity_guard/devcov_integrity_guard.yaml
+  devcovenant/core/policies/devcov_integrity_guard/fixers/__init__.py
+  devcovenant/core/policies/devcov_parity_guard/__init__.py
+  devcovenant/core/policies/devcov_parity_guard/adapters/__init__.py
+  devcovenant/core/policies/devcov_parity_guard/devcov_parity_guard.py
+  devcovenant/core/policies/devcov_parity_guard/devcov_parity_guard.yaml
+  devcovenant/core/policies/devcov_parity_guard/fixers/__init__.py
+  devcovenant/core/policies/devcov_self_enforcement/__init__.py
+  devcovenant/core/policies/devcov_self_enforcement/adapters/__init__.py
+  devcovenant/core/policies/devcov_self_enforcement/assets/.gitkeep
+  devcovenant/core/policies/devcov_self_enforcement/devcov_self_enforcement.py
+  devcovenant/core/policies/devcov_self_enforcement/\
+    devcov_self_enforcement.yaml
+  devcovenant/core/policies/devcov_self_enforcement/fixers/__init__.py
+  devcovenant/core/policies/devcov_structure_guard/devcov_structure_guard.yaml
+  devcovenant/core/policies/devflow_run_gates/devflow_run_gates.py
+  devcovenant/core/policies/devflow_run_gates/devflow_run_gates.yaml
   devcovenant/core/policies/docstring_and_comment_coverage/\
     docstring_and_comment_coverage.yaml
   devcovenant/core/policies/documentation_growth_tracking/\
     documentation_growth_tracking.yaml
-  devcovenant/core/policies/last_updated_placement/\
-    last_updated_placement.yaml
+  devcovenant/core/policies/last_updated_placement/fixers/global.py
+  devcovenant/core/policies/last_updated_placement/last_updated_placement.py
+  devcovenant/core/policies/last_updated_placement/last_updated_placement.yaml
   devcovenant/core/policies/line_length_limit/line_length_limit.yaml
-  devcovenant/core/policies/new_modules_need_tests/\
-    new_modules_need_tests.yaml
+  devcovenant/core/policies/managed_environment/managed_environment.yaml
+  devcovenant/core/policies/name_clarity/name_clarity.yaml
+  devcovenant/core/policies/new_modules_need_tests/new_modules_need_tests.yaml
+  devcovenant/core/policies/no_future_dates/no_future_dates.yaml
+  devcovenant/core/policies/policy_text_presence/__init__.py
+  devcovenant/core/policies/policy_text_presence/adapters/__init__.py
+  devcovenant/core/policies/policy_text_presence/assets/.gitkeep
+  devcovenant/core/policies/policy_text_presence/fixers/__init__.py
+  devcovenant/core/policies/policy_text_presence/policy_text_presence.py
+  devcovenant/core/policies/policy_text_presence/policy_text_presence.yaml
+  devcovenant/core/policies/raw_string_escapes/raw_string_escapes.yaml
+  devcovenant/core/policies/read_only_directories/read_only_directories.yaml
   devcovenant/core/policies/security_scanner/security_scanner.yaml
-  devcovenant/core/policies/semantic_version_scope/\
-    semantic_version_scope.yaml
+  devcovenant/core/policies/semantic_version_scope/semantic_version_scope.yaml
+  devcovenant/core/policies/track_test_status/__init__.py
+  devcovenant/core/policies/track_test_status/adapters/__init__.py
+  devcovenant/core/policies/track_test_status/assets/.gitkeep
+  devcovenant/core/policies/track_test_status/fixers/__init__.py
+  devcovenant/core/policies/track_test_status/track_test_status.py
+  devcovenant/core/policies/track_test_status/track_test_status.yaml
   devcovenant/core/policies/version_sync/version_sync.yaml
+  devcovenant/core/policy_schema.py
+  devcovenant/core/profiles.py
+  devcovenant/core/profiles/README.md
+  devcovenant/core/profiles/devcovuser/assets/config.yaml
   devcovenant/core/profiles/devcovuser/devcovuser.yaml
+  devcovenant/core/profiles/global/assets/AGENTS.md
+  devcovenant/core/profiles/global/assets/AGENTS.yaml
+  devcovenant/core/profiles/global/assets/CHANGELOG.yaml
+  devcovenant/core/profiles/global/assets/CONTRIBUTING.yaml
+  devcovenant/core/profiles/global/assets/PLAN.yaml
+  devcovenant/core/profiles/global/assets/README.yaml
+  devcovenant/core/profiles/global/assets/SPEC.yaml
+  devcovenant/core/profiles/global/assets/devcovenant/README.yaml
   devcovenant/core/profiles/global/global.yaml
+  devcovenant/core/profiles/python/python.yaml
+  devcovenant/core/refresh.py
   devcovenant/core/refresh_all.py
+  devcovenant/core/refresh_policies.py
+  devcovenant/core/registry.py
+  devcovenant/core/run_pre_commit.py
+  devcovenant/core/run_tests.py
   devcovenant/core/stock_policy_texts.json
+  devcovenant/core/undeploy.py
   devcovenant/core/update.py
+  devcovenant/core/update_policy_registry.py
+  devcovenant/core/upgrade.py
+  devcovenant/custom/policies/README.md
+  devcovenant/custom/policies/devcov_raw_string_escapes/\
+    devcov_raw_string_escapes.yaml
+  devcovenant/custom/policies/managed_doc_assets/managed_doc_assets.yaml
+  devcovenant/custom/policies/readme_sync/readme_sync.yaml
+  devcovenant/custom/profiles/devcovrepo/assets/.gitignore
+  devcovenant/custom/profiles/devcovrepo/assets/docs/README.md
   devcovenant/custom/profiles/devcovrepo/assets/docs/config.md
-  devcovenant/custom/profiles/devcovrepo/assets/docs/\
-    installation.md
-  devcovenant/custom/profiles/devcovrepo/assets/docs/\
-    policies.md
-  devcovenant/custom/profiles/devcovrepo/assets/docs/\
-    profiles.md
+  devcovenant/custom/profiles/devcovrepo/assets/docs/installation.md
+  devcovenant/custom/profiles/devcovrepo/assets/docs/policies.md
+  devcovenant/custom/profiles/devcovrepo/assets/docs/refresh.md
+  devcovenant/custom/profiles/devcovrepo/assets/docs/registry.md
+  devcovenant/custom/profiles/devcovrepo/assets/docs/troubleshooting.md
   devcovenant/custom/profiles/devcovrepo/devcovrepo.yaml
+  devcovenant/docs/README.md
   devcovenant/docs/config.md
   devcovenant/docs/installation.md
   devcovenant/docs/policies.md
-  devcovenant/docs/profiles.md
+  devcovenant/docs/refresh.md
+  devcovenant/docs/registry.md
+  devcovenant/docs/troubleshooting.md
   devcovenant/registry/global/stock_policy_texts.yaml
+  devcovenant/registry/local/manifest.json
+  devcovenant/registry/local/policy_registry.yaml
+  devcovenant/registry/local/profile_registry.yaml
+  devcovenant/registry/local/test_status.json
   tests/core/policies/changelog_coverage/tests/test_changelog_coverage.py
+  tests/core/policies/devcov_integrity_guard/__init__.py
+  tests/core/policies/devcov_integrity_guard/tests/__init__.py
+  tests/core/policies/devcov_integrity_guard/tests/\
+    test_devcov_integrity_guard.py
+  tests/core/policies/devcov_parity_guard/__init__.py
+  tests/core/policies/devcov_parity_guard/tests/__init__.py
+  tests/core/policies/devcov_parity_guard/tests/test_devcov_parity_guard.py
+  tests/core/policies/devcov_self_enforcement/__init__.py
+  tests/core/policies/devcov_self_enforcement/tests/__init__.py
+  tests/core/policies/devcov_self_enforcement/tests/\
+    test_devcov_self_enforcement.py
+  tests/core/policies/last_updated_placement/tests/\
+    test_last_updated_placement.py
+  tests/core/policies/policy_text_presence/__init__.py
+  tests/core/policies/policy_text_presence/tests/__init__.py
+  tests/core/policies/policy_text_presence/tests/test_policy_text_presence.py
+  tests/core/policies/track_test_status/__init__.py
+  tests/core/policies/track_test_status/tests/__init__.py
+  tests/core/policies/track_test_status/tests/test_track_test_status.py
+  tests/core/profiles/test_profiles.py
+  tests/core/tests/test_install.py
+  tests/core/tests/test_parser.py
+  tests/core/tests/test_policy_freeze.py
+  tests/core/tests/test_policy_metadata_schema.py
+  tests/core/tests/test_policy_replacements.py
+  tests/core/tests/test_policy_schema.py
+  tests/core/tests/test_refresh_policies.py
+  tests/custom/profiles/test_custom_profiles.py
+  tests/devcovenant/__init__.py
+  tests/devcovenant/core/__init__.py
+  tests/devcovenant/core/policies/__init__.py
+  tests/devcovenant/core/policies/changelog_coverage/__init__.py
+  tests/devcovenant/core/policies/dependency_license_sync/__init__.py
+  tests/devcovenant/core/policies/devcov_integrity_guard/__init__.py
+  tests/devcovenant/core/policies/devcov_structure_guard/__init__.py
+  tests/devcovenant/core/policies/devflow_run_gates/__init__.py
+  tests/devcovenant/core/policies/docstring_and_comment_coverage/__init__.py
+  tests/devcovenant/core/policies/documentation_growth_tracking/__init__.py
+  tests/devcovenant/core/policies/last_updated_placement/__init__.py
+  tests/devcovenant/core/policies/line_length_limit/__init__.py
+  tests/devcovenant/core/policies/managed_environment/__init__.py
+  tests/devcovenant/core/policies/name_clarity/__init__.py
+  tests/devcovenant/core/policies/new_modules_need_tests/__init__.py
+  tests/devcovenant/core/policies/no_future_dates/__init__.py
+  tests/devcovenant/core/policies/raw_string_escapes/__init__.py
+  tests/devcovenant/core/policies/read_only_directories/__init__.py
+  tests/devcovenant/core/policies/security_scanner/__init__.py
+  tests/devcovenant/core/policies/semantic_version_scope/__init__.py
+  tests/devcovenant/core/policies/version_sync/__init__.py
+  tests/devcovenant/core/profiles/__init__.py
+  tests/devcovenant/core/profiles/csharp/__init__.py
+  tests/devcovenant/core/profiles/dart/__init__.py
+  tests/devcovenant/core/profiles/data/__init__.py
+  tests/devcovenant/core/profiles/devcovuser/__init__.py
+  tests/devcovenant/core/profiles/docker/__init__.py
+  tests/devcovenant/core/profiles/docs/__init__.py
+  tests/devcovenant/core/profiles/fastapi/__init__.py
+  tests/devcovenant/core/profiles/flutter/__init__.py
+  tests/devcovenant/core/profiles/frappe/__init__.py
+  tests/devcovenant/core/profiles/global/__init__.py
+  tests/devcovenant/core/profiles/go/__init__.py
+  tests/devcovenant/core/profiles/java/__init__.py
+  tests/devcovenant/core/profiles/javascript/__init__.py
+  tests/devcovenant/core/profiles/kubernetes/__init__.py
+  tests/devcovenant/core/profiles/objective-c/__init__.py
+  tests/devcovenant/core/profiles/php/__init__.py
+  tests/devcovenant/core/profiles/python/__init__.py
+  tests/devcovenant/core/profiles/ruby/__init__.py
+  tests/devcovenant/core/profiles/rust/__init__.py
+  tests/devcovenant/core/profiles/sql/__init__.py
+  tests/devcovenant/core/profiles/suffixes/__init__.py
+  tests/devcovenant/core/profiles/swift/__init__.py
+  tests/devcovenant/core/profiles/terraform/__init__.py
+  tests/devcovenant/core/profiles/typescript/__init__.py
+  tests/devcovenant/custom/__init__.py
+  tests/devcovenant/custom/policies/__init__.py
+  tests/devcovenant/custom/policies/devcov_raw_string_escapes/__init__.py
+  tests/devcovenant/custom/policies/managed_doc_assets/__init__.py
+  tests/devcovenant/custom/policies/readme_sync/__init__.py
+  tests/devcovenant/custom/profiles/__init__.py
+  tests/devcovenant/custom/profiles/devcovrepo/__init__.py
+
+- 2026-02-06: Consolidated registry format, policy metadata flow, and docs.
+  Files:
+  AGENTS.md
+  CONTRIBUTING.md
+  PLAN.md
+  README.md
+  SPEC.md
+  devcovenant/README.md
+  devcovenant/cli.py
+  devcovenant/config.yaml
+  devcovenant/core/cli_options.py
+  devcovenant/core/deploy.py
+  devcovenant/core/engine.py
+  devcovenant/core/generate_policy_metadata_schema.py
+  devcovenant/core/install.py
+  devcovenant/core/manifest.py
+  devcovenant/core/parser.py
+  devcovenant/core/policies/README.md
+  devcovenant/core/policies/changelog_coverage/changelog_coverage.py
+  devcovenant/core/policies/changelog_coverage/changelog_coverage.yaml
+  devcovenant/core/policies/changelog_coverage/fixers/__init__.py
+  devcovenant/core/policies/changelog_coverage/fixers/global.py
+  devcovenant/core/policies/dependency_license_sync/assets/policy_assets.yaml
+  devcovenant/core/policies/dependency_license_sync/\
+    dependency_license_sync.yaml
+  devcovenant/core/policies/devcov_parity_guard/devcov_parity_guard.yaml
+  devcovenant/core/policies/devcov_self_enforcement/\
+    devcov_self_enforcement.yaml
+  devcovenant/core/policies/devcov_structure_guard/devcov_structure_guard.yaml
+  devcovenant/core/policies/devflow_run_gates/devflow_run_gates.yaml
+  devcovenant/core/policies/docstring_and_comment_coverage/\
+    docstring_and_comment_coverage.yaml
+  devcovenant/core/policies/documentation_growth_tracking/\
+    documentation_growth_tracking.yaml
+  devcovenant/core/policies/last_updated_placement/fixers/global.py
+  devcovenant/core/policies/last_updated_placement/last_updated_placement.py
+  devcovenant/core/policies/last_updated_placement/last_updated_placement.yaml
+  devcovenant/core/policies/line_length_limit/line_length_limit.yaml
+  devcovenant/core/policies/managed_environment/managed_environment.yaml
+  devcovenant/core/policies/name_clarity/name_clarity.yaml
+  devcovenant/core/policies/new_modules_need_tests/new_modules_need_tests.yaml
+  devcovenant/core/policies/no_future_dates/no_future_dates.yaml
+  devcovenant/core/policies/policy_text_presence/policy_text_presence.yaml
+  devcovenant/core/policies/raw_string_escapes/raw_string_escapes.yaml
+  devcovenant/core/policies/read_only_directories/read_only_directories.yaml
+  devcovenant/core/policies/security_scanner/security_scanner.yaml
+  devcovenant/core/policies/semantic_version_scope/semantic_version_scope.yaml
+  devcovenant/core/policies/track_test_status/track_test_status.yaml
+  devcovenant/core/policies/version_sync/version_sync.yaml
+  devcovenant/core/policy_schema.py
+  devcovenant/core/profiles.py
+  devcovenant/core/profiles/README.md
+  devcovenant/core/profiles/devcovuser/assets/config.yaml
+  devcovenant/core/profiles/devcovuser/devcovuser.yaml
+  devcovenant/core/profiles/global/assets/AGENTS.md
+  devcovenant/core/profiles/global/assets/AGENTS.yaml
+  devcovenant/core/profiles/global/assets/CHANGELOG.yaml
+  devcovenant/core/profiles/global/assets/CONTRIBUTING.yaml
+  devcovenant/core/profiles/global/assets/PLAN.yaml
+  devcovenant/core/profiles/global/assets/README.yaml
+  devcovenant/core/profiles/global/assets/SPEC.yaml
+  devcovenant/core/profiles/global/assets/devcovenant/README.yaml
+  devcovenant/core/profiles/global/global.yaml
+  devcovenant/core/refresh.py
+  devcovenant/core/refresh_all.py
+  devcovenant/core/refresh_policies.py
+  devcovenant/core/registry.py
+  devcovenant/core/run_pre_commit.py
+  devcovenant/core/run_tests.py
+  devcovenant/core/undeploy.py
+  devcovenant/core/update.py
+  devcovenant/core/update_policy_registry.py
+  devcovenant/core/upgrade.py
+  devcovenant/custom/policies/README.md
+  devcovenant/custom/policies/devcov_raw_string_escapes/\
+    devcov_raw_string_escapes.yaml
+  devcovenant/custom/policies/managed_doc_assets/managed_doc_assets.yaml
+  devcovenant/custom/policies/readme_sync/readme_sync.yaml
+  devcovenant/custom/profiles/devcovrepo/assets/.gitignore
+  devcovenant/custom/profiles/devcovrepo/assets/docs/README.md
+  devcovenant/custom/profiles/devcovrepo/assets/docs/config.md
+  devcovenant/custom/profiles/devcovrepo/assets/docs/installation.md
+  devcovenant/custom/profiles/devcovrepo/assets/docs/refresh.md
+  devcovenant/custom/profiles/devcovrepo/assets/docs/registry.md
+  devcovenant/custom/profiles/devcovrepo/assets/docs/troubleshooting.md
+  devcovenant/docs/README.md
+  devcovenant/docs/config.md
+  devcovenant/docs/installation.md
+  devcovenant/docs/policies.md
+  devcovenant/docs/refresh.md
+  devcovenant/docs/registry.md
+  devcovenant/docs/troubleshooting.md
+  devcovenant/registry/local/manifest.json
+  devcovenant/registry/local/policy_registry.yaml
+  devcovenant/registry/local/test_status.json
+  tests/core/policies/changelog_coverage/tests/test_changelog_coverage.py
+  tests/core/policies/devcov_parity_guard/tests/test_devcov_parity_guard.py
+  tests/core/policies/devcov_self_enforcement/tests/\
+    test_devcov_self_enforcement.py
+  tests/core/policies/last_updated_placement/tests/\
+    test_last_updated_placement.py
+  tests/core/policies/policy_text_presence/tests/test_policy_text_presence.py
+  tests/core/profiles/test_profiles.py
+  tests/core/tests/test_install.py
+  tests/core/tests/test_parser.py
+  tests/core/tests/test_policy_freeze.py
+  tests/core/tests/test_policy_metadata_schema.py
+  tests/core/tests/test_policy_replacements.py
+  tests/core/tests/test_policy_schema.py
+  tests/core/tests/test_refresh_policies.py
+  tests/custom/profiles/test_custom_profiles.py
+  tests/devcovenant/__init__.py
+  tests/devcovenant/core/__init__.py
+  tests/devcovenant/core/policies/__init__.py
+  tests/devcovenant/core/policies/changelog_coverage/__init__.py
+  tests/devcovenant/core/policies/dependency_license_sync/__init__.py
+  tests/devcovenant/core/policies/devcov_parity_guard/__init__.py
+  tests/devcovenant/core/policies/devcov_self_enforcement/__init__.py
+  tests/devcovenant/core/policies/devcov_structure_guard/__init__.py
+  tests/devcovenant/core/policies/devflow_run_gates/__init__.py
+  tests/devcovenant/core/policies/docstring_and_comment_coverage/__init__.py
+  tests/devcovenant/core/policies/documentation_growth_tracking/__init__.py
+  tests/devcovenant/core/policies/last_updated_placement/__init__.py
+  tests/devcovenant/core/policies/line_length_limit/__init__.py
+  tests/devcovenant/core/policies/managed_environment/__init__.py
+  tests/devcovenant/core/policies/name_clarity/__init__.py
+  tests/devcovenant/core/policies/new_modules_need_tests/__init__.py
+  tests/devcovenant/core/policies/no_future_dates/__init__.py
+  tests/devcovenant/core/policies/policy_text_presence/__init__.py
+  tests/devcovenant/core/policies/raw_string_escapes/__init__.py
+  tests/devcovenant/core/policies/read_only_directories/__init__.py
+  tests/devcovenant/core/policies/security_scanner/__init__.py
+  tests/devcovenant/core/policies/semantic_version_scope/__init__.py
+  tests/devcovenant/core/policies/track_test_status/__init__.py
+  tests/devcovenant/core/policies/version_sync/__init__.py
+  tests/devcovenant/core/profiles/__init__.py
+  tests/devcovenant/core/profiles/csharp/__init__.py
+  tests/devcovenant/core/profiles/dart/__init__.py
+  tests/devcovenant/core/profiles/data/__init__.py
+  tests/devcovenant/core/profiles/devcovuser/__init__.py
+  tests/devcovenant/core/profiles/docker/__init__.py
+  tests/devcovenant/core/profiles/docs/__init__.py
+  tests/devcovenant/core/profiles/fastapi/__init__.py
+  tests/devcovenant/core/profiles/flutter/__init__.py
+  tests/devcovenant/core/profiles/frappe/__init__.py
+  tests/devcovenant/core/profiles/global/__init__.py
+  tests/devcovenant/core/profiles/go/__init__.py
+  tests/devcovenant/core/profiles/java/__init__.py
+  tests/devcovenant/core/profiles/javascript/__init__.py
+  tests/devcovenant/core/profiles/kubernetes/__init__.py
+  tests/devcovenant/core/profiles/objective-c/__init__.py
+  tests/devcovenant/core/profiles/php/__init__.py
+  tests/devcovenant/core/profiles/python/__init__.py
+  tests/devcovenant/core/profiles/ruby/__init__.py
+  tests/devcovenant/core/profiles/rust/__init__.py
+  tests/devcovenant/core/profiles/sql/__init__.py
+  tests/devcovenant/core/profiles/suffixes/__init__.py
+  tests/devcovenant/core/profiles/swift/__init__.py
+  tests/devcovenant/core/profiles/terraform/__init__.py
+  tests/devcovenant/core/profiles/typescript/__init__.py
+  tests/devcovenant/custom/__init__.py
+  tests/devcovenant/custom/policies/__init__.py
+  tests/devcovenant/custom/policies/devcov_raw_string_escapes/__init__.py
+  tests/devcovenant/custom/policies/managed_doc_assets/__init__.py
+  tests/devcovenant/custom/policies/readme_sync/__init__.py
+  tests/devcovenant/custom/profiles/__init__.py
+  tests/devcovenant/custom/profiles/devcovrepo/__init__.py
+
+- 2026-02-06: Switch policy assets to descriptors and drop the asset registry.
+  Files:
+  AGENTS.md
+  CONTRIBUTING.md
+  PLAN.md
+  README.md
+  SPEC.md
+  devcovenant/README.md
+  devcovenant/cli.py
+  devcovenant/config.yaml
+  devcovenant/core/cli_options.py
+  devcovenant/core/deploy.py
+  devcovenant/core/engine.py
+  devcovenant/core/generate_policy_metadata_schema.py
+  devcovenant/core/install.py
+  devcovenant/core/manifest.py
+  devcovenant/core/parser.py
+  devcovenant/core/policies/README.md
+  devcovenant/core/policies/changelog_coverage/changelog_coverage.py
+  devcovenant/core/policies/changelog_coverage/changelog_coverage.yaml
+  devcovenant/core/policies/changelog_coverage/fixers/__init__.py
+  devcovenant/core/policies/changelog_coverage/fixers/global.py
+  devcovenant/core/policies/dependency_license_sync/assets/policy_assets.yaml
+  devcovenant/core/policies/dependency_license_sync/\
+    dependency_license_sync.yaml
+  devcovenant/core/policies/devcov_parity_guard/devcov_parity_guard.yaml
+  devcovenant/core/policies/devcov_self_enforcement/\
+    devcov_self_enforcement.yaml
+  devcovenant/core/policies/devcov_structure_guard/devcov_structure_guard.yaml
+  devcovenant/core/policies/devflow_run_gates/devflow_run_gates.yaml
+  devcovenant/core/policies/docstring_and_comment_coverage/\
+    docstring_and_comment_coverage.yaml
+  devcovenant/core/policies/documentation_growth_tracking/\
+    documentation_growth_tracking.yaml
+  devcovenant/core/policies/last_updated_placement/fixers/global.py
+  devcovenant/core/policies/last_updated_placement/last_updated_placement.py
+  devcovenant/core/policies/last_updated_placement/last_updated_placement.yaml
+  devcovenant/core/policies/line_length_limit/line_length_limit.yaml
+  devcovenant/core/policies/managed_environment/managed_environment.yaml
+  devcovenant/core/policies/name_clarity/name_clarity.yaml
+  devcovenant/core/policies/new_modules_need_tests/new_modules_need_tests.yaml
+  devcovenant/core/policies/no_future_dates/no_future_dates.yaml
+  devcovenant/core/policies/policy_text_presence/policy_text_presence.yaml
+  devcovenant/core/policies/raw_string_escapes/raw_string_escapes.yaml
+  devcovenant/core/policies/read_only_directories/read_only_directories.yaml
+  devcovenant/core/policies/security_scanner/security_scanner.yaml
+  devcovenant/core/policies/semantic_version_scope/semantic_version_scope.yaml
+  devcovenant/core/policies/track_test_status/track_test_status.yaml
+  devcovenant/core/policies/version_sync/version_sync.yaml
+  devcovenant/core/policy_schema.py
+  devcovenant/core/profiles/devcovuser/assets/config.yaml
+  devcovenant/core/profiles/devcovuser/devcovuser.yaml
+  devcovenant/core/profiles/global/assets/AGENTS.md
+  devcovenant/core/profiles/global/assets/AGENTS.yaml
+  devcovenant/core/profiles/global/assets/CHANGELOG.yaml
+  devcovenant/core/profiles/global/assets/CONTRIBUTING.yaml
+  devcovenant/core/profiles/global/assets/PLAN.yaml
+  devcovenant/core/profiles/global/assets/README.yaml
+  devcovenant/core/profiles/global/assets/SPEC.yaml
+  devcovenant/core/profiles/global/assets/devcovenant/README.yaml
+  devcovenant/core/profiles/global/global.yaml
+  devcovenant/core/refresh.py
+  devcovenant/core/refresh_all.py
+  devcovenant/core/refresh_policies.py
+  devcovenant/core/registry.py
+  devcovenant/core/run_pre_commit.py
+  devcovenant/core/run_tests.py
+  devcovenant/core/undeploy.py
+  devcovenant/core/update.py
+  devcovenant/core/update_policy_registry.py
+  devcovenant/core/upgrade.py
+  devcovenant/custom/policies/README.md
+  devcovenant/custom/policies/devcov_raw_string_escapes/\
+    devcov_raw_string_escapes.yaml
+  devcovenant/custom/policies/managed_doc_assets/managed_doc_assets.yaml
+  devcovenant/custom/policies/readme_sync/readme_sync.yaml
+  devcovenant/custom/profiles/devcovrepo/assets/.gitignore
+  devcovenant/custom/profiles/devcovrepo/assets/docs/README.md
+  devcovenant/custom/profiles/devcovrepo/assets/docs/config.md
+  devcovenant/custom/profiles/devcovrepo/assets/docs/installation.md
+  devcovenant/custom/profiles/devcovrepo/assets/docs/refresh.md
+  devcovenant/custom/profiles/devcovrepo/assets/docs/registry.md
+  devcovenant/custom/profiles/devcovrepo/assets/docs/troubleshooting.md
+  devcovenant/docs/README.md
+  devcovenant/docs/config.md
+  devcovenant/docs/installation.md
+  devcovenant/docs/policies.md
+  devcovenant/docs/refresh.md
+  devcovenant/docs/registry.md
+  devcovenant/docs/troubleshooting.md
+  devcovenant/registry/local/manifest.json
+  devcovenant/registry/local/policy_registry.yaml
+  devcovenant/registry/local/profile_registry.yaml
+  devcovenant/registry/local/test_status.json
+  tests/core/policies/changelog_coverage/tests/test_changelog_coverage.py
+  tests/core/policies/devcov_parity_guard/tests/test_devcov_parity_guard.py
+  tests/core/policies/devcov_self_enforcement/tests/\
+    test_devcov_self_enforcement.py
+  tests/core/policies/last_updated_placement/tests/\
+    test_last_updated_placement.py
+  tests/core/policies/policy_text_presence/tests/test_policy_text_presence.py
+  tests/core/tests/test_install.py
+  tests/core/tests/test_parser.py
+  tests/core/tests/test_policy_freeze.py
+  tests/core/tests/test_policy_metadata_schema.py
+  tests/core/tests/test_policy_replacements.py
+  tests/core/tests/test_policy_schema.py
+  tests/core/tests/test_refresh_policies.py
+  tests/devcovenant/__init__.py
+  tests/devcovenant/core/__init__.py
+  tests/devcovenant/core/policies/__init__.py
+  tests/devcovenant/core/policies/changelog_coverage/__init__.py
+  tests/devcovenant/core/policies/dependency_license_sync/__init__.py
+  tests/devcovenant/core/policies/devcov_parity_guard/__init__.py
+  tests/devcovenant/core/policies/devcov_self_enforcement/__init__.py
+  tests/devcovenant/core/policies/devcov_structure_guard/__init__.py
+  tests/devcovenant/core/policies/devflow_run_gates/__init__.py
+  tests/devcovenant/core/policies/docstring_and_comment_coverage/__init__.py
+  tests/devcovenant/core/policies/documentation_growth_tracking/__init__.py
+  tests/devcovenant/core/policies/last_updated_placement/__init__.py
+  tests/devcovenant/core/policies/line_length_limit/__init__.py
+  tests/devcovenant/core/policies/managed_environment/__init__.py
+  tests/devcovenant/core/policies/name_clarity/__init__.py
+  tests/devcovenant/core/policies/new_modules_need_tests/__init__.py
+  tests/devcovenant/core/policies/no_future_dates/__init__.py
+  tests/devcovenant/core/policies/policy_text_presence/__init__.py
+  tests/devcovenant/core/policies/raw_string_escapes/__init__.py
+  tests/devcovenant/core/policies/read_only_directories/__init__.py
+  tests/devcovenant/core/policies/security_scanner/__init__.py
+  tests/devcovenant/core/policies/semantic_version_scope/__init__.py
+  tests/devcovenant/core/policies/track_test_status/__init__.py
+  tests/devcovenant/core/policies/version_sync/__init__.py
+  tests/devcovenant/core/profiles/__init__.py
+  tests/devcovenant/core/profiles/csharp/__init__.py
+  tests/devcovenant/core/profiles/dart/__init__.py
+  tests/devcovenant/core/profiles/data/__init__.py
+  tests/devcovenant/core/profiles/devcovuser/__init__.py
+  tests/devcovenant/core/profiles/docker/__init__.py
+  tests/devcovenant/core/profiles/docs/__init__.py
+  tests/devcovenant/core/profiles/fastapi/__init__.py
+  tests/devcovenant/core/profiles/flutter/__init__.py
+  tests/devcovenant/core/profiles/frappe/__init__.py
+  tests/devcovenant/core/profiles/global/__init__.py
+  tests/devcovenant/core/profiles/go/__init__.py
+  tests/devcovenant/core/profiles/java/__init__.py
+  tests/devcovenant/core/profiles/javascript/__init__.py
+  tests/devcovenant/core/profiles/kubernetes/__init__.py
+  tests/devcovenant/core/profiles/objective-c/__init__.py
+  tests/devcovenant/core/profiles/php/__init__.py
+  tests/devcovenant/core/profiles/python/__init__.py
+  tests/devcovenant/core/profiles/ruby/__init__.py
+  tests/devcovenant/core/profiles/rust/__init__.py
+  tests/devcovenant/core/profiles/sql/__init__.py
+  tests/devcovenant/core/profiles/suffixes/__init__.py
+  tests/devcovenant/core/profiles/swift/__init__.py
+  tests/devcovenant/core/profiles/terraform/__init__.py
+  tests/devcovenant/core/profiles/typescript/__init__.py
+  tests/devcovenant/custom/__init__.py
+  tests/devcovenant/custom/policies/__init__.py
+  tests/devcovenant/custom/policies/devcov_raw_string_escapes/__init__.py
+  tests/devcovenant/custom/policies/managed_doc_assets/__init__.py
+  tests/devcovenant/custom/policies/readme_sync/__init__.py
+  tests/devcovenant/custom/profiles/__init__.py
+  tests/devcovenant/custom/profiles/devcovrepo/__init__.py
+- 2026-02-06: Integrated pre-commit config generation with refresh and docs.
+  Files:
+  AGENTS.md
+  CONTRIBUTING.md
+  PLAN.md
+  README.md
+  SPEC.md
+  devcovenant/README.md
+  devcovenant/cli.py
+  devcovenant/config.yaml
+  devcovenant/core/cli_options.py
+  devcovenant/core/deploy.py
+  devcovenant/core/engine.py
+  devcovenant/core/generate_policy_metadata_schema.py
+  devcovenant/core/install.py
+  devcovenant/core/policies/changelog_coverage/changelog_coverage.py
+  devcovenant/core/policies/changelog_coverage/changelog_coverage.yaml
+  devcovenant/core/policies/changelog_coverage/fixers/__init__.py
+  devcovenant/core/policies/changelog_coverage/fixers/global.py
+  devcovenant/core/policies/last_updated_placement/fixers/global.py
+  devcovenant/core/policies/last_updated_placement/last_updated_placement.py
+  devcovenant/core/policies/last_updated_placement/last_updated_placement.yaml
+  devcovenant/core/policy_schema.py
+  devcovenant/core/profiles/devcovuser/assets/config.yaml
+  devcovenant/core/profiles/devcovuser/devcovuser.yaml
+  devcovenant/core/profiles/global/assets/AGENTS.yaml
+  devcovenant/core/profiles/global/assets/CHANGELOG.yaml
+  devcovenant/core/profiles/global/assets/CONTRIBUTING.yaml
+  devcovenant/core/profiles/global/assets/PLAN.yaml
+  devcovenant/core/profiles/global/assets/README.yaml
+  devcovenant/core/profiles/global/assets/SPEC.yaml
+  devcovenant/core/profiles/global/assets/devcovenant/README.yaml
+  devcovenant/core/profiles/global/global.yaml
+  devcovenant/core/refresh.py
+  devcovenant/core/refresh_all.py
+  devcovenant/core/refresh_policies.py
+  devcovenant/core/registry.py
+  devcovenant/core/run_pre_commit.py
+  devcovenant/core/run_tests.py
+  devcovenant/core/undeploy.py
+  devcovenant/core/update.py
+  devcovenant/core/update_policy_registry.py
+  devcovenant/core/upgrade.py
+  devcovenant/custom/profiles/devcovrepo/assets/.gitignore
+  devcovenant/custom/profiles/devcovrepo/assets/docs/README.md
+  devcovenant/custom/profiles/devcovrepo/assets/docs/config.md
+  devcovenant/custom/profiles/devcovrepo/assets/docs/installation.md
+  devcovenant/custom/profiles/devcovrepo/assets/docs/refresh.md
+  devcovenant/custom/profiles/devcovrepo/assets/docs/registry.md
+  devcovenant/docs/README.md
+  devcovenant/docs/config.md
+  devcovenant/docs/installation.md
+  devcovenant/docs/policies.md
+  devcovenant/docs/refresh.md
+  devcovenant/docs/registry.md
+  devcovenant/registry/local/manifest.json
+  devcovenant/registry/local/policy_assets.yaml
+  devcovenant/registry/local/policy_registry.yaml
+  devcovenant/registry/local/profile_registry.yaml
+  devcovenant/registry/local/test_status.json
+  tests/core/policies/changelog_coverage/tests/test_changelog_coverage.py
+  tests/core/policies/last_updated_placement/tests/\
+    test_last_updated_placement.py
+  tests/core/tests/test_install.py
+  tests/core/tests/test_policy_metadata_schema.py
+  tests/core/tests/test_policy_replacements.py
+  tests/core/tests/test_policy_schema.py
+  tests/devcovenant/__init__.py
+  tests/devcovenant/core/__init__.py
+  tests/devcovenant/core/policies/__init__.py
+  tests/devcovenant/core/policies/changelog_coverage/__init__.py
+  tests/devcovenant/core/policies/dependency_license_sync/__init__.py
+  tests/devcovenant/core/policies/devcov_parity_guard/__init__.py
+  tests/devcovenant/core/policies/devcov_self_enforcement/__init__.py
+  tests/devcovenant/core/policies/devcov_structure_guard/__init__.py
+  tests/devcovenant/core/policies/devflow_run_gates/__init__.py
+  tests/devcovenant/core/policies/docstring_and_comment_coverage/__init__.py
+  tests/devcovenant/core/policies/documentation_growth_tracking/__init__.py
+  tests/devcovenant/core/policies/last_updated_placement/__init__.py
+  tests/devcovenant/core/policies/line_length_limit/__init__.py
+  tests/devcovenant/core/policies/managed_environment/__init__.py
+  tests/devcovenant/core/policies/name_clarity/__init__.py
+  tests/devcovenant/core/policies/new_modules_need_tests/__init__.py
+  tests/devcovenant/core/policies/no_future_dates/__init__.py
+  tests/devcovenant/core/policies/policy_text_presence/__init__.py
+  tests/devcovenant/core/policies/raw_string_escapes/__init__.py
+  tests/devcovenant/core/policies/read_only_directories/__init__.py
+  tests/devcovenant/core/policies/security_scanner/__init__.py
+  tests/devcovenant/core/policies/semantic_version_scope/__init__.py
+  tests/devcovenant/core/policies/track_test_status/__init__.py
+  tests/devcovenant/core/policies/version_sync/__init__.py
+  tests/devcovenant/core/profiles/__init__.py
+  tests/devcovenant/core/profiles/csharp/__init__.py
+  tests/devcovenant/core/profiles/dart/__init__.py
+  tests/devcovenant/core/profiles/data/__init__.py
+  tests/devcovenant/core/profiles/devcovuser/__init__.py
+  tests/devcovenant/core/profiles/docker/__init__.py
+  tests/devcovenant/core/profiles/docs/__init__.py
+  tests/devcovenant/core/profiles/fastapi/__init__.py
+  tests/devcovenant/core/profiles/flutter/__init__.py
+  tests/devcovenant/core/profiles/frappe/__init__.py
+  tests/devcovenant/core/profiles/global/__init__.py
+  tests/devcovenant/core/profiles/go/__init__.py
+  tests/devcovenant/core/profiles/java/__init__.py
+  tests/devcovenant/core/profiles/javascript/__init__.py
+  tests/devcovenant/core/profiles/kubernetes/__init__.py
+  tests/devcovenant/core/profiles/objective-c/__init__.py
+  tests/devcovenant/core/profiles/php/__init__.py
+  tests/devcovenant/core/profiles/python/__init__.py
+  tests/devcovenant/core/profiles/ruby/__init__.py
+  tests/devcovenant/core/profiles/rust/__init__.py
+  tests/devcovenant/core/profiles/sql/__init__.py
+  tests/devcovenant/core/profiles/suffixes/__init__.py
+  tests/devcovenant/core/profiles/swift/__init__.py
+  tests/devcovenant/core/profiles/terraform/__init__.py
+  tests/devcovenant/core/profiles/typescript/__init__.py
+  tests/devcovenant/custom/__init__.py
+  tests/devcovenant/custom/policies/__init__.py
+  tests/devcovenant/custom/policies/devcov_raw_string_escapes/__init__.py
+  tests/devcovenant/custom/policies/managed_doc_assets/__init__.py
+  tests/devcovenant/custom/policies/readme_sync/__init__.py
+  tests/devcovenant/custom/profiles/__init__.py
+  tests/devcovenant/custom/profiles/devcovrepo/__init__.py
+
+- 2026-02-06: Seeded config, added lifecycle tests, aligned docs/plan.
+  Files:
+    AGENTS.md
+    CONTRIBUTING.md
+    PLAN.md
+    README.md
+    SPEC.md
+    devcovenant/README.md
+    devcovenant/cli.py
+    devcovenant/config.yaml
+    devcovenant/core/cli_options.py
+    devcovenant/core/deploy.py
+    devcovenant/core/engine.py
+    devcovenant/core/generate_policy_metadata_schema.py
+    devcovenant/core/install.py
+    devcovenant/core/policies/changelog_coverage/changelog_coverage.py
+    devcovenant/core/policies/changelog_coverage/changelog_coverage.yaml
+    devcovenant/core/policies/changelog_coverage/fixers/__init__.py
+    devcovenant/core/policies/changelog_coverage/fixers/global.py
+    devcovenant/core/policies/last_updated_placement/fixers/global.py
+    devcovenant/core/policies/last_updated_placement/\
+      last_updated_placement.py
+    devcovenant/core/policies/last_updated_placement/\
+      last_updated_placement.yaml
+    devcovenant/core/policy_schema.py
+    devcovenant/core/profiles/devcovuser/assets/config.yaml
+    devcovenant/core/profiles/devcovuser/devcovuser.yaml
+    devcovenant/core/profiles/global/assets/AGENTS.yaml
+    devcovenant/core/profiles/global/assets/CHANGELOG.yaml
+    devcovenant/core/profiles/global/assets/CONTRIBUTING.yaml
+    devcovenant/core/profiles/global/assets/PLAN.yaml
+    devcovenant/core/profiles/global/assets/README.yaml
+    devcovenant/core/profiles/global/assets/SPEC.yaml
+    devcovenant/core/profiles/global/assets/devcovenant/README.yaml
+    devcovenant/core/refresh.py
+    devcovenant/core/refresh_all.py
+    devcovenant/core/refresh_policies.py
+    devcovenant/core/registry.py
+    devcovenant/core/run_pre_commit.py
+    devcovenant/core/run_tests.py
+    devcovenant/core/undeploy.py
+    devcovenant/core/update.py
+    devcovenant/core/update_policy_registry.py
+    devcovenant/core/upgrade.py
+    devcovenant/custom/profiles/devcovrepo/assets/docs/README.md
+    devcovenant/custom/profiles/devcovrepo/assets/docs/config.md
+    devcovenant/custom/profiles/devcovrepo/assets/docs/installation.md
+    devcovenant/custom/profiles/devcovrepo/assets/docs/refresh.md
+    devcovenant/custom/profiles/devcovrepo/assets/docs/registry.md
+    devcovenant/docs/README.md
+    devcovenant/docs/config.md
+    devcovenant/docs/installation.md
+    devcovenant/docs/policies.md
+    devcovenant/docs/refresh.md
+    devcovenant/docs/registry.md
+    tests/core/policies/changelog_coverage/tests/test_changelog_coverage.py
+    tests/core/policies/last_updated_placement/tests/\
+      test_last_updated_placement.py
+    tests/core/tests/test_install.py
+    tests/core/tests/test_policy_metadata_schema.py
+    tests/core/tests/test_policy_replacements.py
+    tests/core/tests/test_policy_schema.py
+
+- 2026-02-06: Refined install/deploy lifecycle, config gating, and docs/tests.
+  Files:
+    AGENTS.md
+    CONTRIBUTING.md
+    PLAN.md
+    README.md
+    SPEC.md
+    devcovenant/README.md
+    devcovenant/cli.py
+    devcovenant/config.yaml
+    devcovenant/core/cli_options.py
+    devcovenant/core/deploy.py
+    devcovenant/core/engine.py
+    devcovenant/core/generate_policy_metadata_schema.py
+    devcovenant/core/install.py
+    devcovenant/core/policies/changelog_coverage/changelog_coverage.py
+    devcovenant/core/policies/changelog_coverage/changelog_coverage.yaml
+    devcovenant/core/policies/changelog_coverage/fixers/__init__.py
+    devcovenant/core/policies/changelog_coverage/fixers/global.py
+    devcovenant/core/policies/last_updated_placement/fixers/global.py
+    devcovenant/core/policies/last_updated_placement/\
+      last_updated_placement.py
+    devcovenant/core/policies/last_updated_placement/\
+      last_updated_placement.yaml
+    devcovenant/core/policy_schema.py
+    devcovenant/core/profiles/devcovuser/devcovuser.yaml
+    devcovenant/core/profiles/global/assets/AGENTS.yaml
+    devcovenant/core/profiles/global/assets/CHANGELOG.yaml
+    devcovenant/core/profiles/global/assets/CONTRIBUTING.yaml
+    devcovenant/core/profiles/global/assets/PLAN.yaml
+    devcovenant/core/profiles/global/assets/README.yaml
+    devcovenant/core/profiles/global/assets/SPEC.yaml
+    devcovenant/core/profiles/global/assets/devcovenant/README.yaml
+    devcovenant/core/refresh.py
+    devcovenant/core/refresh_all.py
+    devcovenant/core/refresh_policies.py
+    devcovenant/core/registry.py
+    devcovenant/core/run_pre_commit.py
+    devcovenant/core/run_tests.py
+    devcovenant/core/undeploy.py
+    devcovenant/core/update.py
+    devcovenant/core/update_policy_registry.py
+    devcovenant/core/upgrade.py
+    devcovenant/custom/profiles/devcovrepo/assets/docs/README.md
+    devcovenant/custom/profiles/devcovrepo/assets/docs/config.md
+    devcovenant/custom/profiles/devcovrepo/assets/docs/installation.md
+    devcovenant/custom/profiles/devcovrepo/assets/docs/refresh.md
+    devcovenant/custom/profiles/devcovrepo/assets/docs/registry.md
+    devcovenant/docs/README.md
+    devcovenant/docs/config.md
+    devcovenant/docs/installation.md
+    devcovenant/docs/policies.md
+    devcovenant/docs/refresh.md
+    devcovenant/docs/registry.md
+    tests/core/policies/changelog_coverage/tests/test_changelog_coverage.py
+    tests/core/policies/last_updated_placement/tests/\
+      test_last_updated_placement.py
+    tests/core/tests/test_install.py
+    tests/core/tests/test_policy_metadata_schema.py
+    tests/core/tests/test_policy_replacements.py
+    tests/core/tests/test_policy_schema.py
+
+- 2026-02-06: Adjusted lifecycle flow and hook wiring; reduced noise scope.
+  Files:
+    AGENTS.md
+    CONTRIBUTING.md
+    PLAN.md
+    README.md
+    SPEC.md
+    devcovenant/README.md
+    devcovenant/cli.py
+    devcovenant/core/cli_options.py
+    devcovenant/core/deploy.py
+    devcovenant/core/engine.py
+    devcovenant/core/generate_policy_metadata_schema.py
+    devcovenant/core/install.py
+    devcovenant/core/policies/changelog_coverage/changelog_coverage.py
+    devcovenant/core/policies/changelog_coverage/changelog_coverage.yaml
+    devcovenant/core/policies/changelog_coverage/fixers/__init__.py
+    devcovenant/core/policies/changelog_coverage/fixers/global.py
+    devcovenant/core/policies/last_updated_placement/fixers/global.py
+    devcovenant/core/policies/last_updated_placement/\
+      last_updated_placement.py
+    devcovenant/core/policies/last_updated_placement/\
+      last_updated_placement.yaml
+    devcovenant/core/policy_schema.py
+    devcovenant/core/profiles/global/assets/AGENTS.yaml
+    devcovenant/core/profiles/global/assets/CHANGELOG.yaml
+    devcovenant/core/profiles/global/assets/CONTRIBUTING.yaml
+    devcovenant/core/profiles/global/assets/PLAN.yaml
+    devcovenant/core/profiles/global/assets/README.yaml
+    devcovenant/core/profiles/global/assets/SPEC.yaml
+    devcovenant/core/profiles/global/assets/devcovenant/README.yaml
+    devcovenant/core/refresh_all.py
+    devcovenant/core/refresh.py
+    devcovenant/core/refresh_policies.py
+    devcovenant/core/registry.py
+    devcovenant/core/run_pre_commit.py
+    devcovenant/core/run_tests.py
+    devcovenant/core/undeploy.py
+    devcovenant/core/update.py
+    devcovenant/core/update_policy_registry.py
+    devcovenant/core/upgrade.py
+    devcovenant/custom/profiles/devcovrepo/assets/docs/config.md
+    devcovenant/custom/profiles/devcovrepo/assets/docs/registry.md
+    devcovenant/core/profiles/devcovuser/devcovuser.yaml
+    devcovenant/docs/config.md
+    devcovenant/docs/policies.md
+    devcovenant/docs/registry.md
+    tests/core/policies/changelog_coverage/tests/test_changelog_coverage.py
+    tests/core/policies/last_updated_placement/tests/\
+      test_last_updated_placement.py
+    tests/core/tests/test_install.py
+    tests/core/tests/test_policy_replacements.py
+    tests/core/tests/test_policy_metadata_schema.py
+    tests/core/tests/test_policy_schema.py
+
+- 2026-02-06: Aligned metadata refresh with plan tracking and registry/docs.
+  Files:
+    AGENTS.md
+    PLAN.md
+    SPEC.md
+    devcovenant/cli.py
+    devcovenant/core/engine.py
+    devcovenant/core/generate_policy_metadata_schema.py
+    devcovenant/core/install.py
+    devcovenant/core/policies/changelog_coverage/changelog_coverage.py
+    devcovenant/core/policies/changelog_coverage/changelog_coverage.yaml
+    devcovenant/core/policies/changelog_coverage/fixers/__init__.py
+    devcovenant/core/policies/changelog_coverage/fixers/global.py
+    devcovenant/core/policies/last_updated_placement/last_updated_placement.py
+    devcovenant/core/policies/last_updated_placement/\
+      last_updated_placement.yaml
+    devcovenant/core/policies/last_updated_placement/fixers/global.py
+    devcovenant/core/policy_schema.py
+    devcovenant/core/profiles/global/assets/AGENTS.yaml
+    devcovenant/core/profiles/global/assets/CHANGELOG.yaml
+    devcovenant/core/profiles/global/assets/CONTRIBUTING.yaml
+    devcovenant/core/profiles/global/assets/PLAN.yaml
+    devcovenant/core/profiles/global/assets/README.yaml
+    devcovenant/core/profiles/global/assets/SPEC.yaml
+    devcovenant/core/profiles/global/assets/devcovenant/README.yaml
+    devcovenant/core/refresh_all.py
+    devcovenant/core/refresh_policies.py
+    devcovenant/core/registry.py
+    devcovenant/core/run_pre_commit.py
+    devcovenant/core/run_tests.py
+    devcovenant/core/update.py
+    devcovenant/core/update_policy_registry.py
+    devcovenant/custom/profiles/devcovrepo/assets/docs/config.md
+    devcovenant/custom/profiles/devcovrepo/assets/docs/registry.md
+    devcovenant/docs/config.md
+    devcovenant/docs/policies.md
+    devcovenant/docs/registry.md
+    tests/core/policies/changelog_coverage/tests/test_changelog_coverage.py
+    tests/core/policies/last_updated_placement/tests/\
+      test_last_updated_placement.py
+    tests/core/tests/test_policy_metadata_schema.py
+    tests/core/tests/test_policy_schema.py
+
+- 2026-02-06: Removed schema reg plumbing and made policy metadata flow lean.
+  Files:
+    AGENTS.md
+    PLAN.md
+    SPEC.md
+    devcovenant/cli.py
+    devcovenant/core/engine.py
+    devcovenant/core/generate_policy_metadata_schema.py
+    devcovenant/core/install.py
+    devcovenant/core/policies/changelog_coverage/changelog_coverage.py
+    devcovenant/core/policies/changelog_coverage/changelog_coverage.yaml
+    devcovenant/core/policies/changelog_coverage/fixers/__init__.py
+    devcovenant/core/policies/changelog_coverage/fixers/global.py
+    devcovenant/core/policies/last_updated_placement/\
+      last_updated_placement.py
+    devcovenant/core/policy_schema.py
+    devcovenant/core/profiles/global/assets/AGENTS.yaml
+    devcovenant/core/profiles/global/assets/CHANGELOG.yaml
+    devcovenant/core/profiles/global/assets/CONTRIBUTING.yaml
+    devcovenant/core/profiles/global/assets/PLAN.yaml
+    devcovenant/core/profiles/global/assets/README.yaml
+    devcovenant/core/profiles/global/assets/SPEC.yaml
+    devcovenant/core/profiles/global/assets/devcovenant/README.yaml
+    devcovenant/core/refresh_all.py
+    devcovenant/core/refresh_policies.py
+    devcovenant/core/registry.py
+    devcovenant/core/run_pre_commit.py
+    devcovenant/core/run_tests.py
+    devcovenant/core/update.py
+    devcovenant/core/update_policy_registry.py
+    devcovenant/custom/profiles/devcovrepo/assets/docs/config.md
+    devcovenant/custom/profiles/devcovrepo/assets/docs/registry.md
+    devcovenant/docs/config.md
+    devcovenant/docs/policies.md
+    devcovenant/docs/registry.md
+    tests/core/policies/changelog_coverage/tests/\
+      test_changelog_coverage.py
+    tests/core/policies/last_updated_placement/tests/\
+      test_last_updated_placement.py
+    tests/core/tests/test_policy_metadata_schema.py
+    tests/core/tests/test_policy_schema.py
+
+- 2026-02-05: Documented metadata-flow refactor plus plan/spec and docs.
+  Files:
+    - AGENTS.md
+    - devcovenant/core/install.py
+    - devcovenant/core/policies/changelog_coverage/changelog_coverage.py
+    - devcovenant/core/policies/changelog_coverage/changelog_coverage.yaml
+    - devcovenant/core/policies/changelog_coverage/fixers/__init__.py
+    - devcovenant/core/policies/changelog_coverage/fixers/global.py
+    - devcovenant/core/policies/last_updated_placement/\
+      last_updated_placement.py
+    - devcovenant/core/run_pre_commit.py
+    - devcovenant/custom/profiles/devcovrepo/assets/docs/config.md
+    - devcovenant/docs/config.md
+    - tests/core/policies/changelog_coverage/tests/test_changelog_coverage.py
+    - tests/core/policies/last_updated_placement/tests/\
+      test_last_updated_placement.py
+    - SPEC.md
+    - PLAN.md
+    - devcovenant/docs/registry.md
+    - devcovenant/docs/policies.md
+    - devcovenant/core/profiles/global/assets/AGENTS.yaml
+    - devcovenant/core/profiles/global/assets/CHANGELOG.yaml
+    - devcovenant/core/profiles/global/assets/CONTRIBUTING.yaml
+    - devcovenant/core/profiles/global/assets/PLAN.yaml
+    - devcovenant/core/profiles/global/assets/README.yaml
+    - devcovenant/core/profiles/global/assets/SPEC.yaml
+    - devcovenant/core/profiles/global/assets/devcovenant/README.yaml
+
+- 2026-02-05: Switched managed docs to YAML assets and updated install flow.
+  Files:
+  AGENTS.md
+  PLAN.md
+  SPEC.md
+  devcovenant/core/install.py
+  devcovenant/core/policies/changelog_coverage/changelog_coverage.py
+  devcovenant/core/policies/changelog_coverage/changelog_coverage.yaml
+  devcovenant/core/policies/changelog_coverage/fixers/__init__.py
+  devcovenant/core/policies/changelog_coverage/fixers/global.py
+  devcovenant/core/policies/last_updated_placement/\
+    last_updated_placement.py
+  devcovenant/core/profiles/global/assets/AGENTS.yaml
+  devcovenant/core/profiles/global/assets/CHANGELOG.yaml
+  devcovenant/core/profiles/global/assets/CONTRIBUTING.yaml
+  devcovenant/core/profiles/global/assets/PLAN.yaml
+  devcovenant/core/profiles/global/assets/README.yaml
+  devcovenant/core/profiles/global/assets/SPEC.yaml
+  devcovenant/core/profiles/global/assets/devcovenant/\
+    README.yaml
+  devcovenant/core/run_pre_commit.py
+  devcovenant/custom/profiles/devcovrepo/assets/docs/config.md
+  devcovenant/docs/config.md
+  tests/core/policies/changelog_coverage/tests/\
+    test_changelog_coverage.py
+  tests/core/policies/last_updated_placement/tests/\
+    test_last_updated_placement.py
+
+- 2026-02-05: Aligned plan with spec, refined changelog tooling, and doc stamp.
+  Files:
+  AGENTS.md
+  PLAN.md
+  devcovenant/core/install.py
+  devcovenant/core/policies/changelog_coverage/changelog_coverage.py
+  devcovenant/core/policies/changelog_coverage/changelog_coverage.yaml
+  devcovenant/core/policies/changelog_coverage/fixers/__init__.py
+  devcovenant/core/policies/changelog_coverage/fixers/global.py
+  devcovenant/core/policies/last_updated_placement/\
+    last_updated_placement.py
+  devcovenant/core/run_pre_commit.py
+  devcovenant/custom/profiles/devcovrepo/assets/docs/config.md
+  devcovenant/docs/config.md
+  tests/core/policies/changelog_coverage/tests/test_changelog_coverage.py
+  tests/core/policies/last_updated_placement/tests/\
+    test_last_updated_placement.py
 
 - 2026-02-05: Generalized dependency-license-sync metadata, shifted manifest
   lists into profiles, and updated docs/spec/plan guidance.
@@ -663,13 +1626,13 @@ test_docstring_and_comment_coverage.py
   pyproject.toml
   devcovenant/custom/profiles/devcovrepo/devcovrepo.yaml
 - 2026-02-01: Added per-profile descriptors (`<profile>.yaml`) for all core
-  and custom profiles, refreshed the profile catalog, and wired loaders to
+  and custom profiles, refreshed the profile registry, and wired loaders to
   prefer the new filenames while keeping the old `profile.yaml` fallback.
   Files:
   PROFILE_MAP.md
   devcovenant/core/profiles.py
   devcovenant/core/install.py
-  devcovenant/registry/local/profile_catalog.yaml
+  devcovenant/registry/local/profile_registry.yaml
   devcovenant/core/profiles/*/*.yaml
   devcovenant/custom/profiles/devcovrepo/devcovrepo.yaml
   devcovenant/custom/profiles/devcovuser/devcovuser.yaml
@@ -1063,7 +2026,7 @@ test_docstring_and_comment_coverage.py
 
 - 2026-01-27: Split the registry into tracked `devcovenant/registry/global/`
 -  (curated assets) and gitignored `devcovenant/registry/local/` (generated
-  artifacts: policy registry, manifest, profile catalog, policy assets, and
+  artifacts: policy registry, manifest, profile registry, policy assets, and
   test status). Updated the install/update/engine stack, policy scripts,
   tools, and docs to read/write the new paths and documented the new layout.
   Files:
@@ -1794,7 +2757,7 @@ test_docstring_and_comment_coverage.py
   devcovenant/custom/templates/policies/README.md
   devcovenant/custom/templates/profiles/README.md
   devcovenant/registry/local/manifest.json
-  devcovenant/registry/local/profile_catalog.yaml
+  devcovenant/registry/local/profile_registry.yaml
   devcovenant/registry/local/policy_registry.yaml
   devcovenant/registry/local/test_status.json
 - 2026-01-24: Documented language-aware fixers and fixer
@@ -1930,7 +2893,7 @@ test_docstring_and_comment_coverage.py
   devcovenant/core/policy_scripts/stock_policy_text_sync.py
   devcovenant/core/policy_scripts/track_test_status.py
   devcovenant/core/policy_texts.py
-  devcovenant/core/profile_catalog.yaml
+  devcovenant/core/profile_registry.yaml
   devcovenant/core/profiles.py
   devcovenant/core/stock_policy_texts.yaml
   devcovenant/core/templates/README.md
@@ -2024,7 +2987,7 @@ test_docstring_and_comment_coverage.py
   devcovenant/registry/local/manifest.json
   devcovenant/registry/local/policy_assets.yaml
   devcovenant/registry/global/policy_replacements.yaml
-  devcovenant/registry/local/profile_catalog.yaml
+  devcovenant/registry/local/profile_registry.yaml
   devcovenant/registry/local/policy_registry.yaml
   devcovenant/registry/global/stock_policy_texts.yaml
   devcovenant/registry/local/test_status.json
@@ -2110,7 +3073,7 @@ test_docstring_and_comment_coverage.py
   devcovenant/core/templates/profiles/vue/README.md
   devcovenant/core/templates/profiles/zig/README.md
   devcovenant/custom/policy_assets.yaml
-  devcovenant/custom/profile_catalog.yaml
+  devcovenant/custom/profile_registry.yaml
   devcovenant/custom/templates/policies/README.md
   devcovenant/custom/templates/profiles/README.md
 - 2026-01-24: Expanded template documentation and removed per-profile
@@ -2192,11 +3155,11 @@ test_docstring_and_comment_coverage.py
   devcovenant/core/templates/profiles/vue/README.md
   devcovenant/core/templates/profiles/zig/README.md
   devcovenant/custom/policy_assets.yaml
-  devcovenant/custom/profile_catalog.yaml
+  devcovenant/custom/profile_registry.yaml
   devcovenant/custom/templates/policies/README.md
   devcovenant/custom/templates/profiles/README.md
 - 2026-01-24: Consolidated template docs and added custom template
-  indexes plus profile catalogs. (AI assistant)
+  indexes plus profile registrys. (AI assistant)
   Files:
   CHANGELOG.md
   PLAN.md
@@ -2274,7 +3237,7 @@ test_docstring_and_comment_coverage.py
   devcovenant/core/templates/profiles/vue/README.md
   devcovenant/core/templates/profiles/zig/README.md
   devcovenant/custom/policy_assets.yaml
-  devcovenant/custom/profile_catalog.yaml
+  devcovenant/custom/profile_registry.yaml
   devcovenant/custom/templates/policies/README.md
   devcovenant/custom/templates/profiles/README.md
 - 2026-01-24: Consolidated template docs, added custom catalogs,
@@ -2356,7 +3319,7 @@ test_docstring_and_comment_coverage.py
   devcovenant/core/templates/profiles/vue/README.md
   devcovenant/core/templates/profiles/zig/README.md
   devcovenant/custom/policy_assets.yaml
-  devcovenant/custom/profile_catalog.yaml
+  devcovenant/custom/profile_registry.yaml
   devcovenant/custom/templates/policies/README.md
   devcovenant/custom/templates/profiles/README.md
 - 2026-01-23: Added profile manifests, gitignore fragments, and
@@ -2601,7 +3564,7 @@ test_docstring_and_comment_coverage.py
   CHANGELOG.md
 - 2026-01-23: Completed Phase K asset gating and tests. (AI assistant)
 - 2026-01-23: Added profile-aware templates,
-  install/update logic, and profile catalog tests. (AI assistant)
+  install/update logic, and profile registry tests. (AI assistant)
   Files:
 AGENTS.md
 CHANGELOG.md
@@ -2619,7 +3582,7 @@ devcovenant/core/manifest.py
 devcovenant/core/refresh_policies.py
 devcovenant/registry/local/policy_assets.yaml
 devcovenant/core/policy_scripts/changelog_coverage.py
-devcovenant/registry/local/profile_catalog.yaml
+devcovenant/registry/local/profile_registry.yaml
 devcovenant/core/profiles.py
 devcovenant/core/templates/global/.github/workflows/ci.yml
 devcovenant/core/templates/global/.pre-commit-config.yaml

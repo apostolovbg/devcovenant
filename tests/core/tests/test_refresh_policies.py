@@ -50,9 +50,8 @@ def _policy_block(policy_id: str, name: str, custom: bool = False) -> str:
         "status: active\n"
         "severity: warning\n"
         "auto_fix: false\n"
-        "updated: false\n"
         "enforcement: active\n"
-        "apply: true\n"
+        "enabled: true\n"
         f"custom: {'true' if custom else 'false'}\n"
         "profile_scopes: global\n"
         "```\n\n"
@@ -60,9 +59,8 @@ def _policy_block(policy_id: str, name: str, custom: bool = False) -> str:
     )
 
 
-def test_refresh_policies_reorders_and_updates(tmp_path: Path) -> None:
-    """Refresh reorganizes the policy block and reports
-    the touched policies."""
+def test_refresh_policies_skips_unknown_policies(tmp_path: Path) -> None:
+    """Refresh skips policy blocks that have no source descriptors."""
     agents_path = tmp_path / "AGENTS.md"
     body = (
         _policy_block("policy-b", "Policy B")
@@ -74,18 +72,19 @@ def test_refresh_policies_reorders_and_updates(tmp_path: Path) -> None:
     result = refresh_policies(
         agents_path,
         _schema_path(),
-        set_updated=True,
     )
 
     content = agents_path.read_text(encoding="utf-8")
-    assert result.updated
-    idx_a = content.index("## Policy: Policy A")
-    idx_b = content.index("## Policy: Policy B")
-    assert idx_a < idx_b
+    assert not result.updated
+    assert set(result.skipped_policies) == {"policy-a", "policy-b"}
+    assert "## Policy: Policy A" in content
+    assert "## Policy: Policy B" in content
 
 
-def test_refresh_policies_normalizes_custom_metadata(tmp_path: Path) -> None:
-    """Custom policies are normalized to stock defaults when unmanaged."""
+def test_refresh_policies_keeps_unknown_custom_policy_block(
+    tmp_path: Path,
+) -> None:
+    """Refresh preserves unknown custom blocks and reports them as skipped."""
     agents_path = tmp_path / "AGENTS.md"
     custom_block = (
         "## Policy: Custom Policy\n\n"
@@ -94,9 +93,8 @@ def test_refresh_policies_normalizes_custom_metadata(tmp_path: Path) -> None:
         "status: active\n"
         "severity: error\n"
         "auto_fix: false\n"
-        "updated: false\n"
         "enforcement: active\n"
-        "apply: true\n"
+        "enabled: true\n"
         "custom: true\n"
         "notes: preserved\n"
         "```\n\n"
@@ -104,13 +102,14 @@ def test_refresh_policies_normalizes_custom_metadata(tmp_path: Path) -> None:
     )
     _write_agents(agents_path, custom_block)
 
-    refresh_policies(
+    result = refresh_policies(
         agents_path,
         _schema_path(),
-        set_updated=True,
     )
 
     updated_text = agents_path.read_text(encoding="utf-8")
-    assert "severity: warning" in updated_text
-    assert "custom: false" in updated_text
+    assert not result.updated
+    assert result.skipped_policies == ("custom-policy",)
+    assert "severity: error" in updated_text
+    assert "custom: true" in updated_text
     assert "notes: preserved" in updated_text

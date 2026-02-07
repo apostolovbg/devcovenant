@@ -1,7 +1,8 @@
-"""Refresh policies, registry, and profile catalog in one command."""
+"""Refresh policies, registry, and profile registry in one command."""
 
 from __future__ import annotations
 
+import json
 from pathlib import Path
 
 import yaml
@@ -13,27 +14,26 @@ from devcovenant.core.install import (
     GITIGNORE_USER_END,
     _apply_core_config,
     _apply_profile_config,
+    _clean_asset_entries,
+    _dedupe_preserve_order,
+    _ensure_config_from_profile,
     _ensure_custom_tree,
+    _ensure_global_profile,
     _ensure_tests_mirror,
     _load_active_profiles,
+    _load_profile_manifest,
     _prune_devcovrepo_overrides,
     _render_gitignore,
     _set_backups_enabled,
     apply_autogen_metadata_overrides,
+    refresh_pre_commit_config,
 )
-from devcovenant.core.refresh_policies import (
-    export_metadata_schema,
-    policy_metadata_schema_path,
-    refresh_policies,
-)
+from devcovenant.core.refresh_policies import refresh_policies
 from devcovenant.core.update_policy_registry import update_policy_registry
 
 
-def _schema_path(repo_root: Path) -> Path:
+def _schema_path(repo_root: Path) -> Path | None:
     """Return the schema path used for refresh-policies runs."""
-    canonical = policy_metadata_schema_path(repo_root)
-    if canonical.exists():
-        return canonical
     return (
         repo_root
         / "devcovenant"
@@ -70,10 +70,9 @@ def refresh_gitignore(repo_root: Path) -> bool:
         else ""
     )
     user_text = _prepare_gitignore_user_text(existing)
-    active_profiles = _load_active_profiles(repo_root)
-    if "global" not in active_profiles:
-        active_profiles.append("global")
-    active_profiles = sorted(set(active_profiles))
+    active_profiles = _ensure_global_profile(
+        _dedupe_preserve_order(_load_active_profiles(repo_root))
+    )
     template_root = repo_root / "devcovenant" / "core"
     rendered = _render_gitignore(
         user_text,
@@ -88,22 +87,107 @@ def refresh_gitignore(repo_root: Path) -> bool:
 
 
 def refresh_config(
-    repo_root: Path, profile_catalog: dict[str, dict], include_core: bool
+    repo_root: Path, profile_registry: dict[str, dict], include_core: bool
 ) -> bool:
     """Refresh config.yaml from active profiles while preserving overrides."""
     config_path = repo_root / "devcovenant" / "config.yaml"
+    template_root = repo_root / "devcovenant" / "core"
+    created = False
     if not config_path.exists():
-        return False
-    active_profiles = _load_active_profiles(repo_root)
-    if "global" not in active_profiles:
-        active_profiles.append("global")
-    active_profiles = sorted(set(active_profiles))
+        created = _ensure_config_from_profile(
+            repo_root, template_root, force=True
+        )
+    if not config_path.exists():
+        return created
+    active_profiles = _ensure_global_profile(
+        _dedupe_preserve_order(_load_active_profiles(repo_root))
+    )
     changed = _apply_core_config(repo_root, include_core)
     profile_changed = _apply_profile_config(
-        repo_root, active_profiles, profile_catalog
+        repo_root, active_profiles, profile_registry
     )
     overlay_changed = apply_autogen_metadata_overrides(repo_root)
-    return changed or profile_changed or overlay_changed
+    return created or changed or profile_changed or overlay_changed
+
+
+def _bootstrap_test_status_payload() -> dict[str, object]:
+    """Return a starter payload for test_status.json."""
+    epoch = "1970-01-01T00:00:00+00:00"
+    return {
+        "last_run": epoch,
+        "last_run_utc": epoch,
+        "last_run_epoch": 0,
+        "command": "not run",
+        "commands": [],
+        "sha": "00000000",
+        "notes": "bootstrap",
+        "pre_commit_start_utc": epoch,
+        "pre_commit_start_epoch": 0,
+        "pre_commit_start_command": "",
+        "pre_commit_start_notes": "",
+        "pre_commit_end_utc": epoch,
+        "pre_commit_end_epoch": 0,
+        "pre_commit_end_command": "",
+        "pre_commit_end_notes": "",
+    }
+
+
+def _ensure_test_status(path: Path) -> bool:
+    """Create a starter test status payload when missing."""
+    if path.exists():
+        return False
+    path.parent.mkdir(parents=True, exist_ok=True)
+    payload = _bootstrap_test_status_payload()
+    path.write_text(
+        json.dumps(payload, indent=2, sort_keys=True) + "\n",
+        encoding="utf-8",
+    )
+    return True
+
+
+def _load_global_profile_assets(repo_root: Path) -> list[dict]:
+    """Return cleaned asset entries from the global profile manifest."""
+    package_root = repo_root / "devcovenant"
+    manifest = _load_profile_manifest(package_root, repo_root, "global")
+    entries = _clean_asset_entries(manifest.get("assets", []))
+    return [
+        entry
+        for entry in entries
+        if str(entry.get("mode", "")).lower() == "generate"
+    ]
+
+
+def _ensure_runtime_registry_assets(
+    repo_root: Path,
+    *,
+    skip_freeze: bool,
+) -> tuple[int, dict[str, dict] | None]:
+    """Generate runtime registry assets declared by the global profile."""
+    assets = _load_global_profile_assets(repo_root)
+    registry: dict[str, dict] | None = None
+    for entry in assets:
+        generator = str(entry.get("generator", "")).strip().lower()
+        target = str(entry.get("path", "")).strip()
+        if not generator or not target:
+            continue
+        target_path = repo_root / target
+        if bool(entry.get("if_missing", False)) and target_path.exists():
+            continue
+        if generator == "policy_registry":
+            result = update_policy_registry(
+                repo_root,
+                skip_freeze=skip_freeze,
+            )
+            if result != 0:
+                return result, registry
+        elif generator == "profile_registry":
+            registry = profiles.build_profile_registry(repo_root)
+            profiles.write_profile_registry(repo_root, registry)
+        elif generator == "manifest":
+            manifest_module.ensure_manifest(repo_root)
+        elif generator == "test_status":
+            _ensure_test_status(target_path)
+    return 0, registry
 
 
 def refresh_all(
@@ -113,7 +197,7 @@ def refresh_all(
     registry_only: bool = False,
     backup_existing: bool = False,
 ) -> int:
-    """Refresh policies, registry, and profile catalog."""
+    """Refresh policies, registry, and profile registry."""
     if repo_root is None:
         repo_root = Path(__file__).resolve().parents[2]
     _set_backups_enabled(backup_existing)
@@ -124,9 +208,7 @@ def refresh_all(
     result = refresh_policies(
         agents_path,
         schema,
-        set_updated=True,
     )
-    export_metadata_schema(repo_root)
     if result.changed_policies:
         joined = ", ".join(result.changed_policies)
         print(f"refresh-policies updated metadata for: {joined}")
@@ -134,17 +216,24 @@ def refresh_all(
         print("Skipped policies with missing ids:")
         for policy_id in result.skipped_policies:
             print(f"- {policy_id}")
-    policy_result = update_policy_registry(repo_root)
-    if policy_result != 0:
-        return policy_result
-    catalog = profiles.build_profile_catalog(repo_root)
-    profiles.write_profile_catalog(repo_root, catalog)
-    print("Rebuilt profile catalog at", profiles.REGISTRY_CATALOG)
+    registry_result, registry = _ensure_runtime_registry_assets(
+        repo_root,
+        skip_freeze=False,
+    )
+    if registry_result != 0:
+        return registry_result
+    if registry is None:
+        registry = profiles.build_profile_registry(repo_root)
+        profiles.write_profile_registry(repo_root, registry)
+    if registry is not None:
+        print("Rebuilt profile registry at", profiles.REGISTRY_PROFILE)
     include_core = _load_devcov_core_include(repo_root)
-    if refresh_config(repo_root, catalog, include_core):
+    if refresh_config(repo_root, registry, include_core):
         print("Refreshed config.yaml from active profiles.")
     if refresh_gitignore(repo_root):
         print("Regenerated .gitignore from profile fragments.")
+    if refresh_pre_commit_config(repo_root, profile_registry=registry):
+        print("Regenerated .pre-commit-config.yaml from profiles.")
     _ensure_custom_tree(repo_root)
     _ensure_tests_mirror(repo_root, include_core)
     removed_overrides = _prune_devcovrepo_overrides(repo_root, include_core)
@@ -169,18 +258,37 @@ def refresh_registry(
     """Refresh only registry assets without touching AGENTS or docs."""
     if repo_root is None:
         repo_root = Path(__file__).resolve().parents[2]
-    # Regenerate schema to keep descriptors aligned.
-    export_metadata_schema(repo_root)
-    # Update registry hashes/metadata without toggling AGENTS updated flags.
-    result = update_policy_registry(
-        repo_root, skip_freeze=True, reset_updated_flags=False
+    _set_backups_enabled(False)
+    # Update registry hashes/metadata without touching managed docs.
+    result, registry = _ensure_runtime_registry_assets(
+        repo_root,
+        skip_freeze=True,
     )
     if result != 0:
         return result
-    # Rebuild profile catalog (lives under registry/local/, gitignored).
-    catalog = profiles.build_profile_catalog(repo_root)
-    profiles.write_profile_catalog(repo_root, catalog)
-    print("Registry-only refresh completed (schema, hashes, profile catalog).")
+    if registry is None:
+        # Rebuild profile registry (lives under registry/local/, gitignored).
+        registry = profiles.build_profile_registry(repo_root)
+        profiles.write_profile_registry(repo_root, registry)
+    include_core = _load_devcov_core_include(repo_root)
+    if refresh_config(repo_root, registry, include_core):
+        print("Refreshed config.yaml from active profiles.")
+    _ensure_custom_tree(repo_root)
+    _ensure_tests_mirror(repo_root, include_core)
+    removed_overrides = _prune_devcovrepo_overrides(repo_root, include_core)
+    if removed_overrides:
+        manifest_module.append_notifications(
+            repo_root,
+            [
+                (
+                    "Removed devcovrepo-prefixed overrides:"
+                    f" {', '.join(removed_overrides)}"
+                )
+            ],
+        )
+    print(
+        "Registry-only refresh completed (schema, hashes, profile registry)."
+    )
     return 0
 
 

@@ -5,13 +5,8 @@ text: |
   forcing it on user repos.
 metadata:
   id: devcov-raw-string-escapes
-  status: active
   severity: warning
   auto_fix: 'false'
-  updated: 'false'
   enforcement: active
-  apply: 'true'
-  custom: 'true'
-  freeze: 'false'
   profile_scopes:
     - devcovrepo

@@ -13,7 +13,7 @@ def _write_yaml(path: Path, content: str) -> None:
 
 
 def test_custom_profile_manifest_is_discovered(tmp_path: Path) -> None:
-    """Profiles added in the custom tree appear in the catalog."""
+    """Profiles added in the custom tree appear in the registry."""
     custom_manifest = (
         tmp_path
         / "devcovenant"
@@ -31,8 +31,8 @@ def test_custom_profile_manifest_is_discovered(tmp_path: Path) -> None:
         """,
     )
 
-    catalog = profiles.load_profile_catalog(tmp_path)
+    registry = profiles.load_profile_registry(tmp_path)
 
-    assert "customlang" in catalog
-    assert catalog["customlang"]["source"] == "custom"
-    assert catalog["customlang"]["suffixes"] == [".cl"]
+    assert "customlang" in registry
+    assert registry["customlang"]["source"] == "custom"
+    assert registry["customlang"]["suffixes"] == [".cl"]

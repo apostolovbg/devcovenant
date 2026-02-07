@@ -11,7 +11,8 @@
 Policies are the enforcement units in DevCovenant. Each policy has a YAML
 descriptor that documents its purpose and metadata, plus a script that
 implements the check. Policies are activated only when a profile lists
-them.
+them, but every policy still appears in `AGENTS.md` with its resolved
+metadata and `enabled` flag.
 
 ## Workflow
 1. Edit the policy descriptor to update metadata and prose.
@@ -21,19 +22,21 @@ them.
 
 ## Policy Descriptor Anatomy
 Policy descriptors live in `devcovenant/core/policies/<id>/` and are
-normalized into AGENTS and the local registry. Example metadata:
+resolved into AGENTS and the local registry. Example metadata:
 ```yaml
 id: changelog-coverage
 severity: error
 auto_fix: false
-apply: true
+enabled: true
 profile_scopes:
   - global
 ```
 Profiles supply policy-specific metadata such as dependency manifest lists
 (`dependency-license-sync`), version-sync file lists, or selector scopes.
 Config overrides can adjust those values without editing the policy
-descriptor.
+descriptor. Resolution order is policy defaults → profile overlays → config
+overrides; the resolved map is written into `AGENTS.md` so readers can see
+the working values without inspecting the registry.
 
 ## Scripts, Fixers, Adapters
 - `policy.py` implements the check.

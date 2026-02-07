@@ -8,13 +8,10 @@ text: |
   required context.
 metadata:
   id: managed-environment
-  status: active
   severity: error
   auto_fix: 'false'
-  updated: 'false'
   enforcement: active
-  apply: 'false'
-  custom: 'false'
+  enabled: 'false'
   profile_scopes: global
   expected_paths: []
   expected_interpreters: []

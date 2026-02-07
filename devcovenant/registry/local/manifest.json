@@ -1,0 +1,100 @@
+{
+  "core": {
+    "dirs": [
+      "devcovenant",
+      "devcovenant/core",
+      "devcovenant/core/policies",
+      "devcovenant/core/profiles",
+      "devcovenant/core/profiles/global",
+      "devcovenant/core/profiles/global/assets",
+      "devcovenant/registry/global"
+    ],
+    "files": [
+      "devcovenant/__init__.py",
+      "devcovenant/__main__.py",
+      "devcovenant/cli.py",
+      "devcovenant/config.yaml",
+      "devcovenant/README.md",
+      "devcovenant/registry/global/stock_policy_texts.yaml",
+      "devcovenant/registry/global/policy_replacements.yaml",
+      "devcovenant/core/cli_options.py",
+      "devcovenant/core/profiles/global/assets/AGENTS.md",
+      "devcovenant/core/profiles/global/assets/CONTRIBUTING.md",
+      "devcovenant/core/profiles/global/assets/.pre-commit-config.yaml",
+      "devcovenant/core/profiles/global/assets/.github/workflows/ci.yml",
+      "devcovenant/core/profiles/global/assets/gitignore_base.txt",
+      "devcovenant/core/profiles/global/assets/gitignore_os.txt",
+      "devcovenant/core/profiles/global/assets/devcovenant/run_pre_commit.py",
+      "devcovenant/core/profiles/global/assets/devcovenant/run_tests.py",
+      "devcovenant/core/profiles/global/assets/devcovenant/update_test_status.py",
+      "devcovenant/core/profiles/README.md",
+      "devcovenant/core/policies/README.md",
+      "devcovenant/run_pre_commit.py",
+      "devcovenant/run_tests.py",
+      "devcovenant/update_test_status.py",
+      "devcovenant/core/profiles/global/assets/devcovenant/update_lock.py",
+      "devcovenant/update_lock.py",
+      "devcovenant/VERSION"
+    ]
+  },
+  "custom": {
+    "dirs": [
+      "devcovenant/custom",
+      "devcovenant/custom/policies",
+      "devcovenant/custom/profiles"
+    ],
+    "files": [
+      "devcovenant/custom/profiles/README.md",
+      "devcovenant/custom/policies/README.md"
+    ]
+  },
+  "docs": {
+    "core": [
+      "AGENTS.md",
+      "README.md",
+      "CHANGELOG.md",
+      "CONTRIBUTING.md"
+    ],
+    "custom": [],
+    "optional": [
+      "SPEC.md",
+      "PLAN.md"
+    ]
+  },
+  "generated": {
+    "dirs": [
+      "devcovenant/registry/local",
+      ".devcov-state"
+    ],
+    "files": [
+      "devcovenant/registry/local/policy_registry.yaml",
+      "devcovenant/registry/local/test_status.json",
+      "devcovenant/registry/local/manifest.json",
+      "devcovenant/registry/local/profile_registry.yaml"
+    ]
+  },
+  "notifications": [
+    {
+      "message": "Policy 'readme-sync' unfrozen; custom overrides removed.",
+      "timestamp": "2026-01-28T19:18:05.336980+00:00"
+    },
+    {
+      "message": "Policy 'readme-sync' unfrozen; custom overrides removed.",
+      "timestamp": "2026-01-29T08:50:04.236767+00:00"
+    },
+    {
+      "message": "Policy 'devcov-raw-string-escapes' unfrozen; custom overrides removed.",
+      "timestamp": "2026-01-30T10:28:26.422011+00:00"
+    },
+    {
+      "message": "Policy 'devcov-raw-string-escapes' unfrozen; custom overrides removed.",
+      "timestamp": "2026-01-30T10:29:48.458582+00:00"
+    }
+  ],
+  "profiles": {
+    "active": [],
+    "registry": []
+  },
+  "schema_version": 2,
+  "updated_at": "2026-01-28T09:25:12.857943+00:00"
+}

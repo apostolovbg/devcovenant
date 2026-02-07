@@ -1,7 +1,7 @@
 # DevCovenant Profiles
 
 ## Overview
-This directory holds the stock profiles after the catalog reduction. Each
+This directory holds the stock profiles after the profile set reduction. Each
 profile folder contains `profile.yaml`, optional assets, and a gitignore
 fragment. Profiles activate policies explicitly through the `policies:` list
 plus `policy_overlays` for per-profile metadata. Global policies apply to all

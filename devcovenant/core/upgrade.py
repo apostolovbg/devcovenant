@@ -1,0 +1,418 @@
+#!/usr/bin/env python3
+"""Upgrade DevCovenant in a target repository."""
+
+from __future__ import annotations
+
+import argparse
+import re
+import shutil
+import sys
+from dataclasses import dataclass
+from datetime import datetime, timezone
+from pathlib import Path
+from typing import Dict, List, Tuple
+
+from devcovenant.core import cli_options, install
+from devcovenant.core import manifest as manifest_module
+from devcovenant.core import policy_replacements, profiles
+from devcovenant.core.parser import PolicyParser
+from devcovenant.core.refresh_policies import refresh_policies
+from devcovenant.core.update_policy_registry import update_policy_registry
+
+_POLICY_BLOCK_RE = re.compile(
+    r"(##\s+Policy:\s+[^\n]+\n\n)```policy-def\n(.*?)\n```\n\n"
+    r"(.*?)(?=\n---\n|\n##|\Z)",
+    re.DOTALL,
+)
+
+
+@dataclass(frozen=True)
+class ReplacementPlan:
+    """Plan for policy replacements during update."""
+
+    migrate: Tuple[str, ...]
+    remove: Tuple[str, ...]
+    new_stock: Tuple[str, ...]
+
+
+@dataclass
+class PolicySources:
+    """Captured policy sources for migration."""
+
+    files: Dict[str, Dict[str, bytes]]
+
+
+def _utc_now() -> str:
+    """Return the current UTC timestamp."""
+    return datetime.now(timezone.utc).isoformat()
+
+
+def _version_key(raw: str | None) -> tuple[int, int, int]:
+    """Return a comparable version tuple."""
+    if not raw:
+        return (0, 0, 0)
+    parts = [part.strip() for part in raw.split(".") if part.strip()]
+    numbers: list[int] = []
+    for part in parts:
+        try:
+            numbers.append(int(part))
+        except ValueError:
+            numbers.append(0)
+    while len(numbers) < 3:
+        numbers.append(0)
+    return tuple(numbers[:3])
+
+
+def _read_version(path: Path) -> str | None:
+    """Read a version string from a file when it exists."""
+    if not path.exists():
+        return None
+    return path.read_text(encoding="utf-8").strip()
+
+
+def _parse_metadata_block(
+    block: str,
+) -> Tuple[List[str], Dict[str, List[str]]]:
+    """Return ordered keys and per-key line values from a policy-def block."""
+    order: List[str] = []
+    values: Dict[str, List[str]] = {}
+    current_key = ""
+    for line in block.splitlines():
+        stripped = line.strip()
+        if not stripped:
+            continue
+        if ":" in stripped:
+            key, raw_value = stripped.split(":", 1)
+            key = key.strip()
+            value_text = raw_value.strip()
+            order.append(key)
+            values[key] = [] if not value_text else [value_text]
+            current_key = key
+            continue
+        if current_key:
+            values[current_key].append(stripped)
+    return order, values
+
+
+def _render_metadata_block(
+    keys: List[str], values: Dict[str, List[str]]
+) -> str:
+    """Render a policy-def block from ordered keys and values."""
+    lines: List[str] = []
+    for key in keys:
+        entries = values.get(key, [])
+        if not entries:
+            lines.append(f"{key}:")
+            continue
+        joined = ", ".join(entry for entry in entries if entry)
+        if joined:
+            lines.append(f"{key}: {joined}")
+        else:
+            lines.append(f"{key}:")
+    return "\n".join(lines)
+
+
+def _ensure_key(
+    keys: List[str], values: Dict[str, List[str]], key: str
+) -> None:
+    """Ensure a metadata key exists in order and value map."""
+    if key not in values:
+        values[key] = []
+    if key not in keys:
+        keys.append(key)
+
+
+def _cleanup_policy_separators(text: str) -> str:
+    """Collapse duplicate separators after policy removals."""
+    cleaned = re.sub(r"\n---\n(?:\s*\n---\n)+", "\n---\n", text)
+    cleaned = re.sub(r"\n---\n(\s*\n)+\Z", "\n", cleaned)
+    return cleaned
+
+
+def _collect_policies(agents_path: Path) -> Dict[str, object]:
+    """Return policy definitions keyed by id."""
+    if not agents_path.exists():
+        return {}
+    parser = PolicyParser(agents_path)
+    policies = {
+        policy.policy_id: policy
+        for policy in parser.parse_agents_md()
+        if policy.policy_id
+    }
+    return policies
+
+
+def _collect_new_stock_policies(
+    template_path: Path, existing_ids: set[str]
+) -> Tuple[str, ...]:
+    """Return new stock policy IDs that were not present before update."""
+    parser = PolicyParser(template_path)
+    template_ids = {
+        policy.policy_id
+        for policy in parser.parse_agents_md()
+        if policy.policy_id and policy.status != "deleted"
+    }
+    new_ids = sorted(template_ids - existing_ids)
+    return tuple(new_ids)
+
+
+def _build_replacement_plan(
+    target_policies: Dict[str, object],
+    replacements: Dict[str, policy_replacements.PolicyReplacement],
+    template_path: Path,
+) -> ReplacementPlan:
+    """Determine which policies to migrate or remove."""
+    migrate: List[str] = []
+    remove: List[str] = []
+    for policy_id, replacement in replacements.items():
+        policy = target_policies.get(policy_id)
+        if not policy:
+            continue
+        if getattr(policy, "enabled", False):
+            migrate.append(replacement.policy_id)
+        else:
+            remove.append(replacement.policy_id)
+
+    new_stock = _collect_new_stock_policies(
+        template_path, set(target_policies.keys())
+    )
+    return ReplacementPlan(
+        migrate=tuple(migrate),
+        remove=tuple(remove),
+        new_stock=new_stock,
+    )
+
+
+def _policy_script_name(policy_id: str) -> str:
+    """Return the script name for a policy id."""
+    return policy_id.replace("-", "_")
+
+
+def _snapshot_policy_sources(
+    repo_root: Path, policy_ids: Tuple[str, ...]
+) -> PolicySources:
+    """Capture existing core policy scripts and fixers for migration."""
+    files: Dict[str, Dict[str, bytes]] = {}
+    for policy_id in policy_ids:
+        script_name = _policy_script_name(policy_id)
+        policy_dir = (
+            repo_root / "devcovenant" / "core" / "policies" / script_name
+        )
+        if not policy_dir.exists():
+            continue
+        captured: Dict[str, bytes] = {}
+        for path in policy_dir.rglob("*"):
+            if not path.is_file():
+                continue
+            rel_path = str(path.relative_to(policy_dir))
+            captured[rel_path] = path.read_bytes()
+        if captured:
+            files[policy_id] = captured
+    return PolicySources(files=files)
+
+
+def _write_custom_sources(
+    repo_root: Path,
+    policy_id: str,
+    sources: PolicySources,
+) -> None:
+    """Write captured policy sources into custom directories."""
+    script_name = _policy_script_name(policy_id)
+    policy_dir = (
+        repo_root / "devcovenant" / "custom" / "policies" / script_name
+    )
+    if policy_dir.exists():
+        return
+    captured = sources.files.get(policy_id)
+    if not captured:
+        return
+    policy_dir.mkdir(parents=True, exist_ok=True)
+    for rel_path, payload in captured.items():
+        target = policy_dir / rel_path
+        target.parent.mkdir(parents=True, exist_ok=True)
+        target.write_bytes(payload)
+
+
+def _remove_custom_sources(repo_root: Path, policy_id: str) -> None:
+    """Remove custom policy sources for a policy."""
+    script_name = _policy_script_name(policy_id)
+    policy_dir = (
+        repo_root / "devcovenant" / "custom" / "policies" / script_name
+    )
+    if policy_dir.exists():
+        shutil.rmtree(policy_dir)
+
+
+def _rewrite_agents_for_replacements(
+    agents_path: Path,
+    migrate_ids: Tuple[str, ...],
+    remove_ids: Tuple[str, ...],
+) -> Tuple[Tuple[str, ...], Tuple[str, ...]]:
+    """Apply replacement metadata changes and removals to AGENTS.md."""
+    if not agents_path.exists():
+        return (), ()
+
+    migrate_set = set(migrate_ids)
+    remove_set = set(remove_ids)
+    migrated: List[str] = []
+    removed: List[str] = []
+    content = agents_path.read_text(encoding="utf-8")
+
+    # Policy block rewriter for replacement actions.
+    def _replace(match: re.Match[str]) -> str:
+        heading = match.group(1)
+        metadata_block = match.group(2).strip()
+        description = match.group(3)
+        order, values = _parse_metadata_block(metadata_block)
+        policy_id = values.get("id", [""])[0]
+        if policy_id in remove_set:
+            removed.append(policy_id)
+            return ""
+        if policy_id in migrate_set:
+            _ensure_key(order, values, "status")
+            _ensure_key(order, values, "custom")
+            values["status"] = ["deprecated"]
+            values["custom"] = ["true"]
+            rendered = _render_metadata_block(order, values)
+            migrated.append(policy_id)
+            return f"{heading}```policy-def\n{rendered}\n```\n\n{description}"
+        return match.group(0)
+
+    updated, _count = _POLICY_BLOCK_RE.subn(_replace, content)
+    updated = _cleanup_policy_separators(updated)
+    if updated != content:
+        agents_path.write_text(updated, encoding="utf-8")
+    return tuple(migrated), tuple(removed)
+
+
+def _print_notifications(messages: List[str]) -> None:
+    """Print update notifications to stdout."""
+    if not messages:
+        return
+    print("\nPolicy update notices:")
+    for message in messages:
+        print(f"- {message}")
+
+
+def main(argv=None) -> None:
+    """CLI entry point for upgrades."""
+    parser = argparse.ArgumentParser(
+        description="Upgrade DevCovenant in a target repository."
+    )
+    cli_options.add_install_update_args(
+        parser,
+        defaults=cli_options.DEFAULT_UPDATE_DEFAULTS,
+    )
+    args = parser.parse_args(argv)
+    skip_refresh = bool(getattr(args, "skip_refresh", False))
+
+    target_root = Path(args.target).resolve()
+    source_version = _read_version(
+        Path(__file__).resolve().parents[1] / "VERSION"
+    )
+    target_version = _read_version(target_root / "devcovenant" / "VERSION")
+    if _version_key(source_version) <= _version_key(target_version):
+        print("DevCovenant core is already up to date; upgrade skipped.")
+        return
+    template_path = (
+        Path(__file__).resolve().parents[1]
+        / "core"
+        / "profiles"
+        / "global"
+        / "assets"
+        / "AGENTS.md"
+    )
+    schema_path = None
+    agents_path = target_root / "AGENTS.md"
+
+    existing_policies = _collect_policies(agents_path)
+    replacements = policy_replacements.load_policy_replacements(
+        Path(__file__).resolve().parents[2]
+    )
+    plan = _build_replacement_plan(
+        existing_policies, replacements, template_path
+    )
+    sources = _snapshot_policy_sources(target_root, plan.migrate)
+
+    install_args = cli_options.build_install_args(
+        args,
+        mode="existing",
+        allow_existing=True,
+    )
+    install_args.append("--deploy")
+    install.main(install_args)
+
+    if getattr(args, "no_touch", False):
+        return
+
+    migrated, removed = _rewrite_agents_for_replacements(
+        agents_path, plan.migrate, plan.remove
+    )
+    for policy_id in migrated:
+        _write_custom_sources(target_root, policy_id, sources)
+    for policy_id in removed:
+        _remove_custom_sources(target_root, policy_id)
+
+    notifications: List[str] = []
+    for policy_id in migrated:
+        replacement = replacements.get(policy_id)
+        if replacement:
+            notifications.append(
+                (
+                    f"Policy '{policy_id}' replaced by"
+                    f" '{replacement.replaced_by}' and moved to"
+                    " custom (deprecated)."
+                )
+            )
+    for policy_id in removed:
+        replacement = replacements.get(policy_id)
+        if replacement:
+            notifications.append(
+                (
+                    f"Policy '{policy_id}' replaced by"
+                    f" '{replacement.replaced_by}' and removed"
+                    " because it was disabled."
+                )
+            )
+    if plan.new_stock:
+        joined = ", ".join(plan.new_stock)
+        notifications.append(f"New stock policies available: {joined}.")
+
+    if notifications:
+        manifest_module.append_notifications(target_root, notifications)
+    _print_notifications(notifications)
+
+    if not args.skip_policy_refresh:
+        refresh_policies(
+            agents_path,
+            schema_path,
+        )
+        result = update_policy_registry(target_root, skip_freeze=True)
+        if result != 0:
+            sys.exit(result)
+
+    if not skip_refresh:
+        from devcovenant.core import refresh_all as refresh_all_module
+
+        if args.skip_policy_refresh:
+            refresh_all_module.refresh_registry(
+                target_root, schema_path=schema_path
+            )
+            refreshed_registry = profiles.build_profile_registry(target_root)
+            include_core = target_root == Path(__file__).resolve().parents[2]
+            refresh_all_module.refresh_config(
+                target_root, refreshed_registry, include_core
+            )
+            refresh_all_module.refresh_gitignore(target_root)
+            refresh_all_module.refresh_pre_commit_config(
+                target_root, profile_registry=refreshed_registry
+            )
+        else:
+            refresh_all_module.refresh_all(
+                target_root,
+                backup_existing=bool(getattr(args, "backup_existing", False)),
+            )
+
+
+if __name__ == "__main__":
+    main()

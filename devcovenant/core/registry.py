@@ -6,14 +6,30 @@ import hashlib
 from dataclasses import dataclass
 from datetime import datetime, timezone
 from pathlib import Path
-from typing import Dict, List, Optional, Tuple
+from typing import Dict, List, Optional
 
 import yaml
 
 from .parser import PolicyDefinition
 from .policy_descriptor import PolicyDescriptor
 from .policy_locations import resolve_script_location
-from .policy_schema import PolicySchema
+
+
+class _RegistryYamlDumper(yaml.SafeDumper):
+    """YAML dumper for registry files with readable multiline strings."""
+
+
+def _represent_registry_string(
+    dumper: yaml.Dumper, text_value: str
+) -> yaml.nodes.ScalarNode:
+    """Render multiline strings as literal blocks."""
+    style = "|" if "\n" in text_value else None
+    return dumper.represent_scalar(
+        "tag:yaml.org,2002:str", text_value, style=style
+    )
+
+
+_RegistryYamlDumper.add_representer(str, _represent_registry_string)
 
 
 @dataclass
@@ -84,8 +100,17 @@ class PolicyRegistry:
         """Save the registry to disk."""
         self._normalize_registry_hashes()
         self.registry_path.parent.mkdir(parents=True, exist_ok=True)
-        with open(self.registry_path, "w", encoding="utf-8") as f:
-            yaml.safe_dump(self._data, f, sort_keys=False)
+        payload = yaml.dump(
+            self._data,
+            Dumper=_RegistryYamlDumper,
+            sort_keys=False,
+            allow_unicode=False,
+        )
+        if self.registry_path.exists():
+            existing = self.registry_path.read_text(encoding="utf-8")
+            if existing == payload:
+                return
+        self.registry_path.write_text(payload, encoding="utf-8")
 
     def _normalize_hash_value(self, hash_value: object) -> str | None:
         """Normalize stored hash values to a string."""
@@ -133,11 +158,14 @@ class PolicyRegistry:
 
         for policy in policies:
             # Skip deleted or deprecated policies
-            if policy.status in ["deleted", "deprecated"] or not policy.apply:
+            if (
+                policy.status in ["deleted", "deprecated"]
+                or not policy.enabled
+            ):
                 continue
 
             # Skip policies explicitly turned off
-            if not policy.apply:
+            if not policy.enabled:
                 continue
 
             # Determine script path
@@ -164,22 +192,6 @@ class PolicyRegistry:
                     issue_type = "script_missing"
                 else:
                     issue_type = "new_policy"
-                issues.append(
-                    PolicySyncIssue(
-                        policy_id=policy.policy_id,
-                        policy_text=policy.description,
-                        policy_hash="",
-                        script_path=script_path,
-                        script_exists=script_exists,
-                        issue_type=issue_type,
-                        current_hash=current_hash,
-                    )
-                )
-                continue
-
-            # If policy is marked as updated, it needs sync
-            if policy.updated:
-                issue_type = "hash_mismatch"
                 issues.append(
                     PolicySyncIssue(
                         policy_id=policy.policy_id,
@@ -261,68 +273,11 @@ class PolicyRegistry:
                     candidates.append(normalized)
         return sorted(dict.fromkeys(candidates))
 
-    def _split_profiles(self, raw_value: str) -> List[str]:
-        """Return normalized profile scopes."""
-        return [
-            scope.strip()
-            for scope in raw_value.replace("\n", ",").split(",")
-            if scope.strip()
-        ]
-
-    def _metadata_default_values(self, raw_value: object | None) -> List[str]:
-        """Normalize a metadata default into a list of strings."""
-
-        if raw_value is None:
-            return []
-        if isinstance(raw_value, list):
-            return [str(item) for item in raw_value if str(item)]
-        return [str(raw_value)]
-
-    def _schema_payload(
-        self,
-        descriptor: PolicyDescriptor | None,
-        schema: PolicySchema | None,
-        metadata: Dict[str, str],
-    ) -> Tuple[List[str], Dict[str, List[str]]]:
-        """
-        Build schema metadata keys and defaults.
-
-        Args:
-            descriptor: Descriptor metadata (if available).
-            schema: Already resolved schema (if available).
-            metadata: The resolved metadata map for fallback.
-        """
-
-        if schema:
-            defaults: Dict[str, List[str]] = {}
-            for key in schema.keys:
-                raw_default = schema.defaults.get(key)
-                defaults[key] = list(raw_default) if raw_default else []
-            return list(schema.keys), defaults
-
-        if descriptor:
-            descriptor_keys = list(descriptor.metadata.keys())
-            defaults = {
-                key: self._metadata_default_values(
-                    descriptor.metadata.get(key)
-                )
-                for key in descriptor_keys
-            }
-            return descriptor_keys, defaults
-
-        fallback_keys = list(metadata.keys())
-        defaults = {
-            key: self._metadata_default_values(metadata.get(key))
-            for key in fallback_keys
-        }
-        return fallback_keys, defaults
-
     def update_policy_entry(
         self,
         policy: PolicyDefinition,
         script_location,
         descriptor: PolicyDescriptor | None = None,
-        schema: PolicySchema | None = None,
         *,
         resolved_metadata: Dict[str, str] | None = None,
     ):
@@ -334,36 +289,20 @@ class PolicyRegistry:
             script_location: Located script info (or None).
         """
         entry = self._data["policies"].setdefault(policy.policy_id, {})
+        previous_entry = dict(entry)
+        previous_hash = entry.get("hash")
+        previous_last_updated = entry.get("last_updated")
+        entry.clear()
         entry["status"] = policy.status
-        entry["enabled"] = policy.apply
+        entry["enabled"] = policy.enabled
         entry["custom"] = policy.custom
         entry["description"] = policy.name
         entry["policy_text"] = policy.description
         metadata_map = dict(resolved_metadata or policy.raw_metadata)
-        schema_keys, schema_defaults = self._schema_payload(
-            descriptor, schema, metadata_map
-        )
-        ordered_keys = list(schema_keys)
-        extras = [key for key in metadata_map if key not in ordered_keys]
-        ordered_keys.extend(extras)
-        entry["metadata_handles"] = list(ordered_keys)
-        entry["profiles"] = self._split_profiles(
-            metadata_map.get("profile_scopes", "")
-        )
-        metadata_values: Dict[str, List[str]] = {
-            key: self._split_metadata_values(metadata_map.get(key, ""))
-            for key in ordered_keys
-        }
-        entry["metadata_schema"] = {
-            "keys": list(schema_keys),
-            "defaults": schema_defaults,
-        }
-        entry["metadata_values"] = metadata_values
         entry["metadata"] = dict(metadata_map)
         entry["assets"] = self._extract_asset_values(metadata_map)
         entry["core"] = False
         entry["script_exists"] = False
-        entry["last_updated"] = entry.get("last_updated")
 
         if script_location and script_location.path.exists():
             script_path = script_location.path
@@ -374,10 +313,21 @@ class PolicyRegistry:
             entry["script_path"] = self._compact_script_path(script_path)
             entry["script_exists"] = True
             entry["core"] = script_location.kind == "core"
+        else:
+            entry["hash"] = previous_hash
+            entry["script_path"] = None
+
+        previous_compare = dict(previous_entry)
+        previous_compare.pop("last_updated", None)
+        current_compare = dict(entry)
+        current_compare.pop("last_updated", None)
+        if (
+            current_compare != previous_compare
+            or previous_last_updated is None
+        ):
             entry["last_updated"] = datetime.now(timezone.utc).isoformat()
         else:
-            entry["hash"] = entry.get("hash")
-            entry["script_path"] = None
+            entry["last_updated"] = previous_last_updated
 
         self.save()
 

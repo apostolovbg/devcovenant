@@ -8,16 +8,13 @@ from typing import Dict, Iterable, List, Sequence, Tuple
 
 import yaml
 
-from devcovenant.core.generate_policy_metadata_schema import (
-    write_schema as generate_policy_metadata_schema,
-)
+from devcovenant.core import profiles
 from devcovenant.core.policy_descriptor import (
     PolicyDescriptor,
     load_policy_descriptor,
 )
 from devcovenant.core.policy_schema import (
     POLICY_BLOCK_RE,
-    PolicySchema,
     parse_metadata_block,
 )
 from devcovenant.core.selector_helpers import _normalize_globs
@@ -30,24 +27,22 @@ _COMMON_KEYS = [
     "status",
     "severity",
     "auto_fix",
-    "updated",
     "enforcement",
-    "apply",
+    "enabled",
     "custom",
     "freeze",
     "profile_scopes",
 ]
 
 _COMMON_DEFAULTS: Dict[str, List[str]] = {
-    "status": ["active"],
     "severity": ["warning"],
     "auto_fix": ["false"],
-    "updated": ["false"],
     "enforcement": ["active"],
-    "apply": ["true"],
+    "enabled": ["true"],
     "custom": ["false"],
     "freeze": ["false"],
     "profile_scopes": ["global"],
+    "status": ["active"],
 }
 
 _ROLE_SUFFIXES: Tuple[str, ...] = ("globs", "files", "dirs")
@@ -72,18 +67,10 @@ _LEGACY_ROLE_KEY = {
 }
 
 _GROUP_COMMENTS: Dict[int, str] = {}
-POLICY_METADATA_SCHEMA_FILENAME = "policy_metadata_schema.yaml"
-
-
-def policy_metadata_schema_path(repo_root: Path) -> Path:
-    """Return the canonical metadata schema file path."""
-    return (
-        repo_root
-        / "devcovenant"
-        / "registry"
-        / "local"
-        / POLICY_METADATA_SCHEMA_FILENAME
-    )
+# Keep policy-defined defaults authoritative; only strip transient keys.
+_DERIVED_VALUE_KEYS = {"updated"}
+_ORDER_EXCLUDE_KEYS = {"updated"}
+_STATUS_OVERRIDE_VALUES = {"deprecated", "fiducial", "new", "deleted"}
 
 
 def _template_agents_path(repo_root: Path) -> Path:
@@ -97,16 +84,6 @@ def _template_agents_path(repo_root: Path) -> Path:
         / "assets"
         / "AGENTS.md"
     )
-
-
-def _choose_schema_source(repo_root: Path, schema_path: Path | None) -> Path:
-    """Resolve the schema source path, preferring the canonical file."""
-    if schema_path and schema_path.exists():
-        return schema_path
-    canonical = policy_metadata_schema_path(repo_root)
-    if canonical.exists():
-        return canonical
-    return _template_agents_path(repo_root)
 
 
 @dataclass(frozen=True)
@@ -132,57 +109,6 @@ class _PolicyEntry:
 def _policy_id_from_dir(dir_name: str) -> str:
     """Convert a policy directory name into a policy id."""
     return dir_name.replace("_", "-").strip()
-
-
-def _normalize_profile_name(raw: object) -> str:
-    """Normalize a profile name for matching."""
-    return str(raw or "").strip().lower()
-
-
-def _load_active_profiles(repo_root: Path) -> List[str]:
-    """Load active profiles from config.yaml, ensuring global is present."""
-    config_path = repo_root / "devcovenant" / "config.yaml"
-    if not config_path.exists():
-        return ["global"]
-    try:
-        config_data = (
-            yaml.safe_load(config_path.read_text(encoding="utf-8")) or {}
-        )
-    except Exception:
-        return ["global"]
-    profiles_block = (
-        config_data.get("profiles", {})
-        if isinstance(config_data, dict)
-        else {}
-    )
-    active = profiles_block.get("active", [])
-    if isinstance(active, str):
-        candidates = [active]
-    elif isinstance(active, list):
-        candidates = active
-    else:
-        candidates = [active] if active else []
-    normalized = []
-    for entry in candidates:
-        name = _normalize_profile_name(entry)
-        if name and name != "__none__":
-            normalized.append(name)
-    if "global" not in normalized:
-        normalized.append("global")
-    return sorted(set(normalized))
-
-
-def _scopes_match(scopes: List[str], active_profiles: List[str]) -> bool:
-    """Return True when any scope matches the active profiles."""
-    if not scopes:
-        return True
-    for scope in scopes:
-        normalized = _normalize_profile_name(scope)
-        if not normalized:
-            continue
-        if normalized == "global" or normalized in active_profiles:
-            return True
-    return False
 
 
 def _discover_policy_sources(repo_root: Path) -> Dict[str, Dict[str, bool]]:
@@ -220,12 +146,22 @@ def metadata_value_list(raw_value: object) -> List[str]:
 
 @dataclass(frozen=True)
 class PolicyControl:
-    """Config-driven overrides for policy metadata."""
+    """Config-driven policy control flags."""
 
-    autogen_do_not_apply: set[str]
-    manual_force_apply: set[str]
+    autogen_disable: set[str]
+    manual_force_enable: set[str]
     freeze_core: set[str]
-    overrides: Dict[str, Dict[str, List[str]]]
+
+
+@dataclass(frozen=True)
+class MetadataContext:
+    """Resolved metadata context for policy normalization."""
+
+    control: PolicyControl
+    profile_overlays: Dict[str, Dict[str, Tuple[List[str], bool]]]
+    autogen_overrides: Dict[str, Dict[str, List[str]]]
+    user_overrides: Dict[str, Dict[str, List[str]]]
+    template_defaults: Dict[str, Dict[str, List[str]]]
 
 
 def _normalize_policy_list(raw_value: object | None) -> set[str]:
@@ -245,36 +181,195 @@ def _normalize_policy_list(raw_value: object | None) -> set[str]:
     return set()
 
 
-def load_policy_control_config(repo_root: Path) -> PolicyControl:
-    """Load the do-not-apply/freeze/override config for policies."""
+def _load_config_payload(repo_root: Path) -> Dict[str, object]:
+    """Load config.yaml into a dictionary."""
 
     config_path = repo_root / "devcovenant" / "config.yaml"
     if not config_path.exists():
-        return PolicyControl(set(), set(), set(), {})
+        return {}
     try:
         payload = yaml.safe_load(config_path.read_text(encoding="utf-8")) or {}
     except Exception:
         payload = {}
-    autogen_do_not_apply = _normalize_policy_list(
-        payload.get("autogen_do_not_apply")
+    return payload if isinstance(payload, dict) else {}
+
+
+def _load_active_profiles(payload: Dict[str, object]) -> List[str]:
+    """Return the active profiles from config payload."""
+
+    profiles_block = (
+        payload.get("profiles", {}) if isinstance(payload, dict) else {}
     )
-    manual_force_apply = _normalize_policy_list(
-        payload.get("manual_force_apply")
+    active = (
+        profiles_block.get("active", [])
+        if isinstance(profiles_block, dict)
+        else []
+    )
+    if isinstance(active, str):
+        candidates = [active]
+    elif isinstance(active, list):
+        candidates = active
+    else:
+        candidates = [active] if active else []
+    normalized: List[str] = []
+    for entry in candidates:
+        token = str(entry or "").strip().lower()
+        if token and token != "__none__":
+            normalized.append(token)
+    if "global" not in normalized:
+        normalized.insert(0, "global")
+    return normalized
+
+
+def _normalize_metadata_values(raw_value: object) -> List[str]:
+    """Normalize a metadata value into a list of strings."""
+
+    if raw_value is None:
+        return []
+    if isinstance(raw_value, str):
+        text = raw_value.strip()
+        if not text or text == "__none__":
+            return []
+        return [text]
+    if isinstance(raw_value, list):
+        cleaned: List[str] = []
+        for entry in raw_value:
+            token = str(entry or "").strip()
+            if token and token != "__none__":
+                cleaned.append(token)
+        return cleaned
+    text = str(raw_value).strip()
+    if not text or text == "__none__":
+        return []
+    return [text]
+
+
+def _normalize_override_map(
+    raw_value: object,
+) -> Dict[str, Dict[str, List[str]]]:
+    """Normalize a policy override map into list-valued metadata entries."""
+
+    if not isinstance(raw_value, dict):
+        return {}
+    normalized: Dict[str, Dict[str, List[str]]] = {}
+    for policy_id, mapping in raw_value.items():
+        if not isinstance(mapping, dict):
+            continue
+        policy_key = str(policy_id).strip()
+        if not policy_key:
+            continue
+        entries: Dict[str, List[str]] = {}
+        for key, metadata_value in mapping.items():
+            key_name = str(key).strip()
+            if not key_name:
+                continue
+            entries[key_name] = _normalize_metadata_values(metadata_value)
+        if entries:
+            normalized[policy_key] = entries
+    return normalized
+
+
+def _merge_override_maps(
+    base: Dict[str, Dict[str, List[str]]],
+    incoming: Dict[str, Dict[str, List[str]]],
+) -> Dict[str, Dict[str, List[str]]]:
+    """Merge override maps with incoming values taking precedence."""
+
+    merged = {policy_id: dict(values) for policy_id, values in base.items()}
+    for policy_id, overrides in incoming.items():
+        current = merged.setdefault(policy_id, {})
+        for key, values in overrides.items():
+            current[key] = list(values)
+    return merged
+
+
+def _load_metadata_overrides(
+    payload: Dict[str, object],
+) -> Tuple[Dict[str, Dict[str, List[str]]], Dict[str, Dict[str, List[str]]]]:
+    """Return autogen/user metadata overrides from config payload."""
+
+    autogen = _normalize_override_map(
+        payload.get("autogen_metadata_overrides")
+    )
+    user = _normalize_override_map(payload.get("user_metadata_overrides"))
+    legacy = _normalize_override_map(payload.get("policy_overrides"))
+    merged_user = _merge_override_maps(legacy, user)
+    return autogen, merged_user
+
+
+def _collect_profile_overlays(
+    repo_root: Path, active_profiles: List[str]
+) -> Tuple[Dict[str, Dict[str, Tuple[List[str], bool]]], set[str]]:
+    """Collect policy overlays and disable lists from the profile registry."""
+
+    registry = profiles.discover_profiles(repo_root)
+    overlays: Dict[str, Dict[str, Tuple[List[str], bool]]] = {}
+    disabled: set[str] = set()
+    for profile in active_profiles:
+        meta = registry.get(profile)
+        if not isinstance(meta, dict):
+            continue
+        raw_disable = meta.get("autogen_disable")
+        if raw_disable not in (None, "__none__"):
+            disabled |= _normalize_policy_list(raw_disable)
+        raw_overlays = meta.get("policy_overlays") or {}
+        if raw_overlays == "__none__" or not isinstance(raw_overlays, dict):
+            continue
+        for policy_id, overlay in raw_overlays.items():
+            if not isinstance(overlay, dict):
+                continue
+            policy_key = str(policy_id).strip()
+            if not policy_key:
+                continue
+            policy_map = overlays.setdefault(policy_key, {})
+            for key, raw_value in overlay.items():
+                key_name = str(key).strip()
+                if not key_name:
+                    continue
+                merge_values = isinstance(raw_value, list)
+                values = _normalize_metadata_values(raw_value)
+                if merge_values:
+                    current_values = policy_map.get(key_name, ([], True))[0]
+                    merged = _merge_values(current_values, values)
+                    policy_map[key_name] = (merged, True)
+                else:
+                    policy_map[key_name] = (list(values), False)
+    return overlays, disabled
+
+
+def load_policy_control_config(
+    payload: Dict[str, object], profile_disabled: set[str]
+) -> PolicyControl:
+    """Load enabled/freeze control values for policies."""
+
+    autogen_disable = _normalize_policy_list(payload.get("autogen_disable"))
+    autogen_disable |= profile_disabled
+    manual_force_enable = _normalize_policy_list(
+        payload.get("manual_force_enable")
     )
     freeze_core = _normalize_policy_list(payload.get("freeze_core_policies"))
-    overrides_block = payload.get("policy_overrides") or {}
-    overrides: Dict[str, Dict[str, List[str]]] = {}
-    if isinstance(overrides_block, dict):
-        for policy_id, mapping in overrides_block.items():
-            if not isinstance(mapping, dict):
-                continue
-            normalized: Dict[str, List[str]] = {}
-            for key, raw_override in mapping.items():
-                normalized[key] = metadata_value_list(raw_override)
-            if normalized:
-                overrides[str(policy_id)] = normalized
-    return PolicyControl(
-        autogen_do_not_apply, manual_force_apply, freeze_core, overrides
+    return PolicyControl(autogen_disable, manual_force_enable, freeze_core)
+
+
+def build_metadata_context(repo_root: Path) -> MetadataContext:
+    """Return the metadata resolution context for a repo."""
+
+    payload = _load_config_payload(repo_root)
+    active_profiles = _load_active_profiles(payload)
+    profile_overlays, profile_disabled = _collect_profile_overlays(
+        repo_root, active_profiles
+    )
+    autogen_overrides, user_overrides = _load_metadata_overrides(payload)
+    control = load_policy_control_config(payload, profile_disabled)
+    template_defaults = _load_template_metadata(
+        _template_agents_path(repo_root)
+    )
+    return MetadataContext(
+        control=control,
+        profile_overlays=profile_overlays,
+        autogen_overrides=autogen_overrides,
+        user_overrides=user_overrides,
+        template_defaults=template_defaults,
     )
 
 
@@ -291,7 +386,7 @@ def _ensure_metadata_key(
         order.append(key)
 
 
-def apply_policy_control_overrides(
+def apply_policy_control(
     order: List[str],
     values: Dict[str, List[str]],
     policy_id: str,
@@ -299,21 +394,15 @@ def apply_policy_control_overrides(
     *,
     core_available: bool = False,
 ) -> Tuple[List[str], Dict[str, List[str]]]:
-    """Merge config-driven overrides into policy metadata values."""
+    """Apply enabled/force/freeze controls to metadata values."""
 
-    overrides = control.overrides.get(policy_id, {})
-    for key, override_values in overrides.items():
-        _ensure_metadata_key(order, values, key)
-        existing = values.get(key, [])
-        values[key] = _merge_values(existing, override_values)
+    if policy_id in control.autogen_disable:
+        _ensure_metadata_key(order, values, "enabled")
+        values["enabled"] = ["false"]
 
-    if policy_id in control.autogen_do_not_apply:
-        _ensure_metadata_key(order, values, "apply")
-        values["apply"] = ["false"]
-
-    if policy_id in control.manual_force_apply:
-        _ensure_metadata_key(order, values, "apply")
-        values["apply"] = ["true"]
+    if policy_id in control.manual_force_enable:
+        _ensure_metadata_key(order, values, "enabled")
+        values["enabled"] = ["true"]
 
     if policy_id in control.freeze_core and core_available:
         custom_flag = (
@@ -324,48 +413,6 @@ def apply_policy_control_overrides(
             values["freeze"] = ["true"]
 
     return order, values
-
-
-def _load_schema_from_yaml(schema_path: Path) -> Dict[str, PolicySchema]:
-    """Load a metadata schema payload from the canonical YAML file."""
-    schema: Dict[str, PolicySchema] = {}
-    if not schema_path.exists():
-        return schema
-    try:
-        payload = yaml.safe_load(schema_path.read_text(encoding="utf-8"))
-    except Exception:
-        return schema
-    if not isinstance(payload, dict):
-        return schema
-    policies = payload.get("policies")
-    if not isinstance(policies, dict):
-        return schema
-    for policy_id, entry in policies.items():
-        if not isinstance(entry, dict):
-            continue
-        keys = tuple(entry.get("keys", ()))
-        defaults_block = entry.get("defaults", {})
-        defaults: Dict[str, List[str]] = {}
-        if isinstance(defaults_block, dict):
-            for key in keys:
-                defaults[key] = metadata_value_list(defaults_block.get(key))
-        schema[policy_id] = PolicySchema(keys, defaults)
-    return schema
-
-
-def _descriptor_schema_map(
-    descriptors: Dict[str, PolicyDescriptor],
-) -> Dict[str, PolicySchema]:
-    """Build schema entries for each policy descriptor."""
-    schema: Dict[str, PolicySchema] = {}
-    for policy_id, descriptor in descriptors.items():
-        metadata = descriptor.metadata or {}
-        keys = tuple(metadata.keys())
-        defaults: Dict[str, List[str]] = {}
-        for key in keys:
-            defaults[key] = _dedupe(metadata_value_list(metadata.get(key)))
-        schema[policy_id] = PolicySchema(keys, defaults)
-    return schema
 
 
 def _load_descriptors(
@@ -443,13 +490,16 @@ def _render_metadata_block(
         if not entries:
             lines.append(f"{key}:")
             continue
-        first = entries[0]
-        if first:
-            lines.append(f"{key}: {first}")
-        else:
+        non_empty = [entry for entry in entries if entry]
+        if not non_empty:
             lines.append(f"{key}:")
-        for extra in entries[1:]:
-            lines.append(f"  {extra}")
+            continue
+        if len(non_empty) == 1:
+            lines.append(f"{key}: {non_empty[0]}")
+            continue
+        lines.append(f"{key}: {non_empty[0]}")
+        for entry in non_empty[1:]:
+            lines.append(f"  {entry}")
     return "\n".join(lines)
 
 
@@ -576,141 +626,203 @@ def _apply_selector_roles(
     return new_order, values
 
 
-def _build_schema(
+def _load_template_metadata(
     template_path: Path,
-    descriptors: Dict[str, PolicyDescriptor],
-) -> Dict[str, PolicySchema]:
-    """Build policy schema mapping from descriptors with template fallback."""
-    schema: Dict[str, PolicySchema] = {}
-    descriptor_schemas = _descriptor_schema_map(descriptors)
-    schema.update(descriptor_schemas)
-    if template_path.exists() and template_path.suffix in {".yaml", ".yml"}:
-        template_schema = _load_schema_from_yaml(template_path)
-        for policy_id, entry in template_schema.items():
-            if policy_id not in schema:
-                schema[policy_id] = entry
-    elif template_path.exists():
-        content = template_path.read_text(encoding="utf-8")
-        for match in POLICY_BLOCK_RE.finditer(content):
-            metadata_block = match.group(2).strip()
-            order, values = parse_metadata_block(metadata_block)
-            policy_id = ""
-            if "id" in values and values["id"]:
-                policy_id = values["id"][0]
-            if not policy_id:
-                continue
-            if policy_id not in schema:
-                schema[policy_id] = PolicySchema(tuple(order), values)
-    return schema
+) -> Dict[str, Dict[str, List[str]]]:
+    """Parse a template AGENTS policy block into metadata defaults."""
+    if not template_path.exists():
+        return {}
+    content = template_path.read_text(encoding="utf-8")
+    parsed: Dict[str, Dict[str, List[str]]] = {}
+    for match in POLICY_BLOCK_RE.finditer(content):
+        metadata_block = match.group(2).strip()
+        _order, values = parse_metadata_block(metadata_block)
+        policy_id = values.get("id", [""])[0] if values.get("id") else ""
+        if not policy_id:
+            continue
+        parsed[policy_id] = values
+    return parsed
 
 
-def build_metadata_schema(repo_root: Path) -> Dict[str, PolicySchema]:
-    """Return the metadata schema derived from AGENTS and descriptors."""
+def _apply_overrides_replace(
+    values: Dict[str, List[str]],
+    overrides: Dict[str, List[str]],
+) -> None:
+    """Apply override values by replacing existing entries."""
 
-    template_path = (
-        repo_root
-        / "devcovenant"
-        / "core"
-        / "profiles"
-        / "global"
-        / "assets"
-        / "AGENTS.md"
-    )
-    discovered = _discover_policy_sources(repo_root)
-    descriptors = _load_descriptors(repo_root, discovered)
-    return _build_schema(template_path, descriptors)
+    for key, override_values in overrides.items():
+        values[key] = list(override_values)
 
 
-def export_metadata_schema(
-    repo_root: Path,
-    *,
-    schema: Dict[str, PolicySchema] | None = None,
-    output_path: Path | None = None,
-) -> Path:
-    """Write the metadata schema YAML under devcovenant/registry/global."""
+def _apply_profile_overlays(
+    values: Dict[str, List[str]],
+    overlays: Dict[str, Tuple[List[str], bool]],
+) -> None:
+    """Apply profile overlays, merging list values and replacing scalars."""
 
-    schema = schema or build_metadata_schema(repo_root)
-    payload: Dict[str, object] = {"policies": {}}
-    for policy_id in sorted(schema):
-        entry = schema[policy_id]
-        defaults: Dict[str, List[str]] = {}
-        for key in entry.keys:
-            raw_default = entry.defaults.get(key)
-            defaults[key] = list(raw_default) if raw_default else []
-        payload["policies"][policy_id] = {
-            "keys": list(entry.keys),
-            "defaults": defaults,
-        }
-    if output_path is None:
-        output_path = (
-            repo_root
-            / "devcovenant"
-            / "registry"
-            / "local"
-            / "policy_metadata_schema.yaml"
-        )
-    output_path.parent.mkdir(parents=True, exist_ok=True)
-    output_path.write_text(
-        yaml.safe_dump(payload, sort_keys=False, allow_unicode=True),
-        encoding="utf-8",
-    )
-    return output_path
+    for key, (overlay_values, merge_lists) in overlays.items():
+        if merge_lists:
+            values[key] = _merge_values(values.get(key, []), overlay_values)
+        else:
+            values[key] = list(overlay_values)
 
 
-def load_metadata_schema(repo_root: Path) -> Dict[str, PolicySchema]:
-    """Return the canonical metadata schema, loading the YAML if available."""
-    schema_path = policy_metadata_schema_path(repo_root)
-    discovered = _discover_policy_sources(repo_root)
-    descriptors = _load_descriptors(repo_root, discovered)
-    if schema_path.exists():
-        return _build_schema(schema_path, descriptors)
-    return build_metadata_schema(repo_root)
+def _status_override_value(
+    current_values: Dict[str, List[str]],
+) -> List[str] | None:
+    """Return a non-default status override when present."""
+    for entry in current_values.get("status", []):
+        normalized = entry.strip().lower()
+        if normalized in _STATUS_OVERRIDE_VALUES:
+            return [normalized]
+    return None
 
 
-def _normalize_values(
+def _strip_derived_values(values: Dict[str, List[str]]) -> None:
+    """Remove derived metadata values before recomputing."""
+    for key in _DERIVED_VALUE_KEYS:
+        values.pop(key, None)
+
+
+def _resolve_metadata(
     policy_id: str,
     current_order: List[str],
     current_values: Dict[str, List[str]],
-    schema: Dict[str, PolicySchema],
+    descriptor: PolicyDescriptor | None,
+    context: MetadataContext,
+    *,
+    core_available: bool = False,
+    custom_policy: bool = False,
 ) -> Tuple[List[str], Dict[str, List[str]]]:
-    """Return normalized metadata order and values for a policy."""
-    policy_in_schema = policy_id in schema
-    if policy_in_schema:
-        schema_keys = list(schema[policy_id].keys)
-        defaults = schema[policy_id].defaults
+    """Resolve metadata using defaults, overlays, and config overrides."""
+
+    status_override = _status_override_value(current_values)
+
+    if descriptor:
+        base_order, base_values = descriptor_metadata_order_values(descriptor)
+        base_order = [
+            key for key in base_order if key not in _ORDER_EXCLUDE_KEYS
+        ]
+        values = {key: list(entries) for key, entries in base_values.items()}
     else:
-        schema_keys = list(_COMMON_KEYS)
-        defaults = _COMMON_DEFAULTS
+        base_order = [
+            key for key in current_order if key not in _ORDER_EXCLUDE_KEYS
+        ]
+        values = {
+            key: list(entries) for key, entries in current_values.items()
+        }
 
-    extras = [key for key in current_order if key not in schema_keys]
-    ordered_keys = schema_keys + extras
-    values: Dict[str, List[str]] = {}
+    if not descriptor:
+        for key in current_order:
+            if key in _ORDER_EXCLUDE_KEYS:
+                continue
+            values.setdefault(key, list(current_values.get(key, [])))
+
+    template_values = context.template_defaults.get(policy_id)
+    if not descriptor and template_values:
+        for key, defaults in template_values.items():
+            if key in _ORDER_EXCLUDE_KEYS:
+                continue
+            values.setdefault(key, list(defaults))
+            if not values[key] and defaults:
+                values[key] = list(defaults)
+
+    overlays = context.profile_overlays.get(policy_id, {})
+    _apply_profile_overlays(values, overlays)
+
+    autogen_overrides = context.autogen_overrides.get(policy_id, {})
+    _apply_overrides_replace(values, autogen_overrides)
+
+    user_overrides = context.user_overrides.get(policy_id, {})
+    _apply_overrides_replace(values, user_overrides)
+
+    _strip_derived_values(values)
+
+    ordered_keys: List[str] = []
+    for key in _COMMON_KEYS:
+        if key in _ORDER_EXCLUDE_KEYS:
+            continue
+        _ensure_metadata_key(ordered_keys, values, key)
+    for key in base_order:
+        if key in _ORDER_EXCLUDE_KEYS:
+            continue
+        _ensure_metadata_key(ordered_keys, values, key)
+    if template_values and not descriptor:
+        for key in template_values.keys():
+            if key in _ORDER_EXCLUDE_KEYS:
+                continue
+            _ensure_metadata_key(ordered_keys, values, key)
+    for key in overlays.keys():
+        if key in _ORDER_EXCLUDE_KEYS:
+            continue
+        _ensure_metadata_key(ordered_keys, values, key)
+    for key in autogen_overrides.keys():
+        if key in _ORDER_EXCLUDE_KEYS:
+            continue
+        _ensure_metadata_key(ordered_keys, values, key)
+    for key in user_overrides.keys():
+        if key in _ORDER_EXCLUDE_KEYS:
+            continue
+        _ensure_metadata_key(ordered_keys, values, key)
+    if not descriptor:
+        for key in current_order:
+            if key in _ORDER_EXCLUDE_KEYS:
+                continue
+            _ensure_metadata_key(ordered_keys, values, key)
+
+    values["id"] = [policy_id]
+    if status_override:
+        values["status"] = list(status_override)
+    if custom_policy:
+        values["custom"] = ["true"]
+
     for key in ordered_keys:
-        current = current_values.get(key, [])
-        canonical = list(defaults.get(key, []))
-        if policy_in_schema:
-            if current:
-                values[key] = _dedupe(list(current))
-            elif canonical:
-                values[key] = _dedupe(list(canonical))
-            else:
-                values[key] = []
-            continue
-
-        if key in schema_keys:
-            if canonical:
-                values[key] = _dedupe(list(canonical))
-            else:
-                values[key] = []
-            continue
-
+        current = values.get(key, [])
         if current:
             values[key] = _dedupe(list(current))
-        elif canonical:
-            values[key] = _dedupe(list(canonical))
+            continue
+        if key in _COMMON_DEFAULTS:
+            values[key] = _dedupe(list(_COMMON_DEFAULTS[key]))
         else:
             values[key] = []
+
+    ordered_keys, values = apply_policy_control(
+        ordered_keys,
+        values,
+        policy_id,
+        context.control,
+        core_available=core_available,
+    )
+
     return _apply_selector_roles(ordered_keys, values)
+
+
+def resolve_policy_metadata_map(
+    policy_id: str,
+    current_order: List[str],
+    current_values: Dict[str, List[str]],
+    descriptor: PolicyDescriptor | None,
+    context: MetadataContext,
+    *,
+    core_available: bool = False,
+    custom_policy: bool = False,
+) -> Tuple[List[str], Dict[str, str]]:
+    """Return the resolved metadata order and string map for a policy."""
+
+    order, values = _resolve_metadata(
+        policy_id,
+        current_order,
+        current_values,
+        descriptor,
+        context,
+        core_available=core_available,
+        custom_policy=custom_policy,
+    )
+    resolved: Dict[str, str] = {}
+    for key in order:
+        entries = values.get(key, [])
+        resolved[key] = ", ".join(entry for entry in entries if entry)
+    return order, resolved
 
 
 def _assemble_sections(entries: List[_PolicyEntry]) -> str:
@@ -744,9 +856,8 @@ def _locate_policy_block(text: str) -> Tuple[int, int, str]:
 
 def refresh_policies(
     agents_path: Path,
-    schema_path: Path,
+    schema_path: Path | None,
     *,
-    set_updated: bool = True,
     repo_root: Path | None = None,
 ) -> RefreshResult:
     """Refresh the policy block metadata and ordering inside AGENTS.md."""
@@ -754,15 +865,11 @@ def refresh_policies(
         return RefreshResult((), (), False)
 
     repo_root = repo_root or agents_path.parent
-    # Keep the canonical schema in sync with current descriptors before use.
-    generate_policy_metadata_schema(repo_root)
+    context = build_metadata_context(repo_root)
     discovered = _discover_policy_sources(repo_root)
     descriptors = _load_descriptors(repo_root, discovered)
-    control = load_policy_control_config(repo_root)
-    schema_source = _choose_schema_source(repo_root, schema_path)
-    schema = _build_schema(schema_source, descriptors)
+    del schema_path
     stock_texts = _load_stock_texts(repo_root)
-    active_profiles = _load_active_profiles(repo_root)
     content = agents_path.read_text(encoding="utf-8")
     try:
         block_start, block_end, block_text = _locate_policy_block(content)
@@ -792,50 +899,28 @@ def refresh_policies(
 
         seen_ids.add(policy_id)
         source_flags = discovered.get(policy_id, {})
+        if not source_flags:
+            skipped.append(policy_id)
+            continue
         core_available = bool(source_flags.get("core"))
-        if descriptor:
-            base_order, base_values = descriptor_metadata_order_values(
-                descriptor
-            )
-        else:
-            base_order, base_values = order, values
-        base_order = list(base_order)
-        base_values = {key: list(vals) for key, vals in base_values.items()}
-        order, values = apply_policy_control_overrides(
-            base_order,
-            base_values,
-            policy_id,
-            control,
-            core_available=core_available,
+        custom_policy = bool(
+            source_flags.get("custom") and not source_flags.get("core")
         )
-        normalized_order, normalized_values = _normalize_values(
+        normalized_order, normalized_values = _resolve_metadata(
             policy_id,
             order,
             values,
-            schema,
-        )
-        apply_flag = (
-            normalized_values.get("apply", ["true"])[0].strip().lower()
-            == "true"
+            descriptor,
+            context,
+            core_available=core_available,
+            custom_policy=custom_policy,
         )
         custom_flag = (
             normalized_values.get("custom", ["false"])[0].strip().lower()
             == "true"
         )
-        scopes = _split_values(normalized_values.get("profile_scopes", []))
-        if not scopes:
-            scopes = ["global"]
-        if not _scopes_match(scopes, active_profiles):
-            skipped.append(policy_id)
-            continue
         rendered = _render_metadata_block(normalized_order, normalized_values)
         metadata_changed = rendered != metadata_block
-        if metadata_changed and set_updated and apply_flag and not custom_flag:
-            normalized_values["updated"] = ["true"]
-            rendered = _render_metadata_block(
-                normalized_order, normalized_values
-            )
-            metadata_changed = rendered != metadata_block
         final_text = (
             f"{heading}```policy-def\n{rendered}\n```\n\n{description}\n"
         )
@@ -855,42 +940,22 @@ def refresh_policies(
         if policy_id in seen_ids:
             continue
         core_available = bool(source_flags.get("core"))
+        custom_policy = bool(
+            source_flags.get("custom") and not source_flags.get("core")
+        )
         descriptor = descriptors.get(policy_id)
-        if descriptor:
-            base_order, base_values = descriptor_metadata_order_values(
-                descriptor
-            )
-        else:
-            base_order = ["id"]
-            base_values = {"id": [policy_id]}
-            if source_flags.get("custom"):
-                base_values["custom"] = ["true"]
-        base_order = list(base_order)
-        base_values = {key: list(vals) for key, vals in base_values.items()}
-        override_order, override_values = apply_policy_control_overrides(
+        base_order = ["id"]
+        base_values = {"id": [policy_id]}
+        normalized_order, normalized_values = _resolve_metadata(
+            policy_id,
             base_order,
             base_values,
-            policy_id,
-            control,
+            descriptor,
+            context,
             core_available=core_available,
+            custom_policy=custom_policy,
         )
-        normalized_order, normalized_values = _normalize_values(
-            policy_id,
-            override_order,
-            override_values,
-            schema,
-        )
-        if source_flags.get("custom"):
-            normalized_values["custom"] = ["true"]
-            if "custom" not in normalized_order:
-                normalized_order.append("custom")
         normalized_values.setdefault("id", [policy_id])
-        scopes = _split_values(normalized_values.get("profile_scopes", []))
-        if not scopes:
-            scopes = ["global"]
-        if not _scopes_match(scopes, active_profiles):
-            skipped.append(policy_id)
-            continue
         rendered = _render_metadata_block(normalized_order, normalized_values)
         if descriptor and descriptor.text:
             description = descriptor.text.strip()

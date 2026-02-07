@@ -5,16 +5,12 @@ text: |
   review approves the exception.
 metadata:
   id: security-scanner
-  status: active
   severity: error
   auto_fix: 'false'
-  updated: 'false'
   exclude_globs:
     - tests/**
     - '**/tests/**'
   enforcement: active
-  apply: 'true'
-  custom: 'false'
   profile_scopes:
     - python
     - fastapi

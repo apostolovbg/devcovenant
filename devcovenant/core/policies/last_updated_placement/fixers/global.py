@@ -25,6 +25,12 @@ class LastUpdatedPlacementFixer(PolicyFixer):
         r"^\s*(\*\*Last Updated:\*\*|Last Updated:|# Last Updated).*",
         re.IGNORECASE,
     )
+    YAML_MARKER_PATTERN = re.compile(
+        r"^(?P<prefix>\s*-\s*)(?P<quote>['\"]?)"
+        r"(\*\*Last Updated:\*\*|Last Updated:|# Last Updated)"
+        r"(?P<rest>.*?)(?P=quote)\s*$",
+        re.IGNORECASE,
+    )
 
     def can_fix(self, violation: Violation) -> bool:
         """Return True when the violation references a valid file."""
@@ -51,6 +57,27 @@ class LastUpdatedPlacementFixer(PolicyFixer):
             )
 
         lines = content.splitlines()
+        if file_path.suffix in {".yaml", ".yml"}:
+            updated, new_lines = self._update_yaml_header_lines(lines, marker)
+            if updated:
+                new_content = "\n".join(new_lines).rstrip() + "\n"
+                try:
+                    file_path.write_text(new_content, encoding="utf-8")
+                except Exception as exc:
+                    return FixResult(
+                        success=False,
+                        message=f"Unable to write {file_path}: {exc}",
+                    )
+                human_date = marker.split(":", 1)[1].strip()
+                return FixResult(
+                    success=True,
+                    message=(
+                        "Set Last Updated header to "
+                        + human_date
+                        + f" in {file_path}"
+                    ),
+                    files_modified=[file_path],
+                )
         existing_idx = self._find_marker_index(lines)
         modified = False
 
@@ -111,3 +138,43 @@ class LastUpdatedPlacementFixer(PolicyFixer):
             if line.strip():
                 return idx
         return -1
+
+    def _update_yaml_header_lines(
+        self, lines: list[str], marker: str
+    ) -> tuple[bool, list[str]]:
+        """Update header_lines markers in YAML descriptor assets."""
+        header_index = None
+        for idx, line in enumerate(lines):
+            if line.strip() == "header_lines:":
+                header_index = idx
+                break
+        if header_index is None:
+            return False, lines
+
+        list_indices: list[int] = []
+        for idx in range(header_index + 1, len(lines)):
+            line = lines[idx]
+            if not line.strip():
+                continue
+            if line.lstrip().startswith("- "):
+                list_indices.append(idx)
+                continue
+            break
+
+        for idx in list_indices:
+            match = self.YAML_MARKER_PATTERN.match(lines[idx])
+            if match:
+                prefix = match.group("prefix")
+                quote = match.group("quote")
+                lines[idx] = f"{prefix}{quote}{marker}{quote}"
+                return True, lines
+
+        if list_indices:
+            insert_at = list_indices[0] + 1
+            first_line = lines[list_indices[0]]
+            prefix = first_line.split("-", 1)[0] + "- "
+        else:
+            insert_at = header_index + 1
+            prefix = "- "
+        lines.insert(insert_at, f"{prefix}'{marker}'")
+        return True, lines

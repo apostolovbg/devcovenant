@@ -6,12 +6,7 @@ text: |
   the repo README.
 metadata:
   id: readme-sync
-  status: active
   severity: error
   auto_fix: 'true'
-  updated: 'false'
   enforcement: active
-  apply: 'true'
-  custom: 'true'
-  freeze: 'true'
   profile_scopes: global

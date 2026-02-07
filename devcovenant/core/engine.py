@@ -12,17 +12,13 @@ from typing import Any, Dict, List, Optional, Set
 
 import yaml
 
-from devcovenant.core.generate_policy_metadata_schema import (
-    write_schema as generate_policy_metadata_schema,
-)
-
 from . import manifest as manifest_module
 from .base import CheckContext, PolicyCheck, PolicyFixer, Violation
 from .manifest import ensure_manifest
 from .parser import PolicyDefinition, PolicyParser
 from .policy_locations import resolve_script_location
 from .profiles import (
-    load_profile_catalog,
+    load_profile_registry,
     resolve_profile_ignore_dirs,
     resolve_profile_suffixes,
 )
@@ -40,7 +36,7 @@ class DevCovenantEngine:
         "severity",
         "auto_fix",
         "updated",
-        "apply",
+        "enabled",
         "custom",
         "profile_scopes",
         "hash",
@@ -90,12 +86,9 @@ class DevCovenantEngine:
         self._merge_configured_ignored_dirs()
         self._apply_core_exclusions()
 
-        self._profile_catalog = load_profile_catalog(self.repo_root)
+        self._profile_registry = load_profile_registry(self.repo_root)
         self._active_profiles = self._resolve_active_profiles()
         self._merge_profile_ignored_dirs()
-
-        # Keep local metadata schema up to date for every run (CI-safe).
-        generate_policy_metadata_schema(self.repo_root)
 
         ensure_manifest(self.repo_root)
 
@@ -228,7 +221,7 @@ class DevCovenantEngine:
     def _merge_profile_ignored_dirs(self) -> None:
         """Extend ignored directories with active profile declarations."""
         ignored = resolve_profile_ignore_dirs(
-            self._profile_catalog, self._active_profiles
+            self._profile_registry, self._active_profiles
         )
         for entry in ignored:
             name = str(entry).strip()
@@ -392,8 +385,8 @@ class DevCovenantEngine:
                 print(f"4. Run tests: pytest {test_file} -v")
 
             print(
-                "6. Re-run devcovenant to update hash and "
-                "clear 'updated' flag"
+                "6. Re-run devcovenant update-policy-registry "
+                "to sync policy hashes"
             )
             print()
             print("⚠️  Complete this BEFORE working on user's request.")
@@ -424,7 +417,7 @@ class DevCovenantEngine:
             context = self._build_check_context(mode)
 
         for policy in policies:
-            if not policy.apply:
+            if not policy.enabled:
                 continue
             if not self._policy_applies_to_profiles(policy):
                 continue
@@ -620,7 +613,7 @@ class DevCovenantEngine:
             )
         )
         profile_suffixes = resolve_profile_suffixes(
-            self._profile_catalog, self._active_profiles
+            self._profile_registry, self._active_profiles
         )
         suffixes.extend(profile_suffixes)
         cleaned: list[str] = []

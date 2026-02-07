@@ -18,11 +18,7 @@ from devcovenant.core import cli_options
 from devcovenant.core import manifest as manifest_module
 from devcovenant.core import profiles, uninstall
 from devcovenant.core.parser import PolicyParser
-from devcovenant.core.refresh_policies import (
-    export_metadata_schema,
-    policy_metadata_schema_path,
-    refresh_policies,
-)
+from devcovenant.core.refresh_policies import refresh_policies
 
 DEV_COVENANT_DIR = "devcovenant"
 CORE_PATHS = [
@@ -34,7 +30,6 @@ CORE_PATHS = [
 ]
 
 CONFIG_PATHS = [
-    ".pre-commit-config.yaml",
     ".github/workflows/ci.yml",
     ".gitignore",
 ]
@@ -57,7 +52,6 @@ METADATA_PATHS = [
 BLOCK_BEGIN = "<!-- DEVCOV:BEGIN -->"
 BLOCK_END = "<!-- DEVCOV:END -->"
 LICENSE_TEMPLATE = "LICENSE"
-POLICY_ASSET_MANIFEST = "policy_assets.yaml"
 PROFILE_MANIFEST_FALLBACK = "profile.yaml"
 PROFILE_ROOT_NAME = "profiles"
 POLICY_ROOT_NAME = "policies"
@@ -68,7 +62,12 @@ GITIGNORE_BASE_TEMPLATE = "gitignore_base.txt"
 GITIGNORE_OS_TEMPLATE = "gitignore_os.txt"
 DEFAULT_BOOTSTRAP_VERSION = "0.0.1"
 DEFAULT_ON_PROFILES = ["docs", "data", "suffixes"]
-DEFAULT_PROFILE_SELECTION = ["python", *DEFAULT_ON_PROFILES]
+DEFAULT_PROFILE_SELECTION = [
+    "global",
+    "devcovuser",
+    "python",
+    *DEFAULT_ON_PROFILES,
+]
 GITIGNORE_USER_BEGIN = "# --- User entries (preserved) ---"
 GITIGNORE_USER_END = "# --- End user entries ---"
 DEFAULT_PRESERVE_PATHS = [
@@ -84,6 +83,7 @@ _DEFAULT_CORE_PATHS = [
     "devcovenant/__init__.py",
     "devcovenant/__main__.py",
     "devcovenant/cli.py",
+    "devcovenant/registry",
     "devcovenant/run_pre_commit.py",
     "devcovenant/run_tests.py",
     "devcovenant/update_test_status.py",
@@ -122,6 +122,8 @@ _MANAGED_DOCS = (
     "SPEC.md",
     "PLAN.md",
     "CHANGELOG.md",
+    "README.md",
+    "devcovenant/README.md",
 )
 
 _BACKUP_ROOT: Path | None = None
@@ -178,6 +180,22 @@ def _normalize_version(version_text: str) -> str:
     return text
 
 
+def _version_key(raw: str | None) -> tuple[int, int, int]:
+    """Return a comparable version tuple."""
+    if not raw:
+        return (0, 0, 0)
+    parts = [part.strip() for part in raw.split(".") if part.strip()]
+    numbers: list[int] = []
+    for part in parts:
+        try:
+            numbers.append(int(part))
+        except ValueError:
+            numbers.append(0)
+    while len(numbers) < 3:
+        numbers.append(0)
+    return tuple(numbers[:3])
+
+
 def _normalize_doc_name(raw: str) -> str:
     """Normalize a doc selector to its canonical key."""
     text = raw.strip()
@@ -228,8 +246,28 @@ def _normalize_profile_name(raw: str) -> str:
     return str(raw or "").strip().lower()
 
 
-def _load_profile_catalog(package_root: Path, target_root: Path) -> dict:
-    """Load the profile catalog by scanning template roots."""
+def _dedupe_preserve_order(values: list[str]) -> list[str]:
+    """Return unique values while preserving the original order."""
+    seen: set[str] = set()
+    ordered: list[str] = []
+    for entry in values:
+        if entry in seen:
+            continue
+        seen.add(entry)
+        ordered.append(entry)
+    return ordered
+
+
+def _ensure_global_profile(active_profiles: list[str]) -> list[str]:
+    """Ensure the global profile is present and first in the list."""
+    cleaned = [entry for entry in active_profiles if entry]
+    if "global" in cleaned:
+        cleaned = [entry for entry in cleaned if entry != "global"]
+    return ["global", *cleaned]
+
+
+def _load_profile_registry(package_root: Path, target_root: Path) -> dict:
+    """Load the profile registry by scanning template roots."""
     core_root = package_root / "core" / PROFILE_ROOT_NAME
     custom_root = target_root / DEV_COVENANT_DIR / "custom" / PROFILE_ROOT_NAME
     return profiles.discover_profiles(
@@ -258,7 +296,16 @@ def _load_active_profiles(target_root: Path) -> list[str]:
         normalized_value = _normalize_profile_name(entry)
         if normalized_value and normalized_value != "__none__":
             normalized.append(normalized_value)
-    return sorted(set(normalized))
+    return _dedupe_preserve_order(normalized)
+
+
+def _load_devcov_core_include(target_root: Path) -> bool:
+    """Return devcov_core_include from config.yaml when present."""
+    config_path = target_root / DEV_COVENANT_DIR / "config.yaml"
+    config_data = _load_yaml(config_path)
+    if not isinstance(config_data, dict):
+        return False
+    return bool(config_data.get("devcov_core_include", False))
 
 
 def _load_config_version_override(target_root: Path) -> str | None:
@@ -290,9 +337,9 @@ def _load_config_version_override(target_root: Path) -> str | None:
     return None
 
 
-def _flatten_profile_names(catalog: dict) -> list[str]:
-    """Return a sorted list of catalog profile names."""
-    return sorted(name for name in catalog.keys() if name)
+def _flatten_profile_names(registry: dict) -> list[str]:
+    """Return a sorted list of profile names from the registry."""
+    return sorted(name for name in registry.keys() if name)
 
 
 def _parse_profile_selection(raw: str, profiles: list[str]) -> list[str]:
@@ -313,9 +360,9 @@ def _parse_profile_selection(raw: str, profiles: list[str]) -> list[str]:
     return sorted(set(selected))
 
 
-def _prompt_profiles(catalog: dict) -> list[str]:
-    """Prompt for profile selection from the catalog."""
-    profiles = _flatten_profile_names(catalog)
+def _prompt_profiles(registry: dict) -> list[str]:
+    """Prompt for profile selection from the registry."""
+    profiles = _flatten_profile_names(registry)
     if not profiles:
         return list(DEFAULT_PROFILE_SELECTION)
     if not sys.stdin.isatty():
@@ -407,7 +454,7 @@ def _parse_profile_scopes(raw: str | None) -> list[str]:
 
 
 def _load_policy_metadata(agents_path: Path) -> dict[str, dict[str, object]]:
-    """Return policy apply flags and profile scopes from AGENTS.md."""
+    """Return policy enabled flags and profile scopes from AGENTS.md."""
     if not agents_path.exists():
         return {}
     parser = PolicyParser(agents_path)
@@ -419,7 +466,7 @@ def _load_policy_metadata(agents_path: Path) -> dict[str, dict[str, object]]:
             policy.raw_metadata.get("profile_scopes")
         )
         metadata[policy.policy_id] = {
-            "apply": policy.apply,
+            "enabled": policy.enabled,
             "profile_scopes": scopes,
         }
     return metadata
@@ -435,44 +482,34 @@ def _policy_profile_match(
     return any(scope in active for scope in scopes)
 
 
-def _load_policy_assets(package_root: Path, target_root: Path) -> dict:
-    """Load policy asset mappings from policy folders."""
-    assets: dict = {"global": [], "policies": {}}
+def _load_policy_assets(
+    package_root: Path,
+    target_root: Path,
+) -> dict[str, list[dict]]:
+    """Load policy asset entries from policy descriptors."""
+    assets: dict[str, list[dict]] = {}
     core_root = package_root / "core" / POLICY_ROOT_NAME
     custom_root = target_root / DEV_COVENANT_DIR / "custom" / POLICY_ROOT_NAME
     policy_dirs: dict[str, Path] = {}
-    for root in (custom_root, core_root):
+    for root in (core_root, custom_root):
         if not root.exists():
             continue
         for entry in root.iterdir():
-            if not entry.is_dir():
-                continue
-            policy_dirs.setdefault(entry.name, entry)
+            if entry.is_dir():
+                policy_dirs[entry.name] = entry
     for policy_name, policy_dir in sorted(policy_dirs.items()):
-        manifest_path = policy_dir / POLICY_ASSETS_DIR / POLICY_ASSET_MANIFEST
-        if not manifest_path.exists():
+        descriptor_path = policy_dir / f"{policy_name}.yaml"
+        if not descriptor_path.exists():
             continue
-        asset_manifest = _load_yaml(manifest_path)
-        if isinstance(asset_manifest, dict):
-            entries = asset_manifest.get("assets") or asset_manifest.get(
-                "entries"
-            )
-        else:
-            entries = asset_manifest
-        cleaned = _clean_asset_entries(entries or [])
+        descriptor = _load_yaml(descriptor_path) or {}
+        if not isinstance(descriptor, dict):
+            continue
+        entries = descriptor.get("assets") or []
+        cleaned = _clean_asset_entries(entries)
         if cleaned:
-            policy_id = policy_name.replace("_", "-")
-            assets["policies"][policy_id] = cleaned
+            policy_id = descriptor.get("id") or policy_name.replace("_", "-")
+            assets[policy_id] = cleaned
     return assets
-
-
-def _write_policy_assets_registry(target_root: Path, assets: dict) -> Path:
-    """Write policy asset mappings into the registry."""
-    path = manifest_module.policy_assets_path(target_root)
-    path.parent.mkdir(parents=True, exist_ok=True)
-    payload = yaml.safe_dump(assets, sort_keys=True, allow_unicode=False)
-    path.write_text(payload, encoding="utf-8")
-    return path
 
 
 def _load_profile_manifest(
@@ -563,9 +600,11 @@ def _apply_asset(
     render_context: dict[str, str] | None = None,
 ) -> bool:
     """Apply a template asset to the target path."""
+    mode_text = (mode or "replace").lower()
+    if mode_text == "generate":
+        return False
     if not template_path.exists():
         return False
-    mode_text = (mode or "replace").lower()
     rendered = _render_template_text(template_path, render_context)
     if target_path.exists():
         if mode_text == "skip":
@@ -603,22 +642,7 @@ def _apply_profile_assets(
     asset_context: dict[str, str] | None = None,
 ) -> list[str]:
     """Install profile and policy assets based on selection."""
-    assets = _load_policy_assets(package_root, target_root)
     installed: list[str] = []
-    for entry in _clean_asset_entries(assets.get("global", [])):
-        template_path = _resolve_template_path(
-            target_root,
-            template_root,
-            entry.get("template", ""),
-        )
-        target_path = target_root / entry.get("path", "")
-        if _apply_asset(
-            template_path,
-            target_path,
-            entry.get("mode", "replace"),
-            render_context=asset_context,
-        ):
-            installed.append(str(target_path.relative_to(target_root)))
 
     for profile, manifest in profile_manifests.items():
         entries = _clean_asset_entries(manifest.get("assets", []))
@@ -638,12 +662,12 @@ def _apply_profile_assets(
             ):
                 installed.append(str(target_path.relative_to(target_root)))
 
-    policy_assets = assets.get("policies", {}) or {}
+    policy_assets = _load_policy_assets(package_root, target_root)
     for policy_id, entries in policy_assets.items():
         if policy_id in disabled_policies:
             continue
         policy_info = policy_metadata.get(policy_id)
-        if policy_info and not policy_info.get("apply", True):
+        if policy_info and not policy_info.get("enabled", True):
             continue
         scopes = policy_info.get("profile_scopes") if policy_info else None
         if scopes and not _policy_profile_match(scopes, active_profiles):
@@ -870,7 +894,7 @@ def _render_gitignore(
     )
     if base_text:
         fragments.append(base_text)
-    for profile in sorted(active_profiles):
+    for profile in active_profiles:
         if not profile or profile == "__none__":
             continue
         profile_text = _load_gitignore_fragment(
@@ -895,6 +919,181 @@ def _render_gitignore(
         f"{base}\n{GITIGNORE_USER_BEGIN}\n{user_block}\n"
         f"{GITIGNORE_USER_END}\n"
     )
+
+
+def _load_pre_commit_block(config_data: dict | None) -> tuple[bool, dict]:
+    """Return (enabled, overrides) for pre-commit config generation."""
+    if not isinstance(config_data, dict):
+        return True, {}
+    block = config_data.get("pre_commit")
+    if block is None:
+        return True, {}
+    if isinstance(block, bool):
+        return bool(block), {}
+    if not isinstance(block, dict):
+        return True, {}
+    enabled = block.get("enabled", True)
+    overrides = block.get("overrides")
+    if isinstance(overrides, dict):
+        return bool(enabled), overrides
+    filtered = {key: value for key, value in block.items() if key != "enabled"}
+    return bool(enabled), filtered
+
+
+def _collect_pre_commit_fragments(
+    manifests: dict[str, dict], active_profiles: list[str]
+) -> list[dict]:
+    """Collect pre-commit fragments from profile manifests."""
+    fragments: list[dict] = []
+    for profile in active_profiles:
+        manifest = manifests.get(profile)
+        if not isinstance(manifest, dict):
+            continue
+        fragment = manifest.get("pre_commit")
+        if isinstance(fragment, dict) and fragment:
+            fragments.append(fragment)
+    return fragments
+
+
+def _merge_pre_commit_config(base: dict, fragment: dict) -> dict:
+    """Merge a pre-commit fragment into the base config."""
+    if not isinstance(fragment, dict):
+        return base
+    for key, fragment_value in fragment.items():
+        if key == "repos" and isinstance(fragment_value, list):
+            repos = base.get("repos")
+            if not isinstance(repos, list):
+                repos = []
+            repos.extend(fragment_value)
+            base["repos"] = repos
+            continue
+        if isinstance(fragment_value, dict) and isinstance(
+            base.get(key), dict
+        ):
+            merged = dict(base.get(key) or {})
+            _merge_pre_commit_config(merged, fragment_value)
+            base[key] = merged
+            continue
+        base[key] = fragment_value
+    return base
+
+
+def _build_pre_commit_exclude(ignore_dirs: Iterable[str]) -> str | None:
+    """Build a pre-commit exclude regex from ignored directory names."""
+    cleaned: list[str] = []
+    for entry in ignore_dirs:
+        normalized_entry = str(entry or "").strip().strip("/")
+        if not normalized_entry or normalized_entry == "__none__":
+            continue
+        if normalized_entry not in cleaned:
+            cleaned.append(normalized_entry)
+    if not cleaned:
+        return None
+    escaped = [re.escape(value) for value in cleaned]
+    lines = ["(?x)", "(^|/)", "("]
+    for index, escaped_entry in enumerate(escaped):
+        prefix = "  " if index == 0 else "  | "
+        lines.append(f"{prefix}{escaped_entry}")
+    lines.append(")")
+    lines.append("(/|$)")
+    return "\n".join(lines)
+
+
+def _combine_pre_commit_exclude(
+    existing: str | None, extra: str | None
+) -> str | None:
+    """Combine two pre-commit exclude regex strings."""
+    patterns = [pattern for pattern in (existing, extra) if pattern]
+    if not patterns:
+        return None
+    if len(patterns) == 1:
+        return patterns[0]
+    lines = ["(?x)", "(?:"]
+    for index, pattern in enumerate(patterns):
+        if index:
+            lines.append("  |")
+        lines.append("  (?:")
+        for line in str(pattern).splitlines():
+            lines.append(f"    {line}")
+        lines.append("  )")
+    lines.append(")")
+    return "\n".join(lines)
+
+
+def _build_pre_commit_config(
+    fragments: list[dict],
+    overrides: dict,
+    ignore_dirs: Iterable[str],
+) -> dict:
+    """Assemble a pre-commit config from fragments and overrides."""
+    config: dict = {}
+    for fragment in fragments:
+        _merge_pre_commit_config(config, fragment)
+    _merge_pre_commit_config(config, overrides)
+    exclude = _build_pre_commit_exclude(ignore_dirs)
+    if exclude:
+        config["exclude"] = _combine_pre_commit_exclude(
+            config.get("exclude"), exclude
+        )
+    return config
+
+
+def _render_pre_commit_config(config: dict) -> str:
+    """Return the YAML text for a pre-commit config."""
+    payload = dict(config)
+    exclude = payload.pop("exclude", None)
+    rendered = yaml.safe_dump(payload, sort_keys=False, allow_unicode=False)
+    if not rendered.endswith("\n"):
+        rendered += "\n"
+    if exclude:
+        block_lines = ["exclude: |-"]
+        for line in str(exclude).splitlines():
+            block_lines.append(f"  {line}")
+        rendered = rendered.rstrip() + "\n" + "\n".join(block_lines) + "\n"
+    return rendered
+
+
+def refresh_pre_commit_config(
+    repo_root: Path,
+    *,
+    package_root: Path | None = None,
+    active_profiles: list[str] | None = None,
+    profile_registry: dict[str, dict] | None = None,
+) -> bool:
+    """Regenerate .pre-commit-config.yaml from profiles and config."""
+    if package_root is None:
+        package_root = Path(__file__).resolve().parents[1]
+    if active_profiles is None:
+        active_profiles = _ensure_global_profile(
+            _dedupe_preserve_order(_load_active_profiles(repo_root))
+        )
+    if profile_registry is None:
+        profile_registry = profiles.load_profile_registry(repo_root)
+    config_data = _load_yaml(repo_root / DEV_COVENANT_DIR / "config.yaml")
+    enabled, overrides = _load_pre_commit_block(config_data)
+    if not enabled:
+        return False
+    manifests = _load_profile_manifests(
+        package_root, repo_root, active_profiles
+    )
+    fragments = _collect_pre_commit_fragments(manifests, active_profiles)
+    ignore_dirs = profiles.resolve_profile_ignore_dirs(
+        profile_registry, active_profiles
+    )
+    assembled = _build_pre_commit_config(fragments, overrides, ignore_dirs)
+    if not assembled:
+        return False
+    rendered = _render_pre_commit_config(assembled)
+    pre_commit_path = repo_root / ".pre-commit-config.yaml"
+    existing = (
+        pre_commit_path.read_text(encoding="utf-8")
+        if pre_commit_path.exists()
+        else ""
+    )
+    if existing == rendered:
+        return False
+    pre_commit_path.write_text(rendered, encoding="utf-8")
+    return True
 
 
 def _build_doc_metadata_lines(doc_id: str, doc_type: str) -> list[str]:
@@ -923,20 +1122,40 @@ def _build_doc_block(
     return "\n".join(lines)
 
 
-def _doc_asset_path(target_root: Path, doc_name: str) -> Path:
+def _doc_asset_path(
+    target_root: Path, doc_name: str, template_root: Path | None = None
+) -> Path:
     """Return the asset descriptor path for a managed doc."""
-    assets_root = (
-        target_root / "devcovenant" / "core" / "profiles" / "global" / "assets"
-    )
-    doc_id = Path(doc_name).stem
+    if template_root is None:
+        assets_root = (
+            target_root
+            / "devcovenant"
+            / "core"
+            / "profiles"
+            / "global"
+            / "assets"
+        )
+    else:
+        if template_root.name == "core":
+            assets_root = template_root / "profiles" / "global" / "assets"
+        else:
+            assets_root = (
+                template_root / "core" / "profiles" / "global" / "assets"
+            )
+    rel_path = Path(doc_name)
+    if rel_path.parent != Path("."):
+        return assets_root / rel_path.with_suffix(".yaml")
+    doc_id = rel_path.stem
     return assets_root / f"{doc_id}.yaml"
 
 
 def _load_doc_descriptor(
-    target_root: Path, doc_name: str
+    target_root: Path,
+    doc_name: str,
+    template_root: Path | None = None,
 ) -> dict[str, object] | None:
     """Load the descriptor YAML for a managed document."""
-    path = _doc_asset_path(target_root, doc_name)
+    path = _doc_asset_path(target_root, doc_name, template_root)
     if not path.exists():
         return None
     try:
@@ -972,50 +1191,191 @@ def _ensure_header_lines(path: Path, header_lines: list[str]) -> bool:
     return True
 
 
-def _sync_doc_from_descriptor(target_root: Path, doc_name: str) -> bool:
-    """Sync a managed document from its descriptor asset."""
-    descriptor = _load_doc_descriptor(target_root, doc_name)
+def _apply_header_overrides(
+    header_lines: list[str],
+    *,
+    last_updated: str | None = None,
+    version: str | None = None,
+    title: str | None = None,
+) -> list[str]:
+    """Return header lines updated with explicit metadata values."""
+    updated: list[str] = []
+    used_title = False
+    used_last_updated = False
+    used_version = False
+    for line in header_lines:
+        if title and line.lstrip().startswith("#") and not used_title:
+            updated.append(f"# {title}")
+            used_title = True
+            continue
+        if last_updated and _LAST_UPDATED_PATTERN.match(line):
+            updated.append(f"**Last Updated:** {last_updated}")
+            used_last_updated = True
+            continue
+        if version and _VERSION_PATTERN.match(line):
+            updated.append(f"**Version:** {version}")
+            used_version = True
+            continue
+        updated.append(line.rstrip())
+    if title and not used_title:
+        updated.insert(0, f"# {title}")
+    insert_index = 1 if updated and updated[0].lstrip().startswith("#") else 0
+    if last_updated and not used_last_updated:
+        updated.insert(insert_index, f"**Last Updated:** {last_updated}")
+        insert_index += 1
+    if version and not used_version:
+        updated.insert(insert_index, f"**Version:** {version}")
+    return updated
+
+
+def _doc_needs_bootstrap(text: str) -> bool:
+    """Return True when a doc is empty or a single-line placeholder."""
+    non_empty = [line for line in text.splitlines() if line.strip()]
+    return len(non_empty) <= 1
+
+
+def _normalize_body_lines(raw_value: object) -> list[str]:
+    """Return body lines from a descriptor field."""
+    if raw_value is None:
+        return []
+    if isinstance(raw_value, str):
+        return [line.rstrip() for line in raw_value.splitlines()]
+    if isinstance(raw_value, list):
+        return [str(line).rstrip() for line in raw_value]
+    return [str(raw_value).rstrip()]
+
+
+def _render_doc_from_descriptor(
+    target_root: Path,
+    doc_name: str,
+    *,
+    last_updated: str | None = None,
+    version: str | None = None,
+    title: str | None = None,
+    template_root: Path | None = None,
+) -> tuple[str | None, str, list[str]]:
+    """Render a managed doc from its descriptor and return text + block."""
+    descriptor = _load_doc_descriptor(target_root, doc_name, template_root)
     if not descriptor:
-        return False
-    doc_path = target_root / doc_name
+        return None, "", []
     header_lines = descriptor.get("header_lines") or []
+    header_lines = _apply_header_overrides(
+        header_lines,
+        last_updated=last_updated,
+        version=version,
+        title=title,
+    )
     doc_id = descriptor.get("doc_id")
     doc_type = descriptor.get("doc_type")
     managed_block = descriptor.get("managed_block", "")
     extra_lines = [line.rstrip() for line in managed_block.splitlines()]
+    body_lines = _normalize_body_lines(descriptor.get("body_lines"))
+    if not body_lines:
+        body_lines = _normalize_body_lines(descriptor.get("body"))
     template_block = (
         _build_doc_block(doc_id, doc_type, extra_lines)
         if doc_id and doc_type
         else ""
     )
-    if not doc_path.exists():
-        lines: list[str] = []
-        if header_lines:
-            lines.extend(header_lines)
-        lines.append("")
-        if template_block:
-            lines.append(template_block)
-        text = "\n".join(lines).rstrip() + "\n"
-        doc_path.write_text(text, encoding="utf-8")
-        return True
-    changed = False
+    lines: list[str] = []
     if header_lines:
-        changed |= _ensure_header_lines(doc_path, header_lines)
+        lines.extend(header_lines)
+    lines.append("")
+    if template_block:
+        lines.append(template_block)
+    if body_lines:
+        lines.append("")
+        lines.extend(body_lines)
+    text = "\n".join(lines).rstrip() + "\n"
+    return text, template_block, header_lines
+
+
+def _ensure_doc_from_descriptor(
+    target_root: Path,
+    doc_name: str,
+    *,
+    last_updated: str | None = None,
+    version: str | None = None,
+    title: str | None = None,
+    force: bool = False,
+    template_root: Path | None = None,
+) -> tuple[bool, bool]:
+    """Ensure a managed doc exists and return (changed, wrote_full)."""
+    rendered, template_block, _header_lines = _render_doc_from_descriptor(
+        target_root,
+        doc_name,
+        last_updated=last_updated,
+        version=version,
+        title=title,
+        template_root=template_root,
+    )
+    if rendered is None:
+        return False, False
+    doc_path = target_root / doc_name
+    if not doc_path.exists():
+        doc_path.write_text(rendered, encoding="utf-8")
+        return True, True
+    existing_text = doc_path.read_text(encoding="utf-8")
+    if force or _doc_needs_bootstrap(existing_text):
+        _rename_existing_file(doc_path)
+        doc_path.write_text(rendered, encoding="utf-8")
+        return True, True
+    changed = False
+    if last_updated and version:
+        changed |= _apply_standard_header(
+            doc_path, last_updated, version, title=title
+        )
     if template_block:
         changed |= _sync_blocks_from_template(doc_path, template_block)
+    return changed, False
+
+
+def _sync_doc_from_descriptor(
+    target_root: Path,
+    doc_name: str,
+    *,
+    last_updated: str | None = None,
+    version: str | None = None,
+    title: str | None = None,
+    force: bool = False,
+    template_root: Path | None = None,
+) -> bool:
+    """Sync a managed document from its descriptor asset."""
+    changed, _wrote_full = _ensure_doc_from_descriptor(
+        target_root,
+        doc_name,
+        last_updated=last_updated,
+        version=version,
+        title=title,
+        force=force,
+        template_root=template_root,
+    )
     return changed
 
 
 def sync_managed_doc_assets(
     target_root: Path,
     doc_names: Iterable[str] | None = None,
+    *,
+    last_updated: str | None = None,
+    version: str | None = None,
+    title_overrides: dict[str, str] | None = None,
+    template_root: Path | None = None,
 ) -> list[str]:
     """Ensure the managed docs reflect their descriptor assets."""
 
     names = tuple(doc_names or _MANAGED_DOCS)
     updated: list[str] = []
+    title_overrides = title_overrides or {}
     for doc_name in names:
-        if _sync_doc_from_descriptor(target_root, doc_name):
+        if _sync_doc_from_descriptor(
+            target_root,
+            doc_name,
+            last_updated=last_updated,
+            version=version,
+            title=title_overrides.get(doc_name),
+            template_root=template_root,
+        ):
             updated.append(doc_name)
     return updated
 
@@ -1352,6 +1712,110 @@ def _apply_core_config(target_root: Path, include_core: bool) -> bool:
     return True
 
 
+def _ensure_config_from_profile(
+    target_root: Path,
+    template_root: Path,
+    *,
+    profile: str = "devcovuser",
+    force: bool = False,
+) -> bool:
+    """Ensure devcovenant/config.yaml exists from a profile asset."""
+    config_path = target_root / DEV_COVENANT_DIR / "config.yaml"
+    if config_path.exists() and not force:
+        return False
+    template_path = _resolve_template_path(
+        target_root,
+        template_root,
+        "config.yaml",
+        profile=profile,
+    )
+    if not template_path.exists():
+        return False
+    config_path.parent.mkdir(parents=True, exist_ok=True)
+    if config_path.exists():
+        _rename_existing_file(config_path)
+    shutil.copy2(template_path, config_path)
+    return True
+
+
+def _read_generic_config_flag(target_root: Path) -> bool:
+    """Return True when config.yaml is marked as generic."""
+    config_path = target_root / DEV_COVENANT_DIR / "config.yaml"
+    if not config_path.exists():
+        return False
+    try:
+        config_data = yaml.safe_load(config_path.read_text(encoding="utf-8"))
+    except Exception:
+        return False
+    if not isinstance(config_data, dict):
+        return False
+    install_block = config_data.get("install")
+    if not isinstance(install_block, dict):
+        return False
+    return bool(install_block.get("generic_config", False))
+
+
+def _update_generic_config_text(
+    text: str, is_generic: bool
+) -> tuple[str, bool]:
+    """Update the install.generic_config flag inside config text."""
+    lines = text.splitlines()
+    updated_lines: list[str] = []
+    found_install = False
+    found_generic = False
+    index = 0
+    generic_value = "true" if is_generic else "false"
+    while index < len(lines):
+        line = lines[index]
+        if line.strip().startswith("install:"):
+            found_install = True
+            updated_lines.append(line.rstrip())
+            index += 1
+            while index < len(lines):
+                next_line = lines[index]
+                if next_line.startswith("  "):
+                    if next_line.strip().startswith("generic_config:"):
+                        updated_lines.append(
+                            f"  generic_config: {generic_value}"
+                        )
+                        found_generic = True
+                    else:
+                        updated_lines.append(next_line.rstrip())
+                    index += 1
+                    continue
+                if not next_line.strip():
+                    updated_lines.append(next_line.rstrip())
+                    index += 1
+                    continue
+                break
+            if not found_generic:
+                updated_lines.append(f"  generic_config: {generic_value}")
+            continue
+        updated_lines.append(line.rstrip())
+        index += 1
+    if not found_install:
+        if updated_lines and updated_lines[-1].strip():
+            updated_lines.append("")
+        updated_lines.append("install:")
+        updated_lines.append(f"  generic_config: {generic_value}")
+    updated = "\n".join(updated_lines).rstrip() + "\n"
+    return updated, updated != text
+
+
+def _set_generic_config_flag(target_root: Path, is_generic: bool) -> bool:
+    """Ensure config.yaml install.generic_config matches the flag."""
+    config_path = target_root / DEV_COVENANT_DIR / "config.yaml"
+    if not config_path.exists():
+        return False
+    text = config_path.read_text(encoding="utf-8")
+    updated, changed = _update_generic_config_text(text, is_generic)
+    if not changed:
+        return False
+    _rename_existing_file(config_path)
+    config_path.write_text(updated, encoding="utf-8")
+    return True
+
+
 def _format_profile_list(active_profiles: list[str]) -> list[str]:
     """Return a normalized profile list for config storage."""
     if not active_profiles:
@@ -1361,12 +1825,12 @@ def _format_profile_list(active_profiles: list[str]) -> list[str]:
 
 def _format_profile_block(
     active_profiles: list[str],
-    profile_catalog: dict[str, dict],
+    profile_registry: dict[str, dict],
 ) -> list[str]:
     """Return the profiles block for config.yaml."""
     profile_list = _format_profile_list(active_profiles)
     suffixes = profiles.resolve_profile_suffixes(
-        profile_catalog, active_profiles
+        profile_registry, active_profiles
     )
     cleaned: list[str] = []
     for entry in suffixes:
@@ -1390,11 +1854,11 @@ def _format_profile_block(
 def _update_profile_config_text(
     text: str,
     active_profiles: list[str],
-    profile_catalog: dict[str, dict],
+    profile_registry: dict[str, dict],
 ) -> tuple[str, bool]:
     """Update profile selection inside config.yaml text."""
     lines = text.splitlines()
-    profile_block = _format_profile_block(active_profiles, profile_catalog)
+    profile_block = _format_profile_block(active_profiles, profile_registry)
     updated_lines: list[str] = []
     found_profiles = False
     index = 0
@@ -1486,10 +1950,10 @@ def _normalize_policy_list(raw_value: object | None) -> list[str]:
 def _collect_profile_autogen_disable(
     profile_manifests: dict[str, dict],
 ) -> list[str]:
-    """Collect autogen_do_not_apply policy ids from active profiles."""
+    """Collect autogen_disable policy ids from active profiles."""
     combined: list[str] = []
     for manifest in profile_manifests.values():
-        raw = manifest.get("autogen_do_not_apply")
+        raw = manifest.get("autogen_disable")
         if raw == "__none__":
             continue
         combined.extend(_normalize_policy_list(raw))
@@ -1680,7 +2144,7 @@ def _apply_profile_policy_overlays(
 
 def _apply_profile_policy_lists(
     target_root: Path,
-    autogen_do_not_apply: list[str],
+    autogen_disable: list[str],
 ) -> bool:
     """Update autogen policy disable lists inside config.yaml."""
     config_path = target_root / DEV_COVENANT_DIR / "config.yaml"
@@ -1688,7 +2152,7 @@ def _apply_profile_policy_lists(
         return False
     text = config_path.read_text(encoding="utf-8")
     updated, changed = _update_policy_list_config_text(
-        text, "autogen_do_not_apply", autogen_do_not_apply
+        text, "autogen_disable", autogen_disable
     )
     if not changed:
         return False
@@ -1700,7 +2164,7 @@ def _apply_profile_policy_lists(
 def _apply_profile_config(
     target_root: Path,
     active_profiles: list[str],
-    profile_catalog: dict[str, dict],
+    profile_registry: dict[str, dict],
 ) -> bool:
     """Ensure profile selection is recorded in config.yaml."""
     config_path = target_root / DEV_COVENANT_DIR / "config.yaml"
@@ -1708,7 +2172,7 @@ def _apply_profile_config(
         return False
     text = config_path.read_text(encoding="utf-8")
     updated, changed = _update_profile_config_text(
-        text, active_profiles, profile_catalog
+        text, active_profiles, profile_registry
     )
     if not changed:
         return False
@@ -1723,18 +2187,16 @@ def apply_autogen_metadata_overrides(
     """Refresh autogen policy overrides based on active profiles."""
     if package_root is None:
         package_root = Path(__file__).resolve().parents[1]
-    active_profiles = _load_active_profiles(target_root)
-    if "global" not in active_profiles:
-        active_profiles = ["global", *active_profiles]
+    active_profiles = _ensure_global_profile(
+        _dedupe_preserve_order(_load_active_profiles(target_root))
+    )
     manifests = _load_profile_manifests(
         package_root, target_root, active_profiles
     )
     overlays = _collect_profile_overlays(manifests)
     changed = _apply_profile_policy_overlays(target_root, overlays)
-    autogen_do_not_apply = _collect_profile_autogen_disable(manifests)
-    list_changed = _apply_profile_policy_lists(
-        target_root, autogen_do_not_apply
-    )
+    autogen_disable = _collect_profile_autogen_disable(manifests)
+    list_changed = _apply_profile_policy_lists(target_root, autogen_disable)
     return changed or list_changed
 
 
@@ -1914,12 +2376,40 @@ def _ensure_tests_mirror(target_root: Path, include_core: bool) -> None:
         core_root.mkdir(parents=True, exist_ok=True)
     elif core_root.exists():
         shutil.rmtree(core_root)
-    for path in (tests_root, custom_root):
+
+    def _ensure_init(path: Path, comment: str) -> None:
+        """Ensure a package marker exists in the mirror directory."""
         init_path = path / "__init__.py"
         if not init_path.exists():
-            init_path.write_text(
-                "# DevCovenant test mirror.\n", encoding="utf-8"
-            )
+            init_path.write_text(comment, encoding="utf-8")
+
+    _ensure_init(tests_root, "# DevCovenant test mirror.\n")
+    _ensure_init(custom_root, "# DevCovenant custom test mirror.\n")
+    if include_core:
+        _ensure_init(core_root, "# DevCovenant core test mirror.\n")
+
+    def _mirror_subdirs(source_root: Path, target_root: Path) -> None:
+        """Create policy/profile mirror folders under the test tree."""
+        for folder in ("policies", "profiles"):
+            target_folder = target_root / folder
+            target_folder.mkdir(parents=True, exist_ok=True)
+            _ensure_init(target_folder, "# DevCovenant test mirror.\n")
+            source_folder = source_root / folder
+            if not source_folder.exists():
+                continue
+            for entry in source_folder.iterdir():
+                if not entry.is_dir():
+                    continue
+                dest = target_folder / entry.name
+                dest.mkdir(parents=True, exist_ok=True)
+                _ensure_init(dest, "# DevCovenant test mirror.\n")
+
+    _mirror_subdirs(target_root / DEV_COVENANT_DIR / "custom", custom_root)
+    if include_core:
+        _mirror_subdirs(
+            target_root / DEV_COVENANT_DIR / "core",
+            core_root,
+        )
 
 
 def _prune_devcovrepo_overrides(
@@ -2232,7 +2722,7 @@ def _extract_policy_id(metadata: str) -> str:
 def _apply_policy_disables(
     agents_path: Path, disable_ids: list[str]
 ) -> list[str]:
-    """Disable policies by setting apply: false in AGENTS.md."""
+    """Disable policies by setting enabled: false in AGENTS.md."""
     if not disable_ids or not agents_path.exists():
         return []
     disable_set = {
@@ -2256,8 +2746,8 @@ def _apply_policy_disables(
         if policy_id not in disable_set:
             return match.group(0)
         keys, values = _parse_metadata_block(metadata)
-        _ensure_key(keys, values, "apply")
-        values["apply"] = ["false"]
+        _ensure_key(keys, values, "enabled")
+        values["enabled"] = ["false"]
         disabled.append(policy_id)
         changed = True
         rendered = _render_metadata_block(keys, values)
@@ -2389,7 +2879,7 @@ def _finalize_manifest(
     doc_blocks: list[str],
     mode: str,
     active_profiles: list[str],
-    profile_catalog: dict[str, dict],
+    profile_registry: dict[str, dict],
 ) -> None:
     """Write the manifest file for the install/update run."""
     manifest = manifest_module.build_manifest(
@@ -2399,7 +2889,7 @@ def _finalize_manifest(
         mode=mode,
     )
     manifest["profiles"]["active"] = list(active_profiles)
-    manifest["profiles"]["catalog"] = sorted(profile_catalog.keys())
+    manifest["profiles"]["registry"] = sorted(profile_registry.keys())
     manifest_module.write_manifest(target_root, manifest)
 
 
@@ -2418,16 +2908,33 @@ def main(argv=None) -> None:
     _set_backups_enabled(bool(getattr(args, "backup_existing", False)))
     no_touch = bool(getattr(args, "no_touch", False))
     skip_refresh = bool(getattr(args, "skip_refresh", False))
+    skip_core = bool(getattr(args, "skip_core", False))
+    deploy_mode = bool(getattr(args, "deploy", False))
+    require_non_generic = bool(getattr(args, "require_non_generic", False))
 
     disable_policies = _parse_policy_ids(args.disable_policy)
     disabled_policies = list(disable_policies)
 
-    package_root = Path(__file__).resolve().parents[1]
-    repo_root = package_root.parent
+    if skip_core:
+        target_root = Path(args.target).resolve()
+        package_root = target_root / DEV_COVENANT_DIR
+        if not package_root.exists():
+            raise SystemExit(
+                "DevCovenant core not found in target; run install or upgrade."
+            )
+        repo_root = target_root
+    else:
+        package_root = Path(__file__).resolve().parents[1]
+        repo_root = package_root.parent
     template_root = package_root / "core"
     target_root = Path(args.target).resolve()
-    include_core = target_root == repo_root
-    schema_path = policy_metadata_schema_path(target_root)
+    config_existed = (target_root / DEV_COVENANT_DIR / "config.yaml").exists()
+    include_core = (
+        _load_devcov_core_include(target_root)
+        if skip_core
+        else target_root == repo_root
+    )
+    schema_path = None
     _reset_backup_state(target_root)
     manifest_file = manifest_module.manifest_path(target_root)
     legacy_paths = manifest_module.legacy_manifest_paths(target_root)
@@ -2441,24 +2948,12 @@ def main(argv=None) -> None:
         mode = args.mode
 
     if has_existing and not args.allow_existing:
-        auto_uninstall = args.auto_uninstall
-        if not auto_uninstall and sys.stdin.isatty():
-            auto_uninstall = _prompt_yes_no(
-                "DevCovenant artifacts detected. Run uninstall first?",
-                default=False,
-            )
-        if auto_uninstall:
+        if args.auto_uninstall:
             uninstall.main(["--target", str(target_root)])
             has_existing = False
             mode = "empty"
         else:
-            raise SystemExit(
-                "DevCovenant install detected. Use `devcovenant update` to "
-                "refresh an existing repo, or `devcovenant uninstall` "
-                "before a "
-                "fresh install. Use --auto-uninstall to proceed "
-                "automatically."
-            )
+            args.allow_existing = True
 
     if args.allow_existing:
         mode = "existing"
@@ -2541,6 +3036,28 @@ def main(argv=None) -> None:
     existing_version = None
     if version_path.exists():
         existing_version = version_path.read_text(encoding="utf-8").strip()
+    version_existed = version_path.exists()
+
+    if require_non_generic and _read_generic_config_flag(target_root):
+        raise SystemExit(
+            "Config is still generic. Edit devcovenant/config.yaml and set "
+            "install.generic_config to false before running deploy."
+        )
+
+    if has_existing and not skip_core and not deploy_mode:
+        if _version_key(devcovenant_version) > _version_key(existing_version):
+            if sys.stdin.isatty() and _prompt_yes_no(
+                "Newer DevCovenant core detected. Run upgrade now?",
+                default=True,
+            ):
+                from devcovenant.core.upgrade import main as upgrade_main
+
+                upgrade_main(["--target", str(target_root)])
+                return
+            print(
+                "Newer DevCovenant core detected. Run `devcovenant upgrade` "
+                "to apply."
+            )
 
     requested_version = None
     if args.version_value:
@@ -2572,13 +3089,16 @@ def main(argv=None) -> None:
     else:
         target_version = detected_version
 
-    profile_catalog = _load_profile_catalog(package_root, target_root)
+    profile_registry = _load_profile_registry(package_root, target_root)
     if mode == "existing":
         active_profiles = _load_active_profiles(target_root)
         if not active_profiles:
-            active_profiles = _prompt_profiles(profile_catalog)
+            active_profiles = _prompt_profiles(profile_registry)
     else:
-        active_profiles = _prompt_profiles(profile_catalog)
+        active_profiles = _prompt_profiles(profile_registry)
+    active_profiles = _ensure_global_profile(
+        _dedupe_preserve_order(active_profiles)
+    )
 
     installed: dict[str, list[str]] = {
         "core": [],
@@ -2593,36 +3113,47 @@ def main(argv=None) -> None:
         path: _resolve_source_path(target_root, template_root, path)
         for path in core_files
     }
-    installed["core"].extend(
-        _install_devcovenant_dir(
-            repo_root,
-            target_root,
-            DEFAULT_PRESERVE_PATHS if preserve_custom else [],
-            preserve_existing=preserve_custom,
+    if not skip_core:
+        installed["core"].extend(
+            _install_devcovenant_dir(
+                repo_root,
+                target_root,
+                DEFAULT_PRESERVE_PATHS if preserve_custom else [],
+                preserve_existing=preserve_custom,
+            )
         )
-    )
     core_profile_root = package_root / "core" / PROFILE_ROOT_NAME
     custom_profile_root = (
         target_root / DEV_COVENANT_DIR / "custom" / PROFILE_ROOT_NAME
     )
-    profiles.write_profile_catalog(
+    profiles.write_profile_registry(
         target_root,
-        profiles.build_profile_catalog(
+        profiles.build_profile_registry(
             target_root,
             active_profiles,
             core_root=core_profile_root,
             custom_root=custom_profile_root,
         ),
     )
-    installed["core"].extend(
-        _install_paths(
-            repo_root,
-            target_root,
-            core_files,
-            skip_existing=False,
-            source_overrides=core_sources,
+    if not skip_core:
+        installed["core"].extend(
+            _install_paths(
+                repo_root,
+                target_root,
+                core_files,
+                skip_existing=False,
+                source_overrides=core_sources,
+            )
         )
-    )
+
+    if not no_touch:
+        config_created = _ensure_config_from_profile(
+            target_root,
+            template_root,
+            force=not config_existed,
+        )
+        if config_created:
+            installed["config"].append(f"{DEV_COVENANT_DIR}/config.yaml")
 
     if mode == "existing":
         _remove_legacy_paths(target_root, LEGACY_ROOT_PATHS)
@@ -2651,13 +3182,66 @@ def main(argv=None) -> None:
             doc_blocks,
             manifest_mode,
             active_profiles,
-            profile_catalog,
+            profile_registry,
         )
         backups = _backup_log()
         if backups:
             print("Backed up files before overwrite/merge:")
             for entry in backups:
                 print(f"- {entry}")
+        return
+
+    _apply_core_config(target_root, include_core)
+    _apply_profile_config(target_root, active_profiles, profile_registry)
+    _ensure_custom_tree(target_root)
+    _ensure_tests_mirror(target_root, include_core)
+    removed_overrides = _prune_devcovrepo_overrides(target_root, include_core)
+    if removed_overrides:
+        manifest_module.append_notifications(
+            target_root,
+            [
+                (
+                    "Removed devcovrepo-prefixed overrides:"
+                    f" {', '.join(removed_overrides)}"
+                )
+            ],
+        )
+
+    if not deploy_mode:
+        _set_generic_config_flag(target_root, True)
+        if version_mode != "skip" and (
+            version_mode == "overwrite" or not version_existed
+        ):
+            version_path.write_text(f"{target_version}\n", encoding="utf-8")
+            if not version_existed:
+                installed["core"].append(f"{DEV_COVENANT_DIR}/VERSION")
+        docs_mode = "preserve"
+        policy_mode = "preserve"
+        options = _build_manifest_options(
+            docs_mode=docs_mode,
+            config_mode=config_mode,
+            license_mode=license_mode,
+            version_mode=version_mode,
+            target_version=target_version,
+            pyproject_mode=pyproject_mode,
+            ci_mode=ci_mode,
+            docs_include=docs_include,
+            docs_exclude=docs_exclude,
+            policy_mode=policy_mode,
+            preserve_custom=preserve_custom,
+            devcov_core_include=include_core,
+            disabled_policies=disabled_policies,
+            auto_uninstall=bool(args.auto_uninstall),
+        )
+        _finalize_manifest(
+            target_root,
+            options,
+            installed,
+            doc_blocks,
+            manifest_mode,
+            active_profiles,
+            profile_registry,
+        )
         return
 
     config_paths = [path for path in CONFIG_PATHS if path != ".gitignore"]
@@ -2697,23 +3281,19 @@ def main(argv=None) -> None:
             _rename_existing_file(gitignore_path)
         gitignore_path.write_text(gitignore_text, encoding="utf-8")
 
-    _apply_core_config(target_root, include_core)
-    _apply_profile_config(target_root, active_profiles, profile_catalog)
-    _ensure_custom_tree(target_root)
-    _ensure_tests_mirror(target_root, include_core)
-    removed_overrides = _prune_devcovrepo_overrides(target_root, include_core)
-    if removed_overrides:
-        manifest_module.append_notifications(
-            target_root,
-            [
-                (
-                    "Removed devcovrepo-prefixed overrides:"
-                    f" {', '.join(removed_overrides)}"
-                )
-            ],
-        )
+    refresh_pre_commit_config(
+        target_root,
+        package_root=package_root,
+        active_profiles=active_profiles,
+        profile_registry=profile_registry,
+    )
+    pre_commit_path = target_root / ".pre-commit-config.yaml"
+    if (
+        pre_commit_path.exists()
+        and ".pre-commit-config.yaml" not in installed["config"]
+    ):
+        installed["config"].append(".pre-commit-config.yaml")
 
-    version_existed = version_path.exists()
     if version_mode != "skip" and (
         version_mode == "overwrite" or not version_existed
     ):
@@ -2758,27 +3338,49 @@ def main(argv=None) -> None:
             )
         )
 
-        agents_template = _resolve_source_path(
-            target_root, template_root, "AGENTS.md"
-        )
+    doc_key_by_name = {value: key for key, value in _DOC_NAME_MAP.items()}
+
+    def _doc_force(doc_name: str) -> bool:
+        """Return True when managed doc overwrite mode targets the doc."""
+        doc_key = doc_key_by_name.get(doc_name)
+        return _should_overwrite(doc_key) if doc_key else False
+
+    def _track_managed_doc(doc_name: str, existed: bool) -> None:
+        """Record installed docs and managed blocks for the manifest."""
+        doc_path = target_root / doc_name
+        if not existed and doc_path.exists():
+            installed["docs"].append(doc_name)
+        if doc_path.exists():
+            if BLOCK_BEGIN in doc_path.read_text(encoding="utf-8"):
+                doc_blocks.append(doc_name)
+
     agents_existed = agents_path.exists()
-    agents_text = ""
-    if agents_template.exists():
-        agents_text = agents_template.read_text(encoding="utf-8")
-    if not agents_existed or policy_mode == "overwrite":
-        if agents_text:
-            agents_path.write_text(agents_text, encoding="utf-8")
-            if not agents_existed:
-                installed["docs"].append("AGENTS.md")
-            _apply_standard_header(agents_path, last_updated, target_version)
-            if existing_agents_text:
-                _preserve_editable_section(agents_path, existing_agents_text)
-    else:
-        _apply_standard_header(agents_path, last_updated, target_version)
-        if agents_text:
-            _sync_blocks_from_template(agents_path, agents_text)
-            if policy_mode == "append-missing":
-                _append_missing_policies(agents_path, agents_text)
+    agents_force = policy_mode == "overwrite"
+    _agents_changed, agents_rebuilt = _ensure_doc_from_descriptor(
+        target_root,
+        "AGENTS.md",
+        last_updated=last_updated,
+        version=target_version,
+        template_root=template_root,
+        force=agents_force,
+    )
+    if agents_rebuilt and existing_agents_text:
+        _preserve_editable_section(agents_path, existing_agents_text)
+    _track_managed_doc("AGENTS.md", agents_existed)
+    if policy_mode == "append-missing":
+        (
+            agents_template,
+            _template_block,
+            _header_lines,
+        ) = _render_doc_from_descriptor(
+            target_root,
+            "AGENTS.md",
+            last_updated=last_updated,
+            version=target_version,
+            template_root=template_root,
+        )
+        if agents_template:
+            _append_missing_policies(agents_path, agents_template)
 
     disabled_policies = _apply_policy_disables(agents_path, disable_policies)
     policy_metadata = _load_policy_metadata(agents_path)
@@ -2805,126 +3407,28 @@ def main(argv=None) -> None:
             asset_context=asset_context,
         )
     )
-    policy_assets = _load_policy_assets(package_root, target_root)
-    _write_policy_assets_registry(target_root, policy_assets)
 
-    readme_path = target_root / "README.md"
-    if not readme_path.exists():
-        base_readme = (
-            f"# {repo_name}\n\n"
-            "Replace this README content with a project-specific overview.\n"
-        )
-        base_readme = _ensure_standard_header(
-            base_readme, last_updated, target_version, title=repo_name
-        )
-        readme_path.write_text(base_readme, encoding="utf-8")
-        installed["docs"].append("README.md")
-
-    readme_text = readme_path.read_text(encoding="utf-8")
-    scan_text = _strip_devcov_block(readme_text)
-    has_toc = _has_heading(scan_text, "Table of Contents")
-    has_overview = _has_heading(scan_text, "Overview")
-    has_workflow = _has_heading(scan_text, "Workflow")
-    has_devcovenant = _has_heading(scan_text, "DevCovenant")
-    readme_block = _build_readme_block(
-        has_overview, has_workflow, has_toc, has_devcovenant
-    )
-    updated_readme = _ensure_standard_header(
-        readme_text, last_updated, target_version, title=repo_name
-    )
-    readme_path.write_text(updated_readme, encoding="utf-8")
-    _inject_block(readme_path, readme_block)
-    if BLOCK_BEGIN in readme_path.read_text(encoding="utf-8"):
-        doc_blocks.append("README.md")
-
-    spec_path = target_root / "SPEC.md"
-    if spec_path.exists() and not _should_overwrite("SPEC"):
-        _apply_standard_header(spec_path, last_updated, target_version)
-        _ensure_doc_block(spec_path, "SPEC", "specification")
-    else:
-        if spec_path.exists():
-            _rename_existing_file(spec_path)
-        spec_path.write_text(
-            _render_spec_template(target_version, last_updated),
-            encoding="utf-8",
-        )
-        installed["docs"].append("SPEC.md")
-    if BLOCK_BEGIN in spec_path.read_text(encoding="utf-8"):
-        doc_blocks.append("SPEC.md")
-
-    plan_path = target_root / "PLAN.md"
-    if plan_path.exists() and not _should_overwrite("PLAN"):
-        _apply_standard_header(plan_path, last_updated, target_version)
-        _ensure_doc_block(plan_path, "PLAN", "plan")
-    else:
-        if plan_path.exists():
-            _rename_existing_file(plan_path)
-        plan_path.write_text(
-            _render_plan_template(target_version, last_updated),
-            encoding="utf-8",
-        )
-        installed["docs"].append("PLAN.md")
-    if BLOCK_BEGIN in plan_path.read_text(encoding="utf-8"):
-        doc_blocks.append("PLAN.md")
-
-    changelog_path = target_root / "CHANGELOG.md"
-    if not changelog_path.exists():
-        changelog_path.write_text(
-            _render_changelog_template(target_version, last_updated),
-            encoding="utf-8",
-        )
-        installed["docs"].append("CHANGELOG.md")
-    elif _should_overwrite("CHANGELOG"):
-        _rename_existing_file(changelog_path)
-        changelog_path.write_text(
-            _render_changelog_template(target_version, last_updated),
-            encoding="utf-8",
-        )
-        installed["docs"].append("CHANGELOG.md")
-    else:
-        _ensure_changelog_block(changelog_path, last_updated, target_version)
-    if BLOCK_BEGIN in changelog_path.read_text(encoding="utf-8"):
-        doc_blocks.append("CHANGELOG.md")
-
-    contributing_path = target_root / "CONTRIBUTING.md"
-    contributing_template = _resolve_source_path(
-        target_root, template_root, "CONTRIBUTING.md"
-    )
-    if contributing_template.exists():
-        if contributing_path.exists() and not _should_overwrite(
-            "CONTRIBUTING"
-        ):
-            _apply_standard_header(
-                contributing_path, last_updated, target_version
-            )
-            template_block = _extract_block(
-                contributing_template.read_text(encoding="utf-8")
-            )
-            _sync_block(contributing_path, template_block)
-        else:
-            if contributing_path.exists():
-                _rename_existing_file(contributing_path)
-            contributing_text = contributing_template.read_text(
-                encoding="utf-8"
-            )
-            contributing_text = _ensure_standard_header(
-                contributing_text, last_updated, target_version
-            )
-            contributing_path.write_text(contributing_text, encoding="utf-8")
-            installed["docs"].append("CONTRIBUTING.md")
-            if (
-                BLOCK_BEGIN in contributing_text
-                and BLOCK_END in contributing_text
-            ):
-                doc_blocks.append("CONTRIBUTING.md")
-
-    internal_docs = [
-        "devcovenant/README.md",
+    managed_docs = [
+        ("README.md", repo_name),
+        ("SPEC.md", None),
+        ("PLAN.md", None),
+        ("CHANGELOG.md", None),
+        ("CONTRIBUTING.md", None),
+        ("devcovenant/README.md", None),
     ]
-    for rel_path in internal_docs:
-        _apply_standard_header(
-            target_root / rel_path, last_updated, target_version
+    for doc_name, title_override in managed_docs:
+        doc_path = target_root / doc_name
+        existed = doc_path.exists()
+        _ensure_doc_from_descriptor(
+            target_root,
+            doc_name,
+            last_updated=last_updated,
+            version=target_version,
+            title=title_override,
+            template_root=template_root,
+            force=_doc_force(doc_name),
         )
+        _track_managed_doc(doc_name, existed)
     if devcovenant_version:
         _update_devcovenant_version(
             target_root / "devcovenant/README.md", devcovenant_version
@@ -2934,10 +3438,7 @@ def main(argv=None) -> None:
         refresh_policies(
             agents_path,
             schema_path,
-            set_updated=True,
         )
-        export_metadata_schema(target_root)
-
     options = _build_manifest_options(
         docs_mode=docs_mode,
         config_mode=config_mode,
@@ -2961,7 +3462,7 @@ def main(argv=None) -> None:
         doc_blocks,
         manifest_mode,
         active_profiles,
-        profile_catalog,
+        profile_registry,
     )
 
     if not skip_refresh:
@@ -2971,11 +3472,14 @@ def main(argv=None) -> None:
             refresh_all_module.refresh_registry(
                 target_root, schema_path=schema_path
             )
-            refreshed_catalog = profiles.build_profile_catalog(target_root)
+            refreshed_registry = profiles.build_profile_registry(target_root)
             refresh_all_module.refresh_config(
-                target_root, refreshed_catalog, include_core
+                target_root, refreshed_registry, include_core
             )
             refresh_all_module.refresh_gitignore(target_root)
+            refresh_all_module.refresh_pre_commit_config(
+                target_root, profile_registry=refreshed_registry
+            )
         else:
             refresh_all_module.refresh_all(
                 target_root,

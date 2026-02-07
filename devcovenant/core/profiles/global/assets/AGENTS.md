@@ -85,9 +85,9 @@ commands, and metadata through their manifests.
 - Run `python3 devcovenant/run_pre_commit.py --phase start` before editing
   files, perform your work, execute `python3 devcovenant/run_tests.py`, and
   close with `python3 devcovenant/run_pre_commit.py --phase end`.
-- When policy text changes, mark `updated: true`, refresh scripts/tests, run
-  `devcovenant update-policy-registry`, then reset the flag to keep the
-  registry aligned with policy prose.
+- When policy text changes, refresh scripts/tests and run
+  `devcovenant update-policy-registry` so hashes stay aligned with policy
+  prose.
 - Update `THIRD_PARTY_LICENSES.md` and the `licenses/` directory whenever
   dependency manifests (`requirements.in`, `requirements.lock`,
   `pyproject.toml`) change so the dependency-license-sync policy passes.
@@ -137,9 +137,8 @@ id: devcov-self-enforcement
 status: active
 severity: error
 auto_fix: false
-updated: false
 enforcement: active
-apply: true
+enabled: true
 custom: false
 profile_scopes: global
 policy_definitions: AGENTS.md
@@ -157,9 +156,8 @@ id: devcov-structure-guard
 status: active
 severity: error
 auto_fix: false
-updated: false
 enforcement: active
-apply: true
+enabled: true
 custom: false
 profile_scopes: global
 ```
@@ -175,9 +173,8 @@ id: dependency-license-sync
 status: active
 severity: error
 auto_fix: true
-updated: false
 enforcement: active
-apply: true
+enabled: true
 custom: false
 profile_scopes: python
   javascript
@@ -223,9 +220,8 @@ id: policy-text-presence
 status: active
 severity: error
 auto_fix: false
-updated: false
 enforcement: active
-apply: true
+enabled: true
 custom: false
 profile_scopes: global
 policy_definitions: AGENTS.md
@@ -243,9 +239,8 @@ id: devcov-parity-guard
 status: active
 severity: warning
 auto_fix: false
-updated: false
 enforcement: active
-apply: true
+enabled: true
 custom: false
 profile_scopes: global
 policy_definitions: AGENTS.md
@@ -264,9 +259,8 @@ id: devflow-run-gates
 status: active
 severity: error
 auto_fix: false
-updated: false
 enforcement: active
-apply: true
+enabled: true
 custom: false
 profile_scopes: global
   python
@@ -321,9 +315,8 @@ id: managed-environment
 status: active
 severity: error
 auto_fix: false
-updated: false
 enforcement: active
-apply: false
+enabled: false
 custom: false
 profile_scopes: global
 expected_paths:
@@ -347,9 +340,8 @@ id: changelog-coverage
 status: active
 severity: error
 auto_fix: false
-updated: false
 enforcement: active
-apply: true
+enabled: true
 custom: false
 profile_scopes: global
 main_changelog: CHANGELOG.md
@@ -370,9 +362,8 @@ id: version-sync
 status: active
 severity: error
 auto_fix: false
-updated: false
 enforcement: active
-apply: true
+enabled: true
 custom: false
 profile_scopes: global
   docs
@@ -427,9 +418,8 @@ id: semantic-version-scope
 status: active
 severity: error
 auto_fix: false
-updated: false
 enforcement: active
-apply: false
+enabled: false
 custom: false
 profile_scopes: global
 version_file: VERSION
@@ -443,7 +433,7 @@ When enabled, the latest changelog entry must include exactly one
 work, and `patch` for bug fixes or documentation-only updates. The tag
 must match the bump from the previous version, and `VERSION` must be
 updated whenever the changelog declares a release scope. The policy ships
-disabled (`apply: false`) and should only be enabled for release
+disabled (`enabled: false`) and should only be enabled for release
 processes that enforce SemVer discipline.
 
 ---
@@ -455,9 +445,8 @@ id: last-updated-placement
 status: active
 severity: error
 auto_fix: true
-updated: false
 enforcement: active
-apply: true
+enabled: true
 custom: false
 profile_scopes: global
   docs
@@ -486,9 +475,8 @@ id: line-length-limit
 status: active
 severity: warning
 auto_fix: false
-updated: false
 enforcement: active
-apply: true
+enabled: true
 custom: false
 profile_scopes: global
   docs
@@ -542,9 +530,8 @@ id: docstring-and-comment-coverage
 status: active
 severity: error
 auto_fix: false
-updated: false
 enforcement: active
-apply: true
+enabled: true
 custom: false
 profile_scopes: python
 include_suffixes: .py
@@ -568,9 +555,8 @@ id: name-clarity
 status: active
 severity: warning
 auto_fix: false
-updated: false
 enforcement: active
-apply: true
+enabled: true
 custom: false
 profile_scopes: python
 exclude_prefixes: build,dist,node_modules
@@ -595,11 +581,9 @@ id: new-modules-need-tests
 status: active
 severity: error
 auto_fix: false
-updated: false
 enforcement: active
-apply: true
+enabled: true
 custom: true
-updated: false
 profile_scopes: python
 include_suffixes: .py
 include_prefixes: devcovenant
@@ -633,9 +617,8 @@ id: documentation-growth-tracking
 status: active
 severity: info
 auto_fix: false
-updated: false
 enforcement: active
-apply: true
+enabled: true
 custom: false
 profile_scopes: global
   docs
@@ -719,9 +702,8 @@ id: read-only-directories
 status: active
 severity: error
 auto_fix: false
-updated: false
 enforcement: active
-apply: true
+enabled: true
 custom: false
 profile_scopes: global
 include_globs: __none__
@@ -745,9 +727,8 @@ id: no-future-dates
 status: active
 severity: error
 auto_fix: true
-updated: false
 enforcement: active
-apply: true
+enabled: true
 custom: false
 profile_scopes: global
 ```
@@ -764,10 +745,9 @@ id: security-scanner
 status: active
 severity: error
 auto_fix: false
-updated: false
 exclude_globs: tests/**,**/tests/**
 enforcement: active
-apply: true
+enabled: true
 custom: false
 profile_scopes: python
 include_suffixes:

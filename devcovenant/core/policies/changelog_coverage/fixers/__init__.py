@@ -1,1 +1,1 @@
-# Package for fixers modules.
+"""Fixers for changelog-coverage."""

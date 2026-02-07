@@ -13,8 +13,8 @@ license reports, or a policy-specific README that captures how your team
 interprets a rule.
 
 ## Declaring Assets
-Register custom assets by adding a per-policy manifest at:
-`devcovenant/custom/policies/<policy>/assets/policy_assets.yaml`
+Register custom assets by adding an `assets` list to the policy descriptor at:
+`devcovenant/custom/policies/<policy>/<policy>.yaml`
 
 Example:
 ```yaml
@@ -24,12 +24,12 @@ assets:
     mode: replace
 ```
 
-Assets should live alongside the manifest under
-`devcovenant/custom/policies/<policy>/assets/`. Custom policy manifests
-override core manifests when the policy id matches.
+Assets should live alongside the descriptor under
+`devcovenant/custom/policies/<policy>/assets/`. Custom policy descriptors
+override core descriptors when the policy id matches.
 
 ## Workflow
-Add or adjust the asset, update the policy assets map, and keep the policy id
+Add or adjust the asset, update the policy descriptor, and keep the policy id
 consistent. Custom policy assets are applied only when the policy is enabled
-and in scope. After changes, run the DevCovenant gates so the manifest,
-registry, and changelog stay synchronized.
+and in scope. After changes, run the DevCovenant gates so the registry and
+changelog stay synchronized.

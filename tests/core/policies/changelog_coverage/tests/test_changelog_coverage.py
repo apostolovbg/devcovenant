@@ -2,6 +2,7 @@
 Tests for changelog-coverage policy.
 """
 
+import importlib
 from datetime import date
 from pathlib import Path
 from textwrap import dedent
@@ -9,10 +10,19 @@ from types import SimpleNamespace
 
 import pytest
 
-from devcovenant.core.base import CheckContext
+from devcovenant.core.base import CheckContext, Violation
 from devcovenant.core.policies.changelog_coverage.changelog_coverage import (
     ChangelogCoverageCheck,
 )
+
+
+def _summary_block() -> str:
+    """Return a valid Change/Why/Impact summary block."""
+    return (
+        "  Change: Updated docs to cover new behavior\n"
+        "  Why: Clarified expectations for contributors\n"
+        "  Impact: Users see updated guidance in docs\n"
+    )
 
 
 def _set_git_diff(monkeypatch: pytest.MonkeyPatch, output: str) -> None:
@@ -69,7 +79,8 @@ def test_root_changelog_required(
     today = date.today().isoformat()
     changelog_text = (
         "## Version 1.0.0\n"
-        f"- {today}: docs/readme.md\n"
+        f"- {today}:\n"
+        f"{_summary_block()}"
         "  Files:\n"
         "  docs/readme.md\n"
     )
@@ -112,7 +123,8 @@ def test_collections_disabled_route_to_root(
 
     today = date.today().isoformat()
     (tmp_path / "CHANGELOG.md").write_text(
-        f"## Version 1.0.0\n- {today}: initial\n", encoding="utf-8"
+        f"## Version 1.0.0\n- {today}:\n{_summary_block()}",
+        encoding="utf-8",
     )
 
     checker = ChangelogCoverageCheck()
@@ -127,15 +139,16 @@ def test_collections_disabled_route_to_root(
     assert "Files" in messages
 
 
-def test_changelog_requires_descriptive_summary(
+def test_changelog_requires_summary_labels(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch
 ):
-    """Latest entry must include a real summary sentence."""
+    """Latest entry must include labeled summary lines."""
 
     today = date.today().isoformat()
     changelog_text = (
         "## Version 1.0.0\n"
-        f"- {today}: Fix bug\n"
+        f"- {today}:\n"
+        "  Change: Updated module behavior\n"
         "  Files:\n"
         "  src/module.py\n"
     )
@@ -150,18 +163,21 @@ def test_changelog_requires_descriptive_summary(
     violations = checker.check(context)
 
     assert violations
-    assert any("descriptive summary" in v.message for v in violations)
+    assert any("summary lines" in v.message for v in violations)
 
 
-def test_summary_word_minimum_can_be_configured(
+def test_summary_requires_action_verbs(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch
 ):
-    """Configurable summary word minimum should be honored."""
+    """Summary lines must include an action verb from the list."""
 
     today = date.today().isoformat()
     changelog_text = (
         "## Version 1.0.0\n"
-        f"- {today}: Fix bug\n"
+        f"- {today}:\n"
+        "  Change: New behavior here\n"
+        "  Why: Explanation present\n"
+        "  Impact: Some effect\n"
         "  Files:\n"
         "  src/module.py\n"
     )
@@ -171,12 +187,83 @@ def test_summary_word_minimum_can_be_configured(
     )
 
     checker = ChangelogCoverageCheck()
-    checker.set_options({"summary_words_min": 2}, {})
+    checker.set_options({"summary_verbs": ["updated"]}, {})
     _set_git_diff(monkeypatch, "src/module.py\n")
     context = CheckContext(repo_root=tmp_path, all_files=[])
     violations = checker.check(context)
 
-    assert violations == []
+    assert violations
+    assert any("action verb" in v.message for v in violations)
+
+
+def test_files_block_auto_fix(tmp_path: Path):
+    """Auto-fixer should populate the Files block for the latest entry."""
+
+    today = date.today().isoformat()
+    changelog_text = "## Version 1.0.0\n" f"- {today}:\n" f"{_summary_block()}"
+    changelog_path = tmp_path / "CHANGELOG.md"
+    changelog_path.write_text(changelog_text, encoding="utf-8")
+
+    violation = Violation(
+        policy_id="changelog-coverage",
+        severity="error",
+        message="Missing Files block",
+        file_path=changelog_path,
+        can_auto_fix=True,
+        context={"expected_files": ["src/module.py"]},
+    )
+    module = importlib.import_module(
+        "devcovenant.core.policies.changelog_coverage.fixers.global"
+    )
+    fixer = module.ChangelogCoverageFixer()
+    fixer.repo_root = tmp_path
+
+    result = fixer.fix(violation)
+
+    assert result.success
+    updated = changelog_path.read_text(encoding="utf-8")
+    assert "Files:" in updated
+    assert "src/module.py" in updated
+
+
+def test_files_block_auto_fix_wraps_summary_lines(tmp_path: Path):
+    """Auto-fixer wraps long summary lines with backslash continuations."""
+
+    today = date.today().isoformat()
+    long_change = (
+        "Change: Updated documentation with extensive guidance for "
+        "coverage enforcement and changelog formatting across teams"
+    )
+    changelog_text = (
+        "## Version 1.0.0\n"
+        f"- {today}:\n"
+        f"  {long_change}\n"
+        "  Why: Clarified contributor expectations\n"
+        "  Impact: Users see updated guidance in docs\n"
+    )
+    changelog_path = tmp_path / "CHANGELOG.md"
+    changelog_path.write_text(changelog_text, encoding="utf-8")
+
+    violation = Violation(
+        policy_id="changelog-coverage",
+        severity="error",
+        message="Missing Files block",
+        file_path=changelog_path,
+        can_auto_fix=True,
+        context={"expected_files": ["src/module.py"]},
+    )
+    module = importlib.import_module(
+        "devcovenant.core.policies.changelog_coverage.fixers.global"
+    )
+    fixer = module.ChangelogCoverageFixer()
+    fixer.repo_root = tmp_path
+
+    result = fixer.fix(violation)
+
+    assert result.success
+    updated = changelog_path.read_text(encoding="utf-8")
+    assert "Change: Updated documentation" in updated
+    assert "\\\n" in updated
 
 
 def test_rng_changelog_entry_found(
@@ -188,10 +275,10 @@ def test_rng_changelog_entry_found(
     rng_changelog = tmp_path / "rng_minigames" / "CHANGELOG.md"
     rng_changelog.parent.mkdir(parents=True, exist_ok=True)
     today = date.today().isoformat()
-    summary = "rng update logged for coverage policy with extra detail today"
     rng_text = (
         "## Version 1.0.0\n"
-        f"- {today}: {summary}\n"
+        f"- {today}:\n"
+        f"{_summary_block()}"
         "  Files:\n"
         "  rng_minigames/emoji_meteors/game.py\n"
     )
@@ -215,10 +302,10 @@ def test_rng_files_not_logged_in_root(
 
     root_changelog = tmp_path / "CHANGELOG.md"
     today = date.today().isoformat()
-    summary = "rng update logged for coverage policy with extra detail today"
     rng_entry = (
         "## Version 1.0.0\n"
-        f"- {today}: {summary}\n"
+        f"- {today}:\n"
+        f"{_summary_block()}"
         "  Files:\n"
         "  rng_minigames/emoji_meteors/game.py\n"
     )
@@ -255,7 +342,10 @@ def test_rng_entries_ignore_old_root_sections(
             - entry about docs/readme.md
 
             ## Version 1.0.0
-            - rng_minigames/emoji_meteors/game.py
+            - 2026-01-07:
+              Change: Updated rng event behavior
+              Why: Clarified event logging for QA
+              Impact: Reviewers see updated rng logs
             """
         ).strip(),
         encoding="utf-8",
@@ -316,8 +406,14 @@ def test_changelog_entries_newest_first(
         dedent(
             """
             ## Version 1.0.0
-            - 2026-01-05: update src/module.py
-            - 2026-01-07: update src/module.py
+            - 2026-01-05:
+              Change: Updated src/module.py behavior
+              Why: Clarified coverage expectations
+              Impact: Users see updated module behavior
+            - 2026-01-07:
+              Change: Updated src/module.py behavior
+              Why: Clarified coverage expectations
+              Impact: Users see updated module behavior
             """
         ).strip(),
         encoding="utf-8",
@@ -337,13 +433,13 @@ def test_line_continuation_paths(
     """Backslash-wrapped paths should satisfy changelog coverage."""
 
     root_changelog = tmp_path / "CHANGELOG.md"
-    summary = (
-        "Update docs with extra guidance for coverage tests today entries"
-    )
     changelog = "\n".join(
         [
             "## Version 1.0.0",
-            f"- {date.today().isoformat()}: {summary}",
+            f"- {date.today().isoformat()}:",
+            "  Change: Updated docs with extra guidance for coverage tests",
+            "  Why: Clarified expectations for contributors",
+            "  Impact: Users see updated coverage notes now",
             "  Files:",
             "  devcovenant/core/policies/dependency_license_sync/assets/\\",
             "    licenses/README.md",

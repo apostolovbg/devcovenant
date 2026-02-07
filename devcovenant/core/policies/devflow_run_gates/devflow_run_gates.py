@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import fnmatch
 import json
 import os
 import subprocess
@@ -65,6 +66,17 @@ def _code_extensions(policy: "DevflowRunGates") -> set[str] | None:
         for entry in entries
         if isinstance(entry, str) and entry.strip()
     }
+
+
+def _normalize_globs(raw_value: object) -> list[str]:
+    """Normalize skip glob metadata into a list of patterns."""
+    if raw_value is None:
+        return []
+    if isinstance(raw_value, str):
+        return [raw_value.strip()] if raw_value.strip() else []
+    return [
+        str(entry).strip() for entry in (raw_value or []) if str(entry).strip()
+    ]
 
 
 def _required_commands(policy: "DevflowRunGates") -> list[str]:
@@ -176,6 +188,7 @@ class DevflowRunGates(PolicyCheck):
         repo_root = ctx.repo_root
         status_rel = _resolve_status_path(self)
         extensions = _code_extensions(self)
+        skip_globs = _normalize_globs(self.get_option("skipped_globs", []))
         required_commands = _required_commands(self)
 
         files = list(ctx.changed_files or [])
@@ -184,7 +197,25 @@ class DevflowRunGates(PolicyCheck):
             if git_files:
                 files = git_files
         status_abs = (repo_root / status_rel).resolve()
-        files = [path for path in files if path.resolve() != status_abs]
+        filtered: list[Path] = []
+        for path in files:
+            resolved = path.resolve()
+            if resolved == status_abs:
+                continue
+            if skip_globs:
+                try:
+                    rel = resolved.relative_to(repo_root.resolve()).as_posix()
+                except ValueError:
+                    rel = resolved.as_posix()
+                path_str = resolved.as_posix()
+                if any(
+                    fnmatch.fnmatch(rel, pattern)
+                    or fnmatch.fnmatch(path_str, pattern)
+                    for pattern in skip_globs
+                ):
+                    continue
+            filtered.append(path)
+        files = filtered
 
         code_mtime = _latest_code_mtime(files, extensions)
         if code_mtime == 0.0:

@@ -4,11 +4,7 @@ text: |
   should correct accidental placeholders to today’s date.
 metadata:
   id: no-future-dates
-  status: active
   severity: error
   auto_fix: 'true'
-  updated: 'false'
   enforcement: active
-  apply: 'true'
-  custom: 'false'
   profile_scopes: global

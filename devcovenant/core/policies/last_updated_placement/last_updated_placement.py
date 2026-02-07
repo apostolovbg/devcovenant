@@ -6,6 +6,8 @@ Ensures Last Updated markers are only in allowlisted files or suffixes.
 
 import fnmatch
 import re
+import subprocess
+from datetime import datetime, timezone
 from typing import List, Set
 
 from devcovenant.core.base import CheckContext, PolicyCheck, Violation
@@ -39,6 +41,7 @@ class LastUpdatedPlacementCheck(PolicyCheck):
         violations = []
 
         files_to_check = context.all_files or context.changed_files or []
+        touched_files = self._resolve_touched_files(context)
 
         def _normalize_list(raw: object) -> List[str]:
             """Return a list of strings parsed from metadata/config."""
@@ -94,6 +97,8 @@ class LastUpdatedPlacementCheck(PolicyCheck):
             if required_globs and _glob_matches(rel_text, required_globs):
                 required_matches.add(rel_text)
 
+        today = datetime.now(timezone.utc).date().isoformat()
+
         for file_path in files_to_check:
             # Skip non-text files
             text_extensions = [
@@ -110,7 +115,7 @@ class LastUpdatedPlacementCheck(PolicyCheck):
                 continue
 
             # Check if file is in allowlist
-            relative_path = str(file_path.relative_to(context.repo_root))
+            relative_path = file_path.relative_to(context.repo_root).as_posix()
             is_allowlisted = relative_path in allowlist
             if not is_allowlisted and allowed_suffixes:
                 is_allowlisted = file_path.suffix in allowed_suffixes
@@ -147,16 +152,19 @@ class LastUpdatedPlacementCheck(PolicyCheck):
                                     f"Remove 'Last Updated' marker from "
                                     f"this file (only allowed in: {allowed})"
                                 ),
-                                can_auto_fix=True,
                             )
                         )
                         break
 
             has_marker_in_first_three = False
+            marker_date = None
             for line_num, line in marker_lines:
                 if line_num <= 3:
                     has_marker_in_first_three = True
-                    if not self.DATE_PATTERN.search(line):
+                    date_match = self.DATE_PATTERN.search(line)
+                    if date_match:
+                        marker_date = date_match.group(0)
+                    if not date_match:
                         violations.append(
                             Violation(
                                 policy_id=self.policy_id,
@@ -167,9 +175,33 @@ class LastUpdatedPlacementCheck(PolicyCheck):
                                     "Last Updated marker missing "
                                     "ISO date (YYYY-MM-DD)."
                                 ),
+                                can_auto_fix=True,
                             )
                         )
                     break
+
+            if (
+                is_allowlisted
+                and marker_date
+                and relative_path in touched_files
+                and marker_date != today
+            ):
+                violations.append(
+                    Violation(
+                        policy_id=self.policy_id,
+                        severity="warning",
+                        file_path=file_path,
+                        message=(
+                            "Last Updated marker should match the current "
+                            "UTC date for touched docs."
+                        ),
+                        suggestion=(
+                            "Update the Last Updated header to today's "
+                            f"UTC date ({today})."
+                        ),
+                        can_auto_fix=True,
+                    )
+                )
 
             if relative_path in required_matches:
                 if not has_marker_in_first_three:
@@ -187,6 +219,7 @@ class LastUpdatedPlacementCheck(PolicyCheck):
                                 "Add `Last Updated: YYYY-MM-DD` within "
                                 "the first three lines."
                             ),
+                            can_auto_fix=True,
                         )
                     )
             elif is_allowlisted and marker_lines:
@@ -210,3 +243,32 @@ class LastUpdatedPlacementCheck(PolicyCheck):
                     )
 
         return violations
+
+    def _resolve_touched_files(self, context: CheckContext) -> Set[str]:
+        """Resolve touched files to keep Last Updated stamps scoped."""
+        touched: Set[str] = set()
+
+        if context.changed_files:
+            for path in context.changed_files:
+                try:
+                    touched.add(path.relative_to(context.repo_root).as_posix())
+                except ValueError:
+                    continue
+            return touched
+
+        try:
+            result = subprocess.run(
+                ["git", "diff", "--name-only", "HEAD"],
+                cwd=context.repo_root,
+                capture_output=True,
+                text=True,
+                check=True,
+            )
+        except Exception:
+            return touched
+
+        for rel in result.stdout.strip().split("\n"):
+            if not rel:
+                continue
+            touched.add(rel.strip())
+        return touched

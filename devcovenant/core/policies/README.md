@@ -14,28 +14,25 @@ profiles. Custom overrides live under
 `devcovenant/custom/policies/<policy>/assets/` and take precedence.
 
 ## Asset Declarations
-Policy assets are declared in a per-policy manifest named `policy_assets.yaml`
-inside each policy assets folder. Example:
+Policy assets are declared in the policy descriptor itself under the `assets`
+key. Example descriptor path:
 ```
-devcovenant/core/policies/dependency_license_sync/assets/policy_assets.yaml
+devcovenant/core/policies/dependency_license_sync/dependency_license_sync.yaml
 ```
 
-A typical manifest looks like:
+A typical descriptor fragment looks like:
 ```
-version: 1
-policy: dependency-license-sync
 assets:
   - path: THIRD_PARTY_LICENSES.md
     template: THIRD_PARTY_LICENSES.md
     mode: merge
 ```
 
-Install/update compiles all per-policy manifests into
-`devcovenant/registry/local/policy_assets.yaml` so the registry reflects the
-active asset map.
+Install/update reads the descriptor assets directly; there is no separate
+policy-asset registry.
 
 ## Workflow
-When adding or adjusting a policy asset, update the policy assets manifest, add
+When adding or adjusting a policy asset, update the policy descriptor, add
 or refresh the asset file, and ensure install/update logic can resolve the
 path. If a profile declares the same asset, the profile wins to keep
 framework-specific assets prioritized over generic policy defaults.

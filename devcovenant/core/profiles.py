@@ -1,4 +1,4 @@
-"""Profile catalog helpers for DevCovenant."""
+"""Profile registry helpers for DevCovenant."""
 
 from __future__ import annotations
 
@@ -9,7 +9,7 @@ from typing import Dict, List
 import yaml
 
 PROFILE_MANIFEST_FALLBACK = None
-REGISTRY_CATALOG = Path("devcovenant/registry/local/profile_catalog.yaml")
+REGISTRY_PROFILE = Path("devcovenant/registry/local/profile_registry.yaml")
 CORE_PROFILE_ROOT = Path("devcovenant/core/profiles")
 CUSTOM_PROFILE_ROOT = Path("devcovenant/custom/profiles")
 
@@ -80,7 +80,7 @@ def discover_profiles(
     custom_root: Path | None = None,
 ) -> Dict[str, Dict]:
     """Discover profiles from core/custom template roots."""
-    catalog: Dict[str, Dict] = {}
+    registry: Dict[str, Dict] = {}
     core_root = core_root or (repo_root / CORE_PROFILE_ROOT)
     custom_root = custom_root or (repo_root / CUSTOM_PROFILE_ROOT)
 
@@ -100,19 +100,19 @@ def discover_profiles(
             meta["source"] = source
             meta["path"] = _relative_path(entry, repo_root)
             meta["assets_available"] = _profile_assets(entry, repo_root)
-            catalog[name] = meta
-    return catalog
+            registry[name] = meta
+    return registry
 
 
-def build_profile_catalog(
+def build_profile_registry(
     repo_root: Path,
     active_profiles: list[str] | None = None,
     *,
     core_root: Path | None = None,
     custom_root: Path | None = None,
 ) -> Dict[str, Dict]:
-    """Build a profile catalog payload for registry output."""
-    catalog = discover_profiles(
+    """Build a profile registry payload for registry output."""
+    registry = discover_profiles(
         repo_root, core_root=core_root, custom_root=custom_root
     )
     active = {
@@ -120,54 +120,54 @@ def build_profile_catalog(
         for name in (active_profiles or [])
         if name
     }
-    for name, meta in catalog.items():
+    for name, meta in registry.items():
         meta["active"] = name in active
-    return {"generated_at": _utc_now(), "profiles": catalog}
+    return {"generated_at": _utc_now(), "profiles": registry}
 
 
-def write_profile_catalog(repo_root: Path, catalog: Dict[str, Dict]) -> Path:
-    """Write the profile catalog into the registry folder."""
-    path = repo_root / REGISTRY_CATALOG
+def write_profile_registry(repo_root: Path, registry: Dict[str, Dict]) -> Path:
+    """Write the profile registry into the registry folder."""
+    path = repo_root / REGISTRY_PROFILE
     path.parent.mkdir(parents=True, exist_ok=True)
-    payload = yaml.safe_dump(catalog, sort_keys=True, allow_unicode=False)
+    payload = yaml.safe_dump(registry, sort_keys=True, allow_unicode=False)
     path.write_text(payload, encoding="utf-8")
     return path
 
 
-def _normalize_catalog(catalog: Dict[str, Dict]) -> Dict[str, Dict]:
-    """Normalize profile catalogs that include a top-level profiles key."""
-    if "profiles" in catalog and isinstance(catalog["profiles"], dict):
-        return catalog["profiles"]
-    return catalog
+def _normalize_registry(registry: Dict[str, Dict]) -> Dict[str, Dict]:
+    """Normalize profile registries that include a top-level profiles key."""
+    if "profiles" in registry and isinstance(registry["profiles"], dict):
+        return registry["profiles"]
+    return registry
 
 
-def load_profile_catalog(repo_root: Path) -> Dict[str, Dict]:
-    """Load the merged profile catalog from registry or profile roots."""
-    registry_path = repo_root / REGISTRY_CATALOG
+def load_profile_registry(repo_root: Path) -> Dict[str, Dict]:
+    """Load the merged profile registry from registry or profile roots."""
+    registry_path = repo_root / REGISTRY_PROFILE
     if registry_path.exists():
-        catalog_data = _load_yaml(registry_path)
-        if isinstance(catalog_data, dict) and catalog_data:
-            return _normalize_catalog(catalog_data)
+        registry_data = _load_yaml(registry_path)
+        if isinstance(registry_data, dict) and registry_data:
+            return _normalize_registry(registry_data)
     return discover_profiles(repo_root)
 
 
-def list_profiles(catalog: Dict[str, Dict]) -> List[str]:
+def list_profiles(registry: Dict[str, Dict]) -> List[str]:
     """Return a sorted list of profile names."""
-    normalized = _normalize_catalog(catalog)
+    normalized = _normalize_registry(registry)
     return sorted(name for name in normalized.keys() if name)
 
 
 def resolve_profile_suffixes(
-    catalog: Dict[str, Dict], active_profiles: List[str]
+    registry: Dict[str, Dict], active_profiles: List[str]
 ) -> List[str]:
     """Return file suffixes associated with active profiles."""
-    normalized_catalog = _normalize_catalog(catalog)
+    normalized_registry = _normalize_registry(registry)
     suffixes: List[str] = []
     active = {
         _normalize_profile_name(name) for name in active_profiles if name
     }
     for name in active:
-        meta = normalized_catalog.get(name, {})
+        meta = normalized_registry.get(name, {})
         raw = meta.get("suffixes") or []
         for entry in raw:
             suffix_value = str(entry).strip()
@@ -178,16 +178,16 @@ def resolve_profile_suffixes(
 
 
 def resolve_profile_ignore_dirs(
-    catalog: Dict[str, Dict], active_profiles: List[str]
+    registry: Dict[str, Dict], active_profiles: List[str]
 ) -> List[str]:
     """Return ignored directory names from active profiles."""
-    normalized_catalog = _normalize_catalog(catalog)
+    normalized_registry = _normalize_registry(registry)
     ignored: List[str] = []
     active = {
         _normalize_profile_name(name) for name in active_profiles if name
     }
     for name in active:
-        meta = normalized_catalog.get(name, {})
+        meta = normalized_registry.get(name, {})
         raw = meta.get("ignore_dirs") or []
         for entry in raw:
             dir_value = str(entry).strip()

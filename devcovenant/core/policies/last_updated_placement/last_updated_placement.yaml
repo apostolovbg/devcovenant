@@ -1,17 +1,13 @@
 id: last-updated-placement
 text: |
   Docs must include a `Last Updated` header near the top so readers can trust
-  recency. The auto-fix keeps timestamps current while respecting allowed
-  locations.
+  recency. The auto-fix updates the UTC date for touched allowlisted docs
+  while respecting allowed locations.
 metadata:
   id: last-updated-placement
-  status: active
   severity: error
   auto_fix: 'true'
-  updated: 'false'
   enforcement: active
-  apply: 'true'
-  custom: 'false'
   profile_scopes:
     - global
     - docs

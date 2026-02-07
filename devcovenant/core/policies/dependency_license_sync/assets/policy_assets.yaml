@@ -1,9 +1,0 @@
-version: 1
-policy: dependency-license-sync
-assets:
-  - path: THIRD_PARTY_LICENSES.md
-    template: THIRD_PARTY_LICENSES.md
-    mode: merge
-  - path: licenses/README.md
-    template: licenses/README.md
-    mode: replace

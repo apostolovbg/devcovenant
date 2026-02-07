@@ -23,8 +23,7 @@ id: test-policy
 status: active
 severity: warning
 auto_fix: true
-updated: false
-apply: false
+enabled: false
 ```
 
 This is a test policy description.
@@ -49,8 +48,7 @@ This is a test policy description.
         assert policy.status == "active"
         assert policy.severity == "warning"
         assert policy.auto_fix is True
-        assert policy.updated is False
-        assert policy.apply is False
+        assert policy.enabled is False
         assert "test policy description" in policy.description.lower()
 
     finally:
@@ -72,7 +70,6 @@ id: first-policy
 status: active
 severity: error
 auto_fix: false
-updated: false
 ```
 
 First policy description.
@@ -86,7 +83,6 @@ id: second-policy
 status: new
 severity: critical
 auto_fix: true
-updated: true
 ```
 
 Second policy description.
@@ -105,14 +101,12 @@ Second policy description.
         # Check first policy
         assert policies[0].policy_id == "first-policy"
         assert policies[0].severity == "error"
-        assert policies[0].updated is False
-        assert policies[0].apply is True
+        assert policies[0].enabled is True
 
         # Check second policy
         assert policies[1].policy_id == "second-policy"
         assert policies[1].severity == "critical"
-        assert policies[1].updated is True
-        assert policies[1].apply is True
+        assert policies[1].enabled is True
 
     finally:
         temp_path.unlink()

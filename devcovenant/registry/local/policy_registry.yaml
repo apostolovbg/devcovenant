@@ -1,0 +1,898 @@
+policies:
+  changelog-coverage:
+    status: active
+    enabled: true
+    custom: false
+    description: Changelog Coverage
+    policy_text: |-
+      Every change must be logged in a new changelog entry dated today, under the
+      current version, with a three-line summary labeled Change/Why/Impact. Each
+      summary line must include an action verb listed in the summary_verbs
+      metadata and a Files block that lists only the touched paths for this
+      change. Collection prefixes (when enabled) must be logged in their own
+      changelog; prefixed files may not appear in the root changelog. This keeps
+      release notes daily, file-complete, and traceable.
+    metadata:
+      id: changelog-coverage
+      status: active
+      severity: error
+      auto_fix: 'true'
+      enforcement: active
+      enabled: 'true'
+      custom: 'false'
+      freeze: 'false'
+      profile_scopes: global
+      main_changelog: CHANGELOG.md
+      skipped_files: CHANGELOG.md, .gitignore, .pre-commit-config.yaml
+      skipped_globs: ''
+      skipped_prefixes: ''
+      summary_labels: Change, Why, Impact
+      summary_verbs: add, added, adjust, adjusted, align, aligned, amend, amended,
+        automate, automated, build, built, bump, bumped, clean, cleaned, clarify,
+        clarified, consolidate, consolidated, correct, corrected, create, created,
+        define, defined, deprecate, deprecated, document, documented, drop, dropped,
+        enable, enabled, expand, expanded, fix, fixed, harden, hardened, improve,
+        improved, introduce, introduced, migrate, migrated, normalize, normalized,
+        refactor, refactored, remove, removed, rename, renamed, replace, replaced,
+        restructure, restructured, revise, revised, streamline, streamlined, support,
+        supported, update, updated, upgrade, upgraded, wrap, wrapped
+      collections: __none__
+      required_globs: README.md, AGENTS.md, CONTRIBUTING.md, CHANGELOG.md, SPEC.md,
+        PLAN.md
+      selector_roles: skipped,required
+      skipped_dirs: ''
+      required_files: ''
+      required_dirs: ''
+    assets:
+    - .pre-commit-config.yaml
+    - AGENTS.md
+    - CHANGELOG.md
+    - CONTRIBUTING.md
+    - PLAN.md
+    - README.md
+    - SPEC.md
+    core: true
+    script_exists: true
+    hash: 73326c44a7b8235f945567a8545ebafb48ca784eb21c765099ede17dce247c3c
+    script_path: core/changelog_coverage.py
+    last_updated: '2026-02-07T10:21:29.255277+00:00'
+  dependency-license-sync:
+    status: active
+    enabled: true
+    custom: false
+    description: Dependency License Sync
+    policy_text: |-
+      Maintain the third-party license table alongside the dependency manifests
+      configured by the active profiles or config overrides. The policy points
+      reviewers to the `licenses/` directory and its `## License Report` section so
+      every dependency change touches both the license text and the cited manifest.
+    metadata:
+      id: dependency-license-sync
+      status: active
+      severity: error
+      auto_fix: 'true'
+      enforcement: active
+      enabled: 'true'
+      custom: 'false'
+      freeze: 'false'
+      profile_scopes: python, javascript, typescript, java, csharp, php, ruby, go,
+        rust, swift, dart, flutter, fastapi, frappe, objective-c
+      dependency_files: requirements.in, requirements.lock, pyproject.toml
+      third_party_file: THIRD_PARTY_LICENSES.md
+      licenses_dir: licenses
+      report_heading: '## License Report'
+      selector_roles: dependency
+      dependency_globs: ''
+      dependency_dirs: ''
+    assets:
+    - THIRD_PARTY_LICENSES.md
+    core: true
+    script_exists: true
+    hash: 1f66e871b4b1404071ff717561c506e315adacd0d3d17d94f8baaee93d1a4aa9
+    script_path: core/dependency_license_sync.py
+    last_updated: '2026-02-06T18:34:50.663506+00:00'
+  devcov-raw-string-escapes:
+    status: active
+    enabled: true
+    custom: true
+    description: Devcov Raw String Escapes
+    policy_text: |-
+      Warn when DevCovenant repo Python strings contain bare backslashes.
+      This repo-only policy keeps the raw-string guidance active without
+      forcing it on user repos.
+    metadata:
+      id: devcov-raw-string-escapes
+      status: active
+      severity: warning
+      auto_fix: 'false'
+      enforcement: active
+      enabled: 'true'
+      custom: 'true'
+      freeze: 'false'
+      profile_scopes: devcovrepo
+    assets: []
+    core: false
+    script_exists: true
+    hash: 0d4123c039cdb36532f4d331c79cf35597442dd4f30ef6b8a127e0e3f365c89e
+    script_path: custom/devcov_raw_string_escapes.py
+    last_updated: '2026-02-06T18:34:50.753428+00:00'
+  devcov-structure-guard:
+    status: active
+    enabled: true
+    custom: false
+    description: DevCovenant Structure Guard
+    policy_text: Ensure the DevCovenant repo keeps the required structure and tooling
+      files.
+    metadata:
+      id: devcov-structure-guard
+      status: active
+      severity: error
+      auto_fix: 'false'
+      enforcement: active
+      enabled: 'true'
+      custom: 'false'
+      freeze: 'false'
+      profile_scopes: global
+    assets: []
+    core: true
+    script_exists: true
+    hash: e6c5cb69b784a1a809221dc417aa0aeac618fb16d783d6904f85c1eb06908151
+    script_path: core/devcov_structure_guard.py
+    last_updated: '2026-02-06T18:34:51.043905+00:00'
+  devflow-run-gates:
+    status: active
+    enabled: true
+    custom: false
+    description: DevFlow Run Gates
+    policy_text: |-
+      DevCovenant must record and enforce the standard workflow: pre-commit start,
+      tests, then pre-commit end. The policy reads the status file to ensure each
+      gate ran and that no required command was skipped.
+      This check is enforced for every repository change (including
+      documentation-only updates) so the gate sequence cannot be skipped.
+    metadata:
+      id: devflow-run-gates
+      status: active
+      severity: error
+      auto_fix: 'false'
+      enforcement: active
+      enabled: 'true'
+      custom: 'false'
+      freeze: 'false'
+      profile_scopes: global, python, javascript, typescript, java, kotlin, scala,
+        groovy, dotnet, csharp, fsharp, php, ruby, go, rust, swift, dart, flutter,
+        elixir, erlang, haskell, clojure, julia, ocaml, crystal
+      test_status_file: devcovenant/registry/local/test_status.json
+      required_commands: pytest, python3 -m unittest discover
+      require_pre_commit_start: 'true'
+      require_pre_commit_end: 'true'
+      pre_commit_command: python3 -m pre_commit run --all-files
+      pre_commit_start_epoch_key: pre_commit_start_epoch
+      pre_commit_end_epoch_key: pre_commit_end_epoch
+      pre_commit_start_command_key: pre_commit_start_command
+      pre_commit_end_command_key: pre_commit_end_command
+      code_extensions: ''
+      skipped_globs: devcovenant/registry/local/**
+      selector_roles: skipped
+      skipped_files: ''
+      skipped_dirs: ''
+    assets:
+    - devcovenant/registry/local/**
+    - devcovenant/registry/local/test_status.json
+    core: true
+    script_exists: true
+    hash: 86d9586f06220116f9c3075a45fb08c333c87e4b7527573c83d1428e0a667592
+    script_path: core/devflow_run_gates.py
+    last_updated: '2026-02-07T06:21:12.835371+00:00'
+  docstring-and-comment-coverage:
+    status: active
+    enabled: true
+    custom: false
+    description: Docstring and Comment Coverage
+    policy_text: |-
+      Source files must include a docstring or nearby explanatory comment so
+      intent stays visible even as code evolves. Adapters decide how each
+      language satisfies the requirement.
+    metadata:
+      id: docstring-and-comment-coverage
+      status: active
+      severity: error
+      auto_fix: 'false'
+      enforcement: active
+      enabled: 'true'
+      custom: 'false'
+      freeze: 'false'
+      profile_scopes: python, javascript, typescript, go, rust, java, csharp
+      include_suffixes: .py
+      exclude_prefixes: build, dist, node_modules
+      include_prefixes: ''
+      include_globs: '*.py'
+      exclude_suffixes: ''
+      exclude_globs: build/**, dist/**, node_modules/**
+      force_include_globs: ''
+      selector_roles: include, exclude, force_include
+      include_files: ''
+      include_dirs: ''
+      exclude_files: ''
+      exclude_dirs: ''
+      force_include_files: ''
+      force_include_dirs: ''
+    assets:
+    - build/**
+    - dist/**
+    - node_modules/**
+    core: true
+    script_exists: true
+    hash: 9b3fad63de6cf298bae1f65f59410c9af7be8b20615c0be0213e84826d32e0b0
+    script_path: core/docstring_and_comment_coverage.py
+    last_updated: '2026-02-06T18:34:51.329549+00:00'
+  documentation-growth-tracking:
+    status: active
+    enabled: true
+    custom: false
+    description: Documentation Growth Tracking
+    policy_text: |-
+      When user-facing files change (as defined by the user-facing selectors and
+      keywords), the documentation set listed here must be updated. User-facing
+      includes API surfaces, integration touchpoints, and any behavior that affects
+      the user's experience or workflow. Updated docs should mention the relevant
+      components by name so readers can find changes quickly. The policy also
+      enforces documentation quality standards such as required headings, a table
+      of contents, and minimum depth.
+    metadata:
+      id: documentation-growth-tracking
+      status: active
+      severity: info
+      auto_fix: 'false'
+      enforcement: active
+      enabled: 'true'
+      custom: 'false'
+      freeze: 'false'
+      profile_scopes: global, docs, data, python, javascript, typescript, go, rust,
+        java, csharp, php, ruby, swift, dart, terraform, docker, kubernetes, sql,
+        fastapi, frappe, flutter, objective-c
+      selector_roles: user_facing, user_visible, doc_quality
+      include_prefixes: ''
+      exclude_prefixes: data
+      user_facing_prefixes: ''
+      user_facing_exclude_prefixes: tests
+      user_facing_suffixes: .py, .md, .rst, .txt, .js, .ts, .tsx, .vue, .go, .rs,
+        .java, .kt, .swift, .rb, .php, .cs, .yml, .yaml, .json, .toml
+      user_facing_files: devcovenant/cli.py, devcovenant/__main__.py, .pre-commit-config.yaml,
+        pyproject.toml
+      user_facing_globs: .github/workflows/*.yml, .github/workflows/*.yaml, *.py,
+        *.md, *.rst, *.txt, *.js, *.ts, *.tsx, *.vue, *.go, *.rs, *.java, *.kt, *.swift,
+        *.rb, *.php, *.cs, *.yml, *.yaml, *.json, *.toml
+      user_facing_keywords: api, endpoint, endpoints, route, routes, routing, service,
+        services, controller, controllers, handler, handlers, client, clients, webhook,
+        webhooks, integration, integrations, sdk, cli, ui, view, views, page, pages,
+        screen, screens, form, forms, workflow, workflows
+      user_visible_files: devcovenant/README.md, devcovenant/docs/README.md, devcovenant/docs/installation.md,
+        devcovenant/docs/config.md, devcovenant/docs/profiles.md, devcovenant/docs/policies.md,
+        devcovenant/docs/adapters.md, devcovenant/docs/registry.md, devcovenant/docs/refresh.md,
+        devcovenant/docs/workflow.md, devcovenant/docs/troubleshooting.md, README.md,
+        CONTRIBUTING.md, AGENTS.md, SPEC.md, PLAN.md
+      doc_quality_files: devcovenant/README.md, devcovenant/docs/README.md, devcovenant/docs/installation.md,
+        devcovenant/docs/config.md, devcovenant/docs/profiles.md, devcovenant/docs/policies.md,
+        devcovenant/docs/adapters.md, devcovenant/docs/registry.md, devcovenant/docs/refresh.md,
+        devcovenant/docs/workflow.md, devcovenant/docs/troubleshooting.md, README.md,
+        CONTRIBUTING.md, AGENTS.md, SPEC.md, PLAN.md
+      required_headings: Table of Contents, Overview, Workflow
+      require_toc: 'true'
+      min_section_count: '3'
+      min_word_count: '120'
+      quality_severity: warning
+      require_mentions: 'true'
+      mention_severity: warning
+      mention_min_length: '3'
+      mention_stopwords: devcovenant, tools, common, custom, policy, policies, script,
+        scripts, py, js, ts, json, yml, yaml, toml, md, readme, plan, spec
+      include_suffixes: ''
+      include_globs: ''
+      exclude_suffixes: ''
+      exclude_globs: data/**
+      force_include_globs: ''
+      user_facing_exclude_globs: ''
+      user_facing_exclude_suffixes: ''
+      user_facing_dirs: ''
+      user_visible_globs: ''
+      user_visible_dirs: devcovenant/docs
+      doc_quality_globs: ''
+      doc_quality_dirs: devcovenant/docs
+      include_files: ''
+      include_dirs: ''
+      exclude_files: ''
+      exclude_dirs: ''
+      user_facing_exclude_files: ''
+      user_facing_exclude_dirs: tests/**
+      force_include_files: ''
+      force_include_dirs: ''
+    assets:
+    - '*.json'
+    - '*.md'
+    - '*.yaml'
+    - '*.yml'
+    - .github/workflows/*.yaml
+    - .github/workflows/*.yml
+    - .json
+    - .md
+    - .pre-commit-config.yaml
+    - .yaml
+    - .yml
+    - AGENTS.md
+    - CONTRIBUTING.md
+    - PLAN.md
+    - README.md
+    - SPEC.md
+    - data/**
+    - devcovenant/README.md
+    - devcovenant/__main__.py
+    - devcovenant/cli.py
+    - devcovenant/docs
+    - devcovenant/docs/README.md
+    - devcovenant/docs/adapters.md
+    - devcovenant/docs/config.md
+    - devcovenant/docs/installation.md
+    - devcovenant/docs/policies.md
+    - devcovenant/docs/profiles.md
+    - devcovenant/docs/refresh.md
+    - devcovenant/docs/registry.md
+    - devcovenant/docs/troubleshooting.md
+    - devcovenant/docs/workflow.md
+    - tests/**
+    core: true
+    script_exists: true
+    hash: e72fd8c2a79eb945b0129ebce2e1f33f583085846f17c854e431c84c9fee70f4
+    script_path: core/documentation_growth_tracking.py
+    last_updated: '2026-02-06T18:34:51.382430+00:00'
+  last-updated-placement:
+    status: active
+    enabled: true
+    custom: false
+    description: Last Updated Placement
+    policy_text: |-
+      Docs must include a `Last Updated` header near the top so readers can trust
+      recency. The auto-fix updates the UTC date for touched allowlisted docs
+      while respecting allowed locations.
+    metadata:
+      id: last-updated-placement
+      status: active
+      severity: error
+      auto_fix: 'true'
+      enforcement: active
+      enabled: 'true'
+      custom: 'false'
+      freeze: 'false'
+      profile_scopes: global, docs, data
+      include_suffixes: .md
+      allowed_globs: devcovenant/README.md, devcovenant/core/profiles/global/assets/*.yaml,
+        README.md, AGENTS.md, CONTRIBUTING.md, CHANGELOG.md, SPEC.md, PLAN.md
+      allowed_files: ''
+      allowed_suffixes: ''
+      required_files: ''
+      required_globs: devcovenant/README.md, README.md, AGENTS.md, CONTRIBUTING.md,
+        CHANGELOG.md, SPEC.md, PLAN.md
+      selector_roles: include, allowed, required
+      include_globs: '*.md'
+      include_files: ''
+      include_dirs: ''
+      allowed_dirs: ''
+      required_dirs: ''
+    assets:
+    - '*.md'
+    - .md
+    - AGENTS.md
+    - CHANGELOG.md
+    - CONTRIBUTING.md
+    - PLAN.md
+    - README.md
+    - SPEC.md
+    - devcovenant/README.md
+    - devcovenant/core/profiles/global/assets/*.yaml
+    core: true
+    script_exists: true
+    hash: 3a0bfb1752e27a5eb247bace26186b50bd10ad3cb12bd4e84172d374b7744919
+    script_path: core/last_updated_placement.py
+    last_updated: '2026-02-06T18:34:51.526604+00:00'
+  line-length-limit:
+    status: active
+    enabled: true
+    custom: false
+    description: Line Length Limit
+    policy_text: |-
+      Keep lines within the configured maximum so documentation and code remain
+      readable. Reflow long sentences or wrap lists rather than ignoring the limit.
+    metadata:
+      id: line-length-limit
+      status: active
+      severity: warning
+      auto_fix: 'false'
+      enforcement: active
+      enabled: 'true'
+      custom: 'false'
+      freeze: 'false'
+      profile_scopes: global, docs, data, python, javascript, typescript, go, rust,
+        java, csharp, php, ruby, swift, dart, terraform, docker, kubernetes, sql,
+        fastapi, frappe, flutter, objective-c
+      max_length: '79'
+      include_suffixes: .py, .pyi, .pyw, .ipynb, .md, .rst, .txt, .csv, .tsv, .json,
+        .ndjson, .parquet, .avro
+      exclude_prefixes: build, dist, node_modules
+      exclude_globs: devcovenant/registry/**, data/**, devcovenant/core/profiles/global/assets/*.yaml,
+        devcovenant/core/stock_policy_texts.json, build/**, dist/**, node_modules/**
+      include_prefixes: ''
+      include_globs: '*.>, *.py, *.md, *.rst, *.txt, *.yml, *.yaml, *.json, *.toml,
+        *.cff, *.pyi, *.pyw, *.ipynb, *.csv, *.tsv, *.ndjson, *.parquet, *.avro'
+      exclude_suffixes: ''
+      force_include_globs: ''
+      selector_roles: include, exclude, force_include
+      include_files: ''
+      include_dirs: ''
+      exclude_files: ''
+      exclude_dirs: ''
+      force_include_files: ''
+      force_include_dirs: ''
+    assets:
+    - '*.json'
+    - '*.md'
+    - '*.yaml'
+    - '*.yml'
+    - .json
+    - .md
+    - build/**
+    - data/**
+    - devcovenant/core/profiles/global/assets/*.yaml
+    - devcovenant/core/stock_policy_texts.json
+    - devcovenant/registry/**
+    - dist/**
+    - node_modules/**
+    core: true
+    script_exists: true
+    hash: c410336e14e8d539d32c084fd944559185be633d9420fb13de2944e42be5de38
+    script_path: core/line_length_limit.py
+    last_updated: '2026-02-06T18:34:51.616125+00:00'
+  managed-doc-assets:
+    status: active
+    enabled: true
+    custom: true
+    description: Managed Doc Assets
+    policy_text: |-
+      Ensure AGENTS.md, README.md, PLAN.md, SPEC.md, CHANGELOG.md, and
+      CONTRIBUTING.md remain the authoritative sources for their managed-block
+      descriptors under `devcovenant/core/profiles/global/assets/` so documentation
+      generation is deterministic.
+    metadata:
+      id: managed-doc-assets
+      status: active
+      severity: error
+      auto_fix: 'false'
+      enforcement: active
+      enabled: 'true'
+      custom: 'true'
+      freeze: 'false'
+      profile_scopes: devcovrepo
+    assets: []
+    core: false
+    script_exists: true
+    hash: 0d46548dcd240e6f714be744b3d735a1d9c2b0f282653f2158e944b126dc1764
+    script_path: custom/managed_doc_assets.py
+    last_updated: '2026-02-06T18:34:51.718584+00:00'
+  managed-environment:
+    status: active
+    enabled: false
+    custom: false
+    description: Managed Environment
+    policy_text: |-
+      DevCovenant must run from the managed environment described in this
+      policy's metadata. Use expected_paths for virtualenv or bench roots,
+      expected_interpreters for explicit interpreter locations, and
+      required_commands or command_hints to guide contributors. When enabled
+      with empty metadata, the policy emits a warning so teams fill the
+      required context.
+    metadata:
+      id: managed-environment
+      status: active
+      severity: error
+      auto_fix: 'false'
+      enforcement: active
+      enabled: 'false'
+      custom: 'false'
+      freeze: 'false'
+      profile_scopes: global
+      expected_paths: ''
+      expected_interpreters: ''
+      required_commands: ''
+      command_hints: ''
+    assets: []
+    core: true
+    script_exists: true
+    hash: ebba8914fdae3b289a10547a54b17a3245fc384a0f2f7025f0cb2b2280af548b
+    script_path: core/managed_environment.py
+    last_updated: '2026-02-07T09:44:38.126315+00:00'
+  name-clarity:
+    status: active
+    enabled: true
+    custom: false
+    description: Name Clarity
+    policy_text: |-
+      Identifiers should be descriptive enough to communicate intent without
+      reading their implementation. Avoid cryptic or overly short names unless
+      explicitly justified.
+    metadata:
+      id: name-clarity
+      status: active
+      severity: warning
+      auto_fix: 'false'
+      enforcement: active
+      enabled: 'true'
+      custom: 'false'
+      freeze: 'false'
+      profile_scopes: python, javascript, typescript, go, rust, java, csharp
+      exclude_prefixes: data
+      include_suffixes: .py
+      include_prefixes: ''
+      include_globs: '*.py'
+      exclude_suffixes: ''
+      exclude_globs: build/**, dist/**, node_modules/**, data/**
+      force_include_globs: ''
+      selector_roles: exclude, include, force_include
+      exclude_files: ''
+      exclude_dirs: ''
+      include_files: ''
+      include_dirs: ''
+      force_include_files: ''
+      force_include_dirs: ''
+    assets:
+    - build/**
+    - data/**
+    - dist/**
+    - node_modules/**
+    core: true
+    script_exists: true
+    hash: e436f6b9baccd9f6cf8e25da0a75b30ac9641ddbb96d051d8febb787bfc523e3
+    script_path: core/name_clarity.py
+    last_updated: '2026-02-06T18:34:51.963101+00:00'
+  new-modules-need-tests:
+    status: active
+    enabled: true
+    custom: false
+    description: New Modules Need Tests
+    policy_text: |-
+      New or modified modules in the watched locations must have corresponding
+      tests. Test modules (files starting with `test_`) are exempt from the rule.
+      The `tests_watch_dirs` metadata defaults to `tests/`, keeping the watch
+      list aligned with typical test layouts unless overridden.
+    metadata:
+      id: new-modules-need-tests
+      status: active
+      severity: error
+      auto_fix: 'false'
+      enforcement: active
+      enabled: 'true'
+      custom: 'false'
+      freeze: 'false'
+      profile_scopes: python, fastapi, frappe, javascript, typescript, go, rust, java,
+        csharp
+      include_suffixes: .py
+      include_prefixes: devcovenant
+      exclude_prefixes: build, dist, node_modules, tests, data
+      exclude_globs: build/**, dist/**, node_modules/**, tests/**, data/**
+      watch_dirs: tests, tests/devcovenant/core, tests/devcovenant/custom
+      tests_watch_dirs: tests, tests/devcovenant/core, tests/devcovenant/custom
+      include_globs: '*.py, devcovenant/**'
+      exclude_suffixes: ''
+      force_include_globs: ''
+      watch_files: ''
+      selector_roles: include,exclude,watch,tests_watch,force_include
+      include_files: ''
+      include_dirs: ''
+      exclude_files: ''
+      exclude_dirs: ''
+      watch_globs: ''
+      tests_watch_globs: ''
+      tests_watch_files: ''
+      force_include_files: ''
+      force_include_dirs: ''
+    assets:
+    - build/**
+    - data/**
+    - devcovenant/**
+    - dist/**
+    - node_modules/**
+    - tests/**
+    - tests/devcovenant/core
+    - tests/devcovenant/custom
+    core: true
+    script_exists: true
+    hash: b777e230452f33b262bb481bb280cb3e1533aca47e3c853976f0e8996830b6f1
+    script_path: core/new_modules_need_tests.py
+    last_updated: '2026-02-06T18:34:52.016905+00:00'
+  no-future-dates:
+    status: active
+    enabled: true
+    custom: false
+    description: No Future Dates
+    policy_text: "Dates in changelogs or documentation must not be in the future.\
+      \ Auto-fixers\nshould correct accidental placeholders to today\u2019s date."
+    metadata:
+      id: no-future-dates
+      status: active
+      severity: error
+      auto_fix: 'true'
+      enforcement: active
+      enabled: 'true'
+      custom: 'false'
+      freeze: 'false'
+      profile_scopes: global
+    assets: []
+    core: true
+    script_exists: true
+    hash: 69794e0df4755c4fb5ff220dac78fa022a26ad6f784e019437962234433fe3df
+    script_path: core/no_future_dates.py
+    last_updated: '2026-02-06T18:34:52.087210+00:00'
+  raw-string-escapes:
+    status: active
+    enabled: false
+    custom: false
+    description: Raw String Escapes
+    policy_text: Policy description pending.
+    metadata:
+      id: raw-string-escapes
+      status: active
+      severity: warning
+      auto_fix: 'false'
+      enforcement: active
+      enabled: 'false'
+      custom: 'false'
+      freeze: 'false'
+      profile_scopes: python
+    assets: []
+    core: true
+    script_exists: true
+    hash: 39352578e28aac88a328f5b8129b183be6739a35fd0db5fb5f12ed57f577e123
+    script_path: core/raw_string_escapes.py
+    last_updated: '2026-02-06T18:34:52.595953+00:00'
+  read-only-directories:
+    status: active
+    enabled: true
+    custom: false
+    description: Read-Only Directories
+    policy_text: |-
+      Protect declared read-only directories from modification. If a directory must
+      be editable, update this policy definition first.
+    metadata:
+      id: read-only-directories
+      status: active
+      severity: error
+      auto_fix: 'false'
+      enforcement: active
+      enabled: 'true'
+      custom: 'false'
+      freeze: 'false'
+      profile_scopes: global
+      include_globs: __none__
+      include_suffixes: ''
+      include_prefixes: ''
+      exclude_suffixes: ''
+      exclude_prefixes: ''
+      exclude_globs: ''
+      force_include_globs: ''
+      selector_roles: include, exclude, force_include
+      include_files: ''
+      include_dirs: ''
+      exclude_files: ''
+      exclude_dirs: ''
+      force_include_files: ''
+      force_include_dirs: ''
+    assets: []
+    core: true
+    script_exists: true
+    hash: 7012d12b7ce18100bba5bcae5ee152cf58b39f652f2cfb8fdf0a7da289a8d10f
+    script_path: core/read_only_directories.py
+    last_updated: '2026-02-06T18:34:52.840557+00:00'
+  readme-sync:
+    status: active
+    enabled: true
+    custom: true
+    description: README Sync
+    policy_text: |-
+      Ensure `devcovenant/README.md` mirrors `README.md` with repository-only
+      sections removed via the `<!-- REPO-ONLY:BEGIN -->` /
+      `<!-- REPO-ONLY:END -->` markers. Auto-fix rewrites the packaged guide from
+      the repo README.
+    metadata:
+      id: readme-sync
+      status: active
+      severity: error
+      auto_fix: 'true'
+      enforcement: active
+      enabled: 'true'
+      custom: 'true'
+      freeze: 'false'
+      profile_scopes: global
+    assets: []
+    core: false
+    script_exists: true
+    hash: aa6007b1962b61b1ec2345a225c45e1862a88183aff7b6b7f2e1328f36d53bab
+    script_path: custom/readme_sync.py
+    last_updated: '2026-02-06T18:34:52.926656+00:00'
+  security-scanner:
+    status: active
+    enabled: true
+    custom: false
+    description: Security Scanner
+    policy_text: |-
+      Scan source files for risky constructs like `eval`, `exec`, or
+      `shell=True`. Use the documented allow-comment only when a security
+      review approves the exception.
+    metadata:
+      id: security-scanner
+      status: active
+      severity: error
+      auto_fix: 'false'
+      enforcement: active
+      enabled: 'true'
+      custom: 'false'
+      freeze: 'false'
+      profile_scopes: python, fastapi, frappe, javascript, typescript, go, rust, java,
+        csharp
+      exclude_globs: tests/**, **/tests/**, data/**
+      include_suffixes: .py
+      include_prefixes: ''
+      include_globs: '*.py'
+      exclude_suffixes: ''
+      exclude_prefixes: data
+      force_include_globs: ''
+      selector_roles: exclude, include, force_include
+      exclude_files: ''
+      exclude_dirs: ''
+      include_files: ''
+      include_dirs: ''
+      force_include_files: ''
+      force_include_dirs: ''
+    assets:
+    - '**/tests/**'
+    - data/**
+    - tests/**
+    core: true
+    script_exists: true
+    hash: 5555b7c9dc485fafdb8945ac6b038b4e627420545ad946c89c0253e4b39396b1
+    script_path: core/security_scanner.py
+    last_updated: '2026-02-06T18:34:53.047094+00:00'
+  semantic-version-scope:
+    status: active
+    enabled: true
+    custom: false
+    description: Semantic Version Scope
+    policy_text: |-
+      When enabled, the latest changelog entry must include exactly one
+      `[semver:major|minor|patch]` tag that matches the version bump. Use
+      `major` for API-breaking releases, `minor` for backward-compatible feature
+      work, and `patch` for bug fixes or documentation-only updates. The tag
+      must match the bump from the previous version, and the configured
+      version file must be updated whenever the changelog declares a release
+      scope. The policy ships disabled (`enabled: false`) and should only be
+      enabled for release processes that enforce SemVer discipline.
+    metadata:
+      id: semantic-version-scope
+      status: active
+      severity: error
+      auto_fix: 'false'
+      enforcement: active
+      enabled: 'true'
+      custom: 'false'
+      freeze: 'false'
+      profile_scopes: global
+      version_file: devcovenant/VERSION
+      changelog_file: CHANGELOG.md
+      ignored_prefixes: ''
+      selector_roles: ignored
+      ignored_globs: ''
+      ignored_files: ''
+      ignored_dirs: ''
+    assets:
+    - CHANGELOG.md
+    - devcovenant/VERSION
+    core: true
+    script_exists: true
+    hash: abf84aee18607ef1f4d5142027516e972c75837abcccad0a5ad4a09fea3288de
+    script_path: core/semantic_version_scope.py
+    last_updated: '2026-02-07T10:54:30.856379+00:00'
+  version-sync:
+    status: active
+    enabled: true
+    custom: false
+    description: Version Synchronization
+    policy_text: |-
+      All version-bearing files must match the canonical version file (default
+      `VERSION` or a configured override), and version bumps must move forward.
+      Files listed under `optional_files` are only enforced when present. The
+      policy also flags hard-coded runtime versions and ensures changelog
+      releases reflect the current version.
+    metadata:
+      id: version-sync
+      status: active
+      severity: error
+      auto_fix: 'false'
+      enforcement: active
+      enabled: 'true'
+      custom: 'false'
+      freeze: 'false'
+      profile_scopes: global, docs, data, suffixes, python, javascript, typescript,
+        java, csharp, php, ruby, go, rust, swift, dart, flutter, terraform, docker,
+        kubernetes, sql, fastapi, frappe, objective-c
+      version_file: devcovenant/VERSION
+      readme_files: devcovenant/README.md, README.md, AGENTS.md, CONTRIBUTING.md,
+        SPEC.md, PLAN.md
+      optional_files: SPEC.md, PLAN.md
+      pyproject_files: pyproject.toml
+      license_files: LICENSE
+      runtime_entrypoints: __none__
+      runtime_roots: __none__
+      changelog_file: CHANGELOG.md
+      changelog_header_prefix: '## Version'
+      readme_file: ''
+      pyproject_file: ''
+      selector_roles: readme, optional, pyproject, license
+      readme_globs: ''
+      readme_dirs: ''
+      optional_globs: ''
+      optional_dirs: ''
+      pyproject_globs: ''
+      pyproject_dirs: ''
+      license_globs: ''
+      license_dirs: ''
+    assets:
+    - AGENTS.md
+    - CHANGELOG.md
+    - CONTRIBUTING.md
+    - PLAN.md
+    - README.md
+    - SPEC.md
+    - devcovenant/README.md
+    - devcovenant/VERSION
+    core: true
+    script_exists: true
+    hash: d9cc23c140448bd5a9c77bb87d8268b33972b05eaf925ce33a85c1333427c81b
+    script_path: core/version_sync.py
+    last_updated: '2026-02-06T18:34:53.396643+00:00'
+  devcov-integrity-guard:
+    status: active
+    enabled: true
+    custom: false
+    description: Devcov Integrity Guard
+    policy_text: |-
+      Enforce DevCovenant policy integrity: every policy must include descriptive
+      text, AGENTS prose must match policy descriptors, the policy registry must
+      stay synchronized, and test-status metadata must validate when configured.
+    metadata:
+      id: devcov-integrity-guard
+      status: active
+      severity: error
+      auto_fix: 'false'
+      enforcement: active
+      enabled: 'true'
+      custom: 'false'
+      freeze: 'false'
+      profile_scopes: global
+      policy_definitions: AGENTS.md
+      registry_file: devcovenant/registry/local/policy_registry.yaml
+      test_status_file: devcovenant/registry/local/test_status.json
+      watch_dirs: ''
+      watch_files: ''
+      selector_roles: watch,watch_files
+      watch_globs: ''
+      watch_files_globs: ''
+      watch_files_files: ''
+      watch_files_dirs: ''
+    assets:
+    - AGENTS.md
+    - devcovenant/registry/local/policy_registry.yaml
+    - devcovenant/registry/local/test_status.json
+    core: true
+    script_exists: true
+    hash: b969ea2b070af9859fad92fe1a49481a6b82bd9b50d253b47fa8b165823bfa01
+    script_path: core/devcov_integrity_guard.py
+    last_updated: '2026-02-07T10:21:29.426976+00:00'
+metadata:
+  version: 1.0.0

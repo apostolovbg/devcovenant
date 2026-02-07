@@ -8,26 +8,31 @@
 - [Gitignore Regeneration](#gitignore-regeneration)
 
 ## Overview
-Refresh keeps the DevCovenant state consistent with the active profiles
-and policy descriptors. It rebuilds registries, updates managed blocks,
-regenerates `.gitignore`, and synchronizes assets. Refresh is designed to
-run safely in CI because it can skip touching user docs or config when
-needed.
+Refresh keeps DevCovenant registries and config autogen data consistent
+with the active profiles and policy descriptors. Managed docs and policy
+blocks are handled by deploy/update, while refresh focuses on registry
+state, profile registries, and profile-driven repo config such as the
+merged `.gitignore` and `.pre-commit-config.yaml`.
 
 ## Workflow
 1. Registry-only refresh runs at the start of each devcovenant command.
-2. Full refresh-all runs at the end of install/update by default.
-3. Use flags like `--skip-refresh` to bypass the final full refresh.
+2. Refresh-all runs at the end of deploy/update unless `--skip-refresh` is
+   set.
+3. Use the `refresh` command when you only need registries and config
+   autogen updated.
 
 ## Refresh-All
-Full refresh regenerates managed docs, policy blocks, registries, and
-profile-driven assets. It is used after install/update so the repo matches
-the latest policy descriptors.
+Refresh-all regenerates registries, the profile registry, config autogen
+sections, the merged `.gitignore`, and the generated
+`.pre-commit-config.yaml`. It does not touch managed docs or policy
+blocks.
 
 ## Registry-Only Refresh
-Registry-only refresh rebuilds local registry files without modifying
-managed docs or config (unless missing). This keeps CI runs deterministic
-without dirtying the working tree.
+Registry-only refresh rebuilds local registry files and profile registries
+without modifying managed docs, `.gitignore`, or
+`.pre-commit-config.yaml`. It also refreshes config autogen data while
+preserving user overrides. Missing runtime registry stubs (manifest,
+policy assets, test status) are created on demand.
 
 ## Gitignore Regeneration
 `.gitignore` is rebuilt from profile fragments and merged with any

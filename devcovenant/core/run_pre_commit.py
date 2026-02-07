@@ -110,16 +110,26 @@ def main() -> None:
     start_ts = _utc_now() if args.phase == "start" else None
     attempt = 0
     max_attempts = 5
+    force_tests = False
     while True:
         diff_before = _git_diff(repo_root)
         _run_command(args.command, env=env)
-        diff_after = _git_diff(repo_root)
-        if args.phase == "end" and diff_before != diff_after:
-            print(
-                "Detected changes after pre-commit; rerunning tests "
-                "and hooks."
-            )
+        diff_after_hooks = _git_diff(repo_root)
+        hooks_changed = diff_after_hooks != diff_before
+        tests_changed = False
+        if args.phase == "end" and (hooks_changed or force_tests):
+            if hooks_changed:
+                print(
+                    "Detected changes after pre-commit; rerunning tests "
+                    "to validate the updated tree."
+                )
+            elif force_tests:
+                print("Rerunning tests to validate prior fixer changes.")
             _run_tests(repo_root, env)
+            diff_after_tests = _git_diff(repo_root)
+            tests_changed = diff_after_tests != diff_after_hooks
+
+        if args.phase == "end" and (hooks_changed or tests_changed):
             attempt += 1
             if attempt >= max_attempts:
                 print(
@@ -127,6 +137,14 @@ def main() -> None:
                     "Failing end gate."
                 )
                 raise SystemExit(1)
+            if tests_changed:
+                print(
+                    "Detected changes after tests; rerunning hooks "
+                    "and tests."
+                )
+                force_tests = True
+            else:
+                force_tests = False
             print("Rerunning pre-commit hooks to verify clean tree...")
             continue
         break

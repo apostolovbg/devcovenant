@@ -31,6 +31,7 @@ def test_required_file_missing_marker(tmp_path: Path) -> None:
     context = CheckContext(repo_root=tmp_path, all_files=[doc_path])
     violations = checker.check(context)
     assert violations
+    assert any(violation.can_auto_fix for violation in violations)
 
 
 def test_last_updated_allowed_and_top_lines(tmp_path: Path) -> None:
@@ -69,6 +70,7 @@ def test_marker_in_non_allowlisted_file(tmp_path: Path) -> None:
     context = CheckContext(repo_root=tmp_path, all_files=[script_path])
     violations = checker.check(context)
     assert violations
+    assert all(not violation.can_auto_fix for violation in violations)
 
 
 def test_marker_after_third_line(tmp_path: Path) -> None:
@@ -90,6 +92,34 @@ def test_marker_after_third_line(tmp_path: Path) -> None:
     context = CheckContext(repo_root=tmp_path, all_files=[md_path])
     violations = checker.check(context)
     assert violations
+
+
+def test_stale_marker_on_touched_doc(tmp_path: Path) -> None:
+    """Touched allowlisted docs should refresh stale Last Updated markers."""
+    md_path = tmp_path / "README.md"
+    md_path.write_text(
+        "# Title\n**Last Updated:** 2020-01-01\n",
+        encoding="utf-8",
+    )
+
+    checker = last_updated_placement.LastUpdatedPlacementCheck()
+    checker.set_options(
+        {
+            "required_globs": "**/README.md",
+            "allowed_globs": "**/README.md",
+        },
+        {},
+    )
+    context = CheckContext(
+        repo_root=tmp_path,
+        all_files=[md_path],
+        changed_files=[md_path],
+    )
+    violations = checker.check(context)
+    assert violations
+    assert any(
+        "current UTC date" in violation.message for violation in violations
+    )
 
 
 def test_fix_inserts_marker(tmp_path: Path) -> None:

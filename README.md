@@ -1,5 +1,5 @@
 # DevCovenant
-**Last Updated:** 2026-02-05
+**Last Updated:** 2026-02-07
 **Version:** 0.2.6
 
 <!-- DEVCOV:BEGIN -->
@@ -26,7 +26,7 @@ at `devcovenant/README.md`.
 4. [Document assets](#document-assets)
 5. [Extended Docs](#extended-docs)
 6. [CLI Entry Points](#cli-entry-points)
-7. [Install, Update, Uninstall](#install-update-uninstall)
+7. [Install, Deploy, Update, Upgrade](#install-deploy-update-upgrade)
 8. [Workflow](#workflow)
 9. [Core Exclusion](#core-exclusion)
 10. [Dependency and License Tracking](#dependency-and-license-tracking)
@@ -73,7 +73,7 @@ eliminates that by making the documentation itself the executable spec.
   - `custom/policies/`: repo-specific policy overrides (same layout as core).
   - `custom/profiles/`: repo-specific profile overrides and assets.
   - `registry/`: generated registry files (`policy_registry.yaml`,
-    `manifest.json`, `profile_catalog.yaml`, `policy_assets.yaml`) that
+    `manifest.json`, `profile_registry.yaml`) that
     include live policy map metadata so tooling can read policy coverage
     without parsing `AGENTS.md`.
 - `devcovenant/registry/local/`: ephemeral local state such as
@@ -117,44 +117,41 @@ from day-to-day development. Start here:
 - `devcovenant/docs/workflow.md` for the enforced gate sequence.
 - `devcovenant/docs/troubleshooting.md` for common errors and fixes.
 
-## Install, Update, Uninstall
-Install DevCovenant into a target repository:
+## Install, Deploy, Update, Upgrade
+Install copies the DevCovenant core and writes a generic config stub. It
+never deploys managed docs or assets, so you can edit the config before the
+repo goes live:
 ```bash
 devcovenant install --target /path/to/repo
+# edit devcovenant/config.yaml (set install.generic_config: false)
+devcovenant deploy --target /path/to/repo
 ```
 
-Install is intended for new repos. Existing installs should use
-`devcovenant update` or uninstall/reinstall. On install,
-`CHANGELOG.md` and `CONTRIBUTING.md` are replaced when needed. Pass
-`--backup-existing` to keep `_old.md` copies; otherwise files overwrite
-in-place. The configured version file (default `VERSION`) defaults to
-`0.0.1` when missing.
-
-Update an existing installation while preserving policy blocks and
-metadata:
+Update refreshes managed docs/assets/registries using the existing core
+without upgrading core files:
 ```bash
-devcovenant update --target /path/to/repo --policy-mode preserve
+devcovenant update --target /path/to/repo
 ```
 
-Append missing stock policies without overwriting existing ones (the
-default update behavior):
+Upgrade replaces the core when the source version is newer, applies policy
+replacements, and then runs update:
 ```bash
-devcovenant update --target /path/to/repo --policy-mode append-missing
+devcovenant upgrade --target /path/to/repo
 ```
 
-Force overwrite docs or config when needed:
+Registry-only refresh skips managed docs/assets:
 ```bash
-devcovenant update --target /path/to/repo --force-docs
-
-devcovenant update --target /path/to/repo --force-config
+devcovenant refresh --target /path/to/repo
 ```
 
-Skip all doc/policy/metadata writes by appending `--no-touch` to `install` or
-`update`. That flag copies just the `devcovenant/` package (including the
-default `devcovenant/config.yaml`), leaves the rest of the repo untouched,
-and still records the run in `devcovenant/registry/local/manifest.json` so
-you can finish the install later when you are ready:
+Use `python3 -m devcovenant` for source checkouts when the console entry is
+not on PATH.
 
+Skip all doc/policy/metadata writes by appending `--no-touch` to install or
+update. That flag copies just the `devcovenant/` package, leaves the rest of
+the repo untouched, and still records the run in
+`devcovenant/registry/local/manifest.json` so you can finish the deploy
+later:
 ```bash
 devcovenant install --target /path/to/repo --no-touch
 devcovenant update --target /path/to/repo --no-touch
@@ -168,8 +165,8 @@ devcovenant normalize-metadata
 ```
 Schema defaults come from
 `devcovenant/core/profiles/global/assets/AGENTS.md`. Use `--schema` to
-point at another file and `--no-set-updated` if you do not want
-`updated: true` applied to changed policies.
+point at another file if you need to seed metadata from a different
+template.
 
 Selector roles
 --------------
@@ -216,8 +213,8 @@ During `--phase end`, if pre-commit modifies files, the script automatically
 reruns `devcovenant/run_tests.py` before recording the end timestamp so
 tests always post-date any auto-fixes.
 
-When policy blocks change, set `updated: true`, run
-`devcovenant update-policy-registry`, then reset the flag.
+When policy blocks change, run `devcovenant update-policy-registry` to
+sync policy hashes.
 
 ## Core Exclusion
 User repos should keep DevCovenant core excluded from enforcement so updates

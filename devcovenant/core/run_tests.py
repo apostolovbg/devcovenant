@@ -48,8 +48,28 @@ def _registry_required_commands(
     gates = (registry_data.get("policies") or {}).get(
         "devflow-run-gates"
     ) or {}
-    metadata_values = gates.get("metadata_values") or {}
-    raw_commands = metadata_values.get("required_commands") or []
+    metadata_map = gates.get("metadata") or {}
+    raw_commands = metadata_map.get("required_commands") or []
+    if isinstance(raw_commands, str):
+        raw_commands = [
+            item.strip()
+            for item in raw_commands.replace("\n", ",").split(",")
+            if item.strip()
+        ]
+    elif isinstance(raw_commands, list):
+        normalized: list[object] = []
+        for command_entry in raw_commands:
+            if isinstance(command_entry, str):
+                normalized.extend(
+                    entry.strip()
+                    for entry in command_entry.replace("\n", ",").split(",")
+                    if entry.strip()
+                )
+            else:
+                normalized.append(command_entry)
+        raw_commands = normalized
+    else:
+        raw_commands = []
 
     commands: list[tuple[str, list[str]]] = []
     for entry in raw_commands:

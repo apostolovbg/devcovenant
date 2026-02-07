@@ -1,28 +1,27 @@
-"""Tests for policy replacement workflow in updates."""
+"""Tests for policy replacement workflow in upgrades."""
 
 from pathlib import Path
 
 import pytest
 
 from devcovenant.core import manifest as manifest_module
-from devcovenant.core import policy_replacements, update
+from devcovenant.core import policy_replacements, upgrade
 
 
 def _with_skip_refresh(args: list[str]) -> list[str]:
-    """Append the skip-refresh flag to speed up update tests."""
+    """Append the skip-refresh flag to speed up upgrade tests."""
     return [*args, "--skip-refresh"]
 
 
-def _write_agents(path: Path, apply_value: str) -> None:
+def _write_agents(path: Path, enabled_value: str) -> None:
     """Write a minimal AGENTS.md file with one policy."""
     metadata = (
         "id: old-policy\n"
         "status: active\n"
         "severity: warning\n"
         "auto_fix: false\n"
-        "updated: false\n"
         "enforcement: active\n"
-        f"apply: {apply_value}\n"
+        f"enabled: {enabled_value}\n"
         "custom: false\n"
     )
     text = (
@@ -46,7 +45,7 @@ def replacement_map() -> dict[str, policy_replacements.PolicyReplacement]:
     return {"old-policy": replacement}
 
 
-def test_update_migrates_replaced_policy(
+def test_upgrade_migrates_replaced_policy(
     tmp_path: Path, monkeypatch, replacement_map
 ) -> None:
     """Enabled replaced policies should move to custom with deprecation."""
@@ -71,7 +70,7 @@ def test_update_migrates_replaced_policy(
         lambda _root: replacement_map,
     )
 
-    update.main(
+    upgrade.main(
         _with_skip_refresh(["--target", str(target), "--version", "0.2.0"])
     )
 
@@ -107,7 +106,7 @@ def test_update_migrates_replaced_policy(
     assert any("old-policy" in entry["message"] for entry in notifications)
 
 
-def test_update_removes_disabled_replaced_policy(
+def test_upgrade_removes_disabled_replaced_policy(
     tmp_path: Path, monkeypatch, replacement_map
 ) -> None:
     """Disabled replaced policies should be removed entirely."""
@@ -129,7 +128,7 @@ def test_update_removes_disabled_replaced_policy(
         lambda _root: replacement_map,
     )
 
-    update.main(
+    upgrade.main(
         _with_skip_refresh(["--target", str(target), "--version", "0.2.0"])
     )
 

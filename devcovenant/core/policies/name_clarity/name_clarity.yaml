@@ -5,13 +5,9 @@ text: |
   explicitly justified.
 metadata:
   id: name-clarity
-  status: active
   severity: warning
   auto_fix: 'false'
-  updated: 'false'
   enforcement: active
-  apply: 'true'
-  custom: 'false'
   profile_scopes:
     - python
     - javascript

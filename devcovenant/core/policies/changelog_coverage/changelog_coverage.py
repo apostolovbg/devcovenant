@@ -106,22 +106,77 @@ def _first_entry(section: str) -> tuple[str | None, str]:
 _DATE_PATTERN = re.compile(r"^\s*-\s*(\d{4}-\d{2}-\d{2})\b")
 
 
-def _extract_entry_summary(entry_text: str) -> str:
-    """Return the summary text from the first entry line."""
-    for line in entry_text.splitlines():
-        match = _DATE_PATTERN.match(line)
-        if not match:
+def _extract_summary_lines(
+    entry_text: str, labels: list[str]
+) -> dict[str, str]:
+    """Return a mapping of summary labels to their text."""
+    summaries: dict[str, str] = {}
+    if not labels:
+        return summaries
+    lower_labels = {label.lower(): label for label in labels}
+    after_date = False
+    for raw_line in entry_text.splitlines():
+        if not after_date:
+            if _DATE_PATTERN.match(raw_line):
+                after_date = True
             continue
-        if ":" in line:
-            return line.split(":", 1)[1].strip()
-        return ""
-    return ""
+        stripped = raw_line.strip()
+        if not stripped:
+            continue
+        if stripped.lower().startswith("files:"):
+            break
+        for lower_label, label in lower_labels.items():
+            prefix = f"{lower_label}:"
+            if stripped.lower().startswith(prefix):
+                summary_value = stripped.split(":", 1)[1].strip()
+                if summary_value:
+                    summaries[label] = summary_value
+                break
+    return summaries
 
 
-def _summary_is_descriptive(summary: str, minimum_words: int) -> bool:
-    """Return True when the summary looks like a real description."""
-    words = re.findall(r"[A-Za-z]{2,}", summary)
-    return len(words) >= minimum_words
+def _normalize_labels(raw_value: object, default: list[str]) -> list[str]:
+    """Normalize summary labels metadata into a list."""
+    if raw_value is None:
+        return default
+    if isinstance(raw_value, str):
+        entries = [item.strip() for item in raw_value.split(",") if item]
+        return entries or default
+    if isinstance(raw_value, list):
+        entries = [
+            str(item).strip() for item in raw_value if str(item).strip()
+        ]
+        return entries or default
+    return default
+
+
+def _normalize_verbs(raw_value: object, default: list[str]) -> list[str]:
+    """Normalize summary verb metadata into a lowercased list."""
+    if raw_value is None:
+        return [verb.lower() for verb in default if verb]
+    if isinstance(raw_value, str):
+        entries = [item.strip() for item in raw_value.split(",") if item]
+    elif isinstance(raw_value, list):
+        entries = [
+            str(item).strip() for item in raw_value if str(item).strip()
+        ]
+    else:
+        entries = [str(raw_value).strip()]
+    verbs = [verb.lower() for verb in entries if verb]
+    return verbs or [verb.lower() for verb in default if verb]
+
+
+def _line_has_verb(line: str, verbs: list[str]) -> bool:
+    """Return True if any configured verb appears as a whole word."""
+    if not line or not verbs:
+        return False
+    lower_line = line.lower()
+    for verb in verbs:
+        if not verb:
+            continue
+        if re.search(rf"\b{re.escape(verb)}\b", lower_line):
+            return True
+    return False
 
 
 def _normalize_globs(raw_value: object) -> list[str]:
@@ -137,19 +192,79 @@ def _normalize_globs(raw_value: object) -> list[str]:
     return [str(raw_value).strip()]
 
 
-def _parse_min_words(raw_value: object, default: int) -> int:
-    """Parse the minimum summary word count."""
-    if raw_value is None:
-        return default
-    try:
-        if isinstance(raw_value, list):
-            if not raw_value:
-                return default
-            raw_value = raw_value[0]
-        parsed_value = int(str(raw_value).strip())
-        return parsed_value if parsed_value > 0 else default
-    except (TypeError, ValueError):
-        return default
+_DEFAULT_SUMMARY_LABELS = ["Change", "Why", "Impact"]
+_DEFAULT_SUMMARY_VERBS = [
+    "add",
+    "added",
+    "adjust",
+    "adjusted",
+    "align",
+    "aligned",
+    "amend",
+    "amended",
+    "automate",
+    "automated",
+    "build",
+    "built",
+    "bump",
+    "bumped",
+    "clean",
+    "cleaned",
+    "clarify",
+    "clarified",
+    "consolidate",
+    "consolidated",
+    "correct",
+    "corrected",
+    "create",
+    "created",
+    "define",
+    "defined",
+    "deprecate",
+    "deprecated",
+    "document",
+    "documented",
+    "drop",
+    "dropped",
+    "enable",
+    "enabled",
+    "expand",
+    "expanded",
+    "fix",
+    "fixed",
+    "harden",
+    "hardened",
+    "improve",
+    "improved",
+    "introduce",
+    "introduced",
+    "migrate",
+    "migrated",
+    "normalize",
+    "normalized",
+    "refactor",
+    "refactored",
+    "remove",
+    "removed",
+    "rename",
+    "renamed",
+    "replace",
+    "replaced",
+    "restructure",
+    "restructured",
+    "revise",
+    "revised",
+    "streamline",
+    "streamlined",
+    "support",
+    "supported",
+    "update",
+    "updated",
+    "upgrade",
+    "upgraded",
+    "wrap",
+    "wrapped",
+]
 
 
 def _extract_entry_files(entry_text: str) -> list[str]:
@@ -251,8 +366,11 @@ class ChangelogCoverageCheck(PolicyCheck):
             ]
         skip_prefixes = [entry.rstrip("/") for entry in skip_prefixes if entry]
         skip_globs = _normalize_globs(self.get_option("skipped_globs", []))
-        summary_words_min = _parse_min_words(
-            self.get_option("summary_words_min"), default=10
+        summary_labels = _normalize_labels(
+            self.get_option("summary_labels"), _DEFAULT_SUMMARY_LABELS
+        )
+        summary_verbs = _normalize_verbs(
+            self.get_option("summary_verbs"), _DEFAULT_SUMMARY_VERBS
         )
 
         collections = self._resolve_collections(
@@ -384,26 +502,62 @@ class ChangelogCoverageCheck(PolicyCheck):
                             can_auto_fix=False,
                         )
                     )
-                summary = _extract_entry_summary(first_entry)
-                if not _summary_is_descriptive(summary, summary_words_min):
+                summary_lines = _extract_summary_lines(
+                    first_entry, summary_labels
+                )
+                missing_labels = [
+                    label
+                    for label in summary_labels
+                    if label not in summary_lines
+                ]
+                if missing_labels:
+                    labels_str = ", ".join(missing_labels)
                     violations.append(
                         Violation(
                             policy_id=self.policy_id,
                             severity="error",
                             file_path=root_changelog,
                             message=(
-                                "Provide a descriptive summary for the latest "
-                                "changelog entry (at least "
-                                f"{summary_words_min} words)."
+                                "Latest changelog entry must include labeled "
+                                f"summary lines for: {labels_str}."
                             ),
                             suggestion=(
-                                "Update the latest entry summary so it "
-                                "describes the change in plain language."
+                                "Add Change/Why/Impact summary lines directly "
+                                "under the dated entry."
                             ),
                             can_auto_fix=False,
                         )
                     )
+                else:
+                    missing_verbs = [
+                        label
+                        for label in summary_labels
+                        if not _line_has_verb(
+                            summary_lines.get(label, ""), summary_verbs
+                        )
+                    ]
+                    if missing_verbs:
+                        labels_str = ", ".join(missing_verbs)
+                        violations.append(
+                            Violation(
+                                policy_id=self.policy_id,
+                                severity="error",
+                                file_path=root_changelog,
+                                message=(
+                                    "Summary lines must include an action "
+                                    f"verb from the configured list. Missing "
+                                    f"verbs in: {labels_str}."
+                                ),
+                                suggestion=(
+                                    "Revise the Change/Why/Impact lines to "
+                                    "include a clear action verb."
+                                ),
+                                can_auto_fix=False,
+                            )
+                        )
                 entry_files = _extract_entry_files(first_entry)
+                can_fix_files = first_date == today and bool(main_files)
+                fix_context = {"expected_files": list(main_files)}
                 if not entry_files:
                     violations.append(
                         Violation(
@@ -418,7 +572,8 @@ class ChangelogCoverageCheck(PolicyCheck):
                                 "Add a Files: block under the latest entry "
                                 "and list each modified path."
                             ),
-                            can_auto_fix=False,
+                            can_auto_fix=can_fix_files,
+                            context=fix_context,
                         )
                     )
                 missing = [
@@ -441,7 +596,8 @@ class ChangelogCoverageCheck(PolicyCheck):
                                 f"{main_changelog_rel.as_posix()} "
                                 f"documenting changes to: {files_str}"
                             ),
-                            can_auto_fix=False,
+                            can_auto_fix=can_fix_files,
+                            context=fix_context,
                         )
                     )
                 extra = [
@@ -463,7 +619,8 @@ class ChangelogCoverageCheck(PolicyCheck):
                                 "keep the latest entry focused on this "
                                 "change only."
                             ),
-                            can_auto_fix=False,
+                            can_auto_fix=can_fix_files,
+                            context=fix_context,
                         )
                     )
 
@@ -553,27 +710,67 @@ class ChangelogCoverageCheck(PolicyCheck):
                                 can_auto_fix=False,
                             )
                         )
-                    summary = _extract_entry_summary(entry_text)
-                    if not _summary_is_descriptive(summary, summary_words_min):
+                    summary_lines = _extract_summary_lines(
+                        entry_text, summary_labels
+                    )
+                    missing_labels = [
+                        label
+                        for label in summary_labels
+                        if label not in summary_lines
+                    ]
+                    if missing_labels:
+                        labels_str = ", ".join(missing_labels)
                         violations.append(
                             Violation(
                                 policy_id=self.policy_id,
                                 severity="error",
                                 file_path=changelog_path,
                                 message=(
-                                    "Provide a descriptive summary for the "
-                                    f"latest {prefix_label} changelog entry "
-                                    "(at least "
-                                    f"{summary_words_min} words)."
+                                    "Latest changelog entry must include "
+                                    "labeled summary lines for: "
+                                    f"{labels_str}."
                                 ),
                                 suggestion=(
-                                    "Update the latest entry summary so it "
-                                    "describes the change in plain language."
+                                    "Add Change/Why/Impact summary lines "
+                                    "directly under the dated entry."
                                 ),
                                 can_auto_fix=False,
                             )
                         )
+                    else:
+                        missing_verbs = [
+                            label
+                            for label in summary_labels
+                            if not _line_has_verb(
+                                summary_lines.get(label, ""), summary_verbs
+                            )
+                        ]
+                        if missing_verbs:
+                            labels_str = ", ".join(missing_verbs)
+                            violations.append(
+                                Violation(
+                                    policy_id=self.policy_id,
+                                    severity="error",
+                                    file_path=changelog_path,
+                                    message=(
+                                        "Summary lines must include an action "
+                                        "verb from the configured list. "
+                                        f"Missing verbs in: {labels_str}."
+                                    ),
+                                    suggestion=(
+                                        "Revise the Change/Why/Impact lines "
+                                        "to include a clear action verb."
+                                    ),
+                                    can_auto_fix=False,
+                                )
+                            )
                     entry_files = _extract_entry_files(entry_text)
+                    can_fix_files = entry_date == today and bool(
+                        files_for_collection
+                    )
+                    fix_context = {
+                        "expected_files": list(files_for_collection)
+                    }
                     if not entry_files:
                         violations.append(
                             Violation(
@@ -588,7 +785,8 @@ class ChangelogCoverageCheck(PolicyCheck):
                                     "Add a Files: block under the latest "
                                     "entry and list each modified path."
                                 ),
-                                can_auto_fix=False,
+                                can_auto_fix=can_fix_files,
+                                context=fix_context,
                             )
                         )
                     missing_entries = [
@@ -612,7 +810,8 @@ class ChangelogCoverageCheck(PolicyCheck):
                                     f"{changelog_rel.as_posix()} documenting "
                                     f"changes to: {files_str}"
                                 ),
-                                can_auto_fix=False,
+                                can_auto_fix=can_fix_files,
+                                context=fix_context,
                             )
                         )
                     extra_entries = [
@@ -636,7 +835,8 @@ class ChangelogCoverageCheck(PolicyCheck):
                                     "and keep the latest entry focused on "
                                     "this change only."
                                 ),
-                                can_auto_fix=False,
+                                can_auto_fix=can_fix_files,
+                                context=fix_context,
                             )
                         )
 

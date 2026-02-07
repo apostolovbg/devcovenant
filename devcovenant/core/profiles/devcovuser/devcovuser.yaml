@@ -7,28 +7,76 @@ ignore_dirs:
   - third_party
   - node_modules
 assets:
+  - path: devcovenant/config.yaml
+    template: config.yaml
+    mode: skip
   - path: .gitignore
     template: .gitignore
     mode: merge
 policy_overlays:
   changelog-coverage:
     skipped_prefixes:
-      - devcovenant/core
-      - devcovenant/__init__.py
-      - devcovenant/__main__.py
-      - devcovenant/cli.py
-      - devcovenant/registry
-      - devcovenant/run_pre_commit.py
-      - devcovenant/run_tests.py
-      - devcovenant/update_test_status.py
-      - devcovenant/core/check.py
+      - devcovenant
+      - tests/devcovenant
     skipped_globs:
       - "*_old.*"
+  version-sync:
+    version_file: VERSION
+    readme_files:
+      - README.md
+      - AGENTS.md
+      - CONTRIBUTING.md
+      - SPEC.md
+      - PLAN.md
+    optional_files:
+      - SPEC.md
+      - PLAN.md
+    license_files:
+      - LICENSE
+  last-updated-placement:
+    allowed_globs:
+      - README.md
+      - AGENTS.md
+      - CONTRIBUTING.md
+      - CHANGELOG.md
+      - SPEC.md
+      - PLAN.md
+  documentation-growth-tracking:
+    exclude_prefixes:
+      - devcovenant
+      - tests/devcovenant
+    user_facing_exclude_prefixes:
+      - devcovenant
+      - tests/devcovenant
+  line-length-limit:
+    exclude_prefixes:
+      - devcovenant
+    force_include_globs:
+      - devcovenant/custom/**
+      - tests/devcovenant/custom/**
+  name-clarity:
+    exclude_prefixes:
+      - devcovenant
+    force_include_globs:
+      - devcovenant/custom/**
+      - tests/devcovenant/custom/**
+  docstring-and-comment-coverage:
+    exclude_prefixes:
+      - devcovenant
+    force_include_globs:
+      - devcovenant/custom/**
+      - tests/devcovenant/custom/**
+  security-scanner:
+    exclude_prefixes:
+      - devcovenant
+    force_include_globs:
+      - devcovenant/custom/**
+      - tests/devcovenant/custom/**
   new-modules-need-tests:
     exclude_prefixes:
       - devcovenant
     include_prefixes:
       - devcovenant/custom
-autogen_do_not_apply: []
+autogen_disable: []
 policies:
   - new-modules-need-tests

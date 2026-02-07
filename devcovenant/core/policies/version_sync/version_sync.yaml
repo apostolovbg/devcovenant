@@ -7,13 +7,9 @@ text: |
   releases reflect the current version.
 metadata:
   id: version-sync
-  status: active
   severity: error
   auto_fix: 'false'
-  updated: 'false'
   enforcement: active
-  apply: 'true'
-  custom: 'false'
   profile_scopes:
     - global
     - docs
