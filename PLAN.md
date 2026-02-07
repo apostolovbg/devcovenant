@@ -162,7 +162,7 @@ It is the checklist we consult before declaring the spec satisfied.
 - [done] Materialize expanded POLICY_MAP/PROFILE_MAP expectations: ensure
   profiles/policies/assets/adapters/fixers match the reference maps and keep
   the maps authoritative for future additions.
-- [done] Align POLICY_MAP scopes with retained profiles: add fastapi,
+- [done] Align POLICY_MAP coverage with retained profiles: add fastapi,
   frappe, objective-c, and sql where supported (dependency-license-sync,
   docstring-and-comment-coverage, name-clarity, new-modules-need-tests,
   security-scanner, documentation-growth-tracking, line-length-limit,
@@ -171,32 +171,31 @@ It is the checklist we consult before declaring the spec satisfied.
 - [done] Per-profile descriptors (`<profile>.yaml`) must be populated manually
   (maps are reference only); stubs have been fleshed out with real assets and
   overlays for the retained registry.
-- [done] Profile-first scoping: policies run only when a profile lists them
-  (including `global`, which now activates all global policies explicitly).
-  Policy `profile_scopes` stay as documentation only. Profiles are
-  explicit—no inheritance; each profile lists its own assets, suffixes,
-  policies, and overlays. Custom policies remain opt-in via custom profiles
-  or config overrides (not implicitly active in `global`).
+- [not done] Remove profile-first policy activation and scope semantics.
+  Policies must activate from config-only `policy_state`, while profiles stay
+  explicit metadata/assets providers (no inheritance, no activation logic).
 
 ### Policy metadata redesign
+- [not done] Immediate redesign: remove policy/profile scope keys entirely,
+  make config activation authoritative via `policy_state`, and keep metadata
+  resolution as policy defaults -> profile overlays -> user overrides.
+  During migration, preserve current enabled/disabled outcomes in the
+  generated config state map.
 - [done] Define per-policy YAML descriptors that include the managed
   prose, selector metadata, and a `metadata` block whose keys describe the
   schema while also supplying the baseline values that feed into AGENTS and
   the registry. The canonical schema no longer lives in a separate
   hand-written file; it is inferred from the keys declared inside each
   policy’s `metadata`.
-- [done] Use provenance (core vs. frozen/custom loading path) to derive
-  `custom`/`enabled`/`freeze` in the generated metadata instead of retaining
-  explicit `status` or `updated` keys. `metadata` may still expose knobs such
-  as `profile_scopes`, `selector_roles`, or `enforcement`, while the generator
-  records the final `enabled`/`freeze`/`severity` values after applying
-  overrides.
-- [done] Introduce config keys `autogen_disable`,
-  `manual_force_enable`, `freeze_core_policies`, and
-  `user_metadata_overrides` so the active profile can flip `enabled`/`freeze`
-  and mutate `enforcement`, `severity`, selectors, or any schema value without
-  editing the policy YAMLs. The refresh command merges those lists/maps before
-  emitting AGENTS and registry entries so docs remain declarative.
+- [not done] Keep provenance (`core` vs. `custom`) for origin reporting only.
+  Remove scope keys entirely and derive `enabled` strictly from config
+  `policy_state`; generator still records final `enabled`/`freeze`/`severity`
+  after metadata overrides resolve.
+- [not done] Replace `autogen_disable` and `manual_force_enable` with a single
+  config activation map (`policy_state`) that controls all core/custom
+  policies uniformly. Keep `freeze_core_policies` and
+  `user_metadata_overrides`; metadata merge remains policy defaults -> profile
+  overlays -> user overrides.
 - [done] Record every policy in
   `devcovenant/registry/local/policy_registry.yaml` with a single resolved
   metadata map (no schema/value split). The generator and AGENTS templating
@@ -207,10 +206,9 @@ It is the checklist we consult before declaring the spec satisfied.
   `devcovenant/custom/policies/` (or a frozen overlay prescribed in config),
   mark the new entry as `custom`, and rerun `update-policy-registry` so all
   downstream artifacts report the deprecation rather than leaving dangling IDs.
-- [done] Scope `raw-string-escapes` to the python profile and default it to
-  `enabled: false` via the python profile’s `autogen_disable` list.
-  Add the repo-only `devcov-raw-string-escapes` custom policy for
-  DevCovenant’s own enforcement.
+- [not done] Keep `raw-string-escapes` and `devcov-raw-string-escapes`, but
+  control both via config `policy_state` (no scope keys, no autogen disable
+  list).
 
 ### Installation & documentation
 - [done] Implement the lifecycle commands per SPEC: `install`, `deploy`,
@@ -329,26 +327,30 @@ It is the checklist we consult before declaring the spec satisfied.
 ## Outstanding work (dependency order)
 Below is every missing SPEC requirement, ordered by dependency.
 
-1. **Config/schema coverage and registries.** [not done]
+1. **Activation + scope simplification (immediate).** [not done]
+   Remove policy/profile scope keys from policy/profile metadata and generated
+   artifacts, switch activation to config-only `policy_state`, and preserve the
+   current enabled/disabled state during migration.
+2. **Config/schema coverage and registries.** [not done]
    Expose `devcov_core_include`, `devcov_core_paths`, `doc_assets`, and
    `profiles.generated.file_suffixes`; ensure profile/policy assets live under
    `core/` and `custom/` with registries emitted to
    `profile_registry.yaml`.
-2. **Managed policy block regeneration.** [not done]
+3. **Managed policy block regeneration.** [not done]
    Treat the `<!-- DEVCOV-POLICIES -->` block as a managed unit, have `update`
    regenerate policy blocks from descriptors + overrides without extra flags,
    and always regenerate AGENTS from the managed template while preserving the
    editable section.
-3. **Managed docs pipeline completion.** [not done]
+4. **Managed docs pipeline completion.** [not done]
    Ensure all managed docs include `Last Updated`/`Version` headers and
    top-of-file managed blocks; update docs to mention `python3` usage; ensure
    `devcovenant/README.md` includes the packaged DevCovenant Version; and
    sync `README.md`, `SPEC.md`, `PLAN.md`, `CHANGELOG.md`, and
    `CONTRIBUTING.md` from YAML assets (rebuild SPEC/PLAN when missing) while
    deploy/update refresh only managed blocks + headers.
-4. **Gitignore regeneration.** [not done]
+5. **Gitignore regeneration.** [not done]
    Rebuild `.gitignore` from profile fragments while preserving user entries.
-5. **Noise control + mirrors for devcovuser/devcovrepo.** [not done]
+6. **Noise control + mirrors for devcovuser/devcovrepo.** [not done]
    Expand `devcovuser` overlays to exclude `devcovenant/**` from noise-prone
    policies while keeping `devcovenant/custom/**` and
    `tests/devcovenant/custom/**` enforced; define mirror rules for
@@ -356,19 +358,19 @@ Below is every missing SPEC requirement, ordered by dependency.
    `devcovenant/custom` and `tests/devcovenant/**` while pruning devcovrepo
    overrides when `devcov_core_include` is false; document the mirror
    behavior.
-6. **Lifecycle extras and environment gating.** [not done]
+7. **Lifecycle extras and environment gating.** [not done]
    Implement `reset-to-stock`, keep `managed-environment` off by default with
    warnings when metadata is missing, and define version-file fallback and
    license fallback behaviors.
-7. **Packaging & test execution.** [not done]
+8. **Packaging & test execution.** [not done]
    Ship a pure-Python package with a console script entry and ensure
    `run_tests` executes the required command list for mixed stacks.
-8. **CLI command placement cleanup.** [not done]
+9. **CLI command placement cleanup.** [not done]
    Keep CLI helpers inside `devcovenant/` and expose the standard commands.
-9. **Legacy debris cleanup.** [not done]
+10. **Legacy debris cleanup.** [not done]
    Remove obsolete artifacts (e.g., `devcovenant/registry.json` and the GPL
    template) from manifests/install lists and policy references.
-10. **Adapter expansion.** [not done]
+11. **Adapter expansion.** [not done]
    Extract language-specific logic into adapters for the core policies and
    build adapters for languages listed in POLICY_MAP (or trim scopes).
 

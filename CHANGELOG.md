@@ -34,6 +34,17 @@ Example entry:
 ## Version 0.2.6
 
 - 2026-02-07:
+  Change: Updated PLAN and SPEC to keep activation migration tasks explicit.
+  Why: Clarified immediate scope-removal work so implementation order stays
+  aligned.
+  Impact: Updated contributor guidance so config-only activation migration
+  stays aligned.
+  Files:
+  PLAN.md
+  SPEC.md
+  devcovenant/registry/local/test_status.json
+
+- 2026-02-07:
   Change: Updated changelog-coverage to require Change/Why/Impact verbs.
   Why: Clarified summary expectations to avoid vague entries.
   Impact: Users see updated change notes with explicit actions.

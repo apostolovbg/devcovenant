@@ -59,9 +59,9 @@ hashes synchronized so drift is detectable and reversible.
 - Expose `restore-stock-text` to reset policy prose to canonical wording.
 - Support `custom: true/false` metadata to mark custom policy prose that
   bypasses stock text sync checks.
-- Provide an optional semantic-version-scope policy (`enabled: false` by
-  default) that requires one SemVer scope tag in the latest changelog
-  entry and matches the bump to major/minor/patch semantics.
+- Provide an optional semantic-version-scope policy (disabled by default in
+  config `policy_state`) that requires one SemVer scope tag in the latest
+  changelog entry and matches the bump to major/minor/patch semantics.
 - Resolve policy metadata from policy YAML defaults, active profile overlays,
   and user config overrides. The resolved metadata is written into
   `AGENTS.md`, which always lists every policy (core + custom) and shows the
@@ -306,8 +306,8 @@ hashes synchronized so drift is detectable and reversible.
   this SPEC section and clarifies the merge metadata keys.
 - Add tests verifying the generated config matches the manifest for sample
   profile combinations.
-- Assets install only when a policy is enabled and its `profile_scopes`
-  match active profiles.
+- Assets install only when a policy is enabled in config. Scope keys are
+  removed; applicability is driven by resolved metadata and adapter support.
 - Template indexes live at `devcovenant/core/profiles/README.md` and
   `devcovenant/core/policies/README.md`.
 - Profile assets and policy overlays live in profile manifests at
@@ -331,20 +331,16 @@ hashes synchronized so drift is detectable and reversible.
   metadata block.
 - Built-in policies have canonical text stored in
   `devcovenant/registry/global/stock_policy_texts.yaml`.
-- Policies are activated by profiles: a policy is active only when an active
-  profile lists it (or config forces it on). `AGENTS.md` still lists every
-  policy (core + custom); the resolved `enabled` flag reflects activation from
-  profile lists plus `autogen_disable`/`manual_force_enable`. Policy YAML
-  `profile_scopes` are defaults and remain visible in resolved metadata; they
-  are not trimmed to active profiles. POLICY_MAP.md and PROFILE_MAP.md are the
-  authoritative references for required assets, adapters, policies, and
-  overlays; keep them aligned with the manifests and code.
-- POLICY_MAP scopes mirror the retained profile registry: add fastapi, frappe,
-  objective-c, and sql where supported (dependency-license-sync, docstring-
-  and-comment-coverage, name-clarity, new-modules-need-tests, security-
-  scanner, documentation-growth-tracking, line-length-limit, version-sync)
-  and remove deprecated stacks (kotlin, scala, groovy, dotnet, fsharp, elixir,
-  erlang, haskell, clojure, julia, ocaml, crystal, ansible).
+- Policies are activated only by config (`policy_state`), not by policy/profile
+  scopes. `AGENTS.md` still lists every policy (core + custom); the resolved
+  `enabled` flag reflects config state.
+- Immediate outstanding migration: remove any remaining scope-key and
+  profile-first activation code paths so runtime behavior fully matches the
+  config-only activation model.
+- Policy and profile scope keys are removed. Profiles still contribute metadata
+  overlays and assets; policy YAML still carries defaults. POLICY_MAP.md and
+  PROFILE_MAP.md remain the references for required assets, adapters, policies,
+  and overlays; keep them aligned with manifests and code.
 - `dependency-license-sync` must be manifest-agnostic: profiles or config
   overlays provide `dependency_files`, while the core policy metadata remains
   general. The devcovrepo profile sets DevCovenant’s own dependency
@@ -369,8 +365,8 @@ its own assets, suffixes, policies, and overlays.
   `Files:` block listing exactly the touched paths. Changelog entries remain
   newest-first (descending dates).
 - `enabled: false` disables enforcement without removing definitions.
-- Provide a `managed-environment` policy (off by default via policy
-  metadata `enabled: false`) that enforces execution inside the expected
+- Provide a `managed-environment` policy (off by default via config
+  `policy_state`) that enforces execution inside the expected
   environment when `enabled: true`. It must warn when `expected_paths` or
   `expected_interpreters` are empty, warn when `command_hints`
   are missing, and report missing `required_commands` as warnings.
@@ -433,7 +429,6 @@ its own assets, suffixes, policies, and overlays.
     Every substantive change must be recorded ...
   metadata:
     severity: error
-    profile_scopes: [global]
     include_suffixes: [.md]
     selectors:
       include_files: [...]
@@ -443,27 +438,26 @@ its own assets, suffixes, policies, and overlays.
   appear in every policy block; policy-specific keys are emitted even when
   empty.
 - Metadata resolution order is policy defaults → profile overlays → user
-  overrides. The resolved metadata is written into `AGENTS.md` for every
-  policy (active or not), with `enabled` reflecting activation. Metadata is
-  rendered in vertical YAML-style lines (lists continue on indented lines)
-  rather than comma-joined horizontal values. The registry mirrors the
-  resolved map for runtime use.
+  overrides. If no profile declares a metadata key, the policy default is kept.
+  The resolved metadata is written into `AGENTS.md` for every policy (active or
+  not), with `enabled` reflecting config activation. Metadata is rendered in
+  vertical YAML-style lines (lists continue on indented lines) rather than
+  comma-joined horizontal values. The registry mirrors the resolved map for
+  runtime use.
 - When DevCovenant removes a core policy, the updater copies it to
   `devcovenant/custom/policies/` (or a frozen overlay defined in config),
   marks the new copy as `custom`, and reruns `update-policy-registry` so the
   management docs, notices, and registry reflect the deprecated version.
 - `config.yaml` exposes:
-  - `autogen_disable`: profile-driven list that sets `enabled: false`.
-  - `manual_force_enable`: list that forces `enabled: true`.
+  - `policy_state`: policy ID → `true|false` activation map (authoritative).
   - `freeze_core_policies`: list whose IDs toggle `freeze: true`.
   - `user_metadata_overrides`: policy ID → override map applied last.
 - Config-defined overrides replace the targeted keys (no implicit append).
 - Core profiles stay immutable; attach custom policy metadata via custom
   profiles and overlays rather than editing core profile YAML.
-- `raw-string-escapes` remains a core policy, but it is scoped to `python`
-  metadata only and defaults to `enabled: false` via the python profile’s
-  `autogen_disable` overlay. Users can enable it via
-  `manual_force_enable`.
+- `raw-string-escapes` remains a core policy and defaults to `enabled: false`
+  via `policy_state` in config; users enable it by setting
+  `policy_state.raw-string-escapes: true`.
 - Add a repo-specific `devcov-raw-string-escapes` custom policy for the
   DevCovenant repo only; do not ship that custom policy in user installs.
 
