@@ -364,7 +364,7 @@ class DevCovenantEngine:
                 print(f"4. Run tests: pytest {test_file} -v")
 
             print(
-                "6. Re-run devcovenant update-policy-registry "
+                "6. Re-run devcovenant refresh_registry "
                 "to sync policy hashes"
             )
             print()

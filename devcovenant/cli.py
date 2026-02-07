@@ -72,9 +72,7 @@ def main() -> None:
             "check",
             "sync",
             "test",
-            "update-policy-registry",
-            "refresh-registry",
-            "restore-stock-text",
+            "refresh_registry",
             "refresh-policies",
             "refresh-all",
             "normalize-metadata",
@@ -113,15 +111,6 @@ def main() -> None:
         type=Path,
         default=Path("."),
         help="Target repository for install/uninstall commands.",
-    )
-    parser.add_argument(
-        "--policy",
-        help="Policy id to restore stock text for (restore-stock-text only).",
-    )
-    parser.add_argument(
-        "--all",
-        action="store_true",
-        help="Restore stock text for all built-in policies.",
     )
     parser.add_argument(
         "--agents",
@@ -265,9 +254,8 @@ def main() -> None:
         "check",
         "sync",
         "test",
-        "update-policy-registry",
+        "refresh_registry",
         "normalize-metadata",
-        "restore-stock-text",
         "deploy",
         "update",
         "upgrade",
@@ -289,11 +277,9 @@ def main() -> None:
         _print_step(f"Auto-fix: {'enabled' if args.fix else 'disabled'}", "🛠️")
     _print_step("Refreshing local registry", "🔄")
     try:
-        from devcovenant.core.update_policy_registry import (
-            update_policy_registry,
-        )
+        from devcovenant.core.refresh_registry import refresh_registry
 
-        update_policy_registry(args.repo, skip_freeze=True)
+        refresh_registry(args.repo, skip_freeze=True)
         _print_step("Registry refresh complete", "✅")
     except Exception as exc:
         _print_step(f"Registry refresh skipped ({exc})", "⚠️")
@@ -347,24 +333,10 @@ def main() -> None:
             print(f"❌ Test execution failed: {e}")
             sys.exit(1)
 
-    elif args.command in ("update-policy-registry", "update-hashes"):
-        from devcovenant.core.update_policy_registry import (
-            update_policy_registry,
-        )
+    elif args.command == "refresh_registry":
+        from devcovenant.core.refresh_registry import refresh_registry
 
-        _print_banner("Policy registry update", "🧾")
-        if args.command == "update-hashes":
-            print(
-                "The update-hashes command is deprecated. "
-                "Use update-policy-registry instead."
-            )
-        result = update_policy_registry(args.repo)
-        sys.exit(result)
-
-    elif args.command == "refresh-registry":
-        from devcovenant.core.refresh_all import refresh_registry
-
-        _print_banner("Registry refresh", "🔄")
+        _print_banner("Policy registry refresh", "🧾")
         result = refresh_registry(args.repo)
         sys.exit(result)
 
@@ -418,26 +390,6 @@ def main() -> None:
         refresh_main(argv=["--target", str(args.target)])
         sys.exit(0)
 
-    elif args.command == "restore-stock-text":
-        from devcovenant.core.policy_texts import restore_stock_texts
-
-        _print_banner("Restore stock policy text", "🧬")
-        if not args.policy and not args.all:
-            print("Provide --policy <id> or --all.")
-            sys.exit(1)
-
-        policy_ids = None if args.all else [args.policy]
-        restored = restore_stock_texts(
-            args.repo,
-            policy_ids=policy_ids,
-            agents_rel=args.agents,
-        )
-        if not restored:
-            print("No stock policy text restored.")
-            sys.exit(1)
-        restored_list = ", ".join(restored)
-        print(f"Restored stock policy text for: {restored_list}")
-        sys.exit(0)
     elif args.command == "install":
         _print_banner("Install DevCovenant", "📦")
         install_args = ["--target", str(args.target)]

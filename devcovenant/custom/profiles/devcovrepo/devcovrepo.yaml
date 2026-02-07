@@ -75,7 +75,6 @@ policy_overlays:
   line-length-limit:
     exclude_globs:
       - devcovenant/core/profiles/global/assets/*.yaml
-      - devcovenant/core/stock_policy_texts.json
       - devcovenant/registry/**
   last-updated-placement:
     allowed_globs:

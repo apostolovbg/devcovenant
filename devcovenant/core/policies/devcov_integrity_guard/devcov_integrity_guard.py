@@ -173,7 +173,7 @@ class DevcovIntegrityGuardCheck(PolicyCheck):
                     severity="error",
                     file_path=registry_path,
                     message="Policy registry file is missing.",
-                    suggestion="Run `devcovenant update-policy-registry`.",
+                    suggestion="Run `devcovenant refresh_registry`.",
                 )
             ]
 
@@ -191,13 +191,13 @@ class DevcovIntegrityGuardCheck(PolicyCheck):
                     "Policy registry missing entry for policy "
                     f"'{issue.policy_id}'."
                 )
-                suggestion = "Run `devcovenant update-policy-registry`."
+                suggestion = "Run `devcovenant refresh_registry`."
             else:
                 message = (
                     "Policy registry hash mismatch for policy "
                     f"'{issue.policy_id}'."
                 )
-                suggestion = "Run `devcovenant update-policy-registry`."
+                suggestion = "Run `devcovenant refresh_registry`."
             violations.append(
                 Violation(
                     policy_id=self.policy_id,

@@ -57,10 +57,10 @@ hashes synchronized so drift is detectable and reversible.
 - Hash policy definitions and scripts into
   `devcovenant/registry/local/policy_registry.yaml`.
 - Treat policy descriptor `text` fields as the canonical policy prose source.
-- Remove legacy stock-text restore infrastructure (`stock_policy_texts.*` and
-  `restore-stock-text`) now that policy text is descriptor-driven.
-- `refresh-policies` must fail when descriptor policy text is missing; no
-  stock-text fallback is allowed.
+- Remove legacy stock-text restore infrastructure (`stock_policy_texts.*`
+  and `restore-stock-text`) now that policy text is descriptor-driven.
+- `refresh-policies` must fail when descriptor policy text is missing;
+  no stock-text fallback is allowed.
 - Support `custom: true/false` metadata to mark custom policy prose that
   bypasses stock text sync checks.
 - Provide an optional semantic-version-scope policy (disabled by default in
@@ -187,8 +187,8 @@ hashes synchronized so drift is detectable and reversible.
 - Implementation logic lives under `devcovenant/core/` as internal modules.
 - `devcovenant/core/tools/` is not a public entrypoint surface; any helper
   meant for users must have a CLI command and a top-level module.
-- CLI-exposed modules at the package root are real implementations, not
-  forwarding wrappers.
+- CLI-exposed modules at `devcovenant/` root are real implementations,
+  not forwarding wrappers.
 - Avoid duplicate same-name command modules across `devcovenant/` and
   `devcovenant/core/`.
 - CLI-exposed command modules include (non-exhaustive): `check.py`,
@@ -245,7 +245,7 @@ hashes synchronized so drift is detectable and reversible.
 ### Configuration and extension
 - `devcovenant/config.yaml` must support `devcov_core_include` and
   `devcov_core_paths` for core exclusion.
-- Config is seeded from the `devcovuser` profile asset (generic stub) and
+- Config is seeded from the `global` profile asset (generic stub) and
   then refreshed with global defaults plus active profiles. It must include
   `profiles.generated.file_suffixes` so profile selections are visible to
   users and tooling.
@@ -500,11 +500,11 @@ its own assets, suffixes, policies, and overlays.
   policies or profiles inside `devcovenant/custom` unless `devcov_core_include`
   is set to true. The refresh/installer regenerates `devcovenant/custom` and
   `tests/devcovenant` from the global asset, and recreates the default config
-  by materializing the `devcovuser` profile descriptor. The descriptor seeds
-  default settings and overlay lists; resolved metadata is still computed from
-  policy defaults, profile overlays, and user overrides during refresh. That
-  keeps repo-only overrides local while giving downstream installs a clean
-  baseline they can edit.
+  by materializing the global `config.yaml` asset. The asset seeds default
+  settings and overlay lists; resolved metadata is still computed from policy
+  defaults, profile overlays, and user overrides during refresh. That keeps
+  repo-only overrides local while giving downstream installs a clean baseline
+  they can edit.
 - User repositories (and this repo when treated as a user repo) must maintain
   the mirror tree under `tests/devcovenant/**`. When `devcov_core_include` is
   false the `devcovuser` profile mirrors just `devcovenant/custom/**` so only
@@ -518,8 +518,9 @@ its own assets, suffixes, policies, and overlays.
   `devcovenant/registry/local/manifest.json`,
   and `devcovenant/registry/local/test_status.json`
 ) are generated from the global profile assets during install/update/refresh.
-  They are tracked in this repo for CI/builds, excluded from packages, and
-  regenerated when missing.
+  They are local runtime state, excluded from packages, and regenerated when
+  missing. Repositories may gitignore these files by default, while CI/builds
+  regenerate them on demand.
 - `AGENTS.md` is always regenerated from the managed template and resolved
   metadata. Preserve the editable section under `# EDITABLE SECTION`, and
   never allow users to edit the policy block.

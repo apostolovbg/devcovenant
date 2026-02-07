@@ -21,7 +21,7 @@ the registry for mismatched hashes.
 ## Policy Registry Drift
 Symptom: policy hash mismatch or registry warnings.
 Fix:
-- Run `devcovenant update-policy-registry` after policy edits.
+- Run `devcovenant refresh_registry` after policy edits.
 
 ## Doc Growth Warnings
 Symptom: documentation-growth-tracking reports missing doc updates.

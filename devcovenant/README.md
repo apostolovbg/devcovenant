@@ -186,7 +186,7 @@ During `--phase end`, if pre-commit modifies files, the script automatically
 reruns `devcovenant/run_tests.py` before recording the end timestamp so
 tests always post-date any auto-fixes.
 
-When policy blocks change, run `devcovenant update-policy-registry` to
+When policy blocks change, run `devcovenant refresh_registry` to
 sync policy hashes.
 
 ## Core Exclusion
@@ -254,9 +254,9 @@ devcovenant check --mode pre-commit
 
 devcovenant check --fix
 
-devcovenant update-policy-registry
+devcovenant refresh_registry
 
-devcovenant restore-stock-text --policy <id>
+python3 devcovenant/core/refresh_registry.py
 ```
 
 See `devcovenant/README.md` for the full user guide.

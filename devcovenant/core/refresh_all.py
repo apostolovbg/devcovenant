@@ -29,7 +29,9 @@ from devcovenant.core.install import (
     refresh_pre_commit_config,
 )
 from devcovenant.core.refresh_policies import refresh_policies
-from devcovenant.core.update_policy_registry import update_policy_registry
+from devcovenant.core.refresh_registry import (
+    refresh_registry as refresh_policy_registry,
+)
 
 
 def _schema_path(repo_root: Path) -> Path | None:
@@ -174,7 +176,7 @@ def _ensure_runtime_registry_assets(
         if bool(entry.get("if_missing", False)) and target_path.exists():
             continue
         if generator == "policy_registry":
-            result = update_policy_registry(
+            result = refresh_policy_registry(
                 repo_root,
                 skip_freeze=skip_freeze,
             )

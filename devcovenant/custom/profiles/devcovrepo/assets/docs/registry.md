@@ -27,7 +27,7 @@ The main files under `devcovenant/registry/local/` are:
 
 ## Global Registry Assets
 The global registry directory under `devcovenant/registry/global/` ships
-canonical assets such as stock policy texts and policy replacement rules.
+canonical assets such as policy replacement rules.
 These files are part of the package and do not change per repo.
 
 ## Examples

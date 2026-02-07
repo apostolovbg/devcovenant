@@ -1,4 +1,4 @@
-"""Update DevCovenant policy registry.
+"""Refresh DevCovenant policy registry.
 
 Uses devcovenant/registry/local/policy_registry.yaml.
 """
@@ -47,13 +47,13 @@ def _split_metadata_values(raw_value: object | None) -> List[str]:
     return items
 
 
-def update_policy_registry(
+def refresh_registry(
     repo_root: Path | None = None,
     *,
     rerun: bool = False,
     skip_freeze: bool = False,
 ) -> int:
-    """Update policy hashes.
+    """Refresh policy hashes.
 
     Writes devcovenant/registry/local/policy_registry.yaml.
     """
@@ -149,7 +149,7 @@ def update_policy_registry(
             manifest_module.append_notifications(repo_root, freeze_messages)
             _print_freeze_messages(freeze_messages)
         if freeze_changed and not rerun:
-            return update_policy_registry(
+            return refresh_registry(
                 repo_root,
                 rerun=True,
                 skip_freeze=True,
@@ -169,7 +169,7 @@ def _print_freeze_messages(messages: Iterable[str]) -> None:
 
 def main() -> int:
     """CLI entry point."""
-    return update_policy_registry()
+    return refresh_registry()
 
 
 if __name__ == "__main__":

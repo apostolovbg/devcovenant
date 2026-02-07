@@ -17,7 +17,7 @@ from devcovenant.core import manifest as manifest_module
 from devcovenant.core import policy_replacements, profiles
 from devcovenant.core.parser import PolicyParser
 from devcovenant.core.refresh_policies import refresh_policies
-from devcovenant.core.update_policy_registry import update_policy_registry
+from devcovenant.core.refresh_registry import refresh_registry
 
 _POLICY_BLOCK_RE = re.compile(
     r"(##\s+Policy:\s+[^\n]+\n\n)```policy-def\n(.*?)\n```\n\n"
@@ -387,7 +387,7 @@ def main(argv=None) -> None:
             agents_path,
             schema_path,
         )
-        result = update_policy_registry(target_root, skip_freeze=True)
+        result = refresh_registry(target_root, skip_freeze=True)
         if result != 0:
             sys.exit(result)
 

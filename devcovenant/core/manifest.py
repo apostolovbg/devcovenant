@@ -38,7 +38,6 @@ DEFAULT_CORE_FILES = [
     "devcovenant/config.yaml",
     "devcovenant/README.md",
     "devcovenant/VERSION",
-    f"{GLOBAL_REGISTRY_DIR}/stock_policy_texts.yaml",
     f"{GLOBAL_REGISTRY_DIR}/policy_replacements.yaml",
     "devcovenant/core/cli_options.py",
     "devcovenant/core/profiles/global/assets/AGENTS.md",

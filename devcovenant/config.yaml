@@ -318,7 +318,6 @@ autogen_metadata_overrides:
     - devcovenant/registry/**
     - data/**
     - devcovenant/core/profiles/global/assets/*.yaml
-    - devcovenant/core/stock_policy_texts.json
   name-clarity:
     include_suffixes:
     - .py

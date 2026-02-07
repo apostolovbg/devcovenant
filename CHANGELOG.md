@@ -34,6 +34,40 @@ Example entry:
 ## Version 0.2.6
 
 - 2026-02-07:
+  Change: Removed stock-text restore plumbing and renamed policy registry
+  refresh to `refresh_registry`.
+  Why: Consolidated registry workflows and retired legacy stock-text
+  infrastructure in favor of descriptor `text`.
+  Impact: Updated CLI/core registry flows, removed legacy files, and kept
+  PLAN/SPEC in the recovered newer state.
+  Files:
+  README.md
+  PLAN.md
+  SPEC.md
+  devcovenant/README.md
+  devcovenant/cli.py
+  devcovenant/config.yaml
+  devcovenant/core/engine.py
+  devcovenant/core/manifest.py
+  devcovenant/core/policies/devcov_integrity_guard/\
+    devcov_integrity_guard.py
+  devcovenant/core/policy_texts.py
+  devcovenant/core/refresh_all.py
+  devcovenant/core/refresh_policies.py
+  devcovenant/core/profiles/global/assets/README.yaml
+  devcovenant/core/profiles/global/assets/devcovenant/README.yaml
+  devcovenant/core/refresh_registry.py
+  devcovenant/core/stock_policy_texts.json
+  devcovenant/core/upgrade.py
+  devcovenant/custom/profiles/devcovrepo/assets/docs/registry.md
+  devcovenant/custom/profiles/devcovrepo/assets/docs/troubleshooting.md
+  devcovenant/custom/profiles/devcovrepo/devcovrepo.yaml
+  devcovenant/docs/registry.md
+  devcovenant/docs/troubleshooting.md
+  devcovenant/registry/global/stock_policy_texts.yaml
+  tests/core/tests/test_refresh_registry.py
+
+- 2026-02-07:
   Change: Removed legacy policy override fallback behavior and legacy
   activation migration paths.
   Why: Clarified config-driven activation so `policy_state` remains the

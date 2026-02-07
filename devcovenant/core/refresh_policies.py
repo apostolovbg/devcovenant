@@ -442,45 +442,23 @@ def descriptor_metadata_order_values(
     return order, values
 
 
-def _load_stock_texts(repo_root: Path) -> Dict[str, str]:
-    """Load stock policy text from YAML or JSON assets."""
-    yaml_path = (
-        repo_root
-        / "devcovenant"
-        / "registry"
-        / "global"
-        / "stock_policy_texts.yaml"
-    )
-    if yaml_path.exists():
-        try:
-            yaml_payload = yaml.safe_load(
-                yaml_path.read_text(encoding="utf-8")
-            )
-            if isinstance(yaml_payload, dict):
-                return {
-                    str(key): str(value) for key, value in yaml_payload.items()
-                }
-        except Exception:
-            pass
-    json_path = repo_root / "devcovenant" / "core" / "stock_policy_texts.json"
-    if json_path.exists():
-        try:
-            import json
-
-            json_payload = json.loads(json_path.read_text(encoding="utf-8"))
-            if isinstance(json_payload, dict):
-                normalized: Dict[str, str] = {}
-                for key, payload_value in json_payload.items():
-                    if isinstance(payload_value, list):
-                        normalized[key] = "\n".join(
-                            str(item) for item in payload_value
-                        )
-                    else:
-                        normalized[key] = str(payload_value)
-                return normalized
-        except Exception:
-            pass
-    return {}
+def _descriptor_text_or_error(
+    descriptor: PolicyDescriptor | None,
+    policy_id: str,
+) -> str:
+    """Return canonical descriptor text or raise when missing."""
+    if descriptor is None:
+        raise ValueError(
+            f"Missing policy descriptor for `{policy_id}`."
+            " Add a <policy>.yaml file with a non-empty `text` field."
+        )
+    text = str(descriptor.text or "").strip()
+    if not text:
+        raise ValueError(
+            f"Missing descriptor text for `{policy_id}`."
+            " Set the `text` field in the policy descriptor YAML."
+        )
+    return text
 
 
 def _render_metadata_block(
@@ -872,7 +850,6 @@ def refresh_policies(
     discovered = _discover_policy_sources(repo_root)
     descriptors = _load_descriptors(repo_root, discovered)
     del schema_path
-    stock_texts = _load_stock_texts(repo_root)
     content = agents_path.read_text(encoding="utf-8")
     try:
         block_start, block_end, block_text = _locate_policy_block(content)
@@ -887,24 +864,18 @@ def refresh_policies(
     for match in POLICY_BLOCK_RE.finditer(block_text):
         heading = match.group(1)
         metadata_block = match.group(2).strip()
-        existing_description = match.group(3).rstrip()
         order, values = parse_metadata_block(metadata_block)
         policy_id = values.get("id", [""])[0] if values.get("id") else ""
         if not policy_id:
             skipped.append("unknown")
             continue
-        descriptor = descriptors.get(policy_id)
-        description = (
-            descriptor.text.strip()
-            if descriptor and descriptor.text
-            else existing_description
-        )
-
         seen_ids.add(policy_id)
         source_flags = discovered.get(policy_id, {})
         if not source_flags:
             skipped.append(policy_id)
             continue
+        descriptor = descriptors.get(policy_id)
+        description = _descriptor_text_or_error(descriptor, policy_id)
         core_available = bool(source_flags.get("core"))
         custom_policy = bool(
             source_flags.get("custom") and not source_flags.get("core")
@@ -960,12 +931,7 @@ def refresh_policies(
         )
         normalized_values.setdefault("id", [policy_id])
         rendered = _render_metadata_block(normalized_order, normalized_values)
-        if descriptor and descriptor.text:
-            description = descriptor.text.strip()
-        else:
-            description = stock_texts.get(
-                policy_id, "Policy description pending."
-            )
+        description = _descriptor_text_or_error(descriptor, policy_id)
         heading = f"## Policy: {policy_id.replace('-', ' ').title()}\n\n"
         final_text = (
             f"{heading}```policy-def\n{rendered}\n```\n\n{description}\n"
