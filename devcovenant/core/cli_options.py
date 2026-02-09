@@ -7,7 +7,7 @@ from dataclasses import dataclass
 from typing import Iterable
 
 DOCS_MODE_CHOICES = ("preserve", "overwrite")
-POLICY_MODE_CHOICES = ("preserve", "append-missing", "overwrite")
+POLICY_MODE_CHOICES = ("preserve", "overwrite")
 CONFIG_MODE_CHOICES = ("preserve", "overwrite")
 INHERIT_MODE_CHOICES = ("inherit", "preserve", "overwrite", "skip")
 
@@ -39,7 +39,7 @@ DEFAULT_INSTALL_DEFAULTS = InstallUpdateDefaults(
 
 DEFAULT_UPDATE_DEFAULTS = InstallUpdateDefaults(
     docs_mode="preserve",
-    policy_mode="append-missing",
+    policy_mode="preserve",
     config_mode="preserve",
     license_mode="inherit",
     version_mode="inherit",

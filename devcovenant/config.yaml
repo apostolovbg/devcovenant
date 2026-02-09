@@ -31,19 +31,19 @@ profiles:
     - suffixes
   generated:
     file_suffixes:
-      - .py
-      - .pyi
-      - .pyw
-      - .ipynb
+      - .md
+      - .rst
+      - .txt
       - .csv
       - .tsv
       - .json
       - .ndjson
       - .parquet
       - .avro
-      - .md
-      - .rst
-      - .txt
+      - .py
+      - .pyi
+      - .pyw
+      - .ipynb
 paths:
   policy_definitions: AGENTS.md
   registry_file: devcovenant/registry/local/policy_registry.yaml

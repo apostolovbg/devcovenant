@@ -1,5 +1,5 @@
 # Changelog
-**Last Updated:** 2026-02-07
+**Last Updated:** 2026-02-09
 **Version:** 0.2.6
 
 <!-- DEVCOV:BEGIN -->
@@ -32,6 +32,71 @@ Example entry:
 ## Log changes here
 
 ## Version 0.2.6
+
+- 2026-02-09:
+  Change: Updated refresh flows to make policy registry the canonical resolved
+  source and regenerate AGENTS policy sections from registry entries.
+  Why: Removed AGENTS-first drift, removed append-missing policy-mode legacy,
+  and aligned changelog coverage with managed-block-only refresh behavior.
+  Impact: Streamlined refresh behavior now keeps policy rendering
+  registry-first, keeps policy-mode preserve/overwrite only, and reduces
+  managed-doc changelog noise.
+  Files:
+  PLAN.md
+  SPEC.md
+  devcovenant/cli.py
+  devcovenant/config.yaml
+  devcovenant/core/cli_options.py
+  devcovenant/core/install.py
+  devcovenant/core/policies/changelog_coverage/changelog_coverage.py
+  devcovenant/core/policies/changelog_coverage/changelog_coverage.yaml
+  devcovenant/core/profiles/global/assets/AGENTS.md
+  devcovenant/core/profiles/global/assets/AGENTS.yaml
+  devcovenant/core/profiles/global/assets/CHANGELOG.yaml
+  devcovenant/core/profiles/global/assets/PLAN.yaml
+  devcovenant/core/profiles/global/assets/README.yaml
+  devcovenant/core/profiles/global/assets/SPEC.yaml
+  devcovenant/core/profiles/global/assets/devcovenant/README.yaml
+  devcovenant/core/refresh_all.py
+  devcovenant/core/refresh_policies.py
+  devcovenant/core/refresh_registry.py
+  tests/core/policies/changelog_coverage/tests/test_changelog_coverage.py
+  tests/core/tests/test_install.py
+  tests/core/tests/test_refresh_policies.py
+
+- 2026-02-09:
+  Change: Updated managed-doc descriptor templates to generic bootstrap
+  scaffolds and removed static AGENTS policy definitions from the template
+  body.
+  Why: Clarified bootstrap behavior so generated docs start generic while
+  policy sections are generated from runtime descriptors and metadata.
+  Impact: Updated new-install bootstrap output to neutral
+  README/SPEC/PLAN/CHANGELOG/AGENTS
+  content, and AGENTS policy sections are no longer shipped as static template
+  text.
+  Files:
+  PLAN.md
+  devcovenant/core/profiles/global/assets/AGENTS.md
+  devcovenant/core/profiles/global/assets/AGENTS.yaml
+  devcovenant/core/profiles/global/assets/CHANGELOG.yaml
+  devcovenant/core/profiles/global/assets/PLAN.yaml
+  devcovenant/core/profiles/global/assets/README.yaml
+  devcovenant/core/profiles/global/assets/SPEC.yaml
+  devcovenant/core/profiles/global/assets/devcovenant/README.yaml
+  devcovenant/core/install.py
+  tests/core/tests/test_install.py
+
+- 2026-02-08:
+  Change: Updated `PLAN.md` to mark completed stock-text removal and
+  registry-command consolidation work as done.
+  Why: Clarified implementation status so immediate priorities map to
+  remaining 0.2.6 work.
+  Impact: Contributors continue from the correct next tasks without
+  re-auditing already completed legacy cleanup.
+  Files:
+  PLAN.md
+  devcovenant/core/profiles/global/assets/CHANGELOG.yaml
+  devcovenant/core/profiles/global/assets/PLAN.yaml
 
 - 2026-02-07:
   Change: Removed stock-text restore plumbing and renamed policy registry

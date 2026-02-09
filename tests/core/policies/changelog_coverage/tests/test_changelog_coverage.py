@@ -3,6 +3,7 @@ Tests for changelog-coverage policy.
 """
 
 import importlib
+import subprocess
 from datetime import date
 from pathlib import Path
 from textwrap import dedent
@@ -31,6 +32,35 @@ def _set_git_diff(monkeypatch: pytest.MonkeyPatch, output: str) -> None:
     def _fake_run(*_args, **_kwargs):
         """Return a fake subprocess result with the requested output."""
         return SimpleNamespace(stdout=output)
+
+    monkeypatch.setattr("subprocess.run", _fake_run)
+
+
+def _set_git_diff_with_patches(
+    monkeypatch: pytest.MonkeyPatch,
+    *,
+    changed_files: str,
+    patches: dict[str, str],
+    head_files: dict[str, str] | None = None,
+) -> None:
+    """Monkeypatch subprocess.run for name-only, patch, and HEAD lookups."""
+
+    head_files = head_files or {}
+
+    def _fake_run(cmd, *_args, **_kwargs):
+        """Return a fake subprocess result keyed by the git subcommand."""
+
+        if cmd[:3] == ["git", "diff", "--name-only"]:
+            return SimpleNamespace(stdout=changed_files)
+        if cmd[:3] == ["git", "diff", "--unified=0"]:
+            rel_path = cmd[-1]
+            return SimpleNamespace(stdout=patches.get(rel_path, ""))
+        if cmd[:2] == ["git", "show"] and cmd[2].startswith("HEAD:"):
+            rel_path = cmd[2].split("HEAD:", 1)[1]
+            if rel_path in head_files:
+                return SimpleNamespace(stdout=head_files[rel_path])
+            raise subprocess.CalledProcessError(1, cmd)
+        return SimpleNamespace(stdout="")
 
     monkeypatch.setattr("subprocess.run", _fake_run)
 
@@ -457,3 +487,65 @@ def test_line_continuation_paths(
     violations = checker.check(context)
 
     assert violations == []
+
+
+def test_managed_doc_changes_inside_managed_blocks_are_ignored(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+):
+    """Managed-doc diffs confined to DEVCOV blocks should skip coverage."""
+
+    old_agents = (
+        "# AGENTS\n"
+        "<!-- DEVCOV:BEGIN -->\n"
+        "Old managed text.\n"
+        "<!-- DEVCOV:END -->\n"
+        "User text.\n"
+    )
+    new_agents = old_agents.replace("Old managed text.", "New managed text.")
+    (tmp_path / "AGENTS.md").write_text(new_agents, encoding="utf-8")
+
+    _set_git_diff_with_patches(
+        monkeypatch,
+        changed_files="AGENTS.md\n",
+        patches={
+            "AGENTS.md": (
+                "@@ -3 +3 @@\n" "-Old managed text.\n" "+New managed text.\n"
+            )
+        },
+        head_files={"AGENTS.md": old_agents},
+    )
+
+    checker = ChangelogCoverageCheck()
+    context = CheckContext(repo_root=tmp_path, all_files=[])
+    violations = checker.check(context)
+
+    assert violations == []
+
+
+def test_managed_doc_changes_outside_managed_blocks_require_changelog(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+):
+    """Managed-doc diffs outside DEVCOV blocks must still hit coverage."""
+
+    old_readme = (
+        "# Old title\n"
+        "<!-- DEVCOV:BEGIN -->\n"
+        "Managed text.\n"
+        "<!-- DEVCOV:END -->\n"
+    )
+    new_readme = old_readme.replace("# Old title", "# New title")
+    (tmp_path / "README.md").write_text(new_readme, encoding="utf-8")
+
+    _set_git_diff_with_patches(
+        monkeypatch,
+        changed_files="README.md\n",
+        patches={"README.md": "@@ -1 +1 @@\n-# Old title\n+# New title\n"},
+        head_files={"README.md": old_readme},
+    )
+
+    checker = ChangelogCoverageCheck()
+    context = CheckContext(repo_root=tmp_path, all_files=[])
+    violations = checker.check(context)
+
+    assert violations
+    assert any("CHANGELOG.md" in violation.message for violation in violations)

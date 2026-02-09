@@ -8,6 +8,7 @@ from typing import Dict, Iterable, List, Sequence, Tuple
 
 import yaml
 
+from devcovenant.core import manifest as manifest_module
 from devcovenant.core import profiles
 from devcovenant.core.policy_descriptor import (
     PolicyDescriptor,
@@ -835,20 +836,65 @@ def _locate_policy_block(text: str) -> Tuple[int, int, str]:
     return block_start, end, block_text
 
 
+def _metadata_from_registry(
+    policy_id: str,
+    metadata_map: object,
+) -> Tuple[List[str], Dict[str, List[str]]]:
+    """Return ordered metadata keys/values sourced from registry entries."""
+    if not isinstance(metadata_map, dict):
+        return ["id"], {"id": [policy_id]}
+
+    order: List[str] = []
+    values: Dict[str, List[str]] = {}
+    for key, raw_value in metadata_map.items():
+        key_name = str(key).strip()
+        if not key_name:
+            continue
+        order.append(key_name)
+        if isinstance(raw_value, list):
+            normalized = [
+                str(item).strip() for item in raw_value if str(item).strip()
+            ]
+        else:
+            normalized = _split_values([str(raw_value)])
+        values[key_name] = normalized
+    if "id" not in values:
+        values["id"] = [policy_id]
+    else:
+        values["id"] = [policy_id]
+    if "id" not in order:
+        order.insert(0, "id")
+    return order, values
+
+
+def _section_map(block_text: str) -> Dict[str, str]:
+    """Return a map of policy id -> rendered section from a policy block."""
+    sections: Dict[str, str] = {}
+    for match in POLICY_BLOCK_RE.finditer(block_text):
+        heading = match.group(1)
+        metadata_block = match.group(2).strip()
+        order, values = parse_metadata_block(metadata_block)
+        policy_id = values.get("id", [""])[0] if values.get("id") else ""
+        if not policy_id:
+            continue
+        description = match.group(3).strip()
+        rendered = _render_metadata_block(order, values)
+        section = f"{heading}```policy-def\n{rendered}\n```\n\n{description}\n"
+        sections[policy_id] = section
+    return sections
+
+
 def refresh_policies(
     agents_path: Path,
     schema_path: Path | None,
     *,
     repo_root: Path | None = None,
 ) -> RefreshResult:
-    """Refresh the policy block metadata and ordering inside AGENTS.md."""
+    """Refresh the AGENTS policy block from registry policy entries."""
     if not agents_path.exists():
         return RefreshResult((), (), False)
 
     repo_root = repo_root or agents_path.parent
-    context = build_metadata_context(repo_root)
-    discovered = _discover_policy_sources(repo_root)
-    descriptors = _load_descriptors(repo_root, discovered)
     del schema_path
     content = agents_path.read_text(encoding="utf-8")
     try:
@@ -856,101 +902,61 @@ def refresh_policies(
     except ValueError:
         return RefreshResult((), (), False)
 
-    changed: List[str] = []
+    registry_path = manifest_module.policy_registry_path(repo_root)
+    if not registry_path.exists():
+        return RefreshResult((), (), False)
+    try:
+        payload = (
+            yaml.safe_load(registry_path.read_text(encoding="utf-8")) or {}
+        )
+    except Exception:
+        return RefreshResult((), (), False)
+    policies = payload.get("policies", {})
+    if not isinstance(policies, dict) or not policies:
+        return RefreshResult((), (), False)
+
+    previous_sections = _section_map(block_text)
+    generated_sections: Dict[str, str] = {}
     skipped: List[str] = []
     entries: List[_PolicyEntry] = []
-    seen_ids: set[str] = set()
-
-    for match in POLICY_BLOCK_RE.finditer(block_text):
-        heading = match.group(1)
-        metadata_block = match.group(2).strip()
-        order, values = parse_metadata_block(metadata_block)
-        policy_id = values.get("id", [""])[0] if values.get("id") else ""
-        if not policy_id:
-            skipped.append("unknown")
-            continue
-        seen_ids.add(policy_id)
-        source_flags = discovered.get(policy_id, {})
-        if not source_flags:
+    for policy_id in sorted(policies):
+        payload_entry = policies.get(policy_id, {})
+        if not isinstance(payload_entry, dict):
             skipped.append(policy_id)
             continue
-        descriptor = descriptors.get(policy_id)
-        description = _descriptor_text_or_error(descriptor, policy_id)
-        core_available = bool(source_flags.get("core"))
-        custom_policy = bool(
-            source_flags.get("custom") and not source_flags.get("core")
+        order, values = _metadata_from_registry(
+            policy_id, payload_entry.get("metadata")
         )
-        normalized_order, normalized_values = _resolve_metadata(
-            policy_id,
-            order,
-            values,
-            descriptor,
-            context,
-            core_available=core_available,
-            custom_policy=custom_policy,
+        rendered = _render_metadata_block(order, values)
+        heading_name = (
+            str(payload_entry.get("description", "")).strip()
+            or policy_id.replace("-", " ").title()
         )
-        custom_flag = (
-            normalized_values.get("custom", ["false"])[0].strip().lower()
-            == "true"
-        )
-        rendered = _render_metadata_block(normalized_order, normalized_values)
-        metadata_changed = rendered != metadata_block
+        heading = f"## Policy: {heading_name}\n\n"
+        description = str(payload_entry.get("policy_text", "")).strip()
+        if not description:
+            descriptor = load_policy_descriptor(repo_root, policy_id)
+            try:
+                description = _descriptor_text_or_error(descriptor, policy_id)
+            except ValueError:
+                skipped.append(policy_id)
+                continue
         final_text = (
             f"{heading}```policy-def\n{rendered}\n```\n\n{description}\n"
+        )
+        generated_sections[policy_id] = final_text
+        custom_flag = (
+            str(payload_entry.get("custom", False)).strip().lower() == "true"
         )
         entries.append(
             _PolicyEntry(
                 policy_id=policy_id,
                 text=final_text,
                 group=0,
-                changed=metadata_changed,
+                changed=False,
                 custom=custom_flag,
             )
         )
-        if metadata_changed:
-            changed.append(policy_id)
-
-    for policy_id, source_flags in sorted(discovered.items()):
-        if policy_id in seen_ids:
-            continue
-        core_available = bool(source_flags.get("core"))
-        custom_policy = bool(
-            source_flags.get("custom") and not source_flags.get("core")
-        )
-        descriptor = descriptors.get(policy_id)
-        base_order = ["id"]
-        base_values = {"id": [policy_id]}
-        normalized_order, normalized_values = _resolve_metadata(
-            policy_id,
-            base_order,
-            base_values,
-            descriptor,
-            context,
-            core_available=core_available,
-            custom_policy=custom_policy,
-        )
-        normalized_values.setdefault("id", [policy_id])
-        rendered = _render_metadata_block(normalized_order, normalized_values)
-        description = _descriptor_text_or_error(descriptor, policy_id)
-        heading = f"## Policy: {policy_id.replace('-', ' ').title()}\n\n"
-        final_text = (
-            f"{heading}```policy-def\n{rendered}\n```\n\n{description}\n"
-        )
-        entries.append(
-            _PolicyEntry(
-                policy_id=policy_id,
-                text=final_text,
-                group=0,
-                changed=True,
-                custom=(
-                    normalized_values.get("custom", ["false"])[0]
-                    .strip()
-                    .lower()
-                    == "true"
-                ),
-            )
-        )
-        changed.append(policy_id)
 
     if not entries:
         return RefreshResult((), tuple(skipped), False)
@@ -958,13 +964,27 @@ def refresh_policies(
     new_block = _assemble_sections(entries)
     block_clean = block_text.strip()
     new_block_clean = new_block.strip()
-    prefix = content[:block_start]
-    suffix = content[block_end:]
-    rebuilt = (
-        f"{prefix}\n{new_block.rstrip()}\n{suffix}"
-        if not prefix.endswith("\n")
-        else f"{prefix}{new_block.rstrip()}\n{suffix}"
-    )
-    agents_path.write_text(rebuilt, encoding="utf-8")
     updated = new_block_clean != block_clean
+    if updated:
+        prefix = content[:block_start]
+        suffix = content[block_end:]
+        rebuilt = (
+            f"{prefix}\n{new_block.rstrip()}\n{suffix}"
+            if not prefix.endswith("\n")
+            else f"{prefix}{new_block.rstrip()}\n{suffix}"
+        )
+        agents_path.write_text(rebuilt, encoding="utf-8")
+    changed = sorted(
+        {
+            *previous_sections.keys(),
+            *generated_sections.keys(),
+        }
+        - {
+            policy_id
+            for policy_id in previous_sections.keys()
+            & generated_sections.keys()
+            if previous_sections.get(policy_id, "").strip()
+            == generated_sections.get(policy_id, "").strip()
+        }
+    )
     return RefreshResult(tuple(changed), tuple(skipped), updated)

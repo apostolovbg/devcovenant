@@ -2708,14 +2708,6 @@ def _ensure_key(
         keys.append(key)
 
 
-def _extract_policy_id(metadata: str) -> str:
-    """Return the policy id from a metadata block."""
-    for line in metadata.splitlines():
-        stripped = line.strip()
-        if stripped.startswith("id:"):
-            return stripped.split(":", 1)[1].strip()
-
-
 def _apply_policy_state_disables(
     target_root: Path, disable_ids: list[str]
 ) -> list[str]:
@@ -2742,53 +2734,6 @@ def _apply_policy_state_disables(
         _rename_existing_file(config_path)
         config_path.write_text(updated, encoding="utf-8")
     return sorted(disable_set)
-
-
-def _extract_policy_sections(text: str) -> list[tuple[str, str]]:
-    """Return policy ids with their full section text."""
-    policy_pattern = re.compile(
-        r"(##\s+Policy:\s+[^\n]+\n\n```policy-def\n(.*?)\n```\n\n"
-        r".*?)(?=\n---\n|\n##|\Z)",
-        re.DOTALL,
-    )
-    sections: list[tuple[str, str]] = []
-    for match in policy_pattern.finditer(text):
-        metadata = match.group(2)
-        policy_id = ""
-        for line in metadata.splitlines():
-            stripped = line.strip()
-            if stripped.startswith("id:"):
-                policy_id = stripped.split(":", 1)[1].strip()
-                break
-        sections.append((policy_id, match.group(1).rstrip()))
-    return sections
-
-
-def _append_missing_policies(
-    agents_path: Path, template_text: str
-) -> list[str]:
-    """Append missing policy sections from the template."""
-    current = agents_path.read_text(encoding="utf-8")
-    existing = _extract_policy_sections(current)
-    existing_ids = {policy_id for policy_id, _section in existing if policy_id}
-    template_sections = _extract_policy_sections(template_text)
-    missing_sections = [
-        section
-        for policy_id, section in template_sections
-        if policy_id and policy_id not in existing_ids
-    ]
-    if not missing_sections:
-        return []
-    tail = current.rstrip()
-    separator = "\n\n---\n\n" if existing else "\n\n"
-    tail = tail + separator + "\n\n---\n\n".join(missing_sections) + "\n"
-    _rename_existing_file(agents_path)
-    agents_path.write_text(tail, encoding="utf-8")
-    return [
-        policy_id
-        for policy_id, _section in template_sections
-        if policy_id and policy_id not in existing_ids
-    ]
 
 
 def _extract_block(text: str) -> str | None:
@@ -3348,20 +3293,6 @@ def main(argv=None) -> None:
     if agents_rebuilt and existing_agents_text:
         _preserve_editable_section(agents_path, existing_agents_text)
     _track_managed_doc("AGENTS.md", agents_existed)
-    if policy_mode == "append-missing":
-        (
-            agents_template,
-            _template_block,
-            _header_lines,
-        ) = _render_doc_from_descriptor(
-            target_root,
-            "AGENTS.md",
-            last_updated=last_updated,
-            version=target_version,
-            template_root=template_root,
-        )
-        if agents_template:
-            _append_missing_policies(agents_path, agents_template)
 
     disabled_policies = _apply_policy_state_disables(
         target_root, disable_policies

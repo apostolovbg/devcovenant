@@ -104,6 +104,14 @@ def _first_entry(section: str) -> tuple[str | None, str]:
 
 
 _DATE_PATTERN = re.compile(r"^\s*-\s*(\d{4}-\d{2}-\d{2})\b")
+_HUNK_PATTERN = re.compile(r"^@@ -(\d+)(?:,(\d+))? \+(\d+)(?:,(\d+))? @@")
+_MANAGED_MARKERS = [
+    ("<!-- DEVCOV:BEGIN -->", "<!-- DEVCOV:END -->"),
+    (
+        "<!-- DEVCOV-POLICIES:BEGIN -->",
+        "<!-- DEVCOV-POLICIES:END -->",
+    ),
+]
 
 
 def _extract_summary_lines(
@@ -190,6 +198,113 @@ def _normalize_globs(raw_value: object) -> list[str]:
             str(entry).strip() for entry in raw_value if str(entry).strip()
         ]
     return [str(raw_value).strip()]
+
+
+def _normalize_paths(raw_value: object, default: list[str]) -> list[str]:
+    """Normalize path metadata into a list of POSIX-style paths."""
+    if raw_value is None:
+        source = default
+    elif isinstance(raw_value, str):
+        source = [entry for entry in raw_value.split(",") if entry]
+    elif isinstance(raw_value, list):
+        source = [str(entry) for entry in raw_value if str(entry)]
+    else:
+        source = [str(raw_value)]
+    normalized: list[str] = []
+    for entry in source:
+        token = str(entry).strip().replace("\\", "/")
+        if token:
+            normalized.append(token)
+    return normalized
+
+
+def _parse_hunks(patch_text: str) -> list[tuple[int, int, int, int]]:
+    """Return changed old/new line ranges from a unified diff."""
+    hunks: list[tuple[int, int, int, int]] = []
+    for line in patch_text.splitlines():
+        match = _HUNK_PATTERN.match(line)
+        if not match:
+            continue
+        old_start = int(match.group(1))
+        old_count = int(match.group(2) or "1")
+        new_start = int(match.group(3))
+        new_count = int(match.group(4) or "1")
+        hunks.append((old_start, old_count, new_start, new_count))
+    return hunks
+
+
+def _managed_ranges(content: str) -> list[tuple[int, int]]:
+    """Return line ranges covered by managed block markers."""
+    ranges: list[tuple[int, int]] = []
+    lines = content.splitlines()
+    for begin_marker, end_marker in _MANAGED_MARKERS:
+        start_line: int | None = None
+        for index, line in enumerate(lines, start=1):
+            if start_line is None and begin_marker in line:
+                start_line = index
+            elif start_line is not None and end_marker in line:
+                ranges.append((start_line, index))
+                start_line = None
+    return ranges
+
+
+def _line_in_ranges(line_number: int, ranges: list[tuple[int, int]]) -> bool:
+    """Return True when the line number falls inside any managed range."""
+    for start, end in ranges:
+        if start <= line_number <= end:
+            return True
+    return False
+
+
+def _is_managed_block_only_change(
+    repo_root: Path,
+    relative_path: str,
+) -> bool:
+    """Return True when the file diff only touches managed marker blocks."""
+    path = repo_root / relative_path
+    try:
+        diff_result = subprocess.run(
+            ["git", "diff", "--unified=0", "--", relative_path],
+            cwd=repo_root,
+            capture_output=True,
+            text=True,
+            check=True,
+        )
+    except Exception:
+        return False
+    hunks = _parse_hunks(diff_result.stdout)
+    if not hunks:
+        return False
+
+    old_content = ""
+    try:
+        old_result = subprocess.run(
+            ["git", "show", f"HEAD:{relative_path}"],
+            cwd=repo_root,
+            capture_output=True,
+            text=True,
+            check=True,
+        )
+        old_content = old_result.stdout
+    except Exception:
+        old_content = ""
+    new_content = path.read_text(encoding="utf-8") if path.exists() else ""
+
+    old_ranges = _managed_ranges(old_content)
+    new_ranges = _managed_ranges(new_content)
+    if not old_ranges and not new_ranges:
+        return False
+
+    for old_start, old_count, new_start, new_count in hunks:
+        if old_count > 0:
+            for line_number in range(old_start, old_start + old_count):
+                if not _line_in_ranges(line_number, old_ranges):
+                    return False
+        if new_count > 0:
+            for line_number in range(new_start, new_start + new_count):
+                if not _line_in_ranges(line_number, new_ranges):
+                    return False
+    return True
 
 
 _DEFAULT_SUMMARY_LABELS = ["Change", "Why", "Impact"]
@@ -366,6 +481,20 @@ class ChangelogCoverageCheck(PolicyCheck):
             ]
         skip_prefixes = [entry.rstrip("/") for entry in skip_prefixes if entry]
         skip_globs = _normalize_globs(self.get_option("skipped_globs", []))
+        managed_docs = set(
+            _normalize_paths(
+                self.get_option("managed_docs"),
+                [
+                    "AGENTS.md",
+                    "README.md",
+                    "CONTRIBUTING.md",
+                    "SPEC.md",
+                    "PLAN.md",
+                    "CHANGELOG.md",
+                    "devcovenant/README.md",
+                ],
+            )
+        )
         summary_labels = _normalize_labels(
             self.get_option("summary_labels"), _DEFAULT_SUMMARY_LABELS
         )
@@ -401,6 +530,14 @@ class ChangelogCoverageCheck(PolicyCheck):
         collection_files: List[List[str]] = [[] for _ in collections]
 
         for file_path in changed_files:
+            normalized_path = file_path.replace("\\", "/")
+            if (
+                normalized_path in managed_docs
+                and _is_managed_block_only_change(
+                    context.repo_root, normalized_path
+                )
+            ):
+                continue
             if file_path in skip_files:
                 continue
             if any(

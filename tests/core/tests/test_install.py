@@ -309,11 +309,11 @@ def test_policy_mode_preserve_keeps_policy_text(tmp_path: Path) -> None:
     )
     updated = agents_path.read_text(encoding="utf-8")
     assert "Custom policy description." in updated
-    assert "## Policy: Version Synchronization" not in updated
+    assert "id: version-sync" not in updated
 
 
-def test_policy_mode_append_missing_adds_policies(tmp_path: Path) -> None:
-    """Append mode should add missing policy sections from the template."""
+def test_policy_mode_overwrite_replaces_policy_block(tmp_path: Path) -> None:
+    """Overwrite mode should regenerate policy sections from registry data."""
     target = tmp_path / "repo"
     target.mkdir()
     agents_path = target / "AGENTS.md"
@@ -337,17 +337,17 @@ def test_policy_mode_append_missing_adds_policies(tmp_path: Path) -> None:
                 "--target",
                 str(target),
                 "--policy-mode",
-                "append-missing",
+                "overwrite",
             ]
         )
     )
     updated = agents_path.read_text(encoding="utf-8")
-    assert "Custom policy description." in updated
-    assert "## Policy: Version Synchronization" in updated
+    assert "Custom policy description." not in updated
+    assert "id: version-sync" in updated
 
 
-def test_update_defaults_append_missing(tmp_path: Path) -> None:
-    """Update should append missing policies by default."""
+def test_update_defaults_preserve_policy_blocks(tmp_path: Path) -> None:
+    """Update should preserve policy blocks by default."""
     target = tmp_path / "repo"
     target.mkdir()
     install.main(
@@ -367,7 +367,7 @@ def test_update_defaults_append_missing(tmp_path: Path) -> None:
     update.main(_with_skip_refresh(["--target", str(target)]))
     updated = agents_path.read_text(encoding="utf-8")
     assert "Custom policy description." in updated
-    assert "## Policy: Version Synchronization" in updated
+    assert "id: version-sync" not in updated
 
 
 def test_update_removes_legacy_root_paths(tmp_path: Path) -> None:

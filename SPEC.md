@@ -1,5 +1,5 @@
 # DevCovenant Specification
-**Last Updated:** 2026-02-07
+**Last Updated:** 2026-02-09
 **Version:** 0.2.6
 
 <!-- DEVCOV:BEGIN -->
@@ -24,9 +24,10 @@ installer scripts.
 
 ## Overview
 DevCovenant turns policy documentation into executable checks. Policies are
-written in `AGENTS.md`, parsed into structured metadata, and enforced by the
-engine. The system must keep documentation, enforcement logic, and registry
-hashes synchronized so drift is detectable and reversible.
+defined in descriptors, resolved into registry metadata, and emitted into
+`AGENTS.md` for human-readable policy documentation. The system must keep
+enforcement logic, registry state, and rendered documentation synchronized so
+drift is detectable and reversible.
 
 ## Workflow
 - Run the gated workflow for every change: pre-commit start, tests,
@@ -52,27 +53,28 @@ hashes synchronized so drift is detectable and reversible.
 
 ## Functional Requirements
 ### Policy definitions and registry
-- Parse policy blocks from `AGENTS.md` and capture the descriptive text that
-  follows each `policy-def` block.
+- Build policy records from discovered core/custom policy scripts and their
+  descriptor YAML files.
 - Hash policy definitions and scripts into
   `devcovenant/registry/local/policy_registry.yaml`.
 - Treat policy descriptor `text` fields as the canonical policy prose source.
 - Remove legacy stock-text restore infrastructure (`stock_policy_texts.*`
   and `restore-stock-text`) now that policy text is descriptor-driven.
-- `refresh-policies` must fail when descriptor policy text is missing;
-  no stock-text fallback is allowed.
+- `refresh_registry` must skip policies with missing descriptor text and emit
+  notices; no stock-text fallback is allowed.
 - Support `custom: true/false` metadata to mark custom policy prose that
   bypasses stock text sync checks.
 - Provide an optional semantic-version-scope policy (disabled by default in
   config `policy_state`) that requires one SemVer scope tag in the latest
   changelog entry and matches the bump to major/minor/patch semantics.
 - Resolve policy metadata from policy YAML defaults, active profile overlays,
-  and user config overrides. The resolved metadata is written into
-  `AGENTS.md`, which always lists every policy (core + custom) and shows the
-  repo’s working values. Common metadata keys must appear in every policy
-  block, and policy-specific keys from YAML are included even when empty so
-  the schema is visible without a separate metadata schema file. The policy
-  block is fully managed; users must not edit it directly.
+  and user config overrides. The resolved metadata is written first into the
+  policy registry, then rendered into `AGENTS.md`, which always lists every
+  policy (core + custom) and shows the repo’s working values. Common metadata
+  keys must appear in every policy block, and policy-specific keys from YAML
+  are included even when empty so the schema is visible without a separate
+  metadata schema file. The policy block is fully managed; users must not edit
+  it directly.
 
 ### Engine behavior
 - Load policy modules from `devcovenant/core/policies/<id>/<id>.py` with
@@ -138,10 +140,11 @@ hashes synchronized so drift is detectable and reversible.
   is newer than the target repo’s core. It applies `policy_replacements.yaml`
   and then runs `update`. `upgrade` is a direct command, and is also reachable
   by the `install` prompt when a newer core is detected.
-- `refresh` (registry-only) rebuilds registries and policy metadata from the
-  current config/profile state without touching managed docs or assets. It
-  also refreshes config autogen sections (profiles.generated, core paths, and
-  metadata overlays) while preserving user overrides.
+- `refresh` rebuilds registries and policy metadata from the current
+  config/profile state, then regenerates the AGENTS policy block from registry
+  entries. It does not refresh other managed docs/assets. It also refreshes
+  config autogen sections (profiles.generated, core paths, and metadata
+  overlays) while preserving user overrides.
 - `undeploy` removes managed blocks, registries, and generated `.gitignore`
   fragments while keeping `devcovenant/` and config intact so users can edit
   config and redeploy.
@@ -171,7 +174,8 @@ hashes synchronized so drift is detectable and reversible.
   never touches core files.
 - `upgrade`: copy newer core into the repo and apply policy replacements,
   then run `update`.
-- `refresh`: registry-only regeneration and config autogen refresh (no docs).
+- `refresh`: registry regeneration, AGENTS policy-block regeneration, and
+  config autogen refresh (no other docs).
 - `undeploy`: remove managed blocks/registries and revert generated
   `.gitignore` fragments while keeping core + config.
 - `uninstall`: remove the entire DevCovenant footprint and managed blocks.
@@ -355,10 +359,10 @@ hashes synchronized so drift is detectable and reversible.
   overlays provide `dependency_files`, while the core policy metadata remains
   general. The devcovrepo profile sets DevCovenant’s own dependency
   manifests.
-- A registry-only refresh runs at the start of every devcovenant invocation,
-  regenerating `devcovenant/registry/local/*` (hashes, manifest) and only
-  materializing `config.yaml` when missing; it skips AGENTS and managed docs
-  to keep the worktree clean during CI and local runs.
+- A lightweight registry refresh runs at the start of every devcovenant
+  invocation, regenerating `devcovenant/registry/local/*` (hashes, manifest)
+  and only materializing `config.yaml` when missing; it skips AGENTS and
+  managed docs to keep the worktree clean during CI and local runs.
 Profiles are explicit—no inheritance or family defaults; each profile lists
 its own assets, suffixes, policies, and overlays.
 - Custom policy `readme-sync` enforces that `devcovenant/README.md` mirrors
@@ -374,6 +378,10 @@ its own assets, suffixes, policies, and overlays.
   that each contain an action verb from the configured list, and contain a
   `Files:` block listing exactly the touched paths. Changelog entries remain
   newest-first (descending dates).
+- `changelog-coverage` ignores AGENTS and other managed-doc file changes only
+  when the file diff is confined to `<!-- DEVCOV:BEGIN -->` /
+  `<!-- DEVCOV:END -->` or `<!-- DEVCOV-POLICIES:BEGIN -->` /
+  `<!-- DEVCOV-POLICIES:END -->` blocks.
 - `enabled: false` disables enforcement without removing definitions.
 - Provide a `managed-environment` policy (off by default via config
   `policy_state`) that enforces execution inside the expected
@@ -406,8 +414,8 @@ its own assets, suffixes, policies, and overlays.
 - Record update notices (replacements and new policies) in
   `devcovenant/registry/local/manifest.json` and print them to stdout.
 - Treat the collective `<!-- DEVCOV-POLICIES:BEGIN -->` /
-  `<!-- DEVCOV-POLICIES:END -->` block as a managed unit that install/update
-  commands refresh from `devcovenant/core/` assets.
+  `<!-- DEVCOV-POLICIES:END -->` block as a managed unit rendered from
+  registry policy entries.
   Provide a per-policy `freeze`
   override that copies the policy’s modules, descriptors, and assets into
   `devcovenant/custom/` (with `custom: true`) when true and removes those files
@@ -417,10 +425,10 @@ its own assets, suffixes, policies, and overlays.
   for every policy and wired through the per-policy adapters.
   They work across every language/profile combination that the policy supports.
 - Generate `devcovenant/registry/local/policy_registry.yaml` dynamically from
-  `refresh_policies` and `refresh_registry`. The registry is a derived
-  cache that mirrors AGENTS: it stores hashes, script paths, assets, and the
-  resolved metadata map for every policy (enabled or disabled). It does not
-  carry a separate schema/handles/values layer.
+  policy descriptors, script discovery, and metadata resolution. The registry
+  is the canonical resolved policy state: it stores hashes, script paths,
+  assets, and resolved metadata for every policy (enabled or disabled).
+  `AGENTS.md` policy sections are downstream render output from this registry.
 - The legacy `devcovenant/registry.json` storage and the accompanying
   `update_hashes.py` helper were retired and removed, leaving
   `devcovenant/registry/local/policy_registry.yaml` as the single
@@ -449,11 +457,11 @@ its own assets, suffixes, policies, and overlays.
   empty.
 - Metadata resolution order is policy defaults → profile overlays → user
   overrides. If no profile declares a metadata key, the policy default is kept.
-  The resolved metadata is written into `AGENTS.md` for every policy (active or
-  not), with `enabled` reflecting config activation. Metadata is rendered in
-  vertical YAML-style lines (lists continue on indented lines) rather than
-  comma-joined horizontal values. The registry mirrors the resolved map for
-  runtime use.
+  The resolved metadata is written first into the policy registry, then
+  rendered into `AGENTS.md` for every policy (active or not), with `enabled`
+  reflecting config activation. Metadata is rendered in vertical YAML-style
+  lines (lists continue on indented lines) rather than comma-joined horizontal
+  values.
 - When DevCovenant removes a core policy, the updater copies it to
   `devcovenant/custom/policies/` (or a frozen overlay defined in config),
   marks the new copy as `custom`, and reruns `refresh_registry` so the
@@ -521,9 +529,9 @@ its own assets, suffixes, policies, and overlays.
   They are local runtime state, excluded from packages, and regenerated when
   missing. Repositories may gitignore these files by default, while CI/builds
   regenerate them on demand.
-- `AGENTS.md` is always regenerated from the managed template and resolved
-  metadata. Preserve the editable section under `# EDITABLE SECTION`, and
-  never allow users to edit the policy block.
+- `AGENTS.md` is regenerated from the managed template plus policy sections
+  rendered from registry metadata/state. Preserve the editable section under
+  `# EDITABLE SECTION`, and never allow users to edit the policy block.
 - `README.md` keeps user content, receives the standard header, and gains a
   managed block with missing sections (Table of Contents, Overview, Workflow,
   DevCovenant).
@@ -549,8 +557,7 @@ its own assets, suffixes, policies, and overlays.
 - Stamp `Last Updated` values using the UTC install date.
 - Support partial doc overwrites via `--docs-include` / `--docs-exclude`, so
   only selected docs are replaced when docs mode overwrites.
-- Support policy update modes via `--policy-mode preserve|append-missing|`
-  `overwrite`.
+- Support policy update modes via `--policy-mode preserve|overwrite`.
 - Write `devcovenant/registry/local/manifest.json` with the core layout,
   doc types, installed paths, options, active profiles, and policy asset
 - Record the UTC timestamp of the install or update.
@@ -573,13 +580,13 @@ its own assets, suffixes, policies, and overlays.
   configs, managed docs, and metadata. The optional
   `devcovenant/config_override` path remains a temporary override for
   experimentation.
-- Add a `refresh-all` command that runs `refresh-policies`.
-  It fully regenerates policy metadata blocks from descriptors plus
-  overrides (no manual edits), updates
-  `devcovenant/registry/local/policy_registry.yaml`, and rebuilds
-  `devcovenant/registry/local/profile_registry.yaml`.
-  That keeps the profile registry state current without a full
-  install/update run.
+- Add a `refresh-all` command that runs registry generation first and then
+  policy-block rendering.
+  It fully regenerates `devcovenant/registry/local/policy_registry.yaml` from
+  descriptors plus overrides (no manual edits), renders the AGENTS policy
+  block from registry entries, and rebuilds
+  `devcovenant/registry/local/profile_registry.yaml`. That keeps profile and
+  policy state current without a full install/update run.
 
 ## Packaging Requirements
 - Ship `devcovenant` as a pure-Python package with a console script entry.

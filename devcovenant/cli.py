@@ -166,7 +166,7 @@ def main() -> None:
     )
     parser.add_argument(
         "--policy-mode",
-        choices=("preserve", "append-missing", "overwrite"),
+        choices=("preserve", "overwrite"),
         default=None,
         help="How to handle policy blocks during install/update.",
     )
@@ -334,7 +334,7 @@ def main() -> None:
             sys.exit(1)
 
     elif args.command == "refresh_registry":
-        from devcovenant.core.refresh_registry import refresh_registry
+        from devcovenant.core.refresh_all import refresh_registry
 
         _print_banner("Policy registry refresh", "🧾")
         result = refresh_registry(args.repo)

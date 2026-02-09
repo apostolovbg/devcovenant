@@ -205,13 +205,19 @@ enforcement: active
 enabled: true
 custom: false
 freeze: false
-profile_scopes: global
 main_changelog: CHANGELOG.md
 skipped_files: CHANGELOG.md
   .gitignore
   .pre-commit-config.yaml
 skipped_globs:
 skipped_prefixes:
+managed_docs: AGENTS.md
+  README.md
+  CONTRIBUTING.md
+  SPEC.md
+  PLAN.md
+  CHANGELOG.md
+  devcovenant/README.md
 summary_labels: Change
   Why
   Impact
@@ -292,7 +298,8 @@ required_globs: README.md
   CHANGELOG.md
   SPEC.md
   PLAN.md
-selector_roles: skipped,required
+selector_roles: skipped
+  required
 skipped_dirs:
 required_files:
 required_dirs:
@@ -320,21 +327,6 @@ enforcement: active
 enabled: true
 custom: false
 freeze: false
-profile_scopes: python
-  javascript
-  typescript
-  java
-  csharp
-  php
-  ruby
-  go
-  rust
-  swift
-  dart
-  flutter
-  fastapi
-  frappe
-  objective-c
 dependency_files: requirements.in
   requirements.lock
   pyproject.toml
@@ -365,13 +357,13 @@ enforcement: active
 enabled: true
 custom: false
 freeze: false
-profile_scopes: global
 policy_definitions: AGENTS.md
 registry_file: devcovenant/registry/local/policy_registry.yaml
 test_status_file: devcovenant/registry/local/test_status.json
 watch_dirs:
 watch_files:
-selector_roles: watch,watch_files
+selector_roles: watch
+  watch_files
 watch_globs:
 watch_files_globs:
 watch_files_files:
@@ -396,7 +388,6 @@ enforcement: active
 enabled: true
 custom: true
 freeze: false
-profile_scopes: devcovrepo
 ```
 
 Warn when DevCovenant repo Python strings contain bare backslashes.
@@ -406,7 +397,7 @@ forcing it on user repos.
 
 ---
 
-## Policy: DevCovenant Structure Guard
+## Policy: Devcov Structure Guard
 
 ```policy-def
 id: devcov-structure-guard
@@ -417,7 +408,6 @@ enforcement: active
 enabled: true
 custom: false
 freeze: false
-profile_scopes: global
 ```
 
 Ensure the DevCovenant repo keeps the required structure and tooling files.
@@ -425,7 +415,7 @@ Ensure the DevCovenant repo keeps the required structure and tooling files.
 
 ---
 
-## Policy: DevFlow Run Gates
+## Policy: Devflow Run Gates
 
 ```policy-def
 id: devflow-run-gates
@@ -436,31 +426,6 @@ enforcement: active
 enabled: true
 custom: false
 freeze: false
-profile_scopes: global
-  python
-  javascript
-  typescript
-  java
-  kotlin
-  scala
-  groovy
-  dotnet
-  csharp
-  fsharp
-  php
-  ruby
-  go
-  rust
-  swift
-  dart
-  flutter
-  elixir
-  erlang
-  haskell
-  clojure
-  julia
-  ocaml
-  crystal
 test_status_file: devcovenant/registry/local/test_status.json
 required_commands: pytest
   python3 -m unittest discover
@@ -487,7 +452,7 @@ documentation-only updates) so the gate sequence cannot be skipped.
 
 ---
 
-## Policy: Docstring and Comment Coverage
+## Policy: Docstring And Comment Coverage
 
 ```policy-def
 id: docstring-and-comment-coverage
@@ -498,13 +463,6 @@ enforcement: active
 enabled: true
 custom: false
 freeze: false
-profile_scopes: python
-  javascript
-  typescript
-  go
-  rust
-  java
-  csharp
 include_suffixes: .py
 exclude_prefixes: build
   dist
@@ -545,28 +503,6 @@ enforcement: active
 enabled: true
 custom: false
 freeze: false
-profile_scopes: global
-  docs
-  data
-  python
-  javascript
-  typescript
-  go
-  rust
-  java
-  csharp
-  php
-  ruby
-  swift
-  dart
-  terraform
-  docker
-  kubernetes
-  sql
-  fastapi
-  frappe
-  flutter
-  objective-c
 selector_roles: user_facing
   user_visible
   doc_quality
@@ -756,9 +692,6 @@ enforcement: active
 enabled: true
 custom: false
 freeze: false
-profile_scopes: global
-  docs
-  data
 include_suffixes: .md
 allowed_globs: devcovenant/README.md
   devcovenant/core/profiles/global/assets/*.yaml
@@ -806,28 +739,6 @@ enforcement: active
 enabled: true
 custom: false
 freeze: false
-profile_scopes: global
-  docs
-  data
-  python
-  javascript
-  typescript
-  go
-  rust
-  java
-  csharp
-  php
-  ruby
-  swift
-  dart
-  terraform
-  docker
-  kubernetes
-  sql
-  fastapi
-  frappe
-  flutter
-  objective-c
 max_length: 79
 include_suffixes: .py
   .pyi
@@ -848,7 +759,6 @@ exclude_prefixes: build
 exclude_globs: devcovenant/registry/**
   data/**
   devcovenant/core/profiles/global/assets/*.yaml
-  devcovenant/core/stock_policy_texts.json
   build/**
   dist/**
   node_modules/**
@@ -901,7 +811,6 @@ enforcement: active
 enabled: true
 custom: true
 freeze: false
-profile_scopes: devcovrepo
 ```
 
 Ensure AGENTS.md, README.md, PLAN.md, SPEC.md, CHANGELOG.md, and
@@ -923,7 +832,6 @@ enforcement: active
 enabled: false
 custom: false
 freeze: false
-profile_scopes: global
 expected_paths:
 expected_interpreters:
 required_commands:
@@ -951,13 +859,6 @@ enforcement: active
 enabled: true
 custom: false
 freeze: false
-profile_scopes: python
-  javascript
-  typescript
-  go
-  rust
-  java
-  csharp
 exclude_prefixes: data
 include_suffixes: .py
 include_prefixes:
@@ -997,15 +898,6 @@ enforcement: active
 enabled: true
 custom: false
 freeze: false
-profile_scopes: python
-  fastapi
-  frappe
-  javascript
-  typescript
-  go
-  rust
-  java
-  csharp
 include_suffixes: .py
 include_prefixes: devcovenant
 exclude_prefixes: build
@@ -1029,7 +921,11 @@ include_globs: *.py
 exclude_suffixes:
 force_include_globs:
 watch_files:
-selector_roles: include,exclude,watch,tests_watch,force_include
+selector_roles: include
+  exclude
+  watch
+  tests_watch
+  force_include
 include_files:
 include_dirs:
 exclude_files:
@@ -1060,7 +956,6 @@ enforcement: active
 enabled: true
 custom: false
 freeze: false
-profile_scopes: global
 ```
 
 Dates in changelogs or documentation must not be in the future. Auto-fixers
@@ -1080,7 +975,6 @@ enforcement: active
 enabled: false
 custom: false
 freeze: false
-profile_scopes: python
 ```
 
 Policy description pending.
@@ -1088,7 +982,7 @@ Policy description pending.
 
 ---
 
-## Policy: Read-Only Directories
+## Policy: Read Only Directories
 
 ```policy-def
 id: read-only-directories
@@ -1099,7 +993,6 @@ enforcement: active
 enabled: true
 custom: false
 freeze: false
-profile_scopes: global
 include_globs: __none__
 include_suffixes:
 include_prefixes:
@@ -1124,7 +1017,7 @@ be editable, update this policy definition first.
 
 ---
 
-## Policy: README Sync
+## Policy: Readme Sync
 
 ```policy-def
 id: readme-sync
@@ -1135,7 +1028,6 @@ enforcement: active
 enabled: true
 custom: true
 freeze: false
-profile_scopes: global
 ```
 
 Ensure `devcovenant/README.md` mirrors `README.md` with repository-only
@@ -1157,15 +1049,6 @@ enforcement: active
 enabled: true
 custom: false
 freeze: false
-profile_scopes: python
-  fastapi
-  frappe
-  javascript
-  typescript
-  go
-  rust
-  java
-  csharp
 exclude_globs: tests/**
   **/tests/**
   data/**
@@ -1204,7 +1087,6 @@ enforcement: active
 enabled: true
 custom: false
 freeze: false
-profile_scopes: global
 version_file: devcovenant/VERSION
 changelog_file: CHANGELOG.md
 ignored_prefixes:
@@ -1226,7 +1108,7 @@ enabled for release processes that enforce SemVer discipline.
 
 ---
 
-## Policy: Version Synchronization
+## Policy: Version Sync
 
 ```policy-def
 id: version-sync
@@ -1237,29 +1119,6 @@ enforcement: active
 enabled: true
 custom: false
 freeze: false
-profile_scopes: global
-  docs
-  data
-  suffixes
-  python
-  javascript
-  typescript
-  java
-  csharp
-  php
-  ruby
-  go
-  rust
-  swift
-  dart
-  flutter
-  terraform
-  docker
-  kubernetes
-  sql
-  fastapi
-  frappe
-  objective-c
 version_file: devcovenant/VERSION
 readme_files: devcovenant/README.md
   README.md

@@ -1,5 +1,5 @@
 # DevCovenant Development Plan
-**Last Updated:** 2026-02-07
+**Last Updated:** 2026-02-09
 **Version:** 0.2.6
 
 <!-- DEVCOV:BEGIN -->
@@ -42,9 +42,13 @@ truth for behavior and requirements.
   `upgrade`, `refresh`, `undeploy`, `uninstall`.
 - [done] Managed docs are YAML-asset driven and managed-block based.
 - [done] Registry-only startup refresh behavior exists.
-- [done] Policy metadata resolution writes resolved policy blocks into AGENTS.
+- [done] Policy metadata resolution writes resolved policy values into
+  registry entries.
+- [done] AGENTS policy block rendering is downstream from registry entries.
 - [done] Changelog coverage now requires fresh top entry with labeled summary
   and explicit files list.
+- [done] Changelog coverage ignores managed-doc diffs confined to DEVCOV
+  managed blocks and policy markers.
 - [done] `run_tests` executes configured command lists and records test status.
 
 ## Immediate Outstanding Work
@@ -56,7 +60,8 @@ truth for behavior and requirements.
 2. [not done] Scope-key retirement in descriptors
 - Remove policy/profile scope keys from policy and profile YAMLs where they are
   still used for activation logic.
-- Keep profile overlays for metadata/assets; do not use overlays for activation.
+- Keep profile overlays for metadata/assets.
+- Do not use overlays for activation.
 
 3. [not done] Policy enable/disable simplification
 - Unify core and custom policy activation semantics (single `enabled` model).
@@ -66,16 +71,15 @@ truth for behavior and requirements.
 - Remove retired policy directories and references after consolidation.
 - Update maps/docs/tests/registries so removed policy IDs cannot reappear.
 
-5. [not done] AGENTS/registry hardening
-- Keep AGENTS policy block generation deterministic from resolved metadata.
-- Keep metadata rendering vertical and schema-complete (common keys always
-  present; policy keys emitted even when empty).
+5. [done] AGENTS/registry hardening
+- Keep registry generation descriptor-driven with resolved metadata values.
+- Keep AGENTS policy block rendering deterministic from registry state.
 
-6. [not done] Stock-text legacy removal
+6. [done] Stock-text legacy removal
 - Remove `stock_policy_texts` files and restore-stock-text plumbing.
 - Enforce descriptor `text` as the only policy prose source.
 
-7. [not done] Registry command consolidation
+7. [done] Registry command consolidation
 - Make `refresh_registry` the canonical registry regeneration command.
 - Remove or deprecate legacy update-policy-registry command paths.
 

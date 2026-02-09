@@ -207,6 +207,12 @@ def refresh_all(
     schema = schema_path or _schema_path(repo_root)
     if registry_only:
         return refresh_registry(repo_root, schema_path=schema)
+    registry_result, registry = _ensure_runtime_registry_assets(
+        repo_root,
+        skip_freeze=False,
+    )
+    if registry_result != 0:
+        return registry_result
     result = refresh_policies(
         agents_path,
         schema,
@@ -218,12 +224,6 @@ def refresh_all(
         print("Skipped policies with missing ids:")
         for policy_id in result.skipped_policies:
             print(f"- {policy_id}")
-    registry_result, registry = _ensure_runtime_registry_assets(
-        repo_root,
-        skip_freeze=False,
-    )
-    if registry_result != 0:
-        return registry_result
     if registry is None:
         registry = profiles.build_profile_registry(repo_root)
         profiles.write_profile_registry(repo_root, registry)
@@ -257,17 +257,26 @@ def refresh_registry(
     *,
     schema_path: Path | None = None,
 ) -> int:
-    """Refresh only registry assets without touching AGENTS or docs."""
+    """Refresh registry assets and regenerate the AGENTS policy block."""
     if repo_root is None:
         repo_root = Path(__file__).resolve().parents[2]
     _set_backups_enabled(False)
-    # Update registry hashes/metadata without touching managed docs.
     result, registry = _ensure_runtime_registry_assets(
         repo_root,
         skip_freeze=True,
     )
     if result != 0:
         return result
+    agents_path = repo_root / "AGENTS.md"
+    schema = schema_path or _schema_path(repo_root)
+    refresh_result = refresh_policies(agents_path, schema)
+    if refresh_result.changed_policies:
+        joined = ", ".join(refresh_result.changed_policies)
+        print(f"refresh-policies updated metadata for: {joined}")
+    if refresh_result.skipped_policies:
+        print("Skipped policies with missing ids:")
+        for policy_id in refresh_result.skipped_policies:
+            print(f"- {policy_id}")
     if registry is None:
         # Rebuild profile registry (lives under registry/local/, gitignored).
         registry = profiles.build_profile_registry(repo_root)
@@ -289,7 +298,7 @@ def refresh_registry(
             ],
         )
     print(
-        "Registry-only refresh completed (schema, hashes, profile registry)."
+        "Registry refresh completed (hashes, AGENTS block, profile registry)."
     )
     return 0
 

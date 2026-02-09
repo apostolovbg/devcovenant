@@ -20,6 +20,14 @@ metadata:
     - .pre-commit-config.yaml
   skipped_globs: []
   skipped_prefixes: []
+  managed_docs:
+    - AGENTS.md
+    - README.md
+    - CONTRIBUTING.md
+    - SPEC.md
+    - PLAN.md
+    - CHANGELOG.md
+    - devcovenant/README.md
   summary_labels:
     - Change
     - Why
