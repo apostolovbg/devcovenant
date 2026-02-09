@@ -16,7 +16,9 @@ classifiers = [
   "Programming Language :: Python :: 3.14",
 ]
 dependencies = [
+  "pre-commit>=4.5.1",
   "PyYAML>=6.0.2",
+  "pytest>=9.0.2",
   "semver>=3.0.2",
 ]
 [tool.setuptools]

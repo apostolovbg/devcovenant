@@ -17,7 +17,6 @@ import yaml
 from devcovenant.core import cli_options
 from devcovenant.core import manifest as manifest_module
 from devcovenant.core import profiles, uninstall
-from devcovenant.core.parser import PolicyParser
 from devcovenant.core.refresh_policies import refresh_policies
 
 DEV_COVENANT_DIR = "devcovenant"
@@ -406,10 +405,11 @@ def _resolve_template_path(
             return core_candidate
         return target_root / rel_path
     if policy_id:
+        policy_dir_name = policy_id.replace("-", "_")
         candidates.append(
             custom_root
             / POLICY_ROOT_NAME
-            / policy_id
+            / policy_dir_name
             / POLICY_ASSETS_DIR
             / rel_path
         )
@@ -429,8 +429,9 @@ def _resolve_template_path(
         / rel_path
     )
     if policy_id:
+        policy_dir_name = policy_id.replace("-", "_")
         candidates.append(
-            core_policies / policy_id / POLICY_ASSETS_DIR / rel_path
+            core_policies / policy_dir_name / POLICY_ASSETS_DIR / rel_path
         )
     if profile:
         candidates.append(
@@ -445,37 +446,16 @@ def _resolve_template_path(
     return core_root / rel_path
 
 
-def _load_policy_metadata(agents_path: Path) -> dict[str, dict[str, object]]:
-    """Return policy enabled flags from AGENTS.md."""
-    if not agents_path.exists():
-        return {}
-    parser = PolicyParser(agents_path)
-    metadata: dict[str, dict[str, object]] = {}
-    for policy in parser.parse_agents_md():
-        if not policy.policy_id:
-            continue
-        metadata[policy.policy_id] = {
-            "enabled": policy.enabled,
-        }
-    return metadata
-
-
-def _load_policy_assets(
-    package_root: Path,
-    target_root: Path,
-) -> dict[str, list[dict]]:
-    """Load policy asset entries from policy descriptors."""
-    assets: dict[str, list[dict]] = {}
-    core_root = package_root / "core" / POLICY_ROOT_NAME
+def _load_policy_assets(target_root: Path) -> dict[str, dict[str, object]]:
+    """Load fallback assets declared by custom policy descriptors."""
+    assets: dict[str, dict[str, object]] = {}
     custom_root = target_root / DEV_COVENANT_DIR / "custom" / POLICY_ROOT_NAME
-    policy_dirs: dict[str, Path] = {}
-    for root in (core_root, custom_root):
-        if not root.exists():
+    if not custom_root.exists():
+        return assets
+    for policy_dir in sorted(custom_root.iterdir()):
+        if not policy_dir.is_dir():
             continue
-        for entry in root.iterdir():
-            if entry.is_dir():
-                policy_dirs[entry.name] = entry
-    for policy_name, policy_dir in sorted(policy_dirs.items()):
+        policy_name = policy_dir.name
         descriptor_path = policy_dir / f"{policy_name}.yaml"
         if not descriptor_path.exists():
             continue
@@ -486,8 +466,46 @@ def _load_policy_assets(
         cleaned = _clean_asset_entries(entries)
         if cleaned:
             policy_id = descriptor.get("id") or policy_name.replace("_", "-")
-            assets[policy_id] = cleaned
+            metadata = descriptor.get("metadata")
+            if isinstance(metadata, dict):
+                descriptor_enabled = _coerce_bool(
+                    metadata.get("enabled"), default=True
+                )
+            else:
+                descriptor_enabled = True
+            assets[policy_id] = {
+                "assets": cleaned,
+                "enabled": descriptor_enabled,
+            }
     return assets
+
+
+def _allow_custom_policy_asset_fallback(target_root: Path) -> bool:
+    """Return whether custom policy asset fallback is enabled."""
+    config_path = target_root / DEV_COVENANT_DIR / "config.yaml"
+    if not config_path.exists():
+        return True
+    payload = yaml.safe_load(config_path.read_text(encoding="utf-8")) or {}
+    if not isinstance(payload, dict):
+        return True
+    install_cfg = payload.get("install", {})
+    if not isinstance(install_cfg, dict):
+        return True
+    return _coerce_bool(
+        install_cfg.get("allow_custom_policy_asset_fallback"),
+        default=True,
+    )
+
+
+def _load_policy_state_config(target_root: Path) -> dict[str, bool]:
+    """Return normalized policy_state values from config.yaml."""
+    config_path = target_root / DEV_COVENANT_DIR / "config.yaml"
+    if not config_path.exists():
+        return {}
+    payload = yaml.safe_load(config_path.read_text(encoding="utf-8")) or {}
+    if not isinstance(payload, dict):
+        return {}
+    return _normalize_policy_state_map(payload.get("policy_state"))
 
 
 def _load_profile_manifest(
@@ -616,22 +634,26 @@ def _apply_profile_assets(
     active_profiles: list[str],
     profile_manifests: dict[str, dict],
     disabled_policies: set[str],
-    policy_metadata: dict[str, dict[str, object]],
     asset_context: dict[str, str] | None = None,
 ) -> list[str]:
-    """Install profile and policy assets based on selection."""
+    """Install profile assets and custom-policy fallback assets."""
     installed: list[str] = []
+    reserved_targets: set[str] = set()
 
     for profile, manifest in profile_manifests.items():
         entries = _clean_asset_entries(manifest.get("assets", []))
         for entry in entries:
+            rel_path = str(entry.get("path", "")).strip()
+            if not rel_path:
+                continue
+            reserved_targets.add(rel_path)
             template_path = _resolve_template_path(
                 target_root,
                 template_root,
                 entry.get("template", ""),
                 profile=profile,
             )
-            target_path = target_root / entry.get("path", "")
+            target_path = target_root / rel_path
             if _apply_asset(
                 template_path,
                 target_path,
@@ -640,21 +662,30 @@ def _apply_profile_assets(
             ):
                 installed.append(str(target_path.relative_to(target_root)))
 
-    policy_assets = _load_policy_assets(package_root, target_root)
-    for policy_id, entries in policy_assets.items():
+    if not _allow_custom_policy_asset_fallback(target_root):
+        return installed
+
+    policy_assets = _load_policy_assets(target_root)
+    policy_state = _load_policy_state_config(target_root)
+    for policy_id, spec in policy_assets.items():
         if policy_id in disabled_policies:
             continue
-        policy_info = policy_metadata.get(policy_id)
-        if policy_info and not policy_info.get("enabled", True):
+        descriptor_enabled = bool(spec.get("enabled", True))
+        policy_enabled = policy_state.get(policy_id, descriptor_enabled)
+        if not policy_enabled:
             continue
+        entries = spec.get("assets", [])
         for entry in _clean_asset_entries(entries):
+            rel_path = str(entry.get("path", "")).strip()
+            if not rel_path or rel_path in reserved_targets:
+                continue
             template_path = _resolve_template_path(
                 target_root,
                 template_root,
                 entry.get("template", ""),
                 policy_id=policy_id,
             )
-            target_path = target_root / entry.get("path", "")
+            target_path = target_root / rel_path
             if _apply_asset(
                 template_path,
                 target_path,
@@ -1209,6 +1240,76 @@ def _doc_needs_bootstrap(text: str) -> bool:
     return len(non_empty) <= 1
 
 
+def _normalize_doc_asset_entries(raw_value: object) -> list[str]:
+    """Return normalized managed-doc paths from config values."""
+    if raw_value is None:
+        return []
+    if isinstance(raw_value, str):
+        candidates = [
+            part.strip() for part in raw_value.replace("\n", ",").split(",")
+        ]
+    elif isinstance(raw_value, list):
+        candidates = [str(part).strip() for part in raw_value]
+    else:
+        candidates = [str(raw_value).strip()]
+    normalized: list[str] = []
+    for candidate in candidates:
+        if not candidate or candidate == "__none__":
+            continue
+        doc_name = candidate
+        upper_name = candidate.upper()
+        if upper_name in _DOC_NAME_MAP:
+            doc_name = _DOC_NAME_MAP[upper_name]
+        elif upper_name.endswith(".MD"):
+            doc_id = upper_name[:-3]
+            if doc_id in _DOC_NAME_MAP:
+                doc_name = _DOC_NAME_MAP[doc_id]
+        if doc_name not in _MANAGED_DOCS:
+            continue
+        if doc_name not in normalized:
+            normalized.append(doc_name)
+    return normalized
+
+
+def _configured_managed_docs(
+    target_root: Path, *, include_agents: bool = True
+) -> tuple[str, ...]:
+    """Return managed docs resolved from config doc_assets values."""
+    defaults = [
+        doc_name
+        for doc_name in _MANAGED_DOCS
+        if include_agents or doc_name != "AGENTS.md"
+    ]
+    config_path = target_root / DEV_COVENANT_DIR / "config.yaml"
+    if not config_path.exists():
+        return tuple(defaults)
+    try:
+        payload = yaml.safe_load(config_path.read_text(encoding="utf-8")) or {}
+    except Exception:
+        return tuple(defaults)
+    if not isinstance(payload, dict):
+        return tuple(defaults)
+    doc_assets = payload.get("doc_assets")
+    if not isinstance(doc_assets, dict):
+        return tuple(defaults)
+    autogen_docs = _normalize_doc_asset_entries(doc_assets.get("autogen"))
+    user_docs = set(_normalize_doc_asset_entries(doc_assets.get("user")))
+    if not autogen_docs:
+        autogen_docs = list(defaults)
+    selected = [
+        doc_name
+        for doc_name in autogen_docs
+        if doc_name not in user_docs
+        and (include_agents or doc_name != "AGENTS.md")
+    ]
+    if include_agents and "AGENTS.md" not in selected:
+        selected.insert(0, "AGENTS.md")
+    selected = _dedupe_preserve_order(selected)
+    if not selected:
+        return tuple(defaults)
+    return tuple(selected)
+
+
 def _normalize_body_lines(raw_value: object) -> list[str]:
     """Return body lines from a descriptor field."""
     if raw_value is None:
@@ -1339,7 +1440,7 @@ def sync_managed_doc_assets(
 ) -> list[str]:
     """Ensure the managed docs reflect their descriptor assets."""
 
-    names = tuple(doc_names or _MANAGED_DOCS)
+    names = tuple(doc_names or _configured_managed_docs(target_root))
     updated: list[str] = []
     title_overrides = title_overrides or {}
     for doc_name in names:
@@ -1906,6 +2007,18 @@ def _merge_overlay_map(
     return merged
 
 
+def _coerce_bool(raw_value: object, *, default: bool) -> bool:
+    """Return a boolean for common scalar values with a fallback."""
+    if isinstance(raw_value, bool):
+        return raw_value
+    token = str(raw_value).strip().lower()
+    if token in {"true", "1", "yes", "y", "on"}:
+        return True
+    if token in {"false", "0", "no", "n", "off"}:
+        return False
+    return default
+
+
 def _normalize_policy_state_map(raw_value: object | None) -> dict[str, bool]:
     """Normalize a policy_state map into boolean policy flags."""
     if not isinstance(raw_value, dict):
@@ -1915,14 +2028,7 @@ def _normalize_policy_state_map(raw_value: object | None) -> dict[str, bool]:
         key = str(policy_id or "").strip()
         if not key:
             continue
-        if isinstance(enabled_value, bool):
-            normalized[key] = enabled_value
-            continue
-        token = str(enabled_value).strip().lower()
-        if token in {"true", "1", "yes", "y", "on"}:
-            normalized[key] = True
-        elif token in {"false", "0", "no", "n", "off"}:
-            normalized[key] = False
+        normalized[key] = _coerce_bool(enabled_value, default=True)
     return normalized
 
 
@@ -3297,7 +3403,6 @@ def main(argv=None) -> None:
     disabled_policies = _apply_policy_state_disables(
         target_root, disable_policies
     )
-    policy_metadata = _load_policy_metadata(agents_path)
     profile_manifests = _load_profile_manifests(
         package_root,
         target_root,
@@ -3317,20 +3422,13 @@ def main(argv=None) -> None:
             active_profiles,
             profile_manifests,
             set(disabled_policies),
-            policy_metadata,
             asset_context=asset_context,
         )
     )
 
-    managed_docs = [
-        ("README.md", repo_name),
-        ("SPEC.md", None),
-        ("PLAN.md", None),
-        ("CHANGELOG.md", None),
-        ("CONTRIBUTING.md", None),
-        ("devcovenant/README.md", None),
-    ]
-    for doc_name, title_override in managed_docs:
+    managed_docs = _configured_managed_docs(target_root, include_agents=False)
+    for doc_name in managed_docs:
+        title_override = repo_name if doc_name == "README.md" else None
         doc_path = target_root / doc_name
         existed = doc_path.exists()
         _ensure_doc_from_descriptor(

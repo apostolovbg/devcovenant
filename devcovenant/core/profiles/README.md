@@ -23,6 +23,11 @@ A policy is activated by config `policy_state`. Profiles provide policy
 metadata overlays and assets (suffixes, required commands, dependency files)
 without directly toggling policy activation.
 
+Stock policy assets are supplied by profile `assets` declarations. Custom
+policies can still ship fallback assets in
+`devcovenant/custom/policies/<policy>/<policy>.yaml` when
+`install.allow_custom_policy_asset_fallback` is enabled.
+
 ## Workflow expectations
 Managed docs and policies are kept in sync via `devcovenant/run_pre_commit.py`
 (start/tests/end). When adding or editing profiles, refresh POLICY_MAP and

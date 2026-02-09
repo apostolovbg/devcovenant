@@ -3,6 +3,8 @@
 import textwrap
 from pathlib import Path
 
+import yaml
+
 from devcovenant.core import profiles
 
 
@@ -113,3 +115,23 @@ def test_profiles_have_assets_unless_exempt() -> None:
             continue
         assets = meta.get("assets_available", [])
         assert assets, f"profile {name} should include assets_available"
+
+
+def test_profiles_do_not_define_activation_scope_keys() -> None:
+    """Profile manifests must not carry retired activation scope keys."""
+    repo_root = Path(__file__).resolve().parents[3]
+    forbidden = {"profile_scopes", "policy_scopes"}
+    for profile_root in (
+        repo_root / "devcovenant" / "core" / "profiles",
+        repo_root / "devcovenant" / "custom" / "profiles",
+    ):
+        for profile_dir in profile_root.iterdir():
+            if not profile_dir.is_dir() or profile_dir.name.startswith("_"):
+                continue
+            manifest_path = profile_dir / f"{profile_dir.name}.yaml"
+            payload = yaml.safe_load(manifest_path.read_text(encoding="utf-8"))
+            present = forbidden.intersection(payload.keys())
+            assert not present, (
+                f"{manifest_path} contains retired scope keys: "
+                f"{sorted(present)}"
+            )

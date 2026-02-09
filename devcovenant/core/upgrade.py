@@ -12,6 +12,8 @@ from datetime import datetime, timezone
 from pathlib import Path
 from typing import Dict, List, Tuple
 
+import yaml
+
 from devcovenant.core import cli_options, install
 from devcovenant.core import manifest as manifest_module
 from devcovenant.core import policy_replacements, profiles
@@ -68,6 +70,57 @@ def _read_version(path: Path) -> str | None:
     if not path.exists():
         return None
     return path.read_text(encoding="utf-8").strip()
+
+
+def _coerce_bool(raw_value: object, *, default: bool) -> bool:
+    """Return a boolean for common scalar values with a fallback."""
+    if isinstance(raw_value, bool):
+        return raw_value
+    token = str(raw_value).strip().lower()
+    if token in {"true", "1", "yes", "y", "on"}:
+        return True
+    if token in {"false", "0", "no", "n", "off"}:
+        return False
+    return default
+
+
+def _normalize_policy_state(raw_value: object) -> Dict[str, bool]:
+    """Normalize policy_state payload into a policy->enabled map."""
+    if not isinstance(raw_value, dict):
+        return {}
+    normalized: Dict[str, bool] = {}
+    for policy_id, enabled_value in raw_value.items():
+        key = str(policy_id or "").strip()
+        if not key:
+            continue
+        normalized[key] = _coerce_bool(enabled_value, default=True)
+    return normalized
+
+
+def _load_policy_state(config_path: Path) -> Dict[str, bool]:
+    """Load policy_state from config.yaml."""
+    if not config_path.exists():
+        return {}
+    payload = yaml.safe_load(config_path.read_text(encoding="utf-8")) or {}
+    if not isinstance(payload, dict):
+        return {}
+    return _normalize_policy_state(payload.get("policy_state"))
+
+
+def _apply_policy_state_overrides(
+    policies: Dict[str, object], policy_state: Dict[str, bool]
+) -> None:
+    """Apply config policy_state overrides to parsed policy objects."""
+    if not policy_state:
+        return
+    for policy_id, policy in policies.items():
+        if policy_id not in policy_state:
+            continue
+        enabled = policy_state[policy_id]
+        setattr(policy, "enabled", enabled)
+        metadata = getattr(policy, "raw_metadata", None)
+        if isinstance(metadata, dict):
+            metadata["enabled"] = "true" if enabled else "false"
 
 
 def _parse_metadata_block(
@@ -326,6 +379,10 @@ def main(argv=None) -> None:
     agents_path = target_root / "AGENTS.md"
 
     existing_policies = _collect_policies(agents_path)
+    policy_state = _load_policy_state(
+        target_root / "devcovenant" / "config.yaml"
+    )
+    _apply_policy_state_overrides(existing_policies, policy_state)
     replacements = policy_replacements.load_policy_replacements(
         Path(__file__).resolve().parents[2]
     )

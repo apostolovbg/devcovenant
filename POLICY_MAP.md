@@ -42,7 +42,7 @@ and assets; custom policies are opt-in via custom profiles or config overrides.
 
 `devcov-integrity-guard` is the active replacement for legacy integrity checks.
 
-## Profile-Scoped Core Policies
+## Profile-Overlayed Core Policies
 - dependency-license-sync — Profiles: python, javascript, typescript, java,
   csharp, php, ruby, go, rust, swift, dart, flutter, fastapi, frappe,
   objective-c. Overlays must reference each ecosystem’s manifest files; the

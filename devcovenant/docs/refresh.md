@@ -9,10 +9,9 @@
 
 ## Overview
 Refresh keeps DevCovenant registries and config autogen data consistent
-with the active profiles and policy descriptors. Managed docs and policy
-blocks are handled by deploy/update, while refresh focuses on registry
-state, profile registries, and profile-driven repo config such as the
-merged `.gitignore` and `.pre-commit-config.yaml`.
+with the active profiles and policy descriptors. Refresh-all also syncs
+managed docs selected by `doc_assets.autogen` (excluding any docs listed
+under `doc_assets.user`), while `refresh` remains registry-only.
 
 ## Workflow
 1. Registry-only refresh runs at the start of each devcovenant command.
@@ -24,8 +23,8 @@ merged `.gitignore` and `.pre-commit-config.yaml`.
 ## Refresh-All
 Refresh-all regenerates registries, the profile registry, config autogen
 sections, the merged `.gitignore`, and the generated
-`.pre-commit-config.yaml`. It does not touch managed docs or policy
-blocks.
+`.pre-commit-config.yaml`. It also syncs managed doc blocks/headers for
+docs selected by `doc_assets`.
 
 ## Registry-Only Refresh
 Registry-only refresh rebuilds local registry files and profile registries

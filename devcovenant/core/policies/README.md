@@ -7,17 +7,22 @@
 
 ## Overview
 Policy assets are files created because a policy is enabled, such as license
-reports, security logs, or policy-specific README files. Assets live under each
-policy at `devcovenant/core/policies/<policy>/assets/` and are installed only
-when the policy is active and its profile scopes match the repo's active
-profiles. Custom overrides live under
-`devcovenant/custom/policies/<policy>/assets/` and take precedence.
+reports, security logs, or policy-specific README files.
+
+Core policy behavior is profile-owned: stock policy assets should be declared
+in profile manifests (`global` or other active profiles), not loaded directly
+from core policy folders.
+
+Custom policy behavior keeps a fallback path: when
+`install.allow_custom_policy_asset_fallback` is true, assets declared in
+`devcovenant/custom/policies/<policy>/<policy>.yaml` are loaded if that custom
+policy resolves enabled via `policy_state`.
 
 ## Asset Declarations
-Policy assets are declared in the policy descriptor itself under the `assets`
-key. Example descriptor path:
+Custom fallback assets are declared in the custom policy descriptor under the
+`assets` key. Example descriptor path:
 ```
-devcovenant/core/policies/dependency_license_sync/dependency_license_sync.yaml
+devcovenant/custom/policies/my_policy/my_policy.yaml
 ```
 
 A typical descriptor fragment looks like:
@@ -28,11 +33,11 @@ assets:
     mode: merge
 ```
 
-Install/update reads the descriptor assets directly; there is no separate
-policy-asset registry.
+Install/update treats profile asset declarations as primary. Custom policy
+descriptor assets are a fallback convenience path.
 
 ## Workflow
-When adding or adjusting a policy asset, update the policy descriptor, add
-or refresh the asset file, and ensure install/update logic can resolve the
-path. If a profile declares the same asset, the profile wins to keep
-framework-specific assets prioritized over generic policy defaults.
+When adding stock policy assets, declare them in profile manifests. When adding
+custom policy assets without profile edits, declare them in the custom policy
+descriptor and keep `install.allow_custom_policy_asset_fallback` enabled.
+If a profile declares the same target path, the profile asset wins.

@@ -52,24 +52,29 @@ truth for behavior and requirements.
 - [done] `run_tests` executes configured command lists and records test status.
 
 ## Immediate Outstanding Work
-1. [not done] Config-only policy activation migration (critical)
-- Remove remaining runtime scope activation paths (policy/profile scopes).
-- Keep activation authoritative in config (`policy_state`).
-- Preserve current enabled/disabled outcomes during migration.
+1. [done] Config-only policy activation migration (critical)
+- Removed runtime activation drift between AGENTS metadata and config.
+- Kept activation authoritative in config (`policy_state`).
+- Preserved enabled/disabled outcomes by applying config overrides before
+  sync checks and policy execution.
 
-2. [not done] Scope-key retirement in descriptors
-- Remove policy/profile scope keys from policy and profile YAMLs where they are
-  still used for activation logic.
-- Keep profile overlays for metadata/assets.
-- Do not use overlays for activation.
+2. [done] Scope-key retirement in descriptors
+- Removed policy/profile scope keys from policy and profile YAMLs.
+- Added regression checks to block reintroduction of retired scope keys.
+- Kept profile overlays for metadata/assets without using them for activation.
 
-3. [not done] Policy enable/disable simplification
-- Unify core and custom policy activation semantics (single `enabled` model).
-- Remove transitional toggles and guardrails that duplicate activation logic.
+3. [done] Policy enable/disable simplification
+- Unified activation semantics across runtime, install, and upgrade flows.
+- Removed AGENTS-driven activation decisions from asset/replacement planning.
+- Kept a single `enabled` model from descriptor defaults overridden by
+  config `policy_state`.
+- Shifted stock policy asset installation to profile assets and kept custom
+  policy descriptor assets as optional fallback via config.
 
-4. [not done] Legacy policy consolidation cleanup
-- Remove retired policy directories and references after consolidation.
-- Update maps/docs/tests/registries so removed policy IDs cannot reappear.
+4. [done] Legacy policy consolidation cleanup
+- Removed stale scope-wording in policy map sections after consolidation.
+- Added registry inventory regression checks so retired policy IDs cannot
+  reappear in registry outputs.
 
 5. [done] AGENTS/registry hardening
 - Keep registry generation descriptor-driven with resolved metadata values.
@@ -83,18 +88,21 @@ truth for behavior and requirements.
 - Make `refresh_registry` the canonical registry regeneration command.
 - Remove or deprecate legacy update-policy-registry command paths.
 
-8. [not done] CLI module layout cleanup
-- Keep CLI-exposed command modules at `devcovenant/` package root.
-- Remove forwarding-wrapper patterns and duplicate same-name root/core modules.
-- Preserve file-path gate command usage.
+8. [done] CLI module layout cleanup
+- Kept CLI-exposed command modules at `devcovenant/` package root.
+- Removed forwarding-wrapper patterns and duplicate same-name root/core
+  command modules.
+- Preserved file-path gate command usage.
 
 ## Secondary Outstanding Work
-1. [not done] Managed docs pipeline completion
-- Finalize strict sync for README/SPEC/PLAN/CHANGELOG/CONTRIBUTING from YAML
+1. [done] Managed docs pipeline completion
+- Finalized strict sync for README/SPEC/PLAN/CHANGELOG/CONTRIBUTING from YAML
   assets and managed blocks.
+- Wired refresh-all and update/deploy flows to honor `doc_assets.autogen` and
+  `doc_assets.user` when selecting managed docs.
 
 2. [not done] Lifecycle refinements and fallbacks
-- Complete `reset-to-stock` behavior.
+- [done] Retired `reset-to-stock` lifecycle path and references.
 - Finalize version and LICENSE fallback behavior across lifecycle commands.
 
 3. [not done] Adapter expansion and test coverage

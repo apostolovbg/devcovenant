@@ -110,6 +110,55 @@ class DevCovenantEngine:
                 return yaml.safe_load(f) or {}
         return {}
 
+    @staticmethod
+    def _as_bool(raw_value: Any) -> Optional[bool]:
+        """Normalize common truthy/falsey values to bool."""
+        if isinstance(raw_value, bool):
+            return raw_value
+        if isinstance(raw_value, str):
+            normalized = raw_value.strip().lower()
+            if normalized in {"true", "1", "yes", "on"}:
+                return True
+            if normalized in {"false", "0", "no", "off"}:
+                return False
+            return None
+        if isinstance(raw_value, int):
+            if raw_value == 1:
+                return True
+            if raw_value == 0:
+                return False
+        return None
+
+    def _policy_state(self) -> Dict[str, bool]:
+        """Return normalized policy activation overrides from config."""
+        raw_state = self.config.get("policy_state", {})
+        if not isinstance(raw_state, dict):
+            return {}
+        state: Dict[str, bool] = {}
+        for raw_id, raw_value in raw_state.items():
+            policy_id = str(raw_id or "").strip()
+            if not policy_id:
+                continue
+            normalized = self._as_bool(raw_value)
+            if normalized is None:
+                continue
+            state[policy_id] = normalized
+        return state
+
+    def _apply_policy_state_overrides(
+        self, policies: List[PolicyDefinition]
+    ) -> None:
+        """Apply config policy_state overrides to parsed policies in-place."""
+        state = self._policy_state()
+        if not state:
+            return
+        for policy in policies:
+            if policy.policy_id not in state:
+                continue
+            enabled = state[policy.policy_id]
+            policy.enabled = enabled
+            policy.raw_metadata["enabled"] = "true" if enabled else "false"
+
     def _apply_config_paths(self) -> None:
         """Apply configurable path overrides after the config loads."""
         paths_cfg = self.config.get("paths", {})
@@ -272,6 +321,7 @@ class DevCovenantEngine:
         """
         # Parse policies from AGENTS.md
         policies = self.parser.parse_agents_md()
+        self._apply_policy_state_overrides(policies)
 
         # Check for policy sync issues (hash mismatches)
         sync_issues = self.registry.check_policy_sync(policies)

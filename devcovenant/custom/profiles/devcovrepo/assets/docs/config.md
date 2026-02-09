@@ -32,6 +32,9 @@ The core sections are:
 - `freeze_core_policies` to copy policy logic into custom overlays.
 - `pre_commit` for `.pre-commit-config.yaml` enablement and overrides.
 - `install.generic_config` to guard deploys until the config is reviewed.
+- `install.allow_custom_policy_asset_fallback` for custom policy asset
+  fallback from custom policy descriptors when profile assets do not supply
+  those files.
 
 ## Profiles and Overrides
 Overrides merge in the order: policy defaults, profile overlays, then
@@ -51,6 +54,8 @@ entries such as `*_old.*` when backup artifacts should not trigger logging.
 Pre-commit config is built from profile fragments (global first), then
 merged with `pre_commit.overrides` from config. Profile `ignore_dirs`
 are converted into an `exclude` regex so hooks skip the same paths.
+Stock policy assets are profile-owned, while custom policies can still load
+descriptor assets when `install.allow_custom_policy_asset_fallback` is true.
 
 ## Examples
 ```yaml

@@ -3,6 +3,7 @@
 from pathlib import Path
 
 import pytest
+import yaml
 
 from devcovenant.core import manifest as manifest_module
 from devcovenant.core import policy_replacements, upgrade
@@ -33,6 +34,18 @@ def _write_agents(path: Path, enabled_value: str) -> None:
         "Policy description.\n"
     )
     path.write_text(text, encoding="utf-8")
+
+
+def _write_config_policy_state(target: Path, enabled: bool) -> None:
+    """Write a config.yaml policy_state override for old-policy."""
+    config_dir = target / "devcovenant"
+    config_dir.mkdir(parents=True, exist_ok=True)
+    config_path = config_dir / "config.yaml"
+    payload = {"policy_state": {"old-policy": enabled}}
+    config_path.write_text(
+        yaml.safe_dump(payload, sort_keys=False),
+        encoding="utf-8",
+    )
 
 
 @pytest.fixture
@@ -135,3 +148,75 @@ def test_upgrade_removes_disabled_replaced_policy(
     updated = agents_path.read_text(encoding="utf-8")
     assert "old-policy" not in updated
     assert not custom_script.exists()
+
+
+def test_upgrade_policy_state_false_overrides_agents_enabled(
+    tmp_path: Path, monkeypatch, replacement_map
+) -> None:
+    """Config policy_state false should remove replaced policy."""
+    target = tmp_path / "repo"
+    target.mkdir()
+    agents_path = target / "AGENTS.md"
+    _write_agents(agents_path, "true")
+    _write_config_policy_state(target, False)
+
+    custom_scripts = (
+        target / "devcovenant" / "custom" / "policies" / "old_policy"
+    )
+    custom_scripts.mkdir(parents=True, exist_ok=True)
+    custom_script = custom_scripts / "old_policy.py"
+    custom_script.write_text("# custom\n", encoding="utf-8")
+
+    monkeypatch.setattr(
+        policy_replacements,
+        "load_policy_replacements",
+        lambda _root: replacement_map,
+    )
+
+    upgrade.main(
+        _with_skip_refresh(["--target", str(target), "--version", "0.2.0"])
+    )
+
+    updated = agents_path.read_text(encoding="utf-8")
+    assert "old-policy" not in updated
+    assert not custom_script.exists()
+
+
+def test_upgrade_policy_state_true_overrides_agents_disabled(
+    tmp_path: Path, monkeypatch, replacement_map
+) -> None:
+    """Config policy_state true should migrate replaced policy."""
+    target = tmp_path / "repo"
+    target.mkdir()
+    agents_path = target / "AGENTS.md"
+    _write_agents(agents_path, "false")
+    _write_config_policy_state(target, True)
+
+    core_scripts = target / "devcovenant" / "core" / "policies" / "old_policy"
+    core_scripts.mkdir(parents=True, exist_ok=True)
+    script_path = core_scripts / "old_policy.py"
+    script_path.write_text("print('legacy')\n", encoding="utf-8")
+
+    monkeypatch.setattr(
+        policy_replacements,
+        "load_policy_replacements",
+        lambda _root: replacement_map,
+    )
+
+    upgrade.main(
+        _with_skip_refresh(["--target", str(target), "--version", "0.2.0"])
+    )
+
+    updated = agents_path.read_text(encoding="utf-8")
+    assert "status: deprecated" in updated
+    assert "custom: true" in updated
+
+    custom_script = (
+        target
+        / "devcovenant"
+        / "custom"
+        / "policies"
+        / "old_policy"
+        / "old_policy.py"
+    )
+    assert custom_script.exists()

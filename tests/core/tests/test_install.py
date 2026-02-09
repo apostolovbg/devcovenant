@@ -28,6 +28,81 @@ def _mark_config_ready(target: Path) -> None:
     config_path.write_text(updated, encoding="utf-8")
 
 
+def _set_custom_policy_asset_fallback(target: Path, enabled: bool) -> None:
+    """Set install.allow_custom_policy_asset_fallback in config.yaml."""
+    config_path = target / "devcovenant" / "config.yaml"
+    payload = yaml.safe_load(config_path.read_text(encoding="utf-8")) or {}
+    install_cfg = payload.get("install", {})
+    if not isinstance(install_cfg, dict):
+        install_cfg = {}
+    install_cfg["allow_custom_policy_asset_fallback"] = enabled
+    payload["install"] = install_cfg
+    config_path.write_text(
+        yaml.safe_dump(payload, sort_keys=False),
+        encoding="utf-8",
+    )
+
+
+def _set_doc_assets(
+    target: Path, *, autogen: list[str], user: list[str]
+) -> None:
+    """Set doc_assets.autogen and doc_assets.user in config.yaml."""
+    config_path = target / "devcovenant" / "config.yaml"
+    payload = yaml.safe_load(config_path.read_text(encoding="utf-8")) or {}
+    payload["doc_assets"] = {
+        "autogen": list(autogen),
+        "user": list(user),
+    }
+    config_path.write_text(
+        yaml.safe_dump(payload, sort_keys=False),
+        encoding="utf-8",
+    )
+
+
+def _write_custom_policy_with_asset(target: Path) -> None:
+    """Create a custom policy descriptor with a fallback asset."""
+    policy_dir = (
+        target / "devcovenant" / "custom" / "policies" / "custom_asset_policy"
+    )
+    policy_dir.mkdir(parents=True, exist_ok=True)
+    (policy_dir / "custom_asset_policy.py").write_text(
+        "from devcovenant.core.base import PolicyCheck\n\n"
+        "class CustomAssetPolicyCheck(PolicyCheck):\n"
+        "    policy_id = 'custom-asset-policy'\n\n"
+        "    def check(self, context):\n"
+        "        return []\n",
+        encoding="utf-8",
+    )
+    descriptor = {
+        "id": "custom-asset-policy",
+        "text": "Custom policy asset fallback test.",
+        "assets": [
+            {
+                "path": "CUSTOM_POLICY_ASSET.md",
+                "template": "CUSTOM_POLICY_ASSET.md",
+                "mode": "replace",
+            }
+        ],
+        "metadata": {
+            "id": "custom-asset-policy",
+            "enabled": "true",
+            "severity": "warning",
+            "auto_fix": "false",
+            "custom": "true",
+        },
+    }
+    (policy_dir / "custom_asset_policy.yaml").write_text(
+        yaml.safe_dump(descriptor, sort_keys=False),
+        encoding="utf-8",
+    )
+    assets_dir = policy_dir / "assets"
+    assets_dir.mkdir(parents=True, exist_ok=True)
+    (assets_dir / "CUSTOM_POLICY_ASSET.md").write_text(
+        "custom fallback asset\n",
+        encoding="utf-8",
+    )
+
+
 def test_install_records_manifest_with_core_excluded(tmp_path: Path) -> None:
     """Installer run on an empty repo records its manifest and options."""
     target = tmp_path / "repo"
@@ -187,6 +262,38 @@ def test_install_creates_spec_and_plan(tmp_path: Path) -> None:
     deploy.main(_with_skip_refresh(["--target", str(target)]))
     assert (target / "SPEC.md").exists()
     assert (target / "PLAN.md").exists()
+
+
+def test_update_respects_doc_assets_user_docs(tmp_path: Path) -> None:
+    """Update should skip docs listed under doc_assets.user."""
+    target = tmp_path / "repo"
+    target.mkdir()
+    install.main(
+        _with_skip_refresh(
+            [
+                "--target",
+                str(target),
+                "--mode",
+                "empty",
+                "--version",
+                "0.6.0",
+            ]
+        )
+    )
+    _set_doc_assets(
+        target,
+        autogen=["README.md", "SPEC.md", "PLAN.md"],
+        user=["README.md"],
+    )
+    readme_path = target / "README.md"
+    custom_readme = "# User README\n\nKeep this exactly.\n"
+    readme_path.write_text(custom_readme, encoding="utf-8")
+
+    update.main(_with_skip_refresh(["--target", str(target)]))
+
+    updated_readme = readme_path.read_text(encoding="utf-8")
+    assert updated_readme == custom_readme
+    assert install.BLOCK_BEGIN not in updated_readme
 
 
 def test_profile_assets_use_target_version(tmp_path: Path) -> None:
@@ -467,6 +574,114 @@ def test_policy_assets_skip_when_disabled(tmp_path: Path) -> None:
     deploy.main(_with_skip_refresh(["--target", str(target)]))
     assert not (target / "THIRD_PARTY_LICENSES.md").exists()
     assert not (target / "licenses" / "README.md").exists()
+
+
+def test_stock_policy_descriptor_assets_are_profile_owned(
+    tmp_path: Path,
+) -> None:
+    """Core policy descriptor assets are not installed directly."""
+    target = tmp_path / "repo"
+    target.mkdir()
+    install.main(
+        _with_skip_refresh(
+            [
+                "--target",
+                str(target),
+                "--mode",
+                "empty",
+                "--version",
+                "0.7.0",
+            ]
+        )
+    )
+    _mark_config_ready(target)
+    deploy.main(_with_skip_refresh(["--target", str(target)]))
+    assert not (target / "THIRD_PARTY_LICENSES.md").exists()
+    assert not (target / "licenses" / "README.md").exists()
+
+
+def test_policy_assets_skip_when_policy_state_disabled(
+    tmp_path: Path,
+) -> None:
+    """Config policy_state must disable policy assets before refresh."""
+    target = tmp_path / "repo"
+    target.mkdir()
+    install.main(
+        _with_skip_refresh(
+            [
+                "--target",
+                str(target),
+                "--mode",
+                "empty",
+                "--version",
+                "0.7.0",
+            ]
+        )
+    )
+    config_path = target / "devcovenant" / "config.yaml"
+    payload = yaml.safe_load(config_path.read_text(encoding="utf-8")) or {}
+    state = payload.get("policy_state", {})
+    if not isinstance(state, dict):
+        state = {}
+    state["dependency-license-sync"] = False
+    payload["policy_state"] = state
+    config_path.write_text(
+        yaml.safe_dump(payload, sort_keys=False),
+        encoding="utf-8",
+    )
+    _mark_config_ready(target)
+    deploy.main(_with_skip_refresh(["--target", str(target)]))
+    assert not (target / "THIRD_PARTY_LICENSES.md").exists()
+    assert not (target / "licenses" / "README.md").exists()
+
+
+def test_custom_policy_assets_install_via_fallback(tmp_path: Path) -> None:
+    """Custom policy descriptor assets install without profile wiring."""
+    target = tmp_path / "repo"
+    target.mkdir()
+    install.main(
+        _with_skip_refresh(
+            [
+                "--target",
+                str(target),
+                "--mode",
+                "empty",
+                "--version",
+                "0.7.0",
+            ]
+        )
+    )
+    _write_custom_policy_with_asset(target)
+    _mark_config_ready(target)
+    deploy.main(_with_skip_refresh(["--target", str(target)]))
+    asset_path = target / "CUSTOM_POLICY_ASSET.md"
+    assert asset_path.exists()
+    assert "custom fallback asset" in asset_path.read_text(encoding="utf-8")
+
+
+def test_custom_policy_assets_fallback_can_be_disabled(
+    tmp_path: Path,
+) -> None:
+    """install.allow_custom_policy_asset_fallback disables fallback assets."""
+    target = tmp_path / "repo"
+    target.mkdir()
+    install.main(
+        _with_skip_refresh(
+            [
+                "--target",
+                str(target),
+                "--mode",
+                "empty",
+                "--version",
+                "0.7.0",
+            ]
+        )
+    )
+    _write_custom_policy_with_asset(target)
+    _set_custom_policy_asset_fallback(target, False)
+    _mark_config_ready(target)
+    deploy.main(_with_skip_refresh(["--target", str(target)]))
+    assert not (target / "CUSTOM_POLICY_ASSET.md").exists()
 
 
 def test_profile_assets_installed_for_active_profiles(

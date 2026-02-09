@@ -67,6 +67,7 @@ install:
   allow_existing: false
   auto_uninstall: false
   preserve_custom: true
+  allow_custom_policy_asset_fallback: true
   config_mode: preserve
   doc_mode: preserve
   disable_policy: []

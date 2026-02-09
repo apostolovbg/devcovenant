@@ -34,6 +34,82 @@ Example entry:
 ## Version 0.2.6
 
 - 2026-02-09:
+  Change: Updated policy activation flow, managed-doc sync behavior, and CLI
+  command-module layout for the consolidated 0.2.6 command surface.
+  Why: Removed duplicate same-name root/core command modules and finalized
+  descriptor-driven managed-doc sync behavior through `doc_assets`.
+  Impact: Added root-owned command implementations plus regression checks for
+  command placement and managed-doc sync selection.
+  Files:
+  PLAN.md
+  POLICY_MAP.md
+  SPEC.md
+  THIRD_PARTY_LICENSES.md
+  devcovenant/config.yaml
+  devcovenant/core/engine.py
+  devcovenant/core/install.py
+  devcovenant/core/policies/README.md
+  devcovenant/core/profiles/README.md
+  devcovenant/core/profiles/global/assets/config.yaml
+  devcovenant/core/profiles/global/assets/devcovenant/run_pre_commit.py
+  devcovenant/core/profiles/global/assets/devcovenant/run_tests.py
+  devcovenant/core/profiles/global/assets/devcovenant/update_test_status.py
+  devcovenant/core/refresh_all.py
+  devcovenant/core/registry.py
+  devcovenant/core/run_pre_commit.py
+  devcovenant/core/run_tests.py
+  devcovenant/core/update_lock.py
+  devcovenant/core/update_test_status.py
+  devcovenant/core/upgrade.py
+  devcovenant/custom/profiles/devcovrepo/assets/docs/config.md
+  devcovenant/custom/profiles/devcovrepo/assets/docs/refresh.md
+  devcovenant/docs/config.md
+  devcovenant/docs/refresh.md
+  devcovenant/run_pre_commit.py
+  devcovenant/run_tests.py
+  devcovenant/update_lock.py
+  devcovenant/update_test_status.py
+  licenses/pre-commit-4.5.1.txt
+  licenses/pytest-9.0.2.txt
+  pyproject.toml
+  requirements.in
+  requirements.lock
+  tests/core/profiles/test_profiles.py
+  tests/core/tests/test_command_layout.py
+  tests/core/tests/test_engine.py
+  tests/core/tests/test_install.py
+  tests/core/tests/test_policy_descriptor.py
+  tests/core/tests/test_policy_inventory.py
+  tests/core/tests/test_policy_replacements.py
+  tests/core/tests/test_refresh_all.py
+
+- 2026-02-09:
+  Change: Updated activation and asset ownership so stock policy assets are
+  profile-owned and custom policy descriptor assets work as optional fallback.
+  Why: Removed AGENTS-driven activation drift and removed direct core policy
+  descriptor asset installation while keeping custom policy onboarding simple.
+  Impact: Added config and tests for custom-policy fallback assets without
+  custom profile wiring and blocked retired scope-key metadata reintroduction.
+  Files:
+  PLAN.md
+  SPEC.md
+  devcovenant/config.yaml
+  devcovenant/core/engine.py
+  devcovenant/core/install.py
+  devcovenant/core/policies/README.md
+  devcovenant/core/profiles/README.md
+  devcovenant/core/profiles/global/assets/config.yaml
+  devcovenant/core/registry.py
+  devcovenant/core/upgrade.py
+  devcovenant/custom/profiles/devcovrepo/assets/docs/config.md
+  devcovenant/docs/config.md
+  tests/core/profiles/test_profiles.py
+  tests/core/tests/test_engine.py
+  tests/core/tests/test_install.py
+  tests/core/tests/test_policy_descriptor.py
+  tests/core/tests/test_policy_replacements.py
+
+- 2026-02-09:
   Change: Updated refresh flows to make policy registry the canonical resolved
   source and regenerate AGENTS policy sections from registry entries.
   Why: Removed AGENTS-first drift, removed append-missing policy-mode legacy,

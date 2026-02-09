@@ -179,8 +179,6 @@ drift is detectable and reversible.
 - `undeploy`: remove managed blocks/registries and revert generated
   `.gitignore` fragments while keeping core + config.
 - `uninstall`: remove the entire DevCovenant footprint and managed blocks.
-- `reset-to-stock` (planned): restore stock metadata/profile config, updating
-  config, docs, and registries.
 
 ### Command/script placement
 - User-facing, runnable commands live at the `devcovenant/` root and are
@@ -188,7 +186,8 @@ drift is detectable and reversible.
 - File-path command usage is a supported interface and must continue to work
   (`python3 devcovenant/run_pre_commit.py ...` and
   `python3 devcovenant/run_tests.py`).
-- Implementation logic lives under `devcovenant/core/` as internal modules.
+- Shared policy and engine logic lives under `devcovenant/core/` as internal
+  modules; command entrypoints remain rooted at `devcovenant/`.
 - `devcovenant/core/tools/` is not a public entrypoint surface; any helper
   meant for users must have a CLI command and a top-level module.
 - CLI-exposed modules at `devcovenant/` root are real implementations,
@@ -203,10 +202,10 @@ drift is detectable and reversible.
   `run_tests.py` executes the merged
   `devflow-run-gates.required_commands` list resolved from profiles and
   config (defaults remain pytest + unittest) and records the exact command
-  string to `update_test_status`. The corresponding implementations live under
-  `devcovenant/core/`. Language-aware policies delegate parsing/checking to
-  per-language adapters under `devcovenant/core/policies/<policy>/adapters/
-  <lang>.py`; core policy modules remain language-agnostic.
+  string to `update_test_status`. Language-aware policies delegate
+  parsing/checking to per-language adapters under
+  `devcovenant/core/policies/<policy>/adapters/<lang>.py`; core policy modules
+  remain language-agnostic.
 
 ### Documentation management
 - Every managed doc must include `Last Updated` and `Version` headers.
@@ -276,6 +275,9 @@ drift is detectable and reversible.
   Repositories can drive which managed docs the active profiles (for example,
   `global`, `docs`, `devcovenant`) synthesize versus which remain purely
   user-maintained.
+- Managed-doc targets resolve as `doc_assets.autogen` minus `doc_assets.user`.
+  Install/update/refresh-all sync only those docs from descriptors; AGENTS
+  policy content remains generated from the policy registry.
 - This mirrors the policy override structure (`autogen_metadata_overrides` and
   `user_metadata_overrides`) so teams can lift the default curated assets into
   their own configs when needed.
@@ -348,13 +350,23 @@ drift is detectable and reversible.
 - Policies are activated only by config (`policy_state`), not by policy/profile
   scopes. `AGENTS.md` still lists every policy (core + custom); the resolved
   `enabled` flag reflects config state.
-- Immediate outstanding migration: remove any remaining scope-key and
-  profile-first activation code paths so runtime behavior fully matches the
-  config-only activation model.
+- Runtime checks apply `policy_state` overrides before sync and execution, so
+  AGENTS policy metadata remains downstream from config activation.
 - Policy and profile scope keys are removed. Profiles still contribute metadata
-  overlays and assets; policy YAML still carries defaults. POLICY_MAP.md and
-  PROFILE_MAP.md remain the references for required assets, adapters, policies,
-  and overlays; keep them aligned with manifests and code.
+  overlays and assets; policy YAML still carries defaults. Descriptors,
+  manifests, and registry outputs remain authoritative for activation and
+  enforcement behavior.
+- Policy descriptors and profile manifests must not define retired activation
+  scope keys (`profile_scopes`, `policy_scopes`).
+- Install/upgrade planning and policy asset application must resolve `enabled`
+  from descriptor metadata defaults overridden by config `policy_state`; AGENTS
+  `enabled` metadata is downstream and not authoritative for activation.
+- Stock policy assets are profile-owned (`global` and active profile manifests)
+  and are not installed directly from core policy descriptors.
+- Custom policy descriptors may declare fallback assets under
+  `devcovenant/custom/policies/<policy>/<policy>.yaml`; fallback is controlled
+  by `install.allow_custom_policy_asset_fallback` (default `true`) and remains
+  gated by resolved policy `enabled`.
 - `dependency-license-sync` must be manifest-agnostic: profiles or config
   overlays provide `dependency_files`, while the core policy metadata remains
   general. The devcovrepo profile sets DevCovenant’s own dependency
@@ -373,6 +385,9 @@ its own assets, suffixes, policies, and overlays.
   includes every available core/custom policy. Entries are ordered
   alphabetically; active profiles and config only affect the resolved
   `enabled` flag. Custom overrides are marked with `custom: true`.
+- `devcovenant/registry/local/policy_registry.yaml` must stay aligned with
+  descriptor inventory. Unknown or missing policy IDs in that inventory are
+  invalid.
 - `changelog-coverage` requires a fresh topmost entry per change. The newest
   entry must be dated today, include labeled Change/Why/Impact summary lines
   that each contain an action verb from the configured list, and contain a
@@ -564,9 +579,8 @@ its own assets, suffixes, policies, and overlays.
 - Core profile manifests (`devcovenant/core/profiles/<profile>/<profile>.yaml`)
   are shipped as static, authoritative descriptors. `devcovenant update`
   keeps user repos on the latest shipped descriptors, but `refresh-*` commands
-  do not rewrite them. `PROFILE_MAP.md` and `POLICY_MAP.md` are reference
-  tables only—authors consult them when manually populating profile YAMLs;
-  they are not a source-of-truth that is materialized into the manifests.
+  do not rewrite them. Reference notes are never materialized into manifests;
+  descriptors and manifests define behavior directly.
   Generic `profile.yaml` stubs are still invalid once normalization runs.
 - The stock profile set is intentionally slim: global, docs, data, suffixes,
   python, javascript, typescript, java, go, rust, php, ruby, csharp, sql,
@@ -595,6 +609,11 @@ its own assets, suffixes, policies, and overlays.
 - Require Python 3.10+ and declare runtime dependencies in
   `requirements.in`, `requirements.lock`, and `pyproject.toml`; publish
   classifiers through Python 3.14.
+- Runtime-hard dependencies for the default profile baseline
+  (`global` + `devcovuser` / `devcovrepo`) are `PyYAML`, `semver`,
+  `pre-commit`, and `pytest`.
+- Profile selection changes policy/config behavior after install, but does not
+  change package dependency resolution.
 - Publish with MIT license metadata (`license = { file = "LICENSE" }`,
   `License :: OSI Approved :: MIT License` classifier); version-sync enforces
   this under the `devcovrepo` profile.

@@ -7,9 +7,15 @@ import argparse
 import datetime as _dt
 import json
 import subprocess
+import sys
 from pathlib import Path
 
-from devcovenant.core import manifest as manifest_module
+try:
+    from devcovenant.core import manifest as manifest_module
+except ModuleNotFoundError:  # pragma: no cover - fallback for file-path runs
+    repo_root = Path(__file__).resolve().parents[1]
+    sys.path.insert(0, str(repo_root))
+    from devcovenant.core import manifest as manifest_module
 
 
 def _utc_now() -> _dt.datetime:

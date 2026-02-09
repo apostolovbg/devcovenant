@@ -6,6 +6,7 @@ import tempfile
 from pathlib import Path
 
 from devcovenant.core.engine import DevCovenantEngine
+from devcovenant.core.parser import PolicyDefinition
 
 
 def test_engine_initialization():
@@ -97,3 +98,94 @@ def test_custom_override_skips_core_fixers(tmp_path: Path) -> None:
         and getattr(fixer, "_origin", "") == "core"
     ]
     assert not core_fixers
+
+
+def _policy_definition(policy_id: str, enabled: bool) -> PolicyDefinition:
+    """Create a minimal policy definition for engine tests."""
+    return PolicyDefinition(
+        policy_id=policy_id,
+        name="Test Policy",
+        status="active",
+        severity="error",
+        auto_fix=False,
+        enabled=enabled,
+        custom=False,
+        description="Test policy description.",
+        raw_metadata={"enabled": "true" if enabled else "false"},
+    )
+
+
+def test_policy_state_disables_policy_even_if_agents_enables(
+    tmp_path: Path, monkeypatch
+) -> None:
+    """Config policy_state must disable a policy at runtime."""
+    repo_root = tmp_path
+    (repo_root / "devcovenant").mkdir()
+    (repo_root / "AGENTS.md").write_text("# Test\n", encoding="utf-8")
+    (repo_root / "devcovenant" / "config.yaml").write_text(
+        "policy_state:\n" "  sample-policy: false\n",
+        encoding="utf-8",
+    )
+    engine = DevCovenantEngine(repo_root=repo_root)
+
+    policy = _policy_definition("sample-policy", enabled=True)
+    captured = {}
+    monkeypatch.setattr(engine.parser, "parse_agents_md", lambda: [policy])
+
+    def _capture_sync(policies):
+        """Capture enabled state seen by sync checks."""
+        captured["sync"] = [entry.enabled for entry in policies]
+        return []
+
+    def _capture_run(policies, mode, context):
+        """Capture enabled state seen by runtime check execution."""
+        captured["run"] = [entry.enabled for entry in policies]
+        return []
+
+    monkeypatch.setattr(engine.registry, "check_policy_sync", _capture_sync)
+    monkeypatch.setattr(engine, "run_policy_checks", _capture_run)
+
+    result = engine.check(mode="normal")
+
+    assert result.should_block is False
+    assert captured["sync"] == [False]
+    assert captured["run"] == [False]
+    assert policy.raw_metadata["enabled"] == "false"
+
+
+def test_policy_state_enables_policy_even_if_agents_disables(
+    tmp_path: Path, monkeypatch
+) -> None:
+    """Config policy_state must enable a policy at runtime."""
+    repo_root = tmp_path
+    (repo_root / "devcovenant").mkdir()
+    (repo_root / "AGENTS.md").write_text("# Test\n", encoding="utf-8")
+    (repo_root / "devcovenant" / "config.yaml").write_text(
+        "policy_state:\n" "  sample-policy: true\n",
+        encoding="utf-8",
+    )
+    engine = DevCovenantEngine(repo_root=repo_root)
+
+    policy = _policy_definition("sample-policy", enabled=False)
+    captured = {}
+    monkeypatch.setattr(engine.parser, "parse_agents_md", lambda: [policy])
+
+    def _capture_sync(policies):
+        """Capture enabled state seen by sync checks."""
+        captured["sync"] = [entry.enabled for entry in policies]
+        return []
+
+    def _capture_run(policies, mode, context):
+        """Capture enabled state seen by runtime check execution."""
+        captured["run"] = [entry.enabled for entry in policies]
+        return []
+
+    monkeypatch.setattr(engine.registry, "check_policy_sync", _capture_sync)
+    monkeypatch.setattr(engine, "run_policy_checks", _capture_run)
+
+    result = engine.check(mode="normal")
+
+    assert result.should_block is False
+    assert captured["sync"] == [True]
+    assert captured["run"] == [True]
+    assert policy.raw_metadata["enabled"] == "true"

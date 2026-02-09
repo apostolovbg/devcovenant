@@ -164,10 +164,6 @@ class PolicyRegistry:
             ):
                 continue
 
-            # Skip policies explicitly turned off
-            if not policy.enabled:
-                continue
-
             # Determine script path
             # Convert hyphens to underscores for Python module names
             location = resolve_script_location(

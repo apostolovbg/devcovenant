@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import json
+from datetime import datetime, timezone
 from pathlib import Path
 
 import yaml
@@ -15,6 +16,7 @@ from devcovenant.core.install import (
     _apply_core_config,
     _apply_profile_config,
     _clean_asset_entries,
+    _configured_managed_docs,
     _dedupe_preserve_order,
     _ensure_config_from_profile,
     _ensure_custom_tree,
@@ -27,6 +29,7 @@ from devcovenant.core.install import (
     _set_backups_enabled,
     apply_autogen_metadata_overrides,
     refresh_pre_commit_config,
+    sync_managed_doc_assets,
 )
 from devcovenant.core.refresh_policies import refresh_policies
 from devcovenant.core.refresh_registry import (
@@ -45,6 +48,20 @@ def _schema_path(repo_root: Path) -> Path | None:
         / "assets"
         / "AGENTS.md"
     )
+
+
+def _utc_today() -> str:
+    """Return today's UTC date."""
+    return datetime.now(timezone.utc).date().isoformat()
+
+
+def _read_target_version(repo_root: Path) -> str:
+    """Return the repository version used for managed doc headers."""
+    version_path = repo_root / "devcovenant" / "VERSION"
+    if not version_path.exists():
+        return "0.0.0"
+    version_text = version_path.read_text(encoding="utf-8").strip()
+    return version_text or "0.0.0"
 
 
 def _looks_generated_gitignore(text: str) -> bool:
@@ -224,6 +241,17 @@ def refresh_all(
         print("Skipped policies with missing ids:")
         for policy_id in result.skipped_policies:
             print(f"- {policy_id}")
+    managed_docs = _configured_managed_docs(repo_root, include_agents=False)
+    synced_docs = sync_managed_doc_assets(
+        repo_root,
+        doc_names=managed_docs,
+        last_updated=_utc_today(),
+        version=_read_target_version(repo_root),
+        title_overrides={"README.md": repo_root.name},
+    )
+    if synced_docs:
+        joined = ", ".join(synced_docs)
+        print(f"Synchronized managed docs from descriptors: {joined}")
     if registry is None:
         registry = profiles.build_profile_registry(repo_root)
         profiles.write_profile_registry(repo_root, registry)
