@@ -65,7 +65,14 @@ def _git_diff(repo_root: Path) -> str:
 
 def _run_tests(repo_root: Path, env: dict[str, str]) -> None:
     """Run repository tests through the canonical test command."""
-    command = [sys.executable, "-m", "devcovenant", "test", "--repo", str(repo_root)]
+    command = [
+        sys.executable,
+        "-m",
+        "devcovenant",
+        "test",
+        "--repo",
+        str(repo_root),
+    ]
     subprocess.run(command, check=True, env=env)
 
 
@@ -118,7 +125,9 @@ def run_pre_commit_gate(
                 )
                 return 1
             if tests_changed:
-                print("Detected changes after tests; rerunning hooks and tests.")
+                print(
+                    "Detected changes after tests; rerunning hooks and tests."
+                )
                 force_tests = True
             else:
                 force_tests = False

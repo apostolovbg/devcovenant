@@ -60,7 +60,9 @@ def resolve_repo_root(path: Path, *, require_install: bool = False) -> Path:
     """Resolve and validate the target git repository root."""
     repo_root = find_git_root(path)
     if repo_root is None:
-        raise SystemExit("DevCovenant commands must run inside a git repository.")
+        raise SystemExit(
+            "DevCovenant commands must run inside a git repository."
+        )
     if require_install and not (repo_root / "devcovenant").exists():
         raise SystemExit(
             "DevCovenant is not installed in this repo. "

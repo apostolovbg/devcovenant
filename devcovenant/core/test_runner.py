@@ -32,7 +32,9 @@ def registry_required_commands(repo_root: Path) -> list[tuple[str, list[str]]]:
     except Exception:
         return list(zip(DEFAULT_COMMAND_STRINGS, DEFAULT_COMMANDS))
 
-    gates = (registry_data.get("policies") or {}).get("devflow-run-gates") or {}
+    gates = (registry_data.get("policies") or {}).get(
+        "devflow-run-gates"
+    ) or {}
     metadata_map = gates.get("metadata") or {}
     raw_commands = metadata_map.get("required_commands") or []
     if isinstance(raw_commands, str):
@@ -76,7 +78,9 @@ def registry_required_commands(repo_root: Path) -> list[tuple[str, list[str]]]:
     return list(zip(DEFAULT_COMMAND_STRINGS, DEFAULT_COMMANDS))
 
 
-def _run_command(command: list[str], allow_codes: set[int] | None = None) -> None:
+def _run_command(
+    command: list[str], allow_codes: set[int] | None = None
+) -> None:
     """Execute command and raise when it fails."""
     result = subprocess.run(command, check=False)
     allowed = allow_codes or {0}

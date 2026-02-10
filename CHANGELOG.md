@@ -41,31 +41,11 @@ Example entry:
   Impact: Streamlined operator usage, aligned managed-doc templates, and added
   CLI coverage tests for the new check gate behavior.
   Files:
-  PLAN.md
-  README.md
-  SPEC.md
-  devcovenant/README.md
-  devcovenant/cli.py
-  devcovenant/config.yaml
-  devcovenant/core/check.py
-  devcovenant/core/deploy.py
-  devcovenant/core/install.py
-  devcovenant/core/manifest.py
-  devcovenant/core/policies/devcov_integrity_guard/devcov_integrity_guard.py
-  devcovenant/core/policies/devflow_run_gates/devflow_run_gates.py
-  devcovenant/core/profiles/README.md
-  devcovenant/core/profiles/global/assets/PLAN.yaml
-  devcovenant/core/profiles/global/assets/config.yaml
-  devcovenant/core/refresh.py
-  devcovenant/core/update.py
-  devcovenant/run_pre_commit.py
-  devcovenant/run_tests.py
-  devcovenant/update_lock.py
-  devcovenant/update_test_status.py
-  tests/devcovenant/core/test_cli.py
-  tests/devcovenant/core/test_command_layout.py
-  tests/devcovenant/core/test_install.py
-  tests/devcovenant/core/test_refresh_all.py
+  devcovenant/core/command_runtime.py
+  devcovenant/core/gates.py
+  devcovenant/core/test_runner.py
+  devcovenant/undeploy.py
+  devcovenant/uninstall.py
 
 - 2026-02-09:
   Change: Updated policy activation flow, managed-doc sync behavior, and CLI
