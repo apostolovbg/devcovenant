@@ -198,10 +198,15 @@ devcov_core_paths:
   - devcovenant/__init__.py
   - devcovenant/__main__.py
   - devcovenant/cli.py
-  - devcovenant/run_pre_commit.py
-  - devcovenant/run_tests.py
-  - devcovenant/update_test_status.py
-  - devcovenant/core/check.py
+  - devcovenant/check.py
+  - devcovenant/test.py
+  - devcovenant/install.py
+  - devcovenant/deploy.py
+  - devcovenant/upgrade.py
+  - devcovenant/refresh.py
+  - devcovenant/uninstall.py
+  - devcovenant/undeploy.py
+  - devcovenant/update_lock.py
 ```
 
 Only the DevCovenant repo should set `devcov_core_include: true`. Do not

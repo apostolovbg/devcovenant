@@ -8,14 +8,54 @@ from pathlib import Path
 
 import yaml
 
-from devcovenant.core import deploy, install
+from devcovenant.core import install
 from devcovenant.core import manifest as manifest_module
-from devcovenant.core import update, upgrade
+from devcovenant.core import upgrade
 
 
 def _with_skip_refresh(args: list[str]) -> list[str]:
     """Append the skip-refresh flag to speed up installer tests."""
-    return [*args, "--skip-refresh"]
+    return [*args, "--skip-policy-refresh"]
+
+
+class _UpdateCompat:
+    """Internal update compatibility for legacy installer tests."""
+
+    @staticmethod
+    def main(argv: list[str] | None = None) -> None:
+        """Run update semantics through install existing/deploy mode."""
+        forwarded = list(argv or [])
+        forwarded.extend(
+            [
+                "--mode",
+                "existing",
+                "--allow-existing",
+                "--deploy",
+                "--skip-core",
+            ]
+        )
+        install.main(forwarded)
+
+
+class _DeployCompat:
+    """Internal deploy compatibility for legacy installer tests."""
+
+    @staticmethod
+    def main(argv: list[str] | None = None) -> None:
+        """Run deploy semantics through install deploy/skip-core mode."""
+        forwarded = list(argv or [])
+        forwarded.extend(
+            [
+                "--deploy",
+                "--require-non-generic",
+                "--skip-core",
+            ]
+        )
+        install.main(forwarded)
+
+
+update = _UpdateCompat()
+deploy = _DeployCompat()
 
 
 def _mark_config_ready(target: Path) -> None:

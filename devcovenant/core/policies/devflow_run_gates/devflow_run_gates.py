@@ -239,7 +239,7 @@ class DevflowRunGates(PolicyCheck):
                         "Code changed but "
                         "devcovenant/registry/local/test_status.json is "
                         "missing or empty; "
-                        "run `python3 devcovenant/run_tests.py` before "
+                        "run `devcovenant test` before "
                         "replying."
                     ),
                 )
@@ -389,7 +389,7 @@ class DevflowRunGates(PolicyCheck):
                     message=(
                         "Latest recorded test status is missing required "
                         f"commands: {', '.join(missing)}. Run "
-                        "`python3 devcovenant/run_tests.py` before replying."
+                        "`devcovenant test` before replying."
                     ),
                 )
             )
@@ -403,7 +403,7 @@ class DevflowRunGates(PolicyCheck):
                     message=(
                         "Code changed after the last recorded test run "
                         f"({last_run or 'unknown'}); rerun "
-                        "`python3 devcovenant/run_tests.py` so tests "
+                        "`devcovenant test` so tests "
                         "post-date the newest code change (latest code "
                         f"mtime: {when}Z)."
                     ),

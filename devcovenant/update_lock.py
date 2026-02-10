@@ -20,7 +20,7 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Iterable, List, Sequence
 
-ROOT = Path(__file__).resolve().parents[1]
+ROOT = Path.cwd()
 
 
 @dataclass(frozen=True)
@@ -195,7 +195,7 @@ def update_lockfile(root: Path, force: bool = False) -> bool:
     return True
 
 
-def parse_args() -> argparse.Namespace:
+def parse_args(argv: Sequence[str] | None = None) -> argparse.Namespace:
     """Return command-line arguments for the helper."""
 
     parser = argparse.ArgumentParser(
@@ -204,31 +204,14 @@ def parse_args() -> argparse.Namespace:
             "banners when the dependency body is unchanged."
         )
     )
-    parser.add_argument(
-        "--root",
-        type=Path,
-        default=ROOT,
-        help=(
-            "Project root containing requirements.in and requirements.lock. "
-            "Defaults to the repository root inferred from this script."
-        ),
-    )
-    parser.add_argument(
-        "--force",
-        action="store_true",
-        help=(
-            "Force regeneration even if the requirements input hash "
-            "did not change."
-        ),
-    )
-    return parser.parse_args()
+    return parser.parse_args(argv)
 
 
-def main() -> None:
+def main(argv: Sequence[str] | None = None) -> None:
     """Entry-point for the command-line interface."""
 
-    args = parse_args()
-    changed = update_lockfile(args.root, force=args.force)
+    parse_args(argv)
+    changed = update_lockfile(ROOT, force=False)
     if changed:
         print("requirements.lock updated", file=sys.stdout)
     else:

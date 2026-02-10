@@ -6,13 +6,33 @@ from pathlib import Path
 
 import yaml
 
-from devcovenant.core import deploy, install
+from devcovenant.core import install
 from devcovenant.core.refresh_all import refresh_all
 
 
 def _with_skip_refresh(args: list[str]) -> list[str]:
     """Append the skip-refresh flag to speed up install setup."""
-    return [*args, "--skip-refresh"]
+    return [*args, "--skip-policy-refresh"]
+
+
+class _DeployCompat:
+    """Internal deploy compatibility for refresh-all tests."""
+
+    @staticmethod
+    def main(argv: list[str] | None = None) -> None:
+        """Run deploy semantics through install deploy/skip-core mode."""
+        forwarded = list(argv or [])
+        forwarded.extend(
+            [
+                "--deploy",
+                "--require-non-generic",
+                "--skip-core",
+            ]
+        )
+        install.main(forwarded)
+
+
+deploy = _DeployCompat()
 
 
 def _set_doc_assets(

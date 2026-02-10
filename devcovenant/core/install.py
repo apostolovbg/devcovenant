@@ -78,11 +78,16 @@ _DEFAULT_CORE_PATHS = [
     "devcovenant/__init__.py",
     "devcovenant/__main__.py",
     "devcovenant/cli.py",
+    "devcovenant/check.py",
+    "devcovenant/test.py",
+    "devcovenant/install.py",
+    "devcovenant/deploy.py",
+    "devcovenant/upgrade.py",
+    "devcovenant/refresh.py",
+    "devcovenant/uninstall.py",
+    "devcovenant/undeploy.py",
+    "devcovenant/update_lock.py",
     "devcovenant/registry",
-    "devcovenant/run_pre_commit.py",
-    "devcovenant/run_tests.py",
-    "devcovenant/update_test_status.py",
-    "devcovenant/core/check.py",
 ]
 
 LEGACY_ROOT_PATHS = [
@@ -1649,7 +1654,7 @@ def _build_readme_block(
                 "DevCovenant enforces a gated workflow for every change, "
                 "including docs:",
                 "1. `devcovenant check --start`",
-                "2. `python3 devcovenant/run_tests.py`",
+                "2. `devcovenant test`",
                 "3. `devcovenant check --end`",
                 "Record changes in `CHANGELOG.md` and keep `AGENTS.md` in "
                 "sync with",

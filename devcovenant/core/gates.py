@@ -1,9 +1,7 @@
-#!/usr/bin/env python3
-"""Run pre-commit and record the run in the test status registry."""
+"""Gate execution helpers for DevCovenant check --start/--end."""
 
 from __future__ import annotations
 
-import argparse
 import datetime as _dt
 import json
 import os
@@ -12,12 +10,7 @@ import subprocess
 import sys
 from pathlib import Path
 
-try:
-    from devcovenant.core import manifest as manifest_module
-except ModuleNotFoundError:  # pragma: no cover - fallback for file-path runs
-    repo_root = Path(__file__).resolve().parents[1]
-    sys.path.insert(0, str(repo_root))
-    from devcovenant.core import manifest as manifest_module
+from devcovenant.core import manifest as manifest_module
 
 
 def _utc_now() -> _dt.datetime:
@@ -37,7 +30,7 @@ def _load_status(path: Path) -> dict:
 
 
 def _run_command(command: str, env: dict[str, str] | None = None) -> None:
-    """Execute the command string via subprocess."""
+    """Execute a shell command string and raise on failure."""
     parts = shlex.split(command)
     if not parts:
         raise SystemExit("Pre-commit command is empty.")
@@ -54,7 +47,7 @@ def _run_command(command: str, env: dict[str, str] | None = None) -> None:
 
 
 def _git_diff(repo_root: Path) -> str:
-    """Return the current git diff, or an empty string when unavailable."""
+    """Return current git diff output, or empty string when unavailable."""
     try:
         result = subprocess.run(
             ["git", "diff", "--binary"],
@@ -71,58 +64,40 @@ def _git_diff(repo_root: Path) -> str:
 
 
 def _run_tests(repo_root: Path, env: dict[str, str]) -> None:
-    """Run the repository test runner."""
-    command = [sys.executable, str(repo_root / "devcovenant" / "run_tests.py")]
+    """Run repository tests through the canonical test command."""
+    command = [sys.executable, "-m", "devcovenant", "test", "--repo", str(repo_root)]
     subprocess.run(command, check=True, env=env)
 
 
-def main() -> None:
-    """CLI entry point."""
-    parser = argparse.ArgumentParser(
-        description="Run pre-commit and record it as a start/end marker."
-    )
-    parser.add_argument(
-        "--phase",
-        choices=("start", "end"),
-        required=True,
-        help="Record the pre-commit run as the session start or end.",
-    )
-    parser.add_argument(
-        "--command",
-        default="python3 -m pre_commit run --all-files",
-        help="Pre-commit command to execute and record.",
-    )
-    parser.add_argument(
-        "--notes",
-        default="",
-        help="Optional notes recorded alongside the pre-commit run.",
-    )
-    args = parser.parse_args()
+def run_pre_commit_gate(
+    repo_root: Path,
+    phase: str,
+    *,
+    command: str = "python3 -m pre_commit run --all-files",
+    notes: str = "",
+) -> int:
+    """Run and record a start/end gate phase."""
+    if phase not in {"start", "end"}:
+        raise SystemExit("phase must be 'start' or 'end'.")
 
-    candidate_root = Path.cwd()
-    project_markers = ("AGENTS.md", "README.md", "CHANGELOG.md")
-    if not any(
-        (candidate_root / marker).exists() for marker in project_markers
-    ):
-        repo_root = Path(__file__).resolve().parents[1]
-    else:
-        repo_root = candidate_root
     status_path = manifest_module.test_status_path(repo_root)
     status_path.parent.mkdir(parents=True, exist_ok=True)
 
     env = os.environ.copy()
-    env["DEVCOV_DEVFLOW_PHASE"] = args.phase
-    start_ts = _utc_now() if args.phase == "start" else None
+    env["DEVCOV_DEVFLOW_PHASE"] = phase
+    start_ts = _utc_now() if phase == "start" else None
     attempt = 0
     max_attempts = 5
     force_tests = False
+
     while True:
         diff_before = _git_diff(repo_root)
-        _run_command(args.command, env=env)
+        _run_command(command, env=env)
         diff_after_hooks = _git_diff(repo_root)
         hooks_changed = diff_after_hooks != diff_before
         tests_changed = False
-        if args.phase == "end" and (hooks_changed or force_tests):
+
+        if phase == "end" and (hooks_changed or force_tests):
             if hooks_changed:
                 print(
                     "Detected changes after pre-commit; rerunning tests "
@@ -134,19 +109,16 @@ def main() -> None:
             diff_after_tests = _git_diff(repo_root)
             tests_changed = diff_after_tests != diff_after_hooks
 
-        if args.phase == "end" and (hooks_changed or tests_changed):
+        if phase == "end" and (hooks_changed or tests_changed):
             attempt += 1
             if attempt >= max_attempts:
                 print(
                     "Maximum rerun attempts reached; tree still dirty. "
                     "Failing end gate."
                 )
-                raise SystemExit(1)
+                return 1
             if tests_changed:
-                print(
-                    "Detected changes after tests; rerunning hooks "
-                    "and tests."
-                )
+                print("Detected changes after tests; rerunning hooks and tests.")
                 force_tests = True
             else:
                 force_tests = False
@@ -156,15 +128,15 @@ def main() -> None:
 
     payload = _load_status(status_path)
     now = _utc_now()
-    prefix = f"pre_commit_{args.phase}"
+    prefix = f"pre_commit_{phase}"
     if start_ts is not None:
         payload[f"{prefix}_utc"] = start_ts.isoformat()
         payload[f"{prefix}_epoch"] = start_ts.timestamp()
     else:
         payload[f"{prefix}_utc"] = now.isoformat()
         payload[f"{prefix}_epoch"] = now.timestamp()
-    payload[f"{prefix}_command"] = args.command.strip()
-    payload[f"{prefix}_notes"] = args.notes.strip()
+    payload[f"{prefix}_command"] = command.strip()
+    payload[f"{prefix}_notes"] = notes.strip()
     status_path.write_text(
         json.dumps(payload, indent=2) + "\n",
         encoding="utf-8",
@@ -173,7 +145,4 @@ def main() -> None:
         f"Recorded {prefix} at {payload[f'{prefix}_utc']} "
         f"for command `{payload[f'{prefix}_command']}`."
     )
-
-
-if __name__ == "__main__":
-    main()
+    return 0

@@ -26,7 +26,7 @@ body: |-
   ## Workflow
   - Start edits: `devcovenant check --start`
   - Apply changes in dependency order.
-  - Run tests: `python3 devcovenant/run_tests.py`
+  - Run tests: `devcovenant test`
   - End edits: `devcovenant check --end`
 
   ## Active Work

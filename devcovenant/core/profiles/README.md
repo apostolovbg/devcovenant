@@ -29,13 +29,14 @@ policies can still ship fallback assets in
 `install.allow_custom_policy_asset_fallback` is enabled.
 
 ## Workflow expectations
-Managed docs and policies are kept in sync via `devcovenant/run_pre_commit.py`
-(start/tests/end). When adding or editing profiles, refresh POLICY_MAP and
-PROFILE_MAP and run the gate sequence before committing.
+Managed docs and policies are kept in sync via the canonical gate sequence
+(`devcovenant check --start` / `devcovenant test` /
+`devcovenant check --end`). When adding or editing profiles, refresh
+POLICY_MAP and PROFILE_MAP and run the gate sequence before committing.
 
 ## Workflow
-- Run `python3 devcovenant/run_pre_commit.py --phase start` before edits.
+- Run `devcovenant check --start` before edits.
 - Make changes and keep POLICY_MAP/PROFILE_MAP aligned with the active
   profiles.
-- Run `python3 devcovenant/run_tests.py`.
-- Finish with `python3 devcovenant/run_pre_commit.py --phase end`.
+- Run `devcovenant test`.
+- Finish with `devcovenant check --end`.

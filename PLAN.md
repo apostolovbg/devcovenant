@@ -32,7 +32,7 @@ truth for behavior and requirements.
 - After policy descriptor updates, run:
   `devcovenant refresh`
 - Run tests:
-  `python3 devcovenant/run_tests.py`
+  `devcovenant test`
 - End edits with:
   `devcovenant check --end`
 - If hooks/autofixes change files during end, rerun tests and end phase.
@@ -43,6 +43,10 @@ truth for behavior and requirements.
   `refresh`, `undeploy`, `uninstall`, `update_lock`.
 - [done] CLI help/argument parsing is command-scoped, so each command exposes
   only its own options.
+- [done] Public command flags are minimal: only `check` exposes
+  `--start`, `--end`, and `--nofix`.
+- [done] Commands execute against the current working repository root only;
+  no target override flags are in the public CLI.
 - [done] Managed docs are YAML-asset driven and managed-block based.
 - [done] Registry-only startup refresh behavior exists.
 - [done] Policy metadata resolution writes resolved policy values into
@@ -52,7 +56,7 @@ truth for behavior and requirements.
   and explicit files list.
 - [done] Changelog coverage ignores managed-doc diffs confined to DEVCOV
   managed blocks and policy markers.
-- [done] `run_tests` executes configured command lists and records test status.
+- [done] `test` executes configured command lists and records test status.
 
 ## Immediate Outstanding Work
 1. [done] Config-only policy activation migration (critical)

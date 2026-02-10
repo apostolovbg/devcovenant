@@ -1,4 +1,4 @@
-"""Regression tests for CLI command module placement."""
+"""Regression tests for command module placement."""
 
 import os
 import subprocess
@@ -7,10 +7,20 @@ import unittest
 from pathlib import Path
 
 REPO_ROOT = Path(__file__).resolve().parents[3]
-COMMAND_MODULES = (
+ROOT_COMMAND_MODULES = (
+    "check",
+    "test",
+    "install",
+    "deploy",
+    "upgrade",
+    "refresh",
+    "uninstall",
+    "undeploy",
+    "update_lock",
+)
+LEGACY_HELPER_MODULES = (
     "run_pre_commit",
     "run_tests",
-    "update_lock",
     "update_test_status",
 )
 ASSET_SCRIPT_ROOT = (
@@ -24,36 +34,32 @@ ASSET_SCRIPT_ROOT = (
 )
 
 
-def _unit_test_cli_command_modules_live_only_at_package_root() -> None:
-    """CLI command modules should not be duplicated under core."""
-    for module_name in COMMAND_MODULES:
+def _unit_test_root_command_modules_exist() -> None:
+    """All CLI command modules should exist at package root."""
+    for module_name in ROOT_COMMAND_MODULES:
         root_path = REPO_ROOT / "devcovenant" / f"{module_name}.py"
-        core_path = REPO_ROOT / "devcovenant" / "core" / f"{module_name}.py"
-        assert root_path.exists()
-        assert not core_path.exists()
+        assert root_path.exists(), str(root_path)
 
 
-def _unit_test_cli_command_modules_are_not_forwarding_wrappers() -> None:
-    """Root command modules should own their implementation."""
-    for module_name in COMMAND_MODULES:
+def _unit_test_legacy_helper_modules_removed_from_root() -> None:
+    """Legacy helper scripts should be removed from package root."""
+    for module_name in LEGACY_HELPER_MODULES:
         root_path = REPO_ROOT / "devcovenant" / f"{module_name}.py"
-        text = root_path.read_text(encoding="utf-8")
-        wrapper_import = f"from devcovenant.core.{module_name} import main"
-        assert wrapper_import not in text
+        assert not root_path.exists(), str(root_path)
 
 
-def _unit_test_helper_scripts_are_not_duplicated_as_profile_assets() -> None:
-    """Helper command scripts should not be duplicated in profile assets."""
-    for module_name in COMMAND_MODULES:
+def _unit_test_command_modules_not_duplicated_as_profile_assets() -> None:
+    """Root command modules should not be duplicated in profile assets."""
+    for module_name in ROOT_COMMAND_MODULES + LEGACY_HELPER_MODULES:
         duplicate_path = ASSET_SCRIPT_ROOT / f"{module_name}.py"
-        assert not duplicate_path.exists()
+        assert not duplicate_path.exists(), str(duplicate_path)
 
 
-def _unit_test_cli_command_modules_support_file_path_help() -> None:
+def _unit_test_command_modules_support_file_path_help() -> None:
     """File-path invocation should work without PYTHONPATH tweaks."""
     env = os.environ.copy()
     env.pop("PYTHONPATH", None)
-    for module_name in COMMAND_MODULES:
+    for module_name in ROOT_COMMAND_MODULES:
         result = subprocess.run(
             [sys.executable, f"devcovenant/{module_name}.py", "--help"],
             cwd=REPO_ROOT,
@@ -68,18 +74,18 @@ def _unit_test_cli_command_modules_support_file_path_help() -> None:
 class GeneratedUnittestCases(unittest.TestCase):
     """unittest wrappers for module-level tests."""
 
-    def test_cli_command_modules_live_only_at_package_root(self):
-        """Run test_cli_command_modules_live_only_at_package_root."""
-        _unit_test_cli_command_modules_live_only_at_package_root()
+    def test_root_command_modules_exist(self):
+        """Run test_root_command_modules_exist."""
+        _unit_test_root_command_modules_exist()
 
-    def test_cli_command_modules_are_not_forwarding_wrappers(self):
-        """Run test_cli_command_modules_are_not_forwarding_wrappers."""
-        _unit_test_cli_command_modules_are_not_forwarding_wrappers()
+    def test_legacy_helper_modules_removed_from_root(self):
+        """Run test_legacy_helper_modules_removed_from_root."""
+        _unit_test_legacy_helper_modules_removed_from_root()
 
-    def test_helper_scripts_are_not_duplicated_as_profile_assets(self):
-        """Run test_helper_scripts_are_not_duplicated_as_profile_assets."""
-        _unit_test_helper_scripts_are_not_duplicated_as_profile_assets()
+    def test_command_modules_not_duplicated_as_profile_assets(self):
+        """Run test_command_modules_not_duplicated_as_profile_assets."""
+        _unit_test_command_modules_not_duplicated_as_profile_assets()
 
-    def test_cli_command_modules_support_file_path_help(self):
-        """Run test_cli_command_modules_support_file_path_help."""
-        _unit_test_cli_command_modules_support_file_path_help()
+    def test_command_modules_support_file_path_help(self):
+        """Run test_command_modules_support_file_path_help."""
+        _unit_test_command_modules_support_file_path_help()

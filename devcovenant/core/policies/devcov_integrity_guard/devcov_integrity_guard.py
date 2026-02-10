@@ -243,7 +243,7 @@ class DevcovIntegrityGuardCheck(PolicyCheck):
                     line_number=1,
                     message=(
                         "Code changes require a fresh test status update. "
-                        "Run `python3 devcovenant/run_tests.py` so the suite "
+                        "Run `devcovenant test` so the suite "
                         "executes and the status file is refreshed."
                     ),
                 )

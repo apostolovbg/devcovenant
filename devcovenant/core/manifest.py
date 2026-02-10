@@ -35,6 +35,15 @@ DEFAULT_CORE_FILES = [
     "devcovenant/__init__.py",
     "devcovenant/__main__.py",
     "devcovenant/cli.py",
+    "devcovenant/check.py",
+    "devcovenant/test.py",
+    "devcovenant/install.py",
+    "devcovenant/deploy.py",
+    "devcovenant/upgrade.py",
+    "devcovenant/refresh.py",
+    "devcovenant/uninstall.py",
+    "devcovenant/undeploy.py",
+    "devcovenant/update_lock.py",
     "devcovenant/config.yaml",
     "devcovenant/README.md",
     "devcovenant/VERSION",
@@ -46,10 +55,6 @@ DEFAULT_CORE_FILES = [
     "devcovenant/core/profiles/global/assets/gitignore_os.txt",
     "devcovenant/core/profiles/README.md",
     "devcovenant/core/policies/README.md",
-    "devcovenant/run_pre_commit.py",
-    "devcovenant/run_tests.py",
-    "devcovenant/update_lock.py",
-    "devcovenant/update_test_status.py",
 ]
 
 DEFAULT_DOCS_CORE = [

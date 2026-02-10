@@ -106,9 +106,11 @@ drift is detectable and reversible.
   workflows and command examples.
 - Supported commands: `check`, `test`, `install`, `deploy`, `upgrade`,
   `refresh`, `undeploy`, `uninstall`, and `update_lock`.
-- CLI parsing is command-scoped (subparsers). `devcovenant <command> --help`
+- CLI parsing is command-scoped (dispatcher). `devcovenant <command> --help`
   must show only options for that command and must not leak unrelated
   lifecycle flags.
+- All commands run against the current working repository root. Target override
+  flags (`--target`, `--repo`) are not part of the public contract.
 - `check` defaults to auto-fix and exits non-zero on blocking violations or
   sync issues.
 - `check --nofix` runs an audit-only pass.
@@ -154,6 +156,8 @@ drift is detectable and reversible.
   removes managed blocks from documents, and cleans out generated registries.
 - Source-based usage must use `python3 -m devcovenant ...` when invoking
   from a repo checkout; the installed CLI is the default for packaged usage.
+- Lifecycle commands do not expose tuning flags in the public CLI; they run
+  with their canonical defaults.
 
 #### Install/deploy scenarios
 1. Any repo: `install` always succeeds and writes only a generic config
@@ -186,8 +190,8 @@ drift is detectable and reversible.
 - User-facing, runnable commands live at the `devcovenant/` root and are
   exposed through the CLI (and callable via `python3 -m devcovenant`).
 - File-path command usage is a supported interface and must continue to work
-  (`python3 devcovenant/run_pre_commit.py ...` and
-  `python3 devcovenant/run_tests.py`).
+  (for example `python3 devcovenant/check.py --start` and
+  `python3 devcovenant/test.py`).
 - Shared policy and engine logic lives under `devcovenant/core/` as internal
   modules; command entrypoints remain rooted at `devcovenant/`.
 - `devcovenant/core/tools/` is not a public entrypoint surface; any helper
@@ -197,15 +201,15 @@ drift is detectable and reversible.
 - Avoid duplicate same-name command modules across `devcovenant/` and
   `devcovenant/core/`.
 - Do not duplicate CLI helper command sources under profile assets.
-  `run_pre_commit.py`, `run_tests.py`, `update_lock.py`, and
-  `update_test_status.py` are sourced from the package root modules only.
+  Root command modules are sourced from package-root command scripts only.
 - CLI-exposed command modules include (non-exhaustive): `cli.py`,
-  `run_pre_commit.py`, `run_tests.py`, `update_lock.py`,
-  and `update_test_status.py`.
-  `run_tests.py` executes the merged
+  `check.py`, `test.py`, `install.py`, `deploy.py`, `upgrade.py`,
+  `refresh.py`, `uninstall.py`, `undeploy.py`, and `update_lock.py`.
+  `test.py` executes the merged
   `devflow-run-gates.required_commands` list resolved from profiles and
   config (defaults remain pytest + unittest) and records the exact command
-  string to `update_test_status`. Language-aware policies delegate
+  string in `devcovenant/registry/local/test_status.json`. Language-aware
+  policies delegate
   parsing/checking to per-language adapters under
   `devcovenant/core/policies/<policy>/adapters/<lang>.py`; core policy modules
   remain language-agnostic.
@@ -322,7 +326,7 @@ drift is detectable and reversible.
   policy scans skip the same paths.
 - The CLI merges the fragments into `.pre-commit-config.yaml` before running
   the hooks. `devcovenant/registry/local/manifest.json` records the resolved
-  hook set so commands such as `run_pre_commit.py` know which config to
+  hook set so commands such as `check --start/--end` know which config to
   execute and can rerun the merge if profiles change during a session.
 - Include a “Pre-commit config refactor” phase in `PLAN.md` that references
   this SPEC section and clarifies the merge metadata keys.
@@ -338,9 +342,6 @@ drift is detectable and reversible.
   are applied for active profiles, and profile overlays merge into
   `config.yaml` under `autogen_metadata_overrides` (with
   `user_metadata_overrides` taking precedence when set).
-- A lightweight check wrapper ships as `devcovenant/core/check.py` and can
-  be invoked with `python3 -m devcovenant.core.check` to run the CLI from
-  source installs.
 - Managed-document templates include stock non-managed text for each
   devcovenant-managed doc, injected only when the target doc is missing,
   empty, or a single-line placeholder. Otherwise only managed blocks are
@@ -456,7 +457,7 @@ drift is detectable and reversible.
   canonical hash store. Any residual legacy artifacts in the tree should be
   deleted (registry.json, prior `*_old` backups, GPL license template) and
   removed from manifests, schemas, and policy references so refresh/install
-  no longer expect them. Backups are opt-in via `--backup-existing`.
+  no longer expect them.
 
 
 ### Policy definition YAML
@@ -502,9 +503,9 @@ drift is detectable and reversible.
 
 ## Installation Requirements
 - Install the full DevCovenant toolchain into the target repo, including the
-  `devcovenant/` tree, `devcovenant/run_pre_commit.py`,
-  `devcovenant/run_tests.py`, `devcovenant/update_lock.py`, and
-  `devcovenant/update_test_status.py` helpers, and CI workflow assets.
+  `devcovenant/` tree plus root command modules (`check.py`, `test.py`,
+  `install.py`, `deploy.py`, `upgrade.py`, `refresh.py`, `uninstall.py`,
+  `undeploy.py`, `update_lock.py`) and CI workflow assets.
 - Lifecycle installs copy helper command scripts from the package-root
   modules as part of the `devcovenant/` tree; profile assets must not carry
   duplicate helper-script source files.
@@ -515,9 +516,7 @@ drift is detectable and reversible.
   config, and metadata handling. Use `devcovenant deploy` for first activation
   and `devcovenant refresh` for ongoing regeneration.
 - When install finds DevCovenant artifacts, it refuses to proceed unless
-  `--auto-uninstall` is supplied or the user confirms the uninstall prompt.
-- `--disable-policy` sets `enabled: false` for listed policy IDs during
-  install/deploy/upgrade.
+  the user confirms the uninstall prompt.
 - Managed docs (AGENTS/README/PLAN/SPEC/CHANGELOG) refresh their headers and
   managed blocks on deploy/upgrade/refresh with UTC timestamps. Installs
   create missing files while preserving any existing user content; deploy,
@@ -525,7 +524,7 @@ drift is detectable and reversible.
 - Deploy/upgrade defaults preserve policy blocks and metadata; managed blocks
   can be refreshed independently of policy definitions.
 - Preserve custom policy scripts and fixers by default on existing installs
-  (`--preserve-custom`), with explicit overrides available.
+  in lifecycle internals.
 - `devcovenant/config.yaml` is generated only when missing. Autogen sections
   are clearly marked and may be updated; user-controlled settings and
   overrides are preserved to allow installs from an existing config.
@@ -566,14 +565,13 @@ drift is detectable and reversible.
   Existing files receive header refreshes; missing files are created during
   each deploy/refresh run without extra CLI toggles.
 - `CHANGELOG.md` and `CONTRIBUTING.md` are replaced on install; backups are
-  created only when `--backup-existing` is set. Deploy/refresh regenerate
-  managed blocks.
+  not part of the public lifecycle CLI. Deploy/refresh regenerate managed
+  blocks.
 - The configured version file (default `VERSION`, overridden by profile
   overlays like `devcovrepo`) is created on demand. Resolve the target
-  version in this order: CLI `--version`, config `version.override`, existing
-  valid version file, `pyproject.toml` version, interactive prompt, then
-  `0.0.1` when prompting is unavailable. The `--version` flag accepts `x.x`
-  or `x.x.x` (normalized to `x.x.0`).
+  version in this order: config `version.override`, existing valid version
+  file, `pyproject.toml` version, interactive prompt, then `0.0.1` when
+  prompting is unavailable.
 - Invalid existing version values are treated as missing and must continue
   down the fallback chain instead of blocking updates.
 - Metadata mode defaults for version/license are command-lifecycle based:
@@ -586,12 +584,7 @@ drift is detectable and reversible.
 - Regenerate `.gitignore` from global, profile, and OS fragments, then
   merge existing user entries under a preserved block.
 - Default runs overwrite in-place without creating `*_old.*` backups.
-  When `--backup-existing` is set, back up overwritten or merged files as
-  `*_old.*` and report the backups at the end of install.
 - Stamp `Last Updated` values using the UTC install date.
-- Support partial doc overwrites via `--docs-include` / `--docs-exclude`, so
-  only selected docs are replaced when docs mode overwrites.
-- Support policy modes via `--policy-mode preserve|overwrite`.
 - Write `devcovenant/registry/local/manifest.json` with the core layout,
   doc types, installed paths, options, active profiles, and policy asset
 - Record the UTC timestamp of the install/deploy/upgrade/refresh action.
