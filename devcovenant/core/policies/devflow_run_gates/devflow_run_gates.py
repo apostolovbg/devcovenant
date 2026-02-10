@@ -281,8 +281,7 @@ class DevflowRunGates(PolicyCheck):
                         file_path=status_rel,
                         message=(
                             "Session start pre-commit run is missing. Run "
-                            "`python3 devcovenant/run_pre_commit.py "
-                            "--phase start` before editing code."
+                            "`devcovenant check --start` before editing code."
                         ),
                     )
                 )
@@ -297,8 +296,8 @@ class DevflowRunGates(PolicyCheck):
                         message=(
                             "Start was recorded after edits. The gates will "
                             "clear because you ran start→tests→end, but run "
-                            "`python3 devcovenant/run_pre_commit.py --phase "
-                            "start` before editing next time."
+                            "`devcovenant check --start` before editing next "
+                            "time."
                         ),
                     )
                 )
@@ -314,8 +313,7 @@ class DevflowRunGates(PolicyCheck):
                             "Session start pre-commit command is missing or "
                             f"does not include `{pre_commit_command}`. "
                             "Re-run the start gate with "
-                            "`python3 devcovenant/run_pre_commit.py "
-                            "--phase start`."
+                            "`devcovenant check --start`."
                         ),
                     )
                 )
@@ -333,8 +331,7 @@ class DevflowRunGates(PolicyCheck):
                         file_path=status_rel,
                         message=(
                             "Session end pre-commit run is missing. Run "
-                            "`python3 devcovenant/run_pre_commit.py --phase "
-                            "end` before replying."
+                            "`devcovenant check --end` before replying."
                         ),
                     )
                 )
@@ -346,9 +343,8 @@ class DevflowRunGates(PolicyCheck):
                         file_path=status_rel,
                         message=(
                             "Session end pre-commit run predates code "
-                            "changes. Run `python3 devcovenant/"
-                            "run_pre_commit.py --phase end` after edits "
-                            "complete."
+                            "changes. Run `devcovenant check --end` after "
+                            "edits complete."
                         ),
                     )
                 )
@@ -364,8 +360,7 @@ class DevflowRunGates(PolicyCheck):
                             "Session end pre-commit command is missing or "
                             f"does not include `{pre_commit_command}`. "
                             "Re-run the end gate with "
-                            "`python3 devcovenant/run_pre_commit.py --phase "
-                            "end`."
+                            "`devcovenant check --end`."
                         ),
                     )
                 )

@@ -1,5 +1,5 @@
 # Changelog
-**Last Updated:** 2026-02-09
+**Last Updated:** 2026-02-10
 **Version:** 0.2.6
 
 <!-- DEVCOV:BEGIN -->
@@ -32,6 +32,170 @@ Example entry:
 ## Log changes here
 
 ## Version 0.2.6
+
+- 2026-02-10:
+  Change: Updated check command flows, command surface, and spec/plan language
+  for `check --start/--end`, default autofix, and single-command refresh.
+  Why: Clarified gate operation and removed legacy command paths that no longer
+  match the 0.2.6 lifecycle direction.
+  Impact: Streamlined operator usage, aligned managed-doc templates, and added
+  CLI coverage tests for the new check gate behavior.
+  Files:
+  AGENTS.md
+  CONTRIBUTING.md
+  PLAN.md
+  README.md
+  SPEC.md
+  devcovenant/README.md
+  devcovenant/cli.py
+  devcovenant/config.yaml
+  devcovenant/core/check.py
+  devcovenant/core/engine.py
+  devcovenant/core/install.py
+  devcovenant/core/manifest.py
+  devcovenant/core/policies/devflow_run_gates/devflow_run_gates.py
+  devcovenant/core/policies/new_modules_need_tests/adapters/python.py
+  devcovenant/core/profiles/global/assets/AGENTS.md
+  devcovenant/core/profiles/global/assets/AGENTS.yaml
+  devcovenant/core/profiles/global/assets/CHANGELOG.yaml
+  devcovenant/core/profiles/global/assets/CONTRIBUTING.md
+  devcovenant/core/profiles/global/assets/CONTRIBUTING.yaml
+  devcovenant/core/profiles/global/assets/PLAN.yaml
+  devcovenant/core/profiles/global/assets/README.yaml
+  devcovenant/core/profiles/global/assets/SPEC.yaml
+  devcovenant/core/profiles/global/assets/devcovenant/README.yaml
+  devcovenant/core/profiles/global/assets/devcovenant/run_pre_commit.py
+  devcovenant/core/profiles/global/assets/devcovenant/run_tests.py
+  devcovenant/core/profiles/global/assets/devcovenant/update_lock.py
+  devcovenant/core/profiles/global/assets/devcovenant/update_test_status.py
+  devcovenant/core/refresh_all.py
+  devcovenant/core/refresh_policies.py
+  devcovenant/core/uninstall.py
+  devcovenant/core/upgrade.py
+  devcovenant/custom/profiles/devcovrepo/assets/docs/README.md
+  devcovenant/custom/profiles/devcovrepo/assets/docs/config.md
+  devcovenant/custom/profiles/devcovrepo/assets/docs/installation.md
+  devcovenant/custom/profiles/devcovrepo/assets/docs/refresh.md
+  devcovenant/custom/profiles/devcovrepo/assets/docs/registry.md
+  devcovenant/custom/profiles/devcovrepo/assets/docs/troubleshooting.md
+  devcovenant/custom/profiles/devcovrepo/assets/docs/workflow.md
+  devcovenant/docs/README.md
+  devcovenant/docs/config.md
+  devcovenant/docs/installation.md
+  devcovenant/docs/refresh.md
+  devcovenant/docs/registry.md
+  devcovenant/docs/troubleshooting.md
+  devcovenant/docs/workflow.md
+  tests/core/__init__.py
+  tests/core/policies/__init__.py
+  tests/core/policies/changelog_coverage/__init__.py
+  tests/core/policies/changelog_coverage/tests/__init__.py
+  tests/core/policies/changelog_coverage/tests/test_changelog_coverage.py
+  tests/core/policies/dependency_license_sync/__init__.py
+  tests/core/policies/dependency_license_sync/tests/__init__.py
+  tests/core/policies/dependency_license_sync/tests/\
+    test_dependency_license_sync.py
+  tests/core/policies/devcov_integrity_guard/__init__.py
+  tests/core/policies/devcov_integrity_guard/tests/__init__.py
+  tests/core/policies/devcov_integrity_guard/tests/\
+    test_devcov_integrity_guard.py
+  tests/core/policies/devcov_structure_guard/__init__.py
+  tests/core/policies/devcov_structure_guard/tests/__init__.py
+  tests/core/policies/devcov_structure_guard/tests/\
+    test_devcov_structure_guard.py
+  tests/core/policies/devflow_run_gates/__init__.py
+  tests/core/policies/devflow_run_gates/tests/__init__.py
+  tests/core/policies/devflow_run_gates/tests/test_devflow_run_gates.py
+  tests/core/policies/docstring_and_comment_coverage/__init__.py
+  tests/core/policies/docstring_and_comment_coverage/tests/__init__.py
+  tests/core/policies/docstring_and_comment_coverage/tests/\
+    test_docstring_and_comment_coverage.py
+  tests/core/policies/documentation_growth_tracking/__init__.py
+  tests/core/policies/documentation_growth_tracking/tests/__init__.py
+  tests/core/policies/documentation_growth_tracking/tests/\
+    test_documentation_growth_tracking.py
+  tests/core/policies/last_updated_placement/__init__.py
+  tests/core/policies/last_updated_placement/tests/__init__.py
+  tests/core/policies/last_updated_placement/tests/\
+    test_last_updated_placement.py
+  tests/core/policies/line_length_limit/__init__.py
+  tests/core/policies/line_length_limit/tests/__init__.py
+  tests/core/policies/line_length_limit/tests/test_line_length_limit.py
+  tests/core/policies/managed_environment/__init__.py
+  tests/core/policies/managed_environment/tests/__init__.py
+  tests/core/policies/managed_environment/tests/test_managed_environment.py
+  tests/core/policies/name_clarity/__init__.py
+  tests/core/policies/name_clarity/tests/__init__.py
+  tests/core/policies/name_clarity/tests/test_name_clarity.py
+  tests/core/policies/new_modules_need_tests/__init__.py
+  tests/core/policies/new_modules_need_tests/tests/__init__.py
+  tests/core/policies/new_modules_need_tests/tests/\
+    test_new_modules_need_tests.py
+  tests/core/policies/no_future_dates/__init__.py
+  tests/core/policies/no_future_dates/tests/__init__.py
+  tests/core/policies/no_future_dates/tests/test_no_future_dates.py
+  tests/core/policies/raw_string_escapes/__init__.py
+  tests/core/policies/raw_string_escapes/tests/__init__.py
+  tests/core/policies/raw_string_escapes/tests/test_raw_string_escapes.py
+  tests/core/policies/read_only_directories/__init__.py
+  tests/core/policies/read_only_directories/tests/__init__.py
+  tests/core/policies/read_only_directories/tests/test_read_only_directories.py
+  tests/core/policies/security_scanner/__init__.py
+  tests/core/policies/security_scanner/tests/__init__.py
+  tests/core/policies/security_scanner/tests/test_security_scanner.py
+  tests/core/policies/semantic_version_scope/__init__.py
+  tests/core/policies/semantic_version_scope/tests/__init__.py
+  tests/core/policies/semantic_version_scope/tests/\
+    test_semantic_version_scope.py
+  tests/core/policies/version_sync/__init__.py
+  tests/core/policies/version_sync/tests/__init__.py
+  tests/core/policies/version_sync/tests/test_version_sync.py
+  tests/core/profiles/__init__.py
+  tests/core/profiles/test_profiles.py
+  tests/core/tests/__init__.py
+  tests/core/tests/test_base.py
+  tests/core/tests/test_command_layout.py
+  tests/core/tests/test_engine.py
+  tests/core/tests/test_install.py
+  tests/core/tests/test_main_entrypoint.py
+  tests/core/tests/test_manifest.py
+  tests/core/tests/test_parser.py
+  tests/core/tests/test_policy_descriptor.py
+  tests/core/tests/test_policy_freeze.py
+  tests/core/tests/test_policy_inventory.py
+  tests/core/tests/test_policy_replacements.py
+  tests/core/tests/test_refresh_all.py
+  tests/core/tests/test_refresh_policies.py
+  tests/core/tests/test_refresh_registry.py
+  tests/core/tests/test_selectors.py
+  tests/custom/__init__.py
+  tests/custom/policies/test_managed_doc_assets.py
+  tests/custom/policies/test_readme_sync.py
+  tests/custom/profiles/__init__.py
+  tests/custom/profiles/test_custom_profiles.py
+  tests/devcovenant/core/__init__.py
+  tests/devcovenant/core/policies/__init__.py
+  tests/devcovenant/core/policies/changelog_coverage/__init__.py
+  tests/devcovenant/core/policies/dependency_license_sync/__init__.py
+  tests/devcovenant/core/policies/devcov_integrity_guard/__init__.py
+  tests/devcovenant/core/policies/devcov_structure_guard/__init__.py
+  tests/devcovenant/core/policies/devflow_run_gates/__init__.py
+  tests/devcovenant/core/policies/docstring_and_comment_coverage/__init__.py
+  tests/devcovenant/core/policies/documentation_growth_tracking/__init__.py
+  tests/devcovenant/core/policies/last_updated_placement/__init__.py
+  tests/devcovenant/core/policies/line_length_limit/__init__.py
+  tests/devcovenant/core/policies/managed_environment/__init__.py
+  tests/devcovenant/core/policies/name_clarity/__init__.py
+  tests/devcovenant/core/policies/new_modules_need_tests/__init__.py
+  tests/devcovenant/core/policies/no_future_dates/__init__.py
+  tests/devcovenant/core/policies/raw_string_escapes/__init__.py
+  tests/devcovenant/core/policies/read_only_directories/__init__.py
+  tests/devcovenant/core/policies/security_scanner/__init__.py
+  tests/devcovenant/core/policies/semantic_version_scope/__init__.py
+  tests/devcovenant/core/policies/version_sync/__init__.py
+  tests/devcovenant/core/profiles/__init__.py
+  tests/devcovenant/custom/__init__.py
+  tests/devcovenant/custom/profiles/__init__.py
 
 - 2026-02-09:
   Change: Updated policy activation flow, managed-doc sync behavior, and CLI

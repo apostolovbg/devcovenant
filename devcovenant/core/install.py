@@ -22,10 +22,6 @@ from devcovenant.core.refresh_policies import refresh_policies
 DEV_COVENANT_DIR = "devcovenant"
 CORE_PATHS = [
     DEV_COVENANT_DIR,
-    "devcovenant/run_pre_commit.py",
-    "devcovenant/run_tests.py",
-    "devcovenant/update_test_status.py",
-    "devcovenant/core/check.py",
 ]
 
 CONFIG_PATHS = [
@@ -334,6 +330,19 @@ def _load_config_version_override(target_root: Path) -> str | None:
         except ValueError:
             continue
     return None
+
+
+def _normalize_existing_version(raw_value: str | None) -> str | None:
+    """Normalize an existing version value, returning None when invalid."""
+    if not raw_value:
+        return None
+    candidate = raw_value.strip()
+    if not candidate:
+        return None
+    try:
+        return _normalize_version(candidate)
+    except ValueError:
+        return None
 
 
 def _flatten_profile_names(registry: dict) -> list[str]:
@@ -1639,9 +1648,9 @@ def _build_readme_block(
                 "## Workflow",
                 "DevCovenant enforces a gated workflow for every change, "
                 "including docs:",
-                "1. `python3 devcovenant/run_pre_commit.py --phase start`",
+                "1. `devcovenant check --start`",
                 "2. `python3 devcovenant/run_tests.py`",
-                "3. `python3 devcovenant/run_pre_commit.py --phase end`",
+                "3. `devcovenant check --end`",
                 "Record changes in `CHANGELOG.md` and keep `AGENTS.md` in "
                 "sync with",
                 "policy updates.",
@@ -2498,14 +2507,29 @@ def _ensure_tests_mirror(target_root: Path, include_core: bool) -> None:
             target_folder.mkdir(parents=True, exist_ok=True)
             _ensure_init(target_folder, "# DevCovenant test mirror.\n")
             source_folder = source_root / folder
-            if not source_folder.exists():
-                continue
-            for entry in source_folder.iterdir():
-                if not entry.is_dir():
+            expected_dirs: set[str] = set()
+            if source_folder.exists():
+                for entry in source_folder.iterdir():
+                    if not entry.is_dir():
+                        continue
+                    if entry.name.startswith("__"):
+                        continue
+                    expected_dirs.add(entry.name)
+                    dest = target_folder / entry.name
+                    dest.mkdir(parents=True, exist_ok=True)
+                    _ensure_init(dest, "# DevCovenant test mirror.\n")
+
+            # Prune empty stale mirrors for removed policies/profiles.
+            for existing in target_folder.iterdir():
+                if not existing.is_dir():
                     continue
-                dest = target_folder / entry.name
-                dest.mkdir(parents=True, exist_ok=True)
-                _ensure_init(dest, "# DevCovenant test mirror.\n")
+                if existing.name.startswith("__"):
+                    continue
+                if existing.name in expected_dirs:
+                    continue
+                if any(existing.iterdir()):
+                    continue
+                existing.rmdir()
 
     _mirror_subdirs(target_root / DEV_COVENANT_DIR / "custom", custom_root)
     if include_core:
@@ -3039,13 +3063,14 @@ def main(argv=None) -> None:
     if config_mode is None:
         config_mode = "overwrite" if mode == "empty" else "preserve"
 
-    def _resolve_override(override_value: str) -> str:
+    def _resolve_override(override_value: str, inherited: str) -> str:
         """Return the resolved mode for a CLI override."""
-        return config_mode if override_value == "inherit" else override_value
+        return inherited if override_value == "inherit" else override_value
 
-    license_mode = _resolve_override(args.license_mode)
-    version_mode = _resolve_override(args.version_mode)
-    pyproject_mode = _resolve_override(args.pyproject_mode)
+    metadata_mode = "overwrite" if mode == "empty" else "preserve"
+    license_mode = _resolve_override(args.license_mode, metadata_mode)
+    version_mode = _resolve_override(args.version_mode, metadata_mode)
+    pyproject_mode = _resolve_override(args.pyproject_mode, config_mode)
     ci_mode = config_mode if args.ci_mode == "inherit" else args.ci_mode
 
     preserve_custom = args.preserve_custom
@@ -3065,10 +3090,12 @@ def main(argv=None) -> None:
         devcovenant_version = "0.0.0"
 
     version_path = target_root / DEV_COVENANT_DIR / "VERSION"
-    existing_version = None
+    raw_existing_version = None
     if version_path.exists():
-        existing_version = version_path.read_text(encoding="utf-8").strip()
-    version_existed = version_path.exists()
+        raw_existing_version = version_path.read_text(encoding="utf-8").strip()
+    existing_version = _normalize_existing_version(raw_existing_version)
+    version_file_exists = version_path.exists()
+    version_existed = existing_version is not None
 
     if require_non_generic and _read_generic_config_flag(target_root):
         raise SystemExit(
@@ -3140,6 +3167,14 @@ def main(argv=None) -> None:
     }
     doc_blocks: list[str] = []
 
+    core_preserve_paths: list[str] = []
+    if preserve_custom:
+        core_preserve_paths.extend(DEFAULT_PRESERVE_PATHS)
+    if mode == "existing" and version_mode in {"preserve", "skip"}:
+        if version_file_exists:
+            core_preserve_paths.append("VERSION")
+    core_preserve_paths = _dedupe_preserve_order(core_preserve_paths)
+
     core_files = [path for path in CORE_PATHS if path != DEV_COVENANT_DIR]
     core_sources = {
         path: _resolve_source_path(target_root, template_root, path)
@@ -3150,7 +3185,7 @@ def main(argv=None) -> None:
             _install_devcovenant_dir(
                 repo_root,
                 target_root,
-                DEFAULT_PRESERVE_PATHS if preserve_custom else [],
+                core_preserve_paths,
                 preserve_existing=preserve_custom,
             )
         )
@@ -3245,7 +3280,7 @@ def main(argv=None) -> None:
             version_mode == "overwrite" or not version_existed
         ):
             version_path.write_text(f"{target_version}\n", encoding="utf-8")
-            if not version_existed:
+            if not version_file_exists:
                 installed["core"].append(f"{DEV_COVENANT_DIR}/VERSION")
         docs_mode = "preserve"
         policy_mode = "preserve"
@@ -3330,7 +3365,7 @@ def main(argv=None) -> None:
         version_mode == "overwrite" or not version_existed
     ):
         version_path.write_text(f"{target_version}\n", encoding="utf-8")
-        if not version_existed:
+        if not version_file_exists:
             installed["core"].append(f"{DEV_COVENANT_DIR}/VERSION")
 
     license_path = target_root / "LICENSE"
@@ -3343,6 +3378,15 @@ def main(argv=None) -> None:
         license_template = _resolve_source_path(
             target_root, template_root, LICENSE_TEMPLATE
         )
+        if not license_template.exists():
+            fallback_candidates = [
+                package_root.parent / LICENSE_TEMPLATE,
+                Path(__file__).resolve().parents[2] / LICENSE_TEMPLATE,
+            ]
+            for candidate in fallback_candidates:
+                if candidate.exists():
+                    license_template = candidate
+                    break
         if license_template.exists():
             license_body = license_template.read_text(encoding="utf-8")
             license_text = (

@@ -63,16 +63,16 @@ exclude: |-
   (?x)
   (^|/)
   (
-    \.venv
+    _site
+    | site
+    | build
+    | \.venv
     | __pycache__
     | \.pytest_cache
     | \.mypy_cache
-    | build
     | dist
     | data/raw
     | data/tmp
     | data/cache
-    | _site
-    | site
   )
   (/|$)

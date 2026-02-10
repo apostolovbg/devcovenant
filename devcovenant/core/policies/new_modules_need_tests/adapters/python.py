@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import ast
 from pathlib import Path
 from typing import List, Set
 
@@ -39,6 +40,74 @@ def _collect_changed_tests(
         ):
             tests.append(path)
     return tests
+
+
+def _is_python_test_file(path: Path) -> bool:
+    """Return True when file is a Python test module."""
+    return path.name.startswith("test_") and path.suffix.lower() == ".py"
+
+
+def _inherits_testcase(node: ast.ClassDef) -> bool:
+    """Return True when class derives from unittest.TestCase."""
+    for base in node.bases:
+        if isinstance(base, ast.Name) and base.id == "TestCase":
+            return True
+        if isinstance(base, ast.Attribute) and base.attr == "TestCase":
+            return True
+    return False
+
+
+def _validate_unittest_style(path: Path) -> str | None:
+    """Return violation message when Python tests are not unittest-style."""
+    try:
+        content = path.read_text(encoding="utf-8")
+    except OSError:
+        return None
+
+    if "export_unittest_cases(" in content:
+        return (
+            "Remove unittest bridge usage and define explicit "
+            "unittest.TestCase tests."
+        )
+
+    try:
+        tree = ast.parse(content)
+    except SyntaxError:
+        # Let syntax-related policies report parser errors.
+        return None
+
+    top_level_tests = [
+        node.name
+        for node in tree.body
+        if isinstance(node, ast.FunctionDef) and node.name.startswith("test_")
+    ]
+    if top_level_tests:
+        return (
+            "Module-level test_* functions are not allowed; "
+            "use unittest.TestCase methods."
+        )
+
+    has_unittest_tests = False
+    for node in tree.body:
+        if not isinstance(node, ast.ClassDef):
+            continue
+        if not _inherits_testcase(node):
+            continue
+        if any(
+            isinstance(method, ast.FunctionDef)
+            and method.name.startswith("test_")
+            for method in node.body
+        ):
+            has_unittest_tests = True
+            break
+
+    if not has_unittest_tests:
+        return (
+            "Python test modules must define unittest.TestCase "
+            "classes with test_* methods."
+        )
+
+    return None
 
 
 def _is_module(path: Path, selector: SelectorSet, repo_root: Path) -> bool:
@@ -82,6 +151,11 @@ def check_changes(
     tests_changed = _collect_changed_tests(
         repo_root, tests_dirs, added | modified | deleted
     )
+    changed_python_tests = [
+        test_path
+        for test_path in tests_changed
+        if test_path.exists() and _is_python_test_file(test_path)
+    ]
 
     if new_modules and not _existing_tests(repo_root, tests_dirs):
         targets = ", ".join(
@@ -137,6 +211,19 @@ def check_changes(
                     f"Adjust tests under {tests_label}/ "
                     f"when removing modules: {targets}"
                 ),
+            )
+        )
+
+    for test_path in sorted(changed_python_tests):
+        message = _validate_unittest_style(test_path)
+        if not message:
+            continue
+        violations.append(
+            Violation(
+                policy_id=policy_id,
+                severity="error",
+                file_path=test_path,
+                message=message,
             )
         )
 

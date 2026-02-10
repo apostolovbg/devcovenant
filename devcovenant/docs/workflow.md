@@ -21,14 +21,14 @@ any change, including documentation-only edits.
 ## Gated Sequence
 The default commands are:
 ```bash
-python3 devcovenant/run_pre_commit.py --phase start
-python3 devcovenant/run_tests.py
-python3 devcovenant/run_pre_commit.py --phase end
+python3 -m devcovenant check --start
+python3 -m devcovenant test
+python3 -m devcovenant check --end
 ```
 The start and end gates record timestamps in the local registry.
 
 ## Test Runner
-`devcovenant test` (and `run_tests.py`) executes both pytest and
+`devcovenant test` executes both pytest and
 `python3 -m unittest discover` to keep coverage consistent across suites.
 The runner records status so policies can verify that tests ran.
 

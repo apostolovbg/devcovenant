@@ -1,6 +1,6 @@
 header_lines:
 - '# DevCovenant'
-- '**Last Updated:** 2026-02-07'
+- '**Last Updated:** 2026-02-10'
 - '**Version:** 0.2.6'
 doc_id: README
 doc_type: readme
@@ -11,7 +11,7 @@ managed_block: |-
   **Managed By:** DevCovenant
 
   **Read first:** `AGENTS.md` is the canonical source of truth. See
-  `devcovenant/README.md` for usage and update workflow details.
+  `devcovenant/README.md` for usage and lifecycle workflow details.
 body: |-
   DevCovenant helps repositories keep policy prose and enforcement logic aligned.
 
@@ -28,20 +28,23 @@ body: |-
 
   ## Workflow
   Run the gate sequence for edits:
-  1. `python3 devcovenant/run_pre_commit.py --phase start`
-  2. `python3 devcovenant/run_tests.py`
-  3. `python3 devcovenant/run_pre_commit.py --phase end`
+  1. `python3 -m devcovenant check --start`
+  2. `python3 -m devcovenant test`
+  3. `python3 -m devcovenant check --end`
 
   ## Quick Start
   Install DevCovenant, review `devcovenant/config.yaml`, and deploy once config
   is ready. Use `devcovenant check` to inspect policy compliance and
-  `devcovenant refresh_registry` after policy metadata changes.
+  `devcovenant refresh --target .` after policy metadata changes.
 
   ## Commands
   ```bash
   devcovenant check
-  devcovenant check --fix
-  devcovenant refresh_registry
+  devcovenant check --nofix
+  devcovenant check --start
+  devcovenant test
+  devcovenant check --end
+  devcovenant refresh --target /path/to/repo
   ```
 
   ## License

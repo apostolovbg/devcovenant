@@ -196,23 +196,34 @@ def _collect_policies(agents_path: Path) -> Dict[str, object]:
 
 
 def _collect_new_stock_policies(
-    template_path: Path, existing_ids: set[str]
+    source_root: Path, existing_ids: set[str]
 ) -> Tuple[str, ...]:
     """Return new stock policy IDs that were not present before update."""
-    parser = PolicyParser(template_path)
-    template_ids = {
-        policy.policy_id
-        for policy in parser.parse_agents_md()
-        if policy.policy_id and policy.status != "deleted"
-    }
-    new_ids = sorted(template_ids - existing_ids)
+    descriptors_root = source_root / "devcovenant" / "core" / "policies"
+    stock_ids: set[str] = set()
+    for descriptor_path in sorted(descriptors_root.glob("*/*.yaml")):
+        payload = yaml.safe_load(descriptor_path.read_text(encoding="utf-8"))
+        if not isinstance(payload, dict):
+            continue
+        policy_id = str(payload.get("id") or "").strip()
+        if not policy_id:
+            continue
+        metadata = payload.get("metadata")
+        if isinstance(metadata, dict):
+            status = str(metadata.get("status") or "active").strip().lower()
+        else:
+            status = "active"
+        if status == "deleted":
+            continue
+        stock_ids.add(policy_id)
+    new_ids = sorted(stock_ids - existing_ids)
     return tuple(new_ids)
 
 
 def _build_replacement_plan(
     target_policies: Dict[str, object],
     replacements: Dict[str, policy_replacements.PolicyReplacement],
-    template_path: Path,
+    source_root: Path,
 ) -> ReplacementPlan:
     """Determine which policies to migrate or remove."""
     migrate: List[str] = []
@@ -227,7 +238,7 @@ def _build_replacement_plan(
             remove.append(replacement.policy_id)
 
     new_stock = _collect_new_stock_policies(
-        template_path, set(target_policies.keys())
+        source_root, set(target_policies.keys())
     )
     return ReplacementPlan(
         migrate=tuple(migrate),
@@ -367,14 +378,7 @@ def main(argv=None) -> None:
     if _version_key(source_version) <= _version_key(target_version):
         print("DevCovenant core is already up to date; upgrade skipped.")
         return
-    template_path = (
-        Path(__file__).resolve().parents[1]
-        / "core"
-        / "profiles"
-        / "global"
-        / "assets"
-        / "AGENTS.md"
-    )
+    source_root = Path(__file__).resolve().parents[2]
     schema_path = None
     agents_path = target_root / "AGENTS.md"
 
@@ -383,11 +387,9 @@ def main(argv=None) -> None:
         target_root / "devcovenant" / "config.yaml"
     )
     _apply_policy_state_overrides(existing_policies, policy_state)
-    replacements = policy_replacements.load_policy_replacements(
-        Path(__file__).resolve().parents[2]
-    )
+    replacements = policy_replacements.load_policy_replacements(source_root)
     plan = _build_replacement_plan(
-        existing_policies, replacements, template_path
+        existing_policies, replacements, source_root
     )
     sources = _snapshot_policy_sources(target_root, plan.migrate)
 

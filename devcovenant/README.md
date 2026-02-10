@@ -1,5 +1,5 @@
 # DevCovenant
-**Last Updated:** 2026-02-07
+**Last Updated:** 2026-02-10
 **Version:** 0.2.6
 
 <!-- DEVCOV:BEGIN -->
@@ -8,7 +8,7 @@
 **Managed By:** DevCovenant
 
 **Read first:** `AGENTS.md` is the canonical source of truth. See
-`devcovenant/README.md` for usage and update workflow details.
+`devcovenant/README.md` for usage and lifecycle workflow details.
 <!-- DEVCOV:END -->
 
 DevCovenant is a self-enforcing policy system that keeps human-readable
@@ -26,7 +26,7 @@ at `devcovenant/README.md`.
 4. [Document assets](#document-assets)
 5. [Extended Docs](#extended-docs)
 6. [CLI Entry Points](#cli-entry-points)
-7. [Install, Deploy, Update, Upgrade](#install-deploy-update-upgrade)
+7. [Install, Deploy, Refresh, Upgrade](#install-deploy-refresh-upgrade)
 8. [Workflow](#workflow)
 9. [Core Exclusion](#core-exclusion)
 10. [Dependency and License Tracking](#dependency-and-license-tracking)
@@ -80,17 +80,17 @@ latest edit.
 ## Extended Docs
 Detailed guides live in `devcovenant/docs/` and are meant to be referenced
 from day-to-day development. Start here:
-- `devcovenant/docs/installation.md` for install and update flows.
+- `devcovenant/docs/installation.md` for install/deploy/refresh/upgrade flows.
 - `devcovenant/docs/config.md` for config structure and overrides.
 - `devcovenant/docs/profiles.md` for profile anatomy and overlays.
 - `devcovenant/docs/policies.md` for policy descriptors and scripts.
 - `devcovenant/docs/adapters.md` for language-specific adapter design.
 - `devcovenant/docs/registry.md` for registry files and refresh semantics.
-- `devcovenant/docs/refresh.md` for refresh-all vs registry-only runs.
+- `devcovenant/docs/refresh.md` for full refresh behavior.
 - `devcovenant/docs/workflow.md` for the enforced gate sequence.
 - `devcovenant/docs/troubleshooting.md` for common errors and fixes.
 
-## Install, Deploy, Update, Upgrade
+## Install, Deploy, Refresh, Upgrade
 Install copies the DevCovenant core and writes a generic config stub. It
 never deploys managed docs or assets, so you can edit the config before the
 repo goes live:
@@ -100,58 +100,25 @@ devcovenant install --target /path/to/repo
 devcovenant deploy --target /path/to/repo
 ```
 
-Update refreshes managed docs/assets/registries using the existing core
-without upgrading core files:
+Refresh rebuilds managed docs/assets/registries using the existing core:
 ```bash
-devcovenant update --target /path/to/repo
+devcovenant refresh --target /path/to/repo
 ```
 
 Upgrade replaces the core when the source version is newer, applies policy
-replacements, and then runs update:
+replacements, and then runs refresh:
 ```bash
 devcovenant upgrade --target /path/to/repo
-```
-
-Registry-only refresh skips managed docs/assets:
-```bash
-devcovenant refresh --target /path/to/repo
 ```
 
 Use `python3 -m devcovenant` for source checkouts when the console entry is
 not on PATH.
 
-Skip all doc/policy/metadata writes by appending `--no-touch` to install or
-update. That flag copies just the `devcovenant/` package, leaves the rest of
-the repo untouched, and still records the run in
-`devcovenant/registry/local/manifest.json` so you can finish the deploy
-later:
+Undeploy removes managed blocks and generated registry/config artifacts while
+keeping the installed core, and uninstall removes the full DevCovenant
+footprint:
 ```bash
-devcovenant install --target /path/to/repo --no-touch
-devcovenant update --target /path/to/repo --no-touch
-```
-
-
-Normalize policy metadata to include every supported key (empty values
-fall back to defaults):
-```bash
-devcovenant normalize-metadata
-```
-Schema defaults come from
-`devcovenant/core/profiles/global/assets/AGENTS.md`. Use `--schema` to
-point at another file if you need to seed metadata from a different
-template.
-
-Selector roles
---------------
-Use `selector_roles` in policy metadata to declare selector roles. Each
-role produces `role_globs`, `role_files`, and `role_dirs`. Custom role
-names are supported and interpreted by policy scripts. Normalization will
-infer roles from legacy selector keys and insert the role triplets without
-overwriting values.
-
-
-Uninstall uses the same CLI:
-```bash
+devcovenant undeploy --target /path/to/repo
 devcovenant uninstall --target /path/to/repo
 ```
 
@@ -160,11 +127,15 @@ removals remain safe and predictable. If the target repo has no license file,
 DevCovenant installs an MIT license by default and will not overwrite an
 existing license unless forced. When `--backup-existing` is set, the
 installer renames the existing file to `*_old.*` before writing the new one.
+Version fallback order is: CLI `--version`, `config.version.override`, existing
+valid `devcovenant/VERSION`, `pyproject.toml`, prompt, then `0.0.1`.
+Existing-repo lifecycle commands (`deploy`, `refresh`, `upgrade`) default to
+preserve mode for version/license and only overwrite when explicitly requested.
 Managed docs such as `SPEC.md` and `PLAN.md` are part of the profile-driven
 doc asset
 graph, so they are generated (and refreshed) alongside the other auto-managed
 documents—there is no special CLI flag to toggle them. See
-`devcovenant/README.md` for the full install/update reference.
+`devcovenant/README.md` for the full lifecycle reference.
 
 
 ## Workflow
@@ -175,18 +146,18 @@ Adoption guidance:
   raise the block level.
 
 DevCovenant expects the following sequence in enforced repos:
-1. `python3 devcovenant/run_pre_commit.py --phase start`
-2. `python3 devcovenant/run_tests.py`
-3. `python3 devcovenant/run_pre_commit.py --phase end`
+1. `python3 -m devcovenant check --start`
+2. `python3 -m devcovenant test`
+3. `python3 -m devcovenant check --end`
 
 Shortcut: `devcovenant test` runs the same pytest + unittest sequence and
 records status via the test runner wrapper.
 
 During `--phase end`, if pre-commit modifies files, the script automatically
-reruns `devcovenant/run_tests.py` before recording the end timestamp so
+reruns `python3 -m devcovenant test` before recording the end timestamp so
 tests always post-date any auto-fixes.
 
-When policy blocks change, run `devcovenant refresh_registry` to
+When policy blocks change, run `devcovenant refresh --target .` to
 sync policy hashes.
 
 ## Core Exclusion
@@ -230,12 +201,6 @@ That profile also contributes a `.gitignore` fragment that keeps
 that profile continue to commit `devcovenant/config.yaml`, ensuring their
 runtime configuration travels with their source tree.
 
-For a “no-touch” install, copy the `devcovenant/` package into the target repo,
-adjust `devcovenant/config.yaml` to taste, and run
-`devcovenant install --target` later. The installer honors any existing config
-unless `--force-config` is supplied, letting teams pre-seed their configuration
-before DevCovenant runs for the first time.
-
 ## Dependency and License Tracking
 DevCovenant tracks dependencies using the manifest files defined by the
 active profiles (for example `requirements.in`/`pyproject.toml` for Python or
@@ -250,13 +215,13 @@ Common commands:
 ```bash
 devcovenant check
 
-devcovenant check --mode pre-commit
+devcovenant check --nofix
+devcovenant check --start
+devcovenant test
+devcovenant check --end
 
-devcovenant check --fix
-
-devcovenant refresh_registry
-
-python3 devcovenant/core/refresh_registry.py
+devcovenant refresh --target /path/to/repo
+devcovenant update_lock
 ```
 
 See `devcovenant/README.md` for the full user guide.

@@ -14,7 +14,7 @@ in sync with policy descriptors and profile overlays. Treat the
 registry as a cache: do not edit it by hand.
 
 ## Workflow
-1. Run refresh or update to rebuild the local registry.
+1. Run `refresh` to rebuild registry and managed state.
 2. Inspect the registry when debugging policy loading or overrides.
 3. Commit registry changes alongside the code they represent.
 
@@ -22,7 +22,7 @@ registry as a cache: do not edit it by hand.
 The main files under `devcovenant/registry/local/` are:
 - `policy_registry.yaml` for policy hashes and resolved metadata.
 - `profile_registry.yaml` for the active profile inventory.
-- `manifest.json` for install/update tracking and notices.
+- `manifest.json` for lifecycle tracking and notices.
 - `test_status.json` for devflow gate/test run state.
 
 ## Global Registry Assets

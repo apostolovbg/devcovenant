@@ -1,6 +1,6 @@
 header_lines:
 - '# DevCovenant Specification'
-- '**Last Updated:** 2026-02-09'
+- '**Last Updated:** 2026-02-10'
 - '**Version:** 0.2.6'
 doc_id: SPEC
 doc_type: specification
@@ -28,14 +28,15 @@ body: |-
   ## Workflow
   - Run gate commands in order: start, tests, end.
   - Treat policy descriptors as canonical metadata sources.
-  - Refresh registries with `devcovenant refresh_registry` after policy changes.
+  - Run `devcovenant refresh` after policy changes.
 
   ## Functional Requirements
   - Load core and custom policy modules and apply metadata resolution
     deterministically.
   - Regenerate AGENTS policy sections from descriptors and resolved metadata.
-  - Keep lifecycle command behavior (`install`, `deploy`, `update`, `upgrade`,
-    `refresh`, `undeploy`, `uninstall`) explicit and test-covered.
+  - Keep lifecycle command behavior (`check`, `test`, `install`, `deploy`,
+    `upgrade`, `refresh`, `undeploy`, `uninstall`, `update_lock`) explicit and
+    test-covered.
 
   ## Non-Functional Requirements
   - Preserve reproducibility across installs and updates.

@@ -34,16 +34,16 @@ profiles:
       - .md
       - .rst
       - .txt
+      - .py
+      - .pyi
+      - .pyw
+      - .ipynb
       - .csv
       - .tsv
       - .json
       - .ndjson
       - .parquet
       - .avro
-      - .py
-      - .pyi
-      - .pyw
-      - .ipynb
 paths:
   policy_definitions: AGENTS.md
   registry_file: devcovenant/registry/local/policy_registry.yaml

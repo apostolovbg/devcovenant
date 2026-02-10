@@ -1,6 +1,6 @@
 header_lines:
 - '# DevCovenant Development Guide'
-- '**Last Updated:** 2026-02-07'
+- '**Last Updated:** 2026-02-10'
 - '**Version:** 0.2.6'
 doc_id: AGENTS
 doc_type: policy-source
@@ -45,7 +45,7 @@ body: |-
   # EDITABLE SECTION
 
   - YYYY-MM-DD: Add repository-specific notes here. This section is preserved
-    across install and update runs.
+    across install and refresh runs.
 
   <!-- DEVCOV:BEGIN -->
 
@@ -58,9 +58,9 @@ body: |-
 
   ## Obligatory Workflow
   Run DevCovenant gates in this sequence for repository edits:
-  1. `python3 devcovenant/run_pre_commit.py --phase start`
-  2. `python3 devcovenant/run_tests.py`
-  3. `python3 devcovenant/run_pre_commit.py --phase end`
+  1. `python3 -m devcovenant check --start`
+  2. `python3 -m devcovenant test`
+  3. `python3 -m devcovenant check --end`
 
   ## Managed Environment
   If a managed environment is configured, run DevCovenant from that environment.
@@ -84,7 +84,7 @@ body: |-
 
   ## Workflow
   - Run `start`, apply edits, run tests, and finish with `end`.
-  - After policy-text changes, run `devcovenant refresh_registry`.
+  - After policy-text changes, run `devcovenant refresh --target .`.
   - Log every change in `CHANGELOG.md` under the current version entry.
 
   ## Policy Management and Enforcement

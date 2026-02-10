@@ -72,19 +72,6 @@ _ORDER_EXCLUDE_KEYS = {"updated"}
 _STATUS_OVERRIDE_VALUES = {"deprecated", "fiducial", "new", "deleted"}
 
 
-def _template_agents_path(repo_root: Path) -> Path:
-    """Return the global template AGENTS file inside the core assets."""
-    return (
-        repo_root
-        / "devcovenant"
-        / "core"
-        / "profiles"
-        / "global"
-        / "assets"
-        / "AGENTS.md"
-    )
-
-
 @dataclass(frozen=True)
 class RefreshResult:
     """Summary of refresh work."""
@@ -159,7 +146,6 @@ class MetadataContext:
     profile_overlays: Dict[str, Dict[str, Tuple[List[str], bool]]]
     autogen_overrides: Dict[str, Dict[str, List[str]]]
     user_overrides: Dict[str, Dict[str, List[str]]]
-    template_defaults: Dict[str, Dict[str, List[str]]]
 
 
 def _normalize_policy_list(raw_value: object | None) -> set[str]:
@@ -367,15 +353,11 @@ def build_metadata_context(repo_root: Path) -> MetadataContext:
     profile_overlays = _collect_profile_overlays(repo_root, active_profiles)
     autogen_overrides, user_overrides = _load_metadata_overrides(payload)
     control = load_policy_control_config(payload)
-    template_defaults = _load_template_metadata(
-        _template_agents_path(repo_root)
-    )
     return MetadataContext(
         control=control,
         profile_overlays=profile_overlays,
         autogen_overrides=autogen_overrides,
         user_overrides=user_overrides,
-        template_defaults=template_defaults,
     )
 
 
@@ -608,24 +590,6 @@ def _apply_selector_roles(
     return new_order, values
 
 
-def _load_template_metadata(
-    template_path: Path,
-) -> Dict[str, Dict[str, List[str]]]:
-    """Parse a template AGENTS policy block into metadata defaults."""
-    if not template_path.exists():
-        return {}
-    content = template_path.read_text(encoding="utf-8")
-    parsed: Dict[str, Dict[str, List[str]]] = {}
-    for match in POLICY_BLOCK_RE.finditer(content):
-        metadata_block = match.group(2).strip()
-        _order, values = parse_metadata_block(metadata_block)
-        policy_id = values.get("id", [""])[0] if values.get("id") else ""
-        if not policy_id:
-            continue
-        parsed[policy_id] = values
-    return parsed
-
-
 def _apply_overrides_replace(
     values: Dict[str, List[str]],
     overrides: Dict[str, List[str]],
@@ -700,15 +664,6 @@ def _resolve_metadata(
                 continue
             values.setdefault(key, list(current_values.get(key, [])))
 
-    template_values = context.template_defaults.get(policy_id)
-    if not descriptor and template_values:
-        for key, defaults in template_values.items():
-            if key in _ORDER_EXCLUDE_KEYS:
-                continue
-            values.setdefault(key, list(defaults))
-            if not values[key] and defaults:
-                values[key] = list(defaults)
-
     overlays = context.profile_overlays.get(policy_id, {})
     _apply_profile_overlays(values, overlays)
 
@@ -729,11 +684,6 @@ def _resolve_metadata(
         if key in _ORDER_EXCLUDE_KEYS:
             continue
         _ensure_metadata_key(ordered_keys, values, key)
-    if template_values and not descriptor:
-        for key in template_values.keys():
-            if key in _ORDER_EXCLUDE_KEYS:
-                continue
-            _ensure_metadata_key(ordered_keys, values, key)
     for key in overlays.keys():
         if key in _ORDER_EXCLUDE_KEYS:
             continue

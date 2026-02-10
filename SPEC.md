@@ -1,5 +1,5 @@
 # DevCovenant Specification
-**Last Updated:** 2026-02-09
+**Last Updated:** 2026-02-10
 **Version:** 0.2.6
 
 <!-- DEVCOV:BEGIN -->
@@ -32,7 +32,8 @@ drift is detectable and reversible.
 ## Workflow
 - Run the gated workflow for every change: pre-commit start, tests,
   pre-commit end.
-- `pre-commit --phase start` must run before edits but is not required to leave
+- `devcovenant check --start` must run before edits but is not required to
+  leave
   the tree clean; it simply captures a gate snapshot and identifies existing
   issues. Later phases still rerun hooks/tests until the workspace is clean.
 - If start is recorded after edits, the gate issues a warning and brief
@@ -45,10 +46,8 @@ drift is detectable and reversible.
   stored in `devcovenant/registry/local/test_status.json`, created on demand,
   and treated as gitignored state. Do not create `.devcov-state`; keep all
   runtime state under `devcovenant/registry/local`.
-- Run a startup check at session start (`python3 -m devcovenant check --mode
-  startup`).
 - When policy text changes, update scripts/tests and run
-  `devcovenant refresh_registry` so hashes stay aligned.
+  `devcovenant refresh` so hashes stay aligned.
 - Log every change in `CHANGELOG.md` under the current version header.
 
 ## Functional Requirements
@@ -60,7 +59,7 @@ drift is detectable and reversible.
 - Treat policy descriptor `text` fields as the canonical policy prose source.
 - Remove legacy stock-text restore infrastructure (`stock_policy_texts.*`
   and `restore-stock-text`) now that policy text is descriptor-driven.
-- `refresh_registry` must skip policies with missing descriptor text and emit
+- `refresh` must skip policies with missing descriptor text and emit
   notices; no stock-text fallback is allowed.
 - Support `custom: true/false` metadata to mark custom policy prose that
   bypasses stock text sync checks.
@@ -86,7 +85,8 @@ drift is detectable and reversible.
   and suppresses core fixers for that policy.
 - Respect `enabled`, `severity`, `status`, and `enforcement` metadata for each
   policy.
-- Support `startup`, `lint`, `pre-commit`, and `normal` modes.
+- Support one check flow with auto-fix enabled by default and a `--nofix`
+  audit switch.
 - Apply auto-fixers when allowed, using fixers located under
   `devcovenant/core/policies/<id>/fixers/` and any custom fixers under
   `devcovenant/custom/policies/<id>/fixers/`.
@@ -104,13 +104,19 @@ drift is detectable and reversible.
   once as the fallback when the CLI is not on PATH.
 - Documentation should use `python3` (not `python`) for all source-based
   workflows and command examples.
-- Supported commands: `check`, `test`, `refresh_registry`, `install`,
-  `deploy`, `update`, `upgrade`, `refresh`, `undeploy`, and `uninstall`.
-- `check` runs in two modes:
-  - `audit` (default): no auto-fixes; exits non-zero on blocking violations or
-    sync issues.
-  - `fix`: allows policy fixers; still exits non-zero if blocking issues
-    remain.
+- Supported commands: `check`, `test`, `install`, `deploy`, `upgrade`,
+  `refresh`, `undeploy`, `uninstall`, and `update_lock`.
+- CLI parsing is command-scoped (subparsers). `devcovenant <command> --help`
+  must show only options for that command and must not leak unrelated
+  lifecycle flags.
+- `check` defaults to auto-fix and exits non-zero on blocking violations or
+  sync issues.
+- `check --nofix` runs an audit-only pass.
+- `check --start` runs full pre-commit
+  (`python3 -m pre_commit run --all-files`) and records start-gate metadata in
+  `devcovenant/registry/local/test_status.json`.
+- `check --end` runs full pre-commit, reruns tests/hooks until clean when
+  fixers modify files, then records end-gate metadata.
 - `test` runs `pytest` plus `python3 -m unittest discover` against `tests/`
   (mirrors the package layout under `tests/devcovenant/` but stays outside the
   installable package).
@@ -118,11 +124,10 @@ drift is detectable and reversible.
   engine init, command execution) so runs are traceable without flooding.
 - `install` and `uninstall` delegate to `devcovenant/core/install.py` and
   `devcovenant/core/uninstall.py`.
-- `update` supports managed-block-only refreshes and policy-mode control.
-- Explicit normalize-metadata command is unnecessary; refresh/update already
-  resolve metadata via descriptors + profile overlays + config overrides.
+- Explicit metadata-normalization commands are unnecessary; refresh already
+  resolves metadata via descriptors + profile overlays + config overrides.
 
-### Install, deploy, update, upgrade, refresh model
+### Install, deploy, upgrade, refresh model
 - `install` places DevCovenant into a repo and writes a generic,
   devcovrepo-enabled config stub (sets `install.generic_config: true`). It
   never deploys managed docs/assets and exists to force a user config edit
@@ -133,25 +138,20 @@ drift is detectable and reversible.
   (`install.generic_config: false`), materializes managed
   docs/assets/registries, regenerates `.gitignore`, and runs `refresh`
   internally. This is the only command that makes the repo fully “live.”
-- `update` refreshes managed docs/assets/registries from the current config
-  and existing core without touching core files. Users may intentionally
-  stay on an older core; `update` must not upgrade for them.
 - `upgrade` explicitly replaces the DevCovenant core when the source version
   is newer than the target repo’s core. It applies `policy_replacements.yaml`
-  and then runs `update`. `upgrade` is a direct command, and is also reachable
+  and then runs `refresh`. `upgrade` is a direct command, and is also reachable
   by the `install` prompt when a newer core is detected.
-- `refresh` rebuilds registries and policy metadata from the current
-  config/profile state, then regenerates the AGENTS policy block from registry
-  entries. It does not refresh other managed docs/assets. It also refreshes
-  config autogen sections (profiles.generated, core paths, and metadata
-  overlays) while preserving user overrides.
+- `refresh` is a full refresh command. It rebuilds registries and policy
+  metadata, regenerates the AGENTS policy block from registry entries,
+  refreshes managed docs/assets selected by `doc_assets`, and refreshes config
+  autogen sections (profiles.generated, core paths, and metadata overlays)
+  while preserving user overrides.
 - `undeploy` removes managed blocks, registries, and generated `.gitignore`
   fragments while keeping `devcovenant/` and config intact so users can edit
   config and redeploy.
 - `uninstall` removes DevCovenant from a repo: deletes `devcovenant/`,
   removes managed blocks from documents, and cleans out generated registries.
-- “Restore to stock metadata/profile configuration” is a separate command
-  (planned) and must not be conflated with `update` or `refresh`.
 - Source-based usage must use `python3 -m devcovenant ...` when invoking
   from a repo checkout; the installed CLI is the default for packaged usage.
 
@@ -166,19 +166,21 @@ drift is detectable and reversible.
    `deploy`.
 
 #### Command matrix (behavioral intent)
+- `check`: policy checks with default auto-fix; `--nofix` disables fixing;
+  `--start`/`--end` run start/end gate pre-commit workflows.
+- `test`: run `pytest` and `python3 -m unittest discover` against `tests/`.
 - `install`: place core + generic config stub only. Prompt to `upgrade` if a
   newer core is detected. No managed doc deployment.
 - `deploy`: materialize managed docs/assets/registries from config, refresh
   `.gitignore`, and run `refresh` internally.
-- `update`: refresh managed docs/assets/registries using the existing core;
-  never touches core files.
 - `upgrade`: copy newer core into the repo and apply policy replacements,
-  then run `update`.
-- `refresh`: registry regeneration, AGENTS policy-block regeneration, and
-  config autogen refresh (no other docs).
+  then run `refresh`.
+- `refresh`: full refresh for registries, AGENTS policy block, managed
+  docs/assets, and config autogen sections.
 - `undeploy`: remove managed blocks/registries and revert generated
   `.gitignore` fragments while keeping core + config.
 - `uninstall`: remove the entire DevCovenant footprint and managed blocks.
+- `update_lock`: refresh lockfiles and related license material.
 
 ### Command/script placement
 - User-facing, runnable commands live at the `devcovenant/` root and are
@@ -194,11 +196,12 @@ drift is detectable and reversible.
   not forwarding wrappers.
 - Avoid duplicate same-name command modules across `devcovenant/` and
   `devcovenant/core/`.
-- CLI-exposed command modules include (non-exhaustive): `check.py`,
-  `sync.py`, `test.py`, `install.py`, `deploy.py`, `update.py`, `upgrade.py`,
-  `refresh.py`, `uninstall.py`, `undeploy.py`, `refresh_all.py`,
-  `refresh_policies.py`, `refresh_registry.py`, `update_lock.py`,
-  `update_test_status.py`, `run_pre_commit.py`, and `run_tests.py`.
+- Do not duplicate CLI helper command sources under profile assets.
+  `run_pre_commit.py`, `run_tests.py`, `update_lock.py`, and
+  `update_test_status.py` are sourced from the package root modules only.
+- CLI-exposed command modules include (non-exhaustive): `cli.py`,
+  `run_pre_commit.py`, `run_tests.py`, `update_lock.py`,
+  and `update_test_status.py`.
   `run_tests.py` executes the merged
   `devflow-run-gates.required_commands` list resolved from profiles and
   config (defaults remain pytest + unittest) and records the exact command
@@ -231,10 +234,13 @@ drift is detectable and reversible.
   that supply the full document structure, header metadata, and managed
   block scaffolding. Outside-of-block stock text is injected only when a
   target document is missing, empty, or effectively a single-line placeholder;
-  otherwise install/update regenerate only the managed blocks.
+  otherwise deploy/refresh regenerate only the managed blocks.
+- Managed-doc templates are YAML-only. Do not keep duplicate markdown template
+  files for managed docs under `devcovenant/core/profiles/global/assets/`;
+  descriptors are the sole template source.
 - The `last-updated-placement` policy runs with auto-fix enabled so touched
   managed docs receive a UTC `Last Updated` header update during each run
-  (`python3 devcovenant check --fix`), keeping the timestamp aligned with the
+  (`python3 devcovenant check`), keeping the timestamp aligned with the
   latest change.
 - To capture the deep knowledge we accumulate while evolving DevCovenant, the
   custom `devcovrepo` profile must extend `documentation-growth-tracking` so
@@ -264,7 +270,7 @@ drift is detectable and reversible.
   `profiles.active` when a user wants to stop applying their assets or
   metadata overlays.
 - Config should expose global knobs for `paths`, `docs`, `install`,
-  `update`, `engine`, `hooks`, `reporting`, `ignore`,
+  `deploy`, `upgrade`, `refresh`, `engine`, `hooks`, `reporting`, `ignore`,
   `autogen_metadata_overrides`, and `user_metadata_overrides` so repos can
   tune behavior without editing core scripts. Every generated config must
   list every known knob (even if the default value is blank) so the file
@@ -276,7 +282,7 @@ drift is detectable and reversible.
   `global`, `docs`, `devcovenant`) synthesize versus which remain purely
   user-maintained.
 - Managed-doc targets resolve as `doc_assets.autogen` minus `doc_assets.user`.
-  Install/update/refresh-all sync only those docs from descriptors; AGENTS
+  Deploy/refresh sync only those docs from descriptors; AGENTS
   policy content remains generated from the policy registry.
 - This mirrors the policy override structure (`autogen_metadata_overrides` and
   `user_metadata_overrides`) so teams can lift the default curated assets into
@@ -292,7 +298,7 @@ drift is detectable and reversible.
   `devcovenant/custom/profiles/<name>/assets/`, with `global/assets/`
   covering shared docs and tooling.
 - Policy assets are declared in policy descriptors and live under
-  `devcovenant/core/policies/<policy>/assets/`. Install/update reads the
+  `devcovenant/core/policies/<policy>/assets/`. Deploy/refresh reads the
   descriptor assets directly. Custom overrides live under
   `devcovenant/custom/policies/<policy>/assets/`.
 
@@ -310,7 +316,7 @@ drift is detectable and reversible.
   3. overrides supplied via `config.yaml` under a dedicated `pre_commit`
      block (no direct edits to `.pre-commit-config.yaml`).
 - The generated `.pre-commit-config.yaml` is authoritative and refreshed on
-  `deploy`, `update`, `upgrade`, and `refresh`.
+  `deploy`, `upgrade`, and `refresh`.
 - Profile exclusions (for example, `devcovuser` vendor/build ignores) are
   translated into pre-commit `exclude`/`files` settings so pre-commit and
   policy scans skip the same paths.
@@ -375,8 +381,8 @@ drift is detectable and reversible.
   invocation, regenerating `devcovenant/registry/local/*` (hashes, manifest)
   and only materializing `config.yaml` when missing; it skips AGENTS and
   managed docs to keep the worktree clean during CI and local runs.
-Profiles are explicit—no inheritance or family defaults; each profile lists
-its own assets, suffixes, policies, and overlays.
+- Profiles are explicit—no inheritance or family defaults; each profile lists
+  its own assets, suffixes, policies, and overlays.
 - Custom policy `readme-sync` enforces that `devcovenant/README.md` mirrors
   `README.md` with repository-only blocks removed via
   `<!-- REPO-ONLY:BEGIN -->` / `<!-- REPO-ONLY:END -->` markers. Its auto-fix
@@ -423,10 +429,10 @@ its own assets, suffixes, policies, and overlays.
   overrides when present.
 - Support policy replacement metadata via
   `devcovenant/registry/global/policy_replacements.yaml`.
-  During updates, replaced policies move to custom and are marked deprecated
+  During upgrades, replaced policies move to custom and are marked deprecated
   when enabled; disabled policies are removed along with their custom scripts
   and fixers.
-- Record update notices (replacements and new policies) in
+- Record upgrade notices (replacements and new policies) in
   `devcovenant/registry/local/manifest.json` and print them to stdout.
 - Treat the collective `<!-- DEVCOV-POLICIES:BEGIN -->` /
   `<!-- DEVCOV-POLICIES:END -->` block as a managed unit rendered from
@@ -435,7 +441,7 @@ its own assets, suffixes, policies, and overlays.
   override that copies the policy’s modules, descriptors, and assets into
   `devcovenant/custom/` (with `custom: true`) when true and removes those files
   when the flag clears.
-  Always rerun `devcovenant refresh_registry` (and any needed registry
+  Always rerun `devcovenant refresh` (and any needed registry
   fixes) so the registry records the custom copy. Auto-fixers should be devised
   for every policy and wired through the per-policy adapters.
   They work across every language/profile combination that the policy supports.
@@ -479,7 +485,7 @@ its own assets, suffixes, policies, and overlays.
   values.
 - When DevCovenant removes a core policy, the updater copies it to
   `devcovenant/custom/policies/` (or a frozen overlay defined in config),
-  marks the new copy as `custom`, and reruns `refresh_registry` so the
+  marks the new copy as `custom`, and reruns `refresh` so the
   management docs, notices, and registry reflect the deprecated version.
 - `config.yaml` exposes:
   - `policy_state`: policy ID → `true|false` activation map (authoritative).
@@ -499,27 +505,32 @@ its own assets, suffixes, policies, and overlays.
   `devcovenant/` tree, `devcovenant/run_pre_commit.py`,
   `devcovenant/run_tests.py`, `devcovenant/update_lock.py`, and
   `devcovenant/update_test_status.py` helpers, and CI workflow assets.
+- Lifecycle installs copy helper command scripts from the package-root
+  modules as part of the `devcovenant/` tree; profile assets must not carry
+  duplicate helper-script source files.
 - Use packaged assets from `devcovenant/core/profiles/` and
   `devcovenant/core/policies/` when installed from PyPI; fall back to repo
   files when running from source.
 - Install modes: `auto`, `empty`; use mode-specific defaults for docs,
-  config, and metadata handling. Use `devcovenant update` for existing repos.
+  config, and metadata handling. Use `devcovenant deploy` for first activation
+  and `devcovenant refresh` for ongoing regeneration.
 - When install finds DevCovenant artifacts, it refuses to proceed unless
   `--auto-uninstall` is supplied or the user confirms the uninstall prompt.
 - `--disable-policy` sets `enabled: false` for listed policy IDs during
-  install/update.
+  install/deploy/upgrade.
 - Managed docs (AGENTS/README/PLAN/SPEC/CHANGELOG) refresh their headers and
-  managed blocks on install/update/refresh with UTC timestamps. Installs
-  create missing files while preserving any existing user content; updates
-  and refreshes always preserve user content outside managed blocks.
-- Update mode defaults to preserving policy blocks and metadata; managed blocks
+  managed blocks on deploy/upgrade/refresh with UTC timestamps. Installs
+  create missing files while preserving any existing user content; deploy,
+  upgrade, and refresh always preserve user content outside managed blocks.
+- Deploy/upgrade defaults preserve policy blocks and metadata; managed blocks
   can be refreshed independently of policy definitions.
 - Preserve custom policy scripts and fixers by default on existing installs
   (`--preserve-custom`), with explicit overrides available.
 - `devcovenant/config.yaml` is generated only when missing. Autogen sections
   are clearly marked and may be updated; user-controlled settings and
   overrides are preserved to allow installs from an existing config.
-- When an install/update runs, it deletes any `devcovrepo`-prefixed custom
+- When an install/deploy/upgrade runs, it deletes any
+  `devcovrepo`-prefixed custom
   policies or profiles inside `devcovenant/custom` unless `devcov_core_include`
   is set to true. The refresh/installer regenerates `devcovenant/custom` and
   `tests/devcovenant` from the global asset, and recreates the default config
@@ -534,13 +545,14 @@ its own assets, suffixes, policies, and overlays.
   custom extensions are tracked, leaving `tests/**` for project tests. When
   `devcov_core_include` is true, the `devcovrepo` profile adds overlays so the
   entire `devcovenant/**` tree (including core scripts) is mirrored under
-  `tests/devcovenant/`. Install/update/refresh only touch
+  `tests/devcovenant/`. Install/deploy/upgrade/refresh only touch
   `tests/devcovenant/**`, leaving all other `tests/**` entries intact.
 - Runtime-required artifacts (
   `devcovenant/registry/local/policy_registry.yaml`,
   `devcovenant/registry/local/manifest.json`,
   and `devcovenant/registry/local/test_status.json`
-) are generated from the global profile assets during install/update/refresh.
+) are generated from the global profile assets during
+  install/deploy/upgrade/refresh.
   They are local runtime state, excluded from packages, and regenerated when
   missing. Repositories may gitignore these files by default, while CI/builds
   regenerate them on demand.
@@ -552,18 +564,25 @@ its own assets, suffixes, policies, and overlays.
   DevCovenant).
 - `SPEC.md` and `PLAN.md` are always part of the profile-driven doc assets.
   Existing files receive header refreshes; missing files are created during
-  each install/update run without extra CLI toggles.
+  each deploy/refresh run without extra CLI toggles.
 - `CHANGELOG.md` and `CONTRIBUTING.md` are replaced on install; backups are
-  created only when `--backup-existing` is set. Updates refresh managed blocks
-  only.
+  created only when `--backup-existing` is set. Deploy/refresh regenerate
+  managed blocks.
 - The configured version file (default `VERSION`, overridden by profile
-  overlays like `devcovrepo`) is created on demand. Prefer an existing
-  version file, otherwise read version fields from `pyproject.toml`,
-  otherwise prompt. If prompting is skipped, default to `0.0.1`. The
-  `--version` flag overrides detection and accepts `x.x` or `x.x.x`
-  (normalized to `x.x.0`).
-- If no license exists, install the MIT template with a `Project Version`
-  header. Only overwrite licenses when explicitly requested.
+  overlays like `devcovrepo`) is created on demand. Resolve the target
+  version in this order: CLI `--version`, config `version.override`, existing
+  valid version file, `pyproject.toml` version, interactive prompt, then
+  `0.0.1` when prompting is unavailable. The `--version` flag accepts `x.x`
+  or `x.x.x` (normalized to `x.x.0`).
+- Invalid existing version values are treated as missing and must continue
+  down the fallback chain instead of blocking updates.
+- Metadata mode defaults for version/license are command-lifecycle based:
+  empty-repo install defaults to overwrite, while existing-repo flows
+  (`deploy`, `upgrade`, `refresh`) default to preserve unless explicitly
+  overridden.
+- If no license exists, preserve mode bootstraps the MIT template with a
+  `Project Version` header. Existing licenses are overwritten only when
+  explicitly requested.
 - Regenerate `.gitignore` from global, profile, and OS fragments, then
   merge existing user entries under a preserved block.
 - Default runs overwrite in-place without creating `*_old.*` backups.
@@ -572,35 +591,34 @@ its own assets, suffixes, policies, and overlays.
 - Stamp `Last Updated` values using the UTC install date.
 - Support partial doc overwrites via `--docs-include` / `--docs-exclude`, so
   only selected docs are replaced when docs mode overwrites.
-- Support policy update modes via `--policy-mode preserve|overwrite`.
+- Support policy modes via `--policy-mode preserve|overwrite`.
 - Write `devcovenant/registry/local/manifest.json` with the core layout,
   doc types, installed paths, options, active profiles, and policy asset
-- Record the UTC timestamp of the install or update.
+- Record the UTC timestamp of the install/deploy/upgrade/refresh action.
 - Core profile manifests (`devcovenant/core/profiles/<profile>/<profile>.yaml`)
-  are shipped as static, authoritative descriptors. `devcovenant update`
-  keeps user repos on the latest shipped descriptors, but `refresh-*` commands
-  do not rewrite them. Reference notes are never materialized into manifests;
+  are shipped as static, authoritative descriptors. `devcovenant refresh`
+  keeps user repos on the latest shipped descriptors. Reference notes are
+  never materialized into manifests;
   descriptors and manifests define behavior directly.
   Generic `profile.yaml` stubs are still invalid once normalization runs.
 - The stock profile set is intentionally slim: global, docs, data, suffixes,
   python, javascript, typescript, java, go, rust, php, ruby, csharp, sql,
   docker, terraform, kubernetes, fastapi, frappe, dart, flutter, swift,
   objective-c. Retired stacks should be added back as custom profiles.
-- Install and update share a unified self-install/self-refresh workflow.
+- Install, deploy, and refresh share a unified self-install/self-refresh
+  workflow.
   Whatever command runs operates on the host repository: invoking the installed
   package (on `PATH`) targets the current working repo.
-  Running `python3` inside the DevCovenant source tree updates that repo in
+  Running `python3` inside the DevCovenant source tree refreshes that repo in
   place without overwriting the existing `devcovenant/` folder, refreshing only
   configs, managed docs, and metadata. The optional
   `devcovenant/config_override` path remains a temporary override for
   experimentation.
-- Add a `refresh-all` command that runs registry generation first and then
-  policy-block rendering.
-  It fully regenerates `devcovenant/registry/local/policy_registry.yaml` from
-  descriptors plus overrides (no manual edits), renders the AGENTS policy
-  block from registry entries, and rebuilds
-  `devcovenant/registry/local/profile_registry.yaml`. That keeps profile and
-  policy state current without a full install/update run.
+- Keep a single `refresh` command that runs registry generation first and then
+  policy-block rendering. It fully regenerates
+  `devcovenant/registry/local/policy_registry.yaml` from descriptors plus
+  overrides (no manual edits), renders the AGENTS policy block from registry
+  entries, and rebuilds `devcovenant/registry/local/profile_registry.yaml`.
 
 ## Packaging Requirements
 - Ship `devcovenant` as a pure-Python package with a console script entry.

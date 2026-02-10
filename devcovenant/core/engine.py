@@ -397,18 +397,20 @@ class DevCovenantEngine:
                     "3. Use the PolicyCheck base class from "
                     "devcovenant.core.base"
                 )
+                policy_slug = issue.policy_id.replace("-", "_")
                 test_file = (
-                    f"tests/devcovenant/core/tests/test_policies/"
-                    f"test_{issue.policy_id}.py"
+                    f"tests/devcovenant/core/policies/{policy_slug}/"
+                    f"test_{policy_slug}.py"
                 )
                 print(f"4. Add tests in {test_file}")
                 print(f"5. Run tests: pytest {test_file} -v")
             else:
                 print(f"1. Update: {issue.script_path}")
                 print("2. Modify the script to implement the updated policy")
+                policy_slug = issue.policy_id.replace("-", "_")
                 test_file = (
-                    f"tests/devcovenant/core/tests/test_policies/"
-                    f"test_{issue.policy_id}.py"
+                    f"tests/devcovenant/core/policies/{policy_slug}/"
+                    f"test_{policy_slug}.py"
                 )
                 print(f"3. Update tests in {test_file}")
                 print(f"4. Run tests: pytest {test_file} -v")
@@ -792,7 +794,7 @@ class DevCovenantEngine:
 
         if violation.can_auto_fix:
             print()
-            print("Auto-fix: Available (run with --fix)")
+            print("Auto-fix: Enabled by default (use --nofix to disable)")
 
         print()
         print(f"Policy: AGENTS.md#{violation.policy_id}")
@@ -827,8 +829,8 @@ class DevCovenantEngine:
         print()
         if self.config.get("engine", {}).get("auto_fix_enabled", True):
             print(
-                "💡 Quick fix: Run 'devcovenant check --fix' to "
-                "auto-fix fixable violations"
+                "💡 Auto-fix is enabled by default; run "
+                "'devcovenant check --nofix' for audit-only checks"
             )
 
         print("=" * 70)

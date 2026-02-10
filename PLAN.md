@@ -1,5 +1,5 @@
 # DevCovenant Development Plan
-**Last Updated:** 2026-02-09
+**Last Updated:** 2026-02-10
 **Version:** 0.2.6
 
 <!-- DEVCOV:BEGIN -->
@@ -27,19 +27,22 @@ truth for behavior and requirements.
 
 ## Workflow
 - Start edits with:
-  `python3 devcovenant/run_pre_commit.py --phase start`
+  `devcovenant check --start`
 - Implement in dependency order.
 - After policy descriptor updates, run:
-  `devcovenant refresh_registry`
+  `devcovenant refresh`
 - Run tests:
   `python3 devcovenant/run_tests.py`
 - End edits with:
-  `python3 devcovenant/run_pre_commit.py --phase end`
+  `devcovenant check --end`
 - If hooks/autofixes change files during end, rerun tests and end phase.
 
 ## Completed Baseline
-- [done] Lifecycle command surface exists: `install`, `deploy`, `update`,
-  `upgrade`, `refresh`, `undeploy`, `uninstall`.
+- [done] Lifecycle command surface exists: `check` (`--start`, `--end`,
+  default autofix, `--nofix`), `test`, `install`, `deploy`, `upgrade`,
+  `refresh`, `undeploy`, `uninstall`, `update_lock`.
+- [done] CLI help/argument parsing is command-scoped, so each command exposes
+  only its own options.
 - [done] Managed docs are YAML-asset driven and managed-block based.
 - [done] Registry-only startup refresh behavior exists.
 - [done] Policy metadata resolution writes resolved policy values into
@@ -84,31 +87,38 @@ truth for behavior and requirements.
 - Remove `stock_policy_texts` files and restore-stock-text plumbing.
 - Enforce descriptor `text` as the only policy prose source.
 
-7. [done] Registry command consolidation
-- Make `refresh_registry` the canonical registry regeneration command.
-- Remove or deprecate legacy update-policy-registry command paths.
+7. [done] Refresh command consolidation
+- Made `refresh` the canonical full refresh command.
+- Removed legacy `sync` / `refresh_registry` / `refresh-policies` /
+  `refresh-all` / `normalize-metadata` / `update` command paths.
 
 8. [done] CLI module layout cleanup
 - Kept CLI-exposed command modules at `devcovenant/` package root.
 - Removed forwarding-wrapper patterns and duplicate same-name root/core
   command modules.
+- Removed duplicate helper-script source copies from profile assets; helper
+  scripts are sourced from package-root modules only.
 - Preserved file-path gate command usage.
 
 ## Secondary Outstanding Work
 1. [done] Managed docs pipeline completion
 - Finalized strict sync for README/SPEC/PLAN/CHANGELOG/CONTRIBUTING from YAML
   assets and managed blocks.
-- Wired refresh-all and update/deploy flows to honor `doc_assets.autogen` and
+- Wired refresh/deploy flows to honor `doc_assets.autogen` and
   `doc_assets.user` when selecting managed docs.
 
-2. [not done] Lifecycle refinements and fallbacks
+2. [done] Lifecycle refinements and fallbacks
 - [done] Retired `reset-to-stock` lifecycle path and references.
-- Finalize version and LICENSE fallback behavior across lifecycle commands.
+- [done] Finalized version and LICENSE fallback behavior across lifecycle
+  commands with deploy/upgrade regression coverage.
 
 3. [not done] Adapter expansion and test coverage
 - Continue policy-by-policy adapter extraction and dispatch tests.
 
 4. [not done] Legacy artifact/debris removal
+- [done] Removed duplicate managed-doc markdown templates
+  (`assets/AGENTS.md`, `assets/CONTRIBUTING.md`) so managed-doc templates are
+  descriptor-only (`*.yaml`).
 - Remove obsolete registry/template leftovers and stale references from docs,
   manifests, and tests.
 
@@ -120,7 +130,7 @@ truth for behavior and requirements.
   docs, or tests.
 - Descriptor `text` is the only policy prose source and no stock-text legacy
   files remain in runtime paths.
-- `refresh_registry` is the canonical registry regeneration command.
+- `refresh` is the canonical full refresh command.
 - File-path gate commands continue to work from repository root.
 - CLI command modules do not rely on forwarding wrappers or duplicate
   same-name root/core command files.
@@ -129,7 +139,7 @@ truth for behavior and requirements.
 ## Validation Routine
 - Run gate workflow on every change.
 - Verify DevCovenant policy checks pass without blocking violations.
-- Verify `devcovenant refresh_registry` updates local registries as expected.
+- Verify `devcovenant refresh` updates local registries/docs as expected.
 - Verify file-path gate commands still execute from repo root.
 - Verify docs policies pass on final state (`last-updated-placement`,
   `documentation-growth-tracking`, `changelog-coverage`).

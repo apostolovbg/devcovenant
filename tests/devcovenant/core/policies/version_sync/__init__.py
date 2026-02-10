@@ -1,1 +1,1 @@
-# DevCovenant test mirror.
+# Generated package marker for tests.

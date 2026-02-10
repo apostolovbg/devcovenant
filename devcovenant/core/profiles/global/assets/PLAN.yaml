@@ -1,6 +1,6 @@
 header_lines:
 - '# DevCovenant Development Plan'
-- '**Last Updated:** 2026-02-09'
+- '**Last Updated:** 2026-02-10'
 - '**Version:** 0.2.6'
 doc_id: PLAN
 doc_type: plan
@@ -24,10 +24,10 @@ body: |-
   - Mark completed items as `[done]` and outstanding items as `[not done]`.
 
   ## Workflow
-  - Start edits: `python3 devcovenant/run_pre_commit.py --phase start`
+  - Start edits: `devcovenant check --start`
   - Apply changes in dependency order.
   - Run tests: `python3 devcovenant/run_tests.py`
-  - End edits: `python3 devcovenant/run_pre_commit.py --phase end`
+  - End edits: `devcovenant check --end`
 
   ## Active Work
   1. [not done] Item placeholder.

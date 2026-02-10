@@ -1,1 +1,1 @@
-"""Package marker for devcov_integrity_guard policy tests."""
+"""Tests for devcov_integrity_guard policy."""

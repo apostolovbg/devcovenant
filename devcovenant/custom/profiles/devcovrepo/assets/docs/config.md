@@ -9,7 +9,7 @@
 
 ## Overview
 `devcovenant/config.yaml` captures the active profiles, metadata overrides,
-and install/update knobs. The file is tracked in the repo so CI and other
+and lifecycle knobs. The file is tracked in the repo so CI and other
 contributors use the same enforcement settings. Generated registry files
 can be rebuilt, but config stays under version control.
 When the file is missing, DevCovenant seeds a generic stub from the

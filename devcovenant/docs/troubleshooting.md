@@ -16,12 +16,12 @@ the registry for mismatched hashes.
 ## Workflow
 1. Identify the failing policy and message.
 2. Inspect the relevant file or registry entry.
-3. Re-run the appropriate command (refresh, tests, or update).
+3. Re-run the appropriate command (`refresh`, `test`, or `check`).
 
 ## Policy Registry Drift
 Symptom: policy hash mismatch or registry warnings.
 Fix:
-- Run `devcovenant refresh_registry` after policy edits.
+- Run `devcovenant refresh --target .` after policy edits.
 
 ## Doc Growth Warnings
 Symptom: documentation-growth-tracking reports missing doc updates.
@@ -32,9 +32,9 @@ Fix:
 ## Gate Failures
 Symptom: `devflow-run-gates` reports missing start/test/end records.
 Fix:
-- Re-run `python3 devcovenant/run_pre_commit.py --phase start`.
-- Run `python3 devcovenant/run_tests.py`.
-- Finish with `python3 devcovenant/run_pre_commit.py --phase end`.
+- Re-run `python3 -m devcovenant check --start`.
+- Run `python3 -m devcovenant test`.
+- Finish with `python3 -m devcovenant check --end`.
 
 ## Adapter Issues
 Symptom: policy reports missing adapter for active profile.

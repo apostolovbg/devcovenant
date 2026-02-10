@@ -17,13 +17,13 @@ add examples for new flags or metadata, and keep cross-links current.
 Updates here are tracked by the `documentation-growth-tracking` policy.
 
 ## Doc Catalog
-- `installation.md` — install, deploy, update, upgrade, and no-touch runs.
+- `installation.md` — install, deploy, refresh, and upgrade workflows.
 - `config.md` — config structure, overrides, and profile selection.
 - `profiles.md` — profile anatomy, assets, overlays, and suffixes.
 - `policies.md` — policy descriptors, metadata, and custom policies.
 - `adapters.md` — adapter design and language-specific logic.
 - `registry.md` — local registry files and how they are refreshed.
-- `refresh.md` — refresh-all vs registry-only behavior.
+- `refresh.md` — full refresh behavior and command-time registry refresh.
 - `workflow.md` — required gates, pre-commit, and test runners.
 - `troubleshooting.md` — common errors and how to resolve them.
 

@@ -46,7 +46,7 @@ def _schema_path(repo_root: Path) -> Path | None:
         / "profiles"
         / "global"
         / "assets"
-        / "AGENTS.md"
+        / "AGENTS.yaml"
     )
 
 

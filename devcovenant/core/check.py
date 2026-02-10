@@ -3,10 +3,10 @@
 Convenience wrapper to run DevCovenant checks.
 
 Usage:
-    python -m devcovenant.core.check check                 # Normal check
-    python -m devcovenant.core.check check --mode startup  # Startup mode
-    python -m devcovenant.core.check check --mode lint     # Lint mode
-    python -m devcovenant.core.check check --fix           # Auto-fix
+    python -m devcovenant.core.check check                 # Auto-fix check
+    python -m devcovenant.core.check check --nofix         # Audit-only check
+    python -m devcovenant.core.check check --start         # Start gate
+    python -m devcovenant.core.check check --end           # End gate
 """
 
 from devcovenant.cli import main

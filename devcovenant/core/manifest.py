@@ -40,17 +40,10 @@ DEFAULT_CORE_FILES = [
     "devcovenant/VERSION",
     f"{GLOBAL_REGISTRY_DIR}/policy_replacements.yaml",
     "devcovenant/core/cli_options.py",
-    "devcovenant/core/profiles/global/assets/AGENTS.md",
-    "devcovenant/core/profiles/global/assets/CONTRIBUTING.md",
     "devcovenant/core/profiles/global/assets/.pre-commit-config.yaml",
     "devcovenant/core/profiles/global/assets/.github/workflows/ci.yml",
     "devcovenant/core/profiles/global/assets/gitignore_base.txt",
     "devcovenant/core/profiles/global/assets/gitignore_os.txt",
-    "devcovenant/core/profiles/global/assets/devcovenant/run_pre_commit.py",
-    "devcovenant/core/profiles/global/assets/devcovenant/run_tests.py",
-    "devcovenant/core/profiles/global/assets/devcovenant/update_lock.py",
-    "devcovenant/core/profiles/global/assets/devcovenant/"
-    "update_test_status.py",
     "devcovenant/core/profiles/README.md",
     "devcovenant/core/policies/README.md",
     "devcovenant/run_pre_commit.py",
@@ -224,11 +217,47 @@ def append_notifications(repo_root: Path, messages: Iterable[str]) -> None:
     write_manifest(repo_root, manifest)
 
 
+def _normalize_manifest_sections(
+    manifest: Dict[str, Any],
+) -> tuple[Dict[str, Any], bool]:
+    """Normalize manifest sections to the current default inventories."""
+
+    normalized = dict(manifest)
+    changed = False
+    default_manifest = build_manifest()
+    for section_name in ("core", "docs", "custom", "generated"):
+        defaults = default_manifest.get(section_name, {})
+        current = normalized.get(section_name, {})
+        if not isinstance(defaults, dict):
+            continue
+        if not isinstance(current, dict):
+            normalized[section_name] = defaults
+            changed = True
+            continue
+        merged = dict(current)
+        for key, default_value in defaults.items():
+            target_value = (
+                list(default_value)
+                if isinstance(default_value, list)
+                else default_value
+            )
+            if merged.get(key) != target_value:
+                merged[key] = target_value
+                changed = True
+        normalized[section_name] = merged
+    return normalized, changed
+
+
 def ensure_manifest(repo_root: Path) -> Dict[str, Any] | None:
     """Create the manifest if missing and DevCovenant is installed."""
     path = manifest_path(repo_root)
     if path.exists():
-        return json.loads(path.read_text(encoding="utf-8"))
+        payload = json.loads(path.read_text(encoding="utf-8"))
+        normalized, changed = _normalize_manifest_sections(payload)
+        if changed:
+            normalized["updated_at"] = _utc_now()
+            write_manifest(repo_root, normalized)
+        return normalized
     if not (repo_root / DEV_COVENANT_DIR).exists():
         return None
     manifest = build_manifest()
