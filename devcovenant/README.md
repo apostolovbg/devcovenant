@@ -1,5 +1,5 @@
 # DevCovenant
-**Last Updated:** 2026-02-10
+**Last Updated:** 2026-02-11
 **Version:** 0.2.6
 
 <!-- DEVCOV:BEGIN -->
@@ -95,20 +95,20 @@ Install copies the DevCovenant core and writes a generic config stub. It
 never deploys managed docs or assets, so you can edit the config before the
 repo goes live:
 ```bash
-devcovenant install --target /path/to/repo
+devcovenant install
 # edit devcovenant/config.yaml (set install.generic_config: false)
-devcovenant deploy --target /path/to/repo
+devcovenant deploy
 ```
 
 Refresh rebuilds managed docs/assets/registries using the existing core:
 ```bash
-devcovenant refresh --target /path/to/repo
+devcovenant refresh
 ```
 
 Upgrade replaces the core when the source version is newer, applies policy
 replacements, and then runs refresh:
 ```bash
-devcovenant upgrade --target /path/to/repo
+devcovenant upgrade
 ```
 
 Use `python3 -m devcovenant` for source checkouts when the console entry is
@@ -118,17 +118,16 @@ Undeploy removes managed blocks and generated registry/config artifacts while
 keeping the installed core, and uninstall removes the full DevCovenant
 footprint:
 ```bash
-devcovenant undeploy --target /path/to/repo
-devcovenant uninstall --target /path/to/repo
+devcovenant undeploy
+devcovenant uninstall
 ```
 
 The installer records `devcovenant/registry/local/manifest.json` so updates and
 removals remain safe and predictable. If the target repo has no license file,
 DevCovenant installs an MIT license by default and will not overwrite an
-existing license unless forced. When `--backup-existing` is set, the
-installer renames the existing file to `*_old.*` before writing the new one.
-Version fallback order is: CLI `--version`, `config.version.override`, existing
-valid `devcovenant/VERSION`, `pyproject.toml`, prompt, then `0.0.1`.
+existing license unless forced. Version fallback order is:
+`config.version.override`, existing valid `devcovenant/VERSION`,
+`pyproject.toml`, prompt, then `0.0.1`.
 Existing-repo lifecycle commands (`deploy`, `refresh`, `upgrade`) default to
 preserve mode for version/license and only overwrite when explicitly requested.
 Managed docs such as `SPEC.md` and `PLAN.md` are part of the profile-driven
@@ -150,14 +149,14 @@ DevCovenant expects the following sequence in enforced repos:
 2. `python3 -m devcovenant test`
 3. `python3 -m devcovenant check --end`
 
-Shortcut: `devcovenant test` runs the same pytest + unittest sequence and
+Shortcut: `devcovenant test` runs the same unittest + pytest sequence and
 records status via the test runner wrapper.
 
 During `--phase end`, if pre-commit modifies files, the script automatically
 reruns `python3 -m devcovenant test` before recording the end timestamp so
 tests always post-date any auto-fixes.
 
-When policy blocks change, run `devcovenant refresh --target .` to
+When policy blocks change, run `devcovenant refresh` to
 sync policy hashes.
 
 ## Core Exclusion
@@ -193,7 +192,7 @@ project version in generated assets (for example, `pyproject.toml`).
 Apply that override before any `VERSION` file exists.
 
 The DevCovenant repository activates a dedicated `devcovrepo` profile.
-It overrides `new-modules-need-tests` metadata so the `devcovenant/**` sources
+It overrides `modules-need-tests` metadata so the `devcovenant/**` sources
 and the mirrored `tests/devcovenant/**` suites (core/custom policies and
 profiles) stay aligned.
 
@@ -225,7 +224,7 @@ devcovenant check --start
 devcovenant test
 devcovenant check --end
 
-devcovenant refresh --target /path/to/repo
+devcovenant refresh
 devcovenant update_lock
 ```
 

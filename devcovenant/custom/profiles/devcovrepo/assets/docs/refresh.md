@@ -14,7 +14,7 @@ the active profiles and policy descriptors.
 
 ## Workflow
 1. Lightweight registry refresh runs at the start of each CLI command.
-2. `devcovenant refresh --target /path/to/repo` runs a full managed refresh.
+2. `devcovenant refresh` runs a full managed refresh.
 3. `deploy` and `upgrade` also run a full refresh as part of their workflow.
 
 ## Full Refresh

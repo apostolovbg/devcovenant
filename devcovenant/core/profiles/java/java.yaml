@@ -25,7 +25,7 @@ policy_overlays:
   docstring-and-comment-coverage:
     include_suffixes:
       - .java
-  new-modules-need-tests:
+  modules-need-tests:
     include_suffixes:
       - .java
   security-scanner:
@@ -51,7 +51,7 @@ policies:
   - devflow-run-gates
   - name-clarity
   - docstring-and-comment-coverage
-  - new-modules-need-tests
+  - modules-need-tests
   - security-scanner
   - documentation-growth-tracking
   - line-length-limit

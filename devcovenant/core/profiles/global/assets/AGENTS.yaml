@@ -1,6 +1,6 @@
 header_lines:
 - '# DevCovenant Development Guide'
-- '**Last Updated:** 2026-02-10'
+- '**Last Updated:** 2026-02-11'
 - '**Version:** 0.2.6'
 doc_id: AGENTS
 doc_type: policy-source
@@ -84,7 +84,7 @@ body: |-
 
   ## Workflow
   - Run `start`, apply edits, run tests, and finish with `end`.
-  - After policy-text changes, run `devcovenant refresh --target .`.
+  - After policy-text changes, run `devcovenant refresh`.
   - Log every change in `CHANGELOG.md` under the current version entry.
 
   ## Policy Management and Enforcement

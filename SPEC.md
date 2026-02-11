@@ -1,5 +1,5 @@
 # DevCovenant Specification
-**Last Updated:** 2026-02-10
+**Last Updated:** 2026-02-11
 **Version:** 0.2.6
 
 <!-- DEVCOV:BEGIN -->
@@ -119,13 +119,15 @@ drift is detectable and reversible.
   `devcovenant/registry/local/test_status.json`.
 - `check --end` runs full pre-commit, reruns tests/hooks until clean when
   fixers modify files, then records end-gate metadata.
-- `test` runs `pytest` plus `python3 -m unittest discover` against `tests/`
-  (mirrors the package layout under `tests/devcovenant/` but stays outside the
-  installable package).
+- `test` runs `python3 -m unittest discover` first, then `pytest` against
+  `tests/`, and records results through the gate status metadata.
 - CLI output emits stage banners and short status steps (registry refresh,
   engine init, command execution) so runs are traceable without flooding.
-- `install` and `uninstall` delegate to `devcovenant/core/install.py` and
-  `devcovenant/core/uninstall.py`.
+- Lifecycle command logic lives in the root command modules
+  (`devcovenant/install.py`, `devcovenant/upgrade.py`,
+  `devcovenant/uninstall.py`, `devcovenant/undeploy.py`,
+  `devcovenant/refresh.py`) rather than same-name scripts under
+  `devcovenant/core/`.
 - Explicit metadata-normalization commands are unnecessary; refresh already
   resolves metadata via descriptors + profile overlays + config overrides.
 
@@ -172,7 +174,8 @@ drift is detectable and reversible.
 #### Command matrix (behavioral intent)
 - `check`: policy checks with default auto-fix; `--nofix` disables fixing;
   `--start`/`--end` run start/end gate pre-commit workflows.
-- `test`: run `pytest` and `python3 -m unittest discover` against `tests/`.
+- `test`: run `python3 -m unittest discover` and then `pytest` against
+  `tests/`.
 - `install`: place core + generic config stub only. Prompt to `upgrade` if a
   newer core is detected. No managed doc deployment.
 - `deploy`: materialize managed docs/assets/registries from config, refresh
@@ -207,7 +210,7 @@ drift is detectable and reversible.
   `refresh.py`, `uninstall.py`, `undeploy.py`, and `update_lock.py`.
   `test.py` executes the merged
   `devflow-run-gates.required_commands` list resolved from profiles and
-  config (defaults remain pytest + unittest) and records the exact command
+  config (defaults remain unittest + pytest) and records the exact command
   string in `devcovenant/registry/local/test_status.json`. Language-aware
   policies delegate
   parsing/checking to per-language adapters under
@@ -378,10 +381,10 @@ drift is detectable and reversible.
   overlays provide `dependency_files`, while the core policy metadata remains
   general. The devcovrepo profile sets DevCovenant’s own dependency
   manifests.
-- A lightweight registry refresh runs at the start of every devcovenant
-  invocation, regenerating `devcovenant/registry/local/*` (hashes, manifest)
-  and only materializing `config.yaml` when missing; it skips AGENTS and
-  managed docs to keep the worktree clean during CI and local runs.
+- A full refresh runs at the start of every `devcovenant check` invocation.
+  It rebuilds `devcovenant/registry/local/*`, regenerates the `AGENTS.md`
+  policy block, syncs managed docs, and refreshes generated config/profile
+  metadata before policy evaluation.
 - Profiles are explicit—no inheritance or family defaults; each profile lists
   its own assets, suffixes, policies, and overlays.
 - Custom policy `readme-sync` enforces that `devcovenant/README.md` mirrors
@@ -632,29 +635,21 @@ drift is detectable and reversible.
   changes as defined by the active profile overlays so the
   dependency-license-sync policy passes.
 - DevCovenant's own test suites live under `tests/devcovenant/` in the
-  DevCovenant repo only. Tests are not shipped in packages; `tests/` is
-  created on demand when the `new-modules-need-tests` policy is active.
-  User repos exclude `devcovenant/**` from test enforcement except
-  `devcovenant/custom/**`, which is included. When needed, user repos create
-  `tests/devcovenant/custom/` to cover custom policy/profile code. Policies
-  reuse metadata (for example,
-  `tests_watch_dirs`, `selector_roles`, and policy-specific selector options)
-  so the suite can move without hard-coded paths. Profile or repo overrides
-  set these metadata values when they relocate tests elsewhere.
-- The tests tree mirrors the package layout (core/custom and their profile
-  directories) under `tests/devcovenant/` so interpreter or scanner modules
-  in `devcovenant/core/profiles` or `devcovenant/custom/profiles` can rely on
-  corresponding suites under `tests/devcovenant/core/profiles/` and
-  `tests/devcovenant/custom/profiles/`.
-- The `new-modules-need-tests` policy explicitly requires unit tests. The
-  repository continues to run both `pytest` and `python3 -m unittest discover`,
-  but newly added coverage must be unit-level and existing policy tests
-  should be converted to unit suites over time.
-- User repos keep a default-on `devcovuser` profile that excludes
-  `devcovenant/**` from test enforcement except `devcovenant/custom/**`.
-  When `devcov_core_include` is true (DevCovenant’s own repo), disable
-  `devcovuser` and enable `devcovrepo` so the full `devcovenant/**` tree
-  (code and tests) is mirrored and enforced.
+  DevCovenant repo only. Tests are not shipped in packages.
+- `modules-need-tests` is a generic repo-wide rule: any in-scope non-test
+  module (including existing modules) must have tests under configured
+  `tests/` roots. The rule runs as a full repository audit and is
+  metadata-driven (`include_*`, `exclude_*`, `watch_dirs`,
+  `tests_watch_dirs`) with no hard-coded repo paths.
+- For the DevCovenant repo (`devcovrepo`), profile metadata requires a full
+  mirror for `devcovenant/**` under `tests/devcovenant/**`.
+- For user repos (`devcovuser`), profile metadata requires mirror enforcement
+  only for `devcovenant/custom/**` under `tests/devcovenant/custom/**`.
+- For all other user-repo modules, tests are still required under `tests/`,
+  but internal folder structure is user-defined.
+- The `modules-need-tests` policy explicitly requires unit tests. Python test
+  files must be unittest-style, and the repository runs
+  `python3 -m unittest discover` first with `pytest` as piggyback execution.
 - `devcovuser` ignores vendored trees (`vendor`, `third_party`,
   `node_modules`) by default so scans and tests skip bundled dependencies.
 - `devcovuser` also skips vendored DevCovenant core paths in

@@ -1,4 +1,5 @@
-"""Refresh command implementation for DevCovenant."""
+#!/usr/bin/env python3
+"""Refresh command entrypoint for DevCovenant."""
 
 from __future__ import annotations
 
@@ -11,32 +12,29 @@ if __package__ in {None, ""}:  # pragma: no cover
 import argparse
 from pathlib import Path
 
-from devcovenant.core.command_runtime import (
+from devcovenant.core.execution import (
     print_banner,
     print_step,
     resolve_repo_root,
 )
-from devcovenant.core.refresh_all import refresh_all
+from devcovenant.core.repo_refresh import refresh_repo
 
 
 def _build_parser() -> argparse.ArgumentParser:
     """Build parser for refresh command."""
-    parser = argparse.ArgumentParser(description="Run a full refresh.")
-    return parser
+    return argparse.ArgumentParser(description="Run a full refresh.")
 
 
 def run(args: argparse.Namespace) -> int:
     """Execute refresh command."""
     del args
     repo_root = resolve_repo_root(Path.cwd(), require_install=True)
+
     print_banner("DevCovenant run", "🚀")
     print_step("Command: refresh", "🧭")
     print_banner("Full refresh", "🔄")
-    return refresh_all(
-        repo_root,
-        registry_only=False,
-        backup_existing=False,
-    )
+
+    return refresh_repo(repo_root)
 
 
 def main(argv: list[str] | None = None) -> None:

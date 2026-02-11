@@ -62,12 +62,7 @@ install:
   doc_mode: preserve
   disable_policy: []
 
-update:
-  preserve_custom: true
-  refresh_core: true
-
 engine:
-  master_update: true
   fix_threshold: warning
   fail_threshold: error
   auto_fix_enabled: true

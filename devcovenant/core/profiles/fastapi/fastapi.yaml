@@ -28,8 +28,8 @@ policy_overlays:
       - pyproject.toml
   devflow-run-gates:
     required_commands:
-      - pytest
       - python3 -m unittest discover
+      - pytest
   documentation-growth-tracking:
     user_facing_suffixes:
       - .py
@@ -58,7 +58,7 @@ policy_overlays:
   docstring-and-comment-coverage:
     include_suffixes:
       - .py
-  new-modules-need-tests:
+  modules-need-tests:
     include_suffixes:
       - .py
 policies:
@@ -69,5 +69,5 @@ policies:
   - security-scanner
   - name-clarity
   - docstring-and-comment-coverage
-  - new-modules-need-tests
+  - modules-need-tests
   - version-sync

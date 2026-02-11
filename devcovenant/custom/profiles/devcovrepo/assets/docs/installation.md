@@ -40,12 +40,12 @@ Use `python3 -m devcovenant` when the console entry is not available.
 
 ## Examples
 ```bash
-devcovenant install --target /path/to/repo
+devcovenant install
 # edit devcovenant/config.yaml (set install.generic_config: false)
-devcovenant deploy --target /path/to/repo
+devcovenant deploy
 
-devcovenant refresh --target /path/to/repo
-devcovenant upgrade --target /path/to/repo
+devcovenant refresh
+devcovenant upgrade
 ```
 
 ## Undeploy and Uninstall

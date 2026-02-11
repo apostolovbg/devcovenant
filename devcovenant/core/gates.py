@@ -65,15 +65,8 @@ def _git_diff(repo_root: Path) -> str:
 
 def _run_tests(repo_root: Path, env: dict[str, str]) -> None:
     """Run repository tests through the canonical test command."""
-    command = [
-        sys.executable,
-        "-m",
-        "devcovenant",
-        "test",
-        "--repo",
-        str(repo_root),
-    ]
-    subprocess.run(command, check=True, env=env)
+    command = [sys.executable, "-m", "devcovenant", "test"]
+    subprocess.run(command, check=True, env=env, cwd=repo_root)
 
 
 def run_pre_commit_gate(

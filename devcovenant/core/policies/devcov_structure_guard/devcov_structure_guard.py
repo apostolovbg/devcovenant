@@ -51,8 +51,7 @@ class DevCovenantStructureGuardCheck(PolicyCheck):
                 file_path=context.repo_root / missing[0],
                 message=message,
                 suggestion=(
-                    "Run python3 -m devcovenant update --target . "
-                    "--docs-mode overwrite --force-config"
+                    "Run `devcovenant refresh` to restore managed files."
                 ),
                 can_auto_fix=False,
             )

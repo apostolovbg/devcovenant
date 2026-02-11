@@ -34,8 +34,8 @@ policy_overlays:
       - pnpm-lock.yaml
   devflow-run-gates:
     required_commands:
-      - pytest
       - python3 -m unittest discover
+      - pytest
       - npm test
   documentation-growth-tracking:
     user_facing_suffixes:
@@ -64,7 +64,7 @@ policy_overlays:
   docstring-and-comment-coverage:
     include_suffixes:
       - .py
-  new-modules-need-tests:
+  modules-need-tests:
     include_suffixes:
       - .py
       - .js
@@ -76,5 +76,5 @@ policies:
   - security-scanner
   - name-clarity
   - docstring-and-comment-coverage
-  - new-modules-need-tests
+  - modules-need-tests
   - version-sync

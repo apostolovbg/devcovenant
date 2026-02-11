@@ -1,0 +1,18 @@
+id: no-spaghetti
+text: |
+  Prevent core spaghetti drift by freezing the top-level module count and
+  rejecting tiny top-level core modules.
+metadata:
+  id: no-spaghetti
+  severity: error
+  auto_fix: 'false'
+  enforcement: active
+  enabled: 'true'
+  custom: 'true'
+  freeze: 'false'
+  include_globs:
+    - devcovenant/core/*.py
+  exclude_globs:
+    - devcovenant/core/__init__.py
+  max_top_level_modules: 19
+  min_module_lines: 120

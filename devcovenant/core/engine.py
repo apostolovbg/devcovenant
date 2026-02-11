@@ -16,7 +16,7 @@ from . import manifest as manifest_module
 from .base import CheckContext, PolicyCheck, PolicyFixer, Violation
 from .manifest import ensure_manifest
 from .parser import PolicyDefinition, PolicyParser
-from .policy_locations import resolve_script_location
+from .policy_descriptor import resolve_script_location
 from .profiles import (
     load_profile_registry,
     resolve_profile_ignore_dirs,
@@ -158,6 +158,93 @@ class DevCovenantEngine:
             enabled = state[policy.policy_id]
             policy.enabled = enabled
             policy.raw_metadata["enabled"] = "true" if enabled else "false"
+
+    @staticmethod
+    def _as_bool_default(raw_value: Any, default: bool) -> bool:
+        """Convert raw values to bool with a provided default."""
+        normalized = DevCovenantEngine._as_bool(raw_value)
+        if normalized is None:
+            return default
+        return normalized
+
+    @staticmethod
+    def _metadata_scalar(raw_value: Any) -> str:
+        """Normalize registry metadata values to parser-compatible scalars."""
+        if isinstance(raw_value, list):
+            parts = []
+            for list_entry in raw_value:
+                token = str(list_entry or "").strip()
+                if token:
+                    parts.append(token)
+            return ", ".join(parts)
+        if isinstance(raw_value, bool):
+            return "true" if raw_value else "false"
+        if raw_value is None:
+            return ""
+        return str(raw_value).strip()
+
+    def _load_policies_from_registry(self) -> List[PolicyDefinition]:
+        """Load policy definitions from local authoritative registry."""
+        self.registry.load()
+        policies_payload = self.registry._data.get("policies", {})
+        if not isinstance(policies_payload, dict):
+            return []
+
+        policies: List[PolicyDefinition] = []
+        for policy_id in sorted(policies_payload):
+            entry = policies_payload.get(policy_id)
+            if not isinstance(entry, dict):
+                continue
+            metadata_payload = entry.get("metadata", {})
+            metadata: Dict[str, str] = {}
+            if isinstance(metadata_payload, dict):
+                for key, raw_value in metadata_payload.items():
+                    key_name = str(key or "").strip()
+                    if not key_name:
+                        continue
+                    metadata[key_name] = self._metadata_scalar(raw_value)
+            metadata["id"] = policy_id
+
+            name = str(
+                entry.get("description") or policy_id.replace("-", " ").title()
+            ).strip()
+            description = str(entry.get("policy_text") or "").strip()
+            status = (
+                metadata.get("status")
+                or str(entry.get("status") or "active").strip()
+                or "active"
+            )
+            severity = metadata.get("severity") or "warning"
+            auto_fix = self._as_bool_default(
+                metadata.get("auto_fix"), default=False
+            )
+            enabled = self._as_bool_default(
+                metadata.get("enabled", entry.get("enabled", True)),
+                default=True,
+            )
+            custom = self._as_bool_default(
+                metadata.get("custom", entry.get("custom", False)),
+                default=False,
+            )
+            freeze = self._as_bool_default(
+                metadata.get("freeze"), default=False
+            )
+
+            policies.append(
+                PolicyDefinition(
+                    policy_id=policy_id,
+                    name=name,
+                    status=status,
+                    severity=severity,
+                    auto_fix=auto_fix,
+                    enabled=enabled,
+                    custom=custom,
+                    description=description,
+                    freeze=freeze,
+                    raw_metadata=metadata,
+                )
+            )
+        return policies
 
     def _apply_config_paths(self) -> None:
         """Apply configurable path overrides after the config loads."""
@@ -319,8 +406,24 @@ class DevCovenantEngine:
         Returns:
             CheckResult object
         """
-        # Parse policies from AGENTS.md
-        policies = self.parser.parse_agents_md()
+        # Policies are loaded from local registry; AGENTS is downstream docs.
+        policies = self._load_policies_from_registry()
+        if not policies:
+            violation = Violation(
+                policy_id="registry-load",
+                severity="error",
+                file_path=self.registry_path,
+                message=(
+                    "Policy registry is empty or invalid. "
+                    "Checks cannot run without resolved policy metadata."
+                ),
+                suggestion=(
+                    "Run `python3 -m devcovenant refresh` to rebuild "
+                    "devcovenant/registry/local/policy_registry.yaml."
+                ),
+            )
+            self.report_violations([violation], mode)
+            return CheckResult([violation], should_block=True, sync_issues=[])
         self._apply_policy_state_overrides(policies)
 
         # Check for policy sync issues (hash mismatches)

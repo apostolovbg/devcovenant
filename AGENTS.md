@@ -1,5 +1,5 @@
 # DevCovenant Development Guide
-**Last Updated:** 2026-02-10
+**Last Updated:** 2026-02-11
 **Version:** 0.2.6
 
 <!-- DEVCOV:BEGIN -->
@@ -848,6 +848,65 @@ required context.
 
 ---
 
+## Policy: Modules Need Tests
+
+```policy-def
+id: modules-need-tests
+status: active
+severity: error
+auto_fix: false
+enforcement: active
+enabled: true
+custom: false
+freeze: false
+include_suffixes: .py
+include_prefixes: devcovenant
+exclude_prefixes: build
+  dist
+  node_modules
+  tests
+  data
+exclude_globs: build/**
+  dist/**
+  node_modules/**
+  tests/**
+  data/**
+watch_dirs: tests
+  tests/devcovenant/core
+  tests/devcovenant/custom
+tests_watch_dirs: tests
+  tests/devcovenant/core
+  tests/devcovenant/custom
+mirror_roots: devcovenant=>tests/devcovenant
+include_globs: *.py
+  devcovenant/**
+exclude_suffixes:
+force_include_globs:
+watch_files:
+selector_roles: include
+  exclude
+  watch
+  tests_watch
+  force_include
+include_files:
+include_dirs:
+exclude_files:
+exclude_dirs:
+watch_globs:
+tests_watch_globs:
+tests_watch_files:
+force_include_files:
+force_include_dirs:
+```
+
+In-scope non-test modules must have corresponding tests under configured
+test roots. The rule is metadata-driven and supports mirror enforcement for
+selected source roots. Python test files must use unittest.TestCase-style
+definitions; pytest still runs as an execution layer.
+
+
+---
+
 ## Policy: Name Clarity
 
 ```policy-def
@@ -887,64 +946,6 @@ explicitly justified.
 
 ---
 
-## Policy: New Modules Need Tests
-
-```policy-def
-id: new-modules-need-tests
-status: active
-severity: error
-auto_fix: false
-enforcement: active
-enabled: true
-custom: false
-freeze: false
-include_suffixes: .py
-include_prefixes: devcovenant
-exclude_prefixes: build
-  dist
-  node_modules
-  tests
-  data
-exclude_globs: build/**
-  dist/**
-  node_modules/**
-  tests/**
-  data/**
-watch_dirs: tests
-  tests/devcovenant/core
-  tests/devcovenant/custom
-tests_watch_dirs: tests
-  tests/devcovenant/core
-  tests/devcovenant/custom
-include_globs: *.py
-  devcovenant/**
-exclude_suffixes:
-force_include_globs:
-watch_files:
-selector_roles: include
-  exclude
-  watch
-  tests_watch
-  force_include
-include_files:
-include_dirs:
-exclude_files:
-exclude_dirs:
-watch_globs:
-tests_watch_globs:
-tests_watch_files:
-force_include_files:
-force_include_dirs:
-```
-
-New or modified modules in the watched locations must have corresponding
-tests. Test modules (files starting with `test_`) are exempt from the rule.
-The `tests_watch_dirs` metadata defaults to `tests/`, keeping the watch
-list aligned with typical test layouts unless overridden.
-
-
----
-
 ## Policy: No Future Dates
 
 ```policy-def
@@ -960,6 +961,35 @@ freeze: false
 
 Dates in changelogs or documentation must not be in the future. Auto-fixers
 should correct accidental placeholders to today’s date.
+
+
+---
+
+## Policy: No Spaghetti
+
+```policy-def
+id: no-spaghetti
+status: active
+severity: error
+auto_fix: false
+enforcement: active
+enabled: true
+custom: true
+freeze: false
+include_globs: devcovenant/core/*.py
+exclude_globs: devcovenant/core/__init__.py
+max_top_level_modules: 19
+min_module_lines: 120
+selector_roles: include
+  exclude
+include_files:
+include_dirs:
+exclude_files:
+exclude_dirs:
+```
+
+Prevent core spaghetti drift by freezing the top-level module count and
+rejecting tiny top-level core modules.
 
 
 ---

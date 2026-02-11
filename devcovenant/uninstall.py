@@ -1,4 +1,5 @@
-"""Uninstall command implementation for DevCovenant."""
+#!/usr/bin/env python3
+"""Uninstall DevCovenant from the current repository."""
 
 from __future__ import annotations
 
@@ -9,32 +10,46 @@ if __package__ in {None, ""}:  # pragma: no cover
     sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
 import argparse
+import shutil
 from pathlib import Path
 
-from devcovenant.core import uninstall as uninstall_core
-from devcovenant.core.command_runtime import (
+from devcovenant import undeploy
+from devcovenant.core.execution import (
     print_banner,
     print_step,
     resolve_repo_root,
 )
 
 
+def uninstall_repo(repo_root: Path) -> int:
+    """Remove DevCovenant package and managed artifacts from repo."""
+    undeploy.undeploy_repo(repo_root)
+
+    package_dir = repo_root / "devcovenant"
+    if package_dir.exists():
+        shutil.rmtree(package_dir)
+
+    print_step("Removed devcovenant/ package", "✅")
+    return 0
+
+
 def _build_parser() -> argparse.ArgumentParser:
     """Build parser for uninstall command."""
-    parser = argparse.ArgumentParser(description="Remove DevCovenant.")
-    return parser
+    return argparse.ArgumentParser(
+        description="Remove DevCovenant from the current repository."
+    )
 
 
 def run(args: argparse.Namespace) -> int:
     """Execute uninstall command."""
     del args
-    repo_root = resolve_repo_root(Path.cwd(), require_install=False)
+    repo_root = resolve_repo_root(Path.cwd(), require_install=True)
+
     print_banner("DevCovenant run", "🚀")
     print_step("Command: uninstall", "🧭")
-    print_banner("Uninstall DevCovenant", "🧹")
+    print_banner("Uninstall", "🗑️")
 
-    uninstall_core.main(argv=["--target", str(repo_root)])
-    return 0
+    return uninstall_repo(repo_root)
 
 
 def main(argv: list[str] | None = None) -> None:

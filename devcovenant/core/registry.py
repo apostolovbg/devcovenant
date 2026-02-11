@@ -11,8 +11,7 @@ from typing import Dict, List, Optional
 import yaml
 
 from .parser import PolicyDefinition
-from .policy_descriptor import PolicyDescriptor
-from .policy_locations import resolve_script_location
+from .policy_descriptor import PolicyDescriptor, resolve_script_location
 
 
 class _RegistryYamlDumper(yaml.SafeDumper):

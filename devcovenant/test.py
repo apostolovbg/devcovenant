@@ -11,14 +11,14 @@ if __package__ in {None, ""}:  # pragma: no cover
 import argparse
 from pathlib import Path
 
-from devcovenant.core.command_runtime import (
+from devcovenant.core.execution import (
     print_banner,
     print_step,
     resolve_repo_root,
+    run_and_record_tests,
     run_bootstrap_registry_refresh,
     warn_version_mismatch,
 )
-from devcovenant.core.test_runner import run_and_record_tests
 
 
 def _build_parser() -> argparse.ArgumentParser:
@@ -37,7 +37,7 @@ def run(args: argparse.Namespace) -> int:
     warn_version_mismatch(repo_root)
 
     print_banner("DevCovenant tests", "🧪")
-    print_step("Running pytest + unittest discover", "▶️")
+    print_step("Running unittest discover + pytest", "▶️")
     return run_and_record_tests(repo_root, notes="")
 
 

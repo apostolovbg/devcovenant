@@ -12,8 +12,8 @@ metadata:
   enforcement: active
   test_status_file: devcovenant/registry/local/test_status.json
   required_commands:
-    - pytest
     - python3 -m unittest discover
+    - pytest
   require_pre_commit_start: 'true'
   require_pre_commit_end: 'true'
   pre_commit_command: python3 -m pre_commit run --all-files

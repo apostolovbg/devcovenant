@@ -1,4 +1,5 @@
-"""Deploy command implementation for DevCovenant."""
+#!/usr/bin/env python3
+"""Deploy DevCovenant managed artifacts for the current repository."""
 
 from __future__ import annotations
 
@@ -11,44 +12,66 @@ if __package__ in {None, ""}:  # pragma: no cover
 import argparse
 from pathlib import Path
 
-from devcovenant.core import install as install_core
-from devcovenant.core.command_runtime import (
+import yaml
+
+from devcovenant.core.execution import (
     print_banner,
     print_step,
     resolve_repo_root,
 )
+from devcovenant.core.repo_refresh import refresh_repo
+
+
+def _read_yaml(path: Path) -> dict[str, object]:
+    """Load YAML mapping payload from disk."""
+    if not path.exists():
+        return {}
+    try:
+        payload = yaml.safe_load(path.read_text(encoding="utf-8")) or {}
+    except Exception:
+        return {}
+    if isinstance(payload, dict):
+        return payload
+    return {}
+
+
+def _is_generic_config(config: dict[str, object]) -> bool:
+    """Return True when install.generic_config is still enabled."""
+    install_block = config.get("install")
+    if not isinstance(install_block, dict):
+        return True
+    return bool(install_block.get("generic_config", True))
+
+
+def deploy_repo(repo_root: Path) -> int:
+    """Deploy managed DevCovenant docs/assets to a repo."""
+    config_path = repo_root / "devcovenant" / "config.yaml"
+    config = _read_yaml(config_path)
+    if _is_generic_config(config):
+        raise SystemExit(
+            "Deploy blocked: config is still generic. Set "
+            "`install.generic_config: false` first."
+        )
+    return refresh_repo(repo_root)
 
 
 def _build_parser() -> argparse.ArgumentParser:
     """Build parser for deploy command."""
-    parser = argparse.ArgumentParser(
-        description="Deploy managed docs/assets into a repository."
+    return argparse.ArgumentParser(
+        description="Deploy managed docs/assets in the current repository."
     )
-    return parser
-
-
-def _build_install_args(repo_root: Path) -> list[str]:
-    """Return argv for core install.main in deploy mode."""
-    install_args = [
-        "--target",
-        str(repo_root),
-        "--deploy",
-        "--require-non-generic",
-        "--skip-core",
-    ]
-    return install_args
 
 
 def run(args: argparse.Namespace) -> int:
     """Execute deploy command."""
     del args
     repo_root = resolve_repo_root(Path.cwd(), require_install=True)
+
     print_banner("DevCovenant run", "🚀")
     print_step("Command: deploy", "🧭")
-    print_banner("Deploy DevCovenant", "🚀")
+    print_banner("Deploy", "📤")
 
-    install_core.main(argv=_build_install_args(repo_root))
-    return 0
+    return deploy_repo(repo_root)
 
 
 def main(argv: list[str] | None = None) -> None:

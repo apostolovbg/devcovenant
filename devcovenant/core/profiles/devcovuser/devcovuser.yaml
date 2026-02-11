@@ -69,10 +69,20 @@ policy_overlays:
     force_include_globs:
       - devcovenant/custom/**
       - tests/devcovenant/custom/**
-  new-modules-need-tests:
+  modules-need-tests:
     exclude_prefixes:
+      - build
+      - dist
+      - node_modules
+      - tests
       - devcovenant
-    include_prefixes:
-      - devcovenant/custom
+    force_include_globs:
+      - devcovenant/custom/**
+    watch_dirs:
+      - tests
+    tests_watch_dirs:
+      - tests
+    mirror_roots:
+      - devcovenant/custom=>tests/devcovenant/custom
 policies:
-  - new-modules-need-tests
+  - modules-need-tests

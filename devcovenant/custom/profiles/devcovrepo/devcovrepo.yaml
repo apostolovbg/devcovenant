@@ -82,9 +82,7 @@ policy_overlays:
       - devcovenant/core/profiles/global/assets/*.yaml
     required_globs:
       - devcovenant/README.md
-  new-modules-need-tests:
-    include_prefixes:
-      - devcovenant
+  modules-need-tests:
     exclude_prefixes:
       - build
       - dist
@@ -92,12 +90,13 @@ policy_overlays:
       - tests
     watch_dirs:
       - tests
-      - tests/devcovenant/core
-      - tests/devcovenant/custom
     tests_watch_dirs:
       - tests
-      - tests/devcovenant/core
-      - tests/devcovenant/custom
+    mirror_roots:
+      - devcovenant=>tests/devcovenant
+  no-spaghetti:
+    max_top_level_modules: 19
+    min_module_lines: 120
   version-sync:
     version_file: devcovenant/VERSION
     readme_files:
@@ -108,7 +107,8 @@ policies:
   - dependency-license-sync
   - documentation-growth-tracking
   - line-length-limit
-  - new-modules-need-tests
+  - modules-need-tests
+  - no-spaghetti
   - devcov-raw-string-escapes
   - managed-doc-assets
   - readme-sync

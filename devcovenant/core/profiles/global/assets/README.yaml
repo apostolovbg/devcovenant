@@ -1,6 +1,6 @@
 header_lines:
 - '# DevCovenant'
-- '**Last Updated:** 2026-02-10'
+- '**Last Updated:** 2026-02-11'
 - '**Version:** 0.2.6'
 doc_id: README
 doc_type: readme
@@ -35,7 +35,7 @@ body: |-
   ## Quick Start
   Install DevCovenant, review `devcovenant/config.yaml`, and deploy once config
   is ready. Use `devcovenant check` to inspect policy compliance and
-  `devcovenant refresh --target .` after policy metadata changes.
+  `devcovenant refresh` after policy metadata changes.
 
   ## Commands
   ```bash
@@ -44,7 +44,7 @@ body: |-
   devcovenant check --start
   devcovenant test
   devcovenant check --end
-  devcovenant refresh --target /path/to/repo
+  devcovenant refresh
   ```
 
   ## License

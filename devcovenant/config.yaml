@@ -1,54 +1,42 @@
-# DevCovenant Configuration
-# Selector metadata accepts comma-separated strings or YAML lists (see
-# devcovenant/README.md for the canonical selector keys). Use the same
-# names here when overriding policy defaults.
-
-# DevCovenant core exclusion guard. For user repos, keep `devcov_core_include`
-# set to false so core files stay out of enforcement and remain update-safe.
-# User repos should also activate the `devcovuser` profile so DevCovenant
-# artifacts stay excluded while `devcov/custom/` remains covered.
-# Do not edit the core path list in user repos; only the DevCovenant repo
-# should enable core inclusion.
 devcov_core_include: true
 devcov_core_paths:
-  - devcovenant/core
-  - devcovenant/__init__.py
-  - devcovenant/__main__.py
-  - devcovenant/cli.py
-  - devcovenant/check.py
-  - devcovenant/test.py
-  - devcovenant/install.py
-  - devcovenant/deploy.py
-  - devcovenant/upgrade.py
-  - devcovenant/refresh.py
-  - devcovenant/uninstall.py
-  - devcovenant/undeploy.py
-  - devcovenant/update_lock.py
-  - devcovenant/registry
-
+- devcovenant/core
+- devcovenant/__init__.py
+- devcovenant/__main__.py
+- devcovenant/cli.py
+- devcovenant/check.py
+- devcovenant/test.py
+- devcovenant/install.py
+- devcovenant/deploy.py
+- devcovenant/upgrade.py
+- devcovenant/refresh.py
+- devcovenant/uninstall.py
+- devcovenant/undeploy.py
+- devcovenant/update_lock.py
+- devcovenant/registry
 profiles:
   active:
-    - global
-    - data
-    - devcovrepo
-    - docs
-    - python
-    - suffixes
+  - global
+  - data
+  - devcovrepo
+  - docs
+  - python
+  - suffixes
   generated:
     file_suffixes:
-      - .md
-      - .rst
-      - .txt
-      - .py
-      - .pyi
-      - .pyw
-      - .ipynb
-      - .csv
-      - .tsv
-      - .json
-      - .ndjson
-      - .parquet
-      - .avro
+    - .avro
+    - .csv
+    - .ipynb
+    - .json
+    - .md
+    - .ndjson
+    - .parquet
+    - .py
+    - .pyi
+    - .pyw
+    - .rst
+    - .tsv
+    - .txt
 paths:
   policy_definitions: AGENTS.md
   registry_file: devcovenant/registry/local/policy_registry.yaml
@@ -57,16 +45,12 @@ paths:
   custom_profiles_root: devcovenant/custom/profiles
   core_policies_root: devcovenant/core/policies
   custom_policies_root: devcovenant/custom/policies
-
 version:
-  # Set a specific project version for generated assets and templated files.
   override: null
-
 docs:
   managed_blocks:
-    begin: "<!-- DEVCOV:BEGIN -->"
-    end: "<!-- DEVCOV:END -->"
-
+    begin: <!-- DEVCOV:BEGIN -->
+    end: <!-- DEVCOV:END -->
 install:
   generic_config: false
   allow_existing: false
@@ -76,13 +60,7 @@ install:
   config_mode: preserve
   doc_mode: preserve
   disable_policy: []
-
-update:
-  preserve_custom: true
-  refresh_core: true
-
 engine:
-  master_update: true
   fix_threshold: warning
   fail_threshold: error
   auto_fix_enabled: true
@@ -90,53 +68,46 @@ engine:
   verbose: true
   pre_commit_all_files: true
   file_suffixes:
-    - .md
-    - .rst
-    - .txt
-    - .yml
-    - .yaml
-    - .json
-    - .toml
+  - .md
+  - .rst
+  - .txt
+  - .yml
+  - .yaml
+  - .json
+  - .toml
   ignore_dirs:
-    - .git
-    - .venv
-    - .python
-    - output
-    - logs
-    - build
-    - dist
-    - node_modules
-    - __pycache__
-    - .pytest_cache
-    - .cache
-    - .venv.lock
-
+  - .git
+  - .venv
+  - .python
+  - output
+  - logs
+  - build
+  - dist
+  - node_modules
+  - __pycache__
+  - .pytest_cache
+  - .cache
+  - .venv.lock
 self_enforcement:
   enabled: true
-  policy_prefix: "devcov-"
-
+  policy_prefix: devcov-
 hooks:
   pre_commit: true
   pre_push: false
-
 pre_commit:
   enabled: true
   overrides: {}
-
 reporting:
   show_policy_links: true
   audit_trail: true
   use_colors: true
-
 policy_state:
   managed-environment: false
   raw-string-escapes: false
 freeze_core_policies: []
 policy_overrides: {}
-
 ignore:
   patterns: []
-
 autogen_metadata_overrides:
   dependency-license-sync:
     dependency_files:
@@ -329,7 +300,7 @@ autogen_metadata_overrides:
     - .py
     exclude_prefixes:
     - data
-  new-modules-need-tests:
+  modules-need-tests:
     include_suffixes:
     - .py
     exclude_prefixes:
@@ -348,6 +319,8 @@ autogen_metadata_overrides:
     - tests/devcovenant/custom
     include_prefixes:
     - devcovenant
+    mirror_roots:
+    - devcovenant=>tests/devcovenant
   security-scanner:
     include_suffixes:
     - .py
@@ -392,11 +365,11 @@ autogen_metadata_overrides:
 user_metadata_overrides: {}
 doc_assets:
   autogen:
-    - AGENTS.md
-    - README.md
-    - SPEC.md
-    - PLAN.md
-    - CHANGELOG.md
-    - CONTRIBUTING.md
-    - devcovenant/README.md
+  - AGENTS.md
+  - README.md
+  - SPEC.md
+  - PLAN.md
+  - CHANGELOG.md
+  - CONTRIBUTING.md
+  - devcovenant/README.md
   user: []

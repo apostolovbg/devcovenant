@@ -29,7 +29,7 @@ policy_overlays:
   name-clarity:
     exclude_prefixes:
       - data
-  new-modules-need-tests:
+  modules-need-tests:
     exclude_prefixes:
       - data
     watch_dirs: []
@@ -41,6 +41,6 @@ policies:
   - last-updated-placement
   - security-scanner
   - name-clarity
-  - new-modules-need-tests
+  - modules-need-tests
   - line-length-limit
   - version-sync

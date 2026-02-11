@@ -7,6 +7,7 @@ import unittest
 from pathlib import Path
 
 import pytest
+import yaml
 
 from devcovenant.core.engine import DevCovenantEngine
 from devcovenant.core.parser import PolicyDefinition
@@ -42,6 +43,39 @@ def _unit_test_engine_check_no_violations():
         # Create AGENTS.md with no policies
         agents_text = "# Development Guide\n\nNo policies yet."
         (repo_root / "AGENTS.md").write_text(agents_text)
+        registry_path = (
+            repo_root
+            / "devcovenant"
+            / "registry"
+            / "local"
+            / "policy_registry.yaml"
+        )
+        registry_path.parent.mkdir(parents=True, exist_ok=True)
+        registry_path.write_text(
+            yaml.safe_dump(
+                {
+                    "policies": {
+                        "disabled-policy": {
+                            "status": "active",
+                            "enabled": False,
+                            "custom": False,
+                            "description": "Disabled Policy",
+                            "policy_text": "Disabled policy text.",
+                            "metadata": {
+                                "id": "disabled-policy",
+                                "status": "active",
+                                "enabled": "false",
+                                "custom": "false",
+                                "severity": "error",
+                                "auto_fix": "false",
+                            },
+                        }
+                    }
+                },
+                sort_keys=False,
+            ),
+            encoding="utf-8",
+        )
 
         engine = DevCovenantEngine(repo_root=repo_root)
         result = engine.check(mode="normal")
@@ -118,7 +152,7 @@ def _policy_definition(policy_id: str, enabled: bool) -> PolicyDefinition:
     )
 
 
-def _unit_test_policy_state_disables_policy_even_if_agents_enables(
+def _unit_test_policy_state_disable_override(
     tmp_path: Path, monkeypatch
 ) -> None:
     """Config policy_state must disable a policy at runtime."""
@@ -133,7 +167,9 @@ def _unit_test_policy_state_disables_policy_even_if_agents_enables(
 
     policy = _policy_definition("sample-policy", enabled=True)
     captured = {}
-    monkeypatch.setattr(engine.parser, "parse_agents_md", lambda: [policy])
+    monkeypatch.setattr(
+        engine, "_load_policies_from_registry", lambda: [policy]
+    )
 
     def _capture_sync(policies):
         """Capture enabled state seen by sync checks."""
@@ -156,7 +192,7 @@ def _unit_test_policy_state_disables_policy_even_if_agents_enables(
     assert policy.raw_metadata["enabled"] == "false"
 
 
-def _unit_test_policy_state_enables_policy_even_if_agents_disables(
+def _unit_test_policy_state_enable_override(
     tmp_path: Path, monkeypatch
 ) -> None:
     """Config policy_state must enable a policy at runtime."""
@@ -171,7 +207,9 @@ def _unit_test_policy_state_enables_policy_even_if_agents_disables(
 
     policy = _policy_definition("sample-policy", enabled=False)
     captured = {}
-    monkeypatch.setattr(engine.parser, "parse_agents_md", lambda: [policy])
+    monkeypatch.setattr(
+        engine, "_load_policies_from_registry", lambda: [policy]
+    )
 
     def _capture_sync(policies):
         """Capture enabled state seen by sync checks."""
@@ -217,26 +255,24 @@ class GeneratedUnittestCases(unittest.TestCase):
             tmp_path = Path(temp_dir).resolve()
             _unit_test_custom_override_skips_core_fixers(tmp_path=tmp_path)
 
-    def test_policy_state_disables_policy_even_if_agents_enables(self):
-        """Run test_policy_state_disables_policy_even_if_agents_enables."""
+    def test_policy_state_disables_policy_even_if_registry_enables(self):
+        """Run test_policy_state_disables_policy_even_if_registry_enables."""
         monkeypatch = pytest.MonkeyPatch()
         try:
             with tempfile.TemporaryDirectory() as temp_dir:
                 tmp_path = Path(temp_dir).resolve()
-                _unit_test_policy_state_disables_policy_even_if_agents_enables(
-                    tmp_path=tmp_path, monkeypatch=monkeypatch
-                )
+                disable_case = _unit_test_policy_state_disable_override
+                disable_case(tmp_path=tmp_path, monkeypatch=monkeypatch)
         finally:
             monkeypatch.undo()
 
-    def test_policy_state_enables_policy_even_if_agents_disables(self):
-        """Run test_policy_state_enables_policy_even_if_agents_disables."""
+    def test_policy_state_enables_policy_even_if_registry_disables(self):
+        """Run test_policy_state_enables_policy_even_if_registry_disables."""
         monkeypatch = pytest.MonkeyPatch()
         try:
             with tempfile.TemporaryDirectory() as temp_dir:
                 tmp_path = Path(temp_dir).resolve()
-                _unit_test_policy_state_enables_policy_even_if_agents_disables(
-                    tmp_path=tmp_path, monkeypatch=monkeypatch
-                )
+                enable_case = _unit_test_policy_state_enable_override
+                enable_case(tmp_path=tmp_path, monkeypatch=monkeypatch)
         finally:
             monkeypatch.undo()

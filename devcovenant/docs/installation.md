@@ -40,11 +40,10 @@ Use `python3 -m devcovenant` when the console entry is not available.
 
 ## Version and License Fallbacks
 - Default metadata mode:
-  empty install uses overwrite; deploy/refresh/upgrade use preserve unless
-  overridden with `--version-mode` / `--license-mode`.
+  empty install uses overwrite; deploy/refresh/upgrade use preserve.
 - Version resolution order:
-  CLI `--version`, `config.version.override`, existing valid
-  `devcovenant/VERSION`, `pyproject.toml` version, prompt, then `0.0.1`.
+  `config.version.override`, existing valid `devcovenant/VERSION`,
+  `pyproject.toml` version, prompt, then `0.0.1`.
 - Preserve mode:
   keep existing `devcovenant/VERSION` and `LICENSE`; if missing, bootstrap
   them using the resolved version and MIT license template.
@@ -55,12 +54,12 @@ Use `python3 -m devcovenant` when the console entry is not available.
 
 ## Examples
 ```bash
-devcovenant install --target /path/to/repo
+devcovenant install
 # edit devcovenant/config.yaml (set install.generic_config: false)
-devcovenant deploy --target /path/to/repo
+devcovenant deploy
 
-devcovenant refresh --target /path/to/repo
-devcovenant upgrade --target /path/to/repo
+devcovenant refresh
+devcovenant upgrade
 ```
 
 ## Undeploy and Uninstall

@@ -1,5 +1,5 @@
 # DevCovenant Development Plan
-**Last Updated:** 2026-02-10
+**Last Updated:** 2026-02-11
 **Version:** 0.2.6
 
 <!-- DEVCOV:BEGIN -->
@@ -14,136 +14,112 @@ truth for behavior and requirements.
 ## Table of Contents
 1. [Overview](#overview)
 2. [Workflow](#workflow)
-3. [Completed Baseline](#completed-baseline)
-4. [Immediate Outstanding Work](#immediate-outstanding-work)
-5. [Secondary Outstanding Work](#secondary-outstanding-work)
+3. [Audit Baseline](#audit-baseline)
+4. [Remaining 0.2.6 Work](#remaining-026-work)
+5. [Deferred Work](#deferred-work)
 6. [Acceptance Criteria](#acceptance-criteria)
 7. [Validation Routine](#validation-routine)
 
 ## Overview
-- Keep this plan short, current, and dependency ordered.
-- Keep history in `CHANGELOG.md`; keep requirements in `SPEC.md`.
-- Mark only active work as `[not done]`.
+- This plan is a rewrite aligned to the current `SPEC.md` state.
+- Keep this plan dependency-ordered and status-explicit.
+- Keep release history in `CHANGELOG.md`, not here.
 
 ## Workflow
-- Start edits with:
-  `devcovenant check --start`
-- Implement in dependency order.
-- After policy descriptor updates, run:
-  `devcovenant refresh`
-- Run tests:
-  `devcovenant test`
-- End edits with:
-  `devcovenant check --end`
-- If hooks/autofixes change files during end, rerun tests and end phase.
+- Start edit sessions with `devcovenant check --start`.
+- Implement tasks in order from this plan.
+- Run `devcovenant refresh` after descriptor/profile/config changes.
+- Run `devcovenant test`.
+- End with `devcovenant check --end`.
+- If end hooks/autofixers modify files, rerun test and end until clean.
 
-## Completed Baseline
-- [done] Lifecycle command surface exists: `check` (`--start`, `--end`,
-  default autofix, `--nofix`), `test`, `install`, `deploy`, `upgrade`,
-  `refresh`, `undeploy`, `uninstall`, `update_lock`.
-- [done] CLI help/argument parsing is command-scoped, so each command exposes
-  only its own options.
-- [done] Public command flags are minimal: only `check` exposes
-  `--start`, `--end`, and `--nofix`.
-- [done] Commands execute against the current working repository root only;
-  no target override flags are in the public CLI.
-- [done] Managed docs are YAML-asset driven and managed-block based.
-- [done] Registry-only startup refresh behavior exists.
-- [done] Policy metadata resolution writes resolved policy values into
-  registry entries.
-- [done] AGENTS policy block rendering is downstream from registry entries.
-- [done] Changelog coverage now requires fresh top entry with labeled summary
-  and explicit files list.
-- [done] Changelog coverage ignores managed-doc diffs confined to DEVCOV
-  managed blocks and policy markers.
-- [done] `test` executes configured command lists and records test status.
+## Audit Baseline
+- [done] Public command surface is narrowed to:
+  `check`, `test`, `install`, `deploy`, `upgrade`, `refresh`,
+  `undeploy`, `uninstall`, and `update_lock`.
+- [done] Public CLI flags are minimal and command-scoped.
+- [done] Managed docs are YAML-template driven with managed-block refresh.
+- [done] Registry-to-AGENTS render flow is in place.
+- [done] Policy activation is config-driven (`policy_state`).
+- [done] Scope-key retirement work landed in descriptors/manifests.
+- [done] Legacy stock policy text restore path was removed.
+- [done] Tests run via both `pytest` and `python3 -m unittest discover`.
 
-## Immediate Outstanding Work
-1. [done] Config-only policy activation migration (critical)
-- Removed runtime activation drift between AGENTS metadata and config.
-- Kept activation authoritative in config (`policy_state`).
-- Preserved enabled/disabled outcomes by applying config overrides before
-  sync checks and policy execution.
+## Remaining 0.2.6 Work
+1. [not done] Refresh internals de-legacy pass
+- Remove remaining legacy naming and references to
+  `refresh_registry`/`refresh_policies`/`refresh_all` from runtime messages,
+  docs, and tests where they leak old command semantics.
+- Keep one canonical operator command: `devcovenant refresh`.
+- Ensure suggestions in engine/policies point to `devcovenant refresh`.
 
-2. [done] Scope-key retirement in descriptors
-- Removed policy/profile scope keys from policy and profile YAMLs.
-- Added regression checks to block reintroduction of retired scope keys.
-- Kept profile overlays for metadata/assets without using them for activation.
+2. [not done] Root-command vs core-helper boundary cleanup
+- Keep user-action command modules at `devcovenant/` root as real
+  implementations.
+- Move/retain helper logic in `devcovenant/core/` only.
+- Remove stale internal `--target` plumbing from lifecycle helpers where
+  current-repo execution is sufficient and required by SPEC.
 
-3. [done] Policy enable/disable simplification
-- Unified activation semantics across runtime, install, and upgrade flows.
-- Removed AGENTS-driven activation decisions from asset/replacement planning.
-- Kept a single `enabled` model from descriptor defaults overridden by
-  config `policy_state`.
-- Shifted stock policy asset installation to profile assets and kept custom
-  policy descriptor assets as optional fallback via config.
+3. [not done] Lifecycle simplification hardening
+- Remove residual dead branches tied to retired command variants and retired
+  mode switches.
+- Confirm `check --start` and `check --end` remain the only gate entrypoints.
+- Preserve file-path command usage for root commands.
 
-4. [done] Legacy policy consolidation cleanup
-- Removed stale scope-wording in policy map sections after consolidation.
-- Added registry inventory regression checks so retired policy IDs cannot
-  reappear in registry outputs.
+4. [not done] Managed-doc and template drift cleanup
+- Keep managed-doc templates YAML-only and generic.
+- Remove stale references to removed templates/artifacts in tests/docs.
+- Keep refresh behavior block-scoped for existing docs and stock text scoped
+  to missing/empty/placeholder targets.
 
-5. [done] AGENTS/registry hardening
-- Keep registry generation descriptor-driven with resolved metadata values.
-- Keep AGENTS policy block rendering deterministic from registry state.
+5. [not done] Test-suite completion for 0.2.6
+- [done] Finalize `modules-need-tests` as a repo-wide metadata-driven
+  full-audit rule for all in-scope non-test modules with tests required under
+  configured `tests/` roots.
+- [done] Enforce `devcovrepo` metadata so `devcovenant/**` is mirrored under
+  `tests/devcovenant/**`.
+- [done] Enforce `devcovuser` metadata so only `devcovenant/custom/**` is
+  mirrored
+  under `tests/devcovenant/custom/**`.
+- [done] Keep non-DevCovenant module tests user-structured under `tests/`
+  (no forced mirror layout).
+- [not done] Continue migration of remaining pytest-style-only modules into
+  explicit
+  unit-style suites while preserving pytest execution.
+- [not done] Add missing adapter unit tests for core policy adapters.
+- [done] Add regression coverage for the metadata-driven mirror behavior.
 
-6. [done] Stock-text legacy removal
-- Remove `stock_policy_texts` files and restore-stock-text plumbing.
-- Enforce descriptor `text` as the only policy prose source.
+6. [not done] Packaging and artifact residue cleanup
+- Remove obsolete residual artifacts still present in tree
+  (for example, retired GPL template leftovers) when not used by runtime.
+- Verify manifests and packaging rules contain only active artifacts.
+- Keep runtime registry state under `devcovenant/registry/local`.
 
-7. [done] Refresh command consolidation
-- Made `refresh` the canonical full refresh command.
-- Removed legacy `sync` / `refresh_registry` / `refresh-policies` /
-  `refresh-all` / `normalize-metadata` / `update` command paths.
+7. [not done] Pre-commit config refactor finalization
+- Finish the profile-fragment merge audit described in
+  `SPEC.md` (Pre-commit configuration by profile).
+- Verify manifest/profile-registry/pre-commit outputs stay aligned.
+- Add regression cases for representative profile combinations.
 
-8. [done] CLI module layout cleanup
-- Kept CLI-exposed command modules at `devcovenant/` package root.
-- Removed forwarding-wrapper patterns and duplicate same-name root/core
-  command modules.
-- Removed duplicate helper-script source copies from profile assets; helper
-  scripts are sourced from package-root modules only.
-- Preserved file-path gate command usage.
-
-## Secondary Outstanding Work
-1. [done] Managed docs pipeline completion
-- Finalized strict sync for README/SPEC/PLAN/CHANGELOG/CONTRIBUTING from YAML
-  assets and managed blocks.
-- Wired refresh/deploy flows to honor `doc_assets.autogen` and
-  `doc_assets.user` when selecting managed docs.
-
-2. [done] Lifecycle refinements and fallbacks
-- [done] Retired `reset-to-stock` lifecycle path and references.
-- [done] Finalized version and LICENSE fallback behavior across lifecycle
-  commands with deploy/upgrade regression coverage.
-
-3. [not done] Adapter expansion and test coverage
-- Continue policy-by-policy adapter extraction and dispatch tests.
-
-4. [not done] Legacy artifact/debris removal
-- [done] Removed duplicate managed-doc markdown templates
-  (`assets/AGENTS.md`, `assets/CONTRIBUTING.md`) so managed-doc templates are
-  descriptor-only (`*.yaml`).
-- Remove obsolete registry/template leftovers and stale references from docs,
-  manifests, and tests.
+## Deferred Work
+1. [not done] 0.2.7 metadata DSL expansion
+- Continue moving reusable policy metadata knobs from hard-coded logic into
+  descriptor/profile/config-driven structures.
+- Keep custom policy escape hatches intact for repo-specific behavior.
 
 ## Acceptance Criteria
-- Every immediate outstanding item has code + tests.
-- `PLAN.md` and `SPEC.md` do not conflict on activation, lifecycle, or
-  registry behavior.
-- No removed/retired policy can be discovered in manifests, maps, registries,
-  docs, or tests.
-- Descriptor `text` is the only policy prose source and no stock-text legacy
-  files remain in runtime paths.
-- `refresh` is the canonical full refresh command.
-- File-path gate commands continue to work from repository root.
-- CLI command modules do not rely on forwarding wrappers or duplicate
-  same-name root/core command files.
+- `PLAN.md` remains aligned to the current `SPEC.md`.
+- Remaining 0.2.6 work items are implemented with tests.
+- Runtime/help/docs contain no operator-facing legacy refresh command names.
+- Lifecycle internals are current-repo oriented without public target flags.
+- Adapter coverage exists and runs in both pytest and unittest flows.
 - Gate sequence (`start -> tests -> end`) passes cleanly.
 
 ## Validation Routine
-- Run gate workflow on every change.
-- Verify DevCovenant policy checks pass without blocking violations.
-- Verify `devcovenant refresh` updates local registries/docs as expected.
-- Verify file-path gate commands still execute from repo root.
-- Verify docs policies pass on final state (`last-updated-placement`,
-  `documentation-growth-tracking`, `changelog-coverage`).
+- Run: `devcovenant check --start`.
+- Run: `devcovenant test`.
+- Run: `devcovenant check --end`.
+- Validate `devcovenant refresh` as the only operator refresh command.
+- Validate `python3 devcovenant/check.py --start` and
+  `python3 devcovenant/check.py --end`.
+- Validate docs policies and changelog coverage on the final tree.

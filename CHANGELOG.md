@@ -1,5 +1,5 @@
 # Changelog
-**Last Updated:** 2026-02-10
+**Last Updated:** 2026-02-11
 **Version:** 0.2.6
 
 <!-- DEVCOV:BEGIN -->
@@ -33,6 +33,235 @@ Example entry:
 
 ## Version 0.2.6
 
+- 2026-02-11:
+  Change: Updated SPEC/PLAN and implemented metadata-driven
+  `modules-need-tests` behavior for repo-wide full-audit coverage plus
+  profile-defined mirror rules.
+  Why: Updated test-enforcement scope and removed diff-only behavior so
+  devcovrepo/devcovuser overlays define mirror expectations directly.
+  Impact: Updated full mirror enforcement for this repo, custom-only mirror
+  for user repos, and retained user-structured tests for non-DevCovenant
+  modules.
+  Files:
+  AGENTS.md
+  PLAN.md
+  README.md
+  SPEC.md
+  devcovenant/README.md
+  devcovenant/check.py
+  devcovenant/config.yaml
+  devcovenant/core/command_runtime.py
+  devcovenant/core/engine.py
+  devcovenant/core/execution.py
+  devcovenant/core/gates.py
+  devcovenant/core/hooks/pre_commit.py
+  devcovenant/core/install.py
+  devcovenant/core/policies/devcov_structure_guard/devcov_structure_guard.py
+  devcovenant/core/policies/devflow_run_gates/devflow_run_gates.yaml
+  devcovenant/core/policies/modules_need_tests/__init__.py
+  devcovenant/core/policies/modules_need_tests/adapters/__init__.py
+  devcovenant/core/policies/modules_need_tests/adapters/csharp.py
+  devcovenant/core/policies/modules_need_tests/adapters/go.py
+  devcovenant/core/policies/modules_need_tests/adapters/java.py
+  devcovenant/core/policies/modules_need_tests/adapters/javascript.py
+  devcovenant/core/policies/modules_need_tests/adapters/python.py
+  devcovenant/core/policies/modules_need_tests/adapters/rust.py
+  devcovenant/core/policies/modules_need_tests/adapters/typescript.py
+  devcovenant/core/policies/modules_need_tests/assets/.gitkeep
+  devcovenant/core/policies/modules_need_tests/fixers/__init__.py
+  devcovenant/core/policies/modules_need_tests/modules_need_tests.py
+  devcovenant/core/policies/modules_need_tests/modules_need_tests.yaml
+  devcovenant/core/policies/new_modules_need_tests/__init__.py
+  devcovenant/core/policies/new_modules_need_tests/adapters/csharp.py
+  devcovenant/core/policies/new_modules_need_tests/adapters/go.py
+  devcovenant/core/policies/new_modules_need_tests/adapters/java.py
+  devcovenant/core/policies/new_modules_need_tests/adapters/javascript.py
+  devcovenant/core/policies/new_modules_need_tests/adapters/python.py
+  devcovenant/core/policies/new_modules_need_tests/adapters/rust.py
+  devcovenant/core/policies/new_modules_need_tests/adapters/typescript.py
+  devcovenant/core/policies/new_modules_need_tests/new_modules_need_tests.py
+  devcovenant/core/policies/new_modules_need_tests/new_modules_need_tests.yaml
+  devcovenant/core/policy_descriptor.py
+  devcovenant/core/policy_freeze.py
+  devcovenant/core/policy_locations.py
+  devcovenant/core/policy_replacements.py
+  devcovenant/core/policy_schema.py
+  devcovenant/core/profiles/csharp/csharp.yaml
+  devcovenant/core/profiles/data/data.yaml
+  devcovenant/core/profiles/devcovuser/devcovuser.yaml
+  devcovenant/core/profiles/fastapi/fastapi.yaml
+  devcovenant/core/profiles/frappe/frappe.yaml
+  devcovenant/core/profiles/global/assets/AGENTS.yaml
+  devcovenant/core/profiles/global/assets/CHANGELOG.yaml
+  devcovenant/core/profiles/global/assets/PLAN.yaml
+  devcovenant/core/profiles/global/assets/README.yaml
+  devcovenant/core/profiles/global/assets/SPEC.yaml
+  devcovenant/core/profiles/global/assets/config.yaml
+  devcovenant/core/profiles/global/assets/devcovenant/README.yaml
+  devcovenant/core/profiles/go/go.yaml
+  devcovenant/core/profiles/java/java.yaml
+  devcovenant/core/profiles/javascript/javascript.yaml
+  devcovenant/core/profiles/python/python.yaml
+  devcovenant/core/profiles/rust/rust.yaml
+  devcovenant/core/profiles/typescript/typescript.yaml
+  devcovenant/core/refresh_all.py
+  devcovenant/core/refresh_policies.py
+  devcovenant/core/refresh_registry.py
+  devcovenant/core/registry.py
+  devcovenant/core/selectors.py
+  devcovenant/core/undeploy.py
+  devcovenant/core/uninstall.py
+  devcovenant/core/upgrade.py
+  devcovenant/custom/policies/no_spaghetti/no_spaghetti.py
+  devcovenant/custom/policies/no_spaghetti/no_spaghetti.yaml
+  devcovenant/custom/profiles/devcovrepo/assets/docs/installation.md
+  devcovenant/custom/profiles/devcovrepo/assets/docs/refresh.md
+  devcovenant/custom/profiles/devcovrepo/assets/docs/troubleshooting.md
+  devcovenant/custom/profiles/devcovrepo/assets/docs/workflow.md
+  devcovenant/custom/profiles/devcovrepo/devcovrepo.yaml
+  devcovenant/deploy.py
+  devcovenant/docs/installation.md
+  devcovenant/docs/refresh.md
+  devcovenant/docs/troubleshooting.md
+  devcovenant/docs/workflow.md
+  devcovenant/install.py
+  devcovenant/refresh.py
+  devcovenant/test.py
+  devcovenant/undeploy.py
+  devcovenant/uninstall.py
+  devcovenant/upgrade.py
+  tests/devcovenant/core/hooks/__init__.py
+  tests/devcovenant/core/policies/changelog_coverage/adapters/__init__.py
+  tests/devcovenant/core/policies/changelog_coverage/fixers/__init__.py
+  tests/devcovenant/core/policies/changelog_coverage/fixers/test_global.py
+  tests/devcovenant/core/policies/dependency_license_sync/adapters/__init__.py
+  tests/devcovenant/core/policies/dependency_license_sync/fixers/__init__.py
+  tests/devcovenant/core/policies/dependency_license_sync/fixers/test_global.py
+  tests/devcovenant/core/policies/devcov_integrity_guard/adapters/__init__.py
+  tests/devcovenant/core/policies/devcov_integrity_guard/fixers/__init__.py
+  tests/devcovenant/core/policies/devcov_structure_guard/adapters/__init__.py
+  tests/devcovenant/core/policies/devcov_structure_guard/fixers/__init__.py
+  tests/devcovenant/core/policies/devflow_run_gates/adapters/__init__.py
+  tests/devcovenant/core/policies/devflow_run_gates/fixers/__init__.py
+  tests/devcovenant/core/policies/docstring_and_comment_coverage/adapters/\
+    __init__.py
+  tests/devcovenant/core/policies/docstring_and_comment_coverage/adapters/\
+    test_csharp.py
+  tests/devcovenant/core/policies/docstring_and_comment_coverage/adapters/\
+    test_go.py
+  tests/devcovenant/core/policies/docstring_and_comment_coverage/adapters/\
+    test_java.py
+  tests/devcovenant/core/policies/docstring_and_comment_coverage/adapters/\
+    test_javascript.py
+  tests/devcovenant/core/policies/docstring_and_comment_coverage/adapters/\
+    test_python.py
+  tests/devcovenant/core/policies/docstring_and_comment_coverage/adapters/\
+    test_rust.py
+  tests/devcovenant/core/policies/docstring_and_comment_coverage/adapters/\
+    test_typescript.py
+  tests/devcovenant/core/policies/docstring_and_comment_coverage/fixers/\
+    __init__.py
+  tests/devcovenant/core/policies/documentation_growth_tracking/adapters/\
+    __init__.py
+  tests/devcovenant/core/policies/documentation_growth_tracking/fixers/\
+    __init__.py
+  tests/devcovenant/core/policies/last_updated_placement/adapters/__init__.py
+  tests/devcovenant/core/policies/last_updated_placement/fixers/__init__.py
+  tests/devcovenant/core/policies/last_updated_placement/fixers/test_global.py
+  tests/devcovenant/core/policies/line_length_limit/adapters/__init__.py
+  tests/devcovenant/core/policies/line_length_limit/fixers/__init__.py
+  tests/devcovenant/core/policies/managed_environment/adapters/__init__.py
+  tests/devcovenant/core/policies/managed_environment/fixers/__init__.py
+  tests/devcovenant/core/policies/modules_need_tests/__init__.py
+  tests/devcovenant/core/policies/modules_need_tests/adapters/__init__.py
+  tests/devcovenant/core/policies/modules_need_tests/adapters/test_csharp.py
+  tests/devcovenant/core/policies/modules_need_tests/adapters/test_go.py
+  tests/devcovenant/core/policies/modules_need_tests/adapters/test_java.py
+  tests/devcovenant/core/policies/modules_need_tests/adapters/\
+    test_javascript.py
+  tests/devcovenant/core/policies/modules_need_tests/adapters/test_python.py
+  tests/devcovenant/core/policies/modules_need_tests/adapters/test_rust.py
+  tests/devcovenant/core/policies/modules_need_tests/adapters/\
+    test_typescript.py
+  tests/devcovenant/core/policies/modules_need_tests/fixers/__init__.py
+  tests/devcovenant/core/policies/modules_need_tests/test_modules_need_tests.py
+  tests/devcovenant/core/policies/name_clarity/adapters/__init__.py
+  tests/devcovenant/core/policies/name_clarity/adapters/test_csharp.py
+  tests/devcovenant/core/policies/name_clarity/adapters/test_go.py
+  tests/devcovenant/core/policies/name_clarity/adapters/test_java.py
+  tests/devcovenant/core/policies/name_clarity/adapters/test_javascript.py
+  tests/devcovenant/core/policies/name_clarity/adapters/test_python.py
+  tests/devcovenant/core/policies/name_clarity/adapters/test_rust.py
+  tests/devcovenant/core/policies/name_clarity/adapters/test_typescript.py
+  tests/devcovenant/core/policies/name_clarity/fixers/__init__.py
+  tests/devcovenant/core/policies/new_modules_need_tests/\
+    test_new_modules_need_tests.py
+  tests/devcovenant/core/policies/no_future_dates/adapters/__init__.py
+  tests/devcovenant/core/policies/no_future_dates/fixers/__init__.py
+  tests/devcovenant/core/policies/no_future_dates/fixers/test_global.py
+  tests/devcovenant/core/policies/raw_string_escapes/adapters/__init__.py
+  tests/devcovenant/core/policies/raw_string_escapes/fixers/__init__.py
+  tests/devcovenant/core/policies/raw_string_escapes/fixers/test_global.py
+  tests/devcovenant/core/policies/read_only_directories/adapters/__init__.py
+  tests/devcovenant/core/policies/read_only_directories/fixers/__init__.py
+  tests/devcovenant/core/policies/security_scanner/adapters/__init__.py
+  tests/devcovenant/core/policies/security_scanner/adapters/test_csharp.py
+  tests/devcovenant/core/policies/security_scanner/adapters/test_go.py
+  tests/devcovenant/core/policies/security_scanner/adapters/test_java.py
+  tests/devcovenant/core/policies/security_scanner/adapters/test_javascript.py
+  tests/devcovenant/core/policies/security_scanner/adapters/test_python.py
+  tests/devcovenant/core/policies/security_scanner/adapters/test_rust.py
+  tests/devcovenant/core/policies/security_scanner/adapters/test_typescript.py
+  tests/devcovenant/core/policies/security_scanner/fixers/__init__.py
+  tests/devcovenant/core/policies/semantic_version_scope/adapters/__init__.py
+  tests/devcovenant/core/policies/semantic_version_scope/fixers/__init__.py
+  tests/devcovenant/core/policies/version_sync/adapters/__init__.py
+  tests/devcovenant/core/policies/version_sync/fixers/__init__.py
+  tests/devcovenant/core/profiles/fastapi/assets/__init__.py
+  tests/devcovenant/core/profiles/fastapi/assets/test_main.py
+  tests/devcovenant/core/profiles/frappe/assets/__init__.py
+  tests/devcovenant/core/profiles/frappe/assets/test_hooks.py
+  tests/devcovenant/core/test_cli.py
+  tests/devcovenant/core/test_cli_options.py
+  tests/devcovenant/core/test_command_layout.py
+  tests/devcovenant/core/test_engine.py
+  tests/devcovenant/core/test_execution.py
+  tests/devcovenant/core/test_gates.py
+  tests/devcovenant/core/test_install.py
+  tests/devcovenant/core/test_main_entrypoint.py
+  tests/devcovenant/core/test_managed_doc_templates.py
+  tests/devcovenant/core/test_manifest.py
+  tests/devcovenant/core/test_policy_descriptor.py
+  tests/devcovenant/core/test_policy_freeze.py
+  tests/devcovenant/core/test_policy_replacements.py
+  tests/devcovenant/core/test_profiles.py
+  tests/devcovenant/core/test_refresh_all.py
+  tests/devcovenant/core/test_refresh_policies.py
+  tests/devcovenant/core/test_refresh_registry.py
+  tests/devcovenant/core/test_registry.py
+  tests/devcovenant/core/test_selector_helpers.py
+  tests/devcovenant/custom/policies/devcov_raw_string_escapes/\
+    test_devcov_raw_string_escapes.py
+  tests/devcovenant/custom/policies/managed_doc_assets/\
+    test_managed_doc_assets.py
+  tests/devcovenant/custom/policies/no_spaghetti/test_no_spaghetti.py
+  tests/devcovenant/custom/policies/readme_sync/fixers/__init__.py
+  tests/devcovenant/custom/policies/readme_sync/fixers/test_global.py
+  tests/devcovenant/custom/policies/readme_sync/test_readme_sync.py
+  tests/devcovenant/custom/policies/test_managed_doc_assets.py
+  tests/devcovenant/custom/policies/test_readme_sync.py
+  tests/devcovenant/custom/profiles/test_custom_profiles.py
+  tests/devcovenant/test_check.py
+  tests/devcovenant/test_cli.py
+  tests/devcovenant/test_deploy.py
+  tests/devcovenant/test_install.py
+  tests/devcovenant/test_refresh.py
+  tests/devcovenant/test_test.py
+  tests/devcovenant/test_undeploy.py
+  tests/devcovenant/test_uninstall.py
+  tests/devcovenant/test_update_lock.py
+  tests/devcovenant/test_upgrade.py
+
 - 2026-02-10:
   Change: Updated check command flows, command surface, and spec/plan language
   for `check --start/--end`, default autofix, and single-command refresh.
@@ -41,11 +270,22 @@ Example entry:
   Impact: Streamlined operator usage, aligned managed-doc templates, and added
   CLI coverage tests for the new check gate behavior.
   Files:
+  PLAN.md
+  README.md
+  devcovenant/README.md
   devcovenant/core/command_runtime.py
   devcovenant/core/gates.py
+  devcovenant/core/policies/devcov_structure_guard/devcov_structure_guard.py
+  devcovenant/core/profiles/global/assets/AGENTS.yaml
+  devcovenant/core/profiles/global/assets/README.yaml
+  devcovenant/core/profiles/global/assets/devcovenant/README.yaml
   devcovenant/core/test_runner.py
-  devcovenant/undeploy.py
-  devcovenant/uninstall.py
+  devcovenant/custom/profiles/devcovrepo/assets/docs/installation.md
+  devcovenant/custom/profiles/devcovrepo/assets/docs/refresh.md
+  devcovenant/custom/profiles/devcovrepo/assets/docs/troubleshooting.md
+  devcovenant/docs/installation.md
+  devcovenant/docs/refresh.md
+  devcovenant/docs/troubleshooting.md
 
 - 2026-02-09:
   Change: Updated policy activation flow, managed-doc sync behavior, and CLI
