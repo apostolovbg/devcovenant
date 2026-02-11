@@ -2,16 +2,17 @@
 
 from __future__ import annotations
 
+import io
 import os
 import subprocess
 import sys
 import unittest
+from contextlib import redirect_stderr
 from pathlib import Path
 from types import SimpleNamespace
 
-import pytest
-
 from devcovenant import cli
+from tests.devcovenant.support import MonkeyPatch
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
 ROOT_COMMAND_MODULES = (
@@ -60,10 +61,14 @@ def _unit_test_cli_dispatches_command_and_args(monkeypatch) -> None:
     )
     monkeypatch.setattr(sys, "argv", ["devcovenant", "check", "--nofix"])
 
-    with pytest.raises(SystemExit) as exc:
+    try:
         cli.main()
+    except SystemExit as exc:
+        code = exc.code
+    else:  # pragma: no cover - defensive
+        raise AssertionError("Expected SystemExit from cli.main().")
 
-    assert exc.value.code == 0
+    assert code == 0
     assert captured["command"] == "check"
     assert captured["argv"] == ["--nofix"]
 
@@ -71,11 +76,17 @@ def _unit_test_cli_dispatches_command_and_args(monkeypatch) -> None:
 def _unit_test_cli_unknown_command_fails(monkeypatch) -> None:
     """Unknown command should exit with parser error."""
     monkeypatch.setattr(sys, "argv", ["devcovenant", "does-not-exist"])
+    stderr_buffer = io.StringIO()
+    with redirect_stderr(stderr_buffer):
+        try:
+            cli.main()
+        except SystemExit as exc:
+            code = exc.code
+        else:  # pragma: no cover - defensive
+            raise AssertionError("Expected SystemExit from cli.main().")
 
-    with pytest.raises(SystemExit) as exc:
-        cli.main()
-
-    assert exc.value.code == 2
+    assert code == 2
+    assert "invalid choice: 'does-not-exist'" in stderr_buffer.getvalue()
 
 
 def _unit_test_test_help_is_command_scoped() -> None:
@@ -151,7 +162,7 @@ class GeneratedUnittestCases(unittest.TestCase):
 
     def test_cli_dispatches_command_and_args(self):
         """Run test_cli_dispatches_command_and_args."""
-        monkeypatch = pytest.MonkeyPatch()
+        monkeypatch = MonkeyPatch()
         try:
             _unit_test_cli_dispatches_command_and_args(monkeypatch=monkeypatch)
         finally:
@@ -174,7 +185,7 @@ class GeneratedUnittestCases(unittest.TestCase):
 
     def test_cli_unknown_command_fails(self):
         """Run test_cli_unknown_command_fails."""
-        monkeypatch = pytest.MonkeyPatch()
+        monkeypatch = MonkeyPatch()
         try:
             _unit_test_cli_unknown_command_fails(monkeypatch=monkeypatch)
         finally:

@@ -119,7 +119,7 @@ drift is detectable and reversible.
   `devcovenant/registry/local/test_status.json`.
 - `check --end` runs full pre-commit, reruns tests/hooks until clean when
   fixers modify files, then records end-gate metadata.
-- `test` runs `python3 -m unittest discover` first, then `pytest` against
+- `test` runs `python3 -m unittest discover -v` first, then `pytest` against
   `tests/`, and records results through the gate status metadata.
 - CLI output emits stage banners and short status steps (registry refresh,
   engine init, command execution) so runs are traceable without flooding.
@@ -133,7 +133,7 @@ drift is detectable and reversible.
 
 ### Install, deploy, upgrade, refresh model
 - `install` places DevCovenant into a repo and writes a generic,
-  devcovrepo-enabled config stub (sets `install.generic_config: true`). It
+  devcovuser-enabled config stub (sets `install.generic_config: true`). It
   never deploys managed docs/assets and exists to force a user config edit
   before activation. If DevCovenant is already present and a newer core is
   available, `install` must prompt to run `upgrade` first, then continue.
@@ -174,7 +174,7 @@ drift is detectable and reversible.
 #### Command matrix (behavioral intent)
 - `check`: policy checks with default auto-fix; `--nofix` disables fixing;
   `--start`/`--end` run start/end gate pre-commit workflows.
-- `test`: run `python3 -m unittest discover` and then `pytest` against
+- `test`: run `python3 -m unittest discover -v` and then `pytest` against
   `tests/`.
 - `install`: place core + generic config stub only. Prompt to `upgrade` if a
   newer core is detected. No managed doc deployment.
@@ -187,7 +187,11 @@ drift is detectable and reversible.
 - `undeploy`: remove managed blocks/registries and revert generated
   `.gitignore` fragments while keeping core + config.
 - `uninstall`: remove the entire DevCovenant footprint and managed blocks.
-- `update_lock`: refresh lockfiles and related license material.
+- `update_lock`: resolve dependency lock targets from
+  `dependency-license-sync` metadata (policy defaults + active profile
+  overlays + config overrides), refresh supported lockfiles for all active
+  ecosystems, and then refresh policy-owned license artifacts
+  (`THIRD_PARTY_LICENSES.md` / `licenses/`).
 
 ### Command/script placement
 - User-facing, runnable commands live at the `devcovenant/` root and are
@@ -381,6 +385,10 @@ drift is detectable and reversible.
   overlays provide `dependency_files`, while the core policy metadata remains
   general. The devcovrepo profile sets DevCovenant’s own dependency
   manifests.
+- `update_lock` consumes resolved `dependency-license-sync` metadata as its
+  single source of truth. The command must not hardcode a Python-only
+  manifest list; it refreshes whichever ecosystem lockfiles are declared by
+  active profile metadata and then calls policy-owned license refresh logic.
 - A full refresh runs at the start of every `devcovenant check` invocation.
   It rebuilds `devcovenant/registry/local/*`, regenerates the `AGENTS.md`
   policy block, syncs managed docs, and refreshes generated config/profile
@@ -431,6 +439,11 @@ drift is detectable and reversible.
   built artifacts via `MANIFEST.in` so packages do not ship the repo config;
   user installs still auto-generate config when missing and preserve user
   overrides when present.
+- `MANIFEST.in` must not explicitly include repo-root managed docs
+  (`AGENTS.md`, `SPEC.md`, `PLAN.md`, `CHANGELOG.md`, `CONTRIBUTING.md`).
+  Package artifacts should ship package docs/assets under `devcovenant/`
+  (plus required package metadata files such as root `README.md` and license
+  files), not this repo's internal managed-document set.
 - Support policy replacement metadata via
   `devcovenant/registry/global/policy_replacements.yaml`.
   During upgrades, replaced policies move to custom and are marked deprecated
@@ -649,7 +662,8 @@ drift is detectable and reversible.
   but internal folder structure is user-defined.
 - The `modules-need-tests` policy explicitly requires unit tests. Python test
   files must be unittest-style, and the repository runs
-  `python3 -m unittest discover` first with `pytest` as piggyback execution.
+  `python3 -m unittest discover -v` first with `pytest` as piggyback
+  execution.
 - `devcovuser` ignores vendored trees (`vendor`, `third_party`,
   `node_modules`) by default so scans and tests skip bundled dependencies.
 - `devcovuser` also skips vendored DevCovenant core paths in

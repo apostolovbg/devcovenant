@@ -11,12 +11,11 @@ from pathlib import Path
 from textwrap import dedent
 from types import SimpleNamespace
 
-import pytest
-
 from devcovenant.core.base import CheckContext, Violation
 from devcovenant.core.policies.changelog_coverage.changelog_coverage import (
     ChangelogCoverageCheck,
 )
+from tests.devcovenant.support import MonkeyPatch
 
 
 def _summary_block() -> str:
@@ -28,7 +27,7 @@ def _summary_block() -> str:
     )
 
 
-def _set_git_diff(monkeypatch: pytest.MonkeyPatch, output: str) -> None:
+def _set_git_diff(monkeypatch: MonkeyPatch, output: str) -> None:
     """Monkeypatch subprocess.run to return the provided diff output."""
 
     def _fake_run(*_args, **_kwargs):
@@ -39,7 +38,7 @@ def _set_git_diff(monkeypatch: pytest.MonkeyPatch, output: str) -> None:
 
 
 def _set_git_diff_with_patches(
-    monkeypatch: pytest.MonkeyPatch,
+    monkeypatch: MonkeyPatch,
     *,
     changed_files: str,
     patches: dict[str, str],
@@ -67,9 +66,7 @@ def _set_git_diff_with_patches(
     monkeypatch.setattr("subprocess.run", _fake_run)
 
 
-def _unit_test_no_changes_passes(
-    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
-):
+def _unit_test_no_changes_passes(tmp_path: Path, monkeypatch: MonkeyPatch):
     """Empty diffs should yield no violations."""
 
     checker = ChangelogCoverageCheck()
@@ -78,7 +75,7 @@ def _unit_test_no_changes_passes(
 
 
 def _unit_test_skipped_prefixes_ignore_paths(
-    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+    tmp_path: Path, monkeypatch: MonkeyPatch
 ):
     """Configured skipped prefixes should bypass coverage checks."""
 
@@ -92,7 +89,7 @@ def _unit_test_skipped_prefixes_ignore_paths(
 
 
 def _unit_test_skipped_globs_ignore_paths(
-    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+    tmp_path: Path, monkeypatch: MonkeyPatch
 ):
     """Configured skipped globs should bypass coverage checks."""
 
@@ -106,7 +103,7 @@ def _unit_test_skipped_globs_ignore_paths(
 
 
 def _unit_test_root_changelog_required(
-    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+    tmp_path: Path, monkeypatch: MonkeyPatch
 ):
     """Non-RNG files must be listed in the root changelog."""
 
@@ -135,7 +132,7 @@ def _unit_test_root_changelog_required(
 
 
 def _unit_test_rng_changelog_required(
-    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+    tmp_path: Path, monkeypatch: MonkeyPatch
 ):
     """RNG files must be documented in rng_minigames/CHANGELOG.md."""
 
@@ -151,7 +148,7 @@ def _unit_test_rng_changelog_required(
 
 
 def _unit_test_collections_disabled_route_to_root(
-    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+    tmp_path: Path, monkeypatch: MonkeyPatch
 ):
     """When collections are disabled, prefixed paths go to root."""
 
@@ -174,7 +171,7 @@ def _unit_test_collections_disabled_route_to_root(
 
 
 def _unit_test_changelog_requires_summary_labels(
-    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+    tmp_path: Path, monkeypatch: MonkeyPatch
 ):
     """Latest entry must include labeled summary lines."""
 
@@ -201,7 +198,7 @@ def _unit_test_changelog_requires_summary_labels(
 
 
 def _unit_test_summary_requires_action_verbs(
-    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+    tmp_path: Path, monkeypatch: MonkeyPatch
 ):
     """Summary lines must include an action verb from the list."""
 
@@ -301,7 +298,7 @@ def _unit_test_files_block_auto_fix_wraps_summary_lines(tmp_path: Path):
 
 
 def _unit_test_rng_changelog_entry_found(
-    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+    tmp_path: Path, monkeypatch: MonkeyPatch
 ):
     """RNG files pass when mentioned in rng_minigames/CHANGELOG.md."""
 
@@ -330,7 +327,7 @@ def _unit_test_rng_changelog_entry_found(
 
 
 def _unit_test_rng_files_not_logged_in_root(
-    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+    tmp_path: Path, monkeypatch: MonkeyPatch
 ):
     """RNG files should not appear in the root changelog."""
 
@@ -364,7 +361,7 @@ def _unit_test_rng_files_not_logged_in_root(
 
 
 def _unit_test_rng_entries_ignore_old_root_sections(
-    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+    tmp_path: Path, monkeypatch: MonkeyPatch
 ):
     """Old root entries mentioning RNG files should not trigger violations."""
 
@@ -399,7 +396,7 @@ def _unit_test_rng_entries_ignore_old_root_sections(
 
 
 def _unit_test_template_code_block_ignored(
-    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+    tmp_path: Path, monkeypatch: MonkeyPatch
 ):
     """Template code blocks should not count as latest entries."""
 
@@ -432,7 +429,7 @@ def _unit_test_template_code_block_ignored(
 
 
 def _unit_test_changelog_entries_newest_first(
-    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+    tmp_path: Path, monkeypatch: MonkeyPatch
 ):
     """Latest changelog section should list newest entries first."""
     root_changelog = tmp_path / "CHANGELOG.md"
@@ -462,7 +459,7 @@ def _unit_test_changelog_entries_newest_first(
 
 
 def _unit_test_line_continuation_paths(
-    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+    tmp_path: Path, monkeypatch: MonkeyPatch
 ):
     """Backslash-wrapped paths should satisfy changelog coverage."""
 
@@ -494,7 +491,7 @@ def _unit_test_line_continuation_paths(
 
 
 def _unit_test_managed_doc_changes_inside_managed_blocks_are_ignored(
-    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+    tmp_path: Path, monkeypatch: MonkeyPatch
 ):
     """Managed-doc diffs confined to DEVCOV blocks should skip coverage."""
 
@@ -527,7 +524,7 @@ def _unit_test_managed_doc_changes_inside_managed_blocks_are_ignored(
 
 
 def _unit_test_managed_doc_changes_outside_managed_blocks_require_changelog(
-    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+    tmp_path: Path, monkeypatch: MonkeyPatch
 ):
     """Managed-doc diffs outside DEVCOV blocks must still hit coverage."""
 
@@ -560,7 +557,7 @@ class GeneratedUnittestCases(unittest.TestCase):
 
     def test_no_changes_passes(self):
         """Run test_no_changes_passes."""
-        monkeypatch = pytest.MonkeyPatch()
+        monkeypatch = MonkeyPatch()
         try:
             with tempfile.TemporaryDirectory() as temp_dir:
                 tmp_path = Path(temp_dir).resolve()
@@ -572,7 +569,7 @@ class GeneratedUnittestCases(unittest.TestCase):
 
     def test_skipped_prefixes_ignore_paths(self):
         """Run test_skipped_prefixes_ignore_paths."""
-        monkeypatch = pytest.MonkeyPatch()
+        monkeypatch = MonkeyPatch()
         try:
             with tempfile.TemporaryDirectory() as temp_dir:
                 tmp_path = Path(temp_dir).resolve()
@@ -584,7 +581,7 @@ class GeneratedUnittestCases(unittest.TestCase):
 
     def test_skipped_globs_ignore_paths(self):
         """Run test_skipped_globs_ignore_paths."""
-        monkeypatch = pytest.MonkeyPatch()
+        monkeypatch = MonkeyPatch()
         try:
             with tempfile.TemporaryDirectory() as temp_dir:
                 tmp_path = Path(temp_dir).resolve()
@@ -596,7 +593,7 @@ class GeneratedUnittestCases(unittest.TestCase):
 
     def test_root_changelog_required(self):
         """Run test_root_changelog_required."""
-        monkeypatch = pytest.MonkeyPatch()
+        monkeypatch = MonkeyPatch()
         try:
             with tempfile.TemporaryDirectory() as temp_dir:
                 tmp_path = Path(temp_dir).resolve()
@@ -608,7 +605,7 @@ class GeneratedUnittestCases(unittest.TestCase):
 
     def test_rng_changelog_required(self):
         """Run test_rng_changelog_required."""
-        monkeypatch = pytest.MonkeyPatch()
+        monkeypatch = MonkeyPatch()
         try:
             with tempfile.TemporaryDirectory() as temp_dir:
                 tmp_path = Path(temp_dir).resolve()
@@ -620,7 +617,7 @@ class GeneratedUnittestCases(unittest.TestCase):
 
     def test_collections_disabled_route_to_root(self):
         """Run test_collections_disabled_route_to_root."""
-        monkeypatch = pytest.MonkeyPatch()
+        monkeypatch = MonkeyPatch()
         try:
             with tempfile.TemporaryDirectory() as temp_dir:
                 tmp_path = Path(temp_dir).resolve()
@@ -632,7 +629,7 @@ class GeneratedUnittestCases(unittest.TestCase):
 
     def test_changelog_requires_summary_labels(self):
         """Run test_changelog_requires_summary_labels."""
-        monkeypatch = pytest.MonkeyPatch()
+        monkeypatch = MonkeyPatch()
         try:
             with tempfile.TemporaryDirectory() as temp_dir:
                 tmp_path = Path(temp_dir).resolve()
@@ -644,7 +641,7 @@ class GeneratedUnittestCases(unittest.TestCase):
 
     def test_summary_requires_action_verbs(self):
         """Run test_summary_requires_action_verbs."""
-        monkeypatch = pytest.MonkeyPatch()
+        monkeypatch = MonkeyPatch()
         try:
             with tempfile.TemporaryDirectory() as temp_dir:
                 tmp_path = Path(temp_dir).resolve()
@@ -670,7 +667,7 @@ class GeneratedUnittestCases(unittest.TestCase):
 
     def test_rng_changelog_entry_found(self):
         """Run test_rng_changelog_entry_found."""
-        monkeypatch = pytest.MonkeyPatch()
+        monkeypatch = MonkeyPatch()
         try:
             with tempfile.TemporaryDirectory() as temp_dir:
                 tmp_path = Path(temp_dir).resolve()
@@ -682,7 +679,7 @@ class GeneratedUnittestCases(unittest.TestCase):
 
     def test_rng_files_not_logged_in_root(self):
         """Run test_rng_files_not_logged_in_root."""
-        monkeypatch = pytest.MonkeyPatch()
+        monkeypatch = MonkeyPatch()
         try:
             with tempfile.TemporaryDirectory() as temp_dir:
                 tmp_path = Path(temp_dir).resolve()
@@ -694,7 +691,7 @@ class GeneratedUnittestCases(unittest.TestCase):
 
     def test_rng_entries_ignore_old_root_sections(self):
         """Run test_rng_entries_ignore_old_root_sections."""
-        monkeypatch = pytest.MonkeyPatch()
+        monkeypatch = MonkeyPatch()
         try:
             with tempfile.TemporaryDirectory() as temp_dir:
                 tmp_path = Path(temp_dir).resolve()
@@ -706,7 +703,7 @@ class GeneratedUnittestCases(unittest.TestCase):
 
     def test_template_code_block_ignored(self):
         """Run test_template_code_block_ignored."""
-        monkeypatch = pytest.MonkeyPatch()
+        monkeypatch = MonkeyPatch()
         try:
             with tempfile.TemporaryDirectory() as temp_dir:
                 tmp_path = Path(temp_dir).resolve()
@@ -718,7 +715,7 @@ class GeneratedUnittestCases(unittest.TestCase):
 
     def test_changelog_entries_newest_first(self):
         """Run test_changelog_entries_newest_first."""
-        monkeypatch = pytest.MonkeyPatch()
+        monkeypatch = MonkeyPatch()
         try:
             with tempfile.TemporaryDirectory() as temp_dir:
                 tmp_path = Path(temp_dir).resolve()
@@ -730,7 +727,7 @@ class GeneratedUnittestCases(unittest.TestCase):
 
     def test_line_continuation_paths(self):
         """Run test_line_continuation_paths."""
-        monkeypatch = pytest.MonkeyPatch()
+        monkeypatch = MonkeyPatch()
         try:
             with tempfile.TemporaryDirectory() as temp_dir:
                 tmp_path = Path(temp_dir).resolve()
@@ -742,7 +739,7 @@ class GeneratedUnittestCases(unittest.TestCase):
 
     def test_managed_doc_changes_inside_managed_blocks_are_ignored(self):
         """Run wrapper."""
-        monkeypatch = pytest.MonkeyPatch()
+        monkeypatch = MonkeyPatch()
         try:
             with tempfile.TemporaryDirectory() as temp_dir:
                 tmp_path = Path(temp_dir).resolve()
@@ -758,7 +755,7 @@ class GeneratedUnittestCases(unittest.TestCase):
         self,
     ):
         """Run wrapper."""
-        monkeypatch = pytest.MonkeyPatch()
+        monkeypatch = MonkeyPatch()
         try:
             with tempfile.TemporaryDirectory() as temp_dir:
                 tmp_path = Path(temp_dir).resolve()

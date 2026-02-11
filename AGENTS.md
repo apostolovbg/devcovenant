@@ -67,128 +67,45 @@ document and you will get it!
 
 - We are human and AI developers working on this project together.
 - We obey every AGENTS.md and DevCovenant instruction.
-- We maintain flawless repo hygiene to prevent drift and keep integrity strong.
-- We never edit anything inside managed `<!-- DEVCOV* -->` blocks.
-- We read AGENTS.md on every task so we stay current with the development
-  policies.
-- We follow the documented workflow precisely and read README/SPEC/PLAN after
-  AGENTS.md before we start editing.
-- We proactively follow policies while working and stay happy when DevCovenant
-  is happy after edits.
-- We treat any change to repository content as an edit that must obey our
-  gates.
+- We maintain clean repository hygiene and avoid unmanaged drift.
+- We never edit content inside managed `<!-- DEVCOV* -->` blocks.
 
 ## Obligatory Workflow
-Running DevCovenant uses a fixed sequence: begin with
-`python3 devcovenant/run_pre_commit.py --phase start`,
-_only then make any edits_, then run
-`python3 devcovenant/run_tests.py`, and finish with
-`python3 devcovenant/run_pre_commit.py --phase end`. The `devflow-run-gates`
-policy records those commands; any deviation blocks progress. Discussion-only
-turns may skip tests, yet triggering the start gate still snapshots the repo
-state.
-
-This workflow is non-negotiable. Failing to follow it causes failed commits,
-extra gate reruns, and major non-compliance with repository policy.
-
-Multiple violations degrade team culture, so stay polite and courteous;
-follow the rules, keep the repository clean, and ask for help instead of
-looping whenever you cannot clear the gates.
+Run DevCovenant gates in this sequence for repository edits:
+1. `python3 -m devcovenant check --start`
+2. `python3 -m devcovenant test`
+3. `python3 -m devcovenant check --end`
 
 ## Managed Environment
-If your project lives in a managed environment, work and run DevCovenant
-from that environment (the pre-commit hook uses the devcovenant config by
-default).
-
-Follow the `managed-environment` metadata (virtualenv, bench, conda, poetry,
-etc.) for interpreters, paths, and command hints.
-
-_WARNING: IMPORTANT BEHAVIOR REMINDER:_
-
-_If a change requires services (web servers, APIs, databases,_
-_data pipelines, etc.), launch them before the test gate so the suite_
-_exercises the running stack!_
-
-Stock policies
-such as `devflow-run-gates`, `version-sync`, `dependency-license-sync`,
-`changelog-coverage`, and `managed-environment` guard critical invariants;
-consult `devcovenant/README.md` for the broader command catalog, architecture
-notes, profile guidance, and release steps before customizing their metadata.
-
-DevCovenant’s own tests live under `tests/devcovenant/...` (mirroring
-`devcovenant/core` and `devcovenant/custom`) and stay outside the installable
-package. Selector metadata (`selector_roles`, `tests_watch_dirs`, etc.) routes
-policies to those suites, so relocate tests by editing metadata instead of
-hard-coding paths.
+If a managed environment is configured, run DevCovenant from that environment.
+Start required services before the test gate so runtime checks execute against
+the active stack.
 
 ## Table of Contents
 1. [Overview](#overview)
 2. [Program Overview](#program-overview)
 3. [Workflow](#workflow)
-4. [Installer Behavior Reference](#installer-behavior-reference)
-5. [Release Readiness Review](#release-readiness-review)
-6. [Policy Management and Enforcement](#policy-management-and-enforcement)
+4. [Policy Management and Enforcement](#policy-management-and-enforcement)
 
 ## Overview
-DevCovenant translates policy prose into executable checks. This document is
-the canonical source of policy definitions and the instructions for working
-with them.
+DevCovenant converts policy prose into executable checks. This file is the
+canonical policy source and operational guide for the repository.
 
 ## Program Overview
-The engine loads policy modules under `devcovenant/core/policies/<policy>`
-with optional overrides under `devcovenant/custom/policies/<policy>`. Assets,
-adapters, and fixers sit beside the scripts, and profiles configure suffixes,
-commands, and metadata through their manifests.
+The engine loads core policies from `devcovenant/core/policies/<policy>` and
+optional overrides from `devcovenant/custom/policies/<policy>`. Profiles
+provide metadata and selectors that shape enforcement behavior.
 
 ## Workflow
-- Run `python3 devcovenant/run_pre_commit.py --phase start` before editing
-  files, perform your work, execute `python3 devcovenant/run_tests.py`, and
-  close with `python3 devcovenant/run_pre_commit.py --phase end`.
-- Use `python3 -m devcovenant` instead of `devcovenant` when the console
-  script is not on your PATH.
-- When policy text changes, refresh scripts/tests and run
-  `devcovenant update-policy-registry` so hashes stay in sync with policy
-  prose.
-- Update `THIRD_PARTY_LICENSES.md` and the `licenses/` directory whenever
-  dependency manifests (`requirements.in`, `requirements.lock`,
-  `pyproject.toml`) change so the dependency-license-sync policy passes.
-- Keep each managed doc’s “Last Updated” header current and log your work
-  in the current `CHANGELOG.md` entry before closing the gates; the
-  `no-future-dates` policy rejects post-dated timestamps.
-
-## Installer Behavior Reference
-- `AGENTS.md` comes from this template while preserving the editable section
-  created per repo.
-- `README.md` preserves user content, gains the standard header, and receives
-  a managed block for DevCovenant details.
-- `CHANGELOG.md` and `CONTRIBUTING.md` refresh their managed blocks on install
-  and are backed up as `*_old.*`.
-- Managed docs (`SPEC.md`, `PLAN.md`, etc.) remain under profile/metadata
-  control.
-- `.gitignore` merges generated fragments with user entries under a preserved
-  block, while installs record chosen profiles plus the immovable `global`,
-  `data`, `docs`, and `suffixes` profiles.
-
-## Release Readiness Review
-- Keep the gate sequence (pre-commit start → tests → pre-commit end) clean
-  whenever docs, policies, or code change; `devflow-run-gates` will flag
-  deviations.
-- Update `THIRD_PARTY_LICENSES.md`, refresh `licenses/`, and cite touched
-  manifests in the `## License Report` before tagging a release.
-- Log every touched file in the current `CHANGELOG.md` entry and refresh
-  `devcovenant/registry/local/policy_registry.yaml` via
-  `devcovenant update-policy-registry` before releasing.
-- Build artifacts locally (`python3 -m build`, `twine check dist/*`) and verify
-  `.github/workflows/publish.yml` publishes with `PYPI_API_TOKEN`.
+- Run `start`, apply edits, run tests, and finish with `end`.
+- After policy-text changes, run `devcovenant refresh`.
+- Log every change in `CHANGELOG.md` under the current version entry.
 
 ## Policy Management and Enforcement
-This section is managed by DevCovenant; installers and updates refresh it
-automatically. It describes the enforced workflow, managed-environment
-expectations, and points to `devcovenant/README.md` for commands, profiles, and
-release guidance. Detailed policy blocks follow.
-**Managed blocks**
-Managed sections are wrapped with `<!-- DEVCOV:BEGIN -->` and
-`<!-- DEVCOV:END -->`. Install/update/uninstall scripts refresh those
+The policy block below is generated by DevCovenant from policy descriptors and
+runtime metadata resolution.
+
+<!-- DEVCOV:END -->`. Install/update/uninstall scripts refresh those
 blocks while leaving surrounding content intact.
 
 
@@ -428,7 +345,7 @@ custom: false
 freeze: false
 test_status_file: devcovenant/registry/local/test_status.json
 required_commands: pytest
-  python3 -m unittest discover
+  python3 -m unittest discover -v
 require_pre_commit_start: true
 require_pre_commit_end: true
 pre_commit_command: python3 -m pre_commit run --all-files

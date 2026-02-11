@@ -19,4 +19,3 @@ recursive-include devcovenant/core/policies *
 recursive-exclude devcovenant/custom *
 recursive-exclude devcovenant/registry/local *
 recursive-exclude tests *
-recursive-exclude .devcov-state *

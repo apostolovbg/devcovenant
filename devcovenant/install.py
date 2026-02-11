@@ -189,7 +189,7 @@ def _build_parser() -> argparse.ArgumentParser:
 def run(args: argparse.Namespace) -> int:
     """Execute install command."""
     del args
-    repo_root = resolve_repo_root(Path.cwd(), require_install=False)
+    repo_root = resolve_repo_root(require_install=False)
 
     print_banner("DevCovenant run", "🚀")
     print_step("Command: install", "🧭")

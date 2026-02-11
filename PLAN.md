@@ -8,118 +8,135 @@
 **Managed By:** DevCovenant
 <!-- DEVCOV:END -->
 
-This file tracks active implementation work. `SPEC.md` is the source of
-truth for behavior and requirements.
+This plan is rebuilt from `SPEC.md` plus the latest SPEC-vs-reality audit.
+`SPEC.md` remains behavior source of truth; this file tracks execution order,
+status, and acceptance for dedrift work.
 
 ## Table of Contents
 1. [Overview](#overview)
 2. [Workflow](#workflow)
-3. [Audit Baseline](#audit-baseline)
-4. [Remaining 0.2.6 Work](#remaining-026-work)
-5. [Deferred Work](#deferred-work)
+3. [Alignment Snapshot](#alignment-snapshot)
+4. [Active 0.2.6 Dedrift Backlog](#active-026-dedrift-backlog)
+5. [Deferred 0.2.7 Work](#deferred-027-work)
 6. [Acceptance Criteria](#acceptance-criteria)
 7. [Validation Routine](#validation-routine)
 
 ## Overview
-- This plan is a rewrite aligned to the current `SPEC.md` state.
-- Keep this plan dependency-ordered and status-explicit.
-- Keep release history in `CHANGELOG.md`, not here.
+- Scope: close remaining 0.2.6 gaps where runtime behavior differs from
+  `SPEC.md`.
+- Inputs: `SPEC.md` requirements + merged drift findings that were in
+  `DRIFT.md`.
+- Rule: implement in dependency order and keep statuses explicit.
 
 ## Workflow
 - Start edit sessions with `devcovenant check --start`.
-- Implement tasks in order from this plan.
-- Run `devcovenant refresh` after descriptor/profile/config changes.
+- Implement tasks in this plan order.
+- Run `devcovenant refresh` after descriptor/profile/config edits.
 - Run `devcovenant test`.
 - End with `devcovenant check --end`.
-- If end hooks/autofixers modify files, rerun test and end until clean.
+- If hooks/autofixers change files, rerun `test` and `check --end` until
+  clean.
 
-## Audit Baseline
-- [done] Public command surface is narrowed to:
-  `check`, `test`, `install`, `deploy`, `upgrade`, `refresh`,
-  `undeploy`, `uninstall`, and `update_lock`.
-- [done] Public CLI flags are minimal and command-scoped.
+## Alignment Snapshot
+- [done] Public command surface is constrained to:
+  `check`, `test`, `install`, `deploy`, `upgrade`, `refresh`, `undeploy`,
+  `uninstall`, and `update_lock`.
+- [done] Root command modules are real implementations; no root shims.
 - [done] Managed docs are YAML-template driven with managed-block refresh.
-- [done] Registry-to-AGENTS render flow is in place.
+- [done] AGENTS policy block is registry-rendered downstream.
 - [done] Policy activation is config-driven (`policy_state`).
-- [done] Scope-key retirement work landed in descriptors/manifests.
-- [done] Legacy stock policy text restore path was removed.
-- [done] Tests run via both `pytest` and `python3 -m unittest discover`.
+- [done] Legacy stock policy text restore path is removed.
+- [done] Tests run as `python3 -m unittest discover -v` then `pytest`.
+- [done] `update_lock` is metadata-driven and policy-integrated for license
+  artifact refresh.
 
-## Remaining 0.2.6 Work
-1. [not done] Refresh internals de-legacy pass
-- Remove remaining legacy naming and references to
-  `refresh_registry`/`refresh_policies`/`refresh_all` from runtime messages,
-  docs, and tests where they leak old command semantics.
-- Keep one canonical operator command: `devcovenant refresh`.
-- Ensure suggestions in engine/policies point to `devcovenant refresh`.
+## Active 0.2.6 Dedrift Backlog
+1. [not done] `check --start/--end` full-refresh parity
+- Requirement source: `SPEC.md` full-refresh-at-check-start contract.
+- Gap: gate entry paths bypass full refresh before pre-commit gate run.
+- Deliverables:
+  - Run full `refresh_repo(...)` before both `--start` and `--end` phases.
+  - Keep gate metadata recording behavior unchanged.
+  - Add/adjust unit tests for start/end refresh invocation order.
 
-2. [not done] Root-command vs core-helper boundary cleanup
-- Keep user-action command modules at `devcovenant/` root as real
-  implementations.
-- Move/retain helper logic in `devcovenant/core/` only.
-- Remove stale internal `--target` plumbing from lifecycle helpers where
-  current-repo execution is sufficient and required by SPEC.
+2. [not done] `install` upgrade prompt when source is newer
+- Requirement source: install/upgrade model in `SPEC.md`.
+- Gap: install does not prompt to run upgrade first when packaged source is
+  newer than repo core.
+- Deliverables:
+  - Add version comparison and prompt/flow for `upgrade` handoff.
+  - Cover prompt path and non-prompt path with unit tests.
 
-3. [not done] Lifecycle simplification hardening
-- Remove residual dead branches tied to retired command variants and retired
-  mode switches.
-- Confirm `check --start` and `check --end` remain the only gate entrypoints.
-- Preserve file-path command usage for root commands.
+3. [not done] `install` existing-artifact confirmation
+- Requirement source: install safety behavior in `SPEC.md`.
+- Gap: install proceeds directly without explicit uninstall confirmation.
+- Deliverables:
+  - Detect existing DevCovenant artifacts.
+  - Refuse to proceed unless user confirms uninstall prompt flow.
+  - Add unit tests for deny/accept branches.
 
-4. [not done] Managed-doc and template drift cleanup
-- Keep managed-doc templates YAML-only and generic.
-- Remove stale references to removed templates/artifacts in tests/docs.
-- Keep refresh behavior block-scoped for existing docs and stock text scoped
-  to missing/empty/placeholder targets.
+4. [not done] install mode semantics (`auto`, `empty`)
+- Requirement source: installation requirements in `SPEC.md`.
+- Gap: command exposes only a single behavior.
+- Deliverables:
+  - Implement mode handling and defaults as specified.
+  - Keep CLI command-scoped help clean.
+  - Add unit coverage for each mode path.
 
-5. [not done] Test-suite completion for 0.2.6
-- [done] Finalize `modules-need-tests` as a repo-wide metadata-driven
-  full-audit rule for all in-scope non-test modules with tests required under
-  configured `tests/` roots.
-- [done] Enforce `devcovrepo` metadata so `devcovenant/**` is mirrored under
-  `tests/devcovenant/**`.
-- [done] Enforce `devcovuser` metadata so only `devcovenant/custom/**` is
-  mirrored
-  under `tests/devcovenant/custom/**`.
-- [done] Keep non-DevCovenant module tests user-structured under `tests/`
-  (no forced mirror layout).
-- [not done] Continue migration of remaining pytest-style-only modules into
-  explicit
-  unit-style suites while preserving pytest execution.
-- [not done] Add missing adapter unit tests for core policy adapters.
-- [done] Add regression coverage for the metadata-driven mirror behavior.
+5. [not done] profile-driven pre-commit fragment merge
+- Requirement source: pre-commit configuration by profile in `SPEC.md`.
+- Gap: no merge engine currently applies per-profile pre-commit fragments.
+- Deliverables:
+  - Implement merge order: global baseline -> active profile fragments ->
+    config overrides.
+  - Regenerate `.pre-commit-config.yaml` on deploy/upgrade/refresh.
+  - Record resolved hook set in manifest metadata.
+  - Add regression tests for representative profile combinations.
 
-6. [not done] Packaging and artifact residue cleanup
-- Remove obsolete residual artifacts still present in tree
-  (for example, retired GPL template leftovers) when not used by runtime.
-- Verify manifests and packaging rules contain only active artifacts.
-- Keep runtime registry state under `devcovenant/registry/local`.
+6. [not done] `.gitignore` generation and merge lifecycle
+- Requirement source: installation and undeploy requirements in `SPEC.md`.
+- Gap: refresh/deploy do not regenerate `.gitignore`; undeploy does not
+  revert generated fragments.
+- Deliverables:
+  - Implement generated fragment synthesis from global/profile/OS assets.
+  - Preserve user-managed entries under preserved block semantics.
+  - Implement undeploy cleanup for generated fragments.
+  - Add unit tests for generate/merge/revert flows.
 
-7. [not done] Pre-commit config refactor finalization
-- Finish the profile-fragment merge audit described in
-  `SPEC.md` (Pre-commit configuration by profile).
-- Verify manifest/profile-registry/pre-commit outputs stay aligned.
-- Add regression cases for representative profile combinations.
+7. [not done] packaging manifest dedrift
+- Requirement source: packaging rules in `SPEC.md`.
+- Gap: `MANIFEST.in` still includes repo-root managed docs that spec forbids.
+- Deliverables:
+  - Remove forbidden root managed docs from `MANIFEST.in` includes.
+  - Keep required package metadata files and `devcovenant/` docs/assets.
+  - Add/adjust packaging manifest unit checks.
 
-## Deferred Work
-1. [not done] 0.2.7 metadata DSL expansion
-- Continue moving reusable policy metadata knobs from hard-coded logic into
+8. [not done] close-loop dedrift verification
+- Requirement source: plan governance quality.
+- Gap: remaining drift must be re-audited after implementation.
+- Deliverables:
+  - Re-run SPEC-vs-reality audit after items 1-7.
+  - Resolve any residual mismatches or log them as explicit deferred items.
+  - Keep this plan as the single dedrift backlog document.
+
+## Deferred 0.2.7 Work
+1. [not done] Metadata DSL expansion
+- Continue moving reusable policy/runtime knobs from hardcoded logic into
   descriptor/profile/config-driven structures.
-- Keep custom policy escape hatches intact for repo-specific behavior.
+- Keep custom policy and custom profile escape hatches explicit.
 
 ## Acceptance Criteria
-- `PLAN.md` remains aligned to the current `SPEC.md`.
-- Remaining 0.2.6 work items are implemented with tests.
-- Runtime/help/docs contain no operator-facing legacy refresh command names.
-- Lifecycle internals are current-repo oriented without public target flags.
-- Adapter coverage exists and runs in both pytest and unittest flows.
-- Gate sequence (`start -> tests -> end`) passes cleanly.
+- Active 0.2.6 backlog items are implemented with unit coverage.
+- `PLAN.md` remains aligned with current `SPEC.md`.
+- Runtime behavior matches spec for install/deploy/upgrade/refresh/check/test.
+- Generated docs and registries pass policy enforcement with no blocking
+  violations.
+- Gate sequence (`start -> test -> end`) passes cleanly.
 
 ## Validation Routine
-- Run: `devcovenant check --start`.
-- Run: `devcovenant test`.
-- Run: `devcovenant check --end`.
-- Validate `devcovenant refresh` as the only operator refresh command.
-- Validate `python3 devcovenant/check.py --start` and
-  `python3 devcovenant/check.py --end`.
-- Validate docs policies and changelog coverage on the final tree.
+- Run `devcovenant check --start`.
+- Run `devcovenant test`.
+- Run `devcovenant check --end`.
+- Validate command help remains command-scoped.
+- Validate `devcovenant refresh` as canonical operator refresh command.
+- Validate changelog coverage and managed-doc policies on final tree.

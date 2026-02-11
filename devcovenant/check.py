@@ -42,12 +42,6 @@ def _build_parser() -> argparse.ArgumentParser:
         action="store_true",
         help="Run pre-commit and record end gate metadata.",
     )
-    parser.add_argument(
-        "--mode",
-        choices=["normal", "pre-commit", "startup", "lint"],
-        default="normal",
-        help=argparse.SUPPRESS,
-    )
     return parser
 
 
@@ -61,7 +55,7 @@ def _run_gate(repo_root: Path, phase: str) -> int:
     return exit_code
 
 
-def _run_check(repo_root: Path, apply_fixes: bool, mode: str) -> int:
+def _run_check(repo_root: Path, apply_fixes: bool) -> int:
     """Run policy checks through the engine."""
     print_banner("DevCovenant run", "🚀")
     print_step("Command: check", "🧭")
@@ -82,7 +76,7 @@ def _run_check(repo_root: Path, apply_fixes: bool, mode: str) -> int:
 
     print_banner("Policy checks", "🔍")
     print_step("Running policy checks", "▶️")
-    result = engine.check(mode=mode, apply_fixes=apply_fixes)
+    result = engine.check(mode="normal", apply_fixes=apply_fixes)
     print_step("Policy checks complete", "🏁")
 
     if result.should_block:
@@ -94,12 +88,12 @@ def _run_check(repo_root: Path, apply_fixes: bool, mode: str) -> int:
 
 def run(args: argparse.Namespace) -> int:
     """Execute check command."""
-    repo_root = resolve_repo_root(Path.cwd(), require_install=True)
+    repo_root = resolve_repo_root(require_install=True)
     if args.start:
         return _run_gate(repo_root, "start")
     if args.end:
         return _run_gate(repo_root, "end")
-    return _run_check(repo_root, apply_fixes=not args.nofix, mode=args.mode)
+    return _run_check(repo_root, apply_fixes=not args.nofix)
 
 
 def main(argv: list[str] | None = None) -> None:

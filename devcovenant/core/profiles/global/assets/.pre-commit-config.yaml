@@ -35,7 +35,7 @@ repos:
     hooks:
       - id: devcovenant
         name: enforce repository policies (DevCovenant)
-        entry: python3 -m devcovenant.cli check --mode=pre-commit
+        entry: python3 -m devcovenant.cli check
         language: python
         additional_dependencies:
           - PyYAML==6.0.2

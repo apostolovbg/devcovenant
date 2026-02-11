@@ -117,7 +117,7 @@ autogen_metadata_overrides:
   devflow-run-gates:
     required_commands:
     - pytest
-    - python3 -m unittest discover
+    - python3 -m unittest discover -v
     skipped_globs:
     - devcovenant/registry/local/**
   changelog-coverage:

@@ -6,11 +6,11 @@ import tempfile
 import unittest
 from pathlib import Path
 
-import pytest
 import yaml
 
 from devcovenant.core.engine import DevCovenantEngine
 from devcovenant.core.parser import PolicyDefinition
+from tests.devcovenant.support import MonkeyPatch
 
 
 def _unit_test_engine_initialization():
@@ -257,7 +257,7 @@ class GeneratedUnittestCases(unittest.TestCase):
 
     def test_policy_state_disables_policy_even_if_registry_enables(self):
         """Run test_policy_state_disables_policy_even_if_registry_enables."""
-        monkeypatch = pytest.MonkeyPatch()
+        monkeypatch = MonkeyPatch()
         try:
             with tempfile.TemporaryDirectory() as temp_dir:
                 tmp_path = Path(temp_dir).resolve()
@@ -268,7 +268,7 @@ class GeneratedUnittestCases(unittest.TestCase):
 
     def test_policy_state_enables_policy_even_if_registry_disables(self):
         """Run test_policy_state_enables_policy_even_if_registry_disables."""
-        monkeypatch = pytest.MonkeyPatch()
+        monkeypatch = MonkeyPatch()
         try:
             with tempfile.TemporaryDirectory() as temp_dir:
                 tmp_path = Path(temp_dir).resolve()

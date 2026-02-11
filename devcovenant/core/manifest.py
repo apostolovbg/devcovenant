@@ -48,7 +48,6 @@ DEFAULT_CORE_FILES = [
     "devcovenant/README.md",
     "devcovenant/VERSION",
     f"{GLOBAL_REGISTRY_DIR}/policy_replacements.yaml",
-    "devcovenant/core/cli_options.py",
     "devcovenant/core/profiles/global/assets/.pre-commit-config.yaml",
     "devcovenant/core/profiles/global/assets/.github/workflows/ci.yml",
     "devcovenant/core/profiles/global/assets/gitignore_base.txt",

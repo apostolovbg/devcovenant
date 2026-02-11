@@ -28,7 +28,7 @@ python3 -m devcovenant check --end
 The start and end gates record timestamps in the local registry.
 
 ## Test Runner
-`devcovenant test` executes `python3 -m unittest discover` first, then
+`devcovenant test` executes `python3 -m unittest discover -v` first, then
 pytest, to keep coverage consistent across suites.
 The runner records status so policies can verify that tests ran.
 

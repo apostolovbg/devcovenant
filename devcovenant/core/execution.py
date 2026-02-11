@@ -13,10 +13,10 @@ from devcovenant import __version__ as package_version
 from devcovenant.core import manifest as manifest_module
 
 DEFAULT_COMMANDS = [
-    ["python3", "-m", "unittest", "discover"],
+    ["python3", "-m", "unittest", "discover", "-v"],
     ["pytest"],
 ]
-DEFAULT_COMMAND_STRINGS = ["python3 -m unittest discover", "pytest"]
+DEFAULT_COMMAND_STRINGS = ["python3 -m unittest discover -v", "pytest"]
 
 
 def print_banner(title: str, emoji: str) -> None:
@@ -40,9 +40,9 @@ def find_git_root(path: Path) -> Path | None:
     return None
 
 
-def resolve_repo_root(path: Path, *, require_install: bool = False) -> Path:
-    """Resolve and validate the target git repository root."""
-    repo_root = find_git_root(path)
+def resolve_repo_root(*, require_install: bool = False) -> Path:
+    """Resolve and validate the current git repository root."""
+    repo_root = find_git_root(Path.cwd())
     if repo_root is None:
         raise SystemExit(
             "DevCovenant commands must run inside a git repository."
@@ -86,9 +86,9 @@ def run_bootstrap_registry_refresh(repo_root: Path) -> None:
     """Run lightweight registry refresh for command startup."""
     print_step("Refreshing local registry", "🔄")
     try:
-        from devcovenant.core.repo_refresh import refresh_registry
+        from devcovenant.core.repo_refresh import refresh_policy_registry
 
-        refresh_registry(repo_root, skip_freeze=True)
+        refresh_policy_registry(repo_root, skip_freeze=True)
         print_step("Registry refresh complete", "✅")
     except Exception as exc:  # pragma: no cover - defensive
         print_step(f"Registry refresh skipped ({exc})", "⚠️")
@@ -166,7 +166,7 @@ def _prioritize_python_unit_then_pytest(
 
     for raw, tokens in commands:
         token_str = " ".join(tokens).strip().lower()
-        if token_str == "python3 -m unittest discover":
+        if token_str == "python3 -m unittest discover -v":
             unittest_entry = (raw, tokens)
             continue
         if token_str == "pytest":
@@ -252,7 +252,7 @@ def run_and_record_tests(repo_root: Path, notes: str = "") -> int:
     for raw, command in commands:
         print(f"Running: {' '.join(command)}")
         allow_codes = {0}
-        if command[1:] == ["-m", "unittest", "discover"]:
+        if command[:4] == ["python3", "-m", "unittest", "discover"]:
             allow_codes.add(5)
         _run_command(command, allow_codes=allow_codes)
 

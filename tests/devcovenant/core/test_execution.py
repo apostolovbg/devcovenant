@@ -45,8 +45,8 @@ class GeneratedUnittestCases(unittest.TestCase):
         commands = [
             ("pytest", ["pytest"]),
             (
-                "python3 -m unittest discover",
-                ["python3", "-m", "unittest", "discover"],
+                "python3 -m unittest discover -v",
+                ["python3", "-m", "unittest", "discover", "-v"],
             ),
             ("cargo test", ["cargo", "test"]),
         ]
@@ -55,8 +55,8 @@ class GeneratedUnittestCases(unittest.TestCase):
             ordered,
             [
                 (
-                    "python3 -m unittest discover",
-                    ["python3", "-m", "unittest", "discover"],
+                    "python3 -m unittest discover -v",
+                    ["python3", "-m", "unittest", "discover", "-v"],
                 ),
                 ("pytest", ["pytest"]),
                 ("cargo test", ["cargo", "test"]),
@@ -82,7 +82,7 @@ class GeneratedUnittestCases(unittest.TestCase):
                         "metadata": {
                             "required_commands": [
                                 "pytest",
-                                "python3 -m unittest discover",
+                                "python3 -m unittest discover -v",
                             ]
                         }
                     }
@@ -91,5 +91,5 @@ class GeneratedUnittestCases(unittest.TestCase):
 
             commands = execution.registry_required_commands(repo_root)
 
-            self.assertEqual(commands[0][0], "python3 -m unittest discover")
+            self.assertEqual(commands[0][0], "python3 -m unittest discover -v")
             self.assertEqual(commands[1][0], "pytest")

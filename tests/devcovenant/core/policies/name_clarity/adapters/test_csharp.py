@@ -1,12 +1,31 @@
-"""Auto-generated unittest skeleton for
-enforcement coverage."""
+"""Unit tests for the C# name clarity adapter."""
 
 import unittest
+from pathlib import Path
+
+from devcovenant.core.policies.name_clarity.adapters import csharp as adapter
 
 
 class GeneratedUnittestCases(unittest.TestCase):
-    """Placeholder unittest coverage for mirrored module paths."""
+    """unittest coverage for the C# adapter."""
 
-    def test_placeholder(self):
-        """Keep mirrored test path present until focused tests are added."""
-        self.assertTrue(True)
+    def test_flags_generic_identifier(self):
+        """Generic variable names should be reported."""
+        source = "int tmp = 1;\n"
+        violations = adapter.check_file(
+            path=Path("Worker.cs"),
+            source=source,
+            policy_id="name-clarity",
+        )
+        self.assertEqual(1, len(violations))
+        self.assertEqual(1, violations[0].line_number)
+
+    def test_honors_allow_comment(self):
+        """Allowed lines should not emit violations."""
+        source = "int tmp = 1; // name-clarity: allow\n"
+        violations = adapter.check_file(
+            path=Path("Worker.cs"),
+            source=source,
+            policy_id="name-clarity",
+        )
+        self.assertEqual([], violations)

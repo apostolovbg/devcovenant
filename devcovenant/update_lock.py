@@ -1,55 +1,75 @@
-"""Generate deterministic lockfiles without churning metadata.
-
-This helper wraps :mod:`piptools` so the ``make lock`` target only rewrites
-``requirements.lock`` when dependency contents change. The previous
-workflow bumped a ``Last Updated`` banner on every run, forcing noisy diffs
-even when the dependency graph stayed identical. The banner is now removed
-to align with the restricted metadata allowlist while keeping the compiled
-body stable across Python versions.
-"""
+"""Refresh dependency lockfiles and license artifacts from metadata."""
 
 from __future__ import annotations
 
 import argparse
 import hashlib
 import importlib.util
+import shutil
 import subprocess
 import sys
 import tempfile
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Iterable, List, Sequence
+from typing import Callable, Dict, Iterable, List, Sequence, Tuple
+
+if __package__ in {None, ""}:  # pragma: no cover
+    sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
+
+from devcovenant.core.policies.dependency_license_sync import (
+    dependency_license_sync,
+)
+from devcovenant.core.policy_descriptor import (
+    load_policy_descriptor,
+    resolve_script_location,
+)
+from devcovenant.core.repo_refresh import (
+    build_metadata_context,
+    metadata_value_list,
+    resolve_policy_metadata_map,
+)
 
 ROOT = Path.cwd()
+POLICY_ID = "dependency-license-sync"
 
 
 @dataclass(frozen=True)
 class LockFilePieces:
-    """Describe the pieces of a ``requirements.lock`` snapshot."""
+    """Describe the body of a generated requirements.lock snapshot."""
 
     body: List[str]
 
 
+@dataclass(frozen=True)
+class LockHandlerResult:
+    """Outcome from one lockfile refresh strategy."""
+
+    lock_file: str
+    changed: bool
+    attempted: bool
+    message: str
+
+
 def _cache_dir(root: Path) -> Path:
-    """Return the location used for transient cache metadata."""
+    """Return location used for transient dependency hash metadata."""
 
     return root / ".cache"
 
 
 def _input_hash_path(root: Path) -> Path:
-    """Return the cached hash path for ``requirements.in``."""
+    """Return the path storing the last requirements.in hash."""
 
     return _cache_dir(root) / "requirements.in.hash"
 
 
 def _ensure_cache_dir(root: Path) -> None:
-    """Create the cache directory if it is missing."""
+    """Create cache directory when missing."""
 
     _cache_dir(root).mkdir(parents=True, exist_ok=True)
 
 
 def _read_cached_input_hash(root: Path) -> str | None:
-    """Return the stored hash for ``requirements.in`` if available."""
+    """Return stored requirements.in hash when available."""
 
     path = _input_hash_path(root)
     if not path.exists():
@@ -58,73 +78,57 @@ def _read_cached_input_hash(root: Path) -> str | None:
 
 
 def _write_cached_input_hash(root: Path, hash_digest: str) -> None:
-    """Persist the current ``requirements.in`` hash for future runs."""
+    """Persist requirements.in hash for future unchanged checks."""
 
     _ensure_cache_dir(root)
     _input_hash_path(root).write_text(hash_digest, encoding="utf-8")
 
 
-def _compute_requirements_hash(path: Path) -> str:
-    """Return a stable digest for the input requirements."""
+def _compute_file_hash(path: Path) -> str:
+    """Return a stable hash digest for a file."""
 
     return hashlib.sha256(path.read_bytes()).hexdigest()
 
 
-def ensure_piptools_available() -> None:
-    """Abort with guidance when :mod:`piptools` is unavailable."""
+def _file_hash_or_missing(path: Path) -> str:
+    """Return digest string, with placeholder when file is absent."""
 
-    # ``pip-compile`` ships inside the ``piptools`` package.  Import discovery
-    # keeps the helper safe to import even when the optional dependency is
-    # absent, so the unit tests can monkeypatch ``run_pip_compile`` without
-    # tripping the process-wide ``SystemExit`` that previously fired at module
-    # import time.
-    if importlib.util.find_spec("piptools") is None:
-        raise SystemExit(
-            "pip-tools is required to regenerate requirements.lock. Install "
-            "the repository's pinned version with `python -m pip install "
-            "pip-tools==7.4.1`."
-        )
+    if not path.exists():
+        return "__missing__"
+    return _compute_file_hash(path)
 
 
-def ensure_inputs(root: Path) -> tuple[Path, Path]:
-    """Return the ``requirements`` inputs and ensure they exist."""
+def _ensure_tool(command_name: str) -> bool:
+    """Return True when a command is available on PATH."""
 
-    req_in = root / "requirements.in"
-    lock_path = root / "requirements.lock"
-    if not req_in.exists():
-        raise SystemExit(
-            "requirements.in is missing; run the helper from the repository "
-            "root or provide --root with a valid project directory."
-        )
-    return req_in, lock_path
+    return shutil.which(command_name) is not None
 
 
-def run_pip_compile(
-    root: Path, requirements_in: Path, output_path: Path
-) -> None:
-    """Invoke ``pip-compile`` with the repository's canonical flags."""
+def _run_command(repo_root: Path, args: Sequence[str]) -> None:
+    """Run one lockfile command and raise on failure."""
 
-    ensure_piptools_available()
     subprocess.run(
-        [
-            sys.executable,
-            "-m",
-            "piptools",
-            "compile",
-            "--quiet",
-            "--allow-unsafe",
-            "--strip-extras",
-            "--output-file",
-            str(output_path),
-            requirements_in.name,
-        ],
-        cwd=root,
+        list(args),
+        cwd=repo_root,
         check=True,
+        text=True,
+        capture_output=True,
     )
 
 
-def normalise_header(lines: Sequence[str]) -> List[str]:
-    """Stabilise ``pip-compile`` banners across Python versions."""
+def _run_and_detect_change(
+    repo_root: Path, lock_path: Path, command: Sequence[str]
+) -> bool:
+    """Run command and return True when target lockfile changed."""
+
+    before = _file_hash_or_missing(lock_path)
+    _run_command(repo_root, command)
+    after = _file_hash_or_missing(lock_path)
+    return before != after
+
+
+def _normalise_header(lines: Sequence[str]) -> List[str]:
+    """Stabilise pip-compile banners across Python versions."""
 
     python_banner = "# This file is autogenerated by pip-compile"
     target = (
@@ -145,8 +149,8 @@ def normalise_header(lines: Sequence[str]) -> List[str]:
     return result
 
 
-def split_last_updated(lines: Iterable[str]) -> LockFilePieces:
-    """Separate the optional ``Last Updated`` banner from the body."""
+def _split_last_updated(lines: Iterable[str]) -> LockFilePieces:
+    """Drop optional Last Updated banner from lockfile body."""
 
     collected = list(lines)
     if collected and collected[0].startswith("# Last Updated:"):
@@ -154,68 +158,561 @@ def split_last_updated(lines: Iterable[str]) -> LockFilePieces:
     return LockFilePieces(collected)
 
 
-def compile_new_lock(root: Path, requirements_in: Path) -> LockFilePieces:
-    """Generate a normalised lockfile snapshot without touching disk."""
+def _compile_requirements_lock(
+    repo_root: Path, requirements_in: Path
+) -> LockFilePieces:
+    """Generate normalised requirements.lock content without touching disk."""
 
     with tempfile.TemporaryDirectory() as tmpdir:
         tmp_lock = Path(tmpdir) / "requirements.lock"
-        run_pip_compile(root, requirements_in, tmp_lock)
-        normalised = normalise_header(tmp_lock.read_text().splitlines())
-    return split_last_updated(normalised)
+        _run_pip_compile(repo_root, requirements_in, tmp_lock)
+        normalised = _normalise_header(tmp_lock.read_text().splitlines())
+    return _split_last_updated(normalised)
 
 
-def read_existing_lock(lock_path: Path) -> LockFilePieces:
-    """Return the current ``requirements.lock`` pieces, if any."""
+def _run_pip_compile(
+    repo_root: Path, requirements_in: Path, output_path: Path
+) -> None:
+    """Run pip-compile with the repository's canonical options."""
 
-    if not lock_path.exists():
-        return LockFilePieces([])
-    return split_last_updated(lock_path.read_text().splitlines())
+    if importlib.util.find_spec("piptools") is None:
+        raise RuntimeError(
+            "pip-tools is required for requirements.lock updates."
+        )
+    _run_command(
+        repo_root,
+        (
+            sys.executable,
+            "-m",
+            "piptools",
+            "compile",
+            "--quiet",
+            "--allow-unsafe",
+            "--strip-extras",
+            "--output-file",
+            str(output_path),
+            requirements_in.name,
+        ),
+    )
 
 
-def write_lock(lock_path: Path, body: Sequence[str]) -> None:
-    """Persist the reconstructed lockfile without metadata banners."""
+def _refresh_python_requirements_lock(repo_root: Path) -> LockHandlerResult:
+    """Refresh requirements.lock from requirements.in."""
 
-    lock_path.write_text("\n".join(body) + "\n", encoding="utf-8")
+    req_in = repo_root / "requirements.in"
+    lock_path = repo_root / "requirements.lock"
+    if not req_in.exists():
+        return LockHandlerResult(
+            "requirements.lock",
+            changed=False,
+            attempted=False,
+            message="Skipped: requirements.in missing.",
+        )
 
+    current_hash = _compute_file_hash(req_in)
+    cached_hash = _read_cached_input_hash(repo_root)
+    if cached_hash == current_hash and lock_path.exists():
+        return LockHandlerResult(
+            "requirements.lock",
+            changed=False,
+            attempted=False,
+            message="Skipped: requirements.in unchanged.",
+        )
 
-def update_lockfile(root: Path, force: bool = False) -> bool:
-    """Refresh ``requirements.lock`` and return ``True`` when it changed."""
-
-    requirements_in, lock_path = ensure_inputs(root)
-    previous = read_existing_lock(lock_path)
-    current_hash = _compute_requirements_hash(requirements_in)
-    cached_hash = _read_cached_input_hash(root)
-    if not force and cached_hash == current_hash and lock_path.exists():
-        return False
-    compiled = compile_new_lock(root, requirements_in)
-    _write_cached_input_hash(root, current_hash)
+    previous = (
+        _split_last_updated(lock_path.read_text().splitlines())
+        if lock_path.exists()
+        else LockFilePieces([])
+    )
+    compiled = _compile_requirements_lock(repo_root, req_in)
+    _write_cached_input_hash(repo_root, current_hash)
     if previous.body == compiled.body:
-        return False
-    write_lock(lock_path, compiled.body)
-    return True
+        return LockHandlerResult(
+            "requirements.lock",
+            changed=False,
+            attempted=True,
+            message="No content change after pip-compile.",
+        )
+    lock_path.write_text("\n".join(compiled.body) + "\n", encoding="utf-8")
+    return LockHandlerResult(
+        "requirements.lock",
+        changed=True,
+        attempted=True,
+        message="Updated requirements.lock.",
+    )
 
 
-def parse_args(argv: Sequence[str] | None = None) -> argparse.Namespace:
-    """Return command-line arguments for the helper."""
+def _refresh_npm_lock(repo_root: Path) -> LockHandlerResult:
+    """Refresh package-lock.json from package.json."""
+
+    package_json = repo_root / "package.json"
+    lock_path = repo_root / "package-lock.json"
+    if not package_json.exists():
+        return LockHandlerResult(
+            "package-lock.json",
+            changed=False,
+            attempted=False,
+            message="Skipped: package.json missing.",
+        )
+    if not _ensure_tool("npm"):
+        return LockHandlerResult(
+            "package-lock.json",
+            changed=False,
+            attempted=False,
+            message="Skipped: npm not installed.",
+        )
+    changed = _run_and_detect_change(
+        repo_root,
+        lock_path,
+        ("npm", "install", "--package-lock-only"),
+    )
+    message = "Updated package-lock.json." if changed else "No change."
+    return LockHandlerResult("package-lock.json", changed, True, message)
+
+
+def _refresh_yarn_lock(repo_root: Path) -> LockHandlerResult:
+    """Refresh yarn.lock from package.json."""
+
+    package_json = repo_root / "package.json"
+    lock_path = repo_root / "yarn.lock"
+    if not package_json.exists():
+        return LockHandlerResult(
+            "yarn.lock",
+            changed=False,
+            attempted=False,
+            message="Skipped: package.json missing.",
+        )
+    if not _ensure_tool("yarn"):
+        return LockHandlerResult(
+            "yarn.lock",
+            changed=False,
+            attempted=False,
+            message="Skipped: yarn not installed.",
+        )
+    changed = _run_and_detect_change(
+        repo_root,
+        lock_path,
+        ("yarn", "install", "--mode=update-lockfile"),
+    )
+    message = "Updated yarn.lock." if changed else "No change."
+    return LockHandlerResult("yarn.lock", changed, True, message)
+
+
+def _refresh_pnpm_lock(repo_root: Path) -> LockHandlerResult:
+    """Refresh pnpm-lock.yaml from package.json."""
+
+    package_json = repo_root / "package.json"
+    lock_path = repo_root / "pnpm-lock.yaml"
+    if not package_json.exists():
+        return LockHandlerResult(
+            "pnpm-lock.yaml",
+            changed=False,
+            attempted=False,
+            message="Skipped: package.json missing.",
+        )
+    if not _ensure_tool("pnpm"):
+        return LockHandlerResult(
+            "pnpm-lock.yaml",
+            changed=False,
+            attempted=False,
+            message="Skipped: pnpm not installed.",
+        )
+    changed = _run_and_detect_change(
+        repo_root,
+        lock_path,
+        ("pnpm", "install", "--lockfile-only"),
+    )
+    message = "Updated pnpm-lock.yaml." if changed else "No change."
+    return LockHandlerResult("pnpm-lock.yaml", changed, True, message)
+
+
+def _refresh_go_sum(repo_root: Path) -> LockHandlerResult:
+    """Refresh go.sum from go.mod."""
+
+    go_mod = repo_root / "go.mod"
+    lock_path = repo_root / "go.sum"
+    if not go_mod.exists():
+        return LockHandlerResult(
+            "go.sum",
+            changed=False,
+            attempted=False,
+            message="Skipped: go.mod missing.",
+        )
+    if not _ensure_tool("go"):
+        return LockHandlerResult(
+            "go.sum",
+            changed=False,
+            attempted=False,
+            message="Skipped: go not installed.",
+        )
+    changed = _run_and_detect_change(
+        repo_root, lock_path, ("go", "mod", "tidy")
+    )
+    message = "Updated go.sum." if changed else "No change."
+    return LockHandlerResult("go.sum", changed, True, message)
+
+
+def _refresh_cargo_lock(repo_root: Path) -> LockHandlerResult:
+    """Refresh Cargo.lock from Cargo.toml."""
+
+    cargo_toml = repo_root / "Cargo.toml"
+    lock_path = repo_root / "Cargo.lock"
+    if not cargo_toml.exists():
+        return LockHandlerResult(
+            "Cargo.lock",
+            changed=False,
+            attempted=False,
+            message="Skipped: Cargo.toml missing.",
+        )
+    if not _ensure_tool("cargo"):
+        return LockHandlerResult(
+            "Cargo.lock",
+            changed=False,
+            attempted=False,
+            message="Skipped: cargo not installed.",
+        )
+    changed = _run_and_detect_change(
+        repo_root, lock_path, ("cargo", "generate-lockfile")
+    )
+    message = "Updated Cargo.lock." if changed else "No change."
+    return LockHandlerResult("Cargo.lock", changed, True, message)
+
+
+def _refresh_composer_lock(repo_root: Path) -> LockHandlerResult:
+    """Refresh composer.lock from composer.json."""
+
+    composer_json = repo_root / "composer.json"
+    lock_path = repo_root / "composer.lock"
+    if not composer_json.exists():
+        return LockHandlerResult(
+            "composer.lock",
+            changed=False,
+            attempted=False,
+            message="Skipped: composer.json missing.",
+        )
+    if not _ensure_tool("composer"):
+        return LockHandlerResult(
+            "composer.lock",
+            changed=False,
+            attempted=False,
+            message="Skipped: composer not installed.",
+        )
+    changed = _run_and_detect_change(
+        repo_root,
+        lock_path,
+        ("composer", "update", "--lock", "--no-install"),
+    )
+    message = "Updated composer.lock." if changed else "No change."
+    return LockHandlerResult("composer.lock", changed, True, message)
+
+
+def _refresh_gemfile_lock(repo_root: Path) -> LockHandlerResult:
+    """Refresh Gemfile.lock from Gemfile."""
+
+    gemfile = repo_root / "Gemfile"
+    lock_path = repo_root / "Gemfile.lock"
+    if not gemfile.exists():
+        return LockHandlerResult(
+            "Gemfile.lock",
+            changed=False,
+            attempted=False,
+            message="Skipped: Gemfile missing.",
+        )
+    if not _ensure_tool("bundle"):
+        return LockHandlerResult(
+            "Gemfile.lock",
+            changed=False,
+            attempted=False,
+            message="Skipped: bundler not installed.",
+        )
+    changed = _run_and_detect_change(repo_root, lock_path, ("bundle", "lock"))
+    message = "Updated Gemfile.lock." if changed else "No change."
+    return LockHandlerResult("Gemfile.lock", changed, True, message)
+
+
+def _refresh_pubspec_lock(repo_root: Path) -> LockHandlerResult:
+    """Refresh pubspec.lock from pubspec.yaml."""
+
+    pubspec = repo_root / "pubspec.yaml"
+    lock_path = repo_root / "pubspec.lock"
+    if not pubspec.exists():
+        return LockHandlerResult(
+            "pubspec.lock",
+            changed=False,
+            attempted=False,
+            message="Skipped: pubspec.yaml missing.",
+        )
+    if _ensure_tool("flutter"):
+        changed = _run_and_detect_change(
+            repo_root, lock_path, ("flutter", "pub", "get")
+        )
+        message = (
+            "Updated pubspec.lock via flutter." if changed else "No change."
+        )
+        return LockHandlerResult("pubspec.lock", changed, True, message)
+    if _ensure_tool("dart"):
+        changed = _run_and_detect_change(
+            repo_root, lock_path, ("dart", "pub", "get")
+        )
+        message = "Updated pubspec.lock via dart." if changed else "No change."
+        return LockHandlerResult("pubspec.lock", changed, True, message)
+    return LockHandlerResult(
+        "pubspec.lock",
+        changed=False,
+        attempted=False,
+        message="Skipped: neither flutter nor dart is installed.",
+    )
+
+
+def _refresh_podfile_lock(repo_root: Path) -> LockHandlerResult:
+    """Refresh Podfile.lock from Podfile."""
+
+    podfile = repo_root / "Podfile"
+    lock_path = repo_root / "Podfile.lock"
+    if not podfile.exists():
+        return LockHandlerResult(
+            "Podfile.lock",
+            changed=False,
+            attempted=False,
+            message="Skipped: Podfile missing.",
+        )
+    if not _ensure_tool("pod"):
+        return LockHandlerResult(
+            "Podfile.lock",
+            changed=False,
+            attempted=False,
+            message="Skipped: cocoapods is not installed.",
+        )
+    changed = _run_and_detect_change(
+        repo_root,
+        lock_path,
+        ("pod", "install", "--no-repo-update"),
+    )
+    message = "Updated Podfile.lock." if changed else "No change."
+    return LockHandlerResult("Podfile.lock", changed, True, message)
+
+
+def _refresh_dotnet_lock(repo_root: Path) -> LockHandlerResult:
+    """Refresh packages.lock.json when .NET projects are present."""
+
+    lock_path = repo_root / "packages.lock.json"
+    csproj_files = list(repo_root.glob("*.csproj"))
+    if not csproj_files:
+        return LockHandlerResult(
+            "packages.lock.json",
+            changed=False,
+            attempted=False,
+            message="Skipped: no top-level *.csproj file found.",
+        )
+    if not _ensure_tool("dotnet"):
+        return LockHandlerResult(
+            "packages.lock.json",
+            changed=False,
+            attempted=False,
+            message="Skipped: dotnet not installed.",
+        )
+    changed = _run_and_detect_change(
+        repo_root,
+        lock_path,
+        ("dotnet", "restore", "--use-lock-file"),
+    )
+    message = "Updated packages.lock.json." if changed else "No change."
+    return LockHandlerResult("packages.lock.json", changed, True, message)
+
+
+LOCKFILE_HANDLERS: Dict[str, Callable[[Path], LockHandlerResult]] = {
+    "requirements.lock": _refresh_python_requirements_lock,
+    "package-lock.json": _refresh_npm_lock,
+    "yarn.lock": _refresh_yarn_lock,
+    "pnpm-lock.yaml": _refresh_pnpm_lock,
+    "go.sum": _refresh_go_sum,
+    "Cargo.lock": _refresh_cargo_lock,
+    "composer.lock": _refresh_composer_lock,
+    "Gemfile.lock": _refresh_gemfile_lock,
+    "pubspec.lock": _refresh_pubspec_lock,
+    "Podfile.lock": _refresh_podfile_lock,
+    "packages.lock.json": _refresh_dotnet_lock,
+}
+
+
+def _csv_to_list(raw_value: str) -> List[str]:
+    """Expand a comma-separated metadata string into a clean list."""
+
+    items = []
+    for token in str(raw_value or "").split(","):
+        cleaned = token.strip()
+        if cleaned and cleaned != "__none__":
+            items.append(cleaned)
+    return items
+
+
+def _descriptor_metadata_lists(
+    repo_root: Path,
+    policy_id: str,
+) -> Tuple[List[str], Dict[str, List[str]]]:
+    """Load descriptor defaults into order/list map representation."""
+
+    descriptor = load_policy_descriptor(repo_root, policy_id)
+    if descriptor is None:
+        return [], {}
+    order: List[str] = []
+    values: Dict[str, List[str]] = {}
+    for key, raw_value in descriptor.metadata.items():
+        key_name = str(key).strip()
+        if not key_name:
+            continue
+        order.append(key_name)
+        values[key_name] = metadata_value_list(raw_value)
+    return order, values
+
+
+def _resolve_dependency_metadata(repo_root: Path) -> Dict[str, object]:
+    """Resolve dependency-license-sync metadata from profiles and config."""
+
+    order, values = _descriptor_metadata_lists(repo_root, POLICY_ID)
+    descriptor = load_policy_descriptor(repo_root, POLICY_ID)
+    context = build_metadata_context(repo_root)
+    location = resolve_script_location(repo_root, POLICY_ID)
+    core_available = (
+        repo_root
+        / "devcovenant"
+        / "core"
+        / "policies"
+        / "dependency_license_sync"
+        / "dependency_license_sync.py"
+    ).exists()
+    custom_policy = bool(location and location.kind == "custom")
+    _, resolved = resolve_policy_metadata_map(
+        POLICY_ID,
+        order,
+        values,
+        descriptor,
+        context,
+        core_available=core_available,
+        custom_policy=custom_policy,
+    )
+    dependency_files = _csv_to_list(resolved.get("dependency_files", ""))
+    return {
+        "dependency_files": dependency_files,
+        "third_party_file": str(
+            resolved.get(
+                "third_party_file",
+                str(dependency_license_sync.THIRD_PARTY),
+            )
+        ).strip(),
+        "licenses_dir": str(
+            resolved.get(
+                "licenses_dir",
+                dependency_license_sync.LICENSES_DIR,
+            )
+        ).strip(),
+        "report_heading": str(
+            resolved.get(
+                "report_heading",
+                dependency_license_sync.LICENSE_REPORT_HEADING,
+            )
+        ).strip(),
+    }
+
+
+def refresh_locks_and_licenses(
+    repo_root: Path,
+) -> Tuple[List[LockHandlerResult], List[Path]]:
+    """Refresh selected lockfiles and policy-owned license artifacts."""
+
+    metadata = _resolve_dependency_metadata(repo_root)
+    dependency_files = set(metadata["dependency_files"])
+    targets = [
+        lock_name
+        for lock_name in LOCKFILE_HANDLERS
+        if lock_name in dependency_files
+    ]
+    results: List[LockHandlerResult] = []
+    changed_lockfiles: List[str] = []
+    for lock_name in targets:
+        handler = LOCKFILE_HANDLERS[lock_name]
+        try:
+            result = handler(repo_root)
+        except subprocess.CalledProcessError as exc:
+            message = (
+                f"Failed while running {' '.join(exc.cmd)} "
+                f"(exit {exc.returncode})."
+            )
+            result = LockHandlerResult(lock_name, False, True, message)
+        results.append(result)
+        if result.changed:
+            changed_lockfiles.append(lock_name)
+
+    modified_license_files: List[Path] = []
+    if changed_lockfiles:
+        modified_license_files = (
+            dependency_license_sync.refresh_license_artifacts(
+                repo_root,
+                changed_dependency_files=changed_lockfiles,
+                third_party_file=str(metadata["third_party_file"]),
+                licenses_dir=str(metadata["licenses_dir"]),
+                report_heading=str(metadata["report_heading"]),
+            )
+        )
+    return results, modified_license_files
+
+
+def _build_parser() -> argparse.ArgumentParser:
+    """Build parser for update_lock command."""
 
     parser = argparse.ArgumentParser(
         description=(
-            "Regenerate requirements.lock without reintroducing metadata "
-            "banners when the dependency body is unchanged."
+            "Refresh dependency lockfiles for active profiles and keep "
+            "license artifacts in sync."
         )
     )
-    return parser.parse_args(argv)
+    return parser
+
+
+def run(args: argparse.Namespace) -> int:
+    """Execute the update_lock command."""
+
+    del args
+    results, license_files = refresh_locks_and_licenses(ROOT)
+    if not results:
+        print(
+            "No metadata-selected lockfiles are configured for this repo.",
+            file=sys.stdout,
+        )
+        return 0
+
+    changed = [entry for entry in results if entry.changed]
+    attempted = [entry for entry in results if entry.attempted]
+    skipped = [entry for entry in results if not entry.attempted]
+
+    print("Lock refresh results:", file=sys.stdout)
+    for entry in results:
+        print(f"- {entry.lock_file}: {entry.message}", file=sys.stdout)
+
+    if changed:
+        changed_names = ", ".join(entry.lock_file for entry in changed)
+        print(f"Updated lockfiles: {changed_names}", file=sys.stdout)
+    else:
+        print("No lockfile content changed.", file=sys.stdout)
+
+    if license_files:
+        refreshed = ", ".join(str(path) for path in license_files)
+        print(f"Refreshed license artifacts: {refreshed}", file=sys.stdout)
+
+    if not attempted and skipped:
+        print(
+            "All handlers skipped due missing prerequisites/tools.",
+            file=sys.stdout,
+        )
+    return 0
 
 
 def main(argv: Sequence[str] | None = None) -> None:
-    """Entry-point for the command-line interface."""
+    """CLI entry point."""
 
-    parse_args(argv)
-    changed = update_lockfile(ROOT, force=False)
-    if changed:
-        print("requirements.lock updated", file=sys.stdout)
-    else:
-        print("requirements.lock already up to date", file=sys.stdout)
+    parser = _build_parser()
+    args = parser.parse_args(argv)
+    raise SystemExit(run(args))
 
 
 if __name__ == "__main__":

@@ -4,6 +4,8 @@ from __future__ import annotations
 
 import tempfile
 import unittest
+from contextlib import redirect_stderr
+from io import StringIO
 from pathlib import Path
 
 import yaml
@@ -21,7 +23,8 @@ def _unit_test_install_writes_generic_config_and_manifest() -> None:
     """install_repo should copy core and seed generic config."""
     with tempfile.TemporaryDirectory() as temp_dir:
         repo_root = Path(temp_dir)
-        result = install.install_repo(repo_root)
+        with redirect_stderr(StringIO()):
+            result = install.install_repo(repo_root)
         assert result == 0
 
         config_path = repo_root / "devcovenant" / "config.yaml"
@@ -50,7 +53,8 @@ def _unit_test_install_preserves_existing_custom_tree() -> None:
         custom_file.parent.mkdir(parents=True, exist_ok=True)
         custom_file.write_text("# custom\n", encoding="utf-8")
 
-        result = install.install_repo(repo_root)
+        with redirect_stderr(StringIO()):
+            result = install.install_repo(repo_root)
         assert result == 0
         assert custom_file.exists()
         assert custom_file.read_text(encoding="utf-8") == "# custom\n"

@@ -235,7 +235,7 @@ def _unit_test_status_payload_validation_passes(tmp_path: Path) -> None:
         json.dumps(
             {
                 "last_run": "2026-02-07T00:00:00+00:00",
-                "command": "pytest && python3 -m unittest discover",
+                "command": "pytest && python3 -m unittest discover -v",
                 "sha": "a" * 40,
             }
         ),

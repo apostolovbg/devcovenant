@@ -15,7 +15,7 @@ from devcovenant.core.base import CheckContext, PolicyCheck, Violation
 _DEFAULT_STATUS = (
     Path("devcovenant") / "registry" / "local" / "test_status.json"
 )
-_DEFAULT_COMMANDS = ["pytest", "python3 -m unittest discover"]
+_DEFAULT_COMMANDS = ["pytest", "python3 -m unittest discover -v"]
 _DEFAULT_PRE_COMMIT_COMMAND = "pre-commit run --all-files"
 _DEFAULT_PRE_COMMIT_START_KEY = "pre_commit_start_epoch"
 _DEFAULT_PRE_COMMIT_END_KEY = "pre_commit_end_epoch"

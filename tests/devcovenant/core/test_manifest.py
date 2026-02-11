@@ -99,6 +99,18 @@ def _unit_test_legacy_markdown_templates_are_absent() -> None:
     assert not (ASSETS_ROOT / "CONTRIBUTING.md").exists()
 
 
+def _unit_test_legacy_gpl_template_is_absent() -> None:
+    """Retired GPL template asset should not exist."""
+    assert not (ASSETS_ROOT / "LICENSE_GPL-3.0.txt").exists()
+
+
+def _unit_test_manifest_excludes_no_devcov_state_path() -> None:
+    """MANIFEST.in should not keep retired .devcov-state rules."""
+    manifest_path = REPO_ROOT / "MANIFEST.in"
+    contents = manifest_path.read_text(encoding="utf-8")
+    assert ".devcov-state" not in contents
+
+
 def _unit_test_manifest_core_files_skip_legacy_markdown_templates() -> None:
     """Manifest defaults should not list removed markdown templates."""
     assert (
@@ -107,6 +119,10 @@ def _unit_test_manifest_core_files_skip_legacy_markdown_templates() -> None:
     )
     assert (
         "devcovenant/core/profiles/global/assets/CONTRIBUTING.md"
+        not in manifest_module.DEFAULT_CORE_FILES
+    )
+    assert (
+        "devcovenant/core/profiles/global/assets/LICENSE_GPL-3.0.txt"
         not in manifest_module.DEFAULT_CORE_FILES
     )
 
@@ -151,6 +167,14 @@ class GeneratedUnittestCases(unittest.TestCase):
     def test_legacy_markdown_templates_are_absent(self):
         """Run test_legacy_markdown_templates_are_absent."""
         _unit_test_legacy_markdown_templates_are_absent()
+
+    def test_legacy_gpl_template_is_absent(self):
+        """Run test_legacy_gpl_template_is_absent."""
+        _unit_test_legacy_gpl_template_is_absent()
+
+    def test_manifest_excludes_no_devcov_state_path(self):
+        """Run test_manifest_excludes_no_devcov_state_path."""
+        _unit_test_manifest_excludes_no_devcov_state_path()
 
     def test_manifest_core_files_skip_legacy_markdown_templates(self):
         """Run test_manifest_core_files_skip_legacy_markdown_templates."""

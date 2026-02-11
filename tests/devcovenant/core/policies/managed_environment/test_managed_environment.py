@@ -5,10 +5,9 @@ import tempfile
 import unittest
 from pathlib import Path
 
-import pytest
-
 from devcovenant.core.base import CheckContext
 from devcovenant.core.policies.managed_environment import managed_environment
+from tests.devcovenant.support import MonkeyPatch
 
 ManagedEnvironmentCheck = managed_environment.ManagedEnvironmentCheck
 
@@ -102,7 +101,7 @@ class GeneratedUnittestCases(unittest.TestCase):
 
     def test_detects_external_interpreter(self):
         """Run test_detects_external_interpreter."""
-        monkeypatch = pytest.MonkeyPatch()
+        monkeypatch = MonkeyPatch()
         try:
             with tempfile.TemporaryDirectory() as temp_dir:
                 tmp_path = Path(temp_dir).resolve()
@@ -114,7 +113,7 @@ class GeneratedUnittestCases(unittest.TestCase):
 
     def test_allows_managed_environment(self):
         """Run test_allows_managed_environment."""
-        monkeypatch = pytest.MonkeyPatch()
+        monkeypatch = MonkeyPatch()
         try:
             with tempfile.TemporaryDirectory() as temp_dir:
                 tmp_path = Path(temp_dir).resolve()
@@ -132,7 +131,7 @@ class GeneratedUnittestCases(unittest.TestCase):
 
     def test_required_commands_replace_hint_warning(self):
         """Run test_required_commands_replace_hint_warning."""
-        monkeypatch = pytest.MonkeyPatch()
+        monkeypatch = MonkeyPatch()
         try:
             with tempfile.TemporaryDirectory() as temp_dir:
                 tmp_path = Path(temp_dir).resolve()

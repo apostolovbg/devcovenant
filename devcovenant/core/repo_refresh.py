@@ -234,16 +234,39 @@ def _extract_managed_block(text: str) -> str | None:
 
 
 def _replace_managed_block(current: str, template: str) -> tuple[str, bool]:
-    """Replace current first managed block with template managed block."""
-    current_block = _extract_managed_block(current)
-    template_block = _extract_managed_block(template)
-    if current_block is None or template_block is None:
+    """Replace managed blocks in current text with template block content."""
+    current_blocks = _managed_block_spans(current)
+    template_blocks = _managed_block_spans(template)
+    if not current_blocks or not template_blocks:
         return current, False
 
-    start = current.index(BLOCK_BEGIN)
-    end = current.index(BLOCK_END, start) + len(BLOCK_END)
-    updated = current[:start] + template_block + current[end:]
-    return updated, updated != current
+    replacement_count = min(len(current_blocks), len(template_blocks))
+    updated = current
+    changed = False
+    for index in range(replacement_count - 1, -1, -1):
+        start, end, _ = current_blocks[index]
+        replacement = template_blocks[index][2]
+        if updated[start:end] == replacement:
+            continue
+        updated = updated[:start] + replacement + updated[end:]
+        changed = True
+    return updated, changed
+
+
+def _managed_block_spans(text: str) -> list[tuple[int, int, str]]:
+    """Return positional spans for every managed block in text."""
+    spans: list[tuple[int, int, str]] = []
+    search_start = 0
+    while True:
+        block_start = text.find(BLOCK_BEGIN, search_start)
+        if block_start < 0:
+            return spans
+        end_marker = text.find(BLOCK_END, block_start)
+        if end_marker < 0:
+            return spans
+        block_end = end_marker + len(BLOCK_END)
+        spans.append((block_start, block_end, text[block_start:block_end]))
+        search_start = block_end
 
 
 def _sync_doc(repo_root: Path, doc_name: str, version: str) -> bool:
@@ -348,12 +371,12 @@ def refresh_repo(repo_root: Path) -> int:
 
     _sync_doc(repo_root, "AGENTS.md", version)
 
-    registry_result = refresh_registry(repo_root, skip_freeze=False)
+    registry_result = refresh_policy_registry(repo_root, skip_freeze=False)
     if registry_result != 0:
         return registry_result
 
     agents_path = repo_root / "AGENTS.md"
-    refresh_policies(agents_path, None, repo_root=repo_root)
+    refresh_agents_policy_block(agents_path, None, repo_root=repo_root)
 
     active_profiles = _active_profiles(config)
     profile_registry = _refresh_profile_registry(repo_root, active_profiles)
@@ -372,7 +395,7 @@ def refresh_repo(repo_root: Path) -> int:
     return 0
 
 
-# ---- Inlined from core/refresh_policies.py ----
+# ---- AGENTS policy block refresh ----
 _POLICIES_BEGIN = "<!-- DEVCOV-POLICIES:BEGIN -->"
 _POLICIES_END = "<!-- DEVCOV-POLICIES:END -->"
 
@@ -1178,7 +1201,7 @@ def _section_map(block_text: str) -> Dict[str, str]:
     return sections
 
 
-def refresh_policies(
+def refresh_agents_policy_block(
     agents_path: Path,
     schema_path: Path | None,
     *,
@@ -1292,7 +1315,7 @@ def refresh_policies(
     return RefreshResult(tuple(changed), tuple(skipped), changed_file)
 
 
-# ---- Inlined from core/refresh_registry.py ----
+# ---- Local policy registry refresh ----
 def _ensure_trailing_newline(path: Path) -> bool:
     """Ensure the given file ends with a newline."""
     if not path.exists():
@@ -1356,7 +1379,7 @@ def _as_bool(raw_value: str | None, *, default: bool) -> bool:
     return default
 
 
-def refresh_registry(
+def refresh_policy_registry(
     repo_root: Path | None = None,
     *,
     rerun: bool = False,
@@ -1502,7 +1525,7 @@ def refresh_registry(
             manifest_module.append_notifications(repo_root, freeze_messages)
             _print_freeze_messages(freeze_messages)
         if freeze_changed and not rerun:
-            return refresh_registry(
+            return refresh_policy_registry(
                 repo_root,
                 rerun=True,
                 skip_freeze=True,

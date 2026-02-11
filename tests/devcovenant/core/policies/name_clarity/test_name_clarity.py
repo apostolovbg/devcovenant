@@ -4,8 +4,6 @@ import tempfile
 import unittest
 from pathlib import Path
 
-import pytest
-
 from devcovenant.core.base import CheckContext
 from devcovenant.core.policies.name_clarity import name_clarity
 
@@ -111,17 +109,6 @@ def _unit_test_non_python_files_use_placeholder_adapters(tmp_path: Path):
         assert violations, f"expected violation for {suffix}"
 
 
-@pytest.mark.parametrize(
-    ("suffix", "code"),
-    [
-        (".js", "for (let i = 0; i < 3; i++) { const x = i; }"),
-        (".ts", "for (let i = 0; i < 3; i++) { const x = i; }"),
-        (".go", "package main\nfunc main() { for i := 0; i < 3; i++ { } }"),
-        (".rs", "fn main() { for i in 0..3 { let x = i; } }"),
-        (".java", "class Demo { void run() { for (int i=0;i<3;i++) {} } }"),
-        (".cs", "class Demo { void Run(){ for(int i=0;i<3;i++){} } }"),
-    ],
-)
 def _unit_test_non_python_short_loop_counters_allowed(
     tmp_path: Path, suffix: str, code: str
 ):

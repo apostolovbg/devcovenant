@@ -401,7 +401,7 @@ class DevCovenantEngine:
         Main entry point for policy checking.
 
         Args:
-            mode: Check mode (startup, lint, pre-commit, normal)
+            mode: Check mode label recorded in CheckContext.
 
         Returns:
             CheckResult object
@@ -431,10 +431,6 @@ class DevCovenantEngine:
 
         if sync_issues:
             self.report_sync_issues(sync_issues)
-            if mode == "startup":
-                return CheckResult(
-                    [], should_block=True, sync_issues=sync_issues
-                )
 
         # Load and run policy checks
         context = self._build_check_context(mode)
@@ -518,10 +514,7 @@ class DevCovenantEngine:
                 print(f"3. Update tests in {test_file}")
                 print(f"4. Run tests: pytest {test_file} -v")
 
-            print(
-                "6. Re-run devcovenant refresh_registry "
-                "to sync policy hashes"
-            )
+            print("6. Re-run `devcovenant refresh` " "to sync policy hashes")
             print()
             print("⚠️  Complete this BEFORE working on user's request.")
             print()
@@ -606,47 +599,12 @@ class DevCovenantEngine:
         changed_files = []
         all_files = []
 
-        if mode == "pre-commit":
-            # Only check changed files (git diff)
-            import subprocess
-
-            try:
-                result = subprocess.run(
-                    ["git", "diff", "--cached", "--name-only"],
-                    cwd=self.repo_root,
-                    capture_output=True,
-                    text=True,
-                    check=True,
-                )
-                changed_files = []
-                for rel in result.stdout.strip().split("\n"):
-                    if not rel:
-                        continue
-                    full_path = self.repo_root / rel
-                    if self._is_ignored_path(full_path):
-                        continue
-                    changed_files.append(full_path)
-            except Exception:
-                pass
-            if (
-                self.config.get("engine", {}).get(
-                    "pre_commit_all_files", False
-                )
-                is True
-            ):
-                suffixes = set(self._resolve_file_suffixes())
-                all_files = [
-                    path
-                    for path in self._collect_all_files(suffixes)
-                    if not self._is_ignored_path(path)
-                ]
-        else:
-            suffixes = set(self._resolve_file_suffixes())
-            all_files = [
-                path
-                for path in self._collect_all_files(suffixes)
-                if not self._is_ignored_path(path)
-            ]
+        suffixes = set(self._resolve_file_suffixes())
+        all_files = [
+            path
+            for path in self._collect_all_files(suffixes)
+            if not self._is_ignored_path(path)
+        ]
 
         return CheckContext(
             repo_root=self.repo_root,

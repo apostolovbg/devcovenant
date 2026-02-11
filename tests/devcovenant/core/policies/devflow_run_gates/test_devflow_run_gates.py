@@ -7,10 +7,9 @@ import tempfile
 import unittest
 from pathlib import Path
 
-import pytest
-
 from devcovenant.core.base import CheckContext
 from devcovenant.core.policies.devflow_run_gates import devflow_run_gates
+from tests.devcovenant.support import MonkeyPatch
 
 DevflowRunGates = devflow_run_gates.DevflowRunGates
 
@@ -69,7 +68,7 @@ def _unit_test_passes_when_tests_are_fresh(tmp_path: Path) -> None:
     status = {
         "last_run_utc": "2025-12-27T00:00:00Z",
         "last_run_epoch": now,
-        "commands": ["pytest", "python3 -m unittest discover"],
+        "commands": ["pytest", "python3 -m unittest discover -v"],
         "pre_commit_start_utc": "2025-12-26T00:00:00Z",
         "pre_commit_start_epoch": code_mtime - 10,
         "pre_commit_start_command": "pre-commit run --all-files",
@@ -96,7 +95,7 @@ def _unit_test_start_after_edit_is_warning(tmp_path: Path) -> None:
     status = {
         "last_run_utc": "2025-12-27T00:00:00Z",
         "last_run_epoch": code_mtime + 10,
-        "commands": ["pytest", "python3 -m unittest discover"],
+        "commands": ["pytest", "python3 -m unittest discover -v"],
         "pre_commit_start_utc": "2025-12-28T00:00:00Z",
         "pre_commit_start_epoch": code_mtime + 20,  # after edit
         "pre_commit_start_command": "pre-commit run --all-files",
@@ -126,7 +125,7 @@ def _unit_test_requires_pre_commit_start(tmp_path: Path) -> None:
     status = {
         "last_run_utc": "2025-12-27T00:00:00Z",
         "last_run_epoch": code_mtime + 10,
-        "commands": ["pytest", "python3 -m unittest discover"],
+        "commands": ["pytest", "python3 -m unittest discover -v"],
         "pre_commit_end_utc": "2025-12-27T00:00:00Z",
         "pre_commit_end_epoch": code_mtime + 5,
         "pre_commit_end_command": "pre-commit run --all-files",
@@ -152,7 +151,7 @@ def _unit_test_requires_pre_commit_end(tmp_path: Path) -> None:
     status = {
         "last_run_utc": "2025-12-27T00:00:00Z",
         "last_run_epoch": code_mtime + 10,
-        "commands": ["pytest", "python3 -m unittest discover"],
+        "commands": ["pytest", "python3 -m unittest discover -v"],
         "pre_commit_start_utc": "2025-12-26T00:00:00Z",
         "pre_commit_start_epoch": code_mtime - 10,
         "pre_commit_start_command": "pre-commit run --all-files",
@@ -257,7 +256,7 @@ class GeneratedUnittestCases(unittest.TestCase):
 
     def test_start_phase_skips_missing_status(self):
         """Run test_start_phase_skips_missing_status."""
-        monkeypatch = pytest.MonkeyPatch()
+        monkeypatch = MonkeyPatch()
         try:
             with tempfile.TemporaryDirectory() as temp_dir:
                 tmp_path = Path(temp_dir).resolve()
