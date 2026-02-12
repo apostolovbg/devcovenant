@@ -64,14 +64,3 @@ policy_overlays:
   name-clarity:
     include_suffixes:
       - .py
-policies:
-  - dependency-license-sync
-  - devflow-run-gates
-  - docstring-and-comment-coverage
-  - documentation-growth-tracking
-  - line-length-limit
-  - name-clarity
-  - modules-need-tests
-  - raw-string-escapes
-  - security-scanner
-  - version-sync

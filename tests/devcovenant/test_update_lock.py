@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import io
+import os
 import tempfile
 import unittest
 from contextlib import redirect_stdout
@@ -18,7 +19,6 @@ def _unit_test_refresh_uses_metadata_targets_and_syncs_licenses(
     """refresh_locks_and_licenses should use metadata-selected handlers."""
 
     temp_root = Path(tempfile.mkdtemp())
-    monkeypatch.setattr(update_lock, "ROOT", temp_root)
     monkeypatch.setattr(
         update_lock,
         "_resolve_dependency_metadata",
@@ -97,7 +97,6 @@ def _unit_test_refresh_skips_license_sync_without_changed_locks(
     """No changed lockfiles should skip license artifact refresh."""
 
     temp_root = Path(tempfile.mkdtemp())
-    monkeypatch.setattr(update_lock, "ROOT", temp_root)
     monkeypatch.setattr(
         update_lock,
         "_resolve_dependency_metadata",
@@ -151,6 +150,12 @@ def _unit_test_refresh_skips_license_sync_without_changed_locks(
 def _unit_test_run_reports_when_no_targets(monkeypatch: MonkeyPatch) -> None:
     """run should print a clear message when no lock targets are configured."""
 
+    temp_root = Path(tempfile.mkdtemp())
+    monkeypatch.setattr(
+        update_lock,
+        "resolve_repo_root",
+        lambda require_install=True: temp_root,
+    )
     monkeypatch.setattr(
         update_lock,
         "refresh_locks_and_licenses",
@@ -161,6 +166,80 @@ def _unit_test_run_reports_when_no_targets(monkeypatch: MonkeyPatch) -> None:
         code = update_lock.run(args=object())
     assert code == 0
     assert "No metadata-selected lockfiles are configured" in stdout.getvalue()
+
+
+def _unit_test_run_resolves_repo_root_from_subdirectory(
+    monkeypatch: MonkeyPatch,
+) -> None:
+    """run should resolve and use the git root from a subdirectory."""
+
+    temp_root = Path(tempfile.mkdtemp())
+    (temp_root / ".git").mkdir(parents=True, exist_ok=True)
+    (temp_root / "devcovenant").mkdir(parents=True, exist_ok=True)
+    nested = temp_root / "src" / "nested"
+    nested.mkdir(parents=True, exist_ok=True)
+
+    captured: dict[str, Path] = {}
+
+    def _fake_refresh(
+        repo_root: Path,
+    ) -> tuple[list[update_lock.LockHandlerResult], list[Path]]:
+        """Capture resolved root used by run()."""
+        captured["repo_root"] = repo_root
+        return [], []
+
+    monkeypatch.setattr(
+        update_lock,
+        "refresh_locks_and_licenses",
+        _fake_refresh,
+    )
+
+    previous_cwd = Path.cwd()
+    try:
+        os.chdir(nested)
+        stdout = io.StringIO()
+        with redirect_stdout(stdout):
+            code = update_lock.run(args=object())
+    finally:
+        os.chdir(previous_cwd)
+
+    assert code == 0
+    assert captured["repo_root"].resolve() == temp_root.resolve()
+
+
+def _unit_test_python_lock_refresh_attempts_compile_without_hash_cache(
+    monkeypatch: MonkeyPatch,
+) -> None:
+    """requirements.lock refresh should not short-circuit on input hash."""
+
+    temp_root = Path(tempfile.mkdtemp())
+    (temp_root / "requirements.in").write_text(
+        "pytest==9.0.0\n", encoding="utf-8"
+    )
+    (temp_root / "requirements.lock").write_text(
+        "# Last Updated: 2026-02-01\npytest==9.0.0\n",
+        encoding="utf-8",
+    )
+    calls = {"compile": 0}
+
+    def _fake_compile(
+        repo_root: Path, requirements_in: Path
+    ) -> update_lock.LockFilePieces:
+        """Return lock body equal to existing file body."""
+
+        assert repo_root == temp_root
+        assert requirements_in == temp_root / "requirements.in"
+        calls["compile"] += 1
+        return update_lock.LockFilePieces(["pytest==9.0.0"])
+
+    monkeypatch.setattr(
+        update_lock, "_compile_requirements_lock", _fake_compile
+    )
+    result = update_lock._refresh_python_requirements_lock(temp_root)
+    assert calls["compile"] == 1
+    assert result.attempted is True
+    assert result.changed is False
+    assert "No content change" in result.message
 
 
 class GeneratedUnittestCases(unittest.TestCase):
@@ -194,5 +273,27 @@ class GeneratedUnittestCases(unittest.TestCase):
         monkeypatch = MonkeyPatch()
         try:
             _unit_test_run_reports_when_no_targets(monkeypatch=monkeypatch)
+        finally:
+            monkeypatch.undo()
+
+    def test_run_resolves_repo_root_from_subdirectory(self):
+        """Run test_run_resolves_repo_root_from_subdirectory."""
+
+        monkeypatch = MonkeyPatch()
+        try:
+            _unit_test_run_resolves_repo_root_from_subdirectory(
+                monkeypatch=monkeypatch
+            )
+        finally:
+            monkeypatch.undo()
+
+    def test_python_lock_refresh_attempts_compile_without_hash_cache(self):
+        """Run test_python_lock_refresh_attempts_compile_without_hash_cache."""
+
+        monkeypatch = MonkeyPatch()
+        try:
+            _unit_test_python_lock_refresh_attempts_compile_without_hash_cache(
+                monkeypatch=monkeypatch
+            )
         finally:
             monkeypatch.undo()

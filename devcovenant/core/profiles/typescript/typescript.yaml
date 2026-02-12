@@ -61,13 +61,3 @@ policy_overlays:
     include_suffixes:
       - .ts
       - .tsx
-policies:
-  - dependency-license-sync
-  - devflow-run-gates
-  - name-clarity
-  - docstring-and-comment-coverage
-  - modules-need-tests
-  - security-scanner
-  - documentation-growth-tracking
-  - line-length-limit
-  - version-sync

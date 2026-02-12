@@ -3,9 +3,8 @@
 ## Overview
 This directory holds the stock profiles after the profile set reduction. Each
 profile folder contains `profile.yaml`, optional assets, and a gitignore
-fragment. Profiles activate policies explicitly through the `policies:` list
-plus `policy_overlays` for per-profile metadata. Global policies apply to all
-profiles automatically.
+fragment. Profiles provide metadata through `policy_overlays`; policy
+activation is config-only via `policy_state`.
 
 ## Table of Contents
 - How profiles are organized

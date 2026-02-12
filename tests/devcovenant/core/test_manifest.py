@@ -111,6 +111,21 @@ def _unit_test_manifest_excludes_no_devcov_state_path() -> None:
     assert ".devcov-state" not in contents
 
 
+def _unit_test_manifest_excludes_root_managed_docs() -> None:
+    """MANIFEST.in should not include root managed docs."""
+    manifest_path = REPO_ROOT / "MANIFEST.in"
+    contents = manifest_path.read_text(encoding="utf-8")
+    forbidden_includes = (
+        "include AGENTS.md",
+        "include CONTRIBUTING.md",
+        "include SPEC.md",
+        "include PLAN.md",
+        "include CHANGELOG.md",
+    )
+    for entry in forbidden_includes:
+        assert entry not in contents
+
+
 def _unit_test_manifest_core_files_skip_legacy_markdown_templates() -> None:
     """Manifest defaults should not list removed markdown templates."""
     assert (
@@ -175,6 +190,10 @@ class GeneratedUnittestCases(unittest.TestCase):
     def test_manifest_excludes_no_devcov_state_path(self):
         """Run test_manifest_excludes_no_devcov_state_path."""
         _unit_test_manifest_excludes_no_devcov_state_path()
+
+    def test_manifest_excludes_root_managed_docs(self):
+        """Run test_manifest_excludes_root_managed_docs."""
+        _unit_test_manifest_excludes_root_managed_docs()
 
     def test_manifest_core_files_skip_legacy_markdown_templates(self):
         """Run test_manifest_core_files_skip_legacy_markdown_templates."""

@@ -109,17 +109,6 @@ policy_overrides: {}
 ignore:
   patterns: []
 autogen_metadata_overrides:
-  dependency-license-sync:
-    dependency_files:
-    - requirements.in
-    - requirements.lock
-    - pyproject.toml
-  devflow-run-gates:
-    required_commands:
-    - pytest
-    - python3 -m unittest discover -v
-    skipped_globs:
-    - devcovenant/registry/local/**
   changelog-coverage:
     required_globs:
     - README.md
@@ -199,12 +188,56 @@ autogen_metadata_overrides:
     - upgraded
     - wrap
     - wrapped
+  dependency-license-sync:
+    dependency_files:
+    - requirements.in
+    - requirements.lock
+    - pyproject.toml
+  devflow-run-gates:
+    required_commands:
+    - python3 -m unittest discover -v
+    - pytest
+    skipped_globs:
+    - devcovenant/registry/local/**
+  docstring-and-comment-coverage:
+    include_suffixes:
+    - .py
   documentation-growth-tracking:
+    doc_quality_dirs:
+    - devcovenant/docs
+    doc_quality_files:
+    - README.md
+    - CONTRIBUTING.md
+    - AGENTS.md
+    - SPEC.md
+    - PLAN.md
+    - devcovenant/README.md
+    - devcovenant/docs/README.md
+    - devcovenant/docs/installation.md
+    - devcovenant/docs/config.md
+    - devcovenant/docs/profiles.md
+    - devcovenant/docs/policies.md
+    - devcovenant/docs/adapters.md
+    - devcovenant/docs/registry.md
+    - devcovenant/docs/refresh.md
+    - devcovenant/docs/workflow.md
+    - devcovenant/docs/troubleshooting.md
+    exclude_prefixes:
+    - data
+    user_facing_exclude_dirs:
+    - tests/**
+    user_facing_exclude_prefixes:
+    - tests
+    user_facing_files:
+    - .pre-commit-config.yaml
+    - pyproject.toml
+    - devcovenant/cli.py
+    - devcovenant/__main__.py
+    user_facing_globs:
+    - .github/workflows/*.yml
+    - .github/workflows/*.yaml
     user_facing_suffixes:
     - .py
-    - .md
-    - .rst
-    - .txt
     - .js
     - .ts
     - .tsx
@@ -221,155 +254,108 @@ autogen_metadata_overrides:
     - .yaml
     - .json
     - .toml
-    exclude_prefixes:
-    - data
-    user_facing_files:
-    - devcovenant/cli.py
-    - devcovenant/__main__.py
-    - .pre-commit-config.yaml
-    - pyproject.toml
-    user_visible_files:
-    - devcovenant/README.md
-    - devcovenant/docs/README.md
-    - devcovenant/docs/installation.md
-    - devcovenant/docs/config.md
-    - devcovenant/docs/profiles.md
-    - devcovenant/docs/policies.md
-    - devcovenant/docs/adapters.md
-    - devcovenant/docs/registry.md
-    - devcovenant/docs/refresh.md
-    - devcovenant/docs/workflow.md
-    - devcovenant/docs/troubleshooting.md
-    - README.md
-    - CONTRIBUTING.md
-    - AGENTS.md
-    - SPEC.md
-    - PLAN.md
-    doc_quality_files:
-    - devcovenant/README.md
-    - devcovenant/docs/README.md
-    - devcovenant/docs/installation.md
-    - devcovenant/docs/config.md
-    - devcovenant/docs/profiles.md
-    - devcovenant/docs/policies.md
-    - devcovenant/docs/adapters.md
-    - devcovenant/docs/registry.md
-    - devcovenant/docs/refresh.md
-    - devcovenant/docs/workflow.md
-    - devcovenant/docs/troubleshooting.md
-    - README.md
-    - CONTRIBUTING.md
-    - AGENTS.md
-    - SPEC.md
-    - PLAN.md
-    user_visible_dirs:
-    - devcovenant/docs
-    doc_quality_dirs:
-    - devcovenant/docs
-    user_facing_globs:
-    - .github/workflows/*.yml
-    - .github/workflows/*.yaml
-    user_facing_exclude_prefixes:
-    - tests
-    user_facing_exclude_dirs:
-    - tests/**
-  docstring-and-comment-coverage:
-    include_suffixes:
-    - .py
-  line-length-limit:
-    include_suffixes:
-    - .py
-    - .pyi
-    - .pyw
-    - .ipynb
     - .md
     - .rst
     - .txt
-    - .csv
-    - .tsv
-    - .json
-    - .ndjson
-    - .parquet
-    - .avro
+    user_visible_dirs:
+    - devcovenant/docs
+    user_visible_files:
+    - README.md
+    - CONTRIBUTING.md
+    - AGENTS.md
+    - SPEC.md
+    - PLAN.md
+    - devcovenant/README.md
+    - devcovenant/docs/README.md
+    - devcovenant/docs/installation.md
+    - devcovenant/docs/config.md
+    - devcovenant/docs/profiles.md
+    - devcovenant/docs/policies.md
+    - devcovenant/docs/adapters.md
+    - devcovenant/docs/registry.md
+    - devcovenant/docs/refresh.md
+    - devcovenant/docs/workflow.md
+    - devcovenant/docs/troubleshooting.md
+  last-updated-placement:
+    allowed_globs:
+    - README.md
+    - AGENTS.md
+    - CONTRIBUTING.md
+    - CHANGELOG.md
+    - SPEC.md
+    - PLAN.md
+    - devcovenant/README.md
+    - devcovenant/core/profiles/global/assets/*.yaml
+    required_globs:
+    - devcovenant/README.md
+  line-length-limit:
     exclude_globs:
-    - devcovenant/registry/**
     - data/**
     - devcovenant/core/profiles/global/assets/*.yaml
-  name-clarity:
+    - devcovenant/registry/**
     include_suffixes:
+    - .md
+    - .rst
+    - .txt
     - .py
+  modules-need-tests:
     exclude_prefixes:
     - data
-  modules-need-tests:
-    include_suffixes:
-    - .py
-    exclude_prefixes:
     - build
     - dist
     - node_modules
     - tests
-    - data
-    watch_dirs:
-    - tests
-    - tests/devcovenant/core
-    - tests/devcovenant/custom
-    tests_watch_dirs:
-    - tests
-    - tests/devcovenant/core
-    - tests/devcovenant/custom
-    include_prefixes:
-    - devcovenant
-    mirror_roots:
-    - devcovenant=>tests/devcovenant
-  security-scanner:
     include_suffixes:
     - .py
+    mirror_roots:
+    - devcovenant=>tests/devcovenant
+    tests_watch_dirs:
+    - tests
+    watch_dirs:
+    - tests
+  name-clarity:
     exclude_prefixes:
     - data
+    include_suffixes:
+    - .py
+  no-spaghetti:
+    max_top_level_modules:
+    - '19'
+    min_module_lines:
+    - '120'
+  security-scanner:
+    exclude_prefixes:
+    - data
+    include_suffixes:
+    - .py
+  semantic-version-scope:
+    version_file:
+    - devcovenant/VERSION
   version-sync:
-    pyproject_files:
-    - pyproject.toml
-    version_file: devcovenant/VERSION
-    readme_files:
-    - devcovenant/README.md
-    - README.md
-    - AGENTS.md
-    - CONTRIBUTING.md
-    - SPEC.md
-    - PLAN.md
+    license_files:
+    - LICENSE
     optional_files:
     - SPEC.md
     - PLAN.md
-    license_files:
-    - LICENSE
-  last-updated-placement:
-    allowed_globs:
-    - devcovenant/README.md
-    - devcovenant/core/profiles/global/assets/*.yaml
+    pyproject_files:
+    - pyproject.toml
+    readme_files:
     - README.md
     - AGENTS.md
     - CONTRIBUTING.md
-    - CHANGELOG.md
     - SPEC.md
     - PLAN.md
-    required_globs:
     - devcovenant/README.md
-    - README.md
-    - AGENTS.md
-    - CONTRIBUTING.md
-    - CHANGELOG.md
-    - SPEC.md
-    - PLAN.md
-  semantic-version-scope:
-    version_file: devcovenant/VERSION
+    version_file:
+    - devcovenant/VERSION
 user_metadata_overrides: {}
 doc_assets:
   autogen:
   - AGENTS.md
   - README.md
+  - CONTRIBUTING.md
   - SPEC.md
   - PLAN.md
   - CHANGELOG.md
-  - CONTRIBUTING.md
   - devcovenant/README.md
   user: []

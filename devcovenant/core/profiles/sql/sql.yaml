@@ -15,7 +15,3 @@ policy_overlays:
   line-length-limit:
     include_suffixes:
       - .sql
-policies:
-  - documentation-growth-tracking
-  - line-length-limit
-  - version-sync

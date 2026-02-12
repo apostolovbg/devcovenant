@@ -16,6 +16,7 @@ from typing import Callable, Dict, Iterable, List, Sequence, Tuple
 if __package__ in {None, ""}:  # pragma: no cover
     sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
+from devcovenant.core.execution import resolve_repo_root
 from devcovenant.core.policies.dependency_license_sync import (
     dependency_license_sync,
 )
@@ -29,7 +30,6 @@ from devcovenant.core.repo_refresh import (
     resolve_policy_metadata_map,
 )
 
-ROOT = Path.cwd()
 POLICY_ID = "dependency-license-sync"
 
 
@@ -48,40 +48,6 @@ class LockHandlerResult:
     changed: bool
     attempted: bool
     message: str
-
-
-def _cache_dir(root: Path) -> Path:
-    """Return location used for transient dependency hash metadata."""
-
-    return root / ".cache"
-
-
-def _input_hash_path(root: Path) -> Path:
-    """Return the path storing the last requirements.in hash."""
-
-    return _cache_dir(root) / "requirements.in.hash"
-
-
-def _ensure_cache_dir(root: Path) -> None:
-    """Create cache directory when missing."""
-
-    _cache_dir(root).mkdir(parents=True, exist_ok=True)
-
-
-def _read_cached_input_hash(root: Path) -> str | None:
-    """Return stored requirements.in hash when available."""
-
-    path = _input_hash_path(root)
-    if not path.exists():
-        return None
-    return path.read_text(encoding="utf-8").strip()
-
-
-def _write_cached_input_hash(root: Path, hash_digest: str) -> None:
-    """Persist requirements.in hash for future unchanged checks."""
-
-    _ensure_cache_dir(root)
-    _input_hash_path(root).write_text(hash_digest, encoding="utf-8")
 
 
 def _compute_file_hash(path: Path) -> str:
@@ -209,23 +175,12 @@ def _refresh_python_requirements_lock(repo_root: Path) -> LockHandlerResult:
             message="Skipped: requirements.in missing.",
         )
 
-    current_hash = _compute_file_hash(req_in)
-    cached_hash = _read_cached_input_hash(repo_root)
-    if cached_hash == current_hash and lock_path.exists():
-        return LockHandlerResult(
-            "requirements.lock",
-            changed=False,
-            attempted=False,
-            message="Skipped: requirements.in unchanged.",
-        )
-
     previous = (
         _split_last_updated(lock_path.read_text().splitlines())
         if lock_path.exists()
         else LockFilePieces([])
     )
     compiled = _compile_requirements_lock(repo_root, req_in)
-    _write_cached_input_hash(repo_root, current_hash)
     if previous.body == compiled.body:
         return LockHandlerResult(
             "requirements.lock",
@@ -673,7 +628,8 @@ def run(args: argparse.Namespace) -> int:
     """Execute the update_lock command."""
 
     del args
-    results, license_files = refresh_locks_and_licenses(ROOT)
+    repo_root = resolve_repo_root(require_install=True)
+    results, license_files = refresh_locks_and_licenses(repo_root)
     if not results:
         print(
             "No metadata-selected lockfiles are configured for this repo.",

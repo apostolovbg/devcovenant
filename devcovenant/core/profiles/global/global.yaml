@@ -215,16 +215,3 @@ policy_overlays:
   devflow-run-gates:
     skipped_globs:
       - devcovenant/registry/local/**
-policies:
-  - devcov-integrity-guard
-  - devcov-structure-guard
-  - devflow-run-gates
-  - changelog-coverage
-  - no-future-dates
-  - read-only-directories
-  - managed-environment
-  - semantic-version-scope
-  - last-updated-placement
-  - documentation-growth-tracking
-  - line-length-limit
-  - version-sync

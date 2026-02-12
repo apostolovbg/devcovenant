@@ -1,9 +1,4 @@
-include AGENTS.md
 include README.md
-include CONTRIBUTING.md
-include SPEC.md
-include PLAN.md
-include CHANGELOG.md
 include LICENSE
 include THIRD_PARTY_LICENSES.md
 include requirements.in

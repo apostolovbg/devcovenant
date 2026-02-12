@@ -36,11 +36,3 @@ policy_overlays:
   line-length-limit:
     exclude_globs:
       - data/**
-policies:
-  - documentation-growth-tracking
-  - last-updated-placement
-  - security-scanner
-  - name-clarity
-  - modules-need-tests
-  - line-length-limit
-  - version-sync

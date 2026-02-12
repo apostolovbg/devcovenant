@@ -10,6 +10,7 @@ if __package__ in {None, ""}:  # pragma: no cover
     sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
 import argparse
+import shutil
 from pathlib import Path
 
 import yaml
@@ -20,6 +21,12 @@ from devcovenant.core.execution import (
     resolve_repo_root,
 )
 from devcovenant.core.repo_refresh import refresh_repo
+
+USER_MODE_CLEANUP_PATHS = (
+    Path("devcovenant/custom/policies"),
+    Path("tests/devcovenant/core"),
+    Path("devcovenant/custom/profiles/devcovrepo"),
+)
 
 
 def _read_yaml(path: Path) -> dict[str, object]:
@@ -43,6 +50,32 @@ def _is_generic_config(config: dict[str, object]) -> bool:
     return bool(install_block.get("generic_config", True))
 
 
+def _include_core_content(config: dict[str, object]) -> bool:
+    """Return True when deploy should keep devcovrepo/core overlays."""
+    return bool(config.get("devcov_core_include", False))
+
+
+def _remove_path(target: Path) -> bool:
+    """Delete a file or directory if it exists."""
+    if not target.exists():
+        return False
+    if target.is_file() or target.is_symlink():
+        target.unlink()
+        return True
+    shutil.rmtree(target)
+    return True
+
+
+def _cleanup_user_mode_paths(repo_root: Path) -> list[str]:
+    """Delete deploy-only user-mode paths before full refresh."""
+    removed: list[str] = []
+    for relative_path in USER_MODE_CLEANUP_PATHS:
+        target = repo_root / relative_path
+        if _remove_path(target):
+            removed.append(str(relative_path))
+    return removed
+
+
 def deploy_repo(repo_root: Path) -> int:
     """Deploy managed DevCovenant docs/assets to a repo."""
     config_path = repo_root / "devcovenant" / "config.yaml"
@@ -52,6 +85,15 @@ def deploy_repo(repo_root: Path) -> int:
             "Deploy blocked: config is still generic. Set "
             "`install.generic_config: false` first."
         )
+
+    if not _include_core_content(config):
+        removed = _cleanup_user_mode_paths(repo_root)
+        if removed:
+            print_step(
+                "Deploy cleanup removed: " + ", ".join(removed),
+                "🧹",
+            )
+
     return refresh_repo(repo_root)
 
 

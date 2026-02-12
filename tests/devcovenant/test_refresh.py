@@ -62,7 +62,7 @@ def _unit_test_refresh_updates_managed_block_only() -> None:
 
 
 def _unit_test_refresh_updates_all_managed_blocks() -> None:
-    """refresh_repo should update every managed block in AGENTS."""
+    """refresh_repo should normalize AGENTS managed/workflow/policy blocks."""
     with tempfile.TemporaryDirectory() as temp_dir:
         repo_root = Path(temp_dir)
         install.install_repo(repo_root)
@@ -91,6 +91,9 @@ def _unit_test_refresh_updates_all_managed_blocks() -> None:
         assert "old secondary block" not in updated
         assert "keep me" in updated
         assert "## THE DEV COVENANT" in updated
+        assert "<!-- DEVCOV-WORKFLOW:BEGIN -->" in updated
+        assert "<!-- DEVCOV-WORKFLOW:END -->" in updated
+        assert updated.count("<!-- DEVCOV:BEGIN -->") == 1
 
 
 class GeneratedUnittestCases(unittest.TestCase):

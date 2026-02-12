@@ -84,5 +84,3 @@ policy_overlays:
       - tests
     mirror_roots:
       - devcovenant/custom=>tests/devcovenant/custom
-policies:
-  - modules-need-tests

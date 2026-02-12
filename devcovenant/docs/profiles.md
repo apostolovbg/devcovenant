@@ -9,9 +9,9 @@
 
 ## Overview
 Profiles describe the tech stack slices DevCovenant should enforce. Each
-profile declares file suffixes, assets to materialize, and policies to
-activate. Profiles do not inherit from each other; every profile must list
-its own policies and overlays explicitly.
+profile declares file suffixes, assets to materialize, and metadata overlays.
+Policy activation is config-only via `policy_state`; profiles do not toggle
+policy enablement directly. Profiles do not inherit from each other.
 The DevCovenant repo activates the `devcovrepo` profile for repo-only
 policies and documentation tracking.
 
@@ -26,7 +26,6 @@ includes `<name>.yaml` plus any asset templates. The YAML includes:
 - `profile` name and `category`.
 - `suffixes` for file types.
 - `assets` to materialize into the target repo.
-- `policies` to activate.
 - `policy_overlays` for per-policy metadata.
 
 ## Assets and Overlays
@@ -49,9 +48,6 @@ assets:
   - path: pyproject.toml
     template: pyproject.toml
     mode: merge
-policies:
-  - name-clarity
-  - dependency-license-sync
 policy_overlays:
   dependency-license-sync:
     dependency_files:

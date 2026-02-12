@@ -1,15 +1,11 @@
 header_lines:
 - '# Changelog'
-- '**Last Updated:** 2026-02-11'
+- '**Last Updated:** 2026-02-12'
 - '**Version:** 0.2.6'
 doc_id: CHANGELOG
 doc_type: changelog
 managed_by: DevCovenant
 managed_block: |-
-  **Doc ID:** CHANGELOG
-  **Doc Type:** changelog
-  **Managed By:** DevCovenant
-
   ## How to Log Changes
   Add one entry for each substantive change under the current version header.
   Keep entries newest-first and record dates in ISO format (`YYYY-MM-DD`).

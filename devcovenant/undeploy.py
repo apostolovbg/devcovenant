@@ -23,8 +23,12 @@ from devcovenant.core.execution import (
 
 BLOCK_BEGIN = "<!-- DEVCOV:BEGIN -->"
 BLOCK_END = "<!-- DEVCOV:END -->"
+WORKFLOW_BEGIN = "<!-- DEVCOV-WORKFLOW:BEGIN -->"
+WORKFLOW_END = "<!-- DEVCOV-WORKFLOW:END -->"
 POLICY_BEGIN = "<!-- DEVCOV-POLICIES:BEGIN -->"
 POLICY_END = "<!-- DEVCOV-POLICIES:END -->"
+USER_GITIGNORE_BEGIN = "# --- User entries (preserved) ---"
+USER_GITIGNORE_END = "# --- End user entries ---"
 
 DEFAULT_MANAGED_DOCS = [
     "AGENTS.md",
@@ -112,6 +116,39 @@ def _strip_blocks(text: str, begin: str, end: str) -> str:
     return updated
 
 
+def _remove_generated_gitignore(repo_root: Path) -> bool:
+    """Remove generated .gitignore content and preserve user entries only."""
+    gitignore_path = repo_root / ".gitignore"
+    if not gitignore_path.exists():
+        return False
+
+    existing = gitignore_path.read_text(encoding="utf-8")
+    begin_index = existing.find(USER_GITIGNORE_BEGIN)
+    end_index = existing.find(USER_GITIGNORE_END)
+    if begin_index < 0 or end_index < 0 or end_index < begin_index:
+        return False
+
+    body_start = begin_index + len(USER_GITIGNORE_BEGIN)
+    preserved_lines = existing[body_start:end_index].splitlines()
+    while preserved_lines and not preserved_lines[0].strip():
+        preserved_lines.pop(0)
+    while preserved_lines and not preserved_lines[-1].strip():
+        preserved_lines.pop()
+
+    preserved_text = "\n".join(
+        line.rstrip() for line in preserved_lines
+    ).strip()
+    if not preserved_text:
+        gitignore_path.unlink(missing_ok=True)
+        return True
+
+    updated = preserved_text + "\n"
+    if updated == existing:
+        return False
+    gitignore_path.write_text(updated, encoding="utf-8")
+    return True
+
+
 def undeploy_repo(repo_root: Path) -> int:
     """Remove managed blocks and local registry state."""
     docs = _managed_docs_from_config(repo_root)
@@ -124,6 +161,7 @@ def undeploy_repo(repo_root: Path) -> int:
 
         original = path.read_text(encoding="utf-8")
         updated = _strip_blocks(original, BLOCK_BEGIN, BLOCK_END)
+        updated = _strip_blocks(updated, WORKFLOW_BEGIN, WORKFLOW_END)
         updated = _strip_blocks(updated, POLICY_BEGIN, POLICY_END)
         if updated == original:
             continue
@@ -134,6 +172,9 @@ def undeploy_repo(repo_root: Path) -> int:
     registry_local = repo_root / "devcovenant" / "registry" / "local"
     if registry_local.exists():
         shutil.rmtree(registry_local)
+
+    if _remove_generated_gitignore(repo_root):
+        print_step("Removed generated .gitignore fragments", "✅")
 
     if stripped_docs:
         print_step(

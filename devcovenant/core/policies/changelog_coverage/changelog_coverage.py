@@ -108,6 +108,10 @@ _HUNK_PATTERN = re.compile(r"^@@ -(\d+)(?:,(\d+))? \+(\d+)(?:,(\d+))? @@")
 _MANAGED_MARKERS = [
     ("<!-- DEVCOV:BEGIN -->", "<!-- DEVCOV:END -->"),
     (
+        "<!-- DEVCOV-WORKFLOW:BEGIN -->",
+        "<!-- DEVCOV-WORKFLOW:END -->",
+    ),
+    (
         "<!-- DEVCOV-POLICIES:BEGIN -->",
         "<!-- DEVCOV-POLICIES:END -->",
     ),

@@ -122,9 +122,9 @@ def _unit_test_profiles_have_assets_unless_exempt() -> None:
 
 
 def _unit_test_profiles_do_not_define_activation_scope_keys() -> None:
-    """Profile manifests must not carry retired activation scope keys."""
+    """Profile manifests must not carry activation keys."""
     repo_root = Path(__file__).resolve().parents[3]
-    forbidden = {"profile_scopes", "policy_scopes"}
+    forbidden = {"profile_scopes", "policy_scopes", "policies"}
     for profile_root in (
         repo_root / "devcovenant" / "core" / "profiles",
         repo_root / "devcovenant" / "custom" / "profiles",

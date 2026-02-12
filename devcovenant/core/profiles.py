@@ -163,10 +163,14 @@ def resolve_profile_suffixes(
     """Return file suffixes associated with active profiles."""
     normalized_registry = _normalize_registry(registry)
     suffixes: List[str] = []
-    active = {
-        _normalize_profile_name(name) for name in active_profiles if name
-    }
-    for name in active:
+    active_names: List[str] = []
+    for profile_name in active_profiles:
+        normalized_name = _normalize_profile_name(profile_name)
+        if not normalized_name or normalized_name in active_names:
+            continue
+        active_names.append(normalized_name)
+
+    for name in active_names:
         meta = normalized_registry.get(name, {})
         raw = meta.get("suffixes") or []
         for entry in raw:
@@ -183,10 +187,14 @@ def resolve_profile_ignore_dirs(
     """Return ignored directory names from active profiles."""
     normalized_registry = _normalize_registry(registry)
     ignored: List[str] = []
-    active = {
-        _normalize_profile_name(name) for name in active_profiles if name
-    }
-    for name in active:
+    active_names: List[str] = []
+    for profile_name in active_profiles:
+        normalized_name = _normalize_profile_name(profile_name)
+        if not normalized_name or normalized_name in active_names:
+            continue
+        active_names.append(normalized_name)
+
+    for name in active_names:
         meta = normalized_registry.get(name, {})
         raw = meta.get("ignore_dirs") or []
         for entry in raw:

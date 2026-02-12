@@ -21,6 +21,9 @@ class ManagedDocAssetsCheck(PolicyCheck):
 
     policy_id = "managed-doc-assets"
     version = "0.1.0"
+    _DOC_ID_LABEL = "**Doc ID:**"
+    _DOC_TYPE_LABEL = "**Doc Type:**"
+    _MANAGED_BY_LABEL = "**Managed By:**"
 
     def __init__(self) -> None:
         """Initialize the managed document descriptor list."""
@@ -97,6 +100,45 @@ class ManagedDocAssetsCheck(PolicyCheck):
                     )
                 )
 
+            has_managed_block = bool(doc_info["has_managed_block"])
+
+            if (
+                has_managed_block
+                and descriptor.get("doc_type", "") != doc_info["doc_type"]
+            ):
+                violations.append(
+                    Violation(
+                        policy_id=self.policy_id,
+                        severity="error",
+                        file_path=descriptor_path,
+                        message=(
+                            "Descriptor for "
+                            f"{entry['doc']} references doc_type="
+                            f"{descriptor.get('doc_type', '<missing>')} "
+                            f"but the document reports {doc_info['doc_type']}."
+                        ),
+                    )
+                )
+
+            if (
+                has_managed_block
+                and descriptor.get("managed_by", "") != doc_info["managed_by"]
+            ):
+                violations.append(
+                    Violation(
+                        policy_id=self.policy_id,
+                        severity="error",
+                        file_path=descriptor_path,
+                        message=(
+                            "Descriptor for "
+                            f"{entry['doc']} references managed_by="
+                            f"{descriptor.get('managed_by', '<missing>')} "
+                            f"but the document reports "
+                            f"{doc_info['managed_by']}."
+                        ),
+                    )
+                )
+
             if descriptor.get("header_lines", []) != doc_info["header_lines"]:
                 violations.append(
                     Violation(
@@ -110,9 +152,24 @@ class ManagedDocAssetsCheck(PolicyCheck):
                     )
                 )
 
+            if self._descriptor_contains_metadata_lines(descriptor):
+                violations.append(
+                    Violation(
+                        policy_id=self.policy_id,
+                        severity="error",
+                        file_path=descriptor_path,
+                        message=(
+                            "Descriptor managed_block must not duplicate "
+                            "Doc ID/Doc Type/Managed By lines; those are "
+                            "generated from descriptor metadata."
+                        ),
+                    )
+                )
+
+            expected_managed = self._expected_managed_block(descriptor)
             if (
-                descriptor.get("managed_block", "")
-                != doc_info["managed_block"]
+                has_managed_block
+                and expected_managed != doc_info["managed_block"]
             ):
                 violations.append(
                     Violation(
@@ -164,7 +221,7 @@ class ManagedDocAssetsCheck(PolicyCheck):
         except yaml.YAMLError:
             return None
 
-    def _extract_doc_info(self, doc_path: Path) -> Dict[str, str | List[str]]:
+    def _extract_doc_info(self, doc_path: Path) -> Dict[str, object]:
         """Return the header metadata and managed block text for a document."""
         text = doc_path.read_text(encoding="utf-8")
         lines = text.splitlines()
@@ -183,9 +240,11 @@ class ManagedDocAssetsCheck(PolicyCheck):
             "managed_by": "",
         }
         inside = False
+        has_managed_block = False
         for line in lines:
             if "<!-- DEVCOV:BEGIN -->" in line:
                 inside = True
+                has_managed_block = True
                 continue
             if "<!-- DEVCOV:END -->" in line:
                 break
@@ -217,4 +276,60 @@ class ManagedDocAssetsCheck(PolicyCheck):
             "managed_by": metadata["managed_by"],
             "header_lines": header_lines,
             "managed_block": managed_block,
+            "has_managed_block": has_managed_block,
         }
+
+    def _normalize_descriptor_managed_body(
+        self, descriptor: Dict[str, str]
+    ) -> str:
+        """Drop legacy markers and generated metadata from descriptor text."""
+        body = str(descriptor.get("managed_block", ""))
+        cleaned: List[str] = []
+        for raw_line in body.splitlines():
+            line = raw_line.rstrip()
+            stripped = line.strip()
+            if stripped in {"<!-- DEVCOV:BEGIN -->", "<!-- DEVCOV:END -->"}:
+                continue
+            if stripped.startswith(self._DOC_ID_LABEL):
+                continue
+            if stripped.startswith(self._DOC_TYPE_LABEL):
+                continue
+            if stripped.startswith(self._MANAGED_BY_LABEL):
+                continue
+            cleaned.append(line)
+        return "\n".join(cleaned).strip("\n")
+
+    def _expected_managed_block(self, descriptor: Dict[str, str]) -> str:
+        """Build the managed block payload expected in rendered docs."""
+        lines: List[str] = []
+        doc_id = str(descriptor.get("doc_id", "")).strip()
+        doc_type = str(descriptor.get("doc_type", "")).strip()
+        managed_by = str(descriptor.get("managed_by", "")).strip()
+        if doc_id:
+            lines.append(f"{self._DOC_ID_LABEL} {doc_id}")
+        if doc_type:
+            lines.append(f"{self._DOC_TYPE_LABEL} {doc_type}")
+        if managed_by:
+            lines.append(f"{self._MANAGED_BY_LABEL} {managed_by}")
+        body = self._normalize_descriptor_managed_body(descriptor)
+        if lines and body:
+            lines.append("")
+        if body:
+            lines.extend(body.splitlines())
+        return "\n".join(lines).rstrip()
+
+    def _descriptor_contains_metadata_lines(
+        self,
+        descriptor: Dict[str, str],
+    ) -> bool:
+        """Return True when managed_block duplicates metadata lines."""
+        body = str(descriptor.get("managed_block", ""))
+        for line in body.splitlines():
+            stripped = line.strip()
+            if stripped.startswith(self._DOC_ID_LABEL):
+                return True
+            if stripped.startswith(self._DOC_TYPE_LABEL):
+                return True
+            if stripped.startswith(self._MANAGED_BY_LABEL):
+                return True
+        return False

@@ -38,9 +38,3 @@ policy_overlays:
   line-length-limit:
     include_suffixes:
       - .php
-policies:
-  - dependency-license-sync
-  - devflow-run-gates
-  - documentation-growth-tracking
-  - line-length-limit
-  - version-sync

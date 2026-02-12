@@ -32,9 +32,3 @@ policy_overlays:
     dependency_files:
       - Podfile
       - Podfile.lock
-policies:
-  - devflow-run-gates
-  - dependency-license-sync
-  - documentation-growth-tracking
-  - line-length-limit
-  - version-sync

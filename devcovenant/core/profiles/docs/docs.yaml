@@ -24,8 +24,3 @@ policy_overlays:
       - .md
       - .rst
       - .txt
-policies:
-  - line-length-limit
-  - documentation-growth-tracking
-  - last-updated-placement
-  - version-sync

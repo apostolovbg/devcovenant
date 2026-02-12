@@ -1,5 +1,5 @@
 # DevCovenant Development Plan
-**Last Updated:** 2026-02-11
+**Last Updated:** 2026-02-12
 **Version:** 0.2.6
 
 <!-- DEVCOV:BEGIN -->
@@ -8,129 +8,168 @@
 **Managed By:** DevCovenant
 <!-- DEVCOV:END -->
 
-This plan is rebuilt from `SPEC.md` plus the latest SPEC-vs-reality audit.
-`SPEC.md` remains behavior source of truth; this file tracks execution order,
-status, and acceptance for dedrift work.
+This plan tracks the current 0.2.6 dedrift backlog directly from `SPEC.md`.
+`SPEC.md` remains behavior source of truth. This file keeps implementation
+order, status, and validation scope explicit.
 
 ## Table of Contents
 1. [Overview](#overview)
 2. [Workflow](#workflow)
-3. [Alignment Snapshot](#alignment-snapshot)
-4. [Active 0.2.6 Dedrift Backlog](#active-026-dedrift-backlog)
+3. [Decisions Locked](#decisions-locked)
+4. [Active 0.2.6 Backlog](#active-026-backlog)
 5. [Deferred 0.2.7 Work](#deferred-027-work)
 6. [Acceptance Criteria](#acceptance-criteria)
 7. [Validation Routine](#validation-routine)
 
 ## Overview
-- Scope: close remaining 0.2.6 gaps where runtime behavior differs from
+- Scope: close remaining 0.2.6 drift where runtime behavior differs from
   `SPEC.md`.
-- Inputs: `SPEC.md` requirements + merged drift findings that were in
-  `DRIFT.md`.
-- Rule: implement in dependency order and keep statuses explicit.
+- Inputs: current `SPEC.md` plus the latest mismatch audit.
+- Rule: execute in order, mark status explicitly, and keep the plan current.
 
 ## Workflow
-- Start edit sessions with `devcovenant check --start`.
-- Implement tasks in this plan order.
+- Start each edit session with `devcovenant check --start`.
+- Implement items in this plan order unless superseded by spec decisions.
 - Run `devcovenant refresh` after descriptor/profile/config edits.
 - Run `devcovenant test`.
-- End with `devcovenant check --end`.
-- If hooks/autofixers change files, rerun `test` and `check --end` until
-  clean.
+- End each edit session with `devcovenant check --end`.
 
-## Alignment Snapshot
-- [done] Public command surface is constrained to:
+## Decisions Locked
+- [done] `install` is lightweight only: copy `devcovenant/` and seed generic
+  config.
+- [done] Existing installs are upgrade-directed, non-interactive.
+- [done] `check --start` and `check --end` run full refresh before gates.
+- [done] Public command surface stays:
   `check`, `test`, `install`, `deploy`, `upgrade`, `refresh`, `undeploy`,
-  `uninstall`, and `update_lock`.
-- [done] Root command modules are real implementations; no root shims.
-- [done] Managed docs are YAML-template driven with managed-block refresh.
-- [done] AGENTS policy block is registry-rendered downstream.
-- [done] Policy activation is config-driven (`policy_state`).
-- [done] Legacy stock policy text restore path is removed.
-- [done] Tests run as `python3 -m unittest discover -v` then `pytest`.
-- [done] `update_lock` is metadata-driven and policy-integrated for license
-  artifact refresh.
+  `uninstall`, `update_lock`.
 
-## Active 0.2.6 Dedrift Backlog
-1. [not done] `check --start/--end` full-refresh parity
-- Requirement source: `SPEC.md` full-refresh-at-check-start contract.
-- Gap: gate entry paths bypass full refresh before pre-commit gate run.
+## Active 0.2.6 Backlog
+1. [done] SPEC dedrift for install and lifecycle semantics
+- Requirement source: lifecycle model in `SPEC.md`.
 - Deliverables:
-  - Run full `refresh_repo(...)` before both `--start` and `--end` phases.
-  - Keep gate metadata recording behavior unchanged.
-  - Add/adjust unit tests for start/end refresh invocation order.
+  - Keep install lightweight-only semantics.
+  - Document deploy-only destructive cleanup scope.
+  - Align runtime artifact generation wording with full-refresh paths.
 
-2. [not done] `install` upgrade prompt when source is newer
-- Requirement source: install/upgrade model in `SPEC.md`.
-- Gap: install does not prompt to run upgrade first when packaged source is
-  newer than repo core.
+2. [done] Canonical generic install config seeding
+- Requirement source: install model and generic config requirements.
+- Gap: source-tree install can inherit non-generic active profiles.
 - Deliverables:
-  - Add version comparison and prompt/flow for `upgrade` handoff.
-  - Cover prompt path and non-prompt path with unit tests.
+  - Force canonical generic defaults on install.
+  - Keep `install.generic_config: true` and `devcov_core_include: false`.
+  - Add regression tests for deterministic generic config output.
 
-3. [not done] `install` existing-artifact confirmation
-- Requirement source: install safety behavior in `SPEC.md`.
-- Gap: install proceeds directly without explicit uninstall confirmation.
+3. [done] Deploy-only cleanup for user-mode repos
+- Requirement source: deploy behavior for `devcov_core_include: false`.
+- Resolved: deploy now applies cleanup only for user-mode activation.
 - Deliverables:
-  - Detect existing DevCovenant artifacts.
-  - Refuse to proceed unless user confirms uninstall prompt flow.
-  - Add unit tests for deny/accept branches.
+  - On deploy only, delete `devcovenant/custom/policies/**`.
+  - On deploy only, delete `tests/devcovenant/core/**`.
+  - On deploy only, delete `devcovenant/custom/profiles/devcovrepo/**`.
+  - Keep `upgrade` and `refresh` non-destructive for custom content.
 
-4. [not done] install mode semantics (`auto`, `empty`)
-- Requirement source: installation requirements in `SPEC.md`.
-- Gap: command exposes only a single behavior.
+4. [done] Lifecycle registry generation boundaries
+- Requirement source: install/deploy/upgrade/refresh/check contracts.
+- Resolved: lifecycle boundary behavior is enforced and regression-tested.
 - Deliverables:
-  - Implement mode handling and defaults as specified.
-  - Keep CLI command-scoped help clean.
-  - Add unit coverage for each mode path.
+  - Keep install limited to core + generic config + manifest scaffold.
+  - Ensure deploy/upgrade end with full `refresh`.
+  - Keep check start/end full refresh behavior and CI-safe execution.
 
-5. [not done] profile-driven pre-commit fragment merge
-- Requirement source: pre-commit configuration by profile in `SPEC.md`.
-- Gap: no merge engine currently applies per-profile pre-commit fragments.
+5. [done] `update_lock` repo-root execution
+- Requirement source: command matrix and lock refresh behavior.
+- Resolved: `update_lock` resolves repository root and always reconciles
+  Python lock output instead of short-circuiting on cached input hashes.
 - Deliverables:
-  - Implement merge order: global baseline -> active profile fragments ->
-    config overrides.
-  - Regenerate `.pre-commit-config.yaml` on deploy/upgrade/refresh.
-  - Record resolved hook set in manifest metadata.
-  - Add regression tests for representative profile combinations.
+  - Resolve repo root via shared command runtime.
+  - Execute lock and license refresh against resolved repo root.
+  - Remove `requirements.in` hash-cache skip path from Python lock refresh.
+  - Add tests for invocation from subdirectories.
+  - Add tests that prove Python lock refresh still attempts reconciliation
+    when `requirements.in` content is unchanged.
 
-6. [not done] `.gitignore` generation and merge lifecycle
-- Requirement source: installation and undeploy requirements in `SPEC.md`.
-- Gap: refresh/deploy do not regenerate `.gitignore`; undeploy does not
-  revert generated fragments.
+6. [done] Full generated-config refresh alignment
+- Requirement source: refresh config autogen section requirements.
+- Resolved: refresh now regenerates all required config autogen sections
+  (profiles.generated, devcov_core_paths, autogen metadata overlays, and
+  managed doc autogen list) while preserving user override fields.
 - Deliverables:
-  - Implement generated fragment synthesis from global/profile/OS assets.
-  - Preserve user-managed entries under preserved block semantics.
-  - Implement undeploy cleanup for generated fragments.
-  - Add unit tests for generate/merge/revert flows.
+  - Refresh all required generated config sections.
+  - Preserve user-controlled override fields.
+  - Add unit tests for merge/update behavior.
 
-7. [not done] packaging manifest dedrift
-- Requirement source: packaging rules in `SPEC.md`.
-- Gap: `MANIFEST.in` still includes repo-root managed docs that spec forbids.
-- Deliverables:
-  - Remove forbidden root managed docs from `MANIFEST.in` includes.
-  - Keep required package metadata files and `devcovenant/` docs/assets.
-  - Add/adjust packaging manifest unit checks.
-
-8. [not done] close-loop dedrift verification
+7. [not done] Close-loop SPEC-vs-reality audit
 - Requirement source: plan governance quality.
-- Gap: remaining drift must be re-audited after implementation.
+- Gap: backlog completion must be re-audited after implementation.
 - Deliverables:
-  - Re-run SPEC-vs-reality audit after items 1-7.
-  - Resolve any residual mismatches or log them as explicit deferred items.
-  - Keep this plan as the single dedrift backlog document.
+  - Re-run full mismatch audit after items 2-6.
+  - Resolve remaining drift or defer explicitly with rationale.
+  - Keep this plan as single active dedrift backlog.
+
+8. [done] AGENTS multi-block ownership dedrift
+- Requirement source: documentation management block semantics in `SPEC.md`.
+- Resolved: AGENTS now treats top managed block, workflow block, and policy
+  block as separate managed units with generated markers.
+- Deliverables:
+  - Added `DEVCOV-WORKFLOW` managed block support in refresh rendering.
+  - Removed marker literals from AGENTS descriptor `body`.
+  - Preserved editable notes while normalizing legacy second `DEVCOV` block.
+  - Updated changelog coverage managed-block detection and undeploy cleanup
+    for workflow markers.
+
+9. [done] AGENTS-first runtime parser dedrift
+- Requirement source: policy execution semantics in `SPEC.md`.
+- Resolved: engine runtime now parses policy definitions from AGENTS policy
+  blocks and treats registry data as hash/diagnostic state only.
+- Deliverables:
+  - Switch runtime policy loading to parse `AGENTS.md` policy blocks.
+  - Use AGENTS resolved `enabled` values as runtime activation state.
+  - Keep registry as synchronized hash/diagnostic state, not runtime authority.
+  - Add regressions that fail if runtime path bypasses AGENTS parser.
+
+10. [done] CONTRIBUTING descriptor managed-block dedrift
+- Requirement source: managed-doc marker generation contract in `SPEC.md`.
+- Resolved: `CONTRIBUTING.yaml` no longer duplicates managed block marker/
+  content text in descriptor `body`.
+- Deliverables:
+  - Remove managed block marker/content literals from descriptor `body`.
+  - Keep managed block content only in descriptor `managed_block`.
+  - Verify refresh renders a single generated managed block in
+    `CONTRIBUTING.md`.
+
+11. [done] Descriptor-driven managed-block metadata dedrift
+- Requirement source: documentation management block semantics in `SPEC.md`.
+- Resolved: managed block `Doc ID` / `Doc Type` / `Managed By` lines are now
+  generated from descriptor metadata fields instead of copied from descriptor
+  `managed_block` text.
+- Deliverables:
+  - Added renderer support to compose managed block metadata from
+    `doc_id`/`doc_type`/`managed_by`.
+  - Normalized global doc descriptors to remove duplicated metadata lines from
+    `managed_block` text and align `doc_type` values.
+  - Updated managed-doc-assets policy enforcement to reject metadata-line
+    duplication inside descriptor `managed_block`.
+  - Added unit tests for generated-metadata pass behavior and duplication
+    rejection.
+
+12. [done] Profile policy-activation list removal
+- Requirement source: policy activation architecture in `SPEC.md`.
+- Resolved: profile manifests no longer carry `policies:` activation lists;
+  activation is config-only via `policy_state`.
+- Deliverables:
+  - Removed `policies:` keys from all core/custom profile manifests.
+  - Updated profile docs/examples to describe overlays-only profile metadata.
+  - Extended profile manifest tests to reject `policies` activation keys.
 
 ## Deferred 0.2.7 Work
 1. [not done] Metadata DSL expansion
-- Continue moving reusable policy/runtime knobs from hardcoded logic into
-  descriptor/profile/config-driven structures.
-- Keep custom policy and custom profile escape hatches explicit.
+- Continue moving reusable runtime knobs from hardcoded logic into metadata.
+- Keep custom policy/profile escape hatches explicit.
 
 ## Acceptance Criteria
-- Active 0.2.6 backlog items are implemented with unit coverage.
-- `PLAN.md` remains aligned with current `SPEC.md`.
-- Runtime behavior matches spec for install/deploy/upgrade/refresh/check/test.
-- Generated docs and registries pass policy enforcement with no blocking
-  violations.
+- Active 0.2.6 backlog items are completed with unit coverage.
+- Runtime behavior matches `SPEC.md` for lifecycle and command execution.
+- Generated docs/registries pass policy enforcement without blocking errors.
 - Gate sequence (`start -> test -> end`) passes cleanly.
 
 ## Validation Routine
@@ -138,5 +177,4 @@ status, and acceptance for dedrift work.
 - Run `devcovenant test`.
 - Run `devcovenant check --end`.
 - Validate command help remains command-scoped.
-- Validate `devcovenant refresh` as canonical operator refresh command.
-- Validate changelog coverage and managed-doc policies on final tree.
+- Validate `devcovenant refresh` as canonical full-refresh command.

@@ -47,6 +47,13 @@ def _build_parser() -> argparse.ArgumentParser:
 
 def _run_gate(repo_root: Path, phase: str) -> int:
     """Run a devflow gate phase."""
+    print_step("Running full refresh", "🔄")
+    refresh_exit = refresh_repo(repo_root)
+    if refresh_exit != 0:
+        print_step("Full refresh failed", "🚫")
+        return refresh_exit
+    print_step("Full refresh complete", "✅")
+
     print_banner("Devflow gate", "🚦")
     print_step(f"Running `{phase}` pre-commit gate", "▶️")
     exit_code = run_pre_commit_gate(repo_root, phase)

@@ -61,13 +61,3 @@ policy_overlays:
   modules-need-tests:
     include_suffixes:
       - .py
-policies:
-  - dependency-license-sync
-  - devflow-run-gates
-  - documentation-growth-tracking
-  - line-length-limit
-  - security-scanner
-  - name-clarity
-  - docstring-and-comment-coverage
-  - modules-need-tests
-  - version-sync

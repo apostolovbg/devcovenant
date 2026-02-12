@@ -61,6 +61,30 @@ def _unit_test_upgrade_preserves_custom_tree() -> None:
         assert custom_file.read_text(encoding="utf-8") == "# keep\n"
 
 
+def _unit_test_upgrade_runs_full_refresh() -> None:
+    """upgrade_repo should end with full refresh and registries."""
+    with tempfile.TemporaryDirectory() as temp_dir:
+        repo_root = Path(temp_dir)
+        with redirect_stderr(StringIO()):
+            install.install_repo(repo_root)
+
+        version_path = repo_root / "devcovenant" / "VERSION"
+        version_path.write_text("0.0.1\n", encoding="utf-8")
+
+        with redirect_stderr(StringIO()):
+            result = upgrade.upgrade_repo(repo_root)
+        assert result == 0
+
+        policy_registry = (
+            repo_root
+            / "devcovenant"
+            / "registry"
+            / "local"
+            / "policy_registry.yaml"
+        )
+        assert policy_registry.exists()
+
+
 class GeneratedUnittestCases(unittest.TestCase):
     """unittest wrappers for module-level tests."""
 
@@ -71,3 +95,7 @@ class GeneratedUnittestCases(unittest.TestCase):
     def test_upgrade_preserves_custom_tree(self):
         """Run test_upgrade_preserves_custom_tree."""
         _unit_test_upgrade_preserves_custom_tree()
+
+    def test_upgrade_runs_full_refresh(self):
+        """Run test_upgrade_runs_full_refresh."""
+        _unit_test_upgrade_runs_full_refresh()

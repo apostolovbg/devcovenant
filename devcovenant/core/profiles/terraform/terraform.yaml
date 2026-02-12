@@ -28,8 +28,3 @@ policy_overlays:
       - .tf
       - .tfvars
       - .hcl
-policies:
-  - devflow-run-gates
-  - documentation-growth-tracking
-  - line-length-limit
-  - version-sync

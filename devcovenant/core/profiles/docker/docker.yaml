@@ -29,8 +29,3 @@ policy_overlays:
     include_suffixes:
       - .yml
       - .yaml
-policies:
-  - devflow-run-gates
-  - documentation-growth-tracking
-  - line-length-limit
-  - version-sync

@@ -116,16 +116,12 @@ def replace_core_package(repo_root: Path) -> None:
 
 
 def _ensure_profiles_block(payload: dict[str, object]) -> None:
-    """Ensure active profile defaults exist."""
+    """Write canonical generic profile defaults."""
     profiles_block = payload.get("profiles")
     if not isinstance(profiles_block, dict):
         profiles_block = {}
 
-    active = profiles_block.get("active")
-    if isinstance(active, list) and active:
-        profiles_block["active"] = [str(item) for item in active if str(item)]
-    else:
-        profiles_block["active"] = list(DEFAULT_ACTIVE_PROFILES)
+    profiles_block["active"] = list(DEFAULT_ACTIVE_PROFILES)
 
     payload["profiles"] = profiles_block
 
@@ -163,8 +159,7 @@ def _ensure_generic_config(repo_root: Path) -> None:
     install_block["generic_config"] = True
     payload["install"] = install_block
 
-    if "devcov_core_include" not in payload:
-        payload["devcov_core_include"] = False
+    payload["devcov_core_include"] = False
 
     _ensure_profiles_block(payload)
     _ensure_doc_assets_block(payload)
@@ -174,9 +169,24 @@ def _ensure_generic_config(repo_root: Path) -> None:
 def install_repo(repo_root: Path) -> int:
     """Install DevCovenant core and generic config in a repository."""
     replace_core_package(repo_root)
+
+    local_registry = repo_root / "devcovenant" / "registry" / "local"
+    if local_registry.exists():
+        shutil.rmtree(local_registry)
+
     _ensure_generic_config(repo_root)
     manifest_module.ensure_manifest(repo_root)
     return 0
+
+
+def _is_existing_install(repo_root: Path) -> bool:
+    """Return True when DevCovenant is already present in repo_root."""
+    target_dir = _target_package_dir(repo_root)
+    if not target_dir.exists():
+        return False
+    return (target_dir / "__init__.py").exists() or (
+        target_dir / "VERSION"
+    ).exists()
 
 
 def _build_parser() -> argparse.ArgumentParser:
@@ -194,6 +204,11 @@ def run(args: argparse.Namespace) -> int:
     print_banner("DevCovenant run", "🚀")
     print_step("Command: install", "🧭")
     print_banner("Install", "📦")
+
+    if _is_existing_install(repo_root):
+        print_step("DevCovenant is already present in this repository.", "ℹ️")
+        print_step("Run `devcovenant upgrade` to replace core files.", "ℹ️")
+        return 1
 
     result = install_repo(repo_root)
     if result != 0:

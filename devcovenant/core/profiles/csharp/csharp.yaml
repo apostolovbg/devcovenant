@@ -45,13 +45,3 @@ policy_overlays:
   line-length-limit:
     include_suffixes:
       - .cs
-policies:
-  - dependency-license-sync
-  - devflow-run-gates
-  - name-clarity
-  - docstring-and-comment-coverage
-  - modules-need-tests
-  - security-scanner
-  - documentation-growth-tracking
-  - line-length-limit
-  - version-sync

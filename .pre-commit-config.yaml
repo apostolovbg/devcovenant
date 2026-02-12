@@ -66,13 +66,20 @@ exclude: |-
     data/raw
     | data/tmp
     | data/cache
+    | _site
+    | site
+    | build
     | \.venv
     | __pycache__
     | \.pytest_cache
     | \.mypy_cache
-    | build
     | dist
-    | _site
-    | site
+    | \.git
+    | \.python
+    | output
+    | logs
+    | node_modules
+    | \.cache
+    | \.venv\.lock
   )
   (/|$)

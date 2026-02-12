@@ -8,7 +8,7 @@ from pathlib import Path
 
 import yaml
 
-from devcovenant import deploy, install
+from devcovenant import deploy, install, refresh
 
 
 def _set_generic_flag(repo_root: Path, enabled: bool) -> None:
@@ -60,6 +60,62 @@ def _unit_test_deploy_runs_full_refresh_when_config_ready() -> None:
         assert policy_registry.exists()
 
 
+def _write_marker(path: Path) -> None:
+    """Create a marker file and required parent directories."""
+    path.parent.mkdir(parents=True, exist_ok=True)
+    path.write_text("marker\n", encoding="utf-8")
+
+
+def _unit_test_deploy_cleanup_is_deploy_only() -> None:
+    """deploy_repo should remove user-mode paths; refresh should not."""
+    with tempfile.TemporaryDirectory() as temp_dir:
+        repo_root = Path(temp_dir)
+        install.install_repo(repo_root)
+        _set_generic_flag(repo_root, enabled=False)
+
+        policy_marker = (
+            repo_root
+            / "devcovenant"
+            / "custom"
+            / "policies"
+            / "demo"
+            / "demo.py"
+        )
+        tests_marker = (
+            repo_root
+            / "tests"
+            / "devcovenant"
+            / "core"
+            / "demo"
+            / "test_demo.py"
+        )
+        profile_marker = (
+            repo_root
+            / "devcovenant"
+            / "custom"
+            / "profiles"
+            / "devcovrepo"
+            / "demo.txt"
+        )
+        _write_marker(policy_marker)
+        _write_marker(tests_marker)
+        _write_marker(profile_marker)
+
+        refresh_result = refresh.refresh_repo(repo_root)
+        assert refresh_result == 0
+        assert policy_marker.exists()
+        assert tests_marker.exists()
+        assert profile_marker.exists()
+
+        deploy_result = deploy.deploy_repo(repo_root)
+        assert deploy_result == 0
+        assert not (repo_root / "devcovenant" / "custom" / "policies").exists()
+        assert not (repo_root / "tests" / "devcovenant" / "core").exists()
+        assert not (
+            repo_root / "devcovenant" / "custom" / "profiles" / "devcovrepo"
+        ).exists()
+
+
 class GeneratedUnittestCases(unittest.TestCase):
     """unittest wrappers for module-level tests."""
 
@@ -70,3 +126,7 @@ class GeneratedUnittestCases(unittest.TestCase):
     def test_deploy_runs_full_refresh_when_config_ready(self):
         """Run test_deploy_runs_full_refresh_when_config_ready."""
         _unit_test_deploy_runs_full_refresh_when_config_ready()
+
+    def test_deploy_cleanup_is_deploy_only(self):
+        """Run test_deploy_cleanup_is_deploy_only."""
+        _unit_test_deploy_cleanup_is_deploy_only()

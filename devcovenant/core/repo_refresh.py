@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+import copy
+import re
 import sys
 from dataclasses import dataclass
 from datetime import datetime, timezone
@@ -27,6 +29,19 @@ from devcovenant.core.selector_helpers import _normalize_globs
 
 BLOCK_BEGIN = "<!-- DEVCOV:BEGIN -->"
 BLOCK_END = "<!-- DEVCOV:END -->"
+WORKFLOW_BEGIN = "<!-- DEVCOV-WORKFLOW:BEGIN -->"
+WORKFLOW_END = "<!-- DEVCOV-WORKFLOW:END -->"
+_POLICIES_BEGIN = "<!-- DEVCOV-POLICIES:BEGIN -->"
+_POLICIES_END = "<!-- DEVCOV-POLICIES:END -->"
+_DOC_ID_LABEL = "**Doc ID:**"
+_DOC_TYPE_LABEL = "**Doc Type:**"
+_MANAGED_BY_LABEL = "**Managed By:**"
+USER_GITIGNORE_BEGIN = "# --- User entries (preserved) ---"
+USER_GITIGNORE_END = "# --- End user entries ---"
+GITIGNORE_BASE_PATH = (
+    "devcovenant/core/profiles/global/assets/gitignore_base.txt"
+)
+GITIGNORE_OS_PATH = "devcovenant/core/profiles/global/assets/gitignore_os.txt"
 
 DEFAULT_MANAGED_DOCS = [
     "AGENTS.md",
@@ -177,6 +192,92 @@ def _apply_header_overrides(
     return updated
 
 
+def _marker_line_regex(marker: str) -> re.Pattern[str]:
+    """Return a line-anchored regex for marker lookup."""
+    return re.compile(rf"(?m)^[ \t]*{re.escape(marker)}[ \t]*$")
+
+
+def _block_spans(
+    text: str,
+    begin_marker: str,
+    end_marker: str,
+) -> list[tuple[int, int, str]]:
+    """Return positional spans for marker-delimited blocks in text."""
+    spans: list[tuple[int, int, str]] = []
+    begin_re = _marker_line_regex(begin_marker)
+    end_re = _marker_line_regex(end_marker)
+    search_start = 0
+    while True:
+        begin_match = begin_re.search(text, search_start)
+        if begin_match is None:
+            return spans
+        end_match = end_re.search(text, begin_match.end())
+        if end_match is None:
+            return spans
+        block_start = begin_match.start()
+        end_marker_start = text.find(
+            end_marker,
+            end_match.start(),
+            end_match.end(),
+        )
+        if end_marker_start < 0:
+            return spans
+        block_end = end_marker_start + len(end_marker)
+        spans.append((block_start, block_end, text[block_start:block_end]))
+        search_start = end_match.end()
+
+
+def _render_block(begin_marker: str, end_marker: str, body: str) -> str:
+    """Render a managed marker block from marker pair and body."""
+    return "\n".join([begin_marker, body.strip("\n"), end_marker])
+
+
+def _managed_metadata_lines(descriptor: dict[str, object]) -> list[str]:
+    """Return managed-block metadata lines from descriptor fields."""
+    doc_id = str(descriptor.get("doc_id", "")).strip()
+    doc_type = str(descriptor.get("doc_type", "")).strip()
+    managed_by = str(descriptor.get("managed_by", "")).strip()
+    lines: list[str] = []
+    if doc_id:
+        lines.append(f"{_DOC_ID_LABEL} {doc_id}")
+    if doc_type:
+        lines.append(f"{_DOC_TYPE_LABEL} {doc_type}")
+    if managed_by:
+        lines.append(f"{_MANAGED_BY_LABEL} {managed_by}")
+    return lines
+
+
+def _normalize_managed_block_body(body: str) -> str:
+    """Strip legacy marker/header lines from descriptor-managed block body."""
+    cleaned: list[str] = []
+    for raw_line in body.splitlines():
+        line = raw_line.rstrip()
+        stripped = line.strip()
+        if stripped in {BLOCK_BEGIN, BLOCK_END}:
+            continue
+        if stripped.startswith(_DOC_ID_LABEL):
+            continue
+        if stripped.startswith(_DOC_TYPE_LABEL):
+            continue
+        if stripped.startswith(_MANAGED_BY_LABEL):
+            continue
+        cleaned.append(line)
+    return "\n".join(cleaned).strip("\n")
+
+
+def _compose_managed_block_body(descriptor: dict[str, object]) -> str:
+    """Compose managed block body from descriptor metadata and body text."""
+    metadata_lines = _managed_metadata_lines(descriptor)
+    block_extra = _normalize_managed_block_body(
+        str(descriptor.get("managed_block", ""))
+    )
+    if metadata_lines and block_extra:
+        return "\n".join(metadata_lines + ["", block_extra])
+    if metadata_lines:
+        return "\n".join(metadata_lines)
+    return block_extra
+
+
 def _render_doc(repo_root: Path, doc_name: str, version: str) -> str | None:
     """Render managed doc text from YAML descriptor."""
     descriptor = _read_yaml(_descriptor_path(repo_root, doc_name))
@@ -196,15 +297,24 @@ def _render_doc(repo_root: Path, doc_name: str, version: str) -> str | None:
         title=title_override,
     )
 
-    block_body = str(descriptor.get("managed_block", "")).strip("\n")
+    block_body = _compose_managed_block_body(descriptor)
     managed_block = ""
     if block_body:
-        managed_block = "\n".join([BLOCK_BEGIN, block_body, BLOCK_END])
+        managed_block = _render_block(BLOCK_BEGIN, BLOCK_END, block_body)
 
     body_value = descriptor.get("body")
     body_lines = []
     if isinstance(body_value, str):
         body_lines = [line.rstrip() for line in body_value.splitlines()]
+
+    workflow_body = str(descriptor.get("workflow_block", "")).strip("\n")
+    workflow_block = ""
+    if workflow_body:
+        workflow_block = _render_block(
+            WORKFLOW_BEGIN,
+            WORKFLOW_END,
+            workflow_body,
+        )
 
     parts = []
     if header_lines:
@@ -213,6 +323,10 @@ def _render_doc(repo_root: Path, doc_name: str, version: str) -> str | None:
         parts.append(managed_block)
     if body_lines:
         parts.append("\n".join(body_lines))
+    if workflow_block:
+        parts.append(workflow_block)
+    if doc_name == "AGENTS.md":
+        parts.append(f"{_POLICIES_BEGIN}\n{_POLICIES_END}")
     if not parts:
         return None
     return "\n\n".join(parts).rstrip() + "\n"
@@ -226,11 +340,10 @@ def _doc_is_placeholder(text: str) -> bool:
 
 def _extract_managed_block(text: str) -> str | None:
     """Extract first managed block from text."""
-    if BLOCK_BEGIN not in text or BLOCK_END not in text:
+    spans = _managed_block_spans(text)
+    if not spans:
         return None
-    start = text.index(BLOCK_BEGIN)
-    end = text.index(BLOCK_END, start) + len(BLOCK_END)
-    return text[start:end]
+    return spans[0][2]
 
 
 def _replace_managed_block(current: str, template: str) -> tuple[str, bool]:
@@ -255,18 +368,91 @@ def _replace_managed_block(current: str, template: str) -> tuple[str, bool]:
 
 def _managed_block_spans(text: str) -> list[tuple[int, int, str]]:
     """Return positional spans for every managed block in text."""
-    spans: list[tuple[int, int, str]] = []
-    search_start = 0
-    while True:
-        block_start = text.find(BLOCK_BEGIN, search_start)
-        if block_start < 0:
-            return spans
-        end_marker = text.find(BLOCK_END, block_start)
-        if end_marker < 0:
-            return spans
-        block_end = end_marker + len(BLOCK_END)
-        spans.append((block_start, block_end, text[block_start:block_end]))
-        search_start = block_end
+    return _block_spans(text, BLOCK_BEGIN, BLOCK_END)
+
+
+def _first_block_text(
+    text: str,
+    begin_marker: str,
+    end_marker: str,
+) -> str | None:
+    """Return first marker-delimited block text."""
+    spans = _block_spans(text, begin_marker, end_marker)
+    if not spans:
+        return None
+    return spans[0][2]
+
+
+def _first_marker_start(
+    text: str,
+    marker: str,
+    search_start: int,
+) -> int:
+    """Return marker start from offset, or -1 when missing."""
+    match = _marker_line_regex(marker).search(text, search_start)
+    if match is None:
+        return -1
+    return match.start()
+
+
+def _next_agents_control_block_start(text: str, search_start: int) -> int:
+    """Return start of next workflow/policy/legacy block after offset."""
+    starts: list[int] = []
+
+    managed_spans = _managed_block_spans(text)
+    if len(managed_spans) > 1:
+        starts.append(managed_spans[1][0])
+
+    workflow_spans = _block_spans(text, WORKFLOW_BEGIN, WORKFLOW_END)
+    if workflow_spans:
+        starts.append(workflow_spans[0][0])
+
+    policy_start = _first_marker_start(text, _POLICIES_BEGIN, search_start)
+    if policy_start >= 0:
+        starts.append(policy_start)
+
+    if not starts:
+        return len(text)
+    return min(starts)
+
+
+def _sync_agents_content(current: str, rendered: str) -> tuple[str, bool]:
+    """Sync AGENTS managed/workflow blocks while preserving editable text."""
+    managed_spans = _managed_block_spans(current)
+    if not managed_spans:
+        return rendered, current != rendered
+
+    editable_start = managed_spans[0][1]
+    editable_end = _next_agents_control_block_start(current, editable_start)
+    editable_section = current[editable_start:editable_end]
+
+    rendered_spans = _managed_block_spans(rendered)
+    if not rendered_spans:
+        return rendered, current != rendered
+
+    rendered_editable_start = rendered_spans[0][1]
+    rendered_editable_end = _next_agents_control_block_start(
+        rendered,
+        rendered_editable_start,
+    )
+    updated = (
+        rendered[:rendered_editable_start]
+        + editable_section
+        + rendered[rendered_editable_end:]
+    )
+
+    current_policy_block = _first_block_text(
+        current, _POLICIES_BEGIN, _POLICIES_END
+    )
+    template_policy_block = _first_block_text(
+        updated, _POLICIES_BEGIN, _POLICIES_END
+    )
+    if current_policy_block and template_policy_block:
+        updated = updated.replace(
+            template_policy_block, current_policy_block, 1
+        )
+
+    return updated, updated != current
 
 
 def _sync_doc(repo_root: Path, doc_name: str, version: str) -> bool:
@@ -286,7 +472,10 @@ def _sync_doc(repo_root: Path, doc_name: str, version: str) -> bool:
         target.write_text(rendered, encoding="utf-8")
         return True
 
-    updated, changed = _replace_managed_block(current, rendered)
+    if doc_name == "AGENTS.md":
+        updated, changed = _sync_agents_content(current, rendered)
+    else:
+        updated, changed = _replace_managed_block(current, rendered)
     if not changed:
         return False
 
@@ -325,6 +514,7 @@ def _refresh_profile_registry(
 
 
 def _refresh_config_generated(
+    repo_root: Path,
     config_path: Path,
     config: dict[str, object],
     registry: dict[str, dict],
@@ -347,6 +537,12 @@ def _refresh_config_generated(
     if not isinstance(generated, dict):
         generated = {}
 
+    core_paths = _default_core_paths(repo_root)
+    overlays = _config_autogen_metadata_overrides(repo_root, active_profiles)
+    doc_assets = config.get("doc_assets")
+    if not isinstance(doc_assets, dict):
+        doc_assets = {}
+
     changed = False
     if profiles_block.get("active") != active_profiles:
         profiles_block["active"] = active_profiles
@@ -354,13 +550,497 @@ def _refresh_config_generated(
     if generated.get("file_suffixes") != suffixes:
         generated["file_suffixes"] = suffixes
         changed = True
+    if config.get("devcov_core_paths") != core_paths:
+        config["devcov_core_paths"] = core_paths
+        changed = True
+    if config.get("autogen_metadata_overrides") != overlays:
+        config["autogen_metadata_overrides"] = overlays
+        changed = True
+
+    autogen_docs = doc_assets.get("autogen")
+    if autogen_docs != DEFAULT_MANAGED_DOCS:
+        doc_assets["autogen"] = list(DEFAULT_MANAGED_DOCS)
+        changed = True
+    user_docs = doc_assets.get("user")
+    if not isinstance(user_docs, list):
+        doc_assets["user"] = []
+        changed = True
 
     profiles_block["generated"] = generated
     config["profiles"] = profiles_block
+    config["doc_assets"] = doc_assets
 
     if changed:
         _write_yaml(config_path, config)
     return changed
+
+
+def _normalize_string_list(raw_value: object) -> list[str]:
+    """Normalize raw config values into a clean string list."""
+    if isinstance(raw_value, str):
+        items = [raw_value]
+    elif isinstance(raw_value, list):
+        items = raw_value
+    else:
+        return []
+
+    cleaned: list[str] = []
+    for raw_entry in items:
+        token = str(raw_entry or "").strip()
+        if token and token != "__none__":
+            cleaned.append(token)
+    return cleaned
+
+
+def _default_core_paths(repo_root: Path) -> list[str]:
+    """Load canonical devcov core paths from the config asset."""
+    asset_path = (
+        repo_root
+        / "devcovenant"
+        / "core"
+        / "profiles"
+        / "global"
+        / "assets"
+        / "config.yaml"
+    )
+    payload = _read_yaml(asset_path)
+    configured = _normalize_string_list(payload.get("devcov_core_paths"))
+    if configured:
+        return configured
+    return [
+        "devcovenant/core",
+        "devcovenant/__init__.py",
+        "devcovenant/__main__.py",
+        "devcovenant/cli.py",
+        "devcovenant/check.py",
+        "devcovenant/test.py",
+        "devcovenant/install.py",
+        "devcovenant/deploy.py",
+        "devcovenant/upgrade.py",
+        "devcovenant/refresh.py",
+        "devcovenant/uninstall.py",
+        "devcovenant/undeploy.py",
+        "devcovenant/update_lock.py",
+        "devcovenant/registry",
+    ]
+
+
+def _config_autogen_metadata_overrides(
+    repo_root: Path, active_profiles: list[str]
+) -> Dict[str, Dict[str, List[str]]]:
+    """Build deterministic profile-derived autogen metadata overrides."""
+    overlays = _collect_profile_overlays(repo_root, active_profiles)
+    normalized: Dict[str, Dict[str, List[str]]] = {}
+    for policy_id in sorted(overlays.keys()):
+        policy_map = overlays[policy_id]
+        key_map: Dict[str, List[str]] = {}
+        for key_name in sorted(policy_map.keys()):
+            values, _merge_values_flag = policy_map[key_name]
+            key_map[key_name] = list(values)
+        if key_map:
+            normalized[policy_id] = key_map
+    return normalized
+
+
+def _profile_registry_profiles(
+    registry: dict[str, dict],
+) -> dict[str, dict[str, object]]:
+    """Return normalized profile map from a profile registry payload."""
+    raw_profiles = registry.get("profiles")
+    if not isinstance(raw_profiles, dict):
+        return {}
+    normalized: dict[str, dict[str, object]] = {}
+    for name, payload in raw_profiles.items():
+        if not isinstance(payload, dict):
+            continue
+        normalized[str(name).strip().lower()] = payload
+    return normalized
+
+
+def _merge_repo_hooks(
+    base_hooks: list[object], incoming_hooks: list[object]
+) -> list[object]:
+    """Merge pre-commit hook lists by hook id while preserving order."""
+    merged = copy.deepcopy(base_hooks)
+    hook_indexes: dict[str, int] = {}
+    for index, hook in enumerate(merged):
+        if not isinstance(hook, dict):
+            continue
+        hook_id = str(hook.get("id", "")).strip()
+        if hook_id and hook_id not in hook_indexes:
+            hook_indexes[hook_id] = index
+
+    for hook in incoming_hooks:
+        if not isinstance(hook, dict):
+            merged.append(copy.deepcopy(hook))
+            continue
+        hook_id = str(hook.get("id", "")).strip()
+        if not hook_id or hook_id not in hook_indexes:
+            merged.append(copy.deepcopy(hook))
+            if hook_id:
+                hook_indexes[hook_id] = len(merged) - 1
+            continue
+        existing = merged[hook_indexes[hook_id]]
+        if isinstance(existing, dict):
+            updated = copy.deepcopy(existing)
+            updated.update(copy.deepcopy(hook))
+            merged[hook_indexes[hook_id]] = updated
+            continue
+        merged[hook_indexes[hook_id]] = copy.deepcopy(hook)
+    return merged
+
+
+def _merge_repo_entries(
+    base_repos: list[object], incoming_repos: list[object]
+) -> list[object]:
+    """Merge pre-commit repo entries by repo identifier."""
+    merged = copy.deepcopy(base_repos)
+    repo_indexes: dict[str, int] = {}
+    for index, repo_entry in enumerate(merged):
+        if not isinstance(repo_entry, dict):
+            continue
+        repo_name = str(repo_entry.get("repo", "")).strip()
+        if repo_name and repo_name not in repo_indexes:
+            repo_indexes[repo_name] = index
+
+    for repo_entry in incoming_repos:
+        if not isinstance(repo_entry, dict):
+            merged.append(copy.deepcopy(repo_entry))
+            continue
+        repo_name = str(repo_entry.get("repo", "")).strip()
+        if not repo_name or repo_name not in repo_indexes:
+            merged.append(copy.deepcopy(repo_entry))
+            if repo_name:
+                repo_indexes[repo_name] = len(merged) - 1
+            continue
+
+        existing = merged[repo_indexes[repo_name]]
+        if not isinstance(existing, dict):
+            merged[repo_indexes[repo_name]] = copy.deepcopy(repo_entry)
+            continue
+
+        updated = copy.deepcopy(existing)
+        for metadata_key, incoming_value in repo_entry.items():
+            if metadata_key == "hooks" and isinstance(incoming_value, list):
+                current_hooks = updated.get("hooks")
+                if isinstance(current_hooks, list):
+                    updated["hooks"] = _merge_repo_hooks(
+                        current_hooks, incoming_value
+                    )
+                else:
+                    updated["hooks"] = copy.deepcopy(incoming_value)
+                continue
+            updated[metadata_key] = copy.deepcopy(incoming_value)
+        merged[repo_indexes[repo_name]] = updated
+    return merged
+
+
+def _merge_pre_commit_fragment(
+    base_payload: dict[str, object], fragment: dict[str, object]
+) -> dict[str, object]:
+    """Merge one pre-commit fragment into a base payload."""
+    merged = copy.deepcopy(base_payload)
+    for metadata_key, incoming_value in fragment.items():
+        if metadata_key == "repos" and isinstance(incoming_value, list):
+            current_repos = merged.get("repos")
+            if isinstance(current_repos, list):
+                merged["repos"] = _merge_repo_entries(
+                    current_repos, incoming_value
+                )
+            else:
+                merged["repos"] = copy.deepcopy(incoming_value)
+            continue
+        existing = merged.get(metadata_key)
+        if isinstance(existing, dict) and isinstance(incoming_value, dict):
+            updated = copy.deepcopy(existing)
+            updated.update(copy.deepcopy(incoming_value))
+            merged[metadata_key] = updated
+            continue
+        merged[metadata_key] = copy.deepcopy(incoming_value)
+    return merged
+
+
+def _normalize_ignore_dir(raw: object) -> str:
+    """Normalize ignore directory values for pre-commit exclude generation."""
+    token = str(raw or "").strip().strip("/")
+    if not token or token == "__none__":
+        return ""
+    return token
+
+
+def _build_pre_commit_exclude(ignore_dirs: list[str]) -> str:
+    """Build a shared pre-commit exclude regex from ignore directories."""
+    escaped = [re.escape(entry) for entry in ignore_dirs if entry]
+    if not escaped:
+        return ""
+    body = "\n".join(
+        [
+            "(?x)",
+            "(^|/)",
+            "(",
+            "  " + "\n  | ".join(escaped),
+            ")",
+            "(/|$)",
+        ]
+    )
+    return body
+
+
+def _resolved_pre_commit_hooks(payload: dict[str, object]) -> list[str]:
+    """Return stable list of resolved hook identifiers."""
+    hooks: list[str] = []
+    repos_value = payload.get("repos")
+    if not isinstance(repos_value, list):
+        return hooks
+    for repo_entry in repos_value:
+        if not isinstance(repo_entry, dict):
+            continue
+        repo_name = str(repo_entry.get("repo", "")).strip()
+        if not repo_name:
+            continue
+        hooks_value = repo_entry.get("hooks")
+        if not isinstance(hooks_value, list):
+            continue
+        for hook_entry in hooks_value:
+            if not isinstance(hook_entry, dict):
+                continue
+            hook_id = str(hook_entry.get("id", "")).strip()
+            if not hook_id:
+                continue
+            hooks.append(f"{repo_name}:{hook_id}")
+    return hooks
+
+
+_EXCLUDE_PLACEHOLDER = "__DEVCOVENANT_EXCLUDE_PLACEHOLDER__"
+
+
+def _render_pre_commit_yaml(payload: dict[str, object]) -> str:
+    """Render pre-commit payload while preserving readable exclude blocks."""
+    exclude_value = payload.get("exclude")
+    if not isinstance(exclude_value, str) or "\n" not in exclude_value:
+        return yaml.safe_dump(payload, sort_keys=False)
+
+    serialized = copy.deepcopy(payload)
+    serialized["exclude"] = _EXCLUDE_PLACEHOLDER
+    rendered = yaml.safe_dump(serialized, sort_keys=False)
+    literal_block = "\n".join(
+        f"  {line}" for line in exclude_value.splitlines()
+    )
+    marker = f"exclude: {_EXCLUDE_PLACEHOLDER}\n"
+    replacement = "exclude: |-\n" + literal_block + "\n"
+    return rendered.replace(marker, replacement, 1)
+
+
+def _record_pre_commit_manifest(
+    repo_root: Path,
+    active_profiles: list[str],
+    pre_commit_payload: dict[str, object],
+) -> None:
+    """Persist resolved pre-commit metadata into manifest.json."""
+    manifest = manifest_module.ensure_manifest(repo_root)
+    if not isinstance(manifest, dict):
+        return
+
+    profiles_block = manifest.get("profiles")
+    if not isinstance(profiles_block, dict):
+        profiles_block = {}
+
+    resolved_hooks = _resolved_pre_commit_hooks(pre_commit_payload)
+    changed = False
+    if profiles_block.get("active") != active_profiles:
+        profiles_block["active"] = list(active_profiles)
+        changed = True
+    if profiles_block.get("resolved_pre_commit_hooks") != resolved_hooks:
+        profiles_block["resolved_pre_commit_hooks"] = resolved_hooks
+        changed = True
+    if not changed:
+        return
+
+    manifest["profiles"] = profiles_block
+    manifest["updated_at"] = datetime.now(timezone.utc).isoformat()
+    manifest_module.write_manifest(repo_root, manifest)
+
+
+def _refresh_pre_commit_config(
+    repo_root: Path,
+    config: dict[str, object],
+    profile_registry: dict[str, dict],
+    active_profiles: list[str],
+) -> bool:
+    """Regenerate .pre-commit-config.yaml from fragments and overrides."""
+    profiles_map = _profile_registry_profiles(profile_registry)
+    payload: dict[str, object] = {}
+
+    global_fragment = profiles_map.get("global", {}).get("pre_commit")
+    if isinstance(global_fragment, dict):
+        payload = _merge_pre_commit_fragment(payload, global_fragment)
+
+    for profile_name in active_profiles:
+        normalized = str(profile_name or "").strip().lower()
+        if not normalized or normalized == "global":
+            continue
+        fragment = profiles_map.get(normalized, {}).get("pre_commit")
+        if not isinstance(fragment, dict):
+            continue
+        payload = _merge_pre_commit_fragment(payload, fragment)
+
+    ignore_dirs: list[str] = []
+    profile_ignores = profiles.resolve_profile_ignore_dirs(
+        profile_registry, active_profiles
+    )
+    for entry in profile_ignores:
+        token = _normalize_ignore_dir(entry)
+        if token and token not in ignore_dirs:
+            ignore_dirs.append(token)
+
+    engine_block = config.get("engine")
+    if isinstance(engine_block, dict):
+        raw_engine_ignores = engine_block.get("ignore_dirs")
+        if isinstance(raw_engine_ignores, list):
+            for entry in raw_engine_ignores:
+                token = _normalize_ignore_dir(entry)
+                if token and token not in ignore_dirs:
+                    ignore_dirs.append(token)
+
+    if ignore_dirs:
+        payload["exclude"] = _build_pre_commit_exclude(ignore_dirs)
+
+    pre_commit_block = config.get("pre_commit")
+    if isinstance(pre_commit_block, dict):
+        overrides = pre_commit_block.get("overrides")
+        if isinstance(overrides, dict):
+            payload = _merge_pre_commit_fragment(payload, overrides)
+
+    if "repos" not in payload or not isinstance(payload.get("repos"), list):
+        payload["repos"] = []
+
+    target_path = repo_root / ".pre-commit-config.yaml"
+    rendered = _render_pre_commit_yaml(payload)
+    changed = True
+    if target_path.exists():
+        changed = target_path.read_text(encoding="utf-8") != rendered
+    if changed:
+        target_path.write_text(rendered, encoding="utf-8")
+
+    _record_pre_commit_manifest(repo_root, active_profiles, payload)
+    return changed
+
+
+def _read_text(path: Path) -> str:
+    """Read UTF-8 text from a path, returning empty string when missing."""
+    if not path.exists():
+        return ""
+    return path.read_text(encoding="utf-8")
+
+
+def _profile_gitignore_fragment(
+    repo_root: Path,
+    profile_name: str,
+    profile_payload: dict[str, object],
+) -> str:
+    """Resolve a profile .gitignore fragment or synthesize from ignore_dirs."""
+    path_value = str(profile_payload.get("path", "")).strip()
+    if path_value:
+        fragment_path = repo_root / path_value / "assets" / ".gitignore"
+        fragment_text = _read_text(fragment_path).strip()
+        if fragment_text:
+            return fragment_text
+
+    ignore_dirs_value = profile_payload.get("ignore_dirs")
+    if not isinstance(ignore_dirs_value, list):
+        return "# DevCovenant profile ignores"
+
+    ignore_dirs: list[str] = []
+    for entry in ignore_dirs_value:
+        token = str(entry or "").strip()
+        if not token or token == "__none__":
+            continue
+        ignore_dirs.append(token)
+    if not ignore_dirs:
+        return "# DevCovenant profile ignores"
+
+    lines = ["# DevCovenant profile ignores", *ignore_dirs]
+    return "\n".join(lines)
+
+
+def _extract_user_gitignore_entries(existing_text: str) -> list[str]:
+    """Extract preserved user entries from an existing .gitignore body."""
+    begin_index = existing_text.find(USER_GITIGNORE_BEGIN)
+    end_index = existing_text.find(USER_GITIGNORE_END)
+    if begin_index < 0 or end_index < 0 or end_index < begin_index:
+        return [line.rstrip() for line in existing_text.splitlines() if line]
+
+    body_start = begin_index + len(USER_GITIGNORE_BEGIN)
+    body_text = existing_text[body_start:end_index]
+    user_lines = [line.rstrip() for line in body_text.splitlines()]
+    while user_lines and not user_lines[0].strip():
+        user_lines.pop(0)
+    while user_lines and not user_lines[-1].strip():
+        user_lines.pop()
+    return user_lines
+
+
+def _render_gitignore(
+    base_fragment: str,
+    os_fragment: str,
+    profile_sections: list[tuple[str, str]],
+    user_entries: list[str],
+) -> str:
+    """Render full .gitignore with generated and preserved user sections."""
+    sections: list[str] = []
+    base_text = base_fragment.strip()
+    if base_text:
+        sections.append(base_text)
+
+    for profile_name, fragment_text in profile_sections:
+        section_header = f"# Profile: {profile_name}"
+        section_body = fragment_text.strip() or "# DevCovenant profile ignores"
+        sections.append("\n".join([section_header, section_body]))
+
+    os_text = os_fragment.strip()
+    if os_text:
+        sections.append(os_text)
+
+    user_block_lines = [USER_GITIGNORE_BEGIN, ""]
+    user_block_lines.extend(user_entries)
+    user_block_lines.extend(["", USER_GITIGNORE_END])
+    sections.append("\n".join(user_block_lines))
+
+    return (
+        "\n\n".join(section for section in sections if section).rstrip() + "\n"
+    )
+
+
+def _refresh_gitignore(
+    repo_root: Path,
+    profile_registry: dict[str, dict],
+    active_profiles: list[str],
+) -> bool:
+    """Regenerate .gitignore from global/profile/os fragments."""
+    profiles_map = _profile_registry_profiles(profile_registry)
+    profile_sections: list[tuple[str, str]] = []
+    for profile_name in active_profiles:
+        normalized_name = str(profile_name or "").strip().lower()
+        if not normalized_name:
+            continue
+        profile_payload = profiles_map.get(normalized_name, {})
+        fragment_text = _profile_gitignore_fragment(
+            repo_root, normalized_name, profile_payload
+        )
+        profile_sections.append((normalized_name, fragment_text))
+
+    base_fragment = _read_text(repo_root / GITIGNORE_BASE_PATH)
+    os_fragment = _read_text(repo_root / GITIGNORE_OS_PATH)
+    gitignore_path = repo_root / ".gitignore"
+    current_text = _read_text(gitignore_path)
+    user_entries = _extract_user_gitignore_entries(current_text)
+    rendered = _render_gitignore(
+        base_fragment, os_fragment, profile_sections, user_entries
+    )
+    if current_text == rendered:
+        return False
+    gitignore_path.write_text(rendered, encoding="utf-8")
+    return True
 
 
 def refresh_repo(repo_root: Path) -> int:
@@ -382,9 +1062,20 @@ def refresh_repo(repo_root: Path) -> int:
     profile_registry = _refresh_profile_registry(repo_root, active_profiles)
 
     if _refresh_config_generated(
-        config_path, config, profile_registry, active_profiles
+        repo_root, config_path, config, profile_registry, active_profiles
     ):
         print_step("Refreshed config generated profile metadata", "✅")
+
+    if _refresh_pre_commit_config(
+        repo_root, config, profile_registry, active_profiles
+    ):
+        print_step(
+            "Regenerated .pre-commit-config.yaml from profile fragments",
+            "✅",
+        )
+
+    if _refresh_gitignore(repo_root, profile_registry, active_profiles):
+        print_step("Regenerated .gitignore from profile fragments", "✅")
 
     docs = _managed_docs_from_config(config)
     synced = [doc for doc in docs if _sync_doc(repo_root, doc, version)]
@@ -396,8 +1087,6 @@ def refresh_repo(repo_root: Path) -> int:
 
 
 # ---- AGENTS policy block refresh ----
-_POLICIES_BEGIN = "<!-- DEVCOV-POLICIES:BEGIN -->"
-_POLICIES_END = "<!-- DEVCOV-POLICIES:END -->"
 
 _COMMON_KEYS = [
     "id",

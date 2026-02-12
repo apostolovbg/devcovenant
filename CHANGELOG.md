@@ -1,5 +1,5 @@
 # Changelog
-**Last Updated:** 2026-02-11
+**Last Updated:** 2026-02-12
 **Version:** 0.2.6
 
 <!-- DEVCOV:BEGIN -->
@@ -32,6 +32,595 @@ Example entry:
 ## Log changes here
 
 ## Version 0.2.6
+
+- 2026-02-12:
+  Change: Updated engine runtime policy loading to parse `AGENTS.md`
+  policy blocks instead of local registry entries.
+  Why: Aligned runtime behavior with spec so AGENTS remains the execution
+  source and registry remains hash/diagnostic state.
+  Impact: Improved activation consistency by honoring AGENTS `enabled` values
+  and ignoring registry-only policy rows during checks.
+  Files:
+  AGENTS.md
+  CONTRIBUTING.md
+  MANIFEST.in
+  PLAN.md
+  README.md
+  SPEC.md
+  devcovenant/README.md
+  devcovenant/check.py
+  devcovenant/config.yaml
+  devcovenant/core/engine.py
+  devcovenant/core/policies/changelog_coverage/changelog_coverage.py
+  devcovenant/core/profiles.py
+  devcovenant/core/profiles/README.md
+  devcovenant/core/profiles/csharp/csharp.yaml
+  devcovenant/core/profiles/dart/dart.yaml
+  devcovenant/core/profiles/data/data.yaml
+  devcovenant/core/profiles/devcovuser/devcovuser.yaml
+  devcovenant/core/profiles/docker/docker.yaml
+  devcovenant/core/profiles/docs/docs.yaml
+  devcovenant/core/profiles/fastapi/fastapi.yaml
+  devcovenant/core/profiles/flutter/flutter.yaml
+  devcovenant/core/profiles/frappe/frappe.yaml
+  devcovenant/core/profiles/global/assets/AGENTS.yaml
+  devcovenant/core/profiles/global/assets/CHANGELOG.yaml
+  devcovenant/core/profiles/global/assets/CONTRIBUTING.yaml
+  devcovenant/core/profiles/global/assets/PLAN.yaml
+  devcovenant/core/profiles/global/assets/README.yaml
+  devcovenant/core/profiles/global/assets/SPEC.yaml
+  devcovenant/core/profiles/global/assets/devcovenant/README.yaml
+  devcovenant/core/profiles/global/global.yaml
+  devcovenant/core/profiles/go/go.yaml
+  devcovenant/core/profiles/java/java.yaml
+  devcovenant/core/profiles/javascript/javascript.yaml
+  devcovenant/core/profiles/kubernetes/kubernetes.yaml
+  devcovenant/core/profiles/objective-c/objective-c.yaml
+  devcovenant/core/profiles/php/php.yaml
+  devcovenant/core/profiles/python/python.yaml
+  devcovenant/core/profiles/ruby/ruby.yaml
+  devcovenant/core/profiles/rust/rust.yaml
+  devcovenant/core/profiles/sql/sql.yaml
+  devcovenant/core/profiles/suffixes/suffixes.yaml
+  devcovenant/core/profiles/swift/swift.yaml
+  devcovenant/core/profiles/terraform/terraform.yaml
+  devcovenant/core/profiles/typescript/typescript.yaml
+  devcovenant/core/repo_refresh.py
+  devcovenant/custom/policies/managed_doc_assets/managed_doc_assets.py
+  devcovenant/custom/profiles/devcovrepo/devcovrepo.yaml
+  devcovenant/deploy.py
+  devcovenant/docs/installation.md
+  devcovenant/docs/profiles.md
+  devcovenant/install.py
+  devcovenant/undeploy.py
+  devcovenant/update_lock.py
+  tests/devcovenant/core/test_engine.py
+  tests/devcovenant/core/test_manifest.py
+  tests/devcovenant/core/test_profiles.py
+  tests/devcovenant/core/test_repo_refresh.py
+  tests/devcovenant/custom/policies/managed_doc_assets/\
+    test_managed_doc_assets.py
+  tests/devcovenant/test_check.py
+  tests/devcovenant/test_deploy.py
+  tests/devcovenant/test_install.py
+  tests/devcovenant/test_refresh.py
+  tests/devcovenant/test_undeploy.py
+  tests/devcovenant/test_update_lock.py
+  tests/devcovenant/test_upgrade.py
+
+- 2026-02-12:
+  Change: Removed profile-manifest `policies` activation lists and updated
+  profile documentation to keep activation config-only via `policy_state`.
+  Why: Clarified activation architecture so profile metadata stays overlays-
+  only and no longer implies policy enablement semantics.
+  Impact: Updated activation flow to reduce interpretation drift between
+  manifests, docs, and runtime expectations.
+  Files:
+  AGENTS.md
+  CONTRIBUTING.md
+  MANIFEST.in
+  PLAN.md
+  README.md
+  SPEC.md
+  devcovenant/README.md
+  devcovenant/check.py
+  devcovenant/config.yaml
+  devcovenant/core/policies/changelog_coverage/changelog_coverage.py
+  devcovenant/core/profiles.py
+  devcovenant/core/profiles/README.md
+  devcovenant/core/profiles/csharp/csharp.yaml
+  devcovenant/core/profiles/dart/dart.yaml
+  devcovenant/core/profiles/data/data.yaml
+  devcovenant/core/profiles/devcovuser/devcovuser.yaml
+  devcovenant/core/profiles/docker/docker.yaml
+  devcovenant/core/profiles/docs/docs.yaml
+  devcovenant/core/profiles/fastapi/fastapi.yaml
+  devcovenant/core/profiles/flutter/flutter.yaml
+  devcovenant/core/profiles/frappe/frappe.yaml
+  devcovenant/core/profiles/global/assets/AGENTS.yaml
+  devcovenant/core/profiles/global/assets/CHANGELOG.yaml
+  devcovenant/core/profiles/global/assets/CONTRIBUTING.yaml
+  devcovenant/core/profiles/global/assets/PLAN.yaml
+  devcovenant/core/profiles/global/assets/README.yaml
+  devcovenant/core/profiles/global/assets/SPEC.yaml
+  devcovenant/core/profiles/global/assets/devcovenant/README.yaml
+  devcovenant/core/profiles/global/global.yaml
+  devcovenant/core/profiles/go/go.yaml
+  devcovenant/core/profiles/java/java.yaml
+  devcovenant/core/profiles/javascript/javascript.yaml
+  devcovenant/core/profiles/kubernetes/kubernetes.yaml
+  devcovenant/core/profiles/objective-c/objective-c.yaml
+  devcovenant/core/profiles/php/php.yaml
+  devcovenant/core/profiles/python/python.yaml
+  devcovenant/core/profiles/ruby/ruby.yaml
+  devcovenant/core/profiles/rust/rust.yaml
+  devcovenant/core/profiles/sql/sql.yaml
+  devcovenant/core/profiles/suffixes/suffixes.yaml
+  devcovenant/core/profiles/swift/swift.yaml
+  devcovenant/core/profiles/terraform/terraform.yaml
+  devcovenant/core/profiles/typescript/typescript.yaml
+  devcovenant/core/repo_refresh.py
+  devcovenant/custom/policies/managed_doc_assets/managed_doc_assets.py
+  devcovenant/custom/profiles/devcovrepo/devcovrepo.yaml
+  devcovenant/deploy.py
+  devcovenant/docs/installation.md
+  devcovenant/docs/profiles.md
+  devcovenant/install.py
+  devcovenant/undeploy.py
+  devcovenant/update_lock.py
+  tests/devcovenant/core/test_manifest.py
+  tests/devcovenant/core/test_profiles.py
+  tests/devcovenant/core/test_repo_refresh.py
+  tests/devcovenant/custom/policies/managed_doc_assets/\
+    test_managed_doc_assets.py
+  tests/devcovenant/test_check.py
+  tests/devcovenant/test_deploy.py
+  tests/devcovenant/test_install.py
+  tests/devcovenant/test_refresh.py
+  tests/devcovenant/test_undeploy.py
+  tests/devcovenant/test_update_lock.py
+  tests/devcovenant/test_upgrade.py
+
+- 2026-02-12:
+  Change: Updated managed-block rendering to generate Doc ID/Doc Type/Managed
+  By lines from descriptor metadata.
+  Why: Removed descriptor drift where managed metadata was duplicated and could
+  diverge between fields and hard-coded block text.
+  Impact: Updated managed docs stay deterministic and enforceable by policy
+  while preventing future metadata-line duplication drift.
+  Files:
+  AGENTS.md
+  CONTRIBUTING.md
+  MANIFEST.in
+  PLAN.md
+  README.md
+  SPEC.md
+  devcovenant/README.md
+  devcovenant/check.py
+  devcovenant/config.yaml
+  devcovenant/core/policies/changelog_coverage/changelog_coverage.py
+  devcovenant/core/profiles.py
+  devcovenant/core/profiles/csharp/csharp.yaml
+  devcovenant/core/profiles/dart/dart.yaml
+  devcovenant/core/profiles/data/data.yaml
+  devcovenant/core/profiles/devcovuser/devcovuser.yaml
+  devcovenant/core/profiles/docker/docker.yaml
+  devcovenant/core/profiles/docs/docs.yaml
+  devcovenant/core/profiles/fastapi/fastapi.yaml
+  devcovenant/core/profiles/flutter/flutter.yaml
+  devcovenant/core/profiles/frappe/frappe.yaml
+  devcovenant/core/profiles/global/assets/AGENTS.yaml
+  devcovenant/core/profiles/global/assets/CHANGELOG.yaml
+  devcovenant/core/profiles/global/assets/CONTRIBUTING.yaml
+  devcovenant/core/profiles/global/assets/PLAN.yaml
+  devcovenant/core/profiles/global/assets/README.yaml
+  devcovenant/core/profiles/global/assets/SPEC.yaml
+  devcovenant/core/profiles/global/assets/devcovenant/README.yaml
+  devcovenant/core/profiles/global/global.yaml
+  devcovenant/core/profiles/go/go.yaml
+  devcovenant/core/profiles/java/java.yaml
+  devcovenant/core/profiles/javascript/javascript.yaml
+  devcovenant/core/profiles/kubernetes/kubernetes.yaml
+  devcovenant/core/profiles/objective-c/objective-c.yaml
+  devcovenant/core/profiles/php/php.yaml
+  devcovenant/core/profiles/python/python.yaml
+  devcovenant/core/profiles/ruby/ruby.yaml
+  devcovenant/core/profiles/rust/rust.yaml
+  devcovenant/core/profiles/sql/sql.yaml
+  devcovenant/core/profiles/suffixes/suffixes.yaml
+  devcovenant/core/profiles/swift/swift.yaml
+  devcovenant/core/profiles/terraform/terraform.yaml
+  devcovenant/core/profiles/typescript/typescript.yaml
+  devcovenant/core/repo_refresh.py
+  devcovenant/custom/policies/managed_doc_assets/managed_doc_assets.py
+  devcovenant/custom/profiles/devcovrepo/devcovrepo.yaml
+  devcovenant/deploy.py
+  devcovenant/docs/installation.md
+  devcovenant/install.py
+  devcovenant/undeploy.py
+  devcovenant/update_lock.py
+  tests/devcovenant/core/test_manifest.py
+  tests/devcovenant/core/test_repo_refresh.py
+  tests/devcovenant/custom/policies/managed_doc_assets/\
+    test_managed_doc_assets.py
+  tests/devcovenant/test_check.py
+  tests/devcovenant/test_deploy.py
+  tests/devcovenant/test_install.py
+  tests/devcovenant/test_refresh.py
+  tests/devcovenant/test_undeploy.py
+  tests/devcovenant/test_update_lock.py
+  tests/devcovenant/test_upgrade.py
+
+- 2026-02-12:
+  Change: Clarified registry-to-AGENTS policy compilation and AGENTS runtime
+  parser requirements in SPEC, and updated PLAN dedrift status.
+  Why: Aligned specification wording with the required flow where registry
+  state compiles the AGENTS policy block that runtime parsing executes.
+  Impact: Updated dedrift tracking and removed CONTRIBUTING descriptor marker
+  duplication to keep managed-block generation consistent.
+  Files:
+  AGENTS.md
+  CONTRIBUTING.md
+  MANIFEST.in
+  PLAN.md
+  SPEC.md
+  devcovenant/check.py
+  devcovenant/config.yaml
+  devcovenant/core/policies/changelog_coverage/changelog_coverage.py
+  devcovenant/core/profiles.py
+  devcovenant/core/profiles/global/assets/AGENTS.yaml
+  devcovenant/core/profiles/global/assets/CHANGELOG.yaml
+  devcovenant/core/profiles/global/assets/CONTRIBUTING.yaml
+  devcovenant/core/profiles/global/assets/PLAN.yaml
+  devcovenant/core/profiles/global/assets/SPEC.yaml
+  devcovenant/core/repo_refresh.py
+  devcovenant/deploy.py
+  devcovenant/docs/installation.md
+  devcovenant/install.py
+  devcovenant/undeploy.py
+  devcovenant/update_lock.py
+  tests/devcovenant/core/test_manifest.py
+  tests/devcovenant/core/test_repo_refresh.py
+  tests/devcovenant/test_check.py
+  tests/devcovenant/test_deploy.py
+  tests/devcovenant/test_install.py
+  tests/devcovenant/test_refresh.py
+  tests/devcovenant/test_undeploy.py
+  tests/devcovenant/test_update_lock.py
+  tests/devcovenant/test_upgrade.py
+
+- 2026-02-12:
+  Change: Updated AGENTS managed-doc synchronization to model separate managed,
+  workflow, and policy blocks with generated markers.
+  Why: Aligned block ownership so marker lines are renderer-generated and no
+  longer copied from descriptor body text.
+  Impact: Improved AGENTS refresh stability, legacy second-block migration,
+  managed-block changelog filtering, and undeploy marker cleanup.
+  Files:
+  AGENTS.md
+  MANIFEST.in
+  PLAN.md
+  SPEC.md
+  devcovenant/check.py
+  devcovenant/config.yaml
+  devcovenant/core/policies/changelog_coverage/changelog_coverage.py
+  devcovenant/core/profiles.py
+  devcovenant/core/profiles/global/assets/AGENTS.yaml
+  devcovenant/core/profiles/global/assets/CHANGELOG.yaml
+  devcovenant/core/profiles/global/assets/PLAN.yaml
+  devcovenant/core/profiles/global/assets/SPEC.yaml
+  devcovenant/core/repo_refresh.py
+  devcovenant/deploy.py
+  devcovenant/docs/installation.md
+  devcovenant/install.py
+  devcovenant/undeploy.py
+  devcovenant/update_lock.py
+  tests/devcovenant/core/test_manifest.py
+  tests/devcovenant/core/test_repo_refresh.py
+  tests/devcovenant/test_check.py
+  tests/devcovenant/test_deploy.py
+  tests/devcovenant/test_install.py
+  tests/devcovenant/test_refresh.py
+  tests/devcovenant/test_undeploy.py
+  tests/devcovenant/test_update_lock.py
+  tests/devcovenant/test_upgrade.py
+
+- 2026-02-12:
+  Change: Updated refresh config generation to regenerate all required
+  autogen config sections on full refresh.
+  Why: Fixed partial generated-config updates that left stale core paths and
+  profile-derived metadata overlays in `devcovenant/config.yaml`.
+  Impact: Added deterministic refresh behavior for config autogen sections
+  while preserving user metadata overrides and user-managed doc asset entries.
+  Files:
+  MANIFEST.in
+  AGENTS.md
+  PLAN.md
+  SPEC.md
+  devcovenant/check.py
+  devcovenant/config.yaml
+  devcovenant/core/profiles.py
+  devcovenant/core/profiles/global/assets/AGENTS.yaml
+  devcovenant/core/profiles/global/assets/CHANGELOG.yaml
+  devcovenant/core/profiles/global/assets/PLAN.yaml
+  devcovenant/core/profiles/global/assets/SPEC.yaml
+  devcovenant/core/repo_refresh.py
+  devcovenant/deploy.py
+  devcovenant/docs/installation.md
+  devcovenant/install.py
+  devcovenant/undeploy.py
+  devcovenant/update_lock.py
+  tests/devcovenant/core/test_manifest.py
+  tests/devcovenant/core/test_repo_refresh.py
+  tests/devcovenant/test_check.py
+  tests/devcovenant/test_deploy.py
+  tests/devcovenant/test_install.py
+  tests/devcovenant/test_undeploy.py
+  tests/devcovenant/test_update_lock.py
+  tests/devcovenant/test_upgrade.py
+
+- 2026-02-12:
+  Change: Updated `update_lock` to always reconcile Python lock output and
+  updated plan/spec requirements for the stale-hash edge case.
+  Why: Removed cached-input short-circuit behavior that could preserve lock
+  and license drift when `requirements.in` content stayed unchanged.
+  Impact: Improved lock refresh correctness by forcing reconciliation each run
+  and added regression coverage for no-short-circuit behavior.
+  Files:
+  MANIFEST.in
+  PLAN.md
+  SPEC.md
+  devcovenant/check.py
+  devcovenant/core/profiles.py
+  devcovenant/core/profiles/global/assets/CHANGELOG.yaml
+  devcovenant/core/profiles/global/assets/PLAN.yaml
+  devcovenant/core/profiles/global/assets/SPEC.yaml
+  devcovenant/core/repo_refresh.py
+  devcovenant/deploy.py
+  devcovenant/docs/installation.md
+  devcovenant/install.py
+  devcovenant/undeploy.py
+  devcovenant/update_lock.py
+  tests/devcovenant/core/test_manifest.py
+  tests/devcovenant/core/test_repo_refresh.py
+  tests/devcovenant/test_check.py
+  tests/devcovenant/test_deploy.py
+  tests/devcovenant/test_install.py
+  tests/devcovenant/test_undeploy.py
+  tests/devcovenant/test_update_lock.py
+  tests/devcovenant/test_upgrade.py
+
+- 2026-02-11:
+  Change: Updated `update_lock` to resolve repository root before executing
+  lock and license refresh routines.
+  Why: Aligned command execution semantics so `update_lock` does not depend
+  on process working directory.
+  Impact: Added regression tests that validate subdirectory invocation and
+  preserve metadata-driven lock/license behavior.
+  Files:
+  MANIFEST.in
+  PLAN.md
+  SPEC.md
+  devcovenant/check.py
+  devcovenant/core/profiles.py
+  devcovenant/core/repo_refresh.py
+  devcovenant/deploy.py
+  devcovenant/docs/installation.md
+  devcovenant/install.py
+  devcovenant/undeploy.py
+  devcovenant/update_lock.py
+  tests/devcovenant/core/test_manifest.py
+  tests/devcovenant/core/test_repo_refresh.py
+  tests/devcovenant/test_check.py
+  tests/devcovenant/test_deploy.py
+  tests/devcovenant/test_install.py
+  tests/devcovenant/test_undeploy.py
+  tests/devcovenant/test_update_lock.py
+  tests/devcovenant/test_upgrade.py
+
+- 2026-02-11:
+  Change: Enforced lifecycle boundary checks for install, deploy, upgrade,
+  and gate refresh flows.
+  Why: Aligned registry generation semantics so install stays scaffold-only
+  while deploy, upgrade, and check gates keep full-refresh behavior.
+  Impact: Added deterministic install cleanup of stale local registry state
+  and added unit regressions that validate install/deploy/upgrade/check
+  boundaries.
+  Files:
+  MANIFEST.in
+  PLAN.md
+  SPEC.md
+  devcovenant/check.py
+  devcovenant/core/profiles.py
+  devcovenant/core/repo_refresh.py
+  devcovenant/deploy.py
+  devcovenant/docs/installation.md
+  devcovenant/install.py
+  devcovenant/undeploy.py
+  tests/devcovenant/core/test_manifest.py
+  tests/devcovenant/core/test_repo_refresh.py
+  tests/devcovenant/test_check.py
+  tests/devcovenant/test_deploy.py
+  tests/devcovenant/test_install.py
+  tests/devcovenant/test_undeploy.py
+  tests/devcovenant/test_upgrade.py
+
+- 2026-02-11:
+  Change: Updated deploy flow to apply user-mode cleanup before full refresh.
+  Why: Updated lifecycle behavior to match the `devcov_core_include: false`
+  deploy contract without changing refresh/upgrade preservation rules.
+  Impact: Updated deploy behavior now removes user-mode-only paths, and
+  updated tests verify cleanup occurs on deploy while refresh stays
+  non-destructive.
+  Files:
+  MANIFEST.in
+  PLAN.md
+  SPEC.md
+  devcovenant/check.py
+  devcovenant/core/profiles.py
+  devcovenant/core/repo_refresh.py
+  devcovenant/deploy.py
+  devcovenant/docs/installation.md
+  devcovenant/install.py
+  devcovenant/undeploy.py
+  tests/devcovenant/core/test_manifest.py
+  tests/devcovenant/core/test_repo_refresh.py
+  tests/devcovenant/test_check.py
+  tests/devcovenant/test_deploy.py
+  tests/devcovenant/test_install.py
+  tests/devcovenant/test_undeploy.py
+
+- 2026-02-11:
+  Change: Updated install generic-config seeding to force canonical
+  devcovuser defaults.
+  Why: Corrected source-tree install drift where copied config could preserve
+  non-generic active profiles.
+  Impact: Updated install now writes deterministic generic install settings,
+  and updated test coverage verifies profile and core-include reset behavior.
+  Files:
+  MANIFEST.in
+  PLAN.md
+  SPEC.md
+  devcovenant/check.py
+  devcovenant/core/profiles.py
+  devcovenant/core/repo_refresh.py
+  devcovenant/docs/installation.md
+  devcovenant/install.py
+  devcovenant/undeploy.py
+  tests/devcovenant/core/test_manifest.py
+  tests/devcovenant/core/test_repo_refresh.py
+  tests/devcovenant/test_check.py
+  tests/devcovenant/test_install.py
+  tests/devcovenant/test_undeploy.py
+
+- 2026-02-11:
+  Change: Updated lifecycle spec text and rewrote the dedrift plan backlog.
+  Why: Aligned install/deploy/refresh contracts with current decisions and
+  corrected deploy-only cleanup scope.
+  Impact: Updated implementation backlog now tracks deterministic install
+  config, deploy-only cleanup, repo-root lock refresh, and config autogen
+  dedrift.
+  Files:
+  MANIFEST.in
+  PLAN.md
+  SPEC.md
+  devcovenant/check.py
+  devcovenant/core/profiles.py
+  devcovenant/core/repo_refresh.py
+  devcovenant/docs/installation.md
+  devcovenant/install.py
+  devcovenant/undeploy.py
+  tests/devcovenant/core/test_manifest.py
+  tests/devcovenant/core/test_repo_refresh.py
+  tests/devcovenant/test_check.py
+  tests/devcovenant/test_install.py
+  tests/devcovenant/test_undeploy.py
+
+- 2026-02-11:
+  Change: Updated packaging manifest rules to exclude root managed docs.
+  Why: Clarified package artifact scope to match SPEC packaging requirements.
+  Impact: Updated packaging checks to block root managed-doc includes.
+  Files:
+  MANIFEST.in
+  PLAN.md
+  SPEC.md
+  devcovenant/check.py
+  devcovenant/core/profiles.py
+  devcovenant/core/repo_refresh.py
+  devcovenant/docs/installation.md
+  devcovenant/install.py
+  devcovenant/undeploy.py
+  tests/devcovenant/core/test_manifest.py
+  tests/devcovenant/core/test_repo_refresh.py
+  tests/devcovenant/test_check.py
+  tests/devcovenant/test_install.py
+  tests/devcovenant/test_undeploy.py
+
+- 2026-02-11:
+  Change: Updated full `.gitignore` regeneration and undeploy fragment
+  cleanup with preserved user-entry semantics.
+  Why: Aligned refresh and undeploy behavior with SPEC requirements for
+  profile/global/OS fragment synthesis and user-managed entry preservation.
+  Impact: Updated `refresh` to regenerate `.gitignore` deterministically from
+  profile assets and undeploy removes generated fragments while keeping user
+  entries.
+  Files:
+  PLAN.md
+  SPEC.md
+  devcovenant/check.py
+  devcovenant/core/profiles.py
+  devcovenant/core/repo_refresh.py
+  devcovenant/docs/installation.md
+  devcovenant/install.py
+  devcovenant/undeploy.py
+  tests/devcovenant/core/test_repo_refresh.py
+  tests/devcovenant/test_check.py
+  tests/devcovenant/test_install.py
+  tests/devcovenant/test_undeploy.py
+
+- 2026-02-11:
+  Change: Updated refresh orchestration to regenerate profile-driven
+  pre-commit config and record resolved hooks in manifest metadata.
+  Why: Aligned refresh behavior with SPEC merge order and manifest tracking
+  requirements for active profile combinations.
+  Impact: Improved deploy/upgrade/refresh consistency by rebuilding
+  `.pre-commit-config.yaml` from global/profile fragments plus overrides and
+  added regression coverage for merge ordering and hook recording.
+  Files:
+  PLAN.md
+  SPEC.md
+  devcovenant/check.py
+  devcovenant/core/profiles.py
+  devcovenant/core/repo_refresh.py
+  devcovenant/docs/installation.md
+  devcovenant/install.py
+  tests/devcovenant/core/test_repo_refresh.py
+  tests/devcovenant/test_check.py
+  tests/devcovenant/test_install.py
+
+- 2026-02-11:
+  Change: Removed install mode semantics from the dedrift backlog and spec.
+  Why: Clarified install behavior as a single-mode core copy plus generic
+  config seeding.
+  Impact: Updated plan/spec alignment so install does not imply nonexistent
+  mode handling.
+  Files:
+  PLAN.md
+  SPEC.md
+  devcovenant/check.py
+  devcovenant/docs/installation.md
+  devcovenant/install.py
+  tests/devcovenant/test_check.py
+  tests/devcovenant/test_install.py
+
+- 2026-02-11:
+  Change: Updated install behavior to stop on existing DevCovenant installs
+  and direct users to `devcovenant upgrade` without prompts.
+  Why: Clarified install scope so install only places the core package and
+  never drives interactive existing-artifact flows.
+  Impact: Aligned runtime behavior, tests, and specification text around the
+  non-interactive upgrade-directed install rule.
+  Files:
+  PLAN.md
+  SPEC.md
+  devcovenant/check.py
+  devcovenant/docs/installation.md
+  devcovenant/install.py
+  tests/devcovenant/test_check.py
+  tests/devcovenant/test_install.py
+
+- 2026-02-11:
+  Change: Aligned `check --start` and `check --end` with full-refresh
+  behavior before gate execution and updated the active plan status.
+  Why: Clarified gate-entry behavior so check invocations follow the SPEC
+  contract consistently.
+  Impact: Updated gate phases to rebuild registries and managed docs before
+  pre-commit metadata recording, and added unit coverage for refresh order
+  and refresh-failure short-circuiting.
+  Files:
+  PLAN.md
+  devcovenant/check.py
+  tests/devcovenant/test_check.py
 
 - 2026-02-11:
   Change: Removed retired packaging residue and updated plan status for the
