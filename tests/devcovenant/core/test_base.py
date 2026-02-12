@@ -67,6 +67,31 @@ def _unit_test_get_policy_config_ignores_legacy_policies_block() -> None:
     assert context.get_policy_config("line-length-limit") == {}
 
 
+def _unit_test_get_policy_config_normalizes_scalar_path_overrides() -> None:
+    """Path-valued scalar keys should flatten singleton override lists."""
+    context = CheckContext(
+        repo_root=Path("."),
+        config={
+            "autogen_metadata_overrides": {
+                "version-sync": {
+                    "version_file": ["devcovenant/VERSION"],
+                    "readme_files": ["README.md", "AGENTS.md"],
+                }
+            },
+            "user_metadata_overrides": {
+                "version-sync": {
+                    "changelog_file": ["CHANGELOG.md"],
+                }
+            },
+        },
+    )
+    assert context.get_policy_config("version-sync") == {
+        "version_file": "devcovenant/VERSION",
+        "readme_files": ["README.md", "AGENTS.md"],
+        "changelog_file": "CHANGELOG.md",
+    }
+
+
 class GeneratedUnittestCases(unittest.TestCase):
     """unittest wrappers for module-level tests."""
 
@@ -89,3 +114,7 @@ class GeneratedUnittestCases(unittest.TestCase):
     def test_get_policy_config_ignores_legacy_policies_block(self):
         """Run test_get_policy_config_ignores_legacy_policies_block."""
         _unit_test_get_policy_config_ignores_legacy_policies_block()
+
+    def test_get_policy_config_normalizes_scalar_path_overrides(self):
+        """Run test_get_policy_config_normalizes_scalar_path_overrides."""
+        _unit_test_get_policy_config_normalizes_scalar_path_overrides()

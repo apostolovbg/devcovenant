@@ -10,10 +10,8 @@ ignore_dirs:
 assets:
   - path: main.tf
     template: main.tf
-    mode: replace
   - path: variables.tf
     template: variables.tf
-    mode: replace
 policy_overlays:
   devflow-run-gates:
     required_commands:

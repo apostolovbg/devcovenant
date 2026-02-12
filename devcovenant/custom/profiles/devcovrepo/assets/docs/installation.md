@@ -25,8 +25,8 @@ Use `python3 -m devcovenant` when the console entry is not available.
 
 ## Lifecycle Commands
 - `install`: copy the core plus a generic config stub. It never deploys
-  managed docs/assets. If a newer core is available, install prompts for
-  `upgrade` first.
+  managed docs/assets. If a newer core is available, install exits with a
+  message to run `upgrade`.
 - `deploy`: requires a non-generic config (`install.generic_config: false`).
   It writes managed docs/assets/registries, regenerates `.gitignore`, and
   runs a full refresh.

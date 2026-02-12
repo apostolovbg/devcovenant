@@ -98,13 +98,41 @@ order, status, and validation scope explicit.
   - Preserve user-controlled override fields.
   - Add unit tests for merge/update behavior.
 
-7. [not done] Close-loop SPEC-vs-reality audit
+7. [done] Close-loop SPEC-vs-reality audit
 - Requirement source: plan governance quality.
-- Gap: backlog completion must be re-audited after implementation.
+- Resolved: re-audited command surface, lifecycle semantics, activation model,
+  and runtime parser behavior against `SPEC.md`.
 - Deliverables:
   - Re-run full mismatch audit after items 2-6.
   - Resolve remaining drift or defer explicitly with rationale.
   - Keep this plan as single active dedrift backlog.
+
+13. [done] Path-valued metadata normalization in runtime policy options
+- Requirement source: policy execution reliability in `SPEC.md`.
+- Resolved: generated autogen overrides now emit scalar path keys as strings,
+  and runtime override loading flattens legacy singleton list values for
+  singular path keys before policy checks consume them.
+- Deliverables:
+  - Normalize path-valued policy options to scalar file paths before checkers
+    consume them.
+  - Add regressions for `semantic-version-scope` and `version-sync` ensuring
+    no runtime warning path-type errors.
+  - Keep metadata-driven list selectors intact while preserving scalar path
+    options for file-based settings.
+
+14. [done] Mode-less profile assets and dedicated config refresh pipeline
+- Requirement source: refresh architecture dedrift in `SPEC.md`.
+- Resolved: profile assets no longer use `mode`; asset materialization is
+  create-if-missing only, while generated artifacts and config autogen are
+  handled by dedicated refresh logic.
+- Deliverables:
+  - Removed `mode` handling branches and legacy generator-mode asset logic
+    from runtime profile asset materialization.
+  - Updated profile manifests/docs to drop `mode` fields and describe
+    deterministic create-if-missing asset behavior.
+  - Converted config refresh to a dedicated pipeline that preserves user-owned
+    values, regenerates autogen sections every refresh, and writes the
+    commented template structure.
 
 8. [done] AGENTS multi-block ownership dedrift
 - Requirement source: documentation management block semantics in `SPEC.md`.

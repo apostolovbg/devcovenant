@@ -6,34 +6,24 @@ ignore_dirs: []
 assets:
   - path: devcovenant/docs/README.md
     template: docs/README.md
-    mode: replace
   - path: devcovenant/docs/installation.md
     template: docs/installation.md
-    mode: replace
   - path: devcovenant/docs/config.md
     template: docs/config.md
-    mode: replace
   - path: devcovenant/docs/profiles.md
     template: docs/profiles.md
-    mode: replace
   - path: devcovenant/docs/policies.md
     template: docs/policies.md
-    mode: replace
   - path: devcovenant/docs/adapters.md
     template: docs/adapters.md
-    mode: replace
   - path: devcovenant/docs/registry.md
     template: docs/registry.md
-    mode: replace
   - path: devcovenant/docs/refresh.md
     template: docs/refresh.md
-    mode: replace
   - path: devcovenant/docs/workflow.md
     template: docs/workflow.md
-    mode: replace
   - path: devcovenant/docs/troubleshooting.md
     template: docs/troubleshooting.md
-    mode: replace
 policy_overlays:
   dependency-license-sync:
     dependency_files:

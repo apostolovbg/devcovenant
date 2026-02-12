@@ -17,6 +17,7 @@ def _unit_test_parse_policy_definition():
     ) as f:
         f.write(
             """
+<!-- DEVCOV-POLICIES:BEGIN -->
 ## Policy: Test Policy
 
 ```policy-def
@@ -30,6 +31,7 @@ enabled: false
 This is a test policy description.
 
 ---
+<!-- DEVCOV-POLICIES:END -->
 """
         )
         temp_path = Path(f.name)
@@ -64,6 +66,7 @@ def _unit_test_parse_multiple_policies():
     ) as f:
         f.write(
             """
+<!-- DEVCOV-POLICIES:BEGIN -->
 ## Policy: First Policy
 
 ```policy-def
@@ -89,6 +92,7 @@ auto_fix: true
 Second policy description.
 
 ---
+<!-- DEVCOV-POLICIES:END -->
 """
         )
         temp_path = Path(f.name)
@@ -120,6 +124,7 @@ def _unit_test_parse_multiline_metadata():
     ) as f:
         f.write(
             """
+<!-- DEVCOV-POLICIES:BEGIN -->
 ## Policy: Continuation Policy
 
 ```policy-def
@@ -132,6 +137,7 @@ exclude_prefixes: app,apps
 Continuation policy description.
 
 ---
+<!-- DEVCOV-POLICIES:END -->
 """
         )
         temp_path = Path(f.name)
@@ -143,6 +149,54 @@ Continuation policy description.
         assert len(policies) == 1
         policy = policies[0]
         assert policy.raw_metadata["exclude_prefixes"] == "app,apps,build,dist"
+    finally:
+        temp_path.unlink()
+
+
+def _unit_test_parse_ignores_policies_outside_managed_block():
+    """Parser should only read policies inside DEVCOV policy markers."""
+    with tempfile.NamedTemporaryFile(
+        mode="w", suffix=".md", delete=False
+    ) as f:
+        f.write(
+            """
+## Policy: Outside Policy
+
+```policy-def
+id: outside-policy
+status: active
+severity: warning
+auto_fix: false
+```
+
+Outside block policy description.
+
+---
+
+<!-- DEVCOV-POLICIES:BEGIN -->
+## Policy: Inside Policy
+
+```policy-def
+id: inside-policy
+status: active
+severity: error
+auto_fix: true
+```
+
+Inside block policy description.
+
+---
+<!-- DEVCOV-POLICIES:END -->
+"""
+        )
+        temp_path = Path(f.name)
+
+    try:
+        parser = PolicyParser(temp_path)
+        policies = parser.parse_agents_md()
+
+        assert len(policies) == 1
+        assert policies[0].policy_id == "inside-policy"
     finally:
         temp_path.unlink()
 
@@ -161,3 +215,7 @@ class GeneratedUnittestCases(unittest.TestCase):
     def test_parse_multiline_metadata(self):
         """Run test_parse_multiline_metadata."""
         _unit_test_parse_multiline_metadata()
+
+    def test_parse_ignores_policies_outside_managed_block(self):
+        """Run test_parse_ignores_policies_outside_managed_block."""
+        _unit_test_parse_ignores_policies_outside_managed_block()

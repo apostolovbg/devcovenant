@@ -15,11 +15,6 @@ MANIFEST_REL_PATH = f"{LOCAL_REGISTRY_DIR}/{MANIFEST_FILENAME}"
 POLICY_REGISTRY_FILENAME = "policy_registry.yaml"
 PROFILE_REGISTRY_FILENAME = "profile_registry.yaml"
 TEST_STATUS_FILENAME = "test_status.json"
-LEGACY_MANIFEST_PATHS = [
-    ".devcov/install_manifest.json",
-    ".devcovenant/install_manifest.json",
-    "devcovenant/manifest.json",
-]
 
 DEFAULT_CORE_DIRS = [
     "devcovenant",
@@ -131,11 +126,6 @@ def manifest_path(repo_root: Path) -> Path:
     return repo_root / MANIFEST_REL_PATH
 
 
-def legacy_manifest_paths(repo_root: Path) -> list[Path]:
-    """Return legacy manifest paths for a repo."""
-    return [repo_root / rel for rel in LEGACY_MANIFEST_PATHS]
-
-
 def build_manifest(
     *,
     options: Dict[str, Any] | None = None,
@@ -182,19 +172,11 @@ def build_manifest(
     return manifest
 
 
-def load_manifest(
-    repo_root: Path, *, include_legacy: bool = False
-) -> Dict[str, Any] | None:
+def load_manifest(repo_root: Path) -> Dict[str, Any] | None:
     """Load the manifest if present, otherwise return None."""
     manifest = manifest_path(repo_root)
     if manifest.exists():
         return json.loads(manifest.read_text(encoding="utf-8"))
-    if include_legacy:
-        for legacy in legacy_manifest_paths(repo_root):
-            if legacy.exists():
-                legacy_data = json.loads(legacy.read_text(encoding="utf-8"))
-                legacy_data["_legacy"] = True
-                return legacy_data
     return None
 
 

@@ -10,13 +10,10 @@ ignore_dirs: []
 assets:
   - path: Dockerfile
     template: Dockerfile
-    mode: replace
   - path: docker-compose.yml
     template: docker-compose.yml
-    mode: replace
   - path: .dockerignore
     template: .dockerignore
-    mode: replace
 policy_overlays:
   devflow-run-gates:
     required_commands:

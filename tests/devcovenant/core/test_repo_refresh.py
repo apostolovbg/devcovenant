@@ -313,9 +313,9 @@ def _unit_test_refresh_repo_regenerates_gitignore_and_preserves_user() -> None:
         refreshed = gitignore_path.read_text(encoding="utf-8")
         assert "# DevCovenant base ignores" in refreshed
         assert "# OS-specific ignores (DevCovenant)" in refreshed
-        assert "# Profile: data" in refreshed
+        assert "# Profile: data" not in refreshed
         assert "# Profile: python" in refreshed
-        assert "data/raw" in refreshed
+        assert "data/raw" not in refreshed
         assert ".venv" in refreshed
         assert "# keep-me" in refreshed
         assert "local-only/" in refreshed
@@ -368,6 +368,12 @@ def _unit_test_refresh_repo_updates_generated_config_sections() -> None:
             "requirements.lock",
             "pyproject.toml",
         ]
+        assert (
+            refreshed.get("autogen_metadata_overrides", {})
+            .get("version-sync", {})
+            .get("version_file")
+            == "VERSION"
+        )
         assert refreshed.get("user_metadata_overrides", {}).get(
             "dependency-license-sync", {}
         ).get("dependency_files") == ["custom-manifest.lock"]
@@ -378,6 +384,150 @@ def _unit_test_refresh_repo_updates_generated_config_sections() -> None:
         assert refreshed.get("profiles", {}).get("generated", {}).get(
             "file_suffixes"
         ) == [".ipynb", ".py", ".pyi", ".pyw"]
+        rendered = config_path.read_text(encoding="utf-8")
+        assert "DevCovenant Config Template" in rendered
+        assert "Metadata overrides (resolution order matters)" in rendered
+
+
+def _unit_test_refresh_repo_preserves_existing_profile_assets() -> None:
+    """Refresh should preserve existing profile asset targets."""
+    with tempfile.TemporaryDirectory() as temp_dir:
+        repo_root = Path(temp_dir)
+        install.install_repo(repo_root)
+
+        config_path = repo_root / "devcovenant" / "config.yaml"
+        config = _read_yaml(config_path)
+        profiles_block = config.get("profiles")
+        if not isinstance(profiles_block, dict):
+            profiles_block = {}
+        profiles_block["active"] = [
+            "global",
+            "devcovrepo",
+            "docs",
+            "python",
+        ]
+        config["profiles"] = profiles_block
+        _write_yaml(config_path, config)
+
+        target = repo_root / "devcovenant" / "docs" / "profiles.md"
+        target.write_text("stale\n", encoding="utf-8")
+
+        result = core_refresh.refresh_repo(repo_root)
+
+        assert result == 0
+        assert target.read_text(encoding="utf-8") == "stale\n"
+
+
+def _unit_test_refresh_repo_rebuilds_config_when_missing() -> None:
+    """Refresh should rebuild config from template when missing."""
+    with tempfile.TemporaryDirectory() as temp_dir:
+        repo_root = Path(temp_dir)
+        install.install_repo(repo_root)
+        config_path = repo_root / "devcovenant" / "config.yaml"
+        config_path.unlink()
+
+        result = core_refresh.refresh_repo(repo_root)
+
+        assert result == 0
+        assert config_path.exists()
+        config = _read_yaml(config_path)
+        install_block = config.get("install")
+        assert isinstance(install_block, dict)
+        assert install_block.get("generic_config") is True
+        rendered = config_path.read_text(encoding="utf-8")
+        assert "DevCovenant Config Template" in rendered
+
+
+def _unit_test_refresh_repo_materializes_missing_profile_assets() -> None:
+    """Refresh should create missing profile assets."""
+    with tempfile.TemporaryDirectory() as temp_dir:
+        repo_root = Path(temp_dir)
+        install.install_repo(repo_root)
+
+        config_path = repo_root / "devcovenant" / "config.yaml"
+        config = _read_yaml(config_path)
+        profiles_block = config.get("profiles")
+        if not isinstance(profiles_block, dict):
+            profiles_block = {}
+        profiles_block["active"] = ["global", "python", "docs"]
+        config["profiles"] = profiles_block
+        _write_yaml(config_path, config)
+
+        requirements_in = repo_root / "requirements.in"
+        requirements_in.unlink(missing_ok=True)
+
+        expected = (
+            repo_root
+            / "devcovenant"
+            / "core"
+            / "profiles"
+            / "python"
+            / "assets"
+            / "requirements.in"
+        ).read_text(encoding="utf-8")
+
+        result = core_refresh.refresh_repo(repo_root)
+
+        assert result == 0
+        assert requirements_in.read_text(encoding="utf-8") == expected
+
+
+def _unit_test_refresh_repo_preserves_existing_python_assets() -> None:
+    """Refresh should preserve existing python-profile asset targets."""
+    with tempfile.TemporaryDirectory() as temp_dir:
+        repo_root = Path(temp_dir)
+        install.install_repo(repo_root)
+
+        config_path = repo_root / "devcovenant" / "config.yaml"
+        config = _read_yaml(config_path)
+        profiles_block = config.get("profiles")
+        if not isinstance(profiles_block, dict):
+            profiles_block = {}
+        profiles_block["active"] = ["global", "python"]
+        config["profiles"] = profiles_block
+        _write_yaml(config_path, config)
+
+        pyproject = repo_root / "pyproject.toml"
+        pyproject.write_text(
+            '[project]\nname = "preserved"\nversion = "1.2.3"\n',
+            encoding="utf-8",
+        )
+
+        result = core_refresh.refresh_repo(repo_root)
+
+        assert result == 0
+        assert pyproject.read_text(encoding="utf-8") == (
+            '[project]\nname = "preserved"\nversion = "1.2.3"\n'
+        )
+
+
+def _unit_test_refresh_repo_emits_scalar_path_overrides() -> None:
+    """Refresh should emit scalar strings for path-valued autogen keys."""
+    with tempfile.TemporaryDirectory() as temp_dir:
+        repo_root = Path(temp_dir)
+        install.install_repo(repo_root)
+
+        config_path = repo_root / "devcovenant" / "config.yaml"
+        config = _read_yaml(config_path)
+        profiles_block = config.get("profiles")
+        if not isinstance(profiles_block, dict):
+            profiles_block = {}
+        profiles_block["active"] = ["global", "devcovrepo"]
+        config["profiles"] = profiles_block
+        _write_yaml(config_path, config)
+
+        result = core_refresh.refresh_repo(repo_root)
+        assert result == 0
+
+        refreshed = _read_yaml(config_path)
+        autogen = refreshed.get("autogen_metadata_overrides", {})
+        assert isinstance(autogen, dict)
+        version_sync = autogen.get("version-sync", {})
+        assert isinstance(version_sync, dict)
+        assert version_sync.get("version_file") == "devcovenant/VERSION"
+        semver = autogen.get("semantic-version-scope", {})
+        assert isinstance(semver, dict)
+        assert semver.get("version_file") == "devcovenant/VERSION"
 
 
 class GeneratedUnittestCases(unittest.TestCase):
@@ -410,3 +560,23 @@ class GeneratedUnittestCases(unittest.TestCase):
     def test_refresh_repo_updates_generated_config_sections(self):
         """Run test_refresh_repo_updates_generated_config_sections."""
         _unit_test_refresh_repo_updates_generated_config_sections()
+
+    def test_refresh_repo_preserves_existing_profile_assets(self):
+        """Run test_refresh_repo_preserves_existing_profile_assets."""
+        _unit_test_refresh_repo_preserves_existing_profile_assets()
+
+    def test_refresh_repo_rebuilds_config_when_missing(self):
+        """Run test_refresh_repo_rebuilds_config_when_missing."""
+        _unit_test_refresh_repo_rebuilds_config_when_missing()
+
+    def test_refresh_repo_materializes_missing_profile_assets(self):
+        """Run test_refresh_repo_materializes_missing_profile_assets."""
+        _unit_test_refresh_repo_materializes_missing_profile_assets()
+
+    def test_refresh_repo_preserves_existing_python_assets(self):
+        """Run test_refresh_repo_preserves_existing_python_assets."""
+        _unit_test_refresh_repo_preserves_existing_python_assets()
+
+    def test_refresh_repo_emits_scalar_path_overrides(self):
+        """Run test_refresh_repo_emits_scalar_path_overrides."""
+        _unit_test_refresh_repo_emits_scalar_path_overrides()

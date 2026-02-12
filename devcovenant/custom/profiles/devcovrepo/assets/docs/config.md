@@ -13,7 +13,9 @@ and lifecycle knobs. The file is tracked in the repo so CI and other
 contributors use the same enforcement settings. Generated registry files
 can be rebuilt, but config stays under version control.
 When the file is missing, DevCovenant seeds a generic stub from the
-`global` profile asset and marks it as generic until reviewed.
+global config template and marks it as generic until reviewed.
+On every full refresh, DevCovenant regenerates autogen-owned config
+sections while preserving user-owned settings.
 
 ## Workflow
 1. Choose profiles that match the repo tech stack.
@@ -30,11 +32,8 @@ The core sections are:
 - `user_metadata_overrides` for per-policy overrides applied last.
 - `policy_state` for authoritative policy on/off activation.
 - `freeze_core_policies` to copy policy logic into custom overlays.
-- `pre_commit` for `.pre-commit-config.yaml` enablement and overrides.
+- `pre_commit` for `.pre-commit-config.yaml` overrides.
 - `install.generic_config` to guard deploys until the config is reviewed.
-- `install.allow_custom_policy_asset_fallback` for custom policy asset
-  fallback from custom policy descriptors when profile assets do not supply
-  those files.
 
 ## Profiles and Overrides
 Overrides merge in the order: policy defaults, profile overlays, then
@@ -54,8 +53,8 @@ entries such as `*_old.*` when backup artifacts should not trigger logging.
 Pre-commit config is built from profile fragments (global first), then
 merged with `pre_commit.overrides` from config. Profile `ignore_dirs`
 are converted into an `exclude` regex so hooks skip the same paths.
-Stock policy assets are profile-owned, while custom policies can still load
-descriptor assets when `install.allow_custom_policy_asset_fallback` is true.
+Stock and custom policy assets are profile-owned through profile `assets`
+declarations for active profiles.
 
 ## Examples
 ```yaml
@@ -79,7 +78,6 @@ user_metadata_overrides:
       - requirements.in
       - requirements.lock
 pre_commit:
-  enabled: true
   overrides:
     repos:
       - repo: https://github.com/pre-commit/pre-commit-hooks

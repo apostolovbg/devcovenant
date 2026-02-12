@@ -65,6 +65,10 @@ class PolicyParser:
         with open(self.agents_md_path, "r", encoding="utf-8") as f:
             content = f.read()
 
+        policy_block = self._policy_block(content)
+        if not policy_block.strip():
+            return []
+
         policies = []
 
         # Find all policy blocks
@@ -75,7 +79,7 @@ class PolicyParser:
             re.DOTALL,
         )
 
-        for match in policy_pattern.finditer(content):
+        for match in policy_pattern.finditer(policy_block):
             name = match.group(1).strip()
             metadata_block = match.group(2).strip()
             description = match.group(3).strip()
@@ -107,6 +111,18 @@ class PolicyParser:
             policies.append(policy)
 
         return policies
+
+    @staticmethod
+    def _policy_block(content: str) -> str:
+        """Return the text inside the managed AGENTS policy block."""
+        begin_marker = "<!-- DEVCOV-POLICIES:BEGIN -->"
+        end_marker = "<!-- DEVCOV-POLICIES:END -->"
+        try:
+            begin = content.index(begin_marker) + len(begin_marker)
+            end = content.index(end_marker, begin)
+        except ValueError:
+            return ""
+        return content[begin:end]
 
     def _parse_metadata_block(self, block: str) -> Dict[str, str]:
         """

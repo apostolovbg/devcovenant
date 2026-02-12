@@ -14,8 +14,6 @@ import shutil
 import tempfile
 from pathlib import Path
 
-import yaml
-
 from devcovenant.core import manifest as manifest_module
 from devcovenant.core.execution import (
     print_banner,
@@ -25,21 +23,9 @@ from devcovenant.core.execution import (
 
 DEFAULT_ACTIVE_PROFILES = [
     "global",
-    "docs",
-    "data",
-    "suffixes",
     "devcovuser",
     "python",
-]
-
-DEFAULT_MANAGED_DOCS = [
-    "AGENTS.md",
-    "README.md",
-    "CONTRIBUTING.md",
-    "SPEC.md",
-    "PLAN.md",
-    "CHANGELOG.md",
-    "devcovenant/README.md",
+    "docs",
 ]
 
 
@@ -51,28 +37,6 @@ def _source_package_dir() -> Path:
 def _target_package_dir(repo_root: Path) -> Path:
     """Return the destination devcovenant directory for a repo."""
     return repo_root / "devcovenant"
-
-
-def _read_yaml(path: Path) -> dict[str, object]:
-    """Load YAML mapping payload from disk."""
-    if not path.exists():
-        return {}
-    try:
-        payload = yaml.safe_load(path.read_text(encoding="utf-8")) or {}
-    except Exception:
-        return {}
-    if isinstance(payload, dict):
-        return payload
-    return {}
-
-
-def _write_yaml(path: Path, payload: dict[str, object]) -> None:
-    """Write YAML mapping payload to disk."""
-    path.parent.mkdir(parents=True, exist_ok=True)
-    path.write_text(
-        yaml.safe_dump(payload, sort_keys=False),
-        encoding="utf-8",
-    )
 
 
 def _copy_ignore(directory: str, names: list[str]) -> set[str]:
@@ -115,55 +79,27 @@ def replace_core_package(repo_root: Path) -> None:
             shutil.copytree(preserved_custom, restored_custom)
 
 
-def _ensure_profiles_block(payload: dict[str, object]) -> None:
-    """Write canonical generic profile defaults."""
-    profiles_block = payload.get("profiles")
-    if not isinstance(profiles_block, dict):
-        profiles_block = {}
-
-    profiles_block["active"] = list(DEFAULT_ACTIVE_PROFILES)
-
-    payload["profiles"] = profiles_block
-
-
-def _ensure_doc_assets_block(payload: dict[str, object]) -> None:
-    """Ensure managed doc asset defaults exist."""
-    doc_assets = payload.get("doc_assets")
-    if not isinstance(doc_assets, dict):
-        doc_assets = {}
-
-    autogen = doc_assets.get("autogen")
-    if isinstance(autogen, list) and autogen:
-        doc_assets["autogen"] = [str(item) for item in autogen if str(item)]
-    else:
-        doc_assets["autogen"] = list(DEFAULT_MANAGED_DOCS)
-
-    user_docs = doc_assets.get("user")
-    if isinstance(user_docs, list):
-        doc_assets["user"] = [str(item) for item in user_docs if str(item)]
-    else:
-        doc_assets["user"] = []
-
-    payload["doc_assets"] = doc_assets
-
-
 def _ensure_generic_config(repo_root: Path) -> None:
     """Write/install a generic config stub for post-install editing."""
+    template_path = (
+        repo_root
+        / "devcovenant"
+        / "core"
+        / "profiles"
+        / "global"
+        / "assets"
+        / "config.yaml"
+    )
     config_path = repo_root / "devcovenant" / "config.yaml"
-    payload = _read_yaml(config_path)
-
-    install_block = payload.get("install")
-    if not isinstance(install_block, dict):
-        install_block = {}
-
-    install_block["generic_config"] = True
-    payload["install"] = install_block
-
-    payload["devcov_core_include"] = False
-
-    _ensure_profiles_block(payload)
-    _ensure_doc_assets_block(payload)
-    _write_yaml(config_path, payload)
+    if not template_path.exists():
+        raise FileNotFoundError(
+            "Missing global config template: "
+            "devcovenant/core/profiles/global/assets/config.yaml"
+        )
+    config_path.write_text(
+        template_path.read_text(encoding="utf-8"),
+        encoding="utf-8",
+    )
 
 
 def install_repo(repo_root: Path) -> int:

@@ -7,7 +7,6 @@ ignore_dirs: []
 assets:
   - path: schema.sql
     template: schema.sql
-    mode: replace
 policy_overlays:
   documentation-growth-tracking:
     user_facing_suffixes:

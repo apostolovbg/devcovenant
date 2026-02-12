@@ -1,35 +1,22 @@
-# Custom Policy Assets
+# Custom Policies
 
 ## Table of Contents
 1. Overview
-2. Declaring Assets
+2. Metadata and Assets
 3. Workflow
 
 ## Overview
-Custom policy assets override core policy assets when paths match. Use this
-folder to ship repo-specific policy documents or configuration files without
-forking DevCovenant core. Examples include custom security logs, alternate
-license reports, or a policy-specific README that captures how your team
-interprets a rule.
+Custom policies live under `devcovenant/custom/policies/<policy>/` and
+override core policy scripts/descriptors when the policy id matches.
 
-## Declaring Assets
-Register custom assets by adding an `assets` list to the policy descriptor at:
-`devcovenant/custom/policies/<policy>/<policy>.yaml`
-
-Example:
-```yaml
-assets:
-  - path: docs/README.md
-    template: README.md
-    mode: replace
-```
-
-Assets should live alongside the descriptor under
-`devcovenant/custom/policies/<policy>/assets/`. Custom policy descriptors
-override core descriptors when the policy id matches.
+## Metadata and Assets
+Policy metadata still comes from descriptors and profile overlays, but policy
+assets are profile-owned. Declare asset files under active profile manifests
+(`devcovenant/core/profiles/*/*.yaml` or
+`devcovenant/custom/profiles/*/*.yaml`) using `assets` path/template entries.
 
 ## Workflow
-Add or adjust the asset, update the policy descriptor, and keep the policy id
-consistent. Custom policy assets are applied only when the policy is enabled
-and in scope. After changes, run the DevCovenant gates so the registry and
-changelog stay synchronized.
+Adjust policy code/descriptor here, tune metadata via profile/config overlays,
+and manage any asset files through profiles. After changes, run the
+DevCovenant gates so registry, AGENTS policy block, and changelog stay
+synchronized.

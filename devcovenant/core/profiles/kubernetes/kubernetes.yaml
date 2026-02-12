@@ -9,10 +9,8 @@ ignore_dirs:
 assets:
   - path: Chart.yaml
     template: Chart.yaml
-    mode: replace
   - path: values.yaml
     template: values.yaml
-    mode: replace
 policy_overlays:
   devflow-run-gates:
     required_commands:

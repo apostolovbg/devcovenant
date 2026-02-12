@@ -10,10 +10,8 @@ ignore_dirs:
 assets:
   - path: Gemfile
     template: Gemfile
-    mode: replace
   - path: Gemfile.lock
     template: Gemfile.lock
-    mode: replace
 policy_overlays:
   dependency-license-sync:
     dependency_files:

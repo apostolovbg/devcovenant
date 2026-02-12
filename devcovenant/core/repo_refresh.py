@@ -81,15 +81,6 @@ def _read_yaml(path: Path) -> dict[str, object]:
     return {}
 
 
-def _write_yaml(path: Path, payload: dict[str, object]) -> None:
-    """Write YAML mapping payload to disk."""
-    path.parent.mkdir(parents=True, exist_ok=True)
-    path.write_text(
-        yaml.safe_dump(payload, sort_keys=False),
-        encoding="utf-8",
-    )
-
-
 def _normalize_doc_name(name: str) -> str:
     """Normalize configured doc names to canonical markdown paths."""
     raw = str(name or "").strip()
@@ -513,66 +504,462 @@ def _refresh_profile_registry(
     return registry
 
 
+def _profile_asset_target(
+    repo_root: Path, asset_payload: dict[str, object]
+) -> Path | None:
+    """Return normalized target path for a profile asset entry."""
+    raw_path = str(asset_payload.get("path", "")).strip()
+    if not raw_path:
+        return None
+    return repo_root / raw_path
+
+
+def _profile_asset_template(
+    repo_root: Path,
+    profile_payload: dict[str, object],
+    asset_payload: dict[str, object],
+) -> Path | None:
+    """Return the resolved template path for a profile asset entry."""
+    raw_template = str(asset_payload.get("template", "")).strip()
+    profile_path = str(profile_payload.get("path", "")).strip()
+    if not raw_template or not profile_path:
+        return None
+    return repo_root / profile_path / "assets" / raw_template
+
+
+def _read_text_if_exists(path: Path) -> str:
+    """Read UTF-8 text when file exists, otherwise return empty string."""
+    if not path.exists() or not path.is_file():
+        return ""
+    return path.read_text(encoding="utf-8")
+
+
+def _write_text_if_changed(target: Path, content: str) -> bool:
+    """Write target file only when content changes."""
+    current = _read_text_if_exists(target)
+    if current == content:
+        return False
+    target.parent.mkdir(parents=True, exist_ok=True)
+    target.write_text(content, encoding="utf-8")
+    return True
+
+
+def _materialize_profile_asset(
+    *,
+    target: Path,
+    template_path: Path | None,
+) -> bool:
+    """Apply one profile asset entry and return True when modified."""
+    if template_path is None or not template_path.exists():
+        return False
+
+    if target.exists():
+        return False
+
+    template_text = template_path.read_text(encoding="utf-8")
+    return _write_text_if_changed(target, template_text)
+
+
+def _refresh_profile_assets(
+    repo_root: Path,
+    profile_registry: dict[str, dict],
+    active_profiles: list[str],
+) -> list[str]:
+    """Materialize active profile assets into the target repository."""
+    changed: list[str] = []
+    profiles_map = _profile_registry_profiles(profile_registry)
+    for profile_name in active_profiles:
+        normalized = str(profile_name or "").strip().lower()
+        if not normalized:
+            continue
+        profile_payload = profiles_map.get(normalized, {})
+        raw_assets = profile_payload.get("assets")
+        if not isinstance(raw_assets, list):
+            continue
+        for entry in raw_assets:
+            if not isinstance(entry, dict):
+                continue
+            target = _profile_asset_target(repo_root, entry)
+            if target is None:
+                continue
+            template_path = _profile_asset_template(
+                repo_root, profile_payload, entry
+            )
+            if not _materialize_profile_asset(
+                target=target,
+                template_path=template_path,
+            ):
+                continue
+            rel_path = target.relative_to(repo_root).as_posix()
+            changed.append(rel_path)
+    return changed
+
+
+_CONFIG_AUTOGEN_PATHS: tuple[tuple[str, ...], ...] = (
+    ("devcov_core_paths",),
+    ("autogen_metadata_overrides",),
+    ("profiles", "generated"),
+    ("doc_assets", "autogen"),
+)
+
+
+def _is_autogen_config_path(path: tuple[str, ...]) -> bool:
+    """Return True when a config path is owned by autogen refresh."""
+    for prefix in _CONFIG_AUTOGEN_PATHS:
+        if path[: len(prefix)] == prefix:
+            return True
+    return False
+
+
+def _merge_user_config_values(
+    base: dict[str, object],
+    incoming: dict[str, object],
+    *,
+    path: tuple[str, ...] = (),
+) -> None:
+    """Merge user-owned config values while skipping autogen-owned paths."""
+    for raw_key, incoming_value in incoming.items():
+        key = str(raw_key)
+        next_path = path + (key,)
+        if _is_autogen_config_path(next_path):
+            continue
+        current_value = base.get(key)
+        if isinstance(current_value, dict) and isinstance(
+            incoming_value, dict
+        ):
+            _merge_user_config_values(
+                current_value,
+                incoming_value,
+                path=next_path,
+            )
+            continue
+        base[key] = copy.deepcopy(incoming_value)
+
+
+def _config_template_path(repo_root: Path) -> Path:
+    """Return global config template path."""
+    return (
+        repo_root
+        / "devcovenant"
+        / "core"
+        / "profiles"
+        / "global"
+        / "assets"
+        / "config.yaml"
+    )
+
+
+def _load_config_template(repo_root: Path) -> dict[str, object]:
+    """Load global config template payload."""
+    template_payload = _read_yaml(_config_template_path(repo_root))
+    if isinstance(template_payload, dict) and template_payload:
+        return template_payload
+    return {
+        "devcov_core_include": False,
+        "devcov_core_paths": _default_core_paths(repo_root),
+        "profiles": {
+            "active": [
+                "global",
+                "devcovuser",
+                "python",
+                "docs",
+            ],
+            "generated": {"file_suffixes": ["__none__"]},
+        },
+        "paths": {
+            "policy_definitions": "AGENTS.md",
+            "registry_file": (
+                "devcovenant/registry/local/policy_registry.yaml"
+            ),
+        },
+        "version": {"override": None},
+        "docs": {
+            "managed_blocks": {
+                "begin": BLOCK_BEGIN,
+                "end": BLOCK_END,
+            }
+        },
+        "doc_assets": {"autogen": list(DEFAULT_MANAGED_DOCS), "user": []},
+        "install": {"generic_config": True},
+        "engine": {
+            "fail_threshold": "error",
+            "auto_fix_enabled": True,
+            "file_suffixes": [".md", ".rst", ".txt", ".yml", ".yaml"],
+            "ignore_dirs": [".git", ".venv", "build", "dist"],
+        },
+        "pre_commit": {"overrides": {}},
+        "policy_state": {},
+        "freeze_core_policies": [],
+        "ignore": {"patterns": []},
+        "autogen_metadata_overrides": {},
+        "user_metadata_overrides": {},
+    }
+
+
+def _yaml_block(payload: dict[str, object]) -> str:
+    """Dump one YAML block while preserving key order."""
+    return yaml.safe_dump(payload, sort_keys=False).rstrip()
+
+
+def _config_comment_header() -> str:
+    """Return static comment header used by rendered config."""
+    rule = "# " + ("-" * 67)
+    return "\n".join(
+        [
+            rule,
+            "# DevCovenant Config Template (generic install baseline)",
+            rule,
+            (
+                "# This file is copied to `devcovenant/config.yaml` by "
+                "`devcovenant install`."
+            ),
+            "#",
+            "# Install always seeds a safe generic stub:",
+            "# - `install.generic_config: true`",
+            "# - profile set oriented to user repositories",
+            "#",
+            "# Typical flow:",
+            "# 1) Review/edit this config.",
+            "# 2) Set `install.generic_config: false`.",
+            "# 3) Run `devcovenant deploy`.",
+            rule,
+        ]
+    )
+
+
+def _config_section_header(title: str) -> str:
+    """Return one titled section banner for rendered config blocks."""
+    rule = "# " + ("-" * 67)
+    return "\n".join([rule, f"# {title}", rule])
+
+
+def _render_config_yaml(payload: dict[str, object]) -> str:
+    """Render config payload with stable comments and key ordering."""
+    known_keys = [
+        "devcov_core_include",
+        "devcov_core_paths",
+        "profiles",
+        "paths",
+        "version",
+        "docs",
+        "doc_assets",
+        "install",
+        "engine",
+        "pre_commit",
+        "policy_state",
+        "freeze_core_policies",
+        "ignore",
+        "autogen_metadata_overrides",
+        "user_metadata_overrides",
+    ]
+    comments = {
+        "scope": _config_section_header("Scope control"),
+        "profiles": _config_section_header("Profile activation"),
+        "paths": _config_section_header("Canonical paths"),
+        "version": _config_section_header("Version controls"),
+        "docs": _config_section_header("Managed document controls"),
+        "install": _config_section_header("Install/deploy safety"),
+        "engine": _config_section_header("Engine behavior"),
+        "pre_commit": _config_section_header("Pre-commit generation"),
+        "policy": _config_section_header(
+            "Policy activation and customization"
+        ),
+        "ignore": _config_section_header("Global ignore patterns"),
+        "metadata": _config_section_header(
+            "Metadata overrides (resolution order matters)"
+        ),
+    }
+
+    blocks = [
+        _config_comment_header(),
+        comments["scope"],
+        "\n".join(
+            [
+                (
+                    "# Whether policy checks include DevCovenant's own "
+                    "implementation files."
+                ),
+                "# - false: user-repo mode (ignore core internals)",
+                ("# - true: DevCovenant-repo mode " "(enforce the full tree)"),
+            ]
+        ),
+        _yaml_block(
+            {
+                "devcov_core_include": bool(
+                    payload.get("devcov_core_include", False)
+                ),
+            }
+        ),
+        "\n".join(
+            [
+                (
+                    "# Paths excluded from checks when "
+                    "`devcov_core_include` is false."
+                ),
+                "# Keep this list aligned with command and core internals.",
+            ]
+        ),
+        _yaml_block(
+            {
+                "devcov_core_paths": _normalize_string_list(
+                    payload.get("devcov_core_paths")
+                ),
+            }
+        ),
+        comments["profiles"],
+        "# Ordered profile list. `global` should stay first.",
+        ("# Profiles contribute suffixes, assets, and metadata overlays."),
+        (
+            "# Profiles do not activate policies. "
+            "Policy activation is `policy_state`."
+        ),
+        _yaml_block({"profiles": payload.get("profiles", {})}),
+        comments["paths"],
+        "# Runtime policy source parsed by the engine.",
+        "# Generated local policy registry (hashes + diagnostics).",
+        _yaml_block({"paths": payload.get("paths", {})}),
+        comments["version"],
+        "# Optional forced version value for version-aware logic.",
+        _yaml_block({"version": payload.get("version", {})}),
+        comments["docs"],
+        "# Marker pair used by managed-block refresh logic.",
+        _yaml_block({"docs": payload.get("docs", {})}),
+        "\n".join(
+            [
+                (
+                    "# Documents that refresh may fully materialize from "
+                    "descriptor templates."
+                ),
+                "# Empty list means runtime backfills defaults.",
+                (
+                    "# Documents in `user` are excluded from full "
+                    "template materialization."
+                ),
+                (
+                    "# Managed block refresh still applies when markers are "
+                    "present."
+                ),
+            ]
+        ),
+        _yaml_block({"doc_assets": payload.get("doc_assets", {})}),
+        comments["install"],
+        (
+            "# True after install. Deploy is blocked until user reviews "
+            "config."
+        ),
+        ("# Set this to false after review to allow `devcovenant deploy`."),
+        _yaml_block({"install": payload.get("install", {})}),
+        comments["engine"],
+        (
+            "# Violations at or above fail_threshold fail the run "
+            "(info|warning|error|critical)."
+        ),
+        "# auto_fix_enabled controls policy auto-fix pass behavior.",
+        "# file_suffixes and ignore_dirs define broad scan boundaries.",
+        _yaml_block({"engine": payload.get("engine", {})}),
+        comments["pre_commit"],
+        "# Structured overrides merged into generated pre-commit config.",
+        _yaml_block({"pre_commit": payload.get("pre_commit", {})}),
+        comments["policy"],
+        "# Canonical policy on/off map: {policy-id: true|false}.",
+        _yaml_block({"policy_state": payload.get("policy_state", {})}),
+        "# Core policy IDs frozen into devcovenant/custom/policies/*.",
+        _yaml_block(
+            {
+                "freeze_core_policies": _normalize_string_list(
+                    payload.get("freeze_core_policies")
+                )
+            }
+        ),
+        comments["ignore"],
+        "# Extra glob patterns excluded from CheckContext file collections.",
+        _yaml_block({"ignore": payload.get("ignore", {})}),
+        comments["metadata"],
+        "# Auto-generated profile overlays written by refresh.",
+        "# Do not hand-edit unless you intentionally own this layer.",
+        _yaml_block(
+            {
+                "autogen_metadata_overrides": payload.get(
+                    "autogen_metadata_overrides", {}
+                )
+            }
+        ),
+        "# User-owned overrides applied last (highest precedence).",
+        "# Shape: {policy-id: {metadata_key: value-or-list}}",
+        _yaml_block(
+            {
+                "user_metadata_overrides": payload.get(
+                    "user_metadata_overrides", {}
+                )
+            }
+        ),
+    ]
+
+    extras = {
+        key: value for key, value in payload.items() if key not in known_keys
+    }
+    if extras:
+        rule = "# " + ("-" * 67)
+        blocks.extend(
+            [
+                rule,
+                "# Extra user-defined keys (preserved)",
+                rule,
+                _yaml_block(extras),
+            ]
+        )
+    return "\n\n".join(blocks).rstrip() + "\n"
+
+
 def _refresh_config_generated(
     repo_root: Path,
     config_path: Path,
     config: dict[str, object],
     registry: dict[str, dict],
     active_profiles: list[str],
-) -> bool:
-    """Refresh generated config sections from active profile metadata."""
-    if not config:
-        return False
+) -> tuple[dict[str, object], bool]:
+    """Refresh config with autogen values while preserving user-owned keys."""
+    template = _load_config_template(repo_root)
+    merged = copy.deepcopy(template)
+    _merge_user_config_values(merged, config)
 
     profile_suffixes = profiles.resolve_profile_suffixes(
         registry, active_profiles
     )
     suffixes = sorted({str(item) for item in profile_suffixes if str(item)})
 
-    profiles_block = config.get("profiles")
+    profiles_block = merged.get("profiles")
     if not isinstance(profiles_block, dict):
         profiles_block = {}
-
     generated = profiles_block.get("generated")
     if not isinstance(generated, dict):
         generated = {}
+    profiles_block["active"] = list(active_profiles)
+    generated["file_suffixes"] = suffixes
+    profiles_block["generated"] = generated
+    merged["profiles"] = profiles_block
 
-    core_paths = _default_core_paths(repo_root)
-    overlays = _config_autogen_metadata_overrides(repo_root, active_profiles)
-    doc_assets = config.get("doc_assets")
+    merged["devcov_core_paths"] = _default_core_paths(repo_root)
+    merged["autogen_metadata_overrides"] = _config_autogen_metadata_overrides(
+        repo_root, active_profiles
+    )
+
+    doc_assets = merged.get("doc_assets")
     if not isinstance(doc_assets, dict):
         doc_assets = {}
-
-    changed = False
-    if profiles_block.get("active") != active_profiles:
-        profiles_block["active"] = active_profiles
-        changed = True
-    if generated.get("file_suffixes") != suffixes:
-        generated["file_suffixes"] = suffixes
-        changed = True
-    if config.get("devcov_core_paths") != core_paths:
-        config["devcov_core_paths"] = core_paths
-        changed = True
-    if config.get("autogen_metadata_overrides") != overlays:
-        config["autogen_metadata_overrides"] = overlays
-        changed = True
-
-    autogen_docs = doc_assets.get("autogen")
-    if autogen_docs != DEFAULT_MANAGED_DOCS:
-        doc_assets["autogen"] = list(DEFAULT_MANAGED_DOCS)
-        changed = True
+    doc_assets["autogen"] = list(DEFAULT_MANAGED_DOCS)
     user_docs = doc_assets.get("user")
     if not isinstance(user_docs, list):
         doc_assets["user"] = []
-        changed = True
+    merged["doc_assets"] = doc_assets
 
-    profiles_block["generated"] = generated
-    config["profiles"] = profiles_block
-    config["doc_assets"] = doc_assets
-
-    if changed:
-        _write_yaml(config_path, config)
-    return changed
+    rendered = _render_config_yaml(merged)
+    current = _read_text_if_exists(config_path)
+    if current == rendered:
+        return merged, False
+    config_path.parent.mkdir(parents=True, exist_ok=True)
+    config_path.write_text(rendered, encoding="utf-8")
+    return merged, True
 
 
 def _normalize_string_list(raw_value: object) -> list[str]:
@@ -627,19 +1014,35 @@ def _default_core_paths(repo_root: Path) -> list[str]:
 
 def _config_autogen_metadata_overrides(
     repo_root: Path, active_profiles: list[str]
-) -> Dict[str, Dict[str, List[str]]]:
+) -> Dict[str, Dict[str, object]]:
     """Build deterministic profile-derived autogen metadata overrides."""
     overlays = _collect_profile_overlays(repo_root, active_profiles)
-    normalized: Dict[str, Dict[str, List[str]]] = {}
+    normalized: Dict[str, Dict[str, object]] = {}
     for policy_id in sorted(overlays.keys()):
         policy_map = overlays[policy_id]
-        key_map: Dict[str, List[str]] = {}
+        key_map: Dict[str, object] = {}
         for key_name in sorted(policy_map.keys()):
-            values, _merge_values_flag = policy_map[key_name]
+            values, merge_values = policy_map[key_name]
+            if merge_values:
+                key_map[key_name] = list(values)
+                continue
+            if _is_scalar_path_override_key(key_name):
+                key_map[key_name] = values[0] if values else "__none__"
+                continue
             key_map[key_name] = list(values)
         if key_map:
             normalized[policy_id] = key_map
     return normalized
+
+
+def _is_scalar_path_override_key(key_name: str) -> bool:
+    """Return True when override key represents a singular path value."""
+    token = str(key_name or "").strip().lower()
+    if not token:
+        return False
+    if token.endswith(("_files", "_paths", "_dirs", "_roots")):
+        return False
+    return token.endswith(("_file", "_path", "_dir", "_root"))
 
 
 def _profile_registry_profiles(
@@ -1046,7 +1449,8 @@ def _refresh_gitignore(
 def refresh_repo(repo_root: Path) -> int:
     """Run full refresh for the repository."""
     config_path = repo_root / "devcovenant" / "config.yaml"
-    config = _read_yaml(config_path)
+    config = _load_config_template(repo_root)
+    _merge_user_config_values(config, _read_yaml(config_path))
     version = _read_version(repo_root)
 
     _sync_doc(repo_root, "AGENTS.md", version)
@@ -1061,9 +1465,21 @@ def refresh_repo(repo_root: Path) -> int:
     active_profiles = _active_profiles(config)
     profile_registry = _refresh_profile_registry(repo_root, active_profiles)
 
-    if _refresh_config_generated(
+    refreshed_assets = _refresh_profile_assets(
+        repo_root,
+        profile_registry,
+        active_profiles,
+    )
+    if refreshed_assets:
+        print_step(
+            "Materialized profile assets: " + ", ".join(refreshed_assets),
+            "✅",
+        )
+
+    config, config_changed = _refresh_config_generated(
         repo_root, config_path, config, profile_registry, active_profiles
-    ):
+    )
+    if config_changed:
         print_step("Refreshed config generated profile metadata", "✅")
 
     if _refresh_pre_commit_config(
@@ -1289,20 +1705,6 @@ def _normalize_override_map(
     return normalized
 
 
-def _merge_override_maps(
-    base: Dict[str, Dict[str, List[str]]],
-    incoming: Dict[str, Dict[str, List[str]]],
-) -> Dict[str, Dict[str, List[str]]]:
-    """Merge override maps with incoming values taking precedence."""
-
-    merged = {policy_id: dict(values) for policy_id, values in base.items()}
-    for policy_id, overrides in incoming.items():
-        current = merged.setdefault(policy_id, {})
-        for key, values in overrides.items():
-            current[key] = list(values)
-    return merged
-
-
 def _load_metadata_overrides(
     payload: Dict[str, object],
 ) -> Tuple[Dict[str, Dict[str, List[str]]], Dict[str, Dict[str, List[str]]]]:
@@ -1312,9 +1714,7 @@ def _load_metadata_overrides(
         payload.get("autogen_metadata_overrides")
     )
     user = _normalize_override_map(payload.get("user_metadata_overrides"))
-    legacy = _normalize_override_map(payload.get("policy_overrides"))
-    merged_user = _merge_override_maps(legacy, user)
-    return autogen, merged_user
+    return autogen, user
 
 
 def _collect_profile_overlays(

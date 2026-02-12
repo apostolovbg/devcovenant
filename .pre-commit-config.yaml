@@ -63,10 +63,7 @@ exclude: |-
   (?x)
   (^|/)
   (
-    data/raw
-    | data/tmp
-    | data/cache
-    | _site
+    _site
     | site
     | build
     | \.venv

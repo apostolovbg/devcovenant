@@ -34,42 +34,38 @@ Example entry:
 ## Version 0.2.6
 
 - 2026-02-12:
-  Change: Updated engine runtime policy loading to parse `AGENTS.md`
-  policy blocks instead of local registry entries.
-  Why: Aligned runtime behavior with spec so AGENTS remains the execution
-  source and registry remains hash/diagnostic state.
-  Impact: Improved activation consistency by honoring AGENTS `enabled` values
-  and ignoring registry-only policy rows during checks.
+  Change: Corrected profile-manifest path references in SPEC/docs and
+  constrained AGENTS policy parsing to the managed policy block markers.
+  Why: Removed spec/documentation drift around `<name>.yaml` manifests and
+  prevented runtime parsing from reading policy-like text outside
+  `DEVCOV-POLICIES` markers.
+  Impact: Clarified profile contract paths and hardened parser behavior to the
+  canonical managed policy block surface.
   Files:
-  AGENTS.md
-  CONTRIBUTING.md
-  MANIFEST.in
   PLAN.md
-  README.md
   SPEC.md
-  devcovenant/README.md
-  devcovenant/check.py
   devcovenant/config.yaml
-  devcovenant/core/engine.py
-  devcovenant/core/policies/changelog_coverage/changelog_coverage.py
-  devcovenant/core/profiles.py
+  devcovenant/core/base.py
+  devcovenant/core/manifest.py
+  devcovenant/core/parser.py
+  devcovenant/core/policies/README.md
+  devcovenant/core/policies/dependency_license_sync/\
+    dependency_license_sync.yaml
   devcovenant/core/profiles/README.md
   devcovenant/core/profiles/csharp/csharp.yaml
   devcovenant/core/profiles/dart/dart.yaml
+  devcovenant/core/profiles/data/assets/.gitignore
+  devcovenant/core/profiles/data/assets/data/README.md
+  devcovenant/core/profiles/data/assets/data/manifest.json
   devcovenant/core/profiles/data/data.yaml
   devcovenant/core/profiles/devcovuser/devcovuser.yaml
   devcovenant/core/profiles/docker/docker.yaml
+  devcovenant/core/profiles/docs/assets/mkdocs.yml
   devcovenant/core/profiles/docs/docs.yaml
   devcovenant/core/profiles/fastapi/fastapi.yaml
   devcovenant/core/profiles/flutter/flutter.yaml
   devcovenant/core/profiles/frappe/frappe.yaml
-  devcovenant/core/profiles/global/assets/AGENTS.yaml
-  devcovenant/core/profiles/global/assets/CHANGELOG.yaml
-  devcovenant/core/profiles/global/assets/CONTRIBUTING.yaml
-  devcovenant/core/profiles/global/assets/PLAN.yaml
-  devcovenant/core/profiles/global/assets/README.yaml
-  devcovenant/core/profiles/global/assets/SPEC.yaml
-  devcovenant/core/profiles/global/assets/devcovenant/README.yaml
+  devcovenant/core/profiles/global/assets/config.yaml
   devcovenant/core/profiles/global/global.yaml
   devcovenant/core/profiles/go/go.yaml
   devcovenant/core/profiles/java/java.yaml
@@ -77,36 +73,66 @@ Example entry:
   devcovenant/core/profiles/kubernetes/kubernetes.yaml
   devcovenant/core/profiles/objective-c/objective-c.yaml
   devcovenant/core/profiles/php/php.yaml
+  devcovenant/core/profiles/python/assets/venv.md
   devcovenant/core/profiles/python/python.yaml
   devcovenant/core/profiles/ruby/ruby.yaml
   devcovenant/core/profiles/rust/rust.yaml
   devcovenant/core/profiles/sql/sql.yaml
+  devcovenant/core/profiles/suffixes/assets/suffixes.txt
   devcovenant/core/profiles/suffixes/suffixes.yaml
   devcovenant/core/profiles/swift/swift.yaml
   devcovenant/core/profiles/terraform/terraform.yaml
   devcovenant/core/profiles/typescript/typescript.yaml
   devcovenant/core/repo_refresh.py
-  devcovenant/custom/policies/managed_doc_assets/managed_doc_assets.py
+  devcovenant/custom/policies/README.md
+  devcovenant/custom/profiles/README.md
+  devcovenant/custom/profiles/devcovrepo/assets/docs/config.md
+  devcovenant/custom/profiles/devcovrepo/assets/docs/installation.md
+  devcovenant/custom/profiles/devcovrepo/assets/docs/policies.md
+  devcovenant/custom/profiles/devcovrepo/assets/docs/profiles.md
+  devcovenant/custom/profiles/devcovrepo/assets/docs/workflow.md
   devcovenant/custom/profiles/devcovrepo/devcovrepo.yaml
-  devcovenant/deploy.py
+  devcovenant/docs/config.md
   devcovenant/docs/installation.md
+  devcovenant/docs/policies.md
   devcovenant/docs/profiles.md
+  devcovenant/docs/workflow.md
   devcovenant/install.py
-  devcovenant/undeploy.py
-  devcovenant/update_lock.py
-  tests/devcovenant/core/test_engine.py
-  tests/devcovenant/core/test_manifest.py
+  tests/devcovenant/core/policies/devcov_integrity_guard/\
+    test_devcov_integrity_guard.py
+  tests/devcovenant/core/profiles/data/__init__.py
+  tests/devcovenant/core/profiles/suffixes/__init__.py
+  tests/devcovenant/core/test_base.py
+  tests/devcovenant/core/test_parser.py
   tests/devcovenant/core/test_profiles.py
   tests/devcovenant/core/test_repo_refresh.py
-  tests/devcovenant/custom/policies/managed_doc_assets/\
-    test_managed_doc_assets.py
-  tests/devcovenant/test_check.py
-  tests/devcovenant/test_deploy.py
-  tests/devcovenant/test_install.py
-  tests/devcovenant/test_refresh.py
-  tests/devcovenant/test_undeploy.py
-  tests/devcovenant/test_update_lock.py
-  tests/devcovenant/test_upgrade.py
+
+- 2026-02-12:
+  Change: Normalized path-valued metadata overrides so singular path keys
+  resolve as scalar strings in generated config and runtime policy options.
+  Why: Fixed runtime warnings where list-shaped overrides reached
+  `semantic-version-scope` and `version-sync` path parsing.
+  Impact: Improved policy execution reliability while preserving list-based
+  selector metadata behavior.
+  Files:
+  PLAN.md
+  SPEC.md
+  devcovenant/config.yaml
+  devcovenant/core/base.py
+  devcovenant/core/repo_refresh.py
+  tests/devcovenant/core/test_base.py
+  tests/devcovenant/core/test_repo_refresh.py
+
+- 2026-02-12:
+  Change: Updated the 0.2.6 backlog status after a new SPEC-vs-reality
+  audit and added the remaining path-normalization drift as an explicit item.
+  Why: Clarified the dedrift close-loop state and kept unresolved behavior in
+  one tracked backlog instead of implicit runtime warnings.
+  Impact: Improved planning accuracy by marking completed audit work and
+  isolating the next runtime-fix target for `semantic-version-scope` and
+  `version-sync`.
+  Files:
+  PLAN.md
 
 - 2026-02-12:
   Change: Removed profile-manifest `policies` activation lists and updated

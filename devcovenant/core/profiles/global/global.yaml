@@ -3,24 +3,7 @@ profile: global
 category: core
 suffixes: []
 ignore_dirs: []
-assets:
-  - path: devcovenant/config.yaml
-    template: config.yaml
-    mode: skip
-  - path: devcovenant/registry/local/manifest.json
-    mode: generate
-    generator: manifest
-    if_missing: true
-  - path: devcovenant/registry/local/policy_registry.yaml
-    mode: generate
-    generator: policy_registry
-  - path: devcovenant/registry/local/profile_registry.yaml
-    mode: generate
-    generator: profile_registry
-  - path: devcovenant/registry/local/test_status.json
-    mode: generate
-    generator: test_status
-    if_missing: true
+assets: []
 pre_commit:
   default_language_version:
     python: python3.14

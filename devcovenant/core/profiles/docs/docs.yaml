@@ -9,10 +9,7 @@ ignore_dirs:
   - _site
   - site
   - build
-assets:
-  - path: mkdocs.yml
-    template: mkdocs.yml
-    mode: replace
+assets: []
 policy_overlays:
   documentation-growth-tracking:
     user_facing_suffixes:

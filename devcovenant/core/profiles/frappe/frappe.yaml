@@ -18,10 +18,8 @@ ignore_dirs:
 assets:
   - path: hooks.py
     template: hooks.py
-    mode: replace
   - path: modules.txt
     template: modules.txt
-    mode: replace
 policy_overlays:
   dependency-license-sync:
     dependency_files:

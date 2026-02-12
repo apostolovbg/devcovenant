@@ -37,12 +37,6 @@ devcovenant/registry/local/
 # Profile: global
 # DevCovenant profile ignores
 
-# Profile: data
-# DevCovenant profile ignores
-data/raw
-data/tmp
-data/cache
-
 # Profile: devcovrepo
 # DevCovenant repo-specific ignores
 # Keep this fragment minimal; config.yaml stays tracked.
@@ -61,9 +55,6 @@ __pycache__
 .mypy_cache
 build
 dist
-
-# Profile: suffixes
-# DevCovenant profile ignores
 
 # OS-specific ignores (DevCovenant)
 

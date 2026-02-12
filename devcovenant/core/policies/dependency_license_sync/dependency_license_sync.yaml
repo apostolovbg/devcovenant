@@ -4,13 +4,6 @@ text: |
   configured by the active profiles or config overrides. The policy points
   reviewers to the `licenses/` directory and its `## License Report` section so
   every dependency change touches both the license text and the cited manifest.
-assets:
-  - path: THIRD_PARTY_LICENSES.md
-    template: THIRD_PARTY_LICENSES.md
-    mode: merge
-  - path: licenses/README.md
-    template: licenses/README.md
-    mode: replace
 metadata:
   id: dependency-license-sync
   severity: error

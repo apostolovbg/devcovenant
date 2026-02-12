@@ -16,10 +16,8 @@ ignore_dirs:
 assets:
   - path: main.py
     template: main.py
-    mode: replace
   - path: openapi.json
     template: openapi.json
-    mode: replace
 policy_overlays:
   dependency-license-sync:
     dependency_files:

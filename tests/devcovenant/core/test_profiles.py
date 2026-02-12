@@ -107,7 +107,7 @@ def _unit_test_profile_overlays_reference_known_policies() -> None:
 
 def _unit_test_profiles_have_assets_unless_exempt() -> None:
     """Most profiles should ship assets; allow explicit exceptions."""
-    exempt = {"devcovuser", "suffixes"}
+    exempt = {"global", "devcovuser"}
     repo_root = Path(__file__).resolve().parents[3]
     registry = profiles.build_profile_registry(repo_root)
     for name, meta in (

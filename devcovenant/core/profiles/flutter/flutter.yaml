@@ -9,13 +9,10 @@ ignore_dirs:
 assets:
   - path: .gitignore
     template: .gitignore
-    mode: merge
   - path: pubspec.yaml
     template: pubspec.yaml
-    mode: replace
   - path: pubspec.lock
     template: pubspec.lock
-    mode: replace
 policy_overlays:
   dependency-license-sync:
     dependency_files:

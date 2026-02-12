@@ -29,7 +29,8 @@ The start and end gates record timestamps in the local registry.
 
 ## Test Runner
 `devcovenant test` executes `python3 -m unittest discover -v` first, then
-pytest, to keep coverage consistent across suites.
+pytest, to keep coverage consistent across suites and preserve readable
+test names.
 The runner records status so policies can verify that tests ran.
 
 ## CI Notes

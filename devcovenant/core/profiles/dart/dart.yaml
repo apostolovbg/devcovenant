@@ -9,10 +9,8 @@ ignore_dirs:
 assets:
   - path: pubspec.yaml
     template: pubspec.yaml
-    mode: replace
   - path: pubspec.lock
     template: pubspec.lock
-    mode: replace
 policy_overlays:
   dependency-license-sync:
     dependency_files:

@@ -10,10 +10,8 @@ ignore_dirs:
 assets:
   - path: go.mod
     template: go.mod
-    mode: replace
   - path: go.sum
     template: go.sum
-    mode: replace
 policy_overlays:
   dependency-license-sync:
     dependency_files:

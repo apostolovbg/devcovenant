@@ -9,7 +9,6 @@ ignore_dirs:
 assets:
   - path: .gitignore
     template: .gitignore
-    mode: merge
 policy_overlays:
   changelog-coverage:
     skipped_prefixes:

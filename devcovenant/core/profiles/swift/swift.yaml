@@ -8,7 +8,6 @@ ignore_dirs:
 assets:
   - path: Package.swift
     template: Package.swift
-    mode: replace
 policy_overlays:
   dependency-license-sync:
     dependency_files:

@@ -1,4 +1,31 @@
+# -------------------------------------------------------------------
+# DevCovenant Config Template (generic install baseline)
+# -------------------------------------------------------------------
+# This file is copied to `devcovenant/config.yaml` by `devcovenant install`.
+#
+# Install always seeds a safe generic stub:
+# - `install.generic_config: true`
+# - profile set oriented to user repositories
+#
+# Typical flow:
+# 1) Review/edit this config.
+# 2) Set `install.generic_config: false`.
+# 3) Run `devcovenant deploy`.
+# -------------------------------------------------------------------
+
+# -------------------------------------------------------------------
+# Scope control
+# -------------------------------------------------------------------
+
+# Whether policy checks include DevCovenant's own implementation files.
+# - false: user-repo mode (ignore core internals)
+# - true: DevCovenant-repo mode (enforce the full tree)
+
 devcov_core_include: true
+
+# Paths excluded from checks when `devcov_core_include` is false.
+# Keep this list aligned with command and core internals.
+
 devcov_core_paths:
 - devcovenant/core
 - devcovenant/__init__.py
@@ -14,59 +41,105 @@ devcov_core_paths:
 - devcovenant/undeploy.py
 - devcovenant/update_lock.py
 - devcovenant/registry
+
+# -------------------------------------------------------------------
+# Profile activation
+# -------------------------------------------------------------------
+
+# Ordered profile list. `global` should stay first.
+
+# Profiles contribute suffixes, assets, and metadata overlays.
+
+# Profiles do not activate policies. Policy activation is `policy_state`.
+
 profiles:
   active:
   - global
-  - data
   - devcovrepo
   - docs
   - python
-  - suffixes
   generated:
     file_suffixes:
-    - .avro
-    - .csv
     - .ipynb
-    - .json
     - .md
-    - .ndjson
-    - .parquet
     - .py
     - .pyi
     - .pyw
     - .rst
-    - .tsv
     - .txt
+
+# -------------------------------------------------------------------
+# Canonical paths
+# -------------------------------------------------------------------
+
+# Runtime policy source parsed by the engine.
+
+# Generated local policy registry (hashes + diagnostics).
+
 paths:
   policy_definitions: AGENTS.md
   registry_file: devcovenant/registry/local/policy_registry.yaml
-  manifest_file: devcovenant/registry/local/manifest.json
-  core_profiles_root: devcovenant/core/profiles
-  custom_profiles_root: devcovenant/custom/profiles
-  core_policies_root: devcovenant/core/policies
-  custom_policies_root: devcovenant/custom/policies
+
+# -------------------------------------------------------------------
+# Version controls
+# -------------------------------------------------------------------
+
+# Optional forced version value for version-aware logic.
+
 version:
   override: null
+
+# -------------------------------------------------------------------
+# Managed document controls
+# -------------------------------------------------------------------
+
+# Marker pair used by managed-block refresh logic.
+
 docs:
   managed_blocks:
     begin: <!-- DEVCOV:BEGIN -->
     end: <!-- DEVCOV:END -->
+
+# Documents that refresh may fully materialize from descriptor templates.
+# Empty list means runtime backfills defaults.
+# Documents in `user` are excluded from full template materialization.
+# Managed block refresh still applies when markers are present.
+
+doc_assets:
+  autogen:
+  - AGENTS.md
+  - README.md
+  - CONTRIBUTING.md
+  - SPEC.md
+  - PLAN.md
+  - CHANGELOG.md
+  - devcovenant/README.md
+  user: []
+
+# -------------------------------------------------------------------
+# Install/deploy safety
+# -------------------------------------------------------------------
+
+# True after install. Deploy is blocked until user reviews config.
+
+# Set this to false after review to allow `devcovenant deploy`.
+
 install:
   generic_config: false
-  allow_existing: false
-  auto_uninstall: false
-  preserve_custom: true
-  allow_custom_policy_asset_fallback: true
-  config_mode: preserve
-  doc_mode: preserve
-  disable_policy: []
+
+# -------------------------------------------------------------------
+# Engine behavior
+# -------------------------------------------------------------------
+
+# Violations at or above fail_threshold fail the run (info|warning|error|critical).
+
+# auto_fix_enabled controls policy auto-fix pass behavior.
+
+# file_suffixes and ignore_dirs define broad scan boundaries.
+
 engine:
-  fix_threshold: warning
   fail_threshold: error
   auto_fix_enabled: true
-  parallel_checks: true
-  verbose: true
-  pre_commit_all_files: true
   file_suffixes:
   - .md
   - .rst
@@ -88,26 +161,47 @@ engine:
   - .pytest_cache
   - .cache
   - .venv.lock
-self_enforcement:
-  enabled: true
-  policy_prefix: devcov-
-hooks:
-  pre_commit: true
-  pre_push: false
+
+# -------------------------------------------------------------------
+# Pre-commit generation
+# -------------------------------------------------------------------
+
+# Structured overrides merged into generated pre-commit config.
+
 pre_commit:
-  enabled: true
   overrides: {}
-reporting:
-  show_policy_links: true
-  audit_trail: true
-  use_colors: true
+
+# -------------------------------------------------------------------
+# Policy activation and customization
+# -------------------------------------------------------------------
+
+# Canonical policy on/off map: {policy-id: true|false}.
+
 policy_state:
   managed-environment: false
   raw-string-escapes: false
+
+# Core policy IDs frozen into devcovenant/custom/policies/*.
+
 freeze_core_policies: []
-policy_overrides: {}
+
+# -------------------------------------------------------------------
+# Global ignore patterns
+# -------------------------------------------------------------------
+
+# Extra glob patterns excluded from CheckContext file collections.
+
 ignore:
   patterns: []
+
+# -------------------------------------------------------------------
+# Metadata overrides (resolution order matters)
+# -------------------------------------------------------------------
+
+# Auto-generated profile overlays written by refresh.
+
+# Do not hand-edit unless you intentionally own this layer.
+
 autogen_metadata_overrides:
   changelog-coverage:
     required_globs:
@@ -222,8 +316,6 @@ autogen_metadata_overrides:
     - devcovenant/docs/refresh.md
     - devcovenant/docs/workflow.md
     - devcovenant/docs/troubleshooting.md
-    exclude_prefixes:
-    - data
     user_facing_exclude_dirs:
     - tests/**
     user_facing_exclude_prefixes:
@@ -290,7 +382,6 @@ autogen_metadata_overrides:
     - devcovenant/README.md
   line-length-limit:
     exclude_globs:
-    - data/**
     - devcovenant/core/profiles/global/assets/*.yaml
     - devcovenant/registry/**
     include_suffixes:
@@ -300,7 +391,6 @@ autogen_metadata_overrides:
     - .py
   modules-need-tests:
     exclude_prefixes:
-    - data
     - build
     - dist
     - node_modules
@@ -314,8 +404,6 @@ autogen_metadata_overrides:
     watch_dirs:
     - tests
   name-clarity:
-    exclude_prefixes:
-    - data
     include_suffixes:
     - .py
   no-spaghetti:
@@ -324,13 +412,10 @@ autogen_metadata_overrides:
     min_module_lines:
     - '120'
   security-scanner:
-    exclude_prefixes:
-    - data
     include_suffixes:
     - .py
   semantic-version-scope:
-    version_file:
-    - devcovenant/VERSION
+    version_file: devcovenant/VERSION
   version-sync:
     license_files:
     - LICENSE
@@ -346,16 +431,10 @@ autogen_metadata_overrides:
     - SPEC.md
     - PLAN.md
     - devcovenant/README.md
-    version_file:
-    - devcovenant/VERSION
+    version_file: devcovenant/VERSION
+
+# User-owned overrides applied last (highest precedence).
+
+# Shape: {policy-id: {metadata_key: value-or-list}}
+
 user_metadata_overrides: {}
-doc_assets:
-  autogen:
-  - AGENTS.md
-  - README.md
-  - CONTRIBUTING.md
-  - SPEC.md
-  - PLAN.md
-  - CHANGELOG.md
-  - devcovenant/README.md
-  user: []

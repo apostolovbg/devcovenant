@@ -1,1 +1,0 @@
-# DevCovenant test mirror.

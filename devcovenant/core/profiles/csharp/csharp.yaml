@@ -9,7 +9,6 @@ ignore_dirs:
 assets:
   - path: Project.csproj
     template: Project.csproj
-    mode: replace
 policy_overlays:
   dependency-license-sync:
     dependency_files:

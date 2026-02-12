@@ -8,13 +8,10 @@ ignore_dirs:
 assets:
   - path: composer.json
     template: composer.json
-    mode: replace
   - path: composer.lock
     template: composer.lock
-    mode: replace
   - path: phpunit.xml
     template: phpunit.xml
-    mode: replace
 policy_overlays:
   dependency-license-sync:
     dependency_files:

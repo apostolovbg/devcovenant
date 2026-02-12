@@ -41,6 +41,7 @@ The policy script selects the adapter based on active profiles and falls
 back to a safe default when no adapter is available.
 
 ## Custom Policies
-Custom policies live under `devcovenant/custom/policies/<id>/` and are
-opt-in via custom profiles or config overrides. Use them to extend or
-replace stock behavior without editing core policy code.
+Custom policies live under `devcovenant/custom/policies/<id>/` and use the
+same descriptor/script model as core policies. They are activated through
+config `policy_state` after discovery/refresh, with metadata tuned through
+profile overlays or config overrides.

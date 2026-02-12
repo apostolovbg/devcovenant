@@ -283,10 +283,11 @@ documentation synchronized so drift is detectable and reversible.
 ### Configuration and extension
 - `devcovenant/config.yaml` must support `devcov_core_include` and
   `devcov_core_paths` for core exclusion.
-- Config is seeded from the `global` profile asset (generic stub) and
-  then refreshed with global defaults plus active profiles. It must include
-  `profiles.generated.file_suffixes` so profile selections are visible to
-  users and tooling.
+- Config is seeded from the global config template
+  (`devcovenant/core/profiles/global/assets/config.yaml`) and then refreshed
+  on every full refresh path. Runtime refresh preserves user-owned settings,
+  regenerates autogen-owned sections, and keeps the commented template
+  structure in the rendered file.
 - Config exposes `version.override` so config-driven installs can declare
   the project version that templated assets (for example, `pyproject.toml`)
   should use when no version file exists yet.
@@ -294,18 +295,17 @@ documentation synchronized so drift is detectable and reversible.
   repository can opt into its own test overrides while user repositories keep
   `devcovenant/**` out of enforcement while still keeping
   `devcovenant/custom/**` monitored.
-- The `global` profile is always active. Other shipped defaults (`docs`,
-  `data`, `suffixes`) are enabled by default but can be trimmed from
+- The `global` profile is always active. Other shipped defaults (`docs`) are
+  enabled by default but can be trimmed from
   `profiles.active` when a user wants to stop applying their assets or
   metadata overlays.
-- Config should expose global knobs for `paths`, `docs`, `install`,
-  `deploy`, `upgrade`, `refresh`, `engine`, `hooks`, `reporting`, `ignore`,
-  `autogen_metadata_overrides`, and `user_metadata_overrides` so repos can
-  tune behavior without editing core scripts. Every generated config must
-  list every known knob (even if the default value is blank) so the file
-  doubles as an override template that documents every supported option;
-  only the policy overrides sections may remain empty to avoid
-  overwhelming the document.
+- Config should expose the runtime knobs actually consumed by core logic:
+  `devcov_core_include`, `devcov_core_paths`, `profiles`, `paths`, `version`,
+  `docs`, `doc_assets`, `install`, `engine`, `pre_commit`, `policy_state`,
+  `freeze_core_policies`, `ignore`, `autogen_metadata_overrides`, and
+  `user_metadata_overrides`. Generated config remains the canonical override
+  template and documents each supported key with inline comments in the
+  profile asset template.
 - Config also exposes `doc_assets` (with `autogen` and `user` lists).
   Repositories can drive which managed docs the active profiles (for example,
   `global`, `docs`, `devcovenant`) synthesize versus which remain purely
@@ -317,6 +317,11 @@ documentation synchronized so drift is detectable and reversible.
 - This mirrors the policy override structure (`autogen_metadata_overrides` and
   `user_metadata_overrides`) so teams can lift the default curated assets into
   their own configs when needed.
+- Path-valued scalar metadata keys (singular `*_file`, `*_path`, `*_dir`,
+  `*_root`) must be emitted as scalar strings in generated
+  `autogen_metadata_overrides` and normalized as scalar strings at runtime
+  even when legacy config content still stores singleton lists. List-valued
+  selectors (`*_files`, `*_globs`, `*_dirs`, `*_paths`) remain list-driven.
 - The profile registry is generated into
   `devcovenant/registry/local/profile_registry.yaml` by scanning
   profile manifests.
@@ -327,10 +332,9 @@ documentation synchronized so drift is detectable and reversible.
 - Profile assets live under `devcovenant/core/profiles/<name>/assets/` and
   `devcovenant/custom/profiles/<name>/assets/`, with `global/assets/`
   covering shared docs and tooling.
-- Policy assets are declared in policy descriptors and live under
-  `devcovenant/core/policies/<policy>/assets/`. Deploy/refresh reads the
-  descriptor assets directly. Custom overrides live under
-  `devcovenant/custom/policies/<policy>/assets/`.
+- Policy assets are profile-owned and declared in profile manifests
+  (`assets` lists). Policy descriptors remain metadata/prose definitions and
+  are not used as stock asset sources during deploy/refresh.
 
 ### Pre-commit configuration by profile
 - Each profile declares a `pre_commit` fragment describing the repos and hooks
@@ -363,11 +367,13 @@ documentation synchronized so drift is detectable and reversible.
 - Template indexes live at `devcovenant/core/profiles/README.md` and
   `devcovenant/core/policies/README.md`.
 - Profile assets and policy overlays live in profile manifests at
-  `devcovenant/core/profiles/<name>/profile.yaml`, with custom overrides
-  under `devcovenant/custom/profiles/<name>/profile.yaml`. Profile assets
-  are applied for active profiles, and profile overlays merge into
+  `devcovenant/core/profiles/<name>/<name>.yaml`, with custom overrides
+  under `devcovenant/custom/profiles/<name>/<name>.yaml`. Profile assets
+  are create-if-missing for active profiles, and profile overlays merge into
   `config.yaml` under `autogen_metadata_overrides` (with
   `user_metadata_overrides` taking precedence when set).
+- Profile asset manifests do not define `mode` fields. Asset handling is
+  deterministic: create missing targets only; never overwrite existing files.
 - Profile manifests must not declare policy-activation lists (for example,
   `policies:`). Activation is config-only through `policy_state`.
 - Managed-document templates include stock non-managed text for each
@@ -402,10 +408,8 @@ documentation synchronized so drift is detectable and reversible.
   source and must match activation outcomes.
 - Stock policy assets are profile-owned (`global` and active profile manifests)
   and are not installed directly from core policy descriptors.
-- Custom policy descriptors may declare fallback assets under
-  `devcovenant/custom/policies/<policy>/<policy>.yaml`; fallback is controlled
-  by `install.allow_custom_policy_asset_fallback` (default `true`) and remains
-  gated by resolved policy `enabled`.
+- Custom policy assets are also profile-owned via active profile `assets`
+  declarations. There is no descriptor fallback flag in config.
 - `dependency-license-sync` must be manifest-agnostic: profiles or config
   overlays provide `dependency_files`, while the core policy metadata remains
   general. The devcovrepo profile sets DevCovenant’s own dependency
@@ -568,9 +572,9 @@ documentation synchronized so drift is detectable and reversible.
   can be refreshed independently of policy definitions.
 - Preserve custom policy scripts and fixers by default on existing installs
   in lifecycle internals.
-- `devcovenant/config.yaml` is generated only when missing. Autogen sections
-  are clearly marked and may be updated; user-controlled settings and
-  overrides are preserved to allow installs from an existing config.
+- `devcovenant/config.yaml` is refreshed on every full refresh path.
+  Autogen sections are regenerated each run, while user-controlled settings
+  and overrides are preserved from the existing file.
 - When deploy runs with `devcov_core_include` set to false, it deletes
   `devcovenant/custom/policies/**`, `tests/devcovenant/core/**`, and
   `devcovenant/custom/profiles/devcovrepo/**` before regenerating managed
@@ -630,8 +634,8 @@ documentation synchronized so drift is detectable and reversible.
   keeps user repos on the latest shipped descriptors. Reference notes are
   never materialized into manifests;
   descriptors and manifests define behavior directly.
-  Generic `profile.yaml` stubs are still invalid once normalization runs.
-- The stock profile set is intentionally slim: global, docs, data, suffixes,
+  Generic profile-manifest stubs are still invalid once normalization runs.
+- The stock profile set is intentionally slim: global, docs, devcovuser,
   python, javascript, typescript, java, go, rust, php, ruby, csharp, sql,
   docker, terraform, kubernetes, fastapi, frappe, dart, flutter, swift,
   objective-c. Retired stacks should be added back as custom profiles.

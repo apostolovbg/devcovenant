@@ -7,6 +7,32 @@ from dataclasses import dataclass, field
 from pathlib import Path, PurePosixPath
 from typing import Any, Dict, List, Optional
 
+_SCALAR_PATH_SUFFIXES = ("_file", "_path", "_dir", "_root")
+_LIST_PATH_SUFFIXES = ("_files", "_paths", "_dirs", "_roots")
+
+
+def _is_scalar_path_key(key: str) -> bool:
+    """Return True when config key should resolve to one path string."""
+    token = str(key or "").strip().lower()
+    if not token:
+        return False
+    if token.endswith(_LIST_PATH_SUFFIXES):
+        return False
+    return token.endswith(_SCALAR_PATH_SUFFIXES)
+
+
+def _normalize_override_value(key: str, value: Any) -> Any:
+    """Normalize merged config override values for runtime policy checks."""
+    if not isinstance(value, list):
+        return value
+    if not _is_scalar_path_key(key):
+        return list(value)
+    for entry in value:
+        text = str(entry or "").strip()
+        if text:
+            return text
+    return ""
+
 
 @dataclass
 class CheckContext:
@@ -92,7 +118,10 @@ class CheckContext:
             merged.update(autogen_entry)
         if isinstance(user_entry, dict):
             merged.update(user_entry)
-        return merged
+        normalized: Dict[str, Any] = {}
+        for key, value in merged.items():
+            normalized[key] = _normalize_override_value(key, value)
+        return normalized
 
 
 @dataclass

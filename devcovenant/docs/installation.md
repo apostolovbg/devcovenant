@@ -25,8 +25,8 @@ Use `python3 -m devcovenant` when the console entry is not available.
 
 ## Lifecycle Commands
 - `install`: copy the core plus a generic config stub. It never deploys
-  managed docs/assets. If DevCovenant is already present, install exits and
-  instructs you to run `upgrade`.
+  managed docs/assets. If a newer core is available, install exits with a
+  message to run `upgrade`.
 - `deploy`: requires a non-generic config (`install.generic_config: false`).
   It writes managed docs/assets/registries, regenerates `.gitignore`, and
   runs a full refresh.
@@ -37,20 +37,6 @@ Use `python3 -m devcovenant` when the console entry is not available.
   policy replacements, then run `refresh`.
 - `undeploy`: remove managed blocks/registries and generated `.gitignore`
   fragments while keeping core + config.
-
-## Version and License Fallbacks
-- Default metadata mode:
-  empty install uses overwrite; deploy/refresh/upgrade use preserve.
-- Version resolution order:
-  `config.version.override`, existing valid `devcovenant/VERSION`,
-  `pyproject.toml` version, prompt, then `0.0.1`.
-- Preserve mode:
-  keep existing `devcovenant/VERSION` and `LICENSE`; if missing, bootstrap
-  them using the resolved version and MIT license template.
-- Overwrite mode:
-  always rewrite `devcovenant/VERSION` and `LICENSE` from resolved inputs.
-- Skip mode:
-  leave the respective file untouched.
 
 ## Examples
 ```bash

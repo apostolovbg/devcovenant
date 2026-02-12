@@ -29,6 +29,7 @@ def _write_agents(
     """Write a minimal AGENTS fixture containing one policy."""
     path.write_text(
         (
+            "<!-- DEVCOV-POLICIES:BEGIN -->\n"
             "## Policy: Demo\n\n"
             "```policy-def\n"
             "id: demo-policy\n"
@@ -39,7 +40,8 @@ def _write_agents(
             "enabled: true\n"
             "custom: false\n"
             "```\n\n"
-            f"{description}\n"
+            f"{description}\n\n"
+            "<!-- DEVCOV-POLICIES:END -->\n"
         ),
         encoding="utf-8",
     )

@@ -419,7 +419,7 @@ selector_roles: user_facing
   user_visible
   doc_quality
 include_prefixes:
-exclude_prefixes: data
+exclude_prefixes:
 user_facing_prefixes:
 user_facing_exclude_prefixes: tests
 user_facing_suffixes: .py
@@ -563,7 +563,7 @@ mention_stopwords: devcovenant
 include_suffixes:
 include_globs:
 exclude_suffixes:
-exclude_globs: data/**
+exclude_globs:
 force_include_globs:
 user_facing_exclude_globs:
 user_facing_exclude_suffixes:
@@ -653,8 +653,7 @@ include_suffixes: .md
 exclude_prefixes: build
   dist
   node_modules
-exclude_globs: data/**
-  devcovenant/core/profiles/global/assets/*.yaml
+exclude_globs: devcovenant/core/profiles/global/assets/*.yaml
   devcovenant/registry/**
   build/**
   dist/**
@@ -750,13 +749,11 @@ custom: false
 freeze: false
 include_suffixes: .py
 include_prefixes:
-exclude_prefixes: data
-  build
+exclude_prefixes: build
   dist
   node_modules
   tests
-exclude_globs: data/**
-  build/**
+exclude_globs: build/**
   dist/**
   node_modules/**
   tests/**
@@ -802,7 +799,9 @@ enforcement: active
 enabled: true
 custom: false
 freeze: false
-exclude_prefixes: data
+exclude_prefixes: build
+  dist
+  node_modules
 include_suffixes: .py
 include_prefixes:
 include_globs: *.py
@@ -810,7 +809,6 @@ exclude_suffixes:
 exclude_globs: build/**
   dist/**
   node_modules/**
-  data/**
 force_include_globs:
 selector_roles: exclude
   include
@@ -965,12 +963,11 @@ custom: false
 freeze: false
 exclude_globs: tests/**
   **/tests/**
-  data/**
 include_suffixes: .py
 include_prefixes:
 include_globs: *.py
 exclude_suffixes:
-exclude_prefixes: data
+exclude_prefixes:
 force_include_globs:
 selector_roles: exclude
   include

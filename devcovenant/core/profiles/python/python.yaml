@@ -16,19 +16,12 @@ ignore_dirs:
 assets:
   - path: requirements.in
     template: requirements.in
-    mode: merge
   - path: requirements.lock
     template: requirements.lock
-    mode: merge
   - path: .python-version
     template: .python-version
-    mode: replace
   - path: pyproject.toml
     template: pyproject.toml
-    mode: replace
-  - path: venv.md
-    template: venv.md
-    mode: replace
 policy_state:
   raw-string-escapes: false
 policy_overlays:
