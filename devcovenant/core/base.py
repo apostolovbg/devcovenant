@@ -53,6 +53,7 @@ class CheckContext:
     git_diff: Optional[str] = None
     mode: str = "normal"
     config: Dict[str, Any] = field(default_factory=dict)
+    translator_runtime: Any = None
     _ignore_patterns: List[str] = field(
         default_factory=list, init=False, repr=False
     )

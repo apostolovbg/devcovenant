@@ -13,6 +13,24 @@ assets:
     template: package.json
   - path: tsconfig.json
     template: tsconfig.json
+pre_commit:
+  repos:
+    - repo: https://github.com/pre-commit/mirrors-prettier
+      rev: v3.3.3
+      hooks:
+        - id: prettier
+          files: \.(ts|tsx)$
+translators:
+  - id: typescript
+    extensions:
+      - .ts
+      - .tsx
+    can_handle:
+      strategy: module_function
+      entrypoint: devcovenant.core.translator_runtime.can_handle
+    translate:
+      strategy: module_function
+      entrypoint: devcovenant.core.translator_runtime.translate
 policy_overlays:
   dependency-license-sync:
     dependency_files:

@@ -8,10 +8,45 @@ from devcovenant.core.base import CheckContext
 from devcovenant.core.policies.docstring_and_comment_coverage import (
     docstring_and_comment_coverage,
 )
+from devcovenant.core.translator_runtime import TranslatorRuntime
 
 DocstringAndCommentCoverageCheck = (
     docstring_and_comment_coverage.DocstringAndCommentCoverageCheck
 )
+
+
+def _runtime(profile: str, suffixes: list[str]) -> TranslatorRuntime:
+    """Build a translator runtime for one language profile."""
+    registry = {
+        profile: {
+            "category": "language",
+            "translators": [
+                {
+                    "id": profile,
+                    "extensions": suffixes,
+                    "can_handle": {
+                        "strategy": "module_function",
+                        "entrypoint": (
+                            "devcovenant.core.translator_runtime."
+                            "can_handle_declared_extensions"
+                        ),
+                    },
+                    "translate": {
+                        "strategy": "module_function",
+                        "entrypoint": (
+                            "devcovenant.core.translator_runtime."
+                            "translate_language_unit"
+                        ),
+                    },
+                }
+            ],
+        }
+    }
+    return TranslatorRuntime(
+        repo_root=Path.cwd(),
+        profile_registry=registry,
+        active_profiles=[profile],
+    )
 
 
 def _create_file(tmp_path: Path, source: str) -> Path:
@@ -23,8 +58,7 @@ def _create_file(tmp_path: Path, source: str) -> Path:
 
 
 def _unit_test_flags_missing_docstrings(tmp_path: Path):
-    """Modules and functions without comments or docstrings
-    trigger violations."""
+    """Modules and functions without comments/docstrings trigger violations."""
     source = (
         "def foo():\n"
         "    return 42\n"
@@ -40,6 +74,7 @@ def _unit_test_flags_missing_docstrings(tmp_path: Path):
         repo_root=tmp_path,
         changed_files=[target],
         all_files=[target],
+        translator_runtime=_runtime("python", [".py"]),
     )
     violations = checker.check(context)
 
@@ -69,10 +104,9 @@ def _unit_test_comments_satisfy_policy(tmp_path: Path):
         repo_root=tmp_path,
         changed_files=[target],
         all_files=[target],
+        translator_runtime=_runtime("python", [".py"]),
     )
-    violations = checker.check(context)
-
-    assert violations == []
+    assert checker.check(context) == []
 
 
 def _unit_test_all_files_scanned_when_no_changes(tmp_path: Path):
@@ -85,6 +119,7 @@ def _unit_test_all_files_scanned_when_no_changes(tmp_path: Path):
         repo_root=tmp_path,
         changed_files=[],
         all_files=[target],
+        translator_runtime=_runtime("python", [".py"]),
     )
     violations = checker.check(context)
 
@@ -110,30 +145,33 @@ def _unit_test_metadata_skip_prefixes(tmp_path: Path):
         repo_root=tmp_path,
         changed_files=[target],
         all_files=[target],
+        translator_runtime=_runtime("python", [".py"]),
     )
-    violations = checker.check(context)
-
-    assert (
-        not violations
-    ), "Metadata exclusions should allow repo-specific gaps"
+    assert checker.check(context) == []
 
 
-def _unit_test_non_python_files_are_skipped(tmp_path: Path):
-    """Non-Python files should be checked via adapters."""
+def _unit_test_non_python_files_are_checked(tmp_path: Path):
+    """Non-Python language files should also receive doc coverage checks."""
     cases = [
-        (".js", "// ok\nfunction good() {}\n", "function bad() {}\n"),
+        (
+            ".js",
+            "javascript",
+            "// ok\nfunction good() {}\n",
+            "function bad() {}\n",
+        ),
         (
             ".ts",
+            "typescript",
             "// ok\nfunction good(): void {}\n",
             "function bad(): void {}\n",
         ),
-        (".go", "// ok\nfunc good() {}\n", "func bad() {}\n"),
-        (".rs", "/// ok\nfn good() {}\n", "fn bad() {}\n"),
-        (".java", "/** ok */\nclass Good {}\n", "class Bad {}\n"),
-        (".cs", "/// ok\nclass Good {}\n", "class Bad {}\n"),
+        (".go", "go", "// ok\nfunc good() {}\n", "func bad() {}\n"),
+        (".rs", "rust", "/// ok\nfn good() {}\n", "fn bad() {}\n"),
+        (".java", "java", "/** ok */\nclass Good {}\n", "class Bad {}\n"),
+        (".cs", "csharp", "/// ok\nclass Good {}\n", "class Bad {}\n"),
     ]
 
-    for suffix, good_src, bad_src in cases:
+    for suffix, profile, good_src, bad_src in cases:
         good = tmp_path / "project_lib" / f"good{suffix}"
         bad = tmp_path / "project_lib" / f"bad{suffix}"
         good.parent.mkdir(parents=True, exist_ok=True)
@@ -152,6 +190,7 @@ def _unit_test_non_python_files_are_skipped(tmp_path: Path):
             repo_root=tmp_path,
             changed_files=[good, bad],
             all_files=[good, bad],
+            translator_runtime=_runtime(profile, [suffix]),
         )
         violations = checker.check(context)
 
@@ -186,8 +225,8 @@ class GeneratedUnittestCases(unittest.TestCase):
             tmp_path = Path(temp_dir).resolve()
             _unit_test_metadata_skip_prefixes(tmp_path=tmp_path)
 
-    def test_non_python_files_are_skipped(self):
-        """Run test_non_python_files_are_skipped."""
+    def test_non_python_files_are_checked(self):
+        """Run test_non_python_files_are_checked."""
         with tempfile.TemporaryDirectory() as temp_dir:
             tmp_path = Path(temp_dir).resolve()
-            _unit_test_non_python_files_are_skipped(tmp_path=tmp_path)
+            _unit_test_non_python_files_are_checked(tmp_path=tmp_path)

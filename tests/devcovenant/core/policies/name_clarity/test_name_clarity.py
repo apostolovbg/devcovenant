@@ -6,6 +6,7 @@ from pathlib import Path
 
 from devcovenant.core.base import CheckContext
 from devcovenant.core.policies.name_clarity import name_clarity
+from devcovenant.core.translator_runtime import TranslatorRuntime
 
 NameClarityCheck = name_clarity.NameClarityCheck
 
@@ -32,11 +33,51 @@ def _build_module(tmp_path: Path, source: str) -> Path:
     return path
 
 
+def _build_runtime(
+    profile_name: str, suffixes: list[str]
+) -> TranslatorRuntime:
+    """Return a translator runtime with one language-profile declaration."""
+    registry = {
+        profile_name: {
+            "category": "language",
+            "translators": [
+                {
+                    "id": profile_name,
+                    "extensions": suffixes,
+                    "can_handle": {
+                        "strategy": "module_function",
+                        "entrypoint": (
+                            "devcovenant.core.translator_runtime."
+                            "can_handle_declared_extensions"
+                        ),
+                    },
+                    "translate": {
+                        "strategy": "module_function",
+                        "entrypoint": (
+                            "devcovenant.core.translator_runtime."
+                            "translate_language_unit"
+                        ),
+                    },
+                }
+            ],
+        }
+    }
+    return TranslatorRuntime(
+        repo_root=Path.cwd(),
+        profile_registry=registry,
+        active_profiles=[profile_name],
+    )
+
+
 def _unit_test_detects_placeholder_identifiers(tmp_path: Path):
     """Placeholders should trigger name clarity warnings."""
     source = "def foo():\n    tmp = 1\n"
     target = _build_module(tmp_path, source)
-    context = CheckContext(repo_root=tmp_path, changed_files=[target])
+    context = CheckContext(
+        repo_root=tmp_path,
+        changed_files=[target],
+        translator_runtime=_build_runtime("python", [".py"]),
+    )
 
     violations = _configured_policy().check(context)
     assert len(violations) >= 2
@@ -48,7 +89,11 @@ def _unit_test_accepts_short_loop_counters(tmp_path: Path):
     """Loop counters should not trigger name clarity warnings."""
     source = "for i in range(3):\n    pass\n"
     target = _build_module(tmp_path, source)
-    context = CheckContext(repo_root=tmp_path, changed_files=[target])
+    context = CheckContext(
+        repo_root=tmp_path,
+        changed_files=[target],
+        translator_runtime=_build_runtime("python", [".py"]),
+    )
 
     assert _configured_policy().check(context) == []
 
@@ -57,7 +102,11 @@ def _unit_test_allows_explicit_override(tmp_path: Path):
     """Allow comments should silence name clarity warnings."""
     source = "foo = 1  # name-clarity: allow\n"
     target = _build_module(tmp_path, source)
-    context = CheckContext(repo_root=tmp_path, changed_files=[target])
+    context = CheckContext(
+        repo_root=tmp_path,
+        changed_files=[target],
+        translator_runtime=_build_runtime("python", [".py"]),
+    )
 
     assert _configured_policy().check(context) == []
 
@@ -74,23 +123,27 @@ def _unit_test_ignores_vendor_files(tmp_path: Path):
     )
     path.parent.mkdir(parents=True, exist_ok=True)
     path.write_text("foo = 1\n", encoding="utf-8")
-    context = CheckContext(repo_root=tmp_path, changed_files=[path])
+    context = CheckContext(
+        repo_root=tmp_path,
+        changed_files=[path],
+        translator_runtime=_build_runtime("python", [".py"]),
+    )
 
     assert _configured_policy().check(context) == []
 
 
-def _unit_test_non_python_files_use_placeholder_adapters(tmp_path: Path):
-    """Non-Python files should be checked via adapters."""
+def _unit_test_non_python_files_use_translators(tmp_path: Path):
+    """Non-Python files should be checked via translators."""
     cases = [
-        (".js", "const foo = 1;"),
-        (".ts", "const foo: number = 1;"),
-        (".go", "package main\nfunc main() { var foo = 1 }"),
-        (".rs", "fn main() { let foo = 1; }"),
-        (".java", "class Demo { void run() { int foo = 1; } }"),
-        (".cs", "class Demo { void Run() { var foo = 1; } }"),
+        (".js", "const foo = 1;", "javascript"),
+        (".ts", "const foo: number = 1;", "typescript"),
+        (".go", "package main\nfunc main() { var foo = 1 }", "go"),
+        (".rs", "fn main() { let foo = 1; }", "rust"),
+        (".java", "class Demo { void run() { int foo = 1; } }", "java"),
+        (".cs", "class Demo { void Run() { var foo = 1; } }", "csharp"),
     ]
 
-    for suffix, code in cases:
+    for suffix, code, translator_id in cases:
         path = tmp_path / "project_lib" / f"sample{suffix}"
         path.parent.mkdir(parents=True, exist_ok=True)
         path.write_text(code, encoding="utf-8")
@@ -104,7 +157,11 @@ def _unit_test_non_python_files_use_placeholder_adapters(tmp_path: Path):
             },
             {},
         )
-        context = CheckContext(repo_root=tmp_path, changed_files=[path])
+        context = CheckContext(
+            repo_root=tmp_path,
+            changed_files=[path],
+            translator_runtime=_build_runtime(translator_id, [suffix]),
+        )
         violations = policy.check(context)
         assert violations, f"expected violation for {suffix}"
 
@@ -112,7 +169,7 @@ def _unit_test_non_python_files_use_placeholder_adapters(tmp_path: Path):
 def _unit_test_non_python_short_loop_counters_allowed(
     tmp_path: Path, suffix: str, code: str
 ):
-    """Short loop counters remain allowed across adapters."""
+    """Short loop counters remain allowed across translators."""
     path = tmp_path / "project_lib" / f"loop{suffix}"
     path.parent.mkdir(parents=True, exist_ok=True)
     path.write_text(code, encoding="utf-8")
@@ -126,7 +183,19 @@ def _unit_test_non_python_short_loop_counters_allowed(
         },
         {},
     )
-    context = CheckContext(repo_root=tmp_path, changed_files=[path])
+    suffix_to_profile = {
+        ".js": "javascript",
+        ".ts": "typescript",
+        ".go": "go",
+        ".rs": "rust",
+        ".java": "java",
+        ".cs": "csharp",
+    }
+    context = CheckContext(
+        repo_root=tmp_path,
+        changed_files=[path],
+        translator_runtime=_build_runtime(suffix_to_profile[suffix], [suffix]),
+    )
     assert policy.check(context) == []
 
 
@@ -157,13 +226,11 @@ class GeneratedUnittestCases(unittest.TestCase):
             tmp_path = Path(temp_dir).resolve()
             _unit_test_ignores_vendor_files(tmp_path=tmp_path)
 
-    def test_non_python_files_use_placeholder_adapters(self):
-        """Run test_non_python_files_use_placeholder_adapters."""
+    def test_non_python_files_use_translators(self):
+        """Run test_non_python_files_use_translators."""
         with tempfile.TemporaryDirectory() as temp_dir:
             tmp_path = Path(temp_dir).resolve()
-            _unit_test_non_python_files_use_placeholder_adapters(
-                tmp_path=tmp_path
-            )
+            _unit_test_non_python_files_use_translators(tmp_path=tmp_path)
 
     def test_non_python_short_loop_counters_allowed__case_000(self):
         """Run test_non_python_short_loop_counters_allowed__case_000."""

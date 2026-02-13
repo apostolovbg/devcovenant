@@ -7,8 +7,43 @@ from unittest.mock import patch
 
 from devcovenant.core.base import CheckContext
 from devcovenant.core.policies.modules_need_tests import modules_need_tests
+from devcovenant.core.translator_runtime import TranslatorRuntime
 
 ModulesNeedTestsCheck = modules_need_tests.ModulesNeedTestsCheck
+
+
+def _runtime(profile: str, suffixes: list[str]) -> TranslatorRuntime:
+    """Build a translator runtime for one language profile."""
+    registry = {
+        profile: {
+            "category": "language",
+            "translators": [
+                {
+                    "id": profile,
+                    "extensions": suffixes,
+                    "can_handle": {
+                        "strategy": "module_function",
+                        "entrypoint": (
+                            "devcovenant.core.translator_runtime."
+                            "can_handle_declared_extensions"
+                        ),
+                    },
+                    "translate": {
+                        "strategy": "module_function",
+                        "entrypoint": (
+                            "devcovenant.core.translator_runtime."
+                            "translate_language_unit"
+                        ),
+                    },
+                }
+            ],
+        }
+    }
+    return TranslatorRuntime(
+        repo_root=Path.cwd(),
+        profile_registry=registry,
+        active_profiles=[profile],
+    )
 
 
 class TestModulesNeedTestsPolicy(unittest.TestCase):
@@ -39,7 +74,10 @@ class TestModulesNeedTestsPolicy(unittest.TestCase):
 
             mock_subprocess.return_value = "project_lib/new_module.py\n"
 
-            context = CheckContext(repo_root=repo_root)
+            context = CheckContext(
+                repo_root=repo_root,
+                translator_runtime=_runtime("python", [".py"]),
+            )
             violations = self._configured_python_policy().check(context)
 
             self.assertEqual(len(violations), 1)
@@ -70,7 +108,10 @@ class TestModulesNeedTestsPolicy(unittest.TestCase):
                 "tests/test_service_module.py\n"
             )
 
-            context = CheckContext(repo_root=repo_root)
+            context = CheckContext(
+                repo_root=repo_root,
+                translator_runtime=_runtime("python", [".py"]),
+            )
             violations = self._configured_python_policy().check(context)
 
             self.assertEqual(violations, [])
@@ -96,7 +137,10 @@ class TestModulesNeedTestsPolicy(unittest.TestCase):
                 "project_lib/new_module.py\n" "tests/test_new_module.py\n"
             )
 
-            context = CheckContext(repo_root=repo_root)
+            context = CheckContext(
+                repo_root=repo_root,
+                translator_runtime=_runtime("python", [".py"]),
+            )
             violations = self._configured_python_policy().check(context)
 
             self.assertTrue(violations)
@@ -133,7 +177,10 @@ class TestModulesNeedTestsPolicy(unittest.TestCase):
                 "project_lib/new_module.py\n" "tests/test_new_module.py\n"
             )
 
-            context = CheckContext(repo_root=repo_root)
+            context = CheckContext(
+                repo_root=repo_root,
+                translator_runtime=_runtime("python", [".py"]),
+            )
             violations = self._configured_python_policy().check(context)
 
             self.assertTrue(violations)
@@ -178,7 +225,10 @@ class TestModulesNeedTestsPolicy(unittest.TestCase):
                 },
                 {},
             )
-            context = CheckContext(repo_root=repo_root)
+            context = CheckContext(
+                repo_root=repo_root,
+                translator_runtime=_runtime("python", [".py"]),
+            )
             violations = policy.check(context)
 
             self.assertTrue(violations)
@@ -222,7 +272,10 @@ class TestModulesNeedTestsPolicy(unittest.TestCase):
                 },
                 {},
             )
-            context = CheckContext(repo_root=repo_root)
+            context = CheckContext(
+                repo_root=repo_root,
+                translator_runtime=_runtime("python", [".py"]),
+            )
             violations = policy.check(context)
 
             self.assertTrue(
@@ -262,7 +315,10 @@ class TestModulesNeedTestsPolicy(unittest.TestCase):
                 },
                 {},
             )
-            context = CheckContext(repo_root=repo_root)
+            context = CheckContext(
+                repo_root=repo_root,
+                translator_runtime=_runtime("python", [".py"]),
+            )
             violations = policy.check(context)
 
             self.assertTrue(
@@ -289,7 +345,10 @@ def _unit_test_js_modules_require_tests(mock_subprocess):
             {"include_prefixes": ["src"], "include_suffixes": [".js"]},
             {},
         )
-        context = CheckContext(repo_root=repo_root)
+        context = CheckContext(
+            repo_root=repo_root,
+            translator_runtime=_runtime("javascript", [".js"]),
+        )
         violations = policy.check(context)
         assert violations
 
@@ -316,7 +375,9 @@ def _unit_test_go_modules_require_tests(mock_subprocess):
             {"include_prefixes": ["pkg"], "include_suffixes": [".go"]},
             {},
         )
-        context = CheckContext(repo_root=repo_root)
+        context = CheckContext(
+            repo_root=repo_root, translator_runtime=_runtime("go", [".go"])
+        )
         violations = policy.check(context)
         assert violations
 

@@ -71,25 +71,25 @@ runtime-consolidation workstream defined in `SPEC.md`.
   - Validate declaration shape during refresh/runtime loading.
   - Ensure only language profiles can declare translators.
 
-5. [not done] Build centralized translator runtime in core.
+5. [done] Build centralized translator runtime in core.
 - Deliverables:
   - Build extension-based candidate routing from active language profiles.
   - Run `can_handle` candidate arbitration.
   - Emit deterministic violations for no-match and multi-match cases.
 
-6. [not done] Introduce shared `LanguageUnit` model.
+6. [done] Introduce shared `LanguageUnit` model.
 - Deliverables:
   - Define normalized, policy-agnostic output structure.
   - Route all language-aware policy parsing through this structure.
 
-7. [not done] Migrate language-aware policies off per-policy adapter maps.
+7. [done] Migrate language-aware policies off per-policy adapter maps.
 - Deliverables:
   - Migrate `name_clarity`, `security_scanner`,
     `docstring_and_comment_coverage`, and `modules_need_tests` to translator
     runtime + `LanguageUnit`.
   - Remove per-policy extension->adapter routing logic.
 
-8. [not done] Pre-commit profile ownership cleanup.
+8. [done] Pre-commit profile ownership cleanup.
 - Deliverables:
   - Keep global hook baseline in `global` profile.
   - Move language-specific hooks to corresponding language profiles.
@@ -102,7 +102,7 @@ runtime-consolidation workstream defined in `SPEC.md`.
   - Remove legacy/duplicate internals absorbed by the new domains.
   - Keep CLI-exposed scripts at package root.
 
-10. [not done] Add conformance/contract test suite.
+10. [done] Add conformance/contract test suite.
 - Deliverables:
   - Assert full alphabetical `policy_state` refresh behavior with state
     preservation.

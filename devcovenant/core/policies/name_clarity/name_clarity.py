@@ -1,43 +1,32 @@
-"""Adapter-driven clarity checks for short/generic identifiers."""
+"""Language-agnostic clarity checks using shared translator LanguageUnit."""
 
 from __future__ import annotations
 
-import importlib
-from pathlib import Path
 from typing import List
 
 from devcovenant.core.base import CheckContext, PolicyCheck, Violation
 from devcovenant.core.selector_helpers import SelectorSet
-
-ADAPTER_BY_SUFFIX = {
-    ".py": "devcovenant.core.policies.name_clarity.adapters.python",
-    ".pyi": "devcovenant.core.policies.name_clarity.adapters.python",
-    ".pyw": "devcovenant.core.policies.name_clarity.adapters.python",
-    ".js": "devcovenant.core.policies.name_clarity.adapters.javascript",
-    ".jsx": "devcovenant.core.policies.name_clarity.adapters.javascript",
-    ".ts": "devcovenant.core.policies.name_clarity.adapters.typescript",
-    ".tsx": "devcovenant.core.policies.name_clarity.adapters.typescript",
-    ".go": "devcovenant.core.policies.name_clarity.adapters.go",
-    ".rs": "devcovenant.core.policies.name_clarity.adapters.rust",
-    ".java": "devcovenant.core.policies.name_clarity.adapters.java",
-    ".cs": "devcovenant.core.policies.name_clarity.adapters.csharp",
-}
-
-
-def _adapter_for(path: Path):
-    """Return adapter module for the given file path, or None."""
-    module_path = ADAPTER_BY_SUFFIX.get(path.suffix.lower())
-    if not module_path:
-        return None
-    return importlib.import_module(module_path)
+from devcovenant.core.translator_runtime import flag_name_clarity_identifiers
 
 
 class NameClarityCheck(PolicyCheck):
     """Warn when placeholder or overly short identifiers are introduced."""
 
     policy_id = "name-clarity"
-    version = "1.2.0"
-    DEFAULT_SUFFIXES = list(ADAPTER_BY_SUFFIX.keys())
+    version = "1.3.0"
+    DEFAULT_SUFFIXES = [
+        ".py",
+        ".pyi",
+        ".pyw",
+        ".js",
+        ".jsx",
+        ".ts",
+        ".tsx",
+        ".go",
+        ".rs",
+        ".java",
+        ".cs",
+    ]
 
     def _selector(self) -> SelectorSet:
         """Return selector describing files enforced by the policy."""
@@ -46,28 +35,48 @@ class NameClarityCheck(PolicyCheck):
         )
 
     def check(self, context: CheckContext) -> List[Violation]:
-        """Run the check across all matching files using adapters."""
+        """Run the check across all matching files using translated units."""
         files = context.all_files or context.changed_files or []
         violations: List[Violation] = []
         selector = self._selector()
+        runtime = context.translator_runtime
+        if runtime is None:
+            return violations
 
         for path in files:
-            if not path.is_file():
+            if not path.is_file() or not selector.matches(
+                path, context.repo_root
+            ):
                 continue
-            if not selector.matches(path, context.repo_root):
-                continue
-
-            adapter = _adapter_for(path)
-            if adapter is None:
-                continue
-
-            text = path.read_text(encoding="utf-8")
-            violations.extend(
-                adapter.check_file(
-                    path=path,
-                    source=text,
-                    policy_id=self.policy_id,
-                )
+            resolution = runtime.resolve(
+                path=path,
+                policy_id=self.policy_id,
+                context=context,
             )
+            if not resolution.is_resolved:
+                violations.extend(resolution.violations)
+                continue
+            source = path.read_text(encoding="utf-8")
+            unit = runtime.translate(
+                resolution,
+                path=path,
+                source=source,
+                context=context,
+            )
+            if unit is None:
+                continue
+            for fact in flag_name_clarity_identifiers(unit):
+                violations.append(
+                    Violation(
+                        policy_id=self.policy_id,
+                        severity="warning",
+                        file_path=path,
+                        line_number=fact.line_number,
+                        message=(
+                            f"Identifier '{fact.name}' is overly generic "
+                            "or too short; choose a more descriptive name."
+                        ),
+                    )
+                )
 
         return violations

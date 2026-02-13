@@ -23,6 +23,7 @@ from .profiles import (
     resolve_profile_suffixes,
 )
 from .registry import PolicyRegistry, PolicySyncIssue
+from .translator_runtime import TranslatorRuntime
 
 
 class DevCovenantEngine:
@@ -87,6 +88,11 @@ class DevCovenantEngine:
 
         self._profile_registry = load_profile_registry(self.repo_root)
         self._active_profiles = self._resolve_active_profiles()
+        self.translator_runtime = TranslatorRuntime(
+            self.repo_root,
+            self._profile_registry,
+            self._active_profiles,
+        )
         self._merge_profile_ignored_dirs()
 
         ensure_manifest(self.repo_root)
@@ -491,6 +497,7 @@ class DevCovenantEngine:
             all_files=all_files,
             mode=mode,
             config=self.config,
+            translator_runtime=self.translator_runtime,
         )
 
     def _collect_all_files(self, suffixes: Set[str]) -> List[Path]:

@@ -23,6 +23,7 @@ class DummyPolicy(PolicyCheck):
         return self._options.get(key, default)
 
     def check(self, context):  # pragma: no cover - not used
+        """Unused check implementation required by PolicyCheck."""
         return []
 
 

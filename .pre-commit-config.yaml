@@ -1,6 +1,28 @@
 default_language_version:
   python: python3.14
 repos:
+- repo: https://github.com/pre-commit/pre-commit-hooks
+  rev: v4.6.0
+  hooks:
+  - id: check-merge-conflict
+  - id: check-yaml
+  - id: end-of-file-fixer
+  - id: trailing-whitespace
+    args:
+    - --markdown-linebreak-ext=md
+- repo: local
+  hooks:
+  - id: devcovenant
+    name: enforce repository policies (DevCovenant)
+    entry: python3 -m devcovenant.cli check
+    language: python
+    additional_dependencies:
+    - PyYAML==6.0.2
+    - semver==3.0.2
+    types:
+    - text
+    pass_filenames: false
+    always_run: true
 - repo: https://github.com/psf/black
   rev: 24.4.2
   hooks:
@@ -30,15 +52,6 @@ repos:
     args:
     - --line-length
     - '79'
-- repo: https://github.com/pre-commit/pre-commit-hooks
-  rev: v4.6.0
-  hooks:
-  - id: check-merge-conflict
-  - id: check-yaml
-  - id: end-of-file-fixer
-  - id: trailing-whitespace
-    args:
-    - --markdown-linebreak-ext=md
 - repo: https://github.com/pycqa/flake8
   rev: 6.1.0
   hooks:
@@ -46,19 +59,6 @@ repos:
     args:
     - --max-line-length=79
     - --extend-ignore=E203,W503
-- repo: local
-  hooks:
-  - id: devcovenant
-    name: enforce repository policies (DevCovenant)
-    entry: python3 -m devcovenant.cli check
-    language: python
-    additional_dependencies:
-    - PyYAML==6.0.2
-    - semver==3.0.2
-    types:
-    - text
-    pass_filenames: false
-    always_run: true
 exclude: |-
   (?x)
   (^|/)

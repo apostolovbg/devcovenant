@@ -9,6 +9,26 @@ ignore_dirs:
 assets:
   - path: Project.csproj
     template: Project.csproj
+pre_commit:
+  repos:
+    - repo: local
+      hooks:
+        - id: csharp-format
+          name: csharp format check
+          entry: dotnet format --verify-no-changes
+          language: system
+          pass_filenames: false
+          files: \.cs$
+translators:
+  - id: csharp
+    extensions:
+      - .cs
+    can_handle:
+      strategy: module_function
+      entrypoint: devcovenant.core.translator_runtime.can_handle
+    translate:
+      strategy: module_function
+      entrypoint: devcovenant.core.translator_runtime.translate
 policy_overlays:
   dependency-license-sync:
     dependency_files:

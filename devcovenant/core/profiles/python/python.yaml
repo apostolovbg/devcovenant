@@ -22,6 +22,42 @@ assets:
     template: .python-version
   - path: pyproject.toml
     template: pyproject.toml
+pre_commit:
+  repos:
+    - repo: https://github.com/psf/black
+      rev: 24.4.2
+      hooks:
+        - id: black
+          args: [--line-length, "79"]
+    - repo: https://github.com/pycqa/isort
+      rev: 5.12.0
+      hooks:
+        - id: isort
+          args: [--profile, black, --line-length, "79"]
+    - repo: https://github.com/astral-sh/ruff-pre-commit
+      rev: v0.4.4
+      hooks:
+        - id: ruff
+          args: [--fix, --exit-non-zero-on-fix, --line-length, "79"]
+        - id: ruff-format
+          args: [--line-length, "79"]
+    - repo: https://github.com/pycqa/flake8
+      rev: 6.1.0
+      hooks:
+        - id: flake8
+          args: [--max-line-length=79, "--extend-ignore=E203,W503"]
+translators:
+  - id: python
+    extensions:
+      - .py
+      - .pyi
+      - .pyw
+    can_handle:
+      strategy: module_function
+      entrypoint: devcovenant.core.translator_runtime.can_handle
+    translate:
+      strategy: module_function
+      entrypoint: devcovenant.core.translator_runtime.translate
 policy_overlays:
   dependency-license-sync:
     dependency_files:

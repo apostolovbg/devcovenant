@@ -1,72 +1,80 @@
-"""Detect suspicious constructs via language adapters."""
+"""Detect suspicious constructs via shared translator LanguageUnit."""
 
 from __future__ import annotations
 
-import importlib
-from pathlib import Path
 from typing import List
 
 from devcovenant.core.base import CheckContext, PolicyCheck, Violation
 from devcovenant.core.selector_helpers import SelectorSet
-
-ADAPTER_BY_SUFFIX = {
-    ".py": "devcovenant.core.policies.security_scanner.adapters.python",
-    ".pyi": "devcovenant.core.policies.security_scanner.adapters.python",
-    ".pyw": "devcovenant.core.policies.security_scanner.adapters.python",
-    ".js": "devcovenant.core.policies.security_scanner.adapters.javascript",
-    ".jsx": "devcovenant.core.policies.security_scanner.adapters.javascript",
-    ".ts": "devcovenant.core.policies.security_scanner.adapters.typescript",
-    ".tsx": "devcovenant.core.policies.security_scanner.adapters.typescript",
-    ".go": "devcovenant.core.policies.security_scanner.adapters.go",
-    ".rs": "devcovenant.core.policies.security_scanner.adapters.rust",
-    ".java": "devcovenant.core.policies.security_scanner.adapters.java",
-    ".cs": "devcovenant.core.policies.security_scanner.adapters.csharp",
-}
-
-
-def _adapter_for(path: Path):
-    """Return adapter module for a given file path, or None."""
-    module_path = ADAPTER_BY_SUFFIX.get(path.suffix.lower())
-    if not module_path:
-        return None
-    return importlib.import_module(module_path)
 
 
 class SecurityScannerCheck(PolicyCheck):
     """Flag known insecure constructs that breach compliance guidelines."""
 
     policy_id = "security-scanner"
-    version = "1.1.0"
+    version = "1.2.0"
+    DEFAULT_SUFFIXES = [
+        ".py",
+        ".pyi",
+        ".pyw",
+        ".js",
+        ".jsx",
+        ".ts",
+        ".tsx",
+        ".go",
+        ".rs",
+        ".java",
+        ".cs",
+    ]
 
     def check(self, context: CheckContext) -> List[Violation]:
-        """Search repository modules using adapters."""
+        """Search repository modules through translator LanguageUnits."""
         violations: List[Violation] = []
         files = context.all_files or context.changed_files or []
         selector = SelectorSet.from_policy(
-            self, defaults={"include_suffixes": list(ADAPTER_BY_SUFFIX.keys())}
+            self, defaults={"include_suffixes": self.DEFAULT_SUFFIXES}
         )
+        runtime = context.translator_runtime
+        if runtime is None:
+            return violations
 
         for path in files:
-            if not path.is_file():
+            if not path.is_file() or not selector.matches(
+                path, context.repo_root
+            ):
                 continue
-            try:
-                path.relative_to(context.repo_root)
-            except ValueError:
-                continue
-            if not selector.matches(path, context.repo_root):
-                continue
-
-            adapter = _adapter_for(path)
-            if adapter is None:
-                continue
-
-            text = path.read_text(encoding="utf-8")
-            violations.extend(
-                adapter.check_file(
-                    path=path,
-                    source=text,
-                    policy_id=self.policy_id,
-                )
+            resolution = runtime.resolve(
+                path=path,
+                policy_id=self.policy_id,
+                context=context,
             )
+            if not resolution.is_resolved:
+                if any(
+                    "ambiguous" in violation.message.lower()
+                    for violation in resolution.violations
+                ):
+                    violations.extend(resolution.violations)
+                continue
+            source = path.read_text(encoding="utf-8")
+            unit = runtime.translate(
+                resolution,
+                path=path,
+                source=source,
+                context=context,
+            )
+            if unit is None:
+                continue
+            for fact in unit.risk_facts:
+                violations.append(
+                    Violation(
+                        policy_id=self.policy_id,
+                        severity=fact.severity,
+                        file_path=path,
+                        line_number=fact.line_number,
+                        message=(
+                            "Insecure construct detected: " f"{fact.message}"
+                        ),
+                    )
+                )
 
         return violations
