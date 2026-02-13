@@ -530,6 +530,52 @@ def _unit_test_refresh_repo_emits_scalar_path_overrides() -> None:
         assert semver.get("version_file") == "devcovenant/VERSION"
 
 
+def _unit_test_refresh_repo_materializes_full_policy_state_map() -> None:
+    """Refresh should rewrite policy_state as full alphabetical map."""
+    with tempfile.TemporaryDirectory() as temp_dir:
+        repo_root = Path(temp_dir)
+        install.install_repo(repo_root)
+
+        config_path = repo_root / "devcovenant" / "config.yaml"
+        config = _read_yaml(config_path)
+        config["policy_state"] = {
+            "managed-environment": True,
+            "raw-string-escapes": "false",
+            "stale-policy-id": False,
+        }
+        _write_yaml(config_path, config)
+
+        result = core_refresh.refresh_repo(repo_root)
+        assert result == 0
+
+        refreshed = _read_yaml(config_path)
+        state = refreshed.get("policy_state")
+        assert isinstance(state, dict)
+        assert "stale-policy-id" not in state
+        assert state.get("managed-environment") is True
+        assert state.get("raw-string-escapes") is False
+
+        registry_path = (
+            repo_root
+            / "devcovenant"
+            / "registry"
+            / "local"
+            / "policy_registry.yaml"
+        )
+        registry = _read_yaml(registry_path)
+        policies = registry.get("policies")
+        assert isinstance(policies, dict)
+        expected_ids = sorted(str(policy_id) for policy_id in policies)
+        assert list(state.keys()) == expected_ids
+
+        for policy_id in expected_ids:
+            if policy_id in {"managed-environment", "raw-string-escapes"}:
+                continue
+            entry = policies.get(policy_id)
+            assert isinstance(entry, dict)
+            assert state[policy_id] is bool(entry.get("enabled", True))
+
+
 class GeneratedUnittestCases(unittest.TestCase):
     """unittest wrappers for core refresh coverage."""
 
@@ -580,3 +626,7 @@ class GeneratedUnittestCases(unittest.TestCase):
     def test_refresh_repo_emits_scalar_path_overrides(self):
         """Run test_refresh_repo_emits_scalar_path_overrides."""
         _unit_test_refresh_repo_emits_scalar_path_overrides()
+
+    def test_refresh_repo_materializes_full_policy_state_map(self):
+        """Run test_refresh_repo_materializes_full_policy_state_map."""
+        _unit_test_refresh_repo_materializes_full_policy_state_map()

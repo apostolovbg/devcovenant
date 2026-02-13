@@ -12,6 +12,7 @@ PROFILE_MANIFEST_FALLBACK = None
 REGISTRY_PROFILE = Path("devcovenant/registry/local/profile_registry.yaml")
 CORE_PROFILE_ROOT = Path("devcovenant/core/profiles")
 CUSTOM_PROFILE_ROOT = Path("devcovenant/custom/profiles")
+LANGUAGE_CATEGORY = "language"
 
 
 def _utc_now() -> str:
@@ -68,6 +69,157 @@ def _manifest_path(profile_dir: Path) -> Path:
     return profile_dir / f"{profile_dir.name}.yaml"
 
 
+def _normalize_translator_extensions(
+    raw_value: object,
+    *,
+    profile_name: str,
+    translator_id: str,
+    source_label: str,
+) -> list[str]:
+    """Normalize translator extension lists."""
+    if not isinstance(raw_value, list):
+        raise ValueError(
+            f"{source_label} translator '{translator_id}' in profile "
+            f"'{profile_name}' must define extensions as a list."
+        )
+    normalized: list[str] = []
+    for raw_entry in raw_value:
+        token = str(raw_entry or "").strip().lower()
+        if not token:
+            continue
+        if not token.startswith("."):
+            token = f".{token}"
+        if token not in normalized:
+            normalized.append(token)
+    if not normalized:
+        raise ValueError(
+            f"{source_label} translator '{translator_id}' in profile "
+            f"'{profile_name}' must declare at least one extension."
+        )
+    return normalized
+
+
+def _normalize_translator_strategy(
+    raw_value: object,
+    *,
+    profile_name: str,
+    translator_id: str,
+    section: str,
+    source_label: str,
+) -> dict[str, object]:
+    """Normalize a translator strategy block."""
+    if not isinstance(raw_value, dict):
+        raise ValueError(
+            f"{source_label} translator '{translator_id}' in profile "
+            f"'{profile_name}' must define {section} as a mapping."
+        )
+    normalized = dict(raw_value)
+    strategy = str(normalized.get("strategy", "")).strip().lower()
+    entrypoint = str(normalized.get("entrypoint", "")).strip()
+    if not strategy:
+        raise ValueError(
+            f"{source_label} translator '{translator_id}' in profile "
+            f"'{profile_name}' must define {section}.strategy."
+        )
+    if not entrypoint:
+        raise ValueError(
+            f"{source_label} translator '{translator_id}' in profile "
+            f"'{profile_name}' must define {section}.entrypoint."
+        )
+    normalized["strategy"] = strategy
+    normalized["entrypoint"] = entrypoint
+    return normalized
+
+
+def _normalize_profile_translators(
+    profile_name: str,
+    profile_meta: dict[str, object],
+    *,
+    source_label: str,
+) -> None:
+    """Normalize translator declarations for one profile."""
+    category = str(profile_meta.get("category", "")).strip().lower()
+    raw_translators = profile_meta.get("translators")
+    if raw_translators in (None, "__none__"):
+        return
+    if category != LANGUAGE_CATEGORY:
+        raise ValueError(
+            f"{source_label} profile '{profile_name}' declares translators "
+            "but is not category: language."
+        )
+    if not isinstance(raw_translators, list):
+        raise ValueError(
+            f"{source_label} profile '{profile_name}' must define "
+            "translators as a list."
+        )
+    normalized_entries: list[dict[str, object]] = []
+    seen_ids: set[str] = set()
+    for raw_entry in raw_translators:
+        if not isinstance(raw_entry, dict):
+            raise ValueError(
+                f"{source_label} profile '{profile_name}' has non-mapping "
+                "translator entries."
+            )
+        entry = dict(raw_entry)
+        translator_id = str(entry.get("id", "")).strip().lower()
+        if not translator_id:
+            raise ValueError(
+                f"{source_label} profile '{profile_name}' has a translator "
+                "without id."
+            )
+        if translator_id in seen_ids:
+            raise ValueError(
+                f"{source_label} profile '{profile_name}' has duplicate "
+                f"translator id '{translator_id}'."
+            )
+        seen_ids.add(translator_id)
+        entry["id"] = translator_id
+        entry["extensions"] = _normalize_translator_extensions(
+            entry.get("extensions"),
+            profile_name=profile_name,
+            translator_id=translator_id,
+            source_label=source_label,
+        )
+        entry["can_handle"] = _normalize_translator_strategy(
+            entry.get("can_handle"),
+            profile_name=profile_name,
+            translator_id=translator_id,
+            section="can_handle",
+            source_label=source_label,
+        )
+        entry["translate"] = _normalize_translator_strategy(
+            entry.get("translate"),
+            profile_name=profile_name,
+            translator_id=translator_id,
+            section="translate",
+            source_label=source_label,
+        )
+        normalized_entries.append(entry)
+    profile_meta["translators"] = normalized_entries
+
+
+def _normalize_registry_profiles(
+    registry: Dict[str, Dict], *, source_label: str
+) -> Dict[str, Dict]:
+    """Validate and normalize profile registry entries in place."""
+    for profile_name, raw_meta in list(registry.items()):
+        if not isinstance(raw_meta, dict):
+            registry[profile_name] = {}
+            continue
+        meta = dict(raw_meta)
+        category = str(meta.get("category", "")).strip().lower()
+        if not category:
+            category = "unknown"
+        meta["category"] = category
+        _normalize_profile_translators(
+            profile_name,
+            meta,
+            source_label=source_label,
+        )
+        registry[profile_name] = meta
+    return registry
+
+
 def load_profile(manifest_path: Path) -> dict:
     """Load a single profile manifest from disk."""
     return _load_yaml(manifest_path)
@@ -97,6 +249,11 @@ def discover_profiles(
                 meta["category"] = (
                     "custom" if source == "custom" else "unknown"
                 )
+            _normalize_profile_translators(
+                name,
+                meta,
+                source_label=str(manifest_path),
+            )
             meta["source"] = source
             meta["path"] = _relative_path(entry, repo_root)
             meta["assets_available"] = _profile_assets(entry, repo_root)
@@ -137,8 +294,12 @@ def write_profile_registry(repo_root: Path, registry: Dict[str, Dict]) -> Path:
 def _normalize_registry(registry: Dict[str, Dict]) -> Dict[str, Dict]:
     """Normalize profile registries that include a top-level profiles key."""
     if "profiles" in registry and isinstance(registry["profiles"], dict):
-        return registry["profiles"]
-    return registry
+        return _normalize_registry_profiles(
+            registry["profiles"], source_label=str(REGISTRY_PROFILE)
+        )
+    return _normalize_registry_profiles(
+        registry, source_label="profile-registry"
+    )
 
 
 def load_profile_registry(repo_root: Path) -> Dict[str, Dict]:

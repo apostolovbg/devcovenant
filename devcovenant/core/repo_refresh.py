@@ -943,6 +943,10 @@ def _refresh_config_generated(
     merged["autogen_metadata_overrides"] = _config_autogen_metadata_overrides(
         repo_root, active_profiles
     )
+    merged["policy_state"] = _materialize_policy_state_map(
+        repo_root,
+        _normalize_policy_state(merged.get("policy_state")),
+    )
 
     doc_assets = merged.get("doc_assets")
     if not isinstance(doc_assets, dict):
@@ -960,6 +964,40 @@ def _refresh_config_generated(
     config_path.parent.mkdir(parents=True, exist_ok=True)
     config_path.write_text(rendered, encoding="utf-8")
     return merged, True
+
+
+def _materialize_policy_state_map(
+    repo_root: Path, current_state: Dict[str, bool]
+) -> Dict[str, bool]:
+    """Return full alphabetical policy_state map from local registry."""
+    registry_path = manifest_module.policy_registry_path(repo_root)
+    payload = _read_yaml(registry_path)
+    raw_policies = payload.get("policies")
+    if not isinstance(raw_policies, dict):
+        return {}
+
+    resolved: Dict[str, bool] = {}
+    for raw_policy_id in sorted(raw_policies):
+        policy_id = str(raw_policy_id or "").strip()
+        if not policy_id:
+            continue
+        if policy_id in current_state:
+            resolved[policy_id] = current_state[policy_id]
+            continue
+        entry = raw_policies.get(raw_policy_id)
+        default_enabled = True
+        if isinstance(entry, dict):
+            raw_enabled = entry.get("enabled")
+            if isinstance(raw_enabled, bool):
+                default_enabled = raw_enabled
+            elif raw_enabled is not None:
+                token = str(raw_enabled).strip().lower()
+                if token in {"true", "1", "yes", "y", "on"}:
+                    default_enabled = True
+                elif token in {"false", "0", "no", "n", "off"}:
+                    default_enabled = False
+        resolved[policy_id] = default_enabled
+    return resolved
 
 
 def _normalize_string_list(raw_value: object) -> list[str]:

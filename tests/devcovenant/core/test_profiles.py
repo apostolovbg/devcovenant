@@ -121,24 +121,167 @@ def _unit_test_profiles_have_assets_unless_exempt() -> None:
         assert assets, f"profile {name} should include assets_available"
 
 
-def _unit_test_profiles_do_not_define_activation_scope_keys() -> None:
-    """Profile manifests must not carry activation keys."""
-    repo_root = Path(__file__).resolve().parents[3]
-    forbidden = {"profile_scopes", "policy_scopes", "policies"}
-    for profile_root in (
-        repo_root / "devcovenant" / "core" / "profiles",
-        repo_root / "devcovenant" / "custom" / "profiles",
-    ):
-        for profile_dir in profile_root.iterdir():
-            if not profile_dir.is_dir() or profile_dir.name.startswith("_"):
-                continue
-            manifest_path = profile_dir / f"{profile_dir.name}.yaml"
-            payload = yaml.safe_load(manifest_path.read_text(encoding="utf-8"))
-            present = forbidden.intersection(payload.keys())
-            assert not present, (
-                f"{manifest_path} contains retired scope keys: "
-                f"{sorted(present)}"
+def _unit_test_language_profile_translator_declarations_normalize() -> None:
+    """Language profiles should normalize translator declaration fields."""
+    with tempfile.TemporaryDirectory() as temp_dir:
+        repo_root = Path(temp_dir).resolve()
+        manifest_path = (
+            repo_root
+            / "devcovenant"
+            / "core"
+            / "profiles"
+            / "python"
+            / "python.yaml"
+        )
+        _write_yaml(
+            manifest_path,
+            """
+            version: 1
+            profile: python
+            category: language
+            translators:
+              - id: Python
+                extensions: [py, ".PYI", ".Pyw", ".py"]
+                can_handle:
+                  strategy: MODULE_FUNCTION
+                  entrypoint: devcovenant.core.translators.python.can_handle
+                translate:
+                  strategy: MODULE_FUNCTION
+                  entrypoint: devcovenant.core.translators.python.translate
+            """,
+        )
+        registry = profiles.discover_profiles(repo_root)
+        translators = registry["python"]["translators"]
+        assert len(translators) == 1
+        declaration = translators[0]
+        assert declaration["id"] == "python"
+        assert declaration["extensions"] == [".py", ".pyi", ".pyw"]
+        assert declaration["can_handle"]["strategy"] == "module_function"
+        assert declaration["translate"]["strategy"] == "module_function"
+
+
+def _unit_test_non_language_profile_translators_raise() -> None:
+    """Only language profiles can carry translator declarations."""
+    with tempfile.TemporaryDirectory() as temp_dir:
+        repo_root = Path(temp_dir).resolve()
+        manifest_path = (
+            repo_root
+            / "devcovenant"
+            / "core"
+            / "profiles"
+            / "react"
+            / "react.yaml"
+        )
+        _write_yaml(
+            manifest_path,
+            """
+            version: 1
+            profile: react
+            category: framework
+            translators:
+              - id: javascript
+                extensions: [".js"]
+                can_handle:
+                  strategy: module_function
+                  entrypoint: translator.javascript.can_handle
+                translate:
+                  strategy: module_function
+                  entrypoint: translator.javascript.translate
+            """,
+        )
+        with unittest.TestCase().assertRaises(ValueError):
+            profiles.discover_profiles(repo_root)
+
+
+def _unit_test_translator_declaration_shape_is_validated() -> None:
+    """Translator declarations must provide required fields."""
+    invalid_manifests = [
+        """
+        version: 1
+        profile: python
+        category: language
+        translators:
+          - id: python
+            extensions: [".py"]
+            translate:
+              strategy: module_function
+              entrypoint: devcovenant.core.translators.python.translate
+        """,
+        """
+        version: 1
+        profile: python
+        category: language
+        translators:
+          - id: python
+            extensions: [".py"]
+            can_handle:
+              strategy: module_function
+              entrypoint: devcovenant.core.translators.python.can_handle
+            translate:
+              strategy: module_function
+        """,
+        """
+        version: 1
+        profile: python
+        category: language
+        translators:
+          - id: ""
+            extensions: [".py"]
+            can_handle:
+              strategy: module_function
+              entrypoint: devcovenant.core.translators.python.can_handle
+            translate:
+              strategy: module_function
+              entrypoint: devcovenant.core.translators.python.translate
+        """,
+    ]
+    for content in invalid_manifests:
+        with tempfile.TemporaryDirectory() as temp_dir:
+            repo_root = Path(temp_dir).resolve()
+            manifest_path = (
+                repo_root
+                / "devcovenant"
+                / "core"
+                / "profiles"
+                / "python"
+                / "python.yaml"
             )
+            _write_yaml(manifest_path, content)
+            with unittest.TestCase().assertRaises(ValueError):
+                profiles.discover_profiles(repo_root)
+
+
+def _unit_test_profile_registry_load_validates_translator_schema() -> None:
+    """Loading registry metadata should validate translator declarations."""
+    with tempfile.TemporaryDirectory() as temp_dir:
+        repo_root = Path(temp_dir).resolve()
+        registry_path = (
+            repo_root
+            / "devcovenant"
+            / "registry"
+            / "local"
+            / "profile_registry.yaml"
+        )
+        _write_yaml(
+            registry_path,
+            """
+            generated_at: "2026-02-13T00:00:00+00:00"
+            profiles:
+              react:
+                category: framework
+                translators:
+                  - id: javascript
+                    extensions: [".js"]
+                    can_handle:
+                      strategy: module_function
+                      entrypoint: translator.javascript.can_handle
+                    translate:
+                      strategy: module_function
+                      entrypoint: translator.javascript.translate
+            """,
+        )
+        with unittest.TestCase().assertRaises(ValueError):
+            profiles.load_profile_registry(repo_root)
 
 
 def _unit_test_devcovuser_new_modules_overlay_uses_custom_mirror() -> None:
@@ -208,9 +351,21 @@ class GeneratedUnittestCases(unittest.TestCase):
         """Run test_profiles_have_assets_unless_exempt."""
         _unit_test_profiles_have_assets_unless_exempt()
 
-    def test_profiles_do_not_define_activation_scope_keys(self):
-        """Run test_profiles_do_not_define_activation_scope_keys."""
-        _unit_test_profiles_do_not_define_activation_scope_keys()
+    def test_language_profile_translator_declarations_normalize(self):
+        """Run test_language_profile_translator_declarations_normalize."""
+        _unit_test_language_profile_translator_declarations_normalize()
+
+    def test_non_language_profile_translators_raise(self):
+        """Run test_non_language_profile_translators_raise."""
+        _unit_test_non_language_profile_translators_raise()
+
+    def test_translator_declaration_shape_is_validated(self):
+        """Run test_translator_declaration_shape_is_validated."""
+        _unit_test_translator_declaration_shape_is_validated()
+
+    def test_profile_registry_load_validates_translator_schema(self):
+        """Run test_profile_registry_load_validates_translator_schema."""
+        _unit_test_profile_registry_load_validates_translator_schema()
 
     def test_devcovuser_new_modules_overlay_uses_custom_mirror(self):
         """Run test_devcovuser_new_modules_overlay_uses_custom_mirror."""

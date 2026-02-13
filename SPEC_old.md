@@ -1,5 +1,5 @@
 # DevCovenant Specification
-**Last Updated:** 2026-02-13
+**Last Updated:** 2026-02-12
 **Version:** 0.2.6
 
 <!-- DEVCOV:BEGIN -->
@@ -28,17 +28,6 @@ defined in descriptors, resolved through profile/config overlays into registry
 metadata, and compiled into the `AGENTS.md` policy block for runtime parsing.
 The system must keep enforcement logic, registry state, and rendered
 documentation synchronized so drift is detectable and reversible.
-
-### API Freeze Charter
-- Freeze API semantics and contracts, not inventories. Existing command,
-  metadata, and runtime contract behavior must not change silently.
-- Minor-version evolution is additive only (new commands, metadata keys,
-  profiles, translators, and policies).
-- Breaking behavior changes require explicit migration notes and versioned
-  contract updates in this specification.
-- Forward-only implementation: implement the current contract directly.
-  Do not keep legacy fallback paths and do not add anti-legacy rejection
-  logic unless a policy explicitly requires that behavior.
 
 ## Workflow
 - Run the gated workflow for every change: pre-commit start, tests,
@@ -92,11 +81,9 @@ documentation synchronized so drift is detectable and reversible.
 ### Engine behavior
 - Load policy modules from `devcovenant/core/policies/<id>/<id>.py` with
   custom overrides in `devcovenant/custom/policies/<id>/<id>.py`.
-- Load translator declarations from active language profile manifests and
-  resolve translation through the engine runtime, not through per-policy
-  adapter maps.
-- Translator declarations live in language profile YAML and include
-  extension routing and translation strategy configuration.
+- Load language adapters from `devcovenant/core/policies/<id>/adapters/`
+  with custom overrides in `devcovenant/custom/policies/<id>/adapters/`.
+  Custom adapters override core for the same policy + language.
 - When a custom policy module exists, it fully replaces the built-in policy
   and suppresses core fixers for that policy.
 - Respect `enabled`, `severity`, `status`, and `enforcement` metadata for each
@@ -122,9 +109,6 @@ documentation synchronized so drift is detectable and reversible.
   workflows and command examples.
 - Supported commands: `check`, `test`, `install`, `deploy`, `upgrade`,
   `refresh`, `undeploy`, `uninstall`, and `update_lock`.
-- The command surface is a frozen contract; new commands are allowed only
-  as additive registered commands and must not change existing command
-  semantics.
 - CLI parsing is command-scoped (dispatcher). `devcovenant <command> --help`
   must show only options for that command and must not leak unrelated
   lifecycle flags.
@@ -241,9 +225,10 @@ documentation synchronized so drift is detectable and reversible.
   `devflow-run-gates.required_commands` list resolved from profiles and
   config (defaults remain unittest + pytest) and records the exact command
   string in `devcovenant/registry/local/test_status.json`. Language-aware
-  policies request translation from the engine runtime, which routes files
-  by extension using active language-profile translator declarations;
-  policy modules remain language-agnostic.
+  policies delegate
+  parsing/checking to per-language adapters under
+  `devcovenant/core/policies/<policy>/adapters/<lang>.py`; core policy modules
+  remain language-agnostic.
 
 ### Documentation management
 - Every managed doc must include `Last Updated` and `Version` headers.
@@ -334,26 +319,16 @@ documentation synchronized so drift is detectable and reversible.
   their own configs when needed.
 - Path-valued scalar metadata keys (singular `*_file`, `*_path`, `*_dir`,
   `*_root`) must be emitted as scalar strings in generated
-  `autogen_metadata_overrides` and normalized as scalar strings at runtime.
-  List-valued selectors (`*_files`, `*_globs`, `*_dirs`, `*_paths`) remain
-  list-driven.
+  `autogen_metadata_overrides` and normalized as scalar strings at runtime
+  even when legacy config content still stores singleton lists. List-valued
+  selectors (`*_files`, `*_globs`, `*_dirs`, `*_paths`) remain list-driven.
 - The profile registry is generated into
   `devcovenant/registry/local/profile_registry.yaml` by scanning
   profile manifests.
 - Active profiles are recorded under `profiles.active` in config and extend
   file suffix coverage through registry definitions.
-- On every refresh, `policy_state` is rewritten as a full alphabetical map
-  of all effective policy IDs (core + custom with custom-over-core same-ID
-  precedence). Existing booleans are preserved, new IDs are seeded from the
-  current resolved `enabled` default, and stale IDs are removed.
 - Custom profiles are declared by adding a profile manifest plus assets
   under `devcovenant/custom/profiles/<name>/`.
-- Core vs custom profile origin is inferred by manifest location
-  (`devcovenant/core/profiles` vs `devcovenant/custom/profiles`); no
-  dedicated `custom` profile type key is used.
-- Only language profiles may declare translators. Framework/ops/tooling/repo
-  profiles do not select translators; they contribute overlays/assets/hooks
-  and file-selection metadata.
 - Profile assets live under `devcovenant/core/profiles/<name>/assets/` and
   `devcovenant/custom/profiles/<name>/assets/`, with `global/assets/`
   covering shared docs and tooling.
@@ -368,7 +343,6 @@ documentation synchronized so drift is detectable and reversible.
   manifest metadata so installs can regenerate `.pre-commit-config.yaml`
   whenever profile selections change.
 - The global profile owns the DevCovenant hook baseline and shared defaults.
-  Language-specific hooks belong to their language profiles.
 - The merge order for `.pre-commit-config.yaml` is:
   1. global profile defaults and the shared DevCovenant fragment,
      ensuring a consistent baseline.
@@ -389,8 +363,7 @@ documentation synchronized so drift is detectable and reversible.
 - Add tests verifying the generated config matches the manifest for sample
   profile combinations.
 - Assets install only when a policy is enabled in config. Scope keys are
-  removed; applicability is driven by resolved metadata and translator
-  availability.
+  removed; applicability is driven by resolved metadata and adapter support.
 - Template indexes live at `devcovenant/core/profiles/README.md` and
   `devcovenant/core/policies/README.md`.
 - Profile assets and policy overlays live in profile manifests at
@@ -401,8 +374,8 @@ documentation synchronized so drift is detectable and reversible.
   `user_metadata_overrides` taking precedence when set).
 - Profile asset manifests do not define `mode` fields. Asset handling is
   deterministic: create missing targets only; never overwrite existing files.
-- Profile manifests provide overlays/assets/hooks and file-selection metadata.
-  Policy activation is config-only through `policy_state`.
+- Profile manifests must not declare policy-activation lists (for example,
+  `policies:`). Activation is config-only through `policy_state`.
 - Managed-document templates include stock non-managed text for each
   devcovenant-managed doc, injected only when the target doc is missing,
   empty, or a single-line placeholder. Otherwise only managed blocks are
@@ -426,9 +399,8 @@ documentation synchronized so drift is detectable and reversible.
   manifests, and registry outputs remain authoritative for metadata
   resolution, while runtime activation comes from `policy_state` compiled
   into AGENTS.
-- Metadata resolution precedence is fixed: policy descriptor defaults ->
-  active profile overlays -> `autogen_metadata_overrides` ->
-  `user_metadata_overrides` -> `policy_state` activation application.
+- Policy descriptors and profile manifests must not define retired activation
+  scope keys (`profile_scopes`, `policy_scopes`).
 - Install/upgrade planning and policy asset application must resolve `enabled`
   from descriptor metadata defaults overridden by config `policy_state`, write
   those resolved values to registry metadata, and then compile AGENTS from the
@@ -519,14 +491,14 @@ documentation synchronized so drift is detectable and reversible.
   when the flag clears.
   Always rerun `devcovenant refresh` (and any needed registry
   fixes) so the registry records the custom copy. Auto-fixers should be devised
-  for every policy and wired through the shared translator runtime.
+  for every policy and wired through the per-policy adapters.
   They work across every language/profile combination that the policy supports.
 - Generate `devcovenant/registry/local/policy_registry.yaml` dynamically from
   policy descriptors, script discovery, and metadata resolution. The registry
-  stores synchronized hashes, script paths, assets, and resolved metadata for
-  every policy (enabled or disabled) as diagnostic/integrity state. The
-  AGENTS policy block is compiled from this registry, and AGENTS is the
-  canonical runtime parser surface.
+  is the canonical resolved policy state and stores hashes, script paths,
+  assets, and resolved metadata for every policy (enabled or disabled). The
+  AGENTS policy block is compiled from this registry and is the canonical
+  runtime parser surface.
 - The legacy `devcovenant/registry.json` storage and the accompanying
   `update_hashes.py` helper were retired and removed, leaving
   `devcovenant/registry/local/policy_registry.yaml` as the single
@@ -553,14 +525,12 @@ documentation synchronized so drift is detectable and reversible.
 - Metadata keys under `metadata` are the schema for that policy. Common keys
   appear in every policy block; policy-specific keys are emitted even when
   empty.
-- Metadata resolution order is policy defaults → profile overlays →
-  `autogen_metadata_overrides` → `user_metadata_overrides` →
-  `policy_state` activation application. If no profile declares a metadata key,
-  the policy default is kept. The resolved metadata is written into the local
-  policy registry and rendered into `AGENTS.md` for every policy (active or
-  not), with `enabled` reflecting config activation. Metadata is rendered in
-  vertical YAML-style lines (lists continue on indented lines) rather than
-  comma-joined horizontal values.
+- Metadata resolution order is policy defaults → profile overlays → user
+  overrides. If no profile declares a metadata key, the policy default is kept.
+  The resolved metadata is written into the local policy registry and rendered
+  into `AGENTS.md` for every policy (active or not), with `enabled` reflecting
+  config activation. Metadata is rendered in vertical YAML-style lines (lists
+  continue on indented lines) rather than comma-joined horizontal values.
 - When DevCovenant removes a core policy, the updater copies it to
   `devcovenant/custom/policies/` (or a frozen overlay defined in config),
   marks the new copy as `custom`, and reruns `refresh` so the
@@ -577,19 +547,6 @@ documentation synchronized so drift is detectable and reversible.
   `policy_state.raw-string-escapes: true`.
 - Add a repo-specific `devcov-raw-string-escapes` custom policy for the
   DevCovenant repo only; do not ship that custom policy in user installs.
-
-### Translator Runtime Contract
-- Translator declarations are profile metadata owned by active language
-  profiles. Policy code must not hardcode extension-to-adapter mappings.
-- Each translator declaration includes translator ID, extension set,
-  `can_handle` routing strategy, and `translate` strategy/entrypoint.
-- For each policy-selected file, the engine resolves translator candidates by
-  extension from active language profiles, evaluates `can_handle`, and then:
-  zero matches -> policy violation (no translator), one match -> use it,
-  multiple matches -> policy violation (ambiguous translator).
-- Translators return a normalized, policy-agnostic `LanguageUnit` payload.
-  Policies and fixers consume this shared structure instead of per-policy
-  language adapter APIs.
 
 ## Installation Requirements
 - Install the full DevCovenant toolchain into the target repo, including the
@@ -732,10 +689,6 @@ documentation synchronized so drift is detectable and reversible.
   files must be unittest-style, and the repository runs
   `python3 -m unittest discover -v` first with `pytest` as piggyback
   execution.
-- Tests are current-behavior artifacts: each test must validate the
-  corresponding script/module behavior as it exists now. When scripts change,
-  corresponding tests are updated; when scripts are deleted, corresponding
-  tests are deleted.
 - `devcovuser` ignores vendored trees (`vendor`, `third_party`,
   `node_modules`) by default so scans and tests skip bundled dependencies.
 - `devcovuser` also skips vendored DevCovenant core paths in
@@ -749,24 +702,10 @@ documentation synchronized so drift is detectable and reversible.
   code-style/security policies still enforce custom extensions and their
   tests.
 
-### Core Responsibility Consolidation
-- Internal core responsibilities are consolidated into stable runtime
-  domains: policy runtime, metadata runtime, profile runtime, translator
-  runtime, refresh runtime, and registry runtime.
-- Legacy or duplicate internal modules/functions must be removed when their
-  responsibilities are absorbed by the stable runtime domains.
-- CLI-exposed scripts remain at `devcovenant/` package root; consolidated
-  runtime modules remain internal under `devcovenant/core/`.
-
 ## Non-Functional Requirements
 - Checks must be fast enough for pre-commit usage on typical repos.
 - Violations must be clear, actionable, and reference the policy source.
 - Install and uninstall operations must be deterministic and reversible.
-- Contract tests must enforce current contract behavior: full alphabetical
-  `policy_state` materialization on refresh with state preservation;
-  translator ownership by language profiles only; and language-aware policies
-  routed through the shared translator runtime without per-policy adapter
-  maps.
 
 ## Future Direction
 - Version 0.2.7 moves more stock policies onto a metadata-driven DSL surfaced

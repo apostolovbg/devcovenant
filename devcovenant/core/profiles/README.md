@@ -9,6 +9,7 @@ activation is config-only via `policy_state`.
 ## Table of Contents
 - How profiles are organized
 - Activation rules
+- Translator declarations
 - Workflow expectations
 
 ## How profiles are organized
@@ -25,6 +26,13 @@ without directly toggling policy activation.
 Stock policy assets are supplied by profile `assets` declarations. Custom
 policy behavior is still configurable via profile overlays and custom policy
 code, but asset materialization remains profile-owned and create-if-missing.
+
+## Translator declarations
+Only language profiles may declare `translators`. Each entry uses this shape:
+`id`, `extensions`, `can_handle`, and `translate`. `can_handle` and
+`translate` are strategy mappings with `strategy` and `entrypoint`.
+Validation runs during profile discovery and profile-registry loading so
+invalid declarations fail fast.
 
 ## Workflow expectations
 Managed docs and policies are kept in sync via the canonical gate sequence

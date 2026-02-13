@@ -178,8 +178,28 @@ pre_commit:
 # Canonical policy on/off map: {policy-id: true|false}.
 
 policy_state:
+  changelog-coverage: true
+  dependency-license-sync: true
+  devcov-integrity-guard: true
+  devcov-raw-string-escapes: true
+  devcov-structure-guard: true
+  devflow-run-gates: true
+  docstring-and-comment-coverage: true
+  documentation-growth-tracking: true
+  last-updated-placement: true
+  line-length-limit: true
+  managed-doc-assets: true
   managed-environment: false
+  modules-need-tests: true
+  name-clarity: true
+  no-future-dates: true
+  no-spaghetti: true
   raw-string-escapes: false
+  read-only-directories: true
+  readme-sync: true
+  security-scanner: true
+  semantic-version-scope: true
+  version-sync: true
 
 # Core policy IDs frozen into devcovenant/custom/policies/*.
 

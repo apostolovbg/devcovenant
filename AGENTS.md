@@ -1,5 +1,5 @@
 # DevCovenant Development Guide
-**Last Updated:** 2026-02-12
+**Last Updated:** 2026-02-13
 **Version:** 0.2.6
 
 <!-- DEVCOV:BEGIN -->
@@ -782,8 +782,11 @@ force_include_dirs:
 
 In-scope non-test modules must have corresponding tests under configured
 test roots. The rule is metadata-driven and supports mirror enforcement for
-selected source roots. Python test files must use unittest.TestCase-style
-definitions; pytest still runs as an execution layer.
+selected source roots. Tests are current-behavior artifacts: when modules
+change, corresponding tests must be updated, and when modules are removed,
+corresponding tests must be removed as well. Python test files must use
+unittest.TestCase-style definitions; pytest still runs as an execution
+layer.
 
 
 ---

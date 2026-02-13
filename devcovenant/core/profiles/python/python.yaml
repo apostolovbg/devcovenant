@@ -22,8 +22,6 @@ assets:
     template: .python-version
   - path: pyproject.toml
     template: pyproject.toml
-policy_state:
-  raw-string-escapes: false
 policy_overlays:
   dependency-license-sync:
     dependency_files:
