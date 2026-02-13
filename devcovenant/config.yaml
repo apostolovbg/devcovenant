@@ -32,6 +32,7 @@ devcov_core_paths:
 - devcovenant/__main__.py
 - devcovenant/cli.py
 - devcovenant/check.py
+- devcovenant/gate.py
 - devcovenant/test.py
 - devcovenant/install.py
 - devcovenant/deploy.py
@@ -131,14 +132,16 @@ install:
 # Engine behavior
 # -------------------------------------------------------------------
 
-# Violations at or above fail_threshold fail the run (info|warning|error|critical).
+# Violations at or above fail_threshold fail the run.
+
+# Allowed levels: info, warning, error, critical.
 
 # auto_fix_enabled controls policy auto-fix pass behavior.
 
 # file_suffixes and ignore_dirs define broad scan boundaries.
 
 engine:
-  fail_threshold: error
+  fail_threshold: warning
   auto_fix_enabled: true
   file_suffixes:
   - .md

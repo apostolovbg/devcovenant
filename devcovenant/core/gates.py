@@ -1,4 +1,4 @@
-"""Gate execution helpers for DevCovenant check --start/--end."""
+"""Gate execution helpers for DevCovenant gate --start/--end."""
 
 from __future__ import annotations
 

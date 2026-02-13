@@ -132,7 +132,8 @@ document and you will get it!
 - Helper/library code belongs under `devcovenant/core`.
 - Avoid duplicate command logic across modules.
 - Keep command contracts minimal and explicit.
-- `check` supports `--start`, `--end`, `--nofix`.
+- `check` supports `--nofix`, `--norefresh`.
+- `gate` supports `--start`, `--end`.
 - Unneeded flags are removed when they create drift.
 
 ### Testing Rules
@@ -155,9 +156,9 @@ document and you will get it!
 - Never let PLAN say done while reality is not done.
 
 ### Operational Discipline
-- Before edits: run `python3 -m devcovenant check --start`.
+- Before edits: run `python3 -m devcovenant gate --start`.
 - After edits: run `python3 -m devcovenant test`.
-- Finalize: run `python3 -m devcovenant check --end`.
+- Finalize: run `python3 -m devcovenant gate --end`.
 - Every substantive change gets CHANGELOG coverage.
 - Keep file lists in changelog accurate.
 - Consult SPEC before implementing PLAN items.
@@ -173,6 +174,9 @@ document and you will get it!
 - Item 9 core responsibility consolidation.
 - Item 10 conformance contract tests.
 - Item 12 final SPEC-vs-reality closure audit.
+- 2026-02-13: Workflow split is now explicit: `gate` owns start/end
+  pre-commit orchestration, while `check` owns policy evaluation and may
+  skip startup refresh via `--norefresh` when explicitly requested.
 
 ### Self-Checks Before Claiming Completion
 - Does behavior match SPEC text exactly?
@@ -194,9 +198,9 @@ document and you will get it!
 
 ## Obligatory Workflow
 Run DevCovenant gates in this sequence for repository edits:
-1. `python3 -m devcovenant check --start`
+1. `python3 -m devcovenant gate --start`
 2. `python3 -m devcovenant test`
-3. `python3 -m devcovenant check --end`
+3. `python3 -m devcovenant gate --end`
 
 ## Managed Environment
 If a managed environment is configured, run DevCovenant from that environment.
@@ -219,7 +223,8 @@ optional overrides from `devcovenant/custom/policies/<policy>`. Profiles
 provide metadata and selectors that shape enforcement behavior.
 
 ## Workflow
-- Run `start`, apply edits, run tests, and finish with `end`.
+- Run `devcovenant gate --start`, apply edits, run tests, and finish with
+  `devcovenant gate --end`.
 - After policy-text changes, run `devcovenant refresh`.
 - Log every change in `CHANGELOG.md` under the current version entry.
 

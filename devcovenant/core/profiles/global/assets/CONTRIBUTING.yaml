@@ -1,6 +1,6 @@
 header_lines:
 - '# Contributing'
-- '**Last Updated:** 2026-02-12'
+- '**Last Updated:** 2026-02-13'
 - '**Version:** 0.2.6'
 doc_id: CONTRIBUTING
 doc_type: contributing-guide
@@ -29,9 +29,9 @@ body: |-
   ## Workflow
   Follow the canonical gate sequence (details in `devcovenant/README.md`):
   ```bash
-  python3 -m devcovenant check --start
+  python3 -m devcovenant gate --start
   python3 -m devcovenant test
-  python3 -m devcovenant check --end
+  python3 -m devcovenant gate --end
   ```
   If the console script is not on your PATH, use `python3 -m devcovenant`
   instead of `devcovenant` for CLI commands.

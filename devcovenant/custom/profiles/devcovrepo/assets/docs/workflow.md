@@ -21,9 +21,9 @@ any change, including documentation-only edits.
 ## Gated Sequence
 The default commands are:
 ```bash
-python3 -m devcovenant check --start
+python3 -m devcovenant gate --start
 python3 -m devcovenant test
-python3 -m devcovenant check --end
+python3 -m devcovenant gate --end
 ```
 The start and end gates record timestamps in the local registry.
 

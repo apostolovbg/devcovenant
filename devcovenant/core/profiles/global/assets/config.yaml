@@ -29,6 +29,7 @@ devcov_core_paths:
   - devcovenant/__main__.py
   - devcovenant/cli.py
   - devcovenant/check.py
+  - devcovenant/gate.py
   - devcovenant/test.py
   - devcovenant/install.py
   - devcovenant/deploy.py

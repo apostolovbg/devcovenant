@@ -20,23 +20,18 @@ def _runtime(profile: str, suffixes: list[str]) -> TranslatorRuntime:
     registry = {
         profile: {
             "category": "language",
+            "path": f"devcovenant/core/profiles/{profile}",
             "translators": [
                 {
                     "id": profile,
                     "extensions": suffixes,
                     "can_handle": {
                         "strategy": "module_function",
-                        "entrypoint": (
-                            "devcovenant.core.translator_runtime."
-                            "can_handle_declared_extensions"
-                        ),
+                        "entrypoint": "translator.py:can_handle",
                     },
                     "translate": {
                         "strategy": "module_function",
-                        "entrypoint": (
-                            "devcovenant.core.translator_runtime."
-                            "translate_language_unit"
-                        ),
+                        "entrypoint": "translator.py:translate",
                     },
                 }
             ],

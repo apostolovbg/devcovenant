@@ -52,9 +52,9 @@ workflow_block: |-
 
   ## Obligatory Workflow
   Run DevCovenant gates in this sequence for repository edits:
-  1. `python3 -m devcovenant check --start`
+  1. `python3 -m devcovenant gate --start`
   2. `python3 -m devcovenant test`
-  3. `python3 -m devcovenant check --end`
+  3. `python3 -m devcovenant gate --end`
 
   ## Managed Environment
   If a managed environment is configured, run DevCovenant from that environment.
@@ -77,7 +77,8 @@ workflow_block: |-
   provide metadata and selectors that shape enforcement behavior.
 
   ## Workflow
-  - Run `start`, apply edits, run tests, and finish with `end`.
+  - Run `devcovenant gate --start`, apply edits, run tests, and finish with
+    `devcovenant gate --end`.
   - After policy-text changes, run `devcovenant refresh`.
   - Log every change in `CHANGELOG.md` under the current version entry.
 

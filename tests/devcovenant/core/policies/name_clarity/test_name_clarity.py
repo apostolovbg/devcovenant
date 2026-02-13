@@ -40,23 +40,18 @@ def _build_runtime(
     registry = {
         profile_name: {
             "category": "language",
+            "path": f"devcovenant/core/profiles/{profile_name}",
             "translators": [
                 {
                     "id": profile_name,
                     "extensions": suffixes,
                     "can_handle": {
                         "strategy": "module_function",
-                        "entrypoint": (
-                            "devcovenant.core.translator_runtime."
-                            "can_handle_declared_extensions"
-                        ),
+                        "entrypoint": "translator.py:can_handle",
                     },
                     "translate": {
                         "strategy": "module_function",
-                        "entrypoint": (
-                            "devcovenant.core.translator_runtime."
-                            "translate_language_unit"
-                        ),
+                        "entrypoint": "translator.py:translate",
                     },
                 }
             ],

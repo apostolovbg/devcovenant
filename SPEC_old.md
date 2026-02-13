@@ -1,5 +1,4 @@
 # DevCovenant Specification
-**Last Updated:** 2026-02-12
 **Version:** 0.2.6
 
 <!-- DEVCOV:BEGIN -->

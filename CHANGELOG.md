@@ -42,135 +42,65 @@ Example entry:
   language-profile
   declarations, and translator-runtime behavior is covered by dedicated tests.
   Files:
+  AGENTS.md
+  CONTRIBUTING.md
   PLAN.md
-  devcovenant/core/base.py
-  devcovenant/core/engine.py
-  devcovenant/core/policies/changelog_coverage/adapters/__init__.py
-  devcovenant/core/policies/dependency_license_sync/adapters/__init__.py
-  devcovenant/core/policies/devcov_integrity_guard/adapters/__init__.py
-  devcovenant/core/policies/devcov_structure_guard/adapters/__init__.py
-  devcovenant/core/policies/devflow_run_gates/adapters/__init__.py
-  devcovenant/core/policies/docstring_and_comment_coverage/adapters/__init__.py
-  devcovenant/core/policies/docstring_and_comment_coverage/adapters/csharp.py
-  devcovenant/core/policies/docstring_and_comment_coverage/adapters/go.py
-  devcovenant/core/policies/docstring_and_comment_coverage/adapters/java.py
-  devcovenant/core/policies/docstring_and_comment_coverage/adapters/\
-    javascript.py
-  devcovenant/core/policies/docstring_and_comment_coverage/adapters/python.py
-  devcovenant/core/policies/docstring_and_comment_coverage/adapters/rust.py
-  devcovenant/core/policies/docstring_and_comment_coverage/adapters/\
-    typescript.py
-  devcovenant/core/policies/docstring_and_comment_coverage/\
-    docstring_and_comment_coverage.py
-  devcovenant/core/policies/documentation_growth_tracking/adapters/__init__.py
-  devcovenant/core/policies/last_updated_placement/adapters/__init__.py
-  devcovenant/core/policies/line_length_limit/adapters/__init__.py
-  devcovenant/core/policies/managed_environment/adapters/__init__.py
-  devcovenant/core/policies/modules_need_tests/adapters/__init__.py
-  devcovenant/core/policies/modules_need_tests/adapters/csharp.py
-  devcovenant/core/policies/modules_need_tests/adapters/go.py
-  devcovenant/core/policies/modules_need_tests/adapters/java.py
-  devcovenant/core/policies/modules_need_tests/adapters/javascript.py
-  devcovenant/core/policies/modules_need_tests/adapters/python.py
-  devcovenant/core/policies/modules_need_tests/adapters/rust.py
-  devcovenant/core/policies/modules_need_tests/adapters/typescript.py
-  devcovenant/core/policies/modules_need_tests/modules_need_tests.py
-  devcovenant/core/policies/name_clarity/adapters/__init__.py
-  devcovenant/core/policies/name_clarity/adapters/csharp.py
-  devcovenant/core/policies/name_clarity/adapters/go.py
-  devcovenant/core/policies/name_clarity/adapters/java.py
-  devcovenant/core/policies/name_clarity/adapters/javascript.py
-  devcovenant/core/policies/name_clarity/adapters/python.py
-  devcovenant/core/policies/name_clarity/adapters/rust.py
-  devcovenant/core/policies/name_clarity/adapters/typescript.py
-  devcovenant/core/policies/name_clarity/name_clarity.py
-  devcovenant/core/policies/no_future_dates/adapters/__init__.py
-  devcovenant/core/policies/raw_string_escapes/adapters/__init__.py
-  devcovenant/core/policies/read_only_directories/adapters/__init__.py
-  devcovenant/core/policies/security_scanner/adapters/__init__.py
-  devcovenant/core/policies/security_scanner/adapters/csharp.py
-  devcovenant/core/policies/security_scanner/adapters/go.py
-  devcovenant/core/policies/security_scanner/adapters/java.py
-  devcovenant/core/policies/security_scanner/adapters/javascript.py
-  devcovenant/core/policies/security_scanner/adapters/python.py
-  devcovenant/core/policies/security_scanner/adapters/rust.py
-  devcovenant/core/policies/security_scanner/adapters/typescript.py
-  devcovenant/core/policies/security_scanner/security_scanner.py
-  devcovenant/core/policies/semantic_version_scope/adapters/__init__.py
-  devcovenant/core/policies/version_sync/adapters/__init__.py
+  README.md
+  SPEC.md
+  SPEC_old.md
+  devcovenant/README.md
+  devcovenant/check.py
+  devcovenant/cli.py
+  devcovenant/config.yaml
+  devcovenant/core/gates.py
+  devcovenant/core/policies/devflow_run_gates/devflow_run_gates.py
   devcovenant/core/profiles/csharp/csharp.yaml
+  devcovenant/core/profiles/csharp/translator.py
+  devcovenant/core/profiles/global/assets/AGENTS.yaml
+  devcovenant/core/profiles/global/assets/CONTRIBUTING.yaml
+  devcovenant/core/profiles/global/assets/PLAN.yaml
+  devcovenant/core/profiles/global/assets/README.yaml
+  devcovenant/core/profiles/global/assets/config.yaml
+  devcovenant/core/profiles/global/assets/devcovenant/README.yaml
   devcovenant/core/profiles/global/global.yaml
   devcovenant/core/profiles/go/go.yaml
+  devcovenant/core/profiles/go/translator.py
   devcovenant/core/profiles/java/java.yaml
+  devcovenant/core/profiles/java/translator.py
   devcovenant/core/profiles/javascript/javascript.yaml
+  devcovenant/core/profiles/javascript/translator.py
+  devcovenant/core/profiles/python/assets/pyproject.toml
   devcovenant/core/profiles/python/python.yaml
+  devcovenant/core/profiles/python/translator.py
   devcovenant/core/profiles/rust/rust.yaml
+  devcovenant/core/profiles/rust/translator.py
+  devcovenant/core/profiles/typescript/translator.py
   devcovenant/core/profiles/typescript/typescript.yaml
+  devcovenant/core/repo_refresh.py
   devcovenant/core/translator_runtime.py
-  tests/devcovenant/core/policies/changelog_coverage/adapters/__init__.py
-  tests/devcovenant/core/policies/dependency_license_sync/adapters/__init__.py
-  tests/devcovenant/core/policies/devcov_integrity_guard/adapters/__init__.py
-  tests/devcovenant/core/policies/devcov_structure_guard/adapters/__init__.py
-  tests/devcovenant/core/policies/devflow_run_gates/adapters/__init__.py
-  tests/devcovenant/core/policies/docstring_and_comment_coverage/adapters/\
-    __init__.py
-  tests/devcovenant/core/policies/docstring_and_comment_coverage/adapters/\
-    test_csharp.py
-  tests/devcovenant/core/policies/docstring_and_comment_coverage/adapters/\
-    test_go.py
-  tests/devcovenant/core/policies/docstring_and_comment_coverage/adapters/\
-    test_java.py
-  tests/devcovenant/core/policies/docstring_and_comment_coverage/adapters/\
-    test_javascript.py
-  tests/devcovenant/core/policies/docstring_and_comment_coverage/adapters/\
-    test_python.py
-  tests/devcovenant/core/policies/docstring_and_comment_coverage/adapters/\
-    test_rust.py
-  tests/devcovenant/core/policies/docstring_and_comment_coverage/adapters/\
-    test_typescript.py
+  devcovenant/custom/policies/README.md
+  devcovenant/custom/profiles/devcovrepo/assets/docs/troubleshooting.md
+  devcovenant/custom/profiles/devcovrepo/assets/docs/workflow.md
+  devcovenant/docs/troubleshooting.md
+  devcovenant/docs/workflow.md
+  devcovenant/gate.py
+  pyproject.toml
   tests/devcovenant/core/policies/docstring_and_comment_coverage/\
     test_docstring_and_comment_coverage.py
-  tests/devcovenant/core/policies/documentation_growth_tracking/adapters/\
-    __init__.py
-  tests/devcovenant/core/policies/last_updated_placement/adapters/__init__.py
-  tests/devcovenant/core/policies/line_length_limit/adapters/__init__.py
-  tests/devcovenant/core/policies/managed_environment/adapters/__init__.py
-  tests/devcovenant/core/policies/modules_need_tests/adapters/__init__.py
-  tests/devcovenant/core/policies/modules_need_tests/adapters/test_csharp.py
-  tests/devcovenant/core/policies/modules_need_tests/adapters/test_go.py
-  tests/devcovenant/core/policies/modules_need_tests/adapters/test_java.py
-  tests/devcovenant/core/policies/modules_need_tests/adapters/\
-    test_javascript.py
-  tests/devcovenant/core/policies/modules_need_tests/adapters/test_python.py
-  tests/devcovenant/core/policies/modules_need_tests/adapters/test_rust.py
-  tests/devcovenant/core/policies/modules_need_tests/adapters/\
-    test_typescript.py
   tests/devcovenant/core/policies/modules_need_tests/test_modules_need_tests.py
-  tests/devcovenant/core/policies/name_clarity/adapters/__init__.py
-  tests/devcovenant/core/policies/name_clarity/adapters/test_csharp.py
-  tests/devcovenant/core/policies/name_clarity/adapters/test_go.py
-  tests/devcovenant/core/policies/name_clarity/adapters/test_java.py
-  tests/devcovenant/core/policies/name_clarity/adapters/test_javascript.py
-  tests/devcovenant/core/policies/name_clarity/adapters/test_python.py
-  tests/devcovenant/core/policies/name_clarity/adapters/test_rust.py
-  tests/devcovenant/core/policies/name_clarity/adapters/test_typescript.py
   tests/devcovenant/core/policies/name_clarity/test_name_clarity.py
-  tests/devcovenant/core/policies/no_future_dates/adapters/__init__.py
-  tests/devcovenant/core/policies/raw_string_escapes/adapters/__init__.py
-  tests/devcovenant/core/policies/read_only_directories/adapters/__init__.py
-  tests/devcovenant/core/policies/security_scanner/adapters/__init__.py
-  tests/devcovenant/core/policies/security_scanner/adapters/test_csharp.py
-  tests/devcovenant/core/policies/security_scanner/adapters/test_go.py
-  tests/devcovenant/core/policies/security_scanner/adapters/test_java.py
-  tests/devcovenant/core/policies/security_scanner/adapters/test_javascript.py
-  tests/devcovenant/core/policies/security_scanner/adapters/test_python.py
-  tests/devcovenant/core/policies/security_scanner/adapters/test_rust.py
-  tests/devcovenant/core/policies/security_scanner/adapters/test_typescript.py
   tests/devcovenant/core/policies/security_scanner/test_security_scanner.py
-  tests/devcovenant/core/policies/semantic_version_scope/adapters/__init__.py
-  tests/devcovenant/core/policies/version_sync/adapters/__init__.py
-  tests/devcovenant/core/test_selector_helpers.py
-  tests/devcovenant/core/test_translator_runtime.py
+  tests/devcovenant/core/profiles/csharp/test_translator.py
+  tests/devcovenant/core/profiles/go/test_translator.py
+  tests/devcovenant/core/profiles/java/test_translator.py
+  tests/devcovenant/core/profiles/javascript/test_translator.py
+  tests/devcovenant/core/profiles/python/test_translator.py
+  tests/devcovenant/core/profiles/rust/test_translator.py
+  tests/devcovenant/core/profiles/typescript/test_translator.py
+  tests/devcovenant/core/test_repo_refresh.py
+  tests/devcovenant/test_check.py
+  tests/devcovenant/test_cli.py
+  tests/devcovenant/test_gate.py
 
 - 2026-02-13:
   Change: Updated refresh runtime to materialize `policy_state` as a full

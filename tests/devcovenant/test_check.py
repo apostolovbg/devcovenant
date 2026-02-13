@@ -10,103 +10,91 @@ from unittest.mock import patch
 from devcovenant import check
 
 
-def _unit_test_gate_runs_full_refresh_before_start_phase() -> None:
-    """_run_gate should refresh before executing start gate."""
+def _unit_test_run_refreshes_by_default() -> None:
+    """run() should refresh before invoking engine checks by default."""
     events: list[str] = []
     repo_root = Path("/repo")
 
-    # Mock refresh callback for execution-order assertions.
     def _fake_refresh(_: Path) -> int:
+        """Track refresh call order for assertion."""
         events.append("refresh")
         return 0
 
-    # Mock gate callback for execution-order assertions.
-    def _fake_gate(_: Path, phase: str) -> int:
-        events.append(f"gate:{phase}")
-        return 0
-
-    with patch("devcovenant.check.refresh_repo", side_effect=_fake_refresh):
+    args = SimpleNamespace(nofix=False, norefresh=False)
+    with patch("devcovenant.check.resolve_repo_root", return_value=repo_root):
         with patch(
-            "devcovenant.check.run_pre_commit_gate",
-            side_effect=_fake_gate,
+            "devcovenant.check.refresh_repo", side_effect=_fake_refresh
         ):
-            exit_code = check._run_gate(repo_root, "start")
+            with patch("devcovenant.check.warn_version_mismatch"):
+                with patch("devcovenant.check.print_banner"):
+                    with patch("devcovenant.check.print_step"):
+                        with patch(
+                            "devcovenant.check.DevCovenantEngine"
+                        ) as engine:
+                            engine.return_value.check.return_value = (
+                                SimpleNamespace(
+                                    should_block=False,
+                                    has_sync_issues=lambda: False,
+                                )
+                            )
+                            exit_code = check.run(args)
 
     assert exit_code == 0
-    assert events == ["refresh", "gate:start"]
+    assert events == ["refresh"]
 
 
-def _unit_test_gate_runs_full_refresh_before_end_phase() -> None:
-    """_run_gate should refresh before executing end gate."""
-    events: list[str] = []
+def _unit_test_run_skips_refresh_with_norefresh() -> None:
+    """run() should skip refresh when --norefresh is selected."""
     repo_root = Path("/repo")
-
-    # Mock refresh callback for execution-order assertions.
-    def _fake_refresh(_: Path) -> int:
-        events.append("refresh")
-        return 0
-
-    # Mock gate callback for execution-order assertions.
-    def _fake_gate(_: Path, phase: str) -> int:
-        events.append(f"gate:{phase}")
-        return 0
-
-    with patch("devcovenant.check.refresh_repo", side_effect=_fake_refresh):
-        with patch(
-            "devcovenant.check.run_pre_commit_gate",
-            side_effect=_fake_gate,
-        ):
-            exit_code = check._run_gate(repo_root, "end")
-
+    args = SimpleNamespace(nofix=False, norefresh=True)
+    with patch("devcovenant.check.resolve_repo_root", return_value=repo_root):
+        with patch("devcovenant.check.refresh_repo") as refresh_mock:
+            with patch("devcovenant.check.warn_version_mismatch"):
+                with patch("devcovenant.check.print_banner"):
+                    with patch("devcovenant.check.print_step"):
+                        with patch(
+                            "devcovenant.check.DevCovenantEngine"
+                        ) as engine:
+                            engine.return_value.check.return_value = (
+                                SimpleNamespace(
+                                    should_block=False,
+                                    has_sync_issues=lambda: False,
+                                )
+                            )
+                            exit_code = check.run(args)
     assert exit_code == 0
-    assert events == ["refresh", "gate:end"]
+    refresh_mock.assert_not_called()
 
 
-def _unit_test_gate_stops_when_refresh_fails() -> None:
-    """_run_gate should abort without pre-commit when refresh fails."""
+def _unit_test_run_stops_when_refresh_fails() -> None:
+    """run() should abort when refresh fails."""
     repo_root = Path("/repo")
-
-    with patch("devcovenant.check.refresh_repo", return_value=9):
-        with patch("devcovenant.check.run_pre_commit_gate") as gate_mock:
-            exit_code = check._run_gate(repo_root, "start")
-
-    assert exit_code == 9
-    gate_mock.assert_not_called()
-
-
-def _unit_test_run_dispatches_start_and_end_to_gate() -> None:
-    """run() should dispatch --start/--end through _run_gate."""
-    start_args = SimpleNamespace(start=True, end=False, nofix=False)
-    end_args = SimpleNamespace(start=False, end=True, nofix=False)
-    repo_root = Path("/repo")
+    args = SimpleNamespace(nofix=False, norefresh=False)
 
     with patch("devcovenant.check.resolve_repo_root", return_value=repo_root):
-        with patch("devcovenant.check._run_gate", return_value=0) as gate_mock:
-            start_exit = check.run(start_args)
-            end_exit = check.run(end_args)
-
-    assert start_exit == 0
-    assert end_exit == 0
-    assert gate_mock.call_count == 2
-    gate_mock.assert_any_call(repo_root, "start")
-    gate_mock.assert_any_call(repo_root, "end")
+        with patch("devcovenant.check.refresh_repo", return_value=9):
+            with patch("devcovenant.check.warn_version_mismatch"):
+                with patch("devcovenant.check.print_banner"):
+                    with patch("devcovenant.check.print_step"):
+                        with patch(
+                            "devcovenant.check.DevCovenantEngine"
+                        ) as engine:
+                            exit_code = check.run(args)
+    assert exit_code == 9
+    engine.assert_not_called()
 
 
 class GeneratedUnittestCases(unittest.TestCase):
     """unittest wrappers for module-level tests."""
 
-    def test_gate_runs_full_refresh_before_start_phase(self):
-        """Run test_gate_runs_full_refresh_before_start_phase."""
-        _unit_test_gate_runs_full_refresh_before_start_phase()
+    def test_run_refreshes_by_default(self):
+        """Run test_run_refreshes_by_default."""
+        _unit_test_run_refreshes_by_default()
 
-    def test_gate_runs_full_refresh_before_end_phase(self):
-        """Run test_gate_runs_full_refresh_before_end_phase."""
-        _unit_test_gate_runs_full_refresh_before_end_phase()
+    def test_run_skips_refresh_with_norefresh(self):
+        """Run test_run_skips_refresh_with_norefresh."""
+        _unit_test_run_skips_refresh_with_norefresh()
 
-    def test_gate_stops_when_refresh_fails(self):
-        """Run test_gate_stops_when_refresh_fails."""
-        _unit_test_gate_stops_when_refresh_fails()
-
-    def test_run_dispatches_start_and_end_to_gate(self):
-        """Run test_run_dispatches_start_and_end_to_gate."""
-        _unit_test_run_dispatches_start_and_end_to_gate()
+    def test_run_stops_when_refresh_fails(self):
+        """Run test_run_stops_when_refresh_fails."""
+        _unit_test_run_stops_when_refresh_fails()

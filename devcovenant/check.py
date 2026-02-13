@@ -19,7 +19,6 @@ from devcovenant.core.execution import (
     resolve_repo_root,
     warn_version_mismatch,
 )
-from devcovenant.core.gates import run_pre_commit_gate
 from devcovenant.core.repo_refresh import refresh_repo
 
 
@@ -31,49 +30,29 @@ def _build_parser() -> argparse.ArgumentParser:
         action="store_true",
         help="Disable auto-fixes for this run.",
     )
-    group = parser.add_mutually_exclusive_group()
-    group.add_argument(
-        "--start",
+    parser.add_argument(
+        "--norefresh",
         action="store_true",
-        help="Run pre-commit and record start gate metadata.",
-    )
-    group.add_argument(
-        "--end",
-        action="store_true",
-        help="Run pre-commit and record end gate metadata.",
+        help="Skip the startup full refresh before policy checks.",
     )
     return parser
 
 
-def _run_gate(repo_root: Path, phase: str) -> int:
-    """Run a devflow gate phase."""
-    print_step("Running full refresh", "🔄")
-    refresh_exit = refresh_repo(repo_root)
-    if refresh_exit != 0:
-        print_step("Full refresh failed", "🚫")
-        return refresh_exit
-    print_step("Full refresh complete", "✅")
-
-    print_banner("Devflow gate", "🚦")
-    print_step(f"Running `{phase}` pre-commit gate", "▶️")
-    exit_code = run_pre_commit_gate(repo_root, phase)
-    if exit_code == 0:
-        print_step(f"{phase.capitalize()} gate recorded", "✅")
-    return exit_code
-
-
-def _run_check(repo_root: Path, apply_fixes: bool) -> int:
+def _run_check(repo_root: Path, apply_fixes: bool, skip_refresh: bool) -> int:
     """Run policy checks through the engine."""
     print_banner("DevCovenant run", "🚀")
     print_step("Command: check", "🧭")
     print_step(f"Auto-fix: {'enabled' if apply_fixes else 'disabled'}", "🛠️")
 
-    print_step("Running full refresh", "🔄")
-    refresh_exit = refresh_repo(repo_root)
-    if refresh_exit != 0:
-        print_step("Full refresh failed", "🚫")
-        return refresh_exit
-    print_step("Full refresh complete", "✅")
+    if skip_refresh:
+        print_step("Skipping full refresh (--norefresh)", "⏭️")
+    else:
+        print_step("Running full refresh", "🔄")
+        refresh_exit = refresh_repo(repo_root)
+        if refresh_exit != 0:
+            print_step("Full refresh failed", "🚫")
+            return refresh_exit
+        print_step("Full refresh complete", "✅")
 
     warn_version_mismatch(repo_root)
 
@@ -96,11 +75,11 @@ def _run_check(repo_root: Path, apply_fixes: bool) -> int:
 def run(args: argparse.Namespace) -> int:
     """Execute check command."""
     repo_root = resolve_repo_root(require_install=True)
-    if args.start:
-        return _run_gate(repo_root, "start")
-    if args.end:
-        return _run_gate(repo_root, "end")
-    return _run_check(repo_root, apply_fixes=not args.nofix)
+    return _run_check(
+        repo_root,
+        apply_fixes=not args.nofix,
+        skip_refresh=bool(args.norefresh),
+    )
 
 
 def main(argv: list[str] | None = None) -> None:

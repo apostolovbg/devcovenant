@@ -2,11 +2,8 @@
 
 from __future__ import annotations
 
-import ast
 import importlib
-import io
-import re
-import tokenize
+import importlib.util
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Any
@@ -15,7 +12,6 @@ from .base import Violation
 
 MODULE_FUNCTION = "module_function"
 ALLOW_NAME_CLARITY = "name-clarity: allow"
-ALLOW_SECURITY = "security-scanner: allow"
 
 _PLACEHOLDER_NAMES = {
     "foo",
@@ -26,219 +22,24 @@ _PLACEHOLDER_NAMES = {
     "var",
     "data",
     "val",
-    "value",
     "obj",
-    "item",
 }
-_SHORT_NAME_ALLOW = {"i", "j", "k", "x", "y", "z"}
-
-_LANGUAGE_ALIASES = {
-    "python": "python",
-    "javascript": "javascript",
-    "typescript": "typescript",
-    "go": "go",
-    "rust": "rust",
-    "java": "java",
-    "csharp": "csharp",
-}
-
-_SYMBOL_PATTERNS = {
-    "javascript": [
-        ("function", re.compile(r"\bfunction\s+([A-Za-z_][A-Za-z0-9_]*)")),
-        (
-            "class",
-            re.compile(r"\bclass\s+([A-Za-z_][A-Za-z0-9_]*)"),
-        ),
-        (
-            "variable",
-            re.compile(r"\b(?:const|let|var)\s+([A-Za-z_][A-Za-z0-9_]*)"),
-        ),
-    ],
-    "typescript": [
-        ("function", re.compile(r"\bfunction\s+([A-Za-z_][A-Za-z0-9_]*)")),
-        (
-            "class",
-            re.compile(r"\bclass\s+([A-Za-z_][A-Za-z0-9_]*)"),
-        ),
-        (
-            "variable",
-            re.compile(r"\b(?:const|let|var)\s+([A-Za-z_][A-Za-z0-9_]*)"),
-        ),
-    ],
-    "go": [
-        ("function", re.compile(r"\bfunc\s+([A-Za-z_][A-Za-z0-9_]*)")),
-        ("type", re.compile(r"\btype\s+([A-Za-z_][A-Za-z0-9_]*)")),
-        ("variable", re.compile(r"\bvar\s+([A-Za-z_][A-Za-z0-9_]*)")),
-    ],
-    "rust": [
-        ("function", re.compile(r"\bfn\s+([A-Za-z_][A-Za-z0-9_]*)")),
-        ("type", re.compile(r"\bstruct\s+([A-Za-z_][A-Za-z0-9_]*)")),
-        (
-            "variable",
-            re.compile(r"\blet\s+(?:mut\s+)?([A-Za-z_][A-Za-z0-9_]*)"),
-        ),
-    ],
-    "java": [
-        (
-            "class",
-            re.compile(r"\bclass\s+([A-Za-z_][A-Za-z0-9_]*)"),
-        ),
-        (
-            "function",
-            re.compile(
-                r"\b(?:public|private|protected)?\s*"
-                r"(?:static\s+)?[A-Za-z_][A-Za-z0-9_<>,\[\]]*\s+"
-                r"([A-Za-z_][A-Za-z0-9_]*)\s*\("
-            ),
-        ),
-        (
-            "variable",
-            re.compile(
-                r"\b(?:final\s+)?[A-Za-z_][A-Za-z0-9_<>,\[\]]*\s+"
-                r"([A-Za-z_][A-Za-z0-9_]*)\s*="
-            ),
-        ),
-    ],
-    "csharp": [
-        (
-            "class",
-            re.compile(r"\bclass\s+([A-Za-z_][A-Za-z0-9_]*)"),
-        ),
-        (
-            "function",
-            re.compile(
-                r"\b(?:public|private|protected|internal)?\s*"
-                r"(?:static\s+)?[A-Za-z_][A-Za-z0-9_<>,\[\]?]*\s+"
-                r"([A-Za-z_][A-Za-z0-9_]*)\s*\("
-            ),
-        ),
-        (
-            "variable",
-            re.compile(
-                r"\b(?:var|[A-Za-z_][A-Za-z0-9_<>,\[\]?]*)\s+"
-                r"([A-Za-z_][A-Za-z0-9_]*)\s*="
-            ),
-        ),
-    ],
-}
-
-_RISK_PATTERNS = {
-    "python": [
-        (
-            "error",
-            re.compile(r"\beval\s*\("),  # security-scanner: allow
-            "Avoid eval().",
-        ),
-        (
-            "error",
-            re.compile(r"\bexec\s*\("),  # security-scanner: allow
-            "Avoid exec().",
-        ),
-        (
-            "error",
-            re.compile(r"\bpickle\.loads\s*\("),  # security-scanner: allow
-            "Avoid untrusted pickle.loads().",
-        ),
-        (
-            "error",
-            re.compile(r"\bsubprocess\.run\s*\([^)]*shell\s*=\s*True"),
-            "Avoid shell=True in subprocess.run().",
-        ),
-    ],
-    "javascript": [
-        (
-            "error",
-            re.compile(r"\beval\s*\("),  # security-scanner: allow
-            "Avoid eval().",
-        ),
-        (
-            "error",
-            re.compile(r"\bnew\s+Function\s*\("),
-            "Avoid Function constructor.",
-        ),
-        (
-            "error",
-            re.compile(r"child_process\.exec"),
-            "Avoid child_process.exec.",
-        ),
-    ],
-    "typescript": [
-        (
-            "error",
-            re.compile(r"\beval\s*\("),  # security-scanner: allow
-            "Avoid eval().",
-        ),
-        (
-            "error",
-            re.compile(r"\bnew\s+Function\s*\("),
-            "Avoid Function constructor.",
-        ),
-        (
-            "error",
-            re.compile(r"child_process\.exec"),
-            "Avoid child_process.exec.",
-        ),
-    ],
-    "go": [
-        (
-            "warning",
-            re.compile(r"os/exec"),
-            "Avoid os/exec imports.",
-        ),
-        (
-            "warning",
-            re.compile(r"\bexec\.Command\s*\("),
-            "Review exec.Command usage.",
-        ),
-    ],
-    "rust": [
-        (
-            "warning",
-            re.compile(r"\bunsafe\s*\{"),
-            "Review unsafe blocks.",
-        )
-    ],
-    "java": [
-        (
-            "warning",
-            re.compile(r"Runtime\.getRuntime\(\)\.exec"),
-            "Review Runtime.exec usage.",
-        ),
-        (
-            "warning",
-            re.compile(r"ProcessBuilder\s*\("),
-            "Review ProcessBuilder usage.",
-        ),
-    ],
-    "csharp": [
-        (
-            "warning",
-            re.compile(r"\bProcess\.Start\s*\("),
-            "Review Process.Start usage.",
-        )
-    ],
-}
-
-_TEST_NAMING = {
-    "python": ["test_{stem}.py", "{stem}_test.py"],
-    "javascript": [
-        "{stem}.test.js",
-        "{stem}.spec.js",
-        "test_{stem}.js",
-        "{stem}.test.jsx",
-        "{stem}.spec.jsx",
-    ],
-    "typescript": [
-        "{stem}.test.ts",
-        "{stem}.spec.ts",
-        "test_{stem}.ts",
-        "{stem}.test.tsx",
-        "{stem}.spec.tsx",
-    ],
-    "go": ["{stem}_test.go"],
-    "rust": ["{stem}_test.rs"],
-    "java": ["{stem}Test.java", "{stem}Tests.java"],
-    "csharp": ["{stem}Test.cs", "{stem}Tests.cs"],
+_SHORT_NAME_ALLOW = {
+    "i",
+    "j",
+    "k",
+    "x",
+    "y",
+    "z",
+    "d",
+    "e",
+    "f",
+    "v",
+    "re",
+    "os",
+    "io",
+    "dt",
+    "_dt",
 }
 
 
@@ -313,16 +114,6 @@ class TranslatorResolution:
         return self.declaration is not None and not self.violations
 
 
-@dataclass(frozen=True)
-class _LanguageFacts:
-    """Internal normalized facts before LanguageUnit assembly."""
-
-    module_documented: bool
-    identifiers: tuple[IdentifierFact, ...]
-    symbol_docs: tuple[SymbolDocFact, ...]
-    risks: tuple[RiskFact, ...]
-
-
 def can_handle_declared_extensions(
     *, path: Path, declaration: TranslatorDeclaration, **_: Any
 ) -> bool:
@@ -333,9 +124,8 @@ def can_handle_declared_extensions(
 def translate_language_unit(
     *, path: Path, source: str, declaration: TranslatorDeclaration, **_: Any
 ) -> LanguageUnit:
-    """Default translate strategy returning normalized LanguageUnit."""
-    language = _normalize_language_key(declaration.translator_id)
-    facts = _extract_language_facts(language, source)
+    """Default translate strategy returning a minimal LanguageUnit."""
+    language = str(declaration.translator_id or "").strip().lower()
     return LanguageUnit(
         translator_id=declaration.translator_id,
         profile_name=declaration.profile_name,
@@ -343,11 +133,11 @@ def translate_language_unit(
         path=str(path),
         suffix=path.suffix.lower(),
         source=source,
-        module_documented=facts.module_documented,
-        identifier_facts=facts.identifiers,
-        symbol_doc_facts=facts.symbol_docs,
-        risk_facts=facts.risks,
-        test_name_templates=tuple(_TEST_NAMING.get(language, [])),
+        module_documented=False,
+        identifier_facts=tuple(),
+        symbol_doc_facts=tuple(),
+        risk_facts=tuple(),
+        test_name_templates=tuple(),
     )
 
 
@@ -359,177 +149,6 @@ def can_handle(**kwargs: Any) -> bool:
 def translate(**kwargs: Any) -> LanguageUnit:
     """Short alias for profile entrypoints."""
     return translate_language_unit(**kwargs)
-
-
-def _normalize_language_key(raw: str) -> str:
-    """Normalize translator ids to the runtime language key."""
-    normalized = str(raw or "").strip().lower()
-    return _LANGUAGE_ALIASES.get(normalized, normalized)
-
-
-def _collect_python_comment_lines(source: str) -> set[int]:
-    """Collect line numbers that contain Python comments."""
-    lines: set[int] = set()
-    reader = io.StringIO(source).readline
-    try:
-        for token in tokenize.generate_tokens(reader):
-            if token.type == tokenize.COMMENT:
-                lines.add(token.start[0])
-    except tokenize.TokenError:
-        return lines
-    return lines
-
-
-def _has_nearby_comment(
-    line_number: int,
-    lines: list[str],
-    *,
-    lookback: int = 3,
-    prefixes: tuple[str, ...] = ("#", "//", "///", "/**", "/*", "*"),
-) -> bool:
-    """Return True when a nearby comment marker is present."""
-    start = max(1, line_number - lookback)
-    for current in range(start, line_number + 1):
-        if current > len(lines):
-            continue
-        text = lines[current - 1].strip()
-        if any(text.startswith(prefix) for prefix in prefixes):
-            return True
-    return False
-
-
-def _extract_python_facts(source: str) -> _LanguageFacts:
-    """Extract identifiers, documentation and risks from Python source."""
-    lines = source.splitlines()
-    comments = _collect_python_comment_lines(source)
-    identifiers: list[IdentifierFact] = []
-    symbol_docs: list[SymbolDocFact] = []
-    risks: list[RiskFact] = []
-
-    try:
-        module = ast.parse(source)
-    except SyntaxError:
-        return _LanguageFacts(False, tuple(), tuple(), tuple())
-
-    module_documented = bool(ast.get_docstring(module))
-    if not module_documented:
-        module_documented = any(line <= 5 for line in comments)
-
-    for node in ast.walk(module):
-        if isinstance(node, (ast.FunctionDef, ast.AsyncFunctionDef)):
-            identifiers.append(
-                IdentifierFact(node.name, node.lineno, "function")
-            )
-            documented = bool(ast.get_docstring(node))
-            if not documented:
-                documented = _has_nearby_comment(node.lineno, lines)
-            symbol_docs.append(
-                SymbolDocFact("function", node.name, node.lineno, documented)
-            )
-            arguments = (
-                node.args.posonlyargs + node.args.args + node.args.kwonlyargs
-            )
-            for arg in arguments:
-                identifiers.append(
-                    IdentifierFact(
-                        arg.arg,
-                        getattr(arg, "lineno", node.lineno),
-                        "argument",
-                    )
-                )
-            if node.args.vararg:
-                identifiers.append(
-                    IdentifierFact(
-                        node.args.vararg.arg, node.lineno, "argument"
-                    )
-                )
-            if node.args.kwarg:
-                identifiers.append(
-                    IdentifierFact(
-                        node.args.kwarg.arg, node.lineno, "argument"
-                    )
-                )
-            continue
-        if isinstance(node, ast.ClassDef):
-            identifiers.append(IdentifierFact(node.name, node.lineno, "class"))
-            documented = bool(ast.get_docstring(node))
-            if not documented:
-                documented = _has_nearby_comment(node.lineno, lines)
-            symbol_docs.append(
-                SymbolDocFact("class", node.name, node.lineno, documented)
-            )
-            continue
-        if isinstance(node, ast.Name):
-            identifiers.append(
-                IdentifierFact(
-                    node.id, getattr(node, "lineno", 1), "identifier"
-                )
-            )
-
-    for severity, pattern, message in _RISK_PATTERNS.get("python", []):
-        for match in pattern.finditer(source):
-            line_number = source.count("\n", 0, match.start()) + 1
-            window = lines[max(0, line_number - 3) : line_number]
-            if any(ALLOW_SECURITY in text for text in window):
-                continue
-            risks.append(RiskFact(severity, line_number, message))
-
-    return _LanguageFacts(
-        module_documented,
-        tuple(identifiers),
-        tuple(symbol_docs),
-        tuple(risks),
-    )
-
-
-def _extract_generic_facts(language: str, source: str) -> _LanguageFacts:
-    """Extract facts from non-Python source using regex heuristics."""
-    lines = source.splitlines()
-    module_documented = False
-    for line in lines:
-        stripped = line.strip()
-        if not stripped:
-            continue
-        module_documented = stripped.startswith(
-            ("//", "///", "/*", "/**", "*")
-        )
-        break
-
-    identifiers: list[IdentifierFact] = []
-    symbol_docs: list[SymbolDocFact] = []
-    patterns = _SYMBOL_PATTERNS.get(language, [])
-    for line_number, line in enumerate(lines, start=1):
-        for kind, pattern in patterns:
-            for match in pattern.finditer(line):
-                name = match.group(1)
-                identifiers.append(IdentifierFact(name, line_number, kind))
-                if kind in {"function", "class", "type"}:
-                    documented = _has_nearby_comment(line_number, lines)
-                    symbol_docs.append(
-                        SymbolDocFact(kind, name, line_number, documented)
-                    )
-
-    risks: list[RiskFact] = []
-    for severity, pattern, message in _RISK_PATTERNS.get(language, []):
-        for line_number, line in enumerate(lines, start=1):
-            if ALLOW_SECURITY in line:
-                continue
-            if pattern.search(line):
-                risks.append(RiskFact(severity, line_number, message))
-
-    return _LanguageFacts(
-        module_documented,
-        tuple(identifiers),
-        tuple(symbol_docs),
-        tuple(risks),
-    )
-
-
-def _extract_language_facts(language: str, source: str) -> _LanguageFacts:
-    """Dispatch language fact extraction."""
-    if language == "python":
-        return _extract_python_facts(source)
-    return _extract_generic_facts(language, source)
 
 
 def flag_name_clarity_identifiers(
@@ -573,6 +192,7 @@ class TranslatorRuntime:
         self.profile_registry = profile_registry
         self.active_profiles = sorted(set(active_profiles))
         self._by_extension = self._build_extension_map()
+        self._file_module_cache: dict[str, Any] = {}
 
     def resolve(
         self,
@@ -718,6 +338,12 @@ class TranslatorRuntime:
                 f"Unsupported translator strategy '{strategy}'. "
                 f"Expected '{MODULE_FUNCTION}'."
             )
+        declaration = kwargs.get("declaration")
+        if isinstance(entrypoint, str) and ":" in entrypoint:
+            function = self._resolve_profile_file_entrypoint(
+                entrypoint, declaration
+            )
+            return function(**kwargs)
         module_name, _, function_name = entrypoint.rpartition(".")
         if not module_name or not function_name:
             raise ValueError(
@@ -727,3 +353,54 @@ class TranslatorRuntime:
         module = importlib.import_module(module_name)
         function = getattr(module, function_name)
         return function(**kwargs)
+
+    def _resolve_profile_file_entrypoint(
+        self,
+        entrypoint: str,
+        declaration: TranslatorDeclaration | Any,
+    ) -> Any:
+        """Resolve file-style translator entrypoints."""
+        if not isinstance(declaration, TranslatorDeclaration):
+            raise ValueError(
+                "File-style translator entrypoints need declaration context."
+            )
+        relative_path, _, function_name = entrypoint.partition(":")
+        relative_path = str(relative_path or "").strip()
+        function_name = str(function_name or "").strip()
+        if not relative_path or not function_name:
+            raise ValueError(
+                f"Translator entrypoint '{entrypoint}' must be "
+                "file.py:function."
+            )
+        profile_meta = self.profile_registry.get(declaration.profile_name, {})
+        profile_path = str(profile_meta.get("path", "")).strip()
+        if not profile_path:
+            raise ValueError(
+                f"Profile '{declaration.profile_name}' has no path metadata."
+            )
+        module_path = (self.repo_root / profile_path / relative_path).resolve()
+        if not module_path.exists():
+            raise ValueError(
+                f"Translator module path not found: {module_path}"
+            )
+        cache_key = str(module_path)
+        module = self._file_module_cache.get(cache_key)
+        if module is None:
+            spec = importlib.util.spec_from_file_location(
+                f"devcovenant_translator_{declaration.profile_name}",
+                module_path,
+            )
+            if spec is None or spec.loader is None:
+                raise ValueError(
+                    f"Failed to load translator module: {module_path}"
+                )
+            module = importlib.util.module_from_spec(spec)
+            spec.loader.exec_module(module)
+            self._file_module_cache[cache_key] = module
+        function = getattr(module, function_name, None)
+        if function is None:
+            raise ValueError(
+                f"Translator function '{function_name}' "
+                f"not found in {module_path}"
+            )
+        return function

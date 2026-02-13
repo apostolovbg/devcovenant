@@ -43,7 +43,7 @@ documentation synchronized so drift is detectable and reversible.
 ## Workflow
 - Run the gated workflow for every change: pre-commit start, tests,
   pre-commit end.
-- `devcovenant check --start` must run before edits but is not required to
+- `devcovenant gate --start` must run before edits but is not required to
   leave
   the tree clean; it simply captures a gate snapshot and identifies existing
   issues. Later phases still rerun hooks/tests until the workspace is clean.
@@ -120,8 +120,8 @@ documentation synchronized so drift is detectable and reversible.
   once as the fallback when the CLI is not on PATH.
 - Documentation should use `python3` (not `python`) for all source-based
   workflows and command examples.
-- Supported commands: `check`, `test`, `install`, `deploy`, `upgrade`,
-  `refresh`, `undeploy`, `uninstall`, and `update_lock`.
+- Supported commands: `check`, `gate`, `test`, `install`, `deploy`,
+  `upgrade`, `refresh`, `undeploy`, `uninstall`, and `update_lock`.
 - The command surface is a frozen contract; new commands are allowed only
   as additive registered commands and must not change existing command
   semantics.
@@ -133,10 +133,11 @@ documentation synchronized so drift is detectable and reversible.
 - `check` defaults to auto-fix and exits non-zero on blocking violations or
   sync issues.
 - `check --nofix` runs an audit-only pass.
-- `check --start` runs full pre-commit
+- `check --norefresh` skips the startup full refresh for that check run.
+- `gate --start` runs full pre-commit
   (`python3 -m pre_commit run --all-files`) and records start-gate metadata in
   `devcovenant/registry/local/test_status.json`.
-- `check --end` runs full pre-commit, reruns tests/hooks until clean when
+- `gate --end` runs full pre-commit, reruns tests/hooks until clean when
   fixers modify files, then records end-gate metadata.
 - `test` runs `python3 -m unittest discover -v` first, then `pytest` against
   `tests/`, and records results through the gate status metadata.
@@ -193,7 +194,8 @@ documentation synchronized so drift is detectable and reversible.
 
 #### Command matrix (behavioral intent)
 - `check`: policy checks with default auto-fix; `--nofix` disables fixing;
-  `--start`/`--end` run start/end gate pre-commit workflows.
+  `--norefresh` skips startup refresh.
+- `gate`: runs start/end gate pre-commit workflows via `--start`/`--end`.
 - `test`: run `python3 -m unittest discover -v` and then `pytest` against
   `tests/`.
 - `install`: place core + generic config stub only when DevCovenant is not
@@ -222,7 +224,7 @@ documentation synchronized so drift is detectable and reversible.
 - User-facing, runnable commands live at the `devcovenant/` root and are
   exposed through the CLI (and callable via `python3 -m devcovenant`).
 - File-path command usage is a supported interface and must continue to work
-  (for example `python3 devcovenant/check.py --start` and
+  (for example `python3 devcovenant/gate.py --start` and
   `python3 devcovenant/test.py`).
 - Shared policy and engine logic lives under `devcovenant/core/` as internal
   modules; command entrypoints remain rooted at `devcovenant/`.
@@ -235,7 +237,7 @@ documentation synchronized so drift is detectable and reversible.
 - Do not duplicate CLI helper command sources under profile assets.
   Root command modules are sourced from package-root command scripts only.
 - CLI-exposed command modules include (non-exhaustive): `cli.py`,
-  `check.py`, `test.py`, `install.py`, `deploy.py`, `upgrade.py`,
+  `check.py`, `gate.py`, `test.py`, `install.py`, `deploy.py`, `upgrade.py`,
   `refresh.py`, `uninstall.py`, `undeploy.py`, and `update_lock.py`.
   `test.py` executes the merged
   `devflow-run-gates.required_commands` list resolved from profiles and
@@ -382,7 +384,7 @@ documentation synchronized so drift is detectable and reversible.
   policy scans skip the same paths.
 - The CLI merges the fragments into `.pre-commit-config.yaml` before running
   the hooks. `devcovenant/registry/local/manifest.json` records the resolved
-  hook set so commands such as `check --start/--end` know which config to
+  hook set so commands such as `gate --start/--end` know which config to
   execute and can rerun the merge if profiles change during a session.
 - Include a “Pre-commit config refactor” phase in `PLAN.md` that references
   this SPEC section and clarifies the merge metadata keys.

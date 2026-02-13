@@ -20,3 +20,10 @@ Adjust policy code/descriptor here, tune metadata via profile/config overlays,
 and manage any asset files through profiles. After changes, run the
 DevCovenant gates so registry, AGENTS policy block, and changelog stay
 synchronized.
+
+When a custom policy replaces a core policy id, keep the metadata contract
+stable unless you are intentionally evolving that policy's public behavior.
+Prefer adding metadata keys over redefining existing ones, and document every
+semantic change in `SPEC.md` and `PLAN.md` before implementation. This keeps
+custom policy behavior reviewable, reproducible, and aligned with the
+repository workflow.

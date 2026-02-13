@@ -9,6 +9,7 @@ from types import ModuleType
 
 _COMMAND_MODULES = {
     "check": "devcovenant.check",
+    "gate": "devcovenant.gate",
     "test": "devcovenant.test",
     "install": "devcovenant.install",
     "deploy": "devcovenant.deploy",

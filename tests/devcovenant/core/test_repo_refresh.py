@@ -225,6 +225,7 @@ def _unit_test_refresh_repo_merges_pre_commit_fragments_and_overrides() -> (
         assert repo_names.index("https://example.com/docs-fragment") < (
             repo_names.index("https://example.com/override-fragment")
         )
+        assert repo_names[-1] == "local"
 
         shared_repo = next(
             entry
@@ -241,6 +242,18 @@ def _unit_test_refresh_repo_merges_pre_commit_fragments_and_overrides() -> (
         }
         assert hooks_by_id["shared-hook"].get("args") == ["--from-override"]
         assert "python-only-hook" in hooks_by_id
+
+        local_repo = next(
+            entry
+            for entry in repos_value
+            if isinstance(entry, dict) and entry.get("repo") == "local"
+        )
+        local_hooks = local_repo.get("hooks")
+        assert isinstance(local_hooks, list)
+        local_hook_ids = [
+            hook.get("id") for hook in local_hooks if isinstance(hook, dict)
+        ]
+        assert "devcovenant" in local_hook_ids
 
 
 def _unit_test_refresh_repo_records_resolved_hooks_in_manifest() -> None:

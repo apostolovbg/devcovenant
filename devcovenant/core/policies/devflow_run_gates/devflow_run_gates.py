@@ -281,7 +281,7 @@ class DevflowRunGates(PolicyCheck):
                         file_path=status_rel,
                         message=(
                             "Session start pre-commit run is missing. Run "
-                            "`devcovenant check --start` before editing code."
+                            "`devcovenant gate --start` before editing code."
                         ),
                     )
                 )
@@ -296,7 +296,7 @@ class DevflowRunGates(PolicyCheck):
                         message=(
                             "Start was recorded after edits. The gates will "
                             "clear because you ran start→tests→end, but run "
-                            "`devcovenant check --start` before editing next "
+                            "`devcovenant gate --start` before editing next "
                             "time."
                         ),
                     )
@@ -313,7 +313,7 @@ class DevflowRunGates(PolicyCheck):
                             "Session start pre-commit command is missing or "
                             f"does not include `{pre_commit_command}`. "
                             "Re-run the start gate with "
-                            "`devcovenant check --start`."
+                            "`devcovenant gate --start`."
                         ),
                     )
                 )
@@ -331,7 +331,7 @@ class DevflowRunGates(PolicyCheck):
                         file_path=status_rel,
                         message=(
                             "Session end pre-commit run is missing. Run "
-                            "`devcovenant check --end` before replying."
+                            "`devcovenant gate --end` before replying."
                         ),
                     )
                 )
@@ -343,7 +343,7 @@ class DevflowRunGates(PolicyCheck):
                         file_path=status_rel,
                         message=(
                             "Session end pre-commit run predates code "
-                            "changes. Run `devcovenant check --end` after "
+                            "changes. Run `devcovenant gate --end` after "
                             "edits complete."
                         ),
                     )
@@ -360,7 +360,7 @@ class DevflowRunGates(PolicyCheck):
                             "Session end pre-commit command is missing or "
                             f"does not include `{pre_commit_command}`. "
                             "Re-run the end gate with "
-                            "`devcovenant check --end`."
+                            "`devcovenant gate --end`."
                         ),
                     )
                 )

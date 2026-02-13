@@ -850,10 +850,8 @@ def _render_config_yaml(payload: dict[str, object]) -> str:
         ("# Set this to false after review to allow `devcovenant deploy`."),
         _yaml_block({"install": payload.get("install", {})}),
         comments["engine"],
-        (
-            "# Violations at or above fail_threshold fail the run "
-            "(info|warning|error|critical)."
-        ),
+        "# Violations at or above fail_threshold fail the run.",
+        "# Allowed levels: info, warning, error, critical.",
         "# auto_fix_enabled controls policy auto-fix pass behavior.",
         "# file_suffixes and ignore_dirs define broad scan boundaries.",
         _yaml_block({"engine": payload.get("engine", {})}),
@@ -1038,6 +1036,7 @@ def _default_core_paths(repo_root: Path) -> list[str]:
         "devcovenant/__main__.py",
         "devcovenant/cli.py",
         "devcovenant/check.py",
+        "devcovenant/gate.py",
         "devcovenant/test.py",
         "devcovenant/install.py",
         "devcovenant/deploy.py",
@@ -1302,6 +1301,37 @@ def _record_pre_commit_manifest(
     manifest_module.write_manifest(repo_root, manifest)
 
 
+def _ensure_devcovenant_hook_last(payload: dict[str, object]) -> None:
+    """Move the local devcovenant hook to the end of pre-commit repos."""
+    repos_value = payload.get("repos")
+    if not isinstance(repos_value, list):
+        return
+
+    target_index = -1
+    for index, repo_entry in enumerate(repos_value):
+        if not isinstance(repo_entry, dict):
+            continue
+        if str(repo_entry.get("repo", "")).strip() != "local":
+            continue
+        hooks_value = repo_entry.get("hooks")
+        if not isinstance(hooks_value, list):
+            continue
+        has_devcovenant = any(
+            isinstance(hook_entry, dict)
+            and str(hook_entry.get("id", "")).strip() == "devcovenant"
+            for hook_entry in hooks_value
+        )
+        if has_devcovenant:
+            target_index = index
+
+    if target_index < 0 or target_index == len(repos_value) - 1:
+        return
+
+    target_entry = repos_value.pop(target_index)
+    repos_value.append(target_entry)
+    payload["repos"] = repos_value
+
+
 def _refresh_pre_commit_config(
     repo_root: Path,
     config: dict[str, object],
@@ -1354,6 +1384,8 @@ def _refresh_pre_commit_config(
 
     if "repos" not in payload or not isinstance(payload.get("repos"), list):
         payload["repos"] = []
+
+    _ensure_devcovenant_hook_last(payload)
 
     target_path = repo_root / ".pre-commit-config.yaml"
     rendered = _render_pre_commit_yaml(payload)

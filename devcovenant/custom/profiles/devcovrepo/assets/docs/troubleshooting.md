@@ -32,9 +32,9 @@ Fix:
 ## Gate Failures
 Symptom: `devflow-run-gates` reports missing start/test/end records.
 Fix:
-- Re-run `python3 -m devcovenant check --start`.
+- Re-run `python3 -m devcovenant gate --start`.
 - Run `python3 -m devcovenant test`.
-- Finish with `python3 -m devcovenant check --end`.
+- Finish with `python3 -m devcovenant gate --end`.
 
 ## Adapter Issues
 Symptom: policy reports missing adapter for active profile.

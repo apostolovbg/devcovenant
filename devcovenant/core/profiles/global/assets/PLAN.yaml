@@ -21,10 +21,10 @@ body: |-
   - Mark completed items as `[done]` and outstanding items as `[not done]`.
 
   ## Workflow
-  - Start edits: `devcovenant check --start`
+  - Start edits: `devcovenant gate --start`
   - Apply changes in dependency order.
   - Run tests: `devcovenant test`
-  - End edits: `devcovenant check --end`
+  - End edits: `devcovenant gate --end`
 
   ## Active Work
   1. [not done] Item placeholder.

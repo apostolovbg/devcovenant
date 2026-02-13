@@ -17,6 +17,7 @@ from tests.devcovenant.support import MonkeyPatch
 REPO_ROOT = Path(__file__).resolve().parents[2]
 ROOT_COMMAND_MODULES = (
     "check",
+    "gate",
     "test",
     "install",
     "deploy",
@@ -102,6 +103,22 @@ def _unit_test_test_help_is_command_scoped() -> None:
     assert "--repo" not in result.stdout
     assert "--install-mode" not in result.stdout
     assert "--docs-mode" not in result.stdout
+
+
+def _unit_test_check_help_shows_check_only_options() -> None:
+    """`check --help` should expose only check command options."""
+    result = subprocess.run(
+        [sys.executable, "-m", "devcovenant", "check", "--help"],
+        cwd=REPO_ROOT,
+        check=False,
+        capture_output=True,
+        text=True,
+    )
+    assert result.returncode == 0
+    assert "--nofix" in result.stdout
+    assert "--norefresh" in result.stdout
+    assert "--start" not in result.stdout
+    assert "--end" not in result.stdout
 
 
 def _unit_test_install_help_shows_command_scope() -> None:
@@ -194,6 +211,10 @@ class GeneratedUnittestCases(unittest.TestCase):
     def test_test_help_is_command_scoped(self):
         """Run test_test_help_is_command_scoped."""
         _unit_test_test_help_is_command_scoped()
+
+    def test_check_help_shows_check_only_options(self):
+        """Run test_check_help_shows_check_only_options."""
+        _unit_test_check_help_shows_check_only_options()
 
     def test_install_help_shows_command_scope(self):
         """Run test_install_help_shows_command_scope."""

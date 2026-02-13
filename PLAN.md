@@ -29,11 +29,11 @@ runtime-consolidation workstream defined in `SPEC.md`.
   fallbacks and no anti-legacy policing logic unless explicitly requested.
 
 ## Workflow
-- Run `devcovenant check --start` before edits.
+- Run `devcovenant gate --start` before edits.
 - Implement items in backlog order unless superseded by a newer SPEC decision.
 - Run `devcovenant refresh` after spec/profile/runtime contract edits.
 - Run `devcovenant test`.
-- Run `devcovenant check --end`.
+- Run `devcovenant gate --end`.
 
 ## Locked Decisions
 - [done] Policy activation is config-only (`policy_state`).
@@ -122,6 +122,13 @@ runtime-consolidation workstream defined in `SPEC.md`.
   - Re-audit runtime behavior vs amended SPEC.
   - Resolve residual drift or explicitly defer with rationale.
 
+13. [done] Split gate lifecycle from check command.
+- Deliverables:
+  - Move start/end pre-commit workflow to `gate --start|--end`.
+  - Keep `check` focused on policy execution with `--nofix` and
+    `--norefresh`.
+  - Update docs/templates/workflow guidance to use `gate` for start/end.
+
 ## Acceptance Criteria
 - API contracts are explicit in SPEC and enforced in code.
 - Refresh produces deterministic, full, alphabetical `policy_state`.
@@ -133,7 +140,7 @@ runtime-consolidation workstream defined in `SPEC.md`.
 - Contract tests pass and block regressions.
 
 ## Validation Routine
-- Run `devcovenant check --start`.
+- Run `devcovenant gate --start`.
 - Run `devcovenant refresh` after each milestone item.
 - Run `devcovenant test`.
-- Run `devcovenant check --end`.
+- Run `devcovenant gate --end`.

@@ -1,5 +1,5 @@
 # DevCovenant
-**Last Updated:** 2026-02-12
+**Last Updated:** 2026-02-13
 **Version:** 0.2.6
 
 <!-- DEVCOV:BEGIN -->
@@ -172,9 +172,9 @@ Adoption guidance:
   raise the block level.
 
 DevCovenant expects the following sequence in enforced repos:
-1. `python3 -m devcovenant check --start`
+1. `python3 -m devcovenant gate --start`
 2. `python3 -m devcovenant test`
-3. `python3 -m devcovenant check --end`
+3. `python3 -m devcovenant gate --end`
 
 Shortcut: `devcovenant test` runs the same unittest + pytest sequence and
 records status via the test runner wrapper.
@@ -198,6 +198,7 @@ devcov_core_paths:
   - devcovenant/__main__.py
   - devcovenant/cli.py
   - devcovenant/check.py
+  - devcovenant/gate.py
   - devcovenant/test.py
   - devcovenant/install.py
   - devcovenant/deploy.py
@@ -247,9 +248,10 @@ Common commands:
 devcovenant check
 
 devcovenant check --nofix
-devcovenant check --start
+devcovenant check --norefresh
+devcovenant gate --start
 devcovenant test
-devcovenant check --end
+devcovenant gate --end
 
 devcovenant refresh
 devcovenant update_lock
