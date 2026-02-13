@@ -43,21 +43,6 @@ Example entry:
   automatically, and validated the contract with new refresh regression tests.
   Files:
   AGENTS.md
-  PLAN.md
-  SPEC.md
-  SPEC_old.md
-  devcovenant/config.yaml
-  devcovenant/core/policies/modules_need_tests/modules_need_tests.yaml
-  devcovenant/core/profiles.py
-  devcovenant/core/profiles/README.md
-  devcovenant/core/profiles/global/assets/AGENTS.yaml
-  devcovenant/core/profiles/global/assets/CHANGELOG.yaml
-  devcovenant/core/profiles/global/assets/PLAN.yaml
-  devcovenant/core/profiles/global/assets/SPEC.yaml
-  devcovenant/core/profiles/python/python.yaml
-  devcovenant/core/repo_refresh.py
-  tests/devcovenant/core/test_profiles.py
-  tests/devcovenant/core/test_repo_refresh.py
 
 - 2026-02-12:
   Change: Clarified forward-only architecture rules in SPEC/PLAN and updated

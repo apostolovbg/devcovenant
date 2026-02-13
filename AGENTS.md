@@ -42,24 +42,147 @@ document and you will get it!
 
 # EDITABLE SECTION
 
-- 2026-01-22: Removed `DEVCOVENANT.md` and `CITATION.cff`; documentation now
-  lives in `README.md` and `devcovenant/README.md`, and citation support is
-  fully removed from the CLI and assets.
-- 2026-01-22: SPEC/PLAN are managed alongside the other profile-driven doc
-  assets. There is no include flag; profiles, policies, and config decide when
-  to refresh them.
-- 2026-01-22: Update runs overwrite `devcovenant/` docs while preserving
-  editable notes and managed blocks in repo-level docs.
-- 2026-01-26: Noted repo tests live under `/tests` outside the package and are
-  driven by metadata selectors (e.g., `tests_watch_dirs`), so policy/profile
-  suites can move freely without hard-coded paths.
-- 2026-01-26: PLAN/SPEC now describe the scanner roadmap, the science profile
-  (including a `CITATION.md` asset), the additional framework/API/database
-  profiles, and the upcoming 0.2.7 metadata-driven DSL for stock policies while
-  keeping custom policy prose editable in AGENTS.
-- 2026-01-27: Reordered AGENTS sections and markers as intended; the
-  policy block remains a special DevCovenant-managed area that general block
-  automation should avoid until we flesh out the policy handling workflow.
+## Working Notepad (Live Development Spec)
+
+### Update Habit (Do Not Skip)
+- Note-to-self: update this section frequently so notes never grow beards.
+- Note-to-self: if a decision changes, update this section in the same session.
+- Note-to-self: when PLAN/SPEC changes, mirror the operational impact here.
+- Note-to-self: stale notes are drift; treat stale notes as a bug.
+- Note-to-self: prefer short, factual entries over long narrative text.
+
+### Current Direction (0.2.6)
+- API freeze means contract semantics are stable.
+- Additive extensions are allowed; silent behavior flips are not.
+- Policy activation authority is config `policy_state`.
+- Profiles do not activate policies.
+- Profiles supply overlays, assets, selectors, and hooks.
+- AGENTS policy block is runtime-parsed source for active behavior.
+- Registry remains diagnostic/hash state and AGENTS compile source.
+- Refresh must keep AGENTS policy block synchronized.
+- Forward-only implementation is the baseline stance.
+
+### Forward-Only Rules
+- Do not add legacy fallbacks unless explicitly requested.
+- Do not add anti-legacy policing logic unless explicitly requested.
+- Do not keep dead compatibility code "just in case".
+- When architecture changes, remove obsolete paths.
+- When modules are replaced, remove old tests for removed modules.
+- Prefer direct target-state code over migration scaffolding.
+- If migration glue is unavoidable, mark it temporary and remove quickly.
+- Spec-first changes must ship with reality-aligned code.
+
+### Policy Activation Rules
+- `policy_state` is the single source for enabled/disabled state.
+- Policy descriptors may still carry default `enabled` for seeding.
+- Refresh rewrites full alphabetical `policy_state` map.
+- Existing user boolean values are preserved on refresh.
+- New policy IDs are seeded from resolved defaults.
+- Stale policy IDs are removed during materialization.
+- Profiles must not be used as policy toggles.
+
+### Profile Contract Rules
+- Core/custom origin is inferred by path location.
+- No dedicated `custom` type key is needed.
+- Profiles are explicit; no inheritance machinery in this pass.
+- Profile manifests define metadata overlays only.
+- Profile manifests define assets only.
+- Profile manifests define hook fragments only.
+- Profile manifests define selection metadata only.
+- Keep manifest shape deterministic and readable.
+
+### Translator Contract Rules
+- Translators are declared by language profiles.
+- Translator declarations live in profile YAML.
+- Translator declaration fields: `id`, `extensions`, `can_handle`, `translate`.
+- `extensions` are normalized to lowercase dotted values.
+- `can_handle` must define strategy and entrypoint.
+- `translate` must define strategy and entrypoint.
+- Non-language profiles must not declare translators.
+- Routing is resolved from active language declarations.
+- No per-policy extension-to-adapter hardcoding in target architecture.
+
+### Runtime Parsing Rules
+- Runtime policy parsing reads AGENTS policy block.
+- Parser must stay scoped to managed policy markers.
+- Avoid reading policy-like text outside managed block.
+- Keep parser behavior deterministic across runs.
+- Keep parser behavior independent of formatting noise.
+
+### Refresh and Registry Rules
+- Full refresh is expected in check/deploy/upgrade/refresh workflows.
+- Refresh regenerates local policy/profile registries.
+- Refresh syncs managed docs and managed blocks.
+- Refresh updates generated config sections.
+- User-configurable settings should remain preserved.
+- Generated config sections should be clearly separated.
+- Refresh output should be informative, not ambiguous.
+
+### Managed Docs Rules
+- Managed markers are generated, not copied from body prose.
+- Editable content outside managed blocks is preserved.
+- Managed block content should be deterministic.
+- AGENTS has special policy block semantics.
+- Keep workflow guidance consistent with actual command behavior.
+- Keep document headers and metadata coherent.
+
+### CLI and Lifecycle Rules
+- CLI-exposed scripts stay on package root.
+- Root command scripts are real scripts, not shims.
+- Helper/library code belongs under `devcovenant/core`.
+- Avoid duplicate command logic across modules.
+- Keep command contracts minimal and explicit.
+- `check` supports `--start`, `--end`, `--nofix`.
+- Unneeded flags are removed when they create drift.
+
+### Testing Rules
+- Tests validate current behavior, not retired behavior.
+- If module changes, matching tests must be updated.
+- If module is removed, matching tests must be removed.
+- Python tests should be `unittest` style.
+- Pytest remains execution layer in test command.
+- Tests tree mirrors intended structure contracts.
+- Avoid stale placeholder tests where real coverage is expected.
+
+### Drift Never-Do-Agains
+- Never reintroduce stock-policy-text restore infrastructure.
+- Never reintroduce reset-to-stock lifecycle paths.
+- Never hardcode profile activation in profile manifests.
+- Never hardcode path logic when metadata is the contract.
+- Never keep duplicate modules with near-identical purpose.
+- Never split one responsibility into random tiny sprawl files.
+- Never patch over architecture issues with temporary shims.
+- Never let PLAN say done while reality is not done.
+
+### Operational Discipline
+- Before edits: run `python3 -m devcovenant check --start`.
+- After edits: run `python3 -m devcovenant test`.
+- Finalize: run `python3 -m devcovenant check --end`.
+- Every substantive change gets CHANGELOG coverage.
+- Keep file lists in changelog accurate.
+- Consult SPEC before implementing PLAN items.
+- Update PLAN status as work is completed.
+- Stage all changes after each completed work slice.
+
+### Near-Term Backlog Memory
+- Item 4 translator schema: completed.
+- Item 5 centralized translator runtime: next major step.
+- Item 6 shared `LanguageUnit`: required for policy migration.
+- Item 7 migrate language-aware policies to shared runtime.
+- Item 8 pre-commit ownership cleanup by profile.
+- Item 9 core responsibility consolidation.
+- Item 10 conformance contract tests.
+- Item 12 final SPEC-vs-reality closure audit.
+
+### Self-Checks Before Claiming Completion
+- Does behavior match SPEC text exactly?
+- Is old logic removed instead of hidden?
+- Are tests aligned with new behavior?
+- Is changelog entry complete and specific?
+- Is PLAN item status updated?
+- Is AGENTS notepad updated with key lessons?
+- Are there any unexplained generated artifacts?
+- Is the worktree staged for user-controlled commit/push?
 
 <!-- DEVCOV-WORKFLOW:BEGIN -->
 ## THE DEV COVENANT
