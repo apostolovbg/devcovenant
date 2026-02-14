@@ -110,8 +110,7 @@ documentation synchronized so drift is detectable and reversible.
   extension routing and translation strategy configuration.
 - When a custom policy module exists, it fully replaces the built-in policy
   and suppresses core fixers for that policy.
-- Respect `enabled`, `severity`, `status`, and `enforcement` metadata for each
-  policy.
+- Respect `enabled`, `severity`, and `enforcement` metadata for each policy.
 - Support one check flow with auto-fix enabled by default and a `--nofix`
   audit switch.
 - Apply auto-fixers when allowed, using fixers located under
@@ -186,8 +185,11 @@ documentation synchronized so drift is detectable and reversible.
   `devcovenant/custom/profiles/devcovrepo/**` before regeneration. This is the
   only command that makes the repo fully “live.”
 - `upgrade` explicitly replaces the DevCovenant core when the source version
-  is newer than the target repo’s core. It applies `policy_replacements.yaml`
-  and then runs `refresh`. `upgrade` is a direct command.
+  is newer than the target repo’s core. It applies
+  `policy_replacements.yaml` as `policy_state` key migrations (`old-id`
+  -> `new-id`) and then runs `refresh`. If a custom policy override exists for
+  the replaced policy ID, migration is skipped for that key.
+  `upgrade` is a direct command.
 - `refresh` is a full refresh command. It rebuilds registries and policy
   metadata, regenerates the AGENTS policy block from registry entries,
   refreshes managed docs/assets selected by `doc_assets`, and refreshes config
@@ -222,8 +224,8 @@ documentation synchronized so drift is detectable and reversible.
   No managed doc deployment.
 - `deploy`: materialize managed docs/assets/registries from config, refresh
   `.gitignore`, and run `refresh` internally.
-- `upgrade`: copy newer core into the repo and apply policy replacements,
-  then run `refresh`.
+- `upgrade`: copy newer core into the repo, migrate replacement policy-state
+  keys from `policy_replacements.yaml`, and then run `refresh`.
 - `refresh`: full refresh for registries, AGENTS policy block, managed
   docs/assets, and config autogen sections.
 - `undeploy`: remove managed blocks/registries and revert generated
@@ -500,7 +502,6 @@ documentation synchronized so drift is detectable and reversible.
   environment when `enabled: true`. It must warn when `expected_paths` or
   `expected_interpreters` are empty, warn when `command_hints`
   are missing, and report missing `required_commands` as warnings.
-- `fiducial` policies remain enforced and always surface their policy text.
 - Selector keys (`include_*`, `exclude_*`, `force_*`, `watch_*`) are supported
   across policy definitions for consistent scoping.
 - Policy metadata normalization must be able to add missing keys without
@@ -525,9 +526,9 @@ documentation synchronized so drift is detectable and reversible.
   files), not this repo's internal managed-document set.
 - Support policy replacement metadata via
   `devcovenant/registry/global/policy_replacements.yaml`.
-  During upgrades, replaced policies move to custom and are marked deprecated
-  when enabled; disabled policies are removed along with their custom scripts
-  and fixers.
+  During upgrades, replacements migrate `policy_state` keys from replaced
+  policy IDs to replacement policy IDs. When a custom override module exists
+  for a replaced policy ID, that key is left unchanged.
 - Record upgrade notices (replacements and new policies) in
   `devcovenant/registry/local/manifest.json` and print them to stdout.
 - Treat the collective `<!-- DEVCOV-POLICIES:BEGIN -->` /
@@ -576,10 +577,9 @@ documentation synchronized so drift is detectable and reversible.
   not), with `enabled` reflecting config activation. Metadata is rendered in
   vertical YAML-style lines (lists continue on indented lines) rather than
   comma-joined horizontal values.
-- When DevCovenant removes a core policy, the updater copies it to
-  `devcovenant/custom/policies/`, marks the new copy as `custom`, and reruns
-  `refresh` so the management docs, notices, and registry reflect the
-  deprecated version.
+- When policy replacements are declared, the updater migrates
+  `config.policy_state` keys (`old-id` -> `new-id`) before refresh so runtime
+  activation follows the replacement mapping without mutating policy blocks.
 - `config.yaml` exposes:
   - `policy_state`: policy ID → `true|false` activation map (authoritative).
   - `user_metadata_overrides`: policy ID → override map applied last.

@@ -38,6 +38,8 @@ explicit, stable, and implementation-aligned with `SPEC.md`.
 ## Operating Rules
 - `policy_state` in `devcovenant/config.yaml` is the only policy activation
   authority.
+- Policy lifecycle `status` metadata is retired from runtime contracts.
+- Policy replacements migrate `policy_state` keys during `upgrade`.
 - Profiles provide overlays/assets/hooks/selectors; profiles do not activate
   policies.
 - Translators are declared by language profiles and routed through the shared
@@ -117,13 +119,13 @@ explicit, stable, and implementation-aligned with `SPEC.md`.
   - Profile manifest schema contract tests.
   - Translator declaration and `LanguageUnit` contract tests.
 
-9. [not done] Complete Tier C contract tests.
+9. [done] Complete Tier C contract tests.
 - Deliverables:
   - Registry file schema and generation invariant tests.
   - Policy/profile registry synchronization tests.
   - Test-status/gate state schema tests.
 
-10. [not done] Close remaining responsibility drift in core modules.
+10. [done] Close remaining responsibility drift in core modules.
 - Deliverables:
   - Eliminate duplicate code paths for profile, registry, selector,
     metadata, and refresh responsibilities.
@@ -131,14 +133,25 @@ explicit, stable, and implementation-aligned with `SPEC.md`.
     standalone `parser.py`.
   - Keep `policy_contracts.py` contract-only by usage.
 
-11. [not done] Run full SPEC-vs-reality audit and resolve remaining 0.2.6
+11. [done] Remove policy `status` lifecycle semantics and use replacement
+    metadata as policy-state migrations.
+- Deliverables:
+  - Drop runtime `status` handling from policy parsing/execution and registry
+    schema.
+  - Remove `status` from generated AGENTS policy-def metadata.
+  - Migrate replacement flow to `config.policy_state` key rewrites in
+    `upgrade`.
+  - Skip replacement-key migration when a custom policy override exists for
+    the replaced policy id.
+
+12. [not done] Run full SPEC-vs-reality audit and resolve remaining 0.2.6
     drift.
 - Deliverables:
   - Enumerate unresolved drift against current `SPEC.md`.
   - Fix or explicitly defer each item with rationale.
   - Mark backlog complete only when no unresolved 0.2.6 drift remains.
 
-12. [not done] Finalize 0.2.6 release readiness.
+13. [not done] Finalize 0.2.6 release readiness.
 - Deliverables:
   - Clean docs/registry/config refresh behavior.
   - Passing gated workflow (`gate --start`, `test`, `gate --end`).

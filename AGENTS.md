@@ -55,6 +55,7 @@ document and you will get it!
 - API freeze means contract semantics are stable.
 - Additive extensions are allowed; silent behavior flips are not.
 - Policy activation authority is config `policy_state`.
+- Policy lifecycle `status` metadata is retired.
 - Profiles do not activate policies.
 - Profiles supply overlays, assets, selectors, and hooks.
 - AGENTS policy block is runtime-parsed source for active behavior.
@@ -80,6 +81,8 @@ document and you will get it!
 - New policy IDs are seeded from resolved defaults.
 - Stale policy IDs are removed during materialization.
 - Profiles must not be used as policy toggles.
+- Policy replacements migrate `policy_state` keys during `upgrade`.
+- Replacement migration skips keys that have custom policy overrides.
 
 ### Profile Contract Rules
 - Core/custom origin is inferred by path location.
@@ -171,9 +174,14 @@ document and you will get it!
 - Item 6 shared `LanguageUnit`: required for policy migration.
 - Item 7 migrate language-aware policies to shared runtime.
 - Item 8 pre-commit ownership cleanup by profile.
-- Item 9 core responsibility consolidation.
-- Item 10 conformance contract tests.
+- Item 9 Tier C registry/state contract tests: completed.
+- Item 10 core responsibility consolidation and parser fold: completed.
+- Item 11 SPEC-vs-reality closure audit: next.
 - Item 12 final SPEC-vs-reality closure audit.
+- 2026-02-14: Added Tier C contract tests for policy/profile registry schema,
+  registry synchronization invariants, and gate/test-status payload schema.
+- 2026-02-14: Folded AGENTS policy parsing into `policy_runtime.py` and
+  removed standalone `core/parser.py` plus stale mirrored parser tests.
 - 2026-02-13: Workflow split is now explicit: `gate` owns start/end
   pre-commit orchestration, while `check` owns policy evaluation and may
   skip startup refresh via `--norefresh` when explicitly requested.
@@ -238,7 +246,6 @@ runtime metadata resolution.
 
 ```policy-def
 id: changelog-coverage
-status: active
 severity: error
 auto_fix: true
 enforcement: active
@@ -359,7 +366,6 @@ release notes daily, file-complete, and traceable.
 
 ```policy-def
 id: dependency-license-sync
-status: active
 severity: error
 auto_fix: true
 enforcement: active
@@ -388,7 +394,6 @@ every dependency change touches both the license text and the cited manifest.
 
 ```policy-def
 id: devcov-integrity-guard
-status: active
 severity: error
 auto_fix: false
 enforcement: active
@@ -418,7 +423,6 @@ stay synchronized, and test-status metadata must validate when configured.
 
 ```policy-def
 id: devcov-raw-string-escapes
-status: active
 severity: warning
 auto_fix: false
 enforcement: active
@@ -437,7 +441,6 @@ forcing it on user repos.
 
 ```policy-def
 id: devcov-structure-guard
-status: active
 severity: error
 auto_fix: false
 enforcement: active
@@ -454,7 +457,6 @@ Ensure the DevCovenant repo keeps the required structure and tooling files.
 
 ```policy-def
 id: devflow-run-gates
-status: active
 severity: error
 auto_fix: false
 enforcement: active
@@ -490,7 +492,6 @@ documentation-only updates) so the gate sequence cannot be skipped.
 
 ```policy-def
 id: docstring-and-comment-coverage
-status: active
 severity: error
 auto_fix: false
 enforcement: active
@@ -529,7 +530,6 @@ language satisfies the requirement.
 
 ```policy-def
 id: documentation-growth-tracking
-status: active
 severity: info
 auto_fix: false
 enforcement: active
@@ -717,7 +717,6 @@ of contents, and minimum depth.
 
 ```policy-def
 id: last-updated-placement
-status: active
 severity: error
 auto_fix: true
 enforcement: active
@@ -757,7 +756,6 @@ while respecting allowed locations.
 
 ```policy-def
 id: line-length-limit
-status: active
 severity: warning
 auto_fix: false
 enforcement: active
@@ -810,7 +808,6 @@ readable. Reflow long sentences or wrap lists rather than ignoring the limit.
 
 ```policy-def
 id: managed-doc-assets
-status: active
 severity: error
 auto_fix: false
 enforcement: active
@@ -830,7 +827,6 @@ generation is deterministic.
 
 ```policy-def
 id: managed-environment
-status: active
 severity: error
 auto_fix: false
 enforcement: active
@@ -856,7 +852,6 @@ required context.
 
 ```policy-def
 id: modules-need-tests
-status: active
 severity: error
 auto_fix: false
 enforcement: active
@@ -910,7 +905,6 @@ layer.
 
 ```policy-def
 id: name-clarity
-status: active
 severity: warning
 auto_fix: false
 enforcement: active
@@ -949,7 +943,6 @@ explicitly justified.
 
 ```policy-def
 id: no-future-dates
-status: active
 severity: error
 auto_fix: true
 enforcement: active
@@ -967,7 +960,6 @@ should correct accidental placeholders to today’s date.
 
 ```policy-def
 id: no-spaghetti
-status: active
 severity: error
 auto_fix: false
 enforcement: active
@@ -995,7 +987,6 @@ rejecting tiny top-level core modules.
 
 ```policy-def
 id: raw-string-escapes
-status: active
 severity: warning
 auto_fix: false
 enforcement: active
@@ -1012,7 +1003,6 @@ Policy description pending.
 
 ```policy-def
 id: read-only-directories
-status: active
 severity: error
 auto_fix: false
 enforcement: active
@@ -1046,7 +1036,6 @@ be editable, update this policy definition first.
 
 ```policy-def
 id: readme-sync
-status: active
 severity: error
 auto_fix: true
 enforcement: active
@@ -1066,7 +1055,6 @@ the repo README.
 
 ```policy-def
 id: security-scanner
-status: active
 severity: error
 auto_fix: false
 enforcement: active
@@ -1102,7 +1090,6 @@ review approves the exception.
 
 ```policy-def
 id: semantic-version-scope
-status: active
 severity: error
 auto_fix: false
 enforcement: active
@@ -1133,7 +1120,6 @@ enabled for release processes that enforce SemVer discipline.
 
 ```policy-def
 id: version-sync
-status: active
 severity: error
 auto_fix: false
 enforcement: active

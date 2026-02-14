@@ -33,7 +33,6 @@ def _write_agents(
             "## Policy: Demo\n\n"
             "```policy-def\n"
             "id: demo-policy\n"
-            "status: active\n"
             "severity: error\n"
             "auto_fix: false\n"
             "enforcement: active\n"

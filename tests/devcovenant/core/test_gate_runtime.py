@@ -5,6 +5,7 @@ from __future__ import annotations
 import json
 import tempfile
 import unittest
+from datetime import datetime
 from pathlib import Path
 from unittest.mock import patch
 
@@ -81,6 +82,9 @@ class GeneratedUnittestCases(unittest.TestCase):
                 payload["pre_commit_start_command"],
                 "python3 -m pre_commit run --all-files",
             )
+            self.assertIsInstance(payload["pre_commit_start_utc"], str)
+            self.assertIsInstance(payload["pre_commit_start_epoch"], float)
+            datetime.fromisoformat(payload["pre_commit_start_utc"])
 
     @patch("devcovenant.core.gate_runtime._utc_now")
     @patch("devcovenant.core.gate_runtime._run_tests")
@@ -153,3 +157,48 @@ class GeneratedUnittestCases(unittest.TestCase):
             self.assertEqual(result, 1)
             self.assertEqual(run_command_mock.call_count, 5)
             self.assertEqual(run_tests_mock.call_count, 5)
+
+    @patch("devcovenant.core.gate_runtime._utc_now")
+    @patch("devcovenant.core.gate_runtime._run_command")
+    @patch("devcovenant.core.gate_runtime._git_diff")
+    def test_end_gate_records_status_schema(
+        self,
+        git_diff_mock,
+        run_command_mock,
+        utc_now_mock,
+    ):
+        """run_pre_commit_gate(end) should emit Tier-C gate status fields."""
+        with tempfile.TemporaryDirectory() as temp_dir:
+            repo_root = Path(temp_dir)
+            git_diff_mock.side_effect = ["", ""]
+            utc_now_mock.return_value = gate_runtime._dt.datetime(
+                2026,
+                2,
+                14,
+                8,
+                0,
+                tzinfo=gate_runtime._dt.timezone.utc,
+            )
+
+            result = gate_runtime.run_pre_commit_gate(
+                repo_root,
+                "end",
+                notes="end notes",
+            )
+            self.assertEqual(result, 0)
+            self.assertEqual(run_command_mock.call_count, 1)
+
+            status_path = (
+                gate_runtime.registry_runtime_module.test_status_path(
+                    repo_root
+                )
+            )
+            payload = json.loads(status_path.read_text(encoding="utf-8"))
+            self.assertEqual(
+                payload["pre_commit_end_command"],
+                "python3 -m pre_commit run --all-files",
+            )
+            self.assertEqual(payload["pre_commit_end_notes"], "end notes")
+            self.assertIsInstance(payload["pre_commit_end_utc"], str)
+            self.assertIsInstance(payload["pre_commit_end_epoch"], float)
+            datetime.fromisoformat(payload["pre_commit_end_utc"])

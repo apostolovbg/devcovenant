@@ -34,6 +34,94 @@ Example entry:
 ## Version 0.2.6
 
 - 2026-02-14:
+  Change: Removed policy lifecycle `status` handling and migrated upgrade
+  replacement behavior to `policy_state` key rewrites.
+  Why: Aligned runtime and metadata contracts with config-authoritative
+  activation while dropping deprecated policy-status semantics.
+  Impact: Improved policy execution/registry clarity and aligned replacement
+  migrations without mutating AGENTS policy metadata.
+  Files:
+  AGENTS.md
+  PLAN.md
+  POLICY_MAP.md
+  PROFILE_MAP.md
+  SPEC.md
+  devcovenant/core/metadata_runtime.py
+  devcovenant/core/parser.py
+  devcovenant/core/policies/devcov_integrity_guard/devcov_integrity_guard.py
+  devcovenant/core/policy_runtime.py
+  devcovenant/core/refresh_runtime.py
+  devcovenant/core/registry_runtime.py
+  devcovenant/upgrade.py
+  tests/devcovenant/core/policies/devcov_integrity_guard/\
+    test_devcov_integrity_guard.py
+  tests/devcovenant/core/test_execution_runtime.py
+  tests/devcovenant/core/test_gate_runtime.py
+  tests/devcovenant/core/test_metadata_runtime.py
+  tests/devcovenant/core/test_parser.py
+  tests/devcovenant/core/test_policy_runtime.py
+  tests/devcovenant/core/test_refresh_runtime.py
+  tests/devcovenant/core/test_registry_runtime.py
+
+- 2026-02-14:
+  Change: Updated profile and policy map documents to match current
+  0.2.6 contracts and shipped inventories.
+  Why: Clarified current profile/policy ownership and removed outdated
+  references to retired profiles and adapter-era routing.
+  Impact: Improved map accuracy for contributor decisions on overlays,
+  translators, and activation flow.
+  Files:
+  AGENTS.md
+  PLAN.md
+  POLICY_MAP.md
+  PROFILE_MAP.md
+  devcovenant/core/parser.py
+  devcovenant/core/policies/devcov_integrity_guard/devcov_integrity_guard.py
+  devcovenant/core/policy_runtime.py
+  devcovenant/core/refresh_runtime.py
+  devcovenant/core/registry_runtime.py
+  tests/devcovenant/core/test_execution_runtime.py
+  tests/devcovenant/core/test_gate_runtime.py
+  tests/devcovenant/core/test_parser.py
+  tests/devcovenant/core/test_policy_runtime.py
+  tests/devcovenant/core/test_refresh_runtime.py
+
+- 2026-02-14:
+  Change: Folded AGENTS policy parsing into the policy runtime and removed the
+  standalone parser module with its stale mirrored test file.
+  Why: Aligned parser ownership under `policy_runtime.py` to close
+  core-responsibility drift in the API-freeze target layout.
+  Impact: Improved runtime clarity by reducing duplicate core paths while
+  keeping parser behavior covered via policy-runtime tests.
+  Files:
+  AGENTS.md
+  PLAN.md
+  devcovenant/core/parser.py
+  devcovenant/core/policies/devcov_integrity_guard/devcov_integrity_guard.py
+  devcovenant/core/policy_runtime.py
+  devcovenant/core/refresh_runtime.py
+  devcovenant/core/registry_runtime.py
+  tests/devcovenant/core/test_execution_runtime.py
+  tests/devcovenant/core/test_gate_runtime.py
+  tests/devcovenant/core/test_parser.py
+  tests/devcovenant/core/test_policy_runtime.py
+  tests/devcovenant/core/test_refresh_runtime.py
+
+- 2026-02-14:
+  Change: Added Tier C contract tests for local registry/state schemas and
+  refresh synchronization invariants.
+  Why: Aligned the API-freeze backlog so registry data contracts are verified
+  by tests instead of remaining implied runtime behavior.
+  Impact: Improved confidence that policy/profile registries and gate/test
+  status payloads stay deterministic during continued core refactoring.
+  Files:
+  AGENTS.md
+  PLAN.md
+  tests/devcovenant/core/test_execution_runtime.py
+  tests/devcovenant/core/test_gate_runtime.py
+  tests/devcovenant/core/test_refresh_runtime.py
+
+- 2026-02-14:
   Change: Revised API-freeze docs to make parser consolidation explicit by
   removing `parser.py` as a target module and assigning AGENTS parsing to
   runtime ownership.

@@ -34,7 +34,6 @@ def _unit_test_policy_metadata_precedence_uses_user_last() -> None:
         text="Demo policy text.",
         metadata={
             "id": "demo",
-            "status": "active",
             "severity": "warning",
             "enabled": "true",
             "include_globs": "*.py",
@@ -53,10 +52,9 @@ def _unit_test_policy_metadata_precedence_uses_user_last() -> None:
     )
     order, resolved = metadata_runtime.resolve_policy_metadata_map(
         "demo",
-        current_order=["id", "status", "severity", "enabled"],
+        current_order=["id", "severity", "enabled"],
         current_values={
             "id": ["demo"],
-            "status": ["active"],
             "severity": ["warning"],
             "enabled": ["true"],
         },
@@ -77,7 +75,6 @@ def _unit_test_selector_roles_are_materialized_from_legacy_keys() -> None:
         text="Selector demo policy.",
         metadata={
             "id": "selectors-demo",
-            "status": "active",
             "severity": "warning",
             "auto_fix": "false",
             "enforcement": "active",

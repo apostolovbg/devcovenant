@@ -14,7 +14,6 @@ from devcovenant.core.selector_runtime import _normalize_globs
 
 _COMMON_KEYS = [
     "id",
-    "status",
     "severity",
     "auto_fix",
     "enforcement",
@@ -22,7 +21,6 @@ _COMMON_KEYS = [
     "custom",
 ]
 _COMMON_DEFAULTS: Dict[str, List[str]] = {
-    "status": ["active"],
     "severity": ["warning"],
     "auto_fix": ["false"],
     "enforcement": ["active"],
@@ -51,7 +49,7 @@ _LEGACY_ROLE_KEY = {
 }
 _DERIVED_VALUE_KEYS = {"updated"}
 _ORDER_EXCLUDE_KEYS = {"updated"}
-_STATUS_OVERRIDE_VALUES = {"deprecated", "fiducial", "new", "deleted"}
+_RETIRED_METADATA_KEYS = {"status"}
 
 
 def metadata_value_list(raw_value: object) -> List[str]:
@@ -410,6 +408,8 @@ def _apply_overrides_replace(
 ) -> None:
     """Apply override values by replacing existing entries."""
     for key, override_values in overrides.items():
+        if key in _RETIRED_METADATA_KEYS:
+            continue
         values[key] = list(override_values)
 
 
@@ -419,21 +419,12 @@ def _apply_profile_overlays(
 ) -> None:
     """Apply profile overlays, merging list values and replacing scalars."""
     for key, (overlay_values, merge_lists) in overlays.items():
+        if key in _RETIRED_METADATA_KEYS:
+            continue
         if merge_lists:
             values[key] = _merge_values(values.get(key, []), overlay_values)
             continue
         values[key] = list(overlay_values)
-
-
-def _status_override_value(
-    current_values: Dict[str, List[str]],
-) -> List[str] | None:
-    """Return non-default status override when present."""
-    for entry in current_values.get("status", []):
-        normalized = entry.strip().lower()
-        if normalized in _STATUS_OVERRIDE_VALUES:
-            return [normalized]
-    return None
 
 
 def _strip_derived_values(values: Dict[str, List[str]]) -> None:
@@ -452,23 +443,34 @@ def _resolve_metadata(
     custom_policy: bool = False,
 ) -> Tuple[List[str], Dict[str, List[str]]]:
     """Resolve metadata using defaults, overlays, and config overrides."""
-    status_override = _status_override_value(current_values)
     if descriptor:
         base_order, base_values = descriptor_metadata_order_values(descriptor)
         base_order = [
-            key for key in base_order if key not in _ORDER_EXCLUDE_KEYS
-        ]
-        values = {key: list(entries) for key, entries in base_values.items()}
-    else:
-        base_order = [
-            key for key in current_order if key not in _ORDER_EXCLUDE_KEYS
+            key
+            for key in base_order
+            if key not in _ORDER_EXCLUDE_KEYS
+            and key not in _RETIRED_METADATA_KEYS
         ]
         values = {
-            key: list(entries) for key, entries in current_values.items()
+            key: list(entries)
+            for key, entries in base_values.items()
+            if key not in _RETIRED_METADATA_KEYS
+        }
+    else:
+        base_order = [
+            key
+            for key in current_order
+            if key not in _ORDER_EXCLUDE_KEYS
+            and key not in _RETIRED_METADATA_KEYS
+        ]
+        values = {
+            key: list(entries)
+            for key, entries in current_values.items()
+            if key not in _RETIRED_METADATA_KEYS
         }
     if not descriptor:
         for key in current_order:
-            if key in _ORDER_EXCLUDE_KEYS:
+            if key in _ORDER_EXCLUDE_KEYS or key in _RETIRED_METADATA_KEYS:
                 continue
             values.setdefault(key, list(current_values.get(key, [])))
 
@@ -486,30 +488,28 @@ def _resolve_metadata(
             continue
         _ensure_metadata_key(ordered_keys, values, key)
     for key in base_order:
-        if key in _ORDER_EXCLUDE_KEYS:
+        if key in _ORDER_EXCLUDE_KEYS or key in _RETIRED_METADATA_KEYS:
             continue
         _ensure_metadata_key(ordered_keys, values, key)
     for key in overlays.keys():
-        if key in _ORDER_EXCLUDE_KEYS:
+        if key in _ORDER_EXCLUDE_KEYS or key in _RETIRED_METADATA_KEYS:
             continue
         _ensure_metadata_key(ordered_keys, values, key)
     for key in autogen_overrides.keys():
-        if key in _ORDER_EXCLUDE_KEYS:
+        if key in _ORDER_EXCLUDE_KEYS or key in _RETIRED_METADATA_KEYS:
             continue
         _ensure_metadata_key(ordered_keys, values, key)
     for key in user_overrides.keys():
-        if key in _ORDER_EXCLUDE_KEYS:
+        if key in _ORDER_EXCLUDE_KEYS or key in _RETIRED_METADATA_KEYS:
             continue
         _ensure_metadata_key(ordered_keys, values, key)
     if not descriptor:
         for key in current_order:
-            if key in _ORDER_EXCLUDE_KEYS:
+            if key in _ORDER_EXCLUDE_KEYS or key in _RETIRED_METADATA_KEYS:
                 continue
             _ensure_metadata_key(ordered_keys, values, key)
 
     values["id"] = [policy_id]
-    if status_override:
-        values["status"] = list(status_override)
     if custom_policy:
         values["custom"] = ["true"]
 

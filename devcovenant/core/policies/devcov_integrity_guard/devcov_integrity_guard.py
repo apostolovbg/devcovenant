@@ -7,12 +7,12 @@ from datetime import datetime
 from pathlib import Path
 from typing import Iterable, List
 
-from devcovenant.core.parser import PolicyDefinition, PolicyParser
 from devcovenant.core.policy_contracts import (
     CheckContext,
     PolicyCheck,
     Violation,
 )
+from devcovenant.core.policy_runtime import PolicyDefinition, PolicyParser
 from devcovenant.core.registry_runtime import (
     PolicyRegistry,
     load_policy_descriptor,
@@ -192,12 +192,6 @@ class DevcovIntegrityGuardCheck(PolicyCheck):
                     f"Policy script missing for policy '{issue.policy_id}'."
                 )
                 suggestion = "Add the policy script or remove the policy."
-            elif issue.issue_type == "new_policy":
-                message = (
-                    "Policy registry missing entry for policy "
-                    f"'{issue.policy_id}'."
-                )
-                suggestion = "Run `devcovenant refresh`."
             else:
                 message = (
                     "Policy registry hash mismatch for policy "

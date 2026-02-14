@@ -2,99 +2,85 @@
 **Version:** 0.2.6
 
 ## Purpose
-Declarative expectations for every shipped profile. Lists required assets,
-policies, overlays, and activation rules. Profiles are explicit; no implicit
-inheritance. Custom policies stay opt-in via custom profiles/config.
+This map documents shipped profile contracts for 0.2.6.
+Profiles provide overlays, assets, hooks, selectors, and translators.
+Profiles do not activate policies. Policy activation lives in `policy_state`.
+
+## Contract Rules
+- `global` is always active at runtime.
+- Other profiles are selected in `devcovenant/config.yaml` under
+  `profiles.active`.
+- Core/custom origin is inferred by profile location.
+- Only language profiles may declare translators.
+- Translators are declared in profile YAML and routed by shared runtime.
+- Assets are materialized by deploy/upgrade/refresh when missing.
+- Existing non-one-liner assets are preserved on refresh paths.
 
 ## Core Profiles
-- global — Assets: managed doc descriptors, tooling scripts (.pre-commit,
-  CI workflow, gitignore fragments). Policies: all core global policies,
-  including `devcov-integrity-guard` as the unified integrity check.
-  Overlays: version-sync defaults (VERSION + core docs), doc-growth
-  defaults. Mode: static, update keeps descriptors current.
-- docs — Assets: mkdocs.yml, doc .gitignore. Policies: version-sync,
-  documentation-growth-tracking, line-length-limit, last-updated-placement.
-- data — Assets: data/README.md, data/manifest.json, .gitignore. Policies:
-  documentation-growth-tracking, last-updated-placement, security-scanner
-  (excluded data), name-clarity, new-modules-need-tests (excluded),
-  line-length-limit, version-sync.
-- suffixes — Assets: suffixes.txt (merge). Policies: version-sync.
-- devcovuser (custom-use) — Assets: .gitignore (merge placeholder); ignores
-  vendored trees (`vendor`, `third_party`, `node_modules`). Policies:
-  new-modules-need-tests with excludes to keep devcovenant core out.
-- devcovrepo (custom) — Assets: .gitignore placeholder. Policies: doc-growth,
-  line-length, new-modules-need-tests, devcov-raw-string-escapes, managed-
-  doc-assets, readme-sync. Overlays: devcovenant docs tracking,
-  devcovenant/VERSION for version-sync.
-
-## Language / Framework Profiles
-- python — Assets: requirements.in/lock, pyproject.toml, .python-version,
-  venv.md, .gitignore; Policies: dependency-license-sync, devflow-run-gates,
-  doc/comment coverage, name-clarity, new-modules-need-tests, security-
-  scanner, documentation-growth-tracking, line-length-limit, version-sync,
-  raw-string-escapes.
-- javascript — Assets: package.json, .gitignore; Policies:
-  dependency-license-sync, devflow-run-gates, doc/comment coverage,
-  name-clarity, new-modules-need-tests, security-scanner, doc-growth,
-  line-length-limit, version-sync.
-- typescript — Assets: package.json, tsconfig.json, .gitignore; Policies:
-  same as javascript.
-- java — Assets: build.gradle, .gitignore; Policies: dependency-license-sync,
-  devflow-run-gates, doc/comment coverage, name-clarity, new-modules-need-
-  tests, security-scanner, doc-growth, line-length-limit, version-sync.
-- go — Assets: go.mod, go.sum, .gitignore; Policies: dependency-license-sync,
-  devflow-run-gates, doc/comment coverage, name-clarity, new-modules-need-
-  tests, security-scanner, doc-growth, line-length-limit, version-sync.
-- rust — Assets: Cargo.toml, Cargo.lock, .gitignore; Policies: dependency-
-  license-sync, devflow-run-gates, doc/comment coverage, name-clarity,
-  new-modules-need-tests, security-scanner, doc-growth, line-length-limit,
-  version-sync.
-- php — Assets: composer.json, composer.lock, phpunit.xml, .gitignore;
-  Policies: dependency-license-sync, devflow-run-gates, doc-growth, line-
-  length-limit, version-sync.
-- ruby — Assets: Gemfile, Gemfile.lock, .gitignore; Policies: dependency-
-  license-sync, devflow-run-gates, doc-growth, line-length-limit, version-
-  sync.
-- csharp — Assets: Project.csproj, packages.lock.json, .gitignore; Policies:
-  dependency-license-sync, devflow-run-gates, doc/comment coverage, name-
-  clarity, new-modules-need-tests, security-scanner, doc-growth, line-length-
-  limit, version-sync.
-- sql — Assets: schema.sql, .gitignore; Policies: doc-growth, line-length-
-  limit, version-sync.
-- docker — Assets: Dockerfile, docker-compose.yml, .dockerignore, .gitignore;
-  Policies: devflow-run-gates, doc-growth, line-length-limit, version-sync.
-- terraform — Assets: main.tf, variables.tf, .gitignore; Policies: doc-
-  growth, line-length-limit, version-sync, devflow-run-gates (terraform
-  validate).
-- kubernetes — Assets: Chart.yaml, values.yaml, .gitignore; Policies:
-  devflow-run-gates (helm lint), doc-growth, line-length-limit, version-sync.
-- fastapi — Assets: main.py, openapi.json, .gitignore; Policies: dependency-
-  license-sync, devflow-run-gates (pytest/unittest), doc/comment coverage,
-  name-clarity, new-modules-need-tests, security-scanner, doc-growth,
-  line-length-limit, version-sync.
-- frappe — Assets: hooks.py, modules.txt, .gitignore; Policies: dependency-
-  license-sync, devflow-run-gates (pytest/unittest/npm test), doc/comment
-  coverage (py), name-clarity (py), new-modules-need-tests (py/js),
-  security-scanner (py/js), doc-growth, line-length-limit, version-sync.
-- dart — Assets: pubspec.yaml, pubspec.lock, .gitignore; Policies:
-  dependency-license-sync, devflow-run-gates (dart test), doc-growth, line-
-  length-limit, version-sync.
-- flutter — Assets: pubspec.yaml, pubspec.lock, .gitignore; Policies:
-  dependency-license-sync, devflow-run-gates (flutter test), doc-growth,
-  line-length-limit, version-sync.
-- swift — Assets: Package.swift, .gitignore; Policies: dependency-license-
-  sync, devflow-run-gates (swift test), doc-growth, line-length-limit,
-  version-sync.
-- objective-c — Assets: .gitignore, Podfile; Policies: dependency-license-
-  sync (Podfile/lock), devflow-run-gates (xcodebuild test), doc-growth, line-
-  length-limit, version-sync.
+- `global` (`core`): shared overlays and hook baseline. Owns managed docs,
+  changelog coverage defaults, version-sync defaults, and gate baseline.
+- `docs` (`ops`): documentation overlays for doc-growth and line-length.
+  No standalone assets.
+- `devcovuser` (`core`): user-repo safety overlays. Keeps
+  `devcovenant/custom/**` mirrored under `tests/devcovenant/custom/**`.
+- `python` (`language`): Python assets and overlays for dependency/license,
+  tests, doc/comment coverage, name clarity, modules-need-tests,
+  security-scanner, doc-growth, line-length, and version-sync.
+- `javascript` (`language`): JS overlays for dependency/license, tests,
+  doc/comment coverage, name clarity, modules-need-tests,
+  security-scanner, doc-growth, and line-length.
+- `typescript` (`language`): TS overlays similar to javascript.
+- `java` (`language`): Java overlays for dependency/license, tests,
+  doc/comment coverage, name clarity, modules-need-tests,
+  security-scanner, doc-growth, and line-length.
+- `go` (`language`): Go overlays for dependency/license, tests,
+  doc/comment coverage, name clarity, modules-need-tests,
+  security-scanner, doc-growth, and line-length.
+- `rust` (`language`): Rust overlays for dependency/license, tests,
+  doc/comment coverage, name clarity, modules-need-tests,
+  security-scanner, doc-growth, and line-length.
+- `csharp` (`language`): C# overlays for dependency/license, tests,
+  doc/comment coverage, name clarity, modules-need-tests,
+  security-scanner, doc-growth, and line-length.
+- `php` (`language`): dependency/license, tests, doc-growth, and line-length.
+- `ruby` (`language`): dependency/license, tests, doc-growth, and line-length.
+- `swift` (`language`): dependency/license, tests, doc-growth, and line-length.
+- `objective-c` (`language`): dependency/license, tests, doc-growth,
+  and line-length.
+- `dart` (`language`): dependency/license, tests, doc-growth, and line-length.
+- `flutter` (`framework`): dependency/license, tests, doc-growth,
+  and line-length.
+- `fastapi` (`framework`): Python-centric framework overlays for tests,
+  dependency/license, doc/comment coverage, name clarity,
+  modules-need-tests, security-scanner, doc-growth, and line-length.
+- `frappe` (`framework`): mixed stack overlays for tests,
+  dependency/license, doc/comment coverage, name clarity,
+  modules-need-tests, security-scanner, doc-growth, and line-length.
+- `docker` (`ops`): Docker assets plus test/doc-growth/line-length overlays.
+- `terraform` (`ops`): Terraform assets plus test/doc-growth/line-length.
+- `kubernetes` (`ops`): Kubernetes assets plus test/doc-growth/line-length.
+- `sql` (`ops`): SQL schema asset plus doc-growth/line-length overlays.
 
 ## Custom Profiles
-- devcovrepo — see Core Profiles above; activates custom policies.
+- `devcovrepo` (`repo`): DevCovenant-repo overlays and docs assets.
+  Adds custom-policy overlays (`no-spaghetti`) and extends
+  modules-need-tests to full `devcovenant=>tests/devcovenant` mirroring.
 
-## Expectations
-- All .gitignore assets use merge mode to preserve user entries.
-- Assets listed above are required for profile completeness; updates must keep
-  modes (replace/merge) consistent with policy needs.
-- Profiles SHOULD list every policy they overlay in `policies:`. Runtime
-  activation is controlled by config `policy_state`.
+## Translator Ownership
+Language profiles with active translator declarations:
+- `python`
+- `javascript`
+- `typescript`
+- `java`
+- `go`
+- `rust`
+- `csharp`
+
+Language profiles without translator declarations yet:
+- `dart`, `php`, `ruby`, `swift`, `objective-c`
+
+## Notes
+- Retired profiles (`data`, `suffixes`) are removed.
+- Profile YAML overlays are metadata inputs only.
+- Runtime policy list and final activation are compiled through refresh
+  into AGENTS and `policy_state`.

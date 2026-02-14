@@ -10,10 +10,13 @@ if __package__ in {None, ""}:  # pragma: no cover
     sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
 import argparse
-import re
 from pathlib import Path
 
+import yaml
+
 from devcovenant import install
+from devcovenant.core import metadata_runtime
+from devcovenant.core import refresh_runtime as refresh_runtime_module
 from devcovenant.core import registry_runtime as manifest_module
 from devcovenant.core import registry_runtime as policy_replacements
 from devcovenant.core.execution_runtime import (
@@ -22,12 +25,6 @@ from devcovenant.core.execution_runtime import (
     resolve_repo_root,
 )
 from devcovenant.core.refresh_runtime import refresh_repo
-
-_POLICY_BLOCK_RE = re.compile(
-    r"(##\s+Policy:\s+[^\n]+\n\n)```policy-def\n(.*?)\n```\n\n"
-    r"(.*?)(?=\n---\n|\n##|\Z)",
-    re.DOTALL,
-)
 
 
 def _read_version(path: Path) -> str:
@@ -52,76 +49,85 @@ def _version_key(raw: str) -> tuple[int, int, int]:
     return tuple(numbers)
 
 
-def _extract_policy_id(metadata: str) -> str:
-    """Extract `id` from a policy-def metadata block."""
-    for line in metadata.splitlines():
-        stripped = line.strip()
-        if not stripped.startswith("id:"):
-            continue
-        _, policy_value = stripped.split(":", 1)
-        return policy_value.strip()
-    return ""
+def _load_config_payload(config_path: Path) -> dict[str, object]:
+    """Load config payload from disk, defaulting to an empty mapping."""
+    if not config_path.exists():
+        return {}
+    payload = yaml.safe_load(config_path.read_text(encoding="utf-8")) or {}
+    if isinstance(payload, dict):
+        return payload
+    return {}
 
 
-def _set_metadata_value(metadata: str, key: str, metadata_value: str) -> str:
-    """Set or append a single scalar policy metadata key."""
-    pattern = re.compile(rf"^{re.escape(key)}:\s*.*$", re.MULTILINE)
-    if pattern.search(metadata):
-        return pattern.sub(f"{key}: {metadata_value}", metadata)
-    joined = metadata.rstrip()
-    if joined:
-        return f"{joined}\n{key}: {metadata_value}"
-    return f"{key}: {metadata_value}"
-
-
-def _rewrite_policy_block_for_replacement(metadata: str) -> str:
-    """Mark a replaced policy as deprecated custom."""
-    updated = _set_metadata_value(metadata, "status", "deprecated")
-    updated = _set_metadata_value(updated, "custom", "true")
-    return updated
+def _custom_policy_override_exists(repo_root: Path, policy_id: str) -> bool:
+    """Return True when a custom policy module exists for policy_id."""
+    module_name = policy_id.replace("-", "_")
+    script_path = (
+        repo_root
+        / "devcovenant"
+        / "custom"
+        / "policies"
+        / module_name
+        / f"{module_name}.py"
+    )
+    return script_path.exists()
 
 
 def _apply_policy_replacements(repo_root: Path) -> list[str]:
-    """Apply policy replacement annotations in AGENTS policy blocks."""
+    """Migrate config.policy_state according to replacement metadata."""
     replacements = policy_replacements.load_policy_replacements(repo_root)
     if not replacements:
         return []
 
-    agents_path = repo_root / "AGENTS.md"
-    if not agents_path.exists():
+    config_path = repo_root / "devcovenant" / "config.yaml"
+    if not config_path.exists():
         return []
 
-    original = agents_path.read_text(encoding="utf-8")
-    updated_ids: list[str] = []
+    payload = _load_config_payload(config_path)
+    state = metadata_runtime.normalize_policy_state(
+        payload.get("policy_state")
+    )
+    if not state:
+        return []
 
-    def _replace(match: re.Match[str]) -> str:
-        """Rewrite a matched policy block when replacement metadata exists."""
-        heading = match.group(1)
-        metadata = match.group(2).strip()
-        description = match.group(3).strip()
-        policy_id = _extract_policy_id(metadata)
-        if policy_id not in replacements:
-            return match.group(0)
+    notices: list[str] = []
+    changed = False
+    for policy_id in sorted(replacements):
+        replacement = replacements[policy_id]
+        if _custom_policy_override_exists(repo_root, policy_id):
+            if policy_id in state:
+                notices.append(
+                    "Skipped policy_state migration for "
+                    f"'{policy_id}' because a custom override exists."
+                )
+            continue
+        if policy_id not in state:
+            continue
+        enabled = state.pop(policy_id)
+        replacement_id = replacement.replaced_by
+        if replacement_id not in state:
+            state[replacement_id] = enabled
+        changed = True
+        note = str(replacement.note or "").strip()
+        message = (
+            "Migrated policy_state " f"'{policy_id}' -> '{replacement_id}'"
+        )
+        if note:
+            message = f"{message} ({note})"
+        notices.append(message)
 
-        rewritten = _rewrite_policy_block_for_replacement(metadata)
-        updated_ids.append(policy_id)
-        return f"{heading}```policy-def\n{rewritten}\n```\n\n{description}\n"
+    if not changed:
+        if notices:
+            manifest_module.append_notifications(repo_root, notices)
+        return notices
 
-    updated = _POLICY_BLOCK_RE.sub(_replace, original)
-    if updated_ids and updated != original:
-        agents_path.write_text(updated, encoding="utf-8")
-
-    if updated_ids:
-        messages = [
-            (
-                "Policy "
-                f"'{policy_id}' marked deprecated and custom after replacement"
-            )
-            for policy_id in updated_ids
-        ]
-        manifest_module.append_notifications(repo_root, messages)
-
-    return updated_ids
+    payload["policy_state"] = {
+        policy_id: state[policy_id] for policy_id in sorted(state)
+    }
+    rendered = refresh_runtime_module._render_config_yaml(payload)
+    config_path.write_text(rendered, encoding="utf-8")
+    manifest_module.append_notifications(repo_root, notices)
+    return notices
 
 
 def upgrade_repo(repo_root: Path) -> int:
@@ -138,12 +144,14 @@ def upgrade_repo(repo_root: Path) -> int:
     else:
         print_step("Core already up to date", "ℹ️")
 
-    replaced = _apply_policy_replacements(repo_root)
-    if replaced:
+    replacement_notices = _apply_policy_replacements(repo_root)
+    if replacement_notices:
         print_step(
-            f"Applied policy replacements: {', '.join(sorted(set(replaced)))}",
+            "Processed policy replacements",
             "✅",
         )
+        for notice in replacement_notices:
+            print_step(notice, "ℹ️")
 
     return refresh_repo(repo_root)
 

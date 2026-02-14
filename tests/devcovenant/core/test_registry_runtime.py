@@ -72,8 +72,8 @@ def _unit_test_registry_prune_policies_removes_stale_entries() -> None:
         registry_path.parent.mkdir(parents=True, exist_ok=True)
         payload = {
             "policies": {
-                "alpha": {"status": "active"},
-                "beta": {"status": "active"},
+                "alpha": {"enabled": True},
+                "beta": {"enabled": True},
             },
             "metadata": {"version": "1.0.0"},
         }
@@ -117,7 +117,6 @@ def _write_agents(repo_root: Path) -> None:
         "## Policy: Old Policy\n\n"
         "```policy-def\n"
         "id: old-policy\n"
-        "status: active\n"
         "custom: false\n"
         "enabled: true\n"
         "```\n\n"
@@ -139,20 +138,69 @@ def _unit_test_load_policy_replacements_reads_mapping() -> None:
         assert loaded["old-policy"].replaced_by == "new-policy"
 
 
-def _unit_test_apply_replacements_marks_policy_deprecated_custom() -> None:
-    """Upgrade replacement pass should rewrite AGENTS policy metadata."""
+def _unit_test_apply_replacements_migrates_policy_state() -> None:
+    """Upgrade replacement pass should migrate config policy_state keys."""
     with tempfile.TemporaryDirectory() as temp_dir:
         repo_root = Path(temp_dir)
         install.install_repo(repo_root)
         _write_replacements(repo_root)
         _write_agents(repo_root)
+        config_path = repo_root / "devcovenant" / "config.yaml"
+        config_payload = yaml.safe_load(
+            config_path.read_text(encoding="utf-8")
+        )
+        config_payload["policy_state"] = {"old-policy": False}
+        config_path.write_text(
+            yaml.safe_dump(config_payload, sort_keys=False),
+            encoding="utf-8",
+        )
 
-        replaced = upgrade._apply_policy_replacements(repo_root)
-        assert replaced == ["old-policy"]
+        notices = upgrade._apply_policy_replacements(repo_root)
+        assert any("old-policy" in notice for notice in notices)
 
-        updated_agents = (repo_root / "AGENTS.md").read_text(encoding="utf-8")
-        assert "status: deprecated" in updated_agents
-        assert "custom: true" in updated_agents
+        updated_config = yaml.safe_load(
+            config_path.read_text(encoding="utf-8")
+        )
+        state = updated_config.get("policy_state", {})
+        assert state.get("new-policy") is False
+        assert "old-policy" not in state
+
+
+def _unit_test_apply_replacements_skips_custom_overrides() -> None:
+    """Replacement migration should not rewrite keys for custom overrides."""
+    with tempfile.TemporaryDirectory() as temp_dir:
+        repo_root = Path(temp_dir)
+        install.install_repo(repo_root)
+        _write_replacements(repo_root)
+        config_path = repo_root / "devcovenant" / "config.yaml"
+        config_payload = yaml.safe_load(
+            config_path.read_text(encoding="utf-8")
+        )
+        config_payload["policy_state"] = {"old-policy": True}
+        config_path.write_text(
+            yaml.safe_dump(config_payload, sort_keys=False),
+            encoding="utf-8",
+        )
+        custom_policy = (
+            repo_root
+            / "devcovenant"
+            / "custom"
+            / "policies"
+            / "old_policy"
+            / "old_policy.py"
+        )
+        custom_policy.parent.mkdir(parents=True, exist_ok=True)
+        custom_policy.write_text("# custom old policy\n", encoding="utf-8")
+
+        notices = upgrade._apply_policy_replacements(repo_root)
+        assert any("custom override exists" in notice for notice in notices)
+
+        updated_config = yaml.safe_load(
+            config_path.read_text(encoding="utf-8")
+        )
+        state = updated_config.get("policy_state", {})
+        assert state.get("old-policy") is True
+        assert "new-policy" not in state
 
 
 def _unit_test_ensure_manifest_returns_none_without_install() -> None:
@@ -384,9 +432,13 @@ class GeneratedUnittestCases(unittest.TestCase):
         """Run test_load_policy_replacements_reads_mapping."""
         _unit_test_load_policy_replacements_reads_mapping()
 
-    def test_apply_replacements_marks_policy_deprecated_custom(self):
-        """Run test_apply_replacements_marks_policy_deprecated_custom."""
-        _unit_test_apply_replacements_marks_policy_deprecated_custom()
+    def test_apply_replacements_migrates_policy_state(self):
+        """Run test_apply_replacements_migrates_policy_state."""
+        _unit_test_apply_replacements_migrates_policy_state()
+
+    def test_apply_replacements_skips_custom_overrides(self):
+        """Run test_apply_replacements_skips_custom_overrides."""
+        _unit_test_apply_replacements_skips_custom_overrides()
 
     def test_ensure_manifest_returns_none_without_install(self):
         """Run test_ensure_manifest_returns_none_without_install."""

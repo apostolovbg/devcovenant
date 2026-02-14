@@ -2,17 +2,20 @@
 Registry for tracking policy hashes and sync status.
 """
 
+from __future__ import annotations
+
 import hashlib
 import json
 import re
 from dataclasses import dataclass
 from datetime import datetime, timezone
 from pathlib import Path
-from typing import Any, Dict, Iterable, List, Optional, Tuple
+from typing import TYPE_CHECKING, Any, Dict, Iterable, List, Optional, Tuple
 
 import yaml
 
-from .parser import PolicyDefinition
+if TYPE_CHECKING:
+    from .policy_runtime import PolicyDefinition
 
 DEV_COVENANT_DIR = "devcovenant"
 GLOBAL_REGISTRY_DIR = f"{DEV_COVENANT_DIR}/registry/global"
@@ -441,7 +444,7 @@ class PolicySyncIssue:
         script_path: Path to the policy script
         script_exists: Whether the script exists
         issue_type: Type of sync issue
-            (hash_mismatch, script_missing, new_policy)
+            (hash_mismatch, script_missing)
         current_hash: Current hash from registry (if any)
     """
 
@@ -576,11 +579,7 @@ class PolicyRegistry:
         issues = []
 
         for policy in policies:
-            # Skip deleted or deprecated policies
-            if (
-                policy.status in ["deleted", "deprecated"]
-                or not policy.enabled
-            ):
+            if not policy.enabled:
                 continue
 
             # Determine script path
@@ -602,11 +601,8 @@ class PolicyRegistry:
             # Determine if there's an issue
             issue_type = None
 
-            if policy.status == "new" or not script_exists:
-                if not script_exists:
-                    issue_type = "script_missing"
-                else:
-                    issue_type = "new_policy"
+            if not script_exists:
+                issue_type = "script_missing"
                 issues.append(
                     PolicySyncIssue(
                         policy_id=policy.policy_id,
@@ -708,7 +704,6 @@ class PolicyRegistry:
         previous_hash = entry.get("hash")
         previous_last_updated = entry.get("last_updated")
         entry.clear()
-        entry["status"] = policy.status
         entry["enabled"] = policy.enabled
         entry["custom"] = policy.custom
         entry["description"] = policy.name

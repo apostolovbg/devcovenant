@@ -6,13 +6,14 @@ import importlib
 import importlib.util
 import inspect
 import os
+import re
 import sys
+from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Any, Dict, List, Optional, Set
 
 import yaml
 
-from .parser import PolicyDefinition, PolicyParser
 from .policy_contracts import CheckContext, PolicyCheck, PolicyFixer, Violation
 from .profile_runtime import (
     load_profile_registry,
@@ -28,6 +29,105 @@ from .registry_runtime import (
     resolve_script_location,
 )
 from .translator_runtime import TranslatorRuntime
+
+
+@dataclass
+class PolicyDefinition:
+    """
+    A policy definition parsed from AGENTS.md.
+    """
+
+    policy_id: str
+    name: str
+    severity: str
+    auto_fix: bool
+    enabled: bool
+    custom: bool
+    description: str
+    hash_from_file: Optional[str] = None
+    raw_metadata: Dict[str, str] = field(default_factory=dict)
+
+
+class PolicyParser:
+    """
+    Parse policy definitions from the managed AGENTS policy block.
+    """
+
+    def __init__(self, agents_md_path: Path):
+        """Store the AGENTS path used for managed policy parsing."""
+        self.agents_md_path = agents_md_path
+
+    def parse_agents_md(self) -> List[PolicyDefinition]:
+        """Return policy definitions discovered in AGENTS.md."""
+        with open(self.agents_md_path, "r", encoding="utf-8") as file_obj:
+            content = file_obj.read()
+
+        policy_block = self._policy_block(content)
+        if not policy_block.strip():
+            return []
+
+        policies: list[PolicyDefinition] = []
+        policy_pattern = re.compile(
+            r"##\s+Policy:\s+([^\n]+)\n\n```policy-def\n(.*?)\n```\n\n"
+            r"(.*?)(?=\n---\n|\n##|\n<!-- DEVCOV-POLICIES:END -->|\Z)",
+            re.DOTALL,
+        )
+        for match in policy_pattern.finditer(policy_block):
+            metadata = self._parse_metadata_block(match.group(2).strip())
+            policy = PolicyDefinition(
+                policy_id=metadata.get("id", ""),
+                name=match.group(1).strip(),
+                severity=metadata.get("severity", "warning"),
+                auto_fix=metadata.get("auto_fix", "false").lower() == "true",
+                enabled=metadata.get("enabled", "true").strip().lower()
+                == "true",
+                custom=metadata.get("custom", "false").strip().lower()
+                == "true",
+                description=match.group(3).strip(),
+                hash_from_file=metadata.get("hash"),
+                raw_metadata=metadata,
+            )
+            policies.append(policy)
+        return policies
+
+    @staticmethod
+    def _policy_block(content: str) -> str:
+        """Return the text inside the managed AGENTS policy block."""
+        begin_marker = "<!-- DEVCOV-POLICIES:BEGIN -->"
+        end_marker = "<!-- DEVCOV-POLICIES:END -->"
+        try:
+            begin = content.index(begin_marker) + len(begin_marker)
+            end = content.index(end_marker, begin)
+        except ValueError:
+            return ""
+        return content[begin:end]
+
+    @staticmethod
+    def _parse_metadata_block(block: str) -> Dict[str, str]:
+        """Parse key/value metadata from a policy-def block."""
+        metadata: dict[str, str] = {}
+        current_key: str | None = None
+        for line in block.split("\n"):
+            stripped = line.strip()
+            if not stripped:
+                continue
+            if ":" in stripped:
+                key, value = stripped.split(":", 1)
+                current_key = key.strip()
+                metadata[current_key] = value.strip()
+                continue
+            if not current_key:
+                continue
+            continuation = stripped
+            existing = metadata.get(current_key, "")
+            if not existing:
+                metadata[current_key] = continuation
+                continue
+            if existing.endswith(",") or continuation.startswith(","):
+                metadata[current_key] = f"{existing}{continuation}"
+                continue
+            metadata[current_key] = f"{existing},{continuation}"
+        return metadata
 
 
 class DevCovenantEngine:
@@ -416,21 +516,6 @@ class DevCovenantEngine:
 
         for policy in policies:
             if not policy.enabled:
-                continue
-            if policy.status == "fiducial":
-                violations.append(
-                    Violation(
-                        policy_id=policy.policy_id,
-                        severity="info",
-                        file_path=self.agents_md_path,
-                        message=(
-                            "Fiducial policy reminder:\n"
-                            f"{policy.description}"
-                        ),
-                    )
-                )
-            # Skip inactive policies
-            if policy.status not in ["active", "new", "fiducial"]:
                 continue
 
             # Try to load and run the policy script

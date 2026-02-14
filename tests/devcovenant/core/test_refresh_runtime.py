@@ -6,12 +6,15 @@ import json
 import re
 import tempfile
 import unittest
+from datetime import datetime
 from pathlib import Path
 
 import yaml
 
 from devcovenant import install
+from devcovenant.core import profile_runtime
 from devcovenant.core import refresh_runtime as core_refresh
+from devcovenant.core import registry_runtime
 
 
 def _read_yaml(path: Path) -> dict[str, object]:
@@ -124,7 +127,6 @@ def _unit_test_refresh_repo_emits_agents_policy_block_contract() -> None:
 
         required = {
             "id",
-            "status",
             "severity",
             "auto_fix",
             "enforcement",
@@ -660,6 +662,133 @@ def _unit_test_refresh_repo_materializes_full_policy_state_map() -> None:
             assert state[policy_id] is bool(entry.get("enabled", True))
 
 
+def _unit_test_refresh_repo_policy_registry_schema_contract() -> None:
+    """Refresh should emit policy_registry.yaml with contract keys/types."""
+    with tempfile.TemporaryDirectory() as temp_dir:
+        repo_root = Path(temp_dir)
+        install.install_repo(repo_root)
+
+        result = core_refresh.refresh_repo(repo_root)
+        assert result == 0
+
+        registry_path = registry_runtime.policy_registry_path(repo_root)
+        payload = _read_yaml(registry_path)
+        metadata = payload.get("metadata")
+        assert isinstance(metadata, dict)
+        assert str(metadata.get("version", "")).strip()
+
+        policies = payload.get("policies")
+        assert isinstance(policies, dict)
+        assert policies
+        assert list(policies.keys()) == sorted(policies.keys())
+
+        for policy_id, entry in policies.items():
+            assert isinstance(entry, dict)
+            assert isinstance(entry.get("enabled"), bool)
+            assert isinstance(entry.get("custom"), bool)
+            assert isinstance(entry.get("description"), str)
+            assert isinstance(entry.get("policy_text"), str)
+            assert isinstance(entry.get("metadata"), dict)
+            assert isinstance(entry.get("assets"), list)
+            assert isinstance(entry.get("core"), bool)
+            assert isinstance(entry.get("script_exists"), bool)
+            assert isinstance(entry.get("last_updated"), str)
+            datetime.fromisoformat(
+                str(entry.get("last_updated")).replace("Z", "+00:00")
+            )
+            hash_value = entry.get("hash")
+            assert hash_value is None or isinstance(hash_value, str)
+            script_path = entry.get("script_path")
+            assert script_path is None or isinstance(script_path, str)
+            assert entry.get("metadata", {}).get("id") == policy_id
+
+
+def _unit_test_refresh_repo_profile_registry_schema_contract() -> None:
+    """Refresh should emit profile_registry.yaml with contract keys/types."""
+    with tempfile.TemporaryDirectory() as temp_dir:
+        repo_root = Path(temp_dir)
+        install.install_repo(repo_root)
+
+        result = core_refresh.refresh_repo(repo_root)
+        assert result == 0
+
+        registry_path = registry_runtime.profile_registry_path(repo_root)
+        payload = _read_yaml(registry_path)
+        generated_at = payload.get("generated_at")
+        assert isinstance(generated_at, str)
+        datetime.fromisoformat(generated_at.replace("Z", "+00:00"))
+
+        profiles = payload.get("profiles")
+        assert isinstance(profiles, dict)
+        assert profiles
+        assert list(profiles.keys()) == sorted(profiles.keys())
+
+        for profile_name, entry in profiles.items():
+            assert isinstance(entry, dict)
+            assert entry.get("profile") == profile_name
+            assert entry.get("source") in {"core", "custom"}
+            assert isinstance(entry.get("path"), str)
+            assert isinstance(entry.get("category"), str)
+            assert isinstance(entry.get("active"), bool)
+            assert isinstance(entry.get("assets_available"), list)
+            translators = entry.get("translators")
+            if translators in (None, "__none__"):
+                continue
+            assert isinstance(translators, list)
+            if translators:
+                assert str(entry.get("category", "")).lower() == "language"
+
+
+def _unit_test_refresh_repo_registry_sync_invariants() -> None:
+    """Refresh output should stay synchronized with discovery sources."""
+    with tempfile.TemporaryDirectory() as temp_dir:
+        repo_root = Path(temp_dir)
+        install.install_repo(repo_root)
+
+        result = core_refresh.refresh_repo(repo_root)
+        assert result == 0
+
+        policy_payload = _read_yaml(
+            registry_runtime.policy_registry_path(repo_root)
+        )
+        policy_entries = policy_payload.get("policies")
+        assert isinstance(policy_entries, dict)
+
+        profile_payload = _read_yaml(
+            registry_runtime.profile_registry_path(repo_root)
+        )
+        profile_entries = profile_payload.get("profiles")
+        assert isinstance(profile_entries, dict)
+
+        discovered_profiles = profile_runtime.discover_profiles(repo_root)
+        assert set(profile_entries) == set(discovered_profiles)
+        for profile_name, discovered in discovered_profiles.items():
+            registry_entry = profile_entries[profile_name]
+            assert registry_entry.get("source") == discovered.get("source")
+            assert registry_entry.get("path") == discovered.get("path")
+
+        registry = registry_runtime.PolicyRegistry(
+            registry_runtime.policy_registry_path(repo_root),
+            repo_root,
+        )
+        for policy_id, entry in policy_entries.items():
+            descriptor = registry_runtime.load_policy_descriptor(
+                repo_root, policy_id
+            )
+            assert descriptor is not None
+            location = registry_runtime.resolve_script_location(
+                repo_root, policy_id
+            )
+            if location is None:
+                assert entry.get("script_exists") is False
+                assert entry.get("script_path") is None
+                continue
+            assert entry.get("script_exists") is True
+            assert entry.get("script_path") == registry._compact_script_path(
+                location.path
+            )
+
+
 class GeneratedUnittestCases(unittest.TestCase):
     """unittest wrappers for core refresh coverage."""
 
@@ -722,3 +851,15 @@ class GeneratedUnittestCases(unittest.TestCase):
     def test_refresh_repo_materializes_full_policy_state_map(self):
         """Run test_refresh_repo_materializes_full_policy_state_map."""
         _unit_test_refresh_repo_materializes_full_policy_state_map()
+
+    def test_refresh_repo_policy_registry_schema_contract(self):
+        """Run test_refresh_repo_policy_registry_schema_contract."""
+        _unit_test_refresh_repo_policy_registry_schema_contract()
+
+    def test_refresh_repo_profile_registry_schema_contract(self):
+        """Run test_refresh_repo_profile_registry_schema_contract."""
+        _unit_test_refresh_repo_profile_registry_schema_contract()
+
+    def test_refresh_repo_registry_sync_invariants(self):
+        """Run test_refresh_repo_registry_sync_invariants."""
+        _unit_test_refresh_repo_registry_sync_invariants()

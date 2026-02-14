@@ -2,8 +2,10 @@
 
 from __future__ import annotations
 
+import json
 import tempfile
 import unittest
+from datetime import datetime
 from pathlib import Path
 from unittest.mock import patch
 
@@ -101,3 +103,40 @@ class GeneratedUnittestCases(unittest.TestCase):
 
             self.assertEqual(commands[0][0], "python3 -m unittest discover -v")
             self.assertEqual(commands[1][0], "pytest")
+
+    @patch("devcovenant.core.execution_runtime._current_sha")
+    def test_record_test_status_writes_contract_schema(
+        self,
+        current_sha_mock,
+    ):
+        """record_test_status should emit the Tier-C state schema."""
+        current_sha_mock.return_value = "a" * 40
+        with tempfile.TemporaryDirectory() as temp_dir:
+            repo_root = Path(temp_dir).resolve()
+            execution_runtime.record_test_status(
+                repo_root,
+                "python3 -m unittest discover -v && pytest",
+                notes="schema check",
+            )
+
+            status_path = (
+                execution_runtime.registry_runtime_module.test_status_path(
+                    repo_root
+                )
+            )
+            payload = json.loads(status_path.read_text(encoding="utf-8"))
+            self.assertEqual(
+                payload["command"],
+                "python3 -m unittest discover -v && pytest",
+            )
+            self.assertEqual(
+                payload["commands"],
+                ["python3 -m unittest discover -v", "pytest"],
+            )
+            self.assertEqual(payload["sha"], "a" * 40)
+            self.assertEqual(payload["notes"], "schema check")
+            self.assertIsInstance(payload["last_run"], str)
+            self.assertIsInstance(payload["last_run_utc"], str)
+            self.assertIsInstance(payload["last_run_epoch"], (int, float))
+            datetime.fromisoformat(payload["last_run"])
+            datetime.fromisoformat(payload["last_run_utc"])

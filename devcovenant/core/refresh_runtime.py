@@ -15,7 +15,7 @@ import yaml
 from devcovenant.core import metadata_runtime, profile_runtime
 from devcovenant.core import registry_runtime as manifest_module
 from devcovenant.core.execution_runtime import print_step
-from devcovenant.core.parser import PolicyDefinition
+from devcovenant.core.policy_runtime import PolicyDefinition
 from devcovenant.core.registry_runtime import (
     POLICY_BLOCK_RE,
     PolicyDescriptor,
@@ -1954,7 +1954,6 @@ def refresh_policy_registry(
             key: str(resolved_metadata.get(key, "")).strip()
             for key in resolved_order
         }
-        status = ordered_metadata.get("status") or "active"
         severity = ordered_metadata.get("severity") or "warning"
         enabled = _as_bool(ordered_metadata.get("enabled"), default=True)
         custom = _as_bool(ordered_metadata.get("custom"), default=False)
@@ -1963,7 +1962,6 @@ def refresh_policy_registry(
         policy = PolicyDefinition(
             policy_id=policy_id,
             name=policy_name,
-            status=status,
             severity=severity,
             auto_fix=auto_fix,
             enabled=enabled,

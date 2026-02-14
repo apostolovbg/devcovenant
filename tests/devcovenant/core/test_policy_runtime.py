@@ -6,7 +6,7 @@ import tempfile
 import unittest
 from pathlib import Path
 
-from devcovenant.core.policy_runtime import DevCovenantEngine
+from devcovenant.core.policy_runtime import DevCovenantEngine, PolicyParser
 from tests.devcovenant.support import MonkeyPatch
 
 
@@ -111,7 +111,6 @@ def _agents_policy_doc(policy_id: str, enabled: bool) -> str:
         "## Policy: Sample Policy\n\n"
         "```policy-def\n"
         f"id: {policy_id}\n"
-        "status: active\n"
         "severity: error\n"
         "auto_fix: false\n"
         "enforcement: active\n"
@@ -223,6 +222,177 @@ def _unit_test_runtime_policy_source_is_agents(
     assert captured["ids"] == ["agents-policy"]
 
 
+def _unit_test_parse_policy_definition() -> None:
+    """PolicyParser should parse a single policy definition block."""
+    with tempfile.NamedTemporaryFile(
+        mode="w", suffix=".md", delete=False
+    ) as file_obj:
+        file_obj.write(
+            """
+<!-- DEVCOV-POLICIES:BEGIN -->
+## Policy: Test Policy
+
+```policy-def
+id: test-policy
+severity: warning
+auto_fix: true
+enabled: false
+```
+
+This is a test policy description.
+
+---
+<!-- DEVCOV-POLICIES:END -->
+"""
+        )
+        temp_path = Path(file_obj.name)
+
+    try:
+        parser = PolicyParser(temp_path)
+        policies = parser.parse_agents_md()
+        assert len(policies) == 1
+        policy = policies[0]
+        assert policy.policy_id == "test-policy"
+        assert policy.name == "Test Policy"
+        assert policy.severity == "warning"
+        assert policy.auto_fix is True
+        assert policy.enabled is False
+        assert "test policy description" in policy.description.lower()
+    finally:
+        temp_path.unlink()
+
+
+def _unit_test_parse_multiple_policies() -> None:
+    """PolicyParser should parse multiple policy sections in one block."""
+    with tempfile.NamedTemporaryFile(
+        mode="w", suffix=".md", delete=False
+    ) as file_obj:
+        file_obj.write(
+            """
+<!-- DEVCOV-POLICIES:BEGIN -->
+## Policy: First Policy
+
+```policy-def
+id: first-policy
+severity: error
+auto_fix: false
+```
+
+First policy description.
+
+---
+
+## Policy: Second Policy
+
+```policy-def
+id: second-policy
+severity: critical
+auto_fix: true
+```
+
+Second policy description.
+
+---
+<!-- DEVCOV-POLICIES:END -->
+"""
+        )
+        temp_path = Path(file_obj.name)
+
+    try:
+        parser = PolicyParser(temp_path)
+        policies = parser.parse_agents_md()
+        assert len(policies) == 2
+        assert policies[0].policy_id == "first-policy"
+        assert policies[0].severity == "error"
+        assert policies[0].enabled is True
+        assert policies[1].policy_id == "second-policy"
+        assert policies[1].severity == "critical"
+        assert policies[1].enabled is True
+    finally:
+        temp_path.unlink()
+
+
+def _unit_test_parse_multiline_metadata() -> None:
+    """PolicyParser should fold metadata continuation lines."""
+    with tempfile.NamedTemporaryFile(
+        mode="w", suffix=".md", delete=False
+    ) as file_obj:
+        file_obj.write(
+            """
+<!-- DEVCOV-POLICIES:BEGIN -->
+## Policy: Continuation Policy
+
+```policy-def
+id: continuation-policy
+exclude_prefixes: app,apps
+  build,dist
+```
+
+Continuation policy description.
+
+---
+<!-- DEVCOV-POLICIES:END -->
+"""
+        )
+        temp_path = Path(file_obj.name)
+
+    try:
+        parser = PolicyParser(temp_path)
+        policies = parser.parse_agents_md()
+        assert len(policies) == 1
+        assert (
+            policies[0].raw_metadata["exclude_prefixes"]
+            == "app,apps,build,dist"
+        )
+    finally:
+        temp_path.unlink()
+
+
+def _unit_test_parse_ignores_policies_outside_managed_block() -> None:
+    """PolicyParser should parse only the managed policies block."""
+    with tempfile.NamedTemporaryFile(
+        mode="w", suffix=".md", delete=False
+    ) as file_obj:
+        file_obj.write(
+            """
+## Policy: Outside Policy
+
+```policy-def
+id: outside-policy
+severity: warning
+auto_fix: false
+```
+
+Outside block policy description.
+
+---
+
+<!-- DEVCOV-POLICIES:BEGIN -->
+## Policy: Inside Policy
+
+```policy-def
+id: inside-policy
+severity: error
+auto_fix: true
+```
+
+Inside block policy description.
+
+---
+<!-- DEVCOV-POLICIES:END -->
+"""
+        )
+        temp_path = Path(file_obj.name)
+
+    try:
+        parser = PolicyParser(temp_path)
+        policies = parser.parse_agents_md()
+        assert len(policies) == 1
+        assert policies[0].policy_id == "inside-policy"
+    finally:
+        temp_path.unlink()
+
+
 class GeneratedUnittestCases(unittest.TestCase):
     """unittest wrappers for module-level tests."""
 
@@ -269,3 +439,19 @@ class GeneratedUnittestCases(unittest.TestCase):
                 )
         finally:
             monkeypatch.undo()
+
+    def test_parse_policy_definition(self):
+        """Run test_parse_policy_definition."""
+        _unit_test_parse_policy_definition()
+
+    def test_parse_multiple_policies(self):
+        """Run test_parse_multiple_policies."""
+        _unit_test_parse_multiple_policies()
+
+    def test_parse_multiline_metadata(self):
+        """Run test_parse_multiline_metadata."""
+        _unit_test_parse_multiline_metadata()
+
+    def test_parse_ignores_policies_outside_managed_block(self):
+        """Run test_parse_ignores_policies_outside_managed_block."""
+        _unit_test_parse_ignores_policies_outside_managed_block()
