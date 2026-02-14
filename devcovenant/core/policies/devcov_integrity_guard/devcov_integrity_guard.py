@@ -7,11 +7,17 @@ from datetime import datetime
 from pathlib import Path
 from typing import Iterable, List
 
-from devcovenant.core.base import CheckContext, PolicyCheck, Violation
 from devcovenant.core.parser import PolicyDefinition, PolicyParser
-from devcovenant.core.policy_descriptor import load_policy_descriptor
-from devcovenant.core.registry import PolicyRegistry
-from devcovenant.core.selector_helpers import build_watchlists
+from devcovenant.core.policy_contracts import (
+    CheckContext,
+    PolicyCheck,
+    Violation,
+)
+from devcovenant.core.registry_runtime import (
+    PolicyRegistry,
+    load_policy_descriptor,
+)
+from devcovenant.core.selector_runtime import build_watchlists
 
 _DEFAULT_STATUS_PATH = (
     Path("devcovenant") / "registry" / "local" / "test_status.json"

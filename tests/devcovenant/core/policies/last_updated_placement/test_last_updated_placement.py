@@ -6,10 +6,10 @@ import unittest
 from datetime import datetime, timezone
 from pathlib import Path
 
-from devcovenant.core.base import CheckContext, Violation
 from devcovenant.core.policies.last_updated_placement import (
     last_updated_placement,
 )
+from devcovenant.core.policy_contracts import CheckContext, Violation
 
 fixer_module = importlib.import_module(
     "devcovenant.core.policies.last_updated_placement.fixers.global"

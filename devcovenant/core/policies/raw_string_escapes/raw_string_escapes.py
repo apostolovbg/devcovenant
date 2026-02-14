@@ -5,8 +5,12 @@ import re
 import tokenize
 from typing import List
 
-from devcovenant.core.base import CheckContext, PolicyCheck, Violation
-from devcovenant.core.selector_helpers import SelectorSet
+from devcovenant.core.policy_contracts import (
+    CheckContext,
+    PolicyCheck,
+    Violation,
+)
+from devcovenant.core.selector_runtime import SelectorSet
 
 _STRING_PREFIX_RE = re.compile(r"(?P<prefix>[rubfRUBF]*)(?P<quote>['\"]{1,3})")
 _SUSPICIOUS_ESCAPE_RE = re.compile(r"\\(?![\\'\"abfnrtv0-7xuUN])")

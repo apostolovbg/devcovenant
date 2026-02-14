@@ -1,7 +1,11 @@
 """Guard editing access to paths selected by the metadata-defined globs."""
 
-from devcovenant.core.base import CheckContext, PolicyCheck, Violation
-from devcovenant.core.selector_helpers import SelectorSet
+from devcovenant.core.policy_contracts import (
+    CheckContext,
+    PolicyCheck,
+    Violation,
+)
+from devcovenant.core.selector_runtime import SelectorSet
 
 
 class ReadOnlyDirectoriesCheck(PolicyCheck):

@@ -4,8 +4,8 @@ import tempfile
 import unittest
 from pathlib import Path
 
-from devcovenant.core.base import CheckContext
 from devcovenant.core.policies.name_clarity import name_clarity
+from devcovenant.core.policy_contracts import CheckContext
 from devcovenant.core.translator_runtime import TranslatorRuntime
 
 NameClarityCheck = name_clarity.NameClarityCheck

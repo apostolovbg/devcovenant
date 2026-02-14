@@ -8,7 +8,11 @@ from __future__ import annotations
 
 from typing import List, Tuple
 
-from devcovenant.core.base import CheckContext, PolicyCheck, Violation
+from devcovenant.core.policy_contracts import (
+    CheckContext,
+    PolicyCheck,
+    Violation,
+)
 
 
 class ReadmeSyncCheck(PolicyCheck):

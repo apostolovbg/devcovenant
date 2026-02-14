@@ -5,8 +5,8 @@ import tempfile
 import unittest
 from pathlib import Path
 
-from devcovenant.core.base import CheckContext
 from devcovenant.core.policies.managed_environment import managed_environment
+from devcovenant.core.policy_contracts import CheckContext
 from tests.devcovenant.support import MonkeyPatch
 
 ManagedEnvironmentCheck = managed_environment.ManagedEnvironmentCheck

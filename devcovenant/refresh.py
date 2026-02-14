@@ -12,12 +12,12 @@ if __package__ in {None, ""}:  # pragma: no cover
 import argparse
 from pathlib import Path
 
-from devcovenant.core.execution import (
+from devcovenant.core.execution_runtime import (
     print_banner,
     print_step,
     resolve_repo_root,
 )
-from devcovenant.core.repo_refresh import refresh_repo
+from devcovenant.core.refresh_runtime import refresh_repo
 
 
 def _build_parser() -> argparse.ArgumentParser:

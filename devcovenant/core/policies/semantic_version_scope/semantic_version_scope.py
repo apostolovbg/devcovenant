@@ -7,7 +7,11 @@ import re
 from pathlib import Path
 from typing import List, Optional, Tuple
 
-from devcovenant.core.base import CheckContext, PolicyCheck, Violation
+from devcovenant.core.policy_contracts import (
+    CheckContext,
+    PolicyCheck,
+    Violation,
+)
 
 try:
     from semver import VersionInfo

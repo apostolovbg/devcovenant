@@ -204,10 +204,6 @@ policy_state:
   semantic-version-scope: true
   version-sync: true
 
-# Core policy IDs frozen into devcovenant/custom/policies/*.
-
-freeze_core_policies: []
-
 # -------------------------------------------------------------------
 # Global ignore patterns
 # -------------------------------------------------------------------

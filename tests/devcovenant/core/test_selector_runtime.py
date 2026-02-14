@@ -1,11 +1,11 @@
-"""Tests for selector helper behavior."""
+"""Tests for selector runtime behavior."""
 
 import tempfile
 import unittest
 from pathlib import Path
 
-from devcovenant.core.base import PolicyCheck
-from devcovenant.core.selector_helpers import SelectorSet, build_watchlists
+from devcovenant.core.policy_contracts import PolicyCheck
+from devcovenant.core.selector_runtime import SelectorSet, build_watchlists
 
 
 class DummyPolicy(PolicyCheck):

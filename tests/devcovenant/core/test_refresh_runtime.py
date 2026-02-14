@@ -1,8 +1,9 @@
-"""Unit tests for devcovenant.core.repo_refresh orchestration."""
+"""Unit tests for devcovenant.core.refresh_runtime orchestration."""
 
 from __future__ import annotations
 
 import json
+import re
 import tempfile
 import unittest
 from pathlib import Path
@@ -10,7 +11,7 @@ from pathlib import Path
 import yaml
 
 from devcovenant import install
-from devcovenant.core import repo_refresh as core_refresh
+from devcovenant.core import refresh_runtime as core_refresh
 
 
 def _read_yaml(path: Path) -> dict[str, object]:
@@ -101,6 +102,43 @@ def _unit_test_refresh_repo_updates_agents_policy_block() -> None:
         assert "<!-- DEVCOV-POLICIES:BEGIN -->" in content
         assert "<!-- DEVCOV-WORKFLOW:BEGIN -->" in content
         assert "## Policy:" in content
+
+
+def _unit_test_refresh_repo_emits_agents_policy_block_contract() -> None:
+    """Refresh should emit policy-def blocks with required contract keys."""
+    with tempfile.TemporaryDirectory() as temp_dir:
+        repo_root = Path(temp_dir)
+        install.install_repo(repo_root)
+
+        result = core_refresh.refresh_repo(repo_root)
+        assert result == 0
+
+        agents_path = repo_root / "AGENTS.md"
+        content = agents_path.read_text(encoding="utf-8")
+        blocks = re.findall(
+            r"```policy-def\n(.*?)\n```",
+            content,
+            flags=re.DOTALL,
+        )
+        assert blocks
+
+        required = {
+            "id",
+            "status",
+            "severity",
+            "auto_fix",
+            "enforcement",
+            "enabled",
+            "custom",
+        }
+        for block in blocks:
+            keys = {
+                line.split(":", 1)[0].strip()
+                for line in block.splitlines()
+                if ":" in line and line.split(":", 1)[0].strip()
+            }
+            missing = required - keys
+            assert not missing, sorted(missing)
 
 
 def _unit_test_refresh_repo_ignores_inline_marker_mentions() -> None:
@@ -402,6 +440,39 @@ def _unit_test_refresh_repo_updates_generated_config_sections() -> None:
         assert "Metadata overrides (resolution order matters)" in rendered
 
 
+def _unit_test_refresh_repo_emits_config_contract_keys() -> None:
+    """Refresh should materialize core Tier-A config contract keys."""
+    with tempfile.TemporaryDirectory() as temp_dir:
+        repo_root = Path(temp_dir)
+        install.install_repo(repo_root)
+
+        result = core_refresh.refresh_repo(repo_root)
+        assert result == 0
+
+        config_path = repo_root / "devcovenant" / "config.yaml"
+        config = _read_yaml(config_path)
+
+        assert isinstance(config.get("devcov_core_include"), bool)
+        assert isinstance(config.get("devcov_core_paths"), list)
+        assert isinstance(config.get("profiles"), dict)
+        assert isinstance(config.get("policy_state"), dict)
+        assert isinstance(config.get("doc_assets"), dict)
+        assert isinstance(config.get("install"), dict)
+        assert isinstance(config.get("pre_commit"), dict)
+        assert isinstance(config.get("autogen_metadata_overrides"), dict)
+        assert isinstance(config.get("user_metadata_overrides"), dict)
+
+        profiles_block = config.get("profiles", {})
+        assert isinstance(profiles_block.get("active"), list)
+
+        doc_assets = config.get("doc_assets", {})
+        assert isinstance(doc_assets.get("autogen"), list)
+        assert isinstance(doc_assets.get("user"), list)
+
+        install_block = config.get("install", {})
+        assert isinstance(install_block.get("generic_config"), bool)
+
+
 def _unit_test_refresh_repo_preserves_existing_profile_assets() -> None:
     """Refresh should preserve existing profile asset targets."""
     with tempfile.TemporaryDirectory() as temp_dir:
@@ -600,6 +671,10 @@ class GeneratedUnittestCases(unittest.TestCase):
         """Run test_refresh_repo_updates_agents_policy_block."""
         _unit_test_refresh_repo_updates_agents_policy_block()
 
+    def test_refresh_repo_emits_agents_policy_block_contract(self):
+        """Run test_refresh_repo_emits_agents_policy_block_contract."""
+        _unit_test_refresh_repo_emits_agents_policy_block_contract()
+
     def test_refresh_repo_ignores_inline_marker_mentions(self):
         """Run test_refresh_repo_ignores_inline_marker_mentions."""
         _unit_test_refresh_repo_ignores_inline_marker_mentions()
@@ -619,6 +694,10 @@ class GeneratedUnittestCases(unittest.TestCase):
     def test_refresh_repo_updates_generated_config_sections(self):
         """Run test_refresh_repo_updates_generated_config_sections."""
         _unit_test_refresh_repo_updates_generated_config_sections()
+
+    def test_refresh_repo_emits_config_contract_keys(self):
+        """Run test_refresh_repo_emits_config_contract_keys."""
+        _unit_test_refresh_repo_emits_config_contract_keys()
 
     def test_refresh_repo_preserves_existing_profile_assets(self):
         """Run test_refresh_repo_preserves_existing_profile_assets."""

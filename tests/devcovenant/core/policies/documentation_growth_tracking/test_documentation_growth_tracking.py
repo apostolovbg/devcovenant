@@ -4,10 +4,10 @@ import tempfile
 import unittest
 from pathlib import Path
 
-from devcovenant.core.base import CheckContext
 from devcovenant.core.policies.documentation_growth_tracking import (
     documentation_growth_tracking,
 )
+from devcovenant.core.policy_contracts import CheckContext
 
 DocumentationGrowthTrackingCheck = (
     documentation_growth_tracking.DocumentationGrowthTrackingCheck

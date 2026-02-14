@@ -4,11 +4,11 @@ import tempfile
 import unittest
 from pathlib import Path
 
-from devcovenant.core import manifest as manifest_module
-from devcovenant.core.base import CheckContext
+from devcovenant.core import registry_runtime as manifest_module
 from devcovenant.core.policies.devcov_structure_guard import (
     devcov_structure_guard,
 )
+from devcovenant.core.policy_contracts import CheckContext
 
 
 def _unit_test_structure_guard_passes_with_required_paths():

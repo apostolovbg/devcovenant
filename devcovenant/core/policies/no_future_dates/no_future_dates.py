@@ -8,7 +8,11 @@ import datetime as dt
 import re
 from typing import List
 
-from devcovenant.core.base import CheckContext, PolicyCheck, Violation
+from devcovenant.core.policy_contracts import (
+    CheckContext,
+    PolicyCheck,
+    Violation,
+)
 
 DATE_PATTERN = re.compile(r"\b(19|20)\d{2}-\d{2}-\d{2}\b")
 

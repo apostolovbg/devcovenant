@@ -9,11 +9,11 @@ from pathlib import Path
 
 import yaml
 
-from devcovenant.core.base import CheckContext
 from devcovenant.core.policies.devcov_integrity_guard import (
     devcov_integrity_guard,
 )
-from devcovenant.core.registry import PolicyRegistry
+from devcovenant.core.policy_contracts import CheckContext
+from devcovenant.core.registry_runtime import PolicyRegistry
 
 
 def _write(path: Path, content: str) -> Path:

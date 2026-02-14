@@ -4,10 +4,10 @@ import tempfile
 import unittest
 from pathlib import Path
 
-from devcovenant.core.base import CheckContext
 from devcovenant.core.policies.docstring_and_comment_coverage import (
     docstring_and_comment_coverage,
 )
+from devcovenant.core.policy_contracts import CheckContext
 from devcovenant.core.translator_runtime import TranslatorRuntime
 
 DocstringAndCommentCoverageCheck = (

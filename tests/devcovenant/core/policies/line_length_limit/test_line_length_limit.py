@@ -7,8 +7,8 @@ import tempfile
 import unittest
 from pathlib import Path
 
-from devcovenant.core.base import CheckContext
 from devcovenant.core.policies.line_length_limit import line_length_limit
+from devcovenant.core.policy_contracts import CheckContext
 
 LineLengthLimitCheck = line_length_limit.LineLengthLimitCheck
 

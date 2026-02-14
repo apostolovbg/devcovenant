@@ -11,7 +11,7 @@ import re
 from datetime import datetime, timezone
 from pathlib import Path
 
-from devcovenant.core.base import FixResult, PolicyFixer, Violation
+from devcovenant.core.policy_contracts import FixResult, PolicyFixer, Violation
 
 
 class LastUpdatedPlacementFixer(PolicyFixer):

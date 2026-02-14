@@ -12,17 +12,21 @@ from typing import Any, Dict, List, Optional, Set
 
 import yaml
 
-from . import manifest as manifest_module
-from .base import CheckContext, PolicyCheck, PolicyFixer, Violation
-from .manifest import ensure_manifest
 from .parser import PolicyDefinition, PolicyParser
-from .policy_descriptor import resolve_script_location
-from .profiles import (
+from .policy_contracts import CheckContext, PolicyCheck, PolicyFixer, Violation
+from .profile_runtime import (
     load_profile_registry,
+    parse_active_profiles,
     resolve_profile_ignore_dirs,
     resolve_profile_suffixes,
 )
-from .registry import PolicyRegistry, PolicySyncIssue
+from .registry_runtime import (
+    PolicyRegistry,
+    PolicySyncIssue,
+    ensure_manifest,
+    policy_registry_path,
+    resolve_script_location,
+)
 from .translator_runtime import TranslatorRuntime
 
 
@@ -74,9 +78,7 @@ class DevCovenantEngine:
         self.devcovenant_dir = self.repo_root / "devcovenant"
         self.agents_md_path = self.repo_root / "AGENTS.md"
         self.config_path = self.devcovenant_dir / "config.yaml"
-        self.registry_path = manifest_module.policy_registry_path(
-            self.repo_root
-        )
+        self.registry_path = policy_registry_path(self.repo_root)
 
         # Load configuration and apply overrides
         self.config = self._load_config()
@@ -87,7 +89,9 @@ class DevCovenantEngine:
         self._apply_core_exclusions()
 
         self._profile_registry = load_profile_registry(self.repo_root)
-        self._active_profiles = self._resolve_active_profiles()
+        self._active_profiles = parse_active_profiles(
+            self.config, include_global=True
+        )
         self.translator_runtime = TranslatorRuntime(
             self.repo_root,
             self._profile_registry,
@@ -171,24 +175,6 @@ class DevCovenantEngine:
             if not rel:
                 continue
             self._ignored_paths.append(self.repo_root / rel)
-
-    def _resolve_active_profiles(self) -> list[str]:
-        """Return the normalized list of active profiles."""
-        profiles_cfg = self.config.get("profiles", {}) if self.config else {}
-        active = profiles_cfg.get("active", [])
-        if isinstance(active, str):
-            candidates = [active]
-        elif isinstance(active, list):
-            candidates = active
-        else:
-            candidates = [active] if active else []
-        normalized: list[str] = []
-        for entry in candidates:
-            normalized_value = str(entry or "").strip().lower()
-            if not normalized_value or normalized_value == "__none__":
-                continue
-            normalized.append(normalized_value)
-        return sorted(set(normalized))
 
     def _discover_custom_policy_overrides(self) -> set[str]:
         """Return policy ids overridden by custom policy scripts."""
@@ -378,8 +364,8 @@ class DevCovenantEngine:
                 print(f"1. Create: {issue.script_path}")
                 print("2. Implement the policy described above")
                 print(
-                    "3. Use the PolicyCheck base class from "
-                    "devcovenant.core.base"
+                    "3. Use the PolicyCheck contract from "
+                    "devcovenant.core.policy_contracts"
                 )
                 policy_slug = issue.policy_id.replace("-", "_")
                 test_file = (

@@ -8,7 +8,7 @@ import re
 from pathlib import Path
 from typing import Iterable, List, Tuple
 
-from devcovenant.core.base import FixResult, PolicyFixer, Violation
+from devcovenant.core.policy_contracts import FixResult, PolicyFixer, Violation
 
 _DATE_PATTERN = re.compile(r"^\s*-\s*(\d{4}-\d{2}-\d{2})\b")
 

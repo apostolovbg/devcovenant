@@ -4,10 +4,10 @@ import tempfile
 import unittest
 from pathlib import Path
 
-from devcovenant.core.base import CheckContext
 from devcovenant.core.policies.read_only_directories import (
     read_only_directories,
 )
+from devcovenant.core.policy_contracts import CheckContext
 
 
 def _prepare_file(tmp_path: Path) -> Path:

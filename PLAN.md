@@ -1,5 +1,5 @@
 # DevCovenant Development Plan
-**Last Updated:** 2026-02-13
+**Last Updated:** 2026-02-14
 **Version:** 0.2.6
 
 <!-- DEVCOV:BEGIN -->
@@ -8,139 +8,152 @@
 **Managed By:** DevCovenant
 <!-- DEVCOV:END -->
 
-This plan replaces the prior dedrift backlog and drives the API-freeze and
-runtime-consolidation workstream defined in `SPEC.md`.
+This plan is the execution backlog for the 0.2.6 API-freeze phase.
+The goal is to make runtime behavior, extension contracts, and data contracts
+explicit, stable, and implementation-aligned with `SPEC.md`.
 
 ## Table of Contents
 1. [Overview](#overview)
 2. [Workflow](#workflow)
-3. [Locked Decisions](#locked-decisions)
-4. [API-Freeze Backlog](#api-freeze-backlog)
-5. [Acceptance Criteria](#acceptance-criteria)
-6. [Validation Routine](#validation-routine)
+3. [Operating Rules](#operating-rules)
+4. [Contract Surfaces](#contract-surfaces)
+5. [Target Core Layout](#target-core-layout)
+6. [Implementation Backlog](#implementation-backlog)
+7. [Acceptance Criteria](#acceptance-criteria)
+8. [Validation Cycle](#validation-cycle)
 
 ## Overview
-- Scope: freeze DevCovenant contracts while keeping additive extensibility.
-- Priority: remove runtime/API fragmentation and align language handling on
-  profile-owned translators + shared `LanguageUnit`.
-- Constraint: `policy_state` in `config.yaml` remains the sole activation
-  authority.
-- Rule: implement target-state behavior directly (forward-only): no legacy
-  fallbacks and no anti-legacy policing logic unless explicitly requested.
+- Scope: finish 0.2.6 API freeze and remove remaining SPEC-vs-reality drift.
+- Standard: forward-only implementation of the current contract.
+- Constraint: no legacy fallbacks and no active anti-legacy policing logic
+  unless a policy explicitly requires such behavior.
 
 ## Workflow
-- Run `devcovenant gate --start` before edits.
-- Implement items in backlog order unless superseded by a newer SPEC decision.
-- Run `devcovenant refresh` after spec/profile/runtime contract edits.
-- Run `devcovenant test`.
-- Run `devcovenant gate --end`.
+- Start with `python3 -m devcovenant gate --start`.
+- Implement one backlog item at a time against `SPEC.md`.
+- Run `python3 -m devcovenant refresh` when contract docs/schema change.
+- Run `python3 -m devcovenant test` before closing the work cycle.
+- Finish with `python3 -m devcovenant gate --end`.
 
-## Locked Decisions
-- [done] Policy activation is config-only (`policy_state`).
-- [done] Core/custom profile origin is inferred by path.
-- [done] Translators are owned by language profiles.
-- [done] Framework/ops/tooling/repo profiles do not select translators.
-- [done] Runtime parses AGENTS policy block; registry remains diagnostic/hash
-  state and AGENTS compile source.
-- [done] Forward-only implementation applies: remove old paths from code/docs;
-  do not add dedicated legacy fallback paths or anti-legacy rejection checks.
+## Operating Rules
+- `policy_state` in `devcovenant/config.yaml` is the only policy activation
+  authority.
+- Profiles provide overlays/assets/hooks/selectors; profiles do not activate
+  policies.
+- Translators are declared by language profiles and routed through the shared
+  translator runtime.
+- CLI-exposed command modules stay at `devcovenant/` package root.
+- Tests are current-behavior artifacts and must be updated or deleted when
+  their target modules change or are removed.
 
-## API-Freeze Backlog
-1. [done] Amend SPEC for API freeze charter and additive extension policy.
+## Contract Surfaces
+- Tier A (user contract): CLI command behavior/flags, config schema,
+  managed-doc block schema, AGENTS policy-block schema.
+- Tier B (extension contract): policy/fixer interfaces, profile manifest
+  schema, translator declaration schema, `LanguageUnit` schema.
+- Tier C (data contract): registry/state file schemas under
+  `devcovenant/registry/local` and `devcovenant/registry/global`.
+- Tier D (internal runtime): orchestration/runtime internals under
+  `devcovenant/core/*_runtime.py`.
+
+## Target Core Layout
+- Runtime orchestration modules:
+  - `policy_runtime.py`
+  - `metadata_runtime.py`
+  - `profile_runtime.py`
+  - `translator_runtime.py`
+  - `refresh_runtime.py`
+  - `registry_runtime.py`
+  - `selector_runtime.py`
+  - `gate_runtime.py`
+  - `execution_runtime.py`
+- Contract module:
+  - `policy_contracts.py`
+
+## Implementation Backlog
+1. [done] Establish API freeze charter and contract-surface matrix in SPEC.
 - Deliverables:
-  - Explicit contract freeze language.
-  - Explicit additive-only minor-version rule.
-  - Explicit migration requirement for breaking changes.
+  - Explicit Tier A/B/C/D definitions.
+  - Explicit forward-only rule in spec language.
 
-2. [done] Implement full `policy_state` materialization on refresh.
+2. [done] Consolidate runtime orchestration under explicit `*_runtime.py`
+   ownership.
 - Deliverables:
-  - Rebuild `policy_state` as full alphabetical map of effective policy IDs.
-  - Preserve existing boolean states.
-  - Seed new entries from resolved `enabled` defaults.
-  - Drop stale policy IDs no longer discovered.
+  - Migrate orchestration responsibilities into the target runtime set.
+  - Remove overlapping legacy runtime modules.
 
-3. [done] Implement profile contract boundaries in runtime behavior.
+3. [done] Remove policy-freeze workflow and artifacts.
 - Deliverables:
-  - Use profile manifests for overlays/assets/hooks and file selectors only.
-  - Keep activation resolved solely from `policy_state`.
-  - Keep core/custom distinction path-inferred without extra type keys.
+  - Remove policy-freeze runtime/doc/test references.
+  - Keep custom-policy copy workflow as the replacement pattern.
 
-4. [done] Add language-profile translator declaration schema.
+4. [done] Freeze command model around `check`, `gate`, `test`, and lifecycle
+   commands.
 - Deliverables:
-  - Define translator declaration fields in profile YAML schema.
-  - Validate declaration shape during refresh/runtime loading.
-  - Ensure only language profiles can declare translators.
+  - `gate --start|--end` handles gate recording and pre-commit execution.
+  - `check` keeps `--nofix` and `--norefresh` behavior only.
 
-5. [done] Build centralized translator runtime in core.
+5. [done] Move translator ownership to language profiles and remove
+   per-policy adapter ownership.
 - Deliverables:
-  - Build extension-based candidate routing from active language profiles.
-  - Run `can_handle` candidate arbitration.
-  - Emit deterministic violations for no-match and multi-match cases.
+  - Language profiles declare translator routing metadata.
+  - Policy execution requests translation through runtime.
 
-6. [done] Introduce shared `LanguageUnit` model.
+6. [done] Narrow package-level Python API exports to explicit contracts.
 - Deliverables:
-  - Define normalized, policy-agnostic output structure.
-  - Route all language-aware policy parsing through this structure.
+  - Define and document explicit exports in `devcovenant/__init__.py`.
+  - Keep runtime internals non-public by default.
+  - Align tests/docs with the narrowed import surface.
 
-7. [done] Migrate language-aware policies off per-policy adapter maps.
+7. [done] Complete Tier A contract tests.
 - Deliverables:
-  - Migrate `name_clarity`, `security_scanner`,
-    `docstring_and_comment_coverage`, and `modules_need_tests` to translator
-    runtime + `LanguageUnit`.
-  - Remove per-policy extension->adapter routing logic.
+  - CLI command/flag behavior tests for frozen commands.
+  - Config schema and managed-doc block contract tests.
+  - AGENTS policy-block schema tests.
 
-8. [done] Pre-commit profile ownership cleanup.
+8. [done] Complete Tier B contract tests.
 - Deliverables:
-  - Keep global hook baseline in `global` profile.
-  - Move language-specific hooks to corresponding language profiles.
-  - Keep generated pre-commit as authoritative artifact.
+  - Policy/fixer callable contract tests via `policy_contracts.py` types.
+  - Profile manifest schema contract tests.
+  - Translator declaration and `LanguageUnit` contract tests.
 
-9. [not done] Consolidate scattered core responsibilities.
+9. [not done] Complete Tier C contract tests.
 - Deliverables:
-  - Consolidate runtime responsibilities into stable core runtime domains:
-    policy, metadata, profile, translator, refresh, registry.
-  - Remove legacy/duplicate internals absorbed by the new domains.
-  - Keep CLI-exposed scripts at package root.
+  - Registry file schema and generation invariant tests.
+  - Policy/profile registry synchronization tests.
+  - Test-status/gate state schema tests.
 
-10. [done] Add conformance/contract test suite.
+10. [not done] Close remaining responsibility drift in core modules.
 - Deliverables:
-  - Assert full alphabetical `policy_state` refresh behavior with state
-    preservation.
-  - Assert translator ownership by language profiles only.
-  - Assert language-aware policy execution goes through shared translator
-    runtime behavior.
+  - Eliminate duplicate code paths for profile, registry, selector,
+    metadata, and refresh responsibilities.
+  - Fold AGENTS policy-block parse logic into runtime ownership and remove
+    standalone `parser.py`.
+  - Keep `policy_contracts.py` contract-only by usage.
 
-11. [done] Align test lifecycle contract in `modules-need-tests`.
+11. [not done] Run full SPEC-vs-reality audit and resolve remaining 0.2.6
+    drift.
 - Deliverables:
-  - Define test ownership as current-behavior validation of corresponding
-    scripts/modules.
-  - Require test updates alongside script changes.
-  - Require test removal when corresponding scripts/modules are removed.
+  - Enumerate unresolved drift against current `SPEC.md`.
+  - Fix or explicitly defer each item with rationale.
+  - Mark backlog complete only when no unresolved 0.2.6 drift remains.
 
-12. [not done] SPEC-vs-reality closure audit after implementation.
+12. [not done] Finalize 0.2.6 release readiness.
 - Deliverables:
-  - Re-audit runtime behavior vs amended SPEC.
-  - Resolve residual drift or explicitly defer with rationale.
-
-13. [done] Split gate lifecycle from check command.
-- Deliverables:
-  - Move start/end pre-commit workflow to `gate --start|--end`.
-  - Keep `check` focused on policy execution with `--nofix` and
-    `--norefresh`.
-  - Update docs/templates/workflow guidance to use `gate` for start/end.
+  - Clean docs/registry/config refresh behavior.
+  - Passing gated workflow (`gate --start`, `test`, `gate --end`).
+  - Updated changelog entries for completed backlog work.
 
 ## Acceptance Criteria
-- API contracts are explicit in SPEC and enforced in code.
-- Refresh produces deterministic, full, alphabetical `policy_state`.
-- Language-aware policies run through centralized translator runtime and shared
-  `LanguageUnit`.
-- No per-policy adapter routing remains in migrated policies.
-- Core runtime responsibilities are consolidated and duplicate internals
-  removed.
-- Contract tests pass and block regressions.
+- Contract boundaries are explicit and enforced by tests for Tier A/B/C.
+- Runtime internals are not treated as public API.
+- Translator routing is metadata-driven via language profile declarations.
+- Command behavior matches the frozen CLI contract.
+- SPEC and runtime behavior are aligned with no unresolved 0.2.6 drift.
 
-## Validation Routine
-- Run `devcovenant gate --start`.
-- Run `devcovenant refresh` after each milestone item.
-- Run `devcovenant test`.
-- Run `devcovenant gate --end`.
+## Validation Cycle
+- Run `python3 -m devcovenant gate --start` before edits.
+- Run targeted unittests for touched contract surfaces.
+- Run `python3 -m devcovenant refresh` after contract/schema edits.
+- Run `python3 -m devcovenant test`.
+- Run `python3 -m devcovenant gate --end`.

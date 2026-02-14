@@ -10,7 +10,7 @@ import subprocess
 import sys
 from pathlib import Path
 
-from devcovenant.core import manifest as manifest_module
+from devcovenant.core import registry_runtime as registry_runtime_module
 
 
 def _utc_now() -> _dt.datetime:
@@ -80,7 +80,7 @@ def run_pre_commit_gate(
     if phase not in {"start", "end"}:
         raise SystemExit("phase must be 'start' or 'end'.")
 
-    status_path = manifest_module.test_status_path(repo_root)
+    status_path = registry_runtime_module.test_status_path(repo_root)
     status_path.parent.mkdir(parents=True, exist_ok=True)
 
     env = os.environ.copy()

@@ -4,8 +4,8 @@ import tempfile
 import unittest
 from pathlib import Path
 
-from devcovenant.core.base import CheckContext
 from devcovenant.core.policies.security_scanner import security_scanner
+from devcovenant.core.policy_contracts import CheckContext
 from devcovenant.core.translator_runtime import TranslatorRuntime
 
 SecurityScannerCheck = security_scanner.SecurityScannerCheck

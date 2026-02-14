@@ -31,7 +31,6 @@ The core sections are:
 - `autogen_metadata_overrides` for profile-derived metadata overlays.
 - `user_metadata_overrides` for per-policy overrides applied last.
 - `policy_state` for authoritative policy on/off activation.
-- `freeze_core_policies` to copy policy logic into custom overlays.
 - `pre_commit` for `.pre-commit-config.yaml` overrides.
 - `install.generic_config` to guard deploys until the config is reviewed.
 

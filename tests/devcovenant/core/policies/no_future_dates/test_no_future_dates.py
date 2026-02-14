@@ -6,8 +6,8 @@ import tempfile
 import unittest
 from pathlib import Path
 
-from devcovenant.core.base import CheckContext
 from devcovenant.core.policies.no_future_dates import no_future_dates
+from devcovenant.core.policy_contracts import CheckContext
 
 FIXER_MODULE = "devcovenant.core.policies.no_future_dates.fixers.global"
 fixer_module = importlib.import_module(FIXER_MODULE)

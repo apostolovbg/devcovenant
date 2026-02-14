@@ -1,4 +1,4 @@
-"""Unit tests for devcovenant.core.execution helpers."""
+"""Unit tests for devcovenant.core.execution_runtime helpers."""
 
 from __future__ import annotations
 
@@ -7,7 +7,7 @@ import unittest
 from pathlib import Path
 from unittest.mock import patch
 
-from devcovenant.core import execution
+from devcovenant.core import execution_runtime
 
 
 class GeneratedUnittestCases(unittest.TestCase):
@@ -20,7 +20,7 @@ class GeneratedUnittestCases(unittest.TestCase):
             (repo_root / ".git").mkdir()
             nested = repo_root / "src" / "module"
             nested.mkdir(parents=True)
-            resolved = execution.find_git_root(nested)
+            resolved = execution_runtime.find_git_root(nested)
             self.assertEqual(resolved, repo_root)
 
     def test_read_local_version_returns_none_without_init(self):
@@ -28,7 +28,7 @@ class GeneratedUnittestCases(unittest.TestCase):
         with tempfile.TemporaryDirectory() as temp_dir:
             repo_root = Path(temp_dir).resolve()
             (repo_root / "devcovenant").mkdir()
-            self.assertIsNone(execution.read_local_version(repo_root))
+            self.assertIsNone(execution_runtime.read_local_version(repo_root))
 
     def test_read_local_version_parses_version_string(self):
         """read_local_version parses __version__ from package __init__.py."""
@@ -38,7 +38,10 @@ class GeneratedUnittestCases(unittest.TestCase):
             package_dir.mkdir()
             init_path = package_dir / "__init__.py"
             init_path.write_text('__version__ = "9.9.9"\n', encoding="utf-8")
-            self.assertEqual(execution.read_local_version(repo_root), "9.9.9")
+            self.assertEqual(
+                execution_runtime.read_local_version(repo_root),
+                "9.9.9",
+            )
 
     def test_prioritizes_unittest_before_pytest(self):
         """unittest discover should run before pytest when both exist."""
@@ -50,7 +53,9 @@ class GeneratedUnittestCases(unittest.TestCase):
             ),
             ("cargo test", ["cargo", "test"]),
         ]
-        ordered = execution._prioritize_python_unit_then_pytest(commands)
+        ordered = execution_runtime._prioritize_python_unit_then_pytest(
+            commands
+        )
         self.assertEqual(
             ordered,
             [
@@ -63,7 +68,10 @@ class GeneratedUnittestCases(unittest.TestCase):
             ],
         )
 
-    @patch("devcovenant.core.execution.manifest_module.policy_registry_path")
+    @patch(
+        "devcovenant.core.execution_runtime."
+        "registry_runtime_module.policy_registry_path"
+    )
     @patch("yaml.safe_load")
     def test_registry_required_commands_reorders_python_pair(
         self,
@@ -89,7 +97,7 @@ class GeneratedUnittestCases(unittest.TestCase):
                 }
             }
 
-            commands = execution.registry_required_commands(repo_root)
+            commands = execution_runtime.registry_required_commands(repo_root)
 
             self.assertEqual(commands[0][0], "python3 -m unittest discover -v")
             self.assertEqual(commands[1][0], "pytest")

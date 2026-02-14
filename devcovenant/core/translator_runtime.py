@@ -8,7 +8,7 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Any
 
-from .base import Violation
+from .policy_contracts import Violation
 
 MODULE_FUNCTION = "module_function"
 ALLOW_NAME_CLARITY = "name-clarity: allow"

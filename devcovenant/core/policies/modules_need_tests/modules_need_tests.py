@@ -8,8 +8,12 @@ import subprocess
 from pathlib import Path
 from typing import List, Set, Tuple
 
-from devcovenant.core.base import CheckContext, PolicyCheck, Violation
-from devcovenant.core.selector_helpers import SelectorSet, build_watchlists
+from devcovenant.core.policy_contracts import (
+    CheckContext,
+    PolicyCheck,
+    Violation,
+)
+from devcovenant.core.selector_runtime import SelectorSet, build_watchlists
 
 IGNORED_MODULE_STEMS = {"__init__", "__main__"}
 

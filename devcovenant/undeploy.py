@@ -15,7 +15,7 @@ from pathlib import Path
 
 import yaml
 
-from devcovenant.core.execution import (
+from devcovenant.core.execution_runtime import (
     print_banner,
     print_step,
     resolve_repo_root,

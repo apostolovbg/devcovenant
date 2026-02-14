@@ -11,12 +11,12 @@ if __package__ in {None, ""}:  # pragma: no cover
 
 import argparse
 
-from devcovenant.core.execution import (
+from devcovenant.core.execution_runtime import (
     print_banner,
     print_step,
     resolve_repo_root,
 )
-from devcovenant.core.gates import run_pre_commit_gate
+from devcovenant.core.gate_runtime import run_pre_commit_gate
 
 
 def _build_parser() -> argparse.ArgumentParser:

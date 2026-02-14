@@ -7,8 +7,8 @@ import tempfile
 import unittest
 from pathlib import Path
 
-from devcovenant.core.base import CheckContext
 from devcovenant.core.policies.devflow_run_gates import devflow_run_gates
+from devcovenant.core.policy_contracts import CheckContext
 from tests.devcovenant.support import MonkeyPatch
 
 DevflowRunGates = devflow_run_gates.DevflowRunGates

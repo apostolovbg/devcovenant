@@ -8,7 +8,11 @@ import sys
 from pathlib import Path
 from typing import List
 
-from devcovenant.core.base import CheckContext, PolicyCheck, Violation
+from devcovenant.core.policy_contracts import (
+    CheckContext,
+    PolicyCheck,
+    Violation,
+)
 
 
 class ManagedEnvironmentCheck(PolicyCheck):

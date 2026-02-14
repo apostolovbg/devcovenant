@@ -6,7 +6,7 @@ import tempfile
 import unittest
 from pathlib import Path
 
-from devcovenant.core.engine import DevCovenantEngine
+from devcovenant.core.policy_runtime import DevCovenantEngine
 from tests.devcovenant.support import MonkeyPatch
 
 
@@ -117,7 +117,6 @@ def _agents_policy_doc(policy_id: str, enabled: bool) -> str:
         "enforcement: active\n"
         f"enabled: {enabled_value}\n"
         "custom: false\n"
-        "freeze: false\n"
         "```\n\n"
         "Sample policy description.\n"
         "<!-- DEVCOV-POLICIES:END -->\n"

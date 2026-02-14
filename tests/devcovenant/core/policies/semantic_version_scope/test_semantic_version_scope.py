@@ -4,10 +4,10 @@ import tempfile
 import unittest
 from pathlib import Path
 
-from devcovenant.core.base import CheckContext
 from devcovenant.core.policies.semantic_version_scope import (
     semantic_version_scope,
 )
+from devcovenant.core.policy_contracts import CheckContext
 
 
 def _write_version_files(

@@ -8,7 +8,11 @@ import subprocess
 from pathlib import Path
 from typing import Iterable, List, Optional
 
-from devcovenant.core.base import CheckContext, PolicyCheck, Violation
+from devcovenant.core.policy_contracts import (
+    CheckContext,
+    PolicyCheck,
+    Violation,
+)
 
 try:
     import tomllib  # type: ignore[attr-defined]

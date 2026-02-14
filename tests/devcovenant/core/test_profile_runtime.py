@@ -7,7 +7,7 @@ from pathlib import Path
 
 import yaml
 
-from devcovenant.core import profiles
+from devcovenant.core import profile_runtime
 
 
 def _write_yaml(path: Path, content: str) -> None:
@@ -54,7 +54,7 @@ def _unit_test_load_profile_registry_merges_core_and_custom(
     )
     custom_profile_dir.mkdir(parents=True, exist_ok=True)
 
-    registry = profiles.load_profile_registry(tmp_path)
+    registry = profile_runtime.load_profile_registry(tmp_path)
 
     assert registry["python"]["suffixes"] == [".py", ".pyi"]
     assert registry["python"]["source"] == "custom"
@@ -64,7 +64,7 @@ def _unit_test_load_profile_registry_merges_core_and_custom(
 def _unit_test_list_profiles_sorts_registry() -> None:
     """Profile list is sorted for stable prompts."""
     registry = {"lua": {}, "python": {}, "zig": {}}
-    assert profiles.list_profiles(registry) == ["lua", "python", "zig"]
+    assert profile_runtime.list_profiles(registry) == ["lua", "python", "zig"]
 
 
 def _unit_test_resolve_profile_suffixes_ignores_placeholders() -> None:
@@ -73,8 +73,63 @@ def _unit_test_resolve_profile_suffixes_ignores_placeholders() -> None:
         "python": {"suffixes": [".py", ".pyi"]},
         "docs": {"suffixes": ["__none__", " "]},
     }
-    resolved = profiles.resolve_profile_suffixes(registry, ["docs", "python"])
+    resolved = profile_runtime.resolve_profile_suffixes(
+        registry, ["docs", "python"]
+    )
     assert resolved == [".py", ".pyi"]
+
+
+def _unit_test_parse_active_profiles_includes_global_once() -> None:
+    """Active profile parsing should normalize names and include global."""
+    config = {"profiles": {"active": ["Python", " global ", "__none__", ""]}}
+    parsed = profile_runtime.parse_active_profiles(config, include_global=True)
+    assert parsed == ["global", "python"]
+
+
+def _unit_test_parse_active_profiles_supports_string_or_missing() -> None:
+    """Profile parsing should handle string values and missing blocks."""
+    from_string = profile_runtime.parse_active_profiles(
+        {"profiles": {"active": "typescript"}},
+        include_global=False,
+    )
+    assert from_string == ["typescript"]
+    from_missing = profile_runtime.parse_active_profiles(
+        {}, include_global=True
+    )
+    assert from_missing == ["global"]
+
+
+def _unit_test_refresh_profile_registry_persists_payload() -> None:
+    """Refreshing the profile registry should persist registry/local file."""
+    with tempfile.TemporaryDirectory() as temp_dir:
+        repo_root = Path(temp_dir).resolve()
+        _write_yaml(
+            repo_root
+            / "devcovenant"
+            / "core"
+            / "profiles"
+            / "python"
+            / "python.yaml",
+            """
+            version: 1
+            profile: python
+            category: language
+            suffixes: [".py"]
+            """,
+        )
+        registry = profile_runtime.refresh_profile_registry(
+            repo_root, ["python"]
+        )
+        assert "profiles" in registry
+        assert "python" in registry["profiles"]
+        written_path = (
+            repo_root
+            / "devcovenant"
+            / "registry"
+            / "local"
+            / "profile_registry.yaml"
+        )
+        assert written_path.exists()
 
 
 def _unit_test_profile_overlays_reference_known_policies() -> None:
@@ -90,12 +145,12 @@ def _unit_test_profile_overlays_reference_known_policies() -> None:
                 continue
             known_policies.add(policy_dir.name.replace("_", "-"))
 
-    registry = profiles.build_profile_registry(repo_root)
+    registry = profile_runtime.build_profile_registry(repo_root)
     entries = registry["profiles"] if "profiles" in registry else registry
 
     for name, meta in entries.items():
         manifest_path = repo_root / meta["path"] / f"{name}.yaml"
-        manifest = profiles.load_profile(manifest_path)
+        manifest = profile_runtime.load_profile(manifest_path)
         overlays = manifest.get("policy_overlays", {})
         if not isinstance(overlays, dict):
             continue
@@ -109,7 +164,7 @@ def _unit_test_profiles_have_assets_unless_exempt() -> None:
     """Most profiles should ship assets; allow explicit exceptions."""
     exempt = {"global", "devcovuser"}
     repo_root = Path(__file__).resolve().parents[3]
-    registry = profiles.build_profile_registry(repo_root)
+    registry = profile_runtime.build_profile_registry(repo_root)
     for name, meta in (
         registry["profiles"].items()
         if "profiles" in registry
@@ -150,7 +205,7 @@ def _unit_test_language_profile_translator_declarations_normalize() -> None:
                   entrypoint: devcovenant.core.translators.python.translate
             """,
         )
-        registry = profiles.discover_profiles(repo_root)
+        registry = profile_runtime.discover_profiles(repo_root)
         translators = registry["python"]["translators"]
         assert len(translators) == 1
         declaration = translators[0]
@@ -190,7 +245,7 @@ def _unit_test_non_language_profile_translators_raise() -> None:
             """,
         )
         with unittest.TestCase().assertRaises(ValueError):
-            profiles.discover_profiles(repo_root)
+            profile_runtime.discover_profiles(repo_root)
 
 
 def _unit_test_translator_declaration_shape_is_validated() -> None:
@@ -248,7 +303,7 @@ def _unit_test_translator_declaration_shape_is_validated() -> None:
             )
             _write_yaml(manifest_path, content)
             with unittest.TestCase().assertRaises(ValueError):
-                profiles.discover_profiles(repo_root)
+                profile_runtime.discover_profiles(repo_root)
 
 
 def _unit_test_profile_registry_load_validates_translator_schema() -> None:
@@ -281,7 +336,56 @@ def _unit_test_profile_registry_load_validates_translator_schema() -> None:
             """,
         )
         with unittest.TestCase().assertRaises(ValueError):
-            profiles.load_profile_registry(repo_root)
+            profile_runtime.load_profile_registry(repo_root)
+
+
+def _unit_test_profile_manifests_follow_contract_schema() -> None:
+    """Profile manifests should satisfy the frozen manifest contract."""
+    repo_root = Path(__file__).resolve().parents[3]
+    manifest_paths: list[Path] = []
+    roots = [
+        repo_root / "devcovenant" / "core" / "profiles",
+        repo_root / "devcovenant" / "custom" / "profiles",
+    ]
+    for root in roots:
+        for profile_dir in sorted(root.iterdir()):
+            if not profile_dir.is_dir() or profile_dir.name.startswith("_"):
+                continue
+            manifest = profile_dir / f"{profile_dir.name}.yaml"
+            assert manifest.exists(), f"missing profile manifest: {manifest}"
+            manifest_paths.append(manifest)
+
+    assert manifest_paths
+    for manifest_path in manifest_paths:
+        payload = profile_runtime.load_profile(manifest_path)
+        assert isinstance(payload, dict)
+        assert payload.get("version") is not None
+        assert str(payload.get("profile", "")).strip() == manifest_path.stem
+        category = str(payload.get("category", "")).strip().lower()
+        assert category
+
+        overlays = payload.get("policy_overlays", {})
+        if overlays not in (None, "__none__"):
+            assert isinstance(overlays, dict)
+
+        translators = payload.get("translators")
+        if translators in (None, "__none__"):
+            continue
+        assert isinstance(translators, list)
+        if translators:
+            assert category == "language"
+        for declaration in translators:
+            assert isinstance(declaration, dict)
+            assert str(declaration.get("id", "")).strip()
+            extensions = declaration.get("extensions")
+            assert isinstance(extensions, list) and extensions
+            for extension in extensions:
+                assert str(extension).strip()
+            for section in ("can_handle", "translate"):
+                strategy = declaration.get(section)
+                assert isinstance(strategy, dict)
+                assert str(strategy.get("strategy", "")).strip()
+                assert str(strategy.get("entrypoint", "")).strip()
 
 
 def _unit_test_devcovuser_new_modules_overlay_uses_custom_mirror() -> None:
@@ -315,7 +419,7 @@ def _unit_test_devcovrepo_new_modules_overlay_uses_full_mirror() -> None:
         / "devcovrepo"
         / "devcovrepo.yaml"
     )
-    payload = profiles.load_profile(manifest_path)
+    payload = profile_runtime.load_profile(manifest_path)
     overlays = payload.get("policy_overlays", {})
     policy_overlay = overlays.get("modules-need-tests", {})
     mirror_roots = policy_overlay.get("mirror_roots", [])
@@ -347,6 +451,18 @@ class GeneratedUnittestCases(unittest.TestCase):
         """Run test_profile_overlays_reference_known_policies."""
         _unit_test_profile_overlays_reference_known_policies()
 
+    def test_parse_active_profiles_includes_global_once(self):
+        """Run test_parse_active_profiles_includes_global_once."""
+        _unit_test_parse_active_profiles_includes_global_once()
+
+    def test_parse_active_profiles_supports_string_or_missing(self):
+        """Run test_parse_active_profiles_supports_string_or_missing."""
+        _unit_test_parse_active_profiles_supports_string_or_missing()
+
+    def test_refresh_profile_registry_persists_payload(self):
+        """Run test_refresh_profile_registry_persists_payload."""
+        _unit_test_refresh_profile_registry_persists_payload()
+
     def test_profiles_have_assets_unless_exempt(self):
         """Run test_profiles_have_assets_unless_exempt."""
         _unit_test_profiles_have_assets_unless_exempt()
@@ -366,6 +482,10 @@ class GeneratedUnittestCases(unittest.TestCase):
     def test_profile_registry_load_validates_translator_schema(self):
         """Run test_profile_registry_load_validates_translator_schema."""
         _unit_test_profile_registry_load_validates_translator_schema()
+
+    def test_profile_manifests_follow_contract_schema(self):
+        """Run test_profile_manifests_follow_contract_schema."""
+        _unit_test_profile_manifests_follow_contract_schema()
 
     def test_devcovuser_new_modules_overlay_uses_custom_mirror(self):
         """Run test_devcovuser_new_modules_overlay_uses_custom_mirror."""

@@ -5,8 +5,12 @@ import re
 from pathlib import Path, PurePosixPath
 from typing import Iterable, List, Sequence
 
-from devcovenant.core.base import CheckContext, PolicyCheck, Violation
-from devcovenant.core.selector_helpers import SelectorSet
+from devcovenant.core.policy_contracts import (
+    CheckContext,
+    PolicyCheck,
+    Violation,
+)
+from devcovenant.core.selector_runtime import SelectorSet
 
 
 def _normalize_list(raw: object | None) -> List[str]:

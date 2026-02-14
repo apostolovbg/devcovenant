@@ -4,7 +4,7 @@ import tempfile
 import unittest
 from pathlib import Path
 
-from devcovenant.core.base import CheckContext
+from devcovenant.core.policy_contracts import CheckContext
 from devcovenant.custom.policies.no_spaghetti.no_spaghetti import (
     NoSpaghettiCheck,
 )

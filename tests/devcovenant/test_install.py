@@ -14,7 +14,7 @@ from unittest.mock import patch
 import yaml
 
 from devcovenant import install
-from devcovenant.core import manifest as manifest_module
+from devcovenant.core import registry_runtime as manifest_module
 
 
 def _read_yaml(path: Path) -> dict[str, object]:

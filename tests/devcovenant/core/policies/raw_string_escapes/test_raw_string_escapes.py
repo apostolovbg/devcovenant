@@ -5,8 +5,8 @@ import tempfile
 import unittest
 from pathlib import Path
 
-from devcovenant.core.base import CheckContext
 from devcovenant.core.policies.raw_string_escapes import raw_string_escapes
+from devcovenant.core.policy_contracts import CheckContext
 
 FIXER_MODULE = "devcovenant.core.policies.raw_string_escapes.fixers.global"
 fixer_module = importlib.import_module(FIXER_MODULE)

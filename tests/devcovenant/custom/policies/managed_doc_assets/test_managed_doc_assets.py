@@ -9,8 +9,8 @@ from pathlib import Path
 import yaml
 
 from devcovenant import install
-from devcovenant.core.base import CheckContext
-from devcovenant.core.repo_refresh import refresh_repo
+from devcovenant.core.policy_contracts import CheckContext
+from devcovenant.core.refresh_runtime import refresh_repo
 from devcovenant.custom.policies.managed_doc_assets.managed_doc_assets import (
     ManagedDocAssetsCheck,
 )

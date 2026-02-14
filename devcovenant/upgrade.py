@@ -14,14 +14,14 @@ import re
 from pathlib import Path
 
 from devcovenant import install
-from devcovenant.core import manifest as manifest_module
-from devcovenant.core import policy_freeze as policy_replacements
-from devcovenant.core.execution import (
+from devcovenant.core import registry_runtime as manifest_module
+from devcovenant.core import registry_runtime as policy_replacements
+from devcovenant.core.execution_runtime import (
     print_banner,
     print_step,
     resolve_repo_root,
 )
-from devcovenant.core.repo_refresh import refresh_repo
+from devcovenant.core.refresh_runtime import refresh_repo
 
 _POLICY_BLOCK_RE = re.compile(
     r"(##\s+Policy:\s+[^\n]+\n\n)```policy-def\n(.*?)\n```\n\n"

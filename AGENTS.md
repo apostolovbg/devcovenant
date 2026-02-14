@@ -1,5 +1,5 @@
 # DevCovenant Development Guide
-**Last Updated:** 2026-02-13
+**Last Updated:** 2026-02-14
 **Version:** 0.2.6
 
 <!-- DEVCOV:BEGIN -->
@@ -244,7 +244,6 @@ auto_fix: true
 enforcement: active
 enabled: true
 custom: false
-freeze: false
 main_changelog: CHANGELOG.md
 skipped_files: CHANGELOG.md
   .gitignore
@@ -366,7 +365,6 @@ auto_fix: true
 enforcement: active
 enabled: true
 custom: false
-freeze: false
 dependency_files: requirements.in
   requirements.lock
   pyproject.toml
@@ -396,7 +394,6 @@ auto_fix: false
 enforcement: active
 enabled: true
 custom: false
-freeze: false
 policy_definitions: AGENTS.md
 registry_file: devcovenant/registry/local/policy_registry.yaml
 test_status_file: devcovenant/registry/local/test_status.json
@@ -427,7 +424,6 @@ auto_fix: false
 enforcement: active
 enabled: true
 custom: true
-freeze: false
 ```
 
 Warn when DevCovenant repo Python strings contain bare backslashes.
@@ -447,7 +443,6 @@ auto_fix: false
 enforcement: active
 enabled: true
 custom: false
-freeze: false
 ```
 
 Ensure the DevCovenant repo keeps the required structure and tooling files.
@@ -465,7 +460,6 @@ auto_fix: false
 enforcement: active
 enabled: true
 custom: false
-freeze: false
 test_status_file: devcovenant/registry/local/test_status.json
 required_commands: python3 -m unittest discover -v
   pytest
@@ -502,7 +496,6 @@ auto_fix: false
 enforcement: active
 enabled: true
 custom: false
-freeze: false
 include_suffixes: .py
 exclude_prefixes: build
   dist
@@ -542,7 +535,6 @@ auto_fix: false
 enforcement: active
 enabled: true
 custom: false
-freeze: false
 selector_roles: user_facing
   user_visible
   doc_quality
@@ -693,7 +685,7 @@ include_globs:
 exclude_suffixes:
 exclude_globs:
 force_include_globs:
-user_facing_exclude_globs:
+user_facing_exclude_globs: tests/**
 user_facing_exclude_suffixes:
 user_facing_dirs:
 user_visible_globs:
@@ -731,7 +723,6 @@ auto_fix: true
 enforcement: active
 enabled: true
 custom: false
-freeze: false
 include_suffixes: .md
 allowed_globs: README.md
   AGENTS.md
@@ -772,7 +763,6 @@ auto_fix: false
 enforcement: active
 enabled: true
 custom: false
-freeze: false
 max_length: 79
 include_suffixes: .md
   .rst
@@ -826,7 +816,6 @@ auto_fix: false
 enforcement: active
 enabled: true
 custom: true
-freeze: false
 ```
 
 Ensure AGENTS.md, README.md, PLAN.md, SPEC.md, CHANGELOG.md, and
@@ -847,7 +836,6 @@ auto_fix: false
 enforcement: active
 enabled: false
 custom: false
-freeze: false
 expected_paths:
 expected_interpreters:
 required_commands:
@@ -874,7 +862,6 @@ auto_fix: false
 enforcement: active
 enabled: true
 custom: false
-freeze: false
 include_suffixes: .py
 include_prefixes:
 exclude_prefixes: build
@@ -929,7 +916,6 @@ auto_fix: false
 enforcement: active
 enabled: true
 custom: false
-freeze: false
 exclude_prefixes: build
   dist
   node_modules
@@ -969,7 +955,6 @@ auto_fix: true
 enforcement: active
 enabled: true
 custom: false
-freeze: false
 ```
 
 Dates in changelogs or documentation must not be in the future. Auto-fixers
@@ -988,7 +973,6 @@ auto_fix: false
 enforcement: active
 enabled: true
 custom: true
-freeze: false
 include_globs: devcovenant/core/*.py
 exclude_globs: devcovenant/core/__init__.py
 max_top_level_modules: 19
@@ -1017,7 +1001,6 @@ auto_fix: false
 enforcement: active
 enabled: false
 custom: false
-freeze: false
 ```
 
 Policy description pending.
@@ -1035,7 +1018,6 @@ auto_fix: false
 enforcement: active
 enabled: true
 custom: false
-freeze: false
 include_globs: __none__
 include_suffixes:
 include_prefixes:
@@ -1070,7 +1052,6 @@ auto_fix: true
 enforcement: active
 enabled: true
 custom: true
-freeze: false
 ```
 
 Ensure `devcovenant/README.md` mirrors `README.md` with repository-only
@@ -1091,7 +1072,6 @@ auto_fix: false
 enforcement: active
 enabled: true
 custom: false
-freeze: false
 exclude_globs: tests/**
   **/tests/**
 include_suffixes: .py
@@ -1128,7 +1108,6 @@ auto_fix: false
 enforcement: active
 enabled: true
 custom: false
-freeze: false
 version_file: devcovenant/VERSION
 changelog_file: CHANGELOG.md
 ignored_prefixes:
@@ -1160,7 +1139,6 @@ auto_fix: false
 enforcement: active
 enabled: true
 custom: false
-freeze: false
 version_file: devcovenant/VERSION
 readme_files: README.md
   AGENTS.md

@@ -14,7 +14,7 @@ import shutil
 from pathlib import Path
 
 from devcovenant import undeploy
-from devcovenant.core.execution import (
+from devcovenant.core.execution_runtime import (
     print_banner,
     print_step,
     resolve_repo_root,

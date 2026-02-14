@@ -35,6 +35,39 @@ def _normalize_profile_name(raw: str) -> str:
     return str(raw or "").strip().lower()
 
 
+def _active_profile_names(raw_active: object) -> list[str]:
+    """Normalize active profile names from config-like payloads."""
+    if isinstance(raw_active, str):
+        candidates = [raw_active]
+    elif isinstance(raw_active, list):
+        candidates = raw_active
+    else:
+        candidates = [raw_active] if raw_active else []
+
+    names: list[str] = []
+    for entry in candidates:
+        name = _normalize_profile_name(str(entry or ""))
+        if not name or name == "__none__" or name in names:
+            continue
+        names.append(name)
+    return names
+
+
+def parse_active_profiles(
+    config: dict[str, object], *, include_global: bool = True
+) -> list[str]:
+    """Resolve active profiles from config."""
+    profiles_block = config.get("profiles")
+    if isinstance(profiles_block, dict):
+        names = _active_profile_names(profiles_block.get("active"))
+    else:
+        names = []
+    if include_global:
+        names = [name for name in names if name != "global"]
+        names.insert(0, "global")
+    return names
+
+
 def _iter_profile_dirs(root: Path) -> list[Path]:
     """Return profile directories beneath a root."""
     if not root.exists():
@@ -272,11 +305,7 @@ def build_profile_registry(
     registry = discover_profiles(
         repo_root, core_root=core_root, custom_root=custom_root
     )
-    active = {
-        _normalize_profile_name(name)
-        for name in (active_profiles or [])
-        if name
-    }
+    active = {name for name in _active_profile_names(active_profiles or [])}
     for name, meta in registry.items():
         meta["active"] = name in active
     return {"generated_at": _utc_now(), "profiles": registry}
@@ -289,6 +318,15 @@ def write_profile_registry(repo_root: Path, registry: Dict[str, Dict]) -> Path:
     payload = yaml.safe_dump(registry, sort_keys=True, allow_unicode=False)
     path.write_text(payload, encoding="utf-8")
     return path
+
+
+def refresh_profile_registry(
+    repo_root: Path, active_profiles: list[str] | None = None
+) -> Dict[str, Dict]:
+    """Rebuild and persist profile registry, then return it."""
+    registry = build_profile_registry(repo_root, active_profiles or [])
+    write_profile_registry(repo_root, registry)
+    return registry
 
 
 def _normalize_registry(registry: Dict[str, Dict]) -> Dict[str, Dict]:
@@ -324,14 +362,7 @@ def resolve_profile_suffixes(
     """Return file suffixes associated with active profiles."""
     normalized_registry = _normalize_registry(registry)
     suffixes: List[str] = []
-    active_names: List[str] = []
-    for profile_name in active_profiles:
-        normalized_name = _normalize_profile_name(profile_name)
-        if not normalized_name or normalized_name in active_names:
-            continue
-        active_names.append(normalized_name)
-
-    for name in active_names:
+    for name in _active_profile_names(active_profiles):
         meta = normalized_registry.get(name, {})
         raw = meta.get("suffixes") or []
         for entry in raw:
@@ -348,14 +379,7 @@ def resolve_profile_ignore_dirs(
     """Return ignored directory names from active profiles."""
     normalized_registry = _normalize_registry(registry)
     ignored: List[str] = []
-    active_names: List[str] = []
-    for profile_name in active_profiles:
-        normalized_name = _normalize_profile_name(profile_name)
-        if not normalized_name or normalized_name in active_names:
-            continue
-        active_names.append(normalized_name)
-
-    for name in active_names:
+    for name in _active_profile_names(active_profiles):
         meta = normalized_registry.get(name, {})
         raw = meta.get("ignore_dirs") or []
         for entry in raw:

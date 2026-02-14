@@ -1,5 +1,5 @@
 # Changelog
-**Last Updated:** 2026-02-13
+**Last Updated:** 2026-02-14
 **Version:** 0.2.6
 
 <!-- DEVCOV:BEGIN -->
@@ -33,6 +33,750 @@ Example entry:
 
 ## Version 0.2.6
 
+- 2026-02-14:
+  Change: Revised API-freeze docs to make parser consolidation explicit by
+  removing `parser.py` as a target module and assigning AGENTS parsing to
+  runtime ownership.
+  Why: Clarified backlog intent so parser decisions are tracked as planned work
+  instead of implicit context.
+  Impact: Improved implementation focus and prevented parser-related
+  thread loss during remaining 0.2.6 responsibility-consolidation work.
+  Files:
+  AGENTS.md
+  PLAN.md
+  SPEC.md
+  devcovenant/__init__.py
+  devcovenant/check.py
+  devcovenant/config.yaml
+  devcovenant/core/execution_runtime.py
+  devcovenant/core/gate_runtime.py
+  devcovenant/core/manifest.py
+  devcovenant/core/metadata_runtime.py
+  devcovenant/core/parser.py
+  devcovenant/core/policies/changelog_coverage/changelog_coverage.py
+  devcovenant/core/policies/changelog_coverage/fixers/global.py
+  devcovenant/core/policies/dependency_license_sync/dependency_license_sync.py
+  devcovenant/core/policies/dependency_license_sync/fixers/global.py
+  devcovenant/core/policies/devcov_integrity_guard/devcov_integrity_guard.py
+  devcovenant/core/policies/devcov_structure_guard/devcov_structure_guard.py
+  devcovenant/core/policies/devflow_run_gates/devflow_run_gates.py
+  devcovenant/core/policies/docstring_and_comment_coverage/\
+    docstring_and_comment_coverage.py
+  devcovenant/core/policies/documentation_growth_tracking/\
+    documentation_growth_tracking.py
+  devcovenant/core/policies/last_updated_placement/fixers/global.py
+  devcovenant/core/policies/last_updated_placement/last_updated_placement.py
+  devcovenant/core/policies/line_length_limit/line_length_limit.py
+  devcovenant/core/policies/managed_environment/managed_environment.py
+  devcovenant/core/policies/modules_need_tests/modules_need_tests.py
+  devcovenant/core/policies/name_clarity/name_clarity.py
+  devcovenant/core/policies/no_future_dates/fixers/global.py
+  devcovenant/core/policies/no_future_dates/no_future_dates.py
+  devcovenant/core/policies/raw_string_escapes/fixers/global.py
+  devcovenant/core/policies/raw_string_escapes/raw_string_escapes.py
+  devcovenant/core/policies/read_only_directories/read_only_directories.py
+  devcovenant/core/policies/security_scanner/security_scanner.py
+  devcovenant/core/policies/semantic_version_scope/semantic_version_scope.py
+  devcovenant/core/policies/version_sync/version_sync.py
+  devcovenant/core/policy_contracts.py
+  devcovenant/core/policy_descriptor.py
+  devcovenant/core/policy_freeze.py
+  devcovenant/core/policy_runtime.py
+  devcovenant/core/profile_runtime.py
+  devcovenant/core/profiles/global/assets/AGENTS.yaml
+  devcovenant/core/profiles/global/assets/CHANGELOG.yaml
+  devcovenant/core/profiles/global/assets/PLAN.yaml
+  devcovenant/core/profiles/global/assets/SPEC.yaml
+  devcovenant/core/profiles/global/assets/config.yaml
+  devcovenant/core/refresh_runtime.py
+  devcovenant/core/registry.py
+  devcovenant/core/registry_runtime.py
+  devcovenant/core/selector_runtime.py
+  devcovenant/core/translator_runtime.py
+  devcovenant/custom/policies/managed_doc_assets/managed_doc_assets.py
+  devcovenant/custom/policies/no_spaghetti/no_spaghetti.py
+  devcovenant/custom/policies/no_spaghetti/no_spaghetti.yaml
+  devcovenant/custom/policies/readme_sync/fixers/global.py
+  devcovenant/custom/policies/readme_sync/readme_sync.py
+  devcovenant/custom/profiles/devcovrepo/assets/docs/config.md
+  devcovenant/deploy.py
+  devcovenant/docs/config.md
+  devcovenant/gate.py
+  devcovenant/install.py
+  devcovenant/refresh.py
+  devcovenant/test.py
+  devcovenant/undeploy.py
+  devcovenant/uninstall.py
+  devcovenant/update_lock.py
+  devcovenant/upgrade.py
+  tests/devcovenant/core/policies/changelog_coverage/test_changelog_coverage.py
+  tests/devcovenant/core/policies/dependency_license_sync/\
+    test_dependency_license_sync.py
+  tests/devcovenant/core/policies/devcov_integrity_guard/\
+    test_devcov_integrity_guard.py
+  tests/devcovenant/core/policies/devcov_structure_guard/\
+    test_devcov_structure_guard.py
+  tests/devcovenant/core/policies/devflow_run_gates/test_devflow_run_gates.py
+  tests/devcovenant/core/policies/docstring_and_comment_coverage/\
+    test_docstring_and_comment_coverage.py
+  tests/devcovenant/core/policies/documentation_growth_tracking/\
+    test_documentation_growth_tracking.py
+  tests/devcovenant/core/policies/last_updated_placement/\
+    test_last_updated_placement.py
+  tests/devcovenant/core/policies/line_length_limit/test_line_length_limit.py
+  tests/devcovenant/core/policies/managed_environment/\
+    test_managed_environment.py
+  tests/devcovenant/core/policies/modules_need_tests/test_modules_need_tests.py
+  tests/devcovenant/core/policies/name_clarity/test_name_clarity.py
+  tests/devcovenant/core/policies/no_future_dates/test_no_future_dates.py
+  tests/devcovenant/core/policies/raw_string_escapes/test_raw_string_escapes.py
+  tests/devcovenant/core/policies/read_only_directories/\
+    test_read_only_directories.py
+  tests/devcovenant/core/policies/security_scanner/test_security_scanner.py
+  tests/devcovenant/core/policies/semantic_version_scope/\
+    test_semantic_version_scope.py
+  tests/devcovenant/core/policies/version_sync/test_version_sync.py
+  tests/devcovenant/core/test_base.py
+  tests/devcovenant/core/test_execution_runtime.py
+  tests/devcovenant/core/test_gate_runtime.py
+  tests/devcovenant/core/test_gates.py
+  tests/devcovenant/core/test_manifest.py
+  tests/devcovenant/core/test_metadata_runtime.py
+  tests/devcovenant/core/test_policy_contracts.py
+  tests/devcovenant/core/test_policy_descriptor.py
+  tests/devcovenant/core/test_policy_freeze.py
+  tests/devcovenant/core/test_policy_runtime.py
+  tests/devcovenant/core/test_profile_runtime.py
+  tests/devcovenant/core/test_refresh_runtime.py
+  tests/devcovenant/core/test_registry.py
+  tests/devcovenant/core/test_registry_runtime.py
+  tests/devcovenant/core/test_selector_runtime.py
+  tests/devcovenant/core/test_translator_runtime.py
+  tests/devcovenant/custom/policies/managed_doc_assets/\
+    test_managed_doc_assets.py
+  tests/devcovenant/custom/policies/no_spaghetti/test_no_spaghetti.py
+  tests/devcovenant/test_cli.py
+  tests/devcovenant/test_install.py
+
+- 2026-02-14:
+  Change: Added Tier B extension-contract unittest coverage for policy/fixer
+  callable contracts, profile manifest schema contracts, and translator
+  `LanguageUnit` contracts.
+  Why: Aligned the API-freeze backlog item for extension-surface conformance
+  so contract behavior is validated by tests instead of implied by docs.
+  Impact: Improved confidence that policy/fixer interfaces, profile manifests,
+  and translator declarations remain stable during ongoing 0.2.6 refactors.
+  Files:
+  AGENTS.md
+  PLAN.md
+  SPEC.md
+  devcovenant/__init__.py
+  devcovenant/check.py
+  devcovenant/config.yaml
+  devcovenant/core/execution_runtime.py
+  devcovenant/core/gate_runtime.py
+  devcovenant/core/manifest.py
+  devcovenant/core/metadata_runtime.py
+  devcovenant/core/parser.py
+  devcovenant/core/policies/changelog_coverage/changelog_coverage.py
+  devcovenant/core/policies/changelog_coverage/fixers/global.py
+  devcovenant/core/policies/dependency_license_sync/dependency_license_sync.py
+  devcovenant/core/policies/dependency_license_sync/fixers/global.py
+  devcovenant/core/policies/devcov_integrity_guard/devcov_integrity_guard.py
+  devcovenant/core/policies/devcov_structure_guard/devcov_structure_guard.py
+  devcovenant/core/policies/devflow_run_gates/devflow_run_gates.py
+  devcovenant/core/policies/docstring_and_comment_coverage/\
+    docstring_and_comment_coverage.py
+  devcovenant/core/policies/documentation_growth_tracking/\
+    documentation_growth_tracking.py
+  devcovenant/core/policies/last_updated_placement/fixers/global.py
+  devcovenant/core/policies/last_updated_placement/last_updated_placement.py
+  devcovenant/core/policies/line_length_limit/line_length_limit.py
+  devcovenant/core/policies/managed_environment/managed_environment.py
+  devcovenant/core/policies/modules_need_tests/modules_need_tests.py
+  devcovenant/core/policies/name_clarity/name_clarity.py
+  devcovenant/core/policies/no_future_dates/fixers/global.py
+  devcovenant/core/policies/no_future_dates/no_future_dates.py
+  devcovenant/core/policies/raw_string_escapes/fixers/global.py
+  devcovenant/core/policies/raw_string_escapes/raw_string_escapes.py
+  devcovenant/core/policies/read_only_directories/read_only_directories.py
+  devcovenant/core/policies/security_scanner/security_scanner.py
+  devcovenant/core/policies/semantic_version_scope/semantic_version_scope.py
+  devcovenant/core/policies/version_sync/version_sync.py
+  devcovenant/core/policy_contracts.py
+  devcovenant/core/policy_descriptor.py
+  devcovenant/core/policy_freeze.py
+  devcovenant/core/policy_runtime.py
+  devcovenant/core/profile_runtime.py
+  devcovenant/core/profiles/global/assets/AGENTS.yaml
+  devcovenant/core/profiles/global/assets/CHANGELOG.yaml
+  devcovenant/core/profiles/global/assets/PLAN.yaml
+  devcovenant/core/profiles/global/assets/SPEC.yaml
+  devcovenant/core/profiles/global/assets/config.yaml
+  devcovenant/core/refresh_runtime.py
+  devcovenant/core/registry.py
+  devcovenant/core/registry_runtime.py
+  devcovenant/core/selector_runtime.py
+  devcovenant/core/translator_runtime.py
+  devcovenant/custom/policies/managed_doc_assets/managed_doc_assets.py
+  devcovenant/custom/policies/no_spaghetti/no_spaghetti.py
+  devcovenant/custom/policies/no_spaghetti/no_spaghetti.yaml
+  devcovenant/custom/policies/readme_sync/fixers/global.py
+  devcovenant/custom/policies/readme_sync/readme_sync.py
+  devcovenant/custom/profiles/devcovrepo/assets/docs/config.md
+  devcovenant/deploy.py
+  devcovenant/docs/config.md
+  devcovenant/gate.py
+  devcovenant/install.py
+  devcovenant/refresh.py
+  devcovenant/test.py
+  devcovenant/undeploy.py
+  devcovenant/uninstall.py
+  devcovenant/update_lock.py
+  devcovenant/upgrade.py
+  tests/devcovenant/core/policies/changelog_coverage/test_changelog_coverage.py
+  tests/devcovenant/core/policies/dependency_license_sync/\
+    test_dependency_license_sync.py
+  tests/devcovenant/core/policies/devcov_integrity_guard/\
+    test_devcov_integrity_guard.py
+  tests/devcovenant/core/policies/devcov_structure_guard/\
+    test_devcov_structure_guard.py
+  tests/devcovenant/core/policies/devflow_run_gates/test_devflow_run_gates.py
+  tests/devcovenant/core/policies/docstring_and_comment_coverage/\
+    test_docstring_and_comment_coverage.py
+  tests/devcovenant/core/policies/documentation_growth_tracking/\
+    test_documentation_growth_tracking.py
+  tests/devcovenant/core/policies/last_updated_placement/\
+    test_last_updated_placement.py
+  tests/devcovenant/core/policies/line_length_limit/test_line_length_limit.py
+  tests/devcovenant/core/policies/managed_environment/\
+    test_managed_environment.py
+  tests/devcovenant/core/policies/modules_need_tests/test_modules_need_tests.py
+  tests/devcovenant/core/policies/name_clarity/test_name_clarity.py
+  tests/devcovenant/core/policies/no_future_dates/test_no_future_dates.py
+  tests/devcovenant/core/policies/raw_string_escapes/test_raw_string_escapes.py
+  tests/devcovenant/core/policies/read_only_directories/\
+    test_read_only_directories.py
+  tests/devcovenant/core/policies/security_scanner/test_security_scanner.py
+  tests/devcovenant/core/policies/semantic_version_scope/\
+    test_semantic_version_scope.py
+  tests/devcovenant/core/policies/version_sync/test_version_sync.py
+  tests/devcovenant/core/test_base.py
+  tests/devcovenant/core/test_execution_runtime.py
+  tests/devcovenant/core/test_gate_runtime.py
+  tests/devcovenant/core/test_gates.py
+  tests/devcovenant/core/test_manifest.py
+  tests/devcovenant/core/test_metadata_runtime.py
+  tests/devcovenant/core/test_policy_contracts.py
+  tests/devcovenant/core/test_policy_descriptor.py
+  tests/devcovenant/core/test_policy_freeze.py
+  tests/devcovenant/core/test_policy_runtime.py
+  tests/devcovenant/core/test_profile_runtime.py
+  tests/devcovenant/core/test_refresh_runtime.py
+  tests/devcovenant/core/test_registry.py
+  tests/devcovenant/core/test_registry_runtime.py
+  tests/devcovenant/core/test_selector_runtime.py
+  tests/devcovenant/core/test_translator_runtime.py
+  tests/devcovenant/custom/policies/managed_doc_assets/\
+    test_managed_doc_assets.py
+  tests/devcovenant/custom/policies/no_spaghetti/test_no_spaghetti.py
+  tests/devcovenant/test_cli.py
+  tests/devcovenant/test_install.py
+
+- 2026-02-14:
+  Change: Updated runtime test alignment by replacing
+  `test_gate_runtime.py` placeholder coverage with focused
+  `gate_runtime` unit behavior tests.
+  Why: Aligned implementation backlog item 10 so consolidated runtime modules
+  have current-behavior tests under mirrored runtime test paths.
+  Impact: Improved runtime test fidelity while keeping unittest suites primary
+  and removing placeholder-only coverage for gate execution behavior.
+  Files:
+  AGENTS.md
+  PLAN.md
+  SPEC.md
+  devcovenant/__init__.py
+  devcovenant/check.py
+  devcovenant/config.yaml
+  devcovenant/core/execution_runtime.py
+  devcovenant/core/gate_runtime.py
+  devcovenant/core/manifest.py
+  devcovenant/core/metadata_runtime.py
+  devcovenant/core/parser.py
+  devcovenant/core/policies/changelog_coverage/changelog_coverage.py
+  devcovenant/core/policies/changelog_coverage/fixers/global.py
+  devcovenant/core/policies/dependency_license_sync/dependency_license_sync.py
+  devcovenant/core/policies/dependency_license_sync/fixers/global.py
+  devcovenant/core/policies/devcov_integrity_guard/devcov_integrity_guard.py
+  devcovenant/core/policies/devcov_structure_guard/devcov_structure_guard.py
+  devcovenant/core/policies/devflow_run_gates/devflow_run_gates.py
+  devcovenant/core/policies/docstring_and_comment_coverage/\
+    docstring_and_comment_coverage.py
+  devcovenant/core/policies/documentation_growth_tracking/\
+    documentation_growth_tracking.py
+  devcovenant/core/policies/last_updated_placement/fixers/global.py
+  devcovenant/core/policies/last_updated_placement/last_updated_placement.py
+  devcovenant/core/policies/line_length_limit/line_length_limit.py
+  devcovenant/core/policies/managed_environment/managed_environment.py
+  devcovenant/core/policies/modules_need_tests/modules_need_tests.py
+  devcovenant/core/policies/name_clarity/name_clarity.py
+  devcovenant/core/policies/no_future_dates/fixers/global.py
+  devcovenant/core/policies/no_future_dates/no_future_dates.py
+  devcovenant/core/policies/raw_string_escapes/fixers/global.py
+  devcovenant/core/policies/raw_string_escapes/raw_string_escapes.py
+  devcovenant/core/policies/read_only_directories/read_only_directories.py
+  devcovenant/core/policies/security_scanner/security_scanner.py
+  devcovenant/core/policies/semantic_version_scope/semantic_version_scope.py
+  devcovenant/core/policies/version_sync/version_sync.py
+  devcovenant/core/policy_contracts.py
+  devcovenant/core/policy_descriptor.py
+  devcovenant/core/policy_freeze.py
+  devcovenant/core/policy_runtime.py
+  devcovenant/core/profile_runtime.py
+  devcovenant/core/profiles/global/assets/AGENTS.yaml
+  devcovenant/core/profiles/global/assets/CHANGELOG.yaml
+  devcovenant/core/profiles/global/assets/PLAN.yaml
+  devcovenant/core/profiles/global/assets/SPEC.yaml
+  devcovenant/core/profiles/global/assets/config.yaml
+  devcovenant/core/refresh_runtime.py
+  devcovenant/core/registry.py
+  devcovenant/core/registry_runtime.py
+  devcovenant/core/selector_runtime.py
+  devcovenant/core/translator_runtime.py
+  devcovenant/custom/policies/managed_doc_assets/managed_doc_assets.py
+  devcovenant/custom/policies/no_spaghetti/no_spaghetti.py
+  devcovenant/custom/policies/no_spaghetti/no_spaghetti.yaml
+  devcovenant/custom/policies/readme_sync/fixers/global.py
+  devcovenant/custom/policies/readme_sync/readme_sync.py
+  devcovenant/custom/profiles/devcovrepo/assets/docs/config.md
+  devcovenant/deploy.py
+  devcovenant/docs/config.md
+  devcovenant/gate.py
+  devcovenant/install.py
+  devcovenant/refresh.py
+  devcovenant/test.py
+  devcovenant/undeploy.py
+  devcovenant/uninstall.py
+  devcovenant/update_lock.py
+  devcovenant/upgrade.py
+  tests/devcovenant/core/policies/changelog_coverage/test_changelog_coverage.py
+  tests/devcovenant/core/policies/dependency_license_sync/\
+    test_dependency_license_sync.py
+  tests/devcovenant/core/policies/devcov_integrity_guard/\
+    test_devcov_integrity_guard.py
+  tests/devcovenant/core/policies/devcov_structure_guard/\
+    test_devcov_structure_guard.py
+  tests/devcovenant/core/policies/devflow_run_gates/test_devflow_run_gates.py
+  tests/devcovenant/core/policies/docstring_and_comment_coverage/\
+    test_docstring_and_comment_coverage.py
+  tests/devcovenant/core/policies/documentation_growth_tracking/\
+    test_documentation_growth_tracking.py
+  tests/devcovenant/core/policies/last_updated_placement/\
+    test_last_updated_placement.py
+  tests/devcovenant/core/policies/line_length_limit/test_line_length_limit.py
+  tests/devcovenant/core/policies/managed_environment/\
+    test_managed_environment.py
+  tests/devcovenant/core/policies/modules_need_tests/test_modules_need_tests.py
+  tests/devcovenant/core/policies/name_clarity/test_name_clarity.py
+  tests/devcovenant/core/policies/no_future_dates/test_no_future_dates.py
+  tests/devcovenant/core/policies/raw_string_escapes/test_raw_string_escapes.py
+  tests/devcovenant/core/policies/read_only_directories/\
+    test_read_only_directories.py
+  tests/devcovenant/core/policies/security_scanner/test_security_scanner.py
+  tests/devcovenant/core/policies/semantic_version_scope/\
+    test_semantic_version_scope.py
+  tests/devcovenant/core/policies/version_sync/test_version_sync.py
+  tests/devcovenant/core/test_execution_runtime.py
+  tests/devcovenant/core/test_gate_runtime.py
+  tests/devcovenant/core/test_gates.py
+  tests/devcovenant/core/test_manifest.py
+  tests/devcovenant/core/test_metadata_runtime.py
+  tests/devcovenant/core/test_policy_contracts.py
+  tests/devcovenant/core/test_policy_descriptor.py
+  tests/devcovenant/core/test_policy_freeze.py
+  tests/devcovenant/core/test_policy_runtime.py
+  tests/devcovenant/core/test_profile_runtime.py
+  tests/devcovenant/core/test_refresh_runtime.py
+  tests/devcovenant/core/test_registry.py
+  tests/devcovenant/core/test_registry_runtime.py
+  tests/devcovenant/core/test_selector_runtime.py
+  tests/devcovenant/custom/policies/managed_doc_assets/\
+    test_managed_doc_assets.py
+  tests/devcovenant/custom/policies/no_spaghetti/test_no_spaghetti.py
+  tests/devcovenant/test_cli.py
+  tests/devcovenant/test_install.py
+
+- 2026-02-14:
+  Change: Consolidated manifest and policy-descriptor helpers into
+  `registry_runtime` and migrated runtime/command imports to the merged API.
+  Why: Aligned implementation backlog item 9 to remove folded legacy core
+  modules and keep one runtime ownership path.
+  Impact: Removed `devcovenant/core/manifest.py` and
+  `devcovenant/core/policy_descriptor.py`, and updated/deleted tied tests to
+  match current runtime behavior.
+  Files:
+  AGENTS.md
+  PLAN.md
+  SPEC.md
+  devcovenant/__init__.py
+  devcovenant/check.py
+  devcovenant/config.yaml
+  devcovenant/core/execution_runtime.py
+  devcovenant/core/gate_runtime.py
+  devcovenant/core/manifest.py
+  devcovenant/core/metadata_runtime.py
+  devcovenant/core/parser.py
+  devcovenant/core/policies/devcov_integrity_guard/devcov_integrity_guard.py
+  devcovenant/core/policies/devcov_structure_guard/devcov_structure_guard.py
+  devcovenant/core/policies/docstring_and_comment_coverage/\
+    docstring_and_comment_coverage.py
+  devcovenant/core/policies/documentation_growth_tracking/\
+    documentation_growth_tracking.py
+  devcovenant/core/policies/line_length_limit/line_length_limit.py
+  devcovenant/core/policies/modules_need_tests/modules_need_tests.py
+  devcovenant/core/policies/name_clarity/name_clarity.py
+  devcovenant/core/policies/raw_string_escapes/raw_string_escapes.py
+  devcovenant/core/policies/read_only_directories/read_only_directories.py
+  devcovenant/core/policies/security_scanner/security_scanner.py
+  devcovenant/core/policy_descriptor.py
+  devcovenant/core/policy_freeze.py
+  devcovenant/core/policy_runtime.py
+  devcovenant/core/profile_runtime.py
+  devcovenant/core/profiles/global/assets/config.yaml
+  devcovenant/core/refresh_runtime.py
+  devcovenant/core/registry.py
+  devcovenant/core/registry_runtime.py
+  devcovenant/core/selector_runtime.py
+  devcovenant/custom/policies/no_spaghetti/no_spaghetti.yaml
+  devcovenant/custom/profiles/devcovrepo/assets/docs/config.md
+  devcovenant/deploy.py
+  devcovenant/docs/config.md
+  devcovenant/gate.py
+  devcovenant/install.py
+  devcovenant/refresh.py
+  devcovenant/test.py
+  devcovenant/undeploy.py
+  devcovenant/uninstall.py
+  devcovenant/update_lock.py
+  devcovenant/upgrade.py
+  tests/devcovenant/core/policies/devcov_integrity_guard/\
+    test_devcov_integrity_guard.py
+  tests/devcovenant/core/policies/devcov_structure_guard/\
+    test_devcov_structure_guard.py
+  tests/devcovenant/core/test_execution_runtime.py
+  tests/devcovenant/core/test_gate_runtime.py
+  tests/devcovenant/core/test_manifest.py
+  tests/devcovenant/core/test_metadata_runtime.py
+  tests/devcovenant/core/test_policy_descriptor.py
+  tests/devcovenant/core/test_policy_freeze.py
+  tests/devcovenant/core/test_policy_runtime.py
+  tests/devcovenant/core/test_profile_runtime.py
+  tests/devcovenant/core/test_refresh_runtime.py
+  tests/devcovenant/core/test_registry.py
+  tests/devcovenant/core/test_registry_runtime.py
+  tests/devcovenant/core/test_selector_runtime.py
+  tests/devcovenant/custom/policies/managed_doc_assets/\
+    test_managed_doc_assets.py
+  tests/devcovenant/test_install.py
+
+- 2026-02-14:
+  Change: Renamed gate and execution internals to
+  `gate_runtime`/`execution_runtime` and migrated command/runtime imports.
+  Why: Aligned runtime-consolidation item 8 so gate and shared command
+  helpers use explicit runtime ownership.
+  Impact: Removed `devcovenant/core/gates.py` and
+  `devcovenant/core/execution.py` while preserving stable `gate` and `test`
+  command behavior.
+  Files:
+  AGENTS.md
+  PLAN.md
+  SPEC.md
+  devcovenant/__init__.py
+  devcovenant/check.py
+  devcovenant/config.yaml
+  devcovenant/core/execution_runtime.py
+  devcovenant/core/gate_runtime.py
+  devcovenant/core/metadata_runtime.py
+  devcovenant/core/parser.py
+  devcovenant/core/policies/devcov_integrity_guard/devcov_integrity_guard.py
+  devcovenant/core/policies/docstring_and_comment_coverage/\
+    docstring_and_comment_coverage.py
+  devcovenant/core/policies/documentation_growth_tracking/\
+    documentation_growth_tracking.py
+  devcovenant/core/policies/line_length_limit/line_length_limit.py
+  devcovenant/core/policies/modules_need_tests/modules_need_tests.py
+  devcovenant/core/policies/name_clarity/name_clarity.py
+  devcovenant/core/policies/raw_string_escapes/raw_string_escapes.py
+  devcovenant/core/policies/read_only_directories/read_only_directories.py
+  devcovenant/core/policies/security_scanner/security_scanner.py
+  devcovenant/core/policy_freeze.py
+  devcovenant/core/policy_runtime.py
+  devcovenant/core/profile_runtime.py
+  devcovenant/core/profiles/global/assets/config.yaml
+  devcovenant/core/refresh_runtime.py
+  devcovenant/core/registry_runtime.py
+  devcovenant/core/selector_runtime.py
+  devcovenant/custom/policies/no_spaghetti/no_spaghetti.yaml
+  devcovenant/custom/profiles/devcovrepo/assets/docs/config.md
+  devcovenant/deploy.py
+  devcovenant/docs/config.md
+  devcovenant/gate.py
+  devcovenant/install.py
+  devcovenant/refresh.py
+  devcovenant/test.py
+  devcovenant/undeploy.py
+  devcovenant/uninstall.py
+  devcovenant/update_lock.py
+  devcovenant/upgrade.py
+  tests/devcovenant/core/policies/devcov_integrity_guard/\
+    test_devcov_integrity_guard.py
+  tests/devcovenant/core/test_execution_runtime.py
+  tests/devcovenant/core/test_gate_runtime.py
+  tests/devcovenant/core/test_metadata_runtime.py
+  tests/devcovenant/core/test_policy_freeze.py
+  tests/devcovenant/core/test_policy_runtime.py
+  tests/devcovenant/core/test_profile_runtime.py
+  tests/devcovenant/core/test_refresh_runtime.py
+  tests/devcovenant/core/test_registry.py
+  tests/devcovenant/core/test_registry_runtime.py
+  tests/devcovenant/core/test_selector_runtime.py
+  tests/devcovenant/custom/policies/managed_doc_assets/\
+    test_managed_doc_assets.py
+
+- 2026-02-13:
+  Change: Renamed selector helper internals to `selector_runtime` and migrated
+  policy/runtime imports and selector tests to the new module path.
+  Why: Aligned implementation backlog item 7 so selector matching and
+  watchlist normalization live under explicit runtime naming.
+  Impact: Improved runtime consolidation by removing
+  `devcovenant/core/selector_helpers.py` and validating unchanged selector
+  behavior through `tests/devcovenant/core/test_selector_runtime.py`.
+  Files:
+  AGENTS.md
+  PLAN.md
+  SPEC.md
+  devcovenant/__init__.py
+  devcovenant/check.py
+  devcovenant/config.yaml
+  devcovenant/core/execution.py
+  devcovenant/core/gates.py
+  devcovenant/core/metadata_runtime.py
+  devcovenant/core/parser.py
+  devcovenant/core/policies/devcov_integrity_guard/devcov_integrity_guard.py
+  devcovenant/core/policies/docstring_and_comment_coverage/\
+    docstring_and_comment_coverage.py
+  devcovenant/core/policies/documentation_growth_tracking/\
+    documentation_growth_tracking.py
+  devcovenant/core/policies/line_length_limit/line_length_limit.py
+  devcovenant/core/policies/modules_need_tests/modules_need_tests.py
+  devcovenant/core/policies/name_clarity/name_clarity.py
+  devcovenant/core/policies/raw_string_escapes/raw_string_escapes.py
+  devcovenant/core/policies/read_only_directories/read_only_directories.py
+  devcovenant/core/policies/security_scanner/security_scanner.py
+  devcovenant/core/policy_freeze.py
+  devcovenant/core/policy_runtime.py
+  devcovenant/core/profile_runtime.py
+  devcovenant/core/profiles/global/assets/config.yaml
+  devcovenant/core/refresh_runtime.py
+  devcovenant/core/registry_runtime.py
+  devcovenant/core/selector_helpers.py
+  devcovenant/custom/policies/no_spaghetti/no_spaghetti.yaml
+  devcovenant/custom/profiles/devcovrepo/assets/docs/config.md
+  devcovenant/deploy.py
+  devcovenant/docs/config.md
+  devcovenant/refresh.py
+  devcovenant/update_lock.py
+  devcovenant/upgrade.py
+  tests/devcovenant/core/policies/devcov_integrity_guard/\
+    test_devcov_integrity_guard.py
+  tests/devcovenant/core/test_execution.py
+  tests/devcovenant/core/test_metadata_runtime.py
+  tests/devcovenant/core/test_policy_freeze.py
+  tests/devcovenant/core/test_policy_runtime.py
+  tests/devcovenant/core/test_profile_runtime.py
+  tests/devcovenant/core/test_refresh_runtime.py
+  tests/devcovenant/core/test_registry.py
+  tests/devcovenant/core/test_registry_runtime.py
+  tests/devcovenant/core/test_selector_helpers.py
+  tests/devcovenant/custom/policies/managed_doc_assets/\
+    test_managed_doc_assets.py
+
+- 2026-02-13:
+  Change: Renamed full refresh orchestration to `refresh_runtime` and updated
+  command/runtime imports to consume the new module path.
+  Why: Aligned implementation backlog item 6 so full refresh ownership is in
+  the explicit runtime module set.
+  Impact: Improved core responsibility alignment by replacing
+  `repo_refresh.py` with `refresh_runtime.py` and renaming corresponding
+  runtime tests.
+  Files:
+  AGENTS.md
+  PLAN.md
+  SPEC.md
+  devcovenant/__init__.py
+  devcovenant/check.py
+  devcovenant/config.yaml
+  devcovenant/core/execution.py
+  devcovenant/core/gates.py
+  devcovenant/core/metadata_runtime.py
+  devcovenant/core/parser.py
+  devcovenant/core/policies/devcov_integrity_guard/devcov_integrity_guard.py
+  devcovenant/core/policy_freeze.py
+  devcovenant/core/policy_runtime.py
+  devcovenant/core/profile_runtime.py
+  devcovenant/core/profiles/global/assets/config.yaml
+  devcovenant/core/refresh_runtime.py
+  devcovenant/core/registry_runtime.py
+  devcovenant/custom/policies/no_spaghetti/no_spaghetti.yaml
+  devcovenant/custom/profiles/devcovrepo/assets/docs/config.md
+  devcovenant/deploy.py
+  devcovenant/docs/config.md
+  devcovenant/refresh.py
+  devcovenant/update_lock.py
+  devcovenant/upgrade.py
+  tests/devcovenant/core/policies/devcov_integrity_guard/\
+    test_devcov_integrity_guard.py
+  tests/devcovenant/core/test_execution.py
+  tests/devcovenant/core/test_metadata_runtime.py
+  tests/devcovenant/core/test_policy_freeze.py
+  tests/devcovenant/core/test_policy_runtime.py
+  tests/devcovenant/core/test_profile_runtime.py
+  tests/devcovenant/core/test_refresh_runtime.py
+  tests/devcovenant/core/test_registry.py
+  tests/devcovenant/core/test_registry_runtime.py
+  tests/devcovenant/custom/policies/managed_doc_assets/\
+    test_managed_doc_assets.py
+
+- 2026-02-13:
+  Change: Removed policy-freeze controls from runtime/config/docs and folded
+  policy replacement loading into `registry_runtime`.
+  Why: Aligned policy management to explicit custom copies instead of
+  automatic freeze toggles.
+  Impact: Updated parser/refresh/config generation so `freeze` metadata and
+  `freeze_core_policies` no longer exist, and deleted freeze-specific module
+  and tests.
+  Files:
+  AGENTS.md
+  PLAN.md
+  SPEC.md
+  devcovenant/__init__.py
+  devcovenant/check.py
+  devcovenant/config.yaml
+  devcovenant/core/execution.py
+  devcovenant/core/gates.py
+  devcovenant/core/metadata_runtime.py
+  devcovenant/core/parser.py
+  devcovenant/core/policies/devcov_integrity_guard/devcov_integrity_guard.py
+  devcovenant/core/policy_freeze.py
+  devcovenant/core/policy_runtime.py
+  devcovenant/core/profile_runtime.py
+  devcovenant/core/profiles/global/assets/config.yaml
+  devcovenant/core/registry_runtime.py
+  devcovenant/core/repo_refresh.py
+  devcovenant/custom/policies/no_spaghetti/no_spaghetti.yaml
+  devcovenant/custom/profiles/devcovrepo/assets/docs/config.md
+  devcovenant/docs/config.md
+  devcovenant/update_lock.py
+  devcovenant/upgrade.py
+  tests/devcovenant/core/policies/devcov_integrity_guard/\
+    test_devcov_integrity_guard.py
+  tests/devcovenant/core/test_execution.py
+  tests/devcovenant/core/test_metadata_runtime.py
+  tests/devcovenant/core/test_policy_freeze.py
+  tests/devcovenant/core/test_policy_runtime.py
+  tests/devcovenant/core/test_profile_runtime.py
+  tests/devcovenant/core/test_registry.py
+  tests/devcovenant/core/test_registry_runtime.py
+
+- 2026-02-13:
+  Change: Introduced `metadata_runtime` and moved policy metadata precedence
+  and selector-role materialization out of refresh internals.
+  Why: Aligned consolidation item 4 so metadata resolution has one runtime
+  owner instead of being spread across `repo_refresh` helper paths.
+  Impact: Improved metadata resolution by routing it through
+  `devcovenant/core/metadata_runtime.py`, and dedicated unit coverage validates
+  precedence, selector-role expansion, and rendered metadata block output.
+  Files:
+  AGENTS.md
+  PLAN.md
+  SPEC.md
+  devcovenant/__init__.py
+  devcovenant/core/engine.py
+  devcovenant/core/execution.py
+  devcovenant/core/gates.py
+  devcovenant/core/metadata_runtime.py
+  devcovenant/core/policies/devcov_integrity_guard/devcov_integrity_guard.py
+  devcovenant/core/profile_runtime.py
+  devcovenant/core/registry_runtime.py
+  devcovenant/core/repo_refresh.py
+  devcovenant/update_lock.py
+  tests/devcovenant/core/policies/devcov_integrity_guard/\
+    test_devcov_integrity_guard.py
+  tests/devcovenant/core/test_execution.py
+  tests/devcovenant/core/test_metadata_runtime.py
+  tests/devcovenant/core/test_profile_runtime.py
+  tests/devcovenant/core/test_registry_runtime.py
+
+- 2026-02-13:
+  Change: Renamed core registry APIs to `registry_runtime` and migrated
+  registry path resolution away from manifest helpers in runtime callsites.
+  Why: Aligned consolidation item 3 so registry ownership is explicit and
+  path helper responsibilities are folded into runtime-owned code.
+  Impact: Updated engine/refresh/gate/execution consumers to call
+  `registry_runtime` directly, and updated registry/execution tests to
+  match the new runtime module surface.
+  Files:
+  PLAN.md
+  SPEC.md
+  devcovenant/__init__.py
+  devcovenant/core/engine.py
+  devcovenant/core/execution.py
+  devcovenant/core/gates.py
+  devcovenant/core/policies/devcov_integrity_guard/devcov_integrity_guard.py
+  devcovenant/core/profile_runtime.py
+  devcovenant/core/registry_runtime.py
+  devcovenant/core/repo_refresh.py
+  tests/devcovenant/core/policies/devcov_integrity_guard/\
+    test_devcov_integrity_guard.py
+  tests/devcovenant/core/test_execution.py
+  tests/devcovenant/core/test_profile_runtime.py
+  tests/devcovenant/core/test_registry_runtime.py
+
+- 2026-02-13:
+  Change: Renamed core profile APIs to `profile_runtime` and migrated runtime
+  callsites/tests to the new module path.
+  Why: Aligned implementation with the runtime-responsibility consolidation
+  plan by moving profile ownership under explicit `*_runtime` naming.
+  Impact: Updated profile loading/refresh consumers to use
+  `devcovenant/core/profile_runtime.py`, and profile runtime coverage now
+  lives under `tests/devcovenant/core/test_profile_runtime.py`.
+  Files:
+  PLAN.md
+  SPEC.md
+  devcovenant/core/engine.py
+  devcovenant/core/profile_runtime.py
+  devcovenant/core/registry.py
+  devcovenant/core/repo_refresh.py
+  tests/devcovenant/core/test_profile_runtime.py
+  tests/devcovenant/core/test_registry.py
+
+- 2026-02-13:
+  Change: Rewrote the API-freeze plan and expanded SPEC runtime-consolidation
+  details with explicit `*_runtime` module ownership and migration scope.
+  Why: Clarified the missing item-9 detail and locked the exact internal
+  target-state module map for the consolidation refactor.
+  Impact: Updated planning to track concrete core-module migrations and
+  defined exactly what `devcovenant/core/` must contain after consolidation.
+  Files:
+  PLAN.md
+  SPEC.md
+  devcovenant/core/engine.py
+  devcovenant/core/profiles.py
+  devcovenant/core/registry.py
+  devcovenant/core/repo_refresh.py
+  tests/devcovenant/core/test_profiles.py
+  tests/devcovenant/core/test_registry.py
+
 - 2026-02-13:
   Change: Added centralized translator runtime arbitration and routed
   `name-clarity` through translator resolution instead of extension maps.
@@ -42,65 +786,13 @@ Example entry:
   language-profile
   declarations, and translator-runtime behavior is covered by dedicated tests.
   Files:
-  AGENTS.md
-  CONTRIBUTING.md
   PLAN.md
-  README.md
-  SPEC.md
-  SPEC_old.md
-  devcovenant/README.md
-  devcovenant/check.py
-  devcovenant/cli.py
-  devcovenant/config.yaml
-  devcovenant/core/gates.py
-  devcovenant/core/policies/devflow_run_gates/devflow_run_gates.py
-  devcovenant/core/profiles/csharp/csharp.yaml
-  devcovenant/core/profiles/csharp/translator.py
-  devcovenant/core/profiles/global/assets/AGENTS.yaml
-  devcovenant/core/profiles/global/assets/CONTRIBUTING.yaml
-  devcovenant/core/profiles/global/assets/PLAN.yaml
-  devcovenant/core/profiles/global/assets/README.yaml
-  devcovenant/core/profiles/global/assets/config.yaml
-  devcovenant/core/profiles/global/assets/devcovenant/README.yaml
-  devcovenant/core/profiles/global/global.yaml
-  devcovenant/core/profiles/go/go.yaml
-  devcovenant/core/profiles/go/translator.py
-  devcovenant/core/profiles/java/java.yaml
-  devcovenant/core/profiles/java/translator.py
-  devcovenant/core/profiles/javascript/javascript.yaml
-  devcovenant/core/profiles/javascript/translator.py
-  devcovenant/core/profiles/python/assets/pyproject.toml
-  devcovenant/core/profiles/python/python.yaml
-  devcovenant/core/profiles/python/translator.py
-  devcovenant/core/profiles/rust/rust.yaml
-  devcovenant/core/profiles/rust/translator.py
-  devcovenant/core/profiles/typescript/translator.py
-  devcovenant/core/profiles/typescript/typescript.yaml
+  devcovenant/core/engine.py
+  devcovenant/core/profiles.py
+  devcovenant/core/registry.py
   devcovenant/core/repo_refresh.py
-  devcovenant/core/translator_runtime.py
-  devcovenant/custom/policies/README.md
-  devcovenant/custom/profiles/devcovrepo/assets/docs/troubleshooting.md
-  devcovenant/custom/profiles/devcovrepo/assets/docs/workflow.md
-  devcovenant/docs/troubleshooting.md
-  devcovenant/docs/workflow.md
-  devcovenant/gate.py
-  pyproject.toml
-  tests/devcovenant/core/policies/docstring_and_comment_coverage/\
-    test_docstring_and_comment_coverage.py
-  tests/devcovenant/core/policies/modules_need_tests/test_modules_need_tests.py
-  tests/devcovenant/core/policies/name_clarity/test_name_clarity.py
-  tests/devcovenant/core/policies/security_scanner/test_security_scanner.py
-  tests/devcovenant/core/profiles/csharp/test_translator.py
-  tests/devcovenant/core/profiles/go/test_translator.py
-  tests/devcovenant/core/profiles/java/test_translator.py
-  tests/devcovenant/core/profiles/javascript/test_translator.py
-  tests/devcovenant/core/profiles/python/test_translator.py
-  tests/devcovenant/core/profiles/rust/test_translator.py
-  tests/devcovenant/core/profiles/typescript/test_translator.py
-  tests/devcovenant/core/test_repo_refresh.py
-  tests/devcovenant/test_check.py
-  tests/devcovenant/test_cli.py
-  tests/devcovenant/test_gate.py
+  tests/devcovenant/core/test_profiles.py
+  tests/devcovenant/core/test_registry.py
 
 - 2026-02-13:
   Change: Updated refresh runtime to materialize `policy_state` as a full
@@ -150,7 +842,7 @@ Example entry:
   PLAN.md
   SPEC.md
   devcovenant/config.yaml
-  devcovenant/core/base.py
+  devcovenant/core/policy_contracts.py
   devcovenant/core/manifest.py
   devcovenant/core/parser.py
   devcovenant/core/policies/README.md
@@ -207,7 +899,7 @@ Example entry:
     test_devcov_integrity_guard.py
   tests/devcovenant/core/profiles/data/__init__.py
   tests/devcovenant/core/profiles/suffixes/__init__.py
-  tests/devcovenant/core/test_base.py
+  tests/devcovenant/core/test_policy_contracts.py
   tests/devcovenant/core/test_parser.py
   tests/devcovenant/core/test_profiles.py
   tests/devcovenant/core/test_repo_refresh.py
@@ -223,9 +915,9 @@ Example entry:
   PLAN.md
   SPEC.md
   devcovenant/config.yaml
-  devcovenant/core/base.py
+  devcovenant/core/policy_contracts.py
   devcovenant/core/repo_refresh.py
-  tests/devcovenant/core/test_base.py
+  tests/devcovenant/core/test_policy_contracts.py
   tests/devcovenant/core/test_repo_refresh.py
 
 - 2026-02-12:
@@ -1356,7 +2048,7 @@ Example entry:
   SPEC.md
   devcovenant/.gitignore
   devcovenant/config.yaml
-  devcovenant/core/base.py
+  devcovenant/core/policy_contracts.py
   devcovenant/core/engine.py
   devcovenant/core/install.py
   devcovenant/core/policies/changelog_coverage/changelog_coverage.yaml
@@ -1406,7 +2098,7 @@ Example entry:
   tests/core/policies/devflow_run_gates/tests/test_devflow_run_gates.py
   tests/core/policies/line_length_limit/tests/test_line_length_limit.py
   tests/core/profiles/test_profiles.py
-  tests/core/tests/test_base.py
+  tests/core/tests/test_policy_contracts.py
   tests/core/tests/test_install.py
   tests/core/tests/test_refresh_policies.py
 
@@ -3322,7 +4014,7 @@ test_docstring_and_comment_coverage.py
   devcovenant/cli.py
   devcovenant/config.yaml
   devcovenant/config_old.yaml
-  devcovenant/core/base.py
+  devcovenant/core/policy_contracts.py
   devcovenant/core/cli_options.py
   devcovenant/core/install.py
 
@@ -3529,7 +4221,7 @@ test_docstring_and_comment_coverage.py
 - 2026-01-26: Relocated DevCovenant's core test modules outside the package so
   they now live under `tests/devcovenant/core/tests/`. Files:
   devcovenant/core/tests/__init__.py
-  devcovenant/core/tests/test_base.py
+  devcovenant/core/tests/test_policy_contracts.py
   devcovenant/core/tests/test_main_entrypoint.py
   tests/devcovenant/core/tests/test_refresh_policies.py
   devcovenant/core/tests/test_parser.py

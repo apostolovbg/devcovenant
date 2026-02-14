@@ -4,7 +4,11 @@ import datetime as dt
 from pathlib import Path
 from typing import Iterable, List
 
-from devcovenant.core.base import CheckContext, PolicyCheck, Violation
+from devcovenant.core.policy_contracts import (
+    CheckContext,
+    PolicyCheck,
+    Violation,
+)
 
 THIRD_PARTY = Path("THIRD_PARTY_LICENSES.md")
 LICENSES_DIR = "licenses"

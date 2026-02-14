@@ -10,7 +10,11 @@ import subprocess
 from datetime import datetime, timezone
 from typing import List, Set
 
-from devcovenant.core.base import CheckContext, PolicyCheck, Violation
+from devcovenant.core.policy_contracts import (
+    CheckContext,
+    PolicyCheck,
+    Violation,
+)
 
 
 class LastUpdatedPlacementCheck(PolicyCheck):

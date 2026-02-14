@@ -12,7 +12,11 @@ from datetime import date
 from pathlib import Path
 from typing import Any, List
 
-from devcovenant.core.base import CheckContext, PolicyCheck, Violation
+from devcovenant.core.policy_contracts import (
+    CheckContext,
+    PolicyCheck,
+    Violation,
+)
 
 
 def _find_markers(content: str) -> tuple[int | None, list[int]]:

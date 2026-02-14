@@ -16,18 +16,18 @@ from typing import Callable, Dict, Iterable, List, Sequence, Tuple
 if __package__ in {None, ""}:  # pragma: no cover
     sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
-from devcovenant.core.execution import resolve_repo_root
-from devcovenant.core.policies.dependency_license_sync import (
-    dependency_license_sync,
-)
-from devcovenant.core.policy_descriptor import (
-    load_policy_descriptor,
-    resolve_script_location,
-)
-from devcovenant.core.repo_refresh import (
+from devcovenant.core.execution_runtime import resolve_repo_root
+from devcovenant.core.metadata_runtime import (
     build_metadata_context,
     metadata_value_list,
     resolve_policy_metadata_map,
+)
+from devcovenant.core.policies.dependency_license_sync import (
+    dependency_license_sync,
+)
+from devcovenant.core.registry_runtime import (
+    load_policy_descriptor,
+    resolve_script_location,
 )
 
 POLICY_ID = "dependency-license-sync"
@@ -528,14 +528,6 @@ def _resolve_dependency_metadata(repo_root: Path) -> Dict[str, object]:
     descriptor = load_policy_descriptor(repo_root, POLICY_ID)
     context = build_metadata_context(repo_root)
     location = resolve_script_location(repo_root, POLICY_ID)
-    core_available = (
-        repo_root
-        / "devcovenant"
-        / "core"
-        / "policies"
-        / "dependency_license_sync"
-        / "dependency_license_sync.py"
-    ).exists()
     custom_policy = bool(location and location.kind == "custom")
     _, resolved = resolve_policy_metadata_map(
         POLICY_ID,
@@ -543,7 +535,6 @@ def _resolve_dependency_metadata(repo_root: Path) -> Dict[str, object]:
         values,
         descriptor,
         context,
-        core_available=core_available,
         custom_policy=custom_policy,
     )
     dependency_files = _csv_to_list(resolved.get("dependency_files", ""))

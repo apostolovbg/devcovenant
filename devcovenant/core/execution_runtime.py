@@ -10,7 +10,7 @@ import subprocess
 from pathlib import Path
 
 from devcovenant import __version__ as package_version
-from devcovenant.core import manifest as manifest_module
+from devcovenant.core import registry_runtime as registry_runtime_module
 
 DEFAULT_COMMANDS = [
     ["python3", "-m", "unittest", "discover", "-v"],
@@ -86,9 +86,9 @@ def run_bootstrap_registry_refresh(repo_root: Path) -> None:
     """Run lightweight registry refresh for command startup."""
     print_step("Refreshing local registry", "🔄")
     try:
-        from devcovenant.core.repo_refresh import refresh_policy_registry
+        from devcovenant.core.refresh_runtime import refresh_policy_registry
 
-        refresh_policy_registry(repo_root, skip_freeze=True)
+        refresh_policy_registry(repo_root)
         print_step("Registry refresh complete", "✅")
     except Exception as exc:  # pragma: no cover - defensive
         print_step(f"Registry refresh skipped ({exc})", "⚠️")
@@ -96,7 +96,7 @@ def run_bootstrap_registry_refresh(repo_root: Path) -> None:
 
 def registry_required_commands(repo_root: Path) -> list[tuple[str, list[str]]]:
     """Read required commands from devflow-run-gates metadata."""
-    registry_path = manifest_module.policy_registry_path(repo_root)
+    registry_path = registry_runtime_module.policy_registry_path(repo_root)
     if not registry_path.exists():
         return list(zip(DEFAULT_COMMAND_STRINGS, DEFAULT_COMMANDS))
 
@@ -212,7 +212,7 @@ def _current_sha(repo_root: Path) -> str:
 
 def record_test_status(repo_root: Path, command: str, notes: str = "") -> None:
     """Record test status payload under registry/local/test_status.json."""
-    status_path = manifest_module.test_status_path(repo_root)
+    status_path = registry_runtime_module.test_status_path(repo_root)
     status_path.parent.mkdir(parents=True, exist_ok=True)
 
     existing: dict[str, object] = {}

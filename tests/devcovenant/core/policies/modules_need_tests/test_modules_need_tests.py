@@ -5,8 +5,8 @@ import unittest
 from pathlib import Path
 from unittest.mock import patch
 
-from devcovenant.core.base import CheckContext
 from devcovenant.core.policies.modules_need_tests import modules_need_tests
+from devcovenant.core.policy_contracts import CheckContext
 from devcovenant.core.translator_runtime import TranslatorRuntime
 
 ModulesNeedTestsCheck = modules_need_tests.ModulesNeedTestsCheck

@@ -10,7 +10,11 @@ import time
 from pathlib import Path
 from typing import Iterable, List
 
-from devcovenant.core.base import CheckContext, PolicyCheck, Violation
+from devcovenant.core.policy_contracts import (
+    CheckContext,
+    PolicyCheck,
+    Violation,
+)
 
 _DEFAULT_STATUS = (
     Path("devcovenant") / "registry" / "local" / "test_status.json"

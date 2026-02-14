@@ -11,6 +11,7 @@ from contextlib import redirect_stderr
 from pathlib import Path
 from types import SimpleNamespace
 
+import devcovenant
 from devcovenant import cli
 from tests.devcovenant.support import MonkeyPatch
 
@@ -137,6 +138,22 @@ def _unit_test_install_help_shows_command_scope() -> None:
     assert "--nofix" not in result.stdout
 
 
+def _unit_test_gate_help_is_command_scoped() -> None:
+    """`gate --help` should expose only gate options."""
+    result = subprocess.run(
+        [sys.executable, "-m", "devcovenant", "gate", "--help"],
+        cwd=REPO_ROOT,
+        check=False,
+        capture_output=True,
+        text=True,
+    )
+    assert result.returncode == 0
+    assert "--start" in result.stdout
+    assert "--end" in result.stdout
+    assert "--nofix" not in result.stdout
+    assert "--norefresh" not in result.stdout
+
+
 def _unit_test_root_command_modules_exist() -> None:
     """All CLI command modules should exist at package root."""
     for module_name in ROOT_COMMAND_MODULES:
@@ -172,6 +189,18 @@ def _unit_test_command_modules_support_file_path_help() -> None:
             text=True,
         )
         assert result.returncode == 0, result.stderr
+
+
+def _unit_test_package_exports_are_explicit() -> None:
+    """Package root should export only documented stable symbols."""
+    assert devcovenant.__all__ == ["__version__"]
+
+
+def _unit_test_runtime_classes_not_exposed_at_package_root() -> None:
+    """Runtime internals should not be exposed by the package root."""
+    assert not hasattr(devcovenant, "DevCovenantEngine")
+    assert not hasattr(devcovenant, "PolicyParser")
+    assert not hasattr(devcovenant, "PolicyRegistry")
 
 
 class GeneratedUnittestCases(unittest.TestCase):
@@ -220,6 +249,10 @@ class GeneratedUnittestCases(unittest.TestCase):
         """Run test_install_help_shows_command_scope."""
         _unit_test_install_help_shows_command_scope()
 
+    def test_gate_help_is_command_scoped(self):
+        """Run test_gate_help_is_command_scoped."""
+        _unit_test_gate_help_is_command_scoped()
+
     def test_root_command_modules_exist(self):
         """Run test_root_command_modules_exist."""
         _unit_test_root_command_modules_exist()
@@ -235,3 +268,11 @@ class GeneratedUnittestCases(unittest.TestCase):
     def test_command_modules_support_file_path_help(self):
         """Run test_command_modules_support_file_path_help."""
         _unit_test_command_modules_support_file_path_help()
+
+    def test_package_exports_are_explicit(self):
+        """Run test_package_exports_are_explicit."""
+        _unit_test_package_exports_are_explicit()
+
+    def test_runtime_classes_not_exposed_at_package_root(self):
+        """Run test_runtime_classes_not_exposed_at_package_root."""
+        _unit_test_runtime_classes_not_exposed_at_package_root()

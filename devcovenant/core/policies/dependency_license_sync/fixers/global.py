@@ -8,10 +8,10 @@ import datetime as dt
 from pathlib import Path
 from typing import Iterable, List
 
-from devcovenant.core.base import FixResult, PolicyFixer, Violation
 from devcovenant.core.policies.dependency_license_sync import (
     dependency_license_sync,
 )
+from devcovenant.core.policy_contracts import FixResult, PolicyFixer, Violation
 
 
 class DependencyLicenseSyncFixer(PolicyFixer):

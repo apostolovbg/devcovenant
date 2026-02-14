@@ -6,8 +6,12 @@ Ensures required DevCovenant files and directories are present.
 
 from typing import List
 
-from devcovenant.core import manifest as manifest_module
-from devcovenant.core.base import CheckContext, PolicyCheck, Violation
+from devcovenant.core import registry_runtime as manifest_module
+from devcovenant.core.policy_contracts import (
+    CheckContext,
+    PolicyCheck,
+    Violation,
+)
 
 
 class DevCovenantStructureGuardCheck(PolicyCheck):

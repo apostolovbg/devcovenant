@@ -11,10 +11,10 @@ from pathlib import Path
 from textwrap import dedent
 from types import SimpleNamespace
 
-from devcovenant.core.base import CheckContext, Violation
 from devcovenant.core.policies.changelog_coverage.changelog_coverage import (
     ChangelogCoverageCheck,
 )
+from devcovenant.core.policy_contracts import CheckContext, Violation
 from tests.devcovenant.support import MonkeyPatch
 
 

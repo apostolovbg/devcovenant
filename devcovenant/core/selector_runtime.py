@@ -7,7 +7,7 @@ from dataclasses import dataclass, field
 from pathlib import Path, PurePosixPath
 from typing import Iterable, List, Mapping, Sequence
 
-from devcovenant.core.base import PolicyCheck
+from devcovenant.core.policy_contracts import PolicyCheck
 
 
 def _normalize_list(raw_value: object | None) -> List[str]:

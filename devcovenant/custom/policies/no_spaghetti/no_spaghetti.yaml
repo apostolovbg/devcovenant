@@ -9,7 +9,6 @@ metadata:
   enforcement: active
   enabled: 'true'
   custom: 'true'
-  freeze: 'false'
   include_globs:
     - devcovenant/core/*.py
   exclude_globs:

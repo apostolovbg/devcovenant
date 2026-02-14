@@ -5,8 +5,8 @@ import unittest
 from pathlib import Path
 from unittest import mock
 
-from devcovenant.core.base import CheckContext
 from devcovenant.core.policies.version_sync import version_sync
+from devcovenant.core.policy_contracts import CheckContext
 
 VersionSyncCheck = version_sync.VersionSyncCheck
 

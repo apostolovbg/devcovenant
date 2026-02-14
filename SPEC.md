@@ -1,5 +1,5 @@
 # DevCovenant Specification
-**Last Updated:** 2026-02-13
+**Last Updated:** 2026-02-14
 **Version:** 0.2.6
 
 <!-- DEVCOV:BEGIN -->
@@ -39,6 +39,17 @@ documentation synchronized so drift is detectable and reversible.
 - Forward-only implementation: implement the current contract directly.
   Do not keep legacy fallback paths and do not add anti-legacy rejection
   logic unless a policy explicitly requires that behavior.
+
+### Contract Surface Matrix
+- Tier A (user contract): CLI command behavior and flags, `config.yaml`
+  schema, managed-doc block formats, and AGENTS policy-block schema.
+- Tier B (extension contract): policy/fixer interfaces, profile manifest
+  schema, translator declaration schema, and `LanguageUnit` contract.
+- Tier C (data contract): on-disk registry/state file schemas under
+  `devcovenant/registry/local` and `devcovenant/registry/global`.
+- Tier D (internal runtime): `devcovenant/core/*_runtime.py` orchestration,
+  parser internals, and helper internals. These are intentionally non-public
+  and may be refactored without external API guarantees.
 
 ## Workflow
 - Run the gated workflow for every change: pre-commit start, tests,
@@ -125,6 +136,14 @@ documentation synchronized so drift is detectable and reversible.
 - The command surface is a frozen contract; new commands are allowed only
   as additive registered commands and must not change existing command
   semantics.
+- DevCovenant is CLI-first. Python imports from `devcovenant/core/**` are
+  internal by default unless explicitly declared as extension contracts in
+  this specification.
+- Package-root Python API is intentionally narrow: `devcovenant.__all__`
+  exports only stable package metadata (`__version__`). Runtime classes
+  (`DevCovenantEngine`, `PolicyRegistry`) are internal and
+  must be imported from their core runtime modules when needed by internal
+  code.
 - CLI parsing is command-scoped (dispatcher). `devcovenant <command> --help`
   must show only options for that command and must not leak unrelated
   lifecycle flags.
@@ -319,10 +338,9 @@ documentation synchronized so drift is detectable and reversible.
 - Config should expose the runtime knobs actually consumed by core logic:
   `devcov_core_include`, `devcov_core_paths`, `profiles`, `paths`, `version`,
   `docs`, `doc_assets`, `install`, `engine`, `pre_commit`, `policy_state`,
-  `freeze_core_policies`, `ignore`, `autogen_metadata_overrides`, and
-  `user_metadata_overrides`. Generated config remains the canonical override
-  template and documents each supported key with inline comments in the
-  profile asset template.
+  `ignore`, `autogen_metadata_overrides`, and `user_metadata_overrides`.
+  Generated config remains the canonical override template and documents each
+  supported key with inline comments in the profile asset template.
 - Config also exposes `doc_assets` (with `autogen` and `user` lists).
   Repositories can drive which managed docs the active profiles (for example,
   `global`, `docs`, `devcovenant`) synthesize versus which remain purely
@@ -515,13 +533,8 @@ documentation synchronized so drift is detectable and reversible.
 - Treat the collective `<!-- DEVCOV-POLICIES:BEGIN -->` /
   `<!-- DEVCOV-POLICIES:END -->` block as a managed unit rendered from
   registry policy entries.
-  Provide a per-policy `freeze`
-  override that copies the policy’s modules, descriptors, and assets into
-  `devcovenant/custom/` (with `custom: true`) when true and removes those files
-  when the flag clears.
-  Always rerun `devcovenant refresh` (and any needed registry
-  fixes) so the registry records the custom copy. Auto-fixers should be devised
-  for every policy and wired through the shared translator runtime.
+  Auto-fixers should be devised for every policy and wired through the shared
+  translator runtime.
   They work across every language/profile combination that the policy supports.
 - Generate `devcovenant/registry/local/policy_registry.yaml` dynamically from
   policy descriptors, script discovery, and metadata resolution. The registry
@@ -539,7 +552,7 @@ documentation synchronized so drift is detectable and reversible.
 
 
 ### Policy definition YAML
-- Each policy (core, frozen, or custom) ships with a `<policy>.yaml` that
+- Each policy (core or custom) ships with a `<policy>.yaml` that
   contains:
   ```
   id: changelog-coverage
@@ -564,12 +577,11 @@ documentation synchronized so drift is detectable and reversible.
   vertical YAML-style lines (lists continue on indented lines) rather than
   comma-joined horizontal values.
 - When DevCovenant removes a core policy, the updater copies it to
-  `devcovenant/custom/policies/` (or a frozen overlay defined in config),
-  marks the new copy as `custom`, and reruns `refresh` so the
-  management docs, notices, and registry reflect the deprecated version.
+  `devcovenant/custom/policies/`, marks the new copy as `custom`, and reruns
+  `refresh` so the management docs, notices, and registry reflect the
+  deprecated version.
 - `config.yaml` exposes:
   - `policy_state`: policy ID → `true|false` activation map (authoritative).
-  - `freeze_core_policies`: list whose IDs toggle `freeze: true`.
   - `user_metadata_overrides`: policy ID → override map applied last.
 - Config-defined overrides replace the targeted keys (no implicit append).
 - Core profiles stay immutable; attach custom policy metadata via custom
@@ -752,13 +764,55 @@ documentation synchronized so drift is detectable and reversible.
   tests.
 
 ### Core Responsibility Consolidation
-- Internal core responsibilities are consolidated into stable runtime
-  domains: policy runtime, metadata runtime, profile runtime, translator
-  runtime, refresh runtime, and registry runtime.
-- Legacy or duplicate internal modules/functions must be removed when their
-  responsibilities are absorbed by the stable runtime domains.
-- CLI-exposed scripts remain at `devcovenant/` package root; consolidated
-  runtime modules remain internal under `devcovenant/core/`.
+- Runtime consolidation is an API-freeze deliverable, not a best-effort
+  cleanup. `devcovenant/core/` must expose a stable internal module set with
+  explicit ownership and no duplicate responsibility paths.
+- Target-state core runtime module set:
+  - `policy_runtime.py`: policy discovery/loading, metadata hydration,
+    policy/fixer execution orchestration, and AGENTS policy-block parsing
+    primitives consumed by runtime call paths.
+  - `metadata_runtime.py`: metadata precedence resolution, selector-role
+    normalization, policy metadata merge helpers.
+  - `profile_runtime.py`: profile discovery/loading, active profile
+    resolution, profile overlays/hooks/asset metadata composition.
+  - `translator_runtime.py`: translator registry build, candidate arbitration,
+    translation execution, `LanguageUnit` contracts.
+  - `refresh_runtime.py`: full refresh orchestration (policy registry,
+    profile registry, managed docs, config refresh, AGENTS policy block
+    compilation).
+  - `registry_runtime.py`: policy/profile registry persistence, hash updates,
+    drift/sync reporting.
+  - `selector_runtime.py`: shared selector/filter matching helpers used by
+    policies/runtime.
+  - `gate_runtime.py`: `gate --start|--end` execution and test-status writes.
+  - `execution_runtime.py`: command-shell helpers shared by CLI entry scripts
+    (banner, subprocess wrappers, repo-root resolution,
+    test command execution).
+- Contract ownership inside `devcovenant/core/` is explicit:
+  - Extension contract modules: only `policy_contracts.py` is a stable
+    Python contract for policy/fixer implementers.
+  - Profile contract: schema and behavior are defined by profile manifests
+    (`<profile>.yaml`) plus runtime resolution semantics in
+    `profile_runtime.py`; contracts are manifest/data-driven, not import API.
+  - Registry contract: schema and behavior are defined by
+    `devcovenant/registry/local/*.yaml|json` and their generation rules, not
+    by direct imports from `registry_runtime.py`.
+  - AGENTS policy-block behavior contract is schema-level; parsing internals
+    are runtime implementation details, not import API.
+  - Translator contract is profile declaration schema + `LanguageUnit`
+    payload schema; runtime routing is internal to `translator_runtime.py`.
+- Core contract modules (kept separate from runtime orchestration):
+  - `policy_contracts.py`: policy/fixer contract types
+    (`CheckContext`, `PolicyCheck`, `PolicyFixer`, `Violation`, `FixResult`)
+    used by all policies.
+- Existing scattered modules with overlapping concerns (`engine.py`,
+  `profiles.py`, `registry.py`, and other partial helpers) are transitional
+  and must be folded into the target runtime set, then removed.
+- No fallback wrappers and no anti-legacy rejection logic are added for this
+  consolidation. The codebase moves directly to the target-state module
+  contract, and tests are updated to current behavior.
+- CLI-exposed scripts remain at `devcovenant/` package root; runtime modules
+  remain internal under `devcovenant/core/`.
 
 ## Non-Functional Requirements
 - Checks must be fast enough for pre-commit usage on typical repos.
@@ -769,6 +823,12 @@ documentation synchronized so drift is detectable and reversible.
   translator ownership by language profiles only; and language-aware policies
   routed through the shared translator runtime without per-policy adapter
   maps.
+- Contract tests must also enforce the contract surface matrix:
+  - Tier A: command flags/behavior and config/doc block schemas.
+  - Tier B: extension contracts (`policy_contracts.py`,
+    translator/profile schemas).
+  - Tier C: registry/state file schemas.
+  - Tier D internals are intentionally excluded from public API assertions.
 
 ## Future Direction
 - Version 0.2.7 moves more stock policies onto a metadata-driven DSL surfaced

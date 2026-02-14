@@ -11,7 +11,7 @@ if __package__ in {None, ""}:  # pragma: no cover
 import argparse
 from pathlib import Path
 
-from devcovenant.core.execution import (
+from devcovenant.core.execution_runtime import (
     print_banner,
     print_step,
     resolve_repo_root,

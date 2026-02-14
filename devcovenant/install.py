@@ -14,8 +14,8 @@ import shutil
 import tempfile
 from pathlib import Path
 
-from devcovenant.core import manifest as manifest_module
-from devcovenant.core.execution import (
+from devcovenant.core import registry_runtime as manifest_module
+from devcovenant.core.execution_runtime import (
     print_banner,
     print_step,
     resolve_repo_root,

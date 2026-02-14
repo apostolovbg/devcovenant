@@ -161,9 +161,6 @@ pre_commit:
 # Value: true or false
 policy_state: {}
 
-# Core policy IDs to freeze into `devcovenant/custom/policies/*`.
-freeze_core_policies: []
-
 # ---------------------------------------------------------------------------
 # Global ignore patterns
 # ---------------------------------------------------------------------------
