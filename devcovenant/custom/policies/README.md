@@ -41,4 +41,6 @@ policy scripts when declarative assets are sufficient.
 1. Change descriptor and script together.
 2. Update mirrored tests under `tests/devcovenant/custom/policies/...`.
 3. Run `devcovenant refresh` after descriptor/profile updates.
-4. Run full gate sequence.
+4. Run full gate sequence:
+   `gate --start` -> `gate --mid` (rerun until clean) ->
+   `test` -> `gate --end`.

@@ -16,14 +16,19 @@ registry as a cache: do not edit it by hand.
 ## Workflow
 1. Run `refresh` to rebuild registry and managed state.
 2. Inspect the registry when debugging policy loading or overrides.
-3. Commit registry changes alongside the code they represent.
+3. Use the gate workflow (`start -> mid -> test -> end`) for edit slices.
+4. Commit registry changes alongside the code they represent.
 
 ## Local Registry Contents
 The main files under `devcovenant/registry/local/` are:
 - `policy_registry.yaml` for policy hashes and resolved metadata.
 - `profile_registry.yaml` for the active profile inventory.
 - `manifest.json` for lifecycle tracking and notices.
-- `gate_status.json` for devflow gate/test run state.
+- `gate_status.json` for gate session lifecycle and test run state.
+
+Lifecycle notes:
+- `gate --start` and `gate --end` write lifecycle state.
+- `gate --mid` performs required pre-test checks without lifecycle writes.
 
 ## Global Registry Assets
 The global registry directory under `devcovenant/registry/global/` is a

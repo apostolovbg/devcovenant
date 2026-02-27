@@ -1,6 +1,5 @@
 # Builtin Policies
 **Last Updated:** 2026-02-27
-
 **Version:** 1.0.0
 
 ## Table of Contents
@@ -61,4 +60,6 @@ A custom policy override suppresses builtin autofix helpers for that policy ID.
 2. Update mirrored tests under `tests/devcovenant/builtin/policies/...`.
 3. Keep tests behavioral/contract-focused; do not add placeholder stubs.
 4. Run `devcovenant refresh` after descriptor metadata changes.
-5. Run full gate sequence before finalizing.
+5. Run full gate sequence before finalizing:
+   `gate --start` -> `gate --mid` (rerun until clean) ->
+   `test` -> `gate --end`.

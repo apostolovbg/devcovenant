@@ -38,5 +38,7 @@ language units through shared translator runtime contracts.
 ## Workflow
 1. Edit custom profile manifest/assets.
 2. Refresh to regenerate registries and generated assets.
-3. Verify tests and gate sequence.
+3. Verify with full gate sequence:
+   `gate --start` -> `gate --mid` (rerun until clean) ->
+   `test` -> `gate --end`.
 4. Keep `PROFILE_MAP.md` and docs aligned when adding new profiles.

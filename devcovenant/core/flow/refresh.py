@@ -19,9 +19,6 @@ from devcovenant.core.services import (
 )
 from devcovenant.core.services import profile_registry as profile_runtime
 from devcovenant.core.services import registry as manifest_module
-from devcovenant.core.services.audit_digest import (
-    refresh_audit_digest_artifacts,
-)
 from devcovenant.core.services.policy_parse import PolicyDefinition
 from devcovenant.core.services.registry import (
     PolicyRegistry,
@@ -2247,22 +2244,6 @@ def refresh_policy_registry(
     if _ensure_trailing_newline(registry_path):
         runtime_print(
             f"Ensured trailing newline in {registry_path}.",
-            verbose_only=True,
-        )
-
-    try:
-        changed_digests = refresh_audit_digest_artifacts(
-            repo_root,
-            agents_path=agents_md_path,
-            policy_registry_path=registry_path,
-        )
-    except ValueError as error:
-        runtime_print(f"Error: {error}", file=sys.stderr)
-        return 1
-    if changed_digests:
-        runtime_print(
-            "Updated informational audit digest artifacts: "
-            + ", ".join(changed_digests),
             verbose_only=True,
         )
 

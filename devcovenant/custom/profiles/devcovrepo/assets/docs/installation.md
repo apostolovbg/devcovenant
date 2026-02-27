@@ -26,6 +26,7 @@ shell wrapper).
 2. Edit `devcovenant/config.yaml` and set `install.generic_config: false`.
 3. Run `deploy` to activate managed docs, registries, and gitignore.
 4. Use `refresh` for normal managed refreshes and `upgrade` for core updates.
+5. Run gated edits with `start -> mid -> test -> end`.
 
 ## Lifecycle Commands
 - `install`: copy the core plus a generic config stub. It never deploys
@@ -50,6 +51,12 @@ devcovenant deploy
 
 devcovenant refresh
 devcovenant upgrade
+
+# edit-session workflow
+devcovenant gate --start
+devcovenant gate --mid
+devcovenant test
+devcovenant gate --end
 ```
 
 ## Undeploy and Uninstall

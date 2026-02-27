@@ -95,11 +95,13 @@ class PolicyParser:
         """Parse key/value metadata from a policy-def block."""
         metadata: dict[str, str] = {}
         current_key: str | None = None
+        key_pattern = re.compile(r"^[A-Za-z0-9_.-]+\s*:")
         for line in block.split("\n"):
             stripped = line.strip()
             if not stripped:
                 continue
-            if ":" in stripped:
+            is_indented = line[:1].isspace()
+            if (not is_indented) and key_pattern.match(stripped):
                 key, value = stripped.split(":", 1)
                 current_key = key.strip()
                 metadata[current_key] = value.strip()

@@ -37,7 +37,9 @@ Registry regeneration occurs during full-refresh paths:
 - `devcovenant refresh`
 - `devcovenant deploy`
 - `devcovenant upgrade`
-- `devcovenant check` (unless `--norefresh`)
+- gate pre-commit phases (`devcovenant gate --start`,
+  required non-lifecycle `devcovenant gate --mid`, and
+  `devcovenant gate --end`) through gate-owned check orchestration
 
 Ownership model:
 - local registry files are generated state
@@ -55,4 +57,5 @@ If drift persists, compare AGENTS policy block content against
 ## Workflow
 1. Run refresh-producing command.
 2. Confirm registry outputs are regenerated.
-3. Validate with tests and end gate.
+3. Run `devcovenant gate --mid` before tests in active sessions.
+4. Validate with tests and end gate.

@@ -302,10 +302,6 @@ Invariant:
   solely because recorded tests are newer than recorded end.
 - Runtime snapshot/session helper ownership lives in
   `devcovenant/core/runtime/session_snapshot.py`.
-- `devcovenant/core/services/audit_digest.py` generates local low-token
-  workflow/policy digest artifacts (`audit_digest.json` + `audit_digest.txt`)
-  from AGENTS + policy registry state; digest artifacts are informational only
-  and AGENTS remains canonical.
 - `devcovenant/core/flow/session.py` exports explicit session helper symbols
   (`capture_current_numstat_snapshot`, `session_delta_paths`, and related
   snapshot helpers) rather than wildcard runtime imports.
@@ -315,6 +311,12 @@ Invariant:
   `devcovenant/core/services/policy_block_refresh.py`.
 - AGENTS policy parser/model helpers live in
   `devcovenant/core/services/policy_parse.py`.
+- Policy metadata parsing treats only non-indented `key:` rows as new keys, so
+  indented continuation values can safely contain `:` tokens (for example URL
+  prefixes and long-line marker tokens).
+- Registry metadata block parsing uses the same non-indented `key:` rule so
+  AGENTS refresh/registry round-trips keep colon-containing continuation
+  values stable.
 - Policy check orchestration lives in
   `devcovenant/core/services/policy_engine.py`. The stable service surface is
   `DevCovenantEngine.check()` returning `CheckResult`, with result helper
@@ -374,8 +376,8 @@ Invariant:
 
 ### Refresh and Registry
 - Full refresh runs in `refresh`, `deploy`, `upgrade`, and gate pre-commit
-  phases via gate-owned check orchestration (`gate --start`, optional
-  `gate --mid`, and `gate --end`).
+  phases via gate-owned check orchestration (`gate --start`,
+  required non-lifecycle `gate --mid`, and `gate --end`).
 - Refresh regenerates:
   - local registries
   - AGENTS managed policy block

@@ -48,4 +48,6 @@ intentional and documented in `SPEC.md`.
 2. Update tests under mirrored `tests/devcovenant/custom/...` paths.
 3. Update relevant docs and maps (`POLICY_MAP.md`, `PROFILE_MAP.md`).
 4. Run `devcovenant refresh` after manifest or descriptor changes.
-5. Run full gate sequence before handing off changes.
+5. Run full gate sequence before handing off changes:
+   `gate --start` -> `gate --mid` (rerun until clean) ->
+   `test` -> `gate --end`.

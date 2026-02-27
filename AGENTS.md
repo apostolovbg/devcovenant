@@ -941,9 +941,9 @@ enforcement: active
 enabled: true
 custom: false
 max_length: 79
-allow_long_url_lines: False
-url_prefixes: http://
-  https://
+allow_long_url_lines: True
+url_prefixes: https://
+  http://
   ftp://
   ftps://
   sftp://
@@ -959,7 +959,7 @@ url_prefixes: http://
   torrent:
   data:
   urn:
-allow_long_lines: False
+allow_long_lines: True
 long_lines_contain:
 long_lines_between:
 include_suffixes: .py
@@ -994,8 +994,8 @@ force_include_globs:
 selector_roles: include
   exclude
   force_include
-url_globs: http:/**
-  https:/**
+url_globs: https:/**
+  http:/**
   ftp:/**
   ftps:/**
   sftp:/**

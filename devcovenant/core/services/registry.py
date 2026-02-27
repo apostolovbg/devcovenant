@@ -23,8 +23,6 @@ LOCAL_REGISTRY_DIR = f"{DEV_COVENANT_DIR}/registry/local"
 POLICY_REGISTRY_FILENAME = "policy_registry.yaml"
 PROFILE_REGISTRY_FILENAME = "profile_registry.yaml"
 GATE_STATUS_FILENAME = "gate_status.json"
-AUDIT_DIGEST_JSON_FILENAME = "audit_digest.json"
-AUDIT_DIGEST_TXT_FILENAME = "audit_digest.txt"
 MANIFEST_FILENAME = "manifest.json"
 MANIFEST_REL_PATH = f"{LOCAL_REGISTRY_DIR}/{MANIFEST_FILENAME}"
 POLICY_BLOCK_RE = re.compile(
@@ -64,16 +62,6 @@ def gate_status_path(repo_root: Path) -> Path:
     return local_registry_root(repo_root) / GATE_STATUS_FILENAME
 
 
-def audit_digest_json_path(repo_root: Path) -> Path:
-    """Return the machine-readable audit digest path."""
-    return local_registry_root(repo_root) / AUDIT_DIGEST_JSON_FILENAME
-
-
-def audit_digest_txt_path(repo_root: Path) -> Path:
-    """Return the short human-readable audit digest path."""
-    return local_registry_root(repo_root) / AUDIT_DIGEST_TXT_FILENAME
-
-
 @dataclass(frozen=True)
 class PolicyScriptLocation:
     """Resolved policy script location."""
@@ -99,11 +87,13 @@ def parse_metadata_block(
     order: List[str] = []
     values: Dict[str, List[str]] = {}
     current_key = ""
+    key_pattern = re.compile(r"^[A-Za-z0-9_.-]+\s*:")
     for line in block.splitlines():
         stripped = line.strip()
         if not stripped:
             continue
-        if ":" in stripped:
+        is_indented = line[:1].isspace()
+        if (not is_indented) and key_pattern.match(stripped):
             key, raw_value = stripped.split(":", 1)
             key = key.strip()
             value_text = raw_value.strip()
@@ -251,8 +241,6 @@ DEFAULT_CUSTOM_FILES = [
 DEFAULT_GENERATED_FILES = [
     f"{LOCAL_REGISTRY_DIR}/{POLICY_REGISTRY_FILENAME}",
     f"{LOCAL_REGISTRY_DIR}/{GATE_STATUS_FILENAME}",
-    f"{LOCAL_REGISTRY_DIR}/{AUDIT_DIGEST_JSON_FILENAME}",
-    f"{LOCAL_REGISTRY_DIR}/{AUDIT_DIGEST_TXT_FILENAME}",
     f"{LOCAL_REGISTRY_DIR}/{MANIFEST_FILENAME}",
     f"{LOCAL_REGISTRY_DIR}/{PROFILE_REGISTRY_FILENAME}",
 ]

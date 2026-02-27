@@ -16,6 +16,7 @@ the active profiles and policy descriptors.
 1. Lightweight registry refresh runs at the start of each CLI command.
 2. `devcovenant refresh` runs a full managed refresh.
 3. `deploy` and `upgrade` also run a full refresh as part of their workflow.
+4. Gate-driven edit workflow should still run `gate --mid` before tests.
 
 ## Full Refresh
 The full refresh command regenerates local registries, profile registry state,

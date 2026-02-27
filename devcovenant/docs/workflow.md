@@ -256,10 +256,6 @@ Output behavior:
 - gate session lifecycle evidence is stored in
   `devcovenant/registry/local/gate_status.json`, while command-run evidence is
   stored in `devcovenant/logs/<run-id>-<command>/`
-- refresh now also emits low-token audit digest artifacts in
-  `devcovenant/registry/local/audit_digest.json` and
-  `devcovenant/registry/local/audit_digest.txt`; these are informational and
-  do not replace canonical AGENTS workflow/policy reading requirements
 - gate-managed autofix requests honor `engine.auto_fix_enabled` from
   `devcovenant/config.yaml` (disabled globally by default)
 - runtime subprocess helpers for explicit `test` runs and gate-managed

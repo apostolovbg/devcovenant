@@ -18,6 +18,10 @@
 # 2) set `install.generic_config: false`;
 # 3) run `devcovenant deploy`.
 #
+# Required edit-session gate flow:
+# `devcovenant gate --start` -> `devcovenant gate --mid` (rerun until clean)
+# -> `devcovenant test` -> `devcovenant gate --end`
+#
 # Ownership rule:
 # - `refresh` rewrites auto-generated sections;
 # - human-owned keys are preserved.
@@ -130,12 +134,18 @@ engine:
   # Human-owned key.
   # Output contract mode for runtime command messages.
   # Allowed values: normal, quiet, verbose
-  # Default remains verbose.
+  # - normal: concise progress + gate hook visibility
+  # - quiet: suppress routine stdout output
+  # - verbose: detailed runtime output
+  # Default remains verbose when unset/invalid.
   output_mode: verbose
 
   # Human-owned key.
   # Output mode for test command reporting/progress behavior.
   # Allowed values: normal, quiet, verbose
+  # - normal: concise progress markers, full child output in run logs
+  # - quiet: suppress routine test stdout, keep stderr failures visible
+  # - verbose: full child output in console
   # If omitted, test output mode falls back to `output_mode`.
   tests_output_mode: verbose
 
@@ -145,6 +155,7 @@ engine:
   # - 1: keep only the latest run folder
   # - N: keep the latest N run folders
   # Logging is always enabled; this controls retention only.
+  # Operators should inspect `summary.txt` first for failures.
   logs_keep_last: 0
 
   # Human-owned key.

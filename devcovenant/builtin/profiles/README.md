@@ -1,6 +1,5 @@
 # Builtin Profiles
 **Last Updated:** 2026-02-27
-
 **Version:** 1.0.0
 
 ## Table of Contents
@@ -81,5 +80,7 @@ overlays/overrides.
 ## Workflow
 1. Edit profile manifest and assets.
 2. Run `devcovenant refresh`.
-3. Verify with `devcovenant test`.
-4. Finalize with `devcovenant gate --end`.
+3. Run `devcovenant gate --start`.
+4. Run `devcovenant gate --mid` until clean.
+5. Verify with `devcovenant test`.
+6. Finalize with `devcovenant gate --end`.

@@ -362,10 +362,10 @@ policy_overlays:
       - PLAN.md
   line-length-limit:
     max_length: 79
-    allow_long_url_lines: false
+    allow_long_url_lines: true
     url_prefixes:
-      - 'http://'
       - 'https://'
+      - 'http://'
       - 'ftp://'
       - 'ftps://'
       - 'sftp://'
@@ -381,7 +381,7 @@ policy_overlays:
       - 'torrent:'
       - 'data:'
       - 'urn:'
-    allow_long_lines: false
+    allow_long_lines: true
     long_lines_contain: []
     long_lines_between: []
     include_suffixes:

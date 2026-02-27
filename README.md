@@ -3,12 +3,7 @@
 **Version:** 1.0.0
 
 <p align="center">
-  <img
-src=
-"https://github.com/apostolov/devcovenant/raw/main/devcovenant/docs/banner.png"
-    alt="DevCovenant"
-    style="width: 100%;"
-  />
+  <img src="https://raw.githubusercontent.com/apostolovbg/devcovenant/main/devcovenant/docs/banner.png" alt="DevCovenant" style="width: 100%;" />
 </p>
 
 <!-- DEVCOV:BEGIN -->
@@ -55,7 +50,7 @@ Repo-only:
 DevCovenant treats policy prose as executable contract, not static guidance.
 The runtime compiles policy definitions from managed docs, resolves metadata
 through profile and config layers, and enforces the result through a required
-start -> optional mid preflight loop -> test -> end gate sequence.
+start -> mid preflight loop -> test -> end gate sequence.
 
 This model gives teams one source of truth for:
 - what is required
@@ -179,6 +174,8 @@ Core runtime ownership:
 - refresh orchestration: `devcovenant/core/flow/refresh.py`
 - gate sequencing/state: `devcovenant/core/flow/gate.py`
 - shared command execution: `devcovenant/core/runtime/execution.py`
+- shared output policy: `devcovenant/core/runtime/output.py`
+- run-artifact logging substrate: `devcovenant/core/runtime/run_logging.py`
 
 Runtime data stores:
 - source of policy truth:

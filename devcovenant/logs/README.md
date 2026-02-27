@@ -1,5 +1,5 @@
 # Run Logs
-**Last Updated:** 2026-02-25
+**Last Updated:** 2026-02-27
 **Version:** 1.0.0
 
 ## Overview
@@ -19,7 +19,11 @@ Planned per-run folders contain stable artifacts such as:
 The file `latest.json` is a lightweight pointer to the most recent run folder.
 
 ## Workflow
-Read summaries first, then open targeted log slices only when deeper detail is
-needed. Treat generated log contents as local state. Commit only tracked docs
-in this directory. The shared `run_logging` runtime allocates and updates these
-artifacts for command runs.
+Use this triage order:
+1. `summary.txt`
+2. `tail.txt` (if present)
+3. `stderr.log` / `stdout.log`
+
+Treat generated log contents as local runtime state. Commit only tracked docs
+in this directory. The shared `run_logging` runtime allocates and updates
+these artifacts for command runs.

@@ -33,8 +33,6 @@ def _unit_test_registry_symbol_contract_is_stable() -> None:
         assert callable(getattr(module, symbol))
 
     function_contract = [
-        "audit_digest_json_path",
-        "audit_digest_txt_path",
         "append_notifications",
         "build_manifest",
         "gate_status_path",
@@ -74,8 +72,6 @@ def _unit_test_registry_symbol_assertions_cover_public_api() -> None:
     assert module.PolicyScriptLocation
     assert module.PolicySyncIssue
     assert module.PolicyRegistry
-    assert module.audit_digest_json_path
-    assert module.audit_digest_txt_path
     assert module.append_notifications
     assert module.build_manifest
     assert module.ensure_manifest
@@ -103,36 +99,66 @@ def _unit_test_registry_symbol_assertions_cover_public_api() -> None:
     assert module.PolicyRegistry.update_policy_entry
 
 
-def _unit_test_generated_manifest_includes_audit_digest_artifacts() -> None:
-    """Manifest generated files should include audit-digest artifacts."""
+def _unit_test_generated_manifest_includes_local_registry_artifacts() -> None:
+    """Manifest generated files should include local registry artifacts."""
     module = importlib.import_module(MODULE)
     manifest = module.build_manifest()
     generated = manifest.get("generated", {})
     files = generated.get("files", [])
     assert (
-        f"{module.LOCAL_REGISTRY_DIR}/{module.AUDIT_DIGEST_JSON_FILENAME}"
+        f"{module.LOCAL_REGISTRY_DIR}/{module.POLICY_REGISTRY_FILENAME}"
         in files
     )
     assert (
-        f"{module.LOCAL_REGISTRY_DIR}/{module.AUDIT_DIGEST_TXT_FILENAME}"
+        f"{module.LOCAL_REGISTRY_DIR}/{module.PROFILE_REGISTRY_FILENAME}"
         in files
     )
+    assert (
+        f"{module.LOCAL_REGISTRY_DIR}/{module.GATE_STATUS_FILENAME}" in files
+    )
+    assert f"{module.LOCAL_REGISTRY_DIR}/{module.MANIFEST_FILENAME}" in files
     with tempfile.TemporaryDirectory() as tmpdir:
         repo_root = Path(tmpdir)
-        assert module.audit_digest_json_path(repo_root) == (
+        assert module.policy_registry_path(repo_root) == (
             repo_root
             / "devcovenant"
             / "registry"
             / "local"
-            / "audit_digest.json"
+            / "policy_registry.yaml"
         )
-        assert module.audit_digest_txt_path(repo_root) == (
+        assert module.profile_registry_path(repo_root) == (
             repo_root
             / "devcovenant"
             / "registry"
             / "local"
-            / "audit_digest.txt"
+            / "profile_registry.yaml"
         )
+        assert module.gate_status_path(repo_root) == (
+            repo_root
+            / "devcovenant"
+            / "registry"
+            / "local"
+            / "gate_status.json"
+        )
+        assert module.manifest_path(repo_root) == (
+            repo_root / "devcovenant" / "registry" / "local" / "manifest.json"
+        )
+
+
+def _unit_test_parse_metadata_block_preserves_colon_continuations() -> None:
+    """Registry metadata parser should keep indented values with colons."""
+    module = importlib.import_module(MODULE)
+    block = """
+id: demo-policy
+url_prefixes: http://
+  https://
+long_lines_contain: marker://
+  token:with:colon
+"""
+    order, values = module.parse_metadata_block(block.strip())
+    assert order == ["id", "url_prefixes", "long_lines_contain"]
+    assert values["url_prefixes"] == ["http://", "https://"]
+    assert values["long_lines_contain"] == ["marker://", "token:with:colon"]
 
 
 def _unit_test_layered_core_namespaces_remain_importable() -> None:
@@ -234,9 +260,13 @@ class GeneratedUnittestCases(unittest.TestCase):
         """Run root namespace export/importability check."""
         _unit_test_layered_core_namespaces_remain_importable()
 
-    def test_generated_manifest_includes_audit_digest_artifacts(self):
-        """Run generated-manifest audit-digest artifact assertions."""
-        _unit_test_generated_manifest_includes_audit_digest_artifacts()
+    def test_generated_manifest_includes_local_registry_artifacts(self):
+        """Run generated-manifest local-registry artifact assertions."""
+        _unit_test_generated_manifest_includes_local_registry_artifacts()
+
+    def test_parse_metadata_block_preserves_colon_continuations(self):
+        """Run registry metadata-continuation parser assertions."""
+        _unit_test_parse_metadata_block_preserves_colon_continuations()
 
     def test_services_export_inventory_remains_intentionally_narrow(self):
         """Run services package export inventory guard assertions."""

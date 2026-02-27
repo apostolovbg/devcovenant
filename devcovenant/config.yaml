@@ -688,9 +688,9 @@ autogen_metadata_overlays:
     - devcovenant/docs/**/*.md
   line-length-limit:
     allow_long_lines:
-    - 'False'
+    - 'True'
     allow_long_url_lines:
-    - 'False'
+    - 'True'
     exclude_globs:
     - devcovenant/logs/**
     - build/**
@@ -727,8 +727,8 @@ autogen_metadata_overlays:
     max_length:
     - '79'
     url_prefixes:
-    - http://
     - https://
+    - http://
     - ftp://
     - ftps://
     - sftp://

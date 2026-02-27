@@ -99,6 +99,9 @@ Typical `defaults` metadata includes:
 - last-updated document scope defaults
 - line-length baseline defaults (`max_length`, URL-prefix escape hatches,
   and generic repo include/exclude selectors)
+  Current shipped defaults set `allow_long_url_lines: true` and
+  `allow_long_lines: true` so marker-based escape hatches work without
+  per-repo override boilerplate.
 - test-watch root defaults
 - tests-coverage assertion-signal behavior defaults (fixture marker contract)
 - generic dependency-license-sync output defaults
@@ -232,6 +235,9 @@ Asset materialization rules:
   `devcovenant/builtin/profiles/global/assets/config.yaml`
 - config template comments are part of the operator contract and should be
   updated whenever ownership/merge/runtime behavior changes
+- global config template comments include the required edit-session gate flow
+  (`gate --start` -> `gate --mid` -> `test` -> `gate --end`) and concise mode
+  semantics for `engine.output_mode` and `engine.tests_output_mode`
 - global config template defines `engine.output_mode` as human-owned runtime
   output selector (`normal|quiet|verbose`, default `verbose`)
 - global config template defines `engine.tests_output_mode` as a separate

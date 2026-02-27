@@ -71,6 +71,10 @@ They should explain:
 - merge semantics (overlay vs override);
 - generation behavior for managed files (`.gitignore`, pre-commit config,
   governance workflow);
+- required edit-session gate flow (`gate --start` -> `gate --mid` -> `test`
+  -> `gate --end`);
+- concise output-mode semantics for `engine.output_mode` and
+  `engine.tests_output_mode`;
 - role-based metadata conventions for policies such as
   `dependency-license-sync` and `version-sync`.
 

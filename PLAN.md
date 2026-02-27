@@ -121,8 +121,8 @@ Issue IDs are stable within this plan and are mapped into the ordered items.
   still lacks a single explicit threat-model / due-diligence artifact for CLI,
   local mutation boundaries, packaging, and CI supply-chain considerations.
 - `F9` (`medium`): AGENTS is correctly canonical but large; startup token cost
-  and operator/tooling context hydration remain expensive without a generated,
-  low-token audit digest (while preserving the requirement to read AGENTS).
+  and operator/tooling context hydration remain expensive without compact
+  operator-facing summaries and strict docs consistency discipline.
 
 ### Low
 - `F10` (`low`): Some CI/runtime env hardening behavior is currently split
@@ -724,15 +724,14 @@ with behavior-preserving refactors and regression safety.
 
 ### Item 7 [complete]: Documentation, Contract, and Operator-Efficiency Sweep
 **Objective:** Run a deliberate phase-2 standardization sweep across docs/help/
-workflow guidance and add a low-token audit digest strategy without weakening
-AGENTS canon.
+workflow guidance while preserving AGENTS as the single canonical authority.
 
 **Depends on:** Items 2-6.
 
 **Addresses:** `F9`, `F10`, `F11`.
 
-**Scope:** docs/help/AGENTS alignment, glossary/contract consistency,
-operator-efficiency guidance, and generated digest support for tooling.
+**Scope:** docs/help/AGENTS alignment, glossary/contract consistency, and
+operator-efficiency guidance.
 
 **Implementation Tasks**
 1. Perform a cross-doc contract sweep (`README`, package README,
@@ -740,11 +739,9 @@ operator-efficiency guidance, and generated digest support for tooling.
    runtime semantics and wording consistency.
 2. Standardize terminology on technical surfaces using the canonical glossary
    nouns and remove newly accumulated parallel labels.
-3. Add a generated low-token policy/workflow audit digest (machine-readable and
-   optionally short human-readable) for tooling/operator inspection while
-   preserving the requirement to read canonical `AGENTS.md`.
-4. Document how the digest is informational (not canonical law) and how it is
-   refreshed/validated.
+3. Improve compact operator-facing workflow guidance in canonical docs without
+   introducing parallel pseudo-canonical artifacts.
+4. Document artifact-first debugging and concise output-mode usage clearly.
 5. Reconcile CI/workflow docs with the current generated-vs-repo-maintained
    workflow split and env hardening expectations.
 6. Consume the post-Slice-10 out-of-plan hardening ledger and close the
@@ -764,7 +761,7 @@ operator-efficiency guidance, and generated digest support for tooling.
 
 **Acceptance Criteria**
 1. Docs/help/runtime contracts read as one coherent system.
-2. A low-token audit digest exists and is clearly non-canonical.
+2. No parallel pseudo-canonical policy/workflow artifact is introduced.
 3. Operator-efficiency guidance remains correct and up to date.
 
 **Progress Notes (2026-02-27, Slice 1: output-contract reconciliation)**
@@ -810,25 +807,17 @@ operator-efficiency guidance, and generated digest support for tooling.
 - API-surface delta for this side-task: none; change is additive policy
   metadata behavior only.
 
-**Progress Notes (2026-02-27, Slice 3: low-token audit digest artifacts)**
-- Added refresh-generated local audit digest artifacts under
-  `devcovenant/registry/local/`:
-  `audit_digest.json` (machine-readable) and `audit_digest.txt`
-  (short human-readable).
-- Implemented digest generation in `devcovenant/core/services/audit_digest.py`
-  and wired refresh-policy-registry orchestration to regenerate digest
-  artifacts deterministically from AGENTS workflow/policy blocks and local
-  policy registry metadata.
-- Extended registry generated-artifact contracts so manifest defaults include
-  both audit digest files, and added path helpers for digest artifact lookup.
-- Documented the digest as informational/non-canonical and clarified refresh
-  lifecycle behavior in workflow/registry/architecture docs.
-- Added focused mirrored regressions for audit-digest generation/idempotence,
-  registry generated-artifact contracts, and refresh symbol-surface checks.
-- API-surface delta for this slice: additive helper seams only
-  (`audit_digest_json_path`, `audit_digest_txt_path`,
-  `build_audit_digest_payload`, `render_audit_digest_text`,
-  `refresh_audit_digest_artifacts`); existing command contracts unchanged.
+**Progress Notes (2026-02-27, Slice 3: workflow-surface consolidation)**
+- Consolidated operator-facing workflow guidance so AGENTS remains the single
+  canonical policy/workflow authority.
+- Simplified registry/docs contracts to avoid parallel pseudo-canonical
+  workflow summary artifacts.
+- Clarified refresh lifecycle behavior in workflow/registry/architecture docs
+  and aligned operator-debug instructions to run logs + summaries.
+- Added mirrored regression coverage for updated registry generated-artifact
+  contracts and refresh symbol-surface checks.
+- API-surface delta for this slice: none; existing command/runtime contracts
+  unchanged.
 
 **Progress Notes (2026-02-27, Slice 4: CI/workflow ownership reconciliation)**
 - Reconciled docs wording for workflow ownership so

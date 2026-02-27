@@ -28,8 +28,6 @@ Manual edits are unsupported and typically interpreted as drift.
 - `profile_registry.yaml`
 - `manifest.json`
 - `gate_status.json`
-- `audit_digest.json` (machine-readable informational digest)
-- `audit_digest.txt` (short human-readable informational digest)
 
 `policy_registry.yaml` includes:
 - discovered policy IDs
@@ -47,11 +45,6 @@ Manual edits are unsupported and typically interpreted as drift.
 - generated artifact inventory
 - lifecycle bookkeeping metadata
 - refresh-oriented notifications/contracts
-
-`audit_digest.json` / `audit_digest.txt` include:
-- low-token workflow/policy inspection summaries for operators/tooling
-- execution-order and enabled-policy snapshots derived from AGENTS + registry
-- explicit non-canonical notice (`AGENTS.md` remains canonical law)
 
 ## Gate Status Contract
 `gate_status.json` is the workflow session ledger used by gate-aware policies.
@@ -96,13 +89,9 @@ Local registry regeneration occurs on full refresh paths:
 - gate pre-commit phases (`devcovenant gate --start` / `--end`) through the
   gate-owned local `check` orchestration path
 
-Audit digest behavior:
-- digest artifacts regenerate with policy-registry refresh paths
-- digest artifacts are informational only; they do not replace AGENTS workflow
-  reading requirements
-
 Gate status evolves on:
 - `devcovenant gate --start`
+- `devcovenant gate --mid` (non-lifecycle checks only; no status writes)
 - `devcovenant test`
 - `devcovenant gate --end`
 - `devcovenant gate --status` (read-only inspection; no ledger writes)

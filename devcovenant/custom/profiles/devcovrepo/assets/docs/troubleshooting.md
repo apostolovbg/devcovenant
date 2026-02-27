@@ -34,6 +34,7 @@ Fix:
 Symptom: `devflow-run-gates` reports missing start/test/end records.
 Fix:
 - Re-run `devcovenant gate --start`.
+- Run `devcovenant gate --mid` until clean.
 - Run `devcovenant test`.
 - Finish with `devcovenant gate --end`.
 

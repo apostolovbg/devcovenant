@@ -14,18 +14,23 @@ any change, including documentation-only edits.
 
 ## Workflow
 1. Run the pre-commit start gate.
-2. Make the necessary edits.
-3. Run tests through the DevCovenant test runner.
-4. Run the pre-commit end gate.
+2. Make the necessary edits and clear blocking complaints.
+3. Run the required pre-test mid gate (`gate --mid`) until clean.
+4. Run tests through the DevCovenant test runner.
+5. Run the pre-commit end gate.
 
 ## Gated Sequence
 The default commands are:
 ```bash
 devcovenant gate --start
+# required pre-test mutating preflight; rerun until clean
+devcovenant gate --mid
 devcovenant test
 devcovenant gate --end
 ```
-The start and end gates record timestamps in the local registry.
+Start and end gates record lifecycle state in the local registry.
+`gate --mid` is non-lifecycle and exists to surface hook/runtime mutations
+before test evidence is recorded.
 When using the fallback launcher (`python3 -m devcovenant ...`) from a source
 checkout, setting `PYTHONPYCACHEPREFIX` before Python starts prevents repo-
 local `devcovenant/__pycache__/` drift while preserving bytecode generation.
@@ -33,13 +38,14 @@ local `devcovenant/__pycache__/` drift while preserving bytecode generation.
 ## Test Runner
 `devcovenant test` executes `python3 -m unittest discover -v` first, then
 pytest, to keep coverage consistent across suites and preserve readable
-test names.
-The runner records status so policies can verify that tests ran.
+test names. The runner records status so policies can verify that tests ran.
+In normal mode, concise progress markers are printed while full output remains
+available in run logs.
 
 ## CI Notes
 CI pipelines should run the same gates. If a pre-commit hook changes files,
-run the tests again before recording the end gate so test results post-date
-any auto-fixes.
+rerun `gate --mid` and tests before recording the end gate so test results
+post-date any hook or autofix mutations.
 The generated `governance-and-test` workflow now sets `PYTHONPYCACHEPREFIX`
 at the job level so top-level DevCovenant launches and child Python commands
 write bytecode caches outside the repo tree.
