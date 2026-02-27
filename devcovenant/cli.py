@@ -1,0 +1,407 @@
+"""Command dispatcher for DevCovenant."""
+
+from __future__ import annotations
+
+import argparse
+import importlib
+import os
+import shlex
+import sys
+import traceback
+from pathlib import Path
+from types import ModuleType
+
+from devcovenant.launcher_bootstrap import apply_repo_pycache_prefix_from_cwd
+
+apply_repo_pycache_prefix_from_cwd()
+
+execution_runtime_module = importlib.import_module(
+    "devcovenant.core.runtime.execution"
+)
+
+_COMMAND_MODULES = {
+    "check": "devcovenant.check",
+    "gate": "devcovenant.gate",
+    "test": "devcovenant.test",
+    "install": "devcovenant.install",
+    "deploy": "devcovenant.deploy",
+    "upgrade": "devcovenant.upgrade",
+    "refresh": "devcovenant.refresh",
+    "uninstall": "devcovenant.uninstall",
+    "undeploy": "devcovenant.undeploy",
+    "update_lock": "devcovenant.update_lock",
+}
+
+_MANAGED_REEXEC_GUARD_ENV = "DEVCOV_MANAGED_REEXEC_ACTIVE"
+_MANAGED_REEXEC_SOURCE_ENV = "DEVCOV_MANAGED_REEXEC_SOURCE"
+_RUN_LOG_HANDOFF_REPO_ENV = "DEVCOV_RUN_LOG_REPO_ROOT"
+_RUN_LOG_HANDOFF_RUN_ID_ENV = "DEVCOV_RUN_LOG_ID"
+_TOP_LEVEL_COMMAND_ENV = "DEVCOV_TOP_COMMAND"
+
+
+def _build_parser() -> argparse.ArgumentParser:
+    """Build the root dispatcher parser."""
+    parser = argparse.ArgumentParser(
+        description="DevCovenant - Self-enforcing policy system"
+    )
+    parser.add_argument(
+        "command",
+        choices=sorted(_COMMAND_MODULES.keys()),
+        help="Command to run",
+    )
+    return parser
+
+
+def _load_command_module(command: str) -> ModuleType:
+    """Import and return command module for a command id."""
+    module_path = _COMMAND_MODULES[command]
+    return importlib.import_module(module_path)
+
+
+def _managed_stage_for_command(
+    command: str,
+    command_args: list[str],
+) -> str:
+    """Resolve managed-environment stage for one CLI command invocation."""
+    if command == "gate":
+        if "--end" in command_args:
+            return "end"
+        if "--start" in command_args:
+            return "start"
+    if command == "test":
+        return "test"
+    return "command"
+
+
+def _same_interpreter_path(current: str, expected: str) -> bool:
+    """Return True when two interpreter paths resolve to the same file."""
+    current_path = Path(current)
+    expected_path = Path(expected)
+    try:
+        current_resolved = current_path.resolve()
+    except OSError:
+        current_resolved = current_path
+    try:
+        expected_resolved = expected_path.resolve()
+    except OSError:
+        expected_resolved = expected_path
+    return current_resolved == expected_resolved
+
+
+def _should_skip_managed_reexec(command_args: list[str]) -> bool:
+    """Skip managed re-exec for help invocations."""
+    return any(token in {"-h", "--help"} for token in command_args)
+
+
+def _apply_run_log_handoff_env(env: dict[str, str]) -> dict[str, str]:
+    """Copy active run-log handoff variables into a re-exec environment."""
+    for key in (_RUN_LOG_HANDOFF_REPO_ENV, _RUN_LOG_HANDOFF_RUN_ID_ENV):
+        value = str(os.environ.get(key, "")).strip()
+        if value:
+            env[key] = value
+    return env
+
+
+def _same_path_text(left: str, right: str) -> bool:
+    """Return True when two path strings resolve to the same location."""
+    try:
+        return Path(left).resolve() == Path(right).resolve()
+    except OSError:
+        return Path(left) == Path(right)
+
+
+def _initialize_cli_run_logging(
+    repo_root: Path | None,
+    command: str,
+    command_args: list[str],
+):
+    """Create or adopt the per-run log context for one CLI command."""
+    if _should_skip_managed_reexec(command_args):
+        execution_runtime_module.clear_active_run_log_context()
+        return None
+    if repo_root is None:
+        execution_runtime_module.clear_active_run_log_context()
+        return None
+    run_logging_module = execution_runtime_module.run_logging_runtime_module
+    handoff_repo = str(os.environ.get(_RUN_LOG_HANDOFF_REPO_ENV, "")).strip()
+    handoff_run_id = str(
+        os.environ.get(_RUN_LOG_HANDOFF_RUN_ID_ENV, "")
+    ).strip()
+    context = None
+    if (
+        handoff_repo
+        and handoff_run_id
+        and _same_path_text(
+            handoff_repo,
+            str(repo_root),
+        )
+    ):
+        try:
+            context = run_logging_module.load_run_log_context(
+                repo_root,
+                run_id=handoff_run_id,
+            )
+        except ValueError:
+            context = None
+    if context is None:
+        context = run_logging_module.create_run_log_context(
+            repo_root,
+            command,
+            ["devcovenant", command, *command_args],
+            cwd=Path.cwd(),
+            metadata={
+                "dispatch_source": "cli",
+                "managed_reexec_source": os.environ.get(
+                    _MANAGED_REEXEC_SOURCE_ENV, ""
+                ),
+            },
+        )
+    execution_runtime_module.set_active_run_log_context(context)
+    execution_runtime_module.merge_active_run_log_metadata(
+        {
+            "invoked_python": (
+                str(os.environ.get(_MANAGED_REEXEC_SOURCE_ENV, "")).strip()
+                or sys.executable
+            ),
+            "effective_python": sys.executable,
+            "managed_environment_active": bool(
+                str(os.environ.get("DEVCOV_MANAGED_PYTHON", "")).strip()
+                or str(os.environ.get("VIRTUAL_ENV", "")).strip()
+            ),
+            "managed_reexec_applied": bool(
+                str(os.environ.get(_MANAGED_REEXEC_SOURCE_ENV, "")).strip()
+            ),
+        }
+    )
+    os.environ[_RUN_LOG_HANDOFF_REPO_ENV] = str(repo_root)
+    os.environ[_RUN_LOG_HANDOFF_RUN_ID_ENV] = context.run_id
+    return context
+
+
+def _finalize_cli_run_logging(
+    *,
+    exit_code: int | None,
+    status: str | None = None,
+    metadata_updates: dict[str, object] | None = None,
+) -> None:
+    """Finalize active CLI run logging and clear handoff state."""
+    if metadata_updates:
+        execution_runtime_module.merge_active_run_log_metadata(
+            metadata_updates
+        )
+    error_like = (exit_code is not None and int(exit_code) != 0) or str(
+        status or ""
+    ).strip().lower() in {"failure", "exception", "interrupted"}
+    pointer_stream = sys.stderr if error_like else None
+    execution_runtime_module.emit_active_run_log_pointer(
+        file=pointer_stream,
+        once=True,
+    )
+    execution_runtime_module.finalize_active_run_log_context(
+        exit_code=exit_code,
+        status=status,
+    )
+    execution_runtime_module.clear_active_run_log_context()
+    os.environ.pop(_RUN_LOG_HANDOFF_REPO_ENV, None)
+    os.environ.pop(_RUN_LOG_HANDOFF_RUN_ID_ENV, None)
+
+
+def _exit_code_from_system_exit(exc: SystemExit) -> int:
+    """Normalize `SystemExit.code` to a process exit code integer."""
+    code = exc.code
+    if code is None:
+        return 0
+    if isinstance(code, int):
+        return int(code)
+    return 1
+
+
+def _maybe_reexec_managed_environment(
+    command: str,
+    command_args: list[str],
+) -> None:
+    """Re-exec command in managed interpreter when policy is active."""
+    if _should_skip_managed_reexec(command_args):
+        return
+    repo_root = execution_runtime_module.find_git_root(Path.cwd())
+    if repo_root is None:
+        return
+    stage = _managed_stage_for_command(command, command_args)
+    managed_env: dict[str, str] | None = None
+    managed_python: str | None = None
+    managed_resolution_error: str | None = None
+    try:
+        managed_env, managed_python = (
+            execution_runtime_module.resolve_managed_environment_for_stage(
+                repo_root,
+                stage,
+                base_env=os.environ,
+            )
+        )
+    except ValueError as exc:
+        managed_resolution_error = str(exc)
+    if managed_env is not None and managed_python:
+        if _same_interpreter_path(sys.executable, managed_python):
+            execution_runtime_module.merge_active_run_log_metadata(
+                {
+                    "invoked_python": sys.executable,
+                    "effective_python": sys.executable,
+                    "managed_environment_active": True,
+                    "managed_reexec_applied": False,
+                }
+            )
+            return
+        if os.environ.get(_MANAGED_REEXEC_GUARD_ENV) == "1":
+            raise SystemExit(
+                "Managed-environment auto-rerun did not converge to the "
+                "expected interpreter."
+            )
+        rerun_message = (
+            "Re-running DevCovenant from managed interpreter: "
+            f"{managed_python}\n"
+        )
+        execution_runtime_module.runtime_print(
+            rerun_message,
+            end="",
+            file=sys.stderr,
+            flush=True,
+        )
+        env = _apply_run_log_handoff_env(dict(managed_env))
+        env[_MANAGED_REEXEC_GUARD_ENV] = "1"
+        env[_MANAGED_REEXEC_SOURCE_ENV] = sys.executable
+        argv = [managed_python, "-m", "devcovenant", command, *command_args]
+        os.execve(managed_python, argv, env)
+
+    managed_root = ""
+    if managed_env is not None:
+        managed_root = str(managed_env.get("VIRTUAL_ENV", "")).strip()
+    try:
+        rerun_argv = (
+            execution_runtime_module.resolve_managed_rerun_command_for_stage(
+                repo_root,
+                stage,
+                command,
+                command_args,
+                managed_python=managed_python,
+                managed_root=managed_root or None,
+            )
+        )
+    except ValueError as exc:
+        raise SystemExit(str(exc)) from exc
+    if rerun_argv:
+        if os.environ.get(_MANAGED_REEXEC_GUARD_ENV) == "1":
+            raise SystemExit(
+                "Managed-environment auto-rerun did not converge to the "
+                "expected interpreter."
+            )
+        rerun_message = (
+            "Re-running DevCovenant through managed rerun command: "
+            f"{shlex.join(rerun_argv)}\n"
+        )
+        execution_runtime_module.runtime_print(
+            rerun_message,
+            end="",
+            file=sys.stderr,
+            flush=True,
+        )
+        env = _apply_run_log_handoff_env(dict(managed_env or os.environ))
+        env[_MANAGED_REEXEC_GUARD_ENV] = "1"
+        env[_MANAGED_REEXEC_SOURCE_ENV] = sys.executable
+        os.execvpe(rerun_argv[0], rerun_argv, env)
+
+    if managed_resolution_error:
+        raise SystemExit(managed_resolution_error)
+
+
+def main(argv: list[str] | None = None) -> None:
+    """Main CLI entry point."""
+    parser = _build_parser()
+    command_args = list(sys.argv[1:] if argv is None else argv)
+    if not command_args:
+        parser.print_help()
+        raise SystemExit(0)
+
+    first = command_args[0]
+    if first in {"-h", "--help"}:
+        parser.print_help()
+        raise SystemExit(0)
+    if first not in _COMMAND_MODULES:
+        parser.error(
+            f"argument command: invalid choice: '{first}' "
+            f"(choose from {', '.join(sorted(_COMMAND_MODULES))})"
+        )
+    os.environ[_TOP_LEVEL_COMMAND_ENV] = first
+    repo_root = execution_runtime_module.find_git_root(Path.cwd())
+    if repo_root is not None:
+        execution_runtime_module.configure_repo_pycache_prefix(repo_root)
+        execution_runtime_module.configure_output_mode_from_config(repo_root)
+        execution_runtime_module.configure_logs_keep_last_from_config(
+            repo_root
+        )
+    _initialize_cli_run_logging(repo_root, first, command_args[1:])
+    _maybe_reexec_managed_environment(first, command_args[1:])
+    try:
+        module = _load_command_module(first)
+
+        if not hasattr(module, "main"):
+            raise SystemExit(
+                f"Command module '{module.__name__}' is missing main()."
+            )
+
+        module.main(command_args[1:])
+    except SystemExit as exc:
+        exit_code = _exit_code_from_system_exit(exc)
+        metadata_updates: dict[str, object] = {
+            "exit_kind": "system_exit",
+            "exit_code_normalized": exit_code,
+        }
+        if isinstance(exc.code, str):
+            message = str(exc.code).strip()
+            if message:
+                execution_runtime_module.append_active_run_log_output(
+                    "stderr",
+                    message + "\n",
+                )
+                metadata_updates["system_exit_message"] = message
+        _finalize_cli_run_logging(
+            exit_code=exit_code,
+            status="success" if exit_code == 0 else "failure",
+            metadata_updates=metadata_updates,
+        )
+        raise
+    except KeyboardInterrupt:
+        execution_runtime_module.append_active_run_log_output(
+            "stderr",
+            traceback.format_exc(),
+        )
+        _finalize_cli_run_logging(
+            exit_code=130,
+            status="interrupted",
+            metadata_updates={"exit_kind": "keyboard_interrupt"},
+        )
+        raise
+    except Exception as exc:
+        execution_runtime_module.append_active_run_log_output(
+            "stderr",
+            traceback.format_exc(),
+        )
+        _finalize_cli_run_logging(
+            exit_code=1,
+            status="exception",
+            metadata_updates={
+                "exit_kind": "exception",
+                "exception_type": type(exc).__name__,
+                "exception_message": str(exc),
+            },
+        )
+        raise
+    else:
+        _finalize_cli_run_logging(
+            exit_code=0,
+            status="success",
+            metadata_updates={"exit_kind": "return"},
+        )
+
+
+if __name__ == "__main__":
+    main()

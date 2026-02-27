@@ -1,0 +1,913 @@
+# -------------------------------------------------------------------
+# DevCovenant Config Template (generic install baseline)
+# -------------------------------------------------------------------
+# This file is copied to `devcovenant/config.yaml` by `devcovenant install`.
+#
+# Install always seeds a safe generic stub:
+# - `install.generic_config: true`
+# - profile set oriented to user repositories
+#
+# Typical flow:
+# 1) Review/edit this config.
+# 2) Set `install.generic_config: false`.
+# 3) Run `devcovenant deploy`.
+# -------------------------------------------------------------------
+
+# -------------------------------------------------------------------
+# Scope control
+# -------------------------------------------------------------------
+
+# Whether policy checks include DevCovenant's own implementation files.
+# - false: user-repo mode (ignore core internals)
+# - true: DevCovenant-repo mode (enforce the full tree)
+
+devcov_core_include: true
+
+# -------------------------------------------------------------------
+# Profile activation
+# -------------------------------------------------------------------
+
+# Ordered profile list. `global` should stay first.
+
+# Profiles contribute suffixes, assets, and metadata overlays.
+
+# Generated diagnostics include profile-level core path mappings.
+
+# Profiles do not activate policies. Policy activation is `policy_state` for normal toggles.
+
+# `severity: critical` policies remain enforced even when toggled false in `policy_state`.
+
+profiles:
+  active:
+  - global
+  - defaults
+  - devcovrepo
+  - docs
+  - python
+  generated:
+    file_suffixes:
+    - .ipynb
+    - .md
+    - .py
+    - .pyi
+    - .pyw
+    - .rst
+    - .txt
+    devcov_core_paths:
+    - devcovenant/core
+    - devcovenant/builtin
+    - devcovenant/__init__.py
+    - devcovenant/__main__.py
+    - devcovenant/cli.py
+    - devcovenant/check.py
+    - devcovenant/gate.py
+    - devcovenant/test.py
+    - devcovenant/install.py
+    - devcovenant/deploy.py
+    - devcovenant/upgrade.py
+    - devcovenant/refresh.py
+    - devcovenant/uninstall.py
+    - devcovenant/undeploy.py
+    - devcovenant/update_lock.py
+    - devcovenant/registry
+
+# -------------------------------------------------------------------
+# Canonical paths
+# -------------------------------------------------------------------
+
+# Runtime policy source parsed by the engine.
+
+# Generated local policy registry (hashes + diagnostics).
+
+paths:
+  policy_definitions: AGENTS.md
+  registry_file: devcovenant/registry/local/policy_registry.yaml
+
+# -------------------------------------------------------------------
+# Managed document controls
+# -------------------------------------------------------------------
+
+# Documents that refresh may fully materialize from descriptor templates.
+# Empty list means runtime backfills defaults.
+# Documents in `user` are excluded from full template materialization.
+# Managed block refresh still applies when markers are present.
+
+doc_assets:
+  autogen:
+  - AGENTS.md
+  - README.md
+  - CONTRIBUTING.md
+  - SPEC.md
+  - PLAN.md
+  - CHANGELOG.md
+  - devcovenant/README.md
+  user: []
+
+# -------------------------------------------------------------------
+# Install/deploy safety
+# -------------------------------------------------------------------
+
+# True after install. Deploy is blocked until user reviews config.
+
+# Set this to false after review to allow `devcovenant deploy`.
+
+install:
+  generic_config: false
+
+# -------------------------------------------------------------------
+# Engine behavior
+# -------------------------------------------------------------------
+
+# Violations at or above fail_threshold fail the run.
+
+# Allowed levels: info, warning, error, critical.
+
+# auto_fix_enabled controls gate-managed policy auto-fix behavior.
+
+# `check` stays read-only.
+
+# logs_keep_last controls run-log retention (`0` keeps all runs).
+
+# pycache_prefix_enabled/pycache_prefix route Python bytecode caches away from the repo tree (empty prefix = auto temp path).
+
+# file_suffixes and ignore_dirs define broad scan boundaries.
+
+engine:
+  fail_threshold: warning
+  output_mode: normal
+  tests_output_mode: normal
+  logs_keep_last: 20
+  pycache_prefix_enabled: true
+  pycache_prefix: ''
+  auto_fix_enabled: true
+  file_suffixes:
+  - .md
+  - .rst
+  - .txt
+  - .yml
+  - .yaml
+  - .json
+  - .toml
+  ignore_dirs:
+  - .git
+  - .venv
+  - .python
+  - output
+  - logs
+  - build
+  - dist
+  - node_modules
+  - __pycache__
+  - .pytest_cache
+  - .cache
+  - .venv.lock
+
+# -------------------------------------------------------------------
+# Governance-and-test generation
+# -------------------------------------------------------------------
+
+# `overlays` are merged into generated governance workflow.
+
+# `overrides` replace generated payload when non-empty.
+
+governance_and_test:
+  overlays: {}
+  overrides: {}
+
+# -------------------------------------------------------------------
+# Pre-commit generation
+# -------------------------------------------------------------------
+
+# `overlays` are merged into generated pre-commit config.
+
+# `overrides` replace generated payload when non-empty.
+
+pre_commit:
+  overlays: {}
+  overrides: {}
+
+# -------------------------------------------------------------------
+# Policy activation and customization
+# -------------------------------------------------------------------
+
+# Canonical policy activation map: {policy-id: true|false}.
+
+# Critical-severity policies remain enforced even when set to false here.
+
+policy_state:
+  changelog-coverage: true
+  dependency-license-sync: true
+  devcov-integrity-guard: true
+  devcov-raw-string-escapes: true
+  devcov-structure-guard: true
+  devflow-run-gates: true
+  docstring-and-comment-coverage: true
+  documentation-growth-tracking: true
+  last-updated-placement: true
+  line-length-limit: true
+  managed-doc-assets: true
+  managed-environment: true
+  modules-need-tests: true
+  name-clarity: true
+  no-future-dates: true
+  no-print-outside-output-runtime: true
+  raw-string-escapes: false
+  read-only-directories: true
+  readme-sync: true
+  security-scanner: true
+  semantic-version-scope: false
+  tests-coverage: true
+  version-sync: true
+
+# -------------------------------------------------------------------
+# Global ignore patterns
+# -------------------------------------------------------------------
+
+# Extra glob patterns excluded from CheckContext file collections.
+
+ignore:
+  patterns:
+  - devcovenant/config.yaml
+
+# -------------------------------------------------------------------
+# Gitignore generation
+# -------------------------------------------------------------------
+
+# Extra entries appended to generated `.gitignore`.
+
+# Entries are applied before the preserved user block.
+
+# `overrides` replaces generated base/profile/os fragments entirely.
+
+gitignore:
+  overlays: []
+  overrides: []
+
+# -------------------------------------------------------------------
+# Metadata layers (resolution order matters)
+# -------------------------------------------------------------------
+
+# Auto-generated metadata overlays written by refresh.
+
+# Merge semantics: list append + dedupe, scalar replace.
+
+autogen_metadata_overlays:
+  changelog-coverage:
+    gate_status_file: devcovenant/registry/local/gate_status.json
+    header_doc_suffixes:
+    - .md
+    - .rst
+    - .txt
+    header_keys:
+    - Last Updated
+    - Version
+    header_scan_lines:
+    - '4'
+    main_changelog:
+    - CHANGELOG.md
+    required_globs:
+    - README.md
+    - AGENTS.md
+    - CONTRIBUTING.md
+    - CHANGELOG.md
+    - SPEC.md
+    - PLAN.md
+    skipped_files:
+    - devcovenant/config.yaml
+    - CHANGELOG.md
+    - .gitignore
+    - .pre-commit-config.yaml
+    - .github/workflows/governance-and-test.yml
+    summary_labels:
+    - Change
+    - Why
+    - Impact
+    summary_verbs:
+    - add
+    - added
+    - address
+    - addressed
+    - adjust
+    - adjusted
+    - align
+    - aligned
+    - amend
+    - amended
+    - automate
+    - automated
+    - bootstrap
+    - build
+    - built
+    - bump
+    - bumped
+    - cache
+    - clean
+    - cleaned
+    - clarify
+    - clarified
+    - consolidate
+    - consolidated
+    - configure
+    - correct
+    - corrected
+    - create
+    - created
+    - define
+    - defined
+    - deserialize
+    - deprecate
+    - deprecated
+    - detect
+    - document
+    - documented
+    - drop
+    - dropped
+    - enable
+    - enabled
+    - enforce
+    - enforced
+    - expand
+    - expanded
+    - extract
+    - fix
+    - fixed
+    - harden
+    - hardened
+    - implement
+    - improve
+    - improved
+    - instrument
+    - integrate
+    - introduce
+    - introduced
+    - invalidate
+    - lock
+    - materialize
+    - merge
+    - migrate
+    - migrated
+    - normalize
+    - normalized
+    - optimize
+    - pin
+    - preserve
+    - prevent
+    - profile
+    - publish
+    - reconcile
+    - regenerate
+    - refactor
+    - refactored
+    - release
+    - remove
+    - removed
+    - rename
+    - renamed
+    - replace
+    - replaced
+    - resolve
+    - restructure
+    - restructured
+    - revert
+    - revise
+    - revised
+    - sanitize
+    - scaffold
+    - serialize
+    - simplify
+    - simplified
+    - split
+    - stabilize
+    - stabilized
+    - streamline
+    - streamlined
+    - support
+    - supported
+    - sync
+    - tune
+    - unpin
+    - update
+    - updated
+    - upgrade
+    - upgraded
+    - validate
+    - validated
+    - verify
+    - verified
+    - wrap
+    - wrapped
+    - allow
+    - allowed
+    - analyze
+    - analyzed
+    - annotate
+    - annotated
+    - assess
+    - assessed
+    - audit
+    - audited
+    - calculate
+    - calculated
+    - check
+    - checked
+    - choose
+    - chosen
+    - close
+    - closed
+    - collect
+    - collected
+    - compare
+    - compared
+    - complete
+    - completed
+    - compose
+    - composed
+    - constrain
+    - constrained
+    - convert
+    - converted
+    - copy
+    - copied
+    - cover
+    - covered
+    - delete
+    - deleted
+    - derive
+    - derived
+    - describe
+    - described
+    - design
+    - designed
+    - diagnose
+    - diagnosed
+    - disable
+    - disabled
+    - ensure
+    - ensured
+    - estimate
+    - estimated
+    - evaluate
+    - evaluated
+    - execute
+    - executed
+    - explain
+    - explained
+    - expose
+    - exposed
+    - finalize
+    - finalized
+    - make
+    - made
+    - map
+    - mapped
+    - mark
+    - marked
+    - measure
+    - measured
+    - organize
+    - organized
+    - prioritize
+    - prioritized
+    - promote
+    - promoted
+    - prune
+    - pruned
+    - prove
+    - proved
+    - record
+    - recorded
+    - reduce
+    - reduced
+    - reject
+    - rejected
+    - repair
+    - repaired
+    - report
+    - reported
+    - reset
+    - restore
+    - restored
+    - retain
+    - retained
+    - review
+    - reviewed
+    - rewrite
+    - rewrote
+    - select
+    - selected
+    - sequence
+    - sequenced
+    - show
+    - showed
+    - sort
+    - sorted
+    - stage
+    - staged
+    - standardize
+    - standardized
+    - strengthen
+    - strengthened
+    - suppress
+    - suppressed
+    - test
+    - tested
+  dependency-license-sync:
+    dependency_dirs: []
+    dependency_files: []
+    dependency_globs: []
+    dependency_role_dirs: []
+    dependency_role_files:
+    - intent=>requirements.in
+    - resolved=>requirements.lock
+    - package_manifest=>pyproject.toml
+    dependency_role_globs: []
+    dependency_roles:
+    - intent
+    - resolved
+    - package_manifest
+    licenses_dir: licenses
+    report_heading:
+    - '## License Report'
+    third_party_file: licenses/THIRD_PARTY_LICENSES.md
+  devcov-integrity-guard:
+    gate_status_file: devcovenant/registry/local/gate_status.json
+    policy_definitions:
+    - AGENTS.md
+    registry_file: devcovenant/registry/local/policy_registry.yaml
+  devflow-run-gates:
+    gate_status_file: devcovenant/registry/local/gate_status.json
+    pre_commit_command:
+    - python3 -m pre_commit run --all-files
+    required_commands:
+    - python3 -m unittest discover -v
+    - pytest
+    skipped_globs:
+    - devcovenant/registry/local/**
+  docstring-and-comment-coverage:
+    include_suffixes:
+    - .py
+  documentation-growth-tracking:
+    doc_quality_dirs:
+    - devcovenant/docs
+    doc_quality_files:
+    - README.md
+    - CONTRIBUTING.md
+    - AGENTS.md
+    - SPEC.md
+    - PLAN.md
+    - devcovenant/README.md
+    - devcovenant/docs/architecture.md
+    - devcovenant/docs/installation.md
+    - devcovenant/docs/config.md
+    - devcovenant/docs/profiles.md
+    - devcovenant/docs/policies.md
+    - devcovenant/docs/translators.md
+    - devcovenant/docs/registry.md
+    - devcovenant/docs/refresh.md
+    - devcovenant/docs/workflow.md
+    - devcovenant/docs/troubleshooting.md
+    doc_routes:
+    - devcovenant/builtin/policies/ => devcovenant/docs/policies.md
+    - devcovenant/builtin/policies/ => devcovenant/docs/architecture.md
+    - devcovenant/builtin/profiles/*/*.yaml => devcovenant/docs/profiles.md
+    - devcovenant/*/profiles/*/*translator.py=> devcovenant/docs/translators.md
+    - devcovenant/builtin/profiles/**/config.yaml => devcovenant/docs/config.md
+    - devcovenant/*/profiles/*/assets/*.yaml=> devcovenant/docs/profiles.md
+    - devcovenant/*/profiles/*/assets/*.yml=> devcovenant/docs/profiles.md
+    - devcovenant/*/profiles/**/assets/**/*.yaml=> devcovenant/docs/profiles.md
+    - devcovenant/*/profiles/**/assets/**/*.yml=> devcovenant/docs/profiles.md
+    - devcovenant/custom/profiles/**/*.yaml => devcovenant/docs/profiles.md
+    - devcovenant/custom/policies/**/*.yaml => devcovenant/docs/policies.md
+    - devcovenant/custom/policies/**/*.py => devcovenant/docs/policies.md
+    - devcovenant/core/flow/*.py => devcovenant/docs/workflow.md
+    - devcovenant/core/flow/*.py => devcovenant/docs/architecture.md
+    - devcovenant/core/runtime/*.py => devcovenant/docs/workflow.md
+    - devcovenant/core/runtime/*.py => devcovenant/docs/architecture.md
+    - devcovenant/core/services/*.py => devcovenant/docs/architecture.md
+    - devcovenant/core/lib/*.py => devcovenant/docs/architecture.md
+    - devcovenant/core/contracts/*.py => devcovenant/docs/architecture.md
+    - devcovenant/*.py => devcovenant/docs/installation.md
+    - devcovenant/*.py => devcovenant/docs/workflow.md
+    - pyproject.toml => devcovenant/docs/installation.md
+    - MANIFEST.in => devcovenant/docs/installation.md
+    - devcovenant/config.yaml => devcovenant/docs/config.md
+    - .github/workflows/*.yml => devcovenant/docs/workflow.md
+    user_facing_exclude_dirs:
+    - tests/**
+    user_facing_exclude_files:
+    - devcovenant/config.yaml
+    user_facing_exclude_prefixes:
+    - tests
+    user_facing_files:
+    - .pre-commit-config.yaml
+    - pyproject.toml
+    - devcovenant/cli.py
+    - devcovenant/__main__.py
+    user_facing_globs:
+    - .github/workflows/*.yml
+    - .github/workflows/*.yaml
+    user_facing_suffixes:
+    - .py
+    - .js
+    - .ts
+    - .tsx
+    - .vue
+    - .go
+    - .rs
+    - .java
+    - .kt
+    - .swift
+    - .rb
+    - .php
+    - .cs
+    - .yml
+    - .yaml
+    - .json
+    - .toml
+    user_visible_dirs:
+    - devcovenant/docs
+    user_visible_files:
+    - README.md
+    - CONTRIBUTING.md
+    - AGENTS.md
+    - SPEC.md
+    - PLAN.md
+    - devcovenant/README.md
+    - devcovenant/docs/architecture.md
+    - devcovenant/docs/installation.md
+    - devcovenant/docs/config.md
+    - devcovenant/docs/profiles.md
+    - devcovenant/docs/policies.md
+    - devcovenant/docs/translators.md
+    - devcovenant/docs/registry.md
+    - devcovenant/docs/refresh.md
+    - devcovenant/docs/workflow.md
+    - devcovenant/docs/troubleshooting.md
+  last-updated-placement:
+    allowed_globs:
+    - README.md
+    - AGENTS.md
+    - CONTRIBUTING.md
+    - CHANGELOG.md
+    - SPEC.md
+    - PLAN.md
+    - PROFILE_MAP.md
+    - POLICY_MAP.md
+    - devcovenant/README.md
+    - devcovenant/core/README.md
+    - devcovenant/custom/README.md
+    - devcovenant/registry/README.md
+    - devcovenant/builtin/policies/README.md
+    - devcovenant/builtin/profiles/README.md
+    - devcovenant/custom/policies/README.md
+    - devcovenant/custom/profiles/README.md
+    - devcovenant/docs/*.md
+    - devcovenant/docs/**/*.md
+    include_globs:
+    - '*.md'
+    include_suffixes:
+    - .md
+    required_globs:
+    - README.md
+    - AGENTS.md
+    - CONTRIBUTING.md
+    - CHANGELOG.md
+    - SPEC.md
+    - PLAN.md
+    - PROFILE_MAP.md
+    - POLICY_MAP.md
+    - devcovenant/README.md
+    - devcovenant/core/README.md
+    - devcovenant/custom/README.md
+    - devcovenant/registry/README.md
+    - devcovenant/builtin/policies/README.md
+    - devcovenant/builtin/profiles/README.md
+    - devcovenant/custom/policies/README.md
+    - devcovenant/custom/profiles/README.md
+    - devcovenant/docs/*.md
+    - devcovenant/docs/**/*.md
+  line-length-limit:
+    allow_long_lines:
+    - 'False'
+    allow_long_url_lines:
+    - 'False'
+    exclude_globs:
+    - devcovenant/logs/**
+    - build/**
+    - dist/**
+    - node_modules/**
+    - devcovenant/builtin/profiles/global/assets/*.yaml
+    - devcovenant/registry/**
+    exclude_prefixes:
+    - build
+    - dist
+    - node_modules
+    include_globs:
+    - '*.py'
+    - '*.md'
+    - '*.rst'
+    - '*.txt'
+    - '*.yml'
+    - '*.yaml'
+    - '*.json'
+    - '*.toml'
+    - '*.cff'
+    include_suffixes:
+    - .py
+    - .md
+    - .rst
+    - .txt
+    - .yml
+    - .yaml
+    - .json
+    - .toml
+    - .cff
+    long_lines_between: []
+    long_lines_contain: []
+    max_length:
+    - '79'
+    url_prefixes:
+    - http://
+    - https://
+    - ftp://
+    - ftps://
+    - sftp://
+    - ssh://
+    - ws://
+    - wss://
+    - file://
+    - git://
+    - svn://
+    - 'mailto:'
+    - 'tel:'
+    - 'magnet:'
+    - 'torrent:'
+    - 'data:'
+    - 'urn:'
+  managed-environment:
+    expected_interpreters:
+    - .venv/bin/python
+    - .venv/Scripts/python.exe
+    expected_paths:
+    - .venv
+    managed_commands:
+    - start=>python3 -m venv .venv
+    - start=>{managed_python} -m pip install -r requirements.lock
+    manual_commands:
+    - python3 -m venv .venv
+    - '{managed_python} -m pip install -r requirements.lock'
+    required_commands:
+    - python3
+    - pre-commit
+    - pytest
+  modules-need-tests:
+    exclude_prefixes:
+    - build
+    - dist
+    - node_modules
+    - tests
+    include_suffixes:
+    - .py
+    mirror_roots:
+    - devcovenant=>tests/devcovenant
+    mirror_test_name_templates:
+    - python=>test_{stem}.py
+    - python=>{stem}_test.py
+    test_style_requirements:
+    - python=>python_unittest
+    tests_watch_dirs:
+    - tests
+    watch_dirs:
+    - tests
+  name-clarity:
+    exclude_globs:
+    - build/**
+    - dist/**
+    - node_modules/**
+    exclude_prefixes:
+    - build
+    - dist
+    - node_modules
+    include_suffixes:
+    - .py
+  no-print-outside-output-runtime:
+    allow_waiver_comment:
+    - 'DEVCOV_ALLOW_OUTPUT:'
+    allowed_file_globs:
+    - devcovenant/core/runtime/execution.py
+    exclude_globs:
+    - devcovenant/builtin/profiles/**/assets/**
+    - tests/**
+    include_globs:
+    - devcovenant/**/*.py
+    include_suffixes:
+    - .py
+    sink_call_targets:
+    - python=>print
+    - python=>builtins.print
+  security-scanner:
+    exclude_globs:
+    - tests/**
+    - '**/tests/**'
+    include_suffixes:
+    - .py
+  semantic-version-scope:
+    changelog_file: CHANGELOG.md
+    version_file: devcovenant/VERSION
+  tests-coverage:
+    assertion_signal_patterns:
+    - python=>\bassert\b
+    - python=>\bself\.assert[A-Za-z_]*\s*\(
+    exclude_prefixes:
+    - build
+    - dist
+    - node_modules
+    - tests
+    include_suffixes:
+    - .py
+    symbol_assertion_window:
+    - '2'
+    symbol_kinds:
+    - function
+    - class
+    symbol_name_min_length:
+    - '3'
+    tautology_patterns:
+    - python=>^\s*assert\s+True\s*$
+    - python=>^\s*self\.assertTrue\s*\(\s*True\s*\)\s*$
+    tests_watch_dirs:
+    - tests
+    watch_dirs:
+    - tests
+  version-sync:
+    changelog_file: CHANGELOG.md
+    changelog_header_prefix:
+    - '## Version'
+    role_extractors:
+    - docs=>doc_header_version
+    - changelog=>changelog_header_version
+    - legal=>semver_token
+    - package_manifest=>manifest_project_version
+    target_role_dirs:
+    - docs=>devcovenant/docs
+    target_role_files:
+    - docs=>README.md
+    - docs=>AGENTS.md
+    - docs=>CONTRIBUTING.md
+    - docs=>SPEC.md
+    - docs=>PLAN.md
+    - changelog=>CHANGELOG.md
+    - legal=>LICENSE
+    - docs=>CHANGELOG.md
+    - docs=>PROFILE_MAP.md
+    - docs=>POLICY_MAP.md
+    - docs=>devcovenant/README.md
+    - docs=>devcovenant/core/README.md
+    - docs=>devcovenant/custom/README.md
+    - docs=>devcovenant/registry/README.md
+    - docs=>devcovenant/builtin/policies/README.md
+    - docs=>devcovenant/builtin/profiles/README.md
+    - docs=>devcovenant/custom/policies/README.md
+    - docs=>devcovenant/custom/profiles/README.md
+    - package_manifest=>pyproject.toml
+    target_role_globs:
+    - docs=>devcovenant/docs/**/*.md
+    target_roles:
+    - docs
+    - changelog
+    - legal
+    - package_manifest
+    version_file: devcovenant/VERSION
+
+# User-owned overlays applied after autogen overlays.
+
+# Merge semantics: list append + dedupe, scalar replace.
+
+user_metadata_overlays: {}
+
+# Auto-generated metadata overrides written by refresh.
+
+# Override semantics: full key replacement.
+
+# Do not hand-edit unless you intentionally own this layer.
+
+autogen_metadata_overrides: {}
+
+# User-owned overrides applied last (highest precedence).
+
+# Override semantics: full key replacement.
+
+# Shape: {policy-id: {metadata_key: value-or-list}}
+
+user_metadata_overrides:
+  line-length-limit:
+    exclude_globs:
+    - devcovenant/builtin/profiles/global/assets/*.yaml
+    - devcovenant/registry/**
+  modules-need-tests:
+    exclude_globs:
+    - devcovenant/builtin/profiles/**/assets/**
+    mirror_roots:
+    - devcovenant=>tests/devcovenant
+  tests-coverage:
+    severity: warning

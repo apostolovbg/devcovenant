@@ -1,0 +1,618 @@
+"""Per-run logging substrate for DevCovenant command execution."""
+
+from __future__ import annotations
+
+import datetime as _dt
+import json
+import re
+import shutil
+from dataclasses import dataclass, field
+from pathlib import Path
+from typing import Any, Mapping, Sequence
+
+RUN_LOG_SCHEMA_VERSION = "1.0"
+_RUN_LOG_ROOT_RELATIVE = Path("devcovenant") / "logs"
+_LATEST_POINTER_FILE = "latest.json"
+_COMMAND_SLUG_PATTERN = re.compile(r"[^a-z0-9]+")
+_MAX_COMMAND_SLUG_LENGTH = 32
+
+
+@dataclass(frozen=True)
+class RunLogPaths:
+    """Resolved artifact paths for one per-run log context."""
+
+    run_dir: Path
+    run_json: Path
+    summary_txt: Path
+    summary_json: Path
+    stdout_log: Path
+    stderr_log: Path
+    tail_txt: Path
+
+
+@dataclass
+class RunLogContext:
+    """Runtime context describing one command-run logging allocation."""
+
+    repo_root: Path
+    logs_root: Path
+    run_id: str
+    command_name: str
+    argv: tuple[str, ...]
+    cwd: Path
+    started_at: str
+    gate_session_id: str | None = None
+    metadata: dict[str, Any] = field(default_factory=dict)
+    paths: RunLogPaths | None = None
+
+    def require_paths(self) -> RunLogPaths:
+        """Return resolved artifact paths or raise for invalid contexts."""
+        if self.paths is None:
+            raise ValueError("Run log context is missing resolved paths.")
+        return self.paths
+
+
+def resolve_run_logs_root(repo_root: Path) -> Path:
+    """Return the canonical per-run log root for one repository."""
+    return Path(repo_root) / _RUN_LOG_ROOT_RELATIVE
+
+
+def latest_run_pointer_path(repo_root: Path) -> Path:
+    """Return the path to the lightweight latest-run pointer file."""
+    return resolve_run_logs_root(repo_root) / _LATEST_POINTER_FILE
+
+
+def create_run_log_context(
+    repo_root: Path,
+    command_name: str,
+    argv: Sequence[str] | None = None,
+    *,
+    cwd: Path | None = None,
+    gate_session_id: str | None = None,
+    started_at: _dt.datetime | None = None,
+    metadata: Mapping[str, Any] | None = None,
+) -> RunLogContext:
+    """Allocate one per-run log directory and initialize core artifacts."""
+    repo_root = Path(repo_root)
+    logs_root = resolve_run_logs_root(repo_root)
+    logs_root.mkdir(parents=True, exist_ok=True)
+
+    started = _coerce_utc_datetime(started_at)
+    run_id = _allocate_run_id(
+        logs_root=logs_root,
+        command_name=command_name,
+        argv=argv or (),
+        started_at=started,
+    )
+    run_dir = logs_root / run_id
+    run_dir.mkdir(parents=False, exist_ok=False)
+
+    paths = _build_run_log_paths(run_dir)
+    for path in (
+        paths.stdout_log,
+        paths.stderr_log,
+        paths.tail_txt,
+    ):
+        path.touch(exist_ok=True)
+
+    context = RunLogContext(
+        repo_root=repo_root,
+        logs_root=logs_root,
+        run_id=run_id,
+        command_name=str(command_name or "").strip() or "command",
+        argv=tuple(str(token) for token in (argv or ())),
+        cwd=Path(cwd) if cwd is not None else repo_root,
+        started_at=_isoformat_utc(started),
+        gate_session_id=(
+            str(gate_session_id).strip() if gate_session_id else None
+        ),
+        metadata=dict(metadata or {}),
+        paths=paths,
+    )
+    write_run_summary_text(
+        context,
+        _default_summary_text(context, status="running", exit_code=None),
+    )
+    write_run_summary_json(
+        context,
+        _default_summary_json(context, status="running", exit_code=None),
+    )
+    _write_run_metadata(
+        context,
+        status="running",
+        exit_code=None,
+        finished_at=None,
+        metadata_updates=None,
+    )
+    record_latest_run_pointer(
+        context,
+        status="running",
+        exit_code=None,
+        finished_at=None,
+    )
+    return context
+
+
+def load_run_log_context(
+    repo_root: Path,
+    *,
+    run_id: str | None = None,
+    run_dir: Path | None = None,
+) -> RunLogContext:
+    """Load an existing run-log context from a previously created folder."""
+    repo_root = Path(repo_root)
+    logs_root = resolve_run_logs_root(repo_root)
+    selected_run_id = str(run_id or "").strip()
+    if run_dir is None:
+        if not selected_run_id:
+            raise ValueError("Either `run_id` or `run_dir` is required.")
+        run_dir = logs_root / selected_run_id
+    else:
+        run_dir = Path(run_dir)
+        if not selected_run_id:
+            selected_run_id = run_dir.name
+    if not run_dir.is_dir():
+        raise ValueError(f"Run log directory does not exist: {run_dir}")
+
+    paths = _build_run_log_paths(run_dir)
+    payload = _read_run_metadata(paths.run_json)
+    command_name = str(payload.get("command_name", "")).strip() or "command"
+    argv_raw = payload.get("argv", [])
+    argv = tuple(
+        str(token)
+        for token in (argv_raw if isinstance(argv_raw, list) else [])
+    )
+    cwd_value = str(payload.get("cwd", "")).strip()
+    started_at = str(payload.get("started_at", "")).strip() or _isoformat_utc(
+        _utc_now()
+    )
+    gate_session_id_raw = payload.get("gate_session_id")
+    gate_session_id = (
+        str(gate_session_id_raw).strip()
+        if gate_session_id_raw is not None and str(gate_session_id_raw).strip()
+        else None
+    )
+    metadata_raw = payload.get("metadata", {})
+    metadata = dict(metadata_raw) if isinstance(metadata_raw, Mapping) else {}
+    return RunLogContext(
+        repo_root=repo_root,
+        logs_root=logs_root,
+        run_id=selected_run_id,
+        command_name=command_name,
+        argv=argv,
+        cwd=Path(cwd_value) if cwd_value else repo_root,
+        started_at=started_at,
+        gate_session_id=gate_session_id,
+        metadata=metadata,
+        paths=paths,
+    )
+
+
+def finalize_run_log_context(
+    context: RunLogContext,
+    *,
+    exit_code: int | None,
+    status: str | None = None,
+    finished_at: _dt.datetime | None = None,
+    summary_text: str | None = None,
+    summary_data: Mapping[str, Any] | None = None,
+    metadata_updates: Mapping[str, Any] | None = None,
+) -> None:
+    """Finalize run metadata and optional summaries for one context."""
+    resolved_status = _resolve_run_status(exit_code, status)
+    finished = _coerce_utc_datetime(finished_at)
+
+    if summary_text is not None:
+        write_run_summary_text(context, summary_text)
+    else:
+        write_run_summary_text(
+            context,
+            _default_summary_text(
+                context,
+                status=resolved_status,
+                exit_code=exit_code,
+            ),
+        )
+
+    if summary_data is not None:
+        write_run_summary_json(context, summary_data)
+    else:
+        write_run_summary_json(
+            context,
+            _default_summary_json(
+                context,
+                status=resolved_status,
+                exit_code=exit_code,
+                finished_at=finished,
+            ),
+        )
+
+    _write_run_metadata(
+        context,
+        status=resolved_status,
+        exit_code=exit_code,
+        finished_at=finished,
+        metadata_updates=metadata_updates,
+    )
+    record_latest_run_pointer(
+        context,
+        status=resolved_status,
+        exit_code=exit_code,
+        finished_at=finished,
+    )
+
+
+def prune_run_log_directories(
+    repo_root: Path,
+    *,
+    keep_last: int,
+    preserve_run_id: str | None = None,
+) -> list[str]:
+    """Prune older run-log directories while preserving the newest runs."""
+    try:
+        normalized_keep = int(keep_last)
+    except (TypeError, ValueError):
+        normalized_keep = 0
+    if normalized_keep < 0:
+        normalized_keep = 0
+    if normalized_keep == 0:
+        return []
+
+    logs_root = resolve_run_logs_root(Path(repo_root))
+    if not logs_root.is_dir():
+        return []
+
+    run_dirs = _discover_run_log_directories(logs_root)
+    if not run_dirs:
+        return []
+    run_dirs.sort(key=lambda path: path.name, reverse=True)
+
+    keep_names: set[str] = set()
+    for path in run_dirs[:normalized_keep]:
+        keep_names.add(path.name)
+    preserved = str(preserve_run_id or "").strip()
+    if preserved:
+        keep_names.add(preserved)
+
+    removed: list[str] = []
+    for path in run_dirs:
+        if path.name in keep_names:
+            continue
+        try:
+            shutil.rmtree(path)
+        except OSError:
+            continue
+        removed.append(path.name)
+    return removed
+
+
+def append_run_stream_output(
+    context: RunLogContext,
+    stream_name: str,
+    text: str,
+) -> None:
+    """Append text to one stream log (`stdout` or `stderr`)."""
+    paths = context.require_paths()
+    token = str(stream_name or "").strip().lower()
+    if token == "stdout":
+        path = paths.stdout_log
+    elif token == "stderr":
+        path = paths.stderr_log
+    else:
+        raise ValueError("Invalid stream_name. Expected `stdout` or `stderr`.")
+    with path.open("a", encoding="utf-8") as handle:
+        handle.write(str(text))
+
+
+def write_run_summary_text(context: RunLogContext, text: str) -> None:
+    """Write `summary.txt` for one run context."""
+    path = context.require_paths().summary_txt
+    path.write_text(str(text), encoding="utf-8")
+
+
+def write_run_summary_json(
+    context: RunLogContext, payload: Mapping[str, Any]
+) -> None:
+    """Write `summary.json` using deterministic JSON serialization."""
+    path = context.require_paths().summary_json
+    _write_json(path, dict(payload))
+
+
+def write_run_tail(context: RunLogContext, text: str) -> None:
+    """Write or replace the bounded tail helper artifact."""
+    path = context.require_paths().tail_txt
+    path.write_text(str(text), encoding="utf-8")
+
+
+def record_latest_run_pointer(
+    context: RunLogContext,
+    *,
+    status: str,
+    exit_code: int | None,
+    finished_at: _dt.datetime | None,
+) -> None:
+    """Update the lightweight latest-run pointer for quick lookup."""
+    logs_root = context.logs_root
+    logs_root.mkdir(parents=True, exist_ok=True)
+    pointer_path = logs_root / _LATEST_POINTER_FILE
+    paths = context.require_paths()
+    payload = {
+        "schema_version": RUN_LOG_SCHEMA_VERSION,
+        "run_id": context.run_id,
+        "command_name": context.command_name,
+        "status": str(status),
+        "exit_code": exit_code,
+        "started_at": context.started_at,
+        "finished_at": (
+            _isoformat_utc(_coerce_utc_datetime(finished_at))
+            if finished_at is not None
+            else None
+        ),
+        "gate_session_id": context.gate_session_id,
+        "run_dir": _repo_relative(context.repo_root, paths.run_dir),
+        "summary_txt": _repo_relative(context.repo_root, paths.summary_txt),
+        "summary_json": _repo_relative(context.repo_root, paths.summary_json),
+        "updated_at": _isoformat_utc(_utc_now()),
+    }
+    _write_json(pointer_path, payload)
+
+
+def _build_run_log_paths(run_dir: Path) -> RunLogPaths:
+    """Return the standard artifact paths for one run directory."""
+    return RunLogPaths(
+        run_dir=run_dir,
+        run_json=run_dir / "run.json",
+        summary_txt=run_dir / "summary.txt",
+        summary_json=run_dir / "summary.json",
+        stdout_log=run_dir / "stdout.log",
+        stderr_log=run_dir / "stderr.log",
+        tail_txt=run_dir / "tail.txt",
+    )
+
+
+def _discover_run_log_directories(logs_root: Path) -> list[Path]:
+    """Return candidate per-run directories under the logs root."""
+    discovered: list[Path] = []
+    for entry in logs_root.iterdir():
+        if not entry.is_dir():
+            continue
+        if (entry / "run.json").is_file():
+            discovered.append(entry)
+    return discovered
+
+
+def _allocate_run_id(
+    *,
+    logs_root: Path,
+    command_name: str,
+    argv: Sequence[str],
+    started_at: _dt.datetime,
+) -> str:
+    """Allocate a unique run identifier using timestamp and command slug."""
+    stamp = _run_timestamp_token(started_at)
+    slug = _command_slug(command_name, argv)
+    base = f"{stamp}-{slug}"
+    candidate = base
+    suffix = 1
+    while (logs_root / candidate).exists():
+        suffix += 1
+        candidate = f"{base}-{suffix:03d}"
+    return candidate
+
+
+def _command_slug(command_name: str, argv: Sequence[str]) -> str:
+    """Normalize a command label into a filesystem-safe slug."""
+    label = str(command_name or "").strip()
+    if not label and argv:
+        label = str(argv[0]).strip()
+    lowered = label.lower()
+    slug = _COMMAND_SLUG_PATTERN.sub("-", lowered).strip("-")
+    if not slug:
+        slug = "command"
+    return slug[:_MAX_COMMAND_SLUG_LENGTH]
+
+
+def _run_timestamp_token(value: _dt.datetime) -> str:
+    """Return one deterministic UTC timestamp token for run identifiers."""
+    utc_value = _coerce_utc_datetime(value)
+    return utc_value.strftime("%Y%m%dT%H%M%S%fZ")
+
+
+def _write_run_metadata(
+    context: RunLogContext,
+    *,
+    status: str,
+    exit_code: int | None,
+    finished_at: _dt.datetime | None,
+    metadata_updates: Mapping[str, Any] | None,
+) -> None:
+    """Write `run.json` with deterministic metadata for one run."""
+    effective_metadata = dict(context.metadata)
+    if metadata_updates:
+        effective_metadata.update(_json_safe(dict(metadata_updates)))
+    invoked_python = str(effective_metadata.get("invoked_python", "")).strip()
+    effective_python = str(
+        effective_metadata.get("effective_python", "")
+    ).strip()
+    managed_active_raw = effective_metadata.get("managed_environment_active")
+    managed_reexec_raw = effective_metadata.get("managed_reexec_applied")
+    payload: dict[str, Any] = {
+        "schema_version": RUN_LOG_SCHEMA_VERSION,
+        "run_id": context.run_id,
+        "command_name": context.command_name,
+        "argv": list(context.argv),
+        "cwd": str(context.cwd),
+        "repo_root": str(context.repo_root),
+        "started_at": context.started_at,
+        "finished_at": (
+            _isoformat_utc(_coerce_utc_datetime(finished_at))
+            if finished_at is not None
+            else None
+        ),
+        "status": str(status),
+        "exit_code": exit_code,
+        "gate_session_id": context.gate_session_id,
+        "invoked_python": invoked_python or None,
+        "effective_python": effective_python or None,
+        "managed_environment_active": (
+            bool(managed_active_raw)
+            if isinstance(managed_active_raw, bool)
+            else None
+        ),
+        "managed_reexec_applied": (
+            bool(managed_reexec_raw)
+            if isinstance(managed_reexec_raw, bool)
+            else None
+        ),
+        "run_dir": _repo_relative(
+            context.repo_root,
+            context.require_paths().run_dir,
+        ),
+        "artifacts": _artifact_map(context),
+        "metadata": effective_metadata,
+    }
+    _write_json(context.require_paths().run_json, payload)
+
+
+def _artifact_map(context: RunLogContext) -> dict[str, str]:
+    """Return repo-relative artifact paths for serialized run metadata."""
+    paths = context.require_paths()
+    return {
+        "run_json": _repo_relative(context.repo_root, paths.run_json),
+        "summary_txt": _repo_relative(context.repo_root, paths.summary_txt),
+        "summary_json": _repo_relative(context.repo_root, paths.summary_json),
+        "stdout_log": _repo_relative(context.repo_root, paths.stdout_log),
+        "stderr_log": _repo_relative(context.repo_root, paths.stderr_log),
+        "tail_txt": _repo_relative(context.repo_root, paths.tail_txt),
+    }
+
+
+def _repo_relative(repo_root: Path, path: Path) -> str:
+    """Return repo-relative path when possible, else absolute path."""
+    try:
+        return path.relative_to(repo_root).as_posix()
+    except ValueError:
+        return str(path)
+
+
+def _default_summary_text(
+    context: RunLogContext,
+    *,
+    status: str,
+    exit_code: int | None,
+) -> str:
+    """Build a deterministic summary text placeholder or final summary."""
+    lines = [
+        f"Run ID: {context.run_id}",
+        f"Command: {context.command_name}",
+        f"Status: {status}",
+        f"Exit Code: {'' if exit_code is None else exit_code}",
+        "Run Dir: "
+        + _repo_relative(
+            context.repo_root,
+            context.require_paths().run_dir,
+        ),
+    ]
+    return "\n".join(lines) + "\n"
+
+
+def _default_summary_json(
+    context: RunLogContext,
+    *,
+    status: str,
+    exit_code: int | None,
+    finished_at: _dt.datetime | None = None,
+) -> dict[str, Any]:
+    """Build a deterministic summary JSON payload for one run."""
+    return {
+        "schema_version": RUN_LOG_SCHEMA_VERSION,
+        "run_id": context.run_id,
+        "command_name": context.command_name,
+        "status": status,
+        "exit_code": exit_code,
+        "started_at": context.started_at,
+        "finished_at": (
+            _isoformat_utc(_coerce_utc_datetime(finished_at))
+            if finished_at is not None
+            else None
+        ),
+        "artifacts": {
+            "stdout_log": _repo_relative(
+                context.repo_root, context.require_paths().stdout_log
+            ),
+            "stderr_log": _repo_relative(
+                context.repo_root, context.require_paths().stderr_log
+            ),
+            "tail_txt": _repo_relative(
+                context.repo_root, context.require_paths().tail_txt
+            ),
+        },
+    }
+
+
+def _resolve_run_status(exit_code: int | None, status: str | None) -> str:
+    """Return finalized run status from explicit status or exit code."""
+    token = str(status or "").strip().lower()
+    if token:
+        return token
+    if exit_code is None:
+        return "unknown"
+    return "success" if exit_code == 0 else "failure"
+
+
+def _utc_now() -> _dt.datetime:
+    """Return the current UTC timestamp as an aware datetime."""
+    return _dt.datetime.now(_dt.timezone.utc)
+
+
+def _coerce_utc_datetime(value: _dt.datetime | None) -> _dt.datetime:
+    """Return a timezone-aware UTC datetime."""
+    if value is None:
+        return _utc_now()
+    if value.tzinfo is None:
+        return value.replace(tzinfo=_dt.timezone.utc)
+    return value.astimezone(_dt.timezone.utc)
+
+
+def _isoformat_utc(value: _dt.datetime) -> str:
+    """Return UTC ISO-8601 text for one datetime value."""
+    return _coerce_utc_datetime(value).isoformat()
+
+
+def _write_json(path: Path, payload: Mapping[str, Any]) -> None:
+    """Write JSON deterministically with UTF-8 encoding."""
+    normalized = _json_safe(dict(payload))
+    path.write_text(
+        json.dumps(normalized, indent=2, sort_keys=True) + "\n",
+        encoding="utf-8",
+    )
+
+
+def _read_run_metadata(path: Path) -> dict[str, Any]:
+    """Read `run.json` when present and return a mapping payload."""
+    if not path.exists():
+        return {}
+    try:
+        payload = json.loads(path.read_text(encoding="utf-8"))
+    except (OSError, json.JSONDecodeError):
+        return {}
+    if not isinstance(payload, dict):
+        return {}
+    return payload
+
+
+def _json_safe(value: Any) -> Any:
+    """Convert values into JSON-serializable primitives deterministically."""
+    if value is None:
+        return None
+    if isinstance(value, (str, int, float, bool)):
+        return value
+    if isinstance(value, Path):
+        return str(value)
+    if isinstance(value, _dt.datetime):
+        return _isoformat_utc(value)
+    if isinstance(value, Mapping):
+        return {str(key): _json_safe(item) for key, item in value.items()}
+    if isinstance(value, (list, tuple, set, frozenset)):
+        return [_json_safe(item) for item in value]
+    return str(value)

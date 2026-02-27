@@ -1,0 +1,34 @@
+id: line-length-limit
+text: |
+  Keep lines within the configured maximum so documentation and code remain
+  readable. Reflow long sentences or wrap lists rather than ignoring the limit.
+  Optional metadata escape hatches can allow long lines for URL-heavy content
+  or explicit marker patterns when repositories need targeted flexibility.
+metadata:
+  id: line-length-limit
+  severity: warning
+  auto_fix: 'false'
+  enforcement: active
+  max_length: ''
+  allow_long_url_lines: ''
+  url_prefixes: []
+  allow_long_lines: ''
+  long_lines_contain: []
+  long_lines_between: []
+  include_suffixes: []
+  exclude_prefixes: []
+  exclude_globs: []
+  include_prefixes: []
+  include_globs: []
+  exclude_suffixes: []
+  force_include_globs: []
+  selector_roles:
+    - include
+    - exclude
+    - force_include
+  include_files: []
+  include_dirs: []
+  exclude_files: []
+  exclude_dirs: []
+  force_include_files: []
+  force_include_dirs: []

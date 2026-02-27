@@ -1,0 +1,68 @@
+# DevCovenant base ignores
+.idea/
+.vscode/
+*.swp
+*.swo
+*.swn
+*.tmp
+*.bak
+.env
+.env.*
+!.env.example
+build/
+dist/
+out/
+coverage/
+reports/
+*.egg-info/
+*.log
+.cache/
+.ruff_cache/
+tmp/
+temp/
+devcovenant/registry/local/
+devcovenant/logs/**
+!devcovenant/logs/
+!devcovenant/logs/README.md
+
+# Profile: docs
+_site
+site
+build
+
+# Profile: python
+.venv
+__pycache__
+.pytest_cache
+.mypy_cache
+build
+dist
+
+# OS-specific ignores (DevCovenant)
+.DS_Store
+.AppleDouble
+.LSOverride
+Icon
+._*
+.Spotlight-V100
+.Trashes
+.fseventsd
+.AppleDB
+.AppleDesktop
+Network Trash Folder
+Temporary Items
+Thumbs.db
+Desktop.ini
+ehthumbs.db
+Icon?
+*.lnk
+$RECYCLE.BIN/
+.directory
+.Trash-*
+.fuse_hidden*
+.nfs*
+
+# --- User entries (preserved) ---
+
+
+# --- End user entries ---

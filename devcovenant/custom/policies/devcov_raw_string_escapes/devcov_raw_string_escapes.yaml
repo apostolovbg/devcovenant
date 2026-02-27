@@ -1,0 +1,14 @@
+id: devcov-raw-string-escapes
+text: |
+  Warn when DevCovenant repo Python strings contain bare backslashes.
+  This repo-only policy keeps the raw-string guidance active without
+  forcing it on user repos.
+metadata:
+  id: devcov-raw-string-escapes
+  severity: warning
+  auto_fix: 'false'
+  enforcement: active
+  include_suffixes:
+    - .py
+    - .pyi
+    - .pyw

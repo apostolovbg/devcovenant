@@ -1,0 +1,42 @@
+version: 1
+profile: objective_c
+category: language
+suffixes:
+  - .m
+  - .mm
+  - .h
+ignore_dirs:
+  - build
+assets:
+  - path: Podfile
+    template: Podfile
+translators:
+  - id: objective_c
+    extensions:
+      - .m
+      - .mm
+      - .h
+    can_handle:
+      strategy: module_function
+      entrypoint: objective_c_translator.py:can_handle
+    translate:
+      strategy: module_function
+      entrypoint: objective_c_translator.py:translate
+policy_overlays:
+  devflow-run-gates:
+    required_commands:
+      - xcodebuild test
+  documentation-growth-tracking:
+    user_facing_suffixes:
+      - .m
+      - .mm
+      - .h
+  line-length-limit:
+    include_suffixes:
+      - .m
+      - .mm
+      - .h
+  dependency-license-sync:
+    dependency_role_files:
+      - intent=>Podfile
+      - resolved=>Podfile.lock

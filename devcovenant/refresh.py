@@ -1,0 +1,48 @@
+#!/usr/bin/env python3
+"""Refresh command entrypoint for DevCovenant."""
+
+from __future__ import annotations
+
+if __package__ in {None, ""}:  # pragma: no cover
+    import sys
+    from pathlib import Path
+
+    sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
+
+import argparse
+from pathlib import Path
+
+from devcovenant.core.flow.refresh import refresh_repo
+from devcovenant.core.runtime.execution import (
+    print_banner,
+    print_step,
+    resolve_repo_root,
+)
+
+
+def _build_parser() -> argparse.ArgumentParser:
+    """Build parser for refresh command."""
+    return argparse.ArgumentParser(description="Run a full refresh.")
+
+
+def run(args: argparse.Namespace) -> int:
+    """Execute refresh command."""
+    del args
+    repo_root = resolve_repo_root(require_install=True)
+
+    print_banner("DevCovenant run", "🚀")
+    print_step("Command: refresh", "🧭")
+    print_banner("Full refresh", "🔄")
+
+    return refresh_repo(repo_root)
+
+
+def main(argv: list[str] | None = None) -> None:
+    """CLI entry point."""
+    parser = _build_parser()
+    args = parser.parse_args(argv)
+    raise SystemExit(run(args))
+
+
+if __name__ == "__main__":
+    main()

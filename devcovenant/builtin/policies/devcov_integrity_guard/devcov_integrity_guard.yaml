@@ -1,0 +1,16 @@
+id: devcov-integrity-guard
+text: |
+  Enforce DevCovenant policy integrity: every policy must include descriptive
+  text, AGENTS prose must match policy descriptors, the policy registry must
+  stay synchronized, and gate-status metadata must validate when configured.
+metadata:
+  id: devcov-integrity-guard
+  severity: critical
+  auto_fix: 'false'
+  enforcement: active
+  policy_definitions: ''
+  registry_file: ''
+  gate_status_file: ''
+  watch_dirs: []
+  watch_files: []
+  selector_roles: watch,watch_files

@@ -1,0 +1,66 @@
+version: 1
+profile: csharp
+category: language
+suffixes:
+  - .cs
+ignore_dirs:
+  - bin
+  - obj
+assets:
+  - path: Project.csproj
+    template: Project.csproj
+pre_commit:
+  repos:
+    - repo: local
+      hooks:
+        - id: csharp-format
+          name: csharp format check
+          entry: dotnet format --verify-no-changes
+          language: system
+          pass_filenames: false
+          files: \.cs$
+translators:
+  - id: csharp
+    extensions:
+      - .cs
+    can_handle:
+      strategy: module_function
+      entrypoint: csharp_translator.py:can_handle
+    translate:
+      strategy: module_function
+      entrypoint: csharp_translator.py:translate
+policy_overlays:
+  dependency-license-sync:
+    dependency_role_files:
+      - package_manifest=>Project.csproj
+      - resolved=>packages.lock.json
+  devflow-run-gates:
+    required_commands:
+      - dotnet test
+  name-clarity:
+    include_suffixes:
+      - .cs
+  docstring-and-comment-coverage:
+    include_suffixes:
+      - .cs
+  modules-need-tests:
+    include_suffixes:
+      - .cs
+  security-scanner:
+    include_suffixes:
+      - .cs
+  documentation-growth-tracking:
+    user_facing_suffixes:
+      - .cs
+    user_facing_keywords:
+      - controller
+      - controllers
+      - service
+      - services
+      - endpoint
+      - endpoints
+      - handler
+      - handlers
+  line-length-limit:
+    include_suffixes:
+      - .cs

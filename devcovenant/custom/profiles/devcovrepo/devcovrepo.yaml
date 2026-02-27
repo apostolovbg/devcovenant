@@ -1,0 +1,209 @@
+version: 1
+profile: devcovrepo
+category: repo
+suffixes: []
+ignore_dirs: []
+assets:
+  - path: devcovenant/docs/installation.md
+    template: docs/installation.md
+  - path: devcovenant/docs/config.md
+    template: docs/config.md
+  - path: devcovenant/docs/profiles.md
+    template: docs/profiles.md
+  - path: devcovenant/docs/policies.md
+    template: docs/policies.md
+  - path: devcovenant/docs/translators.md
+    template: docs/translators.md
+  - path: devcovenant/docs/registry.md
+    template: docs/registry.md
+  - path: devcovenant/docs/refresh.md
+    template: docs/refresh.md
+  - path: devcovenant/docs/workflow.md
+    template: docs/workflow.md
+  - path: devcovenant/docs/troubleshooting.md
+    template: docs/troubleshooting.md
+policy_overlays:
+  dependency-license-sync:
+    dependency_role_files:
+      - intent=>requirements.in
+      - resolved=>requirements.lock
+      - package_manifest=>pyproject.toml
+  managed-environment:
+    expected_paths:
+      - .venv
+    expected_interpreters:
+      - .venv/bin/python
+      - .venv/Scripts/python.exe
+    required_commands:
+      - python3
+      - pre-commit
+      - pytest
+    manual_commands:
+      - python3 -m venv .venv
+      - '{managed_python} -m pip install -r requirements.lock'
+    managed_commands:
+      - start=>python3 -m venv .venv
+      - start=>{managed_python} -m pip install -r requirements.lock
+  documentation-growth-tracking:
+    user_facing_files:
+      - devcovenant/cli.py
+      - devcovenant/__main__.py
+    doc_routes:
+      - "devcovenant/builtin/policies/ => devcovenant/docs/policies.md"
+      - "devcovenant/builtin/policies/ => devcovenant/docs/architecture.md"
+      - >-
+        devcovenant/builtin/profiles/*/*.yaml =>
+        devcovenant/docs/profiles.md
+      - >-
+        devcovenant/*/profiles/*/*translator.py=>
+        devcovenant/docs/translators.md
+      - >-
+        devcovenant/builtin/profiles/**/config.yaml =>
+        devcovenant/docs/config.md
+      - >-
+        devcovenant/*/profiles/*/assets/*.yaml=>
+        devcovenant/docs/profiles.md
+      - >-
+        devcovenant/*/profiles/*/assets/*.yml=>
+        devcovenant/docs/profiles.md
+      - >-
+        devcovenant/*/profiles/**/assets/**/*.yaml=>
+        devcovenant/docs/profiles.md
+      - >-
+        devcovenant/*/profiles/**/assets/**/*.yml=>
+        devcovenant/docs/profiles.md
+      - "devcovenant/custom/profiles/**/*.yaml => devcovenant/docs/profiles.md"
+      - "devcovenant/custom/policies/**/*.yaml => devcovenant/docs/policies.md"
+      - "devcovenant/custom/policies/**/*.py => devcovenant/docs/policies.md"
+      - "devcovenant/core/flow/*.py => devcovenant/docs/workflow.md"
+      - "devcovenant/core/flow/*.py => devcovenant/docs/architecture.md"
+      - "devcovenant/core/runtime/*.py => devcovenant/docs/workflow.md"
+      - "devcovenant/core/runtime/*.py => devcovenant/docs/architecture.md"
+      - "devcovenant/core/services/*.py => devcovenant/docs/architecture.md"
+      - "devcovenant/core/lib/*.py => devcovenant/docs/architecture.md"
+      - "devcovenant/core/contracts/*.py => devcovenant/docs/architecture.md"
+      - "devcovenant/*.py => devcovenant/docs/installation.md"
+      - "devcovenant/*.py => devcovenant/docs/workflow.md"
+      - "pyproject.toml => devcovenant/docs/installation.md"
+      - "MANIFEST.in => devcovenant/docs/installation.md"
+      - "devcovenant/config.yaml => devcovenant/docs/config.md"
+      - ".github/workflows/*.yml => devcovenant/docs/workflow.md"
+    user_visible_files:
+      - devcovenant/README.md
+      - devcovenant/docs/architecture.md
+      - devcovenant/docs/installation.md
+      - devcovenant/docs/config.md
+      - devcovenant/docs/profiles.md
+      - devcovenant/docs/policies.md
+      - devcovenant/docs/translators.md
+      - devcovenant/docs/registry.md
+      - devcovenant/docs/refresh.md
+      - devcovenant/docs/workflow.md
+      - devcovenant/docs/troubleshooting.md
+    doc_quality_files:
+      - devcovenant/README.md
+      - devcovenant/docs/architecture.md
+      - devcovenant/docs/installation.md
+      - devcovenant/docs/config.md
+      - devcovenant/docs/profiles.md
+      - devcovenant/docs/policies.md
+      - devcovenant/docs/translators.md
+      - devcovenant/docs/registry.md
+      - devcovenant/docs/refresh.md
+      - devcovenant/docs/workflow.md
+      - devcovenant/docs/troubleshooting.md
+    user_visible_dirs:
+      - devcovenant/docs
+    doc_quality_dirs:
+      - devcovenant/docs
+  line-length-limit:
+    exclude_globs:
+      - devcovenant/builtin/profiles/global/assets/*.yaml
+      - devcovenant/registry/**
+  no-print-outside-output-runtime:
+    include_suffixes:
+      - .py
+    include_globs:
+      - devcovenant/**/*.py
+    exclude_globs:
+      - devcovenant/builtin/profiles/**/assets/**
+      - tests/**
+    allowed_file_globs:
+      - devcovenant/core/runtime/execution.py
+    allow_waiver_comment: 'DEVCOV_ALLOW_OUTPUT:'
+  last-updated-placement:
+    allowed_globs:
+      - README.md
+      - AGENTS.md
+      - CONTRIBUTING.md
+      - PLAN.md
+      - SPEC.md
+      - CHANGELOG.md
+      - PROFILE_MAP.md
+      - POLICY_MAP.md
+      - devcovenant/README.md
+      - devcovenant/core/README.md
+      - devcovenant/custom/README.md
+      - devcovenant/registry/README.md
+      - devcovenant/builtin/policies/README.md
+      - devcovenant/builtin/profiles/README.md
+      - devcovenant/custom/policies/README.md
+      - devcovenant/custom/profiles/README.md
+      - devcovenant/docs/*.md
+      - devcovenant/docs/**/*.md
+    required_globs:
+      - README.md
+      - AGENTS.md
+      - CONTRIBUTING.md
+      - PLAN.md
+      - SPEC.md
+      - CHANGELOG.md
+      - PROFILE_MAP.md
+      - POLICY_MAP.md
+      - devcovenant/README.md
+      - devcovenant/core/README.md
+      - devcovenant/custom/README.md
+      - devcovenant/registry/README.md
+      - devcovenant/builtin/policies/README.md
+      - devcovenant/builtin/profiles/README.md
+      - devcovenant/custom/policies/README.md
+      - devcovenant/custom/profiles/README.md
+      - devcovenant/docs/*.md
+      - devcovenant/docs/**/*.md
+  modules-need-tests:
+    exclude_prefixes:
+      - build
+      - dist
+      - node_modules
+      - tests
+    watch_dirs:
+      - tests
+    tests_watch_dirs:
+      - tests
+    mirror_roots:
+      - devcovenant=>tests/devcovenant
+  version-sync:
+    version_file: devcovenant/VERSION
+    target_role_files:
+      - docs=>README.md
+      - docs=>AGENTS.md
+      - docs=>CONTRIBUTING.md
+      - docs=>PLAN.md
+      - docs=>SPEC.md
+      - docs=>CHANGELOG.md
+      - docs=>PROFILE_MAP.md
+      - docs=>POLICY_MAP.md
+      - docs=>devcovenant/README.md
+      - docs=>devcovenant/core/README.md
+      - docs=>devcovenant/custom/README.md
+      - docs=>devcovenant/registry/README.md
+      - docs=>devcovenant/builtin/policies/README.md
+      - docs=>devcovenant/builtin/profiles/README.md
+      - docs=>devcovenant/custom/policies/README.md
+      - docs=>devcovenant/custom/profiles/README.md
+    target_role_globs:
+      - docs=>devcovenant/docs/**/*.md
+    target_role_dirs:
+      - docs=>devcovenant/docs
+  semantic-version-scope:
+    version_file: devcovenant/VERSION

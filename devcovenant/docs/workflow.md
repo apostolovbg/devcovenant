@@ -1,0 +1,489 @@
+# Workflow
+**Last Updated:** 2026-02-27
+**Version:** 1.0.0
+
+## Table of Contents
+- [Overview](#overview)
+- [Program Vocabulary](#program-vocabulary)
+- [Required Sequence](#required-sequence)
+- [90-Second Evidence Ritual](#90-second-evidence-ritual)
+- [Step Details](#step-details)
+- [Session State Model](#session-state-model)
+- [Recovery and Reconcile](#recovery-and-reconcile)
+- [Changelog and Delta Scope Rules](#changelog-and-delta-scope-rules)
+- [CI Mapping](#ci-mapping)
+- [Operator Checklist](#operator-checklist)
+
+## Overview
+DevCovenant workflow is a hard contract, not a suggestion:
+
+```bash
+gate --start -> gate --mid loop (rerun until clean) -> test -> gate --end
+```
+
+The sequence exists to guarantee three things:
+- baseline integrity at session start
+- execution evidence for required tests
+- clean, recorded closure state
+
+The sequence applies to governed code and documentation changes.
+Default `ignore.patterns` excludes `devcovenant/config.yaml`, so config-only
+edits do not trigger session-delta or changelog-coverage nagging.
+Layered kernel modules now live under
+`devcovenant/core/{flow,runtime,services,lib,contracts}`.
+Namespace scaffolds under `devcovenant/builtin/{policies,profiles}` are the
+canonical bundled stock paths.
+
+## Program Vocabulary
+- `gate session`:
+  one workflow slice between successful `gate --start` and `gate --end`
+- `session baseline`:
+  the timestamp/snapshot boundary used to compute in-scope changed files
+- `session delta`:
+  files changed after baseline
+- `output boundary`:
+  runtime API for all command-visible output
+- `output mode`:
+  `verbose`, `normal`, or `quiet` command output contract
+- `tests output mode`:
+  `verbose`, `normal`, or `quiet` test-command output/progress contract
+- `test event`:
+  normalized test lifecycle event emitted by adapters
+- `assertion signal`:
+  meaningful assertion used by tests-coverage checks
+
+## Required Sequence
+Canonical commands:
+
+```bash
+devcovenant gate --start
+# edit files and clear complaints while working
+# required pre-test mutating preflight; rerun until clean
+devcovenant gate --mid
+devcovenant test
+devcovenant gate --end
+```
+
+If CLI is unavailable:
+
+```bash
+python3 -m devcovenant gate --start
+python3 -m devcovenant gate --mid
+python3 -m devcovenant test
+python3 -m devcovenant gate --end
+```
+
+On Windows, `py -m devcovenant ...` is a common equivalent launcher form.
+This command-form fallback does not change exact-token validation for
+`devflow-run-gates.required_commands` test evidence.
+
+Required execution order:
+1. on the first session in a new conversation, read full `AGENTS.md`
+2. on every session, reread the `DEVCOV-WORKFLOW` block in `AGENTS.md`
+3. if AGENTS non-workflow hash changed since prior session, reread full
+   `AGENTS.md`
+4. build active-policy model from `enabled: true` policies
+5. run `gate --start` before edits
+6. clear start-gate complaints before editing
+7. edit while proactively following policy contracts
+8. if complaints appear, clear them before continuing
+9. run `gate --mid` before tests to surface hook/devcov
+   mutations and blocking complaints early; rerun `gate --mid` until clean
+10. run `test`
+11. run `gate --end`
+12. rerun required steps if end gate reports new changes/violations
+
+## 90-Second Evidence Ritual
+Use this ritual when you want a fast proof that DevCovenant is working and
+producing evidence artifacts, without running a full gate lifecycle first.
+
+Canonical ritual commands:
+
+```bash
+devcovenant check
+devcovenant test
+```
+
+Why this ritual is the canonical quick proof:
+- it uses explicit commands from the real command surface (no demo wrapper)
+- it demonstrates `check` as read-only audit behavior
+- it demonstrates command-run evidence artifacts and `Run logs:` pointers
+- it demonstrates quick, live command feedback without running full lifecycle
+
+Stable cues to verify (avoid exact timestamp matching):
+1. `check` prints a standard `Run logs:` pointer and completes without opening
+   or closing a gate session.
+2. `test` prints a standard `Run logs:` pointer, records test command
+   evidence, and keeps full output in run artifacts.
+3. If a workflow command fails and you need lifecycle inspection, run
+   `gate --status` to view `Gate Status:` and a `Latest Relevant Logs:`
+   pointer (when run artifacts exist).
+
+Artifact-first inspection order:
+1. `summary.txt`
+2. `tail.txt` (if present)
+3. `stderr.log` / `stdout.log`
+
+Scope note:
+- this ritual is a quick confidence check, not a substitute for the required
+  development workflow
+- for repository work, use the full gate sequence:
+  `devcovenant gate --start` -> `devcovenant gate --mid` loop ->
+  `devcovenant test` -> `devcovenant gate --end`
+
+## Step Details
+Shared gate hook targeting:
+- `gate --start`, `gate --mid`, and `gate --end` resolve pre-commit targets
+  from the current snapshot path set before hook execution.
+- when the configured hook command uses `--all-files`, gate runtime rewrites it
+  to explicit `--files <snapshot-paths...>` for phase-consistent coverage,
+  including newly created files not yet staged in git.
+
+`gate --start` responsibilities:
+- bootstrap local policy registry metadata when missing so managed-environment
+  contracts can resolve on clean clones before pre-commit
+- run managed-environment `start` commands when policy is enabled
+- run pre-commit hooks for baseline validation
+- block baseline recording if hooks fail
+- record session start timestamps and metadata in gate status
+- clear stale end-gate pre-commit evidence so ordering checks stay
+  session-bound
+- record changelog top-entry fingerprint for fresh-entry enforcement
+- capture document exemption baselines used by changelog checks
+- resolve changelog/session-baseline helper logic through
+  `devcovenant/core/flow/gate_changelog_helpers.py` so metadata parsing and
+  top-entry fingerprint behavior stay centralized
+- fail with explicit retry instructions (run `devcovenant test`, then rerun
+  `devcovenant gate --start`) when recovery/reconcile requires fresh test
+  evidence; start gate performs no internal test runs
+
+`gate --mid` responsibilities:
+- require an active open gate session (`gate --start` already completed)
+- run managed-environment `command` stage preparation when policy is enabled
+- run pre-commit hooks with the same gate-owned refresh/autofix orchestration
+  used by lifecycle gate phases
+- surface blocking, non-autofixed DevCovenant violations with explicit
+  `gate --mid` retry guidance before tests
+- remain non-lifecycle: do not record start/end timestamps or change gate
+  session state in `gate_status.json`
+
+`test` responsibilities:
+- run managed-environment `test` commands when policy is enabled
+- execute Python-launcher commands with the resolved managed interpreter
+- resolve canonical command metadata from `required_commands`
+- consume typed-empty metadata values directly; no sentinel pseudo-empty token
+  path is part of active runtime behavior
+- execute commands in declared order without fallback command injection
+- record execution timestamp and command chain in gate status
+- record tests mode and selected command-metadata key in gate status
+- record normalized schema-version `1.0` test events for downstream tooling
+- emit adapter-load warnings through output runtime before running commands
+- command runtime actions (for example `update_lock`) dispatch through policy
+  contracts using `PolicyCheck.run_runtime_action(...)`
+
+`gate --end` responsibilities:
+- run managed-environment `end` commands when policy is enabled
+- run pre-commit hooks
+- fail fast with explicit fix-and-rerun guidance when pre-commit reports
+  blocking, non-autofixed DevCovenant violations
+- fail with explicit retry instructions when hooks mutate files or tests are
+  stale for the current tree (`devcovenant test`, then
+  `devcovenant gate --end`)
+- record session closure only after successful checks
+
+Install/upgrade boundary:
+- `install` is a cold bootstrap command and does not preserve existing
+  repo-local `devcovenant/` runtime state
+- `install` exits and points to `upgrade` when DevCovenant is already present
+- `upgrade` preserves runtime-local `devcovenant/registry/local/` and
+  `devcovenant/logs/` during core replacement before running refresh
+
+`gate --status` responsibilities:
+- read gate session state without mutating lifecycle files
+- report short session status and last known phase
+- point to the latest relevant run-log artifacts for summary-first triage
+- resolve status-line rendering and latest-run pointer fallback through
+  `devcovenant/core/flow/gate_status_helpers.py` so read-only status behavior
+  remains isolated from lifecycle writes
+- align CLI help wording with the same contract
+  (`devcovenant check --help` = audit-only,
+  `devcovenant gate --help` = lifecycle phases + `gate --mid` +
+  short read-only `gate --status`)
+- support inspection-first recovery loops without rerunning gate commands
+  just to read lifecycle state
+- keep audit-only no-change `devcovenant check` runs non-blocking for stale
+  end-vs-test ordering in closed sessions with no post-end edits
+- discover policy scripts from `devcovenant/builtin/policies` and
+  `devcovenant/custom/policies` only
+- keep profile discovery and merge inventory resolved from
+  `devcovenant/core/services/profile_registry.py`
+
+Output behavior:
+- `engine.output_mode: verbose` prints detailed stage/step messages
+- `engine.output_mode: normal` uses concise runtime command output
+- `engine.output_mode: quiet` suppresses routine stdout output and keeps
+  errors/violations on stderr
+- runtime console messages are line-flushed by default so status/progress
+  lines remain visible during long-running commands instead of appearing only
+  at process exit
+- `engine.tests_output_mode` controls `devcovenant test` console-detail and
+  child-output suppression behavior
+- `devcovenant/core/runtime/run_logging.py` provides a shared per-run logging
+  substrate for command-run artifact folders under `devcovenant/logs/`;
+  CLI dispatch now allocates/finalizes top-level run folders and emits a
+  deterministic standard `Run logs:` pointer on success and failure paths
+- operators should treat the printed `Run logs:` path as the canonical
+  debug entrypoint for command-run evidence artifacts
+- `engine.logs_keep_last` controls how many recent run-log folders remain in
+  `devcovenant/logs/` after each command (`0` keeps all); logging itself is
+  not a disableable runtime feature
+- artifact-first triage order for run evidence artifacts is: `summary.txt`,
+  then `tail.txt` (if
+  present), then full logs (`stderr.log`/`stdout.log`)
+- when run artifacts are available, prefer status updates and final
+  results over verbose live-streaming, and use summaries/tails first for
+  failure triage
+- prefer low-frequency polling for long-running commands instead of tight
+  polling loops
+- use the documented polling cadence internally, but do not narrate
+  polling steps/cadence in routine progress updates unless asked
+- avoid ad-hoc output redirects for DevCovenant commands when official
+  run artifacts already exist
+- the logging substrate preserves artifact fidelity independently of console
+  verbosity choices
+- `check` is read-only by default; gate pre-commit phases own refresh/autofix
+  orchestration for the shared checking routine
+- gate session lifecycle evidence is stored in
+  `devcovenant/registry/local/gate_status.json`, while command-run evidence is
+  stored in `devcovenant/logs/<run-id>-<command>/`
+- refresh now also emits low-token audit digest artifacts in
+  `devcovenant/registry/local/audit_digest.json` and
+  `devcovenant/registry/local/audit_digest.txt`; these are informational and
+  do not replace canonical AGENTS workflow/policy reading requirements
+- gate-managed autofix requests honor `engine.auto_fix_enabled` from
+  `devcovenant/config.yaml` (disabled globally by default)
+- runtime subprocess helpers for explicit `test` runs and gate-managed
+  subprocess execution capture full command output into run artifacts while
+  console verbosity remains a separate concern
+- runtime subprocess helpers emit `Please wait. In progress...` during long
+  silent waits in normal mode while preserving existing phase/start lines
+  and use sub-second heartbeat polling so short silent commands still emit
+  deterministic liveness updates when heartbeat output is configured
+- refresh-owned `devcovenant/config.yaml` guidance comments (for example
+  `fail_threshold` and `auto_fix_enabled`) are emitted from refresh runtime
+  source logic, not hand-maintained in repo-local generated config files
+- `engine.tests_output_mode: normal` keeps status lines concise while
+  suppressing test command child output, emits deterministic
+  start/completion markers (for example `▶ [n/total] <command>` and
+  completion/failure markers), and still writes full output to run-log
+  artifacts
+- `engine.tests_output_mode: quiet` suppresses routine test stdout chatter
+  and child output while preserving stderr failures/violations and full
+  run-log artifacts
+- `devcovenant test` writes informational profiling artifacts per run
+  (`test_profile.json` and `test_profile.txt`) with module/group and slowest-
+  command duration breakdowns for the resolved command chain
+- test-run summary metadata now includes stable command-duration fields
+  (`duration_seconds_min_command`, `duration_seconds_avg_command`,
+  `duration_seconds_max_command`, `duration_events_count`) for trend tracking
+- gate commands never run tests internally (including recovery/reconcile
+  paths); they fail with explicit `devcovenant test` retry instructions
+- normal mode streams gate pre-commit hook output, suppresses
+  flood-prone managed/test child channels, and preserves deterministic
+  liveness heartbeats plus bounded failure tails when suppression applies
+- quiet mode suppresses routine stdout child output across channels and keeps
+  error/violation surfaces on stderr; verbose mode keeps full child streaming
+- progress-bar rendering is removed from the CLI runtime path; normal mode
+  no longer emits `tqdm` redraw noise in terminals or CI logs
+- normal-mode live streaming can be acceptable when it stays concise, but
+  verbose streaming can consume significant tokens
+- runtime console-emitting subprocesses use PTY-backed streaming on POSIX
+  by default so hook/test output flushes live without process-end buffering;
+  pipe streaming remains the fallback when PTY is unavailable or when
+  normal-mode suppression hides child output
+- gate/test/managed child commands route through one runtime helper
+  (`run_child_command_with_output_policy`) with channel plans resolved by
+  `resolve_child_output_plan_for_channel`; this keeps mode behavior aligned
+  across all command families
+- prefer run artifacts and summaries/tails before switching to verbose
+  streaming or ad-hoc redirects
+- keep operator progress updates concise: report what changed, what
+  passed/failed, and the next step; avoid narrating routine waits or
+  polling steps/cadence or obvious command progress
+- normal-mode live streaming is acceptable for routine progress visibility;
+  reserve verbose streaming for explicit request, missing run artifacts, or
+  interactive I/O needs
+- recommended polling cadence for long-running commands is:
+  `5s`, `15s`, `30s`, `45s`, `60s`, `90s`, `120s`, `150s`, `180s`, `240s`,
+  then every `60s`
+- `engine.pycache_prefix_enabled: true` routes Python bytecode caches via
+  `PYTHONPYCACHEPREFIX` for DevCovenant-managed child commands, preserving
+  bytecode generation fidelity while avoiding repo-local `__pycache__/` drift
+- generated CI governance workflows set `PYTHONPYCACHEPREFIX` at job scope so
+  top-level `python -m devcovenant ...` launches also avoid repo-local
+  bytecode-cache drift in CI
+- `devcovenant/launcher_bootstrap.py` centralizes the lightweight
+  pre-import pycache-prefix routing used by `devcovenant/cli.py` and
+  `devcovenant/__main__.py`, but shell/CI launcher env still owns
+  zero-drift guarantees for fallback launcher starts
+- gate-session changelog coverage uses a gate-start exemption baseline that
+  includes DEVCOV-managed blocks in non-doc text files (for example generated
+  YAML/YML assets), so managed-only regen noise does not require new
+  changelog entries
+- the shared exemption fingerprint implementation now lives in
+  `devcovenant/core/lib/document_exemptions.py`, and both gate-session
+  baseline capture and changelog-coverage checks call that same helper path
+  to reduce drift risk
+
+Managed-environment scope split:
+- core/global defaults keep `managed-environment` disabled.
+- each repository opts in by setting
+  `devcovenant/config.yaml -> policy_state.managed-environment: true`.
+  Critical-severity policy disable attempts are still ignored by runtime,
+  with explicit diagnostics, even though `policy_state` remains the config
+  control surface.
+- when enabled, any DevCovenant CLI command re-execs under the managed
+  interpreter automatically when invoked from a different interpreter.
+- stage command prefixes are `start`, `test`, `end`, `command`, and `all`.
+- if non-start commands run before interpreter creation, runtime executes
+  explicit `start=>...` bootstrap commands once before failing.
+- managed-environment stage bootstrap progress is tracked in
+  `DEVCOV_MANAGED_STAGE_RUNS` so stage commands are not repeated after CLI
+  re-exec into the managed interpreter.
+- managed-environment stage bootstrap/output commands honor runtime output
+  mode: normal mode suppresses bootstrap command bursts, quiet mode keeps
+  routine stdout hidden, and verbose mode streams full child output.
+- when managed interpreters are unavailable,
+  `managed_rerun_commands` can rerun the same command through wrapper
+  adapters (for example bench or other environment launchers).
+- scope exclusions: when `devcov_core_include` is false, core checks ignore
+  `profiles.generated.devcov_core_paths`, which include builtin and core
+  internals plus root CLI scripts.
+- managed-environment guidance expands tokenized manual commands with
+  resolved paths; missing values render explicit placeholders like
+  `<managed_python>`.
+
+## Session State Model
+Session metadata is persisted in:
+`devcovenant/registry/local/gate_status.json`.
+
+Conceptual state machine:
+1. `closed` (or absent) -> run `gate --start` -> `open`
+2. `open` -> run `test` as needed during the slice
+3. `open` -> successful `gate --end` -> `closed`
+
+Important rules:
+- a new start is rejected while a session is `open`
+- end requires an active open session
+- `gate --status` is read-only and does not change session state
+- failed end does not mark session closed
+- baseline/session keys must be valid for session-aware checks
+- start records AGENTS section hashes:
+  `agents_full_sha256`, `agents_workflow_sha256`,
+  `agents_non_workflow_sha256`
+
+Session scope behavior:
+- policy checks use gate-session delta
+- during normal start, delta is empty after baseline capture
+- during recovery start, reconciled unsessioned edits are included in scope
+- config `ignore.patterns` are applied before unsessioned/session checks
+
+## Recovery and Reconcile
+Start gate includes guardrails against silent baseline resets.
+
+When start detects unsessioned edits after the previous closed session:
+1. it opens a recovery session
+2. it runs pre-commit against that unsessioned delta
+3. it fails with explicit instructions to run `devcovenant test` and rerun
+   `devcovenant gate --start` (no internal test execution)
+4. it records a fresh baseline only after a later explicit retry succeeds when
+   test evidence was stale or missing
+5. if explicit test evidence is already fresh for the current unsessioned
+   edits, the retry can succeed without another redundant test run
+
+When start detects malformed/invalid status payload:
+- it opens recovery behavior from current baseline rather than silently
+  discarding state
+
+This behavior protects changelog/session checks from hidden drift.
+
+## Changelog and Delta Scope Rules
+`changelog-coverage` is session-aware:
+- it compares current top entry fingerprint against start fingerprint
+- each change slice needs a fresh top changelog entry
+- validations are scoped to files changed in the active session delta
+- default config excludes `devcovenant/config.yaml` from this scope
+
+Session baseline keys:
+- `session_start_snapshot`:
+  normal session baseline snapshot
+- `session_baseline_snapshot`:
+  optional recovery baseline snapshot that includes unsessioned edits
+- `session_end_snapshot`:
+  closed-session snapshot used for unsessioned-edit detection
+- `last_run_snapshot`:
+  explicit test snapshot used for end-gate freshness checks
+
+Policy scope contract:
+- missing or invalid session metadata outside start phase is an explicit error
+- gate-aware checks read session ledger state directly
+- session delta is computed from runtime snapshot helpers, not ad-hoc git
+  commands
+- deleted-file coverage is scoped to the active session via the
+  `session_start_snapshot` gate-start baseline, so older staged deletions do
+  not leak into new slices
+- normal `gate --start` validates an empty session delta and does not import
+  HEAD-wide deleted paths from prior slices
+- runtime snapshot/session helper ownership now lives in
+  `devcovenant/core/runtime/session_snapshot.py`, while
+  `devcovenant/core/runtime/execution.py` is the layered command-facing
+  execution module
+- `devcovenant/core/flow/session.py` now re-exports an explicit session helper
+  set from execution runtime (instead of wildcard imports) so compatibility
+  imports remain stable and auditable
+- AGENTS policy-block rendering is isolated in
+  `devcovenant/core/services/policy_block_refresh.py`, and AGENTS policy
+  parser/model helpers are isolated in
+  `devcovenant/core/services/policy_parse.py`
+
+Test-policy alignment rules:
+- `modules-need-tests` enforces source-to-test structural alignment
+- `tests-coverage` enforces assertion signal quality
+- tautological assertions do not count unless fixture-marked with
+  `DEVCOV_FIXTURE_OK: <reason>`
+
+## CI Mapping
+Primary governance workflow:
+- `.github/workflows/governance-and-test.yml`
+- generated by refresh from template + profile/config overlays
+- tracked in this repository as refresh output; change inputs, then refresh
+- installs CI tooling from `requirements.lock` to keep versions reproducible
+- runs start -> test -> end sequence
+- normalizes workflow trigger key to literal `on`
+
+Repository-maintained workflows (not refresh-generated):
+- `build.yml`:
+  build validation after successful governance workflow completion, including
+  pre-build artifact cleanup plus isolated wheel + sdist install smoke
+  (`python -m devcovenant --help`)
+- `publish.yml`:
+  manual release workflow (`workflow_dispatch`) with the same cleanup and
+  wheel + sdist install smoke in its build job before upload/publish
+
+Use local gates to match CI expectations and reduce late failures.
+
+## Operator Checklist
+Before edits:
+1. read `AGENTS.md` and active policies
+2. run `devcovenant gate --start`
+
+During edits:
+1. keep changelog and docs aligned with behavior changes
+2. clear complaints before continuing
+
+After edits:
+1. run `devcovenant test`
+2. run `devcovenant gate --end`
+3. if end gate reports hook-induced changes or stale tests, rerun
+   `devcovenant test` and then `devcovenant gate --end` until clean
+4. stage all changed files for the completed slice

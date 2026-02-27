@@ -1,0 +1,67 @@
+[project]
+name = "devcovenant"
+version = "1.0.0"
+description = "Self-enforcing development policy engine"
+readme = "README.md"
+requires-python = ">=3.10"
+license = "MIT"
+license-files = [
+  "LICENSE",
+  "licenses/THIRD_PARTY_LICENSES.md",
+  "licenses/*.txt",
+]
+classifiers = [
+  "Programming Language :: Python :: 3",
+  "Programming Language :: Python :: 3 :: Only",
+]
+dependencies = [
+  "pre-commit>=4.5.1",
+  "PyYAML>=6.0.2",
+  "pytest>=9.0.2",
+  "semver>=3.0.2",
+  "tqdm>=4.66.1",
+]
+[tool.setuptools]
+include-package-data = true
+[tool.setuptools.packages.find]
+include = [
+  "devcovenant",
+  "devcovenant.*",
+]
+namespaces = false
+[tool.setuptools.exclude-package-data]
+"*" = [
+  "*.py[cod]",
+  "**/*.py[cod]",
+  "__pycache__/*",
+  "**/__pycache__/*",
+]
+"devcovenant" = [
+  "*.py[cod]",
+  "**/*.py[cod]",
+  "__pycache__/*",
+  "**/__pycache__/*",
+]
+"devcovenant.core" = [
+  "policies/*",
+  "policies/**",
+  "profiles/*",
+  "profiles/**",
+  "*.py[cod]",
+  "**/*.py[cod]",
+  "__pycache__/*",
+  "**/__pycache__/*",
+]
+[project.scripts]
+devcovenant = "devcovenant.cli:main"
+[tool.black]
+line-length = 79
+
+[tool.isort]
+profile = "black"
+line_length = 79
+
+[tool.ruff]
+line-length = 79
+
+[tool.ruff.format]

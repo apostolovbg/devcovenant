@@ -1,0 +1,63 @@
+version: 1
+profile: java
+category: language
+suffixes:
+  - .java
+ignore_dirs:
+  - target
+  - build
+assets:
+  - path: build.gradle
+    template: build.gradle
+pre_commit:
+  repos:
+    - repo: https://github.com/macisamuele/language-formatters-pre-commit
+      rev: v2.13.0
+      hooks:
+        - id: pretty-format-java
+translators:
+  - id: java
+    extensions:
+      - .java
+    can_handle:
+      strategy: module_function
+      entrypoint: java_translator.py:can_handle
+    translate:
+      strategy: module_function
+      entrypoint: java_translator.py:translate
+policy_overlays:
+  dependency-license-sync:
+    dependency_role_files:
+      - package_manifest=>pom.xml
+      - package_manifest=>build.gradle
+  devflow-run-gates:
+    required_commands:
+      - mvn test
+      - gradle test
+  name-clarity:
+    include_suffixes:
+      - .java
+  docstring-and-comment-coverage:
+    include_suffixes:
+      - .java
+  modules-need-tests:
+    include_suffixes:
+      - .java
+  security-scanner:
+    include_suffixes:
+      - .java
+  documentation-growth-tracking:
+    user_facing_suffixes:
+      - .java
+    user_facing_keywords:
+      - controller
+      - controllers
+      - service
+      - services
+      - endpoint
+      - endpoints
+      - handler
+      - handlers
+  line-length-limit:
+    include_suffixes:
+      - .java

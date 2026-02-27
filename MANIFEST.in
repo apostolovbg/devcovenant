@@ -1,0 +1,26 @@
+include README.md
+include LICENSE
+include licenses/THIRD_PARTY_LICENSES.md
+recursive-include licenses *.txt
+include requirements.in
+include requirements.lock
+include devcovenant/README.md
+include devcovenant/VERSION
+recursive-exclude devcovenant/logs *
+include devcovenant/logs/README.md
+recursive-include devcovenant/docs *
+recursive-include devcovenant/registry/global *
+exclude devcovenant/config.yaml
+exclude devcovenant/registry/local/*
+recursive-include devcovenant/builtin/profiles *
+recursive-include devcovenant/builtin/policies *
+recursive-exclude devcovenant/custom *
+recursive-exclude devcovenant/registry/local *
+recursive-exclude tests *
+prune build
+prune dist
+prune devcovenant.egg-info
+global-exclude *.py[cod]
+global-exclude *$py.class
+global-exclude __pycache__/*
+global-exclude */__pycache__/*

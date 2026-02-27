@@ -1,0 +1,12 @@
+id: managed-doc-assets
+text: |
+  Ensure AGENTS.md, README.md, PLAN.md, SPEC.md, CHANGELOG.md, and
+  CONTRIBUTING.md remain the authoritative sources for their managed-block
+  descriptors under `devcovenant/builtin/profiles/global/assets/` so
+  documentation
+  generation is deterministic.
+metadata:
+  id: managed-doc-assets
+  severity: error
+  auto_fix: 'false'
+  enforcement: active

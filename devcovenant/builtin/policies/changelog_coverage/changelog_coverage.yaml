@@ -1,0 +1,25 @@
+id: changelog-coverage
+text: |
+  Every change must be logged in a new changelog entry dated today, under the
+  current version, with a three-line summary labeled Change/Why/Impact. Each
+  summary line must include an action verb listed in the summary_verbs
+  metadata and a Files block that lists only the touched paths for this
+  change. The policy compares the top changelog entry against the gate-start
+  top-entry fingerprint to require a fresh entry for each work session, while
+  resolving changed paths from the active gate session. Collection prefixes
+  (when enabled) must be logged in their own changelog; prefixed files may not
+  appear in the root changelog. This keeps release notes daily, file-complete,
+  and traceable.
+metadata:
+  id: changelog-coverage
+  severity: error
+  auto_fix: 'false'
+  enforcement: active
+  main_changelog: []
+  skipped_files: []
+  skipped_globs: []
+  skipped_prefixes: []
+  summary_labels: []
+  summary_verbs: []
+  gate_status_file: ''
+  collections: []
