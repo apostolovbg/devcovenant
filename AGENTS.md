@@ -1,5 +1,5 @@
 # DevCovenant Development Guide
-**Last Updated:** 2026-02-27
+**Last Updated:** 2026-02-28
 **Version:** 1.0.0
 
 <!-- DEVCOV:BEGIN -->
@@ -794,6 +794,9 @@ doc_routes: devcovenant/builtin/policies/ => devcovenant/docs/policies.md
   devcovenant/*/profiles/*/assets/*.yml=> devcovenant/docs/profiles.md
   devcovenant/*/profiles/**/assets/**/*.yaml=> devcovenant/docs/profiles.md
   devcovenant/*/profiles/**/assets/**/*.yml=> devcovenant/docs/profiles.md
+  devcovenant/custom/profiles/__init__.py => devcovenant/docs/profiles.md
+  devcovenant/custom/profiles/*.py => devcovenant/docs/profiles.md
+  devcovenant/custom/profiles/**/*.py => devcovenant/docs/profiles.md
   devcovenant/custom/profiles/**/*.yaml => devcovenant/docs/profiles.md
   devcovenant/custom/policies/**/*.yaml => devcovenant/docs/policies.md
   devcovenant/custom/policies/**/*.py => devcovenant/docs/policies.md

@@ -1,5 +1,5 @@
 # Changelog
-**Last Updated:** 2026-02-27
+**Last Updated:** 2026-02-28
 **Version:** 1.0.0
 
 <!-- DEVCOV:BEGIN -->
@@ -54,6 +54,115 @@ Example:
 ## Log changes here
 
 ## Version 1.0.0
+
+- 2026-02-28:
+  Change: Fixed baseline recovery regressions in deploy/refresh test fixtures
+    after accidental undo drift changed seeded-install expectations.
+  Why: Restored contract alignment so seeded installs exclude shipped custom
+    payload policy scripts while custom profile fixtures remain
+    descriptor-valid.
+  Impact: Stabilized `devcovenant test` and gate recovery in this repository
+    by removing false failures from seeded refresh/deploy expectations.
+  Files:
+  CHANGELOG.md
+  tests/devcovenant/core/services/test_profile_registry.py
+  tests/devcovenant/test_cli.py
+  tests/devcovenant/test_install.py
+  tests/devcovenant/test_refresh.py
+  tests/devcovenant/test_upgrade.py
+
+- 2026-02-28:
+  Change: Fixed upgrade/install preservation contract to keep all user custom
+    payload directories without name-based pruning, and tightened package
+    build rules so repository-owned custom payloads do not ship.
+  Why: Preservation semantics must be explicit and name-agnostic, while
+    package payload leakage is prevented at build/install boundaries.
+  Impact: Upgrade now preserves `devcovenant/custom/policies/*` and
+    `devcovenant/custom/profiles/*` payloads as-is, and install/upgrade no
+    longer depend on one-time cleanup behavior for leaked custom payloads.
+  Files:
+  CHANGELOG.md
+  MANIFEST.in
+  devcovenant/custom/profiles/__init__.py
+  devcovenant/custom/profiles/devcovrepo/devcovrepo.yaml
+  devcovenant/docs/installation.md
+  devcovenant/docs/profiles.md
+  devcovenant/docs/workflow.md
+  devcovenant/install.py
+  licenses/THIRD_PARTY_LICENSES.md
+  pyproject.toml
+  tests/devcovenant/test_install.py
+  tests/devcovenant/test_deploy.py
+  tests/devcovenant/test_refresh.py
+  tests/devcovenant/test_upgrade.py
+
+- 2026-02-28:
+  Change: Fixed upgrade/refresh resilience by preserving custom policy trees
+    while enforcing custom descriptor parity with core policies, and
+    reconciled full shipped core files on every upgrade run.
+  Why: Upgrade in user repositories could fail hard on stale custom policy
+    scripts, and version-gated replacement could miss shipped
+    `devcovenant/*.py` or builtin/core file updates.
+  Impact: Preserved custom policy content, improved upgrade reliability, and
+    ensured full shipped package files materialize on every upgrade run,
+    with descriptor issues now blocking until fixed for both core and custom,
+    without dropping repository `devcovenant/config.yaml`.
+  Files:
+  CHANGELOG.md
+  devcovenant/docs/architecture.md
+  devcovenant/docs/installation.md
+  devcovenant/docs/workflow.md
+  devcovenant/install.py
+  devcovenant/upgrade.py
+  tests/devcovenant/test_upgrade.py
+
+- 2026-02-28:
+  Change: Added a new builtin `opencl` language profile with translator/test
+    coverage and aligned profile inventory docs so shipped language coverage is
+    explicit for `opencl` and `rust`.
+  Why: Expanded general-purpose language support for mixed Rust/OpenCL
+    repositories while keeping profile contracts and translator ownership
+    discoverable in packaged docs.
+  Impact: Enabled baseline OpenCL suffix/policy/translator behavior without
+    forcing toolchain-specific hooks, and improved release clarity for shipped
+    language-profile coverage.
+  Files:
+  CHANGELOG.md
+  PROFILE_MAP.md
+  devcovenant/builtin/profiles/README.md
+  devcovenant/builtin/profiles/opencl/opencl.yaml
+  devcovenant/builtin/profiles/opencl/opencl_translator.py
+  devcovenant/docs/profiles.md
+  devcovenant/docs/translators.md
+  tests/devcovenant/builtin/profiles/opencl/test_opencl_translator.py
+  tests/devcovenant/core/services/test_profile_registry.py
+
+- 2026-02-28:
+  Change: Fixed managed-environment re-exec for lifecycle bootstrap commands
+    and strengthened unmanaged-doc refresh sync to inject managed headers/
+    blocks while preserving existing body content.
+  Why: Fresh non-venv repos could fail lifecycle bootstrap before local policy
+    scripts existed, `update_lock` required a tool that was not installed, and
+    existing unmanaged docs did not receive managed headers/blocks on deploy.
+  Impact: Improved machine-install reliability for lifecycle/update commands
+    and preserved existing repo docs while standardizing managed headers/
+    blocks during install/deploy/refresh.
+  Files:
+  CHANGELOG.md
+  README.md
+  devcovenant/README.md
+  devcovenant/cli.py
+  devcovenant/core/flow/refresh.py
+  devcovenant/docs/architecture.md
+  devcovenant/docs/config.md
+  devcovenant/docs/installation.md
+  devcovenant/docs/workflow.md
+  licenses/THIRD_PARTY_LICENSES.md
+  pyproject.toml
+  requirements.in
+  requirements.lock
+  tests/devcovenant/test_cli.py
+  tests/devcovenant/test_refresh.py
 
 - 2026-02-27:
   Change: Updated repository documentation through a full `.md` sweep,

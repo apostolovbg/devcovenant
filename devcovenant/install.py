@@ -32,44 +32,105 @@ def _target_package_dir(repo_root: Path) -> Path:
     return repo_root / "devcovenant"
 
 
-def _copy_ignore(directory: str, names: list[str]) -> set[str]:
-    """Ignore runtime caches and local registry state during copy."""
-    ignored = set()
-    if Path(directory).name == "registry" and "local" in names:
-        ignored.add("local")
-    for name in names:
-        if name == "__pycache__":
-            ignored.add(name)
-        if name.endswith(".pyc"):
-            ignored.add(name)
-    return ignored
+_CUSTOM_SCAFFOLD_FILES = {"README.md", "__init__.py"}
 
 
-def replace_core_package(repo_root: Path) -> None:
+def _copy_ignore_builder(source_dir: Path):
+    """Return copy ignore callback scoped to one source directory."""
+
+    def _copy_ignore(directory: str, names: list[str]) -> set[str]:
+        """Ignore runtime caches/local state and package-owned payload."""
+        ignored = set()
+        current = Path(directory)
+        try:
+            rel_path = current.relative_to(source_dir).as_posix()
+        except ValueError:
+            rel_path = current.name
+
+        if rel_path == "registry" and "local" in names:
+            ignored.add("local")
+
+        if rel_path in {"custom/policies", "custom/profiles"}:
+            for name in names:
+                if name in _CUSTOM_SCAFFOLD_FILES:
+                    continue
+                ignored.add(name)
+
+        for name in names:
+            if name == "__pycache__":
+                ignored.add(name)
+            if name.endswith(".pyc"):
+                ignored.add(name)
+        return ignored
+
+    return _copy_ignore
+
+
+def _collect_custom_payload_dirs(custom_dir: Path) -> list[tuple[Path, Path]]:
+    """Collect user custom payload dirs to preserve across replacement."""
+    collected: list[tuple[Path, Path]] = []
+    sections = (
+        "policies",
+        "profiles",
+    )
+    for section in sections:
+        section_root = custom_dir / section
+        if not section_root.exists():
+            continue
+        for entry in sorted(section_root.iterdir()):
+            if not entry.is_dir():
+                continue
+            if entry.name.startswith(".") or entry.name == "__pycache__":
+                continue
+            rel = Path("custom") / section / entry.name
+            collected.append((entry, rel))
+    return collected
+
+
+def replace_core_package(
+    repo_root: Path,
+    source_dir: Path | None = None,
+) -> None:
     """Replace repo-root devcovenant package with packaged source."""
-    source_dir = _source_package_dir().resolve()
+    source_dir = (source_dir or _source_package_dir()).resolve()
     target_dir = _target_package_dir(repo_root).resolve()
     if source_dir == target_dir:
         return
 
     with tempfile.TemporaryDirectory() as temp_dir:
         temp_path = Path(temp_dir)
-        preserved_custom = temp_path / "custom"
+        preserved_payload_root = temp_path / "custom_payload"
         custom_dir = target_dir / "custom"
 
         if custom_dir.exists():
-            shutil.copytree(custom_dir, preserved_custom, dirs_exist_ok=True)
+            for payload_dir, rel_path in _collect_custom_payload_dirs(
+                custom_dir
+            ):
+                destination = preserved_payload_root / rel_path
+                destination.parent.mkdir(parents=True, exist_ok=True)
+                shutil.copytree(payload_dir, destination, dirs_exist_ok=True)
 
         if target_dir.exists():
             shutil.rmtree(target_dir)
 
-        shutil.copytree(source_dir, target_dir, ignore=_copy_ignore)
+        shutil.copytree(
+            source_dir,
+            target_dir,
+            ignore=_copy_ignore_builder(source_dir),
+        )
 
-        if preserved_custom.exists():
-            restored_custom = target_dir / "custom"
-            if restored_custom.exists():
-                shutil.rmtree(restored_custom)
-            shutil.copytree(preserved_custom, restored_custom)
+        if preserved_payload_root.exists():
+            for preserved_dir in sorted(preserved_payload_root.rglob("*")):
+                if not preserved_dir.is_dir():
+                    continue
+                rel_path = preserved_dir.relative_to(preserved_payload_root)
+                if len(rel_path.parts) != 3:
+                    continue
+                destination = target_dir / rel_path
+                if destination.exists():
+                    shutil.rmtree(destination)
+                destination.parent.mkdir(parents=True, exist_ok=True)
+                shutil.copytree(preserved_dir, destination)
 
 
 def _ensure_generic_config(repo_root: Path) -> None:

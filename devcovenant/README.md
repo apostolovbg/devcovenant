@@ -303,7 +303,9 @@ Important execution semantics:
 - end gate records closure only on success
 - when `managed-environment` is active, CLI commands invoked from a
   non-managed interpreter are automatically re-executed in the managed
-  interpreter
+  interpreter when local managed-environment runtime is present; lifecycle
+  bootstrap/teardown commands (`install`, `deploy`, `undeploy`, `uninstall`)
+  are intentionally excluded
 - if direct managed interpreter resolution is unavailable, configured
   `managed_rerun_commands` can rerun the command through wrapper adapters
   (for example bench/xenv launchers)

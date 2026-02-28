@@ -148,7 +148,7 @@ def _unit_test_refresh_policy_registry_origin_metadata() -> None:
         payload = yaml.safe_load(policy_registry.read_text(encoding="utf-8"))
         policies = payload.get("policies", {})
         assert policies["changelog-coverage"]["origin"] == "builtin"
-        assert policies["readme-sync"]["origin"] == "custom"
+        assert "readme-sync" not in policies
         assert "core" not in policies["changelog-coverage"]
 
 

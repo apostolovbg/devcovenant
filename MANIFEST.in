@@ -15,6 +15,12 @@ exclude devcovenant/registry/local/*
 recursive-include devcovenant/builtin/profiles *
 recursive-include devcovenant/builtin/policies *
 recursive-exclude devcovenant/custom *
+include devcovenant/custom/__init__.py
+include devcovenant/custom/README.md
+include devcovenant/custom/policies/__init__.py
+include devcovenant/custom/policies/README.md
+include devcovenant/custom/profiles/__init__.py
+include devcovenant/custom/profiles/README.md
 recursive-exclude devcovenant/registry/local *
 recursive-exclude tests *
 prune build

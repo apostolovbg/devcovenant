@@ -576,6 +576,9 @@ autogen_metadata_overlays:
     - devcovenant/*/profiles/*/assets/*.yml=> devcovenant/docs/profiles.md
     - devcovenant/*/profiles/**/assets/**/*.yaml=> devcovenant/docs/profiles.md
     - devcovenant/*/profiles/**/assets/**/*.yml=> devcovenant/docs/profiles.md
+    - devcovenant/custom/profiles/__init__.py => devcovenant/docs/profiles.md
+    - devcovenant/custom/profiles/*.py => devcovenant/docs/profiles.md
+    - devcovenant/custom/profiles/**/*.py => devcovenant/docs/profiles.md
     - devcovenant/custom/profiles/**/*.yaml => devcovenant/docs/profiles.md
     - devcovenant/custom/policies/**/*.yaml => devcovenant/docs/policies.md
     - devcovenant/custom/policies/**/*.py => devcovenant/docs/policies.md

@@ -4,12 +4,18 @@
 #
 #    pip-compile --allow-unsafe --strip-extras --output-file=requirements.lock requirements.in
 #
+build==1.4.0
+    # via pip-tools
 cfgv==3.5.0
     # via pre-commit
+click==8.3.1
+    # via pip-tools
 distlib==0.4.0
     # via virtualenv
 filelock==3.24.3
-    # via virtualenv
+    # via
+    #   python-discovery
+    #   virtualenv
 identify==2.6.16
     # via pre-commit
 iniconfig==2.3.0
@@ -17,17 +23,30 @@ iniconfig==2.3.0
 nodeenv==1.10.0
     # via pre-commit
 packaging==26.0
-    # via pytest
+    # via
+    #   build
+    #   pytest
+    #   wheel
+pip-tools==7.5.3
+    # via -r requirements.in
 platformdirs==4.9.2
-    # via virtualenv
+    # via
+    #   python-discovery
+    #   virtualenv
 pluggy==1.6.0
     # via pytest
 pre-commit==4.5.1
     # via -r requirements.in
 pygments==2.19.2
     # via pytest
+pyproject-hooks==1.2.0
+    # via
+    #   build
+    #   pip-tools
 pytest==9.0.2
     # via -r requirements.in
+python-discovery==1.1.0
+    # via virtualenv
 pyyaml==6.0.3
     # via
     #   -r requirements.in
@@ -36,5 +55,13 @@ semver==3.0.4
     # via -r requirements.in
 tqdm==4.67.3
     # via -r requirements.in
-virtualenv==20.39.0
+virtualenv==21.1.0
     # via pre-commit
+wheel==0.46.3
+    # via pip-tools
+
+# The following packages are considered to be unsafe in a requirements file:
+pip==26.0.1
+    # via pip-tools
+setuptools==82.0.0
+    # via pip-tools

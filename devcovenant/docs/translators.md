@@ -1,5 +1,5 @@
 # Translators
-**Last Updated:** 2026-02-27
+**Last Updated:** 2026-02-28
 **Version:** 1.0.0
 
 ## Table of Contents
@@ -48,6 +48,10 @@ Declaration guidance:
 - keep extension ownership explicit and unambiguous
 - prefer one canonical translator per extension per active profile stack
 - keep entrypoints profile-contained and importable in runtime context
+
+Builtin language profiles with shipped translators include:
+- `python`, `javascript`, `typescript`, `java`, `go`, `rust`, `opencl`,
+  `csharp`, `php`, `ruby`, `dart`, `swift`, `objective_c`, `sql`
 
 ## Runtime Resolution
 Per-file resolution flow:

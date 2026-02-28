@@ -374,6 +374,78 @@ def _replace_managed_block(current: str, template: str) -> tuple[str, bool]:
     return updated, changed
 
 
+def _rendered_header_and_block(rendered: str) -> tuple[str, str]:
+    """Return rendered header text and first managed block content."""
+    managed_block = _extract_managed_block(rendered)
+    if managed_block is None:
+        return rendered.strip("\n"), ""
+    block_start = rendered.find(managed_block)
+    if block_start < 0:
+        return rendered.strip("\n"), managed_block
+    header_text = rendered[:block_start].strip("\n")
+    return header_text, managed_block
+
+
+def _strip_existing_generated_headers(current: str) -> str:
+    """Strip leading generated header metadata from existing doc text."""
+    lines = current.replace("\r\n", "\n").splitlines()
+    if not lines:
+        return ""
+
+    scan_window = lines[:8]
+    has_last_updated = any(
+        line.strip().lower().startswith("**last updated:**")
+        for line in scan_window
+    )
+    has_version = any(
+        line.strip().lower().startswith("**version:**") for line in scan_window
+    )
+    if not (has_last_updated or has_version):
+        return current.strip("\n")
+
+    index = 0
+    while index < len(lines) and not lines[index].strip():
+        index += 1
+
+    if index < len(lines) and lines[index].lstrip().startswith("#"):
+        index += 1
+
+    while index < len(lines):
+        token = lines[index].strip().lower()
+        if not token:
+            index += 1
+            continue
+        if token.startswith("**last updated:**"):
+            index += 1
+            continue
+        if token.startswith("**version:**"):
+            index += 1
+            continue
+        break
+
+    trimmed = "\n".join(lines[index:]).strip("\n")
+    if trimmed:
+        return trimmed
+    return current.strip("\n")
+
+
+def _inject_managed_header_and_block(
+    current: str,
+    rendered: str,
+) -> tuple[str, bool]:
+    """Inject rendered header/managed block into unmanaged existing docs."""
+    header_text, managed_block = _rendered_header_and_block(rendered)
+    if not managed_block:
+        return current, False
+
+    preserved = _strip_existing_generated_headers(current)
+    sections = [header_text, managed_block]
+    if preserved:
+        sections.append(preserved)
+    updated = "\n\n".join(part for part in sections if part).rstrip() + "\n"
+    return updated, updated != current
+
+
 def _managed_block_spans(text: str) -> list[tuple[int, int, str]]:
     """Return positional spans for every managed block in text."""
     return _block_spans(text, BLOCK_BEGIN, BLOCK_END)
@@ -528,7 +600,12 @@ def _sync_doc(repo_root: Path, doc_name: str, version: str) -> bool:
     if doc_name == "AGENTS.md":
         updated, changed = _sync_agents_content(current, rendered)
     else:
-        updated, changed = _replace_managed_block(current, rendered)
+        if _managed_block_spans(current):
+            updated, changed = _replace_managed_block(current, rendered)
+        else:
+            updated, changed = _inject_managed_header_and_block(
+                current, rendered
+            )
     if not changed:
         return False
 

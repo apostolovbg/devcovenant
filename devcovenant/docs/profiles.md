@@ -1,5 +1,5 @@
 # Profiles
-**Last Updated:** 2026-02-27
+**Last Updated:** 2026-02-28
 **Version:** 1.0.0
 
 ## Table of Contents
@@ -31,6 +31,10 @@ Profiles may provide:
 - file assets and templates
 - pre-commit fragments
 - translator declarations (language profiles)
+
+Shipped builtin language profiles include:
+- `python`, `javascript`, `typescript`, `java`, `go`, `rust`, `opencl`,
+  `csharp`, `php`, `ruby`, `dart`, `swift`, `objective_c`, `sql`
 
 Any profile category may contribute policy metadata overlays, including
 `devflow-run-gates` test command metadata
@@ -343,6 +347,11 @@ The builtin Python profile ships with a `test_events` entry that points to
 ## Builtin vs Custom
 Builtin profiles are shipped defaults.
 Custom profiles are repository-owned and override same-name builtin profiles.
+Package builds ship custom scaffolding files (`README.md`, `__init__.py`)
+but do not ship repository-owned custom payload directories.
+Upgrade/install replacement preserves existing repository custom payload
+directories under `devcovenant/custom/profiles/*` and
+`devcovenant/custom/policies/*`.
 
 Custom profile precedence is path-based and deterministic.
 

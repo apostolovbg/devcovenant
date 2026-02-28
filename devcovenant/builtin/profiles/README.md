@@ -1,5 +1,5 @@
 # Builtin Profiles
-**Last Updated:** 2026-02-27
+**Last Updated:** 2026-02-28
 **Version:** 1.0.0
 
 ## Table of Contents
@@ -20,6 +20,10 @@ Policy activation authority is `config.policy_state`.
 Shipped baseline split:
 - `global`: universal hooks/assets baseline
 - `defaults`: common repo-layout metadata defaults
+
+Shipped language profiles:
+- `python`, `javascript`, `typescript`, `java`, `go`, `rust`, `opencl`,
+  `csharp`, `php`, `ruby`, `dart`, `swift`, `objective_c`, `sql`
 
 ## Profile Responsibilities
 Profiles may provide:

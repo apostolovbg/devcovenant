@@ -37,6 +37,12 @@ _MANAGED_REEXEC_SOURCE_ENV = "DEVCOV_MANAGED_REEXEC_SOURCE"
 _RUN_LOG_HANDOFF_REPO_ENV = "DEVCOV_RUN_LOG_REPO_ROOT"
 _RUN_LOG_HANDOFF_RUN_ID_ENV = "DEVCOV_RUN_LOG_ID"
 _TOP_LEVEL_COMMAND_ENV = "DEVCOV_TOP_COMMAND"
+_MANAGED_REEXEC_BYPASS_COMMANDS = {
+    "install",
+    "deploy",
+    "undeploy",
+    "uninstall",
+}
 
 
 def _build_parser() -> argparse.ArgumentParser:
@@ -108,6 +114,19 @@ def _same_path_text(left: str, right: str) -> bool:
         return Path(left).resolve() == Path(right).resolve()
     except OSError:
         return Path(left) == Path(right)
+
+
+def _has_local_managed_environment_policy(repo_root: Path) -> bool:
+    """Return True when local managed-environment policy runtime exists."""
+    policy_script = (
+        repo_root
+        / "devcovenant"
+        / "builtin"
+        / "policies"
+        / "managed_environment"
+        / "managed_environment.py"
+    )
+    return policy_script.exists()
 
 
 def _initialize_cli_run_logging(
@@ -221,10 +240,14 @@ def _maybe_reexec_managed_environment(
     command_args: list[str],
 ) -> None:
     """Re-exec command in managed interpreter when policy is active."""
+    if command in _MANAGED_REEXEC_BYPASS_COMMANDS:
+        return
     if _should_skip_managed_reexec(command_args):
         return
     repo_root = execution_runtime_module.find_git_root(Path.cwd())
     if repo_root is None:
+        return
+    if not _has_local_managed_environment_policy(repo_root):
         return
     stage = _managed_stage_for_command(command, command_args)
     managed_env: dict[str, str] | None = None

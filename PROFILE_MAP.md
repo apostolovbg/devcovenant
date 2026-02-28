@@ -1,5 +1,5 @@
 # Profile Map
-**Last Updated:** 2026-02-27
+**Last Updated:** 2026-02-28
 **Version:** 1.0.0
 
 ## Table of Contents
@@ -35,6 +35,7 @@ Language profiles:
 - `java`
 - `go`
 - `rust`
+- `opencl`
 - `csharp`
 - `php`
 - `ruby`
@@ -65,6 +66,7 @@ Language profiles with declared translators:
 - `java`
 - `go`
 - `rust`
+- `opencl`
 - `csharp`
 - `dart`
 - `php`

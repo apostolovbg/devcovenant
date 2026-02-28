@@ -1,5 +1,5 @@
 # Installation and Lifecycle
-**Last Updated:** 2026-02-27
+**Last Updated:** 2026-02-28
 **Version:** 1.0.0
 
 ## Table of Contents
@@ -124,9 +124,10 @@ Runtime details that affect operations:
   `gate --status`)
 - gate-managed autofix behavior is controlled by
   `engine.auto_fix_enabled: true|false` in `devcovenant/config.yaml`
-- when `managed-environment` is active, any DevCovenant command invoked from
-  a non-managed interpreter re-execs automatically in the managed interpreter
-  before command logic continues
+- when `managed-environment` is active, CLI commands invoked from a
+  non-managed interpreter re-exec automatically in the managed interpreter
+  before command logic continues, except lifecycle bootstrap/teardown commands
+  (`install`, `deploy`, `undeploy`, `uninstall`)
 - command-run evidence (`devcovenant/logs/<run-id>/run.json`) records
   interpreter provenance fields (`invoked_python`, `effective_python`,
   `managed_environment_active`, `managed_reexec_applied`) so you can verify
@@ -227,12 +228,35 @@ Scenario: repository should stop including DevCovenant-core internals
 3. review cleanup output and rerun tests/gates
 
 ## Upgrade and Lock Maintenance
-Use `upgrade` when source version is newer and core should be replaced.
+Use `upgrade` when core files should be reconciled from the installed CLI
+package source.
 Use `refresh` when generated runtime state must be rebuilt.
 
 Upgrade replacement preserves repo-local runtime state under:
 - `devcovenant/registry/local/`
 - `devcovenant/logs/`
+- `devcovenant/config.yaml`
+
+Upgrade also preserves user payload directories under:
+- `devcovenant/custom/policies/<policy-id>/`
+- `devcovenant/custom/profiles/<profile-id>/`
+while reconciling package-owned custom scaffolding
+(`devcovenant/custom/**/README.md`, package `__init__.py` files) from the
+upgraded core snapshot.
+
+Package distribution excludes repository-owned custom payloads by design;
+user repository custom payloads remain preserved by upgrade replacement.
+
+If a custom policy script is present but its descriptor file is missing or
+invalid, refresh/upgrade behavior is explicit:
+- fail the command with the same descriptor error contract as core policies
+- require descriptor fix before rerunning refresh/upgrade
+Upgrade reconciles the full `devcovenant/` package from source on every run
+(including `devcovenant/*.py`, `core/`, and `builtin/`) regardless of version
+direction, so stale or missing shipped files are always restored.
+When `devcovenant` is run inside a repo that already contains
+`devcovenant/`, upgrade resolves source from the installed package
+distribution to avoid local-import shadowing.
 
 Install remains a cold bootstrap command and does not provide preservation or
 merge behavior for existing `devcovenant/` trees.

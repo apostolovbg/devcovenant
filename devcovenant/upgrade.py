@@ -10,9 +10,11 @@ if __package__ in {None, ""}:  # pragma: no cover
     sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
 import argparse
+import importlib.metadata as importlib_metadata
 import re
 import shutil
 import tempfile
+from collections.abc import Callable
 from pathlib import Path
 
 import semver
@@ -29,6 +31,7 @@ _UPGRADE_RUNTIME_PRESERVE_DIRS = (
     Path("devcovenant/registry/local"),
     Path("devcovenant/logs"),
 )
+_UPGRADE_RUNTIME_PRESERVE_FILES = (Path("devcovenant/config.yaml"),)
 _SEMVER_COMPARE_RE = re.compile(
     r"^(?P<core>\d+(?:\.\d+){0,2})"
     r"(?:-(?P<prerelease>[0-9A-Za-z.-]+))?"
@@ -95,6 +98,15 @@ def _preserve_upgrade_runtime_state(repo_root: Path, temp_root: Path) -> None:
         preserved_path = temp_root / rel_path
         preserved_path.parent.mkdir(parents=True, exist_ok=True)
         shutil.copytree(source_path, preserved_path)
+    for rel_path in _UPGRADE_RUNTIME_PRESERVE_FILES:
+        source_path = repo_root / rel_path
+        if not source_path.exists():
+            continue
+        if not source_path.is_file():
+            continue
+        preserved_path = temp_root / rel_path
+        preserved_path.parent.mkdir(parents=True, exist_ok=True)
+        shutil.copy2(source_path, preserved_path)
 
 
 def _restore_upgrade_runtime_state(repo_root: Path, temp_root: Path) -> None:
@@ -116,13 +128,76 @@ def _restore_upgrade_runtime_state(repo_root: Path, temp_root: Path) -> None:
         target_logs.parent.mkdir(parents=True, exist_ok=True)
         shutil.copytree(preserved_logs, target_logs, dirs_exist_ok=True)
 
+    for rel_path in _UPGRADE_RUNTIME_PRESERVE_FILES:
+        preserved_file = temp_root / rel_path
+        if not preserved_file.exists():
+            continue
+        target_path = repo_root / rel_path
+        target_path.parent.mkdir(parents=True, exist_ok=True)
+        shutil.copy2(preserved_file, target_path)
+
+
+def _ensure_upgrade_config(repo_root: Path) -> None:
+    """Seed generic config when missing after core refresh."""
+    config_path = repo_root / "devcovenant" / "config.yaml"
+    if config_path.exists():
+        return
+    template_path = (
+        repo_root
+        / "devcovenant"
+        / "builtin"
+        / "profiles"
+        / "global"
+        / "assets"
+        / "config.yaml"
+    )
+    if not template_path.exists():
+        return
+    config_path.write_text(
+        template_path.read_text(encoding="utf-8"),
+        encoding="utf-8",
+    )
+    print_step(
+        "Config missing after upgrade; seeded generic config stub",
+        "ℹ️",
+    )
+
+
+def _resolve_upgrade_source_dir(
+    repo_root: Path,
+    distribution_lookup: Callable[
+        [str], importlib_metadata.Distribution
+    ] = importlib_metadata.distribution,
+) -> Path:
+    """Resolve source package path, guarding against local import shadowing."""
+    source_dir = Path(install.__file__).resolve().parent
+    target_dir = (repo_root / "devcovenant").resolve()
+    if source_dir != target_dir:
+        return source_dir
+    try:
+        distribution = distribution_lookup("devcovenant")
+    except importlib_metadata.PackageNotFoundError:
+        return source_dir
+    dist_source_dir = Path(distribution.locate_file("devcovenant")).resolve()
+    if dist_source_dir.exists() and dist_source_dir != target_dir:
+        print_step(
+            (
+                "Detected local package shadow; "
+                "using installed package source for upgrade"
+            ),
+            "ℹ️",
+        )
+        return dist_source_dir
+    return source_dir
+
 
 def _replace_core_package_for_upgrade(repo_root: Path) -> None:
     """Replace core package while preserving upgrade-owned runtime state."""
+    source_dir = _resolve_upgrade_source_dir(repo_root)
     with tempfile.TemporaryDirectory() as temp_dir:
         temp_root = Path(temp_dir)
         _preserve_upgrade_runtime_state(repo_root, temp_root)
-        install.replace_core_package(repo_root)
+        install.replace_core_package(repo_root, source_dir=source_dir)
         _restore_upgrade_runtime_state(repo_root, temp_root)
 
 
@@ -133,19 +208,42 @@ def upgrade_repo(repo_root: Path) -> int:
 
     source_version = _read_version(source_version_path)
     target_version = _read_version(target_version_path)
+    print_step(
+        (
+            "Version compare: source="
+            f"{source_version}, installed={target_version}"
+        ),
+        "ℹ️",
+    )
     try:
         source_key = _parse_version_for_compare(source_version)
         target_key = _parse_version_for_compare(target_version)
     except ValueError as error:
         raise SystemExit(f"Upgrade blocked: {error}") from error
+    _replace_core_package_for_upgrade(repo_root)
+    target_version_path.write_text(f"{source_version}\n", encoding="utf-8")
     if source_key > target_key:
-        _replace_core_package_for_upgrade(repo_root)
-        target_version_path.write_text(f"{source_version}\n", encoding="utf-8")
         print_step("Core package replaced with newer version", "✅")
+    elif source_key == target_key:
+        print_step("Core package refreshed from source (same version)", "✅")
     else:
-        print_step("Core already up to date", "ℹ️")
+        print_step(
+            (
+                "Core package reconciled from source "
+                "(installed version was newer)"
+            ),
+            "✅",
+        )
 
-    return refresh_repo(repo_root)
+    _ensure_upgrade_config(repo_root)
+    print_step("Running full refresh after upgrade", "🔄")
+    result = refresh_repo(repo_root)
+    if result != 0:
+        print_step(
+            "Upgrade refresh failed; inspect run logs for details.",
+            "🚫",
+        )
+    return result
 
 
 def _build_parser() -> argparse.ArgumentParser:

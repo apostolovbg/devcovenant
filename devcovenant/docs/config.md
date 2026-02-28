@@ -165,6 +165,8 @@ the same session so generated configs remain self-explanatory.
   when active, CLI commands automatically re-exec under the resolved managed
   interpreter when the current interpreter differs, or through configured
   wrapper rerun commands when direct interpreter execution is unavailable.
+  Lifecycle bootstrap/teardown commands (`install`, `deploy`, `undeploy`,
+  `uninstall`) are excluded from managed re-exec.
 
 - `paths.policy_definitions`: policy prose source read by runtime.
 
@@ -334,7 +336,8 @@ Scope split contract:
 - repository-level enablement is controlled by `policy_state` in each repo's
   `devcovenant/config.yaml`.
 - CLI commands run from non-managed interpreters are automatically re-executed
-  in the managed interpreter when this policy is active.
+  in the managed interpreter when this policy is active, excluding
+  `install`, `deploy`, `undeploy`, and `uninstall`.
 - when direct managed interpreter resolution fails, runtime can rerun
   DevCovenant through `managed_rerun_commands` wrapper metadata.
 

@@ -79,6 +79,17 @@ def _write_policy_descriptor(script_path: Path) -> None:
     )
 
 
+def _write_profile_descriptor(profile_dir: Path) -> None:
+    """Create a minimal descriptor for a custom profile directory."""
+    profile_name = profile_dir.name
+    descriptor_path = profile_dir / f"{profile_name}.yaml"
+    descriptor_path.write_text(
+        f"version: 1\nprofile: {profile_name}\ncategory: repo\n"
+        "suffixes: []\nignore_dirs: []\npolicy_overlays: {}\n",
+        encoding="utf-8",
+    )
+
+
 def _unit_test_deploy_cleanup_is_deploy_only() -> None:
     """deploy_repo should remove user-mode paths; refresh should not."""
     with tempfile.TemporaryDirectory() as temp_dir:
@@ -114,6 +125,7 @@ def _unit_test_deploy_cleanup_is_deploy_only() -> None:
         _write_policy_descriptor(policy_marker)
         _write_marker(tests_marker)
         _write_marker(profile_marker)
+        _write_profile_descriptor(profile_marker.parent)
 
         refresh_result = refresh.refresh_repo(repo_root)
         assert refresh_result == 0

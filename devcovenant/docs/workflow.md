@@ -1,5 +1,5 @@
 # Workflow
-**Last Updated:** 2026-02-27
+**Last Updated:** 2026-02-28
 **Version:** 1.0.0
 
 ## Table of Contents
@@ -196,7 +196,17 @@ Install/upgrade boundary:
   repo-local `devcovenant/` runtime state
 - `install` exits and points to `upgrade` when DevCovenant is already present
 - `upgrade` preserves runtime-local `devcovenant/registry/local/` and
-  `devcovenant/logs/` during core replacement before running refresh
+  `devcovenant/logs/`, plus repository `devcovenant/config.yaml`, during
+  core replacement before running refresh
+- `upgrade` preserves user payload trees under
+  `devcovenant/custom/policies/<policy-id>/` and
+  `devcovenant/custom/profiles/<profile-id>/`, while refreshing package-owned
+  custom scaffolding files from source
+- orphan custom policy scripts still fail with the same descriptor contract as
+  core policies; fix the descriptor and rerun
+- `upgrade` reconciles the full `devcovenant/` package from source on every
+  run (including `devcovenant/*.py`, `core/`, and `builtin/`) regardless of
+  version ordering
 
 `gate --status` responsibilities:
 - read gate session state without mutating lifecycle files
@@ -339,7 +349,9 @@ Managed-environment scope split:
   with explicit diagnostics, even though `policy_state` remains the config
   control surface.
 - when enabled, any DevCovenant CLI command re-execs under the managed
-  interpreter automatically when invoked from a different interpreter.
+  interpreter automatically when invoked from a different interpreter, except
+  lifecycle bootstrap/teardown commands (`install`, `deploy`, `undeploy`,
+  `uninstall`).
 - stage command prefixes are `start`, `test`, `end`, `command`, and `all`.
 - if non-start commands run before interpreter creation, runtime executes
   explicit `start=>...` bootstrap commands once before failing.

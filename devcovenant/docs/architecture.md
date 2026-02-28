@@ -1,5 +1,5 @@
 # DevCovenant Architecture Contracts
-**Last Updated:** 2026-02-27
+**Last Updated:** 2026-02-28
 **Version:** 1.0.0
 
 ## Table of Contents
@@ -123,8 +123,15 @@ Invariant:
   routine.
 - Gate-managed autofix requests read `engine.auto_fix_enabled` from repo
   config and default to disabled when the key is absent.
-- `upgrade` uses semantic-version comparison with prerelease ordering for core
-  replacement decisions (normalizing partial and `v`-prefixed repo versions).
+- `upgrade` normalizes and reports semantic-version comparison (including
+  partial and `v`-prefixed versions), then always reconciles the full
+  `devcovenant/` package from source (`devcovenant/*.py`, `core/`, `builtin/`)
+  while preserving repo-local runtime/custom state.
+- Upgrade preserves user custom policy trees under
+  `devcovenant/custom/policies/**` by design.
+- When a custom script has a missing/invalid descriptor, refresh/upgrade keeps
+  custom files but fails with the same descriptor-missing/invalid contract as
+  core policies until descriptor metadata is fixed.
 - `devcovenant/core/runtime/run_logging.py` provides the shared per-run log
   substrate (run-folder allocation, artifact metadata, and latest-run pointer
   updates under `devcovenant/logs/`) while command layers own integration.
@@ -147,6 +154,8 @@ Invariant:
   stage-scoped environment state (`start`/`test`/`end`/`command`), and
   CLI dispatch re-execs DevCovenant commands in the resolved interpreter
   when current and managed interpreters differ.
+  Lifecycle bootstrap/teardown commands
+  (`install`, `deploy`, `undeploy`, `uninstall`) bypass managed re-exec.
 - when interpreter resolution fails but
   `managed_rerun_commands` metadata is configured, CLI dispatch can rerun
   DevCovenant through stage-scoped wrapper commands with command placeholders.
