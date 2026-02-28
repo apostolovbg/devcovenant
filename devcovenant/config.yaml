@@ -810,6 +810,10 @@ autogen_metadata_overlays:
     - python=>print
     - python=>builtins.print
   no-raw-errors:
+    broad_exception_waiver_between:
+    - DEVCOV_ALLOW_BROAD_EXCEPT_BEGIN=>DEVCOV_ALLOW_BROAD_EXCEPT_END
+    broad_exception_waiver_markers:
+    - '{''DEVCOV_ALLOW_BROAD_EXCEPT'': None}'
     exclude_globs:
     - build/**
     - dist/**
@@ -819,6 +823,8 @@ autogen_metadata_overlays:
     - dist
     - node_modules
     forbid_bare_except:
+    - 'True'
+    forbid_broad_exception_handlers:
     - 'True'
     forbid_raise_exception:
     - 'True'
