@@ -6,7 +6,7 @@ jobs:
   governance-and-test:
     runs-on: ubuntu-latest
     env:
-      PYTHONPYCACHEPREFIX: ${{ runner.temp }}/devcovenant-pycache
+      PYTHONPYCACHEPREFIX: .gha-pycache
     steps:
     - name: Checkout
       uses: actions/checkout@v4

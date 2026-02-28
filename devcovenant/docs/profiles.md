@@ -252,8 +252,9 @@ Asset materialization rules:
   `engine.pycache_prefix_enabled: true` when the key is absent
 - refresh-generated governance workflow and repo-maintained
   `build.yml`/`publish.yml` workflows can set `PYTHONPYCACHEPREFIX` at job
-  scope so fallback `python -m devcovenant ...` launches avoid repo-local
-  `__pycache__` drift in CI
+  scope (DevCovenant uses `.gha-pycache`) so fallback
+  `python -m devcovenant ...` launches avoid repo-local `__pycache__` drift in
+  CI
 
 Hook rules:
 - pre-commit fragments merge into generated `.pre-commit-config.yaml`

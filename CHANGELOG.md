@@ -56,6 +56,38 @@ Example:
 ## Version 1.0.0
 
 - 2026-02-28:
+  Change: Fixed GitHub Actions workflow validity by replacing unsupported
+    job-env `runner.temp` expressions with `.gha-pycache`.
+  Why: Prevented immediate workflow parse failures that produced failed runs
+    with no jobs for governance, build, and publish.
+  Impact: Restored valid push-trigger governance execution while keeping build
+    governance-dependent and publish manual-only.
+  Files:
+  CHANGELOG.md
+  .github/workflows/build.yml
+  .github/workflows/governance-and-test.yml
+  .github/workflows/publish.yml
+  devcovenant/builtin/profiles/global/assets/governance-and-test.yml
+  devcovenant/docs/profiles.md
+  devcovenant/docs/workflow.md
+
+- 2026-02-28:
+  Change: Fixed GitHub Actions workflow env parsing by replacing job-level
+    `${{ runner.temp }}` pycache expressions with a stable `.gha-pycache` path.
+  Why: Prevented workflow-file validation failures that blocked governance,
+    build, and publish runs before any jobs were created.
+  Impact: Restored push-triggered governance execution, kept build dependent on
+    governance success, and kept publish manual-only with valid workflow files.
+  Files:
+  CHANGELOG.md
+  .github/workflows/build.yml
+  .github/workflows/governance-and-test.yml
+  .github/workflows/publish.yml
+  devcovenant/builtin/profiles/global/assets/governance-and-test.yml
+  devcovenant/docs/profiles.md
+  devcovenant/docs/workflow.md
+
+- 2026-02-28:
   Change: Fixed governance workflow trigger rendering to emit canonical
     GitHub syntax (`on:`, `push:`, `pull_request:`) and validated it in
     refresh tests.

@@ -7,7 +7,7 @@ jobs:
   build-distributions:
     runs-on: ubuntu-latest
     env:
-      PYTHONPYCACHEPREFIX: ${{ runner.temp }}/devcovenant-pycache
+      PYTHONPYCACHEPREFIX: .gha-pycache
 
     steps:
       - name: Checkout repository

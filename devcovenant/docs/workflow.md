@@ -469,6 +469,8 @@ Primary governance workflow:
 - runs start -> test -> end sequence
 - normalizes trigger rendering to canonical GitHub syntax:
   `on:`, `push:`, and `pull_request:` (no quoted `on` / `null` trigger values)
+- sets `PYTHONPYCACHEPREFIX` in job env to `.gha-pycache` so CI bytecode
+  artifacts stay out of source trees
 
 Repository-maintained workflows (not refresh-generated):
 - `build.yml`:
