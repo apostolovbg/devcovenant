@@ -137,6 +137,24 @@ class GeneratedUnittestCases(unittest.TestCase):
             self.assertTrue(violations)
             self.assertIn("gate --start", violations[0].message)
 
+    def test_missing_status_allows_read_only_check_bootstrap(self):
+        """Read-only check should not fail before first gate session."""
+        monkeypatch = MonkeyPatch()
+        try:
+            with tempfile.TemporaryDirectory() as temp_dir:
+                tmp_path = Path(temp_dir).resolve()
+                ctx = _make_ctx(
+                    tmp_path,
+                    ["src/example.py"],
+                    working_numstat={"src/example.py": "1\t1\tsrc/example.py"},
+                    session_reason_code="missing_gate_status",
+                )
+                monkeypatch.setenv("DEVCOV_TOP_COMMAND", "check")
+                violations = _configured_check().check(ctx)
+                self.assertEqual(violations, [])
+        finally:
+            monkeypatch.undo()
+
     def test_closed_session_without_edits_passes(self):
         """Closed session with valid command evidence should pass."""
         with tempfile.TemporaryDirectory() as temp_dir:

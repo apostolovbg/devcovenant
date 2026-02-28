@@ -29,6 +29,10 @@ Typical keys:
 - `policy_overlays`
 - optional `pre_commit` fragments
 
+Profile-owned metadata is the preferred place for operational policy values.
+For example, `defaults` can set `no-raw-errors` selector/boolean defaults,
+while repo profiles (for example `devcovuser`/`devcovrepo`) can narrow scope.
+
 ## Assets and Overlays
 Profile assets are applied in `profiles.active` order:
 - each asset is created only when the target is missing.

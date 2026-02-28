@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import importlib
+import sys
 import tempfile
 import unittest
 from pathlib import Path
@@ -575,6 +576,57 @@ def _unit_test_summary_status_respects_warning_fail_threshold() -> None:
     assert "Status: ✅ PASSED" not in joined
 
 
+def _unit_test_quiet_mode_reports_violations_to_stderr(
+    monkeypatch: MonkeyPatch,
+) -> None:
+    """Quiet-mode violation reporting should route output to stderr."""
+    module = importlib.import_module(MODULE)
+    engine = module.DevCovenantEngine.__new__(module.DevCovenantEngine)
+    engine.config = {"engine": {"fail_threshold": "warning"}}
+    engine.passed_count = 0
+    engine.failed_count = 1
+    printed: list[dict[str, object]] = []
+
+    def _fake_runtime_print(message="", **kwargs):
+        """Capture runtime_print invocations for quiet-mode assertions."""
+        printed.append({"message": str(message), **kwargs})
+
+    monkeypatch.setattr(module, "runtime_print", _fake_runtime_print)
+    monkeypatch.setattr(module, "get_output_mode", lambda: "quiet")
+    engine.report_violations(
+        [
+            module.Violation(
+                policy_id="demo-policy",
+                severity="warning",
+                message="demo warning",
+            )
+        ]
+    )
+    assert printed
+    assert all(entry.get("file") is sys.stderr for entry in printed)
+
+
+def _unit_test_quiet_mode_skips_success_banners(
+    monkeypatch: MonkeyPatch,
+) -> None:
+    """Quiet mode should suppress success-only policy output."""
+    module = importlib.import_module(MODULE)
+    engine = module.DevCovenantEngine.__new__(module.DevCovenantEngine)
+    engine.config = {"engine": {"fail_threshold": "warning"}}
+    engine.passed_count = 1
+    engine.failed_count = 0
+    printed: list[dict[str, object]] = []
+
+    def _fake_runtime_print(message="", **kwargs):
+        """Capture runtime_print invocations for quiet-mode assertions."""
+        printed.append({"message": str(message), **kwargs})
+
+    monkeypatch.setattr(module, "runtime_print", _fake_runtime_print)
+    monkeypatch.setattr(module, "get_output_mode", lambda: "quiet")
+    engine.report_violations([])
+    assert printed == []
+
+
 def _unit_test_critical_policy_disable_attempt_is_reported_and_enforced(
     monkeypatch: MonkeyPatch,
     *,
@@ -732,6 +784,26 @@ class GeneratedUnittestCases(unittest.TestCase):
     def test_summary_status_respects_warning_fail_threshold(self):
         """Run fail-threshold-aware summary status assertions."""
         _unit_test_summary_status_respects_warning_fail_threshold()
+
+    def test_quiet_mode_reports_violations_to_stderr(self):
+        """Run quiet-mode stderr routing assertions for violations."""
+        monkeypatch = MonkeyPatch()
+        try:
+            _unit_test_quiet_mode_reports_violations_to_stderr(
+                monkeypatch=monkeypatch
+            )
+        finally:
+            monkeypatch.undo()
+
+    def test_quiet_mode_skips_success_banners(self):
+        """Run quiet-mode suppression assertions for success output."""
+        monkeypatch = MonkeyPatch()
+        try:
+            _unit_test_quiet_mode_skips_success_banners(
+                monkeypatch=monkeypatch
+            )
+        finally:
+            monkeypatch.undo()
 
     def test_critical_builtin_disable_attempt_is_reported_and_enforced(self):
         """Run builtin critical-disable immunity assertions."""

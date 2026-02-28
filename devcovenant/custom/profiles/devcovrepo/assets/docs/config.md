@@ -73,6 +73,10 @@ environment stage commands. For top-level fallback launches
 (`python3 -m devcovenant ...`), set `PYTHONPYCACHEPREFIX` in the shell/CI
 environment before Python starts if you want to prevent repo-local
 `__pycache__` creation for the launcher process itself.
+When `managed-environment` is enabled, non-managed interpreter launches
+auto-rerun in the managed interpreter. If that resolved path exists but is not
+executable, runtime emits an explicit managed-environment error and then
+attempts `managed_rerun_commands` wrapper fallback when configured.
 
 ## Examples
 ```yaml

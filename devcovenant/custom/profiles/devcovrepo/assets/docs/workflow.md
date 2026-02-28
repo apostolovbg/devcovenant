@@ -41,11 +41,16 @@ pytest, to keep coverage consistent across suites and preserve readable
 test names. The runner records status so policies can verify that tests ran.
 In normal mode, concise progress markers are printed while full output remains
 available in run logs.
+Unhandled command exceptions are normalized to explicit user-facing errors;
+run logs keep full traceback detail for diagnostics.
 
 ## CI Notes
 CI pipelines should run the same gates. If a pre-commit hook changes files,
 rerun `gate --mid` and tests before recording the end gate so test results
 post-date any hook or autofix mutations.
+When managed-environment is enabled and a resolved managed interpreter path is
+not executable, DevCovenant emits an explicit managed-environment error; when
+`managed_rerun_commands` is configured, wrapper fallback is attempted.
 The generated `governance-and-test` workflow now sets `PYTHONPYCACHEPREFIX`
 at the job level so top-level DevCovenant launches and child Python commands
 write bytecode caches outside the repo tree.

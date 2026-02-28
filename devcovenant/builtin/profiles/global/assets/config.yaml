@@ -244,6 +244,7 @@ pre_commit:
 policy_state:
   raw-string-escapes: false
   semantic-version-scope: false
+  version-sync: false
 
 # ---------------------------------------------------------------------------
 # Global ignore patterns

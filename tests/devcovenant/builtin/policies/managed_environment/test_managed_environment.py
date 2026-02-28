@@ -14,6 +14,15 @@ from tests.devcovenant.support import MonkeyPatch
 ManagedEnvironmentCheck = managed_environment.ManagedEnvironmentCheck
 
 
+def _unit_test_contract_symbols_covered() -> None:
+    """Managed-environment module should expose stable contract symbols."""
+    module = managed_environment
+    assert hasattr(module, "ManagedEnvironmentCheck")
+    checker_class = module.ManagedEnvironmentCheck
+    assert hasattr(checker_class, "check")
+    assert hasattr(checker_class, "run_runtime_action")
+
+
 def _unit_test_detects_external_interpreter(tmp_path: Path, monkeypatch):
     """External interpreters should trigger a violation."""
     (tmp_path / ".venv").mkdir()
@@ -70,7 +79,7 @@ def _unit_test_warns_when_metadata_empty(tmp_path: Path):
     assert violations
     assert all(v.severity == "warning" for v in violations)
     assert any("expected_paths" in v.message for v in violations)
-    assert any("manual_commands" in v.message for v in violations)
+    assert not any("manual_commands" in v.message for v in violations)
 
 
 def _unit_test_required_commands_replace_hint_warning(
@@ -317,6 +326,10 @@ def _unit_test_runtime_action_unknown_raises() -> None:
 
 class GeneratedUnittestCases(unittest.TestCase):
     """unittest wrappers for module-level tests."""
+
+    def test_contract_symbols_covered(self):
+        """Run managed-environment contract symbol assertions."""
+        _unit_test_contract_symbols_covered()
 
     def test_detects_external_interpreter(self):
         """Run test_detects_external_interpreter."""

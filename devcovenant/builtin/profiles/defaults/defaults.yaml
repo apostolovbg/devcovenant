@@ -425,6 +425,22 @@ policy_overlays:
     exclude_globs:
       - tests/**
       - '**/tests/**'
+  no-raw-errors:
+    include_suffixes:
+      - .py
+    include_globs:
+      - '*.py'
+    exclude_prefixes:
+      - build
+      - dist
+      - node_modules
+    exclude_globs:
+      - build/**
+      - dist/**
+      - node_modules/**
+    forbid_bare_except: true
+    forbid_raise_exception: true
+    forbid_silent_exception_pass: true
   modules-need-tests:
     exclude_prefixes:
       - build
@@ -448,3 +464,11 @@ policy_overlays:
   devflow-run-gates:
     skipped_globs:
       - devcovenant/registry/local/**
+  managed-environment:
+    expected_paths:
+      - .venv
+    expected_interpreters:
+      - .venv/bin/python
+      - .venv/Scripts/python.exe
+    manual_commands:
+      - python3 -m venv .venv

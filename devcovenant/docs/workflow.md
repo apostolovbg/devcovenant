@@ -242,6 +242,10 @@ Output behavior:
   substrate for command-run artifact folders under `devcovenant/logs/`;
   CLI dispatch now allocates/finalizes top-level run folders and emits a
   deterministic standard `Run logs:` pointer on success and failure paths
+- CLI unhandled exceptions are normalized to explicit typed errors through
+  `devcovenant/core/runtime/errors.py` and
+  `devcovenant/core/contracts/errors.py`; console output stays explicit while
+  full traceback detail remains in run-log artifacts
 - operators should treat the printed `Run logs:` path as the canonical
   debug entrypoint for command-run evidence artifacts
 - `engine.logs_keep_last` controls how many recent run-log folders remain in
@@ -263,6 +267,9 @@ Output behavior:
   verbosity choices
 - `check` is read-only by default; gate pre-commit phases own refresh/autofix
   orchestration for the shared checking routine
+- read-only `check` remains usable before the first gate session:
+  when gate status is missing and no session-scoped changes are present,
+  session-only checks stay non-blocking
 - gate session lifecycle evidence is stored in
   `devcovenant/registry/local/gate_status.json`, while command-run evidence is
   stored in `devcovenant/logs/<run-id>-<command>/`
@@ -280,9 +287,9 @@ Output behavior:
   source logic, not hand-maintained in repo-local generated config files
 - `engine.tests_output_mode: normal` keeps status lines concise while
   suppressing test command child output, emits deterministic
-  start/completion markers (for example `▶ [n/total] <command>` and
-  completion/failure markers), and still writes full output to run-log
-  artifacts
+  start/failure markers (for example `▶ [n/total] <command>` and
+  `[n/total] FAILED: <command> (exit n)`), and still writes full output
+  to run-log artifacts
 - `engine.tests_output_mode: quiet` suppresses routine test stdout chatter
   and child output while preserving stderr failures/violations and full
   run-log artifacts
@@ -352,6 +359,9 @@ Managed-environment scope split:
   interpreter automatically when invoked from a different interpreter, except
   lifecycle bootstrap/teardown commands (`install`, `deploy`, `undeploy`,
   `uninstall`).
+- non-executable managed interpreter paths emit an explicit
+  managed-environment error and then attempt `managed_rerun_commands`
+  fallback when configured.
 - stage command prefixes are `start`, `test`, `end`, `command`, and `all`.
 - if non-start commands run before interpreter creation, runtime executes
   explicit `start=>...` bootstrap commands once before failing.

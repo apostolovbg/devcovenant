@@ -138,6 +138,10 @@ Invariant:
 - CLI dispatch now owns top-level run-context lifecycle (create/adopt on
   entry, finalize on success/failure, and pointer emission) so all root
   commands can share one run-folder contract.
+- CLI unhandled exceptions are normalized through
+  `devcovenant/core/runtime/errors.py` into typed explicit errors
+  (`devcovenant/core/contracts/errors.py`) before process exit, while full
+  traceback detail is preserved in run-log artifacts.
 - The run-logging substrate is intended to remain full-fidelity even when
   command layers later change console verbosity or suppression behavior.
 - Output mode is resolved from `devcovenant/config.yaml -> engine.output_mode`
@@ -159,6 +163,9 @@ Invariant:
 - when interpreter resolution fails but
   `managed_rerun_commands` metadata is configured, CLI dispatch can rerun
   DevCovenant through stage-scoped wrapper commands with command placeholders.
+- when a resolved managed interpreter path exists but is not executable,
+  CLI dispatch emits an explicit managed-environment error and then follows
+  the same rerun-wrapper fallback contract when configured.
 - Normal-mode `devcovenant test` keeps status output concise, suppresses
   flood-prone test child output in console, captures full child output in
   run-log artifacts, and emits sparse deterministic start/completion markers
@@ -464,9 +471,12 @@ Invariant:
   output pipeline.
 - normal mode streams gate pre-commit hook output, suppresses
   flood-prone managed/test child channels, and still emits deterministic
-  progress/liveness lines through the shared output boundary.
+  progress/liveness lines through the shared output boundary without
+  duplicate per-command completion lines.
 - quiet mode suppresses routine stdout child output across channels while
   preserving stderr error/violation surfaces and full run-log artifacts.
+- policy-engine reporting routes violation/sync output to stderr in quiet mode
+  so failures stay visible while routine stdout remains suppressed.
 - verbose mode keeps full child-output streaming through the same runtime
   helper path for every channel.
 - CLI run logs (`run.json`) record interpreter provenance (`invoked_python`,
@@ -498,6 +508,8 @@ Invariant:
 - Default global config excludes `devcovenant/config.yaml` from session delta
   and unsessioned-edit detection.
 - Missing or invalid session metadata is a hard error.
+- Read-only `check` keeps a narrow bootstrap exception:
+  missing gate status with an empty scoped delta is non-blocking.
 - Policy runtime validates `session_id`, `session_state`, and end-epoch
   invariants before exposing session scope to checks.
 - Read-only status rendering may report malformed gate-state payloads, but it
@@ -554,6 +566,9 @@ Invariant:
   patterns with language suffix routing (`language_suffixes`,
   `literal_patterns`, `raw_literal_patterns`,
   `suspicious_escape_patterns`).
+- `no-raw-errors` enforces explicit error surfaces for Python source by
+  flagging bare `except`, generic `raise Exception(...)`, and silent
+  `except Exception: pass` handlers in selected scope.
 - `read-only-directories` is opt-in by include scope. Empty typed include
   selectors (`[]`) disable enforcement until explicit include metadata is
   configured.

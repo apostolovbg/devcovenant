@@ -37,6 +37,9 @@ Fix:
 - Run `devcovenant gate --mid` until clean.
 - Run `devcovenant test`.
 - Finish with `devcovenant gate --end`.
+- If managed-environment is enabled and auto-rerun fails, verify
+  `expected_interpreters`/`expected_paths` and interpreter executability.
+  Non-executable managed paths are surfaced as explicit errors.
 
 ## Repo Bytecode Drift
 Symptom: `devcov-structure-guard` reports `devcovenant/__pycache__/` or

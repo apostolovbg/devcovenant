@@ -1,5 +1,5 @@
 # Policies
-**Last Updated:** 2026-02-27
+**Last Updated:** 2026-02-28
 **Version:** 1.0.0
 
 ## Table of Contents
@@ -159,6 +159,9 @@ High-impact runtime contracts:
   Out-of-scope files (skipped metadata selectors and managed/header-only
   exempt deltas) are tolerated when humans list them in `Files:` blocks, but
   only in-scope files satisfy required coverage.
+  Top-level read-only `devcovenant check` without an open gate session
+  (`missing_gate_status` and empty phase) uses an empty scope instead of
+  hard-failing bootstrap checks.
 - `devflow-run-gates` enforces the start -> test -> end sequence and validates
   the latest `test` evidence against resolved required command metadata
   (`required_commands`). Gate status stores the tests mode and selected
@@ -168,6 +171,8 @@ High-impact runtime contracts:
   For audit-only no-change `devcovenant check` runs in a closed session with
   no post-end edits, stale end-vs-test ordering does not emit a blocking
   violation; edit-session and unsessioned-edit enforcement remains strict.
+  Missing gate status also stays non-blocking only for top-level read-only
+  `check` bootstrap (`missing_gate_status` with empty phase).
 - `devcov-structure-guard` enforces repo-local bytecode hygiene when
   enabled by profile/config metadata, flagging `__pycache__/` and `*.py[cod]`
   artifacts under `devcovenant/`, and it validates the tracked
@@ -214,6 +219,9 @@ High-impact runtime contracts:
   Active policy state also enables CLI interpreter auto re-exec into the
   managed interpreter; command-run `run.json` artifacts record interpreter
   provenance for audit/debug use.
+  Empty managed-environment metadata emits explicit expected-path/interpreter
+  guidance warnings; missing manual-command hint warnings are not emitted
+  unless an actual environment mismatch requires remediation guidance.
 - `dependency-license-sync` and `update_lock` operate from resolved metadata
   (descriptor + profiles + config layers), with role selectors as the
   primary contract (`dependency_role_*` via `role=>selector`) and no
@@ -245,6 +253,9 @@ High-impact runtime contracts:
   languages use configurable suffix, literal, raw-prefix, and escape-pattern
   metadata (`language_suffixes`, `literal_patterns`,
   `raw_literal_patterns`, `suspicious_escape_patterns`).
+- `no-raw-errors` enforces explicit error surfaces in Python source by
+  flagging bare `except`, generic `raise Exception(...)`, and silent
+  `except Exception: pass` handlers through selector-driven scope metadata.
 - `tests-coverage` is structural and validates assertion signals across related
   tests for each in-scope module that already has related tests.
   It reads related test files directly (no gate-status evidence payload) and

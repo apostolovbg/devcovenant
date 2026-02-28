@@ -2,6 +2,7 @@
 Base classes and interfaces for devcovenant policies and fixers.
 """
 
+import os
 from abc import ABC, abstractmethod
 from dataclasses import dataclass, field
 from pathlib import Path, PurePosixPath
@@ -321,6 +322,18 @@ class PolicyCheck(ABC):
         if state.phase == "start":
             return []
         if not state.session_valid:
+            top_command = (
+                str(os.environ.get("DEVCOV_TOP_COMMAND", "")).strip().lower()
+            )
+            reason = str(state.session_reason_code or "").strip().lower()
+            if (
+                top_command == "check"
+                and not str(state.phase or "").strip()
+                and reason == "missing_gate_status"
+            ):
+                # Read-only audit checks should remain usable before the first
+                # gate session has been initialized.
+                return []
             message = state.session_error.strip()
             if not message:
                 message = (

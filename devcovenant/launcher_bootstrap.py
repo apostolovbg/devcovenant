@@ -103,7 +103,7 @@ def apply_repo_pycache_prefix_from_start_path(start: Path) -> bool:
     os.environ["PYTHONPYCACHEPREFIX"] = prefix
     try:
         sys.pycache_prefix = prefix
-    except Exception:
+    except (AttributeError, TypeError):
         pass
     return True
 

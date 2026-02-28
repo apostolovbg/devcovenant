@@ -1254,6 +1254,47 @@ repository profiles define in-scope selectors and boundary allowlists.
 
 ---
 
+## Policy: No Raw Errors
+
+```policy-def
+id: no-raw-errors
+severity: error
+auto_fix: false
+enforcement: active
+enabled: true
+custom: false
+selector_roles: include
+  exclude
+  force_include
+include_suffixes: .py
+include_prefixes:
+include_globs: *.py
+exclude_suffixes:
+exclude_prefixes: build
+  dist
+  node_modules
+exclude_globs: build/**
+  dist/**
+  node_modules/**
+force_include_globs:
+include_files:
+include_dirs:
+exclude_files:
+exclude_dirs:
+force_include_files:
+force_include_dirs:
+forbid_bare_except: True
+forbid_raise_exception: True
+forbid_silent_exception_pass: True
+```
+
+Enforce explicit error surfaces and block raw exception anti-patterns.
+This policy flags bare `except`, generic `raise Exception(...)`, and
+silent `except Exception: pass` handlers in selected source files.
+
+
+---
+
 ## Policy: Raw String Escapes
 
 ```policy-def

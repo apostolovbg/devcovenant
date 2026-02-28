@@ -56,6 +56,119 @@ Example:
 ## Version 1.0.0
 
 - 2026-02-28:
+  Change: Implemented explicit runtime error contracts and CLI normalization,
+    introduced builtin `no-raw-errors` policy with profile-owned metadata
+    defaults, and swept docs/doc-assets to align contracts.
+  Why: Standardized explicit failure surfaces at command boundaries and
+    prevented raw Python error anti-pattern drift across repositories.
+  Impact: Strengthened operator-facing error determinism, policy-governed
+    explicit-error enforcement, and documentation fidelity for policy/profile
+    ownership and runtime behavior.
+  Files:
+  CHANGELOG.md
+  POLICY_MAP.md
+  devcovenant/builtin/profiles/defaults/defaults.yaml
+  devcovenant/builtin/profiles/devcovuser/devcovuser.yaml
+  devcovenant/cli.py
+  devcovenant/core/README.md
+  devcovenant/core/contracts/__init__.py
+  devcovenant/core/contracts/errors.py
+  devcovenant/core/runtime/errors.py
+  devcovenant/core/runtime/execution.py
+  devcovenant/launcher_bootstrap.py
+  devcovenant/builtin/policies/no_raw_errors/__init__.py
+  devcovenant/builtin/policies/no_raw_errors/no_raw_errors.py
+  devcovenant/builtin/policies/no_raw_errors/no_raw_errors.yaml
+  devcovenant/custom/profiles/devcovrepo/assets/docs/installation.md
+  devcovenant/custom/profiles/devcovrepo/assets/docs/policies.md
+  devcovenant/custom/profiles/devcovrepo/assets/docs/profiles.md
+  devcovenant/custom/profiles/devcovrepo/assets/docs/workflow.md
+  devcovenant/docs/architecture.md
+  devcovenant/docs/installation.md
+  devcovenant/docs/policies.md
+  devcovenant/docs/profiles.md
+  devcovenant/docs/workflow.md
+  tests/devcovenant/test_cli.py
+  tests/devcovenant/test_launcher_bootstrap.py
+  tests/devcovenant/core/runtime/test_execution.py
+  tests/devcovenant/core/contracts/test_errors.py
+  tests/devcovenant/core/runtime/test_errors.py
+  tests/devcovenant/builtin/policies/no_raw_errors/\
+    test_no_raw_errors.py
+
+- 2026-02-28:
+  Change: Audited every repository Markdown doc and policy/profile doc-asset
+    template, and aligned managed-environment re-exec wording across repo,
+    packaged, and profile-template documentation.
+  Why: Prevented documentation drift after managed-interpreter hardening so
+    non-executable-path behavior and rerun fallback contracts stay explicit.
+  Impact: Strengthened documentation/API clarity for operators and seeded repos
+    while preserving existing command and policy behavior.
+  Files:
+  CHANGELOG.md
+  README.md
+  devcovenant/README.md
+  devcovenant/docs/architecture.md
+  devcovenant/docs/config.md
+  devcovenant/docs/installation.md
+  devcovenant/docs/profiles.md
+  devcovenant/docs/troubleshooting.md
+  devcovenant/custom/profiles/devcovrepo/assets/docs/config.md
+  devcovenant/custom/profiles/devcovrepo/assets/docs/installation.md
+  devcovenant/custom/profiles/devcovrepo/assets/docs/troubleshooting.md
+  devcovenant/custom/profiles/devcovrepo/assets/docs/workflow.md
+  devcovenant/builtin/profiles/global/assets/CONTRIBUTING.yaml
+  devcovenant/builtin/profiles/global/assets/devcovenant/README.yaml
+
+- 2026-02-28:
+  Change: Hardened managed-interpreter auto-rerun by validating executable
+    paths before `execve` and falling back to rerun adapters or explicit
+    managed-environment errors.
+  Why: Prevented raw `PermissionError` crashes when a configured managed
+    interpreter path exists but is not executable.
+  Impact: Improved CLI determinism for `check`/`gate`/`test` workflows with
+    clear operator-facing failures and verified fallback behavior.
+  Files:
+  CHANGELOG.md
+  devcovenant/cli.py
+  devcovenant/docs/installation.md
+  devcovenant/docs/workflow.md
+  tests/devcovenant/test_cli.py
+
+- 2026-02-28:
+  Change: Stabilized read-only check bootstrap scope, quiet-mode error routing,
+    and managed-environment defaults across policy/runtime layers.
+  Why: Fixed false blocking in no-session audits and clarified output behavior
+    so gate/test feedback remains deterministic and operator-visible.
+  Impact: Strengthened API contracts and documentation fidelity while keeping
+    strict gate enforcement for lifecycle commands and non-check paths.
+  Files:
+  CHANGELOG.md
+  devcovenant/builtin/policies/changelog_coverage/changelog_coverage.py
+  devcovenant/builtin/policies/devflow_run_gates/devflow_run_gates.py
+  devcovenant/builtin/policies/managed_environment/managed_environment.py
+  devcovenant/builtin/profiles/defaults/defaults.yaml
+  devcovenant/builtin/profiles/devcovuser/devcovuser.yaml
+  devcovenant/builtin/profiles/global/assets/config.yaml
+  devcovenant/core/contracts/policy.py
+  devcovenant/core/runtime/execution.py
+  devcovenant/core/services/policy_engine.py
+  devcovenant/docs/architecture.md
+  devcovenant/docs/config.md
+  devcovenant/docs/policies.md
+  devcovenant/docs/profiles.md
+  devcovenant/docs/workflow.md
+  tests/devcovenant/builtin/policies/changelog_coverage/\
+    test_changelog_coverage.py
+  tests/devcovenant/builtin/policies/devflow_run_gates/\
+    test_devflow_run_gates.py
+  tests/devcovenant/builtin/policies/managed_environment/\
+    test_managed_environment.py
+  tests/devcovenant/core/contracts/test_policy.py
+  tests/devcovenant/core/runtime/test_execution.py
+  tests/devcovenant/core/services/test_policy_engine.py
+
+- 2026-02-28:
   Change: Fixed GitHub Actions workflow validity by replacing unsupported
     job-env `runner.temp` expressions with `.gha-pycache`.
   Why: Prevented immediate workflow parse failures that produced failed runs

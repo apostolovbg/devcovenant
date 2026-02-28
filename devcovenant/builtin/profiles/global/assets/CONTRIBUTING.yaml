@@ -21,4 +21,6 @@ body: "This file is intentionally brief. Use it as the entry point, then follow 
   \ -m devcovenant gate --end\n```\nIf the console script is not on your PATH, use\
   \ `python3 -m devcovenant`\ninstead of `devcovenant` for CLI commands.\nIf the gate\
   \ sequence fails, fix the violations and rerun the full sequence\nbefore submitting\
-  \ changes."
+  \ changes.\nIf managed-environment is enabled and a resolved interpreter path is\
+  \ not executable, DevCovenant emits an explicit error and falls back to\n`managed_rerun_commands`\
+  \ when configured."

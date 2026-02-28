@@ -111,7 +111,10 @@ Typical `defaults` metadata includes:
 - generic dependency-license-sync output defaults
 - documentation-growth-tracking user-facing suffix defaults (non-doc suffixes)
 - generic selector excludes for scope-style policies
-  (`docstring-and-comment-coverage`, `name-clarity`, `security-scanner`)
+  (`docstring-and-comment-coverage`, `name-clarity`, `security-scanner`,
+  `no-raw-errors`)
+- managed-environment bootstrap defaults
+  (`expected_paths`, `expected_interpreters`, and baseline `manual_commands`)
 
 Custom layout patterns:
 1. Keep `defaults` active and add local deltas through config overlays.
@@ -290,6 +293,9 @@ Test-command metadata rules:
   `manual_commands`
 - profiles may provide wrapper rerun adapters through
   `managed_rerun_commands` (`stage=>command`) for bench/xenv launchers
+- when resolved managed interpreter paths are non-executable, runtime surfaces
+  an explicit managed-environment error and then applies configured rerun
+  adapters
 - valid managed command stages are:
   `start`, `test`, `end`, `command`, and `all`
 - command placeholders may use:
@@ -312,6 +318,15 @@ Test-command metadata rules:
   vocabulary so changelog entries can use natural action wording (for example
   `make`/`made`, `review`/`reviewed`, `complete`/`completed`) without ad-hoc
   profile customization
+- `defaults` profile also seeds managed-environment path defaults
+  (`.venv`, `.venv/bin/python`, `.venv/Scripts/python.exe`) so enabling
+  `managed-environment` starts from explicit path ownership instead of empty
+  metadata
+- `devcovuser` narrows force-include selectors for
+  `docstring-and-comment-coverage`, `name-clarity`, `security-scanner`,
+  `no-raw-errors`, and `modules-need-tests` to custom Python files
+  (`devcovenant/custom/**/*.py`) so custom README docs are not misclassified
+  as code modules
 
 Documentation profile scope rule:
 - `docs` profile provides docs-focused line-length includes

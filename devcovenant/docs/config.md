@@ -1,5 +1,5 @@
 # Configuration
-**Last Updated:** 2026-02-27
+**Last Updated:** 2026-02-28
 **Version:** 1.0.0
 
 ## Table of Contents
@@ -229,6 +229,7 @@ Profiles do not activate policies.
 
 Notable activation defaults in this repository:
 - `semantic-version-scope` stays `false` outside release slices.
+- `version-sync` stays `false` in the global config template by default.
 - `raw-string-escapes` stays optional and can be enabled when repositories
   want language-aware suspicious-escape checks beyond repo-specific custom
   policies.
@@ -338,6 +339,9 @@ Scope split contract:
 - CLI commands run from non-managed interpreters are automatically re-executed
   in the managed interpreter when this policy is active, excluding
   `install`, `deploy`, `undeploy`, and `uninstall`.
+- if a resolved managed interpreter path exists but is not executable,
+  runtime emits an explicit managed-environment error and then attempts
+  `managed_rerun_commands` fallback when configured.
 - when direct managed interpreter resolution fails, runtime can rerun
   DevCovenant through `managed_rerun_commands` wrapper metadata.
 

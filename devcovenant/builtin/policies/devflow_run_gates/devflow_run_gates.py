@@ -212,6 +212,18 @@ class DevflowRunGates(PolicyCheck):
                 )
             ]
         if not status:
+            top_command = (
+                str(os.environ.get("DEVCOV_TOP_COMMAND", "")).strip().lower()
+            )
+            reason = str(ctx.change_state.session_reason_code or "").strip()
+            if (
+                not phase
+                and top_command == "check"
+                and reason == "missing_gate_status"
+            ):
+                # Read-only audit checks should stay usable before the first
+                # gate session has been opened.
+                return violations
             return [
                 Violation(
                     policy_id=self.policy_id,

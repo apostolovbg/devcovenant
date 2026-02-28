@@ -29,7 +29,8 @@ auto_fix: false
 enabled: true
 ```
 Profiles supply policy-specific metadata such as dependency manifest lists
-(`dependency-license-sync`), version-sync file lists, or selector scopes.
+(`dependency-license-sync`), version-sync file lists, selector scopes, or
+explicit-error controls (for example `no-raw-errors` booleans and selectors).
 Config overrides can adjust those values without editing the policy
 descriptor.
 
@@ -40,6 +41,9 @@ descriptor.
   the shared translator runtime.
 Policy scripts consume `LanguageUnit` output and do not dispatch
 language-specific routing directly.
+`no-raw-errors` is a builtin Python policy that flags bare `except`,
+generic `raise Exception(...)`, and silent `except Exception: pass`
+handlers so failures stay explicit at runtime boundaries.
 
 ## Custom Policies
 Custom policies live under `devcovenant/custom/policies/<id>/` and use the

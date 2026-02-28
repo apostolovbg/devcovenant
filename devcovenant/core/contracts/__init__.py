@@ -5,6 +5,7 @@ from __future__ import annotations
 import importlib
 
 _MODULE_MAP = {
+    "errors": "devcovenant.core.contracts.errors",
     "policy": "devcovenant.core.contracts.policy",
 }
 

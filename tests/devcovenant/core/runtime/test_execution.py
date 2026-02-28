@@ -559,7 +559,7 @@ def _unit_test_repo_pycache_prefix_sets_env_and_runtime_prefix() -> None:
             os.environ["PYTHONPYCACHEPREFIX"] = previous_env
         try:
             module.sys.pycache_prefix = previous_prefix
-        except Exception:
+        except (AttributeError, TypeError):
             pass
         module._PYCACHE_PREFIX_ENABLED = False
         module._PYCACHE_PREFIX_VALUE = None
@@ -601,7 +601,7 @@ def _unit_test_repo_pycache_prefix_honors_custom_relative_path() -> None:
             os.environ["PYTHONPYCACHEPREFIX"] = previous_env
         try:
             module.sys.pycache_prefix = previous_prefix
-        except Exception:
+        except (AttributeError, TypeError):
             pass
         module._PYCACHE_PREFIX_ENABLED = False
         module._PYCACHE_PREFIX_VALUE = None
@@ -809,7 +809,7 @@ def _unit_test_test_command_progress_emits_sparse_lines_in_normal_mode() -> (
             progress.fail_step("pytest", 2)
     output = stdout_buffer.getvalue()
     assert "▶ [1/2] python3 -m unittest discover -v" in output
-    assert "[1/2] python3 -m unittest discover -v" in output
+    assert "\n[1/2] python3 -m unittest discover -v\n" not in output
     assert "▶ [2/2] pytest" in output
     assert "[2/2] FAILED: pytest (exit 2)" in output
 

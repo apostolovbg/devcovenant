@@ -12,8 +12,8 @@ DevCovenant separates installation of the core from deployment of managed
 docs and assets. `install` copies `devcovenant/` and writes a generic config
 stub. `deploy` activates managed docs, policy blocks, registries, and the
 generated `.gitignore`. `refresh` is the standard full managed refresh for an
-already installed repo. `upgrade` replaces the core when a newer version is
-available and then runs refresh.
+already installed repo. `upgrade` reconciles core from source on every run and
+then runs refresh.
 
 Use `python3 -m devcovenant` when the console entry is not available.
 If you launch from a source checkout and want to avoid repo-local
@@ -30,7 +30,7 @@ shell wrapper).
 
 ## Lifecycle Commands
 - `install`: copy the core plus a generic config stub. It never deploys
-  managed docs/assets. If a newer core is available, install exits with a
+  managed docs/assets. If DevCovenant already exists, install exits with a
   message to run `upgrade`.
 - `deploy`: requires a non-generic config (`install.generic_config: false`).
   It writes managed docs/assets/registries, regenerates `.gitignore`, and
@@ -38,8 +38,12 @@ shell wrapper).
 - `refresh`: run a full managed refresh using the installed core. It updates
   registries, managed docs/blocks, merged `.gitignore`, and generated
   pre-commit config.
-- `upgrade`: replace core files when the source version is newer, then run
-  `refresh`.
+- `upgrade`: reconcile core from source on every run, then run `refresh`.
+- managed-environment runtime notes: when a managed interpreter path exists but
+  is not executable, DevCovenant emits an explicit managed-environment error;
+  when configured, `managed_rerun_commands` wrapper fallback is attempted.
+- unhandled CLI runtime exceptions are normalized into explicit typed errors,
+  while traceback details remain available in run logs.
 - `undeploy`: remove managed blocks/registries and generated `.gitignore`
   fragments while keeping core + config.
 

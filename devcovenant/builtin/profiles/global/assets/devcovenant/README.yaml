@@ -53,6 +53,9 @@ body: 'DevCovenant helps repositories keep policy prose and enforcement logic al
   is ready. Use `devcovenant check` for read-only policy audits and
 
   gate commands for refresh/autofix workflow orchestration.
+  If managed-environment is enabled and a resolved interpreter path is not
+  executable, DevCovenant emits an explicit error and uses
+  `managed_rerun_commands` fallback when configured.
 
 
   ## Commands

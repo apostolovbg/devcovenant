@@ -1,5 +1,5 @@
 # Core Runtime
-**Last Updated:** 2026-02-27
+**Last Updated:** 2026-02-28
 **Version:** 1.0.0
 
 ## Table of Contents
@@ -34,6 +34,7 @@ Public user-facing contracts still live in top-level/docs surfaces:
   - `session.py`: gate-session helper wiring.
 - `runtime/`: process and output boundary.
   - `execution.py`: command dispatch, subprocess routing, managed re-exec.
+  - `errors.py`: runtime exception normalization and explicit error rendering.
   - `output.py`: output-mode policy and channel-level stream/suppression rules.
   - `run_logging.py`: run-folder allocation and summary/log artifact contract.
   - `session_snapshot.py`: snapshot collection/diff helpers.
@@ -50,6 +51,7 @@ Public user-facing contracts still live in top-level/docs surfaces:
   - `selectors.py`: selector matching utilities.
   - `document_exemptions.py`: managed/header-only exemption fingerprints.
 - `contracts/`: typed runtime contracts.
+  - `errors.py`: structured error code and explicit failure payload contract.
   - `policy.py`: check/fixer/violation/runtime-action contract classes.
 
 ## Layer Responsibilities

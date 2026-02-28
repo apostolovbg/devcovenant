@@ -18,6 +18,9 @@ apply_repo_pycache_prefix_from_cwd()
 execution_runtime_module = importlib.import_module(
     "devcovenant.core.runtime.execution"
 )
+runtime_errors_module = importlib.import_module(
+    "devcovenant.core.runtime.errors"
+)
 
 _COMMAND_MODULES = {
     "check": "devcovenant.check",
@@ -92,6 +95,17 @@ def _same_interpreter_path(current: str, expected: str) -> bool:
     except OSError:
         expected_resolved = expected_path
     return current_resolved == expected_resolved
+
+
+def _managed_python_is_executable(path_text: str) -> bool:
+    """Return True when a managed interpreter path is executable."""
+    path = Path(path_text)
+    try:
+        if not path.exists() or not path.is_file():
+            return False
+    except OSError:
+        return False
+    return os.access(path, os.X_OK)
 
 
 def _should_skip_managed_reexec(command_args: list[str]) -> bool:
@@ -252,6 +266,7 @@ def _maybe_reexec_managed_environment(
     stage = _managed_stage_for_command(command, command_args)
     managed_env: dict[str, str] | None = None
     managed_python: str | None = None
+    managed_python_hint: str | None = None
     managed_resolution_error: str | None = None
     try:
         managed_env, managed_python = (
@@ -263,8 +278,17 @@ def _maybe_reexec_managed_environment(
         )
     except ValueError as exc:
         managed_resolution_error = str(exc)
+    managed_python_hint = managed_python
     if managed_env is not None and managed_python:
-        if _same_interpreter_path(sys.executable, managed_python):
+        if not _managed_python_is_executable(managed_python):
+            managed_resolution_error = (
+                "Managed-environment interpreter is not executable: "
+                f"`{managed_python}`."
+            )
+            managed_python = None
+        if managed_python is None:
+            pass
+        elif _same_interpreter_path(sys.executable, managed_python):
             execution_runtime_module.merge_active_run_log_metadata(
                 {
                     "invoked_python": sys.executable,
@@ -274,26 +298,40 @@ def _maybe_reexec_managed_environment(
                 }
             )
             return
-        if os.environ.get(_MANAGED_REEXEC_GUARD_ENV) == "1":
+        elif os.environ.get(_MANAGED_REEXEC_GUARD_ENV) == "1":
             raise SystemExit(
                 "Managed-environment auto-rerun did not converge to the "
                 "expected interpreter."
             )
-        rerun_message = (
-            "Re-running DevCovenant from managed interpreter: "
-            f"{managed_python}\n"
-        )
-        execution_runtime_module.runtime_print(
-            rerun_message,
-            end="",
-            file=sys.stderr,
-            flush=True,
-        )
-        env = _apply_run_log_handoff_env(dict(managed_env))
-        env[_MANAGED_REEXEC_GUARD_ENV] = "1"
-        env[_MANAGED_REEXEC_SOURCE_ENV] = sys.executable
-        argv = [managed_python, "-m", "devcovenant", command, *command_args]
-        os.execve(managed_python, argv, env)
+        else:
+            rerun_message = (
+                "Re-running DevCovenant from managed interpreter: "
+                f"{managed_python}\n"
+            )
+            execution_runtime_module.runtime_print(
+                rerun_message,
+                end="",
+                file=sys.stderr,
+                flush=True,
+            )
+            env = _apply_run_log_handoff_env(dict(managed_env))
+            env[_MANAGED_REEXEC_GUARD_ENV] = "1"
+            env[_MANAGED_REEXEC_SOURCE_ENV] = sys.executable
+            argv = [
+                managed_python,
+                "-m",
+                "devcovenant",
+                command,
+                *command_args,
+            ]
+            try:
+                os.execve(managed_python, argv, env)
+            except OSError as exc:
+                managed_resolution_error = (
+                    "Managed-environment interpreter exec failed: "
+                    f"`{managed_python}` ({exc})."
+                )
+                managed_python = None
 
     managed_root = ""
     if managed_env is not None:
@@ -305,7 +343,7 @@ def _maybe_reexec_managed_environment(
                 stage,
                 command,
                 command_args,
-                managed_python=managed_python,
+                managed_python=managed_python_hint,
                 managed_root=managed_root or None,
             )
         )
@@ -404,20 +442,29 @@ def main(argv: list[str] | None = None) -> None:
         )
         raise
     except Exception as exc:
+        normalized_error = runtime_errors_module.normalize_unhandled_exception(
+            exc
+        )
         execution_runtime_module.append_active_run_log_output(
             "stderr",
             traceback.format_exc(),
         )
+        execution_runtime_module.runtime_print(
+            runtime_errors_module.render_error(normalized_error),
+            file=sys.stderr,
+            flush=True,
+        )
         _finalize_cli_run_logging(
-            exit_code=1,
+            exit_code=normalized_error.exit_code,
             status="exception",
             metadata_updates={
-                "exit_kind": "exception",
+                "exit_kind": "normalized_exception",
+                "error_code": normalized_error.code.value,
                 "exception_type": type(exc).__name__,
                 "exception_message": str(exc),
             },
         )
-        raise
+        raise SystemExit(normalized_error.exit_code) from exc
     else:
         _finalize_cli_run_logging(
             exit_code=0,

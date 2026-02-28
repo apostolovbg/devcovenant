@@ -90,12 +90,6 @@ class ManagedEnvironmentCheck(PolicyCheck):
         manual_commands = self._normalize_entries(
             self.get_option("manual_commands", [])
         )
-        managed_commands = self._normalize_entries(
-            self.get_option("managed_commands", [])
-        )
-        managed_rerun_commands = self._normalize_entries(
-            self.get_option("managed_rerun_commands", [])
-        )
         required_commands = self._normalize_entries(
             self.get_option("required_commands", [])
         )
@@ -107,20 +101,6 @@ class ManagedEnvironmentCheck(PolicyCheck):
                     repo_root,
                     "managed-environment is enabled, but no expected_paths or "
                     "expected_interpreters are configured.",
-                )
-            )
-        if (
-            not required_commands
-            and not manual_commands
-            and not managed_commands
-            and not managed_rerun_commands
-        ):
-            warnings.append(
-                self._warning(
-                    repo_root,
-                    "managed-environment is enabled, but no manual_commands, "
-                    "managed_commands, managed_rerun_commands, or "
-                    "required_commands are configured.",
                 )
             )
         if required_commands:

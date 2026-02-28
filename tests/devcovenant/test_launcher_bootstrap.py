@@ -47,7 +47,7 @@ def _restore_pycache_state(
         os.environ["PYTHONPYCACHEPREFIX"] = previous_env
     try:
         module.sys.pycache_prefix = previous_prefix
-    except Exception:
+    except (AttributeError, TypeError):
         pass
 
 

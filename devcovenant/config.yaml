@@ -211,6 +211,7 @@ policy_state:
   name-clarity: true
   no-future-dates: true
   no-print-outside-output-runtime: true
+  no-raw-errors: true
   raw-string-escapes: false
   read-only-directories: true
   readme-sync: true
@@ -808,6 +809,25 @@ autogen_metadata_overlays:
     sink_call_targets:
     - python=>print
     - python=>builtins.print
+  no-raw-errors:
+    exclude_globs:
+    - build/**
+    - dist/**
+    - node_modules/**
+    exclude_prefixes:
+    - build
+    - dist
+    - node_modules
+    forbid_bare_except:
+    - 'True'
+    forbid_raise_exception:
+    - 'True'
+    forbid_silent_exception_pass:
+    - 'True'
+    include_globs:
+    - '*.py'
+    include_suffixes:
+    - .py
   security-scanner:
     exclude_globs:
     - tests/**

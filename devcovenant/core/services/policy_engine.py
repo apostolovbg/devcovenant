@@ -2,6 +2,7 @@
 Main DevCovenant engine - orchestrates policy checking and enforcement.
 """
 
+import sys
 from pathlib import Path
 from typing import Any, Dict, List, Optional, Set
 
@@ -20,7 +21,7 @@ from devcovenant.core.contracts.policy import (
     PolicyFixer,
     Violation,
 )
-from devcovenant.core.runtime.execution import runtime_print
+from devcovenant.core.runtime.execution import get_output_mode, runtime_print
 from devcovenant.core.services import metadata as metadata_runtime
 from devcovenant.core.services.policy_parse import (
     PolicyDefinition,
@@ -370,7 +371,10 @@ class DevCovenantEngine:
         Args:
             issues: List of PolicySyncIssue objects
         """
-        policy_reporting.report_sync_issues(issues, print_fn=runtime_print)
+        policy_reporting.report_sync_issues(
+            issues,
+            print_fn=self._report_print_fn(error_channel=bool(issues)),
+        )
 
     def run_policy_checks(
         self,
@@ -529,11 +533,13 @@ class DevCovenantEngine:
         Args:
             violations: List of violations
         """
+        if not violations and get_output_mode() == "quiet":
+            return
         policy_reporting.report_violations(
             violations,
             passed_count=self.passed_count,
             failed_count=self.failed_count,
-            print_fn=runtime_print,
+            print_fn=self._report_print_fn(error_channel=bool(violations)),
             fail_threshold=policy_reporting.config_fail_threshold(self.config),
             auto_fix_enabled=policy_reporting.config_auto_fix_enabled(
                 self.config
@@ -550,12 +556,26 @@ class DevCovenantEngine:
         """Report summary of violations."""
         policy_reporting.report_summary(
             by_severity,
-            print_fn=runtime_print,
+            print_fn=self._report_print_fn(
+                error_channel=any(by_severity.values())
+            ),
             fail_threshold=policy_reporting.config_fail_threshold(self.config),
             auto_fix_enabled=policy_reporting.config_auto_fix_enabled(
                 self.config
             ),
         )
+
+    @staticmethod
+    def _report_print_fn(*, error_channel: bool):
+        """Return report printer routed for the active output mode."""
+        if not (error_channel and get_output_mode() == "quiet"):
+            return runtime_print
+
+        def _stderr_print(message: str = "", **kwargs: Any) -> None:
+            """Route quiet-mode violation output to stderr."""
+            runtime_print(str(message), file=sys.stderr, **kwargs)
+
+        return _stderr_print
 
     def should_block(self, violations: List[Violation]) -> bool:
         """

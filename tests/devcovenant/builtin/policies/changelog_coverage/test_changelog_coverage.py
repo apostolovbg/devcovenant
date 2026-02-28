@@ -2287,6 +2287,42 @@ class GeneratedUnittestCases(unittest.TestCase):
         finally:
             monkeypatch.undo()
 
+    def test_missing_gate_status_is_ignored_when_no_scoped_changes(self):
+        """No-change runs should not fail on missing gate status."""
+        monkeypatch = MonkeyPatch()
+        try:
+            with tempfile.TemporaryDirectory() as temp_dir:
+                tmp_path = Path(temp_dir).resolve()
+                checker = ChangelogCoverageCheck()
+                checker.set_options(
+                    {"summary_verbs": ["update", "clarify", "see", "saw"]},
+                    {},
+                )
+
+                monkeypatch.setattr(
+                    "devcovenant.builtin.policies.changelog_coverage."
+                    "changelog_coverage.ChangelogCoverageCheck."
+                    "scoped_changed_files",
+                    lambda _self, _context: [],
+                )
+
+                context = CheckContext(
+                    repo_root=tmp_path,
+                    all_files=[],
+                    change_state=ChangeState(
+                        session_valid=False,
+                        session_error=(
+                            "Gate status file is missing: "
+                            "devcovenant/registry/local/gate_status.json."
+                        ),
+                        session_reason_code="missing_gate_status",
+                    ),
+                )
+                violations = checker.check(context)
+                assert not violations
+        finally:
+            monkeypatch.undo()
+
     def test_changelogcoveragecheck_symbol_contract_is_stable(self):
         """Run test_changelogcoveragecheck_symbol_contract_is_stable."""
         _unit_test_changelogcoveragecheck_symbol_contract_is_stable()

@@ -1,5 +1,5 @@
 # Troubleshooting
-**Last Updated:** 2026-02-27
+**Last Updated:** 2026-02-28
 **Version:** 1.0.0
 
 ## Table of Contents
@@ -106,6 +106,9 @@ Recovery actions:
 4. if managed-environment auto re-exec fails:
    - confirm `expected_interpreters` and `expected_paths` point to the
      intended environment launcher path
+   - if a managed interpreter path exists but is not executable, fix
+     permissions or path ownership; DevCovenant now reports this explicitly
+     instead of raising raw interpreter-exec tracebacks
    - confirm managed bootstrap commands can create the interpreter for
      non-start invocations
    - if direct interpreter paths are unavailable (bench/xenv), configure

@@ -1,5 +1,5 @@
 # DevCovenant
-**Last Updated:** 2026-02-27
+**Last Updated:** 2026-02-28
 **Version:** 1.0.0
 
 <p align="center">
@@ -271,7 +271,7 @@ Lifecycle contract:
 - `refresh`:
   regenerate registries, managed blocks, and generated governance files
 - `upgrade`:
-  replace core from newer source version, then refresh
+  reconcile core from source on every run, then refresh
 - `undeploy`:
   remove managed artifacts while keeping core/config
 - `uninstall`:
@@ -311,6 +311,9 @@ Important execution semantics:
   interpreter when local managed-environment runtime is present; lifecycle
   bootstrap/teardown commands (`install`, `deploy`, `undeploy`, `uninstall`)
   are intentionally excluded
+- if a resolved managed interpreter path is present but not executable,
+  DevCovenant emits an explicit managed-environment error instead of crashing
+  and then uses `managed_rerun_commands` when a wrapper fallback is configured
 - if direct managed interpreter resolution is unavailable, configured
   `managed_rerun_commands` can rerun the command through wrapper adapters
   (for example bench/xenv launchers)

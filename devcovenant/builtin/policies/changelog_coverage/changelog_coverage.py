@@ -636,6 +636,9 @@ class ChangelogCoverageCheck(PolicyCheck):
             )
             return violations
 
+        if not changed_files:
+            return violations
+
         gate_status: dict[str, object] = {}
         start_exemption_fingerprints: dict[str, dict[str, str]] = {}
         if phase != "start":
@@ -695,8 +698,6 @@ class ChangelogCoverageCheck(PolicyCheck):
             merged_changed = set(changed_files)
             merged_changed.update(deleted_file_set)
             changed_files = sorted(merged_changed)
-        if not changed_files:
-            return violations
         changed_file_set = set(changed_files)
 
         main_files: List[str] = []

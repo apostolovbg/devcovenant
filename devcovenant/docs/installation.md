@@ -43,7 +43,7 @@ Command contract:
 - `refresh`:
   regenerate registries, managed blocks, and generated governance files
 - `upgrade`:
-  replace core when source version is newer, preserve runtime-local
+  reconcile core from source on every run, preserve runtime-local
   `devcovenant/registry/local/` and `devcovenant/logs/`, then refresh
 - `undeploy`:
   remove managed artifacts while preserving core/config
@@ -128,10 +128,17 @@ Runtime details that affect operations:
   non-managed interpreter re-exec automatically in the managed interpreter
   before command logic continues, except lifecycle bootstrap/teardown commands
   (`install`, `deploy`, `undeploy`, `uninstall`)
+- if the resolved managed interpreter path is not executable, CLI emits an
+  explicit managed-environment failure and then uses
+  `managed_rerun_commands` fallback when configured
 - command-run evidence (`devcovenant/logs/<run-id>/run.json`) records
   interpreter provenance fields (`invoked_python`, `effective_python`,
   `managed_environment_active`, `managed_reexec_applied`) so you can verify
   whether managed re-exec took effect
+- unhandled CLI runtime exceptions are normalized into explicit typed errors
+  (`devcovenant/core/runtime/errors.py`,
+  `devcovenant/core/contracts/errors.py`) instead of leaking raw traceback
+  output to console; traceback details remain in run logs
 - run-log retention is configured in `devcovenant/config.yaml` via
   `engine.logs_keep_last` (`0` keeps all run folders; positive values keep
   the latest N folders)

@@ -1,5 +1,5 @@
 # Policy Map
-**Last Updated:** 2026-02-27
+**Last Updated:** 2026-02-28
 **Version:** 1.0.0
 
 ## Table of Contents
@@ -44,6 +44,9 @@ This map documents shipped policy contracts and ownership for 1.0.0.
 - `last-updated-placement`: enforces top-level `Last Updated` placement and
   updates date values for managed docs.
 - `line-length-limit`: warns when in-scope files exceed configured line limit.
+- `no-raw-errors`: blocks raw Python error anti-patterns (bare `except`,
+  generic `raise Exception(...)`, and silent `except Exception: pass`) in
+  selector-scoped files.
 - `no-print-outside-output-runtime`: enforces metadata-driven output sinks.
   Language profiles declare sink targets, while repository profiles define
   selectors and allowed output-boundary files/symbols.
@@ -120,3 +123,7 @@ Output-boundary sinks:
 - `sink_call_targets`, `sink_attr_targets`, `sink_macro_targets`
 - `allowed_symbol_targets`, `allowed_file_globs`,
   `allow_waiver_comment`
+
+Raw-error policy:
+- `forbid_bare_except`, `forbid_raise_exception`,
+  `forbid_silent_exception_pass`

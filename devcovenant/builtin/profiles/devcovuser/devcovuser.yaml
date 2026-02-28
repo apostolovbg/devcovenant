@@ -30,20 +30,26 @@ policy_overlays:
     exclude_prefixes:
       - devcovenant
     force_include_globs:
-      - devcovenant/custom/**
-      - tests/devcovenant/custom/**
+      - devcovenant/custom/**/*.py
+      - tests/devcovenant/custom/**/*.py
   docstring-and-comment-coverage:
     exclude_prefixes:
       - devcovenant
     force_include_globs:
-      - devcovenant/custom/**
-      - tests/devcovenant/custom/**
+      - devcovenant/custom/**/*.py
+      - tests/devcovenant/custom/**/*.py
   security-scanner:
     exclude_prefixes:
       - devcovenant
     force_include_globs:
-      - devcovenant/custom/**
-      - tests/devcovenant/custom/**
+      - devcovenant/custom/**/*.py
+      - tests/devcovenant/custom/**/*.py
+  no-raw-errors:
+    exclude_prefixes:
+      - devcovenant
+    force_include_globs:
+      - devcovenant/custom/**/*.py
+      - tests/devcovenant/custom/**/*.py
   modules-need-tests:
     exclude_prefixes:
       - build
@@ -52,7 +58,7 @@ policy_overlays:
       - tests
       - devcovenant
     force_include_globs:
-      - devcovenant/custom/**
+      - devcovenant/custom/**/*.py
     watch_dirs:
       - tests
     tests_watch_dirs:

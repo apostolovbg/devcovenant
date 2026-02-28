@@ -566,8 +566,6 @@ def _read_pycache_prefix_from_config(repo_root: Path) -> str:
 def configure_repo_pycache_prefix(repo_root: Path) -> bool:
     """Configure repo-scoped Python bytecode cache routing when enabled."""
     global _PYCACHE_PREFIX_ENABLED, _PYCACHE_PREFIX_VALUE
-    if _PYCACHE_PREFIX_ENABLED and _PYCACHE_PREFIX_VALUE:
-        return True
     if not _read_pycache_prefix_enabled_from_config(repo_root):
         _PYCACHE_PREFIX_ENABLED = False
         _PYCACHE_PREFIX_VALUE = None
@@ -581,7 +579,7 @@ def configure_repo_pycache_prefix(repo_root: Path) -> bool:
     _PYCACHE_PREFIX_VALUE = prefix
     try:
         setattr(sys, "pycache_prefix", prefix)
-    except Exception:
+    except (AttributeError, TypeError):
         pass
     os.environ["PYTHONPYCACHEPREFIX"] = prefix
     return True
@@ -1565,11 +1563,13 @@ class _TestCommandProgress:
         runtime_print(f"▶ [{self._count + 1}/{self.total}] {description}")
 
     def complete_step(self, description: str) -> None:
-        """Advance state and emit deterministic step lines in normal mode."""
+        """Advance state and keep normal-mode progress output non-duplicate."""
         self._count += 1
         self._completed_descriptions.append(str(description))
         if self._normal_mode:
-            runtime_print(f"[{self._count}/{self.total}] {description}")
+            # Normal mode already emitted the start marker and heartbeats.
+            # Keep completion silent to avoid duplicate progress lines.
+            return
 
     def fail_step(
         self,
