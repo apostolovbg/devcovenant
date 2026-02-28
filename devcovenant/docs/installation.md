@@ -139,6 +139,9 @@ Runtime details that affect operations:
   (`devcovenant/core/runtime/errors.py`,
   `devcovenant/core/contracts/errors.py`) instead of leaking raw traceback
   output to console; traceback details remain in run logs
+- the CLI top-level normalization boundary uses an explicit
+  `DEVCOV_ALLOW_BROAD_ONCE` marker so `no-raw-errors` can enforce broad
+  handler discipline without hiding boundary intent
 - run-log retention is configured in `devcovenant/config.yaml` via
   `engine.logs_keep_last` (`0` keeps all run folders; positive values keep
   the latest N folders)

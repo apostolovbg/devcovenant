@@ -214,7 +214,7 @@ class DevCovenantEngine:
             )
         try:
             parsed = self.parser.parse_agents_md()
-        # DEVCOV_ALLOW_BROAD_EXCEPT: AGENTS parser boundary.
+        # DEVCOV_ALLOW_BROAD_ONCE AGENTS parser boundary.
         except Exception as exc:
             raise ValueError(
                 f"Failed to parse AGENTS policies: {exc}"

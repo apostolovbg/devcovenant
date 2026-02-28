@@ -441,7 +441,7 @@ def main(argv: list[str] | None = None) -> None:
             metadata_updates={"exit_kind": "keyboard_interrupt"},
         )
         raise
-    # DEVCOV_ALLOW_BROAD_EXCEPT: CLI top-level error normalization boundary.
+    # DEVCOV_ALLOW_BROAD_ONCE CLI top-level normalization boundary.
     except Exception as exc:
         normalized_error = runtime_errors_module.normalize_unhandled_exception(
             exc

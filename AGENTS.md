@@ -1285,10 +1285,10 @@ force_include_files:
 force_include_dirs:
 forbid_bare_except: True
 forbid_raise_exception: True
-forbid_broad_exception_handlers:
+forbid_broad_exception_handlers: True
 forbid_silent_exception_pass: True
-broad_exception_waiver_markers:
-broad_exception_waiver_between:
+broad_exception_waiver_markers: DEVCOV_ALLOW_BROAD_ONCE
+broad_exception_waiver_between: DEVCOV_BROAD_BEGIN=>DEVCOV_BROAD_END
 ```
 
 Enforce explicit error surfaces and block raw exception anti-patterns.

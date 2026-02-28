@@ -32,12 +32,9 @@ def _configured_check() -> NoRawErrorsCheck:
             "forbid_raise_exception": True,
             "forbid_broad_exception_handlers": True,
             "forbid_silent_exception_pass": True,
-            "broad_exception_waiver_markers": ["DEVCOV_ALLOW_BROAD_EXCEPT:"],
+            "broad_exception_waiver_markers": ["DEVCOV_ALLOW_BROAD_ONCE"],
             "broad_exception_waiver_between": [
-                (
-                    "DEVCOV_ALLOW_BROAD_EXCEPT_BEGIN=>"
-                    "DEVCOV_ALLOW_BROAD_EXCEPT_END"
-                )
+                "DEVCOV_BROAD_BEGIN=>DEVCOV_BROAD_END"
             ],
         },
         {},
@@ -141,7 +138,7 @@ def _unit_test_broad_except_with_comment_waiver_passes() -> None:
 def run(raw):
     try:
         return int(raw)
-    # DEVCOV_ALLOW_BROAD_EXCEPT: boundary normalizer
+    # DEVCOV_ALLOW_BROAD_ONCE boundary normalizer
     except Exception as exc:
         raise RuntimeError(f"invalid value: {raw}") from exc
 """,
@@ -158,13 +155,13 @@ def _unit_test_broad_except_with_region_waiver_passes() -> None:
             root,
             "pkg/demo.py",
             """
-# DEVCOV_ALLOW_BROAD_EXCEPT_BEGIN
+# DEVCOV_BROAD_BEGIN
 def run(raw):
     try:
         return int(raw)
     except Exception as exc:
         raise RuntimeError(f"invalid value: {raw}") from exc
-# DEVCOV_ALLOW_BROAD_EXCEPT_END
+# DEVCOV_BROAD_END
 """,
         )
         violations = _run_policy(root, module)

@@ -55,6 +55,12 @@ def _unit_test_fix_inserts_last_updated_marker() -> None:
         assert "**Last Updated:**" in content
 
 
+def _unit_test_fixer_symbol_contract_is_stable() -> None:
+    """Fixer symbol contract should stay explicit and importable."""
+    assert LastUpdatedPlacementFixer.__name__ == "LastUpdatedPlacementFixer"
+    assert hasattr(LastUpdatedPlacementFixer, "fix")
+
+
 class GeneratedUnittestCases(unittest.TestCase):
     """unittest wrappers for module-level tests."""
 
@@ -65,3 +71,7 @@ class GeneratedUnittestCases(unittest.TestCase):
     def test_fix_inserts_last_updated_marker(self):
         """Run test_fix_inserts_last_updated_marker."""
         _unit_test_fix_inserts_last_updated_marker()
+
+    def test_fixer_symbol_contract_is_stable(self):
+        """Run test_fixer_symbol_contract_is_stable."""
+        _unit_test_fixer_symbol_contract_is_stable()

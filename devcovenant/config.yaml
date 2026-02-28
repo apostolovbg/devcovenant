@@ -811,9 +811,9 @@ autogen_metadata_overlays:
     - python=>builtins.print
   no-raw-errors:
     broad_exception_waiver_between:
-    - DEVCOV_ALLOW_BROAD_EXCEPT_BEGIN=>DEVCOV_ALLOW_BROAD_EXCEPT_END
+    - DEVCOV_BROAD_BEGIN=>DEVCOV_BROAD_END
     broad_exception_waiver_markers:
-    - '{''DEVCOV_ALLOW_BROAD_EXCEPT'': None}'
+    - DEVCOV_ALLOW_BROAD_ONCE
     exclude_globs:
     - build/**
     - dist/**

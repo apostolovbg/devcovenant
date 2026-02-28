@@ -246,7 +246,7 @@ def load_test_event_adapters(repo_root: Path) -> list[TestEventAdapter]:
             payload, include_global=True
         )
         registry = profile_runtime.load_profile_registry(repo_root)
-    # DEVCOV_ALLOW_BROAD_EXCEPT: adapter registry bootstrap boundary.
+    # DEVCOV_ALLOW_BROAD_ONCE adapter registry bootstrap boundary.
     except Exception as exc:
         _set_adapter_load_warnings(
             [
@@ -316,7 +316,7 @@ def load_test_event_adapters(repo_root: Path) -> list[TestEventAdapter]:
                     profile_name=profile,
                     config=config if isinstance(config, Mapping) else {},
                 )
-            # DEVCOV_ALLOW_BROAD_EXCEPT: third-party adapter boundary.
+            # DEVCOV_ALLOW_BROAD_ONCE third-party adapter boundary.
             except Exception as exc:
                 warnings.append(
                     (

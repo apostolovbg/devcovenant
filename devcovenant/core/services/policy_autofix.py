@@ -53,7 +53,7 @@ def load_fixers(
                 )
                 try:
                     module = importlib.import_module(module_name)
-                # DEVCOV_ALLOW_BROAD_EXCEPT: plugin import boundary.
+                # DEVCOV_ALLOW_BROAD_ONCE plugin import boundary.
                 except Exception as exc:
                     raise RuntimeError(
                         "Failed to import fixer module "
@@ -70,7 +70,7 @@ def load_fixers(
                             setattr(instance, "repo_root", repo_root)
                             setattr(instance, "_origin", origin)
                             fixers.append(instance)
-                        # DEVCOV_ALLOW_BROAD_EXCEPT: plugin init boundary.
+                        # DEVCOV_ALLOW_BROAD_ONCE plugin init boundary.
                         except Exception as exc:
                             raise RuntimeError(
                                 "Failed to initialize fixer "

@@ -246,6 +246,9 @@ Output behavior:
   `devcovenant/core/runtime/errors.py` and
   `devcovenant/core/contracts/errors.py`; console output stays explicit while
   full traceback detail remains in run-log artifacts
+- broad exception handlers at intentional process/plugin boundaries must be
+  explicitly marked (`DEVCOV_ALLOW_BROAD_ONCE` or configured waiver
+  regions) to satisfy `no-raw-errors` governance
 - operators should treat the printed `Run logs:` path as the canonical
   debug entrypoint for command-run evidence artifacts
 - `engine.logs_keep_last` controls how many recent run-log folders remain in

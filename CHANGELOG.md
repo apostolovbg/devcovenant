@@ -76,10 +76,14 @@ Example:
   devcovenant/core/services/policy_check_runner.py
   devcovenant/core/services/policy_engine.py
   devcovenant/docs/architecture.md
+  devcovenant/docs/installation.md
   devcovenant/docs/policies.md
   devcovenant/docs/profiles.md
+  devcovenant/docs/workflow.md
   tests/devcovenant/builtin/policies/no_raw_errors/\
     test_no_raw_errors.py
+  tests/devcovenant/builtin/policies/last_updated_placement/autofix/\
+    test_global.py
 
 - 2026-02-28:
   Change: Implemented explicit runtime error contracts and CLI normalization,

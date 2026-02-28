@@ -14,10 +14,8 @@ from devcovenant.core.contracts.policy import (
 from devcovenant.core.lib.selectors import SelectorSet
 
 _VALID_SEVERITIES = {"critical", "error", "warning", "info"}
-_DEFAULT_WAIVER_MARKERS = ("DEVCOV_ALLOW_BROAD_EXCEPT:",)
-_DEFAULT_WAIVER_BETWEEN = (
-    "DEVCOV_ALLOW_BROAD_EXCEPT_BEGIN=>DEVCOV_ALLOW_BROAD_EXCEPT_END",
-)
+_DEFAULT_WAIVER_MARKERS = ("DEVCOV_ALLOW_BROAD_ONCE",)
+_DEFAULT_WAIVER_BETWEEN = ("DEVCOV_BROAD_BEGIN=>DEVCOV_BROAD_END",)
 
 
 def _coerce_bool(value: object, *, default: bool) -> bool:
