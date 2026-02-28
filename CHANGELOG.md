@@ -56,6 +56,32 @@ Example:
 ## Version 1.0.0
 
 - 2026-02-28:
+  Change: Strengthened `no-raw-errors` to flag broad `except Exception`
+    handlers and support explicit waiver markers/regions.
+  Why: Prevented hidden broad-catch drift while preserving explicit boundary
+    ownership through auditable waiver metadata.
+  Impact: Improved explicit-failure enforcement consistency across runtime
+    boundaries, policy/plugin isolation layers, and policy documentation.
+  Files:
+  CHANGELOG.md
+  devcovenant/builtin/policies/no_raw_errors/no_raw_errors.py
+  devcovenant/builtin/policies/no_raw_errors/no_raw_errors.yaml
+  devcovenant/builtin/profiles/defaults/defaults.yaml
+  devcovenant/builtin/policies/modules_need_tests/modules_need_tests.py
+  devcovenant/builtin/policies/raw_string_escapes/raw_string_escapes.py
+  devcovenant/builtin/policies/last_updated_placement/autofix/global.py
+  devcovenant/cli.py
+  devcovenant/core/services/event.py
+  devcovenant/core/services/policy_autofix.py
+  devcovenant/core/services/policy_check_runner.py
+  devcovenant/core/services/policy_engine.py
+  devcovenant/docs/architecture.md
+  devcovenant/docs/policies.md
+  devcovenant/docs/profiles.md
+  tests/devcovenant/builtin/policies/no_raw_errors/\
+    test_no_raw_errors.py
+
+- 2026-02-28:
   Change: Implemented explicit runtime error contracts and CLI normalization,
     introduced builtin `no-raw-errors` policy with profile-owned metadata
     defaults, and swept docs/doc-assets to align contracts.

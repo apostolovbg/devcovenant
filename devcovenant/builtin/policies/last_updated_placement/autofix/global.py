@@ -48,7 +48,7 @@ class LastUpdatedPlacementFixer(PolicyFixer):
         file_path = Path(violation.file_path)
         try:
             content = file_path.read_text(encoding="utf-8")
-        except Exception as exc:
+        except (OSError, UnicodeError) as exc:
             return FixResult(
                 success=False,
                 message=f"Unable to read {file_path}: {exc}",
@@ -80,7 +80,7 @@ class LastUpdatedPlacementFixer(PolicyFixer):
         new_content = "\n".join(lines).rstrip() + "\n"
         try:
             file_path.write_text(new_content, encoding="utf-8")
-        except Exception as exc:
+        except (OSError, UnicodeError) as exc:
             return FixResult(
                 success=False,
                 message=f"Unable to write {file_path}: {exc}",

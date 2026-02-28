@@ -1,8 +1,10 @@
 id: no-raw-errors
 text: |
   Enforce explicit error surfaces and block raw exception anti-patterns.
-  This policy flags bare `except`, generic `raise Exception(...)`, and
-  silent `except Exception: pass` handlers in selected source files.
+  This policy flags bare `except`, broad `except Exception` handlers,
+  generic `raise Exception(...)`, and silent `except Exception: pass`
+  handlers in selected source files. Broad-handler waivers are explicit
+  through marker comments or marker regions.
 metadata:
   id: no-raw-errors
   severity: error
@@ -29,4 +31,7 @@ metadata:
   force_include_dirs: []
   forbid_bare_except: ''
   forbid_raise_exception: ''
+  forbid_broad_exception_handlers: ''
   forbid_silent_exception_pass: ''
+  broad_exception_waiver_markers: []
+  broad_exception_waiver_between: []

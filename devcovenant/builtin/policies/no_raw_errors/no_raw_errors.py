@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import ast
 from pathlib import Path
-from typing import List
+from typing import List, Sequence
 
 from devcovenant.core.contracts.policy import (
     CheckContext,
@@ -14,6 +14,10 @@ from devcovenant.core.contracts.policy import (
 from devcovenant.core.lib.selectors import SelectorSet
 
 _VALID_SEVERITIES = {"critical", "error", "warning", "info"}
+_DEFAULT_WAIVER_MARKERS = ("DEVCOV_ALLOW_BROAD_EXCEPT:",)
+_DEFAULT_WAIVER_BETWEEN = (
+    "DEVCOV_ALLOW_BROAD_EXCEPT_BEGIN=>DEVCOV_ALLOW_BROAD_EXCEPT_END",
+)
 
 
 def _coerce_bool(value: object, *, default: bool) -> bool:
@@ -26,6 +30,98 @@ def _coerce_bool(value: object, *, default: bool) -> bool:
     if token in {"false", "0", "no", "off", "disabled"}:
         return False
     return default
+
+
+def _option_tokens(raw_value: object) -> list[str]:
+    """Normalize one metadata option into a list of non-empty tokens."""
+    if raw_value is None:
+        return []
+    if isinstance(raw_value, str):
+        return [
+            token.strip()
+            for token in raw_value.replace("\n", ",").split(",")
+            if token.strip()
+        ]
+    if isinstance(raw_value, (list, tuple, set)):
+        tokens: list[str] = []
+        for entry in raw_value:
+            token = str(entry or "").strip()
+            if token:
+                tokens.append(token)
+        return tokens
+    token = str(raw_value).strip()
+    return [token] if token else []
+
+
+def _between_pairs(raw_value: object) -> list[tuple[str, str]]:
+    """Normalize `left=>right` waiver region tokens."""
+    pairs: list[tuple[str, str]] = []
+    for token in _option_tokens(raw_value):
+        if "=>" not in token:
+            continue
+        left, right = token.split("=>", 1)
+        left_token = left.strip()
+        right_token = right.strip()
+        if left_token and right_token:
+            pairs.append((left_token, right_token))
+    return pairs
+
+
+def _contains_any_marker(
+    line_content: str,
+    markers: Sequence[str],
+) -> bool:
+    """Return True when any marker appears in one line."""
+    return any(marker and marker in line_content for marker in markers)
+
+
+def _waiver_regions(
+    lines: Sequence[str],
+    between_pairs: Sequence[tuple[str, str]],
+) -> list[tuple[int, int]]:
+    """Return inclusive line ranges where broad-handler waivers are active."""
+    regions: list[tuple[int, int]] = []
+    for left, right in between_pairs:
+        start_line = 0
+        for line_number, line_content in enumerate(lines, start=1):
+            if not start_line and left in line_content:
+                start_line = line_number
+            if start_line and right in line_content:
+                regions.append((start_line, line_number))
+                start_line = 0
+    return regions
+
+
+def _line_in_regions(
+    line_number: int,
+    regions: Sequence[tuple[int, int]],
+) -> bool:
+    """Return True when line number falls within one configured region."""
+    for start_line, end_line in regions:
+        if start_line <= line_number <= end_line:
+            return True
+    return False
+
+
+def _line_has_comment_waiver(
+    lines: Sequence[str],
+    line_number: int,
+    markers: Sequence[str],
+) -> bool:
+    """Return True when waiver marker exists on same/prior comment line."""
+    if line_number < 1 or line_number > len(lines):
+        return False
+    if _contains_any_marker(lines[line_number - 1], markers):
+        return True
+    previous_index = line_number - 2
+    while previous_index >= 0 and not lines[previous_index].strip():
+        previous_index -= 1
+    if previous_index < 0:
+        return False
+    previous_line = lines[previous_index].lstrip()
+    if not previous_line.startswith("#"):
+        return False
+    return _contains_any_marker(previous_line, markers)
 
 
 def _is_exception_name(node: ast.AST | None) -> bool:
@@ -94,10 +190,30 @@ class NoRawErrorsCheck(PolicyCheck):
             self.get_option("forbid_raise_exception", True),
             default=True,
         )
+        forbid_broad_exception_handlers = _coerce_bool(
+            self.get_option("forbid_broad_exception_handlers", True),
+            default=True,
+        )
         forbid_silent_exception_pass = _coerce_bool(
             self.get_option("forbid_silent_exception_pass", True),
             default=True,
         )
+        waiver_markers = _option_tokens(
+            self.get_option(
+                "broad_exception_waiver_markers",
+                list(_DEFAULT_WAIVER_MARKERS),
+            )
+        )
+        if not waiver_markers:
+            waiver_markers = list(_DEFAULT_WAIVER_MARKERS)
+        waiver_between = _between_pairs(
+            self.get_option(
+                "broad_exception_waiver_between",
+                list(_DEFAULT_WAIVER_BETWEEN),
+            )
+        )
+        if not waiver_between:
+            waiver_between = _between_pairs(_DEFAULT_WAIVER_BETWEEN)
 
         violations: List[Violation] = []
         for path in files:
@@ -128,6 +244,8 @@ class NoRawErrorsCheck(PolicyCheck):
                 tree = ast.parse(source)
             except SyntaxError:
                 continue
+            lines = source.splitlines()
+            waiver_regions = _waiver_regions(lines, waiver_between)
 
             for node in ast.walk(tree):
                 if isinstance(node, ast.ExceptHandler):
@@ -148,10 +266,12 @@ class NoRawErrorsCheck(PolicyCheck):
                                 ),
                             )
                         )
+                    is_broad_handler = _is_broad_exception_handler(node)
+                    is_silent_handler = _is_silent_pass_handler(node)
                     if (
                         forbid_silent_exception_pass
-                        and _is_broad_exception_handler(node)
-                        and _is_silent_pass_handler(node)
+                        and is_broad_handler
+                        and is_silent_handler
                     ):
                         violations.append(
                             Violation(
@@ -166,6 +286,40 @@ class NoRawErrorsCheck(PolicyCheck):
                                 suggestion=(
                                     "Handle explicitly with error context or "
                                     "narrow the exception to expected cases."
+                                ),
+                            )
+                        )
+                    if (
+                        forbid_broad_exception_handlers
+                        and is_broad_handler
+                        and not is_silent_handler
+                    ):
+                        line_number = int(getattr(node, "lineno", 0) or 0)
+                        has_comment_waiver = _line_has_comment_waiver(
+                            lines,
+                            line_number,
+                            waiver_markers,
+                        )
+                        in_waiver_region = _line_in_regions(
+                            line_number,
+                            waiver_regions,
+                        )
+                        if has_comment_waiver or in_waiver_region:
+                            continue
+                        violations.append(
+                            Violation(
+                                policy_id=self.policy_id,
+                                severity=severity,
+                                file_path=candidate,
+                                line_number=line_number,
+                                message=(
+                                    "Broad `except Exception` handlers are "
+                                    "not allowed."
+                                ),
+                                suggestion=(
+                                    "Catch specific exception classes; use "
+                                    "a waiver marker only at an explicit "
+                                    "boundary with rationale."
                                 ),
                             )
                         )

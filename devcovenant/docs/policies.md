@@ -254,8 +254,12 @@ High-impact runtime contracts:
   metadata (`language_suffixes`, `literal_patterns`,
   `raw_literal_patterns`, `suspicious_escape_patterns`).
 - `no-raw-errors` enforces explicit error surfaces in Python source by
-  flagging bare `except`, generic `raise Exception(...)`, and silent
-  `except Exception: pass` handlers through selector-driven scope metadata.
+  flagging bare `except`, broad `except Exception` handlers, generic
+  `raise Exception(...)`, and silent `except Exception: pass` handlers
+  through selector-driven scope metadata.
+  Broad-handler waivers are explicit and metadata-driven through
+  `broad_exception_waiver_markers` (line/comment markers) and
+  `broad_exception_waiver_between` (`left=>right` region markers).
 - `tests-coverage` is structural and validates assertion signals across related
   tests for each in-scope module that already has related tests.
   It reads related test files directly (no gate-status evidence payload) and

@@ -30,7 +30,15 @@ def _configured_check() -> NoRawErrorsCheck:
             "include_globs": ["*.py"],
             "forbid_bare_except": True,
             "forbid_raise_exception": True,
+            "forbid_broad_exception_handlers": True,
             "forbid_silent_exception_pass": True,
+            "broad_exception_waiver_markers": ["DEVCOV_ALLOW_BROAD_EXCEPT:"],
+            "broad_exception_waiver_between": [
+                (
+                    "DEVCOV_ALLOW_BROAD_EXCEPT_BEGIN=>"
+                    "DEVCOV_ALLOW_BROAD_EXCEPT_END"
+                )
+            ],
         },
         {},
     )
@@ -99,6 +107,68 @@ def run():
         violations = _run_policy(root, module)
         assert violations
         assert "Silent `except Exception: pass`" in violations[0].message
+        assert len(violations) == 1
+
+
+def _unit_test_broad_except_exception_is_reported() -> None:
+    """Broad handlers should trigger violations without waivers."""
+    with tempfile.TemporaryDirectory() as tmpdir:
+        root = Path(tmpdir)
+        module = _write_file(
+            root,
+            "pkg/demo.py",
+            """
+def run(raw):
+    try:
+        return int(raw)
+    except Exception as exc:
+        raise ValueError(f"invalid value: {raw}") from exc
+""",
+        )
+        violations = _run_policy(root, module)
+        assert violations
+        assert "Broad `except Exception` handlers" in violations[0].message
+
+
+def _unit_test_broad_except_with_comment_waiver_passes() -> None:
+    """Line waiver marker should allow broad handlers at boundaries."""
+    with tempfile.TemporaryDirectory() as tmpdir:
+        root = Path(tmpdir)
+        module = _write_file(
+            root,
+            "pkg/demo.py",
+            """
+def run(raw):
+    try:
+        return int(raw)
+    # DEVCOV_ALLOW_BROAD_EXCEPT: boundary normalizer
+    except Exception as exc:
+        raise RuntimeError(f"invalid value: {raw}") from exc
+""",
+        )
+        violations = _run_policy(root, module)
+        assert violations == []
+
+
+def _unit_test_broad_except_with_region_waiver_passes() -> None:
+    """Region waiver markers should allow broad handlers in that span."""
+    with tempfile.TemporaryDirectory() as tmpdir:
+        root = Path(tmpdir)
+        module = _write_file(
+            root,
+            "pkg/demo.py",
+            """
+# DEVCOV_ALLOW_BROAD_EXCEPT_BEGIN
+def run(raw):
+    try:
+        return int(raw)
+    except Exception as exc:
+        raise RuntimeError(f"invalid value: {raw}") from exc
+# DEVCOV_ALLOW_BROAD_EXCEPT_END
+""",
+        )
+        violations = _run_policy(root, module)
+        assert violations == []
 
 
 def _unit_test_specific_explicit_errors_pass() -> None:
@@ -145,6 +215,18 @@ class GeneratedUnittestCases(unittest.TestCase):
     def test_except_exception_pass_is_reported(self):
         """Run except Exception pass policy assertions."""
         _unit_test_except_exception_pass_is_reported()
+
+    def test_broad_except_exception_is_reported(self):
+        """Run broad except policy assertions."""
+        _unit_test_broad_except_exception_is_reported()
+
+    def test_broad_except_with_comment_waiver_passes(self):
+        """Run broad except comment-waiver assertions."""
+        _unit_test_broad_except_with_comment_waiver_passes()
+
+    def test_broad_except_with_region_waiver_passes(self):
+        """Run broad except region-waiver assertions."""
+        _unit_test_broad_except_with_region_waiver_passes()
 
     def test_specific_explicit_errors_pass(self):
         """Run explicit error-handling pass assertions."""

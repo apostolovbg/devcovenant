@@ -567,8 +567,12 @@ Invariant:
   `literal_patterns`, `raw_literal_patterns`,
   `suspicious_escape_patterns`).
 - `no-raw-errors` enforces explicit error surfaces for Python source by
-  flagging bare `except`, generic `raise Exception(...)`, and silent
-  `except Exception: pass` handlers in selected scope.
+  flagging bare `except`, broad `except Exception` handlers, generic
+  `raise Exception(...)`, and silent `except Exception: pass` handlers in
+  selected scope.
+  Broad-handler waivers are explicit through marker comments and marker
+  regions (`broad_exception_waiver_markers`,
+  `broad_exception_waiver_between`).
 - `read-only-directories` is opt-in by include scope. Empty typed include
   selectors (`[]`) disable enforcement until explicit include metadata is
   configured.

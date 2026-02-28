@@ -113,6 +113,9 @@ Typical `defaults` metadata includes:
 - generic selector excludes for scope-style policies
   (`docstring-and-comment-coverage`, `name-clarity`, `security-scanner`,
   `no-raw-errors`)
+- no-raw-errors strict defaults for broad handlers with explicit waiver
+  channels (`forbid_broad_exception_handlers`,
+  `broad_exception_waiver_markers`, `broad_exception_waiver_between`)
 - managed-environment bootstrap defaults
   (`expected_paths`, `expected_interpreters`, and baseline `manual_commands`)
 

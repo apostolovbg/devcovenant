@@ -440,7 +440,13 @@ policy_overlays:
       - node_modules/**
     forbid_bare_except: true
     forbid_raise_exception: true
+    forbid_broad_exception_handlers: true
     forbid_silent_exception_pass: true
+    broad_exception_waiver_markers:
+      - DEVCOV_ALLOW_BROAD_EXCEPT:
+    broad_exception_waiver_between:
+      - >-
+        DEVCOV_ALLOW_BROAD_EXCEPT_BEGIN=>DEVCOV_ALLOW_BROAD_EXCEPT_END
   modules-need-tests:
     exclude_prefixes:
       - build

@@ -134,6 +134,7 @@ def run_policy_checks(
                     passed_count += 1
                 else:
                     failed_count += 1
+        # DEVCOV_ALLOW_BROAD_EXCEPT: policy execution isolation boundary.
         except Exception as error:
             failed_count += 1
             violations.append(
