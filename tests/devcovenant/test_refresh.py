@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import re
 import tempfile
 import unittest
 from pathlib import Path
@@ -200,6 +201,28 @@ def _unit_test_refresh_seeds_autofix_for_devcovrepo_when_unset() -> None:
         assert updated["engine"]["pycache_prefix_enabled"] is True
 
 
+def _unit_test_refresh_renders_canonical_workflow_triggers() -> None:
+    """refresh_repo should render canonical GitHub trigger syntax."""
+    with tempfile.TemporaryDirectory() as temp_dir:
+        repo_root = Path(temp_dir)
+        repo_seed_cache.copy_installed_repo(repo_root)
+
+        result = refresh.refresh_repo(repo_root)
+        assert result == 0
+
+        workflow_path = (
+            repo_root / ".github" / "workflows" / "governance-and-test.yml"
+        )
+        content = workflow_path.read_text(encoding="utf-8")
+        assert "\non:\n" in content
+        assert "'on':" not in content
+        assert '"on":' not in content
+        assert "push: null" not in content
+        assert "pull_request: null" not in content
+        assert re.search(r"(?m)^  push:$", content)
+        assert re.search(r"(?m)^  pull_request:$", content)
+
+
 class GeneratedUnittestCases(unittest.TestCase):
     """unittest wrappers for module-level tests."""
 
@@ -234,3 +257,7 @@ class GeneratedUnittestCases(unittest.TestCase):
     def test_refresh_seeds_autofix_for_devcovrepo_when_unset(self):
         """Run devcovrepo autofix seeding refresh assertions."""
         _unit_test_refresh_seeds_autofix_for_devcovrepo_when_unset()
+
+    def test_refresh_renders_canonical_workflow_triggers(self):
+        """Run canonical governance-trigger rendering refresh assertions."""
+        _unit_test_refresh_renders_canonical_workflow_triggers()

@@ -467,7 +467,8 @@ Primary governance workflow:
 - tracked in this repository as refresh output; change inputs, then refresh
 - installs CI tooling from `requirements.lock` to keep versions reproducible
 - runs start -> test -> end sequence
-- normalizes workflow trigger key to literal `on`
+- normalizes trigger rendering to canonical GitHub syntax:
+  `on:`, `push:`, and `pull_request:` (no quoted `on` / `null` trigger values)
 
 Repository-maintained workflows (not refresh-generated):
 - `build.yml`:

@@ -1,7 +1,7 @@
 name: Governance and Test
-'on':
-  push: null
-  pull_request: null
+on:
+  push:
+  pull_request:
 jobs:
   governance-and-test:
     runs-on: ubuntu-latest

@@ -56,6 +56,22 @@ Example:
 ## Version 1.0.0
 
 - 2026-02-28:
+  Change: Fixed governance workflow trigger rendering to emit canonical
+    GitHub syntax (`on:`, `push:`, `pull_request:`) and validated it in
+    refresh tests.
+  Why: Prevented ambiguous serialized trigger forms (`'on':`, `*: null`) that
+    can obscure push-trigger behavior after refresh regeneration.
+  Impact: Kept governance/test activation on push explicit, preserved build as
+    governance-dependent via `workflow_run`, and improved trigger reliability.
+  Files:
+  CHANGELOG.md
+  .github/workflows/governance-and-test.yml
+  devcovenant/core/flow/refresh.py
+  devcovenant/docs/architecture.md
+  devcovenant/docs/workflow.md
+  tests/devcovenant/test_refresh.py
+
+- 2026-02-28:
   Change: Fixed baseline recovery regressions in deploy/refresh test fixtures
     after accidental undo drift changed seeded-install expectations.
   Why: Restored contract alignment so seeded installs exclude shipped custom

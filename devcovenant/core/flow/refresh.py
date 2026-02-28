@@ -1402,6 +1402,39 @@ def _normalize_governance_trigger_key(
     return ordered
 
 
+def _render_governance_workflow_yaml(payload: dict[str, object]) -> str:
+    """Render governance workflow YAML in canonical GitHub syntax."""
+    rendered = yaml.safe_dump(payload, sort_keys=False)
+    lines = rendered.splitlines()
+    normalized_lines: list[str] = []
+    in_on_block = False
+    null_event_pattern = re.compile(r"^(\s+[A-Za-z0-9_-]+): null$")
+
+    for line in lines:
+        if line in {"'on':", '"on":'}:
+            normalized_lines.append("on:")
+            in_on_block = True
+            continue
+
+        stripped = line.lstrip()
+        indent = len(line) - len(stripped)
+        if indent == 0 and stripped and stripped != "on:":
+            in_on_block = False
+
+        if in_on_block:
+            null_event_match = null_event_pattern.match(line)
+            if null_event_match:
+                normalized_lines.append(f"{null_event_match.group(1)}:")
+                continue
+
+        normalized_lines.append(line)
+
+    normalized = "\n".join(normalized_lines)
+    if rendered.endswith("\n"):
+        normalized += "\n"
+    return normalized
+
+
 def _refresh_governance_and_test(
     repo_root: Path,
     config: dict[str, object],
@@ -1431,7 +1464,7 @@ def _refresh_governance_and_test(
     target_path = (
         repo_root / ".github" / "workflows" / "governance-and-test.yml"
     )
-    rendered = yaml.safe_dump(payload, sort_keys=False)
+    rendered = _render_governance_workflow_yaml(payload)
     changed = True
     if target_path.exists():
         changed = target_path.read_text(encoding="utf-8") != rendered

@@ -393,7 +393,8 @@ Invariant:
   - managed docs and generated config sections
   - generated `.pre-commit-config.yaml` and `.gitignore`
   - generated `.github/workflows/governance-and-test.yml` with literal
-    workflow trigger key `on` preserved
+    workflow trigger key `on` preserved and trigger events rendered in
+    canonical form (`push:`, `pull_request:` without `null` values)
 - `.gitignore` is generated from:
   - global template fragments
   - active profile manifest fragments (`gitignore_fragments` or `ignore_dirs`)
