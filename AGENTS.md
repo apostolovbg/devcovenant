@@ -1285,12 +1285,17 @@ force_include_files:
 force_include_dirs:
 forbid_bare_except: True
 forbid_raise_exception: True
+forbid_broad_exception_handlers:
 forbid_silent_exception_pass: True
+broad_exception_waiver_markers:
+broad_exception_waiver_between:
 ```
 
 Enforce explicit error surfaces and block raw exception anti-patterns.
-This policy flags bare `except`, generic `raise Exception(...)`, and
-silent `except Exception: pass` handlers in selected source files.
+This policy flags bare `except`, broad `except Exception` handlers,
+generic `raise Exception(...)`, and silent `except Exception: pass`
+handlers in selected source files. Broad-handler waivers are explicit
+through marker comments or marker regions.
 
 
 ---
