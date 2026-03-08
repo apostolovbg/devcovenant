@@ -1,5 +1,5 @@
 # Profile Map
-**Last Updated:** 2026-02-28
+**Last Updated:** 2026-03-08
 **Version:** 1.0.0
 
 ## Table of Contents
@@ -57,6 +57,8 @@ Ops/tooling profiles:
 ## Custom Profiles
 - `devcovrepo`: repository-specific overlays/assets for DevCovenant dogfooding,
   including documentation-route metadata and broader modules-test mirrors.
+- `restapi`: reusable API-governance profile that tightens API-focused
+  documentation routes, security scope, and test coverage expectations.
 
 ## Translator Ownership
 Language profiles with declared translators:

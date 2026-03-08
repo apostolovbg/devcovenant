@@ -1,0 +1,81 @@
+version: 1
+profile: restapi
+category: framework
+suffixes:
+  - .py
+  - .js
+  - .ts
+  - .json
+  - .yaml
+  - .yml
+ignore_dirs:
+  - .venv
+  - __pycache__
+  - .pytest_cache
+  - .mypy_cache
+  - build
+  - dist
+  - node_modules
+policy_overlays:
+  documentation-growth-tracking:
+    user_facing_keywords:
+      - api
+      - endpoint
+      - endpoints
+      - route
+      - routes
+      - request
+      - response
+      - responses
+      - auth
+      - authorization
+      - pagination
+      - rate-limit
+      - idempotency
+      - webhook
+      - webhooks
+      - openapi
+      - swagger
+    doc_routes:
+      - "openapi/**/*.yaml => docs/api.md"
+      - "openapi/**/*.yml => docs/api.md"
+      - "**/*api*/**/*.py => docs/api.md"
+      - "**/*api*/**/*.js => docs/api.md"
+      - "**/*api*/**/*.ts => docs/api.md"
+      - "**/*api*/**/*.py => docs/auth.md"
+      - "**/*api*/**/*.js => docs/auth.md"
+      - "**/*api*/**/*.ts => docs/auth.md"
+      - "**/*api*/**/*.py => docs/errors.md"
+      - "**/*api*/**/*.js => docs/errors.md"
+      - "**/*api*/**/*.ts => docs/errors.md"
+  security-scanner:
+    force_include_globs:
+      - "**/*api*/**/*.py"
+      - "**/*api*/**/*.js"
+      - "**/*api*/**/*.ts"
+  no-raw-errors:
+    forbid_broad_exception_handlers: true
+    broad_exception_waiver_markers:
+      - DEVCOV_ALLOW_BROAD_ONCE
+  modules-need-tests:
+    force_include_globs:
+      - "**/*api*/**/*.py"
+      - "**/*api*/**/*.js"
+      - "**/*api*/**/*.ts"
+    watch_dirs:
+      - tests
+    tests_watch_dirs:
+      - tests
+  tests-coverage:
+    force_include_globs:
+      - "**/*api*/**/*.py"
+      - "**/*api*/**/*.js"
+      - "**/*api*/**/*.ts"
+    watch_dirs:
+      - tests
+    tests_watch_dirs:
+      - tests
+  read-only-directories:
+    include_dirs:
+      - openapi/generated
+      - clients/generated

@@ -1,10 +1,11 @@
 # Profiles
-**Last Updated:** 2026-02-28
+**Last Updated:** 2026-03-08
 **Version:** 1.0.0
 
 ## Table of Contents
 - [Overview](#overview)
 - [Responsibilities](#responsibilities)
+- [Shipped Custom Profiles](#shipped-custom-profiles)
 - [Metadata Population](#metadata-population)
 - [Baseline Defaults Profile](#baseline-defaults-profile)
 - [Dependency Selector Overlays](#dependency-selector-overlays)
@@ -51,6 +52,14 @@ and consistent across generated docs, including concise operator-update
 communication discipline.
 
 Profiles should not embed unrelated business logic.
+
+## Shipped Custom Profiles
+Packaged custom profile guidance currently includes:
+- `restapi`: API governance overlays for endpoint-heavy repositories.
+  It tightens `documentation-growth-tracking` with API/OpenAPI `doc_routes`,
+  hardens `security-scanner` and test policies with API path force-includes,
+  and keeps `no-raw-errors` broad-handler control explicit through
+  `DEVCOV_ALLOW_BROAD_ONCE`.
 
 ## Metadata Population
 Profiles are the preferred source of operational metadata values when policy

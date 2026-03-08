@@ -1,9 +1,10 @@
 # Custom Profiles
-**Last Updated:** 2026-02-27
+**Last Updated:** 2026-03-08
 **Version:** 1.0.0
 
 ## Table of Contents
 - [Overview](#overview)
+- [Shipped Profiles](#shipped-profiles)
 - [Directory Layout](#directory-layout)
 - [Override Semantics](#override-semantics)
 - [Translator Declarations](#translator-declarations)
@@ -13,6 +14,11 @@
 Custom profiles live under `devcovenant/custom/profiles/<profile-name>/`.
 They let a repository tailor assets, overlays, selectors, hooks, and
 translator declarations without editing shipped builtin profile manifests.
+
+## Shipped Profiles
+- `devcovrepo`: DevCovenant repository dogfooding profile.
+- `restapi`: API-governance profile for endpoint docs/routes, security scope,
+  raw-error discipline, and stricter API test expectations.
 
 ## Directory Layout
 A custom profile typically contains:

@@ -1,5 +1,5 @@
 # Changelog
-**Last Updated:** 2026-02-28
+**Last Updated:** 2026-03-08
 **Version:** 1.0.0
 
 <!-- DEVCOV:BEGIN -->
@@ -54,6 +54,21 @@ Example:
 ## Log changes here
 
 ## Version 1.0.0
+
+- 2026-03-08:
+  Change: Added a reusable `restapi` custom profile with strict API-focused
+    policy overlays for docs routing, security scope, and test expectations.
+  Why: Standardized endpoint-governance defaults so REST-heavy repositories
+    can enable stronger API discipline without ad-hoc local policy wiring.
+  Impact: Improved profile-level API hardening and documentation clarity for
+    custom profile inventory, activation guidance, and REST policy intent.
+  Files:
+  CHANGELOG.md
+  AGENTS.md
+  PROFILE_MAP.md
+  devcovenant/custom/profiles/README.md
+  devcovenant/custom/profiles/restapi/restapi.yaml
+  devcovenant/docs/profiles.md
 
 - 2026-02-28:
   Change: Strengthened `no-raw-errors` to flag broad `except Exception`
