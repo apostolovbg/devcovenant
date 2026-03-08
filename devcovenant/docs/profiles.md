@@ -5,7 +5,7 @@
 ## Table of Contents
 - [Overview](#overview)
 - [Responsibilities](#responsibilities)
-- [Shipped Custom Profiles](#shipped-custom-profiles)
+- [Repository Custom Profiles](#repository-custom-profiles)
 - [Metadata Population](#metadata-population)
 - [Baseline Defaults Profile](#baseline-defaults-profile)
 - [Dependency Selector Overlays](#dependency-selector-overlays)
@@ -53,13 +53,18 @@ communication discipline.
 
 Profiles should not embed unrelated business logic.
 
-## Shipped Custom Profiles
-Packaged custom profile guidance currently includes:
+## Repository Custom Profiles
+This repository includes custom profiles for dogfooding and reusable examples.
+Those payload directories are repository-owned and are not packaged as
+distribution inventory for user repositories.
+
+Current repo-local example:
 - `restapi`: API governance overlays for endpoint-heavy repositories.
   It tightens `documentation-growth-tracking` with API/OpenAPI `doc_routes`,
   hardens `security-scanner` and test policies with API path force-includes,
-  and keeps `no-raw-errors` broad-handler control explicit through
-  `DEVCOV_ALLOW_BROAD_ONCE`.
+  keeps `no-raw-errors` broad-handler control explicit through
+  `DEVCOV_ALLOW_BROAD_ONCE`, and can seed `docs/api.md`, `docs/auth.md`,
+  and `docs/errors.md` through profile assets.
 
 ## Metadata Population
 Profiles are the preferred source of operational metadata values when policy

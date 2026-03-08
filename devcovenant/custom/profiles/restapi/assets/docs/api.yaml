@@ -1,0 +1,18 @@
+header_lines:
+  - '# API Contract'
+body: |-
+  ## Overview
+  Document the externally visible REST API contract for this repository.
+  Keep this file focused on stable consumer-facing behavior, not internal
+  implementation details.
+
+  ## Endpoints
+  List each endpoint with:
+  - method and path
+  - request body/query/path parameters
+  - response status codes and payload shape
+  - idempotency and pagination behavior where relevant
+
+  ## Change Notes
+  When endpoint behavior changes, update this file in the same slice and keep
+  examples synchronized with OpenAPI/spec files used by the repository.

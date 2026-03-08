@@ -58,7 +58,8 @@ Ops/tooling profiles:
 - `devcovrepo`: repository-specific overlays/assets for DevCovenant dogfooding,
   including documentation-route metadata and broader modules-test mirrors.
 - `restapi`: reusable API-governance profile that tightens API-focused
-  documentation routes, security scope, and test coverage expectations.
+  documentation routes, security scope, and test coverage expectations, and
+  seeds `docs/api.md`, `docs/auth.md`, and `docs/errors.md` assets.
 
 ## Translator Ownership
 Language profiles with declared translators:

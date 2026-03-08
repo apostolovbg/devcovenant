@@ -16,6 +16,13 @@ ignore_dirs:
   - build
   - dist
   - node_modules
+assets:
+  - path: docs/api.md
+    template: docs/api.yaml
+  - path: docs/auth.md
+    template: docs/auth.yaml
+  - path: docs/errors.md
+    template: docs/errors.yaml
 policy_overlays:
   documentation-growth-tracking:
     user_facing_keywords:

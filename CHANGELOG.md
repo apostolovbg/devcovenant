@@ -55,6 +55,38 @@ Example:
 
 ## Version 1.0.0
 
+- 2026-03-09:
+  Change: Removed shipped-profile inventory lists from folder profile docs and
+    clarified package docs to treat custom profiles as repository-owned.
+  Why: Prevented documentation drift between folder contract docs and packaging
+    behavior for builtin/custom profile payloads.
+  Impact: Strengthened release-facing documentation clarity by keeping folder
+    READMEs contract-focused and making custom-profile shipping boundaries
+    explicit.
+  Files:
+  CHANGELOG.md
+  devcovenant/builtin/profiles/README.md
+  devcovenant/custom/profiles/README.md
+  devcovenant/docs/profiles.md
+
+- 2026-03-09:
+  Change: Converted REST API doc assets to YAML template descriptors and
+    wired them into the `restapi` custom profile asset list.
+  Why: Enabled zero-setup seeding of core API contract docs when the profile
+    is active, while aligning asset contracts to descriptor-based templates.
+  Impact: Improved `restapi` profile usability and consistency for new repos
+    by materializing `docs/api.md`, `docs/auth.md`, and `docs/errors.md`
+    from YAML descriptors.
+  Files:
+  CHANGELOG.md
+  PROFILE_MAP.md
+  devcovenant/custom/profiles/README.md
+  devcovenant/custom/profiles/restapi/restapi.yaml
+  devcovenant/custom/profiles/restapi/assets/docs/api.yaml
+  devcovenant/custom/profiles/restapi/assets/docs/auth.yaml
+  devcovenant/custom/profiles/restapi/assets/docs/errors.yaml
+  devcovenant/docs/profiles.md
+
 - 2026-03-08:
   Change: Added a reusable `restapi` custom profile with strict API-focused
     policy overlays for docs routing, security scope, and test expectations.

@@ -4,7 +4,6 @@
 
 ## Table of Contents
 - [Overview](#overview)
-- [Shipped Profiles](#shipped-profiles)
 - [Directory Layout](#directory-layout)
 - [Override Semantics](#override-semantics)
 - [Translator Declarations](#translator-declarations)
@@ -14,11 +13,10 @@
 Custom profiles live under `devcovenant/custom/profiles/<profile-name>/`.
 They let a repository tailor assets, overlays, selectors, hooks, and
 translator declarations without editing shipped builtin profile manifests.
-
-## Shipped Profiles
-- `devcovrepo`: DevCovenant repository dogfooding profile.
-- `restapi`: API-governance profile for endpoint docs/routes, security scope,
-  raw-error discipline, and stricter API test expectations.
+Custom profile payloads are repository-owned and should not be documented as
+packaged builtin inventory.
+Package builds keep custom-folder scaffolding (`README.md`, `__init__.py`) but
+do not ship repository-specific custom profile payload directories.
 
 ## Directory Layout
 A custom profile typically contains:

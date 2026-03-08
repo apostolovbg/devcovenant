@@ -1,0 +1,17 @@
+header_lines:
+  - '# Auth Contract'
+body: |-
+  ## Overview
+  Document authentication and authorization behavior for API consumers.
+  Use explicit statements for required credentials, token lifecycle, and scope
+  requirements.
+
+  ## Authentication
+  Describe:
+  - accepted auth schemes (for example bearer token, API key)
+  - token issuance and refresh expectations
+  - required headers and failure behavior for missing/invalid credentials
+
+  ## Authorization
+  Describe role/scope checks and the expected forbidden/unauthorized responses
+  for each protected endpoint group.

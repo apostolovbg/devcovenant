@@ -1,5 +1,5 @@
 # Builtin Profiles
-**Last Updated:** 2026-02-28
+**Last Updated:** 2026-03-08
 **Version:** 1.0.0
 
 ## Table of Contents
@@ -16,14 +16,9 @@ Builtin profiles are shipped under
 
 Profiles are metadata and asset providers. They do not activate policies.
 Policy activation authority is `config.policy_state`.
-
-Shipped baseline split:
-- `global`: universal hooks/assets baseline
-- `defaults`: common repo-layout metadata defaults
-
-Shipped language profiles:
-- `python`, `javascript`, `typescript`, `java`, `go`, `rust`, `opencl`,
-  `csharp`, `php`, `ruby`, `dart`, `swift`, `objective_c`, `sql`
+This README documents folder contracts and ownership boundaries, not the
+current profile inventory. For the active builtin/custom profile catalog, use
+`PROFILE_MAP.md`.
 
 ## Profile Responsibilities
 Profiles may provide:
