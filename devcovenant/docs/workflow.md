@@ -1,5 +1,5 @@
 # Workflow
-**Last Updated:** 2026-02-28
+**Last Updated:** 2026-03-09
 **Version:** 1.0.0
 
 ## Table of Contents
@@ -204,6 +204,10 @@ Install/upgrade boundary:
   custom scaffolding files from source
 - orphan custom policy scripts still fail with the same descriptor contract as
   core policies; fix the descriptor and rerun
+- refresh validates managed-doc descriptor schema before rendering docs:
+  `header_lines` must be a non-empty string list, and multiline
+  `managed_block`/`body`/`workflow_block` fields must use YAML literal block
+  style (`|`/`|-`) for stable markdown output
 - `upgrade` reconciles the full `devcovenant/` package from source on every
   run (including `devcovenant/*.py`, `core/`, and `builtin/`) regardless of
   version ordering

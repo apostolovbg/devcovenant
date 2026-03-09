@@ -1,5 +1,5 @@
 # Changelog
-**Last Updated:** 2026-03-08
+**Last Updated:** 2026-03-09
 **Version:** 1.0.0
 
 <!-- DEVCOV:BEGIN -->
@@ -54,6 +54,40 @@ Example:
 ## Log changes here
 
 ## Version 1.0.0
+
+- 2026-03-09:
+  Change: Replaced `CONTRIBUTING.md` and `SPEC.md` with current managed
+    template outputs for a one-time baseline alignment.
+  Why: Removed stale generic drift so both docs match current descriptor
+    contract text and workflow guidance.
+  Impact: Restored deterministic managed-doc baseline behavior for
+    contributor/spec guidance in this repository.
+  Files:
+  CHANGELOG.md
+  CONTRIBUTING.md
+  SPEC.md
+
+- 2026-03-09:
+  Change: Hardened managed-doc descriptor validation in refresh and converted
+    shipped doc asset templates to YAML literal block scalars.
+  Why: Aligned descriptor schema enforcement with deterministic markdown
+    generation to prevent template-serialization drift.
+  Impact: Strengthened install/refresh reliability and local test coverage for
+    descriptor contract failures outside CI-only execution.
+  Files:
+  CHANGELOG.md
+  AGENTS.md
+  devcovenant/config.yaml
+  devcovenant/core/flow/refresh.py
+  devcovenant/builtin/profiles/defaults/defaults.yaml
+  devcovenant/builtin/profiles/global/assets/README.yaml
+  devcovenant/builtin/profiles/global/assets/CONTRIBUTING.yaml
+  devcovenant/builtin/profiles/global/assets/PLAN.yaml
+  devcovenant/builtin/profiles/global/assets/devcovenant/README.yaml
+  devcovenant/docs/architecture.md
+  devcovenant/docs/profiles.md
+  devcovenant/docs/workflow.md
+  tests/devcovenant/test_refresh.py
 
 - 2026-03-09:
   Change: Removed shipped-profile inventory lists from folder profile docs and

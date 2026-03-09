@@ -1,5 +1,5 @@
 # Contributing
-**Last Updated:** 2026-02-27
+**Last Updated:** 2026-03-09
 **Version:** 1.0.0
 
 <!-- DEVCOV:BEGIN -->
@@ -11,30 +11,37 @@
 for lifecycle guidance and workflow details.
 <!-- DEVCOV:END -->
 
-Use this file as a fast entry point, then follow `AGENTS.md`, `PLAN.md`,
-`devcovenant/README.md`, and `devcovenant/docs/architecture.md`.
+This file is intentionally brief. Use it as the entry point, then follow
+the full guidance in `devcovenant/README.md` and policy definitions in
+`AGENTS.md`.
 
 ## Table of Contents
 1. [Overview](#overview)
 2. [Workflow](#workflow)
 
 ## Overview
-- `AGENTS.md`: policy source and workflow contract.
-- `devcovenant/docs/architecture.md`: stable runtime contracts.
-- `PLAN.md`: active backlog and done/not-done state.
-- `devcovenant/README.md`: command and lifecycle usage guide.
-- `SPEC.md`: optional specification layer usage guide.
+- Read `AGENTS.md` for policy definitions and required workflow.
+- Read `devcovenant/README.md` for architecture, schema, and lifecycle
+  rules.
+- Check `PLAN.md` for current priorities.
+This guide stays short by design. It points to canonical rules and
+reminds contributors that DevCovenant enforcement applies to every
+change, including documentation-only updates.
 
 ## Workflow
-Always use the gate sequence for repository edits:
-
+Follow the canonical gate sequence
+(details in `devcovenant/README.md`):
 ```bash
-devcovenant gate --start
-# pre-test mutating preflight; rerun until clean
-devcovenant gate --mid
-devcovenant test
-devcovenant gate --end
+python3 -m devcovenant gate --start
+# pre-test mutating preflight (may rerun)
+python3 -m devcovenant gate --mid
+python3 -m devcovenant test
+python3 -m devcovenant gate --end
 ```
-
-If a gate fails, fix the issue and rerun the full sequence.
-Stage completed changes before handoff.
+If the console script is not on your PATH, use
+`python3 -m devcovenant` instead of `devcovenant` for CLI commands.
+If the gate sequence fails, fix violations and rerun the full sequence
+before submitting changes.
+If managed-environment is enabled and the resolved interpreter is not
+executable, DevCovenant emits an explicit error and falls back to
+`managed_rerun_commands` when configured.

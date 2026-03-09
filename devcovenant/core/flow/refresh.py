@@ -48,6 +48,18 @@ _AGENTS_EDITABLE_HYGIENE_LINES = [
 ]
 USER_GITIGNORE_BEGIN = "# --- User entries (preserved) ---"
 USER_GITIGNORE_END = "# --- End user entries ---"
+_MANAGED_DOC_DESCRIPTOR_KEYS = frozenset(
+    {
+        "header_lines",
+        "doc_id",
+        "doc_type",
+        "managed_by",
+        "managed_block",
+        "body",
+        "workflow_block",
+    }
+)
+_MANAGED_DOC_MULTILINE_KEYS = ("managed_block", "body", "workflow_block")
 
 
 def _utc_today() -> str:
@@ -156,6 +168,137 @@ def _descriptor_path(repo_root: Path, doc_name: str) -> Path:
     if doc_path.parent != Path("."):
         return assets_root / doc_path.with_suffix(".yaml")
     return assets_root / f"{doc_path.stem}.yaml"
+
+
+def _yaml_scalar_style_token(raw_yaml: str, key: str) -> str:
+    """Return the inline scalar style token from one YAML key line."""
+    pattern = re.compile(
+        rf"(?m)^[ \t]*{re.escape(key)}[ \t]*:[ \t]*(?P<token>[^\n]*)$"
+    )
+    match = pattern.search(raw_yaml)
+    if match is None:
+        return ""
+    return str(match.group("token") or "").strip()
+
+
+def _require_literal_block_scalar(
+    descriptor_path: Path,
+    *,
+    doc_name: str,
+    field_name: str,
+    field_value: str,
+    raw_yaml: str,
+) -> None:
+    """Require literal block scalar style for multiline descriptor fields."""
+    if "\n" not in field_value:
+        return
+    style_token = _yaml_scalar_style_token(raw_yaml, field_name)
+    if style_token.startswith("|"):
+        return
+    raise ValueError(
+        "Managed doc descriptor "
+        f"`{descriptor_path}` field `{field_name}` in `{doc_name}` "
+        "contains multiline text and must use YAML literal block style "
+        f"(`{field_name}: |-`)."
+    )
+
+
+def _validate_managed_doc_descriptor(
+    descriptor: dict[str, object],
+    *,
+    descriptor_path: Path,
+    doc_name: str,
+    raw_yaml: str,
+) -> None:
+    """Validate managed-doc descriptor schema and multiline style rules."""
+    unknown_keys = sorted(
+        str(key)
+        for key in descriptor.keys()
+        if str(key) not in _MANAGED_DOC_DESCRIPTOR_KEYS
+    )
+    if unknown_keys:
+        raise ValueError(
+            "Managed doc descriptor "
+            f"`{descriptor_path}` has unsupported keys: "
+            f"{', '.join(unknown_keys)}."
+        )
+
+    header_lines = descriptor.get("header_lines")
+    if not isinstance(header_lines, list) or not header_lines:
+        raise ValueError(
+            "Managed doc descriptor "
+            f"`{descriptor_path}` for `{doc_name}` must define non-empty "
+            "`header_lines`."
+        )
+    for index, header in enumerate(header_lines):
+        if not isinstance(header, str) or not header.strip():
+            raise ValueError(
+                "Managed doc descriptor "
+                f"`{descriptor_path}` has invalid header_lines[{index}] "
+                "(must be a non-empty string)."
+            )
+
+    for field_name in (
+        "doc_id",
+        "doc_type",
+        "managed_by",
+        "managed_block",
+        "body",
+        "workflow_block",
+    ):
+        raw_value = descriptor.get(field_name)
+        if raw_value is None:
+            continue
+        if not isinstance(raw_value, str):
+            raise ValueError(
+                "Managed doc descriptor "
+                f"`{descriptor_path}` field `{field_name}` must be a string."
+            )
+        if field_name in _MANAGED_DOC_MULTILINE_KEYS:
+            _require_literal_block_scalar(
+                descriptor_path,
+                doc_name=doc_name,
+                field_name=field_name,
+                field_value=raw_value,
+                raw_yaml=raw_yaml,
+            )
+
+
+def _load_managed_doc_descriptor(
+    descriptor_path: Path,
+    *,
+    doc_name: str,
+) -> dict[str, object]:
+    """Load and validate one managed-doc descriptor payload."""
+    if not descriptor_path.exists():
+        raise ValueError(
+            "Missing managed doc descriptor for "
+            f"`{doc_name}`: {descriptor_path}"
+        )
+    try:
+        raw_yaml = descriptor_path.read_text(encoding="utf-8")
+    except OSError as exc:
+        raise ValueError(
+            f"Unable to read managed doc descriptor {descriptor_path}: {exc}"
+        ) from exc
+    try:
+        payload = yaml.safe_load(raw_yaml)
+    except yaml.YAMLError as exc:
+        raise ValueError(
+            f"Invalid YAML in managed doc descriptor {descriptor_path}: {exc}"
+        ) from exc
+    if not isinstance(payload, dict):
+        raise ValueError(
+            "Managed doc descriptor "
+            f"`{descriptor_path}` must contain a YAML mapping."
+        )
+    _validate_managed_doc_descriptor(
+        payload,
+        descriptor_path=descriptor_path,
+        doc_name=doc_name,
+        raw_yaml=raw_yaml,
+    )
+    return payload
 
 
 def _apply_header_overrides(
@@ -286,9 +429,10 @@ def _compose_managed_block_body(descriptor: dict[str, object]) -> str:
 
 def _render_doc(repo_root: Path, doc_name: str, version: str) -> str:
     """Render managed doc text from YAML descriptor."""
-    descriptor = _read_yaml(_descriptor_path(repo_root, doc_name))
-    if not descriptor:
-        raise ValueError(f"Descriptor is empty for managed doc '{doc_name}'.")
+    descriptor = _load_managed_doc_descriptor(
+        _descriptor_path(repo_root, doc_name),
+        doc_name=doc_name,
+    )
 
     headers_raw = descriptor.get("header_lines")
     if isinstance(headers_raw, list):
@@ -2127,8 +2271,16 @@ def refresh_repo(repo_root: Path) -> int:
     if gitignore_changed:
         print_step("Regenerated .gitignore from profile fragments", "✅")
 
-    docs = _managed_docs_from_config(config)
-    synced = [doc for doc in docs if _sync_doc(repo_root, doc, version)]
+    try:
+        docs = _managed_docs_from_config(config)
+    except ValueError as error:
+        print_step(f"Managed doc routing refresh failed: {error}", "🚫")
+        return 1
+    try:
+        synced = [doc for doc in docs if _sync_doc(repo_root, doc, version)]
+    except ValueError as error:
+        print_step(f"Managed doc refresh failed: {error}", "🚫")
+        return 1
     if synced:
         print_step(f"Synchronized managed docs: {', '.join(synced)}", "✅")
 

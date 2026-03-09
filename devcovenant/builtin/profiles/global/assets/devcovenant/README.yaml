@@ -5,78 +5,50 @@ header_lines:
 doc_id: README
 doc_type: repo-readme
 managed_by: DevCovenant
-managed_block: '**Read first:** `AGENTS.md` is the canonical source of truth. See
-
-  `devcovenant/README.md` for usage and lifecycle workflow details.'
-body: 'DevCovenant helps repositories keep policy prose and enforcement logic aligned.
-
+managed_block: |-
+  **Read first:** `AGENTS.md` is the canonical source of truth. See
+  `devcovenant/README.md` for usage and lifecycle workflow details.
+body: |-
+  DevCovenant helps repositories keep policy prose and enforcement logic
+  aligned.
 
   ## Table of Contents
-
   1. [Overview](#overview)
-
   2. [Workflow](#workflow)
-
   3. [Quick Start](#quick-start)
-
   4. [Commands](#commands)
-
   5. [License](#license)
 
-
   ## Overview
-
   Use this README for repository-level context. Keep policy source text in
-
-  `AGENTS.md`, requirements in `SPEC.md`, and active execution tasks in `PLAN.md`.
-
+  `AGENTS.md`, requirements in `SPEC.md`, and active execution tasks in
+  `PLAN.md`.
 
   ## Workflow
-
   Run the gate sequence for edits:
-
   1. `python3 -m devcovenant gate --start`
-
   2. Pre-test loop: `python3 -m devcovenant gate --mid`
-
   3. `python3 -m devcovenant test`
-
   4. `python3 -m devcovenant gate --end`
-
   On Windows, `py -m devcovenant ...` is a common equivalent launcher form.
 
-
   ## Quick Start
-
-  Install DevCovenant, review `devcovenant/config.yaml`, and deploy once config
-
-  is ready. Use `devcovenant check` for read-only policy audits and
-
+  Install DevCovenant, review `devcovenant/config.yaml`, and deploy once
+  config is ready. Use `devcovenant check` for read-only policy audits and
   gate commands for refresh/autofix workflow orchestration.
   If managed-environment is enabled and a resolved interpreter path is not
   executable, DevCovenant emits an explicit error and uses
   `managed_rerun_commands` fallback when configured.
 
-
   ## Commands
-
   ```bash
-
   devcovenant check
-
   devcovenant gate --start
-
   devcovenant gate --mid
-
   devcovenant test
-
   devcovenant gate --end
-
   devcovenant refresh
-
   ```
 
-
   ## License
-
-  Document repository licensing terms here.'
+  Document repository licensing terms here.

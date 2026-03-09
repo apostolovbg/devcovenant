@@ -1,5 +1,5 @@
 # DevCovenant Specification
-**Last Updated:** 2026-02-27
+**Last Updated:** 2026-03-09
 **Version:** 1.0.0
 
 <!-- DEVCOV:BEGIN -->
@@ -10,9 +10,9 @@
 
 This is a generic SPEC guide template.
 
-Use `SPEC.md` only if your repository wants a dedicated specification layer.
-If your repo does not need it, keep this file brief and route details to your
-real operational docs.
+Use `SPEC.md` only when your repository needs a durable specification layer.
+If your repo does not need one, keep this file brief and route details to
+your operational documentation.
 
 ## Table of Contents
 1. [Overview](#overview)
@@ -24,8 +24,7 @@ real operational docs.
 7. [Pointers](#pointers)
 
 ## Overview
-`SPEC.md` is the place for durable repository-level contracts only.
-
+`SPEC.md` is for durable repository-level contracts only.
 Do not use it as a backlog, scratchpad, or temporary planning area.
 
 ## When To Use SPEC
@@ -41,7 +40,7 @@ Do not use it as a backlog, scratchpad, or temporary planning area.
 ## Ownership Boundaries
 - `AGENTS.md`: workflow law, policy source, and temporary editable notes.
 - `PLAN.md`: active work backlog.
-- `devcovenant/docs/*`: operational and user-facing behavior guides.
+- `docs/*`: operational and user-facing behavior guides.
 - `SPEC.md`: optional stable contract layer for this repository only.
 
 ## Recommended Structure
@@ -61,14 +60,4 @@ architecture doc and keep SPEC at the meta-contract level.
 - If your repo stops using SPEC, keep this file as a short usage note only.
 
 ## Pointers
-For DevCovenant itself, stable operational contracts live in:
-- `devcovenant/docs/architecture.md`
-- `devcovenant/docs/workflow.md`
-- `devcovenant/docs/config.md`
-- `devcovenant/docs/policies.md`
-- `devcovenant/docs/profiles.md`
-- `devcovenant/docs/translators.md`
-- `devcovenant/docs/refresh.md`
-- `devcovenant/docs/registry.md`
-- `devcovenant/docs/installation.md`
-- `devcovenant/docs/troubleshooting.md`
+Add pointers to the docs that hold your runtime and operational contracts.

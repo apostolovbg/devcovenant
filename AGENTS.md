@@ -1,5 +1,5 @@
 # DevCovenant Development Guide
-**Last Updated:** 2026-03-08
+**Last Updated:** 2026-03-09
 **Version:** 1.0.0
 
 <!-- DEVCOV:BEGIN -->
@@ -979,6 +979,8 @@ exclude_prefixes: build
   node_modules
 exclude_globs: devcovenant/builtin/profiles/global/assets/*.yaml
   devcovenant/registry/**
+  *.egg-info/**
+  **/*.egg-info/**
   build/**
   dist/**
   node_modules/**

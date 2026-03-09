@@ -700,6 +700,8 @@ autogen_metadata_overlays:
     - build/**
     - dist/**
     - node_modules/**
+    - '*.egg-info/**'
+    - '**/*.egg-info/**'
     - devcovenant/builtin/profiles/global/assets/*.yaml
     - devcovenant/registry/**
     exclude_prefixes:
@@ -933,6 +935,8 @@ user_metadata_overrides:
     exclude_globs:
     - devcovenant/builtin/profiles/global/assets/*.yaml
     - devcovenant/registry/**
+    - '*.egg-info/**'
+    - '**/*.egg-info/**'
   modules-need-tests:
     exclude_globs:
     - devcovenant/builtin/profiles/**/assets/**

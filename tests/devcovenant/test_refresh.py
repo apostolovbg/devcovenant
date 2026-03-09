@@ -5,6 +5,8 @@ from __future__ import annotations
 import re
 import tempfile
 import unittest
+from contextlib import redirect_stdout
+from io import StringIO
 from pathlib import Path
 
 import yaml
@@ -223,6 +225,86 @@ def _unit_test_refresh_renders_canonical_workflow_triggers() -> None:
         assert re.search(r"(?m)^  pull_request:$", content)
 
 
+def _unit_test_refresh_rejects_multiline_non_block_doc_descriptor() -> None:
+    """refresh_repo should fail when multiline doc fields skip block style."""
+    with tempfile.TemporaryDirectory() as temp_dir:
+        repo_root = Path(temp_dir)
+        repo_seed_cache.copy_installed_repo(repo_root)
+
+        descriptor_path = (
+            repo_root
+            / "devcovenant"
+            / "builtin"
+            / "profiles"
+            / "global"
+            / "assets"
+            / "README.yaml"
+        )
+        descriptor_path.write_text(
+            "\n".join(
+                [
+                    "header_lines:",
+                    "- '# README'",
+                    "- '**Last Updated:**'",
+                    "- '**Version:** 1.0.0'",
+                    "doc_id: README",
+                    "doc_type: repo-readme",
+                    "managed_by: DevCovenant",
+                    "managed_block: |-",
+                    "  block text",
+                    'body: "Line one\\nLine two"',
+                    "",
+                ]
+            ),
+            encoding="utf-8",
+        )
+
+        output = StringIO()
+        with redirect_stdout(output):
+            result = refresh.refresh_repo(repo_root)
+        assert result == 1
+        assert "must use YAML literal block style" in output.getvalue()
+
+
+def _unit_test_refresh_rejects_invalid_doc_descriptor_schema() -> None:
+    """refresh_repo should fail when managed doc descriptor schema is wrong."""
+    with tempfile.TemporaryDirectory() as temp_dir:
+        repo_root = Path(temp_dir)
+        repo_seed_cache.copy_installed_repo(repo_root)
+
+        descriptor_path = (
+            repo_root
+            / "devcovenant"
+            / "builtin"
+            / "profiles"
+            / "global"
+            / "assets"
+            / "README.yaml"
+        )
+        descriptor_path.write_text(
+            "\n".join(
+                [
+                    "header_lines: invalid",
+                    "doc_id: README",
+                    "doc_type: repo-readme",
+                    "managed_by: DevCovenant",
+                    "managed_block: |-",
+                    "  block text",
+                    "body: |-",
+                    "  Body text",
+                    "",
+                ]
+            ),
+            encoding="utf-8",
+        )
+
+        output = StringIO()
+        with redirect_stdout(output):
+            result = refresh.refresh_repo(repo_root)
+        assert result == 1
+        assert "must define non-empty `header_lines`" in output.getvalue()
+
+
 class GeneratedUnittestCases(unittest.TestCase):
     """unittest wrappers for module-level tests."""
 
@@ -261,3 +343,11 @@ class GeneratedUnittestCases(unittest.TestCase):
     def test_refresh_renders_canonical_workflow_triggers(self):
         """Run canonical governance-trigger rendering refresh assertions."""
         _unit_test_refresh_renders_canonical_workflow_triggers()
+
+    def test_refresh_rejects_multiline_non_block_doc_descriptor(self):
+        """Run refresh rejection for non-block multiline descriptor strings."""
+        _unit_test_refresh_rejects_multiline_non_block_doc_descriptor()
+
+    def test_refresh_rejects_invalid_doc_descriptor_schema(self):
+        """Run refresh rejection for invalid managed-doc schema."""
+        _unit_test_refresh_rejects_invalid_doc_descriptor_schema()

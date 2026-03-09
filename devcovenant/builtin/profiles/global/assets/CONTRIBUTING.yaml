@@ -5,22 +5,41 @@ header_lines:
 doc_id: CONTRIBUTING
 doc_type: contributing-guide
 managed_by: DevCovenant
-managed_block: '**Read first:** `AGENTS.md` is canonical. See `devcovenant/README.md`
+managed_block: |-
+  **Read first:** `AGENTS.md` is canonical. See `devcovenant/README.md`
+  for lifecycle guidance and workflow details.
+body: |-
+  This file is intentionally brief. Use it as the entry point, then follow
+  the full guidance in `devcovenant/README.md` and policy definitions in
+  `AGENTS.md`.
 
-  for lifecycle guidance and workflow details.'
-body: "This file is intentionally brief. Use it as the entry point, then follow the\n\
-  full guidance in `devcovenant/README.md` and the policy definitions in\n`AGENTS.md`.\n\
-  \n## Table of Contents\n1. [Overview](#overview)\n2. [Workflow](#workflow)\n\n##\
-  \ Overview\n- Read `AGENTS.md` for policy definitions and required workflow.\n-\
-  \ Read `devcovenant/README.md` for architecture, schema, and lifecycle\n  rules.\n\
-  - Check `PLAN.md` for current priorities.\nThis guide stays short by design. It\
-  \ exists to point you to the canonical\nrules and to remind you that DevCovenant\
-  \ enforcement applies to every\nchange, including documentation-only updates.\n\n\
-  ## Workflow\nFollow the canonical gate sequence (details in `devcovenant/README.md`):\n\
-  ```bash\npython3 -m devcovenant gate --start\n# pre-test mutating preflight (may rerun)\npython3 -m devcovenant gate --mid\npython3 -m devcovenant test\npython3\
-  \ -m devcovenant gate --end\n```\nIf the console script is not on your PATH, use\
-  \ `python3 -m devcovenant`\ninstead of `devcovenant` for CLI commands.\nIf the gate\
-  \ sequence fails, fix the violations and rerun the full sequence\nbefore submitting\
-  \ changes.\nIf managed-environment is enabled and a resolved interpreter path is\
-  \ not executable, DevCovenant emits an explicit error and falls back to\n`managed_rerun_commands`\
-  \ when configured."
+  ## Table of Contents
+  1. [Overview](#overview)
+  2. [Workflow](#workflow)
+
+  ## Overview
+  - Read `AGENTS.md` for policy definitions and required workflow.
+  - Read `devcovenant/README.md` for architecture, schema, and lifecycle
+    rules.
+  - Check `PLAN.md` for current priorities.
+  This guide stays short by design. It points to canonical rules and
+  reminds contributors that DevCovenant enforcement applies to every
+  change, including documentation-only updates.
+
+  ## Workflow
+  Follow the canonical gate sequence
+  (details in `devcovenant/README.md`):
+  ```bash
+  python3 -m devcovenant gate --start
+  # pre-test mutating preflight (may rerun)
+  python3 -m devcovenant gate --mid
+  python3 -m devcovenant test
+  python3 -m devcovenant gate --end
+  ```
+  If the console script is not on your PATH, use
+  `python3 -m devcovenant` instead of `devcovenant` for CLI commands.
+  If the gate sequence fails, fix violations and rerun the full sequence
+  before submitting changes.
+  If managed-environment is enabled and the resolved interpreter is not
+  executable, DevCovenant emits an explicit error and falls back to
+  `managed_rerun_commands` when configured.

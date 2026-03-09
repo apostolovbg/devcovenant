@@ -1,5 +1,5 @@
 # DevCovenant Architecture Contracts
-**Last Updated:** 2026-02-28
+**Last Updated:** 2026-03-09
 **Version:** 1.0.0
 
 ## Table of Contents
@@ -132,6 +132,10 @@ Invariant:
 - When a custom script has a missing/invalid descriptor, refresh/upgrade keeps
   custom files but fails with the same descriptor-missing/invalid contract as
   core policies until descriptor metadata is fixed.
+- Managed-doc descriptors are schema-validated before refresh rendering:
+  `header_lines` must be a non-empty list of strings, and multiline
+  `managed_block`/`body`/`workflow_block` values must use YAML literal block
+  scalar style so generated markdown remains deterministic.
 - `devcovenant/core/runtime/run_logging.py` provides the shared per-run log
   substrate (run-folder allocation, artifact metadata, and latest-run pointer
   updates under `devcovenant/logs/`) while command layers own integration.

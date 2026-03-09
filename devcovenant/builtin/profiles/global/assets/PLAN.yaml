@@ -6,52 +6,32 @@ doc_id: PLAN
 doc_type: plan
 managed_by: DevCovenant
 managed_block: ''
-body: 'Use this plan to track active implementation work. Keep items
+body: |-
+  Use this plan to track active implementation work. Keep items
   dependency-ordered, factual, and current.
 
-
   ## Table of Contents
-
   1. [Overview](#overview)
-
   2. [Execution Rules](#execution-rules)
-
   3. [Active Work](#active-work)
-
   4. [Validation Routine](#validation-routine)
 
-
   ## Overview
-
   - Record durable requirements in `SPEC.md` when your repo uses SPEC.
-
   - Record change history in `CHANGELOG.md`.
-
   - Mark completed items as `[done]` and outstanding items as `[not done]`.
 
-
   ## Execution Rules
-
   - Work in dependency order unless an explicit blocker requires reordering.
-
   - Keep each item concrete and testable.
-
   - Update status in the same session when work lands.
 
-
   ## Active Work
-
   1. [not done] Item placeholder.
-
   2. [not done] Item placeholder.
-
   3. [done] Item placeholder.
 
-
   ## Validation Routine
-
   - Verify checks and tests pass.
-
   - Verify generated artifacts are synchronized after refresh.
-
-  - Verify documentation and changelog were updated where behavior changed.'
+  - Verify documentation and changelog were updated where behavior changed.

@@ -412,6 +412,8 @@ policy_overlays:
       - build/**
       - dist/**
       - node_modules/**
+      - '*.egg-info/**'
+      - '**/*.egg-info/**'
   name-clarity:
     exclude_prefixes:
       - build
