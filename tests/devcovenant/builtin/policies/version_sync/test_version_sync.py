@@ -66,10 +66,10 @@ class TestVersionSyncPolicy(unittest.TestCase):
         return changelog
 
     def _write_readme(self, root: Path, path: str, version: str) -> Path:
-        """Write a document carrying the Version header."""
+        """Write a document carrying the Project Version header."""
         readme = root / path
         readme.parent.mkdir(parents=True, exist_ok=True)
-        readme.write_text(f"**Version:** {version}\n")
+        readme.write_text(f"**Project Version:** {version}\n")
         return readme
 
     def _write_license(self, root: Path, path: str, version: str) -> Path:

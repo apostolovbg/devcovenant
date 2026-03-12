@@ -1,12 +1,9 @@
-# DevCovenant Deep Audit Remediation Plan
-**Last Updated:** 2026-02-27
-**Version:** 1.0.0
-
-<!-- DEVCOV:BEGIN -->
+# Development Plan
 **Doc ID:** PLAN
 **Doc Type:** plan
-**Managed By:** DevCovenant
-<!-- DEVCOV:END -->
+**Project Version:** 1.0.0
+**Last Updated:** 2026-03-09
+**DevCovenant Version:** 1.0.0
 
 This plan replaces the completed `1.0.0` pre-release handoff roadmap with a
 new, audit-seeded remediation roadmap for the next DevCovenant hardening
@@ -1259,6 +1256,6 @@ These are not blocked by the current plan unless promoted via plan amendment.
 - Broader critical-policy expansion beyond the current builtin critical set.
 - Activation of `semantic-version-scope` (requires explicit version-governed
   workflow slice and migration posture).
-- Cosmetic or breaking policy-ID renames (for example
-  `last-updated-placement`) without a concrete migration need.
+- Cosmetic or breaking policy-ID renames (for example `last-updated`) without
+  a concrete migration need.
 - Additional feature expansion unrelated to the issue register above.

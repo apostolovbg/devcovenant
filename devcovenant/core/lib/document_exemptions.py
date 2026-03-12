@@ -16,7 +16,9 @@ DEFAULT_MANAGED_MARKERS = (
     ("<!-- DEVCOV-POLICIES:BEGIN -->", "<!-- DEVCOV-POLICIES:END -->"),
 )
 DEFAULT_HEADER_DOC_SUFFIXES = frozenset({".md", ".rst", ".txt"})
-DEFAULT_HEADER_KEYS = frozenset({"last updated", "version"})
+DEFAULT_HEADER_KEYS = frozenset(
+    {"last updated", "project version", "devcovenant version"}
+)
 DEFAULT_HEADER_SCAN_LINES = 4
 EMPTY_MANAGED_MARKER_SIGNATURE = hashlib.sha256(b"").hexdigest()
 

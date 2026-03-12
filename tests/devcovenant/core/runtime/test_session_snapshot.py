@@ -54,7 +54,7 @@ def _unit_test_public_session_snapshot_helpers_are_deterministic() -> None:
             (
                 "# Sample\n"
                 "**Last Updated:** 2026-02-26\n"
-                "**Version:** 0.0.1\n"
+                "**Project Version:** 0.0.1\n"
                 "<!-- DEVCOV:BEGIN -->\n"
                 "Managed text.\n"
                 "<!-- DEVCOV:END -->\n"
@@ -178,7 +178,11 @@ def _unit_test_public_session_snapshot_helpers_are_deterministic() -> None:
             repo_root,
             "README.md",
             header_doc_suffixes={".md"},
-            header_keys={"last updated", "version"},
+            header_keys={
+                "last updated",
+                "project version",
+                "devcovenant version",
+            },
             header_scan_lines=4,
         )
         assert fingerprint is not None
@@ -188,7 +192,11 @@ def _unit_test_public_session_snapshot_helpers_are_deterministic() -> None:
         baseline = module.capture_document_exemption_baseline(
             repo_root,
             header_doc_suffixes=[".md"],
-            header_keys=["Last Updated", "Version"],
+            header_keys=[
+                "Last Updated",
+                "Project Version",
+                "DevCovenant Version",
+            ],
             header_scan_lines=4,
         )
         assert "README.md" in baseline

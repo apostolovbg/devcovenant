@@ -34,9 +34,13 @@ WORKFLOW_BEGIN = "<!-- DEVCOV-WORKFLOW:BEGIN -->"
 WORKFLOW_END = "<!-- DEVCOV-WORKFLOW:END -->"
 _POLICIES_BEGIN = "<!-- DEVCOV-POLICIES:BEGIN -->"
 _POLICIES_END = "<!-- DEVCOV-POLICIES:END -->"
+_USER_PRESERVE_BEGIN = "<!-- DEVCOV-USER-PRESERVE:BEGIN -->"
+_USER_PRESERVE_END = "<!-- DEVCOV-USER-PRESERVE:END -->"
 _DOC_ID_LABEL = "**Doc ID:**"
 _DOC_TYPE_LABEL = "**Doc Type:**"
-_MANAGED_BY_LABEL = "**Managed By:**"
+_PROJECT_VERSION_LABEL = "**Project Version:**"
+_LAST_UPDATED_LABEL = "**Last Updated:**"
+_DEVCOV_VERSION_LABEL = "**DevCovenant Version:**"
 _AGENTS_EDITABLE_HEADING = "# EDITABLE SECTION"
 _AGENTS_EDITABLE_HYGIENE_HEADING = "## Editable-Section Hygiene"
 _AGENTS_EDITABLE_HYGIENE_LINES = [
@@ -50,16 +54,34 @@ USER_GITIGNORE_BEGIN = "# --- User entries (preserved) ---"
 USER_GITIGNORE_END = "# --- End user entries ---"
 _MANAGED_DOC_DESCRIPTOR_KEYS = frozenset(
     {
-        "header_lines",
+        "title",
         "doc_id",
         "doc_type",
-        "managed_by",
+        "project_version",
+        "last_updated",
+        "devcovenant_version",
         "managed_block",
         "body",
         "workflow_block",
     }
 )
 _MANAGED_DOC_MULTILINE_KEYS = ("managed_block", "body", "workflow_block")
+_MANAGED_DOC_REQUIRED_KEYS = (
+    "title",
+    "doc_id",
+    "doc_type",
+    "project_version",
+    "last_updated",
+    "devcovenant_version",
+    "managed_block",
+    "body",
+)
+_MANAGED_DOC_OPTIONAL_KEYS = ("workflow_block",)
+_MANAGED_DOC_BOOLEAN_KEYS = (
+    "project_version",
+    "last_updated",
+    "devcovenant_version",
+)
 
 
 def _utc_today() -> str:
@@ -67,12 +89,61 @@ def _utc_today() -> str:
     return datetime.now(timezone.utc).date().isoformat()
 
 
-def _read_version(repo_root: Path) -> str:
-    """Read the target DevCovenant version."""
+def _read_devcovenant_version(repo_root: Path) -> str:
+    """Read the DevCovenant package version from devcovenant/VERSION."""
     version_path = repo_root / "devcovenant" / "VERSION"
     if not version_path.exists():
         return "0.0.0"
     version_text = version_path.read_text(encoding="utf-8").strip()
+    return version_text or "0.0.0"
+
+
+def _metadata_string_token(raw: object) -> str:
+    """Normalize one metadata value into a single string token."""
+    if isinstance(raw, list):
+        for entry in raw:
+            token = str(entry).strip()
+            if token:
+                return token
+        return ""
+    return str(raw or "").strip()
+
+
+def _project_version_file_from_config(config: dict[str, object]) -> str:
+    """Resolve version-sync.version_file from effective config layers."""
+    metadata_layers = (
+        config.get("autogen_metadata_overlays"),
+        config.get("user_metadata_overlays"),
+        config.get("autogen_metadata_overrides"),
+        config.get("user_metadata_overrides"),
+    )
+    resolved = ""
+    for layer in metadata_layers:
+        if not isinstance(layer, dict):
+            continue
+        version_sync = layer.get("version-sync")
+        if not isinstance(version_sync, dict):
+            continue
+        token = _metadata_string_token(version_sync.get("version_file"))
+        if token:
+            resolved = token
+    return resolved or "VERSION"
+
+
+def _read_project_version(repo_root: Path, config: dict[str, object]) -> str:
+    """Read the project version using version-sync.version_file."""
+    version_file = _project_version_file_from_config(config)
+    version_path = _resolve_path_under_root(
+        repo_root,
+        version_file,
+        field_name="version-sync.version_file",
+    )
+    if not version_path.exists():
+        return "0.0.0"
+    try:
+        version_text = version_path.read_text(encoding="utf-8").strip()
+    except OSError:
+        return "0.0.0"
     return version_text or "0.0.0"
 
 
@@ -211,9 +282,10 @@ def _validate_managed_doc_descriptor(
     raw_yaml: str,
 ) -> None:
     """Validate managed-doc descriptor schema and multiline style rules."""
+    descriptor_keys = [str(key) for key in descriptor.keys()]
     unknown_keys = sorted(
         str(key)
-        for key in descriptor.keys()
+        for key in descriptor_keys
         if str(key) not in _MANAGED_DOC_DESCRIPTOR_KEYS
     )
     if unknown_keys:
@@ -223,25 +295,25 @@ def _validate_managed_doc_descriptor(
             f"{', '.join(unknown_keys)}."
         )
 
-    header_lines = descriptor.get("header_lines")
-    if not isinstance(header_lines, list) or not header_lines:
+    required_prefix = list(_MANAGED_DOC_REQUIRED_KEYS)
+    if descriptor_keys[: len(required_prefix)] != required_prefix:
         raise ValueError(
             "Managed doc descriptor "
-            f"`{descriptor_path}` for `{doc_name}` must define non-empty "
-            "`header_lines`."
+            f"`{descriptor_path}` must declare keys in this order: "
+            f"{', '.join(required_prefix)}."
         )
-    for index, header in enumerate(header_lines):
-        if not isinstance(header, str) or not header.strip():
+
+    for field_name in _MANAGED_DOC_REQUIRED_KEYS:
+        if field_name not in descriptor:
             raise ValueError(
                 "Managed doc descriptor "
-                f"`{descriptor_path}` has invalid header_lines[{index}] "
-                "(must be a non-empty string)."
+                f"`{descriptor_path}` is missing required key `{field_name}`."
             )
 
     for field_name in (
+        "title",
         "doc_id",
         "doc_type",
-        "managed_by",
         "managed_block",
         "body",
         "workflow_block",
@@ -262,6 +334,28 @@ def _validate_managed_doc_descriptor(
                 field_value=raw_value,
                 raw_yaml=raw_yaml,
             )
+
+    for field_name in ("title", "doc_id", "doc_type"):
+        if not str(descriptor.get(field_name, "")).strip():
+            raise ValueError(
+                "Managed doc descriptor "
+                f"`{descriptor_path}` field `{field_name}` must be "
+                "non-empty."
+            )
+
+    for field_name in _MANAGED_DOC_BOOLEAN_KEYS:
+        raw_value = descriptor.get(field_name)
+        if not isinstance(raw_value, bool):
+            raise ValueError(
+                "Managed doc descriptor "
+                f"`{descriptor_path}` field `{field_name}` must be boolean."
+            )
+
+    if descriptor.get("devcovenant_version") is not True:
+        raise ValueError(
+            "Managed doc descriptor "
+            f"`{descriptor_path}` field `devcovenant_version` must be true."
+        )
 
 
 def _load_managed_doc_descriptor(
@@ -301,44 +395,40 @@ def _load_managed_doc_descriptor(
     return payload
 
 
-def _apply_header_overrides(
-    header_lines: list[str],
+def _descriptor_bool(descriptor: dict[str, object], field_name: str) -> bool:
+    """Return a required boolean field from a managed descriptor."""
+    raw_value = descriptor.get(field_name)
+    if not isinstance(raw_value, bool):
+        raise ValueError(
+            f"Managed doc descriptor field `{field_name}` must be boolean."
+        )
+    return raw_value
+
+
+def _render_generated_header(
+    descriptor: dict[str, object],
     *,
-    version: str,
-    title: str | None = None,
+    project_version: str,
+    devcovenant_version: str,
 ) -> list[str]:
-    """Inject standard header fields into descriptor header lines."""
-    updated = []
-    saw_title = False
-    saw_date = False
-    saw_version = False
-
-    for line in header_lines:
-        stripped = line.strip().lower()
-        if title and line.lstrip().startswith("#") and not saw_title:
-            updated.append(f"# {title}")
-            saw_title = True
-            continue
-        if stripped.startswith("**last updated:**"):
-            updated.append(f"**Last Updated:** {_utc_today()}")
-            saw_date = True
-            continue
-        if stripped.startswith("**version:**"):
-            updated.append(f"**Version:** {version}")
-            saw_version = True
-            continue
-        updated.append(line.rstrip())
-
-    if title and not saw_title:
-        updated.insert(0, f"# {title}")
-
-    insert_index = 1 if updated and updated[0].startswith("#") else 0
-    if not saw_date:
-        updated.insert(insert_index, f"**Last Updated:** {_utc_today()}")
-        insert_index += 1
-    if not saw_version:
-        updated.insert(insert_index, f"**Version:** {version}")
-    return updated
+    """Render deterministic top-of-doc header lines from descriptor keys."""
+    title = str(descriptor.get("title", "")).strip()
+    if not title:
+        raise ValueError("Managed doc descriptor field `title` is required.")
+    doc_id = str(descriptor.get("doc_id", "")).strip()
+    doc_type = str(descriptor.get("doc_type", "")).strip()
+    lines: list[str] = [f"# {title}"]
+    if doc_id:
+        lines.append(f"{_DOC_ID_LABEL} {doc_id}")
+    if doc_type:
+        lines.append(f"{_DOC_TYPE_LABEL} {doc_type}")
+    if _descriptor_bool(descriptor, "project_version"):
+        lines.append(f"{_PROJECT_VERSION_LABEL} {project_version}")
+    if _descriptor_bool(descriptor, "last_updated"):
+        lines.append(f"{_LAST_UPDATED_LABEL} {_utc_today()}")
+    if _descriptor_bool(descriptor, "devcovenant_version"):
+        lines.append(f"{_DEVCOV_VERSION_LABEL} {devcovenant_version}")
+    return lines
 
 
 def _marker_line_regex(marker: str) -> re.Pattern[str]:
@@ -381,70 +471,153 @@ def _render_block(begin_marker: str, end_marker: str, body: str) -> str:
     return "\n".join([begin_marker, body.rstrip("\n"), end_marker])
 
 
-def _managed_metadata_lines(descriptor: dict[str, object]) -> list[str]:
-    """Return managed-block metadata lines from descriptor fields."""
-    doc_id = str(descriptor.get("doc_id", "")).strip()
-    doc_type = str(descriptor.get("doc_type", "")).strip()
-    managed_by = str(descriptor.get("managed_by", "")).strip()
-    lines: list[str] = []
-    if doc_id:
-        lines.append(f"{_DOC_ID_LABEL} {doc_id}")
-    if doc_type:
-        lines.append(f"{_DOC_TYPE_LABEL} {doc_type}")
-    if managed_by:
-        lines.append(f"{_MANAGED_BY_LABEL} {managed_by}")
-    return lines
+def _validate_preserve_markers(text: str, *, doc_name: str) -> None:
+    """Validate DEVCOV preserve marker structure for one document text."""
+    begin_re = _marker_line_regex(_USER_PRESERVE_BEGIN)
+    end_re = _marker_line_regex(_USER_PRESERVE_END)
+    events: list[tuple[int, str]] = []
+    for match in begin_re.finditer(text):
+        events.append((match.start(), "begin"))
+    for match in end_re.finditer(text):
+        events.append((match.start(), "end"))
+    events.sort(key=lambda item: item[0])
+
+    depth = 0
+    for _, token in events:
+        if token == "begin":
+            if depth != 0:
+                raise ValueError(
+                    f"{doc_name} contains nested DEVCOV-USER-PRESERVE blocks."
+                )
+            depth = 1
+            continue
+        if depth == 0:
+            raise ValueError(
+                f"{doc_name} contains DEVCOV-USER-PRESERVE end marker "
+                "without begin marker."
+            )
+        depth = 0
+    if depth != 0:
+        raise ValueError(
+            f"{doc_name} contains unterminated DEVCOV-USER-PRESERVE block."
+        )
+
+
+def _preserve_block_spans(text: str) -> list[tuple[int, int, str]]:
+    """Return positional spans for DEVCOV-USER-PRESERVE blocks."""
+    return _block_spans(text, _USER_PRESERVE_BEGIN, _USER_PRESERVE_END)
+
+
+def _preserve_blocks(text: str) -> list[str]:
+    """Return preserve blocks in encounter order."""
+    return [block for _, _, block in _preserve_block_spans(text)]
+
+
+def _split_leading_preserve_blocks(text: str) -> tuple[list[str], str]:
+    """Split contiguous top-of-document preserve blocks from text."""
+    spans = _preserve_block_spans(text)
+    if not spans:
+        return [], text
+    leading: list[str] = []
+    cursor = 0
+    for start, end, block in spans:
+        if text[cursor:start].strip():
+            break
+        leading.append(block)
+        cursor = end
+    if not leading:
+        return [], text
+    remainder = text[cursor:].lstrip("\n")
+    return leading, remainder
+
+
+def _merge_preserve_blocks_into_replacement(
+    current_block: str,
+    replacement_block: str,
+) -> str:
+    """Merge preserve blocks from current block into replacement block."""
+    current_preserves = _preserve_blocks(current_block)
+    if not current_preserves:
+        return replacement_block
+
+    missing = [
+        block
+        for block in current_preserves
+        if block.strip() and block not in replacement_block
+    ]
+    if not missing:
+        return replacement_block
+
+    end_index = replacement_block.rfind(BLOCK_END)
+    if end_index < 0:
+        return replacement_block
+    prefix = replacement_block[:end_index].rstrip("\n")
+    suffix = replacement_block[end_index:].lstrip("\n")
+    sections = [prefix]
+    sections.extend(block.strip("\n") for block in missing)
+    merged_prefix = "\n\n".join(
+        section for section in sections if section.strip()
+    )
+    return f"{merged_prefix}\n{suffix}"
+
+
+def _merge_header_with_preserves(
+    current_header: str, template_header: str
+) -> str:
+    """Render generated header while preserving user preserve blocks."""
+    leading_blocks, _ = _split_leading_preserve_blocks(current_header)
+    all_blocks = _preserve_blocks(current_header)
+
+    used = 0
+    remaining_blocks: list[str] = []
+    for block in all_blocks:
+        if used < len(leading_blocks) and block == leading_blocks[used]:
+            used += 1
+            continue
+        remaining_blocks.append(block)
+
+    sections: list[str] = []
+    sections.extend(block.strip("\n") for block in leading_blocks)
+    sections.append(template_header.strip("\n"))
+    sections.extend(block.strip("\n") for block in remaining_blocks)
+    return "\n\n".join(section for section in sections if section).strip("\n")
 
 
 def _normalize_managed_block_body(body: str) -> str:
-    """Strip marker/header lines from descriptor-managed block body."""
+    """Strip begin/end markers from descriptor-managed block body text."""
     cleaned: list[str] = []
     for raw_line in body.splitlines():
         line = raw_line.rstrip()
         stripped = line.strip()
         if stripped in {BLOCK_BEGIN, BLOCK_END}:
             continue
-        if stripped.startswith(_DOC_ID_LABEL):
-            continue
-        if stripped.startswith(_DOC_TYPE_LABEL):
-            continue
-        if stripped.startswith(_MANAGED_BY_LABEL):
-            continue
         cleaned.append(line)
     return "\n".join(cleaned).strip("\n")
 
 
 def _compose_managed_block_body(descriptor: dict[str, object]) -> str:
-    """Compose managed block body from descriptor metadata and body text."""
-    metadata_lines = _managed_metadata_lines(descriptor)
-    block_extra = _normalize_managed_block_body(
+    """Compose managed block body from descriptor-managed block text."""
+    return _normalize_managed_block_body(
         str(descriptor.get("managed_block", ""))
     )
-    if metadata_lines and block_extra:
-        return "\n".join(metadata_lines + ["", block_extra])
-    if metadata_lines:
-        return "\n".join(metadata_lines)
-    return block_extra
 
 
-def _render_doc(repo_root: Path, doc_name: str, version: str) -> str:
+def _render_doc(
+    repo_root: Path,
+    doc_name: str,
+    *,
+    project_version: str,
+    devcovenant_version: str,
+) -> str:
     """Render managed doc text from YAML descriptor."""
     descriptor = _load_managed_doc_descriptor(
         _descriptor_path(repo_root, doc_name),
         doc_name=doc_name,
     )
-
-    headers_raw = descriptor.get("header_lines")
-    if isinstance(headers_raw, list):
-        header_lines = [str(item).rstrip() for item in headers_raw]
-    else:
-        header_lines = []
-
-    title_override = repo_root.name if doc_name == "README.md" else None
-    header_lines = _apply_header_overrides(
-        header_lines,
-        version=version,
-        title=title_override,
+    header_lines = _render_generated_header(
+        descriptor,
+        project_version=project_version,
+        devcovenant_version=devcovenant_version,
     )
 
     block_body = _compose_managed_block_body(descriptor)
@@ -502,19 +675,71 @@ def _replace_managed_block(current: str, template: str) -> tuple[str, bool]:
     """Replace managed blocks in current text with template block content."""
     current_blocks = _managed_block_spans(current)
     template_blocks = _managed_block_spans(template)
-    if not current_blocks or not template_blocks:
+    if not current_blocks:
         return current, False
+
+    template_header, _ = _rendered_header_and_block(template)
+    if not template_blocks:
+        updated = current
+        for start, end, current_block in reversed(current_blocks):
+            preserved = "\n\n".join(
+                block.strip("\n") for block in _preserve_blocks(current_block)
+            ).strip("\n")
+            prefix = updated[:start].rstrip("\n")
+            suffix = updated[end:].lstrip("\n")
+            chunks: list[str] = []
+            if prefix:
+                chunks.append(prefix)
+            if preserved:
+                chunks.append(preserved)
+            if suffix:
+                chunks.append(suffix)
+            updated = "\n\n".join(chunks)
+
+        first_block_start = current_blocks[0][0]
+        current_header = current[:first_block_start]
+        merged_header = _merge_header_with_preserves(
+            current_header,
+            template_header,
+        )
+        body = updated[first_block_start:].lstrip("\n")
+        rebuilt_chunks: list[str] = [merged_header.rstrip("\n")]
+        if body:
+            rebuilt_chunks.append(body)
+        rebuilt = "\n\n".join(
+            chunk for chunk in rebuilt_chunks if chunk
+        ).rstrip()
+        rebuilt = rebuilt + "\n" if rebuilt else ""
+        return rebuilt, rebuilt != current
 
     replacement_count = min(len(current_blocks), len(template_blocks))
     updated = current
     changed = False
     for index in range(replacement_count - 1, -1, -1):
-        start, end, _ = current_blocks[index]
-        replacement = template_blocks[index][2]
+        start, end, current_block = current_blocks[index]
+        replacement = _merge_preserve_blocks_into_replacement(
+            current_block,
+            template_blocks[index][2],
+        )
         if updated[start:end] == replacement:
             continue
         updated = updated[:start] + replacement + updated[end:]
         changed = True
+
+    if template_header and current_blocks:
+        first_block_start = current_blocks[0][0]
+        current_header = updated[:first_block_start]
+        merged_header = _merge_header_with_preserves(
+            current_header,
+            template_header,
+        )
+        if merged_header != current_header.strip("\n"):
+            updated = (
+                merged_header.rstrip("\n")
+                + "\n\n"
+                + updated[first_block_start:].lstrip("\n")
+            )
+            changed = True
     return updated, changed
 
 
@@ -522,7 +747,7 @@ def _rendered_header_and_block(rendered: str) -> tuple[str, str]:
     """Return rendered header text and first managed block content."""
     managed_block = _extract_managed_block(rendered)
     if managed_block is None:
-        return rendered.strip("\n"), ""
+        return _generated_header_text(rendered), ""
     block_start = rendered.find(managed_block)
     if block_start < 0:
         return rendered.strip("\n"), managed_block
@@ -530,22 +755,77 @@ def _rendered_header_and_block(rendered: str) -> tuple[str, str]:
     return header_text, managed_block
 
 
+def _generated_header_text(rendered: str) -> str:
+    """Extract generated doc header lines from rendered markdown text."""
+    lines = rendered.replace("\r\n", "\n").splitlines()
+    if not lines:
+        return ""
+
+    index = 0
+    while index < len(lines) and not lines[index].strip():
+        index += 1
+    if index >= len(lines):
+        return ""
+
+    header_lines: list[str] = []
+    if lines[index].lstrip().startswith("#"):
+        header_lines.append(lines[index].rstrip())
+        index += 1
+
+    header_prefixes = (
+        "**doc id:**",
+        "**doc type:**",
+        "**project version:**",
+        "**last updated:**",
+        "**devcovenant version:**",
+    )
+    while index < len(lines):
+        token = lines[index].strip()
+        if not token:
+            index += 1
+            continue
+        lowered = token.lower()
+        if lowered.startswith(header_prefixes):
+            header_lines.append(lines[index].rstrip())
+            index += 1
+            continue
+        break
+
+    return "\n".join(header_lines).strip("\n")
+
+
+def _merge_first_block_preserves(
+    *,
+    source_text: str,
+    target_text: str,
+    begin_marker: str,
+    end_marker: str,
+) -> str:
+    """Merge preserve blocks from source first block into target block."""
+    source_block = _first_block_text(source_text, begin_marker, end_marker)
+    if source_block is None:
+        return target_text
+    target_block = _first_block_text(target_text, begin_marker, end_marker)
+    if target_block is None:
+        return target_text
+    merged_block = _merge_preserve_blocks_into_replacement(
+        source_block,
+        target_block,
+    )
+    if merged_block == target_block:
+        return target_text
+    block_start = target_text.find(target_block)
+    if block_start < 0:
+        return target_text
+    block_end = block_start + len(target_block)
+    return target_text[:block_start] + merged_block + target_text[block_end:]
+
+
 def _strip_existing_generated_headers(current: str) -> str:
     """Strip leading generated header metadata from existing doc text."""
     lines = current.replace("\r\n", "\n").splitlines()
     if not lines:
         return ""
-
-    scan_window = lines[:8]
-    has_last_updated = any(
-        line.strip().lower().startswith("**last updated:**")
-        for line in scan_window
-    )
-    has_version = any(
-        line.strip().lower().startswith("**version:**") for line in scan_window
-    )
-    if not (has_last_updated or has_version):
-        return current.strip("\n")
 
     index = 0
     while index < len(lines) and not lines[index].strip():
@@ -562,7 +842,16 @@ def _strip_existing_generated_headers(current: str) -> str:
         if token.startswith("**last updated:**"):
             index += 1
             continue
-        if token.startswith("**version:**"):
+        if token.startswith("**project version:**"):
+            index += 1
+            continue
+        if token.startswith("**devcovenant version:**"):
+            index += 1
+            continue
+        if token.startswith("**doc id:**"):
+            index += 1
+            continue
+        if token.startswith("**doc type:**"):
             index += 1
             continue
         break
@@ -583,9 +872,16 @@ def _inject_managed_header_and_block(
         return current, False
 
     preserved = _strip_existing_generated_headers(current)
-    sections = [header_text, managed_block]
-    if preserved:
-        sections.append(preserved)
+    leading_preserve_blocks, preserved_remainder = (
+        _split_leading_preserve_blocks(preserved)
+    )
+    sections: list[str] = [
+        *(block.strip("\n") for block in leading_preserve_blocks),
+        header_text,
+        managed_block,
+    ]
+    if preserved_remainder:
+        sections.append(preserved_remainder)
     updated = "\n\n".join(part for part in sections if part).rstrip() + "\n"
     return updated, updated != current
 
@@ -667,6 +963,19 @@ def _sync_agents_content(current: str, rendered: str) -> tuple[str, bool]:
         + rendered[rendered_editable_end:]
     )
 
+    updated = _merge_first_block_preserves(
+        source_text=current,
+        target_text=updated,
+        begin_marker=BLOCK_BEGIN,
+        end_marker=BLOCK_END,
+    )
+    updated = _merge_first_block_preserves(
+        source_text=current,
+        target_text=updated,
+        begin_marker=WORKFLOW_BEGIN,
+        end_marker=WORKFLOW_END,
+    )
+
     current_policy_block = _first_block_text(
         current, _POLICIES_BEGIN, _POLICIES_END
     )
@@ -677,6 +986,21 @@ def _sync_agents_content(current: str, rendered: str) -> tuple[str, bool]:
         updated = updated.replace(
             template_policy_block, current_policy_block, 1
         )
+
+    updated_spans = _managed_block_spans(updated)
+    if managed_spans and updated_spans:
+        current_header = current[: managed_spans[0][0]]
+        template_header = updated[: updated_spans[0][0]]
+        merged_header = _merge_header_with_preserves(
+            current_header,
+            template_header,
+        )
+        if merged_header != template_header.strip("\n"):
+            updated = (
+                merged_header.rstrip("\n")
+                + "\n\n"
+                + updated[updated_spans[0][0] :].lstrip("\n")
+            )
 
     return updated, updated != current
 
@@ -726,9 +1050,21 @@ def _normalize_agents_editable_section(section: str) -> str:
     return f"{prefix}{section_core}{suffix}"
 
 
-def _sync_doc(repo_root: Path, doc_name: str, version: str) -> bool:
+def _sync_doc(
+    repo_root: Path,
+    doc_name: str,
+    *,
+    project_version: str,
+    devcovenant_version: str,
+) -> bool:
     """Synchronize one managed doc from descriptor content."""
-    rendered = _render_doc(repo_root, doc_name, version)
+    rendered = _render_doc(
+        repo_root,
+        doc_name,
+        project_version=project_version,
+        devcovenant_version=devcovenant_version,
+    )
+    _validate_preserve_markers(rendered, doc_name=doc_name)
 
     target = repo_root / doc_name
     if not target.exists():
@@ -737,6 +1073,7 @@ def _sync_doc(repo_root: Path, doc_name: str, version: str) -> bool:
         return True
 
     current = target.read_text(encoding="utf-8")
+    _validate_preserve_markers(current, doc_name=doc_name)
     if _doc_is_placeholder(current):
         target.write_text(rendered, encoding="utf-8")
         return True
@@ -2177,8 +2514,14 @@ def refresh_repo(repo_root: Path) -> int:
         config = _load_config_template(repo_root)
         user_config = _read_yaml(config_path) if config_path.exists() else {}
         _merge_user_config_values(config, user_config)
-        version = _read_version(repo_root)
-        _sync_doc(repo_root, "AGENTS.md", version)
+        project_version = _read_project_version(repo_root, config)
+        devcovenant_version = _read_devcovenant_version(repo_root)
+        _sync_doc(
+            repo_root,
+            "AGENTS.md",
+            project_version=project_version,
+            devcovenant_version=devcovenant_version,
+        )
     except ValueError as error:
         print_step(f"Refresh failed: {error}", "🚫")
         return 1
@@ -2277,7 +2620,22 @@ def refresh_repo(repo_root: Path) -> int:
         print_step(f"Managed doc routing refresh failed: {error}", "🚫")
         return 1
     try:
-        synced = [doc for doc in docs if _sync_doc(repo_root, doc, version)]
+        project_version = _read_project_version(repo_root, config)
+    except ValueError as error:
+        print_step(f"Project version resolution failed: {error}", "🚫")
+        return 1
+    devcovenant_version = _read_devcovenant_version(repo_root)
+    try:
+        synced = [
+            doc
+            for doc in docs
+            if _sync_doc(
+                repo_root,
+                doc,
+                project_version=project_version,
+                devcovenant_version=devcovenant_version,
+            )
+        ]
     except ValueError as error:
         print_step(f"Managed doc refresh failed: {error}", "🚫")
         return 1

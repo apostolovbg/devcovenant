@@ -1,12 +1,11 @@
 # Changelog
-**Last Updated:** 2026-03-09
-**Version:** 1.0.0
-
-<!-- DEVCOV:BEGIN -->
 **Doc ID:** CHANGELOG
 **Doc Type:** changelog
-**Managed By:** DevCovenant
+**Project Version:** 1.0.0
+**Last Updated:** 2026-03-09
+**DevCovenant Version:** 1.0.0
 
+<!-- DEVCOV:BEGIN -->
 ## How to Log Changes
 Add one entry for each substantive change under the current version header.
 Keep entries newest-first and record dates in ISO format (`YYYY-MM-DD`).
@@ -54,6 +53,104 @@ Example:
 ## Log changes here
 
 ## Version 1.0.0
+
+- 2026-03-09:
+  Change: Documented gate changelog-helper default header-key alignment in
+    workflow and architecture references.
+  Why: Clarified that changelog exemption defaults now track generated header
+    labels (`Last Updated`, `Project Version`, `DevCovenant Version`).
+  Impact: Reduced doc/runtime drift risk for session-exemption behavior and
+    made troubleshooting clearer for gate-start changelog checks.
+  Files:
+  devcovenant/docs/architecture.md
+  devcovenant/docs/workflow.md
+
+- 2026-03-09:
+  Change: Renamed `last-updated-placement` to `last-updated`, migrated
+    managed-doc header contracts to generated key fields, and hardened refresh
+    preserve-block semantics.
+  Why: Standardized policy/runtime naming and removed legacy header parsing so
+    descriptor-governed docs and policy metadata remain deterministic.
+  Impact: Strengthened forward-only release behavior by enforcing
+    `Project Version` headers, preserving user blocks anywhere in managed docs,
+    and documenting the migration across config/profile/runtime/test surfaces.
+  Files:
+  AGENTS.md
+  CHANGELOG.md
+  CONTRIBUTING.md
+  PLAN.md
+  POLICY_MAP.md
+  PROFILE_MAP.md
+  README.md
+  SPEC.md
+  devcovenant/README.md
+  devcovenant/builtin/policies/README.md
+  devcovenant/builtin/policies/last_updated_placement/__init__.py
+  devcovenant/builtin/policies/last_updated_placement/autofix/__init__.py
+  devcovenant/builtin/policies/last_updated_placement/autofix/global.py
+  devcovenant/builtin/policies/last_updated_placement/\
+    last_updated_placement.py
+  devcovenant/builtin/policies/last_updated_placement/\
+    last_updated_placement.yaml
+  devcovenant/builtin/policies/last_updated/__init__.py
+  devcovenant/builtin/policies/last_updated/autofix/__init__.py
+  devcovenant/builtin/policies/last_updated/autofix/global.py
+  devcovenant/builtin/policies/last_updated/last_updated.py
+  devcovenant/builtin/policies/last_updated/last_updated.yaml
+  devcovenant/builtin/policies/version_sync/version_sync.py
+  devcovenant/builtin/profiles/README.md
+  devcovenant/builtin/profiles/defaults/defaults.yaml
+  devcovenant/builtin/profiles/global/assets/AGENTS.yaml
+  devcovenant/builtin/profiles/global/assets/CHANGELOG.yaml
+  devcovenant/builtin/profiles/global/assets/CONTRIBUTING.yaml
+  devcovenant/builtin/profiles/global/assets/LICENSE.yaml
+  devcovenant/builtin/profiles/global/assets/PLAN.yaml
+  devcovenant/builtin/profiles/global/assets/README.yaml
+  devcovenant/builtin/profiles/global/assets/SPEC.yaml
+  devcovenant/builtin/profiles/global/assets/devcovenant/README.yaml
+  devcovenant/config.yaml
+  devcovenant/core/README.md
+  devcovenant/core/flow/gate_changelog_helpers.py
+  devcovenant/core/flow/refresh.py
+  devcovenant/core/lib/document_exemptions.py
+  devcovenant/custom/README.md
+  devcovenant/custom/policies/README.md
+  devcovenant/custom/policies/managed_doc_assets/managed_doc_assets.py
+  devcovenant/custom/profiles/README.md
+  devcovenant/custom/profiles/devcovrepo/devcovrepo.yaml
+  devcovenant/docs/architecture.md
+  devcovenant/docs/config.md
+  devcovenant/docs/installation.md
+  devcovenant/docs/policies.md
+  devcovenant/docs/profiles.md
+  devcovenant/docs/refresh.md
+  devcovenant/docs/registry.md
+  devcovenant/docs/translators.md
+  devcovenant/docs/troubleshooting.md
+  devcovenant/docs/workflow.md
+  devcovenant/logs/README.md
+  devcovenant/registry/README.md
+  tests/devcovenant/builtin/policies/changelog_coverage/\
+    test_changelog_coverage.py
+  tests/devcovenant/builtin/policies/documentation_growth_tracking/\
+    test_documentation_growth_tracking.py
+  tests/devcovenant/builtin/policies/last_updated_placement/__init__.py
+  tests/devcovenant/builtin/policies/last_updated_placement/autofix/\
+    __init__.py
+  tests/devcovenant/builtin/policies/last_updated_placement/autofix/\
+    test_global.py
+  tests/devcovenant/builtin/policies/last_updated_placement/\
+    test_last_updated_placement.py
+  tests/devcovenant/builtin/policies/last_updated/__init__.py
+  tests/devcovenant/builtin/policies/last_updated/autofix/__init__.py
+  tests/devcovenant/builtin/policies/last_updated/autofix/test_global.py
+  tests/devcovenant/builtin/policies/last_updated/test_last_updated.py
+  tests/devcovenant/builtin/policies/version_sync/test_version_sync.py
+  tests/devcovenant/core/lib/test_document_exemptions.py
+  tests/devcovenant/core/runtime/test_session_snapshot.py
+  tests/devcovenant/custom/policies/managed_doc_assets/\
+    test_managed_doc_assets.py
+  tests/devcovenant/test_refresh.py
 
 - 2026-03-09:
   Change: Replaced `CONTRIBUTING.md` and `SPEC.md` with current managed

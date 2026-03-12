@@ -1,10 +1,9 @@
-header_lines:
-- '# DevCovenant'
-- '**Last Updated:**'
-- '**Version:** 1.0.0'
+title: DevCovenant
 doc_id: README
 doc_type: repo-readme
-managed_by: DevCovenant
+project_version: false
+last_updated: true
+devcovenant_version: true
 managed_block: |-
   **Read first:** `AGENTS.md` is the canonical source of truth. See
   `devcovenant/README.md` for usage and lifecycle workflow details.

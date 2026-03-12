@@ -39,8 +39,8 @@ def _policy_violations(repo_root: Path) -> list[str]:
     return [violation.message for violation in check.check(context)]
 
 
-def _unit_test_generated_metadata_managed_blocks_pass() -> None:
-    """Policy should pass after refresh with generated metadata lines."""
+def _unit_test_generated_descriptor_and_docs_pass() -> None:
+    """Policy should pass for refreshed generated docs/descriptors."""
     with tempfile.TemporaryDirectory() as temp_dir:
         repo_root = Path(temp_dir)
         install.install_repo(repo_root)
@@ -49,13 +49,12 @@ def _unit_test_generated_metadata_managed_blocks_pass() -> None:
         messages = _policy_violations(repo_root)
         assert not any("Managed block for " in message for message in messages)
         assert not any(
-            "must not duplicate Doc ID/Doc Type/Managed By lines" in message
-            for message in messages
+            "missing required header" in message for message in messages
         )
 
 
-def _unit_test_descriptor_metadata_duplication_is_rejected() -> None:
-    """Policy should reject descriptors that duplicate generated metadata."""
+def _unit_test_descriptor_generated_label_duplication_is_rejected() -> None:
+    """Policy should reject managed_block text that duplicates key labels."""
     with tempfile.TemporaryDirectory() as temp_dir:
         repo_root = Path(temp_dir)
         install.install_repo(repo_root)
@@ -82,66 +81,35 @@ def _unit_test_descriptor_metadata_duplication_is_rejected() -> None:
 
         messages = _policy_violations(repo_root)
         assert any(
-            "must not duplicate Doc ID/Doc Type/Managed By lines" in message
+            "must not duplicate generated header labels" in message
             for message in messages
         )
 
 
-def _unit_test_header_last_updated_value_is_template_agnostic() -> None:
-    """Policy should ignore concrete Last Updated dates in descriptors."""
+def _unit_test_user_preserve_blocks_inside_managed_block_are_ignored() -> None:
+    """Policy should ignore user-preserve blocks inside managed blocks."""
     with tempfile.TemporaryDirectory() as temp_dir:
         repo_root = Path(temp_dir)
         install.install_repo(repo_root)
         assert refresh_repo(repo_root) == 0
 
-        descriptor_path = (
-            repo_root
-            / "devcovenant"
-            / "builtin"
-            / "profiles"
-            / "global"
-            / "assets"
-            / "PLAN.yaml"
+        readme_path = repo_root / "README.md"
+        content = readme_path.read_text(encoding="utf-8")
+        insert = "\n".join(
+            [
+                "<!-- DEVCOV-USER-PRESERVE:BEGIN -->",
+                "![Banner](https://example.com/banner.png)",
+                "<!-- DEVCOV-USER-PRESERVE:END -->",
+            ]
         )
-        descriptor = _load_yaml(descriptor_path)
-        headers = list(descriptor.get("header_lines") or [])
-        headers[1] = "**Last Updated:** 1999-01-01"
-        descriptor["header_lines"] = headers
-        _dump_yaml(descriptor_path, descriptor)
+        content = content.replace(
+            "<!-- DEVCOV:END -->", f"{insert}\n<!-- DEVCOV:END -->"
+        )
+        readme_path.write_text(content, encoding="utf-8")
 
         messages = _policy_violations(repo_root)
         assert not any(
-            "Header lines in PLAN.md diverge from its descriptor." in message
-            for message in messages
-        )
-
-
-def _unit_test_header_title_mismatch_allowed_for_generic_templates() -> None:
-    """README/PLAN/SPEC headers may diverge for generic templates."""
-    with tempfile.TemporaryDirectory() as temp_dir:
-        repo_root = Path(temp_dir)
-        install.install_repo(repo_root)
-        assert refresh_repo(repo_root) == 0
-
-        descriptor_path = (
-            repo_root
-            / "devcovenant"
-            / "builtin"
-            / "profiles"
-            / "global"
-            / "assets"
-            / "README.yaml"
-        )
-        descriptor = _load_yaml(descriptor_path)
-        headers = list(descriptor.get("header_lines") or [])
-        headers[0] = "# Project Name"
-        descriptor["header_lines"] = headers
-        _dump_yaml(descriptor_path, descriptor)
-
-        messages = _policy_violations(repo_root)
-        assert not any(
-            "Header lines in README.md diverge from its descriptor." in message
-            for message in messages
+            "Managed block for README.md" in message for message in messages
         )
 
 
@@ -155,22 +123,18 @@ def _unit_test_managed_doc_assets_symbol_contract_is_stable() -> None:
 class GeneratedUnittestCases(unittest.TestCase):
     """unittest wrappers for module-level tests."""
 
-    def test_generated_metadata_managed_blocks_pass(self):
-        """Run test_generated_metadata_managed_blocks_pass."""
-        _unit_test_generated_metadata_managed_blocks_pass()
+    def test_generated_descriptor_and_docs_pass(self):
+        """Run test_generated_descriptor_and_docs_pass."""
+        _unit_test_generated_descriptor_and_docs_pass()
 
-    def test_descriptor_metadata_duplication_is_rejected(self):
-        """Run test_descriptor_metadata_duplication_is_rejected."""
-        _unit_test_descriptor_metadata_duplication_is_rejected()
+    def test_descriptor_generated_label_duplication_is_rejected(self):
+        """Run duplication rejection test."""
+        _unit_test_descriptor_generated_label_duplication_is_rejected()
 
-    def test_header_last_updated_value_is_template_agnostic(self):
-        """Run test_header_last_updated_value_is_template_agnostic."""
-        _unit_test_header_last_updated_value_is_template_agnostic()
-
-    def test_header_title_mismatch_allowed_for_generic_templates(self):
-        """Run test_header_title_mismatch_allowed_for_generic_templates."""
-        _unit_test_header_title_mismatch_allowed_for_generic_templates()
+    def test_user_preserve_blocks_inside_managed_block_are_ignored(self):
+        """Run preserve-block ignore test."""
+        _unit_test_user_preserve_blocks_inside_managed_block_are_ignored()
 
     def test_managed_doc_assets_symbol_contract_is_stable(self):
-        """Run test_managed_doc_assets_symbol_contract_is_stable."""
+        """Run managed-doc-assets symbol contract assertions."""
         _unit_test_managed_doc_assets_symbol_contract_is_stable()

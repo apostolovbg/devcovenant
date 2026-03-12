@@ -1,6 +1,6 @@
 # Workflow
 **Last Updated:** 2026-03-09
-**Version:** 1.0.0
+**Project Version:** 1.0.0
 
 ## Table of Contents
 - [Overview](#overview)
@@ -153,6 +153,8 @@ Shared gate hook targeting:
 - resolve changelog/session-baseline helper logic through
   `devcovenant/core/flow/gate_changelog_helpers.py` so metadata parsing and
   top-entry fingerprint behavior stay centralized
+- default changelog exemption header keys align with generated doc headers:
+  `Last Updated`, `Project Version`, and `DevCovenant Version`
 - fail with explicit retry instructions (run `devcovenant test`, then rerun
   `devcovenant gate --start`) when recovery/reconcile requires fresh test
   evidence; start gate performs no internal test runs
@@ -205,9 +207,13 @@ Install/upgrade boundary:
 - orphan custom policy scripts still fail with the same descriptor contract as
   core policies; fix the descriptor and rerun
 - refresh validates managed-doc descriptor schema before rendering docs:
-  `header_lines` must be a non-empty string list, and multiline
-  `managed_block`/`body`/`workflow_block` fields must use YAML literal block
-  style (`|`/`|-`) for stable markdown output
+  descriptors must declare ordered keys
+  (`title`, `doc_id`, `doc_type`, `project_version`, `last_updated`,
+  `devcovenant_version`, `managed_block`, `body`, optional `workflow_block`);
+  multiline `managed_block`/`body`/`workflow_block` fields must use YAML
+  literal block style (`|`/`|-`) for stable markdown output
+- refresh preserves user carve-outs wrapped in
+  `DEVCOV-USER-PRESERVE:BEGIN/END` anywhere in managed docs
 - `upgrade` reconciles the full `devcovenant/` package from source on every
   run (including `devcovenant/*.py`, `core/`, and `builtin/`) regardless of
   version ordering

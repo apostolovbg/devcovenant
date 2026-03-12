@@ -243,13 +243,12 @@ def _unit_test_refresh_rejects_multiline_non_block_doc_descriptor() -> None:
         descriptor_path.write_text(
             "\n".join(
                 [
-                    "header_lines:",
-                    "- '# README'",
-                    "- '**Last Updated:**'",
-                    "- '**Version:** 1.0.0'",
+                    "title: README",
                     "doc_id: README",
                     "doc_type: repo-readme",
-                    "managed_by: DevCovenant",
+                    "project_version: true",
+                    "last_updated: true",
+                    "devcovenant_version: true",
                     "managed_block: |-",
                     "  block text",
                     'body: "Line one\\nLine two"',
@@ -284,10 +283,12 @@ def _unit_test_refresh_rejects_invalid_doc_descriptor_schema() -> None:
         descriptor_path.write_text(
             "\n".join(
                 [
-                    "header_lines: invalid",
+                    "title: README",
                     "doc_id: README",
                     "doc_type: repo-readme",
-                    "managed_by: DevCovenant",
+                    "project_version: true",
+                    "last_updated: true",
+                    "devcovenant_version: false",
                     "managed_block: |-",
                     "  block text",
                     "body: |-",
@@ -302,7 +303,7 @@ def _unit_test_refresh_rejects_invalid_doc_descriptor_schema() -> None:
         with redirect_stdout(output):
             result = refresh.refresh_repo(repo_root)
         assert result == 1
-        assert "must define non-empty `header_lines`" in output.getvalue()
+        assert "field `devcovenant_version` must be true" in output.getvalue()
 
 
 class GeneratedUnittestCases(unittest.TestCase):

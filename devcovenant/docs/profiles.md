@@ -1,6 +1,6 @@
 # Profiles
 **Last Updated:** 2026-03-09
-**Version:** 1.0.0
+**Project Version:** 1.0.0
 
 ## Table of Contents
 - [Overview](#overview)
@@ -226,14 +226,18 @@ Asset materialization rules:
 - create file when missing
 - preserve existing non-one-line file content
 - refresh managed blocks where descriptors require
-- managed-doc descriptors must follow an explicit schema:
-  `header_lines`, `doc_id`, `doc_type`, `managed_by`, `managed_block`,
-  `body`, `workflow_block`
-- `header_lines` must be a non-empty list of non-empty strings
+- managed-doc descriptors must follow an explicit key schema in order:
+  `title`, `doc_id`, `doc_type`, `project_version`, `last_updated`,
+  `devcovenant_version`, `managed_block`, `body`, optional `workflow_block`
+- `project_version`, `last_updated`, and `devcovenant_version` must be
+  booleans; `devcovenant_version` must be `true`
 - multiline `managed_block`, `body`, and `workflow_block` values must use
   YAML literal block style (`|-`/`|`), not quoted multiline scalars
 - descriptor schema/style violations fail refresh explicitly with file+field
   guidance
+- `<!-- DEVCOV-USER-PRESERVE:BEGIN -->` /
+  `<!-- DEVCOV-USER-PRESERVE:END -->` blocks are preserved during refresh
+  anywhere in managed docs (including top-of-file and inside managed blocks)
 - profile assets do not use per-asset mode flags
 - target/template paths must stay inside repo/profile asset roots
 - root `.gitignore` is generated, not shipped as profile assets

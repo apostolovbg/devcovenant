@@ -84,7 +84,7 @@ policy_overlays:
     third_party_file: licenses/THIRD_PARTY_LICENSES.md
     licenses_dir: licenses
     report_heading: '## License Report'
-  last-updated-placement:
+  last-updated:
     include_suffixes:
       - .md
     include_globs:
@@ -117,7 +117,8 @@ policy_overlays:
       - .txt
     header_keys:
       - Last Updated
-      - Version
+      - Project Version
+      - DevCovenant Version
     header_scan_lines: 4
     summary_labels:
       - Change

@@ -1,9 +1,4 @@
-"""
-Fixer for Last Updated Marker Placement policy.
-
-Ensures the header is stamped with the current UTC date near the top of the
-document so readers can trust the recency recorded by DevCovenant.
-"""
+"""Autofix runtime for the last-updated policy."""
 
 from __future__ import annotations
 
@@ -14,20 +9,19 @@ from pathlib import Path
 from devcovenant.core.contracts.policy import FixResult, PolicyFixer, Violation
 
 
-class LastUpdatedPlacementFixer(PolicyFixer):
-    """
-    Keep Last Updated markers current in allowlisted managed documents.
-    """
+class LastUpdatedFixer(PolicyFixer):
+    """Keep Last Updated markers current in allowlisted managed docs."""
 
-    policy_id = "last-updated-placement"
+    policy_id = "last-updated"
 
     LAST_UPDATED_PATTERN = re.compile(
         r"^\s*(\*\*Last Updated:\*\*|Last Updated:|# Last Updated).*",
         re.IGNORECASE,
     )
+    MANAGED_BLOCK_BEGIN = "<!-- DEVCOV:BEGIN -->"
 
     def can_fix(self, violation: Violation) -> bool:
-        """Return True when the violation references a valid file."""
+        """Return True when the violation references a fixable text file."""
         if violation.file_path is not None and Path(
             violation.file_path
         ).suffix.lower() in {".yaml", ".yml"}:
@@ -38,7 +32,7 @@ class LastUpdatedPlacementFixer(PolicyFixer):
         )
 
     def fix(self, violation: Violation) -> FixResult:
-        """Insert or refresh the UTC Last Updated marker near the top."""
+        """Insert or refresh UTC Last Updated marker in header zone."""
         if not violation.file_path:
             return FixResult(
                 success=False, message="No file path provided in violation"
@@ -64,9 +58,9 @@ class LastUpdatedPlacementFixer(PolicyFixer):
                 modified = True
         else:
             insert_pos = self._insert_position(lines)
-            lines.insert(insert_pos + 1, marker)
-            if insert_pos + 2 >= len(lines) or lines[insert_pos + 2].strip():
-                lines.insert(insert_pos + 2, "")
+            lines.insert(insert_pos, marker)
+            if insert_pos < len(lines) and lines[insert_pos + 1].strip():
+                lines.insert(insert_pos + 1, "")
             modified = True
 
         if not modified:
@@ -87,31 +81,32 @@ class LastUpdatedPlacementFixer(PolicyFixer):
             )
 
         human_date = marker.split(":", 1)[1].strip()
-        message = (
-            "Set Last Updated header to " + human_date + f" in {file_path}"
-        )
         return FixResult(
             success=True,
-            message=message,
+            message=(
+                "Set Last Updated header to " f"{human_date} in {file_path}"
+            ),
             files_modified=[file_path],
         )
 
     def _format_marker(self) -> str:
-        """Render the marker line with today's UTC date."""
+        """Render Last Updated marker line with today's UTC date."""
         today = datetime.now(timezone.utc).date().isoformat()
         return f"**Last Updated:** {today}"
 
     def _find_marker_index(self, lines: list[str]) -> int | None:
-        """Return the first index containing an existing marker."""
+        """Return first index containing a Last Updated marker."""
         for idx, line in enumerate(lines):
             if self.LAST_UPDATED_PATTERN.match(line):
                 return idx
         return None
 
     def _insert_position(self, lines: list[str]) -> int:
-        """Find where to insert the new marker.
-        After the first non-empty line."""
+        """Return insertion index before managed block or first body line."""
+        for idx, line in enumerate(lines):
+            if line.strip() == self.MANAGED_BLOCK_BEGIN:
+                return idx
         for idx, line in enumerate(lines):
             if line.strip():
-                return idx
-        return -1
+                return idx + 1
+        return 0

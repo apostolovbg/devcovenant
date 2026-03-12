@@ -1,6 +1,6 @@
 # Policy Map
-**Last Updated:** 2026-02-28
-**Version:** 1.0.0
+**Last Updated:** 2026-03-09
+**Project Version:** 1.0.0
 
 ## Table of Contents
 1. [Purpose](#purpose)
@@ -41,7 +41,7 @@ This map documents shipped policy contracts and ownership for 1.0.0.
   in-scope source files.
 - `documentation-growth-tracking`: enforces docs-update expectations and
   quality gates for user-facing changes.
-- `last-updated-placement`: enforces top-level `Last Updated` placement and
+- `last-updated`: enforces top-level `Last Updated` placement and
   updates date values for managed docs.
 - `line-length-limit`: warns when in-scope files exceed configured line limit.
 - `no-raw-errors`: blocks raw Python error anti-patterns (bare `except`,

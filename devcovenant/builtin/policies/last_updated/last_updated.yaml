@@ -1,10 +1,10 @@
-id: last-updated-placement
+id: last-updated
 text: |
-  Docs must include a `Last Updated` header near the top so readers can trust
-  recency. The auto-fix updates the UTC date for touched allowlisted docs
-  while respecting allowed locations.
+  Docs must include a `Last Updated` header in the generated header zone so
+  readers can trust recency. The auto-fix updates UTC dates for touched
+  allowlisted docs while respecting allowlist selectors.
 metadata:
-  id: last-updated-placement
+  id: last-updated
   severity: error
   auto_fix: 'true'
   enforcement: active

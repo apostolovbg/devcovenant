@@ -1,16 +1,11 @@
-# DevCovenant
-**Last Updated:** 2026-02-28
-**Version:** 1.0.0
-
-<p align="center">
-  <img src="https://raw.githubusercontent.com/apostolovbg/devcovenant/main/devcovenant/docs/banner.png" alt="DevCovenant" style="width: 100%;" />
-</p>
-
-<!-- DEVCOV:BEGIN -->
+# Project Name
 **Doc ID:** README
 **Doc Type:** repo-readme
-**Managed By:** DevCovenant
+**Project Version:** 1.0.0
+**Last Updated:** 2026-03-09
+**DevCovenant Version:** 1.0.0
 
+<!-- DEVCOV:BEGIN -->
 **Read first:** `AGENTS.md` is the canonical source of truth. See
 `devcovenant/README.md` for usage and lifecycle workflow details.
 <!-- DEVCOV:END -->

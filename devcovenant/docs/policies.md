@@ -1,6 +1,6 @@
 # Policies
-**Last Updated:** 2026-02-28
-**Version:** 1.0.0
+**Last Updated:** 2026-03-09
+**Project Version:** 1.0.0
 
 ## Table of Contents
 - [Overview](#overview)
@@ -284,7 +284,7 @@ High-impact runtime contracts:
 - bundled session checks share centralized snapshot helpers from
   `devcovenant/core/runtime/session_snapshot.py`, with command-facing
   compatibility re-exports from `devcovenant/core/runtime/execution.py`.
-- `last-updated-placement` scopes stale-date checks to session-changed files
+- `last-updated` scopes stale-date checks to session-changed files
   from runtime context only (no git fallback scanning).
 - `version-sync` stays consistency-only; semver bump progression and release
   scope enforcement are handled by `semantic-version-scope`.
@@ -298,7 +298,7 @@ High-impact runtime contracts:
   `role_extractors` mappings (`role=>extractor`) to keep target-version
   checks format-aware without file-type bucket metadata.
 - policy descriptors keep contract keys, while global/profile overlays provide
-  operational defaults for `changelog-coverage`, `last-updated-placement`,
+  operational defaults for `changelog-coverage`, `last-updated`,
   `semantic-version-scope`, `version-sync`, `modules-need-tests`,
   and `tests-coverage`.
 - `devcov-integrity-guard` keeps its path keys declared in the descriptor,

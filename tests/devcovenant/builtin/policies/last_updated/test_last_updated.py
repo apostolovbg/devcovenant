@@ -1,4 +1,4 @@
-"""Tests for last-updated-placement policy."""
+"""Tests for last-updated policy."""
 
 import importlib
 import tempfile
@@ -6,15 +6,14 @@ import unittest
 from datetime import datetime, timezone
 from pathlib import Path
 
-from devcovenant.builtin.policies.last_updated_placement import (
-    last_updated_placement,
-)
+from devcovenant.builtin.policies.last_updated import last_updated
 from devcovenant.core.contracts.policy import CheckContext, Violation
 
 fixer_module = importlib.import_module(
-    "devcovenant.builtin.policies.last_updated_placement.autofix.global"
+    "devcovenant.builtin.policies.last_updated.autofix.global"
 )
-LastUpdatedPlacementFixer = fixer_module.LastUpdatedPlacementFixer
+LastUpdatedCheck = last_updated.LastUpdatedCheck
+LastUpdatedFixer = fixer_module.LastUpdatedFixer
 
 
 def _unit_test_required_file_missing_marker(tmp_path: Path) -> None:
@@ -22,7 +21,7 @@ def _unit_test_required_file_missing_marker(tmp_path: Path) -> None:
     doc_path = tmp_path / "README.md"
     doc_path.write_text("# Title\nContent\n", encoding="utf-8")
 
-    checker = last_updated_placement.LastUpdatedPlacementCheck()
+    checker = last_updated.LastUpdatedCheck()
     checker.set_options(
         {
             "required_globs": "**/README.md",
@@ -36,15 +35,27 @@ def _unit_test_required_file_missing_marker(tmp_path: Path) -> None:
     assert any(violation.can_auto_fix for violation in violations)
 
 
-def _unit_test_last_updated_allowed_and_top_lines(tmp_path: Path) -> None:
-    """Allow Last Updated markers in allowlisted docs near the top."""
+def _unit_test_last_updated_allowed_in_header_zone(tmp_path: Path) -> None:
+    """Allow Last Updated marker anywhere in the generated header zone."""
     md_path = tmp_path / "README.md"
     md_path.write_text(
-        "# Title\n**Last Updated:** 2026-01-07\n",
+        "\n".join(
+            [
+                "# Title",
+                "**Doc ID:** README",
+                "**Doc Type:** readme",
+                "**Project Version:** 1.0.0",
+                "**Last Updated:** 2026-01-07",
+                "<!-- DEVCOV:BEGIN -->",
+                "block",
+                "<!-- DEVCOV:END -->",
+            ]
+        )
+        + "\n",
         encoding="utf-8",
     )
 
-    checker = last_updated_placement.LastUpdatedPlacementCheck()
+    checker = last_updated.LastUpdatedCheck()
     checker.set_options(
         {
             "required_globs": "**/README.md",
@@ -64,7 +75,7 @@ def _unit_test_marker_in_non_allowlisted_file(tmp_path: Path) -> None:
         encoding="utf-8",
     )
 
-    checker = last_updated_placement.LastUpdatedPlacementCheck()
+    checker = last_updated.LastUpdatedCheck()
     checker.set_options(
         {"allowed_globs": "**/README.md"},
         {},
@@ -75,27 +86,6 @@ def _unit_test_marker_in_non_allowlisted_file(tmp_path: Path) -> None:
     assert all(not violation.can_auto_fix for violation in violations)
 
 
-def _unit_test_marker_after_third_line(tmp_path: Path) -> None:
-    """Markers after line three should be flagged."""
-    md_path = tmp_path / "README.md"
-    md_path.write_text(
-        "# Title\nLine 2\nLine 3\nLast Updated: 2026-01-07\n",
-        encoding="utf-8",
-    )
-
-    checker = last_updated_placement.LastUpdatedPlacementCheck()
-    checker.set_options(
-        {
-            "required_globs": "**/README.md",
-            "allowed_globs": "**/README.md",
-        },
-        {},
-    )
-    context = CheckContext(repo_root=tmp_path, all_files=[md_path])
-    violations = checker.check(context)
-    assert violations
-
-
 def _unit_test_stale_marker_on_touched_doc(tmp_path: Path) -> None:
     """Touched allowlisted docs should refresh stale Last Updated markers."""
     md_path = tmp_path / "README.md"
@@ -104,7 +94,7 @@ def _unit_test_stale_marker_on_touched_doc(tmp_path: Path) -> None:
         encoding="utf-8",
     )
 
-    checker = last_updated_placement.LastUpdatedPlacementCheck()
+    checker = last_updated.LastUpdatedCheck()
     checker.set_options(
         {
             "required_globs": "**/README.md",
@@ -125,14 +115,14 @@ def _unit_test_stale_marker_on_touched_doc(tmp_path: Path) -> None:
 
 
 def _unit_test_yaml_templates_outside_include_scope(tmp_path: Path) -> None:
-    """YAML descriptor headers stay outside markdown include scope."""
+    """YAML descriptors stay outside markdown include scope."""
     yaml_path = tmp_path / "template.yaml"
     yaml_path.write_text(
-        "header_lines:\\n- '# Title'\\n- '**Last Updated:**'\\n",
+        "title: Template\nlast_updated: true\n",
         encoding="utf-8",
     )
 
-    checker = last_updated_placement.LastUpdatedPlacementCheck()
+    checker = last_updated.LastUpdatedCheck()
     checker.set_options(
         {
             "include_suffixes": [".md"],
@@ -146,16 +136,16 @@ def _unit_test_yaml_templates_outside_include_scope(tmp_path: Path) -> None:
 
 
 def _unit_test_fix_inserts_marker(tmp_path: Path) -> None:
-    """The fixer inserts a UTC Last Updated marker when it is missing."""
+    """Fixer inserts a UTC Last Updated marker when it is missing."""
     md_path = tmp_path / "README.md"
     md_path.write_text(
         "# Title\nContent\n",
         encoding="utf-8",
     )
 
-    fixer = LastUpdatedPlacementFixer()
+    fixer = LastUpdatedFixer()
     violation = Violation(
-        policy_id="last-updated-placement",
+        policy_id="last-updated",
         severity="warning",
         message="test",
         file_path=md_path,
@@ -163,20 +153,20 @@ def _unit_test_fix_inserts_marker(tmp_path: Path) -> None:
     result = fixer.fix(violation)
     assert result.success
     lines = md_path.read_text(encoding="utf-8").splitlines()
-    assert any(line.startswith("**Last Updated:**") for line in lines[:3])
+    assert any(line.startswith("**Last Updated:**") for line in lines)
 
 
 def _unit_test_fix_updates_existing_marker(tmp_path: Path) -> None:
-    """The fixer refreshes existing markers to today's UTC date."""
+    """Fixer refreshes existing markers to today's UTC date."""
     md_path = tmp_path / "README.md"
     md_path.write_text(
         "# Title\n**Last Updated:** 2020-01-01\n",
         encoding="utf-8",
     )
 
-    fixer = LastUpdatedPlacementFixer()
+    fixer = LastUpdatedFixer()
     violation = Violation(
-        policy_id="last-updated-placement",
+        policy_id="last-updated",
         severity="warning",
         message="test",
         file_path=md_path,
@@ -193,6 +183,16 @@ def _unit_test_fix_updates_existing_marker(tmp_path: Path) -> None:
     assert date_line.endswith(datetime.now(timezone.utc).date().isoformat())
 
 
+def _unit_test_last_updated_symbol_contract_is_stable() -> None:
+    """Policy/fixer symbols should stay importable and callable."""
+    assert callable(LastUpdatedCheck)
+    assert hasattr(LastUpdatedCheck, "check")
+    assert callable(getattr(LastUpdatedCheck, "check"))
+    assert callable(LastUpdatedFixer)
+    assert hasattr(LastUpdatedFixer, "fix")
+    assert callable(getattr(LastUpdatedFixer, "fix"))
+
+
 class GeneratedUnittestCases(unittest.TestCase):
     """unittest wrappers for module-level tests."""
 
@@ -202,23 +202,17 @@ class GeneratedUnittestCases(unittest.TestCase):
             tmp_path = Path(temp_dir).resolve()
             _unit_test_required_file_missing_marker(tmp_path=tmp_path)
 
-    def test_last_updated_allowed_and_top_lines(self):
-        """Run test_last_updated_allowed_and_top_lines."""
+    def test_last_updated_allowed_in_header_zone(self):
+        """Run test_last_updated_allowed_in_header_zone."""
         with tempfile.TemporaryDirectory() as temp_dir:
             tmp_path = Path(temp_dir).resolve()
-            _unit_test_last_updated_allowed_and_top_lines(tmp_path=tmp_path)
+            _unit_test_last_updated_allowed_in_header_zone(tmp_path=tmp_path)
 
     def test_marker_in_non_allowlisted_file(self):
         """Run test_marker_in_non_allowlisted_file."""
         with tempfile.TemporaryDirectory() as temp_dir:
             tmp_path = Path(temp_dir).resolve()
             _unit_test_marker_in_non_allowlisted_file(tmp_path=tmp_path)
-
-    def test_marker_after_third_line(self):
-        """Run test_marker_after_third_line."""
-        with tempfile.TemporaryDirectory() as temp_dir:
-            tmp_path = Path(temp_dir).resolve()
-            _unit_test_marker_after_third_line(tmp_path=tmp_path)
 
     def test_stale_marker_on_touched_doc(self):
         """Run test_stale_marker_on_touched_doc."""
@@ -243,3 +237,7 @@ class GeneratedUnittestCases(unittest.TestCase):
         with tempfile.TemporaryDirectory() as temp_dir:
             tmp_path = Path(temp_dir).resolve()
             _unit_test_fix_updates_existing_marker(tmp_path=tmp_path)
+
+    def test_last_updated_symbol_contract_is_stable(self):
+        """Run symbol-contract assertions for last-updated policy/fixer."""
+        _unit_test_last_updated_symbol_contract_is_stable()

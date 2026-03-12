@@ -1,10 +1,9 @@
-header_lines:
-- 'MIT License'
-- 'DevCovenant Version: 1.0.0'
-- 'Copyright (c) 2026 Black Epsilon Ltd. and Apostol Apostolov'
+title: MIT License
 doc_id: LICENSE
 doc_type: license
-managed_by: DevCovenant
+project_version: false
+last_updated: false
+devcovenant_version: true
 managed_block: |-
   MIT License
   DevCovenant Version: 1.0.0
@@ -28,3 +27,4 @@ managed_block: |-
   LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
   OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
   SOFTWARE.
+body: ''

@@ -90,7 +90,7 @@ def _unit_test_no_reminder_when_docs_are_touched(tmp_path: Path):
     doc_file.write_text(
         "# README\n"
         "**Last Updated:** 2026-01-11\n"
-        "**Version:** 0.1.0\n\n"
+        "**Project Version:** 0.1.0\n\n"
         "## Table of Contents\n"
         "1. [Overview](#overview)\n"
         "2. [Workflow](#workflow)\n\n"
@@ -114,7 +114,7 @@ def _unit_test_quality_violation_when_sections_missing(tmp_path: Path):
     doc_file.write_text(
         "# README\n"
         "**Last Updated:** 2026-01-11\n"
-        "**Version:** 0.1.0\n\n"
+        "**Project Version:** 0.1.0\n\n"
         "## Overview\n"
         "Short doc.\n",
         encoding="utf-8",
@@ -137,7 +137,7 @@ def _unit_test_quality_passes_when_requirements_met(tmp_path: Path):
     doc_file.write_text(
         "# README\n"
         "**Last Updated:** 2026-01-11\n"
-        "**Version:** 0.1.0\n\n"
+        "**Project Version:** 0.1.0\n\n"
         "## Table of Contents\n"
         "1. [Overview](#overview)\n"
         "2. [Workflow](#workflow)\n\n"

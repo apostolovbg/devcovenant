@@ -1,10 +1,9 @@
-header_lines:
-  - '# DevCovenant Development Guide'
-  - '**Last Updated:**'
-  - '**Version:** 1.0.0'
+title: DevCovenant Development Guide
 doc_id: AGENTS
 doc_type: policy-source
-managed_by: DevCovenant
+project_version: true
+last_updated: true
+devcovenant_version: true
 managed_block: |-
   # Message from DevCovenant's Human (Read First)
 

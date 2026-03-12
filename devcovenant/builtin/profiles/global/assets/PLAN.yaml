@@ -1,10 +1,9 @@
-header_lines:
-- '# Development Plan'
-- '**Last Updated:**'
-- '**Version:** 1.0.0'
+title: Development Plan
 doc_id: PLAN
 doc_type: plan
-managed_by: DevCovenant
+project_version: true
+last_updated: true
+devcovenant_version: true
 managed_block: ''
 body: |-
   Use this plan to track active implementation work. Keep items

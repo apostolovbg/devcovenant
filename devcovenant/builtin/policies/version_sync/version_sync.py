@@ -25,7 +25,7 @@ except ModuleNotFoundError:  # pragma: no cover
 _VERSION_PATTERN = re.compile(r"(?P<version>\d+\.\d+\.\d+)")
 _STRICT_SEMVER_PATTERN = re.compile(r"^\d+\.\d+\.\d+$")
 _DOC_VERSION_PATTERN = re.compile(
-    r"^\s*\*\*Version:\*\*\s*(?P<version>\d+\.\d+\.\d+)",
+    r"^\s*\*\*Project Version:\*\*\s*(?P<version>\d+\.\d+\.\d+)",
     flags=re.MULTILINE,
 )
 _EXTRACTOR_NAMES = {
@@ -459,7 +459,7 @@ class VersionSyncCheck(PolicyCheck):
 
     @staticmethod
     def _extract_doc_header_version(path: Path) -> Optional[str]:
-        """Extract `**Version:**` header from a document."""
+        """Extract `**Project Version:**` header from a document."""
         text = path.read_text(encoding="utf-8")
         match = _DOC_VERSION_PATTERN.search(text)
         if not match:

@@ -169,7 +169,7 @@ def _resolve_doc_exemption_options(
     )
     header_keys = _normalize_list_option(
         metadata.get("header_keys"),
-        ["Last Updated", "Version"],
+        ["Last Updated", "Project Version", "DevCovenant Version"],
     )
     raw_scan = metadata.get("header_scan_lines", 4)
     try:

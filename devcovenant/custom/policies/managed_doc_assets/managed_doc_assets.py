@@ -1,13 +1,13 @@
 """
 Policy: Managed Document Assets
 
-Ensure AGENTS.md, README.md, PLAN.md, SPEC.md, CHANGELOG.md, and
-CONTRIBUTING.md remain the authoritative sources of their managed-block
-descriptors in `devcovenant/builtin/profiles/global/assets/`.
+Ensure managed-document descriptors in global assets remain the authoritative
+source for generated header fields and managed block payloads.
 """
 
 from __future__ import annotations
 
+import re
 from pathlib import Path
 from typing import Dict, List
 
@@ -21,18 +21,23 @@ from devcovenant.core.contracts.policy import (
 
 
 class ManagedDocAssetsCheck(PolicyCheck):
-    """Verify that every managed document has a matching YAML descriptor."""
+    """Verify managed docs and their descriptors remain synchronized."""
 
     policy_id = "managed-doc-assets"
-    version = "0.1.0"
+    version = "0.2.0"
+
     _DOC_ID_LABEL = "**Doc ID:**"
     _DOC_TYPE_LABEL = "**Doc Type:**"
-    _MANAGED_BY_LABEL = "**Managed By:**"
-    _LAST_UPDATED_PREFIX = "**last updated:**"
-    _HEADER_SYNC_EXEMPT_DOCS = {"README.md", "PLAN.md", "SPEC.md"}
+    _PROJECT_VERSION_LABEL = "**Project Version:**"
+    _LAST_UPDATED_LABEL = "**Last Updated:**"
+    _DEVCOV_VERSION_LABEL = "**DevCovenant Version:**"
+    _PRESERVE_BEGIN = "<!-- DEVCOV-USER-PRESERVE:BEGIN -->"
+    _PRESERVE_END = "<!-- DEVCOV-USER-PRESERVE:END -->"
+
+    _DATE_RE = re.compile(r"\b\d{4}-\d{2}-\d{2}\b")
 
     def __init__(self) -> None:
-        """Initialize the managed document descriptor list."""
+        """Initialize descriptor-doc pairs covered by this policy."""
         super().__init__()
         self.managed_docs = [
             {"doc": "AGENTS.md", "descriptor": "AGENTS.yaml"},
@@ -41,34 +46,13 @@ class ManagedDocAssetsCheck(PolicyCheck):
             {"doc": "SPEC.md", "descriptor": "SPEC.yaml"},
             {"doc": "CHANGELOG.md", "descriptor": "CHANGELOG.yaml"},
             {"doc": "CONTRIBUTING.md", "descriptor": "CONTRIBUTING.yaml"},
-            {"doc": "LICENSE", "descriptor": "LICENSE.yaml"},
         ]
 
     def check(self, context: CheckContext) -> List[Violation]:
-        """Inspect docs and descriptors to ensure they stay synchronized."""
+        """Inspect docs and descriptors to ensure authoritative sync."""
         violations: List[Violation] = []
         repo_root = context.repo_root
-        builtin_assets_dir = (
-            repo_root
-            / "devcovenant"
-            / "builtin"
-            / "profiles"
-            / "global"
-            / "assets"
-        )
-        core_assets_dir = (
-            repo_root
-            / "devcovenant"
-            / "core"
-            / "profiles"
-            / "global"
-            / "assets"
-        )
-        assets_dir = (
-            builtin_assets_dir
-            if builtin_assets_dir.exists()
-            else core_assets_dir
-        )
+        assets_dir = self._assets_dir(repo_root)
 
         for entry in self.managed_docs:
             doc_path = repo_root / entry["doc"]
@@ -77,7 +61,6 @@ class ManagedDocAssetsCheck(PolicyCheck):
             if not doc_path.is_file():
                 violations.append(self._missing_doc_violation(doc_path))
                 continue
-
             if not descriptor_path.is_file():
                 violations.append(
                     self._missing_descriptor_violation(
@@ -103,112 +86,172 @@ class ManagedDocAssetsCheck(PolicyCheck):
                 continue
 
             doc_info = self._extract_doc_info(doc_path)
+            violations.extend(
+                self._check_descriptor_sync(
+                    descriptor=descriptor,
+                    descriptor_path=descriptor_path,
+                    doc_info=doc_info,
+                    doc_name=entry["doc"],
+                )
+            )
 
-            if descriptor.get("doc_id", "") != doc_info["doc_id"]:
+        return violations
+
+    def _assets_dir(self, repo_root: Path) -> Path:
+        """Resolve active global assets directory location."""
+        builtin_assets_dir = (
+            repo_root
+            / "devcovenant"
+            / "builtin"
+            / "profiles"
+            / "global"
+            / "assets"
+        )
+        core_assets_dir = (
+            repo_root
+            / "devcovenant"
+            / "core"
+            / "profiles"
+            / "global"
+            / "assets"
+        )
+        return (
+            builtin_assets_dir
+            if builtin_assets_dir.exists()
+            else core_assets_dir
+        )
+
+    def _check_descriptor_sync(
+        self,
+        *,
+        descriptor: Dict[str, object],
+        descriptor_path: Path,
+        doc_info: Dict[str, object],
+        doc_name: str,
+    ) -> List[Violation]:
+        """Build violations for one descriptor-doc pair."""
+        violations: List[Violation] = []
+
+        doc_id = str(descriptor.get("doc_id", "")).strip()
+        doc_type = str(descriptor.get("doc_type", "")).strip()
+        title = str(descriptor.get("title", "")).strip()
+
+        if title and title != str(doc_info["title"]):
+            violations.append(
+                Violation(
+                    policy_id=self.policy_id,
+                    severity="error",
+                    file_path=descriptor_path,
+                    message=(
+                        f"Descriptor title for {doc_name} is `{title}` but "
+                        f"document header reports `{doc_info['title']}`."
+                    ),
+                )
+            )
+        if doc_id and doc_id != str(doc_info["doc_id"]):
+            violations.append(
+                Violation(
+                    policy_id=self.policy_id,
+                    severity="error",
+                    file_path=descriptor_path,
+                    message=(
+                        f"Descriptor doc_id for {doc_name} is `{doc_id}` but "
+                        f"document reports `{doc_info['doc_id']}`."
+                    ),
+                )
+            )
+        if doc_type and doc_type != str(doc_info["doc_type"]):
+            violations.append(
+                Violation(
+                    policy_id=self.policy_id,
+                    severity="error",
+                    file_path=descriptor_path,
+                    message=(
+                        f"Descriptor doc_type for {doc_name} is `{doc_type}` "
+                        f"but document reports `{doc_info['doc_type']}`."
+                    ),
+                )
+            )
+
+        header_map = doc_info["header_map"]
+        for descriptor_key, label in (
+            ("project_version", self._PROJECT_VERSION_LABEL),
+            ("last_updated", self._LAST_UPDATED_LABEL),
+            ("devcovenant_version", self._DEVCOV_VERSION_LABEL),
+        ):
+            required = bool(descriptor.get(descriptor_key, False))
+            present = label in header_map
+            if required and not present:
                 violations.append(
                     Violation(
                         policy_id=self.policy_id,
                         severity="error",
                         file_path=descriptor_path,
                         message=(
-                            "Descriptor for "
-                            f"{entry['doc']} references doc_id="
-                            f"{descriptor.get('doc_id', '<missing>')} "
-                            f"but the document reports {doc_info['doc_id']}."
+                            f"{doc_name} is missing required header "
+                            f"`{label}` from descriptor key "
+                            f"`{descriptor_key}`."
                         ),
                     )
                 )
-
-            has_managed_block = bool(doc_info["has_managed_block"])
-
-            if (
-                has_managed_block
-                and descriptor.get("doc_type", "") != doc_info["doc_type"]
-            ):
+            if not required and present:
                 violations.append(
                     Violation(
                         policy_id=self.policy_id,
                         severity="error",
                         file_path=descriptor_path,
                         message=(
-                            "Descriptor for "
-                            f"{entry['doc']} references doc_type="
-                            f"{descriptor.get('doc_type', '<missing>')} "
-                            f"but the document reports {doc_info['doc_type']}."
+                            f"{doc_name} contains header `{label}` but "
+                            f"descriptor key `{descriptor_key}` is false."
                         ),
                     )
                 )
 
-            if (
-                has_managed_block
-                and descriptor.get("managed_by", "") != doc_info["managed_by"]
-            ):
-                violations.append(
-                    Violation(
-                        policy_id=self.policy_id,
-                        severity="error",
-                        file_path=descriptor_path,
-                        message=(
-                            "Descriptor for "
-                            f"{entry['doc']} references managed_by="
-                            f"{descriptor.get('managed_by', '<missing>')} "
-                            f"but the document reports "
-                            f"{doc_info['managed_by']}."
-                        ),
-                    )
+        last_updated_value = str(header_map.get(self._LAST_UPDATED_LABEL, ""))
+        if last_updated_value and not self._DATE_RE.search(last_updated_value):
+            violations.append(
+                Violation(
+                    policy_id=self.policy_id,
+                    severity="error",
+                    file_path=descriptor_path,
+                    message=(
+                        f"{doc_name} Last Updated header is missing an "
+                        "ISO date (YYYY-MM-DD)."
+                    ),
                 )
+            )
 
-            if entry["doc"] not in self._HEADER_SYNC_EXEMPT_DOCS:
-                descriptor_headers = self._normalize_header_lines(
-                    descriptor.get("header_lines", [])
+        if self._descriptor_contains_generated_headers(descriptor):
+            violations.append(
+                Violation(
+                    policy_id=self.policy_id,
+                    severity="error",
+                    file_path=descriptor_path,
+                    message=(
+                        "Descriptor managed_block must not duplicate "
+                        "generated header labels."
+                    ),
                 )
-                document_headers = self._normalize_header_lines(
-                    doc_info["header_lines"]
-                )
-                if descriptor_headers != document_headers:
-                    violations.append(
-                        Violation(
-                            policy_id=self.policy_id,
-                            severity="error",
-                            file_path=descriptor_path,
-                            message=(
-                                "Header lines in "
-                                f"{entry['doc']} diverge from its descriptor."
-                            ),
-                        )
-                    )
+            )
 
-            if self._descriptor_contains_metadata_lines(descriptor):
-                violations.append(
-                    Violation(
-                        policy_id=self.policy_id,
-                        severity="error",
-                        file_path=descriptor_path,
-                        message=(
-                            "Descriptor managed_block must not duplicate "
-                            "Doc ID/Doc Type/Managed By lines; those are "
-                            "generated from descriptor metadata."
-                        ),
-                    )
+        expected_managed = self._expected_managed_block(descriptor)
+        actual_managed = (
+            str(doc_info["managed_block"])
+            if doc_info["has_managed_block"]
+            else ""
+        )
+        if expected_managed != actual_managed:
+            violations.append(
+                Violation(
+                    policy_id=self.policy_id,
+                    severity="error",
+                    file_path=descriptor_path,
+                    message=(
+                        f"Managed block for {doc_name} no longer matches its "
+                        "descriptor."
+                    ),
                 )
-
-            expected_managed = self._expected_managed_block(descriptor)
-            if (
-                has_managed_block
-                and expected_managed != doc_info["managed_block"]
-            ):
-                violations.append(
-                    Violation(
-                        policy_id=self.policy_id,
-                        severity="error",
-                        file_path=descriptor_path,
-                        message=(
-                            "Managed block for "
-                            f"{entry['doc']} no longer matches "
-                            f"{entry['descriptor']}."
-                        ),
-                    )
-                )
+            )
 
         return violations
 
@@ -240,8 +283,8 @@ class ManagedDocAssetsCheck(PolicyCheck):
             ),
         )
 
-    def _load_descriptor(self, path: Path) -> Dict[str, str] | None:
-        """Parse the YAML descriptor for a managed document."""
+    def _load_descriptor(self, path: Path) -> Dict[str, object] | None:
+        """Parse one descriptor document."""
         try:
             payload = yaml.safe_load(path.read_text(encoding="utf-8"))
         except yaml.YAMLError:
@@ -251,23 +294,38 @@ class ManagedDocAssetsCheck(PolicyCheck):
         return payload
 
     def _extract_doc_info(self, doc_path: Path) -> Dict[str, object]:
-        """Return the header metadata and managed block text for a document."""
+        """Return generated header fields and managed block text."""
         text = doc_path.read_text(encoding="utf-8")
         lines = text.splitlines()
-        header_lines = []
+
+        header_map: Dict[str, str] = {}
+        title = ""
+        doc_id = ""
+        doc_type = ""
+
         for line in lines:
-            if not line.strip():
-                continue
-            header_lines.append(line.rstrip())
-            if len(header_lines) == 3:
+            stripped = line.strip()
+            if stripped == "<!-- DEVCOV:BEGIN -->":
                 break
+            if not stripped:
+                continue
+            if not title and stripped.startswith("#"):
+                title = stripped.lstrip("#").strip()
+            if stripped.startswith(self._DOC_ID_LABEL):
+                doc_id = stripped.split(self._DOC_ID_LABEL, 1)[1].strip()
+                continue
+            if stripped.startswith(self._DOC_TYPE_LABEL):
+                doc_type = stripped.split(self._DOC_TYPE_LABEL, 1)[1].strip()
+                continue
+            for label in (
+                self._PROJECT_VERSION_LABEL,
+                self._LAST_UPDATED_LABEL,
+                self._DEVCOV_VERSION_LABEL,
+            ):
+                if stripped.startswith(label):
+                    header_map[label] = stripped.split(label, 1)[1].strip()
 
         managed_block_lines: List[str] = []
-        metadata: Dict[str, str] = {
-            "doc_id": "",
-            "doc_type": "",
-            "managed_by": "",
-        }
         inside = False
         has_managed_block = False
         for line in lines:
@@ -278,101 +336,63 @@ class ManagedDocAssetsCheck(PolicyCheck):
             if "<!-- DEVCOV:END -->" in line:
                 break
             if inside:
-                stripped = line.rstrip()
-                managed_block_lines.append(stripped)
-                if stripped.startswith("**Doc ID:**"):
-                    metadata["doc_id"] = stripped.split("**Doc ID:**", 1)[
-                        1
-                    ].strip()
-                elif stripped.startswith("**Doc Type:**"):
-                    metadata["doc_type"] = stripped.split("**Doc Type:**", 1)[
-                        1
-                    ].strip()
-                elif stripped.startswith("**Managed By:**"):
-                    metadata["managed_by"] = stripped.split(
-                        "**Managed By:**", 1
-                    )[1].strip()
+                managed_block_lines.append(line.rstrip())
 
-        managed_block = "\n".join(managed_block_lines).rstrip()
-        if not managed_block_lines:
-            managed_block = text.rstrip()
-        if not metadata["doc_id"]:
-            metadata["doc_id"] = doc_path.stem.upper()
+        managed_block = self._strip_preserve_blocks(
+            "\n".join(managed_block_lines)
+        ).strip("\n")
 
         return {
-            "doc_id": metadata["doc_id"],
-            "doc_type": metadata["doc_type"],
-            "managed_by": metadata["managed_by"],
-            "header_lines": header_lines,
+            "title": title,
+            "doc_id": doc_id,
+            "doc_type": doc_type,
+            "header_map": header_map,
             "managed_block": managed_block,
             "has_managed_block": has_managed_block,
         }
 
-    def _normalize_header_lines(self, raw_lines: object) -> list[str]:
-        """Normalize headers for descriptor-vs-document comparison."""
-        if not isinstance(raw_lines, list):
-            return []
-        normalized: list[str] = []
-        for raw_line in raw_lines:
-            line = str(raw_line).rstrip()
-            lowered = line.strip().lower()
-            if lowered.startswith(self._LAST_UPDATED_PREFIX):
-                normalized.append("**Last Updated:**")
-                continue
-            normalized.append(line)
-        return normalized
-
-    def _normalize_descriptor_managed_body(
-        self, descriptor: Dict[str, str]
-    ) -> str:
-        """Drop markers and generated metadata from descriptor text."""
-        body = str(descriptor.get("managed_block", ""))
-        cleaned: List[str] = []
-        for raw_line in body.splitlines():
-            line = raw_line.rstrip()
+    def _strip_preserve_blocks(self, text: str) -> str:
+        """Remove user-preserve blocks from text before comparison."""
+        cleaned: list[str] = []
+        inside = False
+        for line in text.splitlines():
             stripped = line.strip()
+            if stripped == self._PRESERVE_BEGIN:
+                inside = True
+                continue
+            if stripped == self._PRESERVE_END:
+                inside = False
+                continue
+            if not inside:
+                cleaned.append(line)
+        return "\n".join(cleaned)
+
+    def _expected_managed_block(self, descriptor: Dict[str, object]) -> str:
+        """Build managed block payload expected in rendered docs."""
+        body = str(descriptor.get("managed_block", ""))
+        lines: list[str] = []
+        for raw_line in body.splitlines():
+            stripped = raw_line.strip()
             if stripped in {"<!-- DEVCOV:BEGIN -->", "<!-- DEVCOV:END -->"}:
                 continue
-            if stripped.startswith(self._DOC_ID_LABEL):
-                continue
-            if stripped.startswith(self._DOC_TYPE_LABEL):
-                continue
-            if stripped.startswith(self._MANAGED_BY_LABEL):
-                continue
-            cleaned.append(line)
-        return "\n".join(cleaned).strip("\n")
+            lines.append(raw_line.rstrip())
+        return "\n".join(lines).strip("\n")
 
-    def _expected_managed_block(self, descriptor: Dict[str, str]) -> str:
-        """Build the managed block payload expected in rendered docs."""
-        lines: List[str] = []
-        doc_id = str(descriptor.get("doc_id", "")).strip()
-        doc_type = str(descriptor.get("doc_type", "")).strip()
-        managed_by = str(descriptor.get("managed_by", "")).strip()
-        if doc_id:
-            lines.append(f"{self._DOC_ID_LABEL} {doc_id}")
-        if doc_type:
-            lines.append(f"{self._DOC_TYPE_LABEL} {doc_type}")
-        if managed_by:
-            lines.append(f"{self._MANAGED_BY_LABEL} {managed_by}")
-        body = self._normalize_descriptor_managed_body(descriptor)
-        if lines and body:
-            lines.append("")
-        if body:
-            lines.extend(body.splitlines())
-        return "\n".join(lines).rstrip()
-
-    def _descriptor_contains_metadata_lines(
+    def _descriptor_contains_generated_headers(
         self,
-        descriptor: Dict[str, str],
+        descriptor: Dict[str, object],
     ) -> bool:
-        """Return True when managed_block duplicates metadata lines."""
+        """Return True when managed_block duplicates header labels."""
         body = str(descriptor.get("managed_block", ""))
         for line in body.splitlines():
             stripped = line.strip()
-            if stripped.startswith(self._DOC_ID_LABEL):
-                return True
-            if stripped.startswith(self._DOC_TYPE_LABEL):
-                return True
-            if stripped.startswith(self._MANAGED_BY_LABEL):
-                return True
+            for label in (
+                self._DOC_ID_LABEL,
+                self._DOC_TYPE_LABEL,
+                self._PROJECT_VERSION_LABEL,
+                self._LAST_UPDATED_LABEL,
+                self._DEVCOV_VERSION_LABEL,
+            ):
+                if stripped.startswith(label):
+                    return True
         return False

@@ -1,12 +1,11 @@
 # DevCovenant Development Guide
-**Last Updated:** 2026-03-09
-**Version:** 1.0.0
-
-<!-- DEVCOV:BEGIN -->
 **Doc ID:** AGENTS
 **Doc Type:** policy-source
-**Managed By:** DevCovenant
+**Project Version:** 1.0.0
+**Last Updated:** 2026-03-09
+**DevCovenant Version:** 1.0.0
 
+<!-- DEVCOV:BEGIN -->
 # Message from DevCovenant's Human (Read First)
 
 This document is the canonical law of this repository for both humans and AI.
@@ -430,7 +429,8 @@ header_doc_suffixes: .md
   .rst
   .txt
 header_keys: Last Updated
-  Version
+  Project Version
+  DevCovenant Version
 header_scan_lines: 4
 required_globs: README.md
   AGENTS.md
@@ -868,10 +868,10 @@ user-facing change must match at least one route and touch all mapped docs.
 
 ---
 
-## Policy: Last Updated Placement
+## Policy: Last Updated
 
 ```policy-def
-id: last-updated-placement
+id: last-updated
 severity: error
 auto_fix: true
 enforcement: active
@@ -927,9 +927,9 @@ allowed_dirs:
 required_dirs:
 ```
 
-Docs must include a `Last Updated` header near the top so readers can trust
-recency. The auto-fix updates the UTC date for touched allowlisted docs
-while respecting allowed locations.
+Docs must include a `Last Updated` header in the generated header zone so
+readers can trust recency. The auto-fix updates UTC dates for touched
+allowlisted docs while respecting allowlist selectors.
 
 
 ---

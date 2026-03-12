@@ -136,7 +136,7 @@ policy_overlays:
     allowed_file_globs:
       - devcovenant/core/runtime/execution.py
     allow_waiver_comment: 'DEVCOV_ALLOW_OUTPUT:'
-  last-updated-placement:
+  last-updated:
     allowed_globs:
       - README.md
       - AGENTS.md

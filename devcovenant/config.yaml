@@ -203,7 +203,7 @@ policy_state:
   devflow-run-gates: true
   docstring-and-comment-coverage: true
   documentation-growth-tracking: true
-  last-updated-placement: true
+  last-updated: true
   line-length-limit: true
   managed-doc-assets: true
   managed-environment: true
@@ -261,7 +261,8 @@ autogen_metadata_overlays:
     - .txt
     header_keys:
     - Last Updated
-    - Version
+    - Project Version
+    - DevCovenant Version
     header_scan_lines:
     - '4'
     main_changelog:
@@ -647,7 +648,7 @@ autogen_metadata_overlays:
     - devcovenant/docs/refresh.md
     - devcovenant/docs/workflow.md
     - devcovenant/docs/troubleshooting.md
-  last-updated-placement:
+  last-updated:
     allowed_globs:
     - README.md
     - AGENTS.md

@@ -77,7 +77,11 @@ def _allowlist_fingerprint_payload(
             content,
             relative_path,
             header_doc_suffixes={".md", ".rst", ".txt"},
-            header_keys={"last updated", "version"},
+            header_keys={
+                "last updated",
+                "project version",
+                "devcovenant version",
+            },
             header_scan_lines=4,
         ),
         "managed_marker_signature": _marker_signature(content),
@@ -1198,7 +1202,7 @@ def _unit_test_document_header_only_changes_are_ignored(
         "Project Notes\n"
         "**Last Updated:** 2026-02-16\n"
         "Context line\n"
-        "**Version:** 0.2.6\n"
+        "**Project Version:** 0.2.6\n"
         "\n"
         "Body text.\n"
     )
@@ -1283,10 +1287,12 @@ def _unit_test_document_header_line_five_requires_changelog(
         "Line 2\n"
         "Line 3\n"
         "Line 4\n"
-        "**Version:** 0.2.6\n"
+        "**Project Version:** 0.2.6\n"
         "Body\n"
     )
-    new_doc = old_doc.replace("**Version:** 0.2.6", "**Version:** 0.2.7")
+    new_doc = old_doc.replace(
+        "**Project Version:** 0.2.6", "**Project Version:** 0.2.7"
+    )
     (tmp_path / "notes.txt").write_text(new_doc, encoding="utf-8")
 
     _set_git_diff_with_patches(
@@ -1294,7 +1300,9 @@ def _unit_test_document_header_line_five_requires_changelog(
         changed_files="notes.txt\n",
         patches={
             "notes.txt": (
-                "@@ -5 +5 @@\n" "-**Version:** 0.2.6\n" "+**Version:** 0.2.7\n"
+                "@@ -5 +5 @@\n"
+                "-**Project Version:** 0.2.6\n"
+                "+**Project Version:** 0.2.7\n"
             )
         },
         head_files={"notes.txt": old_doc},

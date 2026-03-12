@@ -1,6 +1,6 @@
 # DevCovenant Architecture Contracts
 **Last Updated:** 2026-03-09
-**Version:** 1.0.0
+**Project Version:** 1.0.0
 
 ## Table of Contents
 - [Overview](#overview)
@@ -133,9 +133,11 @@ Invariant:
   custom files but fails with the same descriptor-missing/invalid contract as
   core policies until descriptor metadata is fixed.
 - Managed-doc descriptors are schema-validated before refresh rendering:
-  `header_lines` must be a non-empty list of strings, and multiline
-  `managed_block`/`body`/`workflow_block` values must use YAML literal block
-  scalar style so generated markdown remains deterministic.
+  descriptors must declare ordered keys
+  (`title`, `doc_id`, `doc_type`, `project_version`, `last_updated`,
+  `devcovenant_version`, `managed_block`, `body`, optional `workflow_block`);
+  multiline `managed_block`/`body`/`workflow_block` values must use YAML
+  literal block scalar style so generated markdown remains deterministic.
 - `devcovenant/core/runtime/run_logging.py` provides the shared per-run log
   substrate (run-folder allocation, artifact metadata, and latest-run pointer
   updates under `devcovenant/logs/`) while command layers own integration.
@@ -433,6 +435,8 @@ Invariant:
   assembly and latest-run pointer fallback resolution for `gate --status`.
 - `devcovenant/core/flow/gate_changelog_helpers.py` owns gate-start
   changelog top-entry fingerprint and document-exemption option resolution.
+- changelog helper default header-key resolution aligns with generated doc
+  headers: `Last Updated`, `Project Version`, `DevCovenant Version`.
 - Item 6 compatibility wrapper inventory keeps transitional seams explicit:
   `devcovenant/core/flow/gate.py::_resolve_latest_relevant_run_pointer`
   delegates to `gate_status_helpers._resolve_latest_relevant_run_pointer`,

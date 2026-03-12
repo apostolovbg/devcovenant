@@ -38,7 +38,7 @@ def _unit_test_doc_header_and_managed_changes_keep_non_exempt_hash() -> None:
     old_doc = (
         "# Notes\n"
         "**Last Updated:** 2026-02-16\n"
-        "**Version:** 0.2.6\n"
+        "**Project Version:** 0.2.6\n"
         "<!-- DEVCOV:BEGIN -->\n"
         "Old managed text.\n"
         "<!-- DEVCOV:END -->\n"
@@ -54,7 +54,11 @@ def _unit_test_doc_header_and_managed_changes_keep_non_exempt_hash() -> None:
     )
     kwargs = {
         "header_doc_suffixes": {".md", ".rst", ".txt"},
-        "header_keys": {"last updated", "version"},
+        "header_keys": {
+            "last updated",
+            "project version",
+            "devcovenant version",
+        },
         "header_scan_lines": 4,
     }
 
@@ -91,7 +95,11 @@ def _unit_test_fingerprint_for_path_supports_yml_and_yaml_assets() -> None:
         (repo_root / yaml_rel).write_text(workflow_text, encoding="utf-8")
         kwargs = {
             "header_doc_suffixes": {".md", ".rst", ".txt"},
-            "header_keys": {"last updated", "version"},
+            "header_keys": {
+                "last updated",
+                "project version",
+                "devcovenant version",
+            },
             "header_scan_lines": 4,
         }
 
