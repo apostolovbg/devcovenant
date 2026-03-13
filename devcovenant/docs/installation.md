@@ -1,5 +1,5 @@
 # Installation and Lifecycle
-**Last Updated:** 2026-03-09
+**Last Updated:** 2026-03-12
 **Project Version:** 1.0.0
 
 ## Table of Contents
@@ -250,9 +250,13 @@ Upgrade replacement preserves repo-local runtime state under:
 Upgrade also preserves user payload directories under:
 - `devcovenant/custom/policies/<policy-id>/`
 - `devcovenant/custom/profiles/<profile-id>/`
-while reconciling package-owned custom scaffolding
-(`devcovenant/custom/**/README.md`, package `__init__.py` files) from the
-upgraded core snapshot.
+
+Upgrade prunes known repository-only custom payload paths leaked by older
+installs before refresh:
+- `devcovenant/custom/policies/devcov_raw_string_escapes`
+- `devcovenant/custom/policies/managed_doc_assets`
+- `devcovenant/custom/policies/readme_sync`
+- `devcovenant/custom/profiles/<repo-only-profile-id>`
 
 Package distribution excludes repository-owned custom payloads by design;
 user repository custom payloads remain preserved by upgrade replacement.

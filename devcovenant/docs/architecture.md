@@ -1,5 +1,5 @@
 # DevCovenant Architecture Contracts
-**Last Updated:** 2026-03-09
+**Last Updated:** 2026-03-12
 **Project Version:** 1.0.0
 
 ## Table of Contents
@@ -128,7 +128,11 @@ Invariant:
   `devcovenant/` package from source (`devcovenant/*.py`, `core/`, `builtin/`)
   while preserving repo-local runtime/custom state.
 - Upgrade preserves user custom policy trees under
-  `devcovenant/custom/policies/**` by design.
+  `devcovenant/custom/policies/**` and user custom profile trees under
+  `devcovenant/custom/profiles/**` by design.
+- Upgrade prunes known repo-only custom payload directories leaked by older
+  installs (`devcov_raw_string_escapes`, `managed_doc_assets`,
+  `readme_sync`, repository-only custom profiles) before refresh.
 - When a custom script has a missing/invalid descriptor, refresh/upgrade keeps
   custom files but fails with the same descriptor-missing/invalid contract as
   core policies until descriptor metadata is fixed.

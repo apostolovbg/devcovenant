@@ -32,6 +32,12 @@ _UPGRADE_RUNTIME_PRESERVE_DIRS = (
     Path("devcovenant/logs"),
 )
 _UPGRADE_RUNTIME_PRESERVE_FILES = (Path("devcovenant/config.yaml"),)
+_UPGRADE_REPO_ONLY_CUSTOM_PRUNE_DIRS = (
+    Path("devcovenant/custom/policies/devcov_raw_string_escapes"),
+    Path("devcovenant/custom/policies/managed_doc_assets"),
+    Path("devcovenant/custom/policies/readme_sync"),
+    Path("devcovenant/custom/profiles/devcovrepo"),
+)
 _SEMVER_COMPARE_RE = re.compile(
     r"^(?P<core>\d+(?:\.\d+){0,2})"
     r"(?:-(?P<prerelease>[0-9A-Za-z.-]+))?"
@@ -201,6 +207,21 @@ def _replace_core_package_for_upgrade(repo_root: Path) -> None:
         _restore_upgrade_runtime_state(repo_root, temp_root)
 
 
+def _prune_repo_only_custom_payload(repo_root: Path) -> list[Path]:
+    """Remove known repo-only custom payload leaked into user repos."""
+    removed: list[Path] = []
+    for rel_path in _UPGRADE_REPO_ONLY_CUSTOM_PRUNE_DIRS:
+        target_path = repo_root / rel_path
+        if not target_path.exists():
+            continue
+        if target_path.is_dir():
+            shutil.rmtree(target_path)
+        else:
+            target_path.unlink()
+        removed.append(rel_path)
+    return removed
+
+
 def upgrade_repo(repo_root: Path) -> int:
     """Upgrade DevCovenant core and run full refresh."""
     source_version_path = Path(__file__).resolve().parent / "VERSION"
@@ -221,6 +242,13 @@ def upgrade_repo(repo_root: Path) -> int:
     except ValueError as error:
         raise SystemExit(f"Upgrade blocked: {error}") from error
     _replace_core_package_for_upgrade(repo_root)
+    pruned_paths = _prune_repo_only_custom_payload(repo_root)
+    if pruned_paths:
+        formatted = ", ".join(str(path) for path in pruned_paths)
+        print_step(
+            f"Pruned repo-only custom payload: {formatted}",
+            "ℹ️",
+        )
     target_version_path.write_text(f"{source_version}\n", encoding="utf-8")
     if source_key > target_key:
         print_step("Core package replaced with newer version", "✅")

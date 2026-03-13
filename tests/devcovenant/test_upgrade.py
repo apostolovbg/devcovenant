@@ -110,6 +110,62 @@ def _unit_test_upgrade_preserves_custom_tree() -> None:
         assert custom_file.read_text(encoding="utf-8") == "# keep\n"
 
 
+def _unit_test_upgrade_prunes_repo_only_custom_payload() -> None:
+    """upgrade_repo should remove leaked repo-only custom payload paths."""
+    with tempfile.TemporaryDirectory() as temp_dir:
+        repo_root = Path(temp_dir)
+        repo_seed_cache.copy_installed_repo(repo_root)
+
+        leaked_policy_dir = (
+            repo_root
+            / "devcovenant"
+            / "custom"
+            / "policies"
+            / "devcov_raw_string_escapes"
+        )
+        leaked_policy_dir.mkdir(parents=True, exist_ok=True)
+        (leaked_policy_dir / "__init__.py").write_text(
+            "__all__ = []\n",
+            encoding="utf-8",
+        )
+        (leaked_policy_dir / "devcov_raw_string_escapes.py").write_text(
+            "# leaked repo-only policy script\n",
+            encoding="utf-8",
+        )
+
+        leaked_profile_dir = (
+            repo_root / "devcovenant" / "custom" / "profiles" / "devcovrepo"
+        )
+        leaked_profile_dir.mkdir(parents=True, exist_ok=True)
+        (leaked_profile_dir / "devcovrepo.yaml").write_text(
+            "profile: devcovrepo\n",
+            encoding="utf-8",
+        )
+
+        user_policy = (
+            repo_root
+            / "devcovenant"
+            / "custom"
+            / "policies"
+            / "demo"
+            / "demo.py"
+        )
+        user_policy.parent.mkdir(parents=True, exist_ok=True)
+        user_policy.write_text("# keep-user-payload\n", encoding="utf-8")
+        _write_policy_descriptor(user_policy)
+
+        with redirect_stderr(StringIO()):
+            result = upgrade.upgrade_repo(repo_root)
+        assert result == 0
+
+        assert not leaked_policy_dir.exists()
+        assert not leaked_profile_dir.exists()
+        assert user_policy.exists()
+        assert (
+            user_policy.read_text(encoding="utf-8") == "# keep-user-payload\n"
+        )
+
+
 def _unit_test_upgrade_runs_full_refresh() -> None:
     """upgrade_repo should end with full refresh and registries."""
     with tempfile.TemporaryDirectory() as temp_dir:
@@ -205,6 +261,31 @@ def _unit_test_parse_version_for_compare_rejects_invalid_tokens() -> None:
     assert "Invalid semantic version string" in message
 
 
+def _unit_test_main_invokes_run_and_exits_with_code() -> None:
+    """upgrade.main should parse args, call run, and exit with run code."""
+    captured: dict[str, object] = {}
+    original_run = upgrade.run
+
+    def _fake_run(args):
+        """Capture parsed args and return a sentinel exit code."""
+        captured["args"] = args
+        return 7
+
+    upgrade.run = _fake_run
+    try:
+        try:
+            upgrade.main([])
+        except SystemExit as exc:
+            exit_code = exc.code
+        else:  # pragma: no cover - defensive
+            raise AssertionError("Expected SystemExit from main().")
+    finally:
+        upgrade.run = original_run
+
+    assert exit_code == 7
+    assert "args" in captured
+
+
 class GeneratedUnittestCases(unittest.TestCase):
     """unittest wrappers for module-level tests."""
 
@@ -215,6 +296,10 @@ class GeneratedUnittestCases(unittest.TestCase):
     def test_upgrade_preserves_custom_tree(self):
         """Run test_upgrade_preserves_custom_tree."""
         _unit_test_upgrade_preserves_custom_tree()
+
+    def test_upgrade_prunes_repo_only_custom_payload(self):
+        """Run repo-only custom payload prune assertions for upgrade."""
+        _unit_test_upgrade_prunes_repo_only_custom_payload()
 
     def test_upgrade_runs_full_refresh(self):
         """Run test_upgrade_runs_full_refresh."""
@@ -235,3 +320,7 @@ class GeneratedUnittestCases(unittest.TestCase):
     def test_parse_version_for_compare_rejects_invalid_tokens(self):
         """Run invalid-version rejection assertions for upgrade parser."""
         _unit_test_parse_version_for_compare_rejects_invalid_tokens()
+
+    def test_main_invokes_run_and_exits_with_code(self):
+        """Run main-entrypoint run/exit-code assertions."""
+        _unit_test_main_invokes_run_and_exits_with_code()

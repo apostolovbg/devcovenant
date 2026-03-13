@@ -1,5 +1,5 @@
 # Workflow
-**Last Updated:** 2026-03-09
+**Last Updated:** 2026-03-12
 **Project Version:** 1.0.0
 
 ## Table of Contents
@@ -202,8 +202,10 @@ Install/upgrade boundary:
   core replacement before running refresh
 - `upgrade` preserves user payload trees under
   `devcovenant/custom/policies/<policy-id>/` and
-  `devcovenant/custom/profiles/<profile-id>/`, while refreshing package-owned
-  custom scaffolding files from source
+  `devcovenant/custom/profiles/<profile-id>/`
+- `upgrade` prunes known repo-only custom payload paths leaked by older
+  installs (`devcov_raw_string_escapes`, `managed_doc_assets`,
+  `readme_sync`, and repository-only custom profiles) before refresh
 - orphan custom policy scripts still fail with the same descriptor contract as
   core policies; fix the descriptor and rerun
 - refresh validates managed-doc descriptor schema before rendering docs:

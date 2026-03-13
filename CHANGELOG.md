@@ -2,7 +2,7 @@
 **Doc ID:** CHANGELOG
 **Doc Type:** changelog
 **Project Version:** 1.0.0
-**Last Updated:** 2026-03-09
+**Last Updated:** 2026-03-12
 **DevCovenant Version:** 1.0.0
 
 <!-- DEVCOV:BEGIN -->
@@ -53,6 +53,26 @@ Example:
 ## Log changes here
 
 ## Version 1.0.0
+
+- 2026-03-13:
+  Change: Hardened upgrade custom-payload handling by pruning known
+    repository-only custom paths leaked by older installs while preserving
+    user custom policy/profile payload trees.
+  Why: Prevented refresh/upgrade failures in user repositories caused by
+    leaked repo-only custom scripts without descriptors and aligned upgrade
+    behavior with the no-repo-custom-shipping contract.
+  Impact: Upgrade now removes known leaked repo-only custom payload
+    directories before refresh, preserves user custom trees, and is covered by
+    new install/upgrade regressions plus updated workflow/installation/
+    architecture docs.
+  Files:
+  CHANGELOG.md
+  devcovenant/upgrade.py
+  devcovenant/docs/architecture.md
+  devcovenant/docs/installation.md
+  devcovenant/docs/workflow.md
+  tests/devcovenant/test_install.py
+  tests/devcovenant/test_upgrade.py
 
 - 2026-03-09:
   Change: Documented gate changelog-helper default header-key alignment in

@@ -111,6 +111,28 @@ def _unit_test_install_preserves_existing_custom_tree() -> None:
         assert custom_file.read_text(encoding="utf-8") == "# custom\n"
 
 
+def _unit_test_install_does_not_copy_repo_custom_payload() -> None:
+    """install_repo should not copy repo-only custom payload into targets."""
+    with tempfile.TemporaryDirectory() as temp_dir:
+        repo_root = Path(temp_dir)
+        with redirect_stderr(StringIO()):
+            result = install.install_repo(repo_root)
+        assert result == 0
+
+        leaked_policy = (
+            repo_root
+            / "devcovenant"
+            / "custom"
+            / "policies"
+            / "devcov_raw_string_escapes"
+        )
+        leaked_profile = (
+            repo_root / "devcovenant" / "custom" / "profiles" / "devcovrepo"
+        )
+        assert not leaked_policy.exists()
+        assert not leaked_profile.exists()
+
+
 def _unit_test_install_run_requires_upgrade_when_present() -> None:
     """run() should refuse existing installs and point to upgrade."""
     with tempfile.TemporaryDirectory() as temp_dir:
@@ -433,6 +455,10 @@ class GeneratedUnittestCases(unittest.TestCase):
     def test_install_preserves_existing_custom_tree(self):
         """Run test_install_preserves_existing_custom_tree."""
         _unit_test_install_preserves_existing_custom_tree()
+
+    def test_install_does_not_copy_repo_custom_payload(self):
+        """Run install repo-only custom-payload exclusion assertions."""
+        _unit_test_install_does_not_copy_repo_custom_payload()
 
     def test_install_run_requires_upgrade_when_present(self):
         """Run test_install_run_requires_upgrade_when_present."""
