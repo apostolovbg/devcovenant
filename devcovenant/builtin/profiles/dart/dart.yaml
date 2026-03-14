@@ -6,6 +6,9 @@ suffixes:
 ignore_dirs:
   - .dart_tool
   - build
+clean_overlays:
+  build_dirs:
+    - .dart_tool
 assets:
   - path: pubspec.yaml
     template: pubspec.yaml

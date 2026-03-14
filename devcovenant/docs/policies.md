@@ -1,5 +1,5 @@
 # Policies
-**Last Updated:** 2026-03-09
+**Last Updated:** 2026-03-13
 **Project Version:** 1.0.0
 
 ## Table of Contents
@@ -154,6 +154,11 @@ High-impact runtime contracts:
   By default, generated governance files (`.gitignore`,
   `.pre-commit-config.yaml` and `.github/workflows/governance-and-test.yml`)
   are excluded from changelog coverage.
+  Universal editor/build/runtime artifacts are also skipped by default
+  (`.vscode/**`, `.idea/**`, build/dist trees, cache directories,
+  `*.egg-info/**`, `pip-wheel-metadata/**`, coverage artifacts, and
+  DevCovenant runtime state under `devcovenant/logs/**` and
+  `devcovenant/registry/local/**`).
   Deleted in-scope files remain valid `Files:` entries and are treated as
   real change evidence even after the path no longer exists on disk.
   Out-of-scope files (skipped metadata selectors and managed/header-only
@@ -179,8 +184,10 @@ High-impact runtime contracts:
   `devcovenant/logs` skeleton via the core manifest without requiring any
   policy inventory.
 - `line-length-limit` excludes transient runtime log artifacts under
-  `devcovenant/logs/**` so generated summaries and tails do not create
-  warning noise during gated runs.
+  `devcovenant/logs/**` plus universal editor/build/runtime artifacts
+  (`*.egg-info/**`, `pip-wheel-metadata/**`, coverage/cache trees,
+  `.vscode/**`, `.idea/**`, and local runtime state) so generated noise does
+  not create warning churn during gated runs.
   Descriptor keys remain declared, while default values are profile-owned
   (`defaults` for max-length/URL escape-hatch defaults and
   `global` for runtime log-artifact excludes).
@@ -216,6 +223,10 @@ High-impact runtime contracts:
   `managed_rerun_commands` (`stage=>command`) provide wrapper-based command
   rerun adapters (for example bench or other external environment runners)
   when the managed interpreter cannot be executed directly.
+  `documentation-growth-tracking` also hard-excludes universal
+  editor/build/runtime artifacts from user-facing change detection so
+  packaging, cache, and local-tool artifacts do not demand documentation
+  updates.
   Active policy state also enables CLI interpreter auto re-exec into the
   managed interpreter; command-run `run.json` artifacts record interpreter
   provenance for audit/debug use.
@@ -286,6 +297,12 @@ High-impact runtime contracts:
   compatibility re-exports from `devcovenant/core/runtime/execution.py`.
 - `last-updated` scopes stale-date checks to session-changed files
   from runtime context only (no git fallback scanning).
+- `last-updated` ships builtin package-doc allowlists for installed
+  `devcovenant/README.md`, package README surfaces, and
+  `devcovenant/docs/**/*.md` so user repos do not need repo-specific
+  overlays just to keep packaged docs compliant.
+- `last-updated` violation suggestions report the effective allowlist,
+  including allowlisted globs, instead of only explicit files/suffixes.
 - `version-sync` stays consistency-only; semver bump progression and release
   scope enforcement are handled by `semantic-version-scope`.
 - `semantic-version-scope` activation follows

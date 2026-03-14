@@ -1,0 +1,24 @@
+header_lines:
+- '# Contributing'
+- '**Last Updated:**'
+- '**Version:** 0.2.6'
+doc_id: CONTRIBUTING
+doc_type: contributing-guide
+managed_by: DevCovenant
+managed_block: '**Read first:** `AGENTS.md` is canonical. See `devcovenant/README.md`
+
+  for lifecycle guidance and workflow details.'
+body: "This file is intentionally brief. Use it as the entry point, then follow the\n\
+  full guidance in `devcovenant/README.md` and the policy definitions in\n`AGENTS.md`.\n\
+  \n## Table of Contents\n1. [Overview](#overview)\n2. [Workflow](#workflow)\n\n##\
+  \ Overview\n- Read `AGENTS.md` for policy definitions and required workflow.\n-\
+  \ Read `devcovenant/README.md` for architecture, schema, and lifecycle\n  rules.\n\
+  - Check `PLAN.md` for current priorities.\nThis guide stays short by design. It\
+  \ exists to point you to the canonical\nrules and to remind you that DevCovenant\
+  \ enforcement applies to every\nchange, including documentation-only updates.\n\n\
+  ## Workflow\nFollow the canonical gate sequence (details in `devcovenant/README.md`):\n\
+  ```bash\npython3 -m devcovenant gate --start\npython3 -m devcovenant test\npython3\
+  \ -m devcovenant gate --end\n```\nIf the console script is not on your PATH, use\
+  \ `python3 -m devcovenant`\ninstead of `devcovenant` for CLI commands.\nIf the gate\
+  \ sequence fails, fix the violations and rerun the full sequence\nbefore submitting\
+  \ changes."

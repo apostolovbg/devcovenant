@@ -7,6 +7,9 @@ suffixes:
 ignore_dirs:
   - .bundle
   - vendor/bundle
+clean_overlays:
+  cache_dirs:
+    - .bundle
 assets:
   - path: Gemfile
     template: Gemfile

@@ -2,7 +2,7 @@
 **Doc ID:** README
 **Doc Type:** repo-readme
 **Project Version:** 1.0.0
-**Last Updated:** 2026-03-12
+**Last Updated:** 2026-03-13
 **DevCovenant Version:** 1.0.0
 
 <!-- DEVCOV:BEGIN -->
@@ -231,9 +231,10 @@ Primary governance commands:
 - `devcovenant gate --end`:
   run end hooks, enforce sequence completion, and close the gate session
 
-Lifecycle commands:
+Lifecycle and maintenance commands:
 - `devcovenant install`
 - `devcovenant deploy`
+- `devcovenant clean`
 - `devcovenant refresh`
 - `devcovenant upgrade`
 - `devcovenant undeploy`
@@ -246,6 +247,8 @@ Practical usage guidance:
   gate session
 - use gate commands for mandatory gate-session workflow and mutating checks
 - use `devcovenant gate --status` for short read-only gate session inspection
+- use `clean` to remove disposable build/cache artifacts after package/build
+  validation without touching logs, local registry evidence, or `.venv`
 - use `refresh` when descriptors/profiles/templates change
 - use `update_lock` when dependency inputs changed and license artifacts must
   be reconciled
@@ -258,6 +261,8 @@ Lifecycle contract:
   copy package files and seed generic config stub
 - `deploy`:
   require explicit non-generic config, then materialize managed outputs
+- `clean`:
+  remove disposable build/cache artifacts from resolved profile/config targets
 - `refresh`:
   regenerate registries, managed blocks, and generated governance files
 - `upgrade`:
@@ -347,7 +352,8 @@ policies can still appear as `false` in `policy_state`, but runtime
 enforcement ignores that disable toggle and emits an explicit diagnostic.
 
 ## Profiles and Translators
-Profiles contribute metadata overlays, selectors, assets, and hook fragments.
+Profiles contribute metadata overlays, cleanup overlays, selectors, assets,
+and hook fragments.
 Profiles do not activate policies.
 
 Language profiles may also declare translators and test-event adapters:
@@ -376,8 +382,7 @@ Extension guidance:
 
 ## Docs Map
 This README is the canonical docs entrypoint for the packaged documentation
-set. The former `devcovenant/docs/README.md` docset map is retired; its
-navigation guidance now lives here.
+set.
 
 ### Documentation Tiers
 - universal/package docs:

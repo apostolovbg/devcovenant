@@ -64,6 +64,43 @@ def _unit_test_install_writes_generic_config_and_manifest() -> None:
             "docs",
         ]
 
+        ignore_block = config.get("ignore", {})
+        assert isinstance(ignore_block, dict)
+        ignore_patterns = ignore_block.get("patterns", [])
+        assert isinstance(ignore_patterns, list)
+        for expected in (
+            ".vscode/**",
+            ".idea/**",
+            "*.egg-info/**",
+            "pip-wheel-metadata/**",
+            ".coverage.*",
+            "devcovenant/registry/local/**",
+        ):
+            assert expected in ignore_patterns
+
+        clean_block = config.get("clean", {})
+        assert isinstance(clean_block, dict)
+        assert clean_block.get("overlays") == {
+            "build_dirs": [],
+            "build_globs": [],
+            "cache_dirs": [],
+            "cache_globs": [],
+            "protected_dirs": [],
+            "protected_globs": [],
+        }
+        assert clean_block.get("overrides") == {
+            "build_dirs": [],
+            "build_globs": [],
+            "cache_dirs": [],
+            "cache_globs": [],
+            "protected_dirs": [],
+            "protected_globs": [],
+        }
+
+        gitignore_block = config.get("gitignore", {})
+        assert isinstance(gitignore_block, dict)
+        assert gitignore_block.get("overlays") == []
+
         manifest_path = manifest_module.manifest_path(repo_root)
         assert manifest_path.exists()
 

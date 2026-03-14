@@ -1,0 +1,28 @@
+id: version-sync
+text: |
+  All version-bearing targets must match the canonical version file (default
+  `VERSION` or a configured override).
+  Target selection is role-based via `target_roles` and role selectors
+  (`target_role_files`, `target_role_globs`, `target_role_dirs`) with
+  `role=>selector` entries. Version extraction is role-driven via
+  `role_extractors` and explicit extractor names
+  (`doc_header_version`, `changelog_header_version`,
+  `manifest_project_version`, `semver_token`). Manifest extraction remains
+  format-aware (TOML/JSON/YAML) while selector routing stays role-based.
+  Semantic bump progression and release-scope enforcement are handled by
+  `semantic-version-scope`.
+metadata:
+  id: version-sync
+  severity: error
+  auto_fix: 'false'
+  enforcement: active
+  version_file: ''
+  target_roles: []
+  role_extractors: []
+  target_role_files: []
+  target_role_globs: []
+  target_role_dirs: []
+  changelog_file: ''
+  changelog_header_prefix: ''
+  selector_roles:
+    - target

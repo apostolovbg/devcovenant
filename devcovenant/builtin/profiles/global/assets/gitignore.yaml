@@ -18,13 +18,25 @@ base_fragments:
   - dist/
   - out/
   - coverage/
+  - htmlcov/
   - reports/
   - '*.egg-info/'
+  - pip-wheel-metadata/
 
   # Logs
   - '*.log'
 
   # Misc
+  - .venv/
+  - .python/
+  - __pycache__/
+  - .pytest_cache/
+  - .mypy_cache/
+  - .tox/
+  - .nox/
+  - .hypothesis/
+  - .coverage
+  - .coverage.*
   - .cache/
   - .ruff_cache/
   - tmp/

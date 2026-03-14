@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import json
 import re
 import tempfile
 import unittest
@@ -132,6 +133,85 @@ def _unit_test_refresh_writes_devcovenant_logs_gitignore_rules() -> None:
         assert "!devcovenant/logs/README.md" in content
 
 
+def _unit_test_refresh_writes_global_artifact_ignore_defaults() -> None:
+    """refresh_repo should seed shared editor/build/runtime ignore globs."""
+    with tempfile.TemporaryDirectory() as temp_dir:
+        repo_root = Path(temp_dir)
+        repo_seed_cache.copy_installed_repo(repo_root)
+
+        result = refresh.refresh_repo(repo_root)
+        assert result == 0
+
+        config_path = repo_root / "devcovenant" / "config.yaml"
+        payload = yaml.safe_load(config_path.read_text(encoding="utf-8"))
+        patterns = payload["ignore"]["patterns"]
+        for expected in (
+            ".vscode/**",
+            ".idea/**",
+            "*.egg-info/**",
+            "pip-wheel-metadata/**",
+            ".coverage.*",
+            "devcovenant/logs/**",
+            "devcovenant/registry/local/**",
+        ):
+            assert expected in patterns
+
+
+def _unit_test_refresh_writes_clean_config_section() -> None:
+    """refresh_repo should render the clean config contract and defaults."""
+    with tempfile.TemporaryDirectory() as temp_dir:
+        repo_root = Path(temp_dir)
+        repo_seed_cache.copy_installed_repo(repo_root)
+
+        result = refresh.refresh_repo(repo_root)
+        assert result == 0
+
+        config_path = repo_root / "devcovenant" / "config.yaml"
+        payload = yaml.safe_load(config_path.read_text(encoding="utf-8"))
+        clean_block = payload.get("clean", {})
+
+        assert isinstance(clean_block, dict)
+        assert clean_block.get("overlays") == {
+            "build_dirs": [],
+            "build_globs": [],
+            "cache_dirs": [],
+            "cache_globs": [],
+            "protected_dirs": [],
+            "protected_globs": [],
+        }
+        assert clean_block.get("overrides") == {
+            "build_dirs": [],
+            "build_globs": [],
+            "cache_dirs": [],
+            "cache_globs": [],
+            "protected_dirs": [],
+            "protected_globs": [],
+        }
+
+
+def _unit_test_refresh_writes_global_artifact_gitignore_rules() -> None:
+    """refresh_repo should write universal editor/build/runtime gitignores."""
+    with tempfile.TemporaryDirectory() as temp_dir:
+        repo_root = Path(temp_dir)
+        repo_seed_cache.copy_installed_repo(repo_root)
+
+        result = refresh.refresh_repo(repo_root)
+        assert result == 0
+
+        gitignore_path = repo_root / ".gitignore"
+        content = gitignore_path.read_text(encoding="utf-8")
+        for expected in (
+            ".vscode/",
+            ".idea/",
+            "*.egg-info/",
+            "pip-wheel-metadata/",
+            ".coverage",
+            ".coverage.*",
+            "htmlcov/",
+        ):
+            assert expected in content
+
+
 def _unit_test_refresh_policy_registry_origin_metadata() -> None:
     """refresh_repo should record builtin/custom policy origins."""
     with tempfile.TemporaryDirectory() as temp_dir:
@@ -153,6 +233,111 @@ def _unit_test_refresh_policy_registry_origin_metadata() -> None:
         assert policies["changelog-coverage"]["origin"] == "builtin"
         assert "readme-sync" not in policies
         assert "core" not in policies["changelog-coverage"]
+
+
+def _unit_test_refresh_policy_registry_records_metadata_resolution() -> None:
+    """refresh_repo should persist per-key metadata resolution trace."""
+    with tempfile.TemporaryDirectory() as temp_dir:
+        repo_root = Path(temp_dir)
+        repo_seed_cache.copy_installed_repo(repo_root)
+
+        result = refresh.refresh_repo(repo_root)
+        assert result == 0
+
+        policy_registry = (
+            repo_root
+            / "devcovenant"
+            / "registry"
+            / "local"
+            / "policy_registry.yaml"
+        )
+        payload = yaml.safe_load(policy_registry.read_text(encoding="utf-8"))
+        policy_entry = payload["policies"]["changelog-coverage"]
+        resolution = policy_entry["metadata_resolution"]["required_globs"]
+
+        assert resolution["effective"]["values"]
+        assert any(key != "effective" for key in resolution)
+        assert isinstance(policy_entry["metadata_warnings"], list)
+        assert isinstance(policy_entry["runtime_metadata_options"], dict)
+        assert isinstance(policy_entry["runtime_config_overrides"], dict)
+        assert isinstance(policy_entry["runtime_effective_options"], dict)
+
+
+def _unit_test_refresh_records_override_replacement_warning() -> None:
+    """refresh_repo should record warnings for destructive overrides."""
+    with tempfile.TemporaryDirectory() as temp_dir:
+        repo_root = Path(temp_dir)
+        repo_seed_cache.copy_installed_repo(repo_root)
+
+        config_path = repo_root / "devcovenant" / "config.yaml"
+        payload = yaml.safe_load(config_path.read_text(encoding="utf-8"))
+        payload["user_metadata_overrides"] = {
+            "changelog-coverage": {"required_globs": ["README.md"]}
+        }
+        config_path.write_text(
+            yaml.safe_dump(payload, sort_keys=False),
+            encoding="utf-8",
+        )
+
+        result = refresh.refresh_repo(repo_root)
+        assert result == 0
+
+        policy_registry = (
+            repo_root
+            / "devcovenant"
+            / "registry"
+            / "local"
+            / "policy_registry.yaml"
+        )
+        refreshed = yaml.safe_load(policy_registry.read_text(encoding="utf-8"))
+        policy_entry = refreshed["policies"]["changelog-coverage"]
+        warnings = policy_entry["metadata_warnings"]
+        assert warnings
+        assert warnings[0]["layer"] == "user_overrides"
+        assert warnings[0]["key"] == "required_globs"
+        resolution = policy_entry["metadata_resolution"]["required_globs"]
+        assert resolution["user_overrides"]["values"] == ["README.md"]
+        assert resolution["effective"]["values"] == ["README.md"]
+        assert policy_entry["runtime_config_overrides"]["required_globs"] == [
+            "README.md"
+        ]
+        assert policy_entry["runtime_effective_options"]["required_globs"] == [
+            "README.md"
+        ]
+
+
+def _unit_test_refresh_preserves_existing_gate_status() -> None:
+    """refresh_repo should leave an open gate status file untouched."""
+    with tempfile.TemporaryDirectory() as temp_dir:
+        repo_root = Path(temp_dir)
+        repo_seed_cache.copy_installed_repo(repo_root)
+
+        gate_status_path = (
+            repo_root
+            / "devcovenant"
+            / "registry"
+            / "local"
+            / "gate_status.json"
+        )
+        gate_status_path.parent.mkdir(parents=True, exist_ok=True)
+        expected_payload = {
+            "session_id": "refresh-open-session",
+            "session_state": "open",
+            "pre_commit_start_utc": "2026-03-01T10:00:00+00:00",
+        }
+        gate_status_path.write_text(
+            json.dumps(expected_payload, indent=2) + "\n",
+            encoding="utf-8",
+        )
+
+        result = refresh.refresh_repo(repo_root)
+        assert result == 0
+
+        assert gate_status_path.exists()
+        actual_payload = json.loads(
+            gate_status_path.read_text(encoding="utf-8")
+        )
+        assert actual_payload == expected_payload
 
 
 def _unit_test_refresh_defaults_autofix_disabled_globally() -> None:
@@ -329,9 +514,33 @@ class GeneratedUnittestCases(unittest.TestCase):
         """Run test_refresh_writes_devcovenant_logs_gitignore_rules."""
         _unit_test_refresh_writes_devcovenant_logs_gitignore_rules()
 
+    def test_refresh_writes_global_artifact_ignore_defaults(self):
+        """Run global artifact ignore default assertions."""
+        _unit_test_refresh_writes_global_artifact_ignore_defaults()
+
+    def test_refresh_writes_clean_config_section(self):
+        """Run clean-config template rendering assertions."""
+        _unit_test_refresh_writes_clean_config_section()
+
+    def test_refresh_writes_global_artifact_gitignore_rules(self):
+        """Run global artifact gitignore assertions."""
+        _unit_test_refresh_writes_global_artifact_gitignore_rules()
+
     def test_refresh_policy_registry_origin_metadata(self):
         """Run test_refresh_policy_registry_origin_metadata."""
         _unit_test_refresh_policy_registry_origin_metadata()
+
+    def test_refresh_policy_registry_records_metadata_resolution(self):
+        """Run metadata-resolution registry persistence assertions."""
+        _unit_test_refresh_policy_registry_records_metadata_resolution()
+
+    def test_refresh_records_override_replacement_warning(self):
+        """Run destructive-override warning persistence assertions."""
+        _unit_test_refresh_records_override_replacement_warning()
+
+    def test_refresh_preserves_existing_gate_status(self):
+        """Run open-gate preservation assertions for refresh."""
+        _unit_test_refresh_preserves_existing_gate_status()
 
     def test_refresh_defaults_autofix_disabled_globally(self):
         """Run global autofix default-disabled refresh assertions."""

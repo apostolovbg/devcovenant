@@ -193,6 +193,102 @@ def _unit_test_resolved_bundle_preserves_string_map_contract() -> None:
         "README.md",
         "AGENTS.md",
     ]
+    assert isinstance(bundle.resolution_trace, dict)
+    assert isinstance(bundle.warnings, list)
+    assert bundle.warning_messages() == []
+
+
+def _unit_test_resolved_bundle_tracks_layer_trace_and_warnings() -> None:
+    """Resolved bundles should expose layer trace and replacement warnings."""
+    module = importlib.import_module(MODULE)
+    descriptor_module = importlib.import_module(
+        "devcovenant.core.services.registry"
+    )
+    descriptor = descriptor_module.PolicyDescriptor(
+        policy_id="demo-policy",
+        text="demo",
+        metadata={
+            "severity": "error",
+            "enabled": "true",
+            "required_globs": ["README.md"],
+            "header_scan_lines": "4",
+        },
+    )
+    context = module.MetadataContext(
+        control=module.PolicyControl(policy_state={"demo-policy": False}),
+        profile_overlays={
+            "demo-policy": {"required_globs": (["AGENTS.md"], True)}
+        },
+        autogen_overlays={},
+        user_overlays={"demo-policy": {"required_globs": (["PLAN.md"], True)}},
+        autogen_overrides={},
+        user_overrides={"demo-policy": {"required_globs": ["SPEC.md"]}},
+    )
+
+    bundle = module.resolve_policy_metadata_bundle(
+        "demo-policy",
+        [],
+        {},
+        descriptor,
+        context,
+    )
+
+    trace = bundle.resolution_trace["required_globs"]
+    assert trace["descriptor"]["values"] == ["README.md"]
+    assert trace["profile_overlays"]["values"] == ["AGENTS.md"]
+    assert trace["profile_overlays"]["behavior"] == "append"
+    assert trace["user_overlays"]["values"] == ["PLAN.md"]
+    assert trace["user_overrides"]["values"] == ["SPEC.md"]
+    assert trace["user_overrides"]["behavior"] == "replace"
+    assert trace["user_overrides"]["replaced_inherited_values"] == [
+        "README.md",
+        "AGENTS.md",
+        "PLAN.md",
+    ]
+    assert trace["effective"]["values"] == ["SPEC.md"]
+
+    enabled_trace = bundle.resolution_trace["enabled"]
+    assert enabled_trace["policy_state"]["values"] == ["false"]
+    assert enabled_trace["effective"]["values"] == ["false"]
+
+    assert bundle.warning_messages() == [
+        "user_overrides replaces inherited metadata for "
+        "`demo-policy.required_globs`; use overlays if you intended "
+        "additive behavior."
+    ]
+    assert bundle.warnings[0]["key"] == "required_globs"
+    assert bundle.warnings[0]["layer"] == "user_overrides"
+
+
+def _unit_test_bundle_tracks_runtime_defaults_and_selector_derives() -> None:
+    """Bundles should trace runtime defaults and selector-derived fields."""
+    module = importlib.import_module(MODULE)
+    descriptor_module = importlib.import_module(
+        "devcovenant.core.services.registry"
+    )
+    descriptor = descriptor_module.PolicyDescriptor(
+        policy_id="demo-policy",
+        text="demo",
+        metadata={
+            "watch_prefixes": ["docs"],
+        },
+    )
+
+    bundle = module.resolve_policy_metadata_bundle(
+        "demo-policy",
+        [],
+        {},
+        descriptor,
+        _empty_context(module),
+    )
+
+    severity_trace = bundle.resolution_trace["severity"]
+    assert severity_trace["runtime_defaults"]["values"] == ["warning"]
+    assert severity_trace["effective"]["values"] == ["warning"]
+
+    watch_globs_trace = bundle.resolution_trace["watch_globs"]
+    assert watch_globs_trace["derived_selectors"]["behavior"] == "derive"
+    assert watch_globs_trace["effective"]["values"] == ["docs/**"]
 
 
 def _unit_test_active_policy_metadata_bundle_shapes_are_valid() -> None:
@@ -225,6 +321,8 @@ def _unit_test_active_policy_metadata_bundle_shapes_are_valid() -> None:
         assert len(bundle.order) == len(set(bundle.order))
         assert set(bundle.order) == set(bundle.list_map.keys())
         assert set(bundle.order) == set(bundle.string_map.keys())
+        assert isinstance(bundle.resolution_trace, dict)
+        assert isinstance(bundle.warnings, list)
         assert "id" in bundle.string_map
         assert "severity" in bundle.string_map
         for values in bundle.list_map.values():
@@ -282,6 +380,16 @@ class GeneratedUnittestCases(unittest.TestCase):
     ):
         """Run typed-bundle vs legacy string-map compatibility assertions."""
         _unit_test_resolved_bundle_preserves_string_map_contract()
+
+    def test_resolve_policy_metadata_bundle_tracks_layer_trace_and_warnings(
+        self,
+    ):
+        """Run resolution-trace and override-warning assertions."""
+        _unit_test_resolved_bundle_tracks_layer_trace_and_warnings()
+
+    def test_resolve_policy_metadata_bundle_records_runtime_defaults(self):
+        """Run runtime-default and derived-selector trace assertions."""
+        _unit_test_bundle_tracks_runtime_defaults_and_selector_derives()
 
     def test_active_policy_metadata_bundle_shapes_are_valid(self):
         """Run enabled-policy resolved-metadata shape assertions."""

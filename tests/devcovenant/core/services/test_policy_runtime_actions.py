@@ -21,10 +21,12 @@ def _unit_test_module_importable() -> None:
 def _unit_test_symbol_contract_is_stable() -> None:
     """Runtime-action helper seam functions should stay callable."""
     module = importlib.import_module(MODULE)
+    assert hasattr(module, "build_runtime_policy_option_views")
     assert hasattr(module, "load_policy_check_instance")
     assert hasattr(module, "runtime_policy_config_overrides")
     assert hasattr(module, "runtime_policy_metadata_options")
     assert hasattr(module, "run_policy_runtime_action")
+    assert callable(module.build_runtime_policy_option_views)
     assert callable(module.load_policy_check_instance)
     assert callable(module.runtime_policy_config_overrides)
     assert callable(module.runtime_policy_metadata_options)
@@ -34,6 +36,7 @@ def _unit_test_symbol_contract_is_stable() -> None:
 def _unit_test_symbol_assertions_cover_runtime_action_seam() -> None:
     """Tests should assert the runtime-action helper seam directly."""
     module = importlib.import_module(MODULE)
+    assert module.build_runtime_policy_option_views
     assert module.load_policy_check_instance
     assert module.runtime_policy_config_overrides
     assert module.runtime_policy_metadata_options
@@ -78,6 +81,22 @@ def _unit_test_runtime_policy_config_overrides_reads_config() -> None:
         assert overrides["status_file"] == "devcovenant/status.json"
 
 
+def _unit_test_build_runtime_policy_option_views_prefers_overrides() -> None:
+    """Runtime option views should expose all three typed option views."""
+    module = importlib.import_module(MODULE)
+    views = module.build_runtime_policy_option_views(
+        {"alpha": ["one"], "beta": "meta", "gamma": "meta"},
+        {"alpha": ["two"], "beta": "", "delta": 4},
+    )
+
+    assert views["runtime_metadata_options"]["alpha"] == ["one"]
+    assert views["runtime_config_overrides"]["alpha"] == ["two"]
+    assert views["runtime_effective_options"]["alpha"] == ["two"]
+    assert views["runtime_effective_options"]["beta"] == "meta"
+    assert views["runtime_effective_options"]["gamma"] == "meta"
+    assert views["runtime_effective_options"]["delta"] == 4
+
+
 def _unit_test_runtime_policy_metadata_options_decodes_registry_strings() -> (
     None
 ):
@@ -117,6 +136,50 @@ def _unit_test_runtime_policy_metadata_options_decodes_registry_strings() -> (
         assert options["enabled"] is True
         assert options["header_scan_lines"] == 4
         assert options["required_globs"] == ["README.md", "AGENTS.md"]
+
+
+def _unit_test_runtime_policy_metadata_prefers_typed_registry() -> None:
+    """Typed registry metadata should win over raw string metadata."""
+    module = importlib.import_module(MODULE)
+    with tempfile.TemporaryDirectory() as tmpdir:
+        repo_root = Path(tmpdir)
+        registry_path = (
+            repo_root
+            / "devcovenant"
+            / "registry"
+            / "local"
+            / "policy_registry.yaml"
+        )
+        registry_path.parent.mkdir(parents=True, exist_ok=True)
+        registry_path.write_text(
+            yaml.safe_dump(
+                {
+                    "policies": {
+                        "demo-policy": {
+                            "runtime_metadata_options": {
+                                "enabled": True,
+                                "header_scan_lines": 7,
+                                "required_globs": ["PLAN.md"],
+                            },
+                            "metadata": {
+                                "enabled": "true",
+                                "header_scan_lines": "4",
+                                "required_globs": "README.md, AGENTS.md",
+                            },
+                        }
+                    }
+                },
+                sort_keys=False,
+            ),
+            encoding="utf-8",
+        )
+        options = module.runtime_policy_metadata_options(
+            repo_root,
+            "demo-policy",
+        )
+        assert options["enabled"] is True
+        assert options["header_scan_lines"] == 7
+        assert options["required_globs"] == ["PLAN.md"]
 
 
 def _unit_test_runtime_action_dispatches_with_injected_loaders() -> None:
@@ -206,9 +269,19 @@ class GeneratedUnittestCases(unittest.TestCase):
         """Run config-override helper assertions."""
         _unit_test_runtime_policy_config_overrides_reads_config()
 
+    def test_build_runtime_policy_option_views_prefers_overrides(self):
+        """Run runtime-option view merge assertions."""
+        _unit_test_build_runtime_policy_option_views_prefers_overrides()
+
     def test_runtime_policy_metadata_options_decodes_registry_strings(self):
         """Run registry metadata typed-decoding assertions."""
         _unit_test_runtime_policy_metadata_options_decodes_registry_strings()
+
+    def test_runtime_policy_metadata_options_prefers_typed_registry_view(
+        self,
+    ):
+        """Run typed-registry metadata option assertions."""
+        _unit_test_runtime_policy_metadata_prefers_typed_registry()
 
     def test_run_policy_runtime_action_dispatches_with_injected_loaders(self):
         """Run runtime-action dispatch assertions with injected loaders."""

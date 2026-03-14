@@ -2,7 +2,7 @@
 **Doc ID:** AGENTS
 **Doc Type:** policy-source
 **Project Version:** 1.0.0
-**Last Updated:** 2026-03-12
+**Last Updated:** 2026-03-13
 **DevCovenant Version:** 1.0.0
 
 <!-- DEVCOV:BEGIN -->
@@ -190,7 +190,26 @@ skipped_files: devcovenant/config.yaml
   .gitignore
   .pre-commit-config.yaml
   .github/workflows/governance-and-test.yml
-skipped_globs:
+skipped_globs: .vscode/**
+  .idea/**
+  .venv/**
+  .python/**
+  build/**
+  dist/**
+  __pycache__/**
+  *.egg-info/**
+  pip-wheel-metadata/**
+  .pytest_cache/**
+  .ruff_cache/**
+  .mypy_cache/**
+  .tox/**
+  .nox/**
+  .hypothesis/**
+  .coverage
+  .coverage.*
+  htmlcov/**
+  devcovenant/logs/**
+  devcovenant/registry/local/**
 skipped_prefixes:
 summary_labels: Change
   Why
@@ -839,7 +858,27 @@ include_globs:
 exclude_suffixes:
 exclude_globs:
 force_include_globs:
-user_facing_exclude_globs: tests/**
+user_facing_exclude_globs: .vscode/**
+  .idea/**
+  .venv/**
+  .python/**
+  build/**
+  dist/**
+  __pycache__/**
+  *.egg-info/**
+  pip-wheel-metadata/**
+  .pytest_cache/**
+  .ruff_cache/**
+  .mypy_cache/**
+  .tox/**
+  .nox/**
+  .hypothesis/**
+  .coverage
+  .coverage.*
+  htmlcov/**
+  devcovenant/logs/**
+  devcovenant/registry/local/**
+  tests/**
 user_facing_exclude_suffixes:
 user_facing_dirs:
 user_visible_globs:
@@ -878,7 +917,18 @@ enforcement: active
 enabled: true
 custom: false
 include_suffixes: .md
-allowed_globs: README.md
+allowed_globs: devcovenant/README.md
+  devcovenant/core/README.md
+  devcovenant/custom/README.md
+  devcovenant/registry/README.md
+  devcovenant/logs/README.md
+  devcovenant/builtin/policies/README.md
+  devcovenant/builtin/profiles/README.md
+  devcovenant/custom/policies/README.md
+  devcovenant/custom/profiles/README.md
+  devcovenant/docs/*.md
+  devcovenant/docs/**/*.md
+  README.md
   AGENTS.md
   CONTRIBUTING.md
   CHANGELOG.md
@@ -886,20 +936,21 @@ allowed_globs: README.md
   PLAN.md
   PROFILE_MAP.md
   POLICY_MAP.md
-  devcovenant/README.md
-  devcovenant/core/README.md
-  devcovenant/custom/README.md
-  devcovenant/registry/README.md
-  devcovenant/builtin/policies/README.md
-  devcovenant/builtin/profiles/README.md
-  devcovenant/custom/policies/README.md
-  devcovenant/custom/profiles/README.md
-  devcovenant/docs/*.md
-  devcovenant/docs/**/*.md
 allowed_files:
 allowed_suffixes:
 required_files:
-required_globs: README.md
+required_globs: devcovenant/README.md
+  devcovenant/core/README.md
+  devcovenant/custom/README.md
+  devcovenant/registry/README.md
+  devcovenant/logs/README.md
+  devcovenant/builtin/policies/README.md
+  devcovenant/builtin/profiles/README.md
+  devcovenant/custom/policies/README.md
+  devcovenant/custom/profiles/README.md
+  devcovenant/docs/*.md
+  devcovenant/docs/**/*.md
+  README.md
   AGENTS.md
   CONTRIBUTING.md
   CHANGELOG.md
@@ -907,16 +958,6 @@ required_globs: README.md
   PLAN.md
   PROFILE_MAP.md
   POLICY_MAP.md
-  devcovenant/README.md
-  devcovenant/core/README.md
-  devcovenant/custom/README.md
-  devcovenant/registry/README.md
-  devcovenant/builtin/policies/README.md
-  devcovenant/builtin/profiles/README.md
-  devcovenant/custom/policies/README.md
-  devcovenant/custom/profiles/README.md
-  devcovenant/docs/*.md
-  devcovenant/docs/**/*.md
 selector_roles: include
   allowed
   required
@@ -964,7 +1005,8 @@ url_prefixes: https://
   urn:
 allow_long_lines: True
 long_lines_contain:
-long_lines_between:
+long_lines_between: devcovenant/builtin/policies/=>.yaml
+  devcovenant/custom/policies/=>.yaml
 include_suffixes: .py
   .md
   .rst
@@ -977,13 +1019,30 @@ include_suffixes: .py
 exclude_prefixes: build
   dist
   node_modules
-exclude_globs: devcovenant/builtin/profiles/global/assets/*.yaml
-  devcovenant/registry/**
-  *.egg-info/**
-  **/*.egg-info/**
+exclude_globs: .vscode/**
+  .idea/**
+  .venv/**
+  .python/**
   build/**
   dist/**
+  __pycache__/**
+  *.egg-info/**
+  pip-wheel-metadata/**
+  .pytest_cache/**
+  .ruff_cache/**
+  .mypy_cache/**
+  .tox/**
+  .nox/**
+  .hypothesis/**
+  .coverage
+  .coverage.*
+  htmlcov/**
+  devcovenant/logs/**
+  devcovenant/registry/local/**
   node_modules/**
+  **/*.egg-info/**
+  devcovenant/builtin/profiles/global/assets/*.yaml
+  devcovenant/registry/**
 include_prefixes:
 include_globs: *.py
   *.md

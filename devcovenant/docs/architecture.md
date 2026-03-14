@@ -1,5 +1,5 @@
 # DevCovenant Architecture Contracts
-**Last Updated:** 2026-03-12
+**Last Updated:** 2026-03-13
 **Project Version:** 1.0.0
 
 ## Table of Contents
@@ -220,6 +220,18 @@ Invariant:
 - Metadata precedence is fixed:
   descriptor defaults -> profile overlays -> autogen overlays ->
   user overlays -> autogen overrides -> user overrides -> policy_state.
+- Policy registry entries now persist per-key `metadata_resolution` trace and
+  structured `metadata_warnings` so descriptor/profile/config precedence can
+  be audited without reading runtime code or guessing from final values.
+- Policy registry entries also persist typed
+  `runtime_metadata_options`, `runtime_config_overrides`, and
+  `runtime_effective_options` views so runtime-facing policy option behavior
+  can be inspected without reconstructing `PolicyCheck.get_option(...)`
+  manually.
+- Trace payloads may also show runtime-owned layers such as
+  `runtime_defaults`, `runtime_identity`, and `derived_selectors` when the
+  effective value is filled or normalized by runtime rather than directly by a
+  descriptor/profile/config layer.
 - Pseudo-empty sentinel tokens are not part of active metadata contracts.
   Empty metadata must use typed YAML empties (`''`, `[]`, `{}`).
 - Refresh rewrites a full alphabetical `policy_state` map:
@@ -230,7 +242,8 @@ Invariant:
     disable toggle
 
 ### Profiles and Translators
-- Profiles provide overlays, assets, selectors, and hook fragments.
+- Profiles provide overlays, cleanup overlays, assets, selectors, and hook
+  fragments.
 - Profiles do not activate policies.
 - Only language profiles declare translators.
 - Policies remain language-agnostic and request translation via runtime.
@@ -238,14 +251,17 @@ Invariant:
 
 ### CLI and Command Placement
 - Public commands are:
-  `check`, `gate`, `test`, `install`, `deploy`, `refresh`, `upgrade`,
-  `undeploy`, `uninstall`, `update_lock`.
+  `check`, `clean`, `gate`, `test`, `install`, `deploy`, `refresh`,
+  `upgrade`, `undeploy`, `uninstall`, `update_lock`.
 - CLI examples default to on-PATH `devcovenant ...` usage.
 - `python3 -m devcovenant ...` remains the source-checkout fallback.
 - CLI-facing command scripts stay at package root.
 - Active kernel ownership now lives under `devcovenant/core/flow`,
   `devcovenant/core/runtime`, `devcovenant/core/services`,
   `devcovenant/core/lib`, and `devcovenant/core/contracts`.
+- `devcovenant/core/flow/clean.py` orchestrates cleanup selection/reporting,
+  while `devcovenant/core/services/cleanup.py` resolves config/profile
+  targets and enforces non-overridable protection fences.
 - Bundled policy/profile sources are canonical under
   `devcovenant/builtin/policies` and `devcovenant/builtin/profiles`.
 - Legacy bundled policy/profile source trees are removed; runtime resolves
@@ -457,6 +473,11 @@ Invariant:
   `devcovenant/core/lib/document_exemptions.py`; runtime session baseline
   capture (`session_snapshot`) and the `changelog-coverage` policy consume
   the same canonical helper functions to avoid behavior drift.
+- `devcovenant/builtin/policies/last_updated/last_updated.yaml` now carries
+  the neutral package-doc baseline (`devcovenant/README.md`,
+  package README surfaces, and `devcovenant/docs/**/*.md`) so installed
+  repos inherit safe `Last Updated` defaults before profile overlays add
+  repo-specific root docs or maps.
 - top-level CLI run-log pointer emission is centralized in
   `devcovenant/core/runtime/execution.py`; normal-mode test runs can emit
   the same standard `Run logs:` pointer early for artifact-first triage
@@ -519,6 +540,12 @@ Invariant:
   coverage for changelog validation is derived from `session_start_snapshot`.
 - Default global config excludes `devcovenant/config.yaml` from session delta
   and unsessioned-edit detection.
+- Universal filesystem noise is layered intentionally:
+  shared editor/build/runtime artifacts live in the global baseline
+  (`engine.ignore_dirs`, `ignore.patterns`, and generated `.gitignore`),
+  builtin policy descriptors carry policy-specific universal skip fences,
+  and repo-local overlays are reserved for genuinely repository-specific
+  exclusions.
 - Missing or invalid session metadata is a hard error.
 - Read-only `check` keeps a narrow bootstrap exception:
   missing gate status with an empty scoped delta is non-blocking.

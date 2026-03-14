@@ -93,7 +93,27 @@ metadata:
   exclude_suffixes: []
   exclude_globs: []
   force_include_globs: []
-  user_facing_exclude_globs: []
+  user_facing_exclude_globs:
+    - .vscode/**
+    - .idea/**
+    - .venv/**
+    - .python/**
+    - build/**
+    - dist/**
+    - __pycache__/**
+    - '*.egg-info/**'
+    - pip-wheel-metadata/**
+    - .pytest_cache/**
+    - .ruff_cache/**
+    - .mypy_cache/**
+    - .tox/**
+    - .nox/**
+    - .hypothesis/**
+    - .coverage
+    - .coverage.*
+    - htmlcov/**
+    - devcovenant/logs/**
+    - devcovenant/registry/local/**
   user_facing_exclude_suffixes: []
   user_facing_dirs: []
   user_visible_globs: []

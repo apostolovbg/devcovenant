@@ -12,6 +12,14 @@ ignore_dirs:
   - build
   - coverage
   - .cache
+clean_overlays:
+  cache_dirs:
+    - coverage
+    - .parcel-cache
+    - .next
+    - .nuxt
+    - .svelte-kit
+    - .turbo
 assets:
   - path: package.json
     template: package.json

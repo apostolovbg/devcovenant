@@ -1,0 +1,25 @@
+version: 1
+profile: kubernetes
+category: ops
+suffixes:
+  - .yml
+  - .yaml
+ignore_dirs:
+  - charts
+assets:
+  - path: Chart.yaml
+    template: Chart.yaml
+  - path: values.yaml
+    template: values.yaml
+policy_overlays:
+  devflow-run-gates:
+    required_commands:
+      - helm lint
+  documentation-growth-tracking:
+    user_facing_suffixes:
+      - .yml
+      - .yaml
+  line-length-limit:
+    include_suffixes:
+      - .yml
+      - .yaml

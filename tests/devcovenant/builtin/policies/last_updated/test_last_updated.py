@@ -8,6 +8,9 @@ from pathlib import Path
 
 from devcovenant.builtin.policies.last_updated import last_updated
 from devcovenant.core.contracts.policy import CheckContext, Violation
+from devcovenant.core.services import metadata as metadata_runtime
+from devcovenant.core.services.registry import load_policy_descriptor
+from tests.devcovenant import repo_seed_cache
 
 fixer_module = importlib.import_module(
     "devcovenant.builtin.policies.last_updated.autofix.global"
@@ -84,6 +87,28 @@ def _unit_test_marker_in_non_allowlisted_file(tmp_path: Path) -> None:
     violations = checker.check(context)
     assert violations
     assert all(not violation.can_auto_fix for violation in violations)
+
+
+def _unit_test_non_allowlisted_marker_suggestion_mentions_globs(
+    tmp_path: Path,
+) -> None:
+    """Suggestions should include allowlisted globs when those drive policy."""
+    script_path = tmp_path / "script.py"
+    script_path.write_text(
+        "**Last Updated:** 2026-01-07\n",
+        encoding="utf-8",
+    )
+
+    checker = last_updated.LastUpdatedCheck()
+    checker.set_options(
+        {"allowed_globs": ["devcovenant/docs/*.md"]},
+        {},
+    )
+    context = CheckContext(repo_root=tmp_path, all_files=[script_path])
+    violations = checker.check(context)
+    assert violations
+    suggestion = violations[0].suggestion or ""
+    assert "devcovenant/docs/*.md" in suggestion
 
 
 def _unit_test_stale_marker_on_touched_doc(tmp_path: Path) -> None:
@@ -193,6 +218,38 @@ def _unit_test_last_updated_symbol_contract_is_stable() -> None:
     assert callable(getattr(LastUpdatedFixer, "fix"))
 
 
+def _unit_test_installed_package_docs_are_allowlisted() -> None:
+    """Installed package docs should inherit allowlist coverage."""
+    with tempfile.TemporaryDirectory() as temp_dir:
+        repo_root = Path(temp_dir).resolve()
+        repo_seed_cache.copy_installed_repo(repo_root)
+
+        checker = last_updated.LastUpdatedCheck()
+        descriptor = load_policy_descriptor(repo_root, "last-updated")
+        assert descriptor is not None
+        context = metadata_runtime.build_metadata_context(repo_root)
+        bundle = metadata_runtime.resolve_policy_metadata_bundle(
+            "last-updated",
+            [],
+            {},
+            descriptor,
+            context,
+        )
+        checker.set_options(bundle.decode_options(), {})
+
+        doc_paths = [
+            repo_root / "devcovenant" / "README.md",
+            repo_root / "devcovenant" / "custom" / "README.md",
+            repo_root / "devcovenant" / "docs" / "installation.md",
+        ]
+        check_context = CheckContext(
+            repo_root=repo_root,
+            all_files=doc_paths,
+        )
+        violations = checker.check(check_context)
+        assert violations == []
+
+
 class GeneratedUnittestCases(unittest.TestCase):
     """unittest wrappers for module-level tests."""
 
@@ -213,6 +270,14 @@ class GeneratedUnittestCases(unittest.TestCase):
         with tempfile.TemporaryDirectory() as temp_dir:
             tmp_path = Path(temp_dir).resolve()
             _unit_test_marker_in_non_allowlisted_file(tmp_path=tmp_path)
+
+    def test_non_allowlisted_marker_suggestion_mentions_globs(self):
+        """Run allowlisted-glob suggestion assertions."""
+        with tempfile.TemporaryDirectory() as temp_dir:
+            tmp_path = Path(temp_dir).resolve()
+            _unit_test_non_allowlisted_marker_suggestion_mentions_globs(
+                tmp_path=tmp_path
+            )
 
     def test_stale_marker_on_touched_doc(self):
         """Run test_stale_marker_on_touched_doc."""
@@ -241,3 +306,7 @@ class GeneratedUnittestCases(unittest.TestCase):
     def test_last_updated_symbol_contract_is_stable(self):
         """Run symbol-contract assertions for last-updated policy/fixer."""
         _unit_test_last_updated_symbol_contract_is_stable()
+
+    def test_installed_package_docs_are_allowlisted(self):
+        """Run installed-package allowlist assertions for package docs."""
+        _unit_test_installed_package_docs_are_allowlisted()

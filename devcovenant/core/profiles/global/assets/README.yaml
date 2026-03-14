@@ -1,0 +1,50 @@
+header_lines:
+- '# Project Name'
+- '**Last Updated:**'
+- '**Version:** 0.2.6'
+doc_id: README
+doc_type: repo-readme
+managed_by: DevCovenant
+managed_block: '**Read first:** `AGENTS.md` is the canonical source of truth. See
+
+  `devcovenant/README.md` for usage and lifecycle workflow details.'
+body: 'Describe the project this repository ships: what it does, who it helps,
+  and what problem it solves.
+
+
+  ## Table of Contents
+
+  1. [Overview](#overview)
+
+  2. [Architecture](#architecture)
+
+  3. [Getting Started](#getting-started)
+
+  4. [Development Workflow](#development-workflow)
+
+  5. [License](#license)
+
+
+  ## Overview
+
+  Provide a concise description of the project scope and current status.
+
+
+  ## Architecture
+
+  Summarize the main components and where deeper documentation lives.
+
+
+  ## Getting Started
+
+  Explain setup, prerequisites, and first-run commands for contributors.
+
+
+  ## Development Workflow
+
+  Document the required edit/test/review routine for this repository.
+
+
+  ## License
+
+  Document repository licensing terms here.'

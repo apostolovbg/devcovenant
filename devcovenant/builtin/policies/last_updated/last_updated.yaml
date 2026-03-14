@@ -8,17 +8,41 @@ metadata:
   severity: error
   auto_fix: 'true'
   enforcement: active
-  include_suffixes: []
-  allowed_globs: []
+  include_suffixes:
+    - .md
+  allowed_globs:
+    - devcovenant/README.md
+    - devcovenant/core/README.md
+    - devcovenant/custom/README.md
+    - devcovenant/registry/README.md
+    - devcovenant/logs/README.md
+    - devcovenant/builtin/policies/README.md
+    - devcovenant/builtin/profiles/README.md
+    - devcovenant/custom/policies/README.md
+    - devcovenant/custom/profiles/README.md
+    - devcovenant/docs/*.md
+    - devcovenant/docs/**/*.md
   allowed_files: []
   allowed_suffixes: []
   required_files: []
-  required_globs: []
+  required_globs:
+    - devcovenant/README.md
+    - devcovenant/core/README.md
+    - devcovenant/custom/README.md
+    - devcovenant/registry/README.md
+    - devcovenant/logs/README.md
+    - devcovenant/builtin/policies/README.md
+    - devcovenant/builtin/profiles/README.md
+    - devcovenant/custom/policies/README.md
+    - devcovenant/custom/profiles/README.md
+    - devcovenant/docs/*.md
+    - devcovenant/docs/**/*.md
   selector_roles:
     - include
     - allowed
     - required
-  include_globs: []
+  include_globs:
+    - '*.md'
   include_files: []
   include_dirs: []
   allowed_dirs: []

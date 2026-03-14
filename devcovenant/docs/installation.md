@@ -1,5 +1,5 @@
 # Installation and Lifecycle
-**Last Updated:** 2026-03-12
+**Last Updated:** 2026-03-13
 **Project Version:** 1.0.0
 
 ## Table of Contents
@@ -40,6 +40,9 @@ Command contract:
   copy `devcovenant/` and seed generic config only
 - `deploy`:
   require `install.generic_config: false`, then run full refresh
+- `clean`:
+  remove disposable build/package/cache artifacts from resolved
+  profile/config cleanup targets while preserving protected runtime state
 - `refresh`:
   regenerate registries, managed blocks, and generated governance files
 - `upgrade`:
@@ -67,6 +70,7 @@ Additional invariants:
 ```bash
 devcovenant install
 devcovenant deploy
+devcovenant clean
 devcovenant refresh
 devcovenant upgrade
 devcovenant undeploy
@@ -90,6 +94,7 @@ Recommended operating sequence:
 3. Activate (`deploy`).
 4. Do work under start -> mid preflight loop -> test -> end gates.
 5. Use `refresh`/`upgrade` when contracts or core content change.
+6. Use `clean` when local build/cache residue needs pruning after those runs.
 
 Runtime details that affect operations:
 - `devcovenant test` executes
@@ -108,6 +113,10 @@ Runtime details that affect operations:
 - `devcovenant test` in `engine.tests_output_mode: normal` also emits the
   same `Run logs:` pointer when command execution starts so operators can
   inspect logs immediately without waiting for command completion
+- `devcovenant clean` resolves active-profile `clean_overlays` plus repo
+  `clean.overlays`/`clean.overrides`, supports `--build`, `--cache`, and
+  `--all` (default), and always protects `.git`, `.venv`,
+  `devcovenant/logs/`, and `devcovenant/registry/local/`
 - repository pytest execution is configured in `pyproject.toml` with
   `--import-mode=importlib` and `pythonpath = ["."]` so mirrored builtin/core
   test names do not collide during collection

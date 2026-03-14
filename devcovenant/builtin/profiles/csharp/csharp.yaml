@@ -6,6 +6,10 @@ suffixes:
 ignore_dirs:
   - bin
   - obj
+clean_overlays:
+  build_dirs:
+    - bin
+    - obj
 assets:
   - path: Project.csproj
     template: Project.csproj

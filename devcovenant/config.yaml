@@ -29,7 +29,7 @@ devcov_core_include: true
 
 # Ordered profile list. `global` should stay first.
 
-# Profiles contribute suffixes, assets, and metadata overlays.
+# Profiles contribute suffixes, assets, metadata overlays, and cleanup overlays.
 
 # Generated diagnostics include profile-level core path mappings.
 
@@ -60,6 +60,7 @@ profiles:
     - devcovenant/__main__.py
     - devcovenant/cli.py
     - devcovenant/check.py
+    - devcovenant/clean.py
     - devcovenant/gate.py
     - devcovenant/test.py
     - devcovenant/install.py
@@ -163,6 +164,32 @@ engine:
   - .venv.lock
 
 # -------------------------------------------------------------------
+# Cleanup targets
+# -------------------------------------------------------------------
+
+# `clean.overlays` add repository-specific cleanup targets on top of active profile clean_overlays.
+
+# `clean.overrides` replace one resolved cleanup key entirely when repository ownership must take over.
+
+# Protected entries are additive safety fences; runtime also always protects .git, .venv, devcovenant/logs, and devcovenant/registry/local.
+
+clean:
+  overlays:
+    build_dirs: []
+    build_globs: []
+    cache_dirs: []
+    cache_globs: []
+    protected_dirs: []
+    protected_globs: []
+  overrides:
+    build_dirs: []
+    build_globs: []
+    cache_dirs: []
+    cache_globs: []
+    protected_dirs: []
+    protected_globs: []
+
+# -------------------------------------------------------------------
 # Governance-and-test generation
 # -------------------------------------------------------------------
 
@@ -229,6 +256,21 @@ policy_state:
 ignore:
   patterns:
   - devcovenant/config.yaml
+  - .vscode/**
+  - .idea/**
+  - '*.egg-info/**'
+  - pip-wheel-metadata/**
+  - .pytest_cache/**
+  - .ruff_cache/**
+  - .mypy_cache/**
+  - .tox/**
+  - .nox/**
+  - .hypothesis/**
+  - .coverage
+  - .coverage.*
+  - htmlcov/**
+  - devcovenant/logs/**
+  - devcovenant/registry/local/**
 
 # -------------------------------------------------------------------
 # Gitignore generation
@@ -729,7 +771,9 @@ autogen_metadata_overlays:
     - .json
     - .toml
     - .cff
-    long_lines_between: []
+    long_lines_between:
+    - devcovenant/builtin/policies/=>.yaml
+    - devcovenant/custom/policies/=>.yaml
     long_lines_contain: []
     max_length:
     - '79'
@@ -915,7 +959,11 @@ autogen_metadata_overlays:
 
 # Merge semantics: list append + dedupe, scalar replace.
 
-user_metadata_overlays: {}
+user_metadata_overlays:
+  line-length-limit:
+    exclude_globs:
+    - devcovenant/builtin/profiles/global/assets/*.yaml
+    - devcovenant/registry/**
 
 # Auto-generated metadata overrides written by refresh.
 
@@ -932,12 +980,6 @@ autogen_metadata_overrides: {}
 # Shape: {policy-id: {metadata_key: value-or-list}}
 
 user_metadata_overrides:
-  line-length-limit:
-    exclude_globs:
-    - devcovenant/builtin/profiles/global/assets/*.yaml
-    - devcovenant/registry/**
-    - '*.egg-info/**'
-    - '**/*.egg-info/**'
   modules-need-tests:
     exclude_globs:
     - devcovenant/builtin/profiles/**/assets/**

@@ -1,0 +1,51 @@
+id: line-length-limit
+text: |
+  Keep lines within the configured maximum so documentation and code remain
+  readable. Reflow long sentences or wrap lists rather than ignoring the limit.
+metadata:
+  id: line-length-limit
+  severity: warning
+  auto_fix: 'false'
+  enforcement: active
+  max_length: '79'
+  include_suffixes:
+    - .py
+    - .md
+    - .rst
+    - .txt
+    - .yml
+    - .yaml
+    - .json
+    - .toml
+    - .cff
+  exclude_prefixes:
+    - build
+    - dist
+    - node_modules
+  exclude_globs:
+    - build/**
+    - dist/**
+    - node_modules/**
+  include_prefixes: []
+  include_globs:
+    - '*.py'
+    - '*.md'
+    - '*.rst'
+    - '*.txt'
+    - '*.yml'
+    - '*.yaml'
+    - '*.json'
+    - '*.toml'
+    - '*.cff'
+  exclude_suffixes: []
+  force_include_globs: []
+  selector_roles:
+    - include
+    - exclude
+    - force_include
+  include_files: []
+  include_dirs: []
+  exclude_files: []
+  exclude_dirs: []
+  force_include_files: []
+  force_include_dirs: []

@@ -7,6 +7,10 @@ suffixes:
   - .h
 ignore_dirs:
   - build
+clean_overlays:
+  build_dirs:
+    - build
+    - .build
 assets:
   - path: Podfile
     template: Podfile

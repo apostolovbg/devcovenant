@@ -7,6 +7,9 @@ ignore_dirs:
   - bin
   - pkg
   - vendor
+clean_overlays:
+  cache_globs:
+    - 'coverage.out'
 assets:
   - path: go.mod
     template: go.mod

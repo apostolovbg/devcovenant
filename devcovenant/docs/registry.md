@@ -1,5 +1,5 @@
 # Registry Files
-**Last Updated:** 2026-03-09
+**Last Updated:** 2026-03-13
 **Project Version:** 1.0.0
 
 ## Table of Contents
@@ -33,7 +33,28 @@ Manual edits are unsupported and typically interpreted as drift.
 - discovered policy IDs
 - descriptor/script paths and hashes
 - resolved metadata snapshots
+- per-key metadata resolution trace (`metadata_resolution`)
+- structured override-replacement diagnostics (`metadata_warnings`)
+- typed runtime metadata view (`runtime_metadata_options`)
+- typed config-override view (`runtime_config_overrides`)
+- merged runtime-effective option view (`runtime_effective_options`)
 - builtin/custom origin indicators (`origin`)
+
+Metadata trace intent:
+- `metadata` remains the final effective string-map used for policy/runtime
+  loading contracts
+- `metadata_resolution` explains how each effective key was composed across
+  descriptor, profile overlay, config overlay, config override, and
+  policy-state layers
+- `metadata_warnings` records destructive override cases where an override
+  replaced inherited non-empty values; this is an audit aid, not a silent
+  autofix
+- `runtime_metadata_options` shows the typed metadata option map that runtime
+  passes to policy checks after decoding the registry string map
+- `runtime_config_overrides` shows the typed config override map that runtime
+  passes separately from `config.yaml`
+- `runtime_effective_options` shows the merged value surface that a policy
+  sees after config-overrides beat non-empty metadata values
 
 `profile_registry.yaml` includes:
 - discovered profiles and source roots

@@ -5,6 +5,7 @@ from __future__ import annotations
 import importlib
 
 _MODULE_MAP = {
+    "cleanup": "devcovenant.core.services.cleanup",
     "event": "devcovenant.core.services.event",
     "metadata": "devcovenant.core.services.metadata",
     "policy_block_refresh": "devcovenant.core.services.policy_block_refresh",

@@ -49,6 +49,17 @@ _SELECTOR_ROLE_TARGETS = {
 }
 _DERIVED_VALUE_KEYS = {"updated"}
 _ORDER_EXCLUDE_KEYS = {"updated"}
+_TRACE_LAYER_RUNTIME_DEFAULTS = "runtime_defaults"
+_TRACE_LAYER_DESCRIPTOR = "descriptor"
+_TRACE_LAYER_PROFILE_OVERLAYS = "profile_overlays"
+_TRACE_LAYER_AUTOGEN_OVERLAYS = "autogen_overlays"
+_TRACE_LAYER_USER_OVERLAYS = "user_overlays"
+_TRACE_LAYER_AUTOGEN_OVERRIDES = "autogen_overrides"
+_TRACE_LAYER_USER_OVERRIDES = "user_overrides"
+_TRACE_LAYER_POLICY_STATE = "policy_state"
+_TRACE_LAYER_DERIVED_SELECTORS = "derived_selectors"
+_TRACE_LAYER_RUNTIME_IDENTITY = "runtime_identity"
+_TRACE_LAYER_RUNTIME_CUSTOM = "runtime_custom_source"
 
 
 def metadata_value_list(raw_value: object) -> List[str]:
@@ -86,6 +97,8 @@ class ResolvedPolicyMetadata:
     order: List[str]
     list_map: Dict[str, List[str]]
     string_map: Dict[str, str]
+    resolution_trace: Dict[str, Dict[str, Any]]
+    warnings: List[Dict[str, Any]]
 
     def decode_options(
         self,
@@ -97,6 +110,15 @@ class ResolvedPolicyMetadata:
             self.string_map,
             reserved_keys=reserved_keys,
         )
+
+    def warning_messages(self) -> List[str]:
+        """Return human-readable metadata warning messages."""
+        messages: List[str] = []
+        for warning in self.warnings:
+            message = str(warning.get("message", "")).strip()
+            if message:
+                messages.append(message)
+        return messages
 
 
 def _load_config_payload(repo_root: Path) -> Dict[str, object]:
@@ -461,6 +483,77 @@ def _dedupe(values: Iterable[str]) -> List[str]:
     return ordered
 
 
+def _trace_bucket(
+    trace: Dict[str, Dict[str, Any]],
+    key: str,
+) -> Dict[str, Any]:
+    """Return the trace bucket for one metadata key."""
+    return trace.setdefault(key, {})
+
+
+def _record_trace_layer(
+    trace: Dict[str, Dict[str, Any]],
+    key: str,
+    *,
+    layer: str,
+    values: Sequence[str],
+    behavior: str,
+    replaced_inherited_values: Sequence[str] = (),
+    note: str = "",
+) -> None:
+    """Record one resolution-layer contribution for a metadata key."""
+    bucket = _trace_bucket(trace, key)
+    payload: Dict[str, Any] = {
+        "values": [str(entry) for entry in values if str(entry)],
+        "behavior": behavior,
+    }
+    replaced = [
+        str(entry) for entry in replaced_inherited_values if str(entry)
+    ]
+    if replaced:
+        payload["replaced_inherited_values"] = replaced
+    if note.strip():
+        payload["note"] = note.strip()
+    bucket[layer] = payload
+
+
+def _record_effective_trace(
+    trace: Dict[str, Dict[str, Any]],
+    key: str,
+    values: Sequence[str],
+) -> None:
+    """Record the final effective values for one metadata key."""
+    bucket = _trace_bucket(trace, key)
+    bucket["effective"] = {
+        "values": [str(entry) for entry in values if str(entry)]
+    }
+
+
+def _build_override_warning(
+    policy_id: str,
+    key: str,
+    *,
+    layer: str,
+    inherited_values: Sequence[str],
+    replacement_values: Sequence[str],
+) -> Dict[str, Any]:
+    """Build one structured override-replacement warning payload."""
+    inherited = [str(entry) for entry in inherited_values if str(entry)]
+    replacement = [str(entry) for entry in replacement_values if str(entry)]
+    return {
+        "policy_id": policy_id,
+        "key": key,
+        "layer": layer,
+        "inherited_values": inherited,
+        "replacement_values": replacement,
+        "message": (
+            f"{layer} replaces inherited metadata for "
+            f"`{policy_id}.{key}`; use overlays if you intended additive "
+            "behavior."
+        ),
+    }
+
+
 def _convert_prefixes(prefixes: Iterable[str]) -> List[str]:
     """Convert prefixes into glob patterns."""
     globs: List[str] = []
@@ -555,22 +648,65 @@ def _apply_selector_roles(
 def _apply_overrides_replace(
     values: Dict[str, List[str]],
     overrides: Dict[str, List[str]],
+    *,
+    policy_id: str,
+    layer_name: str,
+    trace: Dict[str, Dict[str, Any]],
+    warnings: List[Dict[str, Any]],
 ) -> None:
     """Apply override values by replacing existing entries."""
     for key, override_values in overrides.items():
+        inherited_values = list(values.get(key, []))
         values[key] = list(override_values)
+        _record_trace_layer(
+            trace,
+            key,
+            layer=layer_name,
+            values=override_values,
+            behavior="replace",
+            replaced_inherited_values=inherited_values,
+        )
+        if inherited_values and inherited_values != list(override_values):
+            warnings.append(
+                _build_override_warning(
+                    policy_id,
+                    key,
+                    layer=layer_name,
+                    inherited_values=inherited_values,
+                    replacement_values=override_values,
+                )
+            )
 
 
 def _apply_profile_overlays(
     values: Dict[str, List[str]],
     overlays: Dict[str, Tuple[List[str], bool]],
+    *,
+    layer_name: str,
+    trace: Dict[str, Dict[str, Any]],
 ) -> None:
     """Apply profile overlays, merging list values and replacing scalars."""
     for key, (overlay_values, merge_lists) in overlays.items():
+        inherited_values = list(values.get(key, []))
         if merge_lists:
             values[key] = _merge_values(values.get(key, []), overlay_values)
+            _record_trace_layer(
+                trace,
+                key,
+                layer=layer_name,
+                values=overlay_values,
+                behavior="append",
+            )
             continue
         values[key] = list(overlay_values)
+        _record_trace_layer(
+            trace,
+            key,
+            layer=layer_name,
+            values=overlay_values,
+            behavior="replace",
+            replaced_inherited_values=inherited_values,
+        )
 
 
 def _strip_derived_values(values: Dict[str, List[str]]) -> None:
@@ -587,14 +723,29 @@ def _resolve_metadata(
     context: MetadataContext,
     *,
     custom_policy: bool = False,
-) -> Tuple[List[str], Dict[str, List[str]]]:
+) -> Tuple[
+    List[str],
+    Dict[str, List[str]],
+    Dict[str, Dict[str, Any]],
+    List[Dict[str, Any]],
+]:
     """Resolve metadata using defaults, overlays, and config overrides."""
+    trace: Dict[str, Dict[str, Any]] = {}
+    warnings: List[Dict[str, Any]] = []
     if descriptor:
         base_order, base_values = descriptor_metadata_order_values(descriptor)
         base_order = [
             key for key in base_order if key not in _ORDER_EXCLUDE_KEYS
         ]
         values = {key: list(entries) for key, entries in base_values.items()}
+        for key in base_order:
+            _record_trace_layer(
+                trace,
+                key,
+                layer=_TRACE_LAYER_DESCRIPTOR,
+                values=values.get(key, []),
+                behavior="base",
+            )
     else:
         base_order = [
             key for key in current_order if key not in _ORDER_EXCLUDE_KEYS
@@ -602,6 +753,14 @@ def _resolve_metadata(
         values = {
             key: list(entries) for key, entries in current_values.items()
         }
+        for key in base_order:
+            _record_trace_layer(
+                trace,
+                key,
+                layer=_TRACE_LAYER_DESCRIPTOR,
+                values=values.get(key, []),
+                behavior="base",
+            )
     if not descriptor:
         for key in current_order:
             if key in _ORDER_EXCLUDE_KEYS:
@@ -609,15 +768,44 @@ def _resolve_metadata(
             values.setdefault(key, list(current_values.get(key, [])))
 
     overlays = context.profile_overlays.get(policy_id, {})
-    _apply_profile_overlays(values, overlays)
+    _apply_profile_overlays(
+        values,
+        overlays,
+        layer_name=_TRACE_LAYER_PROFILE_OVERLAYS,
+        trace=trace,
+    )
     autogen_overlays = context.autogen_overlays.get(policy_id, {})
-    _apply_profile_overlays(values, autogen_overlays)
+    _apply_profile_overlays(
+        values,
+        autogen_overlays,
+        layer_name=_TRACE_LAYER_AUTOGEN_OVERLAYS,
+        trace=trace,
+    )
     user_overlays = context.user_overlays.get(policy_id, {})
-    _apply_profile_overlays(values, user_overlays)
+    _apply_profile_overlays(
+        values,
+        user_overlays,
+        layer_name=_TRACE_LAYER_USER_OVERLAYS,
+        trace=trace,
+    )
     autogen_overrides = context.autogen_overrides.get(policy_id, {})
-    _apply_overrides_replace(values, autogen_overrides)
+    _apply_overrides_replace(
+        values,
+        autogen_overrides,
+        policy_id=policy_id,
+        layer_name=_TRACE_LAYER_AUTOGEN_OVERRIDES,
+        trace=trace,
+        warnings=warnings,
+    )
     user_overrides = context.user_overrides.get(policy_id, {})
-    _apply_overrides_replace(values, user_overrides)
+    _apply_overrides_replace(
+        values,
+        user_overrides,
+        policy_id=policy_id,
+        layer_name=_TRACE_LAYER_USER_OVERRIDES,
+        trace=trace,
+        warnings=warnings,
+    )
     _strip_derived_values(values)
 
     ordered_keys: List[str] = []
@@ -656,8 +844,23 @@ def _resolve_metadata(
             _ensure_metadata_key(ordered_keys, values, key)
 
     values["id"] = [policy_id]
+    _record_trace_layer(
+        trace,
+        "id",
+        layer=_TRACE_LAYER_RUNTIME_IDENTITY,
+        values=[policy_id],
+        behavior="replace",
+    )
     if custom_policy:
         values["custom"] = ["true"]
+        _record_trace_layer(
+            trace,
+            "custom",
+            layer=_TRACE_LAYER_RUNTIME_CUSTOM,
+            values=["true"],
+            behavior="replace",
+            note="Resolved from active custom policy script.",
+        )
 
     for key in ordered_keys:
         current = values.get(key, [])
@@ -666,16 +869,62 @@ def _resolve_metadata(
             continue
         if key in _COMMON_DEFAULTS:
             values[key] = _dedupe(list(_COMMON_DEFAULTS[key]))
+            _record_trace_layer(
+                trace,
+                key,
+                layer=_TRACE_LAYER_RUNTIME_DEFAULTS,
+                values=values[key],
+                behavior="default",
+            )
             continue
         values[key] = []
 
+    control_requested = context.control.policy_state.get(policy_id)
+    pre_control_enabled = list(values.get("enabled", []))
+    severity_token = _first_metadata_token(values, "severity")
     ordered_keys, values = apply_policy_control(
         ordered_keys,
         values,
         policy_id,
         context.control,
     )
-    return _apply_selector_roles(ordered_keys, values)
+    if control_requested is not None:
+        control_note = ""
+        if severity_token == "critical" and not bool(control_requested):
+            control_note = (
+                "Critical policy disable attempt preserved enforcement."
+            )
+        _record_trace_layer(
+            trace,
+            "enabled",
+            layer=_TRACE_LAYER_POLICY_STATE,
+            values=["true" if bool(control_requested) else "false"],
+            behavior="replace",
+            replaced_inherited_values=pre_control_enabled,
+            note=control_note,
+        )
+
+    pre_selector_values = {
+        key: list(entries) for key, entries in values.items()
+    }
+    ordered_keys, values = _apply_selector_roles(ordered_keys, values)
+    for key, resolved_values in values.items():
+        previous_values = pre_selector_values.get(key, [])
+        if resolved_values == previous_values:
+            continue
+        derived_values = [
+            entry for entry in resolved_values if entry not in previous_values
+        ]
+        _record_trace_layer(
+            trace,
+            key,
+            layer=_TRACE_LAYER_DERIVED_SELECTORS,
+            values=derived_values or resolved_values,
+            behavior="derive",
+        )
+    for key in ordered_keys:
+        _record_effective_trace(trace, key, values.get(key, []))
+    return ordered_keys, values, trace, warnings
 
 
 def resolve_policy_metadata_map(
@@ -709,7 +958,7 @@ def resolve_policy_metadata_bundle(
     custom_policy: bool = False,
 ) -> ResolvedPolicyMetadata:
     """Return resolved metadata in list and string forms."""
-    order, values = _resolve_metadata(
+    order, values, trace, warnings = _resolve_metadata(
         policy_id,
         current_order,
         current_values,
@@ -727,6 +976,8 @@ def resolve_policy_metadata_bundle(
         order=list(order),
         list_map=list_map,
         string_map=string_map,
+        resolution_trace=trace,
+        warnings=warnings,
     )
 
 

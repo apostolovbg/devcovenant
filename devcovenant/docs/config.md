@@ -1,5 +1,5 @@
 # Configuration
-**Last Updated:** 2026-03-09
+**Last Updated:** 2026-03-13
 **Project Version:** 1.0.0
 
 ## Table of Contents
@@ -22,6 +22,10 @@ audited without reading runtime code.
 Default global config includes `ignore.patterns:
 devcovenant/config.yaml`, so config-only edits are excluded from
 session-delta governance and related policy nagging.
+That same global baseline also ignores ubiquitous editor, packaging,
+coverage, and DevCovenant runtime artifacts such as `.vscode/**`,
+`.idea/**`, `*.egg-info/**`, `pip-wheel-metadata/**`, `.coverage*`,
+`devcovenant/logs/**`, and `devcovenant/registry/local/**`.
 Runtime still requires valid YAML; parse/load errors in config remain
 blocking command failures.
 The template source
@@ -36,6 +40,8 @@ Autogen-owned sections:
 
 User-owned sections:
 - `profiles.active`
+- `clean.overlays`
+- `clean.overrides`
 - `user_metadata_overlays`
 - `user_metadata_overrides`
 - `policy_state`
@@ -115,6 +121,10 @@ the same session so generated configs remain self-explanatory.
 - `gitignore.overrides`: replacement list for generated
   base/profile/os entries.
 
+- `ignore.patterns`: global glob-style exclusions for universal editor,
+  packaging, coverage, and runtime artifacts that should stay outside
+  `CheckContext` file collections across policies.
+
 - `engine.fail_threshold`: severity threshold that blocks checks.
 
 - `engine.auto_fix_enabled`: gate-managed auto-fix toggle (`true|false`).
@@ -142,6 +152,12 @@ the same session so generated configs remain self-explanatory.
 - `engine.pycache_prefix`: path used for `PYTHONPYCACHEPREFIX` when routing is
   enabled. Use `''` for an auto-selected stable repo-specific temp path;
   relative paths resolve from repo root and absolute paths are used as-is.
+
+- `clean.overlays`: additive cleanup targets merged after active profile
+  `clean_overlays`.
+
+- `clean.overrides`: replacement cleanup lists for repositories that need
+  full ownership of one resolved cleanup key.
 
 - `devflow-run-gates.required_commands`: canonical test command chain.
   `engine.tests_output_mode` changes output presentation only; it does not
@@ -181,6 +197,12 @@ the same session so generated configs remain self-explanatory.
 Baseline profile guidance:
 - keep `global` first
 - `defaults` provides common repo-layout metadata defaults
+- `global` owns the shared ignore/gitignore baseline for ubiquitous
+  editor/build/runtime artifact noise; repo-local config should only add
+  truly repository-specific exclusions on top
+- `global` and stack-specific profiles may also contribute `clean_overlays`
+  for disposable build/cache targets; repository config should add only
+  repo-specific cleanup targets or deliberate replacements
 - use custom profiles (or config metadata layers) for repo-specific layout
   changes
 
@@ -203,6 +225,14 @@ Overlay semantics:
 Override semantics:
 - targeted keys are replaced
 - upstream overlay/default values for that key are omitted
+- replacement intent is explicit: use overrides when you want full authority
+  over one key, not when you want additive extension
+- refresh records per-key resolution trace in
+  `devcovenant/registry/local/policy_registry.yaml` under
+  `metadata_resolution`
+- when an override replaces inherited non-empty values, refresh also records
+  a structured `metadata_warnings` entry for that policy key so destructive
+  replacement is visible during audits
 
 ## Policy Activation
 `policy_state` is the activation authority for normal policy toggles.

@@ -6,6 +6,10 @@ suffixes:
 ignore_dirs:
   - .dart_tool
   - build
+clean_overlays:
+  build_dirs:
+    - .dart_tool
+    - build
 gitignore_fragments:
   - .dart_tool/
   - .packages

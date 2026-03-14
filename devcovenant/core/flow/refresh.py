@@ -12,10 +12,14 @@ from typing import Dict, List
 
 import yaml
 
+from devcovenant.core.contracts.policy import CheckContext
 from devcovenant.core.runtime.execution import print_step, runtime_print
 from devcovenant.core.services import metadata as metadata_runtime
 from devcovenant.core.services import (
     policy_block_refresh as refresh_policy_block_runtime_module,
+)
+from devcovenant.core.services import (
+    policy_runtime_actions as runtime_actions_module,
 )
 from devcovenant.core.services import profile_registry as profile_runtime
 from devcovenant.core.services import registry as manifest_module
@@ -1349,6 +1353,7 @@ def _render_config_yaml(payload: dict[str, object]) -> str:
         "doc_assets",
         "install",
         "engine",
+        "clean",
         "governance_and_test",
         "pre_commit",
         "policy_state",
@@ -1366,6 +1371,7 @@ def _render_config_yaml(payload: dict[str, object]) -> str:
         "doc_assets": _config_section_header("Managed document controls"),
         "install": _config_section_header("Install/deploy safety"),
         "engine": _config_section_header("Engine behavior"),
+        "clean": _config_section_header("Cleanup targets"),
         "governance_and_test": _config_section_header(
             "Governance-and-test generation"
         ),
@@ -1402,7 +1408,10 @@ def _render_config_yaml(payload: dict[str, object]) -> str:
         ),
         comments["profiles"],
         "# Ordered profile list. `global` should stay first.",
-        "# Profiles contribute suffixes, assets, and metadata overlays.",
+        (
+            "# Profiles contribute suffixes, assets, metadata overlays, "
+            "and cleanup overlays."
+        ),
         "# Generated diagnostics include profile-level core path mappings.",
         (
             "# Profiles do not activate policies. "
@@ -1455,6 +1464,21 @@ def _render_config_yaml(payload: dict[str, object]) -> str:
         ),
         "# file_suffixes and ignore_dirs define broad scan boundaries.",
         _yaml_block({"engine": payload.get("engine", {})}),
+        comments["clean"],
+        (
+            "# `clean.overlays` add repository-specific cleanup targets on "
+            "top of active profile clean_overlays."
+        ),
+        (
+            "# `clean.overrides` replace one resolved cleanup key entirely "
+            "when repository ownership must take over."
+        ),
+        (
+            "# Protected entries are additive safety fences; runtime also "
+            "always protects .git, .venv, devcovenant/logs, and "
+            "devcovenant/registry/local."
+        ),
+        _yaml_block({"clean": payload.get("clean", {})}),
         comments["governance_and_test"],
         "# `overlays` are merged into generated governance workflow.",
         "# `overrides` replace generated payload when non-empty.",
@@ -1717,6 +1741,7 @@ def _default_core_paths(repo_root: Path) -> list[str]:
         "devcovenant/__main__.py",
         "devcovenant/cli.py",
         "devcovenant/check.py",
+        "devcovenant/clean.py",
         "devcovenant/gate.py",
         "devcovenant/test.py",
         "devcovenant/install.py",
@@ -2758,6 +2783,12 @@ def refresh_policy_registry(
     except ValueError as error:
         runtime_print(f"Error: {error}", file=sys.stderr)
         return 1
+    try:
+        config_payload = _read_yaml(repo_root / "devcovenant" / "config.yaml")
+    except ValueError as error:
+        runtime_print(f"Error: {error}", file=sys.stderr)
+        return 1
+    config_context = CheckContext(repo_root=repo_root, config=config_payload)
     discovered = _discover_policy_sources(repo_root)
 
     registry = PolicyRegistry(registry_path, repo_root)
@@ -2765,6 +2796,7 @@ def refresh_policy_registry(
     updated = 0
     policies: List[PolicyDefinition] = []
     seen_policy_ids: set[str] = set()
+    metadata_warning_targets: List[str] = []
     for policy_id in sorted(discovered):
         location, builtin_available, custom_available = (
             _resolve_policy_sources(repo_root, policy_id)
@@ -2801,20 +2833,26 @@ def refresh_policy_registry(
             key: _descriptor_values(descriptor.metadata.get(key))
             for key in current_order
         }
-        resolved_order, resolved_metadata = (
-            metadata_runtime.resolve_policy_metadata_map(
-                policy_id,
-                current_order,
-                current_values,
-                descriptor,
-                context,
-                custom_policy=bool(custom_available and not builtin_available),
-            )
+        bundle = metadata_runtime.resolve_policy_metadata_bundle(
+            policy_id,
+            current_order,
+            current_values,
+            descriptor,
+            context,
+            custom_policy=bool(custom_available and not builtin_available),
         )
+        resolved_order = bundle.order
+        resolved_metadata = bundle.string_map
         ordered_metadata = {
             key: str(resolved_metadata.get(key, "")).strip()
             for key in resolved_order
         }
+        runtime_option_views = (
+            runtime_actions_module.build_runtime_policy_option_views(
+                bundle.decode_options(),
+                config_context.get_policy_config(policy_id),
+            )
+        )
         severity = ordered_metadata.get("severity") or "warning"
         enabled = _as_bool(ordered_metadata.get("enabled"), default=True)
         custom = _as_bool(ordered_metadata.get("custom"), default=False)
@@ -2837,7 +2875,12 @@ def refresh_policy_registry(
             location,
             descriptor,
             resolved_metadata=ordered_metadata,
+            metadata_resolution=bundle.resolution_trace,
+            metadata_warnings=bundle.warnings,
+            runtime_option_views=runtime_option_views,
         )
+        for warning in bundle.warning_messages():
+            metadata_warning_targets.append(f"{policy_id}: {warning}")
         script_name = (
             location.path.name if location is not None else "<missing>"
         )
@@ -2864,6 +2907,12 @@ def refresh_policy_registry(
     if _ensure_trailing_newline(registry_path):
         runtime_print(
             f"Ensured trailing newline in {registry_path}.",
+            verbose_only=True,
+        )
+    if metadata_warning_targets:
+        runtime_print(
+            "Recorded metadata replacement warnings in policy_registry.yaml "
+            f"for {len(metadata_warning_targets)} key(s).",
             verbose_only=True,
         )
 

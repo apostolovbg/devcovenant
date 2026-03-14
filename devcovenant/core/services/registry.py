@@ -671,6 +671,9 @@ class PolicyRegistry:
         descriptor: PolicyDescriptor | None = None,
         *,
         resolved_metadata: Dict[str, str] | None = None,
+        metadata_resolution: Dict[str, Dict[str, Any]] | None = None,
+        metadata_warnings: List[Dict[str, Any]] | None = None,
+        runtime_option_views: Dict[str, Dict[str, Any]] | None = None,
     ):
         """
         Update a policy entry in the registry.
@@ -690,6 +693,18 @@ class PolicyRegistry:
         entry["policy_text"] = policy.description
         metadata_map = dict(resolved_metadata or policy.raw_metadata)
         entry["metadata"] = dict(metadata_map)
+        entry["metadata_resolution"] = dict(metadata_resolution or {})
+        entry["metadata_warnings"] = list(metadata_warnings or [])
+        views = dict(runtime_option_views or {})
+        entry["runtime_metadata_options"] = dict(
+            views.get("runtime_metadata_options", {})
+        )
+        entry["runtime_config_overrides"] = dict(
+            views.get("runtime_config_overrides", {})
+        )
+        entry["runtime_effective_options"] = dict(
+            views.get("runtime_effective_options", {})
+        )
         entry["assets"] = self._extract_asset_values(metadata_map)
         entry["origin"] = None
         entry["script_exists"] = False

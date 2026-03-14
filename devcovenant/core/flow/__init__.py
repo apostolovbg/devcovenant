@@ -5,6 +5,7 @@ from __future__ import annotations
 import importlib
 
 _MODULE_MAP = {
+    "clean": "devcovenant.core.flow.clean",
     "gate": "devcovenant.core.flow.gate",
     "refresh": "devcovenant.core.flow.refresh",
     "session": "devcovenant.core.flow.session",

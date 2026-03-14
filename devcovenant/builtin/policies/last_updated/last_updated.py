@@ -110,8 +110,10 @@ class LastUpdatedCheck(PolicyCheck):
                     break
 
             if marker_line is not None and not is_allowlisted:
-                allowed = (
-                    ", ".join(sorted(allowlist | allowed_suffixes)) or "none"
+                allowed = self._format_allowlist_description(
+                    allowlist=allowlist,
+                    allowed_suffixes=allowed_suffixes,
+                    allowed_globs=allowed_globs,
                 )
                 violations.append(
                     Violation(
@@ -251,6 +253,23 @@ class LastUpdatedCheck(PolicyCheck):
         if allowed_globs and self._glob_matches(relative_path, allowed_globs):
             return True
         return False
+
+    def _format_allowlist_description(
+        self,
+        *,
+        allowlist: Set[str],
+        allowed_suffixes: Set[str],
+        allowed_globs: List[str],
+    ) -> str:
+        """Render a compact allowlist description for violation suggestions."""
+        allowed = sorted(
+            {
+                *allowlist,
+                *allowed_globs,
+                *allowed_suffixes,
+            }
+        )
+        return ", ".join(allowed) or "none"
 
     def _resolve_touched_files(self, context: CheckContext) -> Set[str]:
         """Resolve touched files for date freshness checks."""

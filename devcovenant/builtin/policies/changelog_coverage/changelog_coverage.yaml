@@ -17,7 +17,27 @@ metadata:
   enforcement: active
   main_changelog: []
   skipped_files: []
-  skipped_globs: []
+  skipped_globs:
+    - .vscode/**
+    - .idea/**
+    - .venv/**
+    - .python/**
+    - build/**
+    - dist/**
+    - __pycache__/**
+    - '*.egg-info/**'
+    - pip-wheel-metadata/**
+    - .pytest_cache/**
+    - .ruff_cache/**
+    - .mypy_cache/**
+    - .tox/**
+    - .nox/**
+    - .hypothesis/**
+    - .coverage
+    - .coverage.*
+    - htmlcov/**
+    - devcovenant/logs/**
+    - devcovenant/registry/local/**
   skipped_prefixes: []
   summary_labels: []
   summary_verbs: []

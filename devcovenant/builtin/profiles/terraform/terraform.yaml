@@ -7,6 +7,9 @@ suffixes:
   - .hcl
 ignore_dirs:
   - .terraform
+clean_overlays:
+  build_dirs:
+    - .terraform
 assets:
   - path: main.tf
     template: main.tf

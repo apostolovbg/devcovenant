@@ -12,6 +12,14 @@ REGISTRY_PROFILE = Path("devcovenant/registry/local/profile_registry.yaml")
 BUILTIN_PROFILE_ROOT = Path("devcovenant/builtin/profiles")
 CUSTOM_PROFILE_ROOT = Path("devcovenant/custom/profiles")
 LANGUAGE_CATEGORY = "language"
+_CLEAN_OVERLAY_KEYS = (
+    "build_dirs",
+    "build_globs",
+    "cache_dirs",
+    "cache_globs",
+    "protected_dirs",
+    "protected_globs",
+)
 
 
 def _utc_now() -> str:
@@ -377,6 +385,44 @@ def _normalize_profile_test_events(
     profile_meta["test_events"] = normalized_entries
 
 
+def _normalize_profile_clean_overlays(
+    profile_name: str,
+    profile_meta: dict[str, object],
+    *,
+    source_label: str,
+) -> None:
+    """Normalize cleanup overlays declared by one profile manifest."""
+    raw_overlays = profile_meta.get("clean_overlays")
+    if raw_overlays is None:
+        return
+    if not isinstance(raw_overlays, dict):
+        raise ValueError(
+            f"{source_label} profile '{profile_name}' must define "
+            "clean_overlays as a mapping."
+        )
+    normalized: dict[str, list[str]] = {}
+    for key in _CLEAN_OVERLAY_KEYS:
+        if key not in raw_overlays:
+            continue
+        raw_value = raw_overlays.get(key)
+        if isinstance(raw_value, str):
+            entries = [raw_value]
+        elif isinstance(raw_value, list):
+            entries = raw_value
+        else:
+            raise ValueError(
+                f"{source_label} profile '{profile_name}' clean_overlays."
+                f"{key} must be a string or list."
+            )
+        values: list[str] = []
+        for raw_entry in entries:
+            token = str(raw_entry or "").strip()
+            if token and token not in values:
+                values.append(token)
+        normalized[key] = values
+    profile_meta["clean_overlays"] = normalized
+
+
 def _normalize_registry_profiles(
     registry: Dict[str, Dict], *, source_label: str
 ) -> Dict[str, Dict]:
@@ -396,6 +442,11 @@ def _normalize_registry_profiles(
             source_label=source_label,
         )
         _normalize_profile_test_events(
+            profile_name,
+            meta,
+            source_label=source_label,
+        )
+        _normalize_profile_clean_overlays(
             profile_name,
             meta,
             source_label=source_label,
@@ -452,6 +503,11 @@ def discover_profiles(
                 source_label=str(manifest_path),
             )
             _normalize_profile_test_events(
+                name,
+                meta,
+                source_label=str(manifest_path),
+            )
+            _normalize_profile_clean_overlays(
                 name,
                 meta,
                 source_label=str(manifest_path),
@@ -559,3 +615,25 @@ def resolve_profile_ignore_dirs(
                 continue
             ignored.append(dir_value)
     return ignored
+
+
+def resolve_profile_clean_overlays(
+    registry: Dict[str, Dict], active_profiles: List[str]
+) -> Dict[str, List[str]]:
+    """Return additive cleanup overlays contributed by active profiles."""
+    normalized_registry = _normalize_registry(registry)
+    resolved = {key: [] for key in _CLEAN_OVERLAY_KEYS}
+    for name in _active_profile_names(active_profiles):
+        meta = normalized_registry.get(name, {})
+        raw = meta.get("clean_overlays")
+        if not isinstance(raw, dict):
+            continue
+        for key in _CLEAN_OVERLAY_KEYS:
+            values = raw.get(key)
+            if not isinstance(values, list):
+                continue
+            for entry in values:
+                token = str(entry or "").strip()
+                if token and token not in resolved[key]:
+                    resolved[key].append(token)
+    return resolved

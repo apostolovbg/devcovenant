@@ -2,7 +2,7 @@
 **Doc ID:** CHANGELOG
 **Doc Type:** changelog
 **Project Version:** 1.0.0
-**Last Updated:** 2026-03-12
+**Last Updated:** 2026-03-13
 **DevCovenant Version:** 1.0.0
 
 <!-- DEVCOV:BEGIN -->
@@ -53,6 +53,163 @@ Example:
 ## Log changes here
 
 ## Version 1.0.0
+
+- 2026-03-14:
+  Change: Added a first-class `clean` command with profile-seeded cleanup
+    targets, config-driven layering, and protected runtime fences.
+  Why: Prevented build and cache residue from polluting gated work while
+    standardizing disposable artifact cleanup across profiles and repos.
+  Impact: Repositories can safely remove build-only, cache-only, or combined
+    cleanup targets through one documented command with regression coverage.
+  Files:
+  CHANGELOG.md
+  README.md
+  devcovenant/README.md
+  devcovenant/builtin/profiles/csharp/csharp.yaml
+  devcovenant/builtin/profiles/dart/dart.yaml
+  devcovenant/builtin/profiles/flutter/flutter.yaml
+  devcovenant/builtin/profiles/global/assets/config.yaml
+  devcovenant/builtin/profiles/global/global.yaml
+  devcovenant/builtin/profiles/go/go.yaml
+  devcovenant/builtin/profiles/java/java.yaml
+  devcovenant/builtin/profiles/javascript/javascript.yaml
+  devcovenant/builtin/profiles/objective_c/objective_c.yaml
+  devcovenant/builtin/profiles/php/php.yaml
+  devcovenant/builtin/profiles/python/python.yaml
+  devcovenant/builtin/profiles/ruby/ruby.yaml
+  devcovenant/builtin/profiles/rust/rust.yaml
+  devcovenant/builtin/profiles/swift/swift.yaml
+  devcovenant/builtin/profiles/terraform/terraform.yaml
+  devcovenant/builtin/profiles/typescript/typescript.yaml
+  devcovenant/clean.py
+  devcovenant/cli.py
+  devcovenant/core/flow/__init__.py
+  devcovenant/core/flow/clean.py
+  devcovenant/core/flow/refresh.py
+  devcovenant/core/services/__init__.py
+  devcovenant/core/services/cleanup.py
+  devcovenant/core/services/profile_registry.py
+  devcovenant/docs/architecture.md
+  devcovenant/docs/config.md
+  devcovenant/docs/installation.md
+  devcovenant/docs/profiles.md
+  devcovenant/docs/workflow.md
+  tests/devcovenant/core/services/test_cleanup.py
+  tests/devcovenant/core/flow/test_clean.py
+  tests/devcovenant/core/services/test_profile_registry.py
+  tests/devcovenant/core/services/test_registry.py
+  tests/devcovenant/test_clean.py
+  tests/devcovenant/test_install.py
+  tests/devcovenant/test_refresh.py
+
+- 2026-03-14:
+  Change: Removed the retired `devcovenant/docs/README.md` vampire file and
+    cleared the remaining stale references to it from current docs.
+  Why: Prevented old untracked docset residue from re-triggering governance
+    failures and kept the canonical docs entrypoint contract unambiguous.
+  Impact: The packaged docs map now points only at live entrypoints, and
+    future gates will not trip over the resurrected retired file.
+  Files:
+  CHANGELOG.md
+  README.md
+  devcovenant/README.md
+  devcovenant/docs/profiles.md
+  devcovenant/docs/README.md
+
+- 2026-03-13:
+  Change: Exposed typed runtime policy option views in the local policy
+    registry alongside raw metadata trace and override warnings.
+  Why: Clarified the exact option surface that policy runtime sees so audits
+    do not have to reconstruct `PolicyCheck.get_option(...)` behavior by hand.
+  Impact: Refresh now records runtime metadata, config-override, and
+    effective-option views for each policy, and regression tests lock that
+    debug contract in place.
+  Files:
+  CHANGELOG.md
+  devcovenant/core/flow/refresh.py
+  devcovenant/core/services/policy_runtime_actions.py
+  devcovenant/core/services/registry.py
+  devcovenant/docs/architecture.md
+  devcovenant/docs/registry.md
+  devcovenant/docs/workflow.md
+  tests/devcovenant/core/services/test_policy_runtime_actions.py
+  tests/devcovenant/test_refresh.py
+
+- 2026-03-13:
+  Change: Instrumented policy metadata resolution with per-key trace and
+    override-replacement warnings recorded in the local policy registry.
+  Why: Clarified descriptor/profile/config precedence so destructive
+    replacements are auditable without guessing from final effective
+    metadata alone.
+  Impact: Refresh now records metadata provenance and warning diagnostics,
+    and the resolution contract is documented and regression-tested.
+  Files:
+  CHANGELOG.md
+  devcovenant/core/flow/refresh.py
+  devcovenant/core/services/metadata.py
+  devcovenant/core/services/registry.py
+  devcovenant/docs/architecture.md
+  devcovenant/docs/config.md
+  devcovenant/docs/profiles.md
+  devcovenant/docs/registry.md
+  devcovenant/docs/workflow.md
+  tests/devcovenant/core/services/test_metadata.py
+  tests/devcovenant/test_refresh.py
+
+- 2026-03-13:
+  Change: Promoted universal editor, packaging, coverage, and runtime artifact
+    exclusions into the global baseline and builtin policy metadata while
+    removing temporary repo-local tuning.
+  Why: Standardized what belongs in shared defaults versus policy descriptors
+    so repos inherit common noise suppression without rediscovering `.vscode`,
+    `*.egg-info`, coverage, and runtime-state exclusions locally.
+  Impact: New installs, refreshes, and policy checks now share a cleaner
+    exclusion model, and this repo no longer relies on ad-hoc local overlays
+    for universal artifact noise.
+  Files:
+  CHANGELOG.md
+  devcovenant/builtin/policies/changelog_coverage/changelog_coverage.yaml
+  devcovenant/builtin/policies/documentation_growth_tracking/documentation_growth_tracking.yaml
+  devcovenant/builtin/policies/line_length_limit/line_length_limit.yaml
+  devcovenant/builtin/profiles/global/assets/config.yaml
+  devcovenant/builtin/profiles/global/assets/gitignore.yaml
+  devcovenant/config.yaml
+  devcovenant/custom/profiles/devcovrepo/devcovrepo.yaml
+  devcovenant/docs/architecture.md
+  devcovenant/docs/config.md
+  devcovenant/docs/policies.md
+  devcovenant/docs/profiles.md
+  tests/devcovenant/test_install.py
+  tests/devcovenant/test_refresh.py
+
+- 2026-03-13:
+  Change: Adjusted repo-local scope metadata to exclude transient
+    `*.egg-info` build artifacts during rebuild-and-reinstall validation.
+  Why: Prevented machine-level package validation slices from dragging local
+    build metadata into changelog-governed session scope.
+  Impact: Rebuild and reinstall checks now stay focused on real repository
+    files while preserving governance on tracked project changes.
+  Files:
+  devcovenant/config.yaml
+
+- 2026-03-13:
+  Change: Adjusted `last-updated` builtin package-doc allowlists and
+    diagnostics while adding regressions for installed-doc and lifecycle-state
+    preservation behavior.
+  Why: Prevented upgraded user repositories from warning on shipped
+    DevCovenant docs and exposed effective allowlisted globs instead of
+    misleading `only allowed in: none` suggestions.
+  Impact: Installed repos now inherit safe `Last Updated` defaults for
+    packaged docs, violation guidance is clearer, and refresh/upgrade
+    preservation coverage is stronger.
+  Files:
+  devcovenant/builtin/policies/last_updated/last_updated.py
+  devcovenant/builtin/policies/last_updated/last_updated.yaml
+  devcovenant/docs/architecture.md
+  devcovenant/docs/policies.md
+  tests/devcovenant/builtin/policies/last_updated/test_last_updated.py
+  tests/devcovenant/test_refresh.py
+  tests/devcovenant/test_upgrade.py
 
 - 2026-03-13:
   Change: Hardened upgrade custom-payload handling by pruning known

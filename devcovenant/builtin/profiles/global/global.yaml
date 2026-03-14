@@ -3,6 +3,34 @@ profile: global
 category: core
 suffixes: []
 ignore_dirs: []
+clean_overlays:
+  build_dirs:
+    - build
+    - dist
+    - pip-wheel-metadata
+  build_globs:
+    - '*.egg-info'
+    - '**/*.egg-info'
+  cache_dirs:
+    - .pytest_cache
+    - .ruff_cache
+    - .mypy_cache
+    - .tox
+    - .nox
+    - .hypothesis
+    - htmlcov
+  cache_globs:
+    - '.coverage'
+    - '.coverage.*'
+    - '**/__pycache__'
+  protected_dirs:
+    - .git
+    - .venv
+    - devcovenant/logs
+    - devcovenant/registry/local
+  protected_globs:
+    - devcovenant/logs/**
+    - devcovenant/registry/local/**
 gitignore_template: gitignore.yaml
 governance_template: governance-and-test.yml
 pre_commit:

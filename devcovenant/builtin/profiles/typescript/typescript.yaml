@@ -8,6 +8,16 @@ ignore_dirs:
   - node_modules
   - dist
   - build
+clean_overlays:
+  cache_dirs:
+    - coverage
+    - .parcel-cache
+    - .next
+    - .nuxt
+    - .svelte-kit
+    - .turbo
+  cache_globs:
+    - '*.tsbuildinfo'
 assets:
   - path: package.json
     template: package.json

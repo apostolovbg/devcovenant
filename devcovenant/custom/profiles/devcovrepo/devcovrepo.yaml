@@ -125,6 +125,9 @@ policy_overlays:
     exclude_globs:
       - devcovenant/builtin/profiles/global/assets/*.yaml
       - devcovenant/registry/**
+    long_lines_between:
+      - devcovenant/builtin/policies/=>.yaml
+      - devcovenant/custom/policies/=>.yaml
   no-print-outside-output-runtime:
     include_suffixes:
       - .py

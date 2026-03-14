@@ -1,0 +1,37 @@
+version: 1
+profile: dart
+category: language
+suffixes:
+  - .dart
+ignore_dirs:
+  - .dart_tool
+  - build
+assets:
+  - path: pubspec.yaml
+    template: pubspec.yaml
+  - path: pubspec.lock
+    template: pubspec.lock
+translators:
+  - id: dart
+    extensions:
+      - .dart
+    can_handle:
+      strategy: module_function
+      entrypoint: translator.py:can_handle
+    translate:
+      strategy: module_function
+      entrypoint: translator.py:translate
+policy_overlays:
+  dependency-license-sync:
+    dependency_role_files:
+      - package_manifest=>pubspec.yaml
+      - resolved=>pubspec.lock
+  devflow-run-gates:
+    required_commands:
+      - dart test
+  documentation-growth-tracking:
+    user_facing_suffixes:
+      - .dart
+  line-length-limit:
+    include_suffixes:
+      - .dart

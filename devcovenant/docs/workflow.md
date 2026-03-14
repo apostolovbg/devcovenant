@@ -1,5 +1,5 @@
 # Workflow
-**Last Updated:** 2026-03-12
+**Last Updated:** 2026-03-13
 **Project Version:** 1.0.0
 
 ## Table of Contents
@@ -130,6 +130,8 @@ Scope note:
 - for repository work, use the full gate sequence:
   `devcovenant gate --start` -> `devcovenant gate --mid` loop ->
   `devcovenant test` -> `devcovenant gate --end`
+- `devcovenant clean` is a maintenance command for disposable build/cache
+  residue; it does not replace the gate workflow for actual repository work
 
 ## Step Details
 Shared gate hook targeting:
@@ -197,9 +199,22 @@ Install/upgrade boundary:
 - `install` is a cold bootstrap command and does not preserve existing
   repo-local `devcovenant/` runtime state
 - `install` exits and points to `upgrade` when DevCovenant is already present
+- `clean` resolves active-profile `clean_overlays` plus repo
+  `clean.overlays`/`clean.overrides`, supports `--build`, `--cache`, and
+  `--all` (default), and preserves hard-protected `.git`, `.venv`,
+  `devcovenant/logs/`, and `devcovenant/registry/local/`
 - `upgrade` preserves runtime-local `devcovenant/registry/local/` and
   `devcovenant/logs/`, plus repository `devcovenant/config.yaml`, during
   core replacement before running refresh
+- refresh writes final per-policy metadata snapshots to
+  `policy_registry.yaml` and now also records per-key
+  `metadata_resolution` trace plus `metadata_warnings` for destructive
+  override replacement, so workflow debugging can start from registry
+  evidence instead of ad-hoc guesswork
+- the same registry also records `runtime_metadata_options`,
+  `runtime_config_overrides`, and `runtime_effective_options` so policy
+  option debugging can use the exact typed runtime surface rather than only
+  the raw string-map metadata block
 - `upgrade` preserves user payload trees under
   `devcovenant/custom/policies/<policy-id>/` and
   `devcovenant/custom/profiles/<profile-id>/`

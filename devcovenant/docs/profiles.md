@@ -1,5 +1,5 @@
 # Profiles
-**Last Updated:** 2026-03-09
+**Last Updated:** 2026-03-13
 **Project Version:** 1.0.0
 
 ## Table of Contents
@@ -50,6 +50,11 @@ The global profile also ships managed workflow text assets (for example the
 AGENTS workflow contract) so output/polling guidance stays refresh-managed
 and consistent across generated docs, including concise operator-update
 communication discipline.
+It also owns the universal ignore/gitignore baseline for editor, packaging,
+coverage, and DevCovenant runtime artifacts so repos do not need to rediscover
+common exclusions such as `.vscode/**`, `.idea/**`, `*.egg-info/**`,
+`pip-wheel-metadata/**`, `.coverage*`, `devcovenant/logs/**`, and
+`devcovenant/registry/local/**`.
 
 Profiles should not embed unrelated business logic.
 
@@ -72,7 +77,14 @@ behavior depends on project stack or tooling shape.
 
 Guidelines:
 - keep policy descriptor metadata minimal
+- put ubiquitous filesystem noise in the `global` baseline (`ignore.patterns`
+  and generated `.gitignore`), not in repo-local overlays
+- put disposable build/cache defaults in profile `clean_overlays`, not in
+  policy descriptors
+- reserve repo-local overlays/config for genuinely repository-specific
+  exclusions
 - define runtime-specific values through `policy_overlays`
+- define stack-specific cleanup targets through `clean_overlays`
 - keep value types explicit (`''`, `[]`, `{}` for empty placeholders)
 - prefer typed empties; do not use sentinel pseudo-empty tokens such as
   `__none__` in overlays
@@ -81,6 +93,9 @@ Guidelines:
   runtime code consumes the shared typed decoder/view when it needs bool/list/
   number semantics
 - use config overlays/overrides only for repository-specific deltas
+- treat config overrides as destructive replacement, not additive merge;
+  refresh records override-replacement warnings and per-key resolution trace
+  in `policy_registry.yaml` so repos can audit why one value won
 - when overlays define `documentation-growth-tracking.doc_routes`, ensure
   route-target docs are also included in `user_visible_files` and
   `doc_quality_files`
@@ -209,6 +224,7 @@ Typical keys:
 - optional `governance_template` (global workflow template)
 - optional `governance_and_test` (workflow fragment overlay)
 - `policy_overlays`
+- optional `clean_overlays`
 - `assets`
 - `pre_commit`
 - optional `translators`
@@ -252,8 +268,7 @@ Asset materialization rules:
   pre-test workflow wording, gate-owned refresh/autofix wording, and
   artifact-first output/log inspection workflow guidance
 - repository profiles can treat `README.md` / `devcovenant/README.md` as
-  canonical docs map/start-here entrypoints and avoid materializing
-  `devcovenant/docs/README.md`
+  canonical docs map/start-here entrypoints
 - AGENTS workflow wording should prefer artifact summaries/tails/logs for
   debugging and caution against verbose streaming token overhead without
   forbidding concise normal-mode streaming

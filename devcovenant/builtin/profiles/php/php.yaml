@@ -5,6 +5,9 @@ suffixes:
   - .php
 ignore_dirs:
   - vendor
+clean_overlays:
+  cache_dirs:
+    - .phpunit.cache
 assets:
   - path: composer.json
     template: composer.json

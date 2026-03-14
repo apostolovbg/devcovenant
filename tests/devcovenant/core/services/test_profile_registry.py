@@ -37,6 +37,7 @@ def _unit_test_profile_registry_symbol_contract_is_stable() -> None:
         "load_profile_registry",
         "parse_active_profiles",
         "refresh_profile_registry",
+        "resolve_profile_clean_overlays",
         "resolve_profile_ignore_dirs",
         "resolve_profile_suffixes",
         "write_profile_registry",
@@ -55,9 +56,25 @@ def _unit_test_profile_registry_symbol_assertions_cover_public_api() -> None:
     assert module.load_profile_registry
     assert module.parse_active_profiles
     assert module.refresh_profile_registry
+    assert module.resolve_profile_clean_overlays
     assert module.resolve_profile_ignore_dirs
     assert module.resolve_profile_suffixes
     assert module.write_profile_registry
+
+
+def _unit_test_profile_registry_resolves_clean_overlays() -> None:
+    """Active profiles should expose additive cleanup overlays."""
+    module = importlib.import_module(MODULE)
+    registry = module.discover_profiles(REPO_ROOT)
+    overlays = module.resolve_profile_clean_overlays(
+        registry,
+        ["global", "python", "typescript"],
+    )
+
+    assert "build" in overlays["build_dirs"]
+    assert ".pytype" in overlays["cache_dirs"]
+    assert ".turbo" in overlays["cache_dirs"]
+    assert "*.tsbuildinfo" in overlays["cache_globs"]
 
 
 def _unit_test_discover_profiles_validates_missing_asset_template() -> None:
@@ -230,6 +247,10 @@ class GeneratedUnittestCases(unittest.TestCase):
     def test_discover_profiles_accepts_flutter_lock_template(self):
         """Run flutter pubspec.lock template integrity regression."""
         _unit_test_discover_profiles_accepts_flutter_lock_template()
+
+    def test_profile_registry_resolves_clean_overlays(self):
+        """Run cleanup overlay resolution regression coverage."""
+        _unit_test_profile_registry_resolves_clean_overlays()
 
     def test_governance_workflow_asset_matches_repo_contract(self):
         """Run global workflow asset vs repo workflow contract assertions."""

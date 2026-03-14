@@ -5,6 +5,9 @@ suffixes:
   - .swift
 ignore_dirs:
   - .build
+clean_overlays:
+  build_dirs:
+    - .build
 assets:
   - path: Package.swift
     template: Package.swift

@@ -10,6 +10,7 @@ from io import StringIO
 from pathlib import Path
 
 from devcovenant import install, upgrade
+from devcovenant.core.flow import gate_status_helpers
 from tests.devcovenant import repo_seed_cache
 
 
@@ -229,6 +230,44 @@ def _unit_test_upgrade_preserves_runtime_local_registry_and_logs() -> None:
         ) == expected_summary
 
 
+def _unit_test_upgrade_preserves_open_gate_status_visibility() -> None:
+    """upgrade_repo should keep open gate state visible to status helpers."""
+    with tempfile.TemporaryDirectory() as temp_dir:
+        repo_root = Path(temp_dir)
+        repo_seed_cache.copy_installed_repo(repo_root)
+
+        gate_status_path = (
+            repo_root
+            / "devcovenant"
+            / "registry"
+            / "local"
+            / "gate_status.json"
+        )
+        gate_status_path.parent.mkdir(parents=True, exist_ok=True)
+        gate_status_path.write_text(
+            json.dumps(
+                {
+                    "session_id": "upgrade-open-session",
+                    "session_state": "open",
+                    "pre_commit_start_utc": "2026-03-01T10:00:00+00:00",
+                },
+                indent=2,
+            )
+            + "\n",
+            encoding="utf-8",
+        )
+
+        with redirect_stderr(StringIO()):
+            result = upgrade.upgrade_repo(repo_root)
+        assert result == 0
+
+        summary_lines = gate_status_helpers._gate_status_summary_lines(
+            repo_root
+        )
+        assert "Gate Status: open" in summary_lines
+        assert "Session ID: upgrade-open-session" in summary_lines
+
+
 def _unit_test_parse_version_for_compare_normalizes_partial_and_v_prefix() -> (
     None
 ):
@@ -308,6 +347,10 @@ class GeneratedUnittestCases(unittest.TestCase):
     def test_upgrade_preserves_runtime_local_registry_and_logs(self):
         """Run test_upgrade_preserves_runtime_local_registry_and_logs."""
         _unit_test_upgrade_preserves_runtime_local_registry_and_logs()
+
+    def test_upgrade_preserves_open_gate_status_visibility(self):
+        """Run open-gate visibility assertions for upgrade."""
+        _unit_test_upgrade_preserves_open_gate_status_visibility()
 
     def test_parse_version_for_compare_normalizes_partial_and_v_prefix(self):
         """Run version normalization assertions for upgrade comparisons."""

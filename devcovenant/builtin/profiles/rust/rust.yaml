@@ -5,6 +5,9 @@ suffixes:
   - .rs
 ignore_dirs:
   - target
+clean_overlays:
+  build_dirs:
+    - target
 assets:
   - path: Cargo.toml
     template: Cargo.toml

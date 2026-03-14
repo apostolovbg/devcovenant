@@ -1,0 +1,39 @@
+version: 1
+profile: flutter
+category: framework
+suffixes:
+  - .dart
+ignore_dirs:
+  - .dart_tool
+  - build
+gitignore_fragments:
+  - .dart_tool/
+  - .packages
+  - pubspec.lock
+  - build/
+  - .flutter-plugins
+  - .flutter-plugins-dependencies
+  - .metadata
+  - ios/Pods/
+  - ios/Podfile.lock
+  - android/.gradle/
+  - android/local.properties
+assets:
+  - path: pubspec.yaml
+    template: pubspec.yaml
+  - path: pubspec.lock
+    template: pubspec.lock
+policy_overlays:
+  dependency-license-sync:
+    dependency_role_files:
+      - package_manifest=>pubspec.yaml
+      - resolved=>pubspec.lock
+  devflow-run-gates:
+    required_commands:
+      - flutter test
+  documentation-growth-tracking:
+    user_facing_suffixes:
+      - .dart
+  line-length-limit:
+    include_suffixes:
+      - .dart

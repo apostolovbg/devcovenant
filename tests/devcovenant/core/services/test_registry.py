@@ -178,6 +178,7 @@ def _unit_test_services_export_inventory_remains_intentionally_narrow() -> (
     module = importlib.import_module("devcovenant.core.services")
     exported = set(getattr(module, "__all__", []))
     expected = {
+        "cleanup",
         "event",
         "metadata",
         "policy_block_refresh",

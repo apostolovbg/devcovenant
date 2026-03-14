@@ -1,0 +1,33 @@
+version: 1
+profile: swift
+category: language
+suffixes:
+  - .swift
+ignore_dirs:
+  - .build
+assets:
+  - path: Package.swift
+    template: Package.swift
+translators:
+  - id: swift
+    extensions:
+      - .swift
+    can_handle:
+      strategy: module_function
+      entrypoint: translator.py:can_handle
+    translate:
+      strategy: module_function
+      entrypoint: translator.py:translate
+policy_overlays:
+  dependency-license-sync:
+    dependency_role_files:
+      - package_manifest=>Package.swift
+  devflow-run-gates:
+    required_commands:
+      - swift test
+  documentation-growth-tracking:
+    user_facing_suffixes:
+      - .swift
+  line-length-limit:
+    include_suffixes:
+      - .swift

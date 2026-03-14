@@ -6,6 +6,11 @@ suffixes:
 ignore_dirs:
   - target
   - build
+clean_overlays:
+  build_dirs:
+    - .gradle
+    - target
+    - out
 assets:
   - path: build.gradle
     template: build.gradle

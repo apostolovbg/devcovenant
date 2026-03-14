@@ -5,7 +5,7 @@ from __future__ import annotations
 import importlib.util
 import sys
 from pathlib import Path
-from typing import Any, Callable
+from typing import Any, Callable, Mapping
 
 import yaml
 
@@ -64,6 +64,44 @@ def runtime_policy_config_overrides(
     return context.get_policy_config(policy_id)
 
 
+def _option_value_is_empty(candidate: Any) -> bool:
+    """Return True when a runtime option value is an empty placeholder."""
+    if candidate is None:
+        return True
+    if isinstance(candidate, str):
+        return candidate.strip() == ""
+    if isinstance(candidate, dict):
+        return not candidate
+    if isinstance(candidate, (list, tuple, set)):
+        if not candidate:
+            return True
+        return all(not str(item).strip() for item in candidate)
+    return False
+
+
+def build_runtime_policy_option_views(
+    metadata_options: Mapping[str, Any] | None,
+    config_overrides: Mapping[str, Any] | None,
+) -> dict[str, dict[str, Any]]:
+    """Build typed runtime option views for registry/debug inspection."""
+    metadata = dict(metadata_options or {})
+    overrides = dict(config_overrides or {})
+    effective: dict[str, Any] = {}
+    for key in list(metadata.keys()) + list(overrides.keys()):
+        if key in effective:
+            continue
+        if key in overrides and not _option_value_is_empty(overrides[key]):
+            effective[key] = overrides[key]
+            continue
+        if key in metadata and not _option_value_is_empty(metadata[key]):
+            effective[key] = metadata[key]
+    return {
+        "runtime_metadata_options": metadata,
+        "runtime_config_overrides": overrides,
+        "runtime_effective_options": effective,
+    }
+
+
 def runtime_policy_metadata_options(
     repo_root: Path,
     policy_id: str,
@@ -87,6 +125,9 @@ def runtime_policy_metadata_options(
             if isinstance(policies, dict):
                 entry = policies.get(policy_id)
                 if isinstance(entry, dict):
+                    typed_metadata = entry.get("runtime_metadata_options")
+                    if isinstance(typed_metadata, dict):
+                        return dict(typed_metadata)
                     metadata = entry.get("metadata")
                     if isinstance(metadata, dict):
                         return metadata_runtime.decode_metadata_options_map(

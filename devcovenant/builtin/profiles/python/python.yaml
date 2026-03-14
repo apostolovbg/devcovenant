@@ -13,6 +13,13 @@ ignore_dirs:
   - .mypy_cache
   - build
   - dist
+clean_overlays:
+  cache_dirs:
+    - .pytype
+  cache_globs:
+    - '.ipynb_checkpoints'
+    - '**/.ipynb_checkpoints'
+    - 'coverage.xml'
 assets:
   - path: requirements.in
     template: requirements.in

@@ -45,7 +45,8 @@ profiles:
   # Profiles contribute:
   # - file suffixes;
   # - managed assets;
-  # - policy metadata overlays/overrides.
+  # - policy metadata overlays/overrides;
+  # - cleanup target overlays.
   #
   # Profiles DO NOT enable/disable policies.
   # Activation authority is `policy_state` for normal toggles.
@@ -75,6 +76,7 @@ profiles:
       - devcovenant/__main__.py
       - devcovenant/cli.py
       - devcovenant/check.py
+      - devcovenant/clean.py
       - devcovenant/gate.py
       - devcovenant/test.py
       - devcovenant/install.py
@@ -207,6 +209,32 @@ engine:
     - .venv.lock
 
 # ---------------------------------------------------------------------------
+# Cleanup targets
+# ---------------------------------------------------------------------------
+clean:
+  # Human-owned key.
+  # Additive cleanup targets merged after active profile clean_overlays.
+  # Use this for repository-specific build/cache junk beyond builtin profiles.
+  overlays:
+    build_dirs: []
+    build_globs: []
+    cache_dirs: []
+    cache_globs: []
+    protected_dirs: []
+    protected_globs: []
+
+  # Human-owned key.
+  # Full replacement for the resolved cleanup list of one key.
+  # Use only when repository ownership must replace profile-seeded defaults.
+  overrides:
+    build_dirs: []
+    build_globs: []
+    cache_dirs: []
+    cache_globs: []
+    protected_dirs: []
+    protected_globs: []
+
+# ---------------------------------------------------------------------------
 # Governance workflow generation
 # ---------------------------------------------------------------------------
 governance_and_test:
@@ -251,9 +279,25 @@ policy_state:
 # ---------------------------------------------------------------------------
 ignore:
   # Additional glob patterns excluded from CheckContext file collections.
-  # Keep this list short and intentional; broad ignores can hide drift.
+  # Use this for ubiquitous editor/build/runtime artifacts that are not best
+  # expressed through simple directory-name ignores.
   patterns:
     - devcovenant/config.yaml
+    - .vscode/**
+    - .idea/**
+    - '*.egg-info/**'
+    - pip-wheel-metadata/**
+    - .pytest_cache/**
+    - .ruff_cache/**
+    - .mypy_cache/**
+    - .tox/**
+    - .nox/**
+    - .hypothesis/**
+    - .coverage
+    - .coverage.*
+    - htmlcov/**
+    - devcovenant/logs/**
+    - devcovenant/registry/local/**
 
 # ---------------------------------------------------------------------------
 # Gitignore generation

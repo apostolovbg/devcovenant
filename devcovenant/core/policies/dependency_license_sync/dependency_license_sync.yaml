@@ -1,0 +1,39 @@
+id: dependency-license-sync
+text: |
+  Maintain third-party license artifacts alongside dependency changes.
+  This policy governs repository dependency compliance only: when dependency
+  inputs in this repository change, repository license artifacts must be kept
+  synchronized. It does not, by itself, define or guarantee package-
+  distribution legal compliance for sdists/wheels/binaries.
+  Dependency input modeling supports role-based taxonomy for mixed ecosystems:
+  `intent`, `resolved`, and `package_manifest`.
+  Role selectors are metadata-driven via
+  (`dependency_role_files`, `dependency_role_globs`,
+  `dependency_role_dirs`) using `role=>selector` tokens.
+  Dependency selectors are metadata-driven
+  (`dependency_files`, `dependency_globs`, `dependency_dirs`) and may include
+  both manifest files and lock/resolution files so mixed-language repositories
+  can define their own layout. Every dependency change must keep the
+  configured report file (`third_party_file`) and configured license directory
+  (`licenses_dir`) synchronized, including the configured `report_heading`.
+  Autofix is restricted to those configured artifacts and must remain
+  deterministic/idempotent.
+metadata:
+  id: dependency-license-sync
+  severity: error
+  auto_fix: 'true'
+  enforcement: active
+  dependency_files: []
+  dependency_globs: []
+  dependency_dirs: []
+  dependency_roles:
+    - intent
+    - resolved
+    - package_manifest
+  dependency_role_files: []
+  dependency_role_globs: []
+  dependency_role_dirs: []
+  third_party_file: ''
+  licenses_dir: ''
+  report_heading: ''
+  selector_roles: dependency

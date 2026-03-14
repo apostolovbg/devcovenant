@@ -17,7 +17,27 @@ metadata:
   long_lines_between: []
   include_suffixes: []
   exclude_prefixes: []
-  exclude_globs: []
+  exclude_globs:
+    - .vscode/**
+    - .idea/**
+    - .venv/**
+    - .python/**
+    - build/**
+    - dist/**
+    - __pycache__/**
+    - '*.egg-info/**'
+    - pip-wheel-metadata/**
+    - .pytest_cache/**
+    - .ruff_cache/**
+    - .mypy_cache/**
+    - .tox/**
+    - .nox/**
+    - .hypothesis/**
+    - .coverage
+    - .coverage.*
+    - htmlcov/**
+    - devcovenant/logs/**
+    - devcovenant/registry/local/**
   include_prefixes: []
   include_globs: []
   exclude_suffixes: []
