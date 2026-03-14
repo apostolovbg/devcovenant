@@ -20,6 +20,7 @@ from tests.devcovenant.support import MonkeyPatch
 REPO_ROOT = Path(__file__).resolve().parents[2]
 ROOT_COMMAND_MODULES = (
     "check",
+    "clean",
     "gate",
     "test",
     "install",
@@ -479,10 +480,27 @@ def _unit_test_install_help_shows_command_scope() -> None:
         text=True,
     )
     assert result.returncode == 0
+    assert "usage: devcovenant install [-h]" in result.stdout
     assert "--mode" not in result.stdout
     assert "--target" not in result.stdout
     assert "--docs-mode" not in result.stdout
     assert "--nofix" not in result.stdout
+
+
+def _unit_test_all_command_help_uses_scoped_prog() -> None:
+    """Every root command help surface should show scoped usage text."""
+    for module_name in ROOT_COMMAND_MODULES:
+        result = subprocess.run(
+            [sys.executable, "-m", "devcovenant", module_name, "--help"],
+            cwd=REPO_ROOT,
+            check=False,
+            capture_output=True,
+            text=True,
+        )
+        assert result.returncode == 0
+        assert (
+            f"usage: devcovenant {module_name} [-h]" in result.stdout
+        ), result.stdout
 
 
 def _unit_test_gate_help_is_command_scoped() -> None:
@@ -724,6 +742,52 @@ def _unit_test_cli_adopts_handoff_run_log_without_duplicate_folder(
         assert run_payload["effective_python"]
 
 
+def _unit_test_cli_uninstall_skips_run_log_pointer(monkeypatch) -> None:
+    """`uninstall` should not emit a run-log pointer it cannot preserve."""
+    with tempfile.TemporaryDirectory() as tmpdir:
+        repo_root = Path(tmpdir)
+        (repo_root / ".git").mkdir()
+        (repo_root / "devcovenant").mkdir()
+        monkeypatch.setattr(
+            cli.execution_runtime_module,
+            "find_git_root",
+            lambda _path: repo_root,
+        )
+        monkeypatch.setattr(
+            cli.execution_runtime_module,
+            "configure_repo_pycache_prefix",
+            lambda _repo_root: False,
+        )
+        monkeypatch.setattr(
+            cli,
+            "_maybe_reexec_managed_environment",
+            lambda _command, _args: None,
+        )
+        monkeypatch.setattr(
+            cli,
+            "_load_command_module",
+            lambda _command: SimpleNamespace(
+                main=lambda _argv: (_ for _ in ()).throw(SystemExit(0))
+            ),
+        )
+        monkeypatch.setattr(sys, "argv", ["devcovenant", "uninstall"])
+
+        stdout_buffer = io.StringIO()
+        stderr_buffer = io.StringIO()
+        with redirect_stdout(stdout_buffer), redirect_stderr(stderr_buffer):
+            try:
+                cli.main()
+            except SystemExit as exc:
+                code = exc.code
+            else:  # pragma: no cover - defensive
+                raise AssertionError("Expected SystemExit from cli.main().")
+
+        assert code == 0
+        assert "Run logs:" not in stdout_buffer.getvalue()
+        assert "Run logs:" not in stderr_buffer.getvalue()
+        assert not (repo_root / "devcovenant" / "logs").exists()
+
+
 def _unit_test_package_exports_are_explicit() -> None:
     """Package root should export only documented stable symbols."""
     assert devcovenant.__all__ == ["__version__"]
@@ -844,6 +908,10 @@ class GeneratedUnittestCases(unittest.TestCase):
         """Run test_gate_help_is_command_scoped."""
         _unit_test_gate_help_is_command_scoped()
 
+    def test_all_command_help_uses_scoped_prog(self):
+        """Run test_all_command_help_uses_scoped_prog."""
+        _unit_test_all_command_help_uses_scoped_prog()
+
     def test_root_command_modules_exist(self):
         """Run test_root_command_modules_exist."""
         _unit_test_root_command_modules_exist()
@@ -889,6 +957,16 @@ class GeneratedUnittestCases(unittest.TestCase):
         monkeypatch = MonkeyPatch()
         try:
             _unit_test_cli_adopts_handoff_run_log_without_duplicate_folder(
+                monkeypatch=monkeypatch
+            )
+        finally:
+            monkeypatch.undo()
+
+    def test_cli_uninstall_skips_run_log_pointer(self):
+        """Run uninstall run-log bypass assertions."""
+        monkeypatch = MonkeyPatch()
+        try:
+            _unit_test_cli_uninstall_skips_run_log_pointer(
                 monkeypatch=monkeypatch
             )
         finally:

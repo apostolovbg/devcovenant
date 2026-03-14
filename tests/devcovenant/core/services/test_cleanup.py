@@ -40,17 +40,19 @@ def _unit_test_module_has_public_symbols() -> None:
         assert hasattr(module, symbol)
 
 
-def _unit_test_resolve_clean_selection_defaults_to_all() -> None:
-    """No explicit clean flags should resolve to all cleanup categories."""
+def _unit_test_resolve_clean_selection_requires_explicit_scope() -> None:
+    """No explicit clean flags should be rejected."""
     module = importlib.import_module(MODULE)
-    selection = module.resolve_clean_selection(
-        include_all=False,
-        include_build=False,
-        include_cache=False,
-    )
-    assert selection.include_build is True
-    assert selection.include_cache is True
-    assert selection.labels() == ("build", "cache")
+    try:
+        module.resolve_clean_selection(
+            include_all=False,
+            include_build=False,
+            include_cache=False,
+        )
+    except ValueError as error:
+        assert "Select at least one cleanup scope" in str(error)
+    else:
+        raise AssertionError("Expected explicit-scope validation failure.")
 
 
 def _unit_test_resolve_clean_config_merges_profiles_and_config_layers() -> (
@@ -89,6 +91,57 @@ def _unit_test_resolve_clean_config_merges_profiles_and_config_layers() -> (
         assert "scratch/protected" in resolved.protected_dirs
         assert ".git" in resolved.protected_dirs
         assert "devcovenant/logs/**" in resolved.protected_globs
+
+
+def _unit_test_legacy_empty_clean_override_placeholder_is_ignored() -> None:
+    """Legacy all-empty override blocks should not wipe clean defaults."""
+    module = importlib.import_module(MODULE)
+    with tempfile.TemporaryDirectory() as temp_dir:
+        repo_root = Path(temp_dir)
+        repo_seed_cache.copy_installed_repo(repo_root)
+
+        config_path = repo_root / "devcovenant" / "config.yaml"
+        payload = yaml.safe_load(config_path.read_text(encoding="utf-8"))
+        payload["profiles"]["active"] = ["global", "python", "typescript"]
+        payload["clean"]["overrides"] = {
+            "build_dirs": [],
+            "build_globs": [],
+            "cache_dirs": [],
+            "cache_globs": [],
+            "protected_dirs": [],
+            "protected_globs": [],
+        }
+        config_path.write_text(
+            yaml.safe_dump(payload, sort_keys=False),
+            encoding="utf-8",
+        )
+
+        resolved = module.resolve_clean_config(repo_root)
+
+        assert ".pytype" in resolved.cache_dirs
+        assert ".turbo" in resolved.cache_dirs
+
+
+def _unit_test_explicit_empty_clean_override_clears_selected_key() -> None:
+    """Explicit per-key empty overrides should clear resolved values."""
+    module = importlib.import_module(MODULE)
+    with tempfile.TemporaryDirectory() as temp_dir:
+        repo_root = Path(temp_dir)
+        repo_seed_cache.copy_installed_repo(repo_root)
+
+        config_path = repo_root / "devcovenant" / "config.yaml"
+        payload = yaml.safe_load(config_path.read_text(encoding="utf-8"))
+        payload["profiles"]["active"] = ["global", "python", "typescript"]
+        payload["clean"]["overrides"] = {"cache_dirs": []}
+        config_path.write_text(
+            yaml.safe_dump(payload, sort_keys=False),
+            encoding="utf-8",
+        )
+
+        resolved = module.resolve_clean_config(repo_root)
+
+        assert resolved.cache_dirs == ()
+        assert ".coverage.*" in resolved.cache_globs
 
 
 def _unit_test_execute_cleanup_preserves_protected() -> None:
@@ -165,13 +218,21 @@ class GeneratedUnittestCases(unittest.TestCase):
         """Run cleanup service symbol contract coverage."""
         _unit_test_module_has_public_symbols()
 
-    def test_resolve_clean_selection_defaults_to_all(self):
-        """Run clean-selection default behavior coverage."""
-        _unit_test_resolve_clean_selection_defaults_to_all()
+    def test_resolve_clean_selection_requires_explicit_scope(self):
+        """Run explicit-scope validation coverage."""
+        _unit_test_resolve_clean_selection_requires_explicit_scope()
 
     def test_resolve_clean_config_merges_profiles_and_config_layers(self):
         """Run clean-config merge behavior coverage."""
         _unit_test_resolve_clean_config_merges_profiles_and_config_layers()
+
+    def test_legacy_empty_clean_override_placeholder_is_ignored(self):
+        """Run legacy-placeholder clean override compatibility coverage."""
+        _unit_test_legacy_empty_clean_override_placeholder_is_ignored()
+
+    def test_explicit_empty_clean_override_clears_selected_key(self):
+        """Run explicit empty-list clean override coverage."""
+        _unit_test_explicit_empty_clean_override_clears_selected_key()
 
     def test_execute_cleanup_removes_selected_targets_and_preserves_protected(
         self,

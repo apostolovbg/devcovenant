@@ -1,4 +1,4 @@
-"""Sanity checks for devcovenant.core.runtime.execution."""
+"""Mirrored surface sanity checks."""
 
 from __future__ import annotations
 
@@ -1019,6 +1019,52 @@ def _unit_test_test_profile_artifacts_are_written_for_active_run() -> None:
             module.clear_active_run_log_context()
 
 
+def _unit_test_clean_summary_artifacts_include_command_details() -> None:
+    """Clean-run summaries should expose cleanup details in artifacts."""
+    module = importlib.import_module(MODULE)
+    logging_module = importlib.import_module(
+        "devcovenant.core.runtime.run_logging"
+    )
+    with tempfile.TemporaryDirectory() as tmpdir:
+        repo_root = Path(tmpdir)
+        context = logging_module.create_run_log_context(
+            repo_root=repo_root,
+            command_name="clean",
+            argv=("devcovenant", "clean", "--build"),
+        )
+        try:
+            module.set_active_run_log_context(context)
+            module.merge_active_run_log_metadata(
+                {
+                    "clean_summary": {
+                        "selected_scopes": ["build"],
+                        "removed_count": 2,
+                        "removed_paths": ["build", "dist"],
+                        "skipped_protected_count": 1,
+                        "skipped_protected_paths": ["devcovenant/logs"],
+                    }
+                }
+            )
+            module.finalize_active_run_log_context(
+                exit_code=0,
+                status="success",
+            )
+        finally:
+            module.clear_active_run_log_context()
+
+        summary_txt = context.require_paths().summary_txt.read_text(
+            encoding="utf-8"
+        )
+        summary_json = context.require_paths().summary_json.read_text(
+            encoding="utf-8"
+        )
+        assert "Cleanup Scope: build" in summary_txt
+        assert "Removed Targets: 2" in summary_txt
+        assert "Skipped Protected Targets: 1" in summary_txt
+        assert '"clean_summary": {' in summary_json
+        assert '"removed_count": 2' in summary_json
+
+
 class GeneratedUnittestCases(unittest.TestCase):
     """unittest wrappers for layered module sanity checks."""
 
@@ -1153,3 +1199,7 @@ class GeneratedUnittestCases(unittest.TestCase):
     def test_test_profile_artifacts_are_written_for_active_run(self):
         """Run active-run profiling artifact generation assertions."""
         _unit_test_test_profile_artifacts_are_written_for_active_run()
+
+    def test_clean_summary_artifacts_include_command_details(self):
+        """Run clean-summary artifact detail assertions."""
+        _unit_test_clean_summary_artifacts_include_command_details()

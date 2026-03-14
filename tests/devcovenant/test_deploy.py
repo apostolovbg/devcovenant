@@ -5,6 +5,8 @@ from __future__ import annotations
 import tempfile
 import unittest
 from pathlib import Path
+from types import SimpleNamespace
+from unittest.mock import patch
 
 import yaml
 
@@ -142,6 +144,47 @@ def _unit_test_deploy_cleanup_is_deploy_only() -> None:
         ).exists()
 
 
+def _unit_test_deploy_run_calls_deploy_repo() -> None:
+    """run() should resolve the repo root and delegate to deploy_repo."""
+    with tempfile.TemporaryDirectory() as temp_dir:
+        repo_root = Path(temp_dir)
+        with patch(
+            "devcovenant.deploy.resolve_repo_root",
+            return_value=repo_root,
+        ):
+            with patch(
+                "devcovenant.deploy.deploy_repo", return_value=0
+            ) as mock:
+                result = deploy.run(SimpleNamespace())
+    assert result == 0
+    mock.assert_called_once_with(repo_root)
+
+
+def _unit_test_deploy_main_exits_with_run_code() -> None:
+    """main() should parse args, call run, and exit with its code."""
+    captured: dict[str, object] = {}
+    original_run = deploy.run
+
+    def _fake_run(args):
+        """Capture parsed args and return a stable exit code."""
+        captured["args"] = args
+        return 0
+
+    deploy.run = _fake_run
+    try:
+        try:
+            deploy.main([])
+        except SystemExit as exc:
+            code = exc.code
+        else:  # pragma: no cover - defensive
+            raise AssertionError("Expected SystemExit from main().")
+    finally:
+        deploy.run = original_run
+
+    assert code == 0
+    assert hasattr(captured["args"], "__dict__")
+
+
 class GeneratedUnittestCases(unittest.TestCase):
     """unittest wrappers for module-level tests."""
 
@@ -156,3 +199,11 @@ class GeneratedUnittestCases(unittest.TestCase):
     def test_deploy_cleanup_is_deploy_only(self):
         """Run test_deploy_cleanup_is_deploy_only."""
         _unit_test_deploy_cleanup_is_deploy_only()
+
+    def test_deploy_run_calls_deploy_repo(self):
+        """Run test_deploy_run_calls_deploy_repo."""
+        _unit_test_deploy_run_calls_deploy_repo()
+
+    def test_deploy_main_exits_with_run_code(self):
+        """Run test_deploy_main_exits_with_run_code."""
+        _unit_test_deploy_main_exits_with_run_code()

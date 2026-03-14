@@ -1,5 +1,5 @@
 # Configuration
-**Last Updated:** 2026-03-13
+**Last Updated:** 2026-03-14
 **Project Version:** 1.0.0
 
 ## Table of Contents
@@ -157,7 +157,10 @@ the same session so generated configs remain self-explanatory.
   `clean_overlays`.
 
 - `clean.overrides`: replacement cleanup lists for repositories that need
-  full ownership of one resolved cleanup key.
+  full ownership of one resolved cleanup key. Template defaults use `{}` so
+  no replacement is implied; explicit per-key `[]` values intentionally clear
+  inherited lists for that key. Legacy repos that still carry the older
+  all-empty placeholder block are treated as no-op compatibility placeholders.
 
 - `devflow-run-gates.required_commands`: canonical test command chain.
   `engine.tests_output_mode` changes output presentation only; it does not

@@ -1,4 +1,4 @@
-"""Sanity checks for devcovenant.core.services.profile_registry."""
+"""Mirrored surface sanity checks."""
 
 from __future__ import annotations
 

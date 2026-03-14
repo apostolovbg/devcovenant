@@ -15,6 +15,7 @@ from pathlib import Path
 
 from devcovenant import undeploy
 from devcovenant.core.runtime.execution import (
+    build_command_parser,
     print_banner,
     print_step,
     resolve_repo_root,
@@ -35,8 +36,9 @@ def uninstall_repo(repo_root: Path) -> int:
 
 def _build_parser() -> argparse.ArgumentParser:
     """Build parser for uninstall command."""
-    return argparse.ArgumentParser(
-        description="Remove DevCovenant from the current repository."
+    return build_command_parser(
+        "uninstall",
+        "Remove DevCovenant from the current repository.",
     )
 
 

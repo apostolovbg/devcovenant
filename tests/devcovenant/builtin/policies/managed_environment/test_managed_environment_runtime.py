@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import importlib
+import tempfile
 import unittest
 from pathlib import Path
 from unittest import mock
@@ -222,6 +223,56 @@ def _unit_test_guidance_suffix_uses_placeholders_when_missing() -> None:
     assert "{managed_python}" not in suffix
 
 
+def _unit_test_load_policy_entry_falls_back_to_agents_without_writing() -> (
+    None
+):
+    """Missing registry should fall back to AGENTS without creating one."""
+    module = importlib.import_module(MODULE)
+    with tempfile.TemporaryDirectory() as temp_dir:
+        repo_root = Path(temp_dir)
+        agents_path = repo_root / "AGENTS.md"
+        agents_path.write_text(
+            "\n".join(
+                [
+                    "# AGENTS",
+                    "<!-- DEVCOV-POLICIES:BEGIN -->",
+                    "## Policy: Managed Environment",
+                    "",
+                    "```policy-def",
+                    "id: managed-environment",
+                    "severity: error",
+                    "auto_fix: false",
+                    "enabled: true",
+                    "custom: false",
+                    "expected_paths: .venv",
+                    "expected_interpreters: .venv/bin/python",
+                    "```",
+                    "",
+                    "Managed environment policy text.",
+                    "<!-- DEVCOV-POLICIES:END -->",
+                    "",
+                ]
+            ),
+            encoding="utf-8",
+        )
+
+        entry = module._load_policy_entry(repo_root)
+
+        assert entry is not None
+        assert entry["enabled"] is True
+        metadata = entry["metadata"]
+        assert metadata["expected_paths"] == ".venv"
+        assert metadata["expected_interpreters"] == ".venv/bin/python"
+        registry_path = (
+            repo_root
+            / "devcovenant"
+            / "registry"
+            / "local"
+            / "policy_registry.yaml"
+        )
+        assert not registry_path.exists()
+
+
 def _unit_test_run_command_suppresses_console_bursts_in_normal_mode() -> None:
     """Managed commands can suppress bursts in normal mode when requested."""
     module = importlib.import_module(MODULE)
@@ -391,6 +442,10 @@ class GeneratedUnittestCases(unittest.TestCase):
     def test_guidance_suffix_uses_placeholders_when_missing(self):
         """Run managed guidance placeholder fallback assertions."""
         _unit_test_guidance_suffix_uses_placeholders_when_missing()
+
+    def test_load_policy_entry_falls_back_to_agents_without_writing(self):
+        """Run AGENTS fallback coverage for missing local registry."""
+        _unit_test_load_policy_entry_falls_back_to_agents_without_writing()
 
     def test_run_command_suppresses_console_bursts_in_normal_mode(self):
         """Run managed-command normal-mode output suppression assertions."""

@@ -1,5 +1,5 @@
 # Workflow
-**Last Updated:** 2026-03-13
+**Last Updated:** 2026-03-14
 **Project Version:** 1.0.0
 
 ## Table of Contents
@@ -200,9 +200,10 @@ Install/upgrade boundary:
   repo-local `devcovenant/` runtime state
 - `install` exits and points to `upgrade` when DevCovenant is already present
 - `clean` resolves active-profile `clean_overlays` plus repo
-  `clean.overlays`/`clean.overrides`, supports `--build`, `--cache`, and
-  `--all` (default), and preserves hard-protected `.git`, `.venv`,
-  `devcovenant/logs/`, and `devcovenant/registry/local/`
+  `clean.overlays`/`clean.overrides`, requires an explicit `--all`,
+  `--build`, or `--cache` scope, writes cleanup details into
+  `summary.txt`/`summary.json`, and preserves hard-protected `.git`,
+  `.venv`, `devcovenant/logs/`, and `devcovenant/registry/local/`
 - `upgrade` preserves runtime-local `devcovenant/registry/local/` and
   `devcovenant/logs/`, plus repository `devcovenant/config.yaml`, during
   core replacement before running refresh
@@ -268,7 +269,9 @@ Output behavior:
 - `devcovenant/core/runtime/run_logging.py` provides a shared per-run logging
   substrate for command-run artifact folders under `devcovenant/logs/`;
   CLI dispatch now allocates/finalizes top-level run folders and emits a
-  deterministic standard `Run logs:` pointer on success and failure paths
+  deterministic standard `Run logs:` pointer on success and failure paths,
+  except for `uninstall`, which removes `devcovenant/` and therefore cannot
+  leave a durable run-log folder
 - CLI unhandled exceptions are normalized to explicit typed errors through
   `devcovenant/core/runtime/errors.py` and
   `devcovenant/core/contracts/errors.py`; console output stays explicit while

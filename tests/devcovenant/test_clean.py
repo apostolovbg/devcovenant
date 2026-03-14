@@ -5,7 +5,7 @@ from __future__ import annotations
 import io
 import tempfile
 import unittest
-from contextlib import redirect_stdout
+from contextlib import redirect_stderr, redirect_stdout
 from pathlib import Path
 from types import SimpleNamespace
 from unittest.mock import patch
@@ -26,8 +26,36 @@ def _unit_test_clean_flow_symbol_contract_is_stable() -> None:
     assert module.clean_repo
 
 
-def _unit_test_clean_run_defaults_to_all_cleanup_scope() -> None:
-    """`clean.run()` should default to all cleanup categories."""
+def _unit_test_clean_main_requires_explicit_scope() -> None:
+    """`devcovenant clean` should reject empty scope selection."""
+    stderr = io.StringIO()
+    try:
+        with redirect_stderr(stderr):
+            clean.main([])
+    except SystemExit as exc:
+        assert exc.code == 2
+    else:
+        raise AssertionError("Expected SystemExit for empty clean scope.")
+    rendered = stderr.getvalue()
+    assert "usage: devcovenant clean" in rendered
+    assert "select at least one cleanup scope" in rendered
+
+
+def _unit_test_clean_help_uses_clean_prog() -> None:
+    """Help output should render the clean subcommand usage prefix."""
+    stdout = io.StringIO()
+    try:
+        with redirect_stdout(stdout):
+            clean.main(["--help"])
+    except SystemExit as exc:
+        assert exc.code == 0
+    else:
+        raise AssertionError("Expected SystemExit for help output.")
+    assert "usage: devcovenant clean" in stdout.getvalue()
+
+
+def _unit_test_clean_run_honors_all_cleanup_scope() -> None:
+    """`clean.run()` should honor the explicit all-scope selection."""
     with tempfile.TemporaryDirectory() as temp_dir:
         repo_root = Path(temp_dir)
         repo_seed_cache.copy_installed_repo(repo_root)
@@ -41,7 +69,7 @@ def _unit_test_clean_run_defaults_to_all_cleanup_scope() -> None:
                 return_value=repo_root,
             ):
                 result = clean.run(
-                    SimpleNamespace(all=False, build=False, cache=False)
+                    SimpleNamespace(all=True, build=False, cache=False)
                 )
 
         assert result == 0
@@ -84,9 +112,17 @@ class GeneratedUnittestCases(unittest.TestCase):
         """Run clean flow symbol contract coverage."""
         _unit_test_clean_flow_symbol_contract_is_stable()
 
-    def test_clean_run_defaults_to_all_cleanup_scope(self):
-        """Run default clean-scope execution coverage."""
-        _unit_test_clean_run_defaults_to_all_cleanup_scope()
+    def test_clean_main_requires_explicit_scope(self):
+        """Run empty-scope CLI validation coverage."""
+        _unit_test_clean_main_requires_explicit_scope()
+
+    def test_clean_help_uses_clean_prog(self):
+        """Run clean help-program rendering coverage."""
+        _unit_test_clean_help_uses_clean_prog()
+
+    def test_clean_run_honors_all_cleanup_scope(self):
+        """Run explicit all-scope execution coverage."""
+        _unit_test_clean_run_honors_all_cleanup_scope()
 
     def test_clean_run_can_limit_to_build_only(self):
         """Run build-only clean-scope execution coverage."""

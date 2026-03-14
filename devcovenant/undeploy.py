@@ -16,6 +16,7 @@ from pathlib import Path
 import yaml
 
 from devcovenant.core.runtime.execution import (
+    build_command_parser,
     print_banner,
     print_step,
     resolve_repo_root,
@@ -256,8 +257,9 @@ def undeploy_repo(repo_root: Path) -> int:
 
 def _build_parser() -> argparse.ArgumentParser:
     """Build parser for undeploy command."""
-    return argparse.ArgumentParser(
-        description="Remove deployed managed artifacts and keep core files."
+    return build_command_parser(
+        "undeploy",
+        "Remove deployed managed artifacts and keep core files.",
     )
 
 

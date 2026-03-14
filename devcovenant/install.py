@@ -15,6 +15,7 @@ import tempfile
 from pathlib import Path
 
 from devcovenant.core.runtime.execution import (
+    build_command_parser,
     print_banner,
     print_step,
     resolve_repo_root,
@@ -181,8 +182,9 @@ def _is_existing_install(repo_root: Path) -> bool:
 
 def _build_parser() -> argparse.ArgumentParser:
     """Build parser for install command."""
-    return argparse.ArgumentParser(
-        description="Install DevCovenant into the current repository."
+    return build_command_parser(
+        "install",
+        "Install DevCovenant into the current repository.",
     )
 
 

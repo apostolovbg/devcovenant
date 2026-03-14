@@ -2,7 +2,7 @@
 **Doc ID:** AGENTS
 **Doc Type:** policy-source
 **Project Version:** 1.0.0
-**Last Updated:** 2026-03-13
+**Last Updated:** 2026-03-14
 **DevCovenant Version:** 1.0.0
 
 <!-- DEVCOV:BEGIN -->
@@ -878,6 +878,10 @@ user_facing_exclude_globs: .vscode/**
   htmlcov/**
   devcovenant/logs/**
   devcovenant/registry/local/**
+  devcovenant/core/*.py
+  devcovenant/core/policies/**
+  devcovenant/core/profiles/**
+  devcovenant/custom/policies/**/fixers/**
   tests/**
 user_facing_exclude_suffixes:
 user_facing_dirs:
@@ -1042,6 +1046,7 @@ exclude_globs: .vscode/**
   node_modules/**
   **/*.egg-info/**
   devcovenant/builtin/profiles/global/assets/*.yaml
+  devcovenant/builtin/profiles/global/assets/**/*.yaml
   devcovenant/registry/**
 include_prefixes:
 include_globs: *.py
@@ -1574,7 +1579,11 @@ exclude_prefixes: build
   dist
   node_modules
   tests
-exclude_globs: build/**
+exclude_globs: devcovenant/core/*.py
+  devcovenant/core/policies/**
+  devcovenant/core/profiles/**
+  devcovenant/custom/policies/**/fixers/**
+  build/**
   dist/**
   node_modules/**
   tests/**

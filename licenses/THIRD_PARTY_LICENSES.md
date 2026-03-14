@@ -4,6 +4,9 @@ This report lists direct third-party dependencies declared in dependency
 manifests and the corresponding license texts stored under `licenses/`.
 
 ## License Report
+- `devcovenant/core/profiles/python/assets/pyproject.toml`
+- `devcovenant/core/profiles/python/assets/requirements.in`
+- `devcovenant/core/profiles/python/assets/requirements.lock`
 - `pyproject.toml`
 ## Dependency License Inventory
 - `pre-commit==4.5.1`: `licenses/pre-commit-4.5.1.txt`

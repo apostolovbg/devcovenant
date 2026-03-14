@@ -1,5 +1,5 @@
 # Policies
-**Last Updated:** 2026-03-13
+**Last Updated:** 2026-03-14
 **Project Version:** 1.0.0
 
 ## Table of Contents
@@ -167,6 +167,10 @@ High-impact runtime contracts:
   Top-level read-only `devcovenant check` without an open gate session
   (`missing_gate_status` and empty phase) uses an empty scope instead of
   hard-failing bootstrap checks.
+- `managed-environment` resolves from the local policy registry when it
+  exists and falls back to the compiled AGENTS policy block when it does not,
+  so maintenance commands can detect managed-interpreter contracts without
+  materializing registry state as a side effect.
 - `devflow-run-gates` enforces the start -> test -> end sequence and validates
   the latest `test` evidence against resolved required command metadata
   (`required_commands`). Gate status stores the tests mode and selected

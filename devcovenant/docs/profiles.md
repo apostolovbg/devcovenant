@@ -1,5 +1,5 @@
 # Profiles
-**Last Updated:** 2026-03-13
+**Last Updated:** 2026-03-14
 **Project Version:** 1.0.0
 
 ## Table of Contents
@@ -81,6 +81,9 @@ Guidelines:
   and generated `.gitignore`), not in repo-local overlays
 - put disposable build/cache defaults in profile `clean_overlays`, not in
   policy descriptors
+- keep generated `clean.overrides` defaults empty (`{}`) and use explicit
+  per-key `[]` overrides only when you intentionally want to clear inherited
+  cleanup lists for that one key
 - reserve repo-local overlays/config for genuinely repository-specific
   exclusions
 - define runtime-specific values through `policy_overlays`
@@ -120,6 +123,9 @@ Test-fidelity governance pattern:
   `enforce_symbol_fidelity`.
 - language profiles own `modules-need-tests` mirror templates via
   `mirror_test_name_templates`; repository profiles own `mirror_roots`.
+- repository profiles may exclude internal compatibility mirrors from
+  `tests-coverage` and `documentation-growth-tracking` while still keeping
+  those files inside `modules-need-tests` structural mirror enforcement.
 
 ## Baseline Defaults Profile
 `defaults` is the shipped baseline repo-layout profile.

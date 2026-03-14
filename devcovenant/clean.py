@@ -12,6 +12,7 @@ import argparse
 
 from devcovenant.core.flow.clean import clean_repo
 from devcovenant.core.runtime.execution import (
+    build_command_parser,
     print_banner,
     print_step,
     resolve_repo_root,
@@ -20,13 +21,14 @@ from devcovenant.core.runtime.execution import (
 
 def _build_parser() -> argparse.ArgumentParser:
     """Build parser for the clean command."""
-    parser = argparse.ArgumentParser(
-        description="Remove build/cache artifacts safely."
+    parser = build_command_parser(
+        "clean",
+        "Remove disposable build or cache artifacts safely.",
     )
     parser.add_argument(
         "--all",
         action="store_true",
-        help="Remove both build and cache artifacts (default).",
+        help="Remove both build/package and cache/test-output artifacts.",
     )
     parser.add_argument(
         "--build",
@@ -61,6 +63,13 @@ def main(argv: list[str] | None = None) -> None:
     """CLI entry point."""
     parser = _build_parser()
     args = parser.parse_args(argv)
+    if args.all and (args.build or args.cache):
+        parser.error("`--all` cannot be combined with `--build` or `--cache`.")
+    if not any((args.all, args.build, args.cache)):
+        parser.error(
+            "select at least one cleanup scope: `--all`, `--build`, or "
+            "`--cache`."
+        )
     raise SystemExit(run(args))
 
 

@@ -2,7 +2,7 @@
 **Doc ID:** README
 **Doc Type:** repo-readme
 **Project Version:** 1.0.0
-**Last Updated:** 2026-03-13
+**Last Updated:** 2026-03-14
 **DevCovenant Version:** 1.0.0
 
 <!-- DEVCOV:BEGIN -->
@@ -212,7 +212,8 @@ Artifact usage guidance:
 - inspect `summary.txt` first, then `tail.txt`, then full logs
 - use `devcovenant gate --status` to inspect lifecycle state without reruns
 - treat printed `Run logs:` pointers as the canonical entrypoint to run
-  evidence artifacts
+  evidence artifacts; `uninstall` is the one exception because it removes the
+  installation folder that normally stores run logs
 
 ## Command Surface
 Primary governance commands:
@@ -234,7 +235,7 @@ Primary governance commands:
 Lifecycle and maintenance commands:
 - `devcovenant install`
 - `devcovenant deploy`
-- `devcovenant clean`
+- `devcovenant clean --all|--build|--cache`
 - `devcovenant refresh`
 - `devcovenant upgrade`
 - `devcovenant undeploy`
@@ -270,7 +271,8 @@ Lifecycle contract:
 - `undeploy`:
   remove managed artifacts while keeping core/config
 - `uninstall`:
-  remove DevCovenant footprint from the repository
+  remove DevCovenant footprint from the repository; this command does not
+  leave a durable run-log folder because it removes `devcovenant/`
 
 Generated artifacts owned by refresh include:
 - `devcovenant/registry/local/policy_registry.yaml`

@@ -1,5 +1,5 @@
 # Installation and Lifecycle
-**Last Updated:** 2026-03-13
+**Last Updated:** 2026-03-14
 **Project Version:** 1.0.0
 
 ## Table of Contents
@@ -70,7 +70,7 @@ Additional invariants:
 ```bash
 devcovenant install
 devcovenant deploy
-devcovenant clean
+devcovenant clean --all
 devcovenant refresh
 devcovenant upgrade
 devcovenant undeploy
@@ -109,13 +109,15 @@ Runtime details that affect operations:
   child output while preserving stderr failure surfaces and full run logs
 - root CLI commands emit a standard `Run logs:` pointer
   (`devcovenant/logs/...`) on success and failure so troubleshooting can
-  start from `summary.txt`/`summary.json`
+  start from `summary.txt`/`summary.json`; `uninstall` is the one exception
+  because it removes `devcovenant/` itself
 - `devcovenant test` in `engine.tests_output_mode: normal` also emits the
   same `Run logs:` pointer when command execution starts so operators can
   inspect logs immediately without waiting for command completion
 - `devcovenant clean` resolves active-profile `clean_overlays` plus repo
-  `clean.overlays`/`clean.overrides`, supports `--build`, `--cache`, and
-  `--all` (default), and always protects `.git`, `.venv`,
+  `clean.overlays`/`clean.overrides`, requires an explicit `--all`,
+  `--build`, or `--cache` scope, records cleanup details in
+  `summary.txt`/`summary.json`, and always protects `.git`, `.venv`,
   `devcovenant/logs/`, and `devcovenant/registry/local/`
 - repository pytest execution is configured in `pyproject.toml` with
   `--import-mode=importlib` and `pythonpath = ["."]` so mirrored builtin/core
@@ -326,8 +328,13 @@ DevCovenant distribution contracts follow PEP 639-compatible metadata:
   - `licenses/THIRD_PARTY_LICENSES.md`
   - `licenses/*.txt`
 - `pyproject.toml` constrains package discovery to `devcovenant` package roots
-  and excludes package bytecode/cache payloads
+  and excludes package bytecode/cache payloads plus internal
+  `devcovenant/core/policies/**` and `devcovenant/core/profiles/**`
+  compatibility trees from wheel discovery
 - `MANIFEST.in` includes license-source artifacts for sdist inputs
+- `MANIFEST.in` excludes internal `devcovenant/core/policies/**` and
+  `devcovenant/core/profiles/**` trees so sdists match the shipped package
+  boundary
 - `MANIFEST.in` excludes runtime log payloads under `devcovenant/logs/*`
   while re-including `devcovenant/logs/README.md`
 - `MANIFEST.in` prunes `build/`, `dist/`, `*.egg-info`, and cache artifacts

@@ -12,6 +12,7 @@ import argparse
 from pathlib import Path
 
 from devcovenant.core.runtime.execution import (
+    build_command_parser,
     print_banner,
     print_step,
     resolve_repo_root,
@@ -23,7 +24,10 @@ from devcovenant.core.runtime.execution import (
 
 def _build_parser() -> argparse.ArgumentParser:
     """Build parser for the test command."""
-    parser = argparse.ArgumentParser(description="Run the DevCovenant tests.")
+    parser = build_command_parser(
+        "test",
+        "Run the DevCovenant tests.",
+    )
     return parser
 
 

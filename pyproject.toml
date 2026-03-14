@@ -30,6 +30,10 @@ include = [
   "devcovenant.*",
 ]
 exclude = [
+  "devcovenant.core.policies",
+  "devcovenant.core.policies.*",
+  "devcovenant.core.profiles",
+  "devcovenant.core.profiles.*",
   "devcovenant.custom.policies.*",
   "devcovenant.custom.profiles.*",
 ]

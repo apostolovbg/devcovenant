@@ -9,6 +9,8 @@ import unittest
 from contextlib import redirect_stdout
 from io import StringIO
 from pathlib import Path
+from types import SimpleNamespace
+from unittest.mock import patch
 
 import yaml
 
@@ -179,14 +181,7 @@ def _unit_test_refresh_writes_clean_config_section() -> None:
             "protected_dirs": [],
             "protected_globs": [],
         }
-        assert clean_block.get("overrides") == {
-            "build_dirs": [],
-            "build_globs": [],
-            "cache_dirs": [],
-            "cache_globs": [],
-            "protected_dirs": [],
-            "protected_globs": [],
-        }
+        assert clean_block.get("overrides") == {}
 
 
 def _unit_test_refresh_writes_global_artifact_gitignore_rules() -> None:
@@ -491,6 +486,48 @@ def _unit_test_refresh_rejects_invalid_doc_descriptor_schema() -> None:
         assert "field `devcovenant_version` must be true" in output.getvalue()
 
 
+def _unit_test_refresh_run_calls_refresh_repo() -> None:
+    """run() should resolve repo root and delegate to refresh_repo."""
+    with tempfile.TemporaryDirectory() as temp_dir:
+        repo_root = Path(temp_dir)
+        with patch(
+            "devcovenant.refresh.resolve_repo_root",
+            return_value=repo_root,
+        ):
+            with patch(
+                "devcovenant.refresh.refresh_repo",
+                return_value=0,
+            ) as mock:
+                result = refresh.run(SimpleNamespace())
+    assert result == 0
+    mock.assert_called_once_with(repo_root)
+
+
+def _unit_test_refresh_main_exits_with_run_code() -> None:
+    """main() should parse args, call run, and exit with its code."""
+    captured: dict[str, object] = {}
+    original_run = refresh.run
+
+    def _fake_run(args):
+        """Capture parsed args and return a stable exit code."""
+        captured["args"] = args
+        return 0
+
+    refresh.run = _fake_run
+    try:
+        try:
+            refresh.main([])
+        except SystemExit as exc:
+            code = exc.code
+        else:  # pragma: no cover - defensive
+            raise AssertionError("Expected SystemExit from main().")
+    finally:
+        refresh.run = original_run
+
+    assert code == 0
+    assert hasattr(captured["args"], "__dict__")
+
+
 class GeneratedUnittestCases(unittest.TestCase):
     """unittest wrappers for module-level tests."""
 
@@ -561,3 +598,11 @@ class GeneratedUnittestCases(unittest.TestCase):
     def test_refresh_rejects_invalid_doc_descriptor_schema(self):
         """Run refresh rejection for invalid managed-doc schema."""
         _unit_test_refresh_rejects_invalid_doc_descriptor_schema()
+
+    def test_refresh_run_calls_refresh_repo(self):
+        """Run test_refresh_run_calls_refresh_repo."""
+        _unit_test_refresh_run_calls_refresh_repo()
+
+    def test_refresh_main_exits_with_run_code(self):
+        """Run test_refresh_main_exits_with_run_code."""
+        _unit_test_refresh_main_exits_with_run_code()

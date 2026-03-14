@@ -4,7 +4,11 @@ from __future__ import annotations
 
 from pathlib import Path
 
-from devcovenant.core.runtime.execution import print_step, runtime_print
+from devcovenant.core.runtime.execution import (
+    merge_active_run_log_metadata,
+    print_step,
+    runtime_print,
+)
 from devcovenant.core.services import cleanup as cleanup_runtime
 
 
@@ -25,6 +29,19 @@ def clean_repo(
     print_step(f"Cleanup scope: {labels}", "🧹")
 
     result = cleanup_runtime.execute_cleanup(repo_root, selection)
+    merge_active_run_log_metadata(
+        {
+            "clean_summary": {
+                "selected_scopes": list(selection.labels()),
+                "removed_count": len(result.removed_paths),
+                "removed_paths": list(result.removed_paths),
+                "skipped_protected_count": len(result.skipped_protected_paths),
+                "skipped_protected_paths": list(
+                    result.skipped_protected_paths
+                ),
+            }
+        }
+    )
     if result.removed_paths:
         print_step(
             f"Removed {len(result.removed_paths)} cleanup target(s)",

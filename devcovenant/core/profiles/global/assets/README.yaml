@@ -5,9 +5,9 @@ header_lines:
 doc_id: README
 doc_type: repo-readme
 managed_by: DevCovenant
-managed_block: '**Read first:** `AGENTS.md` is the canonical source of truth. See
-
-  `devcovenant/README.md` for usage and lifecycle workflow details.'
+managed_block: |-
+  **Read first:** `AGENTS.md` is the canonical source of truth.
+  See `devcovenant/README.md` for usage and lifecycle workflow details.
 body: 'Describe the project this repository ships: what it does, who it helps,
   and what problem it solves.
 

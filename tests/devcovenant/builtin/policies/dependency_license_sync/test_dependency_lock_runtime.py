@@ -1,4 +1,4 @@
-"""Sanity checks for dependency lock runtime policy helper module."""
+"""Mirrored surface sanity checks."""
 
 from __future__ import annotations
 

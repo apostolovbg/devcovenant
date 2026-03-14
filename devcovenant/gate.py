@@ -13,6 +13,7 @@ import argparse
 
 from devcovenant.core.flow.gate import run_pre_commit_gate, show_gate_status
 from devcovenant.core.runtime.execution import (
+    build_command_parser,
     print_banner,
     print_step,
     resolve_repo_root,
@@ -21,8 +22,9 @@ from devcovenant.core.runtime.execution import (
 
 def _build_parser() -> argparse.ArgumentParser:
     """Build parser for gate command."""
-    parser = argparse.ArgumentParser(
-        description="Run DevCovenant gate session lifecycle commands."
+    parser = build_command_parser(
+        "gate",
+        "Run DevCovenant gate session lifecycle commands.",
     )
     group = parser.add_mutually_exclusive_group(required=True)
     group.add_argument(

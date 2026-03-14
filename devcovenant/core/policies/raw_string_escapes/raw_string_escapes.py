@@ -308,6 +308,7 @@ def _resolve_language_for_path(
                 policy_id=policy_id,
                 context=context,
             )
+        # DEVCOV_ALLOW_BROAD_ONCE translator resolution boundary.
         except Exception:
             resolution = None
         if resolution is not None and getattr(

@@ -643,6 +643,11 @@ autogen_metadata_overlays:
     - tests/**
     user_facing_exclude_files:
     - devcovenant/config.yaml
+    user_facing_exclude_globs:
+    - devcovenant/core/*.py
+    - devcovenant/core/policies/**
+    - devcovenant/core/profiles/**
+    - devcovenant/custom/policies/**/fixers/**
     user_facing_exclude_prefixes:
     - tests
     user_facing_files:
@@ -746,6 +751,7 @@ autogen_metadata_overlays:
     - '*.egg-info/**'
     - '**/*.egg-info/**'
     - devcovenant/builtin/profiles/global/assets/*.yaml
+    - devcovenant/builtin/profiles/global/assets/**/*.yaml
     - devcovenant/registry/**
     exclude_prefixes:
     - build
@@ -894,6 +900,11 @@ autogen_metadata_overlays:
     assertion_signal_patterns:
     - python=>\bassert\b
     - python=>\bself\.assert[A-Za-z_]*\s*\(
+    exclude_globs:
+    - devcovenant/core/*.py
+    - devcovenant/core/policies/**
+    - devcovenant/core/profiles/**
+    - devcovenant/custom/policies/**/fixers/**
     exclude_prefixes:
     - build
     - dist

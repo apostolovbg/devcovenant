@@ -9,8 +9,8 @@ managed_block: |-
   # Message from DevCovenant's Human (Read First)
 
   This document is the canonical law of this repository for both humans and AI.
-  If you do not follow it, commits will fail, development quality will drift, and
-  the project in this repository will be compromised.
+  If you do not follow it, commits will fail, development quality will drift,
+  and the project in this repository will be compromised.
 
   Read this entire file end-to-end before doing any work: this managed message,
   the editable section, the workflow block, and the active policies.
@@ -22,14 +22,14 @@ managed_block: |-
   follow those policies proactively while writing, not after violations appear.
 
   Use the editable section as a live repo-specific notepad. Keep notes short,
-  factual, and current so they do not grow beards. When decisions change, update
-  notes in the same session. When operational behavior changes, update notes so
-  future sessions do not run on stale assumptions. Treat stale notes as drift and
-  clear them.
+  factual, and current so they do not grow beards. When decisions change,
+  update notes in the same session. When operational behavior changes, update
+  notes so future sessions do not run on stale assumptions. Treat stale notes
+  as drift and clear them.
 
   Never edit content inside managed `<!-- DEVCOV* -->` blocks in any file.
-  Read `README.md` for project context and `devcovenant/README.md` for lifecycle
-  and command behavior.
+  Read `README.md` for project context and `devcovenant/README.md` for
+  lifecycle and command behavior.
 body: |-
   # EDITABLE SECTION
 

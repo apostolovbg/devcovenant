@@ -1,6 +1,4 @@
 # Core Policies
-**Last Updated:** 2026-02-20
-**Version:** 0.2.6
 
 ## Table of Contents
 - [Overview](#overview)

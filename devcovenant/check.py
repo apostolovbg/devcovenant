@@ -15,6 +15,7 @@ from pathlib import Path
 
 from devcovenant.core.flow.refresh import refresh_repo
 from devcovenant.core.runtime.execution import (
+    build_command_parser,
     cleanup_repo_bytecode_artifacts,
     print_banner,
     print_step,
@@ -36,8 +37,9 @@ def _env_flag(name: str) -> bool:
 
 def _build_parser() -> argparse.ArgumentParser:
     """Build parser for check command."""
-    parser = argparse.ArgumentParser(
-        description="Run read-only DevCovenant audit checks."
+    parser = build_command_parser(
+        "check",
+        "Run read-only DevCovenant audit checks.",
     )
     parser.add_argument(
         "--nofix",

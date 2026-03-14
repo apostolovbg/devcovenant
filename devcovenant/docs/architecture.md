@@ -1,5 +1,5 @@
 # DevCovenant Architecture Contracts
-**Last Updated:** 2026-03-13
+**Last Updated:** 2026-03-14
 **Project Version:** 1.0.0
 
 ## Table of Contents
@@ -260,8 +260,10 @@ Invariant:
   `devcovenant/core/runtime`, `devcovenant/core/services`,
   `devcovenant/core/lib`, and `devcovenant/core/contracts`.
 - `devcovenant/core/flow/clean.py` orchestrates cleanup selection/reporting,
-  while `devcovenant/core/services/cleanup.py` resolves config/profile
-  targets and enforces non-overridable protection fences.
+  records clean-summary metadata for run artifacts, while
+  `devcovenant/core/services/cleanup.py` resolves config/profile targets,
+  honors explicit per-key override clearing, and enforces non-overridable
+  protection fences.
 - Bundled policy/profile sources are canonical under
   `devcovenant/builtin/policies` and `devcovenant/builtin/profiles`.
 - Legacy bundled policy/profile source trees are removed; runtime resolves
@@ -278,9 +280,9 @@ Invariant:
 - when `managed-environment` is enabled, gate stages run stage-scoped
   `managed_commands` (`start`/`end`) before pre-commit, then execute
   Python-launcher gate commands with the resolved managed interpreter.
-- managed-environment resolution bootstraps local policy registry metadata
-  when missing, so clean clone start-gate runs can still resolve
-  managed-environment contracts before pre-commit execution.
+- managed-environment resolution falls back to the compiled AGENTS policy
+  block when local policy registry metadata is missing, so non-gate commands
+  do not need to write registry state just to resolve managed execution.
 - managed-environment command stages are metadata-driven:
   `start`, `test`, `end`, `command`, and `all`.
 - managed rerun wrapper stages are metadata-driven through
@@ -481,7 +483,9 @@ Invariant:
 - top-level CLI run-log pointer emission is centralized in
   `devcovenant/core/runtime/execution.py`; normal-mode test runs can emit
   the same standard `Run logs:` pointer early for artifact-first triage
-  without duplicating the final CLI pointer line.
+  without duplicating the final CLI pointer line. `uninstall` is the one
+  deliberate exception because it removes `devcovenant/` and cannot preserve
+  a durable run-log folder under that path.
 - run-log retention is runtime-owned in the same layer and prunes older
   per-run directories after command finalization using
   `engine.logs_keep_last` (`0` = unlimited retention).

@@ -226,13 +226,9 @@ clean:
   # Human-owned key.
   # Full replacement for the resolved cleanup list of one key.
   # Use only when repository ownership must replace profile-seeded defaults.
-  overrides:
-    build_dirs: []
-    build_globs: []
-    cache_dirs: []
-    cache_globs: []
-    protected_dirs: []
-    protected_globs: []
+  # Use `cache_dirs: []`-style per-key empties when you intentionally want to
+  # clear inherited values for that one key.
+  overrides: {}
 
 # ---------------------------------------------------------------------------
 # Governance workflow generation

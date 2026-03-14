@@ -1,4 +1,4 @@
-"""Sanity checks for devcovenant.core.services.policy_file_scope."""
+"""Mirrored surface sanity checks."""
 
 from __future__ import annotations
 

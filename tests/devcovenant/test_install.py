@@ -88,14 +88,7 @@ def _unit_test_install_writes_generic_config_and_manifest() -> None:
             "protected_dirs": [],
             "protected_globs": [],
         }
-        assert clean_block.get("overrides") == {
-            "build_dirs": [],
-            "build_globs": [],
-            "cache_dirs": [],
-            "cache_globs": [],
-            "protected_dirs": [],
-            "protected_globs": [],
-        }
+        assert clean_block.get("overrides") == {}
 
         gitignore_block = config.get("gitignore", {})
         assert isinstance(gitignore_block, dict)

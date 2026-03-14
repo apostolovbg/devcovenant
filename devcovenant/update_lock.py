@@ -16,7 +16,11 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Sequence
 
-from devcovenant.core.runtime.execution import resolve_repo_root, runtime_print
+from devcovenant.core.runtime.execution import (
+    build_command_parser,
+    resolve_repo_root,
+    runtime_print,
+)
 from devcovenant.core.services.policy_engine import run_policy_runtime_action
 
 _DEPENDENCY_POLICY_ID = "dependency-license-sync"
@@ -89,11 +93,12 @@ def refresh_locks_and_licenses(
 def _build_parser() -> argparse.ArgumentParser:
     """Build parser for update_lock command."""
 
-    return argparse.ArgumentParser(
-        description=(
+    return build_command_parser(
+        "update_lock",
+        (
             "Refresh dependency lockfiles for active profiles and keep "
             "license artifacts in sync."
-        )
+        ),
     )
 
 

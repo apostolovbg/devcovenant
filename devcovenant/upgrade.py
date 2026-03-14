@@ -22,6 +22,7 @@ import semver
 from devcovenant import install
 from devcovenant.core.flow.refresh import refresh_repo
 from devcovenant.core.runtime.execution import (
+    build_command_parser,
     print_banner,
     print_step,
     resolve_repo_root,
@@ -276,8 +277,9 @@ def upgrade_repo(repo_root: Path) -> int:
 
 def _build_parser() -> argparse.ArgumentParser:
     """Build parser for upgrade command."""
-    return argparse.ArgumentParser(
-        description="Upgrade DevCovenant core in the current repository."
+    return build_command_parser(
+        "upgrade",
+        "Upgrade DevCovenant core in the current repository.",
     )
 
 

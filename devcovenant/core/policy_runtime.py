@@ -303,6 +303,7 @@ class DevCovenantEngine:
             )
         try:
             parsed = self.parser.parse_agents_md()
+        # DEVCOV_ALLOW_BROAD_ONCE AGENTS parser boundary.
         except Exception as exc:
             raise ValueError(
                 f"Failed to parse AGENTS policies: {exc}"
@@ -480,6 +481,7 @@ class DevCovenantEngine:
                     )
                     try:
                         module = importlib.import_module(module_name)
+                    # DEVCOV_ALLOW_BROAD_ONCE plugin import boundary.
                     except Exception as exc:
                         raise RuntimeError(
                             "Failed to import fixer module "
@@ -496,6 +498,7 @@ class DevCovenantEngine:
                                 setattr(instance, "repo_root", self.repo_root)
                                 setattr(instance, "_origin", origin)
                                 fixers.append(instance)
+                            # DEVCOV_ALLOW_BROAD_ONCE plugin init boundary.
                             except Exception as exc:
                                 raise RuntimeError(
                                     "Failed to initialize fixer "
@@ -691,6 +694,7 @@ class DevCovenantEngine:
                         self.passed_count += 1
                     else:
                         self.failed_count += 1
+            # DEVCOV_ALLOW_BROAD_ONCE policy execution isolation boundary.
             except Exception as e:
                 self.failed_count += 1
                 violations.append(

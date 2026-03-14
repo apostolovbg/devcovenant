@@ -1,4 +1,4 @@
-"""Sanity checks for devcovenant.core.services.event."""
+"""Mirrored surface sanity checks."""
 
 from __future__ import annotations
 

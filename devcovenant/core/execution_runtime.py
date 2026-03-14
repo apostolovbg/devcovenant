@@ -1161,7 +1161,10 @@ def _is_unittest_command(command: Sequence[str]) -> bool:
 
 
 class _CommandOutputProgress:
-    """Consume command output and render per-command progress in normal mode."""
+    """Consume command output.
+
+    Render per-command progress in normal mode.
+    """
 
     def __init__(self, command: Sequence[str], description: str) -> None:
         """Initialize one command progress tracker."""

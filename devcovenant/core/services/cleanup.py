@@ -121,9 +121,15 @@ def _normalize_clean_mapping(raw_value: object) -> dict[str, list[str]]:
 def _normalize_clean_override_mapping(
     raw_value: object,
 ) -> dict[str, list[str]]:
-    """Normalize clean overrides while ignoring empty default placeholders."""
+    """Normalize clean overrides with compatibility for legacy placeholders."""
     normalized = _normalize_clean_mapping(raw_value)
-    return {key: values for key, values in normalized.items() if values}
+    if (
+        isinstance(raw_value, dict)
+        and set(raw_value.keys()) >= set(_CLEAN_TARGET_KEYS)
+        and all(not normalized.get(key) for key in _CLEAN_TARGET_KEYS)
+    ):
+        return {}
+    return normalized
 
 
 def _merge_clean_layers(
@@ -143,8 +149,12 @@ def resolve_clean_selection(
     include_cache: bool,
 ) -> CleanSelection:
     """Resolve effective cleanup categories from CLI flags."""
-    if include_all or (not include_build and not include_cache):
+    if include_all:
         return CleanSelection(include_build=True, include_cache=True)
+    if not include_build and not include_cache:
+        raise ValueError(
+            "Select at least one cleanup scope: --all, --build, or --cache."
+        )
     return CleanSelection(
         include_build=include_build,
         include_cache=include_cache,

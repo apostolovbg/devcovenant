@@ -15,6 +15,7 @@ from devcovenant.core.runtime.execution import (
     runtime_print,
 )
 from devcovenant.core.services import registry as registry_runtime_module
+from devcovenant.core.services.policy_parse import PolicyParser
 
 POLICY_ID = "managed-environment"
 RUNTIME_ACTION_RESOLVE_STAGE = "resolve-stage"
@@ -33,16 +34,37 @@ def _run_bootstrap_registry_refresh(repo_root: Path) -> None:
         raise ValueError("Registry refresh failed.")
 
 
+def _load_policy_entry_from_agents(repo_root: Path) -> dict[str, Any] | None:
+    """Load managed-environment entry directly from AGENTS policy blocks."""
+    agents_path = repo_root / "AGENTS.md"
+    if not agents_path.exists():
+        return None
+    try:
+        policies = PolicyParser(agents_path).parse_agents_md()
+    except OSError as exc:
+        raise ValueError(
+            f"Unable to read AGENTS.md at {agents_path}: {exc}"
+        ) from exc
+    except ValueError as exc:
+        raise ValueError(
+            f"Failed to parse managed-environment policy: {exc}"
+        ) from exc
+    for policy in policies:
+        if policy.policy_id != POLICY_ID:
+            continue
+        return {
+            "id": policy.policy_id,
+            "enabled": policy.enabled,
+            "metadata": dict(policy.raw_metadata),
+        }
+    return None
+
+
 def _load_policy_entry(repo_root: Path) -> dict[str, Any] | None:
     """Load managed-environment policy entry from local registry."""
     registry_path = registry_runtime_module.policy_registry_path(repo_root)
     if not registry_path.exists():
-        agents_path = repo_root / "AGENTS.md"
-        if not agents_path.exists():
-            return None
-        _run_bootstrap_registry_refresh(repo_root)
-        if not registry_path.exists():
-            return None
+        return _load_policy_entry_from_agents(repo_root)
 
     try:
         registry_data = yaml.safe_load(

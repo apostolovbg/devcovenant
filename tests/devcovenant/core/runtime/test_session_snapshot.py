@@ -1,4 +1,4 @@
-"""Sanity checks for devcovenant.core.runtime.session_snapshot."""
+"""Mirrored surface sanity checks."""
 
 from __future__ import annotations
 

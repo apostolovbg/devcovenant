@@ -1,4 +1,4 @@
-"""Sanity checks for devcovenant.core.flow.gate."""
+"""Mirrored surface sanity checks."""
 
 from __future__ import annotations
 

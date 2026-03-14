@@ -38,7 +38,13 @@ def _unit_test_clean_flow_reports_scope_and_removed_targets() -> None:
             "execute_cleanup",
             return_value=result,
         ) as execute_mock:
-            with patch.object(module, "print_step") as print_mock:
+            with (
+                patch.object(module, "print_step") as print_mock,
+                patch.object(
+                    module,
+                    "merge_active_run_log_metadata",
+                ) as metadata_mock,
+            ):
                 flow_result = module.clean_repo(
                     Path("."),
                     include_all=False,
@@ -52,6 +58,10 @@ def _unit_test_clean_flow_reports_scope_and_removed_targets() -> None:
     messages = [call.args[0] for call in print_mock.call_args_list]
     assert "Cleanup scope: build" in messages
     assert "Removed 1 cleanup target(s)" in messages
+    metadata_mock.assert_called_once()
+    payload = metadata_mock.call_args.args[0]
+    assert payload["clean_summary"]["selected_scopes"] == ["build"]
+    assert payload["clean_summary"]["removed_count"] == 1
 
 
 class GeneratedUnittestCases(unittest.TestCase):

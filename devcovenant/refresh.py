@@ -14,6 +14,7 @@ from pathlib import Path
 
 from devcovenant.core.flow.refresh import refresh_repo
 from devcovenant.core.runtime.execution import (
+    build_command_parser,
     print_banner,
     print_step,
     resolve_repo_root,
@@ -22,7 +23,7 @@ from devcovenant.core.runtime.execution import (
 
 def _build_parser() -> argparse.ArgumentParser:
     """Build parser for refresh command."""
-    return argparse.ArgumentParser(description="Run a full refresh.")
+    return build_command_parser("refresh", "Run a full refresh.")
 
 
 def run(args: argparse.Namespace) -> int:

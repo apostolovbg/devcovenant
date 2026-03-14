@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import argparse
 import datetime as _dt
 import errno
 import hashlib
@@ -38,6 +39,19 @@ from devcovenant.core.services import (
 )
 
 OutputMode = output_runtime_module.OutputMode
+
+
+def build_command_parser(
+    command_name: str,
+    description: str,
+) -> argparse.ArgumentParser:
+    """Build a command-scoped parser with stable root-command usage text."""
+    return argparse.ArgumentParser(
+        prog=f"devcovenant {command_name}",
+        description=description,
+    )
+
+
 ChildOutputChannel = output_runtime_module.ChildOutputChannel
 _OUTPUT_MODE_DEFAULT: OutputMode = output_runtime_module.OUTPUT_MODE_DEFAULT
 _MANAGED_ENV_POLICY_ID = "managed-environment"
@@ -333,6 +347,32 @@ def _build_active_run_summary_text(
             lines.append(f"Test Profile txt: {profile_txt}")
         if profile_json:
             lines.append(f"Test Profile json: {profile_json}")
+    clean_summary = context.metadata.get("clean_summary")
+    if isinstance(clean_summary, Mapping):
+        scopes = clean_summary.get("selected_scopes")
+        if isinstance(scopes, Sequence) and not isinstance(scopes, str):
+            scope_text = ", ".join(
+                str(item).strip() for item in scopes if str(item).strip()
+            )
+            if scope_text:
+                lines.append(f"Cleanup Scope: {scope_text}")
+        removed_count = clean_summary.get("removed_count")
+        if removed_count is not None:
+            lines.append(f"Removed Targets: {removed_count}")
+        skipped_count = clean_summary.get("skipped_protected_count")
+        if skipped_count is not None:
+            lines.append(f"Skipped Protected Targets: {skipped_count}")
+        skipped_paths = clean_summary.get("skipped_protected_paths")
+        if isinstance(skipped_paths, Sequence) and not isinstance(
+            skipped_paths, str
+        ):
+            skipped_text = ", ".join(
+                str(item).strip()
+                for item in skipped_paths
+                if str(item).strip()
+            )
+            if skipped_text:
+                lines.append(f"Skipped Protected Paths: {skipped_text}")
     return "\n".join(lines) + "\n"
 
 
@@ -345,7 +385,7 @@ def _build_active_run_summary_json(
     """Build a generic command-run summary JSON payload for CLI dispatch."""
     final_status = _resolve_run_log_status(exit_code, status)
     paths = context.require_paths()
-    return {
+    payload = {
         "schema_version": run_logging_runtime_module.RUN_LOG_SCHEMA_VERSION,
         "run_id": context.run_id,
         "command_name": context.command_name,
@@ -379,6 +419,10 @@ def _build_active_run_summary_json(
         },
         "metadata": dict(context.metadata),
     }
+    clean_summary = context.metadata.get("clean_summary")
+    if isinstance(clean_summary, Mapping):
+        payload["clean_summary"] = dict(clean_summary)
+    return payload
 
 
 def _resolve_run_log_status(

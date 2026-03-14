@@ -47,6 +47,7 @@ _MANAGED_REEXEC_BYPASS_COMMANDS = {
     "undeploy",
     "uninstall",
 }
+_RUN_LOG_BYPASS_COMMANDS = {"uninstall"}
 
 
 def _build_parser() -> argparse.ArgumentParser:
@@ -150,6 +151,11 @@ def _initialize_cli_run_logging(
     command_args: list[str],
 ):
     """Create or adopt the per-run log context for one CLI command."""
+    if command in _RUN_LOG_BYPASS_COMMANDS:
+        execution_runtime_module.clear_active_run_log_context()
+        os.environ.pop(_RUN_LOG_HANDOFF_REPO_ENV, None)
+        os.environ.pop(_RUN_LOG_HANDOFF_RUN_ID_ENV, None)
+        return None
     if _should_skip_managed_reexec(command_args):
         execution_runtime_module.clear_active_run_log_context()
         return None

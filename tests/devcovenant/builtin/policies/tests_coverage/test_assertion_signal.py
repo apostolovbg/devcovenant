@@ -1,4 +1,4 @@
-"""Sanity checks for tests-coverage assertion signal helper module."""
+"""Mirrored surface sanity checks."""
 
 from __future__ import annotations
 

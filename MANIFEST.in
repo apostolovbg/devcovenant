@@ -14,6 +14,8 @@ exclude devcovenant/config.yaml
 exclude devcovenant/registry/local/*
 recursive-include devcovenant/builtin/profiles *
 recursive-include devcovenant/builtin/policies *
+recursive-exclude devcovenant/core/policies *
+recursive-exclude devcovenant/core/profiles *
 recursive-exclude devcovenant/custom *
 include devcovenant/custom/__init__.py
 include devcovenant/custom/README.md

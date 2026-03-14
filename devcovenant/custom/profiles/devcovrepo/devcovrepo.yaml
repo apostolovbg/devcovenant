@@ -48,6 +48,11 @@ policy_overlays:
     user_facing_files:
       - devcovenant/cli.py
       - devcovenant/__main__.py
+    user_facing_exclude_globs:
+      - devcovenant/core/*.py
+      - devcovenant/core/policies/**
+      - devcovenant/core/profiles/**
+      - devcovenant/custom/policies/**/fixers/**
     doc_routes:
       - "devcovenant/builtin/policies/ => devcovenant/docs/policies.md"
       - "devcovenant/builtin/policies/ => devcovenant/docs/architecture.md"
@@ -124,6 +129,7 @@ policy_overlays:
   line-length-limit:
     exclude_globs:
       - devcovenant/builtin/profiles/global/assets/*.yaml
+      - devcovenant/builtin/profiles/global/assets/**/*.yaml
       - devcovenant/registry/**
     long_lines_between:
       - devcovenant/builtin/policies/=>.yaml
@@ -190,6 +196,12 @@ policy_overlays:
       - tests
     mirror_roots:
       - devcovenant=>tests/devcovenant
+  tests-coverage:
+    exclude_globs:
+      - devcovenant/core/*.py
+      - devcovenant/core/policies/**
+      - devcovenant/core/profiles/**
+      - devcovenant/custom/policies/**/fixers/**
   version-sync:
     version_file: devcovenant/VERSION
     target_role_files:
