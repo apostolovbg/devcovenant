@@ -184,6 +184,40 @@ def _unit_test_refresh_writes_clean_config_section() -> None:
         assert clean_block.get("overrides") == {}
 
 
+def _unit_test_refresh_renders_devcov_managed_doc_intros() -> None:
+    """refresh_repo should render doc-specific DevCovenant intro text."""
+    with tempfile.TemporaryDirectory() as temp_dir:
+        repo_root = Path(temp_dir)
+        repo_seed_cache.copy_installed_repo(repo_root)
+
+        result = refresh.refresh_repo(repo_root)
+        assert result == 0
+
+        readme = (repo_root / "README.md").read_text(encoding="utf-8")
+        package_readme = (repo_root / "devcovenant" / "README.md").read_text(
+            encoding="utf-8"
+        )
+        contributing = (repo_root / "CONTRIBUTING.md").read_text(
+            encoding="utf-8"
+        )
+        changelog = (repo_root / "CHANGELOG.md").read_text(encoding="utf-8")
+
+        assert "**Contributor note:** this repository is managed by " in readme
+        assert "Use this README and `devcovenant/docs/*.md`" in readme
+        assert "**Managed runtime note:** this `devcovenant/` folder" in (
+            package_readme
+        )
+        assert "Use this README for DevCovenant commands, lifecycle," in (
+            package_readme
+        )
+        assert "This opening section is managed by DevCovenant." in (
+            contributing
+        )
+        assert "## Workflow" in contributing
+        assert "<!-- DEVCOV:END -->\n\n## Repository Notes" in contributing
+        assert "## DevCovenant Change Logging Rules" in changelog
+
+
 def _unit_test_refresh_writes_global_artifact_gitignore_rules() -> None:
     """refresh_repo should write universal editor/build/runtime gitignores."""
     with tempfile.TemporaryDirectory() as temp_dir:
@@ -558,6 +592,10 @@ class GeneratedUnittestCases(unittest.TestCase):
     def test_refresh_writes_clean_config_section(self):
         """Run clean-config template rendering assertions."""
         _unit_test_refresh_writes_clean_config_section()
+
+    def test_refresh_renders_devcov_managed_doc_intros(self):
+        """Run DevCovenant managed-doc intro rendering assertions."""
+        _unit_test_refresh_renders_devcov_managed_doc_intros()
 
     def test_refresh_writes_global_artifact_gitignore_rules(self):
         """Run global artifact gitignore assertions."""

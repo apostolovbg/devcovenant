@@ -5,8 +5,11 @@ project_version: true
 last_updated: true
 devcovenant_version: true
 managed_block: |-
-  **Read first:** `AGENTS.md` is the canonical source of truth. See
-  `devcovenant/README.md` for usage and lifecycle workflow details.
+  **Contributor note:** this repository is managed by DevCovenant.
+  Read `AGENTS.md` for repository workflow and policy rules.
+  Use this README and `devcovenant/docs/*.md` for the DevCovenant
+  commands, lifecycle, configuration, and evidence model used in this
+  repository.
 body: |-
   Describe the project this repository ships: what it does, who it helps,
   and what problem it solves.

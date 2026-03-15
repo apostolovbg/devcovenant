@@ -50,8 +50,6 @@ policy_overlays:
       - devcovenant/__main__.py
     user_facing_exclude_globs:
       - devcovenant/core/*.py
-      - devcovenant/core/policies/**
-      - devcovenant/core/profiles/**
       - devcovenant/custom/policies/**/fixers/**
     doc_routes:
       - "devcovenant/builtin/policies/ => devcovenant/docs/policies.md"
@@ -199,8 +197,6 @@ policy_overlays:
   tests-coverage:
     exclude_globs:
       - devcovenant/core/*.py
-      - devcovenant/core/policies/**
-      - devcovenant/core/profiles/**
       - devcovenant/custom/policies/**/fixers/**
   version-sync:
     version_file: devcovenant/VERSION

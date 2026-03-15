@@ -2,7 +2,7 @@
 **Doc ID:** AGENTS
 **Doc Type:** policy-source
 **Project Version:** 1.0.0
-**Last Updated:** 2026-03-14
+**Last Updated:** 2026-03-15
 **DevCovenant Version:** 1.0.0
 
 <!-- DEVCOV:BEGIN -->
@@ -28,8 +28,8 @@ future sessions do not run on stale assumptions. Treat stale notes as drift and
 clear them.
 
 Never edit content inside managed `<!-- DEVCOV* -->` blocks in any file.
-Read `README.md` for project context and `devcovenant/README.md` for lifecycle
-and command behavior.
+Read `README.md` for project context and `devcovenant/README.md` for the
+DevCovenant lifecycle and command behavior used by this repository.
 <!-- DEVCOV:END -->
 
 # EDITABLE SECTION
@@ -879,8 +879,6 @@ user_facing_exclude_globs: .vscode/**
   devcovenant/logs/**
   devcovenant/registry/local/**
   devcovenant/core/*.py
-  devcovenant/core/policies/**
-  devcovenant/core/profiles/**
   devcovenant/custom/policies/**/fixers/**
   tests/**
 user_facing_exclude_suffixes:
@@ -1580,8 +1578,6 @@ exclude_prefixes: build
   node_modules
   tests
 exclude_globs: devcovenant/core/*.py
-  devcovenant/core/policies/**
-  devcovenant/core/profiles/**
   devcovenant/custom/policies/**/fixers/**
   build/**
   dist/**

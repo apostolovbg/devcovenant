@@ -181,8 +181,8 @@ Invariant:
   run-log artifacts, and emits sparse deterministic start/completion markers
   for each required command (for example `▶ [n/total] <command>` plus
   completion/failure lines).
-- Progress-bar parsing/rendering (`tqdm`) is removed from the CLI runtime
-  path so CI and agent terminals do not receive redraw/noise spam.
+- Progress-bar parsing/rendering is removed from the DevCovenant runtime so
+  CI and agent terminals do not receive redraw/noise spam.
 - Runtime subprocess helpers and gate rerun helpers capture command
   stdout/stderr into the active run-log context so full-fidelity artifacts do
   not depend on console verbosity mode.

@@ -27,8 +27,8 @@ managed_block: |-
   clear them.
 
   Never edit content inside managed `<!-- DEVCOV* -->` blocks in any file.
-  Read `README.md` for project context and `devcovenant/README.md` for lifecycle
-  and command behavior.
+  Read `README.md` for project context and `devcovenant/README.md` for the
+  DevCovenant lifecycle and command behavior used by this repository.
 body: |-
   # EDITABLE SECTION
 

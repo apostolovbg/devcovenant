@@ -5,8 +5,11 @@ project_version: false
 last_updated: true
 devcovenant_version: true
 managed_block: |-
-  **Read first:** `AGENTS.md` is the canonical source of truth. See
-  `devcovenant/README.md` for usage and lifecycle workflow details.
+  **Managed runtime note:** this `devcovenant/` folder contains the
+  DevCovenant runtime installed for this repository.
+  Use this README for DevCovenant commands, lifecycle, configuration, and
+  evidence artifacts. `AGENTS.md` remains the canonical source for active
+  repository policy text.
 body: |-
   DevCovenant helps repositories keep policy prose and enforcement logic
   aligned.
@@ -19,9 +22,9 @@ body: |-
   5. [License](#license)
 
   ## Overview
-  Use this README for repository-level context. Keep policy source text in
-  `AGENTS.md`, requirements in `SPEC.md`, and active execution tasks in
-  `PLAN.md`.
+  Use this README for DevCovenant runtime context in this repository.
+  Keep policy source text in `AGENTS.md`, requirements in `SPEC.md`, and
+  active execution tasks in `PLAN.md`.
 
   ## Workflow
   Run the gate sequence for edits:

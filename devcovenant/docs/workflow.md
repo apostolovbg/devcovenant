@@ -339,8 +339,8 @@ Output behavior:
   liveness heartbeats plus bounded failure tails when suppression applies
 - quiet mode suppresses routine stdout child output across channels and keeps
   error/violation surfaces on stderr; verbose mode keeps full child streaming
-- progress-bar rendering is removed from the CLI runtime path; normal mode
-  no longer emits `tqdm` redraw noise in terminals or CI logs
+- progress-bar rendering is removed from the DevCovenant runtime; normal
+  mode no longer emits redraw noise in terminals or CI logs
 - normal-mode live streaming can be acceptable when it stays concise, but
   verbose streaming can consume significant tokens
 - runtime console-emitting subprocesses use PTY-backed streaming on POSIX

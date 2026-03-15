@@ -2,12 +2,15 @@
 **Doc ID:** README
 **Doc Type:** repo-readme
 **Project Version:** 1.0.0
-**Last Updated:** 2026-03-14
+**Last Updated:** 2026-03-15
 **DevCovenant Version:** 1.0.0
 
 <!-- DEVCOV:BEGIN -->
-**Read first:** `AGENTS.md` is the canonical source of truth. See
-`devcovenant/README.md` for usage and lifecycle workflow details.
+**Contributor note:** this repository is managed by DevCovenant.
+Read `AGENTS.md` for repository workflow and policy rules.
+Use this README and `devcovenant/docs/*.md` for the DevCovenant
+commands, lifecycle, configuration, and evidence model used in this
+repository.
 <!-- DEVCOV:END -->
 
 DevCovenant is a Repository Governance Framework.

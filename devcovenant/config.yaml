@@ -645,8 +645,6 @@ autogen_metadata_overlays:
     - devcovenant/config.yaml
     user_facing_exclude_globs:
     - devcovenant/core/*.py
-    - devcovenant/core/policies/**
-    - devcovenant/core/profiles/**
     - devcovenant/custom/policies/**/fixers/**
     user_facing_exclude_prefixes:
     - tests
@@ -902,8 +900,6 @@ autogen_metadata_overlays:
     - python=>\bself\.assert[A-Za-z_]*\s*\(
     exclude_globs:
     - devcovenant/core/*.py
-    - devcovenant/core/policies/**
-    - devcovenant/core/profiles/**
     - devcovenant/custom/policies/**/fixers/**
     exclude_prefixes:
     - build

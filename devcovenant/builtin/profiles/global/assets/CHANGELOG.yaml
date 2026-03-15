@@ -5,7 +5,9 @@ project_version: true
 last_updated: true
 devcovenant_version: true
 managed_block: |-
-  ## How to Log Changes
+  ## DevCovenant Change Logging Rules
+  This opening section is managed by DevCovenant for repositories that
+  use DevCovenant.
   Add one entry for each substantive change under the current version header.
   Keep entries newest-first and record dates in ISO format (`YYYY-MM-DD`).
   Each entry must include Change/Why/Impact summary lines with action verbs.

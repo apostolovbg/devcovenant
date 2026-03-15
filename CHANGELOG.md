@@ -2,11 +2,13 @@
 **Doc ID:** CHANGELOG
 **Doc Type:** changelog
 **Project Version:** 1.0.0
-**Last Updated:** 2026-03-14
+**Last Updated:** 2026-03-15
 **DevCovenant Version:** 1.0.0
 
 <!-- DEVCOV:BEGIN -->
-## How to Log Changes
+## DevCovenant Change Logging Rules
+This opening section is managed by DevCovenant for repositories that
+use DevCovenant.
 Add one entry for each substantive change under the current version header.
 Keep entries newest-first and record dates in ISO format (`YYYY-MM-DD`).
 Each entry must include Change/Why/Impact summary lines with action verbs.
@@ -53,6 +55,427 @@ Example:
 ## Log changes here
 
 ## Version 1.0.0
+
+- 2026-03-15:
+  Change: Reverted the aborted repo-root bootstrap experiment and
+    resynchronized the managed documentation headers.
+  Why: Removed the rejected startup-hook approach so the repository returns to
+    the prior staged state without introducing repo-root bootstrap files.
+  Impact: Preserved the earlier staged work while keeping the bootstrap
+    experiment out of the tree and aligning the managed docs to the current
+    session date.
+  Files:
+  AGENTS.md
+  CHANGELOG.md
+  CONTRIBUTING.md
+  README.md
+  devcovenant/README.md
+
+- 2026-03-15:
+  Change: Completed Item 1 of the strict no-fallback plan and recorded the
+    validated baseline finding.
+  Why: Confirmed that read-only source-checkout `devcovenant check` still
+    recreates repo-local bytecode, so the next slices can target a real
+    delegacy defect instead of incidental hygiene noise.
+  Impact: Recorded the validated baseline in `PLAN.md`, so the next work can
+    remove fallback behavior from a known-clean starting point.
+  Files:
+  CHANGELOG.md
+  PLAN.md
+
+- 2026-03-15:
+  Change: Replaced the completed hardening roadmap with a new strict
+    no-fallback remediation plan.
+  Why: Captured the delegacy audit findings in dependency order so future
+    slices can remove live compatibility behavior systematically.
+  Impact: Defined `PLAN.md` as the governing roadmap for the next cycle around
+    snapshot, runtime, command, package, docs, tests, and downstream
+    no-fallback proof work.
+  Files:
+  CHANGELOG.md
+  PLAN.md
+
+- 2026-03-14:
+  Change: Documented the builtin-only shipped profile authority after the
+    legacy `devcovenant/core/profiles/**` mirror removal.
+  Why: Clarified the doc route triggered by the repo profile metadata change
+    in this gate session and made the forward `builtin` boundary explicit.
+  Impact: `devcovenant/docs/profiles.md` now states that shipped manifests,
+    assets, and translators live only under `builtin` plus repo-owned
+    `custom`, reducing profile-layout confusion.
+  Files:
+  CHANGELOG.md
+  devcovenant/custom/profiles/devcovrepo/devcovrepo.yaml
+  devcovenant/docs/profiles.md
+
+- 2026-03-14:
+  Change: Removed the obsolete legacy `devcovenant/core`
+    compatibility tree, regenerated managed metadata, and
+    synchronized supporting package, docs, and license surfaces.
+  Why: Eliminated duplicate pre-1.0 authorities that kept old policy,
+    profile, and runtime mirrors alive after the builtin/core split.
+  Impact: Simplified DevCovenant to one shipped policy/profile tree,
+    reduced drift risk, and aligned generated repo surfaces with the
+    forward 1.0 architecture.
+  Files:
+  AGENTS.md
+  CHANGELOG.md
+  devcovenant/config.yaml
+  devcovenant/core/event_runtime.py
+  devcovenant/core/execution_runtime.py
+  devcovenant/core/gate_runtime.py
+  devcovenant/core/lock_runtime.py
+  devcovenant/core/metadata_runtime.py
+  devcovenant/core/policies/README.md
+  devcovenant/core/policies/__init__.py
+  devcovenant/core/policies/changelog_coverage/__init__.py
+  devcovenant/core/policies/changelog_coverage/assets/.gitkeep
+  devcovenant/core/policies/changelog_coverage/changelog_coverage.py
+  devcovenant/core/policies/changelog_coverage/changelog_coverage.yaml
+  devcovenant/core/policies/dependency_license_sync/__init__.py
+  devcovenant/core/policies/dependency_license_sync/dependency_license_sync.py
+  devcovenant/core/policies/dependency_license_sync/\
+    dependency_license_sync.yaml
+  devcovenant/core/policies/dependency_license_sync/fixers/__init__.py
+  devcovenant/core/policies/dependency_license_sync/fixers/global.py
+  devcovenant/core/policies/devcov_integrity_guard/__init__.py
+  devcovenant/core/policies/devcov_integrity_guard/assets/.gitkeep
+  devcovenant/core/policies/devcov_integrity_guard/devcov_integrity_guard.py
+  devcovenant/core/policies/devcov_integrity_guard/devcov_integrity_guard.yaml
+  devcovenant/core/policies/devcov_integrity_guard/fixers/__init__.py
+  devcovenant/core/policies/devcov_structure_guard/__init__.py
+  devcovenant/core/policies/devcov_structure_guard/assets/.gitkeep
+  devcovenant/core/policies/devcov_structure_guard/devcov_structure_guard.py
+  devcovenant/core/policies/devcov_structure_guard/devcov_structure_guard.yaml
+  devcovenant/core/policies/devcov_structure_guard/fixers/__init__.py
+  devcovenant/core/policies/devflow_run_gates/__init__.py
+  devcovenant/core/policies/devflow_run_gates/assets/.gitkeep
+  devcovenant/core/policies/devflow_run_gates/devflow_run_gates.py
+  devcovenant/core/policies/devflow_run_gates/devflow_run_gates.yaml
+  devcovenant/core/policies/devflow_run_gates/fixers/__init__.py
+  devcovenant/core/policies/docstring_and_comment_coverage/__init__.py
+  devcovenant/core/policies/docstring_and_comment_coverage/assets/.gitkeep
+  devcovenant/core/policies/docstring_and_comment_coverage/\
+    docstring_and_comment_coverage.py
+  devcovenant/core/policies/docstring_and_comment_coverage/\
+    docstring_and_comment_coverage.yaml
+  devcovenant/core/policies/docstring_and_comment_coverage/fixers/__init__.py
+  devcovenant/core/policies/documentation_growth_tracking/__init__.py
+  devcovenant/core/policies/documentation_growth_tracking/assets/.gitkeep
+  devcovenant/core/policies/documentation_growth_tracking/\
+    documentation_growth_tracking.py
+  devcovenant/core/policies/documentation_growth_tracking/\
+    documentation_growth_tracking.yaml
+  devcovenant/core/policies/documentation_growth_tracking/fixers/__init__.py
+  devcovenant/core/policies/last_updated_placement/__init__.py
+  devcovenant/core/policies/last_updated_placement/assets/.gitkeep
+  devcovenant/core/policies/last_updated_placement/fixers/__init__.py
+  devcovenant/core/policies/last_updated_placement/fixers/global.py
+  devcovenant/core/policies/last_updated_placement/last_updated_placement.py
+  devcovenant/core/policies/last_updated_placement/last_updated_placement.yaml
+  devcovenant/core/policies/line_length_limit/__init__.py
+  devcovenant/core/policies/line_length_limit/assets/.gitkeep
+  devcovenant/core/policies/line_length_limit/fixers/__init__.py
+  devcovenant/core/policies/line_length_limit/line_length_limit.py
+  devcovenant/core/policies/line_length_limit/line_length_limit.yaml
+  devcovenant/core/policies/managed_environment/__init__.py
+  devcovenant/core/policies/managed_environment/assets/.gitkeep
+  devcovenant/core/policies/managed_environment/fixers/__init__.py
+  devcovenant/core/policies/managed_environment/managed_environment.py
+  devcovenant/core/policies/managed_environment/managed_environment.yaml
+  devcovenant/core/policies/modules_need_tests/__init__.py
+  devcovenant/core/policies/modules_need_tests/assets/.gitkeep
+  devcovenant/core/policies/modules_need_tests/fixers/__init__.py
+  devcovenant/core/policies/modules_need_tests/modules_need_tests.py
+  devcovenant/core/policies/modules_need_tests/modules_need_tests.yaml
+  devcovenant/core/policies/name_clarity/__init__.py
+  devcovenant/core/policies/name_clarity/assets/.gitkeep
+  devcovenant/core/policies/name_clarity/fixers/__init__.py
+  devcovenant/core/policies/name_clarity/name_clarity.py
+  devcovenant/core/policies/name_clarity/name_clarity.yaml
+  devcovenant/core/policies/no_future_dates/__init__.py
+  devcovenant/core/policies/no_future_dates/assets/.gitkeep
+  devcovenant/core/policies/no_future_dates/fixers/__init__.py
+  devcovenant/core/policies/no_future_dates/fixers/global.py
+  devcovenant/core/policies/no_future_dates/no_future_dates.py
+  devcovenant/core/policies/no_future_dates/no_future_dates.yaml
+  devcovenant/core/policies/no_print_outside_output_runtime/__init__.py
+  devcovenant/core/policies/no_print_outside_output_runtime/\
+    no_print_outside_output_runtime.py
+  devcovenant/core/policies/no_print_outside_output_runtime/\
+    no_print_outside_output_runtime.yaml
+  devcovenant/core/policies/raw_string_escapes/__init__.py
+  devcovenant/core/policies/raw_string_escapes/assets/.gitkeep
+  devcovenant/core/policies/raw_string_escapes/fixers/__init__.py
+  devcovenant/core/policies/raw_string_escapes/fixers/global.py
+  devcovenant/core/policies/raw_string_escapes/raw_string_escapes.py
+  devcovenant/core/policies/raw_string_escapes/raw_string_escapes.yaml
+  devcovenant/core/policies/read_only_directories/__init__.py
+  devcovenant/core/policies/read_only_directories/assets/.gitkeep
+  devcovenant/core/policies/read_only_directories/fixers/__init__.py
+  devcovenant/core/policies/read_only_directories/read_only_directories.py
+  devcovenant/core/policies/read_only_directories/read_only_directories.yaml
+  devcovenant/core/policies/security_scanner/__init__.py
+  devcovenant/core/policies/security_scanner/assets/.gitkeep
+  devcovenant/core/policies/security_scanner/fixers/__init__.py
+  devcovenant/core/policies/security_scanner/security_scanner.py
+  devcovenant/core/policies/security_scanner/security_scanner.yaml
+  devcovenant/core/policies/semantic_version_scope/__init__.py
+  devcovenant/core/policies/semantic_version_scope/assets/.gitkeep
+  devcovenant/core/policies/semantic_version_scope/fixers/__init__.py
+  devcovenant/core/policies/semantic_version_scope/semantic_version_scope.py
+  devcovenant/core/policies/semantic_version_scope/semantic_version_scope.yaml
+  devcovenant/core/policies/tests_coverage/__init__.py
+  devcovenant/core/policies/tests_coverage/fixers/__init__.py
+  devcovenant/core/policies/tests_coverage/tests_coverage.py
+  devcovenant/core/policies/tests_coverage/tests_coverage.yaml
+  devcovenant/core/policies/version_sync/__init__.py
+  devcovenant/core/policies/version_sync/assets/.gitkeep
+  devcovenant/core/policies/version_sync/fixers/__init__.py
+  devcovenant/core/policies/version_sync/version_sync.py
+  devcovenant/core/policies/version_sync/version_sync.yaml
+  devcovenant/core/policy_contracts.py
+  devcovenant/core/policy_runtime.py
+  devcovenant/core/profile_runtime.py
+  devcovenant/core/profiles/README.md
+  devcovenant/core/profiles/csharp/assets/Project.csproj
+  devcovenant/core/profiles/csharp/assets/packages.lock.json
+  devcovenant/core/profiles/csharp/csharp.yaml
+  devcovenant/core/profiles/csharp/translator.py
+  devcovenant/core/profiles/dart/assets/pubspec.lock
+  devcovenant/core/profiles/dart/assets/pubspec.yaml
+  devcovenant/core/profiles/dart/dart.yaml
+  devcovenant/core/profiles/dart/translator.py
+  devcovenant/core/profiles/defaults/defaults.yaml
+  devcovenant/core/profiles/devcovuser/devcovuser.yaml
+  devcovenant/core/profiles/docker/assets/.dockerignore
+  devcovenant/core/profiles/docker/assets/Dockerfile
+  devcovenant/core/profiles/docker/assets/docker-compose.yml
+  devcovenant/core/profiles/docker/docker.yaml
+  devcovenant/core/profiles/docs/docs.yaml
+  devcovenant/core/profiles/fastapi/assets/main.py
+  devcovenant/core/profiles/fastapi/assets/openapi.json
+  devcovenant/core/profiles/fastapi/fastapi.yaml
+  devcovenant/core/profiles/flutter/assets/pubspec.yaml
+  devcovenant/core/profiles/flutter/flutter.yaml
+  devcovenant/core/profiles/frappe/assets/hooks.py
+  devcovenant/core/profiles/frappe/assets/modules.txt
+  devcovenant/core/profiles/frappe/frappe.yaml
+  devcovenant/core/profiles/global/assets/.github/workflows/ci.yml
+  devcovenant/core/profiles/global/assets/AGENTS.yaml
+  devcovenant/core/profiles/global/assets/CHANGELOG.yaml
+  devcovenant/core/profiles/global/assets/CONTRIBUTING.yaml
+  devcovenant/core/profiles/global/assets/LICENSE.yaml
+  devcovenant/core/profiles/global/assets/PLAN.yaml
+  devcovenant/core/profiles/global/assets/README.yaml
+  devcovenant/core/profiles/global/assets/SPEC.yaml
+  devcovenant/core/profiles/global/assets/config.yaml
+  devcovenant/core/profiles/global/assets/devcovenant/README.yaml
+  devcovenant/core/profiles/global/assets/gitignore.yaml
+  devcovenant/core/profiles/global/assets/governance-and-test.yml
+  devcovenant/core/profiles/global/global.yaml
+  devcovenant/core/profiles/go/assets/go.mod
+  devcovenant/core/profiles/go/assets/go.sum
+  devcovenant/core/profiles/go/go.yaml
+  devcovenant/core/profiles/go/translator.py
+  devcovenant/core/profiles/java/assets/build.gradle
+  devcovenant/core/profiles/java/java.yaml
+  devcovenant/core/profiles/java/translator.py
+  devcovenant/core/profiles/javascript/assets/package.json
+  devcovenant/core/profiles/javascript/javascript.yaml
+  devcovenant/core/profiles/javascript/translator.py
+  devcovenant/core/profiles/kubernetes/assets/Chart.yaml
+  devcovenant/core/profiles/kubernetes/assets/values.yaml
+  devcovenant/core/profiles/kubernetes/kubernetes.yaml
+  devcovenant/core/profiles/objective-c/assets/Podfile
+  devcovenant/core/profiles/objective-c/objective-c.yaml
+  devcovenant/core/profiles/objective-c/translator.py
+  devcovenant/core/profiles/php/assets/composer.json
+  devcovenant/core/profiles/php/assets/composer.lock
+  devcovenant/core/profiles/php/assets/phpunit.xml
+  devcovenant/core/profiles/php/php.yaml
+  devcovenant/core/profiles/php/translator.py
+  devcovenant/core/profiles/python/assets/.python-version
+  devcovenant/core/profiles/python/assets/pyproject.toml
+  devcovenant/core/profiles/python/assets/requirements.in
+  devcovenant/core/profiles/python/assets/requirements.lock
+  devcovenant/core/profiles/python/python.yaml
+  devcovenant/core/profiles/python/translator.py
+  devcovenant/core/profiles/ruby/assets/Gemfile
+  devcovenant/core/profiles/ruby/assets/Gemfile.lock
+  devcovenant/core/profiles/ruby/ruby.yaml
+  devcovenant/core/profiles/ruby/translator.py
+  devcovenant/core/profiles/rust/assets/Cargo.lock
+  devcovenant/core/profiles/rust/assets/Cargo.toml
+  devcovenant/core/profiles/rust/rust.yaml
+  devcovenant/core/profiles/rust/translator.py
+  devcovenant/core/profiles/sql/assets/schema.sql
+  devcovenant/core/profiles/sql/sql.yaml
+  devcovenant/core/profiles/sql/translator.py
+  devcovenant/core/profiles/swift/assets/Package.swift
+  devcovenant/core/profiles/swift/swift.yaml
+  devcovenant/core/profiles/swift/translator.py
+  devcovenant/core/profiles/terraform/assets/main.tf
+  devcovenant/core/profiles/terraform/assets/variables.tf
+  devcovenant/core/profiles/terraform/terraform.yaml
+  devcovenant/core/profiles/typescript/assets/package.json
+  devcovenant/core/profiles/typescript/assets/tsconfig.json
+  devcovenant/core/profiles/typescript/translator.py
+  devcovenant/core/profiles/typescript/typescript.yaml
+  devcovenant/core/refresh_runtime.py
+  devcovenant/core/registry_runtime.py
+  devcovenant/core/selector_runtime.py
+  devcovenant/core/tests_coverage_runtime.py
+  devcovenant/core/translator_runtime.py
+  devcovenant/custom/policies/readme_sync/fixers/global.py
+  devcovenant/custom/profiles/devcovrepo/devcovrepo.yaml
+  devcovenant/docs/installation.md
+  licenses/THIRD_PARTY_LICENSES.md
+  tests/devcovenant/core/policies/__init__.py
+  tests/devcovenant/core/policies/changelog_coverage/__init__.py
+  tests/devcovenant/core/policies/changelog_coverage/test_changelog_coverage.py
+  tests/devcovenant/core/policies/dependency_license_sync/__init__.py
+  tests/devcovenant/core/policies/dependency_license_sync/fixers/__init__.py
+  tests/devcovenant/core/policies/dependency_license_sync/fixers/test_global.py
+  tests/devcovenant/core/policies/dependency_license_sync/\
+    test_dependency_license_sync.py
+  tests/devcovenant/core/policies/devcov_integrity_guard/__init__.py
+  tests/devcovenant/core/policies/devcov_integrity_guard/\
+    test_devcov_integrity_guard.py
+  tests/devcovenant/core/policies/devcov_structure_guard/__init__.py
+  tests/devcovenant/core/policies/devcov_structure_guard/\
+    test_devcov_structure_guard.py
+  tests/devcovenant/core/policies/devflow_run_gates/__init__.py
+  tests/devcovenant/core/policies/devflow_run_gates/test_devflow_run_gates.py
+  tests/devcovenant/core/policies/docstring_and_comment_coverage/__init__.py
+  tests/devcovenant/core/policies/docstring_and_comment_coverage/\
+    test_docstring_and_comment_coverage.py
+  tests/devcovenant/core/policies/documentation_growth_tracking/__init__.py
+  tests/devcovenant/core/policies/documentation_growth_tracking/\
+    test_documentation_growth_tracking.py
+  tests/devcovenant/core/policies/last_updated_placement/__init__.py
+  tests/devcovenant/core/policies/last_updated_placement/fixers/__init__.py
+  tests/devcovenant/core/policies/last_updated_placement/fixers/test_global.py
+  tests/devcovenant/core/policies/last_updated_placement/\
+    test_last_updated_placement.py
+  tests/devcovenant/core/policies/line_length_limit/__init__.py
+  tests/devcovenant/core/policies/line_length_limit/test_line_length_limit.py
+  tests/devcovenant/core/policies/managed_environment/__init__.py
+  tests/devcovenant/core/policies/managed_environment/\
+    test_managed_environment.py
+  tests/devcovenant/core/policies/modules_need_tests/__init__.py
+  tests/devcovenant/core/policies/modules_need_tests/test_modules_need_tests.py
+  tests/devcovenant/core/policies/name_clarity/__init__.py
+  tests/devcovenant/core/policies/name_clarity/test_name_clarity.py
+  tests/devcovenant/core/policies/no_future_dates/__init__.py
+  tests/devcovenant/core/policies/no_future_dates/fixers/__init__.py
+  tests/devcovenant/core/policies/no_future_dates/fixers/test_global.py
+  tests/devcovenant/core/policies/no_future_dates/test_no_future_dates.py
+  tests/devcovenant/core/policies/no_print_outside_output_runtime/__init__.py
+  tests/devcovenant/core/policies/no_print_outside_output_runtime/\
+    test_no_print_outside_output_runtime.py
+  tests/devcovenant/core/policies/raw_string_escapes/__init__.py
+  tests/devcovenant/core/policies/raw_string_escapes/fixers/__init__.py
+  tests/devcovenant/core/policies/raw_string_escapes/fixers/test_global.py
+  tests/devcovenant/core/policies/raw_string_escapes/test_raw_string_escapes.py
+  tests/devcovenant/core/policies/read_only_directories/__init__.py
+  tests/devcovenant/core/policies/read_only_directories/\
+    test_read_only_directories.py
+  tests/devcovenant/core/policies/security_scanner/__init__.py
+  tests/devcovenant/core/policies/security_scanner/test_security_scanner.py
+  tests/devcovenant/core/policies/semantic_version_scope/__init__.py
+  tests/devcovenant/core/policies/semantic_version_scope/\
+    test_semantic_version_scope.py
+  tests/devcovenant/core/policies/tests_coverage/__init__.py
+  tests/devcovenant/core/policies/tests_coverage/test_tests_coverage.py
+  tests/devcovenant/core/policies/version_sync/__init__.py
+  tests/devcovenant/core/policies/version_sync/test_version_sync.py
+  tests/devcovenant/core/profiles/__init__.py
+  tests/devcovenant/core/profiles/csharp/__init__.py
+  tests/devcovenant/core/profiles/csharp/test_translator.py
+  tests/devcovenant/core/profiles/dart/__init__.py
+  tests/devcovenant/core/profiles/dart/test_translator.py
+  tests/devcovenant/core/profiles/fastapi/__init__.py
+  tests/devcovenant/core/profiles/fastapi/assets/__init__.py
+  tests/devcovenant/core/profiles/fastapi/assets/test_main.py
+  tests/devcovenant/core/profiles/frappe/__init__.py
+  tests/devcovenant/core/profiles/frappe/assets/__init__.py
+  tests/devcovenant/core/profiles/frappe/assets/test_hooks.py
+  tests/devcovenant/core/profiles/go/__init__.py
+  tests/devcovenant/core/profiles/go/test_translator.py
+  tests/devcovenant/core/profiles/java/__init__.py
+  tests/devcovenant/core/profiles/java/test_translator.py
+  tests/devcovenant/core/profiles/javascript/__init__.py
+  tests/devcovenant/core/profiles/javascript/test_translator.py
+  tests/devcovenant/core/profiles/objective-c/__init__.py
+  tests/devcovenant/core/profiles/objective-c/test_translator.py
+  tests/devcovenant/core/profiles/php/__init__.py
+  tests/devcovenant/core/profiles/php/test_translator.py
+  tests/devcovenant/core/profiles/python/__init__.py
+  tests/devcovenant/core/profiles/python/test_translator.py
+  tests/devcovenant/core/profiles/ruby/__init__.py
+  tests/devcovenant/core/profiles/ruby/test_translator.py
+  tests/devcovenant/core/profiles/rust/__init__.py
+  tests/devcovenant/core/profiles/rust/test_translator.py
+  tests/devcovenant/core/profiles/sql/__init__.py
+  tests/devcovenant/core/profiles/sql/test_translator.py
+  tests/devcovenant/core/profiles/swift/__init__.py
+  tests/devcovenant/core/profiles/swift/test_translator.py
+  tests/devcovenant/core/profiles/typescript/__init__.py
+  tests/devcovenant/core/profiles/typescript/test_translator.py
+  tests/devcovenant/core/test_event_runtime.py
+  tests/devcovenant/core/test_execution_runtime.py
+  tests/devcovenant/core/test_gate_runtime.py
+  tests/devcovenant/core/test_lock_runtime.py
+  tests/devcovenant/core/test_metadata_runtime.py
+  tests/devcovenant/core/test_policy_contracts.py
+  tests/devcovenant/core/test_policy_runtime.py
+  tests/devcovenant/core/test_profile_runtime.py
+  tests/devcovenant/core/test_refresh_runtime.py
+  tests/devcovenant/core/test_registry_runtime.py
+  tests/devcovenant/core/test_selector_runtime.py
+  tests/devcovenant/core/test_tests_coverage_runtime.py
+  tests/devcovenant/core/test_translator_runtime.py
+  tests/devcovenant/custom/policies/readme_sync/fixers/__init__.py
+  tests/devcovenant/custom/policies/readme_sync/fixers/test_global.py
+- 2026-03-14:
+  Change: Removed `tqdm`, redesigned managed doc intros, and restructured
+    `CONTRIBUTING.md` so the standard DevCovenant contributor contract lives
+    inside the managed block with preserved repo-specific notes below it.
+  Why: Clarified DevCovenant-governed docs in user repositories, removed the
+    stale progress-bar dependency from the legacy runtime surface, and kept
+    the authoritative asset sets synchronized across builtin and core paths.
+  Impact: Rendered docs now explain DevCovenant usage more naturally on
+    GitHub, `CONTRIBUTING.md` upgrades safely without losing repo notes, and
+    the runtime no longer carries `tqdm` or its license artifact.
+  Files:
+  AGENTS.md
+  CHANGELOG.md
+  CONTRIBUTING.md
+  README.md
+  devcovenant/README.md
+  devcovenant/builtin/profiles/global/assets/AGENTS.yaml
+  devcovenant/builtin/profiles/global/assets/CHANGELOG.yaml
+  devcovenant/builtin/profiles/global/assets/CONTRIBUTING.yaml
+  devcovenant/builtin/profiles/global/assets/README.yaml
+  devcovenant/builtin/profiles/global/assets/devcovenant/\
+    README.yaml
+  devcovenant/core/execution_runtime.py
+  devcovenant/core/profiles/global/assets/AGENTS.yaml
+  devcovenant/core/profiles/global/assets/CHANGELOG.yaml
+  devcovenant/core/profiles/global/assets/CONTRIBUTING.yaml
+  devcovenant/core/profiles/global/assets/README.yaml
+  devcovenant/core/profiles/global/assets/devcovenant/README.yaml
+  devcovenant/docs/architecture.md
+  devcovenant/docs/installation.md
+  devcovenant/docs/profiles.md
+  devcovenant/docs/workflow.md
+  licenses/THIRD_PARTY_LICENSES.md
+  licenses/tqdm-4.66.1.txt
+  pyproject.toml
+  requirements.in
+  requirements.lock
+  tests/devcovenant/test_refresh.py
 
 - 2026-03-14:
   Change: Standardized command-scoped help usage across DevCovenant CLI

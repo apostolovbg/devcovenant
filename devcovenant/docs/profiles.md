@@ -36,6 +36,10 @@ Profiles may provide:
 Shipped builtin language profiles include:
 - `python`, `javascript`, `typescript`, `java`, `go`, `rust`, `opencl`,
   `csharp`, `php`, `ruby`, `dart`, `swift`, `objective_c`, `sql`
+Builtin profiles are the only shipped profile authority in `1.0.0+`.
+The retired `devcovenant/core/profiles/**` compatibility mirror has been
+removed, so profile manifests, assets, and translators now live only under
+`devcovenant/builtin/profiles/**` plus repo-owned `devcovenant/custom/**`.
 
 Any profile category may contribute policy metadata overlays, including
 `devflow-run-gates` test command metadata
@@ -273,6 +277,11 @@ Asset materialization rules:
   the read-only `check` guidance, required non-lifecycle `gate --mid`
   pre-test workflow wording, gate-owned refresh/autofix wording, and
   artifact-first output/log inspection workflow guidance
+- global managed-doc assets under
+  `devcovenant/builtin/profiles/global/assets/` now use doc-type-specific
+  DevCovenant intro text instead of one generic "Read first" message
+- `CONTRIBUTING.yaml` keeps the standard DevCovenant workflow inside the
+  managed block and leaves repository notes below `<!-- DEVCOV:END -->`
 - repository profiles can treat `README.md` / `devcovenant/README.md` as
   canonical docs map/start-here entrypoints
 - AGENTS workflow wording should prefer artifact summaries/tails/logs for

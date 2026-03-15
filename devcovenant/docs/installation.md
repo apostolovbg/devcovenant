@@ -122,6 +122,8 @@ Runtime details that affect operations:
 - repository pytest execution is configured in `pyproject.toml` with
   `--import-mode=importlib` and `pythonpath = ["."]` so mirrored builtin/core
   test names do not collide during collection
+- `pyproject.toml` no longer depends on `tqdm`; normal-mode liveness uses
+  runtime messages and run-log artifacts instead of progress-bar UI helpers
 - `gate --start` is blocking and records no baseline when hooks fail
 - `gate --mid` is a required non-lifecycle pre-commit sweep that may apply
   hook/DevCovenant mutations but does not write gate lifecycle fields
@@ -328,13 +330,11 @@ DevCovenant distribution contracts follow PEP 639-compatible metadata:
   - `licenses/THIRD_PARTY_LICENSES.md`
   - `licenses/*.txt`
 - `pyproject.toml` constrains package discovery to `devcovenant` package roots
-  and excludes package bytecode/cache payloads plus internal
-  `devcovenant/core/policies/**` and `devcovenant/core/profiles/**`
-  compatibility trees from wheel discovery
+  and excludes package bytecode/cache payloads plus removed legacy tree
+  names from wheel discovery so stale local build artifacts cannot leak
 - `MANIFEST.in` includes license-source artifacts for sdist inputs
-- `MANIFEST.in` excludes internal `devcovenant/core/policies/**` and
-  `devcovenant/core/profiles/**` trees so sdists match the shipped package
-  boundary
+- `MANIFEST.in` excludes removed legacy tree names so stale build artifacts
+  cannot leak into sdists
 - `MANIFEST.in` excludes runtime log payloads under `devcovenant/logs/*`
   while re-including `devcovenant/logs/README.md`
 - `MANIFEST.in` prunes `build/`, `dist/`, `*.egg-info`, and cache artifacts
