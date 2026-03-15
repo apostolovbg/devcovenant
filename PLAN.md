@@ -2,7 +2,7 @@
 **Doc ID:** PLAN
 **Doc Type:** plan
 **Project Version:** 1.0.0
-**Last Updated:** 2026-03-14
+**Last Updated:** 2026-03-15
 **DevCovenant Version:** 1.0.0
 
 This plan replaces the completed hardening-cycle roadmap with the current
@@ -15,9 +15,10 @@ The audit that seeded this plan found that the repository has already removed
 most large legacy trees, but still carries targeted fallback behavior in gate
 snapshots, managed-environment reruns, runtime authority lookup, cleanup
 compatibility shims, `gate --status` recovery scanning, hidden `check` flags,
-package export indirection, and several docs/tests that still preserve those
-contracts. This plan closes those seams in dependency order and ends with a
-full downstream proof in a user repo.
+package export indirection, source-checkout launcher bytecode drift, and
+several docs/tests that still preserve those contracts. This plan closes those
+seams in dependency order and ends with a full downstream proof in a user
+repo.
 
 ## Table of Contents
 1. [Overview](#overview)
@@ -51,10 +52,13 @@ full downstream proof in a user repo.
 - `core` owns program internals; `builtin` owns shipped policy/profile content.
 - `python3 -m devcovenant` remains a supported launcher form unless an
   explicit backlog item changes that contract.
+- No repo-root bootstrap files or startup hooks will be introduced to solve
+  launcher/pycache behavior.
 
 ## Scope and Principles
 ### In Scope
 - CLI command contracts.
+- Launcher contract and pycache ownership.
 - Runtime authority lookup and bootstrap behavior.
 - Gate/session snapshot handling.
 - Managed-environment execution behavior.
@@ -74,6 +78,9 @@ full downstream proof in a user repo.
 
 ## Issue Register
 ### High
+- `D0`: source-checkout `python3 -m devcovenant` can recreate repo-local
+  bytecode before DevCovenant gains runtime control, and repo-root bootstrap
+  files are not an acceptable fix.
 - `D1`: legacy gate snapshot migration is still live through
   `legacy_numstat` handling.
 - `D2`: managed-environment still supports wrapper rerun fallback through
@@ -131,13 +138,15 @@ Operator notes:
 
 ## Execution Order
 1. Reset the baseline and capture the live no-fallback starting point.
-2. Remove the most invasive runtime compatibility behavior first:
+2. Lock the launcher/pycache contract before removing deeper fallback seams,
+   so the rest of the cycle does not rely on fake bootstrap assumptions.
+3. Remove the most invasive runtime compatibility behavior next:
    gate-session migration and managed-environment fallbacks.
-3. Remove smaller command/runtime fallback seams next.
-4. Simplify remaining package/runtime surfaces so the architecture reads as
+4. Remove smaller command/runtime fallback seams next.
+5. Simplify remaining package/runtime surfaces so the architecture reads as
    forward-only, not transitional.
-5. Sweep docs/tests so the written contract matches the code contract.
-6. Prove the result in this repo and then in `dlmc`.
+6. Sweep docs/tests so the written contract matches the code contract.
+7. Prove the result in this repo and then in `dlmc`.
 
 ## Ordered Backlog
 ### Item 1 [complete]: Baseline Cleanup and Delegacy Audit Reset
@@ -178,11 +187,57 @@ Operator notes:
 - Replaced the prior completed roadmap with the strict no-fallback issue
   register and dependency-ordered backlog now governing the next slices.
 
-### Item 2 [pending]: Remove Legacy Gate-Snapshot Compatibility
+### Item 2 [pending]: Lock Launcher and Pycache Strictness
+**Objective:** Make the launcher contract explicit and resolve source-checkout
+bytecode drift without repo-root bootstrap files.
+
+**Depends on:** Item 1.
+
+**Addresses:** `D0`, supports `D8`, `D10`.
+
+**Scope:** launcher behavior, pycache routing, source-checkout command truth,
+and docs/tests for supported launcher forms.
+
+**Implementation Tasks**
+1. Define the strict launcher contract for this cycle: keep `devcovenant` and
+   `python3 -m devcovenant` as supported forms, but do not rely on repo-root
+   bootstrap files, startup hooks, or fake in-package pre-import fixes.
+2. Audit the current launcher/pycache flow and remove any wording or code
+   assumptions that imply source-tree bytecode drift can be prevented from too
+   late in startup.
+3. Implement a non-repo-root solution for pycache discipline where DevCovenant
+   can honestly own it, or narrow the no-drift guarantee to the launcher forms
+   that can control startup early enough.
+4. Seed explicit config and docs wording for launcher expectations and pycache
+   behavior.
+5. Add focused regressions that prove the chosen launcher contract, reject
+   repo-root bootstrap files as a solution, and document the supported
+   behavior honestly.
+
+**Tests and Validation**
+1. Focused launcher/bootstrap tests.
+2. Focused execution-runtime tests for pycache behavior.
+3. Full `devcovenant test`.
+
+**Documentation**
+1. `PLAN.md`
+2. `README.md`
+3. `devcovenant/README.md`
+4. `devcovenant/docs/installation.md`
+5. `devcovenant/docs/architecture.md`
+6. `devcovenant/docs/workflow.md`
+7. `CHANGELOG.md`
+
+**Acceptance Criteria**
+1. The launcher/pycache contract is explicit, tested, and documented.
+2. No repo-root bootstrap file or startup hook is required.
+3. Later no-fallback items no longer depend on ambiguous bootstrap behavior.
+
+### Item 3 [pending]: Remove Legacy Gate-Snapshot Compatibility
 **Objective:** Delete all live migration paths for pre-current gate snapshot
 payloads.
 
-**Depends on:** Item 1.
+**Depends on:** Item 2.
 
 **Addresses:** `D1`.
 
@@ -214,10 +269,10 @@ construction, and gate payload validation.
 3. Tests no longer protect compatibility behavior that the product no longer
    supports.
 
-### Item 3 [pending]: Remove Managed-Environment Fallback Behavior
+### Item 4 [pending]: Remove Managed-Environment Fallback Behavior
 **Objective:** Make managed-environment execution strict and single-authority.
 
-**Depends on:** Item 2.
+**Depends on:** Item 3.
 
 **Addresses:** `D2`, `D3`.
 
@@ -255,10 +310,10 @@ metadata/runtime authority, and docs/tests for wrapper reruns.
    behavior.
 3. Managed-environment failure modes are explicit and documented.
 
-### Item 4 [pending]: Remove Hidden Command and Cleanup Compatibility
+### Item 5 [pending]: Remove Hidden Command and Cleanup Compatibility
 **Objective:** Delete remaining command-level fallback and compatibility seams.
 
-**Depends on:** Item 3.
+**Depends on:** Item 4.
 
 **Addresses:** `D4`, `D5`, `D6`, supports `D8`.
 
@@ -291,11 +346,11 @@ metadata/runtime authority, and docs/tests for wrapper reruns.
 3. `clean` no longer preserves legacy placeholder behavior.
 4. Runtime option ownership is explicit in config/templates.
 
-### Item 5 [pending]: Remove Transitional Package and Event Compatibility
+### Item 6 [pending]: Remove Transitional Package and Event Compatibility
 **Objective:** Make package surfaces and event behavior read as intentional,
 not transitional.
 
-**Depends on:** Item 4.
+**Depends on:** Item 5.
 
 **Addresses:** `D7`, `D10`, `D11`.
 
@@ -332,11 +387,11 @@ adapter behavior.
 2. Alternate launcher forms are described as supported forms, not fallbacks.
 3. Test-event handling is explicit and intentionally configured.
 
-### Item 6 [pending]: Full Docs and Tests Delegacy Sweep
+### Item 7 [pending]: Full Docs and Tests Delegacy Sweep
 **Objective:** Remove stale fallback/compatibility narration and obsolete test
 coverage across the repo.
 
-**Depends on:** Items 2-5.
+**Depends on:** Items 2-6.
 
 **Addresses:** `D9`, consolidates `D10` and `D11`.
 
@@ -375,11 +430,11 @@ profile assets, and tests that still encode removed fallback behavior.
 2. Tests no longer preserve deleted fallback behavior.
 3. Documentation routes and quality checks remain green.
 
-### Item 7 [pending]: Full Validation and Downstream Proof
+### Item 8 [pending]: Full Validation and Downstream Proof
 **Objective:** Prove the strict no-fallback baseline operationally in both this
 repo and a downstream managed repo.
 
-**Depends on:** Items 1-6.
+**Depends on:** Items 1-7.
 
 **Addresses:** validates the full program.
 
@@ -418,12 +473,13 @@ repo and a downstream managed repo.
 
 ## Validation Matrix
 - Item 1: `check`, `gate --start`
-- Item 2: snapshot + check-context focused tests, full suite
-- Item 3: managed-environment runtime/CLI focused tests, full suite
-- Item 4: `check`/`clean`/`gate --status` focused tests, full suite
-- Item 5: import/event focused tests, full suite
-- Item 6: refresh/docs/CLI focused tests, full suite
-- Item 7: full suite, full gate cycle, downstream `dlmc` proof
+- Item 2: launcher/bootstrap + execution-runtime focused tests, full suite
+- Item 3: snapshot + check-context focused tests, full suite
+- Item 4: managed-environment runtime/CLI focused tests, full suite
+- Item 5: `check`/`clean`/`gate --status` focused tests, full suite
+- Item 6: import/event focused tests, full suite
+- Item 7: refresh/docs/CLI focused tests, full suite
+- Item 8: full suite, full gate cycle, downstream `dlmc` proof
 
 ## Documentation Deliverables
 - `PLAN.md`
@@ -441,10 +497,12 @@ repo and a downstream managed repo.
 ## Completion Criteria
 1. No live runtime or command path relies on compatibility or fallback logic
    that the product no longer intends to support.
-2. Runtime authority for the affected behaviors is explicit and singular.
-3. Docs and tests match the strict product truth.
-4. Full repo validation passes.
-5. Downstream `dlmc` validation passes.
+2. Launcher and pycache behavior are explicit and do not rely on repo-root
+   bootstrap files.
+3. Runtime authority for the affected behaviors is explicit and singular.
+4. Docs and tests match the strict product truth.
+5. Full repo validation passes.
+6. Downstream `dlmc` validation passes.
 
 ## Risk Controls and Non-Goals
 ### Risk Controls
@@ -452,6 +510,8 @@ repo and a downstream managed repo.
   before the full suite.
 - Keep alternate supported behavior only when it is explicitly named,
   documented, and tested as supported behavior.
+- Reject repo-root bootstrap files and hidden startup hooks as a launcher
+  remedy.
 - Treat user-repo validation as mandatory, not optional.
 
 ### Non-Goals

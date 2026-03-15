@@ -57,6 +57,17 @@ Example:
 ## Version 1.0.0
 
 - 2026-03-15:
+  Change: Amended the no-fallback roadmap to insert a launcher and pycache
+    strictness item ahead of the deeper delegacy removals.
+  Why: Clarified that source-checkout bytecode drift must be solved without
+    repo-root bootstrap files and before the remaining fallback-removal work.
+  Impact: Sequenced the plan around the real launcher contract, so later items
+    no longer rely on ambiguous bootstrap assumptions.
+  Files:
+  CHANGELOG.md
+  PLAN.md
+
+- 2026-03-15:
   Change: Reverted the aborted repo-root bootstrap experiment and
     resynchronized the managed documentation headers.
   Why: Removed the rejected startup-hook approach so the repository returns to
