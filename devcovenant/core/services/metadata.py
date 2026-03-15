@@ -8,8 +8,8 @@ from typing import Any, Dict, Iterable, List, Mapping, Sequence, Tuple
 
 import yaml
 
+import devcovenant.core.services.profile_registry as profile_runtime
 from devcovenant.core.lib.selectors import _normalize_globs
-from devcovenant.core.services import profile_registry as profile_runtime
 from devcovenant.core.services.registry import PolicyDescriptor
 
 _COMMON_KEYS = [

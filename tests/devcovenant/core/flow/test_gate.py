@@ -15,7 +15,7 @@ MODULE = "devcovenant.core.flow.gate"
 
 
 def _unit_test_module_importable() -> None:
-    """Module should import without compatibility wrappers."""
+    """Module should import cleanly."""
     module = importlib.import_module(MODULE)
     assert module is not None
 
@@ -1205,7 +1205,7 @@ def _unit_test_status_pointer_skips_current_gate_status_run() -> None:
         run_logging = (
             module.execution_runtime_module.run_logging_runtime_module
         )
-        previous = run_logging.create_run_log_context(
+        run_logging.create_run_log_context(
             repo_root,
             "test",
             ["devcovenant", "test"],
@@ -1220,13 +1220,11 @@ def _unit_test_status_pointer_skips_current_gate_status_run() -> None:
             pointer = module._resolve_latest_relevant_run_pointer(repo_root)
         finally:
             module.execution_runtime_module.clear_active_run_log_context()
-        assert pointer is not None
-        assert pointer.get("run_id") == previous.run_id
-        assert pointer.get("command_name") == "test"
+        assert pointer is None
 
 
 def _unit_test_latest_pointer_wrapper_delegates_to_status_helper() -> None:
-    """Gate compatibility wrapper should delegate to status helper seam."""
+    """Gate latest-pointer helper should delegate to the status helper seam."""
     module = importlib.import_module(MODULE)
     sentinel = {"run_id": "delegated-run"}
     with tempfile.TemporaryDirectory() as tmpdir:
@@ -1374,7 +1372,7 @@ class GeneratedUnittestCases(unittest.TestCase):
         _unit_test_show_gate_status_handles_missing_and_malformed_status()
 
     def test_status_pointer_skips_current_gate_status_run(self):
-        """Run latest-pointer fallback assertions for `gate --status`."""
+        """Run strict-pointer assertions for current `gate --status` runs."""
         _unit_test_status_pointer_skips_current_gate_status_run()
 
     def test_latest_pointer_wrapper_delegates_to_status_helper(self):

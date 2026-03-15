@@ -10,7 +10,7 @@ from typing import Any, Iterable, Mapping, Sequence
 
 import yaml
 
-from devcovenant.core.services import profile_registry as profile_runtime
+import devcovenant.core.services.profile_registry as profile_runtime
 
 EVENT_SCHEMA_VERSION = "1.0"
 _LAST_ADAPTER_LOAD_WARNINGS: list[str] = []
@@ -108,10 +108,10 @@ class TestEventAdapter:
 
 
 class GenericTestEventAdapter(TestEventAdapter):
-    """Fallback adapter that handles any test command."""
+    """Adapter that records any command when a profile declares it."""
 
     def handles(self, command: Sequence[str]) -> bool:
-        """Always handle the command as a generic fallback."""
+        """Always handle the command when explicitly configured."""
         return True
 
 
@@ -155,17 +155,27 @@ def python_test_event_adapter_factory(
     )
 
 
+def generic_test_event_adapter_factory(
+    *,
+    adapter_id: str,
+    profile_name: str,
+    config: Mapping[str, Any] | None = None,
+) -> TestEventAdapter:
+    """Factory used by profiles to opt into the generic event adapter."""
+    return GenericTestEventAdapter(
+        adapter_id,
+        profile_name=profile_name,
+        config=config,
+    )
+
+
 class TestEventManager:
     """Collect test events via configured adapters."""
 
     def __init__(self, adapters: Iterable[TestEventAdapter]) -> None:
-        """Store adapters and prepare the fallback event emitter."""
+        """Store explicitly configured adapters."""
         self.adapters = list(adapters)
         self.events: list[TestEvent] = []
-        self._fallback = GenericTestEventAdapter(
-            "generic",
-            schema_version=EVENT_SCHEMA_VERSION,
-        )
 
     def record_command(
         self,
@@ -175,16 +185,18 @@ class TestEventManager:
         started: datetime,
         finished: datetime,
         exit_code: int,
-    ) -> None:
-        """Record one event for the provided command execution."""
+    ) -> bool:
+        """Record one event when a configured adapter matches the command."""
         adapter = next(
             (
                 candidate
                 for candidate in self.adapters
                 if candidate.handles(command)
             ),
-            self._fallback,
+            None,
         )
+        if adapter is None:
+            return False
         event = adapter.build_event(
             command=command,
             command_str=command_str,
@@ -193,6 +205,7 @@ class TestEventManager:
             exit_code=exit_code,
         )
         self.events.append(event)
+        return True
 
 
 def _load_config(repo_root: Path) -> Mapping[str, Any]:

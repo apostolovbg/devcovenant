@@ -8,12 +8,12 @@ from typing import List
 
 import yaml
 
+import devcovenant.core.services.registry as manifest_module
 from devcovenant.core.contracts.policy import (
     CheckContext,
     PolicyCheck,
     Violation,
 )
-from devcovenant.core.services import registry as manifest_module
 
 
 class DevCovenantStructureGuardCheck(PolicyCheck):

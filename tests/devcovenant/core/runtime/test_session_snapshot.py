@@ -12,7 +12,7 @@ MODULE = "devcovenant.core.runtime.session_snapshot"
 
 
 def _unit_test_module_importable() -> None:
-    """Module should import without compatibility wrappers."""
+    """Module should import cleanly."""
     module = importlib.import_module(MODULE)
     assert module is not None
 
@@ -110,7 +110,7 @@ def _unit_test_public_session_snapshot_helpers_are_deterministic() -> None:
         assert current_snapshot["sample.py"].endswith("\tsample.py")
         assert module.snapshot_row_style(current_snapshot) == "filesystem_hash"
         assert module.snapshot_row_style({"a.py": "1\t1\ta.py"}) == (
-            "legacy_numstat"
+            "unsupported_legacy"
         )
         assert module.snapshot_row_style({}) == "empty"
 
@@ -153,20 +153,20 @@ def _unit_test_public_session_snapshot_helpers_are_deterministic() -> None:
         )
         assert session_delta == {"a.py", "b.py"}
 
-        original_helper = module.snapshot_paths_changed_since
         try:
-            module.snapshot_paths_changed_since = lambda _root, _epoch: {
-                "sample.py"
-            }
-            legacy_delta = module.session_delta_paths(
+            module.session_delta_paths(
                 repo_root,
                 {"legacy.py": "1\t1\tlegacy.py"},
                 current_snapshot,
                 session_start_epoch=1.0,
             )
-        finally:
-            module.snapshot_paths_changed_since = original_helper
-        assert legacy_delta == {"sample.py"}
+        except ValueError as exc:
+            assert "legacy snapshot rows" in str(exc)
+            assert "gate --start" in str(exc)
+        else:
+            raise AssertionError(
+                "Expected legacy snapshot rows to be rejected."
+            )
 
         agents_hashes = module.capture_agents_section_hashes(repo_root)
         assert agents_hashes["agents_file"] == "AGENTS.md"

@@ -10,7 +10,7 @@ MODULE = "devcovenant.core.contracts.policy"
 
 
 def _unit_test_module_importable() -> None:
-    """Module should import without compatibility wrappers."""
+    """Module should import cleanly."""
     module = importlib.import_module(MODULE)
     assert module is not None
 
@@ -133,7 +133,7 @@ class GeneratedUnittestCases(unittest.TestCase):
         _unit_test_contract_symbols_covered()
 
     def test_scoped_changed_files_allows_read_only_check_bootstrap(self):
-        """Run read-only check bootstrap fallback assertions."""
+        """Run read-only check bootstrap assertions."""
         _unit_test_scoped_changed_files_allows_read_only_check_bootstrap()
 
     def test_scoped_changed_files_stays_strict_outside_check(self):

@@ -1,5 +1,5 @@
 # Policies
-**Last Updated:** 2026-03-14
+**Last Updated:** 2026-03-15
 **Project Version:** 1.0.0
 
 ## Table of Contents
@@ -126,8 +126,7 @@ Output mode contract:
 - runtime output mode is selected by
   `devcovenant/config.yaml -> engine.output_mode`
 - tests output mode is selected by
-  `devcovenant/config.yaml -> engine.tests_output_mode` and falls back to
-  `engine.output_mode` when unset
+  `devcovenant/config.yaml -> engine.tests_output_mode`
 - allowed values are `normal`, `quiet`, and `verbose`
 - default is `verbose` when key is unset or invalid
 - tests `normal` mode keeps status lines concise, suppresses flood-prone test
@@ -168,9 +167,9 @@ High-impact runtime contracts:
   (`missing_gate_status` and empty phase) uses an empty scope instead of
   hard-failing bootstrap checks.
 - `managed-environment` resolves from the local policy registry when it
-  exists and falls back to the compiled AGENTS policy block when it does not,
-  so maintenance commands can detect managed-interpreter contracts without
-  materializing registry state as a side effect.
+  exists; if the local registry is missing, runtime fails explicitly and
+  requires `devcovenant refresh` before managed-environment resolution can
+  continue.
 - `devflow-run-gates` enforces the start -> test -> end sequence and validates
   the latest `test` evidence against resolved required command metadata
   (`required_commands`). Gate status stores the tests mode and selected
@@ -224,9 +223,6 @@ High-impact runtime contracts:
   channel.
   Long silent waits can emit `Please wait. In progress...` through the
   shared runtime heartbeat.
-  `managed_rerun_commands` (`stage=>command`) provide wrapper-based command
-  rerun adapters (for example bench or other external environment runners)
-  when the managed interpreter cannot be executed directly.
   `documentation-growth-tracking` also hard-excludes universal
   editor/build/runtime artifacts from user-facing change detection so
   packaging, cache, and local-tool artifacts do not demand documentation
@@ -252,7 +248,8 @@ High-impact runtime contracts:
   matched as literal dot-prefixed paths.
 - `modules-need-tests` enforces source-to-test alignment, bans placeholder
   tests, and removes stale mirror-path tests using profile-owned
-  `mirror_test_name_templates` metadata (with translator template fallback).
+  `mirror_test_name_templates` metadata (with translator wildcard-template
+  resolution).
   Repository module inventory uses the shared snapshot scanner
   (`capture_current_snapshot_paths`) instead of git index commands so policy
   scope stays snapshot-driven.
@@ -297,10 +294,10 @@ High-impact runtime contracts:
 - bundled policy helpers do not expose metadata-driven `session_scope`
   switching; bundled session checks read runtime session state directly.
 - bundled session checks share centralized snapshot helpers from
-  `devcovenant/core/runtime/session_snapshot.py`, with command-facing
-  compatibility re-exports from `devcovenant/core/runtime/execution.py`.
+  `devcovenant/core/runtime/session_snapshot.py`, with runtime consumers
+  treating that module as the canonical snapshot-helper home.
 - `last-updated` scopes stale-date checks to session-changed files
-  from runtime context only (no git fallback scanning).
+  from runtime context only (no git recovery scanning).
 - `last-updated` ships builtin package-doc allowlists for installed
   `devcovenant/README.md`, package README surfaces, and
   `devcovenant/docs/**/*.md` so user repos do not need repo-specific
@@ -422,7 +419,7 @@ Default artifact contract:
 - `licenses/THIRD_PARTY_LICENSES.md` for the report document
 - `licenses/README.md` for generated, generic maintenance guidance
 - `licenses/` for per-dependency license texts/notices
-- no legacy marker artifacts are required in `licenses/`
+- no extra marker artifacts are required in `licenses/`
 
 Operational behavior:
 - when dependency manifests change, the policy requires synchronized updates to

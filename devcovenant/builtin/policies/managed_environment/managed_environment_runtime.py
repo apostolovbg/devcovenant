@@ -10,61 +10,27 @@ from typing import Any, Mapping, Sequence
 
 import yaml
 
+import devcovenant.core.services.registry as registry_runtime_module
 from devcovenant.core.runtime.execution import (
     run_child_command_with_output_policy,
     runtime_print,
 )
-from devcovenant.core.services import registry as registry_runtime_module
-from devcovenant.core.services.policy_parse import PolicyParser
 
 POLICY_ID = "managed-environment"
 RUNTIME_ACTION_RESOLVE_STAGE = "resolve-stage"
-RUNTIME_ACTION_RESOLVE_RERUN = "resolve-rerun-command"
 _MANAGED_ENV_STAGES = frozenset({"start", "test", "end", "command", "all"})
 _MANAGED_STAGE_RUNS_ENV = "DEVCOV_MANAGED_STAGE_RUNS"
 _GUIDANCE_TOKEN_PATTERN = re.compile(r"{([a-zA-Z0-9_]+)}")
-
-
-def _run_bootstrap_registry_refresh(repo_root: Path) -> None:
-    """Run lightweight policy-registry refresh for runtime resolution."""
-    from devcovenant.core.flow.refresh import refresh_policy_registry
-
-    refresh_exit = refresh_policy_registry(repo_root)
-    if refresh_exit != 0:
-        raise ValueError("Registry refresh failed.")
-
-
-def _load_policy_entry_from_agents(repo_root: Path) -> dict[str, Any] | None:
-    """Load managed-environment entry directly from AGENTS policy blocks."""
-    agents_path = repo_root / "AGENTS.md"
-    if not agents_path.exists():
-        return None
-    try:
-        policies = PolicyParser(agents_path).parse_agents_md()
-    except OSError as exc:
-        raise ValueError(
-            f"Unable to read AGENTS.md at {agents_path}: {exc}"
-        ) from exc
-    except ValueError as exc:
-        raise ValueError(
-            f"Failed to parse managed-environment policy: {exc}"
-        ) from exc
-    for policy in policies:
-        if policy.policy_id != POLICY_ID:
-            continue
-        return {
-            "id": policy.policy_id,
-            "enabled": policy.enabled,
-            "metadata": dict(policy.raw_metadata),
-        }
-    return None
 
 
 def _load_policy_entry(repo_root: Path) -> dict[str, Any] | None:
     """Load managed-environment policy entry from local registry."""
     registry_path = registry_runtime_module.policy_registry_path(repo_root)
     if not registry_path.exists():
-        return _load_policy_entry_from_agents(repo_root)
+        raise ValueError(
+            "managed-environment runtime requires local policy registry "
+            f"at {registry_path}. Run `devcovenant refresh`."
+        )
 
     try:
         registry_data = yaml.safe_load(
@@ -357,69 +323,6 @@ def _expand_managed_command_tokens(
     return expanded
 
 
-def _expand_managed_rerun_command_tokens(
-    command_text: str,
-    repo_root: Path,
-    managed_python: Path | None,
-    managed_root: Path | None,
-    *,
-    stage: str,
-    command_name: str,
-    command_args: Sequence[str],
-) -> list[str]:
-    """Expand managed rerun command placeholders into argv tokens."""
-    tokens = shlex.split(command_text)
-    normalized_command = str(command_name or "").strip()
-    normalized_args = [str(token) for token in command_args]
-    command_argv = [normalized_command, *normalized_args]
-    command_string = shlex.join(command_argv)
-    expanded: list[str] = []
-    for token in tokens:
-        if token == "{command_args}":
-            expanded.extend(normalized_args)
-            continue
-        if token == "{command_argv}":
-            expanded.extend(command_argv)
-            continue
-        resolved = token.replace("{repo_root}", str(repo_root))
-        resolved = resolved.replace("{stage}", stage)
-        resolved = resolved.replace("{command}", normalized_command)
-        resolved = resolved.replace("{command_name}", normalized_command)
-        resolved = resolved.replace("{command_string}", command_string)
-        if "{command_args}" in resolved or "{command_argv}" in resolved:
-            raise ValueError(
-                "Managed rerun command placeholders `{command_args}` and "
-                "`{command_argv}` must be standalone shell tokens."
-            )
-        if "{managed_root}" in resolved:
-            if managed_root is None:
-                raise ValueError(
-                    "Managed rerun command uses `{managed_root}` before a "
-                    "managed root exists."
-                )
-            resolved = resolved.replace("{managed_root}", str(managed_root))
-        if "{managed_python}" in resolved:
-            if managed_python is None:
-                raise ValueError(
-                    "Managed rerun command uses `{managed_python}` before a "
-                    "managed interpreter exists."
-                )
-            resolved = resolved.replace(
-                "{managed_python}", str(managed_python)
-            )
-        if "{managed_bin}" in resolved:
-            if managed_python is None:
-                raise ValueError(
-                    "Managed rerun command uses `{managed_bin}` before a "
-                    "managed interpreter exists."
-                )
-            resolved = resolved.replace(
-                "{managed_bin}", str(managed_python.parent)
-            )
-        expanded.append(resolved)
-    return expanded
-
-
 def _run_command(
     command: Sequence[str],
     *,
@@ -604,90 +507,3 @@ def resolve_managed_environment_for_stage(
         )
     env = _apply_managed_env(env, managed_python, managed_root)
     return env, str(managed_python)
-
-
-def resolve_managed_rerun_command_for_stage(
-    repo_root: Path,
-    stage: str,
-    command_name: str,
-    command_args: Sequence[str],
-    *,
-    managed_python: str | None = None,
-    managed_root: str | None = None,
-) -> list[str] | None:
-    """Resolve one managed rerun command for stage-aware CLI re-exec."""
-    stage_token = str(stage or "").strip().lower()
-    if stage_token not in {"start", "test", "end", "command"}:
-        raise ValueError(
-            "Invalid managed-environment stage "
-            f"`{stage}`. Allowed: start, test, end, command."
-        )
-    entry = _load_policy_entry(repo_root)
-    if entry is None:
-        return None
-    if not _is_enabled_token(entry.get("enabled")):
-        return None
-    metadata_map = entry.get("metadata")
-    if not isinstance(metadata_map, dict):
-        raise ValueError(
-            "Invalid policy registry payload: "
-            "`managed-environment.metadata` must be a mapping."
-        )
-
-    managed_rerun_commands_raw = _normalize_metadata_tokens(
-        metadata_map.get("managed_rerun_commands")
-    )
-    if not managed_rerun_commands_raw:
-        return None
-    managed_rerun_commands = _parse_managed_commands(
-        managed_rerun_commands_raw
-    )
-    rerun_command = _select_managed_command_for_stage(
-        managed_rerun_commands,
-        target_stage=stage_token,
-    )
-    if rerun_command is None:
-        return None
-
-    expected_path_tokens = _normalize_metadata_tokens(
-        metadata_map.get("expected_paths")
-    )
-    expected_interpreter_tokens = _normalize_metadata_tokens(
-        metadata_map.get("expected_interpreters")
-    )
-    expected_paths = _resolve_metadata_paths(repo_root, expected_path_tokens)
-    expected_interpreters = _resolve_metadata_paths(
-        repo_root,
-        expected_interpreter_tokens,
-        resolve_symlinks=False,
-    )
-    detected_python, detected_root = _detect_managed_python(
-        expected_interpreters,
-        expected_paths,
-    )
-
-    effective_python: Path | None = (
-        Path(managed_python) if managed_python else detected_python
-    )
-    if managed_root:
-        effective_root: Path | None = Path(managed_root)
-    elif detected_root is not None:
-        effective_root = detected_root
-    elif effective_python is not None:
-        parent_name = effective_python.parent.name.lower()
-        if parent_name in {"bin", "scripts"}:
-            effective_root = effective_python.parent.parent
-        else:
-            effective_root = None
-    else:
-        effective_root = None
-
-    return _expand_managed_rerun_command_tokens(
-        rerun_command,
-        repo_root,
-        effective_python,
-        effective_root,
-        stage=stage_token,
-        command_name=command_name,
-        command_args=command_args,
-    )

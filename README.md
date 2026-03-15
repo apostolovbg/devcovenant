@@ -120,6 +120,10 @@ If the console script is not available on PATH, use:
 python3 -m devcovenant <command>
 ```
 
+For source-checkout launches, zero repo-local launcher-process bytecode
+control belongs to shell or CI `PYTHONPYCACHEPREFIX`, not to an in-package
+bootstrap hook.
+
 On Windows, a common equivalent is:
 
 ```bash
@@ -317,11 +321,8 @@ Important execution semantics:
   bootstrap/teardown commands (`install`, `deploy`, `undeploy`, `uninstall`)
   are intentionally excluded
 - if a resolved managed interpreter path is present but not executable,
-  DevCovenant emits an explicit managed-environment error instead of crashing
-  and then uses `managed_rerun_commands` when a wrapper fallback is configured
-- if direct managed interpreter resolution is unavailable, configured
-  `managed_rerun_commands` can rerun the command through wrapper adapters
-  (for example bench/xenv launchers)
+  DevCovenant emits an explicit managed-environment error and stops so the
+  interpreter path or permissions can be fixed directly
 - if edits happened after previous end gate, start gate can open a recovery
   gate session and validate that unsessioned delta before baseline rewrite
 
@@ -370,11 +371,14 @@ Language profiles may also declare translators and test-event adapters:
 - translators:
   convert language-specific files into normalized units for policy code
 - test-event adapters:
-  emit normalized test lifecycle events for gate-session evidence
+  emit normalized test lifecycle events for gate-session evidence only when
+  the active profile stack declares them explicitly
 
 Framework/ops/tooling profiles can still contribute policy metadata, including
 `devflow-run-gates.required_commands`, but translator ownership remains a
-language-profile responsibility.
+language-profile responsibility. DevCovenant does not keep a hidden generic
+test-event adapter path: unmatched test commands are skipped unless a profile
+declares `generic_test_event_adapter_factory` on purpose.
 
 ## Extension Surfaces
 Extension paths:

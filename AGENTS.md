@@ -1135,23 +1135,21 @@ manual_commands: python3 -m venv .venv
   {managed_python} -m pip install -r requirements.lock
 managed_commands: start=>python3 -m venv .venv
   start=>{managed_python} -m pip install -r requirements.lock
-managed_rerun_commands:
 ```
 
 DevCovenant must run from the managed environment described in this
 policy's metadata. Use expected_paths for virtualenv or bench roots,
 expected_interpreters for explicit interpreter locations, and
 required_commands with `manual_commands`, stage-scoped
-`managed_commands`, and stage-scoped `managed_rerun_commands` to define
-guidance, runtime preparation, and wrapper rerun adapters.
+`managed_commands` to define guidance and runtime preparation.
 Active managed-environment policy now also re-executes DevCovenant CLI
 commands in the managed interpreter automatically when the current
 interpreter does not match. Stage-scoped `managed_commands` accept
 `start`, `test`, `end`, `command`, and `all` prefixes; non-start
 commands reuse `start` bootstrap commands once when the interpreter is
-still missing. `managed_rerun_commands` uses the same stage prefixes and
-can rerun commands through wrapper environments (for example bench or
-other adapters) when managed interpreters are not directly executable.
+still missing. If the resolved managed interpreter is missing or not
+executable, DevCovenant now fails explicitly instead of rerunning through
+wrapper adapters or alternate policy sources.
 When enabled with empty metadata, the policy emits a warning so teams
 fill the required context.
 

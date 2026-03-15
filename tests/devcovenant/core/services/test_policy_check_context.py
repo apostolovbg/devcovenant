@@ -15,7 +15,7 @@ MODULE = "devcovenant.core.services.policy_check_context"
 
 
 def _unit_test_module_importable() -> None:
-    """Module should import without compatibility wrappers."""
+    """Module should import cleanly."""
     module = importlib.import_module(MODULE)
     assert module is not None
 
@@ -189,6 +189,98 @@ def _unit_test_build_change_state_closed_session_rejects_post_end_edits() -> (
         )
 
 
+def _unit_test_build_change_state_open_session_rejects_legacy_snapshot() -> (
+    None
+):
+    """Open-session builder should reject legacy snapshot payload rows."""
+    module = importlib.import_module(MODULE)
+    with tempfile.TemporaryDirectory() as tmpdir:
+        repo_root = Path(tmpdir)
+        status_path = repo_root / "devcovenant/registry/local/gate_status.json"
+        status_path.parent.mkdir(parents=True, exist_ok=True)
+        status_path.write_text(
+            json.dumps(
+                {
+                    "session_id": "open-legacy-ctx",
+                    "session_state": "open",
+                    "session_start_snapshot": {
+                        "legacy.py": "1\t1\tlegacy.py",
+                    },
+                },
+                indent=2,
+            )
+            + "\n",
+            encoding="utf-8",
+        )
+
+        with (
+            mock.patch.dict(module.os.environ, {}, clear=True),
+            mock.patch.object(
+                module,
+                "capture_current_numstat_snapshot",
+                return_value={"legacy.py": "hash\tlegacy.py"},
+            ),
+        ):
+            state = module.build_change_state(
+                repo_root,
+                gate_status_path=Path(
+                    "devcovenant/registry/local/gate_status.json"
+                ),
+                is_ignored_path=lambda _path: False,
+            )
+
+        assert state.session_valid is False
+        assert state.session_reason_code == "unsupported_snapshot_style"
+        assert "`session_start_snapshot`" in state.session_error
+        assert "gate --start" in state.session_error
+
+
+def _unit_test_build_change_state_closed_session_rejects_legacy_snapshot() -> (
+    None
+):
+    """Closed-session builder should reject legacy end snapshot rows."""
+    module = importlib.import_module(MODULE)
+    with tempfile.TemporaryDirectory() as tmpdir:
+        repo_root = Path(tmpdir)
+        status_path = repo_root / "devcovenant/registry/local/gate_status.json"
+        status_path.parent.mkdir(parents=True, exist_ok=True)
+        status_path.write_text(
+            json.dumps(
+                {
+                    "session_id": "closed-legacy-ctx",
+                    "session_state": "closed",
+                    "session_end_snapshot": {
+                        "legacy.py": "1\t1\tlegacy.py",
+                    },
+                },
+                indent=2,
+            )
+            + "\n",
+            encoding="utf-8",
+        )
+
+        with (
+            mock.patch.dict(module.os.environ, {}, clear=True),
+            mock.patch.object(
+                module,
+                "capture_current_numstat_snapshot",
+                return_value={"legacy.py": "hash\tlegacy.py"},
+            ),
+        ):
+            state = module.build_change_state(
+                repo_root,
+                gate_status_path=Path(
+                    "devcovenant/registry/local/gate_status.json"
+                ),
+                is_ignored_path=lambda _path: False,
+            )
+
+        assert state.session_valid is False
+        assert state.session_reason_code == "unsupported_snapshot_style"
+        assert "`session_end_snapshot`" in state.session_error
+        assert "gate --start" in state.session_error
+
+
 def _unit_test_build_check_context_assembles_context_with_helper_state() -> (
     None
 ):
@@ -273,6 +365,14 @@ class GeneratedUnittestCases(unittest.TestCase):
     def test_build_change_state_closed_session_rejects_post_end_edits(self):
         """Run closed-session post-end edit rejection assertions."""
         _unit_test_build_change_state_closed_session_rejects_post_end_edits()
+
+    def test_build_change_state_open_session_rejects_legacy_snapshot(self):
+        """Run open-session legacy-snapshot rejection assertions."""
+        _unit_test_build_change_state_open_session_rejects_legacy_snapshot()
+
+    def test_build_change_state_closed_session_rejects_legacy_snapshot(self):
+        """Run closed-session legacy-snapshot rejection assertions."""
+        _unit_test_build_change_state_closed_session_rejects_legacy_snapshot()
 
     def test_build_check_context_assembles_context_with_helper_state(self):
         """Run check-context builder assembly assertions."""

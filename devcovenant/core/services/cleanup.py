@@ -10,7 +10,7 @@ from typing import Iterable
 
 import yaml
 
-from devcovenant.core.services import profile_registry as profile_runtime
+import devcovenant.core.services.profile_registry as profile_runtime
 
 _CLEAN_TARGET_KEYS = (
     "build_dirs",
@@ -118,20 +118,6 @@ def _normalize_clean_mapping(raw_value: object) -> dict[str, list[str]]:
     return normalized
 
 
-def _normalize_clean_override_mapping(
-    raw_value: object,
-) -> dict[str, list[str]]:
-    """Normalize clean overrides with compatibility for legacy placeholders."""
-    normalized = _normalize_clean_mapping(raw_value)
-    if (
-        isinstance(raw_value, dict)
-        and set(raw_value.keys()) >= set(_CLEAN_TARGET_KEYS)
-        and all(not normalized.get(key) for key in _CLEAN_TARGET_KEYS)
-    ):
-        return {}
-    return normalized
-
-
 def _merge_clean_layers(
     base: dict[str, list[str]], incoming: dict[str, list[str]]
 ) -> dict[str, list[str]]:
@@ -178,9 +164,7 @@ def resolve_clean_config(repo_root: Path) -> CleanConfig:
     if not isinstance(clean_block, dict):
         clean_block = {}
     config_overlays = _normalize_clean_mapping(clean_block.get("overlays"))
-    config_overrides = _normalize_clean_override_mapping(
-        clean_block.get("overrides")
-    )
+    config_overrides = _normalize_clean_mapping(clean_block.get("overrides"))
 
     resolved = _merge_clean_layers(profile_clean, config_overlays)
     for key, values in config_overrides.items():

@@ -1,5 +1,5 @@
 # Workflow
-**Last Updated:** 2026-03-14
+**Last Updated:** 2026-03-15
 **Project Version:** 1.0.0
 
 ## Table of Contents
@@ -74,7 +74,7 @@ python3 -m devcovenant gate --end
 ```
 
 On Windows, `py -m devcovenant ...` is a common equivalent launcher form.
-This command-form fallback does not change exact-token validation for
+This equivalent launcher form does not change exact-token validation for
 `devflow-run-gates.required_commands` test evidence.
 
 Required execution order:
@@ -177,7 +177,8 @@ Shared gate hook targeting:
 - resolve canonical command metadata from `required_commands`
 - consume typed-empty metadata values directly; no sentinel pseudo-empty token
   path is part of active runtime behavior
-- execute commands in declared order without fallback command injection
+- execute commands in declared order without hidden alternate command
+  injection
 - record execution timestamp and command chain in gate status
 - record tests mode and selected command-metadata key in gate status
 - record normalized schema-version `1.0` test events for downstream tooling
@@ -240,7 +241,7 @@ Install/upgrade boundary:
 - read gate session state without mutating lifecycle files
 - report short session status and last known phase
 - point to the latest relevant run-log artifacts for summary-first triage
-- resolve status-line rendering and latest-run pointer fallback through
+- resolve status-line rendering and owned latest-run pointer artifacts through
   `devcovenant/core/flow/gate_status_helpers.py` so read-only status behavior
   remains isolated from lifecycle writes
 - align CLI help wording with the same contract
@@ -345,8 +346,8 @@ Output behavior:
   verbose streaming can consume significant tokens
 - runtime console-emitting subprocesses use PTY-backed streaming on POSIX
   by default so hook/test output flushes live without process-end buffering;
-  pipe streaming remains the fallback when PTY is unavailable or when
-  normal-mode suppression hides child output
+  pipe streaming becomes the alternate transport when PTY is unavailable or
+  when normal-mode suppression hides child output
 - gate/test/managed child commands route through one runtime helper
   (`run_child_command_with_output_policy`) with channel plans resolved by
   `resolve_child_output_plan_for_channel`; this keeps mode behavior aligned
@@ -368,10 +369,9 @@ Output behavior:
 - generated CI governance workflows set `PYTHONPYCACHEPREFIX` at job scope so
   top-level `python -m devcovenant ...` launches also avoid repo-local
   bytecode-cache drift in CI
-- `devcovenant/launcher_bootstrap.py` centralizes the lightweight
-  pre-import pycache-prefix routing used by `devcovenant/cli.py` and
-  `devcovenant/__main__.py`, but shell/CI launcher env still owns
-  zero-drift guarantees for fallback launcher starts
+- source-checkout launcher-process zero-drift guarantees belong to shell/CI
+  `PYTHONPYCACHEPREFIX`, not to repo-root startup hooks or in-package
+  bootstrap tricks
 - gate-session changelog coverage uses a gate-start exemption baseline that
   includes DEVCOV-managed blocks in non-doc text files (for example generated
   YAML/YML assets), so managed-only regen noise does not require new
@@ -393,8 +393,8 @@ Managed-environment scope split:
   lifecycle bootstrap/teardown commands (`install`, `deploy`, `undeploy`,
   `uninstall`).
 - non-executable managed interpreter paths emit an explicit
-  managed-environment error and then attempt `managed_rerun_commands`
-  fallback when configured.
+  managed-environment error and stop execution so the interpreter contract
+  can be fixed directly.
 - stage command prefixes are `start`, `test`, `end`, `command`, and `all`.
 - if non-start commands run before interpreter creation, runtime executes
   explicit `start=>...` bootstrap commands once before failing.
@@ -404,9 +404,6 @@ Managed-environment scope split:
 - managed-environment stage bootstrap/output commands honor runtime output
   mode: normal mode suppresses bootstrap command bursts, quiet mode keeps
   routine stdout hidden, and verbose mode streams full child output.
-- when managed interpreters are unavailable,
-  `managed_rerun_commands` can rerun the same command through wrapper
-  adapters (for example bench or other environment launchers).
 - scope exclusions: when `devcov_core_include` is false, core checks ignore
   `profiles.generated.devcov_core_paths`, which include builtin and core
   internals plus root CLI scripts.
@@ -474,6 +471,9 @@ Session baseline keys:
   closed-session snapshot used for unsessioned-edit detection
 - `last_run_snapshot`:
   explicit test snapshot used for end-gate freshness checks
+- older gate snapshot row formats are not migration-bridged; if they are
+  encountered, DevCovenant fails explicitly and requires a fresh
+  `devcovenant gate --start`
 
 Policy scope contract:
 - missing or invalid session metadata outside start phase is an explicit error
@@ -489,9 +489,8 @@ Policy scope contract:
   `devcovenant/core/runtime/session_snapshot.py`, while
   `devcovenant/core/runtime/execution.py` is the layered command-facing
   execution module
-- `devcovenant/core/flow/session.py` now re-exports an explicit session helper
-  set from execution runtime (instead of wildcard imports) so compatibility
-  imports remain stable and auditable
+- `devcovenant/core/flow/session.py` keeps the session-helper surface
+  explicit and auditable for flow-layer callers
 - AGENTS policy-block rendering is isolated in
   `devcovenant/core/services/policy_block_refresh.py`, and AGENTS policy
   parser/model helpers are isolated in

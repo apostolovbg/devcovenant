@@ -87,29 +87,30 @@ def build_change_state(
         repo_root / path for path in sorted(current_snapshot)
     ]
 
-    def _current_snapshot_for_style(style: str) -> dict[str, str]:
-        """
-        Return the current snapshot rendered in a target row style.
-
-        Legacy-session compatibility: older gate snapshots may store
-        `mtime<TAB>size<TAB>path` rows. We render current files in that same
-        style for deterministic row-level comparisons without git history.
-        """
-        if style != "legacy_numstat":
-            return dict(current_snapshot)
-        legacy_rows: dict[str, str] = {}
-        for path in sorted(current_snapshot):
-            file_path = repo_root / path
-            try:
-                stat = file_path.stat()
-            except OSError as error:
-                _set_invalid(
-                    "snapshot_error",
-                    f"Unable to stat snapshot file {file_path}: {error}",
-                )
-                return {}
-            legacy_rows[path] = f"{stat.st_mtime_ns}\t{stat.st_size}\t{path}"
-        return legacy_rows
+    def _validate_snapshot_style(
+        snapshot: dict[str, str],
+        *,
+        field_name: str,
+    ) -> str | None:
+        """Reject unsupported historical snapshot row styles explicitly."""
+        style = snapshot_row_style(snapshot)
+        if style == "unsupported_legacy":
+            _set_invalid(
+                "unsupported_snapshot_style",
+                "Invalid gate status payload: "
+                f"`{field_name}` uses unsupported legacy snapshot rows. "
+                "Run `devcovenant gate --start` to record a fresh session.",
+            )
+            return None
+        if style == "mixed":
+            _set_invalid(
+                "unsupported_snapshot_style",
+                "Invalid gate status payload: "
+                f"`{field_name}` mixes snapshot row formats. "
+                "Run `devcovenant gate --start` to record a fresh session.",
+            )
+            return None
+        return style
 
     if phase == "start":
         state.session_valid = True
@@ -191,13 +192,16 @@ def build_change_state(
         )
         if end_snapshot is None:
             return state
-        end_style = snapshot_row_style(end_snapshot)
+        end_style = _validate_snapshot_style(
+            end_snapshot,
+            field_name="session_end_snapshot",
+        )
+        if end_style is None:
+            return state
         post_end_paths = diff_snapshot_paths(
             end_snapshot,
-            _current_snapshot_for_style(end_style),
+            current_snapshot,
         )
-        if not state.session_reason_code and end_style == "legacy_numstat":
-            state.session_reason_code = "legacy_snapshot_compat"
         if post_end_paths:
             _set_invalid(
                 "unsessioned_edits_after_end",
@@ -220,6 +224,7 @@ def build_change_state(
         return state
 
     baseline_snapshot = start_snapshot
+    baseline_field_name = "session_start_snapshot"
     if "session_baseline_snapshot" in payload:
         loaded_baseline = _load_snapshot_field(
             "session_baseline_snapshot",
@@ -228,13 +233,17 @@ def build_change_state(
         if loaded_baseline is None:
             return state
         baseline_snapshot = loaded_baseline
-    baseline_style = snapshot_row_style(baseline_snapshot)
+        baseline_field_name = "session_baseline_snapshot"
+    baseline_style = _validate_snapshot_style(
+        baseline_snapshot,
+        field_name=baseline_field_name,
+    )
+    if baseline_style is None:
+        return state
     session_rel_paths = changed_numstat_paths(
         baseline_snapshot,
-        _current_snapshot_for_style(baseline_style),
+        current_snapshot,
     )
-    if not state.session_reason_code and baseline_style == "legacy_numstat":
-        state.session_reason_code = "legacy_snapshot_compat"
     state.session_paths = sorted(
         [repo_root / path for path in session_rel_paths]
     )

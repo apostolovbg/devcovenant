@@ -45,35 +45,6 @@ class ManagedEnvironmentCheck(PolicyCheck):
                 stage,
                 base_env=base_env,
             )
-        if action == runtime_helpers.RUNTIME_ACTION_RESOLVE_RERUN:
-            stage = str(payload_map.get("stage", "")).strip().lower()
-            command_name = str(payload_map.get("command_name", "")).strip()
-            command_args_raw = payload_map.get("command_args", [])
-            command_args = (
-                [str(token) for token in command_args_raw]
-                if isinstance(command_args_raw, list)
-                else []
-            )
-            managed_python_raw = payload_map.get("managed_python")
-            managed_root_raw = payload_map.get("managed_root")
-            managed_python = (
-                str(managed_python_raw).strip()
-                if isinstance(managed_python_raw, str)
-                else None
-            )
-            managed_root = (
-                str(managed_root_raw).strip()
-                if isinstance(managed_root_raw, str)
-                else None
-            )
-            return runtime_helpers.resolve_managed_rerun_command_for_stage(
-                repo_root,
-                stage,
-                command_name,
-                command_args,
-                managed_python=managed_python or None,
-                managed_root=managed_root or None,
-            )
         raise ValueError(
             "Unsupported managed-environment runtime action: " f"`{action}`."
         )

@@ -14,12 +14,13 @@ from datetime import date
 from pathlib import Path
 from typing import Any, List
 
+import devcovenant.core.lib.document_exemptions as document_exemptions_lib
+import devcovenant.core.runtime.execution as execution_runtime_module
 from devcovenant.core.contracts.policy import (
     CheckContext,
     PolicyCheck,
     Violation,
 )
-from devcovenant.core.lib import document_exemptions as document_exemptions_lib
 from devcovenant.core.lib.document_exemptions import (
     DEFAULT_HEADER_DOC_SUFFIXES,
     DEFAULT_HEADER_KEYS,
@@ -31,7 +32,6 @@ from devcovenant.core.lib.document_exemptions import (
 from devcovenant.core.lib.document_exemptions import (
     normalize_document_exemption_entry as _normalize_exemption_entry,
 )
-from devcovenant.core.runtime import execution as execution_runtime_module
 
 # Compatibility alias used by tests that monkeypatch runtime snapshot capture.
 capture_current_numstat_snapshot = (

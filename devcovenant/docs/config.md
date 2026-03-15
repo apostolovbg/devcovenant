@@ -1,5 +1,5 @@
 # Configuration
-**Last Updated:** 2026-03-14
+**Last Updated:** 2026-03-15
 **Project Version:** 1.0.0
 
 ## Table of Contents
@@ -134,7 +134,8 @@ the same session so generated configs remain self-explanatory.
 
 - `engine.tests_output_mode`: test-command output contract
   (`normal|quiet|verbose`), independent from runtime command output.
-  If unset, runtime falls back to `engine.output_mode` for compatibility.
+  Keep this key explicit in config so test behavior does not inherit
+  `engine.output_mode` implicitly.
   Normal mode keeps status output concise, shows gate hook output, suppresses
   flood-prone managed/test child output, emits deterministic
   `[n/total] <command>` markers, and preserves full output in run logs.
@@ -159,8 +160,7 @@ the same session so generated configs remain self-explanatory.
 - `clean.overrides`: replacement cleanup lists for repositories that need
   full ownership of one resolved cleanup key. Template defaults use `{}` so
   no replacement is implied; explicit per-key `[]` values intentionally clear
-  inherited lists for that key. Legacy repos that still carry the older
-  all-empty placeholder block are treated as no-op compatibility placeholders.
+  inherited lists for that key, including all-empty override blocks.
 
 - `devflow-run-gates.required_commands`: canonical test command chain.
   `engine.tests_output_mode` changes output presentation only; it does not
@@ -177,13 +177,10 @@ the same session so generated configs remain self-explanatory.
 - `managed-environment.managed_commands`: stage-scoped auto commands using
   `stage=>command` entries (`start|test|end|command|all`).
 
-- `managed-environment.managed_rerun_commands`: stage-scoped wrapper rerun
-  commands using `stage=>command` entries (`start|test|end|command|all`).
-
 - managed-environment command behavior:
   when active, CLI commands automatically re-exec under the resolved managed
-  interpreter when the current interpreter differs, or through configured
-  wrapper rerun commands when direct interpreter execution is unavailable.
+  interpreter when the current interpreter differs. Missing or
+  non-executable managed interpreters now fail explicitly.
   Lifecycle bootstrap/teardown commands (`install`, `deploy`, `undeploy`,
   `uninstall`) are excluded from managed re-exec.
 
@@ -282,9 +279,11 @@ Autofix workflow note:
 - `engine.pycache_prefix_enabled` + `engine.pycache_prefix` route bytecode
   caches away from the repo tree for DevCovenant-managed Python subprocesses
   while preserving bytecode generation fidelity.
-- For fallback launcher runs (`python3 -m devcovenant ...`), set
-  `PYTHONPYCACHEPREFIX` in the shell/CI environment before Python starts if
-  you need to prevent repo-local launcher-process `__pycache__` writes.
+- For source-checkout alternate launcher runs (`python3 -m devcovenant ...`),
+  set `PYTHONPYCACHEPREFIX` in the shell/CI environment before Python starts
+  if you need to prevent repo-local launcher-process `__pycache__` writes.
+- DevCovenant does not promise that boundary through repo-root startup hooks
+  or an in-package bootstrap helper.
 
 ## Practical Recipes
 Disable one shipped policy:
@@ -348,8 +347,6 @@ user_metadata_overrides:
       - start=>python3 -m venv .venv
       - start=>{managed_python} -m pip install -r requirements.lock
       - command=>{managed_python} -m pip install -r requirements.lock
-    managed_rerun_commands:
-      - command=>bench exec -- devcovenant {command_argv}
 ```
 
 Managed command token contract:
@@ -358,12 +355,6 @@ Managed command token contract:
 - `{managed_bin}`: managed interpreter directory.
 - `{managed_root}`: managed environment root (for example `.venv` or bench
   env directory).
-- `{command}` / `{command_name}`: DevCovenant command token (for example
-  `gate`).
-- `{command_args}`: standalone token that expands to command args.
-- `{command_argv}`: standalone token that expands to
-  `{command_name} + {command_args}`.
-- `{command_string}`: shell-escaped command string for wrapper arguments.
 
 Scope split contract:
 - default global descriptor/template state keeps `managed-environment` off.
@@ -373,10 +364,8 @@ Scope split contract:
   in the managed interpreter when this policy is active, excluding
   `install`, `deploy`, `undeploy`, and `uninstall`.
 - if a resolved managed interpreter path exists but is not executable,
-  runtime emits an explicit managed-environment error and then attempts
-  `managed_rerun_commands` fallback when configured.
-- when direct managed interpreter resolution fails, runtime can rerun
-  DevCovenant through `managed_rerun_commands` wrapper metadata.
+  runtime emits an explicit managed-environment error and stops so the
+  environment contract can be repaired directly.
 
 Keep repository blocking at `error` while downgrading `tests-coverage` findings
 to warning:

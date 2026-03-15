@@ -9,6 +9,8 @@ import shlex
 import sys
 from pathlib import Path
 
+import devcovenant.core.runtime.execution as execution_runtime_module
+import devcovenant.core.services.registry as registry_runtime_module
 from devcovenant.core.flow.gate_changelog_helpers import (
     _entry_fingerprint,
     _latest_changelog_entry,
@@ -21,8 +23,6 @@ from devcovenant.core.flow.gate_status_helpers import (
 from devcovenant.core.flow.gate_status_helpers import (
     _resolve_latest_relevant_run_pointer as _resolve_latest_pointer_impl,
 )
-from devcovenant.core.runtime import execution as execution_runtime_module
-from devcovenant.core.services import registry as registry_runtime_module
 
 runtime_print = execution_runtime_module.runtime_print
 normalize_snapshot_rows = execution_runtime_module.normalize_snapshot_rows

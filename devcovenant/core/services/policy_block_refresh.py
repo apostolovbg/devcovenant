@@ -8,7 +8,7 @@ from typing import Dict, List, Tuple
 
 import yaml
 
-from devcovenant.core.services import metadata as metadata_runtime
+import devcovenant.core.services.metadata as metadata_runtime
 from devcovenant.core.services.registry import (
     POLICY_BLOCK_RE,
     PolicyDescriptor,

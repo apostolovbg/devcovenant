@@ -69,14 +69,15 @@ When `pycache_prefix_enabled: true`, an empty `pycache_prefix` (`''`) means
 DevCovenant will choose a stable repo-specific temp path automatically.
 Relative paths resolve from repo root; absolute paths are used as-is.
 This routing applies to DevCovenant-managed Python subprocesses and managed
-environment stage commands. For top-level fallback launches
+environment stage commands. For top-level source-checkout launches
 (`python3 -m devcovenant ...`), set `PYTHONPYCACHEPREFIX` in the shell/CI
 environment before Python starts if you want to prevent repo-local
-`__pycache__` creation for the launcher process itself.
+`__pycache__` creation for the launcher process itself. DevCovenant does not
+promise that boundary through an in-package bootstrap hook.
 When `managed-environment` is enabled, non-managed interpreter launches
 auto-rerun in the managed interpreter. If that resolved path exists but is not
-executable, runtime emits an explicit managed-environment error and then
-attempts `managed_rerun_commands` wrapper fallback when configured.
+executable, runtime emits an explicit managed-environment error and stops so
+the managed interpreter path or permissions can be fixed directly.
 
 ## Examples
 ```yaml

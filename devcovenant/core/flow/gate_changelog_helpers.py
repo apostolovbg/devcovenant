@@ -8,7 +8,7 @@ from pathlib import Path
 
 import yaml
 
-from devcovenant.core.services import registry as registry_runtime_module
+import devcovenant.core.services.registry as registry_runtime_module
 
 _DATE_ENTRY_PATTERN = re.compile(r"^\s*-\s*\d{4}-\d{2}-\d{2}\b")
 _MANAGED_BEGIN = "<!-- DEVCOV:BEGIN -->"

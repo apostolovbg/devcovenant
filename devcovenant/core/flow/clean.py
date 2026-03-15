@@ -4,12 +4,12 @@ from __future__ import annotations
 
 from pathlib import Path
 
+import devcovenant.core.services.cleanup as cleanup_runtime
 from devcovenant.core.runtime.execution import (
     merge_active_run_log_metadata,
     print_step,
     runtime_print,
 )
-from devcovenant.core.services import cleanup as cleanup_runtime
 
 
 def clean_repo(

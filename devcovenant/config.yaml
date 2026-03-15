@@ -129,7 +129,7 @@ install:
 
 # logs_keep_last controls run-log retention (`0` keeps all runs).
 
-# pycache_prefix_enabled/pycache_prefix route Python bytecode caches away from the repo tree (empty prefix = auto temp path).
+# pycache_prefix_enabled/pycache_prefix route DevCovenant-managed Python bytecode caches away from the repo tree (empty prefix = auto temp path).
 
 # file_suffixes and ignore_dirs define broad scan boundaries.
 

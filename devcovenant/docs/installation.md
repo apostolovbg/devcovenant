@@ -1,5 +1,5 @@
 # Installation and Lifecycle
-**Last Updated:** 2026-03-14
+**Last Updated:** 2026-03-15
 **Project Version:** 1.0.0
 
 ## Table of Contents
@@ -131,6 +131,8 @@ Runtime details that affect operations:
   and latest relevant run-log pointers
 - `devcovenant check` is a read-only audit command; gate pre-commit phases
   own refresh/autofix orchestration for the shared checking routine
+- hidden `check` retired flags are gone; audit behavior is controlled
+  only by the command contract itself and gate-owned environment toggles
 - `devcovenant check --help` and `devcovenant gate --help` are aligned with
   the same command contract (`check` audit-only, gate session lifecycle
   ownership, required non-lifecycle `gate --mid`, and short read-only
@@ -142,8 +144,8 @@ Runtime details that affect operations:
   before command logic continues, except lifecycle bootstrap/teardown commands
   (`install`, `deploy`, `undeploy`, `uninstall`)
 - if the resolved managed interpreter path is not executable, CLI emits an
-  explicit managed-environment failure and then uses
-  `managed_rerun_commands` fallback when configured
+  explicit managed-environment failure and stops so the interpreter path or
+  permissions can be fixed directly
 - command-run evidence (`devcovenant/logs/<run-id>/run.json`) records
   interpreter provenance fields (`invoked_python`, `effective_python`,
   `managed_environment_active`, `managed_reexec_applied`) so you can verify
@@ -164,19 +166,16 @@ Runtime details that affect operations:
 - managed command stages support `start|test|end|command|all`; non-start
   invocations can reuse `start=>...` bootstrap commands once when the
   interpreter does not exist yet
-- managed rerun wrapper stages also support `start|test|end|command|all`
-  through `managed_rerun_commands`, so bench/xenv launchers can rerun
-  DevCovenant when direct interpreter paths are unavailable
 - repositories can treat `devcovenant/**/__pycache__/` and `*.py[cod]` as
   guardrail violations and set `engine.pycache_prefix_enabled: true` so
   DevCovenant-managed child Python commands route bytecode caches via
-  `PYTHONPYCACHEPREFIX`; the shared lightweight launcher bootstrap in
-  `devcovenant/launcher_bootstrap.py` applies the same config-driven routing
-  in `devcovenant/__main__.py` and `devcovenant/cli.py` as early as Python
-  allows
-- boundary truth for fallback launcher runs (`python3 -m devcovenant ...`):
-  Python may still write bytecode for `devcovenant/__init__.py` or the first
-  launcher module before package code can apply config-driven routing
+  `PYTHONPYCACHEPREFIX`
+- boundary truth for source-checkout alternate launcher runs
+  (`python3 -m devcovenant ...`): Python may still write bytecode for
+  `devcovenant/__init__.py` or the first launcher module before DevCovenant
+  runtime code gains control; this launcher form is supported, but its
+  pre-import bytecode boundary still belongs to shell or CI environment
+  setup
 - if you need zero repo-local launcher-process bytecode drift while
   preserving bytecode generation, set `PYTHONPYCACHEPREFIX` in the shell/CI
   environment before Python starts; example shell helper:
@@ -330,10 +329,10 @@ DevCovenant distribution contracts follow PEP 639-compatible metadata:
   - `licenses/THIRD_PARTY_LICENSES.md`
   - `licenses/*.txt`
 - `pyproject.toml` constrains package discovery to `devcovenant` package roots
-  and excludes package bytecode/cache payloads plus removed legacy tree
-  names from wheel discovery so stale local build artifacts cannot leak
+  and excludes package bytecode/cache payloads plus retired tree names from
+  wheel discovery so stale local build artifacts cannot leak
 - `MANIFEST.in` includes license-source artifacts for sdist inputs
-- `MANIFEST.in` excludes removed legacy tree names so stale build artifacts
+- `MANIFEST.in` excludes retired tree names so stale build artifacts
   cannot leak into sdists
 - `MANIFEST.in` excludes runtime log payloads under `devcovenant/logs/*`
   while re-including `devcovenant/logs/README.md`
@@ -343,7 +342,7 @@ Build-time checks in `tests/devcovenant/test_install.py` validate:
 - SPDX and `license-files` metadata
 - manifest license inclusion
 - wheel legal artifacts under `*.dist-info/licenses/`
-- wheel exclusions for `__pycache__/`, `*.py[cod]`, and removed legacy trees
+- wheel exclusions for `__pycache__/`, `*.py[cod]`, and retired tree names
 - wheel exclusions for runtime logs under `devcovenant/logs/` while keeping
   the tracked `devcovenant/logs/README.md` skeleton
 - dirty-build validation where stale `build/lib/*` artifacts must not leak

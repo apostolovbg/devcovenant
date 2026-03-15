@@ -93,8 +93,8 @@ def _unit_test_resolve_clean_config_merges_profiles_and_config_layers() -> (
         assert "devcovenant/logs/**" in resolved.protected_globs
 
 
-def _unit_test_legacy_empty_clean_override_placeholder_is_ignored() -> None:
-    """Legacy all-empty override blocks should not wipe clean defaults."""
+def _unit_test_all_empty_clean_override_block_clears_lists() -> None:
+    """All-empty override blocks should now clear inherited clean lists."""
     module = importlib.import_module(MODULE)
     with tempfile.TemporaryDirectory() as temp_dir:
         repo_root = Path(temp_dir)
@@ -118,8 +118,10 @@ def _unit_test_legacy_empty_clean_override_placeholder_is_ignored() -> None:
 
         resolved = module.resolve_clean_config(repo_root)
 
-        assert ".pytype" in resolved.cache_dirs
-        assert ".turbo" in resolved.cache_dirs
+        assert resolved.build_dirs == ()
+        assert resolved.build_globs == ()
+        assert resolved.cache_dirs == ()
+        assert resolved.cache_globs == ()
 
 
 def _unit_test_explicit_empty_clean_override_clears_selected_key() -> None:
@@ -226,9 +228,9 @@ class GeneratedUnittestCases(unittest.TestCase):
         """Run clean-config merge behavior coverage."""
         _unit_test_resolve_clean_config_merges_profiles_and_config_layers()
 
-    def test_legacy_empty_clean_override_placeholder_is_ignored(self):
-        """Run legacy-placeholder clean override compatibility coverage."""
-        _unit_test_legacy_empty_clean_override_placeholder_is_ignored()
+    def test_all_empty_clean_override_block_clears_lists(self):
+        """Run all-empty clean override replacement coverage."""
+        _unit_test_all_empty_clean_override_block_clears_lists()
 
     def test_explicit_empty_clean_override_clears_selected_key(self):
         """Run explicit empty-list clean override coverage."""

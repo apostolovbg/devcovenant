@@ -25,7 +25,7 @@ def _write_status(repo_root: Path, payload: dict[str, object]) -> Path:
 
 
 def _unit_test_module_importable() -> None:
-    """Module should import without compatibility wrappers."""
+    """Module should import cleanly."""
     module = importlib.import_module(MODULE)
     assert module is not None
 
@@ -48,7 +48,7 @@ def _unit_test_latest_pointer_skips_active_status_run() -> None:
         run_logging = (
             module.execution_runtime_module.run_logging_runtime_module
         )
-        previous = run_logging.create_run_log_context(
+        run_logging.create_run_log_context(
             repo_root,
             "test",
             ["devcovenant", "test"],
@@ -63,9 +63,7 @@ def _unit_test_latest_pointer_skips_active_status_run() -> None:
             pointer = module._resolve_latest_relevant_run_pointer(repo_root)
         finally:
             module.execution_runtime_module.clear_active_run_log_context()
-        assert pointer is not None
-        assert pointer.get("run_id") == previous.run_id
-        assert pointer.get("command_name") == "test"
+        assert pointer is None
 
 
 def _unit_test_gate_status_summary_lines_report_open_session() -> None:
@@ -149,7 +147,7 @@ class GeneratedUnittestCases(unittest.TestCase):
         _unit_test_load_status_rejects_non_mapping_payload()
 
     def test_latest_pointer_skips_active_status_run(self):
-        """Run latest-pointer fallback assertions for active status runs."""
+        """Run latest-pointer strict-pointer assertions for active runs."""
         _unit_test_latest_pointer_skips_active_status_run()
 
     def test_gate_status_summary_lines_report_open_session(self):

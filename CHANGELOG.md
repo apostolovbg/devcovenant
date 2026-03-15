@@ -57,6 +57,221 @@ Example:
 ## Version 1.0.0
 
 - 2026-03-15:
+  Change: Rewrote docs and test narration to remove stale delegacy wording.
+  Why: Clarified the 1.0.0 contract so docs and assertions describe current
+  behavior instead of the old transition story.
+  Impact: Tightened workflow, architecture, installation, profile, and
+  troubleshooting guidance, and kept only intentional strict-behavior test
+  assertions.
+  Files:
+  CHANGELOG.md
+  PLAN.md
+  README.md
+  devcovenant/README.md
+  devcovenant/docs/architecture.md
+  devcovenant/docs/installation.md
+  devcovenant/docs/policies.md
+  devcovenant/docs/profiles.md
+  devcovenant/docs/troubleshooting.md
+  devcovenant/docs/workflow.md
+  tests/devcovenant/core/contracts/test_policy.py
+  tests/devcovenant/builtin/policies/dependency_license_sync/\
+    test_dependency_lock_runtime.py
+  tests/devcovenant/builtin/policies/managed_environment/\
+    test_managed_environment_runtime.py
+  tests/devcovenant/builtin/policies/tests_coverage/\
+    test_assertion_signal.py
+  tests/devcovenant/core/flow/test_gate.py
+  tests/devcovenant/core/flow/test_gate_changelog_helpers.py
+  tests/devcovenant/core/flow/test_gate_status_helpers.py
+  tests/devcovenant/core/flow/test_refresh.py
+  tests/devcovenant/core/flow/test_session.py
+  tests/devcovenant/core/lib/test_document_exemptions.py
+  tests/devcovenant/core/lib/test_selectors.py
+  tests/devcovenant/core/runtime/test_execution.py
+  tests/devcovenant/core/runtime/test_run_logging.py
+  tests/devcovenant/core/runtime/test_session_snapshot.py
+  tests/devcovenant/core/services/test_event.py
+  tests/devcovenant/core/services/test_metadata.py
+  tests/devcovenant/core/services/test_policy_autofix.py
+  tests/devcovenant/core/services/test_policy_block_refresh.py
+  tests/devcovenant/core/services/test_policy_check_context.py
+  tests/devcovenant/core/services/test_policy_check_runner.py
+  tests/devcovenant/core/services/test_policy_engine.py
+  tests/devcovenant/core/services/test_policy_parse.py
+  tests/devcovenant/core/services/test_policy_reporting.py
+  tests/devcovenant/core/services/test_policy_runtime_actions.py
+  tests/devcovenant/core/services/test_profile_registry.py
+  tests/devcovenant/core/services/test_runtime_profile.py
+  tests/devcovenant/core/services/test_translator_engine.py
+
+- 2026-03-15:
+  Change: Removed lazy package-export shims and made test-event handling
+  explicit.
+  Why: Reduced transitional compatibility behavior so package surfaces and
+  event recording follow the same no-fallback contract.
+  Impact: Made core packages import concrete submodules directly, kept
+  launcher wording explicit, and recorded test events only through
+  declared adapters.
+  Files:
+  CHANGELOG.md
+  PLAN.md
+  README.md
+  devcovenant/README.md
+  devcovenant/builtin/policies/changelog_coverage/changelog_coverage.py
+  devcovenant/builtin/policies/devcov_structure_guard/\
+    devcov_structure_guard.py
+  devcovenant/builtin/policies/managed_environment/\
+    managed_environment_runtime.py
+  devcovenant/core/contracts/__init__.py
+  devcovenant/core/flow/__init__.py
+  devcovenant/core/flow/clean.py
+  devcovenant/core/flow/gate.py
+  devcovenant/core/flow/gate_changelog_helpers.py
+  devcovenant/core/flow/gate_status_helpers.py
+  devcovenant/core/flow/refresh.py
+  devcovenant/core/flow/session.py
+  devcovenant/core/lib/__init__.py
+  devcovenant/core/runtime/__init__.py
+  devcovenant/core/runtime/execution.py
+  devcovenant/core/services/__init__.py
+  devcovenant/core/services/cleanup.py
+  devcovenant/core/services/event.py
+  devcovenant/core/services/metadata.py
+  devcovenant/core/services/policy_block_refresh.py
+  devcovenant/core/services/policy_check_runner.py
+  devcovenant/core/services/policy_runtime_actions.py
+  devcovenant/core/services/registry.py
+  devcovenant/docs/architecture.md
+  devcovenant/docs/installation.md
+  devcovenant/docs/policies.md
+  devcovenant/docs/profiles.md
+  devcovenant/docs/workflow.md
+  devcovenant/install.py
+  tests/devcovenant/core/services/test_event.py
+  tests/devcovenant/core/services/test_registry.py
+
+- 2026-03-15:
+  Change: Removed hidden check flags, clean placeholder compatibility,
+  and gate-status pointer scanning.
+  Why: Reduced compatibility shims and recovery logic so command/config
+  ownership stays explicit.
+  Impact: Clarified audit-only check behavior, made clean overrides fully
+  explicit, and made gate status rely only on owned pointers.
+  Files:
+  CHANGELOG.md
+  PLAN.md
+  devcovenant/builtin/profiles/global/assets/config.yaml
+  devcovenant/check.py
+  devcovenant/core/flow/gate_status_helpers.py
+  devcovenant/core/runtime/execution.py
+  devcovenant/core/services/cleanup.py
+  devcovenant/docs/architecture.md
+  devcovenant/docs/config.md
+  devcovenant/docs/installation.md
+  devcovenant/docs/policies.md
+  devcovenant/docs/profiles.md
+  devcovenant/docs/workflow.md
+  tests/devcovenant/core/flow/test_gate.py
+  tests/devcovenant/core/flow/test_gate_status_helpers.py
+  tests/devcovenant/core/services/test_cleanup.py
+  tests/devcovenant/test_check.py
+  tests/devcovenant/test_cli.py
+
+- 2026-03-15:
+  Change: Removed managed-environment rerun fallbacks and enforced
+  local-registry-only runtime resolution.
+  Why: Preferred explicit managed-environment failures over wrapper reruns
+  and AGENTS parsing so command execution stays deterministic.
+  Impact: Clarified that DevCovenant now stops on missing or
+  non-executable managed interpreters across runtime surfaces.
+  Files:
+  CHANGELOG.md
+  AGENTS.md
+  CONTRIBUTING.md
+  README.md
+  devcovenant/README.md
+  devcovenant/builtin/policies/managed_environment/\
+    managed_environment.py
+  devcovenant/builtin/policies/managed_environment/\
+    managed_environment.yaml
+  devcovenant/builtin/policies/managed_environment/\
+    managed_environment_runtime.py
+  devcovenant/builtin/profiles/global/assets/CONTRIBUTING.yaml
+  devcovenant/builtin/profiles/global/assets/devcovenant/README.yaml
+  devcovenant/cli.py
+  devcovenant/core/runtime/execution.py
+  devcovenant/custom/profiles/devcovrepo/assets/docs/config.md
+  devcovenant/custom/profiles/devcovrepo/assets/docs/installation.md
+  devcovenant/custom/profiles/devcovrepo/assets/docs/workflow.md
+  devcovenant/docs/architecture.md
+  devcovenant/docs/config.md
+  devcovenant/docs/installation.md
+  devcovenant/docs/policies.md
+  devcovenant/docs/profiles.md
+  devcovenant/docs/troubleshooting.md
+  devcovenant/docs/workflow.md
+  PLAN.md
+  tests/devcovenant/builtin/policies/managed_environment/\
+    test_managed_environment.py
+  tests/devcovenant/builtin/policies/managed_environment/\
+    test_managed_environment_runtime.py
+  tests/devcovenant/core/runtime/test_execution.py
+  tests/devcovenant/test_cli.py
+
+- 2026-03-15:
+  Change: Removed legacy gate-snapshot migration logic and rejected old
+    snapshot row formats explicitly.
+  Why: Replaced the old `legacy_numstat` bridge with strict current-format
+    validation so stale gate payloads now fail clearly and require a fresh
+    `devcovenant gate --start`.
+  Impact: Kept session scoping deterministic, removed hidden migration
+    behavior, and aligned snapshot tests and docs to the current gate format.
+  Files:
+  CHANGELOG.md
+  PLAN.md
+  devcovenant/core/runtime/execution.py
+  devcovenant/core/runtime/session_snapshot.py
+  devcovenant/core/services/policy_check_context.py
+  devcovenant/docs/architecture.md
+  devcovenant/docs/workflow.md
+  tests/devcovenant/core/runtime/test_session_snapshot.py
+  tests/devcovenant/core/services/test_policy_check_context.py
+
+- 2026-03-15:
+  Change: Removed the in-package launcher bootstrap and locked Item 2's
+    honest launcher and pycache contract.
+  Why: Clarified that source-checkout launcher-process bytecode control must
+    belong to shell or CI `PYTHONPYCACHEPREFIX`, not to repo-root startup
+    hooks or fake in-package pre-import fixes.
+  Impact: Made pycache routing explicit, deleted the misleading bootstrap
+    helper, and aligned tests and docs to the real zero-drift boundary.
+  Files:
+  CHANGELOG.md
+  PLAN.md
+  README.md
+  devcovenant/README.md
+  devcovenant/__main__.py
+  devcovenant/cli.py
+  devcovenant/config.yaml
+  devcovenant/core/flow/refresh.py
+  devcovenant/core/runtime/execution.py
+  devcovenant/docs/architecture.md
+  devcovenant/docs/config.md
+  devcovenant/docs/installation.md
+  devcovenant/docs/profiles.md
+  devcovenant/docs/troubleshooting.md
+  devcovenant/docs/workflow.md
+  devcovenant/builtin/profiles/global/assets/config.yaml
+  devcovenant/builtin/profiles/global/assets/devcovenant/README.yaml
+  devcovenant/custom/profiles/devcovrepo/assets/docs/config.md
+  devcovenant/custom/profiles/devcovrepo/assets/docs/installation.md
+  devcovenant/custom/profiles/devcovrepo/assets/docs/troubleshooting.md
+  devcovenant/custom/profiles/devcovrepo/assets/docs/workflow.md
+  tests/devcovenant/core/runtime/test_execution.py
+  tests/devcovenant/test_cli.py
+
+- 2026-03-15:
   Change: Amended the no-fallback roadmap to insert a launcher and pycache
     strictness item ahead of the deeper delegacy removals.
   Why: Clarified that source-checkout bytecode drift must be solved without

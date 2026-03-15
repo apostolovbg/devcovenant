@@ -40,12 +40,16 @@ shell wrapper).
   pre-commit config.
 - `upgrade`: reconcile core from source on every run, then run `refresh`.
 - managed-environment runtime notes: when a managed interpreter path exists but
-  is not executable, DevCovenant emits an explicit managed-environment error;
-  when configured, `managed_rerun_commands` wrapper fallback is attempted.
+  is not executable, DevCovenant emits an explicit managed-environment error
+  and stops so the interpreter path or permissions can be fixed directly.
 - unhandled CLI runtime exceptions are normalized into explicit typed errors,
   while traceback details remain available in run logs.
 - `undeploy`: remove managed blocks/registries and generated `.gitignore`
   fragments while keeping core + config.
+- launcher truth: DevCovenant does not rely on repo-root startup hooks or
+  in-package pre-import bootstrap tricks to control source-checkout bytecode
+  writes. Top-level `python3 -m devcovenant ...` bytecode behavior is owned by
+  the shell/CI environment before Python starts.
 
 ## Examples
 ```bash

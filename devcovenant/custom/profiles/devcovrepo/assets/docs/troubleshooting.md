@@ -51,8 +51,10 @@ Fix:
 Prevention:
 - Enable `engine.pycache_prefix_enabled: true` in `devcovenant/config.yaml`
   so DevCovenant-managed Python subprocesses use `PYTHONPYCACHEPREFIX`.
-- For fallback launcher runs (`python3 -m devcovenant ...`), set
-  `PYTHONPYCACHEPREFIX` in the shell/CI environment before Python starts.
+- For source-checkout alternate launcher runs (`python3 -m devcovenant ...`),
+  set `PYTHONPYCACHEPREFIX` in the shell/CI environment before Python starts.
+- DevCovenant does not rely on repo-root startup hooks or in-package
+  bootstrap tricks to prevent launcher-process bytecode writes.
 
 ## Translator Issues
 Symptom: policy reports missing translator coverage for active language

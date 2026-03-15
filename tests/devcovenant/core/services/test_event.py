@@ -1,30 +1,48 @@
-"""Mirrored surface sanity checks."""
+"""Tests for explicit test-event adapter behavior."""
 
 from __future__ import annotations
 
 import importlib
+import tempfile
 import unittest
+from datetime import datetime, timedelta, timezone
+from pathlib import Path
 
 MODULE = "devcovenant.core.services.event"
+PACKAGE_MODULES = (
+    "devcovenant.core.flow",
+    "devcovenant.core.runtime",
+    "devcovenant.core.services",
+    "devcovenant.core.contracts",
+    "devcovenant.core.lib",
+)
+SUBMODULE_IMPORTS = (
+    "devcovenant.core.flow.gate",
+    "devcovenant.core.runtime.execution",
+    "devcovenant.core.services.event",
+    "devcovenant.core.contracts.policy",
+    "devcovenant.core.lib.selectors",
+)
+
+
+def _timestamp_range() -> tuple[datetime, datetime]:
+    """Return deterministic start/finish timestamps for event tests."""
+    started = datetime(2026, 3, 15, 10, 0, tzinfo=timezone.utc)
+    finished = started + timedelta(seconds=3)
+    return started, finished
 
 
 def _unit_test_module_importable() -> None:
-    """Module should import without compatibility wrappers."""
+    """Module should import cleanly."""
     module = importlib.import_module(MODULE)
     assert module is not None
-
-
-def _unit_test_module_has_public_symbols() -> None:
-    """Module should expose at least one public symbol."""
-    module = importlib.import_module(MODULE)
-    public_symbols = [name for name in dir(module) if not name.startswith("_")]
-    assert public_symbols
 
 
 def _unit_test_event_symbol_contract_is_stable() -> None:
     """Event service classes/functions should keep a stable surface."""
     module = importlib.import_module(MODULE)
     assert hasattr(module, "consume_test_event_adapter_warnings")
+    assert hasattr(module, "generic_test_event_adapter_factory")
     assert hasattr(module, "load_test_event_adapters")
     assert hasattr(module, "python_test_event_adapter_factory")
     assert hasattr(module, "TestEvent")
@@ -39,17 +57,131 @@ def _unit_test_event_symbol_contract_is_stable() -> None:
     assert hasattr(module.TestEventManager, "record_command")
 
 
+def _unit_test_core_packages_do_not_define_dynamic_getattr() -> None:
+    """Core package namespaces should not use lazy dynamic package hooks."""
+    for module_name in PACKAGE_MODULES:
+        module = importlib.import_module(module_name)
+        assert "__getattr__" not in module.__dict__
+
+
+def _unit_test_direct_submodule_imports_still_work() -> None:
+    """Concrete submodule imports should work without package shims."""
+    for module_name in SUBMODULE_IMPORTS:
+        module = importlib.import_module(module_name)
+        assert module is not None
+
+
+def _unit_test_unmatched_command_is_skipped_without_generic_adapter() -> None:
+    """Commands without a configured adapter should be skipped explicitly."""
+    module = importlib.import_module(MODULE)
+    adapter = module.python_test_event_adapter_factory(
+        adapter_id="python",
+        profile_name="python",
+    )
+    manager = module.TestEventManager([adapter])
+    started, finished = _timestamp_range()
+
+    recorded = manager.record_command(
+        command=["npm", "test"],
+        command_str="npm test",
+        started=started,
+        finished=finished,
+        exit_code=0,
+    )
+
+    assert recorded is False
+    assert manager.events == []
+
+
+def _unit_test_explicit_generic_adapter_records_unmatched_command() -> None:
+    """Profiles may opt in to generic coverage explicitly."""
+    module = importlib.import_module(MODULE)
+    adapter = module.generic_test_event_adapter_factory(
+        adapter_id="generic",
+        profile_name="demo",
+    )
+    manager = module.TestEventManager([adapter])
+    started, finished = _timestamp_range()
+
+    recorded = manager.record_command(
+        command=["npm", "test"],
+        command_str="npm test",
+        started=started,
+        finished=finished,
+        exit_code=0,
+    )
+
+    assert recorded is True
+    assert len(manager.events) == 1
+    assert manager.events[0].adapter_id == "generic"
+    assert manager.events[0].command == "npm test"
+
+
+def _unit_test_profile_loader_accepts_explicit_generic_adapter() -> None:
+    """Loader should materialize a profile-declared generic adapter."""
+    module = importlib.import_module(MODULE)
+    with tempfile.TemporaryDirectory() as temp_dir:
+        repo_root = Path(temp_dir)
+        config_path = repo_root / "devcovenant" / "config.yaml"
+        config_path.parent.mkdir(parents=True, exist_ok=True)
+        config_path.write_text(
+            "profiles:\n" "  active:\n" "    - python\n",
+            encoding="utf-8",
+        )
+
+        registry_path = (
+            repo_root
+            / "devcovenant"
+            / "registry"
+            / "local"
+            / "profile_registry.yaml"
+        )
+        registry_path.parent.mkdir(parents=True, exist_ok=True)
+        registry_path.write_text(
+            "global: {}\n"
+            "python:\n"
+            "  test_events:\n"
+            "    - id: generic\n"
+            "      entrypoint: "
+            "devcovenant.core.services.event:"
+            "generic_test_event_adapter_factory\n",
+            encoding="utf-8",
+        )
+
+        adapters = module.load_test_event_adapters(repo_root)
+
+    assert len(adapters) == 1
+    assert isinstance(adapters[0], module.GenericTestEventAdapter)
+    assert adapters[0].adapter_id == "generic"
+
+
 class GeneratedUnittestCases(unittest.TestCase):
-    """unittest wrappers for layered module sanity checks."""
+    """unittest wrappers for test-event runtime assertions."""
 
     def test_module_importable(self):
         """Run module importability sanity check."""
         _unit_test_module_importable()
 
-    def test_module_has_public_symbols(self):
-        """Run module public-symbol sanity check."""
-        _unit_test_module_has_public_symbols()
-
     def test_event_symbol_contract_is_stable(self):
         """Run event service symbol contract assertions."""
         _unit_test_event_symbol_contract_is_stable()
+
+    def test_core_packages_do_not_define_dynamic_getattr(self):
+        """Run package-namespace no-`__getattr__` assertions."""
+        _unit_test_core_packages_do_not_define_dynamic_getattr()
+
+    def test_direct_submodule_imports_still_work(self):
+        """Run direct-submodule import assertions."""
+        _unit_test_direct_submodule_imports_still_work()
+
+    def test_unmatched_command_is_skipped_without_generic_adapter(self):
+        """Run unmatched-command explicit-skip assertions."""
+        _unit_test_unmatched_command_is_skipped_without_generic_adapter()
+
+    def test_explicit_generic_adapter_records_unmatched_command(self):
+        """Run explicit generic-adapter assertions."""
+        _unit_test_explicit_generic_adapter_records_unmatched_command()
+
+    def test_profile_loader_accepts_explicit_generic_adapter(self):
+        """Run profile-loader explicit generic-adapter assertions."""
+        _unit_test_profile_loader_accepts_explicit_generic_adapter()

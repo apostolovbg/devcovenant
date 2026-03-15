@@ -187,7 +187,7 @@ Operator notes:
 - Replaced the prior completed roadmap with the strict no-fallback issue
   register and dependency-ordered backlog now governing the next slices.
 
-### Item 2 [pending]: Lock Launcher and Pycache Strictness
+### Item 2 [complete]: Lock Launcher and Pycache Strictness
 **Objective:** Make the launcher contract explicit and resolve source-checkout
 bytecode drift without repo-root bootstrap files.
 
@@ -233,7 +233,23 @@ and docs/tests for supported launcher forms.
 2. No repo-root bootstrap file or startup hook is required.
 3. Later no-fallback items no longer depend on ambiguous bootstrap behavior.
 
-### Item 3 [pending]: Remove Legacy Gate-Snapshot Compatibility
+**Closure Notes (2026-03-15)**
+- Deleted the in-package `devcovenant/launcher_bootstrap.py` helper and
+  removed the `cli.py` / `__main__.py` startup calls that implied DevCovenant
+  could own pre-import launcher-process bytecode routing from inside the
+  package.
+- Kept `devcovenant` and `python3 -m devcovenant` as supported launcher forms,
+  but narrowed the zero-drift promise honestly: source-checkout launcher-
+  process bytecode control belongs to shell or CI `PYTHONPYCACHEPREFIX`, not
+  to repo-root startup hooks or in-package bootstrap tricks.
+- Made runtime pycache routing and repo bytecode cleanup depend on explicit
+  `engine.pycache_prefix_enabled` config rather than runtime profile
+  inference; refresh still seeds that key explicitly for `devcovrepo`.
+- Added launcher-contract and explicit-opt-in pycache regressions, and updated
+  root, package, config, workflow, installation, architecture, profile, and
+  troubleshooting docs to match the strict launcher boundary.
+
+### Item 3 [complete]: Remove Legacy Gate-Snapshot Compatibility
 **Objective:** Delete all live migration paths for pre-current gate snapshot
 payloads.
 
@@ -269,7 +285,21 @@ construction, and gate payload validation.
 3. Tests no longer protect compatibility behavior that the product no longer
    supports.
 
-### Item 4 [pending]: Remove Managed-Environment Fallback Behavior
+**Closure Notes (2026-03-15)**
+- Removed the legacy snapshot migration bridge from
+  `devcovenant/core/runtime/session_snapshot.py` and the execution-layer
+  delegate in `devcovenant/core/runtime/execution.py`.
+- Changed snapshot-style handling so legacy multi-tab rows are classified as
+  unsupported and fail with an explicit fresh-start instruction instead of
+  falling back to epoch-based path discovery.
+- Removed the legacy rendering/reason-code path from
+  `devcovenant/core/services/policy_check_context.py`, so open and closed
+  sessions now reject stale payloads directly.
+- Replaced the old migration-preserving tests with strict rejection
+  regressions and updated the workflow/architecture docs to say that only the
+  current filesystem-hash gate snapshot format is supported.
+
+### Item 4 [complete]: Remove Managed-Environment Fallback Behavior
 **Objective:** Make managed-environment execution strict and single-authority.
 
 **Depends on:** Item 3.
@@ -310,7 +340,19 @@ metadata/runtime authority, and docs/tests for wrapper reruns.
    behavior.
 3. Managed-environment failure modes are explicit and documented.
 
-### Item 5 [pending]: Remove Hidden Command and Cleanup Compatibility
+**Closure Notes (2026-03-15)**
+- Removed `managed_rerun_commands` support from managed-environment runtime,
+  CLI dispatch, descriptor metadata, docs, and tests.
+- Removed the `resolve-rerun-command` runtime action and the related
+  execution-runtime helper surface.
+- Removed `AGENTS.md` parsing fallback from managed-environment runtime.
+  Local policy registry is now the only runtime authority, and missing
+  registry state fails explicitly with `devcovenant refresh` guidance.
+- Tightened managed-environment failure behavior so missing or
+  non-executable managed interpreters stop with explicit operator-actionable
+  errors instead of attempting wrapper reruns.
+
+### Item 5 [complete]: Remove Hidden Command and Cleanup Compatibility
 **Objective:** Delete remaining command-level fallback and compatibility seams.
 
 **Depends on:** Item 4.
@@ -346,7 +388,19 @@ metadata/runtime authority, and docs/tests for wrapper reruns.
 3. `clean` no longer preserves legacy placeholder behavior.
 4. Runtime option ownership is explicit in config/templates.
 
-### Item 6 [pending]: Remove Transitional Package and Event Compatibility
+**Closure Notes (2026-03-15)**
+- Removed hidden `check` flags (`--nofix`, `--norefresh`) so the audit-only
+  command exposes only its real CLI contract.
+- Removed latest-run recovery scanning from `gate --status`; status now reads
+  only the owned latest-run pointer artifact.
+- Removed the clean all-empty-placeholder compatibility exception so
+  replacement semantics are fully explicit.
+- Removed `engine.tests_output_mode -> engine.output_mode` fallback. Test
+  output mode is now owned explicitly by config/template values.
+- Updated docs and focused regressions for `check`, `clean`,
+  `gate --status`, and execution-runtime option resolution.
+
+### Item 6 [complete]: Remove Transitional Package and Event Compatibility
 **Objective:** Make package surfaces and event behavior read as intentional,
 not transitional.
 
@@ -387,7 +441,21 @@ adapter behavior.
 2. Alternate launcher forms are described as supported forms, not fallbacks.
 3. Test-event handling is explicit and intentionally configured.
 
-### Item 7 [pending]: Full Docs and Tests Delegacy Sweep
+**Closure Notes (2026-03-15)**
+- Removed lazy `__getattr__` compatibility indirection from the layered
+  `devcovenant/core/*/__init__.py` packages and shifted internal callers to
+  concrete module imports instead of package-export shims.
+- Kept `python3 -m devcovenant` and equivalent launcher forms as supported
+  entrypoints, but removed remaining fallback framing from the workflow and
+  installation narrative.
+- Replaced the hidden generic test-event fallback with explicit behavior:
+  unmatched test commands are skipped unless a profile declares
+  `generic_test_event_adapter_factory` intentionally.
+- Added focused package-namespace and test-event regressions, and updated
+  README/package/profile/architecture docs to describe the explicit runtime
+  contract only.
+
+### Item 7 [complete]: Full Docs and Tests Delegacy Sweep
 **Objective:** Remove stale fallback/compatibility narration and obsolete test
 coverage across the repo.
 
@@ -429,6 +497,19 @@ profile assets, and tests that still encode removed fallback behavior.
 1. Docs describe the current strict product truth.
 2. Tests no longer preserve deleted fallback behavior.
 3. Documentation routes and quality checks remain green.
+
+**Closure Notes (2026-03-15)**
+- Swept the remaining package and workflow docs so they describe explicit
+  supported behavior instead of transitional fallback language.
+- Tightened installation, profiles, troubleshooting, workflow, and
+  architecture wording around alternate launcher use, stage bootstrap,
+  snapshot ownership, and helper-surface ownership.
+- Cleaned stale transition-oriented test narration while preserving the
+  active strict-behavior assertions that still matter for the current
+  runtime contract.
+- Kept only intentional current-behavior references in tests and docs;
+  historical or deleted-path narration was removed where it no longer helped
+  explain the live 1.0.0 baseline.
 
 ### Item 8 [pending]: Full Validation and Downstream Proof
 **Objective:** Prove the strict no-fallback baseline operationally in both this

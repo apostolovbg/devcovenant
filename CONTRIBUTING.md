@@ -42,8 +42,8 @@ If the console script is not on your PATH, use
 If the gate sequence fails, clear violations and rerun the required
 commands until the repository is clean.
 If managed-environment is enabled and the resolved interpreter is not
-directly executable, DevCovenant emits an explicit error and falls back
-to `managed_rerun_commands` when configured.
+directly executable, DevCovenant emits an explicit error and stops so the
+managed interpreter path or permissions can be fixed directly.
 <!-- DEVCOV:END -->
 
 ## Repository Notes

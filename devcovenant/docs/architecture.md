@@ -1,5 +1,5 @@
 # DevCovenant Architecture Contracts
-**Last Updated:** 2026-03-14
+**Last Updated:** 2026-03-15
 **Project Version:** 1.0.0
 
 ## Table of Contents
@@ -110,8 +110,8 @@ Invariant:
 - Tier B: extension contract (policy/profile/translator interfaces).
 - Tier C: data contract (local/global registry schemas and status payloads).
 - Tier D: layered kernel modules under
-  `devcovenant/core/{flow,runtime,services,lib,contracts}` with legacy
-  root-module compatibility aliases.
+  `devcovenant/core/{flow,runtime,services,lib,contracts}` with direct
+  submodule imports and no lazy package-export compatibility indirection.
 
 ## Core Runtime Invariants
 ### Runtime and Parsing
@@ -157,12 +157,12 @@ Invariant:
 - Output mode is resolved from `devcovenant/config.yaml -> engine.output_mode`
   (`normal|quiet|verbose`) and defaults to `verbose` when unset or invalid.
 - tests output mode resolves from
-  `devcovenant/config.yaml -> engine.tests_output_mode` and falls back to
-  `engine.output_mode` when unset for compatibility.
+  `devcovenant/config.yaml -> engine.tests_output_mode`. Keep the key
+  explicit so test output behavior is not inferred from `engine.output_mode`.
 - `test` resolves required commands through the
   `devflow-run-gates` policy runtime action
   (`resolve-required-test-commands`) and executes exactly the returned
-  command chain; runtime does not inject fallback command lists.
+  command chain; runtime does not inject hidden alternate command lists.
 - managed-environment orchestration is policy-owned:
   `managed-environment` runtime action `resolve-stage` prepares
   stage-scoped environment state (`start`/`test`/`end`/`command`), and
@@ -170,12 +170,9 @@ Invariant:
   when current and managed interpreters differ.
   Lifecycle bootstrap/teardown commands
   (`install`, `deploy`, `undeploy`, `uninstall`) bypass managed re-exec.
-- when interpreter resolution fails but
-  `managed_rerun_commands` metadata is configured, CLI dispatch can rerun
-  DevCovenant through stage-scoped wrapper commands with command placeholders.
 - when a resolved managed interpreter path exists but is not executable,
-  CLI dispatch emits an explicit managed-environment error and then follows
-  the same rerun-wrapper fallback contract when configured.
+  CLI dispatch emits an explicit managed-environment error and stops so the
+  interpreter contract can be repaired directly.
 - Normal-mode `devcovenant test` keeps status output concise, suppresses
   flood-prone test child output in console, captures full child output in
   run-log artifacts, and emits sparse deterministic start/completion markers
@@ -254,7 +251,8 @@ Invariant:
   `check`, `clean`, `gate`, `test`, `install`, `deploy`, `refresh`,
   `upgrade`, `undeploy`, `uninstall`, `update_lock`.
 - CLI examples default to on-PATH `devcovenant ...` usage.
-- `python3 -m devcovenant ...` remains the source-checkout fallback.
+- `python3 -m devcovenant ...` remains a supported alternate launcher form for
+  source checkouts.
 - CLI-facing command scripts stay at package root.
 - Active kernel ownership now lives under `devcovenant/core/flow`,
   `devcovenant/core/runtime`, `devcovenant/core/services`,
@@ -280,18 +278,16 @@ Invariant:
 - when `managed-environment` is enabled, gate stages run stage-scoped
   `managed_commands` (`start`/`end`) before pre-commit, then execute
   Python-launcher gate commands with the resolved managed interpreter.
-- managed-environment resolution falls back to the compiled AGENTS policy
-  block when local policy registry metadata is missing, so non-gate commands
-  do not need to write registry state just to resolve managed execution.
+- managed-environment resolution requires local policy registry metadata.
+  Missing registry state now fails explicitly and requires
+  `devcovenant refresh`.
 - managed-environment command stages are metadata-driven:
   `start`, `test`, `end`, `command`, and `all`.
-- managed rerun wrapper stages are metadata-driven through
-  `managed_rerun_commands` with the same stage contract.
 - managed-environment interpreter detection preserves virtualenv launcher
   paths (for example `.venv/bin/python`) instead of collapsing symlinks to
   system interpreter paths.
 - if a non-start stage is invoked before interpreter creation, runtime runs
-  explicit `start=>...` managed commands once as bootstrap fallback.
+  explicit `start=>...` managed commands once as stage bootstrap.
 - managed-environment stage bootstrap state is tracked in
   `DEVCOV_MANAGED_STAGE_RUNS` so `start` commands are not rerun after CLI
   managed-interpreter re-exec.
@@ -365,9 +361,9 @@ Invariant:
   `devcovenant/core/services/policy_engine.py`. The stable service surface is
   `DevCovenantEngine.check()` returning `CheckResult`, with result helper
   methods used by command layers for blocking/sync decisions.
-- `devcovenant/core/services/__init__.py` keeps a narrow compatibility export
-  surface for stable service modules. Extracted helper seams under
-  `devcovenant/core/services/policy_*.py` are treated as internal
+- Core package `__init__` modules now act as simple namespace markers.
+  Internal callers import concrete submodules directly, and extracted helper
+  seams under `devcovenant/core/services/policy_*.py` remain internal
   implementation modules unless a plan slice explicitly promotes one.
 - Policy-engine summary status messaging now resolves against the configured
   `engine.fail_threshold` so printed status text matches actual blocking
@@ -391,13 +387,13 @@ Invariant:
   `policy_engine` wrapper functions as the stable service import surface.
 - `policy_engine.py` also delegates violation/sync reporting and fail-threshold
   blocking helpers to `devcovenant/core/services/policy_reporting.py` while
-  preserving `DevCovenantEngine` reporting methods as compatibility wrappers
-  around the stable output contract.
+  preserving `DevCovenantEngine` reporting methods as the stable output
+  contract surface.
 - `policy_engine.py` also delegates repository file-scope helpers (config
   ignore pattern normalization, core exclusion path resolution, profile-based
   suffix/ignore merges, and repository file collection) to
   `devcovenant/core/services/policy_file_scope.py` while preserving engine
-  methods as compatibility wrappers for callers and tests.
+  methods as the stable call surface for callers and tests.
 - `policy_engine.py` also delegates autofixer discovery/execution helpers
   (bundled fixer loading plus auto-fix run-loop messaging/results) to
   `devcovenant/core/services/policy_autofix.py` while preserving engine
@@ -445,28 +441,23 @@ Invariant:
   `engine.pycache_prefix_enabled` is active so repo-local DevCovenant child
   Python commands write bytecode caches outside the repo tree while
   preserving bytecode generation fidelity.
-- lightweight launcher bootstrap routing is centralized in
-  `devcovenant/launcher_bootstrap.py` and called by `devcovenant/cli.py` and
-  `devcovenant/__main__.py` before runtime imports, but shell/CI launcher env
-  still owns the zero-drift boundary for fallback launcher starts because
-  Python can compile the first launcher module(s) before package code runs.
+- source-checkout top-level `python3 -m devcovenant ...` launches can still
+  write launcher-process bytecode before DevCovenant runtime code gains
+  control; shell/CI `PYTHONPYCACHEPREFIX` owns that zero-drift boundary
+  instead of repo-root startup hooks or in-package bootstrap tricks.
 - Local gate state file is `devcovenant/registry/local/gate_status.json`.
 - `gate --status` reads gate-state and latest-run-log pointers through a
   short, read-only status path and does not mutate lifecycle state.
 - `devcovenant/core/flow/gate_status_helpers.py` owns read-only status-line
-  assembly and latest-run pointer fallback resolution for `gate --status`.
+  assembly and owned latest-run pointer resolution for `gate --status`.
 - `devcovenant/core/flow/gate_changelog_helpers.py` owns gate-start
   changelog top-entry fingerprint and document-exemption option resolution.
 - changelog helper default header-key resolution aligns with generated doc
   headers: `Last Updated`, `Project Version`, `DevCovenant Version`.
-- Item 6 compatibility wrapper inventory keeps transitional seams explicit:
-  `devcovenant/core/flow/gate.py::_resolve_latest_relevant_run_pointer`
-  delegates to `gate_status_helpers._resolve_latest_relevant_run_pointer`,
-  and `devcovenant/core/services/policy_engine.py` wrappers delegate to
-  extracted `policy_*` helper modules.
-  Promotion/removal criteria: promote only via an explicit contract-change
-  slice with migration/docs/tests; remove only after in-tree callers move to
-  direct helper imports and delegation regressions are replaced accordingly.
+- Gate/runtime helper extraction remains explicit: command-facing modules may
+  call dedicated helper modules, but package-level compatibility-export
+  indirection is removed and internal callers import concrete modules
+  directly.
 - gate-start document exemption baselines now capture DEVCOV-managed block
   fingerprints for non-doc text files (for example generated YAML/YML
   assets) so changelog coverage can ignore managed-only regenerations
@@ -526,12 +517,15 @@ Invariant:
 - Changelog and session scoping use gate-session snapshots
   (`session_start_snapshot`, optional `session_baseline_snapshot`,
   `session_end_snapshot`, `last_run_snapshot`).
+- Gate-session snapshots now use the current filesystem-hash row format only;
+  older snapshot payloads are rejected explicitly and require a fresh
+  `devcovenant gate --start`.
 - `gate_status.json` stores a targeted `session_start_snapshot` baseline
   mapping so `changelog-coverage` can scope deleted-file evidence to the
   active session without relying on HEAD-wide git deletions.
 - Filesystem snapshot helpers are centralized in
-  `devcovenant/core/runtime/session_snapshot.py`, with command/runtime
-  compatibility re-exports from `devcovenant/core/runtime/execution.py`.
+  `devcovenant/core/runtime/session_snapshot.py`, with runtime consumers
+  treating that module as the canonical snapshot-helper home.
 - Core policy/runtime flow avoids git `HEAD`/working-tree diff dependence for
   bundled session behavior.
 - Session-scoped policy checks evaluate an empty scope during normal

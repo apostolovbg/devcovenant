@@ -12,17 +12,17 @@ from typing import Dict, List
 
 import yaml
 
+import devcovenant.core.services.metadata as metadata_runtime
+import devcovenant.core.services.profile_registry as profile_runtime
+import devcovenant.core.services.registry as manifest_module
 from devcovenant.core.contracts.policy import CheckContext
 from devcovenant.core.runtime.execution import print_step, runtime_print
-from devcovenant.core.services import metadata as metadata_runtime
 from devcovenant.core.services import (
     policy_block_refresh as refresh_policy_block_runtime_module,
 )
 from devcovenant.core.services import (
     policy_runtime_actions as runtime_actions_module,
 )
-from devcovenant.core.services import profile_registry as profile_runtime
-from devcovenant.core.services import registry as manifest_module
 from devcovenant.core.services.policy_parse import PolicyDefinition
 from devcovenant.core.services.registry import (
     PolicyRegistry,
@@ -1459,8 +1459,9 @@ def _render_config_yaml(payload: dict[str, object]) -> str:
         "# `check` stays read-only.",
         "# logs_keep_last controls run-log retention (`0` keeps all runs).",
         (
-            "# pycache_prefix_enabled/pycache_prefix route Python bytecode "
-            "caches away from the repo tree (empty prefix = auto temp path)."
+            "# pycache_prefix_enabled/pycache_prefix route DevCovenant-"
+            "managed Python bytecode caches away from the repo tree "
+            "(empty prefix = auto temp path)."
         ),
         "# file_suffixes and ignore_dirs define broad scan boundaries.",
         _yaml_block({"engine": payload.get("engine", {})}),

@@ -35,7 +35,6 @@ def _unit_test_runtime_symbol_contract_is_stable() -> None:
     expected = [
         "POLICY_ID",
         "RUNTIME_ACTION_RESOLVE_STAGE",
-        "RUNTIME_ACTION_RESOLVE_RERUN",
         "_load_policy_entry",
         "_normalize_metadata_tokens",
         "_resolve_metadata_paths",
@@ -45,12 +44,10 @@ def _unit_test_runtime_symbol_contract_is_stable() -> None:
         "_read_managed_stage_runs",
         "_write_managed_stage_runs",
         "_expand_managed_command_tokens",
-        "_expand_managed_rerun_command_tokens",
         "_expand_guidance_command_tokens",
         "_managed_guidance_suffix",
         "_run_managed_commands_for_stage",
         "resolve_managed_environment_for_stage",
-        "resolve_managed_rerun_command_for_stage",
     ]
     for symbol in expected:
         assert hasattr(module, symbol), symbol
@@ -70,27 +67,6 @@ def _unit_test_resolve_stage_returns_none_when_disabled(
         Path("/tmp/repo"),
         "command",
     ) == (None, None)
-
-
-def _unit_test_resolve_rerun_returns_none_when_disabled(
-    monkeypatch: MonkeyPatch,
-) -> None:
-    """Disabled policy should return no rerun command."""
-    module = importlib.import_module(MODULE)
-    monkeypatch.setattr(
-        module,
-        "_load_policy_entry",
-        lambda repo_root: {"enabled": False, "metadata": {}},
-    )
-    assert (
-        module.resolve_managed_rerun_command_for_stage(
-            Path("/tmp/repo"),
-            "command",
-            "check",
-            ["--nofix"],
-        )
-        is None
-    )
 
 
 def _unit_test_invalid_managed_command_stage_raises() -> None:
@@ -223,54 +199,20 @@ def _unit_test_guidance_suffix_uses_placeholders_when_missing() -> None:
     assert "{managed_python}" not in suffix
 
 
-def _unit_test_load_policy_entry_falls_back_to_agents_without_writing() -> (
-    None
-):
-    """Missing registry should fall back to AGENTS without creating one."""
+def _unit_test_load_policy_entry_requires_local_registry() -> None:
+    """Missing registry should fail explicitly instead of parsing AGENTS."""
     module = importlib.import_module(MODULE)
     with tempfile.TemporaryDirectory() as temp_dir:
         repo_root = Path(temp_dir)
-        agents_path = repo_root / "AGENTS.md"
-        agents_path.write_text(
-            "\n".join(
-                [
-                    "# AGENTS",
-                    "<!-- DEVCOV-POLICIES:BEGIN -->",
-                    "## Policy: Managed Environment",
-                    "",
-                    "```policy-def",
-                    "id: managed-environment",
-                    "severity: error",
-                    "auto_fix: false",
-                    "enabled: true",
-                    "custom: false",
-                    "expected_paths: .venv",
-                    "expected_interpreters: .venv/bin/python",
-                    "```",
-                    "",
-                    "Managed environment policy text.",
-                    "<!-- DEVCOV-POLICIES:END -->",
-                    "",
-                ]
-            ),
-            encoding="utf-8",
-        )
+        try:
+            module._load_policy_entry(repo_root)
+        except ValueError as error:
+            message = str(error)
+        else:  # pragma: no cover - defensive
+            raise AssertionError("Expected ValueError for missing registry.")
 
-        entry = module._load_policy_entry(repo_root)
-
-        assert entry is not None
-        assert entry["enabled"] is True
-        metadata = entry["metadata"]
-        assert metadata["expected_paths"] == ".venv"
-        assert metadata["expected_interpreters"] == ".venv/bin/python"
-        registry_path = (
-            repo_root
-            / "devcovenant"
-            / "registry"
-            / "local"
-            / "policy_registry.yaml"
-        )
-        assert not registry_path.exists()
+        assert "requires local policy registry" in message
+        assert "devcovenant refresh" in message
 
 
 def _unit_test_run_command_suppresses_console_bursts_in_normal_mode() -> None:
@@ -415,14 +357,6 @@ class GeneratedUnittestCases(unittest.TestCase):
         finally:
             monkeypatch.undo()
 
-    def test_resolve_rerun_returns_none_when_disabled(self):
-        """Run disabled resolve-rerun runtime assertions."""
-        monkeypatch = MonkeyPatch()
-        try:
-            _unit_test_resolve_rerun_returns_none_when_disabled(monkeypatch)
-        finally:
-            monkeypatch.undo()
-
     def test_invalid_managed_command_stage_raises(self):
         """Run invalid-stage parser assertion."""
         _unit_test_invalid_managed_command_stage_raises()
@@ -440,12 +374,12 @@ class GeneratedUnittestCases(unittest.TestCase):
         _unit_test_guidance_suffix_expands_tokens()
 
     def test_guidance_suffix_uses_placeholders_when_missing(self):
-        """Run managed guidance placeholder fallback assertions."""
+        """Run managed guidance placeholder assertions."""
         _unit_test_guidance_suffix_uses_placeholders_when_missing()
 
-    def test_load_policy_entry_falls_back_to_agents_without_writing(self):
-        """Run AGENTS fallback coverage for missing local registry."""
-        _unit_test_load_policy_entry_falls_back_to_agents_without_writing()
+    def test_load_policy_entry_requires_local_registry(self):
+        """Run strict local-registry requirement assertions."""
+        _unit_test_load_policy_entry_requires_local_registry()
 
     def test_run_command_suppresses_console_bursts_in_normal_mode(self):
         """Run managed-command normal-mode output suppression assertions."""

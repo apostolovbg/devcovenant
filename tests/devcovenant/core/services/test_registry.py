@@ -174,21 +174,11 @@ def _unit_test_layered_core_namespaces_remain_importable() -> None:
 def _unit_test_services_export_inventory_remains_intentionally_narrow() -> (
     None
 ):
-    """Service package exports should stay on the stable module surface."""
+    """Service package should stay a namespace marker, not an export shim."""
     module = importlib.import_module("devcovenant.core.services")
-    exported = set(getattr(module, "__all__", []))
-    expected = {
-        "cleanup",
-        "event",
-        "metadata",
-        "policy_block_refresh",
-        "policy_engine",
-        "policy_parse",
-        "profile_registry",
-        "registry",
-        "translator_engine",
-    }
-    assert exported == expected
+    exported = getattr(module, "__all__", None)
+    assert exported in (None, [])
+    assert "__getattr__" not in module.__dict__
 
 
 def _unit_test_registry_metadata_typed_view_preserves_storage_contract() -> (

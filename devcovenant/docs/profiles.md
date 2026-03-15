@@ -1,5 +1,5 @@
 # Profiles
-**Last Updated:** 2026-03-14
+**Last Updated:** 2026-03-15
 **Project Version:** 1.0.0
 
 ## Table of Contents
@@ -37,8 +37,7 @@ Shipped builtin language profiles include:
 - `python`, `javascript`, `typescript`, `java`, `go`, `rust`, `opencl`,
   `csharp`, `php`, `ruby`, `dart`, `swift`, `objective_c`, `sql`
 Builtin profiles are the only shipped profile authority in `1.0.0+`.
-The retired `devcovenant/core/profiles/**` compatibility mirror has been
-removed, so profile manifests, assets, and translators now live only under
+Profile manifests, assets, and translators now live only under
 `devcovenant/builtin/profiles/**` plus repo-owned `devcovenant/custom/**`.
 
 Any profile category may contribute policy metadata overlays, including
@@ -46,7 +45,7 @@ Any profile category may contribute policy metadata overlays, including
 (`required_commands`).
 Repository profiles can also provide managed-environment metadata
 (`expected_paths`, `expected_interpreters`, `manual_commands`,
-`managed_commands`, `managed_rerun_commands`).
+`managed_commands`).
 Global profile overlays own shared runtime-path defaults for gate/session
 policies (`gate_status_file`, policy-definition/registry paths, and
 pre-commit command metadata).
@@ -127,9 +126,10 @@ Test-fidelity governance pattern:
   `enforce_symbol_fidelity`.
 - language profiles own `modules-need-tests` mirror templates via
   `mirror_test_name_templates`; repository profiles own `mirror_roots`.
-- repository profiles may exclude internal compatibility mirrors from
-  `tests-coverage` and `documentation-growth-tracking` while still keeping
-  those files inside `modules-need-tests` structural mirror enforcement.
+- repository profiles may exclude internal non-user-facing helper surfaces
+  from `tests-coverage` and `documentation-growth-tracking` while still
+  keeping those files inside `modules-need-tests` structural mirror
+  enforcement.
 
 ## Baseline Defaults Profile
 `defaults` is the shipped baseline repo-layout profile.
@@ -310,11 +310,11 @@ Asset materialization rules:
   human-owned selector for test-command progress/log output
 - global config template defines `engine.pycache_prefix_enabled` and
   `engine.pycache_prefix` for Python bytecode-cache routing via
-  `PYTHONPYCACHEPREFIX`; profiles can seed
-  `engine.pycache_prefix_enabled: true` when the key is absent
+  `PYTHONPYCACHEPREFIX`; refresh can seed explicit
+  `engine.pycache_prefix_enabled: true` for repo profiles that require it
 - refresh-generated governance workflow and repo-maintained
   `build.yml`/`publish.yml` workflows can set `PYTHONPYCACHEPREFIX` at job
-  scope (DevCovenant uses `.gha-pycache`) so fallback
+  scope (DevCovenant uses `.gha-pycache`) so source-checkout
   `python -m devcovenant ...` launches avoid repo-local `__pycache__` drift in
   CI
 
@@ -350,17 +350,13 @@ Test-command metadata rules:
 - profiles may provide `managed-environment` stage commands using
   `managed_commands` entries (`stage=>command`) and human guidance through
   `manual_commands`
-- profiles may provide wrapper rerun adapters through
-  `managed_rerun_commands` (`stage=>command`) for bench/xenv launchers
 - when resolved managed interpreter paths are non-executable, runtime surfaces
-  an explicit managed-environment error and then applies configured rerun
-  adapters
+  an explicit managed-environment error and stops so the environment
+  contract can be fixed directly
 - valid managed command stages are:
   `start`, `test`, `end`, `command`, and `all`
 - command placeholders may use:
-  `{repo_root}`, `{managed_python}`, `{managed_bin}`, `{managed_root}`,
-  `{command}`, `{command_name}`, `{command_args}`, `{command_argv}`,
-  `{command_string}`
+  `{repo_root}`, `{managed_python}`, `{managed_bin}`, and `{managed_root}`
 - profile metadata can target bench-style environments by setting
   `expected_paths`/`expected_interpreters` to bench env locations and using
   stage commands for bench-specific bootstrap/install flows
@@ -418,6 +414,10 @@ that consumes the normalized lifecycle.
 
 The builtin Python profile ships with a `test_events` entry that points to
 `devcovenant.core.services.event:python_test_event_adapter_factory`.
+There is no hidden generic adapter path in runtime anymore. If a repo
+wants generic command coverage, a profile must declare
+`devcovenant.core.services.event:generic_test_event_adapter_factory`
+explicitly; otherwise unmatched test commands are skipped.
 
 ## Builtin vs Custom
 Builtin profiles are shipped defaults.

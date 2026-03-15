@@ -5,8 +5,8 @@ from __future__ import annotations
 import json
 from pathlib import Path
 
-from devcovenant.core.runtime import execution as execution_runtime_module
-from devcovenant.core.services import registry as registry_runtime_module
+import devcovenant.core.runtime.execution as execution_runtime_module
+import devcovenant.core.services.registry as registry_runtime_module
 
 
 def _load_status(path: Path) -> dict:
@@ -120,80 +120,7 @@ def _resolve_latest_relevant_run_pointer(
     pointer_run_id = str(pointer_payload.get("run_id", "")).strip()
     if pointer_payload and pointer_run_id and pointer_run_id != active_run_id:
         return _normalize_latest_pointer_payload(pointer_payload)
-    fallback = _scan_recent_run_pointer(
-        repo_root,
-        exclude_run_id=active_run_id,
-    )
-    if fallback is not None:
-        return fallback
-    if pointer_payload:
-        return _normalize_latest_pointer_payload(pointer_payload)
     return None
-
-
-def _scan_recent_run_pointer(
-    repo_root: Path,
-    *,
-    exclude_run_id: str = "",
-) -> dict[str, str] | None:
-    """Scan run folders for the most recent non-status run pointer payload."""
-    run_logging = execution_runtime_module.run_logging_runtime_module
-    logs_root = run_logging.resolve_run_logs_root(repo_root)
-    if not logs_root.is_dir():
-        return None
-    for run_dir in sorted(
-        (path for path in logs_root.iterdir() if path.is_dir()),
-        key=lambda path: path.name,
-        reverse=True,
-    ):
-        if exclude_run_id and run_dir.name == exclude_run_id:
-            continue
-        payload = _load_json_mapping(run_dir / "run.json")
-        if not payload:
-            continue
-        if _is_gate_status_run_payload(payload):
-            continue
-        normalized = _pointer_from_run_payload(repo_root, run_dir, payload)
-        if normalized is not None:
-            return normalized
-    return None
-
-
-def _is_gate_status_run_payload(payload: dict[str, object]) -> bool:
-    """Return True when a run.json payload describes `gate --status`."""
-    command_name = str(payload.get("command_name", "")).strip().lower()
-    if command_name != "gate":
-        return False
-    argv = payload.get("argv", [])
-    if not isinstance(argv, list):
-        return False
-    return "--status" in {str(token).strip() for token in argv}
-
-
-def _pointer_from_run_payload(
-    repo_root: Path,
-    run_dir: Path,
-    payload: dict[str, object],
-) -> dict[str, str] | None:
-    """Build a pointer-style summary mapping from one run.json payload."""
-    artifacts = payload.get("artifacts", {})
-    summary_txt = ""
-    summary_json = ""
-    if isinstance(artifacts, dict):
-        summary_txt = str(artifacts.get("summary_txt", "")).strip()
-        summary_json = str(artifacts.get("summary_json", "")).strip()
-    if not summary_txt:
-        summary_txt = _repo_relative(repo_root, run_dir / "summary.txt")
-    if not summary_json:
-        summary_json = _repo_relative(repo_root, run_dir / "summary.json")
-    return {
-        "run_id": str(payload.get("run_id", "")).strip() or run_dir.name,
-        "command_name": str(payload.get("command_name", "")).strip(),
-        "status": str(payload.get("status", "")).strip(),
-        "run_dir": _repo_relative(repo_root, run_dir),
-        "summary_txt": summary_txt,
-        "summary_json": summary_json,
-    }
 
 
 def _normalize_latest_pointer_payload(

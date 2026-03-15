@@ -769,7 +769,7 @@ class PolicyRegistry:
 
     def get_policy_metadata_typed(self, policy_id: str) -> Dict[str, Any]:
         """Return a typed metadata view decoded from stored strings."""
-        from devcovenant.core.services import metadata as metadata_runtime
+        import devcovenant.core.services.metadata as metadata_runtime
 
         return metadata_runtime.decode_metadata_options_map(
             self.get_policy_metadata_map(policy_id)

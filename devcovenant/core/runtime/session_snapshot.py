@@ -138,7 +138,7 @@ def normalize_snapshot_rows(
 
 
 def snapshot_row_style(snapshot: dict[str, str]) -> str:
-    """Classify snapshot row style for migration-safe delta handling."""
+    """Classify snapshot row style for current-format validation."""
     if not snapshot:
         return "empty"
     tab_counts: list[int] = []
@@ -150,7 +150,7 @@ def snapshot_row_style(snapshot: dict[str, str]) -> str:
     if not tab_counts:
         return "empty"
     if all(count >= 2 for count in tab_counts):
-        return "legacy_numstat"
+        return "unsupported_legacy"
     if all(count == 1 for count in tab_counts):
         return "filesystem_hash"
     return "mixed"
@@ -165,19 +165,26 @@ def session_delta_paths(
 ) -> set[str]:
     """
     Return session delta paths using shared snapshot comparison semantics.
-
-    Legacy gate snapshots (numstat rows) are migration-bridged by epoch-based
-    path discovery when compared against current filesystem-hash snapshots.
     """
     start_style = snapshot_row_style(start_snapshot)
+    if start_style == "unsupported_legacy":
+        raise ValueError(
+            "Invalid gate status payload: legacy snapshot rows are no longer "
+            "supported. Run `devcovenant gate --start` to record a fresh "
+            "session with the current snapshot format."
+        )
+    if start_style == "mixed":
+        raise ValueError(
+            "Invalid gate status payload: mixed snapshot row formats are not "
+            "supported. Run `devcovenant gate --start` to record a fresh "
+            "session with the current snapshot format."
+        )
     current_style = snapshot_row_style(current_snapshot)
-    if start_style == "legacy_numstat" and current_style == "filesystem_hash":
-        if session_start_epoch is None:
-            raise ValueError(
-                "Invalid gate status payload: `session_start_epoch` is "
-                "required for legacy snapshot migration."
-            )
-        return snapshot_paths_changed_since(repo_root, session_start_epoch)
+    if current_style in {"unsupported_legacy", "mixed"}:
+        raise ValueError(
+            "Invalid current snapshot state: unsupported snapshot row format "
+            "encountered during session comparison."
+        )
     return changed_numstat_paths(start_snapshot, current_snapshot)
 
 

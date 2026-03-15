@@ -5,15 +5,10 @@ from __future__ import annotations
 import argparse
 import importlib
 import os
-import shlex
 import sys
 import traceback
 from pathlib import Path
 from types import ModuleType
-
-from devcovenant.launcher_bootstrap import apply_repo_pycache_prefix_from_cwd
-
-apply_repo_pycache_prefix_from_cwd()
 
 execution_runtime_module = importlib.import_module(
     "devcovenant.core.runtime.execution"
@@ -273,7 +268,6 @@ def _maybe_reexec_managed_environment(
     stage = _managed_stage_for_command(command, command_args)
     managed_env: dict[str, str] | None = None
     managed_python: str | None = None
-    managed_python_hint: str | None = None
     managed_resolution_error: str | None = None
     try:
         managed_env, managed_python = (
@@ -285,7 +279,6 @@ def _maybe_reexec_managed_environment(
         )
     except ValueError as exc:
         managed_resolution_error = str(exc)
-    managed_python_hint = managed_python
     if managed_env is not None and managed_python:
         if not _managed_python_is_executable(managed_python):
             managed_resolution_error = (
@@ -339,43 +332,6 @@ def _maybe_reexec_managed_environment(
                     f"`{managed_python}` ({exc})."
                 )
                 managed_python = None
-
-    managed_root = ""
-    if managed_env is not None:
-        managed_root = str(managed_env.get("VIRTUAL_ENV", "")).strip()
-    try:
-        rerun_argv = (
-            execution_runtime_module.resolve_managed_rerun_command_for_stage(
-                repo_root,
-                stage,
-                command,
-                command_args,
-                managed_python=managed_python_hint,
-                managed_root=managed_root or None,
-            )
-        )
-    except ValueError as exc:
-        raise SystemExit(str(exc)) from exc
-    if rerun_argv:
-        if os.environ.get(_MANAGED_REEXEC_GUARD_ENV) == "1":
-            raise SystemExit(
-                "Managed-environment auto-rerun did not converge to the "
-                "expected interpreter."
-            )
-        rerun_message = (
-            "Re-running DevCovenant through managed rerun command: "
-            f"{shlex.join(rerun_argv)}\n"
-        )
-        execution_runtime_module.runtime_print(
-            rerun_message,
-            end="",
-            file=sys.stderr,
-            flush=True,
-        )
-        env = _apply_run_log_handoff_env(dict(managed_env or os.environ))
-        env[_MANAGED_REEXEC_GUARD_ENV] = "1"
-        env[_MANAGED_REEXEC_SOURCE_ENV] = sys.executable
-        os.execvpe(rerun_argv[0], rerun_argv, env)
 
     if managed_resolution_error:
         raise SystemExit(managed_resolution_error)

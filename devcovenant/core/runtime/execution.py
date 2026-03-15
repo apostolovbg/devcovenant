@@ -26,16 +26,14 @@ try:
 except ImportError:  # pragma: no cover - non-POSIX runtimes
     pty = None  # type: ignore[assignment]
 
+import devcovenant.core.runtime.output as output_runtime_module
+import devcovenant.core.runtime.run_logging as run_logging_runtime_module
+import devcovenant.core.services.event as event_runtime_module
+import devcovenant.core.services.registry as registry_runtime_module
+import devcovenant.core.services.runtime_profile as test_profile_runtime_module
 from devcovenant import __version__ as package_version
-from devcovenant.core.runtime import output as output_runtime_module
-from devcovenant.core.runtime import run_logging as run_logging_runtime_module
 from devcovenant.core.runtime import (
     session_snapshot as session_snapshot_runtime_module,
-)
-from devcovenant.core.services import event as event_runtime_module
-from devcovenant.core.services import registry as registry_runtime_module
-from devcovenant.core.services import (
-    runtime_profile as test_profile_runtime_module,
 )
 
 OutputMode = output_runtime_module.OutputMode
@@ -56,7 +54,6 @@ ChildOutputChannel = output_runtime_module.ChildOutputChannel
 _OUTPUT_MODE_DEFAULT: OutputMode = output_runtime_module.OUTPUT_MODE_DEFAULT
 _MANAGED_ENV_POLICY_ID = "managed-environment"
 _MANAGED_ENV_ACTION_RESOLVE_STAGE = "resolve-stage"
-_MANAGED_ENV_ACTION_RESOLVE_RERUN = "resolve-rerun-command"
 _DEVFLOW_POLICY_ID = "devflow-run-gates"
 _DEVFLOW_ACTION_RESOLVE_REQUIRED_COMMANDS = "resolve-required-test-commands"
 _TEST_COMMAND_OUTPUT_MODE: OutputMode | None = None
@@ -534,31 +531,6 @@ def resolve_engine_auto_fix_enabled(repo_root: Path) -> bool:
     return False
 
 
-def _read_profiles_from_config(repo_root: Path) -> list[str]:
-    """Read active profile list from repo config when available."""
-    config_path = repo_root / "devcovenant" / "config.yaml"
-    if not config_path.exists():
-        return []
-    try:
-        payload = yaml.safe_load(config_path.read_text(encoding="utf-8"))
-    except (OSError, yaml.YAMLError):
-        return []
-    if not isinstance(payload, dict):
-        return []
-    profiles = payload.get("profiles")
-    if not isinstance(profiles, dict):
-        return []
-    active = profiles.get("active")
-    if not isinstance(active, list):
-        return []
-    return [str(token).strip() for token in active if str(token).strip()]
-
-
-def _repo_uses_repo_bytecode_hygiene(repo_root: Path) -> bool:
-    """Return True when repo profiles enable repo-local bytecode hygiene."""
-    return "devcovrepo" in _read_profiles_from_config(repo_root)
-
-
 def _normalize_engine_bool(raw_value: object, *, default: bool) -> bool:
     """Normalize common boolean config tokens to a bool value."""
     if isinstance(raw_value, bool):
@@ -573,14 +545,11 @@ def _normalize_engine_bool(raw_value: object, *, default: bool) -> bool:
 
 
 def _read_pycache_prefix_enabled_from_config(repo_root: Path) -> bool:
-    """Read `engine.pycache_prefix_enabled` with repo-profile fallback."""
+    """Read explicit `engine.pycache_prefix_enabled` from repo config."""
     engine_cfg = _read_engine_config(repo_root)
-    default_enabled = _repo_uses_repo_bytecode_hygiene(repo_root)
-    if "pycache_prefix_enabled" not in engine_cfg:
-        return default_enabled
     return _normalize_engine_bool(
         engine_cfg.get("pycache_prefix_enabled"),
-        default=default_enabled,
+        default=False,
     )
 
 
@@ -630,8 +599,8 @@ def configure_repo_pycache_prefix(repo_root: Path) -> bool:
 
 
 def cleanup_repo_bytecode_artifacts(repo_root: Path) -> bool:
-    """Remove repo-local bytecode artifacts when repo hygiene is enabled."""
-    if not _repo_uses_repo_bytecode_hygiene(repo_root):
+    """Remove repo-local bytecode artifacts when routing is enabled."""
+    if not _read_pycache_prefix_enabled_from_config(repo_root):
         return False
     root = repo_root / "devcovenant"
     if not root.exists():
@@ -700,18 +669,10 @@ def _read_logs_keep_last_from_config(repo_root: Path) -> int:
 
 
 def _read_tests_output_mode_from_config(repo_root: Path) -> str | None:
-    """
-    Read optional `engine.tests_output_mode` from repo config.
-
-    Compatibility fallback:
-    - If `tests_output_mode` is unset, reuse `output_mode`.
-    """
+    """Read optional `engine.tests_output_mode` from repo config."""
     engine_cfg = _read_engine_config(repo_root)
     tests_token = str(engine_cfg.get("tests_output_mode", "")).strip()
-    if tests_token:
-        return tests_token
-    output_token = str(engine_cfg.get("output_mode", "")).strip()
-    return output_token or None
+    return tests_token or None
 
 
 def configure_output_mode_from_config(repo_root: Path) -> OutputMode:
@@ -727,7 +688,7 @@ def configure_logs_keep_last_from_config(repo_root: Path) -> int:
 
 
 def resolve_tests_output_mode(repo_root: Path) -> OutputMode:
-    """Resolve tests output mode from config with compatibility fallback."""
+    """Resolve tests output mode from config with explicit defaults only."""
     return _normalize_output_mode(
         _read_tests_output_mode_from_config(repo_root)
     )
@@ -1207,16 +1168,12 @@ def session_delta_paths(
     session_start_epoch: float | None = None,
 ) -> set[str]:
     """Return session delta paths using shared snapshot comparison logic."""
-    start_style = snapshot_row_style(start_snapshot)
-    current_style = snapshot_row_style(current_snapshot)
-    if start_style == "legacy_numstat" and current_style == "filesystem_hash":
-        if session_start_epoch is None:
-            raise ValueError(
-                "Invalid gate status payload: `session_start_epoch` is "
-                "required for legacy snapshot migration."
-            )
-        return snapshot_paths_changed_since(repo_root, session_start_epoch)
-    return changed_numstat_paths(start_snapshot, current_snapshot)
+    return session_snapshot_runtime_module.session_delta_paths(
+        repo_root,
+        start_snapshot,
+        current_snapshot,
+        session_start_epoch=session_start_epoch,
+    )
 
 
 capture_agents_section_hashes = (
@@ -1322,38 +1279,6 @@ def resolve_managed_environment_for_stage(
             "managed-environment runtime returned invalid interpreter payload."
         )
     return dict(env_raw), managed_python_raw
-
-
-def resolve_managed_rerun_command_for_stage(
-    repo_root: Path,
-    stage: str,
-    command_name: str,
-    command_args: Sequence[str],
-    *,
-    managed_python: str | None = None,
-    managed_root: str | None = None,
-) -> list[str] | None:
-    """Resolve one managed rerun command via policy runtime action."""
-    stage_token = str(stage or "").strip().lower()
-    result = _run_policy_runtime_action(
-        repo_root,
-        policy_id=_MANAGED_ENV_POLICY_ID,
-        action=_MANAGED_ENV_ACTION_RESOLVE_RERUN,
-        payload={
-            "stage": stage_token,
-            "command_name": command_name,
-            "command_args": [str(token) for token in command_args],
-            "managed_python": managed_python or "",
-            "managed_root": managed_root or "",
-        },
-    )
-    if result is None:
-        return None
-    if not isinstance(result, list):
-        raise ValueError(
-            "managed-environment rerun runtime returned invalid payload."
-        )
-    return [str(token) for token in result]
 
 
 def _looks_like_python_launcher(token: str) -> bool:

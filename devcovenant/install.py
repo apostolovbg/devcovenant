@@ -14,13 +14,13 @@ import shutil
 import tempfile
 from pathlib import Path
 
+import devcovenant.core.services.registry as manifest_module
 from devcovenant.core.runtime.execution import (
     build_command_parser,
     print_banner,
     print_step,
     resolve_repo_root,
 )
-from devcovenant.core.services import registry as manifest_module
 
 
 def _source_package_dir() -> Path:

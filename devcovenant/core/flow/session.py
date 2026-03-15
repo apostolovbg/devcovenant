@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from devcovenant.core.runtime import execution as execution_runtime_module
+import devcovenant.core.runtime.execution as execution_runtime_module
 
 capture_current_numstat_snapshot = (
     execution_runtime_module.capture_current_numstat_snapshot

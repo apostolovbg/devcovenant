@@ -69,7 +69,7 @@ def _unit_test_cli_dispatches_command_and_args(monkeypatch) -> None:
         "_initialize_cli_run_logging",
         lambda *_args, **_kwargs: None,
     )
-    monkeypatch.setattr(sys, "argv", ["devcovenant", "check", "--nofix"])
+    monkeypatch.setattr(sys, "argv", ["devcovenant", "check"])
 
     try:
         cli.main()
@@ -80,7 +80,7 @@ def _unit_test_cli_dispatches_command_and_args(monkeypatch) -> None:
 
     assert code == 0
     assert captured["command"] == "check"
-    assert captured["argv"] == ["--nofix"]
+    assert captured["argv"] == []
 
 
 def _unit_test_cli_unknown_command_fails(monkeypatch) -> None:
@@ -119,7 +119,7 @@ def _unit_test_cli_reexecs_when_managed_env_differs(monkeypatch) -> None:
         ),
     )
     monkeypatch.setattr(sys, "executable", "/usr/bin/python3")
-    monkeypatch.setattr(sys, "argv", ["devcovenant", "check", "--nofix"])
+    monkeypatch.setattr(sys, "argv", ["devcovenant", "check"])
     monkeypatch.setattr(
         cli,
         "_initialize_cli_run_logging",
@@ -150,7 +150,6 @@ def _unit_test_cli_reexecs_when_managed_env_differs(monkeypatch) -> None:
         "-m",
         "devcovenant",
         "check",
-        "--nofix",
     ]
     env_payload = captured["env"]
     assert isinstance(env_payload, dict)
@@ -179,7 +178,7 @@ def _unit_test_cli_reexec_guard_prevents_loop(monkeypatch) -> None:
     monkeypatch.setattr(
         sys,
         "argv",
-        ["devcovenant", "check", "--nofix"],
+        ["devcovenant", "check"],
     )
     monkeypatch.setattr(
         cli,
@@ -203,76 +202,6 @@ def _unit_test_cli_reexec_guard_prevents_loop(monkeypatch) -> None:
     )
 
 
-def _unit_test_cli_reexecs_with_managed_rerun_command(monkeypatch) -> None:
-    """CLI should re-exec through metadata rerun command when configured."""
-    repo_root = REPO_ROOT
-    captured: dict[str, object] = {}
-
-    def _raise_missing(_repo_root, _stage, base_env=None):
-        """Raise the managed-interpreter missing error for fallback tests."""
-        raise ValueError("managed-environment interpreter missing")
-
-    monkeypatch.setattr(
-        cli.execution_runtime_module,
-        "find_git_root",
-        lambda _path: repo_root,
-    )
-    monkeypatch.setattr(
-        cli.execution_runtime_module,
-        "resolve_managed_environment_for_stage",
-        _raise_missing,
-    )
-    monkeypatch.setattr(
-        cli.execution_runtime_module,
-        "resolve_managed_rerun_command_for_stage",
-        lambda _repo_root, _stage, _command, _args, **_kwargs: [
-            "bench",
-            "exec",
-            "--",
-            "devcovenant",
-            _command,
-            *_args,
-        ],
-    )
-    monkeypatch.setattr(sys, "argv", ["devcovenant", "check", "--nofix"])
-    monkeypatch.setattr(
-        cli,
-        "_initialize_cli_run_logging",
-        lambda *_args, **_kwargs: None,
-    )
-
-    def _fake_execvpe(path: str, argv: list[str], env: dict[str, str]) -> None:
-        """Capture execvpe contract and stop control flow."""
-        captured["path"] = path
-        captured["argv"] = list(argv)
-        captured["env"] = dict(env)
-        raise SystemExit(0)
-
-    monkeypatch.setattr(cli.os, "execvpe", _fake_execvpe)
-    monkeypatch.setattr(cli, "_load_command_module", lambda _command: None)
-
-    try:
-        cli.main()
-    except SystemExit as exc:
-        code = exc.code
-    else:  # pragma: no cover - defensive
-        raise AssertionError("Expected SystemExit from cli.main().")
-
-    assert code == 0
-    assert captured["path"] == "bench"
-    assert captured["argv"] == [
-        "bench",
-        "exec",
-        "--",
-        "devcovenant",
-        "check",
-        "--nofix",
-    ]
-    env_payload = captured["env"]
-    assert isinstance(env_payload, dict)
-    assert env_payload[cli._MANAGED_REEXEC_GUARD_ENV] == "1"
-
-
 def _unit_test_cli_reports_managed_error_without_rerun(monkeypatch) -> None:
     """CLI should report managed-environment errors when no rerun exists."""
     repo_root = REPO_ROOT
@@ -291,12 +220,7 @@ def _unit_test_cli_reports_managed_error_without_rerun(monkeypatch) -> None:
         "resolve_managed_environment_for_stage",
         _raise_missing,
     )
-    monkeypatch.setattr(
-        cli.execution_runtime_module,
-        "resolve_managed_rerun_command_for_stage",
-        lambda _repo_root, _stage, _command, _args, **_kwargs: None,
-    )
-    monkeypatch.setattr(sys, "argv", ["devcovenant", "check", "--nofix"])
+    monkeypatch.setattr(sys, "argv", ["devcovenant", "check"])
     monkeypatch.setattr(
         cli,
         "_initialize_cli_run_logging",
@@ -334,11 +258,6 @@ def _unit_test_cli_reports_non_executable_managed_python(
         ),
     )
     monkeypatch.setattr(
-        cli.execution_runtime_module,
-        "resolve_managed_rerun_command_for_stage",
-        lambda _repo_root, _stage, _command, _args, **_kwargs: None,
-    )
-    monkeypatch.setattr(
         cli,
         "_managed_python_is_executable",
         lambda _path: False,
@@ -359,83 +278,6 @@ def _unit_test_cli_reports_non_executable_managed_python(
 
     assert "not executable" in code
     assert managed_python in code
-
-
-def _unit_test_cli_falls_back_to_rerun_for_non_executable_python(
-    monkeypatch,
-) -> None:
-    """Non-executable managed Python should still allow rerun fallback."""
-    repo_root = REPO_ROOT
-    managed_python = str(repo_root / ".venv" / "bin" / "python")
-    captured: dict[str, object] = {}
-
-    monkeypatch.setattr(
-        cli.execution_runtime_module,
-        "find_git_root",
-        lambda _path: repo_root,
-    )
-    monkeypatch.setattr(
-        cli.execution_runtime_module,
-        "resolve_managed_environment_for_stage",
-        lambda _repo_root, _stage, base_env=None: (
-            {"PATH": "/tmp"},
-            managed_python,
-        ),
-    )
-    monkeypatch.setattr(
-        cli.execution_runtime_module,
-        "resolve_managed_rerun_command_for_stage",
-        lambda _repo_root, _stage, _command, _args, **_kwargs: [
-            "bench",
-            "exec",
-            "--",
-            "devcovenant",
-            _command,
-            *_args,
-        ],
-    )
-    monkeypatch.setattr(
-        cli,
-        "_managed_python_is_executable",
-        lambda _path: False,
-    )
-    monkeypatch.setattr(
-        cli,
-        "_initialize_cli_run_logging",
-        lambda *_args, **_kwargs: None,
-    )
-    monkeypatch.setattr(sys, "argv", ["devcovenant", "check", "--nofix"])
-
-    def _fake_execvpe(path: str, argv: list[str], env: dict[str, str]) -> None:
-        """Capture fallback rerun invocation and stop control flow."""
-        captured["path"] = path
-        captured["argv"] = list(argv)
-        captured["env"] = dict(env)
-        raise SystemExit(0)
-
-    monkeypatch.setattr(cli.os, "execvpe", _fake_execvpe)
-    monkeypatch.setattr(cli, "_load_command_module", lambda _command: None)
-
-    try:
-        cli.main()
-    except SystemExit as exc:
-        code = exc.code
-    else:  # pragma: no cover - defensive
-        raise AssertionError("Expected SystemExit from cli.main().")
-
-    assert code == 0
-    assert captured["path"] == "bench"
-    assert captured["argv"] == [
-        "bench",
-        "exec",
-        "--",
-        "devcovenant",
-        "check",
-        "--nofix",
-    ]
-    env_payload = captured["env"]
-    assert isinstance(env_payload, dict)
-    assert env_payload[cli._MANAGED_REEXEC_GUARD_ENV] == "1"
 
 
 def _unit_test_test_help_is_command_scoped() -> None:
@@ -551,6 +393,21 @@ def _unit_test_command_modules_support_file_path_help() -> None:
         assert result.returncode == 0, result.stderr
 
 
+def _unit_test_launcher_contract_has_no_in_package_bootstrap() -> None:
+    """Launcher contract should avoid in-package startup bootstrap tricks."""
+    cli_text = (REPO_ROOT / "devcovenant" / "cli.py").read_text(
+        encoding="utf-8"
+    )
+    main_text = (REPO_ROOT / "devcovenant" / "__main__.py").read_text(
+        encoding="utf-8"
+    )
+    assert not (REPO_ROOT / "devcovenant" / "launcher_bootstrap.py").exists()
+    assert "launcher_bootstrap" not in cli_text
+    assert "launcher_bootstrap" not in main_text
+    assert "apply_repo_pycache_prefix_from_cwd" not in cli_text
+    assert "apply_repo_pycache_prefix_from_cwd" not in main_text
+
+
 def _unit_test_cli_writes_run_logs_and_pointer_on_success(monkeypatch) -> None:
     """CLI should finalize a success run folder and print a log pointer."""
     with tempfile.TemporaryDirectory() as tmpdir:
@@ -579,7 +436,7 @@ def _unit_test_cli_writes_run_logs_and_pointer_on_success(monkeypatch) -> None:
                 main=lambda _argv: (_ for _ in ()).throw(SystemExit(0))
             ),
         )
-        monkeypatch.setattr(sys, "argv", ["devcovenant", "check", "--nofix"])
+        monkeypatch.setattr(sys, "argv", ["devcovenant", "check"])
 
         stdout_buffer = io.StringIO()
         stderr_buffer = io.StringIO()
@@ -852,16 +709,6 @@ class GeneratedUnittestCases(unittest.TestCase):
         finally:
             monkeypatch.undo()
 
-    def test_cli_reexecs_with_managed_rerun_command(self):
-        """Run test_cli_reexecs_with_managed_rerun_command."""
-        monkeypatch = MonkeyPatch()
-        try:
-            _unit_test_cli_reexecs_with_managed_rerun_command(
-                monkeypatch=monkeypatch
-            )
-        finally:
-            monkeypatch.undo()
-
     def test_cli_reports_managed_error_without_rerun(self):
         """Run test_cli_reports_managed_error_without_rerun."""
         monkeypatch = MonkeyPatch()
@@ -877,16 +724,6 @@ class GeneratedUnittestCases(unittest.TestCase):
         monkeypatch = MonkeyPatch()
         try:
             _unit_test_cli_reports_non_executable_managed_python(
-                monkeypatch=monkeypatch
-            )
-        finally:
-            monkeypatch.undo()
-
-    def test_cli_falls_back_to_rerun_for_non_executable_python(self):
-        """Run non-executable managed Python rerun-fallback assertions."""
-        monkeypatch = MonkeyPatch()
-        try:
-            _unit_test_cli_falls_back_to_rerun_for_non_executable_python(
                 monkeypatch=monkeypatch
             )
         finally:
@@ -923,6 +760,10 @@ class GeneratedUnittestCases(unittest.TestCase):
     def test_command_modules_support_file_path_help(self):
         """Run test_command_modules_support_file_path_help."""
         _unit_test_command_modules_support_file_path_help()
+
+    def test_launcher_contract_has_no_in_package_bootstrap(self):
+        """Run no-bootstrap launcher source contract assertions."""
+        _unit_test_launcher_contract_has_no_in_package_bootstrap()
 
     def test_package_exports_are_explicit(self):
         """Run test_package_exports_are_explicit."""

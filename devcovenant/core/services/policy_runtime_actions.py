@@ -9,8 +9,8 @@ from typing import Any, Callable, Mapping
 
 import yaml
 
+import devcovenant.core.services.metadata as metadata_runtime
 from devcovenant.core.contracts.policy import CheckContext, PolicyCheck
-from devcovenant.core.services import metadata as metadata_runtime
 from devcovenant.core.services.registry import (
     load_policy_descriptor,
     policy_registry_path,

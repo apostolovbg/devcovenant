@@ -37,21 +37,10 @@ def _env_flag(name: str) -> bool:
 
 def _build_parser() -> argparse.ArgumentParser:
     """Build parser for check command."""
-    parser = build_command_parser(
+    return build_command_parser(
         "check",
         "Run read-only DevCovenant audit checks.",
     )
-    parser.add_argument(
-        "--nofix",
-        action="store_true",
-        help=argparse.SUPPRESS,
-    )
-    parser.add_argument(
-        "--norefresh",
-        action="store_true",
-        help=argparse.SUPPRESS,
-    )
-    return parser
 
 
 def _run_check(
@@ -103,7 +92,7 @@ def _run_check(
     return 0
 
 
-def run(args: argparse.Namespace) -> int:
+def run(_args: argparse.Namespace) -> int:
     """Execute check command."""
     repo_root = resolve_repo_root(require_install=True)
     # `check` is the read-only audit command. Gate orchestration can opt into

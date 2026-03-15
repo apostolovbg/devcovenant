@@ -16,7 +16,7 @@ MODULE = "devcovenant.core.runtime.execution"
 
 
 def _unit_test_module_importable() -> None:
-    """Module should import without compatibility wrappers."""
+    """Module should import cleanly."""
     module = importlib.import_module(MODULE)
     assert module is not None
 
@@ -35,7 +35,6 @@ def _unit_test_execution_symbol_contract_is_stable() -> None:
         "ChildOutputChannel",
         "configure_repo_pycache_prefix",
         "resolve_managed_environment_for_stage",
-        "resolve_managed_rerun_command_for_stage",
         "resolve_child_output_plan_for_channel",
         "rewrite_command_for_managed_python",
         "rewrite_command_string_for_managed_python",
@@ -132,7 +131,6 @@ def _unit_test_execution_symbol_assertions_cover_public_api() -> None:
     assert module.record_gate_status
     assert module.registry_required_commands
     assert module.resolve_managed_environment_for_stage
-    assert module.resolve_managed_rerun_command_for_stage
     assert module.resolve_child_output_plan_for_channel
     assert module.resolve_repo_root
     assert module.resolve_required_test_commands
@@ -273,7 +271,7 @@ def _unit_test_streaming_helper_prefers_pty_for_console_output() -> None:
 
 
 def _unit_test_streaming_helper_uses_pipe_when_console_is_suppressed() -> None:
-    """Hidden-console subprocesses should bypass PTY and use pipe fallback."""
+    """Hidden-console subprocesses should bypass PTY and use pipe transport."""
     module = importlib.import_module(MODULE)
     previous_pty = module.pty
     previous_pty_runner = module._run_subprocess_with_runtime_output_pty
@@ -357,8 +355,8 @@ def _unit_test_run_child_command_uses_shared_output_pipeline() -> None:
     assert kwargs["heartbeat_message"] == "Please wait. In progress..."
 
 
-def _unit_test_pipe_fallback_streams_output_before_process_exit() -> None:
-    """Pipe fallback should emit child lines before process completion."""
+def _unit_test_pipe_transport_streams_output_before_process_exit() -> None:
+    """Pipe transport should emit child lines before process completion."""
     module = importlib.import_module(MODULE)
     previous_pty = module.pty
     previous_runtime_print = module.runtime_print
@@ -565,6 +563,37 @@ def _unit_test_repo_pycache_prefix_sets_env_and_runtime_prefix() -> None:
         module._PYCACHE_PREFIX_VALUE = None
 
 
+def _unit_test_repo_pycache_prefix_requires_explicit_opt_in() -> None:
+    """Pycache routing should stay disabled until config opts in explicitly."""
+    module = importlib.import_module(MODULE)
+    previous_env = os.environ.get("PYTHONPYCACHEPREFIX")
+    previous_prefix = getattr(module.sys, "pycache_prefix", None)
+    try:
+        with tempfile.TemporaryDirectory() as tmpdir:
+            repo_root = Path(tmpdir)
+            config_path = repo_root / "devcovenant" / "config.yaml"
+            config_path.parent.mkdir(parents=True, exist_ok=True)
+            config_path.write_text(
+                "profiles:\n  active:\n  - devcovrepo\n",
+                encoding="utf-8",
+            )
+            enabled = module.configure_repo_pycache_prefix(repo_root)
+            assert enabled is False
+            assert module._PYCACHE_PREFIX_ENABLED is False
+            assert module._PYCACHE_PREFIX_VALUE is None
+    finally:
+        if previous_env is None:
+            os.environ.pop("PYTHONPYCACHEPREFIX", None)
+        else:
+            os.environ["PYTHONPYCACHEPREFIX"] = previous_env
+        try:
+            module.sys.pycache_prefix = previous_prefix
+        except (AttributeError, TypeError):
+            pass
+        module._PYCACHE_PREFIX_ENABLED = False
+        module._PYCACHE_PREFIX_VALUE = None
+
+
 def _unit_test_apply_repo_bytecode_env_forces_unbuffered_output() -> None:
     """Repo runtime env helper should force unbuffered child Python output."""
     module = importlib.import_module(MODULE)
@@ -619,13 +648,34 @@ def _unit_test_repo_bytecode_cleanup_removes_artifacts() -> None:
         pyc_path.write_text("test", encoding="utf-8")
         config_path.parent.mkdir(parents=True, exist_ok=True)
         config_path.write_text(
-            "profiles:\n  active:\n  - devcovrepo\n",
+            "engine:\n  pycache_prefix_enabled: true\n",
             encoding="utf-8",
         )
         removed = module.cleanup_repo_bytecode_artifacts(repo_root)
         assert removed is True
         assert not cache_dir.exists()
         assert not pyc_path.exists()
+
+
+def _unit_test_repo_bytecode_cleanup_requires_explicit_opt_in() -> None:
+    """Bytecode cleanup should not infer opt-in from active profiles."""
+    module = importlib.import_module(MODULE)
+    with tempfile.TemporaryDirectory() as tmpdir:
+        repo_root = Path(tmpdir)
+        config_path = repo_root / "devcovenant" / "config.yaml"
+        cache_dir = repo_root / "devcovenant" / "__pycache__"
+        cache_dir.mkdir(parents=True, exist_ok=True)
+        pyc_path = cache_dir / "execution.cpython-314.pyc"
+        pyc_path.write_text("test", encoding="utf-8")
+        config_path.parent.mkdir(parents=True, exist_ok=True)
+        config_path.write_text(
+            "profiles:\n  active:\n  - devcovrepo\n",
+            encoding="utf-8",
+        )
+        removed = module.cleanup_repo_bytecode_artifacts(repo_root)
+        assert removed is False
+        assert cache_dir.exists()
+        assert pyc_path.exists()
 
 
 def _unit_test_resolve_engine_auto_fix_enabled_defaults_false() -> None:
@@ -1116,9 +1166,9 @@ class GeneratedUnittestCases(unittest.TestCase):
         """Run shared child-command output-pipeline assertions."""
         _unit_test_run_child_command_uses_shared_output_pipeline()
 
-    def test_pipe_fallback_streams_output_before_process_exit(self):
-        """Run pipe-fallback progressive-streaming timing assertions."""
-        _unit_test_pipe_fallback_streams_output_before_process_exit()
+    def test_pipe_transport_streams_output_before_process_exit(self):
+        """Run pipe-stream progressive-timing assertions."""
+        _unit_test_pipe_transport_streams_output_before_process_exit()
 
     def test_normal_mode_command_policy_matrix_defaults(self):
         """Run normal-mode command policy matrix assertions."""
@@ -1152,6 +1202,10 @@ class GeneratedUnittestCases(unittest.TestCase):
         """Run repo pycache-prefix env and runtime-prefix assertions."""
         _unit_test_repo_pycache_prefix_sets_env_and_runtime_prefix()
 
+    def test_repo_pycache_prefix_requires_explicit_opt_in(self):
+        """Run explicit-opt-in pycache-prefix assertions."""
+        _unit_test_repo_pycache_prefix_requires_explicit_opt_in()
+
     def test_repo_pycache_prefix_honors_custom_relative_path(self):
         """Run custom relative pycache-prefix resolution assertions."""
         _unit_test_repo_pycache_prefix_honors_custom_relative_path()
@@ -1163,6 +1217,10 @@ class GeneratedUnittestCases(unittest.TestCase):
     def test_repo_bytecode_cleanup_removes_artifacts(self):
         """Run repo bytecode cleanup removal test."""
         _unit_test_repo_bytecode_cleanup_removes_artifacts()
+
+    def test_repo_bytecode_cleanup_requires_explicit_opt_in(self):
+        """Run explicit-opt-in repo bytecode cleanup assertions."""
+        _unit_test_repo_bytecode_cleanup_requires_explicit_opt_in()
 
     def test_resolve_engine_auto_fix_enabled_defaults_false(self):
         """Run autofix resolver default-disabled assertions."""

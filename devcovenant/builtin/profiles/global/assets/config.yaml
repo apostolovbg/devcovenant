@@ -148,7 +148,8 @@ engine:
   # - normal: concise progress markers, full child output in run logs
   # - quiet: suppress routine test stdout, keep stderr failures visible
   # - verbose: full child output in console
-  # If omitted, test output mode falls back to `output_mode`.
+  # Keep this key explicit so test output behavior does not inherit
+  # `output_mode` implicitly.
   tests_output_mode: verbose
 
   # Human-owned key.
@@ -161,10 +162,10 @@ engine:
   logs_keep_last: 0
 
   # Human-owned key.
-  # Routes Python bytecode caches away from the repo source tree by setting
-  # `PYTHONPYCACHEPREFIX` for DevCovenant-managed subprocesses.
+  # Routes DevCovenant-managed Python bytecode caches away from the repo
+  # source tree by setting `PYTHONPYCACHEPREFIX` for subprocesses.
   # This preserves bytecode generation fidelity while avoiding repo-local
-  # `__pycache__` drift.
+  # `__pycache__` drift for those managed Python commands.
   # `true` enables pycache-prefix routing, `false` leaves Python defaults.
   pycache_prefix_enabled: false
 
@@ -173,6 +174,8 @@ engine:
   # - `''` (empty string): auto-select a stable repo-specific temp path
   # - absolute path: use as-is
   # - relative path: resolve from repo root
+  # Source-checkout top-level `python3 -m devcovenant ...` launches still need
+  # shell or CI `PYTHONPYCACHEPREFIX` if zero launcher-process drift matters.
   pycache_prefix: ''
 
   # Human-owned key.

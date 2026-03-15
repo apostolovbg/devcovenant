@@ -31,9 +31,11 @@ devcovenant gate --end
 Start and end gates record lifecycle state in the local registry.
 `gate --mid` is non-lifecycle and exists to surface hook/runtime mutations
 before test evidence is recorded.
-When using the fallback launcher (`python3 -m devcovenant ...`) from a source
-checkout, setting `PYTHONPYCACHEPREFIX` before Python starts prevents repo-
-local `devcovenant/__pycache__/` drift while preserving bytecode generation.
+When using the supported alternate launcher (`python3 -m devcovenant ...`)
+from a source checkout, setting `PYTHONPYCACHEPREFIX` before Python starts
+prevents repo-local `devcovenant/__pycache__/` drift while preserving
+bytecode generation. DevCovenant does not rely on repo-root startup hooks or
+in-package bootstrap tricks for that boundary.
 
 ## Test Runner
 `devcovenant test` executes `python3 -m unittest discover -v` first, then
@@ -49,8 +51,8 @@ CI pipelines should run the same gates. If a pre-commit hook changes files,
 rerun `gate --mid` and tests before recording the end gate so test results
 post-date any hook or autofix mutations.
 When managed-environment is enabled and a resolved managed interpreter path is
-not executable, DevCovenant emits an explicit managed-environment error; when
-`managed_rerun_commands` is configured, wrapper fallback is attempted.
+not executable, DevCovenant emits an explicit managed-environment error and
+stops so the interpreter path or permissions can be fixed directly.
 The generated `governance-and-test` workflow now sets `PYTHONPYCACHEPREFIX`
 at the job level so top-level DevCovenant launches and child Python commands
 write bytecode caches outside the repo tree.

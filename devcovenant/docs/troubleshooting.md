@@ -1,5 +1,5 @@
 # Troubleshooting
-**Last Updated:** 2026-03-09
+**Last Updated:** 2026-03-15
 **Project Version:** 1.0.0
 
 ## Table of Contents
@@ -111,8 +111,6 @@ Recovery actions:
      instead of raising raw interpreter-exec tracebacks
    - confirm managed bootstrap commands can create the interpreter for
      non-start invocations
-   - if direct interpreter paths are unavailable (bench/xenv), configure
-     `managed_rerun_commands` and verify placeholder expansion
    - manual-command guidance expands tokens to concrete paths when
      available; missing values display explicit placeholders like
      `<managed_python>`
@@ -123,15 +121,13 @@ Recovery actions:
    - rerun until no further mutation or resolve nondeterminism
 6. if `devcov-structure-guard` reports repo bytecode artifacts:
    - delete `devcovenant/**/__pycache__/` and `*.py[cod]` files
-   - if the artifacts came from fallback launcher runs
+   - if the artifacts came from source-checkout alternate launcher runs
      (`python3 -m devcovenant ...`), set `PYTHONPYCACHEPREFIX` before Python
      starts (shell/CI env) to prevent future repo-local launcher-process
      bytecode drift
-   - `devcovenant/launcher_bootstrap.py` applies the same config-driven
-     routing in `devcovenant/__main__.py` and `devcovenant/cli.py`, but it
-     cannot prevent bytecode writes for modules Python compiles before those
-     launcher modules execute
-   - for repeated local fallback runs, use a shell wrapper (see
+   - DevCovenant does not promise that boundary through repo-root startup
+     hooks or an in-package bootstrap helper
+   - for repeated local alternate-launcher runs, use a shell wrapper (see
      `devcovenant/docs/installation.md`) that exports
      `PYTHONPYCACHEPREFIX` before invoking `python3 -m devcovenant`
    - keep `engine.pycache_prefix_enabled: true` (and optional

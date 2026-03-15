@@ -6,12 +6,12 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Any, Callable
 
+import devcovenant.core.services.metadata as metadata_runtime
 from devcovenant.core.contracts.policy import (
     CheckContext,
     PolicyCheck,
     Violation,
 )
-from devcovenant.core.services import metadata as metadata_runtime
 from devcovenant.core.services.policy_parse import PolicyDefinition
 
 

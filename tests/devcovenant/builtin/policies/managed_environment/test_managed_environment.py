@@ -132,33 +132,6 @@ def _unit_test_managed_commands_replace_manual_warning(
     assert checker.check(context) == []
 
 
-def _unit_test_managed_rerun_commands_replace_manual_warning(
-    tmp_path: Path, monkeypatch
-):
-    """Managed rerun commands should suppress missing-manual warning."""
-    managed = tmp_path / ".venv"
-    managed.mkdir()
-    venv_python = managed / "bin"
-    venv_python.mkdir()
-    venv_executable = venv_python / "python"
-    venv_executable.write_text("", encoding="utf-8")
-    monkeypatch.setenv("VIRTUAL_ENV", str(managed))
-    monkeypatch.setattr(sys, "executable", str(venv_executable))
-
-    checker = ManagedEnvironmentCheck()
-    checker.set_options(
-        {
-            "expected_paths": [".venv"],
-            "managed_rerun_commands": [
-                "command=>bench exec -- devcovenant {command_argv}"
-            ],
-        },
-        {},
-    )
-    context = CheckContext(repo_root=tmp_path, changed_files=[])
-    assert checker.check(context) == []
-
-
 def _unit_test_required_commands_accept_dash_underscore_variants(
     tmp_path: Path, monkeypatch
 ):
@@ -260,55 +233,6 @@ def _unit_test_runtime_action_resolve_stage_dispatches(monkeypatch) -> None:
     assert captured["base_env"] == {"PATH": "/usr/bin"}
 
 
-def _unit_test_runtime_action_resolve_rerun_dispatches(monkeypatch) -> None:
-    """Runtime resolve-rerun action should delegate to runtime helpers."""
-    checker = ManagedEnvironmentCheck()
-    captured: dict[str, object] = {}
-    runtime_helpers = managed_environment.managed_environment_runtime
-
-    def _fake_resolve(
-        repo_root: Path,
-        stage: str,
-        command_name: str,
-        command_args,
-        *,
-        managed_python=None,
-        managed_root=None,
-    ):
-        """Capture resolve-rerun parameters for assertions."""
-        captured["repo_root"] = str(repo_root)
-        captured["stage"] = stage
-        captured["command_name"] = command_name
-        captured["command_args"] = list(command_args)
-        captured["managed_python"] = managed_python
-        captured["managed_root"] = managed_root
-        return ["bench", "exec", "--", "devcovenant", command_name]
-
-    monkeypatch.setattr(
-        runtime_helpers,
-        "resolve_managed_rerun_command_for_stage",
-        _fake_resolve,
-    )
-    result = checker.run_runtime_action(
-        runtime_helpers.RUNTIME_ACTION_RESOLVE_RERUN,
-        repo_root=Path("/tmp/repo"),
-        payload={
-            "stage": "command",
-            "command_name": "check",
-            "command_args": ["--nofix"],
-            "managed_python": "/tmp/python",
-            "managed_root": "/tmp/.venv",
-        },
-    )
-    assert result == ["bench", "exec", "--", "devcovenant", "check"]
-    assert captured["repo_root"] == str(Path("/tmp/repo"))
-    assert captured["stage"] == "command"
-    assert captured["command_name"] == "check"
-    assert captured["command_args"] == ["--nofix"]
-    assert captured["managed_python"] == "/tmp/python"
-    assert captured["managed_root"] == "/tmp/.venv"
-
-
 def _unit_test_runtime_action_unknown_raises() -> None:
     """Unknown runtime action should raise a ValueError."""
     checker = ManagedEnvironmentCheck()
@@ -385,18 +309,6 @@ class GeneratedUnittestCases(unittest.TestCase):
         finally:
             monkeypatch.undo()
 
-    def test_managed_rerun_commands_replace_manual_warning(self):
-        """Run test_managed_rerun_commands_replace_manual_warning."""
-        monkeypatch = MonkeyPatch()
-        try:
-            with tempfile.TemporaryDirectory() as temp_dir:
-                tmp_path = Path(temp_dir).resolve()
-                _unit_test_managed_rerun_commands_replace_manual_warning(
-                    tmp_path=tmp_path, monkeypatch=monkeypatch
-                )
-        finally:
-            monkeypatch.undo()
-
     def test_required_commands_accept_dash_underscore_variants(self):
         """Run test_required_commands_accept_dash_underscore_variants."""
         monkeypatch = MonkeyPatch()
@@ -426,16 +338,6 @@ class GeneratedUnittestCases(unittest.TestCase):
         monkeypatch = MonkeyPatch()
         try:
             _unit_test_runtime_action_resolve_stage_dispatches(
-                monkeypatch=monkeypatch
-            )
-        finally:
-            monkeypatch.undo()
-
-    def test_runtime_action_resolve_rerun_dispatches(self):
-        """Run runtime resolve-rerun dispatcher assertions."""
-        monkeypatch = MonkeyPatch()
-        try:
-            _unit_test_runtime_action_resolve_rerun_dispatches(
                 monkeypatch=monkeypatch
             )
         finally:

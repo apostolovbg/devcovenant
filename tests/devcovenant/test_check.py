@@ -23,7 +23,7 @@ def _mock_check_result(*, blocked: bool = False, sync_issues: bool = False):
 def _unit_test_run_is_read_only_by_default() -> None:
     """run() should skip refresh/fixes/cleanup in default audit mode."""
     repo_root = Path("/repo")
-    args = SimpleNamespace(nofix=False, norefresh=False)
+    args = SimpleNamespace()
 
     with patch("devcovenant.check.resolve_repo_root", return_value=repo_root):
         with patch("devcovenant.check.refresh_repo") as refresh_mock:
@@ -50,7 +50,7 @@ def _unit_test_run_is_read_only_by_default() -> None:
 def _unit_test_run_uses_gate_env_for_refresh_and_autofix() -> None:
     """Gate env should enable refresh/fixes/cleanup for the check routine."""
     repo_root = Path("/repo")
-    args = SimpleNamespace(nofix=False, norefresh=False)
+    args = SimpleNamespace()
     gate_env = {
         check._CHECK_APPLY_FIXES_ENV: "1",
         check._CHECK_RUN_REFRESH_ENV: "1",
@@ -88,7 +88,7 @@ def _unit_test_run_uses_gate_env_for_refresh_and_autofix() -> None:
 def _unit_test_run_stops_when_gate_refresh_fails() -> None:
     """Gate-orchestrated refresh failure should abort before checks."""
     repo_root = Path("/repo")
-    args = SimpleNamespace(nofix=False, norefresh=False)
+    args = SimpleNamespace()
     gate_env = {check._CHECK_RUN_REFRESH_ENV: "1"}
 
     with patch.dict("devcovenant.check.os.environ", gate_env, clear=False):
@@ -114,7 +114,7 @@ def _unit_test_run_stops_when_gate_refresh_fails() -> None:
 def _unit_test_run_blocks_when_sync_issues_exist() -> None:
     """run() should return non-zero when sync issues are reported."""
     repo_root = Path("/repo")
-    args = SimpleNamespace(nofix=False, norefresh=True)
+    args = SimpleNamespace()
 
     with patch("devcovenant.check.resolve_repo_root", return_value=repo_root):
         with patch("devcovenant.check.refresh_repo") as refresh_mock:
@@ -138,36 +138,16 @@ def _unit_test_run_blocks_when_sync_issues_exist() -> None:
     engine.return_value.check.assert_called_once_with(apply_fixes=False)
 
 
-def _unit_test_legacy_flags_do_not_change_default_audit_behavior() -> None:
-    """Legacy compatibility flags should not enable mutating behavior."""
-    repo_root = Path("/repo")
-    args = SimpleNamespace(nofix=True, norefresh=True)
-
-    with patch("devcovenant.check.resolve_repo_root", return_value=repo_root):
-        with patch("devcovenant.check.refresh_repo") as refresh_mock:
-            with patch(
-                "devcovenant.check.cleanup_repo_bytecode_artifacts"
-            ) as cleanup_mock:
-                with patch("devcovenant.check.warn_version_mismatch"):
-                    with patch("devcovenant.check.print_banner"):
-                        with patch("devcovenant.check.print_step"):
-                            with patch(
-                                "devcovenant.check.DevCovenantEngine"
-                            ) as engine:
-                                engine.return_value.check.return_value = (
-                                    _mock_check_result()
-                                )
-                                exit_code = check.run(args)
-
-    assert exit_code == 0
-    refresh_mock.assert_not_called()
-    cleanup_mock.assert_not_called()
-    engine.return_value.check.assert_called_once_with(apply_fixes=False)
+def _unit_test_hidden_legacy_flags_are_rejected() -> None:
+    """Removed hidden flags should now fail parser validation."""
+    with unittest.TestCase().assertRaises(SystemExit) as error:
+        check.main(["--nofix"])
+    assert error.exception.code == 2
 
 
 def _unit_test_run_does_not_mutate_gate_status_file() -> None:
     """run() should not mutate gate status in read-only audit mode."""
-    args = SimpleNamespace(nofix=False, norefresh=False)
+    args = SimpleNamespace()
 
     with tempfile.TemporaryDirectory() as tmpdir:
         repo_root = Path(tmpdir)
@@ -249,9 +229,9 @@ class GeneratedUnittestCases(unittest.TestCase):
         """Run test_run_blocks_when_sync_issues_exist."""
         _unit_test_run_blocks_when_sync_issues_exist()
 
-    def test_legacy_flags_do_not_change_default_audit_behavior(self):
-        """Run test_legacy_flags_do_not_change_default_audit_behavior."""
-        _unit_test_legacy_flags_do_not_change_default_audit_behavior()
+    def test_hidden_legacy_flags_are_rejected(self):
+        """Run removed-hidden-flag parser coverage."""
+        _unit_test_hidden_legacy_flags_are_rejected()
 
     def test_run_does_not_mutate_gate_status_file(self):
         """Run test_run_does_not_mutate_gate_status_file."""
