@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import io
+import json
 import tempfile
 import unittest
 from contextlib import redirect_stderr, redirect_stdout
@@ -143,6 +144,53 @@ def _unit_test_clean_run_can_limit_to_logs_only() -> None:
         assert (logs_root / "README.md").is_file()
 
 
+def _unit_test_clean_run_rejects_open_gate_session() -> None:
+    """`clean.run()` should fail when a gate session is open."""
+    with tempfile.TemporaryDirectory() as temp_dir:
+        repo_root = Path(temp_dir)
+        repo_seed_cache.copy_installed_repo(repo_root)
+        status_path = (
+            repo_root
+            / "devcovenant"
+            / "registry"
+            / "runtime"
+            / "gate_status.json"
+        )
+        status_path.parent.mkdir(parents=True, exist_ok=True)
+        status_path.write_text(
+            json.dumps({"session_state": "open"}, indent=2) + "\n",
+            encoding="utf-8",
+        )
+        (repo_root / "build").mkdir()
+
+        stdout = io.StringIO()
+        stderr = io.StringIO()
+        with (
+            redirect_stdout(stdout),
+            redirect_stderr(stderr),
+            patch(
+                "devcovenant.clean.resolve_repo_root",
+                return_value=repo_root,
+            ),
+        ):
+            result = clean.run(
+                SimpleNamespace(
+                    all=False,
+                    build=True,
+                    cache=False,
+                    registry=False,
+                    logs=False,
+                )
+            )
+
+        assert result == 1
+        assert (repo_root / "build").exists()
+        assert (
+            "Cannot run `clean` while a gate session is open"
+            in stderr.getvalue()
+        )
+
+
 class GeneratedUnittestCases(unittest.TestCase):
     """unittest wrappers for clean command regression coverage."""
 
@@ -173,3 +221,7 @@ class GeneratedUnittestCases(unittest.TestCase):
     def test_clean_run_can_limit_to_logs_only(self):
         """Run logs-only clean-scope execution coverage."""
         _unit_test_clean_run_can_limit_to_logs_only()
+
+    def test_clean_run_rejects_open_gate_session(self):
+        """Run open-session clean rejection coverage."""
+        _unit_test_clean_run_rejects_open_gate_session()

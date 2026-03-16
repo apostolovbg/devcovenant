@@ -1,5 +1,5 @@
 # DevCovenant Architecture Contracts
-**Last Updated:** 2026-03-15
+**Last Updated:** 2026-03-16
 **Project Version:** 1.0.0
 
 ## Table of Contents
@@ -368,6 +368,11 @@ Invariant:
   Internal callers import concrete submodules directly, and extracted helper
   seams under `devcovenant/core/services/policy_*.py` remain internal
   implementation modules unless a plan slice explicitly promotes one.
+- Cleanup orchestration in `devcovenant/core/flow/clean.py` treats
+  `devcovenant clean` as a post-session maintenance command: it checks the
+  runtime gate-status file first and fails explicitly when a gate session is
+  still open, so runtime registry and log cleanup cannot erase live session
+  evidence.
 - Policy-engine summary status messaging now resolves against the configured
   `engine.fail_threshold` so printed status text matches actual blocking
   behavior.

@@ -248,6 +248,7 @@ Lifecycle and maintenance commands:
 - `devcovenant install`
 - `devcovenant deploy`
 - `devcovenant clean --all|--build|--cache|--registry|--logs`
+  run cleanup only when no gate session is open; close the gate first
 - `devcovenant refresh`
 - `devcovenant upgrade`
 - `devcovenant undeploy`

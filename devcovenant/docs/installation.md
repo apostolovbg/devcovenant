@@ -1,5 +1,5 @@
 # Installation and Lifecycle
-**Last Updated:** 2026-03-15
+**Last Updated:** 2026-03-16
 **Project Version:** 1.0.0
 
 ## Table of Contents
@@ -84,6 +84,10 @@ devcovenant uninstall
 devcovenant update_lock
 ```
 
+Run `clean` only after the active gate session is closed.
+If `gate --start` is open, finish the slice with `devcovenant gate --end`
+first, then run cleanup outside the session.
+
 Lifecycle plus governance commands are normally paired with:
 
 ```bash
@@ -100,7 +104,8 @@ Recommended operating sequence:
 3. Activate (`deploy`).
 4. Do work under start -> mid preflight loop -> test -> end gates.
 5. Use `refresh`/`upgrade` when contracts or core content change.
-6. Use `clean` when local build/cache residue needs pruning after those runs.
+6. Use `clean` when local build/cache residue needs pruning after those runs
+   and after the gate session is closed.
 
 Runtime details that affect operations:
 - `devcovenant test` executes
@@ -123,6 +128,8 @@ Runtime details that affect operations:
 - `devcovenant clean` resolves active-profile `clean_overlays` plus repo
   `clean.overlays`/`clean.overrides`, requires an explicit `--all`,
   `--build`, `--cache`, `--registry`, or `--logs` scope, records cleanup
+  details in run summaries, and fails explicitly while a gate session is
+  open so runtime evidence is not erased mid-slice
   details in `summary.txt`/`summary.json`, and keeps tracked files such as
   `.git`, `.venv`, `devcovenant/registry/registry.yaml`,
   `devcovenant/registry/README.md`, and `devcovenant/logs/README.md`

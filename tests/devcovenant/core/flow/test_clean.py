@@ -3,9 +3,15 @@
 from __future__ import annotations
 
 import importlib
+import io
+import json
+import tempfile
 import unittest
+from contextlib import redirect_stderr
 from pathlib import Path
 from unittest.mock import patch
+
+from tests.devcovenant import repo_seed_cache
 
 MODULE = "devcovenant.core.flow.clean"
 
@@ -41,6 +47,11 @@ def _unit_test_clean_flow_reports_scope_and_removed_targets() -> None:
             return_value=result,
         ) as execute_mock:
             with (
+                patch.object(
+                    module,
+                    "_gate_session_is_open",
+                    return_value=False,
+                ),
                 patch.object(module, "print_step") as print_mock,
                 patch.object(
                     module,
@@ -68,6 +79,41 @@ def _unit_test_clean_flow_reports_scope_and_removed_targets() -> None:
     assert payload["clean_summary"]["removed_count"] == 1
 
 
+def _unit_test_clean_flow_rejects_open_gate_session() -> None:
+    """Clean flow should fail explicitly during an open gate session."""
+    module = importlib.import_module(MODULE)
+    with tempfile.TemporaryDirectory() as temp_dir:
+        repo_root = Path(temp_dir)
+        repo_seed_cache.copy_installed_repo(repo_root)
+        status_path = (
+            repo_root
+            / "devcovenant"
+            / "registry"
+            / "runtime"
+            / "gate_status.json"
+        )
+        status_path.parent.mkdir(parents=True, exist_ok=True)
+        status_path.write_text(
+            json.dumps({"session_state": "open"}, indent=2) + "\n",
+            encoding="utf-8",
+        )
+        output = io.StringIO()
+        with redirect_stderr(output):
+            exit_code = module.clean_repo(
+                repo_root,
+                include_all=False,
+                include_build=True,
+                include_cache=False,
+                include_registry=False,
+                include_logs=False,
+            )
+
+    assert exit_code == 1
+    assert (
+        "Cannot run `clean` while a gate session is open" in output.getvalue()
+    )
+
+
 class GeneratedUnittestCases(unittest.TestCase):
     """unittest wrappers for cleanup flow regression coverage."""
 
@@ -78,3 +124,7 @@ class GeneratedUnittestCases(unittest.TestCase):
     def test_clean_flow_reports_scope_and_removed_targets(self):
         """Run clean flow reporting coverage."""
         _unit_test_clean_flow_reports_scope_and_removed_targets()
+
+    def test_clean_flow_rejects_open_gate_session(self):
+        """Run open-session cleanup rejection coverage."""
+        _unit_test_clean_flow_rejects_open_gate_session()

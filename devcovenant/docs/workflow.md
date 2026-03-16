@@ -1,5 +1,5 @@
 # Workflow
-**Last Updated:** 2026-03-15
+**Last Updated:** 2026-03-16
 **Project Version:** 1.0.0
 
 ## Table of Contents
@@ -92,6 +92,10 @@ Required execution order:
 10. run `test`
 11. run `gate --end`
 12. rerun required steps if end gate reports new changes/violations
+
+`devcovenant clean` is intentionally outside the active gate lifecycle.
+Run cleanup only after `gate --end`; an open gate session blocks `clean`
+because registry/log cleanup would destroy the session's own runtime evidence.
 
 ## 90-Second Evidence Ritual
 Use this ritual when you want a fast proof that DevCovenant is working and
@@ -288,6 +292,9 @@ Output behavior:
   deterministic standard `Run logs:` pointer on success and failure paths,
   except for `uninstall`, which removes `devcovenant/` and therefore cannot
   leave a durable run-log folder
+- `devcovenant/core/flow/clean.py` now refuses to run while
+  `devcovenant/registry/runtime/gate_status.json` records an open session,
+  keeping cleanup commands outside live gate ownership
 - CLI unhandled exceptions are normalized to explicit typed errors through
   `devcovenant/core/runtime/errors.py` and
   `devcovenant/core/contracts/errors.py`; console output stays explicit while

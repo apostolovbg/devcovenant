@@ -2,9 +2,12 @@
 
 from __future__ import annotations
 
+import json
+import sys
 from pathlib import Path
 
 import devcovenant.core.services.cleanup as cleanup_runtime
+import devcovenant.core.services.registry as registry_runtime
 from devcovenant.core.runtime.execution import (
     merge_active_run_log_metadata,
     print_step,
@@ -22,6 +25,16 @@ def clean_repo(
     include_logs: bool,
 ) -> int:
     """Run repository cleanup for the selected cleanup categories."""
+    if _gate_session_is_open(repo_root):
+        runtime_print(
+            (
+                "Error: Cannot run `clean` while a gate session is open. "
+                "Run `devcovenant gate --end` first, then run `devcovenant "
+                "clean ...` outside the active session."
+            ),
+            file=sys.stderr,
+        )
+        return 1
     selection = cleanup_runtime.resolve_clean_selection(
         include_all=include_all,
         include_build=include_build,
@@ -65,3 +78,17 @@ def clean_repo(
             "🛡️",
         )
     return 0
+
+
+def _gate_session_is_open(repo_root: Path) -> bool:
+    """Return True when the runtime gate status records an open session."""
+    status_path = registry_runtime.gate_status_path(repo_root)
+    if not status_path.exists():
+        return False
+    try:
+        payload = json.loads(status_path.read_text(encoding="utf-8"))
+    except (OSError, json.JSONDecodeError):
+        return False
+    if not isinstance(payload, dict):
+        return False
+    return str(payload.get("session_state", "")).strip().lower() == "open"

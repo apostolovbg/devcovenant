@@ -57,6 +57,24 @@ Example:
 ## Version 1.0.0
 
 - 2026-03-16:
+  Change: Added an open-session guard so `devcovenant clean` now fails until
+  the active gate is closed.
+  Why: Prevented cleanup commands from deleting the runtime registry or logs
+  that an open gate session still owns as live workflow evidence.
+  Impact: Clarified that `clean` is a post-session maintenance command and
+  verified the guard across clean runtime tests and lifecycle docs.
+  Files:
+  CHANGELOG.md
+  README.md
+  devcovenant/README.md
+  devcovenant/core/flow/clean.py
+  devcovenant/docs/architecture.md
+  devcovenant/docs/installation.md
+  devcovenant/docs/workflow.md
+  tests/devcovenant/core/flow/test_clean.py
+  tests/devcovenant/test_clean.py
+
+- 2026-03-16:
   Change: Added the question-mark prompt rule to the Dev Covenant and
   workflow template so question-only prompts stop command execution by
   default.
