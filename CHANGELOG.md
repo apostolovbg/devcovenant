@@ -57,6 +57,25 @@ Example:
 ## Version 1.0.0
 
 - 2026-03-16:
+  Change: Added build cleanup support for unpacked release trees named like
+  `<project>-<version>/` in the repo root.
+  Why: Prevented source-tree package extracts from lingering beside `build/`,
+  `dist/`, and `*.egg-info` after packaging validation runs.
+  Impact: Expanded `clean --build` and `clean --all` so they now remove
+  repo-root release trees for the repo or manifest project name while
+  leaving unrelated versioned directories alone.
+  Files:
+  CHANGELOG.md
+  README.md
+  devcovenant/README.md
+  devcovenant/core/services/cleanup.py
+  devcovenant/docs/architecture.md
+  devcovenant/docs/installation.md
+  devcovenant/docs/workflow.md
+  tests/devcovenant/core/services/test_cleanup.py
+  tests/devcovenant/test_clean.py
+
+- 2026-03-16:
   Change: Added an open-session guard so `devcovenant clean` now fails until
   the active gate is closed.
   Why: Prevented cleanup commands from deleting the runtime registry or logs

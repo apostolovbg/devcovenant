@@ -171,6 +171,21 @@ def _unit_test_execute_cleanup_preserves_protected() -> None:
         (repo_root / "pkg" / "__pycache__").mkdir(parents=True)
         (repo_root / ".coverage").write_text("coverage\n", encoding="utf-8")
         (repo_root / "pkg.egg-info").mkdir()
+        release_tree = repo_root / f"{repo_root.name}-2.45.6"
+        release_tree.mkdir()
+        (release_tree / "PKG-INFO").write_text("artifact\n", encoding="utf-8")
+        other_release_tree = repo_root / "otherproject-2.45.6"
+        other_release_tree.mkdir()
+        (other_release_tree / "PKG-INFO").write_text(
+            "artifact\n",
+            encoding="utf-8",
+        )
+        non_release_tree = repo_root / f"{repo_root.name}-notaversion"
+        non_release_tree.mkdir()
+        (non_release_tree / "PKG-INFO").write_text(
+            "artifact\n",
+            encoding="utf-8",
+        )
         (repo_root / "scratch").mkdir()
         (repo_root / "scratch" / "protected").mkdir()
         (repo_root / "scratch" / "protected" / "keep.txt").write_text(
@@ -218,6 +233,9 @@ def _unit_test_execute_cleanup_preserves_protected() -> None:
         assert (repo_root / "dist").exists()
         assert not (repo_root / "pkg" / "__pycache__").exists()
         assert not (repo_root / ".coverage").exists()
+        assert release_tree.exists()
+        assert other_release_tree.exists()
+        assert non_release_tree.exists()
         assert (repo_root / "devcovenant" / "logs").exists()
         assert (
             repo_root / "devcovenant" / "registry" / "registry.yaml"
@@ -276,6 +294,9 @@ def _unit_test_execute_cleanup_preserves_protected() -> None:
         assert not (repo_root / "build").exists()
         assert not (repo_root / "dist").exists()
         assert not (repo_root / "pkg.egg-info").exists()
+        assert not release_tree.exists()
+        assert other_release_tree.exists()
+        assert non_release_tree.exists()
         assert not runtime_registry_dir.exists()
         assert not run_dir.exists()
         assert (logs_root / "README.md").is_file()

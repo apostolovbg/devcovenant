@@ -93,6 +93,15 @@ def _unit_test_clean_run_can_limit_to_build_only() -> None:
         repo_root = Path(temp_dir)
         repo_seed_cache.copy_installed_repo(repo_root)
         (repo_root / "dist").mkdir()
+        release_tree = repo_root / f"{repo_root.name}-2.45.6"
+        release_tree.mkdir()
+        (release_tree / "PKG-INFO").write_text("artifact\n", encoding="utf-8")
+        other_release_tree = repo_root / "otherproject-2.45.6"
+        other_release_tree.mkdir()
+        (other_release_tree / "PKG-INFO").write_text(
+            "artifact\n",
+            encoding="utf-8",
+        )
         (repo_root / ".coverage").write_text("coverage\n", encoding="utf-8")
 
         with patch(
@@ -111,6 +120,8 @@ def _unit_test_clean_run_can_limit_to_build_only() -> None:
 
         assert result == 0
         assert not (repo_root / "dist").exists()
+        assert not release_tree.exists()
+        assert other_release_tree.exists()
         assert (repo_root / ".coverage").exists()
 
 

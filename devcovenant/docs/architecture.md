@@ -372,7 +372,9 @@ Invariant:
   `devcovenant clean` as a post-session maintenance command: it checks the
   runtime gate-status file first and fails explicitly when a gate session is
   still open, so runtime registry and log cleanup cannot erase live session
-  evidence.
+  evidence. The cleanup service also derives safe build-artifact release-tree
+  targets from repo/manifest project names and removes repo-root unpacked
+  directories shaped like `<project>-<version>/`.
 - Policy-engine summary status messaging now resolves against the configured
   `engine.fail_threshold` so printed status text matches actual blocking
   behavior.

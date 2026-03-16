@@ -294,7 +294,9 @@ Output behavior:
   leave a durable run-log folder
 - `devcovenant/core/flow/clean.py` now refuses to run while
   `devcovenant/registry/runtime/gate_status.json` records an open session,
-  keeping cleanup commands outside live gate ownership
+  keeping cleanup commands outside live gate ownership; build cleanup also
+  prunes repo-root unpacked release trees named like
+  `<project>-<version>/` for the repo or manifest project name
 - CLI unhandled exceptions are normalized to explicit typed errors through
   `devcovenant/core/runtime/errors.py` and
   `devcovenant/core/contracts/errors.py`; console output stays explicit while

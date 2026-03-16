@@ -129,7 +129,9 @@ Runtime details that affect operations:
   `clean.overlays`/`clean.overrides`, requires an explicit `--all`,
   `--build`, `--cache`, `--registry`, or `--logs` scope, records cleanup
   details in run summaries, and fails explicitly while a gate session is
-  open so runtime evidence is not erased mid-slice
+  open so runtime evidence is not erased mid-slice; build cleanup also
+  removes unpacked release trees like `<project>-<version>/` when the
+  directory name matches the repo or manifest project identity
   details in `summary.txt`/`summary.json`, and keeps tracked files such as
   `.git`, `.venv`, `devcovenant/registry/registry.yaml`,
   `devcovenant/registry/README.md`, and `devcovenant/logs/README.md`

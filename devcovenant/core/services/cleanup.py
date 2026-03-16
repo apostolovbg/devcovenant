@@ -2,7 +2,9 @@
 
 from __future__ import annotations
 
+import json
 import os
+import re
 import shutil
 from dataclasses import dataclass
 from pathlib import Path
@@ -11,6 +13,11 @@ from typing import Iterable
 import yaml
 
 import devcovenant.core.services.profile_registry as profile_runtime
+
+try:
+    import tomllib  # type: ignore[attr-defined]
+except ModuleNotFoundError:  # pragma: no cover
+    import tomli as tomllib  # type: ignore[assignment]
 
 _CLEAN_TARGET_KEYS = (
     "build_dirs",
@@ -33,6 +40,7 @@ _HARD_PROTECTED_GLOBS = (
     "devcovenant/registry/README.md",
     "devcovenant/registry/registry.yaml",
 )
+_RELEASE_TREE_SUFFIX_PATTERN = re.compile(r"^(?:v?\d)[A-Za-z0-9._+-]*$")
 
 
 @dataclass(frozen=True)
@@ -260,6 +268,99 @@ def _is_relative_to(path: Path, other: Path) -> bool:
         return False
 
 
+def _normalized_project_name_variants(raw_name: str) -> list[str]:
+    """Return deterministic normalized project-name variants."""
+    token = str(raw_name or "").strip()
+    if not token:
+        return []
+    collapsed = re.sub(r"\s+", "-", token)
+    variants = [
+        token,
+        token.lower(),
+        collapsed,
+        collapsed.lower(),
+        collapsed.replace("_", "-"),
+        collapsed.replace("_", "-").lower(),
+        collapsed.replace("-", "_"),
+        collapsed.replace("-", "_").lower(),
+    ]
+    return _dedupe(variants)
+
+
+def _project_name_candidates(repo_root: Path) -> tuple[str, ...]:
+    """Resolve plausible repo/project names for release-tree detection."""
+    candidates: list[str] = []
+    candidates.extend(_normalized_project_name_variants(repo_root.name))
+
+    pyproject_path = repo_root / "pyproject.toml"
+    if pyproject_path.exists():
+        try:
+            pyproject_payload = tomllib.loads(
+                pyproject_path.read_text(encoding="utf-8")
+            )
+        except (OSError, tomllib.TOMLDecodeError):
+            pyproject_payload = {}
+        if isinstance(pyproject_payload, dict):
+            project_block = pyproject_payload.get("project")
+            if isinstance(project_block, dict):
+                candidates.extend(
+                    _normalized_project_name_variants(
+                        str(project_block.get("name", ""))
+                    )
+                )
+            tool_block = pyproject_payload.get("tool")
+            if isinstance(tool_block, dict):
+                poetry_block = tool_block.get("poetry")
+                if isinstance(poetry_block, dict):
+                    candidates.extend(
+                        _normalized_project_name_variants(
+                            str(poetry_block.get("name", ""))
+                        )
+                    )
+
+    package_json_path = repo_root / "package.json"
+    if package_json_path.exists():
+        try:
+            package_payload = json.loads(
+                package_json_path.read_text(encoding="utf-8")
+            )
+        except (OSError, json.JSONDecodeError):
+            package_payload = {}
+        if isinstance(package_payload, dict):
+            candidates.extend(
+                _normalized_project_name_variants(
+                    str(package_payload.get("name", ""))
+                )
+            )
+
+    return tuple(_dedupe(candidates))
+
+
+def _collect_release_tree_targets(repo_root: Path) -> list[Path]:
+    """Return repo-root unpacked release-tree directories for build cleanup."""
+    name_candidates = _project_name_candidates(repo_root)
+    if not name_candidates:
+        return []
+    targets: list[Path] = []
+    try:
+        children = list(repo_root.iterdir())
+    except OSError:
+        return []
+    for child in children:
+        if not child.is_dir():
+            continue
+        child_name = child.name
+        for candidate in name_candidates:
+            prefix = f"{candidate}-"
+            if not child_name.startswith(prefix):
+                continue
+            suffix = child_name[len(prefix) :]
+            if _RELEASE_TREE_SUFFIX_PATTERN.fullmatch(suffix):
+                targets.append(child)
+                break
+    return _prune_nested_paths(targets)
+
+
 def _prune_nested_paths(paths: Iterable[Path]) -> list[Path]:
     """Keep parent cleanup targets and drop redundant descendants."""
     unique = sorted(
@@ -305,6 +406,7 @@ def _collect_requested_targets(
     """Resolve requested cleanup targets for the selected categories."""
     requested: list[Path] = []
     if selection.include_build:
+        requested.extend(_collect_release_tree_targets(repo_root))
         for raw_dir in config.build_dirs:
             path = _resolve_path_under_root(repo_root, raw_dir)
             if path is not None:

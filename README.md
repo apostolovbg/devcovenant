@@ -267,7 +267,8 @@ Practical usage guidance:
 - use gate commands for mandatory gate-session workflow and mutating checks
 - use `devcovenant gate --status` for short read-only gate session inspection
 - use `clean` to remove disposable build/cache artifacts after package/build
-  validation without touching logs, runtime registry state, or `.venv`
+  validation, including unpacked release trees like `<project>-<version>/`,
+  without touching logs, runtime registry state, or `.venv`
 - use `refresh` when descriptors/profiles/templates change
 - use `update_lock` when dependency inputs changed and license artifacts must
   be reconciled
