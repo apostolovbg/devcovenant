@@ -1,5 +1,5 @@
 # Profiles
-**Last Updated:** 2026-03-15
+**Last Updated:** 2026-03-16
 **Project Version:** 1.0.0
 
 ## Table of Contents
@@ -53,6 +53,9 @@ The global profile also ships managed workflow text assets (for example the
 AGENTS workflow contract) so output/polling guidance stays refresh-managed
 and consistent across generated docs, including concise operator-update
 communication discipline.
+That same AGENTS asset now also carries the question-only prompt stop rule in
+both `THE DEV COVENANT` and `Execution Order`, so repos inherit the `?`
+branch explicitly instead of relying on buried workflow prose.
 It also owns the universal ignore/gitignore baseline for editor, packaging,
 coverage, and DevCovenant runtime artifacts so repos do not need to rediscover
 common exclusions such as `.vscode/**`, `.idea/**`, `*.egg-info/**`,

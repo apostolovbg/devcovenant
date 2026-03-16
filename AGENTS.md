@@ -80,6 +80,9 @@ canonical policy source and operational guide for the repository.
 ## THE DEV COVENANT
 - We are human and AI developers working on this project together.
 - We obey every AGENTS.md and DevCovenant instruction.
+- We treat a human prompt ending with `?` as a question only and do not
+  execute commands, edit files, or start a work slice unless the human
+  explicitly asks.
 - We maintain clean repository hygiene and avoid unmanaged drift.
 - We never edit content inside managed `<!-- DEVCOV* -->` blocks.
 
@@ -102,10 +105,13 @@ during command waits.
    session, reread the entire `AGENTS.md` before work commands.
 4. Build an active-policy mental model from policies marked `enabled: true`
    and follow those policies proactively while writing.
-5. If a managed environment is configured, activate/use it first. Run
+5. If the human prompt ends with `?`, treat it as a question only. Answer
+   without executing commands, editing files, or starting a work slice
+   unless the human explicitly asks for action.
+6. If a managed environment is configured, activate/use it first. Run
    DevCovenant commands and tests in that environment. Installing
    DevCovenant in that environment is recommended.
-6. Run `devcovenant gate --start` before any repository edits. For
+7. Run `devcovenant gate --start` before any repository edits. For
    long-running commands, use non-PTY execution for non-interactive
    DevCovenant commands, prefer low-frequency polling, and avoid verbose
    or large-output streaming by default.
@@ -113,33 +119,33 @@ during command waits.
    150s, 180s, 240s, then every 60s.
    Do not narrate polling steps or cadence in routine progress updates
    unless the human explicitly asks.
-7. Before applying edits, clear start-gate complaints. Blocking violations
+8. Before applying edits, clear start-gate complaints. Blocking violations
    must be cleared; preferred behavior is to clear all complaints. When
    DevCovenant run artifacts are available, inspect summaries/tails/logs
    before rerunning commands.
-8. Apply edits while following policy text and metadata proactively.
-9. If any DevCovenant complaint appears (error, warning, or info), stop
+9. Apply edits while following policy text and metadata proactively.
+10. If any DevCovenant complaint appears (error, warning, or info), stop
    the requested task and clear blocking violations first. Use the latest
    `Run logs:` path and summary artifacts as the primary debug
    entrypoint.
-10. Preferred behavior: clear all DevCovenant complaints before continuing,
+11. Preferred behavior: clear all DevCovenant complaints before continuing,
    unless the human explicitly requests otherwise.
-11. Run `devcovenant gate --mid` before tests to surface hook-induced
+12. Run `devcovenant gate --mid` before tests to surface hook-induced
    mutations and blocking DevCovenant complaints early. `gate --mid`
    requires an open session, does not record lifecycle state, and may
    need an explicit rerun until hooks converge.
-12. Run `devcovenant test`. For long runs, report status/phase updates
+13. Run `devcovenant test`. For long runs, report status/phase updates
    and final result, and prefer run-artifact summaries/tails before
    escalating to verbose streaming. Long silent waits in normal mode
    should surface `Please wait. In progress...`.
-13. Run `devcovenant gate --end`. Use the same artifact-first output
+14. Run `devcovenant gate --end`. Use the same artifact-first output
    discipline as test runs. Gate commands do not run tests internally.
-14. If end-gate hooks or checks produce additional changes or violations,
+15. If end-gate hooks or checks produce additional changes or violations,
    use `devcovenant gate --status` for lifecycle inspection and inspect
    the latest run artifacts before rerunning required commands until the
    repository is clean. When gates require tests, run `devcovenant test`
    explicitly and rerun the gate command.
-15. Stage all changes after each completed work slice.
+16. Stage all changes after each completed work slice.
 
 Audits are not a separate workflow mode. The same gate discipline applies.
 Use `check` as the default read-only audit command. Gate commands own

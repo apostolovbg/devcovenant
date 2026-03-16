@@ -57,6 +57,21 @@ Example:
 ## Version 1.0.0
 
 - 2026-03-16:
+  Change: Added the question-mark prompt rule to the Dev Covenant and
+  workflow template so question-only prompts stop command execution by
+  default.
+  Why: Prevented future conversational questions from accidentally starting
+  work slices just because the broader workflow biases toward execution.
+  Impact: Clarified that AGENTS-managed repos now state the question-only
+  stop rule both as
+  a top-level commandment and as an explicit execution-order branch.
+  Files:
+  AGENTS.md
+  CHANGELOG.md
+  devcovenant/builtin/profiles/global/assets/AGENTS.yaml
+  devcovenant/docs/profiles.md
+
+- 2026-03-16:
   Change: Closed the registry/runtime/log migration plan with local rebuild
   proof and a clean downstream `dlmc` validation run.
   Why: Verified the installed package, this repo, and the cleaned downstream
