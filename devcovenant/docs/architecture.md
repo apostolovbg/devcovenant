@@ -60,7 +60,8 @@ repo files
   -> normalized internal units
   -> policy runtime evaluation (check/gate orchestration)
   -> evidence artifacts
-       - gate session ledger (gate_status.json)
+       - concise gate session ledger (gate_status.json)
+       - companion session snapshot (session_snapshot.json)
        - per-run log folder (run.json, summaries, stdout/stderr, tail)
        - closure-proof references in tracked docs (PLAN/CHANGELOG)
 ```
@@ -108,7 +109,7 @@ Invariant:
 ## Contract Surface Matrix
 - Tier A: user contract (CLI behavior, config schema, managed doc formats).
 - Tier B: extension contract (policy/profile/translator interfaces).
-- Tier C: data contract (local/global registry schemas and status payloads).
+- Tier C: data contract (tracked registry schema and runtime status payloads).
 - Tier D: layered kernel modules under
   `devcovenant/core/{flow,runtime,services,lib,contracts}` with direct
   submodule imports and no lazy package-export compatibility indirection.
@@ -116,7 +117,8 @@ Invariant:
 ## Core Runtime Invariants
 ### Runtime and Parsing
 - Runtime policy input is the AGENTS managed policy block.
-- Local registry state is diagnostic/hash state and AGENTS compile source.
+- Tracked registry state is deterministic governance data and AGENTS
+  compile source.
 - Policy registry entries record `origin` as `builtin` or `custom`.
 - `check` is the default read-only audit command; gate commands own refresh,
   autofix orchestration, and lifecycle state writes for the same checking
@@ -191,8 +193,9 @@ Invariant:
   can replay the exact command contract used at test time.
 - Each required test command also emits a `test_event` with schema version
   `1.0` (from `EVENT_SCHEMA_VERSION` in
-  `devcovenant/core/services/event.py`). Gate status records the `test_events`
-  list so downstream tooling can consume normalized lifecycle data.
+  `devcovenant/core/services/event.py`). `session_snapshot.json` stores the
+  full `test_events` payload list, while `gate_status.json` keeps the concise
+  `test_events_count` summary field.
 - `devcovenant test` also writes informational per-run profiling artifacts
   (`test_profile.json`, `test_profile.txt`) in the active run-log folder with
   module/group aggregation and slowest-command duration breakdowns for the
@@ -419,7 +422,7 @@ Invariant:
   phases via gate-owned check orchestration (`gate --start`,
   required non-lifecycle `gate --mid`, and `gate --end`).
 - Refresh regenerates:
-  - local registries
+  - the tracked `devcovenant/registry/registry.yaml` document
   - AGENTS managed policy block
   - managed docs and generated config sections
   - generated `.pre-commit-config.yaml` and `.gitignore`
@@ -445,7 +448,7 @@ Invariant:
   write launcher-process bytecode before DevCovenant runtime code gains
   control; shell/CI `PYTHONPYCACHEPREFIX` owns that zero-drift boundary
   instead of repo-root startup hooks or in-package bootstrap tricks.
-- Local gate state file is `devcovenant/registry/local/gate_status.json`.
+- Runtime gate state file is `devcovenant/registry/runtime/gate_status.json`.
 - `gate --status` reads gate-state and latest-run-log pointers through a
   short, read-only status path and does not mutate lifecycle state.
 - `devcovenant/core/flow/gate_status_helpers.py` owns read-only status-line
@@ -511,18 +514,22 @@ Invariant:
   `effective_python`, `managed_environment_active`,
   `managed_reexec_applied`) so managed-environment re-exec behavior is
   inspectable from evidence artifacts.
-- retention pruning preserves the active finalized run, `latest.json`, and the
-  tracked `devcovenant/logs/README.md` skeleton while removing older run
-  folders only.
+- retention pruning preserves the active finalized run, the runtime pointer at
+  `devcovenant/registry/runtime/latest.json`, and the tracked
+  `devcovenant/logs/README.md` skeleton while removing older run folders only.
 - Changelog and session scoping use gate-session snapshots
   (`session_start_snapshot`, optional `session_baseline_snapshot`,
   `session_end_snapshot`, `last_run_snapshot`).
 - Gate-session snapshots now use the current filesystem-hash row format only;
   older snapshot payloads are rejected explicitly and require a fresh
   `devcovenant gate --start`.
-- `gate_status.json` stores a targeted `session_start_snapshot` baseline
-  mapping so `changelog-coverage` can scope deleted-file evidence to the
-  active session without relying on HEAD-wide git deletions.
+- `session_snapshot.json` stores the targeted
+  `session_start_snapshot` baseline mapping so `changelog-coverage` can scope
+  deleted-file evidence to the active session without relying on HEAD-wide git
+  deletions.
+- `gate_status.json` stays slim by storing lifecycle state plus
+  `session_snapshot_file` / `session_snapshot_updated_*` pointer metadata
+  instead of the heavy snapshot payloads themselves.
 - Filesystem snapshot helpers are centralized in
   `devcovenant/core/runtime/session_snapshot.py`, with runtime consumers
   treating that module as the canonical snapshot-helper home.
@@ -575,7 +582,7 @@ Invariant:
 - Autofix helpers are optional and must follow autofix contracts when present.
 - Selector metadata keys are shared policy contract keys.
 - Session-bound policies read gate-session state from
-  `devcovenant/registry/local/gate_status.json` and fail explicitly when the
+  `devcovenant/registry/runtime/gate_status.json` and fail explicitly when the
   session ledger is missing or invalid.
 - Bundled runtime scope is no longer metadata-switchable (`session_scope` is
   not used by core policy helpers); bundled checks consume gate-session state
@@ -649,8 +656,8 @@ Invariant:
   a repository tooling dependency by default in governed repositories.
 - Changelog coverage keeps session-level prepend-entry semantics and accepts
   header/managed-block exemptions via lightweight
-  `document_exemption_baseline` records without storing whole-repo session
-  signature inventories.
+  `document_exemption_baseline` records in `session_snapshot.json` without
+  storing whole-repo session signature inventories in `gate_status.json`.
 
 ## Quality Invariants
 - Refresh output is deterministic for identical inputs.

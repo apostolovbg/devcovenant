@@ -12,7 +12,9 @@ from typing import Any, Mapping, Sequence
 
 RUN_LOG_SCHEMA_VERSION = "1.0"
 _RUN_LOG_ROOT_RELATIVE = Path("devcovenant") / "logs"
-_LATEST_POINTER_FILE = "latest.json"
+_LATEST_POINTER_RELATIVE = (
+    Path("devcovenant") / "registry" / "runtime" / "latest.json"
+)
 _COMMAND_SLUG_PATTERN = re.compile(r"[^a-z0-9]+")
 _MAX_COMMAND_SLUG_LENGTH = 32
 
@@ -59,7 +61,7 @@ def resolve_run_logs_root(repo_root: Path) -> Path:
 
 def latest_run_pointer_path(repo_root: Path) -> Path:
     """Return the path to the lightweight latest-run pointer file."""
-    return resolve_run_logs_root(repo_root) / _LATEST_POINTER_FILE
+    return Path(repo_root) / _LATEST_POINTER_RELATIVE
 
 
 def create_run_log_context(
@@ -76,6 +78,9 @@ def create_run_log_context(
     repo_root = Path(repo_root)
     logs_root = resolve_run_logs_root(repo_root)
     logs_root.mkdir(parents=True, exist_ok=True)
+    latest_run_pointer_path(repo_root).parent.mkdir(
+        parents=True, exist_ok=True
+    )
 
     started = _coerce_utc_datetime(started_at)
     run_id = _allocate_run_id(
@@ -332,9 +337,9 @@ def record_latest_run_pointer(
     finished_at: _dt.datetime | None,
 ) -> None:
     """Update the lightweight latest-run pointer for quick lookup."""
-    logs_root = context.logs_root
-    logs_root.mkdir(parents=True, exist_ok=True)
-    pointer_path = logs_root / _LATEST_POINTER_FILE
+    context.logs_root.mkdir(parents=True, exist_ok=True)
+    pointer_path = latest_run_pointer_path(context.repo_root)
+    pointer_path.parent.mkdir(parents=True, exist_ok=True)
     paths = context.require_paths()
     payload = {
         "schema_version": RUN_LOG_SCHEMA_VERSION,

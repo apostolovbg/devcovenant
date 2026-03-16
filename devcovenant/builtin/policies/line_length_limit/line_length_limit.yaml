@@ -37,7 +37,7 @@ metadata:
     - .coverage.*
     - htmlcov/**
     - devcovenant/logs/**
-    - devcovenant/registry/local/**
+    - devcovenant/registry/runtime/**
   include_prefixes: []
   include_globs: []
   exclude_suffixes: []

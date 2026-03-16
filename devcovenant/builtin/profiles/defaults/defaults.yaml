@@ -124,7 +124,7 @@ policy_overlays:
       - Change
       - Why
       - Impact
-    gate_status_file: devcovenant/registry/local/gate_status.json
+    gate_status_file: devcovenant/registry/runtime/gate_status.json
     summary_verbs:
       - add
       - added
@@ -471,7 +471,7 @@ policy_overlays:
       - tests
   devflow-run-gates:
     skipped_globs:
-      - devcovenant/registry/local/**
+      - devcovenant/registry/runtime/**
   managed-environment:
     expected_paths:
       - .venv

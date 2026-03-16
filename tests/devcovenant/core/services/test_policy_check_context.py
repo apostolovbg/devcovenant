@@ -12,6 +12,32 @@ from unittest import mock
 from devcovenant.core.contracts.policy import ChangeState
 
 MODULE = "devcovenant.core.services.policy_check_context"
+_GATE_STATUS_REL = "devcovenant/registry/runtime/gate_status.json"
+_SESSION_SNAPSHOT_REL = "devcovenant/registry/runtime/session_snapshot.json"
+
+
+def _write_gate_runtime_state(
+    repo_root: Path,
+    *,
+    gate_status: dict[str, object],
+    session_snapshot: dict[str, object] | None = None,
+) -> None:
+    """Write split gate runtime fixtures for context-builder tests."""
+    status_path = repo_root / _GATE_STATUS_REL
+    status_path.parent.mkdir(parents=True, exist_ok=True)
+    payload = dict(gate_status)
+    if session_snapshot is not None:
+        payload["session_snapshot_file"] = _SESSION_SNAPSHOT_REL
+        snapshot_path = repo_root / _SESSION_SNAPSHOT_REL
+        snapshot_path.parent.mkdir(parents=True, exist_ok=True)
+        snapshot_path.write_text(
+            json.dumps(session_snapshot, indent=2) + "\n",
+            encoding="utf-8",
+        )
+    status_path.write_text(
+        json.dumps(payload, indent=2) + "\n",
+        encoding="utf-8",
+    )
 
 
 def _unit_test_module_importable() -> None:
@@ -59,7 +85,7 @@ def _unit_test_build_change_state_start_phase_filters_ignored_paths() -> None:
             state = module.build_change_state(
                 repo_root,
                 gate_status_path=Path(
-                    "devcovenant/registry/local/gate_status.json"
+                    "devcovenant/registry/runtime/gate_status.json"
                 ),
                 is_ignored_path=lambda path: path.name == "ignored.py",
             )
@@ -81,28 +107,24 @@ def _unit_test_build_change_state_open_session_uses_baseline_and_filters() -> (
     module = importlib.import_module(MODULE)
     with tempfile.TemporaryDirectory() as tmpdir:
         repo_root = Path(tmpdir)
-        status_path = repo_root / "devcovenant/registry/local/gate_status.json"
-        status_path.parent.mkdir(parents=True, exist_ok=True)
-        status_path.write_text(
-            json.dumps(
-                {
-                    "session_id": "open-ctx-1",
-                    "session_state": "open",
-                    "session_start_snapshot": {
-                        "a.py": "old-a\ta.py",
-                        "b.py": "old-b\tb.py",
-                        "ignored.py": "old-ignored\tignored.py",
-                    },
-                    "session_baseline_snapshot": {
-                        "a.py": "old-a\ta.py",
-                        "b.py": "old-b\tb.py",
-                        "ignored.py": "old-ignored\tignored.py",
-                    },
+        _write_gate_runtime_state(
+            repo_root,
+            gate_status={
+                "session_id": "open-ctx-1",
+                "session_state": "open",
+            },
+            session_snapshot={
+                "session_start_snapshot": {
+                    "a.py": "old-a\ta.py",
+                    "b.py": "old-b\tb.py",
+                    "ignored.py": "old-ignored\tignored.py",
                 },
-                indent=2,
-            )
-            + "\n",
-            encoding="utf-8",
+                "session_baseline_snapshot": {
+                    "a.py": "old-a\ta.py",
+                    "b.py": "old-b\tb.py",
+                    "ignored.py": "old-ignored\tignored.py",
+                },
+            },
         )
 
         with (
@@ -119,9 +141,7 @@ def _unit_test_build_change_state_open_session_uses_baseline_and_filters() -> (
         ):
             state = module.build_change_state(
                 repo_root,
-                gate_status_path=Path(
-                    "devcovenant/registry/local/gate_status.json"
-                ),
+                gate_status_path=Path(_GATE_STATUS_REL),
                 is_ignored_path=lambda path: path.name == "ignored.py",
             )
 
@@ -130,6 +150,7 @@ def _unit_test_build_change_state_open_session_uses_baseline_and_filters() -> (
         assert state.session_error == ""
         assert state.session_reason_code == "open_session"
         assert state.gate_status_payload["session_id"] == "open-ctx-1"
+        assert state.session_snapshot_path == _SESSION_SNAPSHOT_REL
         assert state.current_snapshot_paths == [
             repo_root / "a.py",
             repo_root / "b.py",
@@ -148,21 +169,17 @@ def _unit_test_build_change_state_closed_session_rejects_post_end_edits() -> (
     module = importlib.import_module(MODULE)
     with tempfile.TemporaryDirectory() as tmpdir:
         repo_root = Path(tmpdir)
-        status_path = repo_root / "devcovenant/registry/local/gate_status.json"
-        status_path.parent.mkdir(parents=True, exist_ok=True)
-        status_path.write_text(
-            json.dumps(
-                {
-                    "session_id": "closed-ctx-1",
-                    "session_state": "closed",
-                    "session_end_snapshot": {
-                        "a.py": "old-a\ta.py",
-                    },
+        _write_gate_runtime_state(
+            repo_root,
+            gate_status={
+                "session_id": "closed-ctx-1",
+                "session_state": "closed",
+            },
+            session_snapshot={
+                "session_end_snapshot": {
+                    "a.py": "old-a\ta.py",
                 },
-                indent=2,
-            )
-            + "\n",
-            encoding="utf-8",
+            },
         )
 
         with (
@@ -175,9 +192,7 @@ def _unit_test_build_change_state_closed_session_rejects_post_end_edits() -> (
         ):
             state = module.build_change_state(
                 repo_root,
-                gate_status_path=Path(
-                    "devcovenant/registry/local/gate_status.json"
-                ),
+                gate_status_path=Path(_GATE_STATUS_REL),
                 is_ignored_path=lambda _path: False,
             )
 
@@ -196,21 +211,17 @@ def _unit_test_build_change_state_open_session_rejects_legacy_snapshot() -> (
     module = importlib.import_module(MODULE)
     with tempfile.TemporaryDirectory() as tmpdir:
         repo_root = Path(tmpdir)
-        status_path = repo_root / "devcovenant/registry/local/gate_status.json"
-        status_path.parent.mkdir(parents=True, exist_ok=True)
-        status_path.write_text(
-            json.dumps(
-                {
-                    "session_id": "open-legacy-ctx",
-                    "session_state": "open",
-                    "session_start_snapshot": {
-                        "legacy.py": "1\t1\tlegacy.py",
-                    },
+        _write_gate_runtime_state(
+            repo_root,
+            gate_status={
+                "session_id": "open-legacy-ctx",
+                "session_state": "open",
+            },
+            session_snapshot={
+                "session_start_snapshot": {
+                    "legacy.py": "1\t1\tlegacy.py",
                 },
-                indent=2,
-            )
-            + "\n",
-            encoding="utf-8",
+            },
         )
 
         with (
@@ -223,9 +234,7 @@ def _unit_test_build_change_state_open_session_rejects_legacy_snapshot() -> (
         ):
             state = module.build_change_state(
                 repo_root,
-                gate_status_path=Path(
-                    "devcovenant/registry/local/gate_status.json"
-                ),
+                gate_status_path=Path(_GATE_STATUS_REL),
                 is_ignored_path=lambda _path: False,
             )
 
@@ -242,21 +251,17 @@ def _unit_test_build_change_state_closed_session_rejects_legacy_snapshot() -> (
     module = importlib.import_module(MODULE)
     with tempfile.TemporaryDirectory() as tmpdir:
         repo_root = Path(tmpdir)
-        status_path = repo_root / "devcovenant/registry/local/gate_status.json"
-        status_path.parent.mkdir(parents=True, exist_ok=True)
-        status_path.write_text(
-            json.dumps(
-                {
-                    "session_id": "closed-legacy-ctx",
-                    "session_state": "closed",
-                    "session_end_snapshot": {
-                        "legacy.py": "1\t1\tlegacy.py",
-                    },
+        _write_gate_runtime_state(
+            repo_root,
+            gate_status={
+                "session_id": "closed-legacy-ctx",
+                "session_state": "closed",
+            },
+            session_snapshot={
+                "session_end_snapshot": {
+                    "legacy.py": "1\t1\tlegacy.py",
                 },
-                indent=2,
-            )
-            + "\n",
-            encoding="utf-8",
+            },
         )
 
         with (
@@ -269,9 +274,7 @@ def _unit_test_build_change_state_closed_session_rejects_legacy_snapshot() -> (
         ):
             state = module.build_change_state(
                 repo_root,
-                gate_status_path=Path(
-                    "devcovenant/registry/local/gate_status.json"
-                ),
+                gate_status_path=Path(_GATE_STATUS_REL),
                 is_ignored_path=lambda _path: False,
             )
 
@@ -290,7 +293,7 @@ def _unit_test_build_check_context_assembles_context_with_helper_state() -> (
         repo_root = Path(tmpdir)
         expected_state = ChangeState(
             phase="mid",
-            gate_status_path="devcovenant/registry/local/gate_status.json",
+            gate_status_path="devcovenant/registry/runtime/gate_status.json",
             session_valid=True,
             session_paths=[repo_root / "changed.py"],
         )
@@ -318,7 +321,7 @@ def _unit_test_build_check_context_assembles_context_with_helper_state() -> (
                 config={"ignore": {"patterns": []}},
                 translator_runtime="translator-runtime",
                 gate_status_path=Path(
-                    "devcovenant/registry/local/gate_status.json"
+                    "devcovenant/registry/runtime/gate_status.json"
                 ),
                 is_ignored_path=lambda path: path.name == "ignored.py",
                 resolve_file_suffixes=lambda: [".py"],
@@ -330,7 +333,7 @@ def _unit_test_build_check_context_assembles_context_with_helper_state() -> (
 
         assert calls["repo_root"] == repo_root
         assert calls["gate_status_path"] == Path(
-            "devcovenant/registry/local/gate_status.json"
+            "devcovenant/registry/runtime/gate_status.json"
         )
         assert context.repo_root == repo_root
         assert context.translator_runtime == "translator-runtime"

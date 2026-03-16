@@ -121,7 +121,7 @@ class DevCovenantEngine:
         }
     )
     _DEFAULT_GATE_STATUS_PATH = (
-        Path("devcovenant") / "registry" / "local" / "gate_status.json"
+        Path("devcovenant") / "registry" / "runtime" / "gate_status.json"
     )
 
     def __init__(self, repo_root: Optional[Path] = None):

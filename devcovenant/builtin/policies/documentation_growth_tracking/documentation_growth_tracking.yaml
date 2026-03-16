@@ -113,7 +113,7 @@ metadata:
     - .coverage.*
     - htmlcov/**
     - devcovenant/logs/**
-    - devcovenant/registry/local/**
+    - devcovenant/registry/runtime/**
   user_facing_exclude_suffixes: []
   user_facing_dirs: []
   user_visible_globs: []

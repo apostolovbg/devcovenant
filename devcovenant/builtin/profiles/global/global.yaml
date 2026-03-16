@@ -23,14 +23,17 @@ clean_overlays:
     - '.coverage'
     - '.coverage.*'
     - '**/__pycache__'
+  runtime_registry_dirs:
+    - devcovenant/registry/runtime
+  logs_globs:
+    - devcovenant/logs/*
   protected_dirs:
     - .git
     - .venv
-    - devcovenant/logs
-    - devcovenant/registry/local
   protected_globs:
-    - devcovenant/logs/**
-    - devcovenant/registry/local/**
+    - devcovenant/logs/README.md
+    - devcovenant/registry/README.md
+    - devcovenant/registry/registry.yaml
 gitignore_template: gitignore.yaml
 governance_template: governance-and-test.yml
 pre_commit:
@@ -64,8 +67,8 @@ policy_overlays:
       - devcovenant/logs/**
   devcov-integrity-guard:
     policy_definitions: AGENTS.md
-    registry_file: devcovenant/registry/local/policy_registry.yaml
-    gate_status_file: devcovenant/registry/local/gate_status.json
+    registry_file: devcovenant/registry/registry.yaml
+    gate_status_file: devcovenant/registry/runtime/gate_status.json
   devflow-run-gates:
-    gate_status_file: devcovenant/registry/local/gate_status.json
+    gate_status_file: devcovenant/registry/runtime/gate_status.json
     pre_commit_command: python3 -m pre_commit run --all-files

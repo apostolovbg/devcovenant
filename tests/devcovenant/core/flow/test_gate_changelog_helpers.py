@@ -14,7 +14,7 @@ def _write_policy_registry(
     repo_root: Path,
     metadata_lines: list[str] | None = None,
 ) -> None:
-    """Write one minimal policy registry payload for changelog metadata."""
+    """Write one minimal tracked registry payload for changelog metadata."""
     lines = metadata_lines or [
         "      main_changelog: CHANGELOG.md",
         "      header_doc_suffixes:",
@@ -23,21 +23,20 @@ def _write_policy_registry(
         "      - Last Updated",
         "      header_scan_lines: 4",
     ]
-    registry_path = (
-        repo_root
-        / "devcovenant"
-        / "registry"
-        / "local"
-        / "policy_registry.yaml"
-    )
+    registry_path = repo_root / "devcovenant" / "registry" / "registry.yaml"
     registry_path.parent.mkdir(parents=True, exist_ok=True)
     registry_path.write_text(
         "\n".join(
             [
+                "metadata:",
+                "  schema_version: 1",
+                "  registry_layout: single-root",
                 "policies:",
                 "  changelog-coverage:",
                 "    metadata:",
                 *lines,
+                "profiles: {}",
+                "inventory: {}",
                 "",
             ]
         ),

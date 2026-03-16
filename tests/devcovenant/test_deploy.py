@@ -44,7 +44,7 @@ def _unit_test_deploy_blocks_when_config_is_generic() -> None:
 
 
 def _unit_test_deploy_runs_full_refresh_when_config_ready() -> None:
-    """deploy_repo should run refresh and generate local registries."""
+    """deploy_repo should run refresh and generate tracked registry data."""
     with tempfile.TemporaryDirectory() as temp_dir:
         repo_root = Path(temp_dir)
         repo_seed_cache.copy_installed_repo(repo_root)
@@ -54,11 +54,7 @@ def _unit_test_deploy_runs_full_refresh_when_config_ready() -> None:
         assert result == 0
 
         policy_registry = (
-            repo_root
-            / "devcovenant"
-            / "registry"
-            / "local"
-            / "policy_registry.yaml"
+            repo_root / "devcovenant" / "registry" / "registry.yaml"
         )
         assert policy_registry.exists()
 

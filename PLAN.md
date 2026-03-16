@@ -2,36 +2,40 @@
 **Doc ID:** PLAN
 **Doc Type:** plan
 **Project Version:** 1.0.0
-**Last Updated:** 2026-03-15
+**Last Updated:** 2026-03-16
 **DevCovenant Version:** 1.0.0
 
-This plan replaces the completed hardening-cycle roadmap with the current
-strict no-fallback remediation program. The goal is simple: if DevCovenant
-supports a behavior, it should support it explicitly and own it cleanly. If a
-behavior exists only as compatibility glue, recovery magic, hidden flags,
-runtime guessing, or documentation drift from older designs, we remove it.
+This plan replaces the completed no-fallback remediation roadmap with the next
+future-facing structural program: make DevCovenant's registry model explicit,
+tracked where deterministic, untracked where runtime-local, and cleanable where
+ephemeral. The goal is not to preserve transitional layout or compatibility.
+The goal is to establish the durable 1.x architecture that future repos can use
+without ambiguity.
 
-The audit that seeded this plan found that the repository has already removed
-most large legacy trees, but still carries targeted fallback behavior in gate
-snapshots, managed-environment reruns, runtime authority lookup, cleanup
-compatibility shims, `gate --status` recovery scanning, hidden `check` flags,
-package export indirection, source-checkout launcher bytecode drift, and
-several docs/tests that still preserve those contracts. This plan closes those
-seams in dependency order and ends with a full downstream proof in a user
-repo.
+The new direction is simple:
+- one visible registry root under `devcovenant/registry/`
+- one deterministic tracked registry file for repo governance metadata
+- separate untracked runtime/session state under
+  `devcovenant/registry/runtime/`
+- separate untracked logs under `devcovenant/logs/`
+- slim readable gate status files, with bulky snapshot state moved out
+- explicit cleanup support for runtime registry and logs
+- no legacy compatibility layers, no fallback duplicate layouts, and no mixed
+  ownership between tracked registry truth and local runtime artifacts
 
 ## Table of Contents
 1. [Overview](#overview)
-2. [Scope and Principles](#scope-and-principles)
-3. [Issue Register](#issue-register)
-4. [Non-Negotiable Constraints](#non-negotiable-constraints)
-5. [Workflow](#workflow)
-6. [Execution Order](#execution-order)
-7. [Ordered Backlog](#ordered-backlog)
-8. [Validation Matrix](#validation-matrix)
-9. [Documentation Deliverables](#documentation-deliverables)
-10. [Completion Criteria](#completion-criteria)
-11. [Risk Controls and Non-Goals](#risk-controls-and-non-goals)
+2. [Target Architecture](#target-architecture)
+3. [Scope and Principles](#scope-and-principles)
+4. [Issue Register](#issue-register)
+5. [Non-Negotiable Constraints](#non-negotiable-constraints)
+6. [Workflow](#workflow)
+7. [Execution Order](#execution-order)
+8. [Ordered Backlog](#ordered-backlog)
+9. [Validation Matrix](#validation-matrix)
+10. [Documentation Deliverables](#documentation-deliverables)
+11. [Completion Criteria](#completion-criteria)
+12. [Risk Controls and Non-Goals](#risk-controls-and-non-goals)
 
 ## Overview
 ### Status Vocabulary
@@ -40,79 +44,107 @@ repo.
 - `deferred`: intentionally out of scope for this cycle.
 
 ### Plan Purpose
-- Remove remaining fallback and compatibility behavior from the 1.0.0 codebase.
-- Make runtime authority explicit instead of inferred or recovered.
-- Align CLI behavior, policy/runtime behavior, docs, and tests to the same
-  strict contract.
-- Prove the resulting package behavior in a downstream managed repo.
+- Replace the old `registry/local` mental model with one explicit registry
+  architecture.
+- Track deterministic governance metadata in git without packaging repo-born
+  artifacts into DevCovenant distributions.
+- Keep gate/session state and logs local, disposable, and conflict-free.
+- Make cleanup behavior explicit for runtime registry and logs.
+- Keep the 1.x architecture forward-only: no fallback duplicate layouts, no
+  compatibility registry trees, and no mixed tracked/untracked state files.
 
 ### Baseline Truths Preserved
-- `check` is the read-only audit command.
+- `check` remains the read-only audit command.
 - `gate` owns lifecycle writes and never runs tests internally.
 - `core` owns program internals; `builtin` owns shipped policy/profile content.
-- `python3 -m devcovenant` remains a supported launcher form unless an
-  explicit backlog item changes that contract.
-- No repo-root bootstrap files or startup hooks will be introduced to solve
-  launcher/pycache behavior.
+- Runtime state is not a trust anchor; accountability comes from checks,
+  gates, CI, and review discipline.
+- Logs remain untracked artifacts, not committed evidence files.
+
+## Target Architecture
+### Final Filesystem Layout
+- `devcovenant/registry/registry.yaml`
+- `devcovenant/registry/README.md`
+- `devcovenant/registry/runtime/gate_status.json`
+- `devcovenant/registry/runtime/session_snapshot.json`
+- `devcovenant/registry/runtime/latest.json`
+- `devcovenant/logs/`
+
+### Ownership Rules
+- `devcovenant/registry/registry.yaml`
+  - tracked in git
+  - deterministic
+  - regenerated by DevCovenant commands that own registry materialization
+  - excluded from package payloads
+- `devcovenant/registry/runtime/*`
+  - untracked
+  - runtime-local
+  - disposable and cleanable
+- `devcovenant/logs/*`
+  - untracked
+  - runtime-local
+  - disposable and cleanable
+
+### Gate-State Split
+`gate_status.json` should stay slim and readable. Bulky baseline and snapshot
+state must move into `session_snapshot.json` or equivalent runtime-owned files.
+The gate status file should contain only concise lifecycle fields and pointers
+to heavier companion artifacts.
 
 ## Scope and Principles
 ### In Scope
-- CLI command contracts.
-- Launcher contract and pycache ownership.
-- Runtime authority lookup and bootstrap behavior.
-- Gate/session snapshot handling.
-- Managed-environment execution behavior.
-- Cleanup behavior.
-- `gate --status` behavior.
-- Package-export surfaces.
-- Test-event adapter behavior.
-- Root/package/docs wording and test expectations.
-- Downstream package validation in `dlmc`.
+- registry path model and file ownership
+- tracked registry generation and persistence behavior
+- runtime session-state layout
+- gate snapshot split and gate-status slimming
+- cleanup extensions for runtime registry and logs
+- install / refresh / upgrade / package exclusion behavior
+- `.gitignore` and packaging contract changes
+- docs and tests for the new architecture
+- downstream proof in a user repo
 
 ### Guiding Principles
-- Prefer explicit failure over silent fallback.
-- Keep one authority for each runtime decision.
-- Keep alternate supported behaviors explicit, documented, and tested.
-- Do not retain compatibility code without a present-tense support promise.
-- Remove fallback-oriented tests when the fallback is removed.
+- Track deterministic metadata, not live local state.
+- Keep runtime/session artifacts disposable and untracked.
+- Prefer explicit ownership over inferred ownership.
+- Prefer explicit failures over silent recreation or hidden fallback behavior.
+- Do not package repo-generated runtime artifacts.
+- Do not introduce compatibility layouts for removed paths.
 
 ## Issue Register
 ### High
-- `D0`: source-checkout `python3 -m devcovenant` can recreate repo-local
-  bytecode before DevCovenant gains runtime control, and repo-root bootstrap
-  files are not an acceptable fix.
-- `D1`: legacy gate snapshot migration is still live through
-  `legacy_numstat` handling.
-- `D2`: managed-environment still supports wrapper rerun fallback through
-  `managed_rerun_commands`.
-- `D3`: managed-environment runtime still falls back to parsing `AGENTS.md`
-  when the local registry is missing.
+- `R0`: `devcovenant/registry/runtime/*` still mixes tracked registry truth
+  with runtime/session state.
+- `R1`: `gate_status.json` still carries bulky baseline/snapshot data that
+  should live in a companion runtime snapshot file.
+- `R2`: cleanup does not yet expose explicit runtime-registry and logs scopes.
+- `R3`: current package/install/upgrade behavior still assumes the older local
+  registry layout.
 
 ### Medium
-- `D4`: `check` still accepts hidden legacy compatibility flags.
-- `D5`: `gate --status` still scans recent log folders as a fallback pointer
-  recovery path.
-- `D6`: `clean` still preserves a legacy empty-placeholder override contract.
-- `D7`: package-layer `__init__` files still present compatibility-export
-  indirection.
-- `D8`: runtime config still uses compatibility-style inference for selected
-  engine options.
-- `D9`: docs and tests still describe and preserve removed or unwanted
-  fallback behavior.
+- `R4`: docs still describe registry/runtime ownership less sharply than the
+  new tracked-vs-runtime split requires.
+- `R5`: tests need to prove deterministic tracked registry behavior, runtime
+  recreation behavior, cleanup behavior, and packaging exclusion behavior.
+- `R6`: downstream user-repo proof must confirm the new layout behaves cleanly
+  under `upgrade`, `refresh`, `clean`, `check`, and `gate --status`.
 
 ### Decision Items
-- `D10`: keep `python3 -m devcovenant` as an explicit alternate launcher form,
-  but stop framing it as fallback behavior.
-- `D11`: replace the hidden generic test-event fallback adapter with an
-  explicit declared behavior.
+- `R7`: keep exactly one tracked deterministic registry file, not a tracked
+  live gate-state ledger.
+- `R8`: keep logs untracked and cleanable, including in multi-developer repos.
+- `R9`: make `clean --all` include runtime registry and logs, but never delete
+  tracked `devcovenant/registry/registry.yaml`.
 
 ## Non-Negotiable Constraints
 - No edits inside managed `<!-- DEVCOV* -->` blocks.
-- No silent command-contract flips outside the explicit plan items below.
+- No restoration of `registry/local` as a compatibility alias after migration.
+- No tracked logs.
+- No tracked live gate/session state.
+- No package payload that contains repo-generated registry or log artifacts.
 - No deletion of historical changelog entries.
 - `check` remains read-only.
 - `gate` commands never run tests internally.
-- Repo hygiene issues found during slices are cleared before continuing.
 - All slices end with tests, gate closure, and staging.
 
 ## Workflow
@@ -137,430 +169,336 @@ Operator notes:
 - Normal-mode streaming is acceptable when concise.
 
 ## Execution Order
-1. Reset the baseline and capture the live no-fallback starting point.
-2. Lock the launcher/pycache contract before removing deeper fallback seams,
-   so the rest of the cycle does not rely on fake bootstrap assumptions.
-3. Remove the most invasive runtime compatibility behavior next:
-   gate-session migration and managed-environment fallbacks.
-4. Remove smaller command/runtime fallback seams next.
-5. Simplify remaining package/runtime surfaces so the architecture reads as
-   forward-only, not transitional.
-6. Sweep docs/tests so the written contract matches the code contract.
-7. Prove the result in this repo and then in `dlmc`.
+1. Lock the target filesystem and ownership contract first.
+2. Split runtime session state out of the tracked registry model next.
+3. Extend cleanup and packaging/install behavior once the ownership model is
+   explicit.
+4. Sweep docs/tests only after the code contract is stable.
+5. Prove the result in this repo and then in `dlmc`.
 
 ## Ordered Backlog
-### Item 1 [complete]: Baseline Cleanup and Delegacy Audit Reset
-**Objective:** Start the no-fallback cycle from a clean, explicit baseline.
+### Item 1 [complete]: Lock the Registry Architecture Contract
+**Objective:** Define and implement the one-registry-root architecture and its
+ownership boundaries.
 
 **Depends on:** none.
 
-**Addresses:** supports all items.
+**Addresses:** `R0`, `R7`, `R8`, `R9`.
+
+**Scope:** registry paths, ownership rules, deterministic tracked registry
+materialization, runtime subdirectory contract, and initial `.gitignore`
+realignment.
 
 **Implementation Tasks**
-1. Remove live repo bytecode drift and any equivalent hygiene noise that would
-   pollute the delegacy work.
-2. Run read-only `check` and confirm the remaining findings are actual
-   fallback/delegacy findings, not incidental hygiene drift.
-3. Record the strict no-fallback issue register in `PLAN.md` and the current
-   session in `CHANGELOG.md`.
+1. Replace the mixed `devcovenant/registry/runtime/*` model with one explicit
+   structure rooted at `devcovenant/registry/`.
+2. Establish `devcovenant/registry/registry.yaml` as the only tracked registry
+   artifact and make its generation deterministic.
+3. Establish `devcovenant/registry/runtime/` as the only home for live gate,
+   session, and latest-run runtime artifacts.
+4. Update readers, writers, and path constants to the new layout without
+   preserving compatibility aliases.
+5. Update `.gitignore` and any runtime path helpers to match the new
+   ownership boundaries.
 
 **Tests and Validation**
-1. `devcovenant check`
-2. `devcovenant gate --start`
+1. Focused registry-path and runtime-path tests.
+2. Focused refresh/registry generation tests.
+3. Full `devcovenant test`.
 
 **Documentation**
 1. `PLAN.md`
 2. `CHANGELOG.md`
+3. `devcovenant/docs/registry.md`
+4. `devcovenant/docs/architecture.md`
+5. `devcovenant/docs/workflow.md`
 
 **Acceptance Criteria**
-1. The cycle starts from a known-clean baseline.
-2. The active plan reflects the no-fallback program, not the completed prior
-   roadmap.
+1. Exactly one tracked registry file exists under `devcovenant/registry/`.
+2. Live runtime state no longer shares the tracked registry path.
+3. No compatibility `registry/local` alias remains.
 
-**Closure Notes (2026-03-15)**
-- Confirmed that the repo starts this cycle without lingering
-  `devcovenant/__pycache__` drift, but a read-only source-checkout
-  `devcovenant check` still recreated repo-local bytecode under
-  `devcovenant/__pycache__`.
-- Confirmed that the remaining live baseline issue is a real delegacy/root
-  cause, not generic repo hygiene noise.
-- Replaced the prior completed roadmap with the strict no-fallback issue
-  register and dependency-ordered backlog now governing the next slices.
+**Closure Notes**
+1. Implemented the tracked `devcovenant/registry/registry.yaml` contract and
+   moved live gate/latest state under `devcovenant/registry/runtime/`.
+2. Updated runtime path helpers, install/upgrade behavior, docs, and tests to
+   the forward-only registry layout with no `registry/local` compatibility
+   alias.
+3. Closed the slice with focused regression passes, full `devcovenant test`,
+   and clean `gate --mid` / `gate --end`.
 
-### Item 2 [complete]: Lock Launcher and Pycache Strictness
-**Objective:** Make the launcher contract explicit and resolve source-checkout
-bytecode drift without repo-root bootstrap files.
+### Item 2 [complete]: Split and Slim Gate Runtime State
+**Objective:** Keep gate lifecycle state readable and move bulky snapshot data
+into explicit companion runtime files.
 
 **Depends on:** Item 1.
 
-**Addresses:** `D0`, supports `D8`, `D10`.
+**Addresses:** `R1`.
 
-**Scope:** launcher behavior, pycache routing, source-checkout command truth,
-and docs/tests for supported launcher forms.
+**Scope:** `gate_status.json`, snapshot ownership, exemption baselines,
+readability of lifecycle state, and gate/session readers and writers.
 
 **Implementation Tasks**
-1. Define the strict launcher contract for this cycle: keep `devcovenant` and
-   `python3 -m devcovenant` as supported forms, but do not rely on repo-root
-   bootstrap files, startup hooks, or fake in-package pre-import fixes.
-2. Audit the current launcher/pycache flow and remove any wording or code
-   assumptions that imply source-tree bytecode drift can be prevented from too
-   late in startup.
-3. Implement a non-repo-root solution for pycache discipline where DevCovenant
-   can honestly own it, or narrow the no-drift guarantee to the launcher forms
-   that can control startup early enough.
-4. Seed explicit config and docs wording for launcher expectations and pycache
-   behavior.
-5. Add focused regressions that prove the chosen launcher contract, reject
-   repo-root bootstrap files as a solution, and document the supported
-   behavior honestly.
+1. Move `document_exemption_baseline` and other bulky snapshot/baseline fields
+   out of `gate_status.json` into `session_snapshot.json` or equivalent.
+2. Keep `gate_status.json` limited to concise lifecycle fields and explicit
+   pointers to heavier runtime artifacts.
+3. Update gate/session runtime code to read and write the split model.
+4. Ensure missing runtime snapshot files fail explicitly when required, rather
+   than silently fabricating state.
+5. Reconfirm that tracked registry generation never absorbs runtime snapshot
+   state.
 
 **Tests and Validation**
-1. Focused launcher/bootstrap tests.
-2. Focused execution-runtime tests for pycache behavior.
+1. Focused gate/session snapshot tests.
+2. Focused gate-status helper tests.
 3. Full `devcovenant test`.
 
 **Documentation**
 1. `PLAN.md`
-2. `README.md`
-3. `devcovenant/README.md`
-4. `devcovenant/docs/installation.md`
+2. `CHANGELOG.md`
+3. `devcovenant/docs/workflow.md`
+4. `devcovenant/docs/registry.md`
 5. `devcovenant/docs/architecture.md`
-6. `devcovenant/docs/workflow.md`
-7. `CHANGELOG.md`
 
 **Acceptance Criteria**
-1. The launcher/pycache contract is explicit, tested, and documented.
-2. No repo-root bootstrap file or startup hook is required.
-3. Later no-fallback items no longer depend on ambiguous bootstrap behavior.
+1. `gate_status.json` stays short and readable in large repos.
+2. Heavy snapshot state lives only in companion runtime files.
+3. Runtime readers/writers agree on the new split with no fallback path.
 
-**Closure Notes (2026-03-15)**
-- Deleted the in-package `devcovenant/launcher_bootstrap.py` helper and
-  removed the `cli.py` / `__main__.py` startup calls that implied DevCovenant
-  could own pre-import launcher-process bytecode routing from inside the
-  package.
-- Kept `devcovenant` and `python3 -m devcovenant` as supported launcher forms,
-  but narrowed the zero-drift promise honestly: source-checkout launcher-
-  process bytecode control belongs to shell or CI `PYTHONPYCACHEPREFIX`, not
-  to repo-root startup hooks or in-package bootstrap tricks.
-- Made runtime pycache routing and repo bytecode cleanup depend on explicit
-  `engine.pycache_prefix_enabled` config rather than runtime profile
-  inference; refresh still seeds that key explicitly for `devcovrepo`.
-- Added launcher-contract and explicit-opt-in pycache regressions, and updated
-  root, package, config, workflow, installation, architecture, profile, and
-  troubleshooting docs to match the strict launcher boundary.
+**Closure Notes**
+1. Split gate runtime state between the slim
+   `devcovenant/registry/runtime/gate_status.json` ledger and the companion
+   `devcovenant/registry/runtime/session_snapshot.json` payload file.
+2. Updated gate/session writers, changelog coverage, and session-context
+   readers to use the companion snapshot contract with explicit missing-file
+   failures instead of inline snapshot fallback.
+3. Updated focused regression coverage and the registry/workflow/architecture
+   docs so the split runtime model is part of the forward contract.
 
-### Item 3 [complete]: Remove Legacy Gate-Snapshot Compatibility
-**Objective:** Delete all live migration paths for pre-current gate snapshot
-payloads.
+### Item 3 [complete]: Extend Cleanup for Runtime Registry and Logs
+**Objective:** Make disposable runtime artifacts explicitly cleanable.
 
-**Depends on:** Item 2.
+**Depends on:** Item 1.
 
-**Addresses:** `D1`.
+**Addresses:** `R2`, `R8`, `R9`.
 
-**Scope:** session snapshot capture, snapshot style detection, change-state
-construction, and gate payload validation.
+**Scope:** cleanup config, CLI flags, cleanup service behavior, logs/runtime
+registry protection rules, and `--all` semantics.
 
 **Implementation Tasks**
-1. Remove `legacy_numstat` style support from session snapshot helpers.
-2. Remove epoch-based migration bridging used only for old snapshot payloads.
-3. Remove `legacy_snapshot_compat` reason codes and related branch handling.
-4. Make stale/old gate payloads fail explicitly with guidance to run a fresh
-   `devcovenant gate --start`.
-5. Remove obsolete tests that preserve migration behavior and add strict
-   failure-path regressions.
+1. Add `devcovenant clean --registry` to clean only
+   `devcovenant/registry/runtime/`.
+2. Add `devcovenant clean --logs` to clean only `devcovenant/logs/`.
+3. Make `devcovenant clean --all` include build, cache, runtime registry, and
+   logs.
+4. Ensure tracked `devcovenant/registry/registry.yaml` is never deleted by
+   `clean --all` or `clean --registry`.
+5. Update cleanup summaries and docs so registry/log cleanup is explicit.
 
 **Tests and Validation**
-1. Focused runtime/session snapshot tests.
-2. Focused policy check-context tests.
+1. Focused cleanup-service and clean-command tests.
+2. Focused protection tests proving the tracked registry survives.
 3. Full `devcovenant test`.
 
 **Documentation**
-1. `devcovenant/docs/workflow.md`
-2. `devcovenant/docs/architecture.md`
-3. `CHANGELOG.md`
+1. `PLAN.md`
+2. `CHANGELOG.md`
+3. `devcovenant/docs/config.md`
+4. `devcovenant/docs/workflow.md`
+5. `devcovenant/docs/installation.md`
 
 **Acceptance Criteria**
-1. No live `legacy_numstat` runtime path remains.
-2. Old payloads fail explicitly instead of being migration-bridged.
-3. Tests no longer protect compatibility behavior that the product no longer
-   supports.
+1. Runtime registry and logs are cleanable through first-class CLI scopes.
+2. `clean --all` includes those scopes.
+3. The tracked registry file is never treated as disposable runtime junk.
 
-**Closure Notes (2026-03-15)**
-- Removed the legacy snapshot migration bridge from
-  `devcovenant/core/runtime/session_snapshot.py` and the execution-layer
-  delegate in `devcovenant/core/runtime/execution.py`.
-- Changed snapshot-style handling so legacy multi-tab rows are classified as
-  unsupported and fail with an explicit fresh-start instruction instead of
-  falling back to epoch-based path discovery.
-- Removed the legacy rendering/reason-code path from
-  `devcovenant/core/services/policy_check_context.py`, so open and closed
-  sessions now reject stale payloads directly.
-- Replaced the old migration-preserving tests with strict rejection
-  regressions and updated the workflow/architecture docs to say that only the
-  current filesystem-hash gate snapshot format is supported.
+**Closure Notes**
+1. Added first-class `clean --registry` and `clean --logs` scopes and made
+   `clean --all` cover build, cache, runtime registry, and log residue.
+2. Kept tracked governance artifacts outside cleanup scope by protecting
+   tracked registry and README files while allowing runtime registry and log
+   contents to be cleaned explicitly.
+3. Updated cleanup config, profile clean overlays, regression coverage, and
+   user-facing docs so the new cleanup scopes are part of the stable command
+   contract.
 
-### Item 4 [complete]: Remove Managed-Environment Fallback Behavior
-**Objective:** Make managed-environment execution strict and single-authority.
+### Item 4 [complete]: Align Refresh, Install, Upgrade, and Packaging
+**Objective:** Make command behavior and package payload rules match the new
+registry ownership model.
 
-**Depends on:** Item 3.
+**Depends on:** Items 1 and 3.
 
-**Addresses:** `D2`, `D3`.
+**Addresses:** `R3`, supports `R6`.
 
-**Scope:** managed-environment runtime resolution, CLI re-exec behavior, policy
-metadata/runtime authority, and docs/tests for wrapper reruns.
+**Scope:** refresh materialization, install seeding, upgrade preservation,
+package exclusion, and recovery when deterministic tracked registry files are
+missing.
 
 **Implementation Tasks**
-1. Remove `managed_rerun_commands` support from runtime, docs, and tests.
-2. Remove the `resolve-rerun-command` runtime action and any CLI dispatch that
-   consumes it.
-3. Remove `AGENTS.md` parsing fallback for managed-environment runtime
-   resolution and require the local policy registry as the sole runtime
-   authority.
-4. Make managed-environment failures explicit and operator-actionable.
-5. Update profile/config docs so managed-environment behavior is described as
-   strict preparation plus explicit failure, not wrapper fallback.
+1. Make `refresh` regenerate `devcovenant/registry/registry.yaml` and recreate
+   it cleanly when missing.
+2. Make `install` seed the tracked registry structure without shipping a
+   prebuilt repo-generated registry from the package.
+3. Make `upgrade` preserve runtime registry and logs unless an explicit clean
+   command removes them.
+4. Exclude repo-generated registry and log artifacts from package payloads.
+5. Ensure command behavior treats missing runtime files and missing tracked
+   registry files according to their distinct ownership.
 
 **Tests and Validation**
-1. Focused managed-environment runtime tests.
-2. Focused CLI tests.
+1. Focused install/refresh/upgrade tests.
+2. Packaging-manifest tests.
 3. Full `devcovenant test`.
 
 **Documentation**
-1. `README.md`
-2. `devcovenant/README.md`
-3. `devcovenant/docs/installation.md`
-4. `devcovenant/docs/config.md`
-5. `devcovenant/docs/workflow.md`
-6. `devcovenant/docs/troubleshooting.md`
-7. `CHANGELOG.md`
+1. `PLAN.md`
+2. `CHANGELOG.md`
+3. `README.md`
+4. `devcovenant/README.md`
+5. `devcovenant/docs/installation.md`
+6. `devcovenant/docs/registry.md`
 
 **Acceptance Criteria**
-1. No wrapper rerun fallback remains.
-2. No runtime AGENTS parsing fallback remains for managed-environment
-   behavior.
-3. Managed-environment failure modes are explicit and documented.
+1. The package never ships repo-generated registry or logs.
+2. Refresh/install/upgrade respect the tracked-vs-runtime split.
+3. Missing deterministic registry state and missing runtime state are handled
+   explicitly and correctly.
 
-**Closure Notes (2026-03-15)**
-- Removed `managed_rerun_commands` support from managed-environment runtime,
-  CLI dispatch, descriptor metadata, docs, and tests.
-- Removed the `resolve-rerun-command` runtime action and the related
-  execution-runtime helper surface.
-- Removed `AGENTS.md` parsing fallback from managed-environment runtime.
-  Local policy registry is now the only runtime authority, and missing
-  registry state fails explicitly with `devcovenant refresh` guidance.
-- Tightened managed-environment failure behavior so missing or
-  non-executable managed interpreters stop with explicit operator-actionable
-  errors instead of attempting wrapper reruns.
+**Closure Notes**
+1. Tightened source-checkout install replacement so runtime logs and runtime
+   registry payloads are never copied from the source tree into target repos,
+   while tracked README skeletons remain materialized.
+2. Added explicit refresh/upgrade regressions proving that missing tracked
+   `devcovenant/registry/registry.yaml` is recreated cleanly without
+   bootstrapping runtime session state.
+3. Expanded packaging/docs coverage so wheel/sdist expectations explicitly
+   exclude tracked/runtime registry payloads and runtime logs while keeping the
+   tracked README skeletons.
 
-### Item 5 [complete]: Remove Hidden Command and Cleanup Compatibility
-**Objective:** Delete remaining command-level fallback and compatibility seams.
+### Item 5 [complete]: Sweep Docs and Tests to the New Registry Truth
+**Objective:** Make every written and tested surface describe the forward-only
+registry/runtime/logs architecture.
 
-**Depends on:** Item 4.
+**Depends on:** Items 1 through 4.
 
-**Addresses:** `D4`, `D5`, `D6`, supports `D8`.
+**Addresses:** `R4`, `R5`.
 
-**Scope:** `check`, `clean`, `gate --status`, and runtime option resolution.
+**Scope:** root docs, package docs, registry docs, workflow docs, tests,
+policy/runtime expectations, and any stale path wording.
 
 **Implementation Tasks**
-1. Remove hidden legacy `check` flags (`--nofix`, `--norefresh`).
-2. Remove latest-run pointer recovery scanning from `gate --status` and rely
-   only on owned pointer artifacts.
-3. Remove the clean empty-placeholder compatibility exception.
-4. Stop inferring selected runtime options from compatibility-style fallback
-   rules where explicit config should be required.
-5. Seed explicit config/template values for any runtime settings whose
-   fallback is removed.
-6. Update tests and docs accordingly.
+1. Replace stale `registry/local` wording with the new explicit registry and
+   runtime layout everywhere.
+2. Document the tracked registry as deterministic repo metadata, not as a live
+   pass/fail ledger.
+3. Document logs as untracked runtime artifacts and cleanup scopes.
+4. Add or update tests that prove deterministic registry generation, runtime
+   recreation, cleanup semantics, and package exclusion behavior.
+5. Remove any stale docs/tests that preserve the older mixed registry model.
 
 **Tests and Validation**
-1. Focused `check`, `clean`, `gate --status`, and execution-runtime tests.
+1. Focused docs/contract/path tests.
 2. Full `devcovenant test`.
 
 **Documentation**
-1. `devcovenant/docs/config.md`
-2. `devcovenant/docs/workflow.md`
-3. `devcovenant/docs/architecture.md`
-4. `CHANGELOG.md`
+1. `PLAN.md`
+2. `CHANGELOG.md`
+3. `README.md`
+4. `devcovenant/README.md`
+5. `devcovenant/docs/architecture.md`
+6. `devcovenant/docs/config.md`
+7. `devcovenant/docs/installation.md`
+8. `devcovenant/docs/registry.md`
+9. `devcovenant/docs/workflow.md`
+10. `devcovenant/docs/troubleshooting.md`
 
 **Acceptance Criteria**
-1. `check` exposes only its real contract.
-2. `gate --status` does not scan log folders as recovery logic.
-3. `clean` no longer preserves legacy placeholder behavior.
-4. Runtime option ownership is explicit in config/templates.
+1. No docs or tests describe the old mixed registry model as current truth.
+2. The new registry/runtime/log semantics are explicit across all surfaces.
+3. The tracked registry is clearly described as deterministic and mergeable.
 
-**Closure Notes (2026-03-15)**
-- Removed hidden `check` flags (`--nofix`, `--norefresh`) so the audit-only
-  command exposes only its real CLI contract.
-- Removed latest-run recovery scanning from `gate --status`; status now reads
-  only the owned latest-run pointer artifact.
-- Removed the clean all-empty-placeholder compatibility exception so
-  replacement semantics are fully explicit.
-- Removed `engine.tests_output_mode -> engine.output_mode` fallback. Test
-  output mode is now owned explicitly by config/template values.
-- Updated docs and focused regressions for `check`, `clean`,
-  `gate --status`, and execution-runtime option resolution.
+**Closure Notes**
+1. Removed the remaining `local registries` wording from refresh and
+   architecture docs and rewrote those sections around the tracked registry
+   plus runtime/session split.
+2. Updated refresh/deploy test narration and source comments to match the
+   forward-only registry contract instead of the older mixed/local wording.
+3. Corrected the generated-config protection comment at the refresh source so
+   it describes the real protected tracked files rather than pretending the
+   entire logs/runtime tree is hard-protected.
 
-### Item 6 [complete]: Remove Transitional Package and Event Compatibility
-**Objective:** Make package surfaces and event behavior read as intentional,
-not transitional.
+### Item 6 [complete]: Final Validation and Downstream Proof
+**Objective:** Prove the new architecture in this repo and in a real user repo.
 
-**Depends on:** Item 5.
+**Depends on:** Items 1 through 5.
 
-**Addresses:** `D7`, `D10`, `D11`.
+**Addresses:** `R6`.
 
-**Scope:** package `__init__` exports, launcher framing, and test-event
-adapter behavior.
+**Scope:** local rebuild/reinstall, repo validation, downstream upgrade proof,
+cleanup proof, and end-state audit.
 
 **Implementation Tasks**
-1. Remove compatibility-export `__getattr__` indirection from package-layer
-   `__init__` files and convert internal imports to direct module imports.
-2. Keep `python3 -m devcovenant` as a supported launcher form, but remove all
-   fallback framing from code comments and docs.
-3. Replace the hidden generic test-event fallback adapter with an explicit
-   declared behavior.
-4. Decide and document whether unmatched test commands are skipped explicitly
-   or handled by a declared generic adapter.
-5. Update tests so they protect the new explicit behavior only.
+1. Rebuild and reinstall the local package from the completed branch state.
+2. Revalidate this repo with `gate --start`, `gate --mid`, `devcovenant test`,
+   and `gate --end`.
+3. In `dlmc`, run `devcovenant upgrade`, `refresh`, `clean --registry`,
+   `clean --logs`, `clean --all`, `check`, and `gate --status`.
+4. Confirm that downstream failures, if any, are repo-state issues rather than
+   architecture regressions.
+5. Close the plan with a final audit of paths, packaging behavior, and cleanup
+   behavior.
 
 **Tests and Validation**
-1. Focused package/import tests.
-2. Focused test-event runtime tests.
-3. Full `devcovenant test`.
-
-**Documentation**
-1. `README.md`
-2. `devcovenant/README.md`
-3. `devcovenant/docs/architecture.md`
-4. `devcovenant/docs/installation.md`
-5. `devcovenant/docs/policies.md`
-6. `CHANGELOG.md`
-
-**Acceptance Criteria**
-1. Package surfaces no longer describe or implement compatibility-export
-   indirection.
-2. Alternate launcher forms are described as supported forms, not fallbacks.
-3. Test-event handling is explicit and intentionally configured.
-
-**Closure Notes (2026-03-15)**
-- Removed lazy `__getattr__` compatibility indirection from the layered
-  `devcovenant/core/*/__init__.py` packages and shifted internal callers to
-  concrete module imports instead of package-export shims.
-- Kept `python3 -m devcovenant` and equivalent launcher forms as supported
-  entrypoints, but removed remaining fallback framing from the workflow and
-  installation narrative.
-- Replaced the hidden generic test-event fallback with explicit behavior:
-  unmatched test commands are skipped unless a profile declares
-  `generic_test_event_adapter_factory` intentionally.
-- Added focused package-namespace and test-event regressions, and updated
-  README/package/profile/architecture docs to describe the explicit runtime
-  contract only.
-
-### Item 7 [complete]: Full Docs and Tests Delegacy Sweep
-**Objective:** Remove stale fallback/compatibility narration and obsolete test
-coverage across the repo.
-
-**Depends on:** Items 2-6.
-
-**Addresses:** `D9`, consolidates `D10` and `D11`.
-
-**Scope:** root docs, package docs, `devcovenant/docs/*`, config assets,
-profile assets, and tests that still encode removed fallback behavior.
-
-**Implementation Tasks**
-1. Sweep all docs for fallback/compatibility language that no longer reflects
-   product behavior.
-2. Remove outdated examples and troubleshooting guidance built around removed
-   fallback paths.
-3. Remove tests that preserve removed compatibility behavior.
-4. Add or update strict-behavior tests where needed so the new contract is
-   visible and stable.
-5. Re-run documentation route/quality checks and fix any fallout.
-
-**Tests and Validation**
-1. Focused doc-generation/refresh tests.
-2. Focused CLI/runtime tests touched by the sweep.
-3. Full `devcovenant test`.
-
-**Documentation**
-1. `README.md`
-2. `devcovenant/README.md`
-3. `devcovenant/docs/architecture.md`
-4. `devcovenant/docs/config.md`
-5. `devcovenant/docs/installation.md`
-6. `devcovenant/docs/workflow.md`
-7. `devcovenant/docs/troubleshooting.md`
-8. `devcovenant/docs/policies.md`
-9. `devcovenant/docs/profiles.md`
-10. `CHANGELOG.md`
-
-**Acceptance Criteria**
-1. Docs describe the current strict product truth.
-2. Tests no longer preserve deleted fallback behavior.
-3. Documentation routes and quality checks remain green.
-
-**Closure Notes (2026-03-15)**
-- Swept the remaining package and workflow docs so they describe explicit
-  supported behavior instead of transitional fallback language.
-- Tightened installation, profiles, troubleshooting, workflow, and
-  architecture wording around alternate launcher use, stage bootstrap,
-  snapshot ownership, and helper-surface ownership.
-- Cleaned stale transition-oriented test narration while preserving the
-  active strict-behavior assertions that still matter for the current
-  runtime contract.
-- Kept only intentional current-behavior references in tests and docs;
-  historical or deleted-path narration was removed where it no longer helped
-  explain the live 1.0.0 baseline.
-
-### Item 8 [pending]: Full Validation and Downstream Proof
-**Objective:** Prove the strict no-fallback baseline operationally in both this
-repo and a downstream managed repo.
-
-**Depends on:** Items 1-7.
-
-**Addresses:** validates the full program.
-
-**Scope:** full repo validation, package rebuild/reinstall, and downstream
-`dlmc` proof.
-
-**Implementation Tasks**
-1. Run a final repo-wide review of remaining `fallback`, `legacy`, and
-   `compatibility` references and classify survivors as intentional wording or
-   defects.
-2. Rebuild and reinstall the local package from the current repo state.
-3. Validate this repo with the full gate workflow.
-4. Validate `dlmc` with:
-   - `devcovenant upgrade`
-   - `devcovenant refresh`
-   - `devcovenant clean --build` / `--cache` / `--all`
-   - `devcovenant check`
-   - `devcovenant gate --status`
-5. Inspect downstream run artifacts and confirm no removed fallback path is
-   still required in practice.
-6. Record closure evidence in the changelog and close the plan.
-
-**Tests and Validation**
-1. Full `devcovenant test`.
-2. Full gate cycle in this repo.
-3. Downstream operational proof in `dlmc`.
+1. `python3 -m build`
+2. local reinstall proof
+3. full gated validation in this repo
+4. downstream proof in `dlmc`
 
 **Documentation**
 1. `PLAN.md`
 2. `CHANGELOG.md`
 
 **Acceptance Criteria**
-1. The package works without relying on removed fallback behavior.
-2. The downstream user-repo path is clean.
-3. The plan can be marked complete with evidence.
+1. The local package rebuild/reinstall succeeds.
+2. This repo passes the gated slice cleanly.
+3. Downstream `upgrade`, `refresh`, cleanup scopes, and status/reporting work
+   with the new architecture.
+4. The plan closes with evidence, not assumptions.
+
+**Closure Notes**
+1. Rebuilt the local package, reinstalled the machine-level CLI, and verified
+   the on-PATH `devcovenant` command still resolves to version `1.0.0`.
+2. Revalidated this repo through the gated workflow while preserving the open
+   Item 6 session after the local package proof.
+3. Cleaned and committed `dlmc`, then proved downstream `upgrade`, `refresh`,
+   `check`, `gate --status`, `clean --registry`, `clean --logs`, and
+   `clean --all` against the forward-only registry/runtime/log architecture.
 
 ## Validation Matrix
-- Item 1: `check`, `gate --start`
-- Item 2: launcher/bootstrap + execution-runtime focused tests, full suite
-- Item 3: snapshot + check-context focused tests, full suite
-- Item 4: managed-environment runtime/CLI focused tests, full suite
-- Item 5: `check`/`clean`/`gate --status` focused tests, full suite
-- Item 6: import/event focused tests, full suite
-- Item 7: refresh/docs/CLI focused tests, full suite
-- Item 8: full suite, full gate cycle, downstream `dlmc` proof
+- Registry layout correctness:
+  - tracked registry path
+  - runtime registry path
+  - no compatibility alias
+- Gate runtime correctness:
+  - slim `gate_status.json`
+  - companion snapshot file
+  - explicit runtime readers/writers
+- Cleanup correctness:
+  - `--registry`
+  - `--logs`
+  - `--all`
+  - tracked registry protection
+- Packaging correctness:
+  - no repo-generated registry or logs in package payloads
+- Downstream correctness:
+  - `upgrade`
+  - `refresh`
+  - `check`
+  - `gate --status`
+  - `clean --registry`
+  - `clean --logs`
+  - `clean --all`
 
 ## Documentation Deliverables
 - `PLAN.md`
@@ -570,33 +508,31 @@ repo and a downstream managed repo.
 - `devcovenant/docs/architecture.md`
 - `devcovenant/docs/config.md`
 - `devcovenant/docs/installation.md`
-- `devcovenant/docs/workflow.md`
+- `devcovenant/docs/registry.md`
 - `devcovenant/docs/troubleshooting.md`
-- `devcovenant/docs/policies.md`
-- `devcovenant/docs/profiles.md`
+- `devcovenant/docs/workflow.md`
 
 ## Completion Criteria
-1. No live runtime or command path relies on compatibility or fallback logic
-   that the product no longer intends to support.
-2. Launcher and pycache behavior are explicit and do not rely on repo-root
-   bootstrap files.
-3. Runtime authority for the affected behaviors is explicit and singular.
-4. Docs and tests match the strict product truth.
-5. Full repo validation passes.
-6. Downstream `dlmc` validation passes.
+This plan is complete when:
+1. The tracked registry and runtime registry are split cleanly and explicitly.
+2. `gate_status.json` is slim and runtime-local.
+3. Runtime registry and logs are cleanable through first-class CLI scopes.
+4. The package does not ship repo-generated registry or logs.
+5. Docs/tests describe only the new architecture.
+6. Local and downstream proof confirm the behavior.
 
 ## Risk Controls and Non-Goals
 ### Risk Controls
-- Remove one compatibility cluster at a time and rerun focused regressions
-  before the full suite.
-- Keep alternate supported behavior only when it is explicitly named,
-  documented, and tested as supported behavior.
-- Reject repo-root bootstrap files and hidden startup hooks as a launcher
-  remedy.
-- Treat user-repo validation as mandatory, not optional.
+- Treat the tracked registry like a deterministic generated artifact,
+  similar to a lockfile: if it conflicts, regenerate it and restage.
+- Keep live gate/session state untracked to avoid merge-conflict churn.
+- Keep logs untracked and artifact-oriented, including in CI.
+- Fail explicitly when required runtime artifacts are missing instead of
+  fabricating compatibility state.
 
 ### Non-Goals
-- This cycle does not redesign the policy model or the gate workflow.
-- This cycle does not change the public release version on its own.
-- This cycle does not add new convenience fallbacks to replace the removed
-  ones.
+- Do not track live pass/fail state in git.
+- Do not track logs in git.
+- Do not make `clean --all` delete the tracked registry.
+- Do not preserve `registry/local` as a compatibility layer.
+- Do not treat local mutable runtime files as governance trust anchors.

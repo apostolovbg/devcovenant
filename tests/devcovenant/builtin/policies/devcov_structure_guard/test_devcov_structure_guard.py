@@ -16,7 +16,7 @@ def _seed_required_structure(repo_root: Path) -> None:
     for rel_path in manifest_module.DEFAULT_CORE_DIRS:
         (repo_root / rel_path).mkdir(parents=True, exist_ok=True)
     for rel_path in manifest_module.DEFAULT_CORE_FILES:
-        if rel_path == manifest_module.MANIFEST_REL_PATH:
+        if rel_path == manifest_module.REGISTRY_REL_PATH:
             continue
         path = repo_root / rel_path
         path.parent.mkdir(parents=True, exist_ok=True)
@@ -45,7 +45,7 @@ def _unit_test_structure_guard_passes_with_required_paths():
         checker = devcov_structure_guard.DevCovenantStructureGuardCheck()
         context = CheckContext(repo_root=repo_root)
         assert checker.check(context) == []
-        assert (repo_root / manifest_module.MANIFEST_REL_PATH).exists()
+        assert (repo_root / manifest_module.REGISTRY_REL_PATH).exists()
 
 
 def _unit_test_structure_guard_reports_missing_paths():

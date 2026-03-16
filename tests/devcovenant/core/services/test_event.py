@@ -130,21 +130,22 @@ def _unit_test_profile_loader_accepts_explicit_generic_adapter() -> None:
         )
 
         registry_path = (
-            repo_root
-            / "devcovenant"
-            / "registry"
-            / "local"
-            / "profile_registry.yaml"
+            repo_root / "devcovenant" / "registry" / "registry.yaml"
         )
         registry_path.parent.mkdir(parents=True, exist_ok=True)
         registry_path.write_text(
-            "global: {}\n"
-            "python:\n"
-            "  test_events:\n"
-            "    - id: generic\n"
-            "      entrypoint: "
+            "metadata:\n"
+            "  schema_version: 1\n"
+            "  registry_layout: single-root\n"
+            "policies: {}\n"
+            "profiles:\n"
+            "  python:\n"
+            "    test_events:\n"
+            "      - id: generic\n"
+            "        entrypoint: "
             "devcovenant.core.services.event:"
-            "generic_test_event_adapter_factory\n",
+            "generic_test_event_adapter_factory\n"
+            "inventory: {}\n",
             encoding="utf-8",
         )
 

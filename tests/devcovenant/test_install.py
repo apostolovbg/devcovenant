@@ -74,7 +74,7 @@ def _unit_test_install_writes_generic_config_and_manifest() -> None:
             "*.egg-info/**",
             "pip-wheel-metadata/**",
             ".coverage.*",
-            "devcovenant/registry/local/**",
+            "devcovenant/registry/runtime/**",
         ):
             assert expected in ignore_patterns
 
@@ -85,6 +85,10 @@ def _unit_test_install_writes_generic_config_and_manifest() -> None:
             "build_globs": [],
             "cache_dirs": [],
             "cache_globs": [],
+            "runtime_registry_dirs": [],
+            "runtime_registry_globs": [],
+            "logs_dirs": [],
+            "logs_globs": [],
             "protected_dirs": [],
             "protected_globs": [],
         }
@@ -98,25 +102,21 @@ def _unit_test_install_writes_generic_config_and_manifest() -> None:
         assert manifest_path.exists()
 
 
-def _unit_test_install_does_not_generate_local_registry() -> None:
-    """install_repo should only leave manifest scaffold in registry/local."""
+def _unit_test_install_writes_tracked_registry_without_runtime_state() -> None:
+    """install_repo should seed tracked registry.yaml without runtime state."""
     with tempfile.TemporaryDirectory() as temp_dir:
         repo_root = Path(temp_dir)
         with redirect_stderr(StringIO()):
             result = install.install_repo(repo_root)
         assert result == 0
 
-        local_registry = repo_root / "devcovenant" / "registry" / "local"
-        manifest_path = local_registry / "manifest.json"
-        policy_registry = local_registry / "policy_registry.yaml"
-        profile_registry = local_registry / "profile_registry.yaml"
-        test_status = local_registry / "gate_status.json"
+        registry_root = repo_root / "devcovenant" / "registry"
+        tracked_registry = registry_root / "registry.yaml"
+        runtime_registry = registry_root / "runtime"
 
-        assert local_registry.exists()
-        assert manifest_path.exists()
-        assert not policy_registry.exists()
-        assert not profile_registry.exists()
-        assert not test_status.exists()
+        assert registry_root.exists()
+        assert tracked_registry.exists()
+        assert not runtime_registry.exists()
 
 
 def _unit_test_install_preserves_existing_custom_tree() -> None:
@@ -161,6 +161,42 @@ def _unit_test_install_does_not_copy_repo_custom_payload() -> None:
         )
         assert not leaked_policy.exists()
         assert not leaked_profile.exists()
+
+
+def _unit_test_replace_core_package_ignores_source_runtime_outputs() -> None:
+    """replace_core_package should skip source runtime logs and registry."""
+    with tempfile.TemporaryDirectory() as temp_dir:
+        temp_root = Path(temp_dir)
+        repo_root = temp_root / "target"
+        source_dir = temp_root / "source" / "devcovenant"
+        source_dir.mkdir(parents=True, exist_ok=True)
+
+        (source_dir / "__init__.py").write_text("__all__ = []\n")
+        (source_dir / "README.md").write_text("# package readme\n")
+
+        registry_root = source_dir / "registry"
+        (registry_root / "README.md").parent.mkdir(parents=True, exist_ok=True)
+        (registry_root / "README.md").write_text("# registry readme\n")
+        (registry_root / "registry.yaml").write_text("tracked: true\n")
+        runtime_root = registry_root / "runtime"
+        runtime_root.mkdir(parents=True, exist_ok=True)
+        (runtime_root / "latest.json").write_text("{}\n")
+
+        logs_root = source_dir / "logs"
+        logs_root.mkdir(parents=True, exist_ok=True)
+        (logs_root / "README.md").write_text("# logs readme\n")
+        stale_run_dir = logs_root / "20260315T000000000000Z-test"
+        stale_run_dir.mkdir(parents=True, exist_ok=True)
+        (stale_run_dir / "run.json").write_text("{}\n")
+
+        install.replace_core_package(repo_root, source_dir=source_dir)
+
+        target_root = repo_root / "devcovenant"
+        assert (target_root / "registry" / "README.md").exists()
+        assert (target_root / "logs" / "README.md").exists()
+        assert not (target_root / "registry" / "registry.yaml").exists()
+        assert not (target_root / "registry" / "runtime").exists()
+        assert not (target_root / "logs" / stale_run_dir.name).exists()
 
 
 def _unit_test_install_run_requires_upgrade_when_present() -> None:
@@ -295,10 +331,13 @@ def _assert_no_forbidden_wheel_entries(entries: list[str]) -> None:
     )
 
 
-def _assert_runtime_logs_excluded_from_wheel(entries: list[str]) -> None:
-    """Assert runtime log payloads are excluded from wheel artifacts."""
+def _assert_runtime_outputs_excluded_from_wheel(entries: list[str]) -> None:
+    """Assert tracked/runtime registry and logs obey wheel packaging rules."""
     forbidden_entries = [
-        "devcovenant/logs/latest.json",
+        "devcovenant/registry/registry.yaml",
+        "devcovenant/registry/runtime/latest.json",
+        "devcovenant/registry/runtime/gate_status.json",
+        "devcovenant/registry/runtime/session_snapshot.json",
         "devcovenant/logs/20260225T000000000000Z-test/run.json",
         "devcovenant/logs/20260225T000000000000Z-test/summary.json",
         "devcovenant/logs/20260225T000000000000Z-test/summary.txt",
@@ -309,6 +348,7 @@ def _assert_runtime_logs_excluded_from_wheel(entries: list[str]) -> None:
             "Wheel leaked runtime log artifact: " f"{entry}"
         )
     assert "devcovenant/logs/README.md" in entries
+    assert "devcovenant/registry/README.md" in entries
 
 
 def _seed_stale_build_tree(build_root: Path) -> None:
@@ -354,8 +394,10 @@ def _seed_runtime_logs_tree(build_root: Path) -> None:
     run_dir = (
         build_root / "devcovenant" / "logs" / "20260225T000000000000Z-test"
     )
+    runtime_registry = build_root / "devcovenant" / "registry" / "runtime"
     run_dir.mkdir(parents=True, exist_ok=True)
-    (build_root / "devcovenant" / "logs" / "latest.json").write_text(
+    runtime_registry.mkdir(parents=True, exist_ok=True)
+    (runtime_registry / "latest.json").write_text(
         '{"run_dir": "devcovenant/logs/20260225T000000000000Z-test"}\n',
         encoding="utf-8",
     )
@@ -408,6 +450,9 @@ def _unit_test_manifest_includes_license_artifacts() -> None:
     assert "recursive-include licenses *.txt" in content
     assert "recursive-exclude devcovenant/logs *" in content
     assert "include devcovenant/logs/README.md" in content
+    assert "include devcovenant/registry/README.md" in content
+    assert "exclude devcovenant/registry/registry.yaml" in content
+    assert "recursive-exclude devcovenant/registry/runtime *" in content
 
 
 def _unit_test_wheel_contains_required_license_artifacts() -> None:
@@ -453,14 +498,14 @@ def _unit_test_dirty_build_tree_does_not_leak_into_wheel() -> None:
 
 
 def _unit_test_wheel_excludes_runtime_logs_but_keeps_logs_readme() -> None:
-    """Wheel should exclude runtime logs under devcovenant/logs/."""
+    """Wheel should exclude runtime outputs while keeping tracked READMEs."""
     entries = _cached_wheel_entries(
         include_local_build_tree=True,
         prepare_build_root=_seed_stale_and_runtime_tree,
         clean_before_build=True,
     )
 
-    _assert_runtime_logs_excluded_from_wheel(entries)
+    _assert_runtime_outputs_excluded_from_wheel(entries)
 
 
 def _unit_test_install_symbol_contract_is_stable() -> None:
@@ -478,9 +523,9 @@ class GeneratedUnittestCases(unittest.TestCase):
         """Run test_install_writes_generic_config_and_manifest."""
         _unit_test_install_writes_generic_config_and_manifest()
 
-    def test_install_does_not_generate_local_registry(self):
-        """Run test_install_does_not_generate_local_registry."""
-        _unit_test_install_does_not_generate_local_registry()
+    def test_install_writes_tracked_registry_without_runtime_state(self):
+        """Run test_install_writes_tracked_registry_without_runtime_state."""
+        _unit_test_install_writes_tracked_registry_without_runtime_state()
 
     def test_install_preserves_existing_custom_tree(self):
         """Run test_install_preserves_existing_custom_tree."""
@@ -489,6 +534,10 @@ class GeneratedUnittestCases(unittest.TestCase):
     def test_install_does_not_copy_repo_custom_payload(self):
         """Run install repo-only custom-payload exclusion assertions."""
         _unit_test_install_does_not_copy_repo_custom_payload()
+
+    def test_replace_core_package_ignores_source_runtime_outputs(self):
+        """Run source-runtime-output exclusion assertions for install."""
+        _unit_test_replace_core_package_ignores_source_runtime_outputs()
 
     def test_install_run_requires_upgrade_when_present(self):
         """Run test_install_run_requires_upgrade_when_present."""

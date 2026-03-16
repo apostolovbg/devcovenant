@@ -26,6 +26,15 @@ from devcovenant.core.flow.gate_status_helpers import (
 
 runtime_print = execution_runtime_module.runtime_print
 normalize_snapshot_rows = execution_runtime_module.normalize_snapshot_rows
+load_session_snapshot_payload = (
+    execution_runtime_module.load_session_snapshot_payload
+)
+merge_session_snapshot_payload = (
+    execution_runtime_module.merge_session_snapshot_payload
+)
+prune_inline_session_snapshot_fields = (
+    execution_runtime_module.prune_inline_session_snapshot_fields
+)
 _CHECK_APPLY_FIXES_ENV = "DEVCOV_CHECK_APPLY_FIXES"
 _CHECK_RUN_REFRESH_ENV = "DEVCOV_CHECK_RUN_REFRESH"
 _CHECK_CLEAN_BYTECODE_ENV = "DEVCOV_CHECK_CLEAN_BYTECODE"
@@ -303,7 +312,15 @@ def run_pre_commit_gate(
             ).strip()
             if not last_run_session_id or last_run_session_id != session_id:
                 force_tests = True
-            raw_last_snapshot = pre_payload.get("last_run_snapshot")
+            try:
+                pre_snapshot_payload = load_session_snapshot_payload(
+                    repo_root,
+                    pre_payload,
+                )
+            except ValueError as error:
+                runtime_print(str(error), file=sys.stderr)
+                return 1
+            raw_last_snapshot = pre_snapshot_payload.get("last_run_snapshot")
             if not force_tests:
                 if not isinstance(raw_last_snapshot, dict):
                     force_tests = True
@@ -331,6 +348,8 @@ def run_pre_commit_gate(
             status_exists = status_path.exists()
             status_payload: dict[str, object] = {}
             status_parse_error = ""
+            status_snapshot_payload: dict[str, object] = {}
+            status_snapshot_error = ""
             if status_exists:
                 try:
                     recovery_status_previous = status_path.read_bytes()
@@ -341,6 +360,16 @@ def run_pre_commit_gate(
                     status_payload = _load_status(status_path)
                 except ValueError as error:
                     status_parse_error = str(error)
+                else:
+                    try:
+                        status_snapshot_payload = (
+                            load_session_snapshot_payload(
+                                repo_root,
+                                status_payload,
+                            )
+                        )
+                    except ValueError as error:
+                        status_snapshot_error = str(error)
 
             session_state = (
                 str(status_payload.get("session_state", "")).strip().lower()
@@ -366,7 +395,14 @@ def run_pre_commit_gate(
                     "a recovery session from the current baseline."
                 )
             elif session_state == "closed":
-                raw_end_snapshot = status_payload.get("session_end_snapshot")
+                if status_snapshot_error:
+                    recovery_reason = (
+                        "Closed gate session snapshot is unusable; opening "
+                        "a recovery session from the current baseline."
+                    )
+                raw_end_snapshot = status_snapshot_payload.get(
+                    "session_end_snapshot"
+                )
                 if not isinstance(raw_end_snapshot, dict):
                     recovery_reason = (
                         "Closed gate status is missing "
@@ -396,7 +432,7 @@ def run_pre_commit_gate(
                             "`devcovenant gate --end`; opening a recovery "
                             "session that includes those unsessioned edits."
                         )
-                        raw_last_snapshot = status_payload.get(
+                        raw_last_snapshot = status_snapshot_payload.get(
                             "last_run_snapshot"
                         )
                         if not isinstance(raw_last_snapshot, dict):
@@ -446,12 +482,36 @@ def run_pre_commit_gate(
                 recovery_payload["changelog_start_top_entry_present"] = bool(
                     top_entry
                 )
+                recovery_remove_keys = [
+                    "session_end_snapshot",
+                    "last_run_snapshot",
+                    "test_events",
+                ]
+                recovery_updates: dict[str, object] = {}
                 if recovery_baseline_snapshot is not None:
-                    recovery_payload["session_baseline_snapshot"] = dict(
+                    recovery_updates["session_baseline_snapshot"] = dict(
                         recovery_baseline_snapshot
                     )
                 else:
-                    recovery_payload.pop("session_baseline_snapshot", None)
+                    recovery_remove_keys.append("session_baseline_snapshot")
+                (
+                    snapshot_rel_path,
+                    _recovery_snapshot_payload,
+                ) = merge_session_snapshot_payload(
+                    repo_root,
+                    recovery_payload,
+                    updates=recovery_updates,
+                    remove_keys=tuple(recovery_remove_keys),
+                )
+                recovery_payload["session_snapshot_file"] = snapshot_rel_path
+                recovery_payload["session_snapshot_updated_utc"] = (
+                    start_ts.isoformat()
+                )
+                recovery_payload["session_snapshot_updated_epoch"] = (
+                    start_ts.timestamp()
+                )
+                recovery_payload.pop("test_events_count", None)
+                prune_inline_session_snapshot_fields(recovery_payload)
                 recovery_payload["recovery_start_reason"] = recovery_reason
                 status_path.parent.mkdir(parents=True, exist_ok=True)
                 status_path.write_text(
@@ -663,27 +723,7 @@ def run_pre_commit_gate(
         payload["session_state"] = "open"
         payload["session_start_utc"] = start_ts.isoformat()
         payload["session_start_epoch"] = start_ts.timestamp()
-        # Persist the gate-start filesystem snapshot so policies can scope
-        # deleted-file coverage to this session instead of HEAD-wide history.
-        payload["session_start_snapshot"] = dict(diff_before)
         payload.pop("session_baseline_epoch", None)
-        if recovery_status_active:
-            raw_baseline_snapshot = payload.get("session_baseline_snapshot")
-            if not isinstance(raw_baseline_snapshot, dict):
-                payload.pop("session_baseline_snapshot", None)
-            else:
-                try:
-                    payload["session_baseline_snapshot"] = (
-                        execution_runtime_module.normalize_snapshot_rows(
-                            raw_baseline_snapshot,
-                            field_name="session_baseline_snapshot",
-                        )
-                    )
-                except ValueError:
-                    payload.pop("session_baseline_snapshot", None)
-        else:
-            # Normal starts must not carry a stale recovery baseline forward.
-            payload.pop("session_baseline_snapshot", None)
         try:
             header_doc_suffixes, header_keys, header_scan_lines = (
                 _resolve_doc_exemption_options(repo_root)
@@ -694,21 +734,51 @@ def run_pre_commit_gate(
                 recovery_status_active = False
             runtime_print(str(error), file=sys.stderr)
             return 1
-        payload["document_exemption_baseline"] = (
-            execution_runtime_module.capture_document_exemption_baseline(
-                repo_root,
-                header_doc_suffixes=header_doc_suffixes,
-                header_keys=header_keys,
-                header_scan_lines=header_scan_lines,
+        snapshot_remove_keys = [
+            "session_end_snapshot",
+            "last_run_snapshot",
+            "test_events",
+        ]
+        snapshot_updates: dict[str, object] = {
+            # Persist the gate-start filesystem snapshot so policies can scope
+            # deleted-file coverage to this session instead of HEAD-wide
+            # history.
+            "session_start_snapshot": dict(diff_before),
+            "document_exemption_baseline": (
+                execution_runtime_module.capture_document_exemption_baseline(
+                    repo_root,
+                    header_doc_suffixes=header_doc_suffixes,
+                    header_keys=header_keys,
+                    header_scan_lines=header_scan_lines,
+                )
+            ),
+        }
+        if recovery_status_active and recovery_baseline_snapshot is not None:
+            snapshot_updates["session_baseline_snapshot"] = dict(
+                recovery_baseline_snapshot
             )
+        else:
+            # Normal starts must not carry a stale recovery baseline forward.
+            snapshot_remove_keys.append("session_baseline_snapshot")
+        (
+            snapshot_rel_path,
+            _snapshot_payload,
+        ) = merge_session_snapshot_payload(
+            repo_root,
+            payload,
+            updates=snapshot_updates,
+            remove_keys=tuple(snapshot_remove_keys),
         )
+        payload["session_snapshot_file"] = snapshot_rel_path
+        payload["session_snapshot_updated_utc"] = start_ts.isoformat()
+        payload["session_snapshot_updated_epoch"] = start_ts.timestamp()
+        payload.pop("test_events_count", None)
         payload.update(
             execution_runtime_module.capture_agents_section_hashes(repo_root)
         )
         payload.pop("session_end_utc", None)
         payload.pop("session_end_epoch", None)
         payload.pop("session_end_signature", None)
-        payload.pop("session_end_snapshot", None)
         payload.pop("recovery_start_reason", None)
         try:
             top_entry = _latest_changelog_entry(repo_root)
@@ -735,7 +805,18 @@ def run_pre_commit_gate(
         payload["session_state"] = "closed"
         payload["session_end_utc"] = now.isoformat()
         payload["session_end_epoch"] = now.timestamp()
-        payload["session_end_snapshot"] = dict(diff_after_hooks)
+        (
+            snapshot_rel_path,
+            _snapshot_payload,
+        ) = merge_session_snapshot_payload(
+            repo_root,
+            payload,
+            updates={"session_end_snapshot": dict(diff_after_hooks)},
+        )
+        payload["session_snapshot_file"] = snapshot_rel_path
+        payload["session_snapshot_updated_utc"] = now.isoformat()
+        payload["session_snapshot_updated_epoch"] = now.timestamp()
+    prune_inline_session_snapshot_fields(payload)
     status_path.write_text(
         json.dumps(payload, indent=2) + "\n",
         encoding="utf-8",

@@ -128,19 +128,13 @@ def _unit_test_registry_mismatch_raises_error(tmp_path: Path) -> None:
     script_path = _write_policy_script(tmp_path, body="# stale script\n")
     _write_descriptor(tmp_path, text_value="Policy description.")
 
-    registry_path = (
-        tmp_path
-        / "devcovenant"
-        / "registry"
-        / "local"
-        / "policy_registry.yaml"
-    )
+    registry_path = tmp_path / "devcovenant" / "registry" / "registry.yaml"
     registry = PolicyRegistry(registry_path, tmp_path)
     registry._data.setdefault("policies", {})["demo-policy"] = {"hash": "bad"}
     registry.save()
 
     checker = _build_checker(
-        {"registry_file": "devcovenant/registry/local/policy_registry.yaml"}
+        {"registry_file": "devcovenant/registry/registry.yaml"}
     )
     violations = checker.check(
         CheckContext(
@@ -159,13 +153,7 @@ def _unit_test_status_update_required_when_watched_files_change(
     _write_policy_script(tmp_path)
     _write_descriptor(tmp_path, text_value="Policy description.")
 
-    registry_path = (
-        tmp_path
-        / "devcovenant"
-        / "registry"
-        / "local"
-        / "policy_registry.yaml"
-    )
+    registry_path = tmp_path / "devcovenant" / "registry" / "registry.yaml"
     parser_registry = PolicyRegistry(registry_path, tmp_path)
     script_content = (
         tmp_path
@@ -207,13 +195,7 @@ def _unit_test_status_payload_validation_passes(tmp_path: Path) -> None:
     _write_policy_script(tmp_path)
     _write_descriptor(tmp_path, text_value="Policy description.")
 
-    registry_path = (
-        tmp_path
-        / "devcovenant"
-        / "registry"
-        / "local"
-        / "policy_registry.yaml"
-    )
+    registry_path = tmp_path / "devcovenant" / "registry" / "registry.yaml"
     registry = PolicyRegistry(registry_path, tmp_path)
     script_text = (
         tmp_path
@@ -232,7 +214,7 @@ def _unit_test_status_payload_validation_passes(tmp_path: Path) -> None:
 
     code_path = _write(tmp_path / "src" / "module.py", "x = 1\n")
     status_path = _write(
-        tmp_path / "devcovenant" / "registry" / "local" / "gate_status.json",
+        tmp_path / "devcovenant" / "registry" / "runtime" / "gate_status.json",
         json.dumps(
             {
                 "last_run": "2026-02-07T00:00:00+00:00",

@@ -12,6 +12,7 @@ from devcovenant.core.runtime.execution import (
     capture_current_numstat_snapshot,
     changed_numstat_paths,
     diff_snapshot_paths,
+    load_session_snapshot_payload,
     normalize_snapshot_rows,
     snapshot_row_style,
 )
@@ -157,6 +158,18 @@ def build_change_state(
             "Invalid gate status payload: `session_state` must be "
             "`open` or `closed`.",
         )
+    try:
+        snapshot_payload = load_session_snapshot_payload(
+            repo_root,
+            payload,
+            require=True,
+        )
+    except ValueError as error:
+        return _set_invalid("invalid_session_snapshot", str(error))
+    state.session_snapshot_path = str(
+        payload.get("session_snapshot_file", "")
+    ).strip()
+    state.session_snapshot_payload = snapshot_payload
 
     def _load_snapshot_field(
         field_name: str,
@@ -164,16 +177,16 @@ def build_change_state(
         missing_reason_code: str,
     ) -> dict[str, str] | None:
         """Load one snapshot mapping field from gate status."""
-        if field_name not in payload:
+        if field_name not in snapshot_payload:
             _set_invalid(
                 missing_reason_code,
-                "Invalid gate status payload: "
+                "Invalid session snapshot payload: "
                 f"`{field_name}` is required for session checks.",
             )
             return None
         try:
             snapshot = normalize_snapshot_rows(
-                payload.get(field_name),
+                snapshot_payload.get(field_name),
                 field_name=field_name,
             )
         except ValueError as error:

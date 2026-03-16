@@ -72,7 +72,7 @@ Expected files:
 ## Descriptor and Metadata
 Descriptor metadata defines default behavior.
 Resolved metadata is computed from descriptor/profile/config layers and then
-rendered into AGENTS managed policy block and local policy registry.
+rendered into AGENTS managed policy block and tracked registry.
 The canonical resolver/decoder lives in
 `devcovenant/core/services/metadata.py`.
 It now exposes a typed companion resolved-metadata view for internal runtime
@@ -81,6 +81,10 @@ stability.
 Runtime policy option loading (including runtime-action metadata reads) uses
 the shared decoder so bool/list/number parsing stays consistent across code
 paths.
+Session-aware policies such as `changelog-coverage` and `devflow-run-gates`
+read live workflow state from `devcovenant/registry/runtime/gate_status.json`,
+while deterministic policy/profile metadata is audited through the tracked
+`devcovenant/registry/registry.yaml` document.
 
 Shared metadata families include:
 - severity and enforcement controls
@@ -157,7 +161,7 @@ High-impact runtime contracts:
   (`.vscode/**`, `.idea/**`, build/dist trees, cache directories,
   `*.egg-info/**`, `pip-wheel-metadata/**`, coverage artifacts, and
   DevCovenant runtime state under `devcovenant/logs/**` and
-  `devcovenant/registry/local/**`).
+  `devcovenant/registry/runtime/**`).
   Deleted in-scope files remain valid `Files:` entries and are treated as
   real change evidence even after the path no longer exists on disk.
   Out-of-scope files (skipped metadata selectors and managed/header-only
@@ -166,8 +170,8 @@ High-impact runtime contracts:
   Top-level read-only `devcovenant check` without an open gate session
   (`missing_gate_status` and empty phase) uses an empty scope instead of
   hard-failing bootstrap checks.
-- `managed-environment` resolves from the local policy registry when it
-  exists; if the local registry is missing, runtime fails explicitly and
+- `managed-environment` resolves from the tracked registry when it
+  exists; if the tracked registry is missing, runtime fails explicitly and
   requires `devcovenant refresh` before managed-environment resolution can
   continue.
 - `devflow-run-gates` enforces the start -> test -> end sequence and validates
@@ -284,7 +288,7 @@ High-impact runtime contracts:
   `devcovenant/builtin/policies/tests_coverage/assertion_signal.py`.
 - session-bound checks (for example changelog coverage) consume the
   gate-session ledger from
-  `devcovenant/registry/local/gate_status.json`; `gate --start` records
+  `devcovenant/registry/runtime/gate_status.json`; `gate --start` records
   baseline snapshots, checks run against post-start snapshot deltas, and
   missing/invalid session metadata is an explicit error. Start cannot reset a
   closed-session baseline when post-end edits exist; reconcile-on-start must

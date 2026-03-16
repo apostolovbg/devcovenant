@@ -2,7 +2,7 @@
 **Doc ID:** CHANGELOG
 **Doc Type:** changelog
 **Project Version:** 1.0.0
-**Last Updated:** 2026-03-15
+**Last Updated:** 2026-03-16
 **DevCovenant Version:** 1.0.0
 
 <!-- DEVCOV:BEGIN -->
@@ -55,6 +55,171 @@ Example:
 ## Log changes here
 
 ## Version 1.0.0
+
+- 2026-03-16:
+  Change: Closed the registry/runtime/log migration plan with local rebuild
+  proof and a clean downstream `dlmc` validation run.
+  Why: Verified the installed package, this repo, and the cleaned downstream
+  user repo all behaved correctly under the final tracked-vs-runtime
+  contract.
+  Impact: Completed the plan with direct evidence that rebuild, reinstall,
+  upgrade, refresh, status, and cleanup flows now work end-to-end.
+  Files:
+  CHANGELOG.md
+  PLAN.md
+
+- 2026-03-16:
+  Change: Removed the last stale mixed-registry wording from docs, tests, and
+  generated config commentary.
+  Why: Completed the registry-truth sweep so refresh, architecture, deploy, and
+  refresh tests all describe one tracked registry plus separate runtime state.
+  Impact: The written/tested contract now matches the forward-only
+  registry/runtime/log model without leftover `local registries` narration.
+  Files:
+  CHANGELOG.md
+  PLAN.md
+  devcovenant/config.yaml
+  devcovenant/core/flow/refresh.py
+  devcovenant/docs/architecture.md
+  devcovenant/docs/refresh.md
+  tests/devcovenant/test_deploy.py
+  tests/devcovenant/test_refresh.py
+
+- 2026-03-15:
+  Change: Tightened install, refresh, upgrade, and packaging behavior around
+  the tracked registry and runtime outputs.
+  Why: Prevented source-checkout runtime logs from leaking into target repos
+  and proved that missing tracked registry state is recreated without
+  inventing runtime session payloads.
+  Impact: Repository installs/upgrades now honor the tracked-vs-runtime split
+  more strictly, and package tests/docs explicitly cover the registry/log
+  exclusion contract.
+  Files:
+  CHANGELOG.md
+  PLAN.md
+  README.md
+  devcovenant/README.md
+  devcovenant/docs/installation.md
+  devcovenant/docs/registry.md
+  devcovenant/docs/workflow.md
+  devcovenant/install.py
+  tests/devcovenant/test_install.py
+  tests/devcovenant/test_refresh.py
+  tests/devcovenant/test_upgrade.py
+
+- 2026-03-15:
+  Change: Added first-class cleanup scopes for runtime registry and logs and
+  widened `clean --all` to cover them.
+  Why: Made disposable runtime artifacts explicitly cleanable while keeping
+  tracked registry and README files outside cleanup scope.
+  Impact: `devcovenant clean` can now prune build, cache, runtime-registry,
+  and log residue without treating tracked governance artifacts as junk.
+  Files:
+  CHANGELOG.md
+  PLAN.md
+  README.md
+  devcovenant/README.md
+  devcovenant/builtin/profiles/global/assets/config.yaml
+  devcovenant/builtin/profiles/global/global.yaml
+  devcovenant/clean.py
+  devcovenant/config.yaml
+  devcovenant/core/flow/clean.py
+  devcovenant/core/services/cleanup.py
+  devcovenant/core/services/profile_registry.py
+  devcovenant/docs/config.md
+  devcovenant/docs/installation.md
+  devcovenant/docs/profiles.md
+  devcovenant/docs/registry.md
+  devcovenant/docs/workflow.md
+  devcovenant/registry/registry.yaml
+  tests/devcovenant/core/flow/test_clean.py
+  tests/devcovenant/core/services/test_cleanup.py
+  tests/devcovenant/test_clean.py
+  tests/devcovenant/test_install.py
+  tests/devcovenant/test_refresh.py
+
+- 2026-03-15:
+  Change: Documented and recorded the split gate runtime state contract
+  across the roadmap and runtime docs.
+  Why: Clarified that `gate_status.json` stays slim while
+  `session_snapshot.json` carries heavy session payloads for the active
+  session.
+  Impact: Contributors now see the correct registry/runtime model in the
+  README, workflow, registry, and architecture guidance.
+  Files:
+  CHANGELOG.md
+  PLAN.md
+  README.md
+  devcovenant/README.md
+  devcovenant/docs/architecture.md
+  devcovenant/docs/registry.md
+  devcovenant/docs/workflow.md
+  devcovenant/registry/README.md
+
+- 2026-03-15:
+  Change: Marked Item 1 complete in the plan after the clean gated close.
+  Why: Recorded the registry-architecture slice closure in the roadmap after
+  implementation, tests, and gates all passed.
+  Impact: Updated the plan to reflect the real project state and keep the
+  next slice starting point explicit.
+  Files:
+  CHANGELOG.md
+  PLAN.md
+
+- 2026-03-15:
+  Change: Standardized the one-root registry architecture and repaired the
+  migrated test and documentation contract around it.
+  Why: Completed the Item 1 registry move by routing tracked governance data
+  through `devcovenant/registry/registry.yaml`, keeping runtime state under
+  `devcovenant/registry/runtime/`, and clearing the fallout that the full test
+  suite and mid gate exposed.
+  Impact: Refresh, install, upgrade, gate, clean, and documentation routing
+  now align with the forward-only tracked-vs-runtime registry model, and the
+  repo closes this slice without registry-layout drift.
+  Files:
+  CHANGELOG.md
+  README.md
+  devcovenant/README.md
+  devcovenant/builtin/policies/changelog_coverage/changelog_coverage.py
+  devcovenant/builtin/policies/devflow_run_gates/devflow_run_gates.py
+  devcovenant/config.yaml
+  devcovenant/core/services/profile_registry.py
+  devcovenant/custom/profiles/devcovrepo/devcovrepo.yaml
+  devcovenant/docs/architecture.md
+  devcovenant/docs/policies.md
+  devcovenant/docs/profiles.md
+  devcovenant/docs/registry.md
+  devcovenant/registry/registry.yaml
+  devcovenant/registry/registry.yaml
+  tests/devcovenant/builtin/policies/devcov_structure_guard/\
+    test_devcov_structure_guard.py
+  tests/devcovenant/core/runtime/test_run_logging.py
+  tests/devcovenant/core/services/test_cleanup.py
+  tests/devcovenant/test_cli.py
+  tests/devcovenant/test_refresh.py
+
+- 2026-03-15:
+  Change: Replaced the roadmap with the forward-only registry architecture
+  plan.
+  Why: Defined the next 1.x program around tracked deterministic registry
+  metadata, split runtime state, and explicit cleanup scopes without
+  compatibility drift.
+  Impact: Aligned the next execution cycle around one registry root, slim
+  gate runtime state, and first-class registry/log cleanup.
+  Files:
+  CHANGELOG.md
+  PLAN.md
+
+- 2026-03-15:
+  Change: Completed final validation and downstream operational proof.
+  Why: Verified the strict no-fallback baseline with a local rebuild and a
+  real upgraded user repo.
+  Impact: Closed the remediation plan with evidence that the package works
+  without removed fallback paths, while downstream repo-state issues remain
+  explicit and separate from package behavior.
+  Files:
+  CHANGELOG.md
+  PLAN.md
 
 - 2026-03-15:
   Change: Rewrote docs and test narration to remove stale delegacy wording.

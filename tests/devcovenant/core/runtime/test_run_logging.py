@@ -285,7 +285,9 @@ def _unit_test_prune_run_log_directories_keeps_latest_n_runs() -> None:
         logs_root = repo_root / "devcovenant" / "logs"
         logs_root.mkdir(parents=True, exist_ok=True)
         (logs_root / "README.md").write_text("tracked\n", encoding="utf-8")
-        (logs_root / "latest.json").write_text("{}", encoding="utf-8")
+        runtime_root = repo_root / "devcovenant" / "registry" / "runtime"
+        runtime_root.mkdir(parents=True, exist_ok=True)
+        (runtime_root / "latest.json").write_text("{}", encoding="utf-8")
 
         starts = [
             _fixed_start(),
@@ -311,7 +313,7 @@ def _unit_test_prune_run_log_directories_keeps_latest_n_runs() -> None:
         assert (logs_root / runs[1].run_id).is_dir()
         assert (logs_root / runs[2].run_id).is_dir()
         assert (logs_root / "README.md").is_file()
-        assert (logs_root / "latest.json").is_file()
+        assert (runtime_root / "latest.json").is_file()
 
 
 def _unit_test_prune_run_log_directories_zero_keeps_all() -> None:

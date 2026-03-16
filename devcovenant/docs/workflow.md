@@ -130,8 +130,9 @@ Scope note:
 - for repository work, use the full gate sequence:
   `devcovenant gate --start` -> `devcovenant gate --mid` loop ->
   `devcovenant test` -> `devcovenant gate --end`
-- `devcovenant clean` is a maintenance command for disposable build/cache
-  residue; it does not replace the gate workflow for actual repository work
+- `devcovenant clean` is a maintenance command for disposable build, cache,
+  runtime-registry, and log residue; it does not replace the gate workflow
+  for actual repository work
 
 ## Step Details
 Shared gate hook targeting:
@@ -147,11 +148,13 @@ Shared gate hook targeting:
 - run managed-environment `start` commands when policy is enabled
 - run pre-commit hooks for baseline validation
 - block baseline recording if hooks fail
-- record session start timestamps and metadata in gate status
+- record session start timestamps and concise lifecycle metadata in
+  `gate_status.json`
 - clear stale end-gate pre-commit evidence so ordering checks stay
   session-bound
 - record changelog top-entry fingerprint for fresh-entry enforcement
-- capture document exemption baselines used by changelog checks
+- capture document exemption baselines, recovery baselines, and gate-start
+  snapshot data in `devcovenant/registry/runtime/session_snapshot.json`
 - resolve changelog/session-baseline helper logic through
   `devcovenant/core/flow/gate_changelog_helpers.py` so metadata parsing and
   top-entry fingerprint behavior stay centralized
@@ -181,7 +184,10 @@ Shared gate hook targeting:
   injection
 - record execution timestamp and command chain in gate status
 - record tests mode and selected command-metadata key in gate status
-- record normalized schema-version `1.0` test events for downstream tooling
+- record normalized schema-version `1.0` test events and the last test
+  snapshot in `devcovenant/registry/runtime/session_snapshot.json`
+- keep `gate_status.json` concise by storing `test_events_count` there
+  instead of the full event payload list
 - emit adapter-load warnings through output runtime before running commands
 - command runtime actions (for example `update_lock`) dispatch through policy
   contracts using `PolicyCheck.run_runtime_action(...)`
@@ -194,22 +200,31 @@ Shared gate hook targeting:
 - fail with explicit retry instructions when hooks mutate files or tests are
   stale for the current tree (`devcovenant test`, then
   `devcovenant gate --end`)
-- record session closure only after successful checks
+- record session closure only after successful checks, with the end snapshot
+  stored in `devcovenant/registry/runtime/session_snapshot.json`
 
 Install/upgrade boundary:
 - `install` is a cold bootstrap command and does not preserve existing
   repo-local `devcovenant/` runtime state
 - `install` exits and points to `upgrade` when DevCovenant is already present
+- source-checkout `install` copies tracked package skeletons only; it skips
+  source runtime logs, source runtime registry files, and tracked
+  `registry.yaml` output before seeding a fresh tracked registry in the
+  target repo
 - `clean` resolves active-profile `clean_overlays` plus repo
   `clean.overlays`/`clean.overrides`, requires an explicit `--all`,
-  `--build`, or `--cache` scope, writes cleanup details into
-  `summary.txt`/`summary.json`, and preserves hard-protected `.git`,
-  `.venv`, `devcovenant/logs/`, and `devcovenant/registry/local/`
-- `upgrade` preserves runtime-local `devcovenant/registry/local/` and
+  `--build`, `--cache`, `--registry`, or `--logs` scope, writes cleanup
+  details into `summary.txt`/`summary.json`, and keeps tracked files such as
+  `.git`, `.venv`, `devcovenant/registry/registry.yaml`,
+  `devcovenant/registry/README.md`, and `devcovenant/logs/README.md`
+- `upgrade` preserves runtime-local `devcovenant/registry/runtime/` and
   `devcovenant/logs/`, plus repository `devcovenant/config.yaml`, during
   core replacement before running refresh
+- `refresh` and `upgrade` recreate missing tracked
+  `devcovenant/registry/registry.yaml` explicitly, but they do not fabricate
+  runtime registry session files when those are absent
 - refresh writes final per-policy metadata snapshots to
-  `policy_registry.yaml` and now also records per-key
+  `devcovenant/registry/registry.yaml` and now also records per-key
   `metadata_resolution` trace plus `metadata_warnings` for destructive
   override replacement, so workflow debugging can start from registry
   evidence instead of ad-hoc guesswork
@@ -304,9 +319,12 @@ Output behavior:
 - read-only `check` remains usable before the first gate session:
   when gate status is missing and no session-scoped changes are present,
   session-only checks stay non-blocking
-- gate session lifecycle evidence is stored in
-  `devcovenant/registry/local/gate_status.json`, while command-run evidence is
-  stored in `devcovenant/logs/<run-id>-<command>/`
+- gate session lifecycle evidence is stored in the concise ledger
+  `devcovenant/registry/runtime/gate_status.json`
+- heavy session baseline/snapshot evidence is stored in
+  `devcovenant/registry/runtime/session_snapshot.json`
+- command-run evidence is stored in
+  `devcovenant/logs/<run-id>-<command>/`
 - gate-managed autofix requests honor `engine.auto_fix_enabled` from
   `devcovenant/config.yaml` (disabled globally by default)
 - runtime subprocess helpers for explicit `test` runs and gate-managed
@@ -413,7 +431,10 @@ Managed-environment scope split:
 
 ## Session State Model
 Session metadata is persisted in:
-`devcovenant/registry/local/gate_status.json`.
+- `devcovenant/registry/runtime/gate_status.json` for concise lifecycle
+  state and companion-pointer metadata
+- `devcovenant/registry/runtime/session_snapshot.json` for bulky baseline,
+  snapshot, and test-event payloads
 
 Conceptual state machine:
 1. `closed` (or absent) -> run `gate --start` -> `open`
@@ -464,13 +485,20 @@ This behavior protects changelog/session checks from hidden drift.
 
 Session baseline keys:
 - `session_start_snapshot`:
-  normal session baseline snapshot
+  normal session baseline snapshot in `session_snapshot.json`
 - `session_baseline_snapshot`:
-  optional recovery baseline snapshot that includes unsessioned edits
+  optional recovery baseline snapshot in `session_snapshot.json` that
+  includes unsessioned edits
 - `session_end_snapshot`:
-  closed-session snapshot used for unsessioned-edit detection
+  closed-session snapshot in `session_snapshot.json` used for
+  unsessioned-edit detection
 - `last_run_snapshot`:
-  explicit test snapshot used for end-gate freshness checks
+  explicit test snapshot in `session_snapshot.json` used for end-gate
+  freshness checks
+- `document_exemption_baseline`:
+  changelog-exemption baseline in `session_snapshot.json`
+- `session_snapshot_file`:
+  repo-relative companion pointer recorded in `gate_status.json`
 - older gate snapshot row formats are not migration-bridged; if they are
   encountered, DevCovenant fails explicitly and requires a fresh
   `devcovenant gate --start`
@@ -481,8 +509,8 @@ Policy scope contract:
 - session delta is computed from runtime snapshot helpers, not ad-hoc git
   commands
 - deleted-file coverage is scoped to the active session via the
-  `session_start_snapshot` gate-start baseline, so older staged deletions do
-  not leak into new slices
+  `session_start_snapshot` gate-start baseline in `session_snapshot.json`,
+  so older staged deletions do not leak into new slices
 - normal `gate --start` validates an empty session delta and does not import
   HEAD-wide deleted paths from prior slices
 - runtime snapshot/session helper ownership now lives in

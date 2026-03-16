@@ -5,10 +5,8 @@ Registry for tracking policy hashes and sync status.
 from __future__ import annotations
 
 import hashlib
-import json
 import re
 from dataclasses import dataclass
-from datetime import datetime, timezone
 from pathlib import Path
 from typing import TYPE_CHECKING, Any, Dict, Iterable, List, Optional, Tuple
 
@@ -18,13 +16,13 @@ if TYPE_CHECKING:
     from devcovenant.core.services.policy_parse import PolicyDefinition
 
 DEV_COVENANT_DIR = "devcovenant"
-GLOBAL_REGISTRY_DIR = f"{DEV_COVENANT_DIR}/registry/global"
-LOCAL_REGISTRY_DIR = f"{DEV_COVENANT_DIR}/registry/local"
-POLICY_REGISTRY_FILENAME = "policy_registry.yaml"
-PROFILE_REGISTRY_FILENAME = "profile_registry.yaml"
+REGISTRY_DIR = f"{DEV_COVENANT_DIR}/registry"
+RUNTIME_REGISTRY_DIR = f"{REGISTRY_DIR}/runtime"
+REGISTRY_FILENAME = "registry.yaml"
 GATE_STATUS_FILENAME = "gate_status.json"
-MANIFEST_FILENAME = "manifest.json"
-MANIFEST_REL_PATH = f"{LOCAL_REGISTRY_DIR}/{MANIFEST_FILENAME}"
+LATEST_RUNTIME_FILENAME = "latest.json"
+SESSION_SNAPSHOT_FILENAME = "session_snapshot.json"
+REGISTRY_REL_PATH = f"{REGISTRY_DIR}/{REGISTRY_FILENAME}"
 POLICY_BLOCK_RE = re.compile(
     r"(##\s+Policy:\s+[^\n]+\n\n)```policy-def\n(.*?)\n```\n\n"
     r"(.*?)(?=\n---\n|\n##|\Z)",
@@ -37,29 +35,39 @@ def _registry_root(repo_root: Path, rel_dir: str) -> Path:
     return repo_root / rel_dir
 
 
-def global_registry_root(repo_root: Path) -> Path:
-    """Return the path to the global registry directory."""
-    return _registry_root(repo_root, GLOBAL_REGISTRY_DIR)
+def registry_root(repo_root: Path) -> Path:
+    """Return the path to the tracked registry root directory."""
+    return _registry_root(repo_root, REGISTRY_DIR)
 
 
-def local_registry_root(repo_root: Path) -> Path:
-    """Return the path to the local registry directory."""
-    return _registry_root(repo_root, LOCAL_REGISTRY_DIR)
+def runtime_registry_root(repo_root: Path) -> Path:
+    """Return the path to the runtime registry directory."""
+    return _registry_root(repo_root, RUNTIME_REGISTRY_DIR)
 
 
 def policy_registry_path(repo_root: Path) -> Path:
-    """Return the policy registry path inside the local registry."""
-    return local_registry_root(repo_root) / POLICY_REGISTRY_FILENAME
+    """Return the tracked registry document path."""
+    return registry_root(repo_root) / REGISTRY_FILENAME
 
 
 def profile_registry_path(repo_root: Path) -> Path:
-    """Return the profile registry path inside the local registry."""
-    return local_registry_root(repo_root) / PROFILE_REGISTRY_FILENAME
+    """Return the tracked registry document path for profile data."""
+    return policy_registry_path(repo_root)
+
+
+def latest_runtime_path(repo_root: Path) -> Path:
+    """Return the runtime latest-run pointer path."""
+    return runtime_registry_root(repo_root) / LATEST_RUNTIME_FILENAME
+
+
+def session_snapshot_path(repo_root: Path) -> Path:
+    """Return the runtime session snapshot companion path."""
+    return runtime_registry_root(repo_root) / SESSION_SNAPSHOT_FILENAME
 
 
 def gate_status_path(repo_root: Path) -> Path:
-    """Return the gate status file path inside the local registry."""
-    return local_registry_root(repo_root) / GATE_STATUS_FILENAME
+    """Return the gate status file path inside the runtime registry."""
+    return runtime_registry_root(repo_root) / GATE_STATUS_FILENAME
 
 
 @dataclass(frozen=True)
@@ -193,7 +201,7 @@ DEFAULT_CORE_DIRS = [
     "devcovenant/builtin/profiles/global/assets",
     "devcovenant/core",
     "devcovenant/logs",
-    GLOBAL_REGISTRY_DIR,
+    REGISTRY_DIR,
 ]
 DEFAULT_CORE_FILES = [
     "devcovenant/__init__.py",
@@ -213,6 +221,8 @@ DEFAULT_CORE_FILES = [
     "devcovenant/README.md",
     "devcovenant/VERSION",
     "devcovenant/logs/README.md",
+    f"{REGISTRY_DIR}/README.md",
+    REGISTRY_REL_PATH,
     "devcovenant/builtin/profiles/global/assets/governance-and-test.yml",
     "devcovenant/builtin/profiles/global/assets/gitignore.yaml",
     "devcovenant/builtin/profiles/README.md",
@@ -239,22 +249,71 @@ DEFAULT_CUSTOM_FILES = [
     "devcovenant/custom/policies/README.md",
 ]
 DEFAULT_GENERATED_FILES = [
-    f"{LOCAL_REGISTRY_DIR}/{POLICY_REGISTRY_FILENAME}",
-    f"{LOCAL_REGISTRY_DIR}/{GATE_STATUS_FILENAME}",
-    f"{LOCAL_REGISTRY_DIR}/{MANIFEST_FILENAME}",
-    f"{LOCAL_REGISTRY_DIR}/{PROFILE_REGISTRY_FILENAME}",
+    f"{RUNTIME_REGISTRY_DIR}/{GATE_STATUS_FILENAME}",
+    f"{RUNTIME_REGISTRY_DIR}/{LATEST_RUNTIME_FILENAME}",
 ]
-DEFAULT_GENERATED_DIRS: List[str] = [LOCAL_REGISTRY_DIR]
-
-
-def _utc_now() -> str:
-    """Return the current UTC timestamp as an ISO string."""
-    return datetime.now(timezone.utc).isoformat()
+DEFAULT_GENERATED_DIRS: List[str] = [RUNTIME_REGISTRY_DIR]
 
 
 def manifest_path(repo_root: Path) -> Path:
-    """Return the manifest path for a repo."""
-    return repo_root / MANIFEST_REL_PATH
+    """Return the tracked registry document path used for inventory data."""
+    return policy_registry_path(repo_root)
+
+
+def _base_registry_document() -> Dict[str, Any]:
+    """Return the canonical top-level registry document skeleton."""
+    return {
+        "metadata": {
+            "schema_version": 1,
+            "registry_layout": "single-root",
+        },
+        "policies": {},
+        "profiles": {},
+        "inventory": {},
+    }
+
+
+def _load_registry_document(path: Path) -> Dict[str, Any]:
+    """Load one registry YAML mapping or return the base skeleton."""
+    if not path.exists():
+        return _base_registry_document()
+    try:
+        payload = yaml.safe_load(path.read_text(encoding="utf-8"))
+    except yaml.YAMLError as exc:
+        raise ValueError(
+            f"Invalid YAML in registry file {path}: {exc}"
+        ) from exc
+    except OSError as exc:
+        raise ValueError(
+            f"Unable to read registry file {path}: {exc}"
+        ) from exc
+    if payload is None:
+        return _base_registry_document()
+    if not isinstance(payload, dict):
+        raise ValueError("Registry payload must be a YAML mapping: " f"{path}")
+    normalized = _base_registry_document()
+    for key in ("metadata", "policies", "profiles", "inventory"):
+        value = payload.get(key)
+        if isinstance(value, dict):
+            normalized[key] = value
+    return normalized
+
+
+def _write_registry_document(path: Path, payload: Dict[str, Any]) -> Path:
+    """Persist one normalized registry mapping deterministically."""
+    path.parent.mkdir(parents=True, exist_ok=True)
+    rendered = yaml.dump(
+        payload,
+        Dumper=_RegistryYamlDumper,
+        sort_keys=False,
+        allow_unicode=False,
+    )
+    if path.exists():
+        existing = path.read_text(encoding="utf-8")
+        if existing == rendered:
+            return path
+    path.write_text(rendered, encoding="utf-8")
+    return path
 
 
 def build_manifest(
@@ -263,10 +322,9 @@ def build_manifest(
     installed: Dict[str, Any] | None = None,
     doc_blocks: List[str] | None = None,
 ) -> Dict[str, Any]:
-    """Build a default manifest payload."""
+    """Build a deterministic inventory payload for the tracked registry."""
     manifest: Dict[str, Any] = {
-        "schema_version": 2,
-        "updated_at": _utc_now(),
+        "schema_version": 3,
         "core": {
             "dirs": list(DEFAULT_CORE_DIRS),
             "files": list(DEFAULT_CORE_FILES),
@@ -286,55 +344,40 @@ def build_manifest(
         },
         "profiles": {
             "active": [],
-            "registry": [],
+            "resolved_pre_commit_hooks": [],
         },
     }
     if options is not None:
         manifest["options"] = options
     if installed is not None:
         manifest["installed"] = installed
-    if "notifications" not in manifest:
-        manifest["notifications"] = []
     if doc_blocks is not None:
         manifest["doc_blocks"] = doc_blocks
     return manifest
 
 
 def load_manifest(repo_root: Path) -> Dict[str, Any] | None:
-    """Load the manifest if present, otherwise return None."""
+    """Load the tracked inventory section if present, otherwise return None."""
     path = manifest_path(repo_root)
-    if path.exists():
-        return json.loads(path.read_text(encoding="utf-8"))
-    return None
+    payload = _load_registry_document(path)
+    inventory = payload.get("inventory", {})
+    return (
+        dict(inventory) if isinstance(inventory, dict) and inventory else None
+    )
 
 
 def write_manifest(repo_root: Path, manifest: Dict[str, Any]) -> Path:
-    """Write the manifest to disk and return its path."""
+    """Write inventory data into the tracked registry document."""
     path = manifest_path(repo_root)
-    path.parent.mkdir(parents=True, exist_ok=True)
-    path.write_text(
-        json.dumps(manifest, indent=2, sort_keys=True) + "\n",
-        encoding="utf-8",
-    )
-    return path
-
-
-def append_notifications(repo_root: Path, messages: Iterable[str]) -> None:
-    """Append notification messages to the manifest."""
-    manifest = ensure_manifest(repo_root)
-    if not manifest:
-        return
-    notifications = manifest.setdefault("notifications", [])
-    timestamp = datetime.now(timezone.utc).isoformat()
-    for message in messages:
-        notifications.append({"timestamp": timestamp, "message": message})
-    write_manifest(repo_root, manifest)
+    payload = _load_registry_document(path)
+    payload["inventory"] = dict(manifest)
+    return _write_registry_document(path, payload)
 
 
 def _normalize_manifest_sections(
     manifest: Dict[str, Any],
 ) -> tuple[Dict[str, Any], bool]:
-    """Normalize manifest sections to the current default inventories."""
+    """Normalize inventory sections to the current default inventories."""
     normalized = dict(manifest)
     changed = False
     defaults_manifest = build_manifest()
@@ -362,13 +405,14 @@ def _normalize_manifest_sections(
 
 
 def ensure_manifest(repo_root: Path) -> Dict[str, Any] | None:
-    """Create the manifest when missing and DevCovenant is installed."""
+    """Create the tracked inventory section when missing."""
     path = manifest_path(repo_root)
     if path.exists():
-        payload = json.loads(path.read_text(encoding="utf-8"))
+        payload = load_manifest(repo_root)
+        if payload is None:
+            payload = build_manifest()
         normalized, changed = _normalize_manifest_sections(payload)
         if changed:
-            normalized["updated_at"] = _utc_now()
             write_manifest(repo_root, normalized)
         return normalized
     if not (repo_root / DEV_COVENANT_DIR).exists():
@@ -430,7 +474,7 @@ class PolicyRegistry:
         Initialize the registry.
 
         Args:
-            registry_path: Path to policy_registry.yaml
+            registry_path: Path to the tracked registry.yaml document
             repo_root: Root directory of the repository
         """
         self.registry_path = registry_path
@@ -440,32 +484,7 @@ class PolicyRegistry:
 
     def load(self):
         """Load the registry from disk."""
-        if self.registry_path.exists():
-            try:
-                with open(self.registry_path, "r", encoding="utf-8") as f:
-                    payload = yaml.safe_load(f)
-            except yaml.YAMLError as exc:
-                raise ValueError(
-                    f"Invalid YAML in registry file {self.registry_path}: "
-                    f"{exc}"
-                ) from exc
-            except OSError as exc:
-                raise ValueError(
-                    f"Unable to read registry file {self.registry_path}: "
-                    f"{exc}"
-                ) from exc
-            if not isinstance(payload, dict):
-                raise ValueError(
-                    "Policy registry payload must be a YAML mapping: "
-                    f"{self.registry_path}"
-                )
-            self._data = payload
-        else:
-            self._data = {}
-        if "policies" not in self._data:
-            self._data["policies"] = {}
-        if "metadata" not in self._data:
-            self._data["metadata"] = {"version": "1.0.0"}
+        self._data = _load_registry_document(self.registry_path)
 
     def _normalize_registry_hashes(self) -> None:
         """Normalize stored hashes to string form."""
@@ -479,18 +498,7 @@ class PolicyRegistry:
     def save(self):
         """Save the registry to disk."""
         self._normalize_registry_hashes()
-        self.registry_path.parent.mkdir(parents=True, exist_ok=True)
-        payload = yaml.dump(
-            self._data,
-            Dumper=_RegistryYamlDumper,
-            sort_keys=False,
-            allow_unicode=False,
-        )
-        if self.registry_path.exists():
-            existing = self.registry_path.read_text(encoding="utf-8")
-            if existing == payload:
-                return
-        self.registry_path.write_text(payload, encoding="utf-8")
+        _write_registry_document(self.registry_path, self._data)
 
     def policy_ids(self) -> set[str]:
         """Return policy IDs currently stored in the registry."""
@@ -683,9 +691,7 @@ class PolicyRegistry:
             script_location: Located script info (or None).
         """
         entry = self._data["policies"].setdefault(policy.policy_id, {})
-        previous_entry = dict(entry)
         previous_hash = entry.get("hash")
-        previous_last_updated = entry.get("last_updated")
         entry.clear()
         entry["enabled"] = policy.enabled
         entry["custom"] = policy.custom
@@ -721,18 +727,6 @@ class PolicyRegistry:
         else:
             entry["hash"] = previous_hash
             entry["script_path"] = None
-
-        previous_compare = dict(previous_entry)
-        previous_compare.pop("last_updated", None)
-        current_compare = dict(entry)
-        current_compare.pop("last_updated", None)
-        if (
-            current_compare != previous_compare
-            or previous_last_updated is None
-        ):
-            entry["last_updated"] = datetime.now(timezone.utc).isoformat()
-        else:
-            entry["last_updated"] = previous_last_updated
 
         self.save()
 

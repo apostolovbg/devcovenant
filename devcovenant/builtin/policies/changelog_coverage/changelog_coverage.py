@@ -129,7 +129,7 @@ def _first_entry(section: str) -> tuple[str | None, str]:
 
 _DATE_PATTERN = re.compile(r"^\s*-\s*(\d{4}-\d{2}-\d{2})\b")
 _DEFAULT_GATE_STATUS_PATH = (
-    Path("devcovenant") / "registry" / "local" / "gate_status.json"
+    Path("devcovenant") / "registry" / "runtime" / "gate_status.json"
 )
 _ALLOWLIST_DOC_SUFFIXES = set(DEFAULT_HEADER_DOC_SUFFIXES)
 _ALLOWLIST_HEADER_KEYS = set(DEFAULT_HEADER_KEYS)
@@ -248,7 +248,7 @@ def _normalize_paths(raw_value: object, default: list[str]) -> list[str]:
 
 def _session_deleted_paths(
     *,
-    gate_status: dict[str, object],
+    session_snapshot: dict[str, object],
     current_snapshot_paths: set[str],
 ) -> set[str]:
     """
@@ -257,7 +257,7 @@ def _session_deleted_paths(
     Deleted-file coverage is derived from the session snapshot baseline and
     never from git working-tree/HEAD diff state.
     """
-    raw_snapshot = gate_status.get("session_start_snapshot")
+    raw_snapshot = session_snapshot.get("session_start_snapshot")
     if not isinstance(raw_snapshot, dict):
         return set()
     start_paths: set[str] = set()
@@ -272,7 +272,7 @@ def _deleted_paths_for_changelog_coverage(
     context: CheckContext,
     *,
     phase: str,
-    gate_status: dict[str, object],
+    session_snapshot: dict[str, object],
 ) -> set[str]:
     """
     Return deleted paths relevant to the current coverage scope.
@@ -290,7 +290,7 @@ def _deleted_paths_for_changelog_coverage(
         for path in context.change_state.current_snapshot_numstat.keys()
     }
     return _session_deleted_paths(
-        gate_status=gate_status,
+        session_snapshot=session_snapshot,
         current_snapshot_paths=current_snapshot_paths,
     )
 
@@ -353,16 +353,16 @@ def _normalize_header_scan_lines(raw_value: object) -> int:
 
 
 def _load_document_exemption_baseline(
-    gate_status: dict[str, object],
+    session_snapshot: dict[str, object],
 ) -> dict[str, dict[str, str]]:
     """Return optional validated document allowlist baseline mapping."""
     snapshot_key = "document_exemption_baseline"
-    if snapshot_key not in gate_status:
+    if snapshot_key not in session_snapshot:
         return {}
-    raw_snapshot = gate_status[snapshot_key]
+    raw_snapshot = session_snapshot[snapshot_key]
     if not isinstance(raw_snapshot, dict):
         raise ValueError(
-            "Invalid gate status payload: "
+            "Invalid session snapshot payload: "
             "`document_exemption_baseline` must be a mapping."
         )
     snapshot: dict[str, dict[str, str]] = {}
@@ -370,7 +370,7 @@ def _load_document_exemption_baseline(
         path = str(raw_path).strip()
         if not path:
             raise ValueError(
-                "Invalid gate status payload: "
+                "Invalid session snapshot payload: "
                 "`document_exemption_baseline` contains empty "
                 "paths."
             )
@@ -640,11 +640,15 @@ class ChangelogCoverageCheck(PolicyCheck):
             return violations
 
         gate_status: dict[str, object] = {}
+        session_snapshot: dict[str, object] = {}
         start_exemption_fingerprints: dict[str, dict[str, str]] = {}
         if phase != "start":
             default_status_rel = Path(context.change_state.gate_status_path)
             if gate_status_rel == default_status_rel:
                 gate_status = dict(context.change_state.gate_status_payload)
+                session_snapshot = dict(
+                    context.change_state.session_snapshot_payload
+                )
             if not gate_status:
                 try:
                     gate_status = _load_gate_status(
@@ -661,9 +665,29 @@ class ChangelogCoverageCheck(PolicyCheck):
                         )
                     )
                     return violations
+            if not session_snapshot:
+                try:
+                    session_snapshot = (
+                        execution_runtime_module.load_session_snapshot_payload(
+                            context.repo_root,
+                            gate_status,
+                            require=True,
+                        )
+                    )
+                except ValueError as error:
+                    violations.append(
+                        Violation(
+                            policy_id=self.policy_id,
+                            severity="error",
+                            file_path=context.repo_root / gate_status_rel,
+                            message=str(error),
+                            can_auto_fix=False,
+                        )
+                    )
+                    return violations
             try:
                 start_exemption_fingerprints = (
-                    _load_document_exemption_baseline(gate_status)
+                    _load_document_exemption_baseline(session_snapshot)
                 )
             except ValueError as error:
                 violations.append(
@@ -681,7 +705,7 @@ class ChangelogCoverageCheck(PolicyCheck):
             deleted_file_set = _deleted_paths_for_changelog_coverage(
                 context,
                 phase=phase,
-                gate_status=gate_status,
+                session_snapshot=session_snapshot,
             )
         except ValueError as error:
             violations.append(

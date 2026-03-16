@@ -50,7 +50,9 @@ def _make_ctx(
 
 def _status_path(tmp_path: Path) -> Path:
     """Return default gate status path for tests."""
-    return tmp_path / "devcovenant" / "registry" / "local" / "gate_status.json"
+    return (
+        tmp_path / "devcovenant" / "registry" / "runtime" / "gate_status.json"
+    )
 
 
 def _write_status(tmp_path: Path, payload: dict) -> None:

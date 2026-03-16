@@ -23,7 +23,7 @@ from devcovenant.core.services.registry import (
 )
 
 _DEFAULT_STATUS_PATH = (
-    Path("devcovenant") / "registry" / "local" / "gate_status.json"
+    Path("devcovenant") / "registry" / "runtime" / "gate_status.json"
 )
 
 
@@ -277,7 +277,7 @@ class DevcovIntegrityGuardCheck(PolicyCheck):
         registry_relative = Path(
             self.get_option(
                 "registry_file",
-                "devcovenant/registry/local/policy_registry.yaml",
+                "devcovenant/registry/registry.yaml",
             )
         )
         status_relative = Path(

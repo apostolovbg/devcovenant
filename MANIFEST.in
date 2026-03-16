@@ -9,9 +9,10 @@ include devcovenant/VERSION
 recursive-exclude devcovenant/logs *
 include devcovenant/logs/README.md
 recursive-include devcovenant/docs *
-recursive-include devcovenant/registry/global *
+include devcovenant/registry/README.md
 exclude devcovenant/config.yaml
-exclude devcovenant/registry/local/*
+exclude devcovenant/registry/registry.yaml
+exclude devcovenant/registry/runtime/*
 recursive-include devcovenant/builtin/profiles *
 recursive-include devcovenant/builtin/policies *
 recursive-exclude devcovenant/core/policies *
@@ -23,7 +24,7 @@ include devcovenant/custom/policies/__init__.py
 include devcovenant/custom/policies/README.md
 include devcovenant/custom/profiles/__init__.py
 include devcovenant/custom/profiles/README.md
-recursive-exclude devcovenant/registry/local *
+recursive-exclude devcovenant/registry/runtime *
 recursive-exclude tests *
 prune build
 prune dist

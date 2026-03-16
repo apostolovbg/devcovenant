@@ -12,8 +12,8 @@ from devcovenant import undeploy
 from tests.devcovenant import repo_seed_cache
 
 
-def _unit_test_undeploy_removes_registry_local_and_managed_blocks() -> None:
-    """undeploy_repo should remove local registry and managed doc blocks."""
+def _unit_test_undeploy_removes_registry_state_and_managed_blocks() -> None:
+    """undeploy_repo should remove registry state and managed doc blocks."""
     with tempfile.TemporaryDirectory() as temp_dir:
         repo_root = Path(temp_dir)
         repo_seed_cache.copy_refreshed_repo(repo_root)
@@ -27,8 +27,12 @@ def _unit_test_undeploy_removes_registry_local_and_managed_blocks() -> None:
         result = undeploy.undeploy_repo(repo_root)
         assert result == 0
 
-        registry_local = repo_root / "devcovenant" / "registry" / "local"
-        assert not registry_local.exists()
+        runtime_registry = repo_root / "devcovenant" / "registry" / "runtime"
+        tracked_registry = (
+            repo_root / "devcovenant" / "registry" / "registry.yaml"
+        )
+        assert not runtime_registry.exists()
+        assert not tracked_registry.exists()
 
         updated_agents = agents.read_text(encoding="utf-8")
         assert "<!-- DEVCOV:BEGIN -->" not in updated_agents
@@ -136,9 +140,9 @@ def _unit_test_undeploy_main_exits_with_run_code() -> None:
 class GeneratedUnittestCases(unittest.TestCase):
     """unittest wrappers for module-level tests."""
 
-    def test_undeploy_removes_registry_local_and_managed_blocks(self):
-        """Run test_undeploy_removes_registry_local_and_managed_blocks."""
-        _unit_test_undeploy_removes_registry_local_and_managed_blocks()
+    def test_undeploy_removes_registry_state_and_managed_blocks(self):
+        """Run test_undeploy_removes_registry_state_and_managed_blocks."""
+        _unit_test_undeploy_removes_registry_state_and_managed_blocks()
 
     def test_undeploy_removes_generated_gitignore_fragments(self):
         """Run test_undeploy_removes_generated_gitignore_fragments."""

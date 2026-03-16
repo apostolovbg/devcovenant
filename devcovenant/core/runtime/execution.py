@@ -1185,6 +1185,15 @@ document_exemption_fingerprint_for_path = (
 capture_document_exemption_baseline = (
     session_snapshot_runtime_module.capture_document_exemption_baseline
 )
+load_session_snapshot_payload = (
+    session_snapshot_runtime_module.load_session_snapshot_payload
+)
+merge_session_snapshot_payload = (
+    session_snapshot_runtime_module.merge_session_snapshot_payload
+)
+prune_inline_session_snapshot_fields = (
+    session_snapshot_runtime_module.prune_inline_session_snapshot_fields
+)
 
 
 def read_local_version(repo_root: Path) -> str | None:
@@ -1216,7 +1225,7 @@ def warn_version_mismatch(repo_root: Path) -> None:
 
 def run_bootstrap_registry_refresh(repo_root: Path) -> None:
     """Run lightweight registry refresh for command startup."""
-    print_step("Refreshing local registry", "🔄")
+    print_step("Refreshing tracked registry", "🔄")
     from devcovenant.core.flow.refresh import refresh_policy_registry
 
     refresh_exit = refresh_policy_registry(repo_root)
@@ -1443,7 +1452,7 @@ def record_gate_status(
     tests_output_mode: str | None = None,
     tests_required_commands_key: str | None = None,
 ) -> None:
-    """Record gate status payload under registry/local/gate_status.json."""
+    """Record gate status payload under registry/runtime/gate_status.json."""
     status_path = registry_runtime_module.gate_status_path(repo_root)
     status_path.parent.mkdir(parents=True, exist_ok=True)
 
@@ -1459,24 +1468,34 @@ def record_gate_status(
     now = _dt.datetime.now(tz=_dt.timezone.utc)
     run_snapshot = capture_current_numstat_snapshot(repo_root)
     active_session_id = str(existing.get("session_id", "")).strip()
+    normalized_events = [dict(entry) for entry in test_events or ()]
+    snapshot_rel_path, _ = merge_session_snapshot_payload(
+        repo_root,
+        existing,
+        updates={"last_run_snapshot": run_snapshot}
+        | ({"test_events": normalized_events} if normalized_events else {}),
+        remove_keys=() if normalized_events else ("test_events",),
+    )
     payload = {
         **existing,
         "last_run": now.isoformat(),
         "last_run_utc": now.isoformat(),
         "last_run_epoch": now.timestamp(),
-        "last_run_snapshot": run_snapshot,
         "command": command.strip(),
         "commands": _parse_commands(command),
         "notes": notes.strip(),
+        "session_snapshot_file": snapshot_rel_path,
+        "session_snapshot_updated_utc": now.isoformat(),
+        "session_snapshot_updated_epoch": now.timestamp(),
     }
     if active_session_id:
         payload["last_run_session_id"] = active_session_id
     else:
         payload.pop("last_run_session_id", None)
-    if test_events:
-        payload["test_events"] = [dict(entry) for entry in test_events]
+    if normalized_events:
+        payload["test_events_count"] = len(normalized_events)
     else:
-        payload.pop("test_events", None)
+        payload.pop("test_events_count", None)
     if tests_output_mode:
         payload["tests_output_mode"] = _normalize_output_mode(
             tests_output_mode
@@ -1495,6 +1514,7 @@ def record_gate_status(
     payload.pop("changelog_start_exemption_fingerprints", None)
     payload.pop("cache_enabled", None)
     payload.pop("cache_control_env", None)
+    prune_inline_session_snapshot_fields(payload)
     status_path.write_text(
         json.dumps(payload, indent=2) + "\n",
         encoding="utf-8",

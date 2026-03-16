@@ -71,7 +71,8 @@ This split keeps debugging straightforward:
 3. Policy parser loads AGENTS `policy-def` payloads.
 4. Policy engine resolves metadata + file scope and executes checks.
 5. Gate/test flows run required commands and write run artifacts.
-6. Session evidence is stored in `devcovenant/registry/local/gate_status.json`.
+6. Session evidence is stored in
+   `devcovenant/registry/runtime/gate_status.json`.
 
 ## Contract Boundaries
 Tier-A user contracts live outside this directory and include:

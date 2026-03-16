@@ -2,13 +2,14 @@
 
 from __future__ import annotations
 
-from datetime import datetime, timezone
 from pathlib import Path
 from typing import Dict, List
 
 import yaml
 
-REGISTRY_PROFILE = Path("devcovenant/registry/local/profile_registry.yaml")
+import devcovenant.core.services.registry as registry_runtime
+
+REGISTRY_PROFILE = Path("devcovenant/registry/registry.yaml")
 BUILTIN_PROFILE_ROOT = Path("devcovenant/builtin/profiles")
 CUSTOM_PROFILE_ROOT = Path("devcovenant/custom/profiles")
 LANGUAGE_CATEGORY = "language"
@@ -17,14 +18,13 @@ _CLEAN_OVERLAY_KEYS = (
     "build_globs",
     "cache_dirs",
     "cache_globs",
+    "runtime_registry_dirs",
+    "runtime_registry_globs",
+    "logs_dirs",
+    "logs_globs",
     "protected_dirs",
     "protected_globs",
 )
-
-
-def _utc_now() -> str:
-    """Return the current UTC timestamp."""
-    return datetime.now(timezone.utc).isoformat()
 
 
 def _load_yaml(path: Path) -> dict[str, object]:
@@ -535,15 +535,16 @@ def build_profile_registry(
     active = {name for name in _active_profile_names(active_profiles or [])}
     for name, meta in registry.items():
         meta["active"] = name in active
-    return {"generated_at": _utc_now(), "profiles": registry}
+    return {"profiles": registry}
 
 
 def write_profile_registry(repo_root: Path, registry: Dict[str, Dict]) -> Path:
-    """Write the profile registry into the registry folder."""
+    """Write the profile registry into the tracked registry document."""
     path = repo_root / REGISTRY_PROFILE
-    path.parent.mkdir(parents=True, exist_ok=True)
-    payload = yaml.safe_dump(registry, sort_keys=True, allow_unicode=False)
-    path.write_text(payload, encoding="utf-8")
+    payload = registry_runtime._load_registry_document(path)
+    profiles = registry.get("profiles")
+    payload["profiles"] = dict(profiles) if isinstance(profiles, dict) else {}
+    registry_runtime._write_registry_document(path, payload)
     return path
 
 
@@ -571,9 +572,11 @@ def load_profile_registry(repo_root: Path) -> Dict[str, Dict]:
     """Load the merged profile registry from registry or profile roots."""
     registry_path = repo_root / REGISTRY_PROFILE
     if registry_path.exists():
-        registry_data = _load_yaml(registry_path)
+        registry_data = registry_runtime._load_registry_document(registry_path)
         if isinstance(registry_data, dict) and registry_data:
-            return _normalize_registry(registry_data)
+            normalized = _normalize_registry(registry_data)
+            if normalized:
+                return normalized
     return discover_profiles(repo_root)
 
 

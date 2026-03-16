@@ -69,7 +69,13 @@ def _unit_test_clean_run_honors_all_cleanup_scope() -> None:
                 return_value=repo_root,
             ):
                 result = clean.run(
-                    SimpleNamespace(all=True, build=False, cache=False)
+                    SimpleNamespace(
+                        all=True,
+                        build=False,
+                        cache=False,
+                        registry=False,
+                        logs=False,
+                    )
                 )
 
         assert result == 0
@@ -77,7 +83,7 @@ def _unit_test_clean_run_honors_all_cleanup_scope() -> None:
         assert not (repo_root / "pkg" / "__pycache__").exists()
         rendered = output.getvalue()
         assert "Command: clean" in rendered
-        assert "Cleanup scope: build, cache" in rendered
+        assert "Cleanup scope: build, cache, registry, logs" in rendered
 
 
 def _unit_test_clean_run_can_limit_to_build_only() -> None:
@@ -93,12 +99,48 @@ def _unit_test_clean_run_can_limit_to_build_only() -> None:
             return_value=repo_root,
         ):
             result = clean.run(
-                SimpleNamespace(all=False, build=True, cache=False)
+                SimpleNamespace(
+                    all=False,
+                    build=True,
+                    cache=False,
+                    registry=False,
+                    logs=False,
+                )
             )
 
         assert result == 0
         assert not (repo_root / "dist").exists()
         assert (repo_root / ".coverage").exists()
+
+
+def _unit_test_clean_run_can_limit_to_logs_only() -> None:
+    """`clean.run()` should honor logs-only selection."""
+    with tempfile.TemporaryDirectory() as temp_dir:
+        repo_root = Path(temp_dir)
+        repo_seed_cache.copy_installed_repo(repo_root)
+        logs_root = repo_root / "devcovenant" / "logs"
+        logs_root.mkdir(parents=True, exist_ok=True)
+        (logs_root / "README.md").write_text("tracked\n", encoding="utf-8")
+        run_dir = logs_root / "20260315T000000000000Z-clean-test"
+        run_dir.mkdir()
+
+        with patch(
+            "devcovenant.clean.resolve_repo_root",
+            return_value=repo_root,
+        ):
+            result = clean.run(
+                SimpleNamespace(
+                    all=False,
+                    build=False,
+                    cache=False,
+                    registry=False,
+                    logs=True,
+                )
+            )
+
+        assert result == 0
+        assert not run_dir.exists()
+        assert (logs_root / "README.md").is_file()
 
 
 class GeneratedUnittestCases(unittest.TestCase):
@@ -127,3 +169,7 @@ class GeneratedUnittestCases(unittest.TestCase):
     def test_clean_run_can_limit_to_build_only(self):
         """Run build-only clean-scope execution coverage."""
         _unit_test_clean_run_can_limit_to_build_only()
+
+    def test_clean_run_can_limit_to_logs_only(self):
+        """Run logs-only clean-scope execution coverage."""
+        _unit_test_clean_run_can_limit_to_logs_only()

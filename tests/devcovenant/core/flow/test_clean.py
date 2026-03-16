@@ -22,6 +22,8 @@ def _unit_test_clean_flow_reports_scope_and_removed_targets() -> None:
     selection = module.cleanup_runtime.CleanSelection(
         include_build=True,
         include_cache=False,
+        include_runtime_registry=False,
+        include_logs=False,
     )
     result = module.cleanup_runtime.CleanResult(
         selection=selection,
@@ -50,6 +52,8 @@ def _unit_test_clean_flow_reports_scope_and_removed_targets() -> None:
                     include_all=False,
                     include_build=True,
                     include_cache=False,
+                    include_registry=False,
+                    include_logs=False,
                 )
 
     assert flow_result == 0

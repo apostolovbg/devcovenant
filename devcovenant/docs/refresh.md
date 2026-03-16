@@ -1,5 +1,5 @@
 # Refresh Behavior
-**Last Updated:** 2026-03-09
+**Last Updated:** 2026-03-15
 **Project Version:** 1.0.0
 
 ## Table of Contents
@@ -13,11 +13,12 @@
 - [Workflow](#workflow)
 
 ## Overview
-Full refresh is the deterministic regeneration boundary for DevCovenant
-runtime state.
+Full refresh is the deterministic regeneration boundary for DevCovenant's
+tracked registry and generated governance surfaces. It does not fabricate live
+runtime session state.
 
 Refresh aligns:
-- local registries
+- the tracked registry
 - managed policy source materialization in `AGENTS.md`
 - generated config sections
 - generated governance/tooling files
@@ -40,9 +41,10 @@ runtime artifacts before auditing.
 
 ## What Refresh Regenerates
 Primary generated outputs:
-- `devcovenant/registry/local/policy_registry.yaml`
-- `devcovenant/registry/local/profile_registry.yaml`
-- `devcovenant/registry/local/manifest.json`
+- `devcovenant/registry/registry.yaml`
+- managed policy inventory and metadata resolution trace
+- tracked profile inventory and active-profile state
+- tracked structural inventory used by integrity checks
 - managed policy block in `AGENTS.md`
 - generated sections in `devcovenant/config.yaml`
 - generated `.github/workflows/governance-and-test.yml`
@@ -113,11 +115,11 @@ After changing descriptors, profiles, templates, or metadata contracts:
 When refresh output is unexpected:
 - inspect profile activation order
 - inspect overlay versus override usage
-- inspect local registries for resolved metadata
+- inspect `devcovenant/registry/registry.yaml` for resolved metadata
 
 ## Workflow
 1. Trigger refresh from `refresh`, `deploy`, `upgrade`, or the gate workflow
    (`gate --start` / `gate --end` via gate-owned check orchestration).
-2. Inspect generated registries/config/docs/workflow outputs.
+2. Inspect the tracked registry plus generated config/docs/workflow outputs.
 3. Run tests.
 4. Run end gate and rerun until clean if hooks mutate files.

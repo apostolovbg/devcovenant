@@ -57,7 +57,7 @@ It also owns the universal ignore/gitignore baseline for editor, packaging,
 coverage, and DevCovenant runtime artifacts so repos do not need to rediscover
 common exclusions such as `.vscode/**`, `.idea/**`, `*.egg-info/**`,
 `pip-wheel-metadata/**`, `.coverage*`, `devcovenant/logs/**`, and
-`devcovenant/registry/local/**`.
+`devcovenant/registry/runtime/**`.
 
 Profiles should not embed unrelated business logic.
 
@@ -84,6 +84,8 @@ Guidelines:
   and generated `.gitignore`), not in repo-local overlays
 - put disposable build/cache defaults in profile `clean_overlays`, not in
   policy descriptors
+- let profile `clean_overlays` declare runtime-registry and log cleanup
+  targets too, so `clean --registry` and `clean --logs` stay profile-driven
 - keep generated `clean.overrides` defaults empty (`{}`) and use explicit
   per-key `[]` overrides only when you intentionally want to clear inherited
   cleanup lists for that one key
@@ -101,10 +103,14 @@ Guidelines:
 - use config overlays/overrides only for repository-specific deltas
 - treat config overrides as destructive replacement, not additive merge;
   refresh records override-replacement warnings and per-key resolution trace
-  in `policy_registry.yaml` so repos can audit why one value won
+  in `devcovenant/registry/registry.yaml` so repos can audit why one value won
 - when overlays define `documentation-growth-tracking.doc_routes`, ensure
   route-target docs are also included in `user_visible_files` and
   `doc_quality_files`
+- route tracked registry changes explicitly (for example
+  `devcovenant/registry/registry.yaml => devcovenant/docs/registry.md`) so
+  the tracked registry contract stays documented when registry structure
+  changes
 - route custom policy descriptors explicitly (for example
   `devcovenant/custom/policies/**/*.yaml => devcovenant/docs/policies.md`)
   so documentation-growth checks stay deterministic
@@ -235,6 +241,8 @@ Typical keys:
 - optional `governance_and_test` (workflow fragment overlay)
 - `policy_overlays`
 - optional `clean_overlays`
+- `clean_overlays` may contribute build, cache, runtime-registry, and log
+  cleanup selectors while leaving tracked files protected
 - `assets`
 - `pre_commit`
 - optional `translators`

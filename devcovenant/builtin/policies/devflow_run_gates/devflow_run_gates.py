@@ -14,7 +14,7 @@ from devcovenant.core.contracts.policy import (
 )
 
 _DEFAULT_STATUS = (
-    Path("devcovenant") / "registry" / "local" / "gate_status.json"
+    Path("devcovenant") / "registry" / "runtime" / "gate_status.json"
 )
 _DEFAULT_PRE_COMMIT_COMMAND = "python3 -m pre_commit run --all-files"
 _DEFAULT_PRE_COMMIT_START_KEY = "pre_commit_start_epoch"

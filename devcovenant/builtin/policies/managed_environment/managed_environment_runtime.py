@@ -10,6 +10,7 @@ from typing import Any, Mapping, Sequence
 
 import yaml
 
+import devcovenant.core.services.metadata as metadata_runtime_module
 import devcovenant.core.services.registry as registry_runtime_module
 from devcovenant.core.runtime.execution import (
     run_child_command_with_output_policy,
@@ -24,13 +25,39 @@ _GUIDANCE_TOKEN_PATTERN = re.compile(r"{([a-zA-Z0-9_]+)}")
 
 
 def _load_policy_entry(repo_root: Path) -> dict[str, Any] | None:
-    """Load managed-environment policy entry from local registry."""
+    """Load managed-environment policy entry from the tracked registry."""
     registry_path = registry_runtime_module.policy_registry_path(repo_root)
     if not registry_path.exists():
-        raise ValueError(
-            "managed-environment runtime requires local policy registry "
-            f"at {registry_path}. Run `devcovenant refresh`."
+        config_path = repo_root / "devcovenant" / "config.yaml"
+        if not config_path.exists():
+            raise ValueError(
+                "managed-environment runtime requires tracked registry "
+                f"at {registry_path}. Run `devcovenant refresh`."
+            )
+        descriptor = registry_runtime_module.load_policy_descriptor(
+            repo_root,
+            POLICY_ID,
         )
+        if descriptor is None:
+            return None
+        current_order, current_values = (
+            metadata_runtime_module.descriptor_metadata_order_values(
+                descriptor
+            )
+        )
+        context = metadata_runtime_module.build_metadata_context(repo_root)
+        bundle = metadata_runtime_module.resolve_policy_metadata_bundle(
+            POLICY_ID,
+            current_order,
+            current_values,
+            descriptor,
+            context,
+        )
+        enabled_token = bundle.string_map.get("enabled", "")
+        return {
+            "enabled": enabled_token,
+            "metadata": dict(bundle.string_map),
+        }
 
     try:
         registry_data = yaml.safe_load(

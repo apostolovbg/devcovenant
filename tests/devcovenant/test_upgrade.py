@@ -32,10 +32,10 @@ def _source_version() -> str:
     return version_path.read_text(encoding="utf-8").strip()
 
 
-def _seed_runtime_local_state(repo_root: Path) -> tuple[str, str]:
-    """Seed local registry and logs state that upgrade must preserve."""
+def _seed_runtime_local_state(repo_root: Path) -> tuple[str, str, str]:
+    """Seed runtime registry and logs state that upgrade must preserve."""
     gate_status_path = (
-        repo_root / "devcovenant" / "registry" / "local" / "gate_status.json"
+        repo_root / "devcovenant" / "registry" / "runtime" / "gate_status.json"
     )
     gate_status_path.parent.mkdir(parents=True, exist_ok=True)
     gate_status_payload = {
@@ -52,7 +52,11 @@ def _seed_runtime_local_state(repo_root: Path) -> tuple[str, str]:
     run_dir = logs_root / "20260225T000000000000Z-upgrade-test"
     run_dir.mkdir(parents=True, exist_ok=True)
     latest_payload = {"run_dir": f"devcovenant/logs/{run_dir.name}"}
-    (logs_root / "latest.json").write_text(
+    runtime_latest = (
+        repo_root / "devcovenant" / "registry" / "runtime" / "latest.json"
+    )
+    runtime_latest.parent.mkdir(parents=True, exist_ok=True)
+    runtime_latest.write_text(
         json.dumps(latest_payload, indent=2) + "\n",
         encoding="utf-8",
     )
@@ -64,6 +68,7 @@ def _seed_runtime_local_state(repo_root: Path) -> tuple[str, str]:
 
     return (
         gate_status_path.read_text(encoding="utf-8"),
+        runtime_latest.read_text(encoding="utf-8"),
         (run_dir / "summary.txt").read_text(encoding="utf-8"),
     )
 
@@ -181,24 +186,22 @@ def _unit_test_upgrade_runs_full_refresh() -> None:
         assert result == 0
 
         policy_registry = (
-            repo_root
-            / "devcovenant"
-            / "registry"
-            / "local"
-            / "policy_registry.yaml"
+            repo_root / "devcovenant" / "registry" / "registry.yaml"
         )
         assert policy_registry.exists()
 
 
 def _unit_test_upgrade_preserves_runtime_local_registry_and_logs() -> None:
-    """upgrade_repo should preserve local registry state and logs."""
+    """upgrade_repo should preserve runtime registry state and logs."""
     with tempfile.TemporaryDirectory() as temp_dir:
         repo_root = Path(temp_dir)
         repo_seed_cache.copy_installed_repo(repo_root)
 
-        expected_gate_status, expected_summary = _seed_runtime_local_state(
-            repo_root
-        )
+        (
+            expected_gate_status,
+            expected_latest,
+            expected_summary,
+        ) = _seed_runtime_local_state(repo_root)
         version_path = repo_root / "devcovenant" / "VERSION"
         version_path.write_text("0.0.1\n", encoding="utf-8")
 
@@ -210,7 +213,7 @@ def _unit_test_upgrade_preserves_runtime_local_registry_and_logs() -> None:
             repo_root
             / "devcovenant"
             / "registry"
-            / "local"
+            / "runtime"
             / "gate_status.json"
         )
         assert gate_status_path.exists()
@@ -222,12 +225,16 @@ def _unit_test_upgrade_preserves_runtime_local_registry_and_logs() -> None:
         logs_root = repo_root / "devcovenant" / "logs"
         run_dir = logs_root / "20260225T000000000000Z-upgrade-test"
         assert (logs_root / "README.md").exists()
-        assert (logs_root / "latest.json").exists()
         assert run_dir.exists()
         assert (run_dir / "run.json").exists()
         assert (run_dir / "summary.txt").read_text(
             encoding="utf-8"
         ) == expected_summary
+        latest_path = (
+            repo_root / "devcovenant" / "registry" / "runtime" / "latest.json"
+        )
+        assert latest_path.exists()
+        assert latest_path.read_text(encoding="utf-8") == expected_latest
 
 
 def _unit_test_upgrade_preserves_open_gate_status_visibility() -> None:
@@ -240,7 +247,7 @@ def _unit_test_upgrade_preserves_open_gate_status_visibility() -> None:
             repo_root
             / "devcovenant"
             / "registry"
-            / "local"
+            / "runtime"
             / "gate_status.json"
         )
         gate_status_path.parent.mkdir(parents=True, exist_ok=True)
@@ -266,6 +273,34 @@ def _unit_test_upgrade_preserves_open_gate_status_visibility() -> None:
         )
         assert "Gate Status: open" in summary_lines
         assert "Session ID: upgrade-open-session" in summary_lines
+
+
+def _unit_test_upgrade_recreates_missing_tracked_registry_only() -> None:
+    """upgrade_repo should rebuild tracked registry without runtime state."""
+    with tempfile.TemporaryDirectory() as temp_dir:
+        repo_root = Path(temp_dir)
+        repo_seed_cache.copy_installed_repo(repo_root)
+
+        tracked_registry = (
+            repo_root / "devcovenant" / "registry" / "registry.yaml"
+        )
+        runtime_registry = repo_root / "devcovenant" / "registry" / "runtime"
+        if runtime_registry.exists():
+            raise AssertionError(
+                "Seeded repo should not include runtime state."
+            )
+        tracked_registry.unlink()
+        assert not tracked_registry.exists()
+
+        version_path = repo_root / "devcovenant" / "VERSION"
+        version_path.write_text("0.0.1\n", encoding="utf-8")
+
+        with redirect_stderr(StringIO()):
+            result = upgrade.upgrade_repo(repo_root)
+        assert result == 0
+
+        assert tracked_registry.exists()
+        assert not runtime_registry.exists()
 
 
 def _unit_test_parse_version_for_compare_normalizes_partial_and_v_prefix() -> (
@@ -351,6 +386,10 @@ class GeneratedUnittestCases(unittest.TestCase):
     def test_upgrade_preserves_open_gate_status_visibility(self):
         """Run open-gate visibility assertions for upgrade."""
         _unit_test_upgrade_preserves_open_gate_status_visibility()
+
+    def test_upgrade_recreates_missing_tracked_registry_only(self):
+        """Run tracked-registry recreation assertions for upgrade."""
+        _unit_test_upgrade_recreates_missing_tracked_registry_only()
 
     def test_parse_version_for_compare_normalizes_partial_and_v_prefix(self):
         """Run version normalization assertions for upgrade comparisons."""

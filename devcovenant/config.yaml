@@ -82,7 +82,7 @@ profiles:
 
 paths:
   policy_definitions: AGENTS.md
-  registry_file: devcovenant/registry/local/policy_registry.yaml
+  registry_file: devcovenant/registry/registry.yaml
 
 # -------------------------------------------------------------------
 # Managed document controls
@@ -171,7 +171,7 @@ engine:
 
 # `clean.overrides` replace one resolved cleanup key entirely when repository ownership must take over.
 
-# Protected entries are additive safety fences; runtime also always protects .git, .venv, devcovenant/logs, and devcovenant/registry/local.
+# Protected entries are additive safety fences; runtime also always protects .git, .venv, devcovenant/registry/registry.yaml, devcovenant/registry/README.md, and devcovenant/logs/README.md.
 
 clean:
   overlays:
@@ -179,6 +179,10 @@ clean:
     build_globs: []
     cache_dirs: []
     cache_globs: []
+    runtime_registry_dirs: []
+    runtime_registry_globs: []
+    logs_dirs: []
+    logs_globs: []
     protected_dirs: []
     protected_globs: []
   overrides:
@@ -186,6 +190,10 @@ clean:
     build_globs: []
     cache_dirs: []
     cache_globs: []
+    runtime_registry_dirs: []
+    runtime_registry_globs: []
+    logs_dirs: []
+    logs_globs: []
     protected_dirs: []
     protected_globs: []
 
@@ -270,7 +278,7 @@ ignore:
   - .coverage.*
   - htmlcov/**
   - devcovenant/logs/**
-  - devcovenant/registry/local/**
+  - devcovenant/registry/runtime/**
 
 # -------------------------------------------------------------------
 # Gitignore generation
@@ -296,7 +304,7 @@ gitignore:
 
 autogen_metadata_overlays:
   changelog-coverage:
-    gate_status_file: devcovenant/registry/local/gate_status.json
+    gate_status_file: devcovenant/registry/runtime/gate_status.json
     header_doc_suffixes:
     - .md
     - .rst
@@ -574,19 +582,19 @@ autogen_metadata_overlays:
     - '## License Report'
     third_party_file: licenses/THIRD_PARTY_LICENSES.md
   devcov-integrity-guard:
-    gate_status_file: devcovenant/registry/local/gate_status.json
+    gate_status_file: devcovenant/registry/runtime/gate_status.json
     policy_definitions:
     - AGENTS.md
-    registry_file: devcovenant/registry/local/policy_registry.yaml
+    registry_file: devcovenant/registry/registry.yaml
   devflow-run-gates:
-    gate_status_file: devcovenant/registry/local/gate_status.json
+    gate_status_file: devcovenant/registry/runtime/gate_status.json
     pre_commit_command:
     - python3 -m pre_commit run --all-files
     required_commands:
     - python3 -m unittest discover -v
     - pytest
     skipped_globs:
-    - devcovenant/registry/local/**
+    - devcovenant/registry/runtime/**
   docstring-and-comment-coverage:
     include_suffixes:
     - .py
@@ -638,6 +646,7 @@ autogen_metadata_overlays:
     - pyproject.toml => devcovenant/docs/installation.md
     - MANIFEST.in => devcovenant/docs/installation.md
     - devcovenant/config.yaml => devcovenant/docs/config.md
+    - devcovenant/registry/registry.yaml => devcovenant/docs/registry.md
     - .github/workflows/*.yml => devcovenant/docs/workflow.md
     user_facing_exclude_dirs:
     - tests/**

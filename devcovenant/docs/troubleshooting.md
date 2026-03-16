@@ -137,7 +137,7 @@ Recovery actions:
 
 Signal to watch:
 - successful end must record closure timestamp and command evidence in
-  `devcovenant/registry/local/gate_status.json`
+  `devcovenant/registry/runtime/gate_status.json`
 - use `devcovenant gate --status` before rerunning gates when you only need to
   inspect session state or the latest relevant run logs
 
@@ -166,7 +166,7 @@ Typical symptoms:
 
 Recovery actions:
 1. run `devcovenant refresh`
-2. inspect regenerated files under `devcovenant/registry/local/`
+2. inspect regenerated files under `devcovenant/registry/runtime/`
 3. run `devcovenant test`
 4. run `devcovenant gate --end`
 
@@ -203,7 +203,7 @@ Recovery actions:
 3. use overrides for replacement behavior
 4. inspect resolved metadata in:
    - AGENTS managed policy block
-   - `devcovenant/registry/local/policy_registry.yaml`
+   - `devcovenant/registry/registry.yaml`
 5. verify `policy_state` booleans for activation
 
 Checklist for config edits:
@@ -218,7 +218,7 @@ Typical symptoms:
 
 Recovery actions:
 1. run teardown command directly; recovery mode is expected
-2. verify managed blocks/local registry cleanup happened
+2. verify managed blocks/registry cleanup happened
 3. repair `devcovenant/config.yaml` before re-deploy
 4. rerun full gate sequence after remediation
 

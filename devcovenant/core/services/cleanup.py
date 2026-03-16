@@ -17,18 +17,21 @@ _CLEAN_TARGET_KEYS = (
     "build_globs",
     "cache_dirs",
     "cache_globs",
+    "runtime_registry_dirs",
+    "runtime_registry_globs",
+    "logs_dirs",
+    "logs_globs",
     "protected_dirs",
     "protected_globs",
 )
 _HARD_PROTECTED_DIRS = (
     ".git",
     ".venv",
-    "devcovenant/logs",
-    "devcovenant/registry/local",
 )
 _HARD_PROTECTED_GLOBS = (
-    "devcovenant/logs/**",
-    "devcovenant/registry/local/**",
+    "devcovenant/logs/README.md",
+    "devcovenant/registry/README.md",
+    "devcovenant/registry/registry.yaml",
 )
 
 
@@ -40,6 +43,10 @@ class CleanConfig:
     build_globs: tuple[str, ...]
     cache_dirs: tuple[str, ...]
     cache_globs: tuple[str, ...]
+    runtime_registry_dirs: tuple[str, ...]
+    runtime_registry_globs: tuple[str, ...]
+    logs_dirs: tuple[str, ...]
+    logs_globs: tuple[str, ...]
     protected_dirs: tuple[str, ...]
     protected_globs: tuple[str, ...]
 
@@ -50,6 +57,8 @@ class CleanSelection:
 
     include_build: bool
     include_cache: bool
+    include_runtime_registry: bool
+    include_logs: bool
 
     def labels(self) -> tuple[str, ...]:
         """Return human-readable labels for the selected cleanup set."""
@@ -58,6 +67,10 @@ class CleanSelection:
             labels.append("build")
         if self.include_cache:
             labels.append("cache")
+        if self.include_runtime_registry:
+            labels.append("registry")
+        if self.include_logs:
+            labels.append("logs")
         return tuple(labels)
 
 
@@ -133,17 +146,27 @@ def resolve_clean_selection(
     include_all: bool,
     include_build: bool,
     include_cache: bool,
+    include_registry: bool,
+    include_logs: bool,
 ) -> CleanSelection:
     """Resolve effective cleanup categories from CLI flags."""
     if include_all:
-        return CleanSelection(include_build=True, include_cache=True)
-    if not include_build and not include_cache:
+        return CleanSelection(
+            include_build=True,
+            include_cache=True,
+            include_runtime_registry=True,
+            include_logs=True,
+        )
+    if not any((include_build, include_cache, include_registry, include_logs)):
         raise ValueError(
-            "Select at least one cleanup scope: --all, --build, or --cache."
+            "Select at least one cleanup scope: --all, --build, --cache, "
+            "--registry, or --logs."
         )
     return CleanSelection(
         include_build=include_build,
         include_cache=include_cache,
+        include_runtime_registry=include_registry,
+        include_logs=include_logs,
     )
 
 
@@ -188,6 +211,14 @@ def resolve_clean_config(repo_root: Path) -> CleanConfig:
         build_globs=tuple(_dedupe(resolved.get("build_globs", []))),
         cache_dirs=tuple(_dedupe(resolved.get("cache_dirs", []))),
         cache_globs=tuple(_dedupe(resolved.get("cache_globs", []))),
+        runtime_registry_dirs=tuple(
+            _dedupe(resolved.get("runtime_registry_dirs", []))
+        ),
+        runtime_registry_globs=tuple(
+            _dedupe(resolved.get("runtime_registry_globs", []))
+        ),
+        logs_dirs=tuple(_dedupe(resolved.get("logs_dirs", []))),
+        logs_globs=tuple(_dedupe(resolved.get("logs_globs", []))),
         protected_dirs=tuple(protected_dirs),
         protected_globs=tuple(protected_globs),
     )
@@ -293,6 +324,34 @@ def _collect_requested_targets(
             if path is not None:
                 requested.append(path)
         for raw_pattern in config.cache_globs:
+            pattern = _valid_glob_pattern(raw_pattern)
+            if not pattern:
+                continue
+            try:
+                matches = repo_root.glob(pattern)
+            except (OSError, ValueError):
+                continue
+            requested.extend(matches)
+    if selection.include_runtime_registry:
+        for raw_dir in config.runtime_registry_dirs:
+            path = _resolve_path_under_root(repo_root, raw_dir)
+            if path is not None:
+                requested.append(path)
+        for raw_pattern in config.runtime_registry_globs:
+            pattern = _valid_glob_pattern(raw_pattern)
+            if not pattern:
+                continue
+            try:
+                matches = repo_root.glob(pattern)
+            except (OSError, ValueError):
+                continue
+            requested.extend(matches)
+    if selection.include_logs:
+        for raw_dir in config.logs_dirs:
+            path = _resolve_path_under_root(repo_root, raw_dir)
+            if path is not None:
+                requested.append(path)
+        for raw_pattern in config.logs_globs:
             pattern = _valid_glob_pattern(raw_pattern)
             if not pattern:
                 continue

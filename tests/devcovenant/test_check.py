@@ -155,7 +155,7 @@ def _unit_test_run_does_not_mutate_gate_status_file() -> None:
             repo_root
             / "devcovenant"
             / "registry"
-            / "local"
+            / "runtime"
             / "gate_status.json"
         )
         status_path.parent.mkdir(parents=True, exist_ok=True)

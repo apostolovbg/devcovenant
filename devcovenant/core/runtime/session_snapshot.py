@@ -3,11 +3,14 @@
 from __future__ import annotations
 
 import hashlib
+import json
 import os
 from pathlib import Path
+from typing import Mapping, Sequence
 
 import yaml
 
+import devcovenant.core.services.registry as registry_runtime_module
 from devcovenant.core.lib.document_exemptions import (
     EMPTY_MANAGED_MARKER_SIGNATURE as _EMPTY_MANAGED_MARKER_SIGNATURE,
 )
@@ -36,13 +39,26 @@ _SNAPSHOT_BASE_IGNORED_DIRS = frozenset(
 
 _SNAPSHOT_IGNORED_FILES = frozenset(
     {
-        "devcovenant/registry/local/gate_status.json",
+        "devcovenant/registry/runtime/gate_status.json",
+        "devcovenant/registry/runtime/latest.json",
+        "devcovenant/registry/runtime/session_snapshot.json",
     }
 )
 
-_SNAPSHOT_IGNORED_PREFIXES = ("devcovenant/registry/local/",)
+_SNAPSHOT_IGNORED_PREFIXES = ("devcovenant/registry/runtime/",)
 _AGENTS_WORKFLOW_BEGIN = "<!-- DEVCOV-WORKFLOW:BEGIN -->"
 _AGENTS_WORKFLOW_END = "<!-- DEVCOV-WORKFLOW:END -->"
+SESSION_SNAPSHOT_POINTER_KEY = "session_snapshot_file"
+SESSION_SNAPSHOT_UPDATED_UTC_KEY = "session_snapshot_updated_utc"
+SESSION_SNAPSHOT_UPDATED_EPOCH_KEY = "session_snapshot_updated_epoch"
+SESSION_SNAPSHOT_BULKY_KEYS = (
+    "document_exemption_baseline",
+    "last_run_snapshot",
+    "session_baseline_snapshot",
+    "session_end_snapshot",
+    "session_start_snapshot",
+    "test_events",
+)
 
 
 def capture_current_numstat_snapshot(repo_root: Path) -> dict[str, str]:
@@ -68,6 +84,99 @@ def capture_current_numstat_snapshot(repo_root: Path) -> dict[str, str]:
         digest = _sha256_file(file_path)
         rows[rel] = f"{digest}\t{rel}"
     return rows
+
+
+def default_session_snapshot_relative_path(repo_root: Path) -> str:
+    """Return the canonical repo-relative session snapshot path."""
+    return (
+        registry_runtime_module.session_snapshot_path(repo_root)
+        .relative_to(repo_root)
+        .as_posix()
+    )
+
+
+def resolve_session_snapshot_path(
+    repo_root: Path,
+    gate_status: Mapping[str, object] | None = None,
+    *,
+    require_pointer: bool = False,
+) -> Path:
+    """Resolve the companion session snapshot path from gate status."""
+    raw_pointer = str(
+        (gate_status or {}).get(SESSION_SNAPSHOT_POINTER_KEY, "")
+    ).strip()
+    if not raw_pointer:
+        if require_pointer:
+            raise ValueError(
+                "Invalid gate status payload: "
+                "`session_snapshot_file` is required for session checks."
+            )
+        return registry_runtime_module.session_snapshot_path(repo_root)
+    pointer = Path(raw_pointer)
+    if pointer.is_absolute() or ".." in pointer.parts:
+        raise ValueError(
+            "Invalid gate status payload: `session_snapshot_file` must be "
+            "a repo-relative path inside devcovenant/registry/runtime/."
+        )
+    return repo_root / pointer
+
+
+def load_session_snapshot_payload(
+    repo_root: Path,
+    gate_status: Mapping[str, object] | None,
+    *,
+    require: bool = False,
+) -> dict[str, object]:
+    """Load the companion session snapshot payload for one gate status."""
+    path = resolve_session_snapshot_path(
+        repo_root,
+        gate_status,
+        require_pointer=require,
+    )
+    if not path.exists():
+        if require:
+            try:
+                rel = path.relative_to(repo_root).as_posix()
+            except ValueError:
+                rel = str(path)
+            raise ValueError(f"Session snapshot file is missing: {rel}.")
+        return {}
+    try:
+        payload = json.loads(path.read_text(encoding="utf-8"))
+    except (OSError, json.JSONDecodeError) as exc:
+        raise ValueError(
+            f"Invalid session snapshot JSON in {path}: {exc}"
+        ) from exc
+    if not isinstance(payload, dict):
+        raise ValueError(f"Session snapshot payload must be a mapping: {path}")
+    return payload
+
+
+def merge_session_snapshot_payload(
+    repo_root: Path,
+    gate_status: Mapping[str, object] | None,
+    *,
+    updates: Mapping[str, object] | None = None,
+    remove_keys: Sequence[str] = (),
+) -> tuple[str, dict[str, object]]:
+    """Merge updates into the companion snapshot payload and write it."""
+    path = resolve_session_snapshot_path(repo_root, gate_status)
+    payload = load_session_snapshot_payload(repo_root, gate_status)
+    for key in remove_keys:
+        payload.pop(str(key), None)
+    for key, value in dict(updates or {}).items():
+        payload[str(key)] = value
+    path.parent.mkdir(parents=True, exist_ok=True)
+    path.write_text(json.dumps(payload, indent=2) + "\n", encoding="utf-8")
+    return path.relative_to(repo_root).as_posix(), payload
+
+
+def prune_inline_session_snapshot_fields(
+    gate_status: dict[str, object],
+) -> None:
+    """Remove bulky snapshot/session fields from gate status payloads."""
+    for key in SESSION_SNAPSHOT_BULKY_KEYS:
+        gate_status.pop(key, None)
 
 
 def capture_current_snapshot_paths(repo_root: Path) -> list[str]:

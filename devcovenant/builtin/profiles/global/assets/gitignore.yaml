@@ -43,7 +43,7 @@ base_fragments:
   - temp/
 
   # DevCovenant
-  - devcovenant/registry/local/
+  - devcovenant/registry/runtime/
   - devcovenant/logs/**
   - '!devcovenant/logs/'
   - '!devcovenant/logs/README.md'

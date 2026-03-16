@@ -12,6 +12,7 @@ from types import SimpleNamespace
 from unittest import mock
 
 MODULE = "devcovenant.core.flow.gate"
+_SESSION_SNAPSHOT_REL = "devcovenant/registry/runtime/session_snapshot.json"
 
 
 def _unit_test_module_importable() -> None:
@@ -28,18 +29,15 @@ def _unit_test_module_has_public_symbols() -> None:
 
 
 def _write_policy_registry(repo_root: Path) -> None:
-    """Write a minimal policy registry for changelog metadata."""
-    registry_path = (
-        repo_root
-        / "devcovenant"
-        / "registry"
-        / "local"
-        / "policy_registry.yaml"
-    )
+    """Write a minimal tracked registry for changelog metadata."""
+    registry_path = repo_root / "devcovenant" / "registry" / "registry.yaml"
     registry_path.parent.mkdir(parents=True, exist_ok=True)
     registry_path.write_text(
         "\n".join(
             [
+                "metadata:",
+                "  schema_version: 1",
+                "  registry_layout: single-root",
                 "policies:",
                 "  changelog-coverage:",
                 "    metadata:",
@@ -49,6 +47,8 @@ def _write_policy_registry(repo_root: Path) -> None:
                 "      header_keys:",
                 "      - Last Updated",
                 "      header_scan_lines: 4",
+                "profiles: {}",
+                "inventory: {}",
                 "",
             ]
         ),
@@ -94,6 +94,26 @@ def _write_agents(repo_root: Path) -> None:
     )
 
 
+def _write_session_snapshot(
+    repo_root: Path,
+    payload: dict[str, object],
+) -> str:
+    """Write the gate session companion snapshot payload."""
+    snapshot_path = repo_root / _SESSION_SNAPSHOT_REL
+    snapshot_path.parent.mkdir(parents=True, exist_ok=True)
+    snapshot_path.write_text(
+        json.dumps(payload, indent=2) + "\n",
+        encoding="utf-8",
+    )
+    return _SESSION_SNAPSHOT_REL
+
+
+def _read_session_snapshot(repo_root: Path) -> dict[str, object]:
+    """Read the gate session companion snapshot payload."""
+    snapshot_path = repo_root / _SESSION_SNAPSHOT_REL
+    return json.loads(snapshot_path.read_text(encoding="utf-8"))
+
+
 def _unit_test_start_clears_stale_pre_commit_end() -> None:
     """Start gate should clear stale end-phase pre-commit evidence."""
     module = importlib.import_module(MODULE)
@@ -106,7 +126,7 @@ def _unit_test_start_clears_stale_pre_commit_end() -> None:
             repo_root
             / "devcovenant"
             / "registry"
-            / "local"
+            / "runtime"
             / "gate_status.json"
         )
         status_path.parent.mkdir(parents=True, exist_ok=True)
@@ -358,7 +378,7 @@ def _unit_test_mid_targets_snapshot_files_for_pre_commit() -> None:
             repo_root
             / "devcovenant"
             / "registry"
-            / "local"
+            / "runtime"
             / "gate_status.json"
         )
         status_path.parent.mkdir(parents=True, exist_ok=True)
@@ -426,10 +446,14 @@ def _unit_test_end_targets_snapshot_files_for_pre_commit() -> None:
             repo_root
             / "devcovenant"
             / "registry"
-            / "local"
+            / "runtime"
             / "gate_status.json"
         )
         status_path.parent.mkdir(parents=True, exist_ok=True)
+        snapshot_rel = _write_session_snapshot(
+            repo_root,
+            {"last_run_snapshot": {"sample.py": "same"}},
+        )
         status_path.write_text(
             json.dumps(
                 {
@@ -438,7 +462,7 @@ def _unit_test_end_targets_snapshot_files_for_pre_commit() -> None:
                     "session_start_epoch": 10.0,
                     "last_run_epoch": 20.0,
                     "last_run_session_id": "open-end-target",
-                    "last_run_snapshot": {"sample.py": "same"},
+                    "session_snapshot_file": snapshot_rel,
                 },
                 indent=2,
             )
@@ -500,10 +524,14 @@ def _unit_test_start_recovery_requires_explicit_manual_tests() -> None:
             repo_root
             / "devcovenant"
             / "registry"
-            / "local"
+            / "runtime"
             / "gate_status.json"
         )
         status_path.parent.mkdir(parents=True, exist_ok=True)
+        snapshot_rel = _write_session_snapshot(
+            repo_root,
+            {"session_end_snapshot": {"sample.py": "old"}},
+        )
         status_path.write_text(
             json.dumps(
                 {
@@ -511,7 +539,7 @@ def _unit_test_start_recovery_requires_explicit_manual_tests() -> None:
                     "session_state": "closed",
                     "session_end_epoch": 100.0,
                     "session_end_utc": "2026-02-25T11:00:00+00:00",
-                    "session_end_snapshot": {"sample.py": "old"},
+                    "session_snapshot_file": snapshot_rel,
                 },
                 indent=2,
             )
@@ -585,7 +613,7 @@ def _unit_test_start_recovery_allows_fresh_explicit_manual_tests() -> None:
             repo_root
             / "devcovenant"
             / "registry"
-            / "local"
+            / "runtime"
             / "gate_status.json"
         )
         status_path.parent.mkdir(parents=True, exist_ok=True)
@@ -639,9 +667,12 @@ def _unit_test_start_recovery_allows_fresh_explicit_manual_tests() -> None:
 
         assert exit_code == 0
         updated = json.loads(status_path.read_text(encoding="utf-8"))
+        snapshot_payload = _read_session_snapshot(repo_root)
         assert updated.get("session_state") == "open"
         assert float(updated.get("pre_commit_start_epoch") or 0.0) > 0.0
-        assert updated.get("session_start_snapshot") == {"sample.py": "same"}
+        assert snapshot_payload.get("session_start_snapshot") == {
+            "sample.py": "same"
+        }
 
 
 def _unit_test_end_requires_explicit_test_and_rerun_on_hook_changes() -> None:
@@ -866,7 +897,7 @@ def _unit_test_mid_requires_open_session() -> None:
             repo_root
             / "devcovenant"
             / "registry"
-            / "local"
+            / "runtime"
             / "gate_status.json"
         )
         lines: list[str] = []
@@ -898,7 +929,7 @@ def _unit_test_mid_runs_without_status_mutation() -> None:
             repo_root
             / "devcovenant"
             / "registry"
-            / "local"
+            / "runtime"
             / "gate_status.json"
         )
         status_path.parent.mkdir(parents=True, exist_ok=True)
@@ -994,7 +1025,7 @@ def _unit_test_mid_reports_blocking_devcov_failure() -> None:
             repo_root
             / "devcovenant"
             / "registry"
-            / "local"
+            / "runtime"
             / "gate_status.json"
         )
         status_path.parent.mkdir(parents=True, exist_ok=True)
@@ -1079,7 +1110,7 @@ def _unit_test_show_gate_status_reports_open_session_read_only() -> None:
             repo_root
             / "devcovenant"
             / "registry"
-            / "local"
+            / "runtime"
             / "gate_status.json"
         )
         status_path.parent.mkdir(parents=True, exist_ok=True)
@@ -1119,7 +1150,11 @@ def _unit_test_show_gate_status_reports_open_session_read_only() -> None:
             + "\n",
             encoding="utf-8",
         )
-        (logs_root / "latest.json").write_text(
+        runtime_latest = (
+            repo_root / "devcovenant" / "registry" / "runtime" / "latest.json"
+        )
+        runtime_latest.parent.mkdir(parents=True, exist_ok=True)
+        runtime_latest.write_text(
             json.dumps(
                 {
                     "run_id": run_dir.name,
@@ -1178,7 +1213,7 @@ def _unit_test_show_gate_status_handles_missing_and_malformed_status() -> None:
             repo_root
             / "devcovenant"
             / "registry"
-            / "local"
+            / "runtime"
             / "gate_status.json"
         )
         status_path.parent.mkdir(parents=True, exist_ok=True)
@@ -1248,7 +1283,7 @@ def _unit_test_show_gate_status_reports_closed_session() -> None:
             repo_root
             / "devcovenant"
             / "registry"
-            / "local"
+            / "runtime"
             / "gate_status.json"
         )
         status_path.parent.mkdir(parents=True, exist_ok=True)

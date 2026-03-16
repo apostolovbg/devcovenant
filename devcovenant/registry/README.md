@@ -1,49 +1,55 @@
 # Registry State
-**Last Updated:** 2026-03-09
+**Last Updated:** 2026-03-15
 **Project Version:** 1.0.0
 
 ## Table of Contents
 - [Overview](#overview)
-- [Local Registry](#local-registry)
-- [Global Registry](#global-registry)
+- [Tracked Registry](#tracked-registry)
+- [Runtime Registry](#runtime-registry)
 - [Lifecycle and Ownership](#lifecycle-and-ownership)
 - [Troubleshooting Notes](#troubleshooting-notes)
 - [Workflow](#workflow)
 
 ## Overview
-`devcovenant/registry/` stores generated state used by refresh, checks,
-integrity checks, and gate evidence.
+`devcovenant/registry/` is the single registry root for a managed repository.
+It separates deterministic tracked governance metadata from disposable runtime
+state.
 
-Local files are runtime-generated diagnostics and contracts. Do not manually
-edit generated payloads.
+Do not edit generated payloads by hand. Refresh and gate commands own registry
+materialization.
 
-## Local Registry
-`devcovenant/registry/local/` contains runtime state for the active repo:
-- `policy_registry.yaml`: resolved policy metadata, hashes, and script paths.
-- `profile_registry.yaml`: discovered profile inventory and translator
-  declarations.
-- `manifest.json`: installed/generated asset tracking and lifecycle metadata.
-- `gate_status.json`: start/test/end gate evidence and timestamps.
+## Tracked Registry
+`devcovenant/registry/registry.yaml` is the only tracked registry artifact.
+It stores deterministic repository governance metadata such as:
+- resolved policy entries and metadata traces
+- resolved profile inventory
+- tracked inventory data for package-owned/generated surfaces
 
-## Global Registry
-`devcovenant/registry/global/` is a shipped namespace for stable shared
-registry assets.
+This file belongs in git so a cloned repository carries its current
+DevCovenant governance state.
 
-Current runtime behavior keeps this namespace lightweight, but it remains
-reserved for future global registry contracts and extension points.
+## Runtime Registry
+`devcovenant/registry/runtime/` stores untracked runtime-local state:
+- `gate_status.json` for concise gate lifecycle state
+- `session_snapshot.json` for heavy gate baseline/snapshot/test-event payloads
+- `latest.json` for the latest run-pointer metadata
+
+Runtime registry files are disposable. They are not package payload, not git
+truth, and not a trust anchor.
 
 ## Lifecycle and Ownership
 Registry regeneration occurs during full-refresh paths:
 - `devcovenant refresh`
 - `devcovenant deploy`
 - `devcovenant upgrade`
-- gate pre-commit phases (`devcovenant gate --start`,
-  required non-lifecycle `devcovenant gate --mid`, and
-  `devcovenant gate --end`) through gate-owned check orchestration
+- gate pre-commit phases (`devcovenant gate --start`, required non-lifecycle
+  `devcovenant gate --mid`, and `devcovenant gate --end`) through gate-owned
+  check orchestration
 
 Ownership model:
-- local registry files are generated state
-- global registry files are shipped package assets
+- tracked registry file: deterministic generated repo metadata
+- runtime registry files: local runtime/session state
+- logs: local run artifacts under `devcovenant/logs/`
 
 ## Troubleshooting Notes
 If integrity checks report registry drift:
@@ -52,10 +58,13 @@ If integrity checks report registry drift:
 3. Re-run `devcovenant gate --end`.
 
 If drift persists, compare AGENTS policy block content against
-`policy_registry.yaml` and verify descriptor/profile edits were refreshed.
+`devcovenant/registry/registry.yaml` and verify descriptor/profile edits were
+refreshed.
 
 ## Workflow
-1. Run refresh-producing command.
-2. Confirm registry outputs are regenerated.
-3. Run `devcovenant gate --mid` before tests in active sessions.
-4. Validate with tests and end gate.
+1. Run a refresh-producing command.
+2. Confirm `devcovenant/registry/registry.yaml` is regenerated when inputs
+   changed.
+3. Use `devcovenant/registry/runtime/` only for live runtime inspection.
+4. Run `devcovenant gate --mid` before tests in active sessions.
+5. Validate with tests and end gate.

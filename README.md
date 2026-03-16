@@ -2,7 +2,7 @@
 **Doc ID:** README
 **Doc Type:** repo-readme
 **Project Version:** 1.0.0
-**Last Updated:** 2026-03-15
+**Last Updated:** 2026-03-16
 **DevCovenant Version:** 1.0.0
 
 <!-- DEVCOV:BEGIN -->
@@ -74,7 +74,7 @@ contract statements when possible.
 - `evidence artifact`: a generated runtime artifact used to prove what
   happened (for example gate status, per-run logs, and run summaries).
 - `registry`: generated DevCovenant metadata/state stores, including repo-local
-  runtime registries under `devcovenant/registry/local/`.
+  runtime registries under `devcovenant/registry/runtime/`.
 - `installation folder`: the repo-local `devcovenant/` directory installed
   into a repository and used for runtime code, config, docs, and local state.
 
@@ -183,12 +183,14 @@ Runtime data stores:
 - source of policy truth:
   managed policy block in `AGENTS.md`
 - generated runtime state:
-  `devcovenant/registry/local/*`
+  `devcovenant/registry/runtime/*`
 - session ledger:
-  `devcovenant/registry/local/gate_status.json`
+  `devcovenant/registry/runtime/gate_status.json`
+- session snapshot companion:
+  `devcovenant/registry/runtime/session_snapshot.json`
 
-The session ledger tracks gate timestamps, resolved command evidence, and
-session baseline metadata used by gate-aware policies.
+The session ledger stays concise and readable. Heavy session baseline,
+snapshot, and test-event payloads live in the companion session snapshot file.
 
 Canonical core terminology (for example `gate session`, `check`, `policy`,
 `profile`, `translator`, and `evidence artifact`) is defined in
@@ -201,8 +203,11 @@ workflow state, command results, and failure triage.
 
 Runtime-local evidence artifacts (generated, untracked):
 - gate session ledger evidence:
-  `devcovenant/registry/local/gate_status.json` records gate session state,
-  phase timestamps, and command/test evidence used by gate-aware policies.
+  `devcovenant/registry/runtime/gate_status.json` records concise gate session
+  state, phase timestamps, and pointer metadata for heavy session artifacts.
+- gate session snapshot evidence:
+  `devcovenant/registry/runtime/session_snapshot.json` records heavy baseline,
+  snapshot, exemption, and test-event payloads used by gate-aware policies.
 - command-run evidence folders:
   `devcovenant/logs/<run-id>-<command>/` stores per-run artifacts for top-level
   commands.
@@ -247,7 +252,7 @@ Primary governance commands:
 Lifecycle and maintenance commands:
 - `devcovenant install`
 - `devcovenant deploy`
-- `devcovenant clean --all|--build|--cache`
+- `devcovenant clean --all|--build|--cache|--registry|--logs`
 - `devcovenant refresh`
 - `devcovenant upgrade`
 - `devcovenant undeploy`
@@ -261,7 +266,7 @@ Practical usage guidance:
 - use gate commands for mandatory gate-session workflow and mutating checks
 - use `devcovenant gate --status` for short read-only gate session inspection
 - use `clean` to remove disposable build/cache artifacts after package/build
-  validation without touching logs, local registry evidence, or `.venv`
+  validation without touching logs, runtime registry state, or `.venv`
 - use `refresh` when descriptors/profiles/templates change
 - use `update_lock` when dependency inputs changed and license artifacts must
   be reconciled
@@ -271,15 +276,21 @@ DevCovenant separates installation from activation intentionally.
 
 Lifecycle contract:
 - `install`:
-  copy package files and seed generic config stub
+  copy package files, seed generic config stub, and seed tracked registry
+  structure without shipping repo-generated registry/log runtime payloads
 - `deploy`:
   require explicit non-generic config, then materialize managed outputs
 - `clean`:
-  remove disposable build/cache artifacts from resolved profile/config targets
+  remove disposable build/cache/runtime-registry/log artifacts from resolved
+  profile/config targets while keeping tracked registry/log README files
+  protected
 - `refresh`:
-  regenerate registries, managed blocks, and generated governance files
+  regenerate the tracked registry, managed blocks, and generated governance
+  files; recreate `devcovenant/registry/registry.yaml` when missing without
+  inventing runtime state
 - `upgrade`:
-  reconcile core from source on every run, then refresh
+  reconcile core from source on every run, preserve runtime registry/log state
+  plus config, then refresh the tracked registry
 - `undeploy`:
   remove managed artifacts while keeping core/config
 - `uninstall`:
@@ -287,9 +298,11 @@ Lifecycle contract:
   leave a durable run-log folder because it removes `devcovenant/`
 
 Generated artifacts owned by refresh include:
-- `devcovenant/registry/local/policy_registry.yaml`
-- `devcovenant/registry/local/profile_registry.yaml`
-- `devcovenant/registry/local/manifest.json`
+- `devcovenant/registry/registry.yaml` policy inventory and hash data
+- `devcovenant/registry/registry.yaml` profile inventory and active-profile
+  state
+- `devcovenant/registry/registry.yaml` tracked structural inventory used by
+  integrity checks
 - managed policy block in `AGENTS.md`
 - generated sections in `devcovenant/config.yaml`
 - `.pre-commit-config.yaml`
@@ -405,7 +418,7 @@ set.
 - repo-internal governance docs (source checkout only):
   `AGENTS.md`, `PLAN.md`, `POLICY_MAP.md`, and `PROFILE_MAP.md`
 - runtime evidence artifacts (generated, untracked):
-  `devcovenant/logs/*` and `devcovenant/registry/local/*`
+  `devcovenant/logs/*` and `devcovenant/registry/runtime/*`
 
 ### Start Here
 - [What It Is](#overview):

@@ -1476,8 +1476,8 @@ def _render_config_yaml(payload: dict[str, object]) -> str:
         ),
         (
             "# Protected entries are additive safety fences; runtime also "
-            "always protects .git, .venv, devcovenant/logs, and "
-            "devcovenant/registry/local."
+            "always protects .git, .venv, devcovenant/registry/registry.yaml, "
+            "devcovenant/registry/README.md, and devcovenant/logs/README.md."
         ),
         _yaml_block({"clean": payload.get("clean", {})}),
         comments["governance_and_test"],
@@ -1661,7 +1661,7 @@ def _apply_profile_aware_engine_defaults(
 def _materialize_policy_state_map(
     repo_root: Path, current_state: Dict[str, bool]
 ) -> Dict[str, bool]:
-    """Return full alphabetical policy_state map from local registry."""
+    """Return full alphabetical policy_state map from the tracked registry."""
     registry_path = policy_registry_path(repo_root)
     payload = _read_yaml(registry_path)
     raw_policies = payload.get("policies")
@@ -2160,7 +2160,7 @@ def _record_pre_commit_manifest(
     active_profiles: list[str],
     pre_commit_payload: dict[str, object],
 ) -> None:
-    """Persist resolved pre-commit metadata into manifest.json."""
+    """Persist resolved pre-commit metadata into tracked inventory."""
     manifest = manifest_module.ensure_manifest(repo_root)
     if not isinstance(manifest, dict):
         return
@@ -2181,7 +2181,6 @@ def _record_pre_commit_manifest(
         return
 
     manifest["profiles"] = profiles_block
-    manifest["updated_at"] = datetime.now(timezone.utc).isoformat()
     manifest_module.write_manifest(repo_root, manifest)
 
 
@@ -2763,7 +2762,7 @@ def refresh_policy_registry(
 ) -> int:
     """Refresh policy hashes.
 
-    Writes devcovenant/registry/local/policy_registry.yaml.
+    Writes devcovenant/registry/registry.yaml.
     """
 
     if repo_root is None:
@@ -2912,7 +2911,7 @@ def refresh_policy_registry(
         )
     if metadata_warning_targets:
         runtime_print(
-            "Recorded metadata replacement warnings in policy_registry.yaml "
+            "Recorded metadata replacement warnings in registry.yaml "
             f"for {len(metadata_warning_targets)} key(s).",
             verbose_only=True,
         )

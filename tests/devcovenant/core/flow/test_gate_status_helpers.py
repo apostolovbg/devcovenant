@@ -12,9 +12,9 @@ MODULE = "devcovenant.core.flow.gate_status_helpers"
 
 
 def _write_status(repo_root: Path, payload: dict[str, object]) -> Path:
-    """Write one gate status payload under the local registry path."""
+    """Write one gate status payload under the runtime registry path."""
     status_path = (
-        repo_root / "devcovenant" / "registry" / "local" / "gate_status.json"
+        repo_root / "devcovenant" / "registry" / "runtime" / "gate_status.json"
     )
     status_path.parent.mkdir(parents=True, exist_ok=True)
     status_path.write_text(
@@ -105,7 +105,11 @@ def _unit_test_gate_status_summary_lines_report_open_session() -> None:
             + "\n",
             encoding="utf-8",
         )
-        (logs_root / "latest.json").write_text(
+        runtime_latest = (
+            repo_root / "devcovenant" / "registry" / "runtime" / "latest.json"
+        )
+        runtime_latest.parent.mkdir(parents=True, exist_ok=True)
+        runtime_latest.write_text(
             json.dumps(
                 {
                     "run_id": run_dir.name,

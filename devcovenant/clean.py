@@ -23,7 +23,10 @@ def _build_parser() -> argparse.ArgumentParser:
     """Build parser for the clean command."""
     parser = build_command_parser(
         "clean",
-        "Remove disposable build or cache artifacts safely.",
+        (
+            "Remove disposable build, cache, runtime-registry, "
+            "or log artifacts safely."
+        ),
     )
     parser.add_argument(
         "--all",
@@ -39,6 +42,16 @@ def _build_parser() -> argparse.ArgumentParser:
         "--cache",
         action="store_true",
         help="Remove cache/test-output artifacts only.",
+    )
+    parser.add_argument(
+        "--registry",
+        action="store_true",
+        help="Remove runtime registry artifacts only.",
+    )
+    parser.add_argument(
+        "--logs",
+        action="store_true",
+        help="Remove run-log artifacts only.",
     )
     return parser
 
@@ -56,6 +69,8 @@ def run(args: argparse.Namespace) -> int:
         include_all=bool(args.all),
         include_build=bool(args.build),
         include_cache=bool(args.cache),
+        include_registry=bool(args.registry),
+        include_logs=bool(args.logs),
     )
 
 
@@ -63,12 +78,15 @@ def main(argv: list[str] | None = None) -> None:
     """CLI entry point."""
     parser = _build_parser()
     args = parser.parse_args(argv)
-    if args.all and (args.build or args.cache):
-        parser.error("`--all` cannot be combined with `--build` or `--cache`.")
-    if not any((args.all, args.build, args.cache)):
+    if args.all and (args.build or args.cache or args.registry or args.logs):
         parser.error(
-            "select at least one cleanup scope: `--all`, `--build`, or "
-            "`--cache`."
+            "`--all` cannot be combined with `--build`, `--cache`, "
+            "`--registry`, or `--logs`."
+        )
+    if not any((args.all, args.build, args.cache, args.registry, args.logs)):
+        parser.error(
+            "select at least one cleanup scope: `--all`, `--build`, "
+            "`--cache`, `--registry`, or `--logs`."
         )
     raise SystemExit(run(args))
 

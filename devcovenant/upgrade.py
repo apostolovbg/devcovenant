@@ -29,10 +29,13 @@ from devcovenant.core.runtime.execution import (
 )
 
 _UPGRADE_RUNTIME_PRESERVE_DIRS = (
-    Path("devcovenant/registry/local"),
+    Path("devcovenant/registry/runtime"),
     Path("devcovenant/logs"),
 )
-_UPGRADE_RUNTIME_PRESERVE_FILES = (Path("devcovenant/config.yaml"),)
+_UPGRADE_RUNTIME_PRESERVE_FILES = (
+    Path("devcovenant/config.yaml"),
+    Path("devcovenant/registry/registry.yaml"),
+)
 _UPGRADE_REPO_ONLY_CUSTOM_PRUNE_DIRS = (
     Path("devcovenant/custom/policies/devcov_raw_string_escapes"),
     Path("devcovenant/custom/policies/managed_doc_assets"),
@@ -118,7 +121,7 @@ def _preserve_upgrade_runtime_state(repo_root: Path, temp_root: Path) -> None:
 
 def _restore_upgrade_runtime_state(repo_root: Path, temp_root: Path) -> None:
     """Restore runtime-local state after core replacement during upgrade."""
-    local_registry_rel = Path("devcovenant/registry/local")
+    local_registry_rel = Path("devcovenant/registry/runtime")
     logs_rel = Path("devcovenant/logs")
     preserved_local = temp_root / local_registry_rel
     preserved_logs = temp_root / logs_rel

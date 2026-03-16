@@ -37,17 +37,21 @@ On Windows, `py -m devcovenant ...` is a common equivalent launcher form.
 ## Lifecycle Model
 Command contract:
 - `install`:
-  copy `devcovenant/` and seed generic config only
+  copy `devcovenant/`, seed generic config, and seed tracked registry
+  structure without copying source runtime logs or runtime registry files
 - `deploy`:
   require `install.generic_config: false`, then run full refresh
 - `clean`:
-  remove disposable build/package/cache artifacts from resolved
-  profile/config cleanup targets while preserving protected runtime state
+  remove disposable build/package/cache/runtime-registry/log artifacts from
+  resolved profile/config cleanup targets while preserving protected tracked
+  files
 - `refresh`:
-  regenerate registries, managed blocks, and generated governance files
+  regenerate the tracked registry, managed blocks, and generated governance
+  files; recreate `devcovenant/registry/registry.yaml` when missing without
+  fabricating runtime session state
 - `upgrade`:
   reconcile core from source on every run, preserve runtime-local
-  `devcovenant/registry/local/` and `devcovenant/logs/`, then refresh
+  `devcovenant/registry/runtime/` and `devcovenant/logs/`, then refresh
 - `undeploy`:
   remove managed artifacts while preserving core/config
 - `uninstall`:
@@ -71,6 +75,8 @@ Additional invariants:
 devcovenant install
 devcovenant deploy
 devcovenant clean --all
+devcovenant clean --registry
+devcovenant clean --logs
 devcovenant refresh
 devcovenant upgrade
 devcovenant undeploy
@@ -116,9 +122,10 @@ Runtime details that affect operations:
   inspect logs immediately without waiting for command completion
 - `devcovenant clean` resolves active-profile `clean_overlays` plus repo
   `clean.overlays`/`clean.overrides`, requires an explicit `--all`,
-  `--build`, or `--cache` scope, records cleanup details in
-  `summary.txt`/`summary.json`, and always protects `.git`, `.venv`,
-  `devcovenant/logs/`, and `devcovenant/registry/local/`
+  `--build`, `--cache`, `--registry`, or `--logs` scope, records cleanup
+  details in `summary.txt`/`summary.json`, and keeps tracked files such as
+  `.git`, `.venv`, `devcovenant/registry/registry.yaml`,
+  `devcovenant/registry/README.md`, and `devcovenant/logs/README.md`
 - repository pytest execution is configured in `pyproject.toml` with
   `--import-mode=importlib` and `pythonpath = ["."]` so mirrored builtin/core
   test names do not collide during collection
@@ -255,7 +262,7 @@ package source.
 Use `refresh` when generated runtime state must be rebuilt.
 
 Upgrade replacement preserves repo-local runtime state under:
-- `devcovenant/registry/local/`
+- `devcovenant/registry/runtime/`
 - `devcovenant/logs/`
 - `devcovenant/config.yaml`
 
@@ -336,6 +343,10 @@ DevCovenant distribution contracts follow PEP 639-compatible metadata:
   cannot leak into sdists
 - `MANIFEST.in` excludes runtime log payloads under `devcovenant/logs/*`
   while re-including `devcovenant/logs/README.md`
+- `MANIFEST.in` excludes tracked/runtime registry payload generation outputs
+  (`devcovenant/registry/registry.yaml`,
+  `devcovenant/registry/runtime/*`) while keeping
+  `devcovenant/registry/README.md`
 - `MANIFEST.in` prunes `build/`, `dist/`, `*.egg-info`, and cache artifacts
 
 Build-time checks in `tests/devcovenant/test_install.py` validate:
@@ -345,6 +356,8 @@ Build-time checks in `tests/devcovenant/test_install.py` validate:
 - wheel exclusions for `__pycache__/`, `*.py[cod]`, and retired tree names
 - wheel exclusions for runtime logs under `devcovenant/logs/` while keeping
   the tracked `devcovenant/logs/README.md` skeleton
+- wheel exclusions for tracked/runtime registry payloads while keeping
+  `devcovenant/registry/README.md`
 - dirty-build validation where stale `build/lib/*` artifacts must not leak
 
 CI artifact-installability checks validate:

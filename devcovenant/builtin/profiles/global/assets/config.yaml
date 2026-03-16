@@ -96,7 +96,7 @@ paths:
   policy_definitions: AGENTS.md
 
   # Local generated registry of resolved policy hashes and runtime metadata.
-  registry_file: devcovenant/registry/local/policy_registry.yaml
+  registry_file: devcovenant/registry/registry.yaml
 
 doc_assets:
   # Documents fully materialized from template descriptors on refresh.
@@ -217,12 +217,17 @@ engine:
 clean:
   # Human-owned key.
   # Additive cleanup targets merged after active profile clean_overlays.
-  # Use this for repository-specific build/cache junk beyond builtin profiles.
+  # Use this for repository-specific build/cache/runtime-registry/log junk
+  # beyond builtin profiles.
   overlays:
     build_dirs: []
     build_globs: []
     cache_dirs: []
     cache_globs: []
+    runtime_registry_dirs: []
+    runtime_registry_globs: []
+    logs_dirs: []
+    logs_globs: []
     protected_dirs: []
     protected_globs: []
 
@@ -296,7 +301,7 @@ ignore:
     - .coverage.*
     - htmlcov/**
     - devcovenant/logs/**
-    - devcovenant/registry/local/**
+    - devcovenant/registry/runtime/**
 
 # ---------------------------------------------------------------------------
 # Gitignore generation

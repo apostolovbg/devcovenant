@@ -40,7 +40,7 @@ def _copy_ignore_builder(source_dir: Path):
     """Return copy ignore callback scoped to one source directory."""
 
     def _copy_ignore(directory: str, names: list[str]) -> set[str]:
-        """Ignore runtime caches/local state and package-owned payload."""
+        """Ignore runtime state, tracked outputs, and package-owned payload."""
         ignored = set()
         current = Path(directory)
         try:
@@ -48,8 +48,16 @@ def _copy_ignore_builder(source_dir: Path):
         except ValueError:
             rel_path = current.name
 
-        if rel_path == "registry" and "local" in names:
-            ignored.add("local")
+        if rel_path == "registry":
+            if "runtime" in names:
+                ignored.add("runtime")
+            if "registry.yaml" in names:
+                ignored.add("registry.yaml")
+        if rel_path == "logs":
+            for name in names:
+                if name == "README.md":
+                    continue
+                ignored.add(name)
 
         if rel_path in {"custom/policies", "custom/profiles"}:
             for name in names:
@@ -161,9 +169,9 @@ def install_repo(repo_root: Path) -> int:
     """Install DevCovenant core and generic config in a repository."""
     replace_core_package(repo_root)
 
-    local_registry = repo_root / "devcovenant" / "registry" / "local"
-    if local_registry.exists():
-        shutil.rmtree(local_registry)
+    runtime_registry = repo_root / "devcovenant" / "registry" / "runtime"
+    if runtime_registry.exists():
+        shutil.rmtree(runtime_registry)
 
     _ensure_generic_config(repo_root)
     manifest_module.ensure_manifest(repo_root)

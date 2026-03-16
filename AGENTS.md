@@ -2,7 +2,7 @@
 **Doc ID:** AGENTS
 **Doc Type:** policy-source
 **Project Version:** 1.0.0
-**Last Updated:** 2026-03-15
+**Last Updated:** 2026-03-16
 **DevCovenant Version:** 1.0.0
 
 <!-- DEVCOV:BEGIN -->
@@ -209,7 +209,7 @@ skipped_globs: .vscode/**
   .coverage.*
   htmlcov/**
   devcovenant/logs/**
-  devcovenant/registry/local/**
+  devcovenant/registry/runtime/**
 skipped_prefixes:
 summary_labels: Change
   Why
@@ -442,7 +442,7 @@ summary_verbs: add
   suppressed
   test
   tested
-gate_status_file: devcovenant/registry/local/gate_status.json
+gate_status_file: devcovenant/registry/runtime/gate_status.json
 collections:
 header_doc_suffixes: .md
   .rst
@@ -542,8 +542,8 @@ enforcement: active
 enabled: true
 custom: false
 policy_definitions: AGENTS.md
-registry_file: devcovenant/registry/local/policy_registry.yaml
-gate_status_file: devcovenant/registry/local/gate_status.json
+registry_file: devcovenant/registry/registry.yaml
+gate_status_file: devcovenant/registry/runtime/gate_status.json
 watch_dirs:
 watch_files:
 selector_roles: watch
@@ -613,7 +613,7 @@ auto_fix: false
 enforcement: active
 enabled: true
 custom: false
-gate_status_file: devcovenant/registry/local/gate_status.json
+gate_status_file: devcovenant/registry/runtime/gate_status.json
 required_commands: python3 -m unittest discover -v
   pytest
 require_pre_commit_start: true
@@ -624,7 +624,7 @@ pre_commit_end_epoch_key: pre_commit_end_epoch
 pre_commit_start_command_key: pre_commit_start_command
 pre_commit_end_command_key: pre_commit_end_command
 code_extensions:
-skipped_globs: devcovenant/registry/local/**
+skipped_globs: devcovenant/registry/runtime/**
 selector_roles: skipped
 skipped_files:
 skipped_dirs:
@@ -831,6 +831,7 @@ doc_routes: devcovenant/builtin/policies/ => devcovenant/docs/policies.md
   pyproject.toml => devcovenant/docs/installation.md
   MANIFEST.in => devcovenant/docs/installation.md
   devcovenant/config.yaml => devcovenant/docs/config.md
+  devcovenant/registry/registry.yaml => devcovenant/docs/registry.md
   .github/workflows/*.yml => devcovenant/docs/workflow.md
 require_mentions: true
 mention_min_length: 3
@@ -877,7 +878,7 @@ user_facing_exclude_globs: .vscode/**
   .coverage.*
   htmlcov/**
   devcovenant/logs/**
-  devcovenant/registry/local/**
+  devcovenant/registry/runtime/**
   devcovenant/core/*.py
   devcovenant/custom/policies/**/fixers/**
   tests/**
@@ -1040,7 +1041,7 @@ exclude_globs: .vscode/**
   .coverage.*
   htmlcov/**
   devcovenant/logs/**
-  devcovenant/registry/local/**
+  devcovenant/registry/runtime/**
   node_modules/**
   **/*.egg-info/**
   devcovenant/builtin/profiles/global/assets/*.yaml

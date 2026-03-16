@@ -18,12 +18,16 @@ def clean_repo(
     include_all: bool,
     include_build: bool,
     include_cache: bool,
+    include_registry: bool,
+    include_logs: bool,
 ) -> int:
     """Run repository cleanup for the selected cleanup categories."""
     selection = cleanup_runtime.resolve_clean_selection(
         include_all=include_all,
         include_build=include_build,
         include_cache=include_cache,
+        include_registry=include_registry,
+        include_logs=include_logs,
     )
     labels = ", ".join(selection.labels()) or "none"
     print_step(f"Cleanup scope: {labels}", "🧹")

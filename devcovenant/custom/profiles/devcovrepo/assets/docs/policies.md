@@ -21,7 +21,7 @@ while profiles provide metadata overlays.
 
 ## Policy Descriptor Anatomy
 Policy descriptors live in `devcovenant/builtin/policies/<id>/` and are
-normalized into AGENTS and the local registry. Example metadata:
+normalized into AGENTS and the tracked registry document. Example metadata:
 ```yaml
 id: changelog-coverage
 severity: error

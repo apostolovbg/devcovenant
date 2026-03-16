@@ -456,7 +456,13 @@ def _unit_test_cli_writes_run_logs_and_pointer_on_success(monkeypatch) -> None:
         )
         assert len(run_dirs) == 1
         latest_payload = json.loads(
-            (logs_root / "latest.json").read_text(encoding="utf-8")
+            (
+                repo_root
+                / "devcovenant"
+                / "registry"
+                / "runtime"
+                / "latest.json"
+            ).read_text(encoding="utf-8")
         )
         run_payload = json.loads(
             (run_dirs[0] / "run.json").read_text(encoding="utf-8")

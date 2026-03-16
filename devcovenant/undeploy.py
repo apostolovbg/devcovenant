@@ -199,7 +199,7 @@ def _remove_generated_gitignore(repo_root: Path) -> bool:
 
 
 def undeploy_repo(repo_root: Path) -> int:
-    """Remove managed blocks and local registry state."""
+    """Remove managed blocks and generated registry state."""
     docs: list[str]
     try:
         docs = _managed_docs_from_config(repo_root)
@@ -240,9 +240,12 @@ def undeploy_repo(repo_root: Path) -> int:
             continue
         stripped_docs.append(doc_name)
 
-    registry_local = repo_root / "devcovenant" / "registry" / "local"
-    if registry_local.exists():
-        shutil.rmtree(registry_local)
+    registry_runtime = repo_root / "devcovenant" / "registry" / "runtime"
+    if registry_runtime.exists():
+        shutil.rmtree(registry_runtime)
+
+    tracked_registry = repo_root / "devcovenant" / "registry" / "registry.yaml"
+    tracked_registry.unlink(missing_ok=True)
 
     if _remove_generated_gitignore(repo_root):
         print_step("Removed generated .gitignore fragments", "✅")

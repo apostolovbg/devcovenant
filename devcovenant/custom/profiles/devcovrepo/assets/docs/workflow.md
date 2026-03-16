@@ -28,7 +28,7 @@ devcovenant gate --mid
 devcovenant test
 devcovenant gate --end
 ```
-Start and end gates record lifecycle state in the local registry.
+Start and end gates record lifecycle state in the runtime registry.
 `gate --mid` is non-lifecycle and exists to surface hook/runtime mutations
 before test evidence is recorded.
 When using the supported alternate launcher (`python3 -m devcovenant ...`)

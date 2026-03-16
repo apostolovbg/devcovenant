@@ -22,7 +22,8 @@ Updates here are tracked by the `documentation-growth-tracking` policy.
 - `profiles.md` — profile anatomy, assets, overlays, and suffixes.
 - `policies.md` — policy descriptors, metadata, and custom policies.
 - `translators.md` — translator runtime and language-profile declarations.
-- `registry.md` — local registry files and how they are refreshed.
+- `registry.md` — tracked and runtime registry files and how they are
+  refreshed.
 - `refresh.md` — full refresh behavior and command-time registry refresh.
 - `workflow.md` — required gates, pre-commit, and test runners.
 - `troubleshooting.md` — common errors and how to resolve them.

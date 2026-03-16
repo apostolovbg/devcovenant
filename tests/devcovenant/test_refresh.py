@@ -18,8 +18,8 @@ from devcovenant import refresh
 from tests.devcovenant import repo_seed_cache
 
 
-def _unit_test_refresh_builds_local_registries_and_agents() -> None:
-    """refresh_repo should build local registries and render AGENTS."""
+def _unit_test_refresh_builds_tracked_registry_and_agents() -> None:
+    """refresh_repo should build tracked registry content and render AGENTS."""
     with tempfile.TemporaryDirectory() as temp_dir:
         repo_root = Path(temp_dir)
         repo_seed_cache.copy_installed_repo(repo_root)
@@ -28,18 +28,10 @@ def _unit_test_refresh_builds_local_registries_and_agents() -> None:
         assert result == 0
 
         policy_registry = (
-            repo_root
-            / "devcovenant"
-            / "registry"
-            / "local"
-            / "policy_registry.yaml"
+            repo_root / "devcovenant" / "registry" / "registry.yaml"
         )
         profile_registry = (
-            repo_root
-            / "devcovenant"
-            / "registry"
-            / "local"
-            / "profile_registry.yaml"
+            repo_root / "devcovenant" / "registry" / "registry.yaml"
         )
         agents_path = repo_root / "AGENTS.md"
 
@@ -154,7 +146,7 @@ def _unit_test_refresh_writes_global_artifact_ignore_defaults() -> None:
             "pip-wheel-metadata/**",
             ".coverage.*",
             "devcovenant/logs/**",
-            "devcovenant/registry/local/**",
+            "devcovenant/registry/runtime/**",
         ):
             assert expected in patterns
 
@@ -178,6 +170,10 @@ def _unit_test_refresh_writes_clean_config_section() -> None:
             "build_globs": [],
             "cache_dirs": [],
             "cache_globs": [],
+            "runtime_registry_dirs": [],
+            "runtime_registry_globs": [],
+            "logs_dirs": [],
+            "logs_globs": [],
             "protected_dirs": [],
             "protected_globs": [],
         }
@@ -251,11 +247,7 @@ def _unit_test_refresh_policy_registry_origin_metadata() -> None:
         assert result == 0
 
         policy_registry = (
-            repo_root
-            / "devcovenant"
-            / "registry"
-            / "local"
-            / "policy_registry.yaml"
+            repo_root / "devcovenant" / "registry" / "registry.yaml"
         )
         payload = yaml.safe_load(policy_registry.read_text(encoding="utf-8"))
         policies = payload.get("policies", {})
@@ -274,15 +266,11 @@ def _unit_test_refresh_policy_registry_records_metadata_resolution() -> None:
         assert result == 0
 
         policy_registry = (
-            repo_root
-            / "devcovenant"
-            / "registry"
-            / "local"
-            / "policy_registry.yaml"
+            repo_root / "devcovenant" / "registry" / "registry.yaml"
         )
         payload = yaml.safe_load(policy_registry.read_text(encoding="utf-8"))
         policy_entry = payload["policies"]["changelog-coverage"]
-        resolution = policy_entry["metadata_resolution"]["required_globs"]
+        resolution = policy_entry["metadata_resolution"]["skipped_globs"]
 
         assert resolution["effective"]["values"]
         assert any(key != "effective" for key in resolution)
@@ -301,7 +289,7 @@ def _unit_test_refresh_records_override_replacement_warning() -> None:
         config_path = repo_root / "devcovenant" / "config.yaml"
         payload = yaml.safe_load(config_path.read_text(encoding="utf-8"))
         payload["user_metadata_overrides"] = {
-            "changelog-coverage": {"required_globs": ["README.md"]}
+            "changelog-coverage": {"skipped_globs": ["README.md"]}
         }
         config_path.write_text(
             yaml.safe_dump(payload, sort_keys=False),
@@ -312,27 +300,24 @@ def _unit_test_refresh_records_override_replacement_warning() -> None:
         assert result == 0
 
         policy_registry = (
-            repo_root
-            / "devcovenant"
-            / "registry"
-            / "local"
-            / "policy_registry.yaml"
+            repo_root / "devcovenant" / "registry" / "registry.yaml"
         )
         refreshed = yaml.safe_load(policy_registry.read_text(encoding="utf-8"))
         policy_entry = refreshed["policies"]["changelog-coverage"]
         warnings = policy_entry["metadata_warnings"]
         assert warnings
         assert warnings[0]["layer"] == "user_overrides"
-        assert warnings[0]["key"] == "required_globs"
-        resolution = policy_entry["metadata_resolution"]["required_globs"]
+        assert warnings[0]["key"] == "skipped_globs"
+        resolution = policy_entry["metadata_resolution"]["skipped_globs"]
         assert resolution["user_overrides"]["values"] == ["README.md"]
-        assert resolution["effective"]["values"] == ["README.md"]
-        assert policy_entry["runtime_config_overrides"]["required_globs"] == [
+        assert "README.md" in resolution["effective"]["values"]
+        assert policy_entry["runtime_config_overrides"]["skipped_globs"] == [
             "README.md"
         ]
-        assert policy_entry["runtime_effective_options"]["required_globs"] == [
+        assert (
             "README.md"
-        ]
+            in policy_entry["runtime_effective_options"]["skipped_globs"]
+        )
 
 
 def _unit_test_refresh_preserves_existing_gate_status() -> None:
@@ -345,7 +330,7 @@ def _unit_test_refresh_preserves_existing_gate_status() -> None:
             repo_root
             / "devcovenant"
             / "registry"
-            / "local"
+            / "runtime"
             / "gate_status.json"
         )
         gate_status_path.parent.mkdir(parents=True, exist_ok=True)
@@ -367,6 +352,30 @@ def _unit_test_refresh_preserves_existing_gate_status() -> None:
             gate_status_path.read_text(encoding="utf-8")
         )
         assert actual_payload == expected_payload
+
+
+def _unit_test_refresh_recreates_missing_tracked_registry_only() -> None:
+    """refresh_repo should rebuild tracked registry without runtime state."""
+    with tempfile.TemporaryDirectory() as temp_dir:
+        repo_root = Path(temp_dir)
+        repo_seed_cache.copy_installed_repo(repo_root)
+
+        tracked_registry = (
+            repo_root / "devcovenant" / "registry" / "registry.yaml"
+        )
+        runtime_registry = repo_root / "devcovenant" / "registry" / "runtime"
+        if runtime_registry.exists():
+            raise AssertionError(
+                "Seeded repo should not include runtime state."
+            )
+        tracked_registry.unlink()
+        assert not tracked_registry.exists()
+
+        result = refresh.refresh_repo(repo_root)
+        assert result == 0
+
+        assert tracked_registry.exists()
+        assert not runtime_registry.exists()
 
 
 def _unit_test_refresh_defaults_autofix_disabled_globally() -> None:
@@ -565,9 +574,9 @@ def _unit_test_refresh_main_exits_with_run_code() -> None:
 class GeneratedUnittestCases(unittest.TestCase):
     """unittest wrappers for module-level tests."""
 
-    def test_refresh_builds_local_registries_and_agents(self):
-        """Run test_refresh_builds_local_registries_and_agents."""
-        _unit_test_refresh_builds_local_registries_and_agents()
+    def test_refresh_builds_tracked_registry_and_agents(self):
+        """Run test_refresh_builds_tracked_registry_and_agents."""
+        _unit_test_refresh_builds_tracked_registry_and_agents()
 
     def test_refresh_updates_managed_block_only(self):
         """Run test_refresh_updates_managed_block_only."""
@@ -616,6 +625,10 @@ class GeneratedUnittestCases(unittest.TestCase):
     def test_refresh_preserves_existing_gate_status(self):
         """Run open-gate preservation assertions for refresh."""
         _unit_test_refresh_preserves_existing_gate_status()
+
+    def test_refresh_recreates_missing_tracked_registry_only(self):
+        """Run tracked-registry recreation assertions for refresh."""
+        _unit_test_refresh_recreates_missing_tracked_registry_only()
 
     def test_refresh_defaults_autofix_disabled_globally(self):
         """Run global autofix default-disabled refresh assertions."""

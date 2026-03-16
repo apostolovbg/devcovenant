@@ -16,7 +16,8 @@ Planned per-run folders contain stable artifacts such as:
 - `stderr.log`
 - `tail.txt`
 
-The file `latest.json` is a lightweight pointer to the most recent run folder.
+The latest-run pointer now lives in
+`devcovenant/registry/runtime/latest.json`, not inside `devcovenant/logs/`.
 
 ## Workflow
 Use this triage order:

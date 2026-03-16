@@ -22,6 +22,7 @@ ChangelogCoverageModule = import_module(
 ChangelogCoverageCheck = ChangelogCoverageModule.ChangelogCoverageCheck
 _marker_signature = ChangelogCoverageModule._marker_signature
 _non_exempt_content_hash = ChangelogCoverageModule._non_exempt_content_hash
+_SESSION_SNAPSHOT_REL = "devcovenant/registry/runtime/session_snapshot.json"
 
 
 def _summary_block() -> str:
@@ -48,21 +49,30 @@ def _write_gate_status(
     start_exemption_fingerprints: dict[str, dict[str, str]] | None = None,
     include_start_exemption_fingerprints: bool = True,
     session_state: str = "open",
+    session_snapshot: dict[str, object] | None = None,
 ) -> None:
     """Write gate-status fixture with a changelog start snapshot."""
     status_path = (
-        tmp_path / "devcovenant" / "registry" / "local" / "gate_status.json"
+        tmp_path / "devcovenant" / "registry" / "runtime" / "gate_status.json"
     )
     status_path.parent.mkdir(parents=True, exist_ok=True)
+    snapshot_payload = dict(session_snapshot or {})
+    if include_start_exemption_fingerprints:
+        snapshot_payload["document_exemption_baseline"] = dict(
+            start_exemption_fingerprints or {}
+        )
+    snapshot_path = tmp_path / _SESSION_SNAPSHOT_REL
+    snapshot_path.parent.mkdir(parents=True, exist_ok=True)
+    snapshot_path.write_text(
+        json.dumps(snapshot_payload, indent=2) + "\n",
+        encoding="utf-8",
+    )
     payload = {
         "changelog_start_top_entry_fingerprint": fingerprint,
         "changelog_start_top_entry_present": bool(fingerprint),
         "session_state": session_state,
+        "session_snapshot_file": _SESSION_SNAPSHOT_REL,
     }
-    if include_start_exemption_fingerprints:
-        payload["document_exemption_baseline"] = dict(
-            start_exemption_fingerprints or {}
-        )
     status_path.write_text(json.dumps(payload), encoding="utf-8")
 
 
@@ -158,7 +168,7 @@ def _make_checker(
         merged_options.update(options)
     checker.set_options(merged_options, {})
     status_path = (
-        tmp_path / "devcovenant" / "registry" / "local" / "gate_status.json"
+        tmp_path / "devcovenant" / "registry" / "runtime" / "gate_status.json"
     )
     if not status_path.exists():
         _write_gate_status(tmp_path, "")
@@ -888,12 +898,12 @@ def _unit_test_managed_yml_regen_changes_are_ignored_in_open_session(
         all_files=[],
         change_state=ChangeState(
             phase="end",
-            gate_status_path="devcovenant/registry/local/gate_status.json",
+            gate_status_path="devcovenant/registry/runtime/gate_status.json",
             session_valid=True,
             session_paths=[workflow_path],
             current_snapshot_numstat={rel_path: f"1\t1\t{rel_path}"},
-            gate_status_payload={
-                "session_state": "open",
+            gate_status_payload={"session_state": "open"},
+            session_snapshot_payload={
                 "document_exemption_baseline": {
                     rel_path: _allowlist_fingerprint_payload(
                         relative_path=rel_path,
@@ -934,12 +944,12 @@ def _unit_test_managed_yaml_regen_changes_are_ignored_in_open_session(
         all_files=[],
         change_state=ChangeState(
             phase="end",
-            gate_status_path="devcovenant/registry/local/gate_status.json",
+            gate_status_path="devcovenant/registry/runtime/gate_status.json",
             session_valid=True,
             session_paths=[workflow_path],
             current_snapshot_numstat={rel_path: f"1\t1\t{rel_path}"},
-            gate_status_payload={
-                "session_state": "open",
+            gate_status_payload={"session_state": "open"},
+            session_snapshot_payload={
                 "document_exemption_baseline": {
                     rel_path: _allowlist_fingerprint_payload(
                         relative_path=rel_path,
@@ -985,12 +995,12 @@ def _unit_test_mixed_yml_managed_and_visible_changes_require_changelog(
         all_files=[],
         change_state=ChangeState(
             phase="end",
-            gate_status_path="devcovenant/registry/local/gate_status.json",
+            gate_status_path="devcovenant/registry/runtime/gate_status.json",
             session_valid=True,
             session_paths=[workflow_path],
             current_snapshot_numstat={rel_path: f"1\t1\t{rel_path}"},
-            gate_status_payload={
-                "session_state": "open",
+            gate_status_payload={"session_state": "open"},
+            session_snapshot_payload={
                 "document_exemption_baseline": {
                     rel_path: _allowlist_fingerprint_payload(
                         relative_path=rel_path,
@@ -1085,9 +1095,10 @@ def _unit_test_deleted_files_listed_in_changelog_are_tolerated(
         all_files=[],
         change_state=ChangeState(
             phase="end",
+            gate_status_path="devcovenant/registry/runtime/gate_status.json",
             session_valid=True,
             current_snapshot_numstat={"src/module.py": "hash\tsrc/module.py"},
-            gate_status_payload={
+            session_snapshot_payload={
                 "session_start_snapshot": {
                     "src/module.py": "old\tsrc/module.py",
                     "docs/retired.md": "old\tdocs/retired.md",
@@ -1145,11 +1156,11 @@ def _unit_test_deleted_files_are_scoped_to_gate_start_snapshot(
         all_files=[],
         change_state=ChangeState(
             phase="end",
-            gate_status_path="devcovenant/registry/local/gate_status.json",
+            gate_status_path="devcovenant/registry/runtime/gate_status.json",
             session_valid=True,
             session_paths=[tmp_path / "src" / "module.py"],
             current_snapshot_numstat={"src/module.py": "1\t1\tsrc/module.py"},
-            gate_status_payload={
+            session_snapshot_payload={
                 "session_start_snapshot": {
                     "src/module.py": "old",
                     "docs/current-deleted.md": "old",
@@ -1643,7 +1654,7 @@ def _unit_test_session_rejects_invalid_start_numstat_payload(
         encoding="utf-8",
     )
     status_path = (
-        tmp_path / "devcovenant" / "registry" / "local" / "gate_status.json"
+        tmp_path / "devcovenant" / "registry" / "runtime" / "gate_status.json"
     )
     status_path.parent.mkdir(parents=True, exist_ok=True)
     status_path.write_text(
@@ -2321,7 +2332,7 @@ class GeneratedUnittestCases(unittest.TestCase):
                         session_valid=False,
                         session_error=(
                             "Gate status file is missing: "
-                            "devcovenant/registry/local/gate_status.json."
+                            "devcovenant/registry/runtime/gate_status.json."
                         ),
                         session_reason_code="missing_gate_status",
                     ),

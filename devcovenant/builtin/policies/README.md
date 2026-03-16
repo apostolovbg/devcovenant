@@ -33,7 +33,7 @@ Descriptors define:
 - `metadata` defaults
 
 Resolved metadata is computed by runtime precedence and then written into:
-- `devcovenant/registry/local/policy_registry.yaml`
+- `devcovenant/registry/registry.yaml`
 - AGENTS managed policy block
 
 Example metadata-owned runtime behavior:

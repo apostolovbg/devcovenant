@@ -25,7 +25,7 @@ session-delta governance and related policy nagging.
 That same global baseline also ignores ubiquitous editor, packaging,
 coverage, and DevCovenant runtime artifacts such as `.vscode/**`,
 `.idea/**`, `*.egg-info/**`, `pip-wheel-metadata/**`, `.coverage*`,
-`devcovenant/logs/**`, and `devcovenant/registry/local/**`.
+`devcovenant/logs/**`, and `devcovenant/registry/runtime/**`.
 Runtime still requires valid YAML; parse/load errors in config remain
 blocking command failures.
 The template source
@@ -155,12 +155,15 @@ the same session so generated configs remain self-explanatory.
   relative paths resolve from repo root and absolute paths are used as-is.
 
 - `clean.overlays`: additive cleanup targets merged after active profile
-  `clean_overlays`.
+  `clean_overlays`, including per-scope lists for build, cache,
+  runtime-registry, logs, and protected paths.
 
 - `clean.overrides`: replacement cleanup lists for repositories that need
   full ownership of one resolved cleanup key. Template defaults use `{}` so
   no replacement is implied; explicit per-key `[]` values intentionally clear
   inherited lists for that key, including all-empty override blocks.
+  Runtime still protects tracked files such as
+  `devcovenant/registry/registry.yaml` and `devcovenant/logs/README.md`.
 
 - `devflow-run-gates.required_commands`: canonical test command chain.
   `engine.tests_output_mode` changes output presentation only; it does not
@@ -228,7 +231,7 @@ Override semantics:
 - replacement intent is explicit: use overrides when you want full authority
   over one key, not when you want additive extension
 - refresh records per-key resolution trace in
-  `devcovenant/registry/local/policy_registry.yaml` under
+  `devcovenant/registry/registry.yaml` under
   `metadata_resolution`
 - when an override replaces inherited non-empty values, refresh also records
   a structured `metadata_warnings` entry for that policy key so destructive

@@ -51,6 +51,11 @@ class ChangeState:
         session_error: Validation error when session snapshot is unusable.
         session_reason_code: Stable reason token for session validity/errors.
         gate_status_payload: Loaded gate-status payload when available.
+        session_snapshot_path:
+            Relative session snapshot companion path used for heavy runtime
+            state.
+        session_snapshot_payload:
+            Loaded companion session snapshot payload when available.
     """
 
     phase: str = ""
@@ -62,6 +67,8 @@ class ChangeState:
     session_error: str = ""
     session_reason_code: str = ""
     gate_status_payload: Dict[str, Any] = field(default_factory=dict)
+    session_snapshot_path: str = ""
+    session_snapshot_payload: Dict[str, Any] = field(default_factory=dict)
 
 
 @dataclass

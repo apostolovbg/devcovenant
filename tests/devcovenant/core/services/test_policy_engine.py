@@ -219,7 +219,7 @@ def _unit_test_engine_context_wrappers_delegate_to_helper(
     engine.config = {"ignore": {"patterns": []}}
     engine.translator_runtime = object()
     engine._DEFAULT_GATE_STATUS_PATH = Path(
-        "devcovenant/registry/local/gate_status.json"
+        "devcovenant/registry/runtime/gate_status.json"
     )
     engine._is_ignored_path = lambda path: False
     engine._resolve_file_suffixes = lambda: [".py"]
@@ -444,11 +444,7 @@ def _unit_test_runtime_policy_metadata_options_decodes_registry_strings() -> (
     with tempfile.TemporaryDirectory() as tmpdir:
         repo_root = Path(tmpdir)
         registry_path = (
-            repo_root
-            / "devcovenant"
-            / "registry"
-            / "local"
-            / "policy_registry.yaml"
+            repo_root / "devcovenant" / "registry" / "registry.yaml"
         )
         registry_path.parent.mkdir(parents=True, exist_ok=True)
         registry_path.write_text(

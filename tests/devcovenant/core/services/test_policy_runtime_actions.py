@@ -105,11 +105,7 @@ def _unit_test_runtime_policy_metadata_options_decodes_registry_strings() -> (
     with tempfile.TemporaryDirectory() as tmpdir:
         repo_root = Path(tmpdir)
         registry_path = (
-            repo_root
-            / "devcovenant"
-            / "registry"
-            / "local"
-            / "policy_registry.yaml"
+            repo_root / "devcovenant" / "registry" / "registry.yaml"
         )
         registry_path.parent.mkdir(parents=True, exist_ok=True)
         registry_path.write_text(
@@ -144,11 +140,7 @@ def _unit_test_runtime_policy_metadata_prefers_typed_registry() -> None:
     with tempfile.TemporaryDirectory() as tmpdir:
         repo_root = Path(tmpdir)
         registry_path = (
-            repo_root
-            / "devcovenant"
-            / "registry"
-            / "local"
-            / "policy_registry.yaml"
+            repo_root / "devcovenant" / "registry" / "registry.yaml"
         )
         registry_path.parent.mkdir(parents=True, exist_ok=True)
         registry_path.write_text(

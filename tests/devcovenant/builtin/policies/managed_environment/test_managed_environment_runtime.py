@@ -199,8 +199,8 @@ def _unit_test_guidance_suffix_uses_placeholders_when_missing() -> None:
     assert "{managed_python}" not in suffix
 
 
-def _unit_test_load_policy_entry_requires_local_registry() -> None:
-    """Missing registry should fail explicitly instead of parsing AGENTS."""
+def _unit_test_load_policy_entry_requires_registry_or_config() -> None:
+    """Missing registry without config should fail explicitly."""
     module = importlib.import_module(MODULE)
     with tempfile.TemporaryDirectory() as temp_dir:
         repo_root = Path(temp_dir)
@@ -211,8 +211,69 @@ def _unit_test_load_policy_entry_requires_local_registry() -> None:
         else:  # pragma: no cover - defensive
             raise AssertionError("Expected ValueError for missing registry.")
 
-        assert "requires local policy registry" in message
+        assert "requires tracked registry" in message
         assert "devcovenant refresh" in message
+
+
+def _unit_test_bootstrap_from_config_when_registry_missing(
+    monkeypatch: MonkeyPatch,
+) -> None:
+    """Config metadata should bootstrap managed-environment resolution."""
+    module = importlib.import_module(MODULE)
+    with tempfile.TemporaryDirectory() as temp_dir:
+        repo_root = Path(temp_dir)
+        config_path = repo_root / "devcovenant" / "config.yaml"
+        config_path.parent.mkdir(parents=True, exist_ok=True)
+        config_path.write_text(
+            "profiles:\n  active:\n    - global\n",
+            encoding="utf-8",
+        )
+
+        policy_dir = (
+            repo_root
+            / "devcovenant"
+            / "builtin"
+            / "policies"
+            / "managed_environment"
+        )
+        policy_dir.mkdir(parents=True, exist_ok=True)
+        (policy_dir / "managed_environment.yaml").write_text(
+            "id: managed-environment\n"
+            "text: Managed environment.\n"
+            "metadata:\n"
+            "  enabled: true\n"
+            "  expected_interpreters: []\n"
+            "  expected_paths: []\n",
+            encoding="utf-8",
+        )
+
+        monkeypatch.setattr(
+            module.metadata_runtime_module,
+            "build_metadata_context",
+            lambda repo_root: module.metadata_runtime_module.MetadataContext(
+                control=module.metadata_runtime_module.PolicyControl({}),
+                profile_overlays={},
+                autogen_overlays={
+                    "managed-environment": {
+                        "expected_interpreters": (
+                            [".venv/bin/python"],
+                            True,
+                        ),
+                        "expected_paths": ([".venv"], True),
+                    }
+                },
+                user_overlays={},
+                autogen_overrides={},
+                user_overrides={},
+            ),
+        )
+
+        entry = module._load_policy_entry(repo_root)
+
+    assert entry is not None
+    assert str(entry["enabled"]).lower() == "true"
+    assert entry["metadata"]["expected_interpreters"] == ".venv/bin/python"
+    assert entry["metadata"]["expected_paths"] == ".venv"
 
 
 def _unit_test_run_command_suppresses_console_bursts_in_normal_mode() -> None:
@@ -377,9 +438,19 @@ class GeneratedUnittestCases(unittest.TestCase):
         """Run managed guidance placeholder assertions."""
         _unit_test_guidance_suffix_uses_placeholders_when_missing()
 
-    def test_load_policy_entry_requires_local_registry(self):
-        """Run strict local-registry requirement assertions."""
-        _unit_test_load_policy_entry_requires_local_registry()
+    def test_load_policy_entry_requires_registry_or_config(self):
+        """Run missing-registry-and-config explicit-failure assertions."""
+        _unit_test_load_policy_entry_requires_registry_or_config()
+
+    def test_load_policy_entry_bootstraps_from_config_when_registry_missing(
+        self,
+    ):
+        """Run config-bootstrap assertions for missing tracked registry."""
+        monkeypatch = MonkeyPatch()
+        try:
+            _unit_test_bootstrap_from_config_when_registry_missing(monkeypatch)
+        finally:
+            monkeypatch.undo()
 
     def test_run_command_suppresses_console_bursts_in_normal_mode(self):
         """Run managed-command normal-mode output suppression assertions."""
