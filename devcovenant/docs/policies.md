@@ -1,5 +1,5 @@
 # Policies
-**Last Updated:** 2026-03-16
+**Last Updated:** 2026-03-17
 **Project Version:** 1.0.0
 
 ## Table of Contents
@@ -471,6 +471,8 @@ Operational behavior:
 - extracted values are parsed and compared through the active
   `version-governance` scheme, so equivalent canonical spellings can stay in
   sync even when raw strings differ (for example normalized package versions)
+- repositories should configure `version-governance.scheme` explicitly when
+  they enable `version-governance` or rely on `version-sync`
 - version-governance scheme adapters are internal policy modules, not a
   separate external plugin system; repositories configure the scheme through
   policy metadata rather than loading custom adapter entrypoints

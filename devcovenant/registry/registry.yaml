@@ -8818,9 +8818,9 @@ policies:
       custom schemes may leave bump enforcement disabled. Scheme adapters may be
       builtin or repo-defined and may add extra release rules to the latest
       changelog entry.
-      Activation is controlled by `config.yaml -> policy_state`. Default profile
-      metadata keeps `semver` as the standard baseline, while repositories may
-      switch schemes or relax bump enforcement explicitly.
+      Activation is controlled by `config.yaml -> policy_state`. Repositories
+      should choose `version-governance.scheme` explicitly in profile or config
+      metadata, then tune bump enforcement to match the selected scheme.
     metadata:
       id: version-governance
       severity: error
@@ -9093,7 +9093,7 @@ policies:
     - devcovenant/VERSION
     origin: builtin
     script_exists: true
-    hash: e56606280b63d247e96d33a76aca8ea0f56f072289a7286021b31d5dada53cc5
+    hash: 1836776c3ab88e91312c711f925326c7e6b52d74c2cc895c1a886502a5aee0b7
     script_path: builtin/version_governance.py
 profiles:
   terraform:
@@ -10160,12 +10160,10 @@ profiles:
         target_role_globs: []
         target_role_dirs: []
       version-governance:
-        scheme: semver
         enforce_bumping: true
         version_file: VERSION
         changelog_file: CHANGELOG.md
         changelog_header_prefix: '## Version'
-        semver_scope_tags_required: true
       dependency-license-sync:
         dependency_files: []
         dependency_globs: []
@@ -11534,6 +11532,8 @@ profiles:
         target_role_dirs:
         - docs=>devcovenant/docs
       version-governance:
+        scheme: semver
+        semver_scope_tags_required: true
         version_file: devcovenant/VERSION
     source: custom
     path: devcovenant/custom/profiles/devcovrepo

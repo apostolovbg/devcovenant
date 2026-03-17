@@ -58,7 +58,7 @@ def _read_version(path: Path) -> str:
 
 
 def _normalize_version_for_compare(raw: str) -> str:
-    """Normalize repo version text into parseable SemVer for comparison."""
+    """Normalize DevCovenant package version text into parseable SemVer."""
     token = str(raw or "").strip()
     if not token:
         return "0.0.0"
@@ -67,12 +67,14 @@ def _normalize_version_for_compare(raw: str) -> str:
     match = _SEMVER_COMPARE_RE.fullmatch(token)
     if match is None:
         raise ValueError(
-            f"Invalid semantic version string `{raw}` for upgrade compare."
+            "Invalid DevCovenant package version string "
+            f"`{raw}` for upgrade compare."
         )
     core_parts = [part.strip() for part in match.group("core").split(".")]
     if any(not part.isdigit() for part in core_parts):
         raise ValueError(
-            f"Invalid semantic version string `{raw}` for upgrade compare."
+            "Invalid DevCovenant package version string "
+            f"`{raw}` for upgrade compare."
         )
     while len(core_parts) < 3:
         core_parts.append("0")
@@ -87,13 +89,14 @@ def _normalize_version_for_compare(raw: str) -> str:
         semver.Version.parse(normalized)
     except ValueError as exc:
         raise ValueError(
-            f"Invalid semantic version string `{raw}` for upgrade compare."
+            "Invalid DevCovenant package version string "
+            f"`{raw}` for upgrade compare."
         ) from exc
     return normalized
 
 
 def _parse_version_for_compare(raw: str) -> semver.Version:
-    """Parse a version string into a SemVer object for upgrade ordering."""
+    """Parse one DevCovenant package version into SemVer ordering."""
     return semver.Version.parse(_normalize_version_for_compare(raw))
 
 

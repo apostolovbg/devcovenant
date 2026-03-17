@@ -143,6 +143,11 @@ def resolve_runtime_scheme(
         config_payload=config_payload,
     )
     scheme_name = checker._scheme_name()
+    if not scheme_name:
+        raise ValueError(
+            "Configure `version-governance.scheme` explicitly before "
+            "using version-governance or version-sync."
+        )
     scheme = _scheme_registry().get(scheme_name)
     if scheme is None:
         raise ValueError(
@@ -170,6 +175,19 @@ class VersionGovernanceCheck(PolicyCheck):
         scheme_name = self._scheme_name()
         ignored_prefixes = self._ignored_prefixes()
         enforce_bumping = self._bool_option("enforce_bumping")
+
+        if not scheme_name:
+            return [
+                Violation(
+                    policy_id=self.policy_id,
+                    severity="error",
+                    file_path=version_path,
+                    message=(
+                        "Configure `version-governance.scheme` explicitly "
+                        "before enabling version-governance."
+                    ),
+                )
+            ]
 
         if not version_path.exists():
             return violations
@@ -373,10 +391,10 @@ class VersionGovernanceCheck(PolicyCheck):
 
     def _scheme_name(self) -> str:
         """Return normalized scheme token for version governance."""
-        raw = str(self.get_option("scheme", "semver")).strip().lower()
+        raw = str(self.get_option("scheme", "")).strip().lower()
         if raw == "int":
             return "integer"
-        return raw or "semver"
+        return raw
 
     def _bool_option(self, key: str) -> bool:
         """Return one metadata option normalized as a boolean flag."""

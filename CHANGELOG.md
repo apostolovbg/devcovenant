@@ -57,6 +57,39 @@ Example:
 ## Version 1.0.0
 
 - 2026-03-17:
+  Change: Standardized explicit version-governance scheme selection and
+  clarified version-stack wording across defaults, docs, and upgrade
+  runtime.
+  Why: Removed hidden SemVer baseline assumptions from shared defaults so
+  version readers inherit scheme semantics only from explicit repo
+  metadata.
+  Impact: Made generic profiles scheme-neutral, kept this repo's SemVer
+  choice explicit in `devcovrepo`, and clarified that upgrade's SemVer
+  comparison concerns DevCovenant package versions rather than governed
+  repo versions.
+  Files:
+  AGENTS.md
+  CHANGELOG.md
+  PLAN.md
+  POLICY_MAP.md
+  devcovenant/builtin/policies/version_governance/version_governance.py
+  devcovenant/builtin/policies/version_governance/version_governance.yaml
+  devcovenant/builtin/profiles/defaults/defaults.yaml
+  devcovenant/custom/profiles/devcovrepo/devcovrepo.yaml
+  devcovenant/docs/architecture.md
+  devcovenant/docs/config.md
+  devcovenant/docs/installation.md
+  devcovenant/docs/policies.md
+  devcovenant/docs/profiles.md
+  devcovenant/docs/registry.md
+  devcovenant/docs/workflow.md
+  devcovenant/registry/registry.yaml
+  devcovenant/upgrade.py
+  tests/devcovenant/builtin/policies/version_governance/\
+    test_version_governance.py
+  tests/devcovenant/test_upgrade.py
+
+- 2026-03-17:
   Change: Replaced the completed registry-layout roadmap with a new
   version-stack roadmap in `PLAN.md`.
   Why: Defined the remaining future-facing work after the
@@ -215,7 +248,6 @@ Example:
   Files:
   CHANGELOG.md
   README.md
-  devcovenant/README.md
   devcovenant/core/services/cleanup.py
   devcovenant/docs/architecture.md
   devcovenant/docs/installation.md
@@ -235,7 +267,6 @@ Example:
   AGENTS.md
   CHANGELOG.md
   POLICY_MAP.md
-  devcovenant/README.md
   devcovenant/builtin/policies/semantic_version_scope/__init__.py
   devcovenant/builtin/policies/semantic_version_scope/\
     semantic_version_scope.py
@@ -271,7 +302,6 @@ Example:
   Files:
   CHANGELOG.md
   README.md
-  devcovenant/README.md
   devcovenant/core/flow/clean.py
   devcovenant/docs/architecture.md
   devcovenant/docs/installation.md
@@ -336,7 +366,6 @@ Example:
   CHANGELOG.md
   PLAN.md
   README.md
-  devcovenant/README.md
   devcovenant/docs/installation.md
   devcovenant/docs/registry.md
   devcovenant/docs/workflow.md
@@ -356,7 +385,6 @@ Example:
   CHANGELOG.md
   PLAN.md
   README.md
-  devcovenant/README.md
   devcovenant/builtin/profiles/global/assets/config.yaml
   devcovenant/builtin/profiles/global/global.yaml
   devcovenant/clean.py
@@ -388,7 +416,6 @@ Example:
   CHANGELOG.md
   PLAN.md
   README.md
-  devcovenant/README.md
   devcovenant/docs/architecture.md
   devcovenant/docs/registry.md
   devcovenant/docs/workflow.md
@@ -417,7 +444,6 @@ Example:
   Files:
   CHANGELOG.md
   README.md
-  devcovenant/README.md
   devcovenant/builtin/policies/changelog_coverage/changelog_coverage.py
   devcovenant/builtin/policies/devflow_run_gates/devflow_run_gates.py
   devcovenant/config.yaml
@@ -470,7 +496,6 @@ Example:
   CHANGELOG.md
   PLAN.md
   README.md
-  devcovenant/README.md
   devcovenant/docs/architecture.md
   devcovenant/docs/installation.md
   devcovenant/docs/policies.md
@@ -520,7 +545,6 @@ Example:
   CHANGELOG.md
   PLAN.md
   README.md
-  devcovenant/README.md
   devcovenant/builtin/policies/changelog_coverage/changelog_coverage.py
   devcovenant/builtin/policies/devcov_structure_guard/\
     devcov_structure_guard.py
@@ -593,7 +617,6 @@ Example:
   AGENTS.md
   CONTRIBUTING.md
   README.md
-  devcovenant/README.md
   devcovenant/builtin/policies/managed_environment/\
     managed_environment.py
   devcovenant/builtin/policies/managed_environment/\
@@ -653,7 +676,6 @@ Example:
   CHANGELOG.md
   PLAN.md
   README.md
-  devcovenant/README.md
   devcovenant/__main__.py
   devcovenant/cli.py
   devcovenant/config.yaml
@@ -698,7 +720,6 @@ Example:
   CHANGELOG.md
   CONTRIBUTING.md
   README.md
-  devcovenant/README.md
 
 - 2026-03-15:
   Change: Completed Item 1 of the strict no-fallback plan and recorded the
@@ -1082,7 +1103,6 @@ Example:
   CHANGELOG.md
   CONTRIBUTING.md
   README.md
-  devcovenant/README.md
   devcovenant/builtin/profiles/global/assets/AGENTS.yaml
   devcovenant/builtin/profiles/global/assets/CHANGELOG.yaml
   devcovenant/builtin/profiles/global/assets/CONTRIBUTING.yaml
@@ -1127,7 +1147,6 @@ Example:
   devcovenant/docs/workflow.md
   devcovenant/gate.py
   devcovenant/install.py
-  devcovenant/README.md
   devcovenant/refresh.py
   devcovenant/test.py
   devcovenant/undeploy.py
@@ -1156,7 +1175,6 @@ Example:
   devcovenant/clean.py
   devcovenant/builtin/policies/managed_environment/\
     managed_environment_runtime.py
-  devcovenant/README.md
   devcovenant/builtin/profiles/global/assets/config.yaml
   devcovenant/core/flow/clean.py
   devcovenant/core/runtime/execution.py
@@ -1192,7 +1210,6 @@ Example:
   CONTRIBUTING.md
   MANIFEST.in
   README.md
-  devcovenant/README.md
   devcovenant/config.yaml
   devcovenant/core/event_runtime.py
   devcovenant/core/execution_runtime.py
@@ -1544,7 +1561,6 @@ Example:
   Files:
   CHANGELOG.md
   README.md
-  devcovenant/README.md
   devcovenant/builtin/profiles/csharp/csharp.yaml
   devcovenant/builtin/profiles/dart/dart.yaml
   devcovenant/builtin/profiles/flutter/flutter.yaml
@@ -1592,7 +1608,6 @@ Example:
   Files:
   CHANGELOG.md
   README.md
-  devcovenant/README.md
   devcovenant/docs/profiles.md
   devcovenant/docs/README.md
 
@@ -1740,7 +1755,6 @@ Example:
   PROFILE_MAP.md
   README.md
   SPEC.md
-  devcovenant/README.md
   devcovenant/builtin/policies/README.md
   devcovenant/builtin/policies/last_updated_placement/__init__.py
   devcovenant/builtin/policies/last_updated_placement/autofix/__init__.py
@@ -1972,7 +1986,6 @@ Example:
   Files:
   CHANGELOG.md
   README.md
-  devcovenant/README.md
   devcovenant/docs/architecture.md
   devcovenant/docs/config.md
   devcovenant/docs/installation.md
@@ -2176,7 +2189,6 @@ Example:
   Files:
   CHANGELOG.md
   README.md
-  devcovenant/README.md
   devcovenant/cli.py
   devcovenant/core/flow/refresh.py
   devcovenant/docs/architecture.md
@@ -2204,7 +2216,6 @@ Example:
   CHANGELOG.md
   PLAN.md
   README.md
-  devcovenant/README.md
   devcovenant/builtin/policies/README.md
   devcovenant/builtin/profiles/README.md
   devcovenant/builtin/profiles/global/assets/config.yaml
@@ -2244,7 +2255,6 @@ Example:
   AGENTS.md
   CHANGELOG.md
   README.md
-  devcovenant/README.md
   devcovenant/builtin/profiles/defaults/defaults.yaml
   devcovenant/config.yaml
   devcovenant/core/services/policy_parse.py
@@ -2280,7 +2290,6 @@ Example:
   PROFILE_MAP.md
   README.md
   SPEC.md
-  devcovenant/README.md
   devcovenant/VERSION
   devcovenant/__init__.py
   devcovenant/builtin/policies/README.md

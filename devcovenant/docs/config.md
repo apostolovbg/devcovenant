@@ -1,5 +1,5 @@
 # Configuration
-**Last Updated:** 2026-03-16
+**Last Updated:** 2026-03-17
 **Project Version:** 1.0.0
 
 ## Table of Contents
@@ -295,6 +295,21 @@ policy_state:
   version-governance: false
 ```
 
+Configure version governance for a SemVer repository:
+```yaml
+policy_state:
+  version-governance: true
+
+user_metadata_overrides:
+  version-governance:
+    scheme: semver
+    version_file: VERSION
+    changelog_file: CHANGELOG.md
+    changelog_header_prefix: '## Version'
+    enforce_bumping: true
+    semver_scope_tags_required: true
+```
+
 Configure version governance for a CalVer repository:
 ```yaml
 policy_state:
@@ -354,6 +369,8 @@ user_metadata_overrides:
       devcovenant/custom/policies/version_governance/roman_scheme.py
 ```
 
+Choose `version-governance.scheme` explicitly whenever the policy is
+enabled; there is no implicit SemVer fallback.
 `custom_regex` is validation-only and should keep `enforce_bumping: false`.
 `custom_adapter` expects the referenced repo-relative Python file to export
 `SCHEME` with the same parse/compare/release interface used by builtin

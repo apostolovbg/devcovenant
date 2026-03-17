@@ -332,7 +332,7 @@ def _unit_test_parse_version_for_compare_rejects_invalid_tokens() -> None:
         message = str(error)
     else:  # pragma: no cover - defensive
         raise AssertionError("Expected ValueError for invalid version.")
-    assert "Invalid semantic version string" in message
+    assert "Invalid DevCovenant package version string" in message
 
 
 def _unit_test_main_invokes_run_and_exits_with_code() -> None:

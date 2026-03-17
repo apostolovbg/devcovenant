@@ -1,5 +1,5 @@
 # Workflow
-**Last Updated:** 2026-03-16
+**Last Updated:** 2026-03-17
 **Project Version:** 1.0.0
 
 ## Table of Contents
@@ -208,6 +208,10 @@ Shared gate hook targeting:
   stored in `devcovenant/registry/runtime/session_snapshot.json`
 
 Install/upgrade boundary:
+- `upgrade` normalizes and reports DevCovenant package-version
+  comparison before copying the new core into place; this comparison is
+  about DevCovenant's own release version, not the governed repo version
+  scheme
 - `install` is a cold bootstrap command and does not preserve existing
   repo-local `devcovenant/` runtime state
 - `install` exits and points to `upgrade` when DevCovenant is already present

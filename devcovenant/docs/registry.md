@@ -1,5 +1,5 @@
 # Registry Files
-**Last Updated:** 2026-03-16
+**Last Updated:** 2026-03-17
 **Project Version:** 1.0.0
 
 ## Table of Contents
@@ -62,6 +62,9 @@ Metadata trace intent:
 - `version-sync` records scheme-neutral extractor mappings such as
   `project_version_line` while leaving actual equality semantics to the
   active `version-governance` scheme
+- generic profile defaults now keep version-governance scheme selection
+  explicit; tracked registry output therefore shows the scheme a repo chose
+  intentionally instead of implying a hidden global baseline
 
 ## Runtime Registry
 `devcovenant/registry/runtime/` stores runtime-local state such as:

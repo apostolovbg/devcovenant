@@ -131,6 +131,30 @@ def _unit_test_runtime_scheme_resolves_override_scheme() -> None:
     assert check._scheme_name() == "pep440"
 
 
+def _unit_test_runtime_scheme_requires_explicit_scheme() -> None:
+    """Runtime helper should fail when no governance scheme is configured."""
+    repo_root = _repo_root()
+    config_payload = yaml.safe_load(
+        (repo_root / "devcovenant" / "config.yaml").read_text(encoding="utf-8")
+    )
+    overrides = config_payload.setdefault("user_metadata_overrides", {})
+    overrides["version-governance"] = {
+        "scheme": "",
+    }
+    try:
+        version_governance.resolve_runtime_scheme(
+            repo_root,
+            config_payload=config_payload,
+        )
+    except ValueError as error:
+        message = str(error)
+    else:  # pragma: no cover - defensive
+        raise AssertionError(
+            "Expected version-governance scheme resolution to fail."
+        )
+    assert "version-governance.scheme" in message
+
+
 def _unit_test_semver_minor_marker_requires_minor_bump(tmp_path: Path) -> None:
     """A patch bump should fail when the changelog requests a minor bump."""
     version_file, changelog, other_file = _write_version_files(
@@ -596,6 +620,28 @@ def _unit_test_int_alias_resolves_to_integer_scheme(tmp_path: Path) -> None:
     assert check.check(context) == []
 
 
+def _unit_test_requires_explicit_scheme_when_enabled(tmp_path: Path) -> None:
+    """Enabled governance should fail clearly when scheme is omitted."""
+    version_file, changelog, other_file = _write_version_files(
+        tmp_path,
+        "1.0.0",
+        "0.9.0",
+        "- 2026-03-16: release",
+    )
+    context = CheckContext(
+        repo_root=tmp_path,
+        changed_files=[version_file, changelog, other_file],
+    )
+    check = _configured_policy(
+        scheme="",
+        enforce_bumping=False,
+        semver_scope_tags_required=False,
+    )
+    violations = check.check(context)
+    assert violations
+    assert any("version-governance.scheme" in v.message for v in violations)
+
+
 def _unit_test_unsupported_scheme_is_rejected(tmp_path: Path) -> None:
     """Unsupported scheme names should fail explicitly."""
     version_file, changelog, other_file = _write_version_files(
@@ -635,6 +681,10 @@ class GeneratedUnittestCases(unittest.TestCase):
     def test_runtime_scheme_resolves_override_scheme(self):
         """Run runtime scheme-resolution coverage."""
         _unit_test_runtime_scheme_resolves_override_scheme()
+
+    def test_runtime_scheme_requires_explicit_scheme(self):
+        """Run explicit-scheme runtime resolution coverage."""
+        _unit_test_runtime_scheme_requires_explicit_scheme()
 
     def test_semver_minor_marker_requires_minor_bump(self):
         """Run semver minor-marker mismatch coverage."""
@@ -689,6 +739,13 @@ class GeneratedUnittestCases(unittest.TestCase):
         """Run forward-bump enforcement coverage."""
         with tempfile.TemporaryDirectory() as temp_dir:
             _unit_test_rejects_non_forward_version_when_bumping_enabled(
+                Path(temp_dir).resolve()
+            )
+
+    def test_requires_explicit_scheme_when_enabled(self):
+        """Run explicit-scheme enforcement coverage."""
+        with tempfile.TemporaryDirectory() as temp_dir:
+            _unit_test_requires_explicit_scheme_when_enabled(
                 Path(temp_dir).resolve()
             )
 

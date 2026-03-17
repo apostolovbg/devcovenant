@@ -223,4 +223,6 @@ policy_overlays:
     target_role_dirs:
       - docs=>devcovenant/docs
   version-governance:
+    scheme: semver
+    semver_scope_tags_required: true
     version_file: devcovenant/VERSION

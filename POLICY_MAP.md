@@ -1,5 +1,5 @@
 # Policy Map
-**Last Updated:** 2026-03-16
+**Last Updated:** 2026-03-17
 **Project Version:** 1.0.0
 
 ## Table of Contents
@@ -64,7 +64,7 @@ This map documents shipped policy contracts and ownership for 1.0.0.
 - `read-only-directories`: blocks writes to declared read-only paths.
 - `security-scanner`: blocks risky patterns (`eval`, `exec`, shell risks).
 - `version-governance`: optional version-format validation, scheme-aware
-  forward-bump enforcement, and SemVer release-scope alignment.
+  forward-bump enforcement, and adapter-specific release-rule alignment.
 - `version-sync`: enforces consistency across role-targeted version surfaces
   only.
 

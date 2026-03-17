@@ -182,7 +182,7 @@ Operator notes:
 5. Prove the result in this repo and then in downstream managed repos.
 
 ## Ordered Backlog
-### Item 1 [pending]: Sweep Remaining Version Readers and Assumptions
+### Item 1 [complete]: Sweep Remaining Version Readers and Assumptions
 **Objective:** Ensure every remaining version-aware policy, generated surface,
 and default profile path is either scheme-neutral or delegated through
 `version-governance`.
@@ -223,6 +223,16 @@ extractors or naming.
    it is intentionally specific to a SemVer-only concern.
 2. Default profile examples are scheme-neutral.
 3. Remaining SemVer mentions are intentional and documented.
+
+**Closure Notes**
+1. Removed the hidden generic SemVer baseline from `defaults` and required
+   `version-governance.scheme` explicitly when version governance or
+   version-sync resolution is used.
+2. Moved this repository's SemVer-specific defaults into `devcovrepo` and
+   clarified docs/runtime wording so DevCovenant package upgrade comparison is
+   distinct from governed repo version semantics.
+3. Closed the slice with focused version-stack regressions, refresh-driven
+   managed-surface convergence, and the full gated workflow.
 
 ### Item 2 [pending]: Add Ecosystem and Package Legality Enforcement
 **Objective:** Keep repo version equality flexible while enforcing stricter

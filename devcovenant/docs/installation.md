@@ -1,5 +1,5 @@
 # Installation and Lifecycle
-**Last Updated:** 2026-03-16
+**Last Updated:** 2026-03-17
 **Project Version:** 1.0.0
 
 ## Table of Contents
@@ -62,8 +62,9 @@ Additional invariants:
 - `install` is not a preservation path; if DevCovenant already exists it
   exits and points to `upgrade` instead of merging repo-local state
 - if DevCovenant already exists, `install` exits and points to `upgrade`
-- `upgrade` compares semantic versions with prerelease ordering (and accepts
-  normalized `v`-prefixed version strings such as `v1.2`)
+- `upgrade` compares DevCovenant package release versions with prerelease
+  ordering (and accepts normalized `v`-prefixed version strings such as
+  `v1.2`)
 - `deploy` validates config shape before activation
 - when `devcov_core_include: false`, deploy cleanup removes
   `devcovenant/custom/policies/**`,

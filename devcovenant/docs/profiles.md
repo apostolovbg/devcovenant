@@ -1,5 +1,5 @@
 # Profiles
-**Last Updated:** 2026-03-16
+**Last Updated:** 2026-03-17
 **Project Version:** 1.0.0
 
 ## Table of Contents
@@ -207,11 +207,13 @@ Custom layout patterns for dependency selectors:
 Versioning metadata is profile-driven:
 - `global` seeds `policy_state.version-governance: false` in the generated
   config template so version-governance stays opt-in outside release slices.
-- `defaults` seeds `version-governance` with the standard SemVer baseline:
-  `scheme: semver`, `enforce_bumping: true`,
-  `changelog_header_prefix: ## Version`, and
-  `semver_scope_tags_required: true`.
-- repositories that want Python-package-native versioning may switch
+- `defaults` seeds `version-governance` with shared path and bump controls
+  only: `version_file`, `changelog_file`, `changelog_header_prefix`, and
+  `enforce_bumping`.
+- repositories should choose `version-governance.scheme` explicitly in an
+  active profile or repo config; repo-specific profiles may also add
+  scheme-specific keys such as `semver_scope_tags_required`.
+- repositories that want Python-package-native versioning may set
   `version-governance.scheme` to `pep440` without changing the surrounding
   framework contract.
 - repositories with format-only custom version strings may switch to

@@ -1621,9 +1621,9 @@ version progression under the configured `scheme`. Repositories may enable
 custom schemes may leave bump enforcement disabled. Scheme adapters may be
 builtin or repo-defined and may add extra release rules to the latest
 changelog entry.
-Activation is controlled by `config.yaml -> policy_state`. Default profile
-metadata keeps `semver` as the standard baseline, while repositories may
-switch schemes or relax bump enforcement explicitly.
+Activation is controlled by `config.yaml -> policy_state`. Repositories
+should choose `version-governance.scheme` explicitly in profile or config
+metadata, then tune bump enforcement to match the selected scheme.
 
 
 ---

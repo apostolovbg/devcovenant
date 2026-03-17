@@ -1,5 +1,5 @@
 # DevCovenant Architecture Contracts
-**Last Updated:** 2026-03-16
+**Last Updated:** 2026-03-17
 **Project Version:** 1.0.0
 
 ## Table of Contents
@@ -125,8 +125,9 @@ Invariant:
   routine.
 - Gate-managed autofix requests read `engine.auto_fix_enabled` from repo
   config and default to disabled when the key is absent.
-- `upgrade` normalizes and reports semantic-version comparison (including
-  partial and `v`-prefixed versions), then always reconciles the full
+- `upgrade` normalizes and reports DevCovenant package-version comparison
+  (including partial and `v`-prefixed release strings), then always
+  reconciles the full
   `devcovenant/` package from source (`devcovenant/*.py`, `core/`, `builtin/`)
   while preserving repo-local runtime/custom state.
 - Upgrade preserves user custom policy trees under
@@ -643,7 +644,8 @@ Invariant:
   remains a consistency-only policy that delegates parsing/comparison to
   version-governance.
 - version-governance owns version-format validation, scheme-aware bump
-  progression, and optional SemVer release-scope validation when enabled.
+  progression, and any scheme-specific release-rule validation enabled by the
+  active adapter.
 - `devcovenant/builtin/policies/version_governance/version_governance.py`
   owns the shared changelog/version-file orchestration and scheme registry,
   while sibling modules (`semver.py`, `calver.py`, `integer.py`,

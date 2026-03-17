@@ -65,12 +65,10 @@ policy_overlays:
     target_role_globs: []
     target_role_dirs: []
   version-governance:
-    scheme: semver
     enforce_bumping: true
     version_file: VERSION
     changelog_file: CHANGELOG.md
     changelog_header_prefix: '## Version'
-    semver_scope_tags_required: true
   dependency-license-sync:
     dependency_files: []
     dependency_globs: []
