@@ -1,5 +1,5 @@
 # Registry Files
-**Last Updated:** 2026-03-15
+**Last Updated:** 2026-03-16
 **Project Version:** 1.0.0
 
 ## Table of Contents
@@ -38,6 +38,9 @@ It includes:
 - merged runtime-effective option view (`runtime_effective_options`)
 - discovered profile inventory and active-profile state
 - tracked inventory data used by refresh and integrity checks
+- current policy identities and resolved metadata for shipped frameworks such
+  as `version-governance`, including the configured scheme and bump
+  enforcement options that active profiles/config resolved
 
 Metadata trace intent:
 - `metadata` remains the final effective string-map used for policy/runtime
@@ -50,6 +53,15 @@ Metadata trace intent:
   autofix
 - typed runtime option views make the final policy surface inspectable without
   re-deriving values by hand
+- scheme-driven policies such as `version-governance` also record the
+  configured adapter identity and resolved options here so package-facing
+  repos can prove whether repo version checks are running under a general
+  scheme contract, a packaging-aware contract such as `pep440`, or a
+  repo-defined custom contract using `custom_regex_pattern` or
+  `custom_adapter_path`
+- `version-sync` records scheme-neutral extractor mappings such as
+  `project_version_line` while leaving actual equality semantics to the
+  active `version-governance` scheme
 
 ## Runtime Registry
 `devcovenant/registry/runtime/` stores runtime-local state such as:

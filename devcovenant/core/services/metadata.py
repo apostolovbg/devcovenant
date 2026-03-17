@@ -317,6 +317,14 @@ def load_policy_control_config(payload: Dict[str, object]) -> PolicyControl:
 def build_metadata_context(repo_root: Path) -> MetadataContext:
     """Return the metadata resolution context for a repo."""
     payload = _load_config_payload(repo_root)
+    return build_metadata_context_from_payload(repo_root, payload)
+
+
+def build_metadata_context_from_payload(
+    repo_root: Path,
+    payload: Dict[str, object],
+) -> MetadataContext:
+    """Return the metadata resolution context for an in-memory config."""
     active_profiles = _load_active_profiles(payload)
     profile_overlays = _collect_profile_overlays(repo_root, active_profiles)
     (

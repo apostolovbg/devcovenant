@@ -138,6 +138,9 @@ Runtime details that affect operations:
 - repository pytest execution is configured in `pyproject.toml` with
   `--import-mode=importlib` and `pythonpath = ["."]` so mirrored builtin/core
   test names do not collide during collection
+- `pyproject.toml` now includes the `packaging` runtime dependency so the
+  `version-governance` policy can validate PEP 440 version strings directly
+  when repositories choose that scheme
 - `pyproject.toml` no longer depends on `tqdm`; normal-mode liveness uses
   runtime messages and run-log artifacts instead of progress-bar UI helpers
 - `gate --start` is blocking and records no baseline when hooks fail

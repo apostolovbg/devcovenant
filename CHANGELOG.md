@@ -2,7 +2,7 @@
 **Doc ID:** CHANGELOG
 **Doc Type:** changelog
 **Project Version:** 1.0.0
-**Last Updated:** 2026-03-16
+**Last Updated:** 2026-03-17
 **DevCovenant Version:** 1.0.0
 
 <!-- DEVCOV:BEGIN -->
@@ -56,6 +56,154 @@ Example:
 
 ## Version 1.0.0
 
+- 2026-03-17:
+  Change: Replaced the completed registry-layout roadmap with a new
+  version-stack roadmap in `PLAN.md`.
+  Why: Defined the remaining future-facing work after the
+  `version-governance` framework and `version-sync` integration exposed
+  package-legality, pre-version-identity, and final SemVer-sweep needs.
+  Impact: Sequenced DevCovenant's next version-stack program so future
+  slices can finish scheme-neutral version governance without
+  reintroducing SemVer assumptions or overloading versions with
+  codename-only repo identity.
+  Files:
+  CHANGELOG.md
+  PLAN.md
+
+- 2026-03-16:
+  Change: Refactored `version-sync` to delegate version parsing and
+  equality to `version-governance` and replaced the old SemVer-only
+  doc/legal extractor model with `project_version_line`.
+  Why: Unified version semantics under one policy framework so synced
+  docs, changelog, manifests, and legal text can follow non-SemVer
+  schemes without parallel parsing rules.
+  Impact: Enabled scheme-aware version-sync behavior across SemVer,
+  CalVer, PEP 440, and custom schemes, and synchronized the generated
+  policy/config/registry surfaces to the new extractor contract.
+  Files:
+  AGENTS.md
+  CHANGELOG.md
+  devcovenant/builtin/policies/version_governance/version_governance.py
+  devcovenant/builtin/policies/version_sync/version_sync.py
+  devcovenant/builtin/policies/version_sync/version_sync.yaml
+  devcovenant/builtin/profiles/defaults/defaults.yaml
+  devcovenant/config.yaml
+  devcovenant/core/services/metadata.py
+  devcovenant/docs/architecture.md
+  devcovenant/docs/policies.md
+  devcovenant/docs/profiles.md
+  devcovenant/docs/registry.md
+  devcovenant/registry/registry.yaml
+  tests/devcovenant/builtin/policies/version_governance/\
+    test_version_governance.py
+  tests/devcovenant/builtin/policies/version_sync/test_version_sync.py
+
+- 2026-03-16:
+  Change: Added `custom_regex` and `custom_adapter` scheme support to
+  `version-governance` and extended the shared adapter contract for
+  repo-local version logic.
+  Why: Enabled governed repositories to validate exotic version formats
+  and define repo-local ordering rules without weakening the core
+  version-governance framework.
+  Impact: Enabled format-only custom regex validation, repo-relative
+  custom adapter modules exporting `SCHEME`, and Roman-numeral-style
+  coverage in the version-governance test suite.
+  Files:
+  AGENTS.md
+  CHANGELOG.md
+  devcovenant/builtin/policies/version_governance/calver.py
+  devcovenant/builtin/policies/version_governance/custom_adapter.py
+  devcovenant/builtin/policies/version_governance/custom_regex.py
+  devcovenant/builtin/policies/version_governance/integer.py
+  devcovenant/builtin/policies/version_governance/pep440.py
+  devcovenant/builtin/policies/version_governance/semver.py
+  devcovenant/builtin/policies/version_governance/version_governance.py
+  devcovenant/builtin/policies/version_governance/version_governance.yaml
+  devcovenant/docs/architecture.md
+  devcovenant/docs/config.md
+  devcovenant/docs/policies.md
+  devcovenant/docs/profiles.md
+  devcovenant/docs/registry.md
+  devcovenant/registry/registry.yaml
+  tests/devcovenant/builtin/policies/version_governance/\
+    test_calver.py
+  tests/devcovenant/builtin/policies/version_governance/\
+    test_custom_adapter.py
+  tests/devcovenant/builtin/policies/version_governance/\
+    test_custom_regex.py
+  tests/devcovenant/builtin/policies/version_governance/\
+    test_integer.py
+  tests/devcovenant/builtin/policies/version_governance/test_pep440.py
+  tests/devcovenant/builtin/policies/version_governance/test_semver.py
+  tests/devcovenant/builtin/policies/version_governance/\
+    test_version_governance.py
+
+- 2026-03-16:
+  Change: Added first-class `pep440` scheme support to
+  `version-governance` and wired Python-package version parsing into the
+  scheme registry.
+  Why: Enabled governed Python repos to validate PEP 440 versions
+  directly instead of approximating Python packaging rules through other
+  schemes.
+  Impact: Enabled repositories to set
+  `version-governance.scheme: pep440`, validate prerelease/package
+  versions such as `1.2.0rc1`, and keep dependency manifests, lockfiles,
+  and license reporting aligned with the new runtime dependency.
+  Files:
+  AGENTS.md
+  CHANGELOG.md
+  devcovenant/builtin/policies/version_governance/pep440.py
+  devcovenant/builtin/policies/version_governance/version_governance.py
+  devcovenant/builtin/policies/version_governance/version_governance.yaml
+  devcovenant/docs/architecture.md
+  devcovenant/docs/config.md
+  devcovenant/docs/installation.md
+  devcovenant/docs/policies.md
+  devcovenant/docs/profiles.md
+  devcovenant/docs/registry.md
+  devcovenant/registry/registry.yaml
+  licenses/THIRD_PARTY_LICENSES.md
+  pyproject.toml
+  requirements.in
+  requirements.lock
+  tests/devcovenant/builtin/policies/version_governance/test_pep440.py
+  tests/devcovenant/builtin/policies/version_governance/\
+    test_version_governance.py
+
+- 2026-03-16:
+  Change: Refactored `version-governance` into a shared policy shell with
+  separate SemVer, CalVer, and integer scheme adapters.
+  Why: Standardized the internal framework so new versioning schemes can be
+  added without growing one monolithic policy script.
+  Impact: Documented the adapter architecture, added direct scheme-module
+  tests, and synchronized registry evidence for the modular policy layout.
+  Files:
+  AGENTS.md
+  CHANGELOG.md
+  POLICY_MAP.md
+  devcovenant/builtin/policies/version_governance/__init__.py
+  devcovenant/builtin/policies/version_governance/calver.py
+  devcovenant/builtin/policies/version_governance/integer.py
+  devcovenant/builtin/policies/version_governance/semver.py
+  devcovenant/builtin/policies/version_governance/version_governance.py
+  devcovenant/builtin/policies/version_governance/version_governance.yaml
+  devcovenant/builtin/policies/version_sync/version_sync.yaml
+  devcovenant/builtin/profiles/defaults/defaults.yaml
+  devcovenant/builtin/profiles/global/assets/config.yaml
+  devcovenant/custom/profiles/devcovrepo/devcovrepo.yaml
+  devcovenant/docs/architecture.md
+  devcovenant/docs/config.md
+  devcovenant/docs/policies.md
+  devcovenant/docs/profiles.md
+  devcovenant/docs/registry.md
+  devcovenant/registry/registry.yaml
+  tests/devcovenant/builtin/policies/version_governance/test_calver.py
+  tests/devcovenant/builtin/policies/version_governance/test_integer.py
+  tests/devcovenant/builtin/policies/version_governance/test_semver.py
+  tests/devcovenant/builtin/policies/version_governance/\
+    test_version_governance.py
+  tests/devcovenant/builtin/policies/version_sync/test_version_sync.py
+
 - 2026-03-16:
   Change: Added build cleanup support for unpacked release trees named like
   `<project>-<version>/` in the repo root.
@@ -74,6 +222,44 @@ Example:
   devcovenant/docs/workflow.md
   tests/devcovenant/core/services/test_cleanup.py
   tests/devcovenant/test_clean.py
+
+- 2026-03-16:
+  Change: Replaced the SemVer-only `semantic-version-scope` policy with
+  the new `version-governance` framework and added CalVer/integer support.
+  Why: Expanded version enforcement so DevCovenant can govern repos with
+  different versioning schemes while keeping optional bump discipline
+  explicit.
+  Impact: Standardized version metadata, defaults, docs, tests, and
+  registry output around one future-facing multi-scheme policy contract.
+  Files:
+  AGENTS.md
+  CHANGELOG.md
+  POLICY_MAP.md
+  devcovenant/README.md
+  devcovenant/builtin/policies/semantic_version_scope/__init__.py
+  devcovenant/builtin/policies/semantic_version_scope/\
+    semantic_version_scope.py
+  devcovenant/builtin/policies/semantic_version_scope/\
+    semantic_version_scope.yaml
+  devcovenant/builtin/policies/version_governance/__init__.py
+  devcovenant/builtin/policies/version_governance/version_governance.py
+  devcovenant/builtin/policies/version_governance/version_governance.yaml
+  devcovenant/builtin/policies/version_sync/version_sync.yaml
+  devcovenant/builtin/profiles/defaults/defaults.yaml
+  devcovenant/builtin/profiles/global/assets/config.yaml
+  devcovenant/config.yaml
+  devcovenant/custom/profiles/devcovrepo/devcovrepo.yaml
+  devcovenant/docs/architecture.md
+  devcovenant/docs/config.md
+  devcovenant/docs/policies.md
+  devcovenant/registry/registry.yaml
+  tests/devcovenant/builtin/policies/semantic_version_scope/__init__.py
+  tests/devcovenant/builtin/policies/semantic_version_scope/\
+    test_semantic_version_scope.py
+  tests/devcovenant/builtin/policies/version_governance/__init__.py
+  tests/devcovenant/builtin/policies/version_governance/\
+    test_version_governance.py
+  tests/devcovenant/builtin/policies/version_sync/test_version_sync.py
 
 - 2026-03-16:
   Change: Added an open-session guard so `devcovenant clean` now fails until

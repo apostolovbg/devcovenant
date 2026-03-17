@@ -3,11 +3,62 @@
 import tempfile
 import unittest
 from pathlib import Path
+from unittest import mock
 
+from devcovenant.builtin.policies.version_governance import version_governance
+from devcovenant.builtin.policies.version_governance.calver import CalverScheme
+from devcovenant.builtin.policies.version_governance.custom_regex import (
+    CustomRegexScheme,
+)
+from devcovenant.builtin.policies.version_governance.pep440 import Pep440Scheme
+from devcovenant.builtin.policies.version_governance.semver import SemverScheme
 from devcovenant.builtin.policies.version_sync import version_sync
 from devcovenant.core.contracts.policy import CheckContext
 
 VersionSyncCheck = version_sync.VersionSyncCheck
+
+
+class _RomanNumeralScheme:
+    """Minimal custom adapter stand-in for scheme-agnostic sync tests."""
+
+    name = "custom_adapter"
+
+    _VALUES = {
+        "I": 1,
+        "V": 5,
+        "X": 10,
+    }
+
+    def preflight(self, check, repo_root, version_path):
+        """Roman test adapter has no extra runtime prerequisites."""
+        del check, repo_root, version_path
+        return []
+
+    def version_pattern(self, check, repo_root):
+        """Expose the Roman numeral token pattern for changelog headers."""
+        del check, repo_root
+        return r"[IVX]+"
+
+    def parse_version(self, value, check, repo_root):
+        """Translate one Roman numeral token into a comparable integer."""
+        del check, repo_root
+        token = str(value or "").strip().upper()
+        if token not in {"I", "V", "X"}:
+            raise ValueError(f"`{token}` is not a supported Roman release")
+        return self._VALUES[token]
+
+    def compare_versions(self, left, right):
+        """Compare parsed Roman numeral values numerically."""
+        if left < right:
+            return -1
+        if left > right:
+            return 1
+        return 0
+
+    def validate_release(self, check, release):
+        """Roman test adapter does not add extra release rules."""
+        del check, release
+        return []
 
 
 class TestVersionSyncPolicy(unittest.TestCase):
@@ -40,10 +91,10 @@ class TestVersionSyncPolicy(unittest.TestCase):
                     "legal",
                 ],
                 "role_extractors": [
-                    "docs=>doc_header_version",
+                    "docs=>project_version_line",
                     "changelog=>changelog_header_version",
                     "package_manifest=>manifest_project_version",
-                    "legal=>semver_token",
+                    "legal=>project_version_line",
                 ],
                 "target_role_files": [
                     "docs=>README.md",
@@ -59,6 +110,24 @@ class TestVersionSyncPolicy(unittest.TestCase):
         )
         return policy
 
+    def _resolved_scheme(self, scheme_name: str = "semver", **options):
+        """Return one patched version-governance runtime tuple."""
+        checker = version_governance.VersionGovernanceCheck()
+        checker.set_options({"scheme": scheme_name, **options}, {})
+        schemes = {
+            "semver": SemverScheme(),
+            "calver": CalverScheme(),
+            "pep440": Pep440Scheme(),
+            "custom_regex": CustomRegexScheme(),
+            "custom_adapter": _RomanNumeralScheme(),
+        }
+        return scheme_name, schemes[scheme_name], checker
+
+    def test_module_exposes_versionsync_class_alias(self):
+        """Module-level class alias should point at the policy class."""
+        self.assertIs(VersionSyncCheck, version_sync.VersionSyncCheck)
+        self.assertEqual(VersionSyncCheck().policy_id, "version-sync")
+
     def _write_changelog(self, root: Path, version: str) -> Path:
         """Write a changelog with the provided version."""
         changelog = root / "CHANGELOG.md"
@@ -73,7 +142,7 @@ class TestVersionSyncPolicy(unittest.TestCase):
         return readme
 
     def _write_license(self, root: Path, path: str, version: str) -> Path:
-        """Write a license file that declares the version."""
+        """Write a legal text file with a Project Version line."""
         license_path = root / path
         license_path.parent.mkdir(parents=True, exist_ok=True)
         license_path.write_text(f"Project Version: {version}\nMIT License\n")
@@ -122,7 +191,12 @@ class TestVersionSyncPolicy(unittest.TestCase):
 
             context = CheckContext(repo_root=repo_root)
             policy = self._policy()
-            violations = policy.check(context)
+            with mock.patch.object(
+                version_sync.version_governance,
+                "resolve_runtime_scheme",
+                return_value=self._resolved_scheme("semver"),
+            ):
+                violations = policy.check(context)
 
             mismatch = [v for v in violations if "does not match" in v.message]
             self.assertTrue(mismatch)
@@ -145,7 +219,12 @@ class TestVersionSyncPolicy(unittest.TestCase):
 
             context = CheckContext(repo_root=repo_root)
             policy = self._policy()
-            violations = policy.check(context)
+            with mock.patch.object(
+                version_sync.version_governance,
+                "resolve_runtime_scheme",
+                return_value=self._resolved_scheme("semver"),
+            ):
+                violations = policy.check(context)
 
             missing = [
                 v
@@ -177,7 +256,12 @@ class TestVersionSyncPolicy(unittest.TestCase):
 
             context = CheckContext(repo_root=repo_root)
             policy = self._policy()
-            violations = policy.check(context)
+            with mock.patch.object(
+                version_sync.version_governance,
+                "resolve_runtime_scheme",
+                return_value=self._resolved_scheme("semver"),
+            ):
+                violations = policy.check(context)
 
             version_errs = [
                 v
@@ -209,13 +293,18 @@ class TestVersionSyncPolicy(unittest.TestCase):
 
             context = CheckContext(repo_root=repo_root)
             policy = self._policy()
-            violations = policy.check(context)
+            with mock.patch.object(
+                version_sync.version_governance,
+                "resolve_runtime_scheme",
+                return_value=self._resolved_scheme("semver"),
+            ):
+                violations = policy.check(context)
 
             self.assertEqual(violations, [])
             self.assertTrue(runtime_file.exists())
 
     def test_does_not_enforce_forward_bump_progression(self):
-        """SemVer bump progression is delegated to semantic-version-scope."""
+        """Forward bump progression is delegated to version-governance."""
         with tempfile.TemporaryDirectory() as tmpdir:
             repo_root = Path(tmpdir)
 
@@ -237,7 +326,12 @@ class TestVersionSyncPolicy(unittest.TestCase):
 
             context = CheckContext(repo_root=repo_root)
             policy = self._policy()
-            violations = policy.check(context)
+            with mock.patch.object(
+                version_sync.version_governance,
+                "resolve_runtime_scheme",
+                return_value=self._resolved_scheme("semver"),
+            ):
+                violations = policy.check(context)
 
             self.assertEqual(violations, [])
 
@@ -272,10 +366,10 @@ class TestVersionSyncPolicy(unittest.TestCase):
                         "legal",
                     ],
                     "role_extractors": [
-                        "docs=>doc_header_version",
+                        "docs=>project_version_line",
                         "changelog=>changelog_header_version",
                         "package_manifest=>manifest_project_version",
-                        "legal=>semver_token",
+                        "legal=>project_version_line",
                     ],
                     "target_role_files": [
                         "docs=>README.md",
@@ -295,7 +389,12 @@ class TestVersionSyncPolicy(unittest.TestCase):
                 path for path in repo_root.rglob("*") if path.is_file()
             ]
             context = CheckContext(repo_root=repo_root, all_files=all_files)
-            violations = policy.check(context)
+            with mock.patch.object(
+                version_sync.version_governance,
+                "resolve_runtime_scheme",
+                return_value=self._resolved_scheme("semver"),
+            ):
+                violations = policy.check(context)
 
             mismatch = [
                 item
@@ -355,7 +454,12 @@ class TestVersionSyncPolicy(unittest.TestCase):
                 },
                 {},
             )
-            violations = policy.check(CheckContext(repo_root=repo_root))
+            with mock.patch.object(
+                version_sync.version_governance,
+                "resolve_runtime_scheme",
+                return_value=self._resolved_scheme("semver"),
+            ):
+                violations = policy.check(CheckContext(repo_root=repo_root))
             self.assertEqual(len(violations), 0)
 
     def test_manifest_extractor_rejects_unsupported_extensions(self):
@@ -382,10 +486,156 @@ class TestVersionSyncPolicy(unittest.TestCase):
                 },
                 {},
             )
-            violations = policy.check(CheckContext(repo_root=repo_root))
+            with mock.patch.object(
+                version_sync.version_governance,
+                "resolve_runtime_scheme",
+                return_value=self._resolved_scheme("semver"),
+            ):
+                violations = policy.check(CheckContext(repo_root=repo_root))
             self.assertEqual(len(violations), 1)
             self.assertIn(
                 "supports only TOML/JSON/YAML",
+                violations[0].message,
+            )
+
+    def test_accepts_pep440_normalized_equivalence(self):
+        """Scheme-aware equality should accept equivalent PEP 440 spellings."""
+        with tempfile.TemporaryDirectory() as tmpdir:
+            repo_root = Path(tmpdir)
+            version_dir = repo_root / "project_lib"
+            version_dir.mkdir()
+            (version_dir / "VERSION").write_text("1.2.0beta3\n")
+
+            self._write_readme(repo_root, "README.md", "1.2.0beta3")
+            self._write_readme(repo_root, "docs/README.md", "1.2.0b3")
+            self._write_pyproject(repo_root, "1.2.0b3")
+            self._write_pyproject(
+                repo_root, "1.2.0beta3", "app/pyproject.toml"
+            )
+            self._write_license(repo_root, "LICENSE", "1.2.0beta3")
+            self._write_license(repo_root, "app/license.txt", "1.2.0b3")
+            self._write_changelog(repo_root, "1.2.0b3")
+
+            context = CheckContext(repo_root=repo_root)
+            policy = self._policy()
+            with mock.patch.object(
+                version_sync.version_governance,
+                "resolve_runtime_scheme",
+                return_value=self._resolved_scheme("pep440"),
+            ):
+                violations = policy.check(context)
+
+            self.assertEqual(violations, [])
+
+    def test_accepts_calver_normalized_equivalence(self):
+        """CalVer comparison should accept equal numeric forms."""
+        with tempfile.TemporaryDirectory() as tmpdir:
+            repo_root = Path(tmpdir)
+            version_dir = repo_root / "project_lib"
+            version_dir.mkdir()
+            (version_dir / "VERSION").write_text("2026.03\n")
+
+            self._write_readme(repo_root, "README.md", "2026.3")
+            self._write_readme(repo_root, "docs/README.md", "2026.03")
+            self._write_pyproject(repo_root, "2026.3")
+            self._write_pyproject(repo_root, "2026.03", "app/pyproject.toml")
+            self._write_license(repo_root, "LICENSE", "2026.03")
+            self._write_license(repo_root, "app/license.txt", "2026.3")
+            self._write_changelog(repo_root, "2026.3")
+
+            context = CheckContext(repo_root=repo_root)
+            policy = self._policy()
+            with mock.patch.object(
+                version_sync.version_governance,
+                "resolve_runtime_scheme",
+                return_value=self._resolved_scheme("calver"),
+            ):
+                violations = policy.check(context)
+
+            self.assertEqual(violations, [])
+
+    def test_accepts_custom_regex_scheme(self):
+        """Custom regex schemes should sync non-SemVer repository versions."""
+        with tempfile.TemporaryDirectory() as tmpdir:
+            repo_root = Path(tmpdir)
+            version_dir = repo_root / "project_lib"
+            version_dir.mkdir()
+            (version_dir / "VERSION").write_text("XIV\n")
+
+            self._write_readme(repo_root, "README.md", "XIV")
+            self._write_readme(repo_root, "docs/README.md", "XIV")
+            self._write_pyproject(repo_root, "XIV")
+            self._write_pyproject(repo_root, "XIV", "app/pyproject.toml")
+            self._write_license(repo_root, "LICENSE", "XIV")
+            self._write_license(repo_root, "app/license.txt", "XIV")
+            self._write_changelog(repo_root, "XIV")
+
+            context = CheckContext(repo_root=repo_root)
+            policy = self._policy()
+            with mock.patch.object(
+                version_sync.version_governance,
+                "resolve_runtime_scheme",
+                return_value=self._resolved_scheme(
+                    "custom_regex",
+                    custom_regex_pattern=r"[IVX]+",
+                ),
+            ):
+                violations = policy.check(context)
+
+            self.assertEqual(violations, [])
+
+    def test_accepts_custom_adapter_scheme(self):
+        """Custom adapters should drive repo-defined sync equality."""
+        with tempfile.TemporaryDirectory() as tmpdir:
+            repo_root = Path(tmpdir)
+            version_dir = repo_root / "project_lib"
+            version_dir.mkdir()
+            (version_dir / "VERSION").write_text("V\n")
+
+            self._write_readme(repo_root, "README.md", "V")
+            self._write_readme(repo_root, "docs/README.md", "V")
+            self._write_pyproject(repo_root, "V")
+            self._write_pyproject(repo_root, "V", "app/pyproject.toml")
+            self._write_license(repo_root, "LICENSE", "V")
+            self._write_license(repo_root, "app/license.txt", "V")
+            self._write_changelog(repo_root, "V")
+
+            context = CheckContext(repo_root=repo_root)
+            policy = self._policy()
+            with mock.patch.object(
+                version_sync.version_governance,
+                "resolve_runtime_scheme",
+                return_value=self._resolved_scheme("custom_adapter"),
+            ):
+                violations = policy.check(context)
+
+            self.assertEqual(violations, [])
+
+    def test_reports_version_governance_resolution_failures(self):
+        """Version-sync should fail explicitly when scheme resolution fails."""
+        with tempfile.TemporaryDirectory() as tmpdir:
+            repo_root = Path(tmpdir)
+            (repo_root / "project_lib").mkdir()
+            (repo_root / "project_lib/VERSION").write_text("1.0.0\n")
+            self._write_changelog(repo_root, "1.0.0")
+            self._write_readme(repo_root, "README.md", "1.0.0")
+            self._write_readme(repo_root, "docs/README.md", "1.0.0")
+            self._write_pyproject(repo_root, "1.0.0")
+            self._write_pyproject(repo_root, "1.0.0", "app/pyproject.toml")
+            self._write_license(repo_root, "LICENSE", "1.0.0")
+            self._write_license(repo_root, "app/license.txt", "1.0.0")
+
+            policy = self._policy()
+            with mock.patch.object(
+                version_sync.version_governance,
+                "resolve_runtime_scheme",
+                side_effect=ValueError("no governed scheme configured"),
+            ):
+                violations = policy.check(CheckContext(repo_root=repo_root))
+
+            self.assertEqual(len(violations), 1)
+            self.assertIn(
+                "Cannot resolve version-governance runtime",
                 violations[0].message,
             )
 

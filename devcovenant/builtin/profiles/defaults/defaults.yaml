@@ -52,11 +52,9 @@ policy_overlays:
     target_roles:
       - docs
       - changelog
-      - legal
     role_extractors:
-      - docs=>doc_header_version
+      - docs=>project_version_line
       - changelog=>changelog_header_version
-      - legal=>semver_token
     target_role_files:
       - docs=>README.md
       - docs=>AGENTS.md
@@ -64,12 +62,15 @@ policy_overlays:
       - docs=>SPEC.md
       - docs=>PLAN.md
       - changelog=>CHANGELOG.md
-      - legal=>LICENSE
     target_role_globs: []
     target_role_dirs: []
-  semantic-version-scope:
+  version-governance:
+    scheme: semver
+    enforce_bumping: true
     version_file: VERSION
     changelog_file: CHANGELOG.md
+    changelog_header_prefix: '## Version'
+    semver_scope_tags_required: true
   dependency-license-sync:
     dependency_files: []
     dependency_globs: []

@@ -1,5 +1,5 @@
 # Policies
-**Last Updated:** 2026-03-15
+**Last Updated:** 2026-03-16
 **Project Version:** 1.0.0
 
 ## Table of Contents
@@ -308,11 +308,23 @@ High-impact runtime contracts:
   overlays just to keep packaged docs compliant.
 - `last-updated` violation suggestions report the effective allowlist,
   including allowlisted globs, instead of only explicit files/suffixes.
-- `version-sync` stays consistency-only; semver bump progression and release
-  scope enforcement are handled by `semantic-version-scope`.
-- `semantic-version-scope` activation follows
-  `config.yaml -> policy_state`; descriptor text should stay neutral and not
-  hardcode an enabled/disabled deployment assumption.
+- `version-sync` stays consistency-only; version format validation,
+  scheme-aware bump progression, and comparison semantics are handled by
+  `version-governance`.
+- `version-governance` activation follows `config.yaml -> policy_state`;
+  descriptor text should stay neutral and not hardcode an enabled/disabled
+  deployment assumption.
+- `version-governance` keeps one shared policy shell in
+  `version_governance.py` and delegates scheme-specific parsing/comparison
+  rules to sibling modules such as `semver.py`, `calver.py`, `integer.py`,
+  `pep440.py`, `custom_regex.py`, and `custom_adapter.py`.
+- `custom_regex` is the validation-only path for exotic version syntaxes;
+  it checks a repo-supplied regex and requires `enforce_bumping: false`.
+- `custom_adapter` is the fully extensible path; it loads one repo-relative
+  Python module from `custom_adapter_path`, expects that module to export
+  `SCHEME`, and treats that object as the version-governance scheme
+  interface. This is a version-governance-local extension point, not a
+  general DevCovenant policy plugin mechanism.
 - runtime change-state naming uses `current_snapshot_*` for full current
   snapshot data and `session_*` for gate-scoped deltas.
 - `version-sync` uses role-based selectors
@@ -321,7 +333,7 @@ High-impact runtime contracts:
   checks format-aware without file-type bucket metadata.
 - policy descriptors keep contract keys, while global/profile overlays provide
   operational defaults for `changelog-coverage`, `last-updated`,
-  `semantic-version-scope`, `version-sync`, `modules-need-tests`,
+  `version-governance`, `version-sync`, `modules-need-tests`,
   and `tests-coverage`.
 - `devcov-integrity-guard` keeps its path keys declared in the descriptor,
   while `global` profile overlays provide default values for
@@ -449,12 +461,22 @@ Operational behavior:
 - attach selectors with `target_role_files` / `target_role_globs` /
   `target_role_dirs` (`role=>selector`)
 - all declared role targets are required; there is no optional-target mode
-- extractor set is explicit (`doc_header_version`,
-  `changelog_header_version`, `manifest_project_version`, `semver_token`)
+- extractor set is explicit (`project_version_line`,
+  `changelog_header_version`, `manifest_project_version`)
+- docs and any opted-in legal text should use a `Project Version:` line
+  (plain or markdown header form) so version-sync can read arbitrary
+  governed version formats
 - `manifest_project_version` is format-aware and resolves version fields from
   TOML/JSON/YAML manifest files using the same role mapping contract
-- semver bump progression and scope tagging are enforced separately by
-  `semantic-version-scope` when that policy is enabled
+- extracted values are parsed and compared through the active
+  `version-governance` scheme, so equivalent canonical spellings can stay in
+  sync even when raw strings differ (for example normalized package versions)
+- version-governance scheme adapters are internal policy modules, not a
+  separate external plugin system; repositories configure the scheme through
+  policy metadata rather than loading custom adapter entrypoints
+- `pep440` is the builtin adapter for Python packaging version rules,
+  including prereleases such as `1.2.0rc1`, beta releases such as
+  `1.2.0beta3`, and other valid PEP 440 forms
 - target-role metadata is expected to be profile-driven, with final values
   resolved by standard metadata precedence
   (descriptor -> active profiles -> config overlays -> config overrides)

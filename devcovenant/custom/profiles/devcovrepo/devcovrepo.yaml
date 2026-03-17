@@ -222,5 +222,5 @@ policy_overlays:
       - docs=>devcovenant/docs/**/*.md
     target_role_dirs:
       - docs=>devcovenant/docs
-  semantic-version-scope:
+  version-governance:
     version_file: devcovenant/VERSION

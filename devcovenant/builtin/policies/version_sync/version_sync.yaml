@@ -6,11 +6,13 @@ text: |
   (`target_role_files`, `target_role_globs`, `target_role_dirs`) with
   `role=>selector` entries. Version extraction is role-driven via
   `role_extractors` and explicit extractor names
-  (`doc_header_version`, `changelog_header_version`,
-  `manifest_project_version`, `semver_token`). Manifest extraction remains
-  format-aware (TOML/JSON/YAML) while selector routing stays role-based.
-  Semantic bump progression and release-scope enforcement are handled by
-  `semantic-version-scope`.
+  (`project_version_line`, `changelog_header_version`,
+  `manifest_project_version`). Manifest extraction remains format-aware
+  (TOML/JSON/YAML) while selector routing stays role-based. Version-sync
+  now validates and compares every extracted value through the active
+  `version-governance` scheme so canonical docs, changelog, manifests,
+  and any opted-in legal text stay synchronized even when repositories
+  use non-SemVer version formats.
 metadata:
   id: version-sync
   severity: error

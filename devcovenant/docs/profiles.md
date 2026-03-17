@@ -9,7 +9,7 @@
 - [Metadata Population](#metadata-population)
 - [Baseline Defaults Profile](#baseline-defaults-profile)
 - [Dependency Selector Overlays](#dependency-selector-overlays)
-- [Version Sync Overlays](#version-sync-overlays)
+- [Version Governance And Sync Overlays](#version-governance-and-sync-overlays)
 - [Manifest Model](#manifest-model)
 - [Assets and Hooks](#assets-and-hooks)
 - [Translator Ownership](#translator-ownership)
@@ -203,11 +203,34 @@ Custom layout patterns for dependency selectors:
 3. Add a custom profile later in `profiles.active` to extend/replace selector
    values without changing builtin profiles.
 
-## Version Sync Overlays
+## Version Governance And Sync Overlays
+Versioning metadata is profile-driven:
+- `global` seeds `policy_state.version-governance: false` in the generated
+  config template so version-governance stays opt-in outside release slices.
+- `defaults` seeds `version-governance` with the standard SemVer baseline:
+  `scheme: semver`, `enforce_bumping: true`,
+  `changelog_header_prefix: ## Version`, and
+  `semver_scope_tags_required: true`.
+- repositories that want Python-package-native versioning may switch
+  `version-governance.scheme` to `pep440` without changing the surrounding
+  framework contract.
+- repositories with format-only custom version strings may switch to
+  `scheme: custom_regex`, provide `custom_regex_pattern`, and keep
+  `enforce_bumping: false`.
+- repositories with fully custom ordering rules may switch to
+  `scheme: custom_adapter` and point `custom_adapter_path` at one
+  repo-relative Python module exporting `SCHEME`.
+- repository profiles may redirect only the repo-specific surfaces they own;
+  for example, a repository profile may override
+  `version-governance.version_file` to a package-scoped path such as
+  `devcovenant/VERSION`.
+
 `version-sync` metadata is also profile-driven:
 - target surfaces are role-based (`target_roles`,
   `target_role_files|globs|dirs` with `role=>selector` entries)
 - extractors are mapped per role via `role_extractors`
+- docs roles, and any repo that opts legal text into version-sync, should
+  usually use `project_version_line`
 - `manifest_project_version` is format-aware and should be used for manifest
   roles that may include TOML/JSON/YAML files in mixed repositories
 - language profiles should set extractor mappings explicitly instead of
@@ -223,9 +246,12 @@ stack:
    `user_metadata_overrides`)
 
 Practical pattern:
-1. keep `defaults` for baseline docs/changelog/legal roles
+1. keep `defaults` for baseline `version-governance` and `version-sync`
+   metadata
 2. add language profile overlays (for example python package manifests)
-3. apply user overrides only when you need repo-specific replacement of the
+3. apply repository-profile overlays for repo-owned paths such as custom
+   `version_file` locations
+4. apply user overrides only when you need repo-specific replacement of the
    composed target set
 
 ## Manifest Model

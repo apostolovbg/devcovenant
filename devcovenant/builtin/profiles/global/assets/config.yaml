@@ -275,7 +275,7 @@ pre_commit:
 # Do not activate/deactivate policies through profile manifests.
 policy_state:
   raw-string-escapes: false
-  semantic-version-scope: false
+  version-governance: false
   version-sync: false
 
 # ---------------------------------------------------------------------------

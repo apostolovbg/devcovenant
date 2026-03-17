@@ -2,7 +2,7 @@
 **Doc ID:** AGENTS
 **Doc Type:** policy-source
 **Project Version:** 1.0.0
-**Last Updated:** 2026-03-16
+**Last Updated:** 2026-03-17
 **DevCovenant Version:** 1.0.0
 
 <!-- DEVCOV:BEGIN -->
@@ -1522,37 +1522,6 @@ review approves the exception.
 
 ---
 
-## Policy: Semantic Version Scope
-
-```policy-def
-id: semantic-version-scope
-severity: error
-auto_fix: false
-enforcement: active
-enabled: false
-custom: false
-version_file: devcovenant/VERSION
-changelog_file: CHANGELOG.md
-ignored_prefixes:
-selector_roles: ignored
-ignored_globs:
-ignored_files:
-ignored_dirs:
-```
-
-When enabled, the latest changelog entry must include exactly one
-`[semver:major|minor|patch]` tag that matches the version bump. Use
-`major` for API-breaking releases, `minor` for backward-compatible feature
-work, and `patch` for bug fixes or documentation-only updates. The tag
-must match the bump from the previous version, and the configured
-version file must be updated whenever the changelog declares a release
-scope. Activation is controlled by `config.yaml -> policy_state` and
-should only be enabled for release processes that enforce SemVer
-discipline.
-
-
----
-
 ## Policy: Tests Coverage
 
 ```policy-def
@@ -1621,6 +1590,44 @@ marker `DEVCOV_FIXTURE_OK: <reason>` immediately above the assertion.
 
 ---
 
+## Policy: Version Governance
+
+```policy-def
+id: version-governance
+severity: error
+auto_fix: false
+enforcement: active
+enabled: false
+custom: false
+scheme: semver
+enforce_bumping: True
+version_file: devcovenant/VERSION
+changelog_file: CHANGELOG.md
+changelog_header_prefix: ## Version
+ignored_prefixes:
+semver_scope_tags_required: True
+calver_pattern:
+custom_regex_pattern:
+custom_adapter_path:
+selector_roles: ignored
+ignored_globs:
+ignored_files:
+ignored_dirs:
+```
+
+When enabled, this policy governs repository version format and optional
+version progression under the configured `scheme`. Repositories may enable
+`enforce_bumping` to require forward version movement, while format-only
+custom schemes may leave bump enforcement disabled. Scheme adapters may be
+builtin or repo-defined and may add extra release rules to the latest
+changelog entry.
+Activation is controlled by `config.yaml -> policy_state`. Default profile
+metadata keeps `semver` as the standard baseline, while repositories may
+switch schemes or relax bump enforcement explicitly.
+
+
+---
+
 ## Policy: Version Sync
 
 ```policy-def
@@ -1633,11 +1640,9 @@ custom: false
 version_file: devcovenant/VERSION
 target_roles: docs
   changelog
-  legal
   package_manifest
-role_extractors: docs=>doc_header_version
+role_extractors: docs=>project_version_line
   changelog=>changelog_header_version
-  legal=>semver_token
   package_manifest=>manifest_project_version
 target_role_files: docs=>README.md
   docs=>AGENTS.md
@@ -1645,7 +1650,6 @@ target_role_files: docs=>README.md
   docs=>SPEC.md
   docs=>PLAN.md
   changelog=>CHANGELOG.md
-  legal=>LICENSE
   docs=>CHANGELOG.md
   docs=>PROFILE_MAP.md
   docs=>POLICY_MAP.md
@@ -1674,9 +1678,11 @@ Target selection is role-based via `target_roles` and role selectors
 (`target_role_files`, `target_role_globs`, `target_role_dirs`) with
 `role=>selector` entries. Version extraction is role-driven via
 `role_extractors` and explicit extractor names
-(`doc_header_version`, `changelog_header_version`,
-`manifest_project_version`, `semver_token`). Manifest extraction remains
-format-aware (TOML/JSON/YAML) while selector routing stays role-based.
-Semantic bump progression and release-scope enforcement are handled by
-`semantic-version-scope`.
+(`project_version_line`, `changelog_header_version`,
+`manifest_project_version`). Manifest extraction remains format-aware
+(TOML/JSON/YAML) while selector routing stays role-based. Version-sync
+now validates and compares every extracted value through the active
+`version-governance` scheme so canonical docs, changelog, manifests,
+and any opted-in legal text stay synchronized even when repositories
+use non-SemVer version formats.
 <!-- DEVCOV-POLICIES:END -->

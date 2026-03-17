@@ -10,6 +10,7 @@ from typing import Iterable, List, Optional
 
 import yaml
 
+from devcovenant.builtin.policies.version_governance import version_governance
 from devcovenant.core.contracts.policy import (
     CheckContext,
     PolicyCheck,
@@ -22,22 +23,20 @@ except ModuleNotFoundError:  # pragma: no cover
     import tomli as tomllib  # type: ignore[assignment]
 
 
-_VERSION_PATTERN = re.compile(r"(?P<version>\d+\.\d+\.\d+)")
-_STRICT_SEMVER_PATTERN = re.compile(r"^\d+\.\d+\.\d+$")
-_DOC_VERSION_PATTERN = re.compile(
-    r"^\s*\*\*Project Version:\*\*\s*(?P<version>\d+\.\d+\.\d+)",
+_PROJECT_VERSION_LINE_PATTERN = re.compile(
+    r"^\s*(?:\*\*Project Version:\*\*|Project Version:)\s*"
+    r"(?P<version>.+?)\s*$",
     flags=re.MULTILINE,
 )
 _EXTRACTOR_NAMES = {
-    "doc_header_version",
+    "project_version_line",
     "changelog_header_version",
     "manifest_project_version",
-    "semver_token",
 }
 
 
 class VersionSyncCheck(PolicyCheck):
-    """Ensure every configured target role reports the same SemVer string."""
+    """Ensure every configured target role matches one governed version."""
 
     policy_id = "version-sync"
     version = "2.0.0"
@@ -97,6 +96,46 @@ class VersionSyncCheck(PolicyCheck):
             return violations
 
         try:
+            scheme_name, scheme, governance_check = (
+                version_governance.resolve_runtime_scheme(
+                    context.repo_root,
+                    config_payload=context.config,
+                )
+            )
+        except ValueError as error:
+            return [
+                Violation(
+                    policy_id=self.policy_id,
+                    severity="error",
+                    file_path=version_file,
+                    message=(
+                        "Cannot resolve version-governance runtime for "
+                        f"version-sync: {error}"
+                    ),
+                )
+            ]
+
+        preflight = list(
+            scheme.preflight(
+                governance_check,
+                context.repo_root,
+                version_file,
+            )
+        )
+        if preflight:
+            return [
+                Violation(
+                    policy_id=self.policy_id,
+                    severity="error",
+                    file_path=item.file_path,
+                    message=item.message,
+                    suggestion=item.suggestion,
+                    can_auto_fix=item.can_auto_fix,
+                )
+                for item in preflight
+            ]
+
+        try:
             tracked_version = version_file.read_text(encoding="utf-8").strip()
         except OSError as exc:
             return [
@@ -108,15 +147,22 @@ class VersionSyncCheck(PolicyCheck):
                 )
             ]
 
-        if not _STRICT_SEMVER_PATTERN.fullmatch(tracked_version):
+        try:
+            tracked_parsed = scheme.parse_version(
+                tracked_version,
+                governance_check,
+                context.repo_root,
+            )
+        except ValueError as exc:
             return [
                 Violation(
                     policy_id=self.policy_id,
                     severity="error",
                     file_path=version_file,
                     message=(
-                        f"Tracked VERSION '{tracked_version}' is not valid "
-                        "SemVer; use MAJOR.MINOR.PATCH notation."
+                        f"Tracked {version_file.name} '{tracked_version}' is "
+                        f"not valid for version-governance scheme "
+                        f"`{scheme_name}`: {exc}"
                     ),
                 )
             ]
@@ -164,7 +210,50 @@ class VersionSyncCheck(PolicyCheck):
                     )
                     continue
 
-                if target_version != tracked_version:
+                try:
+                    target_parsed = scheme.parse_version(
+                        target_version,
+                        governance_check,
+                        context.repo_root,
+                    )
+                except ValueError as exc:
+                    violations.append(
+                        Violation(
+                            policy_id=self.policy_id,
+                            severity="error",
+                            file_path=target,
+                            message=(
+                                f"Role `{role}` target version "
+                                f"`{target_version}` is not valid under "
+                                f"scheme `{scheme_name}`: {exc}"
+                            ),
+                        )
+                    )
+                    continue
+
+                try:
+                    matches_tracked = (
+                        scheme.compare_versions(
+                            target_parsed,
+                            tracked_parsed,
+                        )
+                        == 0
+                    )
+                except ValueError as exc:
+                    violations.append(
+                        Violation(
+                            policy_id=self.policy_id,
+                            severity="error",
+                            file_path=target,
+                            message=(
+                                "Cannot compare synchronized versions under "
+                                f"scheme `{scheme_name}`: {exc}"
+                            ),
+                        )
+                    )
+                    continue
+
+                if not matches_tracked:
                     violations.append(
                         Violation(
                             policy_id=self.policy_id,
@@ -208,17 +297,46 @@ class VersionSyncCheck(PolicyCheck):
                         )
                     )
                 elif latest != tracked_version:
-                    violations.append(
-                        Violation(
-                            policy_id=self.policy_id,
-                            severity="error",
-                            file_path=changelog_file,
-                            message=(
-                                f"Changelog version {latest} does not match "
-                                f"{version_file.name} ({tracked_version})"
-                            ),
+                    try:
+                        latest_parsed = scheme.parse_version(
+                            latest,
+                            governance_check,
+                            context.repo_root,
                         )
-                    )
+                        matches_tracked = (
+                            scheme.compare_versions(
+                                latest_parsed,
+                                tracked_parsed,
+                            )
+                            == 0
+                        )
+                    except ValueError as exc:
+                        violations.append(
+                            Violation(
+                                policy_id=self.policy_id,
+                                severity="error",
+                                file_path=changelog_file,
+                                message=(
+                                    "Changelog version "
+                                    f"`{latest}` is not valid under scheme "
+                                    f"`{scheme_name}`: {exc}"
+                                ),
+                            )
+                        )
+                    else:
+                        if not matches_tracked:
+                            violations.append(
+                                Violation(
+                                    policy_id=self.policy_id,
+                                    severity="error",
+                                    file_path=changelog_file,
+                                    message=(
+                                        f"Changelog version {latest} does not "
+                                        f"match {version_file.name} "
+                                        f"({tracked_version})"
+                                    ),
+                                )
+                            )
         return violations
 
     @staticmethod
@@ -442,8 +560,8 @@ class VersionSyncCheck(PolicyCheck):
         changelog_prefix: str,
     ) -> Optional[str]:
         """Extract one version value using the configured extractor."""
-        if extractor_name == "doc_header_version":
-            return self._extract_doc_header_version(target)
+        if extractor_name == "project_version_line":
+            return self._extract_project_version_line(target)
         if extractor_name == "changelog_header_version":
             return self._extract_changelog_header_version(
                 target,
@@ -451,20 +569,18 @@ class VersionSyncCheck(PolicyCheck):
             )
         if extractor_name == "manifest_project_version":
             return self._extract_manifest_project_version(target)
-        if extractor_name == "semver_token":
-            return self._extract_semver_token(target)
         raise ValueError(
             f"Unsupported version extractor `{extractor_name}` configured."
         )
 
     @staticmethod
-    def _extract_doc_header_version(path: Path) -> Optional[str]:
-        """Extract `**Project Version:**` header from a document."""
+    def _extract_project_version_line(path: Path) -> Optional[str]:
+        """Extract a `Project Version:` line from one text document."""
         text = path.read_text(encoding="utf-8")
-        match = _DOC_VERSION_PATTERN.search(text)
+        match = _PROJECT_VERSION_LINE_PATTERN.search(text)
         if not match:
             return None
-        return match.group("version")
+        return match.group("version").strip() or None
 
     @staticmethod
     def _extract_changelog_header_version(
@@ -551,15 +667,6 @@ class VersionSyncCheck(PolicyCheck):
             if isinstance(project_version, str):
                 return project_version.strip() or None
         return None
-
-    @staticmethod
-    def _extract_semver_token(path: Path) -> Optional[str]:
-        """Extract first SemVer token from generic text file."""
-        text = path.read_text(encoding="utf-8")
-        match = _VERSION_PATTERN.search(text)
-        if not match:
-            return None
-        return match.group("version")
 
     @staticmethod
     def _latest_changelog_version(

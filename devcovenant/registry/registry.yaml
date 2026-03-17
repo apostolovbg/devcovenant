@@ -7912,192 +7912,6 @@ policies:
     script_exists: true
     hash: 0bbd23942924fbb0b52cc9796a48f4738c3ba91d4b2152d79ff70a7e2f7c4ac1
     script_path: builtin/security_scanner.py
-  semantic-version-scope:
-    enabled: false
-    custom: false
-    description: Semantic Version Scope
-    policy_text: |-
-      When enabled, the latest changelog entry must include exactly one
-      `[semver:major|minor|patch]` tag that matches the version bump. Use
-      `major` for API-breaking releases, `minor` for backward-compatible feature
-      work, and `patch` for bug fixes or documentation-only updates. The tag
-      must match the bump from the previous version, and the configured
-      version file must be updated whenever the changelog declares a release
-      scope. Activation is controlled by `config.yaml -> policy_state` and
-      should only be enabled for release processes that enforce SemVer
-      discipline.
-    metadata:
-      id: semantic-version-scope
-      severity: error
-      auto_fix: 'false'
-      enforcement: active
-      enabled: 'false'
-      custom: 'false'
-      version_file: devcovenant/VERSION
-      changelog_file: CHANGELOG.md
-      ignored_prefixes: ''
-      selector_roles: ignored
-      ignored_globs: ''
-      ignored_files: ''
-      ignored_dirs: ''
-    metadata_resolution:
-      id:
-        descriptor:
-          values:
-          - semantic-version-scope
-          behavior: base
-        runtime_identity:
-          values:
-          - semantic-version-scope
-          behavior: replace
-        effective:
-          values:
-          - semantic-version-scope
-      severity:
-        descriptor:
-          values:
-          - error
-          behavior: base
-        effective:
-          values:
-          - error
-      auto_fix:
-        descriptor:
-          values:
-          - 'false'
-          behavior: base
-        effective:
-          values:
-          - 'false'
-      enforcement:
-        descriptor:
-          values:
-          - active
-          behavior: base
-        effective:
-          values:
-          - active
-      version_file:
-        descriptor:
-          values: []
-          behavior: base
-        profile_overlays:
-          values:
-          - devcovenant/VERSION
-          behavior: replace
-        autogen_overlays:
-          values:
-          - devcovenant/VERSION
-          behavior: replace
-          replaced_inherited_values:
-          - devcovenant/VERSION
-        effective:
-          values:
-          - devcovenant/VERSION
-      changelog_file:
-        descriptor:
-          values: []
-          behavior: base
-        profile_overlays:
-          values:
-          - CHANGELOG.md
-          behavior: replace
-        autogen_overlays:
-          values:
-          - CHANGELOG.md
-          behavior: replace
-          replaced_inherited_values:
-          - CHANGELOG.md
-        effective:
-          values:
-          - CHANGELOG.md
-      ignored_prefixes:
-        descriptor:
-          values: []
-          behavior: base
-        effective:
-          values: []
-      selector_roles:
-        descriptor:
-          values:
-          - ignored
-          behavior: base
-        effective:
-          values:
-          - ignored
-      ignored_globs:
-        descriptor:
-          values: []
-          behavior: base
-        effective:
-          values: []
-      ignored_files:
-        descriptor:
-          values: []
-          behavior: base
-        effective:
-          values: []
-      ignored_dirs:
-        descriptor:
-          values: []
-          behavior: base
-        effective:
-          values: []
-      enabled:
-        runtime_defaults:
-          values:
-          - 'true'
-          behavior: default
-        policy_state:
-          values:
-          - 'false'
-          behavior: replace
-          replaced_inherited_values:
-          - 'true'
-        effective:
-          values:
-          - 'false'
-      custom:
-        runtime_defaults:
-          values:
-          - 'false'
-          behavior: default
-        effective:
-          values:
-          - 'false'
-    metadata_warnings: []
-    runtime_metadata_options:
-      id: semantic-version-scope
-      severity: error
-      auto_fix: false
-      enforcement: active
-      enabled: false
-      custom: false
-      version_file: devcovenant/VERSION
-      changelog_file: CHANGELOG.md
-      ignored_prefixes: ''
-      selector_roles: ignored
-      ignored_globs: ''
-      ignored_files: ''
-      ignored_dirs: ''
-    runtime_config_overrides: {}
-    runtime_effective_options:
-      id: semantic-version-scope
-      severity: error
-      auto_fix: false
-      enforcement: active
-      enabled: false
-      custom: false
-      version_file: devcovenant/VERSION
-      changelog_file: CHANGELOG.md
-      selector_roles: ignored
-    assets:
-    - CHANGELOG.md
-    - devcovenant/VERSION
-    origin: builtin
-    script_exists: true
-    hash: 5cb271cb8151a5c1f71d1acceeaa13bcfae4d06367c9b95a200f4ae100fa010b
-    script_path: builtin/semantic_version_scope.py
   tests-coverage:
     enabled: true
     custom: false
@@ -8610,11 +8424,13 @@ policies:
       (`target_role_files`, `target_role_globs`, `target_role_dirs`) with
       `role=>selector` entries. Version extraction is role-driven via
       `role_extractors` and explicit extractor names
-      (`doc_header_version`, `changelog_header_version`,
-      `manifest_project_version`, `semver_token`). Manifest extraction remains
-      format-aware (TOML/JSON/YAML) while selector routing stays role-based.
-      Semantic bump progression and release-scope enforcement are handled by
-      `semantic-version-scope`.
+      (`project_version_line`, `changelog_header_version`,
+      `manifest_project_version`). Manifest extraction remains format-aware
+      (TOML/JSON/YAML) while selector routing stays role-based. Version-sync
+      now validates and compares every extracted value through the active
+      `version-governance` scheme so canonical docs, changelog, manifests,
+      and any opted-in legal text stay synchronized even when repositories
+      use non-SemVer version formats.
     metadata:
       id: version-sync
       severity: error
@@ -8623,11 +8439,11 @@ policies:
       enabled: 'true'
       custom: 'false'
       version_file: devcovenant/VERSION
-      target_roles: docs, changelog, legal, package_manifest
-      role_extractors: docs=>doc_header_version, changelog=>changelog_header_version,
-        legal=>semver_token, package_manifest=>manifest_project_version
+      target_roles: docs, changelog, package_manifest
+      role_extractors: docs=>project_version_line, changelog=>changelog_header_version,
+        package_manifest=>manifest_project_version
       target_role_files: docs=>README.md, docs=>AGENTS.md, docs=>CONTRIBUTING.md,
-        docs=>SPEC.md, docs=>PLAN.md, changelog=>CHANGELOG.md, legal=>LICENSE, docs=>CHANGELOG.md,
+        docs=>SPEC.md, docs=>PLAN.md, changelog=>CHANGELOG.md, docs=>CHANGELOG.md,
         docs=>PROFILE_MAP.md, docs=>POLICY_MAP.md, docs=>devcovenant/README.md, docs=>devcovenant/core/README.md,
         docs=>devcovenant/custom/README.md, docs=>devcovenant/registry/README.md,
         docs=>devcovenant/builtin/policies/README.md, docs=>devcovenant/builtin/profiles/README.md,
@@ -8703,21 +8519,18 @@ policies:
           values:
           - docs
           - changelog
-          - legal
           - package_manifest
           behavior: append
         autogen_overlays:
           values:
           - docs
           - changelog
-          - legal
           - package_manifest
           behavior: append
         effective:
           values:
           - docs
           - changelog
-          - legal
           - package_manifest
       role_extractors:
         descriptor:
@@ -8725,23 +8538,20 @@ policies:
           behavior: base
         profile_overlays:
           values:
-          - docs=>doc_header_version
+          - docs=>project_version_line
           - changelog=>changelog_header_version
-          - legal=>semver_token
           - package_manifest=>manifest_project_version
           behavior: append
         autogen_overlays:
           values:
-          - docs=>doc_header_version
+          - docs=>project_version_line
           - changelog=>changelog_header_version
-          - legal=>semver_token
           - package_manifest=>manifest_project_version
           behavior: append
         effective:
           values:
-          - docs=>doc_header_version
+          - docs=>project_version_line
           - changelog=>changelog_header_version
-          - legal=>semver_token
           - package_manifest=>manifest_project_version
       target_role_files:
         descriptor:
@@ -8755,7 +8565,6 @@ policies:
           - docs=>SPEC.md
           - docs=>PLAN.md
           - changelog=>CHANGELOG.md
-          - legal=>LICENSE
           - docs=>CHANGELOG.md
           - docs=>PROFILE_MAP.md
           - docs=>POLICY_MAP.md
@@ -8777,7 +8586,6 @@ policies:
           - docs=>SPEC.md
           - docs=>PLAN.md
           - changelog=>CHANGELOG.md
-          - legal=>LICENSE
           - docs=>CHANGELOG.md
           - docs=>PROFILE_MAP.md
           - docs=>POLICY_MAP.md
@@ -8799,7 +8607,6 @@ policies:
           - docs=>SPEC.md
           - docs=>PLAN.md
           - changelog=>CHANGELOG.md
-          - legal=>LICENSE
           - docs=>CHANGELOG.md
           - docs=>PROFILE_MAP.md
           - docs=>POLICY_MAP.md
@@ -8925,12 +8732,10 @@ policies:
       target_roles: &id073
       - docs
       - changelog
-      - legal
       - package_manifest
       role_extractors: &id074
-      - docs=>doc_header_version
+      - docs=>project_version_line
       - changelog=>changelog_header_version
-      - legal=>semver_token
       - package_manifest=>manifest_project_version
       target_role_files: &id075
       - docs=>README.md
@@ -8939,7 +8744,6 @@ policies:
       - docs=>SPEC.md
       - docs=>PLAN.md
       - changelog=>CHANGELOG.md
-      - legal=>LICENSE
       - docs=>CHANGELOG.md
       - docs=>PROFILE_MAP.md
       - docs=>POLICY_MAP.md
@@ -9001,8 +8805,296 @@ policies:
     - docs=>devcovenant/registry/README.md
     origin: builtin
     script_exists: true
-    hash: 2a4f8c863ad48c08be6a94f3706097629b76c87d3210f17126dc8402e9267167
+    hash: ba176d5c06bb5861a853011da6b36cbefd73433beb51b9d130acd1f26550b13d
     script_path: builtin/version_sync.py
+  version-governance:
+    enabled: false
+    custom: false
+    description: Version Governance
+    policy_text: |-
+      When enabled, this policy governs repository version format and optional
+      version progression under the configured `scheme`. Repositories may enable
+      `enforce_bumping` to require forward version movement, while format-only
+      custom schemes may leave bump enforcement disabled. Scheme adapters may be
+      builtin or repo-defined and may add extra release rules to the latest
+      changelog entry.
+      Activation is controlled by `config.yaml -> policy_state`. Default profile
+      metadata keeps `semver` as the standard baseline, while repositories may
+      switch schemes or relax bump enforcement explicitly.
+    metadata:
+      id: version-governance
+      severity: error
+      auto_fix: 'false'
+      enforcement: active
+      enabled: 'false'
+      custom: 'false'
+      scheme: semver
+      enforce_bumping: 'True'
+      version_file: devcovenant/VERSION
+      changelog_file: CHANGELOG.md
+      changelog_header_prefix: '## Version'
+      ignored_prefixes: ''
+      semver_scope_tags_required: 'True'
+      calver_pattern: ''
+      custom_regex_pattern: ''
+      custom_adapter_path: ''
+      selector_roles: ignored
+      ignored_globs: ''
+      ignored_files: ''
+      ignored_dirs: ''
+    metadata_resolution:
+      id:
+        descriptor:
+          values:
+          - version-governance
+          behavior: base
+        runtime_identity:
+          values:
+          - version-governance
+          behavior: replace
+        effective:
+          values:
+          - version-governance
+      severity:
+        descriptor:
+          values:
+          - error
+          behavior: base
+        effective:
+          values:
+          - error
+      auto_fix:
+        descriptor:
+          values:
+          - 'false'
+          behavior: base
+        effective:
+          values:
+          - 'false'
+      enforcement:
+        descriptor:
+          values:
+          - active
+          behavior: base
+        effective:
+          values:
+          - active
+      scheme:
+        descriptor:
+          values: []
+          behavior: base
+        profile_overlays:
+          values:
+          - semver
+          behavior: replace
+        autogen_overlays:
+          values:
+          - semver
+          behavior: append
+        effective:
+          values:
+          - semver
+      enforce_bumping:
+        descriptor:
+          values:
+          - 'false'
+          behavior: base
+        profile_overlays:
+          values:
+          - 'True'
+          behavior: replace
+          replaced_inherited_values:
+          - 'false'
+        autogen_overlays:
+          values:
+          - 'True'
+          behavior: append
+        effective:
+          values:
+          - 'True'
+      version_file:
+        descriptor:
+          values: []
+          behavior: base
+        profile_overlays:
+          values:
+          - devcovenant/VERSION
+          behavior: replace
+        autogen_overlays:
+          values:
+          - devcovenant/VERSION
+          behavior: replace
+          replaced_inherited_values:
+          - devcovenant/VERSION
+        effective:
+          values:
+          - devcovenant/VERSION
+      changelog_file:
+        descriptor:
+          values: []
+          behavior: base
+        profile_overlays:
+          values:
+          - CHANGELOG.md
+          behavior: replace
+        autogen_overlays:
+          values:
+          - CHANGELOG.md
+          behavior: replace
+          replaced_inherited_values:
+          - CHANGELOG.md
+        effective:
+          values:
+          - CHANGELOG.md
+      changelog_header_prefix:
+        descriptor:
+          values: []
+          behavior: base
+        profile_overlays:
+          values:
+          - '## Version'
+          behavior: replace
+        autogen_overlays:
+          values:
+          - '## Version'
+          behavior: append
+        effective:
+          values:
+          - '## Version'
+      ignored_prefixes:
+        descriptor:
+          values: []
+          behavior: base
+        effective:
+          values: []
+      semver_scope_tags_required:
+        descriptor:
+          values:
+          - 'false'
+          behavior: base
+        profile_overlays:
+          values:
+          - 'True'
+          behavior: replace
+          replaced_inherited_values:
+          - 'false'
+        autogen_overlays:
+          values:
+          - 'True'
+          behavior: append
+        effective:
+          values:
+          - 'True'
+      calver_pattern:
+        descriptor:
+          values: []
+          behavior: base
+        effective:
+          values: []
+      custom_regex_pattern:
+        descriptor:
+          values: []
+          behavior: base
+        effective:
+          values: []
+      custom_adapter_path:
+        descriptor:
+          values: []
+          behavior: base
+        effective:
+          values: []
+      selector_roles:
+        descriptor:
+          values:
+          - ignored
+          behavior: base
+        effective:
+          values:
+          - ignored
+      ignored_globs:
+        descriptor:
+          values: []
+          behavior: base
+        effective:
+          values: []
+      ignored_files:
+        descriptor:
+          values: []
+          behavior: base
+        effective:
+          values: []
+      ignored_dirs:
+        descriptor:
+          values: []
+          behavior: base
+        effective:
+          values: []
+      enabled:
+        runtime_defaults:
+          values:
+          - 'true'
+          behavior: default
+        policy_state:
+          values:
+          - 'false'
+          behavior: replace
+          replaced_inherited_values:
+          - 'true'
+        effective:
+          values:
+          - 'false'
+      custom:
+        runtime_defaults:
+          values:
+          - 'false'
+          behavior: default
+        effective:
+          values:
+          - 'false'
+    metadata_warnings: []
+    runtime_metadata_options:
+      id: version-governance
+      severity: error
+      auto_fix: false
+      enforcement: active
+      enabled: false
+      custom: false
+      scheme: semver
+      enforce_bumping: true
+      version_file: devcovenant/VERSION
+      changelog_file: CHANGELOG.md
+      changelog_header_prefix: '## Version'
+      ignored_prefixes: ''
+      semver_scope_tags_required: true
+      calver_pattern: ''
+      custom_regex_pattern: ''
+      custom_adapter_path: ''
+      selector_roles: ignored
+      ignored_globs: ''
+      ignored_files: ''
+      ignored_dirs: ''
+    runtime_config_overrides: {}
+    runtime_effective_options:
+      id: version-governance
+      severity: error
+      auto_fix: false
+      enforcement: active
+      enabled: false
+      custom: false
+      scheme: semver
+      enforce_bumping: true
+      version_file: devcovenant/VERSION
+      changelog_file: CHANGELOG.md
+      changelog_header_prefix: '## Version'
+      semver_scope_tags_required: true
+      selector_roles: ignored
+    assets:
+    - CHANGELOG.md
+    - devcovenant/VERSION
+    origin: builtin
+    script_exists: true
+    hash: e56606280b63d247e96d33a76aca8ea0f56f072289a7286021b31d5dada53cc5
+    script_path: builtin/version_governance.py
 profiles:
   terraform:
     version: 1
@@ -10055,11 +10147,9 @@ profiles:
         target_roles:
         - docs
         - changelog
-        - legal
         role_extractors:
-        - docs=>doc_header_version
+        - docs=>project_version_line
         - changelog=>changelog_header_version
-        - legal=>semver_token
         target_role_files:
         - docs=>README.md
         - docs=>AGENTS.md
@@ -10067,12 +10157,15 @@ profiles:
         - docs=>SPEC.md
         - docs=>PLAN.md
         - changelog=>CHANGELOG.md
-        - legal=>LICENSE
         target_role_globs: []
         target_role_dirs: []
-      semantic-version-scope:
+      version-governance:
+        scheme: semver
+        enforce_bumping: true
         version_file: VERSION
         changelog_file: CHANGELOG.md
+        changelog_header_prefix: '## Version'
+        semver_scope_tags_required: true
       dependency-license-sync:
         dependency_files: []
         dependency_globs: []
@@ -11440,7 +11533,7 @@ profiles:
         - docs=>devcovenant/docs/**/*.md
         target_role_dirs:
         - docs=>devcovenant/docs
-      semantic-version-scope:
+      version-governance:
         version_file: devcovenant/VERSION
     source: custom
     path: devcovenant/custom/profiles/devcovrepo

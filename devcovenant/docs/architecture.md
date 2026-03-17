@@ -637,12 +637,24 @@ Invariant:
   `intent`, `resolved`, and `package_manifest` mapped with
   `role=>selector` metadata entries.
 - version-sync extractor taxonomy is role-driven and format-aware:
-  `manifest_project_version` handles TOML/JSON/YAML manifests while docs and
-  changelog roles remain extractor-specific (`doc_header_version`,
-  `changelog_header_version`, `semver_token`), and version-sync remains a
-  consistency-only policy.
-- semantic-version-scope owns semver bump progression and release-scope
-  validation when enabled.
+  `manifest_project_version` handles TOML/JSON/YAML manifests while
+  `project_version_line` and `changelog_header_version` cover canonical
+  docs/changelog surfaces plus any opted-in legal text, and version-sync
+  remains a consistency-only policy that delegates parsing/comparison to
+  version-governance.
+- version-governance owns version-format validation, scheme-aware bump
+  progression, and optional SemVer release-scope validation when enabled.
+- `devcovenant/builtin/policies/version_governance/version_governance.py`
+  owns the shared changelog/version-file orchestration and scheme registry,
+  while sibling modules (`semver.py`, `calver.py`, `integer.py`,
+  `pep440.py`, `custom_regex.py`, `custom_adapter.py`) implement
+  scheme-specific parsing, comparison, and extra release rules.
+- `custom_regex.py` is the strict validation-only escape hatch for exotic
+  formats that have no trustworthy ordering semantics.
+- `custom_adapter.py` is the strict repo-local extension path for arbitrary
+  ordering logic; it loads one repo-relative Python module and expects that
+  module to export `SCHEME` with the same version-governance adapter
+  interface used by builtin schemes.
 - dependency-license-sync validates artifact targets as repository-relative
   paths and rejects out-of-repo traversal for both checks and autofix.
 - dependency-license-sync autofix is idempotent: synchronized artifacts are

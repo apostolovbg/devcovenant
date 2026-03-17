@@ -1,5 +1,6 @@
 # Top-level dependency manifest for DevCovenant.  Keep this file minimal so
 # package managers such as pip-tools can produce reproducible locks quickly.
+packaging>=26.0
 pre-commit>=4.5.1
 pip-tools>=7.5.3
 PyYAML>=6.0.2

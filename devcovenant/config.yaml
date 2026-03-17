@@ -251,8 +251,8 @@ policy_state:
   read-only-directories: true
   readme-sync: true
   security-scanner: true
-  semantic-version-scope: false
   tests-coverage: true
+  version-governance: false
   version-sync: true
 
 # -------------------------------------------------------------------
@@ -900,9 +900,6 @@ autogen_metadata_overlays:
     - '**/tests/**'
     include_suffixes:
     - .py
-  semantic-version-scope:
-    changelog_file: CHANGELOG.md
-    version_file: devcovenant/VERSION
   tests-coverage:
     assertion_signal_patterns:
     - python=>\bassert\b
@@ -931,14 +928,24 @@ autogen_metadata_overlays:
     - tests
     watch_dirs:
     - tests
+  version-governance:
+    changelog_file: CHANGELOG.md
+    changelog_header_prefix:
+    - '## Version'
+    enforce_bumping:
+    - 'True'
+    scheme:
+    - semver
+    semver_scope_tags_required:
+    - 'True'
+    version_file: devcovenant/VERSION
   version-sync:
     changelog_file: CHANGELOG.md
     changelog_header_prefix:
     - '## Version'
     role_extractors:
-    - docs=>doc_header_version
+    - docs=>project_version_line
     - changelog=>changelog_header_version
-    - legal=>semver_token
     - package_manifest=>manifest_project_version
     target_role_dirs:
     - docs=>devcovenant/docs
@@ -949,7 +956,6 @@ autogen_metadata_overlays:
     - docs=>SPEC.md
     - docs=>PLAN.md
     - changelog=>CHANGELOG.md
-    - legal=>LICENSE
     - docs=>CHANGELOG.md
     - docs=>PROFILE_MAP.md
     - docs=>POLICY_MAP.md
@@ -967,7 +973,6 @@ autogen_metadata_overlays:
     target_roles:
     - docs
     - changelog
-    - legal
     - package_manifest
     version_file: devcovenant/VERSION
 

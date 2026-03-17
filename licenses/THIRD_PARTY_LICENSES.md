@@ -5,6 +5,8 @@ manifests and the corresponding license texts stored under `licenses/`.
 
 ## License Report
 - `pyproject.toml`
+- `requirements.in`
+- `requirements.lock`
 ## Dependency License Inventory
 - `pre-commit==4.5.1`: `licenses/pre-commit-4.5.1.txt`
 - `PyYAML==6.0.2`: `licenses/PyYAML-6.0.2.txt`

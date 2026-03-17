@@ -1,5 +1,5 @@
 # Configuration
-**Last Updated:** 2026-03-15
+**Last Updated:** 2026-03-16
 **Project Version:** 1.0.0
 
 ## Table of Contents
@@ -261,7 +261,7 @@ Refresh behavior:
 Profiles do not activate policies.
 
 Notable activation defaults in this repository:
-- `semantic-version-scope` stays `false` outside release slices.
+- `version-governance` stays `false` outside release slices.
 - `version-sync` stays `false` in the global config template by default.
 - `raw-string-escapes` stays optional and can be enabled when repositories
   want language-aware suspicious-escape checks beyond repo-specific custom
@@ -292,8 +292,72 @@ Autofix workflow note:
 Disable one shipped policy:
 ```yaml
 policy_state:
-  semantic-version-scope: false
+  version-governance: false
 ```
+
+Configure version governance for a CalVer repository:
+```yaml
+policy_state:
+  version-governance: true
+
+user_metadata_overrides:
+  version-governance:
+    scheme: calver
+    version_file: VERSION
+    changelog_file: CHANGELOG.md
+    changelog_header_prefix: '## Version'
+    enforce_bumping: true
+```
+
+Configure version governance for a Python package using PEP 440:
+```yaml
+policy_state:
+  version-governance: true
+
+user_metadata_overrides:
+  version-governance:
+    scheme: pep440
+    version_file: VERSION
+    changelog_file: CHANGELOG.md
+    changelog_header_prefix: '## Version'
+    enforce_bumping: true
+```
+
+Configure version governance for a format-only custom scheme:
+```yaml
+policy_state:
+  version-governance: true
+
+user_metadata_overrides:
+  version-governance:
+    scheme: custom_regex
+    version_file: VERSION
+    changelog_file: CHANGELOG.md
+    changelog_header_prefix: '## Version'
+    enforce_bumping: false
+    custom_regex_pattern: '[IVXLC]+'
+```
+
+Configure version governance for a fully custom repo-local adapter:
+```yaml
+policy_state:
+  version-governance: true
+
+user_metadata_overrides:
+  version-governance:
+    scheme: custom_adapter
+    version_file: VERSION
+    changelog_file: CHANGELOG.md
+    changelog_header_prefix: '## Version'
+    enforce_bumping: true
+    custom_adapter_path: \
+      devcovenant/custom/policies/version_governance/roman_scheme.py
+```
+
+`custom_regex` is validation-only and should keep `enforce_bumping: false`.
+`custom_adapter` expects the referenced repo-relative Python file to export
+`SCHEME` with the same parse/compare/release interface used by builtin
+version-governance adapters.
 
 Add extra changelog verbs without replacing defaults:
 ```yaml
