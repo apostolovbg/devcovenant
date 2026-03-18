@@ -2,7 +2,7 @@
 **Doc ID:** AGENTS
 **Doc Type:** policy-source
 **Project Version:** 1.0.0
-**Last Updated:** 2026-03-17
+**Last Updated:** 2026-03-18
 **DevCovenant Version:** 1.0.0
 
 <!-- DEVCOV:BEGIN -->

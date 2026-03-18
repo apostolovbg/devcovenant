@@ -2,7 +2,7 @@
 **Doc ID:** CHANGELOG
 **Doc Type:** changelog
 **Project Version:** 1.0.0
-**Last Updated:** 2026-03-17
+**Last Updated:** 2026-03-18
 **DevCovenant Version:** 1.0.0
 
 <!-- DEVCOV:BEGIN -->
@@ -55,6 +55,25 @@ Example:
 ## Log changes here
 
 ## Version 1.0.0
+
+- 2026-03-18:
+  Change: Rewrote Item 3 in `PLAN.md` around an orthogonal
+  `project-governance` policy instead of a mutually exclusive pre-version
+  identity mode.
+  Why: Clarified how project phase, development stance, and intentionally
+  unversioned repos should be governed without overloading
+  `version-governance`.
+  Impact: Planned a cleaner lifecycle model where `project-governance` can
+  coexist with `version-governance`, `AGENTS.md` carries richer governance
+  headers, and unversioned repos use explicit non-version labels plus
+  `## Unreleased`.
+  Files:
+  AGENTS.md
+  CHANGELOG.md
+  CONTRIBUTING.md
+  PLAN.md
+  README.md
+  devcovenant/README.md
 
 - 2026-03-17:
   Change: Added role-scoped package legality enforcement to

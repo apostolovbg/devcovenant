@@ -2,13 +2,13 @@
 **Doc ID:** PLAN
 **Doc Type:** plan
 **Project Version:** 1.0.0
-**Last Updated:** 2026-03-17
+**Last Updated:** 2026-03-18
 **DevCovenant Version:** 1.0.0
 
 This plan replaces the completed registry-layout roadmap with the next
 future-facing program: turn version handling into a first-class,
 scheme-neutral DevCovenant framework across policy, docs, package surfaces,
-and pre-release repo lifecycle.
+and project lifecycle governance.
 
 The baseline has already shifted:
 - `version-governance` now replaces `semantic-version-scope`
@@ -20,8 +20,9 @@ The baseline has already shifted:
 The remaining work is the full plug-in across the rest of the product:
 - remove leftover SemVer assumptions outside the new framework
 - enforce ecosystem/package legality where manifests need stricter rules
-- define a clean pre-version identity model for repos that are not yet on a
-  real release version
+- define a clean project-governance model for stage, stance, and
+  intentionally unversioned lifecycle state without overloading
+  `version-governance`
 - keep the whole stack forward-only, with no fallback compatibility paths
 
 ## Table of Contents
@@ -52,13 +53,15 @@ The remaining work is the full plug-in across the rest of the product:
   scheme-aware through `version-governance`.
 - Separate repo-level version governance from ecosystem-specific package
   legality.
-- Create a clean path for repos that are still pre-version and only have a
-  codename, stage, build identifier, or `Unreleased` lifecycle.
+- Create a clean `project-governance` layer for stage, development stance,
+  codename, build identity, and intentionally unversioned lifecycle state.
 - Keep the 1.x architecture forward-only: no fallback SemVer parsing, no
   duplicate compatibility policies, and no hidden scheme-specific shortcuts.
 
 ### Baseline Truths Preserved
 - `version-governance` owns repo version semantics.
+- `project-governance` will own project-phase and stance metadata without
+  redefining version semantics.
 - `version-sync` owns synchronization of declared version surfaces.
 - `check` remains the read-only audit command.
 - `gate` owns lifecycle writes and never runs tests internally.
@@ -80,19 +83,22 @@ The remaining work is the full plug-in across the rest of the product:
     ecosystem
   - examples: Python package metadata, npm package manifests, future adapter
     targets
-- pre-version identity
-  - governs repos that do not yet have a real release version
-  - owns stage/codename/build identity instead of overloading
-    `version-governance`
+- `project-governance`
+  - governs project phase, development stance, codename, build identity,
+    and versioning mode
+  - stays orthogonal to `version-governance` and may coexist with it
+  - provides the governed model for intentionally unversioned repos without
+    forcing fake numbered versions
 
 ### Design Rules
 - Version semantics flow from `version-governance` outward.
 - Equality and ordering must come from the active scheme adapter, not from
   ad-hoc regexes in unrelated policies.
 - Ecosystem legality is a separate concern from repo-level equality.
-- Codenames and build identities are not versions.
-- Repos without a real version should have an explicit governed state, not a
-  fake placeholder version.
+- Codenames, stages, and build identities are not versions, but they are
+  legitimate governed project metadata.
+- Intentionally unversioned repos should render an explicit non-version
+  label, not a fake numbered version.
 
 ## Scope and Principles
 ### In Scope
@@ -101,7 +107,7 @@ The remaining work is the full plug-in across the rest of the product:
 - package/ecosystem legality rules for version-bearing manifests
 - schema-neutral doc/header handling where version strings appear
 - defaults/profile assumptions that still encode SemVer expectations
-- pre-version repo identity design and implementation
+- `project-governance` design and implementation
 - tests/docs for the completed version-stack contract
 - downstream proof in real managed repos
 
@@ -109,7 +115,8 @@ The remaining work is the full plug-in across the rest of the product:
 - Prefer one version framework over many local parsers.
 - Prefer explicit scheme adapters over generic if/else growth.
 - Prefer explicit legality checks over implicit ecosystem assumptions.
-- Prefer explicit pre-version state over fake release versions.
+- Prefer explicit `project-governance` metadata over fake
+  numbered-version placeholders.
 - Prefer forward-only architecture over compatibility layers.
 - Prefer exact ownership boundaries between repo version semantics and
   packaging semantics.
@@ -120,10 +127,11 @@ The remaining work is the full plug-in across the rest of the product:
   SemVer assumptions outside `version-governance`.
 - `V1`: package-facing version surfaces can now stay in sync under custom
   schemes without proving they are legal for their packaging ecosystem.
-- `V2`: DevCovenant has no first-class governed state for repos that are
-  still pre-version and only have stage/codename/build identity.
-- `V3`: docs need a single explicit explanation of how repo version schemes,
-  package legality, and pre-version identity fit together.
+- `V2`: DevCovenant has no first-class orthogonal governance layer for
+  project phase, development stance, codename, build identity, and
+  intentionally unversioned state.
+- `V3`: docs need a single explicit explanation of how project governance,
+  repo version schemes, and package legality fit together.
 
 ### Medium
 - `V4`: generated managed docs and examples still need a version-stack sweep
@@ -136,8 +144,8 @@ The remaining work is the full plug-in across the rest of the product:
 ### Decision Items
 - `V7`: whether package legality belongs inside `version-sync` role handling
   or in a separate dedicated policy.
-- `V8`: whether pre-version identity is best modeled as a new policy such as
-  `project-identity` or a broader release-lifecycle policy.
+- `V8`: how broad `project-governance` v1 should be beyond stage, stance,
+  codename, build identity, and versioning mode.
 - `V9`: which ecosystems get first-class legality adapters in the initial
   pass after Python/PEP 440.
 
@@ -145,8 +153,8 @@ The remaining work is the full plug-in across the rest of the product:
 - No edits inside managed `<!-- DEVCOV* -->` blocks.
 - No restoration of `semantic-version-scope` as a compatibility alias.
 - No hidden SemVer fallback parser paths outside `version-governance`.
-- No fake version placeholders for pre-version repos when identity is the
-  real concern.
+- No fake numbered-version placeholders when a repo is intentionally
+  unversioned.
 - No deletion of historical changelog entries.
 - `check` remains read-only.
 - `gate` commands never run tests internally.
@@ -176,7 +184,7 @@ Operator notes:
 ## Execution Order
 1. Audit and neutralize the remaining version-reading assumptions first.
 2. Lock the package/ecosystem legality model next.
-3. Design and implement pre-version identity after version and package
+3. Design and implement `project-governance` after version and package
    boundaries are explicit.
 4. Sweep docs/examples/tests only after the code contract is stable.
 5. Prove the result in this repo and then in downstream managed repos.
@@ -287,32 +295,37 @@ manifest ecosystems.
 3. Closed the slice with focused legality regressions, refresh-driven
    managed-surface convergence, and the full gated workflow.
 
-### Item 3 [pending]: Introduce Governed Pre-Version Identity
-**Objective:** Create a first-class governed model for repos that are not yet
-on a real release version.
+### Item 3 [pending]: Introduce Orthogonal Project Governance
+**Objective:** Create a first-class `project-governance` policy for project
+phase, development stance, codename, build identity, and intentionally
+unversioned lifecycle state.
 
 **Depends on:** Item 2.
 
 **Addresses:** `V2`, `V3`, `V8`.
 
-**Scope:** lifecycle stage, codename, build identity, and the boundary between
-`Unreleased` repo state and real release versions.
+**Scope:** project stage, development stance, versioning mode, codename,
+build identity, managed-header behavior, and unversioned changelog flow.
 
 **Implementation Tasks**
-1. Choose the policy shape for pre-version identity.
-2. Define metadata for stage/codename/build identity without calling those
-   values versions.
-3. Define how pre-version repos relate to `version-governance` and
+1. Define `project-governance` metadata for stage, development stance,
+   versioning mode, codename, and build identity.
+2. Keep `project-governance` orthogonal to `version-governance` and
    `version-sync`.
-4. Define how changelog structure and managed docs should behave before the
-   first real version exists.
-5. Implement the policy and wire it into defaults/docs only where intended.
+3. Define managed-header behavior so ordinary docs keep the compact
+   `Project Version` line while `AGENTS.md` gets richer project-governance
+   headers.
+4. Define how intentionally unversioned repos render `Project Version`
+   labels and how `CHANGELOG.md` uses `## Unreleased`.
+5. Implement the policy and wire it only into intended docs/config surfaces.
 
 **Tests and Validation**
-1. Focused lifecycle/pre-version policy tests.
+1. Focused `project-governance` policy tests.
 2. Cross-policy tests for interaction with `version-governance` and
-   `version-sync`.
-3. Full `devcovenant test`.
+   unversioned/versioned header rendering.
+3. Focused refresh/changelog tests for `## Unreleased` and `AGENTS.md`
+   project-governance headers.
+4. Full `devcovenant test`.
 
 **Documentation**
 1. `PLAN.md`
@@ -322,10 +335,12 @@ on a real release version.
 5. `devcovenant/docs/architecture.md`
 
 **Acceptance Criteria**
-1. Repos can be explicitly governed before adopting a real release version.
-2. Codenames and build identifiers are not treated as fake versions.
-3. The transition from pre-version identity to real version governance is
-   documented and test-covered.
+1. `project-governance` can coexist with `version-governance`.
+2. Intentionally unversioned repos can render explicit non-version labels
+   without fake numbered versions.
+3. Extra project-governance header lines appear only where intended,
+   starting with `AGENTS.md`.
+4. `CHANGELOG.md` supports the unversioned `## Unreleased` flow cleanly.
 
 ### Item 4 [pending]: Expand Scheme-Specific Governance Semantics
 **Objective:** Grow the framework beyond simple equality so scheme-specific
@@ -404,7 +419,7 @@ in at least one managed repo.
 - focused version-sync tests
 - focused refresh/rendered-doc tests
 - focused package-legality tests when introduced
-- focused pre-version identity tests when introduced
+- focused `project-governance` tests when introduced
 - `devcovenant test`
 - `devcovenant gate --mid`
 - `devcovenant gate --end`
@@ -437,7 +452,8 @@ This program is complete only when:
    semantics.
 2. Package-manifest legality is enforced explicitly where ecosystems require
    it.
-3. Pre-version repos have a governed lifecycle that does not misuse fake
+3. `project-governance` exists as an orthogonal lifecycle layer,
+   including intentionally unversioned repos without fake numbered
    versions.
 4. Docs and defaults no longer assume SemVer unless a surface intentionally
    requires it.
@@ -447,7 +463,8 @@ This program is complete only when:
 ## Risk Controls and Non-Goals
 ### Risk Controls
 - Keep ecosystem legality separate from repo version equality.
-- Avoid overloading `version-governance` with pre-version identity.
+- Avoid overloading `version-governance` with `project-governance`
+  concerns.
 - Avoid custom-adapter growth that bypasses test coverage or explicit config.
 - Prefer adapter extension points over regex sprawl.
 - Keep policy text generic unless a specific ecosystem or scheme truly needs
@@ -456,7 +473,8 @@ This program is complete only when:
 ### Non-Goals
 - Do not restore `semantic-version-scope`.
 - Do not force one global version scheme on all repositories.
-- Do not treat codenames or build tags as interchangeable with real
-  release versions.
+- Do not treat codenames, stages, or build tags as interchangeable with
+  real release versions.
+- Do not force `project-governance` to masquerade as version governance.
 - Do not add fallback parsers for legacy version strings outside the
   configured scheme adapters.
