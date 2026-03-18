@@ -308,9 +308,10 @@ High-impact runtime contracts:
   overlays just to keep packaged docs compliant.
 - `last-updated` violation suggestions report the effective allowlist,
   including allowlisted globs, instead of only explicit files/suffixes.
-- `version-sync` stays consistency-only; version format validation,
-  scheme-aware bump progression, and comparison semantics are handled by
-  `version-governance`.
+- `version-sync` owns synchronized version surfaces and any explicit
+  role-scoped package-legality checks, while repo-level version format
+  validation, scheme-aware bump progression, and comparison semantics are
+  handled by `version-governance`.
 - `version-governance` activation follows `config.yaml -> policy_state`;
   descriptor text should stay neutral and not hardcode an enabled/disabled
   deployment assumption.
@@ -460,6 +461,9 @@ Operational behavior:
 - map each role to one extractor in `role_extractors` (`role=>extractor`)
 - attach selectors with `target_role_files` / `target_role_globs` /
   `target_role_dirs` (`role=>selector`)
+- optional `role_legality_schemes` mappings (`role=>scheme`) add stricter
+  ecosystem legality for selected targets without changing the repo's
+  canonical version scheme
 - all declared role targets are required; there is no optional-target mode
 - extractor set is explicit (`project_version_line`,
   `changelog_header_version`, `manifest_project_version`)
@@ -471,6 +475,9 @@ Operational behavior:
 - extracted values are parsed and compared through the active
   `version-governance` scheme, so equivalent canonical spellings can stay in
   sync even when raw strings differ (for example normalized package versions)
+- legality mappings are checked after repo-level extraction/parsing; for
+  example, Python profiles can keep repo equality scheme-neutral while still
+  requiring `package_manifest` targets to satisfy `pep440`
 - repositories should configure `version-governance.scheme` explicitly when
   they enable `version-governance` or rely on `version-sync`
 - version-governance scheme adapters are internal policy modules, not a

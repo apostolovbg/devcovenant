@@ -131,6 +131,12 @@ def _unit_test_runtime_scheme_resolves_override_scheme() -> None:
     assert check._scheme_name() == "pep440"
 
 
+def _unit_test_named_scheme_resolution_exposes_builtin_adapter() -> None:
+    """Named scheme lookup should return builtin adapters explicitly."""
+    scheme = version_governance.resolve_named_scheme("pep440")
+    assert scheme.name == "pep440"
+
+
 def _unit_test_runtime_scheme_requires_explicit_scheme() -> None:
     """Runtime helper should fail when no governance scheme is configured."""
     repo_root = _repo_root()

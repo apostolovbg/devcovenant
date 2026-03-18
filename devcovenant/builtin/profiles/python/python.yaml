@@ -86,6 +86,8 @@ policy_overlays:
       - package_manifest
     role_extractors:
       - package_manifest=>manifest_project_version
+    role_legality_schemes:
+      - package_manifest=>pep440
     target_role_files:
       - package_manifest=>pyproject.toml
   security-scanner:

@@ -57,6 +57,36 @@ Example:
 ## Version 1.0.0
 
 - 2026-03-17:
+  Change: Added role-scoped package legality enforcement to
+  `version-sync` and wired Python package manifests to PEP 440 legality.
+  Why: Prevented ecosystem legality from inheriting repo-level scheme
+  flexibility so custom governed schemes cannot allow illegal packaging
+  metadata.
+  Impact: Enforced PEP 440 validation for Python manifests under
+  `version-sync` and defined an explicit `role_legality_schemes`
+  extension path for future ecosystems.
+  Files:
+  AGENTS.md
+  CHANGELOG.md
+  PLAN.md
+  devcovenant/builtin/policies/version_governance/version_governance.py
+  devcovenant/builtin/policies/version_sync/version_sync.py
+  devcovenant/builtin/policies/version_sync/version_sync.yaml
+  devcovenant/builtin/profiles/global/assets/config.yaml
+  devcovenant/builtin/profiles/python/python.yaml
+  devcovenant/config.yaml
+  devcovenant/docs/architecture.md
+  devcovenant/docs/config.md
+  devcovenant/docs/installation.md
+  devcovenant/docs/policies.md
+  devcovenant/docs/profiles.md
+  devcovenant/docs/registry.md
+  devcovenant/registry/registry.yaml
+  tests/devcovenant/builtin/policies/version_governance/\
+    test_version_governance.py
+  tests/devcovenant/builtin/policies/version_sync/test_version_sync.py
+
+- 2026-03-17:
   Change: Standardized explicit version-governance scheme selection and
   clarified version-stack wording across defaults, docs, and upgrade
   runtime.

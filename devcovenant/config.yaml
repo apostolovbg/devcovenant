@@ -947,6 +947,8 @@ autogen_metadata_overlays:
     - docs=>project_version_line
     - changelog=>changelog_header_version
     - package_manifest=>manifest_project_version
+    role_legality_schemes:
+    - package_manifest=>pep440
     target_role_dirs:
     - docs=>devcovenant/docs
     target_role_files:

@@ -76,38 +76,42 @@ class TestVersionSyncPolicy(unittest.TestCase):
         pyproject.write_text(f'[project]\nversion = "{version}"\n')
         return pyproject
 
-    def _policy(self) -> VersionSyncCheck:
+    def _policy(
+        self,
+        *,
+        role_legality_schemes: list[str] | None = None,
+    ) -> VersionSyncCheck:
         """Return a policy configured for role-based version sync."""
         policy = VersionSyncCheck()
-        policy.set_options(
-            {
-                "version_file": "project_lib/VERSION",
-                "changelog_file": "CHANGELOG.md",
-                "changelog_header_prefix": "## Version",
-                "target_roles": [
-                    "docs",
-                    "changelog",
-                    "package_manifest",
-                    "legal",
-                ],
-                "role_extractors": [
-                    "docs=>project_version_line",
-                    "changelog=>changelog_header_version",
-                    "package_manifest=>manifest_project_version",
-                    "legal=>project_version_line",
-                ],
-                "target_role_files": [
-                    "docs=>README.md",
-                    "docs=>docs/README.md",
-                    "changelog=>CHANGELOG.md",
-                    "package_manifest=>pyproject.toml",
-                    "package_manifest=>app/pyproject.toml",
-                    "legal=>LICENSE",
-                    "legal=>app/license.txt",
-                ],
-            },
-            {},
-        )
+        metadata_options = {
+            "version_file": "project_lib/VERSION",
+            "changelog_file": "CHANGELOG.md",
+            "changelog_header_prefix": "## Version",
+            "target_roles": [
+                "docs",
+                "changelog",
+                "package_manifest",
+                "legal",
+            ],
+            "role_extractors": [
+                "docs=>project_version_line",
+                "changelog=>changelog_header_version",
+                "package_manifest=>manifest_project_version",
+                "legal=>project_version_line",
+            ],
+            "target_role_files": [
+                "docs=>README.md",
+                "docs=>docs/README.md",
+                "changelog=>CHANGELOG.md",
+                "package_manifest=>pyproject.toml",
+                "package_manifest=>app/pyproject.toml",
+                "legal=>LICENSE",
+                "legal=>app/license.txt",
+            ],
+        }
+        if role_legality_schemes:
+            metadata_options["role_legality_schemes"] = role_legality_schemes
+        policy.set_options(metadata_options, {})
         return policy
 
     def _resolved_scheme(self, scheme_name: str = "semver", **options):
@@ -610,6 +614,105 @@ class TestVersionSyncPolicy(unittest.TestCase):
                 violations = policy.check(context)
 
             self.assertEqual(violations, [])
+
+    def test_enforces_pep440_legality_for_python_manifests(self):
+        """Package legality should fail invalid Python manifest versions."""
+        with tempfile.TemporaryDirectory() as tmpdir:
+            repo_root = Path(tmpdir)
+            version_dir = repo_root / "project_lib"
+            version_dir.mkdir()
+            (version_dir / "VERSION").write_text("XIV\n")
+
+            self._write_readme(repo_root, "README.md", "XIV")
+            self._write_readme(repo_root, "docs/README.md", "XIV")
+            self._write_pyproject(repo_root, "XIV")
+            self._write_pyproject(repo_root, "XIV", "app/pyproject.toml")
+            self._write_license(repo_root, "LICENSE", "XIV")
+            self._write_license(repo_root, "app/license.txt", "XIV")
+            self._write_changelog(repo_root, "XIV")
+
+            context = CheckContext(repo_root=repo_root)
+            policy = self._policy(
+                role_legality_schemes=["package_manifest=>pep440"]
+            )
+            with mock.patch.object(
+                version_sync.version_governance,
+                "resolve_runtime_scheme",
+                return_value=self._resolved_scheme(
+                    "custom_regex",
+                    custom_regex_pattern=r"[IVX]+",
+                ),
+            ):
+                violations = policy.check(context)
+
+            self.assertEqual(len(violations), 2)
+            self.assertTrue(
+                all(
+                    "is not legal for required scheme `pep440`"
+                    in violation.message
+                    for violation in violations
+                )
+            )
+
+    def test_keeps_repo_scheme_flexible_while_enforcing_package_legality(self):
+        """CalVer repo equality can coexist with PEP 440 manifest legality."""
+        with tempfile.TemporaryDirectory() as tmpdir:
+            repo_root = Path(tmpdir)
+            version_dir = repo_root / "project_lib"
+            version_dir.mkdir()
+            (version_dir / "VERSION").write_text("2026.03\n")
+
+            self._write_readme(repo_root, "README.md", "2026.3")
+            self._write_readme(repo_root, "docs/README.md", "2026.03")
+            self._write_pyproject(repo_root, "2026.3")
+            self._write_pyproject(repo_root, "2026.03", "app/pyproject.toml")
+            self._write_license(repo_root, "LICENSE", "2026.03")
+            self._write_license(repo_root, "app/license.txt", "2026.3")
+            self._write_changelog(repo_root, "2026.3")
+
+            context = CheckContext(repo_root=repo_root)
+            policy = self._policy(
+                role_legality_schemes=["package_manifest=>pep440"]
+            )
+            with mock.patch.object(
+                version_sync.version_governance,
+                "resolve_runtime_scheme",
+                return_value=self._resolved_scheme("calver"),
+            ):
+                violations = policy.check(context)
+
+            self.assertEqual(violations, [])
+
+    def test_rejects_unknown_role_legality_scheme(self):
+        """Legality mappings should fail explicitly for unknown schemes."""
+        with tempfile.TemporaryDirectory() as tmpdir:
+            repo_root = Path(tmpdir)
+            version_dir = repo_root / "project_lib"
+            version_dir.mkdir()
+            (version_dir / "VERSION").write_text("1.0.0\n")
+            self._write_readme(repo_root, "README.md", "1.0.0")
+            self._write_readme(repo_root, "docs/README.md", "1.0.0")
+            self._write_pyproject(repo_root, "1.0.0")
+            self._write_pyproject(repo_root, "1.0.0", "app/pyproject.toml")
+            self._write_license(repo_root, "LICENSE", "1.0.0")
+            self._write_license(repo_root, "app/license.txt", "1.0.0")
+            self._write_changelog(repo_root, "1.0.0")
+
+            policy = self._policy(
+                role_legality_schemes=["package_manifest=>does_not_exist"]
+            )
+            with mock.patch.object(
+                version_sync.version_governance,
+                "resolve_runtime_scheme",
+                return_value=self._resolved_scheme("semver"),
+            ):
+                violations = policy.check(CheckContext(repo_root=repo_root))
+
+            self.assertEqual(len(violations), 1)
+            self.assertIn(
+                "role_legality_schemes` uses unsupported scheme",
+                violations[0].message,
+            )
 
     def test_reports_version_governance_resolution_failures(self):
         """Version-sync should fail explicitly when scheme resolution fails."""

@@ -1644,6 +1644,7 @@ target_roles: docs
 role_extractors: docs=>project_version_line
   changelog=>changelog_header_version
   package_manifest=>manifest_project_version
+role_legality_schemes: package_manifest=>pep440
 target_role_files: docs=>README.md
   docs=>AGENTS.md
   docs=>CONTRIBUTING.md
@@ -1684,5 +1685,8 @@ Target selection is role-based via `target_roles` and role selectors
 now validates and compares every extracted value through the active
 `version-governance` scheme so canonical docs, changelog, manifests,
 and any opted-in legal text stay synchronized even when repositories
-use non-SemVer version formats.
+use non-SemVer version formats. Optional `role_legality_schemes`
+entries add stricter ecosystem legality for selected roles without
+collapsing repo-level version governance back into one packaging-only
+scheme.
 <!-- DEVCOV-POLICIES:END -->

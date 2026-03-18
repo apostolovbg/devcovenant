@@ -641,8 +641,9 @@ Invariant:
   `manifest_project_version` handles TOML/JSON/YAML manifests while
   `project_version_line` and `changelog_header_version` cover canonical
   docs/changelog surfaces plus any opted-in legal text, and version-sync
-  remains a consistency-only policy that delegates parsing/comparison to
-  version-governance.
+  delegates repo-level parsing/comparison to version-governance while
+  optionally layering role-scoped ecosystem legality such as
+  `package_manifest=>pep440`.
 - version-governance owns version-format validation, scheme-aware bump
   progression, and any scheme-specific release-rule validation enabled by the
   active adapter.

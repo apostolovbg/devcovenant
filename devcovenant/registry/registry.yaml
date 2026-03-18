@@ -8430,7 +8430,10 @@ policies:
       now validates and compares every extracted value through the active
       `version-governance` scheme so canonical docs, changelog, manifests,
       and any opted-in legal text stay synchronized even when repositories
-      use non-SemVer version formats.
+      use non-SemVer version formats. Optional `role_legality_schemes`
+      entries add stricter ecosystem legality for selected roles without
+      collapsing repo-level version governance back into one packaging-only
+      scheme.
     metadata:
       id: version-sync
       severity: error
@@ -8442,6 +8445,7 @@ policies:
       target_roles: docs, changelog, package_manifest
       role_extractors: docs=>project_version_line, changelog=>changelog_header_version,
         package_manifest=>manifest_project_version
+      role_legality_schemes: package_manifest=>pep440
       target_role_files: docs=>README.md, docs=>AGENTS.md, docs=>CONTRIBUTING.md,
         docs=>SPEC.md, docs=>PLAN.md, changelog=>CHANGELOG.md, docs=>CHANGELOG.md,
         docs=>PROFILE_MAP.md, docs=>POLICY_MAP.md, docs=>devcovenant/README.md, docs=>devcovenant/core/README.md,
@@ -8553,6 +8557,21 @@ policies:
           - docs=>project_version_line
           - changelog=>changelog_header_version
           - package_manifest=>manifest_project_version
+      role_legality_schemes:
+        descriptor:
+          values: []
+          behavior: base
+        profile_overlays:
+          values:
+          - package_manifest=>pep440
+          behavior: append
+        autogen_overlays:
+          values:
+          - package_manifest=>pep440
+          behavior: append
+        effective:
+          values:
+          - package_manifest=>pep440
       target_role_files:
         descriptor:
           values: []
@@ -8737,6 +8756,7 @@ policies:
       - docs=>project_version_line
       - changelog=>changelog_header_version
       - package_manifest=>manifest_project_version
+      role_legality_schemes: package_manifest=>pep440
       target_role_files: &id075
       - docs=>README.md
       - docs=>AGENTS.md
@@ -8775,6 +8795,7 @@ policies:
       version_file: devcovenant/VERSION
       target_roles: *id073
       role_extractors: *id074
+      role_legality_schemes: package_manifest=>pep440
       target_role_files: *id075
       target_role_globs: docs=>devcovenant/docs/**/*.md
       target_role_dirs: docs=>devcovenant/docs
@@ -8805,7 +8826,7 @@ policies:
     - docs=>devcovenant/registry/README.md
     origin: builtin
     script_exists: true
-    hash: ba176d5c06bb5861a853011da6b36cbefd73433beb51b9d130acd1f26550b13d
+    hash: 9ed82373c84784252feddf31a6c1a4eb8fcd49ea05b487f8ce3c8314906941ba
     script_path: builtin/version_sync.py
   version-governance:
     enabled: false
@@ -9093,7 +9114,7 @@ policies:
     - devcovenant/VERSION
     origin: builtin
     script_exists: true
-    hash: 1836776c3ab88e91312c711f925326c7e6b52d74c2cc895c1a886502a5aee0b7
+    hash: b2020b818f5ebc49fc147d7bc6648e8af490dd035f7d033584e3fed93e4aaa2e
     script_path: builtin/version_governance.py
 profiles:
   terraform:
@@ -9379,6 +9400,8 @@ profiles:
         - package_manifest
         role_extractors:
         - package_manifest=>manifest_project_version
+        role_legality_schemes:
+        - package_manifest=>pep440
         target_role_files:
         - package_manifest=>pyproject.toml
       security-scanner:

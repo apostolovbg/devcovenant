@@ -60,8 +60,9 @@ Metadata trace intent:
   repo-defined custom contract using `custom_regex_pattern` or
   `custom_adapter_path`
 - `version-sync` records scheme-neutral extractor mappings such as
-  `project_version_line` while leaving actual equality semantics to the
-  active `version-governance` scheme
+  `project_version_line`, optional role-legality mappings such as
+  `package_manifest=>pep440`, and leaves repo-level equality semantics to
+  the active `version-governance` scheme
 - generic profile defaults now keep version-governance scheme selection
   explicit; tracked registry output therefore shows the scheme a repo chose
   intentionally instead of implying a hidden global baseline

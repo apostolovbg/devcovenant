@@ -12,7 +12,10 @@ text: |
   now validates and compares every extracted value through the active
   `version-governance` scheme so canonical docs, changelog, manifests,
   and any opted-in legal text stay synchronized even when repositories
-  use non-SemVer version formats.
+  use non-SemVer version formats. Optional `role_legality_schemes`
+  entries add stricter ecosystem legality for selected roles without
+  collapsing repo-level version governance back into one packaging-only
+  scheme.
 metadata:
   id: version-sync
   severity: error
@@ -21,6 +24,7 @@ metadata:
   version_file: ''
   target_roles: []
   role_extractors: []
+  role_legality_schemes: []
   target_role_files: []
   target_role_globs: []
   target_role_dirs: []

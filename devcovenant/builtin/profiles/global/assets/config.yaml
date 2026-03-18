@@ -357,5 +357,7 @@ autogen_metadata_overrides: {}
 #   `dependency_role_dirs`.
 # - version-sync targets are role-based with `role=>selector` entries under
 #   `target_role_files`, `target_role_globs`, `target_role_dirs`, and role
-#   extractor mapping under `role_extractors`.
+#   extractor mapping under `role_extractors`. Optional
+#   `role_legality_schemes` entries add stricter ecosystem legality per
+#   role, such as `package_manifest=>pep440`.
 user_metadata_overrides: {}

@@ -376,6 +376,30 @@ enabled; there is no implicit SemVer fallback.
 `SCHEME` with the same parse/compare/release interface used by builtin
 version-governance adapters.
 
+Keep repository equality under CalVer while requiring Python package
+manifests to satisfy PEP 440:
+```yaml
+policy_state:
+  version-governance: true
+  version-sync: true
+
+user_metadata_overrides:
+  version-governance:
+    scheme: calver
+    version_file: VERSION
+    changelog_file: CHANGELOG.md
+    changelog_header_prefix: '## Version'
+    enforce_bumping: true
+  version-sync:
+    role_legality_schemes:
+      - package_manifest=>pep440
+```
+
+`role_legality_schemes` uses the same `role=>scheme` mapping style as other
+role-based metadata. It adds stricter ecosystem legality for selected
+surfaces after `version-sync` has already read and compared them through the
+active repo-level `version-governance` scheme.
+
 Add extra changelog verbs without replacing defaults:
 ```yaml
 user_metadata_overlays:

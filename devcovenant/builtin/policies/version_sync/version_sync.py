@@ -64,6 +64,12 @@ class VersionSyncCheck(PolicyCheck):
                     self.get_option("role_extractors", [])
                 ),
             )
+            role_legality_schemes = self._resolve_role_legality_schemes(
+                roles=target_roles,
+                raw_schemes=self._normalize_list(
+                    self.get_option("role_legality_schemes", [])
+                ),
+            )
             targets_by_role = self._resolve_targets_by_role(
                 context=context,
                 roles=target_roles,
@@ -134,6 +140,11 @@ class VersionSyncCheck(PolicyCheck):
                 )
                 for item in preflight
             ]
+
+        legality_runtime = self._build_legality_runtime(
+            governance_check=governance_check,
+            role_legality_schemes=role_legality_schemes,
+        )
 
         try:
             tracked_version = version_file.read_text(encoding="utf-8").strip()
@@ -230,6 +241,55 @@ class VersionSyncCheck(PolicyCheck):
                         )
                     )
                     continue
+
+                legality_binding = legality_runtime.get(role)
+                if legality_binding is not None:
+                    (
+                        legality_name,
+                        legality_scheme,
+                        legality_check,
+                    ) = legality_binding
+                    legality_preflight = list(
+                        legality_scheme.preflight(
+                            legality_check,
+                            context.repo_root,
+                            target,
+                        )
+                    )
+                    if legality_preflight:
+                        violations.extend(
+                            Violation(
+                                policy_id=self.policy_id,
+                                severity="error",
+                                file_path=item.file_path,
+                                message=item.message,
+                                suggestion=item.suggestion,
+                                can_auto_fix=item.can_auto_fix,
+                            )
+                            for item in legality_preflight
+                        )
+                        continue
+                    try:
+                        legality_scheme.parse_version(
+                            target_version,
+                            legality_check,
+                            context.repo_root,
+                        )
+                    except ValueError as exc:
+                        violations.append(
+                            Violation(
+                                policy_id=self.policy_id,
+                                severity="error",
+                                file_path=target,
+                                message=(
+                                    f"Role `{role}` target version "
+                                    f"`{target_version}` is not legal for "
+                                    f"required scheme `{legality_name}`: "
+                                    f"{exc}"
+                                ),
+                            )
+                        )
+                        continue
 
                 try:
                     matches_tracked = (
@@ -428,6 +488,76 @@ class VersionSyncCheck(PolicyCheck):
                 f"{listed}."
             )
         return role_extractors
+
+    def _resolve_role_legality_schemes(
+        self,
+        *,
+        roles: List[str],
+        raw_schemes: List[str],
+    ) -> dict[str, str]:
+        """Resolve optional role-to-legality-scheme mappings."""
+        scheme_pairs = self._parse_role_selector_entries(
+            entries=raw_schemes,
+            roles=roles,
+            metadata_key="role_legality_schemes",
+        )
+        role_schemes: dict[str, str] = {}
+        for role, scheme_name in scheme_pairs:
+            token = scheme_name.strip()
+            if role in role_schemes:
+                raise ValueError(
+                    "version-sync `role_legality_schemes` defines duplicate "
+                    f"role `{role}`."
+                )
+            try:
+                version_governance.resolve_named_scheme(token)
+            except ValueError as error:
+                raise ValueError(
+                    "version-sync `role_legality_schemes` uses unsupported "
+                    f"scheme `{token}`: {error}"
+                ) from error
+            role_schemes[role] = token
+        return role_schemes
+
+    def _build_legality_runtime(
+        self,
+        *,
+        governance_check: version_governance.VersionGovernanceCheck,
+        role_legality_schemes: dict[str, str],
+    ) -> dict[
+        str,
+        tuple[
+            str,
+            version_governance.VersionScheme,
+            version_governance.VersionGovernanceCheck,
+        ],
+    ]:
+        """Build role-scoped legality runtimes from the active governance."""
+        runtime: dict[
+            str,
+            tuple[
+                str,
+                version_governance.VersionScheme,
+                version_governance.VersionGovernanceCheck,
+            ],
+        ] = {}
+        for role, scheme_name in role_legality_schemes.items():
+            legality_check = version_governance.VersionGovernanceCheck()
+            legality_metadata = dict(governance_check.metadata_options)
+            legality_config = dict(governance_check.policy_config)
+            legality_config.update(
+                {
+                    "scheme": scheme_name,
+                    "enforce_bumping": False,
+                }
+            )
+            legality_check.set_options(legality_metadata, legality_config)
+            runtime[role] = (
+                scheme_name,
+                version_governance.resolve_named_scheme(scheme_name),
+                legality_check,
+            )
+        return runtime
 
     def _resolve_targets_by_role(
         self,

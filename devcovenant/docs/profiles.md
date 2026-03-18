@@ -231,10 +231,15 @@ Versioning metadata is profile-driven:
 - target surfaces are role-based (`target_roles`,
   `target_role_files|globs|dirs` with `role=>selector` entries)
 - extractors are mapped per role via `role_extractors`
+- optional ecosystem legality is mapped per role via
+  `role_legality_schemes`
 - docs roles, and any repo that opts legal text into version-sync, should
   usually use `project_version_line`
 - `manifest_project_version` is format-aware and should be used for manifest
   roles that may include TOML/JSON/YAML files in mixed repositories
+- Python profiles now also seed `package_manifest=>pep440` legality so
+  `pyproject.toml` stays packaging-legal even when repo-level equality runs
+  under another governed scheme
 - language profiles should set extractor mappings explicitly instead of
   encoding file-format assumptions in role names
 

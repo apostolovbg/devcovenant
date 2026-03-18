@@ -234,7 +234,7 @@ extractors or naming.
 3. Closed the slice with focused version-stack regressions, refresh-driven
    managed-surface convergence, and the full gated workflow.
 
-### Item 2 [pending]: Add Ecosystem and Package Legality Enforcement
+### Item 2 [complete]: Add Ecosystem and Package Legality Enforcement
 **Objective:** Keep repo version equality flexible while enforcing stricter
 package-manifest legality where ecosystems require it.
 
@@ -276,6 +276,16 @@ manifest ecosystems.
    the repo's chosen scheme is otherwise valid.
 2. Repo-level version governance remains scheme-neutral.
 3. The extension path for future package ecosystems is explicit.
+
+**Closure Notes**
+1. Kept package legality inside `version-sync` role handling through new
+   `role_legality_schemes` metadata instead of introducing a second
+   overlapping policy.
+2. Seeded Python package manifests with `package_manifest=>pep440` legality
+   while preserving repo-level equality through the active
+   `version-governance` scheme.
+3. Closed the slice with focused legality regressions, refresh-driven
+   managed-surface convergence, and the full gated workflow.
 
 ### Item 3 [pending]: Introduce Governed Pre-Version Identity
 **Objective:** Create a first-class governed model for repos that are not yet

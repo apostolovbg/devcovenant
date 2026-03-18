@@ -97,6 +97,20 @@ def _scheme_registry() -> dict[str, VersionScheme]:
     return {scheme.name: scheme for scheme in schemes}
 
 
+def resolve_named_scheme(scheme_name: str) -> VersionScheme:
+    """Return one named version-governance scheme adapter."""
+    token = str(scheme_name or "").strip()
+    if not token:
+        raise ValueError("Version-governance scheme name cannot be empty.")
+    scheme = _scheme_registry().get(token)
+    if scheme is None:
+        raise ValueError(
+            "Unsupported version-governance scheme "
+            f"`{token}` configured for this repository."
+        )
+    return scheme
+
+
 def resolve_runtime_check(
     repo_root: Path,
     *,
@@ -148,12 +162,7 @@ def resolve_runtime_scheme(
             "Configure `version-governance.scheme` explicitly before "
             "using version-governance or version-sync."
         )
-    scheme = _scheme_registry().get(scheme_name)
-    if scheme is None:
-        raise ValueError(
-            "Unsupported version-governance scheme "
-            f"`{scheme_name}` configured for this repository."
-        )
+    scheme = resolve_named_scheme(scheme_name)
     return scheme_name, scheme, checker
 
 
