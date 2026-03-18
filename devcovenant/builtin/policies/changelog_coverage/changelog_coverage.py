@@ -16,6 +16,9 @@ from typing import Any, List
 
 import devcovenant.core.lib.document_exemptions as document_exemptions_lib
 import devcovenant.core.runtime.execution as execution_runtime_module
+from devcovenant.builtin.policies.project_governance import (
+    project_governance as project_governance_runtime_module,
+)
 from devcovenant.core.contracts.policy import (
     CheckContext,
     PolicyCheck,
@@ -39,7 +42,11 @@ capture_current_numstat_snapshot = (
 )
 
 
-def _find_markers(content: str) -> tuple[int | None, list[int]]:
+def _find_markers(
+    content: str,
+    *,
+    release_headings: list[str],
+) -> tuple[int | None, list[int]]:
     """Return the log-marker position and version header positions."""
 
     log_index = None
@@ -53,7 +60,9 @@ def _find_markers(content: str) -> tuple[int | None, list[int]]:
         if not in_fence:
             if stripped.startswith("## Log changes here"):
                 log_index = offset
-            if stripped.startswith("## Version"):
+            if any(
+                stripped.startswith(heading) for heading in release_headings
+            ):
                 version_positions.append(offset)
         offset += len(line)
     return log_index, version_positions
@@ -78,10 +87,13 @@ def _collapse_line_continuations(section: str) -> str:
     return "\n".join(merged)
 
 
-def _latest_section(content: str) -> str:
+def _latest_section(content: str, *, release_headings: list[str]) -> str:
     """Return the newest version section from a changelog."""
 
-    log_index, version_positions = _find_markers(content)
+    log_index, version_positions = _find_markers(
+        content,
+        release_headings=release_headings,
+    )
     if not version_positions:
         return content
     start = None
@@ -136,6 +148,17 @@ _ALLOWLIST_HEADER_KEYS = set(DEFAULT_HEADER_KEYS)
 _ALLOWLIST_HEADER_SCAN_LINES = DEFAULT_HEADER_SCAN_LINES
 _marker_signature = document_exemptions_lib.managed_marker_signature
 _non_exempt_content_hash = document_exemptions_lib.non_exempt_content_hash
+
+
+def _resolve_release_headings(context: CheckContext) -> list[str]:
+    """Return active release-section headings for this repository."""
+    try:
+        return project_governance_runtime_module.resolve_release_headings(
+            context.repo_root,
+            config_payload=context.config,
+        )
+    except ValueError:
+        return ["## Version"]
 
 
 def _extract_summary_lines(
@@ -723,6 +746,7 @@ class ChangelogCoverageCheck(PolicyCheck):
             merged_changed.update(deleted_file_set)
             changed_files = sorted(merged_changed)
         changed_file_set = set(changed_files)
+        release_headings = _resolve_release_headings(context)
 
         main_files: List[str] = []
         collection_files: List[List[str]] = [[] for _ in collections]
@@ -765,7 +789,12 @@ class ChangelogCoverageCheck(PolicyCheck):
             else None
         )
         root_section = (
-            _latest_section(root_content) if root_content is not None else None
+            _latest_section(
+                root_content,
+                release_headings=release_headings,
+            )
+            if root_content is not None
+            else None
         )
         section_for_matching = (
             _collapse_line_continuations(root_section)
@@ -1091,7 +1120,10 @@ class ChangelogCoverageCheck(PolicyCheck):
                 else None
             )
             changelog_section = (
-                _latest_section(changelog_content)
+                _latest_section(
+                    changelog_content,
+                    release_headings=release_headings,
+                )
                 if changelog_content
                 else None
             )

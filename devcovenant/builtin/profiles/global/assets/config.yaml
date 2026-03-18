@@ -273,7 +273,11 @@ pre_commit:
 # Critical-severity policies remain enforced even if set to false here;
 # runtime emits a diagnostic instead of honoring the disable attempt.
 # Do not activate/deactivate policies through profile manifests.
+# `project-governance` is orthogonal to `version-governance`:
+# - use it for stage / stance / versioning-mode / codename / build identity;
+# - keep it enabled even when a repo is intentionally unversioned.
 policy_state:
+  project-governance: false
   raw-string-escapes: false
   version-governance: false
   version-sync: false
@@ -340,6 +344,11 @@ autogen_metadata_overlays: {}
 # Human-owned additive overlay layer.
 # Shape: { policy-id: { metadata_key: value-or-list } }
 # Use for additive tuning without replacing the whole key.
+# `project-governance` commonly lives here with keys such as:
+# - `stage`
+# - `development_stance`
+# - `versioning_mode`
+# - optional `codename` / `build_identity`
 user_metadata_overlays: {}
 
 # Auto-generated replacement layer.

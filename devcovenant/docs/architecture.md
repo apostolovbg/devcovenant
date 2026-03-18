@@ -1,5 +1,5 @@
 # DevCovenant Architecture Contracts
-**Last Updated:** 2026-03-17
+**Last Updated:** 2026-03-18
 **Project Version:** 1.0.0
 
 ## Table of Contents
@@ -142,7 +142,8 @@ Invariant:
 - Managed-doc descriptors are schema-validated before refresh rendering:
   descriptors must declare ordered keys
   (`title`, `doc_id`, `doc_type`, `project_version`, `last_updated`,
-  `devcovenant_version`, `managed_block`, `body`, optional `workflow_block`);
+  `devcovenant_version`, `managed_block`, `body`, optional
+  `project_governance_headers`, optional `workflow_block`);
   multiline `managed_block`/`body`/`workflow_block` values must use YAML
   literal block scalar style so generated markdown remains deterministic.
 - `devcovenant/core/runtime/run_logging.py` provides the shared per-run log
@@ -658,6 +659,17 @@ Invariant:
   ordering logic; it loads one repo-relative Python module and expects that
   module to export `SCHEME` with the same version-governance adapter
   interface used by builtin schemes.
+- `project-governance` owns project-phase and stance metadata
+  (`stage`, `development_stance`, `versioning_mode`) plus optional
+  `codename` and `build_identity`. It does not replace
+  `version-governance`; it adds lifecycle governance around it.
+- refresh resolves `Project Version` through `project-governance` so
+  intentionally unversioned repos render an explicit non-version label
+  instead of a fake numbered release, and AGENTS may render additional
+  governance headers when its descriptor opts in.
+- gate changelog helpers and changelog-coverage resolve release headings
+  through `project-governance`, so intentionally unversioned repos can use
+  `## Unreleased` while versioned repos keep `## Version ...` sections.
 - dependency-license-sync validates artifact targets as repository-relative
   paths and rejects out-of-repo traversal for both checks and autofix.
 - dependency-license-sync autofix is idempotent: synchronized artifacts are

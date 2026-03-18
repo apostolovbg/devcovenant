@@ -226,3 +226,7 @@ policy_overlays:
     scheme: semver
     semver_scope_tags_required: true
     version_file: devcovenant/VERSION
+  project-governance:
+    stage: stable
+    development_stance: active-development
+    versioning_mode: versioned

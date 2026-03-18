@@ -9,6 +9,9 @@ from pathlib import Path
 import yaml
 
 import devcovenant.core.services.registry as registry_runtime_module
+from devcovenant.builtin.policies.project_governance import (
+    project_governance as project_governance_runtime_module,
+)
 
 _DATE_ENTRY_PATTERN = re.compile(r"^\s*-\s*\d{4}-\d{2}-\d{2}\b")
 _MANAGED_BEGIN = "<!-- DEVCOV:BEGIN -->"
@@ -50,10 +53,11 @@ def _latest_changelog_entry(repo_root: Path) -> str:
     lines = _visible_changelog_lines(
         changelog_path.read_text(encoding="utf-8")
     )
+    release_headings = _resolve_release_headings(repo_root)
 
     version_start: int | None = None
     for index, line in enumerate(lines):
-        if line.startswith("## Version"):
+        if _line_matches_release_heading(line, release_headings):
             version_start = index
             break
     if version_start is None:
@@ -179,6 +183,25 @@ def _resolve_doc_exemption_options(
     if scan_lines < 0:
         scan_lines = 0
     return suffixes, header_keys, scan_lines
+
+
+def _resolve_release_headings(repo_root: Path) -> list[str]:
+    """Return release-section headings active for this repository."""
+    try:
+        return project_governance_runtime_module.resolve_release_headings(
+            repo_root
+        )
+    except ValueError:
+        return ["## Version"]
+
+
+def _line_matches_release_heading(
+    line: str,
+    headings: list[str],
+) -> bool:
+    """Return True when one changelog heading matches active release heads."""
+    stripped = line.strip()
+    return any(stripped.startswith(heading) for heading in headings)
 
 
 def _entry_fingerprint(entry_text: str) -> str:

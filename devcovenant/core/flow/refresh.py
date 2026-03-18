@@ -15,6 +15,9 @@ import yaml
 import devcovenant.core.services.metadata as metadata_runtime
 import devcovenant.core.services.profile_registry as profile_runtime
 import devcovenant.core.services.registry as manifest_module
+from devcovenant.builtin.policies.project_governance import (
+    project_governance as project_governance_runtime_module,
+)
 from devcovenant.core.contracts.policy import CheckContext
 from devcovenant.core.runtime.execution import print_step, runtime_print
 from devcovenant.core.services import (
@@ -32,6 +35,10 @@ from devcovenant.core.services.registry import (
     resolve_script_location,
 )
 
+ProjectGovernanceState = (
+    project_governance_runtime_module.ProjectGovernanceState
+)
+
 BLOCK_BEGIN = "<!-- DEVCOV:BEGIN -->"
 BLOCK_END = "<!-- DEVCOV:END -->"
 WORKFLOW_BEGIN = "<!-- DEVCOV-WORKFLOW:BEGIN -->"
@@ -43,6 +50,11 @@ _USER_PRESERVE_END = "<!-- DEVCOV-USER-PRESERVE:END -->"
 _DOC_ID_LABEL = "**Doc ID:**"
 _DOC_TYPE_LABEL = "**Doc Type:**"
 _PROJECT_VERSION_LABEL = "**Project Version:**"
+_PROJECT_STAGE_LABEL = "**Project Stage:**"
+_DEVELOPMENT_STANCE_LABEL = "**Development Stance:**"
+_VERSIONING_MODE_LABEL = "**Versioning Mode:**"
+_PROJECT_CODENAME_LABEL = "**Project Codename:**"
+_BUILD_IDENTITY_LABEL = "**Build Identity:**"
 _LAST_UPDATED_LABEL = "**Last Updated:**"
 _DEVCOV_VERSION_LABEL = "**DevCovenant Version:**"
 _AGENTS_EDITABLE_HEADING = "# EDITABLE SECTION"
@@ -64,6 +76,7 @@ _MANAGED_DOC_DESCRIPTOR_KEYS = frozenset(
         "project_version",
         "last_updated",
         "devcovenant_version",
+        "project_governance_headers",
         "managed_block",
         "body",
         "workflow_block",
@@ -81,11 +94,12 @@ _MANAGED_DOC_REQUIRED_KEYS = (
     "body",
 )
 _MANAGED_DOC_OPTIONAL_KEYS = ("workflow_block",)
-_MANAGED_DOC_BOOLEAN_KEYS = (
+_MANAGED_DOC_REQUIRED_BOOLEAN_KEYS = (
     "project_version",
     "last_updated",
     "devcovenant_version",
 )
+_MANAGED_DOC_OPTIONAL_BOOLEAN_KEYS = ("project_governance_headers",)
 
 
 def _utc_today() -> str:
@@ -347,7 +361,16 @@ def _validate_managed_doc_descriptor(
                 "non-empty."
             )
 
-    for field_name in _MANAGED_DOC_BOOLEAN_KEYS:
+    for field_name in _MANAGED_DOC_REQUIRED_BOOLEAN_KEYS:
+        raw_value = descriptor.get(field_name)
+        if not isinstance(raw_value, bool):
+            raise ValueError(
+                "Managed doc descriptor "
+                f"`{descriptor_path}` field `{field_name}` must be boolean."
+            )
+    for field_name in _MANAGED_DOC_OPTIONAL_BOOLEAN_KEYS:
+        if field_name not in descriptor:
+            continue
         raw_value = descriptor.get(field_name)
         if not isinstance(raw_value, bool):
             raise ValueError(
@@ -409,11 +432,46 @@ def _descriptor_bool(descriptor: dict[str, object], field_name: str) -> bool:
     return raw_value
 
 
+def _descriptor_optional_bool(
+    descriptor: dict[str, object],
+    field_name: str,
+) -> bool:
+    """Return an optional boolean field from a managed descriptor."""
+    raw_value = descriptor.get(field_name)
+    if raw_value is None:
+        return False
+    if not isinstance(raw_value, bool):
+        raise ValueError(
+            f"Managed doc descriptor field `{field_name}` must be boolean."
+        )
+    return raw_value
+
+
+def _render_project_governance_header_lines(
+    state: project_governance_runtime_module.ProjectGovernanceState,
+) -> list[str]:
+    """Return generated project-governance header lines."""
+    if not state.enabled:
+        return []
+    lines = [
+        f"{_PROJECT_STAGE_LABEL} {state.stage}",
+        f"{_DEVELOPMENT_STANCE_LABEL} {state.development_stance}",
+        f"{_VERSIONING_MODE_LABEL} {state.versioning_mode}",
+    ]
+    if state.codename:
+        lines.append(f"{_PROJECT_CODENAME_LABEL} {state.codename}")
+    if state.build_identity:
+        lines.append(f"{_BUILD_IDENTITY_LABEL} {state.build_identity}")
+    return lines
+
+
 def _render_generated_header(
+    doc_name: str,
     descriptor: dict[str, object],
     *,
     project_version: str,
     devcovenant_version: str,
+    project_governance_state: ProjectGovernanceState,
 ) -> list[str]:
     """Render deterministic top-of-doc header lines from descriptor keys."""
     title = str(descriptor.get("title", "")).strip()
@@ -428,6 +486,13 @@ def _render_generated_header(
         lines.append(f"{_DOC_TYPE_LABEL} {doc_type}")
     if _descriptor_bool(descriptor, "project_version"):
         lines.append(f"{_PROJECT_VERSION_LABEL} {project_version}")
+    if _descriptor_optional_bool(
+        descriptor,
+        "project_governance_headers",
+    ):
+        lines.extend(
+            _render_project_governance_header_lines(project_governance_state)
+        )
     if _descriptor_bool(descriptor, "last_updated"):
         lines.append(f"{_LAST_UPDATED_LABEL} {_utc_today()}")
     if _descriptor_bool(descriptor, "devcovenant_version"):
@@ -612,6 +677,7 @@ def _render_doc(
     *,
     project_version: str,
     devcovenant_version: str,
+    project_governance_state: ProjectGovernanceState,
 ) -> str:
     """Render managed doc text from YAML descriptor."""
     descriptor = _load_managed_doc_descriptor(
@@ -619,9 +685,11 @@ def _render_doc(
         doc_name=doc_name,
     )
     header_lines = _render_generated_header(
+        doc_name,
         descriptor,
         project_version=project_version,
         devcovenant_version=devcovenant_version,
+        project_governance_state=project_governance_state,
     )
 
     block_body = _compose_managed_block_body(descriptor)
@@ -780,6 +848,11 @@ def _generated_header_text(rendered: str) -> str:
         "**doc id:**",
         "**doc type:**",
         "**project version:**",
+        "**project stage:**",
+        "**development stance:**",
+        "**versioning mode:**",
+        "**project codename:**",
+        "**build identity:**",
         "**last updated:**",
         "**devcovenant version:**",
     )
@@ -847,6 +920,21 @@ def _strip_existing_generated_headers(current: str) -> str:
             index += 1
             continue
         if token.startswith("**project version:**"):
+            index += 1
+            continue
+        if token.startswith("**project stage:**"):
+            index += 1
+            continue
+        if token.startswith("**development stance:**"):
+            index += 1
+            continue
+        if token.startswith("**versioning mode:**"):
+            index += 1
+            continue
+        if token.startswith("**project codename:**"):
+            index += 1
+            continue
+        if token.startswith("**build identity:**"):
             index += 1
             continue
         if token.startswith("**devcovenant version:**"):
@@ -1060,6 +1148,7 @@ def _sync_doc(
     *,
     project_version: str,
     devcovenant_version: str,
+    project_governance_state: ProjectGovernanceState,
 ) -> bool:
     """Synchronize one managed doc from descriptor content."""
     rendered = _render_doc(
@@ -1067,6 +1156,7 @@ def _sync_doc(
         doc_name,
         project_version=project_version,
         devcovenant_version=devcovenant_version,
+        project_governance_state=project_governance_state,
     )
     _validate_preserve_markers(rendered, doc_name=doc_name)
 
@@ -2539,13 +2629,30 @@ def refresh_repo(repo_root: Path) -> int:
         config = _load_config_template(repo_root)
         user_config = _read_yaml(config_path) if config_path.exists() else {}
         _merge_user_config_values(config, user_config)
-        project_version = _read_project_version(repo_root, config)
+        initial_active_profiles = _active_profiles(config)
+        config["autogen_metadata_overlays"] = (
+            _config_autogen_metadata_overlays(
+                repo_root,
+                initial_active_profiles,
+            )
+        )
+        declared_project_version = _read_project_version(repo_root, config)
+        project_governance_state = (
+            project_governance_runtime_module.resolve_runtime_state(
+                repo_root,
+                config_payload=config,
+            )
+        )
+        project_version = project_governance_state.displayed_project_version(
+            declared_project_version
+        )
         devcovenant_version = _read_devcovenant_version(repo_root)
         _sync_doc(
             repo_root,
             "AGENTS.md",
             project_version=project_version,
             devcovenant_version=devcovenant_version,
+            project_governance_state=project_governance_state,
         )
     except ValueError as error:
         print_step(f"Refresh failed: {error}", "🚫")
@@ -2645,7 +2752,16 @@ def refresh_repo(repo_root: Path) -> int:
         print_step(f"Managed doc routing refresh failed: {error}", "🚫")
         return 1
     try:
-        project_version = _read_project_version(repo_root, config)
+        declared_project_version = _read_project_version(repo_root, config)
+        project_governance_state = (
+            project_governance_runtime_module.resolve_runtime_state(
+                repo_root,
+                config_payload=config,
+            )
+        )
+        project_version = project_governance_state.displayed_project_version(
+            declared_project_version
+        )
     except ValueError as error:
         print_step(f"Project version resolution failed: {error}", "🚫")
         return 1
@@ -2659,6 +2775,7 @@ def refresh_repo(repo_root: Path) -> int:
                 doc,
                 project_version=project_version,
                 devcovenant_version=devcovenant_version,
+                project_governance_state=project_governance_state,
             )
         ]
     except ValueError as error:

@@ -247,6 +247,7 @@ policy_state:
   no-future-dates: true
   no-print-outside-output-runtime: true
   no-raw-errors: true
+  project-governance: true
   raw-string-escapes: false
   read-only-directories: true
   readme-sync: true
@@ -312,6 +313,11 @@ autogen_metadata_overlays:
     header_keys:
     - Last Updated
     - Project Version
+    - Project Stage
+    - Development Stance
+    - Versioning Mode
+    - Project Codename
+    - Build Identity
     - DevCovenant Version
     header_scan_lines:
     - '4'
@@ -894,6 +900,33 @@ autogen_metadata_overlays:
     - '*.py'
     include_suffixes:
     - .py
+  project-governance:
+    allowed_development_stances:
+    - experimental
+    - active-development
+    - maintenance
+    - release-managed
+    - frozen
+    - sunset
+    allowed_stages:
+    - prototype
+    - alpha
+    - beta
+    - stable
+    - mature
+    - deprecated
+    - archived
+    changelog_file: CHANGELOG.md
+    development_stance:
+    - active-development
+    stage:
+    - stable
+    unreleased_heading:
+    - '## Unreleased'
+    unversioned_label:
+    - Unversioned
+    versioning_mode:
+    - versioned
   security-scanner:
     exclude_globs:
     - tests/**
@@ -987,6 +1020,10 @@ user_metadata_overlays:
     exclude_globs:
     - devcovenant/builtin/profiles/global/assets/*.yaml
     - devcovenant/registry/**
+  project-governance:
+    stage: stable
+    development_stance: active-development
+    versioning_mode: versioned
 
 # Auto-generated metadata overrides written by refresh.
 

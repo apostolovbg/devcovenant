@@ -69,6 +69,25 @@ policy_overlays:
     version_file: VERSION
     changelog_file: CHANGELOG.md
     changelog_header_prefix: '## Version'
+  project-governance:
+    changelog_file: CHANGELOG.md
+    unversioned_label: Unversioned
+    unreleased_heading: '## Unreleased'
+    allowed_stages:
+      - prototype
+      - alpha
+      - beta
+      - stable
+      - mature
+      - deprecated
+      - archived
+    allowed_development_stances:
+      - experimental
+      - active-development
+      - maintenance
+      - release-managed
+      - frozen
+      - sunset
   dependency-license-sync:
     dependency_files: []
     dependency_globs: []
@@ -117,6 +136,11 @@ policy_overlays:
     header_keys:
       - Last Updated
       - Project Version
+      - Project Stage
+      - Development Stance
+      - Versioning Mode
+      - Project Codename
+      - Build Identity
       - DevCovenant Version
     header_scan_lines: 4
     summary_labels:

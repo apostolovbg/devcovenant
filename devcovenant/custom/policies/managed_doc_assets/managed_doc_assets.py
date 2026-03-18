@@ -13,10 +13,17 @@ from typing import Dict, List
 
 import yaml
 
+from devcovenant.builtin.policies.project_governance import (
+    project_governance as project_governance_runtime_module,
+)
 from devcovenant.core.contracts.policy import (
     CheckContext,
     PolicyCheck,
     Violation,
+)
+
+ProjectGovernanceState = (
+    project_governance_runtime_module.ProjectGovernanceState
 )
 
 
@@ -29,6 +36,11 @@ class ManagedDocAssetsCheck(PolicyCheck):
     _DOC_ID_LABEL = "**Doc ID:**"
     _DOC_TYPE_LABEL = "**Doc Type:**"
     _PROJECT_VERSION_LABEL = "**Project Version:**"
+    _PROJECT_STAGE_LABEL = "**Project Stage:**"
+    _DEVELOPMENT_STANCE_LABEL = "**Development Stance:**"
+    _VERSIONING_MODE_LABEL = "**Versioning Mode:**"
+    _PROJECT_CODENAME_LABEL = "**Project Codename:**"
+    _BUILD_IDENTITY_LABEL = "**Build Identity:**"
     _LAST_UPDATED_LABEL = "**Last Updated:**"
     _DEVCOV_VERSION_LABEL = "**DevCovenant Version:**"
     _PRESERVE_BEGIN = "<!-- DEVCOV-USER-PRESERVE:BEGIN -->"
@@ -53,6 +65,12 @@ class ManagedDocAssetsCheck(PolicyCheck):
         violations: List[Violation] = []
         repo_root = context.repo_root
         assets_dir = self._assets_dir(repo_root)
+        project_governance_state = (
+            project_governance_runtime_module.resolve_runtime_state(
+                repo_root,
+                config_payload=context.config,
+            )
+        )
 
         for entry in self.managed_docs:
             doc_path = repo_root / entry["doc"]
@@ -92,6 +110,7 @@ class ManagedDocAssetsCheck(PolicyCheck):
                     descriptor_path=descriptor_path,
                     doc_info=doc_info,
                     doc_name=entry["doc"],
+                    project_governance_state=project_governance_state,
                 )
             )
 
@@ -128,6 +147,7 @@ class ManagedDocAssetsCheck(PolicyCheck):
         descriptor_path: Path,
         doc_info: Dict[str, object],
         doc_name: str,
+        project_governance_state: ProjectGovernanceState,
     ) -> List[Violation]:
         """Build violations for one descriptor-doc pair."""
         violations: List[Violation] = []
@@ -203,6 +223,38 @@ class ManagedDocAssetsCheck(PolicyCheck):
                         message=(
                             f"{doc_name} contains header `{label}` but "
                             f"descriptor key `{descriptor_key}` is false."
+                        ),
+                    )
+                )
+
+        governance_headers_required = (
+            bool(descriptor.get("project_governance_headers", False))
+            and project_governance_state.enabled
+        )
+        for label in self._project_governance_labels(project_governance_state):
+            present = label in header_map
+            if governance_headers_required and not present:
+                violations.append(
+                    Violation(
+                        policy_id=self.policy_id,
+                        severity="error",
+                        file_path=descriptor_path,
+                        message=(
+                            f"{doc_name} is missing required header "
+                            f"`{label}` from descriptor key "
+                            "`project_governance_headers`."
+                        ),
+                    )
+                )
+            if not governance_headers_required and present:
+                violations.append(
+                    Violation(
+                        policy_id=self.policy_id,
+                        severity="error",
+                        file_path=descriptor_path,
+                        message=(
+                            f"{doc_name} contains header `{label}` but "
+                            "`project_governance_headers` is inactive."
                         ),
                     )
                 )
@@ -319,6 +371,11 @@ class ManagedDocAssetsCheck(PolicyCheck):
                 continue
             for label in (
                 self._PROJECT_VERSION_LABEL,
+                self._PROJECT_STAGE_LABEL,
+                self._DEVELOPMENT_STANCE_LABEL,
+                self._VERSIONING_MODE_LABEL,
+                self._PROJECT_CODENAME_LABEL,
+                self._BUILD_IDENTITY_LABEL,
                 self._LAST_UPDATED_LABEL,
                 self._DEVCOV_VERSION_LABEL,
             ):
@@ -390,9 +447,30 @@ class ManagedDocAssetsCheck(PolicyCheck):
                 self._DOC_ID_LABEL,
                 self._DOC_TYPE_LABEL,
                 self._PROJECT_VERSION_LABEL,
+                self._PROJECT_STAGE_LABEL,
+                self._DEVELOPMENT_STANCE_LABEL,
+                self._VERSIONING_MODE_LABEL,
+                self._PROJECT_CODENAME_LABEL,
+                self._BUILD_IDENTITY_LABEL,
                 self._LAST_UPDATED_LABEL,
                 self._DEVCOV_VERSION_LABEL,
             ):
                 if stripped.startswith(label):
                     return True
         return False
+
+    def _project_governance_labels(
+        self,
+        state: project_governance_runtime_module.ProjectGovernanceState,
+    ) -> list[str]:
+        """Return expected AGENTS header labels for project-governance."""
+        labels = [
+            self._PROJECT_STAGE_LABEL,
+            self._DEVELOPMENT_STANCE_LABEL,
+            self._VERSIONING_MODE_LABEL,
+        ]
+        if state.codename:
+            labels.append(self._PROJECT_CODENAME_LABEL)
+        if state.build_identity:
+            labels.append(self._BUILD_IDENTITY_LABEL)
+        return labels

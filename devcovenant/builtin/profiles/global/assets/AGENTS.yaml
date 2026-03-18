@@ -40,6 +40,7 @@ body: |-
 
   - YYYY-MM-DD: Add repository-specific notes here. This section is preserved
     across install and refresh runs.
+project_governance_headers: true
 workflow_block: |-
 
   ## Workflow Contract

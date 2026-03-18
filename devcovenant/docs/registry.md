@@ -1,5 +1,5 @@
 # Registry Files
-**Last Updated:** 2026-03-17
+**Last Updated:** 2026-03-18
 **Project Version:** 1.0.0
 
 ## Table of Contents
@@ -41,6 +41,9 @@ It includes:
 - current policy identities and resolved metadata for shipped frameworks such
   as `version-governance`, including the configured scheme and bump
   enforcement options that active profiles/config resolved
+- current policy identities and resolved lifecycle metadata for
+  `project-governance`, including stage, development stance, versioning mode,
+  and any optional codename/build identity values
 
 Metadata trace intent:
 - `metadata` remains the final effective string-map used for policy/runtime
@@ -63,6 +66,9 @@ Metadata trace intent:
   `project_version_line`, optional role-legality mappings such as
   `package_manifest=>pep440`, and leaves repo-level equality semantics to
   the active `version-governance` scheme
+- `project-governance` records whether the repo is versioned or intentionally
+  unversioned, plus the configured displayed non-version label and
+  unreleased changelog heading when those apply
 - generic profile defaults now keep version-governance scheme selection
   explicit; tracked registry output therefore shows the scheme a repo chose
   intentionally instead of implying a hidden global baseline
@@ -105,6 +111,7 @@ Key evidence families:
 - open/closed session state
 - pointer metadata for the companion session snapshot
 - changelog snapshot anchors/fingerprints
+- active release-heading behavior resolved from `project-governance`
 - heavy session baseline/snapshot evidence in `session_snapshot.json`
 - test lifecycle event payloads in `session_snapshot.json`
 

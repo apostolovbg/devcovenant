@@ -1,5 +1,5 @@
 # Workflow
-**Last Updated:** 2026-03-17
+**Last Updated:** 2026-03-18
 **Project Version:** 1.0.0
 
 ## Table of Contents
@@ -164,6 +164,11 @@ Shared gate hook targeting:
   top-entry fingerprint behavior stay centralized
 - default changelog exemption header keys align with generated doc headers:
   `Last Updated`, `Project Version`, and `DevCovenant Version`
+- when `project-governance` is active, AGENTS may also render
+  `Project Stage`, `Development Stance`, `Versioning Mode`,
+  `Project Codename`, and `Build Identity`; changelog helper logic resolves
+  active release headings from the same project-governance runtime so
+  intentionally unversioned repos can use `## Unreleased`
 - fail with explicit retry instructions (run `devcovenant test`, then rerun
   `devcovenant gate --start`) when recovery/reconcile requires fresh test
   evidence; start gate performs no internal test runs
@@ -231,6 +236,8 @@ Install/upgrade boundary:
 - `refresh` and `upgrade` recreate missing tracked
   `devcovenant/registry/registry.yaml` explicitly, but they do not fabricate
   runtime registry session files when those are absent
+- refresh renders the compact managed header set for ordinary docs and can
+  add AGENTS-only project-governance header lines when the descriptor opts in
 - refresh writes final per-policy metadata snapshots to
   `devcovenant/registry/registry.yaml` and now also records per-key
   `metadata_resolution` trace plus `metadata_warnings` for destructive

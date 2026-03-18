@@ -1,5 +1,5 @@
 # Configuration
-**Last Updated:** 2026-03-17
+**Last Updated:** 2026-03-18
 **Project Version:** 1.0.0
 
 ## Table of Contents
@@ -107,6 +107,8 @@ the same session so generated configs remain self-explanatory.
   `severity: critical` policies remain enforced even if a config toggle sets
   them to `false`; runtime emits an explicit diagnostic instead of silently
   honoring the disable attempt.
+  `project-governance` is orthogonal to `version-governance`: use it for
+  stage/stance/versioning-mode lifecycle metadata, not version parsing.
 
 - `governance_and_test.overlays`: additive governance workflow patches.
 
@@ -399,6 +401,43 @@ user_metadata_overrides:
 role-based metadata. It adds stricter ecosystem legality for selected
 surfaces after `version-sync` has already read and compared them through the
 active repo-level `version-governance` scheme.
+
+Enable orthogonal project governance for a versioned repository:
+```yaml
+policy_state:
+  project-governance: true
+  version-governance: true
+  version-sync: true
+
+user_metadata_overlays:
+  project-governance:
+    stage: stable
+    development_stance: active-development
+    versioning_mode: versioned
+    codename: atlas
+```
+
+Use project governance for an intentionally unversioned repository:
+```yaml
+policy_state:
+  project-governance: true
+  version-governance: false
+  version-sync: false
+
+user_metadata_overlays:
+  project-governance:
+    stage: beta
+    development_stance: experimental
+    versioning_mode: unversioned
+    unversioned_label: Unversioned
+    unreleased_heading: '## Unreleased'
+```
+
+`project-governance` does not replace `version-governance`; it governs
+project phase and stance metadata. When `versioning_mode` is `unversioned`,
+managed docs keep the `Project Version` line but render the configured
+non-version label, and `CHANGELOG.md` uses the configured unreleased
+heading.
 
 Add extra changelog verbs without replacing defaults:
 ```yaml

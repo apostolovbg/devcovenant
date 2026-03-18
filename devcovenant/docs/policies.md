@@ -1,5 +1,5 @@
 # Policies
-**Last Updated:** 2026-03-17
+**Last Updated:** 2026-03-18
 **Project Version:** 1.0.0
 
 ## Table of Contents
@@ -326,6 +326,16 @@ High-impact runtime contracts:
   `SCHEME`, and treats that object as the version-governance scheme
   interface. This is a version-governance-local extension point, not a
   general DevCovenant policy plugin mechanism.
+- `project-governance` is orthogonal to `version-governance`; it governs
+  stage, development stance, versioning mode, and optional codename/build
+  identity without redefining version parsing/comparison.
+- when `project-governance.versioning_mode` is `unversioned`, the policy
+  governs the explicit displayed non-version label for managed docs and the
+  required unreleased changelog heading.
+- managed-doc descriptors may opt into AGENTS-only governance headers through
+  `project_governance_headers`; ordinary managed docs keep the compact
+  header set and only change the rendered `Project Version` value when the
+  repo is intentionally unversioned.
 - runtime change-state naming uses `current_snapshot_*` for full current
   snapshot data and `session_*` for gate-scoped deltas.
 - `version-sync` uses role-based selectors
@@ -489,6 +499,21 @@ Operational behavior:
 - target-role metadata is expected to be profile-driven, with final values
   resolved by standard metadata precedence
   (descriptor -> active profiles -> config overlays -> config overrides)
+
+### project-governance
+`project-governance` is the lifecycle-governance companion to the version
+stack:
+- it validates `stage`, `development_stance`, and `versioning_mode`
+- it accepts optional `codename` and `build_identity`
+- it stays compatible with both versioned and intentionally unversioned
+  repositories
+- versioned repos can keep `version-governance` and `version-sync` active at
+  the same time
+- unversioned repos render an explicit non-version label such as
+  `Unversioned` in managed docs and require an unreleased changelog flow such
+  as `## Unreleased`
+- AGENTS-only extra headers come from managed-doc descriptor opt-in
+  (`project_governance_headers`) instead of appearing in every managed doc
 
 `devflow-run-gates` required command metadata is canonical:
 - descriptor default may be empty

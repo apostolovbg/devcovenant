@@ -17,7 +17,16 @@ DEFAULT_MANAGED_MARKERS = (
 )
 DEFAULT_HEADER_DOC_SUFFIXES = frozenset({".md", ".rst", ".txt"})
 DEFAULT_HEADER_KEYS = frozenset(
-    {"last updated", "project version", "devcovenant version"}
+    {
+        "last updated",
+        "project version",
+        "project stage",
+        "development stance",
+        "versioning mode",
+        "project codename",
+        "build identity",
+        "devcovenant version",
+    }
 )
 DEFAULT_HEADER_SCAN_LINES = 4
 EMPTY_MANAGED_MARKER_SIGNATURE = hashlib.sha256(b"").hexdigest()

@@ -57,6 +57,46 @@ Example:
 ## Version 1.0.0
 
 - 2026-03-18:
+  Change: Introduced orthogonal `project-governance` lifecycle
+  governance and wired managed headers plus changelog heading resolution
+  through it.
+  Why: Needed a first-class way to govern project stage and intentionally
+  unversioned lifecycle state without overloading `version-governance`
+  or forcing fake numbered versions.
+  Impact: Enabled repositories to keep `project-governance` alongside
+  `version-governance`, render richer AGENTS-only governance headers,
+  and use explicit non-version labels with `## Unreleased` when they are
+  intentionally unversioned.
+  Files:
+  AGENTS.md
+  CHANGELOG.md
+  PLAN.md
+  devcovenant/builtin/policies/project_governance/__init__.py
+  devcovenant/builtin/policies/project_governance/project_governance.py
+  devcovenant/builtin/policies/project_governance/project_governance.yaml
+  devcovenant/builtin/policies/changelog_coverage/changelog_coverage.py
+  devcovenant/builtin/profiles/defaults/defaults.yaml
+  devcovenant/builtin/profiles/global/assets/AGENTS.yaml
+  devcovenant/builtin/profiles/global/assets/config.yaml
+  devcovenant/config.yaml
+  devcovenant/core/flow/gate_changelog_helpers.py
+  devcovenant/core/flow/refresh.py
+  devcovenant/core/lib/document_exemptions.py
+  devcovenant/custom/policies/managed_doc_assets/\
+    managed_doc_assets.py
+  devcovenant/custom/profiles/devcovrepo/devcovrepo.yaml
+  devcovenant/docs/architecture.md
+  devcovenant/docs/config.md
+  devcovenant/docs/policies.md
+  devcovenant/docs/profiles.md
+  devcovenant/docs/registry.md
+  devcovenant/docs/workflow.md
+  devcovenant/registry/registry.yaml
+  tests/devcovenant/builtin/policies/project_governance/__init__.py
+  tests/devcovenant/builtin/policies/project_governance/\
+    test_project_governance.py
+
+- 2026-03-18:
   Change: Rewrote Item 3 in `PLAN.md` around an orthogonal
   `project-governance` policy instead of a mutually exclusive pre-version
   identity mode.

@@ -64,7 +64,8 @@ policies:
       gate_status_file: devcovenant/registry/runtime/gate_status.json
       collections: ''
       header_doc_suffixes: .md, .rst, .txt
-      header_keys: Last Updated, Project Version, DevCovenant Version
+      header_keys: Last Updated, Project Version, Project Stage, Development Stance,
+        Versioning Mode, Project Codename, Build Identity, DevCovenant Version
       header_scan_lines: '4'
       required_globs: README.md, AGENTS.md, CONTRIBUTING.md, CHANGELOG.md, SPEC.md,
         PLAN.md
@@ -969,18 +970,33 @@ policies:
           values:
           - Last Updated
           - Project Version
+          - Project Stage
+          - Development Stance
+          - Versioning Mode
+          - Project Codename
+          - Build Identity
           - DevCovenant Version
           behavior: append
         autogen_overlays:
           values:
           - Last Updated
           - Project Version
+          - Project Stage
+          - Development Stance
+          - Versioning Mode
+          - Project Codename
+          - Build Identity
           - DevCovenant Version
           behavior: append
         effective:
           values:
           - Last Updated
           - Project Version
+          - Project Stage
+          - Development Stance
+          - Versioning Mode
+          - Project Codename
+          - Build Identity
           - DevCovenant Version
       header_scan_lines:
         profile_overlays:
@@ -1357,6 +1373,11 @@ policies:
       header_keys: &id006
       - Last Updated
       - Project Version
+      - Project Stage
+      - Development Stance
+      - Versioning Mode
+      - Project Codename
+      - Build Identity
       - DevCovenant Version
       header_scan_lines: 4
       required_globs: &id007
@@ -1432,7 +1453,7 @@ policies:
     - pip-wheel-metadata/**
     origin: builtin
     script_exists: true
-    hash: dad8b53733fb8ca16faf0069c34e69365ccf37930cb31a1d09d1978d649ba3ef
+    hash: f861d62c53880aaff74c1c36083a71a1c216b67210d0a112995f729b2e6e27f3
     script_path: builtin/changelog_coverage.py
   dependency-license-sync:
     enabled: true
@@ -5275,7 +5296,7 @@ policies:
     assets: []
     origin: custom
     script_exists: true
-    hash: 46372194279de6daaffd42fd51a661e338c8d415572f1d4ddba6c6f4a57acd42
+    hash: beb2958546d3c02486e727c7011b48a52dec73cc2222d210ec1d2e2277d9db69
     script_path: custom/managed_doc_assets.py
   managed-environment:
     enabled: true
@@ -9116,6 +9137,336 @@ policies:
     script_exists: true
     hash: b2020b818f5ebc49fc147d7bc6648e8af490dd035f7d033584e3fed93e4aaa2e
     script_path: builtin/version_governance.py
+  project-governance:
+    enabled: true
+    custom: false
+    description: Project Governance
+    policy_text: |-
+      When enabled, this policy governs project lifecycle metadata that is
+      orthogonal to release numbering: project stage, development stance,
+      versioning mode, optional codename, optional build identity, and the
+      unversioned changelog flow. Repositories may keep it active alongside
+      `version-governance` when they want explicit project-state headers and
+      lifecycle rules without redefining version semantics.
+      Activation is controlled by `config.yaml -> policy_state`. Repositories
+      should choose explicit values for `stage`, `development_stance`, and
+      `versioning_mode`, then tune optional labels or allowed vocabularies as
+      needed.
+    metadata:
+      id: project-governance
+      severity: error
+      auto_fix: 'false'
+      enforcement: active
+      enabled: 'true'
+      custom: 'false'
+      stage: stable
+      development_stance: active-development
+      versioning_mode: versioned
+      codename: ''
+      build_identity: ''
+      changelog_file: CHANGELOG.md
+      unversioned_label: Unversioned
+      unreleased_heading: '## Unreleased'
+      allowed_stages: prototype, alpha, beta, stable, mature, deprecated, archived
+      allowed_development_stances: experimental, active-development, maintenance,
+        release-managed, frozen, sunset
+    metadata_resolution:
+      id:
+        descriptor:
+          values:
+          - project-governance
+          behavior: base
+        runtime_identity:
+          values:
+          - project-governance
+          behavior: replace
+        effective:
+          values:
+          - project-governance
+      severity:
+        descriptor:
+          values:
+          - error
+          behavior: base
+        effective:
+          values:
+          - error
+      auto_fix:
+        descriptor:
+          values:
+          - 'false'
+          behavior: base
+        effective:
+          values:
+          - 'false'
+      enforcement:
+        descriptor:
+          values:
+          - active
+          behavior: base
+        effective:
+          values:
+          - active
+      stage:
+        descriptor:
+          values: []
+          behavior: base
+        profile_overlays:
+          values:
+          - stable
+          behavior: replace
+        autogen_overlays:
+          values:
+          - stable
+          behavior: append
+        user_overlays:
+          values:
+          - stable
+          behavior: replace
+          replaced_inherited_values:
+          - stable
+        effective:
+          values:
+          - stable
+      development_stance:
+        descriptor:
+          values: []
+          behavior: base
+        profile_overlays:
+          values:
+          - active-development
+          behavior: replace
+        autogen_overlays:
+          values:
+          - active-development
+          behavior: append
+        user_overlays:
+          values:
+          - active-development
+          behavior: replace
+          replaced_inherited_values:
+          - active-development
+        effective:
+          values:
+          - active-development
+      versioning_mode:
+        descriptor:
+          values: []
+          behavior: base
+        profile_overlays:
+          values:
+          - versioned
+          behavior: replace
+        autogen_overlays:
+          values:
+          - versioned
+          behavior: append
+        user_overlays:
+          values:
+          - versioned
+          behavior: replace
+          replaced_inherited_values:
+          - versioned
+        effective:
+          values:
+          - versioned
+      codename:
+        descriptor:
+          values: []
+          behavior: base
+        effective:
+          values: []
+      build_identity:
+        descriptor:
+          values: []
+          behavior: base
+        effective:
+          values: []
+      changelog_file:
+        descriptor:
+          values: []
+          behavior: base
+        profile_overlays:
+          values:
+          - CHANGELOG.md
+          behavior: replace
+        autogen_overlays:
+          values:
+          - CHANGELOG.md
+          behavior: replace
+          replaced_inherited_values:
+          - CHANGELOG.md
+        effective:
+          values:
+          - CHANGELOG.md
+      unversioned_label:
+        descriptor:
+          values: []
+          behavior: base
+        profile_overlays:
+          values:
+          - Unversioned
+          behavior: replace
+        autogen_overlays:
+          values:
+          - Unversioned
+          behavior: append
+        effective:
+          values:
+          - Unversioned
+      unreleased_heading:
+        descriptor:
+          values: []
+          behavior: base
+        profile_overlays:
+          values:
+          - '## Unreleased'
+          behavior: replace
+        autogen_overlays:
+          values:
+          - '## Unreleased'
+          behavior: append
+        effective:
+          values:
+          - '## Unreleased'
+      allowed_stages:
+        descriptor:
+          values: []
+          behavior: base
+        profile_overlays:
+          values:
+          - prototype
+          - alpha
+          - beta
+          - stable
+          - mature
+          - deprecated
+          - archived
+          behavior: append
+        autogen_overlays:
+          values:
+          - prototype
+          - alpha
+          - beta
+          - stable
+          - mature
+          - deprecated
+          - archived
+          behavior: append
+        effective:
+          values:
+          - prototype
+          - alpha
+          - beta
+          - stable
+          - mature
+          - deprecated
+          - archived
+      allowed_development_stances:
+        descriptor:
+          values: []
+          behavior: base
+        profile_overlays:
+          values:
+          - experimental
+          - active-development
+          - maintenance
+          - release-managed
+          - frozen
+          - sunset
+          behavior: append
+        autogen_overlays:
+          values:
+          - experimental
+          - active-development
+          - maintenance
+          - release-managed
+          - frozen
+          - sunset
+          behavior: append
+        effective:
+          values:
+          - experimental
+          - active-development
+          - maintenance
+          - release-managed
+          - frozen
+          - sunset
+      enabled:
+        runtime_defaults:
+          values:
+          - 'true'
+          behavior: default
+        policy_state:
+          values:
+          - 'true'
+          behavior: replace
+          replaced_inherited_values:
+          - 'true'
+        effective:
+          values:
+          - 'true'
+      custom:
+        runtime_defaults:
+          values:
+          - 'false'
+          behavior: default
+        effective:
+          values:
+          - 'false'
+    metadata_warnings: []
+    runtime_metadata_options:
+      id: project-governance
+      severity: error
+      auto_fix: false
+      enforcement: active
+      enabled: true
+      custom: false
+      stage: stable
+      development_stance: active-development
+      versioning_mode: versioned
+      codename: ''
+      build_identity: ''
+      changelog_file: CHANGELOG.md
+      unversioned_label: Unversioned
+      unreleased_heading: '## Unreleased'
+      allowed_stages: &id076
+      - prototype
+      - alpha
+      - beta
+      - stable
+      - mature
+      - deprecated
+      - archived
+      allowed_development_stances: &id077
+      - experimental
+      - active-development
+      - maintenance
+      - release-managed
+      - frozen
+      - sunset
+    runtime_config_overrides: {}
+    runtime_effective_options:
+      id: project-governance
+      severity: error
+      auto_fix: false
+      enforcement: active
+      enabled: true
+      custom: false
+      stage: stable
+      development_stance: active-development
+      versioning_mode: versioned
+      changelog_file: CHANGELOG.md
+      unversioned_label: Unversioned
+      unreleased_heading: '## Unreleased'
+      allowed_stages: *id076
+      allowed_development_stances: *id077
+    assets:
+    - CHANGELOG.md
+    origin: builtin
+    script_exists: true
+    hash: 5bcecf5ac17854c7138f8b27f41f4ce115d3af27a6692182da97a62c0971d64e
+    script_path: builtin/project_governance.py
 profiles:
   terraform:
     version: 1
@@ -10187,6 +10538,25 @@ profiles:
         version_file: VERSION
         changelog_file: CHANGELOG.md
         changelog_header_prefix: '## Version'
+      project-governance:
+        changelog_file: CHANGELOG.md
+        unversioned_label: Unversioned
+        unreleased_heading: '## Unreleased'
+        allowed_stages:
+        - prototype
+        - alpha
+        - beta
+        - stable
+        - mature
+        - deprecated
+        - archived
+        allowed_development_stances:
+        - experimental
+        - active-development
+        - maintenance
+        - release-managed
+        - frozen
+        - sunset
       dependency-license-sync:
         dependency_files: []
         dependency_globs: []
@@ -10235,6 +10605,11 @@ profiles:
         header_keys:
         - Last Updated
         - Project Version
+        - Project Stage
+        - Development Stance
+        - Versioning Mode
+        - Project Codename
+        - Build Identity
         - DevCovenant Version
         header_scan_lines: 4
         summary_labels:
@@ -11558,6 +11933,10 @@ profiles:
         scheme: semver
         semver_scope_tags_required: true
         version_file: devcovenant/VERSION
+      project-governance:
+        stage: stable
+        development_stance: active-development
+        versioning_mode: versioned
     source: custom
     path: devcovenant/custom/profiles/devcovrepo
     assets_available:

@@ -1,5 +1,5 @@
 # Profiles
-**Last Updated:** 2026-03-17
+**Last Updated:** 2026-03-18
 **Project Version:** 1.0.0
 
 ## Table of Contents
@@ -9,7 +9,8 @@
 - [Metadata Population](#metadata-population)
 - [Baseline Defaults Profile](#baseline-defaults-profile)
 - [Dependency Selector Overlays](#dependency-selector-overlays)
-- [Version Governance And Sync Overlays](#version-governance-and-sync-overlays)
+- [Version And Project Governance \
+  Overlays](#version-and-project-governance-overlays)
 - [Manifest Model](#manifest-model)
 - [Assets and Hooks](#assets-and-hooks)
 - [Translator Ownership](#translator-ownership)
@@ -203,8 +204,11 @@ Custom layout patterns for dependency selectors:
 3. Add a custom profile later in `profiles.active` to extend/replace selector
    values without changing builtin profiles.
 
-## Version Governance And Sync Overlays
-Versioning metadata is profile-driven:
+## Version And Project Governance Overlays
+Versioning and lifecycle-governance metadata are profile-driven:
+- `global` seeds `policy_state.project-governance: false` and
+  `policy_state.version-governance: false` in the generated config template
+  so both policies stay explicit opt-ins outside governed release slices
 - `global` seeds `policy_state.version-governance: false` in the generated
   config template so version-governance stays opt-in outside release slices.
 - `defaults` seeds `version-governance` with shared path and bump controls
@@ -222,6 +226,15 @@ Versioning metadata is profile-driven:
 - repositories with fully custom ordering rules may switch to
   `scheme: custom_adapter` and point `custom_adapter_path` at one
   repo-relative Python module exporting `SCHEME`.
+- `defaults` also seeds `project-governance` with allowed stage/stance
+  vocabularies plus the generic unversioned display defaults
+  (`Unversioned`, `## Unreleased`)
+- repositories may enable `project-governance` with or without
+  `version-governance`; the policy is about lifecycle state, not version
+  parsing
+- AGENTS asset descriptors can opt into richer governance header lines with
+  `project_governance_headers: true`; ordinary managed docs stay on the
+  compact header set
 - repository profiles may redirect only the repo-specific surfaces they own;
   for example, a repository profile may override
   `version-governance.version_file` to a package-scoped path such as

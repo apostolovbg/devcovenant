@@ -295,7 +295,7 @@ manifest ecosystems.
 3. Closed the slice with focused legality regressions, refresh-driven
    managed-surface convergence, and the full gated workflow.
 
-### Item 3 [pending]: Introduce Orthogonal Project Governance
+### Item 3 [complete]: Introduce Orthogonal Project Governance
 **Objective:** Create a first-class `project-governance` policy for project
 phase, development stance, codename, build identity, and intentionally
 unversioned lifecycle state.
@@ -341,6 +341,18 @@ build identity, managed-header behavior, and unversioned changelog flow.
 3. Extra project-governance header lines appear only where intended,
    starting with `AGENTS.md`.
 4. `CHANGELOG.md` supports the unversioned `## Unreleased` flow cleanly.
+
+**Closure Notes**
+1. Introduced a first-class `project-governance` policy with explicit
+   lifecycle metadata for `stage`, `development_stance`,
+   `versioning_mode`, and optional `codename` / `build_identity`.
+2. Wired refresh, managed-doc validation, changelog helpers, and
+   changelog-coverage through the same project-governance runtime so
+   `AGENTS.md` can render richer governance headers while intentionally
+   unversioned repos use explicit non-version labels plus `## Unreleased`.
+3. Closed the slice with focused project-governance/refresh/changelog
+   regressions, refresh-driven managed-surface convergence, and the full
+   gated workflow.
 
 ### Item 4 [pending]: Expand Scheme-Specific Governance Semantics
 **Objective:** Grow the framework beyond simple equality so scheme-specific
