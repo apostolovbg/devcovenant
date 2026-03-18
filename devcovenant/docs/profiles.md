@@ -211,9 +211,10 @@ Versioning and lifecycle-governance metadata are profile-driven:
   so both policies stay explicit opt-ins outside governed release slices
 - `global` seeds `policy_state.version-governance: false` in the generated
   config template so version-governance stays opt-in outside release slices.
-- `defaults` seeds `version-governance` with shared path and bump controls
-  only: `version_file`, `changelog_file`, `changelog_header_prefix`, and
-  `enforce_bumping`.
+- `defaults` seeds `version-governance` with shared path, ordering, and
+  scheme-governance controls: `version_file`, `changelog_file`,
+  `changelog_header_prefix`, `enforce_bumping`,
+  `canonical_versions_required`, and the default PEP 440 marker toggles.
 - repositories should choose `version-governance.scheme` explicitly in an
   active profile or repo config; repo-specific profiles may also add
   scheme-specific keys such as `semver_scope_tags_required`.

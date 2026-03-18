@@ -66,9 +66,13 @@ policy_overlays:
     target_role_dirs: []
   version-governance:
     enforce_bumping: true
+    canonical_versions_required: false
     version_file: VERSION
     changelog_file: CHANGELOG.md
     changelog_header_prefix: '## Version'
+    pep440_allow_prereleases: true
+    pep440_allow_dev_releases: true
+    pep440_allow_post_releases: true
   project-governance:
     changelog_file: CHANGELOG.md
     unversioned_label: Unversioned

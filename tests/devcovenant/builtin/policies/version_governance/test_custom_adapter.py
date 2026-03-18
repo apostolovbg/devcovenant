@@ -101,6 +101,9 @@ class TestCustomAdapterScheme(unittest.TestCase):
             self.assertEqual(current, 4)
             self.assertEqual(previous, 3)
             self.assertEqual(scheme.compare_versions(previous, current), -1)
+            self.assertIsNone(
+                scheme.canonicalize_version(current, check, repo_root)
+            )
             release = version_governance.VersionReleaseContext(
                 repo_root=repo_root,
                 policy_id="version-governance",
@@ -116,6 +119,10 @@ class TestCustomAdapterScheme(unittest.TestCase):
                 current_parsed=current,
                 previous_version="III",
                 previous_parsed=previous,
+            )
+            self.assertEqual(
+                scheme.validate_progression(check, release),
+                [],
             )
             self.assertEqual(scheme.validate_release(check, release), [])
 

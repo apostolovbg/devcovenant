@@ -10,9 +10,20 @@ from devcovenant.builtin.policies.version_governance.pep440 import Pep440Scheme
 class _FakeCheck:
     """Minimal option surface for scheme tests."""
 
+    def __init__(self, options=None):
+        """Store minimal option state for direct scheme tests."""
+        self._options = options or {}
+
     def get_option(self, key, default=None):
-        """Return the provided default because pep440 needs no options."""
-        return default
+        """Return one configured option value."""
+        return self._options.get(key, default)
+
+    def _bool_option(self, key):
+        """Return one configured option as a boolean."""
+        raw = self._options.get(key, False)
+        if isinstance(raw, bool):
+            return raw
+        return str(raw).strip().lower() in {"1", "true", "yes", "on"}
 
 
 class TestPep440Scheme(unittest.TestCase):
@@ -49,6 +60,11 @@ class TestPep440Scheme(unittest.TestCase):
             previous_version="1.2.0b3",
             previous_parsed=previous,
         )
+        self.assertEqual(
+            scheme.canonicalize_version(previous, check, Path(".")),
+            "1.2.0b3",
+        )
+        self.assertEqual(scheme.validate_progression(check, release), [])
         self.assertEqual(scheme.validate_release(check, release), [])
 
     def test_beta_alias_and_invalid_versions(self):
@@ -59,3 +75,26 @@ class TestPep440Scheme(unittest.TestCase):
         self.assertEqual(str(beta), "1.2.0b3")
         with self.assertRaisesRegex(ValueError, "valid pep440 version"):
             scheme.parse_version("omicron5", check, Path("."))
+
+    def test_prerelease_marker_can_be_disabled(self):
+        """PEP 440 should report disabled prerelease markers explicitly."""
+        scheme = Pep440Scheme()
+        check = _FakeCheck({"pep440_allow_prereleases": False})
+        current = scheme.parse_version("1.2.0rc1", check, Path("."))
+        previous = scheme.parse_version("1.2.0b3", check, Path("."))
+        release = version_governance.VersionReleaseContext(
+            repo_root=Path("."),
+            policy_id="version-governance",
+            version_label="VERSION",
+            version_path=Path("VERSION"),
+            changelog_path=Path("CHANGELOG.md"),
+            changed_files=[Path("VERSION"), Path("CHANGELOG.md")],
+            latest_block="- 2026-03-16: release candidate",
+            current_version="1.2.0rc1",
+            current_parsed=current,
+            previous_version="1.2.0b3",
+            previous_parsed=previous,
+        )
+        violations = scheme.validate_progression(check, release)
+        self.assertEqual(len(violations), 1)
+        self.assertIn("prerelease", violations[0].message.lower())

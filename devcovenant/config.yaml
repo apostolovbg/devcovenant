@@ -962,10 +962,18 @@ autogen_metadata_overlays:
     watch_dirs:
     - tests
   version-governance:
+    canonical_versions_required:
+    - 'False'
     changelog_file: CHANGELOG.md
     changelog_header_prefix:
     - '## Version'
     enforce_bumping:
+    - 'True'
+    pep440_allow_dev_releases:
+    - 'True'
+    pep440_allow_post_releases:
+    - 'True'
+    pep440_allow_prereleases:
     - 'True'
     scheme:
     - semver

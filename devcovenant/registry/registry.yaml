@@ -8872,11 +8872,15 @@ policies:
       custom: 'false'
       scheme: semver
       enforce_bumping: 'True'
+      canonical_versions_required: 'False'
       version_file: devcovenant/VERSION
       changelog_file: CHANGELOG.md
       changelog_header_prefix: '## Version'
       ignored_prefixes: ''
       semver_scope_tags_required: 'True'
+      pep440_allow_prereleases: 'True'
+      pep440_allow_dev_releases: 'True'
+      pep440_allow_post_releases: 'True'
       calver_pattern: ''
       custom_regex_pattern: ''
       custom_adapter_path: ''
@@ -8954,6 +8958,24 @@ policies:
         effective:
           values:
           - 'True'
+      canonical_versions_required:
+        descriptor:
+          values:
+          - 'false'
+          behavior: base
+        profile_overlays:
+          values:
+          - 'False'
+          behavior: replace
+          replaced_inherited_values:
+          - 'false'
+        autogen_overlays:
+          values:
+          - 'False'
+          behavior: append
+        effective:
+          values:
+          - 'False'
       version_file:
         descriptor:
           values: []
@@ -9020,6 +9042,60 @@ policies:
           behavior: replace
           replaced_inherited_values:
           - 'false'
+        autogen_overlays:
+          values:
+          - 'True'
+          behavior: append
+        effective:
+          values:
+          - 'True'
+      pep440_allow_prereleases:
+        descriptor:
+          values:
+          - 'true'
+          behavior: base
+        profile_overlays:
+          values:
+          - 'True'
+          behavior: replace
+          replaced_inherited_values:
+          - 'true'
+        autogen_overlays:
+          values:
+          - 'True'
+          behavior: append
+        effective:
+          values:
+          - 'True'
+      pep440_allow_dev_releases:
+        descriptor:
+          values:
+          - 'true'
+          behavior: base
+        profile_overlays:
+          values:
+          - 'True'
+          behavior: replace
+          replaced_inherited_values:
+          - 'true'
+        autogen_overlays:
+          values:
+          - 'True'
+          behavior: append
+        effective:
+          values:
+          - 'True'
+      pep440_allow_post_releases:
+        descriptor:
+          values:
+          - 'true'
+          behavior: base
+        profile_overlays:
+          values:
+          - 'True'
+          behavior: replace
+          replaced_inherited_values:
+          - 'true'
         autogen_overlays:
           values:
           - 'True'
@@ -9103,11 +9179,15 @@ policies:
       custom: false
       scheme: semver
       enforce_bumping: true
+      canonical_versions_required: false
       version_file: devcovenant/VERSION
       changelog_file: CHANGELOG.md
       changelog_header_prefix: '## Version'
       ignored_prefixes: ''
       semver_scope_tags_required: true
+      pep440_allow_prereleases: true
+      pep440_allow_dev_releases: true
+      pep440_allow_post_releases: true
       calver_pattern: ''
       custom_regex_pattern: ''
       custom_adapter_path: ''
@@ -9125,17 +9205,21 @@ policies:
       custom: false
       scheme: semver
       enforce_bumping: true
+      canonical_versions_required: false
       version_file: devcovenant/VERSION
       changelog_file: CHANGELOG.md
       changelog_header_prefix: '## Version'
       semver_scope_tags_required: true
+      pep440_allow_prereleases: true
+      pep440_allow_dev_releases: true
+      pep440_allow_post_releases: true
       selector_roles: ignored
     assets:
     - CHANGELOG.md
     - devcovenant/VERSION
     origin: builtin
     script_exists: true
-    hash: b2020b818f5ebc49fc147d7bc6648e8af490dd035f7d033584e3fed93e4aaa2e
+    hash: 756aeebb1207f2ab41d68795f519765a5e33adb53297741c60e57c787628fb0b
     script_path: builtin/version_governance.py
   project-governance:
     enabled: true
@@ -10535,9 +10619,13 @@ profiles:
         target_role_dirs: []
       version-governance:
         enforce_bumping: true
+        canonical_versions_required: false
         version_file: VERSION
         changelog_file: CHANGELOG.md
         changelog_header_prefix: '## Version'
+        pep440_allow_prereleases: true
+        pep440_allow_dev_releases: true
+        pep440_allow_post_releases: true
       project-governance:
         changelog_file: CHANGELOG.md
         unversioned_label: Unversioned

@@ -80,6 +80,42 @@ class SemverScheme:
             return 1
         return 0
 
+    def canonicalize_version(
+        self,
+        parsed: VersionInfo,
+        check: "VersionGovernanceCheck",
+        repo_root: Path,
+    ) -> str:
+        """Return the canonical SemVer spelling for one parsed version."""
+        del check, repo_root
+        return str(parsed)
+
+    def validate_progression(
+        self,
+        check: "VersionGovernanceCheck",
+        release: "VersionReleaseContext",
+    ) -> List[Violation]:
+        """Apply SemVer-specific bump progression validation."""
+        del check
+        actual_level = self._compute_bump_level(
+            release.previous_parsed,
+            release.current_parsed,
+        )
+        if actual_level is None:
+            return [
+                Violation(
+                    policy_id=release.policy_id,
+                    severity="error",
+                    file_path=release.version_path,
+                    message=(
+                        "Version bump must update one SemVer component "
+                        "rather than skipping backwards or repeating a "
+                        "stored value."
+                    ),
+                )
+            ]
+        return []
+
     def validate_release(
         self,
         check: "VersionGovernanceCheck",

@@ -75,6 +75,34 @@ class CustomAdapterScheme:
             raise ValueError("Custom adapter is missing `compare_versions`.")
         return int(compare(left, right))
 
+    def canonicalize_version(
+        self,
+        parsed: Any,
+        check: "VersionGovernanceCheck",
+        repo_root: Path,
+    ) -> str | None:
+        """Return one custom canonical spelling when supported."""
+        scheme = self._load_scheme(check, repo_root)
+        canonicalize = getattr(scheme, "canonicalize_version", None)
+        if not callable(canonicalize):
+            return None
+        value = canonicalize(parsed, check, repo_root)
+        if value is None:
+            return None
+        return str(value)
+
+    def validate_progression(
+        self,
+        check: "VersionGovernanceCheck",
+        release: "VersionReleaseContext",
+    ) -> List:
+        """Apply optional custom progression validation."""
+        scheme = self._load_scheme(check, release.repo_root)
+        validate = getattr(scheme, "validate_progression", None)
+        if not callable(validate):
+            return []
+        return list(validate(check, release))
+
     def validate_release(
         self,
         check: "VersionGovernanceCheck",

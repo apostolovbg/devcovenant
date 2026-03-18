@@ -57,6 +57,43 @@ Example:
 ## Version 1.0.0
 
 - 2026-03-18:
+  Change: Split `version-governance` into generic forward-ordering checks
+  plus scheme-owned canonicalization and release-marker governance.
+  Why: Needed Item 4 to keep SemVer-specific bump language contained while
+  giving PEP 440 and future adapters explicit extension points for their
+  own marker semantics.
+  Impact: Enabled canonical version enforcement where schemes define it,
+  added PEP 440 prerelease/dev/post-release controls, and kept non-SemVer
+  schemes free from inherited major/minor/patch rules.
+  Files:
+  CHANGELOG.md
+  PLAN.md
+  devcovenant/builtin/policies/version_governance/calver.py
+  devcovenant/builtin/policies/version_governance/custom_adapter.py
+  devcovenant/builtin/policies/version_governance/custom_regex.py
+  devcovenant/builtin/policies/version_governance/integer.py
+  devcovenant/builtin/policies/version_governance/pep440.py
+  devcovenant/builtin/policies/version_governance/semver.py
+  devcovenant/builtin/policies/version_governance/version_governance.py
+  devcovenant/builtin/policies/version_governance/version_governance.yaml
+  devcovenant/builtin/profiles/defaults/defaults.yaml
+  devcovenant/docs/architecture.md
+  devcovenant/docs/config.md
+  devcovenant/docs/policies.md
+  tests/devcovenant/builtin/policies/version_governance/\
+    test_calver.py
+  tests/devcovenant/builtin/policies/version_governance/\
+    test_custom_adapter.py
+  tests/devcovenant/builtin/policies/version_governance/\
+    test_custom_regex.py
+  tests/devcovenant/builtin/policies/version_governance/\
+    test_integer.py
+  tests/devcovenant/builtin/policies/version_governance/\
+    test_pep440.py
+  tests/devcovenant/builtin/policies/version_governance/\
+    test_version_governance.py
+
+- 2026-03-18:
   Change: Introduced orthogonal `project-governance` lifecycle
   governance and wired managed headers plus changelog heading resolution
   through it.

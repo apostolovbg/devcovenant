@@ -56,6 +56,7 @@ class TestCustomRegexScheme(unittest.TestCase):
         )
         self.assertEqual(scheme.parse_version("IV", check, Path(".")), "IV")
         self.assertEqual(scheme.compare_versions("III", "IV"), -1)
+        self.assertIsNone(scheme.canonicalize_version("IV", check, Path(".")))
         release = version_governance.VersionReleaseContext(
             repo_root=Path("."),
             policy_id="version-governance",
@@ -69,6 +70,7 @@ class TestCustomRegexScheme(unittest.TestCase):
             previous_version="III",
             previous_parsed="III",
         )
+        self.assertEqual(scheme.validate_progression(check, release), [])
         self.assertEqual(scheme.validate_release(check, release), [])
         with self.assertRaisesRegex(ValueError, "custom_regex_pattern"):
             scheme.parse_version("beta3", check, Path("."))

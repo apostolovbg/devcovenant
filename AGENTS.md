@@ -1655,11 +1655,15 @@ enabled: false
 custom: false
 scheme: semver
 enforce_bumping: True
+canonical_versions_required: False
 version_file: devcovenant/VERSION
 changelog_file: CHANGELOG.md
 changelog_header_prefix: ## Version
 ignored_prefixes:
 semver_scope_tags_required: True
+pep440_allow_prereleases: True
+pep440_allow_dev_releases: True
+pep440_allow_post_releases: True
 calver_pattern:
 custom_regex_pattern:
 custom_adapter_path:

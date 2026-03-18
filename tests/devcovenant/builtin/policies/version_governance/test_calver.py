@@ -51,6 +51,10 @@ class TestCalverScheme(unittest.TestCase):
             previous_version="2026.03.15",
             previous_parsed=previous,
         )
+        self.assertIsNone(
+            scheme.canonicalize_version(current, check, Path("."))
+        )
+        self.assertEqual(scheme.validate_progression(check, release), [])
         self.assertEqual(scheme.validate_release(check, release), [])
 
     def test_custom_pattern_is_used_for_validation(self):

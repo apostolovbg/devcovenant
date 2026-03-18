@@ -47,6 +47,11 @@ class TestIntegerScheme(unittest.TestCase):
             previous_version="42",
             previous_parsed=previous,
         )
+        self.assertEqual(
+            scheme.canonicalize_version(current, check, Path(".")),
+            "43",
+        )
+        self.assertEqual(scheme.validate_progression(check, release), [])
         self.assertEqual(scheme.validate_release(check, release), [])
 
     def test_invalid_integer_version_is_rejected(self):

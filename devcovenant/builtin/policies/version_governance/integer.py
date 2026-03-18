@@ -58,6 +58,24 @@ class IntegerScheme:
             return 1
         return 0
 
+    def canonicalize_version(
+        self,
+        parsed: int,
+        check: "VersionGovernanceCheck",
+        repo_root: Path,
+    ) -> str:
+        """Return the canonical integer spelling with no padding."""
+        del check, repo_root
+        return str(parsed)
+
+    def validate_progression(
+        self,
+        check: "VersionGovernanceCheck",
+        release: "VersionReleaseContext",
+    ) -> List:
+        """Integer versioning adds no extra progression rules."""
+        return []
+
     def validate_release(
         self,
         check: "VersionGovernanceCheck",

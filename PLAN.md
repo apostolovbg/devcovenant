@@ -354,7 +354,7 @@ build identity, managed-header behavior, and unversioned changelog flow.
    regressions, refresh-driven managed-surface convergence, and the full
    gated workflow.
 
-### Item 4 [pending]: Expand Scheme-Specific Governance Semantics
+### Item 4 [complete]: Expand Scheme-Specific Governance Semantics
 **Objective:** Grow the framework beyond simple equality so scheme-specific
 ordering and bump rules remain intentional and explicit.
 
@@ -390,6 +390,14 @@ and future scheme adapters.
 1. Builtin schemes expose only the bump semantics they actually support.
 2. Generic bump enforcement is still available where ordering exists.
 3. The framework can grow new schemes without copying SemVer language.
+
+**Completion Notes**
+1. Split generic forward-ordering enforcement from scheme-owned progression
+   and release validation hooks inside `version-governance`.
+2. Added scheme-aware canonical spelling support plus PEP 440 marker
+   controls for prerelease, dev-release, and post-release tokens.
+3. Proved the behavior with focused cross-scheme adapter tests so
+   non-SemVer schemes do not inherit SemVer-specific language accidentally.
 
 ### Item 5 [pending]: Final Docs, Audit, and Downstream Proof
 **Objective:** Close the version-stack program with a full docs sweep and

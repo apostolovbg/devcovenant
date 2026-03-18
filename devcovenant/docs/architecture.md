@@ -648,11 +648,20 @@ Invariant:
 - version-governance owns version-format validation, scheme-aware bump
   progression, and any scheme-specific release-rule validation enabled by the
   active adapter.
+- the shared version-governance shell now splits responsibilities into
+  generic forward-ordering enforcement, optional scheme-defined canonical
+  spelling enforcement, and optional scheme-defined progression/release
+  validation.
 - `devcovenant/builtin/policies/version_governance/version_governance.py`
   owns the shared changelog/version-file orchestration and scheme registry,
   while sibling modules (`semver.py`, `calver.py`, `integer.py`,
   `pep440.py`, `custom_regex.py`, `custom_adapter.py`) implement
   scheme-specific parsing, comparison, and extra release rules.
+- SemVer keeps explicit scope-tag governance in the scheme adapter instead of
+  leaking major/minor/patch language into other schemes.
+- PEP 440 owns marker-family governance in the adapter layer
+  (`prerelease`, `devrelease`, `postrelease`) and can also enforce
+  canonical normalized spellings.
 - `custom_regex.py` is the strict validation-only escape hatch for exotic
   formats that have no trustworthy ordering semantics.
 - `custom_adapter.py` is the strict repo-local extension path for arbitrary

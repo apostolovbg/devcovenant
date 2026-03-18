@@ -62,6 +62,65 @@ class Pep440Scheme:
             return 1
         return 0
 
+    def canonicalize_version(
+        self,
+        parsed: Version,
+        check: "VersionGovernanceCheck",
+        repo_root: Path,
+    ) -> str:
+        """Return the canonical normalized PEP 440 spelling."""
+        del check, repo_root
+        return str(parsed)
+
+    def validate_progression(
+        self,
+        check: "VersionGovernanceCheck",
+        release: "VersionReleaseContext",
+    ) -> List:
+        """Apply PEP 440 marker governance for the recorded version."""
+        violations = []
+        current = release.current_parsed
+        if current.is_prerelease and not self._bool_option(
+            check,
+            "pep440_allow_prereleases",
+            default=True,
+        ):
+            violations.append(
+                self._violation(
+                    release,
+                    "PEP 440 prerelease markers are disabled for this "
+                    f"repository; {release.version_label} cannot use "
+                    f"`{release.current_version}`.",
+                )
+            )
+        if current.is_devrelease and not self._bool_option(
+            check,
+            "pep440_allow_dev_releases",
+            default=True,
+        ):
+            violations.append(
+                self._violation(
+                    release,
+                    "PEP 440 development-release markers are disabled for "
+                    f"this repository; {release.version_label} cannot use "
+                    f"`{release.current_version}`.",
+                )
+            )
+        if current.is_postrelease and not self._bool_option(
+            check,
+            "pep440_allow_post_releases",
+            default=True,
+        ):
+            violations.append(
+                self._violation(
+                    release,
+                    "PEP 440 post-release markers are disabled for this "
+                    f"repository; {release.version_label} cannot use "
+                    f"`{release.current_version}`.",
+                )
+            )
+        return violations
+
     def validate_release(
         self,
         check: "VersionGovernanceCheck",
@@ -69,3 +128,31 @@ class Pep440Scheme:
     ) -> List:
         """PEP 440 imposes no extra changelog-scope rules by default."""
         return []
+
+    def _bool_option(
+        self,
+        check: "VersionGovernanceCheck",
+        key: str,
+        *,
+        default: bool,
+    ) -> bool:
+        """Read one boolean option with an explicit scheme-level default."""
+        raw = check.get_option(key, default)
+        if isinstance(raw, bool):
+            return raw
+        return str(raw).strip().lower() in {"1", "true", "yes", "on"}
+
+    def _violation(
+        self,
+        release: "VersionReleaseContext",
+        message: str,
+    ):
+        """Build one policy violation for a release-marker rule."""
+        from devcovenant.core.contracts.policy import Violation
+
+        return Violation(
+            policy_id=release.policy_id,
+            severity="error",
+            file_path=release.version_path,
+            message=message,
+        )

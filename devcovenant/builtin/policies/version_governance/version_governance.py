@@ -69,6 +69,21 @@ class VersionScheme(Protocol):
     def compare_versions(self, left: Any, right: Any) -> int:
         """Compare two parsed version values for ordering."""
 
+    def canonicalize_version(
+        self,
+        parsed: Any,
+        check: "VersionGovernanceCheck",
+        repo_root: Path,
+    ) -> str | None:
+        """Return one canonical string form when the scheme defines one."""
+
+    def validate_progression(
+        self,
+        check: "VersionGovernanceCheck",
+        release: VersionReleaseContext,
+    ) -> List[Violation]:
+        """Return scheme-specific progression governance violations."""
+
     def validate_release(
         self,
         check: "VersionGovernanceCheck",
@@ -184,6 +199,7 @@ class VersionGovernanceCheck(PolicyCheck):
         scheme_name = self._scheme_name()
         ignored_prefixes = self._ignored_prefixes()
         enforce_bumping = self._bool_option("enforce_bumping")
+        require_canonical = self._bool_option("canonical_versions_required")
 
         if not scheme_name:
             return [
@@ -261,6 +277,27 @@ class VersionGovernanceCheck(PolicyCheck):
                 )
             )
             return violations
+
+        if require_canonical:
+            canonical = scheme.canonicalize_version(
+                current_parsed,
+                self,
+                repo_root,
+            )
+            if canonical and canonical != current_version:
+                violations.append(
+                    Violation(
+                        policy_id=self.policy_id,
+                        severity="error",
+                        file_path=version_path,
+                        message=(
+                            f"{version_label} must use the canonical "
+                            f"`{scheme_name}` spelling `{canonical}` rather "
+                            f"than `{current_version}`."
+                        ),
+                    )
+                )
+                return violations
 
         try:
             changelog_text = changelog_path.read_text(encoding="utf-8")
@@ -384,7 +421,11 @@ class VersionGovernanceCheck(PolicyCheck):
             previous_parsed=previous_parsed,
         )
         try:
-            return scheme.validate_release(self, release)
+            violations.extend(scheme.validate_progression(self, release))
+            if violations:
+                return violations
+            violations.extend(scheme.validate_release(self, release))
+            return violations
         except ValueError as exc:
             return [
                 Violation(

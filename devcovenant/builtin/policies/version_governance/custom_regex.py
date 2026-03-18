@@ -105,6 +105,25 @@ class CustomRegexScheme:
             return 1
         return 0
 
+    def canonicalize_version(
+        self,
+        parsed: str,
+        check: "VersionGovernanceCheck",
+        repo_root: Path,
+    ) -> str | None:
+        """Regex-only mode does not define a canonical spelling."""
+        del parsed, check, repo_root
+        return None
+
+    def validate_progression(
+        self,
+        check: "VersionGovernanceCheck",
+        release: "VersionReleaseContext",
+    ) -> List:
+        """Regex-only mode adds no progression rules."""
+        del check, release
+        return []
+
     def validate_release(
         self,
         check: "VersionGovernanceCheck",

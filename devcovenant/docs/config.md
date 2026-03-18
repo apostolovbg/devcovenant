@@ -338,6 +338,10 @@ user_metadata_overrides:
     changelog_file: CHANGELOG.md
     changelog_header_prefix: '## Version'
     enforce_bumping: true
+    canonical_versions_required: true
+    pep440_allow_prereleases: true
+    pep440_allow_dev_releases: true
+    pep440_allow_post_releases: false
 ```
 
 Configure version governance for a format-only custom scheme:
@@ -377,6 +381,11 @@ enabled; there is no implicit SemVer fallback.
 `custom_adapter` expects the referenced repo-relative Python file to export
 `SCHEME` with the same parse/compare/release interface used by builtin
 version-governance adapters.
+`enforce_bumping` stays generic across schemes: the version must move
+forward under the selected ordering rules.
+`canonical_versions_required` is enforced only by schemes that define a
+canonical string form, such as integer and PEP 440.
+CalVer intentionally keeps repo-chosen formatting instead of inventing one.
 
 Keep repository equality under CalVer while requiring Python package
 manifests to satisfy PEP 440:

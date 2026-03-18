@@ -319,6 +319,9 @@ High-impact runtime contracts:
   `version_governance.py` and delegates scheme-specific parsing/comparison
   rules to sibling modules such as `semver.py`, `calver.py`, `integer.py`,
   `pep440.py`, `custom_regex.py`, and `custom_adapter.py`.
+- the shared shell now separates generic forward-ordering enforcement from
+  scheme-owned progression/release validation, so non-SemVer adapters do not
+  inherit major/minor/patch semantics accidentally
 - `custom_regex` is the validation-only path for exotic version syntaxes;
   it checks a repo-supplied regex and requires `enforce_bumping: false`.
 - `custom_adapter` is the fully extensible path; it loads one repo-relative
@@ -496,6 +499,12 @@ Operational behavior:
 - `pep440` is the builtin adapter for Python packaging version rules,
   including prereleases such as `1.2.0rc1`, beta releases such as
   `1.2.0beta3`, and other valid PEP 440 forms
+- schemes that define canonical spellings can enforce them through
+  `canonical_versions_required`, while schemes that intentionally preserve
+  repo-chosen formatting may leave canonicalization undefined
+- `pep440_allow_prereleases`, `pep440_allow_dev_releases`, and
+  `pep440_allow_post_releases` govern which PEP 440 marker families are
+  allowed on the repo's canonical version surface
 - target-role metadata is expected to be profile-driven, with final values
   resolved by standard metadata precedence
   (descriptor -> active profiles -> config overlays -> config overrides)

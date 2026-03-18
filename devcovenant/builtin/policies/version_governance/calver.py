@@ -67,6 +67,24 @@ class CalverScheme:
             return 1
         return 0
 
+    def canonicalize_version(
+        self,
+        parsed: tuple[int, ...],
+        check: "VersionGovernanceCheck",
+        repo_root: Path,
+    ) -> str | None:
+        """CalVer keeps the repo's chosen formatting, including padding."""
+        del parsed, check, repo_root
+        return None
+
+    def validate_progression(
+        self,
+        check: "VersionGovernanceCheck",
+        release: "VersionReleaseContext",
+    ) -> List:
+        """CalVer adds no extra progression rules beyond forward ordering."""
+        return []
+
     def validate_release(
         self,
         check: "VersionGovernanceCheck",

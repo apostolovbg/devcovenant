@@ -16,11 +16,15 @@ metadata:
   enforcement: active
   scheme: ''
   enforce_bumping: 'false'
+  canonical_versions_required: 'false'
   version_file: ''
   changelog_file: ''
   changelog_header_prefix: ''
   ignored_prefixes: []
   semver_scope_tags_required: 'false'
+  pep440_allow_prereleases: 'true'
+  pep440_allow_dev_releases: 'true'
+  pep440_allow_post_releases: 'true'
   calver_pattern: ''
   custom_regex_pattern: ''
   custom_adapter_path: ''

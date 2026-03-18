@@ -90,6 +90,8 @@ def _unit_test_common_interface_exposes_scheme_contract() -> None:
     assert "version_pattern" in version_governance.VersionScheme.__dict__
     assert "parse_version" in version_governance.VersionScheme.__dict__
     assert "compare_versions" in version_governance.VersionScheme.__dict__
+    assert "canonicalize_version" in version_governance.VersionScheme.__dict__
+    assert "validate_progression" in version_governance.VersionScheme.__dict__
     assert "validate_release" in version_governance.VersionScheme.__dict__
     assert issubclass(version_governance.VersionGovernanceCheck, object)
 
@@ -480,6 +482,53 @@ def _unit_test_pep440_invalid_format_is_rejected(tmp_path: Path) -> None:
     assert any(
         "pep440" in violation.message.lower() for violation in violations
     )
+
+
+def _unit_test_pep440_prerelease_can_be_disabled(tmp_path: Path) -> None:
+    """PEP 440 should reject prereleases when the marker is disabled."""
+    version_file, changelog, other_file = _write_version_files(
+        tmp_path,
+        "1.2.0rc1",
+        "1.2.0b3",
+        "- 2026-03-16: release candidate",
+    )
+    context = CheckContext(
+        repo_root=tmp_path,
+        changed_files=[version_file, changelog, other_file],
+    )
+    check = _configured_policy(
+        scheme="pep440",
+        enforce_bumping=True,
+        semver_scope_tags_required=False,
+        pep440_allow_prereleases=False,
+    )
+    violations = check.check(context)
+    assert violations
+    assert any("prerelease" in v.message.lower() for v in violations)
+    assert not any("major" in v.message.lower() for v in violations)
+
+
+def _unit_test_integer_can_require_canonical_spelling(tmp_path: Path) -> None:
+    """Canonical enforcement should reject padded integer spellings."""
+    version_file, changelog, other_file = _write_version_files(
+        tmp_path,
+        "0043",
+        "42",
+        "- 2026-03-16: build release",
+    )
+    context = CheckContext(
+        repo_root=tmp_path,
+        changed_files=[version_file, changelog, other_file],
+    )
+    check = _configured_policy(
+        scheme="integer",
+        enforce_bumping=True,
+        semver_scope_tags_required=False,
+        canonical_versions_required=True,
+    )
+    violations = check.check(context)
+    assert violations
+    assert any("canonical" in v.message.lower() for v in violations)
 
 
 def _write_custom_adapter_module(tmp_path: Path) -> Path:
