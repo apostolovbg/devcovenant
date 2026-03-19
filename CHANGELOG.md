@@ -2,7 +2,7 @@
 **Doc ID:** CHANGELOG
 **Doc Type:** changelog
 **Project Version:** 1.0.0
-**Last Updated:** 2026-03-18
+**Last Updated:** 2026-03-19
 **DevCovenant Version:** 1.0.0
 
 <!-- DEVCOV:BEGIN -->
@@ -55,6 +55,77 @@ Example:
 ## Log changes here
 
 ## Version 1.0.0
+
+- 2026-03-19:
+  Change: Removed the fake `0.0.0` project-version fallback, made fresh
+  installs explicitly unversioned, and rendered project-governance headers
+  in `SPEC.md` when the descriptor opts in.
+  Why: Prevented refresh from inventing numbered versions for repos with no
+  declared version and aligned the generic install baseline with the new
+  project-governance contract.
+  Impact: Aligned fresh installs to refresh truthfully as unversioned repos,
+  start `CHANGELOG.md` with `## Unreleased` in that baseline, and surface
+  lifecycle headers consistently in opted-in managed docs.
+  Files:
+  CHANGELOG.md
+  PLAN.md
+  SPEC.md
+  devcovenant/builtin/policies/project_governance/project_governance.py
+  devcovenant/builtin/profiles/global/assets/AGENTS.yaml
+  devcovenant/builtin/profiles/global/assets/CHANGELOG.yaml
+  devcovenant/builtin/profiles/global/assets/PLAN.yaml
+  devcovenant/builtin/profiles/global/assets/SPEC.yaml
+  devcovenant/builtin/profiles/global/assets/config.yaml
+  devcovenant/config.yaml
+  devcovenant/core/flow/refresh.py
+  devcovenant/docs/architecture.md
+  devcovenant/docs/config.md
+  devcovenant/docs/policies.md
+  devcovenant/docs/profiles.md
+  devcovenant/docs/registry.md
+  devcovenant/docs/workflow.md
+  devcovenant/registry/registry.yaml
+  tests/devcovenant/builtin/policies/project_governance/\
+    test_project_governance.py
+  tests/devcovenant/test_refresh.py
+
+- 2026-03-19:
+  Change: Disabled Python cache-file writes for source-checkout
+  `python3 -m devcovenant ...` launches and updated the source-run docs.
+  Why: Prevented repo-local `__pycache__/` drift from the launcher process
+  instead of asking operators to wrap source runs with shell env workarounds.
+  Impact: Source runs now stay cache-clean by default while managed child
+  Python commands keep their explicit routing controls.
+  Files:
+  CHANGELOG.md
+  devcovenant/__init__.py
+  devcovenant/builtin/profiles/global/assets/config.yaml
+  devcovenant/builtin/profiles/global/assets/devcovenant/README.yaml
+  devcovenant/custom/profiles/devcovrepo/assets/docs/config.md
+  devcovenant/custom/profiles/devcovrepo/assets/docs/installation.md
+  devcovenant/custom/profiles/devcovrepo/assets/docs/troubleshooting.md
+  devcovenant/custom/profiles/devcovrepo/assets/docs/workflow.md
+  devcovenant/docs/architecture.md
+  devcovenant/docs/config.md
+  devcovenant/docs/installation.md
+  devcovenant/docs/profiles.md
+  devcovenant/docs/workflow.md
+  tests/devcovenant/test_cli.py
+
+- 2026-03-19:
+  Change: Closed the version-stack roadmap with a local-only Item 5 audit
+  and proof pass.
+  Why: Confirmed the remaining repo surfaces were already aligned and only
+  the roadmap still carried an unnecessary downstream-proof requirement.
+  Impact: Keeps the active plan consistent with the actual local closure
+  scope for this completed version-stack program.
+  Files:
+  AGENTS.md
+  CHANGELOG.md
+  CONTRIBUTING.md
+  PLAN.md
+  README.md
+  devcovenant/README.md
 
 - 2026-03-18:
   Change: Split `version-governance` into generic forward-ordering checks

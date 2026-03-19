@@ -52,7 +52,7 @@ managed_block: |-
 body: |-
   ## Log changes here
 
-  ## Version 1.0.0
+  {{ RELEASE_HEADING }}
 
   - YYYY-MM-DD:
     Change: Describe the concrete change with an action verb.

@@ -16,10 +16,9 @@ already installed repo. `upgrade` reconciles core from source on every run and
 then runs refresh.
 
 Use `python3 -m devcovenant` when the console entry is not available.
-If you launch from a source checkout and want to avoid repo-local
-`devcovenant/__pycache__/` drift while preserving bytecode generation, set
-`PYTHONPYCACHEPREFIX` before Python starts (for example in CI job `env` or a
-shell wrapper).
+For source-checkout launches, DevCovenant suppresses Python cache-file writes
+automatically, so `python3 -m devcovenant ...` does not leave
+repo-local `devcovenant/__pycache__/` drift behind.
 
 ## Workflow
 1. Run `install` to copy the core and generate a generic config stub.

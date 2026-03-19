@@ -1024,14 +1024,16 @@ autogen_metadata_overlays:
 # Merge semantics: list append + dedupe, scalar replace.
 
 user_metadata_overlays:
-  line-length-limit:
-    exclude_globs:
-    - devcovenant/builtin/profiles/global/assets/*.yaml
-    - devcovenant/registry/**
   project-governance:
     stage: stable
     development_stance: active-development
     versioning_mode: versioned
+    unversioned_label: Unversioned
+    unreleased_heading: '## Unreleased'
+  line-length-limit:
+    exclude_globs:
+    - devcovenant/builtin/profiles/global/assets/*.yaml
+    - devcovenant/registry/**
 
 # Auto-generated metadata overrides written by refresh.
 

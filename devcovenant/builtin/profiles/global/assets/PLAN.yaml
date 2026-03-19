@@ -11,7 +11,7 @@ body: |-
 
   ## Table of Contents
   1. [Overview](#overview)
-  2. [Execution Rules](#execution-rules)
+  2. [Workflow](#workflow)
   3. [Active Work](#active-work)
   4. [Validation Routine](#validation-routine)
 
@@ -20,7 +20,7 @@ body: |-
   - Record change history in `CHANGELOG.md`.
   - Mark completed items as `[done]` and outstanding items as `[not done]`.
 
-  ## Execution Rules
+  ## Workflow
   - Work in dependency order unless an explicit blocker requires reordering.
   - Keep each item concrete and testable.
   - Update status in the same session when work lands.

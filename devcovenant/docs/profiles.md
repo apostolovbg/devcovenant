@@ -1,5 +1,5 @@
 # Profiles
-**Last Updated:** 2026-03-18
+**Last Updated:** 2026-03-19
 **Project Version:** 1.0.0
 
 ## Table of Contents
@@ -206,11 +206,11 @@ Custom layout patterns for dependency selectors:
 
 ## Version And Project Governance Overlays
 Versioning and lifecycle-governance metadata are profile-driven:
-- `global` seeds `policy_state.project-governance: false` and
-  `policy_state.version-governance: false` in the generated config template
-  so both policies stay explicit opt-ins outside governed release slices
+- `global` seeds `policy_state.project-governance: true` with a generic
+  unversioned baseline (`prototype`, `experimental`, `unversioned`) so fresh
+  installs do not invent fake numbered versions
 - `global` seeds `policy_state.version-governance: false` in the generated
-  config template so version-governance stays opt-in outside release slices.
+  config template so version-governance stays an explicit opt-in.
 - `defaults` seeds `version-governance` with shared path, ordering, and
   scheme-governance controls: `version_file`, `changelog_file`,
   `changelog_header_prefix`, `enforce_bumping`,
@@ -233,7 +233,7 @@ Versioning and lifecycle-governance metadata are profile-driven:
 - repositories may enable `project-governance` with or without
   `version-governance`; the policy is about lifecycle state, not version
   parsing
-- AGENTS asset descriptors can opt into richer governance header lines with
+- managed-doc descriptors can opt into richer governance header lines with
   `project_governance_headers: true`; ordinary managed docs stay on the
   compact header set
 - repository profiles may redirect only the repo-specific surfaces they own;
@@ -372,9 +372,9 @@ Asset materialization rules:
   `engine.pycache_prefix_enabled: true` for repo profiles that require it
 - refresh-generated governance workflow and repo-maintained
   `build.yml`/`publish.yml` workflows can set `PYTHONPYCACHEPREFIX` at job
-  scope (DevCovenant uses `.gha-pycache`) so source-checkout
-  `python -m devcovenant ...` launches avoid repo-local `__pycache__` drift in
-  CI
+  scope (DevCovenant uses `.gha-pycache`) for managed child commands and
+  stable CI behavior; source-checkout `python -m devcovenant ...` launches
+  now suppress Python cache-file writes for the launcher process directly
 
 Hook rules:
 - pre-commit fragments merge into generated `.pre-commit-config.yaml`

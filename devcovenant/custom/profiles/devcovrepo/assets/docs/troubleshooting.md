@@ -51,10 +51,9 @@ Fix:
 Prevention:
 - Enable `engine.pycache_prefix_enabled: true` in `devcovenant/config.yaml`
   so DevCovenant-managed Python subprocesses use `PYTHONPYCACHEPREFIX`.
-- For source-checkout alternate launcher runs (`python3 -m devcovenant ...`),
-  set `PYTHONPYCACHEPREFIX` in the shell/CI environment before Python starts.
-- DevCovenant does not rely on repo-root startup hooks or in-package
-  bootstrap tricks to prevent launcher-process bytecode writes.
+- Source-checkout alternate launcher runs (`python3 -m devcovenant ...`) now
+  suppress Python cache-file writes automatically for the launcher process
+  itself.
 
 ## Translator Issues
 Symptom: policy reports missing translator coverage for active language

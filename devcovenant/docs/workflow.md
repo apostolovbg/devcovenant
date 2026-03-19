@@ -1,5 +1,5 @@
 # Workflow
-**Last Updated:** 2026-03-18
+**Last Updated:** 2026-03-19
 **Project Version:** 1.0.0
 
 ## Table of Contents
@@ -164,7 +164,7 @@ Shared gate hook targeting:
   top-entry fingerprint behavior stay centralized
 - default changelog exemption header keys align with generated doc headers:
   `Last Updated`, `Project Version`, and `DevCovenant Version`
-- when `project-governance` is active, AGENTS may also render
+- when `project-governance` is active, opted-in managed docs may also render
   `Project Stage`, `Development Stance`, `Versioning Mode`,
   `Project Codename`, and `Build Identity`; changelog helper logic resolves
   active release headings from the same project-governance runtime so
@@ -237,7 +237,8 @@ Install/upgrade boundary:
   `devcovenant/registry/registry.yaml` explicitly, but they do not fabricate
   runtime registry session files when those are absent
 - refresh renders the compact managed header set for ordinary docs and can
-  add AGENTS-only project-governance header lines when the descriptor opts in
+  add project-governance header lines to any opted-in managed doc when the
+  descriptor requests them
 - refresh writes final per-policy metadata snapshots to
   `devcovenant/registry/registry.yaml` and now also records per-key
   `metadata_resolution` trace plus `metadata_warnings` for destructive
@@ -404,12 +405,10 @@ Output behavior:
 - `engine.pycache_prefix_enabled: true` routes Python bytecode caches via
   `PYTHONPYCACHEPREFIX` for DevCovenant-managed child commands, preserving
   bytecode generation fidelity while avoiding repo-local `__pycache__/` drift
-- generated CI governance workflows set `PYTHONPYCACHEPREFIX` at job scope so
-  top-level `python -m devcovenant ...` launches also avoid repo-local
-  bytecode-cache drift in CI
-- source-checkout launcher-process zero-drift guarantees belong to shell/CI
-  `PYTHONPYCACHEPREFIX`, not to repo-root startup hooks or in-package
-  bootstrap tricks
+- generated CI governance workflows still set `PYTHONPYCACHEPREFIX` at job
+  scope for managed child commands and stable CI behavior
+- source-checkout top-level `python -m devcovenant ...` launches now suppress
+  Python cache-file writes automatically for the launcher process itself
 - gate-session changelog coverage uses a gate-start exemption baseline that
   includes DEVCOV-managed blocks in non-doc text files (for example generated
   YAML/YML assets), so managed-only regen noise does not require new

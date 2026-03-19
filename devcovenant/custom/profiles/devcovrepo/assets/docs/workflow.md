@@ -32,10 +32,9 @@ Start and end gates record lifecycle state in the runtime registry.
 `gate --mid` is non-lifecycle and exists to surface hook/runtime mutations
 before test evidence is recorded.
 When using the supported alternate launcher (`python3 -m devcovenant ...`)
-from a source checkout, setting `PYTHONPYCACHEPREFIX` before Python starts
-prevents repo-local `devcovenant/__pycache__/` drift while preserving
-bytecode generation. DevCovenant does not rely on repo-root startup hooks or
-in-package bootstrap tricks for that boundary.
+from a source checkout, DevCovenant suppresses Python cache-file writes
+automatically so the launcher process does not leave repo-local
+`devcovenant/__pycache__/` drift behind.
 
 ## Test Runner
 `devcovenant test` executes `python3 -m unittest discover -v` first, then

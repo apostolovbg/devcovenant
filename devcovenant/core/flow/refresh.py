@@ -148,7 +148,12 @@ def _project_version_file_from_config(config: dict[str, object]) -> str:
     return resolved or "VERSION"
 
 
-def _read_project_version(repo_root: Path, config: dict[str, object]) -> str:
+def _read_project_version(
+    repo_root: Path,
+    config: dict[str, object],
+    *,
+    required: bool = True,
+) -> str:
     """Read the project version using version-sync.version_file."""
     version_file = _project_version_file_from_config(config)
     version_path = _resolve_path_under_root(
@@ -157,12 +162,27 @@ def _read_project_version(repo_root: Path, config: dict[str, object]) -> str:
         field_name="version-sync.version_file",
     )
     if not version_path.exists():
-        return "0.0.0"
+        if required:
+            raise ValueError(
+                f"Missing declared project version file: {version_file}"
+            )
+        return ""
     try:
         version_text = version_path.read_text(encoding="utf-8").strip()
-    except OSError:
-        return "0.0.0"
-    return version_text or "0.0.0"
+    except OSError as exc:
+        if required:
+            raise ValueError(
+                f"Unable to read declared project version file "
+                f"{version_file}: {exc}"
+            ) from exc
+        return ""
+    if version_text:
+        return version_text
+    if required:
+        raise ValueError(
+            f"Declared project version file is empty: {version_file}"
+        )
+    return ""
 
 
 def _read_yaml(path: Path) -> dict[str, object]:
@@ -313,7 +333,18 @@ def _validate_managed_doc_descriptor(
             f"{', '.join(unknown_keys)}."
         )
 
-    required_prefix = list(_MANAGED_DOC_REQUIRED_KEYS)
+    required_prefix = [
+        "title",
+        "doc_id",
+        "doc_type",
+        "project_version",
+        "last_updated",
+        "devcovenant_version",
+    ]
+    for field_name in _MANAGED_DOC_OPTIONAL_BOOLEAN_KEYS:
+        if field_name in descriptor:
+            required_prefix.append(field_name)
+    required_prefix.extend(["managed_block", "body"])
     if descriptor_keys[: len(required_prefix)] != required_prefix:
         raise ValueError(
             "Managed doc descriptor "
@@ -671,6 +702,39 @@ def _compose_managed_block_body(descriptor: dict[str, object]) -> str:
     )
 
 
+def _release_heading_for_render(
+    project_governance_state: ProjectGovernanceState,
+    project_version: str,
+) -> str:
+    """Return the rendered changelog release heading for one repo state."""
+    if project_governance_state.is_unversioned:
+        return project_governance_state.unreleased_heading
+    return f"## Version {project_version}"
+
+
+def _render_descriptor_body(
+    doc_name: str,
+    descriptor: dict[str, object],
+    *,
+    project_version: str,
+    project_governance_state: ProjectGovernanceState,
+) -> list[str]:
+    """Render descriptor body lines with doc-specific substitutions."""
+    body_value = descriptor.get("body")
+    if not isinstance(body_value, str):
+        return []
+    rendered = body_value
+    if doc_name == "CHANGELOG.md":
+        rendered = rendered.replace(
+            "{{ RELEASE_HEADING }}",
+            _release_heading_for_render(
+                project_governance_state,
+                project_version,
+            ),
+        )
+    return [line.rstrip() for line in rendered.splitlines()]
+
+
 def _render_doc(
     repo_root: Path,
     doc_name: str,
@@ -697,10 +761,12 @@ def _render_doc(
     if block_body:
         managed_block = _render_block(BLOCK_BEGIN, BLOCK_END, block_body)
 
-    body_value = descriptor.get("body")
-    body_lines = []
-    if isinstance(body_value, str):
-        body_lines = [line.rstrip() for line in body_value.splitlines()]
+    body_lines = _render_descriptor_body(
+        doc_name,
+        descriptor,
+        project_version=project_version,
+        project_governance_state=project_governance_state,
+    )
 
     workflow_body = str(descriptor.get("workflow_block", "")).rstrip("\n")
     workflow_block = ""
@@ -961,7 +1027,7 @@ def _inject_managed_header_and_block(
     """Inject rendered header/managed block into unmanaged existing docs."""
     header_text, managed_block = _rendered_header_and_block(rendered)
     if not managed_block:
-        return current, False
+        return rendered, rendered != current
 
     preserved = _strip_existing_generated_headers(current)
     leading_preserve_blocks, preserved_remainder = (
@@ -2636,12 +2702,16 @@ def refresh_repo(repo_root: Path) -> int:
                 initial_active_profiles,
             )
         )
-        declared_project_version = _read_project_version(repo_root, config)
         project_governance_state = (
             project_governance_runtime_module.resolve_runtime_state(
                 repo_root,
                 config_payload=config,
             )
+        )
+        declared_project_version = _read_project_version(
+            repo_root,
+            config,
+            required=not project_governance_state.is_unversioned,
         )
         project_version = project_governance_state.displayed_project_version(
             declared_project_version
@@ -2752,12 +2822,16 @@ def refresh_repo(repo_root: Path) -> int:
         print_step(f"Managed doc routing refresh failed: {error}", "🚫")
         return 1
     try:
-        declared_project_version = _read_project_version(repo_root, config)
         project_governance_state = (
             project_governance_runtime_module.resolve_runtime_state(
                 repo_root,
                 config_payload=config,
             )
+        )
+        declared_project_version = _read_project_version(
+            repo_root,
+            config,
+            required=not project_governance_state.is_unversioned,
         )
         project_version = project_governance_state.displayed_project_version(
             declared_project_version

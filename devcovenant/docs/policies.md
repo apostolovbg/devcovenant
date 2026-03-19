@@ -1,5 +1,5 @@
 # Policies
-**Last Updated:** 2026-03-18
+**Last Updated:** 2026-03-19
 **Project Version:** 1.0.0
 
 ## Table of Contents
@@ -335,7 +335,7 @@ High-impact runtime contracts:
 - when `project-governance.versioning_mode` is `unversioned`, the policy
   governs the explicit displayed non-version label for managed docs and the
   required unreleased changelog heading.
-- managed-doc descriptors may opt into AGENTS-only governance headers through
+- managed-doc descriptors may opt into governance headers through
   `project_governance_headers`; ordinary managed docs keep the compact
   header set and only change the rendered `Project Version` value when the
   repo is intentionally unversioned.
@@ -521,7 +521,7 @@ stack:
 - unversioned repos render an explicit non-version label such as
   `Unversioned` in managed docs and require an unreleased changelog flow such
   as `## Unreleased`
-- AGENTS-only extra headers come from managed-doc descriptor opt-in
+- extra governance headers come from managed-doc descriptor opt-in
   (`project_governance_headers`) instead of appearing in every managed doc
 
 `devflow-run-gates` required command metadata is canonical:

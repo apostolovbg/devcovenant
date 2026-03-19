@@ -9395,6 +9395,12 @@ policies:
           values:
           - Unversioned
           behavior: append
+        user_overlays:
+          values:
+          - Unversioned
+          behavior: replace
+          replaced_inherited_values:
+          - Unversioned
         effective:
           values:
           - Unversioned
@@ -9410,6 +9416,12 @@ policies:
           values:
           - '## Unreleased'
           behavior: append
+        user_overlays:
+          values:
+          - '## Unreleased'
+          behavior: replace
+          replaced_inherited_values:
+          - '## Unreleased'
         effective:
           values:
           - '## Unreleased'
@@ -9549,7 +9561,7 @@ policies:
     - CHANGELOG.md
     origin: builtin
     script_exists: true
-    hash: 5bcecf5ac17854c7138f8b27f41f4ce115d3af27a6692182da97a62c0971d64e
+    hash: ae4caf1b24437ba492815126a742b4000f7366ca26fe271014d1e1e630d186da
     script_path: builtin/project_governance.py
 profiles:
   terraform:

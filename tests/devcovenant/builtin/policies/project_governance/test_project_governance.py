@@ -6,6 +6,8 @@ import tempfile
 import unittest
 from pathlib import Path
 
+import yaml
+
 from devcovenant import install
 from devcovenant.builtin.policies.project_governance import (
     project_governance as project_governance_module,
@@ -22,27 +24,21 @@ resolve_runtime_state = project_governance_module.resolve_runtime_state
 def _write_unversioned_config(repo_root: Path) -> None:
     """Configure one repo for active unversioned project-governance."""
     config_path = repo_root / "devcovenant" / "config.yaml"
-    text = config_path.read_text(encoding="utf-8")
-    text = text.replace(
-        "  version-governance: false\n",
-        "  project-governance: true\n  version-governance: false\n",
+    payload = yaml.safe_load(config_path.read_text(encoding="utf-8"))
+    payload.setdefault("policy_state", {})
+    payload["policy_state"]["project-governance"] = True
+    payload.setdefault("user_metadata_overlays", {})
+    payload["user_metadata_overlays"]["project-governance"] = {
+        "stage": "beta",
+        "development_stance": "active-development",
+        "versioning_mode": "unversioned",
+        "unversioned_label": "Unversioned",
+        "unreleased_heading": "## Unreleased",
+    }
+    config_path.write_text(
+        yaml.safe_dump(payload, sort_keys=False),
+        encoding="utf-8",
     )
-    text = text.replace(
-        "user_metadata_overlays: {}\n",
-        "\n".join(
-            [
-                "user_metadata_overlays:",
-                "  project-governance:",
-                "    stage: beta",
-                "    development_stance: active-development",
-                "    versioning_mode: unversioned",
-                "    unversioned_label: Unversioned",
-                "    unreleased_heading: '## Unreleased'",
-                "",
-            ]
-        ),
-    )
-    config_path.write_text(text, encoding="utf-8")
 
 
 def _policy_messages(repo_root: Path) -> list[str]:
@@ -64,15 +60,16 @@ def _policy_messages(repo_root: Path) -> list[str]:
     return [violation.message for violation in check.check(context)]
 
 
-def _unit_test_runtime_state_defaults_disabled() -> None:
-    """Runtime state should be inert when the policy stays disabled."""
+def _unit_test_runtime_state_defaults_to_unversioned_governance() -> None:
+    """Fresh installs should default to explicit unversioned governance."""
     with tempfile.TemporaryDirectory() as temp_dir:
         repo_root = Path(temp_dir)
         install.install_repo(repo_root)
         state = resolve_runtime_state(repo_root)
-        assert state.enabled is False
-        assert state.displayed_project_version("1.2.3") == "1.2.3"
-        assert state.agents_header_lines() == []
+        assert state.enabled is True
+        assert state.is_unversioned is True
+        assert state.displayed_project_version("1.2.3") == "Unversioned"
+        assert "**Project Stage:** prototype" in state.agents_header_lines()
 
 
 def _unit_test_unversioned_policy_requires_unreleased_heading() -> None:
@@ -103,7 +100,20 @@ def _unit_test_unversioned_runtime_state_renders_unversioned_label() -> None:
         assert state.enabled is True
         assert state.is_unversioned is True
         assert state.displayed_project_version("9.9.9") == "Unversioned"
-        assert "**Project Stage:** beta" in state.agents_header_lines()
+        assert "**Project Stage:** beta" in state.governance_header_lines()
+
+
+def _unit_test_versioned_runtime_state_requires_declared_version() -> None:
+    """Versioned repos should reject fake fallback versions."""
+    state = ProjectGovernanceState(enabled=True, versioning_mode="versioned")
+    try:
+        state.displayed_project_version("")
+    except ValueError as exc:
+        assert "missing a declared project version" in str(exc)
+    else:  # pragma: no cover - defensive
+        raise AssertionError(
+            "Expected versioned project governance to reject empty version."
+        )
 
 
 def _unit_test_release_heading_resolution_is_scheme_aware() -> None:
@@ -111,7 +121,7 @@ def _unit_test_release_heading_resolution_is_scheme_aware() -> None:
     with tempfile.TemporaryDirectory() as temp_dir:
         repo_root = Path(temp_dir)
         install.install_repo(repo_root)
-        assert resolve_release_headings(repo_root) == ["## Version"]
+        assert resolve_release_headings(repo_root) == ["## Unreleased"]
         _write_unversioned_config(repo_root)
         assert refresh_repo(repo_root) == 0
         assert resolve_release_headings(repo_root) == ["## Unreleased"]
@@ -128,6 +138,7 @@ def _unit_test_symbol_contracts_are_stable() -> None:
     state = checker.runtime_state(Path("."))
     assert isinstance(state, ProjectGovernanceState)
     assert state.enabled is False
+    assert state.governance_header_lines() == []
     assert checker.policy_id == "project-governance"
     with tempfile.TemporaryDirectory() as temp_dir:
         repo_root = Path(temp_dir)
@@ -136,12 +147,30 @@ def _unit_test_symbol_contracts_are_stable() -> None:
         assert result == []
 
 
+def _unit_test_spec_descriptor_opts_into_governance_headers() -> None:
+    """SPEC descriptor should opt into project-governance headers."""
+    with tempfile.TemporaryDirectory() as temp_dir:
+        repo_root = Path(temp_dir)
+        install.install_repo(repo_root)
+        spec_descriptor = (
+            repo_root
+            / "devcovenant"
+            / "builtin"
+            / "profiles"
+            / "global"
+            / "assets"
+            / "SPEC.yaml"
+        )
+        content = spec_descriptor.read_text(encoding="utf-8")
+        assert "project_governance_headers: true" in content
+
+
 class GeneratedUnittestCases(unittest.TestCase):
     """unittest wrappers for module-level tests."""
 
-    def test_runtime_state_defaults_disabled(self):
-        """Run disabled-state runtime assertions."""
-        _unit_test_runtime_state_defaults_disabled()
+    def test_runtime_state_defaults_to_unversioned_governance(self):
+        """Run fresh-install unversioned-governance assertions."""
+        _unit_test_runtime_state_defaults_to_unversioned_governance()
 
     def test_unversioned_policy_requires_unreleased_heading(self):
         """Run unversioned changelog-heading assertions."""
@@ -151,6 +180,10 @@ class GeneratedUnittestCases(unittest.TestCase):
         """Run unversioned runtime label assertions."""
         _unit_test_unversioned_runtime_state_renders_unversioned_label()
 
+    def test_versioned_runtime_state_requires_declared_version(self):
+        """Run versioned runtime no-fake-version assertions."""
+        _unit_test_versioned_runtime_state_requires_declared_version()
+
     def test_release_heading_resolution_is_scheme_aware(self):
         """Run release-heading resolution assertions."""
         _unit_test_release_heading_resolution_is_scheme_aware()
@@ -158,3 +191,7 @@ class GeneratedUnittestCases(unittest.TestCase):
     def test_symbol_contracts_are_stable(self):
         """Run symbol-level project-governance assertions."""
         _unit_test_symbol_contracts_are_stable()
+
+    def test_spec_descriptor_opts_into_governance_headers(self):
+        """Run SPEC governance-header opt-in assertions."""
+        _unit_test_spec_descriptor_opts_into_governance_headers()

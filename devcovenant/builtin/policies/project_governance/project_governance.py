@@ -64,10 +64,14 @@ class ProjectGovernanceState:
         if self.is_unversioned:
             return self.unversioned_label
         token = str(declared_version or "").strip()
-        return token or "0.0.0"
+        if token:
+            return token
+        raise ValueError(
+            "Versioned repository is missing a declared project version."
+        )
 
-    def agents_header_lines(self) -> list[str]:
-        """Return AGENTS-only project-governance header lines."""
+    def governance_header_lines(self) -> list[str]:
+        """Return managed-doc governance header lines for opted-in docs."""
         if not self.enabled:
             return []
         lines = [
@@ -80,6 +84,10 @@ class ProjectGovernanceState:
         if self.build_identity:
             lines.append(f"**Build Identity:** {self.build_identity}")
         return lines
+
+    def agents_header_lines(self) -> list[str]:
+        """Return governance header lines for compatibility callers."""
+        return self.governance_header_lines()
 
 
 def resolve_runtime_state(

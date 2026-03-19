@@ -1,5 +1,5 @@
 # Installation and Lifecycle
-**Last Updated:** 2026-03-17
+**Last Updated:** 2026-03-19
 **Project Version:** 1.0.0
 
 ## Table of Contents
@@ -193,20 +193,9 @@ Runtime details that affect operations:
   DevCovenant-managed child Python commands route bytecode caches via
   `PYTHONPYCACHEPREFIX`
 - boundary truth for source-checkout alternate launcher runs
-  (`python3 -m devcovenant ...`): Python may still write bytecode for
-  `devcovenant/__init__.py` or the first launcher module before DevCovenant
-  runtime code gains control; this launcher form is supported, but its
-  pre-import bytecode boundary still belongs to shell or CI environment
-  setup
-- if you need zero repo-local launcher-process bytecode drift while
-  preserving bytecode generation, set `PYTHONPYCACHEPREFIX` in the shell/CI
-  environment before Python starts; example shell helper:
-  ```bash
-  devcov-local() {
-    PYTHONPYCACHEPREFIX="${TMPDIR:-/tmp}/devcovenant-pycache" \
-      python3 -m devcovenant "$@"
-  }
-  ```
+  (`python3 -m devcovenant ...`): DevCovenant now suppresses Python
+  cache-file writes at package import time, so this launcher form no longer
+  leaves repo-local `__pycache__/` drift behind
 
 ## First-Time Setup Runbook
 1. Run:

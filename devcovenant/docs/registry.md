@@ -1,5 +1,5 @@
 # Registry Files
-**Last Updated:** 2026-03-18
+**Last Updated:** 2026-03-19
 **Project Version:** 1.0.0
 
 ## Table of Contents
@@ -69,6 +69,8 @@ Metadata trace intent:
 - `project-governance` records whether the repo is versioned or intentionally
   unversioned, plus the configured displayed non-version label and
   unreleased changelog heading when those apply
+- fresh generic installs therefore record an explicit unversioned baseline
+  instead of relying on a fabricated placeholder version token
 - generic profile defaults now keep version-governance scheme selection
   explicit; tracked registry output therefore shows the scheme a repo chose
   intentionally instead of implying a hidden global baseline

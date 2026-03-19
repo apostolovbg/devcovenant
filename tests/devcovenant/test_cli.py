@@ -656,6 +656,95 @@ def _unit_test_package_exports_are_explicit() -> None:
     assert devcovenant.__all__ == ["__version__"]
 
 
+def _unit_test_source_checkout_import_disables_bytecode() -> None:
+    """Source-checkout imports should disable Python cache-file writes."""
+    package_init = (REPO_ROOT / "devcovenant" / "__init__.py").read_text(
+        encoding="utf-8"
+    )
+    with tempfile.TemporaryDirectory() as tmpdir:
+        repo_root = Path(tmpdir)
+        package_dir = repo_root / "devcovenant"
+        package_dir.mkdir(parents=True, exist_ok=True)
+        (repo_root / ".git").mkdir()
+        (package_dir / "__init__.py").write_text(
+            package_init,
+            encoding="utf-8",
+        )
+        (package_dir / "__main__.py").write_text(
+            "from devcovenant import __version__\n",
+            encoding="utf-8",
+        )
+        (package_dir / "cli.py").write_text(
+            "__all__ = []\n",
+            encoding="utf-8",
+        )
+        env = os.environ.copy()
+        env.pop("PYTHONDONTWRITEBYTECODE", None)
+        result = subprocess.run(
+            [
+                sys.executable,
+                "-c",
+                (
+                    "import json, os, pathlib, sys, devcovenant; "
+                    "pkg = pathlib.Path("
+                    "devcovenant.__file__).resolve().parent; "
+                    "print(json.dumps({"
+                    "'dont_write': sys.dont_write_bytecode, "
+                    "'env': os.environ.get('PYTHONDONTWRITEBYTECODE', ''), "
+                    "'pycache_exists': (pkg / '__pycache__').exists()}))"
+                ),
+            ],
+            cwd=repo_root,
+            env=env,
+            check=False,
+            capture_output=True,
+            text=True,
+        )
+        assert result.returncode == 0, result.stderr
+        payload = json.loads(result.stdout.strip())
+        assert payload["dont_write"] is True
+        assert payload["env"] == "1"
+        assert payload["pycache_exists"] is False
+
+
+def _unit_test_non_source_import_keeps_default_bytecode_mode() -> None:
+    """Non-source imports should not force bytecode suppression."""
+    package_init = (REPO_ROOT / "devcovenant" / "__init__.py").read_text(
+        encoding="utf-8"
+    )
+    with tempfile.TemporaryDirectory() as tmpdir:
+        repo_root = Path(tmpdir)
+        package_dir = repo_root / "devcovenant"
+        package_dir.mkdir(parents=True, exist_ok=True)
+        (package_dir / "__init__.py").write_text(
+            package_init,
+            encoding="utf-8",
+        )
+        env = os.environ.copy()
+        env.pop("PYTHONDONTWRITEBYTECODE", None)
+        result = subprocess.run(
+            [
+                sys.executable,
+                "-c",
+                (
+                    "import json, os, sys, devcovenant; "
+                    "print(json.dumps({"
+                    "'dont_write': sys.dont_write_bytecode, "
+                    "'env': os.environ.get('PYTHONDONTWRITEBYTECODE', '')}))"
+                ),
+            ],
+            cwd=repo_root,
+            env=env,
+            check=False,
+            capture_output=True,
+            text=True,
+        )
+        assert result.returncode == 0, result.stderr
+        payload = json.loads(result.stdout.strip())
+        assert payload["dont_write"] is False
+        assert payload["env"] == ""
+
+
 def _unit_test_runtime_classes_not_exposed_at_package_root() -> None:
     """Runtime internals should not be exposed by the package root."""
     assert not hasattr(devcovenant, "DevCovenantEngine")
@@ -778,6 +867,14 @@ class GeneratedUnittestCases(unittest.TestCase):
     def test_runtime_classes_not_exposed_at_package_root(self):
         """Run test_runtime_classes_not_exposed_at_package_root."""
         _unit_test_runtime_classes_not_exposed_at_package_root()
+
+    def test_source_checkout_import_disables_bytecode(self):
+        """Run source-checkout bytecode suppression coverage."""
+        _unit_test_source_checkout_import_disables_bytecode()
+
+    def test_non_source_import_keeps_default_bytecode_mode(self):
+        """Run non-source bytecode-default coverage."""
+        _unit_test_non_source_import_keeps_default_bytecode_mode()
 
     def test_cli_writes_run_logs_and_pointer_on_success(self):
         """Run CLI success-path run-log pointer assertions."""

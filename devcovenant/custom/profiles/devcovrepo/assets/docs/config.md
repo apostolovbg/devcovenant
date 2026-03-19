@@ -40,9 +40,9 @@ Key `engine` knobs used in this repo include:
 - `logs_keep_last` for run-log retention (`0` keeps all runs).
 - `auto_fix_enabled` for gate-managed autofix orchestration (`check` stays
   read-only regardless).
-- `pycache_prefix_enabled` and `pycache_prefix` for routing Python bytecode
-  caches away from the repo tree via `PYTHONPYCACHEPREFIX` while preserving
-  bytecode generation fidelity.
+- `pycache_prefix_enabled` and `pycache_prefix` for routing Python cache
+  files away from the repo tree for DevCovenant-managed child Python
+  commands.
 
 ## Profiles and Overrides
 Overrides merge in the order: policy defaults, profile overlays, then
@@ -70,10 +70,9 @@ DevCovenant will choose a stable repo-specific temp path automatically.
 Relative paths resolve from repo root; absolute paths are used as-is.
 This routing applies to DevCovenant-managed Python subprocesses and managed
 environment stage commands. For top-level source-checkout launches
-(`python3 -m devcovenant ...`), set `PYTHONPYCACHEPREFIX` in the shell/CI
-environment before Python starts if you want to prevent repo-local
-`__pycache__` creation for the launcher process itself. DevCovenant does not
-promise that boundary through an in-package bootstrap hook.
+(`python3 -m devcovenant ...`), DevCovenant suppresses Python cache-file
+writes automatically so the launcher process does not leave repo-local
+`__pycache__` drift behind.
 When `managed-environment` is enabled, non-managed interpreter launches
 auto-rerun in the managed interpreter. If that resolved path exists but is not
 executable, runtime emits an explicit managed-environment error and stops so

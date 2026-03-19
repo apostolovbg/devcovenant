@@ -162,10 +162,10 @@ engine:
   logs_keep_last: 0
 
   # Human-owned key.
-  # Routes DevCovenant-managed Python bytecode caches away from the repo
+  # Routes DevCovenant-managed Python cache files away from the repo
   # source tree by setting `PYTHONPYCACHEPREFIX` for subprocesses.
-  # This preserves bytecode generation fidelity while avoiding repo-local
-  # `__pycache__` drift for those managed Python commands.
+  # Source-checkout top-level launches suppress cache-file writes directly;
+  # this key still governs managed child Python commands.
   # `true` enables pycache-prefix routing, `false` leaves Python defaults.
   pycache_prefix_enabled: false
 
@@ -174,8 +174,8 @@ engine:
   # - `''` (empty string): auto-select a stable repo-specific temp path
   # - absolute path: use as-is
   # - relative path: resolve from repo root
-  # Source-checkout top-level `python3 -m devcovenant ...` launches still need
-  # shell or CI `PYTHONPYCACHEPREFIX` if zero launcher-process drift matters.
+  # Source-checkout top-level `python3 -m devcovenant ...` launches no longer
+  # need shell or CI env wrapping just to avoid repo-local cache-file drift.
   pycache_prefix: ''
 
   # Human-owned key.
@@ -275,9 +275,10 @@ pre_commit:
 # Do not activate/deactivate policies through profile manifests.
 # `project-governance` is orthogonal to `version-governance`:
 # - use it for stage / stance / versioning-mode / codename / build identity;
-# - keep it enabled even when a repo is intentionally unversioned.
+# - fresh generic installs start explicitly unversioned instead of inventing
+#   a fake numbered version.
 policy_state:
-  project-governance: false
+  project-governance: true
   raw-string-escapes: false
   version-governance: false
   version-sync: false
@@ -349,7 +350,18 @@ autogen_metadata_overlays: {}
 # - `development_stance`
 # - `versioning_mode`
 # - optional `codename` / `build_identity`
-user_metadata_overlays: {}
+#
+# Generic installs start here explicitly:
+# - `prototype`
+# - `experimental`
+# - `unversioned`
+user_metadata_overlays:
+  project-governance:
+    stage: prototype
+    development_stance: experimental
+    versioning_mode: unversioned
+    unversioned_label: Unversioned
+    unreleased_heading: '## Unreleased'
 
 # Auto-generated replacement layer.
 # Refresh-owned. Do not edit.

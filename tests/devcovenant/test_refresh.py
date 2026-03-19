@@ -38,6 +38,13 @@ def _unit_test_refresh_builds_tracked_registry_and_agents() -> None:
         assert policy_registry.exists()
         assert profile_registry.exists()
         assert agents_path.exists()
+        changelog_path = repo_root / "CHANGELOG.md"
+        spec_path = repo_root / "SPEC.md"
+        assert changelog_path.exists()
+        assert "## Unreleased" in changelog_path.read_text(encoding="utf-8")
+        spec_text = spec_path.read_text(encoding="utf-8")
+        assert "**Project Stage:** prototype" in spec_text
+        assert "**Versioning Mode:** unversioned" in spec_text
 
 
 def _unit_test_refresh_updates_managed_block_only() -> None:
@@ -426,6 +433,69 @@ def _unit_test_refresh_seeds_autofix_for_devcovrepo_when_unset() -> None:
         assert updated["engine"]["pycache_prefix_enabled"] is True
 
 
+def _unit_test_refresh_rejects_missing_version_for_versioned_repo() -> None:
+    """refresh_repo should fail when versioned repos lack a real version."""
+    with tempfile.TemporaryDirectory() as temp_dir:
+        repo_root = Path(temp_dir)
+        repo_seed_cache.copy_installed_repo(repo_root)
+        version_path = repo_root / "VERSION"
+        if version_path.exists():
+            version_path.unlink()
+
+        config_path = repo_root / "devcovenant" / "config.yaml"
+        payload = yaml.safe_load(config_path.read_text(encoding="utf-8"))
+        payload.setdefault("policy_state", {})
+        payload["policy_state"]["project-governance"] = True
+        payload.setdefault("user_metadata_overlays", {})
+        payload["user_metadata_overlays"]["project-governance"] = {
+            "stage": "stable",
+            "development_stance": "active-development",
+            "versioning_mode": "versioned",
+        }
+        config_path.write_text(
+            yaml.safe_dump(payload, sort_keys=False),
+            encoding="utf-8",
+        )
+
+        result = refresh.refresh_repo(repo_root)
+        assert result == 1
+
+
+def _unit_test_refresh_allows_unversioned_repo_without_version_file() -> None:
+    """refresh_repo should allow missing version file for unversioned repos."""
+    with tempfile.TemporaryDirectory() as temp_dir:
+        repo_root = Path(temp_dir)
+        repo_seed_cache.copy_installed_repo(repo_root)
+        version_path = repo_root / "VERSION"
+        if version_path.exists():
+            version_path.unlink()
+
+        config_path = repo_root / "devcovenant" / "config.yaml"
+        payload = yaml.safe_load(config_path.read_text(encoding="utf-8"))
+        payload.setdefault("policy_state", {})
+        payload["policy_state"]["project-governance"] = True
+        payload.setdefault("user_metadata_overlays", {})
+        payload["user_metadata_overlays"]["project-governance"] = {
+            "stage": "beta",
+            "development_stance": "active-development",
+            "versioning_mode": "unversioned",
+            "unversioned_label": "Unversioned",
+            "unreleased_heading": "## Unreleased",
+        }
+        config_path.write_text(
+            yaml.safe_dump(payload, sort_keys=False),
+            encoding="utf-8",
+        )
+
+        result = refresh.refresh_repo(repo_root)
+        assert result == 0
+
+        spec_path = repo_root / "SPEC.md"
+        spec_text = spec_path.read_text(encoding="utf-8")
+        assert "**Project Stage:** beta" in spec_text
+        assert "**Versioning Mode:** unversioned" in spec_text
+
+
 def _unit_test_refresh_renders_canonical_workflow_triggers() -> None:
     """refresh_repo should render canonical GitHub trigger syntax."""
     with tempfile.TemporaryDirectory() as temp_dir:
@@ -637,6 +707,14 @@ class GeneratedUnittestCases(unittest.TestCase):
     def test_refresh_seeds_autofix_for_devcovrepo_when_unset(self):
         """Run devcovrepo autofix seeding refresh assertions."""
         _unit_test_refresh_seeds_autofix_for_devcovrepo_when_unset()
+
+    def test_refresh_rejects_missing_version_for_versioned_repo(self):
+        """Run missing-version explicit-failure refresh assertions."""
+        _unit_test_refresh_rejects_missing_version_for_versioned_repo()
+
+    def test_refresh_allows_unversioned_repo_without_version_file(self):
+        """Run unversioned no-version refresh assertions."""
+        _unit_test_refresh_allows_unversioned_repo_without_version_file()
 
     def test_refresh_renders_canonical_workflow_triggers(self):
         """Run canonical governance-trigger rendering refresh assertions."""

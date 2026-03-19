@@ -1,5 +1,5 @@
 # Configuration
-**Last Updated:** 2026-03-18
+**Last Updated:** 2026-03-19
 **Project Version:** 1.0.0
 
 ## Table of Contents
@@ -285,10 +285,8 @@ Autofix workflow note:
   caches away from the repo tree for DevCovenant-managed Python subprocesses
   while preserving bytecode generation fidelity.
 - For source-checkout alternate launcher runs (`python3 -m devcovenant ...`),
-  set `PYTHONPYCACHEPREFIX` in the shell/CI environment before Python starts
-  if you need to prevent repo-local launcher-process `__pycache__` writes.
-- DevCovenant does not promise that boundary through repo-root startup hooks
-  or an in-package bootstrap helper.
+  DevCovenant now suppresses Python cache-file writes automatically so the
+  launcher process does not leave repo-local `__pycache__` drift behind.
 
 ## Practical Recipes
 Disable one shipped policy:
@@ -447,6 +445,9 @@ project phase and stance metadata. When `versioning_mode` is `unversioned`,
 managed docs keep the `Project Version` line but render the configured
 non-version label, and `CHANGELOG.md` uses the configured unreleased
 heading.
+
+Fresh generic installs start from this same unversioned pattern so refresh
+never fabricates a placeholder numbered release such as `0.0.0`.
 
 Add extra changelog verbs without replacing defaults:
 ```yaml

@@ -1,5 +1,5 @@
 # DevCovenant Architecture Contracts
-**Last Updated:** 2026-03-18
+**Last Updated:** 2026-03-19
 **Project Version:** 1.0.0
 
 ## Table of Contents
@@ -453,10 +453,9 @@ Invariant:
   `engine.pycache_prefix_enabled` is active so repo-local DevCovenant child
   Python commands write bytecode caches outside the repo tree while
   preserving bytecode generation fidelity.
-- source-checkout top-level `python3 -m devcovenant ...` launches can still
-  write launcher-process bytecode before DevCovenant runtime code gains
-  control; shell/CI `PYTHONPYCACHEPREFIX` owns that zero-drift boundary
-  instead of repo-root startup hooks or in-package bootstrap tricks.
+- source-checkout top-level `python3 -m devcovenant ...` launches now disable
+  Python cache-file writes at package import time, so the launcher process
+  does not leave repo-local `__pycache__/` drift behind.
 - Runtime gate state file is `devcovenant/registry/runtime/gate_status.json`.
 - `gate --status` reads gate-state and latest-run-log pointers through a
   short, read-only status path and does not mutate lifecycle state.
@@ -674,8 +673,8 @@ Invariant:
   `version-governance`; it adds lifecycle governance around it.
 - refresh resolves `Project Version` through `project-governance` so
   intentionally unversioned repos render an explicit non-version label
-  instead of a fake numbered release, and AGENTS may render additional
-  governance headers when its descriptor opts in.
+  instead of a fake numbered release, and opted-in managed docs may render
+  additional governance headers when their descriptor opts in.
 - gate changelog helpers and changelog-coverage resolve release headings
   through `project-governance`, so intentionally unversioned repos can use
   `## Unreleased` while versioned repos keep `## Version ...` sections.
