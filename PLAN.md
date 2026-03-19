@@ -44,12 +44,16 @@ dependency-ordered, factual, and current.
    upgrade/gate paths so existing non-empty, non-one-line docs keep their
    authored body content while DevCovenant updates only managed headers and
    explicit managed blocks.
-2. [not done] Strictness And Naming Cleanup.
-   Remove remaining misleading fallback-style behavior/naming and clean stale
-   legacy/fallback residue in tests/helpers where runtime is already strict.
-3. [not done] Final Anti-Bullshit Closure.
-   Re-run the audit, confirm no live legacy/fallback pathways remain, and
-   leave docs/tests aligned with actual runtime truth.
+2. [not done] Docs And Contract Harmonization.
+   Remove repo-specific product wording such as the `version-governance`
+   `release slices` note, make the README model explicit
+   (`README.md` is the authored source and `devcovenant/README.md` is the
+   synced repo-only-pruned projection), and align managed-doc-assets wording
+   with the real doc/asset synchronization contract.
+3. [not done] Strictness, Naming, And Final Closure.
+   Clean the remaining misleading fallback/legacy naming where runtime is
+   already strict, then re-run the anti-bullshit audit and close the plan
+   only when docs, assets, policies, and runtime tell the same story.
 
 ## Validation Routine
 - Verify checks and tests pass.

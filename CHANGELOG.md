@@ -57,6 +57,18 @@ Example:
 ## Version 1.0.0
 
 - 2026-03-19:
+  Change: Refined the remaining plan items so the closure path now focuses
+  on docs-and-contract harmonization first, then strictness, naming, and
+  final anti-bullshit closure.
+  Why: Narrowed the roadmap to the exact cleanup still left after the latest
+  audit and the README-model clarification for this repo.
+  Impact: `PLAN.md` now states the real remaining release-readiness work
+  without extra scope or implied redesign.
+  Files:
+  CHANGELOG.md
+  PLAN.md
+
+- 2026-03-19:
   Change: Corrected managed-doc rendering so empty managed blocks keep
   their `<!-- DEVCOV:BEGIN -->` / `<!-- DEVCOV:END -->` markers and
   restored the strict replacement path for older DevCovenant-shaped docs.
