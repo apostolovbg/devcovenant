@@ -5,6 +5,7 @@ from __future__ import annotations
 import io
 import json
 import os
+import shutil
 import subprocess
 import sys
 import tempfile
@@ -69,6 +70,11 @@ def _unit_test_cli_dispatches_command_and_args(monkeypatch) -> None:
         "_initialize_cli_run_logging",
         lambda *_args, **_kwargs: None,
     )
+    monkeypatch.setattr(
+        cli.execution_runtime_module,
+        "cleanup_source_checkout_import_cache",
+        lambda _repo_root: False,
+    )
     monkeypatch.setattr(sys, "argv", ["devcovenant", "check"])
 
     try:
@@ -81,6 +87,66 @@ def _unit_test_cli_dispatches_command_and_args(monkeypatch) -> None:
     assert code == 0
     assert captured["command"] == "check"
     assert captured["argv"] == []
+
+
+def _unit_test_cli_cleans_source_checkout_import_cache(monkeypatch) -> None:
+    """CLI should clean source-checkout import cache before dispatch."""
+    repo_root = REPO_ROOT
+    captured: list[Path] = []
+
+    monkeypatch.setattr(
+        cli.execution_runtime_module,
+        "find_git_root",
+        lambda _path: repo_root,
+    )
+    monkeypatch.setattr(
+        cli.execution_runtime_module,
+        "cleanup_source_checkout_import_cache",
+        lambda _repo_root: captured.append(_repo_root) or True,
+    )
+    monkeypatch.setattr(
+        cli.execution_runtime_module,
+        "configure_repo_pycache_prefix",
+        lambda _repo_root: False,
+    )
+    monkeypatch.setattr(
+        cli.execution_runtime_module,
+        "configure_output_mode_from_config",
+        lambda _repo_root: None,
+    )
+    monkeypatch.setattr(
+        cli.execution_runtime_module,
+        "configure_logs_keep_last_from_config",
+        lambda _repo_root: None,
+    )
+    monkeypatch.setattr(
+        cli,
+        "_initialize_cli_run_logging",
+        lambda *_args, **_kwargs: None,
+    )
+    monkeypatch.setattr(
+        cli,
+        "_maybe_reexec_managed_environment",
+        lambda _command, _args: None,
+    )
+    monkeypatch.setattr(
+        cli,
+        "_load_command_module",
+        lambda _command: SimpleNamespace(
+            main=lambda _argv: (_ for _ in ()).throw(SystemExit(0))
+        ),
+    )
+    monkeypatch.setattr(sys, "argv", ["devcovenant", "check"])
+
+    try:
+        cli.main()
+    except SystemExit as exc:
+        code = exc.code
+    else:  # pragma: no cover - defensive
+        raise AssertionError("Expected SystemExit from cli.main().")
+
+    assert code == 0
+    assert captured == [repo_root]
 
 
 def _unit_test_cli_unknown_command_fails(monkeypatch) -> None:
@@ -707,6 +773,30 @@ def _unit_test_source_checkout_import_disables_bytecode() -> None:
         assert payload["pycache_exists"] is False
 
 
+def _unit_test_source_checkout_import_cleans_repo_cache_on_exit() -> None:
+    """Source imports should remove their own package cache on exit."""
+    cache_dir = REPO_ROOT / "devcovenant" / "__pycache__"
+    if cache_dir.exists():
+        shutil.rmtree(cache_dir)
+    env = os.environ.copy()
+    env.pop("PYTHONDONTWRITEBYTECODE", None)
+    result = subprocess.run(
+        [
+            sys.executable,
+            "-c",
+            "import devcovenant; print(devcovenant.__version__)",
+        ],
+        cwd=REPO_ROOT,
+        env=env,
+        check=False,
+        capture_output=True,
+        text=True,
+    )
+    assert result.returncode == 0, result.stderr
+    assert result.stdout.strip() == "1.0.0"
+    assert not cache_dir.exists()
+
+
 def _unit_test_non_source_import_keeps_default_bytecode_mode() -> None:
     """Non-source imports should not force bytecode suppression."""
     package_init = (REPO_ROOT / "devcovenant" / "__init__.py").read_text(
@@ -783,6 +873,16 @@ class GeneratedUnittestCases(unittest.TestCase):
         monkeypatch = MonkeyPatch()
         try:
             _unit_test_cli_unknown_command_fails(monkeypatch=monkeypatch)
+        finally:
+            monkeypatch.undo()
+
+    def test_cli_cleans_source_checkout_import_cache(self):
+        """Run test_cli_cleans_source_checkout_import_cache."""
+        monkeypatch = MonkeyPatch()
+        try:
+            _unit_test_cli_cleans_source_checkout_import_cache(
+                monkeypatch=monkeypatch
+            )
         finally:
             monkeypatch.undo()
 
@@ -871,6 +971,10 @@ class GeneratedUnittestCases(unittest.TestCase):
     def test_source_checkout_import_disables_bytecode(self):
         """Run source-checkout bytecode suppression coverage."""
         _unit_test_source_checkout_import_disables_bytecode()
+
+    def test_source_checkout_import_cleans_repo_cache_on_exit(self):
+        """Run source-checkout package-cache cleanup coverage."""
+        _unit_test_source_checkout_import_cleans_repo_cache_on_exit()
 
     def test_non_source_import_keeps_default_bytecode_mode(self):
         """Run non-source bytecode-default coverage."""

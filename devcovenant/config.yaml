@@ -114,6 +114,7 @@ doc_assets:
 
 install:
   generic_config: false
+  import_managed_docs: []
 
 # -------------------------------------------------------------------
 # Engine behavior

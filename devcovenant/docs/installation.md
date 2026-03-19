@@ -38,7 +38,16 @@ On Windows, `py -m devcovenant ...` is a common equivalent launcher form.
 Command contract:
 - `install`:
   copy `devcovenant/`, seed generic config, and seed tracked registry
-  structure without copying source runtime logs or runtime registry files
+  structure without copying source runtime logs or runtime registry files;
+  when compatible pre-authored managed docs already exist, record them for
+  first-refresh adoption instead of overwriting their authored body content
+- document preservation rules are exact across `install`, `deploy`,
+  `refresh`, `upgrade`, and gate-triggered refresh/autofix:
+  - missing docs may be created from assets/templates
+  - empty docs may be replaced fully
+  - one-line docs may be replaced fully
+  - otherwise only managed header lines and explicit `<!-- DEVCOV* -->`
+    blocks may change
 - `deploy`:
   require `install.generic_config: false`, then run full refresh
 - `clean`:
@@ -103,6 +112,10 @@ Recommended operating sequence:
 1. Install (`install`) once.
 2. Review config (`devcovenant/config.yaml`).
 3. Activate (`deploy`).
+   Compatible pre-authored DevCovenant-shaped docs such as `SPEC.md`,
+   `README.md`, and `PLAN.md` can stay in place before this step; the first
+   deploy adopts them when their `DevCovenant Version` is at least as new as
+   the runtime being installed.
 4. Do work under start -> mid preflight loop -> test -> end gates.
 5. Use `refresh`/`upgrade` when contracts or core content change.
 6. Use `clean` when local build/cache residue needs pruning after those runs
@@ -193,9 +206,10 @@ Runtime details that affect operations:
   DevCovenant-managed child Python commands route bytecode caches via
   `PYTHONPYCACHEPREFIX`
 - boundary truth for source-checkout alternate launcher runs
-  (`python3 -m devcovenant ...`): DevCovenant now suppresses Python
-  cache-file writes at package import time, so this launcher form no longer
-  leaves repo-local `__pycache__/` drift behind
+  (`python3 -m devcovenant ...`): DevCovenant keeps this launcher form clean
+  by suppressing later cache-file writes and removing the package-import
+  cache Python may emit before CLI startup, so it no longer leaves
+  repo-local `__pycache__/` drift behind
 
 ## First-Time Setup Runbook
 1. Run:

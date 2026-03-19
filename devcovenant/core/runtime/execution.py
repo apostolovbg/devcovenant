@@ -598,6 +598,26 @@ def configure_repo_pycache_prefix(repo_root: Path) -> bool:
     return True
 
 
+def cleanup_source_checkout_import_cache(
+    repo_root: Path,
+    *,
+    runtime_file: str | Path | None = None,
+) -> bool:
+    """Remove source-package import cache that Python may emit pre-startup."""
+    module_path = Path(runtime_file or __file__).resolve()
+    try:
+        package_root = module_path.parents[3]
+    except IndexError:
+        return False
+    if package_root != repo_root.resolve():
+        return False
+    cache_dir = repo_root / "devcovenant" / "__pycache__"
+    if not cache_dir.exists():
+        return False
+    shutil.rmtree(cache_dir, ignore_errors=True)
+    return True
+
+
 def cleanup_repo_bytecode_artifacts(repo_root: Path) -> bool:
     """Remove repo-local bytecode artifacts when routing is enabled."""
     if not _read_pycache_prefix_enabled_from_config(repo_root):

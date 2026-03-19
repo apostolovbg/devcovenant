@@ -211,6 +211,10 @@ Versioning and lifecycle-governance metadata are profile-driven:
   installs do not invent fake numbered versions
 - `global` seeds `policy_state.version-governance: false` in the generated
   config template so version-governance stays an explicit opt-in.
+- `global` doc assets also define the managed-doc adoption contract used
+  during first install/deploy, where compatible pre-authored docs such as
+  `SPEC.md`, `README.md`, and `PLAN.md` can be imported as seed content
+  instead of being overwritten.
 - `defaults` seeds `version-governance` with shared path, ordering, and
   scheme-governance controls: `version_file`, `changelog_file`,
   `changelog_header_prefix`, `enforce_bumping`,
@@ -374,7 +378,12 @@ Asset materialization rules:
   `build.yml`/`publish.yml` workflows can set `PYTHONPYCACHEPREFIX` at job
   scope (DevCovenant uses `.gha-pycache`) for managed child commands and
   stable CI behavior; source-checkout `python -m devcovenant ...` launches
-  now suppress Python cache-file writes for the launcher process directly
+  now suppress Python cache-file writes for the launcher process directly and
+  clean the package-import cache on exit so source repos stay free of
+  `__pycache__/` drift
+- the global `README.yaml` asset intentionally leaves the root `README.md`
+  managed note blank; repo-specific authored README content remains outside
+  managed regions unless the file is missing, empty, or one line only
 
 Hook rules:
 - pre-commit fragments merge into generated `.pre-commit-config.yaml`

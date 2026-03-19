@@ -14,7 +14,7 @@ from unittest.mock import patch
 
 import yaml
 
-from devcovenant import refresh
+from devcovenant import install, refresh
 from tests.devcovenant import repo_seed_cache
 
 
@@ -67,6 +67,140 @@ def _unit_test_refresh_updates_managed_block_only() -> None:
         updated = readme.read_text(encoding="utf-8")
         assert "User body" in updated
         assert "Doc ID:" in updated
+
+
+def _unit_test_refresh_imports_same_version_header_only_spec_doc() -> None:
+    """refresh_repo should adopt a same-version preauthored SPEC body."""
+    with tempfile.TemporaryDirectory() as temp_dir:
+        repo_root = Path(temp_dir)
+        spec_path = repo_root / "SPEC.md"
+        spec_path.parent.mkdir(parents=True, exist_ok=True)
+        spec_path.write_text(
+            "# Product Spec\n"
+            "**Doc ID:** SPEC\n"
+            "**Doc Type:** specification\n"
+            "**Project Version:** 9.9.9\n"
+            "**DevCovenant Version:** 1.0.0\n\n"
+            "Custom imported spec body.\n",
+            encoding="utf-8",
+        )
+
+        install.install_repo(repo_root)
+        result = refresh.refresh_repo(repo_root)
+        assert result == 0
+
+        updated = spec_path.read_text(encoding="utf-8")
+        assert "**Project Stage:** prototype" in updated
+        assert "**Versioning Mode:** unversioned" in updated
+        assert "Custom imported spec body." in updated
+
+
+def _unit_test_refresh_imports_same_version_header_only_plan_doc() -> None:
+    """refresh_repo should adopt a same-version preauthored PLAN body."""
+    with tempfile.TemporaryDirectory() as temp_dir:
+        repo_root = Path(temp_dir)
+        plan_path = repo_root / "PLAN.md"
+        plan_path.parent.mkdir(parents=True, exist_ok=True)
+        plan_path.write_text(
+            "# App Plan\n"
+            "**Doc ID:** PLAN\n"
+            "**Doc Type:** plan\n"
+            "**Project Version:** 9.9.9\n"
+            "**DevCovenant Version:** 1.0.0\n\n"
+            "Custom imported planning body.\n",
+            encoding="utf-8",
+        )
+
+        install.install_repo(repo_root)
+        result = refresh.refresh_repo(repo_root)
+        assert result == 0
+
+        updated = plan_path.read_text(encoding="utf-8")
+        assert "Custom imported planning body." in updated
+        assert "**DevCovenant Version:** 1.0.0" in updated
+
+
+def _unit_test_refresh_preserves_existing_non_placeholder_plan_body() -> None:
+    """refresh_repo should preserve existing non-placeholder PLAN content."""
+    with tempfile.TemporaryDirectory() as temp_dir:
+        repo_root = Path(temp_dir)
+        repo_seed_cache.copy_installed_repo(repo_root)
+
+        plan_path = repo_root / "PLAN.md"
+        plan_path.write_text(
+            "# Development Plan\n"
+            "**Doc ID:** PLAN\n"
+            "**Doc Type:** plan\n"
+            "**Project Version:** 1.0.0\n"
+            "**Last Updated:** 2026-03-01\n"
+            "**DevCovenant Version:** 1.0.0\n\n"
+            "This is the real planning body.\n\n"
+            "## Active Work\n"
+            "1. [not done] Preserve authored docs.\n",
+            encoding="utf-8",
+        )
+
+        result = refresh.refresh_repo(repo_root)
+        assert result == 0
+
+        updated = plan_path.read_text(encoding="utf-8")
+        assert "This is the real planning body." in updated
+        assert "Preserve authored docs." in updated
+        assert "Item placeholder." not in updated
+
+
+def _unit_test_refresh_replaces_older_header_only_spec_doc() -> None:
+    """refresh_repo should replace older DevCovenant SPEC seeds."""
+    with tempfile.TemporaryDirectory() as temp_dir:
+        repo_root = Path(temp_dir)
+        spec_path = repo_root / "SPEC.md"
+        spec_path.parent.mkdir(parents=True, exist_ok=True)
+        spec_path.write_text(
+            "# Product Spec\n"
+            "**Doc ID:** SPEC\n"
+            "**Doc Type:** specification\n"
+            "**Project Version:** 9.9.9\n"
+            "**DevCovenant Version:** 0.9.0\n\n"
+            "Old imported body.\n",
+            encoding="utf-8",
+        )
+
+        install.install_repo(repo_root)
+        result = refresh.refresh_repo(repo_root)
+        assert result == 0
+
+        updated = spec_path.read_text(encoding="utf-8")
+        assert "Old imported body." not in updated
+        assert "This is a generic SPEC guide template." in updated
+
+
+def _unit_test_refresh_imports_same_version_managed_block_doc() -> None:
+    """refresh_repo should adopt same-version managed-block docs."""
+    with tempfile.TemporaryDirectory() as temp_dir:
+        repo_root = Path(temp_dir)
+        readme_path = repo_root / "README.md"
+        readme_path.parent.mkdir(parents=True, exist_ok=True)
+        readme_path.write_text(
+            "# Seed README\n"
+            "**Doc ID:** README\n"
+            "**Doc Type:** repo-readme\n"
+            "**Project Version:** 0.1.0\n"
+            "**DevCovenant Version:** 1.0.0\n\n"
+            "<!-- DEVCOV:BEGIN -->\n"
+            "stale block\n"
+            "<!-- DEVCOV:END -->\n\n"
+            "Imported README body.\n",
+            encoding="utf-8",
+        )
+
+        install.install_repo(repo_root)
+        result = refresh.refresh_repo(repo_root)
+        assert result == 0
+
+        updated = readme_path.read_text(encoding="utf-8")
+        assert "Imported README body." in updated
+        assert "stale block" not in updated
+        assert "**DevCovenant Version:** 1.0.0" in updated
 
 
 def _unit_test_refresh_updates_all_managed_blocks() -> None:
@@ -205,13 +339,18 @@ def _unit_test_refresh_renders_devcov_managed_doc_intros() -> None:
         )
         changelog = (repo_root / "CHANGELOG.md").read_text(encoding="utf-8")
 
-        assert "**Contributor note:** this repository is managed by " in readme
-        assert "Use this README and `devcovenant/docs/*.md`" in readme
+        assert "**Contributor note:** this repository is managed by " not in (
+            readme
+        )
+        assert "<!-- DEVCOV:BEGIN -->\n\n<!-- DEVCOV:END -->" in readme
+        assert "Describe the project this repository ships" in readme
+        assert "If you already drafted DevCovenant-shaped docs" in readme
         assert "**Managed runtime note:** this `devcovenant/` folder" in (
             package_readme
         )
-        assert "Use this README for DevCovenant commands, lifecycle," in (
-            package_readme
+        assert (
+            "DevCovenant is a Repository Governance Framework."
+            in package_readme
         )
         assert "This opening section is managed by DevCovenant." in (
             contributing
@@ -651,6 +790,26 @@ class GeneratedUnittestCases(unittest.TestCase):
     def test_refresh_updates_managed_block_only(self):
         """Run test_refresh_updates_managed_block_only."""
         _unit_test_refresh_updates_managed_block_only()
+
+    def test_refresh_imports_same_version_header_only_spec_doc(self):
+        """Run same-version SPEC import assertions."""
+        _unit_test_refresh_imports_same_version_header_only_spec_doc()
+
+    def test_refresh_imports_same_version_header_only_plan_doc(self):
+        """Run same-version PLAN import assertions."""
+        _unit_test_refresh_imports_same_version_header_only_plan_doc()
+
+    def test_refresh_preserves_existing_non_placeholder_plan_body(self):
+        """Run existing PLAN preservation assertions."""
+        _unit_test_refresh_preserves_existing_non_placeholder_plan_body()
+
+    def test_refresh_replaces_older_header_only_spec_doc(self):
+        """Run older SPEC replacement assertions."""
+        _unit_test_refresh_replaces_older_header_only_spec_doc()
+
+    def test_refresh_imports_same_version_managed_block_doc(self):
+        """Run same-version managed-block import assertions."""
+        _unit_test_refresh_imports_same_version_managed_block_doc()
 
     def test_refresh_updates_all_managed_blocks(self):
         """Run test_refresh_updates_all_managed_blocks."""

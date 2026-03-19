@@ -357,6 +357,9 @@ def main(argv: list[str] | None = None) -> None:
     os.environ[_TOP_LEVEL_COMMAND_ENV] = first
     repo_root = execution_runtime_module.find_git_root(Path.cwd())
     if repo_root is not None:
+        execution_runtime_module.cleanup_source_checkout_import_cache(
+            repo_root
+        )
         execution_runtime_module.configure_repo_pycache_prefix(repo_root)
         execution_runtime_module.configure_output_mode_from_config(repo_root)
         execution_runtime_module.configure_logs_keep_last_from_config(

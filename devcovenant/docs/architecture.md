@@ -454,8 +454,9 @@ Invariant:
   Python commands write bytecode caches outside the repo tree while
   preserving bytecode generation fidelity.
 - source-checkout top-level `python3 -m devcovenant ...` launches now disable
-  Python cache-file writes at package import time, so the launcher process
-  does not leave repo-local `__pycache__/` drift behind.
+  later Python cache-file writes and proactively remove the package-import
+  cache Python may emit before CLI startup, so the launcher process does not
+  leave repo-local `__pycache__/` drift behind.
 - Runtime gate state file is `devcovenant/registry/runtime/gate_status.json`.
 - `gate --status` reads gate-state and latest-run-log pointers through a
   short, read-only status path and does not mutate lifecycle state.
@@ -675,6 +676,18 @@ Invariant:
   intentionally unversioned repos render an explicit non-version label
   instead of a fake numbered release, and opted-in managed docs may render
   additional governance headers when their descriptor opts in.
+- refresh can adopt pre-authored DevCovenant-shaped docs such as `SPEC.md`,
+  `README.md`, or `PLAN.md` during first bootstrap: if an existing target doc
+  already carries matching `Doc ID` /
+  `Doc Type` headers and a `DevCovenant Version` equal to or newer than the
+  running runtime, refresh upgrades its managed header/block surfaces instead
+  of discarding the authored body outright.
+- document replacement rules are exact across refresh/bootstrap paths:
+  - missing docs may be created from assets/templates
+  - empty docs may be replaced fully
+  - one-line docs may be replaced fully
+  - otherwise only managed header lines and explicit `<!-- DEVCOV* -->`
+    blocks may change
 - gate changelog helpers and changelog-coverage resolve release headings
   through `project-governance`, so intentionally unversioned repos can use
   `## Unreleased` while versioned repos keep `## Version ...` sections.

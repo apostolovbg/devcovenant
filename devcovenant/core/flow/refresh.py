@@ -10,6 +10,7 @@ from datetime import datetime, timezone
 from pathlib import Path
 from typing import Dict, List
 
+import semver
 import yaml
 
 import devcovenant.core.services.metadata as metadata_runtime
@@ -100,6 +101,11 @@ _MANAGED_DOC_REQUIRED_BOOLEAN_KEYS = (
     "devcovenant_version",
 )
 _MANAGED_DOC_OPTIONAL_BOOLEAN_KEYS = ("project_governance_headers",)
+_SEMVER_COMPARE_RE = re.compile(
+    r"^(?P<core>\d+(?:\.\d+){0,2})"
+    r"(?:-(?P<prerelease>[0-9A-Za-z.-]+))?"
+    r"(?:\+(?P<build>[0-9A-Za-z.-]+))?$"
+)
 
 
 def _utc_today() -> str:
@@ -125,6 +131,55 @@ def _metadata_string_token(raw: object) -> str:
                 return token
         return ""
     return str(raw or "").strip()
+
+
+def _normalize_devcovenant_version_for_compare(raw: str) -> str:
+    """Normalize DevCovenant version text into SemVer-compatible form."""
+    token = str(raw or "").strip()
+    if not token:
+        raise ValueError("DevCovenant version cannot be empty.")
+    if token[:1] in {"v", "V"}:
+        token = token[1:].strip()
+    match = _SEMVER_COMPARE_RE.fullmatch(token)
+    if match is None:
+        raise ValueError(f"Invalid DevCovenant version string `{raw}`.")
+    core_parts = [part.strip() for part in match.group("core").split(".")]
+    if any(not part.isdigit() for part in core_parts):
+        raise ValueError(f"Invalid DevCovenant version string `{raw}`.")
+    while len(core_parts) < 3:
+        core_parts.append("0")
+    normalized = ".".join(core_parts[:3])
+    prerelease = str(match.group("prerelease") or "").strip()
+    build = str(match.group("build") or "").strip()
+    if prerelease:
+        normalized = f"{normalized}-{prerelease}"
+    if build:
+        normalized = f"{normalized}+{build}"
+    semver.Version.parse(normalized)
+    return normalized
+
+
+def _parse_devcovenant_version_for_compare(raw: str) -> semver.Version:
+    """Parse one DevCovenant version for ordering checks."""
+    return semver.Version.parse(
+        _normalize_devcovenant_version_for_compare(raw)
+    )
+
+
+def _install_import_managed_docs(config: dict[str, object]) -> set[str]:
+    """Return install-recorded managed-doc import seeds from config."""
+    install_block = config.get("install")
+    if not isinstance(install_block, dict):
+        return set()
+    raw_docs = install_block.get("import_managed_docs")
+    if not isinstance(raw_docs, list):
+        return set()
+    selected: set[str] = set()
+    for item in raw_docs:
+        normalized = _normalize_doc_name(str(item))
+        if normalized:
+            selected.add(normalized)
+    return selected
 
 
 def _project_version_file_from_config(config: dict[str, object]) -> str:
@@ -758,7 +813,7 @@ def _render_doc(
 
     block_body = _compose_managed_block_body(descriptor)
     managed_block = ""
-    if block_body:
+    if "managed_block" in descriptor:
         managed_block = _render_block(BLOCK_BEGIN, BLOCK_END, block_body)
 
     body_lines = _render_descriptor_body(
@@ -937,6 +992,85 @@ def _generated_header_text(rendered: str) -> str:
     return "\n".join(header_lines).strip("\n")
 
 
+def _generated_header_map(text: str) -> dict[str, str]:
+    """Return normalized generated-header label/value pairs from one doc."""
+    header_text = _generated_header_text(text)
+    if not header_text:
+        return {}
+    result: dict[str, str] = {}
+    for line in header_text.splitlines():
+        stripped = line.strip()
+        if not stripped.startswith("**") or ":**" not in stripped:
+            continue
+        label_part, value_part = stripped.split(":**", 1)
+        label = label_part.strip("* ").strip().lower()
+        result[label] = value_part.strip()
+    return result
+
+
+def _is_importable_managed_doc(
+    current: str,
+    rendered: str,
+) -> bool:
+    """Return True when current doc is a valid import seed for refresh."""
+    current_headers = _generated_header_map(current)
+    rendered_headers = _generated_header_map(rendered)
+    if not current_headers or not rendered_headers:
+        return False
+
+    for key in ("doc id", "doc type"):
+        current_value = current_headers.get(key, "")
+        rendered_value = rendered_headers.get(key, "")
+        if not current_value or current_value != rendered_value:
+            return False
+
+    current_version = current_headers.get("devcovenant version", "")
+    rendered_version = rendered_headers.get("devcovenant version", "")
+    if not current_version or not rendered_version:
+        return False
+    try:
+        return _parse_devcovenant_version_for_compare(
+            current_version
+        ) >= _parse_devcovenant_version_for_compare(rendered_version)
+    except ValueError:
+        return False
+
+
+def _is_devcovenant_shaped_target_doc(
+    current: str,
+    rendered: str,
+) -> bool:
+    """Return True when current doc already matches target doc identity."""
+    current_headers = _generated_header_map(current)
+    rendered_headers = _generated_header_map(rendered)
+    if not current_headers or not rendered_headers:
+        return False
+    for key in ("doc id", "doc type"):
+        current_value = current_headers.get(key, "")
+        rendered_value = rendered_headers.get(key, "")
+        if not current_value or current_value != rendered_value:
+            return False
+    return True
+
+
+def _merge_header_only_import_doc(
+    current: str,
+    rendered: str,
+) -> tuple[str, bool]:
+    """Inject managed content while preserving imported body content."""
+    header_text, managed_block = _rendered_header_and_block(rendered)
+    if not header_text:
+        return rendered, rendered != current
+    preserved = _strip_existing_generated_headers(current).strip("\n")
+    parts = [header_text.strip("\n")]
+    if managed_block:
+        parts.append(managed_block.strip("\n"))
+    if preserved:
+        parts.append(preserved)
+    updated = "\n\n".join(part for part in parts if part).rstrip() + "\n"
+    return updated, updated != current
+
+
 def _merge_first_block_preserves(
     *,
     source_text: str,
@@ -1025,9 +1159,14 @@ def _inject_managed_header_and_block(
     rendered: str,
 ) -> tuple[str, bool]:
     """Inject rendered header/managed block into unmanaged existing docs."""
+    if _is_devcovenant_shaped_target_doc(
+        current, rendered
+    ) and not _is_importable_managed_doc(current, rendered):
+        return rendered, rendered != current
+
     header_text, managed_block = _rendered_header_and_block(rendered)
     if not managed_block:
-        return rendered, rendered != current
+        return _merge_header_only_import_doc(current, rendered)
 
     preserved = _strip_existing_generated_headers(current)
     leading_preserve_blocks, preserved_remainder = (
@@ -1215,6 +1354,7 @@ def _sync_doc(
     project_version: str,
     devcovenant_version: str,
     project_governance_state: ProjectGovernanceState,
+    import_managed_docs: set[str],
 ) -> bool:
     """Synchronize one managed doc from descriptor content."""
     rendered = _render_doc(
@@ -1238,15 +1378,28 @@ def _sync_doc(
         target.write_text(rendered, encoding="utf-8")
         return True
 
+    importable_seed = (
+        doc_name in import_managed_docs
+        and _is_importable_managed_doc(current, rendered)
+    )
     if doc_name == "AGENTS.md":
         updated, changed = _sync_agents_content(current, rendered)
     else:
         if _managed_block_spans(current):
-            updated, changed = _replace_managed_block(current, rendered)
+            if importable_seed:
+                updated, changed = _replace_managed_block(current, rendered)
+            else:
+                updated, changed = _replace_managed_block(current, rendered)
         else:
-            updated, changed = _inject_managed_header_and_block(
-                current, rendered
-            )
+            if importable_seed:
+                updated, changed = _merge_header_only_import_doc(
+                    current,
+                    rendered,
+                )
+            else:
+                updated, changed = _inject_managed_header_and_block(
+                    current, rendered
+                )
     if not changed:
         return False
 
@@ -2717,12 +2870,14 @@ def refresh_repo(repo_root: Path) -> int:
             declared_project_version
         )
         devcovenant_version = _read_devcovenant_version(repo_root)
+        import_managed_docs = _install_import_managed_docs(config)
         _sync_doc(
             repo_root,
             "AGENTS.md",
             project_version=project_version,
             devcovenant_version=devcovenant_version,
             project_governance_state=project_governance_state,
+            import_managed_docs=import_managed_docs,
         )
     except ValueError as error:
         print_step(f"Refresh failed: {error}", "🚫")
@@ -2840,6 +2995,7 @@ def refresh_repo(repo_root: Path) -> int:
         print_step(f"Project version resolution failed: {error}", "🚫")
         return 1
     devcovenant_version = _read_devcovenant_version(repo_root)
+    import_managed_docs = _install_import_managed_docs(config)
     try:
         synced = [
             doc
@@ -2850,6 +3006,7 @@ def refresh_repo(repo_root: Path) -> int:
                 project_version=project_version,
                 devcovenant_version=devcovenant_version,
                 project_governance_state=project_governance_state,
+                import_managed_docs=import_managed_docs,
             )
         ]
     except ValueError as error:

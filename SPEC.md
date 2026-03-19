@@ -8,6 +8,10 @@
 **Last Updated:** 2026-03-19
 **DevCovenant Version:** 1.0.0
 
+<!-- DEVCOV:BEGIN -->
+
+<!-- DEVCOV:END -->
+
 This is a generic SPEC guide template.
 
 Use `SPEC.md` only when your repository needs a durable specification layer.

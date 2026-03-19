@@ -124,6 +124,11 @@ install:
   # - false: human completed review; deploy is allowed.
   generic_config: true
 
+  # Refresh-owned install memory for pre-authored managed-doc imports.
+  # `install` records eligible existing DevCovenant-shaped docs here so the
+  # first refresh/deploy can adopt them instead of overwriting them.
+  import_managed_docs: []
+
 # ---------------------------------------------------------------------------
 # Engine behavior
 # ---------------------------------------------------------------------------

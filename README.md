@@ -6,11 +6,7 @@
 **DevCovenant Version:** 1.0.0
 
 <!-- DEVCOV:BEGIN -->
-**Contributor note:** this repository is managed by DevCovenant.
-Read `AGENTS.md` for repository workflow and policy rules.
-Use this README and `devcovenant/docs/*.md` for the DevCovenant
-commands, lifecycle, configuration, and evidence model used in this
-repository.
+
 <!-- DEVCOV:END -->
 
 DevCovenant is a Repository Governance Framework.

@@ -57,6 +57,112 @@ Example:
 ## Version 1.0.0
 
 - 2026-03-19:
+  Change: Corrected managed-doc rendering so empty managed blocks keep
+  their `<!-- DEVCOV:BEGIN -->` / `<!-- DEVCOV:END -->` markers and
+  restored the strict replacement path for older DevCovenant-shaped docs.
+  Why: Corrected an intentionally blank root `README.md` managed block that
+  had been collapsed into no block at all, and fixed the first pass that
+  briefly let older SPEC seeds preserve body text that should be replaced.
+  Impact: Preserved explicit empty managed blocks in `README.md` and
+  `PLAN.md`, restored strict replacement for older seeded docs, and
+  covered the exact behavior in refresh tests.
+  Files:
+  CHANGELOG.md
+  devcovenant/core/flow/refresh.py
+
+- 2026-03-19:
+  Change: Restored `PLAN.md` as a real repo roadmap and fixed refresh so
+  existing non-empty, non-one-line docs keep their authored body while only
+  managed headers and explicit managed blocks are synchronized, including
+  empty managed blocks that must keep their markers.
+  Why: Prevented `PLAN.md` from staying on a bad full-replacement path, which
+  violated the agreed document rules for refresh/install/deploy/upgrade
+  behavior and had also collapsed an intentionally empty root `README.md`
+  managed block into no block at all.
+  Impact: Existing authored docs now survive refresh correctly, the exact
+  document rules are recorded in the plan and docs, `PLAN.md` no longer
+  collapses back to placeholder content on sync, and root `README.md`
+  keeps an empty managed block with its markers intact.
+  Files:
+  CHANGELOG.md
+  PLAN.md
+  README.md
+  devcovenant/README.md
+  devcovenant/builtin/profiles/global/assets/README.yaml
+  devcovenant/core/flow/refresh.py
+  devcovenant/docs/architecture.md
+  devcovenant/docs/installation.md
+  devcovenant/docs/profiles.md
+  devcovenant/docs/workflow.md
+  tests/devcovenant/test_refresh.py
+
+- 2026-03-19:
+  Change: Hardened source-checkout startup so Python cache files no longer
+  linger in the repo and restored the audit remediation plan to the real
+  three-slice Item 1/2/3 closure path.
+  Why: The anti-bullshit audit still found live repo drift from
+  `devcovenant/__pycache__`, and the routed docs needed to say clearly that
+  source imports now clean their own package cache as part of that fix.
+  Impact: Source imports now clean their own package cache on exit, the live
+  cache drift repro is closed, and the plan again tracks the remaining strict
+  follow-up work truthfully.
+  Files:
+  CHANGELOG.md
+  devcovenant/__init__.py
+  devcovenant/cli.py
+  devcovenant/builtin/profiles/global/assets/devcovenant/README.yaml
+  devcovenant/core/runtime/execution.py
+  devcovenant/docs/architecture.md
+  devcovenant/docs/config.md
+  devcovenant/docs/installation.md
+  devcovenant/docs/profiles.md
+  devcovenant/docs/troubleshooting.md
+  devcovenant/docs/workflow.md
+  tests/devcovenant/core/runtime/test_execution.py
+  tests/devcovenant/test_cli.py
+
+- 2026-03-19:
+  Change: Rewrote the active plan into a condensed remediation roadmap for
+  the anti-bullshit audit findings.
+  Why: Focus follow-up work on the live cache/runtime defect first, then
+  clean the remaining naming and strictness noise without adding fallback
+  pathways.
+  Impact: The current roadmap now closes the audit in three explicit slices
+  instead of leaving placeholder plan items.
+  Files:
+  CHANGELOG.md
+  PLAN.md
+
+- 2026-03-19:
+  Change: Added install-time adoption for compatible pre-authored
+  DevCovenant-managed docs and documented seeded `SPEC.md`, `README.md`,
+  and `PLAN.md` startup flows.
+  Why: Preserve DevCovenant-shaped starter docs created before install so
+  fresh repositories can begin from authored planning/spec content instead
+  of losing it during first bootstrap.
+  Impact: `install` now records importable managed docs for first-refresh
+  adoption, while docs and tests cover the seeded-doc workflow clearly.
+  Files:
+  CHANGELOG.md
+  CONTRIBUTING.md
+  README.md
+  devcovenant/README.md
+  devcovenant/builtin/profiles/global/assets/README.yaml
+  devcovenant/builtin/profiles/global/assets/config.yaml
+  devcovenant/builtin/profiles/global/assets/devcovenant/README.yaml
+  devcovenant/config.yaml
+  devcovenant/core/flow/refresh.py
+  devcovenant/custom/profiles/devcovrepo/assets/docs/installation.md
+  devcovenant/docs/architecture.md
+  devcovenant/docs/config.md
+  devcovenant/docs/installation.md
+  devcovenant/docs/profiles.md
+  devcovenant/docs/workflow.md
+  devcovenant/install.py
+  tests/devcovenant/test_deploy.py
+  tests/devcovenant/test_refresh.py
+
+- 2026-03-19:
   Change: Removed the fake `0.0.0` project-version fallback, made fresh
   installs explicitly unversioned, and rendered project-governance headers
   in `SPEC.md` when the descriptor opts in.

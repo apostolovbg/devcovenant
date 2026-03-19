@@ -1,5 +1,5 @@
 # Troubleshooting
-**Last Updated:** 2026-03-15
+**Last Updated:** 2026-03-19
 **Project Version:** 1.0.0
 
 ## Table of Contents
@@ -121,15 +121,9 @@ Recovery actions:
    - rerun until no further mutation or resolve nondeterminism
 6. if `devcov-structure-guard` reports repo bytecode artifacts:
    - delete `devcovenant/**/__pycache__/` and `*.py[cod]` files
-   - if the artifacts came from source-checkout alternate launcher runs
-     (`python3 -m devcovenant ...`), set `PYTHONPYCACHEPREFIX` before Python
-     starts (shell/CI env) to prevent future repo-local launcher-process
-     bytecode drift
-   - DevCovenant does not promise that boundary through repo-root startup
-     hooks or an in-package bootstrap helper
-   - for repeated local alternate-launcher runs, use a shell wrapper (see
-     `devcovenant/docs/installation.md`) that exports
-     `PYTHONPYCACHEPREFIX` before invoking `python3 -m devcovenant`
+   - source-checkout launcher runs now clean up the package-import cache
+     Python may emit before CLI startup, so repeated `python3 -m
+     devcovenant ...` runs should not leave fresh repo-local cache drift
    - keep `engine.pycache_prefix_enabled: true` (and optional
      `engine.pycache_prefix`) in `devcovenant/config.yaml` so DevCovenant-
      managed Python subprocesses also route bytecode caches outside the repo

@@ -4,12 +4,7 @@ doc_type: repo-readme
 project_version: true
 last_updated: true
 devcovenant_version: true
-managed_block: |-
-  **Contributor note:** this repository is managed by DevCovenant.
-  Read `AGENTS.md` for repository workflow and policy rules.
-  Use this README and `devcovenant/docs/*.md` for the DevCovenant
-  commands, lifecycle, configuration, and evidence model used in this
-  repository.
+managed_block: ''
 body: |-
   Describe the project this repository ships: what it does, who it helps,
   and what problem it solves.
@@ -18,7 +13,7 @@ body: |-
   1. [Overview](#overview)
   2. [Architecture](#architecture)
   3. [Getting Started](#getting-started)
-  4. [Development Workflow](#development-workflow)
+  4. [Workflow](#workflow)
   5. [License](#license)
 
   ## Overview
@@ -26,12 +21,20 @@ body: |-
 
   ## Architecture
   Summarize the main components and where deeper documentation lives.
+  In this repo, the refresh-generated governance gate pipeline lives in
+  `.github/workflows/governance-and-test.yml`.
 
   ## Getting Started
   Explain setup, prerequisites, and first-run commands for contributors.
+  If you already drafted DevCovenant-shaped docs such as `SPEC.md`,
+  `README.md`, or `PLAN.md`, keep them in place before the first `deploy`;
+  refresh can adopt them when their `DevCovenant Version` is at least as
+  new as the runtime being installed.
 
-  ## Development Workflow
+  ## Workflow
   Document the required edit/test/review routine for this repository.
+  In `engine.tests_output_mode: normal`, test progress stays concise while
+  full child output remains available in run logs.
 
   ## License
   Document repository licensing terms here.

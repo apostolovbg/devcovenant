@@ -10,7 +10,7 @@ from unittest.mock import patch
 
 import yaml
 
-from devcovenant import deploy, refresh
+from devcovenant import deploy, install, refresh
 from tests.devcovenant import repo_seed_cache
 
 
@@ -57,6 +57,33 @@ def _unit_test_deploy_runs_full_refresh_when_config_ready() -> None:
             repo_root / "devcovenant" / "registry" / "registry.yaml"
         )
         assert policy_registry.exists()
+
+
+def _unit_test_deploy_adopts_pre_authored_spec_doc() -> None:
+    """deploy_repo should adopt a same-version preauthored SPEC doc."""
+    with tempfile.TemporaryDirectory() as temp_dir:
+        repo_root = Path(temp_dir)
+        spec_path = repo_root / "SPEC.md"
+        spec_path.parent.mkdir(parents=True, exist_ok=True)
+        spec_path.write_text(
+            "# App Spec\n"
+            "**Doc ID:** SPEC\n"
+            "**Doc Type:** specification\n"
+            "**Project Version:** 9.9.9\n"
+            "**DevCovenant Version:** 1.0.0\n\n"
+            "Imported app specification body.\n",
+            encoding="utf-8",
+        )
+
+        install.install_repo(repo_root)
+        _set_generic_flag(repo_root, enabled=False)
+        result = deploy.deploy_repo(repo_root)
+        assert result == 0
+
+        updated = spec_path.read_text(encoding="utf-8")
+        assert "Imported app specification body." in updated
+        assert "**Project Stage:** prototype" in updated
+        assert "**Versioning Mode:** unversioned" in updated
 
 
 def _write_marker(path: Path) -> None:
@@ -191,6 +218,10 @@ class GeneratedUnittestCases(unittest.TestCase):
     def test_deploy_runs_full_refresh_when_config_ready(self):
         """Run test_deploy_runs_full_refresh_when_config_ready."""
         _unit_test_deploy_runs_full_refresh_when_config_ready()
+
+    def test_deploy_adopts_pre_authored_spec_doc(self):
+        """Run pre-authored SPEC adoption assertions."""
+        _unit_test_deploy_adopts_pre_authored_spec_doc()
 
     def test_deploy_cleanup_is_deploy_only(self):
         """Run test_deploy_cleanup_is_deploy_only."""

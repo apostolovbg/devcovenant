@@ -48,5 +48,5 @@ managed interpreter path or permissions can be fixed directly.
 
 ## Repository Notes
 
-Add repository-specific contributor notes here. This section is preserved
-across DevCovenant upgrade and refresh runs.
+Add repository-specific contributor notes here. This section is
+preserved across DevCovenant upgrade and refresh runs.

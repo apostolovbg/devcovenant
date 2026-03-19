@@ -32,10 +32,13 @@ body: |-
   2. Pre-test loop: `python3 -m devcovenant gate --mid`
   3. `python3 -m devcovenant test`
   4. `python3 -m devcovenant gate --end`
+  In `engine.tests_output_mode: normal`, test progress stays concise while
+  full child output remains available in run logs.
   On Windows, `py -m devcovenant ...` is a common equivalent launcher form.
-  For source-checkout launches, DevCovenant suppresses Python cache-file
-  writes automatically, so `python3 -m devcovenant ...` does not leave
-  repo-local `__pycache__/` drift behind.
+  For source-checkout launches, DevCovenant keeps the repo clean by
+  suppressing later Python cache-file writes and removing the package-import
+  cache Python may emit before CLI startup, so `python3 -m devcovenant ...`
+  does not leave repo-local `__pycache__/` drift behind.
 
   ## Quick Start
   Install DevCovenant, review `devcovenant/config.yaml`, and deploy once

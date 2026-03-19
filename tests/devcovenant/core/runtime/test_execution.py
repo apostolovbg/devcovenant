@@ -678,6 +678,27 @@ def _unit_test_repo_bytecode_cleanup_requires_explicit_opt_in() -> None:
         assert pyc_path.exists()
 
 
+def _unit_test_source_checkout_import_cache_cleanup_removes_cache() -> None:
+    """Source-checkout cleanup should remove package import cache dirs."""
+    module = importlib.import_module(MODULE)
+    with tempfile.TemporaryDirectory() as tmpdir:
+        repo_root = Path(tmpdir)
+        package_dir = repo_root / "devcovenant"
+        runtime_dir = package_dir / "core" / "runtime"
+        runtime_dir.mkdir(parents=True, exist_ok=True)
+        cache_dir = package_dir / "__pycache__"
+        cache_dir.mkdir(parents=True, exist_ok=True)
+        pyc_path = cache_dir / "__init__.cpython-314.pyc"
+        pyc_path.write_bytes(b"x")
+        removed = module.cleanup_source_checkout_import_cache(
+            repo_root,
+            runtime_file=runtime_dir / "execution.py",
+        )
+        assert removed is True
+        assert not cache_dir.exists()
+        assert not pyc_path.exists()
+
+
 def _unit_test_resolve_engine_auto_fix_enabled_defaults_false() -> None:
     """Autofix resolver should default to disabled when key is absent."""
     module = importlib.import_module(MODULE)
@@ -1221,6 +1242,10 @@ class GeneratedUnittestCases(unittest.TestCase):
     def test_repo_bytecode_cleanup_requires_explicit_opt_in(self):
         """Run explicit-opt-in repo bytecode cleanup assertions."""
         _unit_test_repo_bytecode_cleanup_requires_explicit_opt_in()
+
+    def test_source_checkout_import_cache_cleanup_removes_cache(self):
+        """Run source-checkout import-cache cleanup assertions."""
+        _unit_test_source_checkout_import_cache_cleanup_removes_cache()
 
     def test_resolve_engine_auto_fix_enabled_defaults_false(self):
         """Run autofix resolver default-disabled assertions."""

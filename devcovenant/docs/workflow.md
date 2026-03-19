@@ -218,7 +218,17 @@ Install/upgrade boundary:
   about DevCovenant's own release version, not the governed repo version
   scheme
 - `install` is a cold bootstrap command and does not preserve existing
-  repo-local `devcovenant/` runtime state
+  managed runtime state
+- `install` may record compatible pre-authored managed docs
+  (`SPEC.md`, `README.md`, `PLAN.md`, and peers) so the first
+  `refresh`/`deploy` adopts their authored content while updating generated
+  headers and managed blocks to the active runtime
+- document preservation rules are exact:
+  - missing docs may be created from assets/templates
+  - empty docs may be replaced fully
+  - one-line docs may be replaced fully
+  - otherwise only managed header lines and explicit `<!-- DEVCOV* -->`
+    blocks may change
 - `install` exits and points to `upgrade` when DevCovenant is already present
 - source-checkout `install` copies tracked package skeletons only; it skips
   source runtime logs, source runtime registry files, and tracked
@@ -407,8 +417,9 @@ Output behavior:
   bytecode generation fidelity while avoiding repo-local `__pycache__/` drift
 - generated CI governance workflows still set `PYTHONPYCACHEPREFIX` at job
   scope for managed child commands and stable CI behavior
-- source-checkout top-level `python -m devcovenant ...` launches now suppress
-  Python cache-file writes automatically for the launcher process itself
+- source-checkout top-level `python -m devcovenant ...` launches keep the
+  repo clean by suppressing later cache-file writes and removing the
+  package-import cache Python may emit before CLI startup
 - gate-session changelog coverage uses a gate-start exemption baseline that
   includes DEVCOV-managed blocks in non-doc text files (for example generated
   YAML/YML assets), so managed-only regen noise does not require new

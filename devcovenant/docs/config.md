@@ -37,6 +37,7 @@ Autogen-owned sections:
 - `profiles.generated`
 - `autogen_metadata_overlays`
 - `autogen_metadata_overrides`
+- `install.import_managed_docs`
 
 User-owned sections:
 - `profiles.active`
@@ -173,6 +174,12 @@ the same session so generated configs remain self-explanatory.
 
 - `install.generic_config`: deploy guard for first-time activation flow.
 
+- `install.import_managed_docs`: refresh-owned install memory that records
+  compatible pre-authored managed docs discovered during `install` so the
+  first `refresh`/`deploy` can adopt seeded `SPEC.md`, `README.md`,
+  `PLAN.md`, and similar DevCovenant-shaped docs instead of overwriting
+  their authored body content.
+
 - `managed-environment.expected_paths|expected_interpreters`: metadata-driven
   managed interpreter roots and explicit interpreter candidates.
 
@@ -285,8 +292,8 @@ Autofix workflow note:
   caches away from the repo tree for DevCovenant-managed Python subprocesses
   while preserving bytecode generation fidelity.
 - For source-checkout alternate launcher runs (`python3 -m devcovenant ...`),
-  DevCovenant now suppresses Python cache-file writes automatically so the
-  launcher process does not leave repo-local `__pycache__` drift behind.
+  DevCovenant keeps the repo clean by suppressing later cache-file writes
+  and removing the package-import cache Python may emit before CLI startup.
 
 ## Practical Recipes
 Disable one shipped policy:

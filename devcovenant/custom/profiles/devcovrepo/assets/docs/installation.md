@@ -22,10 +22,12 @@ repo-local `devcovenant/__pycache__/` drift behind.
 
 ## Workflow
 1. Run `install` to copy the core and generate a generic config stub.
-2. Edit `devcovenant/config.yaml` and set `install.generic_config: false`.
-3. Run `deploy` to activate managed docs, registries, and gitignore.
-4. Use `refresh` for normal managed refreshes and `upgrade` for core updates.
-5. Run gated edits with `start -> mid -> test -> end`.
+2. If the repo already contains DevCovenant-shaped docs such as `SPEC.md`,
+   `README.md`, or `PLAN.md`, keep them in place.
+3. Edit `devcovenant/config.yaml` and set `install.generic_config: false`.
+4. Run `deploy` to activate managed docs, registries, and gitignore.
+5. Use `refresh` for normal managed refreshes and `upgrade` for core updates.
+6. Run gated edits with `start -> mid -> test -> end`.
 
 ## Lifecycle Commands
 - `install`: copy the core plus a generic config stub. It never deploys
@@ -34,6 +36,13 @@ repo-local `devcovenant/__pycache__/` drift behind.
 - `deploy`: requires a non-generic config (`install.generic_config: false`).
   It writes managed docs/assets/registries, regenerates `.gitignore`, and
   runs a full refresh.
+- pre-authored DevCovenant-shaped docs such as `SPEC.md`, `README.md`, or
+  `PLAN.md` are adopted during refresh/deploy when their `Doc ID` / `Doc Type`
+  match the target doc and their
+  `DevCovenant Version` matches or exceeds the running runtime. Header-only
+  docs keep their authored body while headers are upgraded; managed-block docs
+  keep user content outside the managed block while the block/header refreshes.
+  Older DevCovenant-shaped docs are replaced instead of being imported.
 - `refresh`: run a full managed refresh using the installed core. It updates
   registries, managed docs/blocks, merged `.gitignore`, and generated
   pre-commit config.
