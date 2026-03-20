@@ -278,15 +278,43 @@ pre_commit:
 # Critical-severity policies remain enforced even if set to false here;
 # runtime emits a diagnostic instead of honoring the disable attempt.
 # Do not activate/deactivate policies through profile manifests.
-# `project-governance` is orthogonal to `version-governance`:
-# - use it for stage / stance / versioning-mode / codename / build identity;
-# - fresh generic installs start explicitly unversioned instead of inventing
-#   a fake numbered version.
 policy_state:
-  project-governance: true
   raw-string-escapes: false
   version-governance: false
   version-sync: false
+
+# ---------------------------------------------------------------------------
+# Project governance (repo lifecycle metadata)
+# ---------------------------------------------------------------------------
+# Source of truth for repo stage / stance / versioning mode / codename /
+# build identity / changelog release flow.
+# `project-governance` is orthogonal to `version-governance`:
+# - use this block for project lifecycle metadata and rendered doc headers;
+# - use `version-governance` for actual version-scheme enforcement.
+# Generic installs start explicitly unversioned instead of inventing a fake
+# numbered version.
+project-governance:
+  stage: prototype
+  development_stance: experimental
+  versioning_mode: unversioned
+  unversioned_label: Unversioned
+  unreleased_heading: '## Unreleased'
+  changelog_file: CHANGELOG.md
+  allowed_stages:
+    - prototype
+    - alpha
+    - beta
+    - stable
+    - mature
+    - deprecated
+    - archived
+  allowed_development_stances:
+    - experimental
+    - active-development
+    - maintenance
+    - release-managed
+    - frozen
+    - sunset
 
 # ---------------------------------------------------------------------------
 # Global ignore patterns
@@ -350,23 +378,8 @@ autogen_metadata_overlays: {}
 # Human-owned additive overlay layer.
 # Shape: { policy-id: { metadata_key: value-or-list } }
 # Use for additive tuning without replacing the whole key.
-# `project-governance` commonly lives here with keys such as:
-# - `stage`
-# - `development_stance`
-# - `versioning_mode`
-# - optional `codename` / `build_identity`
-#
-# Generic installs start here explicitly:
-# - `prototype`
-# - `experimental`
-# - `unversioned`
 user_metadata_overlays:
-  project-governance:
-    stage: prototype
-    development_stance: experimental
-    versioning_mode: unversioned
-    unversioned_label: Unversioned
-    unreleased_heading: '## Unreleased'
+  {}
 
 # Auto-generated replacement layer.
 # Refresh-owned. Do not edit.

@@ -31,6 +31,8 @@ blocking command failures.
 The template source
 `devcovenant/builtin/profiles/global/assets/config.yaml` also carries detailed
 inline comments and should be treated as part of the configuration contract.
+For the dedicated lifecycle-metadata contract, see
+`devcovenant/docs/project_governance.md`.
 
 ## Ownership Model
 Autogen-owned sections:
@@ -96,6 +98,10 @@ the same session so generated configs remain self-explanatory.
 
 - `doc_assets`: managed-doc routing for autogen and user selections.
 
+- `project-governance`: first-class repo lifecycle metadata for stage,
+  development stance, versioning mode, optional codename/build identity,
+  displayed unversioned label, and unreleased changelog heading.
+
 - `autogen_metadata_overlays`: generated additive overlay layer.
 
 - `user_metadata_overlays`: user additive overlay layer.
@@ -108,8 +114,6 @@ the same session so generated configs remain self-explanatory.
   `severity: critical` policies remain enforced even if a config toggle sets
   them to `false`; runtime emits an explicit diagnostic instead of silently
   honoring the disable attempt.
-  `project-governance` is orthogonal to `version-governance`: use it for
-  stage/stance/versioning-mode lifecycle metadata, not version parsing.
 
 - `governance_and_test.overlays`: additive governance workflow patches.
 
@@ -417,42 +421,38 @@ role-based metadata. It adds stricter ecosystem legality for selected
 surfaces after `version-sync` has already read and compared them through the
 active repo-level `version-governance` scheme.
 
-Enable orthogonal project governance for a versioned repository:
+Configure orthogonal project governance for a versioned repository:
 ```yaml
+project-governance:
+  stage: stable
+  development_stance: active-development
+  versioning_mode: versioned
+  codename: atlas
+
 policy_state:
-  project-governance: true
   version-governance: true
   version-sync: true
-
-user_metadata_overlays:
-  project-governance:
-    stage: stable
-    development_stance: active-development
-    versioning_mode: versioned
-    codename: atlas
 ```
 
 Use project governance for an intentionally unversioned repository:
 ```yaml
+project-governance:
+  stage: beta
+  development_stance: experimental
+  versioning_mode: unversioned
+  unversioned_label: Unversioned
+  unreleased_heading: '## Unreleased'
+
 policy_state:
-  project-governance: true
   version-governance: false
   version-sync: false
-
-user_metadata_overlays:
-  project-governance:
-    stage: beta
-    development_stance: experimental
-    versioning_mode: unversioned
-    unversioned_label: Unversioned
-    unreleased_heading: '## Unreleased'
 ```
 
 `project-governance` does not replace `version-governance`; it governs
-project phase and stance metadata. When `versioning_mode` is `unversioned`,
-managed docs keep the `Project Version` line but render the configured
-non-version label, and `CHANGELOG.md` uses the configured unreleased
-heading.
+project phase and stance metadata through the dedicated top-level config
+section. When `versioning_mode` is `unversioned`, managed docs keep the
+`Project Version` line but render the configured non-version label, and
+`CHANGELOG.md` uses the configured unreleased heading.
 
 Fresh generic installs start from this same unversioned pattern so refresh
 never fabricates a placeholder numbered release such as `0.0.0`.

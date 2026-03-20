@@ -2,6 +2,9 @@
 **Doc ID:** CHANGELOG
 **Doc Type:** changelog
 **Project Version:** 1.0.0
+**Project Stage:** stable
+**Development Stance:** active-development
+**Versioning Mode:** versioned
 **Last Updated:** 2026-03-20
 **DevCovenant Version:** 1.0.0
 
@@ -55,6 +58,75 @@ Example:
 ## Log changes here
 
 ## Version 1.0.0
+
+- 2026-03-20:
+  Change: Documented `project-governance` as a first-class service in the
+  README surfaces, dedicated docs, and supporting reference docs.
+  Why: Clarified where operators configure lifecycle metadata, how it
+  relates to `version-governance`, and where its resolved state surfaces.
+  Impact: Clarifies the full project-governance contract so readers can
+  follow its config, registry, AGENTS, and changelog behavior without
+  reconstructing it from scattered notes.
+  Files:
+  CHANGELOG.md
+  README.md
+  devcovenant/README.md
+  devcovenant/builtin/profiles/global/assets/README.yaml
+  devcovenant/builtin/profiles/global/assets/devcovenant/README.yaml
+  devcovenant/docs/architecture.md
+  devcovenant/docs/config.md
+  devcovenant/docs/policies.md
+  devcovenant/docs/profiles.md
+  devcovenant/docs/project_governance.md
+  devcovenant/docs/registry.md
+  devcovenant/docs/workflow.md
+
+- 2026-03-20:
+  Change: Refactored `project-governance` into a core service, exposed it
+  directly in config and registry state, and rendered its resolved state in
+  managed doc surfaces instead of the policy block.
+  Why: Defined one repo-owned runtime source for lifecycle metadata so
+  AGENTS, SPEC, PLAN, and CHANGELOG can read one resolved source without
+  treating project state as a normal policy toggle.
+  Impact: Keeps project governance out of the policy registry, makes config
+  ownership explicit, adds the AGENTS governance section, and preserves the
+  same lifecycle rendering across managed docs.
+  Files:
+  AGENTS.md
+  CHANGELOG.md
+  PLAN.md
+  devcovenant/builtin/policies/changelog_coverage/changelog_coverage.py
+  devcovenant/builtin/policies/project_governance/__init__.py
+  devcovenant/builtin/policies/project_governance/project_governance.py
+  devcovenant/builtin/policies/project_governance/project_governance.yaml
+  devcovenant/builtin/profiles/defaults/defaults.yaml
+  devcovenant/builtin/profiles/global/assets/AGENTS.yaml
+  devcovenant/builtin/profiles/global/assets/CHANGELOG.yaml
+  devcovenant/builtin/profiles/global/assets/PLAN.yaml
+  devcovenant/builtin/profiles/global/assets/config.yaml
+  devcovenant/config.yaml
+  devcovenant/core/flow/gate_changelog_helpers.py
+  devcovenant/core/flow/refresh.py
+  devcovenant/core/services/project_governance.py
+  devcovenant/core/services/registry.py
+  devcovenant/custom/policies/managed_doc_assets/managed_doc_assets.py
+  devcovenant/custom/profiles/devcovrepo/devcovrepo.yaml
+  devcovenant/docs/architecture.md
+  devcovenant/docs/config.md
+  devcovenant/docs/policies.md
+  devcovenant/docs/profiles.md
+  devcovenant/docs/registry.md
+  devcovenant/docs/workflow.md
+  devcovenant/registry/registry.yaml
+  tests/devcovenant/builtin/policies/project_governance/__init__.py
+  tests/devcovenant/builtin/policies/changelog_coverage/\
+    test_changelog_coverage.py
+  tests/devcovenant/core/flow/test_gate.py
+  tests/devcovenant/core/flow/test_gate_changelog_helpers.py
+  tests/devcovenant/builtin/policies/project_governance/\
+    test_project_governance.py
+  tests/devcovenant/core/services/test_project_governance.py
+  tests/devcovenant/test_refresh.py
 
 - 2026-03-20:
   Change: Closed Item 3 in `PLAN.md`, fixed the final `version-sync`

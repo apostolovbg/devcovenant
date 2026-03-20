@@ -21,6 +21,9 @@ Treat generated registry files as:
 - reproducibility artifacts
 - synchronization evidence for integrity checks
 
+For the meanings of the resolved `project-governance` fields stored here, see
+`devcovenant/docs/project_governance.md`.
+
 Manual edits are unsupported and typically interpreted as drift.
 
 ## Tracked Registry
@@ -28,6 +31,7 @@ Manual edits are unsupported and typically interpreted as drift.
 Changes to that file are routed here by documentation-growth-tracking because
 this document is the user-facing explanation of the tracked registry contract.
 It includes:
+- resolved `project-governance` state as its own top-level registry section
 - discovered policy IDs
 - descriptor/script paths and hashes
 - resolved metadata snapshots
@@ -41,9 +45,9 @@ It includes:
 - current policy identities and resolved metadata for shipped frameworks such
   as `version-governance`, including the configured scheme and bump
   enforcement options that active profiles/config resolved
-- current policy identities and resolved lifecycle metadata for
-  `project-governance`, including stage, development stance, versioning mode,
-  and any optional codename/build identity values
+- resolved `project-governance` lifecycle metadata, including stage,
+  development stance, versioning mode, optional codename/build identity,
+  displayed project version, and active release headings
 
 Metadata trace intent:
 - `metadata` remains the final effective string-map used for policy/runtime
@@ -66,9 +70,10 @@ Metadata trace intent:
   `project_version_line`, optional role-legality mappings such as
   `package_manifest=>pep440`, and leaves repo-level equality semantics to
   the active `version-governance` scheme
-- `project-governance` records whether the repo is versioned or intentionally
-  unversioned, plus the configured displayed non-version label and
-  unreleased changelog heading when those apply
+- the top-level `project-governance` registry section records whether the
+  repo is versioned or intentionally unversioned, plus the configured
+  displayed non-version label and unreleased changelog heading when those
+  apply
 - fresh generic installs therefore record an explicit unversioned baseline
   instead of relying on a fabricated placeholder version token
 - generic profile defaults now keep version-governance scheme selection
@@ -113,7 +118,8 @@ Key evidence families:
 - open/closed session state
 - pointer metadata for the companion session snapshot
 - changelog snapshot anchors/fingerprints
-- active release-heading behavior resolved from `project-governance`
+- active release-heading behavior resolved from the top-level
+  `project-governance` registry section
 - heavy session baseline/snapshot evidence in `session_snapshot.json`
 - test lifecycle event payloads in `session_snapshot.json`
 

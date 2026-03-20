@@ -205,16 +205,20 @@ Custom layout patterns for dependency selectors:
    values without changing builtin profiles.
 
 ## Version And Project Governance Overlays
-Versioning and lifecycle-governance metadata are profile-driven:
-- `global` seeds `policy_state.project-governance: true` with a generic
-  unversioned baseline (`prototype`, `experimental`, `unversioned`) so fresh
-  installs do not invent fake numbered versions
+Versioning metadata stays policy-driven, while project-governance defaults are
+profile-driven through the dedicated config section:
+- `global` seeds the top-level `project-governance` config block with a
+  generic unversioned baseline (`prototype`, `experimental`, `unversioned`)
+  so fresh installs do not invent fake numbered versions
 - `global` seeds `policy_state.version-governance: false` in the generated
   config template so version-governance stays an explicit opt-in.
 - `global` doc assets also define the managed-doc adoption contract used
   during first install/deploy, where compatible pre-authored docs such as
   `SPEC.md`, `README.md`, and `PLAN.md` can be imported as seed content
   instead of being overwritten.
+- the shipped README assets should also document the project-governance
+  service and point operators at `devcovenant/docs/project_governance.md`
+  when lifecycle metadata behavior changes.
 - in this repository, the authored README source remains `README.md`, while
   `readme-sync` derives `devcovenant/README.md` by removing repo-only blocks
   for the packaged guide.
@@ -237,11 +241,12 @@ Versioning and lifecycle-governance metadata are profile-driven:
 - `defaults` also seeds `project-governance` with allowed stage/stance
   vocabularies plus the generic unversioned display defaults
   (`Unversioned`, `## Unreleased`)
-- repositories may enable `project-governance` with or without
-  `version-governance`; the policy is about lifecycle state, not version
+- repositories may configure `project-governance` with or without
+  `version-governance`; the service is about lifecycle state, not version
   parsing
 - managed-doc descriptors can opt into richer governance header lines with
-  `project_governance_headers: true`; ordinary managed docs stay on the
+  `project_governance_headers: true`; AGENTS can also opt into the managed
+  post-workflow governance section, while ordinary managed docs stay on the
   compact header set
 - repository profiles may redirect only the repo-specific surfaces they own;
   for example, a repository profile may override

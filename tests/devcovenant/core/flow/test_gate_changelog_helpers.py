@@ -42,6 +42,20 @@ def _write_policy_registry(
         ),
         encoding="utf-8",
     )
+    config_path = repo_root / "devcovenant" / "config.yaml"
+    config_path.parent.mkdir(parents=True, exist_ok=True)
+    config_path.write_text(
+        "\n".join(
+            [
+                "project-governance:",
+                "  stage: stable",
+                "  development_stance: active-development",
+                "  versioning_mode: versioned",
+                "",
+            ]
+        ),
+        encoding="utf-8",
+    )
 
 
 def _unit_test_module_importable() -> None:

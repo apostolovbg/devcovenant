@@ -9,8 +9,8 @@ from pathlib import Path
 import yaml
 
 import devcovenant.core.services.registry as registry_runtime_module
-from devcovenant.builtin.policies.project_governance import (
-    project_governance as project_governance_runtime_module,
+from devcovenant.core.services import (
+    project_governance as project_governance_service,
 )
 
 _DATE_ENTRY_PATTERN = re.compile(r"^\s*-\s*\d{4}-\d{2}-\d{2}\b")
@@ -187,12 +187,7 @@ def _resolve_doc_exemption_options(
 
 def _resolve_release_headings(repo_root: Path) -> list[str]:
     """Return release-section headings active for this repository."""
-    try:
-        return project_governance_runtime_module.resolve_release_headings(
-            repo_root
-        )
-    except ValueError:
-        return ["## Version"]
+    return project_governance_service.resolve_release_headings(repo_root)
 
 
 def _line_matches_release_heading(

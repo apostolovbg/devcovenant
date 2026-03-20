@@ -342,10 +342,11 @@ High-impact runtime contracts:
   `SCHEME`, and treats that object as the version-governance scheme
   interface. This is a version-governance-local extension point, not a
   general DevCovenant policy plugin mechanism.
-- `project-governance` is orthogonal to `version-governance`; it governs
-  stage, development stance, versioning mode, and optional codename/build
-  identity without redefining version parsing/comparison.
-- when `project-governance.versioning_mode` is `unversioned`, the policy
+- `project-governance` is orthogonal to `version-governance`; it is a
+  service-backed repo metadata contract that governs stage, development
+  stance, versioning mode, and optional codename/build identity without
+  redefining version parsing/comparison.
+- when `project-governance.versioning_mode` is `unversioned`, the service
   governs the explicit displayed non-version label for managed docs and the
   required unreleased changelog heading.
 - managed-doc descriptors may opt into governance headers through
@@ -522,9 +523,11 @@ Operational behavior:
   resolved by standard metadata precedence
   (descriptor -> active profiles -> config overlays -> config overrides)
 
-### project-governance
+### project-governance service
 `project-governance` is the lifecycle-governance companion to the version
-stack:
+stack, but it is no longer an AGENTS policy-block entry:
+- it is configured directly through the top-level
+  `project-governance:` section in `devcovenant/config.yaml`
 - it validates `stage`, `development_stance`, and `versioning_mode`
 - it accepts optional `codename` and `build_identity`
 - it stays compatible with both versioned and intentionally unversioned
@@ -535,7 +538,10 @@ stack:
   `Unversioned` in managed docs and require an unreleased changelog flow such
   as `## Unreleased`
 - extra governance headers come from managed-doc descriptor opt-in
-  (`project_governance_headers`) instead of appearing in every managed doc
+  (`project_governance_headers`), while AGENTS also renders a dedicated
+  project-governance section after the workflow block
+- the full field/surface contract is documented in
+  `devcovenant/docs/project_governance.md`
 
 `devflow-run-gates` required command metadata is canonical:
 - descriptor default may be empty
@@ -577,6 +583,9 @@ Override policy still participates in the same metadata resolution and
 Policy changes require mirrored tests under:
 - `tests/devcovenant/builtin/policies/<policy-id>/...`
 - `tests/devcovenant/custom/policies/<policy-id>/...` for custom policies
+- service-backed repo metadata such as `project-governance` belongs under
+  the matching core service test location
+  (`tests/devcovenant/core/services/...`)
 
 Tests validate current behavior only. Remove stale tests for removed behavior.
 Placeholder test stubs are not allowed; tests must encode behavioral or

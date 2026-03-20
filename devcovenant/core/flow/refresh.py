@@ -16,9 +16,6 @@ import yaml
 import devcovenant.core.services.metadata as metadata_runtime
 import devcovenant.core.services.profile_registry as profile_runtime
 import devcovenant.core.services.registry as manifest_module
-from devcovenant.builtin.policies.project_governance import (
-    project_governance as project_governance_runtime_module,
-)
 from devcovenant.core.contracts.policy import CheckContext
 from devcovenant.core.runtime.execution import print_step, runtime_print
 from devcovenant.core.services import (
@@ -26,6 +23,9 @@ from devcovenant.core.services import (
 )
 from devcovenant.core.services import (
     policy_runtime_actions as runtime_actions_module,
+)
+from devcovenant.core.services import (
+    project_governance as project_governance_service,
 )
 from devcovenant.core.services.policy_parse import PolicyDefinition
 from devcovenant.core.services.registry import (
@@ -36,9 +36,7 @@ from devcovenant.core.services.registry import (
     resolve_script_location,
 )
 
-ProjectGovernanceState = (
-    project_governance_runtime_module.ProjectGovernanceState
-)
+ProjectGovernanceState = project_governance_service.ProjectGovernanceState
 
 BLOCK_BEGIN = "<!-- DEVCOV:BEGIN -->"
 BLOCK_END = "<!-- DEVCOV:END -->"
@@ -78,6 +76,7 @@ _MANAGED_DOC_DESCRIPTOR_KEYS = frozenset(
         "last_updated",
         "devcovenant_version",
         "project_governance_headers",
+        "project_governance_section",
         "managed_block",
         "body",
         "workflow_block",
@@ -100,7 +99,10 @@ _MANAGED_DOC_REQUIRED_BOOLEAN_KEYS = (
     "last_updated",
     "devcovenant_version",
 )
-_MANAGED_DOC_OPTIONAL_BOOLEAN_KEYS = ("project_governance_headers",)
+_MANAGED_DOC_OPTIONAL_BOOLEAN_KEYS = (
+    "project_governance_headers",
+    "project_governance_section",
+)
 _SEMVER_COMPARE_RE = re.compile(
     r"^(?P<core>\d+(?:\.\d+){0,2})"
     r"(?:-(?P<prerelease>[0-9A-Za-z.-]+))?"
@@ -534,21 +536,33 @@ def _descriptor_optional_bool(
 
 
 def _render_project_governance_header_lines(
-    state: project_governance_runtime_module.ProjectGovernanceState,
+    state: ProjectGovernanceState,
 ) -> list[str]:
     """Return generated project-governance header lines."""
-    if not state.enabled:
-        return []
-    lines = [
-        f"{_PROJECT_STAGE_LABEL} {state.stage}",
-        f"{_DEVELOPMENT_STANCE_LABEL} {state.development_stance}",
-        f"{_VERSIONING_MODE_LABEL} {state.versioning_mode}",
+    return [
+        f"{label} {value}"
+        for label, value in (
+            (_PROJECT_STAGE_LABEL, state.stage),
+            (_DEVELOPMENT_STANCE_LABEL, state.development_stance),
+            (_VERSIONING_MODE_LABEL, state.versioning_mode),
+            (_PROJECT_CODENAME_LABEL, state.codename),
+            (_BUILD_IDENTITY_LABEL, state.build_identity),
+        )
+        if str(value).strip()
     ]
-    if state.codename:
-        lines.append(f"{_PROJECT_CODENAME_LABEL} {state.codename}")
-    if state.build_identity:
-        lines.append(f"{_BUILD_IDENTITY_LABEL} {state.build_identity}")
-    return lines
+
+
+def _render_project_governance_section_block(
+    *,
+    project_version: str,
+    project_governance_state: ProjectGovernanceState,
+) -> str:
+    """Render the AGENTS project-governance section block."""
+    return _render_block(
+        BLOCK_BEGIN,
+        BLOCK_END,
+        "\n".join(project_governance_state.section_lines(project_version)),
+    )
 
 
 def _render_generated_header(
@@ -831,6 +845,15 @@ def _render_doc(
             WORKFLOW_END,
             workflow_body,
         )
+    project_governance_section = ""
+    if doc_name == "AGENTS.md" and _descriptor_optional_bool(
+        descriptor,
+        "project_governance_section",
+    ):
+        project_governance_section = _render_project_governance_section_block(
+            project_version=project_version,
+            project_governance_state=project_governance_state,
+        )
 
     parts = []
     if header_lines:
@@ -841,6 +864,8 @@ def _render_doc(
         parts.append("\n".join(body_lines))
     if workflow_block:
         parts.append(workflow_block)
+    if project_governance_section:
+        parts.append(project_governance_section)
     if doc_name == "AGENTS.md":
         parts.append(f"{_POLICIES_BEGIN}\n{_POLICIES_END}")
     if not parts:
@@ -1665,6 +1690,7 @@ def _render_config_yaml(payload: dict[str, object]) -> str:
         "clean",
         "governance_and_test",
         "pre_commit",
+        "project-governance",
         "policy_state",
         "ignore",
         "gitignore",
@@ -1685,6 +1711,7 @@ def _render_config_yaml(payload: dict[str, object]) -> str:
             "Governance-and-test generation"
         ),
         "pre_commit": _config_section_header("Pre-commit generation"),
+        "project_governance": _config_section_header("Project governance"),
         "policy": _config_section_header(
             "Policy activation and customization"
         ),
@@ -1804,6 +1831,23 @@ def _render_config_yaml(payload: dict[str, object]) -> str:
         "# `overlays` are merged into generated pre-commit config.",
         "# `overrides` replace generated payload when non-empty.",
         _yaml_block({"pre_commit": payload.get("pre_commit", {})}),
+        comments["project_governance"],
+        (
+            "# Repository lifecycle metadata rendered into managed docs, "
+            "registry output, and changelog release flow."
+        ),
+        (
+            "# `versioning_mode: unversioned` renders the configured "
+            "`unversioned_label` and uses `unreleased_heading`."
+        ),
+        _yaml_block(
+            {
+                "project-governance": payload.get(
+                    "project-governance",
+                    {},
+                )
+            }
+        ),
         comments["policy"],
         ("# Canonical policy activation map: {policy-id: true|false}."),
         (
@@ -1888,7 +1932,14 @@ def _refresh_config_generated(
     template = _load_config_template(repo_root)
     merged = copy.deepcopy(template)
     _merge_user_config_values(merged, config)
+    _drop_legacy_project_governance_metadata(merged)
     _apply_profile_aware_engine_defaults(merged, user_config, active_profiles)
+    _apply_profile_aware_project_governance_defaults(
+        merged,
+        user_config,
+        registry,
+        active_profiles,
+    )
 
     profile_suffixes = profile_runtime.resolve_profile_suffixes(
         registry, active_profiles
@@ -1965,6 +2016,82 @@ def _apply_profile_aware_engine_defaults(
             engine_block["auto_fix_enabled"] = True
         if "pycache_prefix_enabled" not in user_engine_map:
             engine_block["pycache_prefix_enabled"] = True
+
+
+def _normalize_project_governance_mapping(
+    raw_value: object,
+) -> dict[str, object]:
+    """Normalize one project-governance config block into a mapping."""
+    if not isinstance(raw_value, dict):
+        return {}
+    return {
+        str(key).strip(): copy.deepcopy(value)
+        for key, value in raw_value.items()
+        if str(key).strip()
+    }
+
+
+def _drop_legacy_project_governance_metadata(
+    payload: dict[str, object],
+) -> None:
+    """Remove retired policy-era project-governance config keys."""
+    policy_state = payload.get("policy_state")
+    if isinstance(policy_state, dict):
+        policy_state.pop("project-governance", None)
+    for key_name in (
+        "autogen_metadata_overlays",
+        "user_metadata_overlays",
+        "autogen_metadata_overrides",
+        "user_metadata_overrides",
+    ):
+        layer = payload.get(key_name)
+        if isinstance(layer, dict):
+            layer.pop("project-governance", None)
+
+
+def _profile_project_governance_defaults(
+    profile_registry: dict[str, dict],
+    active_profiles: list[str],
+) -> dict[str, object]:
+    """Return merged project-governance defaults from active profiles."""
+    profiles_map = _profile_registry_profiles(profile_registry)
+    resolved: dict[str, object] = {}
+    for profile_name in active_profiles:
+        normalized_name = str(profile_name or "").strip().lower()
+        if not normalized_name:
+            continue
+        payload = profiles_map.get(normalized_name, {})
+        fragment = _normalize_project_governance_mapping(
+            payload.get("project-governance")
+        )
+        if not fragment:
+            continue
+        resolved.update(fragment)
+    return resolved
+
+
+def _apply_profile_aware_project_governance_defaults(
+    merged: dict[str, object],
+    user_config: dict[str, object],
+    profile_registry: dict[str, dict],
+    active_profiles: list[str],
+) -> None:
+    """Apply active-profile project-governance defaults when unset by user."""
+    current = _normalize_project_governance_mapping(
+        merged.get("project-governance")
+    )
+    user_owned = _normalize_project_governance_mapping(
+        user_config.get("project-governance")
+    )
+    profile_defaults = _profile_project_governance_defaults(
+        profile_registry,
+        active_profiles,
+    )
+    for key, value in profile_defaults.items():
+        if key in user_owned:
+            continue
+        current[key] = copy.deepcopy(value)
+    merged["project-governance"] = current
 
 
 def _materialize_policy_state_map(
@@ -2848,7 +2975,18 @@ def refresh_repo(repo_root: Path) -> int:
         config = _load_config_template(repo_root)
         user_config = _read_yaml(config_path) if config_path.exists() else {}
         _merge_user_config_values(config, user_config)
+        _drop_legacy_project_governance_metadata(config)
         initial_active_profiles = _active_profiles(config)
+        preview_profile_registry = profile_runtime.build_profile_registry(
+            repo_root,
+            initial_active_profiles,
+        )
+        _apply_profile_aware_project_governance_defaults(
+            config,
+            user_config,
+            preview_profile_registry,
+            initial_active_profiles,
+        )
         config["autogen_metadata_overlays"] = (
             _config_autogen_metadata_overlays(
                 repo_root,
@@ -2856,7 +2994,7 @@ def refresh_repo(repo_root: Path) -> int:
             )
         )
         project_governance_state = (
-            project_governance_runtime_module.resolve_runtime_state(
+            project_governance_service.resolve_runtime_state(
                 repo_root,
                 config_payload=config,
             )
@@ -2883,7 +3021,10 @@ def refresh_repo(repo_root: Path) -> int:
         print_step(f"Refresh failed: {error}", "🚫")
         return 1
 
-    registry_result = refresh_policy_registry(repo_root)
+    registry_result = refresh_policy_registry(
+        repo_root,
+        config_payload=config,
+    )
     if registry_result != 0:
         return registry_result
 
@@ -2978,7 +3119,7 @@ def refresh_repo(repo_root: Path) -> int:
         return 1
     try:
         project_governance_state = (
-            project_governance_runtime_module.resolve_runtime_state(
+            project_governance_service.resolve_runtime_state(
                 repo_root,
                 config_payload=config,
             )
@@ -3107,6 +3248,8 @@ def _resolve_policy_sources(
 
 def refresh_policy_registry(
     repo_root: Path | None = None,
+    *,
+    config_payload: dict[str, object] | None = None,
 ) -> int:
     """Refresh policy hashes.
 
@@ -3126,13 +3269,19 @@ def refresh_policy_registry(
         )
         return 1
 
+    if config_payload is None:
+        try:
+            config_payload = _read_yaml(
+                repo_root / "devcovenant" / "config.yaml"
+            )
+        except ValueError as error:
+            runtime_print(f"Error: {error}", file=sys.stderr)
+            return 1
     try:
-        context = metadata_runtime.build_metadata_context(repo_root)
-    except ValueError as error:
-        runtime_print(f"Error: {error}", file=sys.stderr)
-        return 1
-    try:
-        config_payload = _read_yaml(repo_root / "devcovenant" / "config.yaml")
+        context = metadata_runtime.build_metadata_context_from_payload(
+            repo_root,
+            dict(config_payload),
+        )
     except ValueError as error:
         runtime_print(f"Error: {error}", file=sys.stderr)
         return 1
@@ -3263,5 +3412,24 @@ def refresh_policy_registry(
             f"for {len(metadata_warning_targets)} key(s).",
             verbose_only=True,
         )
+
+    try:
+        project_governance_state = (
+            project_governance_service.resolve_runtime_state(
+                repo_root,
+                config_payload=config_payload,
+            )
+        )
+        declared_project_version = _read_project_version(
+            repo_root,
+            config_payload,
+            required=not project_governance_state.is_unversioned,
+        )
+        registry.update_project_governance(
+            project_governance_state.registry_payload(declared_project_version)
+        )
+    except ValueError as error:
+        runtime_print(f"Error: {error}", file=sys.stderr)
+        return 1
 
     return 0

@@ -73,25 +73,6 @@ policy_overlays:
     pep440_allow_prereleases: true
     pep440_allow_dev_releases: true
     pep440_allow_post_releases: true
-  project-governance:
-    changelog_file: CHANGELOG.md
-    unversioned_label: Unversioned
-    unreleased_heading: '## Unreleased'
-    allowed_stages:
-      - prototype
-      - alpha
-      - beta
-      - stable
-      - mature
-      - deprecated
-      - archived
-    allowed_development_stances:
-      - experimental
-      - active-development
-      - maintenance
-      - release-managed
-      - frozen
-      - sunset
   dependency-license-sync:
     dependency_files: []
     dependency_globs: []
@@ -507,3 +488,22 @@ policy_overlays:
       - .venv/Scripts/python.exe
     manual_commands:
       - python3 -m venv .venv
+project-governance:
+  changelog_file: CHANGELOG.md
+  unversioned_label: Unversioned
+  unreleased_heading: '## Unreleased'
+  allowed_stages:
+    - prototype
+    - alpha
+    - beta
+    - stable
+    - mature
+    - deprecated
+    - archived
+  allowed_development_stances:
+    - experimental
+    - active-development
+    - maintenance
+    - release-managed
+    - frozen
+    - sunset

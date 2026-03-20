@@ -54,6 +54,27 @@ def _write_policy_registry(repo_root: Path) -> None:
         ),
         encoding="utf-8",
     )
+    _write_runtime_config(repo_root)
+
+
+def _write_runtime_config(repo_root: Path) -> None:
+    """Write the minimal runtime config required by gate helpers."""
+    config_path = repo_root / "devcovenant" / "config.yaml"
+    config_path.parent.mkdir(parents=True, exist_ok=True)
+    config_path.write_text(
+        "\n".join(
+            [
+                "project-governance:",
+                "  stage: stable",
+                "  development_stance: active-development",
+                "  versioning_mode: versioned",
+                "engine:",
+                "  auto_fix_enabled: false",
+                "",
+            ]
+        ),
+        encoding="utf-8",
+    )
 
 
 def _write_changelog(repo_root: Path) -> None:
@@ -212,7 +233,17 @@ def _unit_test_start_respects_autofix_enabled_config() -> None:
         config_path = repo_root / "devcovenant" / "config.yaml"
         config_path.parent.mkdir(parents=True, exist_ok=True)
         config_path.write_text(
-            "engine:\n  auto_fix_enabled: true\n",
+            "\n".join(
+                [
+                    "project-governance:",
+                    "  stage: stable",
+                    "  development_stance: active-development",
+                    "  versioning_mode: versioned",
+                    "engine:",
+                    "  auto_fix_enabled: true",
+                    "",
+                ]
+            ),
             encoding="utf-8",
         )
         captured_env: dict[str, str] = {}

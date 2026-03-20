@@ -16,9 +16,6 @@ from typing import Any, List
 
 import devcovenant.core.lib.document_exemptions as document_exemptions_lib
 import devcovenant.core.runtime.execution as execution_runtime_module
-from devcovenant.builtin.policies.project_governance import (
-    project_governance as project_governance_runtime_module,
-)
 from devcovenant.core.contracts.policy import (
     CheckContext,
     PolicyCheck,
@@ -34,6 +31,9 @@ from devcovenant.core.lib.document_exemptions import (
 )
 from devcovenant.core.lib.document_exemptions import (
     normalize_document_exemption_entry as _normalize_exemption_entry,
+)
+from devcovenant.core.services import (
+    project_governance as project_governance_service,
 )
 
 # Compatibility alias used by tests that monkeypatch runtime snapshot capture.
@@ -152,13 +152,10 @@ _non_exempt_content_hash = document_exemptions_lib.non_exempt_content_hash
 
 def _resolve_release_headings(context: CheckContext) -> list[str]:
     """Return active release-section headings for this repository."""
-    try:
-        return project_governance_runtime_module.resolve_release_headings(
-            context.repo_root,
-            config_payload=context.config,
-        )
-    except ValueError:
-        return ["## Version"]
+    return project_governance_service.resolve_release_headings(
+        context.repo_root,
+        config_payload=context.config,
+    )
 
 
 def _extract_summary_lines(
@@ -746,7 +743,19 @@ class ChangelogCoverageCheck(PolicyCheck):
             merged_changed.update(deleted_file_set)
             changed_files = sorted(merged_changed)
         changed_file_set = set(changed_files)
-        release_headings = _resolve_release_headings(context)
+        try:
+            release_headings = _resolve_release_headings(context)
+        except ValueError as error:
+            violations.append(
+                Violation(
+                    policy_id=self.policy_id,
+                    severity="error",
+                    file_path=context.repo_root / main_changelog_rel,
+                    message=str(error),
+                    can_auto_fix=False,
+                )
+            )
+            return violations
 
         main_files: List[str] = []
         collection_files: List[List[str]] = [[] for _ in collections]

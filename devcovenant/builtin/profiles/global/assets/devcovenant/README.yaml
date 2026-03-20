@@ -16,15 +16,22 @@ body: |-
 
   ## Table of Contents
   1. [Overview](#overview)
-  2. [Workflow](#workflow)
-  3. [Quick Start](#quick-start)
-  4. [Commands](#commands)
-  5. [License](#license)
+  2. [Project Governance](#project-governance)
+  3. [Workflow](#workflow)
+  4. [Quick Start](#quick-start)
+  5. [Commands](#commands)
+  6. [License](#license)
 
   ## Overview
   Use this README for DevCovenant runtime context in this repository.
   Keep policy source text in `AGENTS.md`, requirements in `SPEC.md`, and
   active execution tasks in `PLAN.md`.
+
+  ## Project Governance
+  Project-governance is the lifecycle-metadata service that feeds managed
+  doc headers, the AGENTS governance section, and tracked registry output.
+  Configure it directly in `devcovenant/config.yaml` and use
+  `devcovenant/docs/project_governance.md` for the detailed contract.
 
   ## Workflow
   Run the gate sequence for edits:

@@ -170,6 +170,21 @@ def _make_checker(
     status_path = (
         tmp_path / "devcovenant" / "registry" / "runtime" / "gate_status.json"
     )
+    config_path = tmp_path / "devcovenant" / "config.yaml"
+    if not config_path.exists():
+        config_path.parent.mkdir(parents=True, exist_ok=True)
+        config_path.write_text(
+            "\n".join(
+                [
+                    "project-governance:",
+                    "  stage: stable",
+                    "  development_stance: active-development",
+                    "  versioning_mode: versioned",
+                    "",
+                ]
+            ),
+            encoding="utf-8",
+        )
     if not status_path.exists():
         _write_gate_status(tmp_path, "")
     return checker

@@ -24,16 +24,17 @@ matches checks, and release notes that do not reflect what actually changed.
 2. [Glossary (Canonical Terms)](#glossary-canonical-terms)
 3. [Why DevCovenant](#why-devcovenant)
 4. [Quick Start](#quick-start)
-5. [Runtime Model](#runtime-model)
-6. [Evidence Artifacts](#evidence-artifacts)
-7. [Command Surface](#command-surface)
-8. [Lifecycle](#lifecycle)
-9. [Workflow](#workflow)
-10. [Policy Activation and Metadata](#policy-activation-and-metadata)
-11. [Profiles and Translators](#profiles-and-translators)
-12. [Extension Surfaces](#extension-surfaces)
-13. [Docs Map](#docs-map)
-14. [License](#license)
+5. [Project Governance](#project-governance)
+6. [Runtime Model](#runtime-model)
+7. [Evidence Artifacts](#evidence-artifacts)
+8. [Command Surface](#command-surface)
+9. [Lifecycle](#lifecycle)
+10. [Workflow](#workflow)
+11. [Policy Activation and Metadata](#policy-activation-and-metadata)
+12. [Profiles and Translators](#profiles-and-translators)
+13. [Extension Surfaces](#extension-surfaces)
+14. [Docs Map](#docs-map)
+15. [License](#license)
 
 ## Overview
 DevCovenant treats policy prose as executable contract, not static guidance.
@@ -157,6 +158,38 @@ If you want the full lifecycle proof (not the 90-second ritual), run the
 normal gate sequence:
 `devcovenant gate --start` -> `devcovenant gate --mid` loop ->
 `devcovenant test` -> `devcovenant gate --end`.
+
+## Project Governance
+`project-governance` is the repo-owned lifecycle contract for the project
+itself.
+It lives directly in `devcovenant/config.yaml`, not in the generated AGENTS
+policy block.
+
+It governs:
+- `stage`
+- `development_stance`
+- `versioning_mode`
+- optional `codename`
+- optional `build_identity`
+- the displayed unversioned label and unreleased changelog heading
+
+This service is orthogonal to `version-governance`:
+- `project-governance` describes the project's lifecycle posture
+- `version-governance` validates actual version format/progression rules
+
+That lets a repo be:
+- versioned and stable
+- versioned and experimental
+- intentionally unversioned while still fully governed
+
+Resolved project-governance state surfaces in:
+- `devcovenant/config.yaml`
+- `devcovenant/registry/registry.yaml`
+- the dedicated `Project Governance` section in `AGENTS.md`
+- headers in `AGENTS.md`, `SPEC.md`, `PLAN.md`, and `CHANGELOG.md`
+
+For the detailed field contract, rendering surfaces, and changelog behavior,
+see `devcovenant/docs/project_governance.md`.
 
 ## Runtime Model
 Core runtime ownership:
@@ -429,6 +462,9 @@ removed.
 Detailed package docs under `devcovenant/docs/`:
 - `installation.md`:
   install/deploy/upgrade/teardown lifecycle runbooks
+- `project_governance.md`:
+  lifecycle metadata contract, rendering surfaces, and unversioned/versioned
+  behavior
 - `workflow.md`:
   gate contract, session semantics, and the canonical 90-second evidence ritual
 - `config.md`:

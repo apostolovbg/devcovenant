@@ -267,6 +267,7 @@ def _base_registry_document() -> Dict[str, Any]:
             "schema_version": 1,
             "registry_layout": "single-root",
         },
+        "project-governance": {},
         "policies": {},
         "profiles": {},
         "inventory": {},
@@ -292,7 +293,13 @@ def _load_registry_document(path: Path) -> Dict[str, Any]:
     if not isinstance(payload, dict):
         raise ValueError("Registry payload must be a YAML mapping: " f"{path}")
     normalized = _base_registry_document()
-    for key in ("metadata", "policies", "profiles", "inventory"):
+    for key in (
+        "metadata",
+        "project-governance",
+        "policies",
+        "profiles",
+        "inventory",
+    ):
         value = payload.get(key)
         if isinstance(value, dict):
             normalized[key] = value
@@ -499,6 +506,14 @@ class PolicyRegistry:
         """Save the registry to disk."""
         self._normalize_registry_hashes()
         _write_registry_document(self.registry_path, self._data)
+
+    def update_project_governance(
+        self,
+        payload: Dict[str, Any],
+    ) -> None:
+        """Update the tracked project-governance registry section."""
+        self._data["project-governance"] = dict(payload)
+        self.save()
 
     def policy_ids(self) -> set[str]:
         """Return policy IDs currently stored in the registry."""

@@ -143,7 +143,8 @@ Invariant:
   descriptors must declare ordered keys
   (`title`, `doc_id`, `doc_type`, `project_version`, `last_updated`,
   `devcovenant_version`, `managed_block`, `body`, optional
-  `project_governance_headers`, optional `workflow_block`);
+  `project_governance_headers`, optional `project_governance_section`,
+  optional `workflow_block`);
   multiline `managed_block`/`body`/`workflow_block` values must use YAML
   literal block scalar style so generated markdown remains deterministic.
 - `devcovenant/core/runtime/run_logging.py` provides the shared per-run log
@@ -671,14 +672,22 @@ Invariant:
   ordering logic; it loads one repo-relative Python module and expects that
   module to export `SCHEME` with the same version-governance adapter
   interface used by builtin schemes.
-- `project-governance` owns project-phase and stance metadata
-  (`stage`, `development_stance`, `versioning_mode`) plus optional
-  `codename` and `build_identity`. It does not replace
-  `version-governance`; it adds lifecycle governance around it.
+- `project-governance` now lives in
+  `devcovenant/core/services/project_governance.py` as a core service
+  backed by the top-level `project-governance:` config section. It owns
+  project-phase and stance metadata (`stage`, `development_stance`,
+  `versioning_mode`) plus optional `codename` and `build_identity`. It does
+  not replace `version-governance`; it adds lifecycle governance around it.
+- the dedicated operator-facing contract for that service now lives in
+  `devcovenant/docs/project_governance.md`; architecture docs keep the
+  implementation view only.
 - refresh resolves `Project Version` through `project-governance` so
   intentionally unversioned repos render an explicit non-version label
   instead of a fake numbered release, and opted-in managed docs may render
   additional governance headers when their descriptor opts in.
+- AGENTS also renders a dedicated managed project-governance section after
+  the workflow block so agents can read the resolved repo lifecycle state
+  directly before the generated policy block.
 - refresh can adopt pre-authored DevCovenant-shaped docs such as `SPEC.md`,
   `README.md`, or `PLAN.md` during first bootstrap: if an existing target doc
   already carries matching `Doc ID` /

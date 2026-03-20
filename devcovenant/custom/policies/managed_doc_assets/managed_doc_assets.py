@@ -13,18 +13,16 @@ from typing import Dict, List
 
 import yaml
 
-from devcovenant.builtin.policies.project_governance import (
-    project_governance as project_governance_runtime_module,
-)
 from devcovenant.core.contracts.policy import (
     CheckContext,
     PolicyCheck,
     Violation,
 )
-
-ProjectGovernanceState = (
-    project_governance_runtime_module.ProjectGovernanceState
+from devcovenant.core.services import (
+    project_governance as project_governance_service,
 )
+
+ProjectGovernanceState = project_governance_service.ProjectGovernanceState
 
 
 class ManagedDocAssetsCheck(PolicyCheck):
@@ -65,12 +63,21 @@ class ManagedDocAssetsCheck(PolicyCheck):
         violations: List[Violation] = []
         repo_root = context.repo_root
         assets_dir = self._assets_dir(repo_root)
-        project_governance_state = (
-            project_governance_runtime_module.resolve_runtime_state(
-                repo_root,
-                config_payload=context.config,
+        try:
+            project_governance_state = (
+                project_governance_service.resolve_runtime_state(
+                    repo_root,
+                    config_payload=context.config,
+                )
             )
-        )
+        except ValueError as error:
+            return [
+                Violation(
+                    policy_id=self.policy_id,
+                    severity="error",
+                    message=str(error),
+                )
+            ]
 
         for entry in self.managed_docs:
             doc_path = repo_root / entry["doc"]
@@ -305,6 +312,34 @@ class ManagedDocAssetsCheck(PolicyCheck):
                 )
             )
 
+        governance_section_required = bool(
+            descriptor.get("project_governance_section", False)
+        )
+        actual_governance_section = ""
+        managed_blocks = doc_info.get("managed_blocks", [])
+        if isinstance(managed_blocks, list) and len(managed_blocks) > 1:
+            actual_governance_section = str(managed_blocks[1]).strip("\n")
+        expected_governance_section = ""
+        if governance_section_required:
+            expected_governance_section = (
+                self._expected_project_governance_section(
+                    project_governance_state,
+                    str(header_map.get(self._PROJECT_VERSION_LABEL, "")),
+                )
+            )
+        if expected_governance_section != actual_governance_section:
+            violations.append(
+                Violation(
+                    policy_id=self.policy_id,
+                    severity="error",
+                    file_path=descriptor_path,
+                    message=(
+                        f"Project-governance section for {doc_name} no "
+                        "longer matches its rendered contract."
+                    ),
+                )
+            )
+
         return violations
 
     def _missing_doc_violation(self, doc_path: Path) -> Violation:
@@ -382,22 +417,30 @@ class ManagedDocAssetsCheck(PolicyCheck):
                 if stripped.startswith(label):
                     header_map[label] = stripped.split(label, 1)[1].strip()
 
-        managed_block_lines: List[str] = []
+        managed_blocks: List[str] = []
+        current_block_lines: List[str] = []
         inside = False
         has_managed_block = False
         for line in lines:
             if "<!-- DEVCOV:BEGIN -->" in line:
                 inside = True
                 has_managed_block = True
+                current_block_lines = []
                 continue
             if "<!-- DEVCOV:END -->" in line:
-                break
+                if inside:
+                    managed_blocks.append(
+                        self._strip_preserve_blocks(
+                            "\n".join(current_block_lines)
+                        ).strip("\n")
+                    )
+                inside = False
+                current_block_lines = []
+                continue
             if inside:
-                managed_block_lines.append(line.rstrip())
+                current_block_lines.append(line.rstrip())
 
-        managed_block = self._strip_preserve_blocks(
-            "\n".join(managed_block_lines)
-        ).strip("\n")
+        managed_block = managed_blocks[0] if managed_blocks else ""
 
         return {
             "title": title,
@@ -405,6 +448,7 @@ class ManagedDocAssetsCheck(PolicyCheck):
             "doc_type": doc_type,
             "header_map": header_map,
             "managed_block": managed_block,
+            "managed_blocks": managed_blocks,
             "has_managed_block": has_managed_block,
         }
 
@@ -461,7 +505,7 @@ class ManagedDocAssetsCheck(PolicyCheck):
 
     def _project_governance_labels(
         self,
-        state: project_governance_runtime_module.ProjectGovernanceState,
+        state: ProjectGovernanceState,
     ) -> list[str]:
         """Return expected AGENTS header labels for project-governance."""
         labels = [
@@ -474,3 +518,15 @@ class ManagedDocAssetsCheck(PolicyCheck):
         if state.build_identity:
             labels.append(self._BUILD_IDENTITY_LABEL)
         return labels
+
+    def _expected_project_governance_section(
+        self,
+        state: ProjectGovernanceState,
+        project_version: str,
+    ) -> str:
+        """Return expected AGENTS project-governance section body text."""
+        try:
+            lines = state.section_lines(project_version)
+        except ValueError:
+            return ""
+        return "\n".join(lines).strip("\n")

@@ -33,6 +33,8 @@ Layered kernel modules now live under
 `devcovenant/core/{flow,runtime,services,lib,contracts}`.
 Namespace scaffolds under `devcovenant/builtin/{policies,profiles}` are the
 canonical bundled stock paths.
+The lifecycle-metadata contract that feeds AGENTS, SPEC, PLAN, CHANGELOG, and
+registry outputs is documented in `devcovenant/docs/project_governance.md`.
 
 ## Program Vocabulary
 - `gate session`:
@@ -164,10 +166,10 @@ Shared gate hook targeting:
   top-entry fingerprint behavior stay centralized
 - default changelog exemption header keys align with generated doc headers:
   `Last Updated`, `Project Version`, and `DevCovenant Version`
-- when `project-governance` is active, opted-in managed docs may also render
-  `Project Stage`, `Development Stance`, `Versioning Mode`,
-  `Project Codename`, and `Build Identity`; changelog helper logic resolves
-  active release headings from the same project-governance runtime so
+- the resolved `project-governance` service can add `Project Stage`,
+  `Development Stance`, `Versioning Mode`, `Project Codename`, and
+  `Build Identity` to opted-in managed docs; changelog helper logic resolves
+  active release headings from the same service so
   intentionally unversioned repos can use `## Unreleased`
 - fail with explicit retry instructions (run `devcovenant test`, then rerun
   `devcovenant gate --start`) when recovery/reconcile requires fresh test
@@ -255,6 +257,9 @@ Install/upgrade boundary:
 - refresh renders the compact managed header set for ordinary docs and can
   add project-governance header lines to any opted-in managed doc when the
   descriptor requests them
+- AGENTS also renders a dedicated managed `Project Governance` section after
+  the workflow block so agents can read the resolved repo lifecycle state
+  directly before the generated policy block
 - refresh writes final per-policy metadata snapshots to
   `devcovenant/registry/registry.yaml` and now also records per-key
   `metadata_resolution` trace plus `metadata_warnings` for destructive

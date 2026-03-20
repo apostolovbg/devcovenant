@@ -183,6 +183,15 @@ and runtime metadata resolution. Treat it as managed and do not edit it
 directly.
 <!-- DEVCOV-WORKFLOW:END -->
 
+<!-- DEVCOV:BEGIN -->
+## Project Governance
+This block reflects the repository's active project-governance state.
+- Project Version: 1.0.0
+- Project Stage: stable
+- Development Stance: active-development
+- Versioning Mode: versioned
+<!-- DEVCOV:END -->
+
 <!-- DEVCOV-POLICIES:BEGIN -->
 ## Policy: Changelog Coverage
 
@@ -1372,52 +1381,6 @@ This policy flags bare `except`, broad `except Exception` handlers,
 generic `raise Exception(...)`, and silent `except Exception: pass`
 handlers in selected source files. Broad-handler waivers are explicit
 through marker comments or marker regions.
-
-
----
-
-## Policy: Project Governance
-
-```policy-def
-id: project-governance
-severity: error
-auto_fix: false
-enforcement: active
-enabled: true
-custom: false
-stage: stable
-development_stance: active-development
-versioning_mode: versioned
-codename:
-build_identity:
-changelog_file: CHANGELOG.md
-unversioned_label: Unversioned
-unreleased_heading: ## Unreleased
-allowed_stages: prototype
-  alpha
-  beta
-  stable
-  mature
-  deprecated
-  archived
-allowed_development_stances: experimental
-  active-development
-  maintenance
-  release-managed
-  frozen
-  sunset
-```
-
-When enabled, this policy governs project lifecycle metadata that is
-orthogonal to release numbering: project stage, development stance,
-versioning mode, optional codename, optional build identity, and the
-unversioned changelog flow. Repositories may keep it active alongside
-`version-governance` when they want explicit project-state headers and
-lifecycle rules without redefining version semantics.
-Activation is controlled by `config.yaml -> policy_state`. Repositories
-should choose explicit values for `stage`, `development_stance`, and
-`versioning_mode`, then tune optional labels or allowed vocabularies as
-needed.
 
 
 ---

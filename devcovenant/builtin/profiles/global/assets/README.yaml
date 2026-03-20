@@ -11,13 +11,19 @@ body: |-
 
   ## Table of Contents
   1. [Overview](#overview)
-  2. [Architecture](#architecture)
-  3. [Getting Started](#getting-started)
-  4. [Workflow](#workflow)
-  5. [License](#license)
+  2. [Project Governance](#project-governance)
+  3. [Architecture](#architecture)
+  4. [Getting Started](#getting-started)
+  5. [Workflow](#workflow)
+  6. [License](#license)
 
   ## Overview
   Provide a concise description of the project scope and current status.
+
+  ## Project Governance
+  Document the repository lifecycle contract here: current stage,
+  development stance, versioning mode, and where contributors should look
+  for deeper governance detail.
 
   ## Architecture
   Summarize the main components and where deeper documentation lives.

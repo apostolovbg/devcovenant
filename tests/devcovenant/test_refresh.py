@@ -45,6 +45,20 @@ def _unit_test_refresh_builds_tracked_registry_and_agents() -> None:
         spec_text = spec_path.read_text(encoding="utf-8")
         assert "**Project Stage:** prototype" in spec_text
         assert "**Versioning Mode:** unversioned" in spec_text
+        agents_text = agents_path.read_text(encoding="utf-8")
+        assert "## Project Governance" in agents_text
+        assert agents_text.index("## Project Governance") < agents_text.index(
+            "<!-- DEVCOV-POLICIES:BEGIN -->"
+        )
+        registry_payload = yaml.safe_load(
+            policy_registry.read_text(encoding="utf-8")
+        )
+        assert "project-governance" in registry_payload
+        assert (
+            registry_payload["project-governance"]["versioning_mode"]
+            == "unversioned"
+        )
+        assert "project-governance" not in registry_payload["policies"]
 
 
 def _unit_test_refresh_updates_managed_block_only() -> None:
@@ -235,9 +249,10 @@ def _unit_test_refresh_updates_all_managed_blocks() -> None:
         assert "old secondary block" not in updated
         assert "keep me" in updated
         assert "## THE DEV COVENANT" in updated
+        assert "## Project Governance" in updated
         assert "<!-- DEVCOV-WORKFLOW:BEGIN -->" in updated
         assert "<!-- DEVCOV-WORKFLOW:END -->" in updated
-        assert updated.count("<!-- DEVCOV:BEGIN -->") == 1
+        assert updated.count("<!-- DEVCOV:BEGIN -->") == 2
 
 
 def _unit_test_refresh_writes_ruff_cache_gitignore() -> None:
@@ -585,10 +600,7 @@ def _unit_test_refresh_rejects_missing_version_for_versioned_repo() -> None:
 
         config_path = repo_root / "devcovenant" / "config.yaml"
         payload = yaml.safe_load(config_path.read_text(encoding="utf-8"))
-        payload.setdefault("policy_state", {})
-        payload["policy_state"]["project-governance"] = True
-        payload.setdefault("user_metadata_overlays", {})
-        payload["user_metadata_overlays"]["project-governance"] = {
+        payload["project-governance"] = {
             "stage": "stable",
             "development_stance": "active-development",
             "versioning_mode": "versioned",
@@ -613,10 +625,7 @@ def _unit_test_refresh_allows_unversioned_repo_without_version_file() -> None:
 
         config_path = repo_root / "devcovenant" / "config.yaml"
         payload = yaml.safe_load(config_path.read_text(encoding="utf-8"))
-        payload.setdefault("policy_state", {})
-        payload["policy_state"]["project-governance"] = True
-        payload.setdefault("user_metadata_overlays", {})
-        payload["user_metadata_overlays"]["project-governance"] = {
+        payload["project-governance"] = {
             "stage": "beta",
             "development_stance": "active-development",
             "versioning_mode": "unversioned",
@@ -635,6 +644,12 @@ def _unit_test_refresh_allows_unversioned_repo_without_version_file() -> None:
         spec_text = spec_path.read_text(encoding="utf-8")
         assert "**Project Stage:** beta" in spec_text
         assert "**Versioning Mode:** unversioned" in spec_text
+        plan_text = (repo_root / "PLAN.md").read_text(encoding="utf-8")
+        changelog_text = (repo_root / "CHANGELOG.md").read_text(
+            encoding="utf-8"
+        )
+        assert "**Project Stage:** beta" in plan_text
+        assert "**Project Stage:** beta" in changelog_text
 
 
 def _unit_test_refresh_renders_canonical_workflow_triggers() -> None:

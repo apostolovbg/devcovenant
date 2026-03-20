@@ -4,6 +4,7 @@ doc_type: changelog
 project_version: true
 last_updated: true
 devcovenant_version: true
+project_governance_headers: true
 managed_block: |-
   ## DevCovenant Change Logging Rules
   This opening section is managed by DevCovenant for repositories that
