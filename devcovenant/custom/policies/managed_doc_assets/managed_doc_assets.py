@@ -1,8 +1,8 @@
 """
 Policy: Managed Document Assets
 
-Ensure managed-document descriptors in global assets remain the authoritative
-source for generated header fields and managed block payloads.
+Ensure managed documents and their global-asset descriptors stay
+synchronized.
 """
 
 from __future__ import annotations
@@ -61,7 +61,7 @@ class ManagedDocAssetsCheck(PolicyCheck):
         ]
 
     def check(self, context: CheckContext) -> List[Violation]:
-        """Inspect docs and descriptors to ensure authoritative sync."""
+        """Inspect docs and descriptors to ensure synchronization."""
         violations: List[Violation] = []
         repo_root = context.repo_root
         assets_dir = self._assets_dir(repo_root)

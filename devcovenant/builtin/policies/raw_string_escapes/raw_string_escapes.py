@@ -132,7 +132,7 @@ def _parse_language_suffixes(raw: object) -> dict[str, set[str]]:
 def _values_for_language(
     mapping: dict[str, tuple[Pattern[str], ...]], language: str
 ) -> tuple[Pattern[str], ...]:
-    """Return compiled patterns for one language plus wildcard fallback."""
+    """Return compiled patterns for one language plus wildcard defaults."""
     language_token = str(language or "").strip().lower()
     values: list[Pattern[str]] = []
     values.extend(mapping.get("*", tuple()))

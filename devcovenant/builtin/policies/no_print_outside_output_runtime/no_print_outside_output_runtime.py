@@ -171,7 +171,7 @@ def _python_call_matches(*, target: str, dotted: str, leaf: str) -> bool:
 def _targets_for_language(
     mapping: dict[str, set[str]], language: str
 ) -> set[str]:
-    """Return targets defined for language plus wildcard fallback."""
+    """Return targets defined for one language plus wildcard defaults."""
     values = set(mapping.get(language, set()))
     values.update(mapping.get("*", set()))
     return values

@@ -92,6 +92,7 @@ def _unit_test_refresh_imports_same_version_header_only_spec_doc() -> None:
         updated = spec_path.read_text(encoding="utf-8")
         assert "**Project Stage:** prototype" in updated
         assert "**Versioning Mode:** unversioned" in updated
+        assert "This opening section is managed by DevCovenant." in updated
         assert "Custom imported spec body." in updated
 
 
@@ -116,6 +117,7 @@ def _unit_test_refresh_imports_same_version_header_only_plan_doc() -> None:
         assert result == 0
 
         updated = plan_path.read_text(encoding="utf-8")
+        assert "This opening section is managed by DevCovenant." in updated
         assert "Custom imported planning body." in updated
         assert "**DevCovenant Version:** 1.0.0" in updated
 

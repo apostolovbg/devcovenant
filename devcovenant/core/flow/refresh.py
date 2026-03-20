@@ -2549,10 +2549,10 @@ def _find_devcovenant_hook(
 
 def _ensure_devcovenant_hook_present(
     payload: dict[str, object],
-    fallback_hook: dict[str, object] | None,
+    default_hook: dict[str, object] | None,
 ) -> None:
     """Ensure generated pre-commit payload contains the devcovenant hook."""
-    if not fallback_hook:
+    if not default_hook:
         return
     repos_value = payload.get("repos")
     if not isinstance(repos_value, list):
@@ -2573,14 +2573,14 @@ def _ensure_devcovenant_hook_present(
             for hook_entry in hooks_value
         )
         if not has_devcovenant:
-            hooks_value.append(copy.deepcopy(fallback_hook))
+            hooks_value.append(copy.deepcopy(default_hook))
         payload["repos"] = repos_value
         return
 
     repos_value.append(
         {
             "repo": "local",
-            "hooks": [copy.deepcopy(fallback_hook)],
+            "hooks": [copy.deepcopy(default_hook)],
         }
     )
     payload["repos"] = repos_value

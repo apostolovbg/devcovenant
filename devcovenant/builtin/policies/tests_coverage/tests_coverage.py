@@ -69,7 +69,7 @@ def _parse_lang_values(raw: object) -> dict[str, list[str]]:
 def _values_for_language(
     mapping: dict[str, list[str]], language: str
 ) -> tuple[str, ...]:
-    """Resolve configured values for a language with wildcard fallback."""
+    """Resolve configured values for a language with wildcard defaults."""
     language_token = str(language or "").strip().lower()
     values: list[str] = []
     values.extend(mapping.get("*", []))
@@ -91,7 +91,7 @@ def _configured_bool(policy: PolicyCheck, key: str, default: bool) -> bool:
 
 
 def _configured_int(policy: PolicyCheck, key: str, default: int) -> int:
-    """Return one policy option coerced to int with fallback."""
+    """Return one policy option coerced to int with a configured default."""
     raw = policy.get_option(key, default)
     if isinstance(raw, int):
         return raw

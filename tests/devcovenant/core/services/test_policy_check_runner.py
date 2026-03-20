@@ -62,10 +62,10 @@ def _unit_test_symbol_assertions_cover_runner_seam() -> None:
     assert module.run_policy_checks
 
 
-def _unit_test_critical_disable_attempted_uses_state_and_fallback_config() -> (
+def _unit_test_critical_disable_attempted_uses_state_and_default_config() -> (
     None
 ):
-    """Critical-disable helper should honor state and config fallback."""
+    """Critical-disable helper should honor state and config defaults."""
     module = importlib.import_module(MODULE)
     critical_policy = _policy("critical-demo", severity="critical")
     warning_policy = _policy("warning-demo", severity="warning")
@@ -261,9 +261,9 @@ class GeneratedUnittestCases(unittest.TestCase):
         """Run explicit policy-check-runner symbol assertions."""
         _unit_test_symbol_assertions_cover_runner_seam()
 
-    def test_critical_disable_attempted_uses_state_and_fallback_config(self):
-        """Run critical-disable state/fallback assertions."""
-        _unit_test_critical_disable_attempted_uses_state_and_fallback_config()
+    def test_critical_disable_attempted_uses_state_and_default_config(self):
+        """Run critical-disable state/default assertions."""
+        _unit_test_critical_disable_attempted_uses_state_and_default_config()
 
     def test_critical_disable_attempt_violation_messages_are_stable(self):
         """Run critical-disable violation message assertions."""

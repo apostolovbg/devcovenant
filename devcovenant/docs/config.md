@@ -1,5 +1,5 @@
 # Configuration
-**Last Updated:** 2026-03-19
+**Last Updated:** 2026-03-20
 **Project Version:** 1.0.0
 
 ## Table of Contents
@@ -270,7 +270,8 @@ Refresh behavior:
 Profiles do not activate policies.
 
 Notable activation defaults in this repository:
-- `version-governance` stays `false` outside release slices.
+- `version-governance` stays `false` in the global config template until a
+  repository explicitly opts in.
 - `version-sync` stays `false` in the global config template by default.
 - `raw-string-escapes` stays optional and can be enabled when repositories
   want language-aware suspicious-escape checks beyond repo-specific custom

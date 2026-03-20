@@ -4,7 +4,9 @@ doc_type: plan
 project_version: true
 last_updated: true
 devcovenant_version: true
-managed_block: ''
+managed_block: |-
+  This opening section is managed by DevCovenant.
+  Use `PLAN.md` to track active implementation work below this block.
 body: |-
   Use this plan to track active implementation work. Keep items
   dependency-ordered, factual, and current.

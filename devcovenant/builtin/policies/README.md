@@ -49,9 +49,10 @@ to shared translator runtime, which returns normalized language units.
 
 ## Autofix Contract
 Autofix helpers are optional.
-When present, they live in `autofix/` and follow language-aware fallback rules:
+When present, they live in `autofix/` and follow language-aware default
+resolution rules:
 - language-specific autofix helper when available
-- `autofix/global.py` fallback otherwise
+- `autofix/global.py` as the global default otherwise
 
 A custom policy override suppresses builtin autofix helpers for that policy ID.
 

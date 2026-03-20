@@ -141,10 +141,10 @@ class SelectorSet:
         def option(name: str, default: object | None = None) -> object | None:
             """Return the merged metadata/config value for ``name``."""
             key = f"{prefix}{name}" if prefix else name
-            fallback = default
-            if fallback is None and defaults:
-                fallback = defaults.get(name)
-            return policy.get_option(key, fallback)
+            default_value = default
+            if default_value is None and defaults:
+                default_value = defaults.get(name)
+            return policy.get_option(key, default_value)
 
         return cls(
             include_suffixes=_normalize_suffixes(
@@ -230,10 +230,10 @@ def build_watchlists(
     def option(name: str) -> object | None:
         """Return the merged metadata/config value for ``name``."""
         key = f"{prefix}{name}" if prefix else name
-        fallback: object | None = None
+        default_value: object | None = None
         if defaults:
-            fallback = defaults.get(name)
-        return policy.get_option(key, fallback)
+            default_value = defaults.get(name)
+        return policy.get_option(key, default_value)
 
     return (
         _normalize_paths(_normalize_list(option("watch_files"))),

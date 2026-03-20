@@ -1,5 +1,5 @@
 # DevCovenant Architecture Contracts
-**Last Updated:** 2026-03-19
+**Last Updated:** 2026-03-20
 **Project Version:** 1.0.0
 
 ## Table of Contents
@@ -269,8 +269,8 @@ Invariant:
   protection fences.
 - Bundled policy/profile sources are canonical under
   `devcovenant/builtin/policies` and `devcovenant/builtin/profiles`.
-- Legacy bundled policy/profile source trees are removed; runtime resolves
-  bundled checks/profiles from builtin.
+- Removed bundled policy/profile source trees stay removed; runtime resolves
+  bundled checks/profiles from builtin only.
 - Managed-environment CLI re-exec is single-hop guarded to prevent loops.
 
 ### Gate Contract
@@ -645,6 +645,9 @@ Invariant:
   delegates repo-level parsing/comparison to version-governance while
   optionally layering role-scoped ecosystem legality such as
   `package_manifest=>pep440`.
+- synchronized version equality now prefers canonical or parsed equivalence
+  before ordered comparison, so format-only schemes such as `custom_regex`
+  remain strict without pretending they can express progression.
 - version-governance owns version-format validation, scheme-aware bump
   progression, and any scheme-specific release-rule validation enabled by the
   active adapter.
@@ -682,6 +685,9 @@ Invariant:
   `Doc Type` headers and a `DevCovenant Version` equal to or newer than the
   running runtime, refresh upgrades its managed header/block surfaces instead
   of discarding the authored body outright.
+- `readme-sync` keeps the packaged `devcovenant/README.md` as a projection of
+  the root `README.md`, removing only `<!-- REPO-ONLY:* -->` sections so this
+  repository maintains one authored README source.
 - document replacement rules are exact across refresh/bootstrap paths:
   - missing docs may be created from assets/templates
   - empty docs may be replaced fully

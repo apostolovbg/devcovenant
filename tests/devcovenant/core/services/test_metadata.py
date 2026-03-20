@@ -154,7 +154,7 @@ def _empty_context(module):
 
 
 def _unit_test_resolved_bundle_preserves_string_map_contract() -> None:
-    """Typed bundle should match legacy string-map resolver output."""
+    """Typed bundle should match string-map resolver output."""
     module = importlib.import_module(MODULE)
     descriptor_module = importlib.import_module(
         "devcovenant.core.services.registry"
@@ -378,7 +378,7 @@ class GeneratedUnittestCases(unittest.TestCase):
     def test_resolve_policy_metadata_bundle_preserves_string_map_contract(
         self,
     ):
-        """Run typed-bundle vs legacy string-map compatibility assertions."""
+        """Run typed-bundle vs string-map compatibility assertions."""
         _unit_test_resolved_bundle_preserves_string_map_contract()
 
     def test_resolve_policy_metadata_bundle_tracks_layer_trace_and_warnings(

@@ -5,7 +5,7 @@
 **Project Stage:** stable
 **Development Stance:** active-development
 **Versioning Mode:** versioned
-**Last Updated:** 2026-03-19
+**Last Updated:** 2026-03-20
 **DevCovenant Version:** 1.0.0
 
 <!-- DEVCOV:BEGIN -->
@@ -1123,10 +1123,9 @@ custom: true
 ```
 
 Ensure AGENTS.md, README.md, PLAN.md, SPEC.md, CHANGELOG.md, and
-CONTRIBUTING.md remain the authoritative sources for their managed-block
-descriptors under `devcovenant/builtin/profiles/global/assets/` so
-documentation
-generation is deterministic.
+CONTRIBUTING.md stay synchronized with their managed-doc descriptors under
+`devcovenant/builtin/profiles/global/assets/` so documentation generation
+remains deterministic.
 
 
 ---
@@ -1533,10 +1532,10 @@ enabled: true
 custom: true
 ```
 
-Ensure `devcovenant/README.md` mirrors `README.md` with repository-only
-sections removed via the `<!-- REPO-ONLY:BEGIN -->` /
-`<!-- REPO-ONLY:END -->` markers. Auto-fix rewrites the packaged guide from
-the repo README.
+Ensure `devcovenant/README.md` stays synchronized with the authored root
+`README.md` while removing repository-only sections via the
+`<!-- REPO-ONLY:BEGIN -->` / `<!-- REPO-ONLY:END -->` markers. Auto-fix
+rewrites the packaged guide from the repo README.
 
 
 ---

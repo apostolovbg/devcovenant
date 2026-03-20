@@ -5206,10 +5206,9 @@ policies:
     description: Managed Doc Assets
     policy_text: |-
       Ensure AGENTS.md, README.md, PLAN.md, SPEC.md, CHANGELOG.md, and
-      CONTRIBUTING.md remain the authoritative sources for their managed-block
-      descriptors under `devcovenant/builtin/profiles/global/assets/` so
-      documentation
-      generation is deterministic.
+      CONTRIBUTING.md stay synchronized with their managed-doc descriptors under
+      `devcovenant/builtin/profiles/global/assets/` so documentation generation
+      remains deterministic.
     metadata:
       id: managed-doc-assets
       severity: error
@@ -5296,7 +5295,7 @@ policies:
     assets: []
     origin: custom
     script_exists: true
-    hash: beb2958546d3c02486e727c7011b48a52dec73cc2222d210ec1d2e2277d9db69
+    hash: 3e45781a15f42bd9c1b7c8e93a66884a4627d435626cde0b4a66a3b67ee17459
     script_path: custom/managed_doc_assets.py
   managed-environment:
     enabled: true
@@ -5947,7 +5946,7 @@ policies:
     - tests/**
     origin: builtin
     script_exists: true
-    hash: cd34c0c0f5367c7aa2137cc6e60bcf733064575eba397a4097592703b63011e3
+    hash: 8b8a3181f37bfcd4746342f3cc6d59bde0a5ca2fe5d92c68029c9fac16e5910f
     script_path: builtin/modules_need_tests.py
   name-clarity:
     enabled: true
@@ -6670,7 +6669,7 @@ policies:
     - tests/**
     origin: builtin
     script_exists: true
-    hash: b5d63bb57ec38d5d2389b40afbd43aa07c16ba6e714e34d41368c487d2a9f9e1
+    hash: 33c529f7b8a47fe21b72988b910c7f0373285567ded1359e088103ca6a3a34cc
     script_path: builtin/no_print_outside_output_runtime.py
   no-raw-errors:
     enabled: true
@@ -7368,7 +7367,7 @@ policies:
     assets: []
     origin: builtin
     script_exists: true
-    hash: 8ecb3f96d60fc6e3f27b33dae9f72ce1552402b8ce68323f19daebf272c3f4c9
+    hash: f7a6c0a7caeecb7e17aa6d31d061b42aff2f1256da79886a09fed91bd60c18b8
     script_path: builtin/raw_string_escapes.py
   read-only-directories:
     enabled: true
@@ -7591,10 +7590,10 @@ policies:
     custom: true
     description: Readme Sync
     policy_text: |-
-      Ensure `devcovenant/README.md` mirrors `README.md` with repository-only
-      sections removed via the `<!-- REPO-ONLY:BEGIN -->` /
-      `<!-- REPO-ONLY:END -->` markers. Auto-fix rewrites the packaged guide from
-      the repo README.
+      Ensure `devcovenant/README.md` stays synchronized with the authored root
+      `README.md` while removing repository-only sections via the
+      `<!-- REPO-ONLY:BEGIN -->` / `<!-- REPO-ONLY:END -->` markers. Auto-fix
+      rewrites the packaged guide from the repo README.
     metadata:
       id: readme-sync
       severity: error
@@ -7681,7 +7680,7 @@ policies:
     assets: []
     origin: custom
     script_exists: true
-    hash: 12c670b7ac1070d5998787e6e9c87fe331e715bb8c4ef40ea4c0f99a2f220866
+    hash: f1c9814eacfae639a816bbc76d872f31bc525e33ff2c8c45bb7ded435a4b6419
     script_path: custom/readme_sync.py
   security-scanner:
     enabled: true
@@ -8432,7 +8431,7 @@ policies:
     - tests/**
     origin: builtin
     script_exists: true
-    hash: f66bcda45fc036f4d98d713c894eb4717ec97b6e91d0c27930cb76851e188685
+    hash: 4685021d04ee0bd883bcdb0c8c8360aa3957fb2dc4874a4a108fc65694c34121
     script_path: builtin/tests_coverage.py
   version-sync:
     enabled: true
@@ -8847,7 +8846,7 @@ policies:
     - docs=>devcovenant/registry/README.md
     origin: builtin
     script_exists: true
-    hash: 9ed82373c84784252feddf31a6c1a4eb8fcd49ea05b487f8ce3c8314906941ba
+    hash: d760b491b68f395a079cd594bade23e82d06cbb716102195e0261b145383211c
     script_path: builtin/version_sync.py
   version-governance:
     enabled: false

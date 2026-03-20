@@ -6,7 +6,7 @@ import fnmatch
 import json
 import re
 from pathlib import Path
-from typing import Iterable, List, Optional
+from typing import Any, Iterable, List, Optional
 
 import yaml
 
@@ -291,27 +291,15 @@ class VersionSyncCheck(PolicyCheck):
                         )
                         continue
 
-                try:
-                    matches_tracked = (
-                        scheme.compare_versions(
-                            target_parsed,
-                            tracked_parsed,
-                        )
-                        == 0
-                    )
-                except ValueError as exc:
-                    violations.append(
-                        Violation(
-                            policy_id=self.policy_id,
-                            severity="error",
-                            file_path=target,
-                            message=(
-                                "Cannot compare synchronized versions under "
-                                f"scheme `{scheme_name}`: {exc}"
-                            ),
-                        )
-                    )
-                    continue
+                matches_tracked = self._versions_match(
+                    scheme=scheme,
+                    left_parsed=target_parsed,
+                    right_parsed=tracked_parsed,
+                    left_text=target_version,
+                    right_text=tracked_version,
+                    governance_check=governance_check,
+                    repo_root=context.repo_root,
+                )
 
                 if not matches_tracked:
                     violations.append(
@@ -363,13 +351,6 @@ class VersionSyncCheck(PolicyCheck):
                             governance_check,
                             context.repo_root,
                         )
-                        matches_tracked = (
-                            scheme.compare_versions(
-                                latest_parsed,
-                                tracked_parsed,
-                            )
-                            == 0
-                        )
                     except ValueError as exc:
                         violations.append(
                             Violation(
@@ -384,6 +365,15 @@ class VersionSyncCheck(PolicyCheck):
                             )
                         )
                     else:
+                        matches_tracked = self._versions_match(
+                            scheme=scheme,
+                            left_parsed=latest_parsed,
+                            right_parsed=tracked_parsed,
+                            left_text=latest,
+                            right_text=tracked_version,
+                            governance_check=governance_check,
+                            repo_root=context.repo_root,
+                        )
                         if not matches_tracked:
                             violations.append(
                                 Violation(
@@ -398,6 +388,42 @@ class VersionSyncCheck(PolicyCheck):
                                 )
                             )
         return violations
+
+    @staticmethod
+    def _versions_match(
+        *,
+        scheme: Any,
+        left_parsed: Any,
+        right_parsed: Any,
+        left_text: str,
+        right_text: str,
+        governance_check: PolicyCheck,
+        repo_root: Path,
+    ) -> bool:
+        """Return True when synchronized version surfaces are equivalent."""
+        if left_text == right_text:
+            return True
+
+        left_canonical = scheme.canonicalize_version(
+            left_parsed,
+            governance_check,
+            repo_root,
+        )
+        right_canonical = scheme.canonicalize_version(
+            right_parsed,
+            governance_check,
+            repo_root,
+        )
+        if left_canonical or right_canonical:
+            return left_canonical == right_canonical
+
+        if left_parsed == right_parsed:
+            return True
+
+        try:
+            return scheme.compare_versions(left_parsed, right_parsed) == 0
+        except ValueError:
+            return False
 
     @staticmethod
     def _normalize_list(raw: Iterable[str] | str | None) -> List[str]:

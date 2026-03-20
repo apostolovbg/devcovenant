@@ -1,5 +1,5 @@
 # Profiles
-**Last Updated:** 2026-03-19
+**Last Updated:** 2026-03-20
 **Project Version:** 1.0.0
 
 ## Table of Contents
@@ -215,6 +215,9 @@ Versioning and lifecycle-governance metadata are profile-driven:
   during first install/deploy, where compatible pre-authored docs such as
   `SPEC.md`, `README.md`, and `PLAN.md` can be imported as seed content
   instead of being overwritten.
+- in this repository, the authored README source remains `README.md`, while
+  `readme-sync` derives `devcovenant/README.md` by removing repo-only blocks
+  for the packaged guide.
 - `defaults` seeds `version-governance` with shared path, ordering, and
   scheme-governance controls: `version_file`, `changelog_file`,
   `changelog_header_prefix`, `enforce_bumping`,
@@ -344,8 +347,9 @@ Asset materialization rules:
   DevCovenant intro text instead of one generic "Read first" message
 - `CONTRIBUTING.yaml` keeps the standard DevCovenant workflow inside the
   managed block and leaves repository notes below `<!-- DEVCOV:END -->`
-- repository profiles can treat `README.md` / `devcovenant/README.md` as
-  canonical docs map/start-here entrypoints
+- repository profiles can treat `README.md` as the authored docs-map/start-
+  here entrypoint and `devcovenant/README.md` as the packaged projection when
+  they want one maintained README source plus a repo-only-pruned user guide
 - AGENTS workflow wording should prefer artifact summaries/tails/logs for
   debugging and caution against verbose streaming token overhead without
   forbidding concise normal-mode streaming
@@ -384,6 +388,9 @@ Asset materialization rules:
 - the global `README.yaml` asset intentionally leaves the root `README.md`
   managed note blank; repo-specific authored README content remains outside
   managed regions unless the file is missing, empty, or one line only
+- the global `PLAN.yaml` and `SPEC.yaml` assets keep explicit managed
+  identity blocks; only the root `README.md` intentionally uses an empty
+  managed block
 
 Hook rules:
 - pre-commit fragments merge into generated `.pre-commit-config.yaml`

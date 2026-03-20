@@ -98,12 +98,12 @@ class CustomRegexScheme:
         return token
 
     def compare_versions(self, left: str, right: str) -> int:
-        """Return lexical ordering for unreachable defensive fallback only."""
-        if left < right:
-            return -1
-        if left > right:
-            return 1
-        return 0
+        """Reject ordered comparison because regex-only mode is format-only."""
+        del left, right
+        raise ValueError(
+            "`custom_regex` does not define version ordering; disable "
+            "`enforce_bumping` or use `custom_adapter`."
+        )
 
     def canonicalize_version(
         self,

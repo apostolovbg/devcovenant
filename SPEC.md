@@ -5,11 +5,12 @@
 **Project Stage:** stable
 **Development Stance:** active-development
 **Versioning Mode:** versioned
-**Last Updated:** 2026-03-19
+**Last Updated:** 2026-03-20
 **DevCovenant Version:** 1.0.0
 
 <!-- DEVCOV:BEGIN -->
-
+This opening section is managed by DevCovenant.
+Use `SPEC.md` only for durable repository contracts below this block.
 <!-- DEVCOV:END -->
 
 This is a generic SPEC guide template.

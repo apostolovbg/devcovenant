@@ -93,7 +93,7 @@ def _parse_lang_values(raw: object) -> dict[str, list[str]]:
 def _values_for_language(
     mapping: dict[str, list[str]], language: str
 ) -> tuple[str, ...]:
-    """Resolve language values with wildcard fallback."""
+    """Resolve language values with wildcard defaults."""
     token = str(language or "").strip().lower()
     values: list[str] = []
     values.extend(mapping.get("*", []))

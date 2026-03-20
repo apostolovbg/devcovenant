@@ -1,5 +1,5 @@
 # Policies
-**Last Updated:** 2026-03-19
+**Last Updated:** 2026-03-20
 **Project Version:** 1.0.0
 
 ## Table of Contents
@@ -308,10 +308,19 @@ High-impact runtime contracts:
   overlays just to keep packaged docs compliant.
 - `last-updated` violation suggestions report the effective allowlist,
   including allowlisted globs, instead of only explicit files/suffixes.
+- `readme-sync` keeps `devcovenant/README.md` as the packaged projection of
+  the root `README.md`, removing only repo-only sections so this repository
+  maintains one authored README source.
+- `managed-doc-assets` is a synchronization guard between managed docs and
+  their global asset descriptors; it does not make one side a universal
+  authority over the other.
 - `version-sync` owns synchronized version surfaces and any explicit
   role-scoped package-legality checks, while repo-level version format
   validation, scheme-aware bump progression, and comparison semantics are
   handled by `version-governance`.
+- `version-sync` now resolves synchronized equality through canonical text or
+  parsed equality before attempting ordered comparison, so format-only schemes
+  such as `custom_regex` stay strict without inventing progression semantics.
 - `version-governance` activation follows `config.yaml -> policy_state`;
   descriptor text should stay neutral and not hardcode an enabled/disabled
   deployment assumption.
@@ -319,6 +328,10 @@ High-impact runtime contracts:
   `version_governance.py` and delegates scheme-specific parsing/comparison
   rules to sibling modules such as `semver.py`, `calver.py`, `integer.py`,
   `pep440.py`, `custom_regex.py`, and `custom_adapter.py`.
+- `custom_regex` is format-only by design; it now raises an explicit error if
+  ordered comparison is requested instead of inventing lexical progression.
+- wildcard language helpers in builtin policy runtime now describe
+  configuration merging as default resolution rather than generic fallback.
 - the shared shell now separates generic forward-ordering enforcement from
   scheme-owned progression/release validation, so non-SemVer adapters do not
   inherit major/minor/patch semantics accidentally

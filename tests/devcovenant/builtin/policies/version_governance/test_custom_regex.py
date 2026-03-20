@@ -55,7 +55,10 @@ class TestCustomRegexScheme(unittest.TestCase):
             r"[IVXLC]+",
         )
         self.assertEqual(scheme.parse_version("IV", check, Path(".")), "IV")
-        self.assertEqual(scheme.compare_versions("III", "IV"), -1)
+        with self.assertRaisesRegex(
+            ValueError, "does not define version ordering"
+        ):
+            scheme.compare_versions("III", "IV")
         self.assertIsNone(scheme.canonicalize_version("IV", check, Path(".")))
         release = version_governance.VersionReleaseContext(
             repo_root=Path("."),

@@ -5,7 +5,9 @@ project_version: true
 last_updated: true
 devcovenant_version: true
 project_governance_headers: true
-managed_block: ''
+managed_block: |-
+  This opening section is managed by DevCovenant.
+  Use `SPEC.md` only for durable repository contracts below this block.
 body: |-
   This is a generic SPEC guide template.
 

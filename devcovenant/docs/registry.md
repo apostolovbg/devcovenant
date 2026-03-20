@@ -1,5 +1,5 @@
 # Registry Files
-**Last Updated:** 2026-03-19
+**Last Updated:** 2026-03-20
 **Project Version:** 1.0.0
 
 ## Table of Contents
@@ -135,6 +135,10 @@ Tracked registry regeneration occurs on full refresh paths:
 - `devcovenant upgrade`
 - gate pre-commit phases (`devcovenant gate --start` / `--end`) through the
   gate-owned `check` orchestration path
+- policy descriptor text/hash changes propagate into
+  `devcovenant/registry/registry.yaml` on the next full refresh path, so the
+  tracked registry keeps the current policy contract text, hash state, and
+  synchronized-equality contract changes
 
 Gate status evolves on:
 - `devcovenant gate --start`

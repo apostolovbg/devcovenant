@@ -1,5 +1,5 @@
 # Installation and Lifecycle
-**Last Updated:** 2026-03-19
+**Last Updated:** 2026-03-20
 **Project Version:** 1.0.0
 
 ## Table of Contents
@@ -116,6 +116,9 @@ Recommended operating sequence:
    `README.md`, and `PLAN.md` can stay in place before this step; the first
    deploy adopts them when their `DevCovenant Version` is at least as new as
    the runtime being installed.
+   In this repository, the root `README.md` remains the authored source while
+   `devcovenant/README.md` is the packaged projection with repo-only sections
+   removed.
 4. Do work under start -> mid preflight loop -> test -> end gates.
 5. Use `refresh`/`upgrade` when contracts or core content change.
 6. Use `clean` when local build/cache residue needs pruning after those runs

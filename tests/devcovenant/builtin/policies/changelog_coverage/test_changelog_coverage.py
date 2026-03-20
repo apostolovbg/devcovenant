@@ -1639,7 +1639,7 @@ def _unit_test_session_requires_start_numstat_snapshot(
 def _unit_test_session_rejects_invalid_start_numstat_payload(
     tmp_path: Path, monkeypatch: MonkeyPatch
 ):
-    """Invalid legacy start numstat payload should be ignored."""
+    """Invalid unsupported start numstat payload should be ignored."""
     today = date.today().isoformat()
     entry = (
         f"- {today}:\n"

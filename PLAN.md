@@ -2,11 +2,12 @@
 **Doc ID:** PLAN
 **Doc Type:** plan
 **Project Version:** 1.0.0
-**Last Updated:** 2026-03-19
+**Last Updated:** 2026-03-20
 **DevCovenant Version:** 1.0.0
 
 <!-- DEVCOV:BEGIN -->
-
+This opening section is managed by DevCovenant.
+Use `PLAN.md` to track active implementation work below this block.
 <!-- DEVCOV:END -->
 
 Use this plan to track active implementation work. Keep items
@@ -44,16 +45,17 @@ dependency-ordered, factual, and current.
    upgrade/gate paths so existing non-empty, non-one-line docs keep their
    authored body content while DevCovenant updates only managed headers and
    explicit managed blocks.
-2. [not done] Docs And Contract Harmonization.
-   Remove repo-specific product wording such as the `version-governance`
-   `release slices` note, make the README model explicit
-   (`README.md` is the authored source and `devcovenant/README.md` is the
-   synced repo-only-pruned projection), and align managed-doc-assets wording
-   with the real doc/asset synchronization contract.
-3. [not done] Strictness, Naming, And Final Closure.
-   Clean the remaining misleading fallback/legacy naming where runtime is
-   already strict, then re-run the anti-bullshit audit and close the plan
-   only when docs, assets, policies, and runtime tell the same story.
+2. [done] Docs And Contract Harmonization.
+   Removed the stale `version-governance` `release slices` wording, made the
+   README model explicit (`README.md` is the authored source and
+   `devcovenant/README.md` is the synced repo-only-pruned projection), and
+   aligned managed-doc-assets wording with the real doc/asset synchronization
+   contract.
+3. [done] Strictness, Naming, And Final Closure.
+   Cleaned the remaining misleading fallback/legacy naming where runtime is
+   already strict, replaced the fake `custom_regex` ordering path with an
+   explicit error, and closed the final anti-bullshit cleanup cycle so docs,
+   assets, policies, and runtime tell the same story.
 
 ## Validation Routine
 - Verify checks and tests pass.

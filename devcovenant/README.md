@@ -2,7 +2,7 @@
 **Doc ID:** README
 **Doc Type:** repo-readme
 **Project Version:** 1.0.0
-**Last Updated:** 2026-03-19
+**Last Updated:** 2026-03-20
 **DevCovenant Version:** 1.0.0
 
 <!-- DEVCOV:BEGIN -->
@@ -403,6 +403,9 @@ Extension guidance:
 ## Docs Map
 This README is the canonical docs entrypoint for the packaged documentation
 set.
+In this repository, `README.md` is the authored source and
+`devcovenant/README.md` is the synced packaged guide with repo-only sections
+removed.
 
 ### Documentation Tiers
 - universal/package docs:

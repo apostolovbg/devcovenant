@@ -2,7 +2,7 @@
 **Doc ID:** CHANGELOG
 **Doc Type:** changelog
 **Project Version:** 1.0.0
-**Last Updated:** 2026-03-19
+**Last Updated:** 2026-03-20
 **DevCovenant Version:** 1.0.0
 
 <!-- DEVCOV:BEGIN -->
@@ -55,6 +55,98 @@ Example:
 ## Log changes here
 
 ## Version 1.0.0
+
+- 2026-03-20:
+  Change: Closed Item 3 in `PLAN.md`, fixed the final `version-sync`
+  equality seam for format-only schemes, and aligned the routed docs for the
+  closeout pass.
+  Why: Defined a strict equality path for `version-sync` because
+  `custom_regex` should stay format-only and should not pretend ordered
+  progression exists.
+  Impact: Keeps the final cleanup closure traceable, keeps format-only
+  schemes synchronized without fake ordering, and records the routed-doc
+  updates for this gate session.
+  Files:
+  CHANGELOG.md
+  PLAN.md
+  devcovenant/builtin/policies/version_sync/version_sync.py
+  devcovenant/docs/architecture.md
+  devcovenant/docs/policies.md
+  devcovenant/docs/registry.md
+  devcovenant/registry/registry.yaml
+
+- 2026-03-20:
+  Change: Tightened Item 3 strictness by removing misleading fallback-style
+  naming, replacing the fake `custom_regex` ordering path with an explicit
+  error, and cleaning stale removed/unsupported wording.
+  Why: Reduced the last naming noise that still made strict default
+  resolution or rejected old shapes read like compatibility behavior.
+  Impact: Clarified strict runtime behavior, kept docs aligned with the real
+  default-resolution model, and prepared the final anti-bullshit closure
+  audit.
+  Files:
+  CHANGELOG.md
+  devcovenant/builtin/policies/README.md
+  devcovenant/builtin/policies/modules_need_tests/modules_need_tests.py
+  devcovenant/builtin/policies/no_print_outside_output_runtime/\
+    no_print_outside_output_runtime.py
+  devcovenant/builtin/policies/raw_string_escapes/raw_string_escapes.py
+  devcovenant/builtin/policies/tests_coverage/tests_coverage.py
+  devcovenant/builtin/policies/version_governance/custom_regex.py
+  devcovenant/core/flow/refresh.py
+  devcovenant/core/lib/selectors.py
+  devcovenant/docs/architecture.md
+  devcovenant/docs/policies.md
+  devcovenant/docs/workflow.md
+  tests/devcovenant/builtin/policies/changelog_coverage/\
+    test_changelog_coverage.py
+  tests/devcovenant/builtin/policies/version_governance/test_custom_regex.py
+  tests/devcovenant/core/services/test_metadata.py
+  tests/devcovenant/core/services/test_policy_check_runner.py
+
+- 2026-03-20:
+  Change: Aligned the remaining Item 2 docs and policy wording around
+  version-governance defaults, README ownership, and managed-doc asset sync.
+  Why: Removed repo-specific product wording, made the root README versus
+  packaged README contract explicit, and aligned managed-doc-assets text with
+  its real synchronization role.
+  Impact: Clarified the documentation contract, aligned policy prose with
+  runtime behavior, and closed Item 2 in `PLAN.md`.
+  Files:
+  AGENTS.md
+  CHANGELOG.md
+  PLAN.md
+  README.md
+  devcovenant/custom/policies/managed_doc_assets/managed_doc_assets.py
+  devcovenant/custom/policies/managed_doc_assets/managed_doc_assets.yaml
+  devcovenant/custom/policies/readme_sync/readme_sync.yaml
+  devcovenant/README.md
+  devcovenant/docs/architecture.md
+  devcovenant/docs/config.md
+  devcovenant/docs/installation.md
+  devcovenant/docs/policies.md
+  devcovenant/docs/profiles.md
+  devcovenant/docs/registry.md
+  devcovenant/docs/workflow.md
+  devcovenant/registry/registry.yaml
+
+- 2026-03-20:
+  Change: Restored explicit managed blocks for `PLAN.md` and `SPEC.md`
+  through their global doc assets and refresh coverage.
+  Why: Corrected the drift where only `README.md` was supposed to keep an
+  intentionally empty managed block, while `PLAN.md` and `SPEC.md` should
+  still render managed identity content.
+  Impact: Restored non-empty managed blocks to `PLAN.md` and `SPEC.md`,
+  proved the behavior in tests, and kept the root `README.md` as the only
+  intentionally empty managed block.
+  Files:
+  CHANGELOG.md
+  PLAN.md
+  SPEC.md
+  devcovenant/builtin/profiles/global/assets/PLAN.yaml
+  devcovenant/builtin/profiles/global/assets/SPEC.yaml
+  devcovenant/docs/profiles.md
+  tests/devcovenant/test_refresh.py
 
 - 2026-03-19:
   Change: Refined the remaining plan items so the closure path now focuses

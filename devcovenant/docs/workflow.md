@@ -1,5 +1,5 @@
 # Workflow
-**Last Updated:** 2026-03-19
+**Last Updated:** 2026-03-20
 **Project Version:** 1.0.0
 
 ## Table of Contents
@@ -223,6 +223,9 @@ Install/upgrade boundary:
   (`SPEC.md`, `README.md`, `PLAN.md`, and peers) so the first
   `refresh`/`deploy` adopts their authored content while updating generated
   headers and managed blocks to the active runtime
+- in this repository, `README.md` is the authored source and
+  `devcovenant/README.md` is the synced packaged projection with repo-only
+  sections stripped by `readme-sync`
 - document preservation rules are exact:
   - missing docs may be created from assets/templates
   - empty docs may be replaced fully
@@ -246,6 +249,9 @@ Install/upgrade boundary:
 - `refresh` and `upgrade` recreate missing tracked
   `devcovenant/registry/registry.yaml` explicitly, but they do not fabricate
   runtime registry session files when those are absent
+- refresh keeps the generated local `devcovenant` pre-commit hook explicit in
+  `.pre-commit-config.yaml`; when fragments omit it, refresh injects the
+  default local hook payload instead of treating it as compatibility state
 - refresh renders the compact managed header set for ordinary docs and can
   add project-governance header lines to any opted-in managed doc when the
   descriptor requests them

@@ -1,9 +1,9 @@
 id: readme-sync
 text: |
-  Ensure `devcovenant/README.md` mirrors `README.md` with repository-only
-  sections removed via the `<!-- REPO-ONLY:BEGIN -->` /
-  `<!-- REPO-ONLY:END -->` markers. Auto-fix rewrites the packaged guide from
-  the repo README.
+  Ensure `devcovenant/README.md` stays synchronized with the authored root
+  `README.md` while removing repository-only sections via the
+  `<!-- REPO-ONLY:BEGIN -->` / `<!-- REPO-ONLY:END -->` markers. Auto-fix
+  rewrites the packaged guide from the repo README.
 metadata:
   id: readme-sync
   severity: error
