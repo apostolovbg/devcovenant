@@ -8,8 +8,9 @@
 - [Custom Policies](#custom-policies)
 
 ## Overview
-Policies are the enforcement units in DevCovenant. Each policy has a YAML
-descriptor that documents its purpose and metadata, plus a script that
+Policies are the enforcement units in DevCovenant. Each policy has a
+YAML (YAML Ain't Markup Language) descriptor that documents its purpose and
+metadata, plus a script that
 implements the check. Policies are activated by config `policy_state`,
 while profiles provide metadata overlays.
 

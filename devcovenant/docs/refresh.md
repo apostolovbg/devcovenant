@@ -1,5 +1,5 @@
 # Refresh Behavior
-**Last Updated:** 2026-03-15
+**Last Updated:** 2026-03-20
 **Project Version:** 1.0.0
 
 ## Table of Contents
@@ -84,8 +84,8 @@ sections.
 `policy_state` regeneration rules:
 - materialize full alphabetical effective policy map
 - preserve existing user booleans
-- seed new policy IDs from resolved defaults
-- remove stale IDs no longer present in resolved policy set
+- seed new policy IDs (identifiers) from resolved defaults
+- remove stale IDs no longer present in the resolved policy set
 
 Operator guidance:
 - do not hand-edit autogen-owned sections

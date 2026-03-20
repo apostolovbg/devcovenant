@@ -16,8 +16,8 @@
 ## Overview
 This document is the stable architecture contract for DevCovenant.
 DevCovenant is a Repository Governance Framework.
-It is an SDLC policy and evidence engine, AI-resilient by design and usable
-without AI.
+It is an SDLC (software development lifecycle) policy and evidence engine,
+AI (artificial intelligence)-resilient by design and usable without AI.
 
 It captures behavior that should stay consistent across refactors. Detailed
 operational procedures stay in the other docs in this folder.
@@ -107,7 +107,9 @@ Invariant:
 - policy code remains contract-stable while metadata evolves.
 
 ## Contract Surface Matrix
-- Tier A: user contract (CLI behavior, config schema, managed doc formats).
+- Tier A: user contract
+  (CLI (command-line interface) behavior, config schema, managed doc
+  formats).
 - Tier B: extension contract (policy/profile/translator interfaces).
 - Tier C: data contract (tracked registry schema and runtime status payloads).
 - Tier D: layered kernel modules under
@@ -145,8 +147,9 @@ Invariant:
   `devcovenant_version`, `managed_block`, `body`, optional
   `project_governance_headers`, optional `project_governance_section`,
   optional `workflow_block`);
-  multiline `managed_block`/`body`/`workflow_block` values must use YAML
-  literal block scalar style so generated markdown remains deterministic.
+  multiline `managed_block`/`body`/`workflow_block` values must use
+  YAML (YAML Ain't Markup Language) literal block scalar style so generated
+  markdown remains deterministic.
 - `devcovenant/core/runtime/run_logging.py` provides the shared per-run log
   substrate (run-folder allocation, artifact metadata, and latest-run pointer
   updates under `devcovenant/logs/`) while command layers own integration.
@@ -184,7 +187,8 @@ Invariant:
   for each required command (for example `▶ [n/total] <command>` plus
   completion/failure lines).
 - Progress-bar parsing/rendering is removed from the DevCovenant runtime so
-  CI and agent terminals do not receive redraw/noise spam.
+  CI (continuous integration) and agent terminals do not receive
+  redraw/noise spam.
 - Runtime subprocess helpers and gate rerun helpers capture command
   stdout/stderr into the active run-log context so full-fidelity artifacts do
   not depend on console verbosity mode.
@@ -501,10 +505,11 @@ Invariant:
   preserving existing phase/start lines.
   Heartbeat scheduling remains sub-second so short silent steps can still emit
   deterministic liveness lines when heartbeat output is configured.
-- runtime subprocess helpers use a PTY-backed stream path on POSIX when
-  console emission is enabled so child-tool output flushes live instead of
-  accumulating in subprocess buffers; helpers fall back to pipe streaming
-  when PTY is unavailable or normal-mode suppression hides child output.
+- runtime subprocess helpers use a PTY (pseudoterminal)-backed stream path on
+  POSIX (Portable Operating System Interface) systems when console emission
+  is enabled so child-tool output flushes live instead of accumulating in
+  subprocess buffers; helpers fall back to pipe streaming when PTY is
+  unavailable or normal-mode suppression hides child output.
 - child command routing is centralized through
   `run_child_command_with_output_policy` in
   `devcovenant/core/runtime/execution.py`, with channel plans resolved via
@@ -640,7 +645,9 @@ Invariant:
   `intent`, `resolved`, and `package_manifest` mapped with
   `role=>selector` metadata entries.
 - version-sync extractor taxonomy is role-driven and format-aware:
-  `manifest_project_version` handles TOML/JSON/YAML manifests while
+  `manifest_project_version` handles TOML (Tom's Obvious, Minimal
+  Language)/JSON (JavaScript Object Notation)/YAML
+  (YAML Ain't Markup Language) manifests while
   `project_version_line` and `changelog_header_version` cover canonical
   docs/changelog surfaces plus any opted-in legal text, and version-sync
   delegates repo-level parsing/comparison to version-governance while
@@ -663,7 +670,8 @@ Invariant:
   scheme-specific parsing, comparison, and extra release rules.
 - SemVer keeps explicit scope-tag governance in the scheme adapter instead of
   leaking major/minor/patch language into other schemes.
-- PEP 440 owns marker-family governance in the adapter layer
+- PEP (Python Enhancement Proposal) 440 owns marker-family governance in the
+  adapter layer
   (`prerelease`, `devrelease`, `postrelease`) and can also enforce
   canonical normalized spellings.
 - `custom_regex.py` is the strict validation-only escape hatch for exotic

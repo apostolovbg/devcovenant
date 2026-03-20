@@ -60,6 +60,52 @@ Example:
 ## Version 1.0.0
 
 - 2026-03-20:
+  Change: Rewrote the active roadmap in `PLAN.md` around developer-mode
+  naming, the managed-docs service, descriptor-driven docs, optional/custom
+  managed docs, bootstrap clarity, and fuller teaching-oriented docs.
+  Why: Clarified the next implementation program so the repo can move from
+  recent governance fixes into the larger documentation and doc-engine
+  architecture work without carrying stale cleanup-era planning.
+  Impact: Defined a concrete six-item forward plan that now governs the next
+  development slices for config naming, managed docs, doc descriptors,
+  optional docs, bootstrap guidance, and documentation depth.
+  Files:
+  CHANGELOG.md
+  PLAN.md
+
+- 2026-03-20:
+  Change: Expanded first-use abbreviations across repo docs, managed doc
+  assets, and synced README surfaces.
+  Why: Enforced the documentation rule that each document must decipher an
+  abbreviation on first use instead of assuming reader familiarity.
+  Impact: Improved readability and consistency across the README, AGENTS,
+  CONTRIBUTING, reference docs, and self-hosting doc assets.
+  Files:
+  AGENTS.md
+  CHANGELOG.md
+  CONTRIBUTING.md
+  PROFILE_MAP.md
+  README.md
+  devcovenant/README.md
+  devcovenant/builtin/profiles/global/assets/AGENTS.yaml
+  devcovenant/builtin/profiles/global/assets/CONTRIBUTING.yaml
+  devcovenant/builtin/profiles/global/assets/devcovenant/README.yaml
+  devcovenant/custom/profiles/devcovrepo/assets/docs/config.md
+  devcovenant/custom/profiles/devcovrepo/assets/docs/installation.md
+  devcovenant/custom/profiles/devcovrepo/assets/docs/policies.md
+  devcovenant/custom/profiles/devcovrepo/assets/docs/refresh.md
+  devcovenant/custom/profiles/devcovrepo/assets/docs/workflow.md
+  devcovenant/docs/architecture.md
+  devcovenant/docs/config.md
+  devcovenant/docs/installation.md
+  devcovenant/docs/policies.md
+  devcovenant/docs/profiles.md
+  devcovenant/docs/refresh.md
+  devcovenant/docs/registry.md
+  devcovenant/docs/troubleshooting.md
+  devcovenant/docs/workflow.md
+
+- 2026-03-20:
   Change: Documented `project-governance` as a first-class service in the
   README surfaces, dedicated docs, and supporting reference docs.
   Why: Clarified where operators configure lifecycle metadata, how it

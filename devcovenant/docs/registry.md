@@ -32,7 +32,7 @@ Changes to that file are routed here by documentation-growth-tracking because
 this document is the user-facing explanation of the tracked registry contract.
 It includes:
 - resolved `project-governance` state as its own top-level registry section
-- discovered policy IDs
+- discovered policy IDs (identifiers)
 - descriptor/script paths and hashes
 - resolved metadata snapshots
 - per-key metadata resolution trace (`metadata_resolution`)

@@ -15,7 +15,8 @@ generated `.gitignore`. `refresh` is the standard full managed refresh for an
 already installed repo. `upgrade` reconciles core from source on every run and
 then runs refresh.
 
-Use `python3 -m devcovenant` when the console entry is not available.
+Use `python3 -m devcovenant` when the
+CLI (command-line interface) entry is not available.
 For source-checkout launches, DevCovenant suppresses Python cache-file writes
 automatically, so `python3 -m devcovenant ...` does not leave
 repo-local `devcovenant/__pycache__/` drift behind.
@@ -57,7 +58,7 @@ repo-local `devcovenant/__pycache__/` drift behind.
 - launcher truth: DevCovenant does not rely on repo-root startup hooks or
   in-package pre-import bootstrap tricks to control source-checkout bytecode
   writes. Top-level `python3 -m devcovenant ...` bytecode behavior is owned by
-  the shell/CI environment before Python starts.
+  the shell/CI (continuous integration) environment before Python starts.
 
 ## Examples
 ```bash

@@ -71,8 +71,10 @@ Those payload directories are repository-owned and are not packaged as
 distribution inventory for user repositories.
 
 Current repo-local example:
-- `restapi`: API governance overlays for endpoint-heavy repositories.
-  It tightens `documentation-growth-tracking` with API/OpenAPI `doc_routes`,
+- `restapi`: API (application programming interface) governance overlays for
+  endpoint-heavy repositories.
+  It tightens `documentation-growth-tracking` with API/OpenAPI
+  (OpenAPI Specification) `doc_routes`,
   hardens `security-scanner` and test policies with API path force-includes,
   keeps `no-raw-errors` broad-handler control explicit through
   `DEVCOV_ALLOW_BROAD_ONCE`, and can seed `docs/api.md`, `docs/auth.md`,
@@ -100,10 +102,10 @@ Guidelines:
 - keep value types explicit (`''`, `[]`, `{}` for empty placeholders)
 - prefer typed empties; do not use sentinel pseudo-empty tokens such as
   `__none__` in overlays
-- profile overlays may use YAML scalar/list/bool values directly; metadata
-  resolution preserves a stable string-map form for AGENTS/registry output and
-  runtime code consumes the shared typed decoder/view when it needs bool/list/
-  number semantics
+- profile overlays may use YAML (YAML Ain't Markup Language)
+  scalar/list/bool values directly; metadata resolution preserves a stable
+  string-map form for AGENTS/registry output and runtime code consumes the
+  shared typed decoder/view when it needs bool/list/number semantics
 - use config overlays/overrides only for repository-specific deltas
 - treat config overrides as destructive replacement, not additive merge;
   refresh records override-replacement warnings and per-key resolution trace
@@ -225,7 +227,8 @@ profile-driven through the dedicated config section:
 - `defaults` seeds `version-governance` with shared path, ordering, and
   scheme-governance controls: `version_file`, `changelog_file`,
   `changelog_header_prefix`, `enforce_bumping`,
-  `canonical_versions_required`, and the default PEP 440 marker toggles.
+  `canonical_versions_required`, and the default
+  PEP (Python Enhancement Proposal) 440 marker toggles.
 - repositories should choose `version-governance.scheme` explicitly in an
   active profile or repo config; repo-specific profiles may also add
   scheme-specific keys such as `semver_scope_tags_required`.
@@ -262,7 +265,9 @@ profile-driven through the dedicated config section:
 - docs roles, and any repo that opts legal text into version-sync, should
   usually use `project_version_line`
 - `manifest_project_version` is format-aware and should be used for manifest
-  roles that may include TOML/JSON/YAML files in mixed repositories
+  roles that may include TOML (Tom's Obvious, Minimal Language)/JSON
+  (JavaScript Object Notation)/YAML (YAML Ain't Markup Language) files in
+  mixed repositories
 - Python profiles now also seed `package_manifest=>pep440` legality so
   `pyproject.toml` stays packaging-legal even when repo-level equality runs
   under another governed scheme
@@ -386,7 +391,8 @@ Asset materialization rules:
 - refresh-generated governance workflow and repo-maintained
   `build.yml`/`publish.yml` workflows can set `PYTHONPYCACHEPREFIX` at job
   scope (DevCovenant uses `.gha-pycache`) for managed child commands and
-  stable CI behavior; source-checkout `python -m devcovenant ...` launches
+  stable CI (continuous integration) behavior; source-checkout
+  `python -m devcovenant ...` launches
   now suppress Python cache-file writes for the launcher process directly and
   clean the package-import cache on exit so source repos stay free of
   `__pycache__/` drift

@@ -26,8 +26,8 @@ That same global baseline also ignores ubiquitous editor, packaging,
 coverage, and DevCovenant runtime artifacts such as `.vscode/**`,
 `.idea/**`, `*.egg-info/**`, `pip-wheel-metadata/**`, `.coverage*`,
 `devcovenant/logs/**`, and `devcovenant/registry/runtime/**`.
-Runtime still requires valid YAML; parse/load errors in config remain
-blocking command failures.
+Runtime still requires valid YAML (YAML Ain't Markup Language); parse/load
+errors in config remain blocking command failures.
 The template source
 `devcovenant/builtin/profiles/global/assets/config.yaml` also carries detailed
 inline comments and should be treated as part of the configuration contract.
@@ -110,7 +110,8 @@ the same session so generated configs remain self-explanatory.
 
 - `user_metadata_overrides`: user replace layer (highest metadata authority).
 
-- `policy_state`: authoritative activation map for every policy ID.
+- `policy_state`: authoritative activation map for every policy
+  ID (identifier).
   `severity: critical` policies remain enforced even if a config toggle sets
   them to `false`; runtime emits an explicit diagnostic instead of silently
   honoring the disable attempt.
@@ -194,9 +195,10 @@ the same session so generated configs remain self-explanatory.
   `stage=>command` entries (`start|test|end|command|all`).
 
 - managed-environment command behavior:
-  when active, CLI commands automatically re-exec under the resolved managed
-  interpreter when the current interpreter differs. Missing or
-  non-executable managed interpreters now fail explicitly.
+  when active, CLI (command-line interface) commands automatically re-exec
+  under the resolved managed interpreter when the current interpreter
+  differs. Missing or non-executable managed interpreters now fail
+  explicitly.
   Lifecycle bootstrap/teardown commands (`install`, `deploy`, `undeploy`,
   `uninstall`) are excluded from managed re-exec.
 
@@ -336,7 +338,8 @@ user_metadata_overrides:
     enforce_bumping: true
 ```
 
-Configure version governance for a Python package using PEP 440:
+Configure version governance for a Python package using
+PEP (Python Enhancement Proposal) 440:
 ```yaml
 policy_state:
   version-governance: true

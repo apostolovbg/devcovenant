@@ -38,7 +38,8 @@ python3 -m devcovenant gate --end
 ```
 
 If the console script is not on your PATH, use
-`python3 -m devcovenant` instead of `devcovenant` for CLI commands.
+`python3 -m devcovenant` instead of `devcovenant` for
+CLI (command-line interface) commands.
 If the gate sequence fails, clear violations and rerun the required
 commands until the repository is clean.
 If managed-environment is enabled and the resolved interpreter is not

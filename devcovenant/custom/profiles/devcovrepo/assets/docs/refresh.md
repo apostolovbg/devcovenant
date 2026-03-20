@@ -13,7 +13,8 @@ registries, managed docs, policy blocks, and generated configs aligned with
 the active profiles and policy descriptors.
 
 ## Workflow
-1. Lightweight registry refresh runs at the start of each CLI command.
+1. Lightweight registry refresh runs at the start of each
+   CLI (command-line interface) command.
 2. `devcovenant refresh` runs a full managed refresh.
 3. `deploy` and `upgrade` also run a full refresh as part of their workflow.
 4. Gate-driven edit workflow should still run `gate --mid` before tests.

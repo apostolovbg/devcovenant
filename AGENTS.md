@@ -11,7 +11,8 @@
 <!-- DEVCOV:BEGIN -->
 # Message from DevCovenant's Human (Read First)
 
-This document is the canonical law of this repository for both humans and AI.
+This document is the canonical law of this repository for both humans and
+AI (artificial intelligence).
 If you do not follow it, commits will fail, development quality will drift, and
 the project in this repository will be compromised.
 
@@ -54,7 +55,8 @@ DevCovenant lifecycle and command behavior used by this repository.
 ## Release Control Notes
 - Human-controlled release operations remain manual.
 - Destructive history operations require explicit human direction.
-- Keep CI/governance checks green before publish decisions.
+- Keep CI (continuous integration)/governance checks green before publish
+  decisions.
 
 ## Hygiene Rules
 - Keep this section short, factual, and current.
@@ -115,9 +117,9 @@ during command waits.
    DevCovenant commands and tests in that environment. Installing
    DevCovenant in that environment is recommended.
 7. Run `devcovenant gate --start` before any repository edits. For
-   long-running commands, use non-PTY execution for non-interactive
-   DevCovenant commands, prefer low-frequency polling, and avoid verbose
-   or large-output streaming by default.
+   long-running commands, use non-PTY (pseudoterminal) execution for
+   non-interactive DevCovenant commands, prefer low-frequency polling,
+   and avoid verbose or large-output streaming by default.
    Polling cadence for long waits: 5s, 15s, 30s, 45s, 60s, 90s, 120s,
    150s, 180s, 240s, then every 60s.
    Do not narrate polling steps or cadence in routine progress updates
@@ -173,7 +175,7 @@ against the active stack.
 
 ## Command Form
 Primary command examples use on-PATH `devcovenant ...`.
-If the CLI is unavailable from source checkout, use
+If the CLI (command-line interface) is unavailable from source checkout, use
 `python3 -m devcovenant ...`.
 On Windows, `py -m devcovenant ...` is a common equivalent launcher form.
 

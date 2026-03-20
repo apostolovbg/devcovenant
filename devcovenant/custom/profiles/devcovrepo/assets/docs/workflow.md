@@ -5,7 +5,7 @@
 - [Workflow](#workflow)
 - [Gated Sequence](#gated-sequence)
 - [Test Runner](#test-runner)
-- [CI Notes](#ci-notes)
+- [CI (continuous integration) Notes](#ci-continuous-integration-notes)
 
 ## Overview
 DevCovenant enforces a fixed development workflow to keep policy checks,
@@ -45,7 +45,7 @@ available in run logs.
 Unhandled command exceptions are normalized to explicit user-facing errors;
 run logs keep full traceback detail for diagnostics.
 
-## CI Notes
+## CI (continuous integration) Notes
 CI pipelines should run the same gates. If a pre-commit hook changes files,
 rerun `gate --mid` and tests before recording the end gate so test results
 post-date any hook or autofix mutations.

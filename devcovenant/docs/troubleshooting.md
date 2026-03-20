@@ -1,5 +1,5 @@
 # Troubleshooting
-**Last Updated:** 2026-03-19
+**Last Updated:** 2026-03-20
 **Project Version:** 1.0.0
 
 ## Table of Contents
@@ -45,9 +45,10 @@ Use one reproducible loop:
 
 Run-log substrate note:
 - `devcovenant/core/runtime/run_logging.py` now defines the shared per-run
-  log substrate under `devcovenant/logs/`; root CLI commands now print a
-  run-log pointer and write summary artifacts you can inspect before opening
-  full stdout/stderr logs.
+  log substrate under `devcovenant/logs/`; root
+  CLI (command-line interface) commands now print a run-log pointer and
+  write summary artifacts you can inspect before opening full stdout/stderr
+  logs.
 - In `engine.tests_output_mode: normal`, test status output stays concise and
   flood-prone child output is suppressed; use the printed run-log pointer for
   details.
@@ -59,7 +60,8 @@ Run-log substrate note:
   artifacts already exist.
 - Use `devcovenant gate --status` for lifecycle inspection before rerunning
   gates when you only need current session state or latest run evidence.
-- Prefer non-PTY execution for non-interactive DevCovenant commands.
+- Prefer non-PTY (pseudoterminal) execution for non-interactive DevCovenant
+  commands.
 - Prefer low-frequency polling for long-running commands using this cadence:
   `5s`, `15s`, `30s`, `45s`, `60s`, `90s`, `120s`, `150s`, `180s`, `240s`,
   then every `60s`.
@@ -202,7 +204,7 @@ Recovery actions:
 
 Checklist for config edits:
 - avoid editing autogen sections directly
-- keep YAML types explicit
+- keep YAML (YAML Ain't Markup Language) types explicit
 - rerun refresh after profile/descriptor changes
 
 ## Teardown Recovery

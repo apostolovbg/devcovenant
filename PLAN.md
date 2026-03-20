@@ -43,22 +43,36 @@ dependency-ordered, factual, and current.
 - Update status in the same session when work lands.
 
 ## Active Work
-1. [done] Managed Document Preservation Hardening.
-   Restore exact document-preservation behavior across refresh/install/deploy/
-   upgrade/gate paths so existing non-empty, non-one-line docs keep their
-   authored body content while DevCovenant updates only managed headers and
-   explicit managed blocks.
-2. [done] Docs And Contract Harmonization.
-   Removed the stale `version-governance` `release slices` wording, made the
-   README model explicit (`README.md` is the authored source and
-   `devcovenant/README.md` is the synced repo-only-pruned projection), and
-   aligned managed-doc-assets wording with the real doc/asset synchronization
-   contract.
-3. [done] Strictness, Naming, And Final Closure.
-   Cleaned the remaining misleading fallback/legacy naming where runtime is
-   already strict, replaced the fake `custom_regex` ordering path with an
-   explicit error, and closed the final anti-bullshit cleanup cycle so docs,
-   assets, policies, and runtime tell the same story.
+1. [not done] Rename And Clarify Repository Integration Signals.
+   Replace `devcov_core_include` with `developer_mode`, make it `true` for
+   the DevCovenant repo and `false` for ordinary user repos by default, and
+   replace vague `generic_config` wording with an explicit config-review
+   state such as `config_review_pending`.
+2. [not done] Build A Managed-Docs Service.
+   Consolidate managed-document behavior into one core service that owns doc
+   discovery, descriptor loading, enable/disable resolution,
+   creation/adoption/preservation rules, managed header rendering, managed
+   block rendering, and seeded-doc import behavior instead of spreading that
+   logic across multiple flows and checks.
+3. [not done] Make Document Governance Fully Descriptor-Driven.
+   Remove hardcoded document special cases by letting document descriptors
+   declare project-governance header presence, any dedicated governance
+   section, managed-block content, default enablement, and builtin/custom doc
+   inventory behavior.
+4. [not done] Support Optional And Custom Managed Docs.
+   Allow additional managed docs from custom templates, allow builtin managed
+   docs to be turned off except for `AGENTS.md`, and prove the behavior by
+   making `PROFILE_MAP.md` and `POLICY_MAP.md` custom managed docs supplied
+   by the `devcovrepo` profile.
+5. [not done] Document Initial Integration And Bootstrap Clearly.
+   Fully document empty-repo install, seeded-doc install, existing-repo
+   install, config review, deploy, first gate cycle, and the exact reasons
+   those steps exist, including clearer inline guidance inside
+   `devcovenant/config.yaml`.
+6. [not done] Expand Documentation From Terse To Teaching-Quality.
+   Rewrite operator-shorthand docs into explanatory docs that teach what a
+   feature is, why it exists, how it behaves, when to use it, and how it
+   relates to adjacent DevCovenant concepts.
 
 ## Validation Routine
 - Verify checks and tests pass.

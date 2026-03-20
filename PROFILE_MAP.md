@@ -1,5 +1,5 @@
 # Profile Map
-**Last Updated:** 2026-03-09
+**Last Updated:** 2026-03-20
 **Project Version:** 1.0.0
 
 ## Table of Contents
@@ -57,7 +57,8 @@ Ops/tooling profiles:
 ## Custom Profiles
 - `devcovrepo`: repository-specific overlays/assets for DevCovenant dogfooding,
   including documentation-route metadata and broader modules-test mirrors.
-- `restapi`: reusable API-governance profile that tightens API-focused
+- `restapi`: reusable API (application programming interface) governance
+  profile that tightens API-focused
   documentation routes, security scope, and test coverage expectations, and
   seeds `docs/api.md`, `docs/auth.md`, and `docs/errors.md` assets.
 

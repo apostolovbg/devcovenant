@@ -10,8 +10,8 @@
 <!-- DEVCOV:END -->
 
 DevCovenant is a Repository Governance Framework.
-It is an SDLC policy and evidence engine, AI-resilient by design and usable
-without AI.
+It is an SDLC (software development lifecycle) policy and evidence engine,
+AI (artificial intelligence)-resilient by design and usable without AI.
 It keeps governance prose, runtime enforcement, and daily workflow behavior
 synchronized.
 
@@ -111,15 +111,16 @@ devcovenant test
 devcovenant gate --end
 ```
 
-If the console script is not available on PATH, use:
+If the console script is not available on PATH, use the
+CLI (command-line interface) module entry form:
 
 ```bash
 python3 -m devcovenant <command>
 ```
 
 For source-checkout launches, zero repo-local launcher-process bytecode
-control belongs to shell or CI `PYTHONPYCACHEPREFIX`, not to an in-package
-bootstrap hook.
+control belongs to shell or CI (continuous integration)
+`PYTHONPYCACHEPREFIX`, not to an in-package bootstrap hook.
 
 On Windows, a common equivalent is:
 
@@ -538,4 +539,5 @@ slice so policy prose and enforcement do not diverge.
 <!-- REPO-ONLY:END -->
 
 ## License
-This project is released under the MIT License.
+This project is released under the
+MIT (Massachusetts Institute of Technology) License.

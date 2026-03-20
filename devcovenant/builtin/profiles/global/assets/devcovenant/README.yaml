@@ -44,7 +44,8 @@ body: |-
   On Windows, `py -m devcovenant ...` is a common equivalent launcher form.
   For source-checkout launches, DevCovenant keeps the repo clean by
   suppressing later Python cache-file writes and removing the package-import
-  cache Python may emit before CLI startup, so `python3 -m devcovenant ...`
+  cache Python may emit before
+  CLI (command-line interface) startup, so `python3 -m devcovenant ...`
   does not leave repo-local `__pycache__/` drift behind.
 
   ## Quick Start

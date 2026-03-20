@@ -213,7 +213,7 @@ High-impact runtime contracts:
   dispatch (`command` stage).
   Runtime tracks completed stage preparation in
   `DEVCOV_MANAGED_STAGE_RUNS` so stage bootstrap commands are not repeated
-  across managed-interpreter CLI re-exec hops.
+  across managed-interpreter CLI (command-line interface) re-exec hops.
   Stage resolution honors explicit base environments so empty overrides
   isolate stage tracking from ambient process state.
   Managed command subprocess output now routes through the shared runtime
@@ -259,8 +259,9 @@ High-impact runtime contracts:
   scope stays snapshot-driven.
   Language-specific test-style requirements are metadata-driven through
   `test_style_requirements` (`language=>rule` tokens).
-  UTF-8 decode/read failures in module or test files are emitted as explicit
-  deterministic violations instead of aborting policy execution.
+  UTF-8 (8-bit Unicode Transformation Format) decode/read failures in module
+  or test files are emitted as explicit deterministic violations instead of
+  aborting policy execution.
 - `security-scanner` reads source via UTF-8 and emits explicit read/decode
   violations when files are unreadable, instead of raising runtime
   exceptions.
@@ -449,7 +450,8 @@ Boundary rule:
   completeness by itself.
 
 Package-distribution contract for this repository:
-- `pyproject.toml` uses SPDX `project.license` and PEP 639
+- `pyproject.toml` uses SPDX (Software Package Data Exchange)
+  `project.license` and PEP (Python Enhancement Proposal) 639
   `project.license-files`.
 - `MANIFEST.in` includes the same license-source artifacts for sdist inputs.
 - required shipped legal artifacts are:
@@ -498,7 +500,9 @@ Operational behavior:
   (plain or markdown header form) so version-sync can read arbitrary
   governed version formats
 - `manifest_project_version` is format-aware and resolves version fields from
-  TOML/JSON/YAML manifest files using the same role mapping contract
+  TOML (Tom's Obvious, Minimal Language)/JSON
+  (JavaScript Object Notation)/YAML (YAML Ain't Markup Language) manifest
+  files using the same role mapping contract
 - extracted values are parsed and compared through the active
   `version-governance` scheme, so equivalent canonical spellings can stay in
   sync even when raw strings differ (for example normalized package versions)
