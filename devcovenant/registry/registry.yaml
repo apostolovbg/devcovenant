@@ -5230,10 +5230,10 @@ policies:
     custom: true
     description: Managed Doc Assets
     policy_text: |-
-      Ensure AGENTS.md, README.md, PLAN.md, SPEC.md, CHANGELOG.md, and
-      CONTRIBUTING.md stay synchronized with their managed-doc descriptors under
-      `devcovenant/builtin/profiles/global/assets/` so documentation generation
-      remains deterministic.
+      Ensure the managed docs marked as authoritative sources stay synchronized
+      with their managed-doc descriptors under the global asset root and any
+      active profile asset roots so documentation generation remains
+      deterministic.
     metadata:
       id: managed-doc-assets
       severity: error
@@ -5320,7 +5320,7 @@ policies:
     assets: []
     origin: custom
     script_exists: true
-    hash: ddf3bd14232a957021a33878005ce759d3a7d3860704ebca4071b2b341806e4b
+    hash: 7ed645fe04b748d99e3cecab128fd4cd1606ebc12a0451e1db95dc2e7cc8924a
     script_path: custom/managed_doc_assets.py
   managed-environment:
     enabled: true
@@ -11722,6 +11722,8 @@ profiles:
     source: custom
     path: devcovenant/custom/profiles/devcovrepo
     assets_available:
+    - devcovenant/custom/profiles/devcovrepo/assets/POLICY_MAP.yaml
+    - devcovenant/custom/profiles/devcovrepo/assets/PROFILE_MAP.yaml
     - devcovenant/custom/profiles/devcovrepo/assets/docs/README.md
     - devcovenant/custom/profiles/devcovrepo/assets/docs/config.md
     - devcovenant/custom/profiles/devcovrepo/assets/docs/installation.md

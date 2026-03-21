@@ -1,15 +1,15 @@
 # -------------------------------------------------------------------
-# DevCovenant Config Template (generic install baseline)
+# DevCovenant Config Template (review-required baseline)
 # -------------------------------------------------------------------
 # This file is copied to `devcovenant/config.yaml` by `devcovenant install`.
 #
-# Install always seeds a safe generic stub:
-# - `install.generic_config: true`
+# Install always seeds a safe review-required baseline:
+# - `install.config_reviewed: false`
 # - profile set oriented to user repositories
 #
 # Typical flow:
 # 1) Review/edit this config.
-# 2) Set `install.generic_config: false`.
+# 2) Set `install.config_reviewed: true`.
 # 3) Run `devcovenant deploy`.
 # -------------------------------------------------------------------
 
@@ -17,11 +17,11 @@
 # Scope control
 # -------------------------------------------------------------------
 
-# Whether policy checks include DevCovenant's own implementation files.
-# - false: user-repo mode (ignore core internals)
-# - true: DevCovenant-repo mode (enforce the full tree)
+# Whether this repository is in DevCovenant developer mode.
+# - false: normal user-repo scope (exclude DevCovenant implementation internals from normal repo scope)
+# - true: DevCovenant developer mode (govern the full DevCovenant implementation tree)
 
-devcov_core_include: true
+developer_mode: true
 
 # -------------------------------------------------------------------
 # Profile activation
@@ -101,6 +101,8 @@ doc_assets:
   - SPEC.md
   - PLAN.md
   - CHANGELOG.md
+  - PROFILE_MAP.md
+  - POLICY_MAP.md
   - devcovenant/README.md
   user: []
 
@@ -113,7 +115,7 @@ doc_assets:
 # Set this to false after review to allow `devcovenant deploy`.
 
 install:
-  generic_config: false
+  config_reviewed: false
   import_managed_docs: []
 
 # -------------------------------------------------------------------

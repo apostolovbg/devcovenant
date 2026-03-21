@@ -10,12 +10,10 @@ if __package__ in {None, ""}:  # pragma: no cover
     sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
 import argparse
-import re
 import shutil
 import tempfile
 from pathlib import Path
 
-import semver
 import yaml
 
 import devcovenant.core.services.registry as manifest_module
@@ -25,6 +23,7 @@ from devcovenant.core.runtime.execution import (
     print_step,
     resolve_repo_root,
 )
+from devcovenant.core.services import managed_docs as managed_docs_service
 
 
 def _source_package_dir() -> Path:
@@ -38,90 +37,6 @@ def _target_package_dir(repo_root: Path) -> Path:
 
 
 _CUSTOM_SCAFFOLD_FILES = {"README.md", "__init__.py"}
-_SEMVER_COMPARE_RE = re.compile(
-    r"^(?P<core>\d+(?:\.\d+){0,2})"
-    r"(?:-(?P<prerelease>[0-9A-Za-z.-]+))?"
-    r"(?:\+(?P<build>[0-9A-Za-z.-]+))?$"
-)
-
-
-def _normalize_devcovenant_version_for_compare(raw: str) -> str:
-    """Normalize DevCovenant version text into parseable SemVer."""
-    token = str(raw or "").strip()
-    if not token:
-        raise ValueError("DevCovenant version cannot be empty.")
-    if token[:1] in {"v", "V"}:
-        token = token[1:].strip()
-    match = _SEMVER_COMPARE_RE.fullmatch(token)
-    if match is None:
-        raise ValueError(f"Invalid DevCovenant version string `{raw}`.")
-    core_parts = [part.strip() for part in match.group("core").split(".")]
-    if any(not part.isdigit() for part in core_parts):
-        raise ValueError(f"Invalid DevCovenant version string `{raw}`.")
-    while len(core_parts) < 3:
-        core_parts.append("0")
-    normalized = ".".join(core_parts[:3])
-    prerelease = str(match.group("prerelease") or "").strip()
-    build = str(match.group("build") or "").strip()
-    if prerelease:
-        normalized = f"{normalized}-{prerelease}"
-    if build:
-        normalized = f"{normalized}+{build}"
-    semver.Version.parse(normalized)
-    return normalized
-
-
-def _parse_devcovenant_version_for_compare(raw: str) -> semver.Version:
-    """Parse one DevCovenant version into comparable SemVer ordering."""
-    return semver.Version.parse(
-        _normalize_devcovenant_version_for_compare(raw)
-    )
-
-
-def _managed_doc_header_map(text: str) -> dict[str, str]:
-    """Extract top-of-doc managed header labels into a normalized map."""
-    lines = text.replace("\r\n", "\n").splitlines()
-    result: dict[str, str] = {}
-    index = 0
-    while index < len(lines) and not lines[index].strip():
-        index += 1
-    if index < len(lines) and lines[index].lstrip().startswith("#"):
-        index += 1
-    while index < len(lines):
-        token = lines[index].strip()
-        if not token:
-            index += 1
-            continue
-        if not token.startswith("**") or ":**" not in token:
-            break
-        label_part, value_part = token.split(":**", 1)
-        label = label_part.strip("* ").strip().lower()
-        result[label] = value_part.strip()
-        index += 1
-    return result
-
-
-def _expected_managed_doc_identity(
-    source_dir: Path,
-    doc_name: str,
-) -> tuple[str, str] | None:
-    """Return expected doc-id/doc-type for one managed doc descriptor."""
-    assets_root = source_dir / "builtin" / "profiles" / "global" / "assets"
-    doc_path = Path(doc_name)
-    if doc_path.parent != Path("."):
-        descriptor_path = assets_root / doc_path.with_suffix(".yaml")
-    else:
-        descriptor_path = assets_root / f"{doc_path.stem}.yaml"
-    if not descriptor_path.exists():
-        return None
-    payload = yaml.safe_load(descriptor_path.read_text(encoding="utf-8")) or {}
-    if not isinstance(payload, dict):
-        return None
-    doc_id = str(payload.get("doc_id", "")).strip()
-    doc_type = str(payload.get("doc_type", "")).strip()
-    if not doc_id or not doc_type:
-        return None
-    return doc_id, doc_type
 
 
 def _detect_importable_managed_docs(
@@ -129,43 +44,10 @@ def _detect_importable_managed_docs(
     source_dir: Path,
 ) -> list[str]:
     """Return existing repo docs eligible for first managed-doc adoption."""
-    runtime_version = (
-        (source_dir / "VERSION").read_text(encoding="utf-8").strip()
+    return managed_docs_service.detect_importable_managed_docs(
+        repo_root,
+        source_dir,
     )
-    candidates = (
-        "AGENTS.md",
-        "README.md",
-        "CONTRIBUTING.md",
-        "SPEC.md",
-        "PLAN.md",
-        "CHANGELOG.md",
-    )
-    imported: list[str] = []
-    for doc_name in candidates:
-        path = repo_root / doc_name
-        if not path.exists() or not path.is_file():
-            continue
-        headers = _managed_doc_header_map(path.read_text(encoding="utf-8"))
-        expected = _expected_managed_doc_identity(source_dir, doc_name)
-        if expected is None:
-            continue
-        doc_id, doc_type = expected
-        if headers.get("doc id", "") != doc_id:
-            continue
-        if headers.get("doc type", "") != doc_type:
-            continue
-        current_version = headers.get("devcovenant version", "")
-        if not current_version:
-            continue
-        try:
-            if _parse_devcovenant_version_for_compare(
-                current_version
-            ) < _parse_devcovenant_version_for_compare(runtime_version):
-                continue
-        except ValueError:
-            continue
-        imported.append(doc_name)
-    return imported
 
 
 def _copy_ignore_builder(source_dir: Path):
@@ -274,12 +156,12 @@ def replace_core_package(
                 shutil.copytree(preserved_dir, destination)
 
 
-def _ensure_generic_config(
+def _ensure_review_required_config(
     repo_root: Path,
     *,
     import_managed_docs: list[str] | None = None,
 ) -> None:
-    """Write/install a generic config stub for post-install editing."""
+    """Write/install a review-required config stub for post-install editing."""
     template_path = (
         repo_root
         / "devcovenant"
@@ -297,7 +179,9 @@ def _ensure_generic_config(
         )
     payload = yaml.safe_load(template_path.read_text(encoding="utf-8")) or {}
     if not isinstance(payload, dict):
-        raise ValueError("Generic config template must be a YAML mapping.")
+        raise ValueError(
+            "Review-required config template must be a YAML mapping."
+        )
     install_block = payload.get("install", {})
     if not isinstance(install_block, dict):
         install_block = {}
@@ -310,7 +194,7 @@ def _ensure_generic_config(
 
 
 def install_repo(repo_root: Path) -> int:
-    """Install DevCovenant core and generic config in a repository."""
+    """Install DevCovenant core and review-required config in a repository."""
     source_dir = _source_package_dir()
     import_managed_docs = _detect_importable_managed_docs(
         repo_root,
@@ -322,7 +206,7 @@ def install_repo(repo_root: Path) -> int:
     if runtime_registry.exists():
         shutil.rmtree(runtime_registry)
 
-    _ensure_generic_config(
+    _ensure_review_required_config(
         repo_root,
         import_managed_docs=import_managed_docs,
     )
@@ -369,8 +253,10 @@ def run(args: argparse.Namespace) -> int:
     print_step("Installed devcovenant/ core package", "✅")
     print_step(
         (
-            "Config reset to generic stub. Edit devcovenant/config.yaml, "
-            "then run `devcovenant deploy`."
+            "Config reset to review-required baseline. Review "
+            "devcovenant/config.yaml, set "
+            "`install.config_reviewed: true`, then run "
+            "`devcovenant deploy`."
         ),
         "ℹ️",
     )

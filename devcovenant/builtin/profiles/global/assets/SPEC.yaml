@@ -1,10 +1,13 @@
 title: DevCovenant Specification
+target_path: SPEC.md
 doc_id: SPEC
 doc_type: specification
 project_version: true
 last_updated: true
 devcovenant_version: true
 project_governance_headers: true
+import_seed: true
+authoritative_source: true
 managed_block: |-
   This opening section is managed by DevCovenant.
   Use `SPEC.md` only for durable repository contracts below this block.

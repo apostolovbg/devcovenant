@@ -142,6 +142,10 @@ Invariant:
   custom files but fails with the same descriptor-missing/invalid contract as
   core policies until descriptor metadata is fixed.
 - Managed-doc descriptors are schema-validated before refresh rendering:
+  `devcovenant/core/services/managed_docs.py` is the shared owner for managed
+  doc descriptor parsing, validation, seed adoption, preservation rules, and
+  managed header/block rendering used by `install`, `refresh`, and the
+  managed-doc asset integrity check;
   descriptors must declare ordered keys
   (`title`, `doc_id`, `doc_type`, `project_version`, `last_updated`,
   `devcovenant_version`, `managed_block`, `body`, optional
@@ -689,13 +693,24 @@ Invariant:
 - the dedicated operator-facing contract for that service now lives in
   `devcovenant/docs/project_governance.md`; architecture docs keep the
   implementation view only.
+- managed-doc behavior is now centralized in
+  `devcovenant/core/services/managed_docs.py` so `install` seed detection,
+  `refresh` synchronization, and `managed_doc_assets` validation read from
+  the same document runtime instead of maintaining separate copies of the
+  rules.
+- that service now resolves descriptors from the global managed-doc asset
+  root plus any active profile asset roots, so repositories can add custom
+  managed docs without forking the common document engine.
+- common managed docs now follow one shared contract driven by their
+  descriptors: standard generated headers, one managed block, and preserved
+  human-authored body content outside managed regions.
 - refresh resolves `Project Version` through `project-governance` so
   intentionally unversioned repos render an explicit non-version label
   instead of a fake numbered release, and opted-in managed docs may render
   additional governance headers when their descriptor opts in.
-- AGENTS also renders a dedicated managed project-governance section after
-  the workflow block so agents can read the resolved repo lifecycle state
-  directly before the generated policy block.
+- AGENTS remains the explicit special case outside that common doc engine:
+  refresh still owns its multi-block workflow/policy layout and its
+  dedicated project-governance section after the workflow block.
 - refresh can adopt pre-authored DevCovenant-shaped docs such as `SPEC.md`,
   `README.md`, or `PLAN.md` during first bootstrap: if an existing target doc
   already carries matching `Doc ID` /

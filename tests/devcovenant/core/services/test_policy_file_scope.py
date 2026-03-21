@@ -103,13 +103,13 @@ def _unit_test_matches_config_ignore_pattern_matches_dir_token() -> None:
 
 
 def _unit_test_core_exclusion_paths_respect_include_toggle() -> None:
-    """Core exclusion helper should honor `devcov_core_include`."""
+    """Core exclusion helper should honor `developer_mode`."""
     module = importlib.import_module(MODULE)
     repo_root = Path("/tmp/devcovenant")
     disabled = module.core_exclusion_paths(
         repo_root,
         {
-            "devcov_core_include": False,
+            "developer_mode": False,
             "profiles": {
                 "generated": {
                     "devcov_core_paths": [
@@ -122,7 +122,7 @@ def _unit_test_core_exclusion_paths_respect_include_toggle() -> None:
     )
     enabled = module.core_exclusion_paths(
         repo_root,
-        {"devcov_core_include": True},
+        {"developer_mode": True},
     )
     assert disabled == [
         repo_root / "devcovenant/core",

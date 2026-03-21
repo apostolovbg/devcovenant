@@ -1,6 +1,14 @@
 # Policy Map
-**Last Updated:** 2026-03-17
+**Doc ID:** POLICY_MAP
+**Doc Type:** reference-map
 **Project Version:** 1.0.0
+**Last Updated:** 2026-03-20
+**DevCovenant Version:** 1.0.0
+
+<!-- DEVCOV:BEGIN -->
+This opening section is managed by DevCovenant.
+Use `POLICY_MAP.md` to track policy inventory and ownership below this block.
+<!-- DEVCOV:END -->
 
 ## Table of Contents
 1. [Purpose](#purpose)

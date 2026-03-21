@@ -54,6 +54,17 @@ The global profile also ships managed workflow text assets (for example the
 AGENTS workflow contract) so output/polling guidance stays refresh-managed
 and consistent across generated docs, including concise operator-update
 communication discipline.
+The same global asset stack also seeds the initial install baseline in
+`devcovenant/config.yaml`, including `developer_mode: false` for normal
+user-repo scope and `install.config_reviewed: false` so `deploy` stays
+blocked until a human completes the first config review.
+Those shipped config comments are meant to explain the first integration
+story in practical terms: empty-repo install, seeded-doc install, and
+existing-repo install all stop at the same human config-review checkpoint
+before `deploy` activates the reviewed contract.
+That baseline is meant for ordinary repos using DevCovenant as a tool; this
+repository flips `developer_mode` to `true` because it is used to develop
+DevCovenant itself.
 That same AGENTS asset now also carries the question-only prompt stop rule in
 both `THE DEV COVENANT` and `Execution Order`, so repos inherit the `?`
 branch explicitly instead of relying on buried workflow prose.
@@ -248,9 +259,9 @@ profile-driven through the dedicated config section:
   `version-governance`; the service is about lifecycle state, not version
   parsing
 - managed-doc descriptors can opt into richer governance header lines with
-  `project_governance_headers: true`; AGENTS can also opt into the managed
-  post-workflow governance section, while ordinary managed docs stay on the
-  compact header set
+  `project_governance_headers: true`; AGENTS still gets its dedicated
+  post-workflow governance section from the AGENTS-specific refresh path,
+  while ordinary managed docs stay on the compact header set
 - repository profiles may redirect only the repo-specific surfaces they own;
   for example, a repository profile may override
   `version-governance.version_file` to a package-scoped path such as
@@ -328,10 +339,20 @@ Asset materialization rules:
 - preserve existing non-one-line file content
 - refresh managed blocks where descriptors require
 - managed-doc descriptors must follow an explicit key schema in order:
-  `title`, `doc_id`, `doc_type`, `project_version`, `last_updated`,
-  `devcovenant_version`, `managed_block`, `body`, optional `workflow_block`
+  `title`, `target_path`, `doc_id`, `doc_type`, `project_version`,
+  `last_updated`, `devcovenant_version`, optional managed-doc booleans,
+  `managed_block`, `body`, optional `workflow_block`
 - `project_version`, `last_updated`, and `devcovenant_version` must be
   booleans; `devcovenant_version` must be `true`
+- managed-doc booleans currently cover shared doc-engine behavior such as
+  `project_governance_headers`, `import_seed`, and `authoritative_source`
+- descriptors may live under the global asset root or an active profile
+  `assets/` tree; add the document path to `doc_assets.autogen` to activate
+  that managed doc for one repo
+- omitting a builtin doc from `doc_assets.autogen` turns that managed doc off
+  for the repo while leaving `AGENTS.md` mandatory
+- AGENTS multi-block workflow/policy rendering is intentionally not a generic
+  managed-doc descriptor feature
 - multiline `managed_block`, `body`, and `workflow_block` values must use
   YAML literal block style (`|-`/`|`), not quoted multiline scalars
 - descriptor schema/style violations fail refresh explicitly with file+field
@@ -339,7 +360,9 @@ Asset materialization rules:
 - `<!-- DEVCOV-USER-PRESERVE:BEGIN -->` /
   `<!-- DEVCOV-USER-PRESERVE:END -->` blocks are preserved during refresh
   anywhere in managed docs (including top-of-file and inside managed blocks)
-- profile assets do not use per-asset mode flags
+- profile `assets:` manifest entries still describe ordinary materialized
+  files; managed-doc descriptors under `assets/` are discovered by the
+  managed-doc service instead of the profile asset-copy path
 - target/template paths must stay inside repo/profile asset roots
 - root `.gitignore` is generated, not shipped as profile assets
 - `.gitignore` combines global template fragments, per-profile manifest

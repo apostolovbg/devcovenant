@@ -11,13 +11,12 @@ import re
 from pathlib import Path
 from typing import Dict, List
 
-import yaml
-
 from devcovenant.core.contracts.policy import (
     CheckContext,
     PolicyCheck,
     Violation,
 )
+from devcovenant.core.services import managed_docs as managed_docs_service
 from devcovenant.core.services import (
     project_governance as project_governance_service,
 )
@@ -31,38 +30,29 @@ class ManagedDocAssetsCheck(PolicyCheck):
     policy_id = "managed-doc-assets"
     version = "0.2.0"
 
-    _DOC_ID_LABEL = "**Doc ID:**"
-    _DOC_TYPE_LABEL = "**Doc Type:**"
-    _PROJECT_VERSION_LABEL = "**Project Version:**"
-    _PROJECT_STAGE_LABEL = "**Project Stage:**"
-    _DEVELOPMENT_STANCE_LABEL = "**Development Stance:**"
-    _VERSIONING_MODE_LABEL = "**Versioning Mode:**"
-    _PROJECT_CODENAME_LABEL = "**Project Codename:**"
-    _BUILD_IDENTITY_LABEL = "**Build Identity:**"
-    _LAST_UPDATED_LABEL = "**Last Updated:**"
-    _DEVCOV_VERSION_LABEL = "**DevCovenant Version:**"
-    _PRESERVE_BEGIN = "<!-- DEVCOV-USER-PRESERVE:BEGIN -->"
-    _PRESERVE_END = "<!-- DEVCOV-USER-PRESERVE:END -->"
+    _DOC_ID_LABEL = managed_docs_service.DOC_ID_LABEL
+    _DOC_TYPE_LABEL = managed_docs_service.DOC_TYPE_LABEL
+    _PROJECT_VERSION_LABEL = managed_docs_service.PROJECT_VERSION_LABEL
+    _PROJECT_STAGE_LABEL = managed_docs_service.PROJECT_STAGE_LABEL
+    _DEVELOPMENT_STANCE_LABEL = managed_docs_service.DEVELOPMENT_STANCE_LABEL
+    _VERSIONING_MODE_LABEL = managed_docs_service.VERSIONING_MODE_LABEL
+    _PROJECT_CODENAME_LABEL = managed_docs_service.PROJECT_CODENAME_LABEL
+    _BUILD_IDENTITY_LABEL = managed_docs_service.BUILD_IDENTITY_LABEL
+    _LAST_UPDATED_LABEL = managed_docs_service.LAST_UPDATED_LABEL
+    _DEVCOV_VERSION_LABEL = managed_docs_service.DEVCOV_VERSION_LABEL
+    _PRESERVE_BEGIN = managed_docs_service.USER_PRESERVE_BEGIN
+    _PRESERVE_END = managed_docs_service.USER_PRESERVE_END
 
     _DATE_RE = re.compile(r"\b\d{4}-\d{2}-\d{2}\b")
 
     def __init__(self) -> None:
         """Initialize descriptor-doc pairs covered by this policy."""
         super().__init__()
-        self.managed_docs = [
-            {"doc": "AGENTS.md", "descriptor": "AGENTS.yaml"},
-            {"doc": "README.md", "descriptor": "README.yaml"},
-            {"doc": "PLAN.md", "descriptor": "PLAN.yaml"},
-            {"doc": "SPEC.md", "descriptor": "SPEC.yaml"},
-            {"doc": "CHANGELOG.md", "descriptor": "CHANGELOG.yaml"},
-            {"doc": "CONTRIBUTING.md", "descriptor": "CONTRIBUTING.yaml"},
-        ]
 
     def check(self, context: CheckContext) -> List[Violation]:
         """Inspect docs and descriptors to ensure synchronization."""
         violations: List[Violation] = []
         repo_root = context.repo_root
-        assets_dir = self._assets_dir(repo_root)
         try:
             project_governance_state = (
                 project_governance_service.resolve_runtime_state(
@@ -79,9 +69,12 @@ class ManagedDocAssetsCheck(PolicyCheck):
                 )
             ]
 
-        for entry in self.managed_docs:
+        for entry in managed_docs_service.authoritative_managed_doc_entries(
+            repo_root,
+            config_payload=context.config,
+        ):
             doc_path = repo_root / entry["doc"]
-            descriptor_path = assets_dir / entry["descriptor"]
+            descriptor_path = Path(str(entry["descriptor_path"]))
 
             if not doc_path.is_file():
                 violations.append(self._missing_doc_violation(doc_path))
@@ -95,17 +88,18 @@ class ManagedDocAssetsCheck(PolicyCheck):
                 )
                 continue
 
-            descriptor = self._load_descriptor(descriptor_path)
-            if descriptor is None:
+            try:
+                descriptor = self._load_descriptor(
+                    descriptor_path,
+                    doc_name=entry["doc"],
+                )
+            except ValueError as error:
                 violations.append(
                     Violation(
                         policy_id=self.policy_id,
                         severity="error",
                         file_path=descriptor_path,
-                        message=(
-                            "Descriptor "
-                            f"{descriptor_path} is not a valid YAML document."
-                        ),
+                        message=str(error),
                     )
                 )
                 continue
@@ -123,28 +117,16 @@ class ManagedDocAssetsCheck(PolicyCheck):
 
         return violations
 
-    def _assets_dir(self, repo_root: Path) -> Path:
-        """Resolve active global assets directory location."""
-        builtin_assets_dir = (
-            repo_root
-            / "devcovenant"
-            / "builtin"
-            / "profiles"
-            / "global"
-            / "assets"
-        )
-        core_assets_dir = (
-            repo_root
-            / "devcovenant"
-            / "core"
-            / "profiles"
-            / "global"
-            / "assets"
-        )
-        return (
-            builtin_assets_dir
-            if builtin_assets_dir.exists()
-            else core_assets_dir
+    def _load_descriptor(
+        self,
+        path: Path,
+        *,
+        doc_name: str,
+    ) -> Dict[str, object]:
+        """Parse one descriptor document."""
+        return managed_docs_service.load_managed_doc_descriptor(
+            path,
+            doc_name=doc_name,
         )
 
     def _check_descriptor_sync(
@@ -312,9 +294,7 @@ class ManagedDocAssetsCheck(PolicyCheck):
                 )
             )
 
-        governance_section_required = bool(
-            descriptor.get("project_governance_section", False)
-        )
+        governance_section_required = doc_name == "AGENTS.md"
         actual_governance_section = ""
         managed_blocks = doc_info.get("managed_blocks", [])
         if isinstance(managed_blocks, list) and len(managed_blocks) > 1:
@@ -370,161 +350,40 @@ class ManagedDocAssetsCheck(PolicyCheck):
             ),
         )
 
-    def _load_descriptor(self, path: Path) -> Dict[str, object] | None:
-        """Parse one descriptor document."""
-        try:
-            payload = yaml.safe_load(path.read_text(encoding="utf-8"))
-        except yaml.YAMLError:
-            return None
-        if not isinstance(payload, dict):
-            return None
-        return payload
-
     def _extract_doc_info(self, doc_path: Path) -> Dict[str, object]:
         """Return generated header fields and managed block text."""
-        text = doc_path.read_text(encoding="utf-8")
-        lines = text.splitlines()
-
-        header_map: Dict[str, str] = {}
-        title = ""
-        doc_id = ""
-        doc_type = ""
-
-        for line in lines:
-            stripped = line.strip()
-            if stripped == "<!-- DEVCOV:BEGIN -->":
-                break
-            if not stripped:
-                continue
-            if not title and stripped.startswith("#"):
-                title = stripped.lstrip("#").strip()
-            if stripped.startswith(self._DOC_ID_LABEL):
-                doc_id = stripped.split(self._DOC_ID_LABEL, 1)[1].strip()
-                continue
-            if stripped.startswith(self._DOC_TYPE_LABEL):
-                doc_type = stripped.split(self._DOC_TYPE_LABEL, 1)[1].strip()
-                continue
-            for label in (
-                self._PROJECT_VERSION_LABEL,
-                self._PROJECT_STAGE_LABEL,
-                self._DEVELOPMENT_STANCE_LABEL,
-                self._VERSIONING_MODE_LABEL,
-                self._PROJECT_CODENAME_LABEL,
-                self._BUILD_IDENTITY_LABEL,
-                self._LAST_UPDATED_LABEL,
-                self._DEVCOV_VERSION_LABEL,
-            ):
-                if stripped.startswith(label):
-                    header_map[label] = stripped.split(label, 1)[1].strip()
-
-        managed_blocks: List[str] = []
-        current_block_lines: List[str] = []
-        inside = False
-        has_managed_block = False
-        for line in lines:
-            if "<!-- DEVCOV:BEGIN -->" in line:
-                inside = True
-                has_managed_block = True
-                current_block_lines = []
-                continue
-            if "<!-- DEVCOV:END -->" in line:
-                if inside:
-                    managed_blocks.append(
-                        self._strip_preserve_blocks(
-                            "\n".join(current_block_lines)
-                        ).strip("\n")
-                    )
-                inside = False
-                current_block_lines = []
-                continue
-            if inside:
-                current_block_lines.append(line.rstrip())
-
-        managed_block = managed_blocks[0] if managed_blocks else ""
-
-        return {
-            "title": title,
-            "doc_id": doc_id,
-            "doc_type": doc_type,
-            "header_map": header_map,
-            "managed_block": managed_block,
-            "managed_blocks": managed_blocks,
-            "has_managed_block": has_managed_block,
-        }
+        return managed_docs_service.extract_doc_info(doc_path)
 
     def _strip_preserve_blocks(self, text: str) -> str:
         """Remove user-preserve blocks from text before comparison."""
-        cleaned: list[str] = []
-        inside = False
-        for line in text.splitlines():
-            stripped = line.strip()
-            if stripped == self._PRESERVE_BEGIN:
-                inside = True
-                continue
-            if stripped == self._PRESERVE_END:
-                inside = False
-                continue
-            if not inside:
-                cleaned.append(line)
-        return "\n".join(cleaned)
+        return managed_docs_service.strip_preserve_blocks(text)
 
     def _expected_managed_block(self, descriptor: Dict[str, object]) -> str:
         """Build managed block payload expected in rendered docs."""
-        body = str(descriptor.get("managed_block", ""))
-        lines: list[str] = []
-        for raw_line in body.splitlines():
-            stripped = raw_line.strip()
-            if stripped in {"<!-- DEVCOV:BEGIN -->", "<!-- DEVCOV:END -->"}:
-                continue
-            lines.append(raw_line.rstrip())
-        return "\n".join(lines).strip("\n")
+        return managed_docs_service.expected_managed_block(descriptor)
 
     def _descriptor_contains_generated_headers(
         self,
         descriptor: Dict[str, object],
     ) -> bool:
         """Return True when managed_block duplicates header labels."""
-        body = str(descriptor.get("managed_block", ""))
-        for line in body.splitlines():
-            stripped = line.strip()
-            for label in (
-                self._DOC_ID_LABEL,
-                self._DOC_TYPE_LABEL,
-                self._PROJECT_VERSION_LABEL,
-                self._PROJECT_STAGE_LABEL,
-                self._DEVELOPMENT_STANCE_LABEL,
-                self._VERSIONING_MODE_LABEL,
-                self._PROJECT_CODENAME_LABEL,
-                self._BUILD_IDENTITY_LABEL,
-                self._LAST_UPDATED_LABEL,
-                self._DEVCOV_VERSION_LABEL,
-            ):
-                if stripped.startswith(label):
-                    return True
-        return False
+        return managed_docs_service.descriptor_contains_generated_headers(
+            descriptor
+        )
 
     def _project_governance_labels(
         self,
         state: ProjectGovernanceState,
     ) -> list[str]:
-        """Return expected AGENTS header labels for project-governance."""
-        labels = [
-            self._PROJECT_STAGE_LABEL,
-            self._DEVELOPMENT_STANCE_LABEL,
-            self._VERSIONING_MODE_LABEL,
-        ]
-        if state.codename:
-            labels.append(self._PROJECT_CODENAME_LABEL)
-        if state.build_identity:
-            labels.append(self._BUILD_IDENTITY_LABEL)
-        return labels
+        """Return expected header labels for project-governance."""
+        return managed_docs_service.project_governance_labels(state)
 
     def _expected_project_governance_section(
         self,
         state: ProjectGovernanceState,
         project_version: str,
     ) -> str:
-        """Return expected AGENTS project-governance section body text."""
+        """Return expected rendered project-governance section text."""
         try:
             lines = state.section_lines(project_version)
         except ValueError:

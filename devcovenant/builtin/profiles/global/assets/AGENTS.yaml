@@ -1,11 +1,13 @@
 title: DevCovenant Development Guide
+target_path: AGENTS.md
 doc_id: AGENTS
 doc_type: policy-source
 project_version: true
 last_updated: true
 devcovenant_version: true
 project_governance_headers: true
-project_governance_section: true
+import_seed: true
+authoritative_source: true
 managed_block: |-
   # Message from DevCovenant's Human (Read First)
 

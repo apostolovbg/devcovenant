@@ -59,6 +59,235 @@ Example:
 
 ## Version 1.0.0
 
+- 2026-03-21:
+  Change: Expanded the initial integration and bootstrap docs, clarified
+  `install.config_reviewed`, and rewrote install/config/workflow guidance in
+  more practical language.
+  Why: Explained empty-repo, seeded-doc, and existing-repo startup paths
+  concretely so first-time users can understand what DevCovenant is doing
+  and why deploy is blocked until config review is complete.
+  Impact: Clarified repositories now have clearer install, config, and
+  workflow docs that teach the activation model, the first gate cycle, and
+  the bootstrap
+  preservation rules without insider shorthand.
+  Files:
+  CHANGELOG.md
+  PLAN.md
+  README.md
+  devcovenant/README.md
+  devcovenant/builtin/profiles/global/assets/config.yaml
+  devcovenant/config.yaml
+  devcovenant/custom/profiles/devcovrepo/assets/docs/config.md
+  devcovenant/custom/profiles/devcovrepo/assets/docs/installation.md
+  devcovenant/custom/profiles/devcovrepo/assets/docs/workflow.md
+  devcovenant/docs/config.md
+  devcovenant/docs/installation.md
+  devcovenant/docs/profiles.md
+  devcovenant/docs/workflow.md
+
+- 2026-03-20:
+  Change: Added active-profile managed-doc descriptor resolution, enabled
+  optional builtin docs and custom managed docs through `doc_assets`, and
+  added `PROFILE_MAP.md` / `POLICY_MAP.md` as custom managed docs from the
+  `devcovrepo` profile.
+  Why: Supported repository-specific managed docs without forcing new
+  hardcoded document paths or keeping builtin docs permanently mandatory.
+  Impact: Repositories can now turn builtin managed docs off intentionally,
+  add profile-owned managed docs through descriptors, and keep the same
+  preservation rules across builtin and custom documents.
+  Files:
+  CHANGELOG.md
+  PLAN.md
+  README.md
+  POLICY_MAP.md
+  PROFILE_MAP.md
+  devcovenant/README.md
+  devcovenant/builtin/profiles/global/assets/config.yaml
+  devcovenant/config.yaml
+  devcovenant/core/flow/refresh.py
+  devcovenant/core/services/managed_docs.py
+  devcovenant/custom/policies/managed_doc_assets/managed_doc_assets.py
+  devcovenant/custom/policies/managed_doc_assets/managed_doc_assets.yaml
+  devcovenant/custom/profiles/devcovrepo/assets/POLICY_MAP.yaml
+  devcovenant/custom/profiles/devcovrepo/assets/PROFILE_MAP.yaml
+  devcovenant/custom/profiles/devcovrepo/assets/docs/config.md
+  devcovenant/custom/profiles/devcovrepo/assets/docs/refresh.md
+  devcovenant/docs/architecture.md
+  devcovenant/docs/config.md
+  devcovenant/docs/policies.md
+  devcovenant/docs/profiles.md
+  devcovenant/docs/refresh.md
+  devcovenant/docs/registry.md
+  devcovenant/docs/workflow.md
+  devcovenant/registry/registry.yaml
+  tests/devcovenant/core/services/test_managed_docs.py
+  tests/devcovenant/custom/policies/managed_doc_assets/\
+    test_managed_doc_assets.py
+  tests/devcovenant/test_refresh.py
+
+- 2026-03-20:
+  Change: Refactored shared managed-doc behavior into descriptors, rewired the
+  common doc engine and managed-doc-assets checks to read those descriptor
+  flags, and kept AGENTS as the one explicit multi-block special case.
+  Why: Stopped document behavior from depending on scattered hardcoded
+  assumptions while avoiding the wrong abstraction of pretending every doc
+  can or should behave like AGENTS.
+  Impact: Aligned ordinary managed docs around one descriptor-driven
+  contract for headers, seed import, and authoritative asset sync, while
+  AGENTS keeps its
+  dedicated workflow, policy, and governance layout without polluting the
+  common engine.
+  Files:
+  CHANGELOG.md
+  PLAN.md
+  devcovenant/core/services/managed_docs.py
+  devcovenant/custom/policies/managed_doc_assets/managed_doc_assets.py
+  devcovenant/custom/policies/managed_doc_assets/managed_doc_assets.yaml
+  devcovenant/builtin/profiles/global/assets/AGENTS.yaml
+  devcovenant/builtin/profiles/global/assets/README.yaml
+  devcovenant/builtin/profiles/global/assets/PLAN.yaml
+  devcovenant/builtin/profiles/global/assets/SPEC.yaml
+  devcovenant/builtin/profiles/global/assets/CHANGELOG.yaml
+  devcovenant/builtin/profiles/global/assets/CONTRIBUTING.yaml
+  devcovenant/builtin/profiles/global/assets/LICENSE.yaml
+  devcovenant/builtin/profiles/global/assets/devcovenant/README.yaml
+  devcovenant/docs/architecture.md
+  devcovenant/docs/policies.md
+  devcovenant/docs/profiles.md
+  devcovenant/docs/refresh.md
+  devcovenant/docs/registry.md
+  devcovenant/docs/workflow.md
+  devcovenant/registry/registry.yaml
+  tests/devcovenant/core/services/test_managed_docs.py
+  tests/devcovenant/test_refresh.py
+
+- 2026-03-20:
+  Change: Refactored managed-doc descriptor loading, seed adoption,
+  preservation, and managed header/block rendering in one shared runtime
+  service and rewired refresh/install/doc-asset checks to use it.
+  Why: Removed the spread-out document-engine ownership that made managed
+  docs harder to reason about and easier to drift across refresh, install,
+  and integrity-check paths.
+  Impact: Made managed-doc behavior easier to maintain by giving it one core
+  owner, added direct service coverage, and recorded the completed service
+  extraction in the active plan and architecture docs.
+  Files:
+  CHANGELOG.md
+  PLAN.md
+  devcovenant/core/services/managed_docs.py
+  devcovenant/core/flow/refresh.py
+  devcovenant/install.py
+  devcovenant/custom/policies/managed_doc_assets/managed_doc_assets.py
+  devcovenant/docs/architecture.md
+  devcovenant/docs/installation.md
+  devcovenant/docs/policies.md
+  devcovenant/docs/registry.md
+  devcovenant/docs/workflow.md
+  devcovenant/registry/registry.yaml
+  tests/devcovenant/core/services/test_managed_docs.py
+  tests/devcovenant/custom/policies/managed_doc_assets/\
+    test_managed_doc_assets.py
+
+- 2026-03-20:
+  Change: Clarified Item 1 wording so `developer_mode`,
+  `config_reviewed`, and normal-repo cleanup behavior now describe real repo
+  usage in plain language.
+  Why: Removed insider shorthand and corrected unclear config comments so a
+  reader can tell when DevCovenant is being used as a tool versus when a
+  repository is being used to develop DevCovenant itself.
+  Impact: Made the config comments, install/workflow docs, and deploy test
+  coverage more concrete by explaining repo-only development paths and by
+  proving that normal repos prune only the intended DevCovenant-only files.
+  Files:
+  CHANGELOG.md
+  README.md
+  devcovenant/README.md
+  devcovenant/builtin/profiles/global/assets/config.yaml
+  devcovenant/config.yaml
+  devcovenant/custom/profiles/devcovrepo/assets/docs/config.md
+  devcovenant/custom/profiles/devcovrepo/assets/docs/installation.md
+  devcovenant/deploy.py
+  devcovenant/docs/config.md
+  devcovenant/docs/installation.md
+  devcovenant/docs/profiles.md
+  devcovenant/docs/workflow.md
+  tests/devcovenant/test_deploy.py
+
+- 2026-03-20:
+  Change: Rewrote `PLAN.md` into a fuller roadmap that keeps the same active
+  tasks while making the direction more concrete, practical, and
+  de-insider-ized.
+  Why: Clarified that the next work is not just about shipping features, but
+  also about rewriting config comments and docs so learning users can
+  understand what DevCovenant is doing and when to use each concept.
+  Impact: Expanded the active plan into a more detailed guide for the
+  managed-docs service, descriptor-driven docs, optional docs, clearer
+  bootstrap docs, and a broader teaching-quality documentation rewrite.
+  Files:
+  CHANGELOG.md
+  PLAN.md
+
+- 2026-03-20:
+  Change: Finalized `developer_mode` and `install.config_reviewed`,
+  documented the reviewed-true bootstrap contract, and marked Item 1 done in
+  `PLAN.md`.
+  Why: Preserved the pre-session rename entry while landing the final
+  reviewed-true semantics and the route-doc updates required by the gate.
+  Impact: Clarified that install now seeds `config_reviewed: false`, deploy
+  now requires `config_reviewed: true`, and the workflow/profile docs explain
+  the initial integration contract more clearly.
+  Files:
+  CHANGELOG.md
+  PLAN.md
+  README.md
+  devcovenant/README.md
+  devcovenant/builtin/profiles/global/assets/config.yaml
+  devcovenant/config.yaml
+  devcovenant/core/flow/refresh.py
+  devcovenant/custom/profiles/devcovrepo/assets/docs/config.md
+  devcovenant/custom/profiles/devcovrepo/assets/docs/installation.md
+  devcovenant/deploy.py
+  devcovenant/docs/config.md
+  devcovenant/docs/installation.md
+  devcovenant/docs/profiles.md
+  devcovenant/docs/workflow.md
+  devcovenant/install.py
+  devcovenant/upgrade.py
+  tests/devcovenant/test_deploy.py
+  tests/devcovenant/test_install.py
+
+- 2026-03-20:
+  Change: Renamed `devcov_core_include` to `developer_mode` and
+  `install.generic_config` to `install.config_review_pending` across runtime,
+  config templates, docs, and tests.
+  Why: Made the initial integration and self-hosting scope contract explicit
+  instead of relying on vague or implementation-shaped names.
+  Impact: Clarified bootstrap review flow, made developer-vs-user repo scope
+  more understandable, and removed the old key names from the live runtime
+  surface.
+  Files:
+  CHANGELOG.md
+  README.md
+  devcovenant/README.md
+  devcovenant/builtin/profiles/global/assets/config.yaml
+  devcovenant/config.yaml
+  devcovenant/core/flow/refresh.py
+  devcovenant/core/services/policy_file_scope.py
+  devcovenant/deploy.py
+  devcovenant/docs/config.md
+  devcovenant/docs/installation.md
+  devcovenant/docs/project_governance.md
+  devcovenant/docs/registry.md
+  devcovenant/docs/workflow.md
+  devcovenant/custom/profiles/devcovrepo/assets/docs/config.md
+  devcovenant/custom/profiles/devcovrepo/assets/docs/installation.md
+  devcovenant/install.py
+  devcovenant/upgrade.py
+  tests/devcovenant/core/services/test_policy_engine.py
+  tests/devcovenant/core/services/test_policy_file_scope.py
+  tests/devcovenant/test_deploy.py
+  tests/devcovenant/test_install.py
+
 - 2026-03-20:
   Change: Rewrote the active roadmap in `PLAN.md` around developer-mode
   naming, the managed-docs service, descriptor-driven docs, optional/custom
@@ -2189,7 +2418,8 @@ Example:
   Files:
   CHANGELOG.md
   devcovenant/builtin/policies/changelog_coverage/changelog_coverage.yaml
-  devcovenant/builtin/policies/documentation_growth_tracking/documentation_growth_tracking.yaml
+  devcovenant/builtin/policies/documentation_growth_tracking/\
+    documentation_growth_tracking.yaml
   devcovenant/builtin/policies/line_length_limit/line_length_limit.yaml
   devcovenant/builtin/profiles/global/assets/config.yaml
   devcovenant/builtin/profiles/global/assets/gitignore.yaml

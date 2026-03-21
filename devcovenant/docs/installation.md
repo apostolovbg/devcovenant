@@ -17,11 +17,16 @@
 ## Overview
 DevCovenant separates installation from activation on purpose.
 
-`install` copies runtime files and writes a generic config stub.
+`install` copies runtime files and writes a review-required config baseline.
 `deploy` is the activation step and requires explicit operator review of
 `devcovenant/config.yaml` before managed artifacts are generated.
 
 That split prevents accidental policy activation with unreviewed defaults.
+It also makes the first-time integration story easier to reason about:
+- install puts DevCovenant in the repo
+- config review decides how this repo should use it
+- deploy turns that reviewed config into active docs, registries, and
+  generated governance files
 
 ## Prerequisites
 Before lifecycle commands:
@@ -37,10 +42,13 @@ On Windows, `py -m devcovenant ...` is a common equivalent launcher form.
 ## Lifecycle Model
 Command contract:
 - `install`:
-  copy `devcovenant/`, seed generic config, and seed tracked registry
+  copy `devcovenant/`, seed a review-required config baseline, and seed tracked
+  registry
   structure without copying source runtime logs or runtime registry files;
   when compatible pre-authored managed docs already exist, record them for
-  first-refresh adoption instead of overwriting their authored body content
+  first-refresh adoption instead of overwriting their authored body content;
+  install and refresh now use the same managed-doc runtime service for this
+  seed-detection and adoption contract
 - document preservation rules are exact across `install`, `deploy`,
   `refresh`, `upgrade`, and gate-triggered refresh/autofix:
   - missing docs may be created from assets/templates
@@ -49,7 +57,7 @@ Command contract:
   - otherwise only managed header lines and explicit `<!-- DEVCOV* -->`
     blocks may change
 - `deploy`:
-  require `install.generic_config: false`, then run full refresh
+  require `install.config_reviewed: true`, then run full refresh
 - `clean`:
   remove disposable build/package/cache/runtime-registry/log artifacts from
   resolved profile/config cleanup targets while preserving protected tracked
@@ -75,10 +83,11 @@ Additional invariants:
   ordering (and accepts normalized `v`-prefixed version strings such as
   `v1.2`)
 - `deploy` validates config shape before activation
-- when `devcov_core_include: false`, deploy cleanup removes
+- when `developer_mode: false`, deploy cleanup removes repo-only
+  DevCovenant development paths from normal repos, including
   `devcovenant/custom/policies/**`,
   `tests/devcovenant/core/**`, and
-  `devcovenant/custom/profiles/**`
+  `devcovenant/custom/profiles/<repo-only-profile>/**`
 
 ## Commands
 ```bash
@@ -123,6 +132,11 @@ Recommended operating sequence:
 5. Use `refresh`/`upgrade` when contracts or core content change.
 6. Use `clean` when local build/cache residue needs pruning after those runs
    and after the gate session is closed.
+
+The important boundary is:
+- `install` is safe setup
+- `deploy` is activation
+- the first gate cycle proves the activated baseline is actually clean
 
 Runtime details that affect operations:
 - `devcovenant test` executes
@@ -218,11 +232,17 @@ Runtime details that affect operations:
   repo-local `__pycache__/` drift behind
 
 ## First-Time Setup Runbook
+Use the runbook below after `install`. Pick the starting situation that
+matches your repository, then come back to the shared review and activation
+steps.
+
+### Shared Review And Activation Steps
 1. Run:
    ```bash
    devcovenant install
    ```
 2. Open `devcovenant/config.yaml` and review:
+   - `developer_mode`
    - `profiles.active`
    - `policy_state`
    - `engine.fail_threshold`
@@ -231,13 +251,13 @@ Runtime details that affect operations:
 3. Set:
    ```yaml
    install:
-     generic_config: false
+     config_reviewed: true
    ```
 4. Activate:
    ```bash
    devcovenant deploy
    ```
-5. Validate baseline workflow:
+5. Validate the baseline with the full gate cycle:
    ```bash
    devcovenant gate --start
    # pre-test mutating preflight; rerun until clean
@@ -249,6 +269,44 @@ Runtime details that affect operations:
 If `deploy` fails, fix config shape errors first. Deploy should not be forced
 through malformed config.
 
+Why the full first gate cycle matters:
+- `gate --start` proves the repo can begin a clean governed work slice
+- `gate --mid` catches hook-driven mutations before you trust test results
+- `test` proves the active command chain works in this repo
+- `gate --end` proves the slice can close cleanly after hooks and checks
+
+### Starting Situation: Empty Repo
+What to expect:
+- `install` writes the `devcovenant/` folder and the review-required config
+- `deploy` then creates the managed docs and generated governance files
+- the first gate cycle proves the empty baseline is now a governed repo
+
+This is the simplest path and the best one to learn on first.
+
+### Starting Situation: Repo Seeded With `SPEC.md` Or `README.md`
+What to expect:
+- put the pre-authored docs in the repo before `install`
+- if they already look like compatible DevCovenant docs, `install` records
+  them in `install.import_managed_docs`
+- the first `deploy` adopts them instead of overwriting their authored body
+- DevCovenant still refreshes the managed header lines and managed block to
+  match the active runtime
+
+This is the "start from SPEC" workflow. It is useful when you sketch a repo
+in chat first and bring the resulting docs into Git before installation.
+
+### Starting Situation: Existing Repo With Real Files
+What to expect:
+- `install` leaves ordinary repo files alone
+- `deploy` adds DevCovenant around the existing repo
+- existing multi-line docs keep their authored body content
+- empty docs and one-line placeholders may be replaced
+- managed header lines and explicit managed blocks are the only regions that
+  DevCovenant owns in non-placeholder docs
+
+This is the right path when you are integrating DevCovenant into a repo that
+already has code, docs, and normal history.
+
 ## Common Lifecycle Scenarios
 Scenario: update policy descriptors or profile manifests
 1. edit descriptors/profiles
@@ -256,11 +314,12 @@ Scenario: update policy descriptors or profile manifests
 3. run `devcovenant test`
 4. run `devcovenant gate --end`
 
-Scenario: move from generic install to active governance
-1. set `install.generic_config: false`
+Scenario: move from review-required install to active governance
+1. set `install.config_reviewed: true`
 2. confirm profile stack and policy activation booleans
 3. run `devcovenant deploy`
 4. run full gate sequence (`gate --mid` before `test`)
+5. treat that first gate cycle as proof that the integration is complete
 
 Scenario: operator wants concise command output
 1. set:
@@ -272,13 +331,18 @@ Scenario: operator wants concise command output
 2. run `devcovenant test` and confirm sparse normal-mode output plus the
    printed run-log pointer
 
-Scenario: repository should stop including DevCovenant-core internals
+Scenario: repository uses DevCovenant as a tool and should drop repo-only
+DevCovenant development files
 1. set:
    ```yaml
-   devcov_core_include: false
+   developer_mode: false
    ```
 2. run `devcovenant deploy`
-3. review cleanup output and rerun tests/gates
+3. confirm deploy pruned DevCovenant-only development paths such as
+   `devcovenant/custom/policies/**`,
+   `devcovenant/custom/profiles/<repo-only-profile>/**`, and
+   `tests/devcovenant/core/**`
+4. rerun tests/gates
 
 ## Upgrade and Lock Maintenance
 Use `upgrade` when core files should be reconciled from the installed CLI

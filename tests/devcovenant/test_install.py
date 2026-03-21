@@ -38,8 +38,8 @@ def _read_yaml(path: Path) -> dict[str, object]:
     return yaml.safe_load(path.read_text(encoding="utf-8")) or {}
 
 
-def _unit_test_install_writes_generic_config_and_manifest() -> None:
-    """install_repo should copy core and seed generic config."""
+def _unit_test_install_writes_config_reviewed_and_manifest() -> None:
+    """install_repo should copy core and seed review-required config."""
     with tempfile.TemporaryDirectory() as temp_dir:
         repo_root = Path(temp_dir)
         with redirect_stderr(StringIO()):
@@ -51,8 +51,8 @@ def _unit_test_install_writes_generic_config_and_manifest() -> None:
         config = _read_yaml(config_path)
         install_block = config.get("install", {})
         assert isinstance(install_block, dict)
-        assert install_block.get("generic_config") is True
-        assert config.get("devcov_core_include") is False
+        assert install_block.get("config_reviewed") is False
+        assert config.get("developer_mode") is False
 
         profiles_block = config.get("profiles", {})
         assert isinstance(profiles_block, dict)
@@ -519,9 +519,9 @@ def _unit_test_install_symbol_contract_is_stable() -> None:
 class GeneratedUnittestCases(unittest.TestCase):
     """unittest wrappers for module-level tests."""
 
-    def test_install_writes_generic_config_and_manifest(self):
-        """Run test_install_writes_generic_config_and_manifest."""
-        _unit_test_install_writes_generic_config_and_manifest()
+    def test_install_writes_config_reviewed_and_manifest(self):
+        """Run test_install_writes_config_reviewed_and_manifest."""
+        _unit_test_install_writes_config_reviewed_and_manifest()
 
     def test_install_writes_tracked_registry_without_runtime_state(self):
         """Run test_install_writes_tracked_registry_without_runtime_state."""

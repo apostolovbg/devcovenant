@@ -13,27 +13,62 @@ and lifecycle knobs. The file is tracked in the repo so
 CI (continuous integration) and other contributors use the same enforcement
 settings. Generated registry files
 can be rebuilt, but config stays under version control.
-When the file is missing, DevCovenant seeds a generic stub from the
-global config template and marks it as generic until reviewed.
+When the file is missing, DevCovenant seeds a review-required baseline from the
+global config template and blocks deploy until that review is completed.
 On every full refresh, DevCovenant regenerates autogen-owned config
 sections while preserving user-owned settings.
+
+Practical mental model:
+- `install` gives the repo this file plus the DevCovenant runtime
+- your review of this file decides how the repo should behave
+- `deploy` is blocked until that review is done
+- after that, refresh, deploy, gates, and tests all read this file as the
+  repo's active operating contract
 
 ## Workflow
 1. Choose profiles that match the repo tech stack.
 2. Add overrides for policies that need custom selectors or enforcement.
-3. Set `install.generic_config: false` once the config is reviewed so
+3. Confirm whether this repo is a normal repo using DevCovenant or a repo
+   used to develop DevCovenant itself, then set `developer_mode`
+   accordingly.
+4. Set `install.config_reviewed: true` once the config is reviewed so
    `devcovenant deploy` can run.
-4. Keep the config file committed so the same rules apply in CI.
+5. Keep the config file committed so the same rules apply in CI.
+
+Practical first-review checklist:
+1. decide whether this is a normal repo using DevCovenant or a repo used to
+   develop DevCovenant itself, then set `developer_mode`
+2. confirm the active profile stack in `profiles.active`
+3. confirm which policies should be on or off in `policy_state`
+4. confirm the important `engine` settings such as output mode, fail
+   threshold, and autofix behavior
+5. confirm the managed-doc list in `doc_assets`
+6. then flip `install.config_reviewed: true`
+
+`install.config_reviewed` is the explicit human review checkpoint.
+It is not a runtime cache or a hidden deploy flag.
 
 ## Config Structure
 The core sections are:
 - `profiles.active` for the profile list.
-- `doc_assets` for autogen vs. user-managed doc lists.
+- `doc_assets` for the managed-doc list, optional custom managed docs, and
+  exclusion entries.
 - `autogen_metadata_overrides` for profile-derived metadata overlays.
 - `user_metadata_overrides` for per-policy overrides applied last.
 - `policy_state` for authoritative policy on/off activation.
 - `pre_commit` for `.pre-commit-config.yaml` overrides.
-- `install.generic_config` to guard deploys until the config is reviewed.
+- `install.config_reviewed` to guard deploys until the config review is
+  complete.
+- `developer_mode` to declare whether the repository is merely using
+  DevCovenant or is actually being used to develop DevCovenant itself.
+
+Managed-doc guidance:
+- keep `AGENTS.md` in `doc_assets.autogen`
+- remove a builtin doc from `doc_assets.autogen` to turn it off for this repo
+- add custom docs to `doc_assets.autogen` only after creating matching
+  descriptors under an active profile `assets/` tree
+- use `doc_assets.user` when you want to keep the full autogen list visible
+  but exclude a specific doc from managed-doc sync
 
 Key `engine` knobs used in this repo include:
 - `output_mode` / `tests_output_mode` for console verbosity and test-run

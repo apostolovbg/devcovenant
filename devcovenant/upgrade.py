@@ -151,7 +151,7 @@ def _restore_upgrade_runtime_state(repo_root: Path, temp_root: Path) -> None:
 
 
 def _ensure_upgrade_config(repo_root: Path) -> None:
-    """Seed generic config when missing after core refresh."""
+    """Seed review-required config when missing after core refresh."""
     config_path = repo_root / "devcovenant" / "config.yaml"
     if config_path.exists():
         return
@@ -171,7 +171,7 @@ def _ensure_upgrade_config(repo_root: Path) -> None:
         encoding="utf-8",
     )
     print_step(
-        "Config missing after upgrade; seeded generic config stub",
+        "Config missing after upgrade; seeded review-required config baseline",
         "ℹ️",
     )
 

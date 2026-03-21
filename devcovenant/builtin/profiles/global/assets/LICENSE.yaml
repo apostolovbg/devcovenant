@@ -1,9 +1,12 @@
 title: MIT License
+target_path: LICENSE
 doc_id: LICENSE
 doc_type: license
 project_version: false
 last_updated: false
 devcovenant_version: true
+import_seed: false
+authoritative_source: false
 managed_block: |-
   MIT License
   DevCovenant Version: 1.0.0

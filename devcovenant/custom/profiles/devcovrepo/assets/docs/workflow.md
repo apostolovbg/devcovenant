@@ -19,6 +19,18 @@ any change, including documentation-only edits.
 4. Run tests through the DevCovenant test runner.
 5. Run the pre-commit end gate.
 
+First-time integration boundary:
+- `install` is setup
+- config review is the human decision point
+- `deploy` is activation
+- the first `gate --start` -> `gate --mid` -> `test` -> `gate --end` cycle
+  is the proof that activation succeeded
+
+That same bootstrap model applies whether you start from:
+- an empty repo
+- a repo seeded with DevCovenant-shaped docs such as `SPEC.md`
+- an existing repo with ordinary files and docs
+
 ## Gated Sequence
 The default commands are:
 ```bash

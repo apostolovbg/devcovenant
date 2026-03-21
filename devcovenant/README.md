@@ -96,7 +96,9 @@ Use this flow in a repository where DevCovenant is already available:
 
 ```bash
 devcovenant install
-# edit devcovenant/config.yaml and set install.generic_config: false
+# review devcovenant/config.yaml
+# confirm developer_mode
+# set install.config_reviewed: true
 devcovenant deploy
 devcovenant gate --start
 # make your edits
@@ -105,6 +107,21 @@ devcovenant gate --mid
 devcovenant test
 devcovenant gate --end
 ```
+
+What each step means:
+- `install` puts the DevCovenant runtime and a review-required
+  `devcovenant/config.yaml` into the repo
+- your config review decides how this repo should use DevCovenant
+- `deploy` activates that reviewed config by generating managed docs,
+  registries, and other governed files
+- the first full gate cycle proves that the activated baseline is actually
+  clean and usable
+
+`install.config_reviewed` is the human review checkpoint for first-time
+integration.
+It is not a hidden runtime flag or a cache key.
+It simply means "a human has reviewed this config and is ready to let deploy
+activate it."
 
 If the console script is not available on PATH, use the
 CLI (command-line interface) module entry form:
@@ -124,11 +141,26 @@ py -m devcovenant <command>
 ```
 
 Minimum first-pass config review:
-1. confirm `profiles.active`
-2. confirm `policy_state` enablement choices
-3. confirm `engine.fail_threshold`
-4. confirm `engine.output_mode` (`verbose`, `normal`, or `quiet`)
-5. set `install.generic_config: false` before `deploy`
+1. confirm whether this repo is a normal repo using DevCovenant or a repo
+   used to develop DevCovenant itself
+2. set `developer_mode` accordingly
+3. confirm `profiles.active`
+4. confirm `policy_state` enablement choices
+5. confirm `engine.fail_threshold`
+6. confirm `engine.output_mode` (`verbose`, `normal`, or `quiet`)
+7. set `install.config_reviewed: true` before `deploy`
+
+Common starting situations:
+1. Empty repo:
+   `install` adds DevCovenant and the review-required config, then `deploy`
+   creates the initial managed docs and generated governance files.
+2. Repo seeded with `SPEC.md` and optionally `README.md`:
+   put those docs in the repo before `install`; if they are compatible
+   DevCovenant-shaped docs, the first `deploy` adopts them and upgrades their
+   managed regions while preserving their authored body.
+3. Existing repo with real files:
+   `install` leaves the repo's ordinary files alone and `deploy` adds
+   DevCovenant around them using the managed-doc preservation rules.
 
 ### See It Work in 90 Seconds
 Use this short ritual to prove the evidence model before deeper setup work.
@@ -301,12 +333,24 @@ Practical usage guidance:
 ## Lifecycle
 DevCovenant separates installation from activation intentionally.
 
+Think about the boundary like this:
+- `install` is setup
+- config review is the human decision point
+- `deploy` is activation
+- the first `gate --start` -> `gate --mid` -> `test` -> `gate --end` cycle
+  is the proof that activation succeeded
+
 Lifecycle contract:
 - `install`:
-  copy package files, seed generic config stub, and seed tracked registry
+  copy package files, seed a review-required config baseline, and seed tracked
+  registry
   structure without shipping repo-generated registry/log runtime payloads
+- `install` does not activate managed docs yet; it stops and waits for config
+  review
 - `deploy`:
-  require explicit non-generic config, then materialize managed outputs
+  require completed config review, then materialize managed outputs
+- `deploy` is the first point where the repo becomes actively governed by the
+  reviewed config
 - `clean`:
   remove disposable build/cache/runtime-registry/log artifacts from resolved
   profile/config targets while keeping tracked registry/log README files
@@ -433,6 +477,13 @@ Extension guidance:
 3. use config overlays/overrides only for repository deltas
 4. update docs and tests in the same work slice as runtime behavior changes
 5. keep managed-block boundaries intact (`<!-- DEVCOV* -->`)
+
+Managed-doc extension note:
+- custom profiles may also ship managed-doc descriptors under their
+  `assets/` tree; add the target doc path to `doc_assets.autogen` to turn
+  that custom managed doc on for one repo
+- remove a builtin doc from `doc_assets.autogen` to turn that managed doc
+  off for one repo; `AGENTS.md` stays mandatory
 
 ## Docs Map
 This README is the canonical docs entrypoint for the packaged documentation

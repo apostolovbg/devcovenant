@@ -1,40 +1,57 @@
 # ---------------------------------------------------------------------------
-# DevCovenant config template (generic install baseline)
+# DevCovenant config template (review-required install baseline)
 # ---------------------------------------------------------------------------
-# This file is copied to `devcovenant/config.yaml` during
-# `devcovenant install`.
+# `devcovenant install` copies this file into the repository as
+# `devcovenant/config.yaml`.
 #
-# Why this template exists:
-# - give every repository a safe, explicit baseline;
-# - keep behavior auditable in one file;
-# - make profile/policy customization predictable.
+# Read this file as the repo's operating contract:
+# - human-owned keys say what this repo wants;
+# - refresh-owned keys show what DevCovenant resolved/generated from that.
 #
-# Initial install safety:
-# - `install.generic_config` is set to `true`;
-# - deploy is blocked until a human confirms the config.
+# Why install stops before deploy:
+# - install gives the repo a safe starting point;
+# - deploy turns the config into active managed docs, registries, and
+#   generated governance files;
+# - `install.config_reviewed: false` keeps deploy blocked until a human has
+#   checked that the starting config matches the repo.
 #
-# Typical first-use flow:
-# 1) review and edit `devcovenant/config.yaml`;
-# 2) set `install.generic_config: false`;
-# 3) run `devcovenant deploy`.
+# Typical first-time flow:
+# 1) run `devcovenant install`
+# 2) review this file
+# 3) set `install.config_reviewed: true`
+# 4) run `devcovenant deploy`
+# 5) start normal work with
+#    `gate --start` -> `gate --mid` -> `test` -> `gate --end`
 #
-# Required edit-session gate flow:
-# `devcovenant gate --start` -> `devcovenant gate --mid` (rerun until clean)
-# -> `devcovenant test` -> `devcovenant gate --end`
+# Three common starting situations:
+# - empty repo:
+#   install writes DevCovenant core + this config; deploy then creates the
+#   managed docs and generated governance files
+# - repo with pre-authored DevCovenant-shaped docs such as `SPEC.md`:
+#   install records those docs for adoption; first deploy/refresh upgrades
+#   their managed headers/blocks while preserving the authored body
+# - repo with ordinary existing files:
+#   install leaves them alone; deploy adds DevCovenant around them using the
+#   managed-doc preservation rules
 #
 # Ownership rule:
-# - `refresh` rewrites auto-generated sections;
-# - human-owned keys are preserved.
-# AI assistants must not modify human-owned keys unless explicitly asked.
+# - refresh rewrites refresh-owned sections;
+# - human-owned keys stay under human control.
+# AI assistants must not change human-owned keys unless explicitly asked.
 # ---------------------------------------------------------------------------
 
 # ---------------------------------------------------------------------------
 # Scope control
 # ---------------------------------------------------------------------------
-# Include DevCovenant's own implementation tree in checks.
-# - false: user-repo mode (exclude DevCovenant internals from coverage scope)
-# - true: DevCovenant-repo mode (govern full DevCovenant implementation tree)
-devcov_core_include: false
+# Are you using DevCovenant as a tool, or using this repository to develop
+# DevCovenant itself?
+# - false: normal repo using DevCovenant
+#          deploy removes repo-only DevCovenant development paths and tests
+#          that ordinary repos should not own
+# - true: this repo is being used to develop DevCovenant itself
+#         keep DevCovenant source files, self-hosting profiles/policies, and
+#         DevCovenant-only tests in scope
+developer_mode: false
 
 # ---------------------------------------------------------------------------
 # Profile activation
@@ -67,8 +84,8 @@ profiles:
     # Auto-generated from the active profile stack.
     # Never edit directly; refresh will rewrite these values.
     file_suffixes: []
-    # Generated path list used to filter DevCovenant internals when
-    # `devcov_core_include` is false.
+    # Generated path list of DevCovenant source/runtime files hidden from
+    # normal repository scans when `developer_mode` is false.
     devcov_core_paths:
       - devcovenant/core
       - devcovenant/builtin
@@ -99,8 +116,11 @@ paths:
   registry_file: devcovenant/registry/registry.yaml
 
 doc_assets:
-  # Documents fully materialized from template descriptors on refresh.
-  # Edits outside managed blocks in these files will be replaced on refresh.
+  # Managed docs that DevCovenant creates and refreshes from descriptors.
+  # Keep `AGENTS.md` here.
+  # Add a custom doc here only after creating a matching descriptor under an
+  # active profile `assets/` tree.
+  # Remove a builtin doc here to turn that managed doc off for this repo.
   autogen:
     - AGENTS.md
     - README.md
@@ -110,8 +130,9 @@ doc_assets:
     - CHANGELOG.md
     - devcovenant/README.md
 
-  # Files excluded from full materialization.
-  # Managed `<!-- DEVCOV* -->` blocks are still refreshed where present.
+  # Optional exclusion list for docs that still appear in `autogen`.
+  # Use this when you want the full default list to stay visible here but do
+  # not want one specific doc to be managed in this repo right now.
   user: []
 
 # ---------------------------------------------------------------------------
@@ -119,14 +140,22 @@ doc_assets:
 # ---------------------------------------------------------------------------
 install:
   # Human-owned key.
-  # - true: generic post-install config is still pending human review;
-  #         `devcovenant deploy` stays blocked.
-  # - false: human completed review; deploy is allowed.
-  generic_config: true
+  # What this means:
+  # - false: you have not finished reviewing this config yet;
+  #          `devcovenant deploy` stays blocked
+  # - true: the config review is complete; deploy may run
+  #
+  # Review this before you flip it to true:
+  # - is `developer_mode` correct for this repo?
+  # - is `profiles.active` the right profile stack?
+  # - is `policy_state` correct?
+  # - are the key `engine` settings acceptable?
+  config_reviewed: false
 
   # Refresh-owned install memory for pre-authored managed-doc imports.
   # `install` records eligible existing DevCovenant-shaped docs here so the
   # first refresh/deploy can adopt them instead of overwriting them.
+  # This is runtime memory, not a human-planning field.
   import_managed_docs: []
 
 # ---------------------------------------------------------------------------

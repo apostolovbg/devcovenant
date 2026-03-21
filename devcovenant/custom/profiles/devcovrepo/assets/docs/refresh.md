@@ -23,7 +23,8 @@ the active profiles and policy descriptors.
 The full refresh command regenerates local registries, profile registry state,
 config autogen sections, the merged `.gitignore`, and generated
 `.pre-commit-config.yaml`. It also syncs managed doc blocks/headers for docs
-selected by `doc_assets`.
+selected by `doc_assets`, resolving descriptors from the global asset root
+plus any active profile asset roots.
 
 ## Automatic Registry Refresh
 DevCovenant runs an internal lightweight registry refresh before command

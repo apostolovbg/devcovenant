@@ -14,14 +14,14 @@ from devcovenant import deploy, install, refresh
 from tests.devcovenant import repo_seed_cache
 
 
-def _set_generic_flag(repo_root: Path, enabled: bool) -> None:
-    """Set install.generic_config in config.yaml."""
+def _set_config_reviewed(repo_root: Path, enabled: bool) -> None:
+    """Set install.config_reviewed in config.yaml."""
     config_path = repo_root / "devcovenant" / "config.yaml"
     payload = yaml.safe_load(config_path.read_text(encoding="utf-8")) or {}
     install_block = payload.get("install", {})
     if not isinstance(install_block, dict):
         install_block = {}
-    install_block["generic_config"] = enabled
+    install_block["config_reviewed"] = enabled
     payload["install"] = install_block
     config_path.write_text(
         yaml.safe_dump(payload, sort_keys=False),
@@ -29,8 +29,8 @@ def _set_generic_flag(repo_root: Path, enabled: bool) -> None:
     )
 
 
-def _unit_test_deploy_blocks_when_config_is_generic() -> None:
-    """deploy_repo should block if install.generic_config is true."""
+def _unit_test_deploy_blocks_when_config_review_is_incomplete() -> None:
+    """deploy_repo should block if install.config_reviewed is false."""
     with tempfile.TemporaryDirectory() as temp_dir:
         repo_root = Path(temp_dir)
         repo_seed_cache.copy_installed_repo(repo_root)
@@ -38,9 +38,11 @@ def _unit_test_deploy_blocks_when_config_is_generic() -> None:
         try:
             deploy.deploy_repo(repo_root)
         except SystemExit as exc:
-            assert "generic" in str(exc)
+            assert "review" in str(exc)
         else:
-            raise AssertionError("deploy_repo should fail for generic config")
+            raise AssertionError(
+                "deploy_repo should fail while config review is incomplete"
+            )
 
 
 def _unit_test_deploy_runs_full_refresh_when_config_ready() -> None:
@@ -48,7 +50,7 @@ def _unit_test_deploy_runs_full_refresh_when_config_ready() -> None:
     with tempfile.TemporaryDirectory() as temp_dir:
         repo_root = Path(temp_dir)
         repo_seed_cache.copy_installed_repo(repo_root)
-        _set_generic_flag(repo_root, enabled=False)
+        _set_config_reviewed(repo_root, enabled=True)
 
         result = deploy.deploy_repo(repo_root)
         assert result == 0
@@ -76,7 +78,7 @@ def _unit_test_deploy_adopts_pre_authored_spec_doc() -> None:
         )
 
         install.install_repo(repo_root)
-        _set_generic_flag(repo_root, enabled=False)
+        _set_config_reviewed(repo_root, enabled=True)
         result = deploy.deploy_repo(repo_root)
         assert result == 0
 
@@ -116,11 +118,14 @@ def _write_profile_descriptor(profile_dir: Path) -> None:
 
 
 def _unit_test_deploy_cleanup_is_deploy_only() -> None:
-    """deploy_repo should remove user-mode paths; refresh should not."""
+    """deploy_repo should prune repo-only DevCovenant paths.
+
+    refresh should not.
+    """
     with tempfile.TemporaryDirectory() as temp_dir:
         repo_root = Path(temp_dir)
         repo_seed_cache.copy_installed_repo(repo_root)
-        _set_generic_flag(repo_root, enabled=False)
+        _set_config_reviewed(repo_root, enabled=True)
 
         policy_marker = (
             repo_root
@@ -146,11 +151,21 @@ def _unit_test_deploy_cleanup_is_deploy_only() -> None:
             / "devcovrepo"
             / "demo.txt"
         )
+        kept_profile_marker = (
+            repo_root
+            / "devcovenant"
+            / "custom"
+            / "profiles"
+            / "customer_docs"
+            / "demo.txt"
+        )
         _write_marker(policy_marker)
         _write_policy_descriptor(policy_marker)
         _write_marker(tests_marker)
         _write_marker(profile_marker)
         _write_profile_descriptor(profile_marker.parent)
+        _write_marker(kept_profile_marker)
+        _write_profile_descriptor(kept_profile_marker.parent)
 
         refresh_result = refresh.refresh_repo(repo_root)
         assert refresh_result == 0
@@ -165,6 +180,7 @@ def _unit_test_deploy_cleanup_is_deploy_only() -> None:
         assert not (
             repo_root / "devcovenant" / "custom" / "profiles" / "devcovrepo"
         ).exists()
+        assert kept_profile_marker.exists()
 
 
 def _unit_test_deploy_run_calls_deploy_repo() -> None:
@@ -211,9 +227,9 @@ def _unit_test_deploy_main_exits_with_run_code() -> None:
 class GeneratedUnittestCases(unittest.TestCase):
     """unittest wrappers for module-level tests."""
 
-    def test_deploy_blocks_when_config_is_generic(self):
-        """Run test_deploy_blocks_when_config_is_generic."""
-        _unit_test_deploy_blocks_when_config_is_generic()
+    def test_deploy_blocks_when_config_review_is_incomplete(self):
+        """Run test_deploy_blocks_when_config_review_is_incomplete."""
+        _unit_test_deploy_blocks_when_config_review_is_incomplete()
 
     def test_deploy_runs_full_refresh_when_config_ready(self):
         """Run test_deploy_runs_full_refresh_when_config_ready."""

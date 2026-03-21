@@ -34,6 +34,13 @@ inline comments and should be treated as part of the configuration contract.
 For the dedicated lifecycle-metadata contract, see
 `devcovenant/docs/project_governance.md`.
 
+Practical mental model:
+- `install` gives you this file plus the DevCovenant runtime
+- your review of this file decides how the repo should behave
+- `deploy` is blocked until that review is done
+- after that, `refresh`, `deploy`, gates, and tests all read this file as the
+  repo's active operating contract
+
 ## Ownership Model
 Autogen-owned sections:
 - `profiles.generated`
@@ -48,7 +55,7 @@ User-owned sections:
 - `user_metadata_overlays`
 - `user_metadata_overrides`
 - `policy_state`
-- `install.generic_config`
+- `install.config_reviewed`
 - `engine.fail_threshold`
 - `engine.auto_fix_enabled`
 - `engine.output_mode`
@@ -96,7 +103,8 @@ the same session so generated configs remain self-explanatory.
 - `profiles.generated`: refresh-generated profile metadata summary
   (`file_suffixes`, `devcov_core_paths`).
 
-- `doc_assets`: managed-doc routing for autogen and user selections.
+- `doc_assets`: managed-doc selection for builtin docs, optional custom docs,
+  and per-repo exclusions.
 
 - `project-governance`: first-class repo lifecycle metadata for stage,
   development stance, versioning mode, optional codename/build identity,
@@ -177,7 +185,10 @@ the same session so generated configs remain self-explanatory.
   `engine.tests_output_mode` changes output presentation only; it does not
   select a different command list.
 
-- `install.generic_config`: deploy guard for first-time activation flow.
+- `install.config_reviewed`: explicit post-install config-review guard for
+  first-time activation flow. `install` leaves this as `false`. Change it to
+  `true` only after a human has reviewed `developer_mode`,
+  `profiles.active`, `policy_state`, and the key `engine` settings.
 
 - `install.import_managed_docs`: refresh-owned install memory that records
   compatible pre-authored managed docs discovered during `install` so the
@@ -206,11 +217,15 @@ the same session so generated configs remain self-explanatory.
 
 - `paths.registry_file`: local policy hash registry destination.
 
-- `devcov_core_include`: toggles user-repo scope vs full DevCovenant scope.
+- `developer_mode`: use `false` in a normal repository that is using
+  DevCovenant as a tool. Use `true` only when the repository itself is being
+  used to develop DevCovenant.
 
 - `profiles.generated.devcov_core_paths`: autogen list of DevCovenant
-  internal paths excluded when `devcov_core_include` is false, including
-  builtin and core trees plus root CLI scripts.
+  source/runtime paths hidden from normal repository scans when
+  `developer_mode` is false. This is part of how normal repos avoid taking
+  ownership of DevCovenant's own source tree and repo-only development
+  surfaces.
 
 Baseline profile guidance:
 - keep `global` first
@@ -223,6 +238,37 @@ Baseline profile guidance:
   repo-specific cleanup targets or deliberate replacements
 - use custom profiles (or config metadata layers) for repo-specific layout
   changes
+
+Practical `developer_mode` rule:
+- set `developer_mode: false` for ordinary application/library repos that
+  merely use DevCovenant
+- set `developer_mode: true` only in the DevCovenant source repo or another
+  repo intentionally used to develop DevCovenant itself
+- when `developer_mode: false`, `deploy` prunes repo-only DevCovenant
+  development paths such as `devcovenant/custom/policies/**`,
+  `devcovenant/custom/profiles/<repo-only-profile>/**`, and
+  `tests/devcovenant/core/**`
+
+Practical first-review checklist:
+1. decide whether this is a normal repo using DevCovenant or a repo used to
+   develop DevCovenant itself, then set `developer_mode`
+2. confirm the active profile stack in `profiles.active`
+3. confirm which policies should be on or off in `policy_state`
+4. confirm the important `engine` settings:
+   - `fail_threshold`
+   - `output_mode`
+   - `tests_output_mode`
+   - `auto_fix_enabled`
+5. confirm the managed-doc list in `doc_assets`
+6. then flip `install.config_reviewed: true`
+
+What `install.config_reviewed` is not:
+- not a technical runtime cache
+- not a hidden deploy switch
+- not something refresh should guess for you
+
+It is simply the repo's explicit statement that a human has reviewed the
+starting config and is ready to let `deploy` activate it.
 
 ## Metadata Resolution Order
 Resolved policy metadata is computed in this order:
@@ -303,6 +349,22 @@ Autofix workflow note:
   and removing the package-import cache Python may emit before CLI startup.
 
 ## Practical Recipes
+Configure a normal repository that uses DevCovenant as a tool:
+```yaml
+developer_mode: false
+
+install:
+  config_reviewed: true
+```
+
+Configure a repository that is being used to develop DevCovenant itself:
+```yaml
+developer_mode: true
+
+install:
+  config_reviewed: true
+```
+
 Disable one shipped policy:
 ```yaml
 policy_state:
@@ -457,7 +519,7 @@ section. When `versioning_mode` is `unversioned`, managed docs keep the
 `Project Version` line but render the configured non-version label, and
 `CHANGELOG.md` uses the configured unreleased heading.
 
-Fresh generic installs start from this same unversioned pattern so refresh
+Fresh installs start from this same unversioned pattern so refresh
 never fabricates a placeholder numbered release such as `0.0.0`.
 
 Add extra changelog verbs without replacing defaults:

@@ -109,8 +109,8 @@ def core_exclusion_paths(
     config: dict[str, Any] | None,
 ) -> list[Path]:
     """Return repo-rooted core exclusion paths based on config."""
-    include_core = bool((config or {}).get("devcov_core_include", False))
-    if include_core:
+    developer_mode = bool((config or {}).get("developer_mode", False))
+    if developer_mode:
         return []
     profiles_cfg = (config or {}).get("profiles", {})
     if isinstance(profiles_cfg, dict):

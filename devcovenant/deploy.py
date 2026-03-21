@@ -23,7 +23,7 @@ from devcovenant.core.runtime.execution import (
     resolve_repo_root,
 )
 
-USER_MODE_CLEANUP_PATHS = (
+NORMAL_REPO_PRUNE_PATHS = (
     Path("devcovenant/custom/policies"),
     Path("tests/devcovenant/core"),
     Path("devcovenant/custom/profiles/devcovrepo"),
@@ -53,30 +53,28 @@ def _read_yaml(path: Path) -> dict[str, object]:
     return payload
 
 
-def _is_generic_config(config: dict[str, object]) -> bool:
-    """Return True when install.generic_config is still enabled."""
+def _is_config_reviewed(config: dict[str, object]) -> bool:
+    """Return True when install.config_reviewed is complete."""
     install_block = config.get("install")
     if not isinstance(install_block, dict):
         raise SystemExit(
             "Deploy blocked: `install` must be present as a mapping in "
             "devcovenant/config.yaml."
         )
-    generic_config = install_block.get("generic_config")
-    if not isinstance(generic_config, bool):
+    config_reviewed = install_block.get("config_reviewed")
+    if not isinstance(config_reviewed, bool):
         raise SystemExit(
-            "Deploy blocked: `install.generic_config` must be boolean."
+            "Deploy blocked: `install.config_reviewed` must be boolean."
         )
-    return generic_config
+    return config_reviewed
 
 
-def _include_core_content(config: dict[str, object]) -> bool:
-    """Return True when deploy should keep devcovrepo/core overlays."""
-    include_core = config.get("devcov_core_include")
-    if not isinstance(include_core, bool):
-        raise SystemExit(
-            "Deploy blocked: `devcov_core_include` must be boolean."
-        )
-    return include_core
+def _is_developer_mode(config: dict[str, object]) -> bool:
+    """Return True when the repo is used to develop DevCovenant itself."""
+    developer_mode = config.get("developer_mode")
+    if not isinstance(developer_mode, bool):
+        raise SystemExit("Deploy blocked: `developer_mode` must be boolean.")
+    return developer_mode
 
 
 def _remove_path(target: Path) -> bool:
@@ -90,10 +88,10 @@ def _remove_path(target: Path) -> bool:
     return True
 
 
-def _cleanup_user_mode_paths(repo_root: Path) -> list[str]:
-    """Delete deploy-only user-mode paths before full refresh."""
+def _prune_repo_only_developer_paths(repo_root: Path) -> list[str]:
+    """Delete DevCovenant-only development paths from normal repos."""
     removed: list[str] = []
-    for relative_path in USER_MODE_CLEANUP_PATHS:
+    for relative_path in NORMAL_REPO_PRUNE_PATHS:
         target = repo_root / relative_path
         if _remove_path(target):
             removed.append(str(relative_path))
@@ -104,14 +102,14 @@ def deploy_repo(repo_root: Path) -> int:
     """Deploy managed DevCovenant docs/assets to a repo."""
     config_path = repo_root / "devcovenant" / "config.yaml"
     config = _read_yaml(config_path)
-    if _is_generic_config(config):
+    if not _is_config_reviewed(config):
         raise SystemExit(
-            "Deploy blocked: config is still generic. Set "
-            "`install.generic_config: false` first."
+            "Deploy blocked: config review is not complete. Set "
+            "`install.config_reviewed: true` first."
         )
 
-    if not _include_core_content(config):
-        removed = _cleanup_user_mode_paths(repo_root)
+    if not _is_developer_mode(config):
+        removed = _prune_repo_only_developer_paths(repo_root)
         if removed:
             print_step(
                 "Deploy cleanup removed: " + ", ".join(removed),

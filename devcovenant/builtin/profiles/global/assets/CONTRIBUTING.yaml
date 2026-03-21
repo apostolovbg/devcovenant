@@ -1,9 +1,12 @@
 title: Contributing
+target_path: CONTRIBUTING.md
 doc_id: CONTRIBUTING
 doc_type: contributing-guide
 project_version: true
 last_updated: true
 devcovenant_version: true
+import_seed: true
+authoritative_source: true
 managed_block: |-
   This opening section is managed by DevCovenant.
   It defines the standard contributor workflow used by

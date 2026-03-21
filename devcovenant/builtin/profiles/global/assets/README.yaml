@@ -1,9 +1,12 @@
 title: Project Name
+target_path: README.md
 doc_id: README
 doc_type: repo-readme
 project_version: true
 last_updated: true
 devcovenant_version: true
+import_seed: true
+authoritative_source: true
 managed_block: ''
 body: |-
   Describe the project this repository ships: what it does, who it helps,

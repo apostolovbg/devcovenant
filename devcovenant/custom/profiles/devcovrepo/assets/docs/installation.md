@@ -9,11 +9,18 @@
 
 ## Overview
 DevCovenant separates installation of the core from deployment of managed
-docs and assets. `install` copies `devcovenant/` and writes a generic config
+docs and assets. `install` copies `devcovenant/` and writes a
+review-required config
 stub. `deploy` activates managed docs, policy blocks, registries, and the
 generated `.gitignore`. `refresh` is the standard full managed refresh for an
 already installed repo. `upgrade` reconciles core from source on every run and
 then runs refresh.
+
+The practical model is:
+- `install` is safe setup
+- config review is the human decision point
+- `deploy` is activation
+- the first full gate cycle proves the activated baseline is actually clean
 
 Use `python3 -m devcovenant` when the
 CLI (command-line interface) entry is not available.
@@ -22,21 +29,46 @@ automatically, so `python3 -m devcovenant ...` does not leave
 repo-local `devcovenant/__pycache__/` drift behind.
 
 ## Workflow
-1. Run `install` to copy the core and generate a generic config stub.
+1. Run `install` to copy the core and generate a review-required config
+   baseline.
 2. If the repo already contains DevCovenant-shaped docs such as `SPEC.md`,
    `README.md`, or `PLAN.md`, keep them in place.
-3. Edit `devcovenant/config.yaml` and set `install.generic_config: false`.
-4. Run `deploy` to activate managed docs, registries, and gitignore.
-5. Use `refresh` for normal managed refreshes and `upgrade` for core updates.
-6. Run gated edits with `start -> mid -> test -> end`.
+3. Edit `devcovenant/config.yaml`, confirm whether the repo is a normal repo
+   using DevCovenant or a repo used to develop DevCovenant itself, and set
+   `developer_mode` accordingly.
+4. Set `install.config_reviewed: true`.
+5. Run `deploy` to activate managed docs, registries, and gitignore.
+6. Run the first full gate cycle to prove the baseline:
+   `gate --start` -> `gate --mid` -> `test` -> `gate --end`.
+7. Use `refresh` for normal managed refreshes and `upgrade` for core updates.
+
+Three common starting situations:
+- empty repo:
+  `install` writes the core and config; `deploy` creates the managed baseline
+- repo seeded with `SPEC.md` or `README.md`:
+  the first `deploy` adopts compatible DevCovenant-shaped docs instead of
+  overwriting their authored body
+- existing repo with real files:
+  `install` leaves ordinary files alone and `deploy` adds DevCovenant around
+  them using the normal managed-doc preservation rules
 
 ## Lifecycle Commands
-- `install`: copy the core plus a generic config stub. It never deploys
+- `install`: copy the core plus a review-required config baseline. It never
+  deploys
   managed docs/assets. If DevCovenant already exists, install exits with a
   message to run `upgrade`.
-- `deploy`: requires a non-generic config (`install.generic_config: false`).
+- `deploy`: requires completed config review
+  (`install.config_reviewed: true`).
   It writes managed docs/assets/registries, regenerates `.gitignore`, and
   runs a full refresh.
+- `install.config_reviewed` is the explicit human review checkpoint.
+  It is not a cache key or a hidden runtime switch. It simply means a human
+  has reviewed the starting config and is ready to activate it.
+- when `developer_mode: false`, deploy removes repo-only DevCovenant
+  development paths that do not belong in normal repos, including
+  `devcovenant/custom/policies/**`,
+  `devcovenant/custom/profiles/devcovrepo/**`, and
+  `tests/devcovenant/core/**`
 - pre-authored DevCovenant-shaped docs such as `SPEC.md`, `README.md`, or
   `PLAN.md` are adopted during refresh/deploy when their `Doc ID` / `Doc Type`
   match the target doc and their
@@ -63,7 +95,7 @@ repo-local `devcovenant/__pycache__/` drift behind.
 ## Examples
 ```bash
 devcovenant install
-# edit devcovenant/config.yaml (set install.generic_config: false)
+# review devcovenant/config.yaml (set install.config_reviewed: true)
 devcovenant deploy
 
 devcovenant refresh

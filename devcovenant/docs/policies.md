@@ -313,8 +313,12 @@ High-impact runtime contracts:
   the root `README.md`, removing only repo-only sections so this repository
   maintains one authored README source.
 - `managed-doc-assets` is a synchronization guard between managed docs and
-  their global asset descriptors; it does not make one side a universal
-  authority over the other.
+  their managed-doc descriptors; it does not make one side a universal
+  authority over the other, and it now reads descriptor/header/block rules
+  through the shared managed-doc runtime service instead of keeping a
+  separate copy of that contract. The policy now derives its coverage from
+  enabled descriptors marked as authoritative source docs instead of a fixed
+  hardcoded doc list.
 - `version-sync` owns synchronized version surfaces and any explicit
   role-scoped package-legality checks, while repo-level version format
   validation, scheme-aware bump progression, and comparison semantics are
@@ -542,8 +546,8 @@ stack, but it is no longer an AGENTS policy-block entry:
   `Unversioned` in managed docs and require an unreleased changelog flow such
   as `## Unreleased`
 - extra governance headers come from managed-doc descriptor opt-in
-  (`project_governance_headers`), while AGENTS also renders a dedicated
-  project-governance section after the workflow block
+  (`project_governance_headers`), while AGENTS still renders its dedicated
+  project-governance section through the AGENTS-specific refresh path
 - the full field/surface contract is documented in
   `devcovenant/docs/project_governance.md`
 

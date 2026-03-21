@@ -1133,10 +1133,10 @@ enabled: true
 custom: true
 ```
 
-Ensure AGENTS.md, README.md, PLAN.md, SPEC.md, CHANGELOG.md, and
-CONTRIBUTING.md stay synchronized with their managed-doc descriptors under
-`devcovenant/builtin/profiles/global/assets/` so documentation generation
-remains deterministic.
+Ensure the managed docs marked as authoritative sources stay synchronized
+with their managed-doc descriptors under the global asset root and any
+active profile asset roots so documentation generation remains
+deterministic.
 
 
 ---

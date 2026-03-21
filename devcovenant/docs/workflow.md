@@ -226,6 +226,25 @@ Install/upgrade boundary:
   (`SPEC.md`, `README.md`, `PLAN.md`, and peers) so the first
   `refresh`/`deploy` adopts their authored content while updating generated
   headers and managed blocks to the active runtime
+- that adoption and preservation contract is now owned by the shared
+  managed-doc runtime service instead of being split between separate
+  install-time and refresh-time document helpers
+- `install` seeds user-repo defaults, including `developer_mode: false` and
+  `install.config_reviewed: false`, so bootstrap starts in normal user scope
+  with deploy still blocked pending explicit config review
+- `deploy` requires `install.config_reviewed: true` before it activates
+  managed docs, registries, and other generated artifacts
+- think of that first install/deploy boundary like this:
+  - `install` is setup
+  - config review is the human decision point
+  - `deploy` is activation
+  - the first start -> mid -> test -> end cycle is the proof that activation
+    succeeded
+- managed-doc selection now comes from `doc_assets.autogen` plus descriptor
+  lookup from the global managed-doc assets and any active profile asset
+  roots:
+  keep `AGENTS.md`, remove builtin docs there to turn them off for one repo,
+  and add custom docs there only after creating matching descriptors
 - in this repository, `README.md` is the authored source and
   `devcovenant/README.md` is the synced packaged projection with repo-only
   sections stripped by `readme-sync`
@@ -235,6 +254,11 @@ Install/upgrade boundary:
   - one-line docs may be replaced fully
   - otherwise only managed header lines and explicit `<!-- DEVCOV* -->`
     blocks may change
+- install/deploy bootstrap cases therefore work like this:
+  - empty repo: deploy creates the managed baseline
+  - seeded DevCovenant-shaped docs: deploy adopts and upgrades them
+  - existing repo with ordinary docs/files: deploy preserves real authored
+    content and adds managed regions around it
 - `install` exits and points to `upgrade` when DevCovenant is already present
 - source-checkout `install` copies tracked package skeletons only; it skips
   source runtime logs, source runtime registry files, and tracked
@@ -258,9 +282,10 @@ Install/upgrade boundary:
 - refresh renders the compact managed header set for ordinary docs and can
   add project-governance header lines to any opted-in managed doc when the
   descriptor requests them
-- AGENTS also renders a dedicated managed `Project Governance` section after
-  the workflow block so agents can read the resolved repo lifecycle state
-  directly before the generated policy block
+- AGENTS remains the one explicit special-case doc: refresh also renders its
+  dedicated managed `Project Governance` section after the workflow block so
+  agents can read the resolved repo lifecycle state directly before the
+  generated policy block
 - refresh writes final per-policy metadata snapshots to
   `devcovenant/registry/registry.yaml` and now also records per-key
   `metadata_resolution` trace plus `metadata_warnings` for destructive
@@ -467,9 +492,9 @@ Managed-environment scope split:
 - managed-environment stage bootstrap/output commands honor runtime output
   mode: normal mode suppresses bootstrap command bursts, quiet mode keeps
   routine stdout hidden, and verbose mode streams full child output.
-- scope exclusions: when `devcov_core_include` is false, core checks ignore
-  `profiles.generated.devcov_core_paths`, which include builtin and core
-  internals plus root CLI scripts.
+- scope exclusions: when `developer_mode` is false, normal repos ignore
+  `profiles.generated.devcov_core_paths`, which represent DevCovenant's own
+  source/runtime paths rather than the user's project files.
 - managed-environment guidance expands tokenized manual commands with
   resolved paths; missing values render explicit placeholders like
   `<managed_python>`.

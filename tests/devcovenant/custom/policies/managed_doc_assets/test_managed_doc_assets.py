@@ -69,15 +69,17 @@ def _unit_test_descriptor_generated_label_duplication_is_rejected() -> None:
             / "assets"
             / "CONTRIBUTING.yaml"
         )
-        descriptor = _load_yaml(descriptor_path)
-        managed_block = str(descriptor.get("managed_block", "")).strip("\n")
-        descriptor["managed_block"] = "\n".join(
-            [
-                "**Doc ID:** CONTRIBUTING",
-                managed_block,
-            ]
+        raw_yaml = descriptor_path.read_text(encoding="utf-8")
+        needle = "managed_block: |-\n"
+        assert needle in raw_yaml
+        descriptor_path.write_text(
+            raw_yaml.replace(
+                needle,
+                needle + "  **Doc ID:** CONTRIBUTING\n",
+                1,
+            ),
+            encoding="utf-8",
         )
-        _dump_yaml(descriptor_path, descriptor)
 
         messages = _policy_violations(repo_root)
         assert any(
@@ -113,6 +115,30 @@ def _unit_test_user_preserve_blocks_inside_managed_block_are_ignored() -> None:
         )
 
 
+def _unit_test_disabled_builtin_docs_are_not_required() -> None:
+    """Policy should ignore authoritative docs disabled in doc_assets."""
+    with tempfile.TemporaryDirectory() as temp_dir:
+        repo_root = Path(temp_dir)
+        install.install_repo(repo_root)
+        assert refresh_repo(repo_root) == 0
+
+        config_path = repo_root / "devcovenant" / "config.yaml"
+        payload = _load_yaml(config_path)
+        doc_assets = payload.setdefault("doc_assets", {})
+        assert isinstance(doc_assets, dict)
+        doc_assets["autogen"] = ["AGENTS.md"]
+        doc_assets["user"] = []
+        _dump_yaml(config_path, payload)
+
+        (repo_root / "README.md").unlink(missing_ok=True)
+
+        messages = _policy_violations(repo_root)
+        assert not any(
+            "Managed document README.md is missing." in message
+            for message in messages
+        )
+
+
 def _unit_test_managed_doc_assets_symbol_contract_is_stable() -> None:
     """Managed doc assets class contract should remain callable."""
     assert callable(ManagedDocAssetsCheck)
@@ -134,6 +160,10 @@ class GeneratedUnittestCases(unittest.TestCase):
     def test_user_preserve_blocks_inside_managed_block_are_ignored(self):
         """Run preserve-block ignore test."""
         _unit_test_user_preserve_blocks_inside_managed_block_are_ignored()
+
+    def test_disabled_builtin_docs_are_not_required(self):
+        """Run disabled builtin doc coverage test."""
+        _unit_test_disabled_builtin_docs_are_not_required()
 
     def test_managed_doc_assets_symbol_contract_is_stable(self):
         """Run managed-doc-assets symbol contract assertions."""

@@ -485,7 +485,7 @@ def _write_minimal_config(
     config_path.write_text(
         "\n".join(
             [
-                f"devcov_core_include: {'true' if include_core else 'false'}",
+                f"developer_mode: {'true' if include_core else 'false'}",
                 "profiles:",
                 "  active: []",
                 "  generated:",

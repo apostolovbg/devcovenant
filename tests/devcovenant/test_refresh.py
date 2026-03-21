@@ -219,6 +219,114 @@ def _unit_test_refresh_imports_same_version_managed_block_doc() -> None:
         assert "**DevCovenant Version:** 1.0.0" in updated
 
 
+def _unit_test_refresh_supports_custom_managed_docs() -> None:
+    """refresh_repo should resolve custom managed docs from active profiles."""
+    with tempfile.TemporaryDirectory() as temp_dir:
+        repo_root = Path(temp_dir)
+        install.install_repo(repo_root)
+
+        profile_root = (
+            repo_root / "devcovenant" / "custom" / "profiles" / "mapsdemo"
+        )
+        assets_root = profile_root / "assets"
+        assets_root.mkdir(parents=True, exist_ok=True)
+        (profile_root / "mapsdemo.yaml").write_text(
+            yaml.safe_dump(
+                {
+                    "version": 1,
+                    "profile": "mapsdemo",
+                    "category": "repo",
+                    "suffixes": [],
+                    "ignore_dirs": [],
+                },
+                sort_keys=False,
+            ),
+            encoding="utf-8",
+        )
+        (assets_root / "PROFILE_MAP.yaml").write_text(
+            "\n".join(
+                [
+                    "title: Profile Map",
+                    "target_path: PROFILE_MAP.md",
+                    "doc_id: PROFILE_MAP",
+                    "doc_type: reference-map",
+                    "project_version: true",
+                    "last_updated: true",
+                    "devcovenant_version: true",
+                    "project_governance_headers: false",
+                    "import_seed: true",
+                    "authoritative_source: true",
+                    "managed_block: |-",
+                    "  This opening section is managed by DevCovenant.",
+                    "  Use `PROFILE_MAP.md` for custom profile inventory.",
+                    "body: |-",
+                    "  ## Overview",
+                    "  Template profile map body.",
+                    "",
+                ]
+            ),
+            encoding="utf-8",
+        )
+        (assets_root / "POLICY_MAP.yaml").write_text(
+            "\n".join(
+                [
+                    "title: Policy Map",
+                    "target_path: POLICY_MAP.md",
+                    "doc_id: POLICY_MAP",
+                    "doc_type: reference-map",
+                    "project_version: true",
+                    "last_updated: true",
+                    "devcovenant_version: true",
+                    "project_governance_headers: false",
+                    "import_seed: true",
+                    "authoritative_source: true",
+                    "managed_block: |-",
+                    "  This opening section is managed by DevCovenant.",
+                    "  Use `POLICY_MAP.md` for custom policy inventory.",
+                    "body: |-",
+                    "  ## Overview",
+                    "  Template policy map body.",
+                    "",
+                ]
+            ),
+            encoding="utf-8",
+        )
+
+        config_path = repo_root / "devcovenant" / "config.yaml"
+        payload = yaml.safe_load(config_path.read_text(encoding="utf-8"))
+        assert isinstance(payload, dict)
+        payload["profiles"] = {"active": ["mapsdemo"]}
+        payload["doc_assets"] = {
+            "autogen": ["AGENTS.md", "PROFILE_MAP.md", "POLICY_MAP.md"],
+            "user": [],
+        }
+        config_path.write_text(
+            yaml.safe_dump(payload, sort_keys=False),
+            encoding="utf-8",
+        )
+
+        (repo_root / "PROFILE_MAP.md").write_text(
+            "# Profile Map\n\n"
+            "## Purpose\n"
+            "Keep this authored custom profile map body.\n",
+            encoding="utf-8",
+        )
+
+        result = refresh.refresh_repo(repo_root)
+        assert result == 0
+
+        profile_map = (repo_root / "PROFILE_MAP.md").read_text(
+            encoding="utf-8"
+        )
+        policy_map = (repo_root / "POLICY_MAP.md").read_text(encoding="utf-8")
+
+        assert "**Doc ID:** PROFILE_MAP" in profile_map
+        assert "Keep this authored custom profile map body." in profile_map
+        assert "**Doc ID:** POLICY_MAP" in policy_map
+        assert "Template policy map body." in policy_map
+        assert not (repo_root / "README.md").exists()
+
+
 def _unit_test_refresh_updates_all_managed_blocks() -> None:
     """refresh_repo should normalize AGENTS managed/workflow/policy blocks."""
     with tempfile.TemporaryDirectory() as temp_dir:
@@ -693,6 +801,7 @@ def _unit_test_refresh_rejects_multiline_non_block_doc_descriptor() -> None:
             "\n".join(
                 [
                     "title: README",
+                    "target_path: README.md",
                     "doc_id: README",
                     "doc_type: repo-readme",
                     "project_version: true",
@@ -733,6 +842,7 @@ def _unit_test_refresh_rejects_invalid_doc_descriptor_schema() -> None:
             "\n".join(
                 [
                     "title: README",
+                    "target_path: README.md",
                     "doc_id: README",
                     "doc_type: repo-readme",
                     "project_version: true",

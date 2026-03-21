@@ -65,7 +65,7 @@ project-governance:
   changelog_file: CHANGELOG.md
 ```
 
-Fresh generic installs currently default to an intentionally unversioned
+Fresh installs currently default to an intentionally unversioned
 baseline:
 
 ```yaml

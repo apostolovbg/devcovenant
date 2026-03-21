@@ -34,6 +34,14 @@ It includes:
 - resolved `project-governance` state as its own top-level registry section
 - discovered policy IDs (identifiers)
 - descriptor/script paths and hashes
+- refresh-generated policy hashes and metadata snapshots that also move when
+  shared runtime services change policy behavior
+- descriptor-driven managed-doc runtime changes that affect generated
+  governance output, including authoritative-source coverage, after refresh
+  regenerates the tracked registry
+- resolved managed-doc selection from `doc_assets`, including optional
+  builtin-doc disablement and any custom managed docs discovered from active
+  profile asset roots
 - resolved metadata snapshots
 - per-key metadata resolution trace (`metadata_resolution`)
 - structured override-replacement diagnostics (`metadata_warnings`)
@@ -74,7 +82,7 @@ Metadata trace intent:
   repo is versioned or intentionally unversioned, plus the configured
   displayed non-version label and unreleased changelog heading when those
   apply
-- fresh generic installs therefore record an explicit unversioned baseline
+- fresh installs therefore record an explicit unversioned baseline
   instead of relying on a fabricated placeholder version token
 - generic profile defaults now keep version-governance scheme selection
   explicit; tracked registry output therefore shows the scheme a repo chose
