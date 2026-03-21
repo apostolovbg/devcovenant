@@ -5,7 +5,7 @@
 **Project Stage:** stable
 **Development Stance:** active-development
 **Versioning Mode:** versioned
-**Last Updated:** 2026-03-20
+**Last Updated:** 2026-03-21
 **DevCovenant Version:** 1.0.0
 
 <!-- DEVCOV:BEGIN -->
@@ -58,6 +58,99 @@ Example:
 ## Log changes here
 
 ## Version 1.0.0
+
+- 2026-03-21:
+  Change: Rewrote `PLAN.md` into a dependency-ordered anti-fragmentation and
+  performance-remediation roadmap that focuses first on command speed, test
+  runtime, and documentation structure before freezing contracts.
+  Why: Needed the active plan to reflect the real current bottlenecks so the
+  next work removes structural slowness and documentation sprawl before
+  formalizing the resulting contracts.
+  Impact: Clarified the roadmap now starts with runtime loading reduction,
+  test-runtime reduction, and documentation architecture cleanup, then
+  freezes the simplified product contracts on top of that cleaner baseline.
+  Files:
+  CHANGELOG.md
+  PLAN.md
+
+- 2026-03-21:
+  Change: Rewrote `PLAN.md` into a detailed contract-formalization roadmap
+  that defines the next contract-freezing program across managed docs,
+  config, registry, policies, version adapters, and gates.
+  Why: Needed one dependency-ordered plan that turns implemented behavior
+  into explicit normative contracts instead of leaving product surfaces
+  scattered across code, comments, and habit.
+  Impact: Clarified the next roadmap now gives each contract area a concrete
+  goal, rationale, task list, and completion check so future work can
+  freeze behavior deliberately instead of by drift.
+  Files:
+  CHANGELOG.md
+  PLAN.md
+
+- 2026-03-21:
+  Change: Rewrote the live `PLAN.md` into the current detailed roadmap
+  standard and rewrote the completed items so they read like completed work
+  instead of half-finished planning notes.
+  Why: Kept the real plan aligned with the stronger template and made the
+  roadmap readable as a finished program record rather than a mixed planning
+  artifact.
+  Impact: Clarified `PLAN.md` now presents one consistent completed-roadmap
+  contract that is easier to review, extend, and use as the manual
+  harmonization baseline for future plans.
+  Files:
+  CHANGELOG.md
+  PLAN.md
+
+- 2026-03-21:
+  Change: Updated the `PLAN.md` and `SPEC.md` templates into durable detailed
+  scaffolds, tracked body-only managed-doc fingerprints in the registry, and
+  enabled exact replacement of known old generic document bodies.
+  Why: Let managed docs upgrade from older generic scaffolds without risking
+  authored content, while making template behavior auditable and keeping
+  generated header changes out of template matching.
+  Impact: Enabled repositories to refresh old generic `PLAN.md` /
+  `SPEC.md` scaffolds into stronger templates, preserve real authored docs,
+  and inspect the managed-doc fingerprint contract in the tracked registry.
+  Files:
+  CHANGELOG.md
+  SPEC.md
+  devcovenant/builtin/profiles/global/assets/PLAN.yaml
+  devcovenant/builtin/profiles/global/assets/SPEC.yaml
+  devcovenant/core/flow/refresh.py
+  devcovenant/core/services/managed_docs.py
+  devcovenant/core/services/registry.py
+  devcovenant/docs/architecture.md
+  devcovenant/docs/profiles.md
+  devcovenant/docs/refresh.md
+  devcovenant/docs/registry.md
+  devcovenant/docs/workflow.md
+  devcovenant/registry/registry.yaml
+  tests/devcovenant/core/services/test_managed_docs.py
+  tests/devcovenant/test_refresh.py
+
+- 2026-03-21:
+  Change: Expanded the main docs with clearer reader guidance, rewrote key
+  sections in more practical language, and aligned the top-level README with
+  the product name.
+  Why: Made the docs work as both quick operator references and teaching
+  material so readers can understand what to do, when to do it, and why the
+  workflow exists.
+  Impact: Clarified users can now choose the right doc faster, understand the
+  install/config/workflow/governance relationships more easily, and operate
+  DevCovenant with less insider knowledge.
+  Files:
+  CHANGELOG.md
+  PLAN.md
+  README.md
+  devcovenant/README.md
+  devcovenant/docs/architecture.md
+  devcovenant/docs/config.md
+  devcovenant/docs/installation.md
+  devcovenant/docs/policies.md
+  devcovenant/docs/profiles.md
+  devcovenant/docs/project_governance.md
+  devcovenant/docs/registry.md
+  devcovenant/docs/workflow.md
 
 - 2026-03-21:
   Change: Expanded the initial integration and bootstrap docs, clarified

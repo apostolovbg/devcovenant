@@ -1,5 +1,5 @@
 # Profiles
-**Last Updated:** 2026-03-20
+**Last Updated:** 2026-03-21
 **Project Version:** 1.0.0
 
 ## Table of Contents
@@ -25,6 +25,14 @@ translator declarations for language profiles.
 Policies are not activated by profiles.
 Activation remains config-driven via `policy_state`, with critical-severity
 enforcement immunity handled by runtime (not by profiles).
+
+The practical way to think about profiles is:
+- profiles describe what kind of repo you have
+- config decides which of those profile-provided behaviors are active
+- policies enforce the resulting contract
+
+Most users do not need to author a custom profile on day one.
+For many repos, choosing the right `profiles.active` stack is enough.
 
 ## Responsibilities
 Profiles may provide:
@@ -80,6 +88,15 @@ Profiles should not embed unrelated business logic.
 This repository includes custom profiles for dogfooding and reusable examples.
 Those payload directories are repository-owned and are not packaged as
 distribution inventory for user repositories.
+
+Create a custom profile when you need repo-specific reusable behavior such as:
+- custom managed docs
+- recurring path selectors
+- custom policy metadata overlays
+- repo-specific pre-commit fragments or assets
+
+Do not create a custom profile just to flip one boolean once; simple
+repository-local changes usually belong in `devcovenant/config.yaml`.
 
 Current repo-local example:
 - `restapi`: API (application programming interface) governance overlays for
@@ -341,11 +358,15 @@ Asset materialization rules:
 - managed-doc descriptors must follow an explicit key schema in order:
   `title`, `target_path`, `doc_id`, `doc_type`, `project_version`,
   `last_updated`, `devcovenant_version`, optional managed-doc booleans,
-  `managed_block`, `body`, optional `workflow_block`
+  optional `legacy_generic_body_fingerprints`, `managed_block`, `body`,
+  optional `workflow_block`
 - `project_version`, `last_updated`, and `devcovenant_version` must be
   booleans; `devcovenant_version` must be `true`
 - managed-doc booleans currently cover shared doc-engine behavior such as
   `project_governance_headers`, `import_seed`, and `authoritative_source`
+- `legacy_generic_body_fingerprints` is optional and lists exact body-only
+  SHA-256 fingerprints for known old generic scaffolds that refresh may
+  replace during upgrade or refresh
 - descriptors may live under the global asset root or an active profile
   `assets/` tree; add the document path to `doc_assets.autogen` to activate
   that managed doc for one repo
@@ -353,6 +374,10 @@ Asset materialization rules:
   for the repo while leaving `AGENTS.md` mandatory
 - AGENTS multi-block workflow/policy rendering is intentionally not a generic
   managed-doc descriptor feature
+- generic-scaffold replacement is exact, not heuristic: refresh strips the
+  generated headers and first managed block, fingerprints the remaining body,
+  and replaces the doc only when that body fingerprint matches one of the
+  descriptor's declared legacy generic fingerprints
 - multiline `managed_block`, `body`, and `workflow_block` values must use
   YAML literal block style (`|-`/`|`), not quoted multiline scalars
 - descriptor schema/style violations fail refresh explicitly with file+field

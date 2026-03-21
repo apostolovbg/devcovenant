@@ -5,7 +5,7 @@
 **Project Stage:** stable
 **Development Stance:** active-development
 **Versioning Mode:** versioned
-**Last Updated:** 2026-03-20
+**Last Updated:** 2026-03-21
 **DevCovenant Version:** 1.0.0
 
 <!-- DEVCOV:BEGIN -->
@@ -13,8 +13,8 @@ This opening section is managed by DevCovenant.
 Use `PLAN.md` to track active implementation work below this block.
 <!-- DEVCOV:END -->
 
-Use this plan to track active implementation work. Keep items
-dependency-ordered, factual, and current.
+Use this plan to reduce documentation fragmentation, restore command and test
+speed, and then freeze the simplified resulting contracts deliberately.
 
 ## Table of Contents
 1. [Overview](#overview)
@@ -24,177 +24,163 @@ dependency-ordered, factual, and current.
 5. [Validation Routine](#validation-routine)
 
 ## Overview
-- Record durable requirements in `SPEC.md` when your repo uses SPEC.
-- Record change history in `CHANGELOG.md`.
-- Mark completed items as `[done]` and outstanding items as `[not done]`.
-- Document behavior is strict:
-  - missing docs may be created from assets/templates
+- The previous roadmap correctly identified several contracts that need to be
+  frozen, but the current audit showed two more urgent problems:
+  - the documentation set has become too fragmented and repetitive
+  - DevCovenant command and test runtime has become materially slower
+- This roadmap therefore starts by reducing structural complexity before it
+  freezes more behavior in place.
+- Keep the current managed-document preservation contract unless an explicit
+  plan item changes it:
+  - missing docs may be created from descriptors
   - empty docs may be replaced fully
   - one-line docs may be replaced fully
   - otherwise, only managed header lines and explicit `<!-- DEVCOV* -->`
     blocks may change
-  - an empty managed block is still a managed block and must keep its
-    `<!-- DEVCOV:BEGIN -->` / `<!-- DEVCOV:END -->` markers
-- These same document rules must hold across `refresh`, `install`, `deploy`,
-  `upgrade`, and gate-triggered refresh/autofix paths.
-- This roadmap is now focused on three broad outcomes:
-  - make DevCovenant easier to understand without prior insider knowledge
-  - make configuration and managed-document behavior easier to maintain
-  - make documentation more concrete, practical, and explanatory
+- Keep normative truth centralized. Explanatory docs may teach and guide, but
+  they must not become alternate competing sources of truth.
+- Treat repeated YAML loading, repeated full-flow test work, overlapping docs,
+  and unclear authority boundaries as product debt, not as normal growth.
 
 ## Workflow
-- Work in dependency order unless an explicit blocker requires reordering.
-- Keep each item concrete and testable.
-- Update status in the same session when work lands.
+- Work in dependency order unless a real blocker forces reordering.
+- Prefer removing structural causes of slowness or drift before polishing the
+  surfaces built on top of them.
+- Keep each item concrete enough that another person can continue it without
+  reconstructing hidden context.
+- When an item is complete, rewrite it to state what landed and what is now
+  true because of it.
 
 ## Writing Direction
-- Write for learning humans, not only for experienced operators.
-- Prefer concrete wording over insider shorthand.
-- Replace vague terms such as `implementation`, `internals`, or
-  `core paths` when a clearer phrase exists.
-- Explain what a feature is, why it exists, what it changes, and when to
-  use it.
-- In `devcovenant/config.yaml`, make comments practical and explanatory
-  without turning every key into a repetitive canned formula.
-- Use examples when they remove ambiguity.
-- Treat undocumented behavior, half-documented behavior, and
-  hard-to-interpret wording as real product debt.
+- Write for people who need both quick operational guidance and detailed
+  explanation.
+- Make the docs operator-oriented and explanatory at the same time.
+- Prefer `how DevCovenant works in a repository`, `how to use DevCovenant in a
+  repository`, and `how to integrate DevCovenant into a repository` over
+  soft marketing phrasing.
+- Remove insider shorthand when a concrete phrase is clearer.
+- Explain what a thing is, why it exists, what it controls, and when to use
+  it.
+- Keep config comments practical, concrete, and directly useful at the point
+  of reading.
+- Expand abbreviations on first use in each document.
+- Treat undocumented behavior, half-documented behavior, repeated material
+  without a clear reason, and fancy wording that hides the meaning as product
+  defects.
 
 ## Active Work
-1. [done] Rename And Clarify Repository Integration Signals.
+1. [not done] Eliminate Repeated Runtime Loading And Restore Check/Gate Speed.
    Goal:
-   - replace vague bootstrap and self-hosting names with names that explain
-     what the setting is for
-   Completed work:
-   - replaced `devcov_core_include` with `developer_mode`
-   - replaced `install.generic_config` with `install.config_reviewed`
-   - made the review flag read naturally:
-     - `false` after install
-     - `true` once a human has reviewed the config and deploy may proceed
-   - updated runtime behavior, tests, config comments, and user docs to use
-     the new names
-   Follow-through still expected in later items:
-   - keep improving the wording around `developer_mode` so it says plainly
-     that it is for developing DevCovenant itself rather than for normal
-     user repos
-2. [done] Build A Managed-Docs Service.
-   Goal:
-   - stop spreading document logic across `install`, `deploy`, `refresh`,
-     policies, and special-case helpers
-   Completed work:
-   - created `devcovenant/core/services/managed_docs.py` as the shared owner
-     for managed-doc descriptor loading, validation, seed adoption,
-     preservation rules, and managed header/block rendering
-   - rewired `refresh` to use that service for managed-doc selection and
-     document synchronization instead of owning the document engine locally
-   - rewired `install` to use the same service for first-install seed
-     detection instead of keeping a separate managed-doc identity parser
-   - rewired `managed_doc_assets` to use the same shared descriptor and
-     document helpers so the integrity check follows the same contract as
-     refresh/install
-   - added direct service tests and kept the existing refresh/install/doc
-     checks green against the centralized runtime
-   Outcome:
-   - document behavior now has one clear runtime owner
-   - refresh/install/check flows call the same service instead of
-     re-implementing core rules
-   - future document features can build on one service boundary instead of
-     adding new spaghetti paths
-3. [done] Make Document Governance Fully Descriptor-Driven.
-   Goal:
-   - move shared document behavior into descriptors while keeping AGENTS as
-     the one explicit special-case document
+   - remove the structural causes that make `check`, `refresh`, and gate runs
+     repeatedly reload the same large YAML state.
    Why this matters:
-   - common docs should not need hidden code knowledge to gain or change
-     headers, seed-import behavior, or asset-authority rules
-   Completed work:
-   - taught managed-doc descriptors to declare shared doc-engine behavior such
-     as target path, project-governance header opt-in, seed import, and
-     authoritative-source status
-   - rewired the common managed-doc engine and `managed-doc-assets` policy to
-     read those shared behaviors from descriptors instead of fixed doc lists
-     and one-off header decisions
-   - kept AGENTS explicit and special: its workflow block, policy block, and
-     dedicated project-governance section remain AGENTS-specific runtime
-     behavior rather than generic metadata for every managed doc
-   Outcome:
-   - ordinary managed docs now share one descriptor-driven contract
-   - AGENTS stays the one deliberate exception instead of dragging the whole
-     document engine into AGENTS-style complexity
-4. [done] Support Optional And Custom Managed Docs.
-   Goal:
-   - make the document system useful beyond the fixed builtin set
-   Why this matters:
-   - repos need room for their own managed docs
-   - builtin docs should not all be mandatory forever
-   - the current system is too rigid for real-world variation
-   Completed work:
-   - extended the managed-doc runtime to resolve descriptors from the global
-     asset root plus any active profile asset roots
-   - kept `AGENTS.md` mandatory while letting other builtin docs be turned
-     off by `doc_assets.autogen` / `doc_assets.user`
-   - added custom managed-doc descriptors for `PROFILE_MAP.md` and
-     `POLICY_MAP.md` under the `devcovrepo` profile and activated them in
-     this repository
-   - kept the same preservation rules for builtin and custom docs:
-     missing docs may be created, empty and one-line docs may be replaced,
-     and real authored body content is preserved outside managed regions
-   - rewired authoritative managed-doc checks to follow enabled descriptors
-     instead of a fixed builtin-only list
-   Outcome:
-   - optional builtin docs and custom managed docs now share one runtime path
-   - repositories can add profile-owned managed docs without hacking the
-     common document engine
-   - `AGENTS.md` remains the one default managed doc DevCovenant truly
-     depends on
-5. [done] Document Initial Integration And Bootstrap Clearly.
-   Goal:
-   - make the first-time integration flow understandable to someone who does
-     not already know DevCovenant
-   Why this matters:
-   - the current install/deploy/bootstrap story still makes too many readers
-     infer hidden rules
+   - current `check`/gate cost is dominated by repeated registry, profile,
+     config, and descriptor loading rather than by one clean pass through the
+     actual rule logic.
    Work to do:
-   - document empty-repo install clearly
-   - document seeded-doc install clearly
-   - document existing-repo install clearly
-   - document config review and why deploy is blocked before review
-   - document the first gate cycle and why the order matters
-   - rewrite `devcovenant/config.yaml` comments so they are practical,
-     concrete, and easy to follow
-   Writing direction for this item:
-   - explain what `developer_mode` is for in plain language
-   - explain repo-only development paths and tests directly
-   - remove insider wording that forces readers to reverse-engineer intent
+   - establish one reliable timing baseline for `check`, `gate --mid`,
+     `gate --end`, and `refresh`
+   - identify and remove repeated loads of tracked registry, profile registry,
+     config, and managed-doc descriptor state inside one command run
+   - introduce shared loaded-state or caching boundaries where repeated reads
+     are currently happening
+   - keep command behavior identical while reducing duplicate parse/load work
+   - document the resulting runtime ownership clearly enough that future work
+     does not reintroduce the same problem
    Done when:
-   - a new user can understand the bootstrap path from the docs and config
-     comments alone
-   - the config file reads like a practical operating guide, not a vague
-     metadata dump
-6. [not done] Expand Documentation From Terse To Teaching-Quality.
+   - `check` and gate runs are measurably faster on the same repo state
+   - repeated registry/profile/config/descriptor loading inside one command is
+     materially reduced
+   - tests cover the new runtime boundaries so performance fixes do not become
+     hidden behavior changes
+2. [not done] Reduce Test Runtime Without Weakening Coverage.
    Goal:
-   - turn the documentation set from terse operator notes into product
-     documentation that teaches
+   - bring the full test workflow back to a reasonable runtime while keeping
+     coverage strong.
    Why this matters:
-   - readers should not need insider context to understand DevCovenant
-   - "every word is familiar but the sentence is still unclear" is not
-     acceptable documentation quality
+   - each test runner is now slow on its own, which makes the standard
+     workflow costly even before counting that both runners execute.
    Work to do:
-   - expand core docs with clearer explanations, examples, and rationale
-   - replace compressed insider wording with plain language
-   - connect related concepts so readers can see how install, deploy, docs,
-     profiles, policies, and governance fit together
-   - make the docs friendlier to people who are learning software workflow
-     discipline while learning DevCovenant
+   - profile which test families are slow because they repeatedly run full
+     refresh, deploy, upgrade, install, or other command-style flows
+   - split heavy integration behavior from cheaper contract-level behavior
+     where the expensive full-flow run is not needed
+   - reduce repeated setup and repeated full command execution in refresh,
+     deploy, upgrade, and managed-doc tests
+   - make sure the same behavior is not proven expensively in multiple places
+     without a clear reason
+   - keep one clear place for full end-to-end lifecycle proof while making the
+     rest of the suite more targeted
    Done when:
-   - the main docs explain both how to use DevCovenant and why the workflow
-     exists
-   - the docs stop assuming prior DevCovenant knowledge
-   - the docs become concrete enough that users can operate the tool without
-     guesswork
+   - the slowest test families are materially faster
+   - the standard `devcovenant test` runtime is materially reduced
+   - coverage remains explicit, understandable, and not weakened by hidden
+     test removal
+3. [not done] Rebuild The Documentation Information Architecture.
+   Goal:
+   - reduce fragmentation, repetition, and navigation burden across the docs
+     while keeping the documentation more explanatory, not less.
+   Why this matters:
+   - the docs are currently mostly coherent, but too many documents explain
+     adjacent parts of the same ideas, which makes the whole set harder to
+     read and harder to maintain.
+   Work to do:
+   - inventory the documentation set by purpose: operator entrypoint,
+     normative contract, detailed explanation, reference, repo-internal note
+   - decide which documents are the primary homes for workflow, installation,
+     config, profiles, policies, architecture, registry, and project
+     governance material
+   - reduce repeated explanation across `README.md`, `devcovenant/README.md`,
+     and the main docs so each document has a clearer job
+   - tighten cross-linking so docs point to the primary home of a topic
+     instead of re-explaining the same thing everywhere
+   - revise doc-route expectations if they are forcing too much duplicated
+     writing into too many documents at once
+   Done when:
+   - each major topic has a clear primary home
+   - repeated material is reduced materially without making docs terse again
+   - readers can find workflow, config, policy, and architecture truth more
+     quickly with less cross-document repetition
+4. [not done] Freeze The Simplified Product Contracts.
+   Goal:
+   - formalize the major contracts only after the runtime and documentation
+     surfaces have been simplified enough to freeze cleanly.
+   Why this matters:
+   - freezing a fragmented or slow system too early would just preserve drift
+     and complexity in a more official form.
+   Work to do:
+   - freeze the managed-documents contract
+   - freeze the managed-document descriptor schema
+   - freeze the bootstrap/install/deploy/refresh/upgrade contract
+   - freeze the public config contract
+   - freeze the project-governance contract
+   - freeze the registry contract
+   - freeze the documentation writing contract
+   - freeze the policy descriptor contract
+   - freeze the version-governance adapter contract
+   - freeze the gate and run-artifact contract
+   - for each frozen contract, land:
+     - one normative spec
+     - code validation or enforcement where appropriate
+     - direct tests
+     - explanatory docs that point back to the normative spec
+   Done when:
+   - the major product contracts are explicit, centralized, and testable
+   - explanatory docs point back to the normative contract instead of
+     competing with it
+   - the resulting contracts reflect the simplified runtime and documentation
+     architecture rather than the older fragmented shape
 
 ## Validation Routine
-- Verify checks and tests pass.
-- Verify generated artifacts are synchronized after refresh.
-- Verify documentation and changelog were updated where behavior changed.
-- Verify `devcovenant check` passes after the slice closes.
+- Verify timing baselines are recorded before and after performance work.
+- Verify `check`, gate runs, and `devcovenant test` become measurably faster
+  where the plan says they should.
+- Verify each documentation change reduces duplication or clarifies ownership,
+  rather than moving the same text around pointlessly.
+- Verify each frozen contract produces one normative specification.
+- Verify explanatory docs point back to the normative contract instead of
+  competing with it.
+- Verify direct tests cover contract scenarios rather than only happy-path
+  flows.
+- Verify `devcovenant test` passes after each slice.
+- Verify `devcovenant check` passes after each slice.

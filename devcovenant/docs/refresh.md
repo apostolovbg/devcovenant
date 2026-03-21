@@ -1,5 +1,5 @@
 # Refresh Behavior
-**Last Updated:** 2026-03-20
+**Last Updated:** 2026-03-21
 **Project Version:** 1.0.0
 
 ## Table of Contents
@@ -104,6 +104,13 @@ Managed-doc behavior:
   descriptor under an active profile `assets/` tree
 - `doc_assets.user` is an exclusion list for names still present in
   `doc_assets.autogen`
+- exact known old generic scaffolds may be replaced during refresh:
+  DevCovenant strips generated headers and the first managed block, hashes
+  the remaining body, and replaces the doc only when that fingerprint matches
+  one declared in the descriptor's `legacy_generic_body_fingerprints`
+- current template body fingerprints and any accepted legacy generic
+  fingerprints are written to the tracked `managed-docs` registry section for
+  auditability
 
 AGENTS special contract:
 - AGENTS is the explicit special-case managed doc; the common managed-doc

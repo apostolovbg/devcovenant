@@ -1,5 +1,5 @@
 # Configuration
-**Last Updated:** 2026-03-20
+**Last Updated:** 2026-03-21
 **Project Version:** 1.0.0
 
 ## Table of Contents
@@ -40,6 +40,13 @@ Practical mental model:
 - `deploy` is blocked until that review is done
 - after that, `refresh`, `deploy`, gates, and tests all read this file as the
   repo's active operating contract
+
+First-pass reading order for this file:
+- most users should start with `developer_mode`, `profiles.active`,
+  `doc_assets`, `policy_state`, and the `engine` settings
+- most users should leave generated sections alone
+- if you are unsure whether a key is a policy choice, a repo-lifecycle
+  choice, or generated state, read `Ownership Model` before editing
 
 ## Ownership Model
 Autogen-owned sections:
@@ -269,6 +276,19 @@ What `install.config_reviewed` is not:
 
 It is simply the repo's explicit statement that a human has reviewed the
 starting config and is ready to let `deploy` activate it.
+
+What most repositories change first:
+- `profiles.active`
+- `policy_state`
+- `doc_assets`
+- `engine.output_mode`
+- `engine.tests_output_mode`
+
+What most repositories should not change casually:
+- generated sections such as `profiles.generated`
+- runtime memory such as `install.import_managed_docs`
+- low-level path references unless the repo structure genuinely differs from
+  the normal layout
 
 ## Metadata Resolution Order
 Resolved policy metadata is computed in this order:

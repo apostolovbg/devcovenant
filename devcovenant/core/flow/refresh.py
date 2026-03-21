@@ -2179,6 +2179,12 @@ def refresh_policy_registry(
         registry.update_project_governance(
             project_governance_state.registry_payload(declared_project_version)
         )
+        registry.update_managed_docs(
+            managed_docs_service.managed_docs_registry_payload(
+                repo_root,
+                config_payload=config_payload,
+            )
+        )
     except ValueError as error:
         runtime_print(f"Error: {error}", file=sys.stderr)
         return 1

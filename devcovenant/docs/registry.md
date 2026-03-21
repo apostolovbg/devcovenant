@@ -1,5 +1,5 @@
 # Registry Files
-**Last Updated:** 2026-03-20
+**Last Updated:** 2026-03-21
 **Project Version:** 1.0.0
 
 ## Table of Contents
@@ -26,12 +26,21 @@ For the meanings of the resolved `project-governance` fields stored here, see
 
 Manual edits are unsupported and typically interpreted as drift.
 
+How to use the registry in practice:
+- use `devcovenant/config.yaml` to decide what the repo should do
+- use `AGENTS.md` to read the active workflow and policy contract
+- use `devcovenant/registry/registry.yaml` to audit what DevCovenant
+  actually resolved from that configuration
+
+That makes the registry an explanation surface, not a normal editing surface.
+
 ## Tracked Registry
 `devcovenant/registry/registry.yaml` is the only tracked registry artifact.
 Changes to that file are routed here by documentation-growth-tracking because
 this document is the user-facing explanation of the tracked registry contract.
 It includes:
 - resolved `project-governance` state as its own top-level registry section
+- resolved `managed-docs` state as its own top-level registry section
 - discovered policy IDs (identifiers)
 - descriptor/script paths and hashes
 - refresh-generated policy hashes and metadata snapshots that also move when
@@ -42,6 +51,9 @@ It includes:
 - resolved managed-doc selection from `doc_assets`, including optional
   builtin-doc disablement and any custom managed docs discovered from active
   profile asset roots
+- managed-doc descriptor paths plus body-only fingerprints for current
+  template bodies and any exact legacy generic bodies that refresh may
+  replace
 - resolved metadata snapshots
 - per-key metadata resolution trace (`metadata_resolution`)
 - structured override-replacement diagnostics (`metadata_warnings`)
@@ -82,6 +94,10 @@ Metadata trace intent:
   repo is versioned or intentionally unversioned, plus the configured
   displayed non-version label and unreleased changelog heading when those
   apply
+- the top-level `managed-docs` registry section records descriptor roots,
+  enabled managed docs, and per-doc body fingerprints; those fingerprints
+  intentionally ignore generated headers so routine `Last Updated` changes do
+  not look like template changes
 - fresh installs therefore record an explicit unversioned baseline
   instead of relying on a fabricated placeholder version token
 - generic profile defaults now keep version-governance scheme selection

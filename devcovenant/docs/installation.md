@@ -1,5 +1,5 @@
 # Installation and Lifecycle
-**Last Updated:** 2026-03-20
+**Last Updated:** 2026-03-21
 **Project Version:** 1.0.0
 
 ## Table of Contents
@@ -27,6 +27,12 @@ It also makes the first-time integration story easier to reason about:
 - config review decides how this repo should use it
 - deploy turns that reviewed config into active docs, registries, and
   generated governance files
+
+Use this document when you need to answer questions like:
+- "What does `install` actually do?"
+- "Why is `deploy` blocked?"
+- "What should happen in an empty repo versus an existing repo?"
+- "What proves the integration is complete?"
 
 ## Prerequisites
 Before lifecycle commands:
@@ -137,6 +143,12 @@ The important boundary is:
 - `install` is safe setup
 - `deploy` is activation
 - the first gate cycle proves the activated baseline is actually clean
+
+What most users should remember:
+- `install` is not the moment where DevCovenant takes over the repo
+- `deploy` is the moment where the reviewed contract becomes active
+- the first full gate cycle is not ceremony for its own sake; it is the
+  proof that the activated repo can actually operate under governance
 
 Runtime details that affect operations:
 - `devcovenant test` executes
@@ -275,13 +287,18 @@ Why the full first gate cycle matters:
 - `test` proves the active command chain works in this repo
 - `gate --end` proves the slice can close cleanly after hooks and checks
 
+This is the key idea behind the first gate cycle: it is not "extra
+paperwork." It is the moment where the repo demonstrates that the configured
+workflow, checks, hooks, and tests all agree with each other.
+
 ### Starting Situation: Empty Repo
 What to expect:
 - `install` writes the `devcovenant/` folder and the review-required config
 - `deploy` then creates the managed docs and generated governance files
 - the first gate cycle proves the empty baseline is now a governed repo
 
-This is the simplest path and the best one to learn on first.
+This is the simplest path and the clearest way to see the default
+installation flow.
 
 ### Starting Situation: Repo Seeded With `SPEC.md` Or `README.md`
 What to expect:

@@ -1,5 +1,5 @@
 # DevCovenant Architecture Contracts
-**Last Updated:** 2026-03-20
+**Last Updated:** 2026-03-21
 **Project Version:** 1.0.0
 
 ## Table of Contents
@@ -21,6 +21,10 @@ AI (artificial intelligence)-resilient by design and usable without AI.
 
 It captures behavior that should stay consistent across refactors. Detailed
 operational procedures stay in the other docs in this folder.
+
+Use this document when you are extending or debugging DevCovenant itself.
+If you only need to operate the tool in a repository, start with
+`README.md`, `installation.md`, `config.md`, and `workflow.md` first.
 
 ## Program Vocabulary
 Core user-facing nouns (for example `gate session`, `check`, `policy`,
@@ -698,6 +702,10 @@ Invariant:
   `refresh` synchronization, and `managed_doc_assets` validation read from
   the same document runtime instead of maintaining separate copies of the
   rules.
+- that service also computes normalized body-only fingerprints for managed
+  docs, records them in the tracked registry, and uses descriptor-declared
+  legacy generic fingerprints to replace only exact old scaffolds while
+  leaving authored documents alone.
 - that service now resolves descriptors from the global managed-doc asset
   root plus any active profile asset roots, so repositories can add custom
   managed docs without forking the common document engine.

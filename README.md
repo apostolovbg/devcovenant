@@ -2,7 +2,7 @@
 **Doc ID:** README
 **Doc Type:** repo-readme
 **Project Version:** 1.0.0
-**Last Updated:** 2026-03-20
+**Last Updated:** 2026-03-21
 **DevCovenant Version:** 1.0.0
 
 <!-- DEVCOV:BEGIN -->
@@ -53,6 +53,15 @@ This model gives teams one source of truth for:
 - how requirements are validated
 - what evidence exists for each session
 
+How to read this README:
+- for a quick explanation of what DevCovenant does in a repository, start
+  with `Why DevCovenant` and `Quick Start`
+- for first-time integration, read `Quick Start`, `Lifecycle`, and
+  `Workflow`
+- for the configuration model behind the behavior, read
+  `Project Governance`, `Policy Activation and Metadata`, and
+  `Profiles and Translators`
+
 ## Glossary (Canonical Terms)
 Use this glossary as the canonical source for core DevCovenant nouns in docs,
 help text, and plan language. Reuse these terms verbatim in headings and
@@ -95,6 +104,11 @@ repositories:
 
 DevCovenant addresses these by making workflow sequence and policy contracts
 explicit, generated, and testable.
+
+That makes it useful in two different ways at the same time:
+- as an operator tool, it tells you what to run and what to fix next
+- as an explanatory tool, it exposes why the workflow exists instead of
+  hiding it behind wrapper magic
 
 ## Quick Start
 Use this flow in a repository where DevCovenant is already available:
@@ -166,6 +180,13 @@ Common starting situations:
 3. Existing repo with real files:
    `install` leaves the repo's ordinary files alone and `deploy` adds
    DevCovenant around them using the managed-doc preservation rules.
+
+For a more detailed integration view:
+- use `devcovenant/docs/installation.md` for the full first-time runbook
+- use `devcovenant/docs/config.md` for the practical review model behind
+  `devcovenant/config.yaml`
+- use `devcovenant/docs/workflow.md` for the reasoning behind the gate
+  sequence, not only the command order
 
 ### See It Work in 90 Seconds
 Use this short ritual to prove the evidence model before deeper setup work.

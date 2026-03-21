@@ -17,6 +17,90 @@ import yaml
 from devcovenant import install, refresh
 from tests.devcovenant import repo_seed_cache
 
+OLD_GENERIC_SPEC_BODY = """This is a generic SPEC guide template.
+
+Use `SPEC.md` only when your repository needs a durable specification layer.
+If your repo does not need one, keep this file brief and route details to
+your operational documentation.
+
+## Table of Contents
+1. [Overview](#overview)
+2. [When To Use SPEC](#when-to-use-spec)
+3. [Workflow](#workflow)
+4. [Ownership Boundaries](#ownership-boundaries)
+5. [Recommended Structure](#recommended-structure)
+6. [Maintenance Rules](#maintenance-rules)
+7. [Pointers](#pointers)
+
+## Overview
+`SPEC.md` is for durable repository-level contracts only.
+Do not use it as a backlog, scratchpad, or temporary planning area.
+
+## When To Use SPEC
+- Use SPEC when your repo needs a stable internal contract document.
+- Skip SPEC if AGENTS and operational docs already cover your needs.
+- Keep it small, explicit, and implementation-facing.
+
+## Workflow
+- Follow your repo's required gate workflow before and after edits.
+- Update SPEC only when durable contracts actually change.
+- Update operational docs in the same work slice when behavior changes.
+
+## Ownership Boundaries
+- `AGENTS.md`: workflow law, policy source, and temporary editable notes.
+- `PLAN.md`: active work backlog.
+- `docs/*`: operational and user-facing behavior guides.
+- `SPEC.md`: optional stable contract layer for this repository only.
+
+## Recommended Structure
+- Overview: what this repo treats as invariant.
+- Functional requirements: stable behavior contracts.
+- Non-functional requirements: quality, determinism, security baselines.
+- Pointers: links to detailed operational docs.
+
+If your repo needs architecture invariants, keep them in a dedicated
+architecture doc and keep SPEC at the meta-contract level.
+
+## Maintenance Rules
+- Prefer one-way pointers from SPEC to docs.
+- Do not make docs depend on SPEC to be understandable.
+- Keep SPEC synchronized with runtime reality.
+- Remove stale sections instead of keeping historical leftovers.
+- If your repo stops using SPEC, keep this file as a short usage note only.
+
+## Pointers
+Add pointers to the docs that hold your runtime and operational contracts.
+"""
+
+OLD_GENERIC_PLAN_BODY = (
+    "Use this plan to track active implementation work. Keep items\n"
+    "dependency-ordered, factual, and current.\n\n"
+    "## Table of Contents\n"
+    "1. [Overview](#overview)\n"
+    "2. [Workflow](#workflow)\n"
+    "3. [Active Work](#active-work)\n"
+    "4. [Validation Routine](#validation-routine)\n\n"
+    "## Overview\n"
+    "- Record durable requirements in `SPEC.md` when your repo uses SPEC.\n"
+    "- Record change history in `CHANGELOG.md`.\n"
+    "- Mark completed items as `[done]` and outstanding items as "
+    "`[not done]`.\n\n"
+    "## Workflow\n"
+    "- Work in dependency order unless an explicit blocker requires "
+    "reordering.\n"
+    "- Keep each item concrete and testable.\n"
+    "- Update status in the same session when work lands.\n\n"
+    "## Active Work\n"
+    "1. [not done] Item placeholder.\n"
+    "2. [not done] Item placeholder.\n"
+    "3. [done] Item placeholder.\n\n"
+    "## Validation Routine\n"
+    "- Verify checks and tests pass.\n"
+    "- Verify generated artifacts are synchronized after refresh.\n"
+    "- Verify documentation and changelog were updated where behavior "
+    "changed.\n"
+)
+
 
 def _unit_test_refresh_builds_tracked_registry_and_agents() -> None:
     """refresh_repo should build tracked registry content and render AGENTS."""
@@ -58,6 +142,10 @@ def _unit_test_refresh_builds_tracked_registry_and_agents() -> None:
             registry_payload["project-governance"]["versioning_mode"]
             == "unversioned"
         )
+        assert "managed-docs" in registry_payload
+        spec_entry = registry_payload["managed-docs"]["descriptors"]["SPEC.md"]
+        assert spec_entry["body_fingerprint"]
+        assert spec_entry["legacy_generic_body_fingerprints"]
         assert "project-governance" not in registry_payload["policies"]
 
 
@@ -187,7 +275,76 @@ def _unit_test_refresh_replaces_older_header_only_spec_doc() -> None:
 
         updated = spec_path.read_text(encoding="utf-8")
         assert "Old imported body." not in updated
-        assert "This is a generic SPEC guide template." in updated
+        assert "## Project Intent" in updated
+        assert "## Acceptance Criteria" in updated
+
+
+def _unit_test_refresh_replaces_legacy_generic_spec_body() -> None:
+    """refresh_repo should replace exact legacy generic SPEC scaffolds."""
+    with tempfile.TemporaryDirectory() as temp_dir:
+        repo_root = Path(temp_dir)
+        repo_seed_cache.copy_installed_repo(repo_root)
+
+        spec_path = repo_root / "SPEC.md"
+        spec_path.write_text(
+            "# DevCovenant Specification\n"
+            "**Doc ID:** SPEC\n"
+            "**Doc Type:** specification\n"
+            "**Project Version:** 1.0.0\n"
+            "**Project Stage:** stable\n"
+            "**Development Stance:** active-development\n"
+            "**Versioning Mode:** versioned\n"
+            "**Last Updated:** 2026-01-01\n"
+            "**DevCovenant Version:** 1.0.0\n\n"
+            "<!-- DEVCOV:BEGIN -->\n"
+            "This opening section is managed by DevCovenant.\n"
+            "Use `SPEC.md` only for durable repository contracts below this "
+            "block.\n"
+            "<!-- DEVCOV:END -->\n\n" + OLD_GENERIC_SPEC_BODY,
+            encoding="utf-8",
+        )
+
+        result = refresh.refresh_repo(repo_root)
+        assert result == 0
+
+        updated = spec_path.read_text(encoding="utf-8")
+        assert "This is a generic SPEC guide template." not in updated
+        assert "## Project Intent" in updated
+        assert "## Acceptance Criteria" in updated
+
+
+def _unit_test_refresh_replaces_legacy_generic_plan_body() -> None:
+    """refresh_repo should replace exact legacy generic PLAN scaffolds."""
+    with tempfile.TemporaryDirectory() as temp_dir:
+        repo_root = Path(temp_dir)
+        repo_seed_cache.copy_installed_repo(repo_root)
+
+        plan_path = repo_root / "PLAN.md"
+        plan_path.write_text(
+            "# Development Plan\n"
+            "**Doc ID:** PLAN\n"
+            "**Doc Type:** plan\n"
+            "**Project Version:** 1.0.0\n"
+            "**Project Stage:** stable\n"
+            "**Development Stance:** active-development\n"
+            "**Versioning Mode:** versioned\n"
+            "**Last Updated:** 2026-01-01\n"
+            "**DevCovenant Version:** 1.0.0\n\n"
+            "<!-- DEVCOV:BEGIN -->\n"
+            "This opening section is managed by DevCovenant.\n"
+            "Use `PLAN.md` to track active implementation work below this "
+            "block.\n"
+            "<!-- DEVCOV:END -->\n\n" + OLD_GENERIC_PLAN_BODY,
+            encoding="utf-8",
+        )
+
+        result = refresh.refresh_repo(repo_root)
+        assert result == 0
+
+        updated = plan_path.read_text(encoding="utf-8")
+        assert "Item placeholder." not in updated
+        assert "## Writing Direction" in updated
+        assert "Completed item example." in updated
 
 
 def _unit_test_refresh_imports_same_version_managed_block_doc() -> None:
@@ -933,6 +1090,14 @@ class GeneratedUnittestCases(unittest.TestCase):
     def test_refresh_replaces_older_header_only_spec_doc(self):
         """Run older SPEC replacement assertions."""
         _unit_test_refresh_replaces_older_header_only_spec_doc()
+
+    def test_refresh_replaces_legacy_generic_spec_body(self):
+        """Run legacy generic SPEC replacement assertions."""
+        _unit_test_refresh_replaces_legacy_generic_spec_body()
+
+    def test_refresh_replaces_legacy_generic_plan_body(self):
+        """Run legacy generic PLAN replacement assertions."""
+        _unit_test_refresh_replaces_legacy_generic_plan_body()
 
     def test_refresh_imports_same_version_managed_block_doc(self):
         """Run same-version managed-block import assertions."""

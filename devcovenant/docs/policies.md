@@ -1,5 +1,5 @@
 # Policies
-**Last Updated:** 2026-03-20
+**Last Updated:** 2026-03-21
 **Project Version:** 1.0.0
 
 ## Table of Contents
@@ -25,6 +25,13 @@ enable/disable toggles.
 `severity: critical` policies remain enforced even when a config toggle
 attempts to disable them, and runtime emits an explicit diagnostic.
 Profiles and metadata layers influence behavior, not on/off activation.
+
+How most users interact with policies:
+- read policy output to understand what DevCovenant is complaining about
+- change `policy_state` when a non-critical policy should be on or off
+- change config/profile metadata when a policy should behave differently
+- write custom policy code only when config and profiles cannot express the
+  rule you need
 
 Initial critical policy set in this repository (conservative rollout):
 - `devflow-run-gates` (gate/test/gate evidence workflow integrity)

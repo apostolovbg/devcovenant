@@ -1,4 +1,4 @@
-title: DevCovenant Specification
+title: Project Specification
 target_path: SPEC.md
 doc_id: SPEC
 doc_type: specification
@@ -8,60 +8,132 @@ devcovenant_version: true
 project_governance_headers: true
 import_seed: true
 authoritative_source: true
+legacy_generic_body_fingerprints:
+  - 5b3cac9d37293ae3f40dec269922fcbce264442a67dc5a9642fadac6a0610043
+  - 2fad01922c9ba1b30b1cc736c32041fbf2418aef00349f6e7ffd28a67f547b37
 managed_block: |-
   This opening section is managed by DevCovenant.
   Use `SPEC.md` only for durable repository contracts below this block.
 body: |-
-  This is a generic SPEC guide template.
-
-  Use `SPEC.md` only when your repository needs a durable specification layer.
-  If your repo does not need one, keep this file brief and route details to
-  your operational documentation.
+  Use this document for durable project requirements and stable product
+  decisions.
+  Keep temporary execution work in `PLAN.md`, change history in
+  `CHANGELOG.md`, and workflow law in `AGENTS.md`.
 
   ## Table of Contents
   1. [Overview](#overview)
-  2. [When To Use SPEC](#when-to-use-spec)
-  3. [Workflow](#workflow)
-  4. [Ownership Boundaries](#ownership-boundaries)
-  5. [Recommended Structure](#recommended-structure)
-  6. [Maintenance Rules](#maintenance-rules)
-  7. [Pointers](#pointers)
+  2. [Workflow](#workflow)
+  3. [Project Intent](#project-intent)
+  4. [Goals](#goals)
+  5. [Non-Goals](#non-goals)
+  6. [Users and Actors](#users-and-actors)
+  7. [Core Workflows](#core-workflows)
+  8. [Functional Requirements](#functional-requirements)
+  9. [Non-Functional Requirements](#non-functional-requirements)
+  10. [Data and State](#data-and-state)
+  11. [Interfaces and Dependencies](#interfaces-and-dependencies)
+  12. [Constraints and Assumptions](#constraints-and-assumptions)
+  13. [Acceptance Criteria](#acceptance-criteria)
+  14. [Open Questions](#open-questions)
+  15. [Pointers](#pointers)
 
   ## Overview
-  `SPEC.md` is for durable repository-level contracts only.
-  Do not use it as a backlog, scratchpad, or temporary planning area.
-
-  ## When To Use SPEC
-  - Use SPEC when your repo needs a stable internal contract document.
-  - Skip SPEC if AGENTS and operational docs already cover your needs.
-  - Keep it small, explicit, and implementation-facing.
+  - Project summary: [describe what this project is]
+  - Primary problem: [describe the problem or opportunity]
+  - Current scope: [describe what is in scope right now]
+  - Success signal: [describe what would make this clearly successful]
 
   ## Workflow
-  - Follow your repo's required gate workflow before and after edits.
-  - Update SPEC only when durable contracts actually change.
-  - Update operational docs in the same work slice when behavior changes.
+  - Keep durable product requirements here.
+  - Keep active execution work in `PLAN.md`.
+  - Update this spec when stable project contracts change.
+  - Update operational docs in the same slice when runtime behavior changes.
 
-  ## Ownership Boundaries
-  - `AGENTS.md`: workflow law, policy source, and temporary editable notes.
-  - `PLAN.md`: active work backlog.
-  - `docs/*`: operational and user-facing behavior guides.
-  - `SPEC.md`: optional stable contract layer for this repository only.
+  ## Project Intent
+  Describe the durable intent of the project in plain language.
+  Explain what the project should make possible, for whom, and why it is
+  worth building.
 
-  ## Recommended Structure
-  - Overview: what this repo treats as invariant.
-  - Functional requirements: stable behavior contracts.
-  - Non-functional requirements: quality, determinism, security baselines.
-  - Pointers: links to detailed operational docs.
+  ## Goals
+  - [goal 1]
+  - [goal 2]
+  - [goal 3]
 
-  If your repo needs architecture invariants, keep them in a dedicated
-  architecture doc and keep SPEC at the meta-contract level.
+  Goals should describe outcomes, not implementation tasks.
 
-  ## Maintenance Rules
-  - Prefer one-way pointers from SPEC to docs.
-  - Do not make docs depend on SPEC to be understandable.
-  - Keep SPEC synchronized with runtime reality.
-  - Remove stale sections instead of keeping historical leftovers.
-  - If your repo stops using SPEC, keep this file as a short usage note only.
+  ## Non-Goals
+  - [non-goal 1]
+  - [non-goal 2]
+  - [non-goal 3]
+
+  This section prevents scope drift by stating what the project is
+  intentionally not trying to do.
+
+  ## Users and Actors
+  - Primary user or actor: [who interacts with the system most directly]
+  - Secondary user or actor: [who else matters]
+  - Operational actor: [admin, operator, automation, or integration]
+
+  For each actor, describe what they need from the system.
+
+  ## Core Workflows
+  1. [workflow name]
+     - Trigger: [what starts it]
+     - Main path: [what normally happens]
+     - Result: [what the user or system gets]
+  2. [workflow name]
+     - Trigger: [what starts it]
+     - Main path: [what normally happens]
+     - Result: [what the user or system gets]
+
+  ## Functional Requirements
+  - [requirement 1]
+  - [requirement 2]
+  - [requirement 3]
+
+  Write these as durable behavioral statements.
+  Prefer requirements that can later be tested or demonstrated.
+
+  ## Non-Functional Requirements
+  - Performance: [latency, throughput, scale, or responsiveness expectations]
+  - Reliability: [availability, recovery, or failure-handling expectations]
+  - Security: [authentication, authorization, audit, or data-protection needs]
+  - Maintainability: [clarity, modularity, testability, or operational needs]
+  - Usability: [user-facing clarity and workflow expectations]
+
+  ## Data and State
+  - Important entities: [core records, objects, or documents]
+  - Important state transitions: [how those entities change over time]
+  - Persistence rules: [what must be stored, derived, or ephemeral]
+  - Audit or history needs: [what must be traceable later]
+
+  ## Interfaces and Dependencies
+  - External interfaces: [API, CLI, UI, file formats, queues, webhooks]
+  - Internal interfaces: [major module or service boundaries]
+  - Dependencies: [systems, libraries, or services the project relies on]
+  - Compatibility expectations: [versions, protocols, or platform constraints]
+
+  ## Constraints and Assumptions
+  - Constraint: [technical, legal, operational, or organizational limit]
+  - Assumption: [what the project currently assumes to be true]
+  - Explicit tradeoff: [what is being optimized and what is being accepted]
+
+  ## Acceptance Criteria
+  - [criterion 1 that would prove the spec is satisfied]
+  - [criterion 2 that would prove the spec is satisfied]
+  - [criterion 3 that would prove the spec is satisfied]
+
+  This section should let someone decide whether the project meets the spec
+  without having to guess what success means.
+
+  ## Open Questions
+  - [question 1]
+  - [question 2]
+  - [question 3]
+
+  Keep unresolved questions here only while they are still real.
+  Once answered, fold the answer into the relevant section above.
 
   ## Pointers
-  Add pointers to the docs that hold your runtime and operational contracts.
+  Add pointers to the docs that hold operational detail, architecture notes,
+  API descriptions, or supporting decision records.

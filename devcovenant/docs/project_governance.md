@@ -1,5 +1,5 @@
 # Project Governance
-**Last Updated:** 2026-03-20
+**Last Updated:** 2026-03-21
 **Project Version:** 1.0.0
 
 ## Table of Contents
@@ -27,6 +27,11 @@ Its job is to answer questions like:
 - should managed docs show a real version token or an explicit unversioned
   label?
 - should the changelog use `## Version ...` or `## Unreleased`?
+
+In practice, this is the part of DevCovenant you use when you want the docs
+and registry to describe the project honestly.
+If you want to say "this repo is still experimental" or "this repo is
+intentionally unversioned," this is where that truth belongs.
 
 ## What It Governs
 `project-governance` owns lifecycle metadata, not version-rule enforcement.
@@ -79,6 +84,15 @@ project-governance:
 
 That means a new repo can be governed immediately without inventing a fake
 numbered release.
+
+What most repos change first:
+- `stage`
+- `development_stance`
+- `versioning_mode`
+
+What most repos leave empty unless they truly need it:
+- `codename`
+- `build_identity`
 
 ## Rendering Surfaces
 The resolved project-governance state is intentionally visible.

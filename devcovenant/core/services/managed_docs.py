@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import hashlib
 import re
 from datetime import datetime, timezone
 from pathlib import Path
@@ -49,6 +50,7 @@ _MANAGED_DOC_DESCRIPTOR_KEYS = frozenset(
         "project_governance_headers",
         "import_seed",
         "authoritative_source",
+        "legacy_generic_body_fingerprints",
         "managed_block",
         "body",
         "workflow_block",
@@ -71,11 +73,13 @@ _MANAGED_DOC_OPTIONAL_BOOLEAN_KEYS = (
     "import_seed",
     "authoritative_source",
 )
+_MANAGED_DOC_OPTIONAL_LIST_KEYS = ("legacy_generic_body_fingerprints",)
 _MANAGED_DOC_REQUIRED_BOOLEAN_KEYS = (
     "project_version",
     "last_updated",
     "devcovenant_version",
 )
+_SHA256_HEX_RE = re.compile(r"^[0-9a-f]{64}$")
 _SEMVER_COMPARE_RE = re.compile(
     r"^(?P<core>\d+(?:\.\d+){0,2})"
     r"(?:-(?P<prerelease>[0-9A-Za-z.-]+))?"
@@ -362,6 +366,9 @@ def validate_managed_doc_descriptor(
     for field_name in _MANAGED_DOC_OPTIONAL_BOOLEAN_KEYS:
         if field_name in descriptor:
             required_prefix.append(field_name)
+    for field_name in _MANAGED_DOC_OPTIONAL_LIST_KEYS:
+        if field_name in descriptor:
+            required_prefix.append(field_name)
     required_prefix.extend(["managed_block", "body"])
     if descriptor_keys[: len(required_prefix)] != required_prefix:
         raise ValueError(
@@ -431,6 +438,25 @@ def validate_managed_doc_descriptor(
                 f"`{descriptor_path_value}` field `{field_name}` must be "
                 "boolean."
             )
+    for field_name in _MANAGED_DOC_OPTIONAL_LIST_KEYS:
+        if field_name not in descriptor:
+            continue
+        raw_value = descriptor.get(field_name)
+        if not isinstance(raw_value, list):
+            raise ValueError(
+                "Managed doc descriptor "
+                f"`{descriptor_path_value}` field `{field_name}` must be "
+                "a list."
+            )
+        for item in raw_value:
+            if not isinstance(item, str) or not _SHA256_HEX_RE.fullmatch(
+                item.strip()
+            ):
+                raise ValueError(
+                    "Managed doc descriptor "
+                    f"`{descriptor_path_value}` field `{field_name}` must "
+                    "contain SHA256 hex strings only."
+                )
 
     if descriptor.get("devcovenant_version") is not True:
         raise ValueError(
@@ -524,6 +550,21 @@ def descriptor_is_authoritative_source(
     return descriptor_optional_bool(descriptor, "authoritative_source")
 
 
+def descriptor_legacy_generic_body_fingerprints(
+    descriptor: dict[str, object],
+) -> tuple[str, ...]:
+    """Return exact replaceable legacy generic body fingerprints."""
+    raw_value = descriptor.get("legacy_generic_body_fingerprints")
+    if raw_value is None:
+        return ()
+    if not isinstance(raw_value, list):
+        raise ValueError(
+            "Managed doc descriptor field "
+            "`legacy_generic_body_fingerprints` must be a list."
+        )
+    return tuple(str(item).strip() for item in raw_value if str(item).strip())
+
+
 def _managed_doc_descriptor_entries_from_root(
     assets_root: Path,
 ) -> list[dict[str, object]]:
@@ -608,6 +649,75 @@ def authoritative_managed_doc_entries(
         if descriptor_is_authoritative_source(entry["descriptor"])
         and (not enabled_docs or str(entry["doc"]) in enabled_docs)
     ]
+
+
+def normalize_body_text(text: str) -> str:
+    """Return normalized managed-doc body text for fingerprinting."""
+    normalized = text.replace("\r\n", "\n").replace("\r", "\n")
+    return "\n".join(line.rstrip() for line in normalized.split("\n")).strip(
+        "\n"
+    )
+
+
+def body_fingerprint(text: str) -> str:
+    """Return SHA256 fingerprint for normalized body text."""
+    return hashlib.sha256(
+        normalize_body_text(text).encode("utf-8")
+    ).hexdigest()
+
+
+def descriptor_body_fingerprint(descriptor: dict[str, object]) -> str:
+    """Return the current descriptor body fingerprint."""
+    return body_fingerprint(str(descriptor.get("body", "")))
+
+
+def managed_docs_registry_payload(
+    repo_root: Path,
+    *,
+    config_payload: dict[str, object] | None = None,
+) -> dict[str, object]:
+    """Build the tracked registry view for managed-doc descriptors."""
+    payload = _effective_repo_config_payload(repo_root, config_payload)
+    enabled_docs = managed_docs_from_config(payload) if payload else []
+    enabled_set = set(enabled_docs)
+    descriptor_roots = [
+        str(path.relative_to(repo_root)).replace("\\", "/")
+        for path in managed_doc_assets_roots(
+            repo_root,
+            config_payload=payload,
+        )
+    ]
+    descriptors: dict[str, dict[str, object]] = {}
+    for entry in managed_doc_descriptor_entries(
+        repo_root,
+        config_payload=payload,
+    ):
+        doc_name = str(entry["doc"])
+        descriptor = entry["descriptor"]
+        descriptor_path_value = Path(str(entry["descriptor_path"]))
+        descriptors[doc_name] = {
+            "enabled": doc_name in enabled_set,
+            "descriptor_path": str(
+                descriptor_path_value.relative_to(repo_root)
+            ).replace("\\", "/"),
+            "project_governance_headers": descriptor_optional_bool(
+                descriptor,
+                "project_governance_headers",
+            ),
+            "import_seed": descriptor_import_seed_enabled(descriptor),
+            "authoritative_source": descriptor_is_authoritative_source(
+                descriptor
+            ),
+            "body_fingerprint": descriptor_body_fingerprint(descriptor),
+            "legacy_generic_body_fingerprints": list(
+                descriptor_legacy_generic_body_fingerprints(descriptor)
+            ),
+        }
+    return {
+        "descriptor_roots": descriptor_roots,
+        "enabled_docs": enabled_docs,
+        "descriptors": descriptors,
+    }
 
 
 def render_project_governance_header_lines(
@@ -986,6 +1096,27 @@ def doc_is_placeholder(text: str) -> bool:
     """Return True for empty or effectively one-line docs."""
     lines = [line for line in text.splitlines() if line.strip()]
     return len(lines) <= 1
+
+
+def doc_body_text(text: str) -> str:
+    """Return current doc body text without generated headers/block."""
+    body = strip_existing_generated_headers(text)
+    spans = managed_block_spans(body)
+    if spans:
+        start, end, _ = spans[0]
+        body = (body[:start] + body[end:]).strip("\n")
+    return normalize_body_text(body)
+
+
+def matches_legacy_generic_body(
+    current: str,
+    descriptor: dict[str, object],
+) -> bool:
+    """Return True when current doc body matches a known generic scaffold."""
+    fingerprints = descriptor_legacy_generic_body_fingerprints(descriptor)
+    if not fingerprints:
+        return False
+    return body_fingerprint(doc_body_text(current)) in set(fingerprints)
 
 
 def extract_managed_block(text: str) -> str | None:
@@ -1662,6 +1793,9 @@ def sync_doc(
     current = target.read_text(encoding="utf-8")
     validate_preserve_markers(current, doc_name=doc_name)
     if doc_is_placeholder(current):
+        target.write_text(rendered, encoding="utf-8")
+        return True
+    if matches_legacy_generic_body(current, descriptor):
         target.write_text(rendered, encoding="utf-8")
         return True
 

@@ -26,6 +26,105 @@ project-governance:
   - release-managed
   - frozen
   - sunset
+managed-docs:
+  descriptor_roots:
+  - devcovenant/builtin/profiles/global/assets
+  - devcovenant/custom/profiles/devcovrepo/assets
+  - devcovenant/builtin/profiles/python/assets
+  enabled_docs:
+  - AGENTS.md
+  - README.md
+  - CONTRIBUTING.md
+  - SPEC.md
+  - PLAN.md
+  - CHANGELOG.md
+  - PROFILE_MAP.md
+  - POLICY_MAP.md
+  - devcovenant/README.md
+  descriptors:
+    AGENTS.md:
+      enabled: true
+      descriptor_path: devcovenant/builtin/profiles/global/assets/AGENTS.yaml
+      project_governance_headers: true
+      import_seed: true
+      authoritative_source: true
+      body_fingerprint: 7229bfff6b3c3352b5c7a0ea9adfcfebede9781ba363e50ecfc1406a1bbcf285
+      legacy_generic_body_fingerprints: []
+    CHANGELOG.md:
+      enabled: true
+      descriptor_path: devcovenant/builtin/profiles/global/assets/CHANGELOG.yaml
+      project_governance_headers: true
+      import_seed: true
+      authoritative_source: true
+      body_fingerprint: 97da0420616c6bbdc7b548c3fd7dbb960b2f41d183ab90a203b61a48b5d31efd
+      legacy_generic_body_fingerprints: []
+    CONTRIBUTING.md:
+      enabled: true
+      descriptor_path: devcovenant/builtin/profiles/global/assets/CONTRIBUTING.yaml
+      project_governance_headers: false
+      import_seed: true
+      authoritative_source: true
+      body_fingerprint: e8f9bb3cc1cfe1922cf158e42d85fc8385235d1161d1d458864638d8bbc90584
+      legacy_generic_body_fingerprints: []
+    LICENSE:
+      enabled: false
+      descriptor_path: devcovenant/builtin/profiles/global/assets/LICENSE.yaml
+      project_governance_headers: false
+      import_seed: false
+      authoritative_source: false
+      body_fingerprint: e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855
+      legacy_generic_body_fingerprints: []
+    PLAN.md:
+      enabled: true
+      descriptor_path: devcovenant/builtin/profiles/global/assets/PLAN.yaml
+      project_governance_headers: true
+      import_seed: true
+      authoritative_source: true
+      body_fingerprint: dab51ef9699f76099e4d7052c33ec55a0d3bdddc6a7ffad50bf912983b2e31b0
+      legacy_generic_body_fingerprints:
+      - 9ca5f866398d1715312b39720b0c163674ce8b6e2562201f3eacf5cc140fc894
+    POLICY_MAP.md:
+      enabled: true
+      descriptor_path: devcovenant/custom/profiles/devcovrepo/assets/POLICY_MAP.yaml
+      project_governance_headers: false
+      import_seed: true
+      authoritative_source: true
+      body_fingerprint: 9e25a587c06aed55627cc334791841f40e1e1c8b368011a7d6abf07b20dcccfa
+      legacy_generic_body_fingerprints: []
+    PROFILE_MAP.md:
+      enabled: true
+      descriptor_path: devcovenant/custom/profiles/devcovrepo/assets/PROFILE_MAP.yaml
+      project_governance_headers: false
+      import_seed: true
+      authoritative_source: true
+      body_fingerprint: 83a3ed54df36c78b03dd37eb48a8ef7ad0a4d0cbd32689bde1677cb685de49e2
+      legacy_generic_body_fingerprints: []
+    README.md:
+      enabled: true
+      descriptor_path: devcovenant/builtin/profiles/global/assets/README.yaml
+      project_governance_headers: false
+      import_seed: true
+      authoritative_source: true
+      body_fingerprint: 2e19986ce9aec9f8a94526e2d00b6b305da1c8c762b3e9c0343ca527f35035cf
+      legacy_generic_body_fingerprints: []
+    SPEC.md:
+      enabled: true
+      descriptor_path: devcovenant/builtin/profiles/global/assets/SPEC.yaml
+      project_governance_headers: true
+      import_seed: true
+      authoritative_source: true
+      body_fingerprint: 3731332fef86754d92f2859245c12714bc7c4c6a5627eff62c783ddb33fa7ae5
+      legacy_generic_body_fingerprints:
+      - 5b3cac9d37293ae3f40dec269922fcbce264442a67dc5a9642fadac6a0610043
+      - 2fad01922c9ba1b30b1cc736c32041fbf2418aef00349f6e7ffd28a67f547b37
+    devcovenant/README.md:
+      enabled: true
+      descriptor_path: devcovenant/builtin/profiles/global/assets/devcovenant/README.yaml
+      project_governance_headers: false
+      import_seed: false
+      authoritative_source: false
+      body_fingerprint: 236cc723edd5646eb2e21cf965ee8b2c94c9aedb1afe539a9d85ba76cea61845
+      legacy_generic_body_fingerprints: []
 policies:
   changelog-coverage:
     enabled: true

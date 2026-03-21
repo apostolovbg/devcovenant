@@ -1,5 +1,5 @@
 # Workflow
-**Last Updated:** 2026-03-20
+**Last Updated:** 2026-03-21
 **Project Version:** 1.0.0
 
 ## Table of Contents
@@ -35,6 +35,13 @@ Namespace scaffolds under `devcovenant/builtin/{policies,profiles}` are the
 canonical bundled stock paths.
 The lifecycle-metadata contract that feeds AGENTS, SPEC, PLAN, CHANGELOG, and
 registry outputs is documented in `devcovenant/docs/project_governance.md`.
+
+Use this document when you need to answer questions like:
+- "Which command should I run next?"
+- "Why does DevCovenant insist on `gate --mid` before tests?"
+- "What is the difference between `check`, `gate --status`, and the gate
+  commands?"
+- "Why did the tool ask me to rerun part of the sequence?"
 
 ## Program Vocabulary
 - `gate session`:
@@ -99,6 +106,13 @@ Required execution order:
 `devcovenant clean` is intentionally outside the active gate lifecycle.
 Run cleanup only after `gate --end`; an open gate session blocks `clean`
 because registry/log cleanup would destroy the session's own runtime evidence.
+
+Quick command-choice guide:
+- use `check` when you want a read-only audit
+- use `gate --status` when you want to inspect the current gate session
+- use `gate --start` / `gate --mid` / `test` / `gate --end` when you are
+  doing real repository work
+- use `clean` only after the gate session is closed
 
 ## 90-Second Evidence Ritual
 Use this ritual when you want a fast proof that DevCovenant is working and
@@ -301,12 +315,17 @@ Install/upgrade boundary:
 - `upgrade` prunes known repo-only custom payload paths leaked by older
   installs (`devcov_raw_string_escapes`, `managed_doc_assets`,
   `readme_sync`, and repository-only custom profiles) before refresh
+- `upgrade` and `refresh` may replace known old generic `PLAN.md` /
+  `SPEC.md` scaffolds, but only by exact body fingerprint after generated
+  headers and the first managed block are stripped from the comparison
 - orphan custom policy scripts still fail with the same descriptor contract as
   core policies; fix the descriptor and rerun
 - refresh validates managed-doc descriptor schema before rendering docs:
   descriptors must declare ordered keys
-  (`title`, `doc_id`, `doc_type`, `project_version`, `last_updated`,
-  `devcovenant_version`, `managed_block`, `body`, optional `workflow_block`);
+  (`title`, `target_path`, `doc_id`, `doc_type`, `project_version`,
+  `last_updated`, `devcovenant_version`, optional managed-doc booleans,
+  optional `legacy_generic_body_fingerprints`, `managed_block`, `body`,
+  optional `workflow_block`);
   multiline `managed_block`/`body`/`workflow_block` fields must use
   YAML (YAML Ain't Markup Language) literal block style (`|`/`|-`) for
   stable markdown output

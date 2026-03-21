@@ -268,6 +268,7 @@ def _base_registry_document() -> Dict[str, Any]:
             "registry_layout": "single-root",
         },
         "project-governance": {},
+        "managed-docs": {},
         "policies": {},
         "profiles": {},
         "inventory": {},
@@ -296,6 +297,7 @@ def _load_registry_document(path: Path) -> Dict[str, Any]:
     for key in (
         "metadata",
         "project-governance",
+        "managed-docs",
         "policies",
         "profiles",
         "inventory",
@@ -513,6 +515,14 @@ class PolicyRegistry:
     ) -> None:
         """Update the tracked project-governance registry section."""
         self._data["project-governance"] = dict(payload)
+        self.save()
+
+    def update_managed_docs(
+        self,
+        payload: Dict[str, Any],
+    ) -> None:
+        """Update the tracked managed-doc registry section."""
+        self._data["managed-docs"] = dict(payload)
         self.save()
 
     def policy_ids(self) -> set[str]:
