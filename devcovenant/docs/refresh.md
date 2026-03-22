@@ -1,218 +1,114 @@
 # Refresh Behavior
-**Last Updated:** 2026-03-21
+**Last Updated:** 2026-03-22
 **Project Version:** 1.0.0
 
-## Table of Contents
-- [Overview](#overview)
-- [When Refresh Runs](#when-refresh-runs)
-- [What Refresh Regenerates](#what-refresh-regenerates)
-- [Composition Rules](#composition-rules)
-- [Config Regeneration](#config-regeneration)
-- [Managed Docs and Blocks](#managed-docs-and-blocks)
-- [Managed Doc Descriptor Schema](#managed-doc-descriptor-schema)
-- [Validation and Enforcement](#validation-and-enforcement)
-- [Operational Notes](#operational-notes)
-- [Workflow](#workflow)
-
 ## Overview
-Full refresh is the deterministic regeneration boundary for DevCovenant's
-tracked registry and generated governance surfaces. It does not fabricate live
-runtime session state.
+This document is the normative home for the managed-documents contract.
+Use it together with `devcovenant/docs/contracts.md` when you need the stable
+rules for regeneration, preservation, adoption, and descriptor ownership.
 
-Refresh aligns:
-- the tracked registry
-- managed policy source materialization in `AGENTS.md`
+`refresh` is the deterministic regeneration boundary for DevCovenant's tracked
+outputs.
+It updates the governed files that DevCovenant owns, but it does not invent
+fake live session state.
+
+## What Refresh Owns
+Refresh can regenerate:
+
+- tracked registry state
+
 - generated config sections
-- generated governance/tooling files
-- managed docs and managed blocks
-- repeated tracked YAML reads through one run-scoped cache boundary shared by
-  refresh, check, gate, install, deploy, and undeploy
 
-If profiles, descriptors, or templates changed, refresh is mandatory before
-trusting downstream gate results.
-This is the primary home for refresh-owned regeneration behavior and
-managed-doc update rules. Use `devcovenant/docs/installation.md` for
-lifecycle command order and `devcovenant/docs/workflow.md` for the exact
-gate sequence.
-It is also the normative home for the managed-documents contract and the
-managed-doc descriptor schema. Use `devcovenant/docs/contracts.md` for the
-contract index.
+- managed policy output in `AGENTS.md`
+
+- generated workflow and tooling files
+
+- managed docs selected through `doc_assets`
+
+- generated `.gitignore` and pre-commit files
+
+If profiles, descriptors, or managed templates changed, refresh is the point
+where those changes become real in the repository.
 
 ## When Refresh Runs
-Full refresh runs in:
+A full refresh runs in:
+
 - `devcovenant refresh`
+
 - `devcovenant deploy`
+
 - `devcovenant upgrade`
-- gate pre-commit phases (`devcovenant gate --start` / `--end`) via gate-owned
-  orchestration of the local `check` hook
 
-`devcovenant check` is read-only and does not run startup refresh.
-Use `devcovenant refresh` (or the gate workflow) when you need regenerated
-runtime artifacts before auditing.
+- gate-owned refresh/autofix paths during the governed workflow
 
-## What Refresh Regenerates
-Primary generated outputs:
-- `devcovenant/registry/registry.yaml`
-- managed policy inventory and metadata resolution trace
-- tracked profile inventory and active-profile state
-- tracked structural inventory used by integrity checks
-- managed policy block in `AGENTS.md`
-- generated sections in `devcovenant/config.yaml`
-- generated `.github/workflows/governance-and-test.yml`
-- generated `.pre-commit-config.yaml`
-- generated `.gitignore`
-- managed docs selected through config/profile metadata
+`check` is read-only and does not run startup refresh.
 
-Refresh is idempotent for synchronized inputs. Re-running refresh with no input
-changes should produce no further file mutations.
-The shared YAML cache only reduces duplicate parsing inside one command run;
-it does not change refresh output ownership or preservation rules.
+## Managed Docs
+Managed docs are descriptor-driven.
+The managed-doc runtime owns:
 
-## Composition Rules
-Governance workflow composition:
-1. global template
-   (`devcovenant/builtin/profiles/global/assets/governance-and-test.yml`)
-2. active profile fragments (`governance_and_test`)
-3. `config.governance_and_test.overlays`
-4. if `config.governance_and_test.overrides` is non-empty, replace 1-3
+- descriptor loading
 
-Gitignore composition:
-1. global template
-   (`devcovenant/builtin/profiles/global/assets/gitignore.yaml`)
-2. active profile fragments (`gitignore_fragments` or `ignore_dirs`)
-3. `config.gitignore.overlays`
-4. preserved user block entries
-5. if `config.gitignore.overrides` is non-empty, replace 1-3 before step 4
+- descriptor validation
 
-Pre-commit composition follows the same pattern:
-1. baseline payload
-2. active profile fragments
-3. `pre_commit.overlays`
-4. `pre_commit.overrides` as replacement when non-empty
+- header rendering
 
-## Config Regeneration
-Refresh rewrites autogen-owned config sections and preserves user-owned
-sections.
+- managed block rendering
 
-`policy_state` regeneration rules:
-- materialize full alphabetical effective policy map
-- preserve existing user booleans
-- seed new policy IDs (identifiers) from resolved defaults
-- remove stale IDs no longer present in the resolved policy set
+- adoption of compatible seeded docs
 
-Operator guidance:
-- do not hand-edit autogen-owned sections
-- place repository-specific behavior in user overlay/override sections
+- replacement of known old generic scaffolds
 
-## Managed Docs and Blocks
-Managed-doc behavior:
-- managed markers are generated by runtime
-- content outside managed blocks is preserved
-- header fields (including `Last Updated`) can be refreshed by managed logic
-- routing uses `doc_assets.autogen` plus descriptor lookup from the global
-  managed-doc assets and any active profile asset roots
-- remove a builtin doc from `doc_assets.autogen` to turn that managed doc off
-  for one repo
-- add a custom doc to `doc_assets.autogen` after creating a matching
-  descriptor under an active profile `assets/` tree
-- `doc_assets.user` is an exclusion list for names still present in
-  `doc_assets.autogen`
-- exact known old generic scaffolds may be replaced during refresh:
-  DevCovenant strips generated headers and the first managed block, hashes
-  the remaining body, and replaces the doc only when that fingerprint matches
-  one declared in the descriptor's `legacy_generic_body_fingerprints`
-- current template body fingerprints and any accepted legacy generic
-  fingerprints are written to the tracked `managed-docs` registry section for
-  auditability
+That keeps document behavior centralized instead of spreading it across many
+commands.
 
-AGENTS special contract:
-- AGENTS is the explicit special-case managed doc; the common managed-doc
-  engine handles headers + one managed block, while AGENTS keeps its
-  multi-block workflow/policy layout
-- refresh compiles the managed policy block from resolved metadata
-- policy runtime reads that managed block as executable policy source
+## Preservation Rules
+The practical preservation rules are:
 
-This means descriptor/profile/config metadata changes are not fully active
-until refresh materializes them.
+- missing doc: may be created
+
+- empty doc: may be replaced
+
+- one-line doc: may be replaced
+
+- otherwise: only managed headers and managed blocks should change
+
+That rule is what allows DevCovenant to manage docs without treating ordinary
+human-written prose as disposable.
 
 ## Managed Doc Descriptor Schema
-Common managed-doc descriptors are YAML (YAML Ain't Markup Language) mappings
-with this exact stable key order:
-- `title`
-- `target_path`
-- `doc_id`
-- `doc_type`
-- `project_version`
-- `last_updated`
-- `devcovenant_version`
-- optional `project_governance_headers`
-- optional `import_seed`
-- optional `authoritative_source`
-- optional `legacy_generic_body_fingerprints`
-- `managed_block`
-- `body`
-- optional `workflow_block`
+A managed-doc descriptor defines the target path, identity headers, managed
+block content, and body template.
+Some docs can also opt into project-governance header rendering.
 
-Field contract:
-- `target_path` must resolve to the managed doc's canonical path
-- `project_version`, `last_updated`, and `devcovenant_version` are required
-  booleans
-- `devcovenant_version` must stay `true`
-- optional boolean and list keys must use their real YAML types, not strings
-- `legacy_generic_body_fingerprints` contains exact SHA-256 body
-  fingerprints only
-- multiline `managed_block`, `body`, and `workflow_block` values must use
-  YAML literal block style
-- `workflow_block` is reserved for the AGENTS special case and is not part of
-  the common one-block document contract
+The descriptor is the source of structure.
+The live file is the source of preserved authored content outside the managed
+areas.
 
-Behavior contract:
-- common managed docs use headers plus one explicit managed block
-- AGENTS is the only managed-doc special case with multi-block behavior
-- descriptor discovery comes from the global managed-doc assets root plus any
-  active profile asset roots
-- authoritative descriptor coverage for asset-sync checks follows
-  `authoritative_source: true`
+## Custom Managed Docs
+Profiles can add custom managed docs through their asset trees.
+That is how repo-specific docs such as API, auth, or error contracts can be
+introduced without hardcoding those docs into the global baseline.
 
-## Validation and Enforcement
-The managed-doc runtime service
-`devcovenant/core/services/managed_docs.py` is the enforcement boundary for
-this contract.
+## Validation And Failure Modes
+Refresh should fail explicitly when a managed-doc descriptor is invalid.
+It should not guess what a broken descriptor meant.
 
-That service validates:
-- descriptor key support and exact order
-- required boolean fields and types
-- descriptor target-path correctness
-- literal-block style for multiline fields
-- duplicate descriptor targets across descriptor roots
-- exact body-fingerprint matching for legacy generic replacement
+The common failure classes are:
 
-Related proof surfaces:
-- `tests/devcovenant/core/services/test_managed_docs.py`
-- `tests/devcovenant/test_refresh.py`
-- `tests/devcovenant/custom/policies/managed_doc_assets/`
-  `test_managed_doc_assets.py`
+- missing descriptor for an enabled managed doc
 
-## Operational Notes
-After changing descriptors, profiles, templates, or metadata contracts:
-1. run `devcovenant refresh`
-2. inspect generated outputs
-3. run `devcovenant test`
-4. run `devcovenant gate --end`
+- invalid descriptor shape
 
-When refresh output is unexpected:
-- inspect profile activation order
-- inspect overlay versus override usage
-- inspect `devcovenant/registry/registry.yaml` for resolved metadata
+- broken target/template mapping
 
-## Workflow
-Use this document when the question is "what does refresh own?" or
-"why did refresh change this generated surface?".
-Use `devcovenant/docs/contracts.md` when you need the contract map for all
-frozen product surfaces.
-For the exact gate sequence, use `devcovenant/docs/workflow.md`.
+- conflicting managed-doc ownership
 
-Refresh-change loop:
-1. Trigger refresh from `refresh`, `deploy`, `upgrade`, or the gate workflow.
-2. Inspect the tracked registry plus generated config/docs/workflow outputs.
-3. Run the normal gate workflow from `devcovenant/docs/workflow.md`.
+## Practical Rule
+If a refresh-related change seems confusing, ask two questions first:
+
+1. which descriptor owns this output?
+2. is the file supposed to be preserved, regenerated, or adopted?
+
+Most refresh confusion becomes much easier once those two ownership questions
+are answered.

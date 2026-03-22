@@ -655,7 +655,6 @@ autogen_metadata_overlays:
     - devcovenant/docs/config.md
     - devcovenant/docs/profiles.md
     - devcovenant/docs/policies.md
-    - devcovenant/docs/translators.md
     - devcovenant/docs/registry.md
     - devcovenant/docs/refresh.md
     - devcovenant/docs/workflow.md
@@ -663,7 +662,7 @@ autogen_metadata_overlays:
     doc_routes:
     - devcovenant/builtin/policies/ => devcovenant/docs/policies.md
     - devcovenant/builtin/profiles/*/*.yaml => devcovenant/docs/profiles.md
-    - devcovenant/*/profiles/*/*translator.py=> devcovenant/docs/translators.md
+    - devcovenant/*/profiles/*/*translator.py=> devcovenant/docs/profiles.md
     - devcovenant/builtin/profiles/**/config.yaml => devcovenant/docs/config.md
     - devcovenant/*/profiles/*/assets/*.yaml=> devcovenant/docs/profiles.md
     - devcovenant/*/profiles/*/assets/*.yml=> devcovenant/docs/profiles.md
@@ -741,7 +740,6 @@ autogen_metadata_overlays:
     - devcovenant/docs/config.md
     - devcovenant/docs/profiles.md
     - devcovenant/docs/policies.md
-    - devcovenant/docs/translators.md
     - devcovenant/docs/registry.md
     - devcovenant/docs/refresh.md
     - devcovenant/docs/workflow.md

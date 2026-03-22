@@ -11,38 +11,39 @@ managed_block: ''
 body: |-
   {{ PROJECT_DESCRIPTION }}
 
-  ## Table of Contents
-  1. [Overview](#overview)
-  2. [Project Governance](#project-governance)
-  3. [Architecture](#architecture)
-  4. [Getting Started](#getting-started)
-  5. [Workflow](#workflow)
-  6. [License](#license)
-
   ## Overview
-  Provide a concise description of the project scope and current status.
+  Use this README as the operator entrypoint for the repository.
+  Describe the project this repository ships, what problem it solves, and what
+  contributors or operators should do first.
 
-  ## Project Governance
-  Document the repository lifecycle contract here: current stage,
-  development stance, versioning mode, and where contributors should look
-  for deeper governance detail.
+  If you already drafted DevCovenant-shaped docs, review them before replacing
+  useful authored content with a fresh template body.
 
-  ## Architecture
-  Summarize the main components and where deeper documentation lives.
-  In this repo, the refresh-generated governance gate pipeline lives in
-  `.github/workflows/governance-and-test.yml`.
+  Keep this document practical.
+  It should orient someone quickly and point them to deeper docs without
+  turning into the whole handbook.
 
-  ## Getting Started
-  Explain setup, prerequisites, and first-run commands for contributors.
-  If you already drafted DevCovenant-shaped docs such as `SPEC.md`,
-  `README.md`, or `PLAN.md`, keep them in place before the first `deploy`;
-  refresh can adopt them when their `DevCovenant Version` is at least as
-  new as the runtime being installed.
+  ## Quick Start
+  Give the shortest correct setup and first-use sequence.
+  Include the commands a contributor or operator should actually run first.
+
+  If the repository uses DevCovenant-managed lifecycle commands, explain the
+  install/review/deploy boundary plainly and list the standard gate sequence.
 
   ## Workflow
-  Document the required edit/test/review routine for this repository.
-  In `engine.tests_output_mode: normal`, test progress stays concise while
-  full child output remains available in run logs.
+  Describe the normal edit, test, and review routine for this repository.
+  Prefer an explicit command sequence over vague prose.
+
+  ## Configuration Checkpoints
+  Call out the few settings or files a human must review consciously.
+  Prefer short explanations of what each checkpoint controls.
+
+  ## Docs Map
+  List the smaller set of deeper docs and say what each one is for.
+  Keep the descriptions concrete so the reader knows which page to open next.
+
+  ## Security, Privacy, and Support
+  Point readers at the trust-surface docs that matter for this repository.
 
   ## License
-  Document repository licensing terms here.
+  Document the repository licensing terms here.

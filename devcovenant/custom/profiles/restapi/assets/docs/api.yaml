@@ -2,17 +2,43 @@ header_lines:
   - '# API Contract'
 body: |-
   ## Overview
-  Document the externally visible REST API contract for this repository.
-  Keep this file focused on stable consumer-facing behavior, not internal
-  implementation details.
+  Describe the stable consumer-facing API surface for this repository.
+  Keep the focus on what an API client can rely on, not on internal controller
+  or service structure.
 
-  ## Endpoints
-  List each endpoint with:
-  - method and path
-  - request body/query/path parameters
-  - response status codes and payload shape
-  - idempotency and pagination behavior where relevant
+  ## Audience And Scope
+  Explain who uses this API, which clients or integrators matter most, and
+  which surface area this document covers.
 
-  ## Change Notes
-  When endpoint behavior changes, update this file in the same slice and keep
-  examples synchronized with OpenAPI/spec files used by the repository.
+  ## Base Rules
+  State the common rules that apply to the whole API, such as:
+
+  - base path or versioning model
+
+  - content types
+
+  - pagination rules
+
+  - idempotency expectations
+
+  - timeouts, retries, and rate-limit behavior where relevant
+
+  ## Endpoint Groups
+  Organize endpoints by resource or workflow.
+  For each group, document:
+
+  - purpose
+
+  - authentication expectations
+
+  - endpoint list
+
+  - request shape
+
+  - response shape
+
+  - error behavior
+
+  ## Change Discipline
+  Update this doc in the same slice as any stable API behavior change.
+  Keep examples, OpenAPI files, and client-visible error contracts aligned.

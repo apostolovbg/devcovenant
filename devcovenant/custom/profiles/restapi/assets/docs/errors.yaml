@@ -2,16 +2,36 @@ header_lines:
   - '# Error Contract'
 body: |-
   ## Overview
-  Document API error surfaces as an explicit contract.
-  Prefer stable, typed error codes and consistent payload fields.
+  Describe the API's error surface as a stable contract.
+  The goal is for clients to handle failures deterministically instead of
+  parsing ad hoc messages.
 
-  ## Error Shape
-  Define one canonical error payload shape and list each field:
+  ## Canonical Error Shape
+  Define the error payload shape and each field clearly, such as:
+
   - machine-readable code
-  - human-readable message
-  - optional details/context fields
-  - correlation/request identifiers if present
 
-  ## Status Mapping
-  Maintain a table mapping domain failure categories to HTTP status codes and
-  error codes so consumers can implement deterministic handling.
+  - human-readable message
+
+  - structured detail fields
+
+  - correlation or request identifiers
+
+  - retryability or support hints where present
+
+  ## Status And Code Mapping
+  Explain how domain failure categories map to HTTP status codes and stable
+  error codes.
+  Keep the mapping concrete enough that client code can implement branching
+  logic from this document alone.
+
+  ## Consistency Rules
+  State the rules that should remain true across the whole API, such as:
+
+  - one canonical payload shape
+
+  - one place for human-readable explanation
+
+  - stable machine-readable codes
+
+  - no leaking of internal exception text into client contracts

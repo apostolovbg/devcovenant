@@ -60,6 +60,74 @@ Example:
 ## Version 1.0.0
 
 - 2026-03-22:
+  Change: Removed empty former policy directories from the working tree
+  after the policy-to-core invariant migration and recorded the cleanup.
+  Why: Prevented dead directory residue from confusing package audits,
+  filesystem inspection, and future maintenance work.
+  Impact: Left the repository layout cleaner and closer to the current
+  runtime architecture without changing tracked product behavior.
+  Files:
+  CHANGELOG.md
+
+- 2026-03-22:
+  Change: Rewrote DevCovenant's documentation set around an operator-first
+  `README.md`, merged overlapping detailed docs into a smaller reference set,
+  restored the lean contract-index surfaces the package still needs, and
+  expanded the live and template docs so refresh produces fuller,
+  easier-to-scan pages instead of terse or fragmented ones.
+  Why: Reduced documentation sprawl, title-content mismatch, dense list-driven
+  formatting, and template-driven repetition while preserving the explicit
+  package contract surfaces and wording the current runtime and tests still
+  rely on.
+  Impact: Aligned the live docs, managed doc templates, profile doc routes,
+  documentation quality policy, and doc-contract tests around a smaller,
+  clearer, more readable documentation architecture that future refresh and
+  upgrade runs can preserve.
+  Files:
+  AGENTS.md
+  CHANGELOG.md
+  CONTRIBUTING.md
+  PLAN.md
+  README.md
+  devcovenant/README.md
+  devcovenant/builtin/policies/documentation_growth_tracking/\
+    documentation_growth_tracking.yaml
+  devcovenant/builtin/profiles/global/assets/CONTRIBUTING.yaml
+  devcovenant/builtin/profiles/global/assets/PLAN.yaml
+  devcovenant/builtin/profiles/global/assets/README.yaml
+  devcovenant/builtin/profiles/global/assets/SPEC.yaml
+  devcovenant/builtin/profiles/global/assets/devcovenant/README.yaml
+  devcovenant/config.yaml
+  devcovenant/custom/profiles/devcovrepo/assets/docs/README.md
+  devcovenant/custom/profiles/devcovrepo/assets/docs/config.md
+  devcovenant/custom/profiles/devcovrepo/assets/docs/installation.md
+  devcovenant/custom/profiles/devcovrepo/assets/docs/policies.md
+  devcovenant/custom/profiles/devcovrepo/assets/docs/profiles.md
+  devcovenant/custom/profiles/devcovrepo/assets/docs/refresh.md
+  devcovenant/custom/profiles/devcovrepo/assets/docs/registry.md
+  devcovenant/custom/profiles/devcovrepo/assets/docs/translators.md
+  devcovenant/custom/profiles/devcovrepo/assets/docs/troubleshooting.md
+  devcovenant/custom/profiles/devcovrepo/assets/docs/workflow.md
+  devcovenant/custom/profiles/devcovrepo/devcovrepo.yaml
+  devcovenant/custom/profiles/restapi/assets/docs/api.yaml
+  devcovenant/custom/profiles/restapi/assets/docs/auth.yaml
+  devcovenant/custom/profiles/restapi/assets/docs/errors.yaml
+  devcovenant/docs/architecture.md
+  devcovenant/docs/config.md
+  devcovenant/docs/contracts.md
+  devcovenant/docs/installation.md
+  devcovenant/docs/policies.md
+  devcovenant/docs/profiles.md
+  devcovenant/docs/project_governance.md
+  devcovenant/docs/refresh.md
+  devcovenant/docs/registry.md
+  devcovenant/docs/translators.md
+  devcovenant/docs/troubleshooting.md
+  devcovenant/docs/workflow.md
+  devcovenant/registry/registry.yaml
+  tests/devcovenant/test_refresh.py
+
+- 2026-03-22:
   Change: Strengthened the roadmap so managed document templates across builtin
   and relevant custom profiles must become detailed, reader-useful blueprints
   rather than terse one-pagers, and so Item 2 now retires `update_lock`

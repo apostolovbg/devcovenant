@@ -1,97 +1,60 @@
-# Product Contracts
-**Last Updated:** 2026-03-21
+# Contracts
+**Last Updated:** 2026-03-22
 **Project Version:** 1.0.0
 
-## Table of Contents
-- [Overview](#overview)
-- [Contract Index](#contract-index)
-- [Normative and Explanatory Documents](#normative-and-explanatory-documents)
-- [Documentation Writing Contract](#documentation-writing-contract)
-- [Workflow](#workflow)
-
 ## Overview
-This document is the index for DevCovenant's frozen product contracts.
+This document is the contract index for the DevCovenant package docs.
+Use it when you need to know which page is the normative home for a stable
+public contract and where a future change should be documented first.
 
-Each contract below has one normative home. That normative home defines what
-DevCovenant promises, what inputs it accepts, what outputs it owns, and where
-runtime enforcement already exists. Other documents may explain or summarize
-those contracts, but they must point back to the normative home instead of
-becoming alternate competing sources of truth.
+The detailed docs should stay operator-oriented and explanatory.
+That does not remove the need for a stable contract map.
+This page exists so the package docs can stay readable without turning every
+page into a competing master index.
 
-Use this document when you need to answer questions like:
-- which document is the contract for managed docs?
-- where is the exact lifecycle command contract frozen?
-- which docs are explanatory, and which docs define the stable rule?
-- what writing rules apply to DevCovenant documentation itself?
+## Frozen Contract Homes
+The current normative homes are:
 
-## Contract Index
-The frozen contract set is:
-- managed-documents contract:
-  `devcovenant/docs/refresh.md`
-- managed-document descriptor schema:
-  `devcovenant/docs/refresh.md`
-- bootstrap, install, deploy, refresh, upgrade, undeploy, and uninstall
-  contract:
-  `devcovenant/docs/installation.md`
-- gate sequence and run-artifact contract:
-  `devcovenant/docs/workflow.md`
-- public config contract:
-  `devcovenant/docs/config.md`
-- project-governance contract:
-  `devcovenant/docs/project_governance.md`
-- registry contract:
-  `devcovenant/docs/registry.md`
-- policy descriptor contract:
-  `devcovenant/docs/policies.md`
-- version-governance adapter contract:
-  `devcovenant/docs/policies.md`
-- documentation writing contract:
-  this document
+- `devcovenant/docs/installation.md` for the lifecycle command contract
 
-## Normative and Explanatory Documents
-Normative documents:
-- define the exact rule or interface
-- are the first place to update when the contract changes
-- should be cited by other docs instead of duplicated loosely
+- `devcovenant/docs/refresh.md` for the managed-documents contract and
+  managed doc descriptor schema
 
-Explanatory documents:
-- teach how to use the contract in practice
-- give examples, scenarios, and operator guidance
-- may summarize the contract only enough to support their own topic
-- must point back to the normative home when exact truth matters
+- `devcovenant/docs/workflow.md` for the gate sequence and run-artifact
+  contract
 
-Primary-home rule:
-- each major contract gets one normative home
-- reference docs should stay aligned with that home
-- when two docs start restating the same rule in full, one of them should be
-  reduced to a summary plus pointer
+- `devcovenant/docs/config.md` for the public `devcovenant/config.yaml`
+  contract
+
+- `devcovenant/docs/project_governance.md` for the `project-governance`
+  contract
+
+- `devcovenant/docs/registry.md` for the registry contract
+
+- `devcovenant/docs/policies.md` for the policy descriptor contract and
+  version-governance adapter contract
 
 ## Documentation Writing Contract
-Documentation in this repository must be operator-oriented and explanatory at
+Documentation in this package should be operator-oriented and explanatory at
 the same time.
+Write for a technically serious reader who needs a clear next action and a
+clear explanation, not for someone who enjoys decoding insider shorthand.
 
-Stable writing rules:
-- explain what a thing is, why it exists, what it controls, and when to use
-  it
-- keep operational steps explicit and easy to follow
-- avoid insider shorthand when a concrete phrase is clearer
-- avoid soft marketing phrasing such as whether DevCovenant "fits" a repo;
-  prefer concrete phrasing such as how it works, how to use it, or how to
-  integrate it
+The stable writing rules are:
+
 - expand an abbreviation on first use in each document
-- keep config comments practical, concrete, and useful at the point of
-  reading
-- treat undocumented behavior, half-documented behavior, and duplicate
+
+- avoid soft marketing phrasing when direct technical wording is clearer
+
+- treat half-documented behavior, repeated boilerplate, and duplicate
   competing explanations as defects
 
-Documentation should teach by being clear. It should not rely on rhetoric
-about learning or teaching to do that work.
+- prefer direct technical prose over artistic or self-conscious wording
 
-## Workflow
-When behavior changes:
-1. update the normative home first
-2. update runtime enforcement or validation when needed
-3. update tests that prove the contract
-4. update explanatory docs so they point back to the normative home and stay
-   aligned with it
-5. run the normal gate workflow from `devcovenant/docs/workflow.md`
+- keep templates substantial enough that new repos start from real documents,
+  not placeholder stubs
+
+## Practical Use
+When you change one of the contract pages, update that page first.
+Then update any operator-facing summaries, templates, or supporting docs that
+point back to it.

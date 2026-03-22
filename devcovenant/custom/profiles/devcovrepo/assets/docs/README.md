@@ -1,34 +1,39 @@
 # DevCovenant Docs
 
-## Table of Contents
-- [Overview](#overview)
-- [Workflow](#workflow)
-- [Doc Catalog](#doc-catalog)
-- [Conventions](#conventions)
-
 ## Overview
-This folder holds the detailed, user-facing guides for DevCovenant.
-`devcovenant/README.md` remains the top-level guide, while these docs
-explain the deeper mechanics, profiles, policies, and workflows.
+This folder holds the detailed reference docs for DevCovenant.
+`README.md` is the operator entrypoint.
+These docs explain the deeper runtime, config, policy, profile, registry, and
+refresh behavior that the README only points to.
 
-## Workflow
-Treat these files like code: update them alongside any behavior changes,
-add examples for new flags or metadata, and keep cross-links current.
-Updates here are tracked by the `documentation-growth-tracking` policy.
+## Doc Set
+The intended reference set is smaller and stricter now:
 
-## Doc Catalog
-- `installation.md` — install, deploy, refresh, and upgrade workflows.
-- `config.md` — config structure, overrides, and profile selection.
-- `profiles.md` — profile anatomy, assets, overlays, and suffixes.
-- `policies.md` — policy descriptors, metadata, and custom policies.
-- `translators.md` — translator runtime and language-profile declarations.
-- `registry.md` — tracked and runtime registry files and how they are
-  refreshed.
-- `refresh.md` — full refresh behavior and command-time registry refresh.
-- `workflow.md` — required gates, pre-commit, and test runners.
-- `troubleshooting.md` — common errors and how to resolve them.
+- `installation.md` for lifecycle commands and first activation
 
-## Conventions
-- Keep headings consistent and link back to code paths where useful.
-- Prefer short, copy-pasteable examples over long prose.
-- Keep the newest information aligned with `SPEC.md` and `PLAN.md`.
+- `workflow.md` for the exact gate sequence and recovery rules
+
+- `config.md` for config ownership, project governance, and review
+
+- `profiles.md` for profiles, assets, overlays, and translators
+
+- `policies.md` for policy descriptors, runtime actions, and policy commands
+
+- `refresh.md` for refresh ownership and managed-doc behavior
+
+- `architecture.md` for runtime layers, invariants, and contract map
+
+- `registry.md` for tracked and runtime registry state
+
+- `troubleshooting.md` for common failures and recovery
+
+## Working Rules
+Keep these docs concrete.
+Avoid turning them into meta-commentary about documentation itself.
+Titles should match contents closely, and a short doc should not be forced to
+carry extra sections only because some older template expected them.
+
+## Formatting Rules
+Prefer short paragraphs, explicit examples, and readable lists.
+Avoid dense bullet walls and avoid treating every doc like it needs the same
+shape regardless of topic.

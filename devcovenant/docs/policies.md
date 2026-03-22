@@ -2,686 +2,125 @@
 **Last Updated:** 2026-03-22
 **Project Version:** 1.0.0
 
-## Table of Contents
-- [Overview](#overview)
-- [Program Vocabulary](#program-vocabulary)
-- [Policy Structure](#policy-structure)
-- [Descriptor and Metadata](#descriptor-and-metadata)
-- [Descriptor Authoring Convention](#descriptor-authoring-convention)
-- [Runtime Execution](#runtime-execution)
-- [Version-Governance Adapter Contract](#version-governance-adapter-contract)
-- [Output Governance Policy](#output-governance-policy)
-- [Core Policy Deep Dives](#core-policy-deep-dives)
-- [Autofix Model](#autofix-model)
-- [Custom Policy Overrides](#custom-policy-overrides)
-- [Workflow](#workflow)
-- [Testing Expectations](#testing-expectations)
-
 ## Overview
-Policies are executable governance rules.
-Each policy combines prose (`text`), metadata defaults, and runtime check code.
+This document is the normative home for the policy descriptor contract.
+Use it together with `devcovenant/docs/contracts.md` when you need the stable
+boundary between configurable policy behavior, autofix, commands, and core
+invariants.
 
-Policy activation is controlled by `config.policy_state` for standard
-enable/disable toggles.
-`severity: critical` policies remain enforced even when a config toggle
-attempts to disable them, and runtime emits an explicit diagnostic.
-Profiles and metadata layers influence behavior, not on/off activation.
-DevCovenant core invariants are a separate contract surface. They are not
-activated through `policy_state`, and they surface through
-`config.core_invariants` plus the dedicated AGENTS core-invariant block.
+Policies are the customizable enforcement units in DevCovenant.
+Each policy combines descriptor metadata, runtime check logic, and optional
+autofix support.
 
-How most users interact with policies:
-- read policy output to understand what DevCovenant is complaining about
-- change `policy_state` when a non-critical policy should be on or off
-- change config/profile metadata when a policy should behave differently
-- write custom policy code only when config and profiles cannot express the
-  rule you need
-This is the primary home for policy descriptors, runtime behavior, and policy
-authoring. Use `devcovenant/docs/config.md` for activation toggles and
-`devcovenant/docs/profiles.md` for metadata sources.
-It is also the normative home for the policy descriptor contract and the
-version-governance adapter contract. Use `devcovenant/docs/contracts.md` for
-the contract index.
+Policies are different from core invariants.
+Policies are repository-governance surfaces.
+Core invariants are DevCovenant-owned runtime boundaries.
 
-DevCovenant core invariants are documented in `architecture.md` and surfaced
-at runtime in AGENTS and the tracked registry under `core-invariants`.
+## What A Policy Contains
+A normal policy directory contains:
 
-## Program Vocabulary
-- `output boundary`:
-  one runtime interface for all user-visible output.
-- `output mode`:
-  command output contract level (`normal` concise, `quiet` minimal,
-  `verbose` detailed).
-- `test event`:
-  normalized lifecycle event emitted by test adapters.
-  Events follow schema version `1.0` (see
-  `devcovenant/core/services/event.py`) and are recorded into the gate status
-  payload (`test_events`) for downstream tooling to consume.
-- `assertion signal`:
-  meaningful assertion proving behavior in related tests; tautologies are
-  excluded unless fixture-annotated.
-- `deterministic execution`:
-  DevCovenant self-runs rely on explicit configuration, stable metadata,
-  and reproducible session state.
+- a descriptor YAML file
 
-## Policy Structure
-Builtin policy path:
-- `devcovenant/builtin/policies/<policy-id>/`
+- a runtime check file
 
-Custom policy path:
-- `devcovenant/custom/policies/<policy-id>/`
+- optional autofix helpers
 
-Expected files:
-- `<policy-id>.yaml` descriptor
-- `<policy-id>.py` check script
-- optional `autofix/`
-- optional `assets/`
-- optional directories are contract-optional: do not commit placeholder-only
-  folders
-- `.gitkeep` placeholder files are not part of policy layout contracts;
-  create `assets/` or `autofix/` only when real files exist
+- optional assets
 
-## Descriptor and Metadata
-Descriptor metadata defines default behavior.
-Resolved metadata is computed from descriptor/profile/config layers and then
-rendered into AGENTS managed policy block and tracked registry.
-The canonical resolver/decoder lives in
-`devcovenant/core/services/metadata.py`.
-It now exposes a typed companion resolved-metadata view for internal runtime
-use while preserving the registry's persisted string-map contract for audit
-stability.
-Runtime policy option loading (including runtime-action metadata reads) uses
-the shared decoder so bool/list/number parsing stays consistent across code
-paths.
-Session-aware policies such as `changelog-coverage` read live workflow state
-from `devcovenant/registry/runtime/gate_status.json`, while deterministic
-policy/profile metadata is audited through the tracked
-`devcovenant/registry/registry.yaml` document.
+The descriptor declares metadata and human-facing prose.
+The runtime code enforces the rule.
 
-Shared metadata families include:
-- severity and enforcement controls
-- selectors (`include_*`, `exclude_*`, `force_include_*`)
-- session-ledger references (for policies that validate gate sessions)
-- policy-specific options (for example changelog verbs, dependency files,
-  version-sync targets)
+## Activation And Metadata
+Policy activation is controlled by `config.policy_state`.
+Profile overlays and config overrides then tune how enabled policies behave.
 
-## Descriptor Authoring Convention
-Use minimal policy descriptor metadata and prefer profile overlays for
-operational values when behavior is profile-dependent.
+That means the usual control split is:
 
-Metadata shape conventions:
-- keep scalars unquoted when safe
-- use single quotes when quoting is required
-- use `''` for empty string placeholders
-- use `[]` for empty list placeholders
-- use `{}` for empty object placeholders
-- prefer typed empty values only; do not use sentinel pseudo-empty values
-  such as `__none__`
-- keep policy-level defaults minimal and move stack/layout defaults to profiles
-  (for example changelog paths/header keys, version/changelog targets, and
-  test watch roots)
+- config decides whether a customizable policy is on or off
 
-Descriptor keys remain part of the contract schema even when values are
-profile-populated. Runtime checks should raise explicit violations when
-required metadata remains unresolved after merge.
-When authoring or debugging metadata, treat the registry/AGENTS forms as
-canonical persisted strings and the shared metadata decoder as the canonical
-typed interpretation layer for runtime code.
+- profiles and metadata decide how it behaves
 
-## Runtime Execution
-Runtime source for policy definitions is AGENTS policy block.
-Execution flow:
-1. parse AGENTS policy definitions
-2. load policy scripts from builtin/custom paths
-3. apply activation and metadata
-4. run checks
-5. run autofix helpers if allowed and available
-6. rerun checks when autofix helpers changed files
+- runtime enforces the result
 
-Runtime loading boundary:
-- policy/config/registry helpers now read tracked YAML through the shared
-  run-scoped cache in `devcovenant/core/services/yaml_cache.py`
-- this does not change policy meaning; it removes repeated parsing of the
-  same tracked config, registry, and descriptor files inside one command run
+## Checks, Autofix, And Commands
+The boundary here is important:
 
-Output mode contract:
-- runtime output mode is selected by
-  `devcovenant/config.yaml -> engine.output_mode`
-- tests output mode is selected by
-  `devcovenant/config.yaml -> engine.tests_output_mode`
-- allowed values are `normal`, `quiet`, and `verbose`
-- default is `verbose` when key is unset or invalid
-- tests `normal` mode keeps status lines concise, suppresses flood-prone test
-  child output in console, and emits deterministic `[n/total] <command>`
-  markers plus summary hints while full child output remains in run logs
-- tests `quiet` mode suppresses routine stdout chatter and child output while
-  preserving stderr failure surfaces and full run-log artifacts
+- checks inspect and report
 
-High-impact runtime contracts:
-- `changelog-coverage` requires a fresh top entry per gated session and keeps
-  validation scoped to paths changed after gate start via session snapshots
-  (`session_start_snapshot`, optional `session_baseline_snapshot` for recovery
-  starts, plus `session_end_snapshot` / `last_run_snapshot` for lifecycle
-  checks). Missing or invalid required snapshot metadata is a hard error.
-  Deleted-file coverage is scoped with the gate-start
-  `session_start_snapshot` baseline so older staged deletions do not leak
-  into later slices, and start-phase validation does not import HEAD-wide
-  deleted paths.
-  Header/managed-block changelog exemptions use lightweight
-  `document_exemption_baseline` records from gate start instead of whole-repo
-  snapshot inventories, and the fingerprint algorithm is shared with
-  gate-session baseline capture via
-  `devcovenant/core/lib/document_exemptions.py`.
-  By default, generated governance files (`.gitignore`,
-  `.pre-commit-config.yaml` and `.github/workflows/governance-and-test.yml`)
-  are excluded from changelog coverage.
-  Universal editor/build/runtime artifacts are also skipped by default
-  (`.vscode/**`, `.idea/**`, build/dist trees, cache directories,
-  `*.egg-info/**`, `pip-wheel-metadata/**`, coverage artifacts, and
-  DevCovenant runtime state under `devcovenant/logs/**` and
-  `devcovenant/registry/runtime/**`).
-  Deleted in-scope files remain valid `Files:` entries and are treated as
-  real change evidence even after the path no longer exists on disk.
-  Out-of-scope files (skipped metadata selectors and managed/header-only
-  exempt deltas) are tolerated when humans list them in `Files:` blocks, but
-  only in-scope files satisfy required coverage.
-  Top-level read-only `devcovenant check` without an open gate session
-  (`missing_gate_status` and empty phase) uses an empty scope instead of
-  hard-failing bootstrap checks.
-- `managed-environment` resolves from the tracked registry when it
-  exists; if the tracked registry is missing, runtime fails explicitly and
-  requires `devcovenant refresh` before managed-environment resolution can
-  continue.
-  Managed-environment runtime now uses the same tracked-registry cache path
-  as the rest of the runtime so repeated stage resolution does not keep
-  reparsing the registry in one command run.
-- the `devflow-run-gates` core invariant enforces the start -> test -> end
-  sequence and validates
-  the latest `test` evidence against resolved required command metadata
-  (`required_commands`). Gate status stores the tests mode and selected
-  command key for deterministic end-gate validation.
-  Required command validation is exact-token based against recorded command
-  entries; substring matches do not satisfy required command evidence.
-  For audit-only no-change `devcovenant check` runs in a closed session with
-  no post-end edits, stale end-vs-test ordering does not emit a blocking
-  violation; edit-session and unsessioned-edit enforcement remains strict.
-  Missing gate status also stays non-blocking only for top-level read-only
-  `check` bootstrap (`missing_gate_status` with empty phase).
-- the `devcov-structure-guard` core invariant enforces repo-local bytecode
-  hygiene when
-  enabled by profile/config metadata, flagging `__pycache__/` and `*.py[cod]`
-  artifacts under `devcovenant/`, and it validates the tracked
-  `devcovenant/logs` skeleton via the core manifest without requiring any
-  policy inventory.
-  Its active-profile lookup now reuses the shared config cache instead of
-  reparsing `devcovenant/config.yaml` independently.
-- `line-length-limit` excludes transient runtime log artifacts under
-  `devcovenant/logs/**` plus universal editor/build/runtime artifacts
-  (`*.egg-info/**`, `pip-wheel-metadata/**`, coverage/cache trees,
-  `.vscode/**`, `.idea/**`, local runtime state, and generated
-  `licenses/*.txt` dependency-license snapshots) so generated noise does not
-  create warning churn during gated runs.
-  Descriptor keys remain declared, while default values are profile-owned
-  (`defaults` for max-length/URL escape-hatch defaults and
-  `global` for runtime log-artifact excludes).
-  It also supports optional escape-hatch metadata for long lines:
-  `allow_long_url_lines` + `url_prefixes` (URL-like marker prefixes),
-  plus `allow_long_lines` with `long_lines_contain` and
-  `long_lines_between` (`left=>right` pairs).
-  These escape hatches are general and apply to any selected file type,
-  not documentation only.
-- `read-only-directories` enforces only when include selectors are explicitly
-  configured. Empty typed selectors (`[]`) keep the policy scope disabled.
-- `managed-environment` is metadata-driven and stage-aware:
-  `manual_commands` are operator guidance only, while
-  `managed_commands` (`stage=>command`) are executable runtime preparation
-  steps for `gate --start`, `test`, `gate --end`, and general command
-  dispatch (`command` stage).
-  Runtime tracks completed stage preparation in
-  `DEVCOV_MANAGED_STAGE_RUNS` so stage bootstrap commands are not repeated
-  across managed-interpreter CLI (command-line interface) re-exec hops.
-  Stage resolution honors explicit base environments so empty overrides
-  isolate stage tracking from ambient process state.
-  Managed command subprocess output now routes through the shared runtime
-  child-command gateway
-  (`run_child_command_with_output_policy` in
-  `devcovenant/core/runtime/execution.py`) with per-channel plans resolved
-  by `resolve_child_output_plan_for_channel`.
-  Normal mode suppresses managed/test child channels while keeping gate
-  pre-commit hook output visible; quiet mode suppresses routine stdout child
-  output across channels; verbose mode keeps full child streaming for every
-  channel.
-  Long silent waits can emit `Please wait. In progress...` through the
-  shared runtime heartbeat.
-  `documentation-growth-tracking` also hard-excludes universal
-  editor/build/runtime artifacts from user-facing change detection so
-  packaging, cache, and local-tool artifacts do not demand documentation
-  updates.
-  Active policy state also enables CLI interpreter auto re-exec into the
-  managed interpreter; command-run `run.json` artifacts record interpreter
-  provenance for audit/debug use.
-  Empty managed-environment metadata emits explicit expected-path/interpreter
-  guidance warnings; missing manual-command hint warnings are not emitted
-  unless an actual environment mismatch requires remediation guidance.
+- autofixers mutate during autofix-enabled check flows
+
+- explicit policy commands perform deliberate operator actions
+
+Checks should not mutate files directly.
+That keeps the runtime honest and makes side effects easier to reason about.
+
+## Policy Runtime Actions
+A policy can expose runtime actions.
+Those actions are the reusable operational surface a policy command or autofix
+can call.
+
+For example, the dependency-management policy can expose refresh actions that:
+
+- refresh lock state
+
+- refresh dependency and license artifacts
+
+- refresh the whole dependency-management output set
+
+The same runtime action can then be used by:
+
+- an autofixer
+
+- a manual policy command
+
+## Policy Commands
+DevCovenant now supports namespaced policy commands.
+The intended shape is:
+
+```bash
+devcovenant policy <policy-id> <command>
+```
+
+That keeps policy-owned operations explicit and prevents the CLI from turning
+into a pile of unrelated one-off top-level commands.
+
+The roadmap now states this plainly for dependency management:
+`update_lock` is not being kept as a backward-compatibility command surface.
+The namespaced policy command surface is the supported direction.
+
+## Dependency Management
+Dependency management is now one coherent policy surface.
+It owns dependency refresh, dependency inventory, and license/report
+synchronization together instead of splitting those behaviors across separate,
+loosely connected commands or policies.
+
+That gives custom repositories one policy to customize rather than several
+half-overlapping surfaces.
 
 ## Version-Governance Adapter Contract
-`version-governance` resolves one named scheme adapter and expects a stable
-interface from it.
+Version-governance adapters define how version schemes are parsed,
+validated, normalized, and compared.
+They are part of the stable extension surface because repositories can choose
+scheme behavior that is stricter than raw string equality.
 
-Builtin adapter interface:
-- `version_pattern`
-- `parse_version`
-- `compare_versions`
-- `validate_release`
+## Custom Policies
+Custom policies live under `devcovenant/custom/policies/<id>/` and use the
+same descriptor-plus-runtime model as builtin ones.
+They should follow the same boundary discipline:
 
-Optional adapter callables:
-- `preflight`
-- `canonicalize_version`
-- `validate_progression`
+- checks report
 
-Stable adapter rules:
-- adapters must raise explicit errors when a required capability is missing
-- `custom_regex` is format-only and does not define ordered comparison
-- `custom_adapter` must point to a repo-relative Python module inside the
-  repository and that module must export `SCHEME`
-- custom adapter `SCHEME` must provide the required callable interface
-- package-aware adapters such as `pep440` may canonicalize versions while
-  still preserving repo-level scheme ownership
-- `version-sync` may use scheme equality without pretending a validation-only
-  scheme provides ordering
+- autofixers fix
 
-Relevant enforcement surfaces:
-- `devcovenant/builtin/policies/version_governance/version_governance.py`
-- `devcovenant/builtin/policies/version_governance/custom_regex.py`
-- `devcovenant/builtin/policies/version_governance/custom_adapter.py`
-- `tests/devcovenant/builtin/policies/version_governance/*.py`
-- `tests/devcovenant/builtin/policies/version_sync/test_version_sync.py`
-- `dependency-management` operates from resolved metadata
-  (descriptor + profiles + config layers), with role selectors as the
-  primary contract (`dependency_role_*` via `role=>selector`) and no
-  hardcoded manifest lists.
-  Manual mutation now uses the policy-born command surface
-  `devcovenant policy dependency-management refresh-all`, while
-  `update_lock` remains a compatibility alias.
-- `documentation-growth-tracking` can enforce hard doc-route mappings so
-  user-facing code changes must touch specific documentation targets.
-  By default, documentation-only suffixes are not treated as user-facing;
-  include them explicitly only when a repository wants doc edits to trigger
-  route checks.
-  Dot-prefixed glob triggers (for example `.github/workflows/*.yml`) are
-  matched as literal dot-prefixed paths.
-- `modules-need-tests` enforces source-to-test alignment, bans placeholder
-  tests, and removes stale mirror-path tests using profile-owned
-  `mirror_test_name_templates` metadata (with translator wildcard-template
-  resolution).
-  Repository module inventory uses the shared snapshot scanner
-  (`capture_current_snapshot_paths`) instead of git index commands so policy
-  scope stays snapshot-driven.
-  Language-specific test-style requirements are metadata-driven through
-  `test_style_requirements` (`language=>rule` tokens).
-  UTF-8 (8-bit Unicode Transformation Format) decode/read failures in module
-  or test files are emitted as explicit deterministic violations instead of
-  aborting policy execution.
-- `security-scanner` reads source via UTF-8 and emits explicit read/decode
-  violations when files are unreadable, instead of raising runtime
-  exceptions.
-- `raw-string-escapes` is language-aware and metadata-driven: Python literals
-  use tokenizer spans for precise detection and autofix context, while other
-  languages use configurable suffix, literal, raw-prefix, and escape-pattern
-  metadata (`language_suffixes`, `literal_patterns`,
-  `raw_literal_patterns`, `suspicious_escape_patterns`).
-- `no-raw-errors` enforces explicit error surfaces in Python source by
-  flagging bare `except`, broad `except Exception` handlers, generic
-  `raise Exception(...)`, and silent `except Exception: pass` handlers
-  through selector-driven scope metadata.
-  Broad-handler waivers are explicit and metadata-driven through
-  `broad_exception_waiver_markers` (line/comment markers) and
-  `broad_exception_waiver_between` (`left=>right` region markers).
-- `tests-coverage` is structural and validates assertion signals across related
-  tests for each in-scope module that already has related tests.
-  It reads related test files directly (no gate-status evidence payload) and
-  uses profile-owned assertion metadata (`assertion_signal_patterns`,
-  `tautology_patterns`, `fixture_marker_pattern`) plus symbol-fidelity keys
-  (`symbol_kinds`, `symbol_name_min_length`, `symbol_assertion_window`,
-  `enforce_symbol_fidelity`) to enforce function/class coverage
-  deterministically.
-  Assertion signal helpers are policy-owned under
-  `devcovenant/builtin/policies/tests_coverage/assertion_signal.py`.
-- session-bound checks (for example changelog coverage) consume the
-  gate-session ledger from
-  `devcovenant/registry/runtime/gate_status.json`; `gate --start` records
-  baseline snapshots, checks run against post-start snapshot deltas, and
-  missing/invalid session metadata is an explicit error. Start cannot reset a
-  closed-session baseline when post-end edits exist; reconcile-on-start must
-  clear policy checks and test execution before baseline rewrite. End closure
-  timestamps/snapshots are written only after a successful end gate and never
-  from failing end runs.
-- bundled policy helpers do not expose metadata-driven `session_scope`
-  switching; bundled session checks read runtime session state directly.
-- bundled session checks share centralized snapshot helpers from
-  `devcovenant/core/runtime/session_snapshot.py`, with runtime consumers
-  treating that module as the canonical snapshot-helper home.
-- bundled policy configuration validation must raise explicit configuration
-  violations instead of relying on runtime `assert` statements, so optimized
-  Python execution and static-analysis tools see the same enforcement
-  behavior.
-- `last-updated` scopes stale-date checks to session-changed files
-  from runtime context only (no git recovery scanning).
-- `last-updated` ships builtin package-doc allowlists for installed
-  `devcovenant/README.md`, package README surfaces, and
-  `devcovenant/docs/**/*.md` so user repos do not need repo-specific
-  overlays just to keep packaged docs compliant.
-- `last-updated` violation suggestions report the effective allowlist,
-  including allowlisted globs, instead of only explicit files/suffixes.
-- `readme-sync` keeps `devcovenant/README.md` as the packaged projection of
-  the root `README.md`, removing only repo-only sections so this repository
-  maintains one authored README source.
-- `managed-doc-assets` is a synchronization guard between managed docs and
-  their managed-doc descriptors; it does not make one side a universal
-  authority over the other, and it now reads descriptor/header/block rules
-  through the shared managed-doc runtime service instead of keeping a
-  separate copy of that contract. The policy now derives its coverage from
-  enabled descriptors marked as authoritative source docs instead of a fixed
-  hardcoded doc list.
-- `version-sync` owns synchronized version surfaces and any explicit
-  role-scoped package-legality checks, while repo-level version format
-  validation, scheme-aware bump progression, and comparison semantics are
-  handled by `version-governance`.
-- `version-sync` now resolves synchronized equality through canonical text or
-  parsed equality before attempting ordered comparison, so format-only schemes
-  such as `custom_regex` stay strict without inventing progression semantics.
-- `version-governance` activation follows `config.yaml -> policy_state`;
-  descriptor text should stay neutral and not hardcode an enabled/disabled
-  deployment assumption.
-- `version-governance` keeps one shared policy shell in
-  `version_governance.py` and delegates scheme-specific parsing/comparison
-  rules to sibling modules such as `semver.py`, `calver.py`, `integer.py`,
-  `pep440.py`, `custom_regex.py`, and `custom_adapter.py`.
-- `custom_regex` is format-only by design; it now raises an explicit error if
-  ordered comparison is requested instead of inventing lexical progression.
-- wildcard language helpers in builtin policy runtime now describe
-  configuration merging as default resolution rather than generic fallback.
-- the shared shell now separates generic forward-ordering enforcement from
-  scheme-owned progression/release validation, so non-SemVer adapters do not
-  inherit major/minor/patch semantics accidentally
-- `custom_regex` is the validation-only path for exotic version syntaxes;
-  it checks a repo-supplied regex and requires `enforce_bumping: false`.
-- `custom_adapter` is the fully extensible path; it loads one repo-relative
-  Python module from `custom_adapter_path`, expects that module to export
-  `SCHEME`, and treats that object as the version-governance scheme
-  interface. This is a version-governance-local extension point, not a
-  general DevCovenant policy plugin mechanism.
-- `project-governance` is orthogonal to `version-governance`; it is a
-  service-backed repo metadata contract that governs stage, development
-  stance, versioning mode, and optional codename/build identity without
-  redefining version parsing/comparison.
-- when `project-governance.versioning_mode` is `unversioned`, the service
-  governs the explicit displayed non-version label for managed docs and the
-  required unreleased changelog heading.
-- managed-doc descriptors may opt into governance headers through
-  `project_governance_headers`; ordinary managed docs keep the compact
-  header set and only change the rendered `Project Version` value when the
-  repo is intentionally unversioned.
-- runtime change-state naming uses `current_snapshot_*` for full current
-  snapshot data and `session_*` for gate-scoped deltas.
-- `version-sync` uses role-based selectors
-  (`target_role_files`/`target_role_globs`/`target_role_dirs`) and
-  `role_extractors` mappings (`role=>extractor`) to keep target-version
-  checks format-aware without file-type bucket metadata.
-- policy descriptors keep contract keys, while global/profile overlays provide
-  operational defaults for `changelog-coverage`, `last-updated`,
-  `version-governance`, `version-sync`, `modules-need-tests`,
-  and `tests-coverage`.
-- the `devcov-integrity-guard` core invariant keeps its path keys declared in
-  the descriptor, while `global` profile overlays and
-  `config.core_invariants` provide runtime values for
-  `policy_definitions`, `registry_file`, and `gate_status_file`.
+- commands run explicit operations
 
-## Output Governance Policy
-`no-print-outside-output-runtime` is now a metadata-driven output-sink policy.
-The policy script stays generic while profiles own operational values.
+## Practical Guidance
+When changing a policy, update all of the following together:
 
-### Metadata Ownership Model
-- descriptor:
-  owns contract keys and neutral defaults only.
-- language profiles:
-  own sink declarations (`sink_call_targets`, `sink_attr_targets`,
-  `sink_macro_targets`) using `language=>target` entries.
-- repository profiles:
-  own selection scope (`include_*`, `exclude_*`) and boundary allowances
-  (`allowed_file_globs`, `allowed_symbol_targets`,
-  `allow_waiver_comment`).
-- activation:
-  remains `config.yaml -> policy_state` for standard toggles; critical
-  severity enforcement immunity still applies.
+1. descriptor prose and metadata
+2. runtime code
+3. tests
+4. user-facing docs when behavior changes
 
-### Enforcement Model
-1. Build scope from resolved selector metadata.
-2. Resolve one translator/language per file through translator runtime.
-3. Load sink targets for that language (plus wildcard `*` targets).
-4. Detect sink calls:
-   Python uses AST; non-Python uses language-aware textual matching.
-5. Allow only hits covered by boundary metadata
-   (`allowed_file_globs`, `allowed_symbol_targets`, waiver marker).
-6. Emit violations for remaining direct-output sinks.
-
-### Metadata Contract (Output Sinks)
-- `sink_call_targets`: `language=>call_target` entries.
-- `sink_attr_targets`: `language=>attribute_target` entries.
-- `sink_macro_targets`: `language=>macro_target` entries.
-- `allowed_symbol_targets`: `language=>symbol_name` entries.
-- `allowed_file_globs`: path globs where sinks are allowed by boundary.
-- `allow_waiver_comment`: line marker for explicit reviewed waivers.
-
-### no-print-outside-output-runtime
-The policy does not hardcode language sink lists or repository paths.
-It enforces only what resolved metadata declares for the active profile stack.
-
-## Core Policy Deep Dives
-Policies are the customizable governance surface.
-DevCovenant-owned invariants such as `devflow-run-gates`,
-`devcov-integrity-guard`, and `devcov-structure-guard` are no longer part of
-the policy inventory even though they still surface metadata and runtime
-evidence in AGENTS and the registry.
-
-### dependency-management
-`dependency-management` is metadata-driven and profile-driven:
-- dependency inputs are resolved primarily from role-based selectors:
-  `dependency_role_files`/`dependency_role_globs`/`dependency_role_dirs`
-  with `role=>selector` tokens
-- generic selectors (`dependency_files`/`dependency_globs`/
-  `dependency_dirs`) remain available when role taxonomy is unnecessary
-- canonical roles are:
-  - `intent`
-  - `resolved`
-  - `package_manifest`
-- selector keys are generic by design and may include both manifests and
-  lock/resolution files
-- the canonical manual command is
-  `devcovenant policy dependency-management refresh-all`
-- `update_lock` remains a compatibility alias for that one command
-- no language-specific manifest list is hardcoded in policy logic
-- mixed-language repositories are supported by profile overlays and config
-  metadata layers
-
-Role selector examples:
-- `intent=>requirements.in`
-- `resolved=>requirements.lock`
-- `package_manifest=>pyproject.toml`
-- `intent=>services/*/package.json`
-
-Compliance domains:
-- `repo_dependency_compliance`: repository dependency changes (tooling and
-  product dependency inputs present in the repository) must update legal
-  artifacts consistently.
-- `package_distribution_compliance`: package-level legal artifacts shipped in
-  sdists/wheels/binaries; this scope is defined by packaging contracts and is
-  not enforced by `dependency-management` alone.
-
-Boundary rule:
-- Passing `dependency-management` means repository artifacts are synchronized
-  for changed dependency inputs; it does not certify distribution-package legal
-  completeness by itself.
-- The current repository autofix also builds a deterministic direct-dependency
-  inventory under `licenses/` from declared dependency inputs plus the
-  installed distributions available to the runtime.
-
-Package-distribution contract for this repository:
-- `pyproject.toml` uses SPDX (Software Package Data Exchange)
-  `project.license` and PEP (Python Enhancement Proposal) 639
-  `project.license-files`.
-- `MANIFEST.in` includes the same license-source artifacts for sdist inputs.
-- required shipped legal artifacts are:
-  - `LICENSE`
-  - `licenses/THIRD_PARTY_LICENSES.md`
-  - `licenses/*.txt` dependency license texts
-- build-time validation is enforced by
-  `tests/devcovenant/test_install.py`.
-
-Default artifact contract:
-- `licenses/THIRD_PARTY_LICENSES.md` for the report document
-- `licenses/README.md` for generated, generic maintenance guidance
-- `licenses/` for per-dependency license texts/notices
-- no extra marker artifacts are required in `licenses/`
-
-Operational behavior:
-- when dependency manifests change, the policy requires synchronized updates to
-  both the report document and the license directory
-- policy checks stay read-only and report drift only
-- dependency-management autofix may invoke the same `refresh-all`
-  runtime action automatically when autofix is enabled
-- `devcovenant policy dependency-management refresh-all` is the explicit
-  manual mutation path when an operator wants the same repair on demand
-- lock refresh handlers are policy-owned under
-  `devcovenant/builtin/policies/dependency_management/`
-  (`dependency_lock_runtime.py`) and invoked through declared policy runtime
-  action dispatch
-- reviewed subprocess boundaries inside dependency-management are annotated for
-  Bandit so scanner output stays focused on unexpected process surfaces rather
-  than on this deliberate tokenized command path
-- autofix is scoped to configured artifacts only (`third_party_file` and
-  `licenses_dir/README.md`) and rejects out-of-repo metadata paths
-- refresh/fix rewrites the configured `## License Report` section
-  deterministically from the current dependency-change set; stale report
-  entries are pruned automatically
-- refresh/fix behavior remains idempotent when report and README already
-  match the expected deterministic content
-
-### version-sync
-`version-sync` is role-based:
-- declare role names in `target_roles`
-- map each role to one extractor in `role_extractors` (`role=>extractor`)
-- attach selectors with `target_role_files` / `target_role_globs` /
-  `target_role_dirs` (`role=>selector`)
-- optional `role_legality_schemes` mappings (`role=>scheme`) add stricter
-  ecosystem legality for selected targets without changing the repo's
-  canonical version scheme
-- all declared role targets are required; there is no optional-target mode
-- extractor set is explicit (`project_version_line`,
-  `changelog_header_version`, `manifest_project_version`)
-- docs and any opted-in legal text should use a `Project Version:` line
-  (plain or markdown header form) so version-sync can read arbitrary
-  governed version formats
-- `manifest_project_version` is format-aware and resolves version fields from
-  TOML (Tom's Obvious, Minimal Language)/JSON
-  (JavaScript Object Notation)/YAML (YAML Ain't Markup Language) manifest
-  files using the same role mapping contract
-- extracted values are parsed and compared through the active
-  `version-governance` scheme, so equivalent canonical spellings can stay in
-  sync even when raw strings differ (for example normalized package versions)
-- legality mappings are checked after repo-level extraction/parsing; for
-  example, Python profiles can keep repo equality scheme-neutral while still
-  requiring `package_manifest` targets to satisfy `pep440`
-- repositories should configure `version-governance.scheme` explicitly when
-  they enable `version-governance` or rely on `version-sync`
-- version-governance scheme adapters are internal policy modules, not a
-  separate external plugin system; repositories configure the scheme through
-  policy metadata rather than loading custom adapter entrypoints
-- `pep440` is the builtin adapter for Python packaging version rules,
-  including prereleases such as `1.2.0rc1`, beta releases such as
-  `1.2.0beta3`, and other valid PEP 440 forms
-- schemes that define canonical spellings can enforce them through
-  `canonical_versions_required`, while schemes that intentionally preserve
-  repo-chosen formatting may leave canonicalization undefined
-- `pep440_allow_prereleases`, `pep440_allow_dev_releases`, and
-  `pep440_allow_post_releases` govern which PEP 440 marker families are
-  allowed on the repo's canonical version surface
-- target-role metadata is expected to be profile-driven, with final values
-  resolved by standard metadata precedence
-  (descriptor -> active profiles -> config overlays -> config overrides)
-
-### project-governance service
-`project-governance` is the lifecycle-governance companion to the version
-stack, but it is no longer an AGENTS policy-block entry:
-- it is configured directly through the top-level
-  `project-governance:` section in `devcovenant/config.yaml`
-- it validates `stage`, `development_stance`, and `versioning_mode`
-- it accepts optional `codename` and `build_identity`
-- it stays compatible with both versioned and intentionally unversioned
-  repositories
-- versioned repos can keep `version-governance` and `version-sync` active at
-  the same time
-- unversioned repos render an explicit non-version label such as
-  `Unversioned` in managed docs and require an unreleased changelog flow such
-  as `## Unreleased`
-- extra governance headers come from managed-doc descriptor opt-in
-  (`project_governance_headers`), while AGENTS still renders its dedicated
-  project-governance section through the AGENTS-specific refresh path
-- the full field/surface contract is documented in
-  `devcovenant/docs/project_governance.md`
-
-Policy-born command contract:
-- policies may declare runtime actions and policy-born commands in their
-  descriptors
-- policy checks remain read-only
-- autofixers may invoke declared runtime actions
-- explicit manual commands may invoke those same runtime actions through the
-  namespaced `devcovenant policy <policy-id> <command>` surface
-- dependency-management is the first shipped policy using that command model
-
-Documentation route metadata:
-- `doc_routes`: list of `trigger => doc1, doc2` mappings
-- trigger supports prefix (`path/`) and glob (`**/*.py`) forms
-- route, mention, and quality violations use the policy's single `severity`
-- malformed `doc_routes` entries emit explicit configuration violations
-
-## Autofix Model
-Autofix helpers are optional.
-When present, they live under `autofix/`.
-Do not keep empty placeholder `autofix/` directories.
-
-Routing behavior:
-- use language-specific autofix helper when available
-- fall back to `autofix/global.py` otherwise
-
-Some policies intentionally ship without autofix helpers.
-
-## Custom Policy Overrides
-Custom policy with same ID fully overrides builtin policy and suppresses
-builtin autofix helpers for that ID.
-
-Override policy still participates in the same metadata resolution and
-`policy_state` activation flow.
-
-## Workflow
-Use this document when the change is about what a policy is, how it resolves
-metadata, or how policy code should be authored.
-For the exact gate sequence, use `devcovenant/docs/workflow.md`.
-
-Policy-change loop:
-1. Update descriptor text/metadata and check script together.
-2. Run `devcovenant refresh` if descriptor metadata changed.
-3. Update mirrored tests.
-4. Run the normal gate workflow from `devcovenant/docs/workflow.md`.
-
-## Testing Expectations
-Policy changes require mirrored tests under:
-- `tests/devcovenant/builtin/policies/<policy-id>/...`
-- `tests/devcovenant/custom/policies/<policy-id>/...` for custom policies
-- service-backed repo metadata such as `project-governance` belongs under
-  the matching core service test location
-  (`tests/devcovenant/core/services/...`)
-
-Tests validate current behavior only. Remove stale tests for removed behavior.
-Placeholder test stubs are not allowed; tests must encode behavioral or
-contract assertions.
+That is what keeps the policy surface readable instead of turning it into code
+that only the runtime understands.

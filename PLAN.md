@@ -272,81 +272,43 @@ a polished, externally credible, store-bought-looking product.
      loose single-version check
    - publish automation now uses a modern PyPI trust model instead of a
      long-lived secret token
-5. [not done] Rebuild The Documentation Set For Human Readability.
+5. [done] Rebuild The Documentation Set For Human Readability.
    Goal:
    - turn the documentation set into a smaller, clearer, easier-to-scan
      system where the operator path is obvious, detailed docs are fewer and
      better owned, and every major document says exactly what its title
      promises.
    Why this matters:
-   - the current docs are still one of DevCovenant's biggest product-quality
-     liabilities: they are too fragmented, too meta, too repetitive, and too
-     dense to read comfortably under real operator or maintainer pressure.
-   - the current `README.md` still behaves like a mixed handbook/reference/map
-     instead of a clean operator entrypoint, while several detailed docs bleed
-     into neighboring topics and carry contract-bookkeeping prose that weakens
-     their value as explanations.
-   - this hurts both first impressions and day-to-day usability, even when the
-     underlying technical behavior is strong.
-   Work to do:
-   - redefine the documentation architecture explicitly:
-     which docs exist, which docs are removed or merged, and which doc is the
-     single primary home for each major topic
-   - turn `README.md` and therefore packaged `devcovenant/README.md` into
-     clearly operator-first entrypoints:
-     quick orientation, quick install/integration, quick command flow, and a
-     concise outward map to deeper docs
-   - reduce the number of detailed docs where they are split too finely or
-     overlapping, and merge or retire docs whose scope is too thin to justify
-     a separate page
-   - rewrite detailed docs so their titles and contents match tightly:
-     `workflow` should be workflow, `installation` should be installation,
-     `profiles` should be profiles, and so on, without each page half-owning
-     adjacent topics
-   - remove repeated "primary home", "normative home", and similar
-     meta-documentation bookkeeping language from reader-facing prose unless it
-     is truly necessary for understanding the product contract
-   - strip out rhetorical flourishes, artistic-literary wording, and
-     documentation-system self-reference where plain technical prose would
-     explain the behavior better
-   - revise formatting conventions for readability:
-     fewer dense bullet walls, more short paragraphs, better list spacing, and
-     less reliance on full document tables of contents where a shorter document
-     would read better without one
-   - keep operator-oriented and explanatory writing together, but do it through
-     structure and clarity rather than by talking about "learning" or
-     "teaching"
-   - review and rewrite the managed template set across builtin and relevant
-     custom profile assets so `README`, `SPEC`, `PLAN`, and related
-     managed-doc assets reinforce the same documentation architecture instead
-     of pushing the docs back toward sprawl
-   - require those templates to produce detailed, genuinely useful documents
-     rather than terse one-pagers, placeholder stubs, or minimally expanded
-     shells that still need the reader to guess the intended shape
-   - align template formatting as well as topic ownership so generated docs do
-     not keep reintroducing dense bullet rhythm, poor spacing, or other
-     readability problems after refresh or upgrade
-   - use the local `copernican` repository as a comparative benchmark for
-     information architecture:
-     narrower topic ownership, clearer entrypoint-vs-reference separation, and
-     more concrete prose, while still avoiding its own weaker habits where
-     they are not worth copying
-   - document the resulting architecture plainly so future work does not drift
-     back into document sprawl
-   Done when:
-   - `README.md` is unmistakably an operator entrypoint rather than a mixed
-     handbook/reference hybrid
-   - the detailed docs are fewer, clearer, and each one has an obvious owned
-     topic that matches its title
-   - repeated topic spillover is materially reduced across the docs set
-   - the writing is concrete, explanatory, and direct rather than fluffy,
-     artistic, or repo-insiderish
-   - the formatting is noticeably easier to scan under normal working
-     conditions
-   - the managed templates and live docs reinforce the same smaller, clearer
-     documentation architecture
-   - managed document templates across profiles now generate substantial,
-     reader-useful documents instead of terse scaffolds
+   - the docs were still one of DevCovenant's biggest product-quality
+     liabilities: too fragmented, too meta, too repetitive, and too dense to
+     read comfortably under real operator or maintainer pressure.
+   Completed work:
+   - rewrote `README.md` as the operator-first entrypoint and brought
+     `devcovenant/README.md` back into the same practical operator contract
+   - rebuilt the main detailed docs around tighter owned topics with direct,
+     less rhetorical prose and more breathable structure
+   - restored a lean `contracts.md` index and a dedicated
+     `project_governance.md` contract page so the frozen contract surfaces stay
+     explicit without turning every detailed doc into a competing index
+   - retired the old `translators.md` split and folded translator ownership
+     back into `profiles.md`
+   - tightened the documentation-growth policy so docs are no longer forced to
+     carry a table of contents and a `Workflow` heading regardless of topic
+   - expanded `CONTRIBUTING.md` and the managed-doc templates so generated docs
+     start from substantial, readable content instead of terse shells
+   - rewrote the repo-profile and REST API doc assets so builtin and custom
+     templates follow the same readability and ownership rules as the live docs
+   - aligned the documentation tests with the new detailed contributing-doc
+     contract and the restored contract-index/project-governance surfaces
+   Outcome:
+   - the README surfaces now act as operator entrypoints instead of mixed
+     handbooks
+   - the detailed docs have clearer scope, less overlap, and more direct
+     wording
+   - the package docs keep the stable contract map without reverting to the old
+     sprawl
+   - the template set now reinforces the new documentation architecture instead
+     of regenerating terse or scan-hostile docs
 6. [not done] Run Final Store-Bought QA Closure.
    Goal:
    - verify that DevCovenant now feels professionally packaged, externally

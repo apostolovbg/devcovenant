@@ -792,7 +792,6 @@ user_visible_files: README.md
   devcovenant/docs/config.md
   devcovenant/docs/profiles.md
   devcovenant/docs/policies.md
-  devcovenant/docs/translators.md
   devcovenant/docs/registry.md
   devcovenant/docs/refresh.md
   devcovenant/docs/workflow.md
@@ -811,20 +810,17 @@ doc_quality_files: README.md
   devcovenant/docs/config.md
   devcovenant/docs/profiles.md
   devcovenant/docs/policies.md
-  devcovenant/docs/translators.md
   devcovenant/docs/registry.md
   devcovenant/docs/refresh.md
   devcovenant/docs/workflow.md
   devcovenant/docs/troubleshooting.md
-required_headings: Table of Contents
-  Overview
-  Workflow
-require_toc: true
+required_headings: Overview
+require_toc: false
 min_section_count: 3
 min_word_count: 120
 doc_routes: devcovenant/builtin/policies/ => devcovenant/docs/policies.md
   devcovenant/builtin/profiles/*/*.yaml => devcovenant/docs/profiles.md
-  devcovenant/*/profiles/*/*translator.py=> devcovenant/docs/translators.md
+  devcovenant/*/profiles/*/*translator.py=> devcovenant/docs/profiles.md
   devcovenant/builtin/profiles/**/config.yaml => devcovenant/docs/config.md
   devcovenant/*/profiles/*/assets/*.yaml=> devcovenant/docs/profiles.md
   devcovenant/*/profiles/*/assets/*.yml=> devcovenant/docs/profiles.md
@@ -920,9 +916,10 @@ keywords), the documentation set listed here must be updated. User-facing
 includes API surfaces, integration touchpoints, and any behavior that affects
 the user's experience or workflow. Updated docs should mention the relevant
 components by name so readers can find changes quickly. The policy also
-enforces documentation quality standards such as required headings, a table
-of contents, and minimum depth. When `doc_routes` is configured, each
-user-facing change must match at least one route and touch all mapped docs.
+enforces documentation quality standards such as clear core headings,
+minimum depth, and readable structure. When `doc_routes` is configured,
+each user-facing change must match at least one route and touch all mapped
+docs.
 
 
 ---

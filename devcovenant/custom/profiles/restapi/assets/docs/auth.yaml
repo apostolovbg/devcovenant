@@ -2,16 +2,33 @@ header_lines:
   - '# Auth Contract'
 body: |-
   ## Overview
-  Document authentication and authorization behavior for API consumers.
-  Use explicit statements for required credentials, token lifecycle, and scope
-  requirements.
+  Describe how API consumers authenticate and what authorization rules they
+  must satisfy.
+  Keep this document explicit enough that a client implementer does not need to
+  infer security behavior from endpoint examples alone.
 
-  ## Authentication
-  Describe:
-  - accepted auth schemes (for example bearer token, API key)
-  - token issuance and refresh expectations
-  - required headers and failure behavior for missing/invalid credentials
+  ## Authentication Model
+  Explain:
 
-  ## Authorization
-  Describe role/scope checks and the expected forbidden/unauthorized responses
-  for each protected endpoint group.
+  - accepted authentication schemes
+
+  - token or credential lifecycle
+
+  - required headers or parameters
+
+  - refresh and revocation rules
+
+  - what happens when credentials are missing, expired, or malformed
+
+  ## Authorization Model
+  Explain:
+
+  - roles, scopes, or capability checks
+
+  - which endpoint groups require which permissions
+
+  - the difference between unauthenticated and unauthorized failures
+
+  ## Operational Notes
+  Document any security-relevant client expectations such as session expiry,
+  clock skew tolerance, multi-factor steps, or audit-visible identifiers.

@@ -5,9 +5,10 @@ text: |
   includes API surfaces, integration touchpoints, and any behavior that affects
   the user's experience or workflow. Updated docs should mention the relevant
   components by name so readers can find changes quickly. The policy also
-  enforces documentation quality standards such as required headings, a table
-  of contents, and minimum depth. When `doc_routes` is configured, each
-  user-facing change must match at least one route and touch all mapped docs.
+  enforces documentation quality standards such as clear core headings,
+  minimum depth, and readable structure. When `doc_routes` is configured,
+  each user-facing change must match at least one route and touch all mapped
+  docs.
 metadata:
   id: documentation-growth-tracking
   severity: warning
@@ -59,10 +60,8 @@ metadata:
   user_visible_files: []
   doc_quality_files: []
   required_headings:
-    - Table of Contents
     - Overview
-    - Workflow
-  require_toc: 'true'
+  require_toc: 'false'
   min_section_count: '3'
   min_word_count: '120'
   doc_routes: []

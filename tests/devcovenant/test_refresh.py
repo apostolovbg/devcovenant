@@ -696,14 +696,16 @@ def _unit_test_refresh_renders_devcov_managed_doc_intros() -> None:
             package_readme
         )
         assert (
-            "DevCovenant is a Repository Governance Framework."
+            "DevCovenant is a repository governance framework."
             in package_readme
         )
         assert "This opening section is managed by DevCovenant." in (
             contributing
         )
+        assert "## Overview" in contributing
         assert "## Workflow" in contributing
-        assert "<!-- DEVCOV:END -->\n\n## Repository Notes" in contributing
+        assert "<!-- DEVCOV:END -->\n\n## Overview" in contributing
+        assert "## Repository Notes" in contributing
         assert "## DevCovenant Change Logging Rules" in changelog
 
 

@@ -12,8 +12,6 @@ assets:
     template: docs/profiles.md
   - path: devcovenant/docs/policies.md
     template: docs/policies.md
-  - path: devcovenant/docs/translators.md
-    template: docs/translators.md
   - path: devcovenant/docs/registry.md
     template: docs/registry.md
   - path: devcovenant/docs/refresh.md
@@ -58,7 +56,7 @@ policy_overlays:
         devcovenant/docs/profiles.md
       - >-
         devcovenant/*/profiles/*/*translator.py=>
-        devcovenant/docs/translators.md
+        devcovenant/docs/profiles.md
       - >-
         devcovenant/builtin/profiles/**/config.yaml =>
         devcovenant/docs/config.md
@@ -108,7 +106,6 @@ policy_overlays:
       - devcovenant/docs/config.md
       - devcovenant/docs/profiles.md
       - devcovenant/docs/policies.md
-      - devcovenant/docs/translators.md
       - devcovenant/docs/registry.md
       - devcovenant/docs/refresh.md
       - devcovenant/docs/workflow.md
@@ -123,7 +120,6 @@ policy_overlays:
       - devcovenant/docs/config.md
       - devcovenant/docs/profiles.md
       - devcovenant/docs/policies.md
-      - devcovenant/docs/translators.md
       - devcovenant/docs/registry.md
       - devcovenant/docs/refresh.md
       - devcovenant/docs/workflow.md

@@ -1,37 +1,34 @@
 # Refresh Behavior
 
-## Table of Contents
-- [Overview](#overview)
-- [Workflow](#workflow)
-- [Full Refresh](#full-refresh)
-- [Automatic Registry Refresh](#automatic-registry-refresh)
-- [Gitignore Regeneration](#gitignore-regeneration)
-
 ## Overview
-`devcovenant refresh` is the canonical full refresh command. It keeps
-registries, managed docs, policy blocks, and generated configs aligned with
-the active profiles and policy descriptors.
+Use this doc for the regeneration boundary.
+It should explain what refresh owns, when it runs, and how managed docs are
+preserved or replaced.
 
-## Workflow
-1. Lightweight registry refresh runs at the start of each
-   CLI (command-line interface) command.
-2. `devcovenant refresh` runs a full managed refresh.
-3. `deploy` and `upgrade` also run a full refresh as part of their workflow.
-4. Gate-driven edit workflow should still run `gate --mid` before tests.
+This page should answer a practical maintainer question: if a generated file
+changed, which input owns that change and what kind of rewrite is DevCovenant
+allowed to perform? Keep the answer concrete enough that someone can tell when
+a manual edit will survive refresh and when it will be replaced.
 
-## Full Refresh
-The full refresh command regenerates local registries, profile registry state,
-config autogen sections, the merged `.gitignore`, and generated
-`.pre-commit-config.yaml`. It also syncs managed doc blocks/headers for docs
-selected by `doc_assets`, resolving descriptors from the global asset root
-plus any active profile asset roots.
+## What This Doc Should Cover
+Explain:
 
-## Automatic Registry Refresh
-DevCovenant runs an internal lightweight registry refresh before command
-execution so metadata stays current during normal checks/tests. This is an
-implementation detail, not a separate user-facing command.
+- what refresh regenerates
 
-## Gitignore Regeneration
-`.gitignore` is rebuilt from profile fragments and merged with any
-user-provided entries. This keeps platform-specific ignores consistent
-across installs while preserving local additions.
+- when full refresh runs
+
+- managed-doc descriptors
+
+- preservation rules
+
+- seeded-doc adoption
+
+- custom managed docs from profiles
+
+- failure modes and validation
+
+## Writing Rules
+Keep the ownership questions obvious.
+Readers should leave knowing what input owns a generated output, what kind of
+mutation refresh is allowed to make, and when a full rerender is expected
+rather than surprising.

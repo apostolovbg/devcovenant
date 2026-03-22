@@ -39,14 +39,20 @@ body: |-
 
   ## Overview
   - Project summary: [describe what this project is]
+
   - Primary problem: [describe the problem or opportunity]
+
   - Current scope: [describe what is in scope right now]
+
   - Success signal: [describe what would make this clearly successful]
 
   ## Workflow
   - Keep durable product requirements here.
+
   - Keep active execution work in `PLAN.md`.
+
   - Update this spec when stable project contracts change.
+
   - Update operational docs in the same slice when runtime behavior changes.
 
   ## Project Intent
@@ -56,14 +62,18 @@ body: |-
 
   ## Goals
   - [goal 1]
+
   - [goal 2]
+
   - [goal 3]
 
   Goals should describe outcomes, not implementation tasks.
 
   ## Non-Goals
   - [non-goal 1]
+
   - [non-goal 2]
+
   - [non-goal 3]
 
   This section prevents scope drift by stating what the project is
@@ -71,7 +81,9 @@ body: |-
 
   ## Users and Actors
   - Primary user or actor: [who interacts with the system most directly]
+
   - Secondary user or actor: [who else matters]
+
   - Operational actor: [admin, operator, automation, or integration]
 
   For each actor, describe what they need from the system.
@@ -79,16 +91,22 @@ body: |-
   ## Core Workflows
   1. [workflow name]
      - Trigger: [what starts it]
+
      - Main path: [what normally happens]
+
      - Result: [what the user or system gets]
   2. [workflow name]
      - Trigger: [what starts it]
+
      - Main path: [what normally happens]
+
      - Result: [what the user or system gets]
 
   ## Functional Requirements
   - [requirement 1]
+
   - [requirement 2]
+
   - [requirement 3]
 
   Write these as durable behavioral statements.
@@ -96,31 +114,45 @@ body: |-
 
   ## Non-Functional Requirements
   - Performance: [latency, throughput, scale, or responsiveness expectations]
+
   - Reliability: [availability, recovery, or failure-handling expectations]
+
   - Security: [authentication, authorization, audit, or data-protection needs]
+
   - Maintainability: [clarity, modularity, testability, or operational needs]
+
   - Usability: [user-facing clarity and workflow expectations]
 
   ## Data and State
   - Important entities: [core records, objects, or documents]
+
   - Important state transitions: [how those entities change over time]
+
   - Persistence rules: [what must be stored, derived, or ephemeral]
+
   - Audit or history needs: [what must be traceable later]
 
   ## Interfaces and Dependencies
   - External interfaces: [API, CLI, UI, file formats, queues, webhooks]
+
   - Internal interfaces: [major module or service boundaries]
+
   - Dependencies: [systems, libraries, or services the project relies on]
+
   - Compatibility expectations: [versions, protocols, or platform constraints]
 
   ## Constraints and Assumptions
   - Constraint: [technical, legal, operational, or organizational limit]
+
   - Assumption: [what the project currently assumes to be true]
+
   - Explicit tradeoff: [what is being optimized and what is being accepted]
 
   ## Acceptance Criteria
   - [criterion 1 that would prove the spec is satisfied]
+
   - [criterion 2 that would prove the spec is satisfied]
+
   - [criterion 3 that would prove the spec is satisfied]
 
   This section should let someone decide whether the project meets the spec
@@ -128,7 +160,9 @@ body: |-
 
   ## Open Questions
   - [question 1]
+
   - [question 2]
+
   - [question 3]
 
   Keep unresolved questions here only while they are still real.

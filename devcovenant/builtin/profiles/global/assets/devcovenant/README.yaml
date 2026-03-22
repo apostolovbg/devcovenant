@@ -14,60 +14,37 @@ managed_block: |-
   evidence artifacts. `AGENTS.md` remains the canonical source for active
   repository policy text.
 body: |-
-  DevCovenant helps repositories keep policy prose and enforcement logic
-  aligned.
-
-  ## Table of Contents
-  1. [Overview](#overview)
-  2. [Project Governance](#project-governance)
-  3. [Workflow](#workflow)
-  4. [Quick Start](#quick-start)
-  5. [Commands](#commands)
-  6. [License](#license)
+  DevCovenant is a Repository Governance Framework.
+  It keeps repository workflow, policy prose, and evidence artifacts aligned.
 
   ## Overview
-  Use this README for DevCovenant runtime context in this repository.
-  Keep policy source text in `AGENTS.md`, requirements in `SPEC.md`, and
-  active execution tasks in `PLAN.md`.
-
-  ## Project Governance
-  Project-governance is the lifecycle-metadata service that feeds managed
-  doc headers, the AGENTS governance section, and tracked registry output.
-  Configure it directly in `devcovenant/config.yaml` and use
-  `devcovenant/docs/project_governance.md` for the detailed contract.
-
-  ## Workflow
-  Run the gate sequence for edits:
-  1. `python3 -m devcovenant gate --start`
-  2. Pre-test loop: `python3 -m devcovenant gate --mid`
-  3. `python3 -m devcovenant test`
-  4. `python3 -m devcovenant gate --end`
-  In `engine.tests_output_mode: normal`, test progress stays concise while
-  full child output remains available in run logs.
-  On Windows, `py -m devcovenant ...` is a common equivalent launcher form.
-  For source-checkout launches, DevCovenant keeps the repo clean by
-  suppressing later Python cache-file writes and removing the package-import
-  cache Python may emit before
-  CLI (command-line interface) startup, so `python3 -m devcovenant ...`
-  does not leave repo-local `__pycache__/` drift behind.
+  Use this README as the operator guide to the installed DevCovenant runtime in
+  this repository.
+  Keep policy source in `AGENTS.md`, durable requirements in `SPEC.md`, and
+  active execution work in `PLAN.md` when those docs are present.
 
   ## Quick Start
-  Install DevCovenant, review `devcovenant/config.yaml`, and deploy once
-  config is ready. Use `devcovenant check` for read-only policy audits and
-  gate commands for refresh/autofix workflow orchestration.
-  If managed-environment is enabled and a resolved interpreter path is not
-  executable, DevCovenant emits an explicit error and stops so the
-  environment contract can be fixed directly.
+  Explain the smallest correct command flow for using DevCovenant in this
+  repository.
+  Include `install`, config review, `deploy`, and the standard gate sequence
+  when they apply.
+
+  ## Workflow
+  Document the normal command order for repository work.
+  Keep the wording direct and operational.
 
   ## Commands
-  ```bash
-  devcovenant check
-  devcovenant gate --start
-  devcovenant gate --mid
-  devcovenant test
-  devcovenant gate --end
-  devcovenant refresh
-  ```
+  List the commands most operators actually need, such as `check`, the gate
+  commands, `test`, `refresh`, and the main lifecycle commands.
+
+  ## Configuration Checkpoints
+  Summarize the few config decisions that matter most on first review, such as
+  `developer_mode`, the active profile stack, doc assets, core invariants,
+  policy activation, and output settings.
+
+  ## Evidence Artifacts
+  Explain where run logs and related session state live and what to inspect
+  first when something fails.
 
   ## License
   Document repository licensing terms here.

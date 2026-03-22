@@ -28,22 +28,30 @@ body: |-
   - Use `PLAN.md` for active multi-slice work, not for durable product
     requirements.
   - Record durable project requirements in `SPEC.md` when your repo uses SPEC.
+
   - Record completed slice history in `CHANGELOG.md`.
+
   - Mark completed items as `[done]` and outstanding items as `[not done]`.
+
   - Prefer one roadmap that people can execute over a long wish list of vague
     intentions.
 
   ## Workflow
   - Work in dependency order unless a real blocker forces reordering.
+
   - Keep each item concrete enough that another person can continue it.
+
   - Update status in the same session when work lands.
+
   - Split very large themes into numbered items with clear closure criteria.
 
   ## Writing Direction
   - State what the work is, why it matters, what has to happen, and how you
     will know it is done.
   - Prefer plain language over slogans.
+
   - Use bullets for requirements and acceptance checks.
+
   - Treat vague work items as unfinished planning, not as good enough
     planning.
 
@@ -78,6 +86,9 @@ body: |-
 
   ## Validation Routine
   - Verify checks and tests pass.
+
   - Verify generated artifacts are synchronized after refresh.
+
   - Verify documentation and changelog were updated where behavior changed.
+
   - Verify `devcovenant check` passes after the slice closes.
