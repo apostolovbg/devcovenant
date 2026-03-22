@@ -31,13 +31,10 @@ translators:
       strategy: module_function
       entrypoint: rust_translator.py:translate
 policy_overlays:
-  dependency-license-sync:
+  dependency-management:
     dependency_role_files:
       - package_manifest=>Cargo.toml
       - resolved=>Cargo.lock
-  devflow-run-gates:
-    required_commands:
-      - cargo test
   name-clarity:
     include_suffixes:
       - .rs
@@ -93,3 +90,7 @@ policy_overlays:
     sink_macro_targets:
       - rust=>println
       - rust=>eprintln
+core_invariant_overlays:
+  devflow-run-gates:
+    required_commands:
+      - cargo test

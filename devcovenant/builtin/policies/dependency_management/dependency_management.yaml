@@ -1,0 +1,51 @@
+id: dependency-management
+text: |
+  Manage dependency-maintenance artifacts as one coherent policy surface.
+  When dependency inputs in this repository change, lockfiles and repository
+  compliance artifacts must stay synchronized together.
+  Dependency input modeling supports role-based taxonomy for mixed ecosystems:
+  `intent`, `resolved`, and `package_manifest`.
+  Role selectors are metadata-driven via
+  (`dependency_role_files`, `dependency_role_globs`,
+  `dependency_role_dirs`) using `role=>selector` tokens.
+  Dependency selectors are metadata-driven
+  (`dependency_files`, `dependency_globs`, `dependency_dirs`) and may include
+  both manifest files and lock/resolution files so mixed-language repositories
+  can define their own layout. Every dependency change must keep the
+  configured report file (`third_party_file`) and configured license directory
+  (`licenses_dir`) synchronized, including the configured `report_heading`.
+  Policy checks remain read-only. Autofixers may invoke declared policy
+  runtime actions, and explicit policy-born CLI commands may invoke those same
+  runtime actions manually. Remediation messaging may differ when autofix is
+  enabled versus disabled. Artifact refresh remains deterministic/idempotent.
+metadata:
+  id: dependency-management
+  severity: error
+  auto_fix: 'true'
+  enforcement: active
+  dependency_files: []
+  dependency_globs: []
+  dependency_dirs: []
+  dependency_roles:
+    - intent
+    - resolved
+    - package_manifest
+  dependency_role_files: []
+  dependency_role_globs: []
+  dependency_role_dirs: []
+  third_party_file: ''
+  licenses_dir: ''
+  report_heading: ''
+  selector_roles: dependency
+runtime_actions:
+  - id: refresh-all
+    description: >-
+      Refresh configured dependency lockfiles and compliance artifacts.
+    mutates_repo: true
+commands:
+  - name: refresh-all
+    help: Refresh configured dependency lockfiles and compliance artifacts.
+    runtime_action: refresh-all
+    mutates_repo: true
+    aliases:
+      - update-lock

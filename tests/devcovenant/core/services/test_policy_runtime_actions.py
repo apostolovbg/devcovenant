@@ -211,6 +211,7 @@ def _unit_test_runtime_action_dispatches_with_injected_loaders() -> None:
         checker_loader=lambda repo_root, policy_id: _FakeChecker(),
         metadata_loader=lambda repo_root, policy_id: {"alpha": 1},
         config_loader=lambda repo_root, policy_id: {"beta": 2},
+        action_validator=lambda repo_root, *, policy_id, action: None,
     )
     assert calls == [("action", "demo-action")]
     assert result["repo_root"] == str(Path("/tmp/devcovenant").resolve())
@@ -229,6 +230,7 @@ def _unit_test_run_policy_runtime_action_fails_when_policy_missing() -> None:
             action="demo-action",
             payload={},
             checker_loader=lambda repo_root, policy_id: None,
+            action_validator=lambda repo_root, *, policy_id, action: None,
         )
     except ValueError as error:
         assert "Policy script not found" in str(error)

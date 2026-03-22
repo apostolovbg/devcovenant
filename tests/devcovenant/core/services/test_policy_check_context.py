@@ -323,6 +323,8 @@ def _unit_test_build_check_context_assembles_context_with_helper_state() -> (
                 gate_status_path=Path(
                     "devcovenant/registry/runtime/gate_status.json"
                 ),
+                autofix_enabled=True,
+                autofix_requested=False,
                 is_ignored_path=lambda path: path.name == "ignored.py",
                 resolve_file_suffixes=lambda: [".py"],
                 collect_all_files=lambda suffixes: [
@@ -340,6 +342,8 @@ def _unit_test_build_check_context_assembles_context_with_helper_state() -> (
         assert context.changed_files == [repo_root / "changed.py"]
         assert context.all_files == [repo_root / "all.py"]
         assert context.change_state is expected_state
+        assert context.autofix_enabled is True
+        assert context.autofix_requested is False
 
 
 class GeneratedUnittestCases(unittest.TestCase):

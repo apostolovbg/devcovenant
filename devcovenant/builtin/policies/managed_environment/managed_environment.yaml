@@ -26,3 +26,8 @@ metadata:
   required_commands: []
   manual_commands: []
   managed_commands: []
+runtime_actions:
+  - id: resolve-stage
+    description: >-
+      Resolve the managed interpreter and bootstrap steps for one CLI stage.
+    mutates_repo: false

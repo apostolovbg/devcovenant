@@ -39,11 +39,13 @@ Practical first-review checklist:
 1. decide whether this is a normal repo using DevCovenant or a repo used to
    develop DevCovenant itself, then set `developer_mode`
 2. confirm the active profile stack in `profiles.active`
-3. confirm which policies should be on or off in `policy_state`
-4. confirm the important `engine` settings such as output mode, fail
+3. confirm `core_invariants` metadata such as required test commands and
+   gate-status paths
+4. confirm which policies should be on or off in `policy_state`
+5. confirm the important `engine` settings such as output mode, fail
    threshold, and autofix behavior
-5. confirm the managed-doc list in `doc_assets`
-6. then flip `install.config_reviewed: true`
+6. confirm the managed-doc list in `doc_assets`
+7. then flip `install.config_reviewed: true`
 
 `install.config_reviewed` is the explicit human review checkpoint.
 It is not a runtime cache or a hidden deploy flag.
@@ -53,6 +55,7 @@ The core sections are:
 - `profiles.active` for the profile list.
 - `doc_assets` for the managed-doc list, optional custom managed docs, and
   exclusion entries.
+- `core_invariants` for DevCovenant-owned runtime-invariant metadata.
 - `autogen_metadata_overrides` for profile-derived metadata overlays.
 - `user_metadata_overrides` for per-policy overrides applied last.
 - `policy_state` for authoritative policy on/off activation.
@@ -86,8 +89,11 @@ config overrides (autogen first, user last). Config overrides replace
 targeted keys rather than appending. This lets a repo adjust a policy
 without editing core files or the policy descriptor.
 For dependency and license tracking, the active profiles supply the
-`dependency-license-sync` manifest list; use config overrides when your
+`dependency-management` manifest list; use config overrides when your
 repo has custom manifest names.
+For DevCovenant-owned invariants such as gate evidence, registry integrity,
+and required runtime structure, use the first-class `core_invariants`
+section instead of `policy_state`.
 Version tracking defaults also come from profiles (for example, the
 global/default profiles set baseline role targets while custom profiles
 can override the `version_file` and add role selectors. Use config
@@ -131,10 +137,15 @@ user_metadata_overrides:
       - fixed
     skipped_globs:
       - "*_old.*"
-  dependency-license-sync:
+  dependency-management:
     dependency_role_files:
       - intent=>requirements.in
       - resolved=>requirements.lock
+core_invariants:
+  devflow-run-gates:
+    required_commands:
+      - python3 -m unittest discover -v
+      - pytest
 pre_commit:
   overrides:
     repos:

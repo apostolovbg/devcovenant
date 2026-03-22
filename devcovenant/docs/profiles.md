@@ -57,9 +57,10 @@ Builtin profiles are the only shipped profile authority in `1.0.0+`.
 Profile manifests, assets, and translators now live only under
 `devcovenant/builtin/profiles/**` plus repo-owned `devcovenant/custom/**`.
 
-Any profile category may contribute policy metadata overlays, including
-`devflow-run-gates` test command metadata
-(`required_commands`).
+Any profile category may contribute policy metadata overlays.
+Profiles may also contribute core-invariant metadata where DevCovenant
+defines that contract, including `devflow-run-gates` required test command
+metadata (`required_commands`).
 Repository profiles can also provide managed-environment metadata
 (`expected_paths`, `expected_interpreters`, `manual_commands`,
 `managed_commands`).
@@ -133,7 +134,8 @@ Guidelines:
   cleanup lists for that one key
 - reserve repo-local overlays/config for genuinely repository-specific
   exclusions
-- define runtime-specific values through `policy_overlays`
+- define policy-specific runtime values through `policy_overlays`
+- define core-invariant runtime values through `core_invariant_overlays`
 - define stack-specific cleanup targets through `clean_overlays`
 - keep value types explicit (`''`, `[]`, `{}` for empty placeholders)
 - prefer typed empties; do not use sentinel pseudo-empty tokens such as
@@ -198,7 +200,7 @@ Typical `defaults` metadata includes:
   per-repo override boilerplate.
 - test-watch root defaults
 - tests-coverage assertion-signal behavior defaults (fixture marker contract)
-- generic dependency-license-sync output defaults
+- generic dependency-management output defaults
 - documentation-growth-tracking user-facing suffix defaults (non-doc suffixes)
 - generic selector excludes for scope-style policies
   (`docstring-and-comment-coverage`, `name-clarity`, `security-scanner`,
@@ -346,6 +348,7 @@ Typical keys:
 - optional `governance_template` (global workflow template)
 - optional `governance_and_test` (workflow fragment overlay)
 - `policy_overlays`
+- optional `core_invariant_overlays`
 - optional `clean_overlays`
 - `clean_overlays` may contribute build, cache, runtime-registry, and log
   cleanup selectors while leaving tracked files protected
@@ -483,11 +486,13 @@ Governance workflow rules:
 - in the DevCovenant repository, the tracked
   `.github/workflows/governance-and-test.yml` is refresh-generated output
   derived from the global asset baseline and must stay aligned on critical CI
-  contract behavior (for example `PYTHONPYCACHEPREFIX` job env and the
-  `gate --start` -> `test` -> `gate --end` command sequence)
+  contract behavior (for example `PYTHONPYCACHEPREFIX` job env, the primary
+  `gate --start` -> `test` -> `gate --end` command sequence, the focused
+  compatibility matrix, and the assurance-scanner job)
 
 Test-command metadata rules:
-- profiles may add command chains under `devflow-run-gates` using
+- profiles may add command chains under the `devflow-run-gates`
+  core-invariant metadata using
   `required_commands`
 - resolved command list is consumed by `devcovenant test`
 - command order is preserved from resolved metadata

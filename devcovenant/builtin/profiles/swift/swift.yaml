@@ -22,15 +22,16 @@ translators:
       strategy: module_function
       entrypoint: swift_translator.py:translate
 policy_overlays:
-  dependency-license-sync:
+  dependency-management:
     dependency_role_files:
       - package_manifest=>Package.swift
-  devflow-run-gates:
-    required_commands:
-      - swift test
   documentation-growth-tracking:
     user_facing_suffixes:
       - .swift
   line-length-limit:
     include_suffixes:
       - .swift
+core_invariant_overlays:
+  devflow-run-gates:
+    required_commands:
+      - swift test

@@ -102,6 +102,28 @@ def _unit_test_run_policy_runtime_action_invokes_policy_action(
 
         metadata = {"alpha": "beta"}
 
+    def _fake_runtime_action_dispatch(
+        repo_root,
+        *,
+        policy_id,
+        action,
+        payload,
+        checker_loader,
+        metadata_loader,
+        config_loader,
+    ):
+        """Apply resolved options to a checker and run one runtime action."""
+        checker = checker_loader(repo_root, policy_id)
+        checker.set_options(
+            metadata_loader(repo_root, policy_id),
+            config_loader(repo_root, policy_id),
+        )
+        return checker.run_runtime_action(
+            action,
+            repo_root=repo_root.resolve(),
+            payload=payload,
+        )
+
     monkeypatch.setattr(
         module,
         "load_policy_check_instance",
@@ -117,13 +139,18 @@ def _unit_test_run_policy_runtime_action_invokes_policy_action(
         "_runtime_policy_config_overrides",
         lambda repo_root, policy_id: {"gamma": "delta"},
     )
+    monkeypatch.setattr(
+        module.runtime_actions,
+        "run_policy_runtime_action",
+        _fake_runtime_action_dispatch,
+    )
     result = module.run_policy_runtime_action(
         Path("/tmp/devcovenant"),
-        policy_id="dependency-license-sync",
-        action="refresh-locks-and-licenses",
+        policy_id="dependency-management",
+        action="refresh-all",
         payload={"scope": "full"},
     )
-    assert result["action"] == "refresh-locks-and-licenses"
+    assert result["action"] == "refresh-all"
     assert result["repo_root"] == str(Path("/tmp/devcovenant").resolve())
     assert result["payload"] == {"scope": "full"}
     assert result["metadata"] == {"alpha": "beta"}
@@ -135,16 +162,41 @@ def _unit_test_run_policy_runtime_action_fails_when_policy_missing(
 ) -> None:
     """Runtime action dispatcher should fail cleanly for missing policies."""
     module = importlib.import_module(MODULE)
+
+    def _fake_runtime_action_dispatch(
+        repo_root,
+        *,
+        policy_id,
+        action,
+        payload,
+        checker_loader,
+        metadata_loader,
+        config_loader,
+    ):
+        """Raise the runtime-action missing-policy error deterministically."""
+        del action, payload, metadata_loader, config_loader
+        if checker_loader(repo_root, policy_id) is None:
+            raise ValueError(
+                "Policy script not found for runtime action: "
+                f"`{policy_id}`."
+            )
+        return None
+
     monkeypatch.setattr(
         module,
         "load_policy_check_instance",
         lambda repo_root, policy_id: None,
     )
+    monkeypatch.setattr(
+        module.runtime_actions,
+        "run_policy_runtime_action",
+        _fake_runtime_action_dispatch,
+    )
     try:
         module.run_policy_runtime_action(
             Path("/tmp/devcovenant"),
             policy_id="missing-policy",
-            action="refresh-locks-and-licenses",
+            action="refresh-all",
             payload={},
         )
     except ValueError as error:
@@ -243,6 +295,8 @@ def _unit_test_engine_context_wrappers_delegate_to_helper(
         *,
         config,
         translator_runtime,
+        autofix_enabled,
+        autofix_requested,
         gate_status_path,
         is_ignored_path,
         resolve_file_suffixes,
@@ -252,6 +306,8 @@ def _unit_test_engine_context_wrappers_delegate_to_helper(
         calls["context_repo_root"] = repo_root
         calls["context_config"] = config
         calls["context_translator_runtime"] = translator_runtime
+        calls["context_autofix_enabled"] = autofix_enabled
+        calls["context_autofix_requested"] = autofix_requested
         calls["context_gate_status_path"] = gate_status_path
         calls["context_ignore_fn"] = is_ignored_path
         calls["context_resolve_fn"] = resolve_file_suffixes
@@ -279,6 +335,8 @@ def _unit_test_engine_context_wrappers_delegate_to_helper(
     assert calls["context_repo_root"] == engine.repo_root
     assert calls["context_config"] is engine.config
     assert calls["context_translator_runtime"] is engine.translator_runtime
+    assert calls["context_autofix_enabled"] is False
+    assert calls["context_autofix_requested"] is False
     assert (
         calls["context_gate_status_path"] == engine._DEFAULT_GATE_STATUS_PATH
     )

@@ -30,6 +30,7 @@ _COMMAND_MODULES = {
     "refresh": "devcovenant.refresh",
     "uninstall": "devcovenant.uninstall",
     "undeploy": "devcovenant.undeploy",
+    "policy": "devcovenant.policy",
     "update_lock": "devcovenant.update_lock",
 }
 
@@ -329,7 +330,8 @@ def _maybe_reexec_managed_environment(
                 *command_args,
             ]
             try:
-                os.execve(managed_python, argv, env)
+                # Re-exec uses explicit argv/env in the managed interpreter.
+                os.execve(managed_python, argv, env)  # nosec B606
             except OSError as exc:
                 managed_resolution_error = (
                     "Managed-environment interpreter exec failed: "

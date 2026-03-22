@@ -21,7 +21,7 @@ assets:
   - path: modules.txt
     template: modules.txt
 policy_overlays:
-  dependency-license-sync:
+  dependency-management:
     dependency_role_files:
       - intent=>requirements.in
       - resolved=>requirements.lock
@@ -30,11 +30,6 @@ policy_overlays:
       - resolved=>package-lock.json
       - resolved=>yarn.lock
       - resolved=>pnpm-lock.yaml
-  devflow-run-gates:
-    required_commands:
-      - python3 -m unittest discover -v
-      - pytest
-      - npm test
   documentation-growth-tracking:
     user_facing_suffixes:
       - .py
@@ -66,3 +61,9 @@ policy_overlays:
     include_suffixes:
       - .py
       - .js
+core_invariant_overlays:
+  devflow-run-gates:
+    required_commands:
+      - python3 -m unittest discover -v
+      - pytest
+      - npm test

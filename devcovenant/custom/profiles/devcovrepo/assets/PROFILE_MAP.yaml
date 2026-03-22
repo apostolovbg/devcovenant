@@ -103,8 +103,9 @@ body: |-
   - For dependency licensing metadata: `defaults` provides generic output
     targets; language/framework profiles provide dependency selectors when
     active; `devcovrepo` adds this repository's selectors only.
-  - Any active profile category may contribute `devflow-run-gates` test-command
-    overlays; resolved command order is preserved at runtime.
+  - Any active profile category may contribute `devflow-run-gates`
+    core-invariant test-command overlays; resolved command order is preserved
+    at runtime.
   - Language profiles may declare `test_events` adapter metadata for
     `devcovenant/core/services/event.py`; that contract is separate from
     translator declarations.

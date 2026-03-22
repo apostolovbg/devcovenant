@@ -95,6 +95,7 @@ profiles:
       - devcovenant/check.py
       - devcovenant/clean.py
       - devcovenant/gate.py
+      - devcovenant/policy.py
       - devcovenant/test.py
       - devcovenant/install.py
       - devcovenant/deploy.py
@@ -313,6 +314,32 @@ policy_state:
   version-sync: false
 
 # ---------------------------------------------------------------------------
+# Core invariants (DevCovenant-owned runtime contracts)
+# ---------------------------------------------------------------------------
+# These are not ordinary policies and should not be toggled through
+# `policy_state`.
+# Use this section only when you need to adjust metadata for one of
+# DevCovenant's own non-optional runtime invariants.
+# Keep edits deliberate: these values shape gate evidence, registry
+# validation, and DevCovenant runtime structure checks.
+core_invariants:
+  devcov-integrity-guard:
+    gate_status_file: devcovenant/registry/runtime/gate_status.json
+    policy_definitions:
+      - AGENTS.md
+    registry_file: devcovenant/registry/registry.yaml
+  devcov-structure-guard: {}
+  devflow-run-gates:
+    gate_status_file: devcovenant/registry/runtime/gate_status.json
+    pre_commit_command:
+      - python3 -m pre_commit run --all-files
+    required_commands:
+      - python3 -m unittest discover -v
+      - pytest
+    skipped_globs:
+      - devcovenant/registry/runtime/**
+
+# ---------------------------------------------------------------------------
 # Project governance (repo lifecycle metadata)
 # ---------------------------------------------------------------------------
 # Source of truth for repo stage / stance / versioning mode / codename /
@@ -426,7 +453,7 @@ autogen_metadata_overrides: {}
 # Use when you need full control of a specific metadata key.
 #
 # Mixed-repo examples (kept here for discoverability):
-# - dependency-license-sync selectors are role-based with
+# - dependency-management selectors are role-based with
 #   `role=>selector` entries under
 #   `dependency_role_files`, `dependency_role_globs`,
 #   `dependency_role_dirs`.

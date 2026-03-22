@@ -62,6 +62,7 @@ profiles:
     - devcovenant/check.py
     - devcovenant/clean.py
     - devcovenant/gate.py
+    - devcovenant/policy.py
     - devcovenant/test.py
     - devcovenant/install.py
     - devcovenant/deploy.py
@@ -267,11 +268,8 @@ project-governance:
 
 policy_state:
   changelog-coverage: true
-  dependency-license-sync: true
-  devcov-integrity-guard: true
+  dependency-management: true
   devcov-raw-string-escapes: true
-  devcov-structure-guard: true
-  devflow-run-gates: true
   docstring-and-comment-coverage: true
   documentation-growth-tracking: true
   last-updated: true
@@ -604,7 +602,7 @@ autogen_metadata_overlays:
     - suppressed
     - test
     - tested
-  dependency-license-sync:
+  dependency-management:
     dependency_dirs: []
     dependency_files: []
     dependency_globs: []
@@ -648,6 +646,9 @@ autogen_metadata_overlays:
     - AGENTS.md
     - SPEC.md
     - PLAN.md
+    - SECURITY.md
+    - PRIVACY.md
+    - SUPPORT.md
     - devcovenant/README.md
     - devcovenant/docs/architecture.md
     - devcovenant/docs/installation.md
@@ -672,6 +673,8 @@ autogen_metadata_overlays:
     - devcovenant/custom/profiles/*.py => devcovenant/docs/profiles.md
     - devcovenant/custom/profiles/**/*.py => devcovenant/docs/profiles.md
     - devcovenant/custom/profiles/**/*.yaml => devcovenant/docs/profiles.md
+    - .github/dependabot.yml => devcovenant/docs/workflow.md
+    - bandit.yaml => SECURITY.md
     - devcovenant/custom/policies/**/*.yaml => devcovenant/docs/policies.md
     - devcovenant/custom/policies/**/*.py => devcovenant/docs/policies.md
     - devcovenant/core/flow/*.py => devcovenant/docs/workflow.md
@@ -679,6 +682,7 @@ autogen_metadata_overlays:
     - devcovenant/core/services/*.py => devcovenant/docs/architecture.md
     - devcovenant/core/lib/*.py => devcovenant/docs/architecture.md
     - devcovenant/core/contracts/*.py => devcovenant/docs/architecture.md
+    - devcovenant/core/contracts/**/*.yaml => devcovenant/docs/architecture.md
     - devcovenant/*.py => devcovenant/docs/installation.md
     - pyproject.toml => devcovenant/docs/installation.md
     - MANIFEST.in => devcovenant/docs/installation.md
@@ -728,6 +732,9 @@ autogen_metadata_overlays:
     - AGENTS.md
     - SPEC.md
     - PLAN.md
+    - SECURITY.md
+    - PRIVACY.md
+    - SUPPORT.md
     - devcovenant/README.md
     - devcovenant/docs/architecture.md
     - devcovenant/docs/installation.md
@@ -1055,3 +1062,26 @@ user_metadata_overrides:
     - devcovenant=>tests/devcovenant
   tests-coverage:
     severity: warning
+
+# -------------------------------------------------------------------
+
+# Extra user-defined keys (preserved)
+
+# -------------------------------------------------------------------
+
+core_invariants:
+  devcov-integrity-guard:
+    gate_status_file: devcovenant/registry/runtime/gate_status.json
+    policy_definitions:
+    - AGENTS.md
+    registry_file: devcovenant/registry/registry.yaml
+  devcov-structure-guard: {}
+  devflow-run-gates:
+    gate_status_file: devcovenant/registry/runtime/gate_status.json
+    pre_commit_command:
+    - python3 -m pre_commit run --all-files
+    required_commands:
+    - python3 -m unittest discover -v
+    - pytest
+    skipped_globs:
+    - devcovenant/registry/runtime/**

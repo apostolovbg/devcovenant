@@ -66,15 +66,11 @@ translators:
       strategy: module_function
       entrypoint: python_translator.py:translate
 policy_overlays:
-  dependency-license-sync:
+  dependency-management:
     dependency_role_files:
       - intent=>requirements.in
       - resolved=>requirements.lock
       - package_manifest=>pyproject.toml
-  devflow-run-gates:
-    required_commands:
-      - python3 -m unittest discover -v
-      - pytest
   documentation-growth-tracking:
     user_facing_suffixes:
       - .py
@@ -134,6 +130,11 @@ policy_overlays:
       - python=>print
       - python=>builtins.print
 
+core_invariant_overlays:
+  devflow-run-gates:
+    required_commands:
+      - python3 -m unittest discover -v
+      - pytest
 test_events:
   - id: python
     entrypoint: "devcovenant.core.services.event:\

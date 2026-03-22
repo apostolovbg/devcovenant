@@ -11,6 +11,9 @@ import semver
 import yaml
 
 from devcovenant.core.services import (
+    core_invariants as core_invariants_service,
+)
+from devcovenant.core.services import (
     profile_registry as profile_registry_service,
 )
 from devcovenant.core.services import (
@@ -24,6 +27,8 @@ BLOCK_BEGIN = "<!-- DEVCOV:BEGIN -->"
 BLOCK_END = "<!-- DEVCOV:END -->"
 WORKFLOW_BEGIN = "<!-- DEVCOV-WORKFLOW:BEGIN -->"
 WORKFLOW_END = "<!-- DEVCOV-WORKFLOW:END -->"
+CORE_INVARIANTS_BEGIN = core_invariants_service.CORE_INVARIANTS_BEGIN
+CORE_INVARIANTS_END = core_invariants_service.CORE_INVARIANTS_END
 POLICIES_BEGIN = "<!-- DEVCOV-POLICIES:BEGIN -->"
 POLICIES_END = "<!-- DEVCOV-POLICIES:END -->"
 USER_PRESERVE_BEGIN = "<!-- DEVCOV-USER-PRESERVE:BEGIN -->"
@@ -1067,6 +1072,7 @@ def render_doc_from_descriptor(
     if project_governance_section:
         parts.append(project_governance_section)
     if doc_name == "AGENTS.md":
+        parts.append(f"{CORE_INVARIANTS_BEGIN}\n{CORE_INVARIANTS_END}")
         parts.append(f"{POLICIES_BEGIN}\n{POLICIES_END}")
     if not parts:
         raise ValueError(
@@ -1496,6 +1502,14 @@ def next_control_block_start(text: str, search_start: int) -> int:
     if workflow_spans:
         starts.append(workflow_spans[0][0])
 
+    core_invariant_start = first_marker_start(
+        text,
+        CORE_INVARIANTS_BEGIN,
+        search_start,
+    )
+    if core_invariant_start >= 0:
+        starts.append(core_invariant_start)
+
     policy_start = first_marker_start(text, POLICIES_BEGIN, search_start)
     if policy_start >= 0:
         starts.append(policy_start)
@@ -1572,6 +1586,23 @@ def sync_agents_content(
         begin_marker=WORKFLOW_BEGIN,
         end_marker=WORKFLOW_END,
     )
+
+    current_core_invariant_block = first_block_text(
+        current,
+        CORE_INVARIANTS_BEGIN,
+        CORE_INVARIANTS_END,
+    )
+    template_core_invariant_block = first_block_text(
+        updated,
+        CORE_INVARIANTS_BEGIN,
+        CORE_INVARIANTS_END,
+    )
+    if current_core_invariant_block and template_core_invariant_block:
+        updated = updated.replace(
+            template_core_invariant_block,
+            current_core_invariant_block,
+            1,
+        )
 
     current_policy_block = first_block_text(
         current,

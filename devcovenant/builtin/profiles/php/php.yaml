@@ -26,13 +26,10 @@ translators:
       strategy: module_function
       entrypoint: php_translator.py:translate
 policy_overlays:
-  dependency-license-sync:
+  dependency-management:
     dependency_role_files:
       - intent=>composer.json
       - resolved=>composer.lock
-  devflow-run-gates:
-    required_commands:
-      - phpunit
   documentation-growth-tracking:
     user_facing_suffixes:
       - .php
@@ -48,3 +45,7 @@ policy_overlays:
   line-length-limit:
     include_suffixes:
       - .php
+core_invariant_overlays:
+  devflow-run-gates:
+    required_commands:
+      - phpunit

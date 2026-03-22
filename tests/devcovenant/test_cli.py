@@ -30,6 +30,7 @@ ROOT_COMMAND_MODULES = (
     "refresh",
     "uninstall",
     "undeploy",
+    "policy",
     "update_lock",
 )
 ASSET_SCRIPT_ROOT = (

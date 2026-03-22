@@ -1,0 +1,7 @@
+# Keep Bandit focused on meaningful runtime-hardening findings.
+#
+# B105 is intentionally skipped because DevCovenant contains many ordinary
+# control tokens such as "start", "critical", "stdout", and "false" that the
+# heuristic misclassifies as secret material.
+skips:
+  - B105

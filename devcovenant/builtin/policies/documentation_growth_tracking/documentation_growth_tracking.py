@@ -381,6 +381,16 @@ class DocumentationGrowthTrackingCheck(PolicyCheck):
                 "`user_facing_suffixes`, `user_facing_keywords`, or "
                 "`user_facing_files`."
             )
+        if require_toc is None:
+            config_errors.append("`require_toc` must be a boolean.")
+        if min_sections is None:
+            config_errors.append("`min_section_count` must be an integer.")
+        if min_words is None:
+            config_errors.append("`min_word_count` must be an integer.")
+        if mention_required is None:
+            config_errors.append("`require_mentions` must be a boolean.")
+        if mention_min_length is None:
+            config_errors.append("`mention_min_length` must be an integer.")
         if min_sections is not None and min_sections < 0:
             config_errors.append("`min_section_count` must be >= 0.")
         if min_words is not None and min_words < 0:
@@ -393,13 +403,6 @@ class DocumentationGrowthTrackingCheck(PolicyCheck):
                 _config_violation(self.policy_id, message)
                 for message in dict.fromkeys(config_errors)
             ]
-
-        # Required metadata has been validated above.
-        assert require_toc is not None
-        assert min_sections is not None
-        assert min_words is not None
-        assert mention_required is not None
-        assert mention_min_length is not None
 
         doc_touched: List[PurePosixPath] = []
         user_facing_touched: List[PurePosixPath] = []

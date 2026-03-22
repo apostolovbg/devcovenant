@@ -88,6 +88,8 @@ class PolicyDescriptor:
     policy_id: str
     text: str
     metadata: Dict[str, object]
+    runtime_actions: List[object] | None = None
+    commands: List[object] | None = None
 
 
 def parse_metadata_block(
@@ -186,8 +188,18 @@ def load_policy_descriptor(
         metadata = contents.get("metadata", {})
         if not isinstance(metadata, dict):
             metadata = {}
+        runtime_actions = contents.get("runtime_actions", [])
+        if not isinstance(runtime_actions, list):
+            runtime_actions = []
+        commands = contents.get("commands", [])
+        if not isinstance(commands, list):
+            commands = []
         return PolicyDescriptor(
-            policy_id=descriptor_id, text=text, metadata=metadata
+            policy_id=descriptor_id,
+            text=text,
+            metadata=metadata,
+            runtime_actions=runtime_actions,
+            commands=commands,
         )
     return None
 
@@ -200,6 +212,7 @@ DEFAULT_CORE_DIRS = [
     "devcovenant/builtin/profiles/global",
     "devcovenant/builtin/profiles/global/assets",
     "devcovenant/core",
+    "devcovenant/core/contracts/invariants",
     "devcovenant/logs",
     REGISTRY_DIR,
 ]
@@ -209,6 +222,7 @@ DEFAULT_CORE_FILES = [
     "devcovenant/cli.py",
     "devcovenant/check.py",
     "devcovenant/gate.py",
+    "devcovenant/policy.py",
     "devcovenant/test.py",
     "devcovenant/install.py",
     "devcovenant/deploy.py",
@@ -227,6 +241,16 @@ DEFAULT_CORE_FILES = [
     "devcovenant/builtin/profiles/global/assets/gitignore.yaml",
     "devcovenant/builtin/profiles/README.md",
     "devcovenant/builtin/policies/README.md",
+    "devcovenant/core/contracts/invariant.py",
+    "devcovenant/core/contracts/invariants/devcov_integrity_guard.yaml",
+    "devcovenant/core/contracts/invariants/devcov_structure_guard.yaml",
+    "devcovenant/core/contracts/invariants/devflow_run_gates.yaml",
+    "devcovenant/core/services/core_invariant_block_refresh.py",
+    "devcovenant/core/services/core_invariants.py",
+    "devcovenant/core/services/devcov_integrity_guard.py",
+    "devcovenant/core/services/devcov_structure_guard.py",
+    "devcovenant/core/services/devflow_run_gates.py",
+    "devcovenant/core/services/policy_commands.py",
 ]
 DEFAULT_DOCS_CORE = [
     "AGENTS.md",
@@ -269,6 +293,7 @@ def _base_registry_document() -> Dict[str, Any]:
         },
         "project-governance": {},
         "managed-docs": {},
+        "core-invariants": {},
         "policies": {},
         "profiles": {},
         "inventory": {},
@@ -298,6 +323,7 @@ def _load_registry_document(path: Path) -> Dict[str, Any]:
         "metadata",
         "project-governance",
         "managed-docs",
+        "core-invariants",
         "policies",
         "profiles",
         "inventory",
@@ -525,6 +551,14 @@ class PolicyRegistry:
         self._data["managed-docs"] = dict(payload)
         self.save()
 
+    def update_core_invariants(
+        self,
+        payload: Dict[str, Any],
+    ) -> None:
+        """Update the tracked core-invariants registry section."""
+        self._data["core-invariants"] = dict(payload)
+        self.save()
+
     def policy_ids(self) -> set[str]:
         """Return policy IDs currently stored in the registry."""
         policies = self._data.get("policies", {})
@@ -726,6 +760,10 @@ class PolicyRegistry:
         entry["metadata"] = dict(metadata_map)
         entry["metadata_resolution"] = dict(metadata_resolution or {})
         entry["metadata_warnings"] = list(metadata_warnings or [])
+        entry["runtime_actions"] = list(
+            getattr(descriptor, "runtime_actions", None) or []
+        )
+        entry["commands"] = list(getattr(descriptor, "commands", None) or [])
         views = dict(runtime_option_views or {})
         entry["runtime_metadata_options"] = dict(
             views.get("runtime_metadata_options", {})

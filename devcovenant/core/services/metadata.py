@@ -245,35 +245,38 @@ def _merge_values(existing: List[str], incoming: List[str]) -> List[str]:
 def _collect_profile_overlays(
     repo_root: Path, active_profiles: List[str]
 ) -> Dict[str, Dict[str, Tuple[List[str], bool]]]:
-    """Collect policy overlays from the profile registry."""
+    """Collect policy and core-invariant overlays from the profile registry."""
     registry = profile_runtime.load_profile_registry(repo_root)
     overlays: Dict[str, Dict[str, Tuple[List[str], bool]]] = {}
     for profile in active_profiles:
         meta = registry.get(profile)
         if not isinstance(meta, dict):
             continue
-        raw_overlays = meta.get("policy_overlays") or {}
-        if not isinstance(raw_overlays, dict):
-            continue
-        for policy_id, overlay in raw_overlays.items():
-            if not isinstance(overlay, dict):
+        for section_name in ("policy_overlays", "core_invariant_overlays"):
+            raw_overlays = meta.get(section_name) or {}
+            if not isinstance(raw_overlays, dict):
                 continue
-            policy_key = str(policy_id).strip()
-            if not policy_key:
-                continue
-            policy_map = overlays.setdefault(policy_key, {})
-            for key, raw_value in overlay.items():
-                key_name = str(key).strip()
-                if not key_name:
+            for policy_id, overlay in raw_overlays.items():
+                if not isinstance(overlay, dict):
                     continue
-                merge_values = isinstance(raw_value, list)
-                values = _normalize_metadata_values(raw_value)
-                if merge_values:
-                    current_values = policy_map.get(key_name, ([], True))[0]
-                    merged = _merge_values(current_values, values)
-                    policy_map[key_name] = (merged, True)
+                policy_key = str(policy_id).strip()
+                if not policy_key:
                     continue
-                policy_map[key_name] = (list(values), False)
+                policy_map = overlays.setdefault(policy_key, {})
+                for key, raw_value in overlay.items():
+                    key_name = str(key).strip()
+                    if not key_name:
+                        continue
+                    merge_values = isinstance(raw_value, list)
+                    values = _normalize_metadata_values(raw_value)
+                    if merge_values:
+                        current_values = policy_map.get(key_name, ([], True))[
+                            0
+                        ]
+                        merged = _merge_values(current_values, values)
+                        policy_map[key_name] = (merged, True)
+                        continue
+                    policy_map[key_name] = (list(values), False)
     return overlays
 
 

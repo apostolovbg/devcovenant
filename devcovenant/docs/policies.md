@@ -26,6 +26,9 @@ enable/disable toggles.
 `severity: critical` policies remain enforced even when a config toggle
 attempts to disable them, and runtime emits an explicit diagnostic.
 Profiles and metadata layers influence behavior, not on/off activation.
+DevCovenant core invariants are a separate contract surface. They are not
+activated through `policy_state`, and they surface through
+`config.core_invariants` plus the dedicated AGENTS core-invariant block.
 
 How most users interact with policies:
 - read policy output to understand what DevCovenant is complaining about
@@ -40,13 +43,8 @@ It is also the normative home for the policy descriptor contract and the
 version-governance adapter contract. Use `devcovenant/docs/contracts.md` for
 the contract index.
 
-Initial critical policy set in this repository (conservative rollout):
-- `devflow-run-gates` (gate/test/gate evidence workflow integrity)
-- `devcov-integrity-guard` (policy/registry/prose integrity)
-- `devcov-structure-guard` (required repo/core/tooling structure safety)
-These policies require tracked metadata changes (or builtin-to-custom
-replacement) for intentional behavior divergence; `policy_state` toggles do
-not disable them.
+DevCovenant core invariants are documented in `architecture.md` and surfaced
+at runtime in AGENTS and the tracked registry under `core-invariants`.
 
 ## Program Vocabulary
 - `output boundary`:
@@ -95,9 +93,9 @@ stability.
 Runtime policy option loading (including runtime-action metadata reads) uses
 the shared decoder so bool/list/number parsing stays consistent across code
 paths.
-Session-aware policies such as `changelog-coverage` and `devflow-run-gates`
-read live workflow state from `devcovenant/registry/runtime/gate_status.json`,
-while deterministic policy/profile metadata is audited through the tracked
+Session-aware policies such as `changelog-coverage` read live workflow state
+from `devcovenant/registry/runtime/gate_status.json`, while deterministic
+policy/profile metadata is audited through the tracked
 `devcovenant/registry/registry.yaml` document.
 
 Shared metadata families include:
@@ -197,7 +195,8 @@ High-impact runtime contracts:
   Managed-environment runtime now uses the same tracked-registry cache path
   as the rest of the runtime so repeated stage resolution does not keep
   reparsing the registry in one command run.
-- `devflow-run-gates` enforces the start -> test -> end sequence and validates
+- the `devflow-run-gates` core invariant enforces the start -> test -> end
+  sequence and validates
   the latest `test` evidence against resolved required command metadata
   (`required_commands`). Gate status stores the tests mode and selected
   command key for deterministic end-gate validation.
@@ -208,7 +207,8 @@ High-impact runtime contracts:
   violation; edit-session and unsessioned-edit enforcement remains strict.
   Missing gate status also stays non-blocking only for top-level read-only
   `check` bootstrap (`missing_gate_status` with empty phase).
-- `devcov-structure-guard` enforces repo-local bytecode hygiene when
+- the `devcov-structure-guard` core invariant enforces repo-local bytecode
+  hygiene when
   enabled by profile/config metadata, flagging `__pycache__/` and `*.py[cod]`
   artifacts under `devcovenant/`, and it validates the tracked
   `devcovenant/logs` skeleton via the core manifest without requiring any
@@ -296,12 +296,13 @@ Relevant enforcement surfaces:
 - `devcovenant/builtin/policies/version_governance/custom_adapter.py`
 - `tests/devcovenant/builtin/policies/version_governance/*.py`
 - `tests/devcovenant/builtin/policies/version_sync/test_version_sync.py`
-- `dependency-license-sync` and `update_lock` operate from resolved metadata
+- `dependency-management` operates from resolved metadata
   (descriptor + profiles + config layers), with role selectors as the
   primary contract (`dependency_role_*` via `role=>selector`) and no
   hardcoded manifest lists.
-  Command runtime dispatch uses policy contract actions through
-  `PolicyCheck.run_runtime_action(...)`.
+  Manual mutation now uses the policy-born command surface
+  `devcovenant policy dependency-management refresh-all`, while
+  `update_lock` remains a compatibility alias.
 - `documentation-growth-tracking` can enforce hard doc-route mappings so
   user-facing code changes must touch specific documentation targets.
   By default, documentation-only suffixes are not treated as user-facing;
@@ -360,6 +361,10 @@ Relevant enforcement surfaces:
 - bundled session checks share centralized snapshot helpers from
   `devcovenant/core/runtime/session_snapshot.py`, with runtime consumers
   treating that module as the canonical snapshot-helper home.
+- bundled policy configuration validation must raise explicit configuration
+  violations instead of relying on runtime `assert` statements, so optimized
+  Python execution and static-analysis tools see the same enforcement
+  behavior.
 - `last-updated` scopes stale-date checks to session-changed files
   from runtime context only (no git recovery scanning).
 - `last-updated` ships builtin package-doc allowlists for installed
@@ -427,8 +432,9 @@ Relevant enforcement surfaces:
   operational defaults for `changelog-coverage`, `last-updated`,
   `version-governance`, `version-sync`, `modules-need-tests`,
   and `tests-coverage`.
-- `devcov-integrity-guard` keeps its path keys declared in the descriptor,
-  while `global` profile overlays provide default values for
+- the `devcov-integrity-guard` core invariant keeps its path keys declared in
+  the descriptor, while `global` profile overlays and
+  `config.core_invariants` provide runtime values for
   `policy_definitions`, `registry_file`, and `gate_status_file`.
 
 ## Output Governance Policy
@@ -448,8 +454,6 @@ The policy script stays generic while profiles own operational values.
 - activation:
   remains `config.yaml -> policy_state` for standard toggles; critical
   severity enforcement immunity still applies.
-  The current initial critical set is `devflow-run-gates`,
-  `devcov-integrity-guard`, and `devcov-structure-guard`.
 
 ### Enforcement Model
 1. Build scope from resolved selector metadata.
@@ -474,8 +478,14 @@ The policy does not hardcode language sink lists or repository paths.
 It enforces only what resolved metadata declares for the active profile stack.
 
 ## Core Policy Deep Dives
-### dependency-license-sync
-`dependency-license-sync` is metadata-driven and profile-driven:
+Policies are the customizable governance surface.
+DevCovenant-owned invariants such as `devflow-run-gates`,
+`devcov-integrity-guard`, and `devcov-structure-guard` are no longer part of
+the policy inventory even though they still surface metadata and runtime
+evidence in AGENTS and the registry.
+
+### dependency-management
+`dependency-management` is metadata-driven and profile-driven:
 - dependency inputs are resolved primarily from role-based selectors:
   `dependency_role_files`/`dependency_role_globs`/`dependency_role_dirs`
   with `role=>selector` tokens
@@ -487,8 +497,9 @@ It enforces only what resolved metadata declares for the active profile stack.
   - `package_manifest`
 - selector keys are generic by design and may include both manifests and
   lock/resolution files
-- `update_lock` resolves lock refresh targets from `resolved` role file
-  selectors
+- the canonical manual command is
+  `devcovenant policy dependency-management refresh-all`
+- `update_lock` remains a compatibility alias for that one command
 - no language-specific manifest list is hardcoded in policy logic
 - mixed-language repositories are supported by profile overlays and config
   metadata layers
@@ -505,10 +516,10 @@ Compliance domains:
   artifacts consistently.
 - `package_distribution_compliance`: package-level legal artifacts shipped in
   sdists/wheels/binaries; this scope is defined by packaging contracts and is
-  not enforced by `dependency-license-sync` alone.
+  not enforced by `dependency-management` alone.
 
 Boundary rule:
-- Passing `dependency-license-sync` means repository artifacts are synchronized
+- Passing `dependency-management` means repository artifacts are synchronized
   for changed dependency inputs; it does not certify distribution-package legal
   completeness by itself.
 - The current repository autofix also builds a deterministic direct-dependency
@@ -536,12 +547,18 @@ Default artifact contract:
 Operational behavior:
 - when dependency manifests change, the policy requires synchronized updates to
   both the report document and the license directory
-- `devcovenant update_lock` delegates lock refresh/runtime orchestration while
-  this policy enforces the license artifact contract
+- policy checks stay read-only and report drift only
+- dependency-management autofix may invoke the same `refresh-all`
+  runtime action automatically when autofix is enabled
+- `devcovenant policy dependency-management refresh-all` is the explicit
+  manual mutation path when an operator wants the same repair on demand
 - lock refresh handlers are policy-owned under
-  `devcovenant/builtin/policies/dependency_license_sync/`
-  (`dependency_lock_runtime.py`) and invoked through policy runtime action
-  dispatch
+  `devcovenant/builtin/policies/dependency_management/`
+  (`dependency_lock_runtime.py`) and invoked through declared policy runtime
+  action dispatch
+- reviewed subprocess boundaries inside dependency-management are annotated for
+  Bandit so scanner output stays focused on unexpected process surfaces rather
+  than on this deliberate tokenized command path
 - autofix is scoped to configured artifacts only (`third_party_file` and
   `licenses_dir/README.md`) and rejects out-of-repo metadata paths
 - refresh/fix rewrites the configured `## License Report` section
@@ -613,11 +630,14 @@ stack, but it is no longer an AGENTS policy-block entry:
 - the full field/surface contract is documented in
   `devcovenant/docs/project_governance.md`
 
-`devflow-run-gates` required command metadata is canonical:
-- descriptor default may be empty
-- active profiles may contribute commands through `required_commands`
-- config overlay/override layers can append or replace
-- runtime executes exactly what resolves, in declared order
+Policy-born command contract:
+- policies may declare runtime actions and policy-born commands in their
+  descriptors
+- policy checks remain read-only
+- autofixers may invoke declared runtime actions
+- explicit manual commands may invoke those same runtime actions through the
+  namespaced `devcovenant policy <policy-id> <command>` surface
+- dependency-management is the first shipped policy using that command model
 
 Documentation route metadata:
 - `doc_routes`: list of `trigger => doc1, doc2` mappings

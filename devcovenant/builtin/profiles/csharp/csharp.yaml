@@ -34,13 +34,10 @@ translators:
       strategy: module_function
       entrypoint: csharp_translator.py:translate
 policy_overlays:
-  dependency-license-sync:
+  dependency-management:
     dependency_role_files:
       - package_manifest=>Project.csproj
       - resolved=>packages.lock.json
-  devflow-run-gates:
-    required_commands:
-      - dotnet test
   name-clarity:
     include_suffixes:
       - .cs
@@ -68,3 +65,7 @@ policy_overlays:
   line-length-limit:
     include_suffixes:
       - .cs
+core_invariant_overlays:
+  devflow-run-gates:
+    required_commands:
+      - dotnet test

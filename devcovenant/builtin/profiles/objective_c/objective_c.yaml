@@ -27,9 +27,6 @@ translators:
       strategy: module_function
       entrypoint: objective_c_translator.py:translate
 policy_overlays:
-  devflow-run-gates:
-    required_commands:
-      - xcodebuild test
   documentation-growth-tracking:
     user_facing_suffixes:
       - .m
@@ -40,7 +37,11 @@ policy_overlays:
       - .m
       - .mm
       - .h
-  dependency-license-sync:
+  dependency-management:
     dependency_role_files:
       - intent=>Podfile
       - resolved=>Podfile.lock
+core_invariant_overlays:
+  devflow-run-gates:
+    required_commands:
+      - xcodebuild test

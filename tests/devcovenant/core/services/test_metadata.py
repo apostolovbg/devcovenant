@@ -13,7 +13,7 @@ from devcovenant.core.services.registry import load_policy_descriptor
 
 MODULE = "devcovenant.core.services.metadata"
 REPO_ROOT = Path(__file__).resolve().parents[4]
-INITIAL_CRITICAL_BUILTIN_POLICIES = (
+INITIAL_CORE_INVARIANTS = (
     "devflow-run-gates",
     "devcov-integrity-guard",
     "devcov-structure-guard",
@@ -88,35 +88,25 @@ def _unit_test_apply_policy_control_allows_noncritical_disablement() -> None:
     assert updated_values["enabled"] == ["false"]
 
 
-def _unit_test_initial_critical_builtin_set_is_marked_and_config_immune() -> (
-    None
-):
-    """Selected builtin critical policies should be marked and stay enabled."""
-    module = importlib.import_module(MODULE)
-    control = module.PolicyControl(
-        policy_state={
-            policy_id: False for policy_id in INITIAL_CRITICAL_BUILTIN_POLICIES
-        }
+def _unit_test_core_invariant_descriptors_are_separate_from_policies() -> None:
+    """Core invariants should live outside builtin policy descriptor roots."""
+    invariants_root = (
+        REPO_ROOT / "devcovenant" / "core" / "contracts" / "invariants"
     )
     builtin_policies_root = REPO_ROOT / "devcovenant" / "builtin" / "policies"
 
-    for policy_id in INITIAL_CRITICAL_BUILTIN_POLICIES:
+    for invariant_id in INITIAL_CORE_INVARIANTS:
         descriptor_path = (
-            builtin_policies_root
-            / policy_id.replace("-", "_")
-            / f"{policy_id.replace('-', '_')}.yaml"
+            invariants_root / f"{invariant_id.replace('-', '_')}.yaml"
         )
         payload = yaml.safe_load(descriptor_path.read_text(encoding="utf-8"))
         metadata_block = payload.get("metadata", {})
         assert metadata_block["severity"] == "critical"
-
-        _, updated_values = module.apply_policy_control(
-            ["severity", "enabled"],
-            {"severity": ["critical"], "enabled": ["true"]},
-            policy_id,
-            control,
-        )
-        assert updated_values["enabled"] == ["true"]
+        assert not (
+            builtin_policies_root
+            / invariant_id.replace("-", "_")
+            / f"{invariant_id.replace('-', '_')}.yaml"
+        ).exists()
 
 
 def _unit_test_decode_metadata_option_value_normalizes_common_shapes() -> None:
@@ -291,6 +281,35 @@ def _unit_test_bundle_tracks_runtime_defaults_and_selector_derives() -> None:
     assert watch_globs_trace["effective"]["values"] == ["docs/**"]
 
 
+def _unit_test_profile_overlays_include_core_invariant_sections() -> None:
+    """Profile metadata collection should honor core_invariant_overlays."""
+    module = importlib.import_module(MODULE)
+    original = module.profile_runtime.load_profile_registry
+    try:
+        module.profile_runtime.load_profile_registry = lambda repo_root: {
+            "global": {
+                "policy_overlays": {"demo-policy": {"header_scan_lines": "4"}},
+                "core_invariant_overlays": {
+                    "devflow-run-gates": {
+                        "required_commands": [
+                            "python3 -m unittest discover -v",
+                            "pytest",
+                        ]
+                    }
+                },
+            }
+        }
+        overlays = module.collect_profile_overlays(REPO_ROOT, ["global"])
+    finally:
+        module.profile_runtime.load_profile_registry = original
+
+    assert overlays["demo-policy"]["header_scan_lines"] == (["4"], False)
+    assert overlays["devflow-run-gates"]["required_commands"] == (
+        ["python3 -m unittest discover -v", "pytest"],
+        True,
+    )
+
+
 def _unit_test_active_policy_metadata_bundle_shapes_are_valid() -> None:
     """Resolved metadata for enabled policies should keep stable shapes."""
     module = importlib.import_module(MODULE)
@@ -367,9 +386,9 @@ class GeneratedUnittestCases(unittest.TestCase):
         """Run non-critical policy-state disable assertions."""
         _unit_test_apply_policy_control_allows_noncritical_disablement()
 
-    def test_initial_critical_builtin_set_is_marked_and_config_immune(self):
-        """Run selected builtin critical-policy rollout assertions."""
-        _unit_test_initial_critical_builtin_set_is_marked_and_config_immune()
+    def test_core_invariant_descriptors_are_separate_from_policies(self):
+        """Run core invariant separation assertions."""
+        _unit_test_core_invariant_descriptors_are_separate_from_policies()
 
     def test_decode_metadata_option_value_normalizes_common_shapes(self):
         """Run common metadata decoder shape assertions."""
@@ -390,6 +409,10 @@ class GeneratedUnittestCases(unittest.TestCase):
     def test_resolve_policy_metadata_bundle_records_runtime_defaults(self):
         """Run runtime-default and derived-selector trace assertions."""
         _unit_test_bundle_tracks_runtime_defaults_and_selector_derives()
+
+    def test_profile_overlays_include_core_invariant_sections(self):
+        """Run core-invariant overlay collection assertions."""
+        _unit_test_profile_overlays_include_core_invariant_sections()
 
     def test_active_policy_metadata_bundle_shapes_are_valid(self):
         """Run enabled-policy resolved-metadata shape assertions."""

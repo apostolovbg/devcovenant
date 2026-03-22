@@ -24,6 +24,8 @@ def build_check_context(
     config: dict[str, Any] | None,
     translator_runtime: Any,
     gate_status_path: Path,
+    autofix_enabled: bool,
+    autofix_requested: bool,
     is_ignored_path: Callable[[Path], bool],
     resolve_file_suffixes: Callable[[], list[str]],
     collect_all_files: Callable[[set[str]], list[Path]],
@@ -50,6 +52,8 @@ def build_check_context(
         config=config or {},
         translator_runtime=translator_runtime,
         change_state=change_state,
+        autofix_enabled=autofix_enabled,
+        autofix_requested=autofix_requested,
     )
 
 

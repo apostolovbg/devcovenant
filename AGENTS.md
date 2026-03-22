@@ -194,6 +194,75 @@ This block reflects the repository's active project-governance state.
 - Versioning Mode: versioned
 <!-- DEVCOV:END -->
 
+<!-- DEVCOV-INVARIANTS:BEGIN -->
+## DevCovenant Core Invariants
+
+### Devcov Integrity Guard
+
+```core-invariant-def
+id: devcov-integrity-guard
+severity: critical
+customizable: false
+enforcement: active
+policy_definitions: AGENTS.md
+registry_file: devcovenant/registry/registry.yaml
+gate_status_file: devcovenant/registry/runtime/gate_status.json
+watch_dirs:
+watch_files:
+selector_roles: watch,watch_files
+watch_globs:
+watch_files_globs:
+watch_files_files:
+watch_files_dirs:
+```
+
+Enforce DevCovenant policy integrity: every policy must include descriptive
+text, AGENTS prose must match policy descriptors, the policy registry must
+stay synchronized, and gate-status metadata must validate when configured.
+
+### Devcov Structure Guard
+
+```core-invariant-def
+id: devcov-structure-guard
+severity: critical
+customizable: false
+enforcement: active
+```
+
+Ensure the DevCovenant repo keeps the required structure and tooling files.
+
+### Devflow Run Gates
+
+```core-invariant-def
+id: devflow-run-gates
+severity: critical
+customizable: false
+enforcement: active
+gate_status_file: devcovenant/registry/runtime/gate_status.json
+required_commands: python3 -m unittest discover -v, pytest
+require_pre_commit_start: true
+require_pre_commit_end: true
+pre_commit_command: python3 -m pre_commit run --all-files
+pre_commit_start_epoch_key: pre_commit_start_epoch
+pre_commit_end_epoch_key: pre_commit_end_epoch
+pre_commit_start_command_key: pre_commit_start_command
+pre_commit_end_command_key: pre_commit_end_command
+code_extensions:
+skipped_globs: devcovenant/registry/runtime/**
+selector_roles: skipped
+skipped_files:
+skipped_dirs:
+```
+
+DevCovenant must record and enforce the standard workflow: pre-commit start,
+tests, then pre-commit end. The policy reads the status file to ensure each
+gate ran and that no required command was skipped.
+This check is enforced for every repository change (including
+documentation-only updates) so the gate sequence cannot be skipped.
+Changelog-only edits remain gate-scoped but do not require a fresh test
+rerun by themselves.
+<!-- DEVCOV-INVARIANTS:END -->
+
 <!-- DEVCOV-POLICIES:BEGIN -->
 ## Policy: Changelog Coverage
 
@@ -509,10 +578,10 @@ and traceable.
 
 ---
 
-## Policy: Dependency License Sync
+## Policy: Dependency Management
 
 ```policy-def
-id: dependency-license-sync
+id: dependency-management
 severity: error
 auto_fix: true
 enforcement: active
@@ -535,11 +604,9 @@ report_heading: ## License Report
 selector_roles: dependency
 ```
 
-Maintain third-party license artifacts alongside dependency changes.
-This policy governs repository dependency compliance only: when dependency
-inputs in this repository change, repository license artifacts must be kept
-synchronized. It does not, by itself, define or guarantee package-
-distribution legal compliance for sdists/wheels/binaries.
+Manage dependency-maintenance artifacts as one coherent policy surface.
+When dependency inputs in this repository change, lockfiles and repository
+compliance artifacts must stay synchronized together.
 Dependency input modeling supports role-based taxonomy for mixed ecosystems:
 `intent`, `resolved`, and `package_manifest`.
 Role selectors are metadata-driven via
@@ -551,37 +618,10 @@ both manifest files and lock/resolution files so mixed-language repositories
 can define their own layout. Every dependency change must keep the
 configured report file (`third_party_file`) and configured license directory
 (`licenses_dir`) synchronized, including the configured `report_heading`.
-Autofix is restricted to those configured artifacts and must remain
-deterministic/idempotent.
-
-
----
-
-## Policy: Devcov Integrity Guard
-
-```policy-def
-id: devcov-integrity-guard
-severity: critical
-auto_fix: false
-enforcement: active
-enabled: true
-custom: false
-policy_definitions: AGENTS.md
-registry_file: devcovenant/registry/registry.yaml
-gate_status_file: devcovenant/registry/runtime/gate_status.json
-watch_dirs:
-watch_files:
-selector_roles: watch
-  watch_files
-watch_globs:
-watch_files_globs:
-watch_files_files:
-watch_files_dirs:
-```
-
-Enforce DevCovenant policy integrity: every policy must include descriptive
-text, AGENTS prose must match policy descriptors, the policy registry must
-stay synchronized, and gate-status metadata must validate when configured.
+Policy checks remain read-only. Autofixers may invoke declared policy
+runtime actions, and explicit policy-born CLI commands may invoke those same
+runtime actions manually. Remediation messaging may differ when autofix is
+enabled versus disabled. Artifact refresh remains deterministic/idempotent.
 
 
 ---
@@ -609,59 +649,6 @@ include_dirs:
 Warn when DevCovenant repo Python strings contain bare backslashes.
 This repo-only policy keeps the raw-string guidance active without
 forcing it on user repos.
-
-
----
-
-## Policy: Devcov Structure Guard
-
-```policy-def
-id: devcov-structure-guard
-severity: critical
-auto_fix: false
-enforcement: active
-enabled: true
-custom: false
-```
-
-Ensure the DevCovenant repo keeps the required structure and tooling files.
-
-
----
-
-## Policy: Devflow Run Gates
-
-```policy-def
-id: devflow-run-gates
-severity: critical
-auto_fix: false
-enforcement: active
-enabled: true
-custom: false
-gate_status_file: devcovenant/registry/runtime/gate_status.json
-required_commands: python3 -m unittest discover -v
-  pytest
-require_pre_commit_start: true
-require_pre_commit_end: true
-pre_commit_command: python3 -m pre_commit run --all-files
-pre_commit_start_epoch_key: pre_commit_start_epoch
-pre_commit_end_epoch_key: pre_commit_end_epoch
-pre_commit_start_command_key: pre_commit_start_command
-pre_commit_end_command_key: pre_commit_end_command
-code_extensions:
-skipped_globs: devcovenant/registry/runtime/**
-selector_roles: skipped
-skipped_files:
-skipped_dirs:
-```
-
-DevCovenant must record and enforce the standard workflow: pre-commit start,
-tests, then pre-commit end. The policy reads the status file to ensure each
-gate ran and that no required command was skipped.
-This check is enforced for every repository change (including
-documentation-only updates) so the gate sequence cannot be skipped.
-Changelog-only edits remain gate-scoped but do not require a fresh test
-rerun by themselves.
 
 
 ---
@@ -796,6 +783,9 @@ user_visible_files: README.md
   AGENTS.md
   SPEC.md
   PLAN.md
+  SECURITY.md
+  PRIVACY.md
+  SUPPORT.md
   devcovenant/README.md
   devcovenant/docs/architecture.md
   devcovenant/docs/installation.md
@@ -812,6 +802,9 @@ doc_quality_files: README.md
   AGENTS.md
   SPEC.md
   PLAN.md
+  SECURITY.md
+  PRIVACY.md
+  SUPPORT.md
   devcovenant/README.md
   devcovenant/docs/architecture.md
   devcovenant/docs/installation.md
@@ -841,6 +834,8 @@ doc_routes: devcovenant/builtin/policies/ => devcovenant/docs/policies.md
   devcovenant/custom/profiles/*.py => devcovenant/docs/profiles.md
   devcovenant/custom/profiles/**/*.py => devcovenant/docs/profiles.md
   devcovenant/custom/profiles/**/*.yaml => devcovenant/docs/profiles.md
+  .github/dependabot.yml => devcovenant/docs/workflow.md
+  bandit.yaml => SECURITY.md
   devcovenant/custom/policies/**/*.yaml => devcovenant/docs/policies.md
   devcovenant/custom/policies/**/*.py => devcovenant/docs/policies.md
   devcovenant/core/flow/*.py => devcovenant/docs/workflow.md
@@ -848,6 +843,7 @@ doc_routes: devcovenant/builtin/policies/ => devcovenant/docs/policies.md
   devcovenant/core/services/*.py => devcovenant/docs/architecture.md
   devcovenant/core/lib/*.py => devcovenant/docs/architecture.md
   devcovenant/core/contracts/*.py => devcovenant/docs/architecture.md
+  devcovenant/core/contracts/**/*.yaml => devcovenant/docs/architecture.md
   devcovenant/*.py => devcovenant/docs/installation.md
   pyproject.toml => devcovenant/docs/installation.md
   MANIFEST.in => devcovenant/docs/installation.md

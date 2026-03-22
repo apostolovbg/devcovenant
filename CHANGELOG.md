@@ -60,6 +60,265 @@ Example:
 ## Version 1.0.0
 
 - 2026-03-22:
+  Change: Strengthened the roadmap so managed document templates across builtin
+  and relevant custom profiles must become detailed, reader-useful blueprints
+  rather than terse one-pagers, and so Item 2 now retires `update_lock`
+  entirely in favor of the formal namespaced policy-command surface.
+  Why: Clarified that template depth is part of the
+  documentation problem and that DevCovenant is not keeping backward-
+  compatibility command aliases where the new standardized command contract
+  already exists.
+  Impact: Standardized the plan so template depth and formatting are part of
+  the documentation-rebuild acceptance criteria, and removed ambiguity about
+  `update_lock` by making the namespaced dependency-management commands the
+  only supported direction.
+  Files:
+  CHANGELOG.md
+  PLAN.md
+
+- 2026-03-22:
+  Change: Added a detailed documentation-restructure roadmap ahead of the
+  final store-bought QA closure and rewrote the plan's writing-direction and
+  validation expectations around operator-first entrypoints, fewer stronger
+  docs, clearer topic ownership, and better readability.
+  Why: The latest documentation audit showed that DevCovenant still reads as
+  too fragmented, too meta, too dense, and too hard to scan even after the
+  earlier external-readiness work landed.
+  Impact: The roadmap now treats documentation architecture as a real
+  release-blocking product concern instead of a vague polish item, and the
+  final QA audit is now explicitly gated on fixing that documentation shape.
+  Files:
+  CHANGELOG.md
+  PLAN.md
+
+- 2026-03-22:
+  Change: Hardened release assurance by adding CI compatibility/scanner jobs,
+  CycloneDX SBOM generation, Dependabot automation, and PyPI trusted
+  publishing while tightening reviewed process-boundary scanner annotations.
+  Why: Raised DevCovenant's release and supply-chain posture from basic
+  build/test hygiene to a more professional assurance baseline with explicit
+  scanner, inventory, automation, and publish-trust contracts.
+  Impact: CI now proves the supported Python range more credibly, release
+  workflows emit stronger software-inventory evidence, Bandit stays useful
+  instead of noisy, and publish no longer depends on a long-lived PyPI token.
+  Files:
+  .github/dependabot.yml
+  .github/workflows/build.yml
+  .github/workflows/governance-and-test.yml
+  .github/workflows/publish.yml
+  CHANGELOG.md
+  PLAN.md
+  PRIVACY.md
+  SECURITY.md
+  SUPPORT.md
+  bandit.yaml
+  devcovenant/builtin/policies/dependency_management/\
+    dependency_lock_runtime.py
+  devcovenant/builtin/profiles/global/assets/governance-and-test.yml
+  devcovenant/cli.py
+  devcovenant/core/flow/refresh.py
+  devcovenant/core/runtime/execution.py
+  devcovenant/custom/profiles/devcovrepo/devcovrepo.yaml
+  devcovenant/docs/installation.md
+  devcovenant/docs/policies.md
+  devcovenant/docs/profiles.md
+  devcovenant/docs/registry.md
+  devcovenant/docs/workflow.md
+  devcovenant/registry/registry.yaml
+  devcovenant/update_lock.py
+  tests/devcovenant/test_refresh.py
+
+- 2026-03-22:
+  Change: Added public `SECURITY.md`, `PRIVACY.md`, and `SUPPORT.md`
+  surfaces, hardened run-log metadata redaction, and replaced runtime
+  `assert`-based policy validation with explicit configuration errors.
+  Why: Clarified DevCovenant's external trust posture and prevented obvious
+  secret-like values from being written blindly into structured run metadata.
+  Impact: Documented security, privacy, and support expectations clearly for
+  operators while making structured runtime evidence safer and more explicit.
+  Files:
+  CHANGELOG.md
+  PLAN.md
+  README.md
+  PRIVACY.md
+  SECURITY.md
+  SUPPORT.md
+  devcovenant/README.md
+  devcovenant/builtin/policies/documentation_growth_tracking/\
+    documentation_growth_tracking.py
+  devcovenant/core/runtime/run_logging.py
+  devcovenant/docs/policies.md
+  devcovenant/docs/registry.md
+  devcovenant/docs/workflow.md
+  devcovenant/registry/registry.yaml
+  tests/devcovenant/builtin/policies/documentation_growth_tracking/\
+    test_documentation_growth_tracking.py
+  tests/devcovenant/core/runtime/test_run_logging.py
+
+- 2026-03-22:
+  Change: Standardized dependency-management operations by promoting core
+  invariants out of policy land, converging dependency-license-sync into the
+  dependency-management policy, and adding formal policy runtime-action and
+  namespaced policy-command contracts.
+  Why: Removed the last architectural split where DevCovenant-owned
+  invariants still behaved like ordinary policies and dependency maintenance
+  still depended on one-off wrapper behavior instead of one explicit
+  check/autofix/command contract.
+  Impact: Standardized DevCovenant's operator surface by keeping `gate` as a
+  core command, surfacing core invariant metadata separately from
+  `policy_state`, routing dependency mutation through autofix or explicit
+  policy commands only, and providing a reusable command/runtime contract for
+  future customizable policies.
+  Files:
+  AGENTS.md
+  CHANGELOG.md
+  PLAN.md
+  POLICY_MAP.md
+  README.md
+  devcovenant/README.md
+  devcovenant/builtin/policies/dependency_license_sync/__init__.py
+  devcovenant/builtin/policies/dependency_license_sync/autofix/__init__.py
+  devcovenant/builtin/policies/dependency_license_sync/autofix/global.py
+  devcovenant/builtin/policies/dependency_license_sync/\
+    dependency_license_sync.py
+  devcovenant/builtin/policies/dependency_license_sync/\
+    dependency_license_sync.yaml
+  devcovenant/builtin/policies/dependency_license_sync/\
+    dependency_lock_runtime.py
+  devcovenant/builtin/policies/dependency_management/__init__.py
+  devcovenant/builtin/policies/dependency_management/autofix/__init__.py
+  devcovenant/builtin/policies/dependency_management/autofix/global.py
+  devcovenant/builtin/policies/dependency_management/dependency_lock_runtime.py
+  devcovenant/builtin/policies/dependency_management/dependency_management.py
+  devcovenant/builtin/policies/dependency_management/dependency_management.yaml
+  devcovenant/builtin/policies/devcov_integrity_guard/__init__.py
+  devcovenant/builtin/policies/devcov_integrity_guard/devcov_integrity_guard.py
+  devcovenant/builtin/policies/devcov_integrity_guard/\
+    devcov_integrity_guard.yaml
+  devcovenant/builtin/policies/devcov_structure_guard/__init__.py
+  devcovenant/builtin/policies/devcov_structure_guard/devcov_structure_guard.py
+  devcovenant/builtin/policies/devcov_structure_guard/\
+    devcov_structure_guard.yaml
+  devcovenant/builtin/policies/devflow_run_gates/__init__.py
+  devcovenant/builtin/policies/devflow_run_gates/devflow_run_gates.py
+  devcovenant/builtin/policies/devflow_run_gates/devflow_run_gates.yaml
+  devcovenant/builtin/policies/managed_environment/managed_environment.yaml
+  devcovenant/builtin/profiles/README.md
+  devcovenant/builtin/profiles/csharp/csharp.yaml
+  devcovenant/builtin/profiles/dart/dart.yaml
+  devcovenant/builtin/profiles/defaults/defaults.yaml
+  devcovenant/builtin/profiles/docker/docker.yaml
+  devcovenant/builtin/profiles/fastapi/fastapi.yaml
+  devcovenant/builtin/profiles/flutter/flutter.yaml
+  devcovenant/builtin/profiles/frappe/frappe.yaml
+  devcovenant/builtin/profiles/global/assets/config.yaml
+  devcovenant/builtin/profiles/global/global.yaml
+  devcovenant/builtin/profiles/go/go.yaml
+  devcovenant/builtin/profiles/java/java.yaml
+  devcovenant/builtin/profiles/javascript/javascript.yaml
+  devcovenant/builtin/profiles/kubernetes/kubernetes.yaml
+  devcovenant/builtin/profiles/objective_c/objective_c.yaml
+  devcovenant/builtin/profiles/php/php.yaml
+  devcovenant/builtin/profiles/python/python.yaml
+  devcovenant/builtin/profiles/ruby/ruby.yaml
+  devcovenant/builtin/profiles/rust/rust.yaml
+  devcovenant/builtin/profiles/swift/swift.yaml
+  devcovenant/builtin/profiles/typescript/typescript.yaml
+  devcovenant/cli.py
+  devcovenant/config.yaml
+  devcovenant/core/contracts/invariant.py
+  devcovenant/core/contracts/invariants/devcov_integrity_guard.yaml
+  devcovenant/core/contracts/invariants/devcov_structure_guard.yaml
+  devcovenant/core/contracts/invariants/devflow_run_gates.yaml
+  devcovenant/core/contracts/policy.py
+  devcovenant/core/flow/refresh.py
+  devcovenant/core/runtime/execution.py
+  devcovenant/core/services/core_invariant_block_refresh.py
+  devcovenant/core/services/core_invariants.py
+  devcovenant/core/services/devcov_integrity_guard.py
+  devcovenant/core/services/devcov_structure_guard.py
+  devcovenant/core/services/devflow_run_gates.py
+  devcovenant/core/services/managed_docs.py
+  devcovenant/core/services/metadata.py
+  devcovenant/core/services/policy_check_context.py
+  devcovenant/core/services/policy_commands.py
+  devcovenant/core/services/policy_engine.py
+  devcovenant/core/services/policy_file_scope.py
+  devcovenant/core/services/policy_runtime_actions.py
+  devcovenant/core/services/registry.py
+  devcovenant/custom/profiles/devcovrepo/assets/POLICY_MAP.yaml
+  devcovenant/custom/profiles/devcovrepo/assets/PROFILE_MAP.yaml
+  devcovenant/custom/profiles/devcovrepo/assets/docs/config.md
+  devcovenant/custom/profiles/devcovrepo/assets/docs/policies.md
+  devcovenant/custom/profiles/devcovrepo/assets/docs/profiles.md
+  devcovenant/custom/profiles/devcovrepo/devcovrepo.yaml
+  devcovenant/docs/architecture.md
+  devcovenant/docs/config.md
+  devcovenant/docs/installation.md
+  devcovenant/docs/policies.md
+  devcovenant/docs/profiles.md
+  devcovenant/docs/registry.md
+  devcovenant/docs/workflow.md
+  devcovenant/policy.py
+  devcovenant/registry/registry.yaml
+  devcovenant/update_lock.py
+  tests/devcovenant/builtin/policies/dependency_license_sync/__init__.py
+  tests/devcovenant/builtin/policies/dependency_license_sync/autofix/\
+    __init__.py
+  tests/devcovenant/builtin/policies/dependency_license_sync/autofix/\
+    test_global.py
+  tests/devcovenant/builtin/policies/dependency_license_sync/\
+    test_dependency_license_sync.py
+  tests/devcovenant/builtin/policies/dependency_license_sync/\
+    test_dependency_lock_runtime.py
+  tests/devcovenant/builtin/policies/dependency_management/__init__.py
+  tests/devcovenant/builtin/policies/dependency_management/autofix/__init__.py
+  tests/devcovenant/builtin/policies/dependency_management/autofix/\
+    test_global.py
+  tests/devcovenant/builtin/policies/dependency_management/\
+    test_dependency_lock_runtime.py
+  tests/devcovenant/builtin/policies/dependency_management/\
+    test_dependency_management.py
+  tests/devcovenant/builtin/policies/devcov_integrity_guard/__init__.py
+  tests/devcovenant/builtin/policies/devcov_integrity_guard/\
+    test_devcov_integrity_guard.py
+  tests/devcovenant/builtin/policies/devcov_structure_guard/__init__.py
+  tests/devcovenant/builtin/policies/devcov_structure_guard/\
+    test_devcov_structure_guard.py
+  tests/devcovenant/builtin/policies/devflow_run_gates/__init__.py
+  tests/devcovenant/builtin/policies/devflow_run_gates/\
+    test_devflow_run_gates.py
+  tests/devcovenant/core/contracts/test_invariant.py
+  tests/devcovenant/core/services/test_core_invariant_block_refresh.py
+  tests/devcovenant/core/services/test_core_invariants.py
+  tests/devcovenant/core/services/test_devcov_integrity_guard.py
+  tests/devcovenant/core/services/test_policy_check_context.py
+  tests/devcovenant/core/services/test_devcov_structure_guard.py
+  tests/devcovenant/core/services/test_devflow_run_gates.py
+  tests/devcovenant/core/services/test_metadata.py
+  tests/devcovenant/core/services/test_policy_commands.py
+  tests/devcovenant/core/services/test_policy_engine.py
+  tests/devcovenant/core/services/test_policy_runtime_actions.py
+  tests/devcovenant/test_cli.py
+  tests/devcovenant/test_policy.py
+
+- 2026-03-22:
+  Change: Completed the public package and compliance baseline slice by
+  tightening buyer-facing package metadata, documenting the public package
+  surface more explicitly, and marking PLAN Item 1 complete.
+  Why: Clarified the last remaining Item 1 package-contract work so the built
+  package metadata reads more intentionally and the completed baseline is
+  recorded clearly.
+  Impact: Improved the distributed package metadata and packaging contract
+  clarity while closing the first external-readiness roadmap item.
+  Files:
+  CHANGELOG.md
+  PLAN.md
+  devcovenant/docs/installation.md
+  licenses/THIRD_PARTY_LICENSES.md
+  pyproject.toml
+
+- 2026-03-22:
   Change: Amended the active roadmap so core DevCovenant invariants are
   promoted out of policy land before the dependency-management and
   policy-command standardization work continues.

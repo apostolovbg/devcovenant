@@ -91,7 +91,7 @@ managed-docs:
       project_governance_headers: false
       import_seed: true
       authoritative_source: true
-      body_fingerprint: 9e25a587c06aed55627cc334791841f40e1e1c8b368011a7d6abf07b20dcccfa
+      body_fingerprint: b3301a06b3a5fd9b0230005ac5ebc498f1fe11a529c8066f7b41b961ef486678
       legacy_generic_body_fingerprints: []
     PROFILE_MAP.md:
       enabled: true
@@ -99,7 +99,7 @@ managed-docs:
       project_governance_headers: false
       import_seed: true
       authoritative_source: true
-      body_fingerprint: 83a3ed54df36c78b03dd37eb48a8ef7ad0a4d0cbd32689bde1677cb685de49e2
+      body_fingerprint: 1f4188374ca38a120be93b859898272b4d12f2ab5eb48fc16b02f2281f29dc28
       legacy_generic_body_fingerprints: []
     README.md:
       enabled: true
@@ -127,6 +127,560 @@ managed-docs:
       authoritative_source: false
       body_fingerprint: 236cc723edd5646eb2e21cf965ee8b2c94c9aedb1afe539a9d85ba76cea61845
       legacy_generic_body_fingerprints: []
+core-invariants:
+  devcov-integrity-guard:
+    severity: critical
+    description: Devcov Integrity Guard
+    invariant_text: |-
+      Enforce DevCovenant policy integrity: every policy must include descriptive
+      text, AGENTS prose must match policy descriptors, the policy registry must
+      stay synchronized, and gate-status metadata must validate when configured.
+    metadata:
+      id: devcov-integrity-guard
+      severity: critical
+      auto_fix: 'false'
+      enforcement: active
+      enabled: 'true'
+      custom: 'false'
+      policy_definitions: AGENTS.md
+      registry_file: devcovenant/registry/registry.yaml
+      gate_status_file: devcovenant/registry/runtime/gate_status.json
+      watch_dirs: ''
+      watch_files: ''
+      selector_roles: watch,watch_files
+      watch_globs: ''
+      watch_files_globs: ''
+      watch_files_files: ''
+      watch_files_dirs: ''
+    metadata_resolution:
+      id:
+        descriptor:
+          values:
+          - devcov-integrity-guard
+          behavior: base
+        runtime_identity:
+          values:
+          - devcov-integrity-guard
+          behavior: replace
+        effective:
+          values:
+          - devcov-integrity-guard
+      severity:
+        descriptor:
+          values:
+          - critical
+          behavior: base
+        effective:
+          values:
+          - critical
+      auto_fix:
+        descriptor:
+          values:
+          - 'false'
+          behavior: base
+        effective:
+          values:
+          - 'false'
+      enforcement:
+        descriptor:
+          values:
+          - active
+          behavior: base
+        effective:
+          values:
+          - active
+      policy_definitions:
+        descriptor:
+          values: []
+          behavior: base
+        profile_overlays:
+          values:
+          - AGENTS.md
+          behavior: replace
+        autogen_overlays:
+          values:
+          - AGENTS.md
+          behavior: append
+        effective:
+          values:
+          - AGENTS.md
+      registry_file:
+        descriptor:
+          values: []
+          behavior: base
+        profile_overlays:
+          values:
+          - devcovenant/registry/registry.yaml
+          behavior: replace
+        autogen_overlays:
+          values:
+          - devcovenant/registry/registry.yaml
+          behavior: replace
+          replaced_inherited_values:
+          - devcovenant/registry/registry.yaml
+        effective:
+          values:
+          - devcovenant/registry/registry.yaml
+      gate_status_file:
+        descriptor:
+          values: []
+          behavior: base
+        profile_overlays:
+          values:
+          - devcovenant/registry/runtime/gate_status.json
+          behavior: replace
+        autogen_overlays:
+          values:
+          - devcovenant/registry/runtime/gate_status.json
+          behavior: replace
+          replaced_inherited_values:
+          - devcovenant/registry/runtime/gate_status.json
+        effective:
+          values:
+          - devcovenant/registry/runtime/gate_status.json
+      watch_dirs:
+        descriptor:
+          values: []
+          behavior: base
+        effective:
+          values: []
+      watch_files:
+        descriptor:
+          values: []
+          behavior: base
+        effective:
+          values: []
+      selector_roles:
+        descriptor:
+          values:
+          - watch,watch_files
+          behavior: base
+        effective:
+          values:
+          - watch,watch_files
+      enabled:
+        runtime_defaults:
+          values:
+          - 'true'
+          behavior: default
+        effective:
+          values:
+          - 'true'
+      custom:
+        runtime_defaults:
+          values:
+          - 'false'
+          behavior: default
+        effective:
+          values:
+          - 'false'
+      watch_globs:
+        effective:
+          values: []
+      watch_files_globs:
+        effective:
+          values: []
+      watch_files_files:
+        effective:
+          values: []
+      watch_files_dirs:
+        effective:
+          values: []
+    metadata_warnings: []
+    runtime_metadata_options:
+      id: devcov-integrity-guard
+      severity: critical
+      auto_fix: false
+      enforcement: active
+      enabled: true
+      custom: false
+      policy_definitions: AGENTS.md
+      registry_file: devcovenant/registry/registry.yaml
+      gate_status_file: devcovenant/registry/runtime/gate_status.json
+      watch_dirs: ''
+      watch_files: ''
+      selector_roles: &id002
+      - watch
+      - watch_files
+      watch_globs: ''
+      watch_files_globs: ''
+      watch_files_files: ''
+      watch_files_dirs: ''
+    runtime_config_overrides:
+      gate_status_file: devcovenant/registry/runtime/gate_status.json
+      policy_definitions: &id001
+      - AGENTS.md
+      registry_file: devcovenant/registry/registry.yaml
+    runtime_effective_options:
+      id: devcov-integrity-guard
+      severity: critical
+      auto_fix: false
+      enforcement: active
+      enabled: true
+      custom: false
+      policy_definitions: *id001
+      registry_file: devcovenant/registry/registry.yaml
+      gate_status_file: devcovenant/registry/runtime/gate_status.json
+      selector_roles: *id002
+    module_path: devcovenant/core/services/devcov_integrity_guard.py
+    descriptor_path: devcovenant/core/contracts/invariants/devcov_integrity_guard.yaml
+    customizable: false
+  devcov-structure-guard:
+    severity: critical
+    description: Devcov Structure Guard
+    invariant_text: Ensure the DevCovenant repo keeps the required structure and tooling
+      files.
+    metadata:
+      id: devcov-structure-guard
+      severity: critical
+      auto_fix: 'false'
+      enforcement: active
+      enabled: 'true'
+      custom: 'false'
+    metadata_resolution:
+      id:
+        descriptor:
+          values:
+          - devcov-structure-guard
+          behavior: base
+        runtime_identity:
+          values:
+          - devcov-structure-guard
+          behavior: replace
+        effective:
+          values:
+          - devcov-structure-guard
+      severity:
+        descriptor:
+          values:
+          - critical
+          behavior: base
+        effective:
+          values:
+          - critical
+      auto_fix:
+        descriptor:
+          values:
+          - 'false'
+          behavior: base
+        effective:
+          values:
+          - 'false'
+      enforcement:
+        descriptor:
+          values:
+          - active
+          behavior: base
+        effective:
+          values:
+          - active
+      enabled:
+        runtime_defaults:
+          values:
+          - 'true'
+          behavior: default
+        effective:
+          values:
+          - 'true'
+      custom:
+        runtime_defaults:
+          values:
+          - 'false'
+          behavior: default
+        effective:
+          values:
+          - 'false'
+    metadata_warnings: []
+    runtime_metadata_options:
+      id: devcov-structure-guard
+      severity: critical
+      auto_fix: false
+      enforcement: active
+      enabled: true
+      custom: false
+    runtime_config_overrides: {}
+    runtime_effective_options:
+      id: devcov-structure-guard
+      severity: critical
+      auto_fix: false
+      enforcement: active
+      enabled: true
+      custom: false
+    module_path: devcovenant/core/services/devcov_structure_guard.py
+    descriptor_path: devcovenant/core/contracts/invariants/devcov_structure_guard.yaml
+    customizable: false
+  devflow-run-gates:
+    severity: critical
+    description: Devflow Run Gates
+    invariant_text: |-
+      DevCovenant must record and enforce the standard workflow: pre-commit start,
+      tests, then pre-commit end. The policy reads the status file to ensure each
+      gate ran and that no required command was skipped.
+      This check is enforced for every repository change (including
+      documentation-only updates) so the gate sequence cannot be skipped.
+      Changelog-only edits remain gate-scoped but do not require a fresh test
+      rerun by themselves.
+    metadata:
+      id: devflow-run-gates
+      severity: critical
+      auto_fix: 'false'
+      enforcement: active
+      enabled: 'true'
+      custom: 'false'
+      gate_status_file: devcovenant/registry/runtime/gate_status.json
+      required_commands: python3 -m unittest discover -v, pytest
+      require_pre_commit_start: 'true'
+      require_pre_commit_end: 'true'
+      pre_commit_command: python3 -m pre_commit run --all-files
+      pre_commit_start_epoch_key: pre_commit_start_epoch
+      pre_commit_end_epoch_key: pre_commit_end_epoch
+      pre_commit_start_command_key: pre_commit_start_command
+      pre_commit_end_command_key: pre_commit_end_command
+      code_extensions: ''
+      skipped_globs: devcovenant/registry/runtime/**
+      selector_roles: skipped
+      skipped_files: ''
+      skipped_dirs: ''
+    metadata_resolution:
+      id:
+        descriptor:
+          values:
+          - devflow-run-gates
+          behavior: base
+        runtime_identity:
+          values:
+          - devflow-run-gates
+          behavior: replace
+        effective:
+          values:
+          - devflow-run-gates
+      severity:
+        descriptor:
+          values:
+          - critical
+          behavior: base
+        effective:
+          values:
+          - critical
+      auto_fix:
+        descriptor:
+          values:
+          - 'false'
+          behavior: base
+        effective:
+          values:
+          - 'false'
+      enforcement:
+        descriptor:
+          values:
+          - active
+          behavior: base
+        effective:
+          values:
+          - active
+      gate_status_file:
+        descriptor:
+          values: []
+          behavior: base
+        profile_overlays:
+          values:
+          - devcovenant/registry/runtime/gate_status.json
+          behavior: replace
+        autogen_overlays:
+          values:
+          - devcovenant/registry/runtime/gate_status.json
+          behavior: replace
+          replaced_inherited_values:
+          - devcovenant/registry/runtime/gate_status.json
+        effective:
+          values:
+          - devcovenant/registry/runtime/gate_status.json
+      required_commands:
+        descriptor:
+          values: []
+          behavior: base
+        profile_overlays:
+          values:
+          - python3 -m unittest discover -v
+          - pytest
+          behavior: append
+        autogen_overlays:
+          values:
+          - python3 -m unittest discover -v
+          - pytest
+          behavior: append
+        effective:
+          values:
+          - python3 -m unittest discover -v
+          - pytest
+      require_pre_commit_start:
+        descriptor:
+          values:
+          - 'true'
+          behavior: base
+        effective:
+          values:
+          - 'true'
+      require_pre_commit_end:
+        descriptor:
+          values:
+          - 'true'
+          behavior: base
+        effective:
+          values:
+          - 'true'
+      pre_commit_command:
+        descriptor:
+          values: []
+          behavior: base
+        profile_overlays:
+          values:
+          - python3 -m pre_commit run --all-files
+          behavior: replace
+        autogen_overlays:
+          values:
+          - python3 -m pre_commit run --all-files
+          behavior: append
+        effective:
+          values:
+          - python3 -m pre_commit run --all-files
+      pre_commit_start_epoch_key:
+        descriptor:
+          values:
+          - pre_commit_start_epoch
+          behavior: base
+        effective:
+          values:
+          - pre_commit_start_epoch
+      pre_commit_end_epoch_key:
+        descriptor:
+          values:
+          - pre_commit_end_epoch
+          behavior: base
+        effective:
+          values:
+          - pre_commit_end_epoch
+      pre_commit_start_command_key:
+        descriptor:
+          values:
+          - pre_commit_start_command
+          behavior: base
+        effective:
+          values:
+          - pre_commit_start_command
+      pre_commit_end_command_key:
+        descriptor:
+          values:
+          - pre_commit_end_command
+          behavior: base
+        effective:
+          values:
+          - pre_commit_end_command
+      code_extensions:
+        descriptor:
+          values: []
+          behavior: base
+        effective:
+          values: []
+      skipped_globs:
+        descriptor:
+          values: []
+          behavior: base
+        profile_overlays:
+          values:
+          - devcovenant/registry/runtime/**
+          behavior: append
+        autogen_overlays:
+          values:
+          - devcovenant/registry/runtime/**
+          behavior: append
+        effective:
+          values:
+          - devcovenant/registry/runtime/**
+      enabled:
+        runtime_defaults:
+          values:
+          - 'true'
+          behavior: default
+        effective:
+          values:
+          - 'true'
+      custom:
+        runtime_defaults:
+          values:
+          - 'false'
+          behavior: default
+        effective:
+          values:
+          - 'false'
+      selector_roles:
+        derived_selectors:
+          values:
+          - skipped
+          behavior: derive
+        effective:
+          values:
+          - skipped
+      skipped_files:
+        effective:
+          values: []
+      skipped_dirs:
+        effective:
+          values: []
+    metadata_warnings: []
+    runtime_metadata_options:
+      id: devflow-run-gates
+      severity: critical
+      auto_fix: false
+      enforcement: active
+      enabled: true
+      custom: false
+      gate_status_file: devcovenant/registry/runtime/gate_status.json
+      required_commands:
+      - python3 -m unittest discover -v
+      - pytest
+      require_pre_commit_start: true
+      require_pre_commit_end: true
+      pre_commit_command: python3 -m pre_commit run --all-files
+      pre_commit_start_epoch_key: pre_commit_start_epoch
+      pre_commit_end_epoch_key: pre_commit_end_epoch
+      pre_commit_start_command_key: pre_commit_start_command
+      pre_commit_end_command_key: pre_commit_end_command
+      code_extensions: ''
+      skipped_globs: devcovenant/registry/runtime/**
+      selector_roles: skipped
+      skipped_files: ''
+      skipped_dirs: ''
+    runtime_config_overrides:
+      gate_status_file: devcovenant/registry/runtime/gate_status.json
+      pre_commit_command: &id004
+      - python3 -m pre_commit run --all-files
+      required_commands: &id003
+      - python3 -m unittest discover -v
+      - pytest
+      skipped_globs: &id005
+      - devcovenant/registry/runtime/**
+    runtime_effective_options:
+      id: devflow-run-gates
+      severity: critical
+      auto_fix: false
+      enforcement: active
+      enabled: true
+      custom: false
+      gate_status_file: devcovenant/registry/runtime/gate_status.json
+      required_commands: *id003
+      require_pre_commit_start: true
+      require_pre_commit_end: true
+      pre_commit_command: *id004
+      pre_commit_start_epoch_key: pre_commit_start_epoch
+      pre_commit_end_epoch_key: pre_commit_end_epoch
+      pre_commit_start_command_key: pre_commit_start_command
+      pre_commit_end_command_key: pre_commit_end_command
+      skipped_globs: *id005
+      selector_roles: skipped
+    module_path: devcovenant/core/services/devflow_run_gates.py
+    descriptor_path: devcovenant/core/contracts/invariants/devflow_run_gates.yaml
+    customizable: false
 policies:
   changelog-coverage:
     enabled: true
@@ -1221,6 +1775,8 @@ policies:
         effective:
           values: []
     metadata_warnings: []
+    runtime_actions: []
+    commands: []
     runtime_metadata_options:
       id: changelog-coverage
       severity: error
@@ -1229,13 +1785,13 @@ policies:
       enabled: true
       custom: false
       main_changelog: CHANGELOG.md
-      skipped_files: &id001
+      skipped_files: &id006
       - devcovenant/config.yaml
       - CHANGELOG.md
       - .gitignore
       - .pre-commit-config.yaml
       - .github/workflows/governance-and-test.yml
-      skipped_globs: &id002
+      skipped_globs: &id007
       - .vscode/**
       - .idea/**
       - .venv/**
@@ -1257,11 +1813,11 @@ policies:
       - devcovenant/logs/**
       - devcovenant/registry/runtime/**
       skipped_prefixes: ''
-      summary_labels: &id003
+      summary_labels: &id008
       - Change
       - Why
       - Impact
-      summary_verbs: &id004
+      summary_verbs: &id009
       - add
       - added
       - address
@@ -1492,11 +2048,11 @@ policies:
       - tested
       gate_status_file: devcovenant/registry/runtime/gate_status.json
       collections: ''
-      header_doc_suffixes: &id005
+      header_doc_suffixes: &id010
       - .md
       - .rst
       - .txt
-      header_keys: &id006
+      header_keys: &id011
       - Last Updated
       - Project Version
       - Project Stage
@@ -1506,19 +2062,19 @@ policies:
       - Build Identity
       - DevCovenant Version
       header_scan_lines: 4
-      required_globs: &id007
+      required_globs: &id012
       - README.md
       - AGENTS.md
       - CONTRIBUTING.md
       - CHANGELOG.md
       - SPEC.md
       - PLAN.md
-      selector_roles: &id008
+      selector_roles: &id013
       - skipped
       - header_doc
       - required
       skipped_dirs: ''
-      header_doc_globs: &id009
+      header_doc_globs: &id014
       - '*.md'
       - '*.rst'
       - '*.txt'
@@ -1535,17 +2091,17 @@ policies:
       enabled: true
       custom: false
       main_changelog: CHANGELOG.md
-      skipped_files: *id001
-      skipped_globs: *id002
-      summary_labels: *id003
-      summary_verbs: *id004
+      skipped_files: *id006
+      skipped_globs: *id007
+      summary_labels: *id008
+      summary_verbs: *id009
       gate_status_file: devcovenant/registry/runtime/gate_status.json
-      header_doc_suffixes: *id005
-      header_keys: *id006
+      header_doc_suffixes: *id010
+      header_keys: *id011
       header_scan_lines: 4
-      required_globs: *id007
-      selector_roles: *id008
-      header_doc_globs: *id009
+      required_globs: *id012
+      selector_roles: *id013
+      header_doc_globs: *id014
     assets:
     - '*.egg-info/**'
     - '*.md'
@@ -1581,519 +2137,6 @@ policies:
     script_exists: true
     hash: 77f5a4b32a05aaae32e674c6190d7d1f3d8265c19dec4a9483f4dc7be8c790eb
     script_path: builtin/changelog_coverage.py
-  dependency-license-sync:
-    enabled: true
-    custom: false
-    description: Dependency License Sync
-    policy_text: |-
-      Maintain third-party license artifacts alongside dependency changes.
-      This policy governs repository dependency compliance only: when dependency
-      inputs in this repository change, repository license artifacts must be kept
-      synchronized. It does not, by itself, define or guarantee package-
-      distribution legal compliance for sdists/wheels/binaries.
-      Dependency input modeling supports role-based taxonomy for mixed ecosystems:
-      `intent`, `resolved`, and `package_manifest`.
-      Role selectors are metadata-driven via
-      (`dependency_role_files`, `dependency_role_globs`,
-      `dependency_role_dirs`) using `role=>selector` tokens.
-      Dependency selectors are metadata-driven
-      (`dependency_files`, `dependency_globs`, `dependency_dirs`) and may include
-      both manifest files and lock/resolution files so mixed-language repositories
-      can define their own layout. Every dependency change must keep the
-      configured report file (`third_party_file`) and configured license directory
-      (`licenses_dir`) synchronized, including the configured `report_heading`.
-      Autofix is restricted to those configured artifacts and must remain
-      deterministic/idempotent.
-    metadata:
-      id: dependency-license-sync
-      severity: error
-      auto_fix: 'true'
-      enforcement: active
-      enabled: 'true'
-      custom: 'false'
-      dependency_files: ''
-      dependency_globs: ''
-      dependency_dirs: ''
-      dependency_roles: intent, resolved, package_manifest
-      dependency_role_files: intent=>requirements.in, resolved=>requirements.lock,
-        package_manifest=>pyproject.toml
-      dependency_role_globs: ''
-      dependency_role_dirs: ''
-      third_party_file: licenses/THIRD_PARTY_LICENSES.md
-      licenses_dir: licenses
-      report_heading: '## License Report'
-      selector_roles: dependency
-    metadata_resolution:
-      id:
-        descriptor:
-          values:
-          - dependency-license-sync
-          behavior: base
-        runtime_identity:
-          values:
-          - dependency-license-sync
-          behavior: replace
-        effective:
-          values:
-          - dependency-license-sync
-      severity:
-        descriptor:
-          values:
-          - error
-          behavior: base
-        effective:
-          values:
-          - error
-      auto_fix:
-        descriptor:
-          values:
-          - 'true'
-          behavior: base
-        effective:
-          values:
-          - 'true'
-      enforcement:
-        descriptor:
-          values:
-          - active
-          behavior: base
-        effective:
-          values:
-          - active
-      dependency_files:
-        descriptor:
-          values: []
-          behavior: base
-        profile_overlays:
-          values: []
-          behavior: append
-        autogen_overlays:
-          values: []
-          behavior: append
-        effective:
-          values: []
-      dependency_globs:
-        descriptor:
-          values: []
-          behavior: base
-        profile_overlays:
-          values: []
-          behavior: append
-        autogen_overlays:
-          values: []
-          behavior: append
-        effective:
-          values: []
-      dependency_dirs:
-        descriptor:
-          values: []
-          behavior: base
-        profile_overlays:
-          values: []
-          behavior: append
-        autogen_overlays:
-          values: []
-          behavior: append
-        effective:
-          values: []
-      dependency_roles:
-        descriptor:
-          values:
-          - intent
-          - resolved
-          - package_manifest
-          behavior: base
-        profile_overlays:
-          values:
-          - intent
-          - resolved
-          - package_manifest
-          behavior: append
-        autogen_overlays:
-          values:
-          - intent
-          - resolved
-          - package_manifest
-          behavior: append
-        effective:
-          values:
-          - intent
-          - resolved
-          - package_manifest
-      dependency_role_files:
-        descriptor:
-          values: []
-          behavior: base
-        profile_overlays:
-          values:
-          - intent=>requirements.in
-          - resolved=>requirements.lock
-          - package_manifest=>pyproject.toml
-          behavior: append
-        autogen_overlays:
-          values:
-          - intent=>requirements.in
-          - resolved=>requirements.lock
-          - package_manifest=>pyproject.toml
-          behavior: append
-        effective:
-          values:
-          - intent=>requirements.in
-          - resolved=>requirements.lock
-          - package_manifest=>pyproject.toml
-      dependency_role_globs:
-        descriptor:
-          values: []
-          behavior: base
-        profile_overlays:
-          values: []
-          behavior: append
-        autogen_overlays:
-          values: []
-          behavior: append
-        effective:
-          values: []
-      dependency_role_dirs:
-        descriptor:
-          values: []
-          behavior: base
-        profile_overlays:
-          values: []
-          behavior: append
-        autogen_overlays:
-          values: []
-          behavior: append
-        effective:
-          values: []
-      third_party_file:
-        descriptor:
-          values: []
-          behavior: base
-        profile_overlays:
-          values:
-          - licenses/THIRD_PARTY_LICENSES.md
-          behavior: replace
-        autogen_overlays:
-          values:
-          - licenses/THIRD_PARTY_LICENSES.md
-          behavior: replace
-          replaced_inherited_values:
-          - licenses/THIRD_PARTY_LICENSES.md
-        effective:
-          values:
-          - licenses/THIRD_PARTY_LICENSES.md
-      licenses_dir:
-        descriptor:
-          values: []
-          behavior: base
-        profile_overlays:
-          values:
-          - licenses
-          behavior: replace
-        autogen_overlays:
-          values:
-          - licenses
-          behavior: replace
-          replaced_inherited_values:
-          - licenses
-        effective:
-          values:
-          - licenses
-      report_heading:
-        descriptor:
-          values: []
-          behavior: base
-        profile_overlays:
-          values:
-          - '## License Report'
-          behavior: replace
-        autogen_overlays:
-          values:
-          - '## License Report'
-          behavior: append
-        effective:
-          values:
-          - '## License Report'
-      selector_roles:
-        descriptor:
-          values:
-          - dependency
-          behavior: base
-        effective:
-          values:
-          - dependency
-      enabled:
-        runtime_defaults:
-          values:
-          - 'true'
-          behavior: default
-        policy_state:
-          values:
-          - 'true'
-          behavior: replace
-          replaced_inherited_values:
-          - 'true'
-        effective:
-          values:
-          - 'true'
-      custom:
-        runtime_defaults:
-          values:
-          - 'false'
-          behavior: default
-        effective:
-          values:
-          - 'false'
-    metadata_warnings: []
-    runtime_metadata_options:
-      id: dependency-license-sync
-      severity: error
-      auto_fix: true
-      enforcement: active
-      enabled: true
-      custom: false
-      dependency_files: ''
-      dependency_globs: ''
-      dependency_dirs: ''
-      dependency_roles: &id010
-      - intent
-      - resolved
-      - package_manifest
-      dependency_role_files: &id011
-      - intent=>requirements.in
-      - resolved=>requirements.lock
-      - package_manifest=>pyproject.toml
-      dependency_role_globs: ''
-      dependency_role_dirs: ''
-      third_party_file: licenses/THIRD_PARTY_LICENSES.md
-      licenses_dir: licenses
-      report_heading: '## License Report'
-      selector_roles: dependency
-    runtime_config_overrides: {}
-    runtime_effective_options:
-      id: dependency-license-sync
-      severity: error
-      auto_fix: true
-      enforcement: active
-      enabled: true
-      custom: false
-      dependency_roles: *id010
-      dependency_role_files: *id011
-      third_party_file: licenses/THIRD_PARTY_LICENSES.md
-      licenses_dir: licenses
-      report_heading: '## License Report'
-      selector_roles: dependency
-    assets:
-    - licenses/THIRD_PARTY_LICENSES.md
-    origin: builtin
-    script_exists: true
-    hash: bb258ca07e404989a4307ee1bf019c90257857d3c82c3d54d8c6ee34096b80d3
-    script_path: builtin/dependency_license_sync.py
-  devcov-integrity-guard:
-    enabled: true
-    custom: false
-    description: Devcov Integrity Guard
-    policy_text: |-
-      Enforce DevCovenant policy integrity: every policy must include descriptive
-      text, AGENTS prose must match policy descriptors, the policy registry must
-      stay synchronized, and gate-status metadata must validate when configured.
-    metadata:
-      id: devcov-integrity-guard
-      severity: critical
-      auto_fix: 'false'
-      enforcement: active
-      enabled: 'true'
-      custom: 'false'
-      policy_definitions: AGENTS.md
-      registry_file: devcovenant/registry/registry.yaml
-      gate_status_file: devcovenant/registry/runtime/gate_status.json
-      watch_dirs: ''
-      watch_files: ''
-      selector_roles: watch,watch_files
-      watch_globs: ''
-      watch_files_globs: ''
-      watch_files_files: ''
-      watch_files_dirs: ''
-    metadata_resolution:
-      id:
-        descriptor:
-          values:
-          - devcov-integrity-guard
-          behavior: base
-        runtime_identity:
-          values:
-          - devcov-integrity-guard
-          behavior: replace
-        effective:
-          values:
-          - devcov-integrity-guard
-      severity:
-        descriptor:
-          values:
-          - critical
-          behavior: base
-        effective:
-          values:
-          - critical
-      auto_fix:
-        descriptor:
-          values:
-          - 'false'
-          behavior: base
-        effective:
-          values:
-          - 'false'
-      enforcement:
-        descriptor:
-          values:
-          - active
-          behavior: base
-        effective:
-          values:
-          - active
-      policy_definitions:
-        descriptor:
-          values: []
-          behavior: base
-        profile_overlays:
-          values:
-          - AGENTS.md
-          behavior: replace
-        autogen_overlays:
-          values:
-          - AGENTS.md
-          behavior: append
-        effective:
-          values:
-          - AGENTS.md
-      registry_file:
-        descriptor:
-          values: []
-          behavior: base
-        profile_overlays:
-          values:
-          - devcovenant/registry/registry.yaml
-          behavior: replace
-        autogen_overlays:
-          values:
-          - devcovenant/registry/registry.yaml
-          behavior: replace
-          replaced_inherited_values:
-          - devcovenant/registry/registry.yaml
-        effective:
-          values:
-          - devcovenant/registry/registry.yaml
-      gate_status_file:
-        descriptor:
-          values: []
-          behavior: base
-        profile_overlays:
-          values:
-          - devcovenant/registry/runtime/gate_status.json
-          behavior: replace
-        autogen_overlays:
-          values:
-          - devcovenant/registry/runtime/gate_status.json
-          behavior: replace
-          replaced_inherited_values:
-          - devcovenant/registry/runtime/gate_status.json
-        effective:
-          values:
-          - devcovenant/registry/runtime/gate_status.json
-      watch_dirs:
-        descriptor:
-          values: []
-          behavior: base
-        effective:
-          values: []
-      watch_files:
-        descriptor:
-          values: []
-          behavior: base
-        effective:
-          values: []
-      selector_roles:
-        descriptor:
-          values:
-          - watch,watch_files
-          behavior: base
-        effective:
-          values:
-          - watch,watch_files
-      enabled:
-        runtime_defaults:
-          values:
-          - 'true'
-          behavior: default
-        policy_state:
-          values:
-          - 'true'
-          behavior: replace
-          replaced_inherited_values:
-          - 'true'
-        effective:
-          values:
-          - 'true'
-      custom:
-        runtime_defaults:
-          values:
-          - 'false'
-          behavior: default
-        effective:
-          values:
-          - 'false'
-      watch_globs:
-        effective:
-          values: []
-      watch_files_globs:
-        effective:
-          values: []
-      watch_files_files:
-        effective:
-          values: []
-      watch_files_dirs:
-        effective:
-          values: []
-    metadata_warnings: []
-    runtime_metadata_options:
-      id: devcov-integrity-guard
-      severity: critical
-      auto_fix: false
-      enforcement: active
-      enabled: true
-      custom: false
-      policy_definitions: AGENTS.md
-      registry_file: devcovenant/registry/registry.yaml
-      gate_status_file: devcovenant/registry/runtime/gate_status.json
-      watch_dirs: ''
-      watch_files: ''
-      selector_roles: &id012
-      - watch
-      - watch_files
-      watch_globs: ''
-      watch_files_globs: ''
-      watch_files_files: ''
-      watch_files_dirs: ''
-    runtime_config_overrides: {}
-    runtime_effective_options:
-      id: devcov-integrity-guard
-      severity: critical
-      auto_fix: false
-      enforcement: active
-      enabled: true
-      custom: false
-      policy_definitions: AGENTS.md
-      registry_file: devcovenant/registry/registry.yaml
-      gate_status_file: devcovenant/registry/runtime/gate_status.json
-      selector_roles: *id012
-    assets:
-    - AGENTS.md
-    - devcovenant/registry/registry.yaml
-    - devcovenant/registry/runtime/gate_status.json
-    origin: builtin
-    script_exists: true
-    hash: 1f497d7888eb29a81b322e49e1be81ce90c89f13e532868ffc2ebf7aafd3edf8
-    script_path: builtin/devcov_integrity_guard.py
   devcov-raw-string-escapes:
     enabled: true
     custom: true
@@ -2213,6 +2256,8 @@ policies:
         effective:
           values: []
     metadata_warnings: []
+    runtime_actions: []
+    commands: []
     runtime_metadata_options:
       id: devcov-raw-string-escapes
       severity: warning
@@ -2220,12 +2265,12 @@ policies:
       enforcement: active
       enabled: true
       custom: true
-      include_suffixes: &id013
+      include_suffixes: &id015
       - .py
       - .pyi
       - .pyw
       selector_roles: include
-      include_globs: &id014
+      include_globs: &id016
       - '*.py'
       - '*.pyi'
       - '*.pyw'
@@ -2239,382 +2284,14 @@ policies:
       enforcement: active
       enabled: true
       custom: true
-      include_suffixes: *id013
+      include_suffixes: *id015
       selector_roles: include
-      include_globs: *id014
+      include_globs: *id016
     assets: []
     origin: custom
     script_exists: true
     hash: dad74c49cfed791c8186fe94480ab37a12952d37a945ade86c40a8cc60539458
     script_path: custom/devcov_raw_string_escapes.py
-  devcov-structure-guard:
-    enabled: true
-    custom: false
-    description: Devcov Structure Guard
-    policy_text: Ensure the DevCovenant repo keeps the required structure and tooling
-      files.
-    metadata:
-      id: devcov-structure-guard
-      severity: critical
-      auto_fix: 'false'
-      enforcement: active
-      enabled: 'true'
-      custom: 'false'
-    metadata_resolution:
-      id:
-        descriptor:
-          values:
-          - devcov-structure-guard
-          behavior: base
-        runtime_identity:
-          values:
-          - devcov-structure-guard
-          behavior: replace
-        effective:
-          values:
-          - devcov-structure-guard
-      severity:
-        descriptor:
-          values:
-          - critical
-          behavior: base
-        effective:
-          values:
-          - critical
-      auto_fix:
-        descriptor:
-          values:
-          - 'false'
-          behavior: base
-        effective:
-          values:
-          - 'false'
-      enforcement:
-        descriptor:
-          values:
-          - active
-          behavior: base
-        effective:
-          values:
-          - active
-      enabled:
-        runtime_defaults:
-          values:
-          - 'true'
-          behavior: default
-        policy_state:
-          values:
-          - 'true'
-          behavior: replace
-          replaced_inherited_values:
-          - 'true'
-        effective:
-          values:
-          - 'true'
-      custom:
-        runtime_defaults:
-          values:
-          - 'false'
-          behavior: default
-        effective:
-          values:
-          - 'false'
-    metadata_warnings: []
-    runtime_metadata_options:
-      id: devcov-structure-guard
-      severity: critical
-      auto_fix: false
-      enforcement: active
-      enabled: true
-      custom: false
-    runtime_config_overrides: {}
-    runtime_effective_options:
-      id: devcov-structure-guard
-      severity: critical
-      auto_fix: false
-      enforcement: active
-      enabled: true
-      custom: false
-    assets: []
-    origin: builtin
-    script_exists: true
-    hash: d8dabf9e7218da3ab30995b3af6820798536b773ff38732208fd225a38912858
-    script_path: builtin/devcov_structure_guard.py
-  devflow-run-gates:
-    enabled: true
-    custom: false
-    description: Devflow Run Gates
-    policy_text: |-
-      DevCovenant must record and enforce the standard workflow: pre-commit start,
-      tests, then pre-commit end. The policy reads the status file to ensure each
-      gate ran and that no required command was skipped.
-      This check is enforced for every repository change (including
-      documentation-only updates) so the gate sequence cannot be skipped.
-      Changelog-only edits remain gate-scoped but do not require a fresh test
-      rerun by themselves.
-    metadata:
-      id: devflow-run-gates
-      severity: critical
-      auto_fix: 'false'
-      enforcement: active
-      enabled: 'true'
-      custom: 'false'
-      gate_status_file: devcovenant/registry/runtime/gate_status.json
-      required_commands: python3 -m unittest discover -v, pytest
-      require_pre_commit_start: 'true'
-      require_pre_commit_end: 'true'
-      pre_commit_command: python3 -m pre_commit run --all-files
-      pre_commit_start_epoch_key: pre_commit_start_epoch
-      pre_commit_end_epoch_key: pre_commit_end_epoch
-      pre_commit_start_command_key: pre_commit_start_command
-      pre_commit_end_command_key: pre_commit_end_command
-      code_extensions: ''
-      skipped_globs: devcovenant/registry/runtime/**
-      selector_roles: skipped
-      skipped_files: ''
-      skipped_dirs: ''
-    metadata_resolution:
-      id:
-        descriptor:
-          values:
-          - devflow-run-gates
-          behavior: base
-        runtime_identity:
-          values:
-          - devflow-run-gates
-          behavior: replace
-        effective:
-          values:
-          - devflow-run-gates
-      severity:
-        descriptor:
-          values:
-          - critical
-          behavior: base
-        effective:
-          values:
-          - critical
-      auto_fix:
-        descriptor:
-          values:
-          - 'false'
-          behavior: base
-        effective:
-          values:
-          - 'false'
-      enforcement:
-        descriptor:
-          values:
-          - active
-          behavior: base
-        effective:
-          values:
-          - active
-      gate_status_file:
-        descriptor:
-          values: []
-          behavior: base
-        profile_overlays:
-          values:
-          - devcovenant/registry/runtime/gate_status.json
-          behavior: replace
-        autogen_overlays:
-          values:
-          - devcovenant/registry/runtime/gate_status.json
-          behavior: replace
-          replaced_inherited_values:
-          - devcovenant/registry/runtime/gate_status.json
-        effective:
-          values:
-          - devcovenant/registry/runtime/gate_status.json
-      required_commands:
-        descriptor:
-          values: []
-          behavior: base
-        profile_overlays:
-          values:
-          - python3 -m unittest discover -v
-          - pytest
-          behavior: append
-        autogen_overlays:
-          values:
-          - python3 -m unittest discover -v
-          - pytest
-          behavior: append
-        effective:
-          values:
-          - python3 -m unittest discover -v
-          - pytest
-      require_pre_commit_start:
-        descriptor:
-          values:
-          - 'true'
-          behavior: base
-        effective:
-          values:
-          - 'true'
-      require_pre_commit_end:
-        descriptor:
-          values:
-          - 'true'
-          behavior: base
-        effective:
-          values:
-          - 'true'
-      pre_commit_command:
-        descriptor:
-          values: []
-          behavior: base
-        profile_overlays:
-          values:
-          - python3 -m pre_commit run --all-files
-          behavior: replace
-        autogen_overlays:
-          values:
-          - python3 -m pre_commit run --all-files
-          behavior: append
-        effective:
-          values:
-          - python3 -m pre_commit run --all-files
-      pre_commit_start_epoch_key:
-        descriptor:
-          values:
-          - pre_commit_start_epoch
-          behavior: base
-        effective:
-          values:
-          - pre_commit_start_epoch
-      pre_commit_end_epoch_key:
-        descriptor:
-          values:
-          - pre_commit_end_epoch
-          behavior: base
-        effective:
-          values:
-          - pre_commit_end_epoch
-      pre_commit_start_command_key:
-        descriptor:
-          values:
-          - pre_commit_start_command
-          behavior: base
-        effective:
-          values:
-          - pre_commit_start_command
-      pre_commit_end_command_key:
-        descriptor:
-          values:
-          - pre_commit_end_command
-          behavior: base
-        effective:
-          values:
-          - pre_commit_end_command
-      code_extensions:
-        descriptor:
-          values: []
-          behavior: base
-        effective:
-          values: []
-      skipped_globs:
-        descriptor:
-          values: []
-          behavior: base
-        profile_overlays:
-          values:
-          - devcovenant/registry/runtime/**
-          behavior: append
-        autogen_overlays:
-          values:
-          - devcovenant/registry/runtime/**
-          behavior: append
-        effective:
-          values:
-          - devcovenant/registry/runtime/**
-      enabled:
-        runtime_defaults:
-          values:
-          - 'true'
-          behavior: default
-        policy_state:
-          values:
-          - 'true'
-          behavior: replace
-          replaced_inherited_values:
-          - 'true'
-        effective:
-          values:
-          - 'true'
-      custom:
-        runtime_defaults:
-          values:
-          - 'false'
-          behavior: default
-        effective:
-          values:
-          - 'false'
-      selector_roles:
-        derived_selectors:
-          values:
-          - skipped
-          behavior: derive
-        effective:
-          values:
-          - skipped
-      skipped_files:
-        effective:
-          values: []
-      skipped_dirs:
-        effective:
-          values: []
-    metadata_warnings: []
-    runtime_metadata_options:
-      id: devflow-run-gates
-      severity: critical
-      auto_fix: false
-      enforcement: active
-      enabled: true
-      custom: false
-      gate_status_file: devcovenant/registry/runtime/gate_status.json
-      required_commands: &id015
-      - python3 -m unittest discover -v
-      - pytest
-      require_pre_commit_start: true
-      require_pre_commit_end: true
-      pre_commit_command: python3 -m pre_commit run --all-files
-      pre_commit_start_epoch_key: pre_commit_start_epoch
-      pre_commit_end_epoch_key: pre_commit_end_epoch
-      pre_commit_start_command_key: pre_commit_start_command
-      pre_commit_end_command_key: pre_commit_end_command
-      code_extensions: ''
-      skipped_globs: devcovenant/registry/runtime/**
-      selector_roles: skipped
-      skipped_files: ''
-      skipped_dirs: ''
-    runtime_config_overrides: {}
-    runtime_effective_options:
-      id: devflow-run-gates
-      severity: critical
-      auto_fix: false
-      enforcement: active
-      enabled: true
-      custom: false
-      gate_status_file: devcovenant/registry/runtime/gate_status.json
-      required_commands: *id015
-      require_pre_commit_start: true
-      require_pre_commit_end: true
-      pre_commit_command: python3 -m pre_commit run --all-files
-      pre_commit_start_epoch_key: pre_commit_start_epoch
-      pre_commit_end_epoch_key: pre_commit_end_epoch
-      pre_commit_start_command_key: pre_commit_start_command
-      pre_commit_end_command_key: pre_commit_end_command
-      skipped_globs: devcovenant/registry/runtime/**
-      selector_roles: skipped
-    assets:
-    - devcovenant/registry/runtime/**
-    - devcovenant/registry/runtime/gate_status.json
-    origin: builtin
-    script_exists: true
-    hash: b8352ca650b0536c739e9243e32d1f0300c52b020828e7759c6f3d4fe6fddb37
-    script_path: builtin/devflow_run_gates.py
   docstring-and-comment-coverage:
     enabled: true
     custom: false
@@ -2820,6 +2497,8 @@ policies:
           values:
           - 'false'
     metadata_warnings: []
+    runtime_actions: []
+    commands: []
     runtime_metadata_options:
       id: docstring-and-comment-coverage
       severity: error
@@ -2828,19 +2507,19 @@ policies:
       enabled: true
       custom: false
       include_suffixes: .py
-      exclude_prefixes: &id016
+      exclude_prefixes: &id017
       - build
       - dist
       - node_modules
       include_prefixes: ''
       include_globs: '*.py'
       exclude_suffixes: ''
-      exclude_globs: &id017
+      exclude_globs: &id018
       - build/**
       - dist/**
       - node_modules/**
       force_include_globs: ''
-      selector_roles: &id018
+      selector_roles: &id019
       - include
       - exclude
       - force_include
@@ -2859,10 +2538,10 @@ policies:
       enabled: true
       custom: false
       include_suffixes: .py
-      exclude_prefixes: *id016
+      exclude_prefixes: *id017
       include_globs: '*.py'
-      exclude_globs: *id017
-      selector_roles: *id018
+      exclude_globs: *id018
+      selector_roles: *id019
     assets:
     - build/**
     - dist/**
@@ -2908,15 +2587,15 @@ policies:
         webhooks, integration, integrations, sdk, cli, ui, view, views, page, pages,
         screen, screens, form, forms, workflow, workflows
       user_visible_files: README.md, CONTRIBUTING.md, AGENTS.md, SPEC.md, PLAN.md,
-        devcovenant/README.md, devcovenant/docs/architecture.md, devcovenant/docs/installation.md,
-        devcovenant/docs/config.md, devcovenant/docs/profiles.md, devcovenant/docs/policies.md,
-        devcovenant/docs/translators.md, devcovenant/docs/registry.md, devcovenant/docs/refresh.md,
-        devcovenant/docs/workflow.md, devcovenant/docs/troubleshooting.md
+        SECURITY.md, PRIVACY.md, SUPPORT.md, devcovenant/README.md, devcovenant/docs/architecture.md,
+        devcovenant/docs/installation.md, devcovenant/docs/config.md, devcovenant/docs/profiles.md,
+        devcovenant/docs/policies.md, devcovenant/docs/translators.md, devcovenant/docs/registry.md,
+        devcovenant/docs/refresh.md, devcovenant/docs/workflow.md, devcovenant/docs/troubleshooting.md
       doc_quality_files: README.md, CONTRIBUTING.md, AGENTS.md, SPEC.md, PLAN.md,
-        devcovenant/README.md, devcovenant/docs/architecture.md, devcovenant/docs/installation.md,
-        devcovenant/docs/config.md, devcovenant/docs/profiles.md, devcovenant/docs/policies.md,
-        devcovenant/docs/translators.md, devcovenant/docs/registry.md, devcovenant/docs/refresh.md,
-        devcovenant/docs/workflow.md, devcovenant/docs/troubleshooting.md
+        SECURITY.md, PRIVACY.md, SUPPORT.md, devcovenant/README.md, devcovenant/docs/architecture.md,
+        devcovenant/docs/installation.md, devcovenant/docs/config.md, devcovenant/docs/profiles.md,
+        devcovenant/docs/policies.md, devcovenant/docs/translators.md, devcovenant/docs/registry.md,
+        devcovenant/docs/refresh.md, devcovenant/docs/workflow.md, devcovenant/docs/troubleshooting.md
       required_headings: Table of Contents, Overview, Workflow
       require_toc: 'true'
       min_section_count: '3'
@@ -2930,11 +2609,13 @@ policies:
         devcovenant/docs/profiles.md, devcovenant/custom/profiles/__init__.py => devcovenant/docs/profiles.md,
         devcovenant/custom/profiles/*.py => devcovenant/docs/profiles.md, devcovenant/custom/profiles/**/*.py
         => devcovenant/docs/profiles.md, devcovenant/custom/profiles/**/*.yaml =>
-        devcovenant/docs/profiles.md, devcovenant/custom/policies/**/*.yaml => devcovenant/docs/policies.md,
+        devcovenant/docs/profiles.md, .github/dependabot.yml => devcovenant/docs/workflow.md,
+        bandit.yaml => SECURITY.md, devcovenant/custom/policies/**/*.yaml => devcovenant/docs/policies.md,
         devcovenant/custom/policies/**/*.py => devcovenant/docs/policies.md, devcovenant/core/flow/*.py
         => devcovenant/docs/workflow.md, devcovenant/core/runtime/*.py => devcovenant/docs/workflow.md,
         devcovenant/core/services/*.py => devcovenant/docs/architecture.md, devcovenant/core/lib/*.py
         => devcovenant/docs/architecture.md, devcovenant/core/contracts/*.py => devcovenant/docs/architecture.md,
+        devcovenant/core/contracts/**/*.yaml => devcovenant/docs/architecture.md,
         devcovenant/*.py => devcovenant/docs/installation.md, pyproject.toml => devcovenant/docs/installation.md,
         MANIFEST.in => devcovenant/docs/installation.md, devcovenant/config.yaml =>
         devcovenant/docs/config.md, devcovenant/registry/registry.yaml => devcovenant/docs/registry.md,
@@ -3270,6 +2951,9 @@ policies:
           - AGENTS.md
           - SPEC.md
           - PLAN.md
+          - SECURITY.md
+          - PRIVACY.md
+          - SUPPORT.md
           - devcovenant/README.md
           - devcovenant/docs/architecture.md
           - devcovenant/docs/installation.md
@@ -3289,6 +2973,9 @@ policies:
           - AGENTS.md
           - SPEC.md
           - PLAN.md
+          - SECURITY.md
+          - PRIVACY.md
+          - SUPPORT.md
           - devcovenant/README.md
           - devcovenant/docs/architecture.md
           - devcovenant/docs/installation.md
@@ -3308,6 +2995,9 @@ policies:
           - AGENTS.md
           - SPEC.md
           - PLAN.md
+          - SECURITY.md
+          - PRIVACY.md
+          - SUPPORT.md
           - devcovenant/README.md
           - devcovenant/docs/architecture.md
           - devcovenant/docs/installation.md
@@ -3330,6 +3020,9 @@ policies:
           - AGENTS.md
           - SPEC.md
           - PLAN.md
+          - SECURITY.md
+          - PRIVACY.md
+          - SUPPORT.md
           - devcovenant/README.md
           - devcovenant/docs/architecture.md
           - devcovenant/docs/installation.md
@@ -3349,6 +3042,9 @@ policies:
           - AGENTS.md
           - SPEC.md
           - PLAN.md
+          - SECURITY.md
+          - PRIVACY.md
+          - SUPPORT.md
           - devcovenant/README.md
           - devcovenant/docs/architecture.md
           - devcovenant/docs/installation.md
@@ -3368,6 +3064,9 @@ policies:
           - AGENTS.md
           - SPEC.md
           - PLAN.md
+          - SECURITY.md
+          - PRIVACY.md
+          - SUPPORT.md
           - devcovenant/README.md
           - devcovenant/docs/architecture.md
           - devcovenant/docs/installation.md
@@ -3433,6 +3132,8 @@ policies:
           - devcovenant/custom/profiles/*.py => devcovenant/docs/profiles.md
           - devcovenant/custom/profiles/**/*.py => devcovenant/docs/profiles.md
           - devcovenant/custom/profiles/**/*.yaml => devcovenant/docs/profiles.md
+          - .github/dependabot.yml => devcovenant/docs/workflow.md
+          - bandit.yaml => SECURITY.md
           - devcovenant/custom/policies/**/*.yaml => devcovenant/docs/policies.md
           - devcovenant/custom/policies/**/*.py => devcovenant/docs/policies.md
           - devcovenant/core/flow/*.py => devcovenant/docs/workflow.md
@@ -3440,6 +3141,7 @@ policies:
           - devcovenant/core/services/*.py => devcovenant/docs/architecture.md
           - devcovenant/core/lib/*.py => devcovenant/docs/architecture.md
           - devcovenant/core/contracts/*.py => devcovenant/docs/architecture.md
+          - devcovenant/core/contracts/**/*.yaml => devcovenant/docs/architecture.md
           - devcovenant/*.py => devcovenant/docs/installation.md
           - pyproject.toml => devcovenant/docs/installation.md
           - MANIFEST.in => devcovenant/docs/installation.md
@@ -3461,6 +3163,8 @@ policies:
           - devcovenant/custom/profiles/*.py => devcovenant/docs/profiles.md
           - devcovenant/custom/profiles/**/*.py => devcovenant/docs/profiles.md
           - devcovenant/custom/profiles/**/*.yaml => devcovenant/docs/profiles.md
+          - .github/dependabot.yml => devcovenant/docs/workflow.md
+          - bandit.yaml => SECURITY.md
           - devcovenant/custom/policies/**/*.yaml => devcovenant/docs/policies.md
           - devcovenant/custom/policies/**/*.py => devcovenant/docs/policies.md
           - devcovenant/core/flow/*.py => devcovenant/docs/workflow.md
@@ -3468,6 +3172,7 @@ policies:
           - devcovenant/core/services/*.py => devcovenant/docs/architecture.md
           - devcovenant/core/lib/*.py => devcovenant/docs/architecture.md
           - devcovenant/core/contracts/*.py => devcovenant/docs/architecture.md
+          - devcovenant/core/contracts/**/*.yaml => devcovenant/docs/architecture.md
           - devcovenant/*.py => devcovenant/docs/installation.md
           - pyproject.toml => devcovenant/docs/installation.md
           - MANIFEST.in => devcovenant/docs/installation.md
@@ -3489,6 +3194,8 @@ policies:
           - devcovenant/custom/profiles/*.py => devcovenant/docs/profiles.md
           - devcovenant/custom/profiles/**/*.py => devcovenant/docs/profiles.md
           - devcovenant/custom/profiles/**/*.yaml => devcovenant/docs/profiles.md
+          - .github/dependabot.yml => devcovenant/docs/workflow.md
+          - bandit.yaml => SECURITY.md
           - devcovenant/custom/policies/**/*.yaml => devcovenant/docs/policies.md
           - devcovenant/custom/policies/**/*.py => devcovenant/docs/policies.md
           - devcovenant/core/flow/*.py => devcovenant/docs/workflow.md
@@ -3496,6 +3203,7 @@ policies:
           - devcovenant/core/services/*.py => devcovenant/docs/architecture.md
           - devcovenant/core/lib/*.py => devcovenant/docs/architecture.md
           - devcovenant/core/contracts/*.py => devcovenant/docs/architecture.md
+          - devcovenant/core/contracts/**/*.yaml => devcovenant/docs/architecture.md
           - devcovenant/*.py => devcovenant/docs/installation.md
           - pyproject.toml => devcovenant/docs/installation.md
           - MANIFEST.in => devcovenant/docs/installation.md
@@ -3798,6 +3506,8 @@ policies:
           values:
           - 'false'
     metadata_warnings: []
+    runtime_actions: []
+    commands: []
     runtime_metadata_options:
       id: documentation-growth-tracking
       severity: warning
@@ -3805,7 +3515,7 @@ policies:
       enforcement: active
       enabled: true
       custom: false
-      selector_roles: &id019
+      selector_roles: &id020
       - user_facing
       - user_visible
       - doc_quality
@@ -3813,7 +3523,7 @@ policies:
       exclude_prefixes: ''
       user_facing_prefixes: ''
       user_facing_exclude_prefixes: tests
-      user_facing_suffixes: &id020
+      user_facing_suffixes: &id021
       - .py
       - .js
       - .ts
@@ -3831,12 +3541,12 @@ policies:
       - .yaml
       - .json
       - .toml
-      user_facing_files: &id021
+      user_facing_files: &id022
       - .pre-commit-config.yaml
       - pyproject.toml
       - devcovenant/cli.py
       - devcovenant/__main__.py
-      user_facing_globs: &id022
+      user_facing_globs: &id023
       - .github/workflows/*.yml
       - .github/workflows/*.yaml
       - '*.py'
@@ -3856,7 +3566,7 @@ policies:
       - '*.yaml'
       - '*.json'
       - '*.toml'
-      user_facing_keywords: &id023
+      user_facing_keywords: &id024
       - api
       - endpoint
       - endpoints
@@ -3888,12 +3598,15 @@ policies:
       - forms
       - workflow
       - workflows
-      user_visible_files: &id024
+      user_visible_files: &id025
       - README.md
       - CONTRIBUTING.md
       - AGENTS.md
       - SPEC.md
       - PLAN.md
+      - SECURITY.md
+      - PRIVACY.md
+      - SUPPORT.md
       - devcovenant/README.md
       - devcovenant/docs/architecture.md
       - devcovenant/docs/installation.md
@@ -3905,12 +3618,15 @@ policies:
       - devcovenant/docs/refresh.md
       - devcovenant/docs/workflow.md
       - devcovenant/docs/troubleshooting.md
-      doc_quality_files: &id025
+      doc_quality_files: &id026
       - README.md
       - CONTRIBUTING.md
       - AGENTS.md
       - SPEC.md
       - PLAN.md
+      - SECURITY.md
+      - PRIVACY.md
+      - SUPPORT.md
       - devcovenant/README.md
       - devcovenant/docs/architecture.md
       - devcovenant/docs/installation.md
@@ -3922,14 +3638,14 @@ policies:
       - devcovenant/docs/refresh.md
       - devcovenant/docs/workflow.md
       - devcovenant/docs/troubleshooting.md
-      required_headings: &id026
+      required_headings: &id027
       - Table of Contents
       - Overview
       - Workflow
       require_toc: true
       min_section_count: 3
       min_word_count: 120
-      doc_routes: &id027
+      doc_routes: &id028
       - devcovenant/builtin/policies/ => devcovenant/docs/policies.md
       - devcovenant/builtin/profiles/*/*.yaml => devcovenant/docs/profiles.md
       - devcovenant/*/profiles/*/*translator.py=> devcovenant/docs/translators.md
@@ -3942,6 +3658,8 @@ policies:
       - devcovenant/custom/profiles/*.py => devcovenant/docs/profiles.md
       - devcovenant/custom/profiles/**/*.py => devcovenant/docs/profiles.md
       - devcovenant/custom/profiles/**/*.yaml => devcovenant/docs/profiles.md
+      - .github/dependabot.yml => devcovenant/docs/workflow.md
+      - bandit.yaml => SECURITY.md
       - devcovenant/custom/policies/**/*.yaml => devcovenant/docs/policies.md
       - devcovenant/custom/policies/**/*.py => devcovenant/docs/policies.md
       - devcovenant/core/flow/*.py => devcovenant/docs/workflow.md
@@ -3949,6 +3667,7 @@ policies:
       - devcovenant/core/services/*.py => devcovenant/docs/architecture.md
       - devcovenant/core/lib/*.py => devcovenant/docs/architecture.md
       - devcovenant/core/contracts/*.py => devcovenant/docs/architecture.md
+      - devcovenant/core/contracts/**/*.yaml => devcovenant/docs/architecture.md
       - devcovenant/*.py => devcovenant/docs/installation.md
       - pyproject.toml => devcovenant/docs/installation.md
       - MANIFEST.in => devcovenant/docs/installation.md
@@ -3957,7 +3676,7 @@ policies:
       - .github/workflows/*.yml => devcovenant/docs/workflow.md
       require_mentions: true
       mention_min_length: 3
-      mention_stopwords: &id028
+      mention_stopwords: &id029
       - devcovenant
       - tools
       - common
@@ -3982,7 +3701,7 @@ policies:
       exclude_suffixes: ''
       exclude_globs: ''
       force_include_globs: ''
-      user_facing_exclude_globs: &id029
+      user_facing_exclude_globs: &id030
       - .vscode/**
       - .idea/**
       - .venv/**
@@ -4028,23 +3747,23 @@ policies:
       enforcement: active
       enabled: true
       custom: false
-      selector_roles: *id019
+      selector_roles: *id020
       user_facing_exclude_prefixes: tests
-      user_facing_suffixes: *id020
-      user_facing_files: *id021
-      user_facing_globs: *id022
-      user_facing_keywords: *id023
-      user_visible_files: *id024
-      doc_quality_files: *id025
-      required_headings: *id026
+      user_facing_suffixes: *id021
+      user_facing_files: *id022
+      user_facing_globs: *id023
+      user_facing_keywords: *id024
+      user_visible_files: *id025
+      doc_quality_files: *id026
+      required_headings: *id027
       require_toc: true
       min_section_count: 3
       min_word_count: 120
-      doc_routes: *id027
+      doc_routes: *id028
       require_mentions: true
       mention_min_length: 3
-      mention_stopwords: *id028
-      user_facing_exclude_globs: *id029
+      mention_stopwords: *id029
+      user_facing_exclude_globs: *id030
       user_visible_dirs: devcovenant/docs
       doc_quality_dirs: devcovenant/docs
       user_facing_exclude_files: devcovenant/config.yaml
@@ -4054,6 +3773,7 @@ policies:
     - '*.json'
     - '*.yaml'
     - '*.yml'
+    - .github/dependabot.yml => devcovenant/docs/workflow.md
     - .github/workflows/*.yaml
     - .github/workflows/*.yml
     - .github/workflows/*.yml => devcovenant/docs/workflow.md
@@ -4075,9 +3795,13 @@ policies:
     - CONTRIBUTING.md
     - MANIFEST.in => devcovenant/docs/installation.md
     - PLAN.md
+    - PRIVACY.md
     - README.md
+    - SECURITY.md
     - SPEC.md
+    - SUPPORT.md
     - __pycache__/**
+    - bandit.yaml => SECURITY.md
     - build/**
     - devcovenant/*.py => devcovenant/docs/installation.md
     - devcovenant/*/profiles/**/assets/**/*.yaml=> devcovenant/docs/profiles.md
@@ -4094,6 +3818,7 @@ policies:
     - devcovenant/config.yaml
     - devcovenant/config.yaml => devcovenant/docs/config.md
     - devcovenant/core/*.py
+    - devcovenant/core/contracts/**/*.yaml => devcovenant/docs/architecture.md
     - devcovenant/core/contracts/*.py => devcovenant/docs/architecture.md
     - devcovenant/core/flow/*.py => devcovenant/docs/workflow.md
     - devcovenant/core/lib/*.py => devcovenant/docs/architecture.md
@@ -4127,7 +3852,7 @@ policies:
     - tests/**
     origin: builtin
     script_exists: true
-    hash: df7596f36ad2e4f8d3a9df0b2502f01c480d0792f9acbd6f0a673417abe23090
+    hash: 577f1d1ffed7286319ac58f43b98759b65b236015f9af5265c6a81ba192adaa3
     script_path: builtin/documentation_growth_tracking.py
   last-updated:
     enabled: true
@@ -4468,6 +4193,8 @@ policies:
           values:
           - 'false'
     metadata_warnings: []
+    runtime_actions: []
+    commands: []
     runtime_metadata_options:
       id: last-updated
       severity: error
@@ -4476,7 +4203,7 @@ policies:
       enabled: true
       custom: false
       include_suffixes: .md
-      allowed_globs: &id030
+      allowed_globs: &id031
       - devcovenant/README.md
       - devcovenant/core/README.md
       - devcovenant/custom/README.md
@@ -4499,7 +4226,7 @@ policies:
       allowed_files: ''
       allowed_suffixes: ''
       required_files: ''
-      required_globs: &id031
+      required_globs: &id032
       - devcovenant/README.md
       - devcovenant/core/README.md
       - devcovenant/custom/README.md
@@ -4519,7 +4246,7 @@ policies:
       - PLAN.md
       - PROFILE_MAP.md
       - POLICY_MAP.md
-      selector_roles: &id032
+      selector_roles: &id033
       - include
       - allowed
       - required
@@ -4537,9 +4264,9 @@ policies:
       enabled: true
       custom: false
       include_suffixes: .md
-      allowed_globs: *id030
-      required_globs: *id031
-      selector_roles: *id032
+      allowed_globs: *id031
+      required_globs: *id032
+      selector_roles: *id033
       include_globs: '*.md'
     assets:
     - '*.md'
@@ -5105,6 +4832,8 @@ policies:
         effective:
           values: []
     metadata_warnings: []
+    runtime_actions: []
+    commands: []
     runtime_metadata_options:
       id: line-length-limit
       severity: warning
@@ -5114,7 +4843,7 @@ policies:
       custom: false
       max_length: 79
       allow_long_url_lines: true
-      url_prefixes: &id033
+      url_prefixes: &id034
       - https://
       - http://
       - ftp://
@@ -5134,10 +4863,10 @@ policies:
       - 'urn:'
       allow_long_lines: true
       long_lines_contain: ''
-      long_lines_between: &id034
+      long_lines_between: &id035
       - devcovenant/builtin/policies/=>.yaml
       - devcovenant/custom/policies/=>.yaml
-      include_suffixes: &id035
+      include_suffixes: &id036
       - .py
       - .md
       - .rst
@@ -5147,11 +4876,11 @@ policies:
       - .json
       - .toml
       - .cff
-      exclude_prefixes: &id036
+      exclude_prefixes: &id037
       - build
       - dist
       - node_modules
-      exclude_globs: &id037
+      exclude_globs: &id038
       - .vscode/**
       - .idea/**
       - .venv/**
@@ -5179,7 +4908,7 @@ policies:
       - devcovenant/builtin/profiles/global/assets/**/*.yaml
       - devcovenant/registry/**
       include_prefixes: ''
-      include_globs: &id038
+      include_globs: &id039
       - '*.py'
       - '*.md'
       - '*.rst'
@@ -5191,11 +4920,11 @@ policies:
       - '*.cff'
       exclude_suffixes: ''
       force_include_globs: ''
-      selector_roles: &id039
+      selector_roles: &id040
       - include
       - exclude
       - force_include
-      url_globs: &id040
+      url_globs: &id041
       - https:/**
       - http:/**
       - ftp:/**
@@ -5231,15 +4960,15 @@ policies:
       custom: false
       max_length: 79
       allow_long_url_lines: true
-      url_prefixes: *id033
+      url_prefixes: *id034
       allow_long_lines: true
-      long_lines_between: *id034
-      include_suffixes: *id035
-      exclude_prefixes: *id036
-      exclude_globs: *id037
-      include_globs: *id038
-      selector_roles: *id039
-      url_globs: *id040
+      long_lines_between: *id035
+      include_suffixes: *id036
+      exclude_prefixes: *id037
+      exclude_globs: *id038
+      include_globs: *id039
+      selector_roles: *id040
+      url_globs: *id041
     assets:
     - '**/*.egg-info/**'
     - '*.egg-info/**'
@@ -5384,6 +5113,8 @@ policies:
           values:
           - 'true'
     metadata_warnings: []
+    runtime_actions: []
+    commands: []
     runtime_metadata_options:
       id: managed-doc-assets
       severity: error
@@ -5587,6 +5318,12 @@ policies:
           values:
           - 'false'
     metadata_warnings: []
+    runtime_actions:
+    - id: resolve-stage
+      description: Resolve the managed interpreter and bootstrap steps for one CLI
+        stage.
+      mutates_repo: false
+    commands: []
     runtime_metadata_options:
       id: managed-environment
       severity: error
@@ -5595,17 +5332,17 @@ policies:
       enabled: true
       custom: false
       expected_paths: .venv
-      expected_interpreters: &id041
+      expected_interpreters: &id042
       - .venv/bin/python
       - .venv/Scripts/python.exe
-      required_commands: &id042
+      required_commands: &id043
       - python3
       - pre-commit
       - pytest
-      manual_commands: &id043
+      manual_commands: &id044
       - python3 -m venv .venv
       - '{managed_python} -m pip install -r requirements.lock'
-      managed_commands: &id044
+      managed_commands: &id045
       - start=>python3 -m venv .venv
       - start=>{managed_python} -m pip install -r requirements.lock
     runtime_config_overrides: {}
@@ -5617,10 +5354,10 @@ policies:
       enabled: true
       custom: false
       expected_paths: .venv
-      expected_interpreters: *id041
-      required_commands: *id042
-      manual_commands: *id043
-      managed_commands: *id044
+      expected_interpreters: *id042
+      required_commands: *id043
+      manual_commands: *id044
+      managed_commands: *id045
     assets:
     - .venv/Scripts/python.exe
     - .venv/bin/python
@@ -5969,6 +5706,8 @@ policies:
         effective:
           values: []
     metadata_warnings: []
+    runtime_actions: []
+    commands: []
     runtime_metadata_options:
       id: modules-need-tests
       severity: error
@@ -5978,7 +5717,7 @@ policies:
       custom: false
       include_suffixes: .py
       include_prefixes: ''
-      exclude_prefixes: &id045
+      exclude_prefixes: &id046
       - build
       - dist
       - node_modules
@@ -5992,7 +5731,7 @@ policies:
       watch_dirs: tests
       tests_watch_dirs: tests
       mirror_roots: devcovenant=>tests/devcovenant
-      mirror_test_name_templates: &id048
+      mirror_test_name_templates: &id049
       - python=>test_{stem}.py
       - python=>{stem}_test.py
       test_style_requirements: python=>python_unittest
@@ -6001,11 +5740,11 @@ policies:
       force_include_globs: ''
       watch_files: ''
       placeholder_test_methods: test_placeholder
-      placeholder_text_markers: &id049
+      placeholder_text_markers: &id050
       - placeholder-marker-alpha
       - placeholder-marker-beta
       - placeholder-marker-gamma
-      selector_roles: &id050
+      selector_roles: &id051
       - include
       - exclude
       - watch
@@ -6021,9 +5760,9 @@ policies:
       force_include_files: ''
       force_include_dirs: ''
     runtime_config_overrides:
-      exclude_globs: &id046
+      exclude_globs: &id047
       - devcovenant/builtin/profiles/**/assets/**
-      mirror_roots: &id047
+      mirror_roots: &id048
       - devcovenant=>tests/devcovenant
     runtime_effective_options:
       id: modules-need-tests
@@ -6033,17 +5772,17 @@ policies:
       enabled: true
       custom: false
       include_suffixes: .py
-      exclude_prefixes: *id045
-      exclude_globs: *id046
+      exclude_prefixes: *id046
+      exclude_globs: *id047
       watch_dirs: tests
       tests_watch_dirs: tests
-      mirror_roots: *id047
-      mirror_test_name_templates: *id048
+      mirror_roots: *id048
+      mirror_test_name_templates: *id049
       test_style_requirements: python=>python_unittest
       include_globs: '*.py'
       placeholder_test_methods: test_placeholder
-      placeholder_text_markers: *id049
-      selector_roles: *id050
+      placeholder_text_markers: *id050
+      selector_roles: *id051
     assets:
     - build/**
     - devcovenant/builtin/profiles/**/assets/**
@@ -6278,6 +6017,8 @@ policies:
           values:
           - 'false'
     metadata_warnings: []
+    runtime_actions: []
+    commands: []
     runtime_metadata_options:
       id: name-clarity
       severity: warning
@@ -6285,7 +6026,7 @@ policies:
       enforcement: active
       enabled: true
       custom: false
-      exclude_prefixes: &id051
+      exclude_prefixes: &id052
       - build
       - dist
       - node_modules
@@ -6293,12 +6034,12 @@ policies:
       include_prefixes: ''
       include_globs: '*.py'
       exclude_suffixes: ''
-      exclude_globs: &id052
+      exclude_globs: &id053
       - build/**
       - dist/**
       - node_modules/**
       force_include_globs: ''
-      selector_roles: &id053
+      selector_roles: &id054
       - exclude
       - include
       - force_include
@@ -6316,11 +6057,11 @@ policies:
       enforcement: active
       enabled: true
       custom: false
-      exclude_prefixes: *id051
+      exclude_prefixes: *id052
       include_suffixes: .py
       include_globs: '*.py'
-      exclude_globs: *id052
-      selector_roles: *id053
+      exclude_globs: *id053
+      selector_roles: *id054
     assets:
     - build/**
     - dist/**
@@ -6402,6 +6143,8 @@ policies:
           values:
           - 'false'
     metadata_warnings: []
+    runtime_actions: []
+    commands: []
     runtime_metadata_options:
       id: no-future-dates
       severity: error
@@ -6716,6 +6459,8 @@ policies:
         effective:
           values: []
     metadata_warnings: []
+    runtime_actions: []
+    commands: []
     runtime_metadata_options:
       id: no-print-outside-output-runtime
       severity: error
@@ -6723,7 +6468,7 @@ policies:
       enforcement: active
       enabled: true
       custom: false
-      selector_roles: &id054
+      selector_roles: &id055
       - include
       - exclude
       - force_include
@@ -6731,12 +6476,12 @@ policies:
       allowed_file_dirs: ''
       include_suffixes: .py
       include_prefixes: ''
-      include_globs: &id055
+      include_globs: &id056
       - devcovenant/**/*.py
       - '*.py'
       exclude_suffixes: ''
       exclude_prefixes: ''
-      exclude_globs: &id056
+      exclude_globs: &id057
       - devcovenant/builtin/profiles/**/assets/**
       - tests/**
       force_include_globs: ''
@@ -6746,7 +6491,7 @@ policies:
       exclude_dirs: ''
       force_include_files: ''
       force_include_dirs: ''
-      sink_call_targets: &id057
+      sink_call_targets: &id058
       - python=>print
       - python=>builtins.print
       sink_attr_targets: ''
@@ -6762,11 +6507,11 @@ policies:
       enforcement: active
       enabled: true
       custom: false
-      selector_roles: *id054
+      selector_roles: *id055
       include_suffixes: .py
-      include_globs: *id055
-      exclude_globs: *id056
-      sink_call_targets: *id057
+      include_globs: *id056
+      exclude_globs: *id057
+      sink_call_targets: *id058
       allowed_file_globs: devcovenant/core/runtime/execution.py
       allow_waiver_comment: 'DEVCOV_ALLOW_OUTPUT:'
     assets:
@@ -7103,6 +6848,8 @@ policies:
           values:
           - DEVCOV_BROAD_BEGIN=>DEVCOV_BROAD_END
     metadata_warnings: []
+    runtime_actions: []
+    commands: []
     runtime_metadata_options:
       id: no-raw-errors
       severity: error
@@ -7110,7 +6857,7 @@ policies:
       enforcement: active
       enabled: true
       custom: false
-      selector_roles: &id058
+      selector_roles: &id059
       - include
       - exclude
       - force_include
@@ -7118,11 +6865,11 @@ policies:
       include_prefixes: ''
       include_globs: '*.py'
       exclude_suffixes: ''
-      exclude_prefixes: &id059
+      exclude_prefixes: &id060
       - build
       - dist
       - node_modules
-      exclude_globs: &id060
+      exclude_globs: &id061
       - build/**
       - dist/**
       - node_modules/**
@@ -7147,11 +6894,11 @@ policies:
       enforcement: active
       enabled: true
       custom: false
-      selector_roles: *id058
+      selector_roles: *id059
       include_suffixes: .py
       include_globs: '*.py'
-      exclude_prefixes: *id059
-      exclude_globs: *id060
+      exclude_prefixes: *id060
+      exclude_globs: *id061
       forbid_bare_except: true
       forbid_raise_exception: true
       forbid_broad_exception_handlers: true
@@ -7402,6 +7149,8 @@ policies:
         effective:
           values: []
     metadata_warnings: []
+    runtime_actions: []
+    commands: []
     runtime_metadata_options:
       id: raw-string-escapes
       severity: warning
@@ -7409,7 +7158,7 @@ policies:
       enforcement: active
       enabled: false
       custom: false
-      include_suffixes: &id061
+      include_suffixes: &id062
       - .py
       - .pyi
       - .pyw
@@ -7425,11 +7174,11 @@ policies:
       - .swift
       - .php
       - .rb
-      selector_roles: &id062
+      selector_roles: &id063
       - include
       - exclude
       - force_include
-      include_globs: &id063
+      include_globs: &id064
       - '*.py'
       - '*.pyi'
       - '*.pyw'
@@ -7468,9 +7217,9 @@ policies:
       enforcement: active
       enabled: false
       custom: false
-      include_suffixes: *id061
-      selector_roles: *id062
-      include_globs: *id063
+      include_suffixes: *id062
+      selector_roles: *id063
+      include_globs: *id064
     assets: []
     origin: builtin
     script_exists: true
@@ -7654,6 +7403,8 @@ policies:
           values:
           - 'false'
     metadata_warnings: []
+    runtime_actions: []
+    commands: []
     runtime_metadata_options:
       id: read-only-directories
       severity: error
@@ -7668,7 +7419,7 @@ policies:
       exclude_prefixes: ''
       exclude_globs: ''
       force_include_globs: ''
-      selector_roles: &id064
+      selector_roles: &id065
       - include
       - exclude
       - force_include
@@ -7686,7 +7437,7 @@ policies:
       enforcement: active
       enabled: true
       custom: false
-      selector_roles: *id064
+      selector_roles: *id065
     assets: []
     origin: builtin
     script_exists: true
@@ -7769,6 +7520,8 @@ policies:
           values:
           - 'true'
     metadata_warnings: []
+    runtime_actions: []
+    commands: []
     runtime_metadata_options:
       id: readme-sync
       severity: error
@@ -7994,6 +7747,8 @@ policies:
           values:
           - 'false'
     metadata_warnings: []
+    runtime_actions: []
+    commands: []
     runtime_metadata_options:
       id: security-scanner
       severity: error
@@ -8001,7 +7756,7 @@ policies:
       enforcement: active
       enabled: true
       custom: false
-      exclude_globs: &id065
+      exclude_globs: &id066
       - tests/**
       - '**/tests/**'
       include_suffixes: .py
@@ -8010,7 +7765,7 @@ policies:
       exclude_suffixes: ''
       exclude_prefixes: ''
       force_include_globs: ''
-      selector_roles: &id066
+      selector_roles: &id067
       - exclude
       - include
       - force_include
@@ -8028,10 +7783,10 @@ policies:
       enforcement: active
       enabled: true
       custom: false
-      exclude_globs: *id065
+      exclude_globs: *id066
       include_suffixes: .py
       include_globs: '*.py'
-      selector_roles: *id066
+      selector_roles: *id067
     assets:
     - '**/tests/**'
     - tests/**
@@ -8447,6 +8202,8 @@ policies:
       - warning
       message: user_overrides replaces inherited metadata for `tests-coverage.severity`;
         use overlays if you intended additive behavior.
+    runtime_actions: []
+    commands: []
     runtime_metadata_options:
       id: tests-coverage
       severity: warning
@@ -8455,17 +8212,17 @@ policies:
       enabled: true
       custom: false
       enforce_symbol_fidelity: true
-      symbol_kinds: &id067
+      symbol_kinds: &id068
       - function
       - class
       symbol_name_min_length: 3
       symbol_assertion_window: 2
       fixture_marker_pattern: \bDEVCOV_FIXTURE_OK:\s*(?P<reason>\S.*)
-      assertion_signal_patterns: &id068
+      assertion_signal_patterns: &id069
       - '*=>\bassert\b'
       - python=>\bassert\b
       - python=>\bself\.assert[A-Za-z_]*\s*\(
-      tautology_patterns: &id069
+      tautology_patterns: &id070
       - '*=>^\s*assert\s*\(\s*true\s*\)\s*;?\s*$'
       - '*=>^\s*assert\s+true\s*;?\s*$'
       - rust=>^\s*assert!\s*\(\s*true\s*\)\s*;?\s*$
@@ -8473,12 +8230,12 @@ policies:
       - python=>^\s*self\.assertTrue\s*\(\s*True\s*\)\s*$
       include_suffixes: .py
       include_prefixes: ''
-      exclude_prefixes: &id070
+      exclude_prefixes: &id071
       - build
       - dist
       - node_modules
       - tests
-      exclude_globs: &id071
+      exclude_globs: &id072
       - devcovenant/core/*.py
       - devcovenant/custom/policies/**/fixers/**
       - build/**
@@ -8491,7 +8248,7 @@ policies:
       exclude_suffixes: ''
       force_include_globs: ''
       watch_files: ''
-      selector_roles: &id072
+      selector_roles: &id073
       - include
       - exclude
       - watch
@@ -8516,19 +8273,19 @@ policies:
       enabled: true
       custom: false
       enforce_symbol_fidelity: true
-      symbol_kinds: *id067
+      symbol_kinds: *id068
       symbol_name_min_length: 3
       symbol_assertion_window: 2
       fixture_marker_pattern: \bDEVCOV_FIXTURE_OK:\s*(?P<reason>\S.*)
-      assertion_signal_patterns: *id068
-      tautology_patterns: *id069
+      assertion_signal_patterns: *id069
+      tautology_patterns: *id070
       include_suffixes: .py
-      exclude_prefixes: *id070
-      exclude_globs: *id071
+      exclude_prefixes: *id071
+      exclude_globs: *id072
       watch_dirs: tests
       tests_watch_dirs: tests
       include_globs: '*.py'
-      selector_roles: *id072
+      selector_roles: *id073
     assets:
     - build/**
     - devcovenant/core/*.py
@@ -8867,6 +8624,8 @@ policies:
         effective:
           values: []
     metadata_warnings: []
+    runtime_actions: []
+    commands: []
     runtime_metadata_options:
       id: version-sync
       severity: error
@@ -8875,16 +8634,16 @@ policies:
       enabled: true
       custom: false
       version_file: devcovenant/VERSION
-      target_roles: &id073
+      target_roles: &id074
       - docs
       - changelog
       - package_manifest
-      role_extractors: &id074
+      role_extractors: &id075
       - docs=>project_version_line
       - changelog=>changelog_header_version
       - package_manifest=>manifest_project_version
       role_legality_schemes: package_manifest=>pep440
-      target_role_files: &id075
+      target_role_files: &id076
       - docs=>README.md
       - docs=>AGENTS.md
       - docs=>CONTRIBUTING.md
@@ -8920,10 +8679,10 @@ policies:
       enabled: true
       custom: false
       version_file: devcovenant/VERSION
-      target_roles: *id073
-      role_extractors: *id074
+      target_roles: *id074
+      role_extractors: *id075
       role_legality_schemes: package_manifest=>pep440
-      target_role_files: *id075
+      target_role_files: *id076
       target_role_globs: docs=>devcovenant/docs/**/*.md
       target_role_dirs: docs=>devcovenant/docs
       changelog_file: CHANGELOG.md
@@ -9276,6 +9035,8 @@ policies:
           values:
           - 'false'
     metadata_warnings: []
+    runtime_actions: []
+    commands: []
     runtime_metadata_options:
       id: version-governance
       severity: error
@@ -9327,6 +9088,325 @@ policies:
     script_exists: true
     hash: 756aeebb1207f2ab41d68795f519765a5e33adb53297741c60e57c787628fb0b
     script_path: builtin/version_governance.py
+  dependency-management:
+    enabled: true
+    custom: false
+    description: Dependency Management
+    policy_text: |-
+      Manage dependency-maintenance artifacts as one coherent policy surface.
+      When dependency inputs in this repository change, lockfiles and repository
+      compliance artifacts must stay synchronized together.
+      Dependency input modeling supports role-based taxonomy for mixed ecosystems:
+      `intent`, `resolved`, and `package_manifest`.
+      Role selectors are metadata-driven via
+      (`dependency_role_files`, `dependency_role_globs`,
+      `dependency_role_dirs`) using `role=>selector` tokens.
+      Dependency selectors are metadata-driven
+      (`dependency_files`, `dependency_globs`, `dependency_dirs`) and may include
+      both manifest files and lock/resolution files so mixed-language repositories
+      can define their own layout. Every dependency change must keep the
+      configured report file (`third_party_file`) and configured license directory
+      (`licenses_dir`) synchronized, including the configured `report_heading`.
+      Policy checks remain read-only. Autofixers may invoke declared policy
+      runtime actions, and explicit policy-born CLI commands may invoke those same
+      runtime actions manually. Remediation messaging may differ when autofix is
+      enabled versus disabled. Artifact refresh remains deterministic/idempotent.
+    metadata:
+      id: dependency-management
+      severity: error
+      auto_fix: 'true'
+      enforcement: active
+      enabled: 'true'
+      custom: 'false'
+      dependency_files: ''
+      dependency_globs: ''
+      dependency_dirs: ''
+      dependency_roles: intent, resolved, package_manifest
+      dependency_role_files: intent=>requirements.in, resolved=>requirements.lock,
+        package_manifest=>pyproject.toml
+      dependency_role_globs: ''
+      dependency_role_dirs: ''
+      third_party_file: licenses/THIRD_PARTY_LICENSES.md
+      licenses_dir: licenses
+      report_heading: '## License Report'
+      selector_roles: dependency
+    metadata_resolution:
+      id:
+        descriptor:
+          values:
+          - dependency-management
+          behavior: base
+        runtime_identity:
+          values:
+          - dependency-management
+          behavior: replace
+        effective:
+          values:
+          - dependency-management
+      severity:
+        descriptor:
+          values:
+          - error
+          behavior: base
+        effective:
+          values:
+          - error
+      auto_fix:
+        descriptor:
+          values:
+          - 'true'
+          behavior: base
+        effective:
+          values:
+          - 'true'
+      enforcement:
+        descriptor:
+          values:
+          - active
+          behavior: base
+        effective:
+          values:
+          - active
+      dependency_files:
+        descriptor:
+          values: []
+          behavior: base
+        profile_overlays:
+          values: []
+          behavior: append
+        autogen_overlays:
+          values: []
+          behavior: append
+        effective:
+          values: []
+      dependency_globs:
+        descriptor:
+          values: []
+          behavior: base
+        profile_overlays:
+          values: []
+          behavior: append
+        autogen_overlays:
+          values: []
+          behavior: append
+        effective:
+          values: []
+      dependency_dirs:
+        descriptor:
+          values: []
+          behavior: base
+        profile_overlays:
+          values: []
+          behavior: append
+        autogen_overlays:
+          values: []
+          behavior: append
+        effective:
+          values: []
+      dependency_roles:
+        descriptor:
+          values:
+          - intent
+          - resolved
+          - package_manifest
+          behavior: base
+        profile_overlays:
+          values:
+          - intent
+          - resolved
+          - package_manifest
+          behavior: append
+        autogen_overlays:
+          values:
+          - intent
+          - resolved
+          - package_manifest
+          behavior: append
+        effective:
+          values:
+          - intent
+          - resolved
+          - package_manifest
+      dependency_role_files:
+        descriptor:
+          values: []
+          behavior: base
+        profile_overlays:
+          values:
+          - intent=>requirements.in
+          - resolved=>requirements.lock
+          - package_manifest=>pyproject.toml
+          behavior: append
+        autogen_overlays:
+          values:
+          - intent=>requirements.in
+          - resolved=>requirements.lock
+          - package_manifest=>pyproject.toml
+          behavior: append
+        effective:
+          values:
+          - intent=>requirements.in
+          - resolved=>requirements.lock
+          - package_manifest=>pyproject.toml
+      dependency_role_globs:
+        descriptor:
+          values: []
+          behavior: base
+        profile_overlays:
+          values: []
+          behavior: append
+        autogen_overlays:
+          values: []
+          behavior: append
+        effective:
+          values: []
+      dependency_role_dirs:
+        descriptor:
+          values: []
+          behavior: base
+        profile_overlays:
+          values: []
+          behavior: append
+        autogen_overlays:
+          values: []
+          behavior: append
+        effective:
+          values: []
+      third_party_file:
+        descriptor:
+          values: []
+          behavior: base
+        profile_overlays:
+          values:
+          - licenses/THIRD_PARTY_LICENSES.md
+          behavior: replace
+        autogen_overlays:
+          values:
+          - licenses/THIRD_PARTY_LICENSES.md
+          behavior: replace
+          replaced_inherited_values:
+          - licenses/THIRD_PARTY_LICENSES.md
+        effective:
+          values:
+          - licenses/THIRD_PARTY_LICENSES.md
+      licenses_dir:
+        descriptor:
+          values: []
+          behavior: base
+        profile_overlays:
+          values:
+          - licenses
+          behavior: replace
+        autogen_overlays:
+          values:
+          - licenses
+          behavior: replace
+          replaced_inherited_values:
+          - licenses
+        effective:
+          values:
+          - licenses
+      report_heading:
+        descriptor:
+          values: []
+          behavior: base
+        profile_overlays:
+          values:
+          - '## License Report'
+          behavior: replace
+        autogen_overlays:
+          values:
+          - '## License Report'
+          behavior: append
+        effective:
+          values:
+          - '## License Report'
+      selector_roles:
+        descriptor:
+          values:
+          - dependency
+          behavior: base
+        effective:
+          values:
+          - dependency
+      enabled:
+        runtime_defaults:
+          values:
+          - 'true'
+          behavior: default
+        policy_state:
+          values:
+          - 'true'
+          behavior: replace
+          replaced_inherited_values:
+          - 'true'
+        effective:
+          values:
+          - 'true'
+      custom:
+        runtime_defaults:
+          values:
+          - 'false'
+          behavior: default
+        effective:
+          values:
+          - 'false'
+    metadata_warnings: []
+    runtime_actions:
+    - id: refresh-all
+      description: Refresh configured dependency lockfiles and compliance artifacts.
+      mutates_repo: true
+    commands:
+    - name: refresh-all
+      help: Refresh configured dependency lockfiles and compliance artifacts.
+      runtime_action: refresh-all
+      mutates_repo: true
+      aliases:
+      - update-lock
+    runtime_metadata_options:
+      id: dependency-management
+      severity: error
+      auto_fix: true
+      enforcement: active
+      enabled: true
+      custom: false
+      dependency_files: ''
+      dependency_globs: ''
+      dependency_dirs: ''
+      dependency_roles: &id077
+      - intent
+      - resolved
+      - package_manifest
+      dependency_role_files: &id078
+      - intent=>requirements.in
+      - resolved=>requirements.lock
+      - package_manifest=>pyproject.toml
+      dependency_role_globs: ''
+      dependency_role_dirs: ''
+      third_party_file: licenses/THIRD_PARTY_LICENSES.md
+      licenses_dir: licenses
+      report_heading: '## License Report'
+      selector_roles: dependency
+    runtime_config_overrides: {}
+    runtime_effective_options:
+      id: dependency-management
+      severity: error
+      auto_fix: true
+      enforcement: active
+      enabled: true
+      custom: false
+      dependency_roles: *id077
+      dependency_role_files: *id078
+      third_party_file: licenses/THIRD_PARTY_LICENSES.md
+      licenses_dir: licenses
+      report_heading: '## License Report'
+      selector_roles: dependency
+    assets:
+    - licenses/THIRD_PARTY_LICENSES.md
+    origin: builtin
+    script_exists: true
+    hash: ed7e33cd2c5ccbc30c6afbf8c49e8b192a90bcda4ca27a7fb48f3ee4892ec59d
+    script_path: builtin/dependency_management.py
 profiles:
   terraform:
     version: 1
@@ -9384,9 +9464,6 @@ profiles:
     - path: .dockerignore
       template: .dockerignore
     policy_overlays:
-      devflow-run-gates:
-        required_commands:
-        - docker compose config
       documentation-growth-tracking:
         user_facing_suffixes:
         - .yml
@@ -9395,6 +9472,10 @@ profiles:
         include_suffixes:
         - .yml
         - .yaml
+    core_invariant_overlays:
+      devflow-run-gates:
+        required_commands:
+        - docker compose config
     source: builtin
     path: devcovenant/builtin/profiles/docker
     assets_available:
@@ -9438,13 +9519,10 @@ profiles:
         strategy: module_function
         entrypoint: go_translator.py:translate
     policy_overlays:
-      dependency-license-sync:
+      dependency-management:
         dependency_role_files:
         - intent=>go.mod
         - resolved=>go.sum
-      devflow-run-gates:
-        required_commands:
-        - go test ./...
       name-clarity:
         include_suffixes:
         - .go
@@ -9502,6 +9580,10 @@ profiles:
         - go=>log.Print
         - go=>log.Printf
         - go=>log.Println
+    core_invariant_overlays:
+      devflow-run-gates:
+        required_commands:
+        - go test ./...
     source: builtin
     path: devcovenant/builtin/profiles/go
     assets_available:
@@ -9591,15 +9673,11 @@ profiles:
         strategy: module_function
         entrypoint: python_translator.py:translate
     policy_overlays:
-      dependency-license-sync:
+      dependency-management:
         dependency_role_files:
         - intent=>requirements.in
         - resolved=>requirements.lock
         - package_manifest=>pyproject.toml
-      devflow-run-gates:
-        required_commands:
-        - python3 -m unittest discover -v
-        - pytest
       documentation-growth-tracking:
         user_facing_suffixes:
         - .py
@@ -9658,6 +9736,11 @@ profiles:
         sink_call_targets:
         - python=>print
         - python=>builtins.print
+    core_invariant_overlays:
+      devflow-run-gates:
+        required_commands:
+        - python3 -m unittest discover -v
+        - pytest
     test_events:
     - id: python
       entrypoint: devcovenant.core.services.event:python_test_event_adapter_factory
@@ -9693,7 +9776,7 @@ profiles:
     - path: modules.txt
       template: modules.txt
     policy_overlays:
-      dependency-license-sync:
+      dependency-management:
         dependency_role_files:
         - intent=>requirements.in
         - resolved=>requirements.lock
@@ -9702,11 +9785,6 @@ profiles:
         - resolved=>package-lock.json
         - resolved=>yarn.lock
         - resolved=>pnpm-lock.yaml
-      devflow-run-gates:
-        required_commands:
-        - python3 -m unittest discover -v
-        - pytest
-        - npm test
       documentation-growth-tracking:
         user_facing_suffixes:
         - .py
@@ -9738,6 +9816,12 @@ profiles:
         include_suffixes:
         - .py
         - .js
+    core_invariant_overlays:
+      devflow-run-gates:
+        required_commands:
+        - python3 -m unittest discover -v
+        - pytest
+        - npm test
     source: builtin
     path: devcovenant/builtin/profiles/frappe
     assets_available:
@@ -9772,19 +9856,20 @@ profiles:
         strategy: module_function
         entrypoint: dart_translator.py:translate
     policy_overlays:
-      dependency-license-sync:
+      dependency-management:
         dependency_role_files:
         - package_manifest=>pubspec.yaml
         - resolved=>pubspec.lock
-      devflow-run-gates:
-        required_commands:
-        - dart test
       documentation-growth-tracking:
         user_facing_suffixes:
         - .dart
       line-length-limit:
         include_suffixes:
         - .dart
+    core_invariant_overlays:
+      devflow-run-gates:
+        required_commands:
+        - dart test
     source: builtin
     path: devcovenant/builtin/profiles/dart
     assets_available:
@@ -9836,15 +9921,12 @@ profiles:
         strategy: module_function
         entrypoint: typescript_translator.py:translate
     policy_overlays:
-      dependency-license-sync:
+      dependency-management:
         dependency_role_files:
         - intent=>package.json
         - resolved=>package-lock.json
         - resolved=>yarn.lock
         - resolved=>pnpm-lock.yaml
-      devflow-run-gates:
-        required_commands:
-        - npm test
       name-clarity:
         include_suffixes:
         - .ts
@@ -9916,6 +9998,10 @@ profiles:
         - typescript=>console.info
         - typescript=>console.warn
         - typescript=>console.error
+    core_invariant_overlays:
+      devflow-run-gates:
+        required_commands:
+        - npm test
     source: builtin
     path: devcovenant/builtin/profiles/typescript
     assets_available:
@@ -9956,13 +10042,10 @@ profiles:
         strategy: module_function
         entrypoint: rust_translator.py:translate
     policy_overlays:
-      dependency-license-sync:
+      dependency-management:
         dependency_role_files:
         - package_manifest=>Cargo.toml
         - resolved=>Cargo.lock
-      devflow-run-gates:
-        required_commands:
-        - cargo test
       name-clarity:
         include_suffixes:
         - .rs
@@ -10018,6 +10101,10 @@ profiles:
         sink_macro_targets:
         - rust=>println
         - rust=>eprintln
+    core_invariant_overlays:
+      devflow-run-gates:
+        required_commands:
+        - cargo test
     source: builtin
     path: devcovenant/builtin/profiles/rust
     assets_available:
@@ -10058,14 +10145,10 @@ profiles:
         strategy: module_function
         entrypoint: java_translator.py:translate
     policy_overlays:
-      dependency-license-sync:
+      dependency-management:
         dependency_role_files:
         - package_manifest=>pom.xml
         - package_manifest=>build.gradle
-      devflow-run-gates:
-        required_commands:
-        - mvn test
-        - gradle test
       name-clarity:
         include_suffixes:
         - .java
@@ -10093,6 +10176,11 @@ profiles:
       line-length-limit:
         include_suffixes:
         - .java
+    core_invariant_overlays:
+      devflow-run-gates:
+        required_commands:
+        - mvn test
+        - gradle test
     source: builtin
     path: devcovenant/builtin/profiles/java
     assets_available:
@@ -10150,13 +10238,10 @@ profiles:
         strategy: module_function
         entrypoint: php_translator.py:translate
     policy_overlays:
-      dependency-license-sync:
+      dependency-management:
         dependency_role_files:
         - intent=>composer.json
         - resolved=>composer.lock
-      devflow-run-gates:
-        required_commands:
-        - phpunit
       documentation-growth-tracking:
         user_facing_suffixes:
         - .php
@@ -10172,6 +10257,10 @@ profiles:
       line-length-limit:
         include_suffixes:
         - .php
+    core_invariant_overlays:
+      devflow-run-gates:
+        required_commands:
+        - phpunit
     source: builtin
     path: devcovenant/builtin/profiles/php
     assets_available:
@@ -10402,7 +10491,7 @@ profiles:
         pep440_allow_prereleases: true
         pep440_allow_dev_releases: true
         pep440_allow_post_releases: true
-      dependency-license-sync:
+      dependency-management:
         dependency_files: []
         dependency_globs: []
         dependency_dirs: []
@@ -10806,9 +10895,6 @@ profiles:
         - tests
         tests_watch_dirs:
         - tests
-      devflow-run-gates:
-        skipped_globs:
-        - devcovenant/registry/runtime/**
       managed-environment:
         expected_paths:
         - .venv
@@ -10817,6 +10903,10 @@ profiles:
         - .venv/Scripts/python.exe
         manual_commands:
         - python3 -m venv .venv
+    core_invariant_overlays:
+      devflow-run-gates:
+        skipped_globs:
+        - devcovenant/registry/runtime/**
     project-governance:
       changelog_file: CHANGELOG.md
       unversioned_label: Unversioned
@@ -10871,19 +10961,20 @@ profiles:
     - path: pubspec.lock
       template: pubspec.lock
     policy_overlays:
-      dependency-license-sync:
+      dependency-management:
         dependency_role_files:
         - package_manifest=>pubspec.yaml
         - resolved=>pubspec.lock
-      devflow-run-gates:
-        required_commands:
-        - flutter test
       documentation-growth-tracking:
         user_facing_suffixes:
         - .dart
       line-length-limit:
         include_suffixes:
         - .dart
+    core_invariant_overlays:
+      devflow-run-gates:
+        required_commands:
+        - flutter test
     source: builtin
     path: devcovenant/builtin/profiles/flutter
     assets_available:
@@ -10915,18 +11006,19 @@ profiles:
         strategy: module_function
         entrypoint: swift_translator.py:translate
     policy_overlays:
-      dependency-license-sync:
+      dependency-management:
         dependency_role_files:
         - package_manifest=>Package.swift
-      devflow-run-gates:
-        required_commands:
-        - swift test
       documentation-growth-tracking:
         user_facing_suffixes:
         - .swift
       line-length-limit:
         include_suffixes:
         - .swift
+    core_invariant_overlays:
+      devflow-run-gates:
+        required_commands:
+        - swift test
     source: builtin
     path: devcovenant/builtin/profiles/swift
     assets_available:
@@ -10954,15 +11046,11 @@ profiles:
     - path: openapi.json
       template: openapi.json
     policy_overlays:
-      dependency-license-sync:
+      dependency-management:
         dependency_role_files:
         - intent=>requirements.in
         - resolved=>requirements.lock
         - package_manifest=>pyproject.toml
-      devflow-run-gates:
-        required_commands:
-        - python3 -m unittest discover -v
-        - pytest
       documentation-growth-tracking:
         user_facing_suffixes:
         - .py
@@ -10994,6 +11082,11 @@ profiles:
       modules-need-tests:
         include_suffixes:
         - .py
+    core_invariant_overlays:
+      devflow-run-gates:
+        required_commands:
+        - python3 -m unittest discover -v
+        - pytest
     source: builtin
     path: devcovenant/builtin/profiles/fastapi
     assets_available:
@@ -11037,13 +11130,10 @@ profiles:
         strategy: module_function
         entrypoint: csharp_translator.py:translate
     policy_overlays:
-      dependency-license-sync:
+      dependency-management:
         dependency_role_files:
         - package_manifest=>Project.csproj
         - resolved=>packages.lock.json
-      devflow-run-gates:
-        required_commands:
-        - dotnet test
       name-clarity:
         include_suffixes:
         - .cs
@@ -11071,6 +11161,10 @@ profiles:
       line-length-limit:
         include_suffixes:
         - .cs
+    core_invariant_overlays:
+      devflow-run-gates:
+        required_commands:
+        - dotnet test
     source: builtin
     path: devcovenant/builtin/profiles/csharp
     assets_available:
@@ -11124,15 +11218,12 @@ profiles:
         strategy: module_function
         entrypoint: javascript_translator.py:translate
     policy_overlays:
-      dependency-license-sync:
+      dependency-management:
         dependency_role_files:
         - intent=>package.json
         - resolved=>package-lock.json
         - resolved=>yarn.lock
         - resolved=>pnpm-lock.yaml
-      devflow-run-gates:
-        required_commands:
-        - npm test
       name-clarity:
         include_suffixes:
         - .js
@@ -11214,6 +11305,10 @@ profiles:
         - javascript=>console.info
         - javascript=>console.warn
         - javascript=>console.error
+    core_invariant_overlays:
+      devflow-run-gates:
+        required_commands:
+        - npm test
     source: builtin
     path: devcovenant/builtin/profiles/javascript
     assets_available:
@@ -11249,9 +11344,6 @@ profiles:
         strategy: module_function
         entrypoint: objective_c_translator.py:translate
     policy_overlays:
-      devflow-run-gates:
-        required_commands:
-        - xcodebuild test
       documentation-growth-tracking:
         user_facing_suffixes:
         - .m
@@ -11262,10 +11354,14 @@ profiles:
         - .m
         - .mm
         - .h
-      dependency-license-sync:
+      dependency-management:
         dependency_role_files:
         - intent=>Podfile
         - resolved=>Podfile.lock
+    core_invariant_overlays:
+      devflow-run-gates:
+        required_commands:
+        - xcodebuild test
     source: builtin
     path: devcovenant/builtin/profiles/objective_c
     assets_available:
@@ -11286,9 +11382,6 @@ profiles:
     - path: values.yaml
       template: values.yaml
     policy_overlays:
-      devflow-run-gates:
-        required_commands:
-        - helm lint
       documentation-growth-tracking:
         user_facing_suffixes:
         - .yml
@@ -11297,6 +11390,10 @@ profiles:
         include_suffixes:
         - .yml
         - .yaml
+    core_invariant_overlays:
+      devflow-run-gates:
+        required_commands:
+        - helm lint
     source: builtin
     path: devcovenant/builtin/profiles/kubernetes
     assets_available:
@@ -11373,6 +11470,7 @@ profiles:
       line-length-limit:
         exclude_globs:
         - devcovenant/logs/**
+    core_invariant_overlays:
       devcov-integrity-guard:
         policy_definitions: AGENTS.md
         registry_file: devcovenant/registry/registry.yaml
@@ -11426,13 +11524,10 @@ profiles:
         strategy: module_function
         entrypoint: ruby_translator.py:translate
     policy_overlays:
-      dependency-license-sync:
+      dependency-management:
         dependency_role_files:
         - intent=>Gemfile
         - resolved=>Gemfile.lock
-      devflow-run-gates:
-        required_commands:
-        - bundle exec rake test
       documentation-growth-tracking:
         user_facing_suffixes:
         - .rb
@@ -11450,6 +11545,10 @@ profiles:
         include_suffixes:
         - .rb
         - .rake
+    core_invariant_overlays:
+      devflow-run-gates:
+        required_commands:
+        - bundle exec rake test
     source: builtin
     path: devcovenant/builtin/profiles/ruby
     assets_available:
@@ -11610,7 +11709,7 @@ profiles:
     - path: devcovenant/docs/troubleshooting.md
       template: docs/troubleshooting.md
     policy_overlays:
-      dependency-license-sync:
+      dependency-management:
         dependency_role_files:
         - intent=>requirements.in
         - resolved=>requirements.lock
@@ -11651,6 +11750,8 @@ profiles:
         - devcovenant/custom/profiles/*.py => devcovenant/docs/profiles.md
         - devcovenant/custom/profiles/**/*.py => devcovenant/docs/profiles.md
         - devcovenant/custom/profiles/**/*.yaml => devcovenant/docs/profiles.md
+        - .github/dependabot.yml => devcovenant/docs/workflow.md
+        - bandit.yaml => SECURITY.md
         - devcovenant/custom/policies/**/*.yaml => devcovenant/docs/policies.md
         - devcovenant/custom/policies/**/*.py => devcovenant/docs/policies.md
         - devcovenant/core/flow/*.py => devcovenant/docs/workflow.md
@@ -11658,6 +11759,7 @@ profiles:
         - devcovenant/core/services/*.py => devcovenant/docs/architecture.md
         - devcovenant/core/lib/*.py => devcovenant/docs/architecture.md
         - devcovenant/core/contracts/*.py => devcovenant/docs/architecture.md
+        - devcovenant/core/contracts/**/*.yaml => devcovenant/docs/architecture.md
         - devcovenant/*.py => devcovenant/docs/installation.md
         - pyproject.toml => devcovenant/docs/installation.md
         - MANIFEST.in => devcovenant/docs/installation.md
@@ -11665,6 +11767,9 @@ profiles:
         - devcovenant/registry/registry.yaml => devcovenant/docs/registry.md
         - .github/workflows/*.yml => devcovenant/docs/workflow.md
         user_visible_files:
+        - SECURITY.md
+        - PRIVACY.md
+        - SUPPORT.md
         - devcovenant/README.md
         - devcovenant/docs/architecture.md
         - devcovenant/docs/installation.md
@@ -11677,6 +11782,9 @@ profiles:
         - devcovenant/docs/workflow.md
         - devcovenant/docs/troubleshooting.md
         doc_quality_files:
+        - SECURITY.md
+        - PRIVACY.md
+        - SUPPORT.md
         - devcovenant/README.md
         - devcovenant/docs/architecture.md
         - devcovenant/docs/installation.md
@@ -11824,6 +11932,7 @@ inventory:
     - devcovenant/builtin/profiles/global
     - devcovenant/builtin/profiles/global/assets
     - devcovenant/core
+    - devcovenant/core/contracts/invariants
     - devcovenant/logs
     - devcovenant/registry
     files:
@@ -11832,6 +11941,7 @@ inventory:
     - devcovenant/cli.py
     - devcovenant/check.py
     - devcovenant/gate.py
+    - devcovenant/policy.py
     - devcovenant/test.py
     - devcovenant/install.py
     - devcovenant/deploy.py
@@ -11850,6 +11960,16 @@ inventory:
     - devcovenant/builtin/profiles/global/assets/gitignore.yaml
     - devcovenant/builtin/profiles/README.md
     - devcovenant/builtin/policies/README.md
+    - devcovenant/core/contracts/invariant.py
+    - devcovenant/core/contracts/invariants/devcov_integrity_guard.yaml
+    - devcovenant/core/contracts/invariants/devcov_structure_guard.yaml
+    - devcovenant/core/contracts/invariants/devflow_run_gates.yaml
+    - devcovenant/core/services/core_invariant_block_refresh.py
+    - devcovenant/core/services/core_invariants.py
+    - devcovenant/core/services/devcov_integrity_guard.py
+    - devcovenant/core/services/devcov_structure_guard.py
+    - devcovenant/core/services/devflow_run_gates.py
+    - devcovenant/core/services/policy_commands.py
   docs:
     core:
     - AGENTS.md

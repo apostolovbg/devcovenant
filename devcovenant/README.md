@@ -35,8 +35,9 @@ matches checks, and release notes that do not reflect what actually changed.
 11. [Policy Activation and Metadata](#policy-activation-and-metadata)
 12. [Profiles and Translators](#profiles-and-translators)
 13. [Extension Surfaces](#extension-surfaces)
-14. [Docs Map](#docs-map)
-15. [License](#license)
+14. [Security, Privacy, and Support](#security-privacy-and-support)
+15. [Docs Map](#docs-map)
+16. [License](#license)
 
 ## Overview
 DevCovenant treats policy prose as executable contract, not static guidance.
@@ -161,10 +162,11 @@ Minimum first-pass config review:
    used to develop DevCovenant itself
 2. set `developer_mode` accordingly
 3. confirm `profiles.active`
-4. confirm `policy_state` enablement choices
-5. confirm `engine.fail_threshold`
-6. confirm `engine.output_mode` (`verbose`, `normal`, or `quiet`)
-7. set `install.config_reviewed: true` before `deploy`
+4. confirm `core_invariants` metadata such as required test commands
+5. confirm `policy_state` enablement choices
+6. confirm `engine.fail_threshold`
+7. confirm `engine.output_mode` (`verbose`, `normal`, or `quiet`)
+8. set `install.config_reviewed: true` before `deploy`
 
 Common starting situations:
 1. Empty repo:
@@ -303,7 +305,13 @@ Command families:
   `gate --status`
 - lifecycle and maintenance:
   `install`, `deploy`, `refresh`, `upgrade`, `clean`, `undeploy`,
-  `uninstall`, `update_lock`
+  `uninstall`, `policy`
+
+Operational note:
+- `devcovenant policy dependency-management refresh-all` is the canonical
+  dependency-maintenance command surface.
+- `devcovenant update_lock` remains a compatibility alias for that one
+  dependency-management command.
 
 Primary detailed homes:
 - `devcovenant/docs/workflow.md` for `check`, gate commands, and `test`
@@ -338,6 +346,8 @@ command output remains available in run-log artifacts.
 ## Policy Activation and Metadata
 Short rule:
 - `policy_state` decides whether a normal policy is on or off
+- `core_invariants` carries metadata for DevCovenant's own non-optional
+  runtime contracts
 - descriptors, profiles, and config metadata decide how that policy behaves
 
 Primary detailed homes:
@@ -364,6 +374,15 @@ Use:
 - `devcovenant/docs/policies.md` for custom policy authoring
 - `devcovenant/docs/profiles.md` for custom profiles and managed-doc assets
 
+## Security, Privacy, and Support
+Public trust surfaces live in the repository root:
+- `SECURITY.md`:
+  vulnerability reporting, disclosure expectations, and static-analysis triage
+- `PRIVACY.md`:
+  local data handling, run-log boundaries, session-snapshot scope, and cleanup
+- `SUPPORT.md`:
+  maintenance posture, support scope, and what to include in a good report
+
 ## Docs Map
 This README is the canonical docs entrypoint for the packaged documentation
 set.
@@ -381,6 +400,8 @@ Documentation architecture rule:
 - universal/package docs:
   `devcovenant/README.md` and `devcovenant/docs/*.md` (install/use/runtime
   behavior)
+- public trust docs (repository root):
+  `SECURITY.md`, `PRIVACY.md`, and `SUPPORT.md`
 - repo-internal governance docs (source checkout only):
   `AGENTS.md`, `PLAN.md`, `POLICY_MAP.md`, and `PROFILE_MAP.md`
 - runtime evidence artifacts (generated, untracked):

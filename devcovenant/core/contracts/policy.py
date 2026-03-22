@@ -90,6 +90,8 @@ class CheckContext:
     config: Dict[str, Any] = field(default_factory=dict)
     translator_runtime: Any = None
     change_state: ChangeState = field(default_factory=ChangeState)
+    autofix_enabled: bool = False
+    autofix_requested: bool = False
     _ignore_patterns: List[str] = field(
         default_factory=list, init=False, repr=False
     )

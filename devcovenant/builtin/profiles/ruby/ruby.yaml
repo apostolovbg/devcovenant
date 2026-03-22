@@ -27,13 +27,10 @@ translators:
       strategy: module_function
       entrypoint: ruby_translator.py:translate
 policy_overlays:
-  dependency-license-sync:
+  dependency-management:
     dependency_role_files:
       - intent=>Gemfile
       - resolved=>Gemfile.lock
-  devflow-run-gates:
-    required_commands:
-      - bundle exec rake test
   documentation-growth-tracking:
     user_facing_suffixes:
       - .rb
@@ -51,3 +48,7 @@ policy_overlays:
     include_suffixes:
       - .rb
       - .rake
+core_invariant_overlays:
+  devflow-run-gates:
+    required_commands:
+      - bundle exec rake test

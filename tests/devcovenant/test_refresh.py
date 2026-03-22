@@ -987,6 +987,8 @@ def _unit_test_refresh_renders_canonical_workflow_triggers() -> None:
         assert "pull_request: null" not in content
         assert re.search(r"(?m)^  push:$", content)
         assert re.search(r"(?m)^  pull_request:$", content)
+        assert re.search(r"(?m)^      run: \\|$", content)
+        assert 'run: "python -m pytest -q' not in content
 
 
 def _unit_test_refresh_rejects_multiline_non_block_doc_descriptor() -> None:

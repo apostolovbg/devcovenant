@@ -73,7 +73,7 @@ policy_overlays:
     pep440_allow_prereleases: true
     pep440_allow_dev_releases: true
     pep440_allow_post_releases: true
-  dependency-license-sync:
+  dependency-management:
     dependency_files: []
     dependency_globs: []
     dependency_dirs: []
@@ -477,9 +477,6 @@ policy_overlays:
       - tests
     tests_watch_dirs:
       - tests
-  devflow-run-gates:
-    skipped_globs:
-      - devcovenant/registry/runtime/**
   managed-environment:
     expected_paths:
       - .venv
@@ -488,6 +485,10 @@ policy_overlays:
       - .venv/Scripts/python.exe
     manual_commands:
       - python3 -m venv .venv
+core_invariant_overlays:
+  devflow-run-gates:
+    skipped_globs:
+      - devcovenant/registry/runtime/**
 project-governance:
   changelog_file: CHANGELOG.md
   unversioned_label: Unversioned

@@ -42,15 +42,12 @@ translators:
       strategy: module_function
       entrypoint: typescript_translator.py:translate
 policy_overlays:
-  dependency-license-sync:
+  dependency-management:
     dependency_role_files:
       - intent=>package.json
       - resolved=>package-lock.json
       - resolved=>yarn.lock
       - resolved=>pnpm-lock.yaml
-  devflow-run-gates:
-    required_commands:
-      - npm test
   name-clarity:
     include_suffixes:
       - .ts
@@ -122,3 +119,7 @@ policy_overlays:
       - typescript=>console.info
       - typescript=>console.warn
       - typescript=>console.error
+core_invariant_overlays:
+  devflow-run-gates:
+    required_commands:
+      - npm test

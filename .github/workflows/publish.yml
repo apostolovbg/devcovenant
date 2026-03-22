@@ -6,6 +6,8 @@ on:
 jobs:
   build-distributions:
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
     env:
       PYTHONPYCACHEPREFIX: .gha-pycache
 
@@ -25,13 +27,22 @@ jobs:
       - name: Install build tooling
         run: |
           python -m pip install --upgrade pip
-          python -m pip install build twine
+          python -m pip install build twine cyclonedx-bom==7.2.2
 
       - name: Build distributions
         run: python -m build
 
       - name: Validate distributions
         run: twine check dist/*
+
+      - name: Generate CycloneDX SBOM
+        run: |
+          mkdir -p artifacts/sbom
+          cyclonedx-py requirements requirements.lock \
+            --pyproject pyproject.toml \
+            --mc-type application \
+            --output-reproducible \
+            --output-file artifacts/sbom/devcovenant-sbom.json
 
       - name: Smoke install wheel
         run: |
@@ -61,10 +72,22 @@ jobs:
           name: devcovenant-dist
           path: dist/*
 
+      - name: Upload SBOM
+        uses: actions/upload-artifact@v4
+        with:
+          name: devcovenant-sbom
+          path: artifacts/sbom/*.json
+
   publish:
     runs-on: ubuntu-latest
     needs:
       - build-distributions
+    permissions:
+      contents: read
+      id-token: write
+    environment:
+      name: pypi
+      url: https://pypi.org/p/devcovenant
     steps:
       - name: Download distributions
         uses: actions/download-artifact@v4
@@ -72,18 +95,7 @@ jobs:
           name: devcovenant-dist
           path: dist
 
-      - name: Set up Python
-        uses: actions/setup-python@v5
+      - name: Publish to PyPI with trusted publishing
+        uses: pypa/gh-action-pypi-publish@release/v1
         with:
-          python-version: "3.11"
-
-      - name: Install publish tooling
-        run: |
-          python -m pip install --upgrade pip
-          python -m pip install twine
-
-      - name: Publish to PyPI
-        env:
-          TWINE_USERNAME: __token__
-          TWINE_PASSWORD: ${{ secrets.PYPI_API_TOKEN }}
-        run: twine upload dist/*
+          packages-dir: dist/

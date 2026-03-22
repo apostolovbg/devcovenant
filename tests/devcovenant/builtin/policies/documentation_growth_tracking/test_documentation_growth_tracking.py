@@ -38,6 +38,18 @@ def _checker() -> DocumentationGrowthTrackingCheck:
     return checker
 
 
+def _unit_test_symbol_contract_is_stable() -> None:
+    """Policy module should expose its public checker class explicitly."""
+    assert hasattr(
+        documentation_growth_tracking,
+        "DocumentationGrowthTrackingCheck",
+    )
+    assert (
+        documentation_growth_tracking.DocumentationGrowthTrackingCheck
+        is DocumentationGrowthTrackingCheck
+    )
+
+
 def _unit_test_reminder_when_code_changes_without_docs(tmp_path: Path):
     """Code changes should request documentation growth."""
     target = tmp_path / "app" / "fictional_app" / "feature.py"
@@ -439,6 +451,36 @@ def _unit_test_missing_selectors_reports_configuration_error(
     )
 
 
+def _unit_test_missing_required_options_report_configuration_error(
+    tmp_path: Path,
+):
+    """Missing required scalar options should report explicit config errors."""
+    checker = DocumentationGrowthTrackingCheck()
+    checker.set_options(
+        {
+            "severity": "warning",
+            "user_facing_suffixes": [".py"],
+            "user_visible_files": ["README.md"],
+            "doc_quality_files": ["README.md"],
+            "required_headings": [],
+        },
+        {},
+    )
+    target = tmp_path / "src" / "feature.py"
+    target.parent.mkdir(parents=True, exist_ok=True)
+    target.write_text("print('x')\n", encoding="utf-8")
+    context = CheckContext(repo_root=tmp_path, changed_files=[target])
+    violations = checker.check(context)
+
+    assert violations
+    messages = [violation.message for violation in violations]
+    assert any("require_toc" in message for message in messages)
+    assert any("min_section_count" in message for message in messages)
+    assert any("min_word_count" in message for message in messages)
+    assert any("require_mentions" in message for message in messages)
+    assert any("mention_min_length" in message for message in messages)
+
+
 def _unit_test_uses_session_paths(tmp_path: Path):
     """Policy should read change_state.session_paths."""
     checker = DocumentationGrowthTrackingCheck()
@@ -514,6 +556,10 @@ def _unit_test_current_snapshot_paths_trigger_runtime_scope(tmp_path: Path):
 
 class GeneratedUnittestCases(unittest.TestCase):
     """unittest wrappers for module-level tests."""
+
+    def test_symbol_contract_is_stable(self):
+        """Run documentation-growth symbol contract assertions."""
+        _unit_test_symbol_contract_is_stable()
 
     def test_reminder_when_code_changes_without_docs(self):
         """Run test_reminder_when_code_changes_without_docs."""
@@ -620,6 +666,14 @@ class GeneratedUnittestCases(unittest.TestCase):
         with tempfile.TemporaryDirectory() as temp_dir:
             tmp_path = Path(temp_dir).resolve()
             _unit_test_missing_selectors_reports_configuration_error(
+                tmp_path=tmp_path
+            )
+
+    def test_missing_required_options_report_configuration_error(self):
+        """Run missing-required-options configuration-error test."""
+        with tempfile.TemporaryDirectory() as temp_dir:
+            tmp_path = Path(temp_dir).resolve()
+            _unit_test_missing_required_options_report_configuration_error(
                 tmp_path=tmp_path
             )
 

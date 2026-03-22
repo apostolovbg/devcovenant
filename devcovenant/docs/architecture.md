@@ -179,9 +179,9 @@ Invariant:
   `devcovenant/config.yaml -> engine.tests_output_mode`. Keep the key
   explicit so test output behavior is not inferred from `engine.output_mode`.
 - `test` resolves required commands through the
-  `devflow-run-gates` policy runtime action
-  (`resolve-required-test-commands`) and executes exactly the returned
-  command chain; runtime does not inject hidden alternate command lists.
+  `devflow-run-gates` core invariant helper and executes exactly the
+  returned command chain; runtime does not inject hidden alternate command
+  lists.
 - managed-environment orchestration is policy-owned:
   `managed-environment` runtime action `resolve-stage` prepares
   stage-scoped environment state (`start`/`test`/`end`/`command`), and
@@ -228,13 +228,12 @@ Invariant:
 
 ### Metadata and Activation
 - Activation authority is `config.yaml -> policy_state` for standard
-  enable/disable toggles.
+  policy enable/disable toggles.
+- DevCovenant-owned runtime invariants resolve metadata from
+  `config.yaml -> core_invariants` and are not part of `policy_state`.
 - `severity: critical` policies remain enforced even when a config toggle in
   `policy_state` attempts to disable them; runtime emits an explicit
   diagnostic and continues enforcement.
-- Current initial critical rollout set:
-  `devflow-run-gates`, `devcov-integrity-guard`,
-  `devcov-structure-guard`.
 - Metadata precedence is fixed:
   descriptor defaults -> profile overlays -> autogen overlays ->
   user overlays -> autogen overrides -> user overrides -> policy_state.
@@ -270,7 +269,9 @@ Invariant:
 ### CLI and Command Placement
 - Public commands are:
   `check`, `clean`, `gate`, `test`, `install`, `deploy`, `refresh`,
-  `upgrade`, `undeploy`, `uninstall`, `update_lock`.
+  `upgrade`, `undeploy`, `uninstall`, `policy`.
+- `update_lock` remains a compatibility wrapper for the canonical
+  `dependency-management refresh-all` policy command.
 - CLI examples default to on-PATH `devcovenant ...` usage.
 - `python3 -m devcovenant ...` remains a supported alternate launcher form for
   source checkouts.
@@ -358,7 +359,8 @@ Invariant:
   `gate --mid` is a pre-test hook sweep, not a test substitute).
 - recovery-start now evaluates existing explicit test evidence and only keeps
   blocking when tests are stale/missing for the current unsessioned edits.
-- `devflow-run-gates` keeps edit sessions strict and allows one narrow audit
+- the `devflow-run-gates` core invariant keeps edit sessions strict and
+  allows one narrow audit
   relaxation: closed-session no-change `devcovenant check` runs do not block
   solely because recorded tests are newer than recorded end.
 - Runtime snapshot/session helper ownership lives in
@@ -405,10 +407,12 @@ Invariant:
   using context object identity where needed, to reduce repeated work across
   policies without changing result ordering.
   methods `has_violations()` and `has_sync_issues()`.
-- Policy runtime actions also dispatch through
+- Policy runtime actions dispatch through
   `devcovenant/core/services/policy_engine.py` via
   `run_policy_runtime_action(...)` and policy-level
   `PolicyCheck.run_runtime_action(...)`.
+- Core invariants do not use the policy runtime-action surface; they execute
+  through `devcovenant/core/services/core_invariants.py`.
 - `policy_engine.py` now delegates policy script loading and runtime-action
   dispatch helpers to
   `devcovenant/core/services/policy_runtime_actions.py`, while preserving the
@@ -602,9 +606,13 @@ Invariant:
 - Descriptor keys remain schema declarations even when values are empty
   placeholders; active profiles own operational defaults (for example
   line-length limits and gate/session path metadata).
-- `devcov-integrity-guard` path defaults (`policy_definitions`,
-  `registry_file`, `gate_status_file`) are resolved from profile overlays
-  while descriptor keys remain declared placeholders.
+- the `devcov-integrity-guard` core invariant path defaults
+  (`policy_definitions`, `registry_file`, `gate_status_file`) are resolved
+  from profile overlays and `config.core_invariants` while descriptor keys
+  remain declared placeholders.
+- core invariant descriptors live under
+  `devcovenant/core/contracts/**/*.yaml` and route documentation to
+  architecture docs rather than the policy docs.
 - Runtime executes resolved policy definitions from AGENTS.
 - `devcovenant/core/services/metadata.py` is the canonical metadata
   normalization/decoding layer: it resolves list-valued metadata, renders the
@@ -655,12 +663,15 @@ Invariant:
 - `read-only-directories` is opt-in by include scope. Empty typed include
   selectors (`[]`) disable enforcement until explicit include metadata is
   configured.
-- `dependency-license-sync` and `update_lock` remain metadata-driven,
-  including dependency selector metadata for mixed repositories and generated
-  generic license artifacts under `licenses/`.
+- `dependency-management` remains metadata-driven, including dependency
+  selector metadata for mixed repositories and generated generic license
+  artifacts under `licenses/`.
 - lock refresh runtime for dependency governance is policy-owned in
-  `devcovenant/builtin/policies/dependency_license_sync/` with
+  `devcovenant/builtin/policies/dependency_management/` with
   `dependency_lock_runtime.py`.
+- explicit policy-born commands now dispatch through `devcovenant/policy.py`,
+  while `update_lock` remains a compatibility wrapper for the canonical
+  `dependency-management refresh-all` command.
 - dependency selector modeling supports role taxonomy for mixed ecosystems:
   `intent`, `resolved`, and `package_manifest` mapped with
   `role=>selector` metadata entries.
@@ -757,11 +768,11 @@ Invariant:
 - gate changelog helpers and changelog-coverage resolve release headings
   through `project-governance`, so intentionally unversioned repos can use
   `## Unreleased` while versioned repos keep `## Version ...` sections.
-- dependency-license-sync validates artifact targets as repository-relative
+- dependency-management validates artifact targets as repository-relative
   paths and rejects out-of-repo traversal for both checks and autofix.
-- dependency-license-sync autofix is idempotent: synchronized artifacts are
+- dependency-management autofix is idempotent: synchronized artifacts are
   left unchanged on repeated runs.
-- dependency-license-sync autofix rewrites the configured license-report
+- dependency-management autofix rewrites the configured license-report
   section deterministically from current dependency-change inputs and prunes
   stale report references instead of appending indefinitely.
 - Dependency governance is split into two architecture domains:

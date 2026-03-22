@@ -172,6 +172,50 @@ def _unit_test_finalize_updates_run_metadata_and_pointer() -> None:
         assert latest_payload["run_id"] == context.run_id
 
 
+def _unit_test_run_metadata_redacts_secret_like_cli_and_metadata() -> None:
+    """Persisted run metadata should redact obvious secret-bearing values."""
+    module = importlib.import_module(MODULE)
+    with tempfile.TemporaryDirectory() as tmpdir:
+        repo_root = Path(tmpdir)
+        context = module.create_run_log_context(
+            repo_root,
+            "check",
+            [
+                "devcovenant",
+                "check",
+                "--token",
+                "abc123",
+                "--api-key=shh",
+                "PASSWORD=hunter2",
+            ],
+            started_at=_fixed_start(),
+            metadata={
+                "api_token": "abc123",
+                "safe": "visible",
+                "nested": {
+                    "authorization": "Bearer secret",
+                    "safe": "nested-visible",
+                },
+            },
+        )
+
+        run_payload = _load_json(context.require_paths().run_json)
+        assert run_payload["argv"] == [
+            "devcovenant",
+            "check",
+            "--token",
+            "[REDACTED]",
+            "--api-key=[REDACTED]",
+            "PASSWORD=[REDACTED]",
+        ]
+        assert run_payload["metadata"]["api_token"] == "[REDACTED]"
+        assert run_payload["metadata"]["safe"] == "visible"
+        assert run_payload["metadata"]["nested"]["authorization"] == (
+            "[REDACTED]"
+        )
+        assert run_payload["metadata"]["nested"]["safe"] == "nested-visible"
+
+
 def _unit_test_load_run_log_context_restores_existing_artifacts() -> None:
     """Loading an existing context should reuse the original run folder."""
     module = importlib.import_module(MODULE)
@@ -367,6 +411,10 @@ class GeneratedUnittestCases(unittest.TestCase):
     def test_finalize_updates_run_metadata_and_pointer(self):
         """Run finalize metadata and pointer update assertions."""
         _unit_test_finalize_updates_run_metadata_and_pointer()
+
+    def test_run_metadata_redacts_secret_like_cli_and_metadata(self):
+        """Run persisted run-metadata redaction assertions."""
+        _unit_test_run_metadata_redacts_secret_like_cli_and_metadata()
 
     def test_load_run_log_context_restores_existing_artifacts(self):
         """Run existing-context restoration assertions."""

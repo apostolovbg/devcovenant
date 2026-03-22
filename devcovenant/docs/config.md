@@ -50,7 +50,7 @@ Practical mental model:
 
 First-pass reading order for this file:
 - most users should start with `developer_mode`, `profiles.active`,
-  `doc_assets`, `policy_state`, and the `engine` settings
+  `doc_assets`, `core_invariants`, `policy_state`, and the `engine` settings
 - most users should leave generated sections alone
 - if you are unsure whether a key is a policy choice, a repo-lifecycle
   choice, or generated state, read `Ownership Model` before editing
@@ -66,6 +66,7 @@ User-owned sections:
 - `profiles.active`
 - `clean.overlays`
 - `clean.overrides`
+- `core_invariants`
 - `user_metadata_overlays`
 - `user_metadata_overrides`
 - `policy_state`
@@ -106,7 +107,7 @@ They should explain:
 - concise output-mode semantics for `engine.output_mode` and
   `engine.tests_output_mode`;
 - role-based metadata conventions for policies such as
-  `dependency-license-sync` and `version-sync`.
+  `dependency-management` and `version-sync`.
 
 When runtime behavior or policy contracts change, update template comments in
 the same session so generated configs remain self-explanatory.
@@ -132,6 +133,10 @@ the same session so generated configs remain self-explanatory.
 - `autogen_metadata_overrides`: generated replace layer.
 
 - `user_metadata_overrides`: user replace layer (highest metadata authority).
+
+- `core_invariants`: first-class metadata for DevCovenant-owned runtime
+  invariants such as gate evidence, registry integrity, and required
+  DevCovenant runtime structure. These are not normal policy toggles.
 
 - `policy_state`: authoritative activation map for every policy
   ID (identifier).
@@ -196,14 +201,16 @@ the same session so generated configs remain self-explanatory.
   Runtime still protects tracked files such as
   `devcovenant/registry/registry.yaml` and `devcovenant/logs/README.md`.
 
-- `devflow-run-gates.required_commands`: canonical test command chain.
+- `core_invariants.devflow-run-gates.required_commands`: canonical test
+  command chain.
   `engine.tests_output_mode` changes output presentation only; it does not
   select a different command list.
 
 - `install.config_reviewed`: explicit post-install config-review guard for
   first-time activation flow. `install` leaves this as `false`. Change it to
   `true` only after a human has reviewed `developer_mode`,
-  `profiles.active`, `policy_state`, and the key `engine` settings.
+  `profiles.active`, `core_invariants`, `policy_state`, and the key `engine`
+  settings.
 
 - `install.import_managed_docs`: refresh-owned install memory that records
   compatible pre-authored managed docs discovered during `install` so the
@@ -268,8 +275,10 @@ Practical first-review checklist:
 1. decide whether this is a normal repo using DevCovenant or a repo used to
    develop DevCovenant itself, then set `developer_mode`
 2. confirm the active profile stack in `profiles.active`
-3. confirm which policies should be on or off in `policy_state`
-4. confirm the important `engine` settings:
+3. confirm `core_invariants` metadata such as required test commands and
+   gate-status paths
+4. confirm which policies should be on or off in `policy_state`
+5. confirm the important `engine` settings:
    - `fail_threshold`
    - `output_mode`
    - `tests_output_mode`
@@ -330,13 +339,10 @@ Override semantics:
 `policy_state` is the activation authority for normal policy toggles.
 `severity: critical` policies are the exception: runtime keeps them enforced
 and emits a diagnostic when a config attempts to disable them.
-This repository's initial critical set is:
-- `devflow-run-gates`
-- `devcov-integrity-guard`
-- `devcov-structure-guard`
-Intentional changes to those policies require tracked metadata changes or a
-builtin-to-custom policy replacement; temporary `policy_state: false` toggles
-do not disable them.
+Core invariants are not part of `policy_state`.
+They use the first-class `core_invariants` section instead.
+That keeps normal policy activation separate from DevCovenant's own
+non-optional runtime contracts.
 
 Refresh behavior:
 - rewrites full alphabetical map of effective policy IDs
@@ -592,7 +598,7 @@ user_metadata_overrides:
 
 Replace the required test command chain:
 ```yaml
-user_metadata_overrides:
+core_invariants:
   devflow-run-gates:
     required_commands:
       - python3 -m unittest discover -v
@@ -766,7 +772,7 @@ By default, docs suffixes are not in user-facing scope, so files like
 Replace dependency role selectors completely:
 ```yaml
 user_metadata_overrides:
-  dependency-license-sync:
+  dependency-management:
     dependency_role_files:
       - intent=>requirements.in
       - resolved=>requirements.lock
@@ -794,7 +800,8 @@ profiles:
 ```
 Create `devcovenant/custom/profiles/mylayout/mylayout.yaml` by copying
 `devcovenant/builtin/profiles/defaults/defaults.yaml`, then tailor
-`policy_overlays` for your repository structure.
+`policy_overlays` and `core_invariant_overlays` for your repository
+structure.
 
 ## Common Mistakes
 - Trying to activate policies through profile manifests.

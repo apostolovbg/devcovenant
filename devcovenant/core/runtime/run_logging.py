@@ -17,6 +17,27 @@ _LATEST_POINTER_RELATIVE = (
 )
 _COMMAND_SLUG_PATTERN = re.compile(r"[^a-z0-9]+")
 _MAX_COMMAND_SLUG_LENGTH = 32
+_REDACTED_VALUE = "[REDACTED]"
+_SENSITIVE_KEY_TOKENS = frozenset(
+    {
+        "accesstoken",
+        "apikey",
+        "apitoken",
+        "authorization",
+        "authtoken",
+        "bearertoken",
+        "cookie",
+        "credential",
+        "credentials",
+        "passwd",
+        "passphrase",
+        "password",
+        "privatekey",
+        "secret",
+        "secrets",
+        "token",
+    }
+)
 
 
 @dataclass(frozen=True)
@@ -435,6 +456,8 @@ def _write_run_metadata(
     effective_metadata = dict(context.metadata)
     if metadata_updates:
         effective_metadata.update(_json_safe(dict(metadata_updates)))
+    persisted_argv = _redact_argv(context.argv)
+    persisted_metadata = _redact_metadata(effective_metadata)
     invoked_python = str(effective_metadata.get("invoked_python", "")).strip()
     effective_python = str(
         effective_metadata.get("effective_python", "")
@@ -445,7 +468,7 @@ def _write_run_metadata(
         "schema_version": RUN_LOG_SCHEMA_VERSION,
         "run_id": context.run_id,
         "command_name": context.command_name,
-        "argv": list(context.argv),
+        "argv": persisted_argv,
         "cwd": str(context.cwd),
         "repo_root": str(context.repo_root),
         "started_at": context.started_at,
@@ -474,7 +497,7 @@ def _write_run_metadata(
             context.require_paths().run_dir,
         ),
         "artifacts": _artifact_map(context),
-        "metadata": effective_metadata,
+        "metadata": persisted_metadata,
     }
     _write_json(context.require_paths().run_json, payload)
 
@@ -604,6 +627,62 @@ def _read_run_metadata(path: Path) -> dict[str, Any]:
     if not isinstance(payload, dict):
         return {}
     return payload
+
+
+def _redact_argv(argv: Sequence[str]) -> list[str]:
+    """Redact obvious secret-bearing CLI argument values for persisted logs."""
+    redacted: list[str] = []
+    redact_next = False
+    for token in argv:
+        text = str(token)
+        if redact_next:
+            redacted.append(_REDACTED_VALUE)
+            redact_next = False
+            continue
+        if "=" in text:
+            name, value = text.split("=", 1)
+            if value and _looks_sensitive_name(name):
+                redacted.append(f"{name}={_REDACTED_VALUE}")
+                continue
+        if _looks_sensitive_name(text):
+            redacted.append(text)
+            redact_next = True
+            continue
+        redacted.append(text)
+    return redacted
+
+
+def _redact_metadata(value: Any, *, key_name: str | None = None) -> Any:
+    """Redact obvious secret-bearing metadata fields for persisted logs."""
+    if key_name is not None and _looks_sensitive_name(key_name):
+        return _REDACTED_VALUE
+    if isinstance(value, Mapping):
+        return {
+            str(key): _redact_metadata(item, key_name=str(key))
+            for key, item in value.items()
+        }
+    if isinstance(value, list):
+        return [_redact_metadata(item) for item in value]
+    return value
+
+
+def _looks_sensitive_name(token: str) -> bool:
+    """Return whether one CLI or metadata token looks secret-bearing."""
+    normalized = _normalize_sensitive_name(token)
+    if not normalized:
+        return False
+    if normalized in _SENSITIVE_KEY_TOKENS:
+        return True
+    return any(
+        normalized.endswith(suffix) or normalized.startswith(suffix)
+        for suffix in _SENSITIVE_KEY_TOKENS
+    )
+
+
+def _normalize_sensitive_name(token: str) -> str:
+    """Normalize one metadata or CLI key name for secret matching."""
+    cleaned = str(token).strip().lower().lstrip("-")
+    return re.sub(r"[^a-z0-9]+", "", cleaned)
 
 
 def _json_safe(value: Any) -> Any:

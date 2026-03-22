@@ -33,13 +33,10 @@ translators:
       strategy: module_function
       entrypoint: go_translator.py:translate
 policy_overlays:
-  dependency-license-sync:
+  dependency-management:
     dependency_role_files:
       - intent=>go.mod
       - resolved=>go.sum
-  devflow-run-gates:
-    required_commands:
-      - go test ./...
   name-clarity:
     include_suffixes:
       - .go
@@ -97,3 +94,7 @@ policy_overlays:
       - go=>log.Print
       - go=>log.Printf
       - go=>log.Println
+core_invariant_overlays:
+  devflow-run-gates:
+    required_commands:
+      - go test ./...

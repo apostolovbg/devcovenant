@@ -65,6 +65,7 @@ policy_overlays:
   line-length-limit:
     exclude_globs:
       - devcovenant/logs/**
+core_invariant_overlays:
   devcov-integrity-guard:
     policy_definitions: AGENTS.md
     registry_file: devcovenant/registry/registry.yaml

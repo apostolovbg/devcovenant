@@ -23,7 +23,7 @@ assets:
   - path: devcovenant/docs/troubleshooting.md
     template: docs/troubleshooting.md
 policy_overlays:
-  dependency-license-sync:
+  dependency-management:
     dependency_role_files:
       - intent=>requirements.in
       - resolved=>requirements.lock
@@ -80,6 +80,8 @@ policy_overlays:
       - "devcovenant/custom/profiles/*.py => devcovenant/docs/profiles.md"
       - "devcovenant/custom/profiles/**/*.py => devcovenant/docs/profiles.md"
       - "devcovenant/custom/profiles/**/*.yaml => devcovenant/docs/profiles.md"
+      - ".github/dependabot.yml => devcovenant/docs/workflow.md"
+      - "bandit.yaml => SECURITY.md"
       - "devcovenant/custom/policies/**/*.yaml => devcovenant/docs/policies.md"
       - "devcovenant/custom/policies/**/*.py => devcovenant/docs/policies.md"
       - "devcovenant/core/flow/*.py => devcovenant/docs/workflow.md"
@@ -87,6 +89,9 @@ policy_overlays:
       - "devcovenant/core/services/*.py => devcovenant/docs/architecture.md"
       - "devcovenant/core/lib/*.py => devcovenant/docs/architecture.md"
       - "devcovenant/core/contracts/*.py => devcovenant/docs/architecture.md"
+      - >-
+        devcovenant/core/contracts/**/*.yaml =>
+        devcovenant/docs/architecture.md
       - "devcovenant/*.py => devcovenant/docs/installation.md"
       - "pyproject.toml => devcovenant/docs/installation.md"
       - "MANIFEST.in => devcovenant/docs/installation.md"
@@ -94,6 +99,9 @@ policy_overlays:
       - "devcovenant/registry/registry.yaml => devcovenant/docs/registry.md"
       - ".github/workflows/*.yml => devcovenant/docs/workflow.md"
     user_visible_files:
+      - SECURITY.md
+      - PRIVACY.md
+      - SUPPORT.md
       - devcovenant/README.md
       - devcovenant/docs/architecture.md
       - devcovenant/docs/installation.md
@@ -106,6 +114,9 @@ policy_overlays:
       - devcovenant/docs/workflow.md
       - devcovenant/docs/troubleshooting.md
     doc_quality_files:
+      - SECURITY.md
+      - PRIVACY.md
+      - SUPPORT.md
       - devcovenant/README.md
       - devcovenant/docs/architecture.md
       - devcovenant/docs/installation.md

@@ -11,6 +11,9 @@ import yaml
 
 import devcovenant.core.services.metadata as metadata_runtime
 from devcovenant.core.contracts.policy import CheckContext, PolicyCheck
+from devcovenant.core.services import (
+    policy_commands as policy_commands_service,
+)
 from devcovenant.core.services import yaml_cache as yaml_cache_service
 from devcovenant.core.services.registry import (
     load_policy_descriptor,
@@ -156,9 +159,17 @@ def run_policy_runtime_action(
     config_loader: Callable[[Path, str], dict[str, Any]] = (
         runtime_policy_config_overrides
     ),
+    action_validator: Callable[..., None] = (
+        policy_commands_service.validate_runtime_action_declared
+    ),
 ) -> Any:
     """Run one policy-owned runtime action through the policy contract."""
     repo_root = Path(repo_root).resolve()
+    action_validator(
+        repo_root,
+        policy_id=policy_id,
+        action=action,
+    )
     checker = checker_loader(repo_root, policy_id)
     if checker is None:
         raise ValueError(

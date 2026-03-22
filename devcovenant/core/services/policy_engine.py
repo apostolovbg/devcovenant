@@ -22,6 +22,9 @@ from devcovenant.core.contracts.policy import (
     Violation,
 )
 from devcovenant.core.runtime.execution import get_output_mode, runtime_print
+from devcovenant.core.services import (
+    core_invariants as core_invariants_service,
+)
 from devcovenant.core.services import metadata as metadata_runtime
 from devcovenant.core.services import yaml_cache as yaml_cache_service
 from devcovenant.core.services.policy_parse import (
@@ -337,21 +340,47 @@ class DevCovenantEngine:
             self.report_sync_issues(sync_issues)
 
         # Load and run policy checks
-        context = self._build_check_context()
-        self.passed_count = 0
-        self.failed_count = 0
-        violations = self.run_policy_checks(policies, context)
-
         auto_fix_enabled = self.config.get("engine", {}).get(
             "auto_fix_enabled", False
         )
+        context = self._build_check_context(
+            apply_fixes=bool(apply_fixes),
+            auto_fix_enabled=bool(auto_fix_enabled),
+        )
+        self.passed_count = 0
+        self.failed_count = 0
+        invariant_violations, invariant_passed, invariant_failed = (
+            core_invariants_service.run_core_invariant_checks(
+                self.repo_root,
+                context=context,
+                config_payload=self.config,
+            )
+        )
+        self.passed_count += invariant_passed
+        self.failed_count += invariant_failed
+        violations = list(invariant_violations)
+        violations.extend(self.run_policy_checks(policies, context))
+
         if apply_fixes and auto_fix_enabled:
             fixes_applied = self.apply_auto_fixes(violations)
             if fixes_applied:
-                context = self._build_check_context()
+                context = self._build_check_context(
+                    apply_fixes=bool(apply_fixes),
+                    auto_fix_enabled=bool(auto_fix_enabled),
+                )
                 self.passed_count = 0
                 self.failed_count = 0
-                violations = self.run_policy_checks(policies, context)
+                invariant_violations, invariant_passed, invariant_failed = (
+                    core_invariants_service.run_core_invariant_checks(
+                        self.repo_root,
+                        context=context,
+                        config_payload=self.config,
+                    )
+                )
+                self.passed_count += invariant_passed
+                self.failed_count += invariant_failed
+                violations = list(invariant_violations)
+                violations.extend(self.run_policy_checks(policies, context))
 
         # Report violations
         self.report_violations(violations)
@@ -430,7 +459,12 @@ class DevCovenantEngine:
             config_path=getattr(self, "config_path", None),
         )
 
-    def _build_check_context(self) -> CheckContext:
+    def _build_check_context(
+        self,
+        *,
+        apply_fixes: bool = False,
+        auto_fix_enabled: bool = False,
+    ) -> CheckContext:
         """
         Build the CheckContext for policy checks.
 
@@ -442,6 +476,8 @@ class DevCovenantEngine:
             config=self.config,
             translator_runtime=self.translator_runtime,
             gate_status_path=self._DEFAULT_GATE_STATUS_PATH,
+            autofix_enabled=bool(auto_fix_enabled),
+            autofix_requested=bool(apply_fixes and auto_fix_enabled),
             is_ignored_path=self._is_ignored_path,
             resolve_file_suffixes=self._resolve_file_suffixes,
             collect_all_files=self._collect_all_files,

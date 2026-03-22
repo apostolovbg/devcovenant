@@ -36,7 +36,7 @@ This map documents shipped policy contracts and ownership for 1.0.0.
   keys inside the configured top-of-file header scan window. Generated
   governance targets (`.gitignore`, `.pre-commit-config.yaml`,
   `.github/workflows/governance-and-test.yml`) are excluded by default.
-- `dependency-license-sync`: requires lock/dependency changes to stay aligned
+- `dependency-management`: requires lock/dependency changes to stay aligned
   with `THIRD_PARTY_LICENSES.md` and `licenses/` artifacts (including
   generated `licenses/README.md`) using metadata-driven selectors. This
   policy enforces repository dependency compliance; distribution-package legal

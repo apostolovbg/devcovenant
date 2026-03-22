@@ -19,6 +19,7 @@ _FALLBACK_CORE_EXCLUSION_PATHS = (
     "devcovenant/cli.py",
     "devcovenant/check.py",
     "devcovenant/gate.py",
+    "devcovenant/policy.py",
     "devcovenant/test.py",
     "devcovenant/install.py",
     "devcovenant/deploy.py",

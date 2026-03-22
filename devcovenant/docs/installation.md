@@ -121,7 +121,7 @@ devcovenant refresh
 devcovenant upgrade
 devcovenant undeploy
 devcovenant uninstall
-devcovenant update_lock
+devcovenant policy dependency-management refresh-all
 ```
 
 Run `clean` only after the active gate session is closed.
@@ -157,7 +157,7 @@ What most users should remember:
 
 Runtime details that affect operations:
 - `devcovenant test` executes
-  `devflow-run-gates.required_commands` in metadata order
+  `core_invariants.devflow-run-gates.required_commands` in metadata order
 - `engine.tests_output_mode: normal` consumes verbose command output into
   full run-log artifacts while keeping status output concise and suppressing
   flood-prone test child output with sparse deterministic
@@ -261,6 +261,7 @@ steps.
 2. Open `devcovenant/config.yaml` and review:
    - `developer_mode`
    - `profiles.active`
+   - `core_invariants`
    - `policy_state`
    - `engine.fail_threshold`
    - `engine.output_mode`
@@ -404,13 +405,20 @@ distribution to avoid local-import shadowing.
 Install remains a cold bootstrap command and does not provide preservation or
 merge behavior for existing `devcovenant/` trees.
 
-Use `update_lock` when dependency/lock metadata changed and license artifacts
-must be synchronized:
+Use `devcovenant policy dependency-management refresh-all` when
+dependency/lock metadata changed and license artifacts must be synchronized:
 - lock handlers are selected from resolved metadata
-- lock orchestration runs through dependency-license-sync policy runtime
-  action dispatch (`PolicyCheck.run_runtime_action(...)`)
+- the command is a declared policy-born command backed by the
+  dependency-management runtime action `refresh-all`
+- the dependency-management policy check itself remains read-only; mutation
+  happens only through autofix or through that explicit command
 - license artifacts are refreshed through configured targets
 - metadata paths must stay repo-relative
+
+Compatibility note:
+- `devcovenant update_lock` still forwards to the same
+  dependency-management runtime action for compatibility, but it is no longer
+  the canonical command surface.
 
 Refresh regenerates:
 - local policy/profile registries and manifest
@@ -444,6 +452,12 @@ DevCovenant distribution contracts follow PEP 639-compatible metadata:
 - `pyproject.toml` declares SPDX (Software Package Data Exchange)
   `license = "MIT"` for the
   MIT (Massachusetts Institute of Technology) License
+- `pyproject.toml` uses the packaged `devcovenant/README.md` as the
+  distribution long description so PyPI (Python Package Index) and the
+  installed package surface the same public README contract
+- `pyproject.toml` keeps package `name` and `description` synchronized from
+  `project-governance`, while packaging-specific public metadata such as
+  project URLs and maintainer identity stay explicit in packaging metadata
 - `pyproject.toml` declares `license-files`:
   - `LICENSE`
   - `licenses/THIRD_PARTY_LICENSES.md`
@@ -478,12 +492,34 @@ CI artifact-installability checks validate:
   isolated virtual environments and runs `python -m devcovenant --help`
 - `.github/workflows/build.yml` clears `build/`, `dist/`, `*.egg-info`,
   `.pytest_cache/`, and `.ruff_cache/` before `python -m build`
+- `.github/workflows/build.yml` generates a reproducible CycloneDX SBOM from
+  `requirements.lock` plus `pyproject.toml` and uploads it as a workflow
+  artifact
 - `.github/workflows/publish.yml` mirrors the same smoke-install contract in
   its build job before upload/publish steps
+- `.github/workflows/publish.yml` mirrors the same CycloneDX SBOM generation
+  contract in its build job before publish
 - `.github/workflows/publish.yml` runs the same pre-build cleanup contract
+- `.github/workflows/publish.yml` publishes through PyPI trusted publishing
+  instead of a long-lived upload token; that requires one PyPI-side trusted
+  publisher registration and then uses repository OIDC (OpenID Connect)
+  identity for release upload
+
+Release-assurance checks validate:
+- `.github/workflows/governance-and-test.yml` runs the full gate lifecycle on
+  Python `3.14`
+- `.github/workflows/governance-and-test.yml` also runs a focused
+  compatibility matrix on Python `3.10` through `3.13`
+- `.github/workflows/governance-and-test.yml` runs `pip-audit` against
+  `requirements.lock`
+- `.github/workflows/governance-and-test.yml` runs `bandit` with
+  `bandit.yaml` so low-signal literal-noise findings do not drown out real
+  runtime hardening defects
+- `.github/dependabot.yml` provides weekly dependency-review automation for
+  GitHub Actions and Python package metadata surfaces
 
 This package contract is separate from repository-change policy
-`dependency-license-sync`.
+`dependency-management`.
 
 ## Teardown Commands
 Teardown contract:

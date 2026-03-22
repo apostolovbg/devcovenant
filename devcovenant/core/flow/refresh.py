@@ -18,6 +18,10 @@ import devcovenant.core.services.profile_registry as profile_runtime
 import devcovenant.core.services.registry as manifest_module
 from devcovenant.core.contracts.policy import CheckContext
 from devcovenant.core.runtime.execution import print_step, runtime_print
+from devcovenant.core.services import core_invariant_block_refresh
+from devcovenant.core.services import (
+    core_invariants as core_invariants_service,
+)
 from devcovenant.core.services import managed_docs as managed_docs_service
 from devcovenant.core.services import (
     policy_block_refresh as refresh_policy_block_runtime_module,
@@ -1019,6 +1023,7 @@ def _default_core_paths(repo_root: Path) -> list[str]:
         "devcovenant/check.py",
         "devcovenant/clean.py",
         "devcovenant/gate.py",
+        "devcovenant/policy.py",
         "devcovenant/test.py",
         "devcovenant/install.py",
         "devcovenant/deploy.py",
@@ -1186,7 +1191,27 @@ def _normalize_governance_trigger_key(
 
 def _render_governance_workflow_yaml(payload: dict[str, object]) -> str:
     """Render governance workflow YAML in canonical GitHub syntax."""
-    rendered = yaml.safe_dump(payload, sort_keys=False)
+
+    class _WorkflowYamlDumper(yaml.SafeDumper):
+        """Preserve literal blocks for multiline workflow command strings."""
+
+    def _represent_workflow_string(
+        dumper: yaml.SafeDumper, text_value: str
+    ) -> yaml.nodes.ScalarNode:
+        """Render multiline workflow strings as literal blocks."""
+        style = "|" if "\n" in text_value else None
+        return dumper.represent_scalar(
+            "tag:yaml.org,2002:str",
+            text_value,
+            style=style,
+        )
+
+    _WorkflowYamlDumper.add_representer(str, _represent_workflow_string)
+    rendered = yaml.dump(
+        payload,
+        Dumper=_WorkflowYamlDumper,
+        sort_keys=False,
+    )
     lines = rendered.splitlines()
     normalized_lines: list[str] = []
     in_on_block = False
@@ -1870,9 +1895,12 @@ def refresh_repo(repo_root: Path) -> int:
 
     agents_path = repo_root / "AGENTS.md"
     try:
+        refresh_agents_core_invariant_block(
+            agents_path, None, repo_root=repo_root
+        )
         refresh_agents_policy_block(agents_path, None, repo_root=repo_root)
     except ValueError as error:
-        print_step(f"AGENTS policy refresh failed: {error}", "🚫")
+        print_step(f"AGENTS block refresh failed: {error}", "🚫")
         return 1
 
     active_profiles = _active_profiles(config)
@@ -2018,6 +2046,9 @@ RefreshResult = refresh_policy_block_runtime_module.RefreshResult
 refresh_agents_policy_block = (
     refresh_policy_block_runtime_module.refresh_agents_policy_block
 )
+refresh_agents_core_invariant_block = (
+    core_invariant_block_refresh.refresh_agents_core_invariant_block
+)
 
 
 # ---- Local policy registry refresh ----
@@ -2039,6 +2070,7 @@ def _discover_policy_sources(repo_root: Path) -> Dict[str, Dict[str, bool]]:
     """Return policy ids and whether builtin/custom scripts exist."""
 
     discovered: Dict[str, Dict[str, bool]] = {}
+    skipped_ids = set(core_invariants_service.core_invariant_ids())
     for source in ("builtin", "custom"):
         source_root = repo_root / "devcovenant" / source / "policies"
         if not source_root.exists():
@@ -2050,6 +2082,8 @@ def _discover_policy_sources(repo_root: Path) -> Dict[str, Dict[str, bool]]:
             if not script.exists():
                 continue
             policy_id = entry.name.replace("_", "-").strip()
+            if policy_id in skipped_ids:
+                continue
             record = discovered.setdefault(
                 policy_id, {"builtin": False, "custom": False}
             )
@@ -2281,6 +2315,12 @@ def refresh_policy_registry(
         )
         registry.update_managed_docs(
             managed_docs_service.managed_docs_registry_payload(
+                repo_root,
+                config_payload=config_payload,
+            )
+        )
+        registry.update_core_invariants(
+            core_invariants_service.core_invariants_registry_payload(
                 repo_root,
                 config_payload=config_payload,
             )

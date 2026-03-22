@@ -116,6 +116,9 @@ Metadata trace intent:
 - generic profile defaults now keep version-governance scheme selection
   explicit; tracked registry output therefore shows the scheme a repo chose
   intentionally instead of implying a hidden global baseline
+- profile-fed documentation-routing metadata for release-assurance files such
+  as `.github/dependabot.yml` and `bandit.yaml` is also visible here after
+  refresh, so doc-route behavior can be audited from the tracked registry
 
 ## Runtime Registry
 `devcovenant/registry/runtime/` stores runtime-local state such as:
@@ -127,6 +130,13 @@ Runtime registry files are:
 - untracked
 - disposable
 - local to the current machine/session/branch context
+
+Privacy boundary:
+- `latest.json` is a short latest-run pointer for status helpers, not a full
+  copy of `run.json`
+- run-log privacy and redaction boundaries are documented in `PRIVACY.md`
+- `session_snapshot.json` stores path-and-hash style session evidence rather
+  than full source-file contents
 
 Cleanup rule:
 - `devcovenant clean --registry` removes runtime registry residue only
@@ -204,8 +214,13 @@ Registry behavior expectations:
   the tracked registry structure inside a repository
 
 ## Validation and Integrity
-`devcov-integrity-guard` validates registry state against active policy source
-and runtime expectations.
+The `devcov-integrity-guard` core invariant validates registry state against
+active policy source and runtime expectations.
+
+Tracked registry contract note:
+- policy state lives under `policies`
+- core invariant state lives under `core-invariants`
+- runtime/session ledger data stays under `devcovenant/registry/runtime/`
 
 When drift is detected:
 1. run `devcovenant refresh`

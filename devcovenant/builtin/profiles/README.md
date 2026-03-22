@@ -1,5 +1,5 @@
 # Builtin Profiles
-**Last Updated:** 2026-03-09
+**Last Updated:** 2026-03-22
 **Project Version:** 1.0.0
 
 ## Table of Contents
@@ -43,6 +43,7 @@ Common keys include:
 - optional `governance_template` (global workflow template)
 - optional `governance_and_test` (workflow fragment overlay)
 - `policy_overlays`
+- optional `core_invariant_overlays`
 - `assets`
 - `pre_commit`
 - optional `translators`

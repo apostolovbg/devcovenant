@@ -28,16 +28,17 @@ assets:
   - path: pubspec.lock
     template: pubspec.lock
 policy_overlays:
-  dependency-license-sync:
+  dependency-management:
     dependency_role_files:
       - package_manifest=>pubspec.yaml
       - resolved=>pubspec.lock
-  devflow-run-gates:
-    required_commands:
-      - flutter test
   documentation-growth-tracking:
     user_facing_suffixes:
       - .dart
   line-length-limit:
     include_suffixes:
       - .dart
+core_invariant_overlays:
+  devflow-run-gates:
+    required_commands:
+      - flutter test

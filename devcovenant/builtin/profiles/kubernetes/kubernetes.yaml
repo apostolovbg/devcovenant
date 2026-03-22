@@ -12,9 +12,6 @@ assets:
   - path: values.yaml
     template: values.yaml
 policy_overlays:
-  devflow-run-gates:
-    required_commands:
-      - helm lint
   documentation-growth-tracking:
     user_facing_suffixes:
       - .yml
@@ -23,3 +20,7 @@ policy_overlays:
     include_suffixes:
       - .yml
       - .yaml
+core_invariant_overlays:
+  devflow-run-gates:
+    required_commands:
+      - helm lint

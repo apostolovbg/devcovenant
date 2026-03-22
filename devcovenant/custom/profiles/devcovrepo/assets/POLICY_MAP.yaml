@@ -15,21 +15,33 @@ body: |-
   ## Table of Contents
   1. [Purpose](#purpose)
   2. [Global Rules](#global-rules)
-  3. [Builtin Policies](#builtin-policies)
-  4. [Custom Policies](#custom-policies)
-  5. [Language-Aware Policies](#language-aware-policies)
-  6. [Metadata Families](#metadata-families)
+  3. [Core Invariants](#core-invariants)
+  4. [Builtin Policies](#builtin-policies)
+  5. [Custom Policies](#custom-policies)
+  6. [Language-Aware Policies](#language-aware-policies)
+  7. [Metadata Families](#metadata-families)
 
   ## Purpose
   This map documents shipped policy contracts and ownership for 1.0.0.
 
   ## Global Rules
   - Policy activation authority is `config.policy_state` only.
+  - DevCovenant-owned runtime invariants surface separately through
+    `config.core_invariants`, AGENTS core-invariant block rendering, and the
+    tracked registry `core-invariants` section.
   - Policy descriptors are the canonical prose and metadata defaults.
   - AGENTS policy block is compiled from resolved metadata and parsed at
     runtime.
   - Local registry stores synchronized hash and metadata diagnostics.
   - Same-id custom policy overrides same-id builtin policy.
+
+  ## Core Invariants
+  - `devcov-integrity-guard`: validates descriptor/registry/runtime
+    consistency as a first-class DevCovenant runtime invariant.
+  - `devcov-structure-guard`: enforces required DevCovenant runtime shape and
+    repo-local bytecode hygiene where configured.
+  - `devflow-run-gates`: enforces gate start -> test -> gate end evidence and
+    validates required-command and pre-commit execution records.
 
   ## Builtin Policies
   - `changelog-coverage`: requires one fresh top changelog entry per work
@@ -39,16 +51,11 @@ body: |-
     inside the configured top-of-file header scan window. Generated governance
     targets (`.gitignore`, `.pre-commit-config.yaml`,
     `.github/workflows/governance-and-test.yml`) are excluded by default.
-  - `dependency-license-sync`: requires lock/dependency changes to stay aligned
+  - `dependency-management`: requires lock/dependency changes to stay aligned
     with `THIRD_PARTY_LICENSES.md` and `licenses/` artifacts (including
     generated `licenses/README.md`) using metadata-driven selectors. This
     policy enforces repository dependency compliance; distribution-package
     legal scope is handled by packaging contracts.
-  - `devcov-integrity-guard`: validates descriptor/registry/runtime
-    consistency.
-  - `devcov-structure-guard`: enforces required repository shape constraints.
-  - `devflow-run-gates`: enforces gate start -> test -> gate end evidence and
-    validates required-command and pre-commit execution records.
   - `docstring-and-comment-coverage`: requires explanatory docs/comments for
     in-scope source files.
   - `documentation-growth-tracking`: enforces docs-update expectations and
@@ -104,6 +111,8 @@ body: |-
 
   Gate/session:
   - `gate_status_file`, `required_commands`, pre-commit command/epoch keys
+  - core invariant metadata for `devflow-run-gates` lives under
+    `config.core_invariants`, not `policy_state`
 
   Runtime note:
   - `required_commands` executes in resolved metadata order without runtime

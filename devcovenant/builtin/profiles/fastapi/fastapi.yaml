@@ -19,15 +19,11 @@ assets:
   - path: openapi.json
     template: openapi.json
 policy_overlays:
-  dependency-license-sync:
+  dependency-management:
     dependency_role_files:
       - intent=>requirements.in
       - resolved=>requirements.lock
       - package_manifest=>pyproject.toml
-  devflow-run-gates:
-    required_commands:
-      - python3 -m unittest discover -v
-      - pytest
   documentation-growth-tracking:
     user_facing_suffixes:
       - .py
@@ -59,3 +55,8 @@ policy_overlays:
   modules-need-tests:
     include_suffixes:
       - .py
+core_invariant_overlays:
+  devflow-run-gates:
+    required_commands:
+      - python3 -m unittest discover -v
+      - pytest

@@ -15,9 +15,6 @@ assets:
   - path: .dockerignore
     template: .dockerignore
 policy_overlays:
-  devflow-run-gates:
-    required_commands:
-      - docker compose config
   documentation-growth-tracking:
     user_facing_suffixes:
       - .yml
@@ -26,3 +23,7 @@ policy_overlays:
     include_suffixes:
       - .yml
       - .yaml
+core_invariant_overlays:
+  devflow-run-gates:
+    required_commands:
+      - docker compose config

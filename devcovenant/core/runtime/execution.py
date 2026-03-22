@@ -12,7 +12,7 @@ import re
 import select
 import shlex
 import shutil
-import subprocess
+import subprocess  # nosec B404
 import sys
 import tempfile
 import time
@@ -28,6 +28,7 @@ except ImportError:  # pragma: no cover - non-POSIX runtimes
 
 import devcovenant.core.runtime.output as output_runtime_module
 import devcovenant.core.runtime.run_logging as run_logging_runtime_module
+import devcovenant.core.services.devflow_run_gates as devflow_runtime_module
 import devcovenant.core.services.event as event_runtime_module
 import devcovenant.core.services.registry as registry_runtime_module
 import devcovenant.core.services.runtime_profile as test_profile_runtime_module
@@ -55,8 +56,6 @@ ChildOutputChannel = output_runtime_module.ChildOutputChannel
 _OUTPUT_MODE_DEFAULT: OutputMode = output_runtime_module.OUTPUT_MODE_DEFAULT
 _MANAGED_ENV_POLICY_ID = "managed-environment"
 _MANAGED_ENV_ACTION_RESOLVE_STAGE = "resolve-stage"
-_DEVFLOW_POLICY_ID = "devflow-run-gates"
-_DEVFLOW_ACTION_RESOLVE_REQUIRED_COMMANDS = "resolve-required-test-commands"
 _TEST_COMMAND_OUTPUT_MODE: OutputMode | None = None
 _TEST_COMMAND_LABEL = ""
 _PYCACHE_PREFIX_ENABLED = False
@@ -910,7 +909,8 @@ def _run_subprocess_with_runtime_output_pty(
     command_env = _apply_repo_bytecode_env(dict(env or os.environ))
     command_tokens = [str(token) for token in command]
     master_fd, slave_fd = pty.openpty()
-    process = subprocess.Popen(
+    # Reviewed tokenized child command execution; shell use stays forbidden.
+    process = subprocess.Popen(  # nosec B603
         command_tokens,
         stdin=subprocess.DEVNULL,
         stdout=slave_fd,
@@ -1002,7 +1002,8 @@ def _run_subprocess_with_runtime_output_pipe(
     """Run one subprocess through pipes with live queue-based streaming."""
     command_env = _apply_repo_bytecode_env(dict(env or os.environ))
     command_tokens = [str(token) for token in command]
-    process = subprocess.Popen(
+    # Reviewed tokenized child command execution; shell use stays forbidden.
+    process = subprocess.Popen(  # nosec B603
         command_tokens,
         stdout=subprocess.PIPE,
         stderr=subprocess.STDOUT,
@@ -1346,7 +1347,7 @@ def rewrite_command_string_for_managed_python(
 
 
 def registry_required_commands(repo_root: Path) -> list[tuple[str, list[str]]]:
-    """Read required commands from devflow-run-gates runtime action."""
+    """Read required commands from the devflow core invariant contract."""
     commands, _, _ = resolve_required_test_commands(repo_root)
     return commands
 
@@ -1402,17 +1403,14 @@ def resolve_required_test_commands(
     *,
     tests_mode: OutputMode | None = None,
 ) -> tuple[list[tuple[str, list[str]]], OutputMode, str]:
-    """Resolve required test commands via devflow policy runtime action."""
+    """Resolve required test commands via the devflow core invariant."""
     resolved_mode = tests_mode or resolve_tests_output_mode(repo_root)
-    result = _run_policy_runtime_action(
+    result = devflow_runtime_module.resolve_required_test_commands(
         repo_root,
-        policy_id=_DEVFLOW_POLICY_ID,
-        action=_DEVFLOW_ACTION_RESOLVE_REQUIRED_COMMANDS,
-        payload={"tests_output_mode": resolved_mode},
     )
     if not isinstance(result, dict):
         raise ValueError(
-            "devflow-run-gates runtime action returned invalid payload."
+            "devflow-run-gates invariant returned invalid payload."
         )
     source_field_raw = result.get("source_field", "required_commands")
     source_field = str(source_field_raw).strip() or "required_commands"

@@ -31,14 +31,10 @@ translators:
       strategy: module_function
       entrypoint: java_translator.py:translate
 policy_overlays:
-  dependency-license-sync:
+  dependency-management:
     dependency_role_files:
       - package_manifest=>pom.xml
       - package_manifest=>build.gradle
-  devflow-run-gates:
-    required_commands:
-      - mvn test
-      - gradle test
   name-clarity:
     include_suffixes:
       - .java
@@ -66,3 +62,8 @@ policy_overlays:
   line-length-limit:
     include_suffixes:
       - .java
+core_invariant_overlays:
+  devflow-run-gates:
+    required_commands:
+      - mvn test
+      - gradle test
