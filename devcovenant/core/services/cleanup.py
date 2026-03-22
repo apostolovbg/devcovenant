@@ -13,6 +13,7 @@ from typing import Iterable
 import yaml
 
 import devcovenant.core.services.profile_registry as profile_runtime
+from devcovenant.core.services import yaml_cache as yaml_cache_service
 
 try:
     import tomllib  # type: ignore[attr-defined]
@@ -110,7 +111,7 @@ def _read_config_payload(repo_root: Path) -> dict[str, object]:
     if not config_path.exists():
         return {}
     try:
-        payload = yaml.safe_load(config_path.read_text(encoding="utf-8"))
+        payload = yaml_cache_service.load_yaml(config_path)
     except (OSError, yaml.YAMLError):
         return {}
     return payload if isinstance(payload, dict) else {}

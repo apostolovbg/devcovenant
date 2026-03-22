@@ -12,6 +12,8 @@ from typing import TYPE_CHECKING, Any, Dict, Iterable, List, Optional, Tuple
 
 import yaml
 
+from devcovenant.core.services import yaml_cache as yaml_cache_service
+
 if TYPE_CHECKING:
     from devcovenant.core.services.policy_parse import PolicyDefinition
 
@@ -169,9 +171,7 @@ def load_policy_descriptor(
         if not descriptor_path.exists():
             continue
         try:
-            contents = yaml.safe_load(
-                descriptor_path.read_text(encoding="utf-8")
-            )
+            contents = yaml_cache_service.load_yaml(descriptor_path)
         except yaml.YAMLError as exc:
             raise ValueError(
                 f"Invalid YAML in policy descriptor {descriptor_path}: {exc}"
@@ -280,7 +280,7 @@ def _load_registry_document(path: Path) -> Dict[str, Any]:
     if not path.exists():
         return _base_registry_document()
     try:
-        payload = yaml.safe_load(path.read_text(encoding="utf-8"))
+        payload = yaml_cache_service.load_yaml(path)
     except yaml.YAMLError as exc:
         raise ValueError(
             f"Invalid YAML in registry file {path}: {exc}"

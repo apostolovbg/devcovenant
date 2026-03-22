@@ -5,6 +5,7 @@ from __future__ import annotations
 import json
 import re
 import tempfile
+import tomllib
 import unittest
 from contextlib import redirect_stdout
 from io import StringIO
@@ -153,7 +154,7 @@ def _unit_test_refresh_updates_managed_block_only() -> None:
     """refresh_repo should update managed block without replacing full doc."""
     with tempfile.TemporaryDirectory() as temp_dir:
         repo_root = Path(temp_dir)
-        repo_seed_cache.copy_installed_repo(repo_root)
+        repo_seed_cache.copy_refreshed_repo(repo_root)
 
         readme = repo_root / "README.md"
         readme.write_text(
@@ -169,6 +170,85 @@ def _unit_test_refresh_updates_managed_block_only() -> None:
         updated = readme.read_text(encoding="utf-8")
         assert "User body" in updated
         assert "Doc ID:" in updated
+
+
+def _unit_test_refresh_syncs_project_identity() -> None:
+    """refresh_repo should render README and pyproject identity."""
+    with tempfile.TemporaryDirectory() as temp_dir:
+        repo_root = Path(temp_dir)
+        install.install_repo(repo_root)
+        config_path = repo_root / "devcovenant" / "config.yaml"
+        payload = yaml.safe_load(config_path.read_text(encoding="utf-8"))
+        governance = payload["project-governance"]
+        governance["project_name"] = "Example Product"
+        governance["project_description"] = (
+            "Example Product keeps repository governance explicit."
+        )
+        config_path.write_text(
+            yaml.safe_dump(payload, sort_keys=False),
+            encoding="utf-8",
+        )
+
+        result = refresh.refresh_repo(repo_root)
+        assert result == 0
+
+        readme = (repo_root / "README.md").read_text(encoding="utf-8")
+        assert readme.startswith("# Example Product\n")
+        assert (
+            "Example Product keeps repository governance explicit." in readme
+        )
+
+        pyproject_payload = tomllib.loads(
+            (repo_root / "pyproject.toml").read_text(encoding="utf-8")
+        )
+        assert pyproject_payload["project"]["name"] == "Example Product"
+        assert (
+            pyproject_payload["project"]["description"]
+            == "Example Product keeps repository governance explicit."
+        )
+
+
+def _unit_test_refresh_rewrites_pyproject_identity() -> None:
+    """refresh_repo should rewrite existing pyproject identity fields."""
+    with tempfile.TemporaryDirectory() as temp_dir:
+        repo_root = Path(temp_dir)
+        install.install_repo(repo_root)
+        config_path = repo_root / "devcovenant" / "config.yaml"
+        payload = yaml.safe_load(config_path.read_text(encoding="utf-8"))
+        governance = payload["project-governance"]
+        governance["project_name"] = "Example Product"
+        governance["project_description"] = (
+            "Example Product keeps repository governance explicit."
+        )
+        config_path.write_text(
+            yaml.safe_dump(payload, sort_keys=False),
+            encoding="utf-8",
+        )
+        (repo_root / "pyproject.toml").write_text(
+            "[project]\n"
+            'name = "wrong-name"\n'
+            'version = "0.0.0"\n'
+            'description = "wrong description"\n'
+            'readme = "README.md"\n',
+            encoding="utf-8",
+        )
+
+        result = refresh.refresh_repo(repo_root)
+        assert result == 0
+
+        pyproject_payload = tomllib.loads(
+            (repo_root / "pyproject.toml").read_text(encoding="utf-8")
+        )
+        assert pyproject_payload["project"]["name"] == "Example Product"
+        assert (
+            pyproject_payload["project"]["description"]
+            == "Example Product keeps repository governance explicit."
+        )
+
+
+_REFRESH_PYPROJECT_IDENTITY_CALLBACK = (
+    _unit_test_refresh_rewrites_pyproject_identity
+)
 
 
 def _unit_test_refresh_imports_same_version_header_only_spec_doc() -> None:
@@ -228,7 +308,7 @@ def _unit_test_refresh_preserves_existing_non_placeholder_plan_body() -> None:
     """refresh_repo should preserve existing non-placeholder PLAN content."""
     with tempfile.TemporaryDirectory() as temp_dir:
         repo_root = Path(temp_dir)
-        repo_seed_cache.copy_installed_repo(repo_root)
+        repo_seed_cache.copy_refreshed_repo(repo_root)
 
         plan_path = repo_root / "PLAN.md"
         plan_path.write_text(
@@ -283,7 +363,7 @@ def _unit_test_refresh_replaces_legacy_generic_spec_body() -> None:
     """refresh_repo should replace exact legacy generic SPEC scaffolds."""
     with tempfile.TemporaryDirectory() as temp_dir:
         repo_root = Path(temp_dir)
-        repo_seed_cache.copy_installed_repo(repo_root)
+        repo_seed_cache.copy_refreshed_repo(repo_root)
 
         spec_path = repo_root / "SPEC.md"
         spec_path.write_text(
@@ -317,7 +397,7 @@ def _unit_test_refresh_replaces_legacy_generic_plan_body() -> None:
     """refresh_repo should replace exact legacy generic PLAN scaffolds."""
     with tempfile.TemporaryDirectory() as temp_dir:
         repo_root = Path(temp_dir)
-        repo_seed_cache.copy_installed_repo(repo_root)
+        repo_seed_cache.copy_refreshed_repo(repo_root)
 
         plan_path = repo_root / "PLAN.md"
         plan_path.write_text(
@@ -488,7 +568,7 @@ def _unit_test_refresh_updates_all_managed_blocks() -> None:
     """refresh_repo should normalize AGENTS managed/workflow/policy blocks."""
     with tempfile.TemporaryDirectory() as temp_dir:
         repo_root = Path(temp_dir)
-        repo_seed_cache.copy_installed_repo(repo_root)
+        repo_seed_cache.copy_refreshed_repo(repo_root)
 
         agents = repo_root / "AGENTS.md"
         agents.write_text(
@@ -524,10 +604,7 @@ def _unit_test_refresh_writes_ruff_cache_gitignore() -> None:
     """refresh_repo should include .ruff_cache in generated gitignore."""
     with tempfile.TemporaryDirectory() as temp_dir:
         repo_root = Path(temp_dir)
-        repo_seed_cache.copy_installed_repo(repo_root)
-
-        result = refresh.refresh_repo(repo_root)
-        assert result == 0
+        repo_seed_cache.copy_refreshed_repo(repo_root)
 
         gitignore_path = repo_root / ".gitignore"
         content = gitignore_path.read_text(encoding="utf-8")
@@ -538,10 +615,7 @@ def _unit_test_refresh_writes_devcovenant_logs_gitignore_rules() -> None:
     """refresh_repo should ignore runtime logs but keep logs README tracked."""
     with tempfile.TemporaryDirectory() as temp_dir:
         repo_root = Path(temp_dir)
-        repo_seed_cache.copy_installed_repo(repo_root)
-
-        result = refresh.refresh_repo(repo_root)
-        assert result == 0
+        repo_seed_cache.copy_refreshed_repo(repo_root)
 
         gitignore_path = repo_root / ".gitignore"
         content = gitignore_path.read_text(encoding="utf-8")
@@ -554,10 +628,7 @@ def _unit_test_refresh_writes_global_artifact_ignore_defaults() -> None:
     """refresh_repo should seed shared editor/build/runtime ignore globs."""
     with tempfile.TemporaryDirectory() as temp_dir:
         repo_root = Path(temp_dir)
-        repo_seed_cache.copy_installed_repo(repo_root)
-
-        result = refresh.refresh_repo(repo_root)
-        assert result == 0
+        repo_seed_cache.copy_refreshed_repo(repo_root)
 
         config_path = repo_root / "devcovenant" / "config.yaml"
         payload = yaml.safe_load(config_path.read_text(encoding="utf-8"))
@@ -578,10 +649,7 @@ def _unit_test_refresh_writes_clean_config_section() -> None:
     """refresh_repo should render the clean config contract and defaults."""
     with tempfile.TemporaryDirectory() as temp_dir:
         repo_root = Path(temp_dir)
-        repo_seed_cache.copy_installed_repo(repo_root)
-
-        result = refresh.refresh_repo(repo_root)
-        assert result == 0
+        repo_seed_cache.copy_refreshed_repo(repo_root)
 
         config_path = repo_root / "devcovenant" / "config.yaml"
         payload = yaml.safe_load(config_path.read_text(encoding="utf-8"))
@@ -607,10 +675,7 @@ def _unit_test_refresh_renders_devcov_managed_doc_intros() -> None:
     """refresh_repo should render doc-specific DevCovenant intro text."""
     with tempfile.TemporaryDirectory() as temp_dir:
         repo_root = Path(temp_dir)
-        repo_seed_cache.copy_installed_repo(repo_root)
-
-        result = refresh.refresh_repo(repo_root)
-        assert result == 0
+        repo_seed_cache.copy_refreshed_repo(repo_root)
 
         readme = (repo_root / "README.md").read_text(encoding="utf-8")
         package_readme = (repo_root / "devcovenant" / "README.md").read_text(
@@ -646,10 +711,7 @@ def _unit_test_refresh_writes_global_artifact_gitignore_rules() -> None:
     """refresh_repo should write universal editor/build/runtime gitignores."""
     with tempfile.TemporaryDirectory() as temp_dir:
         repo_root = Path(temp_dir)
-        repo_seed_cache.copy_installed_repo(repo_root)
-
-        result = refresh.refresh_repo(repo_root)
-        assert result == 0
+        repo_seed_cache.copy_refreshed_repo(repo_root)
 
         gitignore_path = repo_root / ".gitignore"
         content = gitignore_path.read_text(encoding="utf-8")
@@ -669,10 +731,7 @@ def _unit_test_refresh_policy_registry_origin_metadata() -> None:
     """refresh_repo should record builtin/custom policy origins."""
     with tempfile.TemporaryDirectory() as temp_dir:
         repo_root = Path(temp_dir)
-        repo_seed_cache.copy_installed_repo(repo_root)
-
-        result = refresh.refresh_repo(repo_root)
-        assert result == 0
+        repo_seed_cache.copy_refreshed_repo(repo_root)
 
         policy_registry = (
             repo_root / "devcovenant" / "registry" / "registry.yaml"
@@ -688,10 +747,7 @@ def _unit_test_refresh_policy_registry_records_metadata_resolution() -> None:
     """refresh_repo should persist per-key metadata resolution trace."""
     with tempfile.TemporaryDirectory() as temp_dir:
         repo_root = Path(temp_dir)
-        repo_seed_cache.copy_installed_repo(repo_root)
-
-        result = refresh.refresh_repo(repo_root)
-        assert result == 0
+        repo_seed_cache.copy_refreshed_repo(repo_root)
 
         policy_registry = (
             repo_root / "devcovenant" / "registry" / "registry.yaml"
@@ -712,7 +768,7 @@ def _unit_test_refresh_records_override_replacement_warning() -> None:
     """refresh_repo should record warnings for destructive overrides."""
     with tempfile.TemporaryDirectory() as temp_dir:
         repo_root = Path(temp_dir)
-        repo_seed_cache.copy_installed_repo(repo_root)
+        repo_seed_cache.copy_refreshed_repo(repo_root)
 
         config_path = repo_root / "devcovenant" / "config.yaml"
         payload = yaml.safe_load(config_path.read_text(encoding="utf-8"))
@@ -752,7 +808,7 @@ def _unit_test_refresh_preserves_existing_gate_status() -> None:
     """refresh_repo should leave an open gate status file untouched."""
     with tempfile.TemporaryDirectory() as temp_dir:
         repo_root = Path(temp_dir)
-        repo_seed_cache.copy_installed_repo(repo_root)
+        repo_seed_cache.copy_refreshed_repo(repo_root)
 
         gate_status_path = (
             repo_root
@@ -786,7 +842,7 @@ def _unit_test_refresh_recreates_missing_tracked_registry_only() -> None:
     """refresh_repo should rebuild tracked registry without runtime state."""
     with tempfile.TemporaryDirectory() as temp_dir:
         repo_root = Path(temp_dir)
-        repo_seed_cache.copy_installed_repo(repo_root)
+        repo_seed_cache.copy_refreshed_repo(repo_root)
 
         tracked_registry = (
             repo_root / "devcovenant" / "registry" / "registry.yaml"
@@ -810,10 +866,7 @@ def _unit_test_refresh_defaults_autofix_disabled_globally() -> None:
     """refresh_repo should default `engine.auto_fix_enabled` to false."""
     with tempfile.TemporaryDirectory() as temp_dir:
         repo_root = Path(temp_dir)
-        repo_seed_cache.copy_installed_repo(repo_root)
-
-        result = refresh.refresh_repo(repo_root)
-        assert result == 0
+        repo_seed_cache.copy_refreshed_repo(repo_root)
 
         config_path = repo_root / "devcovenant" / "config.yaml"
         payload = yaml.safe_load(config_path.read_text(encoding="utf-8"))
@@ -826,7 +879,7 @@ def _unit_test_refresh_seeds_autofix_for_devcovrepo_when_unset() -> None:
     """refresh_repo should seed autofix for active `devcovrepo` when unset."""
     with tempfile.TemporaryDirectory() as temp_dir:
         repo_root = Path(temp_dir)
-        repo_seed_cache.copy_installed_repo(repo_root)
+        repo_seed_cache.copy_refreshed_repo(repo_root)
         config_path = repo_root / "devcovenant" / "config.yaml"
         payload = yaml.safe_load(config_path.read_text(encoding="utf-8"))
         payload.setdefault("profiles", {})
@@ -858,7 +911,7 @@ def _unit_test_refresh_rejects_missing_version_for_versioned_repo() -> None:
     """refresh_repo should fail when versioned repos lack a real version."""
     with tempfile.TemporaryDirectory() as temp_dir:
         repo_root = Path(temp_dir)
-        repo_seed_cache.copy_installed_repo(repo_root)
+        repo_seed_cache.copy_refreshed_repo(repo_root)
         version_path = repo_root / "VERSION"
         if version_path.exists():
             version_path.unlink()
@@ -883,7 +936,7 @@ def _unit_test_refresh_allows_unversioned_repo_without_version_file() -> None:
     """refresh_repo should allow missing version file for unversioned repos."""
     with tempfile.TemporaryDirectory() as temp_dir:
         repo_root = Path(temp_dir)
-        repo_seed_cache.copy_installed_repo(repo_root)
+        repo_seed_cache.copy_refreshed_repo(repo_root)
         version_path = repo_root / "VERSION"
         if version_path.exists():
             version_path.unlink()
@@ -921,10 +974,7 @@ def _unit_test_refresh_renders_canonical_workflow_triggers() -> None:
     """refresh_repo should render canonical GitHub trigger syntax."""
     with tempfile.TemporaryDirectory() as temp_dir:
         repo_root = Path(temp_dir)
-        repo_seed_cache.copy_installed_repo(repo_root)
-
-        result = refresh.refresh_repo(repo_root)
-        assert result == 0
+        repo_seed_cache.copy_refreshed_repo(repo_root)
 
         workflow_path = (
             repo_root / ".github" / "workflows" / "governance-and-test.yml"
@@ -1074,6 +1124,16 @@ class GeneratedUnittestCases(unittest.TestCase):
     def test_refresh_updates_managed_block_only(self):
         """Run test_refresh_updates_managed_block_only."""
         _unit_test_refresh_updates_managed_block_only()
+
+    def test_refresh_syncs_project_identity_into_readme_and_pyproject(self):
+        """Run project-identity rendering assertions."""
+        _unit_test_refresh_syncs_project_identity()
+
+    def test_refresh_rewrites_existing_pyproject_identity_from_governance(
+        self,
+    ):
+        """Run existing pyproject identity sync assertions."""
+        _REFRESH_PYPROJECT_IDENTITY_CALLBACK()
 
     def test_refresh_imports_same_version_header_only_spec_doc(self):
         """Run same-version SPEC import assertions."""

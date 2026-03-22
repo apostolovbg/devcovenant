@@ -426,12 +426,22 @@ def _clean_local_build_artifacts(repo_root: Path) -> None:
 
 
 def _unit_test_pyproject_uses_pep639_license_metadata() -> None:
-    """pyproject.toml should declare SPDX license and license-files."""
+    """pyproject.toml should declare packaging/license metadata cleanly."""
     pyproject_data = tomllib.loads(
         (REPO_ROOT / "pyproject.toml").read_text("utf-8")
     )
+    build_system = pyproject_data.get("build-system", {})
+    assert build_system.get("build-backend") == "setuptools.build_meta"
+    build_requires = build_system.get("requires")
+    assert isinstance(build_requires, list)
+    assert "setuptools>=77" in build_requires
+    assert "wheel" in build_requires
     project_data = pyproject_data.get("project", {})
     assert project_data.get("license") == "MIT"
+    readme_value = project_data.get("readme")
+    assert isinstance(readme_value, dict)
+    assert readme_value.get("file") == "devcovenant/README.md"
+    assert readme_value.get("content-type") == "text/markdown"
     license_files = project_data.get("license-files")
     assert isinstance(license_files, list)
     for required in [

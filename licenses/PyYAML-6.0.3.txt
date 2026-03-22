@@ -1,16 +1,15 @@
-# pytest 9.0.2
+# PyYAML 6.0.3
 
 This file aggregates the upstream license texts bundled with the
-installed distribution for `pytest==9.0.2`.
+installed distribution for `PyYAML==6.0.3`.
 
 Included upstream files:
 - LICENSE
 
 ===== LICENSE =====
 
-The MIT License (MIT)
-
-Copyright (c) 2004 Holger Krekel and others
+Copyright (c) 2017-2021 Ingy döt Net
+Copyright (c) 2006-2016 Kirill Simonov
 
 Permission is hereby granted, free of charge, to any person obtaining a copy of
 this software and associated documentation files (the "Software"), to deal in

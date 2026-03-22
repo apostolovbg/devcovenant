@@ -9,6 +9,8 @@
 - [Composition Rules](#composition-rules)
 - [Config Regeneration](#config-regeneration)
 - [Managed Docs and Blocks](#managed-docs-and-blocks)
+- [Managed Doc Descriptor Schema](#managed-doc-descriptor-schema)
+- [Validation and Enforcement](#validation-and-enforcement)
 - [Operational Notes](#operational-notes)
 - [Workflow](#workflow)
 
@@ -23,9 +25,18 @@ Refresh aligns:
 - generated config sections
 - generated governance/tooling files
 - managed docs and managed blocks
+- repeated tracked YAML reads through one run-scoped cache boundary shared by
+  refresh, check, gate, install, deploy, and undeploy
 
 If profiles, descriptors, or templates changed, refresh is mandatory before
 trusting downstream gate results.
+This is the primary home for refresh-owned regeneration behavior and
+managed-doc update rules. Use `devcovenant/docs/installation.md` for
+lifecycle command order and `devcovenant/docs/workflow.md` for the exact
+gate sequence.
+It is also the normative home for the managed-documents contract and the
+managed-doc descriptor schema. Use `devcovenant/docs/contracts.md` for the
+contract index.
 
 ## When Refresh Runs
 Full refresh runs in:
@@ -54,6 +65,8 @@ Primary generated outputs:
 
 Refresh is idempotent for synchronized inputs. Re-running refresh with no input
 changes should produce no further file mutations.
+The shared YAML cache only reduces duplicate parsing inside one command run;
+it does not change refresh output ownership or preservation rules.
 
 ## Composition Rules
 Governance workflow composition:
@@ -122,6 +135,64 @@ AGENTS special contract:
 This means descriptor/profile/config metadata changes are not fully active
 until refresh materializes them.
 
+## Managed Doc Descriptor Schema
+Common managed-doc descriptors are YAML (YAML Ain't Markup Language) mappings
+with this exact stable key order:
+- `title`
+- `target_path`
+- `doc_id`
+- `doc_type`
+- `project_version`
+- `last_updated`
+- `devcovenant_version`
+- optional `project_governance_headers`
+- optional `import_seed`
+- optional `authoritative_source`
+- optional `legacy_generic_body_fingerprints`
+- `managed_block`
+- `body`
+- optional `workflow_block`
+
+Field contract:
+- `target_path` must resolve to the managed doc's canonical path
+- `project_version`, `last_updated`, and `devcovenant_version` are required
+  booleans
+- `devcovenant_version` must stay `true`
+- optional boolean and list keys must use their real YAML types, not strings
+- `legacy_generic_body_fingerprints` contains exact SHA-256 body
+  fingerprints only
+- multiline `managed_block`, `body`, and `workflow_block` values must use
+  YAML literal block style
+- `workflow_block` is reserved for the AGENTS special case and is not part of
+  the common one-block document contract
+
+Behavior contract:
+- common managed docs use headers plus one explicit managed block
+- AGENTS is the only managed-doc special case with multi-block behavior
+- descriptor discovery comes from the global managed-doc assets root plus any
+  active profile asset roots
+- authoritative descriptor coverage for asset-sync checks follows
+  `authoritative_source: true`
+
+## Validation and Enforcement
+The managed-doc runtime service
+`devcovenant/core/services/managed_docs.py` is the enforcement boundary for
+this contract.
+
+That service validates:
+- descriptor key support and exact order
+- required boolean fields and types
+- descriptor target-path correctness
+- literal-block style for multiline fields
+- duplicate descriptor targets across descriptor roots
+- exact body-fingerprint matching for legacy generic replacement
+
+Related proof surfaces:
+- `tests/devcovenant/core/services/test_managed_docs.py`
+- `tests/devcovenant/test_refresh.py`
+- `tests/devcovenant/custom/policies/managed_doc_assets/`
+  `test_managed_doc_assets.py`
+
 ## Operational Notes
 After changing descriptors, profiles, templates, or metadata contracts:
 1. run `devcovenant refresh`
@@ -135,8 +206,13 @@ When refresh output is unexpected:
 - inspect `devcovenant/registry/registry.yaml` for resolved metadata
 
 ## Workflow
-1. Trigger refresh from `refresh`, `deploy`, `upgrade`, or the gate workflow
-   (`gate --start` / `gate --end` via gate-owned check orchestration).
+Use this document when the question is "what does refresh own?" or
+"why did refresh change this generated surface?".
+Use `devcovenant/docs/contracts.md` when you need the contract map for all
+frozen product surfaces.
+For the exact gate sequence, use `devcovenant/docs/workflow.md`.
+
+Refresh-change loop:
+1. Trigger refresh from `refresh`, `deploy`, `upgrade`, or the gate workflow.
 2. Inspect the tracked registry plus generated config/docs/workflow outputs.
-3. Run tests.
-4. Run end gate and rerun until clean if hooks mutate files.
+3. Run the normal gate workflow from `devcovenant/docs/workflow.md`.

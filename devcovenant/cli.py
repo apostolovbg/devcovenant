@@ -10,6 +10,8 @@ import traceback
 from pathlib import Path
 from types import ModuleType
 
+from devcovenant import __version__
+
 execution_runtime_module = importlib.import_module(
     "devcovenant.core.runtime.execution"
 )
@@ -106,8 +108,10 @@ def _managed_python_is_executable(path_text: str) -> bool:
 
 
 def _should_skip_managed_reexec(command_args: list[str]) -> bool:
-    """Skip managed re-exec for help invocations."""
-    return any(token in {"-h", "--help"} for token in command_args)
+    """Skip managed re-exec for help/version invocations."""
+    return any(
+        token in {"-h", "--help", "-V", "--version"} for token in command_args
+    )
 
 
 def _apply_run_log_handoff_env(env: dict[str, str]) -> dict[str, str]:
@@ -348,6 +352,9 @@ def main(argv: list[str] | None = None) -> None:
     first = command_args[0]
     if first in {"-h", "--help"}:
         parser.print_help()
+        raise SystemExit(0)
+    if first in {"-V", "--version"}:
+        execution_runtime_module.runtime_print(f"devcovenant {__version__}")
         raise SystemExit(0)
     if first not in _COMMAND_MODULES:
         parser.error(

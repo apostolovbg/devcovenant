@@ -11,6 +11,7 @@ import yaml
 
 import devcovenant.core.services.metadata as metadata_runtime
 from devcovenant.core.contracts.policy import CheckContext, PolicyCheck
+from devcovenant.core.services import yaml_cache as yaml_cache_service
 from devcovenant.core.services.registry import (
     load_policy_descriptor,
     policy_registry_path,
@@ -55,7 +56,7 @@ def runtime_policy_config_overrides(
     if not config_path.exists():
         return {}
     try:
-        payload = yaml.safe_load(config_path.read_text(encoding="utf-8"))
+        payload = yaml_cache_service.load_yaml(config_path)
     except (OSError, yaml.YAMLError):
         return {}
     if not isinstance(payload, dict):
@@ -115,9 +116,7 @@ def runtime_policy_metadata_options(
     registry_path = registry_path_resolver(repo_root)
     if registry_path.exists():
         try:
-            registry_payload = yaml.safe_load(
-                registry_path.read_text(encoding="utf-8")
-            )
+            registry_payload = yaml_cache_service.load_yaml(registry_path)
         except (OSError, yaml.YAMLError):
             registry_payload = None
         if isinstance(registry_payload, dict):

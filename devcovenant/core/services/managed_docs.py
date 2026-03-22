@@ -16,6 +16,7 @@ from devcovenant.core.services import (
 from devcovenant.core.services import (
     project_governance as project_governance_service,
 )
+from devcovenant.core.services import yaml_cache as yaml_cache_service
 
 ProjectGovernanceState = project_governance_service.ProjectGovernanceState
 
@@ -209,7 +210,7 @@ def _read_repo_config_payload(repo_root: Path) -> dict[str, object]:
     if not config_path.exists():
         return {}
     try:
-        payload = yaml.safe_load(config_path.read_text(encoding="utf-8"))
+        payload = yaml_cache_service.load_yaml(config_path)
     except (OSError, yaml.YAMLError):
         return {}
     return payload if isinstance(payload, dict) else {}
@@ -478,14 +479,14 @@ def load_managed_doc_descriptor(
             f"`{doc_name}`: {descriptor_path_value}"
         )
     try:
-        raw_yaml = descriptor_path_value.read_text(encoding="utf-8")
+        raw_yaml = yaml_cache_service.read_text(descriptor_path_value)
     except OSError as exc:
         raise ValueError(
             "Unable to read managed doc descriptor "
             f"{descriptor_path_value}: {exc}"
         ) from exc
     try:
-        payload = yaml.safe_load(raw_yaml)
+        payload = yaml_cache_service.load_yaml(descriptor_path_value)
     except yaml.YAMLError as exc:
         raise ValueError(
             "Invalid YAML in managed doc descriptor "
@@ -572,11 +573,11 @@ def _managed_doc_descriptor_entries_from_root(
     entries: list[dict[str, object]] = []
     for descriptor_file in sorted(assets_root.rglob("*.yaml")):
         try:
-            raw_yaml = descriptor_file.read_text(encoding="utf-8")
+            raw_yaml = yaml_cache_service.read_text(descriptor_file)
         except OSError:
             continue
         try:
-            payload = yaml.safe_load(raw_yaml)
+            payload = yaml_cache_service.load_yaml(descriptor_file)
         except yaml.YAMLError:
             continue
         if not isinstance(payload, dict):
@@ -584,15 +585,17 @@ def _managed_doc_descriptor_entries_from_root(
         if not all(key in payload for key in _MANAGED_DOC_REQUIRED_KEYS):
             continue
         doc_name = descriptor_target_path(payload)
-        descriptor = load_managed_doc_descriptor(
-            descriptor_file,
+        validate_managed_doc_descriptor(
+            payload,
+            descriptor_path_value=descriptor_file,
             doc_name=doc_name,
+            raw_yaml=raw_yaml,
         )
         entries.append(
             {
                 "doc": doc_name,
                 "descriptor_path": descriptor_file,
-                "descriptor": descriptor,
+                "descriptor": payload,
             }
         )
     return entries
@@ -608,10 +611,11 @@ def managed_doc_descriptor_entries_from_roots(
             doc_name = str(entry["doc"])
             if doc_name in discovered:
                 existing = Path(str(discovered[doc_name]["descriptor_path"]))
-                duplicate = Path(str(entry["descriptor_path"]))
+                incoming = Path(str(entry["descriptor_path"]))
                 raise ValueError(
-                    "Multiple managed doc descriptors target "
-                    f"`{doc_name}`: `{existing}` and `{duplicate}`."
+                    "Duplicate managed doc descriptor target "
+                    f"`{doc_name}` declared in `{existing}` and "
+                    f"`{incoming}`."
                 )
             discovered[doc_name] = entry
     return [discovered[key] for key in sorted(discovered)]
@@ -775,7 +779,10 @@ def render_generated_header(
     project_governance_state: ProjectGovernanceState,
 ) -> list[str]:
     """Render deterministic top-of-doc header lines from descriptor keys."""
-    title = str(descriptor.get("title", "")).strip()
+    title = project_governance_service.render_identity_placeholders(
+        str(descriptor.get("title", "")),
+        project_governance_state,
+    ).strip()
     if not title:
         raise ValueError("Managed doc descriptor field `title` is required.")
     doc_id = str(descriptor.get("doc_id", "")).strip()
@@ -991,7 +998,10 @@ def render_descriptor_body(
     body_value = descriptor.get("body")
     if not isinstance(body_value, str):
         return []
-    rendered = body_value.replace(
+    rendered = project_governance_service.render_identity_placeholders(
+        body_value,
+        project_governance_state,
+    ).replace(
         "{{ RELEASE_HEADING }}",
         release_heading_for_render(
             project_governance_state,

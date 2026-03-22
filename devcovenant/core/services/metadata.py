@@ -10,6 +10,7 @@ import yaml
 
 import devcovenant.core.services.profile_registry as profile_runtime
 from devcovenant.core.lib.selectors import _normalize_globs
+from devcovenant.core.services import yaml_cache as yaml_cache_service
 from devcovenant.core.services.registry import PolicyDescriptor
 
 _COMMON_KEYS = [
@@ -127,7 +128,7 @@ def _load_config_payload(repo_root: Path) -> Dict[str, object]:
     if not config_path.exists():
         raise ValueError(f"Missing config file: {config_path}")
     try:
-        payload = yaml.safe_load(config_path.read_text(encoding="utf-8"))
+        payload = yaml_cache_service.load_yaml(config_path)
     except yaml.YAMLError as exc:
         raise ValueError(f"Invalid YAML in {config_path}: {exc}") from exc
     except OSError as exc:

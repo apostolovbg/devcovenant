@@ -24,6 +24,7 @@ from devcovenant.core.runtime.execution import (
     resolve_repo_root,
 )
 from devcovenant.core.services import managed_docs as managed_docs_service
+from devcovenant.core.services import yaml_cache as yaml_cache_service
 
 
 def _source_package_dir() -> Path:
@@ -177,7 +178,7 @@ def _ensure_review_required_config(
             "Missing global config template: "
             "devcovenant/builtin/profiles/global/assets/config.yaml"
         )
-    payload = yaml.safe_load(template_path.read_text(encoding="utf-8")) or {}
+    payload = yaml_cache_service.load_yaml(template_path) or {}
     if not isinstance(payload, dict):
         raise ValueError(
             "Review-required config template must be a YAML mapping."

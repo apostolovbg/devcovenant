@@ -1,8 +1,15 @@
+[build-system]
+requires = [
+  "setuptools>=77",
+  "wheel",
+]
+build-backend = "setuptools.build_meta"
+
 [project]
-name = "devcovenant"
+name = "DevCovenant"
 version = "1.0.0"
-description = "Self-enforcing development policy engine"
-readme = "README.md"
+description = "DevCovenant is a Repository Governance Framework."
+readme = {file = "devcovenant/README.md", content-type = "text/markdown"}
 requires-python = ">=3.10"
 license = "MIT"
 license-files = [
@@ -10,9 +17,26 @@ license-files = [
   "licenses/THIRD_PARTY_LICENSES.md",
   "licenses/*.txt",
 ]
+keywords = [
+  "governance",
+  "policy",
+  "workflow",
+  "compliance",
+  "cli",
+]
 classifiers = [
+  "Development Status :: 5 - Production/Stable",
+  "Environment :: Console",
+  "Intended Audience :: Developers",
   "Programming Language :: Python :: 3",
   "Programming Language :: Python :: 3 :: Only",
+  "Programming Language :: Python :: 3.10",
+  "Programming Language :: Python :: 3.11",
+  "Programming Language :: Python :: 3.12",
+  "Programming Language :: Python :: 3.13",
+  "Programming Language :: Python :: 3.14",
+  "Topic :: Software Development",
+  "Topic :: Software Development :: Quality Assurance",
 ]
 dependencies = [
   "packaging>=26.0",
@@ -22,6 +46,11 @@ dependencies = [
   "pytest>=9.0.2",
   "semver>=3.0.2",
 ]
+[project.urls]
+Homepage = "https://github.com/apostolovbg/devcovenant"
+Repository = "https://github.com/apostolovbg/devcovenant"
+Issues = "https://github.com/apostolovbg/devcovenant/issues"
+
 [tool.setuptools]
 include-package-data = true
 [tool.setuptools.packages.find]

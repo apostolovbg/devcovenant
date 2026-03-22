@@ -1,5 +1,6 @@
 """Tests for the dependency-license-sync policy."""
 
+import importlib.metadata as importlib_metadata
 import tempfile
 import unittest
 from pathlib import Path
@@ -12,13 +13,25 @@ from devcovenant.core.contracts.policy import CheckContext
 
 def _setup_repo(tmp_path: Path) -> Path:
     """Create a minimal repo layout for license tracking tests."""
+    packaging_version = importlib_metadata.version("packaging")
+    pytest_version = importlib_metadata.version("pytest")
     tmp_path.joinpath("licenses").mkdir(parents=True, exist_ok=True)
-    (tmp_path / "requirements.in").write_text("numpy==1.0\n", encoding="utf-8")
+    (tmp_path / "requirements.in").write_text(
+        "packaging>=26.0\npytest>=9.0.2\n",
+        encoding="utf-8",
+    )
     (tmp_path / "requirements.lock").write_text(
-        "numpy==1.0\n", encoding="utf-8"
+        f"packaging=={packaging_version}\n" f"pytest=={pytest_version}\n",
+        encoding="utf-8",
     )
     (tmp_path / "pyproject.toml").write_text(
-        "[project]\nname = 'test'\n", encoding="utf-8"
+        "[project]\n"
+        "name = 'test'\n"
+        "dependencies = [\n"
+        "  'packaging>=26.0',\n"
+        "  'pytest>=9.0.2',\n"
+        "]\n",
+        encoding="utf-8",
     )
     (tmp_path / "licenses" / "THIRD_PARTY_LICENSES.md").write_text(
         "# Third-Party Licenses\n", encoding="utf-8"
@@ -197,21 +210,25 @@ def _unit_test_refresh_is_noop_when_artifacts_already_synced(
 ):
     """refresh_license_artifacts should be idempotent for synced artifacts."""
     repo = _setup_repo(tmp_path)
+    dependency_license_sync.refresh_license_artifacts(
+        repo,
+        changed_dependency_files=["requirements.lock"],
+        third_party_file="licenses/THIRD_PARTY_LICENSES.md",
+        licenses_dir="licenses",
+        report_heading="## License Report",
+    )
     report = repo / "licenses" / "THIRD_PARTY_LICENSES.md"
-    report.write_text(
-        "# Third-Party Licenses\n\n## License Report\n"
-        "- `requirements.lock`\n",
-        encoding="utf-8",
-    )
-    licenses_readme = repo / "licenses" / "README.md"
-    licenses_readme.write_text(
-        dependency_license_sync._render_licenses_readme(
-            "licenses/THIRD_PARTY_LICENSES.md"
-        ),
-        encoding="utf-8",
-    )
     before_report = report.read_text(encoding="utf-8")
+    licenses_readme = repo / "licenses" / "README.md"
     before_readme = licenses_readme.read_text(encoding="utf-8")
+    packaging_version = importlib_metadata.version("packaging")
+    pytest_version = importlib_metadata.version("pytest")
+    before_packaging = (
+        repo / "licenses" / f"packaging-{packaging_version}.txt"
+    ).read_text(encoding="utf-8")
+    before_pytest = (
+        repo / "licenses" / f"pytest-{pytest_version}.txt"
+    ).read_text(encoding="utf-8")
 
     modified = dependency_license_sync.refresh_license_artifacts(
         repo,
@@ -224,6 +241,12 @@ def _unit_test_refresh_is_noop_when_artifacts_already_synced(
     assert modified == []
     assert report.read_text(encoding="utf-8") == before_report
     assert licenses_readme.read_text(encoding="utf-8") == before_readme
+    assert (
+        repo / "licenses" / f"packaging-{packaging_version}.txt"
+    ).read_text(encoding="utf-8") == before_packaging
+    assert (repo / "licenses" / f"pytest-{pytest_version}.txt").read_text(
+        encoding="utf-8"
+    ) == before_pytest
 
 
 def _unit_test_refresh_uses_stable_report_entries(tmp_path: Path):
@@ -246,7 +269,10 @@ def _unit_test_refresh_uses_stable_report_entries(tmp_path: Path):
 def _unit_test_refresh_prunes_stale_report_entries(tmp_path: Path):
     """Refresh should rewrite report section and prune stale references."""
     repo = _setup_repo(tmp_path)
+    packaging_version = importlib_metadata.version("packaging")
     report_path = repo / "licenses" / "THIRD_PARTY_LICENSES.md"
+    stale_license = repo / "licenses" / "packaging-0.0.1.txt"
+    stale_license.write_text("old\n", encoding="utf-8")
     report_path.write_text(
         "\n".join(
             [
@@ -260,7 +286,7 @@ def _unit_test_refresh_prunes_stale_report_entries(tmp_path: Path):
                 ),
                 "",
                 "## Dependency License Inventory",
-                "- `pytest==9.0.2`: `licenses/pytest-9.0.2.txt`",
+                "- `packaging==0.0.1`: `licenses/packaging-0.0.1.txt`",
                 "",
             ]
         ),
@@ -285,6 +311,38 @@ def _unit_test_refresh_prunes_stale_report_entries(tmp_path: Path):
         ]
     )
     assert expected_section in report
+    assert stale_license.exists() is False
+    assert f"- `packaging=={packaging_version}`" in report
+
+
+def _unit_test_refresh_materializes_inventory_and_license_texts(
+    tmp_path: Path,
+):
+    """Refresh should build dependency inventory and upstream license texts."""
+    repo = _setup_repo(tmp_path)
+    modified = dependency_license_sync.refresh_license_artifacts(
+        repo,
+        changed_dependency_files=["requirements.lock"],
+        third_party_file="licenses/THIRD_PARTY_LICENSES.md",
+        licenses_dir="licenses",
+        report_heading="## License Report",
+    )
+    packaging_version = importlib_metadata.version("packaging")
+    pytest_version = importlib_metadata.version("pytest")
+    report = (repo / "licenses" / "THIRD_PARTY_LICENSES.md").read_text(
+        encoding="utf-8"
+    )
+    packaging_license = (
+        repo / "licenses" / f"packaging-{packaging_version}.txt"
+    )
+    pytest_license = repo / "licenses" / f"pytest-{pytest_version}.txt"
+    assert packaging_license in modified
+    assert pytest_license in modified
+    assert "## Dependency License Inventory" in report
+    assert f"`packaging=={packaging_version}`" in report
+    assert f"`pytest=={pytest_version}`" in report
+    assert "LICENSE.APACHE" in packaging_license.read_text(encoding="utf-8")
+    assert "# pytest " in pytest_license.read_text(encoding="utf-8")
 
 
 def _unit_test_invalid_artifact_paths_raise_configuration_error(
@@ -475,6 +533,14 @@ class GeneratedUnittestCases(unittest.TestCase):
         with tempfile.TemporaryDirectory() as temp_dir:
             tmp_path = Path(temp_dir).resolve()
             _unit_test_refresh_prunes_stale_report_entries(tmp_path=tmp_path)
+
+    def test_refresh_materializes_inventory_and_license_texts(self):
+        """Run inventory/license-text materialization assertions."""
+        with tempfile.TemporaryDirectory() as temp_dir:
+            tmp_path = Path(temp_dir).resolve()
+            _unit_test_refresh_materializes_inventory_and_license_texts(
+                tmp_path=tmp_path
+            )
 
     def test_role_selectors_match_dependency_file(self):
         """Run test_role_selectors_match_dependency_file."""

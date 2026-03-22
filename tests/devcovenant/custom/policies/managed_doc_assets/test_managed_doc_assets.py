@@ -8,12 +8,11 @@ from pathlib import Path
 
 import yaml
 
-from devcovenant import install
 from devcovenant.core.contracts.policy import CheckContext
-from devcovenant.core.flow.refresh import refresh_repo
 from devcovenant.custom.policies.managed_doc_assets.managed_doc_assets import (
     ManagedDocAssetsCheck,
 )
+from tests.devcovenant import repo_seed_cache
 
 
 def _load_yaml(path: Path) -> dict[str, object]:
@@ -43,8 +42,7 @@ def _unit_test_generated_descriptor_and_docs_pass() -> None:
     """Policy should pass for refreshed generated docs/descriptors."""
     with tempfile.TemporaryDirectory() as temp_dir:
         repo_root = Path(temp_dir)
-        install.install_repo(repo_root)
-        assert refresh_repo(repo_root) == 0
+        repo_seed_cache.copy_refreshed_repo(repo_root)
 
         messages = _policy_violations(repo_root)
         assert not any("Managed block for " in message for message in messages)
@@ -57,8 +55,7 @@ def _unit_test_descriptor_generated_label_duplication_is_rejected() -> None:
     """Policy should reject managed_block text that duplicates key labels."""
     with tempfile.TemporaryDirectory() as temp_dir:
         repo_root = Path(temp_dir)
-        install.install_repo(repo_root)
-        assert refresh_repo(repo_root) == 0
+        repo_seed_cache.copy_refreshed_repo(repo_root)
 
         descriptor_path = (
             repo_root
@@ -92,8 +89,7 @@ def _unit_test_user_preserve_blocks_inside_managed_block_are_ignored() -> None:
     """Policy should ignore user-preserve blocks inside managed blocks."""
     with tempfile.TemporaryDirectory() as temp_dir:
         repo_root = Path(temp_dir)
-        install.install_repo(repo_root)
-        assert refresh_repo(repo_root) == 0
+        repo_seed_cache.copy_refreshed_repo(repo_root)
 
         readme_path = repo_root / "README.md"
         content = readme_path.read_text(encoding="utf-8")
@@ -119,8 +115,7 @@ def _unit_test_disabled_builtin_docs_are_not_required() -> None:
     """Policy should ignore authoritative docs disabled in doc_assets."""
     with tempfile.TemporaryDirectory() as temp_dir:
         repo_root = Path(temp_dir)
-        install.install_repo(repo_root)
-        assert refresh_repo(repo_root) == 0
+        repo_seed_cache.copy_refreshed_repo(repo_root)
 
         config_path = repo_root / "devcovenant" / "config.yaml"
         payload = _load_yaml(config_path)

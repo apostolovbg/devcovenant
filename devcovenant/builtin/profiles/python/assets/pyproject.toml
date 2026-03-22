@@ -1,7 +1,7 @@
 [project]
-name = "python-application"
+name = "{{ PROJECT_NAME }}"
 version = "{{version}}"
-description = "A placeholder python project created by DevCovenant."
+description = "{{ PROJECT_DESCRIPTION }}"
 readme = "README.md"
 authors = ["DevCovenant <devcovenant@example.com>"]
 license = { text = "MIT" }

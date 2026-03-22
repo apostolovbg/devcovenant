@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import copy
+import json
 import os
 import re
 import sys
@@ -27,6 +28,7 @@ from devcovenant.core.services import (
 from devcovenant.core.services import (
     project_governance as project_governance_service,
 )
+from devcovenant.core.services import yaml_cache as yaml_cache_service
 from devcovenant.core.services.policy_parse import PolicyDefinition
 from devcovenant.core.services.registry import (
     PolicyRegistry,
@@ -135,7 +137,7 @@ def _read_yaml(path: Path) -> dict[str, object]:
     if not path.exists():
         raise ValueError(f"Missing YAML file: {path}")
     try:
-        payload = yaml.safe_load(path.read_text(encoding="utf-8"))
+        payload = yaml_cache_service.load_yaml(path)
     except yaml.YAMLError as exc:
         raise ValueError(f"Invalid YAML in {path}: {exc}") from exc
     except OSError as exc:
@@ -266,6 +268,7 @@ def _materialize_profile_asset(
     *,
     target: Path,
     template_path: Path | None,
+    project_governance_state: ProjectGovernanceState,
 ) -> bool:
     """Apply one profile asset entry and return True when modified."""
     if template_path is None or not template_path.exists():
@@ -275,13 +278,49 @@ def _materialize_profile_asset(
         return False
 
     template_text = template_path.read_text(encoding="utf-8")
+    template_text = _render_project_identity_template_text(
+        template_text,
+        project_governance_state,
+    )
     return _write_text_if_changed(target, template_text)
+
+
+def _render_project_identity_template_text(
+    template_text: str,
+    project_governance_state: ProjectGovernanceState,
+) -> str:
+    """Render project identity placeholders for raw asset templates."""
+    rendered = str(template_text or "")
+    for placeholder, value in (
+        (
+            '"{{ PROJECT_NAME }}"',
+            json.dumps(project_governance_state.project_name),
+        ),
+        (
+            '"{{ PROJECT_DESCRIPTION }}"',
+            json.dumps(project_governance_state.project_description),
+        ),
+        (
+            "'{{ PROJECT_NAME }}'",
+            json.dumps(project_governance_state.project_name),
+        ),
+        (
+            "'{{ PROJECT_DESCRIPTION }}'",
+            json.dumps(project_governance_state.project_description),
+        ),
+    ):
+        rendered = rendered.replace(placeholder, value)
+    return project_governance_service.render_identity_placeholders(
+        rendered,
+        project_governance_state,
+    )
 
 
 def _refresh_profile_assets(
     repo_root: Path,
     profile_registry: dict[str, dict],
     active_profiles: list[str],
+    project_governance_state: ProjectGovernanceState,
 ) -> list[str]:
     """Materialize active profile assets into the target repository."""
     changed: list[str] = []
@@ -306,11 +345,62 @@ def _refresh_profile_assets(
             if not _materialize_profile_asset(
                 target=target,
                 template_path=template_path,
+                project_governance_state=project_governance_state,
             ):
                 continue
             rel_path = _repo_relative_path(repo_root, target)
             changed.append(rel_path)
     return changed
+
+
+_PROJECT_TOML_SECTION_RE = re.compile(
+    r"(?ms)^(?P<header>\[project\][ \t]*\n)(?P<body>.*?)(?=^\[|\Z)"
+)
+
+
+def _replace_or_append_project_toml_field(
+    section_body: str,
+    *,
+    field_name: str,
+    field_value: str,
+) -> str:
+    """Replace or append one scalar field in the `[project]` TOML section."""
+    new_line = f"{field_name} = {json.dumps(field_value)}"
+    field_re = re.compile(rf"(?m)^{re.escape(field_name)}\s*=.*$")
+    if field_re.search(section_body):
+        return field_re.sub(new_line, section_body, count=1)
+    separator = "" if not section_body or section_body.endswith("\n") else "\n"
+    return f"{section_body}{separator}{new_line}\n"
+
+
+def _sync_project_pyproject_identity(
+    repo_root: Path,
+    project_governance_state: ProjectGovernanceState,
+) -> bool:
+    """Synchronize package identity fields from project-governance."""
+    pyproject_path = repo_root / "pyproject.toml"
+    current = _read_text_if_exists(pyproject_path)
+    if not current:
+        return False
+    match = _PROJECT_TOML_SECTION_RE.search(current)
+    if match is None:
+        return False
+    updated_body = _replace_or_append_project_toml_field(
+        match.group("body"),
+        field_name="name",
+        field_value=project_governance_state.project_name,
+    )
+    updated_body = _replace_or_append_project_toml_field(
+        updated_body,
+        field_name="description",
+        field_value=project_governance_state.project_description,
+    )
+    updated = (
+        current[: match.start("body")]
+        + updated_body
+        + current[match.end("body") :]
+    )
+    return _write_text_if_changed(pyproject_path, updated)
 
 
 def _repo_relative_path(repo_root: Path, target: Path) -> str:
@@ -1795,6 +1885,7 @@ def refresh_repo(repo_root: Path) -> int:
             repo_root,
             profile_registry,
             active_profiles,
+            project_governance_state,
         )
     except ValueError as error:
         print_step(f"Profile asset refresh failed: {error}", "🚫")
@@ -1906,6 +1997,15 @@ def refresh_repo(repo_root: Path) -> int:
         return 1
     if synced:
         print_step(f"Synchronized managed docs: {', '.join(synced)}", "✅")
+
+    if _sync_project_pyproject_identity(
+        repo_root,
+        project_governance_state,
+    ):
+        print_step(
+            "Synchronized pyproject package identity from project governance",
+            "✅",
+        )
 
     manifest_module.ensure_manifest(repo_root)
     return 0

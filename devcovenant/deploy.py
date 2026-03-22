@@ -22,6 +22,7 @@ from devcovenant.core.runtime.execution import (
     print_step,
     resolve_repo_root,
 )
+from devcovenant.core.services import yaml_cache as yaml_cache_service
 
 NORMAL_REPO_PRUNE_PATHS = (
     Path("devcovenant/custom/policies"),
@@ -37,7 +38,7 @@ def _read_yaml(path: Path) -> dict[str, object]:
             f"Deploy blocked: missing required config file: {path}."
         )
     try:
-        payload = yaml.safe_load(path.read_text(encoding="utf-8"))
+        payload = yaml_cache_service.load_yaml(path)
     except yaml.YAMLError as exc:
         raise SystemExit(
             f"Deploy blocked: invalid YAML in {path}: {exc}"

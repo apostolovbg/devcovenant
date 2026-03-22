@@ -1,5 +1,5 @@
 # Project Governance
-**Last Updated:** 2026-03-21
+**Last Updated:** 2026-03-22
 **Project Version:** 1.0.0
 
 ## Table of Contents
@@ -21,6 +21,9 @@ It is configured directly in `devcovenant/config.yaml`, resolved by
 generated runtime and documentation outputs that need that state.
 
 Its job is to answer questions like:
+- what is this project's public name?
+- what is the one-sentence description that managed public surfaces should
+  reuse?
 - what lifecycle stage is this project in?
 - what is the current development stance?
 - is this repository intentionally unversioned or actively versioned?
@@ -32,11 +35,18 @@ In practice, this is the part of DevCovenant you use when you want the docs
 and registry to describe the project honestly.
 If you want to say "this repo is still experimental" or "this repo is
 intentionally unversioned," this is where that truth belongs.
+This is the primary home for lifecycle metadata fields and rendering
+surfaces. Use `devcovenant/docs/config.md` for the broader config surface and
+`devcovenant/docs/installation.md` for lifecycle command order.
+It is also the normative home for the `project-governance` contract. Use
+`devcovenant/docs/contracts.md` for the contract index.
 
 ## What It Governs
 `project-governance` owns lifecycle metadata, not version-rule enforcement.
 
 Primary fields:
+- `project_name`
+- `project_description`
 - `stage`
 - `development_stance`
 - `versioning_mode`
@@ -60,6 +70,8 @@ The source of truth lives at the top level of `devcovenant/config.yaml`:
 
 ```yaml
 project-governance:
+  project_name: DevCovenant
+  project_description: DevCovenant is a Repository Governance Framework.
   stage: stable
   development_stance: active-development
   versioning_mode: versioned
@@ -75,6 +87,10 @@ baseline:
 
 ```yaml
 project-governance:
+  project_name: Project Name
+  project_description: >
+    Describe the project this repository ships: what it does, who it helps,
+    and what problem it solves.
   stage: prototype
   development_stance: experimental
   versioning_mode: unversioned
@@ -86,6 +102,8 @@ That means a new repo can be governed immediately without inventing a fake
 numbered release.
 
 What most repos change first:
+- `project_name`
+- `project_description`
 - `stage`
 - `development_stance`
 - `versioning_mode`
@@ -104,6 +122,9 @@ Tracked/config/runtime surfaces:
   the resolved tracked record of project-governance state
 
 Managed document surfaces:
+- `README.md`:
+  managed title and generic seed body text derive from
+  `project_name` / `project_description`
 - `AGENTS.md`:
   header lines plus a dedicated `Project Governance` section after the
   workflow block and before the generated policy block
@@ -113,6 +134,11 @@ Managed document surfaces:
   project-governance header lines
 - `CHANGELOG.md`:
   project-governance header lines
+
+Managed package/config surfaces:
+- `pyproject.toml`:
+  package `name` and `description` should be synchronized from
+  `project-governance` whenever DevCovenant owns or refreshes those fields
 
 Rendered values:
 - `Project Version` comes from the resolved governance state
@@ -171,19 +197,20 @@ project-governance:
 ```
 
 Surface effect of the unversioned example:
+- managed README surfaces still use `project_name` and
+  `project_description`
 - managed docs render `Project Version: Unversioned`
 - `AGENTS.md` still shows stage/stance/mode explicitly
 - the changelog must start its live release section with `## Unreleased`
 
 ## Workflow
-When you change project-governance metadata:
-1. edit `devcovenant/config.yaml`
-2. run the normal gate workflow
-3. let refresh regenerate managed doc headers and tracked registry state
-4. verify `AGENTS.md`, `SPEC.md`, `PLAN.md`, `CHANGELOG.md`, and
-   `devcovenant/registry/registry.yaml` reflect the new resolved state
+Treat `project-governance` as human-owned repo metadata, not a policy toggle
+in `policy_state`.
+For the exact gate sequence, use `devcovenant/docs/workflow.md`.
 
-Operational rule:
-- treat `project-governance` as human-owned repo metadata
-- do not treat it like a policy toggle in `policy_state`
-- keep `version-governance` decisions separate from lifecycle-state decisions
+Project-governance change loop:
+1. edit `devcovenant/config.yaml`
+2. let refresh regenerate managed doc headers and tracked registry state
+3. verify `AGENTS.md`, `SPEC.md`, `PLAN.md`, `CHANGELOG.md`, and
+   `devcovenant/registry/registry.yaml` reflect the new resolved state
+4. run the normal gate workflow from `devcovenant/docs/workflow.md`

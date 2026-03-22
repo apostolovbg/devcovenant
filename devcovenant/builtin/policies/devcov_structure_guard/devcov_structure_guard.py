@@ -14,6 +14,7 @@ from devcovenant.core.contracts.policy import (
     PolicyCheck,
     Violation,
 )
+from devcovenant.core.services import yaml_cache as yaml_cache_service
 
 
 class DevCovenantStructureGuardCheck(PolicyCheck):
@@ -28,7 +29,7 @@ class DevCovenantStructureGuardCheck(PolicyCheck):
         if not config_path.exists():
             return []
         try:
-            payload = yaml.safe_load(config_path.read_text(encoding="utf-8"))
+            payload = yaml_cache_service.load_yaml(config_path)
         except (OSError, yaml.YAMLError):
             return []
         if not isinstance(payload, dict):

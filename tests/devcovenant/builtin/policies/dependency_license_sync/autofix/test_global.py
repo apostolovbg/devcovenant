@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import importlib.metadata as importlib_metadata
 import unittest
 from importlib import import_module
 from pathlib import Path
@@ -68,24 +69,33 @@ def _unit_test_fix_materializes_report_and_licenses_readme() -> None:
 
 
 def _unit_test_fix_noop_when_artifacts_are_already_synced() -> None:
-    """Fix should be a no-op when report and README are synchronized."""
+    """Fix should be a no-op when all managed artifacts are synchronized."""
     fixer = DependencyLicenseSyncFixer()
     with TemporaryDirectory() as tmp_dir:
         fixer.repo_root = Path(tmp_dir).resolve()
         licenses = fixer.repo_root / "licenses"
         licenses.mkdir(parents=True, exist_ok=True)
-        report = licenses / "THIRD_PARTY_LICENSES.md"
-        report.write_text(
-            "# Third-Party Licenses\n\n## License Report\n"
-            "- `services/api/package.json`\n",
+        packaging_version = importlib_metadata.version("packaging")
+        (fixer.repo_root / "requirements.in").write_text(
+            "packaging>=26.0\n",
             encoding="utf-8",
         )
-        readme = licenses / "README.md"
-        readme.write_text(
-            DependencyLicenseSyncModule._render_licenses_readme(
-                "licenses/THIRD_PARTY_LICENSES.md"
-            ),
+        (fixer.repo_root / "requirements.lock").write_text(
+            f"packaging=={packaging_version}\n",
             encoding="utf-8",
+        )
+        (fixer.repo_root / "pyproject.toml").write_text(
+            "[project]\n"
+            "name = 'demo'\n"
+            "dependencies = ['packaging>=26.0']\n",
+            encoding="utf-8",
+        )
+        DependencyLicenseSyncModule.refresh_license_artifacts(
+            repo_root=fixer.repo_root,
+            changed_dependency_files=["requirements.lock"],
+            third_party_file="licenses/THIRD_PARTY_LICENSES.md",
+            licenses_dir="licenses",
+            report_heading="## License Report",
         )
 
         violation = Violation(
@@ -93,7 +103,7 @@ def _unit_test_fix_noop_when_artifacts_are_already_synced() -> None:
             severity="error",
             message="sync",
             context={
-                "changed_dependency_files": ["services/api/package.json"],
+                "changed_dependency_files": ["requirements.lock"],
                 "third_party_file": "licenses/THIRD_PARTY_LICENSES.md",
                 "licenses_dir": "licenses",
                 "report_heading": "## License Report",

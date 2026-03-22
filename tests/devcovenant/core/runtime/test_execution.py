@@ -524,6 +524,69 @@ def _unit_test_workflow_doc_marks_mid_gate_required() -> None:
     assert "optional mutating preflight" not in content
 
 
+def _unit_test_contract_index_lists_frozen_contract_homes() -> None:
+    """Contract index should enumerate the frozen normative homes."""
+    content = _read_output_doc_contract_text("devcovenant/docs/contracts.md")
+    for path in (
+        "devcovenant/docs/refresh.md",
+        "devcovenant/docs/installation.md",
+        "devcovenant/docs/workflow.md",
+        "devcovenant/docs/config.md",
+        "devcovenant/docs/project_governance.md",
+        "devcovenant/docs/registry.md",
+        "devcovenant/docs/policies.md",
+    ):
+        assert path in content
+
+
+def _unit_test_primary_docs_identify_their_normative_contracts() -> None:
+    """Primary docs should name their contract role and point to the index."""
+    expectations = {
+        "devcovenant/docs/installation.md": (
+            "normative home for the lifecycle command contract",
+        ),
+        "devcovenant/docs/refresh.md": (
+            "normative home for the managed-documents contract",
+            "## Managed Doc Descriptor Schema",
+        ),
+        "devcovenant/docs/workflow.md": (
+            "normative home for the gate sequence and run-artifact",
+            "## Run Artifact Contract",
+        ),
+        "devcovenant/docs/config.md": (
+            "normative home for the public `devcovenant/config.yaml`",
+        ),
+        "devcovenant/docs/project_governance.md": (
+            "normative home for the `project-governance` contract",
+        ),
+        "devcovenant/docs/registry.md": (
+            "normative home for the registry contract",
+        ),
+        "devcovenant/docs/policies.md": (
+            "normative home for the policy descriptor contract",
+            "## Version-Governance Adapter Contract",
+        ),
+    }
+
+    for path, snippets in expectations.items():
+        content = _read_output_doc_contract_text(path)
+        assert "devcovenant/docs/contracts.md" in content
+        for snippet in snippets:
+            assert snippet in content
+
+
+def _unit_test_contract_index_freezes_documentation_writing_rules() -> None:
+    """Contract index should hold the stable documentation writing rules."""
+    content = _read_output_doc_contract_text("devcovenant/docs/contracts.md")
+    for snippet in (
+        "operator-oriented and explanatory",
+        "expand an abbreviation on first use in each document",
+        "avoid soft marketing phrasing",
+        "duplicate\n  competing explanations as defects",
+    ):
+        assert snippet in content
+
+
 def _unit_test_repo_pycache_prefix_sets_env_and_runtime_prefix() -> None:
     """Repo pycache prefix config should route bytecode caches out of repo."""
     module = importlib.import_module(MODULE)
@@ -1218,6 +1281,18 @@ class GeneratedUnittestCases(unittest.TestCase):
     def test_workflow_doc_marks_mid_gate_required(self):
         """Run required gate-mid wording assertions for workflow docs."""
         _unit_test_workflow_doc_marks_mid_gate_required()
+
+    def test_contract_index_lists_frozen_contract_homes(self):
+        """Run contract-index coverage assertions."""
+        _unit_test_contract_index_lists_frozen_contract_homes()
+
+    def test_primary_docs_identify_their_normative_contracts(self):
+        """Run normative-home linkage assertions."""
+        _unit_test_primary_docs_identify_their_normative_contracts()
+
+    def test_contract_index_freezes_documentation_writing_rules(self):
+        """Run documentation-writing contract assertions."""
+        _unit_test_contract_index_freezes_documentation_writing_rules()
 
     def test_repo_pycache_prefix_sets_env_and_runtime_prefix(self):
         """Run repo pycache-prefix env and runtime-prefix assertions."""

@@ -95,7 +95,7 @@ def _unit_test_upgrade_preserves_custom_tree() -> None:
     """upgrade_repo should preserve custom policies/profiles content."""
     with tempfile.TemporaryDirectory() as temp_dir:
         repo_root = Path(temp_dir)
-        repo_seed_cache.copy_installed_repo(repo_root)
+        repo_seed_cache.copy_refreshed_repo(repo_root)
 
         custom_file = (
             repo_root
@@ -120,7 +120,7 @@ def _unit_test_upgrade_prunes_repo_only_custom_payload() -> None:
     """upgrade_repo should remove leaked repo-only custom payload paths."""
     with tempfile.TemporaryDirectory() as temp_dir:
         repo_root = Path(temp_dir)
-        repo_seed_cache.copy_installed_repo(repo_root)
+        repo_seed_cache.copy_refreshed_repo(repo_root)
 
         leaked_policy_dir = (
             repo_root
@@ -176,7 +176,7 @@ def _unit_test_upgrade_runs_full_refresh() -> None:
     """upgrade_repo should end with full refresh and registries."""
     with tempfile.TemporaryDirectory() as temp_dir:
         repo_root = Path(temp_dir)
-        repo_seed_cache.copy_installed_repo(repo_root)
+        repo_seed_cache.copy_refreshed_repo(repo_root)
 
         version_path = repo_root / "devcovenant" / "VERSION"
         version_path.write_text("0.0.1\n", encoding="utf-8")
@@ -195,7 +195,7 @@ def _unit_test_upgrade_preserves_runtime_local_registry_and_logs() -> None:
     """upgrade_repo should preserve runtime registry state and logs."""
     with tempfile.TemporaryDirectory() as temp_dir:
         repo_root = Path(temp_dir)
-        repo_seed_cache.copy_installed_repo(repo_root)
+        repo_seed_cache.copy_refreshed_repo(repo_root)
 
         (
             expected_gate_status,
@@ -241,7 +241,7 @@ def _unit_test_upgrade_preserves_open_gate_status_visibility() -> None:
     """upgrade_repo should keep open gate state visible to status helpers."""
     with tempfile.TemporaryDirectory() as temp_dir:
         repo_root = Path(temp_dir)
-        repo_seed_cache.copy_installed_repo(repo_root)
+        repo_seed_cache.copy_refreshed_repo(repo_root)
 
         gate_status_path = (
             repo_root
@@ -279,7 +279,7 @@ def _unit_test_upgrade_recreates_missing_tracked_registry_only() -> None:
     """upgrade_repo should rebuild tracked registry without runtime state."""
     with tempfile.TemporaryDirectory() as temp_dir:
         repo_root = Path(temp_dir)
-        repo_seed_cache.copy_installed_repo(repo_root)
+        repo_seed_cache.copy_refreshed_repo(repo_root)
 
         tracked_registry = (
             repo_root / "devcovenant" / "registry" / "registry.yaml"

@@ -1,5 +1,12 @@
-pre-commit 4.5.1
-MIT License
+# pre-commit 4.5.1
+
+This file aggregates the upstream license texts bundled with the
+installed distribution for `pre-commit==4.5.1`.
+
+Included upstream files:
+- LICENSE
+
+===== LICENSE =====
 
 Copyright (c) 2014 pre-commit dev team: Anthony Sottile, Ken Struys
 

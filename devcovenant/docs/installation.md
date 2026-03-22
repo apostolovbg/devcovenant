@@ -1,5 +1,5 @@
 # Installation and Lifecycle
-**Last Updated:** 2026-03-21
+**Last Updated:** 2026-03-22
 **Project Version:** 1.0.0
 
 ## Table of Contents
@@ -27,6 +27,15 @@ It also makes the first-time integration story easier to reason about:
 - config review decides how this repo should use it
 - deploy turns that reviewed config into active docs, registries, and
   generated governance files
+
+This is the primary home for bootstrap, lifecycle commands, and first-time
+integration scenarios. Use `devcovenant/docs/workflow.md` for the exact gate
+sequence and `devcovenant/docs/config.md` for the detailed config review
+surface.
+It is also the normative home for the lifecycle command contract itself:
+`install`, `deploy`, `refresh`, `upgrade`, `undeploy`, `uninstall`, and the
+first-time bootstrap boundary between them. Use
+`devcovenant/docs/contracts.md` for the full contract index.
 
 Use this document when you need to answer questions like:
 - "What does `install` actually do?"
@@ -72,6 +81,8 @@ Command contract:
   regenerate the tracked registry, managed blocks, and generated governance
   files; recreate `devcovenant/registry/registry.yaml` when missing without
   fabricating runtime session state
+  and synchronize project identity from `project-governance` into managed
+  README surfaces and package metadata surfaces such as `pyproject.toml`
 - `upgrade`:
   reconcile core from source on every run, preserve runtime-local
   `devcovenant/registry/runtime/` and `devcovenant/logs/`, then refresh
@@ -94,6 +105,10 @@ Additional invariants:
   `devcovenant/custom/policies/**`,
   `tests/devcovenant/core/**`, and
   `devcovenant/custom/profiles/<repo-only-profile>/**`
+- bootstrap and lifecycle commands now share one run-scoped YAML cache for
+  tracked config, registry, and descriptor files.
+  That makes repeated command startup cheaper without changing install,
+  deploy, undeploy, or refresh authority.
 
 ## Commands
 ```bash
@@ -123,26 +138,16 @@ devcovenant gate --end
 ```
 
 ## Workflow
-Recommended operating sequence:
-1. Install (`install`) once.
-2. Review config (`devcovenant/config.yaml`).
-3. Activate (`deploy`).
-   Compatible pre-authored DevCovenant-shaped docs such as `SPEC.md`,
-   `README.md`, and `PLAN.md` can stay in place before this step; the first
-   deploy adopts them when their `DevCovenant Version` is at least as new as
-   the runtime being installed.
-   In this repository, the root `README.md` remains the authored source while
-   `devcovenant/README.md` is the packaged projection with repo-only sections
-   removed.
-4. Do work under start -> mid preflight loop -> test -> end gates.
-5. Use `refresh`/`upgrade` when contracts or core content change.
-6. Use `clean` when local build/cache residue needs pruning after those runs
-   and after the gate session is closed.
+Use this document to decide lifecycle order:
+1. `install`
+2. review `devcovenant/config.yaml`
+3. set `install.config_reviewed: true`
+4. `deploy`
+5. follow the exact gate sequence from `devcovenant/docs/workflow.md`
 
-The important boundary is:
-- `install` is safe setup
-- `deploy` is activation
-- the first gate cycle proves the activated baseline is actually clean
+Keep the responsibility split clear:
+- this document owns lifecycle state and integration scenarios
+- `workflow.md` owns the exact gate/test command contract
 
 What most users should remember:
 - `install` is not the moment where DevCovenant takes over the repo

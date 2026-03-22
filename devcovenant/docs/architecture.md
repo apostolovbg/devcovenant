@@ -1,5 +1,5 @@
 # DevCovenant Architecture Contracts
-**Last Updated:** 2026-03-21
+**Last Updated:** 2026-03-22
 **Project Version:** 1.0.0
 
 ## Table of Contents
@@ -21,6 +21,10 @@ AI (artificial intelligence)-resilient by design and usable without AI.
 
 It captures behavior that should stay consistent across refactors. Detailed
 operational procedures stay in the other docs in this folder.
+This is the primary home for layered runtime boundaries, invariants, and
+cross-module ownership. It is not the primary home for operator command
+order, lifecycle runbooks, or config editing guidance.
+For the frozen product-contract map, use `devcovenant/docs/contracts.md`.
 
 Use this document when you are extending or debugging DevCovenant itself.
 If you only need to operate the tool in a repository, start with
@@ -79,11 +83,10 @@ Translator boundary clarification:
   while language coverage expands through translators
 
 ## Workflow
-Runtime architecture is coupled to the enforced gate sequence.
-`gate --start` establishes session scope, `gate --mid` runs a
-non-lifecycle mutating preflight, `test` records command execution, and
-`gate --end` closes the session with clean-hook metadata and closure
-evidence.
+Runtime architecture is coupled to the enforced gate sequence, but the exact
+operator workflow contract lives in `devcovenant/docs/workflow.md`.
+Use this document during workflow changes only when the change also affects
+runtime/service boundaries or invariant ownership.
 
 ## Output Governance Contract
 Output-sink governance is implemented by
@@ -438,6 +441,11 @@ Invariant:
   output is built: `assets[*].template`, `gitignore_template`, and
   `governance_template` must resolve within the profile `assets/` tree so
   refresh/registry paths fail explicitly on profile asset drift.
+- Run-scoped YAML loading now lives in
+  `devcovenant/core/services/yaml_cache.py`.
+  That service keys cached reads by path, modification time, and size so one
+  command run can reuse tracked config, registry, and descriptor payloads
+  without leaking stale state across later command runs.
 
 ### Refresh and Registry
 - Full refresh runs in `refresh`, `deploy`, `upgrade`, and gate pre-commit
@@ -451,6 +459,10 @@ Invariant:
   - generated `.github/workflows/governance-and-test.yml` with literal
     workflow trigger key `on` preserved and trigger events rendered in
     canonical form (`push:`, `pull_request:` without `null` values)
+- `check`, gate, refresh, install, deploy, and undeploy now share the same
+  run-scoped cache boundary for repeated tracked YAML reads. The cache
+  reduces duplicate parsing work, but it does not change refresh authority or
+  document-preservation rules.
 - `.gitignore` is generated from:
   - global template fragments
   - active profile manifest fragments (`gitignore_fragments` or `ignore_dirs`)
@@ -691,8 +703,9 @@ Invariant:
 - `project-governance` now lives in
   `devcovenant/core/services/project_governance.py` as a core service
   backed by the top-level `project-governance:` config section. It owns
+  public project identity (`project_name`, `project_description`),
   project-phase and stance metadata (`stage`, `development_stance`,
-  `versioning_mode`) plus optional `codename` and `build_identity`. It does
+  `versioning_mode`), plus optional `codename` and `build_identity`. It does
   not replace `version-governance`; it adds lifecycle governance around it.
 - the dedicated operator-facing contract for that service now lives in
   `devcovenant/docs/project_governance.md`; architecture docs keep the
@@ -712,10 +725,17 @@ Invariant:
 - common managed docs now follow one shared contract driven by their
   descriptors: standard generated headers, one managed block, and preserved
   human-authored body content outside managed regions.
+- the common managed-doc renderer now also resolves project-identity
+  placeholders from `project-governance`, so generic descriptors can stay
+  reusable while real repositories render their own title and summary text.
 - refresh resolves `Project Version` through `project-governance` so
   intentionally unversioned repos render an explicit non-version label
   instead of a fake numbered release, and opted-in managed docs may render
   additional governance headers when their descriptor opts in.
+- profile-asset materialization and refresh-owned `pyproject.toml`
+  synchronization also consume the same project-governance identity so
+  public package metadata is derived from repo governance state rather than
+  hardcoded repo-specific overrides.
 - AGENTS remains the explicit special case outside that common doc engine:
   refresh still owns its multi-block workflow/policy layout and its
   dedicated project-governance section after the workflow block.

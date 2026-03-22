@@ -1,4 +1,4 @@
-title: Project Name
+title: "{{ PROJECT_NAME }}"
 target_path: README.md
 doc_id: README
 doc_type: repo-readme
@@ -9,8 +9,7 @@ import_seed: true
 authoritative_source: true
 managed_block: ''
 body: |-
-  Describe the project this repository ships: what it does, who it helps,
-  and what problem it solves.
+  {{ PROJECT_DESCRIPTION }}
 
   ## Table of Contents
   1. [Overview](#overview)

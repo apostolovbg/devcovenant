@@ -5,7 +5,7 @@
 **Project Stage:** stable
 **Development Stance:** active-development
 **Versioning Mode:** versioned
-**Last Updated:** 2026-03-21
+**Last Updated:** 2026-03-22
 **DevCovenant Version:** 1.0.0
 
 <!-- DEVCOV:BEGIN -->
@@ -830,7 +830,6 @@ require_toc: true
 min_section_count: 3
 min_word_count: 120
 doc_routes: devcovenant/builtin/policies/ => devcovenant/docs/policies.md
-  devcovenant/builtin/policies/ => devcovenant/docs/architecture.md
   devcovenant/builtin/profiles/*/*.yaml => devcovenant/docs/profiles.md
   devcovenant/*/profiles/*/*translator.py=> devcovenant/docs/translators.md
   devcovenant/builtin/profiles/**/config.yaml => devcovenant/docs/config.md
@@ -845,14 +844,11 @@ doc_routes: devcovenant/builtin/policies/ => devcovenant/docs/policies.md
   devcovenant/custom/policies/**/*.yaml => devcovenant/docs/policies.md
   devcovenant/custom/policies/**/*.py => devcovenant/docs/policies.md
   devcovenant/core/flow/*.py => devcovenant/docs/workflow.md
-  devcovenant/core/flow/*.py => devcovenant/docs/architecture.md
   devcovenant/core/runtime/*.py => devcovenant/docs/workflow.md
-  devcovenant/core/runtime/*.py => devcovenant/docs/architecture.md
   devcovenant/core/services/*.py => devcovenant/docs/architecture.md
   devcovenant/core/lib/*.py => devcovenant/docs/architecture.md
   devcovenant/core/contracts/*.py => devcovenant/docs/architecture.md
   devcovenant/*.py => devcovenant/docs/installation.md
-  devcovenant/*.py => devcovenant/docs/workflow.md
   pyproject.toml => devcovenant/docs/installation.md
   MANIFEST.in => devcovenant/docs/installation.md
   devcovenant/config.yaml => devcovenant/docs/config.md
@@ -1065,6 +1061,7 @@ exclude_globs: .vscode/**
   .coverage
   .coverage.*
   htmlcov/**
+  licenses/*.txt
   devcovenant/logs/**
   devcovenant/registry/runtime/**
   node_modules/**

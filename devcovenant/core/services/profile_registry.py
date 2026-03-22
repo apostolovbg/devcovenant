@@ -8,6 +8,7 @@ from typing import Dict, List
 import yaml
 
 import devcovenant.core.services.registry as registry_runtime
+from devcovenant.core.services import yaml_cache as yaml_cache_service
 
 REGISTRY_PROFILE = Path("devcovenant/registry/registry.yaml")
 BUILTIN_PROFILE_ROOT = Path("devcovenant/builtin/profiles")
@@ -32,7 +33,7 @@ def _load_yaml(path: Path) -> dict[str, object]:
     if not path.exists():
         raise ValueError(f"Missing YAML file: {path}")
     try:
-        payload = yaml.safe_load(path.read_text(encoding="utf-8"))
+        payload = yaml_cache_service.load_yaml(path)
     except yaml.YAMLError as exc:
         raise ValueError(f"Invalid YAML in {path}: {exc}") from exc
     except OSError as exc:

@@ -1,5 +1,5 @@
 # Profiles
-**Last Updated:** 2026-03-21
+**Last Updated:** 2026-03-22
 **Project Version:** 1.0.0
 
 ## Table of Contents
@@ -33,6 +33,9 @@ The practical way to think about profiles is:
 
 Most users do not need to author a custom profile on day one.
 For many repos, choosing the right `profiles.active` stack is enough.
+This is the primary home for profile shape, assets, hooks, and translator
+ownership. Use `devcovenant/docs/config.md` for selecting the active stack
+in one repository and `devcovenant/docs/policies.md` for policy behavior.
 
 ## Responsibilities
 Profiles may provide:
@@ -41,6 +44,11 @@ Profiles may provide:
 - file assets and templates
 - pre-commit fragments
 - translator declarations (language profiles)
+
+Profile assets should stay reusable.
+When an asset needs repository identity, prefer placeholders resolved from
+`project-governance` (for example `{{ PROJECT_NAME }}` and
+`{{ PROJECT_DESCRIPTION }}`) instead of repo-specific duplicate templates.
 
 Shipped builtin language profiles include:
 - `python`, `javascript`, `typescript`, `java`, `go`, `rust`, `opencl`,
@@ -148,6 +156,9 @@ Guidelines:
 - route custom policy descriptors explicitly (for example
   `devcovenant/custom/policies/**/*.yaml => devcovenant/docs/policies.md`)
   so documentation-growth checks stay deterministic
+- prefer one primary-home route per code area; touch a second doc only when
+  the behavior genuinely spans both surfaces instead of using doc routes to
+  enforce duplicate explanation
 
 Output-sink governance pattern:
 - language profiles own sink inventories for
@@ -564,10 +575,13 @@ directories under `devcovenant/custom/profiles/*` and
 Custom profile precedence is path-based and deterministic.
 
 ## Workflow
+Use this document when the change is about profile-supplied metadata, assets,
+hooks, or custom profile structure.
+For the exact gate sequence, use `devcovenant/docs/workflow.md`.
+
+Profile-change loop:
 1. Update profile manifest/assets.
 2. Refresh to rebuild generated state.
 3. Update tests for behavior changes.
 4. Update `PROFILE_MAP.md` when inventory or contracts change.
-5. Run full gate sequence.
-6. Respect AGENTS hard-stop flow: run start before edits and clear
-   DevCovenant complaints before continuing implementation.
+5. Run the normal gate workflow from `devcovenant/docs/workflow.md`.

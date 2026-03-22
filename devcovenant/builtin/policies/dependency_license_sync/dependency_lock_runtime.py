@@ -119,6 +119,18 @@ def _split_last_updated(lines: Iterable[str]) -> LockFilePieces:
     return LockFilePieces(collected)
 
 
+def _normalize_python_lock_semantics(lines: Sequence[str]) -> List[str]:
+    """Compare Python lockfiles by resolved pins, not banner formatting."""
+
+    normalized: List[str] = []
+    for raw_line in lines:
+        stripped = str(raw_line).strip()
+        if not stripped or stripped.startswith("#") or raw_line[:1].isspace():
+            continue
+        normalized.append(stripped)
+    return normalized
+
+
 def _compile_requirements_lock(
     repo_root: Path, requirements_in: Path
 ) -> LockFilePieces:
@@ -176,7 +188,9 @@ def _refresh_python_requirements_lock(repo_root: Path) -> LockHandlerResult:
         else LockFilePieces([])
     )
     compiled = _compile_requirements_lock(repo_root, req_in)
-    if previous.body == compiled.body:
+    if _normalize_python_lock_semantics(
+        previous.body
+    ) == _normalize_python_lock_semantics(compiled.body):
         return LockHandlerResult(
             "requirements.lock",
             changed=False,
@@ -601,15 +615,11 @@ def refresh_locks_and_licenses(
         if result.changed:
             changed_lockfiles.append(lock_name)
 
-    modified_license_files: List[Path] = []
-    if changed_lockfiles:
-        modified_license_files = (
-            dependency_license_sync.refresh_license_artifacts(
-                repo_root,
-                changed_dependency_files=changed_lockfiles,
-                third_party_file=str(metadata["third_party_file"]),
-                licenses_dir=str(metadata["licenses_dir"]),
-                report_heading=str(metadata["report_heading"]),
-            )
-        )
+    modified_license_files = dependency_license_sync.refresh_license_artifacts(
+        repo_root,
+        changed_dependency_files=changed_lockfiles,
+        third_party_file=str(metadata["third_party_file"]),
+        licenses_dir=str(metadata["licenses_dir"]),
+        report_heading=str(metadata["report_heading"]),
+    )
     return results, modified_license_files

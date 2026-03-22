@@ -1,5 +1,5 @@
 # Troubleshooting
-**Last Updated:** 2026-03-20
+**Last Updated:** 2026-03-21
 **Project Version:** 1.0.0
 
 ## Table of Contents
@@ -21,15 +21,17 @@ actions.
 
 Treat troubleshooting as part of normal gate workflow. Most failures are
 sequence mistakes, stale generated artifacts, or metadata-shape mismatches.
+This is the primary home for recovery once something is already wrong.
+Use `devcovenant/docs/workflow.md` for the normal command sequence and
+`devcovenant/docs/installation.md` for lifecycle intent when the main
+question is not failure recovery.
 
 ## Workflow
-Use one reproducible loop:
+Use one reproducible recovery loop:
 1. ensure you have a valid open session (`gate --start`)
 2. reproduce one failure category
 3. apply one focused fix
-4. run `devcovenant test`
-5. run `devcovenant gate --end`
-6. if end introduces follow-up changes, rerun until clean
+4. run the normal gate workflow from `devcovenant/docs/workflow.md`
 
 ## Quick Triage Flow
 1. Confirm start/test/end command order.

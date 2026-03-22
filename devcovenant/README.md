@@ -1,13 +1,15 @@
-# Project Name
+# DevCovenant
 **Doc ID:** README
 **Doc Type:** repo-readme
 **Project Version:** 1.0.0
-**Last Updated:** 2026-03-21
+**Last Updated:** 2026-03-22
 **DevCovenant Version:** 1.0.0
 
 <!-- DEVCOV:BEGIN -->
 
 <!-- DEVCOV:END -->
+
+![DevCovenant banner](https://raw.githubusercontent.com/apostolovbg/devcovenant/main/devcovenant/docs/banner.png)
 
 DevCovenant is a Repository Governance Framework.
 It is an SDLC (software development lifecycle) policy and evidence engine,
@@ -246,7 +248,20 @@ For the detailed field contract, rendering surfaces, and changelog behavior,
 see `devcovenant/docs/project_governance.md`.
 
 ## Runtime Model
-Core runtime ownership:
+Use this section for fast orientation only.
+Primary detailed homes:
+- `devcovenant/docs/workflow.md`:
+  gate/session behavior, command sequence, and evidence flow in use
+- `devcovenant/docs/installation.md`:
+  lifecycle commands and first integration boundaries
+- `devcovenant/docs/config.md`:
+  runtime control surface and ownership model
+- `devcovenant/docs/architecture.md`:
+  layered runtime/service boundaries and stable architecture contracts
+- `devcovenant/docs/registry.md`:
+  tracked versus runtime registry surfaces
+
+Fast ownership map:
 - policy parsing/execution: `devcovenant/core/services/policy_engine.py`
 - metadata merge precedence: `devcovenant/core/services/metadata.py`
 - profile discovery/merge: `devcovenant/core/services/profile_registry.py`
@@ -257,254 +272,97 @@ Core runtime ownership:
 - shared output policy: `devcovenant/core/runtime/output.py`
 - run-artifact logging substrate: `devcovenant/core/runtime/run_logging.py`
 
-Runtime data stores:
-- source of policy truth:
-  managed policy block in `AGENTS.md`
-- generated runtime state:
-  `devcovenant/registry/runtime/*`
-- session ledger:
-  `devcovenant/registry/runtime/gate_status.json`
-- session snapshot companion:
-  `devcovenant/registry/runtime/session_snapshot.json`
-
-The session ledger stays concise and readable. Heavy session baseline,
-snapshot, and test-event payloads live in the companion session snapshot file.
-
-Canonical core terminology (for example `gate session`, `check`, `policy`,
-`profile`, `translator`, and `evidence artifact`) is defined in
-`devcovenant/README.md` under `Glossary (Canonical Terms)`.
-
 ## Evidence Artifacts
-DevCovenant produces evidence artifacts that show what happened during a gate
-session or command run. Treat these as the primary proof surfaces for
-workflow state, command results, and failure triage.
+DevCovenant writes explicit proof surfaces for command runs and gate
+sessions.
 
-Runtime-local evidence artifacts (generated, untracked):
-- gate session ledger evidence:
-  `devcovenant/registry/runtime/gate_status.json` records concise gate session
-  state, phase timestamps, and pointer metadata for heavy session artifacts.
-- gate session snapshot evidence:
-  `devcovenant/registry/runtime/session_snapshot.json` records heavy baseline,
-  snapshot, exemption, and test-event payloads used by gate-aware policies.
-- command-run evidence folders:
-  `devcovenant/logs/<run-id>-<command>/` stores per-run artifacts for top-level
-  commands.
-- run metadata evidence:
-  `run.json` records command identity, argv, timing, and exit status.
-- summary evidence:
-  `summary.txt` and `summary.json` provide human-readable and machine-readable
-  triage summaries.
-- output evidence:
-  `stdout.log`, `stderr.log`, and `tail.txt` preserve full command output and a
-  bounded quick-inspection tail.
+Main artifact families:
+- concise gate session ledger:
+  `devcovenant/registry/runtime/gate_status.json`
+- heavy gate session snapshot:
+  `devcovenant/registry/runtime/session_snapshot.json`
+- per-command run folders:
+  `devcovenant/logs/<run-id>-<command>/`
+- tracked closure references:
+  `CHANGELOG.md` and `PLAN.md`
 
-Tracked closure-proof references (repository governance docs):
-- changelog entries provide per-slice traceability (`Change`/`Why`/`Impact`
-  plus file coverage or equivalent references)
-- plan/acceptance docs record planned work criteria and closure notes
+Artifact-first triage order:
+1. `summary.txt`
+2. `tail.txt`
+3. `stderr.log` / `stdout.log`
 
-Artifact usage guidance:
-- inspect `summary.txt` first, then `tail.txt`, then full logs
-- use `devcovenant gate --status` to inspect lifecycle state without reruns
-- treat printed `Run logs:` pointers as the canonical entrypoint to run
-  evidence artifacts; `uninstall` is the one exception because it removes the
-  installation folder that normally stores run logs
+Primary detailed homes:
+- `devcovenant/docs/workflow.md` for command/gate evidence in sequence
+- `devcovenant/docs/registry.md` for tracked versus runtime registry meaning
+- `devcovenant/docs/troubleshooting.md` for recovery use
 
 ## Command Surface
-Primary governance commands:
-- `devcovenant check`:
-  run read-only audit checks (no gate session lifecycle writes)
-- `devcovenant gate --start`:
-  run pre-commit, open a gate session baseline, and own refresh/autofix
-  orchestration
-  (honoring `engine.auto_fix_enabled`)
-- `devcovenant gate --mid`:
-  run a non-lifecycle mid-session pre-commit sweep (mutating hooks/checks may
-  apply) to surface complaints before `devcovenant test`
-- `devcovenant test`:
-  execute resolved `devflow-run-gates.required_commands` and record test
-  command evidence for the active gate session
-- `devcovenant gate --end`:
-  run end hooks, enforce sequence completion, and close the gate session
+Command families:
+- audit and gate sequence:
+  `check`, `gate --start`, `gate --mid`, `test`, `gate --end`,
+  `gate --status`
+- lifecycle and maintenance:
+  `install`, `deploy`, `refresh`, `upgrade`, `clean`, `undeploy`,
+  `uninstall`, `update_lock`
 
-Lifecycle and maintenance commands:
-- `devcovenant install`
-- `devcovenant deploy`
-- `devcovenant clean --all|--build|--cache|--registry|--logs`
-  run cleanup only when no gate session is open; close the gate first
-- `devcovenant refresh`
-- `devcovenant upgrade`
-- `devcovenant undeploy`
-- `devcovenant uninstall`
-- `devcovenant update_lock`
-
-Practical usage guidance:
-- use `check` for broad audit-only policy validation
-- use `gate --mid` as the required pre-test mutating preflight inside an open
-  gate session
-- use gate commands for mandatory gate-session workflow and mutating checks
-- use `devcovenant gate --status` for short read-only gate session inspection
-- use `clean` to remove disposable build/cache artifacts after package/build
-  validation, including unpacked release trees like `<project>-<version>/`,
-  without touching logs, runtime registry state, or `.venv`
-- use `refresh` when descriptors/profiles/templates change
-- use `update_lock` when dependency inputs changed and license artifacts must
-  be reconciled
+Primary detailed homes:
+- `devcovenant/docs/workflow.md` for `check`, gate commands, and `test`
+- `devcovenant/docs/installation.md` for lifecycle commands
+- `devcovenant/docs/refresh.md` for refresh-owned regeneration
 
 ## Lifecycle
-DevCovenant separates installation from activation intentionally.
-
-Think about the boundary like this:
+Keep the lifecycle boundary simple:
 - `install` is setup
 - config review is the human decision point
 - `deploy` is activation
-- the first `gate --start` -> `gate --mid` -> `test` -> `gate --end` cycle
-  is the proof that activation succeeded
+- the first full gate cycle proves that activation is usable
 
-Lifecycle contract:
-- `install`:
-  copy package files, seed a review-required config baseline, and seed tracked
-  registry
-  structure without shipping repo-generated registry/log runtime payloads
-- `install` does not activate managed docs yet; it stops and waits for config
-  review
-- `deploy`:
-  require completed config review, then materialize managed outputs
-- `deploy` is the first point where the repo becomes actively governed by the
-  reviewed config
-- `clean`:
-  remove disposable build/cache/runtime-registry/log artifacts from resolved
-  profile/config targets while keeping tracked registry/log README files
-  protected
-- `refresh`:
-  regenerate the tracked registry, managed blocks, and generated governance
-  files; recreate `devcovenant/registry/registry.yaml` when missing without
-  inventing runtime state
-- `upgrade`:
-  reconcile core from source on every run, preserve runtime registry/log state
-  plus config, then refresh the tracked registry
-- `undeploy`:
-  remove managed artifacts while keeping core/config
-- `uninstall`:
-  remove DevCovenant footprint from the repository; this command does not
-  leave a durable run-log folder because it removes `devcovenant/`
-
-Generated artifacts owned by refresh include:
-- `devcovenant/registry/registry.yaml` policy inventory and hash data
-- `devcovenant/registry/registry.yaml` profile inventory and active-profile
-  state
-- `devcovenant/registry/registry.yaml` tracked structural inventory used by
-  integrity checks
-- managed policy block in `AGENTS.md`
-- generated sections in `devcovenant/config.yaml`
-- `.pre-commit-config.yaml`
-- `.gitignore`
-- `.github/workflows/governance-and-test.yml`
+For the exact lifecycle contract, scenarios, and command-by-command behavior,
+use `devcovenant/docs/installation.md`.
+For refresh-owned outputs, use `devcovenant/docs/refresh.md`.
 
 ## Workflow
-Required edit cycle:
-
+Canonical sequence:
 1. `devcovenant gate --start`
-2. clear start-gate complaints before editing
-3. apply edits
-4. if complaints appear, clear them before continuing
-5. `devcovenant gate --mid` pre-test sweep (rerun until clean)
-6. `devcovenant test`
-7. `devcovenant gate --end`
+2. edit and clear complaints while working
+3. `devcovenant gate --mid` until clean
+4. `devcovenant test`
+5. `devcovenant gate --end`
 
-Important execution semantics:
-- start gate must pass before a valid baseline is recorded
-- start gate cannot open a new session while one is already open
-- mid gate requires an open session, may mutate files, and does not write
-  gate lifecycle state
-- end gate may require explicit operator reruns (`test`, then `gate --end`)
-  until tree state is clean
-- end gate records closure only on success
-- when `managed-environment` is active, CLI commands invoked from a
-  non-managed interpreter are automatically re-executed in the managed
-  interpreter when local managed-environment runtime is present; lifecycle
-  bootstrap/teardown commands (`install`, `deploy`, `undeploy`, `uninstall`)
-  are intentionally excluded
-- if a resolved managed interpreter path is present but not executable,
-  DevCovenant emits an explicit managed-environment error and stops so the
-  interpreter path or permissions can be fixed directly
-- if edits happened after previous end gate, start gate can open a recovery
-  gate session and validate that unsessioned delta before baseline rewrite
-
-`devcovenant test` executes the resolved required command chain in declared
-order. In `engine.tests_output_mode: normal`, test progress stays concise with
-deterministic `[n/total] <command>` markers, optional
-`Please wait. In progress...` heartbeat messages during long silent waits,
-and full command output preserved in evidence artifacts under run logs.
+This README keeps the short operator view.
+For the exact workflow contract, recovery rules, session model, and command
+semantics, use `devcovenant/docs/workflow.md`.
+In `engine.tests_output_mode: normal`, test progress stays concise while full
+command output remains available in run-log artifacts.
 
 ## Policy Activation and Metadata
-Activation and behavior are separate concepts:
-- activation:
-  `devcovenant/config.yaml -> policy_state`
-  (with `severity: critical` policies remaining enforced)
-- behavior:
-  resolved metadata from descriptor/profile/config layers
+Short rule:
+- `policy_state` decides whether a normal policy is on or off
+- descriptors, profiles, and config metadata decide how that policy behaves
 
-Metadata resolution order:
-1. descriptor defaults
-2. active profile overlays
-3. autogen metadata overlays
-4. user metadata overlays
-5. autogen metadata overrides
-6. user metadata overrides
-7. policy activation application from `policy_state`
-
-Ownership model:
-- profiles:
-  reusable stack/layout defaults
-- user config layers:
-  repository-specific deltas
-- policy descriptor:
-  schema/contract keys and minimal defaults
-
-Refresh materializes a full alphabetical `policy_state` map, preserves user
-booleans, seeds new policy IDs, and removes stale IDs. Critical-severity
-policies can still appear as `false` in `policy_state`, but runtime
-enforcement ignores that disable toggle and emits an explicit diagnostic.
+Primary detailed homes:
+- `devcovenant/docs/config.md` for activation authority and ownership
+- `devcovenant/docs/policies.md` for descriptor/runtime behavior
+- `devcovenant/docs/profiles.md` for metadata origin and overlays
 
 ## Profiles and Translators
-Profiles contribute metadata overlays, cleanup overlays, selectors, assets,
-and hook fragments.
-Profiles do not activate policies.
+Profiles describe repo shape; translators describe language-aware conversion
+for policy runtime.
+Profiles do not activate policies by themselves.
 
-Language profiles may also declare translators and test-event adapters:
-- translators:
-  convert language-specific files into normalized units for policy code
-- test-event adapters:
-  emit normalized test lifecycle events for gate-session evidence only when
-  the active profile stack declares them explicitly
-
-Framework/ops/tooling profiles can still contribute policy metadata, including
-`devflow-run-gates.required_commands`, but translator ownership remains a
-language-profile responsibility. DevCovenant does not keep a hidden generic
-test-event adapter path: unmatched test commands are skipped unless a profile
-declares `generic_test_event_adapter_factory` on purpose.
+Primary detailed homes:
+- `devcovenant/docs/profiles.md` for profiles, assets, selectors, and hooks
+- `devcovenant/docs/translators.md` for translator declarations and runtime
+  resolution
 
 ## Extension Surfaces
 Extension paths:
-- custom policies:
-  `devcovenant/custom/policies/<policy-id>/`
-- custom profiles:
-  `devcovenant/custom/profiles/<profile-name>/`
+- custom policies: `devcovenant/custom/policies/<policy-id>/`
+- custom profiles: `devcovenant/custom/profiles/<profile-name>/`
 
-Extension guidance:
-1. keep descriptor defaults minimal and type-safe
-2. move stack-dependent operational values into profiles
-3. use config overlays/overrides only for repository deltas
-4. update docs and tests in the same work slice as runtime behavior changes
-5. keep managed-block boundaries intact (`<!-- DEVCOV* -->`)
-
-Managed-doc extension note:
-- custom profiles may also ship managed-doc descriptors under their
-  `assets/` tree; add the target doc path to `doc_assets.autogen` to turn
-  that custom managed doc on for one repo
-- remove a builtin doc from `doc_assets.autogen` to turn that managed doc
-  off for one repo; `AGENTS.md` stays mandatory
+Use:
+- `devcovenant/docs/policies.md` for custom policy authoring
+- `devcovenant/docs/profiles.md` for custom profiles and managed-doc assets
 
 ## Docs Map
 This README is the canonical docs entrypoint for the packaged documentation
@@ -512,6 +370,12 @@ set.
 In this repository, `README.md` is the authored source and
 `devcovenant/README.md` is the synced packaged guide with repo-only sections
 removed.
+
+Documentation architecture rule:
+- this README is the entrypoint and quick operator view
+- each detailed topic has one primary home under `devcovenant/docs/`
+- other docs should point back to that primary home instead of restating the
+  same contract in full
 
 ### Documentation Tiers
 - universal/package docs:
@@ -532,28 +396,29 @@ removed.
 - [Adapt and Customize](#profiles-and-translators):
   profiles, translators, extension surfaces, and deeper policy docs
 
-Detailed package docs under `devcovenant/docs/`:
+Primary homes under `devcovenant/docs/`:
 - `installation.md`:
-  install/deploy/upgrade/teardown lifecycle runbooks
-- `project_governance.md`:
-  lifecycle metadata contract, rendering surfaces, and unversioned/versioned
-  behavior
+  lifecycle commands, bootstrap, integration scenarios, and teardown
 - `workflow.md`:
-  gate contract, session semantics, and the canonical 90-second evidence ritual
+  exact gate contract, session semantics, and evidence ritual
 - `config.md`:
-  ownership model and metadata merge rules
+  config ownership, review model, and runtime control surface
+- `project_governance.md`:
+  lifecycle metadata fields and rendering surfaces
 - `profiles.md`:
-  profile metadata, assets, hooks, and translator ownership
+  profile metadata, assets, hooks, and custom profile shape
 - `policies.md`:
-  descriptor/runtime contracts and deep policy behavior
+  policy descriptors, runtime behavior, and authoring contract
 - `translators.md`:
   translator declaration, resolution, and failure patterns
+- `architecture.md`:
+  stable runtime architecture contracts and layered boundaries
 - `registry.md`:
-  generated registry contracts and evidence files
+  tracked/runtime registry meaning and integrity surfaces
 - `refresh.md`:
-  deterministic regeneration behavior and outputs
+  refresh-owned regeneration behavior and managed-doc rules
 - `troubleshooting.md`:
-  failure signatures and recovery runbooks
+  failure signatures and recovery loops
 
 Local architecture READMEs (source checkout):
 - `devcovenant/core/README.md`

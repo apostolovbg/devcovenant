@@ -165,6 +165,22 @@ def _unit_test_cli_unknown_command_fails(monkeypatch) -> None:
     assert "invalid choice: 'does-not-exist'" in stderr_buffer.getvalue()
 
 
+def _unit_test_cli_version_flag_prints_version(monkeypatch) -> None:
+    """`--version` should print the package version and exit cleanly."""
+    monkeypatch.setattr(sys, "argv", ["devcovenant", "--version"])
+    stdout_buffer = io.StringIO()
+    with redirect_stdout(stdout_buffer):
+        try:
+            cli.main()
+        except SystemExit as exc:
+            code = exc.code
+        else:  # pragma: no cover - defensive
+            raise AssertionError("Expected SystemExit from cli.main().")
+
+    assert code == 0
+    assert stdout_buffer.getvalue().strip() == "devcovenant 1.0.0"
+
+
 def _unit_test_cli_reexecs_when_managed_env_differs(monkeypatch) -> None:
     """CLI should re-exec when managed interpreter differs from current."""
     repo_root = REPO_ROOT
@@ -873,6 +889,14 @@ class GeneratedUnittestCases(unittest.TestCase):
         monkeypatch = MonkeyPatch()
         try:
             _unit_test_cli_unknown_command_fails(monkeypatch=monkeypatch)
+        finally:
+            monkeypatch.undo()
+
+    def test_cli_version_flag_prints_version(self):
+        """Run top-level version flag assertions."""
+        monkeypatch = MonkeyPatch()
+        try:
+            _unit_test_cli_version_flag_prints_version(monkeypatch=monkeypatch)
         finally:
             monkeypatch.undo()
 

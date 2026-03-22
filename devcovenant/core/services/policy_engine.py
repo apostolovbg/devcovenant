@@ -23,6 +23,7 @@ from devcovenant.core.contracts.policy import (
 )
 from devcovenant.core.runtime.execution import get_output_mode, runtime_print
 from devcovenant.core.services import metadata as metadata_runtime
+from devcovenant.core.services import yaml_cache as yaml_cache_service
 from devcovenant.core.services.policy_parse import (
     PolicyDefinition,
     PolicyParser,
@@ -190,8 +191,7 @@ class DevCovenantEngine:
                 "Run `devcovenant install` or restore config."
             )
         try:
-            with open(self.config_path, "r", encoding="utf-8") as file_obj:
-                payload = yaml.safe_load(file_obj)
+            payload = yaml_cache_service.load_yaml(self.config_path)
         except yaml.YAMLError as exc:
             raise SystemExit(
                 f"Invalid YAML in config file {self.config_path}: {exc}"

@@ -17,6 +17,7 @@ from devcovenant.core.lib.document_exemptions import (
 from devcovenant.core.lib.document_exemptions import (
     document_exemption_fingerprint_for_path,
 )
+from devcovenant.core.services import yaml_cache as yaml_cache_service
 
 _SNAPSHOT_BASE_IGNORED_DIRS = frozenset(
     {
@@ -330,7 +331,7 @@ def _snapshot_ignored_dirs(repo_root: Path) -> set[str]:
     if not config_path.exists():
         return ignored
     try:
-        payload = yaml.safe_load(config_path.read_text(encoding="utf-8"))
+        payload = yaml_cache_service.load_yaml(config_path)
     except (OSError, yaml.YAMLError) as exc:
         raise ValueError(
             f"Unable to read snapshot ignore settings from {config_path}: "

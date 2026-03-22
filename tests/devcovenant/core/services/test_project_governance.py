@@ -46,6 +46,11 @@ class GeneratedUnittestCases(unittest.TestCase):
             state = resolve_runtime_state(repo_root)
             self.assertTrue(state.enabled)
             self.assertTrue(state.is_unversioned)
+            self.assertEqual(state.project_name, "Project Name")
+            self.assertIn(
+                "Describe the project this repository ships",
+                state.project_description,
+            )
             self.assertEqual(state.stage, "prototype")
             self.assertEqual(state.development_stance, "experimental")
             self.assertEqual(
@@ -108,6 +113,10 @@ class GeneratedUnittestCases(unittest.TestCase):
     def test_service_registry_payload_is_deterministic(self):
         """Registry payload should surface the resolved governance state."""
         state = ProjectGovernanceState(
+            project_name="DevCovenant",
+            project_description=(
+                "DevCovenant is a Repository Governance Framework."
+            ),
             stage="stable",
             development_stance="active-development",
             versioning_mode="versioned",
@@ -115,6 +124,11 @@ class GeneratedUnittestCases(unittest.TestCase):
             build_identity="2026.03.20.1",
         )
         payload = state.registry_payload("1.2.3")
+        self.assertEqual(payload["project_name"], "DevCovenant")
+        self.assertEqual(
+            payload["project_description"],
+            "DevCovenant is a Repository Governance Framework.",
+        )
         self.assertEqual(payload["project_version"], "1.2.3")
         self.assertEqual(payload["stage"], "stable")
         self.assertEqual(payload["development_stance"], "active-development")

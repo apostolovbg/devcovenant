@@ -1,5 +1,5 @@
 # Workflow
-**Last Updated:** 2026-03-21
+**Last Updated:** 2026-03-22
 **Project Version:** 1.0.0
 
 ## Table of Contents
@@ -9,6 +9,7 @@
 - [90-Second Evidence Ritual](#90-second-evidence-ritual)
 - [Step Details](#step-details)
 - [Session State Model](#session-state-model)
+- [Run Artifact Contract](#run-artifact-contract)
 - [Recovery and Reconcile](#recovery-and-reconcile)
 - [Changelog and Delta Scope Rules](#changelog-and-delta-scope-rules)
 - [CI (continuous integration) Mapping](#ci-continuous-integration-mapping)
@@ -42,6 +43,12 @@ Use this document when you need to answer questions like:
 - "What is the difference between `check`, `gate --status`, and the gate
   commands?"
 - "Why did the tool ask me to rerun part of the sequence?"
+
+This is the primary home for the exact workflow contract.
+Other docs may summarize workflow only enough to explain their own topic, but
+they should point back here for the full sequence and recovery rules.
+It is also the normative home for the gate sequence and run-artifact
+contract. Use `devcovenant/docs/contracts.md` for the contract index.
 
 ## Program Vocabulary
 - `gate session`:
@@ -186,6 +193,9 @@ Shared gate hook targeting:
   `Build Identity` to opted-in managed docs; changelog helper logic resolves
   active release headings from the same service so
   intentionally unversioned repos can use `## Unreleased`
+- that same service also owns public project identity
+  (`project_name`, `project_description`) for managed README rendering and
+  refresh-owned package metadata synchronization
 - fail with explicit retry instructions (run `devcovenant test`, then rerun
   `devcovenant gate --start`) when recovery/reconcile requires fresh test
   evidence; start gate performs no internal test runs
@@ -259,9 +269,17 @@ Install/upgrade boundary:
   roots:
   keep `AGENTS.md`, remove builtin docs there to turn them off for one repo,
   and add custom docs there only after creating matching descriptors
+- command startup now reuses one run-scoped YAML cache for tracked config,
+  registry, and descriptor reads across `check`, gate, refresh, install,
+  deploy, and undeploy.
+  That speeds repeated command setup without changing which files are
+  authoritative or when refresh is required.
 - in this repository, `README.md` is the authored source and
   `devcovenant/README.md` is the synced packaged projection with repo-only
   sections stripped by `readme-sync`
+- in the generic contract, README descriptors remain reusable templates while
+  the rendered title and summary come from `project-governance` rather than
+  repo-specific descriptor overrides
 - document preservation rules are exact:
   - missing docs may be created from assets/templates
   - empty docs may be replaced fully
@@ -545,6 +563,31 @@ Session scope behavior:
 - during normal start, delta is empty after baseline capture
 - during recovery start, reconciled unsessioned edits are included in scope
 - config `ignore.patterns` are applied before unsessioned/session checks
+
+## Run Artifact Contract
+Run artifacts are part of the workflow contract, not optional debug residue.
+
+Stable artifact families:
+- `devcovenant/logs/<run-id>-<command>/` for per-command run evidence
+- `summary.txt` and `summary.json` for concise outcome evidence
+- `tail.txt` when the runtime emits a tail artifact
+- `stdout.log` and `stderr.log` for full captured output
+- `devcovenant/registry/runtime/gate_status.json` for concise session ledger
+- `devcovenant/registry/runtime/session_snapshot.json` for bulky session
+  baselines, snapshots, and test events
+- `devcovenant/registry/runtime/latest.json` for the latest run pointer used
+  by status helpers
+
+Stable operator rule:
+- when run artifacts exist, inspect `summary.txt` first, then `tail.txt`, and
+  then full logs before escalating to verbose streaming
+
+Stable lifecycle rule:
+- `gate --start` and `gate --end` own lifecycle writes
+- `gate --mid` is required but non-lifecycle
+- `gate --status` is read-only inspection
+- `test` records explicit test evidence and run-artifact pointers without
+  closing the gate session
 
 ## Recovery and Reconcile
 Start gate includes guardrails against silent baseline resets.

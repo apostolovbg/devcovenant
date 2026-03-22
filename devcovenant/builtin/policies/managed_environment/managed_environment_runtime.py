@@ -16,6 +16,7 @@ from devcovenant.core.runtime.execution import (
     run_child_command_with_output_policy,
     runtime_print,
 )
+from devcovenant.core.services import yaml_cache as yaml_cache_service
 
 POLICY_ID = "managed-environment"
 RUNTIME_ACTION_RESOLVE_STAGE = "resolve-stage"
@@ -60,9 +61,7 @@ def _load_policy_entry(repo_root: Path) -> dict[str, Any] | None:
         }
 
     try:
-        registry_data = yaml.safe_load(
-            registry_path.read_text(encoding="utf-8")
-        )
+        registry_data = yaml_cache_service.load_yaml(registry_path)
     except yaml.YAMLError as exc:
         raise ValueError(
             f"Invalid YAML in policy registry {registry_path}: {exc}"

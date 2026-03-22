@@ -5,7 +5,7 @@
 **Project Stage:** stable
 **Development Stance:** active-development
 **Versioning Mode:** versioned
-**Last Updated:** 2026-03-21
+**Last Updated:** 2026-03-22
 **DevCovenant Version:** 1.0.0
 
 <!-- DEVCOV:BEGIN -->
@@ -58,6 +58,241 @@ Example:
 ## Log changes here
 
 ## Version 1.0.0
+
+- 2026-03-22:
+  Change: Amended the active roadmap so core DevCovenant invariants are
+  promoted out of policy land before the dependency-management and
+  policy-command standardization work continues.
+  Why: Clarified that `devflow-run-gates`, `devcov-structure-guard`, and
+  `devcov-integrity-guard` define the engine's own trust boundary and should
+  stay first-class core behavior rather than reading like optional policies
+  or making `gate` look like a policy-born command.
+  Impact: Makes the roadmap dependency-aware by treating the core invariant
+  split as a prerequisite for the later dependency-management runtime and
+  policy-command contract work.
+  Files:
+  CHANGELOG.md
+  PLAN.md
+
+- 2026-03-22:
+  Change: Amended the active roadmap to add a formal
+  dependency-management and policy-command standardization item and reorder
+  the later hardening work around that dependency.
+  Why: Clarified that dependency operations, autofix delegation, and
+  policy-born CLI commands need one coherent contract before broader
+  release-assurance work is layered on top.
+  Impact: Makes the plan dependency-aware by treating
+  dependency-management standardization as an explicit prerequisite for the
+  later supply-chain and QA closure slices.
+  Files:
+  CHANGELOG.md
+  PLAN.md
+
+- 2026-03-22:
+  Change: Aligned public project identity, package metadata synchronization,
+  managed-doc rendering, dependency-license inventory generation, and the
+  active external-readiness roadmap around the current store-bought baseline
+  push.
+  Why: Replaced the abandoned repo-specific README override path with one
+  repo-owned `project-governance` identity source so public README surfaces,
+  package metadata, and this repo's derived packaged README stop duplicating
+  or drifting.
+  Impact: Makes DevCovenant present itself from shared governance metadata,
+  keeps `devcovenant/README.md` derived from the root `README.md` in this
+  repository, improves public package/compliance groundwork, and records the
+  remaining hardening work in a tighter release plan.
+  Files:
+  AGENTS.md
+  CHANGELOG.md
+  PLAN.md
+  CONTRIBUTING.md
+  POLICY_MAP.md
+  PROFILE_MAP.md
+  README.md
+  SPEC.md
+  devcovenant/README.md
+  devcovenant/builtin/policies/dependency_license_sync/\
+    dependency_license_sync.py
+  devcovenant/builtin/policies/dependency_license_sync/\
+    dependency_lock_runtime.py
+  devcovenant/builtin/policies/line_length_limit/\
+    line_length_limit.yaml
+  devcovenant/builtin/profiles/global/assets/README.yaml
+  devcovenant/builtin/profiles/global/assets/config.yaml
+  devcovenant/builtin/profiles/python/assets/pyproject.toml
+  devcovenant/cli.py
+  devcovenant/config.yaml
+  devcovenant/core/flow/refresh.py
+  devcovenant/core/services/managed_docs.py
+  devcovenant/core/services/project_governance.py
+  devcovenant/custom/policies/managed_doc_assets/managed_doc_assets.py
+  devcovenant/docs/architecture.md
+  devcovenant/docs/config.md
+  devcovenant/docs/installation.md
+  devcovenant/docs/policies.md
+  devcovenant/docs/profiles.md
+  devcovenant/docs/project_governance.md
+  devcovenant/docs/registry.md
+  devcovenant/docs/workflow.md
+  devcovenant/registry/registry.yaml
+  licenses/PyYAML-6.0.2.txt
+  licenses/PyYAML-6.0.3.txt
+  licenses/README.md
+  licenses/THIRD_PARTY_LICENSES.md
+  licenses/packaging-26.0.txt
+  licenses/pip-tools-7.5.3.txt
+  licenses/pre-commit-4.5.1.txt
+  licenses/pytest-9.0.2.txt
+  licenses/semver-3.0.2.txt
+  licenses/semver-3.0.4.txt
+  pyproject.toml
+  tests/devcovenant/builtin/policies/dependency_license_sync/\
+    autofix/test_global.py
+  tests/devcovenant/builtin/policies/dependency_license_sync/\
+    test_dependency_license_sync.py
+  tests/devcovenant/builtin/policies/dependency_license_sync/\
+    test_dependency_lock_runtime.py
+  tests/devcovenant/core/services/test_managed_docs.py
+  tests/devcovenant/core/services/test_project_governance.py
+  tests/devcovenant/test_cli.py
+  tests/devcovenant/test_install.py
+  tests/devcovenant/test_refresh.py
+
+- 2026-03-21:
+  Change: Rewrote the active roadmap into a tight external-readiness plan
+  focused on package polish, compliance accuracy, security and privacy trust
+  surfaces, and stronger release assurance.
+  Why: A fresh third-party-style QA audit showed that DevCovenant is
+  technically serious but still not polished enough to feel fully
+  store-bought.
+  Impact: Reorients the next work slices around the real release blockers:
+  public package presentation, legal and license correctness, trust-surface
+  docs, supply-chain hardening, and a final outside-in QA closure pass.
+  Files:
+  CHANGELOG.md
+  PLAN.md
+
+- 2026-03-21:
+  Change: Froze the simplified product contracts through a new contract
+  index, tightened the primary docs into explicit normative homes, added
+  direct contract tests, and marked PLAN Item 4 complete.
+  Why: The runtime and docs were simpler after the earlier cleanup work, so
+  the right next step was to centralize contract truth without creating a
+  second fragmented documentation tree.
+  Impact: Made the managed-doc, lifecycle, workflow, config,
+  project-governance, registry, policy-descriptor, version-governance
+  adapter, and documentation-writing contracts explicit, linked, and
+  test-backed.
+  Files:
+  CHANGELOG.md
+  PLAN.md
+  devcovenant/docs/architecture.md
+  devcovenant/docs/config.md
+  devcovenant/docs/contracts.md
+  devcovenant/docs/installation.md
+  devcovenant/docs/policies.md
+  devcovenant/docs/project_governance.md
+  devcovenant/docs/refresh.md
+  devcovenant/docs/registry.md
+  devcovenant/docs/workflow.md
+  tests/devcovenant/core/runtime/test_execution.py
+  tests/devcovenant/core/services/test_managed_docs.py
+  tests/devcovenant/core/services/test_policy_block_refresh.py
+
+- 2026-03-21:
+  Change: Simplified the docs information architecture around clearer
+  primary homes, slimmed the README entrypoint, simplified documentation
+  route fan-out, and marked PLAN Item 3 complete.
+  Why: Clarified doc ownership because the README was carrying too much deep
+  reference material, several reference docs were repeating workflow/setup
+  framing, and some documentation routes were forcing the same change into
+  multiple docs by default.
+  Impact: Reduced duplicate doc churn by making the README and packaged
+  README clearer entrypoints, making the detailed docs state their ownership
+  boundaries more explicitly, and simplifying the default route map.
+  Files:
+  AGENTS.md
+  CHANGELOG.md
+  PLAN.md
+  README.md
+  devcovenant/README.md
+  devcovenant/config.yaml
+  devcovenant/custom/profiles/devcovrepo/devcovrepo.yaml
+  devcovenant/docs/architecture.md
+  devcovenant/docs/config.md
+  devcovenant/docs/installation.md
+  devcovenant/docs/policies.md
+  devcovenant/docs/profiles.md
+  devcovenant/docs/project_governance.md
+  devcovenant/docs/refresh.md
+  devcovenant/docs/registry.md
+  devcovenant/docs/troubleshooting.md
+  devcovenant/docs/workflow.md
+  devcovenant/registry/registry.yaml
+
+- 2026-03-21:
+  Change: Reduced repeated cold setup in the slow refresh, deploy, upgrade,
+  and managed-doc test families, kept the two standard test runs intact, and
+  marked PLAN Item 2 complete.
+  Why: Several heavy integration-style tests copied and refreshed the same
+  install-and-refresh baseline repeatedly instead of reusing safe cached repo
+  seeds, which had made the standard workflow slow.
+  Impact: Cut the measured hotspot pytest subset from about `238.55s` to
+  about `198.86s`, dropped the managed-doc-assets policy tests to sub-second
+  checks, and preserved one explicit colder upgrade path so lifecycle proof
+  remains visible.
+  Files:
+  CHANGELOG.md
+  PLAN.md
+  tests/devcovenant/custom/policies/managed_doc_assets/\
+    test_managed_doc_assets.py
+  tests/devcovenant/test_refresh.py
+  tests/devcovenant/test_upgrade.py
+
+- 2026-03-21:
+  Change: Added a shared run-scoped YAML cache, rewired the hot command
+  paths through it, documented the new runtime-loading ownership, and marked
+  PLAN Item 1 complete.
+  Why: Repeated tracked config, registry, profile, and descriptor parsing had
+  become the main structural cause of slow `check`, gate, and refresh-related
+  startup work.
+  Impact: Reduced counted `yaml.safe_load` calls during `check` from `77` to
+  `38`, cut local `check` runtime from about `14.35s` to `9.02s`, cut local
+  `pre-commit run --all-files --verbose` runtime from about `28.01s` to
+  `20.81s`, and left one explicit cache boundary for future runtime work.
+  Files:
+  CHANGELOG.md
+  PLAN.md
+  devcovenant/builtin/policies/devcov_structure_guard/\
+    devcov_structure_guard.py
+  devcovenant/builtin/policies/managed_environment/\
+    managed_environment_runtime.py
+  devcovenant/core/flow/gate_changelog_helpers.py
+  devcovenant/core/flow/refresh.py
+  devcovenant/core/runtime/execution.py
+  devcovenant/core/runtime/session_snapshot.py
+  devcovenant/core/services/cleanup.py
+  devcovenant/core/services/event.py
+  devcovenant/core/services/managed_docs.py
+  devcovenant/core/services/metadata.py
+  devcovenant/core/services/policy_block_refresh.py
+  devcovenant/core/services/policy_engine.py
+  devcovenant/core/services/policy_runtime_actions.py
+  devcovenant/core/services/profile_registry.py
+  devcovenant/core/services/project_governance.py
+  devcovenant/core/services/registry.py
+  devcovenant/core/services/yaml_cache.py
+  devcovenant/deploy.py
+  devcovenant/docs/architecture.md
+  devcovenant/docs/installation.md
+  devcovenant/docs/policies.md
+  devcovenant/docs/refresh.md
+  devcovenant/docs/registry.md
+  devcovenant/docs/workflow.md
+  devcovenant/install.py
+  devcovenant/registry/registry.yaml
+  devcovenant/undeploy.py
+  tests/devcovenant/core/services/test_yaml_cache.py
 
 - 2026-03-21:
   Change: Rewrote `PLAN.md` into a dependency-ordered anti-fragmentation and

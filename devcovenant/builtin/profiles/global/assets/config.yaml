@@ -320,9 +320,16 @@ policy_state:
 # `project-governance` is orthogonal to `version-governance`:
 # - use this block for project lifecycle metadata and rendered doc headers;
 # - use `version-governance` for actual version-scheme enforcement.
+# `project_name` and `project_description` are the project-identity source of
+# truth used by managed README surfaces and package metadata surfaces that
+# DevCovenant owns or synchronizes.
 # Generic installs start explicitly unversioned instead of inventing a fake
 # numbered version.
 project-governance:
+  project_name: Project Name
+  project_description: >-
+    Describe the project this repository ships: what it does, who it helps,
+    and what problem it solves.
   stage: prototype
   development_stance: experimental
   versioning_mode: unversioned

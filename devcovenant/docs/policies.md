@@ -1,5 +1,5 @@
 # Policies
-**Last Updated:** 2026-03-21
+**Last Updated:** 2026-03-22
 **Project Version:** 1.0.0
 
 ## Table of Contents
@@ -9,6 +9,7 @@
 - [Descriptor and Metadata](#descriptor-and-metadata)
 - [Descriptor Authoring Convention](#descriptor-authoring-convention)
 - [Runtime Execution](#runtime-execution)
+- [Version-Governance Adapter Contract](#version-governance-adapter-contract)
 - [Output Governance Policy](#output-governance-policy)
 - [Core Policy Deep Dives](#core-policy-deep-dives)
 - [Autofix Model](#autofix-model)
@@ -32,6 +33,12 @@ How most users interact with policies:
 - change config/profile metadata when a policy should behave differently
 - write custom policy code only when config and profiles cannot express the
   rule you need
+This is the primary home for policy descriptors, runtime behavior, and policy
+authoring. Use `devcovenant/docs/config.md` for activation toggles and
+`devcovenant/docs/profiles.md` for metadata sources.
+It is also the normative home for the policy descriptor contract and the
+version-governance adapter contract. Use `devcovenant/docs/contracts.md` for
+the contract index.
 
 Initial critical policy set in this repository (conservative rollout):
 - `devflow-run-gates` (gate/test/gate evidence workflow integrity)
@@ -133,6 +140,12 @@ Execution flow:
 5. run autofix helpers if allowed and available
 6. rerun checks when autofix helpers changed files
 
+Runtime loading boundary:
+- policy/config/registry helpers now read tracked YAML through the shared
+  run-scoped cache in `devcovenant/core/services/yaml_cache.py`
+- this does not change policy meaning; it removes repeated parsing of the
+  same tracked config, registry, and descriptor files inside one command run
+
 Output mode contract:
 - runtime output mode is selected by
   `devcovenant/config.yaml -> engine.output_mode`
@@ -181,6 +194,9 @@ High-impact runtime contracts:
   exists; if the tracked registry is missing, runtime fails explicitly and
   requires `devcovenant refresh` before managed-environment resolution can
   continue.
+  Managed-environment runtime now uses the same tracked-registry cache path
+  as the rest of the runtime so repeated stage resolution does not keep
+  reparsing the registry in one command run.
 - `devflow-run-gates` enforces the start -> test -> end sequence and validates
   the latest `test` evidence against resolved required command metadata
   (`required_commands`). Gate status stores the tests mode and selected
@@ -197,11 +213,14 @@ High-impact runtime contracts:
   artifacts under `devcovenant/`, and it validates the tracked
   `devcovenant/logs` skeleton via the core manifest without requiring any
   policy inventory.
+  Its active-profile lookup now reuses the shared config cache instead of
+  reparsing `devcovenant/config.yaml` independently.
 - `line-length-limit` excludes transient runtime log artifacts under
   `devcovenant/logs/**` plus universal editor/build/runtime artifacts
   (`*.egg-info/**`, `pip-wheel-metadata/**`, coverage/cache trees,
-  `.vscode/**`, `.idea/**`, and local runtime state) so generated noise does
-  not create warning churn during gated runs.
+  `.vscode/**`, `.idea/**`, local runtime state, and generated
+  `licenses/*.txt` dependency-license snapshots) so generated noise does not
+  create warning churn during gated runs.
   Descriptor keys remain declared, while default values are profile-owned
   (`defaults` for max-length/URL escape-hatch defaults and
   `global` for runtime log-artifact excludes).
@@ -244,6 +263,39 @@ High-impact runtime contracts:
   Empty managed-environment metadata emits explicit expected-path/interpreter
   guidance warnings; missing manual-command hint warnings are not emitted
   unless an actual environment mismatch requires remediation guidance.
+
+## Version-Governance Adapter Contract
+`version-governance` resolves one named scheme adapter and expects a stable
+interface from it.
+
+Builtin adapter interface:
+- `version_pattern`
+- `parse_version`
+- `compare_versions`
+- `validate_release`
+
+Optional adapter callables:
+- `preflight`
+- `canonicalize_version`
+- `validate_progression`
+
+Stable adapter rules:
+- adapters must raise explicit errors when a required capability is missing
+- `custom_regex` is format-only and does not define ordered comparison
+- `custom_adapter` must point to a repo-relative Python module inside the
+  repository and that module must export `SCHEME`
+- custom adapter `SCHEME` must provide the required callable interface
+- package-aware adapters such as `pep440` may canonicalize versions while
+  still preserving repo-level scheme ownership
+- `version-sync` may use scheme equality without pretending a validation-only
+  scheme provides ordering
+
+Relevant enforcement surfaces:
+- `devcovenant/builtin/policies/version_governance/version_governance.py`
+- `devcovenant/builtin/policies/version_governance/custom_regex.py`
+- `devcovenant/builtin/policies/version_governance/custom_adapter.py`
+- `tests/devcovenant/builtin/policies/version_governance/*.py`
+- `tests/devcovenant/builtin/policies/version_sync/test_version_sync.py`
 - `dependency-license-sync` and `update_lock` operate from resolved metadata
   (descriptor + profiles + config layers), with role selectors as the
   primary contract (`dependency_role_*` via `role=>selector`) and no
@@ -459,6 +511,9 @@ Boundary rule:
 - Passing `dependency-license-sync` means repository artifacts are synchronized
   for changed dependency inputs; it does not certify distribution-package legal
   completeness by itself.
+- The current repository autofix also builds a deterministic direct-dependency
+  inventory under `licenses/` from declared dependency inputs plus the
+  installed distributions available to the runtime.
 
 Package-distribution contract for this repository:
 - `pyproject.toml` uses SPDX (Software Package Data Exchange)
@@ -589,10 +644,15 @@ Override policy still participates in the same metadata resolution and
 `policy_state` activation flow.
 
 ## Workflow
+Use this document when the change is about what a policy is, how it resolves
+metadata, or how policy code should be authored.
+For the exact gate sequence, use `devcovenant/docs/workflow.md`.
+
+Policy-change loop:
 1. Update descriptor text/metadata and check script together.
 2. Run `devcovenant refresh` if descriptor metadata changed.
 3. Update mirrored tests.
-4. Run `devcovenant test` and `gate --end`.
+4. Run the normal gate workflow from `devcovenant/docs/workflow.md`.
 
 ## Testing Expectations
 Policy changes require mirrored tests under:

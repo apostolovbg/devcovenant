@@ -35,6 +35,7 @@ from devcovenant import __version__ as package_version
 from devcovenant.core.runtime import (
     session_snapshot as session_snapshot_runtime_module,
 )
+from devcovenant.core.services import yaml_cache as yaml_cache_service
 
 OutputMode = output_runtime_module.OutputMode
 
@@ -505,7 +506,7 @@ def _read_engine_config(repo_root: Path) -> dict[str, Any]:
     if not config_path.exists():
         return {}
     try:
-        payload = yaml.safe_load(config_path.read_text(encoding="utf-8"))
+        payload = yaml_cache_service.load_yaml(config_path)
     except (OSError, yaml.YAMLError):
         return {}
     if not isinstance(payload, dict):

@@ -21,6 +21,7 @@ from devcovenant.core.runtime.execution import (
     print_step,
     resolve_repo_root,
 )
+from devcovenant.core.services import yaml_cache as yaml_cache_service
 
 BLOCK_BEGIN = "<!-- DEVCOV:BEGIN -->"
 BLOCK_END = "<!-- DEVCOV:END -->"
@@ -56,7 +57,7 @@ def _read_yaml(path: Path) -> dict[str, object]:
             f"Undeploy config issue: missing required config file: {path}."
         )
     try:
-        payload = yaml.safe_load(path.read_text(encoding="utf-8"))
+        payload = yaml_cache_service.load_yaml(path)
     except yaml.YAMLError as exc:
         raise ValueError(
             f"Undeploy config issue: invalid YAML in {path}: {exc}"

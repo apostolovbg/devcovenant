@@ -187,6 +187,89 @@ def _configure_demo_profile(
 class GeneratedUnittestCases(unittest.TestCase):
     """Direct coverage for the managed-doc runtime service."""
 
+    def test_validate_descriptor_rejects_unknown_keys(self) -> None:
+        """Managed-doc schema should fail explicit unknown descriptor keys."""
+        descriptor = {
+            "title": "README",
+            "target_path": "README.md",
+            "doc_id": "README",
+            "doc_type": "repo-readme",
+            "project_version": True,
+            "last_updated": True,
+            "devcovenant_version": True,
+            "managed_block": "Block text.",
+            "body": "Body text.",
+            "unexpected_key": True,
+        }
+        raw_yaml = "\n".join(
+            [
+                "title: README",
+                "target_path: README.md",
+                "doc_id: README",
+                "doc_type: repo-readme",
+                "project_version: true",
+                "last_updated: true",
+                "devcovenant_version: true",
+                "managed_block: |-",
+                "  Block text.",
+                "body: |-",
+                "  Body text.",
+                "unexpected_key: true",
+                "",
+            ]
+        )
+
+        with self.assertRaisesRegex(ValueError, "unsupported keys"):
+            managed_docs.validate_managed_doc_descriptor(
+                descriptor,
+                descriptor_path_value=Path("README.yaml"),
+                doc_name="README.md",
+                raw_yaml=raw_yaml,
+            )
+
+    def test_validate_descriptor_requires_documented_key_order(self) -> None:
+        """Managed-doc schema should fail for reordered descriptor keys."""
+        descriptor = {
+            "title": "README",
+            "target_path": "README.md",
+            "doc_id": "README",
+            "doc_type": "repo-readme",
+            "project_version": True,
+            "last_updated": True,
+            "devcovenant_version": True,
+            "managed_block": "Block text.",
+            "import_seed": True,
+            "body": "Body text.",
+        }
+        raw_yaml = "\n".join(
+            [
+                "title: README",
+                "target_path: README.md",
+                "doc_id: README",
+                "doc_type: repo-readme",
+                "project_version: true",
+                "last_updated: true",
+                "devcovenant_version: true",
+                "managed_block: |-",
+                "  Block text.",
+                "import_seed: true",
+                "body: |-",
+                "  Body text.",
+                "",
+            ]
+        )
+
+        with self.assertRaisesRegex(
+            ValueError,
+            "must declare keys in this order",
+        ):
+            managed_docs.validate_managed_doc_descriptor(
+                descriptor,
+                descriptor_path_value=Path("README.yaml"),
+                doc_name="README.md",
+                raw_yaml=raw_yaml,
+            )
+
     def test_authoritative_entries_follow_descriptor_flags(self) -> None:
         """Authoritative doc coverage should come from descriptors."""
         with tempfile.TemporaryDirectory() as temp_dir:
@@ -270,6 +353,104 @@ class GeneratedUnittestCases(unittest.TestCase):
             self.assertIn("AGENTS.md", docs)
             self.assertIn("PROFILE_MAP.md", docs)
             self.assertNotIn("README.md", docs)
+
+    def test_duplicate_descriptor_targets_fail(self) -> None:
+        """Duplicate managed-doc targets should fail explicitly."""
+        with tempfile.TemporaryDirectory() as temp_dir:
+            repo_root = Path(temp_dir)
+            install.install_repo(repo_root)
+            profile_root = (
+                repo_root / "devcovenant" / "custom" / "profiles" / "mapsdemo"
+            )
+            assets_root = profile_root / "assets"
+            assets_root.mkdir(parents=True, exist_ok=True)
+            (profile_root / "mapsdemo.yaml").write_text(
+                yaml.safe_dump(
+                    {
+                        "version": 1,
+                        "profile": "mapsdemo",
+                        "category": "repo",
+                        "suffixes": [],
+                        "ignore_dirs": [],
+                    },
+                    sort_keys=False,
+                ),
+                encoding="utf-8",
+            )
+            (assets_root / "README.yaml").write_text(
+                "\n".join(
+                    [
+                        "title: Repo Override",
+                        "target_path: README.md",
+                        "doc_id: README",
+                        "doc_type: repo-readme",
+                        "project_version: true",
+                        "last_updated: true",
+                        "devcovenant_version: true",
+                        "project_governance_headers: false",
+                        "import_seed: true",
+                        "authoritative_source: true",
+                        "managed_block: ''",
+                        "body: |-",
+                        "  Override body.",
+                        "",
+                    ]
+                ),
+                encoding="utf-8",
+            )
+            payload = _configure_demo_profile(
+                repo_root,
+                autogen=["AGENTS.md", "README.md"],
+            )
+
+            with self.assertRaisesRegex(
+                ValueError,
+                "Duplicate managed doc descriptor target `README.md`",
+            ):
+                managed_docs.descriptor_path(
+                    repo_root,
+                    "README.md",
+                    config_payload=payload,
+                )
+
+    def test_render_doc_uses_project_governance_identity(self) -> None:
+        """Managed docs should render identity from governance state."""
+        with tempfile.TemporaryDirectory() as temp_dir:
+            repo_root = Path(temp_dir)
+            install.install_repo(repo_root)
+            config_path = repo_root / "devcovenant" / "config.yaml"
+            payload = _read_yaml(config_path)
+            governance = payload.setdefault("project-governance", {})
+            assert isinstance(governance, dict)
+            governance["project_name"] = "Example Product"
+            governance["project_description"] = (
+                "Example Product keeps repository governance explicit."
+            )
+            config_path.write_text(
+                yaml.safe_dump(payload, sort_keys=False),
+                encoding="utf-8",
+            )
+            state = project_governance.resolve_runtime_state(repo_root)
+            project_version = state.displayed_project_version("")
+            devcovenant_version = (
+                (repo_root / "devcovenant" / "VERSION")
+                .read_text(encoding="utf-8")
+                .strip()
+            )
+
+            rendered = managed_docs.render_doc(
+                repo_root,
+                "README.md",
+                project_version=project_version,
+                devcovenant_version=devcovenant_version,
+                project_governance_state=state,
+            )
+
+            self.assertTrue(rendered.startswith("# Example Product\n"))
+            self.assertIn(
+                "Example Product keeps repository governance explicit.",
+                rendered,
+            )
 
     def test_sync_doc_uses_custom_profile_descriptor(self) -> None:
         """Custom managed docs should preserve real body content on sync."""

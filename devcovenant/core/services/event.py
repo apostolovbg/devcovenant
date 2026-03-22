@@ -8,9 +8,8 @@ from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any, Iterable, Mapping, Sequence
 
-import yaml
-
 import devcovenant.core.services.profile_registry as profile_runtime
+from devcovenant.core.services import yaml_cache as yaml_cache_service
 
 EVENT_SCHEMA_VERSION = "1.0"
 _LAST_ADAPTER_LOAD_WARNINGS: list[str] = []
@@ -211,8 +210,7 @@ class TestEventManager:
 def _load_config(repo_root: Path) -> Mapping[str, Any]:
     """Load `devcovenant/config.yaml` contents."""
     config_path = repo_root / "devcovenant" / "config.yaml"
-    with config_path.open("rb") as handle:
-        payload = yaml.safe_load(handle)
+    payload = yaml_cache_service.load_yaml(config_path)
     if not isinstance(payload, dict):
         raise ValueError(f"Invalid config payload: {config_path}")
     return payload

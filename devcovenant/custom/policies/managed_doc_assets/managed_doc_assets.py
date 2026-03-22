@@ -143,7 +143,10 @@ class ManagedDocAssetsCheck(PolicyCheck):
 
         doc_id = str(descriptor.get("doc_id", "")).strip()
         doc_type = str(descriptor.get("doc_type", "")).strip()
-        title = str(descriptor.get("title", "")).strip()
+        title = project_governance_service.render_identity_placeholders(
+            str(descriptor.get("title", "")),
+            project_governance_state,
+        ).strip()
 
         if title and title != str(doc_info["title"]):
             violations.append(

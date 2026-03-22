@@ -1,5 +1,5 @@
 # Registry Files
-**Last Updated:** 2026-03-21
+**Last Updated:** 2026-03-22
 **Project Version:** 1.0.0
 
 ## Table of Contents
@@ -33,6 +33,11 @@ How to use the registry in practice:
   actually resolved from that configuration
 
 That makes the registry an explanation surface, not a normal editing surface.
+This is the primary home for registry meaning. Use
+`devcovenant/docs/refresh.md` for regeneration behavior and
+`devcovenant/docs/workflow.md` for gate/session order.
+It is also the normative home for the registry contract. Use
+`devcovenant/docs/contracts.md` for the contract index.
 
 ## Tracked Registry
 `devcovenant/registry/registry.yaml` is the only tracked registry artifact.
@@ -45,6 +50,9 @@ It includes:
 - descriptor/script paths and hashes
 - refresh-generated policy hashes and metadata snapshots that also move when
   shared runtime services change policy behavior
+- tracked policy hashes therefore also move when a policy script changes only
+  in its loading boundary or helper wiring, because the registry records the
+  current shipped policy code, not only user-visible policy prose
 - descriptor-driven managed-doc runtime changes that affect generated
   governance output, including authoritative-source coverage, after refresh
   regenerates the tracked registry
@@ -66,7 +74,8 @@ It includes:
   as `version-governance`, including the configured scheme and bump
   enforcement options that active profiles/config resolved
 - resolved `project-governance` lifecycle metadata, including stage,
-  development stance, versioning mode, optional codename/build identity,
+  development stance, versioning mode, public project identity
+  (`project_name`, `project_description`), optional codename/build identity,
   displayed project version, and active release headings
 
 Metadata trace intent:
@@ -98,6 +107,10 @@ Metadata trace intent:
   enabled managed docs, and per-doc body fingerprints; those fingerprints
   intentionally ignore generated headers so routine `Last Updated` changes do
   not look like template changes
+- runtime readers now reuse one shared YAML cache when they consult the
+  tracked registry during `check`, gate, refresh, install, deploy, and
+  undeploy, but the tracked registry file itself remains the same
+  deterministic refresh-owned source of truth
 - fresh installs therefore record an explicit unversioned baseline
   instead of relying on a fabricated placeholder version token
 - generic profile defaults now keep version-governance scheme selection
@@ -205,8 +218,12 @@ If drift persists:
 - verify refresh ran from repository root
 
 ## Workflow
+Use this document when the question is "what does this registry artifact
+mean?" or "which state is tracked versus runtime-local?".
+For the exact gate sequence, use `devcovenant/docs/workflow.md`.
+
+Registry-change loop:
 1. Change descriptor/profile/config inputs.
 2. Run refresh to regenerate tracked registry artifacts.
 3. Inspect `devcovenant/registry/runtime/` for live session state only.
-4. Run tests to update session evidence as needed.
-5. Run end gate to validate synchronized clean state.
+4. Run the normal gate workflow from `devcovenant/docs/workflow.md`.

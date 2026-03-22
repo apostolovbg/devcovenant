@@ -2,6 +2,8 @@ metadata:
   schema_version: 1
   registry_layout: single-root
 project-governance:
+  project_name: DevCovenant
+  project_description: DevCovenant is a Repository Governance Framework.
   project_version: 1.0.0
   stage: stable
   development_stance: active-development
@@ -105,7 +107,7 @@ managed-docs:
       project_governance_headers: false
       import_seed: true
       authoritative_source: true
-      body_fingerprint: 2e19986ce9aec9f8a94526e2d00b6b305da1c8c762b3e9c0343ca527f35035cf
+      body_fingerprint: 62bb747e2d9925b30a1d2faa1b6e007190d4d4a85313d845d6f894a3b73d56f7
       legacy_generic_body_fingerprints: []
     SPEC.md:
       enabled: true
@@ -1885,7 +1887,7 @@ policies:
     - licenses/THIRD_PARTY_LICENSES.md
     origin: builtin
     script_exists: true
-    hash: b0131a7a072add16fafab1d168bb076f98af3838f1ba11d20bdd5d5e248bc083
+    hash: bb258ca07e404989a4307ee1bf019c90257857d3c82c3d54d8c6ee34096b80d3
     script_path: builtin/dependency_license_sync.py
   devcov-integrity-guard:
     enabled: true
@@ -2336,7 +2338,7 @@ policies:
     assets: []
     origin: builtin
     script_exists: true
-    hash: 06ec7bd3696b9136860d74593ee28b25d7938df84fdb73e353df22581fe29bff
+    hash: d8dabf9e7218da3ab30995b3af6820798536b773ff38732208fd225a38912858
     script_path: builtin/devcov_structure_guard.py
   devflow-run-gates:
     enabled: true
@@ -2919,8 +2921,7 @@ policies:
       require_toc: 'true'
       min_section_count: '3'
       min_word_count: '120'
-      doc_routes: devcovenant/builtin/policies/ => devcovenant/docs/policies.md, devcovenant/builtin/policies/
-        => devcovenant/docs/architecture.md, devcovenant/builtin/profiles/*/*.yaml
+      doc_routes: devcovenant/builtin/policies/ => devcovenant/docs/policies.md, devcovenant/builtin/profiles/*/*.yaml
         => devcovenant/docs/profiles.md, devcovenant/*/profiles/*/*translator.py=>
         devcovenant/docs/translators.md, devcovenant/builtin/profiles/**/config.yaml
         => devcovenant/docs/config.md, devcovenant/*/profiles/*/assets/*.yaml=> devcovenant/docs/profiles.md,
@@ -2931,12 +2932,10 @@ policies:
         => devcovenant/docs/profiles.md, devcovenant/custom/profiles/**/*.yaml =>
         devcovenant/docs/profiles.md, devcovenant/custom/policies/**/*.yaml => devcovenant/docs/policies.md,
         devcovenant/custom/policies/**/*.py => devcovenant/docs/policies.md, devcovenant/core/flow/*.py
-        => devcovenant/docs/workflow.md, devcovenant/core/flow/*.py => devcovenant/docs/architecture.md,
-        devcovenant/core/runtime/*.py => devcovenant/docs/workflow.md, devcovenant/core/runtime/*.py
-        => devcovenant/docs/architecture.md, devcovenant/core/services/*.py => devcovenant/docs/architecture.md,
-        devcovenant/core/lib/*.py => devcovenant/docs/architecture.md, devcovenant/core/contracts/*.py
-        => devcovenant/docs/architecture.md, devcovenant/*.py => devcovenant/docs/installation.md,
-        devcovenant/*.py => devcovenant/docs/workflow.md, pyproject.toml => devcovenant/docs/installation.md,
+        => devcovenant/docs/workflow.md, devcovenant/core/runtime/*.py => devcovenant/docs/workflow.md,
+        devcovenant/core/services/*.py => devcovenant/docs/architecture.md, devcovenant/core/lib/*.py
+        => devcovenant/docs/architecture.md, devcovenant/core/contracts/*.py => devcovenant/docs/architecture.md,
+        devcovenant/*.py => devcovenant/docs/installation.md, pyproject.toml => devcovenant/docs/installation.md,
         MANIFEST.in => devcovenant/docs/installation.md, devcovenant/config.yaml =>
         devcovenant/docs/config.md, devcovenant/registry/registry.yaml => devcovenant/docs/registry.md,
         .github/workflows/*.yml => devcovenant/docs/workflow.md
@@ -3423,7 +3422,6 @@ policies:
         profile_overlays:
           values:
           - devcovenant/builtin/policies/ => devcovenant/docs/policies.md
-          - devcovenant/builtin/policies/ => devcovenant/docs/architecture.md
           - devcovenant/builtin/profiles/*/*.yaml => devcovenant/docs/profiles.md
           - devcovenant/*/profiles/*/*translator.py=> devcovenant/docs/translators.md
           - devcovenant/builtin/profiles/**/config.yaml => devcovenant/docs/config.md
@@ -3438,14 +3436,11 @@ policies:
           - devcovenant/custom/policies/**/*.yaml => devcovenant/docs/policies.md
           - devcovenant/custom/policies/**/*.py => devcovenant/docs/policies.md
           - devcovenant/core/flow/*.py => devcovenant/docs/workflow.md
-          - devcovenant/core/flow/*.py => devcovenant/docs/architecture.md
           - devcovenant/core/runtime/*.py => devcovenant/docs/workflow.md
-          - devcovenant/core/runtime/*.py => devcovenant/docs/architecture.md
           - devcovenant/core/services/*.py => devcovenant/docs/architecture.md
           - devcovenant/core/lib/*.py => devcovenant/docs/architecture.md
           - devcovenant/core/contracts/*.py => devcovenant/docs/architecture.md
           - devcovenant/*.py => devcovenant/docs/installation.md
-          - devcovenant/*.py => devcovenant/docs/workflow.md
           - pyproject.toml => devcovenant/docs/installation.md
           - MANIFEST.in => devcovenant/docs/installation.md
           - devcovenant/config.yaml => devcovenant/docs/config.md
@@ -3455,7 +3450,6 @@ policies:
         autogen_overlays:
           values:
           - devcovenant/builtin/policies/ => devcovenant/docs/policies.md
-          - devcovenant/builtin/policies/ => devcovenant/docs/architecture.md
           - devcovenant/builtin/profiles/*/*.yaml => devcovenant/docs/profiles.md
           - devcovenant/*/profiles/*/*translator.py=> devcovenant/docs/translators.md
           - devcovenant/builtin/profiles/**/config.yaml => devcovenant/docs/config.md
@@ -3470,14 +3464,11 @@ policies:
           - devcovenant/custom/policies/**/*.yaml => devcovenant/docs/policies.md
           - devcovenant/custom/policies/**/*.py => devcovenant/docs/policies.md
           - devcovenant/core/flow/*.py => devcovenant/docs/workflow.md
-          - devcovenant/core/flow/*.py => devcovenant/docs/architecture.md
           - devcovenant/core/runtime/*.py => devcovenant/docs/workflow.md
-          - devcovenant/core/runtime/*.py => devcovenant/docs/architecture.md
           - devcovenant/core/services/*.py => devcovenant/docs/architecture.md
           - devcovenant/core/lib/*.py => devcovenant/docs/architecture.md
           - devcovenant/core/contracts/*.py => devcovenant/docs/architecture.md
           - devcovenant/*.py => devcovenant/docs/installation.md
-          - devcovenant/*.py => devcovenant/docs/workflow.md
           - pyproject.toml => devcovenant/docs/installation.md
           - MANIFEST.in => devcovenant/docs/installation.md
           - devcovenant/config.yaml => devcovenant/docs/config.md
@@ -3487,7 +3478,6 @@ policies:
         effective:
           values:
           - devcovenant/builtin/policies/ => devcovenant/docs/policies.md
-          - devcovenant/builtin/policies/ => devcovenant/docs/architecture.md
           - devcovenant/builtin/profiles/*/*.yaml => devcovenant/docs/profiles.md
           - devcovenant/*/profiles/*/*translator.py=> devcovenant/docs/translators.md
           - devcovenant/builtin/profiles/**/config.yaml => devcovenant/docs/config.md
@@ -3502,14 +3492,11 @@ policies:
           - devcovenant/custom/policies/**/*.yaml => devcovenant/docs/policies.md
           - devcovenant/custom/policies/**/*.py => devcovenant/docs/policies.md
           - devcovenant/core/flow/*.py => devcovenant/docs/workflow.md
-          - devcovenant/core/flow/*.py => devcovenant/docs/architecture.md
           - devcovenant/core/runtime/*.py => devcovenant/docs/workflow.md
-          - devcovenant/core/runtime/*.py => devcovenant/docs/architecture.md
           - devcovenant/core/services/*.py => devcovenant/docs/architecture.md
           - devcovenant/core/lib/*.py => devcovenant/docs/architecture.md
           - devcovenant/core/contracts/*.py => devcovenant/docs/architecture.md
           - devcovenant/*.py => devcovenant/docs/installation.md
-          - devcovenant/*.py => devcovenant/docs/workflow.md
           - pyproject.toml => devcovenant/docs/installation.md
           - MANIFEST.in => devcovenant/docs/installation.md
           - devcovenant/config.yaml => devcovenant/docs/config.md
@@ -3944,7 +3931,6 @@ policies:
       min_word_count: 120
       doc_routes: &id027
       - devcovenant/builtin/policies/ => devcovenant/docs/policies.md
-      - devcovenant/builtin/policies/ => devcovenant/docs/architecture.md
       - devcovenant/builtin/profiles/*/*.yaml => devcovenant/docs/profiles.md
       - devcovenant/*/profiles/*/*translator.py=> devcovenant/docs/translators.md
       - devcovenant/builtin/profiles/**/config.yaml => devcovenant/docs/config.md
@@ -3959,14 +3945,11 @@ policies:
       - devcovenant/custom/policies/**/*.yaml => devcovenant/docs/policies.md
       - devcovenant/custom/policies/**/*.py => devcovenant/docs/policies.md
       - devcovenant/core/flow/*.py => devcovenant/docs/workflow.md
-      - devcovenant/core/flow/*.py => devcovenant/docs/architecture.md
       - devcovenant/core/runtime/*.py => devcovenant/docs/workflow.md
-      - devcovenant/core/runtime/*.py => devcovenant/docs/architecture.md
       - devcovenant/core/services/*.py => devcovenant/docs/architecture.md
       - devcovenant/core/lib/*.py => devcovenant/docs/architecture.md
       - devcovenant/core/contracts/*.py => devcovenant/docs/architecture.md
       - devcovenant/*.py => devcovenant/docs/installation.md
-      - devcovenant/*.py => devcovenant/docs/workflow.md
       - pyproject.toml => devcovenant/docs/installation.md
       - MANIFEST.in => devcovenant/docs/installation.md
       - devcovenant/config.yaml => devcovenant/docs/config.md
@@ -4097,7 +4080,6 @@ policies:
     - __pycache__/**
     - build/**
     - devcovenant/*.py => devcovenant/docs/installation.md
-    - devcovenant/*.py => devcovenant/docs/workflow.md
     - devcovenant/*/profiles/**/assets/**/*.yaml=> devcovenant/docs/profiles.md
     - devcovenant/*/profiles/**/assets/**/*.yml=> devcovenant/docs/profiles.md
     - devcovenant/*/profiles/*/*translator.py=> devcovenant/docs/translators.md
@@ -4105,7 +4087,6 @@ policies:
     - devcovenant/*/profiles/*/assets/*.yml=> devcovenant/docs/profiles.md
     - devcovenant/README.md
     - devcovenant/__main__.py
-    - devcovenant/builtin/policies/ => devcovenant/docs/architecture.md
     - devcovenant/builtin/policies/ => devcovenant/docs/policies.md
     - devcovenant/builtin/profiles/**/config.yaml => devcovenant/docs/config.md
     - devcovenant/builtin/profiles/*/*.yaml => devcovenant/docs/profiles.md
@@ -4114,10 +4095,8 @@ policies:
     - devcovenant/config.yaml => devcovenant/docs/config.md
     - devcovenant/core/*.py
     - devcovenant/core/contracts/*.py => devcovenant/docs/architecture.md
-    - devcovenant/core/flow/*.py => devcovenant/docs/architecture.md
     - devcovenant/core/flow/*.py => devcovenant/docs/workflow.md
     - devcovenant/core/lib/*.py => devcovenant/docs/architecture.md
-    - devcovenant/core/runtime/*.py => devcovenant/docs/architecture.md
     - devcovenant/core/runtime/*.py => devcovenant/docs/workflow.md
     - devcovenant/core/services/*.py => devcovenant/docs/architecture.md
     - devcovenant/custom/policies/**/*.py => devcovenant/docs/policies.md
@@ -4616,9 +4595,9 @@ policies:
       exclude_globs: .vscode/**, .idea/**, .venv/**, .python/**, build/**, dist/**,
         __pycache__/**, *.egg-info/**, pip-wheel-metadata/**, .pytest_cache/**, .ruff_cache/**,
         .mypy_cache/**, .tox/**, .nox/**, .hypothesis/**, .coverage, .coverage.*,
-        htmlcov/**, devcovenant/logs/**, devcovenant/registry/runtime/**, node_modules/**,
-        **/*.egg-info/**, devcovenant/builtin/profiles/global/assets/*.yaml, devcovenant/builtin/profiles/global/assets/**/*.yaml,
-        devcovenant/registry/**
+        htmlcov/**, licenses/*.txt, devcovenant/logs/**, devcovenant/registry/runtime/**,
+        node_modules/**, **/*.egg-info/**, devcovenant/builtin/profiles/global/assets/*.yaml,
+        devcovenant/builtin/profiles/global/assets/**/*.yaml, devcovenant/registry/**
       include_prefixes: ''
       include_globs: '*.py, *.md, *.rst, *.txt, *.yml, *.yaml, *.json, *.toml, *.cff'
       exclude_suffixes: ''
@@ -4891,6 +4870,7 @@ policies:
           - .coverage
           - .coverage.*
           - htmlcov/**
+          - licenses/*.txt
           - devcovenant/logs/**
           - devcovenant/registry/runtime/**
           behavior: base
@@ -4943,6 +4923,7 @@ policies:
           - .coverage
           - .coverage.*
           - htmlcov/**
+          - licenses/*.txt
           - devcovenant/logs/**
           - devcovenant/registry/runtime/**
           - node_modules/**
@@ -5189,6 +5170,7 @@ policies:
       - .coverage
       - .coverage.*
       - htmlcov/**
+      - licenses/*.txt
       - devcovenant/logs/**
       - devcovenant/registry/runtime/**
       - node_modules/**
@@ -5303,6 +5285,7 @@ policies:
     - http://
     - https:/**
     - https://
+    - licenses/*.txt
     - magnet:/**
     - mailto:/**
     - node_modules/**
@@ -5419,7 +5402,7 @@ policies:
     assets: []
     origin: custom
     script_exists: true
-    hash: 7ed645fe04b748d99e3cecab128fd4cd1606ebc12a0451e1db95dc2e7cc8924a
+    hash: eb0ef2058e5fa719d654978b770fd695a4c01e8183bd5361954af4e8f2a1b333
     script_path: custom/managed_doc_assets.py
   managed-environment:
     enabled: true
@@ -11657,7 +11640,6 @@ profiles:
         - devcovenant/custom/policies/**/fixers/**
         doc_routes:
         - devcovenant/builtin/policies/ => devcovenant/docs/policies.md
-        - devcovenant/builtin/policies/ => devcovenant/docs/architecture.md
         - devcovenant/builtin/profiles/*/*.yaml => devcovenant/docs/profiles.md
         - devcovenant/*/profiles/*/*translator.py=> devcovenant/docs/translators.md
         - devcovenant/builtin/profiles/**/config.yaml => devcovenant/docs/config.md
@@ -11672,14 +11654,11 @@ profiles:
         - devcovenant/custom/policies/**/*.yaml => devcovenant/docs/policies.md
         - devcovenant/custom/policies/**/*.py => devcovenant/docs/policies.md
         - devcovenant/core/flow/*.py => devcovenant/docs/workflow.md
-        - devcovenant/core/flow/*.py => devcovenant/docs/architecture.md
         - devcovenant/core/runtime/*.py => devcovenant/docs/workflow.md
-        - devcovenant/core/runtime/*.py => devcovenant/docs/architecture.md
         - devcovenant/core/services/*.py => devcovenant/docs/architecture.md
         - devcovenant/core/lib/*.py => devcovenant/docs/architecture.md
         - devcovenant/core/contracts/*.py => devcovenant/docs/architecture.md
         - devcovenant/*.py => devcovenant/docs/installation.md
-        - devcovenant/*.py => devcovenant/docs/workflow.md
         - pyproject.toml => devcovenant/docs/installation.md
         - MANIFEST.in => devcovenant/docs/installation.md
         - devcovenant/config.yaml => devcovenant/docs/config.md

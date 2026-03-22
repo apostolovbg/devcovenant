@@ -8,6 +8,8 @@ from typing import Any, Iterable, Mapping
 
 import yaml
 
+from devcovenant.core.services import yaml_cache as yaml_cache_service
+
 _DEFAULT_STAGES = (
     "prototype",
     "alpha",
@@ -29,6 +31,11 @@ _ALLOWED_VERSIONING_MODES = {"versioned", "unversioned"}
 _DEFAULT_UNVERSIONED_LABEL = "Unversioned"
 _DEFAULT_UNRELEASED_HEADING = "## Unreleased"
 _DEFAULT_CHANGELOG_FILE = "CHANGELOG.md"
+_DEFAULT_PROJECT_NAME = "Project Name"
+_DEFAULT_PROJECT_DESCRIPTION = (
+    "Describe the project this repository ships: what it does, who it "
+    "helps, and what problem it solves."
+)
 _LOG_MARKER = "## Log changes here"
 _MANAGED_BEGIN = "<!-- DEVCOV:BEGIN -->"
 _MANAGED_END = "<!-- DEVCOV:END -->"
@@ -39,6 +46,8 @@ class ProjectGovernanceState:
     """Resolved project-governance state for one repository runtime."""
 
     enabled: bool = True
+    project_name: str = _DEFAULT_PROJECT_NAME
+    project_description: str = _DEFAULT_PROJECT_DESCRIPTION
     stage: str = ""
     development_stance: str = ""
     versioning_mode: str = "versioned"
@@ -104,6 +113,8 @@ class ProjectGovernanceState:
     def registry_payload(self, declared_version: str) -> dict[str, object]:
         """Return a deterministic registry mapping for project governance."""
         payload: dict[str, object] = {
+            "project_name": self.project_name,
+            "project_description": self.project_description,
             "project_version": self.displayed_project_version(
                 declared_version
             ),
@@ -141,6 +152,13 @@ def resolve_runtime_state(
             "`devcovenant/config.yaml`."
         )
 
+    project_name = (
+        _string_option(raw_block, "project_name") or _DEFAULT_PROJECT_NAME
+    )
+    project_description = (
+        _string_option(raw_block, "project_description")
+        or _DEFAULT_PROJECT_DESCRIPTION
+    )
     stage = _required_string(raw_block, "stage")
     development_stance = _required_string(raw_block, "development_stance")
     versioning_mode = _required_string(raw_block, "versioning_mode").lower()
@@ -180,6 +198,8 @@ def resolve_runtime_state(
         _string_option(raw_block, "changelog_file") or _DEFAULT_CHANGELOG_FILE
     )
     return ProjectGovernanceState(
+        project_name=project_name,
+        project_description=project_description,
         stage=stage,
         development_stance=development_stance,
         versioning_mode=versioning_mode,
@@ -196,6 +216,18 @@ def resolve_runtime_state(
         changelog_file=changelog_file,
         allowed_stages=allowed_stages,
         allowed_development_stances=allowed_development_stances,
+    )
+
+
+def render_identity_placeholders(
+    text: str,
+    state: ProjectGovernanceState,
+) -> str:
+    """Render project-identity placeholders from governance state."""
+    rendered = str(text or "")
+    return rendered.replace("{{ PROJECT_NAME }}", state.project_name).replace(
+        "{{ PROJECT_DESCRIPTION }}",
+        state.project_description,
     )
 
 
@@ -264,7 +296,7 @@ def _load_runtime_config(
     if not config_path.exists():
         return {}
     try:
-        payload = yaml.safe_load(config_path.read_text(encoding="utf-8"))
+        payload = yaml_cache_service.load_yaml(config_path)
     except (OSError, yaml.YAMLError) as exc:
         raise ValueError(f"Unable to load runtime config: {exc}") from exc
     if isinstance(payload, dict):

@@ -1,8 +1,17 @@
 """DevCovenant policy: Keep dependency listings and license docs in sync."""
 
 import fnmatch
+import importlib.metadata as importlib_metadata
+import re
 from pathlib import Path
 from typing import Iterable, List
+
+try:  # pragma: no cover - Python 3.11+ path in managed env.
+    import tomllib
+except ModuleNotFoundError:  # pragma: no cover - Python 3.10 fallback path.
+    tomllib = None
+
+from packaging.requirements import Requirement
 
 from devcovenant.core.contracts.policy import (
     CheckContext,
@@ -11,12 +20,26 @@ from devcovenant.core.contracts.policy import (
 )
 
 LICENSES_README_NAME = "README.md"
+LICENSE_INVENTORY_HEADING = "## Dependency License Inventory"
 CANONICAL_DEPENDENCY_ROLES = (
     "intent",
     "resolved",
     "package_manifest",
 )
 RUNTIME_ACTION_REFRESH_LOCKS = "refresh-locks-and-licenses"
+_PROJECT_DEPENDENCIES_RE = re.compile(
+    r"^\s*dependencies\s*=\s*\[(?P<rest>.*)$"
+)
+_PYTHON_LOCK_PIN_RE = re.compile(
+    r"^(?P<name>[A-Za-z0-9_.-]+)==(?P<version>[^\s;\\]+)"
+)
+_DEPENDENCY_INVENTORY_RE = re.compile(
+    r"^-\s+`(?P<name>[^`]+)`:\s+`(?P<path>[^`]+)`\s*$"
+)
+_LICENSE_NAME_RE = re.compile(
+    r"^(license|licence|copying|notice)([.-]|$)",
+    re.IGNORECASE,
+)
 
 
 def _normalize_list(value: object) -> list[str]:
@@ -256,24 +279,29 @@ def _render_licenses_readme(third_party_file: str) -> str:
         "- [Update Checklist](#update-checklist)",
         "",
         "## Overview",
-        "This directory stores third-party license texts and generated",
-        "compliance notes for repository dependency manifests. Keep these",
-        "files synchronized whenever dependency declarations or lock files",
-        "change. The goal is to preserve a clear audit trail that maps",
-        "dependency inputs to local license artifacts without requiring",
-        "manual reconstruction during release reviews or legal checks.",
+        "This directory stores generated third-party license texts and",
+        "generated compliance notes for direct repository dependencies.",
+        "Keep these files synchronized whenever dependency declarations or",
+        "resolved lock versions change. The goal is to preserve a clear audit",
+        "trail that maps declared direct dependencies to local license",
+        "artifacts without requiring manual reconstruction during release",
+        "reviews or legal checks.",
         "",
         "## Workflow",
         f"- Keep `{third_party_file}` synchronized with dependency",
         "  manifest updates.",
-        "- Add, remove, or refresh license files in this directory when",
-        "  dependency versions change.",
+        "- Add, remove, or refresh generated license files in this directory",
+        "  when dependency versions change.",
         "- Record each changed dependency manifest in the report section so",
         "  coverage checks can verify synchronization.",
+        "- Keep the dependency inventory aligned with the actual generated",
+        "  license files.",
         "",
         "## Update Checklist",
-        "- Verify each dependency entry points to a current license file.",
-        "- Replace placeholders with upstream license texts before release.",
+        "- Verify each direct dependency entry points to a current license",
+        "  file.",
+        "- Verify generated license files reflect the currently installed",
+        "  upstream distribution notices.",
         "- Re-run DevCovenant checks and commit both report and license",
         "  artifact updates together.",
         "",
@@ -309,6 +337,11 @@ def _extract_license_report(text: str, heading: str) -> str:
     return "\n".join(section_lines)
 
 
+def _extract_section(text: str, heading: str) -> str:
+    """Extract the text inside one markdown section by heading label."""
+    return _extract_license_report(text, heading)
+
+
 def _contains_reference(section: str, needle: str) -> bool:
     """Case-insensitive search inside the license report."""
     return needle.lower() in section.lower()
@@ -335,6 +368,264 @@ def _render_report_section(
     for dep_file in _normalize_report_entries(changed_dependency_files):
         lines.append(f"- `{dep_file}`")
     return "\n".join(lines)
+
+
+def _normalize_distribution_name(name: str) -> str:
+    """Return the PEP 503-normalized form of a distribution name."""
+    return re.sub(r"[-_.]+", "-", str(name or "").strip()).lower()
+
+
+def _parse_requirement_strings(requirement_lines: Iterable[str]) -> list[str]:
+    """Extract dependency names from requirement-style strings."""
+    names: list[str] = []
+    for raw_line in requirement_lines:
+        stripped = str(raw_line).split("#", 1)[0].strip()
+        if not stripped or stripped.startswith("-"):
+            continue
+        requirement = Requirement(stripped)
+        names.append(requirement.name)
+    return names
+
+
+def _parse_requirements_in(path: Path) -> list[str]:
+    """Return direct dependency names declared in requirements.in."""
+    if not path.exists():
+        return []
+    return _parse_requirement_strings(
+        path.read_text(encoding="utf-8").splitlines()
+    )
+
+
+def _fallback_project_dependency_strings(path: Path) -> list[str]:
+    """Best-effort fallback for `[project].dependencies` on Python 3.10."""
+    strings: list[str] = []
+    in_project = False
+    collecting = False
+    for raw_line in path.read_text(encoding="utf-8").splitlines():
+        stripped = raw_line.strip()
+        if stripped.startswith("[") and stripped.endswith("]"):
+            in_project = stripped == "[project]"
+            if not in_project:
+                collecting = False
+            continue
+        if not in_project:
+            continue
+        line_to_scan = ""
+        if not collecting:
+            match = _PROJECT_DEPENDENCIES_RE.match(stripped)
+            if match is None:
+                continue
+            collecting = True
+            line_to_scan = str(match.group("rest") or "")
+        else:
+            line_to_scan = stripped
+        for quote in ('"', "'"):
+            needle = re.compile(rf"{quote}([^\"']+){quote}")
+            for match in needle.finditer(line_to_scan):
+                strings.append(str(match.group(1)))
+        if "]" in line_to_scan:
+            collecting = False
+    return strings
+
+
+def _parse_pyproject_dependencies(path: Path) -> list[str]:
+    """Return direct dependency names declared in pyproject metadata."""
+    if not path.exists():
+        return []
+    dependency_strings: list[str] = []
+    if tomllib is not None:
+        payload = tomllib.loads(path.read_text(encoding="utf-8"))
+        project_block = payload.get("project", {})
+        raw_dependencies = project_block.get("dependencies", [])
+        if isinstance(raw_dependencies, list):
+            dependency_strings = [str(entry) for entry in raw_dependencies]
+    if not dependency_strings:
+        dependency_strings = _fallback_project_dependency_strings(path)
+    return _parse_requirement_strings(dependency_strings)
+
+
+def _direct_dependency_display_names(repo_root: Path) -> dict[str, str]:
+    """Return normalized direct dependency names mapped to display casing."""
+    display_names: dict[str, str] = {}
+    candidates = []
+    candidates.extend(_parse_requirements_in(repo_root / "requirements.in"))
+    candidates.extend(
+        _parse_pyproject_dependencies(repo_root / "pyproject.toml")
+    )
+    for name in candidates:
+        normalized = _normalize_distribution_name(name)
+        if normalized and normalized not in display_names:
+            display_names[normalized] = name
+    return display_names
+
+
+def _resolved_python_lock_versions(
+    repo_root: Path,
+) -> dict[str, tuple[str, str]]:
+    """Return normalized lockfile names mapped to display name/version."""
+    lock_path = repo_root / "requirements.lock"
+    if not lock_path.exists():
+        return {}
+    resolved: dict[str, tuple[str, str]] = {}
+    for raw_line in lock_path.read_text(encoding="utf-8").splitlines():
+        stripped = raw_line.strip()
+        if not stripped or raw_line[:1].isspace() or stripped.startswith("#"):
+            continue
+        match = _PYTHON_LOCK_PIN_RE.match(stripped)
+        if match is None:
+            continue
+        display_name = str(match.group("name"))
+        version = str(match.group("version"))
+        normalized = _normalize_distribution_name(display_name)
+        resolved[normalized] = (display_name, version)
+    return resolved
+
+
+def _find_distribution(name: str):
+    """Load installed distribution metadata for one dependency name."""
+    candidates = [name]
+    normalized = _normalize_distribution_name(name)
+    if normalized not in candidates:
+        candidates.append(normalized)
+    for candidate in candidates:
+        try:
+            return importlib_metadata.distribution(candidate)
+        except importlib_metadata.PackageNotFoundError:
+            continue
+    raise importlib_metadata.PackageNotFoundError(name)
+
+
+def _distribution_license_sources(dist) -> list[tuple[str, str]]:
+    """Return bundled upstream license texts for one installed distribution."""
+    files = dist.files or []
+    collected: list[tuple[str, str]] = []
+    for entry in sorted(files, key=lambda item: str(item).lower()):
+        entry_text = str(entry)
+        if (
+            ".dist-info/" not in entry_text
+            and ".dist-info\\" not in entry_text
+        ):
+            continue
+        name = Path(entry_text).name
+        if not _LICENSE_NAME_RE.match(name):
+            continue
+        located = Path(dist.locate_file(entry))
+        if not located.exists() or not located.is_file():
+            continue
+        collected.append((name, located.read_text(encoding="utf-8")))
+    if not collected:
+        package_name = dist.metadata.get(
+            "Name", dist.metadata.get("Summary", "")
+        )
+        raise RuntimeError(
+            "No upstream license files were found in the installed "
+            f"distribution metadata for `{package_name or dist}`."
+        )
+    return collected
+
+
+def _render_dependency_license_text(
+    *,
+    package_name: str,
+    version: str,
+    sources: list[tuple[str, str]],
+) -> str:
+    """Render one local aggregate license text for a direct dependency."""
+    lines = [
+        f"# {package_name} {version}",
+        "",
+        "This file aggregates the upstream license texts bundled with the",
+        f"installed distribution for `{package_name}=={version}`.",
+        "",
+        "Included upstream files:",
+    ]
+    for source_name, _ in sources:
+        lines.append(f"- {source_name}")
+    for source_name, source_text in sources:
+        lines.extend(
+            [
+                "",
+                f"===== {source_name} =====",
+                "",
+                source_text.rstrip(),
+            ]
+        )
+    return "\n".join(lines).rstrip() + "\n"
+
+
+def _inventory_entry_path(
+    licenses_dir_path: Path,
+    *,
+    package_name: str,
+    version: str,
+) -> Path:
+    """Return the managed local license-text path for one dependency."""
+    return licenses_dir_path / f"{package_name}-{version}.txt"
+
+
+def _build_dependency_inventory(
+    repo_root: Path,
+    *,
+    licenses_dir_path: Path,
+) -> list[dict[str, str]]:
+    """Resolve direct dependency inventory with generated license targets."""
+    direct_display_names = _direct_dependency_display_names(repo_root)
+    if not direct_display_names:
+        return []
+    resolved_versions = _resolved_python_lock_versions(repo_root)
+    inventory: list[dict[str, str]] = []
+    for normalized_name in sorted(direct_display_names):
+        if normalized_name not in resolved_versions:
+            continue
+        _, version = resolved_versions[normalized_name]
+        display_name = direct_display_names[normalized_name]
+        try:
+            _find_distribution(display_name)
+        except importlib_metadata.PackageNotFoundError:
+            continue
+        inventory.append(
+            {
+                "normalized_name": normalized_name,
+                "package_name": display_name,
+                "version": version,
+                "relative_path": _inventory_entry_path(
+                    licenses_dir_path,
+                    package_name=display_name,
+                    version=version,
+                ).name,
+            }
+        )
+    return inventory
+
+
+def _render_inventory_section(
+    *,
+    licenses_dir: str,
+    inventory: list[dict[str, str]],
+) -> str:
+    """Render deterministic dependency inventory section content."""
+    lines = [LICENSE_INVENTORY_HEADING]
+    for entry in inventory:
+        relative_path = _normalized_rel(
+            str(Path(licenses_dir) / str(entry["relative_path"]))
+        )
+        lines.append(
+            f"- `{entry['package_name']}=={entry['version']}`: "
+            f"`{relative_path}`"
+        )
+    return "\n".join(lines)
+
+
+def _inventory_paths_from_report(text: str) -> set[str]:
+    """Return repo-relative license artifact paths listed in the inventory."""
+    section = _extract_section(text, LICENSE_INVENTORY_HEADING)
+    paths: set[str] = set()
+    for line in section.splitlines():
+        match = _DEPENDENCY_INVENTORY_RE.match(line.strip())
+        if match is None:
+            continue
+        paths.add(_normalized_rel(str(match.group("path"))))
+    return paths
 
 
 def _replace_report_section(
@@ -364,8 +655,54 @@ def _replace_report_section(
             break
 
     replacement_lines = replacement.splitlines()
+    if end < len(lines) and replacement_lines:
+        if replacement_lines[-1].strip():
+            replacement_lines.append("")
     updated_lines = lines[:start] + replacement_lines + lines[end:]
     return "\n".join(updated_lines).rstrip() + "\n"
+
+
+def _sync_dependency_license_files(
+    *,
+    repo_root: Path,
+    licenses_dir_path: Path,
+    licenses_dir: str,
+    inventory: list[dict[str, str]],
+    existing_inventory_paths: set[str],
+) -> list[Path]:
+    """Materialize current dependency license texts and prune stale ones."""
+    modified: list[Path] = []
+    desired_inventory_paths = {
+        _normalized_rel(str(Path(licenses_dir) / entry["relative_path"]))
+        for entry in inventory
+    }
+    for entry in inventory:
+        package_name = str(entry["package_name"])
+        version = str(entry["version"])
+        target_path = licenses_dir_path / str(entry["relative_path"])
+        dist = _find_distribution(package_name)
+        sources = _distribution_license_sources(dist)
+        rendered = _render_dependency_license_text(
+            package_name=package_name,
+            version=version,
+            sources=sources,
+        )
+        if not target_path.exists() or (
+            target_path.read_text(encoding="utf-8") != rendered
+        ):
+            target_path.parent.mkdir(parents=True, exist_ok=True)
+            target_path.write_text(rendered, encoding="utf-8")
+            modified.append(target_path)
+
+    stale_inventory_paths = sorted(
+        existing_inventory_paths - desired_inventory_paths
+    )
+    for relative_path in stale_inventory_paths:
+        stale_path = repo_root / relative_path
+        if stale_path.exists() and stale_path.is_file():
+            stale_path.unlink()
+            modified.append(stale_path)
+    return modified
 
 
 def _ensure_licenses_readme(
@@ -409,18 +746,44 @@ def refresh_license_artifacts(
     else:
         existing = "# Third-Party Licenses\n"
 
-    report_section = _render_report_section(
-        report_heading, changed_dependency_files
+    inventory = _build_dependency_inventory(
+        repo_root,
+        licenses_dir_path=licenses_dir_path,
+    )
+    updated_report = existing
+    if _normalize_report_entries(changed_dependency_files):
+        report_section = _render_report_section(
+            report_heading, changed_dependency_files
+        )
+        updated_report = _replace_report_section(
+            updated_report,
+            heading=report_heading,
+            replacement=report_section,
+        )
+    existing_inventory_paths = _inventory_paths_from_report(updated_report)
+    inventory_section = _render_inventory_section(
+        licenses_dir=licenses_dir,
+        inventory=inventory,
     )
     updated_report = _replace_report_section(
-        existing,
-        heading=report_heading,
-        replacement=report_section,
+        updated_report,
+        heading=LICENSE_INVENTORY_HEADING,
+        replacement=inventory_section,
     )
     if updated_report != existing:
         third_party_path.parent.mkdir(parents=True, exist_ok=True)
         third_party_path.write_text(updated_report, encoding="utf-8")
         modified.append(third_party_path)
+
+    modified.extend(
+        _sync_dependency_license_files(
+            repo_root=repo_root,
+            licenses_dir_path=licenses_dir_path,
+            licenses_dir=licenses_dir,
+            inventory=inventory,
+            existing_inventory_paths=existing_inventory_paths,
+        )
+    )
 
     readme_path = _ensure_licenses_readme(
         licenses_dir_path=licenses_dir_path,

@@ -12,6 +12,7 @@ import devcovenant.core.services.registry as registry_runtime_module
 from devcovenant.core.services import (
     project_governance as project_governance_service,
 )
+from devcovenant.core.services import yaml_cache as yaml_cache_service
 
 _DATE_ENTRY_PATTERN = re.compile(r"^\s*-\s*\d{4}-\d{2}-\d{2}\b")
 _MANAGED_BEGIN = "<!-- DEVCOV:BEGIN -->"
@@ -112,7 +113,7 @@ def _load_changelog_metadata(repo_root: Path) -> dict[str, object]:
             "Run `devcovenant refresh`."
         )
     try:
-        payload = yaml.safe_load(registry_path.read_text(encoding="utf-8"))
+        payload = yaml_cache_service.load_yaml(registry_path)
     except yaml.YAMLError as exc:
         raise ValueError(
             f"Invalid YAML in policy registry {registry_path}: {exc}"

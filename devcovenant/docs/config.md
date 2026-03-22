@@ -1,5 +1,5 @@
 # Configuration
-**Last Updated:** 2026-03-21
+**Last Updated:** 2026-03-22
 **Project Version:** 1.0.0
 
 ## Table of Contents
@@ -33,6 +33,13 @@ The template source
 inline comments and should be treated as part of the configuration contract.
 For the dedicated lifecycle-metadata contract, see
 `devcovenant/docs/project_governance.md`.
+This is the primary home for config ownership, review, and runtime control
+surface details. Use `devcovenant/docs/installation.md` for lifecycle order,
+`devcovenant/docs/policies.md` for policy behavior, and
+`devcovenant/docs/profiles.md` for profile-supplied metadata.
+It is also the normative home for the public `devcovenant/config.yaml`
+contract. Use `devcovenant/docs/contracts.md` for the contract index and use
+this document for the exact stable public config surface.
 
 Practical mental model:
 - `install` gives you this file plus the DevCovenant runtime
@@ -113,7 +120,8 @@ the same session so generated configs remain self-explanatory.
 - `doc_assets`: managed-doc selection for builtin docs, optional custom docs,
   and per-repo exclusions.
 
-- `project-governance`: first-class repo lifecycle metadata for stage,
+- `project-governance`: first-class repo lifecycle metadata for public
+  project identity (`project_name`, `project_description`), stage,
   development stance, versioning mode, optional codename/build identity,
   displayed unversioned label, and unreleased changelog heading.
 
@@ -350,10 +358,15 @@ Notable activation defaults in this repository:
   policies.
 
 ## Workflow
+Use this document when the question is "what does this key mean?" or
+"who owns this section?".
+For the exact gate sequence, use `devcovenant/docs/workflow.md`.
+
+Normal config-change loop:
 1. Update user-owned config keys for desired behavior.
 2. Run `devcovenant refresh`.
 3. Inspect generated sections and AGENTS policy block output.
-4. Run `devcovenant test`.
+4. Run the normal gate workflow from `devcovenant/docs/workflow.md`.
 
 Autofix workflow note:
 - `devcovenant check` is always read-only audit mode.
@@ -509,6 +522,8 @@ active repo-level `version-governance` scheme.
 Configure orthogonal project governance for a versioned repository:
 ```yaml
 project-governance:
+  project_name: DevCovenant
+  project_description: DevCovenant is a Repository Governance Framework.
   stage: stable
   development_stance: active-development
   versioning_mode: versioned
@@ -522,6 +537,10 @@ policy_state:
 Use project governance for an intentionally unversioned repository:
 ```yaml
 project-governance:
+  project_name: Project Name
+  project_description: >
+    Describe the project this repository ships: what it does, who it helps,
+    and what problem it solves.
   stage: beta
   development_stance: experimental
   versioning_mode: unversioned
@@ -534,8 +553,10 @@ policy_state:
 ```
 
 `project-governance` does not replace `version-governance`; it governs
-project phase and stance metadata through the dedicated top-level config
-section. When `versioning_mode` is `unversioned`, managed docs keep the
+project identity, phase, and stance metadata through the dedicated top-level
+config section. `project_name` and `project_description` feed managed README
+surfaces and package metadata surfaces that DevCovenant owns or
+synchronizes. When `versioning_mode` is `unversioned`, managed docs keep the
 `Project Version` line but render the configured non-version label, and
 `CHANGELOG.md` uses the configured unreleased heading.
 
