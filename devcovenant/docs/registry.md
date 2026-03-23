@@ -1,5 +1,5 @@
 # Registry
-**Last Updated:** 2026-03-22
+**Last Updated:** 2026-03-23
 **Project Version:** 1.0.0
 
 ## Overview
@@ -28,7 +28,7 @@ It stores deterministic governance state such as:
 4. managed-doc and generation state
 
 5. profile-provided generation fragments, including reusable
-   `governance_and_test` additions
+   `ci_and_test` additions
 
 6. resolution traces used for auditing and debugging
 

@@ -2,7 +2,7 @@ name: Build
 
 on:
   workflow_run:
-    workflows: ["CI and Tests"]
+    workflows: ["CI and Test"]
     types: [completed]
 
 jobs:

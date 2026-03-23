@@ -286,9 +286,9 @@ def _unit_test_route_glob_with_dot_prefix_matches(tmp_path: Path):
         {},
     )
 
-    workflow = tmp_path / ".github" / "workflows" / "governance-and-test.yml"
+    workflow = tmp_path / ".github" / "workflows" / "ci-and-test.yml"
     workflow.parent.mkdir(parents=True, exist_ok=True)
-    workflow.write_text("name: Governance and Test\n", encoding="utf-8")
+    workflow.write_text("name: CI and Test\n", encoding="utf-8")
     workflow_doc = tmp_path / "devcovenant" / "docs" / "workflow.md"
     workflow_doc.parent.mkdir(parents=True, exist_ok=True)
     workflow_doc.write_text("# Workflow\n", encoding="utf-8")

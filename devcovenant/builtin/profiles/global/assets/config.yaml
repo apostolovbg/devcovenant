@@ -274,18 +274,18 @@ clean:
   overrides: {}
 
 # ---------------------------------------------------------------------------
-# Governance workflow generation
+# CI-and-test workflow generation
 # ---------------------------------------------------------------------------
-governance_and_test:
+ci_and_test:
   # Human-owned key.
   # Deep-merge patch applied to generated
-  # `.github/workflows/governance-and-test.yml`.
-  # Active profiles may also contribute reusable governance_and_test fragments.
+  # `.github/workflows/ci-and-test.yml`.
+  # Active profiles may also contribute reusable ci_and_test fragments.
   # Keep the global base workflow language-agnostic.
   # Use config overlays only for repo-local CI adjustments.
   overlays: {}
   # Human-owned key.
-  # Full replacement payload for generated governance workflow.
+  # Full replacement payload for generated CI-and-test workflow.
   # Use only when complete local ownership is required.
   overrides: {}
 

@@ -527,7 +527,7 @@ def _render_config_yaml(payload: dict[str, object]) -> str:
         "install",
         "engine",
         "clean",
-        "governance_and_test",
+        "ci_and_test",
         "pre_commit",
         "project-governance",
         "policy_state",
@@ -546,7 +546,7 @@ def _render_config_yaml(payload: dict[str, object]) -> str:
         "install": _config_section_header("Install/deploy safety"),
         "engine": _config_section_header("Engine behavior"),
         "clean": _config_section_header("Cleanup targets"),
-        "governance_and_test": _config_section_header(
+        "ci_and_test": _config_section_header(
             "Governance-and-test generation"
         ),
         "pre_commit": _config_section_header("Pre-commit generation"),
@@ -659,13 +659,13 @@ def _render_config_yaml(payload: dict[str, object]) -> str:
             "devcovenant/registry/README.md, and devcovenant/logs/README.md."
         ),
         _yaml_block({"clean": payload.get("clean", {})}),
-        comments["governance_and_test"],
-        "# `overlays` are merged into generated governance workflow.",
+        comments["ci_and_test"],
+        "# `overlays` are merged into generated CI-and-test workflow.",
         "# `overrides` replace generated payload when non-empty.",
         _yaml_block(
             {
-                "governance_and_test": payload.get(
-                    "governance_and_test",
+                "ci_and_test": payload.get(
+                    "ci_and_test",
                     {},
                 )
             }
@@ -1117,15 +1117,15 @@ def _merge_mapping_fragment(
     return merged
 
 
-def _load_global_governance_template(
+def _load_global_ci_and_test_template(
     repo_root: Path,
     profiles_map: dict[str, dict[str, object]],
 ) -> dict[str, object]:
-    """Load governance workflow template from the global profile."""
+    """Load CI-and-test workflow template from the global profile."""
     global_profile = profiles_map.get("global", {})
-    template_name = str(global_profile.get("governance_template", "")).strip()
+    template_name = str(global_profile.get("ci_and_test_template", "")).strip()
     if not template_name:
-        raise ValueError("Global profile is missing governance_template.")
+        raise ValueError("Global profile is missing ci_and_test_template.")
 
     profile_path = str(global_profile.get("path", "")).strip()
     if not profile_path:
@@ -1139,27 +1139,27 @@ def _load_global_governance_template(
     template_path = _resolve_path_under_root(
         profile_root / "assets",
         template_name,
-        field_name="global governance template",
+        field_name="global CI-and-test template",
     )
     payload = _read_yaml(template_path)
     if not isinstance(payload, dict):
         raise ValueError(
-            "Global governance template must contain a YAML mapping."
+            "Global CI-and-test template must contain a YAML mapping."
         )
     return payload
 
 
-def _config_governance_adjustments(
+def _config_ci_and_test_adjustments(
     config: dict[str, object],
 ) -> tuple[dict[str, object], dict[str, object]]:
-    """Resolve config overlays/overrides for governance workflow generation."""
-    governance_block = config.get("governance_and_test")
-    if not isinstance(governance_block, dict):
+    """Resolve config overlays/overrides for CI-and-test generation."""
+    ci_and_test_block = config.get("ci_and_test")
+    if not isinstance(ci_and_test_block, dict):
         return {}, {}
-    overlays = governance_block.get("overlays")
+    overlays = ci_and_test_block.get("overlays")
     if not isinstance(overlays, dict):
         overlays = {}
-    overrides = governance_block.get("overrides")
+    overrides = ci_and_test_block.get("overrides")
     if not isinstance(overrides, dict):
         overrides = {}
     return overlays, overrides
@@ -1168,7 +1168,7 @@ def _config_governance_adjustments(
 def _normalize_governance_trigger_key(
     payload: dict[str, object],
 ) -> dict[str, object]:
-    """Normalize workflow trigger key to literal ``on``."""
+    """Normalize CI-and-test trigger key to literal ``on``."""
     normalized = copy.deepcopy(payload)
     if "on" in normalized:
         normalized.pop(True, None)
@@ -1190,7 +1190,7 @@ def _normalize_governance_trigger_key(
 
 
 def _render_governance_workflow_yaml(payload: dict[str, object]) -> str:
-    """Render governance workflow YAML in canonical GitHub syntax."""
+    """Render CI-and-test workflow YAML in canonical GitHub syntax."""
 
     class _WorkflowYamlDumper(yaml.SafeDumper):
         """Preserve literal blocks for multiline workflow command strings."""
@@ -1242,35 +1242,33 @@ def _render_governance_workflow_yaml(payload: dict[str, object]) -> str:
     return normalized
 
 
-def _refresh_governance_and_test(
+def _refresh_ci_and_test(
     repo_root: Path,
     config: dict[str, object],
     profile_registry: dict[str, dict],
     active_profiles: list[str],
 ) -> bool:
-    """Regenerate governance-and-test workflow from template and fragments."""
+    """Regenerate ci-and-test workflow from template and fragments."""
     profiles_map = _profile_registry_profiles(profile_registry)
-    payload = _load_global_governance_template(repo_root, profiles_map)
+    payload = _load_global_ci_and_test_template(repo_root, profiles_map)
 
     for profile_name in active_profiles:
         normalized = str(profile_name or "").strip().lower()
         if not normalized or normalized == "global":
             continue
         profile_payload = profiles_map.get(normalized, {})
-        fragment = profile_payload.get("governance_and_test")
+        fragment = profile_payload.get("ci_and_test")
         if isinstance(fragment, dict):
             payload = _merge_mapping_fragment(payload, fragment)
 
-    overlays, overrides = _config_governance_adjustments(config)
+    overlays, overrides = _config_ci_and_test_adjustments(config)
     if overlays:
         payload = _merge_mapping_fragment(payload, overlays)
     if overrides:
         payload = copy.deepcopy(overrides)
     payload = _normalize_governance_trigger_key(payload)
 
-    target_path = (
-        repo_root / ".github" / "workflows" / "governance-and-test.yml"
-    )
+    target_path = repo_root / ".github" / "workflows" / "ci-and-test.yml"
     rendered = _render_governance_workflow_yaml(payload)
     changed = True
     if target_path.exists():
@@ -1940,17 +1938,17 @@ def refresh_repo(repo_root: Path) -> int:
         print_step("Refreshed config generated profile metadata", "✅")
 
     try:
-        governance_changed = _refresh_governance_and_test(
+        ci_and_test_changed = _refresh_ci_and_test(
             repo_root,
             config,
             profile_registry,
             active_profiles,
         )
     except ValueError as error:
-        print_step(f"Governance workflow refresh failed: {error}", "🚫")
+        print_step(f"CI-and-test workflow refresh failed: {error}", "🚫")
         return 1
-    if governance_changed:
-        print_step("Regenerated governance-and-test workflow", "✅")
+    if ci_and_test_changed:
+        print_step("Regenerated ci-and-test workflow", "✅")
 
     try:
         pre_commit_changed = _refresh_pre_commit_config(

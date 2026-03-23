@@ -20,7 +20,7 @@ assets:
     template: docs/workflow.md
   - path: devcovenant/docs/troubleshooting.md
     template: docs/troubleshooting.md
-governance_and_test:
+ci_and_test:
   jobs:
     compatibility-matrix:
       name: >-
@@ -146,7 +146,6 @@ policy_overlays:
       - "devcovenant/custom/profiles/*.py => devcovenant/docs/profiles.md"
       - "devcovenant/custom/profiles/**/*.py => devcovenant/docs/profiles.md"
       - "devcovenant/custom/profiles/**/*.yaml => devcovenant/docs/profiles.md"
-      - ".github/dependabot.yml => devcovenant/docs/workflow.md"
       - "bandit.yaml => SECURITY.md"
       - "devcovenant/custom/policies/**/*.yaml => devcovenant/docs/policies.md"
       - "devcovenant/custom/policies/**/*.py => devcovenant/docs/policies.md"

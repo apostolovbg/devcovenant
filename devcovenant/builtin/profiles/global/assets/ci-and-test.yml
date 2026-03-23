@@ -1,12 +1,12 @@
-name: CI and Tests
+name: CI and Test
 
 on:
   push:
   pull_request:
 
 jobs:
-  governance-and-test:
-    name: CI and Tests (Bootstrap Python 3.14)
+  ci-and-test:
+    name: CI and Test (Bootstrap Python 3.14)
     runs-on: ubuntu-latest
     permissions:
       contents: read

@@ -158,7 +158,7 @@ def _validate_profile_asset_manifest(
     source_label: str,
 ) -> None:
     """Validate manifest-declared template references for one profile."""
-    for field_name in ("gitignore_template", "governance_template"):
+    for field_name in ("gitignore_template", "ci_and_test_template"):
         if field_name not in profile_meta:
             continue
         _validate_profile_template_reference(

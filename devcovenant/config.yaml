@@ -205,11 +205,11 @@ clean:
 # Governance-and-test generation
 # -------------------------------------------------------------------
 
-# `overlays` are merged into generated governance workflow.
+# `overlays` are merged into generated CI-and-test workflow.
 
 # `overrides` replace generated payload when non-empty.
 
-governance_and_test:
+ci_and_test:
   overlays: {}
   overrides: {}
 
@@ -368,7 +368,7 @@ autogen_metadata_overlays:
     - CHANGELOG.md
     - .gitignore
     - .pre-commit-config.yaml
-    - .github/workflows/governance-and-test.yml
+    - .github/workflows/ci-and-test.yml
     summary_labels:
     - Change
     - Why
@@ -672,7 +672,6 @@ autogen_metadata_overlays:
     - devcovenant/custom/profiles/*.py => devcovenant/docs/profiles.md
     - devcovenant/custom/profiles/**/*.py => devcovenant/docs/profiles.md
     - devcovenant/custom/profiles/**/*.yaml => devcovenant/docs/profiles.md
-    - .github/dependabot.yml => devcovenant/docs/workflow.md
     - bandit.yaml => SECURITY.md
     - devcovenant/custom/policies/**/*.yaml => devcovenant/docs/policies.md
     - devcovenant/custom/policies/**/*.py => devcovenant/docs/policies.md

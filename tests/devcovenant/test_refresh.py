@@ -978,9 +978,7 @@ def _unit_test_refresh_renders_canonical_workflow_triggers() -> None:
         repo_root = Path(temp_dir)
         repo_seed_cache.copy_refreshed_repo(repo_root)
 
-        workflow_path = (
-            repo_root / ".github" / "workflows" / "governance-and-test.yml"
-        )
+        workflow_path = repo_root / ".github" / "workflows" / "ci-and-test.yml"
         content = workflow_path.read_text(encoding="utf-8")
         assert "\non:\n" in content
         assert "'on':" not in content

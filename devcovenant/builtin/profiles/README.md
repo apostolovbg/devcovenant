@@ -1,5 +1,5 @@
 # Builtin Profiles
-**Last Updated:** 2026-03-22
+**Last Updated:** 2026-03-23
 **Project Version:** 1.0.0
 
 ## Table of Contents
@@ -40,8 +40,8 @@ Common keys include:
 - `ignore_dirs`
 - optional `gitignore_fragments`
 - optional `gitignore_template` (global baseline template)
-- optional `governance_template` (global workflow template)
-- optional `governance_and_test` (workflow fragment overlay)
+- optional `ci_and_test_template` (global workflow template)
+- optional `ci_and_test` (workflow fragment overlay)
 - `policy_overlays`
 - optional `core_invariant_overlays`
 - `assets`
@@ -73,7 +73,7 @@ manifest fragments and config overlays; profiles do not ship `.gitignore`
 asset files.
 Global template source:
 `devcovenant/builtin/profiles/global/assets/gitignore.yaml`.
-`.github/workflows/governance-and-test.yml` is generated from the global
+`.github/workflows/ci-and-test.yml` is generated from the global
 workflow template plus active-profile governance fragments and config
 overlays/overrides.
 

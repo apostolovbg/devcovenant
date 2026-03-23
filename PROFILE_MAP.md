@@ -111,7 +111,7 @@ shared translator runtime.
   user-authored outside managed blocks.
 - Pre-commit fragments from active profiles merge into generated
   `.pre-commit-config.yaml`, then config overlays and overrides are applied.
-- `governance-and-test.yml` is refresh-generated from global template metadata,
+- `ci-and-test.yml` is refresh-generated from global template metadata,
   active profile governance fragments, and config overlays/overrides.
 - `.gitignore` is generated from global template metadata plus active profile
   manifest metadata (`gitignore_fragments` or `ignore_dirs`) and

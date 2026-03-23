@@ -25,7 +25,7 @@ Explain:
 
 6. repo-local examples such as `devcovrepo` and `restapi`
 
-7. reusable CI additions through `governance_and_test` fragments, including
+7. reusable CI additions through `ci_and_test` fragments, including
    the rule that language- or repo-family-specific jobs do not belong in the
    global workflow template
 

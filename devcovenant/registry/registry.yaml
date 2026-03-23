@@ -91,7 +91,7 @@ managed-docs:
       project_governance_headers: false
       import_seed: true
       authoritative_source: true
-      body_fingerprint: b3301a06b3a5fd9b0230005ac5ebc498f1fe11a529c8066f7b41b961ef486678
+      body_fingerprint: 164af96bd0ad07a3197155adec2cda3020936e054cf145266d1b0a77193e57e1
       legacy_generic_body_fingerprints: []
     PROFILE_MAP.md:
       enabled: true
@@ -99,7 +99,7 @@ managed-docs:
       project_governance_headers: false
       import_seed: true
       authoritative_source: true
-      body_fingerprint: 1f4188374ca38a120be93b859898272b4d12f2ab5eb48fc16b02f2281f29dc28
+      body_fingerprint: 0d7c90e1db7860917e52da48b5a11167d14c1b290665e3afdca5c2d48f6a9143
       legacy_generic_body_fingerprints: []
     README.md:
       enabled: true
@@ -706,7 +706,7 @@ policies:
       custom: 'false'
       main_changelog: CHANGELOG.md
       skipped_files: devcovenant/config.yaml, CHANGELOG.md, .gitignore, .pre-commit-config.yaml,
-        .github/workflows/governance-and-test.yml
+        .github/workflows/ci-and-test.yml
       skipped_globs: .vscode/**, .idea/**, .venv/**, .python/**, build/**, dist/**,
         __pycache__/**, *.egg-info/**, pip-wheel-metadata/**, .pytest_cache/**, .ruff_cache/**,
         .mypy_cache/**, .tox/**, .nox/**, .hypothesis/**, .coverage, .coverage.*,
@@ -818,7 +818,7 @@ policies:
           - CHANGELOG.md
           - .gitignore
           - .pre-commit-config.yaml
-          - .github/workflows/governance-and-test.yml
+          - .github/workflows/ci-and-test.yml
           behavior: append
         autogen_overlays:
           values:
@@ -826,7 +826,7 @@ policies:
           - CHANGELOG.md
           - .gitignore
           - .pre-commit-config.yaml
-          - .github/workflows/governance-and-test.yml
+          - .github/workflows/ci-and-test.yml
           behavior: append
         effective:
           values:
@@ -834,7 +834,7 @@ policies:
           - CHANGELOG.md
           - .gitignore
           - .pre-commit-config.yaml
-          - .github/workflows/governance-and-test.yml
+          - .github/workflows/ci-and-test.yml
       skipped_globs:
         descriptor:
           values:
@@ -1790,7 +1790,7 @@ policies:
       - CHANGELOG.md
       - .gitignore
       - .pre-commit-config.yaml
-      - .github/workflows/governance-and-test.yml
+      - .github/workflows/ci-and-test.yml
       skipped_globs: &id007
       - .vscode/**
       - .idea/**
@@ -2105,7 +2105,7 @@ policies:
     assets:
     - '*.egg-info/**'
     - '*.md'
-    - .github/workflows/governance-and-test.yml
+    - .github/workflows/ci-and-test.yml
     - .hypothesis/**
     - .idea/**
     - .md
@@ -2610,17 +2610,16 @@ policies:
         devcovenant/docs/profiles.md, devcovenant/custom/profiles/__init__.py => devcovenant/docs/profiles.md,
         devcovenant/custom/profiles/*.py => devcovenant/docs/profiles.md, devcovenant/custom/profiles/**/*.py
         => devcovenant/docs/profiles.md, devcovenant/custom/profiles/**/*.yaml =>
-        devcovenant/docs/profiles.md, .github/dependabot.yml => devcovenant/docs/workflow.md,
-        bandit.yaml => SECURITY.md, devcovenant/custom/policies/**/*.yaml => devcovenant/docs/policies.md,
-        devcovenant/custom/policies/**/*.py => devcovenant/docs/policies.md, devcovenant/core/flow/*.py
-        => devcovenant/docs/workflow.md, devcovenant/core/runtime/*.py => devcovenant/docs/workflow.md,
-        devcovenant/core/services/*.py => devcovenant/docs/architecture.md, devcovenant/core/lib/*.py
-        => devcovenant/docs/architecture.md, devcovenant/core/contracts/*.py => devcovenant/docs/architecture.md,
-        devcovenant/core/contracts/**/*.yaml => devcovenant/docs/architecture.md,
-        devcovenant/*.py => devcovenant/docs/installation.md, pyproject.toml => devcovenant/docs/installation.md,
-        MANIFEST.in => devcovenant/docs/installation.md, devcovenant/config.yaml =>
-        devcovenant/docs/config.md, devcovenant/registry/registry.yaml => devcovenant/docs/registry.md,
-        .github/workflows/*.yml => devcovenant/docs/workflow.md
+        devcovenant/docs/profiles.md, bandit.yaml => SECURITY.md, devcovenant/custom/policies/**/*.yaml
+        => devcovenant/docs/policies.md, devcovenant/custom/policies/**/*.py => devcovenant/docs/policies.md,
+        devcovenant/core/flow/*.py => devcovenant/docs/workflow.md, devcovenant/core/runtime/*.py
+        => devcovenant/docs/workflow.md, devcovenant/core/services/*.py => devcovenant/docs/architecture.md,
+        devcovenant/core/lib/*.py => devcovenant/docs/architecture.md, devcovenant/core/contracts/*.py
+        => devcovenant/docs/architecture.md, devcovenant/core/contracts/**/*.yaml
+        => devcovenant/docs/architecture.md, devcovenant/*.py => devcovenant/docs/installation.md,
+        pyproject.toml => devcovenant/docs/installation.md, MANIFEST.in => devcovenant/docs/installation.md,
+        devcovenant/config.yaml => devcovenant/docs/config.md, devcovenant/registry/registry.yaml
+        => devcovenant/docs/registry.md, .github/workflows/*.yml => devcovenant/docs/workflow.md
       require_mentions: 'true'
       mention_min_length: '3'
       mention_stopwords: devcovenant, tools, common, custom, policy, policies, script,
@@ -3123,7 +3122,6 @@ policies:
           - devcovenant/custom/profiles/*.py => devcovenant/docs/profiles.md
           - devcovenant/custom/profiles/**/*.py => devcovenant/docs/profiles.md
           - devcovenant/custom/profiles/**/*.yaml => devcovenant/docs/profiles.md
-          - .github/dependabot.yml => devcovenant/docs/workflow.md
           - bandit.yaml => SECURITY.md
           - devcovenant/custom/policies/**/*.yaml => devcovenant/docs/policies.md
           - devcovenant/custom/policies/**/*.py => devcovenant/docs/policies.md
@@ -3154,7 +3152,6 @@ policies:
           - devcovenant/custom/profiles/*.py => devcovenant/docs/profiles.md
           - devcovenant/custom/profiles/**/*.py => devcovenant/docs/profiles.md
           - devcovenant/custom/profiles/**/*.yaml => devcovenant/docs/profiles.md
-          - .github/dependabot.yml => devcovenant/docs/workflow.md
           - bandit.yaml => SECURITY.md
           - devcovenant/custom/policies/**/*.yaml => devcovenant/docs/policies.md
           - devcovenant/custom/policies/**/*.py => devcovenant/docs/policies.md
@@ -3185,7 +3182,6 @@ policies:
           - devcovenant/custom/profiles/*.py => devcovenant/docs/profiles.md
           - devcovenant/custom/profiles/**/*.py => devcovenant/docs/profiles.md
           - devcovenant/custom/profiles/**/*.yaml => devcovenant/docs/profiles.md
-          - .github/dependabot.yml => devcovenant/docs/workflow.md
           - bandit.yaml => SECURITY.md
           - devcovenant/custom/policies/**/*.yaml => devcovenant/docs/policies.md
           - devcovenant/custom/policies/**/*.py => devcovenant/docs/policies.md
@@ -3644,7 +3640,6 @@ policies:
       - devcovenant/custom/profiles/*.py => devcovenant/docs/profiles.md
       - devcovenant/custom/profiles/**/*.py => devcovenant/docs/profiles.md
       - devcovenant/custom/profiles/**/*.yaml => devcovenant/docs/profiles.md
-      - .github/dependabot.yml => devcovenant/docs/workflow.md
       - bandit.yaml => SECURITY.md
       - devcovenant/custom/policies/**/*.yaml => devcovenant/docs/policies.md
       - devcovenant/custom/policies/**/*.py => devcovenant/docs/policies.md
@@ -3759,7 +3754,6 @@ policies:
     - '*.json'
     - '*.yaml'
     - '*.yml'
-    - .github/dependabot.yml => devcovenant/docs/workflow.md
     - .github/workflows/*.yaml
     - .github/workflows/*.yml
     - .github/workflows/*.yml => devcovenant/docs/workflow.md
@@ -10516,7 +10510,7 @@ profiles:
         - CHANGELOG.md
         - .gitignore
         - .pre-commit-config.yaml
-        - .github/workflows/governance-and-test.yml
+        - .github/workflows/ci-and-test.yml
         header_doc_suffixes:
         - .md
         - .rst
@@ -11423,7 +11417,7 @@ profiles:
       - devcovenant/registry/README.md
       - devcovenant/registry/registry.yaml
     gitignore_template: gitignore.yaml
-    governance_template: governance-and-test.yml
+    ci_and_test_template: ci-and-test.yml
     pre_commit:
       repos:
       - repo: https://github.com/pre-commit/pre-commit-hooks
@@ -11474,10 +11468,10 @@ profiles:
     - devcovenant/builtin/profiles/global/assets/PLAN.yaml
     - devcovenant/builtin/profiles/global/assets/README.yaml
     - devcovenant/builtin/profiles/global/assets/SPEC.yaml
+    - devcovenant/builtin/profiles/global/assets/ci-and-test.yml
     - devcovenant/builtin/profiles/global/assets/config.yaml
     - devcovenant/builtin/profiles/global/assets/devcovenant/README.yaml
     - devcovenant/builtin/profiles/global/assets/gitignore.yaml
-    - devcovenant/builtin/profiles/global/assets/governance-and-test.yml
     active: true
   ruby:
     version: 1
@@ -11691,7 +11685,7 @@ profiles:
       template: docs/workflow.md
     - path: devcovenant/docs/troubleshooting.md
       template: docs/troubleshooting.md
-    governance_and_test:
+    ci_and_test:
       jobs:
         compatibility-matrix:
           name: Supported Python Compatibility (Python ${{ matrix.python-version }})
@@ -11799,7 +11793,6 @@ profiles:
         - devcovenant/custom/profiles/*.py => devcovenant/docs/profiles.md
         - devcovenant/custom/profiles/**/*.py => devcovenant/docs/profiles.md
         - devcovenant/custom/profiles/**/*.yaml => devcovenant/docs/profiles.md
-        - .github/dependabot.yml => devcovenant/docs/workflow.md
         - bandit.yaml => SECURITY.md
         - devcovenant/custom/policies/**/*.yaml => devcovenant/docs/policies.md
         - devcovenant/custom/policies/**/*.py => devcovenant/docs/policies.md
@@ -12002,7 +11995,7 @@ inventory:
     - devcovenant/logs/README.md
     - devcovenant/registry/README.md
     - devcovenant/registry/registry.yaml
-    - devcovenant/builtin/profiles/global/assets/governance-and-test.yml
+    - devcovenant/builtin/profiles/global/assets/ci-and-test.yml
     - devcovenant/builtin/profiles/global/assets/gitignore.yaml
     - devcovenant/builtin/profiles/README.md
     - devcovenant/builtin/policies/README.md

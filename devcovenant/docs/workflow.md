@@ -1,5 +1,5 @@
 # Workflow
-**Last Updated:** 2026-03-22
+**Last Updated:** 2026-03-23
 **Project Version:** 1.0.0
 
 ## Overview
@@ -126,17 +126,17 @@ That is why the log artifacts matter.
 
 ## CI Mapping
 The generated CI workflow lives at
-`.github/workflows/governance-and-test.yml`.
-Its visible workflow name is `CI and Tests`.
+`.github/workflows/ci-and-test.yml`.
+Its visible workflow name is `CI and Test`.
 
 The ownership split matters:
 
 1. the builtin `global` profile owns the generic base workflow
 
-2. active profiles may contribute `governance_and_test` fragments that add
+2. active profiles may contribute `ci_and_test` fragments that add
    repo-family jobs or steps
 
-3. local `config.governance_and_test.*` keys are for repo-local overlays or,
+3. local `config.ci_and_test.*` keys are for repo-local overlays or,
    rarely, a full local replacement
 
 The global base should stay language-agnostic.
@@ -146,8 +146,8 @@ the relevant profile instead of from the generic global template.
 
 This repository also keeps `build.yml` and `publish.yml` as repo-maintained
 release workflows.
-They consume the result of `CI and Tests`, but they are not part of the
-generated governance workflow itself.
+They consume the result of `CI and Test`, but they are not part of the
+generated CI-and-test workflow itself.
 
 ## Managed Environment In CI
 CI should bootstrap DevCovenant with a normal Python launcher and then let the

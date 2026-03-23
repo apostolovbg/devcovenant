@@ -22,11 +22,11 @@ Explain:
 
 5. recovery rules
 
-6. the relationship between local workflow and the generated `CI and Tests`
+6. the relationship between local workflow and the generated `CI and Test`
    workflow
 
 7. the rule that the global CI base stays generic while repo-family extras
-   can arrive through profile `governance_and_test` fragments
+   can arrive through profile `ci_and_test` fragments
 
 8. managed-environment use in CI as a metadata-driven contract, not a
    hardcoded virtual-environment activation recipe

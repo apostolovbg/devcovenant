@@ -278,7 +278,7 @@ skipped_files: devcovenant/config.yaml
   CHANGELOG.md
   .gitignore
   .pre-commit-config.yaml
-  .github/workflows/governance-and-test.yml
+  .github/workflows/ci-and-test.yml
 skipped_globs: .vscode/**
   .idea/**
   .venv/**
@@ -830,7 +830,6 @@ doc_routes: devcovenant/builtin/policies/ => devcovenant/docs/policies.md
   devcovenant/custom/profiles/*.py => devcovenant/docs/profiles.md
   devcovenant/custom/profiles/**/*.py => devcovenant/docs/profiles.md
   devcovenant/custom/profiles/**/*.yaml => devcovenant/docs/profiles.md
-  .github/dependabot.yml => devcovenant/docs/workflow.md
   bandit.yaml => SECURITY.md
   devcovenant/custom/policies/**/*.yaml => devcovenant/docs/policies.md
   devcovenant/custom/policies/**/*.py => devcovenant/docs/policies.md

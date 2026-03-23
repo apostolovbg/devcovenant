@@ -80,7 +80,7 @@ The current runtime contract intentionally keeps:
 
 ## Continuous Assurance
 DevCovenant keeps release assurance visible in normal automation:
-1. the generated `CI and Tests` workflow provides the generic base gate/test
+1. the generated `CI and Test` workflow provides the generic base gate/test
    automation on bootstrap Python `3.14`
 
 2. this repository's `devcovrepo` profile adds the supported-Python
@@ -99,10 +99,7 @@ DevCovenant keeps release assurance visible in normal automation:
 6. `bandit.yaml` is the tracked Bandit configuration surface for this repo's
    low-signal skip list
 
-7. Dependabot watches both `github-actions` and Python package metadata at
-   the repository root
-
-8. the publish workflow uses PyPI trusted publishing instead of a long-lived
+7. the publish workflow uses PyPI trusted publishing instead of a long-lived
    upload token, and PyPI-side attestations are emitted through that publish
    path
 

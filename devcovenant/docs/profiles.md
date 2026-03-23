@@ -1,5 +1,5 @@
 # Profiles
-**Last Updated:** 2026-03-22
+**Last Updated:** 2026-03-23
 **Project Version:** 1.0.0
 
 ## Overview
@@ -20,7 +20,7 @@ metadata. A profile can contribute:
 
 5. translator declarations
 
-6. governance-workflow fragments through `governance_and_test`
+6. CI-and-test workflow fragments through `ci_and_test`
 
 7. core-invariant metadata overlays where DevCovenant exposes that contract
 
@@ -113,7 +113,7 @@ Examples include:
 
 5. core-invariant required test commands
 
-6. reusable `governance_and_test` fragments for repo-family CI jobs
+6. reusable `ci_and_test` fragments for repo-family CI jobs
 
 The CI boundary is important.
 The global workflow template should stay generic.

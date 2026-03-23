@@ -30,7 +30,7 @@ Explain:
 
 8. `policy_state`
 
-9. `governance_and_test`
+9. `ci_and_test`
 
 10. `engine` behavior
 
@@ -39,5 +39,5 @@ Keep the prose practical.
 Say what a setting controls, when a human should change it, and what happens if
 it is wrong. Avoid abstract language when a direct explanation is possible.
 Be explicit that reusable extra CI jobs belong in profile
-`governance_and_test` fragments, while local config overlays are for
+`ci_and_test` fragments, while local config overlays are for
 repository-specific adjustments.

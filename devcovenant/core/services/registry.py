@@ -237,7 +237,7 @@ DEFAULT_CORE_FILES = [
     "devcovenant/logs/README.md",
     f"{REGISTRY_DIR}/README.md",
     REGISTRY_REL_PATH,
-    "devcovenant/builtin/profiles/global/assets/governance-and-test.yml",
+    "devcovenant/builtin/profiles/global/assets/ci-and-test.yml",
     "devcovenant/builtin/profiles/global/assets/gitignore.yaml",
     "devcovenant/builtin/profiles/README.md",
     "devcovenant/builtin/policies/README.md",

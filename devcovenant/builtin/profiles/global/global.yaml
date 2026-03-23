@@ -35,7 +35,7 @@ clean_overlays:
     - devcovenant/registry/README.md
     - devcovenant/registry/registry.yaml
 gitignore_template: gitignore.yaml
-governance_template: governance-and-test.yml
+ci_and_test_template: ci-and-test.yml
 pre_commit:
   repos:
     - repo: https://github.com/pre-commit/pre-commit-hooks

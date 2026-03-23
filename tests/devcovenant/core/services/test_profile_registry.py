@@ -163,7 +163,7 @@ def _governance_workflow_signature(
     """Extract a minimal workflow contract signature for CI alignment."""
     jobs = payload.get("jobs")
     assert isinstance(jobs, dict)
-    job = jobs.get("governance-and-test")
+    job = jobs.get("ci-and-test")
     assert isinstance(job, dict)
     env = job.get("env")
     assert isinstance(env, dict)
@@ -204,14 +204,12 @@ def _unit_test_governance_workflow_asset_matches_repo_contract() -> None:
     )
     assert isinstance(manifest_payload, dict)
     template_name = str(
-        manifest_payload.get("governance_template") or ""
+        manifest_payload.get("ci_and_test_template") or ""
     ).strip()
     assert template_name
 
     asset_workflow = global_manifest.parent / "assets" / template_name
-    repo_workflow = (
-        REPO_ROOT / ".github" / "workflows" / "governance-and-test.yml"
-    )
+    repo_workflow = REPO_ROOT / ".github" / "workflows" / "ci-and-test.yml"
 
     asset_payload = yaml.safe_load(asset_workflow.read_text(encoding="utf-8"))
     repo_payload = yaml.safe_load(repo_workflow.read_text(encoding="utf-8"))
@@ -232,30 +230,28 @@ def _unit_test_global_governance_workflow_asset_stays_generic() -> None:
         / "profiles"
         / "global"
         / "assets"
-        / "governance-and-test.yml"
+        / "ci-and-test.yml"
     )
     payload = yaml.safe_load(asset_workflow.read_text(encoding="utf-8"))
     assert isinstance(payload, dict)
     jobs = payload.get("jobs")
     assert isinstance(jobs, dict)
-    assert payload.get("name") == "CI and Tests"
-    assert set(jobs) == {"governance-and-test"}
+    assert payload.get("name") == "CI and Test"
+    assert set(jobs) == {"ci-and-test"}
     assert "compatibility-matrix" not in jobs
     assert "assurance" not in jobs
 
 
 def _unit_test_repo_workflow_includes_devcovrepo_jobs() -> None:
     """Repo workflow should include devcovrepo-provided CI jobs."""
-    repo_workflow = (
-        REPO_ROOT / ".github" / "workflows" / "governance-and-test.yml"
-    )
+    repo_workflow = REPO_ROOT / ".github" / "workflows" / "ci-and-test.yml"
     payload = yaml.safe_load(repo_workflow.read_text(encoding="utf-8"))
     assert isinstance(payload, dict)
-    assert payload.get("name") == "CI and Tests"
+    assert payload.get("name") == "CI and Test"
 
     jobs = payload.get("jobs")
     assert isinstance(jobs, dict)
-    assert "governance-and-test" in jobs
+    assert "ci-and-test" in jobs
     assert "compatibility-matrix" in jobs
     assert "assurance" in jobs
 

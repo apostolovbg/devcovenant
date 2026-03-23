@@ -243,7 +243,7 @@ a polished, externally credible, store-bought-looking product.
      trusted publishing, attestations, SBOMs, explicit security scanning, and
      supportable compatibility claims.
    Completed work:
-   - upgraded the generated `governance-and-test` workflow template to run
+   - upgraded the generated `ci-and-test` workflow template to run
      the full gate lifecycle on Python `3.14`, a focused compatibility matrix
      on Python `3.10` through `3.13`, and an assurance job that runs
      `pip-audit` plus `bandit`
@@ -253,9 +253,6 @@ a polished, externally credible, store-bought-looking product.
    - tightened the remaining reviewed subprocess / exec boundaries with
      targeted `# nosec` annotations and simplified `update_lock` so Bandit can
      stay clean without hiding the real process boundaries
-   - added weekly dependency-review automation through
-     `.github/dependabot.yml` for both GitHub Actions and Python package
-     metadata at the repository root
    - extended `build.yml` and `publish.yml` to generate a reproducible
      CycloneDX SBOM from `requirements.lock` plus `pyproject.toml`
    - replaced long-lived token-based PyPI upload with trusted publishing via

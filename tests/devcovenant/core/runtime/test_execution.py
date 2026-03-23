@@ -507,13 +507,12 @@ def _unit_test_ci_workflow_split_docs_are_consistent() -> None:
 
     assert "repo-maintained copy of" not in profiles
     assert "refresh-generated output" in profiles
-    assert "`governance_and_test`" in profiles
+    assert "`ci_and_test`" in profiles
     assert "global workflow template should stay generic" in profiles
     assert "The generated CI workflow lives at" in workflow
     assert "The global base should stay language-agnostic." in workflow
-    assert (
-        "active profiles may contribute `governance_and_test` fragments"
-        in (workflow)
+    assert "active profiles may contribute `ci_and_test` fragments" in (
+        workflow
     )
     assert ".github/workflows/build.yml" in installation
     assert ".github/workflows/publish.yml" in installation

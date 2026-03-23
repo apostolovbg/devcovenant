@@ -60,6 +60,58 @@ Example:
 ## Version 1.0.0
 
 - 2026-03-23:
+  Change: Removed `.github/dependabot.yml`, renamed the generated CI workflow
+  contract from `governance-and-test` to `ci-and-test`, and updated the
+  workflow/config/profile/runtime/test surfaces to use the new file, key, job,
+  and display names consistently.
+  Why: Corrected the remaining half-renamed CI surface and removed unsolicited
+  bot-update automation so the repo keeps one explicit `ci-and-test` contract
+  without leftover Dependabot or old workflow naming drift.
+  Impact: Removed the remaining mixed CI naming so the repository now keeps
+  one consistent `ci-and-test` workflow
+  surface, no Dependabot file or doc-route residue, refreshed generated
+  metadata, and tests/docs that now enforce the renamed contract end-to-end.
+  Files:
+  .github/dependabot.yml
+  .github/workflows/build.yml
+  .github/workflows/ci-and-test.yml
+  .github/workflows/governance-and-test.yml
+  AGENTS.md
+  CHANGELOG.md
+  PLAN.md
+  POLICY_MAP.md
+  PROFILE_MAP.md
+  SECURITY.md
+  devcovenant/builtin/profiles/README.md
+  devcovenant/builtin/profiles/defaults/defaults.yaml
+  devcovenant/builtin/profiles/global/assets/ci-and-test.yml
+  devcovenant/builtin/profiles/global/assets/config.yaml
+  devcovenant/builtin/profiles/global/assets/governance-and-test.yml
+  devcovenant/builtin/profiles/global/global.yaml
+  devcovenant/config.yaml
+  devcovenant/core/flow/refresh.py
+  devcovenant/core/services/profile_registry.py
+  devcovenant/core/services/registry.py
+  devcovenant/custom/profiles/devcovrepo/assets/POLICY_MAP.yaml
+  devcovenant/custom/profiles/devcovrepo/assets/PROFILE_MAP.yaml
+  devcovenant/custom/profiles/devcovrepo/assets/docs/config.md
+  devcovenant/custom/profiles/devcovrepo/assets/docs/profiles.md
+  devcovenant/custom/profiles/devcovrepo/assets/docs/workflow.md
+  devcovenant/custom/profiles/devcovrepo/devcovrepo.yaml
+  devcovenant/docs/config.md
+  devcovenant/docs/profiles.md
+  devcovenant/docs/registry.md
+  devcovenant/docs/workflow.md
+  devcovenant/registry/registry.yaml
+  tests/devcovenant/builtin/policies/changelog_coverage/\
+    test_changelog_coverage.py
+  tests/devcovenant/builtin/policies/documentation_growth_tracking/\
+    test_documentation_growth_tracking.py
+  tests/devcovenant/core/runtime/test_execution.py
+  tests/devcovenant/core/services/test_profile_registry.py
+  tests/devcovenant/test_refresh.py
+
+- 2026-03-23:
   Change: Moved the supported-Python compatibility and assurance jobs out of
   the global generated workflow, restored the generic `CI and Tests` base, and
   documented the profile-fragment CI contract together with managed-
@@ -192,8 +244,8 @@ Example:
 
 - 2026-03-22:
   Change: Hardened release assurance by adding CI compatibility/scanner jobs,
-  CycloneDX SBOM generation, Dependabot automation, and PyPI trusted
-  publishing while tightening reviewed process-boundary scanner annotations.
+  CycloneDX SBOM generation, and PyPI trusted publishing while tightening
+  reviewed process-boundary scanner annotations.
   Why: Raised DevCovenant's release and supply-chain posture from basic
   build/test hygiene to a more professional assurance baseline with explicit
   scanner, inventory, automation, and publish-trust contracts.
@@ -201,9 +253,8 @@ Example:
   workflows emit stronger software-inventory evidence, Bandit stays useful
   instead of noisy, and publish no longer depends on a long-lived PyPI token.
   Files:
-  .github/dependabot.yml
   .github/workflows/build.yml
-  .github/workflows/governance-and-test.yml
+  .github/workflows/ci-and-test.yml
   .github/workflows/publish.yml
   CHANGELOG.md
   PLAN.md
@@ -213,7 +264,7 @@ Example:
   bandit.yaml
   devcovenant/builtin/policies/dependency_management/\
     dependency_lock_runtime.py
-  devcovenant/builtin/profiles/global/assets/governance-and-test.yml
+  devcovenant/builtin/profiles/global/assets/ci-and-test.yml
   devcovenant/cli.py
   devcovenant/core/flow/refresh.py
   devcovenant/core/runtime/execution.py
@@ -2362,7 +2413,7 @@ Example:
   devcovenant/core/profiles/global/assets/config.yaml
   devcovenant/core/profiles/global/assets/devcovenant/README.yaml
   devcovenant/core/profiles/global/assets/gitignore.yaml
-  devcovenant/core/profiles/global/assets/governance-and-test.yml
+  devcovenant/core/profiles/global/assets/ci-and-test.yml
   devcovenant/core/profiles/global/global.yaml
   devcovenant/core/profiles/go/assets/go.mod
   devcovenant/core/profiles/go/assets/go.sum
@@ -2935,7 +2986,7 @@ Example:
   devcovenant/core/profiles/global/assets/SPEC.yaml
   devcovenant/core/profiles/global/assets/config.yaml
   devcovenant/core/profiles/global/assets/gitignore.yaml
-  devcovenant/core/profiles/global/assets/governance-and-test.yml
+  devcovenant/core/profiles/global/assets/ci-and-test.yml
   devcovenant/core/profiles/global/global.yaml
   devcovenant/core/profiles/go/assets/go.mod
   devcovenant/core/profiles/go/assets/go.sum
@@ -3497,9 +3548,9 @@ Example:
   Files:
   CHANGELOG.md
   .github/workflows/build.yml
-  .github/workflows/governance-and-test.yml
+  .github/workflows/ci-and-test.yml
   .github/workflows/publish.yml
-  devcovenant/builtin/profiles/global/assets/governance-and-test.yml
+  devcovenant/builtin/profiles/global/assets/ci-and-test.yml
   devcovenant/docs/profiles.md
   devcovenant/docs/workflow.md
 
@@ -3513,9 +3564,9 @@ Example:
   Files:
   CHANGELOG.md
   .github/workflows/build.yml
-  .github/workflows/governance-and-test.yml
+  .github/workflows/ci-and-test.yml
   .github/workflows/publish.yml
-  devcovenant/builtin/profiles/global/assets/governance-and-test.yml
+  devcovenant/builtin/profiles/global/assets/ci-and-test.yml
   devcovenant/docs/profiles.md
   devcovenant/docs/workflow.md
 
@@ -3529,7 +3580,7 @@ Example:
     governance-dependent via `workflow_run`, and improved trigger reliability.
   Files:
   CHANGELOG.md
-  .github/workflows/governance-and-test.yml
+  .github/workflows/ci-and-test.yml
   devcovenant/core/flow/refresh.py
   devcovenant/docs/architecture.md
   devcovenant/docs/workflow.md
