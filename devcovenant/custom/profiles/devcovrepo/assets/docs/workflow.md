@@ -20,16 +20,22 @@ Explain:
 
 4. run-log inspection order
 
-5. recovery rules
+5. the guarantee that a reported run-log path still exists after the command
+   finishes, including `clean --logs`
 
-6. the relationship between local workflow and the generated `CI and Test`
+6. recovery rules
+
+7. the relationship between local workflow and the generated `CI and Test`
    workflow
 
-7. the rule that the global CI base stays generic while repo-family extras
+8. the rule that the global CI base stays generic while repo-family extras
    can arrive through profile `ci_and_test` fragments
 
-8. managed-environment use in CI as a metadata-driven contract, not a
+9. managed-environment use in CI as a metadata-driven contract, not a
    hardcoded virtual-environment activation recipe
+
+10. refresh-owned config normalization when stale generated defaults would
+   otherwise disable profile-driven behavior, such as cleanup targets
 
 ## Writing Rules
 Keep this doc operational.

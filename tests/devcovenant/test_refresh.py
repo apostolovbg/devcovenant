@@ -671,6 +671,46 @@ def _unit_test_refresh_writes_clean_config_section() -> None:
         assert clean_block.get("overrides") == {}
 
 
+def _unit_test_refresh_collapses_legacy_default_clean_overrides() -> None:
+    """refresh_repo should normalize legacy all-empty clean overrides."""
+    from devcovenant.core.services.cleanup import resolve_clean_config
+
+    with tempfile.TemporaryDirectory() as temp_dir:
+        repo_root = Path(temp_dir)
+        repo_seed_cache.copy_refreshed_repo(repo_root)
+
+        config_path = repo_root / "devcovenant" / "config.yaml"
+        payload = yaml.safe_load(config_path.read_text(encoding="utf-8"))
+        payload["clean"]["overrides"] = {
+            "build_dirs": [],
+            "build_globs": [],
+            "cache_dirs": [],
+            "cache_globs": [],
+            "runtime_registry_dirs": [],
+            "runtime_registry_globs": [],
+            "logs_dirs": [],
+            "logs_globs": [],
+            "protected_dirs": [],
+            "protected_globs": [],
+        }
+        config_path.write_text(
+            yaml.safe_dump(payload, sort_keys=False),
+            encoding="utf-8",
+        )
+
+        with redirect_stdout(StringIO()):
+            result = refresh.refresh_repo(repo_root)
+        assert result == 0
+
+        updated = yaml.safe_load(config_path.read_text(encoding="utf-8"))
+        assert updated["clean"]["overrides"] == {}
+
+        resolved = resolve_clean_config(repo_root)
+        assert "build" in resolved.build_dirs
+        assert "dist" in resolved.build_dirs
+        assert "*.egg-info" in resolved.build_globs
+
+
 def _unit_test_refresh_renders_devcov_managed_doc_intros() -> None:
     """refresh_repo should render doc-specific DevCovenant intro text."""
     with tempfile.TemporaryDirectory() as temp_dir:
@@ -1184,6 +1224,10 @@ class GeneratedUnittestCases(unittest.TestCase):
     def test_refresh_writes_clean_config_section(self):
         """Run clean-config template rendering assertions."""
         _unit_test_refresh_writes_clean_config_section()
+
+    def test_refresh_collapses_legacy_default_clean_overrides(self):
+        """Run legacy clean-override normalization assertions."""
+        _unit_test_refresh_collapses_legacy_default_clean_overrides()
 
     def test_refresh_renders_devcov_managed_doc_intros(self):
         """Run DevCovenant managed-doc intro rendering assertions."""

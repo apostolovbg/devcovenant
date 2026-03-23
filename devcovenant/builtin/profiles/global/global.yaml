@@ -29,7 +29,6 @@ clean_overlays:
     - devcovenant/logs/*
   protected_dirs:
     - .git
-    - .venv
   protected_globs:
     - devcovenant/logs/README.md
     - devcovenant/registry/README.md

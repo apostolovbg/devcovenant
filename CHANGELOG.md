@@ -60,6 +60,83 @@ Example:
 ## Version 1.0.0
 
 - 2026-03-23:
+  Change: Removed hardcoded `.venv` cleanup protection, made managed
+  environment cleanup protection metadata-driven, and summarized protected
+  cleanup skips by root instead of dumping nested cache paths.
+  Why: Fixed the cleanup contract because protection should follow the active
+  managed-environment metadata rather than a Python-specific hardcode, and the
+  old skip reporting was noisy enough to hide the real protected root.
+  Impact: Cleanup now keeps the active managed environment safe through
+  `cleanup_protected_paths` or `expected_paths`, reports protected skips as
+  readable root summaries, and documents that generic cleanup boundary across
+  the config, workflow, policy, profile, and architecture docs.
+  Files:
+  CHANGELOG.md
+  devcovenant/builtin/policies/managed_environment/managed_environment.yaml
+  devcovenant/builtin/policies/managed_environment/\
+  managed_environment_runtime.py
+  devcovenant/builtin/profiles/global/global.yaml
+  devcovenant/core/flow/clean.py
+  devcovenant/core/runtime/execution.py
+  devcovenant/core/services/cleanup.py
+  devcovenant/docs/architecture.md
+  devcovenant/docs/config.md
+  devcovenant/docs/installation.md
+  devcovenant/docs/policies.md
+  devcovenant/docs/profiles.md
+  devcovenant/docs/registry.md
+  devcovenant/docs/workflow.md
+  devcovenant/registry/registry.yaml
+  tests/devcovenant/builtin/policies/managed_environment/\
+  test_managed_environment_runtime.py
+  tests/devcovenant/core/flow/test_clean.py
+  tests/devcovenant/core/runtime/test_execution.py
+  tests/devcovenant/core/services/test_cleanup.py
+
+- 2026-03-23:
+  Change: Protected the active clean run directory from log cleanup so
+  `clean --logs` and `clean --all` keep their own reported run-artifact path
+  alive after the command finishes.
+  Why: Prevented the clean command from deleting its own summary folder,
+  because the previous behavior printed a run-log path and then removed that
+  same directory while cleaning log targets.
+  Impact: Clean now still prunes older log runs, but it keeps the active clean
+  run folder as a runtime-provided protected path and documents that artifact
+  guarantee in the lifecycle and workflow docs.
+  Files:
+  CHANGELOG.md
+  devcovenant/core/services/cleanup.py
+  devcovenant/core/flow/clean.py
+  tests/devcovenant/core/services/test_cleanup.py
+  tests/devcovenant/core/flow/test_clean.py
+  devcovenant/docs/installation.md
+  devcovenant/docs/workflow.md
+  devcovenant/custom/profiles/devcovrepo/assets/docs/installation.md
+  devcovenant/custom/profiles/devcovrepo/assets/docs/workflow.md
+
+- 2026-03-23:
+  Change: Fixed refresh so legacy all-empty `clean.overrides` blocks collapse
+  back to `{}`, restoring profile-driven cleanup targets and making
+  `clean --all` honor the active profile metadata again.
+  Why: Restored the inherited cleanup lists because the generated config had
+  carried a stale empty-override shape that
+  silently replaced the inherited cleanup lists, so build artifacts such as
+  `dist/` and `*.egg-info/` stopped matching even though the profiles already
+  declared them.
+  Impact: Refresh now restores the intended cleanup contract, the config/docs
+  explain that cleanup targets come from active profile `clean_overlays`, and
+  the regression coverage locks the normalization path in place.
+  Files:
+  CHANGELOG.md
+  devcovenant/config.yaml
+  devcovenant/core/flow/refresh.py
+  tests/devcovenant/test_refresh.py
+  devcovenant/docs/config.md
+  devcovenant/docs/workflow.md
+  devcovenant/custom/profiles/devcovrepo/assets/docs/config.md
+  devcovenant/custom/profiles/devcovrepo/assets/docs/workflow.md
+
+- 2026-03-23:
   Change: Removed the one-off `update_lock` command, dropped its
   dependency-management alias/helper surfaces, and expanded the
   `project-governance` config contract so the live config/docs spell out the

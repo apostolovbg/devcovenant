@@ -188,17 +188,7 @@ clean:
     logs_globs: []
     protected_dirs: []
     protected_globs: []
-  overrides:
-    build_dirs: []
-    build_globs: []
-    cache_dirs: []
-    cache_globs: []
-    runtime_registry_dirs: []
-    runtime_registry_globs: []
-    logs_dirs: []
-    logs_globs: []
-    protected_dirs: []
-    protected_globs: []
+  overrides: {}
 
 # -------------------------------------------------------------------
 # Governance-and-test generation

@@ -115,6 +115,9 @@ Examples include:
 
 6. reusable `ci_and_test` fragments for repo-family CI jobs
 
+7. managed-environment roots that other engine services may need to respect,
+   such as cleanup-safe environment paths
+
 The CI boundary is important.
 The global workflow template should stay generic.
 If a repo family needs additional jobs, such as this repository's supported
@@ -128,6 +131,11 @@ The global config asset is where DevCovenant now lists the full
 `project-governance` key set, the default allowed `stage` values, the default
 allowed `development_stance` values, and the two legal
 `versioning_mode` values directly in the generated config comments.
+The same boundary also matters for cleanup:
+the global profile can seed reusable cleanup targets, but it should not
+hardcode one language-specific managed environment path such as `.venv`.
+Managed-environment protection belongs with the managed-environment metadata so
+other environment types can participate through the same contract.
 
 ## Builtin And Custom Profiles
 Builtin profiles are the shipped reusable stack surface.

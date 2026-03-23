@@ -68,6 +68,10 @@ Read `registry.yaml` when you need to understand:
 5. which profile contributed an extra generated workflow fragment or other
    resolved generation input
 
+6. which cleanup targets came from profiles versus which protected roots came
+   from runtime-owned sources such as the managed environment or the active
+   clean run directory
+
 Read `registry/runtime/` when you need to understand:
 
 - whether a gate session is open
@@ -85,3 +89,11 @@ That applies to retired command surfaces too.
 The tracked registry should show only the live namespaced
 dependency-management command metadata and should not carry the removed
 `update_lock` wrapper path or alias.
+
+The same rule applies to cleanup protection.
+The tracked registry may show reusable cleanup targets contributed by active
+profiles, but it should not pretend that a language-specific managed
+environment root is a global cleanup default.
+Managed-environment cleanup protection belongs in the resolved
+managed-environment metadata so cleanup can protect a `venv`, a bench, or
+another environment type through the same runtime contract.

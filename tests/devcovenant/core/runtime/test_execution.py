@@ -1180,6 +1180,7 @@ def _unit_test_clean_summary_artifacts_include_command_details() -> None:
                         "removed_count": 2,
                         "removed_paths": ["build", "dist"],
                         "skipped_protected_count": 1,
+                        "skipped_protected_match_count": 3,
                         "skipped_protected_paths": ["devcovenant/logs"],
                     }
                 }
@@ -1200,6 +1201,7 @@ def _unit_test_clean_summary_artifacts_include_command_details() -> None:
         assert "Cleanup Scope: build" in summary_txt
         assert "Removed Targets: 2" in summary_txt
         assert "Skipped Protected Targets: 1" in summary_txt
+        assert "Skipped Protected Matches: 3" in summary_txt
         assert '"clean_summary": {' in summary_json
         assert '"removed_count": 2' in summary_json
 

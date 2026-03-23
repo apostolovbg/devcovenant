@@ -5122,6 +5122,7 @@ policies:
       DevCovenant must run from the managed environment described in this
       policy's metadata. Use expected_paths for virtualenv or bench roots,
       expected_interpreters for explicit interpreter locations, and
+      optional cleanup_protected_paths for cleanup-safe roots, and
       required_commands with `manual_commands`, stage-scoped
       `managed_commands` to define guidance and runtime preparation.
       Active managed-environment policy now also re-executes DevCovenant CLI
@@ -5143,6 +5144,7 @@ policies:
       custom: 'false'
       expected_paths: .venv
       expected_interpreters: .venv/bin/python, .venv/Scripts/python.exe
+      cleanup_protected_paths: ''
       required_commands: python3, pre-commit, pytest
       manual_commands: python3 -m venv .venv, {managed_python} -m pip install -r requirements.lock
       managed_commands: start=>python3 -m venv .venv, start=>{managed_python} -m pip
@@ -5231,6 +5233,12 @@ policies:
           values:
           - .venv/bin/python
           - .venv/Scripts/python.exe
+      cleanup_protected_paths:
+        descriptor:
+          values: []
+          behavior: base
+        effective:
+          values: []
       required_commands:
         descriptor:
           values: []
@@ -5314,6 +5322,7 @@ policies:
       expected_interpreters: &id041
       - .venv/bin/python
       - .venv/Scripts/python.exe
+      cleanup_protected_paths: ''
       required_commands: &id042
       - python3
       - pre-commit
@@ -5342,7 +5351,7 @@ policies:
     - .venv/bin/python
     origin: builtin
     script_exists: true
-    hash: 9019c5e182cc49549f462b87bb287a9f5accdfd83046fc2faeb731a3a71f9512
+    hash: 041eb7b314c142d525ebca1a31fb0a757c97ac91a6ac52bea0bfe84cc448bd1e
     script_path: builtin/managed_environment.py
   modules-need-tests:
     enabled: true
@@ -11409,7 +11418,6 @@ profiles:
       - devcovenant/logs/*
       protected_dirs:
       - .git
-      - .venv
       protected_globs:
       - devcovenant/logs/README.md
       - devcovenant/registry/README.md

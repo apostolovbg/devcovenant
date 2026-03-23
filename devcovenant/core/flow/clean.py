@@ -9,6 +9,7 @@ from pathlib import Path
 import devcovenant.core.services.cleanup as cleanup_runtime
 import devcovenant.core.services.registry as registry_runtime
 from devcovenant.core.runtime.execution import (
+    get_active_run_log_context,
     merge_active_run_log_metadata,
     print_step,
     runtime_print,
@@ -44,8 +45,16 @@ def clean_repo(
     )
     labels = ", ".join(selection.labels()) or "none"
     print_step(f"Cleanup scope: {labels}", "🧹")
+    active_run_context = get_active_run_log_context()
+    protected_run_dirs: tuple[Path, ...] = ()
+    if active_run_context is not None:
+        protected_run_dirs = (active_run_context.require_paths().run_dir,)
 
-    result = cleanup_runtime.execute_cleanup(repo_root, selection)
+    result = cleanup_runtime.execute_cleanup(
+        repo_root,
+        selection,
+        extra_protected_paths=protected_run_dirs,
+    )
     merge_active_run_log_metadata(
         {
             "clean_summary": {
@@ -53,6 +62,9 @@ def clean_repo(
                 "removed_count": len(result.removed_paths),
                 "removed_paths": list(result.removed_paths),
                 "skipped_protected_count": len(result.skipped_protected_paths),
+                "skipped_protected_match_count": (
+                    result.skipped_protected_match_count
+                ),
                 "skipped_protected_paths": list(
                     result.skipped_protected_paths
                 ),

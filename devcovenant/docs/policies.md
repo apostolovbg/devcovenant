@@ -73,6 +73,13 @@ The same runtime action can then be used by:
 
 - a manual policy command
 
+The managed-environment policy also exposes runtime-owned environment context
+that other services can consume safely.
+One example is cleanup protection: cleanup may ask the managed-environment
+runtime which roots should stay protected, using explicit
+`cleanup_protected_paths` metadata first and falling back to `expected_paths`
+when no custom cleanup roots are declared.
+
 ## Policy Commands
 DevCovenant now supports namespaced policy commands.
 The intended shape is:

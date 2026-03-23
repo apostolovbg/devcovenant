@@ -9,6 +9,7 @@ import tempfile
 import unittest
 from contextlib import redirect_stderr
 from pathlib import Path
+from types import SimpleNamespace
 from unittest.mock import patch
 
 from tests.devcovenant import repo_seed_cache
@@ -35,6 +36,7 @@ def _unit_test_clean_flow_reports_scope_and_removed_targets() -> None:
         selection=selection,
         removed_paths=("build",),
         skipped_protected_paths=(),
+        skipped_protected_match_count=0,
     )
     with patch.object(
         module.cleanup_runtime,
@@ -114,6 +116,66 @@ def _unit_test_clean_flow_rejects_open_gate_session() -> None:
     )
 
 
+def _unit_test_clean_flow_protects_active_run_log_directory() -> None:
+    """Clean flow should protect the active run directory during cleanup."""
+    module = importlib.import_module(MODULE)
+    selection = module.cleanup_runtime.CleanSelection(
+        include_build=False,
+        include_cache=False,
+        include_runtime_registry=False,
+        include_logs=True,
+    )
+    result = module.cleanup_runtime.CleanResult(
+        selection=selection,
+        removed_paths=(),
+        skipped_protected_paths=("devcovenant/logs/active-run",),
+        skipped_protected_match_count=1,
+    )
+    active_run_dir = Path("devcovenant/logs/active-run")
+    active_context = SimpleNamespace(
+        require_paths=lambda: SimpleNamespace(run_dir=active_run_dir)
+    )
+    with patch.object(
+        module.cleanup_runtime,
+        "resolve_clean_selection",
+        return_value=selection,
+    ):
+        with patch.object(
+            module.cleanup_runtime,
+            "execute_cleanup",
+            return_value=result,
+        ) as execute_mock:
+            with (
+                patch.object(
+                    module,
+                    "_gate_session_is_open",
+                    return_value=False,
+                ),
+                patch.object(
+                    module,
+                    "get_active_run_log_context",
+                    return_value=active_context,
+                ),
+                patch.object(module, "print_step"),
+                patch.object(module, "merge_active_run_log_metadata"),
+            ):
+                flow_result = module.clean_repo(
+                    Path("."),
+                    include_all=False,
+                    include_build=False,
+                    include_cache=False,
+                    include_registry=False,
+                    include_logs=True,
+                )
+
+    assert flow_result == 0
+    execute_mock.assert_called_once_with(
+        Path("."),
+        selection,
+        extra_protected_paths=(active_run_dir,),
+    )
+
+
 class GeneratedUnittestCases(unittest.TestCase):
     """unittest wrappers for cleanup flow regression coverage."""
 
@@ -128,3 +190,7 @@ class GeneratedUnittestCases(unittest.TestCase):
     def test_clean_flow_rejects_open_gate_session(self):
         """Run open-session cleanup rejection coverage."""
         _unit_test_clean_flow_rejects_open_gate_session()
+
+    def test_clean_flow_protects_active_run_log_directory(self):
+        """Run active-run cleanup protection coverage."""
+        _unit_test_clean_flow_protects_active_run_log_directory()

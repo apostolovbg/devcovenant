@@ -48,6 +48,7 @@ def _unit_test_runtime_symbol_contract_is_stable() -> None:
         "_managed_guidance_suffix",
         "_run_managed_commands_for_stage",
         "resolve_managed_environment_for_stage",
+        "resolve_cleanup_protected_paths",
     ]
     for symbol in expected:
         assert hasattr(module, symbol), symbol
@@ -395,6 +396,45 @@ def _unit_test_run_command_suppresses_output_in_quiet_mode() -> None:
     assert kwargs["verbose_only_console"] is False
 
 
+def _unit_test_cleanup_protected_paths_prefer_explicit_metadata() -> None:
+    """Cleanup protection should use explicit managed metadata first."""
+    module = importlib.import_module(MODULE)
+    repo_root = Path("/tmp/repo")
+    entry = {
+        "enabled": True,
+        "metadata": {
+            "cleanup_protected_paths": [".managed-root", ".bench"],
+            "expected_paths": [".venv"],
+            "expected_interpreters": [".venv/bin/python"],
+        },
+    }
+    with mock.patch.object(module, "_load_policy_entry", return_value=entry):
+        protected = module.resolve_cleanup_protected_paths(repo_root)
+
+    assert protected == (
+        (repo_root / ".managed-root").resolve(),
+        (repo_root / ".bench").resolve(),
+    )
+
+
+def _unit_test_cleanup_protected_paths_fall_back_to_expected_paths() -> None:
+    """Cleanup protection should fall back to expected environment roots."""
+    module = importlib.import_module(MODULE)
+    repo_root = Path("/tmp/repo")
+    entry = {
+        "enabled": True,
+        "metadata": {
+            "cleanup_protected_paths": [],
+            "expected_paths": [".venv"],
+            "expected_interpreters": [".venv/bin/python"],
+        },
+    }
+    with mock.patch.object(module, "_load_policy_entry", return_value=entry):
+        protected = module.resolve_cleanup_protected_paths(repo_root)
+
+    assert protected == ((repo_root / ".venv").resolve(),)
+
+
 class GeneratedUnittestCases(unittest.TestCase):
     """unittest wrappers for managed-environment runtime tests."""
 
@@ -467,3 +507,11 @@ class GeneratedUnittestCases(unittest.TestCase):
     def test_run_command_suppresses_output_in_quiet_mode(self):
         """Run managed-command quiet-mode suppression assertions."""
         _unit_test_run_command_suppresses_output_in_quiet_mode()
+
+    def test_cleanup_protected_paths_prefer_explicit_metadata(self):
+        """Run explicit cleanup-protected-path metadata assertions."""
+        _unit_test_cleanup_protected_paths_prefer_explicit_metadata()
+
+    def test_cleanup_protected_paths_fall_back_to_expected_paths(self):
+        """Run expected-path cleanup protection fallback assertions."""
+        _unit_test_cleanup_protected_paths_fall_back_to_expected_paths()

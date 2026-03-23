@@ -359,6 +359,9 @@ def _build_active_run_summary_text(
         skipped_count = clean_summary.get("skipped_protected_count")
         if skipped_count is not None:
             lines.append(f"Skipped Protected Targets: {skipped_count}")
+        skipped_matches = clean_summary.get("skipped_protected_match_count")
+        if skipped_matches is not None:
+            lines.append(f"Skipped Protected Matches: {skipped_matches}")
         skipped_paths = clean_summary.get("skipped_protected_paths")
         if isinstance(skipped_paths, Sequence) and not isinstance(
             skipped_paths, str

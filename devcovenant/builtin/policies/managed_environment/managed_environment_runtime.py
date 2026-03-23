@@ -533,3 +533,50 @@ def resolve_managed_environment_for_stage(
         )
     env = _apply_managed_env(env, managed_python, managed_root)
     return env, str(managed_python)
+
+
+def resolve_cleanup_protected_paths(repo_root: Path) -> tuple[Path, ...]:
+    """Return cleanup-protected roots from managed-environment metadata."""
+    entry = _load_policy_entry(repo_root)
+    if entry is None:
+        return ()
+    if not _is_enabled_token(entry.get("enabled")):
+        return ()
+
+    metadata_map = entry.get("metadata")
+    if not isinstance(metadata_map, dict):
+        raise ValueError(
+            "Invalid policy registry payload: "
+            "`managed-environment.metadata` must be a mapping."
+        )
+
+    cleanup_tokens = _normalize_metadata_tokens(
+        metadata_map.get("cleanup_protected_paths")
+    )
+    if cleanup_tokens:
+        return tuple(_resolve_metadata_paths(repo_root, cleanup_tokens))
+
+    expected_path_tokens = _normalize_metadata_tokens(
+        metadata_map.get("expected_paths")
+    )
+    expected_paths = _resolve_metadata_paths(repo_root, expected_path_tokens)
+    if expected_paths:
+        return tuple(expected_paths)
+
+    expected_interpreter_tokens = _normalize_metadata_tokens(
+        metadata_map.get("expected_interpreters")
+    )
+    expected_interpreters = _resolve_metadata_paths(
+        repo_root,
+        expected_interpreter_tokens,
+        resolve_symlinks=False,
+    )
+    managed_python, managed_root = _detect_managed_python(
+        expected_interpreters,
+        expected_paths,
+    )
+    if managed_root is not None:
+        return (managed_root,)
+    if managed_python is not None:
+        return (managed_python,)
+    return tuple(expected_interpreters)

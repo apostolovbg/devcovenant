@@ -13,6 +13,9 @@ from typing import Iterable
 import yaml
 
 import devcovenant.core.services.profile_registry as profile_runtime
+from devcovenant.builtin.policies.managed_environment import (
+    managed_environment_runtime,
+)
 from devcovenant.core.services import yaml_cache as yaml_cache_service
 
 try:
@@ -32,10 +35,7 @@ _CLEAN_TARGET_KEYS = (
     "protected_dirs",
     "protected_globs",
 )
-_HARD_PROTECTED_DIRS = (
-    ".git",
-    ".venv",
-)
+_HARD_PROTECTED_DIRS = (".git",)
 _HARD_PROTECTED_GLOBS = (
     "devcovenant/logs/README.md",
     "devcovenant/registry/README.md",
@@ -90,6 +90,7 @@ class CleanResult:
     selection: CleanSelection
     removed_paths: tuple[str, ...]
     skipped_protected_paths: tuple[str, ...]
+    skipped_protected_match_count: int
 
 
 def _dedupe(items: Iterable[str]) -> list[str]:
@@ -378,9 +379,12 @@ def _prune_nested_paths(paths: Iterable[Path]) -> list[Path]:
 def _collect_protected_paths(
     repo_root: Path,
     config: CleanConfig,
+    *,
+    extra_protected_paths: Iterable[Path] = (),
 ) -> list[Path]:
     """Resolve protected paths from explicit dirs and glob patterns."""
     protected: list[Path] = []
+    normalized_repo_root = Path(os.path.realpath(repo_root))
     for raw_dir in config.protected_dirs:
         path = _resolve_path_under_root(repo_root, raw_dir)
         if path is None:
@@ -396,7 +400,24 @@ def _collect_protected_paths(
             continue
         for path in matches:
             protected.append(path)
+    for raw_path in extra_protected_paths:
+        try:
+            resolved = Path(os.path.realpath(raw_path))
+        except OSError:
+            continue
+        if _is_relative_to(resolved, normalized_repo_root):
+            protected.append(resolved)
     return _prune_nested_paths(protected)
+
+
+def _managed_environment_protected_paths(repo_root: Path) -> tuple[Path, ...]:
+    """Return cleanup roots resolved from managed-environment metadata."""
+    try:
+        return managed_environment_runtime.resolve_cleanup_protected_paths(
+            repo_root
+        )
+    except ValueError:
+        return ()
 
 
 def _collect_requested_targets(
@@ -469,14 +490,25 @@ def _collect_requested_targets(
     return _prune_nested_paths(existing)
 
 
-def _conflicts_with_protected(path: Path, protected: Iterable[Path]) -> bool:
-    """Return True when deleting `path` would touch protected content."""
+def _conflicting_protected_path(
+    path: Path, protected: Iterable[Path]
+) -> Path | None:
+    """Return the protecting path that conflicts with deleting `path`."""
+    resolved_path = Path(os.path.realpath(path))
     for protected_path in protected:
-        if _is_relative_to(path, protected_path):
-            return True
-        if _is_relative_to(protected_path, path):
-            return True
-    return False
+        resolved_protected = Path(os.path.realpath(protected_path))
+        if _is_relative_to(resolved_path, resolved_protected):
+            return resolved_protected
+        if _is_relative_to(resolved_protected, resolved_path):
+            return resolved_protected
+    return None
+
+
+def _format_skipped_protected_summary(display_path: str, count: int) -> str:
+    """Return a human-readable skipped-protected summary token."""
+    if count <= 1:
+        return display_path
+    return f"{display_path} ({count} matches skipped)"
 
 
 def _delete_path(target: Path) -> None:
@@ -498,23 +530,43 @@ def _repo_relative(path: Path, repo_root: Path) -> str:
         return str(path)
 
 
-def execute_cleanup(repo_root: Path, selection: CleanSelection) -> CleanResult:
+def execute_cleanup(
+    repo_root: Path,
+    selection: CleanSelection,
+    *,
+    extra_protected_paths: Iterable[Path] = (),
+) -> CleanResult:
     """Execute cleanup for one repository and return structured results."""
     config = resolve_clean_config(repo_root)
-    protected = _collect_protected_paths(repo_root, config)
+    managed_environment_paths = _managed_environment_protected_paths(repo_root)
+    protected = _collect_protected_paths(
+        repo_root,
+        config,
+        extra_protected_paths=(
+            *tuple(extra_protected_paths),
+            *managed_environment_paths,
+        ),
+    )
     requested = _collect_requested_targets(repo_root, config, selection)
 
     removed_paths: list[str] = []
-    skipped_paths: list[str] = []
+    skipped_counts: dict[str, int] = {}
     for path in requested:
-        if _conflicts_with_protected(path, protected):
-            skipped_paths.append(_repo_relative(path, repo_root))
+        conflicting = _conflicting_protected_path(path, protected)
+        if conflicting is not None:
+            key = _repo_relative(conflicting, repo_root)
+            skipped_counts[key] = skipped_counts.get(key, 0) + 1
             continue
         _delete_path(path)
         removed_paths.append(_repo_relative(path, repo_root))
 
+    skipped_paths = tuple(
+        _format_skipped_protected_summary(path, skipped_counts[path])
+        for path in sorted(skipped_counts)
+    )
     return CleanResult(
         selection=selection,
         removed_paths=tuple(sorted(removed_paths)),
-        skipped_protected_paths=tuple(sorted(_dedupe(skipped_paths))),
+        skipped_protected_paths=skipped_paths,
+        skipped_protected_match_count=sum(skipped_counts.values()),
     )

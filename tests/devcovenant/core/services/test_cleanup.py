@@ -311,6 +311,89 @@ def _unit_test_execute_cleanup_preserves_protected() -> None:
         )
 
 
+def _unit_test_execute_cleanup_preserves_extra_protected_paths() -> None:
+    """Cleanup execution should preserve runtime-provided protected paths."""
+    module = importlib.import_module(MODULE)
+    with tempfile.TemporaryDirectory() as temp_dir:
+        repo_root = Path(temp_dir)
+        repo_seed_cache.copy_installed_repo(repo_root)
+
+        logs_root = repo_root / "devcovenant" / "logs"
+        logs_root.mkdir(parents=True, exist_ok=True)
+        (logs_root / "README.md").write_text("tracked\n", encoding="utf-8")
+        active_run_dir = logs_root / "20260323T000000000000Z-clean"
+        stale_run_dir = logs_root / "20260315T000000000000Z-clean-test"
+        active_run_dir.mkdir()
+        stale_run_dir.mkdir()
+        (active_run_dir / "summary.txt").write_text("run\n", encoding="utf-8")
+        (stale_run_dir / "summary.txt").write_text("run\n", encoding="utf-8")
+
+        selection = module.resolve_clean_selection(
+            include_all=False,
+            include_build=False,
+            include_cache=False,
+            include_registry=False,
+            include_logs=True,
+        )
+        result = module.execute_cleanup(
+            repo_root,
+            selection,
+            extra_protected_paths=(active_run_dir,),
+        )
+
+        assert active_run_dir.exists()
+        assert not stale_run_dir.exists()
+        assert (logs_root / "README.md").is_file()
+        assert (
+            "devcovenant/logs/20260323T000000000000Z-clean"
+            in result.skipped_protected_paths
+        )
+
+
+def _unit_test_execute_cleanup_summarizes_managed_environment_protection() -> (
+    None
+):
+    """Managed-environment cleanup protection should summarize by root."""
+    module = importlib.import_module(MODULE)
+    with tempfile.TemporaryDirectory() as temp_dir:
+        repo_root = Path(temp_dir)
+        repo_seed_cache.copy_installed_repo(repo_root)
+
+        managed_cache = repo_root / ".venv" / "lib" / "__pycache__"
+        managed_cache.mkdir(parents=True)
+        (managed_cache / "runtime.cpython-314.pyc").write_text(
+            "bytecode\n",
+            encoding="utf-8",
+        )
+        ordinary_cache = repo_root / "pkg" / "__pycache__"
+        ordinary_cache.mkdir(parents=True)
+        (ordinary_cache / "module.cpython-314.pyc").write_text(
+            "bytecode\n",
+            encoding="utf-8",
+        )
+
+        selection = module.resolve_clean_selection(
+            include_all=False,
+            include_build=False,
+            include_cache=True,
+            include_registry=False,
+            include_logs=False,
+        )
+        import unittest.mock as mock
+
+        with mock.patch.object(
+            module,
+            "_managed_environment_protected_paths",
+            return_value=(repo_root / ".venv",),
+        ):
+            result = module.execute_cleanup(repo_root, selection)
+
+        assert managed_cache.exists()
+        assert not ordinary_cache.exists()
+        assert result.skipped_protected_paths == (".venv",)
+        assert result.skipped_protected_match_count == 1
+
+
 class GeneratedUnittestCases(unittest.TestCase):
     """unittest wrappers for cleanup service regression coverage."""
 
@@ -343,3 +426,11 @@ class GeneratedUnittestCases(unittest.TestCase):
     ):
         """Run cleanup execution protection coverage."""
         _unit_test_execute_cleanup_preserves_protected()
+
+    def test_execute_cleanup_preserves_extra_protected_paths(self):
+        """Run runtime-provided cleanup protection coverage."""
+        _unit_test_execute_cleanup_preserves_extra_protected_paths()
+
+    def test_execute_cleanup_summarizes_managed_environment_protection(self):
+        """Run managed-environment cleanup protection summary coverage."""
+        _unit_test_execute_cleanup_summarizes_managed_environment_protection()

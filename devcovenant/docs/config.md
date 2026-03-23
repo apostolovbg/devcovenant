@@ -172,6 +172,35 @@ That is how a repository can carry supported-language compatibility or
 assurance jobs without pushing those language-specific checks into the global
 base workflow.
 
+### clean
+Cleanup targets are profile-driven.
+Active profiles contribute reusable cleanup ownership through
+`clean_overlays`, and local config only adjusts that resolved set.
+
+Use `clean.overlays` when this repository needs extra cleanup targets beyond
+what the active profiles already declare.
+Use `clean.overrides` only when this repository deliberately wants to replace
+one resolved cleanup key entirely.
+
+An empty `clean.overrides: {}` means "use the profile defaults."
+If you intentionally want to clear one inherited list, do it explicitly per
+key, for example `cache_dirs: []`.
+Refresh also normalizes the old legacy pattern where every override key was
+present with an empty list, because that stale template shape accidentally
+disabled all profile cleanup targets by default.
+
+Cleanup protection uses a second ownership split.
+Profile and config cleanup lists decide what can be deleted, while the runtime
+also protects engine-critical paths such as the active clean run directory and
+the managed environment roots declared by the managed-environment policy.
+
+That managed-environment protection is generic.
+Use `managed-environment.cleanup_protected_paths` when the environment should
+protect specific roots during cleanup.
+If that metadata is empty, DevCovenant falls back to the policy's
+`expected_paths`, and only then to explicit interpreter paths when no root is
+available.
+
 ## Project Governance In Practice
 Most repositories change these first:
 

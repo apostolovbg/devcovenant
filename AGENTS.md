@@ -1142,6 +1142,7 @@ custom: false
 expected_paths: .venv
 expected_interpreters: .venv/bin/python
   .venv/Scripts/python.exe
+cleanup_protected_paths:
 required_commands: python3
   pre-commit
   pytest
@@ -1154,6 +1155,7 @@ managed_commands: start=>python3 -m venv .venv
 DevCovenant must run from the managed environment described in this
 policy's metadata. Use expected_paths for virtualenv or bench roots,
 expected_interpreters for explicit interpreter locations, and
+optional cleanup_protected_paths for cleanup-safe roots, and
 required_commands with `manual_commands`, stage-scoped
 `managed_commands` to define guidance and runtime preparation.
 Active managed-environment policy now also re-executes DevCovenant CLI

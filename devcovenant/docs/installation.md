@@ -93,6 +93,13 @@ generated workflow files, `.gitignore`, and related governed artifacts.
 Removes disposable build, cache, runtime-registry, or log artifacts according
 to the resolved cleanup targets.
 Run it only after the active gate session is closed.
+When the logs scope is selected, `clean` may delete older run folders, but it
+must keep the active clean run folder so the reported summary path stays
+available after the command finishes.
+It must also protect the configured managed environment generically through the
+managed-environment policy metadata instead of through a hardcoded `.venv`
+rule, so a bench or another managed environment type can define its own safe
+roots.
 
 ### upgrade
 Reconciles the installed DevCovenant package from source and then runs

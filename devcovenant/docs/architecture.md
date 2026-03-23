@@ -1,5 +1,5 @@
 # DevCovenant Architecture
-**Last Updated:** 2026-03-22
+**Last Updated:** 2026-03-23
 **Project Version:** 1.0.0
 
 ## Overview
@@ -149,6 +149,22 @@ That keeps console behavior, run logs, and normalized errors aligned.
 
 Unhandled runtime exceptions are normalized into explicit user-facing errors,
 while the run logs keep the deeper diagnostic detail.
+
+Cleanup shows how the layers cooperate:
+
+- profile and config metadata describe cleanup targets
+
+- the cleanup service resolves and prunes those targets
+
+- runtime context injects protected paths such as the active clean run folder
+
+- managed-environment runtime contributes generic environment-safe roots
+
+- execution summary rendering records what was removed and which protected
+  roots were skipped
+
+That keeps deletion rules configurable without letting cleanup destroy the
+toolchain or its own active evidence.
 
 ## Contract Map
 The stable contract surfaces live in these docs:

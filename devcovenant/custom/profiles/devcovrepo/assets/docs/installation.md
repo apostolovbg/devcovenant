@@ -22,6 +22,9 @@ Explain:
 
 - cleanup, undeploy, and uninstall
 
+- the rule that `clean` may prune older logs but must keep its active run
+  folder
+
 - empty-repo, seeded-doc, and existing-repo starting situations
 
 - the first full gate cycle as proof that activation succeeded

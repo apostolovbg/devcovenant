@@ -97,6 +97,13 @@ When you see `Run logs: ...`, inspect them in this order:
 
 This is the fastest way to understand a failure without rerunning commands in a
 noisier mode.
+That pointer should stay valid after the command finishes; for example,
+`clean --logs` may prune older run folders, but it must not delete the active
+clean run's own artifact directory.
+Cleanup reporting should also stay readable.
+When cleanup skips protected matches inside the managed environment, the run
+artifacts should summarize that by protected root instead of dumping hundreds
+of nested cache paths.
 
 ## Recovery Rules
 ### Start gate failed
@@ -171,6 +178,16 @@ The important part is not the exact command.
 The important part is that CI exercises the managed-environment contract
 generically, so a different environment type such as a bench can work through
 the same metadata-driven path.
+
+## Refresh-Owned Config Normalization
+Refresh can clean up stale generated-config defaults when they would otherwise
+change runtime behavior accidentally.
+One current example is the legacy all-empty `clean.overrides` block: refresh
+collapses that stale shape back to `{}` so profile-driven cleanup targets stay
+active unless a repository explicitly replaces one cleanup key on purpose.
+Another is cleanup protection itself: cleanup targets come from profiles and
+config, but the active managed environment and the active clean run directory
+are runtime-protected paths resolved separately from those delete lists.
 
 ## Operator Checklist
 Before you close a slice, confirm:

@@ -46,6 +46,18 @@ ProjectGovernanceState = project_governance_service.ProjectGovernanceState
 
 USER_GITIGNORE_BEGIN = "# --- User entries (preserved) ---"
 USER_GITIGNORE_END = "# --- End user entries ---"
+_CLEAN_TARGET_KEYS = (
+    "build_dirs",
+    "build_globs",
+    "cache_dirs",
+    "cache_globs",
+    "runtime_registry_dirs",
+    "runtime_registry_globs",
+    "logs_dirs",
+    "logs_globs",
+    "protected_dirs",
+    "protected_globs",
+)
 
 
 def _utc_today() -> str:
@@ -858,6 +870,7 @@ def _refresh_config_generated(
     else:
         doc_assets["user"] = []
     merged["doc_assets"] = doc_assets
+    _normalize_clean_config_defaults(merged)
 
     rendered = _render_config_yaml(merged)
     current = _read_text_if_exists(config_path)
@@ -866,6 +879,26 @@ def _refresh_config_generated(
     config_path.parent.mkdir(parents=True, exist_ok=True)
     config_path.write_text(rendered, encoding="utf-8")
     return merged, True
+
+
+def _normalize_clean_config_defaults(merged: dict[str, object]) -> None:
+    """Collapse legacy clean overrides that accidentally clear profiles."""
+    clean_block = merged.get("clean")
+    if not isinstance(clean_block, dict):
+        return
+    raw_overrides = clean_block.get("overrides")
+    if not isinstance(raw_overrides, dict):
+        return
+    override_keys = {str(key).strip() for key in raw_overrides}
+    if override_keys != set(_CLEAN_TARGET_KEYS):
+        return
+    for key in _CLEAN_TARGET_KEYS:
+        value = raw_overrides.get(key)
+        if not isinstance(value, list) or any(
+            str(item).strip() for item in value
+        ):
+            return
+    clean_block["overrides"] = {}
 
 
 def _apply_profile_aware_engine_defaults(
