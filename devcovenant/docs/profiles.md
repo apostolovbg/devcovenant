@@ -129,8 +129,9 @@ Use config overrides after that for repository-specific deltas.
 The same profile boundary helps with config readability.
 The global config asset is where DevCovenant now lists the full
 `project-governance` key set, the default allowed `stage` values, the default
-allowed `development_stance` values, and the two legal
-`versioning_mode` values directly in the generated config comments.
+allowed `maintenance_stance` values, the legal
+`compatibility_policy` values, and the two legal `versioning_mode` values
+directly in the generated config comments.
 The same boundary also matters for cleanup:
 the global profile can seed reusable cleanup targets, but it should not
 hardcode one language-specific managed environment path such as `.venv`.
@@ -144,15 +145,24 @@ DevCovenant core files.
 
 A custom profile is a good fit when a repository needs:
 
-- custom managed docs
+1. custom managed docs
 
-- recurring selectors
+2. recurring selectors
 
-- repo-specific metadata overlays
+3. repo-specific metadata overlays
 
-- repo-specific pre-commit fragments
+4. repo-specific pre-commit fragments
+
+5. repo-specific reference-map assets that explain local custom behavior
+   cleanly
 
 It is not a good fit for a one-off local toggle that belongs in config.
+
+A repo-specific custom profile can own reference assets such as
+`POLICY_MAP.yaml`.
+Those assets can describe local policy behavior, including packaged README
+sync that rewrites public links from package metadata instead of hardcoding
+one upstream URL into shared runtime code.
 
 ## Example Profile Shapes
 A repository can combine general stack profiles with narrower tooling or API

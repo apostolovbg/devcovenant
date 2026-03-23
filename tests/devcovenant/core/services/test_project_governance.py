@@ -52,7 +52,8 @@ class GeneratedUnittestCases(unittest.TestCase):
                 state.project_description,
             )
             self.assertEqual(state.stage, "prototype")
-            self.assertEqual(state.development_stance, "experimental")
+            self.assertEqual(state.maintenance_stance, "active")
+            self.assertEqual(state.compatibility_policy, "unspecified")
             self.assertEqual(
                 state.displayed_project_version("1.2.3"), "Unversioned"
             )
@@ -118,7 +119,8 @@ class GeneratedUnittestCases(unittest.TestCase):
                 "DevCovenant is a Repository Governance Framework."
             ),
             stage="stable",
-            development_stance="active-development",
+            maintenance_stance="active",
+            compatibility_policy="breaking-allowed",
             versioning_mode="versioned",
             codename="Atlas",
             build_identity="2026.03.20.1",
@@ -131,7 +133,11 @@ class GeneratedUnittestCases(unittest.TestCase):
         )
         self.assertEqual(payload["project_version"], "1.2.3")
         self.assertEqual(payload["stage"], "stable")
-        self.assertEqual(payload["development_stance"], "active-development")
+        self.assertEqual(payload["maintenance_stance"], "active")
+        self.assertEqual(
+            payload["compatibility_policy"],
+            "breaking-allowed",
+        )
         self.assertEqual(payload["versioning_mode"], "versioned")
         self.assertEqual(payload["codename"], "Atlas")
         self.assertEqual(payload["build_identity"], "2026.03.20.1")

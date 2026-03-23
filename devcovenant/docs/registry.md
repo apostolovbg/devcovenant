@@ -23,14 +23,17 @@ It stores deterministic governance state such as:
 
 2. resolved core-invariant metadata
 
-3. active profile inventory
+3. active project-governance state, including stage, maintenance stance,
+   compatibility policy, and versioning mode
 
-4. managed-doc and generation state
+4. active profile inventory
 
-5. profile-provided generation fragments, including reusable
+5. managed-doc and generation state
+
+6. profile-provided generation fragments, including reusable
    `ci_and_test` additions
 
-6. resolution traces used for auditing and debugging
+7. resolution traces used for auditing and debugging
 
 Commit tracked-registry changes when they are the result of real repo changes.
 
@@ -97,3 +100,8 @@ environment root is a global cleanup default.
 Managed-environment cleanup protection belongs in the resolved
 managed-environment metadata so cleanup can protect a `venv`, a bench, or
 another environment type through the same runtime contract.
+
+The same idea applies to packaged README sync.
+If the tracked registry shows repo-specific `readme-sync` metadata or
+diagnostics, that state should reflect package-facing link rewriting derived
+from repository package metadata, not a hardcoded upstream repository URL.

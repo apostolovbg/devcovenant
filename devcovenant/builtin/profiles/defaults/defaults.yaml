@@ -122,7 +122,8 @@ policy_overlays:
       - Last Updated
       - Project Version
       - Project Stage
-      - Development Stance
+      - Maintenance Stance
+      - Compatibility Policy
       - Versioning Mode
       - Project Codename
       - Build Identity
@@ -498,13 +499,10 @@ project-governance:
     - alpha
     - beta
     - stable
-    - mature
     - deprecated
     - archived
-  allowed_development_stances:
-    - experimental
-    - active-development
+  allowed_maintenance_stances:
+    - active
     - maintenance
-    - release-managed
     - frozen
     - sunset

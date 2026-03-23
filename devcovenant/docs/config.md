@@ -93,11 +93,13 @@ This block includes these keys and value rules:
 summary used by managed README and synchronized package metadata surfaces.
 
 `stage`: one value from `allowed_stages`. The default set is `prototype`,
-`alpha`, `beta`, `stable`, `mature`, `deprecated`, `archived`.
+`alpha`, `beta`, `stable`, `deprecated`, `archived`.
 
-`development_stance`: one value from `allowed_development_stances`. The
-default set is `experimental`, `active-development`, `maintenance`,
-`release-managed`, `frozen`, `sunset`.
+`maintenance_stance`: one value from `allowed_maintenance_stances`. The
+default set is `active`, `maintenance`, `frozen`, `sunset`.
+
+`compatibility_policy`: `backward-compatible`, `breaking-allowed`, or
+`unspecified`.
 
 `versioning_mode`: `versioned` or `unversioned`.
 
@@ -115,11 +117,12 @@ visible changelog heading must match this exactly.
 
 `allowed_stages`: a non-empty list of allowed `stage` values.
 
-`allowed_development_stances`: a non-empty list of allowed
-`development_stance` values.
+`allowed_maintenance_stances`: a non-empty list of allowed
+`maintenance_stance` values.
 
-This is where the repo says what it is called, how mature it is, and whether
-it is intentionally unversioned or actively versioned.
+This is where the repo says what it is called, what lifecycle stage it is in,
+how actively it is still changing, what compatibility promise it is making,
+and whether it is intentionally unversioned or actively versioned.
 Managed docs, registry outputs, and related public surfaces render from this
 state.
 
@@ -210,7 +213,9 @@ Most repositories change these first:
 
 - `stage`
 
-- `development_stance`
+- `maintenance_stance`
+
+- `compatibility_policy`
 
 - `versioning_mode`
 

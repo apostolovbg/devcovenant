@@ -85,6 +85,7 @@ def _unit_test_deploy_adopts_pre_authored_spec_doc() -> None:
         updated = spec_path.read_text(encoding="utf-8")
         assert "Imported app specification body." in updated
         assert "**Project Stage:** prototype" in updated
+        assert "**Compatibility Policy:** unspecified" in updated
         assert "**Versioning Mode:** unversioned" in updated
 
 

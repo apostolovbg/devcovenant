@@ -3,7 +3,8 @@
 **Doc Type:** changelog
 **Project Version:** 1.0.0
 **Project Stage:** stable
-**Development Stance:** active-development
+**Maintenance Stance:** active
+**Compatibility Policy:** breaking-allowed
 **Versioning Mode:** versioned
 **Last Updated:** 2026-03-23
 **DevCovenant Version:** 1.0.0
@@ -58,6 +59,87 @@ Example:
 ## Log changes here
 
 ## Version 1.0.0
+
+- 2026-03-23:
+  Change: Updated the repo-specific `readme-sync` policy so the packaged
+  README can rewrite repo-relative public links from package metadata instead
+  of from a hardcoded upstream URL, and updated the owning docs for that
+  package-facing contract.
+  Why: Avoided hardcoded repository URLs in both runtime logic and tests so
+  forks can keep their packaged README links correct by updating
+  `pyproject.toml` rather than patching repo-specific policy code.
+  Impact: Packaged README sync is now safer for forks, the PyPI-facing link
+  strategy is clearer, and the profile/registry/policy docs now explain the
+  metadata-driven contract behind that behavior.
+  Files:
+  CHANGELOG.md
+  PLAN.md
+  devcovenant/README.md
+  devcovenant/custom/policies/readme_sync/readme_sync.py
+  devcovenant/custom/policies/readme_sync/readme_sync.yaml
+  devcovenant/custom/profiles/devcovrepo/assets/POLICY_MAP.yaml
+  devcovenant/docs/policies.md
+  devcovenant/docs/profiles.md
+  devcovenant/docs/registry.md
+  devcovenant/registry/registry.yaml
+  tests/devcovenant/custom/policies/readme_sync/test_readme_sync.py
+
+- 2026-03-23:
+  Change: Rewrote `PLAN.md` into a detailed pre-release remediation roadmap
+  organized around the final audit findings, with explicit items for the PyPI
+  README link contract, generated config comment drift, packaging warnings,
+  final docs polish, renewed QA closure, and release-candidate preparation.
+  Why: Clarified that the previous plan still read like a status ledger for
+  already-landed stabilization work, while the repo now needs a sharp working
+  document that sequences the remaining finish work before the next audit and
+  release cut.
+  Impact: Clarifies the remaining product-finish defects instead of restating
+  earlier completed work, so the next slices can close the last gaps
+  methodically and with clearer done criteria.
+  Files:
+  CHANGELOG.md
+  PLAN.md
+
+- 2026-03-23:
+  Change: Replaced the old project-governance `development_stance` model with
+  `maintenance_stance` plus `compatibility_policy`, updated the default stage
+  and maintenance vocabularies, and rewired managed headers, registry output,
+  config comments, and governance-heavy tests to the new schema.
+  Why: The previous stance field was too vague to express release reality, so
+  the repo needed a clearer split between lifecycle stage, current maintenance
+  posture, and compatibility promise before the pre-release audit work.
+  Impact: DevCovenant now renders and validates `stage`,
+  `maintenance_stance`, `compatibility_policy`, and `versioning_mode`
+  together, the current repo advertises `breaking-allowed` compatibility
+  explicitly, and refresh migrates the managed docs and registry to that new
+  governance contract.
+  Files:
+  AGENTS.md
+  CHANGELOG.md
+  PLAN.md
+  SPEC.md
+  devcovenant/builtin/profiles/defaults/defaults.yaml
+  devcovenant/builtin/profiles/global/assets/config.yaml
+  devcovenant/config.yaml
+  devcovenant/core/flow/refresh.py
+  devcovenant/core/services/managed_docs.py
+  devcovenant/core/services/project_governance.py
+  devcovenant/custom/policies/managed_doc_assets/managed_doc_assets.py
+  devcovenant/custom/profiles/devcovrepo/devcovrepo.yaml
+  devcovenant/docs/config.md
+  devcovenant/docs/policies.md
+  devcovenant/docs/profiles.md
+  devcovenant/docs/project_governance.md
+  devcovenant/docs/registry.md
+  devcovenant/registry/registry.yaml
+  tests/devcovenant/builtin/policies/changelog_coverage/\
+  test_changelog_coverage.py
+  tests/devcovenant/core/flow/test_gate.py
+  tests/devcovenant/core/flow/test_gate_changelog_helpers.py
+  tests/devcovenant/core/services/test_managed_docs.py
+  tests/devcovenant/core/services/test_project_governance.py
+  tests/devcovenant/test_deploy.py
+  tests/devcovenant/test_refresh.py
 
 - 2026-03-23:
   Change: Removed hardcoded `.venv` cleanup protection, made managed

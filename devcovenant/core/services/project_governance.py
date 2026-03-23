@@ -15,18 +15,20 @@ _DEFAULT_STAGES = (
     "alpha",
     "beta",
     "stable",
-    "mature",
     "deprecated",
     "archived",
 )
-_DEFAULT_DEVELOPMENT_STANCES = (
-    "experimental",
-    "active-development",
+_DEFAULT_MAINTENANCE_STANCES = (
+    "active",
     "maintenance",
-    "release-managed",
     "frozen",
     "sunset",
 )
+_ALLOWED_COMPATIBILITY_POLICIES = {
+    "backward-compatible",
+    "breaking-allowed",
+    "unspecified",
+}
 _ALLOWED_VERSIONING_MODES = {"versioned", "unversioned"}
 _DEFAULT_UNVERSIONED_LABEL = "Unversioned"
 _DEFAULT_UNRELEASED_HEADING = "## Unreleased"
@@ -49,7 +51,8 @@ class ProjectGovernanceState:
     project_name: str = _DEFAULT_PROJECT_NAME
     project_description: str = _DEFAULT_PROJECT_DESCRIPTION
     stage: str = ""
-    development_stance: str = ""
+    maintenance_stance: str = ""
+    compatibility_policy: str = "unspecified"
     versioning_mode: str = "versioned"
     codename: str = ""
     build_identity: str = ""
@@ -57,7 +60,7 @@ class ProjectGovernanceState:
     unreleased_heading: str = _DEFAULT_UNRELEASED_HEADING
     changelog_file: str = _DEFAULT_CHANGELOG_FILE
     allowed_stages: tuple[str, ...] = _DEFAULT_STAGES
-    allowed_development_stances: tuple[str, ...] = _DEFAULT_DEVELOPMENT_STANCES
+    allowed_maintenance_stances: tuple[str, ...] = _DEFAULT_MAINTENANCE_STANCES
 
     @property
     def is_unversioned(self) -> bool:
@@ -79,7 +82,8 @@ class ProjectGovernanceState:
         """Return managed-doc governance header lines for opted-in docs."""
         lines = [
             f"**Project Stage:** {self.stage}",
-            f"**Development Stance:** {self.development_stance}",
+            f"**Maintenance Stance:** {self.maintenance_stance}",
+            f"**Compatibility Policy:** {self.compatibility_policy}",
             f"**Versioning Mode:** {self.versioning_mode}",
         ]
         if self.codename:
@@ -101,7 +105,8 @@ class ProjectGovernanceState:
                 f"{self.displayed_project_version(declared_version)}"
             ),
             f"- Project Stage: {self.stage}",
-            f"- Development Stance: {self.development_stance}",
+            f"- Maintenance Stance: {self.maintenance_stance}",
+            f"- Compatibility Policy: {self.compatibility_policy}",
             f"- Versioning Mode: {self.versioning_mode}",
         ]
         if self.codename:
@@ -119,15 +124,16 @@ class ProjectGovernanceState:
                 declared_version
             ),
             "stage": self.stage,
-            "development_stance": self.development_stance,
+            "maintenance_stance": self.maintenance_stance,
+            "compatibility_policy": self.compatibility_policy,
             "versioning_mode": self.versioning_mode,
             "unversioned_label": self.unversioned_label,
             "unreleased_heading": self.unreleased_heading,
             "changelog_file": self.changelog_file,
             "release_headings": release_headings_for_state(self),
             "allowed_stages": list(self.allowed_stages),
-            "allowed_development_stances": list(
-                self.allowed_development_stances
+            "allowed_maintenance_stances": list(
+                self.allowed_maintenance_stances
             ),
         }
         if self.codename:
@@ -160,8 +166,18 @@ def resolve_runtime_state(
         or _DEFAULT_PROJECT_DESCRIPTION
     )
     stage = _required_string(raw_block, "stage")
-    development_stance = _required_string(raw_block, "development_stance")
+    maintenance_stance = _required_string(raw_block, "maintenance_stance")
+    compatibility_policy = _required_string(
+        raw_block,
+        "compatibility_policy",
+    ).lower()
     versioning_mode = _required_string(raw_block, "versioning_mode").lower()
+    if compatibility_policy not in _ALLOWED_COMPATIBILITY_POLICIES:
+        raise ValueError(
+            "`project-governance.compatibility_policy` must be one of: "
+            + ", ".join(sorted(_ALLOWED_COMPATIBILITY_POLICIES))
+            + "."
+        )
     if versioning_mode not in _ALLOWED_VERSIONING_MODES:
         raise ValueError(
             "`project-governance.versioning_mode` must be `versioned` "
@@ -181,16 +197,16 @@ def resolve_runtime_state(
             + "."
         )
 
-    allowed_development_stances = tuple(
+    allowed_maintenance_stances = tuple(
         _normalized_list(
-            raw_block.get("allowed_development_stances"),
-            default=_DEFAULT_DEVELOPMENT_STANCES,
+            raw_block.get("allowed_maintenance_stances"),
+            default=_DEFAULT_MAINTENANCE_STANCES,
         )
     )
-    if development_stance not in allowed_development_stances:
+    if maintenance_stance not in allowed_maintenance_stances:
         raise ValueError(
-            "`project-governance.development_stance` must be one of: "
-            + ", ".join(allowed_development_stances)
+            "`project-governance.maintenance_stance` must be one of: "
+            + ", ".join(allowed_maintenance_stances)
             + "."
         )
 
@@ -201,7 +217,8 @@ def resolve_runtime_state(
         project_name=project_name,
         project_description=project_description,
         stage=stage,
-        development_stance=development_stance,
+        maintenance_stance=maintenance_stance,
+        compatibility_policy=compatibility_policy,
         versioning_mode=versioning_mode,
         codename=_string_option(raw_block, "codename"),
         build_identity=_string_option(raw_block, "build_identity"),
@@ -215,7 +232,7 @@ def resolve_runtime_state(
         ),
         changelog_file=changelog_file,
         allowed_stages=allowed_stages,
-        allowed_development_stances=allowed_development_stances,
+        allowed_maintenance_stances=allowed_maintenance_stances,
     )
 
 

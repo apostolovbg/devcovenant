@@ -178,7 +178,8 @@ def _make_checker(
                 [
                     "project-governance:",
                     "  stage: stable",
-                    "  development_stance: active-development",
+                    "  maintenance_stance: active",
+                    "  compatibility_policy: breaking-allowed",
                     "  versioning_mode: versioned",
                     "",
                 ]

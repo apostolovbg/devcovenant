@@ -6,7 +6,8 @@ project-governance:
   project_description: DevCovenant is a Repository Governance Framework.
   project_version: 1.0.0
   stage: stable
-  development_stance: active-development
+  maintenance_stance: active
+  compatibility_policy: breaking-allowed
   versioning_mode: versioned
   unversioned_label: Unversioned
   unreleased_heading: '## Unreleased'
@@ -18,14 +19,11 @@ project-governance:
   - alpha
   - beta
   - stable
-  - mature
   - deprecated
   - archived
-  allowed_development_stances:
-  - experimental
-  - active-development
+  allowed_maintenance_stances:
+  - active
   - maintenance
-  - release-managed
   - frozen
   - sunset
 managed-docs:
@@ -91,7 +89,7 @@ managed-docs:
       project_governance_headers: false
       import_seed: true
       authoritative_source: true
-      body_fingerprint: 164af96bd0ad07a3197155adec2cda3020936e054cf145266d1b0a77193e57e1
+      body_fingerprint: ae3a0451127c3ba05b57669ac35d69a03bf12d39ac63ca94b503f596d4aba05e
       legacy_generic_body_fingerprints: []
     PROFILE_MAP.md:
       enabled: true
@@ -744,8 +742,9 @@ policies:
       gate_status_file: devcovenant/registry/runtime/gate_status.json
       collections: ''
       header_doc_suffixes: .md, .rst, .txt
-      header_keys: Last Updated, Project Version, Project Stage, Development Stance,
-        Versioning Mode, Project Codename, Build Identity, DevCovenant Version
+      header_keys: Last Updated, Project Version, Project Stage, Maintenance Stance,
+        Compatibility Policy, Versioning Mode, Project Codename, Build Identity, DevCovenant
+        Version
       header_scan_lines: '4'
       required_globs: README.md, AGENTS.md, CONTRIBUTING.md, CHANGELOG.md, SPEC.md,
         PLAN.md
@@ -1651,7 +1650,8 @@ policies:
           - Last Updated
           - Project Version
           - Project Stage
-          - Development Stance
+          - Maintenance Stance
+          - Compatibility Policy
           - Versioning Mode
           - Project Codename
           - Build Identity
@@ -1662,7 +1662,8 @@ policies:
           - Last Updated
           - Project Version
           - Project Stage
-          - Development Stance
+          - Maintenance Stance
+          - Compatibility Policy
           - Versioning Mode
           - Project Codename
           - Build Identity
@@ -1673,7 +1674,8 @@ policies:
           - Last Updated
           - Project Version
           - Project Stage
-          - Development Stance
+          - Maintenance Stance
+          - Compatibility Policy
           - Versioning Mode
           - Project Codename
           - Build Identity
@@ -2056,7 +2058,8 @@ policies:
       - Last Updated
       - Project Version
       - Project Stage
-      - Development Stance
+      - Maintenance Stance
+      - Compatibility Policy
       - Versioning Mode
       - Project Codename
       - Build Identity
@@ -5112,7 +5115,7 @@ policies:
     assets: []
     origin: custom
     script_exists: true
-    hash: eb0ef2058e5fa719d654978b770fd695a4c01e8183bd5361954af4e8f2a1b333
+    hash: 57dc1f1c4e075cff6e47885c07300b7b4d182dabdebce5461bc51e2af3f73c30
     script_path: custom/managed_doc_assets.py
   managed-environment:
     enabled: true
@@ -7438,8 +7441,10 @@ policies:
     policy_text: |-
       Ensure `devcovenant/README.md` stays synchronized with the authored root
       `README.md` while removing repository-only sections via the
-      `<!-- REPO-ONLY:BEGIN -->` / `<!-- REPO-ONLY:END -->` markers. Auto-fix
-      rewrites the packaged guide from the repo README.
+      `<!-- REPO-ONLY:BEGIN -->` / `<!-- REPO-ONLY:END -->` markers and
+      rewriting repo-relative public links into package-safe repository URLs
+      resolved from `pyproject.toml`. Auto-fix rewrites the packaged guide from
+      the repo README.
     metadata:
       id: readme-sync
       severity: error
@@ -7528,7 +7533,7 @@ policies:
     assets: []
     origin: custom
     script_exists: true
-    hash: f1c9814eacfae639a816bbc76d872f31bc525e33ff2c8c45bb7ded435a4b6419
+    hash: 9f22a04e615e91e37f8da38d18a92100ac5ca73aebd380bf3989d66a003b09b9
     script_path: custom/readme_sync.py
   security-scanner:
     enabled: true
@@ -10526,7 +10531,8 @@ profiles:
         - Last Updated
         - Project Version
         - Project Stage
-        - Development Stance
+        - Maintenance Stance
+        - Compatibility Policy
         - Versioning Mode
         - Project Codename
         - Build Identity
@@ -10902,14 +10908,11 @@ profiles:
       - alpha
       - beta
       - stable
-      - mature
       - deprecated
       - archived
-      allowed_development_stances:
-      - experimental
-      - active-development
+      allowed_maintenance_stances:
+      - active
       - maintenance
-      - release-managed
       - frozen
       - sunset
     source: builtin
@@ -11949,7 +11952,8 @@ profiles:
         version_file: devcovenant/VERSION
     project-governance:
       stage: stable
-      development_stance: active-development
+      maintenance_stance: active
+      compatibility_policy: breaking-allowed
       versioning_mode: versioned
     source: custom
     path: devcovenant/custom/profiles/devcovrepo

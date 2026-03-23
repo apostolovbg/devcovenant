@@ -34,7 +34,10 @@ class ManagedDocAssetsCheck(PolicyCheck):
     _DOC_TYPE_LABEL = managed_docs_service.DOC_TYPE_LABEL
     _PROJECT_VERSION_LABEL = managed_docs_service.PROJECT_VERSION_LABEL
     _PROJECT_STAGE_LABEL = managed_docs_service.PROJECT_STAGE_LABEL
-    _DEVELOPMENT_STANCE_LABEL = managed_docs_service.DEVELOPMENT_STANCE_LABEL
+    _MAINTENANCE_STANCE_LABEL = managed_docs_service.MAINTENANCE_STANCE_LABEL
+    _COMPATIBILITY_POLICY_LABEL = (
+        managed_docs_service.COMPATIBILITY_POLICY_LABEL
+    )
     _VERSIONING_MODE_LABEL = managed_docs_service.VERSIONING_MODE_LABEL
     _PROJECT_CODENAME_LABEL = managed_docs_service.PROJECT_CODENAME_LABEL
     _BUILD_IDENTITY_LABEL = managed_docs_service.BUILD_IDENTITY_LABEL

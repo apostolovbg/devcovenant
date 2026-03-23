@@ -372,7 +372,8 @@ def _unit_test_refresh_replaces_legacy_generic_spec_body() -> None:
             "**Doc Type:** specification\n"
             "**Project Version:** 1.0.0\n"
             "**Project Stage:** stable\n"
-            "**Development Stance:** active-development\n"
+            "**Maintenance Stance:** active\n"
+            "**Compatibility Policy:** breaking-allowed\n"
             "**Versioning Mode:** versioned\n"
             "**Last Updated:** 2026-01-01\n"
             "**DevCovenant Version:** 1.0.0\n\n"
@@ -406,7 +407,8 @@ def _unit_test_refresh_replaces_legacy_generic_plan_body() -> None:
             "**Doc Type:** plan\n"
             "**Project Version:** 1.0.0\n"
             "**Project Stage:** stable\n"
-            "**Development Stance:** active-development\n"
+            "**Maintenance Stance:** active\n"
+            "**Compatibility Policy:** breaking-allowed\n"
             "**Versioning Mode:** versioned\n"
             "**Last Updated:** 2026-01-01\n"
             "**DevCovenant Version:** 1.0.0\n\n"
@@ -962,7 +964,8 @@ def _unit_test_refresh_rejects_missing_version_for_versioned_repo() -> None:
         payload = yaml.safe_load(config_path.read_text(encoding="utf-8"))
         payload["project-governance"] = {
             "stage": "stable",
-            "development_stance": "active-development",
+            "maintenance_stance": "active",
+            "compatibility_policy": "breaking-allowed",
             "versioning_mode": "versioned",
         }
         config_path.write_text(
@@ -987,7 +990,8 @@ def _unit_test_refresh_allows_unversioned_repo_without_version_file() -> None:
         payload = yaml.safe_load(config_path.read_text(encoding="utf-8"))
         payload["project-governance"] = {
             "stage": "beta",
-            "development_stance": "active-development",
+            "maintenance_stance": "active",
+            "compatibility_policy": "breaking-allowed",
             "versioning_mode": "unversioned",
             "unversioned_label": "Unversioned",
             "unreleased_heading": "## Unreleased",

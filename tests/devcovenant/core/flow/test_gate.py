@@ -66,7 +66,8 @@ def _write_runtime_config(repo_root: Path) -> None:
             [
                 "project-governance:",
                 "  stage: stable",
-                "  development_stance: active-development",
+                "  maintenance_stance: active",
+                "  compatibility_policy: breaking-allowed",
                 "  versioning_mode: versioned",
                 "engine:",
                 "  auto_fix_enabled: false",
@@ -237,7 +238,8 @@ def _unit_test_start_respects_autofix_enabled_config() -> None:
                 [
                     "project-governance:",
                     "  stage: stable",
-                    "  development_stance: active-development",
+                    "  maintenance_stance: active",
+                    "  compatibility_policy: breaking-allowed",
                     "  versioning_mode: versioned",
                     "engine:",
                     "  auto_fix_enabled: true",

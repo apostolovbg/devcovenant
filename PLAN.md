@@ -3,7 +3,8 @@
 **Doc Type:** plan
 **Project Version:** 1.0.0
 **Project Stage:** stable
-**Development Stance:** active-development
+**Maintenance Stance:** active
+**Compatibility Policy:** breaking-allowed
 **Versioning Mode:** versioned
 **Last Updated:** 2026-03-23
 **DevCovenant Version:** 1.0.0
@@ -13,33 +14,37 @@ This opening section is managed by DevCovenant.
 Use `PLAN.md` to track active implementation work below this block.
 <!-- DEVCOV:END -->
 
-Use this plan to turn DevCovenant from a technically serious internal tool into
-a polished, externally credible, store-bought-looking product.
+Use this plan to close the remaining pre-release gaps surfaced by the final
+read-only audit and then rerun the release-closure audit from a cleaner,
+truer, more intentional baseline.
 
 ## Table of Contents
 1. [Overview](#overview)
-2. [Workflow](#workflow)
+2. [Working Rules](#working-rules)
 3. [Writing Direction](#writing-direction)
-4. [Active Work](#active-work)
+4. [Active Remediation](#active-remediation)
 5. [Validation Routine](#validation-routine)
 
 ## Overview
-- The earlier performance, documentation-architecture, and contract-freezing
-  work remains valid and should be preserved.
-- The current external QA audit changes the next priority:
-  - DevCovenant is functionally strong
-  - DevCovenant is not yet polished enough to feel commercially finished
-- The main gaps are now:
-  - public package presentation that still looks template-derived
-  - legal/compliance surfaces that are incomplete or out of sync
-  - dependency-management behavior that still spans policy logic, runtime
-    helpers, and one-off command wrappers without one formal contract
-  - core DevCovenant invariants still live in policy land even though they
-    define the engine's own non-optional trust boundary
-  - security/privacy/support trust surfaces that are too thin
-  - release/supply-chain assurance that is still below current best practice
-- This roadmap therefore focuses on external readiness, standardization, and
-  professional finish rather than on more internal refactoring.
+- The large stabilization work is already done and should be preserved:
+  - project governance now uses `stage`, `maintenance_stance`,
+    `compatibility_policy`, and `versioning_mode`
+  - dependency-management is one coherent policy surface
+  - security, privacy, and support surfaces exist
+  - CI and release assurance are materially stronger than before
+  - the documentation set is much smaller and more usable than it was
+- The repo is now in remediation mode, not invention mode.
+- The final read-only audit narrowed the remaining gaps to four specific
+  product-finish problems:
+  - the packaged README still uses repo-relative public links that are wrong
+    for PyPI
+  - the live generated `devcovenant/config.yaml` comment scaffold drifted from
+    the current asset/runtime truth
+  - local package builds still emit MANIFEST and package-discovery warnings
+  - the detailed docs still carry too much contract-index and
+    "normative home" language
+- The next full outside-in audit should happen only after those issues are
+  corrected.
 - Keep the current managed-document preservation contract unless an explicit
   plan item changes it:
   - missing docs may be created from descriptors
@@ -48,15 +53,21 @@ a polished, externally credible, store-bought-looking product.
   - otherwise, only managed header lines and explicit `<!-- DEVCOV* -->`
     blocks may change
 
-## Workflow
+## Working Rules
 - Work in dependency order unless a real blocker forces reordering.
-- Fix externally visible trust defects before secondary polish.
+- Keep remediation narrow and audit-backed.
+- Fix source-of-truth drift before polishing wording around it.
 - Prefer objective evidence over vague reassurance:
   - package metadata
   - shipped docs
   - license artifacts
   - scanner output
   - build and publish workflows
+- Treat build warnings as defects, not harmless background noise.
+- When root and packaged doc surfaces need to differ, make the split explicit
+  and refresh-stable instead of depending on accidental drift.
+- Do not regress the current command/runtime contracts while fixing public
+  polish.
 - Keep each item concrete enough that another person can continue it without
   reconstructing hidden context.
 - When an item is complete, rewrite it to state what landed and what is now
@@ -88,271 +99,158 @@ a polished, externally credible, store-bought-looking product.
   without a clear reason, placeholder text, and fancy wording that hides the
   meaning as product defects.
 
-## Active Work
-1. [done] Fix The Public Package And Compliance Baseline.
+## Active Remediation
+1. [done] Fix The Packaged README Public-Link Contract.
+   What landed:
+   - the repo-specific `readme-sync` policy now rewrites repo-relative public
+     Markdown links in the packaged `devcovenant/README.md` from
+     `pyproject.toml` repository metadata instead of hardcoding one upstream
+     repository URL into shared policy logic
+   - the root `README.md` remains repository-friendly and repo-relative, while
+     the packaged README becomes PyPI-safe through the refresh-owned sync step
+   - the owning policy, docs, registry text, and tests now explain and enforce
+     the metadata-driven link contract
+   - local package proof now shows the built sdist README and wheel metadata
+     contain package-safe absolute links and no longer contain broken
+     repo-relative public links
+   What is now true:
+   - the packaged README is usable on PyPI
+   - the split between root and packaged README surfaces is intentional and
+     refresh-stable
+   - forks can keep packaged README links correct by updating package metadata
+     instead of patching repo-specific runtime code
+
+2. [not done] Reconcile Generated Config Commentary With Runtime Truth.
    Goal:
-   - make the shipped package, package metadata, and legal/compliance surfaces
-     look accurate, finished, and professional before deeper release
-     hardening.
+   - make `devcovenant/config.yaml` trustworthy again as the point-of-reading
+     operator contract.
    Why this matters:
-   - the current audit found that the public README surfaces still look
-     template-derived, the package metadata is sparse, and the third-party
-     license inventory is out of sync with the actual declared and locked
-     dependencies.
-   Completed work:
-   - moved public project identity into `project-governance` so
-     `project_name` and `project_description` now drive shipped README and
-     package-metadata surfaces
-   - replaced placeholder public package identity such as `# Project Name`
-     through that shared governance-owned identity source rather than through
-     repo-specific descriptor overrides
-   - chose the packaged `devcovenant/README.md` surface as the distribution
-     long description so PyPI and installed-package readers see the same
-     public README contract
-   - added and validated the explicit `[build-system]` table plus richer
-     package metadata such as project URLs and maintainer-facing metadata
-   - made the third-party license inventory deterministic and accurate
-     against current declared and locked dependencies, including local
-     license-text artifacts
-   - kept the CLI (command-line interface) version-reporting surface present
-     as part of the public package baseline
-   Outcome:
-   - package metadata, README surfaces, and install experience now read like
-     a real released product rather than a template-derived internal tool
-   - public identity is governed from one repo-owned metadata source rather
-     than duplicated across README and package config surfaces
-   - the third-party license report matches actual dependency inputs exactly
-   - build/package validation and the standard smoke-install test coverage
-     still pass
-2. [done] Standardize Dependency-Management Operations And Policy-Born
-   Commands.
-   Goal:
-   - separate core DevCovenant invariants from customizable policies, then
-     replace the current ad hoc dependency-license/runtime/command split with
-     one coherent, customizable `dependency-management` policy contract.
-   Why this matters:
-   - dependency work now spans lock refresh, dependency inventory, license
-     artifact generation, report synchronization, and a one-off wrapper
-     command, but DevCovenant still lacks a formal policy-born command
-     interface and a formal policy runtime-action contract.
-   - at the same time, `devflow-run-gates`, `devcov-structure-guard`, and
-     `devcov-integrity-guard` are not really repo-customizable policies; they
-     are core DevCovenant invariants, and keeping them as policies would make
-     core commands such as `gate` look like policy-born commands under the new
-     command model.
-   Completed work:
-   - promoted `devflow-run-gates`, `devcov-structure-guard`, and
-     `devcov-integrity-guard` into first-class core invariant contracts under
-     `devcovenant/core/contracts/invariants/` and core runtime/service
-     implementations under `devcovenant/core/services/`
-   - surfaced resolved core-invariant metadata through the right first-class
-     places: top-level `config.core_invariants`, tracked registry
-     `core-invariants`, and the dedicated after-workflow, before-policy
-     DevCovenant block in `AGENTS.md`
-   - stopped treating those invariants as ordinary `policy_state` toggles and
-     separated their profile-fed metadata from ordinary policy overlays by
-     introducing profile `core_invariant_overlays`
-   - kept `gate` as a first-class core command by moving required-test
-     command resolution onto the `devflow-run-gates` invariant helper instead
-     of leaving it as ad hoc policy-runtime behavior
-   - converged `dependency-license-sync` into one
-     `dependency-management` policy that now owns dependency refresh,
-     dependency inventory, and license/report synchronization together
-   - kept policy checks read-only while formalizing mutation through two
-     explicit paths only:
-     autofix invoking declared policy runtime actions, and manual
-     namespaced policy commands invoking the same declared runtime actions
-   - formalized policy runtime actions and policy-born commands with declared
-     action metadata, command metadata, argument parsing, namespaced
-     `devcovenant policy <policy> <command>` entrypoints, and compatibility
-     validation against descriptor declarations
-   - formalized autofix-aware dependency-management messaging so the policy
-     advises manual commands when autofix is off and points at the same
-     runtime action path when autofix is on
-   - retire the one-off `update_lock` command entirely and use only the
-     formal namespaced policy command surface such as
-     `devcovenant policy dependency-management refresh-all`
-   - updated docs, profile manifests, generated surfaces, and direct tests so
-     custom policies now have one explicit command/autofix/check boundary to
-     follow
-   Outcome:
-   - DevCovenant core invariants are clearly separate from customizable
-     policies
-   - `gate` remains a first-class core command instead of drifting into
-     policy-command semantics
-   - one `dependency-management` policy now owns dependency refresh and
-     dependency-compliance behavior coherently
-   - checks stay read-only, autofix owns automatic mutation, and explicit
-     policy commands own manual mutation
-   - policy-born commands, policy runtime actions, autofix delegation, and
-     autofix-aware remediation messaging are now documented and test-backed
-   - dependency-management no longer depends on a one-off wrapper contract or
-     any backward-compatibility alias for `update_lock`
-3. [done] Add Security, Privacy, Support, And Disclosure Surfaces.
-   Goal:
-   - make DevCovenant trustworthy from the outside, not only technically sound
-     on the inside.
-   Why this matters:
-   - the current audit found no clear security-reporting surface, no explicit
-     privacy/data-handling statement, no support/maintenance posture, and no
-     buyer-facing explanation of what local runtime evidence artifacts do,
-     and do not, store.
-   Completed work:
-   - added first-class public trust surfaces in the repository root:
-     `SECURITY.md`, `PRIVACY.md`, and `SUPPORT.md`
-   - documented vulnerability reporting, disclosure expectations, support
-     scope, and data-handling boundaries in operator-facing language instead of
-     leaving those expectations implicit
-   - updated the public `README.md` entrypoint to surface those trust docs as
-     part of the normal product-facing documentation map
-   - hardened run-log persistence by redacting obvious secret-like values from
-     structured `run.json` command arguments and structured metadata before
-     they are written to disk
-   - kept the run-log fidelity contract explicit by documenting that
-     `stdout.log`, `stderr.log`, and `tail.txt` remain faithful command-output
-     artifacts rather than content-aware secret scrubbers
-   - documented the session-snapshot boundary explicitly: path-and-hash style
-     session evidence, not full source-file contents
-   - replaced runtime `assert` use in the documentation-growth policy with
-     explicit configuration-violation handling so optimized Python execution
-     and static-analysis tools see the same behavior
-   - added direct regression tests for run-log redaction and for missing
-     documentation-growth required options
-   - reran Bandit and recorded the current triage stance explicitly: the real
-     runtime defect was fixed, subprocess boundary warnings remain review
-     surfaces, and obvious secret-literal false positives are now treated as
-     explicit scanner noise rather than silent unknowns
-   Outcome:
-   - the repository now has credible public security, privacy, and support
-     surfaces
-   - runtime evidence behavior is documented in both public trust docs and the
-     frozen workflow contract
-   - structured run metadata no longer persists obvious secret-like values
-     blindly
-   - bundled policy configuration validation is clearer and safer under static
-     analysis
-   - the security review story is now explicit enough to support the next
-     release-hardening work instead of relying on tacit maintainer knowledge
-4. [done] Harden Release, Supply Chain, And Assurance.
-   Goal:
-   - raise release and supply-chain posture to current expectations for a
-     professional Python package.
-   Why this matters:
-   - the current audit found basic build/test/publish hygiene, but not the
-     stronger assurance layers now expected for externally credible software:
-     trusted publishing, attestations, SBOMs, explicit security scanning, and
-     supportable compatibility claims.
-   Completed work:
-   - upgraded the generated `ci-and-test` workflow template to run
-     the full gate lifecycle on Python `3.14`, a focused compatibility matrix
-     on Python `3.10` through `3.13`, and an assurance job that runs
-     `pip-audit` plus `bandit`
-   - added `bandit.yaml` so Bandit now skips the low-signal `B105`
-     secret-literal heuristic while keeping real subprocess-boundary findings
-     reviewable
-   - tightened the remaining reviewed subprocess / exec boundaries with
-     targeted `# nosec` annotations and simplified `update_lock` so Bandit can
-     stay clean without hiding the real process boundaries
-   - extended `build.yml` and `publish.yml` to generate a reproducible
-     CycloneDX SBOM from `requirements.lock` plus `pyproject.toml`
-   - replaced long-lived token-based PyPI upload with trusted publishing via
-     `pypa/gh-action-pypi-publish@release/v1`
-   - documented the release-assurance story in the workflow, installation,
-     profile, and security docs, including how DevCovenant interprets scanner
-     disagreements and what PyPI-side trusted-publisher setup is required
-   Outcome:
-   - release automation now emits stronger supply-chain evidence instead of
-     only build and smoke-install proof
-   - dependency and static-security scanning are part of the normal assurance
-     surface
-   - supported-version claims are backed by explicit CI evidence rather than a
-     loose single-version check
-   - publish automation now uses a modern PyPI trust model instead of a
-     long-lived secret token
-5. [done] Rebuild The Documentation Set For Human Readability.
-   Goal:
-   - turn the documentation set into a smaller, clearer, easier-to-scan
-     system where the operator path is obvious, detailed docs are fewer and
-     better owned, and every major document says exactly what its title
-     promises.
-   Why this matters:
-   - the docs were still one of DevCovenant's biggest product-quality
-     liabilities: too fragmented, too meta, too repetitive, and too dense to
-     read comfortably under real operator or maintainer pressure.
-   Completed work:
-   - rewrote `README.md` as the operator-first entrypoint and brought
-     `devcovenant/README.md` back into the same practical operator contract
-   - rebuilt the main detailed docs around tighter owned topics with direct,
-     less rhetorical prose and more breathable structure
-   - restored a lean `contracts.md` index and a dedicated
-     `project_governance.md` contract page so the frozen contract surfaces stay
-     explicit without turning every detailed doc into a competing index
-   - retired the old `translators.md` split and folded translator ownership
-     back into `profiles.md`
-   - tightened the documentation-growth policy so docs are no longer forced to
-     carry a table of contents and a `Workflow` heading regardless of topic
-   - expanded `CONTRIBUTING.md` and the managed-doc templates so generated docs
-     start from substantial, readable content instead of terse shells
-   - rewrote the repo-profile and REST API doc assets so builtin and custom
-     templates follow the same readability and ownership rules as the live docs
-   - aligned the documentation tests with the new detailed contributing-doc
-     contract and the restored contract-index/project-governance surfaces
-   Outcome:
-   - the README surfaces now act as operator entrypoints instead of mixed
-     handbooks
-   - the detailed docs have clearer scope, less overlap, and more direct
-     wording
-   - the package docs keep the stable contract map without reverting to the old
-     sprawl
-   - the template set now reinforces the new documentation architecture instead
-     of regenerating terse or scan-hostile docs
-6. [not done] Run Final Store-Bought QA Closure.
-   Goal:
-   - verify that DevCovenant now feels professionally packaged, externally
-     trustworthy, and operationally consistent across code, docs, packaging,
-     and release automation.
-   Why this matters:
-   - a polished product is not just a collection of fixes; it is a coherent
-     whole that says the same thing in the package metadata, the README, the
-     legal/compliance surfaces, the security docs, the workflows, and the
-     shipped artifacts.
+   - the live config still says runtime always protects `.venv` and still names
+     the old governance-and-test generation section even though the runtime and
+     source assets moved on.
    Work to do:
-   - rerun the third-party QA audit with the same breadth:
-     functionality, packaging, security, privacy, legal/compliance,
-     documentation, and release posture
-   - verify that the rebuilt documentation set is now readable, correctly
-     scoped, consistent with titles, and aligned with the operator-entrypoint
-     model rather than only technically complete
-   - verify there is no remaining template residue, contradictory public
-     messaging, or inaccurate legal/security artifact
-   - verify scanner output, package metadata, build artifacts, and docs tell
-     the same story
-   - produce a concise release-readiness checklist for future releases so this
-     polish does not regress
+   - trace why refresh did not fully reconcile the live generated comment
+     scaffold from the current global config asset
+   - update the owning generator or refresh logic so generated comments for
+     `clean`, `ci_and_test`, and adjacent sections stay synchronized with the
+     active asset text
+   - audit the rest of the generated config comments for other stale labels,
+     especially around cleanup protection, workflow generation, and governance
+     wording
+   - verify that the live config comments describe the actual ownership split:
+     profile-driven cleanup targets, runtime-owned protected roots, and
+     profile-provided `ci_and_test` fragments
    Done when:
-   - a fresh outside-in audit no longer finds obvious package, compliance,
-     security-trust, or release-assurance gaps
-   - DevCovenant can reasonably be described as store-bought in finish, not
-     just in technical seriousness
+   - the live config comment scaffold matches the current asset contract
+   - no stale `.venv`-as-global-protection or governance-and-test wording
+     remains
+   - a refresh rerun preserves the corrected commentary deterministically
+
+3. [not done] Make The Package Build Warning-Free.
+   Goal:
+   - get from "build succeeds" to "build succeeds cleanly and quietly."
+   Why this matters:
+   - the current package builds pass and `twine check` passes, but
+     `python -m build` still emits MANIFEST noise and setuptools
+     package-discovery warnings.
+   Work to do:
+   - classify every current build warning into one of two buckets:
+     MANIFEST pattern noise or setuptools package-discovery noise
+   - decide the intended packaging model for asset-heavy directories such as
+     `devcovenant/docs`, `devcovenant/logs`, `devcovenant/registry`, and the
+     builtin profile asset trees
+   - tighten `MANIFEST.in` so it no longer excludes or prunes paths in a way
+     that produces repeated "no previously-included files" warnings
+   - tighten `pyproject.toml` package discovery so setuptools no longer warns
+     about absent configured packages or asset directories that look
+     importable
+   - rerun local build and smoke-install validation until the package build is
+     warning-free, not merely successful
+   Done when:
+   - `python -m build` completes without MANIFEST or package-discovery warnings
+   - wheel and sdist contents remain correct
+   - `twine check` and smoke installs still pass
+
+4. [not done] Finish The Documentation Polish Pass.
+   Goal:
+   - make the docs read like product docs instead of contract-administration
+     notes.
+   Why this matters:
+   - the docs were restructured successfully, but the audit still found too
+     much contract-index and "normative home" phrasing in pages that should be
+     direct operator references.
+   Work to do:
+   - rewrite the openings of the detailed docs that still lead with meta
+     contract language instead of task or concept framing
+   - trim repeated "use this together with..." and "normative home" wording
+     where it adds governance bookkeeping but not reader value
+   - keep the contract map explicit in `contracts.md`, but stop making every
+     detailed page sound like an extension of that index
+   - reread the operator path from `README.md` into installation, workflow,
+     config, and troubleshooting to make sure the tone stays practical
+   - keep the docs short enough to scan under pressure while still explaining
+     everything they own
+   Done when:
+   - the detailed docs open with direct task or concept framing
+   - the contract map stays available without dominating the reader experience
+   - the remaining meta phrasing is deliberate and minimal
+
+5. [not done] Run The Final Store-Bought QA Closure Again.
+   Goal:
+   - rerun the full external-style audit after remediation and confirm that the
+     remaining gaps are actually gone.
+   Why this matters:
+   - the previous audit already did its job: it found the remaining issues.
+     The next audit should confirm closure, not rediscover the same defects.
+   Work to do:
+   - rerun the read-only audit across docs, code, config, registry, workflows,
+     packaging, trust surfaces, and release posture
+   - verify the packaged README behaves like a real public package surface
+   - verify the live config comments tell the same story as the runtime and
+     source assets
+   - verify the build is warning-free, `twine check` passes, and artifact
+     contents match the documented product surface
+   - verify there is no remaining stale naming, removed-command residue, or
+     contradictory public messaging
+   - produce a concise release-readiness checklist from the final clean audit
+   Done when:
+   - a fresh audit finds no substantive documentation, code, or packaging
+     mismatches
+   - DevCovenant reads as polished, consistent, and intentionally packaged
+
+6. [not done] Prepare The Release-Candidate Cut.
+   Goal:
+   - turn the remediated tree into a release candidate only after the final
+     audit is clean.
+   Why this matters:
+   - release mechanics are easier to trust after the repo truth is stable.
+     History rewriting or orphaning before then only hides work in progress.
+   Work to do:
+   - confirm that the current `1.0.0`, `stable`, `active`, and
+     `breaking-allowed` governance state is still the intended public truth
+   - rerun the governed gate/test cycle and packaging checks on the exact
+     release-candidate tree
+   - decide whether any branch-history cleanup or orphaning is still desired,
+     and do it only after the release-candidate tree is already proven
+   - rerun a short post-history-change smoke audit if the tree identity changes
+   - then publish from the already-audited release candidate
+   Done when:
+   - the release candidate is clean, audited, and truthfully labeled
+   - any optional history cleanup happens after, not before, release proof
 
 ## Validation Routine
-- Verify `devcovenant gate --mid`, `devcovenant test`, and
-  `devcovenant gate --end` pass after each slice.
-- Verify `devcovenant check` remains clean once the gate session is closed.
-- Verify `bandit -q -c bandit.yaml -r devcovenant` remains clean.
-- Verify `pip-audit -r requirements.lock` remains clean.
-- Verify build and packaging checks still pass after public-package changes.
-- Verify dependency-management command, autofix, and check behavior follow the
-  documented mutation boundary:
-  - checks inspect/report only
-  - autofixers may invoke policy runtime actions
-  - explicit policy commands may mutate when run manually
-- Verify legal/compliance artifacts match actual dependency and package state,
-  not a stale approximation.
-- Verify public docs and package metadata read like a finished product and not
-  like a template-derived internal tool.
-- Verify the docs set is small enough, readable enough, and clearly owned
-  enough that operators can find the right page without navigating a maze of
-  near-overlapping references.
-- Verify support, security, privacy, and release-assurance surfaces are
-  mutually consistent.
+- For every remediation slice, run:
+  1. `devcovenant gate --mid`
+  2. `devcovenant test`
+  3. `devcovenant gate --end`
+  4. `devcovenant check`
+- For packaged-surface work, also run:
+  1. `python -m build`
+  2. `twine check dist/*`
+  3. wheel and sdist smoke installs
+- Keep `bandit` and `pip-audit` clean unless a reviewed, documented exception
+  is explicitly introduced.
+- Treat packaging warnings as failures for this plan, even if the build exits
+  successfully.
+- Keep `CHANGELOG.md` and any touched operator docs aligned with the actual
+  remediated behavior.

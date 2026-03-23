@@ -119,6 +119,18 @@ They should follow the same boundary discipline:
 
 - commands run explicit operations
 
+Custom policies that inspect managed docs should also treat the
+project-governance header model as a stable contract.
+That means repository-governance header checks now need to expect
+`Project Stage`, `Maintenance Stance`, `Compatibility Policy`, and
+`Versioning Mode` rather than the older single `Development Stance` label.
+
+Custom policies may also own repository-specific public-surface transforms.
+In this repository, `readme-sync` strips repo-only blocks from the root
+README and rewrites repo-relative public links using the repository URL from
+`pyproject.toml` so the packaged `devcovenant/README.md` works on PyPI
+instead of only in-tree.
+
 ## Practical Guidance
 When changing a policy, update all of the following together:
 

@@ -3,7 +3,8 @@
 **Doc Type:** policy-source
 **Project Version:** 1.0.0
 **Project Stage:** stable
-**Development Stance:** active-development
+**Maintenance Stance:** active
+**Compatibility Policy:** breaking-allowed
 **Versioning Mode:** versioned
 **Last Updated:** 2026-03-23
 **DevCovenant Version:** 1.0.0
@@ -190,7 +191,8 @@ directly.
 This block reflects the repository's active project-governance state.
 - Project Version: 1.0.0
 - Project Stage: stable
-- Development Stance: active-development
+- Maintenance Stance: active
+- Compatibility Policy: breaking-allowed
 - Versioning Mode: versioned
 <!-- DEVCOV:END -->
 
@@ -539,7 +541,8 @@ header_doc_suffixes: .md
 header_keys: Last Updated
   Project Version
   Project Stage
-  Development Stance
+  Maintenance Stance
+  Compatibility Policy
   Versioning Mode
   Project Codename
   Build Identity
@@ -1490,8 +1493,10 @@ custom: true
 
 Ensure `devcovenant/README.md` stays synchronized with the authored root
 `README.md` while removing repository-only sections via the
-`<!-- REPO-ONLY:BEGIN -->` / `<!-- REPO-ONLY:END -->` markers. Auto-fix
-rewrites the packaged guide from the repo README.
+`<!-- REPO-ONLY:BEGIN -->` / `<!-- REPO-ONLY:END -->` markers and
+rewriting repo-relative public links into package-safe repository URLs
+resolved from `pyproject.toml`. Auto-fix rewrites the packaged guide from
+the repo README.
 
 
 ---

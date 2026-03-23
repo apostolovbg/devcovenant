@@ -37,8 +37,10 @@ DOC_ID_LABEL = "**Doc ID:**"
 DOC_TYPE_LABEL = "**Doc Type:**"
 PROJECT_VERSION_LABEL = "**Project Version:**"
 PROJECT_STAGE_LABEL = "**Project Stage:**"
-DEVELOPMENT_STANCE_LABEL = "**Development Stance:**"
+MAINTENANCE_STANCE_LABEL = "**Maintenance Stance:**"
+COMPATIBILITY_POLICY_LABEL = "**Compatibility Policy:**"
 VERSIONING_MODE_LABEL = "**Versioning Mode:**"
+LEGACY_DEVELOPMENT_STANCE_LABEL = "**Development Stance:**"
 PROJECT_CODENAME_LABEL = "**Project Codename:**"
 BUILD_IDENTITY_LABEL = "**Build Identity:**"
 LAST_UPDATED_LABEL = "**Last Updated:**"
@@ -737,7 +739,8 @@ def render_project_governance_header_lines(
         f"{label} {value}"
         for label, value in (
             (PROJECT_STAGE_LABEL, state.stage),
-            (DEVELOPMENT_STANCE_LABEL, state.development_stance),
+            (MAINTENANCE_STANCE_LABEL, state.maintenance_stance),
+            (COMPATIBILITY_POLICY_LABEL, state.compatibility_policy),
             (VERSIONING_MODE_LABEL, state.versioning_mode),
             (PROJECT_CODENAME_LABEL, state.codename),
             (BUILD_IDENTITY_LABEL, state.build_identity),
@@ -752,7 +755,8 @@ def project_governance_labels(
     """Return the governance header labels expected for one state."""
     labels = [
         PROJECT_STAGE_LABEL,
-        DEVELOPMENT_STANCE_LABEL,
+        MAINTENANCE_STANCE_LABEL,
+        COMPATIBILITY_POLICY_LABEL,
         VERSIONING_MODE_LABEL,
     ]
     if state.codename:
@@ -1177,6 +1181,8 @@ def generated_header_text(rendered: str) -> str:
         "**doc type:**",
         "**project version:**",
         "**project stage:**",
+        "**maintenance stance:**",
+        "**compatibility policy:**",
         "**development stance:**",
         "**versioning mode:**",
         "**project codename:**",
@@ -1239,7 +1245,9 @@ def descriptor_contains_generated_headers(
             DOC_TYPE_LABEL,
             PROJECT_VERSION_LABEL,
             PROJECT_STAGE_LABEL,
-            DEVELOPMENT_STANCE_LABEL,
+            MAINTENANCE_STANCE_LABEL,
+            COMPATIBILITY_POLICY_LABEL,
+            LEGACY_DEVELOPMENT_STANCE_LABEL,
             VERSIONING_MODE_LABEL,
             PROJECT_CODENAME_LABEL,
             BUILD_IDENTITY_LABEL,
@@ -1429,6 +1437,12 @@ def strip_existing_generated_headers(current: str) -> str:
             index += 1
             continue
         if token.startswith("**project stage:**"):
+            index += 1
+            continue
+        if token.startswith("**maintenance stance:**"):
+            index += 1
+            continue
+        if token.startswith("**compatibility policy:**"):
             index += 1
             continue
         if token.startswith("**development stance:**"):
@@ -1752,7 +1766,9 @@ def extract_doc_info(doc_path: Path) -> dict[str, object]:
         for label in (
             PROJECT_VERSION_LABEL,
             PROJECT_STAGE_LABEL,
-            DEVELOPMENT_STANCE_LABEL,
+            MAINTENANCE_STANCE_LABEL,
+            COMPATIBILITY_POLICY_LABEL,
+            LEGACY_DEVELOPMENT_STANCE_LABEL,
             VERSIONING_MODE_LABEL,
             PROJECT_CODENAME_LABEL,
             BUILD_IDENTITY_LABEL,

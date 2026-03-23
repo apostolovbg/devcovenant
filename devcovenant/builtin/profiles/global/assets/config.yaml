@@ -343,8 +343,8 @@ core_invariants:
 # ---------------------------------------------------------------------------
 # Project governance (repo lifecycle metadata)
 # ---------------------------------------------------------------------------
-# Source of truth for repo stage / stance / versioning mode / codename /
-# build identity / changelog release flow.
+# Source of truth for repo stage / maintenance stance / compatibility policy /
+# versioning mode / codename / build identity / changelog release flow.
 # `project-governance` is orthogonal to `version-governance`:
 # - use this block for project lifecycle metadata and rendered doc headers;
 # - use `version-governance` for actual version-scheme enforcement.
@@ -352,16 +352,17 @@ core_invariants:
 # truth used by managed README surfaces and package metadata surfaces that
 # DevCovenant owns or synchronizes.
 # `stage` must be listed in `allowed_stages`.
-# `development_stance` must be listed in `allowed_development_stances`.
+# `maintenance_stance` must be listed in `allowed_maintenance_stances`.
+# `compatibility_policy` must be `backward-compatible`,
+# `breaking-allowed`, or `unspecified`.
 # `versioning_mode` must be `versioned` or `unversioned`.
 # `codename` and `build_identity` are optional free-form strings.
 # `unversioned_label`, `unreleased_heading`, and `changelog_file` are
 # free-form strings; `changelog_file` is a repo-relative path.
 # Default `allowed_stages`:
-# prototype, alpha, beta, stable, mature, deprecated, archived.
-# Default `allowed_development_stances`:
-# experimental, active-development, maintenance, release-managed, frozen,
-# sunset.
+# prototype, alpha, beta, stable, deprecated, archived.
+# Default `allowed_maintenance_stances`:
+# active, maintenance, frozen, sunset.
 # Generic installs start explicitly unversioned instead of inventing a fake
 # numbered version.
 project-governance:
@@ -370,7 +371,8 @@ project-governance:
     Describe the project this repository ships: what it does, who it helps,
     and what problem it solves.
   stage: prototype
-  development_stance: experimental
+  maintenance_stance: active
+  compatibility_policy: unspecified
   versioning_mode: unversioned
   unversioned_label: Unversioned
   unreleased_heading: '## Unreleased'
@@ -380,14 +382,11 @@ project-governance:
     - alpha
     - beta
     - stable
-    - mature
     - deprecated
     - archived
-  allowed_development_stances:
-    - experimental
-    - active-development
+  allowed_maintenance_stances:
+    - active
     - maintenance
-    - release-managed
     - frozen
     - sunset
 

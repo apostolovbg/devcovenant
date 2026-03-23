@@ -212,57 +212,57 @@ managed blocks.
 ## Docs Map
 Use the shorter map below instead of treating the README as the whole manual.
 
-- [installation.md](devcovenant/docs/installation.md)
+- [installation.md](https://github.com/apostolovbg/devcovenant/blob/main/devcovenant/docs/installation.md)
 
   Install, deploy, upgrade, clean, undeploy, uninstall, and first-time setup.
 
-- [workflow.md](devcovenant/docs/workflow.md)
+- [workflow.md](https://github.com/apostolovbg/devcovenant/blob/main/devcovenant/docs/workflow.md)
 
   Exact gate sequence, command choice, run artifacts, and recovery.
 
-- [config.md](devcovenant/docs/config.md)
+- [config.md](https://github.com/apostolovbg/devcovenant/blob/main/devcovenant/docs/config.md)
 
   How to read `devcovenant/config.yaml`, including project governance,
   doc assets, core invariants, and policy activation.
 
-- [profiles.md](devcovenant/docs/profiles.md)
+- [profiles.md](https://github.com/apostolovbg/devcovenant/blob/main/devcovenant/docs/profiles.md)
 
   Profiles, overlays, assets, and translator ownership.
 
-- [policies.md](devcovenant/docs/policies.md)
+- [policies.md](https://github.com/apostolovbg/devcovenant/blob/main/devcovenant/docs/policies.md)
 
   Policy descriptors, runtime actions, policy commands, autofix boundaries,
   and version-governance adapters.
 
-- [refresh.md](devcovenant/docs/refresh.md)
+- [refresh.md](https://github.com/apostolovbg/devcovenant/blob/main/devcovenant/docs/refresh.md)
 
   Refresh behavior, managed docs, descriptor schema, and preservation rules.
 
-- [architecture.md](devcovenant/docs/architecture.md)
+- [architecture.md](https://github.com/apostolovbg/devcovenant/blob/main/devcovenant/docs/architecture.md)
 
   Runtime layers, invariants, evidence flow, and contract map.
 
-- [registry.md](devcovenant/docs/registry.md)
+- [registry.md](https://github.com/apostolovbg/devcovenant/blob/main/devcovenant/docs/registry.md)
 
   Tracked registry, runtime registry, and gate-status state.
 
-- [troubleshooting.md](devcovenant/docs/troubleshooting.md)
+- [troubleshooting.md](https://github.com/apostolovbg/devcovenant/blob/main/devcovenant/docs/troubleshooting.md)
 
   Fast recovery paths for common failures.
 
 ## Security, Privacy, and Support
 Public trust surfaces live in the repo root:
 
-- [SECURITY.md](SECURITY.md)
+- [SECURITY.md](https://github.com/apostolovbg/devcovenant/blob/main/SECURITY.md)
 
-- [PRIVACY.md](PRIVACY.md)
+- [PRIVACY.md](https://github.com/apostolovbg/devcovenant/blob/main/PRIVACY.md)
 
-- [SUPPORT.md](SUPPORT.md)
+- [SUPPORT.md](https://github.com/apostolovbg/devcovenant/blob/main/SUPPORT.md)
 
 Use those docs for vulnerability reporting, local data-handling boundaries,
 and support expectations.
 
 ## License
 DevCovenant is released under the MIT License.
-See [LICENSE](LICENSE) and
-[licenses/THIRD_PARTY_LICENSES.md](licenses/THIRD_PARTY_LICENSES.md).
+See [LICENSE](https://github.com/apostolovbg/devcovenant/blob/main/LICENSE) and
+[licenses/THIRD_PARTY_LICENSES.md](https://github.com/apostolovbg/devcovenant/blob/main/licenses/THIRD_PARTY_LICENSES.md).

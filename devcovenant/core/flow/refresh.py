@@ -697,13 +697,16 @@ def _render_config_yaml(payload: dict[str, object]) -> str:
         ),
         (
             "# `stage` must be one of `allowed_stages`; the default set is "
-            "prototype, alpha, beta, stable, mature, deprecated, archived."
+            "prototype, alpha, beta, stable, deprecated, archived."
         ),
         (
-            "# `development_stance` must be one of "
-            "`allowed_development_stances`; the default set is "
-            "experimental, active-development, maintenance, "
-            "release-managed, frozen, sunset."
+            "# `maintenance_stance` must be one of "
+            "`allowed_maintenance_stances`; the default set is "
+            "active, maintenance, frozen, sunset."
+        ),
+        (
+            "# `compatibility_policy` must be "
+            "`backward-compatible`, `breaking-allowed`, or `unspecified`."
         ),
         "# `versioning_mode` must be `versioned` or `unversioned`.",
         (

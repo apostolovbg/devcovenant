@@ -7,8 +7,9 @@ This document is the normative home for the `project-governance` contract.
 Use it together with `devcovenant/docs/contracts.md` when you need the
 stable meaning of repository identity and lifecycle metadata.
 
-`project-governance` is where a repository states what it is called, how mature
-it is, and how DevCovenant should label its public governance surfaces.
+`project-governance` is where a repository states what it is called, what
+lifecycle stage it is in, how actively it is still changing, and what
+compatibility promise it is making.
 It is not a packaging afterthought and it is not derived from `pyproject.toml`.
 Other public surfaces render from this metadata.
 
@@ -19,11 +20,13 @@ Other public surfaces render from this metadata.
 template prompt text that asks you to describe what the project ships.
 
 `stage`: one value from `allowed_stages`. The default allowed set is
-`prototype`, `alpha`, `beta`, `stable`, `mature`, `deprecated`, `archived`.
+`prototype`, `alpha`, `beta`, `stable`, `deprecated`, `archived`.
 
-`development_stance`: one value from `allowed_development_stances`. The
-default allowed set is `experimental`, `active-development`, `maintenance`,
-`release-managed`, `frozen`, `sunset`.
+`maintenance_stance`: one value from `allowed_maintenance_stances`. The
+default allowed set is `active`, `maintenance`, `frozen`, `sunset`.
+
+`compatibility_policy`: closed enum. Allowed values are
+`backward-compatible`, `breaking-allowed`, and `unspecified`.
 
 `versioning_mode`: `versioned` or `unversioned`.
 
@@ -43,8 +46,8 @@ changelog heading in unversioned mode. Default: `## Unreleased`.
 `allowed_stages`: non-empty list of allowed stage tokens. Repositories may
 tighten or rename this list, but `stage` must always be one of its entries.
 
-`allowed_development_stances`: non-empty list of allowed stance tokens.
-Repositories may tighten or rename this list, but `development_stance` must
+`allowed_maintenance_stances`: non-empty list of allowed stance tokens.
+Repositories may tighten or rename this list, but `maintenance_stance` must
 always be one of its entries.
 
 ## What It Controls
