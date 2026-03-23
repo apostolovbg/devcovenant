@@ -1,5 +1,5 @@
 # Project Governance
-**Last Updated:** 2026-03-22
+**Last Updated:** 2026-03-23
 **Project Version:** 1.0.0
 
 ## Overview
@@ -13,27 +13,39 @@ It is not a packaging afterthought and it is not derived from `pyproject.toml`.
 Other public surfaces render from this metadata.
 
 ## Core Fields
-The contract includes:
+`project_name`: any non-empty string. Default seed value: `Project Name`.
 
-- `project_name`
+`project_description`: any non-empty string. Default seed value is the install
+template prompt text that asks you to describe what the project ships.
 
-- `project_description`
+`stage`: one value from `allowed_stages`. The default allowed set is
+`prototype`, `alpha`, `beta`, `stable`, `mature`, `deprecated`, `archived`.
 
-- `stage`
+`development_stance`: one value from `allowed_development_stances`. The
+default allowed set is `experimental`, `active-development`, `maintenance`,
+`release-managed`, `frozen`, `sunset`.
 
-- `development_stance`
+`versioning_mode`: `versioned` or `unversioned`.
 
-- `versioning_mode`
+`codename`: optional free-form string.
 
-- optional `codename`
+`build_identity`: optional free-form string.
 
-- optional `build_identity`
+`unversioned_label`: any non-empty string used as the displayed project
+version in unversioned mode. Default: `Unversioned`.
 
-- `unversioned_label`
+`unreleased_heading`: any non-empty string used as the required top visible
+changelog heading in unversioned mode. Default: `## Unreleased`.
 
-- `unreleased_heading`
+`changelog_file`: any non-empty repo-relative path string. Default:
+`CHANGELOG.md`.
 
-- `changelog_file`
+`allowed_stages`: non-empty list of allowed stage tokens. Repositories may
+tighten or rename this list, but `stage` must always be one of its entries.
+
+`allowed_development_stances`: non-empty list of allowed stance tokens.
+Repositories may tighten or rename this list, but `development_stance` must
+always be one of its entries.
 
 ## What It Controls
 Project-governance metadata feeds several visible surfaces:

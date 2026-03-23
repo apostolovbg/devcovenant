@@ -123,6 +123,12 @@ the relevant profile instead of in the builtin global workflow.
 
 Use config overrides after that for repository-specific deltas.
 
+The same profile boundary helps with config readability.
+The global config asset is where DevCovenant now lists the full
+`project-governance` key set, the default allowed `stage` values, the default
+allowed `development_stance` values, and the two legal
+`versioning_mode` values directly in the generated config comments.
+
 ## Builtin And Custom Profiles
 Builtin profiles are the shipped reusable stack surface.
 Custom profiles let a repository add its own reusable behavior without editing

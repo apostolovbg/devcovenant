@@ -230,7 +230,6 @@ DEFAULT_CORE_FILES = [
     "devcovenant/refresh.py",
     "devcovenant/uninstall.py",
     "devcovenant/undeploy.py",
-    "devcovenant/update_lock.py",
     "devcovenant/config.yaml",
     "devcovenant/README.md",
     "devcovenant/VERSION",

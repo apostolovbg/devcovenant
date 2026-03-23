@@ -9340,8 +9340,6 @@ policies:
       help: Refresh configured dependency lockfiles and compliance artifacts.
       runtime_action: refresh-all
       mutates_repo: true
-      aliases:
-      - update-lock
     runtime_metadata_options:
       id: dependency-management
       severity: error
@@ -11988,7 +11986,6 @@ inventory:
     - devcovenant/refresh.py
     - devcovenant/uninstall.py
     - devcovenant/undeploy.py
-    - devcovenant/update_lock.py
     - devcovenant/config.yaml
     - devcovenant/README.md
     - devcovenant/VERSION

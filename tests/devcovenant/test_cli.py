@@ -31,7 +31,6 @@ ROOT_COMMAND_MODULES = (
     "uninstall",
     "undeploy",
     "policy",
-    "update_lock",
 )
 ASSET_SCRIPT_ROOT = (
     REPO_ROOT

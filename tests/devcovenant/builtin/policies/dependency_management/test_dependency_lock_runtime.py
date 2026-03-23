@@ -33,7 +33,6 @@ def _unit_test_runtime_symbol_contract_is_stable() -> None:
     assert hasattr(module, "LockFilePieces")
     assert hasattr(module, "LockHandlerResult")
     assert hasattr(module, "refresh_all")
-    assert hasattr(module, "refresh_locks_and_licenses")
 
 
 def _unit_test_refresh_runtime_updates_inventory_without_lock_change() -> None:
@@ -78,14 +77,16 @@ def _unit_test_refresh_runtime_updates_inventory_without_lock_change() -> None:
             "report_heading": "## License Report",
         }
         try:
-            results, modified = module.refresh_locks_and_licenses(repo_root)
+            payload = module.refresh_all(repo_root)
         finally:
             module._resolve_dependency_metadata = original_resolver
 
+        results = payload["lock_results"]
+        modified = payload["refreshed_artifacts"]
         assert results
-        assert results[0].changed is False
+        assert results[0]["changed"] is False
         assert any(
-            path.name == f"packaging-{packaging_version}.txt"
+            Path(str(path)).name == f"packaging-{packaging_version}.txt"
             for path in modified
         )
         assert not (licenses_dir / "packaging-0.0.1.txt").exists()

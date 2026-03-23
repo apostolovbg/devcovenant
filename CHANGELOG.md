@@ -60,6 +60,47 @@ Example:
 ## Version 1.0.0
 
 - 2026-03-23:
+  Change: Removed the one-off `update_lock` command, dropped its
+  dependency-management alias/helper surfaces, and expanded the
+  `project-governance` config contract so the live config/docs spell out the
+  full key and value rules directly.
+  Why: Standardized dependency operations were already namespaced under
+  `devcovenant policy`, but the retired wrapper still shipped, and the
+  project-governance contract still required too much code/doc chasing to
+  discover all allowed keys and values.
+  Impact: Removed the retired wrapper path and alias from generated
+  config/registry state and clarified project-governance keys and allowed
+  values directly in `config.yaml` and the detailed docs, so dependency
+  management now uses only
+  `devcovenant policy dependency-management refresh-all`.
+  Files:
+  CHANGELOG.md
+  devcovenant/builtin/policies/dependency_management/\
+    dependency_lock_runtime.py
+  devcovenant/builtin/policies/dependency_management/\
+    dependency_management.yaml
+  devcovenant/builtin/profiles/global/assets/config.yaml
+  devcovenant/cli.py
+  devcovenant/config.yaml
+  devcovenant/core/contracts/policy.py
+  devcovenant/core/flow/refresh.py
+  devcovenant/core/services/policy_file_scope.py
+  devcovenant/core/services/registry.py
+  devcovenant/docs/config.md
+  devcovenant/docs/installation.md
+  devcovenant/docs/policies.md
+  devcovenant/docs/profiles.md
+  devcovenant/docs/project_governance.md
+  devcovenant/docs/registry.md
+  devcovenant/registry/registry.yaml
+  devcovenant/update_lock.py
+  tests/devcovenant/builtin/policies/dependency_management/\
+    test_dependency_lock_runtime.py
+  tests/devcovenant/core/services/test_policy_commands.py
+  tests/devcovenant/test_cli.py
+  tests/devcovenant/test_update_lock.py
+
+- 2026-03-23:
   Change: Removed `.github/dependabot.yml`, renamed the generated CI workflow
   contract from `governance-and-test` to `ci-and-test`, and updated the
   workflow/config/profile/runtime/test surfaces to use the new file, key, job,

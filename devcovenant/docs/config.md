@@ -85,27 +85,38 @@ custom managed docs are added by active profiles.
 ### project-governance
 Repository-owned identity and lifecycle metadata.
 For the dedicated contract, see `devcovenant/docs/project_governance.md`.
-This includes:
+This block includes these keys and value rules:
 
-- `project_name`
+`project_name`: any non-empty string. This is the repo-owned public name.
 
-- `project_description`
+`project_description`: any non-empty string. This is the repo-owned public
+summary used by managed README and synchronized package metadata surfaces.
 
-- `stage`
+`stage`: one value from `allowed_stages`. The default set is `prototype`,
+`alpha`, `beta`, `stable`, `mature`, `deprecated`, `archived`.
 
-- `development_stance`
+`development_stance`: one value from `allowed_development_stances`. The
+default set is `experimental`, `active-development`, `maintenance`,
+`release-managed`, `frozen`, `sunset`.
 
-- `versioning_mode`
+`versioning_mode`: `versioned` or `unversioned`.
 
-- optional `codename`
+`codename`: optional free-form string.
 
-- optional `build_identity`
+`build_identity`: optional free-form string.
 
-- `unversioned_label`
+`unversioned_label`: any non-empty string used as the displayed project
+version when the repo is intentionally unversioned.
 
-- `unreleased_heading`
+`unreleased_heading`: any non-empty string. In unversioned mode, the top
+visible changelog heading must match this exactly.
 
-- `changelog_file`
+`changelog_file`: any non-empty repo-relative path string.
+
+`allowed_stages`: a non-empty list of allowed `stage` values.
+
+`allowed_development_stances`: a non-empty list of allowed
+`development_stance` values.
 
 This is where the repo says what it is called, how mature it is, and whether
 it is intentionally unversioned or actively versioned.

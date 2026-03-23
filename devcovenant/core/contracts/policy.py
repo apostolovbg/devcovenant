@@ -255,7 +255,8 @@ class PolicyCheck(ABC):
         Run one optional runtime action exposed by this policy.
 
         Policy checks may override this hook when command runtimes should be
-        policy-owned (for example update-lock behavior under one policy).
+        policy-owned (for example dependency-management refresh behavior
+        under one policy).
         """
         del payload
         raise ValueError(

@@ -31,7 +31,6 @@ _COMMAND_MODULES = {
     "uninstall": "devcovenant.uninstall",
     "undeploy": "devcovenant.undeploy",
     "policy": "devcovenant.policy",
-    "update_lock": "devcovenant.update_lock",
 }
 
 _MANAGED_REEXEC_GUARD_ENV = "DEVCOV_MANAGED_REEXEC_ACTIVE"

@@ -34,7 +34,6 @@ def _seed_registry(repo_root: Path) -> None:
                                 "help": "Refresh dependency artifacts.",
                                 "runtime_action": "refresh-all",
                                 "mutates_repo": True,
-                                "aliases": ["update-lock"],
                                 "arguments": [
                                     {
                                         "flags": ["--scope"],
@@ -55,8 +54,8 @@ def _seed_registry(repo_root: Path) -> None:
     )
 
 
-def _unit_test_find_policy_command_resolves_aliases() -> None:
-    """Command lookup should resolve both canonical names and aliases."""
+def _unit_test_find_policy_command_resolves_declared_name() -> None:
+    """Command lookup should resolve the declared canonical name."""
     with tempfile.TemporaryDirectory() as temp_dir:
         repo_root = Path(temp_dir).resolve()
         _seed_registry(repo_root)
@@ -65,15 +64,8 @@ def _unit_test_find_policy_command_resolves_aliases() -> None:
             policy_id="dependency-management",
             command_name="refresh-all",
         )
-        alias = policy_commands.find_policy_command(
-            repo_root,
-            policy_id="dependency-management",
-            command_name="update-lock",
-        )
         assert canonical is not None
-        assert alias is not None
         assert canonical.runtime_action == "refresh-all"
-        assert alias.runtime_action == "refresh-all"
 
 
 def _unit_test_parse_policy_command_payload_uses_declared_arguments() -> None:
@@ -98,9 +90,9 @@ def _unit_test_parse_policy_command_payload_uses_declared_arguments() -> None:
 class GeneratedUnittestCases(unittest.TestCase):
     """unittest wrappers for layered module sanity checks."""
 
-    def test_find_policy_command_resolves_aliases(self):
-        """Run command alias resolution assertions."""
-        _unit_test_find_policy_command_resolves_aliases()
+    def test_find_policy_command_resolves_declared_name(self):
+        """Run canonical command resolution assertions."""
+        _unit_test_find_policy_command_resolves_declared_name()
 
     def test_parse_policy_command_payload_uses_declared_arguments(self):
         """Run argument parsing assertions."""

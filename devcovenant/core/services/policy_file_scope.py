@@ -27,7 +27,6 @@ _FALLBACK_CORE_EXCLUSION_PATHS = (
     "devcovenant/refresh.py",
     "devcovenant/uninstall.py",
     "devcovenant/undeploy.py",
-    "devcovenant/update_lock.py",
     "devcovenant/registry",
 )
 

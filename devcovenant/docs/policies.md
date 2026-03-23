@@ -1,5 +1,5 @@
 # Policies
-**Last Updated:** 2026-03-22
+**Last Updated:** 2026-03-23
 **Project Version:** 1.0.0
 
 ## Overview
@@ -84,9 +84,7 @@ devcovenant policy <policy-id> <command>
 That keeps policy-owned operations explicit and prevents the CLI from turning
 into a pile of unrelated one-off top-level commands.
 
-The roadmap now states this plainly for dependency management:
-`update_lock` is not being kept as a backward-compatibility command surface.
-The namespaced policy command surface is the supported direction.
+Dependency management now uses only the namespaced policy command surface.
 
 ## Dependency Management
 Dependency management is now one coherent policy surface.

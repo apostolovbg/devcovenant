@@ -1,5 +1,5 @@
 # Installation and Lifecycle
-**Last Updated:** 2026-03-22
+**Last Updated:** 2026-03-23
 **Project Version:** 1.0.0
 
 ## Overview
@@ -177,8 +177,13 @@ stops with an explicit error so you can fix the path or permissions directly.
 devcovenant install
 devcovenant deploy
 devcovenant refresh
+devcovenant policy dependency-management refresh-all
 devcovenant clean --all
 devcovenant upgrade
 devcovenant undeploy
 devcovenant uninstall
 ```
+
+Dependency refresh is no longer a special top-level command.
+Use the namespaced policy command surface instead:
+`devcovenant policy dependency-management refresh-all`.

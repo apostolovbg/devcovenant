@@ -103,7 +103,6 @@ profiles:
       - devcovenant/refresh.py
       - devcovenant/uninstall.py
       - devcovenant/undeploy.py
-      - devcovenant/update_lock.py
       - devcovenant/registry
 
 # ---------------------------------------------------------------------------
@@ -352,6 +351,17 @@ core_invariants:
 # `project_name` and `project_description` are the project-identity source of
 # truth used by managed README surfaces and package metadata surfaces that
 # DevCovenant owns or synchronizes.
+# `stage` must be listed in `allowed_stages`.
+# `development_stance` must be listed in `allowed_development_stances`.
+# `versioning_mode` must be `versioned` or `unversioned`.
+# `codename` and `build_identity` are optional free-form strings.
+# `unversioned_label`, `unreleased_heading`, and `changelog_file` are
+# free-form strings; `changelog_file` is a repo-relative path.
+# Default `allowed_stages`:
+# prototype, alpha, beta, stable, mature, deprecated, archived.
+# Default `allowed_development_stances`:
+# experimental, active-development, maintenance, release-managed, frozen,
+# sunset.
 # Generic installs start explicitly unversioned instead of inventing a fake
 # numbered version.
 project-governance:

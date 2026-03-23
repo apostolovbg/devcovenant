@@ -680,8 +680,36 @@ def _render_config_yaml(payload: dict[str, object]) -> str:
             "registry output, and changelog release flow."
         ),
         (
+            "# `project_name` and `project_description` are non-empty "
+            "identity strings."
+        ),
+        (
+            "# `stage` must be one of `allowed_stages`; the default set is "
+            "prototype, alpha, beta, stable, mature, deprecated, archived."
+        ),
+        (
+            "# `development_stance` must be one of "
+            "`allowed_development_stances`; the default set is "
+            "experimental, active-development, maintenance, "
+            "release-managed, frozen, sunset."
+        ),
+        "# `versioning_mode` must be `versioned` or `unversioned`.",
+        (
+            "# `codename` and `build_identity` are optional free-form "
+            "strings."
+        ),
+        (
             "# `versioning_mode: unversioned` renders the configured "
             "`unversioned_label` and uses `unreleased_heading`."
+        ),
+        (
+            "# `unversioned_label`, `unreleased_heading`, and "
+            "`changelog_file` are free-form strings; `changelog_file` is "
+            "a repo-relative path."
+        ),
+        (
+            "# When unversioned, the top visible changelog heading must "
+            "match `unreleased_heading` exactly."
         ),
         _yaml_block(
             {
@@ -1031,7 +1059,6 @@ def _default_core_paths(repo_root: Path) -> list[str]:
         "devcovenant/refresh.py",
         "devcovenant/uninstall.py",
         "devcovenant/undeploy.py",
-        "devcovenant/update_lock.py",
         "devcovenant/registry",
     ]
 

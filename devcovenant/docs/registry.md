@@ -80,3 +80,8 @@ Read `registry/runtime/` when you need to understand:
 Do not use the registry as a casual editing surface.
 If the registry looks wrong, change the config, profile, descriptor, or other
 owning input and then refresh.
+
+That applies to retired command surfaces too.
+The tracked registry should show only the live namespaced
+dependency-management command metadata and should not carry the removed
+`update_lock` wrapper path or alias.

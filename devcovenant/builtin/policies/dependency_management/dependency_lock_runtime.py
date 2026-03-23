@@ -645,23 +645,3 @@ def refresh_all(
         "lock_results": result_payload,
         "refreshed_artifacts": refreshed_artifacts,
     }
-
-
-def refresh_locks_and_licenses(
-    repo_root: Path,
-) -> Tuple[List[LockHandlerResult], List[Path]]:
-    """Compatibility helper for legacy wrapper/test surfaces."""
-    payload = refresh_all(repo_root)
-    raw_results = payload.get("lock_results", [])
-    raw_artifacts = payload.get("refreshed_artifacts", [])
-    results = [
-        LockHandlerResult(
-            lock_file=str(entry.get("lock_file", "")),
-            changed=bool(entry.get("changed", False)),
-            attempted=bool(entry.get("attempted", False)),
-            message=str(entry.get("message", "")),
-        )
-        for entry in raw_results
-        if isinstance(entry, dict)
-    ]
-    return results, [Path(str(path)) for path in raw_artifacts]
