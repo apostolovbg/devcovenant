@@ -5,7 +5,7 @@
 **Project Stage:** stable
 **Development Stance:** active-development
 **Versioning Mode:** versioned
-**Last Updated:** 2026-03-22
+**Last Updated:** 2026-03-23
 **DevCovenant Version:** 1.0.0
 
 <!-- DEVCOV:BEGIN -->
@@ -58,6 +58,37 @@ Example:
 ## Log changes here
 
 ## Version 1.0.0
+
+- 2026-03-23:
+  Change: Moved the supported-Python compatibility and assurance jobs out of
+  the global generated workflow, restored the generic `CI and Tests` base, and
+  documented the profile-fragment CI contract together with managed-
+  environment-generic CI bootstrapping.
+  Why: Corrected the boundary drift that had pushed repo-specific Python CI
+  proof into the language-agnostic global workflow instead of keeping those
+  extra jobs in the `devcovrepo` profile.
+  Impact: Aligned ordinary repositories to a generic generated CI baseline
+  while letting this repository add its compatibility matrix and assurance
+  scanners through `devcovrepo`, with tests and docs now enforcing that split.
+  Files:
+  .github/workflows/governance-and-test.yml
+  CHANGELOG.md
+  .github/workflows/build.yml
+  devcovenant/builtin/profiles/global/assets/config.yaml
+  devcovenant/builtin/profiles/global/assets/governance-and-test.yml
+  devcovenant/config.yaml
+  devcovenant/custom/profiles/devcovrepo/assets/docs/config.md
+  devcovenant/custom/profiles/devcovrepo/assets/docs/profiles.md
+  devcovenant/custom/profiles/devcovrepo/assets/docs/workflow.md
+  devcovenant/custom/profiles/devcovrepo/devcovrepo.yaml
+  devcovenant/docs/config.md
+  devcovenant/docs/profiles.md
+  devcovenant/docs/registry.md
+  devcovenant/docs/workflow.md
+  devcovenant/registry/registry.yaml
+  SECURITY.md
+  tests/devcovenant/core/runtime/test_execution.py
+  tests/devcovenant/core/services/test_profile_registry.py
 
 - 2026-03-22:
   Change: Removed empty former policy directories from the working tree

@@ -1,10 +1,10 @@
-name: Governance and Test
+name: CI and Tests
 on:
   push:
   pull_request:
 jobs:
   governance-and-test:
-    name: Governance and Test (Python 3.14)
+    name: CI and Tests (Bootstrap Python 3.14)
     runs-on: ubuntu-latest
     permissions:
       contents: read
@@ -22,13 +22,13 @@ jobs:
         python -m pip install --upgrade pip
         python -m pip install -r requirements.lock
     - name: Run DevCovenant start gate
-      run: python3 -m devcovenant gate --start
+      run: python -m devcovenant gate --start
     - name: Run DevCovenant tests
-      run: python3 -m devcovenant test
+      run: python -m devcovenant test
     - name: Run DevCovenant end gate
-      run: python3 -m devcovenant gate --end
+      run: python -m devcovenant gate --end
   compatibility-matrix:
-    name: Compatibility Matrix (Python ${{ matrix.python-version }})
+    name: Supported Python Compatibility (Python ${{ matrix.python-version }})
     runs-on: ubuntu-latest
     permissions:
       contents: read
@@ -45,14 +45,16 @@ jobs:
     steps:
     - name: Checkout
       uses: actions/checkout@v4
-    - name: Set up Python
+    - name: Set up Python bootstrap
       uses: actions/setup-python@v5
       with:
         python-version: ${{ matrix.python-version }}
-    - name: Install tooling and dependencies
+    - name: Install DevCovenant bootstrap dependencies
       run: |
         python -m pip install --upgrade pip
         python -m pip install -r requirements.lock
+    - name: Prime managed environment
+      run: python -m devcovenant gate --status > /dev/null
     - name: Verify CLI entrypoints
       run: |
         python -m devcovenant --version
@@ -73,15 +75,18 @@ jobs:
     steps:
     - name: Checkout
       uses: actions/checkout@v4
-    - name: Set up Python
+    - name: Set up Python bootstrap
       uses: actions/setup-python@v5
       with:
         python-version: '3.14'
-    - name: Install tooling and scanner dependencies
+    - name: Install DevCovenant bootstrap dependencies
       run: |
         python -m pip install --upgrade pip
         python -m pip install -r requirements.lock
-        python -m pip install bandit==1.9.4 pip-audit==2.10.0
+    - name: Prime managed environment
+      run: python -m devcovenant gate --status > /dev/null
+    - name: Install scanner dependencies
+      run: python -m pip install bandit==1.9.4 pip-audit==2.10.0
     - name: Audit locked dependencies
       run: pip-audit -r requirements.lock
     - name: Run Bandit

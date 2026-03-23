@@ -280,11 +280,13 @@ governance_and_test:
   # Human-owned key.
   # Deep-merge patch applied to generated
   # `.github/workflows/governance-and-test.yml`.
-  # Use for additive customization.
+  # Active profiles may also contribute reusable governance_and_test fragments.
+  # Keep the global base workflow language-agnostic.
+  # Use config overlays only for repo-local CI adjustments.
   overlays: {}
   # Human-owned key.
   # Full replacement payload for generated governance workflow.
-  # Use only when complete ownership is required.
+  # Use only when complete local ownership is required.
   overrides: {}
 
 # ---------------------------------------------------------------------------

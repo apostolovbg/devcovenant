@@ -14,25 +14,30 @@ what kind of trouble appears when it is wrong.
 ## What This Doc Should Cover
 Explain:
 
-- ownership boundaries in config
+1. ownership boundaries in config
 
-- how to review a fresh install baseline
+2. how to review a fresh install baseline
 
-- `developer_mode`
+3. `developer_mode`
 
-- `profiles.active`
+4. `profiles.active`
 
-- `doc_assets`
+5. `doc_assets`
 
-- `project-governance`
+6. `project-governance`
 
-- `core_invariants`
+7. `core_invariants`
 
-- `policy_state`
+8. `policy_state`
 
-- `engine` behavior
+9. `governance_and_test`
+
+10. `engine` behavior
 
 ## Writing Rules
 Keep the prose practical.
 Say what a setting controls, when a human should change it, and what happens if
 it is wrong. Avoid abstract language when a direct explanation is possible.
+Be explicit that reusable extra CI jobs belong in profile
+`governance_and_test` fragments, while local config overlays are for
+repository-specific adjustments.

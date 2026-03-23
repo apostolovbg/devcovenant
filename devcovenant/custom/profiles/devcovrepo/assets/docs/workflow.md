@@ -12,17 +12,24 @@ records, and how to recover when one step mutates files or fails.
 ## What This Doc Should Cover
 Explain:
 
-- `check` versus `gate --status`
+1. `check` versus `gate --status`
 
-- `gate --start`, `gate --mid`, `test`, and `gate --end`
+2. `gate --start`, `gate --mid`, `test`, and `gate --end`
 
-- why `gate --mid` exists
+3. why `gate --mid` exists
 
-- run-log inspection order
+4. run-log inspection order
 
-- recovery rules
+5. recovery rules
 
-- the relationship between local workflow and CI
+6. the relationship between local workflow and the generated `CI and Tests`
+   workflow
+
+7. the rule that the global CI base stays generic while repo-family extras
+   can arrive through profile `governance_and_test` fragments
+
+8. managed-environment use in CI as a metadata-driven contract, not a
+   hardcoded virtual-environment activation recipe
 
 ## Writing Rules
 Keep this doc operational.

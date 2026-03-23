@@ -13,17 +13,21 @@ choices obvious, because that boundary is what keeps profile growth sane.
 ## What This Doc Should Cover
 Explain:
 
-- profile categories and the normal active-stack model
+1. profile categories and the normal active-stack model
 
-- what profiles should own versus what config should own
+2. what profiles should own versus what config should own
 
-- assets and managed-doc templates
+3. assets and managed-doc templates
 
-- translator ownership in language profiles
+4. translator ownership in language profiles
 
-- builtin versus custom profiles
+5. builtin versus custom profiles
 
-- repo-local examples such as `devcovrepo` and `restapi`
+6. repo-local examples such as `devcovrepo` and `restapi`
+
+7. reusable CI additions through `governance_and_test` fragments, including
+   the rule that language- or repo-family-specific jobs do not belong in the
+   global workflow template
 
 ## Writing Rules
 Keep the explanation concrete.

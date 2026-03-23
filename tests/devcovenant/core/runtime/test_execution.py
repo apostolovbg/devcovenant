@@ -507,9 +507,14 @@ def _unit_test_ci_workflow_split_docs_are_consistent() -> None:
 
     assert "repo-maintained copy of" not in profiles
     assert "refresh-generated output" in profiles
+    assert "`governance_and_test`" in profiles
+    assert "global workflow template should stay generic" in profiles
+    assert "The generated CI workflow lives at" in workflow
+    assert "The global base should stay language-agnostic." in workflow
     assert (
-        "Repository-maintained workflows (not refresh-generated):"
-    ) in workflow
+        "active profiles may contribute `governance_and_test` fragments"
+        in (workflow)
+    )
     assert ".github/workflows/build.yml" in installation
     assert ".github/workflows/publish.yml" in installation
     assert "repository-maintained workflows" in installation
@@ -550,7 +555,8 @@ def _unit_test_primary_docs_identify_their_normative_contracts() -> None:
             "## Managed Doc Descriptor Schema",
         ),
         "devcovenant/docs/workflow.md": (
-            "normative home for the gate sequence and run-artifact",
+            "Use this document for the gate sequence, CI contract, and "
+            "run-artifact",
             "## Run Artifact Contract",
         ),
         "devcovenant/docs/config.md": (

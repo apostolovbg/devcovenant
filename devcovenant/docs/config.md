@@ -143,6 +143,24 @@ Runtime behavior such as:
 These settings change how the runtime behaves, not what the repository claims
 about itself.
 
+### governance_and_test
+Repository-local customization for the generated `CI and Tests` workflow.
+
+Use this section for:
+
+1. small repo-local overlays on the generated workflow
+
+2. the rare case where the repository deliberately takes full ownership of the
+   generated workflow payload
+
+Do not use this section as the first place to add reusable extra jobs for a
+repo family.
+If the added job should travel with a profile stack, put that behavior in a
+profile `governance_and_test` fragment instead.
+That is how a repository can carry supported-language compatibility or
+assurance jobs without pushing those language-specific checks into the global
+base workflow.
+
 ## Project Governance In Practice
 Most repositories change these first:
 
@@ -193,15 +211,15 @@ Use config overrides for repository-specific decisions.
 The config participates directly in the managed-doc system.
 It controls:
 
-- which docs are enabled
+1. which docs are enabled
 
-- which custom docs are added
+2. which custom docs are added
 
-- project-governance header rendering
+3. project-governance header rendering
 
-- policy activation that changes AGENTS output
+4. policy activation that changes AGENTS output
 
-- generated workflow and tooling surfaces
+5. generated workflow and tooling surfaces
 
 When you change doc assets, profile assets, or managed-doc metadata,
 run the normal gate workflow or an explicit `refresh` before trusting the

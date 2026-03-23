@@ -80,19 +80,31 @@ The current runtime contract intentionally keeps:
 
 ## Continuous Assurance
 DevCovenant keeps release assurance visible in normal automation:
-- the generated governance workflow runs the full gate lifecycle on Python
-  `3.14`
-- the same workflow runs a focused compatibility matrix on Python `3.10`
-  through `3.13`
-- the assurance job runs `pip-audit -r requirements.lock`
-- the assurance job runs `bandit -q -c bandit.yaml -r devcovenant`
-- `bandit.yaml` is the tracked Bandit configuration surface for this repo's
-  low-signal skip list
-- Dependabot watches both `github-actions` and Python package metadata at the
-  repository root
-- the publish workflow uses PyPI trusted publishing instead of a long-lived
-  upload token, and PyPI-side attestations are emitted through that publish
-  path
+1. the generated `CI and Tests` workflow provides the generic base gate/test
+   automation on bootstrap Python `3.14`
+
+2. this repository's `devcovrepo` profile adds the supported-Python
+   compatibility matrix on Python `3.10` through `3.13`
+
+3. the same repo-specific profile adds the assurance job that runs
+   `pip-audit -r requirements.lock`
+
+4. the same repo-specific profile adds the assurance job that runs
+   `bandit -q -c bandit.yaml -r devcovenant`
+
+5. repo-specific CI jobs prime the managed environment through DevCovenant's
+   managed-environment contract instead of hardcoding one environment type's
+   shell-activation command
+
+6. `bandit.yaml` is the tracked Bandit configuration surface for this repo's
+   low-signal skip list
+
+7. Dependabot watches both `github-actions` and Python package metadata at
+   the repository root
+
+8. the publish workflow uses PyPI trusted publishing instead of a long-lived
+   upload token, and PyPI-side attestations are emitted through that publish
+   path
 
 These checks are review surfaces, not a claim that one scanner is infallible.
 When scanners disagree, DevCovenant's rule is to document the disagreement,

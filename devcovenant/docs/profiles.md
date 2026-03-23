@@ -10,17 +10,19 @@ behavior should come with that shape.
 A profile can contribute refresh-generated output and reusable stack
 metadata. A profile can contribute:
 
-- metadata overlays
+1. metadata overlays
 
-- managed assets
+2. managed assets
 
-- pre-commit fragments
+3. pre-commit fragments
 
-- suffix inventories
+4. suffix inventories
 
-- translator declarations
+5. translator declarations
 
-- core-invariant metadata overlays where DevCovenant exposes that contract
+6. governance-workflow fragments through `governance_and_test`
+
+7. core-invariant metadata overlays where DevCovenant exposes that contract
 
 Profiles do not directly turn policies on or off.
 Policy activation remains config-driven through `policy_state`.
@@ -44,15 +46,18 @@ changes.
 Profiles are the right place for reusable stack behavior.
 That includes things like:
 
-- dependency file roles for a language ecosystem
+1. dependency file roles for a language ecosystem
 
-- managed-environment expectations for a stack
+2. managed-environment expectations for a stack
 
-- generated asset templates
+3. generated asset templates
 
-- translator declarations for a language
+4. translator declarations for a language
 
-- documentation routes for a reusable repo profile
+5. documentation routes for a reusable repo profile
+
+6. extra CI jobs that should apply to a repo family instead of every
+   DevCovenant repository
 
 If the behavior should apply to many repositories of the same shape, it
 probably belongs in a profile instead of local config.
@@ -98,15 +103,23 @@ Profiles are the preferred place for operational metadata that depends on stack
 shape.
 Examples include:
 
-- dependency-management selectors
+1. dependency-management selectors
 
-- version-sync file roles
+2. version-sync file roles
 
-- documentation-growth routes
+3. documentation-growth routes
 
-- no-print sink metadata from language profiles
+4. no-print sink metadata from language profiles
 
-- core-invariant required test commands
+5. core-invariant required test commands
+
+6. reusable `governance_and_test` fragments for repo-family CI jobs
+
+The CI boundary is important.
+The global workflow template should stay generic.
+If a repo family needs additional jobs, such as this repository's supported
+Python compatibility matrix and assurance scanners, that extension belongs in
+the relevant profile instead of in the builtin global workflow.
 
 Use config overrides after that for repository-specific deltas.
 

@@ -3,9 +3,12 @@
 **Project Version:** 1.0.0
 
 ## Overview
-This document is the normative home for the gate sequence and run-artifact
-contract. Use it together with `devcovenant/docs/contracts.md` when you need
-the stable local and CI command order.
+Use this document for the gate sequence, CI contract, and run-artifact
+handling.
+When you need the exact command order or need to understand how the generated
+CI workflow relates to local work, start here.
+Use it together with `devcovenant/docs/contracts.md` when you need the stable
+gate-sequence or CI-ownership contract.
 
 The normal DevCovenant work slice is:
 
@@ -122,14 +125,52 @@ full child output in the run logs.
 That is why the log artifacts matter.
 
 ## CI Mapping
-Repository-maintained workflows (not refresh-generated):
-`.github/workflows/build.yml` and `.github/workflows/publish.yml`.
-The refresh-generated governance gate pipeline should still enforce the same
-local command law.
+The generated CI workflow lives at
+`.github/workflows/governance-and-test.yml`.
+Its visible workflow name is `CI and Tests`.
 
-CI should use the same sequence the repository uses locally.
-That means start gate, mid gate, test, and end gate, not a hand-written
-approximation that silently skips part of the contract.
+The ownership split matters:
+
+1. the builtin `global` profile owns the generic base workflow
+
+2. active profiles may contribute `governance_and_test` fragments that add
+   repo-family jobs or steps
+
+3. local `config.governance_and_test.*` keys are for repo-local overlays or,
+   rarely, a full local replacement
+
+The global base should stay language-agnostic.
+If a repository family needs extra CI proof, such as a supported-language
+compatibility matrix or assurance scanners, that extra job should come from
+the relevant profile instead of from the generic global template.
+
+This repository also keeps `build.yml` and `publish.yml` as repo-maintained
+release workflows.
+They consume the result of `CI and Tests`, but they are not part of the
+generated governance workflow itself.
+
+## Managed Environment In CI
+CI should bootstrap DevCovenant with a normal Python launcher and then let the
+managed-environment contract take over.
+Do not hardcode shell activation for one environment type such as a virtual
+environment.
+
+That rule keeps CI generic:
+
+1. bootstrap Python installs DevCovenant's own dependencies
+
+2. DevCovenant resolves the configured managed environment for the stage
+
+3. stage commands prepare or reuse that environment through metadata such as
+   `expected_paths`, `expected_interpreters`, and `managed_commands`
+
+In this repository, repo-specific CI jobs prime the managed environment with
+`python -m devcovenant gate --status > /dev/null` before running their focused
+checks.
+The important part is not the exact command.
+The important part is that CI exercises the managed-environment contract
+generically, so a different environment type such as a bench can work through
+the same metadata-driven path.
 
 ## Operator Checklist
 Before you close a slice, confirm:

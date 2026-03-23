@@ -19,15 +19,18 @@ but do not hand-edit generated registry files.
 `devcovenant/registry/registry.yaml` is the tracked registry.
 It stores deterministic governance state such as:
 
-- resolved policy metadata
+1. resolved policy metadata
 
-- resolved core-invariant metadata
+2. resolved core-invariant metadata
 
-- active profile inventory
+3. active profile inventory
 
-- managed-doc and generation state
+4. managed-doc and generation state
 
-- resolution traces used for auditing and debugging
+5. profile-provided generation fragments, including reusable
+   `governance_and_test` additions
+
+6. resolution traces used for auditing and debugging
 
 Commit tracked-registry changes when they are the result of real repo changes.
 
@@ -54,13 +57,16 @@ know where a slice stands.
 ## When To Read Which Surface
 Read `registry.yaml` when you need to understand:
 
-- resolved metadata
+1. resolved metadata
 
-- active profiles
+2. active profiles
 
-- generated policy or invariant state
+3. generated policy or invariant state
 
-- why one configuration value won over another
+4. why one configuration value won over another
+
+5. which profile contributed an extra generated workflow fragment or other
+   resolved generation input
 
 Read `registry/runtime/` when you need to understand:
 

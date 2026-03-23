@@ -187,7 +187,9 @@ def _governance_workflow_signature(
             continue
         selected_steps.append(_workflow_step_signature(raw_step))
     return {
+        "workflow_name": str(payload.get("name") or "").strip(),
         "runs-on": str(job.get("runs-on") or "").strip(),
+        "job_name": str(job.get("name") or "").strip(),
         "pycacheprefix": str(env.get("PYTHONPYCACHEPREFIX") or "").strip(),
         "steps": selected_steps,
     }
@@ -219,6 +221,55 @@ def _unit_test_governance_workflow_asset_matches_repo_contract() -> None:
     assert _governance_workflow_signature(repo_payload) == (
         _governance_workflow_signature(asset_payload)
     )
+
+
+def _unit_test_global_governance_workflow_asset_stays_generic() -> None:
+    """Global workflow asset should not absorb repo-specific jobs."""
+    asset_workflow = (
+        REPO_ROOT
+        / "devcovenant"
+        / "builtin"
+        / "profiles"
+        / "global"
+        / "assets"
+        / "governance-and-test.yml"
+    )
+    payload = yaml.safe_load(asset_workflow.read_text(encoding="utf-8"))
+    assert isinstance(payload, dict)
+    jobs = payload.get("jobs")
+    assert isinstance(jobs, dict)
+    assert payload.get("name") == "CI and Tests"
+    assert set(jobs) == {"governance-and-test"}
+    assert "compatibility-matrix" not in jobs
+    assert "assurance" not in jobs
+
+
+def _unit_test_repo_workflow_includes_devcovrepo_jobs() -> None:
+    """Repo workflow should include devcovrepo-provided CI jobs."""
+    repo_workflow = (
+        REPO_ROOT / ".github" / "workflows" / "governance-and-test.yml"
+    )
+    payload = yaml.safe_load(repo_workflow.read_text(encoding="utf-8"))
+    assert isinstance(payload, dict)
+    assert payload.get("name") == "CI and Tests"
+
+    jobs = payload.get("jobs")
+    assert isinstance(jobs, dict)
+    assert "governance-and-test" in jobs
+    assert "compatibility-matrix" in jobs
+    assert "assurance" in jobs
+
+    compatibility = jobs["compatibility-matrix"]
+    assert isinstance(compatibility, dict)
+    steps = compatibility.get("steps")
+    assert isinstance(steps, list)
+    step_names = [
+        str(step.get("name") or "").strip()
+        for step in steps
+        if isinstance(step, dict)
+    ]
+    assert "Prime managed environment" in step_names
+    assert "Run compatibility contract tests" in step_names
 
 
 class GeneratedUnittestCases(unittest.TestCase):
@@ -255,3 +306,11 @@ class GeneratedUnittestCases(unittest.TestCase):
     def test_governance_workflow_asset_matches_repo_contract(self):
         """Run global workflow asset vs repo workflow contract assertions."""
         _unit_test_governance_workflow_asset_matches_repo_contract()
+
+    def test_global_governance_workflow_asset_stays_generic(self):
+        """Run global workflow generic-boundary assertions."""
+        _unit_test_global_governance_workflow_asset_stays_generic()
+
+    def test_repo_workflow_includes_devcovrepo_jobs(self):
+        """Run repo workflow extra-job assertions."""
+        _unit_test_repo_workflow_includes_devcovrepo_jobs()
