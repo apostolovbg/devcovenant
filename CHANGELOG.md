@@ -61,6 +61,21 @@ Example:
 ## Version 1.0.0
 
 - 2026-03-23:
+  Change: Amended `PLAN.md` to insert a detailed remediation item for making
+  `pipx` the explicit, validated public install path, and adjusted the
+  remaining item order and validation notes around that new installation
+  contract.
+  Why: Clarified that the cleaner machine-level install story now needs to be
+  reflected consistently in public docs, release proof, and repo-specific CI
+  rather than living only as an ad hoc operational success.
+  Impact: Standardized the remediation roadmap around installed-CLI
+  distribution as an explicit release-quality task, so the final audit will
+  not sign off before the documented `pipx` path is aligned and proven.
+  Files:
+  CHANGELOG.md
+  PLAN.md
+
+- 2026-03-23:
   Change: Updated the repo-specific `readme-sync` policy so the packaged
   README can rewrite repo-relative public links from package metadata instead
   of from a hardcoded upstream URL, and updated the owning docs for that

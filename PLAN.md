@@ -34,13 +34,15 @@ truer, more intentional baseline.
   - CI and release assurance are materially stronger than before
   - the documentation set is much smaller and more usable than it was
 - The repo is now in remediation mode, not invention mode.
-- The final read-only audit narrowed the remaining gaps to four specific
+- The final read-only audit narrowed the remaining gaps to five specific
   product-finish problems:
   - the packaged README still uses repo-relative public links that are wrong
     for PyPI
   - the live generated `devcovenant/config.yaml` comment scaffold drifted from
     the current asset/runtime truth
   - local package builds still emit MANIFEST and package-discovery warnings
+  - the machine-install story is no longer explicit enough now that `pipx`
+    looks like the right public install path
   - the detailed docs still carry too much contract-index and
     "normative home" language
 - The next full outside-in audit should happen only after those issues are
@@ -171,7 +173,44 @@ truer, more intentional baseline.
    - wheel and sdist contents remain correct
    - `twine check` and smoke installs still pass
 
-4. [not done] Finish The Documentation Polish Pass.
+4. [not done] Standardize The Public Install Story Around `pipx`.
+   Goal:
+   - make the public machine-install contract explicit, consistent, and proven
+     if `pipx` is the preferred way to install DevCovenant as a CLI tool.
+   Why this matters:
+   - we already proved that a `pipx` installation gives a cleaner machine-level
+     DevCovenant install than `pip --user --break-system-packages`, but the
+     repo still does not tell users that clearly or validate it as part of the
+     normal product story.
+   Work to do:
+   - decide and document the final split between user installation and
+     contributor/source-checkout workflow:
+     `pipx` for end users, managed environment or local source checkout for
+     repository development
+   - update the public install surfaces so they all tell the same story:
+     `README.md`, `devcovenant/README.md`, `devcovenant/docs/installation.md`,
+     troubleshooting/install guidance, and any trust/support text that mentions
+     installation or upgrade paths
+   - make the rationale explicit:
+     `pipx` isolates CLI dependencies, avoids polluting a user-site Python
+     environment, and is a better fit for a Python application than ad hoc
+     `pip --user` installs
+   - remove or demote install guidance that implies the old machine-level pip
+     path is the normal or preferred public route
+   - add package-install proof to release validation:
+     build artifact, `pipx` install from that artifact, basic CLI smoke checks,
+     and at least one cleanup or read-only command through the installed CLI
+   - decide whether CI should include a dedicated installed-CLI smoke job,
+     and if so, keep that proof in the repo-specific CI extension layer rather
+     than the language-agnostic base workflow
+   Done when:
+   - the public docs consistently present `pipx` as the preferred machine
+     install path
+   - contributor docs still clearly distinguish source development from
+     installed-CLI usage
+   - release validation proves the documented installed-CLI path works
+
+5. [not done] Finish The Documentation Polish Pass.
    Goal:
    - make the docs read like product docs instead of contract-administration
      notes.
@@ -195,7 +234,7 @@ truer, more intentional baseline.
    - the contract map stays available without dominating the reader experience
    - the remaining meta phrasing is deliberate and minimal
 
-5. [not done] Run The Final Store-Bought QA Closure Again.
+6. [not done] Run The Final Store-Bought QA Closure Again.
    Goal:
    - rerun the full external-style audit after remediation and confirm that the
      remaining gaps are actually gone.
@@ -218,7 +257,7 @@ truer, more intentional baseline.
      mismatches
    - DevCovenant reads as polished, consistent, and intentionally packaged
 
-6. [not done] Prepare The Release-Candidate Cut.
+7. [not done] Prepare The Release-Candidate Cut.
    Goal:
    - turn the remediated tree into a release candidate only after the final
      audit is clean.
@@ -248,6 +287,12 @@ truer, more intentional baseline.
   1. `python -m build`
   2. `twine check dist/*`
   3. wheel and sdist smoke installs
+- For public-install work, also run:
+  1. `pipx` install from a built artifact
+  2. installed-CLI smoke checks such as `--version`, `-h`, and one safe
+     operational command
+  3. verification that the documented end-user install path matches the path
+     the release process actually proved
 - Keep `bandit` and `pip-audit` clean unless a reviewed, documented exception
   is explicitly introduced.
 - Treat packaging warnings as failures for this plan, even if the build exits
