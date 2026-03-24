@@ -1,19 +1,21 @@
 # Configuration
-**Last Updated:** 2026-03-23
+**Last Updated:** 2026-03-24
 **Project Version:** 1.0.0
 
 ## Overview
 This document is the normative home for the public `devcovenant/config.yaml`
-contract. Use it together with `devcovenant/docs/contracts.md` when you need
-the stable meaning of config sections and ownership.
+contract. Keep `devcovenant/docs/contracts.md` nearby when you need the stable
+document map for the rest of the package surfaces.
 
 `devcovenant/config.yaml` is the repository's operating contract.
 It is the main place where a human decides how the repo should use
-DevCovenant.
+DevCovenant: which profiles are active, which docs and policies stay enabled,
+and which runtime behaviors are in force.
 
 Refresh regenerates autogen-owned sections and preserves user-owned sections.
-That means the file is partly generated and partly human authority.
-The important thing is to know which parts belong to which side.
+So the practical question is not "is this file generated?"
+It is "which parts of this file belong to me, and which parts does refresh own
+for visibility?"
 
 ## How To Read This File
 Most people should read it in this order:

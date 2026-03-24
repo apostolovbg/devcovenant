@@ -196,52 +196,52 @@ truer, more intentional baseline.
    - installed-CLI proof now lives in both release validation and repo-specific
      CI instead of in ad hoc local notes
 
-5. [not done] Finish The Documentation Polish Pass.
-   Goal:
-   - make the docs read like product docs instead of contract-administration
-     notes.
-   Why this matters:
-   - the docs were restructured successfully, but the audit still found too
-     much contract-index and "normative home" phrasing in pages that should be
-     direct operator references.
-   Work to do:
-   - rewrite the openings of the detailed docs that still lead with meta
-     contract language instead of task or concept framing
-   - trim repeated "use this together with..." and "normative home" wording
-     where it adds governance bookkeeping but not reader value
-   - keep the contract map explicit in `contracts.md`, but stop making every
-     detailed page sound like an extension of that index
-   - reread the operator path from `README.md` into installation, workflow,
-     config, and troubleshooting to make sure the tone stays practical
-   - keep the docs short enough to scan under pressure while still explaining
-     everything they own
-   Done when:
-   - the detailed docs open with direct task or concept framing
-   - the contract map stays available without dominating the reader experience
-   - the remaining meta phrasing is deliberate and minimal
+5. [done] Finish The Documentation Polish Pass.
+   What landed:
+   - the openings of `config.md`, `project_governance.md`, `registry.md`,
+     `contracts.md`, and `policies.md` were rewritten to keep the explicit
+     contract markers the package tests expect while shifting the reading
+     experience back toward direct operator questions and concrete decisions
+   - the surviving references to `devcovenant/docs/contracts.md` now behave
+     more like a doc-map pointer and less like repeated administrative throat
+     clearing at the top of every page
+   - the registry docs now frame tracked versus runtime-local registry state
+     as a practical debugging choice, and the configuration docs now frame
+     `devcovenant/config.yaml` as the place where a human decides active repo
+     behavior instead of as a generic ownership lecture
+   - the contract index itself now tells readers to start in the concrete page
+     they need and use `contracts.md` as a map, which keeps the stable
+     contract-home model without letting it dominate the whole doc set
+   What is now true:
+   - the detailed docs still satisfy the current contract-index tests
+   - the remaining meta wording is deliberate and lighter
+   - the package docs read more like direct technical references and less like
+     contract-administration notes
 
-6. [not done] Run The Final Store-Bought QA Closure Again.
-   Goal:
-   - rerun the full external-style audit after remediation and confirm that the
-     remaining gaps are actually gone.
-   Why this matters:
-   - the previous audit already did its job: it found the remaining issues.
-     The next audit should confirm closure, not rediscover the same defects.
-   Work to do:
-   - rerun the read-only audit across docs, code, config, registry, workflows,
-     packaging, trust surfaces, and release posture
-   - verify the packaged README behaves like a real public package surface
-   - verify the live config comments tell the same story as the runtime and
-     source assets
-   - verify the build is warning-free, `twine check` passes, and artifact
-     contents match the documented product surface
-   - verify there is no remaining stale naming, removed-command residue, or
-     contradictory public messaging
-   - produce a concise release-readiness checklist from the final clean audit
-   Done when:
-   - a fresh audit finds no substantive documentation, code, or packaging
-     mismatches
-   - DevCovenant reads as polished, consistent, and intentionally packaged
+6. [done] Run The Final Store-Bought QA Closure Again.
+   What landed:
+   - reran the outside-in audit across the live docs, config, registry,
+     workflow surfaces, package metadata, command naming, and packaged README
+     contract
+   - verified that the packaged `devcovenant/README.md` now behaves like a
+     real public package surface: it keeps the `pipx` install story, keeps
+     the governed workflow guidance, and rewrites public doc links into
+     package-safe GitHub URLs instead of shipping broken repo-relative links
+   - rebuilt sdist and wheel from a temp copy that preserved tracked package
+     docs while excluding runtime debris, confirmed the build stayed
+     warning-free, and ran `twine check` successfully on both artifacts
+   - confirmed the built artifacts no longer carry removed-command residue or
+     stale CI naming such as `update_lock`, `governance-and-test`, or
+     Dependabot config, while still shipping the intended package docs and
+     tracked `README` surfaces
+   - confirmed the live doc and config surfaces now tell the same story as the
+     runtime and profile metadata, with no substantive contradictions found in
+     the final picky-eye pass
+   What is now true:
+   - the final external-style audit no longer finds substantive documentation,
+     code, or packaging mismatches
+   - DevCovenant now reads as polished, consistent, and intentionally
+     packaged enough to move into release-candidate preparation
 
 7. [not done] Prepare The Release-Candidate Cut.
    Goal:

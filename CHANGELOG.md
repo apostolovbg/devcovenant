@@ -61,6 +61,43 @@ Example:
 ## Version 1.0.0
 
 - 2026-03-24:
+  Change: Closed the final store-bought QA audit by rerunning the outside-in
+  checks across docs, config, registry, workflows, packaged README behavior,
+  and built artifacts, then rewrote Item 6 in `PLAN.md` to record that clean
+  audit result as completed roadmap state.
+  Why: Completed the remaining verification work after the remediation slices
+  were already done, so the repo no longer had to leave the plan parked on an
+  already-resolved audit step.
+  Impact: Recorded a clean final audit result, confirmed that the built sdist
+  and wheel are warning-free and pass `twine check`, and moved the roadmap
+  forward to release-candidate preparation as the next remaining item.
+  Files:
+  CHANGELOG.md
+  PLAN.md
+
+- 2026-03-24:
+  Change: Rewrote the openings of the main package reference docs so they keep
+  the explicit contract markers the test suite expects while shifting the
+  reading experience back toward direct operator questions, concrete decisions,
+  and lighter contract-index language.
+  Why: The docs had already been structurally reduced, but several key pages
+  still sounded more like administration notes than like technical references,
+  and that was the last stated documentation-polish gap before the final
+  audit.
+  Impact: Reduced the remaining meta tone in the package docs, kept
+  `contracts.md` as the stable map instead of the voice every page speaks in,
+  and recorded the polish slice as completed roadmap state without weakening
+  the existing documentation-contract tests.
+  Files:
+  CHANGELOG.md
+  PLAN.md
+  devcovenant/docs/config.md
+  devcovenant/docs/contracts.md
+  devcovenant/docs/policies.md
+  devcovenant/docs/project_governance.md
+  devcovenant/docs/registry.md
+
+- 2026-03-24:
   Change: Rewrote Item 4 in `PLAN.md` to record the completed `pipx` install
   contract, the repo-specific installed-CLI smoke proof, and the current
   release-validation expectations that now follow from that work.

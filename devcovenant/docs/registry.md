@@ -4,14 +4,17 @@
 
 ## Overview
 This document is the normative home for the registry contract.
-Use it together with `devcovenant/docs/contracts.md` when you need the stable
-meaning of tracked registry state versus runtime-local registry state.
+Keep `devcovenant/docs/contracts.md` nearby when you need the stable document
+map for the rest of the package surfaces.
 
 DevCovenant uses `devcovenant/registry/` for generated state.
 Some of that state is tracked and durable.
 Some of it is runtime-local and disposable.
+Use this page when you need to answer one practical debugging question:
+is the thing I am looking at part of the repository's resolved contract, or is
+it only local evidence about recent command runs?
 
-The safest working rule is simple:
+Working rule:
 read the registry when you need to understand resolved state,
 but do not hand-edit generated registry files.
 

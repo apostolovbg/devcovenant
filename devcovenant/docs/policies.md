@@ -1,16 +1,19 @@
 # Policies
-**Last Updated:** 2026-03-23
+**Last Updated:** 2026-03-24
 **Project Version:** 1.0.0
 
 ## Overview
 This document is the normative home for the policy descriptor contract.
-Use it together with `devcovenant/docs/contracts.md` when you need the stable
-boundary between configurable policy behavior, autofix, commands, and core
-invariants.
+Keep `devcovenant/docs/contracts.md` nearby when you need the stable document
+map or the frozen boundary between configurable policy behavior, autofix,
+commands, and core invariants.
 
 Policies are the customizable enforcement units in DevCovenant.
 Each policy combines descriptor metadata, runtime check logic, and optional
 autofix support.
+Use this page when you need to decide whether a new behavior belongs in a
+policy at all, and if it does, whether it should surface as a check, an
+autofixer, a runtime action, or an explicit operator command.
 
 Policies are different from core invariants.
 Policies are repository-governance surfaces.

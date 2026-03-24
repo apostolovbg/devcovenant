@@ -1,11 +1,13 @@
 # Contracts
-**Last Updated:** 2026-03-22
+**Last Updated:** 2026-03-24
 **Project Version:** 1.0.0
 
 ## Overview
 This document is the contract index for the DevCovenant package docs.
 Use it when you need to know which page is the normative home for a stable
 public contract and where a future change should be documented first.
+Most readers should start in the concrete doc they need and come here only
+when they are deciding where a contract lives or which page owns a change.
 
 The detailed docs should stay operator-oriented and explanatory.
 That does not remove the need for a stable contract map.

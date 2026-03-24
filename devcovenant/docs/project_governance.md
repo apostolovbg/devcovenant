@@ -1,15 +1,18 @@
 # Project Governance
-**Last Updated:** 2026-03-23
+**Last Updated:** 2026-03-24
 **Project Version:** 1.0.0
 
 ## Overview
 This document is the normative home for the `project-governance` contract.
-Use it together with `devcovenant/docs/contracts.md` when you need the
-stable meaning of repository identity and lifecycle metadata.
+Keep `devcovenant/docs/contracts.md` nearby when you need the stable document
+map for the rest of the package surfaces.
 
 `project-governance` is where a repository states what it is called, what
 lifecycle stage it is in, how actively it is still changing, and what
 compatibility promise it is making.
+Open this page when you need to answer those public identity questions
+deliberately instead of letting package metadata or README wording drift into
+becoming the source of truth by accident.
 It is not a packaging afterthought and it is not derived from `pyproject.toml`.
 Other public surfaces render from this metadata.
 
