@@ -61,6 +61,34 @@ Example:
 ## Version 1.0.0
 
 - 2026-03-24:
+  Change: Replaced the generated repo-specific CI sprawl with one
+  `ci-and-test` job that carries the scanner steps and one dependent
+  `build-and-install-test` job, then rewrote the owning docs and workflow
+  contract checks to match that profile-driven shape.
+  Why: Removed the previous compatibility-matrix, assurance, and
+  `installed-cli-smoke` split because it drifted away from the intended
+  two-job CI model and made the generated workflow noisier than the
+  repository contract allowed.
+  Impact: The generated `CI and Test` workflow now matches the requested
+  structure, the public/security docs describe the same contract, and the
+  profile-registry tests now reject a return to the old multi-job sprawl.
+  Files:
+  .github/workflows/ci-and-test.yml
+  CHANGELOG.md
+  PLAN.md
+  SECURITY.md
+  devcovenant/docs/config.md
+  devcovenant/docs/profiles.md
+  devcovenant/docs/registry.md
+  devcovenant/docs/workflow.md
+  devcovenant/custom/profiles/devcovrepo/devcovrepo.yaml
+  devcovenant/custom/profiles/devcovrepo/assets/docs/config.md
+  devcovenant/custom/profiles/devcovrepo/assets/docs/profiles.md
+  devcovenant/custom/profiles/devcovrepo/assets/docs/workflow.md
+  devcovenant/registry/registry.yaml
+  tests/devcovenant/core/services/test_profile_registry.py
+
+- 2026-03-24:
   Change: Closed the final store-bought QA audit by rerunning the outside-in
   checks across docs, config, registry, workflows, packaged README behavior,
   and built artifacts, then rewrote Item 6 in `PLAN.md` to record that clean

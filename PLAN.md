@@ -175,11 +175,12 @@ truer, more intentional baseline.
      how to install, upgrade, and troubleshoot the CLI without blurring that
      machine-install path with `devcovenant install` inside a governed
      repository
-   - the repo-specific `devcovrepo` profile now contributes an
-     `installed-cli-smoke` CI job through `ci_and_test` metadata, so the
-     generated `ci-and-test` workflow proves the documented installed-CLI path
-     without pushing Python-package assumptions back into the language-agnostic
-     global workflow template
+   - the repo-specific `devcovrepo` profile now contributes CI proof through
+     `ci_and_test` metadata by extending the main `ci-and-test` job with the
+     repo's scanner steps and adding one dependent
+     `build-and-install-test` job, so the generated workflow proves the
+     documented installed-CLI path without pushing Python-package assumptions
+     back into the language-agnostic global workflow template
    - the profile-registry regression suite now locks that repo-specific CI
      proof into the workflow contract, and the package-doc wording remains
      neutral about repo-specific profile names while still documenting the CI

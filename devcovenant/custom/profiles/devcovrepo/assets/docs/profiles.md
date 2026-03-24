@@ -26,9 +26,10 @@ Explain:
 6. repo-local examples such as `devcovrepo` and `restapi`
 
 7. reusable CI additions through `ci_and_test` fragments, including
-   the rule that language- or repo-family-specific jobs do not belong in the
-   global workflow template and can include repo-specific installed-CLI smoke
-   proof when the public install path needs it
+   the rule that language- or repo-family-specific behavior does not belong in
+   the global workflow template and may extend the main CI job or add one
+   dependent build-and-install verification job when the public install path
+   needs proof
 
 ## Writing Rules
 Keep the explanation concrete.

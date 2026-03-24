@@ -29,10 +29,12 @@ Explain:
    workflow
 
 8. the rule that the global CI base stays generic while repo-family extras
-   can arrive through profile `ci_and_test` fragments
+   can arrive through profile `ci_and_test` fragments by extending the main
+   job or adding one dependent verification job
 
-9. the repo-specific installed-CLI smoke job that proves the documented
-   `pipx` install path without pushing that logic into the generic CI base
+9. the repo-specific build-and-install verification job that proves the
+   documented `pipx` install path without pushing that logic into the generic
+   CI base
 
 10. managed-environment use in CI as a metadata-driven contract, not a
    hardcoded virtual-environment activation recipe

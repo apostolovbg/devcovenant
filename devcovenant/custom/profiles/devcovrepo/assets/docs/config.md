@@ -41,7 +41,8 @@ Keep the prose practical.
 Say what a setting controls, when a human should change it, and what happens if
 it is wrong. Avoid abstract language when a direct explanation is possible.
 Be explicit that reusable extra CI jobs belong in profile
-`ci_and_test` fragments, while local config overlays are for
+`ci_and_test` fragments, whether they extend the main `ci-and-test` job or add
+one dependent verification job, while local config overlays are for
 repository-specific adjustments.
 Be equally explicit that cleanup targets come from active profile
 `clean_overlays` by default, while local `clean.overrides` are only for

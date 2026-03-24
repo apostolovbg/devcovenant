@@ -120,10 +120,11 @@ Examples include:
 
 The CI boundary is important.
 The global workflow template should stay generic.
-If a repo family needs additional jobs, such as this repository's supported
-Python compatibility matrix, assurance scanners, or a `pipx`-installed CLI
-smoke check, that extension belongs in the relevant profile instead of in the
-builtin global workflow.
+If a repo family needs additional CI proof, that extension belongs in the
+relevant profile instead of in the builtin global workflow.
+The usual shape is to extend the main `ci-and-test` job with repo-family
+steps and, if needed, add one dependent verification job such as this
+repository's `build-and-install-test` job for packaged CLI proof.
 
 Use config overrides after that for repository-specific deltas.
 

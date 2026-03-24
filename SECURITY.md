@@ -83,20 +83,18 @@ DevCovenant keeps release assurance visible in normal automation:
 1. the generated `CI and Test` workflow provides the generic base gate/test
    automation on bootstrap Python `3.14`
 
-2. this repository's `devcovrepo` profile adds the supported-Python
-   compatibility matrix on Python `3.10` through `3.13`
-
-3. the same repo-specific profile adds the assurance job that runs
-   `pip-audit -r requirements.lock`
-
-4. the same repo-specific profile adds the assurance job that runs
+2. this repository's `devcovrepo` profile extends the main `CI and Test`
+   job with `pip-audit -r requirements.lock` and
    `bandit -q -c bandit.yaml -r devcovenant`
 
-5. repo-specific CI jobs prime the managed environment through DevCovenant's
-   managed-environment contract instead of hardcoding one environment type's
-   shell-activation command
+3. the same repo-specific profile adds one dependent `Build and Install Test`
+   job that builds artifacts, runs `twine check`, installs the built CLI with
+   `pipx`, and verifies the installed command surface
 
-6. `bandit.yaml` is the tracked Bandit configuration surface for this repo's
+4. repo-specific CI jobs use DevCovenant's managed-environment contract
+   instead of hardcoding one environment type's shell-activation command
+
+5. `bandit.yaml` is the tracked Bandit configuration surface for this repo's
    low-signal skip list
 
 7. the publish workflow uses PyPI trusted publishing instead of a long-lived

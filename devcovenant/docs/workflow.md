@@ -141,21 +141,23 @@ The ownership split matters:
 1. the builtin `global` profile owns the generic base workflow
 
 2. active profiles may contribute `ci_and_test` fragments that add
-   repo-family jobs or steps
+   repo-family steps or one dependent verification job
 
 3. local `config.ci_and_test.*` keys are for repo-local overlays or,
    rarely, a full local replacement
 
 The global base should stay language-agnostic.
-If a repository family needs extra CI proof, such as a supported-language
-compatibility matrix or assurance scanners, that extra job should come from
+If a repository family needs extra CI proof, that extension should come from
 the relevant profile instead of from the generic global template.
+The clean shape is to keep one main `ci-and-test` job and, when needed, add
+at most one dependent verification job.
 
-In this repository, the active repo-specific profile also adds an
-installed-CLI smoke job.
-That job builds a wheel, installs it with `pipx`, and proves the documented
-machine-install path without pushing Python-package assumptions back into the
-generic global CI base.
+In this repository, the active repo-specific profile extends the main
+`ci-and-test` job with `pip-audit` and Bandit steps, then adds one dependent
+`build-and-install-test` job.
+That second job builds artifacts, runs `twine check`, installs the built CLI
+with `pipx`, and proves the documented machine-install path without pushing
+Python-package assumptions back into the generic global CI base.
 
 This repository also keeps `build.yml` and `publish.yml` as repo-maintained
 release workflows.

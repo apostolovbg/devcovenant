@@ -173,9 +173,9 @@ Do not use this section as the first place to add reusable extra jobs for a
 repo family.
 If the added job should travel with a profile stack, put that behavior in a
 profile `ci_and_test` fragment instead.
-That is how a repository can carry supported-language compatibility or
-assurance jobs without pushing those language-specific checks into the global
-base workflow.
+That is how a repository can extend the main generated `ci-and-test` job or
+add one dependent verification job without pushing repo-family checks into the
+global base workflow.
 
 The generated config commentary should tell the same story.
 The live `devcovenant/config.yaml` section header and comments for
