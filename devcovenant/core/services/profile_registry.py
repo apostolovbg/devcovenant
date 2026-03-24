@@ -85,13 +85,16 @@ def _iter_profile_dirs(root: Path) -> list[Path]:
     """Return profile directories beneath a root."""
     if not root.exists():
         return []
-    return [
-        entry
-        for entry in root.iterdir()
-        if entry.is_dir()
-        and not entry.name.startswith("_")
-        and not entry.name.startswith(".")
-    ]
+    return sorted(
+        [
+            entry
+            for entry in root.iterdir()
+            if entry.is_dir()
+            and not entry.name.startswith("_")
+            and not entry.name.startswith(".")
+        ],
+        key=lambda entry: entry.name.lower(),
+    )
 
 
 def _relative_path(path: Path, base: Path) -> str:

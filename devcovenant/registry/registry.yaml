@@ -9399,425 +9399,83 @@ policies:
     hash: a606feca2947d17eacaac3357c03ef19a76a5fb78f3018274afa1409a01ad0e2
     script_path: builtin/dependency_management.py
 profiles:
-  terraform:
+  csharp:
     version: 1
-    profile: terraform
-    category: ops
-    suffixes:
-    - .tf
-    - .tfvars
-    - .hcl
-    ignore_dirs:
-    - .terraform
-    clean_overlays:
-      build_dirs:
-      - .terraform
-    assets:
-    - path: main.tf
-      template: main.tf
-    - path: variables.tf
-      template: variables.tf
-    policy_overlays:
-      devflow-run-gates:
-        required_commands:
-        - terraform validate
-      documentation-growth-tracking:
-        user_facing_suffixes:
-        - .tf
-        - .tfvars
-        - .hcl
-      line-length-limit:
-        include_suffixes:
-        - .tf
-        - .tfvars
-        - .hcl
-    source: builtin
-    path: devcovenant/builtin/profiles/terraform
-    assets_available:
-    - devcovenant/builtin/profiles/terraform/assets/main.tf
-    - devcovenant/builtin/profiles/terraform/assets/variables.tf
-    active: false
-  docker:
-    version: 1
-    profile: docker
-    category: ops
-    suffixes:
-    - Dockerfile
-    - .dockerignore
-    - .yml
-    - .yaml
-    ignore_dirs: []
-    assets:
-    - path: Dockerfile
-      template: Dockerfile
-    - path: docker-compose.yml
-      template: docker-compose.yml
-    - path: .dockerignore
-      template: .dockerignore
-    policy_overlays:
-      documentation-growth-tracking:
-        user_facing_suffixes:
-        - .yml
-        - .yaml
-      line-length-limit:
-        include_suffixes:
-        - .yml
-        - .yaml
-    core_invariant_overlays:
-      devflow-run-gates:
-        required_commands:
-        - docker compose config
-    source: builtin
-    path: devcovenant/builtin/profiles/docker
-    assets_available:
-    - devcovenant/builtin/profiles/docker/assets/.dockerignore
-    - devcovenant/builtin/profiles/docker/assets/Dockerfile
-    - devcovenant/builtin/profiles/docker/assets/docker-compose.yml
-    active: false
-  go:
-    version: 1
-    profile: go
+    profile: csharp
     category: language
     suffixes:
-    - .go
+    - .cs
     ignore_dirs:
     - bin
-    - pkg
-    - vendor
+    - obj
     clean_overlays:
-      cache_globs:
-      - coverage.out
+      build_dirs:
+      - bin
+      - obj
     assets:
-    - path: go.mod
-      template: go.mod
-    - path: go.sum
-      template: go.sum
+    - path: Project.csproj
+      template: Project.csproj
     pre_commit:
       repos:
-      - repo: https://github.com/dnephin/pre-commit-golang
-        rev: v0.5.1
+      - repo: local
         hooks:
-        - id: go-fmt
-        - id: go-vet
+        - id: csharp-format
+          name: csharp format check
+          entry: dotnet format --verify-no-changes
+          language: system
+          pass_filenames: false
+          files: \.cs$
     translators:
-    - id: go
+    - id: csharp
       extensions:
-      - .go
+      - .cs
       can_handle:
         strategy: module_function
-        entrypoint: go_translator.py:can_handle
+        entrypoint: csharp_translator.py:can_handle
       translate:
         strategy: module_function
-        entrypoint: go_translator.py:translate
+        entrypoint: csharp_translator.py:translate
     policy_overlays:
       dependency-management:
         dependency_role_files:
-        - intent=>go.mod
-        - resolved=>go.sum
+        - package_manifest=>Project.csproj
+        - resolved=>packages.lock.json
       name-clarity:
         include_suffixes:
-        - .go
+        - .cs
       docstring-and-comment-coverage:
         include_suffixes:
-        - .go
+        - .cs
       modules-need-tests:
         include_suffixes:
-        - .go
-        watch_dirs:
-        - tests
-        tests_watch_dirs:
-        - tests
-        mirror_test_name_templates:
-        - go=>{stem}_test.go
-      tests-coverage:
-        include_suffixes:
-        - .go
-        watch_dirs:
-        - tests
-        tests_watch_dirs:
-        - tests
-        assertion_signal_patterns:
-        - go=>\bt\.(?:Error|Errorf|Fatal|Fatalf)\s*\(
-        - go=>\b(?:assert|require)\.[A-Za-z_]+\s*\(
-        tautology_patterns:
-        - go=>^\s*assert\.True\s*\(\s*t\s*,\s*true\s*\)\s*$
-        - go=>^\s*require\.True\s*\(\s*t\s*,\s*true\s*\)\s*$
-        symbol_kinds:
-        - function
-        symbol_name_min_length: 3
-        symbol_assertion_window: 2
+        - .cs
       security-scanner:
         include_suffixes:
-        - .go
+        - .cs
       documentation-growth-tracking:
         user_facing_suffixes:
-        - .go
+        - .cs
         user_facing_keywords:
-        - handler
-        - handlers
-        - middleware
+        - controller
+        - controllers
         - service
         - services
         - endpoint
         - endpoints
-      line-length-limit:
-        include_suffixes:
-        - .go
-      no-print-outside-output-runtime:
-        sink_call_targets:
-        - go=>fmt.Print
-        - go=>fmt.Printf
-        - go=>fmt.Println
-        - go=>log.Print
-        - go=>log.Printf
-        - go=>log.Println
-    core_invariant_overlays:
-      devflow-run-gates:
-        required_commands:
-        - go test ./...
-    source: builtin
-    path: devcovenant/builtin/profiles/go
-    assets_available:
-    - devcovenant/builtin/profiles/go/assets/go.mod
-    - devcovenant/builtin/profiles/go/assets/go.sum
-    active: false
-  python:
-    version: 1
-    profile: python
-    category: language
-    suffixes:
-    - .py
-    - .pyi
-    - .pyw
-    - .ipynb
-    ignore_dirs:
-    - .venv
-    - __pycache__
-    - .pytest_cache
-    - .mypy_cache
-    - build
-    - dist
-    clean_overlays:
-      cache_dirs:
-      - .pytype
-      cache_globs:
-      - .ipynb_checkpoints
-      - '**/.ipynb_checkpoints'
-      - coverage.xml
-    assets:
-    - path: requirements.in
-      template: requirements.in
-    - path: requirements.lock
-      template: requirements.lock
-    - path: .python-version
-      template: .python-version
-    - path: pyproject.toml
-      template: pyproject.toml
-    pre_commit:
-      repos:
-      - repo: https://github.com/psf/black
-        rev: 24.4.2
-        hooks:
-        - id: black
-          args:
-          - --line-length
-          - '79'
-      - repo: https://github.com/pycqa/isort
-        rev: 5.12.0
-        hooks:
-        - id: isort
-          args:
-          - --profile
-          - black
-          - --line-length
-          - '79'
-      - repo: https://github.com/astral-sh/ruff-pre-commit
-        rev: v0.4.4
-        hooks:
-        - id: ruff
-          args:
-          - --fix
-          - --exit-non-zero-on-fix
-          - --line-length
-          - '79'
-        - id: ruff-format
-          args:
-          - --line-length
-          - '79'
-      - repo: https://github.com/pycqa/flake8
-        rev: 6.1.0
-        hooks:
-        - id: flake8
-          args:
-          - --max-line-length=79
-          - --extend-ignore=E203,W503
-    translators:
-    - id: python
-      extensions:
-      - .py
-      - .pyi
-      - .pyw
-      can_handle:
-        strategy: module_function
-        entrypoint: python_translator.py:can_handle
-      translate:
-        strategy: module_function
-        entrypoint: python_translator.py:translate
-    policy_overlays:
-      dependency-management:
-        dependency_role_files:
-        - intent=>requirements.in
-        - resolved=>requirements.lock
-        - package_manifest=>pyproject.toml
-      documentation-growth-tracking:
-        user_facing_suffixes:
-        - .py
-      line-length-limit:
-        include_suffixes:
-        - .py
-      version-sync:
-        target_roles:
-        - package_manifest
-        role_extractors:
-        - package_manifest=>manifest_project_version
-        role_legality_schemes:
-        - package_manifest=>pep440
-        target_role_files:
-        - package_manifest=>pyproject.toml
-      security-scanner:
-        include_suffixes:
-        - .py
-      modules-need-tests:
-        include_suffixes:
-        - .py
-        watch_dirs:
-        - tests
-        tests_watch_dirs:
-        - tests
-        mirror_test_name_templates:
-        - python=>test_{stem}.py
-        - python=>{stem}_test.py
-        test_style_requirements:
-        - python=>python_unittest
-      tests-coverage:
-        include_suffixes:
-        - .py
-        watch_dirs:
-        - tests
-        tests_watch_dirs:
-        - tests
-        assertion_signal_patterns:
-        - python=>\bassert\b
-        - python=>\bself\.assert[A-Za-z_]*\s*\(
-        tautology_patterns:
-        - python=>^\s*assert\s+True\s*$
-        - python=>^\s*self\.assertTrue\s*\(\s*True\s*\)\s*$
-        symbol_kinds:
-        - function
-        - class
-        symbol_name_min_length: 3
-        symbol_assertion_window: 2
-      docstring-and-comment-coverage:
-        include_suffixes:
-        - .py
-      name-clarity:
-        include_suffixes:
-        - .py
-      no-print-outside-output-runtime:
-        sink_call_targets:
-        - python=>print
-        - python=>builtins.print
-    core_invariant_overlays:
-      devflow-run-gates:
-        required_commands:
-        - python3 -m unittest discover -v
-        - pytest
-    test_events:
-    - id: python
-      entrypoint: devcovenant.core.services.event:python_test_event_adapter_factory
-    source: builtin
-    path: devcovenant/builtin/profiles/python
-    assets_available:
-    - devcovenant/builtin/profiles/python/assets/.python-version
-    - devcovenant/builtin/profiles/python/assets/pyproject.toml
-    - devcovenant/builtin/profiles/python/assets/requirements.in
-    - devcovenant/builtin/profiles/python/assets/requirements.lock
-    active: true
-  frappe:
-    version: 1
-    profile: frappe
-    category: framework
-    suffixes:
-    - .py
-    - .js
-    - .json
-    - .md
-    ignore_dirs:
-    - .venv
-    - __pycache__
-    - .pytest_cache
-    - .mypy_cache
-    - build
-    - dist
-    - node_modules
-    - sites
-    assets:
-    - path: hooks.py
-      template: hooks.py
-    - path: modules.txt
-      template: modules.txt
-    policy_overlays:
-      dependency-management:
-        dependency_role_files:
-        - intent=>requirements.in
-        - resolved=>requirements.lock
-        - package_manifest=>pyproject.toml
-        - intent=>package.json
-        - resolved=>package-lock.json
-        - resolved=>yarn.lock
-        - resolved=>pnpm-lock.yaml
-      documentation-growth-tracking:
-        user_facing_suffixes:
-        - .py
-        - .js
-        - .json
-        - .md
-        user_facing_keywords:
-        - endpoint
-        - endpoints
         - handler
         - handlers
       line-length-limit:
         include_suffixes:
-        - .py
-        - .js
-        - .json
-        - .md
-      security-scanner:
-        include_suffixes:
-        - .py
-        - .js
-      name-clarity:
-        include_suffixes:
-        - .py
-      docstring-and-comment-coverage:
-        include_suffixes:
-        - .py
-      modules-need-tests:
-        include_suffixes:
-        - .py
-        - .js
+        - .cs
     core_invariant_overlays:
       devflow-run-gates:
         required_commands:
-        - python3 -m unittest discover -v
-        - pytest
-        - npm test
+        - dotnet test
     source: builtin
-    path: devcovenant/builtin/profiles/frappe
+    path: devcovenant/builtin/profiles/csharp
     assets_available:
-    - devcovenant/builtin/profiles/frappe/assets/hooks.py
-    - devcovenant/builtin/profiles/frappe/assets/modules.txt
+    - devcovenant/builtin/profiles/csharp/assets/Project.csproj
+    - devcovenant/builtin/profiles/csharp/assets/packages.lock.json
     active: false
   dart:
     version: 1
@@ -9866,545 +9524,6 @@ profiles:
     assets_available:
     - devcovenant/builtin/profiles/dart/assets/pubspec.lock
     - devcovenant/builtin/profiles/dart/assets/pubspec.yaml
-    active: false
-  typescript:
-    version: 1
-    profile: typescript
-    category: language
-    suffixes:
-    - .ts
-    - .tsx
-    ignore_dirs:
-    - node_modules
-    - dist
-    - build
-    clean_overlays:
-      cache_dirs:
-      - coverage
-      - .parcel-cache
-      - .next
-      - .nuxt
-      - .svelte-kit
-      - .turbo
-      cache_globs:
-      - '*.tsbuildinfo'
-    assets:
-    - path: package.json
-      template: package.json
-    - path: tsconfig.json
-      template: tsconfig.json
-    pre_commit:
-      repos:
-      - repo: https://github.com/pre-commit/mirrors-prettier
-        rev: v3.3.3
-        hooks:
-        - id: prettier
-          files: \.(ts|tsx)$
-    translators:
-    - id: typescript
-      extensions:
-      - .ts
-      - .tsx
-      can_handle:
-        strategy: module_function
-        entrypoint: typescript_translator.py:can_handle
-      translate:
-        strategy: module_function
-        entrypoint: typescript_translator.py:translate
-    policy_overlays:
-      dependency-management:
-        dependency_role_files:
-        - intent=>package.json
-        - resolved=>package-lock.json
-        - resolved=>yarn.lock
-        - resolved=>pnpm-lock.yaml
-      name-clarity:
-        include_suffixes:
-        - .ts
-        - .tsx
-      docstring-and-comment-coverage:
-        include_suffixes:
-        - .ts
-        - .tsx
-      modules-need-tests:
-        include_suffixes:
-        - .ts
-        - .tsx
-        watch_dirs:
-        - tests
-        tests_watch_dirs:
-        - tests
-        mirror_test_name_templates:
-        - typescript=>{stem}.test.ts
-        - typescript=>{stem}.spec.ts
-        - typescript=>test_{stem}.ts
-        - typescript=>{stem}.test.tsx
-        - typescript=>{stem}.spec.tsx
-      tests-coverage:
-        include_suffixes:
-        - .ts
-        - .tsx
-        watch_dirs:
-        - tests
-        tests_watch_dirs:
-        - tests
-        assertion_signal_patterns:
-        - typescript=>\bexpect\s*\(
-        - typescript=>\bassert(?:\.[A-Za-z_]+)?\s*\(
-        tautology_patterns:
-        - typescript=>^\s*assert\s*\(\s*true\s*\)\s*;?\s*$
-        - typescript=>^\s*expect\s*\(\s*true\s*\)\s*$
-        symbol_kinds:
-        - function
-        - class
-        symbol_name_min_length: 3
-        symbol_assertion_window: 2
-      security-scanner:
-        include_suffixes:
-        - .ts
-        - .tsx
-      documentation-growth-tracking:
-        user_facing_suffixes:
-        - .ts
-        - .tsx
-        user_facing_keywords:
-        - api
-        - endpoint
-        - endpoints
-        - route
-        - routes
-        - controller
-        - controllers
-        - handler
-        - handlers
-        - component
-        - components
-      line-length-limit:
-        include_suffixes:
-        - .ts
-        - .tsx
-      no-print-outside-output-runtime:
-        sink_attr_targets:
-        - typescript=>console.log
-        - typescript=>console.info
-        - typescript=>console.warn
-        - typescript=>console.error
-    core_invariant_overlays:
-      devflow-run-gates:
-        required_commands:
-        - npm test
-    source: builtin
-    path: devcovenant/builtin/profiles/typescript
-    assets_available:
-    - devcovenant/builtin/profiles/typescript/assets/package.json
-    - devcovenant/builtin/profiles/typescript/assets/tsconfig.json
-    active: false
-  rust:
-    version: 1
-    profile: rust
-    category: language
-    suffixes:
-    - .rs
-    ignore_dirs:
-    - target
-    clean_overlays:
-      build_dirs:
-      - target
-    assets:
-    - path: Cargo.toml
-      template: Cargo.toml
-    - path: Cargo.lock
-      template: Cargo.lock
-    pre_commit:
-      repos:
-      - repo: https://github.com/doublify/pre-commit-rust
-        rev: v1.0
-        hooks:
-        - id: fmt
-        - id: cargo-check
-    translators:
-    - id: rust
-      extensions:
-      - .rs
-      can_handle:
-        strategy: module_function
-        entrypoint: rust_translator.py:can_handle
-      translate:
-        strategy: module_function
-        entrypoint: rust_translator.py:translate
-    policy_overlays:
-      dependency-management:
-        dependency_role_files:
-        - package_manifest=>Cargo.toml
-        - resolved=>Cargo.lock
-      name-clarity:
-        include_suffixes:
-        - .rs
-      docstring-and-comment-coverage:
-        include_suffixes:
-        - .rs
-      modules-need-tests:
-        include_suffixes:
-        - .rs
-        watch_dirs:
-        - tests
-        tests_watch_dirs:
-        - tests
-        mirror_test_name_templates:
-        - rust=>{stem}_test.rs
-        - rust=>tests/{stem}.rs
-      tests-coverage:
-        include_suffixes:
-        - .rs
-        watch_dirs:
-        - tests
-        tests_watch_dirs:
-        - tests
-        assertion_signal_patterns:
-        - rust=>\bassert!\s*\(
-        - rust=>\bassert_eq!\s*\(
-        - rust=>\bassert_ne!\s*\(
-        tautology_patterns:
-        - rust=>^\s*assert!\s*\(\s*true\s*\)\s*;?\s*$
-        - rust=>^\s*assert_eq!\s*\(\s*([A-Za-z_][A-Za-z0-9_]*)\s*,\s*\1\)\s*$
-        symbol_kinds:
-        - function
-        - struct
-        symbol_name_min_length: 3
-        symbol_assertion_window: 2
-      security-scanner:
-        include_suffixes:
-        - .rs
-      documentation-growth-tracking:
-        user_facing_suffixes:
-        - .rs
-        user_facing_keywords:
-        - handler
-        - handlers
-        - endpoint
-        - endpoints
-        - service
-        - services
-      line-length-limit:
-        include_suffixes:
-        - .rs
-      no-print-outside-output-runtime:
-        sink_macro_targets:
-        - rust=>println
-        - rust=>eprintln
-    core_invariant_overlays:
-      devflow-run-gates:
-        required_commands:
-        - cargo test
-    source: builtin
-    path: devcovenant/builtin/profiles/rust
-    assets_available:
-    - devcovenant/builtin/profiles/rust/assets/Cargo.lock
-    - devcovenant/builtin/profiles/rust/assets/Cargo.toml
-    active: false
-  java:
-    version: 1
-    profile: java
-    category: language
-    suffixes:
-    - .java
-    ignore_dirs:
-    - target
-    - build
-    clean_overlays:
-      build_dirs:
-      - .gradle
-      - target
-      - out
-    assets:
-    - path: build.gradle
-      template: build.gradle
-    pre_commit:
-      repos:
-      - repo: https://github.com/macisamuele/language-formatters-pre-commit
-        rev: v2.13.0
-        hooks:
-        - id: pretty-format-java
-    translators:
-    - id: java
-      extensions:
-      - .java
-      can_handle:
-        strategy: module_function
-        entrypoint: java_translator.py:can_handle
-      translate:
-        strategy: module_function
-        entrypoint: java_translator.py:translate
-    policy_overlays:
-      dependency-management:
-        dependency_role_files:
-        - package_manifest=>pom.xml
-        - package_manifest=>build.gradle
-      name-clarity:
-        include_suffixes:
-        - .java
-      docstring-and-comment-coverage:
-        include_suffixes:
-        - .java
-      modules-need-tests:
-        include_suffixes:
-        - .java
-      security-scanner:
-        include_suffixes:
-        - .java
-      documentation-growth-tracking:
-        user_facing_suffixes:
-        - .java
-        user_facing_keywords:
-        - controller
-        - controllers
-        - service
-        - services
-        - endpoint
-        - endpoints
-        - handler
-        - handlers
-      line-length-limit:
-        include_suffixes:
-        - .java
-    core_invariant_overlays:
-      devflow-run-gates:
-        required_commands:
-        - mvn test
-        - gradle test
-    source: builtin
-    path: devcovenant/builtin/profiles/java
-    assets_available:
-    - devcovenant/builtin/profiles/java/assets/build.gradle
-    active: false
-  docs:
-    version: 1
-    profile: docs
-    category: ops
-    suffixes:
-    - .md
-    - .rst
-    - .txt
-    ignore_dirs:
-    - _site
-    - site
-    - build
-    assets: []
-    policy_overlays:
-      line-length-limit:
-        include_suffixes:
-        - .md
-        - .rst
-        - .txt
-    source: builtin
-    path: devcovenant/builtin/profiles/docs
-    assets_available: []
-    active: true
-  php:
-    version: 1
-    profile: php
-    category: language
-    suffixes:
-    - .php
-    ignore_dirs:
-    - vendor
-    clean_overlays:
-      cache_dirs:
-      - .phpunit.cache
-    assets:
-    - path: composer.json
-      template: composer.json
-    - path: composer.lock
-      template: composer.lock
-    - path: phpunit.xml
-      template: phpunit.xml
-    translators:
-    - id: php
-      extensions:
-      - .php
-      can_handle:
-        strategy: module_function
-        entrypoint: php_translator.py:can_handle
-      translate:
-        strategy: module_function
-        entrypoint: php_translator.py:translate
-    policy_overlays:
-      dependency-management:
-        dependency_role_files:
-        - intent=>composer.json
-        - resolved=>composer.lock
-      documentation-growth-tracking:
-        user_facing_suffixes:
-        - .php
-        user_facing_keywords:
-        - controller
-        - controllers
-        - service
-        - services
-        - route
-        - routes
-        - endpoint
-        - endpoints
-      line-length-limit:
-        include_suffixes:
-        - .php
-    core_invariant_overlays:
-      devflow-run-gates:
-        required_commands:
-        - phpunit
-    source: builtin
-    path: devcovenant/builtin/profiles/php
-    assets_available:
-    - devcovenant/builtin/profiles/php/assets/composer.json
-    - devcovenant/builtin/profiles/php/assets/composer.lock
-    - devcovenant/builtin/profiles/php/assets/phpunit.xml
-    active: false
-  devcovuser:
-    version: 1
-    profile: devcovuser
-    category: core
-    suffixes: []
-    ignore_dirs:
-    - vendor
-    - third_party
-    - node_modules
-    policy_overlays:
-      changelog-coverage:
-        skipped_prefixes:
-        - devcovenant
-        - tests/devcovenant
-        skipped_globs:
-        - '*_old.*'
-      documentation-growth-tracking:
-        exclude_prefixes:
-        - devcovenant
-        - tests/devcovenant
-        user_facing_exclude_prefixes:
-        - devcovenant
-        - tests/devcovenant
-      line-length-limit:
-        exclude_prefixes:
-        - devcovenant
-        force_include_globs:
-        - devcovenant/custom/**
-        - tests/devcovenant/custom/**
-      name-clarity:
-        exclude_prefixes:
-        - devcovenant
-        force_include_globs:
-        - devcovenant/custom/**/*.py
-        - tests/devcovenant/custom/**/*.py
-      docstring-and-comment-coverage:
-        exclude_prefixes:
-        - devcovenant
-        force_include_globs:
-        - devcovenant/custom/**/*.py
-        - tests/devcovenant/custom/**/*.py
-      security-scanner:
-        exclude_prefixes:
-        - devcovenant
-        force_include_globs:
-        - devcovenant/custom/**/*.py
-        - tests/devcovenant/custom/**/*.py
-      no-raw-errors:
-        exclude_prefixes:
-        - devcovenant
-        force_include_globs:
-        - devcovenant/custom/**/*.py
-        - tests/devcovenant/custom/**/*.py
-      modules-need-tests:
-        exclude_prefixes:
-        - build
-        - dist
-        - node_modules
-        - tests
-        - devcovenant
-        force_include_globs:
-        - devcovenant/custom/**/*.py
-        watch_dirs:
-        - tests
-        tests_watch_dirs:
-        - tests
-        mirror_roots:
-        - devcovenant/custom=>tests/devcovenant/custom
-    source: builtin
-    path: devcovenant/builtin/profiles/devcovuser
-    assets_available: []
-    active: false
-  opencl:
-    version: 1
-    profile: opencl
-    category: language
-    suffixes:
-    - .cl
-    - .ocl
-    - .opencl
-    ignore_dirs:
-    - build
-    - dist
-    - out
-    - .cache
-    assets: []
-    translators:
-    - id: opencl
-      extensions:
-      - .cl
-      - .ocl
-      - .opencl
-      can_handle:
-        strategy: module_function
-        entrypoint: opencl_translator.py:can_handle
-      translate:
-        strategy: module_function
-        entrypoint: opencl_translator.py:translate
-    policy_overlays:
-      name-clarity:
-        include_suffixes:
-        - .cl
-        - .ocl
-        - .opencl
-      docstring-and-comment-coverage:
-        include_suffixes:
-        - .cl
-        - .ocl
-        - .opencl
-      security-scanner:
-        include_suffixes:
-        - .cl
-        - .ocl
-        - .opencl
-      documentation-growth-tracking:
-        user_facing_suffixes:
-        - .cl
-        - .ocl
-        - .opencl
-        user_facing_keywords:
-        - kernel
-        - kernels
-        - buffer
-        - buffers
-        - device
-        - devices
-        - queue
-        - queues
-        - compute
-        - accelerator
-      line-length-limit:
-        include_suffixes:
-        - .cl
-        - .ocl
-        - .opencl
-      no-print-outside-output-runtime:
-        include_suffixes:
-        - .cl
-        - .ocl
-        - .opencl
-        sink_call_targets:
-        - opencl=>printf
-    source: builtin
-    path: devcovenant/builtin/profiles/opencl
-    assets_available:
-    - devcovenant/builtin/profiles/opencl/opencl_translator.py
     active: false
   defaults:
     version: 1
@@ -10919,100 +10038,138 @@ profiles:
     path: devcovenant/builtin/profiles/defaults
     assets_available: []
     active: true
-  flutter:
+  devcovuser:
     version: 1
-    profile: flutter
-    category: framework
-    suffixes:
-    - .dart
+    profile: devcovuser
+    category: core
+    suffixes: []
     ignore_dirs:
-    - .dart_tool
+    - vendor
+    - third_party
+    - node_modules
+    policy_overlays:
+      changelog-coverage:
+        skipped_prefixes:
+        - devcovenant
+        - tests/devcovenant
+        skipped_globs:
+        - '*_old.*'
+      documentation-growth-tracking:
+        exclude_prefixes:
+        - devcovenant
+        - tests/devcovenant
+        user_facing_exclude_prefixes:
+        - devcovenant
+        - tests/devcovenant
+      line-length-limit:
+        exclude_prefixes:
+        - devcovenant
+        force_include_globs:
+        - devcovenant/custom/**
+        - tests/devcovenant/custom/**
+      name-clarity:
+        exclude_prefixes:
+        - devcovenant
+        force_include_globs:
+        - devcovenant/custom/**/*.py
+        - tests/devcovenant/custom/**/*.py
+      docstring-and-comment-coverage:
+        exclude_prefixes:
+        - devcovenant
+        force_include_globs:
+        - devcovenant/custom/**/*.py
+        - tests/devcovenant/custom/**/*.py
+      security-scanner:
+        exclude_prefixes:
+        - devcovenant
+        force_include_globs:
+        - devcovenant/custom/**/*.py
+        - tests/devcovenant/custom/**/*.py
+      no-raw-errors:
+        exclude_prefixes:
+        - devcovenant
+        force_include_globs:
+        - devcovenant/custom/**/*.py
+        - tests/devcovenant/custom/**/*.py
+      modules-need-tests:
+        exclude_prefixes:
+        - build
+        - dist
+        - node_modules
+        - tests
+        - devcovenant
+        force_include_globs:
+        - devcovenant/custom/**/*.py
+        watch_dirs:
+        - tests
+        tests_watch_dirs:
+        - tests
+        mirror_roots:
+        - devcovenant/custom=>tests/devcovenant/custom
+    source: builtin
+    path: devcovenant/builtin/profiles/devcovuser
+    assets_available: []
+    active: false
+  docker:
+    version: 1
+    profile: docker
+    category: ops
+    suffixes:
+    - Dockerfile
+    - .dockerignore
+    - .yml
+    - .yaml
+    ignore_dirs: []
+    assets:
+    - path: Dockerfile
+      template: Dockerfile
+    - path: docker-compose.yml
+      template: docker-compose.yml
+    - path: .dockerignore
+      template: .dockerignore
+    policy_overlays:
+      documentation-growth-tracking:
+        user_facing_suffixes:
+        - .yml
+        - .yaml
+      line-length-limit:
+        include_suffixes:
+        - .yml
+        - .yaml
+    core_invariant_overlays:
+      devflow-run-gates:
+        required_commands:
+        - docker compose config
+    source: builtin
+    path: devcovenant/builtin/profiles/docker
+    assets_available:
+    - devcovenant/builtin/profiles/docker/assets/.dockerignore
+    - devcovenant/builtin/profiles/docker/assets/Dockerfile
+    - devcovenant/builtin/profiles/docker/assets/docker-compose.yml
+    active: false
+  docs:
+    version: 1
+    profile: docs
+    category: ops
+    suffixes:
+    - .md
+    - .rst
+    - .txt
+    ignore_dirs:
+    - _site
+    - site
     - build
-    clean_overlays:
-      build_dirs:
-      - .dart_tool
-      - build
-    gitignore_fragments:
-    - .dart_tool/
-    - .packages
-    - pubspec.lock
-    - build/
-    - .flutter-plugins
-    - .flutter-plugins-dependencies
-    - .metadata
-    - ios/Pods/
-    - ios/Podfile.lock
-    - android/.gradle/
-    - android/local.properties
-    assets:
-    - path: pubspec.yaml
-      template: pubspec.yaml
-    - path: pubspec.lock
-      template: pubspec.lock
+    assets: []
     policy_overlays:
-      dependency-management:
-        dependency_role_files:
-        - package_manifest=>pubspec.yaml
-        - resolved=>pubspec.lock
-      documentation-growth-tracking:
-        user_facing_suffixes:
-        - .dart
       line-length-limit:
         include_suffixes:
-        - .dart
-    core_invariant_overlays:
-      devflow-run-gates:
-        required_commands:
-        - flutter test
+        - .md
+        - .rst
+        - .txt
     source: builtin
-    path: devcovenant/builtin/profiles/flutter
-    assets_available:
-    - devcovenant/builtin/profiles/flutter/assets/pubspec.lock
-    - devcovenant/builtin/profiles/flutter/assets/pubspec.yaml
-    active: false
-  swift:
-    version: 1
-    profile: swift
-    category: language
-    suffixes:
-    - .swift
-    ignore_dirs:
-    - .build
-    clean_overlays:
-      build_dirs:
-      - .build
-    assets:
-    - path: Package.swift
-      template: Package.swift
-    translators:
-    - id: swift
-      extensions:
-      - .swift
-      can_handle:
-        strategy: module_function
-        entrypoint: swift_translator.py:can_handle
-      translate:
-        strategy: module_function
-        entrypoint: swift_translator.py:translate
-    policy_overlays:
-      dependency-management:
-        dependency_role_files:
-        - package_manifest=>Package.swift
-      documentation-growth-tracking:
-        user_facing_suffixes:
-        - .swift
-      line-length-limit:
-        include_suffixes:
-        - .swift
-    core_invariant_overlays:
-      devflow-run-gates:
-        required_commands:
-        - swift test
-    source: builtin
-    path: devcovenant/builtin/profiles/swift
-    assets_available:
-    - devcovenant/builtin/profiles/swift/assets/Package.swift
-    active: false
+    path: devcovenant/builtin/profiles/docs
+    assets_available: []
+    active: true
   fastapi:
     version: 1
     profile: fastapi
@@ -11082,62 +10239,386 @@ profiles:
     - devcovenant/builtin/profiles/fastapi/assets/main.py
     - devcovenant/builtin/profiles/fastapi/assets/openapi.json
     active: false
-  csharp:
+  flutter:
     version: 1
-    profile: csharp
-    category: language
+    profile: flutter
+    category: framework
     suffixes:
-    - .cs
+    - .dart
     ignore_dirs:
-    - bin
-    - obj
+    - .dart_tool
+    - build
     clean_overlays:
       build_dirs:
-      - bin
-      - obj
+      - .dart_tool
+      - build
+    gitignore_fragments:
+    - .dart_tool/
+    - .packages
+    - pubspec.lock
+    - build/
+    - .flutter-plugins
+    - .flutter-plugins-dependencies
+    - .metadata
+    - ios/Pods/
+    - ios/Podfile.lock
+    - android/.gradle/
+    - android/local.properties
     assets:
-    - path: Project.csproj
-      template: Project.csproj
-    pre_commit:
-      repos:
-      - repo: local
-        hooks:
-        - id: csharp-format
-          name: csharp format check
-          entry: dotnet format --verify-no-changes
-          language: system
-          pass_filenames: false
-          files: \.cs$
-    translators:
-    - id: csharp
-      extensions:
-      - .cs
-      can_handle:
-        strategy: module_function
-        entrypoint: csharp_translator.py:can_handle
-      translate:
-        strategy: module_function
-        entrypoint: csharp_translator.py:translate
+    - path: pubspec.yaml
+      template: pubspec.yaml
+    - path: pubspec.lock
+      template: pubspec.lock
     policy_overlays:
       dependency-management:
         dependency_role_files:
-        - package_manifest=>Project.csproj
-        - resolved=>packages.lock.json
-      name-clarity:
-        include_suffixes:
-        - .cs
-      docstring-and-comment-coverage:
-        include_suffixes:
-        - .cs
-      modules-need-tests:
-        include_suffixes:
-        - .cs
-      security-scanner:
-        include_suffixes:
-        - .cs
+        - package_manifest=>pubspec.yaml
+        - resolved=>pubspec.lock
       documentation-growth-tracking:
         user_facing_suffixes:
-        - .cs
+        - .dart
+      line-length-limit:
+        include_suffixes:
+        - .dart
+    core_invariant_overlays:
+      devflow-run-gates:
+        required_commands:
+        - flutter test
+    source: builtin
+    path: devcovenant/builtin/profiles/flutter
+    assets_available:
+    - devcovenant/builtin/profiles/flutter/assets/pubspec.lock
+    - devcovenant/builtin/profiles/flutter/assets/pubspec.yaml
+    active: false
+  frappe:
+    version: 1
+    profile: frappe
+    category: framework
+    suffixes:
+    - .py
+    - .js
+    - .json
+    - .md
+    ignore_dirs:
+    - .venv
+    - __pycache__
+    - .pytest_cache
+    - .mypy_cache
+    - build
+    - dist
+    - node_modules
+    - sites
+    assets:
+    - path: hooks.py
+      template: hooks.py
+    - path: modules.txt
+      template: modules.txt
+    policy_overlays:
+      dependency-management:
+        dependency_role_files:
+        - intent=>requirements.in
+        - resolved=>requirements.lock
+        - package_manifest=>pyproject.toml
+        - intent=>package.json
+        - resolved=>package-lock.json
+        - resolved=>yarn.lock
+        - resolved=>pnpm-lock.yaml
+      documentation-growth-tracking:
+        user_facing_suffixes:
+        - .py
+        - .js
+        - .json
+        - .md
+        user_facing_keywords:
+        - endpoint
+        - endpoints
+        - handler
+        - handlers
+      line-length-limit:
+        include_suffixes:
+        - .py
+        - .js
+        - .json
+        - .md
+      security-scanner:
+        include_suffixes:
+        - .py
+        - .js
+      name-clarity:
+        include_suffixes:
+        - .py
+      docstring-and-comment-coverage:
+        include_suffixes:
+        - .py
+      modules-need-tests:
+        include_suffixes:
+        - .py
+        - .js
+    core_invariant_overlays:
+      devflow-run-gates:
+        required_commands:
+        - python3 -m unittest discover -v
+        - pytest
+        - npm test
+    source: builtin
+    path: devcovenant/builtin/profiles/frappe
+    assets_available:
+    - devcovenant/builtin/profiles/frappe/assets/hooks.py
+    - devcovenant/builtin/profiles/frappe/assets/modules.txt
+    active: false
+  global:
+    version: 1
+    profile: global
+    category: core
+    suffixes: []
+    ignore_dirs: []
+    clean_overlays:
+      build_dirs:
+      - build
+      - dist
+      - pip-wheel-metadata
+      build_globs:
+      - '*.egg-info'
+      - '**/*.egg-info'
+      cache_dirs:
+      - .pytest_cache
+      - .ruff_cache
+      - .mypy_cache
+      - .tox
+      - .nox
+      - .hypothesis
+      - htmlcov
+      cache_globs:
+      - .coverage
+      - .coverage.*
+      - '**/__pycache__'
+      runtime_registry_dirs:
+      - devcovenant/registry/runtime
+      logs_globs:
+      - devcovenant/logs/*
+      protected_dirs:
+      - .git
+      protected_globs:
+      - devcovenant/logs/README.md
+      - devcovenant/registry/README.md
+      - devcovenant/registry/registry.yaml
+    gitignore_template: gitignore.yaml
+    ci_and_test_template: ci-and-test.yml
+    pre_commit:
+      repos:
+      - repo: https://github.com/pre-commit/pre-commit-hooks
+        rev: v4.6.0
+        hooks:
+        - id: check-merge-conflict
+        - id: check-yaml
+        - id: end-of-file-fixer
+        - id: trailing-whitespace
+          args:
+          - --markdown-linebreak-ext=md
+      - repo: local
+        hooks:
+        - id: devcovenant
+          name: enforce repository policies (DevCovenant)
+          entry: python3 -m devcovenant.cli check
+          language: system
+          types:
+          - text
+          pass_filenames: false
+          always_run: true
+    policy_overlays:
+      changelog-coverage:
+        skipped_files:
+        - devcovenant/config.yaml
+      documentation-growth-tracking:
+        user_facing_exclude_files:
+        - devcovenant/config.yaml
+      line-length-limit:
+        exclude_globs:
+        - devcovenant/logs/**
+    core_invariant_overlays:
+      devcov-integrity-guard:
+        policy_definitions: AGENTS.md
+        registry_file: devcovenant/registry/registry.yaml
+        gate_status_file: devcovenant/registry/runtime/gate_status.json
+      devflow-run-gates:
+        gate_status_file: devcovenant/registry/runtime/gate_status.json
+        pre_commit_command: python3 -m pre_commit run --all-files
+    source: builtin
+    path: devcovenant/builtin/profiles/global
+    assets_available:
+    - devcovenant/builtin/profiles/global/assets/.github/workflows/ci.yml
+    - devcovenant/builtin/profiles/global/assets/AGENTS.yaml
+    - devcovenant/builtin/profiles/global/assets/CHANGELOG.yaml
+    - devcovenant/builtin/profiles/global/assets/CONTRIBUTING.yaml
+    - devcovenant/builtin/profiles/global/assets/LICENSE.yaml
+    - devcovenant/builtin/profiles/global/assets/PLAN.yaml
+    - devcovenant/builtin/profiles/global/assets/README.yaml
+    - devcovenant/builtin/profiles/global/assets/SPEC.yaml
+    - devcovenant/builtin/profiles/global/assets/ci-and-test.yml
+    - devcovenant/builtin/profiles/global/assets/config.yaml
+    - devcovenant/builtin/profiles/global/assets/devcovenant/README.yaml
+    - devcovenant/builtin/profiles/global/assets/gitignore.yaml
+    active: true
+  go:
+    version: 1
+    profile: go
+    category: language
+    suffixes:
+    - .go
+    ignore_dirs:
+    - bin
+    - pkg
+    - vendor
+    clean_overlays:
+      cache_globs:
+      - coverage.out
+    assets:
+    - path: go.mod
+      template: go.mod
+    - path: go.sum
+      template: go.sum
+    pre_commit:
+      repos:
+      - repo: https://github.com/dnephin/pre-commit-golang
+        rev: v0.5.1
+        hooks:
+        - id: go-fmt
+        - id: go-vet
+    translators:
+    - id: go
+      extensions:
+      - .go
+      can_handle:
+        strategy: module_function
+        entrypoint: go_translator.py:can_handle
+      translate:
+        strategy: module_function
+        entrypoint: go_translator.py:translate
+    policy_overlays:
+      dependency-management:
+        dependency_role_files:
+        - intent=>go.mod
+        - resolved=>go.sum
+      name-clarity:
+        include_suffixes:
+        - .go
+      docstring-and-comment-coverage:
+        include_suffixes:
+        - .go
+      modules-need-tests:
+        include_suffixes:
+        - .go
+        watch_dirs:
+        - tests
+        tests_watch_dirs:
+        - tests
+        mirror_test_name_templates:
+        - go=>{stem}_test.go
+      tests-coverage:
+        include_suffixes:
+        - .go
+        watch_dirs:
+        - tests
+        tests_watch_dirs:
+        - tests
+        assertion_signal_patterns:
+        - go=>\bt\.(?:Error|Errorf|Fatal|Fatalf)\s*\(
+        - go=>\b(?:assert|require)\.[A-Za-z_]+\s*\(
+        tautology_patterns:
+        - go=>^\s*assert\.True\s*\(\s*t\s*,\s*true\s*\)\s*$
+        - go=>^\s*require\.True\s*\(\s*t\s*,\s*true\s*\)\s*$
+        symbol_kinds:
+        - function
+        symbol_name_min_length: 3
+        symbol_assertion_window: 2
+      security-scanner:
+        include_suffixes:
+        - .go
+      documentation-growth-tracking:
+        user_facing_suffixes:
+        - .go
+        user_facing_keywords:
+        - handler
+        - handlers
+        - middleware
+        - service
+        - services
+        - endpoint
+        - endpoints
+      line-length-limit:
+        include_suffixes:
+        - .go
+      no-print-outside-output-runtime:
+        sink_call_targets:
+        - go=>fmt.Print
+        - go=>fmt.Printf
+        - go=>fmt.Println
+        - go=>log.Print
+        - go=>log.Printf
+        - go=>log.Println
+    core_invariant_overlays:
+      devflow-run-gates:
+        required_commands:
+        - go test ./...
+    source: builtin
+    path: devcovenant/builtin/profiles/go
+    assets_available:
+    - devcovenant/builtin/profiles/go/assets/go.mod
+    - devcovenant/builtin/profiles/go/assets/go.sum
+    active: false
+  java:
+    version: 1
+    profile: java
+    category: language
+    suffixes:
+    - .java
+    ignore_dirs:
+    - target
+    - build
+    clean_overlays:
+      build_dirs:
+      - .gradle
+      - target
+      - out
+    assets:
+    - path: build.gradle
+      template: build.gradle
+    pre_commit:
+      repos:
+      - repo: https://github.com/macisamuele/language-formatters-pre-commit
+        rev: v2.13.0
+        hooks:
+        - id: pretty-format-java
+    translators:
+    - id: java
+      extensions:
+      - .java
+      can_handle:
+        strategy: module_function
+        entrypoint: java_translator.py:can_handle
+      translate:
+        strategy: module_function
+        entrypoint: java_translator.py:translate
+    policy_overlays:
+      dependency-management:
+        dependency_role_files:
+        - package_manifest=>pom.xml
+        - package_manifest=>build.gradle
+      name-clarity:
+        include_suffixes:
+        - .java
+      docstring-and-comment-coverage:
+        include_suffixes:
+        - .java
+      modules-need-tests:
+        include_suffixes:
+        - .java
+      security-scanner:
+        include_suffixes:
+        - .java
+      documentation-growth-tracking:
+        user_facing_suffixes:
+        - .java
         user_facing_keywords:
         - controller
         - controllers
@@ -11149,16 +10630,16 @@ profiles:
         - handlers
       line-length-limit:
         include_suffixes:
-        - .cs
+        - .java
     core_invariant_overlays:
       devflow-run-gates:
         required_commands:
-        - dotnet test
+        - mvn test
+        - gradle test
     source: builtin
-    path: devcovenant/builtin/profiles/csharp
+    path: devcovenant/builtin/profiles/java
     assets_available:
-    - devcovenant/builtin/profiles/csharp/assets/Project.csproj
-    - devcovenant/builtin/profiles/csharp/assets/packages.lock.json
+    - devcovenant/builtin/profiles/java/assets/build.gradle
     active: false
   javascript:
     version: 1
@@ -11303,6 +10784,39 @@ profiles:
     assets_available:
     - devcovenant/builtin/profiles/javascript/assets/package.json
     active: false
+  kubernetes:
+    version: 1
+    profile: kubernetes
+    category: ops
+    suffixes:
+    - .yml
+    - .yaml
+    ignore_dirs:
+    - charts
+    assets:
+    - path: Chart.yaml
+      template: Chart.yaml
+    - path: values.yaml
+      template: values.yaml
+    policy_overlays:
+      documentation-growth-tracking:
+        user_facing_suffixes:
+        - .yml
+        - .yaml
+      line-length-limit:
+        include_suffixes:
+        - .yml
+        - .yaml
+    core_invariant_overlays:
+      devflow-run-gates:
+        required_commands:
+        - helm lint
+    source: builtin
+    path: devcovenant/builtin/profiles/kubernetes
+    assets_available:
+    - devcovenant/builtin/profiles/kubernetes/assets/Chart.yaml
+    - devcovenant/builtin/profiles/kubernetes/assets/values.yaml
+    active: false
   objective_c:
     version: 1
     profile: objective_c
@@ -11356,131 +10870,301 @@ profiles:
     assets_available:
     - devcovenant/builtin/profiles/objective_c/assets/Podfile
     active: false
-  kubernetes:
+  opencl:
     version: 1
-    profile: kubernetes
-    category: ops
+    profile: opencl
+    category: language
     suffixes:
-    - .yml
-    - .yaml
+    - .cl
+    - .ocl
+    - .opencl
     ignore_dirs:
-    - charts
-    assets:
-    - path: Chart.yaml
-      template: Chart.yaml
-    - path: values.yaml
-      template: values.yaml
+    - build
+    - dist
+    - out
+    - .cache
+    assets: []
+    translators:
+    - id: opencl
+      extensions:
+      - .cl
+      - .ocl
+      - .opencl
+      can_handle:
+        strategy: module_function
+        entrypoint: opencl_translator.py:can_handle
+      translate:
+        strategy: module_function
+        entrypoint: opencl_translator.py:translate
     policy_overlays:
+      name-clarity:
+        include_suffixes:
+        - .cl
+        - .ocl
+        - .opencl
+      docstring-and-comment-coverage:
+        include_suffixes:
+        - .cl
+        - .ocl
+        - .opencl
+      security-scanner:
+        include_suffixes:
+        - .cl
+        - .ocl
+        - .opencl
       documentation-growth-tracking:
         user_facing_suffixes:
-        - .yml
-        - .yaml
+        - .cl
+        - .ocl
+        - .opencl
+        user_facing_keywords:
+        - kernel
+        - kernels
+        - buffer
+        - buffers
+        - device
+        - devices
+        - queue
+        - queues
+        - compute
+        - accelerator
       line-length-limit:
         include_suffixes:
-        - .yml
-        - .yaml
+        - .cl
+        - .ocl
+        - .opencl
+      no-print-outside-output-runtime:
+        include_suffixes:
+        - .cl
+        - .ocl
+        - .opencl
+        sink_call_targets:
+        - opencl=>printf
+    source: builtin
+    path: devcovenant/builtin/profiles/opencl
+    assets_available:
+    - devcovenant/builtin/profiles/opencl/opencl_translator.py
+    active: false
+  php:
+    version: 1
+    profile: php
+    category: language
+    suffixes:
+    - .php
+    ignore_dirs:
+    - vendor
+    clean_overlays:
+      cache_dirs:
+      - .phpunit.cache
+    assets:
+    - path: composer.json
+      template: composer.json
+    - path: composer.lock
+      template: composer.lock
+    - path: phpunit.xml
+      template: phpunit.xml
+    translators:
+    - id: php
+      extensions:
+      - .php
+      can_handle:
+        strategy: module_function
+        entrypoint: php_translator.py:can_handle
+      translate:
+        strategy: module_function
+        entrypoint: php_translator.py:translate
+    policy_overlays:
+      dependency-management:
+        dependency_role_files:
+        - intent=>composer.json
+        - resolved=>composer.lock
+      documentation-growth-tracking:
+        user_facing_suffixes:
+        - .php
+        user_facing_keywords:
+        - controller
+        - controllers
+        - service
+        - services
+        - route
+        - routes
+        - endpoint
+        - endpoints
+      line-length-limit:
+        include_suffixes:
+        - .php
     core_invariant_overlays:
       devflow-run-gates:
         required_commands:
-        - helm lint
+        - phpunit
     source: builtin
-    path: devcovenant/builtin/profiles/kubernetes
+    path: devcovenant/builtin/profiles/php
     assets_available:
-    - devcovenant/builtin/profiles/kubernetes/assets/Chart.yaml
-    - devcovenant/builtin/profiles/kubernetes/assets/values.yaml
+    - devcovenant/builtin/profiles/php/assets/composer.json
+    - devcovenant/builtin/profiles/php/assets/composer.lock
+    - devcovenant/builtin/profiles/php/assets/phpunit.xml
     active: false
-  global:
+  python:
     version: 1
-    profile: global
-    category: core
-    suffixes: []
-    ignore_dirs: []
+    profile: python
+    category: language
+    suffixes:
+    - .py
+    - .pyi
+    - .pyw
+    - .ipynb
+    ignore_dirs:
+    - .venv
+    - __pycache__
+    - .pytest_cache
+    - .mypy_cache
+    - build
+    - dist
     clean_overlays:
-      build_dirs:
-      - build
-      - dist
-      - pip-wheel-metadata
-      build_globs:
-      - '*.egg-info'
-      - '**/*.egg-info'
       cache_dirs:
-      - .pytest_cache
-      - .ruff_cache
-      - .mypy_cache
-      - .tox
-      - .nox
-      - .hypothesis
-      - htmlcov
+      - .pytype
       cache_globs:
-      - .coverage
-      - .coverage.*
-      - '**/__pycache__'
-      runtime_registry_dirs:
-      - devcovenant/registry/runtime
-      logs_globs:
-      - devcovenant/logs/*
-      protected_dirs:
-      - .git
-      protected_globs:
-      - devcovenant/logs/README.md
-      - devcovenant/registry/README.md
-      - devcovenant/registry/registry.yaml
-    gitignore_template: gitignore.yaml
-    ci_and_test_template: ci-and-test.yml
+      - .ipynb_checkpoints
+      - '**/.ipynb_checkpoints'
+      - coverage.xml
+    assets:
+    - path: requirements.in
+      template: requirements.in
+    - path: requirements.lock
+      template: requirements.lock
+    - path: .python-version
+      template: .python-version
+    - path: pyproject.toml
+      template: pyproject.toml
     pre_commit:
       repos:
-      - repo: https://github.com/pre-commit/pre-commit-hooks
-        rev: v4.6.0
+      - repo: https://github.com/psf/black
+        rev: 24.4.2
         hooks:
-        - id: check-merge-conflict
-        - id: check-yaml
-        - id: end-of-file-fixer
-        - id: trailing-whitespace
+        - id: black
           args:
-          - --markdown-linebreak-ext=md
-      - repo: local
+          - --line-length
+          - '79'
+      - repo: https://github.com/pycqa/isort
+        rev: 5.12.0
         hooks:
-        - id: devcovenant
-          name: enforce repository policies (DevCovenant)
-          entry: python3 -m devcovenant.cli check
-          language: system
-          types:
-          - text
-          pass_filenames: false
-          always_run: true
+        - id: isort
+          args:
+          - --profile
+          - black
+          - --line-length
+          - '79'
+      - repo: https://github.com/astral-sh/ruff-pre-commit
+        rev: v0.4.4
+        hooks:
+        - id: ruff
+          args:
+          - --fix
+          - --exit-non-zero-on-fix
+          - --line-length
+          - '79'
+        - id: ruff-format
+          args:
+          - --line-length
+          - '79'
+      - repo: https://github.com/pycqa/flake8
+        rev: 6.1.0
+        hooks:
+        - id: flake8
+          args:
+          - --max-line-length=79
+          - --extend-ignore=E203,W503
+    translators:
+    - id: python
+      extensions:
+      - .py
+      - .pyi
+      - .pyw
+      can_handle:
+        strategy: module_function
+        entrypoint: python_translator.py:can_handle
+      translate:
+        strategy: module_function
+        entrypoint: python_translator.py:translate
     policy_overlays:
-      changelog-coverage:
-        skipped_files:
-        - devcovenant/config.yaml
+      dependency-management:
+        dependency_role_files:
+        - intent=>requirements.in
+        - resolved=>requirements.lock
+        - package_manifest=>pyproject.toml
       documentation-growth-tracking:
-        user_facing_exclude_files:
-        - devcovenant/config.yaml
+        user_facing_suffixes:
+        - .py
       line-length-limit:
-        exclude_globs:
-        - devcovenant/logs/**
+        include_suffixes:
+        - .py
+      version-sync:
+        target_roles:
+        - package_manifest
+        role_extractors:
+        - package_manifest=>manifest_project_version
+        role_legality_schemes:
+        - package_manifest=>pep440
+        target_role_files:
+        - package_manifest=>pyproject.toml
+      security-scanner:
+        include_suffixes:
+        - .py
+      modules-need-tests:
+        include_suffixes:
+        - .py
+        watch_dirs:
+        - tests
+        tests_watch_dirs:
+        - tests
+        mirror_test_name_templates:
+        - python=>test_{stem}.py
+        - python=>{stem}_test.py
+        test_style_requirements:
+        - python=>python_unittest
+      tests-coverage:
+        include_suffixes:
+        - .py
+        watch_dirs:
+        - tests
+        tests_watch_dirs:
+        - tests
+        assertion_signal_patterns:
+        - python=>\bassert\b
+        - python=>\bself\.assert[A-Za-z_]*\s*\(
+        tautology_patterns:
+        - python=>^\s*assert\s+True\s*$
+        - python=>^\s*self\.assertTrue\s*\(\s*True\s*\)\s*$
+        symbol_kinds:
+        - function
+        - class
+        symbol_name_min_length: 3
+        symbol_assertion_window: 2
+      docstring-and-comment-coverage:
+        include_suffixes:
+        - .py
+      name-clarity:
+        include_suffixes:
+        - .py
+      no-print-outside-output-runtime:
+        sink_call_targets:
+        - python=>print
+        - python=>builtins.print
     core_invariant_overlays:
-      devcov-integrity-guard:
-        policy_definitions: AGENTS.md
-        registry_file: devcovenant/registry/registry.yaml
-        gate_status_file: devcovenant/registry/runtime/gate_status.json
       devflow-run-gates:
-        gate_status_file: devcovenant/registry/runtime/gate_status.json
-        pre_commit_command: python3 -m pre_commit run --all-files
+        required_commands:
+        - python3 -m unittest discover -v
+        - pytest
+    test_events:
+    - id: python
+      entrypoint: devcovenant.core.services.event:python_test_event_adapter_factory
     source: builtin
-    path: devcovenant/builtin/profiles/global
+    path: devcovenant/builtin/profiles/python
     assets_available:
-    - devcovenant/builtin/profiles/global/assets/.github/workflows/ci.yml
-    - devcovenant/builtin/profiles/global/assets/AGENTS.yaml
-    - devcovenant/builtin/profiles/global/assets/CHANGELOG.yaml
-    - devcovenant/builtin/profiles/global/assets/CONTRIBUTING.yaml
-    - devcovenant/builtin/profiles/global/assets/LICENSE.yaml
-    - devcovenant/builtin/profiles/global/assets/PLAN.yaml
-    - devcovenant/builtin/profiles/global/assets/README.yaml
-    - devcovenant/builtin/profiles/global/assets/SPEC.yaml
-    - devcovenant/builtin/profiles/global/assets/ci-and-test.yml
-    - devcovenant/builtin/profiles/global/assets/config.yaml
-    - devcovenant/builtin/profiles/global/assets/devcovenant/README.yaml
-    - devcovenant/builtin/profiles/global/assets/gitignore.yaml
+    - devcovenant/builtin/profiles/python/assets/.python-version
+    - devcovenant/builtin/profiles/python/assets/pyproject.toml
+    - devcovenant/builtin/profiles/python/assets/requirements.in
+    - devcovenant/builtin/profiles/python/assets/requirements.lock
     active: true
   ruby:
     version: 1
@@ -11543,6 +11227,109 @@ profiles:
     - devcovenant/builtin/profiles/ruby/assets/Gemfile
     - devcovenant/builtin/profiles/ruby/assets/Gemfile.lock
     active: false
+  rust:
+    version: 1
+    profile: rust
+    category: language
+    suffixes:
+    - .rs
+    ignore_dirs:
+    - target
+    clean_overlays:
+      build_dirs:
+      - target
+    assets:
+    - path: Cargo.toml
+      template: Cargo.toml
+    - path: Cargo.lock
+      template: Cargo.lock
+    pre_commit:
+      repos:
+      - repo: https://github.com/doublify/pre-commit-rust
+        rev: v1.0
+        hooks:
+        - id: fmt
+        - id: cargo-check
+    translators:
+    - id: rust
+      extensions:
+      - .rs
+      can_handle:
+        strategy: module_function
+        entrypoint: rust_translator.py:can_handle
+      translate:
+        strategy: module_function
+        entrypoint: rust_translator.py:translate
+    policy_overlays:
+      dependency-management:
+        dependency_role_files:
+        - package_manifest=>Cargo.toml
+        - resolved=>Cargo.lock
+      name-clarity:
+        include_suffixes:
+        - .rs
+      docstring-and-comment-coverage:
+        include_suffixes:
+        - .rs
+      modules-need-tests:
+        include_suffixes:
+        - .rs
+        watch_dirs:
+        - tests
+        tests_watch_dirs:
+        - tests
+        mirror_test_name_templates:
+        - rust=>{stem}_test.rs
+        - rust=>tests/{stem}.rs
+      tests-coverage:
+        include_suffixes:
+        - .rs
+        watch_dirs:
+        - tests
+        tests_watch_dirs:
+        - tests
+        assertion_signal_patterns:
+        - rust=>\bassert!\s*\(
+        - rust=>\bassert_eq!\s*\(
+        - rust=>\bassert_ne!\s*\(
+        tautology_patterns:
+        - rust=>^\s*assert!\s*\(\s*true\s*\)\s*;?\s*$
+        - rust=>^\s*assert_eq!\s*\(\s*([A-Za-z_][A-Za-z0-9_]*)\s*,\s*\1\)\s*$
+        symbol_kinds:
+        - function
+        - struct
+        symbol_name_min_length: 3
+        symbol_assertion_window: 2
+      security-scanner:
+        include_suffixes:
+        - .rs
+      documentation-growth-tracking:
+        user_facing_suffixes:
+        - .rs
+        user_facing_keywords:
+        - handler
+        - handlers
+        - endpoint
+        - endpoints
+        - service
+        - services
+      line-length-limit:
+        include_suffixes:
+        - .rs
+      no-print-outside-output-runtime:
+        sink_macro_targets:
+        - rust=>println
+        - rust=>eprintln
+    core_invariant_overlays:
+      devflow-run-gates:
+        required_commands:
+        - cargo test
+    source: builtin
+    path: devcovenant/builtin/profiles/rust
+    assets_available:
+    - devcovenant/builtin/profiles/rust/assets/Cargo.lock
+    - devcovenant/builtin/profiles/rust/assets/Cargo.toml
+    active: false
   sql:
     version: 1
     profile: sql
@@ -11575,101 +11362,218 @@ profiles:
     assets_available:
     - devcovenant/builtin/profiles/sql/assets/schema.sql
     active: false
-  restapi:
+  swift:
     version: 1
-    profile: restapi
-    category: framework
+    profile: swift
+    category: language
     suffixes:
-    - .py
-    - .js
-    - .ts
-    - .json
-    - .yaml
-    - .yml
+    - .swift
     ignore_dirs:
-    - .venv
-    - __pycache__
-    - .pytest_cache
-    - .mypy_cache
-    - build
-    - dist
-    - node_modules
+    - .build
+    clean_overlays:
+      build_dirs:
+      - .build
     assets:
-    - path: docs/api.md
-      template: docs/api.yaml
-    - path: docs/auth.md
-      template: docs/auth.yaml
-    - path: docs/errors.md
-      template: docs/errors.yaml
+    - path: Package.swift
+      template: Package.swift
+    translators:
+    - id: swift
+      extensions:
+      - .swift
+      can_handle:
+        strategy: module_function
+        entrypoint: swift_translator.py:can_handle
+      translate:
+        strategy: module_function
+        entrypoint: swift_translator.py:translate
     policy_overlays:
+      dependency-management:
+        dependency_role_files:
+        - package_manifest=>Package.swift
       documentation-growth-tracking:
+        user_facing_suffixes:
+        - .swift
+      line-length-limit:
+        include_suffixes:
+        - .swift
+    core_invariant_overlays:
+      devflow-run-gates:
+        required_commands:
+        - swift test
+    source: builtin
+    path: devcovenant/builtin/profiles/swift
+    assets_available:
+    - devcovenant/builtin/profiles/swift/assets/Package.swift
+    active: false
+  terraform:
+    version: 1
+    profile: terraform
+    category: ops
+    suffixes:
+    - .tf
+    - .tfvars
+    - .hcl
+    ignore_dirs:
+    - .terraform
+    clean_overlays:
+      build_dirs:
+      - .terraform
+    assets:
+    - path: main.tf
+      template: main.tf
+    - path: variables.tf
+      template: variables.tf
+    policy_overlays:
+      devflow-run-gates:
+        required_commands:
+        - terraform validate
+      documentation-growth-tracking:
+        user_facing_suffixes:
+        - .tf
+        - .tfvars
+        - .hcl
+      line-length-limit:
+        include_suffixes:
+        - .tf
+        - .tfvars
+        - .hcl
+    source: builtin
+    path: devcovenant/builtin/profiles/terraform
+    assets_available:
+    - devcovenant/builtin/profiles/terraform/assets/main.tf
+    - devcovenant/builtin/profiles/terraform/assets/variables.tf
+    active: false
+  typescript:
+    version: 1
+    profile: typescript
+    category: language
+    suffixes:
+    - .ts
+    - .tsx
+    ignore_dirs:
+    - node_modules
+    - dist
+    - build
+    clean_overlays:
+      cache_dirs:
+      - coverage
+      - .parcel-cache
+      - .next
+      - .nuxt
+      - .svelte-kit
+      - .turbo
+      cache_globs:
+      - '*.tsbuildinfo'
+    assets:
+    - path: package.json
+      template: package.json
+    - path: tsconfig.json
+      template: tsconfig.json
+    pre_commit:
+      repos:
+      - repo: https://github.com/pre-commit/mirrors-prettier
+        rev: v3.3.3
+        hooks:
+        - id: prettier
+          files: \.(ts|tsx)$
+    translators:
+    - id: typescript
+      extensions:
+      - .ts
+      - .tsx
+      can_handle:
+        strategy: module_function
+        entrypoint: typescript_translator.py:can_handle
+      translate:
+        strategy: module_function
+        entrypoint: typescript_translator.py:translate
+    policy_overlays:
+      dependency-management:
+        dependency_role_files:
+        - intent=>package.json
+        - resolved=>package-lock.json
+        - resolved=>yarn.lock
+        - resolved=>pnpm-lock.yaml
+      name-clarity:
+        include_suffixes:
+        - .ts
+        - .tsx
+      docstring-and-comment-coverage:
+        include_suffixes:
+        - .ts
+        - .tsx
+      modules-need-tests:
+        include_suffixes:
+        - .ts
+        - .tsx
+        watch_dirs:
+        - tests
+        tests_watch_dirs:
+        - tests
+        mirror_test_name_templates:
+        - typescript=>{stem}.test.ts
+        - typescript=>{stem}.spec.ts
+        - typescript=>test_{stem}.ts
+        - typescript=>{stem}.test.tsx
+        - typescript=>{stem}.spec.tsx
+      tests-coverage:
+        include_suffixes:
+        - .ts
+        - .tsx
+        watch_dirs:
+        - tests
+        tests_watch_dirs:
+        - tests
+        assertion_signal_patterns:
+        - typescript=>\bexpect\s*\(
+        - typescript=>\bassert(?:\.[A-Za-z_]+)?\s*\(
+        tautology_patterns:
+        - typescript=>^\s*assert\s*\(\s*true\s*\)\s*;?\s*$
+        - typescript=>^\s*expect\s*\(\s*true\s*\)\s*$
+        symbol_kinds:
+        - function
+        - class
+        symbol_name_min_length: 3
+        symbol_assertion_window: 2
+      security-scanner:
+        include_suffixes:
+        - .ts
+        - .tsx
+      documentation-growth-tracking:
+        user_facing_suffixes:
+        - .ts
+        - .tsx
         user_facing_keywords:
         - api
         - endpoint
         - endpoints
         - route
         - routes
-        - request
-        - response
-        - responses
-        - auth
-        - authorization
-        - pagination
-        - rate-limit
-        - idempotency
-        - webhook
-        - webhooks
-        - openapi
-        - swagger
-        doc_routes:
-        - openapi/**/*.yaml => docs/api.md
-        - openapi/**/*.yml => docs/api.md
-        - '**/*api*/**/*.py => docs/api.md'
-        - '**/*api*/**/*.js => docs/api.md'
-        - '**/*api*/**/*.ts => docs/api.md'
-        - '**/*api*/**/*.py => docs/auth.md'
-        - '**/*api*/**/*.js => docs/auth.md'
-        - '**/*api*/**/*.ts => docs/auth.md'
-        - '**/*api*/**/*.py => docs/errors.md'
-        - '**/*api*/**/*.js => docs/errors.md'
-        - '**/*api*/**/*.ts => docs/errors.md'
-      security-scanner:
-        force_include_globs:
-        - '**/*api*/**/*.py'
-        - '**/*api*/**/*.js'
-        - '**/*api*/**/*.ts'
-      no-raw-errors:
-        forbid_broad_exception_handlers: true
-        broad_exception_waiver_markers:
-        - DEVCOV_ALLOW_BROAD_ONCE
-      modules-need-tests:
-        force_include_globs:
-        - '**/*api*/**/*.py'
-        - '**/*api*/**/*.js'
-        - '**/*api*/**/*.ts'
-        watch_dirs:
-        - tests
-        tests_watch_dirs:
-        - tests
-      tests-coverage:
-        force_include_globs:
-        - '**/*api*/**/*.py'
-        - '**/*api*/**/*.js'
-        - '**/*api*/**/*.ts'
-        watch_dirs:
-        - tests
-        tests_watch_dirs:
-        - tests
-      read-only-directories:
-        include_dirs:
-        - openapi/generated
-        - clients/generated
-    source: custom
-    path: devcovenant/custom/profiles/restapi
+        - controller
+        - controllers
+        - handler
+        - handlers
+        - component
+        - components
+      line-length-limit:
+        include_suffixes:
+        - .ts
+        - .tsx
+      no-print-outside-output-runtime:
+        sink_attr_targets:
+        - typescript=>console.log
+        - typescript=>console.info
+        - typescript=>console.warn
+        - typescript=>console.error
+    core_invariant_overlays:
+      devflow-run-gates:
+        required_commands:
+        - npm test
+    source: builtin
+    path: devcovenant/builtin/profiles/typescript
     assets_available:
-    - devcovenant/custom/profiles/restapi/assets/docs/api.yaml
-    - devcovenant/custom/profiles/restapi/assets/docs/auth.yaml
-    - devcovenant/custom/profiles/restapi/assets/docs/errors.yaml
+    - devcovenant/builtin/profiles/typescript/assets/package.json
+    - devcovenant/builtin/profiles/typescript/assets/tsconfig.json
     active: false
   devcovrepo:
     version: 1
@@ -11944,6 +11848,102 @@ profiles:
     - devcovenant/custom/profiles/devcovrepo/assets/docs/troubleshooting.md
     - devcovenant/custom/profiles/devcovrepo/assets/docs/workflow.md
     active: true
+  restapi:
+    version: 1
+    profile: restapi
+    category: framework
+    suffixes:
+    - .py
+    - .js
+    - .ts
+    - .json
+    - .yaml
+    - .yml
+    ignore_dirs:
+    - .venv
+    - __pycache__
+    - .pytest_cache
+    - .mypy_cache
+    - build
+    - dist
+    - node_modules
+    assets:
+    - path: docs/api.md
+      template: docs/api.yaml
+    - path: docs/auth.md
+      template: docs/auth.yaml
+    - path: docs/errors.md
+      template: docs/errors.yaml
+    policy_overlays:
+      documentation-growth-tracking:
+        user_facing_keywords:
+        - api
+        - endpoint
+        - endpoints
+        - route
+        - routes
+        - request
+        - response
+        - responses
+        - auth
+        - authorization
+        - pagination
+        - rate-limit
+        - idempotency
+        - webhook
+        - webhooks
+        - openapi
+        - swagger
+        doc_routes:
+        - openapi/**/*.yaml => docs/api.md
+        - openapi/**/*.yml => docs/api.md
+        - '**/*api*/**/*.py => docs/api.md'
+        - '**/*api*/**/*.js => docs/api.md'
+        - '**/*api*/**/*.ts => docs/api.md'
+        - '**/*api*/**/*.py => docs/auth.md'
+        - '**/*api*/**/*.js => docs/auth.md'
+        - '**/*api*/**/*.ts => docs/auth.md'
+        - '**/*api*/**/*.py => docs/errors.md'
+        - '**/*api*/**/*.js => docs/errors.md'
+        - '**/*api*/**/*.ts => docs/errors.md'
+      security-scanner:
+        force_include_globs:
+        - '**/*api*/**/*.py'
+        - '**/*api*/**/*.js'
+        - '**/*api*/**/*.ts'
+      no-raw-errors:
+        forbid_broad_exception_handlers: true
+        broad_exception_waiver_markers:
+        - DEVCOV_ALLOW_BROAD_ONCE
+      modules-need-tests:
+        force_include_globs:
+        - '**/*api*/**/*.py'
+        - '**/*api*/**/*.js'
+        - '**/*api*/**/*.ts'
+        watch_dirs:
+        - tests
+        tests_watch_dirs:
+        - tests
+      tests-coverage:
+        force_include_globs:
+        - '**/*api*/**/*.py'
+        - '**/*api*/**/*.js'
+        - '**/*api*/**/*.ts'
+        watch_dirs:
+        - tests
+        tests_watch_dirs:
+        - tests
+      read-only-directories:
+        include_dirs:
+        - openapi/generated
+        - clients/generated
+    source: custom
+    path: devcovenant/custom/profiles/restapi
+    assets_available:
+    - devcovenant/custom/profiles/restapi/assets/docs/api.yaml
+    - devcovenant/custom/profiles/restapi/assets/docs/auth.yaml
+    - devcovenant/custom/profiles/restapi/assets/docs/errors.yaml
+    active: false
 inventory:
   schema_version: 3
   core:

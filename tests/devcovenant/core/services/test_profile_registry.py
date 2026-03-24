@@ -135,6 +135,24 @@ def _unit_test_discover_profiles_accepts_flutter_lock_template() -> None:
     )
 
 
+def _unit_test_discover_profiles_orders_profiles_deterministically() -> None:
+    """Profile discovery order should not depend on filesystem iteration."""
+    module = importlib.import_module(MODULE)
+    registry = module.discover_profiles(REPO_ROOT)
+    discovered_names = list(registry.keys())
+    builtin_root = REPO_ROOT / "devcovenant" / "builtin" / "profiles"
+    custom_root = REPO_ROOT / "devcovenant" / "custom" / "profiles"
+    expected_names = [
+        module._normalize_profile_name(entry.name)
+        for entry in module._iter_profile_dirs(builtin_root)
+    ]
+    expected_names.extend(
+        module._normalize_profile_name(entry.name)
+        for entry in module._iter_profile_dirs(custom_root)
+    )
+    assert discovered_names == expected_names
+
+
 def _workflow_step_signature(step: dict[str, object]) -> dict[str, object]:
     """Return the comparable subset of a workflow step."""
     signature: dict[str, object] = {}
@@ -312,6 +330,10 @@ class GeneratedUnittestCases(unittest.TestCase):
     def test_discover_profiles_accepts_flutter_lock_template(self):
         """Run flutter pubspec.lock template integrity regression."""
         _unit_test_discover_profiles_accepts_flutter_lock_template()
+
+    def test_discover_profiles_orders_profiles_deterministically(self):
+        """Run deterministic profile-discovery ordering assertions."""
+        _unit_test_discover_profiles_orders_profiles_deterministically()
 
     def test_profile_registry_resolves_clean_overlays(self):
         """Run cleanup overlay resolution regression coverage."""

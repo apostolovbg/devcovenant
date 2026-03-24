@@ -46,6 +46,9 @@ In this repository, tracked registry state now also records the repo-specific
 the scanner steps merged into `ci-and-test` and the dependent
 `build-and-install-test` proof for the documented `pipx` machine-install
 path.
+The tracked registry also depends on deterministic discovery order, so
+profiles and policy-source inventories are sorted before refresh writes the
+registry on macOS, Linux, or Windows.
 
 Commit tracked-registry changes when they are the result of real repo changes.
 

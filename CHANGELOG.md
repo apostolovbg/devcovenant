@@ -61,6 +61,27 @@ Example:
 ## Version 1.0.0
 
 - 2026-03-24:
+  Change: Sorted profile and policy-source discovery before refresh writes its
+  tracked outputs, then added regression coverage and doc notes for that
+  filesystem-order stability contract.
+  Why: Fixed the Linux-only CI start-gate churn where refresh could rewrite
+  generated files even though policy checks passed, because raw filesystem
+  iteration order was leaking into tracked output order.
+  Impact: Stabilized `gate --start` across macOS, Linux, and Windows
+  filesystems, and the test suite now rejects a return to platform-dependent
+  generated ordering.
+  Files:
+  CHANGELOG.md
+  devcovenant/core/flow/refresh.py
+  devcovenant/core/services/profile_registry.py
+  devcovenant/docs/architecture.md
+  devcovenant/docs/registry.md
+  devcovenant/docs/workflow.md
+  devcovenant/registry/registry.yaml
+  tests/devcovenant/core/services/test_profile_registry.py
+  tests/devcovenant/test_refresh.py
+
+- 2026-03-24:
   Change: Replaced the generated repo-specific CI sprawl with one
   `ci-and-test` job that carries the scanner steps and one dependent
   `build-and-install-test` job, then rewrote the owning docs and workflow

@@ -196,6 +196,11 @@ active unless a repository explicitly replaces one cleanup key on purpose.
 Another is cleanup protection itself: cleanup targets come from profiles and
 config, but the active managed environment and the active clean run directory
 are runtime-protected paths resolved separately from those delete lists.
+Refresh also keeps generated ownership deterministic across filesystems:
+profile and policy discovery are sorted before tracked outputs such as
+`registry.yaml` or generated blocks are written, so Linux CI and local macOS
+or Windows checkouts do not churn the same generated files in different
+orders.
 
 ## Operator Checklist
 Before you close a slice, confirm:

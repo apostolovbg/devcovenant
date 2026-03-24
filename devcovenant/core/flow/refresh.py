@@ -2148,7 +2148,10 @@ def _discover_policy_sources(repo_root: Path) -> Dict[str, Dict[str, bool]]:
         source_root = repo_root / "devcovenant" / source / "policies"
         if not source_root.exists():
             continue
-        for entry in source_root.iterdir():
+        for entry in sorted(
+            source_root.iterdir(),
+            key=lambda candidate: candidate.name.lower(),
+        ):
             if not entry.is_dir():
                 continue
             script = entry / f"{entry.name}.py"

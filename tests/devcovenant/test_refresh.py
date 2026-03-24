@@ -16,7 +16,10 @@ from unittest.mock import patch
 import yaml
 
 from devcovenant import install, refresh
+from devcovenant.core.flow import refresh as refresh_flow
 from tests.devcovenant import repo_seed_cache
+
+REPO_ROOT = Path(__file__).resolve().parents[2]
 
 OLD_GENERIC_SPEC_BODY = """This is a generic SPEC guide template.
 
@@ -270,6 +273,28 @@ def _unit_test_refresh_renders_current_clean_and_ci_commentary() -> None:
             "managed-environment metadata."
         ) in config_text
         assert "always protects .git, .venv" not in config_text
+
+
+def _unit_test_refresh_discovers_policy_sources_deterministically() -> None:
+    """Policy-source discovery should not depend on filesystem iteration."""
+    discovered = refresh_flow._discover_policy_sources(REPO_ROOT)
+    discovered_ids = list(discovered.keys())
+    expected_ids: list[str] = []
+    for source in ("builtin", "custom"):
+        source_root = REPO_ROOT / "devcovenant" / source / "policies"
+        if not source_root.exists():
+            continue
+        for entry in sorted(
+            source_root.iterdir(),
+            key=lambda candidate: candidate.name.lower(),
+        ):
+            if not entry.is_dir():
+                continue
+            script = entry / f"{entry.name}.py"
+            if not script.exists():
+                continue
+            expected_ids.append(entry.name.replace("_", "-").strip())
+    assert discovered_ids == expected_ids
 
 
 def _unit_test_refresh_keeps_root_and_packaged_readme_blocks_empty() -> None:
@@ -1221,6 +1246,10 @@ class GeneratedUnittestCases(unittest.TestCase):
     def test_refresh_renders_current_clean_and_ci_commentary(self):
         """Run generated-config commentary assertions."""
         _unit_test_refresh_renders_current_clean_and_ci_commentary()
+
+    def test_refresh_discovers_policy_sources_deterministically(self):
+        """Run deterministic policy-source discovery assertions."""
+        _unit_test_refresh_discovers_policy_sources_deterministically()
 
     def test_refresh_keeps_root_and_packaged_readme_blocks_empty(self):
         """Run README empty-managed-block assertions."""

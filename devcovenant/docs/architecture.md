@@ -1,5 +1,5 @@
 # DevCovenant Architecture
-**Last Updated:** 2026-03-23
+**Last Updated:** 2026-03-24
 **Project Version:** 1.0.0
 
 ## Overview
@@ -142,6 +142,10 @@ They can contribute:
 Translators are owned by language profiles.
 They keep policies language-agnostic by translating source into normalized
 units instead of forcing each policy to parse each language separately.
+The profile-registry service resolves those profile inventories in a
+deterministic sorted order before tracked registry state is written, so the
+same repo does not rewrite generated files differently on macOS, Linux, or
+Windows just because the filesystem returned directories in a different order.
 
 ## Output And Error Boundaries
 All user-visible command output goes through the runtime output boundary.
