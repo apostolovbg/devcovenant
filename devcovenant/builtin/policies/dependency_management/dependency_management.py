@@ -830,7 +830,6 @@ class DependencyManagementCheck(PolicyCheck):
         payload: dict[str, object] | None = None,
     ) -> dict[str, object]:
         """Run declared dependency-management runtime actions."""
-        del payload
         if action != RUNTIME_ACTION_REFRESH_ALL:
             raise ValueError(
                 "Unsupported dependency-management runtime action: "
@@ -840,7 +839,10 @@ class DependencyManagementCheck(PolicyCheck):
             dependency_lock_runtime,
         )
 
-        return dependency_lock_runtime.refresh_all(repo_root)
+        return dependency_lock_runtime.refresh_all(
+            repo_root,
+            payload=payload,
+        )
 
     def check(self, context: CheckContext):
         """Verify dependency changes match the recorded license summary."""

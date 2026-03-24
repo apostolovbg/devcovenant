@@ -43,6 +43,7 @@ def _unit_test_can_fix_requires_changed_dependency_files() -> None:
 def _unit_test_fix_materializes_report_and_licenses_readme() -> None:
     """Fix should create report and generic licenses/README.md artifacts."""
     fixer = DependencyManagementFixer()
+    captured: dict[str, object] = {}
     with TemporaryDirectory() as tmp_dir:
         fixer.repo_root = Path(tmp_dir).resolve()
         violation = Violation(
@@ -59,14 +60,18 @@ def _unit_test_fix_materializes_report_and_licenses_readme() -> None:
         )
         original_runner = _AUTOFIX_MODULE.run_policy_runtime_action
         try:
-            _AUTOFIX_MODULE.run_policy_runtime_action = (
-                lambda *_args, **_kwargs: {
+
+            def _fake_runner(*_args, **_kwargs):
+                """Capture runtime-action payload and return modified files."""
+                captured.update(_kwargs)
+                return {
                     "refreshed_artifacts": [
                         "licenses/THIRD_PARTY_LICENSES.md",
                         "licenses/README.md",
                     ]
                 }
-            )
+
+            _AUTOFIX_MODULE.run_policy_runtime_action = _fake_runner
             result = fixer.fix(violation)
         finally:
             _AUTOFIX_MODULE.run_policy_runtime_action = original_runner
@@ -75,6 +80,9 @@ def _unit_test_fix_materializes_report_and_licenses_readme() -> None:
             Path("licenses/THIRD_PARTY_LICENSES.md"),
             Path("licenses/README.md"),
         ]
+        assert captured["payload"] == {
+            "changed_dependency_files": ["services/api/package.json"]
+        }
 
 
 def _unit_test_fix_noop_when_artifacts_are_already_synced() -> None:

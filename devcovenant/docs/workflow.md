@@ -1,5 +1,5 @@
 # Workflow
-**Last Updated:** 2026-03-23
+**Last Updated:** 2026-03-24
 **Project Version:** 1.0.0
 
 ## Overview
@@ -150,6 +150,12 @@ The global base should stay language-agnostic.
 If a repository family needs extra CI proof, such as a supported-language
 compatibility matrix or assurance scanners, that extra job should come from
 the relevant profile instead of from the generic global template.
+
+In this repository, the active repo-specific profile also adds an
+installed-CLI smoke job.
+That job builds a wheel, installs it with `pipx`, and proves the documented
+machine-install path without pushing Python-package assumptions back into the
+generic global CI base.
 
 This repository also keeps `build.yml` and `publish.yml` as repo-maintained
 release workflows.

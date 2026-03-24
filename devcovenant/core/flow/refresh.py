@@ -559,7 +559,7 @@ def _render_config_yaml(payload: dict[str, object]) -> str:
         "engine": _config_section_header("Engine behavior"),
         "clean": _config_section_header("Cleanup targets"),
         "ci_and_test": _config_section_header(
-            "Governance-and-test generation"
+            "CI-and-test workflow generation"
         ),
         "pre_commit": _config_section_header("Pre-commit generation"),
         "project_governance": _config_section_header("Project governance"),
@@ -658,22 +658,34 @@ def _render_config_yaml(payload: dict[str, object]) -> str:
         _yaml_block({"engine": payload.get("engine", {})}),
         comments["clean"],
         (
-            "# `clean.overlays` add repository-specific cleanup targets on "
-            "top of active profile clean_overlays."
+            "# Additive cleanup targets merged after active profile "
+            "clean_overlays."
         ),
         (
-            "# `clean.overrides` replace one resolved cleanup key entirely "
-            "when repository ownership must take over."
+            "# Use this for repository-specific build/cache/runtime-registry/"
+            "log junk beyond builtin profiles."
         ),
+        "# Protected entries are additive safety fences.",
         (
-            "# Protected entries are additive safety fences; runtime also "
-            "always protects .git, .venv, devcovenant/registry/registry.yaml, "
-            "devcovenant/registry/README.md, and devcovenant/logs/README.md."
+            "# Runtime also protects engine-critical paths such as `.git`, "
+            "the tracked registry docs, the logs README, the active clean run "
+            "dir, and the managed environment roots resolved from "
+            "managed-environment metadata."
         ),
         _yaml_block({"clean": payload.get("clean", {})}),
         comments["ci_and_test"],
-        "# `overlays` are merged into generated CI-and-test workflow.",
-        "# `overrides` replace generated payload when non-empty.",
+        (
+            "# Deep-merge patch applied to generated "
+            "`.github/workflows/ci-and-test.yml`."
+        ),
+        (
+            "# Active profiles may also contribute reusable ci_and_test "
+            "fragments."
+        ),
+        "# Keep the global base workflow language-agnostic.",
+        "# Use config overlays only for repo-local CI adjustments.",
+        "# Full replacement payload for generated CI-and-test workflow.",
+        "# Use only when complete local ownership is required.",
         _yaml_block(
             {
                 "ci_and_test": payload.get(

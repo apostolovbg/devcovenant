@@ -1,11 +1,14 @@
 # Installation and Lifecycle
-**Last Updated:** 2026-03-23
+**Last Updated:** 2026-03-24
 **Project Version:** 1.0.0
 
 ## Overview
 This document is the normative home for the lifecycle command contract.
-Use it together with `devcovenant/docs/contracts.md` when you need the stable
-meaning of install, deploy, refresh, upgrade, clean, undeploy, and uninstall.
+Use it for the machine-install and lifecycle command story.
+Keep `devcovenant/docs/contracts.md` nearby when you need the stable document
+map for the rest of the runtime surfaces.
+It explains how to install the DevCovenant CLI, when to use `pipx` versus a
+source checkout, and what each lifecycle command changes inside a repository.
 
 DevCovenant separates setup from activation.
 That split is deliberate.
@@ -22,6 +25,10 @@ only then let `deploy` activate the contract.
 ## Before You Start
 You need:
 
+- a machine-level way to run DevCovenant:
+  `pipx` for normal CLI use, or a managed source checkout when you are
+  developing DevCovenant itself
+
 - a git repository
 
 - Python and the toolchain required by the active profile stack
@@ -29,8 +36,60 @@ You need:
 - permission to create or use the managed environment when that policy is
   enabled
 
-If the console script is unavailable, use `python3 -m devcovenant ...`.
+## User Install Versus Source Development
+Use these two paths deliberately:
+
+1. `pipx` install for normal CLI use.
+
+   This is the preferred machine-install path when you want to use
+   DevCovenant in one or more repositories.
+   `pipx` keeps DevCovenant in its own application environment instead of
+   mixing it into your user-site Python packages.
+
+2. source checkout for DevCovenant development.
+
+   Use the repository-managed environment when you are developing DevCovenant
+   itself, testing unreleased runtime changes, or working directly in this
+   repository.
+
+If the console script is unavailable in a source checkout, use
+`python3 -m devcovenant ...`.
 On Windows, `py -m devcovenant ...` is the common equivalent form.
+
+## Preferred Machine Install
+For ordinary users, install the CLI with `pipx`:
+
+```bash
+pipx install devcovenant
+devcovenant --version
+```
+
+Use these companion commands for the installed CLI:
+
+```bash
+pipx upgrade devcovenant
+pipx uninstall devcovenant
+```
+
+That machine-level install is separate from repository activation.
+Installing the CLI makes `devcovenant` available on the machine.
+Running `devcovenant install` inside a repository seeds DevCovenant into that
+repository.
+
+## Source Checkout And Contributor Use
+Use a source checkout when you need to develop DevCovenant rather than simply
+use it.
+
+In that mode:
+
+- create or reuse the repo-managed environment
+
+- run DevCovenant from that environment
+
+- use the governed gate workflow for repository changes
+
+This repository's own managed-environment policy documents the bootstrap
+commands for that contributor path.
 
 ## Install Versus Deploy
 The shortest accurate model is:
@@ -100,6 +159,39 @@ It must also protect the configured managed environment generically through the
 managed-environment policy metadata instead of through a hardcoded `.venv`
 rule, so a bench or another managed environment type can define its own safe
 roots.
+
+## Package Build Surface
+The published package intentionally ships the runtime-facing docs and profile
+assets that DevCovenant needs at install time:
+
+- the packaged `devcovenant/README.md` and `devcovenant/VERSION`
+
+- the built-in policy descriptors under `devcovenant/builtin/policies`
+
+- the built-in profile descriptors, translators, and asset templates under
+  `devcovenant/builtin/profiles`
+
+- the packaged docs under `devcovenant/docs`
+
+- the tracked `README.md` files for `devcovenant/logs` and
+  `devcovenant/registry`
+
+The published package must not ship live repository state or development
+debris such as:
+
+- `devcovenant/config.yaml`
+
+- `devcovenant/registry/registry.yaml`
+
+- `devcovenant/registry/runtime/**`
+
+- timestamped runtime log folders
+
+- local test trees, build trees, or `*.egg-info` outputs
+
+`MANIFEST.in` and `pyproject.toml` should keep that boundary explicit.
+Package builds should be quiet: no stale MANIFEST exclusions, no ambiguous
+package-discovery warnings, and no accidental runtime-state leakage.
 
 ### upgrade
 Reconciles the installed DevCovenant package from source and then runs
@@ -181,6 +273,8 @@ stops with an explicit error so you can fix the path or permissions directly.
 
 ## Quick Reference
 ```bash
+pipx install devcovenant
+pipx upgrade devcovenant
 devcovenant install
 devcovenant deploy
 devcovenant refresh

@@ -251,6 +251,42 @@ _REFRESH_PYPROJECT_IDENTITY_CALLBACK = (
 )
 
 
+def _unit_test_refresh_renders_current_clean_and_ci_commentary() -> None:
+    """refresh_repo should render current clean and ci commentary."""
+    with tempfile.TemporaryDirectory() as temp_dir:
+        repo_root = Path(temp_dir)
+        repo_seed_cache.copy_installed_repo(repo_root)
+
+        result = refresh.refresh_repo(repo_root)
+        assert result == 0
+
+        config_text = (repo_root / "devcovenant" / "config.yaml").read_text(
+            encoding="utf-8"
+        )
+        assert "# CI-and-test workflow generation" in config_text
+        assert "# Governance-and-test generation" not in config_text
+        assert (
+            "managed environment roots resolved from "
+            "managed-environment metadata."
+        ) in config_text
+        assert "always protects .git, .venv" not in config_text
+
+
+def _unit_test_refresh_keeps_root_and_packaged_readme_blocks_empty() -> None:
+    """refresh_repo should keep README managed blocks intentionally empty."""
+    with tempfile.TemporaryDirectory() as temp_dir:
+        repo_root = Path(temp_dir)
+        repo_seed_cache.copy_installed_repo(repo_root)
+
+        result = refresh.refresh_repo(repo_root)
+        assert result == 0
+
+        for relative_path in ("README.md", "devcovenant/README.md"):
+            content = (repo_root / relative_path).read_text(encoding="utf-8")
+            assert "<!-- DEVCOV:BEGIN -->\n\n<!-- DEVCOV:END -->" in content
+            assert "Managed runtime note:" not in content
+
+
 def _unit_test_refresh_imports_same_version_header_only_spec_doc() -> None:
     """refresh_repo should adopt a same-version preauthored SPEC body."""
     with tempfile.TemporaryDirectory() as temp_dir:
@@ -714,7 +750,7 @@ def _unit_test_refresh_collapses_legacy_default_clean_overrides() -> None:
 
 
 def _unit_test_refresh_renders_devcov_managed_doc_intros() -> None:
-    """refresh_repo should render doc-specific DevCovenant intro text."""
+    """refresh_repo should render the intended managed-doc intro contract."""
     with tempfile.TemporaryDirectory() as temp_dir:
         repo_root = Path(temp_dir)
         repo_seed_cache.copy_refreshed_repo(repo_root)
@@ -734,9 +770,10 @@ def _unit_test_refresh_renders_devcov_managed_doc_intros() -> None:
         assert "<!-- DEVCOV:BEGIN -->\n\n<!-- DEVCOV:END -->" in readme
         assert "Describe the project this repository ships" in readme
         assert "If you already drafted DevCovenant-shaped docs" in readme
-        assert "**Managed runtime note:** this `devcovenant/` folder" in (
+        assert "<!-- DEVCOV:BEGIN -->\n\n<!-- DEVCOV:END -->" in (
             package_readme
         )
+        assert "Managed runtime note:" not in package_readme
         assert (
             "DevCovenant is a repository governance framework."
             in package_readme
@@ -1180,6 +1217,14 @@ class GeneratedUnittestCases(unittest.TestCase):
     ):
         """Run existing pyproject identity sync assertions."""
         _REFRESH_PYPROJECT_IDENTITY_CALLBACK()
+
+    def test_refresh_renders_current_clean_and_ci_commentary(self):
+        """Run generated-config commentary assertions."""
+        _unit_test_refresh_renders_current_clean_and_ci_commentary()
+
+    def test_refresh_keeps_root_and_packaged_readme_blocks_empty(self):
+        """Run README empty-managed-block assertions."""
+        _unit_test_refresh_keeps_root_and_packaged_readme_blocks_empty()
 
     def test_refresh_imports_same_version_header_only_spec_doc(self):
         """Run same-version SPEC import assertions."""

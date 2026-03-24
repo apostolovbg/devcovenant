@@ -20,6 +20,8 @@ Explain the most common failure groups:
 
 - config and metadata mistakes
 
+- installed-CLI and `pipx` path problems
+
 - managed-environment failures
 
 - translator or profile mismatches

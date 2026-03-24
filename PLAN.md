@@ -6,7 +6,7 @@
 **Maintenance Stance:** active
 **Compatibility Policy:** breaking-allowed
 **Versioning Mode:** versioned
-**Last Updated:** 2026-03-23
+**Last Updated:** 2026-03-24
 **DevCovenant Version:** 1.0.0
 
 <!-- DEVCOV:BEGIN -->
@@ -122,93 +122,79 @@ truer, more intentional baseline.
    - forks can keep packaged README links correct by updating package metadata
      instead of patching repo-specific runtime code
 
-2. [not done] Reconcile Generated Config Commentary With Runtime Truth.
-   Goal:
-   - make `devcovenant/config.yaml` trustworthy again as the point-of-reading
-     operator contract.
-   Why this matters:
-   - the live config still says runtime always protects `.venv` and still names
-     the old governance-and-test generation section even though the runtime and
-     source assets moved on.
-   Work to do:
-   - trace why refresh did not fully reconcile the live generated comment
-     scaffold from the current global config asset
-   - update the owning generator or refresh logic so generated comments for
-     `clean`, `ci_and_test`, and adjacent sections stay synchronized with the
-     active asset text
-   - audit the rest of the generated config comments for other stale labels,
-     especially around cleanup protection, workflow generation, and governance
-     wording
-   - verify that the live config comments describe the actual ownership split:
-     profile-driven cleanup targets, runtime-owned protected roots, and
-     profile-provided `ci_and_test` fragments
-   Done when:
-   - the live config comment scaffold matches the current asset contract
-   - no stale `.venv`-as-global-protection or governance-and-test wording
-     remains
+2. [done] Reconcile Generated Config Commentary With Runtime Truth.
+   What landed:
+   - the refresh-owned config comment renderer now matches the active global
+     config asset for both cleanup and `ci_and_test` sections
+   - the live generated `devcovenant/config.yaml` now explains cleanup
+     protection in terms of runtime-owned critical paths and
+     managed-environment metadata instead of claiming a hardcoded `.venv`
+     safety rule
+   - the old `Governance-and-test generation` header is gone from the live
+     generated config and has been replaced with the correct
+     `CI-and-test workflow generation` wording
+   - the refresh regression suite now checks both the updated config
+     commentary and the intentional empty-managed-block contract for
+     `README.md` and `devcovenant/README.md`
+   What is now true:
+   - the live generated config comments match the current asset/runtime truth
+   - the packaged and root README managed blocks stay empty by design
    - a refresh rerun preserves the corrected commentary deterministically
 
-3. [not done] Make The Package Build Warning-Free.
-   Goal:
-   - get from "build succeeds" to "build succeeds cleanly and quietly."
-   Why this matters:
-   - the current package builds pass and `twine check` passes, but
-     `python -m build` still emits MANIFEST noise and setuptools
-     package-discovery warnings.
-   Work to do:
-   - classify every current build warning into one of two buckets:
-     MANIFEST pattern noise or setuptools package-discovery noise
-   - decide the intended packaging model for asset-heavy directories such as
-     `devcovenant/docs`, `devcovenant/logs`, `devcovenant/registry`, and the
-     builtin profile asset trees
-   - tighten `MANIFEST.in` so it no longer excludes or prunes paths in a way
-     that produces repeated "no previously-included files" warnings
-   - tighten `pyproject.toml` package discovery so setuptools no longer warns
-     about absent configured packages or asset directories that look
-     importable
-   - rerun local build and smoke-install validation until the package build is
-     warning-free, not merely successful
-   Done when:
-   - `python -m build` completes without MANIFEST or package-discovery warnings
-   - wheel and sdist contents remain correct
-   - `twine check` and smoke installs still pass
+3. [done] Make The Package Build Warning-Free.
+   What landed:
+   - `MANIFEST.in` now describes only the source artifacts that really belong
+     in the source distribution instead of carrying stale exclude and prune
+     rules that fired warnings when those paths were absent
+   - `pyproject.toml` now uses explicit setuptools package-data declarations
+     for the shipped runtime docs, built-in profile assets, built-in policy
+     descriptors, and tracked package READMEs instead of relying on ambiguous
+     implicit package-data scanning
+   - the packaging regression suite now checks the explicit package-data
+     contract and the simplified manifest contract in addition to the existing
+     wheel-content assertions
+   - the package build proof was rerun until `python -m build` completed
+     without MANIFEST or package-discovery warnings
+   What is now true:
+   - local package builds are quiet as well as successful
+   - the wheel still excludes runtime logs, runtime registry state, test
+     trees, and stale build debris while keeping the packaged docs and
+     built-in assets that DevCovenant needs at runtime
+   - the packaging boundary is now explicit in both metadata and docs instead
+     of being enforced by warning-prone side effects
 
-4. [not done] Standardize The Public Install Story Around `pipx`.
-   Goal:
-   - make the public machine-install contract explicit, consistent, and proven
-     if `pipx` is the preferred way to install DevCovenant as a CLI tool.
-   Why this matters:
-   - we already proved that a `pipx` installation gives a cleaner machine-level
-     DevCovenant install than `pip --user --break-system-packages`, but the
-     repo still does not tell users that clearly or validate it as part of the
-     normal product story.
-   Work to do:
-   - decide and document the final split between user installation and
-     contributor/source-checkout workflow:
-     `pipx` for end users, managed environment or local source checkout for
-     repository development
-   - update the public install surfaces so they all tell the same story:
-     `README.md`, `devcovenant/README.md`, `devcovenant/docs/installation.md`,
-     troubleshooting/install guidance, and any trust/support text that mentions
-     installation or upgrade paths
-   - make the rationale explicit:
-     `pipx` isolates CLI dependencies, avoids polluting a user-site Python
-     environment, and is a better fit for a Python application than ad hoc
-     `pip --user` installs
-   - remove or demote install guidance that implies the old machine-level pip
-     path is the normal or preferred public route
-   - add package-install proof to release validation:
-     build artifact, `pipx` install from that artifact, basic CLI smoke checks,
-     and at least one cleanup or read-only command through the installed CLI
-   - decide whether CI should include a dedicated installed-CLI smoke job,
-     and if so, keep that proof in the repo-specific CI extension layer rather
-     than the language-agnostic base workflow
-   Done when:
+4. [done] Standardize The Public Install Story Around `pipx`.
+   What landed:
+   - the public install surfaces now present a clear split between ordinary
+     machine installation and source-checkout development:
+     `pipx` for installed CLI use, repository-managed environment or source
+     checkout for DevCovenant contributors and unreleased runtime work
+   - `README.md`, the packaged `devcovenant/README.md`,
+     `devcovenant/docs/installation.md`, troubleshooting guidance, workflow
+     guidance, profile docs, and `SUPPORT.md` now tell the same story about
+     how to install, upgrade, and troubleshoot the CLI without blurring that
+     machine-install path with `devcovenant install` inside a governed
+     repository
+   - the repo-specific `devcovrepo` profile now contributes an
+     `installed-cli-smoke` CI job through `ci_and_test` metadata, so the
+     generated `ci-and-test` workflow proves the documented installed-CLI path
+     without pushing Python-package assumptions back into the language-agnostic
+     global workflow template
+   - the profile-registry regression suite now locks that repo-specific CI
+     proof into the workflow contract, and the package-doc wording remains
+     neutral about repo-specific profile names while still documenting the CI
+     boundary clearly
+   - a fresh installed-CLI proof now exists for the current artifact set:
+     a wheel built from a temp copy of the working tree was installed with
+     `pipx`, `devcovenant --version` reported `1.0.0`, and the installed CLI
+     ran `devcovenant gate --status` successfully
+   What is now true:
    - the public docs consistently present `pipx` as the preferred machine
      install path
    - contributor docs still clearly distinguish source development from
      installed-CLI usage
-   - release validation proves the documented installed-CLI path works
+   - installed-CLI proof now lives in both release validation and repo-specific
+     CI instead of in ad hoc local notes
 
 5. [not done] Finish The Documentation Polish Pass.
    Goal:

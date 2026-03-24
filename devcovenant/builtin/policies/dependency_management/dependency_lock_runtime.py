@@ -597,6 +597,8 @@ def _resolve_dependency_metadata(repo_root: Path) -> Dict[str, object]:
 
 def refresh_all(
     repo_root: Path,
+    *,
+    payload: dict[str, object] | None = None,
 ) -> dict[str, object]:
     """Refresh selected lockfiles and dependency-management artifacts."""
 
@@ -615,10 +617,19 @@ def refresh_all(
         results.append(result)
         if result.changed:
             changed_lockfiles.append(lock_name)
+    requested_dependency_files: list[str] = []
+    if isinstance(payload, dict):
+        raw_files = payload.get("changed_dependency_files")
+        if isinstance(raw_files, list):
+            for entry in raw_files:
+                text = str(entry).strip()
+                if text:
+                    requested_dependency_files.append(text)
+    changed_dependency_files = requested_dependency_files or changed_lockfiles
 
     modified_license_files = dependency_management.refresh_license_artifacts(
         repo_root,
-        changed_dependency_files=changed_lockfiles,
+        changed_dependency_files=changed_dependency_files,
         third_party_file=str(metadata["third_party_file"]),
         licenses_dir=str(metadata["licenses_dir"]),
         report_heading=str(metadata["report_heading"]),

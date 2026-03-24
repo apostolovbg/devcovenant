@@ -6,7 +6,7 @@
 **Maintenance Stance:** active
 **Compatibility Policy:** breaking-allowed
 **Versioning Mode:** versioned
-**Last Updated:** 2026-03-23
+**Last Updated:** 2026-03-24
 **DevCovenant Version:** 1.0.0
 
 <!-- DEVCOV:BEGIN -->
@@ -59,6 +59,121 @@ Example:
 ## Log changes here
 
 ## Version 1.0.0
+
+- 2026-03-24:
+  Change: Rewrote Item 4 in `PLAN.md` to record the completed `pipx` install
+  contract, the repo-specific installed-CLI smoke proof, and the current
+  release-validation expectations that now follow from that work.
+  Why: Closed the final documentation gap between the implemented install-story
+  slice and the active remediation roadmap after the governed proof and
+  installed-CLI validation had already landed.
+  Impact: Recorded the `pipx`-first install story as completed roadmap state,
+  preserved the prior install-story changelog entry directly below this one as
+  required by the gate snapshot rule, and kept the plan truthful about what
+  now remains before the final audit.
+  Files:
+  CHANGELOG.md
+  PLAN.md
+
+- 2026-03-24:
+  Change: Standardized the public install story around `pipx`, updated the
+  operator and support docs to distinguish installed-CLI use from source
+  checkout development, added a repo-specific installed-CLI smoke job through
+  the `devcovrepo` CI extension layer, and extended the profile-registry
+  regression suite to lock that repo-specific proof into the generated CI
+  contract.
+  Why: Clarified the public machine-install path now that `pipx` is the
+  preferred way to install DevCovenant as a CLI, kept contributor guidance
+  honest about source checkout and managed-environment use, and proved the
+  documented installed-CLI path without pushing Python-package assumptions back
+  into the language-agnostic global workflow template.
+  Impact: Added a consistent `pipx`-first install story across the README,
+  installation, troubleshooting, workflow, and support surfaces, proved the
+  installed CLI path in this repository's CI the same way the docs describe
+  it, and strengthened the profile boundary for repo-specific CI jobs with
+  registry-backed and test-backed evidence.
+  Files:
+  CHANGELOG.md
+  README.md
+  SUPPORT.md
+  devcovenant/README.md
+  devcovenant/custom/profiles/devcovrepo/assets/docs/installation.md
+  devcovenant/custom/profiles/devcovrepo/assets/docs/profiles.md
+  devcovenant/custom/profiles/devcovrepo/assets/docs/troubleshooting.md
+  devcovenant/custom/profiles/devcovrepo/assets/docs/workflow.md
+  devcovenant/custom/profiles/devcovrepo/devcovrepo.yaml
+  devcovenant/docs/installation.md
+  devcovenant/docs/profiles.md
+  devcovenant/docs/registry.md
+  devcovenant/docs/troubleshooting.md
+  devcovenant/docs/workflow.md
+  devcovenant/registry/registry.yaml
+  tests/devcovenant/core/services/test_profile_registry.py
+
+- 2026-03-24:
+  Change: Simplified `MANIFEST.in`, replaced implicit setuptools package-data
+  scanning with explicit package-data declarations in `pyproject.toml`, fixed
+  the dependency-management autofix/runtime handoff so changed package
+  manifests stay reflected in the license report, refreshed those
+  dependency-management artifacts after the package-manifest change, refreshed
+  the tracked registry hash that records the updated policy/runtime contract,
+  and completed the packaging-remediation slice across the UTC rollover on the
+  final manifest, registry, docs, and test surfaces.
+  Why: Removed the stale manifest rules and ambiguous package discovery that
+  were still producing build warnings, while keeping the runtime docs,
+  built-in profile assets, tracked package README surfaces, and synchronized
+  dependency-compliance artifacts in the package contract and keeping live
+  runtime state out of it, corrected the runtime handoff bug that made the
+  dependency-management checker and autofixer disagree about which manifests
+  the license report had to name, and recorded the active post-midnight
+  continuation of the same packaging work under the current UTC day.
+  Impact: `python -m build` now completes quietly, the wheel content contract
+  stays test-backed, the lock/license surfaces stay synchronized with the
+  package manifest set, and the packaging slice stays traceable under the
+  current gate day without displacing the pre-session top changelog entry.
+  Files:
+  CHANGELOG.md
+  MANIFEST.in
+  PLAN.md
+  devcovenant/builtin/policies/dependency_management/autofix/global.py
+  devcovenant/builtin/policies/dependency_management/dependency_lock_runtime.py
+  devcovenant/builtin/policies/dependency_management/dependency_management.py
+  devcovenant/docs/installation.md
+  devcovenant/docs/policies.md
+  devcovenant/docs/registry.md
+  devcovenant/registry/registry.yaml
+  licenses/THIRD_PARTY_LICENSES.md
+  pyproject.toml
+  requirements.lock
+  tests/devcovenant/builtin/policies/dependency_management/autofix/\
+  test_global.py
+  tests/devcovenant/builtin/policies/dependency_management/\
+  test_dependency_lock_runtime.py
+  tests/devcovenant/test_install.py
+
+- 2026-03-23:
+  Change: Reconciled the generated config commentary with the current cleanup
+  and CI contract, removed the stale hardcoded `.venv` wording, restored the
+  packaged README template to an intentionally empty managed block, and added
+  refresh regressions for both behaviors.
+  Why: Fixed the real generator drift instead of patching the live config by
+  hand, and restored the explicit design that both README surfaces keep empty
+  `<!-- DEVCOV -->` blocks so DevCovenant does not inject top-of-file runtime
+  prose into user-facing READMEs.
+  Impact: Strengthened the generated config truth surface, documented and
+  enforced the README descriptor contract, and reduced the chance that refresh
+  drifts back into stale commentary or non-empty README managed blocks.
+  Files:
+  CHANGELOG.md
+  PLAN.md
+  devcovenant/builtin/profiles/global/assets/config.yaml
+  devcovenant/builtin/profiles/global/assets/devcovenant/README.yaml
+  devcovenant/config.yaml
+  devcovenant/core/flow/refresh.py
+  devcovenant/docs/config.md
+  devcovenant/docs/profiles.md
+  devcovenant/docs/refresh.md
+  tests/devcovenant/test_refresh.py
 
 - 2026-03-23:
   Change: Amended `PLAN.md` to insert a detailed remediation item for making

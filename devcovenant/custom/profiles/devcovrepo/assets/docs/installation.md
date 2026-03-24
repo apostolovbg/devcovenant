@@ -12,6 +12,13 @@ and full activation instead of treating them as one opaque command.
 ## What This Doc Should Cover
 Explain:
 
+- `pipx` as the preferred machine install for ordinary users
+
+- source checkout and managed-environment use for DevCovenant contributors
+
+- the difference between installing the CLI on a machine and running
+  `devcovenant install` inside a repository
+
 - `install` as setup
 
 - config review as the human checkpoint

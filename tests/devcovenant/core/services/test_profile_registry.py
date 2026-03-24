@@ -240,6 +240,7 @@ def _unit_test_global_governance_workflow_asset_stays_generic() -> None:
     assert set(jobs) == {"ci-and-test"}
     assert "compatibility-matrix" not in jobs
     assert "assurance" not in jobs
+    assert "installed-cli-smoke" not in jobs
 
 
 def _unit_test_repo_workflow_includes_devcovrepo_jobs() -> None:
@@ -254,6 +255,7 @@ def _unit_test_repo_workflow_includes_devcovrepo_jobs() -> None:
     assert "ci-and-test" in jobs
     assert "compatibility-matrix" in jobs
     assert "assurance" in jobs
+    assert "installed-cli-smoke" in jobs
 
     compatibility = jobs["compatibility-matrix"]
     assert isinstance(compatibility, dict)
@@ -266,6 +268,19 @@ def _unit_test_repo_workflow_includes_devcovrepo_jobs() -> None:
     ]
     assert "Prime managed environment" in step_names
     assert "Run compatibility contract tests" in step_names
+
+    installed_cli = jobs["installed-cli-smoke"]
+    assert isinstance(installed_cli, dict)
+    installed_steps = installed_cli.get("steps")
+    assert isinstance(installed_steps, list)
+    installed_step_names = [
+        str(step.get("name") or "").strip()
+        for step in installed_steps
+        if isinstance(step, dict)
+    ]
+    assert "Build wheel artifact" in installed_step_names
+    assert "Install DevCovenant with pipx" in installed_step_names
+    assert "Smoke-test installed CLI" in installed_step_names
 
 
 class GeneratedUnittestCases(unittest.TestCase):

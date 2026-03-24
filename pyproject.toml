@@ -57,7 +57,7 @@ Issues = "https://github.com/apostolovbg/devcovenant/issues"
 Changelog = "https://github.com/apostolovbg/devcovenant/blob/main/CHANGELOG.md"
 
 [tool.setuptools]
-include-package-data = true
+include-package-data = false
 [tool.setuptools.packages.find]
 include = [
   "devcovenant",
@@ -72,6 +72,39 @@ exclude = [
   "devcovenant.custom.profiles.*",
 ]
 namespaces = false
+[tool.setuptools.package-data]
+"devcovenant" = [
+  "README.md",
+  "VERSION",
+  "docs/*.md",
+  "docs/*.png",
+  "logs/README.md",
+  "registry/README.md",
+]
+"devcovenant.builtin.policies" = [
+  "README.md",
+  "*/*.yaml",
+]
+"devcovenant.builtin.profiles" = [
+  "README.md",
+  "*/*.py",
+  "*/*.yaml",
+  "*/assets/*",
+  "*/assets/**/*",
+  "*/assets/.*",
+  "*/assets/**/.*",
+  "global/assets/.github/workflows/*.yml",
+  "global/assets/.github/workflows/*.yaml",
+]
+"devcovenant.custom" = [
+  "README.md",
+]
+"devcovenant.custom.policies" = [
+  "README.md",
+]
+"devcovenant.custom.profiles" = [
+  "README.md",
+]
 [tool.setuptools.exclude-package-data]
 "*" = [
   "*.py[cod]",

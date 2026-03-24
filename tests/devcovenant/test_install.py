@@ -450,6 +450,36 @@ def _unit_test_pyproject_uses_pep639_license_metadata() -> None:
         "licenses/*.txt",
     ]:
         assert required in license_files
+    tool_data = pyproject_data.get("tool", {})
+    assert isinstance(tool_data, dict)
+    setuptools_data = tool_data.get("setuptools", {})
+    assert isinstance(setuptools_data, dict)
+    assert setuptools_data.get("include-package-data") is False
+    package_data = setuptools_data.get("package-data", {})
+    assert isinstance(package_data, dict)
+    devcovenant_package_data = package_data.get("devcovenant")
+    assert isinstance(devcovenant_package_data, list)
+    for required in [
+        "README.md",
+        "VERSION",
+        "docs/*.md",
+        "docs/*.png",
+        "logs/README.md",
+        "registry/README.md",
+    ]:
+        assert required in devcovenant_package_data
+    builtin_profiles_data = package_data.get("devcovenant.builtin.profiles")
+    assert isinstance(builtin_profiles_data, list)
+    for required in [
+        "*/*.py",
+        "*/*.yaml",
+        "*/assets/*",
+        "*/assets/**/*",
+    ]:
+        assert required in builtin_profiles_data
+    builtin_policies_data = package_data.get("devcovenant.builtin.policies")
+    assert isinstance(builtin_policies_data, list)
+    assert "*/*.yaml" in builtin_policies_data
 
 
 def _unit_test_manifest_includes_license_artifacts() -> None:
@@ -458,11 +488,14 @@ def _unit_test_manifest_includes_license_artifacts() -> None:
     assert "include LICENSE" in content
     assert "include licenses/THIRD_PARTY_LICENSES.md" in content
     assert "recursive-include licenses *.txt" in content
-    assert "recursive-exclude devcovenant/logs *" in content
     assert "include devcovenant/logs/README.md" in content
+    assert "recursive-include devcovenant/docs *" in content
+    assert "recursive-include devcovenant/builtin/profiles *" in content
+    assert "recursive-include devcovenant/builtin/policies *" in content
     assert "include devcovenant/registry/README.md" in content
-    assert "exclude devcovenant/registry/registry.yaml" in content
-    assert "recursive-exclude devcovenant/registry/runtime *" in content
+    assert "prune devcovenant/custom" in content
+    assert "exclude devcovenant/registry/registry.yaml" not in content
+    assert "recursive-exclude devcovenant/logs *" not in content
 
 
 def _unit_test_wheel_contains_required_license_artifacts() -> None:

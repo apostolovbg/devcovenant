@@ -1,5 +1,5 @@
 # Refresh Behavior
-**Last Updated:** 2026-03-22
+**Last Updated:** 2026-03-23
 **Project Version:** 1.0.0
 
 ## Overview
@@ -84,6 +84,12 @@ Some docs can also opt into project-governance header rendering.
 The descriptor is the source of structure.
 The live file is the source of preserved authored content outside the managed
 areas.
+
+Some descriptors intentionally keep the managed block empty.
+That is the rule for `README.md` and `devcovenant/README.md` in this
+repository: the `<!-- DEVCOV:BEGIN -->` / `<!-- DEVCOV:END -->` block stays
+present but empty by design so DevCovenant does not inject runtime prose at
+the top of user-facing README surfaces.
 
 ## Custom Managed Docs
 Profiles can add custom managed docs through their asset trees.

@@ -175,6 +175,12 @@ That is how a repository can carry supported-language compatibility or
 assurance jobs without pushing those language-specific checks into the global
 base workflow.
 
+The generated config commentary should tell the same story.
+The live `devcovenant/config.yaml` section header and comments for
+`ci_and_test` are expected to match the active global config asset, so readers
+can trust that they are looking at the current workflow-generation contract
+instead of stale historical wording.
+
 ### clean
 Cleanup targets are profile-driven.
 Active profiles contribute reusable cleanup ownership through
@@ -196,6 +202,11 @@ Cleanup protection uses a second ownership split.
 Profile and config cleanup lists decide what can be deleted, while the runtime
 also protects engine-critical paths such as the active clean run directory and
 the managed environment roots declared by the managed-environment policy.
+
+The generated config comments should describe that split directly.
+They should not claim that one hardcoded path such as `.venv` is globally
+protected when the real contract is metadata-driven managed-environment
+protection plus runtime-owned critical paths.
 
 That managed-environment protection is generic.
 Use `managed-environment.cleanup_protected_paths` when the environment should

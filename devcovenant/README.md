@@ -2,7 +2,7 @@
 **Doc ID:** README
 **Doc Type:** repo-readme
 **Project Version:** 1.0.0
-**Last Updated:** 2026-03-23
+**Last Updated:** 2026-03-24
 **DevCovenant Version:** 1.0.0
 
 <!-- DEVCOV:BEGIN -->
@@ -55,13 +55,15 @@ It does that by making the workflow explicit, storing the active policy state
 in the repo, and producing evidence for each governed command run.
 
 ## Quick Start
-Use this flow in a repository where DevCovenant is already installed or
-available from source.
+For most users, the right starting point is an isolated machine install with
+`pipx`, followed by repository activation inside the repo you want to govern.
 
 ```bash
+pipx install devcovenant
+devcovenant --version
+cd your-repo
 devcovenant install
 # review devcovenant/config.yaml
-# confirm developer_mode
 # set install.config_reviewed: true
 devcovenant deploy
 devcovenant gate --start
@@ -73,23 +75,30 @@ devcovenant gate --end
 
 What those steps mean:
 
-1. `install` adds the runtime and seeds `devcovenant/config.yaml`.
+1. `pipx install devcovenant` installs the CLI on your machine in an isolated
+   application environment.
 
-2. The config review is the human decision point.
+2. `devcovenant install` adds the runtime to the target repository and seeds
+   `devcovenant/config.yaml`.
+
+3. The config review is the human decision point.
 
    You decide whether the repo is a normal repository using DevCovenant or a
    repository used to develop DevCovenant itself, which profiles are active,
    which policies are enabled, and which engine settings should govern the
    repo.
 
-3. `deploy` activates the reviewed contract.
+4. `deploy` activates the reviewed contract.
 
    That is when managed docs, registries, generated workflow files, and other
    governed outputs are written.
 
-4. The first full gate cycle proves the activated baseline actually works.
+5. The first full gate cycle proves the activated baseline actually works.
 
-If `devcovenant` is not on PATH, use `python3 -m devcovenant ...`.
+Use a source checkout instead of `pipx` only when you are developing
+DevCovenant itself or testing unreleased runtime changes.
+In that case, use the repository's managed environment and fall back to
+`python3 -m devcovenant ...`.
 On Windows, `py -m devcovenant ...` is the common equivalent form.
 
 ## Workflow
@@ -153,6 +162,13 @@ devcovenant clean --all
 
 Other lifecycle commands such as `upgrade`, `undeploy`, and `uninstall` are
 used less often, but they follow the same run-log contract.
+
+Keep machine installation and repository lifecycle separate:
+
+- use `pipx upgrade devcovenant` when you want a newer installed CLI
+
+- use `devcovenant upgrade` inside a repository where DevCovenant is already
+  installed and governed
 
 ## Configuration Checkpoints
 The most important first-review settings in `devcovenant/config.yaml` are:

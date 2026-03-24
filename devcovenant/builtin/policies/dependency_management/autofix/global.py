@@ -32,7 +32,11 @@ class DependencyManagementFixer(PolicyFixer):
                 repo_root,
                 policy_id=self.policy_id,
                 action="refresh-all",
-                payload={},
+                payload={
+                    "changed_dependency_files": list(
+                        violation.context.get("changed_dependency_files", [])
+                    )
+                },
             )
         except ValueError as error:
             return FixResult(

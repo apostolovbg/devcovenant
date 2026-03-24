@@ -1,5 +1,5 @@
 # Profiles
-**Last Updated:** 2026-03-23
+**Last Updated:** 2026-03-24
 **Project Version:** 1.0.0
 
 ## Overview
@@ -121,8 +121,9 @@ Examples include:
 The CI boundary is important.
 The global workflow template should stay generic.
 If a repo family needs additional jobs, such as this repository's supported
-Python compatibility matrix and assurance scanners, that extension belongs in
-the relevant profile instead of in the builtin global workflow.
+Python compatibility matrix, assurance scanners, or a `pipx`-installed CLI
+smoke check, that extension belongs in the relevant profile instead of in the
+builtin global workflow.
 
 Use config overrides after that for repository-specific deltas.
 
@@ -137,6 +138,13 @@ the global profile can seed reusable cleanup targets, but it should not
 hardcode one language-specific managed environment path such as `.venv`.
 Managed-environment protection belongs with the managed-environment metadata so
 other environment types can participate through the same contract.
+
+The same asset ownership shows up in managed docs.
+Profile README descriptors can intentionally keep a managed block empty.
+That is the correct contract for the root `README.md` and packaged
+`devcovenant/README.md` here: the `<!-- DEVCOV -->` block stays present but
+empty by design, so profile assets do not inject DevCovenant runtime prose at
+the top of user-facing README surfaces.
 
 ## Builtin And Custom Profiles
 Builtin profiles are the shipped reusable stack surface.

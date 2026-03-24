@@ -6,30 +6,15 @@ include requirements.in
 include requirements.lock
 include devcovenant/README.md
 include devcovenant/VERSION
-recursive-exclude devcovenant/logs *
 include devcovenant/logs/README.md
 recursive-include devcovenant/docs *
 include devcovenant/registry/README.md
-exclude devcovenant/config.yaml
-exclude devcovenant/registry/registry.yaml
-exclude devcovenant/registry/runtime/*
 recursive-include devcovenant/builtin/profiles *
 recursive-include devcovenant/builtin/policies *
-recursive-exclude devcovenant/core/policies *
-recursive-exclude devcovenant/core/profiles *
-recursive-exclude devcovenant/custom *
+prune devcovenant/custom
 include devcovenant/custom/__init__.py
 include devcovenant/custom/README.md
 include devcovenant/custom/policies/__init__.py
 include devcovenant/custom/policies/README.md
 include devcovenant/custom/profiles/__init__.py
 include devcovenant/custom/profiles/README.md
-recursive-exclude devcovenant/registry/runtime *
-recursive-exclude tests *
-prune build
-prune dist
-prune devcovenant.egg-info
-global-exclude *.py[cod]
-global-exclude *$py.class
-global-exclude __pycache__/*
-global-exclude */__pycache__/*

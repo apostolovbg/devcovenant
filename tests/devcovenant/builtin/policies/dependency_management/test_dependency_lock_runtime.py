@@ -96,6 +96,64 @@ def _unit_test_refresh_runtime_updates_inventory_without_lock_change() -> None:
         assert f"`packaging=={packaging_version}`" in report
 
 
+def _unit_test_refresh_runtime_preserves_changed_manifest_references() -> None:
+    """Runtime refresh should keep all caller-supplied manifest references."""
+    module = importlib.import_module(MODULE)
+    with tempfile.TemporaryDirectory() as temp_dir:
+        repo_root = Path(temp_dir)
+        licenses_dir = repo_root / "licenses"
+        licenses_dir.mkdir(parents=True, exist_ok=True)
+        packaging_version = importlib_metadata.version("packaging")
+        (repo_root / "requirements.in").write_text(
+            "packaging>=26.0\n",
+            encoding="utf-8",
+        )
+        (repo_root / "requirements.lock").write_text(
+            f"packaging=={packaging_version}\n",
+            encoding="utf-8",
+        )
+        (repo_root / "pyproject.toml").write_text(
+            "[project]\n"
+            "name = 'demo'\n"
+            "dependencies = ['packaging>=26.0']\n",
+            encoding="utf-8",
+        )
+        (licenses_dir / "THIRD_PARTY_LICENSES.md").write_text(
+            "# Third-Party Licenses\n\n"
+            "## License Report\n"
+            "- `requirements.lock`\n\n"
+            "## Dependency License Inventory\n"
+            f"- `packaging=={packaging_version}`: "
+            f"`licenses/packaging-{packaging_version}.txt`\n",
+            encoding="utf-8",
+        )
+        original_resolver = module._resolve_dependency_metadata
+        module._resolve_dependency_metadata = lambda _repo_root: {
+            "resolved_dependency_files": ["requirements.lock"],
+            "third_party_file": "licenses/THIRD_PARTY_LICENSES.md",
+            "licenses_dir": "licenses",
+            "report_heading": "## License Report",
+        }
+        try:
+            module.refresh_all(
+                repo_root,
+                payload={
+                    "changed_dependency_files": [
+                        "pyproject.toml",
+                        "requirements.lock",
+                    ]
+                },
+            )
+        finally:
+            module._resolve_dependency_metadata = original_resolver
+
+        report = (licenses_dir / "THIRD_PARTY_LICENSES.md").read_text(
+            encoding="utf-8"
+        )
+        assert "- `pyproject.toml`" in report
+        assert "- `requirements.lock`" in report
+
+
 class GeneratedUnittestCases(unittest.TestCase):
     """unittest wrappers for layered module sanity checks."""
 
@@ -114,3 +172,7 @@ class GeneratedUnittestCases(unittest.TestCase):
     def test_refresh_runtime_updates_inventory_even_without_lock_change(self):
         """Run no-lock-change inventory repair assertions."""
         _unit_test_refresh_runtime_updates_inventory_without_lock_change()
+
+    def test_refresh_runtime_preserves_changed_manifest_references(self):
+        """Run changed-manifest reference preservation assertions."""
+        _unit_test_refresh_runtime_preserves_changed_manifest_references()

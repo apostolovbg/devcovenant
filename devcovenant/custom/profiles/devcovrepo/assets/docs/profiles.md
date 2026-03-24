@@ -27,7 +27,8 @@ Explain:
 
 7. reusable CI additions through `ci_and_test` fragments, including
    the rule that language- or repo-family-specific jobs do not belong in the
-   global workflow template
+   global workflow template and can include repo-specific installed-CLI smoke
+   proof when the public install path needs it
 
 ## Writing Rules
 Keep the explanation concrete.

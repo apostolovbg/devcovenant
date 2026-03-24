@@ -31,10 +31,13 @@ Explain:
 8. the rule that the global CI base stays generic while repo-family extras
    can arrive through profile `ci_and_test` fragments
 
-9. managed-environment use in CI as a metadata-driven contract, not a
+9. the repo-specific installed-CLI smoke job that proves the documented
+   `pipx` install path without pushing that logic into the generic CI base
+
+10. managed-environment use in CI as a metadata-driven contract, not a
    hardcoded virtual-environment activation recipe
 
-10. refresh-owned config normalization when stale generated defaults would
+11. refresh-owned config normalization when stale generated defaults would
    otherwise disable profile-driven behavior, such as cleanup targets
 
 ## Writing Rules

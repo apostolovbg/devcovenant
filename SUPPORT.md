@@ -28,6 +28,8 @@ material publicly.
 ## What To Include
 A good support report should include:
 - the DevCovenant version or commit you are using
+- whether you are using a `pipx` install, a source checkout, or a
+  repository-managed environment
 - operating system and Python version
 - the exact command you ran
 - the active profiles or relevant config overrides

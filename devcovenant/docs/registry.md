@@ -1,5 +1,5 @@
 # Registry
-**Last Updated:** 2026-03-23
+**Last Updated:** 2026-03-24
 **Project Version:** 1.0.0
 
 ## Overview
@@ -34,6 +34,13 @@ It stores deterministic governance state such as:
    `ci_and_test` additions
 
 7. resolution traces used for auditing and debugging
+
+Packaging and policy-runtime changes can legitimately update tracked-registry
+hashes even when the visible behavior change is elsewhere.
+That is normal evidence of a real contract change, not registry noise.
+In this repository, tracked registry state now also records the repo-specific
+`ci_and_test` jobs contributed by the active custom profile, including the
+installed-CLI smoke proof for the documented `pipx` machine-install path.
 
 Commit tracked-registry changes when they are the result of real repo changes.
 

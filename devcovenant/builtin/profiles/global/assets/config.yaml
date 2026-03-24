@@ -253,6 +253,10 @@ clean:
   # Additive cleanup targets merged after active profile clean_overlays.
   # Use this for repository-specific build/cache/runtime-registry/log junk
   # beyond builtin profiles.
+  # Protected entries are additive safety fences.
+  # Runtime also protects engine-critical paths such as `.git`, the tracked
+  # registry docs, the logs README, the active clean run dir, and the managed
+  # environment roots resolved from managed-environment metadata.
   overlays:
     build_dirs: []
     build_globs: []

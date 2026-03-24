@@ -91,3 +91,30 @@ jobs:
       run: pip-audit -r requirements.lock
     - name: Run Bandit
       run: bandit -q -c bandit.yaml -r devcovenant
+  installed-cli-smoke:
+    name: Installed CLI Smoke
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    env:
+      PYTHONPYCACHEPREFIX: .gha-pycache
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v4
+    - name: Set up Python bootstrap
+      uses: actions/setup-python@v5
+      with:
+        python-version: '3.14'
+    - name: Install build tooling
+      run: |
+        python -m pip install --upgrade pip
+        python -m pip install build pipx
+    - name: Build wheel artifact
+      run: python -m build --wheel --outdir dist
+    - name: Install DevCovenant with pipx
+      run: python -m pipx install dist/*.whl
+    - name: Smoke-test installed CLI
+      run: |
+        ~/.local/bin/devcovenant --version
+        ~/.local/bin/devcovenant check --help > /dev/null
+        ~/.local/bin/devcovenant gate --status > /dev/null

@@ -1,5 +1,5 @@
 # Troubleshooting
-**Last Updated:** 2026-03-22
+**Last Updated:** 2026-03-24
 **Project Version:** 1.0.0
 
 ## Overview
@@ -60,6 +60,20 @@ Most "runtime mystery" problems are really metadata-resolution problems.
 If the managed interpreter exists but is not executable, DevCovenant stops with
 an explicit error.
 Fix the interpreter path or permissions, then rerun the appropriate command.
+
+## Installed CLI Problems
+If you installed DevCovenant with `pipx` and the `devcovenant` command is
+missing, check the machine install first instead of debugging repository
+config:
+
+1. run `pipx list`
+2. run `pipx ensurepath`
+3. open a new shell and rerun `devcovenant --version`
+
+If you are in a source checkout, do not confuse that machine install with the
+repo-managed environment.
+Use `python3 -m devcovenant ...` when the checkout does not expose the console
+script directly.
 
 ## Translator And Profile Problems
 If a language-specific policy path seems wrong, verify that the active language

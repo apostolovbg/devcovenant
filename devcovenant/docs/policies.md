@@ -101,6 +101,10 @@ loosely connected commands or policies.
 
 That gives custom repositories one policy to customize rather than several
 half-overlapping surfaces.
+When the checker reports changed dependency manifests, the autofixer and the
+`refresh-all` runtime action now preserve that same manifest set when they
+rewrite `licenses/THIRD_PARTY_LICENSES.md`, so the report section stays aligned
+with what the checker actually validated.
 
 ## Version-Governance Adapter Contract
 Version-governance adapters define how version schemes are parsed,
