@@ -31,6 +31,10 @@ Explain:
    dependent build-and-install verification job when the public install path
    needs proof
 
+8. reviewed repo-specific scanner exceptions, including the rule that they
+   stay out of the generic global workflow and remain documented until an
+   upstream fix exists
+
 ## Writing Rules
 Keep the explanation concrete.
 Profiles are only useful when readers can tell what behavior is reusable,

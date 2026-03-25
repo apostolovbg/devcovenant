@@ -127,6 +127,9 @@ steps and, if needed, add one dependent verification job such as this
 repository's `build-and-install-test` job for packaged CLI proof.
 In this repository, that generated workflow now uses the visible workflow
 name `Checks`, while the specific job names stay descriptive underneath it.
+If a repo family needs a reviewed temporary scanner exception because an
+upstream advisory has no fix release yet, that exception belongs here too,
+not in the generic global workflow template.
 
 Use config overrides after that for repository-specific deltas.
 

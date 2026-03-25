@@ -16,6 +16,8 @@ Explain:
 
 - `registry.yaml`
 
+- repo-specific CI metadata, including reviewed temporary scanner exceptions
+
 - `registry/runtime/`
 
 - `gate_status.json`

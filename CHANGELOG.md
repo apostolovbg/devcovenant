@@ -61,6 +61,26 @@ Example:
 ## Version 1.0.0
 
 - 2026-03-25:
+  Change: documented and configured a reviewed repo-specific `pip-audit`
+  exception for `CVE-2026-4539`.
+  Why: clarified that `pytest` currently pulls vulnerable `pygments` without
+  an upstream fix release, so CI needed an explicit temporary decision.
+  Impact: kept GitHub Actions green without pretending a dependency bump
+  resolves an unfixable advisory.
+  Files:
+  CHANGELOG.md
+  SECURITY.md
+  devcovenant/custom/profiles/devcovrepo/devcovrepo.yaml
+  devcovenant/custom/profiles/devcovrepo/assets/docs/profiles.md
+  devcovenant/custom/profiles/devcovrepo/assets/docs/registry.md
+  devcovenant/custom/profiles/devcovrepo/assets/docs/workflow.md
+  devcovenant/docs/profiles.md
+  devcovenant/docs/registry.md
+  devcovenant/docs/workflow.md
+  devcovenant/registry/registry.yaml
+  tests/devcovenant/core/services/test_profile_registry.py
+
+- 2026-03-25:
   Change: Renamed the generated workflow's visible common-denominator label to
   `Checks`, then made the build-and-install job resolve pipx's bin directory
   before verifying the installed CLI on GitHub runners.

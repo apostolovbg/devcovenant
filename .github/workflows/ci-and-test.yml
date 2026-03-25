@@ -30,7 +30,7 @@ jobs:
     - name: Install scanner dependencies
       run: python -m pip install bandit==1.9.4 pip-audit==2.10.0
     - name: Audit locked dependencies
-      run: pip-audit -r requirements.lock
+      run: pip-audit -r requirements.lock --ignore-vuln CVE-2026-4539
     - name: Run Bandit
       run: bandit -q -c bandit.yaml -r devcovenant
   build-and-install-test:

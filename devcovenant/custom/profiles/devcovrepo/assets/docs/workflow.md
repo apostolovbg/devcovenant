@@ -36,10 +36,13 @@ Explain:
    documented `pipx` install path without pushing that logic into the generic
    CI base
 
-10. managed-environment use in CI as a metadata-driven contract, not a
+10. the rule that a repo-specific scanner exception must stay explicit and
+    documented when an upstream advisory has no published fix release yet
+
+11. managed-environment use in CI as a metadata-driven contract, not a
    hardcoded virtual-environment activation recipe
 
-11. refresh-owned config normalization when stale generated defaults would
+12. refresh-owned config normalization when stale generated defaults would
    otherwise disable profile-driven behavior, such as cleanup targets
 
 ## Writing Rules

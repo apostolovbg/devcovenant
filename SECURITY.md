@@ -105,6 +105,12 @@ These checks are review surfaces, not a claim that one scanner is infallible.
 When scanners disagree, DevCovenant's rule is to document the disagreement,
 keep the reviewed boundary explicit, and avoid silently suppressing the
 result.
+The current repo-specific `pip-audit` invocation carries one documented
+temporary ignore for `CVE-2026-4539` in transitive `pygments`, because
+`pytest` requires `pygments`, the advisory currently has no published fix
+release, and the report describes local-only exploitation. That exception
+belongs in repo-specific CI only and should be removed as soon as upstream
+publishes a fixable release path.
 
 ## Workflow
 Use this document in the normal reporting flow:

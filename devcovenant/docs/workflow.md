@@ -158,6 +158,10 @@ In this repository, the active repo-specific profile extends the main
 That second job builds artifacts, runs `twine check`, installs the built CLI
 with `pipx`, and proves the documented machine-install path without pushing
 Python-package assumptions back into the generic global CI base.
+When an upstream scanner advisory has no published fix release yet, a narrow
+reviewed exception may also live in that repo-specific CI layer.
+Keep that exception explicit, documented, and easy to delete once upstream
+publishes a real fix path.
 
 This repository also keeps `build.yml` and `publish.yml` as repo-maintained
 release workflows.
