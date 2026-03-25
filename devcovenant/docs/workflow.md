@@ -1,5 +1,5 @@
 # Workflow
-**Last Updated:** 2026-03-24
+**Last Updated:** 2026-03-25
 **Project Version:** 1.0.0
 
 ## Overview
@@ -134,7 +134,7 @@ That is why the log artifacts matter.
 ## CI Mapping
 The generated CI workflow lives at
 `.github/workflows/ci-and-test.yml`.
-Its visible workflow name is `CI and Test`.
+Its visible workflow name is `Checks`.
 
 The ownership split matters:
 
@@ -161,7 +161,7 @@ Python-package assumptions back into the generic global CI base.
 
 This repository also keeps `build.yml` and `publish.yml` as repo-maintained
 release workflows.
-They consume the result of `CI and Test`, but they are not part of the
+They consume the result of `Checks`, but they are not part of the
 generated CI-and-test workflow itself.
 
 ## Managed Environment In CI

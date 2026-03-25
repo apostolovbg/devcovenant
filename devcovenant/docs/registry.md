@@ -1,5 +1,5 @@
 # Registry
-**Last Updated:** 2026-03-24
+**Last Updated:** 2026-03-25
 **Project Version:** 1.0.0
 
 ## Overview
@@ -49,6 +49,9 @@ path.
 The tracked registry also depends on deterministic discovery order, so
 profiles and policy-source inventories are sorted before refresh writes the
 registry on macOS, Linux, or Windows.
+That same tracked state also records the current generated workflow contract,
+including the visible workflow name `Checks` and the repo-specific
+`build-and-install-test` verification job.
 
 Commit tracked-registry changes when they are the result of real repo changes.
 

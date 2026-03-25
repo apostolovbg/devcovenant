@@ -254,7 +254,7 @@ def _unit_test_global_governance_workflow_asset_stays_generic() -> None:
     assert isinstance(payload, dict)
     jobs = payload.get("jobs")
     assert isinstance(jobs, dict)
-    assert payload.get("name") == "CI and Test"
+    assert payload.get("name") == "Checks"
     assert set(jobs) == {"ci-and-test"}
     assert "compatibility-matrix" not in jobs
     assert "assurance" not in jobs
@@ -266,7 +266,7 @@ def _unit_test_repo_workflow_includes_devcovrepo_jobs() -> None:
     repo_workflow = REPO_ROOT / ".github" / "workflows" / "ci-and-test.yml"
     payload = yaml.safe_load(repo_workflow.read_text(encoding="utf-8"))
     assert isinstance(payload, dict)
-    assert payload.get("name") == "CI and Test"
+    assert payload.get("name") == "Checks"
 
     jobs = payload.get("jobs")
     assert isinstance(jobs, dict)
@@ -301,6 +301,7 @@ def _unit_test_repo_workflow_includes_devcovrepo_jobs() -> None:
     assert "Build package artifacts" in installed_step_names
     assert "Validate built artifacts" in installed_step_names
     assert "Install DevCovenant with pipx" in installed_step_names
+    assert "Resolve pipx bin directory" in installed_step_names
     assert "Verify installed CLI" in installed_step_names
 
 

@@ -1,5 +1,5 @@
 # Profiles
-**Last Updated:** 2026-03-24
+**Last Updated:** 2026-03-25
 **Project Version:** 1.0.0
 
 ## Overview
@@ -125,6 +125,8 @@ relevant profile instead of in the builtin global workflow.
 The usual shape is to extend the main `ci-and-test` job with repo-family
 steps and, if needed, add one dependent verification job such as this
 repository's `build-and-install-test` job for packaged CLI proof.
+In this repository, that generated workflow now uses the visible workflow
+name `Checks`, while the specific job names stay descriptive underneath it.
 
 Use config overrides after that for repository-specific deltas.
 

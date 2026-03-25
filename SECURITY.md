@@ -80,7 +80,7 @@ The current runtime contract intentionally keeps:
 
 ## Continuous Assurance
 DevCovenant keeps release assurance visible in normal automation:
-1. the generated `CI and Test` workflow provides the generic base gate/test
+1. the generated `Checks` workflow provides the generic base gate/test
    automation on bootstrap Python `3.14`
 
 2. this repository's `devcovrepo` profile extends the main `CI and Test`

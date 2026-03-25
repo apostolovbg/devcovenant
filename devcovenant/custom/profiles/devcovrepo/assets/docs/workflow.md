@@ -25,7 +25,7 @@ Explain:
 
 6. recovery rules
 
-7. the relationship between local workflow and the generated `CI and Test`
+7. the relationship between local workflow and the generated `Checks`
    workflow
 
 8. the rule that the global CI base stays generic while repo-family extras

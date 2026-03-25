@@ -6,7 +6,7 @@
 **Maintenance Stance:** active
 **Compatibility Policy:** breaking-allowed
 **Versioning Mode:** versioned
-**Last Updated:** 2026-03-24
+**Last Updated:** 2026-03-25
 **DevCovenant Version:** 1.0.0
 
 <!-- DEVCOV:BEGIN -->
@@ -59,6 +59,32 @@ Example:
 ## Log changes here
 
 ## Version 1.0.0
+
+- 2026-03-25:
+  Change: Renamed the generated workflow's visible common-denominator label to
+  `Checks`, then made the build-and-install job resolve pipx's bin directory
+  before verifying the installed CLI on GitHub runners.
+  Why: Removed the redundant `CI and Test / CI and Test ...` GitHub Actions
+  naming and fixed the build-job failure caused by hardcoding
+  `~/.local/bin/devcovenant` instead of using pipx's configured bin path.
+  Impact: GitHub Actions now shows a cleaner `Checks / ...` workflow label,
+  the build workflow listens to the renamed workflow correctly, and the
+  installed-CLI verification step no longer depends on one runner-specific
+  pipx shim location.
+  Files:
+  CHANGELOG.md
+  .github/workflows/build.yml
+  .github/workflows/ci-and-test.yml
+  devcovenant/builtin/profiles/global/assets/ci-and-test.yml
+  devcovenant/custom/profiles/devcovrepo/devcovrepo.yaml
+  devcovenant/custom/profiles/devcovrepo/assets/docs/workflow.md
+  devcovenant/docs/config.md
+  devcovenant/docs/profiles.md
+  devcovenant/docs/registry.md
+  devcovenant/docs/workflow.md
+  SECURITY.md
+  devcovenant/registry/registry.yaml
+  tests/devcovenant/core/services/test_profile_registry.py
 
 - 2026-03-24:
   Change: Sorted profile and policy-source discovery before refresh writes its

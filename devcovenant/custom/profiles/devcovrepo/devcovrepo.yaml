@@ -55,11 +55,15 @@ ci_and_test:
           run: python -m twine check dist/*
         - name: Install DevCovenant with pipx
           run: python -m pipx install dist/*.whl
+        - name: Resolve pipx bin directory
+          run: |
+            PIPX_BIN_DIR="$(python -m pipx environment --value PIPX_BIN_DIR)"
+            echo "PIPX_BIN_DIR=$PIPX_BIN_DIR" >> "$GITHUB_ENV"
         - name: Verify installed CLI
           run: |
-            ~/.local/bin/devcovenant --version
-            ~/.local/bin/devcovenant check --help > /dev/null
-            ~/.local/bin/devcovenant gate --status > /dev/null
+            "$PIPX_BIN_DIR/devcovenant" --version
+            "$PIPX_BIN_DIR/devcovenant" check --help > /dev/null
+            "$PIPX_BIN_DIR/devcovenant" gate --status > /dev/null
 policy_overlays:
   dependency-management:
     dependency_role_files:

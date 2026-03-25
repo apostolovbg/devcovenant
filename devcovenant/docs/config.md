@@ -1,5 +1,5 @@
 # Configuration
-**Last Updated:** 2026-03-24
+**Last Updated:** 2026-03-25
 **Project Version:** 1.0.0
 
 ## Overview
@@ -160,7 +160,7 @@ These settings change how the runtime behaves, not what the repository claims
 about itself.
 
 ### ci_and_test
-Repository-local customization for the generated `CI and Test` workflow.
+Repository-local customization for the generated `Checks` workflow.
 
 Use this section for:
 
