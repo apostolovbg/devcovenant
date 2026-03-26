@@ -19,6 +19,76 @@ _DEFAULT_REQUIRED_COMMANDS = [
 ]
 
 
+def _write_workflow_contract(
+    tmp_path: Path,
+    *,
+    workflow_phases: list[str] | None = None,
+) -> None:
+    """Write minimal config and registry surfaces for workflow-contract use."""
+    commands = (
+        list(workflow_phases)
+        if workflow_phases is not None
+        else list(_DEFAULT_REQUIRED_COMMANDS)
+    )
+    config_path = tmp_path / "devcovenant" / "config.yaml"
+    config_path.parent.mkdir(parents=True, exist_ok=True)
+    config_path.write_text(
+        "\n".join(
+            [
+                "project-governance:",
+                "  stage: stable",
+                "  maintenance_stance: active",
+                "  compatibility_policy: breaking-allowed",
+                "  versioning_mode: versioned",
+                "profiles:",
+                "  active:",
+                "    - python",
+                "",
+            ]
+        ),
+        encoding="utf-8",
+    )
+    workflow_phase_lines = [
+        "    workflow_phases:",
+        "      - id: tests",
+        "        enabled: true",
+        "        required: true",
+        "        after: mid",
+        "        before: end",
+        "        order: 100",
+        "        runner:",
+        "          kind: command_group",
+        "          commands:",
+    ]
+    for command in commands:
+        workflow_phase_lines.append(f"            - {command}")
+    workflow_phase_lines.extend(
+        [
+            "        success_contract:",
+            "          kind: all_commands_exit_zero",
+            "        recording:",
+            "          record_in_session: true",
+            "          summary_label: Tests",
+        ]
+    )
+    registry_lines = [
+        "metadata:",
+        "  schema_version: 1",
+        "  registry_layout: single-root",
+        "profiles:",
+        "  global:",
+        "    category: system",
+        "  python:",
+        "    category: language",
+    ]
+    if commands:
+        registry_lines.extend(workflow_phase_lines)
+    registry_lines.extend(["inventory: {}", ""])
+    registry_path = tmp_path / "devcovenant" / "registry" / "registry.yaml"
+    registry_path.parent.mkdir(parents=True, exist_ok=True)
+    registry_path.write_text("\n".join(registry_lines), encoding="utf-8")
+
+
 def _make_ctx(
     tmp_path: Path,
     changed: list[str],
@@ -28,8 +98,10 @@ def _make_ctx(
     session_error: str = "",
     session_reason_code: str = "",
     config: dict | None = None,
+    workflow_phases: list[str] | None = None,
 ) -> CheckContext:
     """Build test context with changed files and optional working snapshot."""
+    _write_workflow_contract(tmp_path, workflow_phases=workflow_phases)
     files = [tmp_path / path for path in changed]
     for file_path in files:
         file_path.parent.mkdir(parents=True, exist_ok=True)
@@ -55,27 +127,94 @@ def _status_path(tmp_path: Path) -> Path:
     )
 
 
-def _write_status(tmp_path: Path, payload: dict) -> None:
-    """Write one test gate-status payload."""
-    path = _status_path(tmp_path)
+def _workflow_session_path(tmp_path: Path) -> Path:
+    """Return default workflow-session path for tests."""
+    return (
+        tmp_path
+        / "devcovenant"
+        / "registry"
+        / "runtime"
+        / "workflow_session.json"
+    )
+
+
+def _phase_entry(
+    *,
+    session_id: str,
+    status: str = "passed",
+) -> dict[str, object]:
+    """Return one minimal recorded workflow phase entry."""
+    return {
+        "id": "tests",
+        "required": True,
+        "enabled": True,
+        "status": status,
+        "summary_label": "Tests",
+        "runner_kind": "command_group",
+        "success_contract_kind": "all_commands_exit_zero",
+        "last_run_session_id": session_id,
+        "command": " && ".join(_DEFAULT_REQUIRED_COMMANDS),
+        "commands": list(_DEFAULT_REQUIRED_COMMANDS),
+        "command_name": "run",
+    }
+
+
+def _write_workflow_session(
+    tmp_path: Path,
+    payload: dict[str, object],
+) -> None:
+    """Write one workflow-session payload for invariant checks."""
+    path = _workflow_session_path(tmp_path)
     path.parent.mkdir(parents=True, exist_ok=True)
     path.write_text(json.dumps(payload), encoding="utf-8")
 
 
+def _write_status(
+    tmp_path: Path,
+    payload: dict[str, object],
+    *,
+    workflow_phases: list[str] | None = None,
+    tests_phase_present: bool = True,
+    tests_phase_status: str = "passed",
+    tests_phase_session_id: str | None = None,
+) -> None:
+    """Write gate status and aligned workflow-session payloads."""
+    _write_workflow_contract(tmp_path, workflow_phases=workflow_phases)
+    path = _status_path(tmp_path)
+    path.parent.mkdir(parents=True, exist_ok=True)
+    path.write_text(json.dumps(payload), encoding="utf-8")
+    session_id = str(payload.get("session_id", "")).strip()
+    commands = (
+        list(workflow_phases)
+        if workflow_phases is not None
+        else list(_DEFAULT_REQUIRED_COMMANDS)
+    )
+    phases: dict[str, object] = {}
+    if commands and tests_phase_present:
+        phases["tests"] = _phase_entry(
+            session_id=tests_phase_session_id or session_id,
+            status=tests_phase_status,
+        )
+    _write_workflow_session(
+        tmp_path,
+        {
+            "schema_version": 1,
+            "workflow_contract_schema_version": 1,
+            "session_id": session_id,
+            "session_state": str(payload.get("session_state", "")).strip(),
+            "required_phase_ids": ["tests"] if commands else [],
+            "anchors": {},
+            "phases": phases,
+        },
+    )
+
+
 def _configured_check(
     *,
-    required_commands: list[str] | None = None,
     extra_options: dict | None = None,
 ) -> DevflowRunGates:
-    """Return invariant instance with required command metadata."""
-    options = {
-        "required_commands": (
-            list(required_commands)
-            if required_commands is not None
-            else list(_DEFAULT_REQUIRED_COMMANDS)
-        )
-    }
-    options.update(dict(extra_options or {}))
+    """Return invariant instance with optional metadata overrides."""
+    options = dict(extra_options or {})
     check = DevflowRunGates()
     check.set_options(options, {})
     return check
@@ -158,7 +297,7 @@ class GeneratedUnittestCases(unittest.TestCase):
             monkeypatch.undo()
 
     def test_closed_session_without_edits_passes(self):
-        """Closed session with valid command evidence should pass."""
+        """Closed session with matching workflow-phase evidence should pass."""
         with tempfile.TemporaryDirectory() as temp_dir:
             tmp_path = Path(temp_dir).resolve()
             _write_status(tmp_path, _closed_session_payload())
@@ -203,13 +342,17 @@ class GeneratedUnittestCases(unittest.TestCase):
                 any("Session is still open" in v.message for v in violations)
             )
 
-    def test_end_phase_accepts_open_session(self):
-        """End-phase run should validate open session without end evidence."""
+    def test_end_phase_requires_missing_required_phase(self):
+        """End-phase checks should require recorded required phases."""
         monkeypatch = MonkeyPatch()
         try:
             with tempfile.TemporaryDirectory() as temp_dir:
                 tmp_path = Path(temp_dir).resolve()
-                _write_status(tmp_path, _open_session_payload())
+                _write_status(
+                    tmp_path,
+                    _open_session_payload(),
+                    tests_phase_present=False,
+                )
                 ctx = _make_ctx(
                     tmp_path,
                     ["src/example.py"],
@@ -217,7 +360,12 @@ class GeneratedUnittestCases(unittest.TestCase):
                 )
                 monkeypatch.setenv("DEVCOV_DEVFLOW_PHASE", "end")
                 violations = _configured_check().check(ctx)
-                self.assertEqual(violations, [])
+                self.assertTrue(
+                    any(
+                        "missing required phases: tests" in v.message
+                        for v in violations
+                    )
+                )
         finally:
             monkeypatch.undo()
 
@@ -254,31 +402,11 @@ class GeneratedUnittestCases(unittest.TestCase):
             violations = _configured_check().check(ctx)
             self.assertEqual(violations, [])
 
-    def test_closed_audit_allows_stale_end_vs_test_order(self):
-        """Closed no-change audits should ignore stale end/test ordering."""
-        with tempfile.TemporaryDirectory() as temp_dir:
-            tmp_path = Path(temp_dir).resolve()
-            payload = _closed_session_payload()
-            payload["pre_commit_end_epoch"] = 12.0
-            payload["last_run_epoch"] = 15.0
-            _write_status(tmp_path, payload)
-            ctx = _make_ctx(
-                tmp_path,
-                ["src/example.py"],
-                working_numstat={},
-                session_valid=True,
-            )
-            violations = _configured_check().check(ctx)
-            self.assertEqual(violations, [])
-
     def test_closed_session_with_unsessioned_edits_still_blocks(self):
         """Closed sessions with post-end edits must still block."""
         with tempfile.TemporaryDirectory() as temp_dir:
             tmp_path = Path(temp_dir).resolve()
-            payload = _closed_session_payload()
-            payload["pre_commit_end_epoch"] = 12.0
-            payload["last_run_epoch"] = 15.0
-            _write_status(tmp_path, payload)
+            _write_status(tmp_path, _closed_session_payload())
             ctx = _make_ctx(
                 tmp_path,
                 ["src/example.py"],
@@ -293,57 +421,63 @@ class GeneratedUnittestCases(unittest.TestCase):
                 )
             )
 
-    def test_requires_tests_after_start(self):
-        """Test evidence must post-date the session start timestamp."""
+    def test_missing_required_phase_configuration(self):
+        """Missing workflow phases should produce config violation."""
         with tempfile.TemporaryDirectory() as temp_dir:
             tmp_path = Path(temp_dir).resolve()
-            payload = _closed_session_payload()
-            payload["last_run_epoch"] = 5.0
-            _write_status(tmp_path, payload)
-            ctx = _make_ctx(tmp_path, ["src/example.py"], working_numstat={})
-            violations = _configured_check().check(ctx)
-            self.assertTrue(
-                any("predate session start" in v.message for v in violations)
+            _write_status(
+                tmp_path,
+                _closed_session_payload(),
+                workflow_phases=[],
+                tests_phase_present=False,
             )
-
-    def test_missing_required_commands_configuration(self):
-        """Missing required_commands should produce config violation."""
-        with tempfile.TemporaryDirectory() as temp_dir:
-            tmp_path = Path(temp_dir).resolve()
             ctx = _make_ctx(
                 tmp_path,
                 ["src/example.py"],
-                working_numstat={"src/example.py": "1\t1\tsrc/example.py"},
+                working_numstat={},
+                workflow_phases=[],
             )
-            check = _configured_check(required_commands=[])
-            violations = check.check(ctx)
+            violations = _configured_check().check(ctx)
             self.assertTrue(violations)
-            self.assertIn("No required test commands", violations[0].message)
+            self.assertIn("No required workflow phases", violations[0].message)
 
-    def test_required_commands_use_exact_matching(self):
-        """Recorded commands should satisfy requirements by exact match."""
+    def test_missing_required_phase_for_current_session_is_reported(self):
+        """Required phase evidence must belong to the active session."""
         with tempfile.TemporaryDirectory() as temp_dir:
             tmp_path = Path(temp_dir).resolve()
-            payload = _closed_session_payload()
-            payload["commands"] = ["pytest-custom"]
-            _write_status(tmp_path, payload)
-            ctx = _make_ctx(tmp_path, ["src/example.py"], working_numstat={})
-            violations = _configured_check(required_commands=["pytest"]).check(
-                ctx
+            _write_status(
+                tmp_path,
+                _closed_session_payload(),
+                tests_phase_session_id="older-session",
             )
+            ctx = _make_ctx(tmp_path, ["src/example.py"], working_numstat={})
+            violations = _configured_check().check(ctx)
             self.assertTrue(violations)
             self.assertIn(
-                "missing required commands: pytest", violations[0].message
+                "missing required phases: tests", violations[0].message
             )
 
     def test_custom_status_path(self):
         """Custom status path from config overrides should be honored."""
         with tempfile.TemporaryDirectory() as temp_dir:
             tmp_path = Path(temp_dir).resolve()
+            _write_workflow_contract(tmp_path)
             status_path = tmp_path / "alt" / "status.json"
             status_path.parent.mkdir(parents=True, exist_ok=True)
             status_path.write_text(
                 json.dumps(_closed_session_payload()), encoding="utf-8"
+            )
+            _write_workflow_session(
+                tmp_path,
+                {
+                    "schema_version": 1,
+                    "workflow_contract_schema_version": 1,
+                    "session_id": "123",
+                    "session_state": "closed",
+                    "required_phase_ids": ["tests"],
+                    "anchors": {},
+                    "phases": {"tests": _phase_entry(session_id="123")},
+                },
             )
             ctx = _make_ctx(
                 tmp_path,
@@ -353,9 +487,6 @@ class GeneratedUnittestCases(unittest.TestCase):
                     "user_metadata_overrides": {
                         "devflow-run-gates": {
                             "gate_status_file": "alt/status.json",
-                            "required_commands": list(
-                                _DEFAULT_REQUIRED_COMMANDS
-                            ),
                         }
                     }
                 },
@@ -364,44 +495,3 @@ class GeneratedUnittestCases(unittest.TestCase):
             check.set_options({}, ctx.get_policy_config("devflow-run-gates"))
             violations = check.check(ctx)
             self.assertEqual(violations, [])
-
-    def test_resolve_required_test_commands(self):
-        """Core helper should expose the configured required commands."""
-        monkeypatch = MonkeyPatch()
-        try:
-            monkeypatch.setattr(
-                devflow_run_gates,
-                "configured_invariant",
-                lambda _repo_root: _configured_check(
-                    required_commands=[
-                        "python3 -m unittest discover -v",
-                        "pytest",
-                    ]
-                ),
-            )
-            result = devflow_run_gates.resolve_required_test_commands(
-                Path("/tmp/repo")
-            )
-            self.assertEqual(
-                result["commands"],
-                ["python3 -m unittest discover -v", "pytest"],
-            )
-            self.assertEqual(result["source_field"], "required_commands")
-        finally:
-            monkeypatch.undo()
-
-    def test_resolve_required_test_commands_rejects_empty_config(self):
-        """Core helper should reject empty required command metadata."""
-        monkeypatch = MonkeyPatch()
-        try:
-            monkeypatch.setattr(
-                devflow_run_gates,
-                "configured_invariant",
-                lambda _repo_root: _configured_check(required_commands=[]),
-            )
-            with self.assertRaises(ValueError):
-                devflow_run_gates.resolve_required_test_commands(
-                    Path("/tmp/repo")
-                )
-        finally:
-            monkeypatch.undo()

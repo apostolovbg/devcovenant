@@ -26,6 +26,25 @@ from devcovenant.core.services.registry import (
 )
 
 POLICY_ID = "dependency-management"
+_PYTHON_LOCK_OPTION_TOKENS = {
+    "--cert",
+    "--client-cert",
+    "--constraint",
+    "--extra-index-url",
+    "--find-links",
+    "--index-url",
+    "--no-binary",
+    "--no-index",
+    "--only-binary",
+    "--prefer-binary",
+    "--pre",
+    "--requirement",
+    "--trusted-host",
+    "-c",
+    "-f",
+    "-i",
+    "-r",
+}
 
 
 @dataclass(frozen=True)
@@ -120,11 +139,31 @@ def _split_last_updated(lines: Iterable[str]) -> LockFilePieces:
     return LockFilePieces(collected)
 
 
+def _is_python_lock_option_line(raw_line: str) -> bool:
+    """Return True for environment-specific pip option directives."""
+
+    stripped = str(raw_line).strip()
+    if not stripped or raw_line[:1].isspace():
+        return False
+    token = stripped.split(maxsplit=1)[0].split("=", 1)[0]
+    return token in _PYTHON_LOCK_OPTION_TOKENS
+
+
+def _strip_python_lock_option_lines(lines: Sequence[str]) -> List[str]:
+    """Remove non-semantic pip option lines from lockfile content."""
+
+    return [
+        str(raw_line)
+        for raw_line in lines
+        if not _is_python_lock_option_line(str(raw_line))
+    ]
+
+
 def _normalize_python_lock_semantics(lines: Sequence[str]) -> List[str]:
     """Compare Python lockfiles by resolved pins, not banner formatting."""
 
     normalized: List[str] = []
-    for raw_line in lines:
+    for raw_line in _strip_python_lock_option_lines(lines):
         stripped = str(raw_line).strip()
         if not stripped or stripped.startswith("#") or raw_line[:1].isspace():
             continue
@@ -141,7 +180,8 @@ def _compile_requirements_lock(
         tmp_lock = Path(tmpdir) / "requirements.lock"
         _run_pip_compile(repo_root, requirements_in, tmp_lock)
         normalised = _normalise_header(tmp_lock.read_text().splitlines())
-    return _split_last_updated(normalised)
+        cleaned = _strip_python_lock_option_lines(normalised)
+    return _split_last_updated(cleaned)
 
 
 def _run_pip_compile(
@@ -189,9 +229,26 @@ def _refresh_python_requirements_lock(repo_root: Path) -> LockHandlerResult:
         else LockFilePieces([])
     )
     compiled = _compile_requirements_lock(repo_root, req_in)
+    previous_cleaned = LockFilePieces(
+        _strip_python_lock_option_lines(previous.body)
+    )
     if _normalize_python_lock_semantics(
-        previous.body
+        previous_cleaned.body
     ) == _normalize_python_lock_semantics(compiled.body):
+        if previous_cleaned.body != previous.body:
+            lock_path.write_text(
+                "\n".join(compiled.body) + "\n",
+                encoding="utf-8",
+            )
+            return LockHandlerResult(
+                "requirements.lock",
+                changed=True,
+                attempted=True,
+                message=(
+                    "Normalized requirements.lock by removing "
+                    "environment-specific pip option lines."
+                ),
+            )
         return LockHandlerResult(
             "requirements.lock",
             changed=False,

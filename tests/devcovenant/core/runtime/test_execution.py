@@ -34,14 +34,18 @@ def _unit_test_execution_symbol_contract_is_stable() -> None:
     expected = [
         "ChildOutputChannel",
         "configure_repo_pycache_prefix",
+        "record_workflow_phase_result",
+        "resolve_declared_workflow_phase",
         "resolve_managed_environment_for_stage",
         "resolve_child_output_plan_for_channel",
         "rewrite_command_for_managed_python",
         "rewrite_command_string_for_managed_python",
-        "resolve_required_test_commands",
-        "registry_required_commands",
+        "resolve_required_workflow_phases",
+        "resolve_workflow_phase_commands",
+        "registry_required_phase_commands",
         "run_child_command_with_output_policy",
-        "run_and_record_tests",
+        "run_and_record_workflow_phase",
+        "run_required_workflow_phases",
     ]
     for symbol in expected:
         assert hasattr(module, symbol), symbol
@@ -75,7 +79,7 @@ def _unit_test_execution_symbols_cover_runtime_helpers() -> None:
         "record_gate_status",
         "resolve_repo_root",
         "resolve_child_output_plan_for_channel",
-        "resolve_tests_output_mode",
+        "resolve_workflow_phase_output_mode",
         "run_bootstrap_registry_refresh",
         "run_child_command_with_output_policy",
         "run_subprocess_with_runtime_output",
@@ -92,7 +96,7 @@ def _unit_test_execution_symbols_cover_runtime_helpers() -> None:
     for method in ["banner", "emit", "step"]:
         assert hasattr(reporter_cls, method), method
 
-    progress_cls = module._TestCommandProgress
+    progress_cls = module._WorkflowCommandProgress
     for method in [
         "close",
         "complete_step",
@@ -129,15 +133,19 @@ def _unit_test_execution_symbol_assertions_cover_public_api() -> None:
     assert module.print_step
     assert module.read_local_version
     assert module.record_gate_status
-    assert module.registry_required_commands
+    assert module.record_workflow_phase_result
+    assert module.registry_required_phase_commands
+    assert module.resolve_declared_workflow_phase
     assert module.resolve_managed_environment_for_stage
     assert module.resolve_child_output_plan_for_channel
     assert module.resolve_repo_root
-    assert module.resolve_required_test_commands
-    assert module.resolve_tests_output_mode
+    assert module.resolve_required_workflow_phases
+    assert module.resolve_workflow_phase_commands
+    assert module.resolve_workflow_phase_output_mode
     assert module.rewrite_command_for_managed_python
     assert module.rewrite_command_string_for_managed_python
-    assert module.run_and_record_tests
+    assert module.run_and_record_workflow_phase
+    assert module.run_required_workflow_phases
     assert module.run_bootstrap_registry_refresh
     assert module.run_child_command_with_output_policy
     assert module.run_subprocess_with_runtime_output
@@ -147,7 +155,7 @@ def _unit_test_execution_symbol_assertions_cover_public_api() -> None:
     assert module.snapshot_paths_changed_since
     assert module.top_level_command_name
     assert module.warn_version_mismatch
-    progress_cls = module._TestCommandProgress
+    progress_cls = module._WorkflowCommandProgress
     assert progress_cls.close
     assert progress_cls.complete_step
     assert progress_cls.describe
@@ -485,15 +493,14 @@ def _unit_test_global_config_template_documents_quiet_mode() -> None:
     assert "tests_output_mode: verbose" in content
 
 
-def _unit_test_normal_mode_test_message_contract_is_stable() -> None:
-    """Normal-mode test message should remain concise and log-first."""
+def _unit_test_normal_mode_workflow_phase_message_contract_is_stable() -> None:
+    """Normal-mode workflow-phase message should stay concise and log-first."""
     content = _read_output_doc_contract_text(
         "devcovenant/core/runtime/execution.py"
     )
-    assert (
-        "Please wait for test commands to execute. Full output is "
-    ) in content
-    assert "available in run logs." in content
+    assert "Please wait for workflow phase commands to execute." in content
+    assert "Full output " in content
+    assert '"is available in run logs."' in content
 
 
 def _unit_test_ci_workflow_split_docs_are_consistent() -> None:
@@ -524,7 +531,7 @@ def _unit_test_workflow_doc_marks_mid_gate_required() -> None:
     """Workflow docs should keep gate --mid mandatory on command surfaces."""
     content = _read_output_doc_contract_text("devcovenant/docs/workflow.md")
     assert "gate --start -> gate --mid loop (rerun until clean)" in content
-    assert "run `gate --mid` before tests" in content
+    assert "run `gate --mid` before `devcovenant run`" in content
     assert "optional mutating preflight" not in content
 
 
@@ -576,6 +583,29 @@ def _unit_test_primary_docs_identify_their_normative_contracts() -> None:
     for path, snippets in expectations.items():
         content = _read_output_doc_contract_text(path)
         assert "devcovenant/docs/contracts.md" in content
+        for snippet in snippets:
+            assert snippet in content
+
+
+def _unit_test_custom_extension_docs_explain_baseline_first_activation():
+    """Custom-extension docs should state the baseline-first lifecycle."""
+    expectations = {
+        "devcovenant/docs/installation.md": (
+            "Reach the first reviewed baseline first.",
+            "review baseline first, then add repo-specific custom extensions",
+        ),
+        "devcovenant/docs/profiles.md": (
+            "Reach the first reviewed DevCovenant baseline first",
+            "after the initial `install` -> config review -> `deploy`",
+        ),
+        "devcovenant/docs/policies.md": (
+            "do not seed repo-specific custom policies before the",
+            "prove that baseline, and",
+        ),
+    }
+
+    for path, snippets in expectations.items():
+        content = _read_output_doc_contract_text(path)
         for snippet in snippets:
             assert snippet in content
 
@@ -841,11 +871,11 @@ def _unit_test_active_run_log_captures_runtime_and_subprocess_output() -> None:
         repo_root = Path(tmpdir)
         context = run_logging.create_run_log_context(
             repo_root,
-            "test",
-            ["devcovenant", "test"],
+            "run",
+            ["devcovenant", "run"],
         )
-        previous_test_mode = module._TEST_COMMAND_OUTPUT_MODE
-        previous_test_label = module._TEST_COMMAND_LABEL
+        previous_test_mode = module._WORKFLOW_PHASE_COMMAND_OUTPUT_MODE
+        previous_test_label = module._WORKFLOW_PHASE_COMMAND_LABEL
         stdout_buffer = io.StringIO()
         stderr_buffer = io.StringIO()
         try:
@@ -855,8 +885,8 @@ def _unit_test_active_run_log_captures_runtime_and_subprocess_output() -> None:
                 redirect_stderr(stderr_buffer),
             ):
                 module.runtime_print("runtime line")
-                module._TEST_COMMAND_OUTPUT_MODE = None
-                module._TEST_COMMAND_LABEL = ""
+                module._WORKFLOW_PHASE_COMMAND_OUTPUT_MODE = None
+                module._WORKFLOW_PHASE_COMMAND_LABEL = ""
                 module._run_command(
                     [
                         sys.executable,
@@ -876,8 +906,8 @@ def _unit_test_active_run_log_captures_runtime_and_subprocess_output() -> None:
                 status="success",
             )
         finally:
-            module._TEST_COMMAND_OUTPUT_MODE = previous_test_mode
-            module._TEST_COMMAND_LABEL = previous_test_label
+            module._WORKFLOW_PHASE_COMMAND_OUTPUT_MODE = previous_test_mode
+            module._WORKFLOW_PHASE_COMMAND_LABEL = previous_test_label
             module.clear_active_run_log_context()
 
         stdout_log = context.require_paths().stdout_log.read_text(
@@ -899,7 +929,7 @@ def _unit_test_active_run_log_captures_runtime_and_subprocess_output() -> None:
         assert "Run logs:" in stdout_log
         assert "subprocess stderr" not in stderr_log
         assert "Run logs:" in tail_text
-        assert '"command_family": "test"' in summary_json
+        assert '"command_family": "run"' in summary_json
 
 
 def _unit_test_emit_active_run_log_pointer_supports_once_semantics() -> None:
@@ -910,8 +940,8 @@ def _unit_test_emit_active_run_log_pointer_supports_once_semantics() -> None:
         repo_root = Path(tmpdir)
         context = run_logging.create_run_log_context(
             repo_root,
-            "test",
-            ["devcovenant", "test"],
+            "run",
+            ["devcovenant", "run"],
         )
         stdout_buffer = io.StringIO()
         try:
@@ -939,7 +969,9 @@ def _unit_test_test_command_progress_emits_sparse_lines_in_normal_mode() -> (
     module = importlib.import_module(MODULE)
     stdout_buffer = io.StringIO()
     with redirect_stdout(stdout_buffer):
-        with module._TestCommandProgress(2, output_mode="normal") as progress:
+        with module._WorkflowCommandProgress(
+            2, output_mode="normal"
+        ) as progress:
             progress.describe("python3 -m unittest discover -v")
             progress.start_step("python3 -m unittest discover -v")
             progress.complete_step("python3 -m unittest discover -v")
@@ -963,17 +995,17 @@ def _unit_test_normal_mode_test_child_output_is_suppressed_and_logged() -> (
         repo_root = Path(tmpdir)
         context = run_logging.create_run_log_context(
             repo_root,
-            "test",
-            ["devcovenant", "test"],
+            "run",
+            ["devcovenant", "run"],
         )
-        previous_test_mode = module._TEST_COMMAND_OUTPUT_MODE
-        previous_test_label = module._TEST_COMMAND_LABEL
+        previous_test_mode = module._WORKFLOW_PHASE_COMMAND_OUTPUT_MODE
+        previous_test_label = module._WORKFLOW_PHASE_COMMAND_LABEL
         stdout_buffer = io.StringIO()
         stderr_buffer = io.StringIO()
         try:
             module.set_active_run_log_context(context)
-            module._TEST_COMMAND_OUTPUT_MODE = "normal"
-            module._TEST_COMMAND_LABEL = "pytest"
+            module._WORKFLOW_PHASE_COMMAND_OUTPUT_MODE = "normal"
+            module._WORKFLOW_PHASE_COMMAND_LABEL = "pytest"
             with (
                 redirect_stdout(stdout_buffer),
                 redirect_stderr(stderr_buffer),
@@ -996,8 +1028,8 @@ def _unit_test_normal_mode_test_child_output_is_suppressed_and_logged() -> (
                 status="success",
             )
         finally:
-            module._TEST_COMMAND_OUTPUT_MODE = previous_test_mode
-            module._TEST_COMMAND_LABEL = previous_test_label
+            module._WORKFLOW_PHASE_COMMAND_OUTPUT_MODE = previous_test_mode
+            module._WORKFLOW_PHASE_COMMAND_LABEL = previous_test_label
             module.clear_active_run_log_context()
 
         console_output = stdout_buffer.getvalue()
@@ -1010,10 +1042,8 @@ def _unit_test_normal_mode_test_child_output_is_suppressed_and_logged() -> (
         assert "normal stderr line" in stdout_log
 
 
-def _unit_test_build_test_run_summary_metadata_includes_counts_and_hints() -> (
-    None
-):
-    """Test summary metadata should include counts, duration, and hints."""
+def _unit_test_workflow_phase_summary_metadata_hints() -> None:
+    """Workflow-phase summary metadata should include counts and hints."""
     module = importlib.import_module(MODULE)
     started = module._dt.datetime(
         2026,
@@ -1038,11 +1068,12 @@ def _unit_test_build_test_run_summary_metadata_includes_counts_and_hints() -> (
             }
         )
     ]
-    payload = module._build_test_run_summary_metadata(
+    payload = module._build_workflow_phase_run_summary_metadata(
+        phase_id="tests",
         commands=[("pytest", ["pytest"])],
         events=events,
-        tests_output_mode="normal",
-        source_field="required_commands",
+        workflow_phase_output_mode="normal",
+        source_field="workflow_phases",
         started=started,
         finished=finished,
         first_failed_command="pytest",
@@ -1062,14 +1093,15 @@ def _unit_test_build_test_run_summary_metadata_includes_counts_and_hints() -> (
     assert len(payload["command_durations"]) == 1
     assert payload["command_durations"][0]["duration_seconds"] == 1.5
     assert payload["command_durations"][0]["command"] == "pytest"
+    assert payload["phase_id"] == "tests"
     assert payload["first_failed_command"] == "pytest"
     assert payload["failure_hint"]
     assert payload["normal_console_flood_suppressed"] is True
     assert payload["normal_console_streaming"] is False
 
 
-def _unit_test_test_profile_artifacts_are_written_for_active_run() -> None:
-    """Test runs should emit repeatable profiling artifacts in run logs."""
+def _unit_test_workflow_profile_artifacts_are_written_for_active_run() -> None:
+    """Workflow runs should emit repeatable profiling artifacts in run logs."""
     module = importlib.import_module(MODULE)
     logging_module = importlib.import_module(
         "devcovenant.core.runtime.run_logging"
@@ -1078,8 +1110,8 @@ def _unit_test_test_profile_artifacts_are_written_for_active_run() -> None:
         repo_root = Path(tmpdir)
         context = logging_module.create_run_log_context(
             repo_root=repo_root,
-            command_name="test",
-            argv=("devcovenant", "test"),
+            command_name="run",
+            argv=("devcovenant", "run"),
         )
         module.set_active_run_log_context(context)
         started = module._dt.datetime(
@@ -1120,7 +1152,8 @@ def _unit_test_test_profile_artifacts_are_written_for_active_run() -> None:
         ]
         try:
             payload, artifacts = (
-                module._build_and_write_test_profile_artifacts(
+                module._build_and_write_workflow_profile_artifacts(
+                    phase_id="tests",
                     commands=[
                         (
                             "python3 -m unittest discover -v",
@@ -1130,28 +1163,36 @@ def _unit_test_test_profile_artifacts_are_written_for_active_run() -> None:
                         ("ruff check .", ["ruff", "check", "."]),
                     ],
                     events=events,
-                    tests_output_mode="normal",
-                    source_field="required_commands",
+                    workflow_phase_output_mode="normal",
+                    source_field="workflow_phases",
                     started=started,
                     finished=finished,
                 )
             )
             assert payload["total_configured_commands"] == 3
             assert payload["recorded_events"] == 3
-            assert artifacts["test_profile_json"].endswith("test_profile.json")
-            assert artifacts["test_profile_txt"].endswith("test_profile.txt")
-            profile_json = (
-                context.require_paths().run_dir / "test_profile.json"
+            assert artifacts["workflow_profile_json"].endswith(
+                "workflow_profile.json"
             )
-            profile_txt = context.require_paths().run_dir / "test_profile.txt"
+            assert artifacts["workflow_profile_txt"].endswith(
+                "workflow_profile.txt"
+            )
+            profile_json = (
+                context.require_paths().run_dir / "workflow_profile.json"
+            )
+            profile_txt = (
+                context.require_paths().run_dir / "workflow_profile.txt"
+            )
             assert profile_json.exists()
             assert profile_txt.exists()
             loaded = module.json.loads(
                 profile_json.read_text(encoding="utf-8")
             )
             assert loaded["recorded_events"] == 3
+            assert loaded["phase_id"] == "tests"
             assert loaded["slowest_commands"][0]["raw_command"] == "pytest"
             rendered = profile_txt.read_text(encoding="utf-8")
+            assert "Workflow Phase Profile (informational)" in rendered
             assert "Group Breakdown:" in rendered
             assert "Slowest Commands:" in rendered
         finally:
@@ -1277,9 +1318,9 @@ class GeneratedUnittestCases(unittest.TestCase):
         """Run quiet-mode selector comment assertions in config template."""
         _unit_test_global_config_template_documents_quiet_mode()
 
-    def test_normal_mode_test_message_contract_is_stable(self):
-        """Run normal-mode test-message contract assertions."""
-        _unit_test_normal_mode_test_message_contract_is_stable()
+    def test_normal_mode_workflow_phase_message_contract_is_stable(self):
+        """Run normal-mode workflow-phase message contract assertions."""
+        _unit_test_normal_mode_workflow_phase_message_contract_is_stable()
 
     def test_ci_workflow_split_docs_are_consistent(self):
         """Run CI workflow ownership wording consistency assertions."""
@@ -1296,6 +1337,10 @@ class GeneratedUnittestCases(unittest.TestCase):
     def test_primary_docs_identify_their_normative_contracts(self):
         """Run normative-home linkage assertions."""
         _unit_test_primary_docs_identify_their_normative_contracts()
+
+    def test_custom_extension_docs_explain_baseline_first_activation(self):
+        """Run baseline-first custom-extension doc assertions."""
+        _unit_test_custom_extension_docs_explain_baseline_first_activation()
 
     def test_contract_index_freezes_documentation_writing_rules(self):
         """Run documentation-writing contract assertions."""
@@ -1357,13 +1402,13 @@ class GeneratedUnittestCases(unittest.TestCase):
         """Run normal-mode suppression and run-log capture assertions."""
         _unit_test_normal_mode_test_child_output_is_suppressed_and_logged()
 
-    def test_build_test_run_summary_metadata_includes_counts_and_hints(self):
-        """Run test-summary metadata shape and hint assertions."""
-        _unit_test_build_test_run_summary_metadata_includes_counts_and_hints()
+    def test_workflow_phase_summary_metadata_hints(self):
+        """Run workflow-phase summary metadata shape assertions."""
+        _unit_test_workflow_phase_summary_metadata_hints()
 
-    def test_test_profile_artifacts_are_written_for_active_run(self):
+    def test_workflow_profile_artifacts_are_written_for_active_run(self):
         """Run active-run profiling artifact generation assertions."""
-        _unit_test_test_profile_artifacts_are_written_for_active_run()
+        _unit_test_workflow_profile_artifacts_are_written_for_active_run()
 
     def test_clean_summary_artifacts_include_command_details(self):
         """Run clean-summary artifact detail assertions."""

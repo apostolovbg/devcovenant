@@ -22,6 +22,7 @@ REGISTRY_DIR = f"{DEV_COVENANT_DIR}/registry"
 RUNTIME_REGISTRY_DIR = f"{REGISTRY_DIR}/runtime"
 REGISTRY_FILENAME = "registry.yaml"
 GATE_STATUS_FILENAME = "gate_status.json"
+WORKFLOW_SESSION_FILENAME = "workflow_session.json"
 LATEST_RUNTIME_FILENAME = "latest.json"
 SESSION_SNAPSHOT_FILENAME = "session_snapshot.json"
 REGISTRY_REL_PATH = f"{REGISTRY_DIR}/{REGISTRY_FILENAME}"
@@ -70,6 +71,11 @@ def session_snapshot_path(repo_root: Path) -> Path:
 def gate_status_path(repo_root: Path) -> Path:
     """Return the gate status file path inside the runtime registry."""
     return runtime_registry_root(repo_root) / GATE_STATUS_FILENAME
+
+
+def workflow_session_path(repo_root: Path) -> Path:
+    """Return the workflow-session file path inside the runtime registry."""
+    return runtime_registry_root(repo_root) / WORKFLOW_SESSION_FILENAME
 
 
 @dataclass(frozen=True)
@@ -222,8 +228,9 @@ DEFAULT_CORE_FILES = [
     "devcovenant/cli.py",
     "devcovenant/check.py",
     "devcovenant/gate.py",
+    "devcovenant/run.py",
+    "devcovenant/phase.py",
     "devcovenant/policy.py",
-    "devcovenant/test.py",
     "devcovenant/install.py",
     "devcovenant/deploy.py",
     "devcovenant/upgrade.py",
@@ -250,6 +257,8 @@ DEFAULT_CORE_FILES = [
     "devcovenant/core/services/devcov_structure_guard.py",
     "devcovenant/core/services/devflow_run_gates.py",
     "devcovenant/core/services/policy_commands.py",
+    "devcovenant/core/services/workflow_contract.py",
+    "devcovenant/core/runtime/workflow_session.py",
 ]
 DEFAULT_DOCS_CORE = [
     "AGENTS.md",
@@ -274,6 +283,7 @@ DEFAULT_CUSTOM_FILES = [
 DEFAULT_GENERATED_FILES = [
     f"{RUNTIME_REGISTRY_DIR}/{GATE_STATUS_FILENAME}",
     f"{RUNTIME_REGISTRY_DIR}/{LATEST_RUNTIME_FILENAME}",
+    f"{RUNTIME_REGISTRY_DIR}/{WORKFLOW_SESSION_FILENAME}",
 ]
 DEFAULT_GENERATED_DIRS: List[str] = [RUNTIME_REGISTRY_DIR]
 
@@ -293,6 +303,7 @@ def _base_registry_document() -> Dict[str, Any]:
         "project-governance": {},
         "managed-docs": {},
         "core-invariants": {},
+        "workflow_contract": {},
         "policies": {},
         "profiles": {},
         "inventory": {},
@@ -323,6 +334,7 @@ def _load_registry_document(path: Path) -> Dict[str, Any]:
         "project-governance",
         "managed-docs",
         "core-invariants",
+        "workflow_contract",
         "policies",
         "profiles",
         "inventory",
@@ -556,6 +568,14 @@ class PolicyRegistry:
     ) -> None:
         """Update the tracked core-invariants registry section."""
         self._data["core-invariants"] = dict(payload)
+        self.save()
+
+    def update_workflow_contract(
+        self,
+        payload: Dict[str, Any],
+    ) -> None:
+        """Update the tracked workflow-contract registry section."""
+        self._data["workflow_contract"] = dict(payload)
         self.save()
 
     def policy_ids(self) -> set[str]:

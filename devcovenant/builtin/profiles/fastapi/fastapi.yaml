@@ -55,8 +55,20 @@ policy_overlays:
   modules-need-tests:
     include_suffixes:
       - .py
-core_invariant_overlays:
-  devflow-run-gates:
-    required_commands:
-      - python3 -m unittest discover -v
-      - pytest
+workflow_phases:
+  - id: tests
+    enabled: true
+    required: true
+    after: mid
+    before: end
+    order: 100
+    runner:
+      kind: command_group
+      commands:
+        - python3 -m unittest discover -v
+        - pytest
+    success_contract:
+      kind: all_commands_exit_zero
+    recording:
+      record_in_session: true
+      summary_label: Tests

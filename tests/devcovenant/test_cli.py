@@ -23,7 +23,8 @@ ROOT_COMMAND_MODULES = (
     "check",
     "clean",
     "gate",
-    "test",
+    "run",
+    "phase",
     "install",
     "deploy",
     "upgrade",
@@ -362,10 +363,10 @@ def _unit_test_cli_reports_non_executable_managed_python(
     assert managed_python in code
 
 
-def _unit_test_test_help_is_command_scoped() -> None:
-    """`test --help` should expose no extra lifecycle flags."""
+def _unit_test_run_help_is_command_scoped() -> None:
+    """`run --help` should expose no extra lifecycle flags."""
     result = subprocess.run(
-        [sys.executable, "-m", "devcovenant", "test", "--help"],
+        [sys.executable, "-m", "devcovenant", "run", "--help"],
         cwd=REPO_ROOT,
         check=False,
         capture_output=True,
@@ -948,9 +949,9 @@ class GeneratedUnittestCases(unittest.TestCase):
         finally:
             monkeypatch.undo()
 
-    def test_test_help_is_command_scoped(self):
-        """Run test_test_help_is_command_scoped."""
-        _unit_test_test_help_is_command_scoped()
+    def test_run_help_is_command_scoped(self):
+        """Run test_run_help_is_command_scoped."""
+        _unit_test_run_help_is_command_scoped()
 
     def test_check_help_shows_check_only_options(self):
         """Run test_check_help_shows_check_only_options."""

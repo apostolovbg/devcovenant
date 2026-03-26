@@ -48,27 +48,113 @@ jobs:
             --output-reproducible \
             --output-file artifacts/sbom/devcovenant-sbom.json
 
-      - name: Smoke install wheel
+      - name: Generate build provenance
+        env:
+          BUILD_RUN_ID: ${{ github.run_id }}
+          BUILD_RUN_ATTEMPT: ${{ github.run_attempt }}
+          BUILD_HEAD_SHA: ${{ github.event.workflow_run.head_sha }}
+          CHECKS_RUN_ID: ${{ github.event.workflow_run.id }}
+        run: |
+          mkdir -p artifacts/provenance
+          python - <<'PY'
+          import hashlib
+          import json
+          import os
+          from pathlib import Path
+
+          def sha256_for(path: Path) -> str:
+              digest = hashlib.sha256()
+              digest.update(path.read_bytes())
+              return digest.hexdigest()
+
+          dist_files = sorted(Path("dist").glob("*"))
+          payload = {
+              "workflow": "Build",
+              "build_run_id": os.environ["BUILD_RUN_ID"],
+              "build_run_attempt": os.environ["BUILD_RUN_ATTEMPT"],
+              "head_sha": os.environ["BUILD_HEAD_SHA"],
+              "checks_run_id": os.environ["CHECKS_RUN_ID"],
+              "distributions": [
+                  {
+                      "name": path.name,
+                      "sha256": sha256_for(path),
+                  }
+                  for path in dist_files
+              ],
+          }
+          Path("artifacts/provenance/build-provenance.json").write_text(
+              json.dumps(payload, indent=2) + "\n",
+              encoding="utf-8",
+          )
+          PY
+
+      - name: Prove wheel artifact lifecycle
         run: |
           set -euo pipefail
           WHEEL_PATH="$(find dist -maxdepth 1 -name '*.whl' -print -quit)"
           test -n "$WHEEL_PATH"
-          python -m venv .smoke-wheel
-          . .smoke-wheel/bin/activate
+          python -m venv .proof-wheel
+          . .proof-wheel/bin/activate
           python -m pip install --upgrade pip
           python -m pip install "$WHEEL_PATH"
-          python -m devcovenant --help > /dev/null
+          git init -q artifacts/wheel-proof
+          (
+            cd artifacts/wheel-proof
+            git config user.name ci
+            git config user.email ci@example.invalid
+            python -m devcovenant install
+            python - <<'PY'
+            from pathlib import Path
 
-      - name: Smoke install sdist
+            path = Path("devcovenant/config.yaml")
+            text = path.read_text(encoding="utf-8")
+            old = "config_reviewed: false"
+            if old not in text:
+                raise SystemExit(
+                    "config_reviewed flag not found in config.yaml"
+                )
+            path.write_text(
+                text.replace(old, "config_reviewed: true", 1),
+                encoding="utf-8",
+            )
+            PY
+            python -m devcovenant deploy
+            python -m devcovenant check
+          )
+
+      - name: Prove sdist artifact lifecycle
         run: |
           set -euo pipefail
           SDIST_PATH="$(find dist -maxdepth 1 -name '*.tar.gz' -print -quit)"
           test -n "$SDIST_PATH"
-          python -m venv .smoke-sdist
-          . .smoke-sdist/bin/activate
+          python -m venv .proof-sdist
+          . .proof-sdist/bin/activate
           python -m pip install --upgrade pip
           python -m pip install "$SDIST_PATH"
-          python -m devcovenant --help > /dev/null
+          git init -q artifacts/sdist-proof
+          (
+            cd artifacts/sdist-proof
+            git config user.name ci
+            git config user.email ci@example.invalid
+            python -m devcovenant install
+            python - <<'PY'
+            from pathlib import Path
+
+            path = Path("devcovenant/config.yaml")
+            text = path.read_text(encoding="utf-8")
+            old = "config_reviewed: false"
+            if old not in text:
+                raise SystemExit(
+                    "config_reviewed flag not found in config.yaml"
+                )
+            path.write_text(
+                text.replace(old, "config_reviewed: true", 1),
+                encoding="utf-8",
+            )
+            PY
+            python -m devcovenant deploy
+            python -m devcovenant check
+          )
 
       - name: Upload distributions
         uses: actions/upload-artifact@v4
@@ -81,3 +167,9 @@ jobs:
         with:
           name: devcovenant-sbom
           path: artifacts/sbom/*.json
+
+      - name: Upload build provenance
+        uses: actions/upload-artifact@v4
+        with:
+          name: devcovenant-provenance
+          path: artifacts/provenance/*.json

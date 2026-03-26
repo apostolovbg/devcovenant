@@ -536,10 +536,18 @@ def build_profile_registry(
         builtin_root=builtin_root,
         custom_root=custom_root,
     )
-    active = {name for name in _active_profile_names(active_profiles or [])}
+    active_names = _active_profile_names(active_profiles or [])
+    active = {name for name in active_names}
     for name, meta in registry.items():
         meta["active"] = name in active
-    return {"profiles": registry}
+    from devcovenant.core.services import workflow_contract as workflow_runtime
+
+    workflow_contract = workflow_runtime.build_workflow_contract(
+        repo_root,
+        registry,
+        active_names,
+    )
+    return {"profiles": registry, "workflow_contract": workflow_contract}
 
 
 def write_profile_registry(repo_root: Path, registry: Dict[str, Dict]) -> Path:
@@ -548,6 +556,10 @@ def write_profile_registry(repo_root: Path, registry: Dict[str, Dict]) -> Path:
     payload = registry_runtime._load_registry_document(path)
     profiles = registry.get("profiles")
     payload["profiles"] = dict(profiles) if isinstance(profiles, dict) else {}
+    workflow_contract = registry.get("workflow_contract")
+    payload["workflow_contract"] = (
+        dict(workflow_contract) if isinstance(workflow_contract, dict) else {}
+    )
     registry_runtime._write_registry_document(path, payload)
     return path
 

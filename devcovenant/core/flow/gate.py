@@ -8,9 +8,11 @@ import os
 import shlex
 import sys
 from pathlib import Path
+from typing import Mapping
 
 import devcovenant.core.runtime.execution as execution_runtime_module
 import devcovenant.core.services.registry as registry_runtime_module
+import devcovenant.core.services.workflow_contract as workflow_contract_module
 from devcovenant.core.flow.gate_changelog_helpers import (
     _entry_fingerprint,
     _latest_changelog_entry,
@@ -22,6 +24,9 @@ from devcovenant.core.flow.gate_status_helpers import (
 )
 from devcovenant.core.flow.gate_status_helpers import (
     _resolve_latest_relevant_run_pointer as _resolve_latest_pointer_impl,
+)
+from devcovenant.core.runtime import (
+    workflow_session as workflow_session_runtime_module,
 )
 
 runtime_print = execution_runtime_module.runtime_print
@@ -215,6 +220,167 @@ def _is_test_relevant_path(path: str) -> bool:
     return leaf not in _TEST_IRRELEVANT_FILES
 
 
+def _phase_rerun_command(phase_id: str) -> str:
+    """Return the canonical rerun command for one workflow phase."""
+    token = str(phase_id or "").strip().lower()
+    return f"devcovenant phase run {token}"
+
+
+def _format_phase_rerun_instructions(
+    phase_ids: list[str],
+    *,
+    required_phase_ids: list[str] | None = None,
+) -> str:
+    """Render one operator-facing rerun instruction chain."""
+    phase_tokens = [
+        str(phase_id or "").strip().lower()
+        for phase_id in phase_ids
+        if str(phase_id or "").strip()
+    ]
+    required_tokens = [
+        str(phase_id or "").strip().lower()
+        for phase_id in (required_phase_ids or [])
+        if str(phase_id or "").strip()
+    ]
+    if phase_tokens and required_tokens and phase_tokens == required_tokens:
+        return "`devcovenant run`"
+    commands = [_phase_rerun_command(phase_id) for phase_id in phase_tokens]
+    if not commands:
+        return ""
+    if len(commands) == 1:
+        return f"`{commands[0]}`"
+    return ", then ".join(f"`{command}`" for command in commands)
+
+
+def _stale_required_phase_ids(
+    repo_root: Path,
+    contract: Mapping[str, object],
+    workflow_payload: Mapping[str, object],
+    current_snapshot: Mapping[str, str],
+    *,
+    session_id: str,
+) -> list[str]:
+    """Return required phases whose latest evidence is missing or stale."""
+    phases_raw = workflow_payload.get("phases")
+    phase_map = dict(phases_raw) if isinstance(phases_raw, dict) else {}
+    stale: list[str] = []
+    for phase_id in workflow_contract_module.required_phase_ids(contract):
+        phase = workflow_contract_module.resolve_phase(contract, phase_id)
+        if phase is None:
+            stale.append(phase_id)
+            continue
+        entry = phase_map.get(phase_id)
+        if not isinstance(entry, dict):
+            stale.append(phase_id)
+            continue
+        if session_id:
+            last_run_session_id = str(
+                entry.get("last_run_session_id", "")
+            ).strip()
+            if last_run_session_id != session_id:
+                stale.append(phase_id)
+                continue
+        try:
+            phase_snapshot = (
+                workflow_session_runtime_module.resolve_phase_snapshot(
+                    repo_root,
+                    workflow_payload,
+                    phase_id,
+                )
+            )
+        except ValueError:
+            stale.append(phase_id)
+            continue
+        if not phase_snapshot:
+            stale.append(phase_id)
+            continue
+        changed_paths = _changed_paths_between(
+            phase_snapshot, current_snapshot
+        )
+        if workflow_contract_module.phase_relevant_paths_changed(
+            phase,
+            sorted(changed_paths),
+        ):
+            stale.append(phase_id)
+    return stale
+
+
+def _record_workflow_anchor(
+    repo_root: Path,
+    *,
+    contract: Mapping[str, object],
+    phase: str,
+    command: str,
+    notes: str,
+    when: _dt.datetime,
+    session_id: str,
+    session_state: str,
+    reset_phases: bool = False,
+    session_snapshot_file: str = "",
+    session_snapshot_updated_utc: str = "",
+    session_snapshot_updated_epoch: float = 0.0,
+) -> None:
+    """Persist workflow-session anchor state for one gate phase."""
+    try:
+        workflow_payload = (
+            workflow_session_runtime_module.load_workflow_session(repo_root)
+        )
+    except ValueError:
+        workflow_payload = {
+            "schema_version": workflow_session_runtime_module.SCHEMA_VERSION,
+            "session_id": "",
+            "session_state": "",
+            "anchors": {},
+            "phases": {},
+            "required_phase_ids": [],
+        }
+    anchors_raw = workflow_payload.get("anchors")
+    anchors = dict(anchors_raw) if isinstance(anchors_raw, dict) else {}
+    anchor_entry = dict(anchors.get(phase) or {})
+    anchor_entry.update(
+        {
+            "id": phase,
+            "status": "passed",
+            "last_run": when.isoformat(),
+            "last_run_utc": when.isoformat(),
+            "last_run_epoch": when.timestamp(),
+            "command": command.strip(),
+            "command_name": f"gate --{phase}",
+            "notes": notes.strip(),
+        }
+    )
+    anchors[phase] = anchor_entry
+    workflow_payload["schema_version"] = (
+        workflow_session_runtime_module.SCHEMA_VERSION
+    )
+    workflow_payload["workflow_contract_schema_version"] = contract.get(
+        "schema_version",
+        workflow_contract_module.SCHEMA_VERSION,
+    )
+    workflow_payload["required_phase_ids"] = (
+        workflow_contract_module.required_phase_ids(contract)
+    )
+    workflow_payload["session_id"] = session_id
+    workflow_payload["session_state"] = session_state
+    workflow_payload["anchors"] = anchors
+    if reset_phases:
+        workflow_payload["phases"] = {}
+    if session_snapshot_file:
+        workflow_payload["session_snapshot_file"] = session_snapshot_file
+    if session_snapshot_updated_utc:
+        workflow_payload["session_snapshot_updated_utc"] = (
+            session_snapshot_updated_utc
+        )
+    if session_snapshot_updated_epoch > 0.0:
+        workflow_payload["session_snapshot_updated_epoch"] = (
+            session_snapshot_updated_epoch
+        )
+    workflow_session_runtime_module.write_workflow_session(
+        repo_root,
+        workflow_payload,
+    )
+
+
 def _current_numstat_snapshot(repo_root: Path) -> dict[str, str]:
     """Return deterministic filesystem-hash snapshot rows keyed by path."""
     return execution_runtime_module.capture_current_numstat_snapshot(repo_root)
@@ -263,8 +429,8 @@ def run_pre_commit_gate(
             return 1
 
     start_ts = _utc_now() if is_start else None
-    force_tests = False
-    recovery_force_tests = False
+    required_phase_ids_pending: list[str] = []
+    recovery_required_phase_ids: list[str] = []
     recovery_status_active = False
     recovery_status_previous: bytes | None = None
     managed_env_stage = "command" if is_mid else phase
@@ -284,6 +450,13 @@ def run_pre_commit_gate(
             managed_python,
         )
     )
+    try:
+        workflow_contract = workflow_contract_module.load_workflow_contract(
+            repo_root
+        )
+    except ValueError as error:
+        runtime_print(str(error), file=sys.stderr)
+        return 1
 
     while True:
         env = dict(managed_env or os.environ)
@@ -305,51 +478,31 @@ def run_pre_commit_gate(
             runtime_print(str(error), file=sys.stderr)
             return 1
         if is_end:
-            force_tests = False
             session_id = str(pre_payload.get("session_id", "")).strip()
-            last_run_session_id = str(
-                pre_payload.get("last_run_session_id", "")
-            ).strip()
-            if not last_run_session_id or last_run_session_id != session_id:
-                force_tests = True
             try:
-                pre_snapshot_payload = load_session_snapshot_payload(
-                    repo_root,
-                    pre_payload,
+                workflow_payload = (
+                    workflow_session_runtime_module.load_workflow_session(
+                        repo_root
+                    )
                 )
             except ValueError as error:
                 runtime_print(str(error), file=sys.stderr)
                 return 1
-            raw_last_snapshot = pre_snapshot_payload.get("last_run_snapshot")
-            if not force_tests:
-                if not isinstance(raw_last_snapshot, dict):
-                    force_tests = True
-                else:
-                    try:
-                        last_run_snapshot = (
-                            execution_runtime_module.normalize_snapshot_rows(
-                                raw_last_snapshot,
-                                field_name="last_run_snapshot",
-                            )
-                        )
-                    except ValueError as error:
-                        runtime_print(str(error), file=sys.stderr)
-                        return 1
-                    changed_since_tests = _changed_paths_between(
-                        last_run_snapshot,
-                        diff_before,
-                    )
-                    if any(
-                        _is_test_relevant_path(path)
-                        for path in changed_since_tests
-                    ):
-                        force_tests = True
+            required_phase_ids_pending = _stale_required_phase_ids(
+                repo_root,
+                workflow_contract,
+                workflow_payload,
+                diff_before,
+                session_id=session_id,
+            )
         if is_start:
             status_exists = status_path.exists()
             status_payload: dict[str, object] = {}
             status_parse_error = ""
             status_snapshot_payload: dict[str, object] = {}
             status_snapshot_error = ""
+            workflow_payload: dict[str, object] = {}
+            workflow_status_error = ""
             if status_exists:
                 try:
                     recovery_status_previous = status_path.read_bytes()
@@ -370,13 +523,20 @@ def run_pre_commit_gate(
                         )
                     except ValueError as error:
                         status_snapshot_error = str(error)
+            try:
+                workflow_payload = (
+                    workflow_session_runtime_module.load_workflow_session(
+                        repo_root
+                    )
+                )
+            except ValueError as error:
+                workflow_status_error = str(error)
 
             session_state = (
                 str(status_payload.get("session_state", "")).strip().lower()
             )
             recovery_reason = ""
             recovery_baseline_snapshot: dict[str, str] | None = None
-            recovery_force_tests = False
             if status_parse_error:
                 recovery_reason = (
                     "Gate status is malformed; opening a recovery session "
@@ -432,29 +592,25 @@ def run_pre_commit_gate(
                             "`devcovenant gate --end`; opening a recovery "
                             "session that includes those unsessioned edits."
                         )
-                        raw_last_snapshot = status_snapshot_payload.get(
-                            "last_run_snapshot"
-                        )
-                        if not isinstance(raw_last_snapshot, dict):
-                            recovery_force_tests = True
-                        else:
-                            try:
-                                last_run_snapshot = normalize_snapshot_rows(
-                                    raw_last_snapshot,
-                                    field_name="last_run_snapshot",
+                        recovery_session_id = str(
+                            status_payload.get("session_id", "")
+                        ).strip()
+                        if workflow_status_error:
+                            recovery_required_phase_ids = list(
+                                workflow_contract_module.required_phase_ids(
+                                    workflow_contract
                                 )
-                            except ValueError as error:
-                                runtime_print(str(error), file=sys.stderr)
-                                return 1
-                            changed_since_tests = _changed_paths_between(
-                                last_run_snapshot,
-                                diff_before,
                             )
-                            if any(
-                                _is_test_relevant_path(path)
-                                for path in changed_since_tests
-                            ):
-                                recovery_force_tests = True
+                        else:
+                            recovery_required_phase_ids = (
+                                _stale_required_phase_ids(
+                                    repo_root,
+                                    workflow_contract,
+                                    workflow_payload,
+                                    diff_before,
+                                    session_id=recovery_session_id,
+                                )
+                            )
             elif status_exists:
                 recovery_reason = (
                     "Gate status is missing session metadata; opening a "
@@ -574,19 +730,28 @@ def run_pre_commit_gate(
         if (
             phase == "start"
             and recovery_status_active
-            and recovery_force_tests
+            and recovery_required_phase_ids
         ):
             _restore_status_file(status_path, recovery_status_previous)
             recovery_status_active = False
+            recovery_rerun = _format_phase_rerun_instructions(
+                recovery_required_phase_ids,
+                required_phase_ids=workflow_contract_module.required_phase_ids(
+                    workflow_contract
+                ),
+            )
             runtime_print(
-                "Recovery start detected unsessioned edits and requires an "
-                "explicit `devcovenant test` run before recording a new "
+                "Recovery start detected unsessioned edits and requires "
+                "fresh required workflow phases before recording a new "
                 "baseline.",
                 file=sys.stderr,
             )
             runtime_print(
-                "Run `devcovenant test`, then rerun `devcovenant gate "
-                "--start`. Start gate performs no internal test runs.",
+                "Run "
+                f"{recovery_rerun},"
+                " "
+                "then rerun `devcovenant gate --start`. Start gate performs "
+                "no internal workflow-phase runs.",
                 file=sys.stderr,
             )
             return 1
@@ -621,7 +786,7 @@ def run_pre_commit_gate(
             runtime_print(
                 "Mid gate found blocking non-autofixed DevCovenant "
                 "violations. Fix violations and rerun `devcovenant gate "
-                "--mid` before tests.",
+                "--mid` before `devcovenant run`.",
                 file=sys.stderr,
             )
             return exit_code
@@ -634,7 +799,7 @@ def run_pre_commit_gate(
             runtime_print(
                 "Mid gate detected hook-induced file changes. "
                 "Rerun `devcovenant gate --mid` until hooks converge, then "
-                "run `devcovenant test`.",
+                "run `devcovenant run`.",
                 file=sys.stderr,
             )
             return 1
@@ -647,23 +812,31 @@ def run_pre_commit_gate(
             )
             runtime_print(
                 "Mid gate failed. Clear pre-commit violations and rerun "
-                "`devcovenant gate --mid` before tests.",
+                "`devcovenant gate --mid` before `devcovenant run`.",
                 file=sys.stderr,
             )
             return exit_code
         if is_end and exit_code == 0 and hooks_changed:
             runtime_print(
                 "End gate detected hook-induced file changes. "
-                "Run `devcovenant test`, then rerun "
+                "Run `devcovenant run`, then rerun "
                 "`devcovenant gate --end`.",
                 file=sys.stderr,
             )
             return 1
-        if is_end and exit_code == 0 and force_tests:
+        if is_end and exit_code == 0 and required_phase_ids_pending:
+            rerun_required_phases = _format_phase_rerun_instructions(
+                required_phase_ids_pending,
+                required_phase_ids=workflow_contract_module.required_phase_ids(
+                    workflow_contract
+                ),
+            )
             runtime_print(
-                "End gate requires a fresh explicit test run before closure. "
-                "Run `devcovenant test`, then rerun "
-                "`devcovenant gate --end`.",
+                "End gate requires fresh required workflow phases before "
+                "closure. Run "
+                f"{rerun_required_phases},"
+                " "
+                "then rerun `devcovenant gate --end`.",
                 file=sys.stderr,
             )
             return 1
@@ -678,6 +851,16 @@ def run_pre_commit_gate(
         break
 
     if is_mid:
+        _record_workflow_anchor(
+            repo_root,
+            contract=workflow_contract,
+            phase="mid",
+            command=command,
+            notes=notes,
+            when=_utc_now(),
+            session_id=session_id,
+            session_state="open",
+        )
         runtime_print(
             "Completed mid gate pre-commit sweep without changing gate "
             "session lifecycle state."
@@ -824,5 +1007,23 @@ def run_pre_commit_gate(
     runtime_print(
         f"Recorded {prefix} at {payload[f'{prefix}_utc']} "
         f"for command `{payload[f'{prefix}_command']}`."
+    )
+    _record_workflow_anchor(
+        repo_root,
+        contract=workflow_contract,
+        phase=phase,
+        command=command,
+        notes=notes,
+        when=start_ts if start_ts is not None else now,
+        session_id=str(payload.get("session_id", "")).strip(),
+        session_state=str(payload.get("session_state", "")).strip().lower(),
+        reset_phases=is_start,
+        session_snapshot_file=str(payload.get("session_snapshot_file", "")),
+        session_snapshot_updated_utc=str(
+            payload.get("session_snapshot_updated_utc", "")
+        ),
+        session_snapshot_updated_epoch=float(
+            payload.get("session_snapshot_updated_epoch") or 0.0
+        ),
     )
     return 0

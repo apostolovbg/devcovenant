@@ -1,5 +1,5 @@
 # Workflow
-**Last Updated:** 2026-03-25
+**Last Updated:** 2026-03-26
 **Project Version:** 1.0.0
 
 ## Overview
@@ -16,7 +16,7 @@ The normal DevCovenant work slice is:
 devcovenant gate --start
 # edit files and clear complaints while working
 devcovenant gate --mid
-devcovenant test
+devcovenant run
 devcovenant gate --end
 ```
 
@@ -42,26 +42,36 @@ It runs the start pre-commit pass and records the baseline the later checks use
 for change-scoped behavior.
 
 ### gate --mid
-Required pre-test preflight.
+Required pre-run preflight.
 It is where hook mutations and DevCovenant autofixes must surface before test
 results are recorded.
 
 ### test
-Runs the configured test command chain and records evidence for it.
-In this repo that is the two-run `unittest` plus `pytest` sequence.
+Runs the declared `tests` workflow phase and records evidence for it.
+`devcovenant run` is the built-in convenience command for
+`devcovenant phase run tests`.
+In this repo that phase is the two-run `unittest` plus `pytest` sequence.
+
+### phase run <id>
+Runs one declared workflow phase and records its result in the active
+workflow session.
+Use it when `gate --start` or `gate --end` tells you a required phase is
+stale and needs an explicit rerun.
 
 ### gate --end
 Runs the closing pre-commit pass and records closure state.
+It only closes the session after every required declared phase for the current
+session has fresh passing evidence.
 
 ## Why gate --mid Exists
-`gate --mid` is what keeps test evidence honest.
+`gate --mid` is what keeps workflow-phase evidence honest.
 Without it, a pre-commit hook or DevCovenant autofix could change files after
-the last meaningful pre-test check and before the recorded test results.
+the last meaningful pre-run check and before the recorded phase results.
 
-That is why the practical rule is: run `gate --mid` before tests.
+That is why the practical rule is: run `gate --mid` before `devcovenant run`.
 Think of the sequence as `gate --start -> gate --mid loop (rerun until clean)`
-before `test` and `gate --end`. If `gate --mid` changes files or reports
-blocking problems, clear them and run it again before tests.
+before `run` and `gate --end`. If `gate --mid` changes files or reports
+blocking problems, clear them and run it again before `devcovenant run`.
 
 ## Standard Sequence
 Use this exact order for ordinary repository work:
@@ -70,7 +80,7 @@ Use this exact order for ordinary repository work:
 2. make the change
 3. `devcovenant gate --mid`
 4. rerun `gate --mid` if it changed files or reported blocking complaints
-5. `devcovenant test`
+5. `devcovenant run`
 6. `devcovenant gate --end`
 
 If the console script is unavailable, use `python3 -m devcovenant ...`.
@@ -109,6 +119,9 @@ of nested cache paths.
 ### Start gate failed
 Clear the reported problem first.
 Do not treat a failed start gate as a usable baseline.
+If start reports stale required workflow phases from the previous closed
+session, run the requested phase commands first and then rerun
+`devcovenant gate --start`.
 
 ### Mid gate changed files
 Run `gate --mid` again until it stops introducing new blocking state.
@@ -117,6 +130,8 @@ Then run `test`.
 ### End gate reported new changes
 Inspect the latest run logs, clear the problem, rerun `test` if required, and
 rerun `gate --end`.
+If end reports stale required workflow phases, rerun the listed
+`devcovenant phase run <id>` commands first.
 
 ### Managed environment error
 If the resolved managed interpreter path exists but is not executable,
@@ -130,6 +145,23 @@ Fix the path or permissions and rerun the appropriate command.
 In `normal` test mode, DevCovenant keeps console progress concise and leaves
 full child output in the run logs.
 That is why the log artifacts matter.
+
+## Workflow Session Surfaces
+DevCovenant now splits workflow evidence between two runtime files:
+
+- `devcovenant/registry/runtime/gate_status.json`
+- `devcovenant/registry/runtime/workflow_session.json`
+
+`gate_status.json` stays the short lifecycle ledger for gate phases and the
+pre-commit evidence they require.
+`workflow_session.json` records the required declared workflow phases for the
+active session, their pass/fail status, their last-session binding, and the
+runtime snapshots used to decide whether a phase is still fresh.
+
+The tracked counterpart to that runtime state is
+`workflow_contract` in `devcovenant/registry/registry.yaml`.
+That tracked section records the reserved anchors, the declared phases coming
+from active profiles, and the required phase ids the engine must enforce.
 
 ## CI Mapping
 The generated CI workflow lives at
@@ -155,9 +187,12 @@ at most one dependent verification job.
 In this repository, the active repo-specific profile extends the main
 `ci-and-test` job with `pip-audit` and Bandit steps, then adds one dependent
 `build-and-install-test` job.
-That second job builds artifacts, runs `twine check`, installs the built CLI
-with `pipx`, and proves the documented machine-install path without pushing
-Python-package assumptions back into the generic global CI base.
+That second job builds artifacts, runs `twine check`, proves that both the
+built wheel and the built sdist can complete
+`install -> config review -> deploy -> check`, then proves the documented
+`pipx` machine-install path with the same activation flow.
+That keeps Python-package proof in the repo-specific layer without pushing it
+back into the generic global CI base.
 When an upstream scanner advisory has no published fix release yet, a narrow
 reviewed exception may also live in that repo-specific CI layer.
 Keep that exception explicit, documented, and easy to delete once upstream
@@ -167,6 +202,13 @@ This repository also keeps `build.yml` and `publish.yml` as repo-maintained
 release workflows.
 They consume the result of `Checks`, but they are not part of the
 generated CI-and-test workflow itself.
+The `build.yml` workflow follows the same truthfulness rule:
+it should prove the real artifact lifecycle from the built wheel and sdist,
+not just that the CLI can print help.
+The `publish.yml` workflow follows the provenance side of that same rule:
+it should accept a specific successful `Build` run, download the validated
+artifact and provenance from that run, verify them, and publish without
+rebuilding a fresh dist inside publish.
 
 ## Managed Environment In CI
 CI should bootstrap DevCovenant with a normal Python launcher and then let the

@@ -1,5 +1,5 @@
 # Installation and Lifecycle
-**Last Updated:** 2026-03-24
+**Last Updated:** 2026-03-26
 **Project Version:** 1.0.0
 
 ## Overview
@@ -135,6 +135,10 @@ This repository keeps `.github/workflows/build.yml` and
 `.github/workflows/publish.yml` as repository-maintained workflows instead of
 refresh-generated output, so package and release behavior stay explicit and
 reviewable.
+That release boundary now includes artifact provenance explicitly:
+`build.yml` produces the validated dist artifacts and provenance record, and
+`publish.yml` should only publish that exact validated Build artifact instead
+of rebuilding inside publish.
 ### install
 Copies the runtime, seeds config, and prepares tracked state.
 It does not activate managed docs or generated governance files.
@@ -147,6 +151,13 @@ Runs the full refresh path and writes the active managed outputs.
 ### refresh
 Rebuilds tracked registry state, managed docs, generated config sections,
 generated workflow files, `.gitignore`, and related governed artifacts.
+
+### phase run <id>
+Runs one declared workflow phase explicitly.
+Use it when a gate command tells you that a required phase is stale and must
+be rerun before a new start baseline or before end-gate closure.
+`devcovenant run` remains the convenience command for the declared
+`tests` phase.
 
 ### clean
 Removes disposable build, cache, runtime-registry, or log artifacts according
@@ -170,6 +181,9 @@ assets that DevCovenant needs at install time:
 
 - the built-in profile descriptors, translators, and asset templates under
   `devcovenant/builtin/profiles`
+
+- the core invariant descriptors under
+  `devcovenant/core/contracts/invariants`
 
 - the packaged docs under `devcovenant/docs`
 
@@ -235,13 +249,24 @@ Use this as the practical first integration flow:
    ```bash
    devcovenant gate --start
    devcovenant gate --mid
-   devcovenant test
+   devcovenant run
    devcovenant gate --end
    ```
 
 That first full cycle matters.
 It is the proof that the repository can actually operate under the reviewed
 contract.
+For a normal repository, that proof should come before adding any
+repo-specific custom policies or profiles under `devcovenant/custom/`.
+Reach the first reviewed baseline first.
+Then add custom extensions deliberately on top of an already-working normal
+activation.
+Separately, this repository's artifact automation now proves the earlier
+activation boundary directly from the built wheel, the built sdist, and the
+documented `pipx` machine-install path:
+`install`, config review, `deploy`, then a read-only `check`.
+That keeps release proof honest at the package boundary while leaving the full
+gate cycle as the practical proof for governed repository work.
 
 ## Normal Operating Routine
 After the first activation, the usual flow is simpler:
@@ -264,6 +289,13 @@ keep.
 
 When `developer_mode: false`, deploy cleanup removes repo-only DevCovenant
 development paths that do not belong in normal repos.
+That is why the baseline-first rule matters:
+if a normal repo seeds repo-specific custom policy/profile paths before its
+first reviewed activation, deploy cleanup can legitimately prune those
+dev-only-looking paths before the repository has established its intended
+custom shape.
+The intended lifecycle is:
+review baseline first, then add repo-specific custom extensions.
 
 ## Managed Environment Notes
 When the managed-environment policy is enabled, later CLI runs can rerun inside

@@ -117,28 +117,31 @@ workflow_block: |-
      entrypoint.
   11. Preferred behavior: clear all DevCovenant complaints before continuing,
      unless the human explicitly requests otherwise.
-  12. Run `devcovenant gate --mid` before tests to surface hook-induced
-     mutations and blocking DevCovenant complaints early. `gate --mid`
+  12. Run `devcovenant gate --mid` before `devcovenant run` to surface
+     hook-induced mutations and blocking DevCovenant complaints early.
+     `gate --mid`
      requires an open session, does not record lifecycle state, and may
      need an explicit rerun until hooks converge.
-  13. Run `devcovenant test`. For long runs, report status/phase updates
+  13. Run `devcovenant run`. For long runs, report status/phase updates
      and final result, and prefer run-artifact summaries/tails before
      escalating to verbose streaming. Long silent waits in normal mode
      should surface `Please wait. In progress...`.
   14. Run `devcovenant gate --end`. Use the same artifact-first output
-     discipline as test runs. Gate commands do not run tests internally.
+     discipline as workflow runs. Gate commands do not run required
+     workflow phases internally.
   15. If end-gate hooks or checks produce additional changes or violations,
      use `devcovenant gate --status` for lifecycle inspection and inspect
      the latest run artifacts before rerunning required commands until the
-     repository is clean. When gates require tests, run `devcovenant test`
-     explicitly and rerun the gate command.
+     repository is clean. When gates require workflow phases, run
+     `devcovenant run` or the requested `devcovenant phase run <id>`
+     commands explicitly and rerun the gate command.
   16. Stage all changes after each completed work slice.
 
   Audits are not a separate workflow mode. The same gate discipline applies.
   Use `check` as the default read-only audit command. Gate commands own
   refresh/autofix orchestration; lifecycle state writes are limited to
   `gate --start` / `gate --end`; `gate --mid` is non-lifecycle.
-  Gate commands never run tests internally.
+  Gate commands never run required workflow phases internally.
   When DevCovenant run artifacts are available, inspect `summary.txt`,
   then `tail.txt` (if present), then full logs before using ad-hoc
   redirects or verbose streaming. Normal-mode live streaming can be
@@ -151,9 +154,9 @@ workflow_block: |-
 
   ## Managed Environment
   If a managed environment is configured, run DevCovenant from that
-  environment and run all tests there as well.
-  Start required services before the test gate so runtime checks execute
-  against the active stack.
+  environment and run all required workflow phases there as well.
+  Start required services before `devcovenant run` so runtime checks
+  execute against the active stack.
 
   ## Command Form
   Primary command examples use on-PATH `devcovenant ...`.

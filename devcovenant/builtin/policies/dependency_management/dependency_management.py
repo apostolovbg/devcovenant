@@ -725,6 +725,109 @@ def _ensure_licenses_readme(
     return readme_path
 
 
+def _licenses_dir_is_in_sync(
+    *,
+    repo_root: Path,
+    licenses_dir_path: Path,
+    licenses_dir: str,
+    third_party_file: str,
+    inventory: list[dict[str, str]],
+    existing_inventory_paths: set[str],
+) -> bool:
+    """Return True when generated license artifacts already match runtime."""
+    desired_inventory_paths = {
+        _normalized_rel(str(Path(licenses_dir) / entry["relative_path"]))
+        for entry in inventory
+    }
+    for entry in inventory:
+        package_name = str(entry["package_name"])
+        version = str(entry["version"])
+        target_path = licenses_dir_path / str(entry["relative_path"])
+        if not target_path.exists():
+            return False
+        dist = _find_distribution(package_name)
+        sources = _distribution_license_sources(dist)
+        rendered = _render_dependency_license_text(
+            package_name=package_name,
+            version=version,
+            sources=sources,
+        )
+        if target_path.read_text(encoding="utf-8") != rendered:
+            return False
+
+    stale_inventory_paths = sorted(
+        existing_inventory_paths - desired_inventory_paths
+    )
+    for relative_path in stale_inventory_paths:
+        stale_path = repo_root / relative_path
+        if stale_path.exists() and stale_path.is_file():
+            return False
+
+    readme_path = licenses_dir_path / LICENSES_README_NAME
+    desired_readme = _render_licenses_readme(third_party_file)
+    if not readme_path.exists():
+        return False
+    return readme_path.read_text(encoding="utf-8") == desired_readme
+
+
+def _license_artifacts_need_refresh(
+    *,
+    repo_root: Path,
+    changed_dependency_files: Iterable[str],
+    third_party_file: str,
+    licenses_dir: str,
+    report_heading: str,
+) -> tuple[bool, bool]:
+    """Return whether the report or licenses directory is out of sync."""
+    third_party_path, licenses_dir_path = _resolve_artifact_targets(
+        repo_root=repo_root,
+        third_party_file=third_party_file,
+        licenses_dir=licenses_dir,
+    )
+    third_party_rel = third_party_path.relative_to(
+        repo_root.resolve()
+    ).as_posix()
+    if third_party_path.exists():
+        existing = third_party_path.read_text(encoding="utf-8")
+    else:
+        existing = "# Third-Party Licenses\n"
+
+    inventory = _build_dependency_inventory(
+        repo_root,
+        licenses_dir_path=licenses_dir_path,
+    )
+    updated_report = existing
+    if _normalize_report_entries(changed_dependency_files):
+        report_section = _render_report_section(
+            report_heading, changed_dependency_files
+        )
+        updated_report = _replace_report_section(
+            updated_report,
+            heading=report_heading,
+            replacement=report_section,
+        )
+    existing_inventory_paths = _inventory_paths_from_report(updated_report)
+    inventory_section = _render_inventory_section(
+        licenses_dir=licenses_dir,
+        inventory=inventory,
+    )
+    updated_report = _replace_report_section(
+        updated_report,
+        heading=LICENSE_INVENTORY_HEADING,
+        replacement=inventory_section,
+    )
+    report_needs_refresh = updated_report != existing
+    licenses_dir_needs_refresh = not _licenses_dir_is_in_sync(
+        repo_root=repo_root,
+        licenses_dir_path=licenses_dir_path,
+        licenses_dir=licenses_dir,
+        third_party_file=third_party_rel,
+        inventory=inventory,
+        existing_inventory_paths=existing_inventory_paths,
+    )
+    return report_needs_refresh, licenses_dir_needs_refresh
+
+
 def refresh_license_artifacts(
     repo_root: Path,
     *,
@@ -927,8 +1030,21 @@ class DependencyManagementCheck(PolicyCheck):
             "licenses_dir": licenses_rel_text,
             "report_heading": report_heading,
         }
+        (
+            report_needs_refresh,
+            licenses_dir_needs_refresh,
+        ) = _license_artifacts_need_refresh(
+            repo_root=context.repo_root,
+            changed_dependency_files=sorted(changed_dependency_files),
+            third_party_file=third_party_rel_text,
+            licenses_dir=licenses_rel_text,
+            report_heading=report_heading,
+        )
 
-        if third_party_rel_text not in changed_rel_paths:
+        if (
+            third_party_rel_text not in changed_rel_paths
+            and report_needs_refresh
+        ):
             violations.append(
                 Violation(
                     policy_id=self.policy_id,
@@ -952,7 +1068,7 @@ class DependencyManagementCheck(PolicyCheck):
             for rel in changed_rel_paths
         )
 
-        if not license_dir_touched:
+        if not license_dir_touched and licenses_dir_needs_refresh:
             violations.append(
                 Violation(
                     policy_id=self.policy_id,

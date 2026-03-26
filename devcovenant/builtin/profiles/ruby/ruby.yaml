@@ -48,7 +48,19 @@ policy_overlays:
     include_suffixes:
       - .rb
       - .rake
-core_invariant_overlays:
-  devflow-run-gates:
-    required_commands:
-      - bundle exec rake test
+workflow_phases:
+  - id: tests
+    enabled: true
+    required: true
+    after: mid
+    before: end
+    order: 100
+    runner:
+      kind: command_group
+      commands:
+        - bundle exec rake test
+    success_contract:
+      kind: all_commands_exit_zero
+    recording:
+      record_in_session: true
+      summary_label: Tests

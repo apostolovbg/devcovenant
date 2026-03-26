@@ -1,5 +1,5 @@
 # Builtin Profiles
-**Last Updated:** 2026-03-23
+**Last Updated:** 2026-03-26
 **Project Version:** 1.0.0
 
 ## Table of Contents
@@ -28,8 +28,9 @@ Profiles may provide:
 - pre-commit hook fragments
 - translator declarations (language profiles only)
 
-Any active profile category may contribute policy overlays such as
-`devflow-run-gates.required_commands`.
+Any active profile category may contribute metadata overlays, and language or
+stack profiles may declare required workflow phases through
+`workflow_phases`.
 
 ## Manifest Schema
 Each profile directory contains `<name>.yaml` manifest.
@@ -82,5 +83,5 @@ overlays/overrides.
 2. Run `devcovenant refresh`.
 3. Run `devcovenant gate --start`.
 4. Run `devcovenant gate --mid` until clean.
-5. Verify with `devcovenant test`.
+5. Verify with `devcovenant run`.
 6. Finalize with `devcovenant gate --end`.

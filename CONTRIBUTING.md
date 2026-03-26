@@ -2,7 +2,7 @@
 **Doc ID:** CONTRIBUTING
 **Doc Type:** contributing-guide
 **Project Version:** 1.0.0
-**Last Updated:** 2026-03-25
+**Last Updated:** 2026-03-26
 **DevCovenant Version:** 1.0.0
 
 <!-- DEVCOV:BEGIN -->
@@ -40,7 +40,7 @@ code-only and documentation-only edits:
 ```bash
 python3 -m devcovenant gate --start
 python3 -m devcovenant gate --mid
-python3 -m devcovenant test
+python3 -m devcovenant run
 python3 -m devcovenant gate --end
 ```
 

@@ -29,6 +29,23 @@ assets:
     template: .python-version
   - path: pyproject.toml
     template: pyproject.toml
+workflow_phases:
+  - id: tests
+    enabled: true
+    required: true
+    after: mid
+    before: end
+    order: 100
+    runner:
+      kind: command_group
+      commands:
+        - python3 -m unittest discover -v
+        - pytest
+    success_contract:
+      kind: all_commands_exit_zero
+    recording:
+      record_in_session: true
+      summary_label: Tests
 pre_commit:
   repos:
     - repo: https://github.com/psf/black
@@ -130,11 +147,6 @@ policy_overlays:
       - python=>print
       - python=>builtins.print
 
-core_invariant_overlays:
-  devflow-run-gates:
-    required_commands:
-      - python3 -m unittest discover -v
-      - pytest
 test_events:
   - id: python
     entrypoint: "devcovenant.core.services.event:\

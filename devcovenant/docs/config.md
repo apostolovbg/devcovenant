@@ -1,5 +1,5 @@
 # Configuration
-**Last Updated:** 2026-03-25
+**Last Updated:** 2026-03-26
 **Project Version:** 1.0.0
 
 ## Overview
@@ -209,6 +209,10 @@ The generated config comments should describe that split directly.
 They should not claim that one hardcoded path such as `.venv` is globally
 protected when the real contract is metadata-driven managed-environment
 protection plus runtime-owned critical paths.
+Those same generated comments now also teach the standard command sequence as
+`gate --start -> gate --mid -> run -> gate --end`.
+The managed-environment contract uses the same `run` stage name, so generated
+operator guidance and runtime stage resolution stay aligned.
 
 That managed-environment protection is generic.
 Use `managed-environment.cleanup_protected_paths` when the environment should

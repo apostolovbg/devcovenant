@@ -1,4 +1,4 @@
-"""Test command implementation for DevCovenant."""
+"""Workflow-run command implementation for DevCovenant."""
 
 from __future__ import annotations
 
@@ -9,40 +9,39 @@ if __package__ in {None, ""}:  # pragma: no cover
     sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
 import argparse
-from pathlib import Path
 
 from devcovenant.core.runtime.execution import (
     build_command_parser,
     print_banner,
     print_step,
     resolve_repo_root,
-    run_and_record_tests,
     run_bootstrap_registry_refresh,
+    run_required_workflow_phases,
     warn_version_mismatch,
 )
 
 
 def _build_parser() -> argparse.ArgumentParser:
-    """Build parser for the test command."""
-    parser = build_command_parser(
-        "test",
-        "Run the DevCovenant tests.",
+    """Build parser for the run command."""
+    return build_command_parser(
+        "run",
+        "Run all required declared DevCovenant workflow phases.",
     )
-    return parser
 
 
 def run(args: argparse.Namespace) -> int:
-    """Execute test command from parsed arguments."""
+    """Execute the workflow-run command from parsed arguments."""
+    del args
     repo_root = resolve_repo_root(require_install=True)
 
     print_banner("DevCovenant run", "🚀")
-    print_step("Command: test", "🧭")
+    print_step("Command: run", "🧭")
     run_bootstrap_registry_refresh(repo_root)
     warn_version_mismatch(repo_root)
 
-    print_banner("DevCovenant tests", "🧪")
-    print_step("Running profile-configured test commands", "▶️")
-    return run_and_record_tests(repo_root, notes="")
+    print_banner("DevCovenant workflow run", "🏃")
+    print_step("Running required workflow phases", "▶️")
+    return run_required_workflow_phases(repo_root, notes="")
 
 
 def main(argv: list[str] | None = None) -> None:

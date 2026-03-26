@@ -50,8 +50,8 @@ def _unit_test_latest_pointer_skips_active_status_run() -> None:
         )
         run_logging.create_run_log_context(
             repo_root,
-            "test",
-            ["devcovenant", "test"],
+            "run",
+            ["devcovenant", "run"],
         )
         current = run_logging.create_run_log_context(
             repo_root,
@@ -83,13 +83,13 @@ def _unit_test_gate_status_summary_lines_report_open_session() -> None:
             },
         )
         logs_root = repo_root / "devcovenant" / "logs"
-        run_dir = logs_root / "20260227T060500000000Z-test"
+        run_dir = logs_root / "20260227T060500000000Z-run"
         run_dir.mkdir(parents=True, exist_ok=True)
         (run_dir / "run.json").write_text(
             json.dumps(
                 {
                     "run_id": run_dir.name,
-                    "command_name": "test",
+                    "command_name": "run",
                     "status": "success",
                     "artifacts": {
                         "summary_txt": (
@@ -113,7 +113,7 @@ def _unit_test_gate_status_summary_lines_report_open_session() -> None:
             json.dumps(
                 {
                     "run_id": run_dir.name,
-                    "command_name": "test",
+                    "command_name": "run",
                     "status": "success",
                     "run_dir": f"devcovenant/logs/{run_dir.name}",
                     "summary_txt": (
@@ -131,9 +131,9 @@ def _unit_test_gate_status_summary_lines_report_open_session() -> None:
         lines = module._gate_status_summary_lines(repo_root)
         assert "Gate Status: open" in lines
         assert "Session ID: open-1" in lines
-        assert "Last Phase: test" in lines
+        assert "Last Phase: run" in lines
         assert "Session Start: 2026-02-27T06:00:00+00:00" in lines
-        assert "Last Test Run: 2026-02-27T06:05:00+00:00" in lines
+        assert "Last Workflow Run: 2026-02-27T06:05:00+00:00" in lines
         assert any(
             "Latest Relevant Logs: devcovenant/logs/" in line for line in lines
         )

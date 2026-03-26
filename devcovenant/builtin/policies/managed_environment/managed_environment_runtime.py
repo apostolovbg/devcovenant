@@ -20,7 +20,7 @@ from devcovenant.core.services import yaml_cache as yaml_cache_service
 
 POLICY_ID = "managed-environment"
 RUNTIME_ACTION_RESOLVE_STAGE = "resolve-stage"
-_MANAGED_ENV_STAGES = frozenset({"start", "test", "end", "command", "all"})
+_MANAGED_ENV_STAGES = frozenset({"start", "run", "end", "command", "all"})
 _MANAGED_STAGE_RUNS_ENV = "DEVCOV_MANAGED_STAGE_RUNS"
 _GUIDANCE_TOKEN_PATTERN = re.compile(r"{([a-zA-Z0-9_]+)}")
 
@@ -427,10 +427,10 @@ def resolve_managed_environment_for_stage(
 ) -> tuple[dict[str, str] | None, str | None]:
     """Resolve and optionally prepare managed-environment execution state."""
     stage_token = str(stage or "").strip().lower()
-    if stage_token not in {"start", "test", "end", "command"}:
+    if stage_token not in {"start", "run", "end", "command"}:
         raise ValueError(
             "Invalid managed-environment stage "
-            f"`{stage}`. Allowed: start, test, end, command."
+            f"`{stage}`. Allowed: start, run, end, command."
         )
     entry = _load_policy_entry(repo_root)
     if entry is None:

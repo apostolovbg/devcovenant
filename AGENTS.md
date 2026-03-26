@@ -6,7 +6,7 @@
 **Maintenance Stance:** active
 **Compatibility Policy:** breaking-allowed
 **Versioning Mode:** versioned
-**Last Updated:** 2026-03-25
+**Last Updated:** 2026-03-26
 **DevCovenant Version:** 1.0.0
 
 <!-- DEVCOV:BEGIN -->
@@ -136,28 +136,31 @@ during command waits.
    entrypoint.
 11. Preferred behavior: clear all DevCovenant complaints before continuing,
    unless the human explicitly requests otherwise.
-12. Run `devcovenant gate --mid` before tests to surface hook-induced
-   mutations and blocking DevCovenant complaints early. `gate --mid`
+12. Run `devcovenant gate --mid` before `devcovenant run` to surface
+   hook-induced mutations and blocking DevCovenant complaints early.
+   `gate --mid`
    requires an open session, does not record lifecycle state, and may
    need an explicit rerun until hooks converge.
-13. Run `devcovenant test`. For long runs, report status/phase updates
+13. Run `devcovenant run`. For long runs, report status/phase updates
    and final result, and prefer run-artifact summaries/tails before
    escalating to verbose streaming. Long silent waits in normal mode
    should surface `Please wait. In progress...`.
 14. Run `devcovenant gate --end`. Use the same artifact-first output
-   discipline as test runs. Gate commands do not run tests internally.
+   discipline as workflow runs. Gate commands do not run required
+   workflow phases internally.
 15. If end-gate hooks or checks produce additional changes or violations,
    use `devcovenant gate --status` for lifecycle inspection and inspect
    the latest run artifacts before rerunning required commands until the
-   repository is clean. When gates require tests, run `devcovenant test`
-   explicitly and rerun the gate command.
+   repository is clean. When gates require workflow phases, run
+   `devcovenant run` or the requested `devcovenant phase run <id>`
+   commands explicitly and rerun the gate command.
 16. Stage all changes after each completed work slice.
 
 Audits are not a separate workflow mode. The same gate discipline applies.
 Use `check` as the default read-only audit command. Gate commands own
 refresh/autofix orchestration; lifecycle state writes are limited to
 `gate --start` / `gate --end`; `gate --mid` is non-lifecycle.
-Gate commands never run tests internally.
+Gate commands never run required workflow phases internally.
 When DevCovenant run artifacts are available, inspect `summary.txt`,
 then `tail.txt` (if present), then full logs before using ad-hoc
 redirects or verbose streaming. Normal-mode live streaming can be
@@ -170,9 +173,9 @@ narrating routine waits, polling steps, or obvious command progress.
 
 ## Managed Environment
 If a managed environment is configured, run DevCovenant from that
-environment and run all tests there as well.
-Start required services before the test gate so runtime checks execute
-against the active stack.
+environment and run all required workflow phases there as well.
+Start required services before `devcovenant run` so runtime checks
+execute against the active stack.
 
 ## Command Form
 Primary command examples use on-PATH `devcovenant ...`.
@@ -241,7 +244,6 @@ severity: critical
 customizable: false
 enforcement: active
 gate_status_file: devcovenant/registry/runtime/gate_status.json
-required_commands: python3 -m unittest discover -v, pytest
 require_pre_commit_start: true
 require_pre_commit_end: true
 pre_commit_command: python3 -m pre_commit run --all-files
@@ -257,12 +259,13 @@ skipped_dirs:
 ```
 
 DevCovenant must record and enforce the standard workflow: pre-commit start,
-tests, then pre-commit end. The policy reads the status file to ensure each
-gate ran and that no required command was skipped.
+declared required workflow phases, then pre-commit end. Gate status
+preserves pre-commit evidence while workflow-session state records which
+required phases passed for the active session.
 This check is enforced for every repository change (including
 documentation-only updates) so the gate sequence cannot be skipped.
-Changelog-only edits remain gate-scoped but do not require a fresh test
-rerun by themselves.
+Changelog-only edits remain gate-scoped but do not require a fresh
+required-phase rerun by themselves.
 <!-- DEVCOV-INVARIANTS:END -->
 
 <!-- DEVCOV-POLICIES:BEGIN -->
@@ -1164,7 +1167,7 @@ required_commands with `manual_commands`, stage-scoped
 Active managed-environment policy now also re-executes DevCovenant CLI
 commands in the managed interpreter automatically when the current
 interpreter does not match. Stage-scoped `managed_commands` accept
-`start`, `test`, `end`, `command`, and `all` prefixes; non-start
+`start`, `run`, `end`, `command`, and `all` prefixes; non-start
 commands reuse `start` bootstrap commands once when the interpreter is
 still missing. If the resolved managed interpreter is missing or not
 executable, DevCovenant now fails explicitly instead of rerunning through

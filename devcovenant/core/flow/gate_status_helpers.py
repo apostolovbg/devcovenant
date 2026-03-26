@@ -68,11 +68,11 @@ def _gate_status_summary_lines(repo_root: Path) -> list[str]:
     session_end = _status_time_token(payload, "session_end_utc")
     if session_end:
         lines.append(f"Session End: {session_end}")
-    last_test_run = _status_time_token(
+    last_workflow_run = _status_time_token(
         payload, "last_run_utc"
     ) or _status_time_token(payload, "last_run")
-    if last_test_run:
-        lines.append(f"Last Test Run: {last_test_run}")
+    if last_workflow_run:
+        lines.append(f"Last Workflow Run: {last_workflow_run}")
     if latest_line:
         lines.append(latest_line)
     return lines
@@ -86,7 +86,7 @@ def _infer_last_gate_phase(payload: dict[str, object]) -> str:
     pre_commit_start = _status_epoch(payload, "pre_commit_start_epoch")
     last_run_epoch = _status_epoch(payload, "last_run_epoch")
     if pre_commit_start > 0.0 and last_run_epoch >= pre_commit_start:
-        return "test"
+        return "run"
     if pre_commit_start > 0.0:
         return "start"
     return ""

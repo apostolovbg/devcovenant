@@ -23,7 +23,19 @@ policy_overlays:
     include_suffixes:
       - .yml
       - .yaml
-core_invariant_overlays:
-  devflow-run-gates:
-    required_commands:
-      - docker compose config
+workflow_phases:
+  - id: tests
+    enabled: true
+    required: true
+    after: mid
+    before: end
+    order: 100
+    runner:
+      kind: command_group
+      commands:
+        - docker compose config
+    success_contract:
+      kind: all_commands_exit_zero
+    recording:
+      record_in_session: true
+      summary_label: Tests

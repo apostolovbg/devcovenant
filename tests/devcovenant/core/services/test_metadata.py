@@ -282,7 +282,7 @@ def _unit_test_bundle_tracks_runtime_defaults_and_selector_derives() -> None:
 
 
 def _unit_test_profile_overlays_include_core_invariant_sections() -> None:
-    """Profile metadata collection should honor core_invariant_overlays."""
+    """Profile metadata collection should honor core_invariant overlays."""
     module = importlib.import_module(MODULE)
     original = module.profile_runtime.load_profile_registry
     try:
@@ -291,10 +291,7 @@ def _unit_test_profile_overlays_include_core_invariant_sections() -> None:
                 "policy_overlays": {"demo-policy": {"header_scan_lines": "4"}},
                 "core_invariant_overlays": {
                     "devflow-run-gates": {
-                        "required_commands": [
-                            "python3 -m unittest discover -v",
-                            "pytest",
-                        ]
+                        "skipped_globs": ["devcovenant/registry/runtime/**"]
                     }
                 },
             }
@@ -304,8 +301,8 @@ def _unit_test_profile_overlays_include_core_invariant_sections() -> None:
         module.profile_runtime.load_profile_registry = original
 
     assert overlays["demo-policy"]["header_scan_lines"] == (["4"], False)
-    assert overlays["devflow-run-gates"]["required_commands"] == (
-        ["python3 -m unittest discover -v", "pytest"],
+    assert overlays["devflow-run-gates"]["skipped_globs"] == (
+        ["devcovenant/registry/runtime/**"],
         True,
     )
 

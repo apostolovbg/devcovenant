@@ -249,6 +249,27 @@ def _unit_test_refresh_is_noop_when_artifacts_already_synced(
     ) == before_pytest
 
 
+def _unit_test_synced_artifacts_need_no_touch_churn_for_manifest_edit(
+    tmp_path: Path,
+):
+    """Synced dependency artifacts should not require fake touch churn."""
+    repo = _setup_repo(tmp_path)
+    dependency_management.refresh_license_artifacts(
+        repo,
+        changed_dependency_files=["pyproject.toml"],
+        third_party_file="licenses/THIRD_PARTY_LICENSES.md",
+        licenses_dir="licenses",
+        report_heading="## License Report",
+    )
+    checker = _build_checker()
+    context = CheckContext(
+        repo_root=repo,
+        changed_files=[repo / "pyproject.toml"],
+    )
+    violations = checker.check(context)
+    assert violations == []
+
+
 def _unit_test_refresh_uses_stable_report_entries(tmp_path: Path):
     """Report entries should stay deterministic and non-date-prefixed."""
     repo = _setup_repo(tmp_path)
@@ -511,6 +532,14 @@ class GeneratedUnittestCases(unittest.TestCase):
         with tempfile.TemporaryDirectory() as temp_dir:
             tmp_path = Path(temp_dir).resolve()
             _unit_test_refresh_is_noop_when_artifacts_already_synced(
+                tmp_path=tmp_path
+            )
+
+    def test_synced_artifacts_need_no_touch_churn_for_manifest_edit(self):
+        """Run synced-artifact no-touch-churn regression coverage."""
+        with tempfile.TemporaryDirectory() as temp_dir:
+            tmp_path = Path(temp_dir).resolve()
+            _unit_test_synced_artifacts_need_no_touch_churn_for_manifest_edit(
                 tmp_path=tmp_path
             )
 

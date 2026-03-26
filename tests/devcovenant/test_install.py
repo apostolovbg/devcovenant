@@ -6,6 +6,7 @@ import io
 import shutil
 import subprocess
 import sys
+import tarfile
 import tempfile
 import tomllib
 import unittest
@@ -31,6 +32,7 @@ FORBIDDEN_WHEEL_PATH_FRAGMENTS = (
     "devcovenant/core/profiles/",
 )
 _WHEEL_ENTRIES_CACHE: dict[tuple[object, ...], list[str]] = {}
+_SDIST_ENTRIES_CACHE: dict[tuple[object, ...], list[str]] = {}
 
 
 def _read_yaml(path: Path) -> dict[str, object]:
@@ -288,6 +290,70 @@ def _read_wheel_entries(wheel_path: Path) -> list[str]:
         return wheel.namelist()
 
 
+def _build_sdist(
+    repo_root: Path,
+    output_dir: Path,
+    *,
+    include_local_build_tree: bool = False,
+    prepare_build_root: Callable[[Path], None] | None = None,
+    clean_before_build: bool = False,
+) -> Path:
+    """Build an sdist artifact and return its path."""
+    build_root = output_dir / "build-root"
+    ignored_patterns = [
+        ".git",
+        ".venv",
+        ".pytest_cache",
+        "__pycache__",
+        "*.pyc",
+        "*.pyo",
+        "dist",
+        "devcovenant.egg-info",
+    ]
+    if not include_local_build_tree:
+        ignored_patterns.append("build")
+
+    ignore = shutil.ignore_patterns(*ignored_patterns)
+    shutil.copytree(
+        repo_root,
+        build_root,
+        ignore=ignore,
+        copy_function=shutil.copy,
+    )
+    if prepare_build_root is not None:
+        prepare_build_root(build_root)
+    if clean_before_build:
+        _clean_local_build_artifacts(build_root)
+    result = subprocess.run(
+        [
+            sys.executable,
+            "-m",
+            "build",
+            "--sdist",
+            "--outdir",
+            str(output_dir),
+        ],
+        cwd=build_root,
+        capture_output=True,
+        text=True,
+        check=False,
+    )
+    assert result.returncode == 0, (
+        "sdist build failed.\n"
+        f"stdout:\n{result.stdout}\n"
+        f"stderr:\n{result.stderr}"
+    )
+    sdists = sorted(output_dir.glob("*.tar.gz"))
+    assert sdists, "sdist build succeeded but no source artifact was produced."
+    return sdists[0]
+
+
+def _read_sdist_entries(sdist_path: Path) -> list[str]:
+    """Return sdist entry names for content assertions."""
+    with tarfile.open(sdist_path, "r:gz") as archive:
+        return archive.getnames()
+
+
 def _cached_wheel_entries(
     *,
     include_local_build_tree: bool = False,
@@ -315,6 +381,36 @@ def _cached_wheel_entries(
         entries = _read_wheel_entries(wheel_path)
 
     _WHEEL_ENTRIES_CACHE[cache_key] = list(entries)
+    return list(entries)
+
+
+def _cached_sdist_entries(
+    *,
+    include_local_build_tree: bool = False,
+    prepare_build_root: Callable[[Path], None] | None = None,
+    clean_before_build: bool = False,
+) -> list[str]:
+    """Build and cache sdist entries for repeated packaging assertions."""
+    cache_key = (
+        include_local_build_tree,
+        clean_before_build,
+        "" if prepare_build_root is None else prepare_build_root.__name__,
+    )
+    cached = _SDIST_ENTRIES_CACHE.get(cache_key)
+    if cached is not None:
+        return list(cached)
+
+    with tempfile.TemporaryDirectory() as temp_dir:
+        sdist_path = _build_sdist(
+            REPO_ROOT,
+            Path(temp_dir),
+            include_local_build_tree=include_local_build_tree,
+            prepare_build_root=prepare_build_root,
+            clean_before_build=clean_before_build,
+        )
+        entries = _read_sdist_entries(sdist_path)
+
+    _SDIST_ENTRIES_CACHE[cache_key] = list(entries)
     return list(entries)
 
 
@@ -462,6 +558,7 @@ def _unit_test_pyproject_uses_pep639_license_metadata() -> None:
     for required in [
         "README.md",
         "VERSION",
+        "core/contracts/invariants/*.yaml",
         "docs/*.md",
         "docs/*.png",
         "logs/README.md",
@@ -489,6 +586,10 @@ def _unit_test_manifest_includes_license_artifacts() -> None:
     assert "include licenses/THIRD_PARTY_LICENSES.md" in content
     assert "recursive-include licenses *.txt" in content
     assert "include devcovenant/logs/README.md" in content
+    assert (
+        "recursive-include devcovenant/core/contracts/invariants *.yaml"
+        in content
+    )
     assert "recursive-include devcovenant/docs *" in content
     assert "recursive-include devcovenant/builtin/profiles *" in content
     assert "recursive-include devcovenant/builtin/policies *" in content
@@ -525,6 +626,34 @@ def _unit_test_wheel_excludes_forbidden_artifacts() -> None:
     entries = _cached_wheel_entries()
 
     _assert_no_forbidden_wheel_entries(entries)
+
+
+def _unit_test_wheel_contains_core_invariant_descriptors() -> None:
+    """Wheel should ship the core invariant descriptor YAMLs."""
+    entries = _cached_wheel_entries()
+    for required in [
+        "devcovenant/core/contracts/invariants/devcov_integrity_guard.yaml",
+        "devcovenant/core/contracts/invariants/devcov_structure_guard.yaml",
+        "devcovenant/core/contracts/invariants/devflow_run_gates.yaml",
+    ]:
+        assert required in entries, (
+            "Wheel is missing required core invariant descriptor: "
+            f"{required}"
+        )
+
+
+def _unit_test_sdist_contains_core_invariant_descriptors() -> None:
+    """sdist should ship the core invariant descriptor YAMLs."""
+    entries = _cached_sdist_entries()
+    for required in [
+        "devcovenant/core/contracts/invariants/devcov_integrity_guard.yaml",
+        "devcovenant/core/contracts/invariants/devcov_structure_guard.yaml",
+        "devcovenant/core/contracts/invariants/devflow_run_gates.yaml",
+    ]:
+        assert any(entry.endswith(required) for entry in entries), (
+            "sdist is missing required core invariant descriptor: "
+            f"{required}"
+        )
 
 
 def _unit_test_dirty_build_tree_does_not_leak_into_wheel() -> None:
@@ -601,6 +730,14 @@ class GeneratedUnittestCases(unittest.TestCase):
     def test_wheel_excludes_forbidden_artifacts(self):
         """Run test_wheel_excludes_forbidden_artifacts."""
         _unit_test_wheel_excludes_forbidden_artifacts()
+
+    def test_wheel_contains_core_invariant_descriptors(self):
+        """Run core invariant descriptor wheel-content assertions."""
+        _unit_test_wheel_contains_core_invariant_descriptors()
+
+    def test_sdist_contains_core_invariant_descriptors(self):
+        """Run core invariant descriptor sdist-content assertions."""
+        _unit_test_sdist_contains_core_invariant_descriptors()
 
     def test_dirty_build_tree_does_not_leak_into_wheel(self):
         """Run test_dirty_build_tree_does_not_leak_into_wheel."""

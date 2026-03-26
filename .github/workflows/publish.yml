@@ -2,99 +2,131 @@ name: Publish
 
 on:
   workflow_dispatch:
+    inputs:
+      build_run_id:
+        description: Successful Build workflow run ID to publish from.
+        required: true
 
 jobs:
-  build-distributions:
-    runs-on: ubuntu-latest
-    permissions:
-      contents: read
-    env:
-      PYTHONPYCACHEPREFIX: .gha-pycache
-
-    steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
-
-      - name: Set up Python
-        uses: actions/setup-python@v5
-        with:
-          python-version: "3.11"
-
-      - name: Clean local build artifacts
-        run: |
-          rm -rf build dist ./*.egg-info .pytest_cache .ruff_cache
-
-      - name: Install build tooling
-        run: |
-          python -m pip install --upgrade pip
-          python -m pip install build twine cyclonedx-bom==7.2.2
-
-      - name: Build distributions
-        run: python -m build
-
-      - name: Validate distributions
-        run: twine check dist/*
-
-      - name: Generate CycloneDX SBOM
-        run: |
-          mkdir -p artifacts/sbom
-          cyclonedx-py requirements requirements.lock \
-            --pyproject pyproject.toml \
-            --mc-type application \
-            --output-reproducible \
-            --output-file artifacts/sbom/devcovenant-sbom.json
-
-      - name: Smoke install wheel
-        run: |
-          set -euo pipefail
-          WHEEL_PATH="$(find dist -maxdepth 1 -name '*.whl' -print -quit)"
-          test -n "$WHEEL_PATH"
-          python -m venv .smoke-wheel
-          . .smoke-wheel/bin/activate
-          python -m pip install --upgrade pip
-          python -m pip install "$WHEEL_PATH"
-          python -m devcovenant --help > /dev/null
-
-      - name: Smoke install sdist
-        run: |
-          set -euo pipefail
-          SDIST_PATH="$(find dist -maxdepth 1 -name '*.tar.gz' -print -quit)"
-          test -n "$SDIST_PATH"
-          python -m venv .smoke-sdist
-          . .smoke-sdist/bin/activate
-          python -m pip install --upgrade pip
-          python -m pip install "$SDIST_PATH"
-          python -m devcovenant --help > /dev/null
-
-      - name: Upload distributions
-        uses: actions/upload-artifact@v4
-        with:
-          name: devcovenant-dist
-          path: dist/*
-
-      - name: Upload SBOM
-        uses: actions/upload-artifact@v4
-        with:
-          name: devcovenant-sbom
-          path: artifacts/sbom/*.json
-
   publish:
     runs-on: ubuntu-latest
-    needs:
-      - build-distributions
     permissions:
+      actions: read
       contents: read
       id-token: write
     environment:
       name: pypi
       url: https://pypi.org/p/devcovenant
     steps:
-      - name: Download distributions
+      - name: Validate selected Build run
+        id: build-run
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const rawRunId = `${{ inputs.build_run_id }}`.trim();
+            const runId = Number(rawRunId);
+            if (!Number.isInteger(runId) || runId <= 0) {
+              core.setFailed(`Invalid build_run_id: ${rawRunId}`);
+              return;
+            }
+
+            const { data: run } = await github.rest.actions.getWorkflowRun({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              run_id: runId,
+            });
+
+            if (run.name !== "Build") {
+              core.setFailed(
+                `Run ${runId} is ${run.name}, expected Build.`,
+              );
+              return;
+            }
+
+            if (
+              run.status !== "completed" ||
+              run.conclusion !== "success"
+            ) {
+              core.setFailed(
+                `Run ${runId} is ${run.status}/${run.conclusion}, ` +
+                "expected completed/success.",
+              );
+              return;
+            }
+
+            core.setOutput("run_id", String(run.id));
+            core.setOutput("head_sha", run.head_sha);
+            core.setOutput("html_url", run.html_url);
+      - name: Download validated distributions
         uses: actions/download-artifact@v4
         with:
+          github-token: ${{ github.token }}
+          repository: ${{ github.repository }}
+          run-id: ${{ steps.build-run.outputs.run_id }}
           name: devcovenant-dist
           path: dist
+      - name: Download build provenance
+        uses: actions/download-artifact@v4
+        with:
+          github-token: ${{ github.token }}
+          repository: ${{ github.repository }}
+          run-id: ${{ steps.build-run.outputs.run_id }}
+          name: devcovenant-provenance
+          path: artifacts/provenance
+      - name: Verify downloaded provenance
+        env:
+          EXPECTED_BUILD_RUN_ID: ${{ steps.build-run.outputs.run_id }}
+          EXPECTED_HEAD_SHA: ${{ steps.build-run.outputs.head_sha }}
+        run: |
+          python - <<'PY'
+          import hashlib
+          import json
+          import os
+          from pathlib import Path
 
+          provenance_path = Path("artifacts/provenance/build-provenance.json")
+          payload = json.loads(provenance_path.read_text(encoding="utf-8"))
+          if str(payload.get("build_run_id")) != os.environ[
+              "EXPECTED_BUILD_RUN_ID"
+          ]:
+              raise SystemExit(
+                  "Downloaded provenance build_run_id does not match the "
+                  "selected Build run."
+              )
+          if payload.get("head_sha") != os.environ["EXPECTED_HEAD_SHA"]:
+              raise SystemExit(
+                  "Downloaded provenance head_sha does not match the "
+                  "selected Build run."
+              )
+
+          dist_dir = Path("dist")
+          dist_files = sorted(
+              path for path in dist_dir.iterdir() if path.is_file()
+          )
+          dist_hashes = {
+              path.name: hashlib.sha256(path.read_bytes()).hexdigest()
+              for path in dist_files
+          }
+          expected_hashes = {
+              str(item.get("name")): str(item.get("sha256"))
+              for item in payload.get("distributions", [])
+          }
+          if dist_hashes != expected_hashes:
+              raise SystemExit(
+                  "Downloaded distributions do not match the validated "
+                  "artifact provenance."
+              )
+          PY
+      - name: Record artifact provenance
+        run: |
+          {
+            echo "Publishing distributions from Build run "
+            echo "\`${{ steps.build-run.outputs.run_id }}\`"
+            echo
+            echo "Source SHA: \`${{ steps.build-run.outputs.head_sha }}\`"
+            echo
+            echo "Build run URL: ${{ steps.build-run.outputs.html_url }}"
+          } >> "$GITHUB_STEP_SUMMARY"
       - name: Publish to PyPI with trusted publishing
         uses: pypa/gh-action-pypi-publish@release/v1
         with:

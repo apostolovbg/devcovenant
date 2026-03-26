@@ -37,7 +37,7 @@ body: |-
   ```bash
   python3 -m devcovenant gate --start
   python3 -m devcovenant gate --mid
-  python3 -m devcovenant test
+  python3 -m devcovenant run
   python3 -m devcovenant gate --end
   ```
 

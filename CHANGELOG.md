@@ -6,7 +6,7 @@
 **Maintenance Stance:** active
 **Compatibility Policy:** breaking-allowed
 **Versioning Mode:** versioned
-**Last Updated:** 2026-03-25
+**Last Updated:** 2026-03-26
 **DevCovenant Version:** 1.0.0
 
 <!-- DEVCOV:BEGIN -->
@@ -59,6 +59,329 @@ Example:
 ## Log changes here
 
 ## Version 1.0.0
+
+- 2026-03-26:
+  Change: implemented the core `run` migration by adding the new root command,
+  moving built-in profiles onto declared `workflow_phases`, and rewriting the
+  gate/runtime/docs contract away from the old public `test` surface.
+  Why: closed the stitched workflow boundary where core still hardcoded
+  `devcovenant test` while the tracked workflow contract claimed a generic
+  phase model.
+  Impact: standardized DevCovenant on `gate --start -> gate --mid -> run ->
+  gate --end`, with explicit `phase run <id>` reruns, profile-owned phase
+  declarations, and aligned docs/registry evidence instead of legacy
+  `required_commands` test wiring.
+  Files:
+  AGENTS.md
+  CHANGELOG.md
+  POLICY_MAP.md
+  PROFILE_MAP.md
+  README.md
+  CONTRIBUTING.md
+  devcovenant/README.md
+  devcovenant/builtin/policies/README.md
+  devcovenant/builtin/policies/managed_environment/managed_environment.yaml
+  devcovenant/builtin/policies/managed_environment/\
+    managed_environment_runtime.py
+  devcovenant/builtin/profiles/README.md
+  devcovenant/builtin/profiles/csharp/csharp.yaml
+  devcovenant/builtin/profiles/dart/dart.yaml
+  devcovenant/builtin/profiles/docker/docker.yaml
+  devcovenant/builtin/profiles/fastapi/fastapi.yaml
+  devcovenant/builtin/profiles/flutter/flutter.yaml
+  devcovenant/builtin/profiles/frappe/frappe.yaml
+  devcovenant/builtin/profiles/global/assets/AGENTS.yaml
+  devcovenant/builtin/profiles/global/assets/README.yaml
+  devcovenant/builtin/profiles/global/assets/ci-and-test.yml
+  devcovenant/builtin/profiles/global/assets/config.yaml
+  devcovenant/builtin/profiles/global/assets/CONTRIBUTING.yaml
+  devcovenant/builtin/profiles/global/assets/devcovenant/README.yaml
+  devcovenant/builtin/profiles/go/go.yaml
+  devcovenant/builtin/profiles/java/java.yaml
+  devcovenant/builtin/profiles/javascript/javascript.yaml
+  devcovenant/builtin/profiles/kubernetes/kubernetes.yaml
+  devcovenant/builtin/profiles/objective_c/objective_c.yaml
+  devcovenant/builtin/profiles/php/php.yaml
+  devcovenant/builtin/profiles/python/python.yaml
+  devcovenant/builtin/profiles/ruby/ruby.yaml
+  devcovenant/builtin/profiles/rust/rust.yaml
+  devcovenant/builtin/profiles/swift/swift.yaml
+  devcovenant/builtin/profiles/terraform/terraform.yaml
+  devcovenant/builtin/profiles/typescript/typescript.yaml
+  devcovenant/cli.py
+  devcovenant/core/contracts/invariants/devflow_run_gates.yaml
+  devcovenant/core/flow/gate.py
+  devcovenant/core/flow/refresh.py
+  devcovenant/core/flow/gate_status_helpers.py
+  devcovenant/core/runtime/execution.py
+  devcovenant/core/services/devcov_integrity_guard.py
+  devcovenant/core/services/devflow_run_gates.py
+  devcovenant/core/services/registry.py
+  devcovenant/core/services/runtime_profile.py
+  devcovenant/core/services/workflow_contract.py
+  devcovenant/core/README.md
+  devcovenant/custom/profiles/devcovrepo/assets/PROFILE_MAP.yaml
+  devcovenant/custom/profiles/devcovrepo/assets/docs/config.md
+  devcovenant/custom/profiles/devcovrepo/assets/docs/installation.md
+  devcovenant/custom/profiles/devcovrepo/assets/docs/profiles.md
+  devcovenant/custom/profiles/devcovrepo/assets/docs/registry.md
+  devcovenant/custom/profiles/devcovrepo/assets/docs/workflow.md
+  devcovenant/custom/profiles/devcovrepo/assets/POLICY_MAP.yaml
+  devcovenant/docs/architecture.md
+  devcovenant/docs/config.md
+  devcovenant/docs/installation.md
+  devcovenant/docs/policies.md
+  devcovenant/docs/profiles.md
+  devcovenant/docs/registry.md
+  devcovenant/docs/workflow.md
+  devcovenant/phase.py
+  devcovenant/registry/README.md
+  devcovenant/registry/registry.yaml
+  devcovenant/run.py
+  devcovenant/test.py
+  tests/devcovenant/core/flow/test_gate.py
+  tests/devcovenant/core/flow/test_gate_status_helpers.py
+  tests/devcovenant/core/runtime/test_execution.py
+  tests/devcovenant/core/runtime/test_run_logging.py
+  tests/devcovenant/core/services/test_devflow_run_gates.py
+  tests/devcovenant/core/services/test_metadata.py
+  tests/devcovenant/core/services/test_profile_registry.py
+  tests/devcovenant/core/services/test_runtime_profile.py
+  tests/devcovenant/core/services/test_workflow_contract.py
+  tests/devcovenant/builtin/policies/managed_environment/\
+    test_managed_environment_runtime.py
+  tests/devcovenant/test_cli.py
+  tests/devcovenant/test_run.py
+  tests/devcovenant/test_test.py
+
+- 2026-03-26:
+  Change: rewrote the active plan to treat the half-migrated workflow-phase
+  redesign as a release blocker and to sequence the full `devcovenant run`
+  migration in ordered work packages.
+  Why: documented the resolved paper design so the next implementation slice
+  replaces the stitched-in `devcovenant test` model with one coherent
+  command/runtime/docs/CI contract instead of drifting through partial fixes.
+  Impact: the repo now has a concrete migration blueprint for root-command
+  ownership, generic phase execution, gate/invariant messaging, CI, docs, test
+  coverage, and the follow-up naming decision around `modules-need-tests`.
+  Files:
+  CHANGELOG.md
+  PLAN.md
+
+- 2026-03-26:
+  Change: reran the external-grade release audit against the current staged
+  release-candidate tree and recorded the closure outcome in the plan.
+  Why: verified that the remaining blocker and high-severity audit findings
+  are now closed by shipped artifacts, real lifecycle proof, workflow
+  truthfulness, publish provenance, lock semantics, and workflow-phase
+  recording rather than by local reasoning alone.
+  Impact: the repo now has a fresh outside-in audit pass showing no
+  substantive blocker or high-severity release-truthfulness mismatches, so
+  the next work is release-candidate preparation rather than more remediation.
+  Files:
+  CHANGELOG.md
+  PLAN.md
+
+- 2026-03-26:
+  Change: clarified the baseline-first lifecycle for repo-specific custom
+  policies and profiles in the operator docs and locked that guidance with a
+  regression test.
+  Why: closed the external-audit docs gap where normal repositories could
+  read custom-extension support without seeing plainly that the first reviewed
+  baseline should come before seeding repo-specific custom surfaces.
+  Impact: normal-repo activation guidance now states `install`, config review,
+  and `deploy` first, then repo-specific custom extensions, and deploy cleanup
+  reads as an intentional lifecycle boundary instead of arbitrary deletion.
+  Files:
+  AGENTS.md
+  CHANGELOG.md
+  CONTRIBUTING.md
+  PLAN.md
+  POLICY_MAP.md
+  PROFILE_MAP.md
+  README.md
+  SPEC.md
+  devcovenant/README.md
+  devcovenant/docs/installation.md
+  devcovenant/docs/policies.md
+  devcovenant/docs/profiles.md
+  devcovenant/custom/profiles/devcovrepo/assets/docs/installation.md
+  devcovenant/custom/profiles/devcovrepo/assets/docs/policies.md
+  devcovenant/custom/profiles/devcovrepo/assets/docs/profiles.md
+  tests/devcovenant/core/runtime/test_execution.py
+
+- 2026-03-25:
+  Change: formalized workflow phases as a tracked/runtime contract by adding
+  `workflow_contract`, `workflow_session.json`, the generic
+  `devcovenant phase run <id>` command, and phase-aware gate and invariant
+  behavior.
+  Why: closed the workflow-boundary defect where gate mechanics still depended
+  on test-centric or policy-adjacent assumptions instead of one explicit
+  profile-declared workflow interface.
+  Impact: the Python profile now declares `tests` as the first real workflow
+  phase, start and end gates enforce required phases generically, tracked
+  registry state records the workflow contract, and the runtime records phase
+  evidence separately from the short gate lifecycle ledger.
+  Files:
+  AGENTS.md
+  CHANGELOG.md
+  PLAN.md
+  devcovenant/builtin/profiles/python/python.yaml
+  devcovenant/cli.py
+  devcovenant/core/contracts/invariants/devflow_run_gates.yaml
+  devcovenant/core/flow/gate.py
+  devcovenant/core/flow/refresh.py
+  devcovenant/core/runtime/execution.py
+  devcovenant/core/runtime/workflow_session.py
+  devcovenant/core/services/devflow_run_gates.py
+  devcovenant/core/services/profile_registry.py
+  devcovenant/core/services/registry.py
+  devcovenant/core/services/workflow_contract.py
+  devcovenant/phase.py
+  devcovenant/docs/architecture.md
+  devcovenant/docs/installation.md
+  devcovenant/docs/profiles.md
+  devcovenant/docs/registry.md
+  devcovenant/docs/workflow.md
+  devcovenant/custom/profiles/devcovrepo/assets/docs/installation.md
+  devcovenant/custom/profiles/devcovrepo/assets/docs/profiles.md
+  devcovenant/custom/profiles/devcovrepo/assets/docs/registry.md
+  devcovenant/custom/profiles/devcovrepo/assets/docs/workflow.md
+  devcovenant/registry/registry.yaml
+  tests/devcovenant/core/flow/test_gate.py
+  tests/devcovenant/core/runtime/test_execution.py
+  tests/devcovenant/core/runtime/test_workflow_session.py
+  tests/devcovenant/core/services/test_devflow_run_gates.py
+  tests/devcovenant/core/services/test_profile_registry.py
+  tests/devcovenant/core/services/test_workflow_contract.py
+  tests/devcovenant/test_cli.py
+  tests/devcovenant/test_phase.py
+  tests/devcovenant/test_refresh.py
+
+- 2026-03-25:
+  Change: rewrote the active release plan to formalize the intended
+  workflow-phase extension redesign, including phase ownership, tracked and
+  runtime schemas, start-gate carry-forward rules, end-gate closure rules,
+  and the initial success-contract set.
+  Why: captured the new workflow-boundary decision before implementation so
+  gate mechanics no longer drift around customizable policy state and the
+  upcoming redesign has one explicit contract to build against.
+  Impact: the plan now records workflow-phase formalization as a first-class
+  release-blocking remediation item, records `external_artifact_check` in the
+  initial success-contract vocabulary, and makes the future registry and
+  migration work concrete enough to execute without reconstructing this thread.
+  Files:
+  CHANGELOG.md
+  PLAN.md
+
+- 2026-03-25:
+  Change: tightened dependency-management lock refresh so
+  `requirements.lock` ignores and scrubs environment-specific pip option
+  lines instead of treating them as semantic dependency drift.
+  Why: closed the external-audit finding that emitted index or trusted-host
+  directives could make refresh behave differently across environments and
+  could leak non-semantic pip source control lines into the stable lock body.
+  Impact: Python lock refresh now preserves a normalized dependency-resolution
+  contract, the new regressions cover both no-drift and cleanup cases, and
+  the policy docs now state plainly that package-source behavior belongs in
+  dependency-management metadata/config rather than the lock file body.
+  Files:
+  CHANGELOG.md
+  PLAN.md
+  devcovenant/builtin/policies/dependency_management/\
+    dependency_lock_runtime.py
+  devcovenant/custom/profiles/devcovrepo/assets/docs/policies.md
+  devcovenant/docs/policies.md
+  tests/devcovenant/builtin/policies/dependency_management/\
+    test_dependency_lock_runtime.py
+
+- 2026-03-25:
+  Change: removed rebuild-in-publish behavior and wired publish to download,
+  verify, and release the exact previously validated Build artifact.
+  Why: closed the external-audit provenance gap where `publish.yml` could
+  upload a fresh dist that the normal build/test path had never actually
+  validated for the reviewed SHA.
+  Impact: release publishing now depends on one specific successful Build run,
+  verified provenance, and the exact dist artifact already proven earlier in
+  CI.
+  Files:
+  .github/workflows/build.yml
+  .github/workflows/publish.yml
+  CHANGELOG.md
+  PLAN.md
+  devcovenant/custom/profiles/devcovrepo/assets/docs/installation.md
+  devcovenant/custom/profiles/devcovrepo/assets/docs/workflow.md
+  devcovenant/docs/installation.md
+  devcovenant/docs/workflow.md
+  tests/devcovenant/core/services/test_profile_registry.py
+
+- 2026-03-25:
+  Change: replaced the shallow CI artifact startup checks with real
+  built-artifact lifecycle proof for wheel, sdist, and the `pipx`
+  machine-install path.
+  Why: closed the external-audit blocker that CI was only proving CLI startup
+  instead of the documented `install -> config review -> deploy` contract.
+  Impact: `Checks` and the dependent build workflow now verify that built
+  artifacts can activate a repository and pass a read-only post-deploy audit
+  before release automation relies on them.
+  Files:
+  .github/workflows/ci-and-test.yml
+  .github/workflows/build.yml
+  CHANGELOG.md
+  PLAN.md
+  devcovenant/custom/profiles/devcovrepo/assets/docs/installation.md
+  devcovenant/custom/profiles/devcovrepo/assets/docs/profiles.md
+  devcovenant/custom/profiles/devcovrepo/assets/docs/registry.md
+  devcovenant/custom/profiles/devcovrepo/assets/docs/workflow.md
+  devcovenant/custom/profiles/devcovrepo/devcovrepo.yaml
+  devcovenant/docs/installation.md
+  devcovenant/docs/profiles.md
+  devcovenant/docs/registry.md
+  devcovenant/docs/workflow.md
+  devcovenant/registry/registry.yaml
+  tests/devcovenant/core/services/test_profile_registry.py
+
+- 2026-03-25:
+  Change: added the core invariant descriptor YAMLs to wheel and sdist
+  packaging, then corrected the dependency-management no-touch false positive
+  that the packaging edit surfaced.
+  Why: closed the external-audit blocker where built artifacts omitted
+  `devcovenant/core/contracts/invariants/*.yaml` and could fail during
+  install -> review -> deploy, while the gate was still demanding fake
+  license churn even when dependency artifacts were already synchronized.
+  Impact: ensured built artifacts now carry the invariant descriptors the
+  runtime resolves at deploy time, packaging tests now reject that omission,
+  and dependency-management now accepts already-synced compliance artifacts
+  for package-manifest-only edits.
+  Files:
+  CHANGELOG.md
+  MANIFEST.in
+  PLAN.md
+  devcovenant/builtin/policies/dependency_management/dependency_management.py
+  pyproject.toml
+  requirements.lock
+  devcovenant/docs/architecture.md
+  devcovenant/docs/installation.md
+  devcovenant/docs/policies.md
+  devcovenant/docs/registry.md
+  devcovenant/custom/profiles/devcovrepo/assets/docs/registry.md
+  devcovenant/registry/registry.yaml
+  tests/devcovenant/builtin/policies/dependency_management/\
+    test_dependency_management.py
+  tests/devcovenant/test_install.py
+
+- 2026-03-25:
+  Change: rewrote the active remediation roadmap around the external
+  release-grade audit findings.
+  Why: replaced the older mostly-complete polish plan with a focused
+  blocker-first plan for artifact completeness, CI proof, publish
+  provenance, lockfile semantics, and first-activation docs clarity.
+  Impact: the repo now has a concrete pre-release closure plan that matches
+  the current external audit verdict instead of the older internal polish
+  milestones.
+  Files:
+  CHANGELOG.md
+  PLAN.md
 
 - 2026-03-25:
   Change: documented and configured a reviewed repo-specific `pip-audit`

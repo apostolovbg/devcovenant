@@ -4,7 +4,7 @@
 #
 #    pip-compile --allow-unsafe --strip-extras --output-file=requirements.lock requirements.in
 #
-build==1.4.0
+build==1.4.1
     # via pip-tools
 cfgv==3.5.0
     # via pre-commit

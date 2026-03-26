@@ -31,7 +31,8 @@ body: |-
   install/review/deploy boundary plainly and list the standard gate sequence.
 
   ## Workflow
-  Describe the normal edit, test, and review routine for this repository.
+  Describe the normal edit, required-phase, and review routine for this
+  repository.
   Prefer an explicit command sequence over vague prose.
 
   ## Configuration Checkpoints

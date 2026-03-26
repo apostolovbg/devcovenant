@@ -13,6 +13,16 @@ MODULE = "devcovenant.core.services.profile_registry"
 REPO_ROOT = Path(__file__).resolve().parents[4]
 
 
+def _load_raw_workflow(path: Path) -> dict[str, object]:
+    """Load one workflow with string-preserving YAML semantics."""
+    payload = yaml.load(
+        path.read_text(encoding="utf-8"),
+        Loader=yaml.BaseLoader,
+    )
+    assert isinstance(payload, dict)
+    return payload
+
+
 def _unit_test_module_importable() -> None:
     """Module should import cleanly."""
     module = importlib.import_module(MODULE)
@@ -153,6 +163,31 @@ def _unit_test_discover_profiles_orders_profiles_deterministically() -> None:
     assert discovered_names == expected_names
 
 
+def _unit_test_profile_registry_exports_workflow_contract() -> None:
+    """Tracked profile registry should expose the workflow contract."""
+    module = importlib.import_module(MODULE)
+    payload = module.build_profile_registry(REPO_ROOT)
+    contract = payload.get("workflow_contract")
+    assert isinstance(contract, dict)
+    required_phase_ids = contract.get("required_phase_ids")
+    assert isinstance(required_phase_ids, list)
+    assert "tests" in required_phase_ids
+    phases = contract.get("phases")
+    assert isinstance(phases, list)
+    tests_phase = next(
+        (
+            phase
+            for phase in phases
+            if isinstance(phase, dict) and phase.get("id") == "tests"
+        ),
+        None,
+    )
+    assert isinstance(tests_phase, dict)
+    runner = tests_phase.get("runner")
+    assert isinstance(runner, dict)
+    assert runner.get("kind") == "command_group"
+
+
 def _workflow_step_signature(step: dict[str, object]) -> dict[str, object]:
     """Return the comparable subset of a workflow step."""
     signature: dict[str, object] = {}
@@ -193,7 +228,8 @@ def _governance_workflow_signature(
         "Set up Python",
         "Install tooling and dependencies",
         "Run DevCovenant start gate",
-        "Run DevCovenant tests",
+        "Run DevCovenant mid gate",
+        "Run DevCovenant workflow phases",
         "Run DevCovenant end gate",
     }
     selected_steps: list[dict[str, object]] = []
@@ -308,9 +344,114 @@ def _unit_test_repo_workflow_includes_devcovrepo_jobs() -> None:
     ]
     assert "Build package artifacts" in installed_step_names
     assert "Validate built artifacts" in installed_step_names
+    assert "Prove wheel artifact lifecycle" in installed_step_names
+    assert "Prove sdist artifact lifecycle" in installed_step_names
     assert "Install DevCovenant with pipx" in installed_step_names
     assert "Resolve pipx bin directory" in installed_step_names
-    assert "Verify installed CLI" in installed_step_names
+    assert "Prove pipx operator lifecycle" in installed_step_names
+
+
+def _unit_test_build_workflow_uploads_provenance_artifact() -> None:
+    """Build workflow should emit provenance beside validated dists."""
+    workflow = _load_raw_workflow(
+        REPO_ROOT / ".github" / "workflows" / "build.yml"
+    )
+    jobs = workflow.get("jobs")
+    assert isinstance(jobs, dict)
+    build_job = jobs.get("build-distributions")
+    assert isinstance(build_job, dict)
+    steps = build_job.get("steps")
+    assert isinstance(steps, list)
+
+    step_names = [
+        str(step.get("name") or "").strip()
+        for step in steps
+        if isinstance(step, dict)
+    ]
+    assert "Generate build provenance" in step_names
+    assert "Upload build provenance" in step_names
+
+    upload_step = next(
+        step
+        for step in steps
+        if isinstance(step, dict)
+        and str(step.get("name") or "").strip() == "Upload build provenance"
+    )
+    upload_with = upload_step.get("with")
+    assert isinstance(upload_with, dict)
+    assert upload_with.get("name") == "devcovenant-provenance"
+
+
+def _unit_test_publish_workflow_uses_validated_build_artifacts() -> None:
+    """Publish workflow should download one validated Build artifact."""
+    workflow = _load_raw_workflow(
+        REPO_ROOT / ".github" / "workflows" / "publish.yml"
+    )
+    triggers = workflow.get("on")
+    assert isinstance(triggers, dict)
+    workflow_dispatch = triggers.get("workflow_dispatch")
+    assert isinstance(workflow_dispatch, dict)
+    inputs = workflow_dispatch.get("inputs")
+    assert isinstance(inputs, dict)
+    build_run_id = inputs.get("build_run_id")
+    assert isinstance(build_run_id, dict)
+    assert build_run_id.get("required") == "true"
+
+    jobs = workflow.get("jobs")
+    assert isinstance(jobs, dict)
+    assert set(jobs) == {"publish"}
+    publish_job = jobs.get("publish")
+    assert isinstance(publish_job, dict)
+
+    permissions = publish_job.get("permissions")
+    assert isinstance(permissions, dict)
+    assert permissions.get("actions") == "read"
+    assert permissions.get("id-token") == "write"
+
+    steps = publish_job.get("steps")
+    assert isinstance(steps, list)
+    step_names = [
+        str(step.get("name") or "").strip()
+        for step in steps
+        if isinstance(step, dict)
+    ]
+    assert "Validate selected Build run" in step_names
+    assert "Download validated distributions" in step_names
+    assert "Download build provenance" in step_names
+    assert "Verify downloaded provenance" in step_names
+    assert "Publish to PyPI with trusted publishing" in step_names
+
+    all_run_blocks = "\n".join(
+        str(step.get("run") or "").strip()
+        for step in steps
+        if isinstance(step, dict)
+    )
+    assert "python -m build" not in all_run_blocks
+
+    dist_download = next(
+        step
+        for step in steps
+        if isinstance(step, dict)
+        and str(step.get("name") or "").strip()
+        == "Download validated distributions"
+    )
+    dist_with = dist_download.get("with")
+    assert isinstance(dist_with, dict)
+    assert dist_with.get("run-id") == "${{ steps.build-run.outputs.run_id }}"
+    assert dist_with.get("name") == "devcovenant-dist"
+
+    provenance_download = next(
+        step
+        for step in steps
+        if isinstance(step, dict)
+        and str(step.get("name") or "").strip() == "Download build provenance"
+    )
+    provenance_with = provenance_download.get("with")
+    assert isinstance(provenance_with, dict)
+    assert provenance_with.get("run-id") == (
+        "${{ steps.build-run.outputs.run_id }}"
+    )
+    assert provenance_with.get("name") == "devcovenant-provenance"
 
 
 class GeneratedUnittestCases(unittest.TestCase):
@@ -359,3 +500,11 @@ class GeneratedUnittestCases(unittest.TestCase):
     def test_repo_workflow_includes_devcovrepo_jobs(self):
         """Run repo workflow extra-job assertions."""
         _unit_test_repo_workflow_includes_devcovrepo_jobs()
+
+    def test_build_workflow_uploads_provenance_artifact(self):
+        """Run build-workflow provenance artifact assertions."""
+        _unit_test_build_workflow_uploads_provenance_artifact()
+
+    def test_publish_workflow_uses_validated_build_artifacts(self):
+        """Run publish-workflow artifact provenance assertions."""
+        _unit_test_publish_workflow_uses_validated_build_artifacts()

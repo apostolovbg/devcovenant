@@ -68,6 +68,10 @@ def _unit_test_resolve_stage_returns_none_when_disabled(
         Path("/tmp/repo"),
         "command",
     ) == (None, None)
+    assert module.resolve_managed_environment_for_stage(
+        Path("/tmp/repo"),
+        "run",
+    ) == (None, None)
 
 
 def _unit_test_invalid_managed_command_stage_raises() -> None:

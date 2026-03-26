@@ -1,19 +1,19 @@
 id: devflow-run-gates
 text: |
   DevCovenant must record and enforce the standard workflow: pre-commit start,
-  tests, then pre-commit end. The policy reads the status file to ensure each
-  gate ran and that no required command was skipped.
+  declared required workflow phases, then pre-commit end. Gate status
+  preserves pre-commit evidence while workflow-session state records which
+  required phases passed for the active session.
   This check is enforced for every repository change (including
   documentation-only updates) so the gate sequence cannot be skipped.
-  Changelog-only edits remain gate-scoped but do not require a fresh test
-  rerun by themselves.
+  Changelog-only edits remain gate-scoped but do not require a fresh
+  required-phase rerun by themselves.
 metadata:
   id: devflow-run-gates
   severity: critical
   auto_fix: 'false'
   enforcement: active
   gate_status_file: ''
-  required_commands: []
   require_pre_commit_start: 'true'
   require_pre_commit_end: 'true'
   pre_commit_command: ''

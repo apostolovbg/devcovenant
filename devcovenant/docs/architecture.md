@@ -1,5 +1,5 @@
 # DevCovenant Architecture
-**Last Updated:** 2026-03-24
+**Last Updated:** 2026-03-26
 **Project Version:** 1.0.0
 
 ## Overview
@@ -83,6 +83,34 @@ Examples include changelog coverage, line length, and dependency management.
 
 That split matters because it keeps non-optional engine behavior out of the
 same conceptual bucket as repo-specific governance choices.
+It also means the package artifact has to ship the core invariant descriptor
+YAMLs under `devcovenant/core/contracts/invariants/`, because deploy and
+other runtime paths resolve those descriptors from the installed package, not
+from a source-only checkout assumption.
+
+## Workflow Contract Model
+Workflow structure now has its own contract instead of being inferred from
+customizable policy state.
+
+Core owns the reserved workflow anchors:
+
+- `start`
+- `mid`
+- `end`
+
+Profiles own declared workflow phases between `mid` and `end`.
+Those phase declarations define:
+
+- whether a phase is enabled or required
+- phase ordering metadata
+- how the phase runs
+- the success contract used to mark it complete
+- the command surface that reruns it explicitly
+
+That split is intentional.
+Policies can still require things about source layout or test structure, but a
+customizable policy should not be the thing that makes gate mechanics work at
+all.
 
 ## Policy Runtime Model
 Policies combine three things:
@@ -102,6 +130,12 @@ That boundary is intentional.
 Checks report.
 Autofix fixes.
 Commands perform explicit operations.
+
+Workflow phases are different.
+They are recorded execution obligations, not policy checks.
+That is why core owns `devcovenant run` and `devcovenant phase run <id>`,
+while profiles declare the actual required phases under the tracked workflow
+contract.
 
 ## Managed Docs And Generation
 Managed documents are a first-class part of the architecture.
@@ -135,6 +169,8 @@ They can contribute:
 
 - managed assets
 
+- workflow phases
+
 - pre-commit fragments
 
 - translator declarations
@@ -146,6 +182,36 @@ The profile-registry service resolves those profile inventories in a
 deterministic sorted order before tracked registry state is written, so the
 same repo does not rewrite generated files differently on macOS, Linux, or
 Windows just because the filesystem returned directories in a different order.
+
+## Registry Ownership
+The tracked registry now has to represent two different kinds of truth:
+
+- durable resolved contract state
+- runtime session evidence
+
+Tracked contract state lives in `devcovenant/registry/registry.yaml`, including
+`workflow_contract`.
+That section records the reserved anchors, the declared phases resolved from
+active profiles, and which phase ids are currently required.
+
+Runtime workflow state lives in
+`devcovenant/registry/runtime/workflow_session.json`.
+That file records:
+
+- the active or last session id
+- anchor results
+- declared phase results
+- last-run session bindings
+- phase freshness snapshots
+
+`gate_status.json` still exists beside it, but it now focuses on gate lifecycle
+and pre-commit evidence instead of trying to be the whole workflow model.
+
+Policy-local runtime state should stay under runtime-owned namespaces such as
+`devcovenant/registry/runtime/` unless a policy explicitly declares another
+working location.
+That keeps mutable state out of policy source folders and preserves the source
+versus runtime boundary.
 
 ## Output And Error Boundaries
 All user-visible command output goes through the runtime output boundary.
@@ -202,3 +268,6 @@ stable:
 - managed docs remain descriptor-driven and preservation-aware
 
 - profiles remain the main reusable metadata and asset surface
+
+- workflow structure remains a formal tracked/runtime contract instead of an
+  accidental side effect of enabled policies

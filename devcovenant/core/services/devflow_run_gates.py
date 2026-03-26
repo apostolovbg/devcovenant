@@ -1,4 +1,4 @@
-"""Session gate contract: start -> test -> end for every work sequence."""
+"""Session gate contract for start, required phases, and end."""
 
 from __future__ import annotations
 
@@ -12,16 +12,22 @@ from devcovenant.core.contracts.policy import CheckContext, Violation
 from devcovenant.core.services import (
     core_invariants as core_invariants_service,
 )
+from devcovenant.core.services import registry as registry_runtime_module
+from devcovenant.core.services import (
+    workflow_contract as workflow_contract_module,
+)
 
 _DEFAULT_STATUS = (
     Path("devcovenant") / "registry" / "runtime" / "gate_status.json"
+)
+_DEFAULT_WORKFLOW_SESSION = (
+    Path("devcovenant") / "registry" / "runtime" / "workflow_session.json"
 )
 _DEFAULT_PRE_COMMIT_COMMAND = "python3 -m pre_commit run --all-files"
 _DEFAULT_PRE_COMMIT_START_KEY = "pre_commit_start_epoch"
 _DEFAULT_PRE_COMMIT_END_KEY = "pre_commit_end_epoch"
 _DEFAULT_PRE_COMMIT_START_COMMAND_KEY = "pre_commit_start_command"
 _DEFAULT_PRE_COMMIT_END_COMMAND_KEY = "pre_commit_end_command"
-REQUIRED_COMMANDS_FIELD = "required_commands"
 
 
 def _resolve_status_path(invariant: "DevflowRunGates") -> Path:
@@ -33,22 +39,36 @@ def _resolve_status_path(invariant: "DevflowRunGates") -> Path:
     return Path(token)
 
 
-def _required_commands(invariant: "DevflowRunGates") -> list[str]:
-    """Return ordered commands that must appear in status command history."""
-    commands_option = invariant.get_option(REQUIRED_COMMANDS_FIELD, [])
-    if isinstance(commands_option, str):
-        commands = [commands_option]
-    elif isinstance(commands_option, list):
-        commands = list(commands_option)
-    else:
-        raise ValueError(
-            "Invalid `required_commands` payload: expected string or list."
-        )
-    return [
-        command.strip()
-        for command in commands
-        if isinstance(command, str) and command.strip()
+def _phase_rerun_command(phase_id: str) -> str:
+    """Return the canonical rerun command for one workflow phase."""
+    token = str(phase_id or "").strip().lower()
+    return f"devcovenant phase run {token}"
+
+
+def _format_phase_rerun_instructions(
+    phase_ids: list[str],
+    *,
+    required_phase_ids: list[str] | None = None,
+) -> str:
+    """Render one operator-facing rerun instruction chain."""
+    phase_tokens = [
+        str(phase_id or "").strip().lower()
+        for phase_id in phase_ids
+        if str(phase_id or "").strip()
     ]
+    required_tokens = [
+        str(phase_id or "").strip().lower()
+        for phase_id in (required_phase_ids or [])
+        if str(phase_id or "").strip()
+    ]
+    if phase_tokens and required_tokens and phase_tokens == required_tokens:
+        return "`devcovenant run`"
+    commands = [_phase_rerun_command(phase_id) for phase_id in phase_tokens]
+    if not commands:
+        return ""
+    if len(commands) == 1:
+        return f"`{commands[0]}`"
+    return ", then ".join(f"`{command}`" for command in commands)
 
 
 def _load_gate_status(status_file: Path) -> dict | None:
@@ -61,6 +81,19 @@ def _load_gate_status(status_file: Path) -> dict | None:
         raise ValueError(f"Invalid gate status JSON: {exc}") from exc
     if not isinstance(payload, dict):
         raise ValueError("Gate status payload must be a JSON object.")
+    return payload
+
+
+def _load_workflow_session(session_file: Path) -> dict | None:
+    """Return parsed workflow-session payload, or None when file is missing."""
+    if not session_file.is_file():
+        return None
+    try:
+        payload = json.loads(session_file.read_text(encoding="utf-8"))
+    except json.JSONDecodeError as exc:
+        raise ValueError(f"Invalid workflow session JSON: {exc}") from exc
+    if not isinstance(payload, dict):
+        raise ValueError("Workflow session payload must be a JSON object.")
     return payload
 
 
@@ -155,31 +188,13 @@ def configured_invariant(repo_root: Path) -> DevflowRunGates:
     return checker
 
 
-def resolve_required_test_commands(
-    repo_root: Path,
-) -> dict[str, object]:
-    """Return the configured required test commands for this repository."""
-    checker = configured_invariant(repo_root)
-    commands = _required_commands(checker)
-    if not commands:
-        raise ValueError(
-            "No required test commands are configured for "
-            "devflow-run-gates. Set `required_commands` via "
-            "active profile overlays."
-        )
-    return {
-        "commands": commands,
-        "source_field": REQUIRED_COMMANDS_FIELD,
-    }
-
-
 class DevflowRunGates(CoreInvariantCheck):
     """Validate that all work is bound to one recorded gate session."""
 
     invariant_id = "devflow-run-gates"
 
     def check(self, ctx: CheckContext) -> List[Violation]:
-        """Enforce start->test->end sequencing from gate-status ledger."""
+        """Enforce start->required-phases->end sequencing from gate state."""
         violations: List[Violation] = []
         status_rel = _resolve_status_path(self)
         status_path = ctx.repo_root / status_rel
@@ -190,34 +205,6 @@ class DevflowRunGates(CoreInvariantCheck):
             return violations
         if phase == "start":
             return violations
-
-        try:
-            required_commands_raw = _required_commands(self)
-        except ValueError as error:
-            return [
-                Violation(
-                    policy_id=self.policy_id,
-                    severity="error",
-                    file_path=status_rel,
-                    message=str(error),
-                )
-            ]
-        required_commands = [
-            command.lower() for command in required_commands_raw
-        ]
-        if not required_commands:
-            return [
-                Violation(
-                    policy_id=self.policy_id,
-                    severity="error",
-                    file_path=status_rel,
-                    message=(
-                        "No required test commands are configured for "
-                        "devflow-run-gates. Set `required_commands` via "
-                        "active profile overlays."
-                    ),
-                )
-            ]
 
         try:
             status = _load_gate_status(status_path)
@@ -250,11 +237,21 @@ class DevflowRunGates(CoreInvariantCheck):
                     file_path=status_rel,
                     message=(
                         "Gate status is missing. Run "
-                        "`devcovenant gate --start`, then `devcovenant test`, "
+                        "`devcovenant gate --start`, then `devcovenant run`, "
                         "then `devcovenant gate --end`."
                     ),
                 )
             ]
+
+        workflow_session_path = registry_runtime_module.workflow_session_path(
+            ctx.repo_root
+        )
+        try:
+            workflow_session_rel = workflow_session_path.relative_to(
+                ctx.repo_root
+            )
+        except ValueError:
+            workflow_session_rel = workflow_session_path
 
         session_id = str(status.get("session_id", "")).strip()
         session_state = str(status.get("session_state", "")).strip().lower()
@@ -264,14 +261,6 @@ class DevflowRunGates(CoreInvariantCheck):
         has_unsessioned_edits = (
             not ctx.change_state.session_valid
             and session_reason_code == "unsessioned_edits_after_end"
-        )
-        allow_closed_audit_end_order_relaxation = (
-            _allow_closed_audit_end_order_relaxation(
-                ctx,
-                phase=phase,
-                session_state=session_state,
-                has_unsessioned_edits=has_unsessioned_edits,
-            )
         )
         if not session_id:
             if has_unsessioned_edits:
@@ -328,6 +317,60 @@ class DevflowRunGates(CoreInvariantCheck):
                     )
                 )
 
+        try:
+            workflow_contract = (
+                workflow_contract_module.load_workflow_contract(ctx.repo_root)
+            )
+        except ValueError as error:
+            return [
+                Violation(
+                    policy_id=self.policy_id,
+                    severity="error",
+                    file_path=workflow_session_rel,
+                    message=str(error),
+                )
+            ]
+        required_phase_ids = workflow_contract_module.required_phase_ids(
+            workflow_contract
+        )
+        if not required_phase_ids:
+            return [
+                Violation(
+                    policy_id=self.policy_id,
+                    severity="error",
+                    file_path=workflow_session_rel,
+                    message=(
+                        "No required workflow phases are configured for "
+                        "the active profiles. Declare `workflow_phases` "
+                        "before relying on devflow-run-gates."
+                    ),
+                )
+            ]
+        try:
+            workflow_session = _load_workflow_session(workflow_session_path)
+        except ValueError as error:
+            return [
+                Violation(
+                    policy_id=self.policy_id,
+                    severity="error",
+                    file_path=workflow_session_rel,
+                    message=str(error),
+                )
+            ]
+        if not workflow_session:
+            return [
+                Violation(
+                    policy_id=self.policy_id,
+                    severity="error",
+                    file_path=workflow_session_rel,
+                    message=(
+                        "Workflow session is missing. Run "
+                        "`devcovenant gate --start`, execute required "
+                        "workflow phases, then `devcovenant gate --end`."
+                    ),
+                )
+            ]
+
         pre_commit_command = _pre_commit_command(self)
         require_start = _require_pre_commit(self, "require_pre_commit_start")
         require_end = _require_pre_commit(self, "require_pre_commit_end")
@@ -353,9 +396,6 @@ class DevflowRunGates(CoreInvariantCheck):
 
         start_ts = _as_epoch(status.get(start_epoch_key))
         end_ts = _as_epoch(status.get(end_epoch_key))
-        last_ts = _as_epoch(status.get("last_run_epoch"))
-        last_run = str(status.get("last_run_utc") or "").strip()
-
         if require_start:
             if start_ts <= 0.0:
                 violations.append(
@@ -383,60 +423,83 @@ class DevflowRunGates(CoreInvariantCheck):
                         ),
                     )
                 )
-
-        commands_raw = status.get("commands")
-        if not isinstance(commands_raw, list):
+        workflow_session_id = str(
+            workflow_session.get("session_id", "")
+        ).strip()
+        workflow_session_state = (
+            str(workflow_session.get("session_state", "")).strip().lower()
+        )
+        if workflow_session_id and workflow_session_id != session_id:
             violations.append(
                 Violation(
                     policy_id=self.policy_id,
                     severity="error",
-                    file_path=status_rel,
-                    message="Gate status field `commands` must be a list.",
+                    file_path=workflow_session_rel,
+                    message=(
+                        "Workflow session id does not match gate status. "
+                        "Re-run `devcovenant gate --start`."
+                    ),
                 )
             )
             return violations
-        recorded_commands = _normalize_recorded_commands(commands_raw)
-        missing_commands = [
-            command
-            for command in required_commands
-            if command not in recorded_commands
-        ]
-        if missing_commands:
+        if phase == "end":
+            if workflow_session_state != "open":
+                violations.append(
+                    Violation(
+                        policy_id=self.policy_id,
+                        severity="error",
+                        file_path=workflow_session_rel,
+                        message=(
+                            "Workflow session must be open during "
+                            "`devcovenant gate --end`."
+                        ),
+                    )
+                )
+                return violations
+        elif workflow_session_state == "open":
             violations.append(
                 Violation(
                     policy_id=self.policy_id,
                     severity="error",
-                    file_path=status_rel,
+                    file_path=workflow_session_rel,
                     message=(
-                        "Latest recorded gate status is missing required "
-                        f"commands: {', '.join(missing_commands)}. Run "
-                        "`devcovenant test`."
+                        "Workflow session is still open. Complete the "
+                        "workflow with `devcovenant gate --end`."
                     ),
                 )
             )
 
-        if last_ts <= 0.0:
+        phases_raw = workflow_session.get("phases")
+        phase_map = dict(phases_raw) if isinstance(phases_raw, dict) else {}
+        missing_required_phases: list[str] = []
+        for phase_id in required_phase_ids:
+            phase_entry = phase_map.get(phase_id)
+            if not isinstance(phase_entry, dict):
+                missing_required_phases.append(phase_id)
+                continue
+            if str(phase_entry.get("status", "")).strip().lower() != "passed":
+                missing_required_phases.append(phase_id)
+                continue
+            last_run_session_id = str(
+                phase_entry.get("last_run_session_id", "")
+            ).strip()
+            if session_id and last_run_session_id != session_id:
+                missing_required_phases.append(phase_id)
+                continue
+        if missing_required_phases:
             violations.append(
                 Violation(
                     policy_id=self.policy_id,
                     severity="error",
-                    file_path=status_rel,
+                    file_path=workflow_session_rel,
                     message=(
-                        "No recorded test run for the active session. "
-                        "Run `devcovenant test`."
-                    ),
-                )
-            )
-        elif start_ts > 0.0 and last_ts < start_ts:
-            violations.append(
-                Violation(
-                    policy_id=self.policy_id,
-                    severity="error",
-                    file_path=status_rel,
-                    message=(
-                        "Recorded tests predate session start "
-                        f"({last_run or 'unknown'}). Run `devcovenant test` "
-                        "after `devcovenant gate --start`."
+                        "Latest recorded workflow session is missing "
+                        "required phases: "
+                        f"{', '.join(missing_required_phases)}. Run "
+                        f"{_format_phase_rerun_instructions(
+                            missing_required_phases,
+                            required_phase_ids=required_phase_ids,
+                        )}."
                     ),
                 )
             )
@@ -466,21 +529,6 @@ class DevflowRunGates(CoreInvariantCheck):
                         ),
                     )
                 )
-            elif last_ts > 0.0 and end_ts < last_ts:
-                if not allow_closed_audit_end_order_relaxation:
-                    violations.append(
-                        Violation(
-                            policy_id=self.policy_id,
-                            severity="error",
-                            file_path=status_rel,
-                            message=(
-                                "Session end pre-commit run predates the "
-                                "latest recorded tests. Re-run "
-                                "`devcovenant gate --end` after tests."
-                            ),
-                        )
-                    )
-
             end_command = str(status.get(end_command_key) or "").lower()
             if pre_commit_command and pre_commit_command not in end_command:
                 violations.append(

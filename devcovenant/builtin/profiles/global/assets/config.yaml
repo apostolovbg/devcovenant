@@ -21,7 +21,7 @@
 # 3) set `install.config_reviewed: true`
 # 4) run `devcovenant deploy`
 # 5) start normal work with
-#    `gate --start` -> `gate --mid` -> `test` -> `gate --end`
+#    `gate --start` -> `gate --mid` -> `run` -> `gate --end`
 #
 # Three common starting situations:
 # - empty repo:
@@ -338,9 +338,6 @@ core_invariants:
     gate_status_file: devcovenant/registry/runtime/gate_status.json
     pre_commit_command:
       - python3 -m pre_commit run --all-files
-    required_commands:
-      - python3 -m unittest discover -v
-      - pytest
     skipped_globs:
       - devcovenant/registry/runtime/**
 

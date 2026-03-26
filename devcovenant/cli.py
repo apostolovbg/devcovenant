@@ -23,7 +23,8 @@ _COMMAND_MODULES = {
     "check": "devcovenant.check",
     "clean": "devcovenant.clean",
     "gate": "devcovenant.gate",
-    "test": "devcovenant.test",
+    "run": "devcovenant.run",
+    "phase": "devcovenant.phase",
     "install": "devcovenant.install",
     "deploy": "devcovenant.deploy",
     "upgrade": "devcovenant.upgrade",
@@ -76,8 +77,8 @@ def _managed_stage_for_command(
             return "end"
         if "--start" in command_args:
             return "start"
-    if command == "test":
-        return "test"
+    if command == "run":
+        return "run"
     return "command"
 
 

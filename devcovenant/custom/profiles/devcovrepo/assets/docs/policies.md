@@ -25,6 +25,9 @@ Explain:
 
 - dependency-management as one coherent policy surface
 
+- the `requirements.lock` contract for normalized resolution content versus
+  environment-specific pip source options
+
 - version-governance adapter expectations
 
 - custom policy guidance
@@ -33,3 +36,9 @@ Explain:
 Avoid drowning readers in descriptor bookkeeping.
 Explain the boundary clearly enough that a maintainer can reason about where a
 new behavior belongs and which mutation path, if any, is allowed.
+
+## Custom Policy Guidance
+In a normal repository, do not seed repo-specific custom policies before the
+first reviewed baseline activation.
+Start with `install`, config review, and `deploy`, prove that baseline, and
+then add custom policies once the normal repo contract is already working.

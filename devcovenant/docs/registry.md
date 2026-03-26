@@ -1,5 +1,5 @@
 # Registry
-**Last Updated:** 2026-03-25
+**Last Updated:** 2026-03-26
 **Project Version:** 1.0.0
 
 ## Overview
@@ -36,7 +36,9 @@ It stores deterministic governance state such as:
 6. profile-provided generation fragments, including reusable
    `ci_and_test` additions
 
-7. resolution traces used for auditing and debugging
+7. the resolved `workflow_contract`
+
+8. resolution traces used for auditing and debugging
 
 Packaging and policy-runtime changes can legitimately update tracked-registry
 hashes even when the visible behavior change is elsewhere.
@@ -44,8 +46,12 @@ That is normal evidence of a real contract change, not registry noise.
 In this repository, tracked registry state now also records the repo-specific
 `ci_and_test` additions contributed by the active custom profile, including
 the scanner steps merged into `ci-and-test` and the dependent
-`build-and-install-test` proof for the documented `pipx` machine-install
-path.
+`build-and-install-test` proof for the built wheel, the built sdist, and the
+documented `pipx` machine-install path.
+That same tracked state also changes when release-facing package-data or
+dependency-management semantics change, because the registry records the
+resolved metadata the runtime actually uses rather than just the visible
+command surface.
 That tracked CI metadata can also include a reviewed temporary scanner
 exception when an upstream advisory has no published fix release yet.
 The tracked registry also depends on deterministic discovery order, so
@@ -54,6 +60,13 @@ registry on macOS, Linux, or Windows.
 That same tracked state also records the current generated workflow contract,
 including the visible workflow name `Checks` and the repo-specific
 `build-and-install-test` verification job.
+The tracked `workflow_contract` section is the workflow-owned part of that
+story: it records the reserved anchors, the declared phases resolved from
+active profiles, and which phase ids are currently required.
+That means required-phase execution no longer lives in an invariant
+`required_commands` list.
+The tracked contract lives in `workflow_contract`, while freshness and
+pass/fail evidence live in `workflow_session.json`.
 
 Commit tracked-registry changes when they are the result of real repo changes.
 
@@ -61,6 +74,8 @@ Commit tracked-registry changes when they are the result of real repo changes.
 `devcovenant/registry/runtime/` stores runtime-local state such as:
 
 - `gate_status.json`
+
+- `workflow_session.json`
 
 - latest-run pointers
 
@@ -70,9 +85,13 @@ This state is about the current or recent command history, not about the
 stable repo contract.
 
 ## Gate Status
-`gate_status.json` is the short session ledger.
-It records lifecycle state for the current gate session and the latest test
-run that belongs to it.
+`gate_status.json` is the short gate lifecycle ledger.
+It records gate start/end state and the pre-commit evidence those anchors
+require.
+
+`workflow_session.json` records the required declared workflow phases for the
+session, their pass/fail state, and the last-session/snapshot evidence used to
+decide whether a phase is still fresh.
 
 That is why `gate --status` is often the right first command when you need to
 know where a slice stands.
@@ -88,16 +107,20 @@ Read `registry.yaml` when you need to understand:
 
 4. why one configuration value won over another
 
-5. which profile contributed an extra generated workflow fragment or other
+5. which workflow phases are required and which profile declared them
+
+6. which profile contributed an extra generated workflow fragment or other
    resolved generation input
 
-6. which cleanup targets came from profiles versus which protected roots came
+7. which cleanup targets came from profiles versus which protected roots came
    from runtime-owned sources such as the managed environment or the active
    clean run directory
 
 Read `registry/runtime/` when you need to understand:
 
 - whether a gate session is open
+
+- whether a required workflow phase has passed for the current session
 
 - what the last relevant run was
 

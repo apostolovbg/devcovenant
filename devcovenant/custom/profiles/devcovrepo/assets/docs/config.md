@@ -47,3 +47,7 @@ repository-specific adjustments.
 Be equally explicit that cleanup targets come from active profile
 `clean_overlays` by default, while local `clean.overrides` are only for
 deliberate replacement of one resolved cleanup key.
+Be equally explicit that required workflow phases no longer come from
+`core_invariants.devflow-run-gates.required_commands`; they come from active
+profile `workflow_phases`, while `core_invariants.devflow-run-gates` now owns
+only the gate evidence contract around those declared phases.

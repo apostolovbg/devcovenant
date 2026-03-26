@@ -47,7 +47,28 @@ def _write_policy_registry(repo_root: Path) -> None:
                 "      header_keys:",
                 "      - Last Updated",
                 "      header_scan_lines: 4",
-                "profiles: {}",
+                "profiles:",
+                "  global:",
+                "    category: system",
+                "  python:",
+                "    category: language",
+                "    workflow_phases:",
+                "      - id: tests",
+                "        enabled: true",
+                "        required: true",
+                "        after: mid",
+                "        before: end",
+                "        order: 100",
+                "        runner:",
+                "          kind: command_group",
+                "          commands:",
+                "            - python3 -m unittest discover -v",
+                "            - pytest",
+                "        success_contract:",
+                "          kind: all_commands_exit_zero",
+                "        recording:",
+                "          record_in_session: true",
+                "          summary_label: Tests",
                 "inventory: {}",
                 "",
             ]
@@ -69,6 +90,9 @@ def _write_runtime_config(repo_root: Path) -> None:
                 "  maintenance_stance: active",
                 "  compatibility_policy: breaking-allowed",
                 "  versioning_mode: versioned",
+                "profiles:",
+                "  active:",
+                "    - python",
                 "engine:",
                 "  auto_fix_enabled: false",
                 "",
@@ -134,6 +158,25 @@ def _read_session_snapshot(repo_root: Path) -> dict[str, object]:
     """Read the gate session companion snapshot payload."""
     snapshot_path = repo_root / _SESSION_SNAPSHOT_REL
     return json.loads(snapshot_path.read_text(encoding="utf-8"))
+
+
+def _write_workflow_session(
+    repo_root: Path,
+    payload: dict[str, object],
+) -> None:
+    """Write the runtime workflow-session payload."""
+    path = (
+        repo_root
+        / "devcovenant"
+        / "registry"
+        / "runtime"
+        / "workflow_session.json"
+    )
+    path.parent.mkdir(parents=True, exist_ok=True)
+    path.write_text(
+        json.dumps(payload, indent=2) + "\n",
+        encoding="utf-8",
+    )
 
 
 def _unit_test_start_clears_stale_pre_commit_end() -> None:
@@ -407,6 +450,7 @@ def _unit_test_mid_targets_snapshot_files_for_pre_commit() -> None:
     module = importlib.import_module(MODULE)
     with tempfile.TemporaryDirectory() as tmpdir:
         repo_root = Path(tmpdir)
+        _write_policy_registry(repo_root)
         status_path = (
             repo_root
             / "devcovenant"
@@ -426,6 +470,18 @@ def _unit_test_mid_targets_snapshot_files_for_pre_commit() -> None:
             )
             + "\n",
             encoding="utf-8",
+        )
+        _write_workflow_session(
+            repo_root,
+            {
+                "schema_version": 1,
+                "workflow_contract_schema_version": 1,
+                "session_id": "open-mid-target",
+                "session_state": "open",
+                "required_phase_ids": ["tests"],
+                "anchors": {},
+                "phases": {},
+            },
         )
         tracked_path = repo_root / "mid_target.py"
         tracked_path.write_text("print('mid')\n", encoding="utf-8")
@@ -475,6 +531,7 @@ def _unit_test_end_targets_snapshot_files_for_pre_commit() -> None:
     module = importlib.import_module(MODULE)
     with tempfile.TemporaryDirectory() as tmpdir:
         repo_root = Path(tmpdir)
+        _write_policy_registry(repo_root)
         status_path = (
             repo_root
             / "devcovenant"
@@ -485,7 +542,10 @@ def _unit_test_end_targets_snapshot_files_for_pre_commit() -> None:
         status_path.parent.mkdir(parents=True, exist_ok=True)
         snapshot_rel = _write_session_snapshot(
             repo_root,
-            {"last_run_snapshot": {"sample.py": "same"}},
+            {
+                "last_run_snapshot": {"sample.py": "same"},
+                "workflow_phase_snapshots": {"tests": {"sample.py": "same"}},
+            },
         )
         status_path.write_text(
             json.dumps(
@@ -501,6 +561,25 @@ def _unit_test_end_targets_snapshot_files_for_pre_commit() -> None:
             )
             + "\n",
             encoding="utf-8",
+        )
+        _write_workflow_session(
+            repo_root,
+            {
+                "schema_version": 1,
+                "workflow_contract_schema_version": 1,
+                "session_id": "open-end-target",
+                "session_state": "open",
+                "required_phase_ids": ["tests"],
+                "session_snapshot_file": snapshot_rel,
+                "anchors": {},
+                "phases": {
+                    "tests": {
+                        "id": "tests",
+                        "status": "passed",
+                        "last_run_session_id": "open-end-target",
+                    }
+                },
+            },
         )
         tracked_path = repo_root / "end_target.py"
         tracked_path.write_text("print('end')\n", encoding="utf-8")
@@ -546,7 +625,7 @@ def _unit_test_end_targets_snapshot_files_for_pre_commit() -> None:
 
 
 def _unit_test_start_recovery_requires_explicit_manual_tests() -> None:
-    """Recovery start should fail and instruct explicit manual tests."""
+    """Recovery start should fail and instruct explicit workflow phases."""
     module = importlib.import_module(MODULE)
     with tempfile.TemporaryDirectory() as tmpdir:
         repo_root = Path(tmpdir)
@@ -578,6 +657,19 @@ def _unit_test_start_recovery_requires_explicit_manual_tests() -> None:
             )
             + "\n",
             encoding="utf-8",
+        )
+        _write_workflow_session(
+            repo_root,
+            {
+                "schema_version": 1,
+                "workflow_contract_schema_version": 1,
+                "session_id": "closed-1",
+                "session_state": "closed",
+                "required_phase_ids": ["tests"],
+                "session_snapshot_file": snapshot_rel,
+                "anchors": {},
+                "phases": {},
+            },
         )
         original_bytes = status_path.read_bytes()
         lines: list[str] = []
@@ -624,24 +716,32 @@ def _unit_test_start_recovery_requires_explicit_manual_tests() -> None:
         assert exit_code == 1
         assert status_path.read_bytes() == original_bytes
         assert any(
-            "requires an explicit `devcovenant test` run" in line
+            "requires fresh required workflow phases" in line for line in lines
+        ), lines
+        assert any(
+            "devcovenant run" in line and "devcovenant gate --start" in line
             for line in lines
         ), lines
         assert any(
-            "devcovenant test" in line and "devcovenant gate --start" in line
-            for line in lines
+            "no internal workflow-phase runs" in line for line in lines
         ), lines
-        assert any("no internal test runs" in line for line in lines), lines
 
 
 def _unit_test_start_recovery_allows_fresh_explicit_manual_tests() -> None:
-    """Recovery start should proceed when explicit tests are already fresh."""
+    """Recovery start should proceed when required phases are already fresh."""
     module = importlib.import_module(MODULE)
     with tempfile.TemporaryDirectory() as tmpdir:
         repo_root = Path(tmpdir)
         _write_policy_registry(repo_root)
         _write_changelog(repo_root)
         _write_agents(repo_root)
+        snapshot_rel = _write_session_snapshot(
+            repo_root,
+            {
+                "session_end_snapshot": {"sample.py": "old"},
+                "workflow_phase_snapshots": {"tests": {"sample.py": "same"}},
+            },
+        )
         status_path = (
             repo_root
             / "devcovenant"
@@ -657,21 +757,35 @@ def _unit_test_start_recovery_allows_fresh_explicit_manual_tests() -> None:
                     "session_state": "closed",
                     "session_end_epoch": 100.0,
                     "session_end_utc": "2026-02-25T11:00:00+00:00",
-                    "last_run_epoch": 200.0,
-                    "last_run_utc": "2026-02-25T11:01:40+00:00",
+                    "session_snapshot_file": snapshot_rel,
                 },
                 indent=2,
             )
             + "\n",
             encoding="utf-8",
         )
+        _write_workflow_session(
+            repo_root,
+            {
+                "schema_version": 1,
+                "workflow_contract_schema_version": 1,
+                "session_id": "closed-1",
+                "session_state": "closed",
+                "required_phase_ids": ["tests"],
+                "session_snapshot_file": snapshot_rel,
+                "anchors": {},
+                "phases": {
+                    "tests": {
+                        "id": "tests",
+                        "status": "passed",
+                        "last_run_session_id": "closed-1",
+                    }
+                },
+            },
+        )
         managed_env_target = (
             "devcovenant.core.flow.gate.execution_runtime_module."
             "resolve_managed_environment_for_stage"
-        )
-        changed_since_target = (
-            "devcovenant.core.flow.gate.execution_runtime_module."
-            "snapshot_paths_changed_since"
         )
         run_command_target = "devcovenant.core.flow.gate._run_command"
         snapshot_target = (
@@ -680,13 +794,6 @@ def _unit_test_start_recovery_allows_fresh_explicit_manual_tests() -> None:
 
         with (
             mock.patch(managed_env_target, return_value=(None, None)),
-            mock.patch(
-                changed_since_target,
-                side_effect=[
-                    {"devcovenant/core/flow/gate.py"},
-                    set(),
-                ],
-            ),
             mock.patch(run_command_target, return_value=0),
             mock.patch(
                 snapshot_target,
@@ -708,13 +815,32 @@ def _unit_test_start_recovery_allows_fresh_explicit_manual_tests() -> None:
         }
 
 
-def _unit_test_end_requires_explicit_test_and_rerun_on_hook_changes() -> None:
+def _unit_test_end_requires_explicit_run_and_rerun_on_hook_changes() -> None:
     """
-    End gate should require explicit test/rerun steps after hook changes.
+    End gate should require explicit run/rerun steps after hook changes.
     """
     module = importlib.import_module(MODULE)
     with tempfile.TemporaryDirectory() as tmpdir:
         repo_root = Path(tmpdir)
+        _write_policy_registry(repo_root)
+        _write_workflow_session(
+            repo_root,
+            {
+                "schema_version": 1,
+                "workflow_contract_schema_version": 1,
+                "session_id": "open-1",
+                "session_state": "open",
+                "required_phase_ids": ["tests"],
+                "anchors": {},
+                "phases": {
+                    "tests": {
+                        "id": "tests",
+                        "status": "passed",
+                        "last_run_session_id": "open-1",
+                    }
+                },
+            },
+        )
         lines: list[str] = []
         managed_env_target = (
             "devcovenant.core.flow.gate.execution_runtime_module."
@@ -770,17 +896,40 @@ def _unit_test_end_requires_explicit_test_and_rerun_on_hook_changes() -> None:
             "hook-induced file changes" in line for line in lines
         ), lines
         assert any(
-            "devcovenant test" in line and "devcovenant gate --end" in line
+            "devcovenant run" in line and "devcovenant gate --end" in line
             for line in lines
         ), lines
         assert not any("no internal reruns" in line for line in lines), lines
 
 
-def _unit_test_end_requires_explicit_test_and_rerun_on_stale_tests() -> None:
-    """End gate should require explicit tests when test freshness is stale."""
+def _unit_test_end_requires_explicit_run_and_rerun_on_stale_tests() -> None:
+    """End gate should require `run` when the required tests phase is stale."""
     module = importlib.import_module(MODULE)
     with tempfile.TemporaryDirectory() as tmpdir:
         repo_root = Path(tmpdir)
+        _write_policy_registry(repo_root)
+        _write_workflow_session(
+            repo_root,
+            {
+                "schema_version": 1,
+                "workflow_contract_schema_version": 1,
+                "session_id": "open-2",
+                "session_state": "open",
+                "required_phase_ids": ["tests"],
+                "anchors": {},
+                "phases": {
+                    "tests": {
+                        "id": "tests",
+                        "status": "passed",
+                        "last_run_session_id": "open-2",
+                    }
+                },
+            },
+        )
+        _write_session_snapshot(
+            repo_root,
+            {"workflow_phase_snapshots": {"tests": {"sample.py": "old"}}},
+        )
         lines: list[str] = []
         managed_env_target = (
             "devcovenant.core.flow.gate.execution_runtime_module."
@@ -835,9 +984,12 @@ def _unit_test_end_requires_explicit_test_and_rerun_on_stale_tests() -> None:
             exit_code = module.run_pre_commit_gate(repo_root, "end")
 
         assert exit_code == 1
-        assert any("fresh explicit test run" in line for line in lines), lines
         assert any(
-            "devcovenant test" in line and "devcovenant gate --end" in line
+            "fresh required workflow phases before closure" in line
+            for line in lines
+        ), lines
+        assert any(
+            "devcovenant run" in line and "devcovenant gate --end" in line
             for line in lines
         ), lines
         assert not any("no internal reruns" in line for line in lines), lines
@@ -848,6 +1000,25 @@ def _unit_test_end_reports_blocking_devcov_failure_clearly() -> None:
     module = importlib.import_module(MODULE)
     with tempfile.TemporaryDirectory() as tmpdir:
         repo_root = Path(tmpdir)
+        _write_policy_registry(repo_root)
+        _write_workflow_session(
+            repo_root,
+            {
+                "schema_version": 1,
+                "workflow_contract_schema_version": 1,
+                "session_id": "open-2",
+                "session_state": "open",
+                "required_phase_ids": ["tests"],
+                "anchors": {},
+                "phases": {
+                    "tests": {
+                        "id": "tests",
+                        "status": "passed",
+                        "last_run_session_id": "open-2",
+                    }
+                },
+            },
+        )
         lines: list[str] = []
         managed_env_target = (
             "devcovenant.core.flow.gate.execution_runtime_module."
@@ -958,6 +1129,7 @@ def _unit_test_mid_runs_without_status_mutation() -> None:
     module = importlib.import_module(MODULE)
     with tempfile.TemporaryDirectory() as tmpdir:
         repo_root = Path(tmpdir)
+        _write_policy_registry(repo_root)
         status_path = (
             repo_root
             / "devcovenant"
@@ -979,6 +1151,18 @@ def _unit_test_mid_runs_without_status_mutation() -> None:
             )
             + "\n",
             encoding="utf-8",
+        )
+        _write_workflow_session(
+            repo_root,
+            {
+                "schema_version": 1,
+                "workflow_contract_schema_version": 1,
+                "session_id": "open-mid-1",
+                "session_state": "open",
+                "required_phase_ids": ["tests"],
+                "anchors": {},
+                "phases": {},
+            },
         )
         original_bytes = status_path.read_bytes()
         captured: dict[str, object] = {}
@@ -1054,6 +1238,7 @@ def _unit_test_mid_reports_blocking_devcov_failure() -> None:
     module = importlib.import_module(MODULE)
     with tempfile.TemporaryDirectory() as tmpdir:
         repo_root = Path(tmpdir)
+        _write_policy_registry(repo_root)
         status_path = (
             repo_root
             / "devcovenant"
@@ -1073,6 +1258,18 @@ def _unit_test_mid_reports_blocking_devcov_failure() -> None:
             )
             + "\n",
             encoding="utf-8",
+        )
+        _write_workflow_session(
+            repo_root,
+            {
+                "schema_version": 1,
+                "workflow_contract_schema_version": 1,
+                "session_id": "open-mid-2",
+                "session_state": "open",
+                "required_phase_ids": ["tests"],
+                "anchors": {},
+                "phases": {},
+            },
         )
         original_bytes = status_path.read_bytes()
         lines: list[str] = []
@@ -1161,13 +1358,13 @@ def _unit_test_show_gate_status_reports_open_session_read_only() -> None:
         status_path.write_bytes(status_bytes)
 
         logs_root = repo_root / "devcovenant" / "logs"
-        run_dir = logs_root / "20260225T110500000000Z-test"
+        run_dir = logs_root / "20260225T110500000000Z-run"
         run_dir.mkdir(parents=True, exist_ok=True)
         (run_dir / "run.json").write_text(
             json.dumps(
                 {
                     "run_id": run_dir.name,
-                    "command_name": "test",
+                    "command_name": "run",
                     "status": "success",
                     "artifacts": {
                         "summary_txt": (
@@ -1191,7 +1388,7 @@ def _unit_test_show_gate_status_reports_open_session_read_only() -> None:
             json.dumps(
                 {
                     "run_id": run_dir.name,
-                    "command_name": "test",
+                    "command_name": "run",
                     "status": "success",
                     "run_dir": f"devcovenant/logs/{run_dir.name}",
                     "summary_txt": (
@@ -1219,9 +1416,9 @@ def _unit_test_show_gate_status_reports_open_session_read_only() -> None:
         assert status_path.read_bytes() == status_bytes
         assert "Gate Status: open" in lines
         assert "Session ID: abc123" in lines
-        assert "Last Phase: test" in lines
+        assert "Last Phase: run" in lines
         assert "Session Start: 2026-02-25T11:00:00+00:00" in lines
-        assert "Last Test Run: 2026-02-25T11:05:00+00:00" in lines
+        assert "Last Workflow Run: 2026-02-25T11:05:00+00:00" in lines
         assert any(
             "Latest Relevant Logs: devcovenant/logs/" in line for line in lines
         )
@@ -1275,8 +1472,8 @@ def _unit_test_status_pointer_skips_current_gate_status_run() -> None:
         )
         run_logging.create_run_log_context(
             repo_root,
-            "test",
-            ["devcovenant", "test"],
+            "run",
+            ["devcovenant", "run"],
         )
         current = run_logging.create_run_log_context(
             repo_root,
@@ -1407,13 +1604,13 @@ class GeneratedUnittestCases(unittest.TestCase):
         """Run start-recovery success assertions when tests are fresh."""
         _unit_test_start_recovery_allows_fresh_explicit_manual_tests()
 
-    def test_end_requires_explicit_test_and_rerun_on_hook_changes(self):
-        """Run end-gate explicit test/rerun assertions for hook changes."""
-        _unit_test_end_requires_explicit_test_and_rerun_on_hook_changes()
+    def test_end_requires_explicit_run_and_rerun_on_hook_changes(self):
+        """Run end-gate explicit run/rerun assertions for hook changes."""
+        _unit_test_end_requires_explicit_run_and_rerun_on_hook_changes()
 
-    def test_end_requires_explicit_test_and_rerun_on_stale_tests(self):
-        """Run end-gate stale-test explicit test/rerun assertions."""
-        _unit_test_end_requires_explicit_test_and_rerun_on_stale_tests()
+    def test_end_requires_explicit_run_and_rerun_on_stale_tests(self):
+        """Run end-gate stale-phase explicit run/rerun assertions."""
+        _unit_test_end_requires_explicit_run_and_rerun_on_stale_tests()
 
     def test_end_reports_blocking_devcov_failure_clearly(self):
         """Run end-gate blocking-DevCovenant message clarity assertions."""

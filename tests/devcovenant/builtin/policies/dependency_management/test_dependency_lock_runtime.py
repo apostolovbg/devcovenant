@@ -154,6 +154,80 @@ def _unit_test_refresh_runtime_preserves_changed_manifest_references() -> None:
         assert "- `requirements.lock`" in report
 
 
+def _unit_test_refresh_runtime_ignores_environment_option_lines() -> None:
+    """Environment-specific pip option lines should not count as lock drift."""
+
+    module = importlib.import_module(MODULE)
+    with tempfile.TemporaryDirectory() as temp_dir:
+        repo_root = Path(temp_dir)
+        packaging_version = importlib_metadata.version("packaging")
+        (repo_root / "requirements.in").write_text(
+            "packaging>=26.0\n",
+            encoding="utf-8",
+        )
+        (repo_root / "requirements.lock").write_text(
+            f"packaging=={packaging_version}\n",
+            encoding="utf-8",
+        )
+        original_compile = module._compile_requirements_lock
+        module._compile_requirements_lock = (
+            lambda _repo_root, _requirements_in: module.LockFilePieces(
+                [
+                    "--index-url https://mirror.example/simple",
+                    f"packaging=={packaging_version}",
+                ]
+            )
+        )
+        try:
+            result = module._refresh_python_requirements_lock(repo_root)
+        finally:
+            module._compile_requirements_lock = original_compile
+
+        assert result.attempted is True
+        assert result.changed is False
+        assert (repo_root / "requirements.lock").read_text(
+            encoding="utf-8"
+        ) == f"packaging=={packaging_version}\n"
+
+
+def _unit_test_refresh_runtime_scrubs_environment_option_lines() -> None:
+    """Existing environment-specific pip option lines should be removed."""
+
+    module = importlib.import_module(MODULE)
+    with tempfile.TemporaryDirectory() as temp_dir:
+        repo_root = Path(temp_dir)
+        packaging_version = importlib_metadata.version("packaging")
+        (repo_root / "requirements.in").write_text(
+            "packaging>=26.0\n",
+            encoding="utf-8",
+        )
+        (repo_root / "requirements.lock").write_text(
+            "--trusted-host mirror.example\n"
+            f"packaging=={packaging_version}\n",
+            encoding="utf-8",
+        )
+        original_compile = module._compile_requirements_lock
+        module._compile_requirements_lock = (
+            lambda _repo_root, _requirements_in: module.LockFilePieces(
+                [f"packaging=={packaging_version}"]
+            )
+        )
+        try:
+            result = module._refresh_python_requirements_lock(repo_root)
+        finally:
+            module._compile_requirements_lock = original_compile
+
+        assert result.attempted is True
+        assert result.changed is True
+        assert result.message == (
+            "Normalized requirements.lock by removing "
+            "environment-specific pip option lines."
+        )
+        assert (repo_root / "requirements.lock").read_text(
+            encoding="utf-8"
+        ) == f"packaging=={packaging_version}\n"
+
+
 class GeneratedUnittestCases(unittest.TestCase):
     """unittest wrappers for layered module sanity checks."""
 
@@ -176,3 +250,11 @@ class GeneratedUnittestCases(unittest.TestCase):
     def test_refresh_runtime_preserves_changed_manifest_references(self):
         """Run changed-manifest reference preservation assertions."""
         _unit_test_refresh_runtime_preserves_changed_manifest_references()
+
+    def test_refresh_runtime_ignores_environment_option_lines(self):
+        """Run environment-specific option-line drift assertions."""
+        _unit_test_refresh_runtime_ignores_environment_option_lines()
+
+    def test_refresh_runtime_scrubs_environment_option_lines(self):
+        """Run environment-specific option-line cleanup assertions."""
+        _unit_test_refresh_runtime_scrubs_environment_option_lines()

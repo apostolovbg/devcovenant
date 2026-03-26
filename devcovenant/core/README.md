@@ -1,5 +1,5 @@
 # Core Runtime
-**Last Updated:** 2026-03-09
+**Last Updated:** 2026-03-26
 **Project Version:** 1.0.0
 
 ## Table of Contents
@@ -99,6 +99,6 @@ folder; those may refactor as long as Tier-A/B/C behavior stays stable.
 4. Run the gate sequence:
    - `devcovenant gate --start`
    - `devcovenant gate --mid`
-   - `devcovenant test`
+   - `devcovenant run`
    - `devcovenant gate --end`
 5. Keep `SPEC.md`, `PLAN.md`, and maps aligned when contracts change.

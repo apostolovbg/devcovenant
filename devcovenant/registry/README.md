@@ -1,5 +1,5 @@
 # Registry State
-**Last Updated:** 2026-03-15
+**Last Updated:** 2026-03-26
 **Project Version:** 1.0.0
 
 ## Table of Contents
@@ -54,7 +54,7 @@ Ownership model:
 ## Troubleshooting Notes
 If integrity checks report registry drift:
 1. Run `devcovenant refresh`.
-2. Re-run `devcovenant test`.
+2. Re-run `devcovenant run`.
 3. Re-run `devcovenant gate --end`.
 
 If drift persists, compare AGENTS policy block content against
@@ -66,5 +66,5 @@ refreshed.
 2. Confirm `devcovenant/registry/registry.yaml` is regenerated when inputs
    changed.
 3. Use `devcovenant/registry/runtime/` only for live runtime inspection.
-4. Run `devcovenant gate --mid` before tests in active sessions.
+4. Run `devcovenant gate --mid` before `devcovenant run` in active sessions.
 5. Validate with tests and end gate.

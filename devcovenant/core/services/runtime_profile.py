@@ -1,4 +1,4 @@
-"""Build informational test-runtime profiling payloads."""
+"""Build informational workflow-phase profiling payloads."""
 
 from __future__ import annotations
 
@@ -34,8 +34,10 @@ def _coerce_duration_seconds(raw: object) -> float:
     return round(value, 6)
 
 
-def infer_test_command_module(command_tokens: Sequence[str]) -> str:
-    """Infer one module token from command tokens."""
+def infer_workflow_phase_command_module(
+    command_tokens: Sequence[str],
+) -> str:
+    """Infer one module token from workflow-phase command tokens."""
     if not command_tokens:
         return "unknown"
     head = Path(str(command_tokens[0])).name.strip().lower()
@@ -54,12 +56,12 @@ def infer_test_command_module(command_tokens: Sequence[str]) -> str:
     return head
 
 
-def infer_test_command_group(
+def infer_workflow_phase_command_group(
     *,
     command_tokens: Sequence[str],
     module_name: str,
 ) -> str:
-    """Infer one coarse command group for runtime profiling."""
+    """Infer one coarse command group for workflow-phase profiling."""
     module_token = str(module_name).strip().lower()
     if module_token in {"pytest", "unittest"}:
         return module_token
@@ -109,16 +111,17 @@ def _aggregate_duration_rows(
     )
 
 
-def build_test_runtime_profile_payload(
+def build_workflow_runtime_profile_payload(
     *,
+    phase_id: str,
     commands: Sequence[tuple[str, Sequence[str]]],
     events: Sequence[Mapping[str, Any]],
-    tests_output_mode: str,
+    workflow_phase_output_mode: str,
     source_field: str,
     started: _dt.datetime,
     finished: _dt.datetime,
 ) -> dict[str, Any]:
-    """Build one informational profiling payload for `devcovenant test`."""
+    """Build one informational profiling payload for one workflow phase."""
     normalized_commands = [
         (str(raw).strip(), [str(token) for token in command_tokens])
         for raw, command_tokens in commands
@@ -139,8 +142,8 @@ def build_test_runtime_profile_payload(
         event_row = events[index] if index < len(events) else {}
         event_tokens = _normalize_command_tokens(event_row.get("command"))
         executed_tokens = event_tokens or configured_tokens
-        module_name = infer_test_command_module(executed_tokens)
-        group_name = infer_test_command_group(
+        module_name = infer_workflow_phase_command_module(executed_tokens)
+        group_name = infer_workflow_phase_command_group(
             command_tokens=executed_tokens,
             module_name=module_name,
         )
@@ -180,9 +183,9 @@ def build_test_runtime_profile_payload(
     return {
         "schema_version": PROFILE_SCHEMA_VERSION,
         "informational_only": True,
-        "command_name": "test",
-        "tests_output_mode": str(tests_output_mode).strip(),
-        "tests_required_commands_key": str(source_field).strip(),
+        "phase_id": str(phase_id).strip().lower(),
+        "workflow_phase_output_mode": str(workflow_phase_output_mode).strip(),
+        "workflow_phase_source_field": str(source_field).strip(),
         "started_at": started.isoformat(),
         "finished_at": finished.isoformat(),
         "duration_seconds": duration_seconds,
@@ -201,15 +204,19 @@ def build_test_runtime_profile_payload(
     }
 
 
-def render_test_runtime_profile_text(payload: Mapping[str, Any]) -> str:
-    """Render one short human-readable profiling report."""
+def render_workflow_runtime_profile_text(payload: Mapping[str, Any]) -> str:
+    """Render one short human-readable workflow-phase profiling report."""
     lines = [
-        "Test Runtime Profile (informational)",
+        "Workflow Phase Profile (informational)",
         f"Schema Version: {payload.get('schema_version', '')}",
-        f"Tests Output Mode: {payload.get('tests_output_mode', '')}",
+        f"Phase Id: {payload.get('phase_id', '')}",
         (
-            "Required Commands Field: "
-            f"{payload.get('tests_required_commands_key', '')}"
+            "Workflow Phase Output Mode: "
+            f"{payload.get('workflow_phase_output_mode', '')}"
+        ),
+        (
+            "Workflow Phase Source Field: "
+            f"{payload.get('workflow_phase_source_field', '')}"
         ),
         f"Started At: {payload.get('started_at', '')}",
         f"Finished At: {payload.get('finished_at', '')}",

@@ -831,6 +831,7 @@ def _refresh_config_generated(
     merged = copy.deepcopy(template)
     _merge_user_config_values(merged, config)
     _drop_legacy_project_governance_metadata(merged)
+    _drop_legacy_workflow_command_metadata(merged)
     _apply_profile_aware_engine_defaults(merged, user_config, active_profiles)
     _apply_profile_aware_project_governance_defaults(
         merged,
@@ -966,6 +967,20 @@ def _drop_legacy_project_governance_metadata(
         layer = payload.get(key_name)
         if isinstance(layer, dict):
             layer.pop("project-governance", None)
+
+
+def _drop_legacy_workflow_command_metadata(
+    payload: dict[str, object],
+) -> None:
+    """Remove retired gate-command config keys replaced by workflow phases."""
+
+    core_invariants = payload.get("core_invariants")
+    if not isinstance(core_invariants, dict):
+        return
+    devflow = core_invariants.get("devflow-run-gates")
+    if not isinstance(devflow, dict):
+        return
+    devflow.pop("required_commands", None)
 
 
 def _profile_project_governance_defaults(
@@ -1913,6 +1928,7 @@ def refresh_repo(repo_root: Path) -> int:
         user_config = _read_yaml(config_path) if config_path.exists() else {}
         _merge_user_config_values(config, user_config)
         _drop_legacy_project_governance_metadata(config)
+        _drop_legacy_workflow_command_metadata(config)
         initial_active_profiles = _active_profiles(config)
         preview_profile_registry = profile_runtime.build_profile_registry(
             repo_root,
@@ -2400,6 +2416,12 @@ def refresh_policy_registry(
                 repo_root,
                 config_payload=config_payload,
             )
+        )
+        registry.update_workflow_contract(
+            profile_runtime.build_profile_registry(
+                repo_root,
+                _active_profiles(config_payload),
+            ).get("workflow_contract", {})
         )
     except ValueError as error:
         runtime_print(f"Error: {error}", file=sys.stderr)

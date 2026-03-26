@@ -256,8 +256,8 @@ class DevcovIntegrityGuard(CoreInvariantCheck):
                     line_number=1,
                     message=(
                         "Code changes require a fresh gate status update. "
-                        "Run `devcovenant test` so the suite "
-                        "executes and the status file is refreshed."
+                        "Run `devcovenant run` so the required workflow "
+                        "phases execute and the status file is refreshed."
                     ),
                 )
             ]

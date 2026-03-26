@@ -2,7 +2,7 @@
 **Doc ID:** README
 **Doc Type:** repo-readme
 **Project Version:** 1.0.0
-**Last Updated:** 2026-03-25
+**Last Updated:** 2026-03-26
 **DevCovenant Version:** 1.0.0
 
 <!-- DEVCOV:BEGIN -->
@@ -25,7 +25,7 @@ In practice, DevCovenant gives a repository four things:
 
 1. A governed workflow.
 
-   The normal work slice is `gate --start`, edit, `gate --mid`, `test`,
+   The normal work slice is `gate --start`, edit, `gate --mid`, `run`,
    `gate --end`.
 
 2. Executable policy rules.
@@ -45,8 +45,8 @@ In practice, DevCovenant gives a repository four things:
 
 ## Why It Exists
 Repositories usually fail in boring ways, not exotic ones.
-A team forgets one required test command.
-A generated file changes after the last test run.
+A team forgets one required workflow phase.
+A generated file changes after the last required workflow run.
 A policy says one thing while the runtime does another.
 A changelog entry misses the files that actually changed.
 
@@ -69,7 +69,7 @@ devcovenant deploy
 devcovenant gate --start
 # make your edits
 devcovenant gate --mid
-devcovenant test
+devcovenant run
 devcovenant gate --end
 ```
 
@@ -108,7 +108,7 @@ The standard repository workflow is:
 devcovenant gate --start
 # edit files and clear complaints while working
 devcovenant gate --mid
-devcovenant test
+devcovenant run
 devcovenant gate --end
 ```
 
@@ -127,13 +127,19 @@ Use the commands this way:
 
 - `gate --mid`
 
-  Required pre-test preflight.
-  It catches pre-commit or DevCovenant mutations before test evidence is
-  recorded.
+  Required pre-run preflight.
+  It catches pre-commit or DevCovenant mutations before required workflow
+  evidence is recorded.
 
-- `test`
+- `run`
 
-  Runs the configured test command chain and records evidence for it.
+  Runs all enabled required workflow phases in declared order and records
+  evidence for them.
+
+- `phase run <id>`
+
+  Runs one explicit workflow phase when only a specific required phase needs a
+  rerun.
 
 - `gate --end`
 
@@ -142,8 +148,8 @@ Use the commands this way:
 When a command emits `Run logs: ...`, start with `summary.txt`.
 If that is not enough, inspect `tail.txt`, then `stdout.log` and `stderr.log`.
 
-In `engine.tests_output_mode: normal`, test progress stays concise in the
-console and full child output stays in the run logs.
+In `engine.tests_output_mode: normal`, the declared `tests` phase keeps
+console progress concise and leaves full child output in the run logs.
 
 ## Commands
 Most operators only need a small command set day to day:
@@ -153,7 +159,7 @@ devcovenant check
 devcovenant gate --status
 devcovenant gate --start
 devcovenant gate --mid
-devcovenant test
+devcovenant run
 devcovenant gate --end
 devcovenant refresh
 devcovenant deploy

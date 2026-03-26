@@ -9,7 +9,7 @@ text: |
   Active managed-environment policy now also re-executes DevCovenant CLI
   commands in the managed interpreter automatically when the current
   interpreter does not match. Stage-scoped `managed_commands` accept
-  `start`, `test`, `end`, `command`, and `all` prefixes; non-start
+  `start`, `run`, `end`, `command`, and `all` prefixes; non-start
   commands reuse `start` bootstrap commands once when the interpreter is
   still missing. If the resolved managed interpreter is missing or not
   executable, DevCovenant now fails explicitly instead of rerunning through

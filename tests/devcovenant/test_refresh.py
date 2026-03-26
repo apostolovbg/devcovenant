@@ -146,6 +146,11 @@ def _unit_test_refresh_builds_tracked_registry_and_agents() -> None:
             registry_payload["project-governance"]["versioning_mode"]
             == "unversioned"
         )
+        assert "workflow_contract" in registry_payload
+        assert (
+            "tests"
+            in registry_payload["workflow_contract"]["required_phase_ids"]
+        )
         assert "managed-docs" in registry_payload
         spec_entry = registry_payload["managed-docs"]["descriptors"]["SPEC.md"]
         assert spec_entry["body_fingerprint"]

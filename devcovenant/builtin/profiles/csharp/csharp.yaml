@@ -65,7 +65,19 @@ policy_overlays:
   line-length-limit:
     include_suffixes:
       - .cs
-core_invariant_overlays:
-  devflow-run-gates:
-    required_commands:
-      - dotnet test
+workflow_phases:
+  - id: tests
+    enabled: true
+    required: true
+    after: mid
+    before: end
+    order: 100
+    runner:
+      kind: command_group
+      commands:
+        - dotnet test
+    success_contract:
+      kind: all_commands_exit_zero
+    recording:
+      record_in_session: true
+      summary_label: Tests

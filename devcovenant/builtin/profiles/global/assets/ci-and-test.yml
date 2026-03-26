@@ -29,8 +29,11 @@ jobs:
       - name: Run DevCovenant start gate
         run: python -m devcovenant gate --start
 
-      - name: Run DevCovenant tests
-        run: python -m devcovenant test
+      - name: Run DevCovenant mid gate
+        run: python -m devcovenant gate --mid
+
+      - name: Run DevCovenant workflow phases
+        run: python -m devcovenant run
 
       - name: Run DevCovenant end gate
         run: python -m devcovenant gate --end

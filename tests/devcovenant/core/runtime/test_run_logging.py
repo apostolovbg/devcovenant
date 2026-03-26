@@ -65,8 +65,8 @@ def _unit_test_create_run_log_context_initializes_artifacts() -> None:
         repo_root = Path(tmpdir)
         context = module.create_run_log_context(
             repo_root,
-            "test",
-            ["python3", "-m", "devcovenant", "test"],
+            "run",
+            ["python3", "-m", "devcovenant", "run"],
             started_at=_fixed_start(),
             metadata={"slice": "item2"},
         )
@@ -85,7 +85,7 @@ def _unit_test_create_run_log_context_initializes_artifacts() -> None:
         run_payload = _load_json(context.require_paths().run_json)
         assert run_payload["status"] == "running"
         assert run_payload["exit_code"] is None
-        assert run_payload["command_name"] == "test"
+        assert run_payload["command_name"] == "run"
         assert run_payload["metadata"]["slice"] == "item2"
         assert run_payload["run_dir"].startswith("devcovenant/logs/")
 
@@ -223,8 +223,8 @@ def _unit_test_load_run_log_context_restores_existing_artifacts() -> None:
         repo_root = Path(tmpdir)
         original = module.create_run_log_context(
             repo_root,
-            "test",
-            ["devcovenant", "test"],
+            "run",
+            ["devcovenant", "run"],
             started_at=_fixed_start(),
             metadata={"origin": "create"},
         )
@@ -232,7 +232,7 @@ def _unit_test_load_run_log_context_restores_existing_artifacts() -> None:
         loaded = module.load_run_log_context(repo_root, run_id=original.run_id)
 
         assert loaded.run_id == original.run_id
-        assert loaded.command_name == "test"
+        assert loaded.command_name == "run"
         assert loaded.metadata["origin"] == "create"
         assert (
             loaded.require_paths().run_dir == original.require_paths().run_dir
@@ -260,8 +260,8 @@ def _unit_test_symbol_level_assertions_cover_public_helpers() -> None:
         repo_root = Path(tmpdir)
         context = module.create_run_log_context(
             repo_root,
-            "test",
-            ["devcovenant", "test"],
+            "run",
+            ["devcovenant", "run"],
             started_at=_fixed_start(),
         )
         assert isinstance(context, module.RunLogContext)
@@ -270,7 +270,7 @@ def _unit_test_symbol_level_assertions_cover_public_helpers() -> None:
         module.write_run_summary_text(context, "manual summary\n")
         module.write_run_summary_json(
             context,
-            {"status": "manual", "kind": "test"},
+            {"status": "manual", "kind": "run"},
         )
         module.write_run_tail(context, "tail preview\n")
         module.record_latest_run_pointer(
@@ -308,8 +308,8 @@ def _unit_test_append_run_stream_output_validates_stream_name() -> None:
         repo_root = Path(tmpdir)
         context = module.create_run_log_context(
             repo_root,
-            "test",
-            ["devcovenant", "test"],
+            "run",
+            ["devcovenant", "run"],
             started_at=_fixed_start(),
         )
         try:
@@ -342,8 +342,8 @@ def _unit_test_prune_run_log_directories_keeps_latest_n_runs() -> None:
         for started in starts:
             ctx = module.create_run_log_context(
                 repo_root,
-                "test",
-                ["devcovenant", "test"],
+                "run",
+                ["devcovenant", "run"],
                 started_at=started,
             )
             module.finalize_run_log_context(ctx, exit_code=0)

@@ -1,5 +1,5 @@
 # Policies
-**Last Updated:** 2026-03-24
+**Last Updated:** 2026-03-26
 **Project Version:** 1.0.0
 
 ## Overview
@@ -82,6 +82,10 @@ One example is cleanup protection: cleanup may ask the managed-environment
 runtime which roots should stay protected, using explicit
 `cleanup_protected_paths` metadata first and falling back to `expected_paths`
 when no custom cleanup roots are declared.
+The same policy now also aligns managed command stages with the public
+workflow contract: `start`, `run`, `end`, `command`, and `all`.
+That keeps managed-environment orchestration aligned with `devcovenant run`
+instead of preserving a special legacy `test` stage.
 
 ## Policy Commands
 DevCovenant now supports namespaced policy commands.
@@ -108,6 +112,16 @@ When the checker reports changed dependency manifests, the autofixer and the
 `refresh-all` runtime action now preserve that same manifest set when they
 rewrite `licenses/THIRD_PARTY_LICENSES.md`, so the report section stays aligned
 with what the checker actually validated.
+The same policy now distinguishes between artifacts that truly need a refresh
+and artifacts that are already synchronized, so package-manifest edits do not
+force fake license-file churn when the generated compliance surfaces are
+already current.
+For Python repositories, `requirements.lock` now follows a stricter contract:
+it represents normalized dependency-resolution content, not environment-local
+pip control lines. Refresh strips emitted directives such as index or
+trusted-host options from both semantic comparison and the written lock body,
+so repositories keep environment-specific package-source behavior in
+dependency-management metadata/config instead of baking it into the lock file.
 
 ## Version-Governance Adapter Contract
 Version-governance adapters define how version schemes are parsed,
@@ -125,6 +139,13 @@ They should follow the same boundary discipline:
 - autofixers fix
 
 - commands run explicit operations
+
+For a normal repository, do not seed repo-specific custom policies before the
+first reviewed baseline activation.
+Start with `install`, config review, and `deploy`, prove that baseline, and
+then add custom policies once the normal repo contract is already working.
+That keeps later deploy cleanup from reading like arbitrary deletion of a
+supported extension surface.
 
 Custom policies that inspect managed docs should also treat the
 project-governance header model as a stable contract.

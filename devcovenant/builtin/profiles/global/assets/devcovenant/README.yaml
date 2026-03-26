@@ -30,7 +30,7 @@ body: |-
 
   ## Commands
   List the commands most operators actually need, such as `check`, the gate
-  commands, `test`, `refresh`, and the main lifecycle commands.
+  commands, `run`, `refresh`, and the main lifecycle commands.
 
   ## Configuration Checkpoints
   Summarize the few config decisions that matter most on first review, such as
