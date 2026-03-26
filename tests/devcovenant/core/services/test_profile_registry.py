@@ -290,7 +290,7 @@ def _unit_test_global_governance_workflow_asset_stays_generic() -> None:
     assert isinstance(payload, dict)
     jobs = payload.get("jobs")
     assert isinstance(jobs, dict)
-    assert payload.get("name") == "Workflows"
+    assert payload.get("name") == "CI"
     assert set(jobs) == {"ci-and-test"}
     assert "compatibility-matrix" not in jobs
     assert "assurance" not in jobs
@@ -302,7 +302,7 @@ def _unit_test_repo_workflow_includes_devcovrepo_jobs() -> None:
     repo_workflow = REPO_ROOT / ".github" / "workflows" / "ci-and-test.yml"
     payload = yaml.safe_load(repo_workflow.read_text(encoding="utf-8"))
     assert isinstance(payload, dict)
-    assert payload.get("name") == "Workflows"
+    assert payload.get("name") == "CI"
 
     jobs = payload.get("jobs")
     assert isinstance(jobs, dict)
@@ -313,6 +313,7 @@ def _unit_test_repo_workflow_includes_devcovrepo_jobs() -> None:
 
     ci_and_test = jobs["ci-and-test"]
     assert isinstance(ci_and_test, dict)
+    assert ci_and_test.get("name") == "DevCovenant"
     steps = ci_and_test.get("steps")
     assert isinstance(steps, list)
     step_names = [
@@ -334,6 +335,7 @@ def _unit_test_repo_workflow_includes_devcovrepo_jobs() -> None:
 
     build_and_install = jobs["build-and-install-test"]
     assert isinstance(build_and_install, dict)
+    assert build_and_install.get("name") == "Build and Install"
     assert build_and_install.get("needs") == "ci-and-test"
     installed_steps = build_and_install.get("steps")
     assert isinstance(installed_steps, list)

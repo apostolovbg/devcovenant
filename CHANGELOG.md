@@ -61,6 +61,50 @@ Example:
 ## Version 1.0.0
 
 - 2026-03-26:
+  Change: renamed the visible generated workflow contract from `Workflows`
+    to `CI`, renamed the generated main job to `DevCovenant`, and
+    synchronized the source, generated, test, and roadmap surfaces around
+    the new Actions naming.
+  Why: resolved the GitHub Actions sidebar ambiguity caused by `Workflows`,
+    aligned the generated workflow and `build.yml` trigger with the intended
+    `CI` contract, and preserved the earlier roadmap entry intact under a
+    fresh session changelog entry.
+  Impact: GitHub Actions now presents a cleaner `CI` workflow with
+    `DevCovenant` and `Build and Install` job labels, while the generated
+    workflow, registry, docs, tests, and roadmap all point at the same
+    contract for the next build-proof verification pass.
+  Files:
+  CHANGELOG.md
+  PLAN.md
+  .github/workflows/build.yml
+  .github/workflows/ci-and-test.yml
+  devcovenant/builtin/profiles/global/assets/ci-and-test.yml
+  devcovenant/custom/profiles/devcovrepo/devcovrepo.yaml
+  devcovenant/docs/config.md
+  devcovenant/docs/profiles.md
+  devcovenant/docs/registry.md
+  devcovenant/docs/workflow.md
+  devcovenant/custom/profiles/devcovrepo/assets/docs/profiles.md
+  devcovenant/custom/profiles/devcovrepo/assets/docs/registry.md
+  devcovenant/custom/profiles/devcovrepo/assets/docs/workflow.md
+  devcovenant/registry/registry.yaml
+  tests/devcovenant/core/services/test_profile_registry.py
+
+- 2026-03-26:
+  Change: amended the roadmap to add the immediate CI naming/blocker work and
+    a full post-`run` core de-spaghettization item.
+  Why: clarified that the active redesign still needs both the GitHub Actions
+    cleanup (`CI` naming and build-proof stability) and a deliberate
+    core-module ownership reshaping after the workflow system lands.
+  Impact: expanded the plan so release prep now depends on resolving the
+    current CI workflow contract and on re-hashing core module ownership,
+    especially around `devflow_run_gates`, the guard modules, and the crowded
+    `core/services` layer.
+  Files:
+  CHANGELOG.md
+  PLAN.md
+
+- 2026-03-26:
   Change: corrected the artifact-lifecycle GitHub Actions scripts to use
     direct temp-repo directory switches, renamed the visible CI workflow
     from `Checks` to `Workflows`, and tightened the roadmap around the

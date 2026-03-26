@@ -57,7 +57,7 @@ The tracked registry also depends on deterministic discovery order, so
 profiles and policy-source inventories are sorted before refresh writes the
 registry on macOS, Linux, or Windows.
 That same tracked state also records the current generated workflow contract,
-including the visible workflow name `Workflows` and the repo-specific
+including the visible workflow name `CI` and the repo-specific
 `build-and-install-test` verification job.
 The tracked `workflow_contract` section is the workflow-owned part of that
 story: it records the reserved anchors, the declared phases resolved from

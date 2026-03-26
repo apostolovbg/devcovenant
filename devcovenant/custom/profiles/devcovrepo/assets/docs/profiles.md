@@ -130,7 +130,7 @@ The usual shape is to extend the main `ci-and-test` job with repo-family
 steps and, if needed, add one dependent verification job such as this
 repository's `build-and-install-test` job for real built-artifact proof.
 In this repository, that generated workflow now uses the visible workflow
-name `Workflows`, while the specific job names stay descriptive underneath it.
+name `CI`, while the specific job names stay descriptive underneath it.
 The repo-specific verification job should prove the public install story from
 the actual wheel, sdist, and `pipx` path, not from shallow `--help` or
 `--status` checks alone.

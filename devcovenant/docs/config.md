@@ -160,7 +160,7 @@ These settings change how the runtime behaves, not what the repository claims
 about itself.
 
 ### ci_and_test
-Repository-local customization for the generated `Workflows` workflow.
+Repository-local customization for the generated `CI` workflow.
 
 Use this section for:
 

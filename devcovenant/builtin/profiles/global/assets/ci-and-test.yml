@@ -1,4 +1,4 @@
-name: Workflows
+name: CI
 
 on:
   push:
@@ -6,7 +6,7 @@ on:
 
 jobs:
   ci-and-test:
-    name: CI and Test (Bootstrap Python 3.14)
+    name: DevCovenant
     runs-on: ubuntu-latest
     permissions:
       contents: read

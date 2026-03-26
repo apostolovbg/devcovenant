@@ -586,7 +586,7 @@ the current state as finished.
    What landed:
    - replaced the shallow workflow startup checks with real built-artifact
      lifecycle proof in the repo-specific `build-and-install-test` job
-   - the generated `Workflows` workflow now proves that the built wheel
+   - the generated `CI` workflow now proves that the built wheel
      and built sdist can complete
      `install -> config review -> deploy -> check` in a temporary git
      repository
@@ -729,7 +729,7 @@ the current state as finished.
      - sdist: `install` -> config review -> `deploy` -> `check`
      - `pipx` install from the built wheel: same operator lifecycle proof
    - reread the generated CI and publish workflows and confirmed that:
-     - `Workflows` proves the governed run plus scanner steps
+     - `CI` proves the governed run plus scanner steps
      - `Build` proves real artifact lifecycle from the tested SHA
      - `Publish` consumes a selected successful `Build` artifact and verifies
        provenance instead of rebuilding
@@ -771,6 +771,12 @@ the current state as finished.
    - `devcovenant phase run <id>` remains the explicit one-phase rerun surface
    - top-level workflow commands are core-owned, not profile-owned
    - profile phase metadata must not define command aliases
+   - the visible GitHub Actions workflow name should be `CI`, because `CI`
+     is standard, includes tests naturally, and avoids the GitHub sidebar
+     ambiguity created by `Workflows`
+   - the main generated CI job should use a focused display name such as
+     `DevCovenant`, while the dependent repo-specific job should keep a
+     concrete name such as `Build and Install`
    - workflow runtime timestamps stay UTC-only and keep one canonical
      timestamp field such as `last_run_utc`
    - command-group phases use `commands` only; a single command is a
@@ -901,16 +907,31 @@ the current state as finished.
    6. CI and generated workflow migration.
       File scope:
       - `.github/workflows/ci-and-test.yml`
+      - `.github/workflows/build.yml`
       - `devcovenant/builtin/profiles/global/assets/ci-and-test.yml`
       - any release/build workflows that still teach the old command shape
       Work to do:
       - replace `python -m devcovenant test` with the new top-level
         `python -m devcovenant run`
+      - rename the generated workflow from `Workflows` to `CI`
+      - rename the main generated job to `DevCovenant`
+      - keep the dependent repo-specific verification job under the concrete
+        name `Build and Install`
+      - keep repo-maintained release workflows (`Build`, `Publish`) distinct
+        from the generated CI workflow so the Actions sidebar reads clearly
+      - ensure lifecycle-proof shell steps stay parse-stable in GitHub
+        Actions and do not rely on fragile indented subshell heredocs
+      - make the repo-maintained `Build` workflow listen to the final
+        generated CI workflow name
       - keep explicit `phase run <id>` only where a specific rerun is
         intentionally needed
       Done when:
       - generated GitHub Actions surfaces teach the same workflow contract as
         AGENTS and the docs
+      - GitHub Actions reads cleanly as `CI`, `Build`, and `Publish`
+        without naming collisions or redundant workflow labels
+      - built-artifact lifecycle proof executes cleanly in GitHub Actions
+        instead of failing on shell-shape quirks
 
    7. Full documentation and managed-asset rewrite.
       File scope:
@@ -1004,10 +1025,153 @@ the current state as finished.
    - AGENTS, docs, CI, and gate messages all teach the same workflow
    - any remaining references to `devcovenant test` are historical only
 
-9. [not done] Prepare The First Real Release Candidate.
+9. [not done] De-Spaghettize Core Workflow Architecture.
+   Goal:
+   - realign the core module layout with the actual ownership boundaries that
+     the `run` / workflow-session redesign introduced
+   - stop leaving workflow truth split across policy-era carryovers,
+     crowded `core/services` modules, and duplicated validation surfaces
+   - make the code layout describe the architecture we actually want to keep
+     after the first SemVer-governed public line
+   Why this matters:
+   - the `run` redesign is large enough that the architecture should move
+     with it instead of staying frozen in pre-redesign folder boundaries
+   - `core/services` has grown into a crowded mixed-responsibility area
+     instead of a narrow home for true shared services
+   - `devflow_run_gates`, `devcov_integrity_guard`, and
+     `devcov_structure_guard` still read partly like policy-era carryovers
+     from the time when these concepts lived closer to normal policy shapes
+   - if the code keeps those legacy placements and duplicated logic islands,
+     the redesign will continue to feel stitched together even after the
+     public command surface is cleaned up
+   Design decisions for this item:
+   - workflow truth should have one authoritative home, centered around
+     `core/flow` and `core/runtime`, with contracts and schemas remaining in
+     `core/contracts`
+   - `core/services` should shrink back to true shared services rather than
+     acting as the drawer where any hard-to-place core logic accumulates
+   - `devflow_run_gates` is a drift candidate:
+     if it survives, it should live under a flow-owned concept with a name
+     that matches its real job; otherwise it should dissolve into shared flow
+     and workflow-validation logic
+   - `devcov_integrity_guard` and `devcov_structure_guard` should be
+     re-evaluated as thin validators, merged concepts, or relocated modules
+     instead of staying as unquestioned policy-era carryovers
+   - the schema-tightening decisions from Item 8 are part of this
+     architectural cleanup in implementation terms:
+     UTC-only `last_run_utc`, `commands`-only command groups, and explicit
+     policy participation need one clean module ownership story, not just
+     good field names
+   Work packages in dependency order:
+   1. Core ownership audit.
+      File scope:
+      - all modules under `devcovenant/core/**`
+      Work to do:
+      - classify each module as primarily:
+        - flow
+        - runtime
+        - contract/schema
+        - service
+        - validation/integrity
+        - compatibility carryover
+      - identify modules whose folder placement no longer matches their real
+        responsibility after the `run` redesign
+      Done when:
+      - the repo has an explicit ownership map for the current core tree
+      - drift candidates are named instead of hand-waved
+
+   2. Workflow-truth consolidation.
+      File scope:
+      - `devcovenant/core/flow/**`
+      - `devcovenant/core/runtime/**`
+      - any surviving `devflow_run_gates*` implementation
+      Work to do:
+      - move, merge, rename, or dissolve modules so workflow truth is not
+        implemented in multiple disconnected places
+      - keep gate behavior, required-phase validation, workflow session
+        recording, and rerun guidance centered around one coherent flow/runtime
+        story
+      Done when:
+      - workflow truth is not split across a legacy invariant-style island and
+        a separate flow/runtime system
+
+   3. Guard-module re-hash.
+      File scope:
+      - `devcov_integrity_guard`
+      - `devcov_structure_guard`
+      - `devflow_run_gates`
+      Work to do:
+      - decide for each whether it remains:
+        - a thin validator
+        - a moved/renamed module
+        - a merged concept
+        - or a deleted compatibility carryover
+      - if `devflow_run_gates` survives, move it under a flow-owned home and
+        give it a name that matches its actual responsibility
+      Done when:
+      - the three guard/invariant-era modules are justified by present
+        architecture rather than by history
+
+   4. `core/services` reduction.
+      File scope:
+      - `devcovenant/core/services/**`
+      Work to do:
+      - move misplaced flow/runtime logic out of `core/services`
+      - merge paper-thin wrappers that only preserve old layering myths
+      - split overloaded modules when one file is acting as several domains at
+        once
+      - keep only true cross-cutting shared services there
+      Done when:
+      - `core/services` is no longer the default parking area for unrelated
+        core logic
+
+   5. Schema and runtime cleanup.
+      File scope:
+      - workflow-session runtime state
+      - workflow-contract parsing
+      - any supporting serializers/deserializers
+      Work to do:
+      - implement the final UTC-only timestamp contract with
+        `last_run_utc` as the canonical field
+      - remove duplicated same-value aliases such as `last_run`
+      - implement the final `commands`-only command-group payload contract
+      - keep policy participation explicit rather than implicit in runtime
+        orchestration
+      Done when:
+      - the runtime/session schema is non-duplicative and matches the plan's
+        final contract
+
+   6. Documentation, registry, and test rewrite for the new architecture.
+      File scope:
+      - `devcovenant/docs/architecture.md`
+      - `devcovenant/docs/workflow.md`
+      - `devcovenant/docs/registry.md`
+      - `PLAN.md`
+      - core architecture tests and workflow-contract tests
+      Work to do:
+      - rewrite architecture explanations to reflect the final ownership map
+      - remove stale service/invariant myths from docs and test expectations
+      - ensure registry/runtime docs describe one truthful ownership model
+      Done when:
+      - docs and tests describe the post-de-spaghettized architecture instead
+        of the policy-era carryover layout
+
+   Done when:
+   - workflow truth has one coherent implementation story
+   - `core/services` is reduced to true services
+   - `devflow_run_gates` either lives in a flow-owned home, becomes thin, or
+     disappears
+   - the guard modules are justified by current architecture instead of
+     historical inertia
+   - the runtime/session schema is non-duplicative
+   - the code layout looks like the architecture DevCovenant actually claims
+     to have
+
+10. [not done] Prepare The First Real Release Candidate.
    Goal:
    - start the real release-candidate cut only after the external-grade
-     remediation audit is clean and the `run` migration is complete.
+     remediation audit is clean, the `run` migration is complete, and the
+     follow-up architecture cleanup is no longer deferred.
    Why this matters:
    - SemVer release discipline should begin after proof, not before it
    - history cleanup or orphaning before then would hide work in progress
@@ -1055,6 +1219,16 @@ the current state as finished.
   9. universal output-mode override tests for all command families in scope
   10. policy-state ownership tests so mutable policy-local state stays out of
      tracked or packaged source surfaces unless explicitly declared
+
+- For core architecture cleanup work, also run:
+  1. ownership-map tests or direct assertions that moved modules now live
+     under the right core subdomain
+  2. regression tests for any renamed or relocated guard/validation modules
+  3. workflow-session schema tests covering `last_run_utc` as the canonical
+     timestamp field
+  4. command-group schema tests covering `commands`-only execution payloads
+  5. architecture/doc contract tests that the new ownership map is described
+     consistently across docs and registry/runtime surfaces
 
 - Until Item 8 lands, ordinary governed development in this repo still uses the
   current live workflow command surface.

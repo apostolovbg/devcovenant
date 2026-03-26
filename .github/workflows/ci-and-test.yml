@@ -1,10 +1,10 @@
-name: Workflows
+name: CI
 on:
   push:
   pull_request:
 jobs:
   ci-and-test:
-    name: CI and Test (Bootstrap Python 3.14)
+    name: DevCovenant
     runs-on: ubuntu-latest
     permissions:
       contents: read
@@ -36,7 +36,7 @@ jobs:
     - name: Run Bandit
       run: bandit -q -c bandit.yaml -r devcovenant
   build-and-install-test:
-    name: Build and Install Test
+    name: Build and Install
     needs: ci-and-test
     runs-on: ubuntu-latest
     permissions:
