@@ -2,7 +2,7 @@ name: Build
 
 on:
   workflow_run:
-    workflows: ["Checks"]
+    workflows: ["Workflows"]
     types: [completed]
 
 jobs:
@@ -98,29 +98,28 @@ jobs:
           python -m pip install --upgrade pip
           python -m pip install "$WHEEL_PATH"
           git init -q artifacts/wheel-proof
-          (
-            cd artifacts/wheel-proof
-            git config user.name ci
-            git config user.email ci@example.invalid
-            python -m devcovenant install
-            python - <<'PY'
-            from pathlib import Path
+          pushd artifacts/wheel-proof >/dev/null
+          git config user.name ci
+          git config user.email ci@example.invalid
+          python -m devcovenant install
+          python - <<'PY'
+          from pathlib import Path
 
-            path = Path("devcovenant/config.yaml")
-            text = path.read_text(encoding="utf-8")
-            old = "config_reviewed: false"
-            if old not in text:
-                raise SystemExit(
-                    "config_reviewed flag not found in config.yaml"
-                )
-            path.write_text(
-                text.replace(old, "config_reviewed: true", 1),
-                encoding="utf-8",
-            )
-            PY
-            python -m devcovenant deploy
-            python -m devcovenant check
+          path = Path("devcovenant/config.yaml")
+          text = path.read_text(encoding="utf-8")
+          old = "config_reviewed: false"
+          if old not in text:
+              raise SystemExit(
+                  "config_reviewed flag not found in config.yaml"
+              )
+          path.write_text(
+              text.replace(old, "config_reviewed: true", 1),
+              encoding="utf-8",
           )
+          PY
+          python -m devcovenant deploy
+          python -m devcovenant check
+          popd >/dev/null
 
       - name: Prove sdist artifact lifecycle
         run: |
@@ -132,29 +131,28 @@ jobs:
           python -m pip install --upgrade pip
           python -m pip install "$SDIST_PATH"
           git init -q artifacts/sdist-proof
-          (
-            cd artifacts/sdist-proof
-            git config user.name ci
-            git config user.email ci@example.invalid
-            python -m devcovenant install
-            python - <<'PY'
-            from pathlib import Path
+          pushd artifacts/sdist-proof >/dev/null
+          git config user.name ci
+          git config user.email ci@example.invalid
+          python -m devcovenant install
+          python - <<'PY'
+          from pathlib import Path
 
-            path = Path("devcovenant/config.yaml")
-            text = path.read_text(encoding="utf-8")
-            old = "config_reviewed: false"
-            if old not in text:
-                raise SystemExit(
-                    "config_reviewed flag not found in config.yaml"
-                )
-            path.write_text(
-                text.replace(old, "config_reviewed: true", 1),
-                encoding="utf-8",
-            )
-            PY
-            python -m devcovenant deploy
-            python -m devcovenant check
+          path = Path("devcovenant/config.yaml")
+          text = path.read_text(encoding="utf-8")
+          old = "config_reviewed: false"
+          if old not in text:
+              raise SystemExit(
+                  "config_reviewed flag not found in config.yaml"
+              )
+          path.write_text(
+              text.replace(old, "config_reviewed: true", 1),
+              encoding="utf-8",
           )
+          PY
+          python -m devcovenant deploy
+          python -m devcovenant check
+          popd >/dev/null
 
       - name: Upload distributions
         uses: actions/upload-artifact@v4

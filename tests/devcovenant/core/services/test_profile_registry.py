@@ -290,7 +290,7 @@ def _unit_test_global_governance_workflow_asset_stays_generic() -> None:
     assert isinstance(payload, dict)
     jobs = payload.get("jobs")
     assert isinstance(jobs, dict)
-    assert payload.get("name") == "Checks"
+    assert payload.get("name") == "Workflows"
     assert set(jobs) == {"ci-and-test"}
     assert "compatibility-matrix" not in jobs
     assert "assurance" not in jobs
@@ -302,7 +302,7 @@ def _unit_test_repo_workflow_includes_devcovrepo_jobs() -> None:
     repo_workflow = REPO_ROOT / ".github" / "workflows" / "ci-and-test.yml"
     payload = yaml.safe_load(repo_workflow.read_text(encoding="utf-8"))
     assert isinstance(payload, dict)
-    assert payload.get("name") == "Checks"
+    assert payload.get("name") == "Workflows"
 
     jobs = payload.get("jobs")
     assert isinstance(jobs, dict)
@@ -350,6 +350,21 @@ def _unit_test_repo_workflow_includes_devcovrepo_jobs() -> None:
     assert "Resolve pipx bin directory" in installed_step_names
     assert "Prove pipx operator lifecycle" in installed_step_names
 
+    lifecycle_run_blocks = "\n".join(
+        str(step.get("run") or "").strip()
+        for step in installed_steps
+        if isinstance(step, dict)
+        and str(step.get("name") or "").strip()
+        in {
+            "Prove wheel artifact lifecycle",
+            "Prove sdist artifact lifecycle",
+            "Prove pipx operator lifecycle",
+        }
+    )
+    assert 'pushd "$TMPDIR/repo" >/dev/null' in lifecycle_run_blocks
+    assert "popd >/dev/null" in lifecycle_run_blocks
+    assert '(\n          cd "$TMPDIR/repo"' not in lifecycle_run_blocks
+
 
 def _unit_test_build_workflow_uploads_provenance_artifact() -> None:
     """Build workflow should emit provenance beside validated dists."""
@@ -380,6 +395,14 @@ def _unit_test_build_workflow_uploads_provenance_artifact() -> None:
     upload_with = upload_step.get("with")
     assert isinstance(upload_with, dict)
     assert upload_with.get("name") == "devcovenant-provenance"
+
+    all_run_blocks = "\n".join(
+        str(step.get("run") or "").strip()
+        for step in steps
+        if isinstance(step, dict)
+    )
+    assert "pushd artifacts/wheel-proof >/dev/null" in all_run_blocks
+    assert "pushd artifacts/sdist-proof >/dev/null" in all_run_blocks
 
 
 def _unit_test_publish_workflow_uses_validated_build_artifacts() -> None:

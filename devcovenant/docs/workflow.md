@@ -166,7 +166,7 @@ from active profiles, and the required phase ids the engine must enforce.
 ## CI Mapping
 The generated CI workflow lives at
 `.github/workflows/ci-and-test.yml`.
-Its visible workflow name is `Checks`.
+Its visible workflow name is `Workflows`.
 
 The ownership split matters:
 
@@ -200,11 +200,14 @@ publishes a real fix path.
 
 This repository also keeps `build.yml` and `publish.yml` as repo-maintained
 release workflows.
-They consume the result of `Checks`, but they are not part of the
+They consume the result of `Workflows`, but they are not part of the
 generated CI-and-test workflow itself.
 The `build.yml` workflow follows the same truthfulness rule:
 it should prove the real artifact lifecycle from the built wheel and sdist,
 not just that the CLI can print help.
+Those proof steps should enter their temp repositories directly instead of
+relying on indented subshell heredocs that can break shell parsing in GitHub
+Actions.
 The `publish.yml` workflow follows the provenance side of that same rule:
 it should accept a specific successful `Build` run, download the validated
 artifact and provenance from that run, verify them, and publish without

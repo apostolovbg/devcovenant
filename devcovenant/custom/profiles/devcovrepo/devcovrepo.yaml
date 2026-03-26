@@ -67,29 +67,28 @@ ci_and_test:
             "$TMPDIR/venv/bin/python" -m pip install --upgrade pip
             "$TMPDIR/venv/bin/python" -m pip install "$ARTIFACT_PATH"
             git init -q "$TMPDIR/repo"
-            (
-              cd "$TMPDIR/repo"
-              git config user.name ci
-              git config user.email ci@example.invalid
-              "$TMPDIR/venv/bin/python" -m devcovenant install
-              "$TMPDIR/venv/bin/python" - <<'PY'
-              from pathlib import Path
+            pushd "$TMPDIR/repo" >/dev/null
+            git config user.name ci
+            git config user.email ci@example.invalid
+            "$TMPDIR/venv/bin/python" -m devcovenant install
+            "$TMPDIR/venv/bin/python" - <<'PY'
+            from pathlib import Path
 
-              path = Path("devcovenant/config.yaml")
-              text = path.read_text(encoding="utf-8")
-              old = "config_reviewed: false"
-              if old not in text:
-                  raise SystemExit(
-                      "config_reviewed flag not found in config.yaml"
-                  )
-              path.write_text(
-                  text.replace(old, "config_reviewed: true", 1),
-                  encoding="utf-8",
-              )
-              PY
-              "$TMPDIR/venv/bin/python" -m devcovenant deploy
-              "$TMPDIR/venv/bin/python" -m devcovenant check
+            path = Path("devcovenant/config.yaml")
+            text = path.read_text(encoding="utf-8")
+            old = "config_reviewed: false"
+            if old not in text:
+                raise SystemExit(
+                    "config_reviewed flag not found in config.yaml"
+                )
+            path.write_text(
+                text.replace(old, "config_reviewed: true", 1),
+                encoding="utf-8",
             )
+            PY
+            "$TMPDIR/venv/bin/python" -m devcovenant deploy
+            "$TMPDIR/venv/bin/python" -m devcovenant check
+            popd >/dev/null
         - name: Prove sdist artifact lifecycle
           run: |
             set -euo pipefail
@@ -103,29 +102,28 @@ ci_and_test:
             "$TMPDIR/venv/bin/python" -m pip install --upgrade pip
             "$TMPDIR/venv/bin/python" -m pip install "$ARTIFACT_PATH"
             git init -q "$TMPDIR/repo"
-            (
-              cd "$TMPDIR/repo"
-              git config user.name ci
-              git config user.email ci@example.invalid
-              "$TMPDIR/venv/bin/python" -m devcovenant install
-              "$TMPDIR/venv/bin/python" - <<'PY'
-              from pathlib import Path
+            pushd "$TMPDIR/repo" >/dev/null
+            git config user.name ci
+            git config user.email ci@example.invalid
+            "$TMPDIR/venv/bin/python" -m devcovenant install
+            "$TMPDIR/venv/bin/python" - <<'PY'
+            from pathlib import Path
 
-              path = Path("devcovenant/config.yaml")
-              text = path.read_text(encoding="utf-8")
-              old = "config_reviewed: false"
-              if old not in text:
-                  raise SystemExit(
-                      "config_reviewed flag not found in config.yaml"
-                  )
-              path.write_text(
-                  text.replace(old, "config_reviewed: true", 1),
-                  encoding="utf-8",
-              )
-              PY
-              "$TMPDIR/venv/bin/python" -m devcovenant deploy
-              "$TMPDIR/venv/bin/python" -m devcovenant check
+            path = Path("devcovenant/config.yaml")
+            text = path.read_text(encoding="utf-8")
+            old = "config_reviewed: false"
+            if old not in text:
+                raise SystemExit(
+                    "config_reviewed flag not found in config.yaml"
+                )
+            path.write_text(
+                text.replace(old, "config_reviewed: true", 1),
+                encoding="utf-8",
             )
+            PY
+            "$TMPDIR/venv/bin/python" -m devcovenant deploy
+            "$TMPDIR/venv/bin/python" -m devcovenant check
+            popd >/dev/null
         - name: Install DevCovenant with pipx
           run: python -m pipx install --force dist/*.whl
         - name: Resolve pipx bin directory
@@ -138,30 +136,29 @@ ci_and_test:
             TMPDIR="$(mktemp -d)"
             trap 'rm -rf "$TMPDIR"' EXIT
             git init -q "$TMPDIR/repo"
-            (
-              cd "$TMPDIR/repo"
-              git config user.name ci
-              git config user.email ci@example.invalid
-              "$PIPX_BIN_DIR/devcovenant" --version
-              "$PIPX_BIN_DIR/devcovenant" install
-              python - <<'PY'
-              from pathlib import Path
+            pushd "$TMPDIR/repo" >/dev/null
+            git config user.name ci
+            git config user.email ci@example.invalid
+            "$PIPX_BIN_DIR/devcovenant" --version
+            "$PIPX_BIN_DIR/devcovenant" install
+            python - <<'PY'
+            from pathlib import Path
 
-              path = Path("devcovenant/config.yaml")
-              text = path.read_text(encoding="utf-8")
-              old = "config_reviewed: false"
-              if old not in text:
-                  raise SystemExit(
-                      "config_reviewed flag not found in config.yaml"
-                  )
-              path.write_text(
-                  text.replace(old, "config_reviewed: true", 1),
-                  encoding="utf-8",
-              )
-              PY
-              "$PIPX_BIN_DIR/devcovenant" deploy
-              "$PIPX_BIN_DIR/devcovenant" check
+            path = Path("devcovenant/config.yaml")
+            text = path.read_text(encoding="utf-8")
+            old = "config_reviewed: false"
+            if old not in text:
+                raise SystemExit(
+                    "config_reviewed flag not found in config.yaml"
+                )
+            path.write_text(
+                text.replace(old, "config_reviewed: true", 1),
+                encoding="utf-8",
             )
+            PY
+            "$PIPX_BIN_DIR/devcovenant" deploy
+            "$PIPX_BIN_DIR/devcovenant" check
+            popd >/dev/null
 policy_overlays:
   dependency-management:
     dependency_role_files:

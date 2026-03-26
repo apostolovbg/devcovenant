@@ -61,6 +61,50 @@ Example:
 ## Version 1.0.0
 
 - 2026-03-26:
+  Change: corrected the artifact-lifecycle GitHub Actions scripts to use
+    direct temp-repo directory switches, renamed the visible CI workflow
+    from `Checks` to `Workflows`, and tightened the roadmap around the
+    workflow-runtime schema.
+  Why: fixed a real shell-parse failure where GitHub could not terminate the
+    inline Python config-review helper in the build-proof steps, removed the
+    last redundant workflow label in the GitHub Actions UI, and captured the
+    schema-tightening decisions needed to keep the `run` redesign from
+    feeling flimsy.
+  Impact: repaired the `Build` lifecycle proof, aligned the generated
+    `Workflows` pipeline name, and clarified that the active migration keeps
+    `last_run_utc` canonical, uses `commands`-only command groups, and does
+    not let structural policies such as `modules-need-tests` masquerade as
+    the engine that powers workflow execution.
+  Files:
+  CHANGELOG.md
+  .github/workflows/build.yml
+  devcovenant/builtin/profiles/global/assets/ci-and-test.yml
+  devcovenant/custom/profiles/devcovrepo/devcovrepo.yaml
+  devcovenant/docs/config.md
+  devcovenant/docs/registry.md
+  devcovenant/docs/workflow.md
+  devcovenant/registry/registry.yaml
+  devcovenant/docs/profiles.md
+  devcovenant/custom/profiles/devcovrepo/assets/docs/registry.md
+  devcovenant/custom/profiles/devcovrepo/assets/docs/workflow.md
+  devcovenant/custom/profiles/devcovrepo/assets/docs/profiles.md
+  PLAN.md
+  tests/devcovenant/core/services/test_profile_registry.py
+
+- 2026-03-26:
+  Change: amended the roadmap to require universal `--quiet`, `--normal`, \
+    and `--verbose` CLI overrides as part of the core `run` migration.
+  Why: clarified that output modes should default from config, allow
+    per-invocation overrides, and stay owned by the shared output/runtime
+    layer instead of bespoke command logic.
+  Impact: standardized the active plan to treat command-wide mode overrides and
+    mode-agnostic command execution as release-blocking parts of the
+    workflow-command redesign.
+  Files:
+  CHANGELOG.md
+  PLAN.md
+
+- 2026-03-26:
   Change: implemented the core `run` migration by adding the new root command,
   moving built-in profiles onto declared `workflow_phases`, and rewriting the
   gate/runtime/docs contract away from the old public `test` surface.

@@ -130,10 +130,12 @@ The usual shape is to extend the main `ci-and-test` job with repo-family
 steps and, if needed, add one dependent verification job such as this
 repository's `build-and-install-test` job for real built-artifact proof.
 In this repository, that generated workflow now uses the visible workflow
-name `Checks`, while the specific job names stay descriptive underneath it.
+name `Workflows`, while the specific job names stay descriptive underneath it.
 The repo-specific verification job should prove the public install story from
 the actual wheel, sdist, and `pipx` path, not from shallow `--help` or
 `--status` checks alone.
+That repo-specific proof should also keep its shell structure simple enough
+that inline activation helpers stay parse-stable in GitHub Actions.
 If a repo family needs a reviewed temporary scanner exception because an
 upstream advisory has no fix release yet, that exception belongs here too,
 not in the generic global workflow template.
