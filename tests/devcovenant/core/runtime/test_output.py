@@ -68,22 +68,28 @@ def _unit_test_normalize_output_mode_uses_default_for_invalid_values() -> None:
     )
 
 
-def _unit_test_normal_mode_suppresses_test_and_managed_child_output() -> None:
-    """Normal mode should suppress noisy test/managed child command output."""
+def _unit_test_normal_mode_suppresses_workflow_and_managed_child_output() -> (
+    None
+):
+    """Normal mode should suppress noisy workflow/managed child output."""
     module = importlib.import_module(MODULE)
-    test_plan = module.resolve_child_output_plan("normal", "test_child")
+    workflow_plan = module.resolve_child_output_plan(
+        "normal",
+        "workflow_child",
+    )
     managed_plan = module.resolve_child_output_plan(
         "normal",
         "managed_child",
     )
-    assert test_plan.emit_console is False
-    assert test_plan.child_output_suppressed is True
-    assert test_plan.heartbeat_message == "Please wait. In progress..."
+    assert workflow_plan.emit_console is False
+    assert workflow_plan.child_output_suppressed is True
+    assert workflow_plan.heartbeat_message == "Please wait. In progress..."
     assert managed_plan.emit_console is False
     assert managed_plan.child_output_suppressed is True
     assert managed_plan.heartbeat_message == "Please wait. In progress..."
     assert (
-        module.channel_suppresses_child_output("normal", "test_child") is True
+        module.channel_suppresses_child_output("normal", "workflow_child")
+        is True
     )
     assert (
         module.channel_suppresses_child_output("normal", "managed_child")
@@ -118,7 +124,7 @@ def _unit_test_quiet_mode_suppresses_all_child_channels() -> None:
     module = importlib.import_module(MODULE)
     for channel in (
         "gate_child",
-        "test_child",
+        "workflow_child",
         "managed_child",
         "generic_child",
     ):
@@ -136,7 +142,7 @@ def _unit_test_verbose_mode_keeps_all_child_channels_visible() -> None:
     module = importlib.import_module(MODULE)
     for channel in (
         "gate_child",
-        "test_child",
+        "workflow_child",
         "managed_child",
         "generic_child",
     ):
@@ -172,9 +178,11 @@ class GeneratedUnittestCases(unittest.TestCase):
         """Run output-mode normalization defaulting assertions."""
         _unit_test_normalize_output_mode_uses_default_for_invalid_values()
 
-    def test_normal_mode_suppresses_test_and_managed_child_output(self):
-        """Run normal-mode suppression assertions for test/managed channels."""
-        _unit_test_normal_mode_suppresses_test_and_managed_child_output()
+    def test_normal_mode_suppresses_workflow_and_managed_child_output(
+        self,
+    ):
+        """Run normal-mode suppression assertions for workflow channels."""
+        _unit_test_normal_mode_suppresses_workflow_and_managed_child_output()
 
     def test_normal_mode_keeps_gate_and_generic_channels_visible(self):
         """Run normal-mode visibility assertions for gate/generic channels."""

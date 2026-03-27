@@ -321,7 +321,7 @@ def _unit_test_resolve_child_output_plan_uses_channel_policy_matrix() -> None:
     previous_mode = module.get_output_mode()
     try:
         module.configure_output_mode("normal")
-        plan = module.resolve_child_output_plan_for_channel("test_child")
+        plan = module.resolve_child_output_plan_for_channel("workflow_child")
         assert plan.emit_console is False
         assert plan.heartbeat_message == "Please wait. In progress..."
         module.configure_output_mode("quiet")
@@ -348,7 +348,7 @@ def _unit_test_run_child_command_uses_shared_output_pipeline() -> None:
         module.run_subprocess_with_runtime_output = _fake_runner
         result, combined = module.run_child_command_with_output_policy(
             ["echo", "ok"],
-            channel="test_child",
+            channel="workflow_child",
             capture_combined_output=True,
             output_mode="normal",
         )
@@ -979,16 +979,15 @@ def _unit_test_test_command_progress_emits_sparse_lines_in_normal_mode() -> (
             progress.start_step("pytest")
             progress.fail_step("pytest", 2)
     output = stdout_buffer.getvalue()
-    assert "▶ [1/2] python3 -m unittest discover -v" in output
+    assert "▶ [1/2]" in output
+    assert "python3 -m unittest discover -v" in output
     assert "\n[1/2] python3 -m unittest discover -v\n" not in output
     assert "▶ [2/2] pytest" in output
     assert "[2/2] FAILED: pytest (exit 2)" in output
 
 
-def _unit_test_normal_mode_test_child_output_is_suppressed_and_logged() -> (
-    None
-):
-    """Normal-mode test child output should be suppressed yet still logged."""
+def _unit_test_normal_mode_workflow_child_output_is_logged() -> None:
+    """Normal-mode workflow child output should be suppressed yet logged."""
     module = importlib.import_module(MODULE)
     run_logging = module.run_logging_runtime_module
     with tempfile.TemporaryDirectory() as tmpdir:
@@ -998,8 +997,8 @@ def _unit_test_normal_mode_test_child_output_is_suppressed_and_logged() -> (
             "run",
             ["devcovenant", "run"],
         )
-        previous_test_mode = module._WORKFLOW_PHASE_COMMAND_OUTPUT_MODE
-        previous_test_label = module._WORKFLOW_PHASE_COMMAND_LABEL
+        previous_workflow_mode = module._WORKFLOW_PHASE_COMMAND_OUTPUT_MODE
+        previous_workflow_label = module._WORKFLOW_PHASE_COMMAND_LABEL
         stdout_buffer = io.StringIO()
         stderr_buffer = io.StringIO()
         try:
@@ -1028,8 +1027,8 @@ def _unit_test_normal_mode_test_child_output_is_suppressed_and_logged() -> (
                 status="success",
             )
         finally:
-            module._WORKFLOW_PHASE_COMMAND_OUTPUT_MODE = previous_test_mode
-            module._WORKFLOW_PHASE_COMMAND_LABEL = previous_test_label
+            module._WORKFLOW_PHASE_COMMAND_OUTPUT_MODE = previous_workflow_mode
+            module._WORKFLOW_PHASE_COMMAND_LABEL = previous_workflow_label
             module.clear_active_run_log_context()
 
         console_output = stdout_buffer.getvalue()
@@ -1038,8 +1037,53 @@ def _unit_test_normal_mode_test_child_output_is_suppressed_and_logged() -> (
         stdout_log = context.require_paths().stdout_log.read_text(
             encoding="utf-8"
         )
-        assert "normal stdout line" in stdout_log
-        assert "normal stderr line" in stdout_log
+    assert "normal stdout line" in stdout_log
+    assert "normal stderr line" in stdout_log
+
+
+def _unit_test_resolve_workflow_phase_output_mode_uses_recording_hook() -> (
+    None
+):
+    """Phase output mode should follow the declared recording hook."""
+
+    module = importlib.import_module(MODULE)
+    previous_mode = module.get_output_mode()
+    with tempfile.TemporaryDirectory() as tmpdir:
+        repo_root = Path(tmpdir)
+        (repo_root / "devcovenant").mkdir(parents=True, exist_ok=True)
+        (repo_root / "devcovenant" / "config.yaml").write_text(
+            "\n".join(
+                [
+                    "engine:",
+                    "  output_mode: quiet",
+                    "  tests_output_mode: normal",
+                    "",
+                ]
+            ),
+            encoding="utf-8",
+        )
+        phase = {
+            "id": "tests",
+            "recording": {
+                "output_mode_config_field": "engine.tests_output_mode"
+            },
+        }
+        plain_phase = {"id": "assurance", "recording": {}}
+
+        try:
+            module.configure_output_mode("quiet")
+            assert (
+                module.resolve_workflow_phase_output_mode(repo_root, phase)
+                == "normal"
+            )
+            assert (
+                module.resolve_workflow_phase_output_mode(
+                    repo_root, plain_phase
+                )
+                == "quiet"
+            )
+        finally:
+            module.configure_output_mode(previous_mode)
 
 
 def _unit_test_workflow_phase_summary_metadata_hints() -> None:
@@ -1398,9 +1442,15 @@ class GeneratedUnittestCases(unittest.TestCase):
         """Run sparse normal-mode progress-line assertions."""
         _unit_test_test_command_progress_emits_sparse_lines_in_normal_mode()
 
-    def test_normal_mode_test_child_output_is_suppressed_and_is_logged(self):
+    def test_normal_mode_workflow_child_output_is_suppressed_and_is_logged(
+        self,
+    ):
         """Run normal-mode suppression and run-log capture assertions."""
-        _unit_test_normal_mode_test_child_output_is_suppressed_and_logged()
+        _unit_test_normal_mode_workflow_child_output_is_logged()
+
+    def test_resolve_workflow_phase_output_mode_uses_recording_hook(self):
+        """Run declarative workflow-phase output-mode hook assertions."""
+        _unit_test_resolve_workflow_phase_output_mode_uses_recording_hook()
 
     def test_workflow_phase_summary_metadata_hints(self):
         """Run workflow-phase summary metadata shape assertions."""

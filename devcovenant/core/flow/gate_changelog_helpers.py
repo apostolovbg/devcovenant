@@ -8,7 +8,7 @@ from pathlib import Path
 
 import yaml
 
-import devcovenant.core.services.registry as registry_runtime_module
+import devcovenant.core.services.tracked_registry as tracked_registry_module
 from devcovenant.core.services import (
     project_governance as project_governance_service,
 )
@@ -106,7 +106,7 @@ def _resolve_main_changelog(repo_root: Path) -> Path:
 
 def _load_changelog_metadata(repo_root: Path) -> dict[str, object]:
     """Return changelog-coverage metadata mapping from policy registry."""
-    registry_path = registry_runtime_module.policy_registry_path(repo_root)
+    registry_path = tracked_registry_module.policy_registry_path(repo_root)
     if not registry_path.exists():
         raise ValueError(
             f"Missing policy registry file: {registry_path}. "

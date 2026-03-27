@@ -11,7 +11,7 @@ from pathlib import Path
 from typing import Mapping
 
 import devcovenant.core.runtime.execution as execution_runtime_module
-import devcovenant.core.services.registry as registry_runtime_module
+import devcovenant.core.runtime.registry as registry_runtime_module
 import devcovenant.core.services.workflow_contract as workflow_contract_module
 from devcovenant.core.flow.gate_changelog_helpers import (
     _entry_fingerprint,
@@ -341,14 +341,15 @@ def _record_workflow_anchor(
         {
             "id": phase,
             "status": "passed",
-            "last_run": when.isoformat(),
             "last_run_utc": when.isoformat(),
             "last_run_epoch": when.timestamp(),
-            "command": command.strip(),
+            "commands": [command.strip()] if command.strip() else [],
             "command_name": f"gate --{phase}",
             "notes": notes.strip(),
         }
     )
+    anchor_entry.pop("last_run", None)
+    anchor_entry.pop("command", None)
     anchors[phase] = anchor_entry
     workflow_payload["schema_version"] = (
         workflow_session_runtime_module.SCHEMA_VERSION

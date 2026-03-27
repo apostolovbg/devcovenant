@@ -20,7 +20,7 @@ from devcovenant.core.services.metadata import (
     metadata_value_list,
     resolve_policy_metadata_map,
 )
-from devcovenant.core.services.registry import (
+from devcovenant.core.services.policy_registry import (
     load_policy_descriptor,
     resolve_script_location,
 )

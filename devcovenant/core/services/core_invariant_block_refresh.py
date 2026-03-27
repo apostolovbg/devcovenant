@@ -12,7 +12,7 @@ from devcovenant.core.services import (
     core_invariants as core_invariants_service,
 )
 from devcovenant.core.services import yaml_cache as yaml_cache_service
-from devcovenant.core.services.registry import policy_registry_path
+from devcovenant.core.services.tracked_registry import policy_registry_path
 
 
 @dataclass(frozen=True)

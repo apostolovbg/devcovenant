@@ -4,13 +4,13 @@ from typing import List
 
 import yaml
 
-import devcovenant.core.services.registry as manifest_module
+import devcovenant.core.services.manifest_inventory as manifest_module
 from devcovenant.core.contracts.invariant import CoreInvariantCheck
 from devcovenant.core.contracts.policy import CheckContext, Violation
 from devcovenant.core.services import yaml_cache as yaml_cache_service
 
 
-class DevcovStructureGuard(CoreInvariantCheck):
+class StructureValidationInvariant(CoreInvariantCheck):
     """Verify DevCovenant repo structure remains intact."""
 
     invariant_id = "devcov-structure-guard"

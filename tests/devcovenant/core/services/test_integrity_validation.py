@@ -1,4 +1,4 @@
-"""Tests for the devcov-integrity-guard core invariant."""
+"""Tests for the integrity validation core invariant."""
 
 from __future__ import annotations
 
@@ -10,8 +10,8 @@ from pathlib import Path
 import yaml
 
 from devcovenant.core.contracts.policy import CheckContext
-from devcovenant.core.services import devcov_integrity_guard
-from devcovenant.core.services.registry import PolicyRegistry
+from devcovenant.core.services import integrity_validation
+from devcovenant.core.services.policy_registry import PolicyRegistry
 
 
 def _write(path: Path, content: str) -> Path:
@@ -81,8 +81,8 @@ def _write_policy_script(
 
 
 def _build_checker(extra_options: dict[str, object] | None = None):
-    """Create a configured integrity guard checker."""
-    checker = devcov_integrity_guard.DevcovIntegrityGuard()
+    """Create a configured integrity validation checker."""
+    checker = integrity_validation.IntegrityValidationInvariant()
     base_options: dict[str, object] = {"policy_definitions": "AGENTS.md"}
     if extra_options:
         base_options.update(extra_options)
@@ -215,8 +215,11 @@ def _unit_test_status_payload_validation_passes(tmp_path: Path) -> None:
         tmp_path / "devcovenant" / "registry" / "runtime" / "gate_status.json",
         json.dumps(
             {
-                "last_run": "2026-02-07T00:00:00+00:00",
-                "command": "pytest && python3 -m unittest discover -v",
+                "last_run_utc": "2026-02-07T00:00:00+00:00",
+                "commands": [
+                    "pytest",
+                    "python3 -m unittest discover -v",
+                ],
                 "sha": "a" * 40,
             }
         ),

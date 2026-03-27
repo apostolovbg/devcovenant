@@ -7,7 +7,7 @@ from typing import Dict, List
 
 import yaml
 
-import devcovenant.core.services.registry as registry_runtime
+import devcovenant.core.services.tracked_registry as registry_runtime
 from devcovenant.core.services import yaml_cache as yaml_cache_service
 
 REGISTRY_PROFILE = Path("devcovenant/registry/registry.yaml")
@@ -553,14 +553,14 @@ def build_profile_registry(
 def write_profile_registry(repo_root: Path, registry: Dict[str, Dict]) -> Path:
     """Write the profile registry into the tracked registry document."""
     path = repo_root / REGISTRY_PROFILE
-    payload = registry_runtime._load_registry_document(path)
+    payload = registry_runtime.load_registry_document(path)
     profiles = registry.get("profiles")
     payload["profiles"] = dict(profiles) if isinstance(profiles, dict) else {}
     workflow_contract = registry.get("workflow_contract")
     payload["workflow_contract"] = (
         dict(workflow_contract) if isinstance(workflow_contract, dict) else {}
     )
-    registry_runtime._write_registry_document(path, payload)
+    registry_runtime.write_registry_document(path, payload)
     return path
 
 
@@ -588,7 +588,7 @@ def load_profile_registry(repo_root: Path) -> Dict[str, Dict]:
     """Load the merged profile registry from registry or profile roots."""
     registry_path = repo_root / REGISTRY_PROFILE
     if registry_path.exists():
-        registry_data = registry_runtime._load_registry_document(registry_path)
+        registry_data = registry_runtime.load_registry_document(registry_path)
         if isinstance(registry_data, dict) and registry_data:
             normalized = _normalize_registry(registry_data)
             if normalized:

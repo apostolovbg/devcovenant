@@ -86,6 +86,14 @@ The same policy now also aligns managed command stages with the public
 workflow contract: `start`, `run`, `end`, `command`, and `all`.
 That keeps managed-environment orchestration aligned with `devcovenant run`
 instead of preserving a special legacy `test` stage.
+The same runtime now resolves the tracked policy registry through the
+tracked-registry helper layer instead of depending on the catch-all
+registry service for runtime-evidence paths.
+Builtin policy runtimes that need descriptor metadata or script locations now
+resolve that information through the dedicated `policy_registry.py` helper
+layer. That keeps dependency-management, version-governance, and other
+policy-owned runtime code from reaching back into manifest-inventory or
+tracked-registry ownership just to resolve policy descriptors.
 
 ## Policy Commands
 DevCovenant now supports namespaced policy commands.

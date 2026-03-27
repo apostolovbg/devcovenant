@@ -10,13 +10,13 @@ import yaml
 
 import devcovenant.core.services.metadata as metadata_runtime
 from devcovenant.core.services import yaml_cache as yaml_cache_service
-from devcovenant.core.services.registry import (
+from devcovenant.core.services.policy_registry import (
     POLICY_BLOCK_RE,
     PolicyDescriptor,
     load_policy_descriptor,
     parse_metadata_block,
-    policy_registry_path,
 )
+from devcovenant.core.services.tracked_registry import policy_registry_path
 
 _POLICIES_BEGIN = "<!-- DEVCOV-POLICIES:BEGIN -->"
 _POLICIES_END = "<!-- DEVCOV-POLICIES:END -->"

@@ -6,7 +6,7 @@
 **Maintenance Stance:** active
 **Compatibility Policy:** breaking-allowed
 **Versioning Mode:** versioned
-**Last Updated:** 2026-03-26
+**Last Updated:** 2026-03-27
 **DevCovenant Version:** 1.0.0
 
 <!-- DEVCOV:BEGIN -->
@@ -781,10 +781,20 @@ the current state as finished.
      timestamp field such as `last_run_utc`
    - command-group phases use `commands` only; a single command is a
      one-item list, not a separate singular schema branch
-   - singular runner payload names are reserved for different concepts such as
-     `runtime_action_id` or `policy_command_id`
+   - singular execution payload names are reserved for different concepts such
+     as `runtime_action_id` or `policy_command_id`; shell command groups must
+     not duplicate the same meaning across parallel `command` / `commands`
+     fields
    - policies do not participate in `run` implicitly just because they are
      enabled; workflow phases must reference explicit runnable surfaces
+   - phase-specific richer behavior is allowed, but it must be expressed
+     through generic phase-reporting hooks or declarative phase metadata,
+     not through hardcoded `phase_id == "tests"` branches in the generic
+     workflow executor
+   - file-dependent success checks must stay generic and support:
+     `required_files`, `required_globs`, `forbidden_globs`, plus explicit
+     relative-versus-absolute path resolution control so any phase can verify
+     files at any intended path without bespoke runtime branching
    - the current structural policy `modules-need-tests` is not automatically
      renamed to `test-engine` during this migration unless its responsibility
      changes as well
@@ -818,6 +828,9 @@ the current state as finished.
       - make declared phases execute through one generic path
       - keep policy participation explicit so a phase only invokes policy-owned
         behavior when it references a deliberate runnable surface
+      - replace remaining `tests`-specific richer behavior with a generic
+        phase-reporting hook/declarative metadata path so any workflow phase
+        can opt into the same richer reporting without a hardcoded phase id
       - support every allowed runner kind:
         `command_group`, `runtime_action`, `policy_command`,
         `manual_attestation`
@@ -828,7 +841,7 @@ the current state as finished.
       - make runtime failures mention `devcovenant run` or
         `devcovenant phase run <id>`, not `devcovenant test`
       Done when:
-      - `tests` is not privileged in runtime flow control
+      - `tests` is not privileged in runtime flow control or reporting
       - enabled policies do not implicitly alter what `run` executes
       - any allowed schema kind is truly executable
 
@@ -897,11 +910,16 @@ the current state as finished.
       - collapse command-group payloads to `commands` only
       - reserve singular payload names for non-shell ids such as
         `runtime_action_id` and `policy_command_id`
+      - tighten file-dependent success contracts so they can express
+        required/forbidden file checks against relative or absolute paths
+        without bespoke per-phase code
       - regenerate tracked registry output to match the final contract
       Done when:
       - profile manifests declare phases, not root command aliases
       - runtime session payloads do not carry same-value timestamp aliases
       - command-group schema no longer duplicates `command` and `commands`
+      - file-dependent success checks have one generic schema that is not
+        tied to test/artifact-only assumptions
       - tracked registry reflects the final command-neutral phase schema
 
    6. CI and generated workflow migration.
@@ -1019,7 +1037,8 @@ the current state as finished.
    - command-group schema uses `commands` only instead of parallel
      `command`/`commands` execution payloads
    - enabled policies do not implicitly plug into `run`
-   - runtime no longer special-cases `tests`
+   - runtime no longer special-cases `tests`; richer behavior is exposed
+     through generic phase hooks/metadata instead
    - every allowed runner kind and success-contract kind is actually supported
    - profile phase metadata no longer leaks command-alias ownership
    - AGENTS, docs, CI, and gate messages all teach the same workflow
@@ -1050,10 +1069,9 @@ the current state as finished.
      `core/contracts`
    - `core/services` should shrink back to true shared services rather than
      acting as the drawer where any hard-to-place core logic accumulates
-   - `devflow_run_gates` is a drift candidate:
-     if it survives, it should live under a flow-owned concept with a name
-     that matches its real job; otherwise it should dissolve into shared flow
-     and workflow-validation logic
+   - `devflow_run_gates` should dissolve into shared flow/runtime
+     workflow-validation logic instead of surviving as a standalone
+     invariant-style logic island
    - `devcov_integrity_guard` and `devcov_structure_guard` should be
      re-evaluated as thin validators, merged concepts, or relocated modules
      instead of staying as unquestioned policy-era carryovers
@@ -1062,6 +1080,15 @@ the current state as finished.
      UTC-only `last_run_utc`, `commands`-only command groups, and explicit
      policy participation need one clean module ownership story, not just
      good field names
+   - registry/runtime ownership should split by both ephemerity and contract
+     ownership, not just by one axis:
+     tracked core-owned state, tracked extension-owned state, runtime
+     core-owned state, and runtime policy-owned state should not all keep
+     sharing one generic registry implementation module
+   - generic phase-reporting hooks belong to the workflow/runtime ownership
+     story as well:
+     special richer reporting must be phase-declarative and reusable, not
+     hidden inside one tests-only branch
    Work packages in dependency order:
    1. Core ownership audit.
       File scope:
@@ -1084,16 +1111,18 @@ the current state as finished.
       File scope:
       - `devcovenant/core/flow/**`
       - `devcovenant/core/runtime/**`
-      - any surviving `devflow_run_gates*` implementation
+      - dissolution path for `devflow_run_gates*`
       Work to do:
       - move, merge, rename, or dissolve modules so workflow truth is not
         implemented in multiple disconnected places
+      - absorb `devflow_run_gates` behavior into the flow/runtime ownership
+        story instead of keeping a second major implementation island
       - keep gate behavior, required-phase validation, workflow session
         recording, and rerun guidance centered around one coherent flow/runtime
         story
       Done when:
-      - workflow truth is not split across a legacy invariant-style island and
-        a separate flow/runtime system
+      - workflow truth is not split across a dissolved legacy invariant island
+        and a separate flow/runtime system
 
    3. Guard-module re-hash.
       File scope:
@@ -1106,8 +1135,11 @@ the current state as finished.
         - a moved/renamed module
         - a merged concept
         - or a deleted compatibility carryover
-      - if `devflow_run_gates` survives, move it under a flow-owned home and
-        give it a name that matches its actual responsibility
+      - explicitly dissolve `devflow_run_gates` into shared flow/runtime
+        validation code
+      - strip stale workflow/schema assumptions out of
+        `devcov_integrity_guard` so it validates the final UTC-only runtime
+        state instead of legacy `last_run` / test-command contracts
       Done when:
       - the three guard/invariant-era modules are justified by present
         architecture rather than by history
@@ -1125,7 +1157,26 @@ the current state as finished.
       - `core/services` is no longer the default parking area for unrelated
         core logic
 
-   5. Schema and runtime cleanup.
+   5. Registry split by ephemerity and ownership.
+      File scope:
+      - `devcovenant/core/services/registry.py`
+      - runtime-registry helpers
+      - tracked-registry helpers
+      - any callers that currently rely on the mixed registry facade
+      Work to do:
+      - separate tracked and runtime registry concerns instead of keeping one
+        broad registry module for both
+      - further separate ownership concerns so core-owned tracked/runtime
+        state and extension-owned tracked/runtime state do not blur into one
+        implementation bucket
+      - make path helpers, registry serializers, and ownership-specific
+        helpers live where their contract actually belongs
+      Done when:
+      - tracked versus runtime state is explicit in code structure
+      - ownership boundaries are explicit in code structure
+      - one generic `registry.py` no longer carries all registry meanings
+
+   6. Schema and runtime cleanup.
       File scope:
       - workflow-session runtime state
       - workflow-contract parsing
@@ -1137,11 +1188,15 @@ the current state as finished.
       - implement the final `commands`-only command-group payload contract
       - keep policy participation explicit rather than implicit in runtime
         orchestration
+      - move richer per-phase reporting onto generic phase hooks/metadata so
+        special reporting is reusable by any phase
+      - keep file-dependent success checks generic, including explicit
+        absolute/relative path resolution controls
       Done when:
       - the runtime/session schema is non-duplicative and matches the plan's
         final contract
 
-   6. Documentation, registry, and test rewrite for the new architecture.
+   7. Documentation, registry, and test rewrite for the new architecture.
       File scope:
       - `devcovenant/docs/architecture.md`
       - `devcovenant/docs/workflow.md`
@@ -1152,6 +1207,9 @@ the current state as finished.
       - rewrite architecture explanations to reflect the final ownership map
       - remove stale service/invariant myths from docs and test expectations
       - ensure registry/runtime docs describe one truthful ownership model
+      - document generic phase-reporting hooks and generic file-dependent
+        success checks as reusable workflow features instead of tests-only
+        exceptions
       Done when:
       - docs and tests describe the post-de-spaghettized architecture instead
         of the policy-era carryover layout
@@ -1159,11 +1217,14 @@ the current state as finished.
    Done when:
    - workflow truth has one coherent implementation story
    - `core/services` is reduced to true services
-   - `devflow_run_gates` either lives in a flow-owned home, becomes thin, or
-     disappears
+   - `devflow_run_gates` disappears as a standalone major implementation and
+     its behavior lives in the core flow/runtime story
    - the guard modules are justified by current architecture instead of
      historical inertia
    - the runtime/session schema is non-duplicative
+   - registry code is split by both ephemerity and ownership
+   - richer phase behavior is generic and declarative, not hardcoded to
+     `tests`
    - the code layout looks like the architecture DevCovenant actually claims
      to have
 

@@ -248,8 +248,15 @@ def _instantiate_adapter(
     )
 
 
-def load_test_event_adapters(repo_root: Path) -> list[TestEventAdapter]:
-    """Load adapters declared by the active profile stack."""
+def load_profile_event_adapters(
+    repo_root: Path,
+    adapter_group: str,
+) -> list[TestEventAdapter]:
+    """Load adapters from one declared profile metadata group."""
+    normalized_group = str(adapter_group or "").strip()
+    if not normalized_group:
+        _set_adapter_load_warnings([])
+        return []
     warnings: list[str] = []
     try:
         payload = _load_config(repo_root)
@@ -277,17 +284,18 @@ def load_test_event_adapters(repo_root: Path) -> list[TestEventAdapter]:
         if not isinstance(metadata, Mapping):
             warnings.append(
                 (
-                    "Skipped test-event metadata from profile "
+                    "Skipped event-adapter metadata from profile "
                     f"'{profile}' because it is not a mapping."
                 )
             )
             continue
-        raw_entries = metadata.get("test_events", [])
+        raw_entries = metadata.get(normalized_group, [])
         if not isinstance(raw_entries, list):
             warnings.append(
                 (
-                    "Skipped test-event adapter metadata from profile "
-                    f"'{profile}' because test_events is not a list."
+                    "Skipped event-adapter metadata from profile "
+                    f"'{profile}' because `{normalized_group}` is not a "
+                    "list."
                 )
             )
             continue
@@ -295,7 +303,7 @@ def load_test_event_adapters(repo_root: Path) -> list[TestEventAdapter]:
             if not isinstance(entry, Mapping):
                 warnings.append(
                     (
-                        "Skipped test-event adapter metadata from profile "
+                        "Skipped event-adapter metadata from profile "
                         f"'{profile}' because one entry is not a mapping."
                     )
                 )
@@ -306,7 +314,7 @@ def load_test_event_adapters(repo_root: Path) -> list[TestEventAdapter]:
             if not adapter_id or not entrypoint:
                 warnings.append(
                     (
-                        "Skipped test-event adapter with missing "
+                        "Skipped event-adapter with missing "
                         "id/entrypoint "
                         f"from profile '{profile}'."
                     )
@@ -331,7 +339,7 @@ def load_test_event_adapters(repo_root: Path) -> list[TestEventAdapter]:
             except Exception as exc:
                 warnings.append(
                     (
-                        f"Skipped test-event adapter '{adapter_id}' from "
+                        f"Skipped event-adapter '{adapter_id}' from "
                         f"profile '{profile}': {exc}"
                     )
                 )
@@ -340,3 +348,8 @@ def load_test_event_adapters(repo_root: Path) -> list[TestEventAdapter]:
             registered.add(adapter_id)
     _set_adapter_load_warnings(warnings)
     return adapters
+
+
+def load_test_event_adapters(repo_root: Path) -> list[TestEventAdapter]:
+    """Load adapters declared by the active profile stack."""
+    return load_profile_event_adapters(repo_root, "test_events")

@@ -9,10 +9,10 @@ from typing import List
 
 from devcovenant.core.contracts.invariant import CoreInvariantCheck
 from devcovenant.core.contracts.policy import CheckContext, Violation
+from devcovenant.core.runtime import registry as runtime_registry_module
 from devcovenant.core.services import (
     core_invariants as core_invariants_service,
 )
-from devcovenant.core.services import registry as registry_runtime_module
 from devcovenant.core.services import (
     workflow_contract as workflow_contract_module,
 )
@@ -243,7 +243,7 @@ class DevflowRunGates(CoreInvariantCheck):
                 )
             ]
 
-        workflow_session_path = registry_runtime_module.workflow_session_path(
+        workflow_session_path = runtime_registry_module.workflow_session_path(
             ctx.repo_root
         )
         try:

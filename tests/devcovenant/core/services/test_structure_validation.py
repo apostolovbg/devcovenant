@@ -1,12 +1,12 @@
-"""Tests for the devcov-structure-guard core invariant."""
+"""Tests for the structure validation core invariant."""
 
 import tempfile
 import unittest
 from pathlib import Path
 
 from devcovenant.core.contracts.policy import CheckContext
-from devcovenant.core.services import devcov_structure_guard
-from devcovenant.core.services import registry as manifest_module
+from devcovenant.core.services import manifest_inventory as manifest_module
+from devcovenant.core.services import structure_validation
 
 
 def _seed_required_structure(repo_root: Path) -> None:
@@ -40,7 +40,7 @@ def _unit_test_structure_guard_passes_with_required_paths():
         repo_root = Path(tmpdir)
         _seed_required_structure(repo_root)
 
-        checker = devcov_structure_guard.DevcovStructureGuard()
+        checker = structure_validation.StructureValidationInvariant()
         context = CheckContext(repo_root=repo_root)
         assert checker.check(context) == []
         assert (repo_root / manifest_module.REGISTRY_REL_PATH).exists()
@@ -50,7 +50,7 @@ def _unit_test_structure_guard_reports_missing_paths():
     """Guard should flag missing structure entries."""
     with tempfile.TemporaryDirectory() as tmpdir:
         repo_root = Path(tmpdir)
-        checker = devcov_structure_guard.DevcovStructureGuard()
+        checker = structure_validation.StructureValidationInvariant()
         context = CheckContext(repo_root=repo_root)
         violations = checker.check(context)
 
@@ -79,7 +79,7 @@ def _unit_test_structure_guard_uses_manifest_docs() -> None:
                 continue
             (repo_root / rel_path).write_text("#")
 
-        checker = devcov_structure_guard.DevcovStructureGuard()
+        checker = structure_validation.StructureValidationInvariant()
         context = CheckContext(repo_root=repo_root)
         violations = checker.check(context)
 
@@ -98,7 +98,7 @@ def _unit_test_structure_guard_reports_repo_bytecode() -> None:
         pycache.mkdir(parents=True, exist_ok=True)
         (pycache / "demo.cpython-314.pyc").write_bytes(b"x")
 
-        checker = devcov_structure_guard.DevcovStructureGuard()
+        checker = structure_validation.StructureValidationInvariant()
         context = CheckContext(repo_root=repo_root)
         violations = checker.check(context)
 
@@ -117,7 +117,7 @@ def _unit_test_structure_guard_skips_repo_bytecode_without_profile() -> None:
         pycache.mkdir(parents=True, exist_ok=True)
         (pycache / "demo.cpython-314.pyc").write_bytes(b"x")
 
-        checker = devcov_structure_guard.DevcovStructureGuard()
+        checker = structure_validation.StructureValidationInvariant()
         context = CheckContext(repo_root=repo_root)
         violations = checker.check(context)
 
@@ -133,7 +133,7 @@ def _unit_test_structure_guard_requires_logs_readme() -> None:
         logs_readme = repo_root / "devcovenant" / "logs" / "README.md"
         logs_readme.unlink()
 
-        checker = devcov_structure_guard.DevcovStructureGuard()
+        checker = structure_validation.StructureValidationInvariant()
         context = CheckContext(repo_root=repo_root)
         violations = checker.check(context)
 

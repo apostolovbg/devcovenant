@@ -27,17 +27,18 @@ The practical split is:
 
 - `flow`
 
-  Lifecycle orchestration such as gate phases, refresh ownership, and command
-  sequencing.
+  Lifecycle orchestration such as gate phases, refresh ownership, command
+  sequencing, and workflow-evidence validation.
 
 - `runtime`
 
-  Execution, output, run logging, error normalization, and command dispatch.
+  Execution, output, run logging, runtime evidence paths, and command
+  dispatch.
 
 - `services`
 
   Shared runtime services such as metadata resolution, policy execution,
-  managed docs, registry handling, and invariant helpers.
+  managed docs, and tracked-registry handling.
 
 - `lib`
 
@@ -88,6 +89,15 @@ YAMLs under `devcovenant/core/contracts/invariants/`, because deploy and
 other runtime paths resolve those descriptors from the installed package, not
 from a source-only checkout assumption.
 
+The implementation ownership now follows that split more honestly as well.
+`devcovenant/core/flow/gate_status_validation.py` and
+`devcovenant/core/flow/workflow_validation.py` own workflow-evidence parsing
+and enforcement, while `devcovenant/core/services/integrity_validation.py`
+and `devcovenant/core/services/structure_validation.py` stay focused on
+descriptor/registry integrity and required-repo-shape checks.
+That keeps flow truth out of service-layer "guard" islands without changing
+the stable invariant ids that repositories already know.
+
 ## Workflow Contract Model
 Workflow structure now has its own contract instead of being inferred from
 customizable policy state.
@@ -105,7 +115,19 @@ Those phase declarations define:
 - phase ordering metadata
 - how the phase runs
 - the success contract used to mark it complete
-- the command surface that reruns it explicitly
+- summary/reporting metadata used when the phase is recorded
+
+That reporting metadata is now declarative as well.
+If a phase needs richer behavior, profiles declare it through recording hooks
+such as:
+
+- `output_mode_config_field`
+- `event_adapter_group`
+- `write_runtime_profile`
+
+Core then executes the same generic workflow-phase machinery for every phase.
+It does not branch on `phase_id == "tests"` to decide whether output,
+event capture, or run-profile artifacts should exist.
 
 That split is intentional.
 Policies can still require things about source layout or test structure, but a
@@ -193,6 +215,8 @@ Tracked contract state lives in `devcovenant/registry/registry.yaml`, including
 `workflow_contract`.
 That section records the reserved anchors, the declared phases resolved from
 active profiles, and which phase ids are currently required.
+Tracked path ownership now lives in
+`devcovenant/core/services/tracked_registry.py`.
 
 Runtime workflow state lives in
 `devcovenant/registry/runtime/workflow_session.json`.
@@ -206,6 +230,8 @@ That file records:
 
 `gate_status.json` still exists beside it, but it now focuses on gate lifecycle
 and pre-commit evidence instead of trying to be the whole workflow model.
+Runtime path ownership for those evidence files lives in
+`devcovenant/core/runtime/registry.py`.
 
 Policy-local runtime state should stay under runtime-owned namespaces such as
 `devcovenant/registry/runtime/` unless a policy explicitly declares another

@@ -163,6 +163,14 @@ workflow structure through core-invariant metadata.
 In the built-in Python profile, the standard `tests` phase now lives there and
 declares its runner commands and success contract, while core owns the public
 `run` and `phase run <id>` command surfaces used to execute it.
+That same declaration can also carry `recording` hooks such as:
+
+- `output_mode_config_field`
+- `event_adapter_group`
+- `write_runtime_profile`
+
+Those hooks let a profile opt specific phases into richer reporting without
+reintroducing hardcoded executor behavior for a special phase id.
 
 The same asset ownership shows up in managed docs.
 Profile README descriptors can intentionally keep a managed block empty.

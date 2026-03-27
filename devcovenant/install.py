@@ -16,7 +16,7 @@ from pathlib import Path
 
 import yaml
 
-import devcovenant.core.services.registry as manifest_module
+import devcovenant.core.services.manifest_inventory as manifest_module
 from devcovenant.core.runtime.execution import (
     build_command_parser,
     print_banner,

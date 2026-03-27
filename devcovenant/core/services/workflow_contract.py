@@ -257,6 +257,16 @@ def _normalize_phase_entry(
             str(recording_raw.get("summary_label") or phase_id).strip().title()
             or phase_id.title()
         ),
+        "output_mode_config_field": str(
+            recording_raw.get("output_mode_config_field") or ""
+        ).strip(),
+        "event_adapter_group": str(
+            recording_raw.get("event_adapter_group") or ""
+        ).strip(),
+        "write_runtime_profile": _normalize_bool(
+            recording_raw.get("write_runtime_profile"),
+            default=False,
+        ),
     }
 
     phase = {

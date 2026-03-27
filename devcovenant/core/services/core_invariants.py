@@ -16,13 +16,11 @@ from devcovenant.core.contracts.invariant import (
 )
 from devcovenant.core.contracts.policy import CheckContext, Violation
 from devcovenant.core.services import yaml_cache as yaml_cache_service
+from devcovenant.core.services.policy_registry import PolicyDescriptor
 from devcovenant.core.services.policy_runtime_actions import (
     build_runtime_policy_option_views,
 )
-from devcovenant.core.services.registry import (
-    PolicyDescriptor,
-    policy_registry_path,
-)
+from devcovenant.core.services.tracked_registry import policy_registry_path
 
 CORE_INVARIANTS_BEGIN = "<!-- DEVCOV-INVARIANTS:BEGIN -->"
 CORE_INVARIANTS_END = "<!-- DEVCOV-INVARIANTS:END -->"
@@ -50,20 +48,25 @@ class ResolvedCoreInvariant:
     runtime_option_views: Dict[str, Dict[str, Any]]
 
 
-_CORE_INVARIANT_MODULES = {
-    "devcov-integrity-guard": (
-        "devcovenant.core.services.devcov_integrity_guard"
-    ),
-    "devcov-structure-guard": (
-        "devcovenant.core.services.devcov_structure_guard"
-    ),
-    "devflow-run-gates": "devcovenant.core.services.devflow_run_gates",
+_CORE_INVARIANT_LOCATIONS = {
+    "devcov-integrity-guard": {
+        "module": "devcovenant.core.services.integrity_validation",
+        "script_path": ("devcovenant/core/services/integrity_validation.py"),
+    },
+    "devcov-structure-guard": {
+        "module": "devcovenant.core.services.structure_validation",
+        "script_path": ("devcovenant/core/services/structure_validation.py"),
+    },
+    "devflow-run-gates": {
+        "module": "devcovenant.core.flow.workflow_validation",
+        "script_path": "devcovenant/core/flow/workflow_validation.py",
+    },
 }
 
 
 def core_invariant_ids() -> list[str]:
     """Return the canonical ordered core invariant ids."""
-    return sorted(_CORE_INVARIANT_MODULES)
+    return sorted(_CORE_INVARIANT_LOCATIONS)
 
 
 def _script_name(invariant_id: str) -> str:
@@ -76,13 +79,12 @@ def resolve_core_invariant_location(
     invariant_id: str,
 ) -> CoreInvariantLocation | None:
     """Return script/descriptor locations for one invariant id."""
-    module_name = _CORE_INVARIANT_MODULES.get(invariant_id)
-    if not module_name:
+    location = _CORE_INVARIANT_LOCATIONS.get(invariant_id)
+    if not location:
         return None
+    module_name = str(location.get("module") or "").strip()
     script_name = _script_name(invariant_id)
-    script_path = (
-        repo_root / "devcovenant" / "core" / "services" / (f"{script_name}.py")
-    )
+    script_path = repo_root / str(location.get("script_path") or "").strip()
     descriptor_path = (
         repo_root
         / "devcovenant"

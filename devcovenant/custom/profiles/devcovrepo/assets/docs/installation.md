@@ -96,7 +96,9 @@ The shortest accurate model is:
 1. `install` is setup.
 
    It copies the runtime, seeds config, and records enough baseline state for
-   the repo to become DevCovenant-managed later.
+   the repo to become DevCovenant-managed later. That baseline also seeds the
+   tracked manifest inventory that later structure validation and refresh
+   reuse.
 
 2. config review is the human checkpoint.
 

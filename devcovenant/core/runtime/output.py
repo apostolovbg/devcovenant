@@ -8,7 +8,7 @@ from typing import Literal
 OutputMode = Literal["normal", "verbose", "quiet"]
 ChildOutputChannel = Literal[
     "gate_child",
-    "test_child",
+    "workflow_child",
     "managed_child",
     "generic_child",
 ]
@@ -16,9 +16,11 @@ ChildOutputChannel = Literal[
 OUTPUT_MODE_DEFAULT: OutputMode = "verbose"
 OUTPUT_MODE_ALLOWED = frozenset({"normal", "verbose", "quiet"})
 WAIT_PROGRESS_MESSAGE = "Please wait. In progress..."
-_NORMAL_MODE_SUPPRESSED_CHANNELS = frozenset({"managed_child", "test_child"})
+_NORMAL_MODE_SUPPRESSED_CHANNELS = frozenset(
+    {"managed_child", "workflow_child"}
+)
 _QUIET_MODE_SUPPRESSED_CHANNELS = frozenset(
-    {"gate_child", "test_child", "managed_child", "generic_child"}
+    {"gate_child", "workflow_child", "managed_child", "generic_child"}
 )
 
 

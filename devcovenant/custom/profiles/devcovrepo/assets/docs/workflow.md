@@ -140,12 +140,16 @@ Fix the path or permissions and rerun the appropriate command.
 
 ## Output Modes
 `engine.output_mode` controls normal command output.
-`engine.tests_output_mode` controls output for the declared `tests` phase
-when it runs through `devcovenant run` or `devcovenant phase run tests`.
+Phase declarations may also point at a narrower config field for their own
+reporting behavior. In the built-in `tests` phase, that hook points to
+`engine.tests_output_mode`.
 
 In `normal` test mode, DevCovenant keeps console progress concise and leaves
 full child output in the run logs.
 That is why the log artifacts matter.
+Profiles declare those richer reporting hooks under
+`workflow_phases[*].recording`, so output-mode overrides, event adapters, and
+workflow profiling are phase-owned instead of hardcoded by phase id.
 
 ## Workflow Session Surfaces
 DevCovenant now splits workflow evidence between two runtime files:
@@ -163,6 +167,12 @@ The tracked counterpart to that runtime state is
 `workflow_contract` in `devcovenant/registry/registry.yaml`.
 That tracked section records the reserved anchors, the declared phases coming
 from active profiles, and the required phase ids the engine must enforce.
+The path helpers that own those files are split the same way:
+
+- `devcovenant/core/runtime/registry.py` owns runtime evidence paths
+- `devcovenant/core/services/tracked_registry.py` owns tracked registry paths
+- `devcovenant/core/flow/gate_status_validation.py` owns gate-status payload
+  parsing and schema validation
 
 ## CI Mapping
 The generated CI workflow lives at

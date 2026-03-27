@@ -10,10 +10,8 @@ from typing import Any, Dict
 import yaml
 
 from devcovenant.core.services import yaml_cache as yaml_cache_service
-from devcovenant.core.services.registry import (
-    load_policy_descriptor,
-    policy_registry_path,
-)
+from devcovenant.core.services.policy_registry import load_policy_descriptor
+from devcovenant.core.services.tracked_registry import policy_registry_path
 
 
 @dataclass(frozen=True)

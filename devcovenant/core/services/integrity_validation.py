@@ -2,11 +2,10 @@
 
 from __future__ import annotations
 
-import json
-from datetime import datetime
 from pathlib import Path
 from typing import Iterable, List
 
+import devcovenant.core.flow.gate_status_validation as status_validation
 from devcovenant.core.contracts.invariant import CoreInvariantCheck
 from devcovenant.core.contracts.policy import CheckContext, Violation
 from devcovenant.core.lib.selectors import build_watchlists
@@ -14,7 +13,7 @@ from devcovenant.core.services.policy_parse import (
     PolicyDefinition,
     PolicyParser,
 )
-from devcovenant.core.services.registry import (
+from devcovenant.core.services.policy_registry import (
     PolicyRegistry,
     load_policy_descriptor,
 )
@@ -25,7 +24,7 @@ _DEFAULT_STATUS_PATH = (
 
 
 def _relative_path_option(
-    invariant: "DevcovIntegrityGuard",
+    invariant: "IntegrityValidationInvariant",
     key: str,
     default: str | Path,
 ) -> Path:
@@ -78,29 +77,7 @@ def _requires_status_update(
     return False
 
 
-def _validate_status_payload(status_path: Path) -> None:
-    """Raise ValueError when the stored gate-status payload is malformed."""
-    try:
-        payload = json.loads(status_path.read_text(encoding="utf-8"))
-    except (OSError, json.JSONDecodeError) as exc:
-        raise ValueError(f"Unable to parse {status_path}: {exc}") from exc
-
-    last_run = payload.get("last_run") or ""
-    try:
-        datetime.fromisoformat(last_run.replace("Z", "+00:00"))
-    except ValueError as exc:
-        raise ValueError(
-            "Field 'last_run' must be an ISO-8601 timestamp."
-        ) from exc
-
-    command = payload.get("command") or ""
-    if not command.strip():
-        raise ValueError(
-            "Field 'command' must record the executed test command."
-        )
-
-
-class DevcovIntegrityGuard(CoreInvariantCheck):
+class IntegrityValidationInvariant(CoreInvariantCheck):
     """Run consolidated integrity checks for policy definitions."""
 
     invariant_id = "devcov-integrity-guard"
@@ -263,7 +240,7 @@ class DevcovIntegrityGuard(CoreInvariantCheck):
             ]
 
         try:
-            _validate_status_payload(status_path)
+            status_validation.validate_gate_status_payload(status_path)
         except ValueError as exc:
             return [
                 Violation(

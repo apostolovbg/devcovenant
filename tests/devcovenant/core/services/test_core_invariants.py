@@ -44,6 +44,56 @@ def _unit_test_load_core_invariant_descriptor_reads_real_descriptor() -> None:
     assert isinstance(descriptor.metadata, dict)
 
 
+def _unit_test_devflow_location_uses_flow_owned_module() -> None:
+    """Devflow invariant should resolve to the flow-owned module path."""
+    module = importlib.import_module(MODULE)
+    location = module.resolve_core_invariant_location(
+        REPO_ROOT,
+        "devflow-run-gates",
+    )
+    assert location is not None
+    assert location.module == "devcovenant.core.flow.workflow_validation"
+    assert location.path == (
+        REPO_ROOT / "devcovenant" / "core" / "flow" / "workflow_validation.py"
+    )
+
+
+def _unit_test_integrity_location_uses_validation_module() -> None:
+    """Integrity invariant should resolve to the renamed validation module."""
+    module = importlib.import_module(MODULE)
+    location = module.resolve_core_invariant_location(
+        REPO_ROOT,
+        "devcov-integrity-guard",
+    )
+    assert location is not None
+    assert location.module == "devcovenant.core.services.integrity_validation"
+    assert location.path == (
+        REPO_ROOT
+        / "devcovenant"
+        / "core"
+        / "services"
+        / "integrity_validation.py"
+    )
+
+
+def _unit_test_structure_location_uses_validation_module() -> None:
+    """Structure invariant should resolve to the renamed validation module."""
+    module = importlib.import_module(MODULE)
+    location = module.resolve_core_invariant_location(
+        REPO_ROOT,
+        "devcov-structure-guard",
+    )
+    assert location is not None
+    assert location.module == "devcovenant.core.services.structure_validation"
+    assert location.path == (
+        REPO_ROOT
+        / "devcovenant"
+        / "core"
+        / "services"
+        / "structure_validation.py"
+    )
+
+
 class GeneratedUnittestCases(unittest.TestCase):
     """unittest wrappers for layered module sanity checks."""
 
@@ -62,3 +112,15 @@ class GeneratedUnittestCases(unittest.TestCase):
     def test_load_core_invariant_descriptor_reads_real_descriptor(self):
         """Run real-descriptor loading assertions."""
         _unit_test_load_core_invariant_descriptor_reads_real_descriptor()
+
+    def test_devflow_location_uses_flow_owned_module(self):
+        """Run flow-owned invariant location assertions."""
+        _unit_test_devflow_location_uses_flow_owned_module()
+
+    def test_integrity_location_uses_validation_module(self):
+        """Run integrity invariant location assertions."""
+        _unit_test_integrity_location_uses_validation_module()
+
+    def test_structure_location_uses_validation_module(self):
+        """Run structure invariant location assertions."""
+        _unit_test_structure_location_uses_validation_module()

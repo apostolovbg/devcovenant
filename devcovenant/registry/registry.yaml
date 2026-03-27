@@ -320,7 +320,7 @@ core-invariants:
       registry_file: devcovenant/registry/registry.yaml
       gate_status_file: devcovenant/registry/runtime/gate_status.json
       selector_roles: *id002
-    module_path: devcovenant/core/services/devcov_integrity_guard.py
+    module_path: devcovenant/core/services/integrity_validation.py
     descriptor_path: devcovenant/core/contracts/invariants/devcov_integrity_guard.yaml
     customizable: false
   devcov-structure-guard:
@@ -404,7 +404,7 @@ core-invariants:
       enforcement: active
       enabled: true
       custom: false
-    module_path: devcovenant/core/services/devcov_structure_guard.py
+    module_path: devcovenant/core/services/structure_validation.py
     descriptor_path: devcovenant/core/contracts/invariants/devcov_structure_guard.yaml
     customizable: false
   devflow-run-gates:
@@ -651,7 +651,7 @@ core-invariants:
       pre_commit_end_command_key: pre_commit_end_command
       skipped_globs: *id004
       selector_roles: skipped
-    module_path: devcovenant/core/services/devflow_run_gates.py
+    module_path: devcovenant/core/flow/workflow_validation.py
     descriptor_path: devcovenant/core/contracts/invariants/devflow_run_gates.yaml
     customizable: false
 workflow_contract:
@@ -689,6 +689,9 @@ workflow_contract:
     recording:
       record_in_session: true
       summary_label: Tests
+      output_mode_config_field: engine.tests_output_mode
+      event_adapter_group: test_events
+      write_runtime_profile: true
     source_field: workflow_phases
   required_phase_ids:
   - tests
@@ -9098,7 +9101,7 @@ policies:
     - devcovenant/VERSION
     origin: builtin
     script_exists: true
-    hash: 756aeebb1207f2ab41d68795f519765a5e33adb53297741c60e57c787628fb0b
+    hash: c727418dc7b3431eb9ac9d812a7aa5988c53c6fe722850873a85226615599322
     script_path: builtin/version_governance.py
   dependency-management:
     enabled: true
@@ -9502,6 +9505,9 @@ profiles:
       recording:
         record_in_session: true
         summary_label: Tests
+        output_mode_config_field: engine.tests_output_mode
+        event_adapter_group: test_events
+        write_runtime_profile: true
     source: builtin
     path: devcovenant/builtin/profiles/csharp
     assets_available:
@@ -9562,6 +9568,9 @@ profiles:
       recording:
         record_in_session: true
         summary_label: Tests
+        output_mode_config_field: engine.tests_output_mode
+        event_adapter_group: test_events
+        write_runtime_profile: true
     source: builtin
     path: devcovenant/builtin/profiles/dart
     assets_available:
@@ -10195,6 +10204,9 @@ profiles:
       recording:
         record_in_session: true
         summary_label: Tests
+        output_mode_config_field: engine.tests_output_mode
+        event_adapter_group: test_events
+        write_runtime_profile: true
     source: builtin
     path: devcovenant/builtin/profiles/docker
     assets_available:
@@ -10300,6 +10312,9 @@ profiles:
       recording:
         record_in_session: true
         summary_label: Tests
+        output_mode_config_field: engine.tests_output_mode
+        event_adapter_group: test_events
+        write_runtime_profile: true
     source: builtin
     path: devcovenant/builtin/profiles/fastapi
     assets_available:
@@ -10363,6 +10378,9 @@ profiles:
       recording:
         record_in_session: true
         summary_label: Tests
+        output_mode_config_field: engine.tests_output_mode
+        event_adapter_group: test_events
+        write_runtime_profile: true
     source: builtin
     path: devcovenant/builtin/profiles/flutter
     assets_available:
@@ -10451,6 +10469,9 @@ profiles:
       recording:
         record_in_session: true
         summary_label: Tests
+        output_mode_config_field: engine.tests_output_mode
+        event_adapter_group: test_events
+        write_runtime_profile: true
     source: builtin
     path: devcovenant/builtin/profiles/frappe
     assets_available:
@@ -10663,6 +10684,9 @@ profiles:
       recording:
         record_in_session: true
         summary_label: Tests
+        output_mode_config_field: engine.tests_output_mode
+        event_adapter_group: test_events
+        write_runtime_profile: true
     source: builtin
     path: devcovenant/builtin/profiles/go
     assets_available:
@@ -10751,6 +10775,9 @@ profiles:
       recording:
         record_in_session: true
         summary_label: Tests
+        output_mode_config_field: engine.tests_output_mode
+        event_adapter_group: test_events
+        write_runtime_profile: true
     source: builtin
     path: devcovenant/builtin/profiles/java
     assets_available:
@@ -10906,6 +10933,9 @@ profiles:
       recording:
         record_in_session: true
         summary_label: Tests
+        output_mode_config_field: engine.tests_output_mode
+        event_adapter_group: test_events
+        write_runtime_profile: true
     source: builtin
     path: devcovenant/builtin/profiles/javascript
     assets_available:
@@ -10950,6 +10980,9 @@ profiles:
       recording:
         record_in_session: true
         summary_label: Tests
+        output_mode_config_field: engine.tests_output_mode
+        event_adapter_group: test_events
+        write_runtime_profile: true
     source: builtin
     path: devcovenant/builtin/profiles/kubernetes
     assets_available:
@@ -11016,6 +11049,9 @@ profiles:
       recording:
         record_in_session: true
         summary_label: Tests
+        output_mode_config_field: engine.tests_output_mode
+        event_adapter_group: test_events
+        write_runtime_profile: true
     source: builtin
     path: devcovenant/builtin/profiles/objective_c
     assets_available:
@@ -11160,6 +11196,9 @@ profiles:
       recording:
         record_in_session: true
         summary_label: Tests
+        output_mode_config_field: engine.tests_output_mode
+        event_adapter_group: test_events
+        write_runtime_profile: true
     source: builtin
     path: devcovenant/builtin/profiles/php
     assets_available:
@@ -11216,6 +11255,9 @@ profiles:
       recording:
         record_in_session: true
         summary_label: Tests
+        output_mode_config_field: engine.tests_output_mode
+        event_adapter_group: test_events
+        write_runtime_profile: true
     pre_commit:
       repos:
       - repo: https://github.com/psf/black
@@ -11408,6 +11450,9 @@ profiles:
       recording:
         record_in_session: true
         summary_label: Tests
+        output_mode_config_field: engine.tests_output_mode
+        event_adapter_group: test_events
+        write_runtime_profile: true
     source: builtin
     path: devcovenant/builtin/profiles/ruby
     assets_available:
@@ -11523,6 +11568,9 @@ profiles:
       recording:
         record_in_session: true
         summary_label: Tests
+        output_mode_config_field: engine.tests_output_mode
+        event_adapter_group: test_events
+        write_runtime_profile: true
     source: builtin
     path: devcovenant/builtin/profiles/rust
     assets_available:
@@ -11611,6 +11659,9 @@ profiles:
       recording:
         record_in_session: true
         summary_label: Tests
+        output_mode_config_field: engine.tests_output_mode
+        event_adapter_group: test_events
+        write_runtime_profile: true
     source: builtin
     path: devcovenant/builtin/profiles/swift
     assets_available:
@@ -11650,6 +11701,9 @@ profiles:
       recording:
         record_in_session: true
         summary_label: Tests
+        output_mode_config_field: engine.tests_output_mode
+        event_adapter_group: test_events
+        write_runtime_profile: true
     policy_overlays:
       documentation-growth-tracking:
         user_facing_suffixes:
@@ -11805,6 +11859,9 @@ profiles:
       recording:
         record_in_session: true
         summary_label: Tests
+        output_mode_config_field: engine.tests_output_mode
+        event_adapter_group: test_events
+        write_runtime_profile: true
     source: builtin
     path: devcovenant/builtin/profiles/typescript
     assets_available:
@@ -12323,11 +12380,16 @@ inventory:
     - devcovenant/core/contracts/invariants/devflow_run_gates.yaml
     - devcovenant/core/services/core_invariant_block_refresh.py
     - devcovenant/core/services/core_invariants.py
-    - devcovenant/core/services/devcov_integrity_guard.py
-    - devcovenant/core/services/devcov_structure_guard.py
-    - devcovenant/core/services/devflow_run_gates.py
+    - devcovenant/core/services/integrity_validation.py
+    - devcovenant/core/services/manifest_inventory.py
     - devcovenant/core/services/policy_commands.py
+    - devcovenant/core/services/policy_registry.py
+    - devcovenant/core/services/structure_validation.py
+    - devcovenant/core/services/tracked_registry.py
     - devcovenant/core/services/workflow_contract.py
+    - devcovenant/core/flow/gate_status_validation.py
+    - devcovenant/core/flow/workflow_validation.py
+    - devcovenant/core/runtime/registry.py
     - devcovenant/core/runtime/workflow_session.py
   docs:
     core:

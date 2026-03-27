@@ -29,23 +29,35 @@ Public user-facing contracts still live in top-level/docs surfaces:
 - `flow/`: command-flow orchestration.
   - `gate.py`: `start`/`mid`/`end` lifecycle behavior and reconcile loops.
   - `gate_status_helpers.py`: read-only status rendering/run-pointer lookup.
+  - `gate_status_validation.py`: gate-status payload parsing and schema
+    validation.
   - `gate_changelog_helpers.py`: changelog top-entry/session-baseline helpers.
   - `refresh.py`: full refresh orchestration and managed-doc regeneration.
   - `session.py`: gate-session helper wiring.
+  - `workflow_validation.py`: flow-owned workflow-evidence validation.
 - `runtime/`: process and output boundary.
   - `execution.py`: command dispatch, subprocess routing, managed re-exec.
   - `errors.py`: runtime exception normalization and explicit error rendering.
   - `output.py`: output-mode policy and channel-level stream/suppression rules.
+  - `registry.py`: runtime evidence-path ownership for gate/session ledgers.
   - `run_logging.py`: run-folder allocation and summary/log artifact contract.
   - `session_snapshot.py`: snapshot collection/diff helpers.
 - `services/`: policy/profile/registry business logic.
   - `event.py`: test-event adapters and lifecycle-event recording.
+  - `integrity_validation.py`: core invariant orchestration for descriptor,
+    registry, and gate-integrity checks.
+  - `manifest_inventory.py`: tracked inventory defaults and required-repo
+    manifest persistence.
   - `metadata.py`: metadata merge, normalization, typed decoding.
   - `policy_block_refresh.py`: AGENTS policy-block rendering.
   - `policy_engine.py`: policy runtime orchestration and reporting.
   - `policy_parse.py`: AGENTS `policy-def` parser/model.
+  - `policy_registry.py`: policy descriptors, script resolution, and tracked
+    policy hash/state management.
   - `profile_registry.py`: profile discovery and merge inventory.
-  - `registry.py`: manifest/registry read-write contracts.
+  - `structure_validation.py`: core invariant checks for required repo
+    structure and repo-local bytecode hygiene.
+  - `tracked_registry.py`: tracked-registry path and document ownership.
   - `translator_engine.py`: language translator routing and `LanguageUnit`.
 - `lib/`: shared helpers.
   - `selectors.py`: selector matching utilities.
@@ -70,9 +82,9 @@ This split keeps debugging straightforward:
 2. AGENTS managed policy block is rendered from resolved metadata.
 3. Policy parser loads AGENTS `policy-def` payloads.
 4. Policy engine resolves metadata + file scope and executes checks.
-5. Gate/test flows run required commands and write run artifacts.
-6. Session evidence is stored in
-   `devcovenant/registry/runtime/gate_status.json`.
+5. Gate/run flows execute required phases and write run artifacts.
+6. Session evidence is stored under `devcovenant/registry/runtime/`,
+   including `gate_status.json` and `workflow_session.json`.
 
 ## Contract Boundaries
 Tier-A user contracts live outside this directory and include:

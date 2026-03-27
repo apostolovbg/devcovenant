@@ -27,9 +27,9 @@ except ImportError:  # pragma: no cover - non-POSIX runtimes
     pty = None  # type: ignore[assignment]
 
 import devcovenant.core.runtime.output as output_runtime_module
+import devcovenant.core.runtime.registry as registry_runtime_module
 import devcovenant.core.runtime.run_logging as run_logging_runtime_module
 import devcovenant.core.services.event as event_runtime_module
-import devcovenant.core.services.registry as registry_runtime_module
 import devcovenant.core.services.workflow_contract as workflow_contract_module
 from devcovenant import __version__ as package_version
 from devcovenant.core.runtime import (
@@ -522,8 +522,8 @@ def get_logs_keep_last() -> int:
     return _LOGS_KEEP_LAST
 
 
-def _read_engine_config(repo_root: Path) -> dict[str, Any]:
-    """Read `engine` config mapping from repo config when available."""
+def _read_repo_config(repo_root: Path) -> dict[str, Any]:
+    """Read full repo config mapping from `devcovenant/config.yaml`."""
     config_path = repo_root / "devcovenant" / "config.yaml"
     if not config_path.exists():
         return {}
@@ -533,10 +533,35 @@ def _read_engine_config(repo_root: Path) -> dict[str, Any]:
         return {}
     if not isinstance(payload, dict):
         return {}
+    return payload
+
+
+def _read_engine_config(repo_root: Path) -> dict[str, Any]:
+    """Read `engine` config mapping from repo config when available."""
+
+    payload = _read_repo_config(repo_root)
     engine_cfg = payload.get("engine")
     if not isinstance(engine_cfg, dict):
         return {}
     return engine_cfg
+
+
+def _read_config_value_by_path(
+    repo_root: Path,
+    path_token: str,
+) -> object | None:
+    """Resolve one dotted config path against `devcovenant/config.yaml`."""
+
+    normalized_path = str(path_token or "").strip()
+    if not normalized_path:
+        return None
+    current: object = _read_repo_config(repo_root)
+    for segment in normalized_path.split("."):
+        token = str(segment or "").strip()
+        if not token or not isinstance(current, Mapping):
+            return None
+        current = current.get(token)
+    return current
 
 
 def resolve_engine_auto_fix_enabled(repo_root: Path) -> bool:
@@ -711,13 +736,6 @@ def _read_logs_keep_last_from_config(repo_root: Path) -> int:
     return _normalize_logs_keep_last(engine_cfg.get("logs_keep_last"))
 
 
-def _read_tests_output_mode_from_config(repo_root: Path) -> str | None:
-    """Read optional `engine.tests_output_mode` from repo config."""
-    engine_cfg = _read_engine_config(repo_root)
-    tests_token = str(engine_cfg.get("tests_output_mode", "")).strip()
-    return tests_token or None
-
-
 def configure_output_mode_from_config(repo_root: Path) -> OutputMode:
     """Configure output mode from `devcovenant/config.yaml`."""
     return configure_output_mode(_read_output_mode_from_config(repo_root))
@@ -732,13 +750,22 @@ def configure_logs_keep_last_from_config(repo_root: Path) -> int:
 
 def resolve_workflow_phase_output_mode(
     repo_root: Path,
-    phase_id: str,
+    phase: Mapping[str, object] | str,
 ) -> OutputMode:
     """Resolve console output mode for one declared workflow phase."""
-
-    if str(phase_id or "").strip().lower() == "tests":
+    phase_payload = (
+        dict(phase)
+        if isinstance(phase, Mapping)
+        else resolve_declared_workflow_phase(repo_root, str(phase))
+    )
+    recording = phase_payload.get("recording")
+    recording_map = dict(recording) if isinstance(recording, Mapping) else {}
+    config_field = str(
+        recording_map.get("output_mode_config_field") or ""
+    ).strip()
+    if config_field:
         return _normalize_output_mode(
-            _read_tests_output_mode_from_config(repo_root)
+            str(_read_config_value_by_path(repo_root, config_field) or "")
         )
     return get_output_mode()
 
@@ -1488,34 +1515,78 @@ def resolve_workflow_phase_commands(
     return phase, commands, source_field
 
 
+def _workflow_phase_recording_map(
+    phase: Mapping[str, object],
+) -> dict[str, object]:
+    """Return normalized recording metadata for one workflow phase."""
+
+    recording = phase.get("recording")
+    return dict(recording) if isinstance(recording, Mapping) else {}
+
+
 def _workflow_phase_output_mode(
     repo_root: Path,
-    phase_id: str,
+    phase: Mapping[str, object],
 ) -> OutputMode:
     """Resolve console output mode for one workflow phase."""
 
-    if str(phase_id or "").strip().lower() == "tests":
-        return resolve_workflow_phase_output_mode(repo_root, phase_id)
-    return get_output_mode()
+    return resolve_workflow_phase_output_mode(repo_root, phase)
+
+
+def _workflow_phase_event_adapter_group(
+    phase: Mapping[str, object],
+) -> str:
+    """Return the configured event-adapter group for one phase."""
+
+    return str(
+        _workflow_phase_recording_map(phase).get("event_adapter_group") or ""
+    ).strip()
+
+
+def _workflow_phase_writes_runtime_profile(
+    phase: Mapping[str, object],
+) -> bool:
+    """Return whether one phase should emit run-profile artifacts."""
+
+    return bool(
+        _workflow_phase_recording_map(phase).get("write_runtime_profile")
+    )
+
+
+def _workflow_phase_uses_reporting_hooks(
+    phase: Mapping[str, object],
+) -> bool:
+    """Return whether a phase declared any richer reporting hooks."""
+
+    recording = _workflow_phase_recording_map(phase)
+    return bool(
+        str(recording.get("output_mode_config_field") or "").strip()
+        or str(recording.get("event_adapter_group") or "").strip()
+        or bool(recording.get("write_runtime_profile"))
+    )
 
 
 def _load_workflow_phase_event_manager(
     repo_root: Path,
-    phase_id: str,
+    phase: Mapping[str, object],
 ) -> event_runtime_module.TestEventManager:
     """Return the configured event manager for one workflow phase."""
 
-    if str(phase_id or "").strip().lower() != "tests":
+    adapter_group = _workflow_phase_event_adapter_group(phase)
+    if not adapter_group:
         return event_runtime_module.TestEventManager(())
     # Clear stale warnings from prior calls in this process.
     event_runtime_module.consume_test_event_adapter_warnings()
-    adapters = event_runtime_module.load_test_event_adapters(repo_root)
+    adapters = event_runtime_module.load_profile_event_adapters(
+        repo_root,
+        adapter_group,
+    )
     adapter_warnings = (
         event_runtime_module.consume_test_event_adapter_warnings()
     )
     for warning in adapter_warnings:
         runtime_print(
-            f"WARNING: test-event adapter load issue: {warning}",
+            f"WARNING: workflow phase event-adapter load issue: {warning}",
             file=sys.stderr,
         )
     return event_runtime_module.TestEventManager(adapters)
@@ -1669,7 +1740,7 @@ def _run_command(
     command_env = _apply_repo_bytecode_env(dict(env or os.environ))
     result, _ = run_child_command_with_output_policy(
         command,
-        channel="test_child",
+        channel="workflow_child",
         env=command_env,
         cwd=cwd,
         capture_combined_output=False,
@@ -1678,7 +1749,7 @@ def _run_command(
     allowed = allow_codes or {0}
     if result.returncode not in allowed:
         output_plan = resolve_child_output_plan_for_channel(
-            "test_child",
+            "workflow_child",
             output_mode=effective_mode,
         )
         if output_plan.child_output_suppressed:
@@ -1732,10 +1803,8 @@ def record_gate_status(
     )
     payload = {
         **existing,
-        "last_run": now.isoformat(),
         "last_run_utc": now.isoformat(),
         "last_run_epoch": now.timestamp(),
-        "command": command.strip(),
         "commands": _parse_commands(command),
         "notes": notes.strip(),
         "session_snapshot_file": snapshot_rel_path,
@@ -1768,14 +1837,17 @@ def record_gate_status(
     payload.pop("changelog_start_exemption_fingerprints", None)
     payload.pop("cache_enabled", None)
     payload.pop("cache_control_env", None)
+    payload.pop("last_run", None)
+    payload.pop("command", None)
     prune_inline_session_snapshot_fields(payload)
     status_path.write_text(
         json.dumps(payload, indent=2) + "\n",
         encoding="utf-8",
     )
+    commands_text = " && ".join(payload.get("commands") or [])
     runtime_print(
-        f"Recorded gate status at {payload['last_run']} "
-        f"for command `{payload['command']}`.",
+        f"Recorded gate status at {payload['last_run_utc']} "
+        f"for commands `{commands_text}`.",
         verbose_only=True,
     )
 
@@ -1839,11 +1911,9 @@ def record_workflow_phase_result(
             "success_contract_kind": str(
                 (phase.get("success_contract") or {}).get("kind", "")
             ).strip(),
-            "last_run": now.isoformat(),
             "last_run_utc": now.isoformat(),
             "last_run_epoch": now.timestamp(),
             "last_run_session_id": active_session_id,
-            "command": command.strip(),
             "commands": _parse_commands(command),
             "command_name": command_name.strip(),
             "notes": notes.strip(),
@@ -1858,6 +1928,8 @@ def record_workflow_phase_result(
             "events_count": event_count,
         }
     )
+    entry.pop("last_run", None)
+    entry.pop("command", None)
     phase_map[phase_id] = entry
     payload["schema_version"] = workflow_session_runtime_module.SCHEMA_VERSION
     payload["workflow_contract_schema_version"] = contract.get(
@@ -1872,7 +1944,8 @@ def record_workflow_phase_result(
     payload["session_snapshot_updated_epoch"] = now.timestamp()
     workflow_session_runtime_module.write_workflow_session(repo_root, payload)
     runtime_print(
-        f"Recorded workflow phase `{phase_id}` at {entry['last_run']}.",
+        f"Recorded workflow phase `{phase_id}` at "
+        f"{entry['last_run_utc']}.",
         verbose_only=True,
     )
 
@@ -1968,7 +2041,7 @@ def _execute_command_group_workflow_phase(
         repo_root,
         phase_id,
     )
-    phase_output_mode = _workflow_phase_output_mode(repo_root, phase_id)
+    phase_output_mode = _workflow_phase_output_mode(repo_root, phase)
     try:
         managed_env, managed_python = resolve_managed_environment_for_stage(
             repo_root,
@@ -1977,7 +2050,9 @@ def _execute_command_group_workflow_phase(
     except ValueError as exc:
         raise SystemExit(str(exc)) from exc
 
-    event_manager = _load_workflow_phase_event_manager(repo_root, phase_id)
+    event_manager = _load_workflow_phase_event_manager(repo_root, phase)
+    reporting_enabled = _workflow_phase_uses_reporting_hooks(phase)
+    writes_runtime_profile = _workflow_phase_writes_runtime_profile(phase)
     phase_started = _dt.datetime.now(tz=_dt.timezone.utc)
     first_failed_command = ""
     first_failed_exit_code: int | None = None
@@ -2032,12 +2107,8 @@ def _execute_command_group_workflow_phase(
                     run_kwargs["cwd"] = repo_root
                 previous_mode = _WORKFLOW_PHASE_COMMAND_OUTPUT_MODE
                 previous_label = _WORKFLOW_PHASE_COMMAND_LABEL
-                if phase_output_mode == "normal" and phase_id == "tests":
-                    _WORKFLOW_PHASE_COMMAND_OUTPUT_MODE = "normal"
-                    _WORKFLOW_PHASE_COMMAND_LABEL = raw
-                else:
-                    _WORKFLOW_PHASE_COMMAND_OUTPUT_MODE = None
-                    _WORKFLOW_PHASE_COMMAND_LABEL = ""
+                _WORKFLOW_PHASE_COMMAND_OUTPUT_MODE = phase_output_mode
+                _WORKFLOW_PHASE_COMMAND_LABEL = raw
                 try:
                     result = _run_command(command_tokens, **run_kwargs)
                 finally:
@@ -2057,14 +2128,15 @@ def _execute_command_group_workflow_phase(
                     exit_code=int(exc.returncode or 1),
                 )
                 progress.fail_step(raw, int(exc.returncode or 1))
-                if phase_id == "tests":
+                if reporting_enabled:
                     merge_active_run_log_metadata(
-                        _build_workflow_phase_run_metadata_with_profile(
+                        _build_workflow_phase_run_metadata_bundle(
                             commands=commands,
                             events=event_manager.events,
                             workflow_phase_output_mode=phase_output_mode,
                             source_field=source_field,
                             phase_id=phase_id,
+                            write_runtime_profile=writes_runtime_profile,
                             started=phase_started,
                             finished=finished,
                             first_failed_command=first_failed_command,
@@ -2093,14 +2165,15 @@ def _execute_command_group_workflow_phase(
     ):
         _verify_external_artifact_check(repo_root, phase_id, success_contract)
 
-    if phase_id == "tests":
+    if reporting_enabled:
         merge_active_run_log_metadata(
-            _build_workflow_phase_run_metadata_with_profile(
+            _build_workflow_phase_run_metadata_bundle(
                 commands=commands,
                 events=event_manager.events,
                 workflow_phase_output_mode=phase_output_mode,
                 source_field=source_field,
                 phase_id=phase_id,
+                write_runtime_profile=writes_runtime_profile,
                 started=phase_started,
                 finished=_dt.datetime.now(tz=_dt.timezone.utc),
                 first_failed_command=first_failed_command,
@@ -2116,7 +2189,7 @@ def _execute_command_group_workflow_phase(
         "notes": notes,
         "command_name": command_name,
         "workflow_phase_output_mode": (
-            phase_output_mode if phase_id == "tests" else None
+            phase_output_mode if reporting_enabled else None
         ),
         "workflow_phase_source_field": source_field,
         "test_events": [event.to_dict() for event in event_manager.events],
@@ -2456,13 +2529,14 @@ def run_required_workflow_phases(repo_root: Path, notes: str = "") -> int:
     return 0
 
 
-def _build_workflow_phase_run_metadata_with_profile(
+def _build_workflow_phase_run_metadata_bundle(
     *,
     phase_id: str,
     commands: Sequence[tuple[str, Sequence[str]]],
     events: Sequence[Any],
     workflow_phase_output_mode: OutputMode,
     source_field: str,
+    write_runtime_profile: bool,
     started: _dt.datetime,
     finished: _dt.datetime,
     first_failed_command: str,
@@ -2470,7 +2544,7 @@ def _build_workflow_phase_run_metadata_with_profile(
     passed_commands: int,
     failed_commands: int,
 ) -> dict[str, Any]:
-    """Build run metadata bundle with workflow summary fields and artifacts."""
+    """Build run metadata bundle for one workflow phase."""
     summary_payload = _build_workflow_phase_run_summary_metadata(
         phase_id=phase_id,
         commands=commands,
@@ -2484,6 +2558,9 @@ def _build_workflow_phase_run_metadata_with_profile(
         passed_commands=passed_commands,
         failed_commands=failed_commands,
     )
+    payload = {"workflow_phase_summary": summary_payload}
+    if not write_runtime_profile:
+        return payload
     profile_payload, profile_artifacts = (
         _build_and_write_workflow_profile_artifacts(
             phase_id=phase_id,
@@ -2495,11 +2572,9 @@ def _build_workflow_phase_run_metadata_with_profile(
             finished=finished,
         )
     )
-    return {
-        "workflow_phase_summary": summary_payload,
-        "workflow_profile": profile_payload,
-        "workflow_profile_artifacts": profile_artifacts,
-    }
+    payload["workflow_profile"] = profile_payload
+    payload["workflow_profile_artifacts"] = profile_artifacts
+    return payload
 
 
 def _build_and_write_workflow_profile_artifacts(

@@ -5,7 +5,7 @@ from __future__ import annotations
 from typing import Callable
 
 from devcovenant.core.contracts.policy import Violation
-from devcovenant.core.services.registry import PolicySyncIssue
+from devcovenant.core.services.policy_registry import PolicySyncIssue
 
 _SEVERITY_ORDER = ("critical", "error", "warning", "info")
 _SEVERITY_LEVELS = {

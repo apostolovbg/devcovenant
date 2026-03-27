@@ -27,21 +27,21 @@ from devcovenant.core.services import (
 )
 from devcovenant.core.services import metadata as metadata_runtime
 from devcovenant.core.services import yaml_cache as yaml_cache_service
+from devcovenant.core.services.manifest_inventory import ensure_manifest
 from devcovenant.core.services.policy_parse import (
     PolicyDefinition,
     PolicyParser,
+)
+from devcovenant.core.services.policy_registry import (
+    PolicyRegistry,
+    PolicySyncIssue,
+    load_policy_descriptor,
 )
 from devcovenant.core.services.profile_registry import (
     load_profile_registry,
     parse_active_profiles,
 )
-from devcovenant.core.services.registry import (
-    PolicyRegistry,
-    PolicySyncIssue,
-    ensure_manifest,
-    load_policy_descriptor,
-    policy_registry_path,
-)
+from devcovenant.core.services.tracked_registry import policy_registry_path
 from devcovenant.core.services.translator_engine import TranslatorRuntime
 
 

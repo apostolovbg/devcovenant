@@ -72,6 +72,55 @@ def _unit_test_phase_snapshots_share_the_session_snapshot_file() -> None:
         assert resolved == snapshot
 
 
+def _unit_test_workflow_session_write_normalizes_legacy_fields() -> None:
+    """Workflow-session writes should collapse legacy duplicate fields."""
+
+    module = importlib.import_module(MODULE)
+    with tempfile.TemporaryDirectory() as tmpdir:
+        repo_root = Path(tmpdir)
+        payload = {
+            "schema_version": module.SCHEMA_VERSION,
+            "session_id": "demo-session",
+            "session_state": "open",
+            "anchors": {
+                "start": {
+                    "status": "passed",
+                    "last_run": "2026-03-26T12:00:00+00:00",
+                    "command": "devcovenant gate --start",
+                }
+            },
+            "phases": {
+                "tests": {
+                    "status": "passed",
+                    "last_run": "2026-03-26T12:05:00+00:00",
+                    "command": "pytest && python3 -m unittest discover -v",
+                }
+            },
+            "required_phase_ids": ["tests"],
+        }
+
+        module.write_workflow_session(repo_root, payload)
+        loaded = module.load_workflow_session(repo_root)
+
+        assert loaded["anchors"]["start"]["last_run_utc"] == (
+            "2026-03-26T12:00:00+00:00"
+        )
+        assert loaded["anchors"]["start"]["commands"] == [
+            "devcovenant gate --start"
+        ]
+        assert "last_run" not in loaded["anchors"]["start"]
+        assert "command" not in loaded["anchors"]["start"]
+        assert loaded["phases"]["tests"]["last_run_utc"] == (
+            "2026-03-26T12:05:00+00:00"
+        )
+        assert loaded["phases"]["tests"]["commands"] == [
+            "pytest",
+            "python3 -m unittest discover -v",
+        ]
+        assert "last_run" not in loaded["phases"]["tests"]
+        assert "command" not in loaded["phases"]["tests"]
+
+
 class GeneratedUnittestCases(unittest.TestCase):
     """unittest wrappers for workflow-session runtime checks."""
 
@@ -89,3 +138,8 @@ class GeneratedUnittestCases(unittest.TestCase):
         """Run workflow-session snapshot regression assertions."""
 
         _unit_test_phase_snapshots_share_the_session_snapshot_file()
+
+    def test_workflow_session_write_normalizes_legacy_fields(self):
+        """Run workflow-session normalization regression assertions."""
+
+        _unit_test_workflow_session_write_normalizes_legacy_fields()

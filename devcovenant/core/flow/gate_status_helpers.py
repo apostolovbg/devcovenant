@@ -5,21 +5,14 @@ from __future__ import annotations
 import json
 from pathlib import Path
 
+import devcovenant.core.flow.gate_status_validation as status_validation
 import devcovenant.core.runtime.execution as execution_runtime_module
-import devcovenant.core.services.registry as registry_runtime_module
+import devcovenant.core.runtime.registry as registry_runtime_module
 
 
 def _load_status(path: Path) -> dict:
     """Load the current status payload."""
-    if not path.exists():
-        return {}
-    try:
-        payload = json.loads(path.read_text(encoding="utf-8"))
-    except json.JSONDecodeError as exc:
-        raise ValueError(f"Invalid gate status JSON in {path}: {exc}") from exc
-    if not isinstance(payload, dict):
-        raise ValueError(f"Gate status payload must be a mapping: {path}")
-    return payload
+    return status_validation.load_gate_status_payload(path)
 
 
 def _gate_status_summary_lines(repo_root: Path) -> list[str]:
@@ -68,9 +61,7 @@ def _gate_status_summary_lines(repo_root: Path) -> list[str]:
     session_end = _status_time_token(payload, "session_end_utc")
     if session_end:
         lines.append(f"Session End: {session_end}")
-    last_workflow_run = _status_time_token(
-        payload, "last_run_utc"
-    ) or _status_time_token(payload, "last_run")
+    last_workflow_run = _status_time_token(payload, "last_run_utc")
     if last_workflow_run:
         lines.append(f"Last Workflow Run: {last_workflow_run}")
     if latest_line:

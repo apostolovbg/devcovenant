@@ -10,7 +10,7 @@ from typing import Mapping, Sequence
 
 import yaml
 
-import devcovenant.core.services.registry as registry_runtime_module
+import devcovenant.core.runtime.registry as registry_runtime_module
 from devcovenant.core.lib.document_exemptions import (
     EMPTY_MANAGED_MARKER_SIGNATURE as _EMPTY_MANAGED_MARKER_SIGNATURE,
 )

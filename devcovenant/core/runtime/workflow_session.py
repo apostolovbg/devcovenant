@@ -6,13 +6,67 @@ import json
 from pathlib import Path
 from typing import Mapping
 
+from devcovenant.core.runtime import registry as registry_runtime
 from devcovenant.core.runtime import (
     session_snapshot as session_snapshot_runtime,
 )
-from devcovenant.core.services import registry as registry_runtime
 
 SCHEMA_VERSION = 1
 _PHASE_SNAPSHOTS_KEY = "workflow_phase_snapshots"
+
+
+def _normalize_commands(raw_value: object) -> list[str]:
+    """Normalize workflow entry commands into a trimmed ordered list."""
+
+    if isinstance(raw_value, list):
+        values = raw_value
+    elif isinstance(raw_value, str):
+        values = [part.strip() for part in raw_value.split("&&")]
+    else:
+        values = []
+    commands: list[str] = []
+    for entry in values:
+        token = str(entry or "").strip()
+        if token and token not in commands:
+            commands.append(token)
+    return commands
+
+
+def _normalize_entry_payload(entry_raw: object) -> dict[str, object]:
+    """Normalize one anchor/phase payload and purge legacy duplicate keys."""
+
+    entry = dict(entry_raw) if isinstance(entry_raw, Mapping) else {}
+    last_run_utc = str(
+        entry.get("last_run_utc") or entry.get("last_run") or ""
+    ).strip()
+    if last_run_utc:
+        entry["last_run_utc"] = last_run_utc
+    else:
+        entry.pop("last_run_utc", None)
+    entry.pop("last_run", None)
+    commands = _normalize_commands(entry.get("commands"))
+    if not commands:
+        commands = _normalize_commands(entry.get("command"))
+    if commands:
+        entry["commands"] = commands
+    else:
+        entry.pop("commands", None)
+    entry.pop("command", None)
+    return entry
+
+
+def _normalize_entry_mapping(raw_entries: object) -> dict[str, object]:
+    """Normalize stored anchor/phase entry mappings."""
+
+    if not isinstance(raw_entries, dict):
+        return {}
+    normalized: dict[str, object] = {}
+    for key, value in raw_entries.items():
+        token = str(key or "").strip()
+        if not token:
+            continue
+        normalized[token] = _normalize_entry_payload(value)
+    return normalized
 
 
 def workflow_session_path(repo_root: Path) -> Path:
@@ -51,9 +105,9 @@ def load_workflow_session(repo_root: Path) -> dict[str, object]:
     normalized = _base_payload()
     normalized.update(payload)
     anchors = payload.get("anchors")
-    normalized["anchors"] = dict(anchors) if isinstance(anchors, dict) else {}
+    normalized["anchors"] = _normalize_entry_mapping(anchors)
     phases = payload.get("phases")
-    normalized["phases"] = dict(phases) if isinstance(phases, dict) else {}
+    normalized["phases"] = _normalize_entry_mapping(phases)
     required_phase_ids = payload.get("required_phase_ids")
     normalized["required_phase_ids"] = (
         list(required_phase_ids)
@@ -71,8 +125,12 @@ def write_workflow_session(
 
     path = workflow_session_path(repo_root)
     path.parent.mkdir(parents=True, exist_ok=True)
+    normalized = _base_payload()
+    normalized.update(dict(payload))
+    normalized["anchors"] = _normalize_entry_mapping(normalized.get("anchors"))
+    normalized["phases"] = _normalize_entry_mapping(normalized.get("phases"))
     path.write_text(
-        json.dumps(dict(payload), indent=2) + "\n",
+        json.dumps(normalized, indent=2) + "\n",
         encoding="utf-8",
     )
     return path

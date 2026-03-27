@@ -1,6 +1,4 @@
-"""
-Registry for tracking policy hashes and sync status.
-"""
+"""Policy-descriptor and tracked policy-registry services."""
 
 from __future__ import annotations
 
@@ -12,70 +10,18 @@ from typing import TYPE_CHECKING, Any, Dict, Iterable, List, Optional, Tuple
 
 import yaml
 
+from devcovenant.core.services import tracked_registry
 from devcovenant.core.services import yaml_cache as yaml_cache_service
 
 if TYPE_CHECKING:
     from devcovenant.core.services.policy_parse import PolicyDefinition
 
-DEV_COVENANT_DIR = "devcovenant"
-REGISTRY_DIR = f"{DEV_COVENANT_DIR}/registry"
-RUNTIME_REGISTRY_DIR = f"{REGISTRY_DIR}/runtime"
-REGISTRY_FILENAME = "registry.yaml"
-GATE_STATUS_FILENAME = "gate_status.json"
-WORKFLOW_SESSION_FILENAME = "workflow_session.json"
-LATEST_RUNTIME_FILENAME = "latest.json"
-SESSION_SNAPSHOT_FILENAME = "session_snapshot.json"
-REGISTRY_REL_PATH = f"{REGISTRY_DIR}/{REGISTRY_FILENAME}"
+DEV_COVENANT_DIR = tracked_registry.DEV_COVENANT_DIR
 POLICY_BLOCK_RE = re.compile(
     r"(##\s+Policy:\s+[^\n]+\n\n)```policy-def\n(.*?)\n```\n\n"
     r"(.*?)(?=\n---\n|\n##|\Z)",
     re.DOTALL,
 )
-
-
-def _registry_root(repo_root: Path, rel_dir: str) -> Path:
-    """Return a registry root path for the given repo and subdir."""
-    return repo_root / rel_dir
-
-
-def registry_root(repo_root: Path) -> Path:
-    """Return the path to the tracked registry root directory."""
-    return _registry_root(repo_root, REGISTRY_DIR)
-
-
-def runtime_registry_root(repo_root: Path) -> Path:
-    """Return the path to the runtime registry directory."""
-    return _registry_root(repo_root, RUNTIME_REGISTRY_DIR)
-
-
-def policy_registry_path(repo_root: Path) -> Path:
-    """Return the tracked registry document path."""
-    return registry_root(repo_root) / REGISTRY_FILENAME
-
-
-def profile_registry_path(repo_root: Path) -> Path:
-    """Return the tracked registry document path for profile data."""
-    return policy_registry_path(repo_root)
-
-
-def latest_runtime_path(repo_root: Path) -> Path:
-    """Return the runtime latest-run pointer path."""
-    return runtime_registry_root(repo_root) / LATEST_RUNTIME_FILENAME
-
-
-def session_snapshot_path(repo_root: Path) -> Path:
-    """Return the runtime session snapshot companion path."""
-    return runtime_registry_root(repo_root) / SESSION_SNAPSHOT_FILENAME
-
-
-def gate_status_path(repo_root: Path) -> Path:
-    """Return the gate status file path inside the runtime registry."""
-    return runtime_registry_root(repo_root) / GATE_STATUS_FILENAME
-
-
-def workflow_session_path(repo_root: Path) -> Path:
-    """Return the workflow-session file path inside the runtime registry."""
-    return runtime_registry_root(repo_root) / WORKFLOW_SESSION_FILENAME
 
 
 @dataclass(frozen=True)
@@ -210,296 +156,9 @@ def load_policy_descriptor(
     return None
 
 
-DEFAULT_CORE_DIRS = [
-    "devcovenant",
-    "devcovenant/builtin",
-    "devcovenant/builtin/policies",
-    "devcovenant/builtin/profiles",
-    "devcovenant/builtin/profiles/global",
-    "devcovenant/builtin/profiles/global/assets",
-    "devcovenant/core",
-    "devcovenant/core/contracts/invariants",
-    "devcovenant/logs",
-    REGISTRY_DIR,
-]
-DEFAULT_CORE_FILES = [
-    "devcovenant/__init__.py",
-    "devcovenant/__main__.py",
-    "devcovenant/cli.py",
-    "devcovenant/check.py",
-    "devcovenant/gate.py",
-    "devcovenant/run.py",
-    "devcovenant/phase.py",
-    "devcovenant/policy.py",
-    "devcovenant/install.py",
-    "devcovenant/deploy.py",
-    "devcovenant/upgrade.py",
-    "devcovenant/refresh.py",
-    "devcovenant/uninstall.py",
-    "devcovenant/undeploy.py",
-    "devcovenant/config.yaml",
-    "devcovenant/README.md",
-    "devcovenant/VERSION",
-    "devcovenant/logs/README.md",
-    f"{REGISTRY_DIR}/README.md",
-    REGISTRY_REL_PATH,
-    "devcovenant/builtin/profiles/global/assets/ci-and-test.yml",
-    "devcovenant/builtin/profiles/global/assets/gitignore.yaml",
-    "devcovenant/builtin/profiles/README.md",
-    "devcovenant/builtin/policies/README.md",
-    "devcovenant/core/contracts/invariant.py",
-    "devcovenant/core/contracts/invariants/devcov_integrity_guard.yaml",
-    "devcovenant/core/contracts/invariants/devcov_structure_guard.yaml",
-    "devcovenant/core/contracts/invariants/devflow_run_gates.yaml",
-    "devcovenant/core/services/core_invariant_block_refresh.py",
-    "devcovenant/core/services/core_invariants.py",
-    "devcovenant/core/services/devcov_integrity_guard.py",
-    "devcovenant/core/services/devcov_structure_guard.py",
-    "devcovenant/core/services/devflow_run_gates.py",
-    "devcovenant/core/services/policy_commands.py",
-    "devcovenant/core/services/workflow_contract.py",
-    "devcovenant/core/runtime/workflow_session.py",
-]
-DEFAULT_DOCS_CORE = [
-    "AGENTS.md",
-    "README.md",
-    "CHANGELOG.md",
-    "CONTRIBUTING.md",
-]
-DEFAULT_DOCS_OPTIONAL = [
-    "SPEC.md",
-    "PLAN.md",
-]
-DEFAULT_DOCS_CUSTOM: List[str] = []
-DEFAULT_CUSTOM_DIRS = [
-    "devcovenant/custom",
-    "devcovenant/custom/policies",
-    "devcovenant/custom/profiles",
-]
-DEFAULT_CUSTOM_FILES = [
-    "devcovenant/custom/profiles/README.md",
-    "devcovenant/custom/policies/README.md",
-]
-DEFAULT_GENERATED_FILES = [
-    f"{RUNTIME_REGISTRY_DIR}/{GATE_STATUS_FILENAME}",
-    f"{RUNTIME_REGISTRY_DIR}/{LATEST_RUNTIME_FILENAME}",
-    f"{RUNTIME_REGISTRY_DIR}/{WORKFLOW_SESSION_FILENAME}",
-]
-DEFAULT_GENERATED_DIRS: List[str] = [RUNTIME_REGISTRY_DIR]
-
-
-def manifest_path(repo_root: Path) -> Path:
-    """Return the tracked registry document path used for inventory data."""
-    return policy_registry_path(repo_root)
-
-
-def _base_registry_document() -> Dict[str, Any]:
-    """Return the canonical top-level registry document skeleton."""
-    return {
-        "metadata": {
-            "schema_version": 1,
-            "registry_layout": "single-root",
-        },
-        "project-governance": {},
-        "managed-docs": {},
-        "core-invariants": {},
-        "workflow_contract": {},
-        "policies": {},
-        "profiles": {},
-        "inventory": {},
-    }
-
-
-def _load_registry_document(path: Path) -> Dict[str, Any]:
-    """Load one registry YAML mapping or return the base skeleton."""
-    if not path.exists():
-        return _base_registry_document()
-    try:
-        payload = yaml_cache_service.load_yaml(path)
-    except yaml.YAMLError as exc:
-        raise ValueError(
-            f"Invalid YAML in registry file {path}: {exc}"
-        ) from exc
-    except OSError as exc:
-        raise ValueError(
-            f"Unable to read registry file {path}: {exc}"
-        ) from exc
-    if payload is None:
-        return _base_registry_document()
-    if not isinstance(payload, dict):
-        raise ValueError("Registry payload must be a YAML mapping: " f"{path}")
-    normalized = _base_registry_document()
-    for key in (
-        "metadata",
-        "project-governance",
-        "managed-docs",
-        "core-invariants",
-        "workflow_contract",
-        "policies",
-        "profiles",
-        "inventory",
-    ):
-        value = payload.get(key)
-        if isinstance(value, dict):
-            normalized[key] = value
-    return normalized
-
-
-def _write_registry_document(path: Path, payload: Dict[str, Any]) -> Path:
-    """Persist one normalized registry mapping deterministically."""
-    path.parent.mkdir(parents=True, exist_ok=True)
-    rendered = yaml.dump(
-        payload,
-        Dumper=_RegistryYamlDumper,
-        sort_keys=False,
-        allow_unicode=False,
-    )
-    if path.exists():
-        existing = path.read_text(encoding="utf-8")
-        if existing == rendered:
-            return path
-    path.write_text(rendered, encoding="utf-8")
-    return path
-
-
-def build_manifest(
-    *,
-    options: Dict[str, Any] | None = None,
-    installed: Dict[str, Any] | None = None,
-    doc_blocks: List[str] | None = None,
-) -> Dict[str, Any]:
-    """Build a deterministic inventory payload for the tracked registry."""
-    manifest: Dict[str, Any] = {
-        "schema_version": 3,
-        "core": {
-            "dirs": list(DEFAULT_CORE_DIRS),
-            "files": list(DEFAULT_CORE_FILES),
-        },
-        "docs": {
-            "core": list(DEFAULT_DOCS_CORE),
-            "optional": list(DEFAULT_DOCS_OPTIONAL),
-            "custom": list(DEFAULT_DOCS_CUSTOM),
-        },
-        "custom": {
-            "dirs": list(DEFAULT_CUSTOM_DIRS),
-            "files": list(DEFAULT_CUSTOM_FILES),
-        },
-        "generated": {
-            "dirs": list(DEFAULT_GENERATED_DIRS),
-            "files": list(DEFAULT_GENERATED_FILES),
-        },
-        "profiles": {
-            "active": [],
-            "resolved_pre_commit_hooks": [],
-        },
-    }
-    if options is not None:
-        manifest["options"] = options
-    if installed is not None:
-        manifest["installed"] = installed
-    if doc_blocks is not None:
-        manifest["doc_blocks"] = doc_blocks
-    return manifest
-
-
-def load_manifest(repo_root: Path) -> Dict[str, Any] | None:
-    """Load the tracked inventory section if present, otherwise return None."""
-    path = manifest_path(repo_root)
-    payload = _load_registry_document(path)
-    inventory = payload.get("inventory", {})
-    return (
-        dict(inventory) if isinstance(inventory, dict) and inventory else None
-    )
-
-
-def write_manifest(repo_root: Path, manifest: Dict[str, Any]) -> Path:
-    """Write inventory data into the tracked registry document."""
-    path = manifest_path(repo_root)
-    payload = _load_registry_document(path)
-    payload["inventory"] = dict(manifest)
-    return _write_registry_document(path, payload)
-
-
-def _normalize_manifest_sections(
-    manifest: Dict[str, Any],
-) -> tuple[Dict[str, Any], bool]:
-    """Normalize inventory sections to the current default inventories."""
-    normalized = dict(manifest)
-    changed = False
-    defaults_manifest = build_manifest()
-    for section_name in ("core", "docs", "custom", "generated"):
-        defaults = defaults_manifest.get(section_name, {})
-        current = normalized.get(section_name, {})
-        if not isinstance(defaults, dict):
-            continue
-        if not isinstance(current, dict):
-            normalized[section_name] = defaults
-            changed = True
-            continue
-        merged = dict(current)
-        for key, default_value in defaults.items():
-            target_value = (
-                list(default_value)
-                if isinstance(default_value, list)
-                else default_value
-            )
-            if merged.get(key) != target_value:
-                merged[key] = target_value
-                changed = True
-        normalized[section_name] = merged
-    return normalized, changed
-
-
-def ensure_manifest(repo_root: Path) -> Dict[str, Any] | None:
-    """Create the tracked inventory section when missing."""
-    path = manifest_path(repo_root)
-    if path.exists():
-        payload = load_manifest(repo_root)
-        if payload is None:
-            payload = build_manifest()
-        normalized, changed = _normalize_manifest_sections(payload)
-        if changed:
-            write_manifest(repo_root, normalized)
-        return normalized
-    if not (repo_root / DEV_COVENANT_DIR).exists():
-        return None
-    manifest = build_manifest()
-    write_manifest(repo_root, manifest)
-    return manifest
-
-
-class _RegistryYamlDumper(yaml.SafeDumper):
-    """YAML dumper for registry files with readable multiline strings."""
-
-
-def _represent_registry_string(
-    dumper: yaml.Dumper, text_value: str
-) -> yaml.nodes.ScalarNode:
-    """Render multiline strings as literal blocks."""
-    style = "|" if "\n" in text_value else None
-    return dumper.represent_scalar(
-        "tag:yaml.org,2002:str", text_value, style=style
-    )
-
-
-_RegistryYamlDumper.add_representer(str, _represent_registry_string)
-
-
 @dataclass
 class PolicySyncIssue:
-    """
-    Represents a policy that is out of sync with its script.
-
-    Attributes:
-        policy_id: ID of the policy
-        policy_text: Current policy text from AGENTS.md
-        policy_hash: Hash of current policy text
-        script_path: Path to the policy script
-        script_exists: Whether the script exists
-        issue_type: Type of sync issue
-            (hash_mismatch, script_missing)
-        current_hash: Current hash from registry (if any)
-    """
+    """One tracked policy/script synchronization issue."""
 
     policy_id: str
     policy_text: str
@@ -511,26 +170,20 @@ class PolicySyncIssue:
 
 
 class PolicyRegistry:
-    """
-    Manages the policy registry (tracking hashes and sync status).
-    """
+    """Manage the tracked policy registry."""
 
     def __init__(self, registry_path: Path, repo_root: Path):
-        """
-        Initialize the registry.
-
-        Args:
-            registry_path: Path to the tracked registry.yaml document
-            repo_root: Root directory of the repository
-        """
+        """Initialize the tracked policy registry."""
         self.registry_path = registry_path
         self.repo_root = repo_root
-        self._data: Dict = {}
+        self._data: Dict[str, Any] = {}
         self.load()
 
     def load(self):
         """Load the registry from disk."""
-        self._data = _load_registry_document(self.registry_path)
+        self._data = tracked_registry.load_registry_document(
+            self.registry_path
+        )
 
     def _normalize_registry_hashes(self) -> None:
         """Normalize stored hashes to string form."""
@@ -544,7 +197,9 @@ class PolicyRegistry:
     def save(self):
         """Save the registry to disk."""
         self._normalize_registry_hashes()
-        _write_registry_document(self.registry_path, self._data)
+        tracked_registry.write_registry_document(
+            self.registry_path, self._data
+        )
 
     def update_project_governance(
         self,
@@ -579,7 +234,7 @@ class PolicyRegistry:
         self.save()
 
     def policy_ids(self) -> set[str]:
-        """Return policy IDs currently stored in the registry."""
+        """Return policy ids currently stored in the registry."""
         policies = self._data.get("policies", {})
         if not isinstance(policies, dict):
             return set()
@@ -611,64 +266,30 @@ class PolicyRegistry:
     def calculate_full_hash(
         self, policy_text: str, script_content: str
     ) -> str:
-        """
-        Calculate the full hash (policy text + script content).
-
-        Args:
-            policy_text: The policy description from AGENTS.md
-            script_content: The Python script content
-
-        Returns:
-            SHA256 hash of combined content
-        """
-        # Normalize both
+        """Calculate one combined policy-text plus script-content hash."""
         normalized_policy = policy_text.strip()
         normalized_script = script_content.strip()
-
-        # Combine
         combined = f"{normalized_policy}\n---\n{normalized_script}"
-
         return hashlib.sha256(combined.encode("utf-8")).hexdigest()
 
     def check_policy_sync(
-        self, policies: List[PolicyDefinition]
+        self, policies: List["PolicyDefinition"]
     ) -> List[PolicySyncIssue]:
-        """
-        Check which policies are out of sync with their scripts.
-
-        Args:
-            policies: List of policies from AGENTS.md
-
-        Returns:
-            List of PolicySyncIssue objects for policies that need updating
-        """
+        """Return synchronization issues for enabled tracked policies."""
         issues = []
-
         for policy in policies:
             if not policy.enabled:
                 continue
-
-            # Determine script path
-            # Convert hyphens to underscores for Python module names
             location = resolve_script_location(
                 self.repo_root, policy.policy_id
             )
             script_path = location.path if location else Path()
-
-            # Check if script exists
             script_exists = location is not None and script_path.exists()
-
-            # Get current hash from registry
             current_hash = None
             if policy.policy_id in self._data.get("policies", {}):
                 raw_hash = self._data["policies"][policy.policy_id].get("hash")
                 current_hash = self._normalize_hash_value(raw_hash)
-
-            # Determine if there's an issue
-            issue_type = None
-
             if not script_exists:
-                issue_type = "script_missing"
                 issues.append(
                     PolicySyncIssue(
                         policy_id=policy.policy_id,
@@ -676,36 +297,27 @@ class PolicyRegistry:
                         policy_hash="",
                         script_path=script_path,
                         script_exists=script_exists,
-                        issue_type=issue_type,
+                        issue_type="script_missing",
                         current_hash=current_hash,
                     )
                 )
                 continue
-
-            # Calculate current hash if script exists
-            if script_exists:
-                with open(script_path, "r", encoding="utf-8") as f:
-                    script_content = f.read()
-
-                calculated_hash = self.calculate_full_hash(
-                    policy.description, script_content
-                )
-
-                # Compare with stored hash
-                if current_hash and calculated_hash != current_hash:
-                    issue_type = "hash_mismatch"
-                    issues.append(
-                        PolicySyncIssue(
-                            policy_id=policy.policy_id,
-                            policy_text=policy.description,
-                            policy_hash=calculated_hash,
-                            script_path=script_path,
-                            script_exists=script_exists,
-                            issue_type=issue_type,
-                            current_hash=current_hash,
-                        )
+            script_content = script_path.read_text(encoding="utf-8")
+            calculated_hash = self.calculate_full_hash(
+                policy.description, script_content
+            )
+            if current_hash and calculated_hash != current_hash:
+                issues.append(
+                    PolicySyncIssue(
+                        policy_id=policy.policy_id,
+                        policy_text=policy.description,
+                        policy_hash=calculated_hash,
+                        script_path=script_path,
+                        script_exists=script_exists,
+                        issue_type="hash_mismatch",
+                        current_hash=current_hash,
                     )
-
+                )
         return issues
 
     def _compact_script_path(self, script_path: Path) -> str:
@@ -752,7 +364,7 @@ class PolicyRegistry:
 
     def update_policy_entry(
         self,
-        policy: PolicyDefinition,
+        policy: "PolicyDefinition",
         script_location,
         descriptor: PolicyDescriptor | None = None,
         *,
@@ -761,13 +373,7 @@ class PolicyRegistry:
         metadata_warnings: List[Dict[str, Any]] | None = None,
         runtime_option_views: Dict[str, Dict[str, Any]] | None = None,
     ):
-        """
-        Update a policy entry in the registry.
-
-        Args:
-            policy: Policy metadata from AGENTS.md.
-            script_location: Located script info (or None).
-        """
+        """Update one policy entry in the tracked registry."""
         entry = self._data["policies"].setdefault(policy.policy_id, {})
         previous_hash = entry.get("hash")
         entry.clear()
@@ -813,15 +419,7 @@ class PolicyRegistry:
         self.save()
 
     def get_policy_hash(self, policy_id: str) -> Optional[str]:
-        """
-        Get the stored hash for a policy.
-
-        Args:
-            policy_id: ID of the policy
-
-        Returns:
-            Hash string or None if not found
-        """
+        """Get the stored hash for one policy."""
         raw_hash = (
             self._data.get("policies", {}).get(policy_id, {}).get("hash")
         )

@@ -6,8 +6,8 @@ import json
 import sys
 from pathlib import Path
 
+import devcovenant.core.runtime.registry as registry_runtime
 import devcovenant.core.services.cleanup as cleanup_runtime
-import devcovenant.core.services.registry as registry_runtime
 from devcovenant.core.runtime.execution import (
     get_active_run_log_context,
     merge_active_run_log_metadata,

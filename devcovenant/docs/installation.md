@@ -97,7 +97,9 @@ The shortest accurate model is:
 1. `install` is setup.
 
    It copies the runtime, seeds config, and records enough baseline state for
-   the repo to become DevCovenant-managed later.
+   the repo to become DevCovenant-managed later. That baseline also seeds the
+   tracked manifest inventory that later structure validation and refresh
+   reuse.
 
 2. config review is the human checkpoint.
 
@@ -156,8 +158,8 @@ generated workflow files, `.gitignore`, and related governed artifacts.
 Runs one declared workflow phase explicitly.
 Use it when a gate command tells you that a required phase is stale and must
 be rerun before a new start baseline or before end-gate closure.
-`devcovenant run` remains the convenience command for the declared
-`tests` phase.
+Use `devcovenant run` for the full required phase set and
+`devcovenant phase run <id>` only when you need one specific phase.
 
 ### clean
 Removes disposable build, cache, runtime-registry, or log artifacts according

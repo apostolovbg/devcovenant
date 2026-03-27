@@ -11,7 +11,8 @@ from typing import Any, Mapping, Sequence
 import yaml
 
 import devcovenant.core.services.metadata as metadata_runtime_module
-import devcovenant.core.services.registry as registry_runtime_module
+import devcovenant.core.services.policy_registry as registry_service_module
+import devcovenant.core.services.tracked_registry as tracked_registry_module
 from devcovenant.core.runtime.execution import (
     run_child_command_with_output_policy,
     runtime_print,
@@ -27,7 +28,7 @@ _GUIDANCE_TOKEN_PATTERN = re.compile(r"{([a-zA-Z0-9_]+)}")
 
 def _load_policy_entry(repo_root: Path) -> dict[str, Any] | None:
     """Load managed-environment policy entry from the tracked registry."""
-    registry_path = registry_runtime_module.policy_registry_path(repo_root)
+    registry_path = tracked_registry_module.policy_registry_path(repo_root)
     if not registry_path.exists():
         config_path = repo_root / "devcovenant" / "config.yaml"
         if not config_path.exists():
@@ -35,7 +36,7 @@ def _load_policy_entry(repo_root: Path) -> dict[str, Any] | None:
                 "managed-environment runtime requires tracked registry "
                 f"at {registry_path}. Run `devcovenant refresh`."
             )
-        descriptor = registry_runtime_module.load_policy_descriptor(
+        descriptor = registry_service_module.load_policy_descriptor(
             repo_root,
             POLICY_ID,
         )

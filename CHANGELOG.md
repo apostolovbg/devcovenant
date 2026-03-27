@@ -6,7 +6,7 @@
 **Maintenance Stance:** active
 **Compatibility Policy:** breaking-allowed
 **Versioning Mode:** versioned
-**Last Updated:** 2026-03-26
+**Last Updated:** 2026-03-27
 **DevCovenant Version:** 1.0.0
 
 <!-- DEVCOV:BEGIN -->
@@ -59,6 +59,210 @@ Example:
 ## Log changes here
 
 ## Version 1.0.0
+
+- 2026-03-26:
+  Change: split the mixed services-layer `registry.py` into tracked-registry,
+    policy-registry, and manifest-inventory helpers and removed the old
+    catch-all module.
+  Why: reduce `core/services` overlap so tracked document I/O, policy
+    descriptor loading, and manifest inventory ownership stop sharing one
+    mixed service surface.
+  Impact: clarifies registry ownership for the ongoing workflow
+    de-spaghettization, rewires the affected runtime and policy services to
+    the new helpers, and adds mirrored tests/docs for the new split.
+  Files:
+  CHANGELOG.md
+  devcovenant/builtin/policies/dependency_management/\
+    dependency_lock_runtime.py
+  devcovenant/builtin/policies/managed_environment/\
+    managed_environment_runtime.py
+  devcovenant/builtin/policies/version_governance/version_governance.py
+  devcovenant/core/README.md
+  devcovenant/core/flow/refresh.py
+  devcovenant/core/services/core_invariant_block_refresh.py
+  devcovenant/core/services/core_invariants.py
+  devcovenant/core/services/integrity_validation.py
+  devcovenant/core/services/manifest_inventory.py
+  devcovenant/core/services/metadata.py
+  devcovenant/core/services/policy_block_refresh.py
+  devcovenant/core/services/policy_commands.py
+  devcovenant/core/services/policy_engine.py
+  devcovenant/core/services/policy_reporting.py
+  devcovenant/core/services/policy_registry.py
+  devcovenant/core/services/policy_runtime_actions.py
+  devcovenant/core/services/profile_registry.py
+  devcovenant/core/services/registry.py
+  devcovenant/core/services/structure_validation.py
+  devcovenant/core/services/tracked_registry.py
+  devcovenant/custom/profiles/devcovrepo/assets/docs/registry.md
+  devcovenant/custom/profiles/devcovrepo/assets/docs/installation.md
+  devcovenant/custom/profiles/devcovrepo/assets/docs/policies.md
+  devcovenant/docs/installation.md
+  devcovenant/docs/policies.md
+  devcovenant/docs/registry.md
+  devcovenant/install.py
+  devcovenant/registry/registry.yaml
+  tests/devcovenant/builtin/policies/last_updated/test_last_updated.py
+  tests/devcovenant/core/services/test_integrity_validation.py
+  tests/devcovenant/core/services/test_manifest_inventory.py
+  tests/devcovenant/core/services/test_metadata.py
+  tests/devcovenant/core/services/test_policy_registry.py
+  tests/devcovenant/core/services/test_policy_reporting.py
+  tests/devcovenant/core/services/test_registry.py
+  tests/devcovenant/core/services/test_structure_validation.py
+  tests/devcovenant/core/services/test_tracked_registry.py
+  tests/devcovenant/test_install.py
+
+- 2026-03-26:
+  Change: moved gate-status payload validation into flow-owned helpers and
+    renamed the remaining core-invariant service modules to
+    `integrity_validation` and `structure_validation`.
+  Why: clarified that workflow-state schema enforcement belongs under
+    `core/flow` while the service layer should describe descriptor, registry,
+    and repo-structure validation without legacy guard-module naming.
+  Impact: keeps invariant ids stable while making the module ownership map
+    more truthful, gives flow one canonical gate-status validation helper,
+    updates manifest/core-invariant path resolution to the renamed modules,
+    and adds mirrored tests/docs for the new architecture split.
+  Files:
+  CHANGELOG.md
+  devcovenant/core/README.md
+  devcovenant/core/flow/gate_status_helpers.py
+  devcovenant/core/flow/gate_status_validation.py
+  devcovenant/core/services/core_invariants.py
+  devcovenant/core/services/devcov_integrity_guard.py
+  devcovenant/core/services/devcov_structure_guard.py
+  devcovenant/core/services/integrity_validation.py
+  devcovenant/core/services/registry.py
+  devcovenant/core/services/structure_validation.py
+  devcovenant/custom/profiles/devcovrepo/assets/docs/registry.md
+  devcovenant/custom/profiles/devcovrepo/assets/docs/workflow.md
+  devcovenant/docs/architecture.md
+  devcovenant/docs/registry.md
+  devcovenant/docs/workflow.md
+  devcovenant/registry/registry.yaml
+  tests/devcovenant/core/flow/test_gate_status_validation.py
+  tests/devcovenant/core/services/test_core_invariants.py
+  tests/devcovenant/core/services/test_devcov_integrity_guard.py
+  tests/devcovenant/core/services/test_devcov_structure_guard.py
+  tests/devcovenant/core/services/test_integrity_validation.py
+  tests/devcovenant/core/services/test_structure_validation.py
+
+- 2026-03-26:
+  Change: normalized workflow-state recording to `last_run_utc` plus
+    `commands`, moved workflow child output onto a generic channel, and
+    declared phase-reporting hooks in workflow metadata instead of
+    hardcoding `tests`.
+  Why: removed transitional duplicate fields and the remaining
+    phase-id-specific execution branches so richer workflow reporting can
+    be phase-owned and reusable.
+  Impact: records workflow sessions with canonical UTC-plus-commands
+    payloads, collapses legacy duplicate keys on write,
+    integrity checks validate the canonical schema, command-group phases can
+    opt into output-mode overrides, event adapters, and runtime profiling
+    declaratively, and built-in test phases use that generic contract.
+  Files:
+  CHANGELOG.md
+  devcovenant/builtin/profiles/csharp/csharp.yaml
+  devcovenant/builtin/profiles/dart/dart.yaml
+  devcovenant/builtin/profiles/docker/docker.yaml
+  devcovenant/builtin/profiles/fastapi/fastapi.yaml
+  devcovenant/builtin/profiles/flutter/flutter.yaml
+  devcovenant/builtin/profiles/frappe/frappe.yaml
+  devcovenant/builtin/profiles/go/go.yaml
+  devcovenant/builtin/profiles/java/java.yaml
+  devcovenant/builtin/profiles/javascript/javascript.yaml
+  devcovenant/builtin/profiles/kubernetes/kubernetes.yaml
+  devcovenant/builtin/profiles/objective_c/objective_c.yaml
+  devcovenant/builtin/profiles/php/php.yaml
+  devcovenant/builtin/profiles/python/python.yaml
+  devcovenant/builtin/profiles/ruby/ruby.yaml
+  devcovenant/builtin/profiles/rust/rust.yaml
+  devcovenant/builtin/profiles/swift/swift.yaml
+  devcovenant/builtin/profiles/terraform/terraform.yaml
+  devcovenant/builtin/profiles/typescript/typescript.yaml
+  devcovenant/core/flow/gate.py
+  devcovenant/core/flow/gate_status_helpers.py
+  devcovenant/core/runtime/execution.py
+  devcovenant/core/runtime/output.py
+  devcovenant/core/runtime/workflow_session.py
+  devcovenant/core/services/devcov_integrity_guard.py
+  devcovenant/core/services/event.py
+  devcovenant/core/services/workflow_contract.py
+  devcovenant/custom/profiles/devcovrepo/assets/docs/profiles.md
+  devcovenant/custom/profiles/devcovrepo/assets/docs/registry.md
+  devcovenant/custom/profiles/devcovrepo/assets/docs/workflow.md
+  devcovenant/docs/architecture.md
+  devcovenant/docs/profiles.md
+  devcovenant/docs/registry.md
+  devcovenant/docs/workflow.md
+  devcovenant/registry/registry.yaml
+  tests/devcovenant/core/flow/test_workflow_validation.py
+  tests/devcovenant/core/runtime/test_execution.py
+  tests/devcovenant/core/runtime/test_output.py
+  tests/devcovenant/core/runtime/test_workflow_session.py
+  tests/devcovenant/core/services/test_devcov_integrity_guard.py
+  tests/devcovenant/core/services/test_workflow_contract.py
+
+- 2026-03-26:
+  Change: moved workflow-validation ownership into `core/flow`, split
+    tracked and runtime registry path helpers, and rewired the invariant
+    loader and mirrored docs/tests to the new module boundaries.
+  Why: split the first de-spaghettization seam so workflow truth no longer
+    has to live behind a service-layer invariant module and one catch-all
+    registry path API.
+  Impact: clarified that flow now owns `workflow_validation.py`, runtime
+    owns runtime registry paths, services own tracked registry paths, and
+    the repo has mirrored tests and docs for the new architecture split.
+  Files:
+  CHANGELOG.md
+  devcovenant/builtin/policies/managed_environment/\
+    managed_environment_runtime.py
+  devcovenant/core/README.md
+  devcovenant/core/flow/clean.py
+  devcovenant/core/flow/gate.py
+  devcovenant/core/flow/gate_changelog_helpers.py
+  devcovenant/core/flow/gate_status_helpers.py
+  devcovenant/core/flow/workflow_validation.py
+  devcovenant/core/runtime/execution.py
+  devcovenant/core/runtime/registry.py
+  devcovenant/core/runtime/session_snapshot.py
+  devcovenant/core/runtime/workflow_session.py
+  devcovenant/core/services/core_invariants.py
+  devcovenant/core/services/devflow_run_gates.py
+  devcovenant/core/services/policy_block_refresh.py
+  devcovenant/core/services/registry.py
+  devcovenant/core/services/tracked_registry.py
+  devcovenant/custom/profiles/devcovrepo/assets/docs/registry.md
+  devcovenant/custom/profiles/devcovrepo/assets/docs/policies.md
+  devcovenant/custom/profiles/devcovrepo/assets/docs/workflow.md
+  devcovenant/docs/architecture.md
+  devcovenant/docs/policies.md
+  devcovenant/docs/registry.md
+  devcovenant/docs/workflow.md
+  devcovenant/registry/registry.yaml
+  tests/devcovenant/core/flow/test_workflow_validation.py
+  tests/devcovenant/core/runtime/test_registry.py
+  tests/devcovenant/core/services/test_core_invariants.py
+  tests/devcovenant/core/services/test_devflow_run_gates.py
+  tests/devcovenant/core/services/test_registry.py
+  tests/devcovenant/core/services/test_tracked_registry.py
+
+- 2026-03-26:
+  Change: revised the roadmap to dissolve `devflow_run_gates`, split
+    registry code by both ephemerity and ownership, and replace leftover
+    tests-only runtime privilege with generic phase-reporting hooks and
+    generic file-dependent success checks.
+  Why: locked the architecture direction after the read-only `run` audit so
+    the next de-spaghettization slice has a precise target instead of vague
+    cleanup language.
+  Impact: the active plan now treats workflow truth consolidation,
+    UTC-only `last_run_utc`, `commands`-only command groups, registry
+    ownership separation, reusable phase hooks, and explicit absolute or
+    relative file-check contracts as one coherent architecture rewrite.
+  Files:
+  CHANGELOG.md
+  PLAN.md
 
 - 2026-03-26:
   Change: renamed the visible generated workflow contract from `Workflows`

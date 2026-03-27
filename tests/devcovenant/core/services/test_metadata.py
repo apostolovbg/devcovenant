@@ -9,7 +9,7 @@ from pathlib import Path
 import yaml
 
 from devcovenant.core.services.policy_parse import PolicyParser
-from devcovenant.core.services.registry import load_policy_descriptor
+from devcovenant.core.services.policy_registry import load_policy_descriptor
 
 MODULE = "devcovenant.core.services.metadata"
 REPO_ROOT = Path(__file__).resolve().parents[4]
@@ -147,7 +147,7 @@ def _unit_test_resolved_bundle_preserves_string_map_contract() -> None:
     """Typed bundle should match string-map resolver output."""
     module = importlib.import_module(MODULE)
     descriptor_module = importlib.import_module(
-        "devcovenant.core.services.registry"
+        "devcovenant.core.services.policy_registry"
     )
     descriptor = descriptor_module.PolicyDescriptor(
         policy_id="demo-policy",
@@ -192,7 +192,7 @@ def _unit_test_resolved_bundle_tracks_layer_trace_and_warnings() -> None:
     """Resolved bundles should expose layer trace and replacement warnings."""
     module = importlib.import_module(MODULE)
     descriptor_module = importlib.import_module(
-        "devcovenant.core.services.registry"
+        "devcovenant.core.services.policy_registry"
     )
     descriptor = descriptor_module.PolicyDescriptor(
         policy_id="demo-policy",
@@ -254,7 +254,7 @@ def _unit_test_bundle_tracks_runtime_defaults_and_selector_derives() -> None:
     """Bundles should trace runtime defaults and selector-derived fields."""
     module = importlib.import_module(MODULE)
     descriptor_module = importlib.import_module(
-        "devcovenant.core.services.registry"
+        "devcovenant.core.services.policy_registry"
     )
     descriptor = descriptor_module.PolicyDescriptor(
         policy_id="demo-policy",

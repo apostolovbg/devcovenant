@@ -15,11 +15,11 @@ from devcovenant.core.services import (
     policy_commands as policy_commands_service,
 )
 from devcovenant.core.services import yaml_cache as yaml_cache_service
-from devcovenant.core.services.registry import (
+from devcovenant.core.services.policy_registry import (
     load_policy_descriptor,
-    policy_registry_path,
     resolve_script_location,
 )
+from devcovenant.core.services.tracked_registry import policy_registry_path
 
 
 def load_policy_check_instance(

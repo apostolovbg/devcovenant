@@ -9,7 +9,7 @@ from pathlib import Path
 from devcovenant.builtin.policies.last_updated import last_updated
 from devcovenant.core.contracts.policy import CheckContext, Violation
 from devcovenant.core.services import metadata as metadata_runtime
-from devcovenant.core.services.registry import load_policy_descriptor
+from devcovenant.core.services.policy_registry import load_policy_descriptor
 from tests.devcovenant import repo_seed_cache
 
 fixer_module = importlib.import_module(

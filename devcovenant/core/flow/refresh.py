@@ -13,9 +13,9 @@ from typing import Dict, List
 
 import yaml
 
+import devcovenant.core.services.manifest_inventory as manifest_module
 import devcovenant.core.services.metadata as metadata_runtime
 import devcovenant.core.services.profile_registry as profile_runtime
-import devcovenant.core.services.registry as manifest_module
 from devcovenant.core.contracts.policy import CheckContext
 from devcovenant.core.runtime.execution import print_step, runtime_print
 from devcovenant.core.services import core_invariant_block_refresh
@@ -34,13 +34,13 @@ from devcovenant.core.services import (
 )
 from devcovenant.core.services import yaml_cache as yaml_cache_service
 from devcovenant.core.services.policy_parse import PolicyDefinition
-from devcovenant.core.services.registry import (
+from devcovenant.core.services.policy_registry import (
     PolicyRegistry,
     iter_script_locations,
     load_policy_descriptor,
-    policy_registry_path,
     resolve_script_location,
 )
+from devcovenant.core.services.tracked_registry import policy_registry_path
 
 ProjectGovernanceState = project_governance_service.ProjectGovernanceState
 

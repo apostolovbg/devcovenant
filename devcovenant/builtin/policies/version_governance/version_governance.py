@@ -13,7 +13,7 @@ from devcovenant.core.contracts.policy import (
     PolicyCheck,
     Violation,
 )
-from devcovenant.core.services.registry import load_policy_descriptor
+from devcovenant.core.services.policy_registry import load_policy_descriptor
 
 _DEFAULT_CHANGELOG_HEADER_PREFIX = "## Version"
 _LOG_MARKER = "## Log changes here"

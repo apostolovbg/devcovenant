@@ -21,7 +21,7 @@ from unittest.mock import patch
 import yaml
 
 from devcovenant import install
-from devcovenant.core.services import registry as manifest_module
+from devcovenant.core.services import manifest_inventory as manifest_module
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
 FORBIDDEN_WHEEL_PATH_FRAGMENTS = (

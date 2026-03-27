@@ -42,3 +42,8 @@ In a normal repository, do not seed repo-specific custom policies before the
 first reviewed baseline activation.
 Start with `install`, config review, and `deploy`, prove that baseline, and
 then add custom policies once the normal repo contract is already working.
+Keep policy docs explicit when a builtin policy changes how it consumes
+tracked registry metadata or workflow-owned command stages.
+Builtin policy runtimes now resolve descriptor metadata and script locations
+through the dedicated `policy_registry.py` helper layer instead of through a
+mixed registry service surface.

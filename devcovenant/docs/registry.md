@@ -67,6 +67,26 @@ That means required-phase execution no longer lives in an invariant
 `required_commands` list.
 The tracked contract lives in `workflow_contract`, while freshness and
 pass/fail evidence live in `workflow_session.json`.
+That same tracked state now also reflects the canonical workflow recording
+shape that refresh resolved for the active profiles, including the phase
+recording hooks that drive output-mode overrides and runtime profiling.
+The helper ownership now matches that split:
+
+- `devcovenant/core/services/tracked_registry.py` owns tracked-registry paths
+  and tracked-registry document I/O
+
+- `devcovenant/core/runtime/registry.py` owns runtime evidence paths
+
+Tracked core-invariant locations now reflect the same ownership cleanup.
+The registry records `devcovenant/core/services/integrity_validation.py` and
+`devcovenant/core/services/structure_validation.py` as the service-owned
+modules for the non-flow invariants, while
+`devcovenant/core/flow/gate_status_validation.py` owns gate-status payload
+schema validation on the workflow side.
+Policy-owned descriptor and hash logic now lives in
+`devcovenant/core/services/policy_registry.py`.
+Tracked inventory defaults and manifest persistence now live in
+`devcovenant/core/services/manifest_inventory.py`.
 
 Commit tracked-registry changes when they are the result of real repo changes.
 

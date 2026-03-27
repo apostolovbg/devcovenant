@@ -8,10 +8,10 @@ import unittest
 from pathlib import Path
 
 from devcovenant.core.contracts.policy import ChangeState, CheckContext
-from devcovenant.core.services import devflow_run_gates
+from devcovenant.core.flow import workflow_validation
 from tests.devcovenant.support import MonkeyPatch
 
-DevflowRunGates = devflow_run_gates.DevflowRunGates
+DevflowRunGates = workflow_validation.DevflowRunGates
 
 _DEFAULT_REQUIRED_COMMANDS = [
     "run suite-a",
@@ -153,7 +153,6 @@ def _phase_entry(
         "runner_kind": "command_group",
         "success_contract_kind": "all_commands_exit_zero",
         "last_run_session_id": session_id,
-        "command": " && ".join(_DEFAULT_REQUIRED_COMMANDS),
         "commands": list(_DEFAULT_REQUIRED_COMMANDS),
         "command_name": "run",
     }

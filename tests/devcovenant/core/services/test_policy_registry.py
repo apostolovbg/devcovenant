@@ -1,4 +1,4 @@
-"""Sanity and contract checks for devcovenant.core.services.registry."""
+"""Sanity and contract checks for policy-registry services."""
 
 from __future__ import annotations
 
@@ -9,7 +9,7 @@ from pathlib import Path
 
 from devcovenant.core.services.policy_parse import PolicyDefinition
 
-MODULE = "devcovenant.core.services.registry"
+MODULE = "devcovenant.core.services.policy_registry"
 
 
 def _unit_test_module_importable() -> None:
@@ -19,7 +19,7 @@ def _unit_test_module_importable() -> None:
 
 
 def _unit_test_registry_symbol_contract_is_stable() -> None:
-    """Registry contract symbols should remain available and callable."""
+    """Policy-registry contract symbols should remain stable."""
     module = importlib.import_module(MODULE)
 
     class_contract = [
@@ -33,18 +33,10 @@ def _unit_test_registry_symbol_contract_is_stable() -> None:
         assert callable(getattr(module, symbol))
 
     function_contract = [
-        "build_manifest",
-        "gate_status_path",
         "iter_script_locations",
-        "latest_runtime_path",
         "load_policy_descriptor",
-        "manifest_path",
-        "policy_registry_path",
-        "profile_registry_path",
-        "registry_root",
+        "parse_metadata_block",
         "resolve_script_location",
-        "runtime_registry_root",
-        "write_manifest",
     ]
     for symbol in function_contract:
         assert hasattr(module, symbol)
@@ -66,27 +58,16 @@ def _unit_test_registry_symbol_contract_is_stable() -> None:
 
 
 def _unit_test_registry_symbol_assertions_cover_public_api() -> None:
-    """Registry module should expose explicit public symbols."""
+    """Policy-registry module should expose explicit public symbols."""
     module = importlib.import_module(MODULE)
     assert module.PolicyDescriptor
     assert module.PolicyScriptLocation
     assert module.PolicySyncIssue
     assert module.PolicyRegistry
-    assert module.build_manifest
-    assert module.ensure_manifest
-    assert module.gate_status_path
     assert module.iter_script_locations
-    assert module.latest_runtime_path
-    assert module.load_manifest
     assert module.load_policy_descriptor
-    assert module.manifest_path
     assert module.parse_metadata_block
-    assert module.policy_registry_path
-    assert module.profile_registry_path
-    assert module.registry_root
     assert module.resolve_script_location
-    assert module.runtime_registry_root
-    assert module.write_manifest
     assert module.PolicyRegistry.calculate_full_hash
     assert module.PolicyRegistry.check_policy_sync
     assert module.PolicyRegistry.get_policy_hash
@@ -97,50 +78,6 @@ def _unit_test_registry_symbol_assertions_cover_public_api() -> None:
     assert module.PolicyRegistry.prune_policies
     assert module.PolicyRegistry.save
     assert module.PolicyRegistry.update_policy_entry
-
-
-def _unit_test_generated_manifest_includes_runtime_registry_artifacts() -> (
-    None
-):
-    """Inventory generated files should include runtime registry artifacts."""
-    module = importlib.import_module(MODULE)
-    manifest = module.build_manifest()
-    generated = manifest.get("generated", {})
-    files = generated.get("files", [])
-    assert (
-        f"{module.RUNTIME_REGISTRY_DIR}/{module.GATE_STATUS_FILENAME}" in files
-    )
-    assert (
-        f"{module.RUNTIME_REGISTRY_DIR}/{module.LATEST_RUNTIME_FILENAME}"
-        in files
-    )
-    with tempfile.TemporaryDirectory() as tmpdir:
-        repo_root = Path(tmpdir)
-        assert module.registry_root(repo_root) == (
-            repo_root / "devcovenant" / "registry"
-        )
-        assert module.runtime_registry_root(repo_root) == (
-            repo_root / "devcovenant" / "registry" / "runtime"
-        )
-        assert module.policy_registry_path(repo_root) == (
-            repo_root / "devcovenant" / "registry" / "registry.yaml"
-        )
-        assert module.profile_registry_path(repo_root) == (
-            repo_root / "devcovenant" / "registry" / "registry.yaml"
-        )
-        assert module.gate_status_path(repo_root) == (
-            repo_root
-            / "devcovenant"
-            / "registry"
-            / "runtime"
-            / "gate_status.json"
-        )
-        assert module.latest_runtime_path(repo_root) == (
-            repo_root / "devcovenant" / "registry" / "runtime" / "latest.json"
-        )
-        assert module.manifest_path(repo_root) == (
-            repo_root / "devcovenant" / "registry" / "registry.yaml"
-        )
 
 
 def _unit_test_parse_metadata_block_preserves_colon_continuations() -> None:
@@ -227,7 +164,7 @@ def _unit_test_registry_metadata_typed_view_preserves_storage_contract() -> (
 
 
 class GeneratedUnittestCases(unittest.TestCase):
-    """unittest wrappers for layered registry checks."""
+    """unittest wrappers for layered policy-registry checks."""
 
     def test_module_importable(self):
         """Run registry module importability check."""
@@ -244,10 +181,6 @@ class GeneratedUnittestCases(unittest.TestCase):
     def test_layered_core_namespaces_remain_importable(self):
         """Run root namespace export/importability check."""
         _unit_test_layered_core_namespaces_remain_importable()
-
-    def test_generated_manifest_includes_runtime_registry_artifacts(self):
-        """Run inventory runtime-registry artifact assertions."""
-        _unit_test_generated_manifest_includes_runtime_registry_artifacts()
 
     def test_parse_metadata_block_preserves_colon_continuations(self):
         """Run registry metadata-continuation parser assertions."""

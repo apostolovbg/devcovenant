@@ -28,6 +28,9 @@ def _tests_phase_entry() -> dict[str, object]:
         "recording": {
             "record_in_session": True,
             "summary_label": "Tests",
+            "output_mode_config_field": "engine.tests_output_mode",
+            "event_adapter_group": "test_events",
+            "write_runtime_profile": True,
         },
     }
 
@@ -62,6 +65,11 @@ def _unit_test_build_workflow_contract_uses_profile_declared_phases() -> None:
     assert tests_phase is not None
     assert tests_phase["owner_id"] == "python"
     assert tests_phase["source_field"] == "workflow_phases"
+    assert tests_phase["recording"]["output_mode_config_field"] == (
+        "engine.tests_output_mode"
+    )
+    assert tests_phase["recording"]["event_adapter_group"] == "test_events"
+    assert tests_phase["recording"]["write_runtime_profile"] is True
 
 
 def _unit_test_phase_relevant_paths_changed_keeps_changelog_only_tests():
