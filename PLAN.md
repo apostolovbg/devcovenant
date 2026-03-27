@@ -756,13 +756,20 @@ the current state as finished.
      messaging
    - align runtime support with the full tracked schema so no allowed phase
      contract remains a paper-only promise
+   - close the remaining contract-hardening gaps around the now-landed `run`
+     model so the public workflow surface is truly settled instead of merely
+     functional
    Why this matters:
-   - the current workflow redesign is only half-migrated
-   - the repo still teaches and privileges `devcovenant test`, which keeps the
-     `tests` phase special even though the architecture now says workflow
-     phases are generic
+   - the core `run` migration is now materially landed, but the item remains
+     open because the adjacent workflow contracts are not all fully locked yet
+   - the repo no longer teaches `devcovenant test`, but some workflow behavior
+     is still expressed through transitional test-shaped or phase-specific
+     assumptions
    - schema truth must match runtime truth before the first SemVer-governed
      public line
+   - public-contract features such as advanced workflow phase kinds, output
+     overrides, and artifact-check path semantics should not remain half-
+     documented or only implicitly owned
    Design decisions for this item:
    - `devcovenant run` is the top-level command that replaces
      `devcovenant test`
@@ -791,10 +798,21 @@ the current state as finished.
      through generic phase-reporting hooks or declarative phase metadata,
      not through hardcoded `phase_id == "tests"` branches in the generic
      workflow executor
+   - changelog-only freshness behavior must become an explicit workflow-phase
+     contract rather than a hidden `tests`-only rule; if changelog-only edits
+     should not stale a required phase, that exemption must be modeled in
+     phase metadata and documented as part of the workflow contract
    - file-dependent success checks must stay generic and support:
      `required_files`, `required_globs`, `forbidden_globs`, plus explicit
      relative-versus-absolute path resolution control so any phase can verify
      files at any intended path without bespoke runtime branching
+   - the advanced workflow kinds are now public workflow-contract surface, not
+     merely internal extension hooks:
+     `command_group`, `runtime_action`, `policy_command`,
+     `manual_attestation`, `all_commands_exit_zero`,
+     `runtime_action_success`, `policy_command_success`,
+     `manual_attested`, and `external_artifact_check` all need explicit docs,
+     examples, and tests
    - the current structural policy `modules-need-tests` is not automatically
      renamed to `test-engine` during this migration unless its responsibility
      changes as well
@@ -831,6 +849,9 @@ the current state as finished.
       - replace remaining `tests`-specific richer behavior with a generic
         phase-reporting hook/declarative metadata path so any workflow phase
         can opt into the same richer reporting without a hardcoded phase id
+      - replace the current hidden `tests`-only changelog freshness shortcut
+        with an explicit phase-freshness contract that can be declared and
+        reasoned about generically
       - support every allowed runner kind:
         `command_group`, `runtime_action`, `policy_command`,
         `manual_attestation`
@@ -841,9 +862,11 @@ the current state as finished.
       - make runtime failures mention `devcovenant run` or
         `devcovenant phase run <id>`, not `devcovenant test`
       Done when:
-      - `tests` is not privileged in runtime flow control or reporting
+      - `tests` is not privileged in runtime flow control or freshness rules
       - enabled policies do not implicitly alter what `run` executes
       - any allowed schema kind is truly executable
+      - changelog-only rerun exemptions, if any, are phase-declared rather
+        than hardcoded by phase id
 
    3. Universal output-mode override contract.
       File scope:
@@ -894,9 +917,8 @@ the current state as finished.
 
    5. Workflow-contract schema cleanup.
       File scope:
-      - `devcovenant/core/services/workflow_contract.py`
+      - `devcovenant/core/flow/workflow_contract.py`
       - `devcovenant/core/services/profile_registry.py`
-      - `devcovenant/core/services/registry.py`
       - `devcovenant/core/flow/refresh.py`
       - `devcovenant/registry/registry.yaml`
       - profile manifests such as
@@ -904,6 +926,8 @@ the current state as finished.
       Work to do:
       - remove command-surface alias ownership from profile metadata
       - keep phase metadata focused on phase behavior only
+      - add an explicit phase-freshness contract so rerun invalidation rules
+        are declared rather than hidden in executor code
       - remove duplicate timestamp fields when they carry the same UTC value
         and keep one canonical workflow runtime timestamp field such as
         `last_run_utc`
@@ -913,11 +937,16 @@ the current state as finished.
       - tighten file-dependent success contracts so they can express
         required/forbidden file checks against relative or absolute paths
         without bespoke per-phase code
+      - decide and document the final path contract for workflow evidence:
+        either keep `workflow_session.json` runtime-owned and fixed, or
+        expose a formal configurable counterpart to `gate_status_file`
       - regenerate tracked registry output to match the final contract
       Done when:
       - profile manifests declare phases, not root command aliases
       - runtime session payloads do not carry same-value timestamp aliases
       - command-group schema no longer duplicates `command` and `commands`
+      - phase freshness rules are explicit in schema rather than implicit in
+        code
       - file-dependent success checks have one generic schema that is not
         tied to test/artifact-only assumptions
       - tracked registry reflects the final command-neutral phase schema
@@ -965,6 +994,7 @@ the current state as finished.
       - `devcovenant/docs/profiles.md`
       - `devcovenant/docs/policies.md`
       - `devcovenant/docs/registry.md`
+      - `PROFILE_MAP.md` / profile-map assets
       - matching global/profile doc assets
       Work to do:
       - rewrite the canonical workflow as
@@ -975,14 +1005,24 @@ the current state as finished.
         - `--quiet`, `--normal`, and `--verbose` override per invocation
         - commands should remain mode-agnostic and rely on the shared output
           layer
+      - publish the workflow-phase contract explicitly:
+        - supported runner kinds
+        - supported success-contract kinds
+        - compatible runner/success combinations
+        - how freshness rules are declared
+        - how file-dependent success checks resolve paths
       - explain clearly that:
         - core owns workflow commands
         - profiles own declared phases
         - policies do not own workflow structure
       - remove claims that `devcovenant test` is a friendly alias
+      - remove ownership drift such as old `core/services/event.py` references
+        or stale `required test commands` language in config docs
       Done when:
       - there is no stale public instruction to run `devcovenant test`
         outside historical changelog context
+      - the public docs describe the full workflow-phase contract instead of
+        only the built-in `tests` phase example
 
    8. Test-suite migration.
       File scope:
@@ -1008,11 +1048,19 @@ the current state as finished.
         workflow-phase executors
       - add coverage that each supported runner kind and each supported
         success-contract kind is actually executable under the runtime
+      - add coverage that advanced public workflow kinds are not only schema-
+        accepted but operator-usable, including `manual_attestation`,
+        `runtime_action_success`, `policy_command_success`, and
+        `external_artifact_check`
+      - add coverage that phase freshness rules are contract-driven rather
+        than hidden in a `tests`-only branch
       - add coverage that start and end guidance names `run` and targeted
         `phase run <id>` correctly
       Done when:
       - the test suite locks the final generic workflow surface instead of the
         old alias model
+      - the advanced workflow-phase contract is publicly proved rather than
+        only accepted by parser/runtime internals
 
    9. Policy naming follow-up decision.
       File scope:
@@ -1077,9 +1125,12 @@ the current state as finished.
      instead of staying as unquestioned policy-era carryovers
    - the schema-tightening decisions from Item 8 are part of this
      architectural cleanup in implementation terms:
-     UTC-only `last_run_utc`, `commands`-only command groups, and explicit
-     policy participation need one clean module ownership story, not just
-     good field names
+     UTC-only `last_run_utc`, `commands`-only command groups, explicit
+     phase-freshness contracts, and explicit policy participation need one
+     clean module ownership story, not just good field names
+   - generic phase-event/reporting infrastructure should stop carrying
+     `test_events` / `TestEvent*` naming once it is the shared workflow-phase
+     reporting system for all phase types
    - registry/runtime ownership should split by both ephemerity and contract
      ownership, not just by one axis:
      tracked core-owned state, tracked extension-owned state, runtime
@@ -1190,11 +1241,18 @@ the current state as finished.
         orchestration
       - move richer per-phase reporting onto generic phase hooks/metadata so
         special reporting is reusable by any phase
+      - finish generalizing the phase-event/reporting subsystem so names such
+        as `test_events`, `TestEvent`, and related counters no longer pretend
+        the shared contract belongs only to the `tests` phase
       - keep file-dependent success checks generic, including explicit
         absolute/relative path resolution controls
+      - formalize whether workflow evidence paths are fixed runtime-owned
+        paths or configurable contract surfaces, and make both docs and code
+        tell the same story
       Done when:
       - the runtime/session schema is non-duplicative and matches the plan's
         final contract
+      - generic phase reporting no longer wears test-only names by accident
 
    7. Documentation, registry, and test rewrite for the new architecture.
       File scope:
@@ -1225,6 +1283,8 @@ the current state as finished.
    - registry code is split by both ephemerity and ownership
    - richer phase behavior is generic and declarative, not hardcoded to
      `tests`
+   - phase-event/reporting internals no longer remain misleadingly test-only
+     once they are shared workflow runtime machinery
    - the code layout looks like the architecture DevCovenant actually claims
      to have
 

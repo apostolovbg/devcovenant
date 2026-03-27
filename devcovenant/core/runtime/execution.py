@@ -44,6 +44,105 @@ from devcovenant.core.services import (
 from devcovenant.core.services import yaml_cache as yaml_cache_service
 
 OutputMode = output_runtime_module.OutputMode
+_OUTPUT_MODE_OVERRIDE_DEST = "output_mode_override"
+_OUTPUT_MODE_OVERRIDE_FLAG_MAP: dict[str, OutputMode] = {
+    "--quiet": "quiet",
+    "--normal": "normal",
+    "--verbose": "verbose",
+}
+
+
+class DevCovenantArgumentParser(argparse.ArgumentParser):
+    """Argument parser that applies shared output-mode overrides."""
+
+    def parse_args(self, args=None, namespace=None):
+        """Parse args and apply any command-local output override."""
+        parsed = super().parse_args(args, namespace)
+        apply_output_mode_override_from_namespace(parsed)
+        return parsed
+
+
+def add_output_mode_override_arguments(
+    parser: argparse.ArgumentParser,
+) -> argparse.ArgumentParser:
+    """Add universal per-invocation output-mode override flags."""
+    group = parser.add_mutually_exclusive_group()
+    group.add_argument(
+        "--quiet",
+        dest=_OUTPUT_MODE_OVERRIDE_DEST,
+        action="store_const",
+        const="quiet",
+        help="Suppress routine stdout for this invocation only.",
+    )
+    group.add_argument(
+        "--normal",
+        dest=_OUTPUT_MODE_OVERRIDE_DEST,
+        action="store_const",
+        const="normal",
+        help="Use concise progress output for this invocation only.",
+    )
+    group.add_argument(
+        "--verbose",
+        dest=_OUTPUT_MODE_OVERRIDE_DEST,
+        action="store_const",
+        const="verbose",
+        help="Stream fuller console detail for this invocation only.",
+    )
+    return parser
+
+
+def output_mode_override_from_namespace(
+    namespace: argparse.Namespace | object | None,
+) -> OutputMode | None:
+    """Return one parsed per-invocation output-mode override."""
+    if namespace is None:
+        return None
+    raw_value = getattr(namespace, _OUTPUT_MODE_OVERRIDE_DEST, None)
+    token = str(raw_value or "").strip().lower()
+    if token in output_runtime_module.OUTPUT_MODE_ALLOWED:
+        return token  # type: ignore[return-value]
+    return None
+
+
+def apply_output_mode_override_from_namespace(
+    namespace: argparse.Namespace | object | None,
+) -> OutputMode | None:
+    """Apply one parsed per-invocation output-mode override, if present."""
+    override = output_mode_override_from_namespace(namespace)
+    if override is not None:
+        configure_output_mode(override)
+    return override
+
+
+def resolve_cli_output_mode_override(
+    argv: Sequence[str],
+) -> OutputMode | None:
+    """Resolve a consistent CLI output-mode override before `--`."""
+    override: OutputMode | None = None
+    for token in argv:
+        if token == "--":
+            break
+        candidate = _OUTPUT_MODE_OVERRIDE_FLAG_MAP.get(str(token).strip())
+        if candidate is None:
+            continue
+        if override is not None and override != candidate:
+            raise ValueError(
+                "Output-mode overrides are mutually exclusive. Choose only "
+                "one of `--quiet`, `--normal`, or `--verbose`."
+            )
+        override = candidate
+    return override
+
+
+def strip_leading_cli_output_mode_overrides(argv: Sequence[str]) -> list[str]:
+    """Strip root-level leading output-mode flags before command dispatch."""
+    remaining = list(argv)
+    while remaining:
+        token = str(remaining[0]).strip()
+        if token not in _OUTPUT_MODE_OVERRIDE_FLAG_MAP:
+            break
+        remaining.pop(0)
+    return remaining
 
 
 def build_command_parser(
@@ -51,10 +150,11 @@ def build_command_parser(
     description: str,
 ) -> argparse.ArgumentParser:
     """Build a command-scoped parser with stable root-command usage text."""
-    return argparse.ArgumentParser(
+    parser = DevCovenantArgumentParser(
         prog=f"devcovenant {command_name}",
         description=description,
     )
+    return add_output_mode_override_arguments(parser)
 
 
 ChildOutputChannel = output_runtime_module.ChildOutputChannel

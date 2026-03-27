@@ -655,7 +655,7 @@ core-invariants:
     descriptor_path: devcovenant/core/contracts/invariants/devflow_run_gates.yaml
     customizable: false
 workflow_contract:
-  schema_version: 2
+  schema_version: 3
   anchors:
   - id: start
     owner: core
@@ -692,6 +692,11 @@ workflow_contract:
       output_mode_config_field: engine.tests_output_mode
       event_adapter_group: test_events
       write_runtime_profile: true
+    freshness:
+      kind: ignore_paths
+      ignored_files:
+      - CHANGELOG.md
+      ignored_globs: []
     source_field: workflow_phases
   required_phase_ids:
   - tests

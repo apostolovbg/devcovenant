@@ -56,7 +56,10 @@ def _unit_test_execution_symbols_cover_runtime_helpers() -> None:
     module = importlib.import_module(MODULE)
     expected = [
         "ConsoleReporter",
+        "DevCovenantArgumentParser",
         "Reporter",
+        "add_output_mode_override_arguments",
+        "apply_output_mode_override_from_namespace",
         "capture_current_numstat_snapshot",
         "capture_current_snapshot_paths",
         "append_active_run_log_output",
@@ -79,11 +82,13 @@ def _unit_test_execution_symbols_cover_runtime_helpers() -> None:
         "record_gate_status",
         "resolve_repo_root",
         "resolve_child_output_plan_for_channel",
+        "resolve_cli_output_mode_override",
         "resolve_workflow_phase_output_mode",
         "run_bootstrap_registry_refresh",
         "run_child_command_with_output_policy",
         "run_subprocess_with_runtime_output",
         "runtime_print",
+        "strip_leading_cli_output_mode_overrides",
         "set_active_run_log_context",
         "session_delta_paths",
         "snapshot_paths_changed_since",
@@ -112,7 +117,10 @@ def _unit_test_execution_symbol_assertions_cover_public_api() -> None:
     module = importlib.import_module(MODULE)
     assert module.Reporter
     assert module.ConsoleReporter
+    assert module.DevCovenantArgumentParser
     assert module.append_active_run_log_output
+    assert module.add_output_mode_override_arguments
+    assert module.apply_output_mode_override_from_namespace
     assert module.capture_current_numstat_snapshot
     assert module.capture_current_snapshot_paths
     assert module.cleanup_repo_bytecode_artifacts
@@ -138,6 +146,7 @@ def _unit_test_execution_symbol_assertions_cover_public_api() -> None:
     assert module.resolve_declared_workflow_phase
     assert module.resolve_managed_environment_for_stage
     assert module.resolve_child_output_plan_for_channel
+    assert module.resolve_cli_output_mode_override
     assert module.resolve_repo_root
     assert module.resolve_required_workflow_phases
     assert module.resolve_workflow_phase_commands
@@ -150,6 +159,7 @@ def _unit_test_execution_symbol_assertions_cover_public_api() -> None:
     assert module.run_child_command_with_output_policy
     assert module.run_subprocess_with_runtime_output
     assert module.runtime_print
+    assert module.strip_leading_cli_output_mode_overrides
     assert module.set_active_run_log_context
     assert module.session_delta_paths
     assert module.snapshot_paths_changed_since
@@ -1086,6 +1096,40 @@ def _unit_test_resolve_workflow_phase_output_mode_uses_recording_hook() -> (
             module.configure_output_mode(previous_mode)
 
 
+def _unit_test_build_command_parser_applies_output_override_flags() -> None:
+    """Command parsers should accept and apply shared output overrides."""
+
+    module = importlib.import_module(MODULE)
+    previous_mode = module.get_output_mode()
+    try:
+        module.configure_output_mode("normal")
+        parser = module.build_command_parser("demo", "Demo parser")
+        parsed = parser.parse_args(["--quiet"])
+        assert getattr(parsed, "output_mode_override", None) == "quiet"
+        assert module.get_output_mode() == "quiet"
+    finally:
+        module.configure_output_mode(previous_mode)
+
+
+def _unit_test_cli_output_override_helpers_handle_dispatch_and_sentinel():
+    """CLI override helpers should resolve one mode and respect `--`."""
+
+    module = importlib.import_module(MODULE)
+    assert (
+        module.resolve_cli_output_mode_override(["check", "--verbose"])
+        == "verbose"
+    )
+    assert (
+        module.resolve_cli_output_mode_override(
+            ["policy", "demo", "run", "--", "--quiet"]
+        )
+        is None
+    )
+    assert module.strip_leading_cli_output_mode_overrides(
+        ["--normal", "run", "--verbose"]
+    ) == ["run", "--verbose"]
+
+
 def _unit_test_workflow_phase_summary_metadata_hints() -> None:
     """Workflow-phase summary metadata should include counts and hints."""
     module = importlib.import_module(MODULE)
@@ -1451,6 +1495,16 @@ class GeneratedUnittestCases(unittest.TestCase):
     def test_resolve_workflow_phase_output_mode_uses_recording_hook(self):
         """Run declarative workflow-phase output-mode hook assertions."""
         _unit_test_resolve_workflow_phase_output_mode_uses_recording_hook()
+
+    def test_build_command_parser_applies_output_override_flags(self):
+        """Run shared command-parser output-override assertions."""
+        _unit_test_build_command_parser_applies_output_override_flags()
+
+    def test_cli_output_override_helpers_handle_dispatch_and_sentinel(
+        self,
+    ):
+        """Run CLI output-override helper assertions."""
+        _unit_test_cli_output_override_helpers_handle_dispatch_and_sentinel()
 
     def test_workflow_phase_summary_metadata_hints(self):
         """Run workflow-phase summary metadata shape assertions."""

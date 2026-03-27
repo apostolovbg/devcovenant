@@ -70,17 +70,37 @@ def _unit_test_build_workflow_contract_uses_profile_declared_phases() -> None:
     )
     assert tests_phase["recording"]["event_adapter_group"] == "test_events"
     assert tests_phase["recording"]["write_runtime_profile"] is True
+    assert tests_phase["freshness"]["kind"] == "ignore_paths"
+    assert tests_phase["freshness"]["ignored_files"] == ["CHANGELOG.md"]
+    assert tests_phase["freshness"]["ignored_globs"] == []
 
 
-def _unit_test_phase_relevant_paths_changed_keeps_changelog_only_tests():
-    """Changelog-only edits should not stale the recorded tests phase."""
+def _unit_test_phase_relevant_paths_changed_uses_freshness_contract():
+    """Workflow-phase invalidation should follow explicit freshness rules."""
 
     module = importlib.import_module(MODULE)
     tests_phase = {
         "id": "tests",
         "runner": {"kind": "command_group"},
+        "freshness": {
+            "kind": "ignore_paths",
+            "ignored_files": ["CHANGELOG.md"],
+            "ignored_globs": [],
+        },
     }
-    other_phase = {"id": "artifact-proof"}
+    default_phase = {"id": "artifact-proof"}
+    strict_phase = {
+        "id": "artifact-proof",
+        "freshness": {"kind": "any_change"},
+    }
+    docs_phase = {
+        "id": "docs-proof",
+        "freshness": {
+            "kind": "ignore_paths",
+            "ignored_files": [],
+            "ignored_globs": ["docs/generated/**"],
+        },
+    }
 
     assert (
         module.phase_relevant_paths_changed(tests_phase, ["CHANGELOG.md"])
@@ -94,7 +114,25 @@ def _unit_test_phase_relevant_paths_changed_keeps_changelog_only_tests():
         is True
     )
     assert (
-        module.phase_relevant_paths_changed(other_phase, ["CHANGELOG.md"])
+        module.phase_relevant_paths_changed(default_phase, ["CHANGELOG.md"])
+        is False
+    )
+    assert (
+        module.phase_relevant_paths_changed(strict_phase, ["CHANGELOG.md"])
+        is True
+    )
+    assert (
+        module.phase_relevant_paths_changed(
+            docs_phase,
+            ["docs/generated/report.txt"],
+        )
+        is False
+    )
+    assert (
+        module.phase_relevant_paths_changed(
+            docs_phase,
+            ["docs/generated/report.txt", "docs/workflow.md"],
+        )
         is True
     )
 
@@ -112,7 +150,7 @@ class GeneratedUnittestCases(unittest.TestCase):
 
         _unit_test_build_workflow_contract_uses_profile_declared_phases()
 
-    def test_phase_relevant_paths_changed_keeps_changelog_only_tests(self):
+    def test_phase_relevant_paths_changed_uses_freshness_contract(self):
         """Run workflow-phase invalidation regression assertions."""
 
-        _unit_test_phase_relevant_paths_changed_keeps_changelog_only_tests()
+        _unit_test_phase_relevant_paths_changed_uses_freshness_contract()

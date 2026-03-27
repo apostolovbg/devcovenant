@@ -54,6 +54,10 @@ Use these two paths deliberately:
 If the console script is unavailable in a source checkout, use
 `python3 -m devcovenant ...`.
 On Windows, `py -m devcovenant ...` is the common equivalent form.
+Every public command also accepts `--quiet`, `--normal`, or `--verbose` as a
+per-invocation output override.
+Those flags override config for that invocation only and work either before
+the command name or on the command itself.
 
 ## Preferred Machine Install
 For ordinary users, install the CLI with `pipx`:

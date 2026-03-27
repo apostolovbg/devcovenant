@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import fnmatch
 from pathlib import Path
 from typing import Mapping, Sequence
 
@@ -10,8 +11,9 @@ from devcovenant.core.services import (
 )
 from devcovenant.core.services import yaml_cache as yaml_cache_service
 
-SCHEMA_VERSION = 2
+SCHEMA_VERSION = 3
 ANCHOR_IDS = ("start", "mid", "end")
+_FRESHNESS_KINDS = {"ignore_paths", "any_change"}
 _RUNNER_KINDS = {
     "command_group",
     "runtime_action",
@@ -26,6 +28,7 @@ _SUCCESS_CONTRACT_KINDS = {
     "external_artifact_check",
 }
 _DEFAULT_TESTS_PHASE_ID = "tests"
+_DEFAULT_FRESHNESS_IGNORED_FILES = ("CHANGELOG.md",)
 
 
 def _load_config_payload(repo_root: Path) -> dict[str, object]:
@@ -268,6 +271,41 @@ def _normalize_phase_entry(
             default=False,
         ),
     }
+    freshness_raw = raw_entry.get("freshness")
+    if freshness_raw is None:
+        freshness_raw = {}
+    if not isinstance(freshness_raw, Mapping):
+        raise ValueError(
+            f"Workflow phase `{phase_id}` in profile `{profile_name}` "
+            "must define freshness as a mapping when present."
+        )
+    freshness_kind = (
+        str(freshness_raw.get("kind") or "ignore_paths").strip().lower()
+        or "ignore_paths"
+    )
+    if freshness_kind not in _FRESHNESS_KINDS:
+        raise ValueError(
+            f"Workflow phase `{phase_id}` in profile `{profile_name}` uses "
+            f"unsupported freshness kind `{freshness_kind}`."
+        )
+    freshness: dict[str, object] = {"kind": freshness_kind}
+    if freshness_kind == "ignore_paths":
+        ignored_files = _normalize_string_list(
+            freshness_raw.get("ignored_files"),
+            field_name=f"workflow_phases[{phase_id}].freshness.ignored_files",
+        )
+        ignored_globs = _normalize_string_list(
+            freshness_raw.get("ignored_globs"),
+            field_name=f"workflow_phases[{phase_id}].freshness.ignored_globs",
+        )
+        if not ignored_files and not ignored_globs:
+            ignored_files = list(_DEFAULT_FRESHNESS_IGNORED_FILES)
+        freshness.update(
+            {
+                "ignored_files": ignored_files,
+                "ignored_globs": ignored_globs,
+            }
+        )
 
     phase = {
         "id": phase_id,
@@ -283,6 +321,7 @@ def _normalize_phase_entry(
         "runner": runner,
         "success_contract": success_contract,
         "recording": recording,
+        "freshness": freshness,
         "source_field": "workflow_phases",
     }
     return phase
@@ -466,13 +505,42 @@ def phase_relevant_paths_changed(
 ) -> bool:
     """Return whether changed paths invalidate one phase result."""
 
-    phase_id = str(phase.get("id") or "").strip().lower()
     if not changed_paths:
         return False
-    if phase_id != _DEFAULT_TESTS_PHASE_ID:
+    freshness = phase.get("freshness")
+    freshness_map = dict(freshness) if isinstance(freshness, Mapping) else {}
+    freshness_kind = (
+        str(freshness_map.get("kind") or "ignore_paths").strip().lower()
+        or "ignore_paths"
+    )
+    if freshness_kind == "any_change":
         return True
+    ignored_files = {
+        str(entry).replace("\\", "/").strip().lower()
+        for entry in freshness_map.get("ignored_files") or ()
+        if str(entry).strip()
+    }
+    if not ignored_files:
+        ignored_files = {
+            token.lower() for token in _DEFAULT_FRESHNESS_IGNORED_FILES
+        }
+    ignored_globs = [
+        str(entry).replace("\\", "/").strip().lower()
+        for entry in freshness_map.get("ignored_globs") or ()
+        if str(entry).strip()
+    ]
     for raw_path in changed_paths:
-        leaf = str(raw_path).replace("\\", "/").rsplit("/", 1)[-1].lower()
-        if leaf != "changelog.md":
-            return True
+        normalized_path = str(raw_path).replace("\\", "/").strip().lower()
+        if not normalized_path:
+            continue
+        leaf = normalized_path.rsplit("/", 1)[-1]
+        if normalized_path in ignored_files or leaf in ignored_files:
+            continue
+        if any(
+            fnmatch.fnmatch(normalized_path, pattern)
+            or fnmatch.fnmatch(leaf, pattern)
+            for pattern in ignored_globs
+        ):
+            continue
+        return True
     return False

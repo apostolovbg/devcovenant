@@ -50,9 +50,10 @@ _RUN_LOG_BYPASS_COMMANDS = {"uninstall"}
 
 def _build_parser() -> argparse.ArgumentParser:
     """Build the root dispatcher parser."""
-    parser = argparse.ArgumentParser(
+    parser = execution_runtime_module.DevCovenantArgumentParser(
         description="DevCovenant - Self-enforcing policy system"
     )
+    execution_runtime_module.add_output_mode_override_arguments(parser)
     parser.add_argument(
         "command",
         choices=sorted(_COMMAND_MODULES.keys()),
@@ -347,6 +348,19 @@ def main(argv: list[str] | None = None) -> None:
     """Main CLI entry point."""
     parser = _build_parser()
     command_args = list(sys.argv[1:] if argv is None else argv)
+    try:
+        cli_output_override = (
+            execution_runtime_module.resolve_cli_output_mode_override(
+                command_args
+            )
+        )
+    except ValueError as exc:
+        parser.error(str(exc))
+    command_args = (
+        execution_runtime_module.strip_leading_cli_output_mode_overrides(
+            command_args
+        )
+    )
     if not command_args:
         parser.print_help()
         raise SystemExit(0)
@@ -370,11 +384,22 @@ def main(argv: list[str] | None = None) -> None:
             repo_root
         )
         execution_runtime_module.configure_repo_pycache_prefix(repo_root)
-        execution_runtime_module.configure_output_mode_from_config(repo_root)
+        if cli_output_override is None:
+            execution_runtime_module.configure_output_mode_from_config(
+                repo_root
+            )
+        else:
+            execution_runtime_module.configure_output_mode(cli_output_override)
         execution_runtime_module.configure_logs_keep_last_from_config(
             repo_root
         )
+    elif cli_output_override is not None:
+        execution_runtime_module.configure_output_mode(cli_output_override)
     _initialize_cli_run_logging(repo_root, first, command_args[1:])
+    if cli_output_override is not None:
+        execution_runtime_module.merge_active_run_log_metadata(
+            {"cli_output_mode_override": cli_output_override}
+        )
     _maybe_reexec_managed_environment(first, command_args[1:])
     try:
         module = _load_command_module(first)

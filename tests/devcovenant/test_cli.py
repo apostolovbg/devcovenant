@@ -363,6 +363,80 @@ def _unit_test_cli_reports_non_executable_managed_python(
     assert managed_python in code
 
 
+def _unit_test_cli_applies_root_level_output_override(monkeypatch) -> None:
+    """Leading root-level output flags should override config for the run."""
+    repo_root = REPO_ROOT
+    captured: dict[str, object] = {}
+
+    monkeypatch.setattr(
+        cli.execution_runtime_module,
+        "find_git_root",
+        lambda _path: repo_root,
+    )
+    monkeypatch.setattr(
+        cli.execution_runtime_module,
+        "cleanup_source_checkout_import_cache",
+        lambda _repo_root: False,
+    )
+    monkeypatch.setattr(
+        cli.execution_runtime_module,
+        "configure_repo_pycache_prefix",
+        lambda _repo_root: False,
+    )
+    monkeypatch.setattr(
+        cli.execution_runtime_module,
+        "configure_output_mode_from_config",
+        lambda _repo_root: captured.setdefault("config_called", True),
+    )
+    monkeypatch.setattr(
+        cli.execution_runtime_module,
+        "configure_output_mode",
+        lambda mode: captured.setdefault("override_mode", mode),
+    )
+    monkeypatch.setattr(
+        cli.execution_runtime_module,
+        "configure_logs_keep_last_from_config",
+        lambda _repo_root: None,
+    )
+    monkeypatch.setattr(
+        cli,
+        "_initialize_cli_run_logging",
+        lambda *_args, **_kwargs: None,
+    )
+    monkeypatch.setattr(
+        cli.execution_runtime_module,
+        "merge_active_run_log_metadata",
+        lambda payload: captured.setdefault("metadata", dict(payload)),
+    )
+    monkeypatch.setattr(
+        cli,
+        "_maybe_reexec_managed_environment",
+        lambda _command, _args: None,
+    )
+    monkeypatch.setattr(
+        cli,
+        "_load_command_module",
+        lambda _command: SimpleNamespace(
+            main=lambda argv: captured.setdefault("argv", list(argv))
+            or (_ for _ in ()).throw(SystemExit(0))
+        ),
+    )
+    monkeypatch.setattr(sys, "argv", ["devcovenant", "--quiet", "check"])
+
+    try:
+        cli.main()
+    except SystemExit as exc:
+        code = exc.code
+    else:  # pragma: no cover - defensive
+        raise AssertionError("Expected SystemExit from cli.main().")
+
+    assert code == 0
+    assert captured["override_mode"] == "quiet"
+    assert "config_called" not in captured
+    assert captured["argv"] == []
+    assert captured["metadata"] == {"cli_output_mode_override": "quiet"}
+
+
 def _unit_test_run_help_is_command_scoped() -> None:
     """`run --help` should expose no extra lifecycle flags."""
     result = subprocess.run(
@@ -376,6 +450,9 @@ def _unit_test_run_help_is_command_scoped() -> None:
     assert "--repo" not in result.stdout
     assert "--install-mode" not in result.stdout
     assert "--docs-mode" not in result.stdout
+    assert "--quiet" in result.stdout
+    assert "--normal" in result.stdout
+    assert "--verbose" in result.stdout
 
 
 def _unit_test_check_help_shows_check_only_options() -> None:
@@ -444,6 +521,9 @@ def _unit_test_gate_help_is_command_scoped() -> None:
     assert "short gate session status" in result.stdout
     assert "--nofix" not in result.stdout
     assert "--norefresh" not in result.stdout
+    assert "--quiet" in result.stdout
+    assert "--normal" in result.stdout
+    assert "--verbose" in result.stdout
 
 
 def _unit_test_root_command_modules_exist() -> None:
@@ -944,6 +1024,16 @@ class GeneratedUnittestCases(unittest.TestCase):
         monkeypatch = MonkeyPatch()
         try:
             _unit_test_cli_reports_non_executable_managed_python(
+                monkeypatch=monkeypatch
+            )
+        finally:
+            monkeypatch.undo()
+
+    def test_cli_applies_root_level_output_override(self):
+        """Run root-level output-override dispatch assertions."""
+        monkeypatch = MonkeyPatch()
+        try:
+            _unit_test_cli_applies_root_level_output_override(
                 monkeypatch=monkeypatch
             )
         finally:

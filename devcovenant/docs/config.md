@@ -1,5 +1,5 @@
 # Configuration
-**Last Updated:** 2026-03-26
+**Last Updated:** 2026-03-27
 **Project Version:** 1.0.0
 
 ## Overview
@@ -158,6 +158,9 @@ Runtime behavior such as:
 
 These settings change how the runtime behaves, not what the repository claims
 about itself.
+They are defaults.
+Operators can override them per invocation with `--quiet`, `--normal`, or
+`--verbose`, and the CLI flag wins only for that one command.
 
 ### ci_and_test
 Repository-local customization for the generated `CI` workflow.

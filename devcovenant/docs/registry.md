@@ -73,6 +73,11 @@ normalization with the rest of the workflow layer.
 That same tracked state now also reflects the canonical workflow recording
 shape that refresh resolved for the active profiles, including the phase
 recording hooks that drive output-mode overrides and runtime profiling.
+It also records the explicit phase freshness contract that the workflow layer
+uses to decide whether previously recorded phase evidence is still fresh.
+The default resolved freshness contract ignores `CHANGELOG.md`, so
+changelog-only edits remain gate-scoped without forcing a rerun of an
+otherwise still-valid required phase.
 The helper ownership now matches that split:
 
 - `devcovenant/core/services/tracked_registry.py` owns tracked-registry paths

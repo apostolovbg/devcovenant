@@ -51,6 +51,8 @@ Runs every enabled required workflow phase in declared order and records
 evidence for each one in the active workflow session.
 In this repo that currently means the required `tests` phase, which runs the
 two-step `unittest` plus `pytest` sequence.
+Every public command also accepts `--quiet`, `--normal`, or `--verbose` as a
+per-invocation output override.
 
 ### phase run <id>
 Runs one declared workflow phase and records its result in the active
@@ -144,6 +146,24 @@ Phase declarations may also point at a narrower config field for their own
 reporting behavior. In the built-in `tests` phase, that hook points to
 `engine.tests_output_mode`.
 
+Every public command and subcommand also accepts a per-invocation override:
+
+- `--quiet`
+- `--normal`
+- `--verbose`
+
+Those flags override config for that invocation only.
+They work in both forms:
+
+```bash
+devcovenant --verbose run
+devcovenant gate --mid --quiet
+devcovenant phase run tests --normal
+```
+
+If the override matches the configured mode already, DevCovenant simply stays
+in that mode.
+
 In `normal` test mode, DevCovenant keeps console progress concise and leaves
 full child output in the run logs.
 That is why the log artifacts matter.
@@ -157,6 +177,37 @@ policy-check summary rendering lives in
 layer. The same runtime boundary now owns namespaced policy-command parsing
 and runtime-action dispatch, so `devcovenant policy ...` runs through the same
 execution layer as `devcovenant run` and `devcovenant phase run <id>`.
+
+## Phase Freshness
+Required workflow phases stay fresh only while their declared freshness
+contract still matches the current repository state.
+That contract is now phase metadata, not a hidden `tests` special case.
+
+The default phase freshness contract is:
+
+- `kind: ignore_paths`
+- `ignored_files: [CHANGELOG.md]`
+- `ignored_globs: []`
+
+That means changelog-only edits remain gate-scoped, but they do not stale an
+already-passed required phase by themselves.
+If a phase should stale on every change instead, declare:
+
+```yaml
+freshness:
+  kind: any_change
+```
+
+If a phase should ignore a broader generated surface, declare:
+
+```yaml
+freshness:
+  kind: ignore_paths
+  ignored_files:
+    - CHANGELOG.md
+  ignored_globs:
+    - docs/generated/**
+```
 
 ## Workflow Session Surfaces
 DevCovenant now splits workflow evidence between two runtime files:

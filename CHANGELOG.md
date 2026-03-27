@@ -61,6 +61,50 @@ Example:
 ## Version 1.0.0
 
 - 2026-03-27:
+  Change: defined explicit workflow-phase freshness and universal
+    per-invocation output-mode overrides across the CLI, runtime, docs, and
+    tests.
+  Why: removed the hidden `tests`-only changelog invalidation rule and
+    converted `--quiet`, `--normal`, and `--verbose` into a stable command
+    contract instead of a config-only runtime behavior.
+  Impact: clarified that required phases now declare freshness behavior
+    explicitly, every public command accepts shared output-mode overrides,
+    and the public docs now describe the workflow-phase contract more
+    directly.
+  Files:
+  CHANGELOG.md
+  devcovenant/cli.py
+  devcovenant/core/flow/workflow_contract.py
+  devcovenant/core/runtime/execution.py
+  devcovenant/docs/config.md
+  devcovenant/docs/installation.md
+  devcovenant/docs/profiles.md
+  devcovenant/docs/registry.md
+  devcovenant/docs/workflow.md
+  devcovenant/custom/profiles/devcovrepo/assets/docs/config.md
+  devcovenant/custom/profiles/devcovrepo/assets/docs/installation.md
+  devcovenant/custom/profiles/devcovrepo/assets/docs/profiles.md
+  devcovenant/custom/profiles/devcovrepo/assets/docs/registry.md
+  devcovenant/custom/profiles/devcovrepo/assets/docs/workflow.md
+  devcovenant/registry/registry.yaml
+  tests/devcovenant/core/flow/test_workflow_contract.py
+  tests/devcovenant/core/runtime/test_execution.py
+  tests/devcovenant/test_cli.py
+
+- 2026-03-27:
+  Change: amended the roadmap to formalize the remaining workflow-contract
+    hardening gaps after the core `run` migration.
+  Why: converted the latest architecture audit findings into explicit plan
+    work so phase freshness, advanced workflow kinds, generic phase events,
+    output overrides, and evidence-path ownership do not remain implicit.
+  Impact: sharpens the boundary between Item 8 and Item 9, adds the missing
+    closure work to the plan, and keeps the remaining workflow formalization
+    visible instead of tribal.
+  Files:
+  CHANGELOG.md
+  PLAN.md
+
+- 2026-03-27:
   Change: simplified the repeated full-check sequencing inside
     `policy_engine.py` into private helper paths.
   Why: reduced duplicated invariant/context rerun logic so the public

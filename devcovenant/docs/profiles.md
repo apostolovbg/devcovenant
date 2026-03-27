@@ -176,6 +176,56 @@ entrypoint resolves through `devcovenant/core/runtime/event.py`, which keeps
 phase-event recording with the runtime execution layer instead of the service
 layer.
 
+## Workflow Phase Contract
+`workflow_phases` is now a public profile-authoring contract.
+Each phase may declare:
+
+- `id`
+- ordering fields such as `after`, `before`, and `order`
+- `runner`
+- `success_contract`
+- `freshness`
+- `recording`
+
+Supported runner kinds are:
+
+- `command_group`
+- `runtime_action`
+- `policy_command`
+- `manual_attestation`
+
+Supported success-contract kinds are:
+
+- `all_commands_exit_zero`
+- `runtime_action_success`
+- `policy_command_success`
+- `manual_attested`
+- `external_artifact_check`
+
+Compatible combinations are:
+
+- `command_group` with `all_commands_exit_zero`
+- `command_group` with `external_artifact_check`
+- `runtime_action` with `runtime_action_success`
+- `runtime_action` with `external_artifact_check`
+- `policy_command` with `policy_command_success`
+- `policy_command` with `external_artifact_check`
+- `manual_attestation` with `manual_attested`
+
+The freshness contract is explicit too.
+By default, phases ignore `CHANGELOG.md` when deciding whether previously
+recorded evidence is still fresh.
+Profiles may tighten or broaden that through `workflow_phases[*].freshness`.
+
+The recording contract is phase-owned:
+
+- `output_mode_config_field`
+- `event_adapter_group`
+- `write_runtime_profile`
+
+That is what lets a phase opt into richer reporting behavior without giving
+core a hidden special case for one phase id.
+
 The same asset ownership shows up in managed docs.
 Profile README descriptors can intentionally keep a managed block empty.
 That is the correct contract for the root `README.md` and packaged
