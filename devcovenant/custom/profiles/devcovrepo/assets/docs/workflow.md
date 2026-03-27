@@ -178,6 +178,8 @@ The path helpers that own those files are split the same way:
 
 - `devcovenant/core/runtime/registry.py` owns runtime evidence paths
 - `devcovenant/core/services/tracked_registry.py` owns tracked registry paths
+- `devcovenant/core/flow/policy_check_context.py` owns gate/session-derived
+  check-context assembly for policy runs
 - `devcovenant/core/flow/workflow_contract.py` owns workflow-contract
   normalization and phase resolution
 - `devcovenant/core/flow/gate_status_validation.py` owns gate-status payload

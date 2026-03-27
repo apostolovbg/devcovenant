@@ -8,10 +8,10 @@ from typing import Any, Dict, List, Optional, Set
 
 import yaml
 
+import devcovenant.core.flow.policy_check_context as policy_check_context
 import devcovenant.core.runtime.policy_reporting as policy_reporting
 import devcovenant.core.runtime.policy_runtime_actions as runtime_actions
 import devcovenant.core.services.policy_autofix as policy_autofix
-import devcovenant.core.services.policy_check_context as policy_check_context
 import devcovenant.core.services.policy_check_runner as policy_check_runner
 import devcovenant.core.services.policy_file_scope as policy_file_scope
 from devcovenant.core.contracts.policy import (
@@ -303,34 +303,12 @@ class DevCovenantEngine:
         try:
             policies = self._load_policies_from_agents()
         except ValueError as exc:
-            violation = Violation(
-                policy_id="agents-parse",
-                severity="error",
-                file_path=self.agents_md_path,
-                message=str(exc),
-                suggestion=(
-                    "Run `python3 -m devcovenant refresh` to regenerate "
-                    "AGENTS.md policy blocks from descriptors."
-                ),
-            )
-            self.report_violations([violation])
-            return CheckResult([violation], should_block=True, sync_issues=[])
+            return self._agents_parse_failure_result(str(exc))
         if not policies:
-            violation = Violation(
-                policy_id="agents-parse",
-                severity="error",
-                file_path=self.agents_md_path,
-                message=(
-                    "AGENTS policy blocks are empty or invalid. "
-                    "Checks cannot run without resolved policy metadata."
-                ),
-                suggestion=(
-                    "Run `python3 -m devcovenant refresh` to regenerate "
-                    "AGENTS.md policy blocks from descriptors."
-                ),
+            return self._agents_parse_failure_result(
+                "AGENTS policy blocks are empty or invalid. "
+                "Checks cannot run without resolved policy metadata."
             )
-            self.report_violations([violation])
-            return CheckResult([violation], should_block=True, sync_issues=[])
 
         # Registry remains hash/diagnostic state only.
         self.registry.load()
@@ -339,48 +317,14 @@ class DevCovenantEngine:
         if sync_issues:
             self.report_sync_issues(sync_issues)
 
-        # Load and run policy checks
         auto_fix_enabled = self.config.get("engine", {}).get(
             "auto_fix_enabled", False
         )
-        context = self._build_check_context(
+        violations = self._run_check_cycle(
+            policies,
             apply_fixes=bool(apply_fixes),
             auto_fix_enabled=bool(auto_fix_enabled),
         )
-        self.passed_count = 0
-        self.failed_count = 0
-        invariant_violations, invariant_passed, invariant_failed = (
-            core_invariants_service.run_core_invariant_checks(
-                self.repo_root,
-                context=context,
-                config_payload=self.config,
-            )
-        )
-        self.passed_count += invariant_passed
-        self.failed_count += invariant_failed
-        violations = list(invariant_violations)
-        violations.extend(self.run_policy_checks(policies, context))
-
-        if apply_fixes and auto_fix_enabled:
-            fixes_applied = self.apply_auto_fixes(violations)
-            if fixes_applied:
-                context = self._build_check_context(
-                    apply_fixes=bool(apply_fixes),
-                    auto_fix_enabled=bool(auto_fix_enabled),
-                )
-                self.passed_count = 0
-                self.failed_count = 0
-                invariant_violations, invariant_passed, invariant_failed = (
-                    core_invariants_service.run_core_invariant_checks(
-                        self.repo_root,
-                        context=context,
-                        config_payload=self.config,
-                    )
-                )
-                self.passed_count += invariant_passed
-                self.failed_count += invariant_failed
-                violations = list(invariant_violations)
-                violations.extend(self.run_policy_checks(policies, context))
 
         # Report violations
         self.report_violations(violations)
@@ -393,6 +337,70 @@ class DevCovenantEngine:
             should_block,
             sync_issues=sync_issues,
         )
+
+    def _agents_parse_failure_result(self, message: str) -> "CheckResult":
+        """Build and report one deterministic AGENTS parse failure result."""
+        violation = Violation(
+            policy_id="agents-parse",
+            severity="error",
+            file_path=self.agents_md_path,
+            message=message,
+            suggestion=(
+                "Run `python3 -m devcovenant refresh` to regenerate "
+                "AGENTS.md policy blocks from descriptors."
+            ),
+        )
+        self.report_violations([violation])
+        return CheckResult([violation], should_block=True, sync_issues=[])
+
+    def _reset_check_counts(self) -> None:
+        """Reset aggregate pass/fail counters before one full check pass."""
+        self.passed_count = 0
+        self.failed_count = 0
+
+    def _run_checks_for_context(
+        self,
+        policies: List[PolicyDefinition],
+        *,
+        context: CheckContext,
+    ) -> List[Violation]:
+        """Run invariant and policy checks for one resolved context."""
+        self._reset_check_counts()
+        invariant_violations, invariant_passed, invariant_failed = (
+            core_invariants_service.run_core_invariant_checks(
+                self.repo_root,
+                context=context,
+                config_payload=self.config,
+            )
+        )
+        self.passed_count += invariant_passed
+        self.failed_count += invariant_failed
+        violations = list(invariant_violations)
+        violations.extend(self.run_policy_checks(policies, context))
+        return violations
+
+    def _run_check_cycle(
+        self,
+        policies: List[PolicyDefinition],
+        *,
+        apply_fixes: bool,
+        auto_fix_enabled: bool,
+    ) -> List[Violation]:
+        """Run one full check cycle with one optional autofix rerun."""
+        context = self._build_check_context(
+            apply_fixes=apply_fixes,
+            auto_fix_enabled=auto_fix_enabled,
+        )
+        violations = self._run_checks_for_context(policies, context=context)
+        if not (apply_fixes and auto_fix_enabled):
+            return violations
+        if not self.apply_auto_fixes(violations):
+            return violations
+        context = self._build_check_context(
+            apply_fixes=apply_fixes,
+            auto_fix_enabled=auto_fix_enabled,
+        )
+        return self._run_checks_for_context(policies, context=context)
 
     def report_sync_issues(self, issues: List[PolicySyncIssue]):
         """

@@ -61,6 +61,42 @@ Example:
 ## Version 1.0.0
 
 - 2026-03-27:
+  Change: simplified the repeated full-check sequencing inside
+    `policy_engine.py` into private helper paths.
+  Why: reduced duplicated invariant/context rerun logic so the public
+    `check()` flow stays narrower while preserving the same autofix-and-rerun
+    behavior.
+  Impact: keeps `policy_engine.py` service-owned but thinner, adds a focused
+    autofix-rerun regression, and updates the architecture doc to describe the
+    slimmer orchestration role more precisely.
+  Files:
+  CHANGELOG.md
+  devcovenant/core/services/policy_engine.py
+  devcovenant/docs/architecture.md
+  tests/devcovenant/core/services/test_policy_engine.py
+
+- 2026-03-27:
+  Change: migrated gate/session-derived policy-check context out of
+    `core/services` into the workflow-owned `core/flow` layer.
+  Why: clarified that snapshot and gate-state interpretation belongs with the
+    flow runtime, while `policy_engine.py` should stay focused on policy
+    orchestration rather than owning session-truth helpers.
+  Impact: rewires the policy-engine context builder to the new flow module,
+    moves the mirrored tests under `tests/devcovenant/core/flow/`, and updates
+    the workflow/core architecture docs to the tighter ownership split.
+  Files:
+  CHANGELOG.md
+  devcovenant/core/README.md
+  devcovenant/core/flow/policy_check_context.py
+  devcovenant/core/services/policy_check_context.py
+  devcovenant/core/services/policy_engine.py
+  devcovenant/custom/profiles/devcovrepo/assets/docs/workflow.md
+  devcovenant/docs/architecture.md
+  devcovenant/docs/workflow.md
+  tests/devcovenant/core/flow/test_policy_check_context.py
+  tests/devcovenant/core/services/test_policy_check_context.py
+
+- 2026-03-27:
   Change: moved workflow-contract resolution out of `core/services` into the
     workflow-owned `core/flow` layer.
   Why: aligned the tracked workflow contract with the rest of the gate/run

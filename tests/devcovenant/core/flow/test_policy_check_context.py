@@ -11,7 +11,7 @@ from unittest import mock
 
 from devcovenant.core.contracts.policy import ChangeState
 
-MODULE = "devcovenant.core.services.policy_check_context"
+MODULE = "devcovenant.core.flow.policy_check_context"
 _GATE_STATUS_REL = "devcovenant/registry/runtime/gate_status.json"
 _SESSION_SNAPSHOT_REL = "devcovenant/registry/runtime/session_snapshot.json"
 

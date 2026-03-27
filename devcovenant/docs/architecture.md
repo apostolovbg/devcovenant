@@ -192,7 +192,12 @@ modules are about execution-time recording and output. The same split now
 applies to namespaced policy-command dispatch: command-definition parsing and
 runtime-action invocation live in `core/runtime/` because they are execution
 plumbing, while the policy engine remains in `core/services/` because it still
-owns policy meaning and orchestration.
+owns policy meaning and orchestration. Gate/session-derived policy-check
+context now also lives on the flow side in
+`devcovenant/core/flow/policy_check_context.py`, because that helper resolves
+snapshot and gate-state truth rather than policy meaning. Within the service
+layer, `policy_engine.py` now keeps its repeated full-check sequencing behind
+private helpers so the public `check()` path stays focused on orchestration.
 
 ## Profiles, Translators, And Assets
 Profiles describe repository shape.

@@ -491,6 +491,61 @@ def _unit_test_engine_policy_runner_wrappers_delegate_to_helper(
     )
 
 
+def _unit_test_run_check_cycle_rechecks_after_autofix(
+    monkeypatch: MonkeyPatch,
+) -> None:
+    """Check cycle should rebuild context after a successful autofix."""
+    module = importlib.import_module(MODULE)
+    engine = object.__new__(module.DevCovenantEngine)
+    engine.passed_count = 0
+    engine.failed_count = 0
+    contexts = ["first-context", "second-context"]
+    calls: list[str] = []
+
+    monkeypatch.setattr(
+        engine,
+        "_build_check_context",
+        lambda **_kwargs: contexts.pop(0),
+    )
+    monkeypatch.setattr(engine, "apply_auto_fixes", lambda violations: True)
+
+    def _fake_run_checks_for_context(_policies, *, context):
+        """Return different violations across the two check passes."""
+        calls.append(context)
+        if context == "first-context":
+            engine.passed_count = 1
+            engine.failed_count = 1
+            return [
+                module.Violation(
+                    policy_id="demo",
+                    severity="warning",
+                    message="needs autofix",
+                    can_auto_fix=True,
+                )
+            ]
+        engine.passed_count = 4
+        engine.failed_count = 0
+        return []
+
+    monkeypatch.setattr(
+        engine,
+        "_run_checks_for_context",
+        _fake_run_checks_for_context,
+    )
+
+    violations = module.DevCovenantEngine._run_check_cycle(
+        engine,
+        [],
+        apply_fixes=True,
+        auto_fix_enabled=True,
+    )
+
+    assert violations == []
+    assert calls == ["first-context", "second-context"]
+    assert engine.passed_count == 4
+    assert engine.failed_count == 0
+
+
 def _unit_test_runtime_policy_metadata_options_decodes_registry_strings() -> (
     None
 ):
@@ -822,6 +877,16 @@ class GeneratedUnittestCases(unittest.TestCase):
         monkeypatch = MonkeyPatch()
         try:
             _unit_test_engine_policy_runner_wrappers_delegate_to_helper(
+                monkeypatch=monkeypatch
+            )
+        finally:
+            monkeypatch.undo()
+
+    def test_run_check_cycle_rechecks_after_autofix(self):
+        """Run the autofix-rerun regression for the policy-engine cycle."""
+        monkeypatch = MonkeyPatch()
+        try:
+            _unit_test_run_check_cycle_rechecks_after_autofix(
                 monkeypatch=monkeypatch
             )
         finally:

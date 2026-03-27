@@ -32,6 +32,8 @@ Public user-facing contracts still live in top-level/docs surfaces:
   - `gate_status_validation.py`: gate-status payload parsing and schema
     validation.
   - `gate_changelog_helpers.py`: changelog top-entry/session-baseline helpers.
+  - `policy_check_context.py`: gate/session-derived check-context assembly for
+    policy runs.
   - `refresh.py`: full refresh orchestration and managed-doc regeneration.
   - `session.py`: gate-session helper wiring.
   - `workflow_contract.py`: workflow-phase contract resolution and
