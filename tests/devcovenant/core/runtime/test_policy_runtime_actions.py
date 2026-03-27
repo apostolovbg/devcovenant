@@ -9,7 +9,7 @@ from pathlib import Path
 
 import yaml
 
-MODULE = "devcovenant.core.services.policy_runtime_actions"
+MODULE = "devcovenant.core.runtime.policy_runtime_actions"
 
 
 def _unit_test_module_importable() -> None:

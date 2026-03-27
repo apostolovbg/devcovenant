@@ -8,7 +8,7 @@ from pathlib import Path
 
 import yaml
 
-from devcovenant.core.services import policy_commands
+from devcovenant.core.runtime import policy_commands
 
 
 def _seed_registry(repo_root: Path) -> None:

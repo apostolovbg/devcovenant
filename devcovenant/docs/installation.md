@@ -1,5 +1,5 @@
 # Installation and Lifecycle
-**Last Updated:** 2026-03-26
+**Last Updated:** 2026-03-27
 **Project Version:** 1.0.0
 
 ## Overview
@@ -322,3 +322,6 @@ devcovenant uninstall
 Dependency refresh is no longer a special top-level command.
 Use the namespaced policy command surface instead:
 `devcovenant policy dependency-management refresh-all`.
+That policy command now runs through the shared runtime execution layer, so it
+inherits the same managed-environment and output-mode behavior as the rest of
+the CLI.

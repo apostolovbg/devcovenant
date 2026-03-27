@@ -10,9 +10,9 @@ import sys
 from pathlib import Path
 from typing import Mapping
 
+import devcovenant.core.flow.workflow_contract as workflow_contract_module
 import devcovenant.core.runtime.execution as execution_runtime_module
 import devcovenant.core.runtime.registry as registry_runtime_module
-import devcovenant.core.services.workflow_contract as workflow_contract_module
 from devcovenant.core.flow.gate_changelog_helpers import (
     _entry_fingerprint,
     _latest_changelog_entry,

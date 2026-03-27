@@ -17,18 +17,15 @@ import devcovenant.core.services.manifest_inventory as manifest_module
 import devcovenant.core.services.metadata as metadata_runtime
 import devcovenant.core.services.profile_registry as profile_runtime
 from devcovenant.core.contracts.policy import CheckContext
+from devcovenant.core.lib import agents_blocks as agents_blocks_lib
+from devcovenant.core.runtime import (
+    policy_runtime_actions as runtime_actions_module,
+)
 from devcovenant.core.runtime.execution import print_step, runtime_print
-from devcovenant.core.services import core_invariant_block_refresh
 from devcovenant.core.services import (
     core_invariants as core_invariants_service,
 )
 from devcovenant.core.services import managed_docs as managed_docs_service
-from devcovenant.core.services import (
-    policy_block_refresh as refresh_policy_block_runtime_module,
-)
-from devcovenant.core.services import (
-    policy_runtime_actions as runtime_actions_module,
-)
 from devcovenant.core.services import (
     project_governance as project_governance_service,
 )
@@ -2131,12 +2128,10 @@ def refresh_repo(repo_root: Path) -> int:
 # ---- AGENTS policy block refresh ----
 
 
-RefreshResult = refresh_policy_block_runtime_module.RefreshResult
-refresh_agents_policy_block = (
-    refresh_policy_block_runtime_module.refresh_agents_policy_block
-)
+RefreshResult = agents_blocks_lib.PolicyBlockRefreshResult
+refresh_agents_policy_block = agents_blocks_lib.refresh_agents_policy_block
 refresh_agents_core_invariant_block = (
-    core_invariant_block_refresh.refresh_agents_core_invariant_block
+    agents_blocks_lib.refresh_agents_core_invariant_block
 )
 
 

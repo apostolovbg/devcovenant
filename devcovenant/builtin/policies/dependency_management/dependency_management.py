@@ -18,9 +18,7 @@ from devcovenant.core.contracts.policy import (
     PolicyCheck,
     Violation,
 )
-from devcovenant.core.services import (
-    policy_commands as policy_commands_service,
-)
+from devcovenant.core.runtime import policy_commands as policy_commands_service
 
 LICENSES_README_NAME = "README.md"
 LICENSE_INVENTORY_HEADING = "## Dependency License Inventory"

@@ -1,5 +1,5 @@
 # Profiles
-**Last Updated:** 2026-03-26
+**Last Updated:** 2026-03-27
 **Project Version:** 1.0.0
 
 ## Overview
@@ -171,6 +171,10 @@ That same declaration can also carry `recording` hooks such as:
 
 Those hooks let a profile opt specific phases into richer reporting without
 reintroducing hardcoded executor behavior for a special phase id.
+In the built-in Python profile, that now also means the test-event adapter
+entrypoint resolves through `devcovenant/core/runtime/event.py`, which keeps
+phase-event recording with the runtime execution layer instead of the service
+layer.
 
 The same asset ownership shows up in managed docs.
 Profile README descriptors can intentionally keep a managed block empty.

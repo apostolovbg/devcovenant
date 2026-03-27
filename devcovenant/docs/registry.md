@@ -1,5 +1,5 @@
 # Registry
-**Last Updated:** 2026-03-26
+**Last Updated:** 2026-03-27
 **Project Version:** 1.0.0
 
 ## Overview
@@ -67,6 +67,9 @@ That means required-phase execution no longer lives in an invariant
 `required_commands` list.
 The tracked contract lives in `workflow_contract`, while freshness and
 pass/fail evidence live in `workflow_session.json`.
+The resolver for that tracked contract now lives under
+`devcovenant/core/flow/workflow_contract.py`, which keeps contract
+normalization with the rest of the workflow layer.
 That same tracked state now also reflects the canonical workflow recording
 shape that refresh resolved for the active profiles, including the phase
 recording hooks that drive output-mode overrides and runtime profiling.
@@ -87,6 +90,16 @@ Policy-owned descriptor and hash logic now lives in
 `devcovenant/core/services/policy_registry.py`.
 Tracked inventory defaults and manifest persistence now live in
 `devcovenant/core/services/manifest_inventory.py`.
+AGENTS block markers and policy/core-invariant block rendering now live in
+`devcovenant/core/lib/agents_blocks.py`, so the tracked registry feeds a
+shared block-rendering helper instead of separate services-layer refresh
+modules.
+That same tracked state now carries the Python profile's test-event adapter
+entrypoint under `devcovenant/core/runtime/event.py`, matching the runtime
+execution layer that actually records workflow phase events.
+The tracked inventory now also records namespaced policy-command parsing and
+runtime-action dispatch under `devcovenant/core/runtime/`, so the registry
+matches the runtime layer that actually executes `devcovenant policy ...`.
 
 Commit tracked-registry changes when they are the result of real repo changes.
 

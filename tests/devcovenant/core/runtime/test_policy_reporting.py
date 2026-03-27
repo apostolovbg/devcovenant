@@ -9,7 +9,7 @@ from pathlib import Path
 from devcovenant.core.contracts.policy import Violation
 from devcovenant.core.services.policy_registry import PolicySyncIssue
 
-MODULE = "devcovenant.core.services.policy_reporting"
+MODULE = "devcovenant.core.runtime.policy_reporting"
 
 
 def _capture_lines():

@@ -14,13 +14,11 @@ import sys
 from pathlib import Path
 from typing import Sequence
 
+from devcovenant.core.runtime import policy_commands as policy_commands_service
 from devcovenant.core.runtime.execution import (
     build_command_parser,
     resolve_repo_root,
     runtime_print,
-)
-from devcovenant.core.services import (
-    policy_commands as policy_commands_service,
 )
 from devcovenant.core.services.policy_engine import run_policy_runtime_action
 

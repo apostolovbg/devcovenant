@@ -9,12 +9,10 @@ from typing import List
 
 from devcovenant.core.contracts.invariant import CoreInvariantCheck
 from devcovenant.core.contracts.policy import CheckContext, Violation
+from devcovenant.core.flow import workflow_contract as workflow_contract_module
 from devcovenant.core.runtime import registry as runtime_registry_module
 from devcovenant.core.services import (
     core_invariants as core_invariants_service,
-)
-from devcovenant.core.services import (
-    workflow_contract as workflow_contract_module,
 )
 
 _DEFAULT_STATUS = (

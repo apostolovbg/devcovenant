@@ -152,5 +152,5 @@ policy_overlays:
 
 test_events:
   - id: python
-    entrypoint: "devcovenant.core.services.event:\
+    entrypoint: "devcovenant.core.runtime.event:\
 python_test_event_adapter_factory"

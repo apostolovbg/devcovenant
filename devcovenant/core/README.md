@@ -1,5 +1,5 @@
 # Core Runtime
-**Last Updated:** 2026-03-26
+**Last Updated:** 2026-03-27
 **Project Version:** 1.0.0
 
 ## Table of Contents
@@ -34,22 +34,28 @@ Public user-facing contracts still live in top-level/docs surfaces:
   - `gate_changelog_helpers.py`: changelog top-entry/session-baseline helpers.
   - `refresh.py`: full refresh orchestration and managed-doc regeneration.
   - `session.py`: gate-session helper wiring.
+  - `workflow_contract.py`: workflow-phase contract resolution and
+    normalization.
   - `workflow_validation.py`: flow-owned workflow-evidence validation.
 - `runtime/`: process and output boundary.
+  - `event.py`: test-event adapters and lifecycle-event recording.
   - `execution.py`: command dispatch, subprocess routing, managed re-exec.
   - `errors.py`: runtime exception normalization and explicit error rendering.
   - `output.py`: output-mode policy and channel-level stream/suppression rules.
+  - `policy_commands.py`: namespaced policy-command parsing and invocation
+    helpers.
+  - `policy_reporting.py`: policy-check output formatting and threshold
+    summaries.
+  - `policy_runtime_actions.py`: policy-action loading and dispatch helpers.
   - `registry.py`: runtime evidence-path ownership for gate/session ledgers.
   - `run_logging.py`: run-folder allocation and summary/log artifact contract.
   - `session_snapshot.py`: snapshot collection/diff helpers.
 - `services/`: policy/profile/registry business logic.
-  - `event.py`: test-event adapters and lifecycle-event recording.
   - `integrity_validation.py`: core invariant orchestration for descriptor,
     registry, and gate-integrity checks.
   - `manifest_inventory.py`: tracked inventory defaults and required-repo
     manifest persistence.
   - `metadata.py`: metadata merge, normalization, typed decoding.
-  - `policy_block_refresh.py`: AGENTS policy-block rendering.
   - `policy_engine.py`: policy runtime orchestration and reporting.
   - `policy_parse.py`: AGENTS `policy-def` parser/model.
   - `policy_registry.py`: policy descriptors, script resolution, and tracked
@@ -60,6 +66,8 @@ Public user-facing contracts still live in top-level/docs surfaces:
   - `tracked_registry.py`: tracked-registry path and document ownership.
   - `translator_engine.py`: language translator routing and `LanguageUnit`.
 - `lib/`: shared helpers.
+  - `agents_blocks.py`: AGENTS block markers plus policy/core-invariant block
+    rendering and refresh helpers.
   - `selectors.py`: selector matching utilities.
   - `document_exemptions.py`: managed/header-only exemption fingerprints.
 - `contracts/`: typed runtime contracts.

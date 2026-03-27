@@ -26,11 +26,11 @@ try:
 except ImportError:  # pragma: no cover - non-POSIX runtimes
     pty = None  # type: ignore[assignment]
 
+import devcovenant.core.flow.workflow_contract as workflow_contract_module
+import devcovenant.core.runtime.event as event_runtime_module
 import devcovenant.core.runtime.output as output_runtime_module
 import devcovenant.core.runtime.registry as registry_runtime_module
 import devcovenant.core.runtime.run_logging as run_logging_runtime_module
-import devcovenant.core.services.event as event_runtime_module
-import devcovenant.core.services.workflow_contract as workflow_contract_module
 from devcovenant import __version__ as package_version
 from devcovenant.core.runtime import (
     session_snapshot as session_snapshot_runtime_module,
@@ -2250,7 +2250,7 @@ def _execute_policy_command_workflow_phase(
 ) -> dict[str, object]:
     """Run one policy-command workflow phase and return result details."""
 
-    from devcovenant.core.services import (
+    from devcovenant.core.runtime import (
         policy_commands as policy_commands_service,
     )
 

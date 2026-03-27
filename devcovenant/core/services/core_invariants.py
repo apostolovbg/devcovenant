@@ -1,4 +1,4 @@
-"""Registry/runtime helpers for DevCovenant core invariants."""
+"""Descriptor and registry helpers for DevCovenant core invariants."""
 
 from __future__ import annotations
 
@@ -15,15 +15,12 @@ from devcovenant.core.contracts.invariant import (
     CoreInvariantDefinition,
 )
 from devcovenant.core.contracts.policy import CheckContext, Violation
-from devcovenant.core.services import yaml_cache as yaml_cache_service
-from devcovenant.core.services.policy_registry import PolicyDescriptor
-from devcovenant.core.services.policy_runtime_actions import (
+from devcovenant.core.runtime.policy_runtime_actions import (
     build_runtime_policy_option_views,
 )
+from devcovenant.core.services import yaml_cache as yaml_cache_service
+from devcovenant.core.services.policy_registry import PolicyDescriptor
 from devcovenant.core.services.tracked_registry import policy_registry_path
-
-CORE_INVARIANTS_BEGIN = "<!-- DEVCOV-INVARIANTS:BEGIN -->"
-CORE_INVARIANTS_END = "<!-- DEVCOV-INVARIANTS:END -->"
 
 
 @dataclass(frozen=True)
@@ -363,67 +360,6 @@ def core_invariants_registry_payload(
         }
         payload[definition.invariant_id] = entry
     return payload
-
-
-def render_core_invariants_block(registry_payload: dict[str, object]) -> str:
-    """Render the AGENTS core-invariants block from registry payload."""
-    if not isinstance(registry_payload, dict) or not registry_payload:
-        return ""
-    sections: list[str] = ["## DevCovenant Core Invariants"]
-    for invariant_id in sorted(registry_payload):
-        entry = registry_payload.get(invariant_id, {})
-        if not isinstance(entry, dict):
-            continue
-        sections.append("")
-        heading = (
-            str(entry.get("description", "")).strip()
-            or invariant_id.replace("-", " ").title()
-        )
-        sections.append(f"### {heading}")
-        sections.append("")
-        sections.append("```core-invariant-def")
-        sections.append(f"id: {invariant_id}")
-        severity = str(entry.get("severity", "critical")).strip()
-        if not severity:
-            severity = "critical"
-        sections.append(f"severity: {severity}")
-        sections.append("customizable: false")
-        metadata = entry.get("metadata", {})
-        if isinstance(metadata, dict):
-            for key, raw_value in metadata.items():
-                if str(key).strip() in {
-                    "id",
-                    "severity",
-                    "enabled",
-                    "custom",
-                    "auto_fix",
-                }:
-                    continue
-                if isinstance(raw_value, list):
-                    cleaned = [
-                        str(item).strip()
-                        for item in raw_value
-                        if str(item).strip()
-                    ]
-                    if not cleaned:
-                        sections.append(f"{key}:")
-                        continue
-                    sections.append(f"{key}: {cleaned[0]}")
-                    for item in cleaned[1:]:
-                        sections.append(f"  {item}")
-                    continue
-                token = str(raw_value).strip()
-                if token:
-                    sections.append(f"{key}: {token}")
-                else:
-                    sections.append(f"{key}:")
-        sections.append("```")
-        description = str(entry.get("invariant_text", "")).strip()
-        if description:
-            sections.append("")
-            sections.append(description)
-    body = "\n".join(sections).rstrip()
-    return f"{CORE_INVARIANTS_BEGIN}\n{body}\n{CORE_INVARIANTS_END}"
 
 
 def run_core_invariant_checks(

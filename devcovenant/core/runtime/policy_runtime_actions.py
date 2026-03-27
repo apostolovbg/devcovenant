@@ -11,9 +11,7 @@ import yaml
 
 import devcovenant.core.services.metadata as metadata_runtime
 from devcovenant.core.contracts.policy import CheckContext, PolicyCheck
-from devcovenant.core.services import (
-    policy_commands as policy_commands_service,
-)
+from devcovenant.core.runtime import policy_commands as policy_commands_service
 from devcovenant.core.services import yaml_cache as yaml_cache_service
 from devcovenant.core.services.policy_registry import (
     load_policy_descriptor,

@@ -8,7 +8,7 @@ import unittest
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
 
-MODULE = "devcovenant.core.services.event"
+MODULE = "devcovenant.core.runtime.event"
 PACKAGE_MODULES = (
     "devcovenant.core.flow",
     "devcovenant.core.runtime",
@@ -19,7 +19,7 @@ PACKAGE_MODULES = (
 SUBMODULE_IMPORTS = (
     "devcovenant.core.flow.gate",
     "devcovenant.core.runtime.execution",
-    "devcovenant.core.services.event",
+    "devcovenant.core.runtime.event",
     "devcovenant.core.contracts.policy",
     "devcovenant.core.lib.selectors",
 )
@@ -143,7 +143,7 @@ def _unit_test_profile_loader_accepts_explicit_generic_adapter() -> None:
             "    test_events:\n"
             "      - id: generic\n"
             "        entrypoint: "
-            "devcovenant.core.services.event:"
+            "devcovenant.core.runtime.event:"
             "generic_test_event_adapter_factory\n"
             "inventory: {}\n",
             encoding="utf-8",

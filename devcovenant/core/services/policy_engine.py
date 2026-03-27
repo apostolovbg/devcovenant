@@ -8,12 +8,12 @@ from typing import Any, Dict, List, Optional, Set
 
 import yaml
 
+import devcovenant.core.runtime.policy_reporting as policy_reporting
+import devcovenant.core.runtime.policy_runtime_actions as runtime_actions
 import devcovenant.core.services.policy_autofix as policy_autofix
 import devcovenant.core.services.policy_check_context as policy_check_context
 import devcovenant.core.services.policy_check_runner as policy_check_runner
 import devcovenant.core.services.policy_file_scope as policy_file_scope
-import devcovenant.core.services.policy_reporting as policy_reporting
-import devcovenant.core.services.policy_runtime_actions as runtime_actions
 from devcovenant.core.contracts.policy import (
     ChangeState,
     CheckContext,

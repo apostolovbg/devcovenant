@@ -60,6 +60,138 @@ Example:
 
 ## Version 1.0.0
 
+- 2026-03-27:
+  Change: moved workflow-contract resolution out of `core/services` into the
+    workflow-owned `core/flow` layer.
+  Why: aligned the tracked workflow contract with the rest of the gate/run
+    code so phase-contract normalization no longer lives in the
+    services grab-bag.
+  Impact: rewires gate, runtime, and profile-registry imports to the new
+    flow-owned module, moves the mirrored tests under
+    `tests/devcovenant/core/flow/`, and updates the inventory/workflow docs
+    to the cleaner ownership map.
+  Files:
+  CHANGELOG.md
+  devcovenant/core/README.md
+  devcovenant/core/flow/gate.py
+  devcovenant/core/flow/workflow_contract.py
+  devcovenant/core/flow/workflow_validation.py
+  devcovenant/core/runtime/execution.py
+  devcovenant/core/services/manifest_inventory.py
+  devcovenant/core/services/profile_registry.py
+  devcovenant/core/services/workflow_contract.py
+  devcovenant/custom/profiles/devcovrepo/assets/docs/registry.md
+  devcovenant/custom/profiles/devcovrepo/assets/docs/workflow.md
+  devcovenant/docs/architecture.md
+  devcovenant/docs/registry.md
+  devcovenant/docs/workflow.md
+  devcovenant/registry/registry.yaml
+  tests/devcovenant/core/flow/test_workflow_contract.py
+  tests/devcovenant/core/services/test_workflow_contract.py
+
+- 2026-03-27:
+  Change: migrated namespaced policy-command parsing and runtime-action
+    dispatch out of `core/services` into `core/runtime`.
+  Why: clarified that explicit `devcovenant policy ...` execution belongs on
+    the same runtime boundary as `run` and `phase run`, while the policy
+    engine remains responsible for policy meaning and orchestration.
+  Impact: rewires policy command/action imports, moves the mirrored tests into
+    `tests/devcovenant/core/runtime/`, and updates the workflow,
+    architecture, policies, and installation docs to the tighter ownership
+    map.
+  Files:
+  CHANGELOG.md
+  devcovenant/builtin/policies/dependency_management/dependency_management.py
+  devcovenant/core/README.md
+  devcovenant/core/flow/refresh.py
+  devcovenant/core/runtime/execution.py
+  devcovenant/core/runtime/policy_commands.py
+  devcovenant/core/runtime/policy_runtime_actions.py
+  devcovenant/core/services/core_invariants.py
+  devcovenant/core/services/manifest_inventory.py
+  devcovenant/core/services/policy_commands.py
+  devcovenant/core/services/policy_engine.py
+  devcovenant/core/services/policy_runtime_actions.py
+  devcovenant/custom/profiles/devcovrepo/assets/docs/installation.md
+  devcovenant/custom/profiles/devcovrepo/assets/docs/policies.md
+  devcovenant/custom/profiles/devcovrepo/assets/docs/registry.md
+  devcovenant/custom/profiles/devcovrepo/assets/docs/workflow.md
+  devcovenant/docs/architecture.md
+  devcovenant/docs/installation.md
+  devcovenant/docs/policies.md
+  devcovenant/docs/registry.md
+  devcovenant/docs/workflow.md
+  devcovenant/policy.py
+  devcovenant/registry/registry.yaml
+  tests/devcovenant/core/runtime/test_policy_commands.py
+  tests/devcovenant/core/runtime/test_policy_runtime_actions.py
+  tests/devcovenant/core/services/test_policy_commands.py
+  tests/devcovenant/core/services/test_policy_runtime_actions.py
+
+- 2026-03-27:
+  Change: migrated runtime-facing event-adapter loading and policy-report
+    output
+    formatting out of `core/services` into `core/runtime`.
+  Why: clarified that `metadata.py` is the real service-layer cross-cutting
+    resolver while event recording and policy-check output belong to runtime
+    execution.
+  Impact: rewires the Python test-event adapter entrypoint and engine imports
+    to the new runtime modules, moves the mirrored tests under
+    `tests/devcovenant/core/runtime/`, and updates the workflow/core docs to
+    the narrower ownership map.
+  Files:
+  CHANGELOG.md
+  devcovenant/builtin/profiles/python/python.yaml
+  devcovenant/core/README.md
+  devcovenant/core/runtime/event.py
+  devcovenant/core/runtime/execution.py
+  devcovenant/core/runtime/policy_reporting.py
+  devcovenant/core/services/event.py
+  devcovenant/core/services/policy_engine.py
+  devcovenant/core/services/policy_reporting.py
+  devcovenant/custom/profiles/devcovrepo/assets/docs/workflow.md
+  devcovenant/docs/architecture.md
+  devcovenant/docs/workflow.md
+  devcovenant/docs/profiles.md
+  devcovenant/docs/registry.md
+  devcovenant/custom/profiles/devcovrepo/assets/docs/profiles.md
+  devcovenant/custom/profiles/devcovrepo/assets/docs/registry.md
+  devcovenant/registry/registry.yaml
+  tests/devcovenant/core/runtime/test_event.py
+  tests/devcovenant/core/runtime/test_policy_reporting.py
+  tests/devcovenant/core/services/test_event.py
+  tests/devcovenant/core/services/test_policy_reporting.py
+
+- 2026-03-27:
+  Change: restructured AGENTS policy/core-invariant block refresh out of
+    `core/services` into the shared `core/lib/agents_blocks.py` helper and
+    trimmed `core_invariants.py` back to invariant loading and registry data.
+  Why: reduced managed-block rendering overlap so the
+    service layer describes invariant and policy business logic instead of
+    also owning AGENTS block scaffolding.
+  Impact: updated `refresh.py` to use one shared AGENTS block helper surface,
+    reduced service-layer overlap, and rewrote managed-doc/runtime imports to
+    the new
+    ownership map, and rewrites the mirrored tests/docs around the new lib
+    helper.
+  Files:
+  CHANGELOG.md
+  devcovenant/core/README.md
+  devcovenant/core/flow/refresh.py
+  devcovenant/core/lib/agents_blocks.py
+  devcovenant/core/services/core_invariant_block_refresh.py
+  devcovenant/core/services/core_invariants.py
+  devcovenant/core/services/managed_docs.py
+  devcovenant/core/services/manifest_inventory.py
+  devcovenant/core/services/policy_block_refresh.py
+  devcovenant/docs/architecture.md
+  devcovenant/docs/registry.md
+  devcovenant/custom/profiles/devcovrepo/assets/docs/registry.md
+  devcovenant/registry/registry.yaml
+  tests/devcovenant/core/lib/test_agents_blocks.py
+  tests/devcovenant/core/services/test_core_invariant_block_refresh.py
+  tests/devcovenant/core/services/test_policy_block_refresh.py
+
 - 2026-03-26:
   Change: split the mixed services-layer `registry.py` into tracked-registry,
     policy-registry, and manifest-inventory helpers and removed the old

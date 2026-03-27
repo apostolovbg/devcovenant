@@ -540,7 +540,7 @@ def build_profile_registry(
     active = {name for name in active_names}
     for name, meta in registry.items():
         meta["active"] = name in active
-    from devcovenant.core.services import workflow_contract as workflow_runtime
+    from devcovenant.core.flow import workflow_contract as workflow_runtime
 
     workflow_contract = workflow_runtime.build_workflow_contract(
         repo_root,

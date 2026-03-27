@@ -7,7 +7,7 @@ import tempfile
 import unittest
 from pathlib import Path
 
-MODULE = "devcovenant.core.services.workflow_contract"
+MODULE = "devcovenant.core.flow.workflow_contract"
 
 
 def _tests_phase_entry() -> dict[str, object]:

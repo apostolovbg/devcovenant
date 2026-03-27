@@ -1,5 +1,5 @@
 # DevCovenant Architecture
-**Last Updated:** 2026-03-26
+**Last Updated:** 2026-03-27
 **Project Version:** 1.0.0
 
 ## Overview
@@ -180,6 +180,19 @@ The shared managed-doc runtime owns:
 The key preservation rule is stable:
 missing docs can be created, empty docs can be replaced, one-line docs can be
 replaced, and otherwise only managed headers and managed blocks should change.
+The AGENTS-specific block scaffolding and rendering helpers now live under
+`devcovenant/core/lib/agents_blocks.py`, which keeps descriptor loading in the
+service layer while moving managed-block rendering out of the services
+grab-bag.
+The same ownership test now applies inside the engine:
+metadata resolution remains in `devcovenant/core/services/metadata.py`
+because it is a real cross-cutting domain service, while event-adapter loading
+and policy-check summary rendering moved into `core/runtime/` because those
+modules are about execution-time recording and output. The same split now
+applies to namespaced policy-command dispatch: command-definition parsing and
+runtime-action invocation live in `core/runtime/` because they are execution
+plumbing, while the policy engine remains in `core/services/` because it still
+owns policy meaning and orchestration.
 
 ## Profiles, Translators, And Assets
 Profiles describe repository shape.
@@ -215,6 +228,10 @@ Tracked contract state lives in `devcovenant/registry/registry.yaml`, including
 `workflow_contract`.
 That section records the reserved anchors, the declared phases resolved from
 active profiles, and which phase ids are currently required.
+The resolver for that tracked workflow contract now lives in
+`devcovenant/core/flow/workflow_contract.py`, which keeps phase-contract
+normalization on the workflow side instead of leaving it in the services
+grab-bag.
 Tracked path ownership now lives in
 `devcovenant/core/services/tracked_registry.py`.
 

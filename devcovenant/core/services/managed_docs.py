@@ -10,9 +10,7 @@ from pathlib import Path
 import semver
 import yaml
 
-from devcovenant.core.services import (
-    core_invariants as core_invariants_service,
-)
+from devcovenant.core.lib import agents_blocks as agents_blocks_lib
 from devcovenant.core.services import (
     profile_registry as profile_registry_service,
 )
@@ -27,10 +25,10 @@ BLOCK_BEGIN = "<!-- DEVCOV:BEGIN -->"
 BLOCK_END = "<!-- DEVCOV:END -->"
 WORKFLOW_BEGIN = "<!-- DEVCOV-WORKFLOW:BEGIN -->"
 WORKFLOW_END = "<!-- DEVCOV-WORKFLOW:END -->"
-CORE_INVARIANTS_BEGIN = core_invariants_service.CORE_INVARIANTS_BEGIN
-CORE_INVARIANTS_END = core_invariants_service.CORE_INVARIANTS_END
-POLICIES_BEGIN = "<!-- DEVCOV-POLICIES:BEGIN -->"
-POLICIES_END = "<!-- DEVCOV-POLICIES:END -->"
+CORE_INVARIANTS_BEGIN = agents_blocks_lib.CORE_INVARIANTS_BEGIN
+CORE_INVARIANTS_END = agents_blocks_lib.CORE_INVARIANTS_END
+POLICIES_BEGIN = agents_blocks_lib.POLICIES_BEGIN
+POLICIES_END = agents_blocks_lib.POLICIES_END
 USER_PRESERVE_BEGIN = "<!-- DEVCOV-USER-PRESERVE:BEGIN -->"
 USER_PRESERVE_END = "<!-- DEVCOV-USER-PRESERVE:END -->"
 DOC_ID_LABEL = "**Doc ID:**"

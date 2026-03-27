@@ -1,5 +1,5 @@
 # Workflow
-**Last Updated:** 2026-03-26
+**Last Updated:** 2026-03-27
 **Project Version:** 1.0.0
 
 ## Overview
@@ -150,6 +150,13 @@ That is why the log artifacts matter.
 Profiles declare those richer reporting hooks under
 `workflow_phases[*].recording`, so output-mode overrides, event adapters, and
 workflow profiling are phase-owned instead of hardcoded by phase id.
+The runtime ownership now matches that behavior more closely:
+event-adapter loading lives in `devcovenant/core/runtime/event.py`, and
+policy-check summary rendering lives in
+`devcovenant/core/runtime/policy_reporting.py` instead of in the services
+layer. The same runtime boundary now owns namespaced policy-command parsing
+and runtime-action dispatch, so `devcovenant policy ...` runs through the same
+execution layer as `devcovenant run` and `devcovenant phase run <id>`.
 
 ## Workflow Session Surfaces
 DevCovenant now splits workflow evidence between two runtime files:
@@ -171,6 +178,8 @@ The helper ownership now matches that split:
 
 - `devcovenant/core/runtime/registry.py` owns runtime evidence paths
 - `devcovenant/core/services/tracked_registry.py` owns tracked registry paths
+- `devcovenant/core/flow/workflow_contract.py` owns workflow-contract
+  normalization and phase resolution
 - `devcovenant/core/flow/gate_status_validation.py` owns gate-status payload
   parsing and schema validation
 

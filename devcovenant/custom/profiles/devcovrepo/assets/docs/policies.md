@@ -47,3 +47,6 @@ tracked registry metadata or workflow-owned command stages.
 Builtin policy runtimes now resolve descriptor metadata and script locations
 through the dedicated `policy_registry.py` helper layer instead of through a
 mixed registry service surface.
+Namespaced policy-command parsing and runtime-action dispatch now live under
+`devcovenant/core/runtime/`, which keeps `devcovenant policy ...` on the same
+execution boundary as `run` and `phase run`.
