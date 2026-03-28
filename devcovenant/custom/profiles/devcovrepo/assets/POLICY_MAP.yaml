@@ -117,7 +117,7 @@ body: |-
     `config.core_invariants`, not `policy_state`
 
   Runtime note:
-  - required workflow runs are resolved from tracked `workflow_contract`
+  - workflow runs are resolved from tracked `workflow_contract`
     data, not from ad hoc invariant command lists.
   - `run_events` payloads are runtime-owned workflow-run event metadata
     from profiles and are not policy descriptor metadata keys.

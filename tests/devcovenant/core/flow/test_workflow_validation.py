@@ -52,7 +52,6 @@ def _write_workflow_contract(
         "    workflow_runs:",
         "      - id: tests",
         "        enabled: true",
-        "        required: true",
         "        after: mid",
         "        before: end",
         "        order: 100",
@@ -201,7 +200,7 @@ def _write_status(
             "workflow_contract_schema_version": 1,
             "session_id": session_id,
             "session_state": str(payload.get("session_state", "")).strip(),
-            "required_run_ids": ["tests"] if commands else [],
+            "run_ids": ["tests"] if commands else [],
             "anchors": {},
             "runs": runs,
         },
@@ -342,7 +341,7 @@ class GeneratedUnittestCases(unittest.TestCase):
             )
 
     def test_end_stage_requires_missing_required_run(self):
-        """End-stage checks should require recorded required runs."""
+        """End-stage checks should require recorded runs."""
         monkeypatch = MonkeyPatch()
         try:
             with tempfile.TemporaryDirectory() as temp_dir:
@@ -360,10 +359,7 @@ class GeneratedUnittestCases(unittest.TestCase):
                 monkeypatch.setenv("DEVCOV_DEVFLOW_STAGE", "end")
                 violations = _configured_check().check(ctx)
                 self.assertTrue(
-                    any(
-                        "missing required runs: tests" in v.message
-                        for v in violations
-                    )
+                    any("missing runs: tests" in v.message for v in violations)
                 )
         finally:
             monkeypatch.undo()
@@ -438,7 +434,7 @@ class GeneratedUnittestCases(unittest.TestCase):
             )
             violations = _configured_check().check(ctx)
             self.assertTrue(violations)
-            self.assertIn("No required workflow runs", violations[0].message)
+            self.assertIn("No workflow runs", violations[0].message)
 
     def test_missing_required_run_for_current_session_is_reported(self):
         """Required stage evidence must belong to the active session."""
@@ -452,9 +448,7 @@ class GeneratedUnittestCases(unittest.TestCase):
             ctx = _make_ctx(tmp_path, ["src/example.py"], working_numstat={})
             violations = _configured_check().check(ctx)
             self.assertTrue(violations)
-            self.assertIn(
-                "missing required runs: tests", violations[0].message
-            )
+            self.assertIn("missing runs: tests", violations[0].message)
 
     def test_custom_status_path(self):
         """Custom evidence paths from config overrides should be honored."""
@@ -488,7 +482,7 @@ class GeneratedUnittestCases(unittest.TestCase):
                         "workflow_contract_schema_version": 1,
                         "session_id": "123",
                         "session_state": "closed",
-                        "required_run_ids": ["tests"],
+                        "run_ids": ["tests"],
                         "anchors": {},
                         "runs": {"tests": _run_entry(session_id="123")},
                     }

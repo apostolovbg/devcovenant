@@ -21,7 +21,7 @@ DevCovenant starts true SemVer release discipline.
 1. [Overview](#overview)
 2. [Audit Baseline](#audit-baseline)
 3. [Working Rules](#working-rules)
-4. [Workflow-Phase Redesign Baseline](#workflow-run-redesign-baseline)
+4. [Workflow-Run Redesign Baseline](#workflow-run-redesign-baseline)
 5. [Active Remediation](#active-remediation)
 6. [Validation Routine](#validation-routine)
 
@@ -39,8 +39,8 @@ DevCovenant starts true SemVer release discipline.
   - whether the dependency lock contract is stable and environment-safe
   - whether the docs explain the intended first-activation lifecycle clearly
   - whether gate mechanics depend on customizable policy state instead of a
-    formal workflow-extension contract
-  - whether the workflow-extension redesign is actually complete in code,
+    formal workflow-run contract
+  - whether the workflow-run redesign is actually complete in code,
     command ownership, CI, and docs rather than only partially generalized
 - Do not start true release-candidate or SemVer-cut work until the blocker,
   high-severity, and workflow-contract items below are resolved.
@@ -72,9 +72,9 @@ Follow-on design review added one more release-relevant concern:
 
 7. high: gate/workflow mechanics still blur two different contracts:
    - customizable policy behavior
-   - required workflow runs and their pass/fail recording
+   - configured workflow runs and their pass/fail recording
    That boundary must be formalized before the first real SemVer-governed
-   line so required workflow behavior does not depend on whether a normal
+   line so workflow behavior does not depend on whether a normal
    policy happens to be enabled.
 
 8. high: the workflow-run redesign is still only partially migrated:
@@ -83,7 +83,7 @@ Follow-on design review added one more release-relevant concern:
      normal declared run under one generic execution path
    - profile schema still leaks command-alias concerns
    - CI, AGENTS, and docs still teach the test-centric workflow instead of the
-     generic required-run workflow
+     generic `run` workflow
    - the tracked workflow schema advertises runner and success-contract kinds
      that the runtime does not fully execute yet
    This leaves the feature looking stitched in rather than fully native.
@@ -101,7 +101,7 @@ release candidate.
   - workflow definitions
   - publish provenance
   - lockfile behavior under different environments
-  - gate session records and required run results
+  - gate session records and workflow-run results
 - Do not start SemVer ritual, orphaning, or release-history cleanup while
   blocker findings remain open.
 - Keep each item concrete enough that another person can continue it without
@@ -116,18 +116,21 @@ release candidate.
   - otherwise, only managed header lines and explicit `<!-- DEVCOV* -->`
     blocks may change
 
-## Workflow-Phase Redesign Baseline
+## Workflow-Run Redesign Baseline
 This section records the intended design before implementation so the
 workflow/gate redesign does not drift into another half-implicit model.
 
 ### Core Principle
 DevCovenant must distinguish between:
 
-- workflow runs that the engine requires and records
+- workflow runs that the engine executes, records, and enforces
 - policies that inspect or mutate repository state
 
 Those are different contracts.
 A customizable policy must not be part of gate's mechanical foundation.
+There is no public required/optional split for workflow runs.
+If a run is configured and enabled, `devcovenant run` runs it and
+`gate --end` enforces it.
 
 ### Workflow Shape
 Core owns three reserved anchors:
@@ -159,7 +162,7 @@ Core owns:
 - anchor runs (`start`, `mid`, `end`)
 - workflow-run ordering rules
 - runtime session recording
-- required-run completion checks
+- configured-run completion checks
 - the command surface for generic run execution
 - the shared output/runtime contract, including per-invocation output-mode
   overrides for all commands
@@ -167,7 +170,7 @@ Core owns:
 Profiles own:
 
 - declared workflow runs
-- whether a run is enabled or required
+- whether a run is enabled
 - ordering metadata for those runs
 - how a run runs
 - the success contract the run uses
@@ -226,21 +229,17 @@ workflow_contract:
     - id: start
       owner: core
       run_kind: gate_anchor
-      required: true
     - id: mid
       owner: core
       run_kind: gate_anchor
-      required: true
     - id: end
       owner: core
       run_kind: gate_anchor
-      required: true
   runs:
     - id: tests
       owner: profile
       owner_id: global
       enabled: true
-      required: true
       position:
         after: mid
         before: end
@@ -270,7 +269,7 @@ That runtime file should record:
 - workflow contract version
 - anchor results
 - declared run results
-- required/optional status
+- per-command results for every `command_group` run that was actually run
 - timestamps
 - run ids
 - attempt counts
@@ -286,20 +285,20 @@ half-migrated and creates pointless schema noise without adding information.
 
 ### Start-Gate Carry-Forward Rule
 `gate --start` must not only open a new session.
-It must also care about the last required workflow-extension results.
+It must also care about the last workflow-run results.
 
 That means `start` should block when the previous workflow state says a
-required declared run is still unclean, failed, missing, or stale in a way
+configured run is still unclean, failed, missing, or stale in a way
 that would have blocked the previous slice from closing honestly.
 
 The intended rule is:
 
-- if the previous required run results are clean and satisfied for the last
+- if the previous configured run results are clean and satisfied for the last
   closed session, `start` may open a new session
-- if the previous required run results are not clean, `start` must fail and
+- if the previous configured run results are not clean, `start` must fail and
   require the operator to clear that state first
 
-This must apply to required declared runs generally, not only to today's
+This must apply to all declared runs generally, not only to today's
 hardcoded test expectations.
 
 ### End-Gate Rule
@@ -307,14 +306,13 @@ hardcoded test expectations.
 
 1. `start` passed for the active session
 2. `mid` passed for the active session
-3. every required declared run between `mid` and `end` passed for the
-   active session
+3. every declared run between `mid` and `end` passed for the active session
 4. only then may `end` pass and close the session
 
 This keeps gate coherent even when different repositories define different
 middle runs.
 
-### Phase Runner Kinds
+### Run Kinds
 Declared workflow runs should use a closed runner vocabulary:
 
 ```yaml
@@ -389,6 +387,11 @@ Recommended meanings:
 - `external_artifact_check`: a declared external artifact contract validated
   successfully
 
+File or artifact presence is not a special side contract.
+It is just a workflow-run success contract.
+That contract must support any file or glob under explicit relative or
+absolute path semantics instead of only the current package-artifact example.
+
 `external_artifact_check` should not stay a future idea.
 It belongs in the initial schema because artifact truth is already a real
 release requirement for this project.
@@ -433,7 +436,6 @@ For example:
 workflow_runs:
   - id: tests
     enabled: true
-    required: true
     after: mid
     before: end
     order: 100
@@ -463,15 +465,11 @@ The target command set is:
 - `devcovenant run`
 - `devcovenant gate --end`
 
-The explicit rerun surface is:
-
-- `devcovenant run`
-
 Under this target model:
 
-- `devcovenant run` executes all enabled required declared runs for the
+- `devcovenant run` executes all enabled declared runs for the
   active session in deterministic order
-- `devcovenant run` executes exactly one declared run
+- there is no separate one-run public rerun command in the settled contract
 - `devcovenant test` does not remain a top-level root command
 - profiles do not define or own top-level CLI aliases
 
@@ -483,15 +481,15 @@ accident.
 `devcovenant run` should:
 
 1. resolve the active tracked workflow contract
-2. collect enabled required runs between `mid` and `end`
+2. collect enabled declared runs between `mid` and `end`
 3. execute them in deterministic declared order
 4. record each run result in the runtime workflow session
-5. stop on first required-run failure
-6. exit zero only when all required runs for that run pass
+5. stop on first run failure
+6. exit zero only when all enabled declared runs pass
 
-If no required runs exist, `run` should:
+If no declared runs exist, `run` should:
 
-- report that there are no required declared runs for the active contract
+- report that there are no declared runs for the active contract
 - exit successfully without pretending work happened
 
 ### No Profile-Owned Command Aliases
@@ -507,7 +505,7 @@ Core owns:
 
 - root command names
 - how operators invoke workflow execution
-- how rerun instructions are rendered in gate messaging
+- how workflow-execution instructions are rendered in gate messaging
 
 That means fields such as a canonical top-level `test` alias should not
 survive the final migration.
@@ -530,7 +528,7 @@ The clean migration path is:
 
 1. formalize the workflow-run schema and runtime-session schema
 2. migrate the current `test` run onto that contract first
-3. update `devflow-run-gates` to validate declared required runs instead of
+3. update `devflow-run-gates` to validate declared runs instead of
    hardcoded required commands
 4. then add any new intermediate runs through profile-owned workflow
    metadata rather than policy enablement side effects
@@ -541,7 +539,7 @@ It correctly introduced:
 
 - tracked `workflow_contract`
 - runtime `workflow_session.json`
-- required-run enforcement in `gate --start` and `gate --end`
+- configured-run enforcement in `gate --start` and `gate --end`
 - profile-owned declaration of the `tests` run
 
 But it still left visible half-step behavior in place:
@@ -650,28 +648,28 @@ the current state as finished.
    - the external-audit high-severity lockfile-semantics finding is closed at
      the runtime, regression, and documentation levels
 
-5. [done] Formalize The Workflow-Phase Extension Contract.
+5. [done] Formalize The Workflow-Run Contract.
    Landed:
    - added `devcovenant/core/services/workflow_contract.py` to resolve the
      tracked workflow contract with reserved anchors (`start`, `mid`, `end`),
-     profile-declared runs, required-run ids, runner kinds, and
+     profile-declared runs, declared run ids, runner kinds, and
      success-contract kinds
    - added `devcovenant/core/runtime/workflow_session.py` and the runtime
      `devcovenant/registry/runtime/workflow_session.json` surface so core
      workflow state is no longer squeezed into `gate_status.json`
    - kept `gate_status.json` as the short lifecycle and pre-commit ledger,
-     while moving required-run truth into `workflow_session.json`
+     while moving declared-run truth into `workflow_session.json`
    - moved the Python stack's `tests` run into the builtin Python profile's
      new `workflow_runs` declaration instead of keeping workflow truth in
      `devflow-run-gates.required_commands`
    - added the generic `devcovenant run` command surface as the
-     first explicit one-run runner
+     core-owned workflow-run command
    - updated `gate --start` so recovery start blocks when the previous closed
-     session has stale required runs, not only stale tests
+     session has stale declared runs, not only stale tests
    - updated `gate --end` so closure requires fresh passing evidence for every
-     required declared run bound to the active session
+     declared run bound to the active session
    - updated `devflow-run-gates` so it validates pre-commit evidence from
-     `gate_status.json` and required-run evidence from
+     `gate_status.json` and declared-run evidence from
      `workflow_session.json`
    - updated tracked registry writing so `workflow_contract` is recorded in
      `devcovenant/registry/registry.yaml`
@@ -681,11 +679,11 @@ the current state as finished.
      tracked workflow-contract export
    What is now true:
    - workflow structure is no longer inferred from normal policy enablement
-   - required workflow behavior no longer depends on a customizable policy
+   - workflow behavior no longer depends on a customizable policy
      being enabled just to make gate mechanics coherent
    - the tracked registry records the generated workflow contract explicitly
    - runtime workflow sessions record anchors and declared runs separately
-   - start and end gates validate declared required runs generally rather
+   - start and end gates validate declared runs generally rather
      than only one hardcoded test-centric case
    - `tests` is the first real declared workflow run under the new contract
    - the remaining redesign work is no longer about inventing workflow runs;
@@ -736,7 +734,7 @@ the current state as finished.
    - reran focused regressions for the remaining truthfulness surfaces:
      - dependency-lock semantics
      - workflow-run/gate contract
-     - workflow-session / required-run recording
+     - workflow-session / declared-run recording
      - package-doc contract wording
    What is now true:
    - the external-grade audit no longer finds substantive blocker or
@@ -748,11 +746,11 @@ the current state as finished.
    - a later workflow-command audit then identified the still-half-migrated
      `devcovenant test` / workflow-run command model captured in Item 8
 
-8. [not done] Complete The `run` / Workflow-Phase Migration.
+8. [not done] Complete The `run` / Workflow-Run Migration.
    Goal:
    - replace the test-centric public workflow with one core-owned generic
      workflow execution surface
-   - make workflow extensions look native in code, docs, CI, and operator
+   - make workflow runs look native in code, docs, CI, and operator
      messaging
    - align runtime support with the full tracked schema so no allowed run
      contract remains a paper-only promise
@@ -773,9 +771,13 @@ the current state as finished.
    Design decisions for this item:
    - `devcovenant run` is the top-level command that replaces
      `devcovenant test`
-   - `devcovenant run` executes all enabled required declared runs for the
+   - `devcovenant run` executes all enabled declared runs for the
      active session in deterministic order
-   - `devcovenant run` remains the explicit one-run rerun surface
+   - there is no public optional-run split:
+     if a run is configured and enabled, `devcovenant run` runs it and
+     `gate --end` enforces it
+   - there is no separate one-run public rerun surface in the settled
+     contract
    - top-level workflow commands are core-owned, not profile-owned
    - profile run metadata must not define command aliases
    - the visible GitHub Actions workflow name should be `CI`, because `CI`
@@ -788,6 +790,8 @@ the current state as finished.
      timestamp field such as `last_run_utc`
    - command-group runs use `commands` only; a single command is a
      one-item list, not a separate singular schema branch
+   - command-group run recording must capture both the aggregate run result
+     and the per-command results for each command that was actually run
    - singular execution payload names are reserved for different concepts such
      as `runtime_action_id` or `policy_command_id`; shell command groups must
      not duplicate the same meaning across parallel `command` / `commands`
@@ -800,7 +804,7 @@ the current state as finished.
      workflow executor
    - changelog-only freshness behavior must become an explicit workflow-run
      contract rather than a hidden `tests`-only rule; if changelog-only edits
-     should not stale a required run, that exemption must be modeled in
+     should not stale a configured run, that exemption must be modeled in
      run metadata and documented as part of the workflow contract
    - file-dependent success checks must stay generic and support:
      `required_files`, `required_globs`, `forbidden_globs`, plus explicit
@@ -829,7 +833,6 @@ the current state as finished.
       Work to do:
       - add the top-level `run` command
       - remove `test` from the public root-command dispatcher
-      - keep explicit single-run execution in `run`
       - resolve managed-environment stages by workflow behavior rather than a
         one-off `test` branch
       Done when:
@@ -846,6 +849,8 @@ the current state as finished.
       - make declared runs execute through one generic path
       - keep policy participation explicit so a run only invokes policy-owned
         behavior when it references a deliberate runnable surface
+      - record per-command results for each `command_group` run rather than
+        only aggregate run status
       - replace remaining `tests`-specific richer behavior with a generic
         run-reporting hook/declarative metadata path so any workflow run
         can opt into the same richer reporting without a hardcoded run id
@@ -902,17 +907,17 @@ the current state as finished.
       - `devcovenant/core/runtime/workflow_session.py`
       Work to do:
       - render rerun instructions through `run` by default
-      - keep explicit `run` wording for targeted recovery cases
+      - remove targeted one-run recovery wording from the public contract
       - make `start` carry-forward checks and `end` closure checks speak in
-        required-run language consistently
+        declared-run language consistently
       - reduce or retire leftover dependence on `gate_status.json` for run
         truth where `workflow_session.json` is the real source
       - keep the remaining split honest:
         `gate_status.json` is the short gate/pre-commit ledger,
-        `workflow_session.json` is required-run truth
+        `workflow_session.json` is declared-run truth
       Done when:
       - gate messaging no longer teaches `devcovenant test`
-      - the invariant validates anchors plus required runs without any
+      - the invariant validates anchors plus declared runs without any
         test-centric fallback language
 
    5. Workflow-contract schema cleanup.
@@ -932,6 +937,8 @@ the current state as finished.
         and keep one canonical workflow runtime timestamp field such as
         `last_run_utc`
       - collapse command-group payloads to `commands` only
+      - make the runtime-session schema record per-command results for
+        `command_group` runs in a command-neutral structure
       - reserve singular payload names for non-shell ids such as
         `runtime_action_id` and `policy_command_id`
       - tighten file-dependent success contracts so they can express
@@ -970,8 +977,8 @@ the current state as finished.
         Actions and do not rely on fragile indented subshell heredocs
       - make the repo-maintained `Build` workflow listen to the final
         generated CI workflow name
-      - keep explicit `run` only where a specific rerun is
-        intentionally needed
+      - keep the generated workflow contract aligned with the one public
+        middle-workflow command: `devcovenant run`
       Done when:
       - generated GitHub Actions surfaces teach the same workflow contract as
         AGENTS and the docs
@@ -999,7 +1006,7 @@ the current state as finished.
       Work to do:
       - rewrite the canonical workflow as
         `gate --start -> gate --mid -> run -> gate --end`
-      - replace test-centric recovery wording with required-run wording
+      - replace test-centric recovery wording with declared-run wording
       - explain the universal output-mode override contract:
         - config sets the default mode
         - `--quiet`, `--normal`, and `--verbose` override per invocation
@@ -1044,6 +1051,8 @@ the current state as finished.
         without duplicate same-value aliases
       - add coverage that `command_group` runners use `commands` only and that
         single-command runs remain one-item command lists
+      - add coverage that `command_group` runs record each executed command in
+        runtime session state rather than only aggregate run status
       - add coverage that enabled structural policies do not implicitly become
         workflow-run executors
       - add coverage that each supported runner kind and each supported
@@ -1054,8 +1063,7 @@ the current state as finished.
         `external_artifact_check`
       - add coverage that run freshness rules are contract-driven rather
         than hidden in a `tests`-only branch
-      - add coverage that start and end guidance names `run` and targeted
-        `run` correctly
+      - add coverage that start and end guidance names `run` consistently
       Done when:
       - the test suite locks the final generic workflow surface instead of the
         old alias model
@@ -1075,7 +1083,7 @@ the current state as finished.
 
    Done when:
    - `devcovenant run` is the canonical top-level workflow execution command
-   - `devcovenant run` is the explicit per-run rerun path
+   - there is no separate one-run public rerun path in the settled contract
    - `devcovenant test` is no longer a public root command
    - every public command accepts universal per-invocation `--quiet`,
      `--normal`, and `--verbose` overrides
@@ -1168,7 +1176,7 @@ the current state as finished.
         implemented in multiple disconnected places
       - absorb `devflow_run_gates` behavior into the flow/runtime ownership
         story instead of keeping a second major implementation island
-      - keep gate behavior, required-run validation, workflow session
+      - keep gate behavior, declared-run validation, workflow session
         recording, and rerun guidance centered around one coherent flow/runtime
         story
       Done when:
@@ -1330,11 +1338,11 @@ the current state as finished.
 - For workflow-contract redesign work, also run:
   1. tracked-registry generation checks for the workflow contract
   2. runtime-session migration and schema tests
-  3. start-gate carry-forward failure tests for unresolved required runs
-  4. end-gate closure tests for required declared runs
+  3. start-gate carry-forward failure tests for unresolved declared runs
+  4. end-gate closure tests for declared runs
   5. run-runner tests for each supported runner kind in scope
   6. success-contract tests for each supported success-contract kind in scope
-  7. `devcovenant run` orchestration tests for ordered required-run execution
+  7. `devcovenant run` orchestration tests for ordered declared-run execution
   8. root-command tests that `devcovenant test` is retired from the public CLI
      once the migration lands
   9. universal output-mode override tests for all command families in scope

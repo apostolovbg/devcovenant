@@ -133,7 +133,7 @@ Metadata for DevCovenant-owned invariants.
 These are not ordinary policies and are not meant to be casual customization
 surfaces.
 They describe non-optional DevCovenant runtime contracts such as gate evidence
-requirements, integrity checks, and required workflow-run evidence paths.
+requirements, integrity checks, and workflow-run evidence paths.
 
 ### policy_state
 The on/off map for customizable policies.

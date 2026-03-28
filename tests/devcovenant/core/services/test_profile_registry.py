@@ -169,9 +169,9 @@ def _unit_test_profile_registry_exports_workflow_contract() -> None:
     payload = module.build_profile_registry(REPO_ROOT)
     contract = payload.get("workflow_contract")
     assert isinstance(contract, dict)
-    required_run_ids = contract.get("required_run_ids")
-    assert isinstance(required_run_ids, list)
-    assert "tests" in required_run_ids
+    run_ids = contract.get("run_ids")
+    assert isinstance(run_ids, list)
+    assert "tests" in run_ids
     runs = contract.get("runs")
     assert isinstance(runs, list)
     tests_run = next(

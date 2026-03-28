@@ -1496,7 +1496,7 @@ def rewrite_command_string_for_managed_python(
     return shlex.join(rewritten)
 
 
-def registry_required_run_commands(
+def registry_run_commands(
     repo_root: Path,
     run_id: str = "tests",
 ) -> list[tuple[str, list[str]]]:
@@ -1505,17 +1505,17 @@ def registry_required_run_commands(
     return commands
 
 
-def resolve_required_workflow_runs(
+def resolve_workflow_runs(
     repo_root: Path,
 ) -> tuple[dict[str, object], list[dict[str, object]]]:
-    """Return the resolved workflow contract and required runs in order."""
+    """Return the resolved workflow contract and enabled runs in order."""
     contract = workflow_contract_module.load_workflow_contract(repo_root)
     runs: list[dict[str, object]] = []
-    for run_id in workflow_contract_module.required_run_ids(contract):
+    for run_id in workflow_contract_module.run_ids(contract):
         run = workflow_contract_module.resolve_run(contract, run_id)
         if run is None:
             raise ValueError(
-                "Required workflow run "
+                "Workflow run "
                 f"`{run_id}` is missing from the active contract."
             )
         runs.append(run)
@@ -1990,8 +1990,6 @@ def record_workflow_run_result(
     entry.update(
         {
             "id": run_id,
-            "required": run_id
-            in workflow_contract_module.required_run_ids(contract),
             "enabled": bool(run.get("enabled")),
             "status": "passed",
             "summary_label": summary_label,
@@ -2025,9 +2023,7 @@ def record_workflow_run_result(
     payload["workflow_contract_schema_version"] = contract.get(
         "schema_version", workflow_contract_module.SCHEMA_VERSION
     )
-    payload["required_run_ids"] = workflow_contract_module.required_run_ids(
-        contract
-    )
+    payload["run_ids"] = workflow_contract_module.run_ids(contract)
     payload["runs"] = run_map
     payload["session_snapshot_file"] = snapshot_rel_path
     payload["session_snapshot_updated_utc"] = now.isoformat()
@@ -2580,17 +2576,16 @@ def run_and_record_workflow_run(
     return 0
 
 
-def run_required_workflow_runs(repo_root: Path, notes: str = "") -> int:
-    """Run all enabled required workflow runs in declared order."""
+def run_workflow_runs(repo_root: Path, notes: str = "") -> int:
+    """Run all enabled workflow runs in declared order."""
 
-    _, required_runs = resolve_required_workflow_runs(repo_root)
-    if not required_runs:
+    _, runs = resolve_workflow_runs(repo_root)
+    if not runs:
         raise SystemExit(
-            "No required workflow runs are configured for the active "
-            "profiles."
+            "No workflow runs are configured for the active profiles."
         )
     executed_run_ids: list[str] = []
-    for run in required_runs:
+    for run in runs:
         run_id = str(run.get("id") or "").strip().lower()
         if not run_id:
             continue

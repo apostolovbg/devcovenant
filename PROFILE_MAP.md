@@ -101,7 +101,7 @@ shared translator runtime.
   targets; language/framework profiles provide dependency selectors when
   active; `devcovrepo` adds this repository's selectors only.
 - Any active profile category may contribute declared `workflow_runs`;
-  core resolves required runs in deterministic order from the tracked
+  core resolves runs in deterministic order from the tracked
   workflow contract.
 - Language profiles may declare `run_events` adapter metadata for the
   relevant workflow run through `devcovenant/core/runtime/event.py`;

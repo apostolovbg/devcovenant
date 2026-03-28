@@ -92,7 +92,7 @@ This split keeps debugging straightforward:
 2. AGENTS managed policy block is rendered from resolved metadata.
 3. Policy parser loads AGENTS `policy-def` payloads.
 4. Policy engine resolves metadata + file scope and executes checks.
-5. Gate/run flows execute required runs and write run artifacts.
+5. Gate/run flows execute runs and write run artifacts.
 6. Session evidence is stored under `devcovenant/registry/runtime/`,
    including `gate_status.json` and `workflow_session.json`.
 

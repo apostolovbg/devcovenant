@@ -101,7 +101,7 @@ Gate/session:
 - `gate_status_file`, pre-commit command/epoch keys
 
 Runtime note:
-- required workflow runs are resolved from tracked `workflow_contract`
+- workflow runs are resolved from tracked `workflow_contract`
   data, not from ad hoc invariant command lists.
 - `run_events` payloads are runtime-owned workflow-run event metadata
   from profiles and are not policy descriptor metadata keys.

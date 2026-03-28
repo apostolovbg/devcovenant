@@ -61,6 +61,90 @@ Example:
 ## Version 1.0.0
 
 - 2026-03-28:
+  Change: aligned the live workflow-run contract in code, docs, profiles,
+    and tests so `devcovenant run` now means “run all configured runs”
+    without a required-versus-optional split.
+  Why: removed the remaining drift between the corrected plan and the
+    implementation so public wording, tracked contract keys, and generated
+    workflow assets all teach the same model.
+  Impact: simplified workflow-run ownership around configured runs,
+    preserved temporary legacy fallbacks only for stale generated state,
+    and refreshed the governed docs, profile manifests, registry contract,
+    runtime messages, and regression coverage around the new wording.
+  Files:
+  AGENTS.md
+  CHANGELOG.md
+  POLICY_MAP.md
+  PROFILE_MAP.md
+  README.md
+  devcovenant/README.md
+  devcovenant/builtin/profiles/README.md
+  devcovenant/builtin/profiles/csharp/csharp.yaml
+  devcovenant/builtin/profiles/dart/dart.yaml
+  devcovenant/builtin/profiles/docker/docker.yaml
+  devcovenant/builtin/profiles/fastapi/fastapi.yaml
+  devcovenant/builtin/profiles/flutter/flutter.yaml
+  devcovenant/builtin/profiles/frappe/frappe.yaml
+  devcovenant/builtin/profiles/global/assets/AGENTS.yaml
+  devcovenant/builtin/profiles/global/assets/README.yaml
+  devcovenant/builtin/profiles/go/go.yaml
+  devcovenant/builtin/profiles/java/java.yaml
+  devcovenant/builtin/profiles/javascript/javascript.yaml
+  devcovenant/builtin/profiles/kubernetes/kubernetes.yaml
+  devcovenant/builtin/profiles/objective_c/objective_c.yaml
+  devcovenant/builtin/profiles/php/php.yaml
+  devcovenant/builtin/profiles/python/python.yaml
+  devcovenant/builtin/profiles/ruby/ruby.yaml
+  devcovenant/builtin/profiles/rust/rust.yaml
+  devcovenant/builtin/profiles/swift/swift.yaml
+  devcovenant/builtin/profiles/terraform/terraform.yaml
+  devcovenant/builtin/profiles/typescript/typescript.yaml
+  devcovenant/core/README.md
+  devcovenant/core/contracts/invariants/devflow_run_gates.yaml
+  devcovenant/core/flow/gate.py
+  devcovenant/core/flow/workflow_contract.py
+  devcovenant/core/flow/workflow_validation.py
+  devcovenant/core/runtime/execution.py
+  devcovenant/core/runtime/workflow_session.py
+  devcovenant/core/services/integrity_validation.py
+  devcovenant/custom/profiles/devcovrepo/assets/POLICY_MAP.yaml
+  devcovenant/custom/profiles/devcovrepo/assets/PROFILE_MAP.yaml
+  devcovenant/custom/profiles/devcovrepo/assets/docs/config.md
+  devcovenant/custom/profiles/devcovrepo/assets/docs/installation.md
+  devcovenant/custom/profiles/devcovrepo/assets/docs/profiles.md
+  devcovenant/custom/profiles/devcovrepo/assets/docs/registry.md
+  devcovenant/custom/profiles/devcovrepo/assets/docs/workflow.md
+  devcovenant/docs/architecture.md
+  devcovenant/docs/config.md
+  devcovenant/docs/installation.md
+  devcovenant/docs/profiles.md
+  devcovenant/docs/registry.md
+  devcovenant/docs/workflow.md
+  devcovenant/registry/registry.yaml
+  devcovenant/run.py
+  tests/devcovenant/core/flow/test_gate.py
+  tests/devcovenant/core/flow/test_workflow_contract.py
+  tests/devcovenant/core/flow/test_workflow_validation.py
+  tests/devcovenant/core/runtime/test_execution.py
+  tests/devcovenant/core/runtime/test_workflow_session.py
+  tests/devcovenant/core/services/test_profile_registry.py
+  tests/devcovenant/test_refresh.py
+  tests/devcovenant/test_run.py
+
+- 2026-03-28:
+  Change: clarified the workflow-run roadmap in `PLAN.md` so `devcovenant
+    run` now plainly means “run all configured runs” without an
+    optional-versus-required split.
+  Why: corrected the plan after the fresh contract clarification so the
+    roadmap no longer teaches drifted one-run or optional-run behavior.
+  Impact: aligned the plan with the intended workflow, documented
+    per-command recording for `command_group` runs, and tightened the
+    file-check and end-gate language around all configured runs.
+  Files:
+  CHANGELOG.md
+  PLAN.md
+
+- 2026-03-28:
   Change: removed the last live `test_events` compatibility shims, fixed the
     managed workflow doc source, and added direct coverage for the public
     advanced workflow-run kinds.

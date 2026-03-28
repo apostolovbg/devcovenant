@@ -29,7 +29,7 @@ def _unit_test_workflow_session_round_trip_uses_runtime_registry() -> None:
             "session_state": "open",
             "anchors": {"start": {"status": "passed"}},
             "runs": {"tests": {"status": "passed"}},
-            "required_run_ids": ["tests"],
+            "run_ids": ["tests"],
         }
 
         written = module.write_workflow_session(repo_root, payload)
@@ -40,7 +40,7 @@ def _unit_test_workflow_session_round_trip_uses_runtime_registry() -> None:
         assert loaded["session_id"] == "demo-session"
         assert loaded["anchors"] == {"start": {"status": "passed"}}
         assert loaded["runs"] == {"tests": {"status": "passed"}}
-        assert loaded["required_run_ids"] == ["tests"]
+        assert loaded["run_ids"] == ["tests"]
 
 
 def _unit_test_run_snapshots_share_the_session_snapshot_file() -> None:
@@ -96,7 +96,7 @@ def _unit_test_workflow_session_write_normalizes_legacy_fields() -> None:
                     "command": "pytest && python3 -m unittest discover -v",
                 }
             },
-            "required_run_ids": ["tests"],
+            "run_ids": ["tests"],
         }
 
         module.write_workflow_session(repo_root, payload)

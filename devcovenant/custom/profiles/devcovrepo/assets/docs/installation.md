@@ -159,9 +159,9 @@ generated workflow files, `.gitignore`, and related governed artifacts.
 
 ### run
 Runs one declared workflow run explicitly.
-Use it when a gate command tells you that a required run is stale and must
+Use it when a gate command tells you that a run is stale and must
 be rerun before a new start baseline or before end-gate closure.
-Use `devcovenant run` for the full required run set and
+Use `devcovenant run` for the full run set and
 `devcovenant run` only when you need one specific run.
 
 ### clean

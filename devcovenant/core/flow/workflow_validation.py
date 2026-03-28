@@ -1,4 +1,4 @@
-"""Session gate contract for start, required runs, and end."""
+"""Session gate contract for start, workflow runs, and end."""
 
 from __future__ import annotations
 
@@ -48,11 +48,9 @@ def _resolve_workflow_session_path(
 
 def _format_run_rerun_instructions(
     run_ids: list[str],
-    *,
-    required_run_ids: list[str] | None = None,
 ) -> str:
     """Render the canonical rerun instruction."""
-    del run_ids, required_run_ids
+    del run_ids
     return "`devcovenant run`"
 
 
@@ -179,7 +177,7 @@ class DevflowRunGates(CoreInvariantCheck):
     invariant_id = "devflow-run-gates"
 
     def check(self, ctx: CheckContext) -> List[Violation]:
-        """Enforce start->required-runs->end sequencing from gate state."""
+        """Enforce start->run->end sequencing from gate state."""
         violations: List[Violation] = []
         status_path = runtime_registry_module.gate_status_path_from_option(
             ctx.repo_root,
@@ -324,17 +322,15 @@ class DevflowRunGates(CoreInvariantCheck):
                     message=str(error),
                 )
             ]
-        required_run_ids = workflow_contract_module.required_run_ids(
-            workflow_contract
-        )
-        if not required_run_ids:
+        run_ids = workflow_contract_module.run_ids(workflow_contract)
+        if not run_ids:
             return [
                 Violation(
                     policy_id=self.policy_id,
                     severity="error",
                     file_path=workflow_session_rel,
                     message=(
-                        "No required workflow runs are configured for "
+                        "No workflow runs are configured for "
                         "the active profiles. Declare `workflow_runs` "
                         "before relying on devflow-run-gates."
                     ),
@@ -359,8 +355,8 @@ class DevflowRunGates(CoreInvariantCheck):
                     file_path=workflow_session_rel,
                     message=(
                         "Workflow session is missing. Run "
-                        "`devcovenant gate --start`, execute required "
-                        "workflow runs, then `devcovenant gate --end`."
+                        "`devcovenant gate --start`, execute workflow "
+                        "runs, then `devcovenant gate --end`."
                     ),
                 )
             ]
@@ -465,22 +461,22 @@ class DevflowRunGates(CoreInvariantCheck):
 
         runs_raw = workflow_session.get("runs")
         run_map = dict(runs_raw) if isinstance(runs_raw, dict) else {}
-        missing_required_runs: list[str] = []
-        for run_id in required_run_ids:
+        missing_runs: list[str] = []
+        for run_id in run_ids:
             run_entry = run_map.get(run_id)
             if not isinstance(run_entry, dict):
-                missing_required_runs.append(run_id)
+                missing_runs.append(run_id)
                 continue
             if str(run_entry.get("status", "")).strip().lower() != "passed":
-                missing_required_runs.append(run_id)
+                missing_runs.append(run_id)
                 continue
             last_run_session_id = str(
                 run_entry.get("last_run_session_id", "")
             ).strip()
             if session_id and last_run_session_id != session_id:
-                missing_required_runs.append(run_id)
+                missing_runs.append(run_id)
                 continue
-        if missing_required_runs:
+        if missing_runs:
             violations.append(
                 Violation(
                     policy_id=self.policy_id,
@@ -488,11 +484,10 @@ class DevflowRunGates(CoreInvariantCheck):
                     file_path=workflow_session_rel,
                     message=(
                         "Latest recorded workflow session is missing "
-                        "required runs: "
-                        f"{', '.join(missing_required_runs)}. Run "
+                        "runs: "
+                        f"{', '.join(missing_runs)}. Run "
                         f"{_format_run_rerun_instructions(
-                            missing_required_runs,
-                            required_run_ids=required_run_ids,
+                            missing_runs,
                         )}."
                     ),
                 )

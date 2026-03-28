@@ -126,7 +126,6 @@ def _normalize_run_entry(
             f"Profile `{profile_name}` has a workflow run without id."
         )
     enabled = _normalize_bool(raw_entry.get("enabled"), default=True)
-    required = _normalize_bool(raw_entry.get("required"), default=True)
     after = str(raw_entry.get("after") or "mid").strip().lower() or "mid"
     before = str(raw_entry.get("before") or "end").strip().lower() or "end"
     order = _normalize_int(raw_entry.get("order"), default=100)
@@ -316,7 +315,6 @@ def _normalize_run_entry(
         "owner": "profile",
         "owner_id": profile_name,
         "enabled": enabled,
-        "required": required,
         "position": {
             "after": after,
             "before": before,
@@ -383,7 +381,6 @@ def _default_anchor_rows() -> list[dict[str, object]]:
         {
             "id": anchor_id,
             "owner": "core",
-            "required": True,
             "anchor_kind": "gate_anchor",
         }
         for anchor_id in ANCHOR_IDS
@@ -411,16 +408,14 @@ def build_workflow_contract(
         ):
             run_map[str(run["id"])] = run
     runs = sorted(run_map.values(), key=_run_sort_key)
-    required_run_ids = [
-        str(run.get("id") or "")
-        for run in runs
-        if bool(run.get("enabled")) and bool(run.get("required"))
+    run_ids = [
+        str(run.get("id") or "") for run in runs if bool(run.get("enabled"))
     ]
     return {
         "schema_version": SCHEMA_VERSION,
         "anchors": _default_anchor_rows(),
         "runs": runs,
-        "required_run_ids": required_run_ids,
+        "run_ids": run_ids,
         "active_profiles": list(active_names),
     }
 
@@ -456,10 +451,12 @@ def resolve_run(
     return None
 
 
-def required_run_ids(contract: Mapping[str, object]) -> list[str]:
-    """Return enabled required run ids from a workflow contract."""
+def run_ids(contract: Mapping[str, object]) -> list[str]:
+    """Return enabled run ids from a workflow contract."""
 
-    raw_ids = contract.get("required_run_ids")
+    raw_ids = contract.get("run_ids")
+    if not isinstance(raw_ids, list):
+        raw_ids = contract.get("required_run_ids")
     if isinstance(raw_ids, list):
         return [
             str(entry or "").strip().lower()
@@ -477,8 +474,6 @@ def required_run_ids(contract: Mapping[str, object]) -> list[str]:
         if not run_id:
             continue
         if not _normalize_bool(raw_run.get("enabled"), default=True):
-            continue
-        if not _normalize_bool(raw_run.get("required"), default=True):
             continue
         resolved.append(run_id)
     return resolved

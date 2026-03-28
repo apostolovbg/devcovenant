@@ -40,12 +40,12 @@ def _unit_test_execution_symbol_contract_is_stable() -> None:
         "resolve_child_output_plan_for_channel",
         "rewrite_command_for_managed_python",
         "rewrite_command_string_for_managed_python",
-        "resolve_required_workflow_runs",
+        "resolve_workflow_runs",
         "resolve_workflow_run_commands",
-        "registry_required_run_commands",
+        "registry_run_commands",
         "run_child_command_with_output_policy",
         "run_and_record_workflow_run",
-        "run_required_workflow_runs",
+        "run_workflow_runs",
     ]
     for symbol in expected:
         assert hasattr(module, symbol), symbol
@@ -142,19 +142,19 @@ def _unit_test_execution_symbol_assertions_cover_public_api() -> None:
     assert module.read_local_version
     assert module.record_gate_status
     assert module.record_workflow_run_result
-    assert module.registry_required_run_commands
+    assert module.registry_run_commands
     assert module.resolve_declared_workflow_run
     assert module.resolve_managed_environment_for_stage
     assert module.resolve_child_output_plan_for_channel
     assert module.resolve_cli_output_mode_override
     assert module.resolve_repo_root
-    assert module.resolve_required_workflow_runs
+    assert module.resolve_workflow_runs
     assert module.resolve_workflow_run_commands
     assert module.resolve_workflow_run_output_mode
     assert module.rewrite_command_for_managed_python
     assert module.rewrite_command_string_for_managed_python
     assert module.run_and_record_workflow_run
-    assert module.run_required_workflow_runs
+    assert module.run_workflow_runs
     assert module.run_bootstrap_registry_refresh
     assert module.run_child_command_with_output_policy
     assert module.run_subprocess_with_runtime_output

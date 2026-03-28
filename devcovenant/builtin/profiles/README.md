@@ -29,7 +29,7 @@ Profiles may provide:
 - translator declarations (language profiles only)
 
 Any active profile category may contribute metadata overlays, and language or
-stack profiles may declare required workflow runs through
+stack profiles may declare workflow runs through
 `workflow_runs`.
 
 ## Manifest Schema

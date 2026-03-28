@@ -55,7 +55,6 @@ def _write_policy_registry(repo_root: Path) -> None:
                 "    workflow_runs:",
                 "      - id: tests",
                 "        enabled: true",
-                "        required: true",
                 "        after: mid",
                 "        before: end",
                 "        order: 100",
@@ -478,7 +477,7 @@ def _unit_test_mid_targets_snapshot_files_for_pre_commit() -> None:
                 "workflow_contract_schema_version": 1,
                 "session_id": "open-mid-target",
                 "session_state": "open",
-                "required_run_ids": ["tests"],
+                "run_ids": ["tests"],
                 "anchors": {},
                 "runs": {},
             },
@@ -569,7 +568,7 @@ def _unit_test_end_targets_snapshot_files_for_pre_commit() -> None:
                 "workflow_contract_schema_version": 1,
                 "session_id": "open-end-target",
                 "session_state": "open",
-                "required_run_ids": ["tests"],
+                "run_ids": ["tests"],
                 "session_snapshot_file": snapshot_rel,
                 "anchors": {},
                 "runs": {
@@ -665,7 +664,7 @@ def _unit_test_start_recovery_requires_explicit_manual_tests() -> None:
                 "workflow_contract_schema_version": 1,
                 "session_id": "closed-1",
                 "session_state": "closed",
-                "required_run_ids": ["tests"],
+                "run_ids": ["tests"],
                 "session_snapshot_file": snapshot_rel,
                 "anchors": {},
                 "runs": {},
@@ -716,7 +715,7 @@ def _unit_test_start_recovery_requires_explicit_manual_tests() -> None:
         assert exit_code == 1
         assert status_path.read_bytes() == original_bytes
         assert any(
-            "requires fresh required workflow runs" in line for line in lines
+            "requires fresh workflow runs" in line for line in lines
         ), lines
         assert any(
             "devcovenant run" in line and "devcovenant gate --start" in line
@@ -728,7 +727,7 @@ def _unit_test_start_recovery_requires_explicit_manual_tests() -> None:
 
 
 def _unit_test_start_recovery_allows_fresh_explicit_manual_tests() -> None:
-    """Recovery start should proceed when required runs are already fresh."""
+    """Recovery start should proceed when runs are already fresh."""
     module = importlib.import_module(MODULE)
     with tempfile.TemporaryDirectory() as tmpdir:
         repo_root = Path(tmpdir)
@@ -771,7 +770,7 @@ def _unit_test_start_recovery_allows_fresh_explicit_manual_tests() -> None:
                 "workflow_contract_schema_version": 1,
                 "session_id": "closed-1",
                 "session_state": "closed",
-                "required_run_ids": ["tests"],
+                "run_ids": ["tests"],
                 "session_snapshot_file": snapshot_rel,
                 "anchors": {},
                 "runs": {
@@ -830,7 +829,7 @@ def _unit_test_end_requires_explicit_run_and_rerun_on_hook_changes() -> None:
                 "workflow_contract_schema_version": 1,
                 "session_id": "open-1",
                 "session_state": "open",
-                "required_run_ids": ["tests"],
+                "run_ids": ["tests"],
                 "anchors": {},
                 "runs": {
                     "tests": {
@@ -903,7 +902,7 @@ def _unit_test_end_requires_explicit_run_and_rerun_on_hook_changes() -> None:
 
 
 def _unit_test_end_requires_explicit_run_and_rerun_on_stale_tests() -> None:
-    """End gate should require `run` when the required tests run is stale."""
+    """End gate should require `run` when the configured tests run is stale."""
     module = importlib.import_module(MODULE)
     with tempfile.TemporaryDirectory() as tmpdir:
         repo_root = Path(tmpdir)
@@ -915,7 +914,7 @@ def _unit_test_end_requires_explicit_run_and_rerun_on_stale_tests() -> None:
                 "workflow_contract_schema_version": 1,
                 "session_id": "open-2",
                 "session_state": "open",
-                "required_run_ids": ["tests"],
+                "run_ids": ["tests"],
                 "anchors": {},
                 "runs": {
                     "tests": {
@@ -985,8 +984,7 @@ def _unit_test_end_requires_explicit_run_and_rerun_on_stale_tests() -> None:
 
         assert exit_code == 1
         assert any(
-            "fresh required workflow runs before closure" in line
-            for line in lines
+            "fresh workflow runs before closure" in line for line in lines
         ), lines
         assert any(
             "devcovenant run" in line and "devcovenant gate --end" in line
@@ -1008,7 +1006,7 @@ def _unit_test_end_reports_blocking_devcov_failure_clearly() -> None:
                 "workflow_contract_schema_version": 1,
                 "session_id": "open-2",
                 "session_state": "open",
-                "required_run_ids": ["tests"],
+                "run_ids": ["tests"],
                 "anchors": {},
                 "runs": {
                     "tests": {
@@ -1159,7 +1157,7 @@ def _unit_test_mid_runs_without_status_mutation() -> None:
                 "workflow_contract_schema_version": 1,
                 "session_id": "open-mid-1",
                 "session_state": "open",
-                "required_run_ids": ["tests"],
+                "run_ids": ["tests"],
                 "anchors": {},
                 "runs": {},
             },
@@ -1266,7 +1264,7 @@ def _unit_test_mid_reports_blocking_devcov_failure() -> None:
                 "workflow_contract_schema_version": 1,
                 "session_id": "open-mid-2",
                 "session_state": "open",
-                "required_run_ids": ["tests"],
+                "run_ids": ["tests"],
                 "anchors": {},
                 "runs": {},
             },

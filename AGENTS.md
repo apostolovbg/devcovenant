@@ -159,7 +159,7 @@ Audits are not a separate workflow mode. The same gate discipline applies.
 Use `check` as the default read-only audit command. Gate commands own
 refresh/autofix orchestration; lifecycle state writes are limited to
 `gate --start` / `gate --end`; `gate --mid` is non-lifecycle.
-Gate commands never run required workflow runs internally.
+Gate commands never run workflow runs internally.
 When DevCovenant run artifacts are available, inspect `summary.txt`,
 then `tail.txt` (if present), then full logs before using ad-hoc
 redirects or verbose streaming. Normal-mode live streaming can be
@@ -172,7 +172,7 @@ narrating routine waits, polling steps, or obvious command progress.
 
 ## Managed Environment
 If a managed environment is configured, run DevCovenant from that
-environment and run all required workflow runs there as well.
+environment and run all workflow runs there as well.
 Start required services before `devcovenant run` so runtime checks
 execute against the active stack.
 
@@ -259,13 +259,13 @@ skipped_dirs:
 ```
 
 DevCovenant must record and enforce the standard workflow: pre-commit start,
-declared required workflow runs, then pre-commit end. Gate status
+declared workflow runs, then pre-commit end. Gate status
 preserves pre-commit evidence while workflow-session state records which
-required runs passed for the active session.
+runs passed for the active session.
 This check is enforced for every repository change (including
 documentation-only updates) so the gate sequence cannot be skipped.
 Changelog-only edits remain gate-scoped but do not require a fresh
-required-run execution by themselves.
+run execution by themselves.
 <!-- DEVCOV-INVARIANTS:END -->
 
 <!-- DEVCOV-POLICIES:BEGIN -->

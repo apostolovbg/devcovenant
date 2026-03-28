@@ -19,7 +19,7 @@ def _unit_test_run_module_symbol_contract_is_stable() -> None:
 
 
 def _unit_test_run_executes_required_workflow_runs() -> None:
-    """run() should bootstrap and delegate the required run set."""
+    """run() should bootstrap and delegate the run set."""
 
     repo_root = Path("/repo")
     args = SimpleNamespace()
@@ -32,7 +32,7 @@ def _unit_test_run_executes_required_workflow_runs() -> None:
                 with patch("devcovenant.run.print_banner"):
                     with patch("devcovenant.run.print_step"):
                         with patch(
-                            "devcovenant.run.run_required_workflow_runs",
+                            "devcovenant.run.run_workflow_runs",
                             return_value=0,
                         ) as run_runs:
                             exit_code = run_command.run(args)

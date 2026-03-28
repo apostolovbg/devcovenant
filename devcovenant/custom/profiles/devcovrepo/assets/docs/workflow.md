@@ -46,7 +46,7 @@ It is where hook mutations and DevCovenant autofixes must surface before test
 results are recorded.
 
 ### run
-Runs every enabled required workflow run in declared order and records
+Runs every enabled workflow run in declared order and records
 evidence for each one in the active workflow session.
 In this repo that currently means the required `tests` run, which runs the
 two-step `unittest` plus `pytest` sequence.
@@ -55,7 +55,7 @@ per-invocation output override.
 
 ### gate --end
 Runs the closing pre-commit pass and records closure state.
-It only closes the session after every required declared run for the current
+It only closes the session after every declared run for the current
 session has fresh passing evidence.
 
 ## Why gate --mid Exists
@@ -114,7 +114,7 @@ of nested cache paths.
 ### Start gate failed
 Clear the reported problem first.
 Do not treat a failed start gate as a usable baseline.
-If start reports stale required workflow runs from the previous closed
+If start reports stale workflow runs from the previous closed
 session, run the requested run commands first and then rerun
 `devcovenant gate --start`.
 
@@ -125,7 +125,7 @@ Then run `run`.
 ### End gate reported new changes
 Inspect the latest run logs, clear the problem, rerun `run` if required, and
 rerun `gate --end`.
-If end reports stale required workflow runs, rerun the listed
+If end reports stale workflow runs, rerun the listed
 `devcovenant run` commands first.
 
 ### Managed environment error
@@ -183,7 +183,7 @@ The default run freshness contract is:
 - `ignored_globs: []`
 
 That means changelog-only edits remain gate-scoped, but they do not stale an
-already-passed required run by themselves.
+already-passed run by themselves.
 If a run should stale on every change instead, declare:
 
 ```yaml
@@ -210,7 +210,7 @@ DevCovenant now splits workflow evidence between two runtime files:
 
 `gate_status.json` stays the short lifecycle ledger for gate stages and the
 pre-commit evidence they require.
-`workflow_session.json` records the required declared workflow runs for the
+`workflow_session.json` records the declared workflow runs for the
 active session, their pass/fail status, their last-session binding, and the
 runtime snapshots used to decide whether a run is still fresh.
 The `devflow-run-gates` invariant may override `gate_status_file` and
@@ -220,7 +220,7 @@ The `devflow-run-gates` invariant may override `gate_status_file` and
 The tracked counterpart to that runtime state is
 `workflow_contract` in `devcovenant/registry/registry.yaml`.
 That tracked section records the reserved anchors, the declared runs coming
-from active profiles, and the required run ids the engine must enforce.
+from active profiles, and the run ids the engine must enforce.
 The helper ownership now matches that split:
 
 - `devcovenant/core/runtime/registry.py` owns runtime evidence paths

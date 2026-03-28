@@ -156,7 +156,7 @@ Commands perform explicit operations.
 Workflow runs are different.
 They are recorded execution obligations, not policy checks.
 That is why core owns `devcovenant run`,
-while profiles declare the actual required runs under the tracked workflow
+while profiles declare the actual runs under the tracked workflow
 contract.
 
 ## Managed Docs And Generation
@@ -232,7 +232,7 @@ The tracked registry now has to represent two different kinds of truth:
 Tracked contract state lives in `devcovenant/registry/registry.yaml`, including
 `workflow_contract`.
 That section records the reserved anchors, the declared runs resolved from
-active profiles, and which run ids are currently required.
+active profiles, and which run ids are configured for execution.
 The resolver for that tracked workflow contract now lives in
 `devcovenant/core/flow/workflow_contract.py`, which keeps run-contract
 normalization on the workflow side instead of leaving it in the services

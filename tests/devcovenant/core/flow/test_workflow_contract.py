@@ -148,7 +148,7 @@ def _unit_test_build_workflow_contract_uses_profile_declared_runs() -> None:
         "mid",
         "end",
     ]
-    assert contract["required_run_ids"] == ["tests"]
+    assert contract["run_ids"] == ["tests"]
     tests_run = module.resolve_run(contract, "tests")
     assert tests_run is not None
     assert tests_run["owner_id"] == "python"

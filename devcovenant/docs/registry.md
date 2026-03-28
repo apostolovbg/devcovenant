@@ -62,8 +62,8 @@ including the visible workflow name `CI` and the repo-specific
 `build-and-install-test` verification job.
 The tracked `workflow_contract` section is the workflow-owned part of that
 story: it records the reserved anchors, the declared runs resolved from
-active profiles, and which run ids are currently required.
-That means required-run execution no longer lives in an invariant
+active profiles, and which run ids are configured for execution.
+That means run execution no longer lives in an invariant
 `required_commands` list.
 The tracked contract lives in `workflow_contract`, while freshness and
 pass/fail evidence live in `workflow_session.json`.
@@ -77,7 +77,7 @@ It also records the explicit run freshness contract that the workflow layer
 uses to decide whether previously recorded run evidence is still fresh.
 The default resolved freshness contract ignores `CHANGELOG.md`, so
 changelog-only edits remain gate-scoped without forcing a rerun of an
-otherwise still-valid required run.
+otherwise still-valid run.
 The helper ownership now matches that split:
 
 - `devcovenant/core/services/tracked_registry.py` owns tracked-registry paths
@@ -130,7 +130,7 @@ The `devflow-run-gates` invariant may override `gate_status_file` and
 It records gate start/end state and the pre-commit evidence those anchors
 require.
 
-`workflow_session.json` records the required declared workflow runs for the
+`workflow_session.json` records the declared workflow runs for the
 session, their pass/fail state, and the last-session/snapshot evidence used to
 decide whether a run is still fresh.
 Run-event metadata is now stored only under `run_events`.
@@ -165,7 +165,7 @@ Read `registry/runtime/` when you need to understand:
 
 - whether a gate session is open
 
-- whether a required workflow run has passed for the current session
+- whether a workflow run has passed for the current session
 
 - what the last relevant run was
 

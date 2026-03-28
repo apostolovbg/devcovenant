@@ -45,8 +45,8 @@ In practice, DevCovenant gives a repository four things:
 
 ## Why It Exists
 Repositories usually fail in boring ways, not exotic ones.
-A team forgets one required workflow run.
-A generated file changes after the last required workflow run.
+A team forgets one workflow run.
+A generated file changes after the last workflow run.
 A policy says one thing while the runtime does another.
 A changelog entry misses the files that actually changed.
 
@@ -128,12 +128,12 @@ Use the commands this way:
 - `gate --mid`
 
   Required pre-run preflight.
-  It catches pre-commit or DevCovenant mutations before required workflow
-  evidence is recorded.
+  It catches pre-commit or DevCovenant mutations before workflow evidence is
+  recorded.
 
 - `run`
 
-  Runs all enabled required workflow runs in declared order and records
+  Runs all enabled workflow runs in declared order and records
   evidence for them.
 
 - `gate --end`

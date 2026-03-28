@@ -222,15 +222,13 @@ def _is_test_relevant_path(path: str) -> bool:
 
 def _format_run_rerun_instructions(
     run_ids: list[str],
-    *,
-    required_run_ids: list[str] | None = None,
 ) -> str:
     """Render the canonical rerun instruction."""
-    del run_ids, required_run_ids
+    del run_ids
     return "`devcovenant run`"
 
 
-def _stale_required_run_ids(
+def _stale_run_ids(
     repo_root: Path,
     contract: Mapping[str, object],
     workflow_payload: Mapping[str, object],
@@ -238,11 +236,11 @@ def _stale_required_run_ids(
     *,
     session_id: str,
 ) -> list[str]:
-    """Return required runs whose latest evidence is missing or stale."""
+    """Return configured runs whose latest evidence is missing or stale."""
     runs_raw = workflow_payload.get("runs")
     run_map = dict(runs_raw) if isinstance(runs_raw, dict) else {}
     stale: list[str] = []
-    for run_id in workflow_contract_module.required_run_ids(contract):
+    for run_id in workflow_contract_module.run_ids(contract):
         run = workflow_contract_module.resolve_run(contract, run_id)
         if run is None:
             stale.append(run_id)
@@ -308,7 +306,7 @@ def _record_workflow_anchor(
             "session_state": "",
             "anchors": {},
             "runs": {},
-            "required_run_ids": [],
+            "run_ids": [],
         }
     anchors_raw = workflow_payload.get("anchors")
     anchors = dict(anchors_raw) if isinstance(anchors_raw, dict) else {}
@@ -334,9 +332,7 @@ def _record_workflow_anchor(
         "schema_version",
         workflow_contract_module.SCHEMA_VERSION,
     )
-    workflow_payload["required_run_ids"] = (
-        workflow_contract_module.required_run_ids(contract)
-    )
+    workflow_payload["run_ids"] = workflow_contract_module.run_ids(contract)
     workflow_payload["session_id"] = session_id
     workflow_payload["session_state"] = session_state
     workflow_payload["anchors"] = anchors
@@ -406,8 +402,8 @@ def run_pre_commit_gate(
             return 1
 
     start_ts = _utc_now() if is_start else None
-    required_run_ids_pending: list[str] = []
-    recovery_required_run_ids: list[str] = []
+    run_ids_pending: list[str] = []
+    recovery_run_ids: list[str] = []
     recovery_status_active = False
     recovery_status_previous: bytes | None = None
     managed_env_stage = "command" if is_mid else stage
@@ -465,7 +461,7 @@ def run_pre_commit_gate(
             except ValueError as error:
                 runtime_print(str(error), file=sys.stderr)
                 return 1
-            required_run_ids_pending = _stale_required_run_ids(
+            run_ids_pending = _stale_run_ids(
                 repo_root,
                 workflow_contract,
                 workflow_payload,
@@ -573,20 +569,18 @@ def run_pre_commit_gate(
                             status_payload.get("session_id", "")
                         ).strip()
                         if workflow_status_error:
-                            recovery_required_run_ids = list(
-                                workflow_contract_module.required_run_ids(
+                            recovery_run_ids = list(
+                                workflow_contract_module.run_ids(
                                     workflow_contract
                                 )
                             )
                         else:
-                            recovery_required_run_ids = (
-                                _stale_required_run_ids(
-                                    repo_root,
-                                    workflow_contract,
-                                    workflow_payload,
-                                    diff_before,
-                                    session_id=recovery_session_id,
-                                )
+                            recovery_run_ids = _stale_run_ids(
+                                repo_root,
+                                workflow_contract,
+                                workflow_payload,
+                                diff_before,
+                                session_id=recovery_session_id,
                             )
             elif status_exists:
                 recovery_reason = (
@@ -704,22 +698,15 @@ def run_pre_commit_gate(
             )
             return 1
 
-        if (
-            stage == "start"
-            and recovery_status_active
-            and recovery_required_run_ids
-        ):
+        if stage == "start" and recovery_status_active and recovery_run_ids:
             _restore_status_file(status_path, recovery_status_previous)
             recovery_status_active = False
             recovery_rerun = _format_run_rerun_instructions(
-                recovery_required_run_ids,
-                required_run_ids=workflow_contract_module.required_run_ids(
-                    workflow_contract
-                ),
+                recovery_run_ids,
             )
             runtime_print(
                 "Recovery start detected unsessioned edits and requires "
-                "fresh required workflow runs before recording a new "
+                "fresh workflow runs before recording a new "
                 "baseline.",
                 file=sys.stderr,
             )
@@ -801,17 +788,14 @@ def run_pre_commit_gate(
                 file=sys.stderr,
             )
             return 1
-        if is_end and exit_code == 0 and required_run_ids_pending:
-            rerun_required_runs = _format_run_rerun_instructions(
-                required_run_ids_pending,
-                required_run_ids=workflow_contract_module.required_run_ids(
-                    workflow_contract
-                ),
+        if is_end and exit_code == 0 and run_ids_pending:
+            rerun_runs = _format_run_rerun_instructions(
+                run_ids_pending,
             )
             runtime_print(
-                "End gate requires fresh required workflow runs before "
+                "End gate requires fresh workflow runs before "
                 "closure. Run "
-                f"{rerun_required_runs},"
+                f"{rerun_runs},"
                 " "
                 "then rerun `devcovenant gate --end`.",
                 file=sys.stderr,

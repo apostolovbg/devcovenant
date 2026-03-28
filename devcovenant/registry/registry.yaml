@@ -89,7 +89,7 @@ managed-docs:
       project_governance_headers: false
       import_seed: true
       authoritative_source: true
-      body_fingerprint: 1edd013a0ffe9041450dce74c523cbcc54e57c7242ec7e079f773a86df5c1010
+      body_fingerprint: ee3bae6c48080358d96d7eb2700ef66baa74f69a0f6bb9275b66dc949dec27c0
       legacy_generic_body_fingerprints: []
     PROFILE_MAP.md:
       enabled: true
@@ -97,7 +97,7 @@ managed-docs:
       project_governance_headers: false
       import_seed: true
       authoritative_source: true
-      body_fingerprint: afede9535270b767a5febacd8f460bd8484150f5fcf815ec4dd77c0c56708a35
+      body_fingerprint: a97fd863571f87d5fd5a8783dd9ab28d96df10355b62b5cc7b72660a7d525b28
       legacy_generic_body_fingerprints: []
     README.md:
       enabled: true
@@ -105,7 +105,7 @@ managed-docs:
       project_governance_headers: false
       import_seed: true
       authoritative_source: true
-      body_fingerprint: 28ea65c11bc263b5e646af600a58b93d622746a93c0ce812c9d3bef39bead178
+      body_fingerprint: d8195f1b81fd86c520b908bf8ffee5e334913b7f5a061fa2a7bb3da1655423bc
       legacy_generic_body_fingerprints: []
     SPEC.md:
       enabled: true
@@ -412,13 +412,13 @@ core-invariants:
     description: Devflow Run Gates
     invariant_text: |-
       DevCovenant must record and enforce the standard workflow: pre-commit start,
-      declared required workflow runs, then pre-commit end. Gate status
+      declared workflow runs, then pre-commit end. Gate status
       preserves pre-commit evidence while workflow-session state records which
-      required runs passed for the active session.
+      runs passed for the active session.
       This check is enforced for every repository change (including
       documentation-only updates) so the gate sequence cannot be skipped.
       Changelog-only edits remain gate-scoped but do not require a fresh
-      required-run execution by themselves.
+      run execution by themselves.
     metadata:
       id: devflow-run-gates
       severity: critical
@@ -667,22 +667,18 @@ workflow_contract:
   anchors:
   - id: start
     owner: core
-    required: true
     anchor_kind: gate_anchor
   - id: mid
     owner: core
-    required: true
     anchor_kind: gate_anchor
   - id: end
     owner: core
-    required: true
     anchor_kind: gate_anchor
   runs:
   - id: tests
     owner: profile
     owner_id: python
     enabled: true
-    required: true
     position:
       after: mid
       before: end
@@ -706,7 +702,7 @@ workflow_contract:
       - CHANGELOG.md
       ignored_globs: []
     source_field: workflow_runs
-  required_run_ids:
+  run_ids:
   - tests
   active_profiles:
   - global
@@ -9505,7 +9501,6 @@ profiles:
     workflow_runs:
     - id: tests
       enabled: true
-      required: true
       after: mid
       before: end
       order: 100
@@ -9568,7 +9563,6 @@ profiles:
     workflow_runs:
     - id: tests
       enabled: true
-      required: true
       after: mid
       before: end
       order: 100
@@ -10204,7 +10198,6 @@ profiles:
     workflow_runs:
     - id: tests
       enabled: true
-      required: true
       after: mid
       before: end
       order: 100
@@ -10311,7 +10304,6 @@ profiles:
     workflow_runs:
     - id: tests
       enabled: true
-      required: true
       after: mid
       before: end
       order: 100
@@ -10378,7 +10370,6 @@ profiles:
     workflow_runs:
     - id: tests
       enabled: true
-      required: true
       after: mid
       before: end
       order: 100
@@ -10467,7 +10458,6 @@ profiles:
     workflow_runs:
     - id: tests
       enabled: true
-      required: true
       after: mid
       before: end
       order: 100
@@ -10684,7 +10674,6 @@ profiles:
     workflow_runs:
     - id: tests
       enabled: true
-      required: true
       after: mid
       before: end
       order: 100
@@ -10774,7 +10763,6 @@ profiles:
     workflow_runs:
     - id: tests
       enabled: true
-      required: true
       after: mid
       before: end
       order: 100
@@ -10933,7 +10921,6 @@ profiles:
     workflow_runs:
     - id: tests
       enabled: true
-      required: true
       after: mid
       before: end
       order: 100
@@ -10980,7 +10967,6 @@ profiles:
     workflow_runs:
     - id: tests
       enabled: true
-      required: true
       after: mid
       before: end
       order: 100
@@ -11049,7 +11035,6 @@ profiles:
     workflow_runs:
     - id: tests
       enabled: true
-      required: true
       after: mid
       before: end
       order: 100
@@ -11196,7 +11181,6 @@ profiles:
     workflow_runs:
     - id: tests
       enabled: true
-      required: true
       after: mid
       before: end
       order: 100
@@ -11254,7 +11238,6 @@ profiles:
     workflow_runs:
     - id: tests
       enabled: true
-      required: true
       after: mid
       before: end
       order: 100
@@ -11450,7 +11433,6 @@ profiles:
     workflow_runs:
     - id: tests
       enabled: true
-      required: true
       after: mid
       before: end
       order: 100
@@ -11568,7 +11550,6 @@ profiles:
     workflow_runs:
     - id: tests
       enabled: true
-      required: true
       after: mid
       before: end
       order: 100
@@ -11659,7 +11640,6 @@ profiles:
     workflow_runs:
     - id: tests
       enabled: true
-      required: true
       after: mid
       before: end
       order: 100
@@ -11701,7 +11681,6 @@ profiles:
     workflow_runs:
     - id: tests
       enabled: true
-      required: true
       after: mid
       before: end
       order: 100
@@ -11859,7 +11838,6 @@ profiles:
     workflow_runs:
     - id: tests
       enabled: true
-      required: true
       after: mid
       before: end
       order: 100

@@ -84,7 +84,7 @@ def _base_payload() -> dict[str, object]:
         "session_state": "",
         "anchors": {},
         "runs": {},
-        "required_run_ids": [],
+        "run_ids": [],
     }
 
 
@@ -108,10 +108,10 @@ def load_workflow_session(repo_root: Path) -> dict[str, object]:
     normalized["anchors"] = _normalize_entry_mapping(anchors)
     runs = payload.get("runs")
     normalized["runs"] = _normalize_entry_mapping(runs)
-    required_run_ids = payload.get("required_run_ids")
-    normalized["required_run_ids"] = (
-        list(required_run_ids) if isinstance(required_run_ids, list) else []
-    )
+    run_ids = payload.get("run_ids")
+    if not isinstance(run_ids, list):
+        run_ids = payload.get("required_run_ids")
+    normalized["run_ids"] = list(run_ids) if isinstance(run_ids, list) else []
     return normalized
 
 

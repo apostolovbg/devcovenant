@@ -32,7 +32,6 @@ assets:
 workflow_runs:
   - id: tests
     enabled: true
-    required: true
     after: mid
     before: end
     order: 100

@@ -140,7 +140,7 @@ workflow_block: |-
   Use `check` as the default read-only audit command. Gate commands own
   refresh/autofix orchestration; lifecycle state writes are limited to
   `gate --start` / `gate --end`; `gate --mid` is non-lifecycle.
-  Gate commands never run required workflow runs internally.
+  Gate commands never run workflow runs internally.
   When DevCovenant run artifacts are available, inspect `summary.txt`,
   then `tail.txt` (if present), then full logs before using ad-hoc
   redirects or verbose streaming. Normal-mode live streaming can be
@@ -153,7 +153,7 @@ workflow_block: |-
 
   ## Managed Environment
   If a managed environment is configured, run DevCovenant from that
-  environment and run all required workflow runs there as well.
+  environment and run all workflow runs there as well.
   Start required services before `devcovenant run` so runtime checks
   execute against the active stack.
 

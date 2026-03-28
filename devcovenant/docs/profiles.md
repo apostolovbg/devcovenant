@@ -156,7 +156,7 @@ Managed-environment protection belongs with the managed-environment metadata so
 other environment types can participate through the same contract.
 
 The same ownership split now matters for workflow itself.
-If a language or stack has a standard required run, the profile should
+If a language or stack has a standard run, the profile should
 declare it through `workflow_runs`.
 That keeps the engine-facing workflow contract explicit instead of smuggling
 workflow structure through core-invariant metadata.
