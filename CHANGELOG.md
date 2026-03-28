@@ -60,6 +60,18 @@ Example:
 
 ## Version 1.0.0
 
+- 2026-03-29:
+  Change: marked the release-candidate preparation roadmap item done after
+    proving the exact candidate tree through governed, packaging, and
+    isolated artifact-lifecycle checks.
+  Why: closed the final pre-release remediation step once the current tree
+    was externally and locally proven as the real release candidate.
+  Impact: the plan now treats the remediation roadmap as complete and leaves
+    only human-controlled release mechanics beyond the proven candidate tree.
+  Files:
+  CHANGELOG.md
+  PLAN.md
+
 - 2026-03-28:
   Change: marked the `run` migration and core de-spaghettization roadmap
     items done and revised the plan summary to reflect release-candidate

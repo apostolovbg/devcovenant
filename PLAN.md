@@ -29,16 +29,16 @@ DevCovenant starts true SemVer release discipline.
 - The large stabilization and polish work is already done and should be
   preserved.
 - The current external audit verdict is:
-  - remediation complete; release-candidate proof next
+  - release-candidate proof complete; ready for first real release mechanics
 - The remaining risks are no longer architectural emptiness, workflow-contract
   drift, or uncontrolled sprawl.
-- The remaining work is release-truthfulness on the exact candidate tree:
-  - confirm the public governance state is still the intended release truth
-  - rerun the full governed workflow on the exact candidate tree
-  - rerun the artifact proof on the exact candidate tree
-  - only then consider history cleanup or first-release mechanics
-- Do not start true SemVer-cut work until the release-candidate item below is
-  resolved.
+- The remaining work is now human-controlled release operation rather than
+  technical remediation:
+  - decide whether to publish from the already-proven candidate tree
+  - perform any optional post-proof history cleanup only if still desired
+  - keep the proven candidate tree as the truth source for first-release
+    mechanics
+- The remediation plan below is now complete.
 
 ## Audit Baseline
 The external audit originally surfaced these findings:
@@ -1293,7 +1293,7 @@ the current state as finished.
    - the code layout looks like the architecture DevCovenant actually claims
      to have
 
-10. [not done] Prepare The First Real Release Candidate.
+10. [done] Prepare The First Real Release Candidate.
    Goal:
    - start the real release-candidate cut only after the external-grade
      remediation audit is clean, the `run` migration is complete, and the
