@@ -1,5 +1,5 @@
 # DevCovenant Architecture
-**Last Updated:** 2026-03-27
+**Last Updated:** 2026-03-28
 **Project Version:** 1.0.0
 
 ## Overview
@@ -27,7 +27,7 @@ The practical split is:
 
 - `flow`
 
-  Lifecycle orchestration such as gate phases, refresh ownership, command
+  Lifecycle orchestration such as gate stages, refresh ownership, command
   sequencing, and workflow-evidence validation.
 
 - `runtime`
@@ -108,25 +108,25 @@ Core owns the reserved workflow anchors:
 - `mid`
 - `end`
 
-Profiles own declared workflow phases between `mid` and `end`.
-Those phase declarations define:
+Profiles own declared workflow runs between `mid` and `end`.
+Those run declarations define:
 
-- whether a phase is enabled or required
-- phase ordering metadata
-- how the phase runs
+- whether a run is enabled or required
+- run ordering metadata
+- how the run executes
 - the success contract used to mark it complete
-- summary/reporting metadata used when the phase is recorded
+- summary/reporting metadata used when the run is recorded
 
 That reporting metadata is now declarative as well.
-If a phase needs richer behavior, profiles declare it through recording hooks
+If a run needs richer behavior, profiles declare it through recording hooks
 such as:
 
 - `output_mode_config_field`
 - `event_adapter_group`
 - `write_runtime_profile`
 
-Core then executes the same generic workflow-phase machinery for every phase.
-It does not branch on `phase_id == "tests"` to decide whether output,
+Core then executes the same generic workflow-run machinery for every run.
+It does not branch on `run_id == "tests"` to decide whether output,
 event capture, or run-profile artifacts should exist.
 
 That split is intentional.
@@ -153,10 +153,10 @@ Checks report.
 Autofix fixes.
 Commands perform explicit operations.
 
-Workflow phases are different.
+Workflow runs are different.
 They are recorded execution obligations, not policy checks.
-That is why core owns `devcovenant run` and `devcovenant phase run <id>`,
-while profiles declare the actual required phases under the tracked workflow
+That is why core owns `devcovenant run`,
+while profiles declare the actual required runs under the tracked workflow
 contract.
 
 ## Managed Docs And Generation
@@ -209,7 +209,7 @@ They can contribute:
 
 - managed assets
 
-- workflow phases
+- workflow runs
 
 - pre-commit fragments
 
@@ -231,10 +231,10 @@ The tracked registry now has to represent two different kinds of truth:
 
 Tracked contract state lives in `devcovenant/registry/registry.yaml`, including
 `workflow_contract`.
-That section records the reserved anchors, the declared phases resolved from
-active profiles, and which phase ids are currently required.
+That section records the reserved anchors, the declared runs resolved from
+active profiles, and which run ids are currently required.
 The resolver for that tracked workflow contract now lives in
-`devcovenant/core/flow/workflow_contract.py`, which keeps phase-contract
+`devcovenant/core/flow/workflow_contract.py`, which keeps run-contract
 normalization on the workflow side instead of leaving it in the services
 grab-bag.
 Tracked path ownership now lives in
@@ -242,13 +242,16 @@ Tracked path ownership now lives in
 
 Runtime workflow state lives in
 `devcovenant/registry/runtime/workflow_session.json`.
+The `devflow-run-gates` invariant may override `gate_status_file` and
+`workflow_session_file`, but both evidence files must stay inside
+`devcovenant/registry/runtime/`.
 That file records:
 
 - the active or last session id
 - anchor results
-- declared phase results
+- declared run results
 - last-run session bindings
-- phase freshness snapshots
+- run freshness snapshots
 
 `gate_status.json` still exists beside it, but it now focuses on gate lifecycle
 and pre-commit evidence instead of trying to be the whole workflow model.

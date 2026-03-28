@@ -969,7 +969,7 @@ def _drop_legacy_project_governance_metadata(
 def _drop_legacy_workflow_command_metadata(
     payload: dict[str, object],
 ) -> None:
-    """Remove retired gate-command config keys replaced by workflow phases."""
+    """Remove retired gate-command config keys replaced by workflow runs."""
 
     core_invariants = payload.get("core_invariants")
     if not isinstance(core_invariants, dict):

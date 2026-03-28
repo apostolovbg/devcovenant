@@ -6,7 +6,7 @@
 **Maintenance Stance:** active
 **Compatibility Policy:** breaking-allowed
 **Versioning Mode:** versioned
-**Last Updated:** 2026-03-27
+**Last Updated:** 2026-03-28
 **DevCovenant Version:** 1.0.0
 
 <!-- DEVCOV:BEGIN -->
@@ -21,7 +21,7 @@ DevCovenant starts true SemVer release discipline.
 1. [Overview](#overview)
 2. [Audit Baseline](#audit-baseline)
 3. [Working Rules](#working-rules)
-4. [Workflow-Phase Redesign Baseline](#workflow-phase-redesign-baseline)
+4. [Workflow-Phase Redesign Baseline](#workflow-run-redesign-baseline)
 5. [Active Remediation](#active-remediation)
 6. [Validation Routine](#validation-routine)
 
@@ -72,18 +72,18 @@ Follow-on design review added one more release-relevant concern:
 
 7. high: gate/workflow mechanics still blur two different contracts:
    - customizable policy behavior
-   - required workflow phases and their pass/fail recording
+   - required workflow runs and their pass/fail recording
    That boundary must be formalized before the first real SemVer-governed
    line so required workflow behavior does not depend on whether a normal
    policy happens to be enabled.
 
-8. high: the workflow-phase redesign is still only partially migrated:
+8. high: the workflow-run redesign is still only partially migrated:
    - core still exposes and teaches a top-level `devcovenant test` command
-   - runtime still special-cases the `tests` phase instead of treating it as a
-     normal declared phase under one generic execution path
+   - runtime still special-cases the `tests` run instead of treating it as a
+     normal declared run under one generic execution path
    - profile schema still leaks command-alias concerns
    - CI, AGENTS, and docs still teach the test-centric workflow instead of the
-     generic required-phase workflow
+     generic required-run workflow
    - the tracked workflow schema advertises runner and success-contract kinds
      that the runtime does not fully execute yet
    This leaves the feature looking stitched in rather than fully native.
@@ -101,7 +101,7 @@ release candidate.
   - workflow definitions
   - publish provenance
   - lockfile behavior under different environments
-  - gate session records and required phase results
+  - gate session records and required run results
 - Do not start SemVer ritual, orphaning, or release-history cleanup while
   blocker findings remain open.
 - Keep each item concrete enough that another person can continue it without
@@ -123,7 +123,7 @@ workflow/gate redesign does not drift into another half-implicit model.
 ### Core Principle
 DevCovenant must distinguish between:
 
-- workflow phases that the engine requires and records
+- workflow runs that the engine requires and records
 - policies that inspect or mutate repository state
 
 Those are different contracts.
@@ -136,15 +136,15 @@ Core owns three reserved anchors:
 - `mid`
 - `end`
 
-Everything else is a declared workflow phase between `mid` and `end`.
+Everything else is a declared workflow run between `mid` and `end`.
 The model is therefore:
 
 - `start`
 - `mid`
-- zero or more declared phases
+- zero or more declared runs
 - `end`
 
-Examples of declared phases:
+Examples of declared runs:
 
 - `tests`
 - `artifact-proof`
@@ -156,21 +156,21 @@ Examples of declared phases:
 Core owns:
 
 - gate session lifecycle
-- anchor phases (`start`, `mid`, `end`)
-- workflow-phase ordering rules
+- anchor runs (`start`, `mid`, `end`)
+- workflow-run ordering rules
 - runtime session recording
-- required-phase completion checks
-- the command surface for generic phase execution
+- required-run completion checks
+- the command surface for generic run execution
 - the shared output/runtime contract, including per-invocation output-mode
   overrides for all commands
 
 Profiles own:
 
-- declared workflow phases
-- whether a phase is enabled or required
-- ordering metadata for those phases
-- how a phase runs
-- the success contract the phase uses
+- declared workflow runs
+- whether a run is enabled or required
+- ordering metadata for those runs
+- how a run runs
+- the success contract the run uses
 
 Policies own:
 
@@ -212,7 +212,7 @@ decide what becomes visible in:
 This matters for future built-in or user-defined commands as well.
 If command execution, child-process handling, progress reporting, and
 run-log pointers all stay under the shared output/runtime layer, future
-policy commands and workflow phases can inherit the three output modes
+policy commands and workflow runs can inherit the three output modes
 without bespoke command-level verbosity logic.
 
 ### Registry Ownership
@@ -225,17 +225,17 @@ workflow_contract:
   anchors:
     - id: start
       owner: core
-      phase_kind: gate_anchor
+      run_kind: gate_anchor
       required: true
     - id: mid
       owner: core
-      phase_kind: gate_anchor
+      run_kind: gate_anchor
       required: true
     - id: end
       owner: core
-      phase_kind: gate_anchor
+      run_kind: gate_anchor
       required: true
-  phases:
+  runs:
     - id: tests
       owner: profile
       owner_id: global
@@ -269,15 +269,15 @@ That runtime file should record:
 - head SHA at session start
 - workflow contract version
 - anchor results
-- declared phase results
+- declared run results
 - required/optional status
 - timestamps
 - run ids
 - attempt counts
-- verified SHA or verified tree fingerprint for each phase result
+- verified SHA or verified tree fingerprint for each run result
 
 The timestamp contract should stay UTC-only.
-If the runtime records the last execution time for a phase, it should keep
+If the runtime records the last execution time for a run, it should keep
 one canonical field such as `last_run_utc`.
 It should not duplicate the same UTC value in both `last_run` and
 `last_run_utc`.
@@ -289,17 +289,17 @@ half-migrated and creates pointless schema noise without adding information.
 It must also care about the last required workflow-extension results.
 
 That means `start` should block when the previous workflow state says a
-required declared phase is still unclean, failed, missing, or stale in a way
+required declared run is still unclean, failed, missing, or stale in a way
 that would have blocked the previous slice from closing honestly.
 
 The intended rule is:
 
-- if the previous required phase results are clean and satisfied for the last
+- if the previous required run results are clean and satisfied for the last
   closed session, `start` may open a new session
-- if the previous required phase results are not clean, `start` must fail and
+- if the previous required run results are not clean, `start` must fail and
   require the operator to clear that state first
 
-This must apply to required declared phases generally, not only to today's
+This must apply to required declared runs generally, not only to today's
 hardcoded test expectations.
 
 ### End-Gate Rule
@@ -307,15 +307,15 @@ hardcoded test expectations.
 
 1. `start` passed for the active session
 2. `mid` passed for the active session
-3. every required declared phase between `mid` and `end` passed for the
+3. every required declared run between `mid` and `end` passed for the
    active session
 4. only then may `end` pass and close the session
 
 This keeps gate coherent even when different repositories define different
-middle phases.
+middle runs.
 
 ### Phase Runner Kinds
-Declared workflow phases should use a closed runner vocabulary:
+Declared workflow runs should use a closed runner vocabulary:
 
 ```yaml
 runner:
@@ -342,7 +342,7 @@ runner:
 ```
 
 That `commands` field should cover both single-command and multi-command
-phases.
+runs.
 A single command is just a one-item list.
 There is no need for a parallel singular `command` field when the value still
 means “shell commands to execute.”
@@ -367,7 +367,7 @@ and tests to carry one field for “one command” and another field for “many
 commands” even though they represent the same execution concept.
 
 ### Success Contracts
-Declared workflow phases should use a closed success-contract vocabulary.
+Declared workflow runs should use a closed success-contract vocabulary.
 The contract set should include all of the following now:
 
 ```yaml
@@ -382,7 +382,7 @@ success_contract:
 
 Recommended meanings:
 
-- `all_commands_exit_zero`: every command in the phase completed successfully
+- `all_commands_exit_zero`: every command in the run completed successfully
 - `runtime_action_success`: the named runtime action reported success
 - `policy_command_success`: the named policy command reported success
 - `manual_attested`: the required attestation record exists and is valid
@@ -395,7 +395,7 @@ release requirement for this project.
 
 The runtime must support every declared runner kind and every declared
 success-contract kind that the tracked schema accepts.
-If the schema admits a phase kind that the runtime cannot execute, the
+If the schema admits a run kind that the runtime cannot execute, the
 workflow contract is not yet honest.
 
 ### Policy Participation Rule
@@ -403,34 +403,34 @@ Policies should not plug into `run` implicitly just because they are enabled.
 
 The workflow contract should stay explicit:
 
-- profiles declare workflow phases
-- phases declare a runner kind and a success contract
-- the runtime executes that declared phase contract
-- policies only participate when the phase references an explicit runnable
+- profiles declare workflow runs
+- runs declare a runner kind and a success contract
+- the runtime executes that declared run contract
+- policies only participate when the run references an explicit runnable
   policy surface
 
 That means:
 
 - enabling a policy does not automatically make it part of `run`
 - disabling a structural policy does not mechanically break workflow
-- if a workflow phase wants policy participation, it should reference an
+- if a workflow run wants policy participation, it should reference an
   explicit policy-owned runnable contract such as `policy_command_id`
 
 This matters directly for `modules-need-tests`.
 That policy is still a structural source-to-test alignment rule.
 It does not currently own workflow execution, and the plan must not pretend
 that it is what powers `devcovenant run`.
-The repo's current `tests` workflow phase is profile-declared and command-run.
+The repo's current `tests` workflow run is profile-declared and command-run.
 `modules-need-tests` remains a separate structural constraint unless its
 responsibility changes deliberately in a later design slice.
 
 ### Profile Contribution Schema
-Profiles should contribute phases through a dedicated key such as
-`workflow_phases`, not indirectly through policy metadata.
+Profiles should contribute runs through a dedicated key such as
+`workflow_runs`, not indirectly through policy metadata.
 For example:
 
 ```yaml
-workflow_phases:
+workflow_runs:
   - id: tests
     enabled: true
     required: true
@@ -448,10 +448,10 @@ workflow_phases:
       summary_label: Tests
 ```
 
-Repo-specific profiles may then contribute phases such as
+Repo-specific profiles may then contribute runs such as
 `artifact-proof` cleanly without pretending they are policies.
 
-The `workflow_phases` declaration should stay focused on phase behavior and
+The `workflow_runs` declaration should stay focused on run behavior and
 must not try to smuggle root-command ownership into profile metadata.
 
 ### Command-Surface Target
@@ -465,40 +465,40 @@ The target command set is:
 
 The explicit rerun surface is:
 
-- `devcovenant phase run <id>`
+- `devcovenant run`
 
 Under this target model:
 
-- `devcovenant run` executes all enabled required declared phases for the
+- `devcovenant run` executes all enabled required declared runs for the
   active session in deterministic order
-- `devcovenant phase run <id>` executes exactly one declared phase
+- `devcovenant run` executes exactly one declared run
 - `devcovenant test` does not remain a top-level root command
 - profiles do not define or own top-level CLI aliases
 
 This keeps workflow execution generic, keeps root command ownership in core,
-and stops the `tests` phase from looking privileged by command-surface
+and stops the `tests` run from looking privileged by command-surface
 accident.
 
 ### `run` Contract
 `devcovenant run` should:
 
 1. resolve the active tracked workflow contract
-2. collect enabled required phases between `mid` and `end`
+2. collect enabled required runs between `mid` and `end`
 3. execute them in deterministic declared order
-4. record each phase result in the runtime workflow session
-5. stop on first required-phase failure
-6. exit zero only when all required phases for that run pass
+4. record each run result in the runtime workflow session
+5. stop on first required-run failure
+6. exit zero only when all required runs for that run pass
 
-If no required phases exist, `run` should:
+If no required runs exist, `run` should:
 
-- report that there are no required declared phases for the active contract
+- report that there are no required declared runs for the active contract
 - exit successfully without pretending work happened
 
 ### No Profile-Owned Command Aliases
 Profiles own:
 
-- phase ids
-- phase ordering
+- run ids
+- run ordering
 - runner metadata
 - success-contract metadata
 - recording labels
@@ -528,26 +528,26 @@ avoids packaging, cleanup, and drift confusion.
 ### Migration Direction
 The clean migration path is:
 
-1. formalize the workflow-phase schema and runtime-session schema
-2. migrate the current `test` phase onto that contract first
-3. update `devflow-run-gates` to validate declared required phases instead of
+1. formalize the workflow-run schema and runtime-session schema
+2. migrate the current `test` run onto that contract first
+3. update `devflow-run-gates` to validate declared required runs instead of
    hardcoded required commands
-4. then add any new intermediate phases through profile-owned workflow
+4. then add any new intermediate runs through profile-owned workflow
    metadata rather than policy enablement side effects
 
 ### Current Design Correction
-The first workflow-phase migration landed only part of the intended design.
+The first workflow-run migration landed only part of the intended design.
 It correctly introduced:
 
 - tracked `workflow_contract`
 - runtime `workflow_session.json`
-- required-phase enforcement in `gate --start` and `gate --end`
-- profile-owned declaration of the `tests` phase
+- required-run enforcement in `gate --start` and `gate --end`
+- profile-owned declaration of the `tests` run
 
 But it still left visible half-step behavior in place:
 
 - top-level `devcovenant test` remains a root command
-- runtime still special-cases the `tests` phase
+- runtime still special-cases the `tests` run
 - gate messaging still renders `devcovenant test`
 - CI still runs `devcovenant test`
 - AGENTS and user-facing docs still teach the test-centric workflow
@@ -654,24 +654,24 @@ the current state as finished.
    Landed:
    - added `devcovenant/core/services/workflow_contract.py` to resolve the
      tracked workflow contract with reserved anchors (`start`, `mid`, `end`),
-     profile-declared phases, required-phase ids, runner kinds, and
+     profile-declared runs, required-run ids, runner kinds, and
      success-contract kinds
    - added `devcovenant/core/runtime/workflow_session.py` and the runtime
      `devcovenant/registry/runtime/workflow_session.json` surface so core
      workflow state is no longer squeezed into `gate_status.json`
    - kept `gate_status.json` as the short lifecycle and pre-commit ledger,
-     while moving required-phase truth into `workflow_session.json`
-   - moved the Python stack's `tests` phase into the builtin Python profile's
-     new `workflow_phases` declaration instead of keeping workflow truth in
+     while moving required-run truth into `workflow_session.json`
+   - moved the Python stack's `tests` run into the builtin Python profile's
+     new `workflow_runs` declaration instead of keeping workflow truth in
      `devflow-run-gates.required_commands`
-   - added the generic `devcovenant phase run <id>` command surface as the
-     first explicit one-phase runner
+   - added the generic `devcovenant run` command surface as the
+     first explicit one-run runner
    - updated `gate --start` so recovery start blocks when the previous closed
-     session has stale required phases, not only stale tests
+     session has stale required runs, not only stale tests
    - updated `gate --end` so closure requires fresh passing evidence for every
-     required declared phase bound to the active session
+     required declared run bound to the active session
    - updated `devflow-run-gates` so it validates pre-commit evidence from
-     `gate_status.json` and required-phase evidence from
+     `gate_status.json` and required-run evidence from
      `workflow_session.json`
    - updated tracked registry writing so `workflow_contract` is recorded in
      `devcovenant/registry/registry.yaml`
@@ -684,11 +684,11 @@ the current state as finished.
    - required workflow behavior no longer depends on a customizable policy
      being enabled just to make gate mechanics coherent
    - the tracked registry records the generated workflow contract explicitly
-   - runtime workflow sessions record anchors and declared phases separately
-   - start and end gates validate declared required phases generally rather
+   - runtime workflow sessions record anchors and declared runs separately
+   - start and end gates validate declared required runs generally rather
      than only one hardcoded test-centric case
-   - `tests` is the first real declared workflow phase under the new contract
-   - the remaining redesign work is no longer about inventing workflow phases;
+   - `tests` is the first real declared workflow run under the new contract
+   - the remaining redesign work is no longer about inventing workflow runs;
      it is about finishing the command/runtime/docs/CI migration so the
      feature stops looking half-test-centric
 
@@ -735,8 +735,8 @@ the current state as finished.
        provenance instead of rebuilding
    - reran focused regressions for the remaining truthfulness surfaces:
      - dependency-lock semantics
-     - workflow-phase/gate contract
-     - workflow-session / required-phase recording
+     - workflow-run/gate contract
+     - workflow-session / required-run recording
      - package-doc contract wording
    What is now true:
    - the external-grade audit no longer finds substantive blocker or
@@ -746,7 +746,7 @@ the current state as finished.
    - that audit closed the earlier artifact, publish, lockfile, and
      first-activation remediation set
    - a later workflow-command audit then identified the still-half-migrated
-     `devcovenant test` / workflow-phase command model captured in Item 8
+     `devcovenant test` / workflow-run command model captured in Item 8
 
 8. [not done] Complete The `run` / Workflow-Phase Migration.
    Goal:
@@ -754,7 +754,7 @@ the current state as finished.
      workflow execution surface
    - make workflow extensions look native in code, docs, CI, and operator
      messaging
-   - align runtime support with the full tracked schema so no allowed phase
+   - align runtime support with the full tracked schema so no allowed run
      contract remains a paper-only promise
    - close the remaining contract-hardening gaps around the now-landed `run`
      model so the public workflow surface is truly settled instead of merely
@@ -763,21 +763,21 @@ the current state as finished.
    - the core `run` migration is now materially landed, but the item remains
      open because the adjacent workflow contracts are not all fully locked yet
    - the repo no longer teaches `devcovenant test`, but some workflow behavior
-     is still expressed through transitional test-shaped or phase-specific
+     is still expressed through transitional test-shaped or run-specific
      assumptions
    - schema truth must match runtime truth before the first SemVer-governed
      public line
-   - public-contract features such as advanced workflow phase kinds, output
+   - public-contract features such as advanced workflow run kinds, output
      overrides, and artifact-check path semantics should not remain half-
      documented or only implicitly owned
    Design decisions for this item:
    - `devcovenant run` is the top-level command that replaces
      `devcovenant test`
-   - `devcovenant run` executes all enabled required declared phases for the
+   - `devcovenant run` executes all enabled required declared runs for the
      active session in deterministic order
-   - `devcovenant phase run <id>` remains the explicit one-phase rerun surface
+   - `devcovenant run` remains the explicit one-run rerun surface
    - top-level workflow commands are core-owned, not profile-owned
-   - profile phase metadata must not define command aliases
+   - profile run metadata must not define command aliases
    - the visible GitHub Actions workflow name should be `CI`, because `CI`
      is standard, includes tests naturally, and avoids the GitHub sidebar
      ambiguity created by `Workflows`
@@ -786,25 +786,25 @@ the current state as finished.
      concrete name such as `Build and Install`
    - workflow runtime timestamps stay UTC-only and keep one canonical
      timestamp field such as `last_run_utc`
-   - command-group phases use `commands` only; a single command is a
+   - command-group runs use `commands` only; a single command is a
      one-item list, not a separate singular schema branch
    - singular execution payload names are reserved for different concepts such
      as `runtime_action_id` or `policy_command_id`; shell command groups must
      not duplicate the same meaning across parallel `command` / `commands`
      fields
    - policies do not participate in `run` implicitly just because they are
-     enabled; workflow phases must reference explicit runnable surfaces
-   - phase-specific richer behavior is allowed, but it must be expressed
-     through generic phase-reporting hooks or declarative phase metadata,
-     not through hardcoded `phase_id == "tests"` branches in the generic
+     enabled; workflow runs must reference explicit runnable surfaces
+   - run-specific richer behavior is allowed, but it must be expressed
+     through generic run-reporting hooks or declarative run metadata,
+     not through hardcoded `run_id == "tests"` branches in the generic
      workflow executor
-   - changelog-only freshness behavior must become an explicit workflow-phase
+   - changelog-only freshness behavior must become an explicit workflow-run
      contract rather than a hidden `tests`-only rule; if changelog-only edits
-     should not stale a required phase, that exemption must be modeled in
-     phase metadata and documented as part of the workflow contract
+     should not stale a required run, that exemption must be modeled in
+     run metadata and documented as part of the workflow contract
    - file-dependent success checks must stay generic and support:
      `required_files`, `required_globs`, `forbidden_globs`, plus explicit
-     relative-versus-absolute path resolution control so any phase can verify
+     relative-versus-absolute path resolution control so any run can verify
      files at any intended path without bespoke runtime branching
    - the advanced workflow kinds are now public workflow-contract surface, not
      merely internal extension hooks:
@@ -825,11 +825,11 @@ the current state as finished.
       - `devcovenant/cli.py`
       - a new core command module for `run`
       - retirement or removal path for `devcovenant/test.py`
-      - `devcovenant/phase.py`
+      - `devcovenant/run.py`
       Work to do:
       - add the top-level `run` command
       - remove `test` from the public root-command dispatcher
-      - keep explicit single-phase execution in `phase run <id>`
+      - keep explicit single-run execution in `run`
       - resolve managed-environment stages by workflow behavior rather than a
         one-off `test` branch
       Done when:
@@ -843,14 +843,14 @@ the current state as finished.
       Work to do:
       - remove the dedicated test-only privileged path as the canonical
         workflow executor
-      - make declared phases execute through one generic path
-      - keep policy participation explicit so a phase only invokes policy-owned
+      - make declared runs execute through one generic path
+      - keep policy participation explicit so a run only invokes policy-owned
         behavior when it references a deliberate runnable surface
       - replace remaining `tests`-specific richer behavior with a generic
-        phase-reporting hook/declarative metadata path so any workflow phase
-        can opt into the same richer reporting without a hardcoded phase id
+        run-reporting hook/declarative metadata path so any workflow run
+        can opt into the same richer reporting without a hardcoded run id
       - replace the current hidden `tests`-only changelog freshness shortcut
-        with an explicit phase-freshness contract that can be declared and
+        with an explicit run-freshness contract that can be declared and
         reasoned about generically
       - support every allowed runner kind:
         `command_group`, `runtime_action`, `policy_command`,
@@ -860,13 +860,13 @@ the current state as finished.
         `policy_command_success`, `manual_attested`,
         `external_artifact_check`
       - make runtime failures mention `devcovenant run` or
-        `devcovenant phase run <id>`, not `devcovenant test`
+        `devcovenant run`, not `devcovenant test`
       Done when:
       - `tests` is not privileged in runtime flow control or freshness rules
       - enabled policies do not implicitly alter what `run` executes
       - any allowed schema kind is truly executable
-      - changelog-only rerun exemptions, if any, are phase-declared rather
-        than hardcoded by phase id
+      - changelog-only rerun exemptions, if any, are run-declared rather
+        than hardcoded by run id
 
    3. Universal output-mode override contract.
       File scope:
@@ -885,7 +885,7 @@ the current state as finished.
       - keep command modules mode-agnostic wherever possible so they do not
         own custom verbosity branches
       - route remaining bespoke command output through the shared
-        output/runtime module so future policy commands and workflow phases
+        output/runtime module so future policy commands and workflow runs
         inherit the three modes automatically
       Done when:
       - every public command accepts `--quiet`, `--normal`, or `--verbose`
@@ -902,17 +902,17 @@ the current state as finished.
       - `devcovenant/core/runtime/workflow_session.py`
       Work to do:
       - render rerun instructions through `run` by default
-      - keep explicit `phase run <id>` wording for targeted recovery cases
+      - keep explicit `run` wording for targeted recovery cases
       - make `start` carry-forward checks and `end` closure checks speak in
-        required-phase language consistently
-      - reduce or retire leftover dependence on `gate_status.json` for phase
+        required-run language consistently
+      - reduce or retire leftover dependence on `gate_status.json` for run
         truth where `workflow_session.json` is the real source
       - keep the remaining split honest:
         `gate_status.json` is the short gate/pre-commit ledger,
-        `workflow_session.json` is required-phase truth
+        `workflow_session.json` is required-run truth
       Done when:
       - gate messaging no longer teaches `devcovenant test`
-      - the invariant validates anchors plus required phases without any
+      - the invariant validates anchors plus required runs without any
         test-centric fallback language
 
    5. Workflow-contract schema cleanup.
@@ -925,8 +925,8 @@ the current state as finished.
         `devcovenant/builtin/profiles/python/python.yaml`
       Work to do:
       - remove command-surface alias ownership from profile metadata
-      - keep phase metadata focused on phase behavior only
-      - add an explicit phase-freshness contract so rerun invalidation rules
+      - keep run metadata focused on run behavior only
+      - add an explicit run-freshness contract so rerun invalidation rules
         are declared rather than hidden in executor code
       - remove duplicate timestamp fields when they carry the same UTC value
         and keep one canonical workflow runtime timestamp field such as
@@ -936,20 +936,20 @@ the current state as finished.
         `runtime_action_id` and `policy_command_id`
       - tighten file-dependent success contracts so they can express
         required/forbidden file checks against relative or absolute paths
-        without bespoke per-phase code
+        without bespoke per-run code
       - decide and document the final path contract for workflow evidence:
         either keep `workflow_session.json` runtime-owned and fixed, or
         expose a formal configurable counterpart to `gate_status_file`
       - regenerate tracked registry output to match the final contract
       Done when:
-      - profile manifests declare phases, not root command aliases
+      - profile manifests declare runs, not root command aliases
       - runtime session payloads do not carry same-value timestamp aliases
       - command-group schema no longer duplicates `command` and `commands`
-      - phase freshness rules are explicit in schema rather than implicit in
+      - run freshness rules are explicit in schema rather than implicit in
         code
       - file-dependent success checks have one generic schema that is not
         tied to test/artifact-only assumptions
-      - tracked registry reflects the final command-neutral phase schema
+      - tracked registry reflects the final command-neutral run schema
 
    6. CI and generated workflow migration.
       File scope:
@@ -970,7 +970,7 @@ the current state as finished.
         Actions and do not rely on fragile indented subshell heredocs
       - make the repo-maintained `Build` workflow listen to the final
         generated CI workflow name
-      - keep explicit `phase run <id>` only where a specific rerun is
+      - keep explicit `run` only where a specific rerun is
         intentionally needed
       Done when:
       - generated GitHub Actions surfaces teach the same workflow contract as
@@ -999,13 +999,13 @@ the current state as finished.
       Work to do:
       - rewrite the canonical workflow as
         `gate --start -> gate --mid -> run -> gate --end`
-      - replace test-centric recovery wording with required-phase wording
+      - replace test-centric recovery wording with required-run wording
       - explain the universal output-mode override contract:
         - config sets the default mode
         - `--quiet`, `--normal`, and `--verbose` override per invocation
         - commands should remain mode-agnostic and rely on the shared output
           layer
-      - publish the workflow-phase contract explicitly:
+      - publish the workflow-run contract explicitly:
         - supported runner kinds
         - supported success-contract kinds
         - compatible runner/success combinations
@@ -1013,7 +1013,7 @@ the current state as finished.
         - how file-dependent success checks resolve paths
       - explain clearly that:
         - core owns workflow commands
-        - profiles own declared phases
+        - profiles own declared runs
         - policies do not own workflow structure
       - remove claims that `devcovenant test` is a friendly alias
       - remove ownership drift such as old `core/services/event.py` references
@@ -1021,8 +1021,8 @@ the current state as finished.
       Done when:
       - there is no stale public instruction to run `devcovenant test`
         outside historical changelog context
-      - the public docs describe the full workflow-phase contract instead of
-        only the built-in `tests` phase example
+      - the public docs describe the full workflow-run contract instead of
+        only the built-in `tests` run example
 
    8. Test-suite migration.
       File scope:
@@ -1043,23 +1043,23 @@ the current state as finished.
       - add coverage that workflow-session runtime fields stay UTC-only
         without duplicate same-value aliases
       - add coverage that `command_group` runners use `commands` only and that
-        single-command phases remain one-item command lists
+        single-command runs remain one-item command lists
       - add coverage that enabled structural policies do not implicitly become
-        workflow-phase executors
+        workflow-run executors
       - add coverage that each supported runner kind and each supported
         success-contract kind is actually executable under the runtime
       - add coverage that advanced public workflow kinds are not only schema-
         accepted but operator-usable, including `manual_attestation`,
         `runtime_action_success`, `policy_command_success`, and
         `external_artifact_check`
-      - add coverage that phase freshness rules are contract-driven rather
+      - add coverage that run freshness rules are contract-driven rather
         than hidden in a `tests`-only branch
       - add coverage that start and end guidance names `run` and targeted
-        `phase run <id>` correctly
+        `run` correctly
       Done when:
       - the test suite locks the final generic workflow surface instead of the
         old alias model
-      - the advanced workflow-phase contract is publicly proved rather than
+      - the advanced workflow-run contract is publicly proved rather than
         only accepted by parser/runtime internals
 
    9. Policy naming follow-up decision.
@@ -1075,7 +1075,7 @@ the current state as finished.
 
    Done when:
    - `devcovenant run` is the canonical top-level workflow execution command
-   - `devcovenant phase run <id>` is the explicit per-phase rerun path
+   - `devcovenant run` is the explicit per-run rerun path
    - `devcovenant test` is no longer a public root command
    - every public command accepts universal per-invocation `--quiet`,
      `--normal`, and `--verbose` overrides
@@ -1086,9 +1086,9 @@ the current state as finished.
      `command`/`commands` execution payloads
    - enabled policies do not implicitly plug into `run`
    - runtime no longer special-cases `tests`; richer behavior is exposed
-     through generic phase hooks/metadata instead
+     through generic run hooks/metadata instead
    - every allowed runner kind and success-contract kind is actually supported
-   - profile phase metadata no longer leaks command-alias ownership
+   - profile run metadata no longer leaks command-alias ownership
    - AGENTS, docs, CI, and gate messages all teach the same workflow
    - any remaining references to `devcovenant test` are historical only
 
@@ -1126,19 +1126,19 @@ the current state as finished.
    - the schema-tightening decisions from Item 8 are part of this
      architectural cleanup in implementation terms:
      UTC-only `last_run_utc`, `commands`-only command groups, explicit
-     phase-freshness contracts, and explicit policy participation need one
+     run-freshness contracts, and explicit policy participation need one
      clean module ownership story, not just good field names
-   - generic phase-event/reporting infrastructure should stop carrying
-     `test_events` / `TestEvent*` naming once it is the shared workflow-phase
-     reporting system for all phase types
+   - generic run-event/reporting infrastructure should stop carrying
+     `test_events` / `TestEvent*` naming once it is the shared workflow-run
+     reporting system for all run types
    - registry/runtime ownership should split by both ephemerity and contract
      ownership, not just by one axis:
      tracked core-owned state, tracked extension-owned state, runtime
      core-owned state, and runtime policy-owned state should not all keep
      sharing one generic registry implementation module
-   - generic phase-reporting hooks belong to the workflow/runtime ownership
+   - generic run-reporting hooks belong to the workflow/runtime ownership
      story as well:
-     special richer reporting must be phase-declarative and reusable, not
+     special richer reporting must be run-declarative and reusable, not
      hidden inside one tests-only branch
    Work packages in dependency order:
    1. Core ownership audit.
@@ -1168,7 +1168,7 @@ the current state as finished.
         implemented in multiple disconnected places
       - absorb `devflow_run_gates` behavior into the flow/runtime ownership
         story instead of keeping a second major implementation island
-      - keep gate behavior, required-phase validation, workflow session
+      - keep gate behavior, required-run validation, workflow session
         recording, and rerun guidance centered around one coherent flow/runtime
         story
       Done when:
@@ -1239,11 +1239,11 @@ the current state as finished.
       - implement the final `commands`-only command-group payload contract
       - keep policy participation explicit rather than implicit in runtime
         orchestration
-      - move richer per-phase reporting onto generic phase hooks/metadata so
-        special reporting is reusable by any phase
-      - finish generalizing the phase-event/reporting subsystem so names such
+      - move richer per-run reporting onto generic run hooks/metadata so
+        special reporting is reusable by any run
+      - finish generalizing the run-event/reporting subsystem so names such
         as `test_events`, `TestEvent`, and related counters no longer pretend
-        the shared contract belongs only to the `tests` phase
+        the shared contract belongs only to the `tests` run
       - keep file-dependent success checks generic, including explicit
         absolute/relative path resolution controls
       - formalize whether workflow evidence paths are fixed runtime-owned
@@ -1252,7 +1252,7 @@ the current state as finished.
       Done when:
       - the runtime/session schema is non-duplicative and matches the plan's
         final contract
-      - generic phase reporting no longer wears test-only names by accident
+      - generic run reporting no longer wears test-only names by accident
 
    7. Documentation, registry, and test rewrite for the new architecture.
       File scope:
@@ -1265,7 +1265,7 @@ the current state as finished.
       - rewrite architecture explanations to reflect the final ownership map
       - remove stale service/invariant myths from docs and test expectations
       - ensure registry/runtime docs describe one truthful ownership model
-      - document generic phase-reporting hooks and generic file-dependent
+      - document generic run-reporting hooks and generic file-dependent
         success checks as reusable workflow features instead of tests-only
         exceptions
       Done when:
@@ -1281,9 +1281,9 @@ the current state as finished.
      historical inertia
    - the runtime/session schema is non-duplicative
    - registry code is split by both ephemerity and ownership
-   - richer phase behavior is generic and declarative, not hardcoded to
+   - richer run behavior is generic and declarative, not hardcoded to
      `tests`
-   - phase-event/reporting internals no longer remain misleadingly test-only
+   - run-event/reporting internals no longer remain misleadingly test-only
      once they are shared workflow runtime machinery
    - the code layout looks like the architecture DevCovenant actually claims
      to have
@@ -1330,11 +1330,11 @@ the current state as finished.
 - For workflow-contract redesign work, also run:
   1. tracked-registry generation checks for the workflow contract
   2. runtime-session migration and schema tests
-  3. start-gate carry-forward failure tests for unresolved required phases
-  4. end-gate closure tests for required declared phases
-  5. phase-runner tests for each supported runner kind in scope
+  3. start-gate carry-forward failure tests for unresolved required runs
+  4. end-gate closure tests for required declared runs
+  5. run-runner tests for each supported runner kind in scope
   6. success-contract tests for each supported success-contract kind in scope
-  7. `devcovenant run` orchestration tests for ordered required-phase execution
+  7. `devcovenant run` orchestration tests for ordered required-run execution
   8. root-command tests that `devcovenant test` is retired from the public CLI
      once the migration lands
   9. universal output-mode override tests for all command families in scope

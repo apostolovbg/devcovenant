@@ -1,4 +1,4 @@
-"""Session gate contract for start, required phases, and end."""
+"""Session gate contract for start, required runs, and end."""
 
 from __future__ import annotations
 
@@ -15,12 +15,6 @@ from devcovenant.core.services import (
     core_invariants as core_invariants_service,
 )
 
-_DEFAULT_STATUS = (
-    Path("devcovenant") / "registry" / "runtime" / "gate_status.json"
-)
-_DEFAULT_WORKFLOW_SESSION = (
-    Path("devcovenant") / "registry" / "runtime" / "workflow_session.json"
-)
 _DEFAULT_PRE_COMMIT_COMMAND = "python3 -m pre_commit run --all-files"
 _DEFAULT_PRE_COMMIT_START_KEY = "pre_commit_start_epoch"
 _DEFAULT_PRE_COMMIT_END_KEY = "pre_commit_end_epoch"
@@ -28,45 +22,38 @@ _DEFAULT_PRE_COMMIT_START_COMMAND_KEY = "pre_commit_start_command"
 _DEFAULT_PRE_COMMIT_END_COMMAND_KEY = "pre_commit_end_command"
 
 
-def _resolve_status_path(invariant: "DevflowRunGates") -> Path:
-    """Return the configured gate status path relative to the repository."""
-    raw = str(invariant.get_option("gate_status_file", str(_DEFAULT_STATUS)))
-    token = raw.strip()
-    if not token:
-        return _DEFAULT_STATUS
-    return Path(token)
+def _resolve_status_path(
+    repo_root: Path,
+    invariant: "DevflowRunGates",
+) -> Path:
+    """Return the configured gate-status path for one repository."""
+
+    return runtime_registry_module.gate_status_path_from_option(
+        repo_root,
+        invariant.get_option("gate_status_file", ""),
+    )
 
 
-def _phase_rerun_command(phase_id: str) -> str:
-    """Return the canonical rerun command for one workflow phase."""
-    token = str(phase_id or "").strip().lower()
-    return f"devcovenant phase run {token}"
+def _resolve_workflow_session_path(
+    repo_root: Path,
+    invariant: "DevflowRunGates",
+) -> Path:
+    """Return the configured workflow-session path for one repository."""
+
+    return runtime_registry_module.workflow_session_path_from_option(
+        repo_root,
+        invariant.get_option("workflow_session_file", ""),
+    )
 
 
-def _format_phase_rerun_instructions(
-    phase_ids: list[str],
+def _format_run_rerun_instructions(
+    run_ids: list[str],
     *,
-    required_phase_ids: list[str] | None = None,
+    required_run_ids: list[str] | None = None,
 ) -> str:
-    """Render one operator-facing rerun instruction chain."""
-    phase_tokens = [
-        str(phase_id or "").strip().lower()
-        for phase_id in phase_ids
-        if str(phase_id or "").strip()
-    ]
-    required_tokens = [
-        str(phase_id or "").strip().lower()
-        for phase_id in (required_phase_ids or [])
-        if str(phase_id or "").strip()
-    ]
-    if phase_tokens and required_tokens and phase_tokens == required_tokens:
-        return "`devcovenant run`"
-    commands = [_phase_rerun_command(phase_id) for phase_id in phase_tokens]
-    if not commands:
-        return ""
-    if len(commands) == 1:
-        return f"`{commands[0]}`"
-    return ", then ".join(f"`{command}`" for command in commands)
+    """Render the canonical rerun instruction."""
+    del run_ids, required_run_ids
+    return "`devcovenant run`"
 
 
 def _load_gate_status(status_file: Path) -> dict | None:
@@ -143,18 +130,18 @@ def _normalize_recorded_commands(commands_raw: list[object]) -> set[str]:
 def _allow_closed_audit_end_order_relaxation(
     ctx: CheckContext,
     *,
-    phase: str,
+    stage: str,
     session_state: str,
     has_unsessioned_edits: bool,
 ) -> bool:
     """Return True when stale end-vs-test ordering is audit-safe.
 
     This branch is intentionally narrow:
-    - applies only to non-gate command checks (`phase` empty)
+    - applies only to non-gate command checks (`stage` empty)
     - applies only to closed sessions
     - applies only when runtime reports no unsessioned edits since end
     """
-    if phase:
+    if stage:
         return False
     if session_state != "closed":
         return False
@@ -192,19 +179,38 @@ class DevflowRunGates(CoreInvariantCheck):
     invariant_id = "devflow-run-gates"
 
     def check(self, ctx: CheckContext) -> List[Violation]:
-        """Enforce start->required-phases->end sequencing from gate state."""
+        """Enforce start->required-runs->end sequencing from gate state."""
         violations: List[Violation] = []
-        status_rel = _resolve_status_path(self)
-        status_path = ctx.repo_root / status_rel
-        phase = os.environ.get("DEVCOV_DEVFLOW_PHASE", "").strip().lower()
+        status_path = runtime_registry_module.gate_status_path_from_option(
+            ctx.repo_root,
+            "",
+        )
+        status_rel = status_path.relative_to(ctx.repo_root)
+        workflow_session_path = (
+            runtime_registry_module.workflow_session_path_from_option(
+                ctx.repo_root,
+                "",
+            )
+        )
+        workflow_session_rel = workflow_session_path.relative_to(ctx.repo_root)
+        stage = os.environ.get("DEVCOV_DEVFLOW_STAGE", "").strip().lower()
         in_pre_commit = bool(str(os.environ.get("PRE_COMMIT", "")).strip())
 
-        if in_pre_commit and not phase:
+        if in_pre_commit and not stage:
             return violations
-        if phase == "start":
+        if stage == "start":
             return violations
 
         try:
+            status_path = _resolve_status_path(ctx.repo_root, self)
+            status_rel = status_path.relative_to(ctx.repo_root)
+            workflow_session_path = _resolve_workflow_session_path(
+                ctx.repo_root,
+                self,
+            )
+            workflow_session_rel = workflow_session_path.relative_to(
+                ctx.repo_root
+            )
             status = _load_gate_status(status_path)
         except ValueError as error:
             return [
@@ -221,7 +227,7 @@ class DevflowRunGates(CoreInvariantCheck):
             )
             reason = str(ctx.change_state.session_reason_code or "").strip()
             if (
-                not phase
+                not stage
                 and top_command == "check"
                 and reason == "missing_gate_status"
             ):
@@ -240,16 +246,6 @@ class DevflowRunGates(CoreInvariantCheck):
                     ),
                 )
             ]
-
-        workflow_session_path = runtime_registry_module.workflow_session_path(
-            ctx.repo_root
-        )
-        try:
-            workflow_session_rel = workflow_session_path.relative_to(
-                ctx.repo_root
-            )
-        except ValueError:
-            workflow_session_rel = workflow_session_path
 
         session_id = str(status.get("session_id", "")).strip()
         session_state = str(status.get("session_state", "")).strip().lower()
@@ -275,7 +271,7 @@ class DevflowRunGates(CoreInvariantCheck):
                 ]
             return violations
 
-        if phase == "end":
+        if stage == "end":
             if session_state != "open":
                 violations.append(
                     Violation(
@@ -328,18 +324,18 @@ class DevflowRunGates(CoreInvariantCheck):
                     message=str(error),
                 )
             ]
-        required_phase_ids = workflow_contract_module.required_phase_ids(
+        required_run_ids = workflow_contract_module.required_run_ids(
             workflow_contract
         )
-        if not required_phase_ids:
+        if not required_run_ids:
             return [
                 Violation(
                     policy_id=self.policy_id,
                     severity="error",
                     file_path=workflow_session_rel,
                     message=(
-                        "No required workflow phases are configured for "
-                        "the active profiles. Declare `workflow_phases` "
+                        "No required workflow runs are configured for "
+                        "the active profiles. Declare `workflow_runs` "
                         "before relying on devflow-run-gates."
                     ),
                 )
@@ -364,7 +360,7 @@ class DevflowRunGates(CoreInvariantCheck):
                     message=(
                         "Workflow session is missing. Run "
                         "`devcovenant gate --start`, execute required "
-                        "workflow phases, then `devcovenant gate --end`."
+                        "workflow runs, then `devcovenant gate --end`."
                     ),
                 )
             ]
@@ -372,7 +368,7 @@ class DevflowRunGates(CoreInvariantCheck):
         pre_commit_command = _pre_commit_command(self)
         require_start = _require_pre_commit(self, "require_pre_commit_start")
         require_end = _require_pre_commit(self, "require_pre_commit_end")
-        if phase == "end":
+        if stage == "end":
             require_end = False
 
         start_epoch_key = _pre_commit_key(
@@ -440,7 +436,7 @@ class DevflowRunGates(CoreInvariantCheck):
                 )
             )
             return violations
-        if phase == "end":
+        if stage == "end":
             if workflow_session_state != "open":
                 violations.append(
                     Violation(
@@ -467,24 +463,24 @@ class DevflowRunGates(CoreInvariantCheck):
                 )
             )
 
-        phases_raw = workflow_session.get("phases")
-        phase_map = dict(phases_raw) if isinstance(phases_raw, dict) else {}
-        missing_required_phases: list[str] = []
-        for phase_id in required_phase_ids:
-            phase_entry = phase_map.get(phase_id)
-            if not isinstance(phase_entry, dict):
-                missing_required_phases.append(phase_id)
+        runs_raw = workflow_session.get("runs")
+        run_map = dict(runs_raw) if isinstance(runs_raw, dict) else {}
+        missing_required_runs: list[str] = []
+        for run_id in required_run_ids:
+            run_entry = run_map.get(run_id)
+            if not isinstance(run_entry, dict):
+                missing_required_runs.append(run_id)
                 continue
-            if str(phase_entry.get("status", "")).strip().lower() != "passed":
-                missing_required_phases.append(phase_id)
+            if str(run_entry.get("status", "")).strip().lower() != "passed":
+                missing_required_runs.append(run_id)
                 continue
             last_run_session_id = str(
-                phase_entry.get("last_run_session_id", "")
+                run_entry.get("last_run_session_id", "")
             ).strip()
             if session_id and last_run_session_id != session_id:
-                missing_required_phases.append(phase_id)
+                missing_required_runs.append(run_id)
                 continue
-        if missing_required_phases:
+        if missing_required_runs:
             violations.append(
                 Violation(
                     policy_id=self.policy_id,
@@ -492,11 +488,11 @@ class DevflowRunGates(CoreInvariantCheck):
                     file_path=workflow_session_rel,
                     message=(
                         "Latest recorded workflow session is missing "
-                        "required phases: "
-                        f"{', '.join(missing_required_phases)}. Run "
-                        f"{_format_phase_rerun_instructions(
-                            missing_required_phases,
-                            required_phase_ids=required_phase_ids,
+                        "required runs: "
+                        f"{', '.join(missing_required_runs)}. Run "
+                        f"{_format_run_rerun_instructions(
+                            missing_required_runs,
+                            required_run_ids=required_run_ids,
                         )}."
                     ),
                 )

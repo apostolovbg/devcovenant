@@ -12,7 +12,7 @@ from devcovenant.core.runtime import (
 )
 
 SCHEMA_VERSION = 1
-_PHASE_SNAPSHOTS_KEY = "workflow_phase_snapshots"
+_RUN_SNAPSHOTS_KEY = "workflow_run_snapshots"
 
 
 def _normalize_commands(raw_value: object) -> list[str]:
@@ -33,7 +33,7 @@ def _normalize_commands(raw_value: object) -> list[str]:
 
 
 def _normalize_entry_payload(entry_raw: object) -> dict[str, object]:
-    """Normalize one anchor/phase payload and purge legacy duplicate keys."""
+    """Normalize one anchor/run payload and purge legacy duplicate keys."""
 
     entry = dict(entry_raw) if isinstance(entry_raw, Mapping) else {}
     last_run_utc = str(
@@ -56,7 +56,7 @@ def _normalize_entry_payload(entry_raw: object) -> dict[str, object]:
 
 
 def _normalize_entry_mapping(raw_entries: object) -> dict[str, object]:
-    """Normalize stored anchor/phase entry mappings."""
+    """Normalize stored anchor/run entry mappings."""
 
     if not isinstance(raw_entries, dict):
         return {}
@@ -83,8 +83,8 @@ def _base_payload() -> dict[str, object]:
         "session_id": "",
         "session_state": "",
         "anchors": {},
-        "phases": {},
-        "required_phase_ids": [],
+        "runs": {},
+        "required_run_ids": [],
     }
 
 
@@ -106,13 +106,11 @@ def load_workflow_session(repo_root: Path) -> dict[str, object]:
     normalized.update(payload)
     anchors = payload.get("anchors")
     normalized["anchors"] = _normalize_entry_mapping(anchors)
-    phases = payload.get("phases")
-    normalized["phases"] = _normalize_entry_mapping(phases)
-    required_phase_ids = payload.get("required_phase_ids")
-    normalized["required_phase_ids"] = (
-        list(required_phase_ids)
-        if isinstance(required_phase_ids, list)
-        else []
+    runs = payload.get("runs")
+    normalized["runs"] = _normalize_entry_mapping(runs)
+    required_run_ids = payload.get("required_run_ids")
+    normalized["required_run_ids"] = (
+        list(required_run_ids) if isinstance(required_run_ids, list) else []
     )
     return normalized
 
@@ -128,7 +126,7 @@ def write_workflow_session(
     normalized = _base_payload()
     normalized.update(dict(payload))
     normalized["anchors"] = _normalize_entry_mapping(normalized.get("anchors"))
-    normalized["phases"] = _normalize_entry_mapping(normalized.get("phases"))
+    normalized["runs"] = _normalize_entry_mapping(normalized.get("runs"))
     path.write_text(
         json.dumps(normalized, indent=2) + "\n",
         encoding="utf-8",
@@ -136,48 +134,48 @@ def write_workflow_session(
     return path
 
 
-def resolve_phase_snapshot(
+def resolve_run_snapshot(
     repo_root: Path,
     payload: Mapping[str, object],
-    phase_id: str,
+    run_id: str,
 ) -> dict[str, str] | None:
-    """Return the stored verification snapshot for one workflow phase."""
+    """Return the stored verification snapshot for one workflow run."""
 
     snapshot_payload = session_snapshot_runtime.load_session_snapshot_payload(
         repo_root,
         payload,
     )
-    raw_snapshots = snapshot_payload.get(_PHASE_SNAPSHOTS_KEY)
+    raw_snapshots = snapshot_payload.get(_RUN_SNAPSHOTS_KEY)
     if not isinstance(raw_snapshots, dict):
         return None
-    raw_snapshot = raw_snapshots.get(str(phase_id or "").strip())
+    raw_snapshot = raw_snapshots.get(str(run_id or "").strip())
     if not isinstance(raw_snapshot, dict):
         return None
     return session_snapshot_runtime.normalize_snapshot_rows(
         raw_snapshot,
-        field_name=f"{_PHASE_SNAPSHOTS_KEY}.{phase_id}",
+        field_name=f"{_RUN_SNAPSHOTS_KEY}.{run_id}",
     )
 
 
-def merge_phase_snapshot(
+def merge_run_snapshot(
     repo_root: Path,
     payload: Mapping[str, object],
-    phase_id: str,
+    run_id: str,
     snapshot: Mapping[str, str],
 ) -> tuple[str, dict[str, object]]:
-    """Merge one phase snapshot into the shared session-snapshot file."""
+    """Merge one run snapshot into the shared session-snapshot file."""
 
     snapshot_payload = session_snapshot_runtime.load_session_snapshot_payload(
         repo_root,
         payload,
     )
-    phase_snapshots = snapshot_payload.get(_PHASE_SNAPSHOTS_KEY)
+    run_snapshots = snapshot_payload.get(_RUN_SNAPSHOTS_KEY)
     normalized_snapshots = (
-        dict(phase_snapshots) if isinstance(phase_snapshots, dict) else {}
+        dict(run_snapshots) if isinstance(run_snapshots, dict) else {}
     )
-    normalized_snapshots[str(phase_id or "").strip()] = dict(snapshot)
+    normalized_snapshots[str(run_id or "").strip()] = dict(snapshot)
     return session_snapshot_runtime.merge_session_snapshot_payload(
         repo_root,
         dict(payload),
-        updates={_PHASE_SNAPSHOTS_KEY: normalized_snapshots},
+        updates={_RUN_SNAPSHOTS_KEY: normalized_snapshots},
     )

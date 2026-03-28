@@ -1,5 +1,5 @@
 # Troubleshooting
-**Last Updated:** 2026-03-24
+**Last Updated:** 2026-03-28
 **Project Version:** 1.0.0
 
 ## Overview
@@ -18,7 +18,7 @@ Ask these questions first:
 
 1. was this a read-only audit or an active gate session?
 2. which command failed?
-3. did a gate phase mutate files?
+3. did a gate stage mutate files?
 4. is the problem in config, metadata, generated state, or tests?
 
 ## Gate Failures

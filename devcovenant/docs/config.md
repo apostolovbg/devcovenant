@@ -1,5 +1,5 @@
 # Configuration
-**Last Updated:** 2026-03-27
+**Last Updated:** 2026-03-28
 **Project Version:** 1.0.0
 
 ## Overview
@@ -133,7 +133,7 @@ Metadata for DevCovenant-owned invariants.
 These are not ordinary policies and are not meant to be casual customization
 surfaces.
 They describe non-optional DevCovenant runtime contracts such as gate evidence
-requirements, integrity checks, and required test commands.
+requirements, integrity checks, and required workflow-run evidence paths.
 
 ### policy_state
 The on/off map for customizable policies.

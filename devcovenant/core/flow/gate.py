@@ -220,39 +220,17 @@ def _is_test_relevant_path(path: str) -> bool:
     return leaf not in _TEST_IRRELEVANT_FILES
 
 
-def _phase_rerun_command(phase_id: str) -> str:
-    """Return the canonical rerun command for one workflow phase."""
-    token = str(phase_id or "").strip().lower()
-    return f"devcovenant phase run {token}"
-
-
-def _format_phase_rerun_instructions(
-    phase_ids: list[str],
+def _format_run_rerun_instructions(
+    run_ids: list[str],
     *,
-    required_phase_ids: list[str] | None = None,
+    required_run_ids: list[str] | None = None,
 ) -> str:
-    """Render one operator-facing rerun instruction chain."""
-    phase_tokens = [
-        str(phase_id or "").strip().lower()
-        for phase_id in phase_ids
-        if str(phase_id or "").strip()
-    ]
-    required_tokens = [
-        str(phase_id or "").strip().lower()
-        for phase_id in (required_phase_ids or [])
-        if str(phase_id or "").strip()
-    ]
-    if phase_tokens and required_tokens and phase_tokens == required_tokens:
-        return "`devcovenant run`"
-    commands = [_phase_rerun_command(phase_id) for phase_id in phase_tokens]
-    if not commands:
-        return ""
-    if len(commands) == 1:
-        return f"`{commands[0]}`"
-    return ", then ".join(f"`{command}`" for command in commands)
+    """Render the canonical rerun instruction."""
+    del run_ids, required_run_ids
+    return "`devcovenant run`"
 
 
-def _stale_required_phase_ids(
+def _stale_required_run_ids(
     repo_root: Path,
     contract: Mapping[str, object],
     workflow_payload: Mapping[str, object],
@@ -260,48 +238,46 @@ def _stale_required_phase_ids(
     *,
     session_id: str,
 ) -> list[str]:
-    """Return required phases whose latest evidence is missing or stale."""
-    phases_raw = workflow_payload.get("phases")
-    phase_map = dict(phases_raw) if isinstance(phases_raw, dict) else {}
+    """Return required runs whose latest evidence is missing or stale."""
+    runs_raw = workflow_payload.get("runs")
+    run_map = dict(runs_raw) if isinstance(runs_raw, dict) else {}
     stale: list[str] = []
-    for phase_id in workflow_contract_module.required_phase_ids(contract):
-        phase = workflow_contract_module.resolve_phase(contract, phase_id)
-        if phase is None:
-            stale.append(phase_id)
+    for run_id in workflow_contract_module.required_run_ids(contract):
+        run = workflow_contract_module.resolve_run(contract, run_id)
+        if run is None:
+            stale.append(run_id)
             continue
-        entry = phase_map.get(phase_id)
+        entry = run_map.get(run_id)
         if not isinstance(entry, dict):
-            stale.append(phase_id)
+            stale.append(run_id)
             continue
         if session_id:
             last_run_session_id = str(
                 entry.get("last_run_session_id", "")
             ).strip()
             if last_run_session_id != session_id:
-                stale.append(phase_id)
+                stale.append(run_id)
                 continue
         try:
-            phase_snapshot = (
-                workflow_session_runtime_module.resolve_phase_snapshot(
+            run_snapshot = (
+                workflow_session_runtime_module.resolve_run_snapshot(
                     repo_root,
                     workflow_payload,
-                    phase_id,
+                    run_id,
                 )
             )
         except ValueError:
-            stale.append(phase_id)
+            stale.append(run_id)
             continue
-        if not phase_snapshot:
-            stale.append(phase_id)
+        if not run_snapshot:
+            stale.append(run_id)
             continue
-        changed_paths = _changed_paths_between(
-            phase_snapshot, current_snapshot
-        )
-        if workflow_contract_module.phase_relevant_paths_changed(
-            phase,
+        changed_paths = _changed_paths_between(run_snapshot, current_snapshot)
+        if workflow_contract_module.run_relevant_paths_changed(
+            run,
             sorted(changed_paths),
         ):
-            stale.append(phase_id)
+            stale.append(run_id)
     return stale
 
 
@@ -309,18 +285,18 @@ def _record_workflow_anchor(
     repo_root: Path,
     *,
     contract: Mapping[str, object],
-    phase: str,
+    stage: str,
     command: str,
     notes: str,
     when: _dt.datetime,
     session_id: str,
     session_state: str,
-    reset_phases: bool = False,
+    reset_runs: bool = False,
     session_snapshot_file: str = "",
     session_snapshot_updated_utc: str = "",
     session_snapshot_updated_epoch: float = 0.0,
 ) -> None:
-    """Persist workflow-session anchor state for one gate phase."""
+    """Persist workflow-session anchor state for one gate stage."""
     try:
         workflow_payload = (
             workflow_session_runtime_module.load_workflow_session(repo_root)
@@ -331,26 +307,26 @@ def _record_workflow_anchor(
             "session_id": "",
             "session_state": "",
             "anchors": {},
-            "phases": {},
-            "required_phase_ids": [],
+            "runs": {},
+            "required_run_ids": [],
         }
     anchors_raw = workflow_payload.get("anchors")
     anchors = dict(anchors_raw) if isinstance(anchors_raw, dict) else {}
-    anchor_entry = dict(anchors.get(phase) or {})
+    anchor_entry = dict(anchors.get(stage) or {})
     anchor_entry.update(
         {
-            "id": phase,
+            "id": stage,
             "status": "passed",
             "last_run_utc": when.isoformat(),
             "last_run_epoch": when.timestamp(),
             "commands": [command.strip()] if command.strip() else [],
-            "command_name": f"gate --{phase}",
+            "command_name": f"gate --{stage}",
             "notes": notes.strip(),
         }
     )
     anchor_entry.pop("last_run", None)
     anchor_entry.pop("command", None)
-    anchors[phase] = anchor_entry
+    anchors[stage] = anchor_entry
     workflow_payload["schema_version"] = (
         workflow_session_runtime_module.SCHEMA_VERSION
     )
@@ -358,14 +334,14 @@ def _record_workflow_anchor(
         "schema_version",
         workflow_contract_module.SCHEMA_VERSION,
     )
-    workflow_payload["required_phase_ids"] = (
-        workflow_contract_module.required_phase_ids(contract)
+    workflow_payload["required_run_ids"] = (
+        workflow_contract_module.required_run_ids(contract)
     )
     workflow_payload["session_id"] = session_id
     workflow_payload["session_state"] = session_state
     workflow_payload["anchors"] = anchors
-    if reset_phases:
-        workflow_payload["phases"] = {}
+    if reset_runs:
+        workflow_payload["runs"] = {}
     if session_snapshot_file:
         workflow_payload["session_snapshot_file"] = session_snapshot_file
     if session_snapshot_updated_utc:
@@ -396,17 +372,17 @@ def _changed_paths_between(
 
 def run_pre_commit_gate(
     repo_root: Path,
-    phase: str,
+    stage: str,
     *,
     command: str = "python3 -m pre_commit run --all-files",
     notes: str = "",
 ) -> int:
-    """Run one gate pre-commit phase (`start`, `mid`, or `end`)."""
-    if phase not in {"start", "mid", "end"}:
-        raise SystemExit("phase must be 'start', 'mid', or 'end'.")
-    is_start = phase == "start"
-    is_mid = phase == "mid"
-    is_end = phase == "end"
+    """Run one gate pre-commit stage (`start`, `mid`, or `end`)."""
+    if stage not in {"start", "mid", "end"}:
+        raise SystemExit("stage must be 'start', 'mid', or 'end'.")
+    is_start = stage == "start"
+    is_mid = stage == "mid"
+    is_end = stage == "end"
 
     status_path = registry_runtime_module.gate_status_path(repo_root)
     status_path.parent.mkdir(parents=True, exist_ok=True)
@@ -423,18 +399,18 @@ def run_pre_commit_gate(
         )
         if not session_id or session_state != "open":
             runtime_print(
-                f"Cannot run {phase} gate without an active open session. "
+                f"Cannot run {stage} gate without an active open session. "
                 "Run `devcovenant gate --start` first.",
                 file=sys.stderr,
             )
             return 1
 
     start_ts = _utc_now() if is_start else None
-    required_phase_ids_pending: list[str] = []
-    recovery_required_phase_ids: list[str] = []
+    required_run_ids_pending: list[str] = []
+    recovery_required_run_ids: list[str] = []
     recovery_status_active = False
     recovery_status_previous: bytes | None = None
-    managed_env_stage = "command" if is_mid else phase
+    managed_env_stage = "command" if is_mid else stage
     try:
         managed_env, managed_python = (
             execution_runtime_module.resolve_managed_environment_for_stage(
@@ -461,7 +437,7 @@ def run_pre_commit_gate(
 
     while True:
         env = dict(managed_env or os.environ)
-        env["DEVCOV_DEVFLOW_PHASE"] = "" if is_mid else phase
+        env["DEVCOV_DEVFLOW_STAGE"] = "" if is_mid else stage
         hook_env = dict(env)
         auto_fix_enabled = (
             execution_runtime_module.resolve_engine_auto_fix_enabled(repo_root)
@@ -489,7 +465,7 @@ def run_pre_commit_gate(
             except ValueError as error:
                 runtime_print(str(error), file=sys.stderr)
                 return 1
-            required_phase_ids_pending = _stale_required_phase_ids(
+            required_run_ids_pending = _stale_required_run_ids(
                 repo_root,
                 workflow_contract,
                 workflow_payload,
@@ -597,14 +573,14 @@ def run_pre_commit_gate(
                             status_payload.get("session_id", "")
                         ).strip()
                         if workflow_status_error:
-                            recovery_required_phase_ids = list(
-                                workflow_contract_module.required_phase_ids(
+                            recovery_required_run_ids = list(
+                                workflow_contract_module.required_run_ids(
                                     workflow_contract
                                 )
                             )
                         else:
-                            recovery_required_phase_ids = (
-                                _stale_required_phase_ids(
+                            recovery_required_run_ids = (
+                                _stale_required_run_ids(
                                     repo_root,
                                     workflow_contract,
                                     workflow_payload,
@@ -642,6 +618,7 @@ def run_pre_commit_gate(
                 recovery_remove_keys = [
                     "session_end_snapshot",
                     "last_run_snapshot",
+                    "run_events",
                     "test_events",
                 ]
                 recovery_updates: dict[str, object] = {}
@@ -667,6 +644,7 @@ def run_pre_commit_gate(
                 recovery_payload["session_snapshot_updated_epoch"] = (
                     start_ts.timestamp()
                 )
+                recovery_payload.pop("run_events_count", None)
                 recovery_payload.pop("test_events_count", None)
                 prune_inline_session_snapshot_fields(recovery_payload)
                 recovery_payload["recovery_start_reason"] = recovery_reason
@@ -711,7 +689,7 @@ def run_pre_commit_gate(
         try:
             diff_after_hooks = _current_numstat_snapshot(repo_root)
         except ValueError as error:
-            if phase == "start" and recovery_status_active:
+            if stage == "start" and recovery_status_active:
                 _restore_status_file(status_path, recovery_status_previous)
                 recovery_status_active = False
             runtime_print(str(error), file=sys.stderr)
@@ -729,21 +707,21 @@ def run_pre_commit_gate(
             return 1
 
         if (
-            phase == "start"
+            stage == "start"
             and recovery_status_active
-            and recovery_required_phase_ids
+            and recovery_required_run_ids
         ):
             _restore_status_file(status_path, recovery_status_previous)
             recovery_status_active = False
-            recovery_rerun = _format_phase_rerun_instructions(
-                recovery_required_phase_ids,
-                required_phase_ids=workflow_contract_module.required_phase_ids(
+            recovery_rerun = _format_run_rerun_instructions(
+                recovery_required_run_ids,
+                required_run_ids=workflow_contract_module.required_run_ids(
                     workflow_contract
                 ),
             )
             runtime_print(
                 "Recovery start detected unsessioned edits and requires "
-                "fresh required workflow phases before recording a new "
+                "fresh required workflow runs before recording a new "
                 "baseline.",
                 file=sys.stderr,
             )
@@ -752,7 +730,7 @@ def run_pre_commit_gate(
                 f"{recovery_rerun},"
                 " "
                 "then rerun `devcovenant gate --start`. Start gate performs "
-                "no internal workflow-phase runs.",
+                "no internal workflow-run runs.",
                 file=sys.stderr,
             )
             return 1
@@ -825,17 +803,17 @@ def run_pre_commit_gate(
                 file=sys.stderr,
             )
             return 1
-        if is_end and exit_code == 0 and required_phase_ids_pending:
-            rerun_required_phases = _format_phase_rerun_instructions(
-                required_phase_ids_pending,
-                required_phase_ids=workflow_contract_module.required_phase_ids(
+        if is_end and exit_code == 0 and required_run_ids_pending:
+            rerun_required_runs = _format_run_rerun_instructions(
+                required_run_ids_pending,
+                required_run_ids=workflow_contract_module.required_run_ids(
                     workflow_contract
                 ),
             )
             runtime_print(
-                "End gate requires fresh required workflow phases before "
+                "End gate requires fresh required workflow runs before "
                 "closure. Run "
-                f"{rerun_required_phases},"
+                f"{rerun_required_runs},"
                 " "
                 "then rerun `devcovenant gate --end`.",
                 file=sys.stderr,
@@ -855,7 +833,7 @@ def run_pre_commit_gate(
         _record_workflow_anchor(
             repo_root,
             contract=workflow_contract,
-            phase="mid",
+            stage="mid",
             command=command,
             notes=notes,
             when=_utc_now(),
@@ -874,7 +852,7 @@ def run_pre_commit_gate(
         runtime_print(str(error), file=sys.stderr)
         return 1
     now = _utc_now()
-    prefix = f"pre_commit_{phase}"
+    prefix = f"pre_commit_{stage}"
     if start_ts is not None:
         payload[f"{prefix}_utc"] = start_ts.isoformat()
         payload[f"{prefix}_epoch"] = start_ts.timestamp()
@@ -892,7 +870,7 @@ def run_pre_commit_gate(
         payload.pop("changelog_start_diff_numstat", None)
         payload.pop("changelog_start_exemption_fingerprints", None)
         payload.pop("session_start_signature", None)
-        # Clear stale end-phase evidence so ordering checks stay session-bound.
+        # Clear stale end-stage evidence so ordering checks stay session-bound.
         for key in (
             "pre_commit_end_utc",
             "pre_commit_end_epoch",
@@ -921,6 +899,7 @@ def run_pre_commit_gate(
         snapshot_remove_keys = [
             "session_end_snapshot",
             "last_run_snapshot",
+            "run_events",
             "test_events",
         ]
         snapshot_updates: dict[str, object] = {
@@ -956,6 +935,7 @@ def run_pre_commit_gate(
         payload["session_snapshot_file"] = snapshot_rel_path
         payload["session_snapshot_updated_utc"] = start_ts.isoformat()
         payload["session_snapshot_updated_epoch"] = start_ts.timestamp()
+        payload.pop("run_events_count", None)
         payload.pop("test_events_count", None)
         payload.update(
             execution_runtime_module.capture_agents_section_hashes(repo_root)
@@ -1012,13 +992,13 @@ def run_pre_commit_gate(
     _record_workflow_anchor(
         repo_root,
         contract=workflow_contract,
-        phase=phase,
+        stage=stage,
         command=command,
         notes=notes,
         when=start_ts if start_ts is not None else now,
         session_id=str(payload.get("session_id", "")).strip(),
         session_state=str(payload.get("session_state", "")).strip().lower(),
-        reset_phases=is_start,
+        reset_runs=is_start,
         session_snapshot_file=str(payload.get("session_snapshot_file", "")),
         session_snapshot_updated_utc=str(
             payload.get("session_snapshot_updated_utc", "")

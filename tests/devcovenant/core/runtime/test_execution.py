@@ -34,18 +34,18 @@ def _unit_test_execution_symbol_contract_is_stable() -> None:
     expected = [
         "ChildOutputChannel",
         "configure_repo_pycache_prefix",
-        "record_workflow_phase_result",
-        "resolve_declared_workflow_phase",
+        "record_workflow_run_result",
+        "resolve_declared_workflow_run",
         "resolve_managed_environment_for_stage",
         "resolve_child_output_plan_for_channel",
         "rewrite_command_for_managed_python",
         "rewrite_command_string_for_managed_python",
-        "resolve_required_workflow_phases",
-        "resolve_workflow_phase_commands",
-        "registry_required_phase_commands",
+        "resolve_required_workflow_runs",
+        "resolve_workflow_run_commands",
+        "registry_required_run_commands",
         "run_child_command_with_output_policy",
-        "run_and_record_workflow_phase",
-        "run_required_workflow_phases",
+        "run_and_record_workflow_run",
+        "run_required_workflow_runs",
     ]
     for symbol in expected:
         assert hasattr(module, symbol), symbol
@@ -83,7 +83,7 @@ def _unit_test_execution_symbols_cover_runtime_helpers() -> None:
         "resolve_repo_root",
         "resolve_child_output_plan_for_channel",
         "resolve_cli_output_mode_override",
-        "resolve_workflow_phase_output_mode",
+        "resolve_workflow_run_output_mode",
         "run_bootstrap_registry_refresh",
         "run_child_command_with_output_policy",
         "run_subprocess_with_runtime_output",
@@ -141,20 +141,20 @@ def _unit_test_execution_symbol_assertions_cover_public_api() -> None:
     assert module.print_step
     assert module.read_local_version
     assert module.record_gate_status
-    assert module.record_workflow_phase_result
-    assert module.registry_required_phase_commands
-    assert module.resolve_declared_workflow_phase
+    assert module.record_workflow_run_result
+    assert module.registry_required_run_commands
+    assert module.resolve_declared_workflow_run
     assert module.resolve_managed_environment_for_stage
     assert module.resolve_child_output_plan_for_channel
     assert module.resolve_cli_output_mode_override
     assert module.resolve_repo_root
-    assert module.resolve_required_workflow_phases
-    assert module.resolve_workflow_phase_commands
-    assert module.resolve_workflow_phase_output_mode
+    assert module.resolve_required_workflow_runs
+    assert module.resolve_workflow_run_commands
+    assert module.resolve_workflow_run_output_mode
     assert module.rewrite_command_for_managed_python
     assert module.rewrite_command_string_for_managed_python
-    assert module.run_and_record_workflow_phase
-    assert module.run_required_workflow_phases
+    assert module.run_and_record_workflow_run
+    assert module.run_required_workflow_runs
     assert module.run_bootstrap_registry_refresh
     assert module.run_child_command_with_output_policy
     assert module.run_subprocess_with_runtime_output
@@ -503,12 +503,12 @@ def _unit_test_global_config_template_documents_quiet_mode() -> None:
     assert "tests_output_mode: verbose" in content
 
 
-def _unit_test_normal_mode_workflow_phase_message_contract_is_stable() -> None:
-    """Normal-mode workflow-phase message should stay concise and log-first."""
+def _unit_test_normal_mode_workflow_run_message_contract_is_stable() -> None:
+    """Normal-mode workflow-run message should stay concise and log-first."""
     content = _read_output_doc_contract_text(
         "devcovenant/core/runtime/execution.py"
     )
-    assert "Please wait for workflow phase commands to execute." in content
+    assert "Please wait for workflow run commands to execute." in content
     assert "Full output " in content
     assert '"is available in run logs."' in content
 
@@ -1051,9 +1051,7 @@ def _unit_test_normal_mode_workflow_child_output_is_logged() -> None:
     assert "normal stderr line" in stdout_log
 
 
-def _unit_test_resolve_workflow_phase_output_mode_uses_recording_hook() -> (
-    None
-):
+def _unit_test_resolve_workflow_run_output_mode_uses_recording_hook() -> None:
     """Phase output mode should follow the declared recording hook."""
 
     module = importlib.import_module(MODULE)
@@ -1072,24 +1070,22 @@ def _unit_test_resolve_workflow_phase_output_mode_uses_recording_hook() -> (
             ),
             encoding="utf-8",
         )
-        phase = {
+        run = {
             "id": "tests",
             "recording": {
                 "output_mode_config_field": "engine.tests_output_mode"
             },
         }
-        plain_phase = {"id": "assurance", "recording": {}}
+        plain_run = {"id": "assurance", "recording": {}}
 
         try:
             module.configure_output_mode("quiet")
             assert (
-                module.resolve_workflow_phase_output_mode(repo_root, phase)
+                module.resolve_workflow_run_output_mode(repo_root, run)
                 == "normal"
             )
             assert (
-                module.resolve_workflow_phase_output_mode(
-                    repo_root, plain_phase
-                )
+                module.resolve_workflow_run_output_mode(repo_root, plain_run)
                 == "quiet"
             )
         finally:
@@ -1130,8 +1126,8 @@ def _unit_test_cli_output_override_helpers_handle_dispatch_and_sentinel():
     ) == ["run", "--verbose"]
 
 
-def _unit_test_workflow_phase_summary_metadata_hints() -> None:
-    """Workflow-phase summary metadata should include counts and hints."""
+def _unit_test_workflow_run_summary_metadata_hints() -> None:
+    """Workflow-run summary metadata should include counts and hints."""
     module = importlib.import_module(MODULE)
     started = module._dt.datetime(
         2026,
@@ -1156,12 +1152,12 @@ def _unit_test_workflow_phase_summary_metadata_hints() -> None:
             }
         )
     ]
-    payload = module._build_workflow_phase_run_summary_metadata(
-        phase_id="tests",
+    payload = module._build_workflow_run_summary_metadata(
+        run_id="tests",
         commands=[("pytest", ["pytest"])],
         events=events,
-        workflow_phase_output_mode="normal",
-        source_field="workflow_phases",
+        workflow_run_output_mode="normal",
+        source_field="workflow_runs",
         started=started,
         finished=finished,
         first_failed_command="pytest",
@@ -1181,7 +1177,7 @@ def _unit_test_workflow_phase_summary_metadata_hints() -> None:
     assert len(payload["command_durations"]) == 1
     assert payload["command_durations"][0]["duration_seconds"] == 1.5
     assert payload["command_durations"][0]["command"] == "pytest"
-    assert payload["phase_id"] == "tests"
+    assert payload["run_id"] == "tests"
     assert payload["first_failed_command"] == "pytest"
     assert payload["failure_hint"]
     assert payload["normal_console_flood_suppressed"] is True
@@ -1241,7 +1237,7 @@ def _unit_test_workflow_profile_artifacts_are_written_for_active_run() -> None:
         try:
             payload, artifacts = (
                 module._build_and_write_workflow_profile_artifacts(
-                    phase_id="tests",
+                    run_id="tests",
                     commands=[
                         (
                             "python3 -m unittest discover -v",
@@ -1251,8 +1247,8 @@ def _unit_test_workflow_profile_artifacts_are_written_for_active_run() -> None:
                         ("ruff check .", ["ruff", "check", "."]),
                     ],
                     events=events,
-                    workflow_phase_output_mode="normal",
-                    source_field="workflow_phases",
+                    workflow_run_output_mode="normal",
+                    source_field="workflow_runs",
                     started=started,
                     finished=finished,
                 )
@@ -1277,10 +1273,10 @@ def _unit_test_workflow_profile_artifacts_are_written_for_active_run() -> None:
                 profile_json.read_text(encoding="utf-8")
             )
             assert loaded["recorded_events"] == 3
-            assert loaded["phase_id"] == "tests"
+            assert loaded["run_id"] == "tests"
             assert loaded["slowest_commands"][0]["raw_command"] == "pytest"
             rendered = profile_txt.read_text(encoding="utf-8")
-            assert "Workflow Phase Profile (informational)" in rendered
+            assert "Workflow Run Profile (informational)" in rendered
             assert "Group Breakdown:" in rendered
             assert "Slowest Commands:" in rendered
         finally:
@@ -1406,9 +1402,9 @@ class GeneratedUnittestCases(unittest.TestCase):
         """Run quiet-mode selector comment assertions in config template."""
         _unit_test_global_config_template_documents_quiet_mode()
 
-    def test_normal_mode_workflow_phase_message_contract_is_stable(self):
-        """Run normal-mode workflow-phase message contract assertions."""
-        _unit_test_normal_mode_workflow_phase_message_contract_is_stable()
+    def test_normal_mode_workflow_run_message_contract_is_stable(self):
+        """Run normal-mode workflow-run message contract assertions."""
+        _unit_test_normal_mode_workflow_run_message_contract_is_stable()
 
     def test_ci_workflow_split_docs_are_consistent(self):
         """Run CI workflow ownership wording consistency assertions."""
@@ -1492,9 +1488,9 @@ class GeneratedUnittestCases(unittest.TestCase):
         """Run normal-mode suppression and run-log capture assertions."""
         _unit_test_normal_mode_workflow_child_output_is_logged()
 
-    def test_resolve_workflow_phase_output_mode_uses_recording_hook(self):
-        """Run declarative workflow-phase output-mode hook assertions."""
-        _unit_test_resolve_workflow_phase_output_mode_uses_recording_hook()
+    def test_resolve_workflow_run_output_mode_uses_recording_hook(self):
+        """Run declarative workflow-run output-mode hook assertions."""
+        _unit_test_resolve_workflow_run_output_mode_uses_recording_hook()
 
     def test_build_command_parser_applies_output_override_flags(self):
         """Run shared command-parser output-override assertions."""
@@ -1506,9 +1502,9 @@ class GeneratedUnittestCases(unittest.TestCase):
         """Run CLI output-override helper assertions."""
         _unit_test_cli_output_override_helpers_handle_dispatch_and_sentinel()
 
-    def test_workflow_phase_summary_metadata_hints(self):
-        """Run workflow-phase summary metadata shape assertions."""
-        _unit_test_workflow_phase_summary_metadata_hints()
+    def test_workflow_run_summary_metadata_hints(self):
+        """Run workflow-run summary metadata shape assertions."""
+        _unit_test_workflow_run_summary_metadata_hints()
 
     def test_workflow_profile_artifacts_are_written_for_active_run(self):
         """Run active-run profiling artifact generation assertions."""

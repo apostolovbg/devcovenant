@@ -52,7 +52,7 @@ def _write_policy_registry(repo_root: Path) -> None:
                 "    category: system",
                 "  python:",
                 "    category: language",
-                "    workflow_phases:",
+                "    workflow_runs:",
                 "      - id: tests",
                 "        enabled: true",
                 "        required: true",
@@ -180,7 +180,7 @@ def _write_workflow_session(
 
 
 def _unit_test_start_clears_stale_pre_commit_end() -> None:
-    """Start gate should clear stale end-phase pre-commit evidence."""
+    """Start gate should clear stale end-stage pre-commit evidence."""
     module = importlib.import_module(MODULE)
     with tempfile.TemporaryDirectory() as tmpdir:
         repo_root = Path(tmpdir)
@@ -260,7 +260,7 @@ def _unit_test_start_injects_check_orchestration_env() -> None:
             exit_code = module.run_pre_commit_gate(repo_root, "start")
 
         assert exit_code == 0
-        assert captured_env["DEVCOV_DEVFLOW_PHASE"] == "start"
+        assert captured_env["DEVCOV_DEVFLOW_STAGE"] == "start"
         assert captured_env["DEVCOV_CHECK_APPLY_FIXES"] == "0"
         assert captured_env["DEVCOV_CHECK_RUN_REFRESH"] == "1"
         assert captured_env["DEVCOV_CHECK_CLEAN_BYTECODE"] == "1"
@@ -478,9 +478,9 @@ def _unit_test_mid_targets_snapshot_files_for_pre_commit() -> None:
                 "workflow_contract_schema_version": 1,
                 "session_id": "open-mid-target",
                 "session_state": "open",
-                "required_phase_ids": ["tests"],
+                "required_run_ids": ["tests"],
                 "anchors": {},
-                "phases": {},
+                "runs": {},
             },
         )
         tracked_path = repo_root / "mid_target.py"
@@ -544,7 +544,7 @@ def _unit_test_end_targets_snapshot_files_for_pre_commit() -> None:
             repo_root,
             {
                 "last_run_snapshot": {"sample.py": "same"},
-                "workflow_phase_snapshots": {"tests": {"sample.py": "same"}},
+                "workflow_run_snapshots": {"tests": {"sample.py": "same"}},
             },
         )
         status_path.write_text(
@@ -569,10 +569,10 @@ def _unit_test_end_targets_snapshot_files_for_pre_commit() -> None:
                 "workflow_contract_schema_version": 1,
                 "session_id": "open-end-target",
                 "session_state": "open",
-                "required_phase_ids": ["tests"],
+                "required_run_ids": ["tests"],
                 "session_snapshot_file": snapshot_rel,
                 "anchors": {},
-                "phases": {
+                "runs": {
                     "tests": {
                         "id": "tests",
                         "status": "passed",
@@ -625,7 +625,7 @@ def _unit_test_end_targets_snapshot_files_for_pre_commit() -> None:
 
 
 def _unit_test_start_recovery_requires_explicit_manual_tests() -> None:
-    """Recovery start should fail and instruct explicit workflow phases."""
+    """Recovery start should fail and instruct explicit workflow runs."""
     module = importlib.import_module(MODULE)
     with tempfile.TemporaryDirectory() as tmpdir:
         repo_root = Path(tmpdir)
@@ -665,10 +665,10 @@ def _unit_test_start_recovery_requires_explicit_manual_tests() -> None:
                 "workflow_contract_schema_version": 1,
                 "session_id": "closed-1",
                 "session_state": "closed",
-                "required_phase_ids": ["tests"],
+                "required_run_ids": ["tests"],
                 "session_snapshot_file": snapshot_rel,
                 "anchors": {},
-                "phases": {},
+                "runs": {},
             },
         )
         original_bytes = status_path.read_bytes()
@@ -716,19 +716,19 @@ def _unit_test_start_recovery_requires_explicit_manual_tests() -> None:
         assert exit_code == 1
         assert status_path.read_bytes() == original_bytes
         assert any(
-            "requires fresh required workflow phases" in line for line in lines
+            "requires fresh required workflow runs" in line for line in lines
         ), lines
         assert any(
             "devcovenant run" in line and "devcovenant gate --start" in line
             for line in lines
         ), lines
         assert any(
-            "no internal workflow-phase runs" in line for line in lines
+            "no internal workflow-run runs" in line for line in lines
         ), lines
 
 
 def _unit_test_start_recovery_allows_fresh_explicit_manual_tests() -> None:
-    """Recovery start should proceed when required phases are already fresh."""
+    """Recovery start should proceed when required runs are already fresh."""
     module = importlib.import_module(MODULE)
     with tempfile.TemporaryDirectory() as tmpdir:
         repo_root = Path(tmpdir)
@@ -739,7 +739,7 @@ def _unit_test_start_recovery_allows_fresh_explicit_manual_tests() -> None:
             repo_root,
             {
                 "session_end_snapshot": {"sample.py": "old"},
-                "workflow_phase_snapshots": {"tests": {"sample.py": "same"}},
+                "workflow_run_snapshots": {"tests": {"sample.py": "same"}},
             },
         )
         status_path = (
@@ -771,10 +771,10 @@ def _unit_test_start_recovery_allows_fresh_explicit_manual_tests() -> None:
                 "workflow_contract_schema_version": 1,
                 "session_id": "closed-1",
                 "session_state": "closed",
-                "required_phase_ids": ["tests"],
+                "required_run_ids": ["tests"],
                 "session_snapshot_file": snapshot_rel,
                 "anchors": {},
-                "phases": {
+                "runs": {
                     "tests": {
                         "id": "tests",
                         "status": "passed",
@@ -830,9 +830,9 @@ def _unit_test_end_requires_explicit_run_and_rerun_on_hook_changes() -> None:
                 "workflow_contract_schema_version": 1,
                 "session_id": "open-1",
                 "session_state": "open",
-                "required_phase_ids": ["tests"],
+                "required_run_ids": ["tests"],
                 "anchors": {},
-                "phases": {
+                "runs": {
                     "tests": {
                         "id": "tests",
                         "status": "passed",
@@ -903,7 +903,7 @@ def _unit_test_end_requires_explicit_run_and_rerun_on_hook_changes() -> None:
 
 
 def _unit_test_end_requires_explicit_run_and_rerun_on_stale_tests() -> None:
-    """End gate should require `run` when the required tests phase is stale."""
+    """End gate should require `run` when the required tests run is stale."""
     module = importlib.import_module(MODULE)
     with tempfile.TemporaryDirectory() as tmpdir:
         repo_root = Path(tmpdir)
@@ -915,9 +915,9 @@ def _unit_test_end_requires_explicit_run_and_rerun_on_stale_tests() -> None:
                 "workflow_contract_schema_version": 1,
                 "session_id": "open-2",
                 "session_state": "open",
-                "required_phase_ids": ["tests"],
+                "required_run_ids": ["tests"],
                 "anchors": {},
-                "phases": {
+                "runs": {
                     "tests": {
                         "id": "tests",
                         "status": "passed",
@@ -928,7 +928,7 @@ def _unit_test_end_requires_explicit_run_and_rerun_on_stale_tests() -> None:
         )
         _write_session_snapshot(
             repo_root,
-            {"workflow_phase_snapshots": {"tests": {"sample.py": "old"}}},
+            {"workflow_run_snapshots": {"tests": {"sample.py": "old"}}},
         )
         lines: list[str] = []
         managed_env_target = (
@@ -985,7 +985,7 @@ def _unit_test_end_requires_explicit_run_and_rerun_on_stale_tests() -> None:
 
         assert exit_code == 1
         assert any(
-            "fresh required workflow phases before closure" in line
+            "fresh required workflow runs before closure" in line
             for line in lines
         ), lines
         assert any(
@@ -1008,9 +1008,9 @@ def _unit_test_end_reports_blocking_devcov_failure_clearly() -> None:
                 "workflow_contract_schema_version": 1,
                 "session_id": "open-2",
                 "session_state": "open",
-                "required_phase_ids": ["tests"],
+                "required_run_ids": ["tests"],
                 "anchors": {},
-                "phases": {
+                "runs": {
                     "tests": {
                         "id": "tests",
                         "status": "passed",
@@ -1159,9 +1159,9 @@ def _unit_test_mid_runs_without_status_mutation() -> None:
                 "workflow_contract_schema_version": 1,
                 "session_id": "open-mid-1",
                 "session_state": "open",
-                "required_phase_ids": ["tests"],
+                "required_run_ids": ["tests"],
                 "anchors": {},
-                "phases": {},
+                "runs": {},
             },
         )
         original_bytes = status_path.read_bytes()
@@ -1222,7 +1222,7 @@ def _unit_test_mid_runs_without_status_mutation() -> None:
         assert exit_code == 0
         assert captured["managed_stage"] == "command"
         hook_env = captured["hook_env"]
-        assert hook_env["DEVCOV_DEVFLOW_PHASE"] == ""
+        assert hook_env["DEVCOV_DEVFLOW_STAGE"] == ""
         assert hook_env["DEVCOV_CHECK_APPLY_FIXES"] == "0"
         assert hook_env["DEVCOV_CHECK_RUN_REFRESH"] == "1"
         assert hook_env["DEVCOV_CHECK_CLEAN_BYTECODE"] == "1"
@@ -1266,9 +1266,9 @@ def _unit_test_mid_reports_blocking_devcov_failure() -> None:
                 "workflow_contract_schema_version": 1,
                 "session_id": "open-mid-2",
                 "session_state": "open",
-                "required_phase_ids": ["tests"],
+                "required_run_ids": ["tests"],
                 "anchors": {},
-                "phases": {},
+                "runs": {},
             },
         )
         original_bytes = status_path.read_bytes()
@@ -1416,7 +1416,7 @@ def _unit_test_show_gate_status_reports_open_session_read_only() -> None:
         assert status_path.read_bytes() == status_bytes
         assert "Gate Status: open" in lines
         assert "Session ID: abc123" in lines
-        assert "Last Phase: run" in lines
+        assert "Last Stage: run" in lines
         assert "Session Start: 2026-02-25T11:00:00+00:00" in lines
         assert "Last Workflow Run: 2026-02-25T11:05:00+00:00" in lines
         assert any(
@@ -1545,7 +1545,7 @@ def _unit_test_show_gate_status_reports_closed_session() -> None:
         assert exit_code == 0
         assert "Gate Status: closed" in lines
         assert "Session ID: closed-1" in lines
-        assert "Last Phase: end" in lines
+        assert "Last Stage: end" in lines
         assert "Session End: 2026-02-25T11:20:01+00:00" in lines
 
 
@@ -1609,7 +1609,7 @@ class GeneratedUnittestCases(unittest.TestCase):
         _unit_test_end_requires_explicit_run_and_rerun_on_hook_changes()
 
     def test_end_requires_explicit_run_and_rerun_on_stale_tests(self):
-        """Run end-gate stale-phase explicit run/rerun assertions."""
+        """Run end-gate stale-stage explicit run/rerun assertions."""
         _unit_test_end_requires_explicit_run_and_rerun_on_stale_tests()
 
     def test_end_reports_blocking_devcov_failure_clearly(self):

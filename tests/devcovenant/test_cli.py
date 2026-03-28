@@ -24,7 +24,6 @@ ROOT_COMMAND_MODULES = (
     "clean",
     "gate",
     "run",
-    "phase",
     "install",
     "deploy",
     "upgrade",

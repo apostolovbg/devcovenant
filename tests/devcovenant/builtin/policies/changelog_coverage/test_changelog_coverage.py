@@ -109,7 +109,7 @@ def _set_scoped_changed_files(
     def _scoped_changed_files(_self, context):
         """Resolve changed paths using session state when provided."""
         state = context.change_state
-        if state.phase == "start":
+        if state.stage == "start":
             return []
         if state.session_valid:
             return list(state.session_paths)
@@ -913,7 +913,7 @@ def _unit_test_managed_yml_regen_changes_are_ignored_in_open_session(
         repo_root=tmp_path,
         all_files=[],
         change_state=ChangeState(
-            phase="end",
+            stage="end",
             gate_status_path="devcovenant/registry/runtime/gate_status.json",
             session_valid=True,
             session_paths=[workflow_path],
@@ -959,7 +959,7 @@ def _unit_test_managed_yaml_regen_changes_are_ignored_in_open_session(
         repo_root=tmp_path,
         all_files=[],
         change_state=ChangeState(
-            phase="end",
+            stage="end",
             gate_status_path="devcovenant/registry/runtime/gate_status.json",
             session_valid=True,
             session_paths=[workflow_path],
@@ -1010,7 +1010,7 @@ def _unit_test_mixed_yml_managed_and_visible_changes_require_changelog(
         repo_root=tmp_path,
         all_files=[],
         change_state=ChangeState(
-            phase="end",
+            stage="end",
             gate_status_path="devcovenant/registry/runtime/gate_status.json",
             session_valid=True,
             session_paths=[workflow_path],
@@ -1110,7 +1110,7 @@ def _unit_test_deleted_files_listed_in_changelog_are_tolerated(
         repo_root=tmp_path,
         all_files=[],
         change_state=ChangeState(
-            phase="end",
+            stage="end",
             gate_status_path="devcovenant/registry/runtime/gate_status.json",
             session_valid=True,
             current_snapshot_numstat={"src/module.py": "hash\tsrc/module.py"},
@@ -1129,16 +1129,16 @@ def _unit_test_deleted_files_listed_in_changelog_are_tolerated(
     )
 
 
-def _unit_test_phase_start_ignores_head_deleted_paths(
+def _unit_test_stage_start_ignores_head_deleted_paths(
     tmp_path: Path, monkeypatch: MonkeyPatch
 ):
-    """Start-phase coverage should not import HEAD-wide deleted paths."""
+    """Start-stage coverage should not import HEAD-wide deleted paths."""
 
     checker = _make_checker(tmp_path)
     context = CheckContext(
         repo_root=tmp_path,
         all_files=[],
-        change_state=ChangeState(phase="start", session_valid=True),
+        change_state=ChangeState(stage="start", session_valid=True),
     )
     violations = checker.check(context)
 
@@ -1171,7 +1171,7 @@ def _unit_test_deleted_files_are_scoped_to_gate_start_snapshot(
         repo_root=tmp_path,
         all_files=[],
         change_state=ChangeState(
-            phase="end",
+            stage="end",
             gate_status_path="devcovenant/registry/runtime/gate_status.json",
             session_valid=True,
             session_paths=[tmp_path / "src" / "module.py"],
@@ -1694,10 +1694,10 @@ def _unit_test_session_rejects_invalid_start_numstat_payload(
     )
 
 
-def _unit_test_start_phase_ignores_preexisting_dirty_tree(
+def _unit_test_start_stage_ignores_preexisting_dirty_tree(
     tmp_path: Path, monkeypatch: MonkeyPatch
 ):
-    """Start phase should not require changelog coverage for baseline dirt."""
+    """Start stage should not require changelog coverage for baseline dirt."""
     (tmp_path / "CHANGELOG.md").write_text(
         "## Version 1.0.0\n",
         encoding="utf-8",
@@ -1709,7 +1709,7 @@ def _unit_test_start_phase_ignores_preexisting_dirty_tree(
         repo_root=tmp_path,
         all_files=[],
         change_state=ChangeState(
-            phase="start",
+            stage="start",
             current_snapshot_paths=[tmp_path / "src" / "preexisting.py"],
         ),
     )
@@ -2043,13 +2043,13 @@ class GeneratedUnittestCases(unittest.TestCase):
         finally:
             monkeypatch.undo()
 
-    def test_phase_start_ignores_head_deleted_paths(self):
-        """Run start-phase deleted-path scoping assertions."""
+    def test_stage_start_ignores_head_deleted_paths(self):
+        """Run start-stage deleted-path scoping assertions."""
         monkeypatch = MonkeyPatch()
         try:
             with tempfile.TemporaryDirectory() as temp_dir:
                 tmp_path = Path(temp_dir).resolve()
-                _unit_test_phase_start_ignores_head_deleted_paths(
+                _unit_test_stage_start_ignores_head_deleted_paths(
                     tmp_path=tmp_path, monkeypatch=monkeypatch
                 )
         finally:
@@ -2258,13 +2258,13 @@ class GeneratedUnittestCases(unittest.TestCase):
         finally:
             monkeypatch.undo()
 
-    def test_start_phase_ignores_preexisting_dirty_tree(self):
-        """Run test_start_phase_ignores_preexisting_dirty_tree."""
+    def test_start_stage_ignores_preexisting_dirty_tree(self):
+        """Run test_start_stage_ignores_preexisting_dirty_tree."""
         monkeypatch = MonkeyPatch()
         try:
             with tempfile.TemporaryDirectory() as temp_dir:
                 tmp_path = Path(temp_dir).resolve()
-                _unit_test_start_phase_ignores_preexisting_dirty_tree(
+                _unit_test_start_stage_ignores_preexisting_dirty_tree(
                     tmp_path=tmp_path, monkeypatch=monkeypatch
                 )
         finally:

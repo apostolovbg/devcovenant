@@ -1,5 +1,5 @@
 # Builtin Profiles
-**Last Updated:** 2026-03-26
+**Last Updated:** 2026-03-28
 **Project Version:** 1.0.0
 
 ## Table of Contents
@@ -29,8 +29,8 @@ Profiles may provide:
 - translator declarations (language profiles only)
 
 Any active profile category may contribute metadata overlays, and language or
-stack profiles may declare required workflow phases through
-`workflow_phases`.
+stack profiles may declare required workflow runs through
+`workflow_runs`.
 
 ## Manifest Schema
 Each profile directory contains `<name>.yaml` manifest.

@@ -2,7 +2,7 @@
 **Doc ID:** PROFILE_MAP
 **Doc Type:** reference-map
 **Project Version:** 1.0.0
-**Last Updated:** 2026-03-27
+**Last Updated:** 2026-03-28
 **DevCovenant Version:** 1.0.0
 
 <!-- DEVCOV:BEGIN -->
@@ -100,11 +100,11 @@ shared translator runtime.
 - For dependency licensing metadata: `defaults` provides generic output
   targets; language/framework profiles provide dependency selectors when
   active; `devcovrepo` adds this repository's selectors only.
-- Any active profile category may contribute declared `workflow_phases`;
-  core resolves required phases in deterministic order from the tracked
+- Any active profile category may contribute declared `workflow_runs`;
+  core resolves required runs in deterministic order from the tracked
   workflow contract.
-- Language profiles may declare `test_events` adapter metadata for the
-  `tests` workflow phase through `devcovenant/core/services/event.py`;
+- Language profiles may declare `run_events` adapter metadata for the
+  relevant workflow run through `devcovenant/core/runtime/event.py`;
   that contract is separate from translator declarations.
 - Session scoping is runtime-owned; profiles should not model policy scope
   switching metadata for bundled checks.

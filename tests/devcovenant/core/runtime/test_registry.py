@@ -29,7 +29,9 @@ def _unit_test_public_symbol_contract_is_stable() -> None:
         "latest_runtime_path",
         "session_snapshot_path",
         "gate_status_path",
+        "gate_status_path_from_option",
         "workflow_session_path",
+        "workflow_session_path_from_option",
     ]:
         assert hasattr(module, symbol)
 
@@ -55,6 +57,64 @@ def _unit_test_path_helpers_resolve_runtime_locations() -> None:
         )
 
 
+def _unit_test_path_helpers_honor_runtime_evidence_overrides() -> None:
+    """Runtime evidence helpers should honor configured invariant paths."""
+
+    module = importlib.import_module(MODULE)
+    with tempfile.TemporaryDirectory() as tmpdir:
+        repo_root = Path(tmpdir)
+        config_path = repo_root / "devcovenant" / "config.yaml"
+        config_path.parent.mkdir(parents=True, exist_ok=True)
+        config_path.write_text(
+            "\n".join(
+                [
+                    "core_invariants:",
+                    "  devflow-run-gates:",
+                    "    gate_status_file: "
+                    "devcovenant/registry/runtime/evidence/status.json",
+                    "    workflow_session_file: "
+                    "devcovenant/registry/runtime/evidence/workflow.json",
+                    "",
+                ]
+            ),
+            encoding="utf-8",
+        )
+        assert module.gate_status_path(repo_root) == (
+            repo_root
+            / "devcovenant"
+            / "registry"
+            / "runtime"
+            / "evidence"
+            / "status.json"
+        )
+        assert module.workflow_session_path(repo_root) == (
+            repo_root
+            / "devcovenant"
+            / "registry"
+            / "runtime"
+            / "evidence"
+            / "workflow.json"
+        )
+
+
+def _unit_test_runtime_evidence_paths_must_stay_under_runtime_root() -> None:
+    """
+    Configured evidence paths should reject escapes from the runtime root.
+    """
+
+    module = importlib.import_module(MODULE)
+    with tempfile.TemporaryDirectory() as tmpdir:
+        repo_root = Path(tmpdir)
+        try:
+            module.gate_status_path_from_option(repo_root, "alt/status.json")
+        except ValueError as exc:
+            assert "devcovenant/registry/runtime/" in str(exc)
+        else:  # pragma: no cover - defensive
+            raise AssertionError(
+                "Expected ValueError for escaped status path."
+            )
+
+
 class GeneratedUnittestCases(unittest.TestCase):
     """unittest wrappers for module-level tests."""
 
@@ -69,3 +129,13 @@ class GeneratedUnittestCases(unittest.TestCase):
     def test_path_helpers_resolve_runtime_locations(self):
         """Run runtime-registry path resolution assertions."""
         _unit_test_path_helpers_resolve_runtime_locations()
+
+    def test_path_helpers_honor_runtime_evidence_overrides(self):
+        """Run runtime-evidence override assertions."""
+
+        _unit_test_path_helpers_honor_runtime_evidence_overrides()
+
+    def test_runtime_evidence_paths_must_stay_under_runtime_root(self):
+        """Run runtime-evidence containment assertions."""
+
+        _unit_test_runtime_evidence_paths_must_stay_under_runtime_root()

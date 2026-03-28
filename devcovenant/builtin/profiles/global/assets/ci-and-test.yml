@@ -32,7 +32,7 @@ jobs:
       - name: Run DevCovenant mid gate
         run: python -m devcovenant gate --mid
 
-      - name: Run DevCovenant workflow phases
+      - name: Run DevCovenant workflow runs
         run: python -m devcovenant run
 
       - name: Run DevCovenant end gate

@@ -157,12 +157,12 @@ Runs the full refresh path and writes the active managed outputs.
 Rebuilds tracked registry state, managed docs, generated config sections,
 generated workflow files, `.gitignore`, and related governed artifacts.
 
-### phase run <id>
-Runs one declared workflow phase explicitly.
-Use it when a gate command tells you that a required phase is stale and must
+### run
+Runs one declared workflow run explicitly.
+Use it when a gate command tells you that a required run is stale and must
 be rerun before a new start baseline or before end-gate closure.
-Use `devcovenant run` for the full required phase set and
-`devcovenant phase run <id>` only when you need one specific phase.
+Use `devcovenant run` for the full required run set and
+`devcovenant run` only when you need one specific run.
 
 ### clean
 Removes disposable build, cache, runtime-registry, or log artifacts according

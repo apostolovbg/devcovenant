@@ -234,7 +234,7 @@ class IntegrityValidationInvariant(CoreInvariantCheck):
                     message=(
                         "Code changes require a fresh gate status update. "
                         "Run `devcovenant run` so the required workflow "
-                        "phases execute and the status file is refreshed."
+                        "runs execute and the status file is refreshed."
                     ),
                 )
             ]

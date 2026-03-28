@@ -16,7 +16,7 @@ from devcovenant.core.runtime.execution import (
     print_step,
     resolve_repo_root,
     run_bootstrap_registry_refresh,
-    run_required_workflow_phases,
+    run_required_workflow_runs,
     warn_version_mismatch,
 )
 
@@ -25,7 +25,7 @@ def _build_parser() -> argparse.ArgumentParser:
     """Build parser for the run command."""
     return build_command_parser(
         "run",
-        "Run all required declared DevCovenant workflow phases.",
+        "Run all required declared DevCovenant workflow runs.",
     )
 
 
@@ -40,8 +40,8 @@ def run(args: argparse.Namespace) -> int:
     warn_version_mismatch(repo_root)
 
     print_banner("DevCovenant workflow run", "🏃")
-    print_step("Running required workflow phases", "▶️")
-    return run_required_workflow_phases(repo_root, notes="")
+    print_step("Running required workflow runs", "▶️")
+    return run_required_workflow_runs(repo_root, notes="")
 
 
 def main(argv: list[str] | None = None) -> None:

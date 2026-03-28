@@ -122,26 +122,25 @@ workflow_block: |-
      `gate --mid`
      requires an open session, does not record lifecycle state, and may
      need an explicit rerun until hooks converge.
-  13. Run `devcovenant run`. For long runs, report status/phase updates
+  13. Run `devcovenant run`. For long runs, report status/run updates
      and final result, and prefer run-artifact summaries/tails before
      escalating to verbose streaming. Long silent waits in normal mode
      should surface `Please wait. In progress...`.
   14. Run `devcovenant gate --end`. Use the same artifact-first output
      discipline as workflow runs. Gate commands do not run required
-     workflow phases internally.
+     workflow runs internally.
   15. If end-gate hooks or checks produce additional changes or violations,
      use `devcovenant gate --status` for lifecycle inspection and inspect
      the latest run artifacts before rerunning required commands until the
-     repository is clean. When gates require workflow phases, run
-     `devcovenant run` or the requested `devcovenant phase run <id>`
-     commands explicitly and rerun the gate command.
+     repository is clean. When gates require workflow runs, run
+     `devcovenant run` explicitly and rerun the gate command.
   16. Stage all changes after each completed work slice.
 
   Audits are not a separate workflow mode. The same gate discipline applies.
   Use `check` as the default read-only audit command. Gate commands own
   refresh/autofix orchestration; lifecycle state writes are limited to
   `gate --start` / `gate --end`; `gate --mid` is non-lifecycle.
-  Gate commands never run required workflow phases internally.
+  Gate commands never run required workflow runs internally.
   When DevCovenant run artifacts are available, inspect `summary.txt`,
   then `tail.txt` (if present), then full logs before using ad-hoc
   redirects or verbose streaming. Normal-mode live streaming can be
@@ -154,7 +153,7 @@ workflow_block: |-
 
   ## Managed Environment
   If a managed environment is configured, run DevCovenant from that
-  environment and run all required workflow phases there as well.
+  environment and run all required workflow runs there as well.
   Start required services before `devcovenant run` so runtime checks
   execute against the active stack.
 

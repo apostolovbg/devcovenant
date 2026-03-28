@@ -111,14 +111,15 @@ body: |-
   - `include_*`, `exclude_*`, `force_include_*`, `selector_roles`
 
   Gate/session:
-  - `gate_status_file`, pre-commit command/epoch keys
+  - `gate_status_file`, `workflow_session_file`, pre-commit command/epoch
+    keys
   - core invariant metadata for `devflow-run-gates` lives under
     `config.core_invariants`, not `policy_state`
 
   Runtime note:
-  - required workflow phases are resolved from tracked `workflow_contract`
+  - required workflow runs are resolved from tracked `workflow_contract`
     data, not from ad hoc invariant command lists.
-  - `test_events` payloads are runtime-owned `tests`-phase event metadata
+  - `run_events` payloads are runtime-owned workflow-run event metadata
     from profiles and are not policy descriptor metadata keys.
 
   Dependency/license:

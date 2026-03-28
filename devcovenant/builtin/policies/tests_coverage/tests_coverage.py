@@ -134,8 +134,8 @@ class TestsCoverageCheck(PolicyCheck):
         """Return changed module scope for symbol-fidelity enforcement."""
         state = context.change_state
         if (
-            state.phase
-            and state.phase != "start"
+            state.stage
+            and state.stage != "start"
             and state.session_valid
             and state.session_paths
         ):
@@ -144,7 +144,7 @@ class TestsCoverageCheck(PolicyCheck):
 
     def check(self, context: CheckContext) -> List[Violation]:
         """Require assertion signals in related tests."""
-        if context.change_state.phase == "start":
+        if context.change_state.stage == "start":
             return []
 
         runtime = context.translator_runtime

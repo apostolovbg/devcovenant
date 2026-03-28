@@ -2,7 +2,7 @@
 **Doc ID:** POLICY_MAP
 **Doc Type:** reference-map
 **Project Version:** 1.0.0
-**Last Updated:** 2026-03-27
+**Last Updated:** 2026-03-28
 **DevCovenant Version:** 1.0.0
 
 <!-- DEVCOV:BEGIN -->
@@ -101,10 +101,10 @@ Gate/session:
 - `gate_status_file`, pre-commit command/epoch keys
 
 Runtime note:
-- required workflow phases are resolved from tracked `workflow_contract`
+- required workflow runs are resolved from tracked `workflow_contract`
   data, not from ad hoc invariant command lists.
-- `test_events` payloads are runtime-owned `tests`-phase event metadata from
-  profiles and are not policy descriptor metadata keys.
+- `run_events` payloads are runtime-owned workflow-run event metadata
+  from profiles and are not policy descriptor metadata keys.
 
 Dependency/license:
 - `dependency_files`, `dependency_globs`, `dependency_dirs`,

@@ -75,7 +75,7 @@ def _policy() -> TestsCoverageCheck:
 def _context(
     repo_root: Path,
     *,
-    phase: str = "",
+    stage: str = "",
     changed_files: list[Path] | None = None,
 ) -> CheckContext:
     """Build check context for tests-coverage policy runs."""
@@ -83,7 +83,7 @@ def _context(
         repo_root=repo_root,
         changed_files=changed_files or [],
         translator_runtime=_runtime("python", [".py"]),
-        change_state=ChangeState(phase=phase),
+        change_state=ChangeState(stage=stage),
     )
 
 
@@ -171,11 +171,11 @@ def _unit_test_handles_non_utf_related_tests():
         )
 
 
-def _unit_test_start_phase_skips_checks():
-    """Start phase should skip tests-coverage enforcement."""
+def _unit_test_start_stage_skips_checks():
+    """Start stage should skip tests-coverage enforcement."""
     with tempfile.TemporaryDirectory() as tmpdir:
         repo_root = Path(tmpdir)
-        context = _context(repo_root, phase="start")
+        context = _context(repo_root, stage="start")
         assert _policy().check(context) == []
 
 
@@ -242,9 +242,9 @@ class GeneratedUnittestCases(unittest.TestCase):
         """Run test_handles_non_utf_related_tests."""
         _unit_test_handles_non_utf_related_tests()
 
-    def test_start_phase_skips_checks(self):
-        """Run test_start_phase_skips_checks."""
-        _unit_test_start_phase_skips_checks()
+    def test_start_stage_skips_checks(self):
+        """Run test_start_stage_skips_checks."""
+        _unit_test_start_stage_skips_checks()
 
     def test_flags_missing_symbol_level_assertions(self):
         """Run test_flags_missing_symbol_level_assertions."""

@@ -295,7 +295,7 @@ class DocumentationGrowthTrackingCheck(PolicyCheck):
             or state.session_paths
             or state.session_error
             or state.session_valid
-            or state.phase
+            or state.stage
         )
         if has_runtime_scope:
             try:

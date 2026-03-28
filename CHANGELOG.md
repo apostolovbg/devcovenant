@@ -6,7 +6,7 @@
 **Maintenance Stance:** active
 **Compatibility Policy:** breaking-allowed
 **Versioning Mode:** versioned
-**Last Updated:** 2026-03-27
+**Last Updated:** 2026-03-28
 **DevCovenant Version:** 1.0.0
 
 <!-- DEVCOV:BEGIN -->
@@ -60,16 +60,185 @@ Example:
 
 ## Version 1.0.0
 
+- 2026-03-28:
+  Change: Removed the drifted duplicate workflow-run surface across the CLI,
+    runtime, registry, docs, generated outputs, and tests.
+  Why: Removed drift between the intended `devcovenant gate --start ->
+    devcovenant gate --mid -> devcovenant run -> devcovenant gate --end`
+    contract and the half-duplicated extra command/model implementation.
+  Impact: Aligned the public command surface, tracked runtime schema,
+    generated AGENTS/registry outputs, and tests on one `run` contract while
+    deleting the duplicate legacy surface.
+  Files:
+  .github/workflows/ci-and-test.yml
+  AGENTS.md
+  CHANGELOG.md
+  PLAN.md
+  POLICY_MAP.md
+  PROFILE_MAP.md
+  README.md
+  devcovenant/README.md
+  devcovenant/builtin/policies/README.md
+  devcovenant/builtin/policies/changelog_coverage/changelog_coverage.py
+  devcovenant/builtin/policies/documentation_growth_tracking/\
+    documentation_growth_tracking.py
+  devcovenant/builtin/policies/tests_coverage/tests_coverage.py
+  devcovenant/builtin/profiles/README.md
+  devcovenant/builtin/profiles/csharp/csharp.yaml
+  devcovenant/builtin/profiles/dart/dart.yaml
+  devcovenant/builtin/profiles/docker/docker.yaml
+  devcovenant/builtin/profiles/fastapi/fastapi.yaml
+  devcovenant/builtin/profiles/flutter/flutter.yaml
+  devcovenant/builtin/profiles/frappe/frappe.yaml
+  devcovenant/builtin/profiles/global/assets/AGENTS.yaml
+  devcovenant/builtin/profiles/global/assets/README.yaml
+  devcovenant/builtin/profiles/global/assets/ci-and-test.yml
+  devcovenant/builtin/profiles/go/go.yaml
+  devcovenant/builtin/profiles/java/java.yaml
+  devcovenant/builtin/profiles/javascript/javascript.yaml
+  devcovenant/builtin/profiles/kubernetes/kubernetes.yaml
+  devcovenant/builtin/profiles/objective_c/objective_c.yaml
+  devcovenant/builtin/profiles/php/php.yaml
+  devcovenant/builtin/profiles/python/python.yaml
+  devcovenant/builtin/profiles/ruby/ruby.yaml
+  devcovenant/builtin/profiles/rust/rust.yaml
+  devcovenant/builtin/profiles/swift/swift.yaml
+  devcovenant/builtin/profiles/terraform/terraform.yaml
+  devcovenant/builtin/profiles/typescript/typescript.yaml
+  devcovenant/cli.py
+  devcovenant/core/README.md
+  devcovenant/core/contracts/invariant.py
+  devcovenant/core/contracts/invariants/devflow_run_gates.yaml
+  devcovenant/core/contracts/policy.py
+  devcovenant/core/flow/gate.py
+  devcovenant/core/flow/gate_status_helpers.py
+  devcovenant/core/flow/policy_check_context.py
+  devcovenant/core/flow/refresh.py
+  devcovenant/core/flow/workflow_contract.py
+  devcovenant/core/flow/workflow_validation.py
+  devcovenant/core/runtime/event.py
+  devcovenant/core/runtime/execution.py
+  devcovenant/core/runtime/session_snapshot.py
+  devcovenant/core/runtime/workflow_session.py
+  devcovenant/core/services/integrity_validation.py
+  devcovenant/core/services/manifest_inventory.py
+  devcovenant/core/services/profile_registry.py
+  devcovenant/core/services/runtime_profile.py
+  devcovenant/custom/profiles/devcovrepo/assets/POLICY_MAP.yaml
+  devcovenant/custom/profiles/devcovrepo/assets/PROFILE_MAP.yaml
+  devcovenant/custom/profiles/devcovrepo/assets/docs/config.md
+  devcovenant/custom/profiles/devcovrepo/assets/docs/installation.md
+  devcovenant/custom/profiles/devcovrepo/assets/docs/policies.md
+  devcovenant/custom/profiles/devcovrepo/assets/docs/profiles.md
+  devcovenant/custom/profiles/devcovrepo/assets/docs/registry.md
+  devcovenant/custom/profiles/devcovrepo/assets/docs/workflow.md
+  devcovenant/docs/architecture.md
+  devcovenant/docs/config.md
+  devcovenant/docs/installation.md
+  devcovenant/docs/policies.md
+  devcovenant/docs/profiles.md
+  devcovenant/docs/registry.md
+  devcovenant/docs/troubleshooting.md
+  devcovenant/docs/workflow.md
+  devcovenant/gate.py
+  devcovenant/phase.py
+  devcovenant/run.py
+  devcovenant/registry/README.md
+  devcovenant/registry/registry.yaml
+  devcovenant/run.py
+  tests/devcovenant/builtin/policies/changelog_coverage/\
+    test_changelog_coverage.py
+  tests/devcovenant/builtin/policies/tests_coverage/test_tests_coverage.py
+  tests/devcovenant/core/contracts/test_policy.py
+  tests/devcovenant/core/flow/test_gate.py
+  tests/devcovenant/core/flow/test_gate_status_helpers.py
+  tests/devcovenant/core/flow/test_policy_check_context.py
+  tests/devcovenant/core/flow/test_workflow_contract.py
+  tests/devcovenant/core/flow/test_workflow_validation.py
+  tests/devcovenant/core/runtime/test_event.py
+  tests/devcovenant/core/runtime/test_execution.py
+  tests/devcovenant/core/runtime/test_workflow_session.py
+  tests/devcovenant/core/services/test_profile_registry.py
+  tests/devcovenant/core/services/test_runtime_profile.py
+  tests/devcovenant/test_cli.py
+  tests/devcovenant/test_gate.py
+  tests/devcovenant/test_phase.py
+  tests/devcovenant/test_run.py
+  tests/devcovenant/test_refresh.py
+  tests/devcovenant/test_run.py
+
+- 2026-03-28:
+  Change: generalized workflow phase-event reporting and formalized
+    configurable runtime evidence paths across the runtime, profiles, docs,
+    and tests.
+  Why: removed the last test-shaped reporting seam and made both gate status
+    and workflow-session evidence follow one explicit invariant contract
+    instead of a half-fixed, half-configurable path model.
+  Impact: phases now record canonical `phase_events`, profiles declare
+    `phase_events` adapters generically, and `gate_status_file` plus
+    `workflow_session_file` are configurable only within the runtime registry
+    root.
+  Files:
+  AGENTS.md
+  CHANGELOG.md
+  POLICY_MAP.md
+  PROFILE_MAP.md
+  devcovenant/builtin/profiles/csharp/csharp.yaml
+  devcovenant/builtin/profiles/dart/dart.yaml
+  devcovenant/builtin/profiles/docker/docker.yaml
+  devcovenant/builtin/profiles/fastapi/fastapi.yaml
+  devcovenant/builtin/profiles/flutter/flutter.yaml
+  devcovenant/builtin/profiles/frappe/frappe.yaml
+  devcovenant/builtin/profiles/go/go.yaml
+  devcovenant/builtin/profiles/java/java.yaml
+  devcovenant/builtin/profiles/javascript/javascript.yaml
+  devcovenant/builtin/profiles/kubernetes/kubernetes.yaml
+  devcovenant/builtin/profiles/objective_c/objective_c.yaml
+  devcovenant/builtin/profiles/php/php.yaml
+  devcovenant/builtin/profiles/python/python.yaml
+  devcovenant/builtin/profiles/ruby/ruby.yaml
+  devcovenant/builtin/profiles/rust/rust.yaml
+  devcovenant/builtin/profiles/swift/swift.yaml
+  devcovenant/builtin/profiles/terraform/terraform.yaml
+  devcovenant/builtin/profiles/typescript/typescript.yaml
+  devcovenant/core/README.md
+  devcovenant/core/contracts/invariants/devflow_run_gates.yaml
+  devcovenant/core/flow/gate.py
+  devcovenant/core/flow/workflow_contract.py
+  devcovenant/core/flow/workflow_validation.py
+  devcovenant/core/runtime/event.py
+  devcovenant/core/runtime/execution.py
+  devcovenant/core/runtime/registry.py
+  devcovenant/core/runtime/session_snapshot.py
+  devcovenant/core/services/profile_registry.py
+  devcovenant/custom/profiles/devcovrepo/assets/POLICY_MAP.yaml
+  devcovenant/custom/profiles/devcovrepo/assets/PROFILE_MAP.yaml
+  devcovenant/custom/profiles/devcovrepo/assets/docs/config.md
+  devcovenant/custom/profiles/devcovrepo/assets/docs/profiles.md
+  devcovenant/custom/profiles/devcovrepo/assets/docs/registry.md
+  devcovenant/custom/profiles/devcovrepo/assets/docs/workflow.md
+  devcovenant/docs/architecture.md
+  devcovenant/docs/config.md
+  devcovenant/docs/profiles.md
+  devcovenant/docs/registry.md
+  devcovenant/docs/workflow.md
+  devcovenant/registry/README.md
+  devcovenant/registry/registry.yaml
+  tests/devcovenant/core/flow/test_workflow_contract.py
+  tests/devcovenant/core/flow/test_workflow_validation.py
+  tests/devcovenant/core/runtime/test_event.py
+  tests/devcovenant/core/runtime/test_registry.py
+
 - 2026-03-27:
-  Change: defined explicit workflow-phase freshness and universal
+  Change: defined explicit workflow-run freshness and universal
     per-invocation output-mode overrides across the CLI, runtime, docs, and
     tests.
   Why: removed the hidden `tests`-only changelog invalidation rule and
     converted `--quiet`, `--normal`, and `--verbose` into a stable command
     contract instead of a config-only runtime behavior.
-  Impact: clarified that required phases now declare freshness behavior
+  Impact: clarified that required runs now declare freshness behavior
     explicitly, every public command accepts shared output-mode overrides,
-    and the public docs now describe the workflow-phase contract more
+    and the public docs now describe the workflow-run contract more
     directly.
   Files:
   CHANGELOG.md
@@ -95,7 +264,7 @@ Example:
   Change: amended the roadmap to formalize the remaining workflow-contract
     hardening gaps after the core `run` migration.
   Why: converted the latest architecture audit findings into explicit plan
-    work so phase freshness, advanced workflow kinds, generic phase events,
+    work so run freshness, advanced workflow kinds, generic run events,
     output overrides, and evidence-path ownership do not remain implicit.
   Impact: sharpens the boundary between Item 8 and Item 9, adds the missing
     closure work to the plan, and keeps the remaining workflow formalization
@@ -144,7 +313,7 @@ Example:
   Change: moved workflow-contract resolution out of `core/services` into the
     workflow-owned `core/flow` layer.
   Why: aligned the tracked workflow contract with the rest of the gate/run
-    code so phase-contract normalization no longer lives in the
+    code so run-contract normalization no longer lives in the
     services grab-bag.
   Impact: rewires gate, runtime, and profile-registry imports to the new
     flow-owned module, moves the mirrored tests under
@@ -173,7 +342,7 @@ Example:
   Change: migrated namespaced policy-command parsing and runtime-action
     dispatch out of `core/services` into `core/runtime`.
   Why: clarified that explicit `devcovenant policy ...` execution belongs on
-    the same runtime boundary as `run` and `phase run`, while the policy
+    the same runtime boundary as `run` and `run run`, while the policy
     engine remains responsible for policy meaning and orchestration.
   Impact: rewires policy command/action imports, moves the mirrored tests into
     `tests/devcovenant/core/runtime/`, and updates the workflow,
@@ -363,16 +532,16 @@ Example:
 - 2026-03-26:
   Change: normalized workflow-state recording to `last_run_utc` plus
     `commands`, moved workflow child output onto a generic channel, and
-    declared phase-reporting hooks in workflow metadata instead of
+    declared run-reporting hooks in workflow metadata instead of
     hardcoding `tests`.
   Why: removed transitional duplicate fields and the remaining
-    phase-id-specific execution branches so richer workflow reporting can
-    be phase-owned and reusable.
+    run-id-specific execution branches so richer workflow reporting can
+    be run-owned and reusable.
   Impact: records workflow sessions with canonical UTC-plus-commands
     payloads, collapses legacy duplicate keys on write,
-    integrity checks validate the canonical schema, command-group phases can
+    integrity checks validate the canonical schema, command-group runs can
     opt into output-mode overrides, event adapters, and runtime profiling
-    declaratively, and built-in test phases use that generic contract.
+    declaratively, and built-in test runs use that generic contract.
   Files:
   CHANGELOG.md
   devcovenant/builtin/profiles/csharp/csharp.yaml
@@ -463,14 +632,14 @@ Example:
 - 2026-03-26:
   Change: revised the roadmap to dissolve `devflow_run_gates`, split
     registry code by both ephemerity and ownership, and replace leftover
-    tests-only runtime privilege with generic phase-reporting hooks and
+    tests-only runtime privilege with generic run-reporting hooks and
     generic file-dependent success checks.
   Why: locked the architecture direction after the read-only `run` audit so
     the next de-spaghettization slice has a precise target instead of vague
     cleanup language.
   Impact: the active plan now treats workflow truth consolidation,
     UTC-only `last_run_utc`, `commands`-only command groups, registry
-    ownership separation, reusable phase hooks, and explicit absolute or
+    ownership separation, reusable run hooks, and explicit absolute or
     relative file-check contracts as one coherent architecture rewrite.
   Files:
   CHANGELOG.md
@@ -566,13 +735,13 @@ Example:
 
 - 2026-03-26:
   Change: implemented the core `run` migration by adding the new root command,
-  moving built-in profiles onto declared `workflow_phases`, and rewriting the
+  moving built-in profiles onto declared `workflow_runs`, and rewriting the
   gate/runtime/docs contract away from the old public `test` surface.
   Why: closed the stitched workflow boundary where core still hardcoded
   `devcovenant test` while the tracked workflow contract claimed a generic
-  phase model.
+  run model.
   Impact: standardized DevCovenant on `gate --start -> gate --mid -> run ->
-  gate --end`, with explicit `phase run <id>` reruns, profile-owned phase
+  gate --end`, with explicit `run` reruns, profile-owned run
   declarations, and aligned docs/registry evidence instead of legacy
   `required_commands` test wiring.
   Files:
@@ -638,7 +807,7 @@ Example:
   devcovenant/docs/profiles.md
   devcovenant/docs/registry.md
   devcovenant/docs/workflow.md
-  devcovenant/phase.py
+  devcovenant/run.py
   devcovenant/registry/README.md
   devcovenant/registry/registry.yaml
   devcovenant/run.py
@@ -659,14 +828,14 @@ Example:
   tests/devcovenant/test_test.py
 
 - 2026-03-26:
-  Change: rewrote the active plan to treat the half-migrated workflow-phase
+  Change: rewrote the active plan to treat the half-migrated workflow-run
   redesign as a release blocker and to sequence the full `devcovenant run`
   migration in ordered work packages.
   Why: documented the resolved paper design so the next implementation slice
   replaces the stitched-in `devcovenant test` model with one coherent
   command/runtime/docs/CI contract instead of drifting through partial fixes.
   Impact: the repo now has a concrete migration blueprint for root-command
-  ownership, generic phase execution, gate/invariant messaging, CI, docs, test
+  ownership, generic run execution, gate/invariant messaging, CI, docs, test
   coverage, and the follow-up naming decision around `modules-need-tests`.
   Files:
   CHANGELOG.md
@@ -677,7 +846,7 @@ Example:
   release-candidate tree and recorded the closure outcome in the plan.
   Why: verified that the remaining blocker and high-severity audit findings
   are now closed by shipped artifacts, real lifecycle proof, workflow
-  truthfulness, publish provenance, lock semantics, and workflow-phase
+  truthfulness, publish provenance, lock semantics, and workflow-run
   recording rather than by local reasoning alone.
   Impact: the repo now has a fresh outside-in audit pass showing no
   substantive blocker or high-severity release-truthfulness mismatches, so
@@ -715,16 +884,16 @@ Example:
   tests/devcovenant/core/runtime/test_execution.py
 
 - 2026-03-25:
-  Change: formalized workflow phases as a tracked/runtime contract by adding
+  Change: formalized workflow runs as a tracked/runtime contract by adding
   `workflow_contract`, `workflow_session.json`, the generic
-  `devcovenant phase run <id>` command, and phase-aware gate and invariant
+  `devcovenant run` command, and run-aware gate and invariant
   behavior.
   Why: closed the workflow-boundary defect where gate mechanics still depended
   on test-centric or policy-adjacent assumptions instead of one explicit
   profile-declared workflow interface.
   Impact: the Python profile now declares `tests` as the first real workflow
-  phase, start and end gates enforce required phases generically, tracked
-  registry state records the workflow contract, and the runtime records phase
+  run, start and end gates enforce required runs generically, tracked
+  registry state records the workflow contract, and the runtime records run
   evidence separately from the short gate lifecycle ledger.
   Files:
   AGENTS.md
@@ -741,7 +910,7 @@ Example:
   devcovenant/core/services/profile_registry.py
   devcovenant/core/services/registry.py
   devcovenant/core/services/workflow_contract.py
-  devcovenant/phase.py
+  devcovenant/run.py
   devcovenant/docs/architecture.md
   devcovenant/docs/installation.md
   devcovenant/docs/profiles.md
@@ -759,18 +928,18 @@ Example:
   tests/devcovenant/core/services/test_profile_registry.py
   tests/devcovenant/core/services/test_workflow_contract.py
   tests/devcovenant/test_cli.py
-  tests/devcovenant/test_phase.py
+  tests/devcovenant/test_run.py
   tests/devcovenant/test_refresh.py
 
 - 2026-03-25:
   Change: rewrote the active release plan to formalize the intended
-  workflow-phase extension redesign, including phase ownership, tracked and
+  workflow-run extension redesign, including run ownership, tracked and
   runtime schemas, start-gate carry-forward rules, end-gate closure rules,
   and the initial success-contract set.
   Why: captured the new workflow-boundary decision before implementation so
   gate mechanics no longer drift around customizable policy state and the
   upcoming redesign has one explicit contract to build against.
-  Impact: the plan now records workflow-phase formalization as a first-class
+  Impact: the plan now records workflow-run formalization as a first-class
   release-blocking remediation item, records `external_artifact_check` in the
   initial success-contract vocabulary, and makes the future registry and
   migration work concrete enough to execute without reconstructing this thread.
@@ -2791,7 +2960,7 @@ Example:
   Change: Rewrote Item 3 in `PLAN.md` around an orthogonal
   `project-governance` policy instead of a mutually exclusive pre-version
   identity mode.
-  Why: Clarified how project phase, development stance, and intentionally
+  Why: Clarified how project run, development stance, and intentionally
   unversioned repos should be governed without overloading
   `version-governance`.
   Impact: Planned a cleaner lifecycle model where `project-governance` can

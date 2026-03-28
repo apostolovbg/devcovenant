@@ -1,5 +1,5 @@
 # Registry State
-**Last Updated:** 2026-03-26
+**Last Updated:** 2026-03-28
 **Project Version:** 1.0.0
 
 ## Table of Contents
@@ -31,7 +31,7 @@ DevCovenant governance state.
 ## Runtime Registry
 `devcovenant/registry/runtime/` stores untracked runtime-local state:
 - `gate_status.json` for concise gate lifecycle state
-- `session_snapshot.json` for heavy gate baseline/snapshot/test-event payloads
+- `session_snapshot.json` for heavy gate baseline/snapshot/run-event payloads
 - `latest.json` for the latest run-pointer metadata
 
 Runtime registry files are disposable. They are not package payload, not git
@@ -42,7 +42,7 @@ Registry regeneration occurs during full-refresh paths:
 - `devcovenant refresh`
 - `devcovenant deploy`
 - `devcovenant upgrade`
-- gate pre-commit phases (`devcovenant gate --start`, required non-lifecycle
+- gate pre-commit stages (`devcovenant gate --start`, required non-lifecycle
   `devcovenant gate --mid`, and `devcovenant gate --end`) through gate-owned
   check orchestration
 

@@ -1,5 +1,5 @@
 # Profiles
-**Last Updated:** 2026-03-27
+**Last Updated:** 2026-03-28
 **Project Version:** 1.0.0
 
 ## Overview
@@ -12,7 +12,7 @@ metadata. A profile can contribute:
 
 1. metadata overlays
 
-2. workflow phases
+2. workflow runs
 
 3. managed assets
 
@@ -61,7 +61,7 @@ That includes things like:
 6. extra CI jobs that should apply to a repo family instead of every
    DevCovenant repository
 
-7. declared workflow phases that should be required for repositories of the
+7. declared workflow runs that should be required for repositories of the
    same stack shape
 
 If the behavior should apply to many repositories of the same shape, it
@@ -116,7 +116,7 @@ Examples include:
 
 4. no-print sink metadata from language profiles
 
-5. reusable workflow phases such as a stack's `tests` phase
+5. reusable workflow runs such as a stack's `tests` run
 
 6. reusable `ci_and_test` fragments for repo-family CI jobs
 
@@ -156,29 +156,29 @@ Managed-environment protection belongs with the managed-environment metadata so
 other environment types can participate through the same contract.
 
 The same ownership split now matters for workflow itself.
-If a language or stack has a standard required phase, the profile should
-declare it through `workflow_phases`.
+If a language or stack has a standard required run, the profile should
+declare it through `workflow_runs`.
 That keeps the engine-facing workflow contract explicit instead of smuggling
 workflow structure through core-invariant metadata.
-In the built-in Python profile, the standard `tests` phase now lives there and
+In the built-in Python profile, the standard `tests` run now lives there and
 declares its runner commands and success contract, while core owns the public
-`run` and `phase run <id>` command surfaces used to execute it.
+`run` command surface used to execute it.
 That same declaration can also carry `recording` hooks such as:
 
 - `output_mode_config_field`
 - `event_adapter_group`
 - `write_runtime_profile`
 
-Those hooks let a profile opt specific phases into richer reporting without
-reintroducing hardcoded executor behavior for a special phase id.
-In the built-in Python profile, that now also means the test-event adapter
+Those hooks let a profile opt specific runs into richer reporting without
+reintroducing hardcoded executor behavior for a special run id.
+In the built-in Python profile, that now also means the run-event adapter
 entrypoint resolves through `devcovenant/core/runtime/event.py`, which keeps
-phase-event recording with the runtime execution layer instead of the service
+run-event recording with the runtime execution layer instead of the service
 layer.
 
-## Workflow Phase Contract
-`workflow_phases` is now a public profile-authoring contract.
-Each phase may declare:
+## Workflow Run Contract
+`workflow_runs` is now a public profile-authoring contract.
+Each run may declare:
 
 - `id`
 - ordering fields such as `after`, `before`, and `order`
@@ -213,18 +213,18 @@ Compatible combinations are:
 - `manual_attestation` with `manual_attested`
 
 The freshness contract is explicit too.
-By default, phases ignore `CHANGELOG.md` when deciding whether previously
+By default, runs ignore `CHANGELOG.md` when deciding whether previously
 recorded evidence is still fresh.
-Profiles may tighten or broaden that through `workflow_phases[*].freshness`.
+Profiles may tighten or broaden that through `workflow_runs[*].freshness`.
 
-The recording contract is phase-owned:
+The recording contract is run-owned:
 
 - `output_mode_config_field`
 - `event_adapter_group`
 - `write_runtime_profile`
 
-That is what lets a phase opt into richer reporting behavior without giving
-core a hidden special case for one phase id.
+That is what lets a run opt into richer reporting behavior without giving
+core a hidden special case for one run id.
 
 The same asset ownership shows up in managed docs.
 Profile README descriptors can intentionally keep a managed block empty.

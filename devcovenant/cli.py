@@ -24,7 +24,6 @@ _COMMAND_MODULES = {
     "clean": "devcovenant.clean",
     "gate": "devcovenant.gate",
     "run": "devcovenant.run",
-    "phase": "devcovenant.phase",
     "install": "devcovenant.install",
     "deploy": "devcovenant.deploy",
     "upgrade": "devcovenant.upgrade",

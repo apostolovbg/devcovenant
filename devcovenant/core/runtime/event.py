@@ -1,4 +1,4 @@
-"""Test-event schema, adapters, and runtime helpers."""
+"""Run-event schema, adapters, and runtime helpers."""
 
 from __future__ import annotations
 
@@ -26,7 +26,7 @@ def _set_adapter_load_warnings(warnings: list[str]) -> None:
     _LAST_ADAPTER_LOAD_WARNINGS = list(warnings)
 
 
-def consume_test_event_adapter_warnings() -> list[str]:
+def consume_run_event_adapter_warnings() -> list[str]:
     """Return and clear warnings produced during adapter loading."""
     global _LAST_ADAPTER_LOAD_WARNINGS
     warnings = list(_LAST_ADAPTER_LOAD_WARNINGS)
@@ -35,8 +35,8 @@ def consume_test_event_adapter_warnings() -> list[str]:
 
 
 @dataclass(frozen=True)
-class TestEvent:
-    """Normalized test lifecycle event emitted by adapters."""
+class RunEvent:
+    """Normalized workflow-run lifecycle event emitted by adapters."""
 
     schema_version: str
     adapter_id: str
@@ -61,8 +61,8 @@ class TestEvent:
         }
 
 
-class TestEventAdapter:
-    """Base adapter for emitting normalized test events."""
+class RunEventAdapter:
+    """Base adapter for emitting normalized run events."""
 
     def __init__(
         self,
@@ -90,11 +90,11 @@ class TestEventAdapter:
         started: datetime,
         finished: datetime,
         exit_code: int,
-    ) -> TestEvent:
-        """Build a `TestEvent` representing the command execution."""
+    ) -> RunEvent:
+        """Build a `RunEvent` representing the command execution."""
         status = "success" if exit_code == 0 else "failure"
         duration = (finished - started).total_seconds()
-        return TestEvent(
+        return RunEvent(
             schema_version=self.schema_version,
             adapter_id=self.adapter_id,
             command=command_str,
@@ -106,7 +106,7 @@ class TestEventAdapter:
         )
 
 
-class GenericTestEventAdapter(TestEventAdapter):
+class GenericRunEventAdapter(RunEventAdapter):
     """Adapter that records any command when a profile declares it."""
 
     def handles(self, command: Sequence[str]) -> bool:
@@ -114,8 +114,8 @@ class GenericTestEventAdapter(TestEventAdapter):
         return True
 
 
-class PythonTestEventAdapter(TestEventAdapter):
-    """Adapter that recognizes Python-based test commands."""
+class PythonRunEventAdapter(RunEventAdapter):
+    """Adapter that recognizes Python-based run commands."""
 
     DEFAULT_MATCHERS = ("pytest", "-m unittest")
 
@@ -139,42 +139,42 @@ class PythonTestEventAdapter(TestEventAdapter):
         return any(token in joined for token in self._matchers)
 
 
-def python_test_event_adapter_factory(
+def python_run_event_adapter_factory(
     *,
     adapter_id: str,
     profile_name: str,
     config: Mapping[str, Any] | None = None,
-) -> TestEventAdapter:
-    """Factory used by profiles to construct the Python test adapter."""
+) -> RunEventAdapter:
+    """Factory used by profiles to construct the Python run adapter."""
 
-    return PythonTestEventAdapter(
+    return PythonRunEventAdapter(
         adapter_id,
         profile_name=profile_name,
         config=config,
     )
 
 
-def generic_test_event_adapter_factory(
+def generic_run_event_adapter_factory(
     *,
     adapter_id: str,
     profile_name: str,
     config: Mapping[str, Any] | None = None,
-) -> TestEventAdapter:
+) -> RunEventAdapter:
     """Factory used by profiles to opt into the generic event adapter."""
-    return GenericTestEventAdapter(
+    return GenericRunEventAdapter(
         adapter_id,
         profile_name=profile_name,
         config=config,
     )
 
 
-class TestEventManager:
-    """Collect test events via configured adapters."""
+class RunEventManager:
+    """Collect workflow run events via configured adapters."""
 
-    def __init__(self, adapters: Iterable[TestEventAdapter]) -> None:
+    def __init__(self, adapters: Iterable[RunEventAdapter]) -> None:
         """Store explicitly configured adapters."""
         self.adapters = list(adapters)
-        self.events: list[TestEvent] = []
+        self.events: list[RunEvent] = []
 
     def record_command(
         self,
@@ -222,13 +222,13 @@ def _instantiate_adapter(
     adapter_id: str,
     profile_name: str,
     config: Mapping[str, Any],
-) -> TestEventAdapter:
+) -> RunEventAdapter:
     """Instantiate an adapter via the configured entrypoint."""
     module_spec, _, attr = entrypoint.partition(":")
     if not module_spec or not attr:
         raise ValueError(
             (
-                f"Invalid entrypoint '{entrypoint}' for test event adapter "
+                f"Invalid entrypoint '{entrypoint}' for run-event adapter "
                 f"'{adapter_id}'."
             )
         )
@@ -237,7 +237,7 @@ def _instantiate_adapter(
     if factory is None or not callable(factory):
         raise ValueError(
             (
-                f"Test event adapter entrypoint '{entrypoint}' is not "
+                f"Run-event adapter entrypoint '{entrypoint}' is not "
                 "callable."
             )
         )
@@ -251,9 +251,11 @@ def _instantiate_adapter(
 def load_profile_event_adapters(
     repo_root: Path,
     adapter_group: str,
-) -> list[TestEventAdapter]:
+) -> list[RunEventAdapter]:
     """Load adapters from one declared profile metadata group."""
     normalized_group = str(adapter_group or "").strip()
+    if normalized_group == "test_events":
+        normalized_group = "run_events"
     if not normalized_group:
         _set_adapter_load_warnings([])
         return []
@@ -269,7 +271,7 @@ def load_profile_event_adapters(
         _set_adapter_load_warnings(
             [
                 (
-                    "Unable to load test-event adapters from profile "
+                    "Unable to load run-event adapters from profile "
                     f"registry: {exc}"
                 )
             ]
@@ -277,7 +279,7 @@ def load_profile_event_adapters(
         return []
 
     normalized_registry = registry
-    adapters: list[TestEventAdapter] = []
+    adapters: list[RunEventAdapter] = []
     registered: set[str] = set()
     for profile in active_profiles:
         metadata = normalized_registry.get(profile, {}) or {}
@@ -323,7 +325,7 @@ def load_profile_event_adapters(
             if adapter_id in registered:
                 warnings.append(
                     (
-                        f"Skipped duplicate test-event adapter id "
+                        f"Skipped duplicate run-event adapter id "
                         f"'{adapter_id}' from profile '{profile}'."
                     )
                 )
@@ -350,6 +352,18 @@ def load_profile_event_adapters(
     return adapters
 
 
-def load_test_event_adapters(repo_root: Path) -> list[TestEventAdapter]:
+def load_run_event_adapters(repo_root: Path) -> list[RunEventAdapter]:
     """Load adapters declared by the active profile stack."""
-    return load_profile_event_adapters(repo_root, "test_events")
+    return load_profile_event_adapters(repo_root, "run_events")
+
+
+# Backward-compatibility aliases for pre-generalization adapter surfaces.
+consume_test_event_adapter_warnings = consume_run_event_adapter_warnings
+TestEvent = RunEvent
+TestEventAdapter = RunEventAdapter
+GenericTestEventAdapter = GenericRunEventAdapter
+PythonTestEventAdapter = PythonRunEventAdapter
+python_test_event_adapter_factory = python_run_event_adapter_factory
+generic_test_event_adapter_factory = generic_run_event_adapter_factory
+TestEventManager = RunEventManager
+load_test_event_adapters = load_run_event_adapters

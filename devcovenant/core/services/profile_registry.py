@@ -332,20 +332,28 @@ def _normalize_profile_translators(
     profile_meta["translators"] = normalized_entries
 
 
-def _normalize_profile_test_events(
+def _normalize_profile_run_events(
     profile_name: str,
     profile_meta: dict[str, object],
     *,
     source_label: str,
 ) -> None:
-    """Normalize test-event adapter declarations for one profile."""
-    raw_entries = profile_meta.get("test_events")
+    """Normalize run-event adapter declarations for one profile."""
+    raw_entries = profile_meta.get("run_events")
+    legacy_entries = profile_meta.get("test_events")
+    if raw_entries is not None and legacy_entries is not None:
+        raise ValueError(
+            f"{source_label} profile '{profile_name}' must not define both "
+            "`run_events` and legacy `test_events`."
+        )
+    if raw_entries is None:
+        raw_entries = legacy_entries
     if raw_entries is None:
         return
     if not isinstance(raw_entries, list):
         raise ValueError(
             f"{source_label} profile '{profile_name}' must define "
-            "test_events as a list."
+            "run_events as a list."
         )
     normalized_entries: list[dict[str, object]] = []
     seen_ids: set[str] = set()
@@ -353,29 +361,29 @@ def _normalize_profile_test_events(
         if not isinstance(raw_entry, dict):
             raise ValueError(
                 f"{source_label} profile '{profile_name}' has "
-                "non-mapping test_event entries."
+                "non-mapping run_event entries."
             )
         entry_id = str(raw_entry.get("id") or "").strip().lower()
         if not entry_id:
             raise ValueError(
-                f"{source_label} profile '{profile_name}' has a test_event "
+                f"{source_label} profile '{profile_name}' has a run_event "
                 "declaration without id."
             )
         if entry_id in seen_ids:
             raise ValueError(
                 f"{source_label} profile '{profile_name}' has duplicate "
-                f"test_event id '{entry_id}'."
+                f"run_event id '{entry_id}'."
             )
         entrypoint = str(raw_entry.get("entrypoint") or "").strip()
         if not entrypoint:
             raise ValueError(
-                f"{source_label} profile '{profile_name}' test_event "
+                f"{source_label} profile '{profile_name}' run_event "
                 f"'{entry_id}' must define an entrypoint."
             )
         config_value = raw_entry.get("config")
         if config_value is not None and not isinstance(config_value, dict):
             raise ValueError(
-                f"{source_label} profile '{profile_name}' test_event "
+                f"{source_label} profile '{profile_name}' run_event "
                 f"'{entry_id}' config must be a mapping."
             )
         normalized_entry: dict[str, object] = {
@@ -386,7 +394,8 @@ def _normalize_profile_test_events(
             normalized_entry["config"] = dict(config_value)
         seen_ids.add(entry_id)
         normalized_entries.append(normalized_entry)
-    profile_meta["test_events"] = normalized_entries
+    profile_meta["run_events"] = normalized_entries
+    profile_meta.pop("test_events", None)
 
 
 def _normalize_profile_clean_overlays(
@@ -445,7 +454,7 @@ def _normalize_registry_profiles(
             meta,
             source_label=source_label,
         )
-        _normalize_profile_test_events(
+        _normalize_profile_run_events(
             profile_name,
             meta,
             source_label=source_label,
@@ -506,7 +515,7 @@ def discover_profiles(
                 meta,
                 source_label=str(manifest_path),
             )
-            _normalize_profile_test_events(
+            _normalize_profile_run_events(
                 name,
                 meta,
                 source_label=str(manifest_path),

@@ -62,8 +62,8 @@ def _unit_test_symbol_assertions_cover_context_seam() -> None:
     assert module.build_check_context
 
 
-def _unit_test_build_change_state_start_phase_filters_ignored_paths() -> None:
-    """Start-phase builder should capture current snapshot and mark valid."""
+def _unit_test_build_change_state_start_stage_filters_ignored_paths() -> None:
+    """Start-stage builder should capture current snapshot and mark valid."""
     module = importlib.import_module(MODULE)
     with tempfile.TemporaryDirectory() as tmpdir:
         repo_root = Path(tmpdir)
@@ -71,7 +71,7 @@ def _unit_test_build_change_state_start_phase_filters_ignored_paths() -> None:
         with (
             mock.patch.dict(
                 module.os.environ,
-                {"DEVCOV_DEVFLOW_PHASE": "start"},
+                {"DEVCOV_DEVFLOW_STAGE": "start"},
             ),
             mock.patch.object(
                 module,
@@ -90,7 +90,7 @@ def _unit_test_build_change_state_start_phase_filters_ignored_paths() -> None:
                 is_ignored_path=lambda path: path.name == "ignored.py",
             )
 
-        assert state.phase == "start"
+        assert state.stage == "start"
         assert state.session_valid is True
         assert state.session_paths == []
         assert state.session_error == ""
@@ -145,7 +145,7 @@ def _unit_test_build_change_state_open_session_uses_baseline_and_filters() -> (
                 is_ignored_path=lambda path: path.name == "ignored.py",
             )
 
-        assert state.phase == ""
+        assert state.stage == ""
         assert state.session_valid is True
         assert state.session_error == ""
         assert state.session_reason_code == "open_session"
@@ -292,7 +292,7 @@ def _unit_test_build_check_context_assembles_context_with_helper_state() -> (
     with tempfile.TemporaryDirectory() as tmpdir:
         repo_root = Path(tmpdir)
         expected_state = ChangeState(
-            phase="mid",
+            stage="mid",
             gate_status_path="devcovenant/registry/runtime/gate_status.json",
             session_valid=True,
             session_paths=[repo_root / "changed.py"],
@@ -361,9 +361,9 @@ class GeneratedUnittestCases(unittest.TestCase):
         """Run explicit policy-check-context symbol assertions."""
         _unit_test_symbol_assertions_cover_context_seam()
 
-    def test_build_change_state_start_phase_filters_ignored_paths(self):
-        """Run start-phase change-state builder assertions."""
-        _unit_test_build_change_state_start_phase_filters_ignored_paths()
+    def test_build_change_state_start_stage_filters_ignored_paths(self):
+        """Run start-stage change-state builder assertions."""
+        _unit_test_build_change_state_start_stage_filters_ignored_paths()
 
     def test_build_change_state_open_session_uses_baseline_and_filters(self):
         """Run open-session baseline/filter change-state assertions."""

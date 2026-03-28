@@ -90,7 +90,7 @@ policy_overlays:
     sink_macro_targets:
       - rust=>println
       - rust=>eprintln
-workflow_phases:
+workflow_runs:
   - id: tests
     enabled: true
     required: true
@@ -107,5 +107,5 @@ workflow_phases:
       record_in_session: true
       summary_label: Tests
       output_mode_config_field: engine.tests_output_mode
-      event_adapter_group: test_events
+      event_adapter_group: run_events
       write_runtime_profile: true

@@ -65,7 +65,7 @@ def _unit_test_scoped_changed_files_allows_read_only_check_bootstrap() -> None:
                 session_valid=False,
                 session_error="Gate status file is missing.",
                 session_reason_code="missing_gate_status",
-                phase="",
+                stage="",
             ),
         )
         scoped = _DummyPolicy().scoped_changed_files(context)
@@ -99,7 +99,7 @@ def _unit_test_scoped_changed_files_stays_strict_outside_check() -> None:
                 session_valid=False,
                 session_error="Gate status file is missing.",
                 session_reason_code="missing_gate_status",
-                phase="",
+                stage="",
             ),
         )
         try:

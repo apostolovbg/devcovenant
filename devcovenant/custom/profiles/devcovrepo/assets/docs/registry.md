@@ -60,22 +60,22 @@ That same tracked state also records the current generated workflow contract,
 including the visible workflow name `CI` and the repo-specific
 `build-and-install-test` verification job.
 The tracked `workflow_contract` section is the workflow-owned part of that
-story: it records the reserved anchors, the declared phases resolved from
-active profiles, and which phase ids are currently required.
-That means the tracked registry should now show required phases under
+story: it records the reserved anchors, the declared runs resolved from
+active profiles, and which run ids are currently required.
+That means the tracked registry should now show required runs under
 `workflow_contract`, not a legacy `devflow-run-gates.required_commands`
 fallback.
 The resolver for that tracked contract now lives under
 `devcovenant/core/flow/workflow_contract.py`, which keeps contract
 normalization with the rest of the workflow layer.
 That same tracked state now also reflects the canonical workflow recording
-shape that refresh resolved for the active profiles, including the phase
+shape that refresh resolved for the active profiles, including the run
 recording hooks that drive output-mode overrides and runtime profiling.
-It also records the explicit phase freshness contract that the workflow layer
-uses to decide whether previously recorded phase evidence is still fresh.
+It also records the explicit run freshness contract that the workflow layer
+uses to decide whether previously recorded run evidence is still fresh.
 The default resolved freshness contract ignores `CHANGELOG.md`, so
 changelog-only edits remain gate-scoped without forcing a rerun of an
-otherwise still-valid required phase.
+otherwise still-valid required run.
 The helper ownership now matches that split:
 
 - `devcovenant/core/services/tracked_registry.py` owns tracked-registry paths
@@ -97,9 +97,9 @@ AGENTS block markers and policy/core-invariant block rendering now live in
 `devcovenant/core/lib/agents_blocks.py`, so the tracked registry feeds a
 shared block-rendering helper instead of separate services-layer refresh
 modules.
-That same tracked state now carries the Python profile's test-event adapter
+That same tracked state now carries the Python profile's run-event adapter
 entrypoint under `devcovenant/core/runtime/event.py`, matching the runtime
-execution layer that actually records workflow phase events.
+execution layer that actually records workflow run events.
 The tracked inventory now also records namespaced policy-command parsing and
 runtime-action dispatch under `devcovenant/core/runtime/`, so the registry
 matches the runtime layer that actually executes `devcovenant policy ...`.
@@ -119,15 +119,18 @@ Commit tracked-registry changes when they are the result of real repo changes.
 
 This state is about the current or recent command history, not about the
 stable repo contract.
+The `devflow-run-gates` invariant may override `gate_status_file` and
+`workflow_session_file`, but both must remain repo-relative paths inside
+`devcovenant/registry/runtime/`.
 
 ## Gate Status
 `gate_status.json` is the short gate lifecycle ledger.
 It records gate start/end state and the pre-commit evidence those anchors
 require.
 
-`workflow_session.json` records the required declared workflow phases for the
+`workflow_session.json` records the required declared workflow runs for the
 session, their pass/fail state, and the last-session/snapshot evidence used to
-decide whether a phase is still fresh.
+decide whether a run is still fresh.
 
 That is why `gate --status` is often the right first command when you need to
 know where a slice stands.
@@ -143,7 +146,7 @@ Read `registry.yaml` when you need to understand:
 
 4. why one configuration value won over another
 
-5. which workflow phases are required and which profile declared them
+5. which workflow runs are required and which profile declared them
 
 6. which profile contributed an extra generated workflow fragment or other
    resolved generation input
@@ -156,7 +159,7 @@ Read `registry/runtime/` when you need to understand:
 
 - whether a gate session is open
 
-- whether a required workflow phase has passed for the current session
+- whether a required workflow run has passed for the current session
 
 - what the last relevant run was
 

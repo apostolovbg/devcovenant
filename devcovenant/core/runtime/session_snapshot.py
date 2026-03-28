@@ -58,8 +58,22 @@ SESSION_SNAPSHOT_BULKY_KEYS = (
     "session_baseline_snapshot",
     "session_end_snapshot",
     "session_start_snapshot",
+    "run_events",
     "test_events",
 )
+
+
+def _normalize_snapshot_payload(
+    payload_raw: object,
+) -> dict[str, object]:
+    """Normalize snapshot payload keys and collapse legacy event names."""
+
+    payload = dict(payload_raw) if isinstance(payload_raw, dict) else {}
+    run_events = payload.get("run_events")
+    if run_events is None and "test_events" in payload:
+        payload["run_events"] = payload.get("test_events")
+    payload.pop("test_events", None)
+    return payload
 
 
 def capture_current_numstat_snapshot(repo_root: Path) -> dict[str, str]:
@@ -150,7 +164,7 @@ def load_session_snapshot_payload(
         ) from exc
     if not isinstance(payload, dict):
         raise ValueError(f"Session snapshot payload must be a mapping: {path}")
-    return payload
+    return _normalize_snapshot_payload(payload)
 
 
 def merge_session_snapshot_payload(
@@ -163,6 +177,7 @@ def merge_session_snapshot_payload(
     """Merge updates into the companion snapshot payload and write it."""
     path = resolve_session_snapshot_path(repo_root, gate_status)
     payload = load_session_snapshot_payload(repo_root, gate_status)
+    payload = _normalize_snapshot_payload(payload)
     for key in remove_keys:
         payload.pop(str(key), None)
     for key, value in dict(updates or {}).items():

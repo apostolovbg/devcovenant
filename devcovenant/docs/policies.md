@@ -1,5 +1,5 @@
 # Policies
-**Last Updated:** 2026-03-27
+**Last Updated:** 2026-03-28
 **Project Version:** 1.0.0
 
 ## Overview
@@ -107,7 +107,7 @@ That keeps policy-owned operations explicit and prevents the CLI from turning
 into a pile of unrelated one-off top-level commands.
 The command-definition parser and runtime-action dispatcher now live under
 `devcovenant/core/runtime/`, which keeps `devcovenant policy ...` on the same
-execution boundary as `run` and `phase run` while leaving policy meaning in
+execution boundary as `run` while leaving policy meaning in
 the service layer.
 
 Dependency management now uses only the namespaced policy command surface.

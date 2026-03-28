@@ -1,4 +1,4 @@
-"""Workflow-contract resolution for reserved anchors and declared phases."""
+"""Workflow-contract resolution for reserved anchors and declared runs."""
 
 from __future__ import annotations
 
@@ -27,7 +27,7 @@ _SUCCESS_CONTRACT_KINDS = {
     "manual_attested",
     "external_artifact_check",
 }
-_DEFAULT_TESTS_PHASE_ID = "tests"
+_DEFAULT_TESTS_RUN_ID = "tests"
 _DEFAULT_FRESHNESS_IGNORED_FILES = ("CHANGELOG.md",)
 
 
@@ -115,16 +115,16 @@ def _normalize_string_list(
     return normalized
 
 
-def _normalize_phase_entry(
+def _normalize_run_entry(
     profile_name: str,
     raw_entry: Mapping[str, object],
 ) -> dict[str, object]:
-    """Normalize one workflow-phase manifest entry."""
+    """Normalize one workflow-run manifest entry."""
 
-    phase_id = str(raw_entry.get("id") or "").strip().lower()
-    if not phase_id:
+    run_id = str(raw_entry.get("id") or "").strip().lower()
+    if not run_id:
         raise ValueError(
-            f"Profile `{profile_name}` has a workflow phase without id."
+            f"Profile `{profile_name}` has a workflow run without id."
         )
     enabled = _normalize_bool(raw_entry.get("enabled"), default=True)
     required = _normalize_bool(raw_entry.get("required"), default=True)
@@ -135,26 +135,26 @@ def _normalize_phase_entry(
     runner_raw = raw_entry.get("runner")
     if not isinstance(runner_raw, Mapping):
         raise ValueError(
-            f"Workflow phase `{phase_id}` in profile `{profile_name}` "
+            f"Workflow run `{run_id}` in profile `{profile_name}` "
             "must define runner as a mapping."
         )
     runner_kind = str(runner_raw.get("kind") or "").strip().lower()
     if runner_kind not in _RUNNER_KINDS:
         raise ValueError(
-            f"Workflow phase `{phase_id}` in profile `{profile_name}` uses "
+            f"Workflow run `{run_id}` in profile `{profile_name}` uses "
             f"unsupported runner kind `{runner_kind}`."
         )
     runner: dict[str, object] = {"kind": runner_kind}
     if runner_kind == "command_group":
         runner["commands"] = _normalize_commands(
             runner_raw.get("commands"),
-            field_name=f"workflow_phases[{phase_id}].runner.commands",
+            field_name=f"workflow_runs[{run_id}].runner.commands",
         )
     elif runner_kind in {"runtime_action", "policy_command"}:
         target = str(runner_raw.get("target") or "").strip()
         if not target:
             raise ValueError(
-                f"Workflow phase `{phase_id}` in profile `{profile_name}` "
+                f"Workflow run `{run_id}` in profile `{profile_name}` "
                 f"must define runner.target for `{runner_kind}`."
             )
         runner["target"] = target
@@ -165,7 +165,7 @@ def _normalize_phase_entry(
             payload = dict(payload_raw)
         else:
             raise ValueError(
-                f"Workflow phase `{phase_id}` in profile `{profile_name}` "
+                f"Workflow run `{run_id}` in profile `{profile_name}` "
                 "must define runner.payload as a mapping when present."
             )
         if payload:
@@ -173,13 +173,13 @@ def _normalize_phase_entry(
         if runner_kind == "policy_command":
             runner["args"] = _normalize_string_list(
                 runner_raw.get("args"),
-                field_name=f"workflow_phases[{phase_id}].runner.args",
+                field_name=f"workflow_runs[{run_id}].runner.args",
             )
     elif runner_kind == "manual_attestation":
         attestation_key = str(runner_raw.get("attestation_key") or "").strip()
         if not attestation_key:
             raise ValueError(
-                f"Workflow phase `{phase_id}` in profile `{profile_name}` "
+                f"Workflow run `{run_id}` in profile `{profile_name}` "
                 "must define runner.attestation_key for manual attestation."
             )
         runner["attestation_key"] = attestation_key
@@ -187,13 +187,13 @@ def _normalize_phase_entry(
     success_raw = raw_entry.get("success_contract")
     if not isinstance(success_raw, Mapping):
         raise ValueError(
-            f"Workflow phase `{phase_id}` in profile `{profile_name}` "
+            f"Workflow run `{run_id}` in profile `{profile_name}` "
             "must define success_contract as a mapping."
         )
     success_kind = str(success_raw.get("kind") or "").strip().lower()
     if success_kind not in _SUCCESS_CONTRACT_KINDS:
         raise ValueError(
-            f"Workflow phase `{phase_id}` in profile `{profile_name}` uses "
+            f"Workflow run `{run_id}` in profile `{profile_name}` uses "
             f"unsupported success contract `{success_kind}`."
         )
     success_contract: dict[str, object] = {"kind": success_kind}
@@ -202,20 +202,19 @@ def _normalize_phase_entry(
         required_files = _normalize_string_list(
             success_raw.get("required_files"),
             field_name=(
-                f"workflow_phases[{phase_id}].success_contract.required_files"
+                f"workflow_runs[{run_id}].success_contract.required_files"
             ),
         )
         required_globs = _normalize_string_list(
             success_raw.get("required_globs"),
             field_name=(
-                f"workflow_phases[{phase_id}].success_contract.required_globs"
+                f"workflow_runs[{run_id}].success_contract.required_globs"
             ),
         )
         forbidden_globs = _normalize_string_list(
             success_raw.get("forbidden_globs"),
             field_name=(
-                f"workflow_phases[{phase_id}].success_contract."
-                "forbidden_globs"
+                f"workflow_runs[{run_id}].success_contract." "forbidden_globs"
             ),
         )
         minimum_matches = _normalize_int(
@@ -224,12 +223,12 @@ def _normalize_phase_entry(
         )
         if minimum_matches < 0:
             raise ValueError(
-                f"Workflow phase `{phase_id}` in profile `{profile_name}` "
+                f"Workflow run `{run_id}` in profile `{profile_name}` "
                 "must define a non-negative minimum_matches value."
             )
         if not (required_files or required_globs or forbidden_globs):
             raise ValueError(
-                f"Workflow phase `{phase_id}` in profile `{profile_name}` "
+                f"Workflow run `{run_id}` in profile `{profile_name}` "
                 "must define required_files, required_globs, or "
                 "forbidden_globs for external_artifact_check."
             )
@@ -248,24 +247,27 @@ def _normalize_phase_entry(
         recording_raw = {}
     if not isinstance(recording_raw, Mapping):
         raise ValueError(
-            f"Workflow phase `{phase_id}` in profile `{profile_name}` "
+            f"Workflow run `{run_id}` in profile `{profile_name}` "
             "must define recording as a mapping when present."
         )
+    event_adapter_group = str(
+        recording_raw.get("event_adapter_group") or ""
+    ).strip()
+    if event_adapter_group == "test_events":
+        event_adapter_group = "run_events"
     recording = {
         "record_in_session": _normalize_bool(
             recording_raw.get("record_in_session"),
             default=True,
         ),
         "summary_label": (
-            str(recording_raw.get("summary_label") or phase_id).strip().title()
-            or phase_id.title()
+            str(recording_raw.get("summary_label") or run_id).strip().title()
+            or run_id.title()
         ),
         "output_mode_config_field": str(
             recording_raw.get("output_mode_config_field") or ""
         ).strip(),
-        "event_adapter_group": str(
-            recording_raw.get("event_adapter_group") or ""
-        ).strip(),
+        "event_adapter_group": event_adapter_group,
         "write_runtime_profile": _normalize_bool(
             recording_raw.get("write_runtime_profile"),
             default=False,
@@ -276,7 +278,7 @@ def _normalize_phase_entry(
         freshness_raw = {}
     if not isinstance(freshness_raw, Mapping):
         raise ValueError(
-            f"Workflow phase `{phase_id}` in profile `{profile_name}` "
+            f"Workflow run `{run_id}` in profile `{profile_name}` "
             "must define freshness as a mapping when present."
         )
     freshness_kind = (
@@ -285,18 +287,18 @@ def _normalize_phase_entry(
     )
     if freshness_kind not in _FRESHNESS_KINDS:
         raise ValueError(
-            f"Workflow phase `{phase_id}` in profile `{profile_name}` uses "
+            f"Workflow run `{run_id}` in profile `{profile_name}` uses "
             f"unsupported freshness kind `{freshness_kind}`."
         )
     freshness: dict[str, object] = {"kind": freshness_kind}
     if freshness_kind == "ignore_paths":
         ignored_files = _normalize_string_list(
             freshness_raw.get("ignored_files"),
-            field_name=f"workflow_phases[{phase_id}].freshness.ignored_files",
+            field_name=f"workflow_runs[{run_id}].freshness.ignored_files",
         )
         ignored_globs = _normalize_string_list(
             freshness_raw.get("ignored_globs"),
-            field_name=f"workflow_phases[{phase_id}].freshness.ignored_globs",
+            field_name=f"workflow_runs[{run_id}].freshness.ignored_globs",
         )
         if not ignored_files and not ignored_globs:
             ignored_files = list(_DEFAULT_FRESHNESS_IGNORED_FILES)
@@ -307,8 +309,8 @@ def _normalize_phase_entry(
             }
         )
 
-    phase = {
-        "id": phase_id,
+    run = {
+        "id": run_id,
         "owner": "profile",
         "owner_id": profile_name,
         "enabled": enabled,
@@ -322,54 +324,54 @@ def _normalize_phase_entry(
         "success_contract": success_contract,
         "recording": recording,
         "freshness": freshness,
-        "source_field": "workflow_phases",
+        "source_field": "workflow_runs",
     }
-    return phase
+    return run
 
 
-def _normalize_manifest_phases(
+def _normalize_manifest_runs(
     profile_name: str,
     raw_value: object,
 ) -> list[dict[str, object]]:
-    """Normalize workflow phases declared in one profile manifest."""
+    """Normalize workflow runs declared in one profile manifest."""
 
     if raw_value is None:
         return []
     if not isinstance(raw_value, list):
         raise ValueError(
-            f"Profile `{profile_name}` must define workflow_phases as a list."
+            f"Profile `{profile_name}` must define workflow_runs as a list."
         )
     normalized: list[dict[str, object]] = []
     seen_ids: set[str] = set()
     for raw_entry in raw_value:
         if not isinstance(raw_entry, Mapping):
             raise ValueError(
-                f"Profile `{profile_name}` has non-mapping workflow phase "
+                f"Profile `{profile_name}` has non-mapping workflow run "
                 "entries."
             )
-        entry = _normalize_phase_entry(profile_name, raw_entry)
-        phase_id = str(entry["id"])
-        if phase_id in seen_ids:
+        entry = _normalize_run_entry(profile_name, raw_entry)
+        run_id = str(entry["id"])
+        if run_id in seen_ids:
             raise ValueError(
-                f"Profile `{profile_name}` defines duplicate workflow phase "
-                f"`{phase_id}`."
+                f"Profile `{profile_name}` defines duplicate workflow run "
+                f"`{run_id}`."
             )
-        seen_ids.add(phase_id)
+        seen_ids.add(run_id)
         normalized.append(entry)
     return normalized
 
 
-def _phase_sort_key(phase: Mapping[str, object]) -> tuple[int, str, str]:
-    """Return deterministic sort key for resolved phase entries."""
+def _run_sort_key(run: Mapping[str, object]) -> tuple[int, str, str]:
+    """Return deterministic sort key for resolved run entries."""
 
-    position = phase.get("position")
+    position = run.get("position")
     if isinstance(position, Mapping):
         order = _normalize_int(position.get("order"), default=100)
     else:
         order = 100
-    owner = str(phase.get("owner_id") or "").strip().lower()
-    phase_id = str(phase.get("id") or "").strip().lower()
-    return (order, owner, phase_id)
+    owner = str(run.get("owner_id") or "").strip().lower()
+    run_id = str(run.get("id") or "").strip().lower()
+    return (order, owner, run_id)
 
 
 def _default_anchor_rows() -> list[dict[str, object]]:
@@ -380,7 +382,7 @@ def _default_anchor_rows() -> list[dict[str, object]]:
             "id": anchor_id,
             "owner": "core",
             "required": True,
-            "phase_kind": "gate_anchor",
+            "anchor_kind": "gate_anchor",
         }
         for anchor_id in ANCHOR_IDS
     ]
@@ -393,7 +395,7 @@ def build_workflow_contract(
 ) -> dict[str, object]:
     """Build the resolved workflow contract for the active profile set."""
 
-    phase_map: dict[str, dict[str, object]] = {}
+    run_map: dict[str, dict[str, object]] = {}
     active_names = profile_registry_service._active_profile_names(
         active_profiles
     )
@@ -401,22 +403,22 @@ def build_workflow_contract(
         profile_meta = profiles_registry.get(profile_name, {})
         if not isinstance(profile_meta, Mapping):
             continue
-        for phase in _normalize_manifest_phases(
+        for run in _normalize_manifest_runs(
             profile_name,
-            profile_meta.get("workflow_phases"),
+            profile_meta.get("workflow_runs"),
         ):
-            phase_map[str(phase["id"])] = phase
-    phases = sorted(phase_map.values(), key=_phase_sort_key)
-    required_phase_ids = [
-        str(phase.get("id") or "")
-        for phase in phases
-        if bool(phase.get("enabled")) and bool(phase.get("required"))
+            run_map[str(run["id"])] = run
+    runs = sorted(run_map.values(), key=_run_sort_key)
+    required_run_ids = [
+        str(run.get("id") or "")
+        for run in runs
+        if bool(run.get("enabled")) and bool(run.get("required"))
     ]
     return {
         "schema_version": SCHEMA_VERSION,
         "anchors": _default_anchor_rows(),
-        "phases": phases,
-        "required_phase_ids": required_phase_ids,
+        "runs": runs,
+        "required_run_ids": required_run_ids,
         "active_profiles": list(active_names),
     }
 
@@ -433,81 +435,81 @@ def load_workflow_contract(repo_root: Path) -> dict[str, object]:
     return build_workflow_contract(repo_root, registry, active_profiles)
 
 
-def resolve_phase(
+def resolve_run(
     contract: Mapping[str, object],
-    phase_id: str,
+    run_id: str,
 ) -> dict[str, object] | None:
-    """Return one phase definition by id from a workflow contract."""
+    """Return one run definition by id from a workflow contract."""
 
-    token = str(phase_id or "").strip().lower()
-    raw_phases = contract.get("phases")
-    if not isinstance(raw_phases, list):
+    token = str(run_id or "").strip().lower()
+    raw_runs = contract.get("runs")
+    if not isinstance(raw_runs, list):
         return None
-    for raw_phase in raw_phases:
-        if not isinstance(raw_phase, Mapping):
+    for raw_run in raw_runs:
+        if not isinstance(raw_run, Mapping):
             continue
-        if str(raw_phase.get("id") or "").strip().lower() != token:
+        if str(raw_run.get("id") or "").strip().lower() != token:
             continue
-        return dict(raw_phase)
+        return dict(raw_run)
     return None
 
 
-def required_phase_ids(contract: Mapping[str, object]) -> list[str]:
-    """Return enabled required phase ids from a workflow contract."""
+def required_run_ids(contract: Mapping[str, object]) -> list[str]:
+    """Return enabled required run ids from a workflow contract."""
 
-    raw_ids = contract.get("required_phase_ids")
+    raw_ids = contract.get("required_run_ids")
     if isinstance(raw_ids, list):
         return [
             str(entry or "").strip().lower()
             for entry in raw_ids
             if str(entry or "").strip()
         ]
-    raw_phases = contract.get("phases")
-    if not isinstance(raw_phases, list):
+    raw_runs = contract.get("runs")
+    if not isinstance(raw_runs, list):
         return []
     resolved: list[str] = []
-    for raw_phase in raw_phases:
-        if not isinstance(raw_phase, Mapping):
+    for raw_run in raw_runs:
+        if not isinstance(raw_run, Mapping):
             continue
-        phase_id = str(raw_phase.get("id") or "").strip().lower()
-        if not phase_id:
+        run_id = str(raw_run.get("id") or "").strip().lower()
+        if not run_id:
             continue
-        if not _normalize_bool(raw_phase.get("enabled"), default=True):
+        if not _normalize_bool(raw_run.get("enabled"), default=True):
             continue
-        if not _normalize_bool(raw_phase.get("required"), default=True):
+        if not _normalize_bool(raw_run.get("required"), default=True):
             continue
-        resolved.append(phase_id)
+        resolved.append(run_id)
     return resolved
 
 
-def resolve_tests_phase(repo_root: Path) -> dict[str, object]:
-    """Return the resolved `tests` phase or raise when absent."""
+def resolve_tests_run(repo_root: Path) -> dict[str, object]:
+    """Return the resolved `tests` run or raise when absent."""
 
     contract = load_workflow_contract(repo_root)
-    phase = resolve_phase(contract, _DEFAULT_TESTS_PHASE_ID)
-    if phase is None:
+    run = resolve_run(contract, _DEFAULT_TESTS_RUN_ID)
+    if run is None:
         raise ValueError(
-            "No `tests` workflow phase is configured for the active profiles."
+            "No `tests` workflow run is configured for the active profiles."
         )
-    runner = phase.get("runner")
+    runner = run.get("runner")
     if not isinstance(runner, Mapping) or str(runner.get("kind") or "") != (
         "command_group"
     ):
         raise ValueError(
-            "The `tests` workflow phase must use runner.kind: command_group."
+            "The `tests` workflow run must use runner.kind: command_group."
         )
-    return phase
+    return run
 
 
-def phase_relevant_paths_changed(
-    phase: Mapping[str, object],
+def run_relevant_paths_changed(
+    run: Mapping[str, object],
     changed_paths: Sequence[str],
 ) -> bool:
-    """Return whether changed paths invalidate one phase result."""
+    """Return whether changed paths invalidate one run result."""
 
     if not changed_paths:
         return False
-    freshness = phase.get("freshness")
+    freshness = run.get("freshness")
     freshness_map = dict(freshness) if isinstance(freshness, Mapping) else {}
     freshness_kind = (
         str(freshness_map.get("kind") or "ignore_paths").strip().lower()

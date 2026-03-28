@@ -1,5 +1,5 @@
 # Builtin Policies
-**Last Updated:** 2026-03-26
+**Last Updated:** 2026-03-28
 **Project Version:** 1.0.0
 
 ## Table of Contents
@@ -37,9 +37,9 @@ Resolved metadata is computed by runtime precedence and then written into:
 - AGENTS managed policy block
 
 Example metadata-owned runtime behavior:
-- `workflow_phases` are resolved from the active profile stack, recorded in
-  the workflow contract, and executed through the core-owned `run` /
-  `phase run <id>` command surfaces.
+- `workflow_runs` are resolved from the active profile stack, recorded in
+  the workflow contract, and executed through the core-owned `run`
+  command surface.
 
 ## Policy Runtime Contract
 Policy scripts expose policy checks and return structured violations consumed

@@ -91,7 +91,7 @@ class CoreInvariantCheck(ABC):
     def scoped_changed_files(self, context: CheckContext) -> List[Path]:
         """Return changed files from the active gate session scope."""
         state = context.change_state
-        if state.phase == "start":
+        if state.stage == "start":
             return []
         if not state.session_valid:
             top_command = (
@@ -100,7 +100,7 @@ class CoreInvariantCheck(ABC):
             reason = str(state.session_reason_code or "").strip().lower()
             if (
                 top_command == "check"
-                and not str(state.phase or "").strip()
+                and not str(state.stage or "").strip()
                 and reason == "missing_gate_status"
             ):
                 return []

@@ -49,9 +49,9 @@ def _gate_status_summary_lines(repo_root: Path) -> list[str]:
     session_id = str(payload.get("session_id", "")).strip()
     if session_id:
         lines.append(f"Session ID: {session_id}")
-    last_phase = _infer_last_gate_phase(payload)
-    if last_phase:
-        lines.append(f"Last Phase: {last_phase}")
+    last_stage = _infer_last_gate_stage(payload)
+    if last_stage:
+        lines.append(f"Last Stage: {last_stage}")
 
     session_start = _status_time_token(
         payload, "session_start_utc"
@@ -69,8 +69,8 @@ def _gate_status_summary_lines(repo_root: Path) -> list[str]:
     return lines
 
 
-def _infer_last_gate_phase(payload: dict[str, object]) -> str:
-    """Infer the latest completed lifecycle phase from gate-status fields."""
+def _infer_last_gate_stage(payload: dict[str, object]) -> str:
+    """Infer the latest completed lifecycle stage from gate-status fields."""
     pre_commit_end = _status_epoch(payload, "pre_commit_end_epoch")
     if pre_commit_end > 0.0:
         return "end"

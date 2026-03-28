@@ -41,7 +41,7 @@ class ChangeState:
     Precomputed change scopes for policy checks.
 
     Attributes:
-        phase: Devflow phase (`start`, `end`, or empty).
+        stage: Gate stage (`start`, `mid`, `end`, or empty).
         gate_status_path: Relative gate-status path used for session snapshots.
         current_snapshot_paths:
             Snapshot-visible paths in the current repo scan.
@@ -58,7 +58,7 @@ class ChangeState:
             Loaded companion session snapshot payload when available.
     """
 
-    phase: str = ""
+    stage: str = ""
     gate_status_path: str = ""
     current_snapshot_paths: List[Path] = field(default_factory=list)
     current_snapshot_numstat: Dict[str, str] = field(default_factory=dict)
@@ -329,7 +329,7 @@ class PolicyCheck(ABC):
         Return changed files from the active gate session scope.
         """
         state = context.change_state
-        if state.phase == "start":
+        if state.stage == "start":
             return []
         if not state.session_valid:
             top_command = (
@@ -338,7 +338,7 @@ class PolicyCheck(ABC):
             reason = str(state.session_reason_code or "").strip().lower()
             if (
                 top_command == "check"
-                and not str(state.phase or "").strip()
+                and not str(state.stage or "").strip()
                 and reason == "missing_gate_status"
             ):
                 # Read-only audit checks should remain usable before the first

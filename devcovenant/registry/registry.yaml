@@ -89,7 +89,7 @@ managed-docs:
       project_governance_headers: false
       import_seed: true
       authoritative_source: true
-      body_fingerprint: a856535ce2c57536caa035e1ba80baa945ce393e4d9a7beeebabd3a982c1952e
+      body_fingerprint: 1edd013a0ffe9041450dce74c523cbcc54e57c7242ec7e079f773a86df5c1010
       legacy_generic_body_fingerprints: []
     PROFILE_MAP.md:
       enabled: true
@@ -97,7 +97,7 @@ managed-docs:
       project_governance_headers: false
       import_seed: true
       authoritative_source: true
-      body_fingerprint: 6027ada7403cada740e2f7598aa3a879b359bb0a31c03d99a24faa8de21472b2
+      body_fingerprint: afede9535270b767a5febacd8f460bd8484150f5fcf815ec4dd77c0c56708a35
       legacy_generic_body_fingerprints: []
     README.md:
       enabled: true
@@ -105,7 +105,7 @@ managed-docs:
       project_governance_headers: false
       import_seed: true
       authoritative_source: true
-      body_fingerprint: 60f3fd133b7c666271bbbb9a38a29181acbc2a4f7bc37af1db19e33b654d4e67
+      body_fingerprint: 28ea65c11bc263b5e646af600a58b93d622746a93c0ce812c9d3bef39bead178
       legacy_generic_body_fingerprints: []
     SPEC.md:
       enabled: true
@@ -412,13 +412,13 @@ core-invariants:
     description: Devflow Run Gates
     invariant_text: |-
       DevCovenant must record and enforce the standard workflow: pre-commit start,
-      declared required workflow phases, then pre-commit end. Gate status
+      declared required workflow runs, then pre-commit end. Gate status
       preserves pre-commit evidence while workflow-session state records which
-      required phases passed for the active session.
+      required runs passed for the active session.
       This check is enforced for every repository change (including
       documentation-only updates) so the gate sequence cannot be skipped.
       Changelog-only edits remain gate-scoped but do not require a fresh
-      required-phase rerun by themselves.
+      required-run execution by themselves.
     metadata:
       id: devflow-run-gates
       severity: critical
@@ -427,6 +427,7 @@ core-invariants:
       enabled: 'true'
       custom: 'false'
       gate_status_file: devcovenant/registry/runtime/gate_status.json
+      workflow_session_file: ''
       require_pre_commit_start: 'true'
       require_pre_commit_end: 'true'
       pre_commit_command: python3 -m pre_commit run --all-files
@@ -493,6 +494,12 @@ core-invariants:
         effective:
           values:
           - devcovenant/registry/runtime/gate_status.json
+      workflow_session_file:
+        descriptor:
+          values: []
+          behavior: base
+        effective:
+          values: []
       require_pre_commit_start:
         descriptor:
           values:
@@ -616,6 +623,7 @@ core-invariants:
       enabled: true
       custom: false
       gate_status_file: devcovenant/registry/runtime/gate_status.json
+      workflow_session_file: ''
       require_pre_commit_start: true
       require_pre_commit_end: true
       pre_commit_command: python3 -m pre_commit run --all-files
@@ -660,16 +668,16 @@ workflow_contract:
   - id: start
     owner: core
     required: true
-    phase_kind: gate_anchor
+    anchor_kind: gate_anchor
   - id: mid
     owner: core
     required: true
-    phase_kind: gate_anchor
+    anchor_kind: gate_anchor
   - id: end
     owner: core
     required: true
-    phase_kind: gate_anchor
-  phases:
+    anchor_kind: gate_anchor
+  runs:
   - id: tests
     owner: profile
     owner_id: python
@@ -690,15 +698,15 @@ workflow_contract:
       record_in_session: true
       summary_label: Tests
       output_mode_config_field: engine.tests_output_mode
-      event_adapter_group: test_events
+      event_adapter_group: run_events
       write_runtime_profile: true
     freshness:
       kind: ignore_paths
       ignored_files:
       - CHANGELOG.md
       ignored_globs: []
-    source_field: workflow_phases
-  required_phase_ids:
+    source_field: workflow_runs
+  required_run_ids:
   - tests
   active_profiles:
   - global
@@ -2165,7 +2173,7 @@ policies:
     - pip-wheel-metadata/**
     origin: builtin
     script_exists: true
-    hash: 77f5a4b32a05aaae32e674c6190d7d1f3d8265c19dec4a9483f4dc7be8c790eb
+    hash: a4bb1e5b2a4af3d7fc6a4a42580b0b2faa0c2e2b3673db03eb7944c75c78b4ca
     script_path: builtin/changelog_coverage.py
   devcov-raw-string-escapes:
     enabled: true
@@ -3861,7 +3869,7 @@ policies:
     - tests/**
     origin: builtin
     script_exists: true
-    hash: 44fdb9c375e255e4619fcc2ff011beab279eca7c558fb5a2b1968e6fd4a9f037
+    hash: d8fc4147011474191978e21066db989dbc4db68fd1231b6648445f3cea9026af
     script_path: builtin/documentation_growth_tracking.py
   last-updated:
     enabled: true
@@ -8315,7 +8323,7 @@ policies:
     - tests/**
     origin: builtin
     script_exists: true
-    hash: 4685021d04ee0bd883bcdb0c8c8360aa3957fb2dc4874a4a108fc65694c34121
+    hash: 99a71a5c3d684de7c3ede0427e1c1d25431de646743339537b3e5c326767b14f
     script_path: builtin/tests_coverage.py
   version-sync:
     enabled: true
@@ -9494,7 +9502,7 @@ profiles:
       line-length-limit:
         include_suffixes:
         - .cs
-    workflow_phases:
+    workflow_runs:
     - id: tests
       enabled: true
       required: true
@@ -9511,7 +9519,7 @@ profiles:
         record_in_session: true
         summary_label: Tests
         output_mode_config_field: engine.tests_output_mode
-        event_adapter_group: test_events
+        event_adapter_group: run_events
         write_runtime_profile: true
     source: builtin
     path: devcovenant/builtin/profiles/csharp
@@ -9557,7 +9565,7 @@ profiles:
       line-length-limit:
         include_suffixes:
         - .dart
-    workflow_phases:
+    workflow_runs:
     - id: tests
       enabled: true
       required: true
@@ -9574,7 +9582,7 @@ profiles:
         record_in_session: true
         summary_label: Tests
         output_mode_config_field: engine.tests_output_mode
-        event_adapter_group: test_events
+        event_adapter_group: run_events
         write_runtime_profile: true
     source: builtin
     path: devcovenant/builtin/profiles/dart
@@ -10193,7 +10201,7 @@ profiles:
         include_suffixes:
         - .yml
         - .yaml
-    workflow_phases:
+    workflow_runs:
     - id: tests
       enabled: true
       required: true
@@ -10210,7 +10218,7 @@ profiles:
         record_in_session: true
         summary_label: Tests
         output_mode_config_field: engine.tests_output_mode
-        event_adapter_group: test_events
+        event_adapter_group: run_events
         write_runtime_profile: true
     source: builtin
     path: devcovenant/builtin/profiles/docker
@@ -10300,7 +10308,7 @@ profiles:
       modules-need-tests:
         include_suffixes:
         - .py
-    workflow_phases:
+    workflow_runs:
     - id: tests
       enabled: true
       required: true
@@ -10318,7 +10326,7 @@ profiles:
         record_in_session: true
         summary_label: Tests
         output_mode_config_field: engine.tests_output_mode
-        event_adapter_group: test_events
+        event_adapter_group: run_events
         write_runtime_profile: true
     source: builtin
     path: devcovenant/builtin/profiles/fastapi
@@ -10367,7 +10375,7 @@ profiles:
       line-length-limit:
         include_suffixes:
         - .dart
-    workflow_phases:
+    workflow_runs:
     - id: tests
       enabled: true
       required: true
@@ -10384,7 +10392,7 @@ profiles:
         record_in_session: true
         summary_label: Tests
         output_mode_config_field: engine.tests_output_mode
-        event_adapter_group: test_events
+        event_adapter_group: run_events
         write_runtime_profile: true
     source: builtin
     path: devcovenant/builtin/profiles/flutter
@@ -10456,7 +10464,7 @@ profiles:
         include_suffixes:
         - .py
         - .js
-    workflow_phases:
+    workflow_runs:
     - id: tests
       enabled: true
       required: true
@@ -10475,7 +10483,7 @@ profiles:
         record_in_session: true
         summary_label: Tests
         output_mode_config_field: engine.tests_output_mode
-        event_adapter_group: test_events
+        event_adapter_group: run_events
         write_runtime_profile: true
     source: builtin
     path: devcovenant/builtin/profiles/frappe
@@ -10673,7 +10681,7 @@ profiles:
         - go=>log.Print
         - go=>log.Printf
         - go=>log.Println
-    workflow_phases:
+    workflow_runs:
     - id: tests
       enabled: true
       required: true
@@ -10690,7 +10698,7 @@ profiles:
         record_in_session: true
         summary_label: Tests
         output_mode_config_field: engine.tests_output_mode
-        event_adapter_group: test_events
+        event_adapter_group: run_events
         write_runtime_profile: true
     source: builtin
     path: devcovenant/builtin/profiles/go
@@ -10763,7 +10771,7 @@ profiles:
       line-length-limit:
         include_suffixes:
         - .java
-    workflow_phases:
+    workflow_runs:
     - id: tests
       enabled: true
       required: true
@@ -10781,7 +10789,7 @@ profiles:
         record_in_session: true
         summary_label: Tests
         output_mode_config_field: engine.tests_output_mode
-        event_adapter_group: test_events
+        event_adapter_group: run_events
         write_runtime_profile: true
     source: builtin
     path: devcovenant/builtin/profiles/java
@@ -10922,7 +10930,7 @@ profiles:
         - javascript=>console.info
         - javascript=>console.warn
         - javascript=>console.error
-    workflow_phases:
+    workflow_runs:
     - id: tests
       enabled: true
       required: true
@@ -10939,7 +10947,7 @@ profiles:
         record_in_session: true
         summary_label: Tests
         output_mode_config_field: engine.tests_output_mode
-        event_adapter_group: test_events
+        event_adapter_group: run_events
         write_runtime_profile: true
     source: builtin
     path: devcovenant/builtin/profiles/javascript
@@ -10969,7 +10977,7 @@ profiles:
         include_suffixes:
         - .yml
         - .yaml
-    workflow_phases:
+    workflow_runs:
     - id: tests
       enabled: true
       required: true
@@ -10986,7 +10994,7 @@ profiles:
         record_in_session: true
         summary_label: Tests
         output_mode_config_field: engine.tests_output_mode
-        event_adapter_group: test_events
+        event_adapter_group: run_events
         write_runtime_profile: true
     source: builtin
     path: devcovenant/builtin/profiles/kubernetes
@@ -11038,7 +11046,7 @@ profiles:
         dependency_role_files:
         - intent=>Podfile
         - resolved=>Podfile.lock
-    workflow_phases:
+    workflow_runs:
     - id: tests
       enabled: true
       required: true
@@ -11055,7 +11063,7 @@ profiles:
         record_in_session: true
         summary_label: Tests
         output_mode_config_field: engine.tests_output_mode
-        event_adapter_group: test_events
+        event_adapter_group: run_events
         write_runtime_profile: true
     source: builtin
     path: devcovenant/builtin/profiles/objective_c
@@ -11185,7 +11193,7 @@ profiles:
       line-length-limit:
         include_suffixes:
         - .php
-    workflow_phases:
+    workflow_runs:
     - id: tests
       enabled: true
       required: true
@@ -11202,7 +11210,7 @@ profiles:
         record_in_session: true
         summary_label: Tests
         output_mode_config_field: engine.tests_output_mode
-        event_adapter_group: test_events
+        event_adapter_group: run_events
         write_runtime_profile: true
     source: builtin
     path: devcovenant/builtin/profiles/php
@@ -11243,7 +11251,7 @@ profiles:
       template: .python-version
     - path: pyproject.toml
       template: pyproject.toml
-    workflow_phases:
+    workflow_runs:
     - id: tests
       enabled: true
       required: true
@@ -11261,7 +11269,7 @@ profiles:
         record_in_session: true
         summary_label: Tests
         output_mode_config_field: engine.tests_output_mode
-        event_adapter_group: test_events
+        event_adapter_group: run_events
         write_runtime_profile: true
     pre_commit:
       repos:
@@ -11377,9 +11385,9 @@ profiles:
         sink_call_targets:
         - python=>print
         - python=>builtins.print
-    test_events:
+    run_events:
     - id: python
-      entrypoint: devcovenant.core.runtime.event:python_test_event_adapter_factory
+      entrypoint: devcovenant.core.runtime.event:python_run_event_adapter_factory
     source: builtin
     path: devcovenant/builtin/profiles/python
     assets_available:
@@ -11439,7 +11447,7 @@ profiles:
         include_suffixes:
         - .rb
         - .rake
-    workflow_phases:
+    workflow_runs:
     - id: tests
       enabled: true
       required: true
@@ -11456,7 +11464,7 @@ profiles:
         record_in_session: true
         summary_label: Tests
         output_mode_config_field: engine.tests_output_mode
-        event_adapter_group: test_events
+        event_adapter_group: run_events
         write_runtime_profile: true
     source: builtin
     path: devcovenant/builtin/profiles/ruby
@@ -11557,7 +11565,7 @@ profiles:
         sink_macro_targets:
         - rust=>println
         - rust=>eprintln
-    workflow_phases:
+    workflow_runs:
     - id: tests
       enabled: true
       required: true
@@ -11574,7 +11582,7 @@ profiles:
         record_in_session: true
         summary_label: Tests
         output_mode_config_field: engine.tests_output_mode
-        event_adapter_group: test_events
+        event_adapter_group: run_events
         write_runtime_profile: true
     source: builtin
     path: devcovenant/builtin/profiles/rust
@@ -11648,7 +11656,7 @@ profiles:
       line-length-limit:
         include_suffixes:
         - .swift
-    workflow_phases:
+    workflow_runs:
     - id: tests
       enabled: true
       required: true
@@ -11665,7 +11673,7 @@ profiles:
         record_in_session: true
         summary_label: Tests
         output_mode_config_field: engine.tests_output_mode
-        event_adapter_group: test_events
+        event_adapter_group: run_events
         write_runtime_profile: true
     source: builtin
     path: devcovenant/builtin/profiles/swift
@@ -11690,7 +11698,7 @@ profiles:
       template: main.tf
     - path: variables.tf
       template: variables.tf
-    workflow_phases:
+    workflow_runs:
     - id: tests
       enabled: true
       required: true
@@ -11707,7 +11715,7 @@ profiles:
         record_in_session: true
         summary_label: Tests
         output_mode_config_field: engine.tests_output_mode
-        event_adapter_group: test_events
+        event_adapter_group: run_events
         write_runtime_profile: true
     policy_overlays:
       documentation-growth-tracking:
@@ -11848,7 +11856,7 @@ profiles:
         - typescript=>console.info
         - typescript=>console.warn
         - typescript=>console.error
-    workflow_phases:
+    workflow_runs:
     - id: tests
       enabled: true
       required: true
@@ -11865,7 +11873,7 @@ profiles:
         record_in_session: true
         summary_label: Tests
         output_mode_config_field: engine.tests_output_mode
-        event_adapter_group: test_events
+        event_adapter_group: run_events
         write_runtime_profile: true
     source: builtin
     path: devcovenant/builtin/profiles/typescript
@@ -12361,7 +12369,6 @@ inventory:
     - devcovenant/check.py
     - devcovenant/gate.py
     - devcovenant/run.py
-    - devcovenant/phase.py
     - devcovenant/policy.py
     - devcovenant/install.py
     - devcovenant/deploy.py

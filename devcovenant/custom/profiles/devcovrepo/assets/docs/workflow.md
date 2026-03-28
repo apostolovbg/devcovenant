@@ -46,28 +46,28 @@ It is where hook mutations and DevCovenant autofixes must surface before test
 results are recorded.
 
 ### run
-Runs every enabled required workflow phase in declared order and records
+Runs every enabled required workflow run in declared order and records
 evidence for each one in the active workflow session.
-In this repo that currently means the required `tests` phase, which runs the
+In this repo that currently means the required `tests` run, which runs the
 two-step `unittest` plus `pytest` sequence.
 Every public command also accepts `--quiet`, `--normal`, or `--verbose` as a
 per-invocation output override.
 
-### phase run <id>
-Runs one declared workflow phase and records its result in the active
+### run
+Runs one declared workflow run and records its result in the active
 workflow session.
-Use it when `gate --start` or `gate --end` tells you a required phase is
+Use it when `gate --start` or `gate --end` tells you a required run is
 stale and needs an explicit rerun.
 
 ### gate --end
 Runs the closing pre-commit pass and records closure state.
-It only closes the session after every required declared phase for the current
+It only closes the session after every required declared run for the current
 session has fresh passing evidence.
 
 ## Why gate --mid Exists
-`gate --mid` is what keeps workflow-phase evidence honest.
+`gate --mid` is what keeps workflow-run evidence honest.
 Without it, a pre-commit hook or DevCovenant autofix could change files after
-the last meaningful pre-run check and before the recorded phase results.
+the last meaningful pre-run check and before the recorded run results.
 
 That is why the practical rule is: run `gate --mid` before `devcovenant run`.
 Think of the sequence as `gate --start -> gate --mid loop (rerun until clean)`
@@ -120,8 +120,8 @@ of nested cache paths.
 ### Start gate failed
 Clear the reported problem first.
 Do not treat a failed start gate as a usable baseline.
-If start reports stale required workflow phases from the previous closed
-session, run the requested phase commands first and then rerun
+If start reports stale required workflow runs from the previous closed
+session, run the requested run commands first and then rerun
 `devcovenant gate --start`.
 
 ### Mid gate changed files
@@ -131,8 +131,8 @@ Then run `run`.
 ### End gate reported new changes
 Inspect the latest run logs, clear the problem, rerun `run` if required, and
 rerun `gate --end`.
-If end reports stale required workflow phases, rerun the listed
-`devcovenant phase run <id>` commands first.
+If end reports stale required workflow runs, rerun the listed
+`devcovenant run` commands first.
 
 ### Managed environment error
 If the resolved managed interpreter path exists but is not executable,
@@ -142,7 +142,7 @@ Fix the path or permissions and rerun the appropriate command.
 ## Output Modes
 `engine.output_mode` controls normal command output.
 Phase declarations may also point at a narrower config field for their own
-reporting behavior. In the built-in `tests` phase, that hook points to
+reporting behavior. In the built-in `tests` run, that hook points to
 `engine.tests_output_mode`.
 
 Every public command and subcommand also accepts a per-invocation override:
@@ -157,7 +157,7 @@ They work in both forms:
 ```bash
 devcovenant --verbose run
 devcovenant gate --mid --quiet
-devcovenant phase run tests --normal
+devcovenant run --normal
 ```
 
 If the override matches the configured mode already, DevCovenant simply stays
@@ -167,37 +167,37 @@ In `normal` test mode, DevCovenant keeps console progress concise and leaves
 full child output in the run logs.
 That is why the log artifacts matter.
 Profiles declare those richer reporting hooks under
-`workflow_phases[*].recording`, so output-mode overrides, event adapters, and
-workflow profiling are phase-owned instead of hardcoded by phase id.
+`workflow_runs[*].recording`, so output-mode overrides, event adapters, and
+workflow profiling are run-owned instead of hardcoded by run id.
 The runtime ownership now matches that behavior more closely:
 event-adapter loading lives in `devcovenant/core/runtime/event.py`, and
 policy-check summary rendering lives in
 `devcovenant/core/runtime/policy_reporting.py` instead of in the services
 layer. The same runtime boundary now owns namespaced policy-command parsing
 and runtime-action dispatch, so `devcovenant policy ...` runs through the same
-execution layer as `devcovenant run` and `devcovenant phase run <id>`.
+execution layer as `devcovenant run` and `devcovenant run`.
 
-## Phase Freshness
-Required workflow phases stay fresh only while their declared freshness
+## Run Freshness
+Required workflow runs stay fresh only while their declared freshness
 contract still matches the current repository state.
-That contract is now phase metadata, not a hidden `tests` special case.
+That contract is now run metadata, not a hidden `tests` special case.
 
-The default phase freshness contract is:
+The default run freshness contract is:
 
 - `kind: ignore_paths`
 - `ignored_files: [CHANGELOG.md]`
 - `ignored_globs: []`
 
 That means changelog-only edits remain gate-scoped, but they do not stale an
-already-passed required phase by themselves.
-If a phase should stale on every change instead, declare:
+already-passed required run by themselves.
+If a run should stale on every change instead, declare:
 
 ```yaml
 freshness:
   kind: any_change
 ```
 
-If a phase should ignore a broader generated surface, declare:
+If a run should ignore a broader generated surface, declare:
 
 ```yaml
 freshness:
@@ -214,16 +214,19 @@ DevCovenant now splits workflow evidence between two runtime files:
 - `devcovenant/registry/runtime/gate_status.json`
 - `devcovenant/registry/runtime/workflow_session.json`
 
-`gate_status.json` stays the short lifecycle ledger for gate phases and the
+`gate_status.json` stays the short lifecycle ledger for gate stages and the
 pre-commit evidence they require.
-`workflow_session.json` records the required declared workflow phases for the
+`workflow_session.json` records the required declared workflow runs for the
 active session, their pass/fail status, their last-session binding, and the
-runtime snapshots used to decide whether a phase is still fresh.
+runtime snapshots used to decide whether a run is still fresh.
+The `devflow-run-gates` invariant may override `gate_status_file` and
+`workflow_session_file`, but both files must stay inside
+`devcovenant/registry/runtime/` so workflow evidence remains runtime-owned.
 
 The tracked counterpart to that runtime state is
 `workflow_contract` in `devcovenant/registry/registry.yaml`.
-That tracked section records the reserved anchors, the declared phases coming
-from active profiles, and the required phase ids the engine must enforce.
+That tracked section records the reserved anchors, the declared runs coming
+from active profiles, and the required run ids the engine must enforce.
 The helper ownership now matches that split:
 
 - `devcovenant/core/runtime/registry.py` owns runtime evidence paths
@@ -231,7 +234,7 @@ The helper ownership now matches that split:
 - `devcovenant/core/flow/policy_check_context.py` owns gate/session-derived
   check-context assembly for policy runs
 - `devcovenant/core/flow/workflow_contract.py` owns workflow-contract
-  normalization and phase resolution
+  normalization and run resolution
 - `devcovenant/core/flow/gate_status_validation.py` owns gate-status payload
   parsing and schema validation
 

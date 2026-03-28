@@ -62,20 +62,20 @@ def run(args: argparse.Namespace) -> int:
         return show_gate_status(repo_root)
 
     if getattr(args, "start", False):
-        phase = "start"
+        stage = "start"
     elif getattr(args, "mid", False):
-        phase = "mid"
+        stage = "mid"
     else:
-        phase = "end"
+        stage = "end"
 
     print_banner("Devflow gate", "🚦")
-    print_step(f"Running `{phase}` pre-commit gate", "▶️")
-    exit_code = run_pre_commit_gate(repo_root, phase)
+    print_step(f"Running `{stage}` pre-commit gate", "▶️")
+    exit_code = run_pre_commit_gate(repo_root, stage)
     if exit_code == 0:
-        if phase == "mid":
+        if stage == "mid":
             print_step("Mid gate completed", "✅")
         else:
-            print_step(f"{phase.capitalize()} gate recorded", "✅")
+            print_step(f"{stage.capitalize()} gate recorded", "✅")
     return exit_code
 
 

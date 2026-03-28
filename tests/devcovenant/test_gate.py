@@ -10,7 +10,7 @@ from unittest.mock import patch
 from devcovenant import gate
 
 
-def _unit_test_run_dispatches_start_phase() -> None:
+def _unit_test_run_dispatches_start_stage() -> None:
     """run() should dispatch --start through run_pre_commit_gate."""
     args = SimpleNamespace(start=True, end=False)
     repo_root = Path("/repo")
@@ -26,7 +26,7 @@ def _unit_test_run_dispatches_start_phase() -> None:
     gate_mock.assert_called_once_with(repo_root, "start")
 
 
-def _unit_test_run_dispatches_end_phase() -> None:
+def _unit_test_run_dispatches_end_stage() -> None:
     """run() should dispatch --end through run_pre_commit_gate."""
     args = SimpleNamespace(start=False, end=True)
     repo_root = Path("/repo")
@@ -42,7 +42,7 @@ def _unit_test_run_dispatches_end_phase() -> None:
     gate_mock.assert_called_once_with(repo_root, "end")
 
 
-def _unit_test_run_dispatches_mid_phase() -> None:
+def _unit_test_run_dispatches_mid_stage() -> None:
     """run() should dispatch --mid through run_pre_commit_gate."""
     args = SimpleNamespace(start=False, mid=True, end=False, status=False)
     repo_root = Path("/repo")
@@ -93,17 +93,17 @@ def _unit_test_main_exits_with_run_exit_code() -> None:
 class GeneratedUnittestCases(unittest.TestCase):
     """unittest wrappers for module-level tests."""
 
-    def test_run_dispatches_start_phase(self):
-        """Run test_run_dispatches_start_phase."""
-        _unit_test_run_dispatches_start_phase()
+    def test_run_dispatches_start_stage(self):
+        """Run test_run_dispatches_start_stage."""
+        _unit_test_run_dispatches_start_stage()
 
-    def test_run_dispatches_end_phase(self):
-        """Run test_run_dispatches_end_phase."""
-        _unit_test_run_dispatches_end_phase()
+    def test_run_dispatches_end_stage(self):
+        """Run test_run_dispatches_end_stage."""
+        _unit_test_run_dispatches_end_stage()
 
-    def test_run_dispatches_mid_phase(self):
-        """Run test_run_dispatches_mid_phase."""
-        _unit_test_run_dispatches_mid_phase()
+    def test_run_dispatches_mid_stage(self):
+        """Run test_run_dispatches_mid_stage."""
+        _unit_test_run_dispatches_mid_stage()
 
     def test_run_dispatches_status_read_only(self):
         """Run test_run_dispatches_status_read_only."""

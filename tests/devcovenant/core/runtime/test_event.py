@@ -1,4 +1,4 @@
-"""Tests for explicit test-event adapter behavior."""
+"""Tests for explicit run-event adapter behavior."""
 
 from __future__ import annotations
 
@@ -41,20 +41,23 @@ def _unit_test_module_importable() -> None:
 def _unit_test_event_symbol_contract_is_stable() -> None:
     """Event service classes/functions should keep a stable surface."""
     module = importlib.import_module(MODULE)
-    assert hasattr(module, "consume_test_event_adapter_warnings")
-    assert hasattr(module, "generic_test_event_adapter_factory")
-    assert hasattr(module, "load_test_event_adapters")
-    assert hasattr(module, "python_test_event_adapter_factory")
-    assert hasattr(module, "TestEvent")
-    assert hasattr(module, "TestEventAdapter")
-    assert hasattr(module, "GenericTestEventAdapter")
-    assert hasattr(module, "PythonTestEventAdapter")
-    assert hasattr(module, "TestEventManager")
+    assert hasattr(module, "consume_run_event_adapter_warnings")
+    assert hasattr(module, "generic_run_event_adapter_factory")
+    assert hasattr(module, "load_run_event_adapters")
+    assert hasattr(module, "python_run_event_adapter_factory")
+    assert hasattr(module, "RunEvent")
+    assert hasattr(module, "RunEventAdapter")
+    assert hasattr(module, "GenericRunEventAdapter")
+    assert hasattr(module, "PythonRunEventAdapter")
+    assert hasattr(module, "RunEventManager")
 
-    assert hasattr(module.TestEvent, "to_dict")
-    assert hasattr(module.TestEventAdapter, "build_event")
-    assert hasattr(module.TestEventAdapter, "handles")
-    assert hasattr(module.TestEventManager, "record_command")
+    assert hasattr(module.RunEvent, "to_dict")
+    assert hasattr(module.RunEventAdapter, "build_event")
+    assert hasattr(module.RunEventAdapter, "handles")
+    assert hasattr(module.RunEventManager, "record_command")
+    assert hasattr(module, "consume_test_event_adapter_warnings")
+    assert hasattr(module, "load_test_event_adapters")
+    assert hasattr(module, "TestEvent")
 
 
 def _unit_test_core_packages_do_not_define_dynamic_getattr() -> None:
@@ -74,11 +77,11 @@ def _unit_test_direct_submodule_imports_still_work() -> None:
 def _unit_test_unmatched_command_is_skipped_without_generic_adapter() -> None:
     """Commands without a configured adapter should be skipped explicitly."""
     module = importlib.import_module(MODULE)
-    adapter = module.python_test_event_adapter_factory(
+    adapter = module.python_run_event_adapter_factory(
         adapter_id="python",
         profile_name="python",
     )
-    manager = module.TestEventManager([adapter])
+    manager = module.RunEventManager([adapter])
     started, finished = _timestamp_range()
 
     recorded = manager.record_command(
@@ -96,11 +99,11 @@ def _unit_test_unmatched_command_is_skipped_without_generic_adapter() -> None:
 def _unit_test_explicit_generic_adapter_records_unmatched_command() -> None:
     """Profiles may opt in to generic coverage explicitly."""
     module = importlib.import_module(MODULE)
-    adapter = module.generic_test_event_adapter_factory(
+    adapter = module.generic_run_event_adapter_factory(
         adapter_id="generic",
         profile_name="demo",
     )
-    manager = module.TestEventManager([adapter])
+    manager = module.RunEventManager([adapter])
     started, finished = _timestamp_range()
 
     recorded = manager.record_command(
@@ -140,24 +143,24 @@ def _unit_test_profile_loader_accepts_explicit_generic_adapter() -> None:
             "policies: {}\n"
             "profiles:\n"
             "  python:\n"
-            "    test_events:\n"
+            "    run_events:\n"
             "      - id: generic\n"
             "        entrypoint: "
             "devcovenant.core.runtime.event:"
-            "generic_test_event_adapter_factory\n"
+            "generic_run_event_adapter_factory\n"
             "inventory: {}\n",
             encoding="utf-8",
         )
 
-        adapters = module.load_test_event_adapters(repo_root)
+        adapters = module.load_run_event_adapters(repo_root)
 
     assert len(adapters) == 1
-    assert isinstance(adapters[0], module.GenericTestEventAdapter)
+    assert isinstance(adapters[0], module.GenericRunEventAdapter)
     assert adapters[0].adapter_id == "generic"
 
 
 class GeneratedUnittestCases(unittest.TestCase):
-    """unittest wrappers for test-event runtime assertions."""
+    """unittest wrappers for run-event runtime assertions."""
 
     def test_module_importable(self):
         """Run module importability sanity check."""

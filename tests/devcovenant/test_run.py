@@ -18,8 +18,8 @@ def _unit_test_run_module_symbol_contract_is_stable() -> None:
     assert run_command.main
 
 
-def _unit_test_run_executes_required_workflow_phases() -> None:
-    """run() should bootstrap and delegate the required phase set."""
+def _unit_test_run_executes_required_workflow_runs() -> None:
+    """run() should bootstrap and delegate the required run set."""
 
     repo_root = Path("/repo")
     args = SimpleNamespace()
@@ -32,15 +32,15 @@ def _unit_test_run_executes_required_workflow_phases() -> None:
                 with patch("devcovenant.run.print_banner"):
                     with patch("devcovenant.run.print_step"):
                         with patch(
-                            "devcovenant.run.run_required_workflow_phases",
+                            "devcovenant.run.run_required_workflow_runs",
                             return_value=0,
-                        ) as run_phases:
+                        ) as run_runs:
                             exit_code = run_command.run(args)
 
     assert exit_code == 0
     refresh.assert_called_once_with(repo_root)
     mismatch.assert_called_once_with(repo_root)
-    run_phases.assert_called_once_with(repo_root, notes="")
+    run_runs.assert_called_once_with(repo_root, notes="")
 
 
 class GeneratedUnittestCases(unittest.TestCase):
@@ -51,7 +51,7 @@ class GeneratedUnittestCases(unittest.TestCase):
 
         _unit_test_run_module_symbol_contract_is_stable()
 
-    def test_run_executes_required_workflow_phases(self):
+    def test_run_executes_required_workflow_runs(self):
         """Run workflow-run command delegation assertions."""
 
-        _unit_test_run_executes_required_workflow_phases()
+        _unit_test_run_executes_required_workflow_runs()

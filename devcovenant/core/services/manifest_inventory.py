@@ -35,7 +35,6 @@ DEFAULT_CORE_FILES = [
     "devcovenant/check.py",
     "devcovenant/gate.py",
     "devcovenant/run.py",
-    "devcovenant/phase.py",
     "devcovenant/policy.py",
     "devcovenant/install.py",
     "devcovenant/deploy.py",

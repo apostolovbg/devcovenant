@@ -64,9 +64,9 @@ def build_change_state(
     is_ignored_path: Callable[[Path], bool],
 ) -> ChangeState:
     """Build current-snapshot and session scopes for policy checks."""
-    phase = os.environ.get("DEVCOV_DEVFLOW_PHASE", "").strip().lower()
+    stage = os.environ.get("DEVCOV_DEVFLOW_STAGE", "").strip().lower()
     state = ChangeState(
-        phase=phase,
+        stage=stage,
         gate_status_path=gate_status_path.as_posix(),
     )
 
@@ -117,9 +117,9 @@ def build_change_state(
             return None
         return style
 
-    if phase == "start":
+    if stage == "start":
         state.session_valid = True
-        state.session_reason_code = "start_phase"
+        state.session_reason_code = "start_stage"
         state.session_paths = []
         state.session_error = ""
         return state

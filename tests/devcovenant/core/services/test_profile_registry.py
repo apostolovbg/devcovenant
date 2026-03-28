@@ -169,21 +169,21 @@ def _unit_test_profile_registry_exports_workflow_contract() -> None:
     payload = module.build_profile_registry(REPO_ROOT)
     contract = payload.get("workflow_contract")
     assert isinstance(contract, dict)
-    required_phase_ids = contract.get("required_phase_ids")
-    assert isinstance(required_phase_ids, list)
-    assert "tests" in required_phase_ids
-    phases = contract.get("phases")
-    assert isinstance(phases, list)
-    tests_phase = next(
+    required_run_ids = contract.get("required_run_ids")
+    assert isinstance(required_run_ids, list)
+    assert "tests" in required_run_ids
+    runs = contract.get("runs")
+    assert isinstance(runs, list)
+    tests_run = next(
         (
-            phase
-            for phase in phases
-            if isinstance(phase, dict) and phase.get("id") == "tests"
+            run
+            for run in runs
+            if isinstance(run, dict) and run.get("id") == "tests"
         ),
         None,
     )
-    assert isinstance(tests_phase, dict)
-    runner = tests_phase.get("runner")
+    assert isinstance(tests_run, dict)
+    runner = tests_run.get("runner")
     assert isinstance(runner, dict)
     assert runner.get("kind") == "command_group"
 
@@ -229,7 +229,7 @@ def _governance_workflow_signature(
         "Install tooling and dependencies",
         "Run DevCovenant start gate",
         "Run DevCovenant mid gate",
-        "Run DevCovenant workflow phases",
+        "Run DevCovenant workflow runs",
         "Run DevCovenant end gate",
     }
     selected_steps: list[dict[str, object]] = []

@@ -27,8 +27,8 @@ def _unit_test_symbol_contract_is_stable() -> None:
     module = importlib.import_module(MODULE)
     assert module.build_workflow_runtime_profile_payload
     assert module.render_workflow_runtime_profile_text
-    assert module.infer_workflow_phase_command_group
-    assert module.infer_workflow_phase_command_module
+    assert module.infer_workflow_run_command_group
+    assert module.infer_workflow_run_command_module
 
 
 def _unit_test_profile_payload_supports_arbitrary_command_count() -> None:
@@ -37,7 +37,7 @@ def _unit_test_profile_payload_supports_arbitrary_command_count() -> None:
     started = _dt.datetime(2026, 2, 27, 12, 0, 0, tzinfo=_dt.timezone.utc)
     finished = _dt.datetime(2026, 2, 27, 12, 0, 30, tzinfo=_dt.timezone.utc)
     payload = module.build_workflow_runtime_profile_payload(
-        phase_id="tests",
+        run_id="tests",
         commands=[
             ("python3 -m unittest discover -v", ["python3", "-m", "unittest"]),
             ("pytest", ["pytest"]),
@@ -63,8 +63,8 @@ def _unit_test_profile_payload_supports_arbitrary_command_count() -> None:
                 "metadata": {"exit_code": 0},
             },
         ],
-        workflow_phase_output_mode="normal",
-        source_field="workflow_phases",
+        workflow_run_output_mode="normal",
+        source_field="workflow_runs",
         started=started,
         finished=finished,
     )
@@ -86,9 +86,9 @@ def _unit_test_render_profile_text_includes_breakdowns() -> None:
     module = importlib.import_module(MODULE)
     payload = {
         "schema_version": "1.0",
-        "phase_id": "tests",
-        "workflow_phase_output_mode": "normal",
-        "workflow_phase_source_field": "workflow_phases",
+        "run_id": "tests",
+        "workflow_run_output_mode": "normal",
+        "workflow_run_source_field": "workflow_runs",
         "started_at": "2026-02-27T12:00:00+00:00",
         "finished_at": "2026-02-27T12:00:30+00:00",
         "duration_seconds": 30.0,
@@ -110,8 +110,8 @@ def _unit_test_render_profile_text_includes_breakdowns() -> None:
         ],
     }
     rendered = module.render_workflow_runtime_profile_text(payload)
-    assert "Workflow Phase Profile (informational)" in rendered
-    assert "Phase Id: tests" in rendered
+    assert "Workflow Run Profile (informational)" in rendered
+    assert "Run Id: tests" in rendered
     assert "Group Breakdown:" in rendered
     assert "Module Breakdown:" in rendered
     assert "Slowest Commands:" in rendered

@@ -1,5 +1,5 @@
 # Installation and Lifecycle
-**Last Updated:** 2026-03-27
+**Last Updated:** 2026-03-28
 **Project Version:** 1.0.0
 
 ## Overview
@@ -158,12 +158,10 @@ Runs the full refresh path and writes the active managed outputs.
 Rebuilds tracked registry state, managed docs, generated config sections,
 generated workflow files, `.gitignore`, and related governed artifacts.
 
-### phase run <id>
-Runs one declared workflow phase explicitly.
-Use it when a gate command tells you that a required phase is stale and must
-be rerun before a new start baseline or before end-gate closure.
-Use `devcovenant run` for the full required phase set and
-`devcovenant phase run <id>` only when you need one specific phase.
+### run
+Runs the declared required workflow runs for the active contract.
+Use it when a gate command tells you that workflow evidence is stale and must
+be refreshed before a new start baseline or before end-gate closure.
 
 ### clean
 Removes disposable build, cache, runtime-registry, or log artifacts according

@@ -2,7 +2,7 @@
 **Doc ID:** README
 **Doc Type:** repo-readme
 **Project Version:** 1.0.0
-**Last Updated:** 2026-03-27
+**Last Updated:** 2026-03-28
 **DevCovenant Version:** 1.0.0
 
 <!-- DEVCOV:BEGIN -->
@@ -45,7 +45,7 @@ In practice, DevCovenant gives a repository four things:
 
 ## Why It Exists
 Repositories usually fail in boring ways, not exotic ones.
-A team forgets one required workflow phase.
+A team forgets one required workflow run.
 A generated file changes after the last required workflow run.
 A policy says one thing while the runtime does another.
 A changelog entry misses the files that actually changed.
@@ -133,13 +133,8 @@ Use the commands this way:
 
 - `run`
 
-  Runs all enabled required workflow phases in declared order and records
+  Runs all enabled required workflow runs in declared order and records
   evidence for them.
-
-- `phase run <id>`
-
-  Runs one explicit workflow phase when only a specific required phase needs a
-  rerun.
 
 - `gate --end`
 
@@ -148,7 +143,7 @@ Use the commands this way:
 When a command emits `Run logs: ...`, start with `summary.txt`.
 If that is not enough, inspect `tail.txt`, then `stdout.log` and `stderr.log`.
 
-In `engine.tests_output_mode: normal`, the declared `tests` phase keeps
+In `engine.tests_output_mode: normal`, the declared `tests` run keeps
 console progress concise and leaves full child output in the run logs.
 
 ## Commands

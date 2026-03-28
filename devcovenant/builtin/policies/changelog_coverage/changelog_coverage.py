@@ -291,7 +291,7 @@ def _session_deleted_paths(
 def _deleted_paths_for_changelog_coverage(
     context: CheckContext,
     *,
-    phase: str,
+    stage: str,
     session_snapshot: dict[str, object],
 ) -> set[str]:
     """
@@ -301,7 +301,7 @@ def _deleted_paths_for_changelog_coverage(
     paths. Non-start checks require a valid gate session and derive deletions
     from the gate-start snapshot only.
     """
-    if phase == "start":
+    if stage == "start":
         return set()
     if not context.change_state.session_valid:
         return set()
@@ -618,9 +618,9 @@ class ChangelogCoverageCheck(PolicyCheck):
         gate_status_rel = Path(
             self.get_option("gate_status_file", str(_DEFAULT_GATE_STATUS_PATH))
         )
-        phase = (
-            context.change_state.phase
-            or os.environ.get("DEVCOV_DEVFLOW_PHASE", "").strip().lower()
+        stage = (
+            context.change_state.stage
+            or os.environ.get("DEVCOV_DEVFLOW_STAGE", "").strip().lower()
         )
 
         try:
@@ -662,7 +662,7 @@ class ChangelogCoverageCheck(PolicyCheck):
         gate_status: dict[str, object] = {}
         session_snapshot: dict[str, object] = {}
         start_exemption_fingerprints: dict[str, dict[str, str]] = {}
-        if phase != "start":
+        if stage != "start":
             default_status_rel = Path(context.change_state.gate_status_path)
             if gate_status_rel == default_status_rel:
                 gate_status = dict(context.change_state.gate_status_payload)
@@ -724,7 +724,7 @@ class ChangelogCoverageCheck(PolicyCheck):
         try:
             deleted_file_set = _deleted_paths_for_changelog_coverage(
                 context,
-                phase=phase,
+                stage=stage,
                 session_snapshot=session_snapshot,
             )
         except ValueError as error:
@@ -856,7 +856,7 @@ class ChangelogCoverageCheck(PolicyCheck):
             else:
                 require_new_session_entry = False
                 snapshot_preservation_failed = False
-                if phase != "start":
+                if stage != "start":
                     session_state = (
                         str(gate_status.get("session_state", ""))
                         .strip()

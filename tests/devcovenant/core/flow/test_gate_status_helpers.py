@@ -131,7 +131,7 @@ def _unit_test_gate_status_summary_lines_report_open_session() -> None:
         lines = module._gate_status_summary_lines(repo_root)
         assert "Gate Status: open" in lines
         assert "Session ID: open-1" in lines
-        assert "Last Phase: run" in lines
+        assert "Last Stage: run" in lines
         assert "Session Start: 2026-02-27T06:00:00+00:00" in lines
         assert "Last Workflow Run: 2026-02-27T06:05:00+00:00" in lines
         assert any(

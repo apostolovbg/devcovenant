@@ -1,5 +1,5 @@
 # Core Runtime
-**Last Updated:** 2026-03-27
+**Last Updated:** 2026-03-28
 **Project Version:** 1.0.0
 
 ## Table of Contents
@@ -36,11 +36,11 @@ Public user-facing contracts still live in top-level/docs surfaces:
     policy runs.
   - `refresh.py`: full refresh orchestration and managed-doc regeneration.
   - `session.py`: gate-session helper wiring.
-  - `workflow_contract.py`: workflow-phase contract resolution and
+  - `workflow_contract.py`: workflow-run contract resolution and
     normalization.
   - `workflow_validation.py`: flow-owned workflow-evidence validation.
 - `runtime/`: process and output boundary.
-  - `event.py`: test-event adapters and lifecycle-event recording.
+  - `event.py`: run-event adapters and lifecycle-event recording.
   - `execution.py`: command dispatch, subprocess routing, managed re-exec.
   - `errors.py`: runtime exception normalization and explicit error rendering.
   - `output.py`: output-mode policy and channel-level stream/suppression rules.
@@ -92,7 +92,7 @@ This split keeps debugging straightforward:
 2. AGENTS managed policy block is rendered from resolved metadata.
 3. Policy parser loads AGENTS `policy-def` payloads.
 4. Policy engine resolves metadata + file scope and executes checks.
-5. Gate/run flows execute required phases and write run artifacts.
+5. Gate/run flows execute required runs and write run artifacts.
 6. Session evidence is stored under `devcovenant/registry/runtime/`,
    including `gate_status.json` and `workflow_session.json`.
 
