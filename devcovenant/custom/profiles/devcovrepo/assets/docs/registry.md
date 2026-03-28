@@ -122,6 +122,9 @@ stable repo contract.
 The `devflow-run-gates` invariant may override `gate_status_file` and
 `workflow_session_file`, but both must remain repo-relative paths inside
 `devcovenant/registry/runtime/`.
+That is also the registry surface cleaned by `devcovenant clean --registry`
+and by the registry portion of `devcovenant clean --all`.
+Tracked registry state in `devcovenant/registry/registry.yaml` is preserved.
 
 ## Gate Status
 `gate_status.json` is the short gate lifecycle ledger.

@@ -324,6 +324,11 @@ devcovenant undeploy
 devcovenant uninstall
 ```
 
+`clean --all` removes build, cache, runtime-registry, and log artifacts.
+Its `registry` scope means runtime registry only:
+`devcovenant/registry/runtime/` is disposable, while the tracked
+`devcovenant/registry/registry.yaml` is preserved.
+
 Dependency refresh is no longer a special top-level command.
 Use the namespaced policy command surface instead:
 `devcovenant policy dependency-management refresh-all`.

@@ -163,6 +163,9 @@ devcovenant clean --all
 
 Other lifecycle commands such as `upgrade`, `undeploy`, and `uninstall` are
 used less often, but they follow the same run-log contract.
+`clean --all` removes disposable build/cache/runtime artifacts; its
+`registry` scope cleans only `devcovenant/registry/runtime/`, not the tracked
+`devcovenant/registry/registry.yaml`.
 
 Keep machine installation and repository lifecycle separate:
 

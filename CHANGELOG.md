@@ -61,6 +61,23 @@ Example:
 ## Version 1.0.0
 
 - 2026-03-28:
+  Change: documented that `clean --all` cleans the runtime registry only for
+    its `registry` scope and preserves the tracked `registry.yaml` contract.
+  Why: clarified the cleanup boundary so operators do not mistake routine
+    cleanup for destructive tracked-registry removal.
+  Impact: explained in the README, installation, and registry docs that
+    cleanup removes `devcovenant/registry/runtime/` artifacts while keeping
+    the tracked registry document intact.
+  Files:
+  CHANGELOG.md
+  README.md
+  devcovenant/README.md
+  devcovenant/custom/profiles/devcovrepo/assets/docs/installation.md
+  devcovenant/custom/profiles/devcovrepo/assets/docs/registry.md
+  devcovenant/docs/installation.md
+  devcovenant/docs/registry.md
+
+- 2026-03-28:
   Change: fixed stale `run` guidance in workflow runtime/docs, documented the
     public manual-attestation and artifact-check operator contract, and
     excluded transient bytecode from profile asset discovery.
