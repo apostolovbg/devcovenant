@@ -23,7 +23,10 @@ def _unit_test_clean_module_symbol_contract_is_stable() -> None:
 
 def _unit_test_clean_flow_symbol_contract_is_stable() -> None:
     """Clean flow module should expose the orchestration entrypoint."""
-    module = __import__("devcovenant.core.flow.clean", fromlist=["clean_repo"])
+    module = __import__(
+        "devcovenant.core.flow.clean_command",
+        fromlist=["clean_repo"],
+    )
     assert module.clean_repo
 
 

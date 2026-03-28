@@ -61,6 +61,33 @@ Example:
 ## Version 1.0.0
 
 - 2026-03-28:
+  Change: removed the lingering `required_run_ids` carry-forward seam from
+    workflow-session persistence and renamed the flow-layer clean module to
+    `clean_command.py` so it no longer doubles the top-level `clean.py`.
+  Why: closed the last live migration shim now that the new `run_ids`
+    contract is proven, and reduced naming drift in the clean-command
+    implementation layout.
+  Impact: removed the legacy runtime-session carry-forward path so
+    workflow-session writes now persist only `run_ids`, aligned
+    clean-command imports/tests around a distinct flow module name, and
+    dropped the obsolete workflow-run `required` field from test fixtures.
+  Files:
+  CHANGELOG.md
+  devcovenant/clean.py
+  devcovenant/core/flow/clean.py
+  devcovenant/core/flow/clean_command.py
+  devcovenant/core/flow/workflow_contract.py
+  devcovenant/core/runtime/workflow_session.py
+  devcovenant/custom/profiles/devcovrepo/assets/docs/installation.md
+  devcovenant/docs/installation.md
+  tests/devcovenant/core/flow/test_clean.py
+  tests/devcovenant/core/flow/test_clean_command.py
+  tests/devcovenant/core/flow/test_workflow_contract.py
+  tests/devcovenant/core/flow/test_workflow_validation.py
+  tests/devcovenant/core/runtime/test_workflow_session.py
+  tests/devcovenant/test_clean.py
+
+- 2026-03-28:
   Change: aligned the live workflow-run contract in code, docs, profiles,
     and tests so `devcovenant run` now means “run all configured runs”
     without a required-versus-optional split.

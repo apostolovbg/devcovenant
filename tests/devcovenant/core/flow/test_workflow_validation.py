@@ -145,7 +145,6 @@ def _run_entry(
     """Return one minimal recorded workflow run entry."""
     return {
         "id": "tests",
-        "required": True,
         "enabled": True,
         "status": status,
         "summary_label": "Tests",

@@ -97,10 +97,12 @@ def _unit_test_workflow_session_write_normalizes_legacy_fields() -> None:
                 }
             },
             "run_ids": ["tests"],
+            "required_run_ids": ["tests", "legacy"],
         }
 
-        module.write_workflow_session(repo_root, payload)
+        written = module.write_workflow_session(repo_root, payload)
         loaded = module.load_workflow_session(repo_root)
+        written_payload = written.read_text(encoding="utf-8")
 
         assert loaded["anchors"]["start"]["last_run_utc"] == (
             "2026-03-26T12:00:00+00:00"
@@ -119,6 +121,8 @@ def _unit_test_workflow_session_write_normalizes_legacy_fields() -> None:
         ]
         assert "last_run" not in loaded["runs"]["tests"]
         assert "command" not in loaded["runs"]["tests"]
+        assert loaded["run_ids"] == ["tests"]
+        assert "required_run_ids" not in written_payload
 
 
 class GeneratedUnittestCases(unittest.TestCase):

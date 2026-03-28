@@ -14,7 +14,7 @@ from unittest.mock import patch
 
 from tests.devcovenant import repo_seed_cache
 
-MODULE = "devcovenant.core.flow.clean"
+MODULE = "devcovenant.core.flow.clean_command"
 
 
 def _unit_test_clean_flow_module_symbol_contract_is_stable() -> None:

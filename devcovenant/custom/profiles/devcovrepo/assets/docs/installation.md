@@ -158,16 +158,17 @@ Rebuilds tracked registry state, managed docs, generated config sections,
 generated workflow files, `.gitignore`, and related governed artifacts.
 
 ### run
-Runs one declared workflow run explicitly.
-Use it when a gate command tells you that a run is stale and must
-be rerun before a new start baseline or before end-gate closure.
-Use `devcovenant run` for the full run set and
-`devcovenant run` only when you need one specific run.
+Runs the declared workflow runs for the active contract.
+Use it when a gate command tells you that workflow evidence is stale and must
+be refreshed before a new start baseline or before end-gate closure.
 
 ### clean
 Removes disposable build, cache, runtime-registry, or log artifacts according
 to the resolved cleanup targets.
 Run it only after the active gate session is closed.
+The CLI entrypoint lives in `devcovenant/clean.py`, while the flow-layer
+implementation that owns cleanup orchestration lives in
+`devcovenant/core/flow/clean_command.py`.
 When the logs scope is selected, `clean` may delete older run folders, but it
 must keep the active clean run folder so the reported summary path stays
 available after the command finishes.

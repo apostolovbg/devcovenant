@@ -167,6 +167,9 @@ be refreshed before a new start baseline or before end-gate closure.
 Removes disposable build, cache, runtime-registry, or log artifacts according
 to the resolved cleanup targets.
 Run it only after the active gate session is closed.
+The CLI entrypoint lives in `devcovenant/clean.py`, while the flow-layer
+implementation that owns cleanup orchestration lives in
+`devcovenant/core/flow/clean_command.py`.
 When the logs scope is selected, `clean` may delete older run folders, but it
 must keep the active clean run folder so the reported summary path stays
 available after the command finishes.

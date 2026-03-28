@@ -104,13 +104,12 @@ def load_workflow_session(repo_root: Path) -> dict[str, object]:
         raise ValueError(f"Workflow session payload must be a mapping: {path}")
     normalized = _base_payload()
     normalized.update(payload)
+    normalized.pop("required_run_ids", None)
     anchors = payload.get("anchors")
     normalized["anchors"] = _normalize_entry_mapping(anchors)
     runs = payload.get("runs")
     normalized["runs"] = _normalize_entry_mapping(runs)
     run_ids = payload.get("run_ids")
-    if not isinstance(run_ids, list):
-        run_ids = payload.get("required_run_ids")
     normalized["run_ids"] = list(run_ids) if isinstance(run_ids, list) else []
     return normalized
 
@@ -125,6 +124,7 @@ def write_workflow_session(
     path.parent.mkdir(parents=True, exist_ok=True)
     normalized = _base_payload()
     normalized.update(dict(payload))
+    normalized.pop("required_run_ids", None)
     normalized["anchors"] = _normalize_entry_mapping(normalized.get("anchors"))
     normalized["runs"] = _normalize_entry_mapping(normalized.get("runs"))
     path.write_text(

@@ -455,8 +455,6 @@ def run_ids(contract: Mapping[str, object]) -> list[str]:
     """Return enabled run ids from a workflow contract."""
 
     raw_ids = contract.get("run_ids")
-    if not isinstance(raw_ids, list):
-        raw_ids = contract.get("required_run_ids")
     if isinstance(raw_ids, list):
         return [
             str(entry or "").strip().lower()

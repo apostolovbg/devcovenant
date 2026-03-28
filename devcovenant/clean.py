@@ -10,7 +10,7 @@ if __package__ in {None, ""}:  # pragma: no cover
 
 import argparse
 
-from devcovenant.core.flow.clean import clean_repo
+from devcovenant.core.flow.clean_command import clean_repo
 from devcovenant.core.runtime.execution import (
     build_command_parser,
     print_banner,

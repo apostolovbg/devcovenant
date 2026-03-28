@@ -16,7 +16,6 @@ def _tests_run_entry() -> dict[str, object]:
     return {
         "id": "tests",
         "enabled": True,
-        "required": True,
         "after": "mid",
         "before": "end",
         "order": 100,
