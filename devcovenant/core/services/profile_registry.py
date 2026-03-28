@@ -113,6 +113,10 @@ def _profile_assets(profile_dir: Path, repo_root: Path) -> list[str]:
     for entry in scan_root.rglob("*"):
         if not entry.is_file():
             continue
+        if "__pycache__" in entry.parts:
+            continue
+        if entry.suffix in {".pyc", ".pyo", ".pyd"}:
+            continue
         if entry.name == f"{profile_dir.name}.yaml":
             continue
         assets.append(_relative_path(entry, repo_root))

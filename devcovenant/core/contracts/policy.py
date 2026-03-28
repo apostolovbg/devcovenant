@@ -252,7 +252,7 @@ class PolicyCheck(ABC):
         payload: Dict[str, Any] | None = None,
     ) -> Any:
         """
-        Run one optional runtime action exposed by this policy.
+        Run one runtime action exposed by this policy.
 
         Policy checks may override this hook when command runtimes should be
         policy-owned (for example dependency-management refresh behavior

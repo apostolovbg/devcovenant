@@ -61,6 +61,37 @@ Example:
 ## Version 1.0.0
 
 - 2026-03-28:
+  Change: fixed stale `run` guidance in workflow runtime/docs, documented the
+    public manual-attestation and artifact-check operator contract, and
+    excluded transient bytecode from profile asset discovery.
+  Why: aligned the live and source-managed docs with the one-command `run`
+    workflow surface, removed misleading rerun guidance that still said
+    `run run` or `test`, and prevented refresh from recording repo-local
+    `__pycache__` artifacts in tracked profile assets.
+  Impact: aligned troubleshooting and workflow recovery text on the real
+    `devcovenant run` contract, published the attestation/env-var and
+    artifact-path semantics for non-command runs, hardened tracked registry
+    refresh against bytecode drift, and added regressions for the new
+    guidance and asset-filtering behavior.
+  Files:
+  CHANGELOG.md
+  devcovenant/core/contracts/policy.py
+  devcovenant/core/runtime/execution.py
+  devcovenant/core/services/profile_registry.py
+  devcovenant/custom/profiles/devcovrepo/assets/docs/policies.md
+  devcovenant/custom/profiles/devcovrepo/assets/docs/profiles.md
+  devcovenant/custom/profiles/devcovrepo/assets/docs/registry.md
+  devcovenant/custom/profiles/devcovrepo/assets/docs/troubleshooting.md
+  devcovenant/custom/profiles/devcovrepo/assets/docs/workflow.md
+  devcovenant/docs/profiles.md
+  devcovenant/docs/registry.md
+  devcovenant/docs/troubleshooting.md
+  devcovenant/docs/workflow.md
+  tests/devcovenant/core/runtime/test_execution.py
+  tests/devcovenant/core/services/test_profile_registry.py
+  tests/devcovenant/test_run.py
+
+- 2026-03-28:
   Change: removed the lingering `required_run_ids` carry-forward seam from
     workflow-session persistence and renamed the flow-layer clean module to
     `clean_command.py` so it no longer doubles the top-level `clean.py`.

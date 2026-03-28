@@ -47,10 +47,10 @@ It is where hook mutations and DevCovenant autofixes must surface before test
 results are recorded.
 
 ### run
-Runs every enabled workflow run in declared order and records
+Runs every configured workflow run in declared order and records
 evidence for each one in the active workflow session.
-In this repo that currently means the required `tests` run, which runs the
-two-step `unittest` plus `pytest` sequence.
+In this repo that currently means the `tests` run, which runs the two-step
+`unittest` plus `pytest` sequence.
 Every public command also accepts `--quiet`, `--normal`, or `--verbose` as a
 per-invocation output override.
 
@@ -90,8 +90,9 @@ devcovenant check
 devcovenant gate --status
 ```
 
-That gives you the current policy result plus the latest session state without
-opening a new slice.
+Use `check` as the default read-only audit command and `gate --status` when
+you need current lifecycle state. Once you move from inspection to governed
+changes, follow the normal gate sequence.
 
 ## Run Artifact Contract
 Every command run writes evidence artifacts.
@@ -172,7 +173,7 @@ and runtime-action dispatch, so `devcovenant policy ...` runs through the same
 execution layer as `devcovenant run`.
 
 ## Run Freshness
-Required workflow runs stay fresh only while their declared freshness
+Workflow runs stay fresh only while their declared freshness
 contract still matches the current repository state.
 That contract is now run metadata, not a hidden `tests` special case.
 

@@ -212,6 +212,24 @@ Compatible combinations are:
 - `policy_command` with `external_artifact_check`
 - `manual_attestation` with `manual_attested`
 
+Manual attestation is an operator-confirmed run, not a hidden interactive
+prompt.
+Declare `runner.attestation_key`, then satisfy the run by exporting:
+
+- `DEVCOV_WORKFLOW_ATTEST_<NORMALIZED_KEY>=true`
+
+For example, `attestation_key: release-ready` resolves to
+`DEVCOV_WORKFLOW_ATTEST_RELEASE_READY=true` before `devcovenant run`.
+
+`external_artifact_check` validates files relative to a declared `base_dir`
+unless a `required_files` entry is already absolute.
+The contract is:
+
+- `base_dir` is repo-relative unless already absolute
+- `required_files` may be absolute or relative to `base_dir`
+- `required_globs` and `forbidden_globs` are evaluated under `base_dir`
+- `minimum_matches` counts matched required files plus matched required globs
+
 The freshness contract is explicit too.
 By default, runs ignore `CHANGELOG.md` when deciding whether previously
 recorded evidence is still fresh.

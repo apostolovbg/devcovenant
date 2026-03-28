@@ -18,8 +18,8 @@ def _unit_test_run_module_symbol_contract_is_stable() -> None:
     assert run_command.main
 
 
-def _unit_test_run_executes_required_workflow_runs() -> None:
-    """run() should bootstrap and delegate the run set."""
+def _unit_test_run_executes_configured_workflow_runs() -> None:
+    """run() should bootstrap and delegate the configured run set."""
 
     repo_root = Path("/repo")
     args = SimpleNamespace()
@@ -51,7 +51,7 @@ class GeneratedUnittestCases(unittest.TestCase):
 
         _unit_test_run_module_symbol_contract_is_stable()
 
-    def test_run_executes_required_workflow_runs(self):
+    def test_run_executes_configured_workflow_runs(self):
         """Run workflow-run command delegation assertions."""
 
-        _unit_test_run_executes_required_workflow_runs()
+        _unit_test_run_executes_configured_workflow_runs()

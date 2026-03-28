@@ -26,9 +26,9 @@ If `gate --start` fails, clear the reported problem before editing.
 A failed start gate is not a usable baseline.
 
 If `gate --mid` fails, clear the issue and rerun `gate --mid` until it is
-clean before running `test`.
+clean before running `run`.
 
-If `gate --end` fails, inspect the latest run logs, rerun `test` if required,
+If `gate --end` fails, inspect the latest run logs, rerun `run` if required,
 and then rerun `gate --end`.
 
 ## Changelog Coverage Problems

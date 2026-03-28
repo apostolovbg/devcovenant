@@ -2422,8 +2422,7 @@ def _execute_manual_attestation_workflow_run(
         raise SystemExit(
             "Workflow run "
             f"`{run.get('id', '')}` requires manual attestation. Set "
-            f"`{env_key}=true` and rerun `devcovenant run run "
-            f"{run.get('id', '')}` or `devcovenant run`."
+            f"`{env_key}=true` and rerun `devcovenant run`."
         )
     return {
         "run_id": str(run.get("id") or "").strip().lower(),
@@ -2537,7 +2536,7 @@ def run_and_record_workflow_run(
 
     configure_repo_pycache_prefix(repo_root)
     run_token = str(run_id or "").strip().lower()
-    invocation_name = str(command_name or f"run run {run_token}").strip()
+    invocation_name = str(command_name or "run").strip()
     details = _execute_workflow_run(
         repo_root,
         run_token,
@@ -2577,7 +2576,7 @@ def run_and_record_workflow_run(
 
 
 def run_workflow_runs(repo_root: Path, notes: str = "") -> int:
-    """Run all enabled workflow runs in declared order."""
+    """Run all configured workflow runs in declared order."""
 
     _, runs = resolve_workflow_runs(repo_root)
     if not runs:
@@ -2734,7 +2733,7 @@ def _build_workflow_run_summary_metadata(
     passed_commands: int,
     failed_commands: int,
 ) -> dict[str, Any]:
-    """Build structured summary metadata for one workflow run run."""
+    """Build structured summary metadata for one workflow run."""
     total_commands = len(commands)
     duration_seconds = round(
         max(

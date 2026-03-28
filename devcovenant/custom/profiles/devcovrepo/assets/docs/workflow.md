@@ -46,10 +46,10 @@ It is where hook mutations and DevCovenant autofixes must surface before test
 results are recorded.
 
 ### run
-Runs every enabled workflow run in declared order and records
+Runs every configured workflow run in declared order and records
 evidence for each one in the active workflow session.
-In this repo that currently means the required `tests` run, which runs the
-two-step `unittest` plus `pytest` sequence.
+In this repo that currently means the `tests` run, which runs the two-step
+`unittest` plus `pytest` sequence.
 Every public command also accepts `--quiet`, `--normal`, or `--verbose` as a
 per-invocation output override.
 
@@ -89,8 +89,9 @@ devcovenant check
 devcovenant gate --status
 ```
 
-That gives you the current policy result plus the latest session state without
-opening a new slice.
+Use `check` as the default read-only audit command and `gate --status` when
+you need current lifecycle state. Once you move from inspection to governed
+changes, follow the normal gate sequence.
 
 ## Run Artifact Contract
 Every command run writes evidence artifacts.
@@ -115,8 +116,7 @@ of nested cache paths.
 Clear the reported problem first.
 Do not treat a failed start gate as a usable baseline.
 If start reports stale workflow runs from the previous closed
-session, run the requested run commands first and then rerun
-`devcovenant gate --start`.
+session, run `devcovenant run` and then rerun `devcovenant gate --start`.
 
 ### Mid gate changed files
 Run `gate --mid` again until it stops introducing new blocking state.
@@ -125,8 +125,8 @@ Then run `run`.
 ### End gate reported new changes
 Inspect the latest run logs, clear the problem, rerun `run` if required, and
 rerun `gate --end`.
-If end reports stale workflow runs, rerun the listed
-`devcovenant run` commands first.
+If end reports stale workflow runs, rerun `devcovenant run` and then
+rerun `devcovenant gate --end`.
 
 ### Managed environment error
 If the resolved managed interpreter path exists but is not executable,
@@ -135,7 +135,7 @@ Fix the path or permissions and rerun the appropriate command.
 
 ## Output Modes
 `engine.output_mode` controls normal command output.
-Phase declarations may also point at a narrower config field for their own
+Run declarations may also point at a narrower config field for their own
 reporting behavior. In the built-in `tests` run, that hook points to
 `engine.tests_output_mode`.
 
@@ -169,10 +169,10 @@ policy-check summary rendering lives in
 `devcovenant/core/runtime/policy_reporting.py` instead of in the services
 layer. The same runtime boundary now owns namespaced policy-command parsing
 and runtime-action dispatch, so `devcovenant policy ...` runs through the same
-execution layer as `devcovenant run` and `devcovenant run`.
+execution layer as `devcovenant run`.
 
 ## Run Freshness
-Required workflow runs stay fresh only while their declared freshness
+Workflow runs stay fresh only while their declared freshness
 contract still matches the current repository state.
 That contract is now run metadata, not a hidden `tests` special case.
 

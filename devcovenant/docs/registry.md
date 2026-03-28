@@ -152,7 +152,7 @@ Read `registry.yaml` when you need to understand:
 
 4. why one configuration value won over another
 
-5. which workflow runs are required and which profile declared them
+5. which workflow runs are configured and which profile declared them
 
 6. which profile contributed an extra generated workflow fragment or other
    resolved generation input

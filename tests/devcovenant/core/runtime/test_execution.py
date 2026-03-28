@@ -1417,6 +1417,43 @@ def _unit_test_manual_attestation_run_contract():
     assert details["command"] == f"manual_attestation:{env_key}"
 
 
+def _unit_test_manual_attestation_failure_guides_to_run_command():
+    """Manual-attestation failures should point only to `devcovenant run`."""
+
+    module = importlib.import_module(MODULE)
+    env_key = module._manual_attestation_env_key("release-ready")
+    previous = os.environ.get(env_key)
+    try:
+        os.environ.pop(env_key, None)
+        try:
+            module._execute_manual_attestation_workflow_run(
+                Path("."),
+                run={
+                    "id": "manual-proof",
+                    "runner": {
+                        "kind": "manual_attestation",
+                        "attestation_key": "release-ready",
+                    },
+                    "success_contract": {"kind": "manual_attested"},
+                },
+                notes="",
+                command_name="run",
+            )
+        except SystemExit as exc:
+            message = str(exc)
+        else:
+            raise AssertionError("Expected manual attestation SystemExit.")
+    finally:
+        if previous is None:
+            os.environ.pop(env_key, None)
+        else:
+            os.environ[env_key] = previous
+
+    assert env_key in message
+    assert "devcovenant run run" not in message
+    assert "`devcovenant run`" in message
+
+
 def _unit_test_verify_external_artifact_check_supports_public_contract():
     """Artifact-check workflow runs should honor declared file contracts."""
 
@@ -1678,6 +1715,10 @@ class GeneratedUnittestCases(unittest.TestCase):
     def test_manual_attestation_run_contract(self):
         """Run manual-attestation workflow-run contract assertions."""
         _unit_test_manual_attestation_run_contract()
+
+    def test_manual_attestation_failure_guides_to_run_command(self):
+        """Run manual-attestation rerun-guidance assertions."""
+        _unit_test_manual_attestation_failure_guides_to_run_command()
 
     def test_verify_external_artifact_check_supports_public_contract(
         self,

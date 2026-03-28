@@ -145,6 +145,51 @@ def _unit_test_discover_profiles_accepts_flutter_lock_template() -> None:
     )
 
 
+def _unit_test_discover_profiles_ignores_repo_bytecode_assets() -> None:
+    """Profile discovery should ignore transient repo bytecode assets."""
+    module = importlib.import_module(MODULE)
+    with tempfile.TemporaryDirectory() as tmpdir:
+        repo_root = Path(tmpdir)
+        builtin_root = repo_root / "devcovenant" / "builtin" / "profiles"
+        custom_root = repo_root / "devcovenant" / "custom" / "profiles"
+        profile_dir = builtin_root / "demo"
+        assets_dir = profile_dir / "assets"
+        pycache_dir = assets_dir / "__pycache__"
+        pycache_dir.mkdir(parents=True, exist_ok=True)
+        (assets_dir / "main.py").write_text(
+            "print('demo')\n",
+            encoding="utf-8",
+        )
+        (pycache_dir / "main.cpython-314.pyc").write_bytes(b"x")
+        (profile_dir / "demo.yaml").write_text(
+            yaml.safe_dump(
+                {
+                    "version": 1,
+                    "profile": "demo",
+                    "category": "framework",
+                    "assets": [{"path": "main.py", "template": "main.py"}],
+                },
+                sort_keys=False,
+            ),
+            encoding="utf-8",
+        )
+        custom_root.mkdir(parents=True, exist_ok=True)
+
+        registry = module.discover_profiles(
+            repo_root,
+            builtin_root=builtin_root,
+            custom_root=custom_root,
+        )
+
+    demo = registry.get("demo", {})
+    assets_available = set(demo.get("assets_available", []))
+    assert (
+        "devcovenant/builtin/profiles/demo/assets/main.py" in assets_available
+    )
+    assert not any("__pycache__" in entry for entry in assets_available)
+    assert not any(entry.endswith(".pyc") for entry in assets_available)
+
+
 def _unit_test_discover_profiles_orders_profiles_deterministically() -> None:
     """Profile discovery order should not depend on filesystem iteration."""
     module = importlib.import_module(MODULE)
@@ -505,6 +550,10 @@ class GeneratedUnittestCases(unittest.TestCase):
     def test_discover_profiles_accepts_flutter_lock_template(self):
         """Run flutter pubspec.lock template integrity regression."""
         _unit_test_discover_profiles_accepts_flutter_lock_template()
+
+    def test_discover_profiles_ignores_repo_bytecode_assets(self):
+        """Run profile-asset bytecode exclusion assertions."""
+        _unit_test_discover_profiles_ignores_repo_bytecode_assets()
 
     def test_discover_profiles_orders_profiles_deterministically(self):
         """Run deterministic profile-discovery ordering assertions."""
