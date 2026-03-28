@@ -29,24 +29,19 @@ DevCovenant starts true SemVer release discipline.
 - The large stabilization and polish work is already done and should be
   preserved.
 - The current external audit verdict is:
-  - close but not ready
-- The remaining risks are no longer architectural emptiness or uncontrolled
-  sprawl.
-- The remaining risks are release-truthfulness and workflow-contract defects:
-  - what the artifacts actually ship
-  - what CI actually proves
-  - whether publish uses the exact proven artifact
-  - whether the dependency lock contract is stable and environment-safe
-  - whether the docs explain the intended first-activation lifecycle clearly
-  - whether gate mechanics depend on customizable policy state instead of a
-    formal workflow-run contract
-  - whether the workflow-run redesign is actually complete in code,
-    command ownership, CI, and docs rather than only partially generalized
-- Do not start true release-candidate or SemVer-cut work until the blocker,
-  high-severity, and workflow-contract items below are resolved.
+  - remediation complete; release-candidate proof next
+- The remaining risks are no longer architectural emptiness, workflow-contract
+  drift, or uncontrolled sprawl.
+- The remaining work is release-truthfulness on the exact candidate tree:
+  - confirm the public governance state is still the intended release truth
+  - rerun the full governed workflow on the exact candidate tree
+  - rerun the artifact proof on the exact candidate tree
+  - only then consider history cleanup or first-release mechanics
+- Do not start true SemVer-cut work until the release-candidate item below is
+  resolved.
 
 ## Audit Baseline
-The external audit surfaced these remaining findings:
+The external audit originally surfaced these findings:
 
 1. blocker: built artifacts do not ship
    `devcovenant/core/contracts/invariants/*.yaml`, so the documented
@@ -90,6 +85,8 @@ Follow-on design review added one more release-relevant concern:
 
 Treat Findings 1 through 4, 7, and 8 as release blockers for the first real
 release candidate.
+Those blockers are now closed in code, docs, CI, registry truth, and
+architecture ownership. The remaining pre-release work is Item 10 below.
 
 ## Working Rules
 - Work in dependency order unless a real blocker forces reordering.
@@ -746,7 +743,7 @@ the current state as finished.
    - a later workflow-command audit then identified the still-half-migrated
      `devcovenant test` / workflow-run command model captured in Item 8
 
-8. [not done] Complete The `run` / Workflow-Run Migration.
+8. [done] Complete The `run` / Workflow-Run Migration.
    Goal:
    - replace the test-centric public workflow with one core-owned generic
      workflow execution surface
@@ -1100,7 +1097,7 @@ the current state as finished.
    - AGENTS, docs, CI, and gate messages all teach the same workflow
    - any remaining references to `devcovenant test` are historical only
 
-9. [not done] De-Spaghettize Core Workflow Architecture.
+9. [done] De-Spaghettize Core Workflow Architecture.
    Goal:
    - realign the core module layout with the actual ownership boundaries that
      the `run` / workflow-session redesign introduced
@@ -1359,7 +1356,7 @@ the current state as finished.
   5. architecture/doc contract tests that the new ownership map is described
      consistently across docs and registry/runtime surfaces
 
-- Until Item 8 lands, ordinary governed development in this repo still uses the
-  current live workflow command surface.
-- Item 8 itself must migrate the repo, docs, and CI to the `run` surface
-  coherently in one contract-aligned slice rather than leaving a mixed model.
+- Item 8 has landed: ordinary governed development in this repo uses the
+  settled `run` workflow surface.
+- Release-prep work must preserve the one-command middle-workflow contract:
+  `devcovenant run`.

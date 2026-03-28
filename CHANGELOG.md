@@ -61,6 +61,20 @@ Example:
 ## Version 1.0.0
 
 - 2026-03-28:
+  Change: marked the `run` migration and core de-spaghettization roadmap
+    items done and revised the plan summary to reflect release-candidate
+    proof as the remaining work.
+  Why: aligned the plan with the now-proven code, docs, CI, and architecture
+    state so the roadmap stops describing closed workflow and ownership work
+    as still open.
+  Impact: clarified that Items 8 and 9 are complete, updated the audit
+    baseline framing, and left release-candidate preparation as the next
+    active roadmap item.
+  Files:
+  CHANGELOG.md
+  PLAN.md
+
+- 2026-03-28:
   Change: documented that `clean --all` cleans the runtime registry only for
     its `registry` scope and preserves the tracked `registry.yaml` contract.
   Why: clarified the cleanup boundary so operators do not mistake routine
