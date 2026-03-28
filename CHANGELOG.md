@@ -61,6 +61,33 @@ Example:
 ## Version 1.0.0
 
 - 2026-03-28:
+  Change: removed the last live `test_events` compatibility shims, fixed the
+    managed workflow doc source, and added direct coverage for the public
+    advanced workflow-run kinds.
+  Why: closed the remaining closure-audit seams so managed docs cannot
+    reintroduce the wrong `run` contract and the public advanced run kinds are
+    proven instead of only documented.
+  Impact: clarified that `run_events` is now the only accepted run-event
+    contract, aligned the managed workflow asset with the public `run`
+    behavior, documented the runtime event ownership more clearly in registry
+    docs, and exercised runtime-action, policy-command, manual-attestation,
+    and external-artifact workflow runs directly in runtime tests.
+  Files:
+  CHANGELOG.md
+  devcovenant/core/flow/gate.py
+  devcovenant/core/flow/workflow_contract.py
+  devcovenant/core/runtime/event.py
+  devcovenant/core/runtime/execution.py
+  devcovenant/core/runtime/session_snapshot.py
+  devcovenant/core/services/profile_registry.py
+  devcovenant/custom/profiles/devcovrepo/assets/docs/registry.md
+  devcovenant/custom/profiles/devcovrepo/assets/docs/workflow.md
+  devcovenant/docs/registry.md
+  tests/devcovenant/core/flow/test_workflow_contract.py
+  tests/devcovenant/core/runtime/test_event.py
+  tests/devcovenant/core/runtime/test_execution.py
+
+- 2026-03-28:
   Change: Removed the drifted duplicate workflow-run surface across the CLI,
     runtime, registry, docs, generated outputs, and tests.
   Why: Removed drift between the intended `devcovenant gate --start ->

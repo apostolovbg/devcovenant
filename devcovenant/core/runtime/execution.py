@@ -1911,7 +1911,6 @@ def record_gate_status(
         payload["run_events_count"] = len(normalized_events)
     else:
         payload.pop("run_events_count", None)
-    payload.pop("test_events_count", None)
     if workflow_run_output_mode:
         payload["workflow_run_output_mode"] = _normalize_output_mode(
             workflow_run_output_mode

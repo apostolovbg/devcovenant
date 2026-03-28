@@ -1283,6 +1283,163 @@ def _unit_test_workflow_profile_artifacts_are_written_for_active_run() -> None:
             module.clear_active_run_log_context()
 
 
+def _unit_test_runtime_action_run_contract():
+    """Runtime-action runs should satisfy the public contract."""
+
+    module = importlib.import_module(MODULE)
+    calls: list[tuple[str, str, dict[str, object]]] = []
+    original_runner = module._run_policy_runtime_action
+    original_renderer = module._render_runtime_action_result
+    try:
+        module._run_policy_runtime_action = (
+            lambda _repo_root, *, policy_id, action, payload=None: (
+                calls.append((policy_id, action, dict(payload or {}))) or {}
+            )
+        )
+        module._render_runtime_action_result = lambda _result: None
+        details = module._execute_runtime_action_workflow_run(
+            Path("."),
+            run={
+                "id": "runtime-proof",
+                "runner": {
+                    "kind": "runtime_action",
+                    "target": "demo:refresh",
+                    "payload": {"mode": "fast"},
+                },
+                "success_contract": {"kind": "runtime_action_success"},
+            },
+            notes="",
+            command_name="run",
+        )
+    finally:
+        module._run_policy_runtime_action = original_runner
+        module._render_runtime_action_result = original_renderer
+
+    assert calls == [("demo", "refresh", {"mode": "fast"})]
+    assert details["run_id"] == "runtime-proof"
+    assert details["command"] == "runtime_action:demo:refresh"
+
+
+def _unit_test_policy_command_run_contract():
+    """Policy-command runs should satisfy the public contract."""
+
+    module = importlib.import_module(MODULE)
+    policy_commands = importlib.import_module(
+        "devcovenant.core.runtime.policy_commands"
+    )
+    calls: list[tuple[str, str, dict[str, object]]] = []
+    original_runner = module._run_policy_runtime_action
+    original_renderer = module._render_runtime_action_result
+    original_find = policy_commands.find_policy_command
+    original_parse = policy_commands.parse_policy_command_payload
+    original_canonical = policy_commands.canonical_policy_command_invocation
+    try:
+        module._run_policy_runtime_action = (
+            lambda _repo_root, *, policy_id, action, payload=None: (
+                calls.append((policy_id, action, dict(payload or {}))) or {}
+            )
+        )
+        module._render_runtime_action_result = lambda _result: None
+        policy_commands.find_policy_command = (
+            lambda *_args, **_kwargs: policy_commands.PolicyCommandDefinition(
+                name="refresh-all",
+                help_text="Refresh all",
+                runtime_action="refresh",
+                mutates_repo=True,
+            )
+        )
+        policy_commands.parse_policy_command_payload = (
+            lambda *_args, **_kwargs: {"mode": "fast"}
+        )
+        policy_commands.canonical_policy_command_invocation = (
+            lambda policy_id, command_name: (
+                f"devcovenant policy {policy_id} {command_name}"
+            )
+        )
+        details = module._execute_policy_command_workflow_run(
+            Path("."),
+            run={
+                "id": "policy-proof",
+                "runner": {
+                    "kind": "policy_command",
+                    "target": "demo:refresh-all",
+                    "args": ["--mode", "fast"],
+                },
+                "success_contract": {"kind": "policy_command_success"},
+            },
+            notes="",
+            command_name="run",
+        )
+    finally:
+        module._run_policy_runtime_action = original_runner
+        module._render_runtime_action_result = original_renderer
+        policy_commands.find_policy_command = original_find
+        policy_commands.parse_policy_command_payload = original_parse
+        policy_commands.canonical_policy_command_invocation = (
+            original_canonical
+        )
+
+    assert calls == [("demo", "refresh", {"mode": "fast"})]
+    assert details["run_id"] == "policy-proof"
+    assert details["command"] == (
+        "devcovenant policy demo refresh-all --mode fast"
+    )
+
+
+def _unit_test_manual_attestation_run_contract():
+    """Manual-attestation runs should honor the public contract."""
+
+    module = importlib.import_module(MODULE)
+    env_key = module._manual_attestation_env_key("release-ready")
+    previous = os.environ.get(env_key)
+    try:
+        os.environ[env_key] = "true"
+        details = module._execute_manual_attestation_workflow_run(
+            Path("."),
+            run={
+                "id": "manual-proof",
+                "runner": {
+                    "kind": "manual_attestation",
+                    "attestation_key": "release-ready",
+                },
+                "success_contract": {"kind": "manual_attested"},
+            },
+            notes="",
+            command_name="run",
+        )
+    finally:
+        if previous is None:
+            os.environ.pop(env_key, None)
+        else:
+            os.environ[env_key] = previous
+
+    assert details["run_id"] == "manual-proof"
+    assert details["command"] == f"manual_attestation:{env_key}"
+
+
+def _unit_test_verify_external_artifact_check_supports_public_contract():
+    """Artifact-check workflow runs should honor declared file contracts."""
+
+    module = importlib.import_module(MODULE)
+    with tempfile.TemporaryDirectory() as tmpdir:
+        repo_root = Path(tmpdir)
+        dist_dir = repo_root / "dist"
+        dist_dir.mkdir()
+        (dist_dir / "demo-1.0.0.whl").write_text("", encoding="utf-8")
+        module._verify_external_artifact_check(
+            repo_root,
+            "artifact-proof",
+            {
+                "kind": "external_artifact_check",
+                "base_dir": ".",
+                "required_files": ["dist/demo-1.0.0.whl"],
+                "required_globs": ["dist/*.whl"],
+                "forbidden_globs": ["dist/*.tmp"],
+                "minimum_matches": 1,
+            },
+        )
+
+
 def _unit_test_clean_summary_artifacts_include_command_details() -> None:
     """Clean-run summaries should expose cleanup details in artifacts."""
     module = importlib.import_module(MODULE)
@@ -1509,6 +1666,24 @@ class GeneratedUnittestCases(unittest.TestCase):
     def test_workflow_profile_artifacts_are_written_for_active_run(self):
         """Run active-run profiling artifact generation assertions."""
         _unit_test_workflow_profile_artifacts_are_written_for_active_run()
+
+    def test_runtime_action_run_contract(self):
+        """Run runtime-action workflow-run contract assertions."""
+        _unit_test_runtime_action_run_contract()
+
+    def test_policy_command_run_contract(self):
+        """Run policy-command workflow-run contract assertions."""
+        _unit_test_policy_command_run_contract()
+
+    def test_manual_attestation_run_contract(self):
+        """Run manual-attestation workflow-run contract assertions."""
+        _unit_test_manual_attestation_run_contract()
+
+    def test_verify_external_artifact_check_supports_public_contract(
+        self,
+    ):
+        """Run artifact-check workflow-run contract assertions."""
+        _unit_test_verify_external_artifact_check_supports_public_contract()
 
     def test_clean_summary_artifacts_include_command_details(self):
         """Run clean-summary artifact detail assertions."""

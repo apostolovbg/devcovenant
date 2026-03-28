@@ -35,6 +35,94 @@ def _tests_run_entry() -> dict[str, object]:
     }
 
 
+def _unit_test_build_workflow_contract_supports_public_advanced_run_kinds():
+    """Public runner and success-contract kinds should normalize cleanly."""
+
+    module = importlib.import_module(MODULE)
+    with tempfile.TemporaryDirectory() as tmpdir:
+        repo_root = Path(tmpdir)
+        contract = module.build_workflow_contract(
+            repo_root,
+            {
+                "python": {
+                    "workflow_runs": [
+                        _tests_run_entry(),
+                        {
+                            "id": "artifact-proof",
+                            "runner": {
+                                "kind": "command_group",
+                                "commands": ["python3 -m build"],
+                            },
+                            "success_contract": {
+                                "kind": "external_artifact_check",
+                                "required_globs": ["dist/*.whl"],
+                                "minimum_matches": 1,
+                            },
+                        },
+                        {
+                            "id": "runtime-proof",
+                            "runner": {
+                                "kind": "runtime_action",
+                                "target": "demo:refresh",
+                                "payload": {"mode": "fast"},
+                            },
+                            "success_contract": {
+                                "kind": "runtime_action_success",
+                            },
+                        },
+                        {
+                            "id": "policy-proof",
+                            "runner": {
+                                "kind": "policy_command",
+                                "target": "demo:refresh-all",
+                                "args": ["--mode", "fast"],
+                            },
+                            "success_contract": {
+                                "kind": "policy_command_success",
+                            },
+                        },
+                        {
+                            "id": "manual-proof",
+                            "runner": {
+                                "kind": "manual_attestation",
+                                "attestation_key": "release-ready",
+                            },
+                            "success_contract": {
+                                "kind": "manual_attested",
+                            },
+                        },
+                    ]
+                }
+            },
+            ["python"],
+        )
+
+    artifact_run = module.resolve_run(contract, "artifact-proof")
+    runtime_run = module.resolve_run(contract, "runtime-proof")
+    policy_run = module.resolve_run(contract, "policy-proof")
+    manual_run = module.resolve_run(contract, "manual-proof")
+
+    assert artifact_run is not None
+    assert artifact_run["success_contract"]["kind"] == (
+        "external_artifact_check"
+    )
+    assert artifact_run["success_contract"]["required_globs"] == ["dist/*.whl"]
+    assert runtime_run is not None
+    assert runtime_run["runner"]["kind"] == "runtime_action"
+    assert runtime_run["runner"]["target"] == "demo:refresh"
+    assert runtime_run["success_contract"]["kind"] == (
+        "runtime_action_success"
+    )
+    assert policy_run is not None
+    assert policy_run["runner"]["kind"] == "policy_command"
+    assert policy_run["runner"]["args"] == ["--mode", "fast"]
+    assert policy_run["success_contract"]["kind"] == ("policy_command_success")
+    assert manual_run is not None
+    assert manual_run["runner"]["kind"] == "manual_attestation"
+    assert manual_run["runner"]["attestation_key"] == "release-ready"
+    assert manual_run["success_contract"]["kind"] == "manual_attested"
+
+
 def _unit_test_module_importable() -> None:
     """Module should import cleanly."""
 
@@ -147,6 +235,13 @@ class GeneratedUnittestCases(unittest.TestCase):
         """Run explicit workflow-run contract assertions."""
 
         _unit_test_build_workflow_contract_uses_profile_declared_runs()
+
+    def test_build_workflow_contract_supports_public_advanced_run_kinds(
+        self,
+    ):
+        """Run advanced workflow-run contract assertions."""
+
+        _unit_test_build_workflow_contract_supports_public_advanced_run_kinds()
 
     def test_run_relevant_paths_changed_uses_freshness_contract(self):
         """Run workflow-run invalidation regression assertions."""

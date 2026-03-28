@@ -55,9 +55,9 @@ def _unit_test_event_symbol_contract_is_stable() -> None:
     assert hasattr(module.RunEventAdapter, "build_event")
     assert hasattr(module.RunEventAdapter, "handles")
     assert hasattr(module.RunEventManager, "record_command")
-    assert hasattr(module, "consume_test_event_adapter_warnings")
-    assert hasattr(module, "load_test_event_adapters")
-    assert hasattr(module, "TestEvent")
+    assert not hasattr(module, "consume_test_event_adapter_warnings")
+    assert not hasattr(module, "load_test_event_adapters")
+    assert not hasattr(module, "TestEvent")
 
 
 def _unit_test_core_packages_do_not_define_dynamic_getattr() -> None:

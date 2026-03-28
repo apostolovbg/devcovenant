@@ -133,6 +133,10 @@ require.
 `workflow_session.json` records the required declared workflow runs for the
 session, their pass/fail state, and the last-session/snapshot evidence used to
 decide whether a run is still fresh.
+Run-event metadata is now stored only under `run_events`.
+Legacy `test_events` adapter declarations are rejected instead of normalized
+silently, so the runtime registry only preserves the final run-owned event
+contract.
 
 That is why `gate --status` is often the right first command when you need to
 know where a slice stands.

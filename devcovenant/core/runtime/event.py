@@ -254,8 +254,6 @@ def load_profile_event_adapters(
 ) -> list[RunEventAdapter]:
     """Load adapters from one declared profile metadata group."""
     normalized_group = str(adapter_group or "").strip()
-    if normalized_group == "test_events":
-        normalized_group = "run_events"
     if not normalized_group:
         _set_adapter_load_warnings([])
         return []
@@ -355,15 +353,3 @@ def load_profile_event_adapters(
 def load_run_event_adapters(repo_root: Path) -> list[RunEventAdapter]:
     """Load adapters declared by the active profile stack."""
     return load_profile_event_adapters(repo_root, "run_events")
-
-
-# Backward-compatibility aliases for pre-generalization adapter surfaces.
-consume_test_event_adapter_warnings = consume_run_event_adapter_warnings
-TestEvent = RunEvent
-TestEventAdapter = RunEventAdapter
-GenericTestEventAdapter = GenericRunEventAdapter
-PythonTestEventAdapter = PythonRunEventAdapter
-python_test_event_adapter_factory = python_run_event_adapter_factory
-generic_test_event_adapter_factory = generic_run_event_adapter_factory
-TestEventManager = RunEventManager
-load_test_event_adapters = load_run_event_adapters

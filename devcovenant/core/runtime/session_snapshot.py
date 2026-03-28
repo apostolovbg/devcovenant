@@ -59,21 +59,15 @@ SESSION_SNAPSHOT_BULKY_KEYS = (
     "session_end_snapshot",
     "session_start_snapshot",
     "run_events",
-    "test_events",
 )
 
 
 def _normalize_snapshot_payload(
     payload_raw: object,
 ) -> dict[str, object]:
-    """Normalize snapshot payload keys and collapse legacy event names."""
+    """Normalize snapshot payload keys."""
 
-    payload = dict(payload_raw) if isinstance(payload_raw, dict) else {}
-    run_events = payload.get("run_events")
-    if run_events is None and "test_events" in payload:
-        payload["run_events"] = payload.get("test_events")
-    payload.pop("test_events", None)
-    return payload
+    return dict(payload_raw) if isinstance(payload_raw, dict) else {}
 
 
 def capture_current_numstat_snapshot(repo_root: Path) -> dict[str, str]:

@@ -27,7 +27,6 @@ _SUCCESS_CONTRACT_KINDS = {
     "manual_attested",
     "external_artifact_check",
 }
-_DEFAULT_TESTS_RUN_ID = "tests"
 _DEFAULT_FRESHNESS_IGNORED_FILES = ("CHANGELOG.md",)
 
 
@@ -97,7 +96,7 @@ def _normalize_string_list(
 ) -> list[str]:
     """Normalize one optional string-or-list payload into unique strings."""
 
-    if raw_value in {None, ""}:
+    if raw_value is None or raw_value == "":
         return []
     if isinstance(raw_value, str):
         values = [raw_value]
@@ -254,7 +253,10 @@ def _normalize_run_entry(
         recording_raw.get("event_adapter_group") or ""
     ).strip()
     if event_adapter_group == "test_events":
-        event_adapter_group = "run_events"
+        raise ValueError(
+            f"Workflow run `{run_id}` in profile `{profile_name}` must "
+            "use `run_events`, not legacy `test_events`."
+        )
     recording = {
         "record_in_session": _normalize_bool(
             recording_raw.get("record_in_session"),
@@ -480,25 +482,6 @@ def required_run_ids(contract: Mapping[str, object]) -> list[str]:
             continue
         resolved.append(run_id)
     return resolved
-
-
-def resolve_tests_run(repo_root: Path) -> dict[str, object]:
-    """Return the resolved `tests` run or raise when absent."""
-
-    contract = load_workflow_contract(repo_root)
-    run = resolve_run(contract, _DEFAULT_TESTS_RUN_ID)
-    if run is None:
-        raise ValueError(
-            "No `tests` workflow run is configured for the active profiles."
-        )
-    runner = run.get("runner")
-    if not isinstance(runner, Mapping) or str(runner.get("kind") or "") != (
-        "command_group"
-    ):
-        raise ValueError(
-            "The `tests` workflow run must use runner.kind: command_group."
-        )
-    return run
 
 
 def run_relevant_paths_changed(

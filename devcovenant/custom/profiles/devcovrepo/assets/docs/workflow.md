@@ -53,12 +53,6 @@ two-step `unittest` plus `pytest` sequence.
 Every public command also accepts `--quiet`, `--normal`, or `--verbose` as a
 per-invocation output override.
 
-### run
-Runs one declared workflow run and records its result in the active
-workflow session.
-Use it when `gate --start` or `gate --end` tells you a required run is
-stale and needs an explicit rerun.
-
 ### gate --end
 Runs the closing pre-commit pass and records closure state.
 It only closes the session after every required declared run for the current

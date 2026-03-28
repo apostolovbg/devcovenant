@@ -619,7 +619,6 @@ def run_pre_commit_gate(
                     "session_end_snapshot",
                     "last_run_snapshot",
                     "run_events",
-                    "test_events",
                 ]
                 recovery_updates: dict[str, object] = {}
                 if recovery_baseline_snapshot is not None:
@@ -645,7 +644,6 @@ def run_pre_commit_gate(
                     start_ts.timestamp()
                 )
                 recovery_payload.pop("run_events_count", None)
-                recovery_payload.pop("test_events_count", None)
                 prune_inline_session_snapshot_fields(recovery_payload)
                 recovery_payload["recovery_start_reason"] = recovery_reason
                 status_path.parent.mkdir(parents=True, exist_ok=True)
@@ -900,7 +898,6 @@ def run_pre_commit_gate(
             "session_end_snapshot",
             "last_run_snapshot",
             "run_events",
-            "test_events",
         ]
         snapshot_updates: dict[str, object] = {
             # Persist the gate-start filesystem snapshot so policies can scope
@@ -936,7 +933,6 @@ def run_pre_commit_gate(
         payload["session_snapshot_updated_utc"] = start_ts.isoformat()
         payload["session_snapshot_updated_epoch"] = start_ts.timestamp()
         payload.pop("run_events_count", None)
-        payload.pop("test_events_count", None)
         payload.update(
             execution_runtime_module.capture_agents_section_hashes(repo_root)
         )

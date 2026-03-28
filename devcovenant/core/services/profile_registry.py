@@ -340,14 +340,11 @@ def _normalize_profile_run_events(
 ) -> None:
     """Normalize run-event adapter declarations for one profile."""
     raw_entries = profile_meta.get("run_events")
-    legacy_entries = profile_meta.get("test_events")
-    if raw_entries is not None and legacy_entries is not None:
+    if "test_events" in profile_meta:
         raise ValueError(
-            f"{source_label} profile '{profile_name}' must not define both "
-            "`run_events` and legacy `test_events`."
+            f"{source_label} profile '{profile_name}' must define "
+            "`run_events`, not legacy `test_events`."
         )
-    if raw_entries is None:
-        raw_entries = legacy_entries
     if raw_entries is None:
         return
     if not isinstance(raw_entries, list):
@@ -395,7 +392,6 @@ def _normalize_profile_run_events(
         seen_ids.add(entry_id)
         normalized_entries.append(normalized_entry)
     profile_meta["run_events"] = normalized_entries
-    profile_meta.pop("test_events", None)
 
 
 def _normalize_profile_clean_overlays(
