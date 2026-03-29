@@ -156,6 +156,7 @@ devcovenant gate --start
 devcovenant gate --mid
 devcovenant run
 devcovenant gate --end
+devcovenant asset SPEC.md
 devcovenant refresh
 devcovenant deploy
 devcovenant clean --all
@@ -163,6 +164,11 @@ devcovenant clean --all
 
 Other lifecycle commands such as `upgrade`, `undeploy`, and `uninstall` are
 used less often, but they follow the same run-log contract.
+`devcovenant asset FILE.ext [OUTPUTNAME.ext]` materializes one reusable
+profile asset or managed doc as a Desktop copy. When the optional second
+argument is omitted, DevCovenant keeps the asset's original filename on the
+Desktop. When it is present, DevCovenant uses that filename on the Desktop.
+`--overwrite` replaces an existing Desktop target.
 `clean --all` removes disposable build/cache/runtime artifacts; its
 `registry` scope cleans only `devcovenant/registry/runtime/`, not the tracked
 `devcovenant/registry/registry.yaml`.

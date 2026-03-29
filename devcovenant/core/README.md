@@ -1,5 +1,5 @@
 # Core Runtime
-**Last Updated:** 2026-03-28
+**Last Updated:** 2026-03-29
 **Project Version:** 1.0.0
 
 ## Table of Contents
@@ -53,6 +53,8 @@ Public user-facing contracts still live in top-level/docs surfaces:
   - `run_logging.py`: run-folder allocation and summary/log artifact contract.
   - `session_snapshot.py`: snapshot collection/diff helpers.
 - `services/`: policy/profile/registry business logic.
+  - `asset_materialization.py`: shared asset-command resolution and rendering
+    for plain profile assets and managed docs.
   - `integrity_validation.py`: core invariant orchestration for descriptor,
     registry, and gate-integrity checks.
   - `manifest_inventory.py`: tracked inventory defaults and required-repo

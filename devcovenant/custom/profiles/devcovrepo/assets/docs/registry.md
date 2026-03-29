@@ -97,6 +97,11 @@ Policy-owned descriptor and hash logic now lives in
 `devcovenant/core/services/policy_registry.py`.
 Tracked inventory defaults and manifest persistence now live in
 `devcovenant/core/services/manifest_inventory.py`.
+That tracked inventory now also records the `devcovenant asset` surface
+through `devcovenant/asset.py` and
+`devcovenant/core/services/asset_materialization.py`, so the tracked registry
+reflects the shared asset-materialization contract rather than only the
+refresh-owned write path.
 AGENTS block markers and policy/core-invariant block rendering now live in
 `devcovenant/core/lib/agents_blocks.py`, so the tracked registry feeds a
 shared block-rendering helper instead of separate services-layer refresh

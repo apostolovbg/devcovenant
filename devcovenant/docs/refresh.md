@@ -1,5 +1,5 @@
 # Refresh Behavior
-**Last Updated:** 2026-03-23
+**Last Updated:** 2026-03-29
 **Project Version:** 1.0.0
 
 ## Overview
@@ -90,6 +90,13 @@ That is the rule for `README.md` and `devcovenant/README.md` in this
 repository: the `<!-- DEVCOV:BEGIN -->` / `<!-- DEVCOV:END -->` block stays
 present but empty by design so DevCovenant does not inject runtime prose at
 the top of user-facing README surfaces.
+
+The same rendering machinery is now reused by `devcovenant asset`.
+That command does not own a second template engine.
+It renders plain profile assets through the same shared asset renderer that
+refresh uses, and it renders descriptor-backed docs through the same
+managed-doc runtime, but writes the result as a Desktop copy instead of the
+repo-owned managed target path.
 
 ## Custom Managed Docs
 Profiles can add custom managed docs through their asset trees.

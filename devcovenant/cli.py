@@ -20,6 +20,7 @@ runtime_errors_module = importlib.import_module(
 )
 
 _COMMAND_MODULES = {
+    "asset": "devcovenant.asset",
     "check": "devcovenant.check",
     "clean": "devcovenant.clean",
     "gate": "devcovenant.gate",

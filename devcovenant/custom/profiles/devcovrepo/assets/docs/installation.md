@@ -157,6 +157,21 @@ Runs the full refresh path and writes the active managed outputs.
 Rebuilds tracked registry state, managed docs, generated config sections,
 generated workflow files, `.gitignore`, and related governed artifacts.
 
+### asset
+Materializes one reusable profile asset or managed doc as a Desktop copy.
+
+The destination contract is:
+
+- no second argument: Desktop plus the original asset basename
+
+- second argument such as `OTHERNAME.md`: Desktop plus that file name
+
+The second argument is a filename only, not a path.
+Use `--overwrite` when the Desktop target already exists.
+`asset` reuses the same rendering machinery that refresh uses for plain
+profile assets and the same managed-doc renderer used by descriptor-backed
+docs such as `SPEC.md`.
+
 ### run
 Runs the declared workflow runs for the active contract.
 Use it when a gate command tells you that workflow evidence is stale and must
@@ -315,6 +330,8 @@ pipx install devcovenant
 pipx upgrade devcovenant
 devcovenant install
 devcovenant deploy
+devcovenant asset SPEC.md
+devcovenant asset SPEC.md OTHERNAME.md
 devcovenant refresh
 devcovenant policy dependency-management refresh-all
 devcovenant clean --all

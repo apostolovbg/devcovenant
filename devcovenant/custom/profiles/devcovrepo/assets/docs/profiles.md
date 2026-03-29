@@ -76,6 +76,35 @@ into vague, terse, hard-to-read starter docs.
 They should generate useful, substantial starting documents whose structure and
 formatting already reflect the intended documentation quality.
 
+`devcovenant asset FILE.ext [OUTPUTNAME.ext]` is the operator surface for
+those shipped
+assets.
+It resolves both:
+
+- manifest-declared profile assets
+
+- descriptor-backed managed docs such as `SPEC.md`
+
+Resolution is deterministic:
+
+- exact target-path matches beat basename matches
+
+- active profiles are considered first in resolved active-profile order
+
+- remaining discovered profiles are considered afterward in deterministic
+  profile-name order
+
+- builtin versus custom is not a special tie-breaker after profiles are
+  discovered
+
+- if the winning profile still exposes multiple basename matches, DevCovenant
+  fails and asks for an exact asset target path
+
+The command writes Desktop copies only.
+It reuses the same rendering machinery that normal refresh/deploy use:
+plain profile assets go through the shared profile-asset renderer, while
+managed docs go through the managed-doc descriptor renderer.
+
 ## Translators
 Translators are owned by language profiles.
 They keep policy logic language-agnostic by translating files into normalized

@@ -1,5 +1,5 @@
 # DevCovenant Architecture
-**Last Updated:** 2026-03-28
+**Last Updated:** 2026-03-29
 **Project Version:** 1.0.0
 
 ## Overview
@@ -38,7 +38,7 @@ The practical split is:
 - `services`
 
   Shared runtime services such as metadata resolution, policy execution,
-  managed docs, and tracked-registry handling.
+  managed docs, tracked-registry handling, and shared asset materialization.
 
 - `lib`
 
@@ -214,6 +214,13 @@ They can contribute:
 - pre-commit fragments
 
 - translator declarations
+
+The `devcovenant asset` command sits on top of that same ownership model.
+It does not carry a separate rendering engine.
+Shared service-layer helpers resolve materializable candidates across
+discovered profiles, then route plain profile assets through the same shared
+asset renderer that refresh uses while routing descriptor-backed docs through
+the managed-doc runtime.
 
 Translators are owned by language profiles.
 They keep policies language-agnostic by translating source into normalized

@@ -20,6 +20,7 @@ from tests.devcovenant.support import MonkeyPatch
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
 ROOT_COMMAND_MODULES = (
+    "asset",
     "check",
     "clean",
     "gate",
@@ -452,6 +453,22 @@ def _unit_test_run_help_is_command_scoped() -> None:
     assert "--quiet" in result.stdout
     assert "--normal" in result.stdout
     assert "--verbose" in result.stdout
+
+
+def _unit_test_asset_help_is_command_scoped() -> None:
+    """`asset --help` should expose only the asset-materialization surface."""
+    result = subprocess.run(
+        [sys.executable, "-m", "devcovenant", "asset", "--help"],
+        cwd=REPO_ROOT,
+        check=False,
+        capture_output=True,
+        text=True,
+    )
+    assert result.returncode == 0
+    assert "Materialize one reusable asset or managed doc" in result.stdout
+    assert "--overwrite" in result.stdout
+    assert "--start" not in result.stdout
+    assert "--end" not in result.stdout
 
 
 def _unit_test_check_help_shows_check_only_options() -> None:
@@ -1041,6 +1058,10 @@ class GeneratedUnittestCases(unittest.TestCase):
     def test_run_help_is_command_scoped(self):
         """Run test_run_help_is_command_scoped."""
         _unit_test_run_help_is_command_scoped()
+
+    def test_asset_help_is_command_scoped(self):
+        """Run test_asset_help_is_command_scoped."""
+        _unit_test_asset_help_is_command_scoped()
 
     def test_check_help_shows_check_only_options(self):
         """Run test_check_help_shows_check_only_options."""

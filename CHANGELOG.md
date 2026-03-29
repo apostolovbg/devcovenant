@@ -61,6 +61,65 @@ Example:
 ## Version 1.0.0
 
 - 2026-03-29:
+  Change: tightened `devcovenant asset` to a Desktop-only copy contract with
+    an optional Desktop output filename instead of accepting general
+    destination paths.
+  Why: fixed the over-broad initial destination surface so asset
+    materialization no longer risks arbitrary writes or path-escape behavior,
+    and aligned the docs with the safer command semantics.
+  Impact: preserves Desktop-only asset materialization, rejects path-like
+    output arguments, keeps `--overwrite`, and preserves the shared
+    rendering machinery for plain assets and managed docs.
+  Files:
+  CHANGELOG.md
+  README.md
+  devcovenant/README.md
+  devcovenant/asset.py
+  devcovenant/core/services/asset_materialization.py
+  devcovenant/custom/profiles/devcovrepo/assets/docs/installation.md
+  devcovenant/custom/profiles/devcovrepo/assets/docs/profiles.md
+  devcovenant/custom/profiles/devcovrepo/assets/docs/refresh.md
+  devcovenant/docs/installation.md
+  devcovenant/docs/profiles.md
+  devcovenant/docs/refresh.md
+  tests/devcovenant/core/services/test_asset_materialization.py
+  tests/devcovenant/test_asset.py
+
+- 2026-03-29:
+  Change: added `devcovenant asset FILE.ext [path]`, shared asset
+    materialization helpers, and the matching docs/tests so reusable profile
+    assets and managed docs can be rendered on demand.
+  Why: exposed seeded docs and manifest templates through one operator-facing
+    command without duplicating refresh or managed-doc rendering logic, while
+    making destination and same-name resolution rules explicit.
+  Impact: operators can now materialize assets to the Desktop or exact output
+    paths with `--overwrite`, deterministic profile precedence, and the same
+    content machinery that normal refresh/deploy already use.
+  Files:
+  CHANGELOG.md
+  README.md
+  devcovenant/README.md
+  devcovenant/asset.py
+  devcovenant/cli.py
+  devcovenant/core/README.md
+  devcovenant/core/flow/refresh.py
+  devcovenant/core/services/asset_materialization.py
+  devcovenant/core/services/manifest_inventory.py
+  devcovenant/custom/profiles/devcovrepo/assets/docs/installation.md
+  devcovenant/custom/profiles/devcovrepo/assets/docs/profiles.md
+  devcovenant/custom/profiles/devcovrepo/assets/docs/refresh.md
+  devcovenant/custom/profiles/devcovrepo/assets/docs/registry.md
+  devcovenant/docs/architecture.md
+  devcovenant/docs/installation.md
+  devcovenant/docs/profiles.md
+  devcovenant/docs/refresh.md
+  devcovenant/docs/registry.md
+  devcovenant/registry/registry.yaml
+  tests/devcovenant/core/services/test_asset_materialization.py
+  tests/devcovenant/test_asset.py
+  tests/devcovenant/test_cli.py
+
+- 2026-03-29:
   Change: fixed `changelog-coverage` to preserve the gate-start top entry by
     fingerprint anywhere below the fresh session entry instead of requiring
     a hard-coded second-slot position.

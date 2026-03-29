@@ -23,6 +23,9 @@ from devcovenant.core.runtime import (
 )
 from devcovenant.core.runtime.execution import print_step, runtime_print
 from devcovenant.core.services import (
+    asset_materialization as asset_materialization_service,
+)
+from devcovenant.core.services import (
     core_invariants as core_invariants_service,
 )
 from devcovenant.core.services import managed_docs as managed_docs_service
@@ -291,42 +294,13 @@ def _materialize_profile_asset(
         return False
 
     template_text = template_path.read_text(encoding="utf-8")
-    template_text = _render_project_identity_template_text(
-        template_text,
-        project_governance_state,
+    template_text = (
+        asset_materialization_service.render_profile_asset_template_text(
+            template_text,
+            project_governance_state,
+        )
     )
     return _write_text_if_changed(target, template_text)
-
-
-def _render_project_identity_template_text(
-    template_text: str,
-    project_governance_state: ProjectGovernanceState,
-) -> str:
-    """Render project identity placeholders for raw asset templates."""
-    rendered = str(template_text or "")
-    for placeholder, value in (
-        (
-            '"{{ PROJECT_NAME }}"',
-            json.dumps(project_governance_state.project_name),
-        ),
-        (
-            '"{{ PROJECT_DESCRIPTION }}"',
-            json.dumps(project_governance_state.project_description),
-        ),
-        (
-            "'{{ PROJECT_NAME }}'",
-            json.dumps(project_governance_state.project_name),
-        ),
-        (
-            "'{{ PROJECT_DESCRIPTION }}'",
-            json.dumps(project_governance_state.project_description),
-        ),
-    ):
-        rendered = rendered.replace(placeholder, value)
-    return project_governance_service.render_identity_placeholders(
-        rendered,
-        project_governance_state,
-    )
 
 
 def _refresh_profile_assets(

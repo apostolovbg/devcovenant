@@ -17,6 +17,9 @@ Explain:
 
 - when full refresh runs
 
+- how `devcovenant asset` reuses the same renderers while writing Desktop
+  copies instead of taking over repo-owned target paths
+
 - managed-doc descriptors
 
 - preservation rules

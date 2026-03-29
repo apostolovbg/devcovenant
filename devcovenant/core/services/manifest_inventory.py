@@ -31,6 +31,7 @@ DEFAULT_CORE_DIRS = [
 DEFAULT_CORE_FILES = [
     "devcovenant/__init__.py",
     "devcovenant/__main__.py",
+    "devcovenant/asset.py",
     "devcovenant/cli.py",
     "devcovenant/check.py",
     "devcovenant/gate.py",
@@ -57,6 +58,7 @@ DEFAULT_CORE_FILES = [
     "devcovenant/core/contracts/invariants/devcov_structure_guard.yaml",
     "devcovenant/core/contracts/invariants/devflow_run_gates.yaml",
     "devcovenant/core/lib/agents_blocks.py",
+    "devcovenant/core/services/asset_materialization.py",
     "devcovenant/core/services/core_invariants.py",
     "devcovenant/core/services/integrity_validation.py",
     "devcovenant/core/services/manifest_inventory.py",
