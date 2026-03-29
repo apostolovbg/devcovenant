@@ -1,5 +1,5 @@
 # Configuration
-**Last Updated:** 2026-03-28
+**Last Updated:** 2026-03-29
 **Project Version:** 1.0.0
 
 ## Overview
@@ -93,6 +93,8 @@ This block includes these keys and value rules:
 
 `project_description`: any non-empty string. This is the repo-owned public
 summary used by managed README and synchronized package metadata surfaces.
+Generic installs seed it as `Describe the project this repository ships: what
+it does, who it helps, and what problem it solves.`
 
 `stage`: one value from `allowed_stages`. The default set is `prototype`,
 `alpha`, `beta`, `stable`, `deprecated`, `archived`.

@@ -9,7 +9,7 @@ import_seed: true
 authoritative_source: true
 managed_block: ''
 body: |-
-  {{ PROJECT_DESCRIPTION }}
+  {{ PROJECT_DESCRIPTION_PARAGRAPH }}
 
   ## Overview
   Use this README as the operator entrypoint for the repository.

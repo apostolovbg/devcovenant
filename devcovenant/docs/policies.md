@@ -1,5 +1,5 @@
 # Policies
-**Last Updated:** 2026-03-28
+**Last Updated:** 2026-03-29
 **Project Version:** 1.0.0
 
 ## Overview
@@ -56,6 +56,11 @@ The boundary here is important:
 
 Checks should not mutate files directly.
 That keeps the runtime honest and makes side effects easier to reason about.
+One important example is `changelog-coverage`: it is gate-session scoped, not
+git-scoped. The checker compares the latest changelog entry against the
+gate-start snapshot, requires a fresh top entry for the current session, and
+preserves the pre-session top entry by fingerprint anywhere below that fresh
+entry instead of binding it to a fixed slot.
 
 ## Policy Runtime Actions
 A policy can expose runtime actions.

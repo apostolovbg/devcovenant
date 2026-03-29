@@ -1,5 +1,5 @@
 # Installation and Lifecycle
-**Last Updated:** 2026-03-28
+**Last Updated:** 2026-03-29
 **Project Version:** 1.0.0
 
 ## Overview
@@ -335,3 +335,8 @@ Use the namespaced policy command surface instead:
 That policy command now runs through the shared runtime execution layer, so it
 inherits the same managed-environment and output-mode behavior as the rest of
 the CLI.
+
+The generated Python `pyproject.toml` also renders long repo-owned
+`project_description` values through a wrapped TOML string form.
+That keeps the physical source lines short without truncating the logical
+package description that install/deploy synchronize from project-governance.

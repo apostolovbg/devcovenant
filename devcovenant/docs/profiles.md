@@ -1,5 +1,5 @@
 # Profiles
-**Last Updated:** 2026-03-28
+**Last Updated:** 2026-03-29
 **Project Version:** 1.0.0
 
 ## Overview
@@ -259,6 +259,9 @@ core a hidden special case for one run id.
 
 The same asset ownership shows up in managed docs.
 Profile README descriptors can intentionally keep a managed block empty.
+They can also render the full repo-owned `project_description` through
+`{{ PROJECT_DESCRIPTION_PARAGRAPH }}` so generated README text wraps cleanly
+without truncating the logical identity sentence that project-governance owns.
 That is the correct contract for the root `README.md` and packaged
 `devcovenant/README.md` here: the `<!-- DEVCOV -->` block stays present but
 empty by design, so profile assets do not inject DevCovenant runtime prose at

@@ -375,15 +375,17 @@ def _replace_or_append_project_toml_field(
     section_body: str,
     *,
     field_name: str,
-    field_value: str,
+    toml_value: str,
 ) -> str:
-    """Replace or append one scalar field in the `[project]` TOML section."""
-    new_line = f"{field_name} = {json.dumps(field_value)}"
-    field_re = re.compile(rf"(?m)^{re.escape(field_name)}\s*=.*$")
+    """Replace or append one field in the `[project]` TOML section."""
+    new_line = f"{field_name} = {toml_value}\n"
+    field_re = re.compile(
+        rf"(?ms)^{re.escape(field_name)}\s*=.*?" r"(?=^[A-Za-z0-9_.-]+\s*=|\Z)"
+    )
     if field_re.search(section_body):
         return field_re.sub(new_line, section_body, count=1)
     separator = "" if not section_body or section_body.endswith("\n") else "\n"
-    return f"{section_body}{separator}{new_line}\n"
+    return f"{section_body}{separator}{new_line}"
 
 
 def _sync_project_pyproject_identity(
@@ -401,12 +403,14 @@ def _sync_project_pyproject_identity(
     updated_body = _replace_or_append_project_toml_field(
         match.group("body"),
         field_name="name",
-        field_value=project_governance_state.project_name,
+        toml_value=json.dumps(project_governance_state.project_name),
     )
     updated_body = _replace_or_append_project_toml_field(
         updated_body,
         field_name="description",
-        field_value=project_governance_state.project_description,
+        toml_value=project_governance_service.render_toml_string(
+            project_governance_state.project_description
+        ),
     )
     updated = (
         current[: match.start("body")]

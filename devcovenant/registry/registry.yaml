@@ -105,7 +105,7 @@ managed-docs:
       project_governance_headers: false
       import_seed: true
       authoritative_source: true
-      body_fingerprint: d8195f1b81fd86c520b908bf8ffee5e334913b7f5a061fa2a7bb3da1655423bc
+      body_fingerprint: 34474b586af2331d9ae26bcc11c71d10ecb0d1cf22f5324662d905e0aa21af7a
       legacy_generic_body_fingerprints: []
     SPEC.md:
       enabled: true
@@ -2169,7 +2169,7 @@ policies:
     - pip-wheel-metadata/**
     origin: builtin
     script_exists: true
-    hash: a4bb1e5b2a4af3d7fc6a4a42580b0b2faa0c2e2b3673db03eb7944c75c78b4ca
+    hash: a7cc8d8576804e987dfc84c4f0e160d777333a48c2997c0c43d9b6853cc908e7
     script_path: builtin/changelog_coverage.py
   devcov-raw-string-escapes:
     enabled: true

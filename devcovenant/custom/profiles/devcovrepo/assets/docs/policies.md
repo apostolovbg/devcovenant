@@ -36,6 +36,10 @@ Explain:
 Avoid drowning readers in descriptor bookkeeping.
 Explain the boundary clearly enough that a maintainer can reason about where a
 new behavior belongs and which mutation path, if any, is allowed.
+Call out session-scoped policy contracts when they matter. For example,
+`changelog-coverage` should be described as gate-session scoped rather than
+git-scoped, with the prior top entry preserved by fingerprint anywhere below
+the fresh session entry instead of in a hard-coded slot.
 
 ## Custom Policy Guidance
 In a normal repository, do not seed repo-specific custom policies before the

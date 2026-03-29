@@ -1,5 +1,5 @@
 # Project Governance
-**Last Updated:** 2026-03-24
+**Last Updated:** 2026-03-29
 **Project Version:** 1.0.0
 
 ## Overview
@@ -19,8 +19,9 @@ Other public surfaces render from this metadata.
 ## Core Fields
 `project_name`: any non-empty string. Default seed value: `Project Name`.
 
-`project_description`: any non-empty string. Default seed value is the install
-template prompt text that asks you to describe what the project ships.
+`project_description`: any non-empty string. Default seed value:
+`Describe the project this repository ships: what it does, who it helps, and
+what problem it solves.`
 
 `stage`: one value from `allowed_stages`. The default allowed set is
 `prototype`, `alpha`, `beta`, `stable`, `deprecated`, `archived`.

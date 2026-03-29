@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import textwrap
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Any, Iterable, Mapping
@@ -242,10 +243,44 @@ def render_identity_placeholders(
 ) -> str:
     """Render project-identity placeholders from governance state."""
     rendered = str(text or "")
-    return rendered.replace("{{ PROJECT_NAME }}", state.project_name).replace(
-        "{{ PROJECT_DESCRIPTION }}",
-        state.project_description,
+    replacements = {
+        "{{ PROJECT_NAME }}": state.project_name,
+        "{{ PROJECT_DESCRIPTION }}": state.project_description,
+        "{{ PROJECT_DESCRIPTION_PARAGRAPH }}": textwrap.fill(
+            state.project_description,
+            width=72,
+            break_long_words=False,
+            break_on_hyphens=False,
+        ),
+        "{{ PROJECT_DESCRIPTION_TOML }}": render_toml_string(
+            state.project_description
+        ),
+    }
+    for placeholder, value in replacements.items():
+        rendered = rendered.replace(placeholder, value)
+    return rendered
+
+
+def render_toml_string(value: str) -> str:
+    """Render *value* as a TOML string while keeping source lines short."""
+    if len(value) <= 60:
+        return yaml.safe_dump(value, default_style='"').strip()
+    wrapped = textwrap.wrap(
+        value,
+        width=56,
+        break_long_words=False,
+        break_on_hyphens=False,
     )
+    if not wrapped:
+        return '""'
+    parts = []
+    for index, line in enumerate(wrapped):
+        if index < len(wrapped) - 1:
+            parts.append(f"{line} \\")
+        else:
+            parts.append(line)
+    body = "\n".join(parts)
+    return f'"""\n{body}"""'
 
 
 def resolve_release_headings(

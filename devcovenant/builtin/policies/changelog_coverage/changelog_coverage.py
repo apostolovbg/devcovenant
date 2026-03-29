@@ -891,33 +891,30 @@ class ChangelogCoverageCheck(PolicyCheck):
                                     suggestion=(
                                         "Prepend a new dated changelog entry "
                                         "for this work and keep the previous "
-                                        "top entry below it."
+                                        "top entry intact somewhere below it."
                                     ),
                                     can_auto_fix=False,
                                 )
                             )
                         else:
-                            expected_previous_fingerprint = (
-                                _entry_fingerprint(entry_blocks[1])
-                                if len(entry_blocks) > 1
-                                else ""
-                            )
-                            if (
-                                expected_previous_fingerprint
-                                != snapshot_fingerprint
+                            preserved_fingerprints = {
+                                _entry_fingerprint(block)
+                                for block in entry_blocks[1:]
+                            }
+                            if snapshot_fingerprint not in (
+                                preserved_fingerprints
                             ):
                                 snapshot_preservation_failed = True
                                 snapshot_message = (
                                     "Gate-start changelog snapshot was "
-                                    "edited, removed, or moved out of the "
-                                    "second position. A new entry must be "
+                                    "edited or removed. A new entry must be "
                                     "prepended and the prior top entry must "
-                                    "remain directly below it."
+                                    "remain unchanged somewhere below it."
                                 )
                                 snapshot_suggestion = (
                                     "Add a fresh top entry and keep the "
-                                    "pre-session top entry intact as the "
-                                    "next entry."
+                                    "pre-session top entry intact somewhere "
+                                    "below it."
                                 )
                                 violations.append(
                                     Violation(

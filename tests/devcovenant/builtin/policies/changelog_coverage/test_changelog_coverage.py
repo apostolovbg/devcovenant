@@ -1465,10 +1465,10 @@ def _unit_test_gate_snapshot_requires_previous_entry_preserved(
     assert any("snapshot was edited" in v.message for v in violations)
 
 
-def _unit_test_gate_snapshot_requires_previous_entry_second(
+def _unit_test_gate_snapshot_allows_previous_entry_anywhere_below(
     tmp_path: Path, monkeypatch: MonkeyPatch
 ):
-    """Gate-start entry must remain immediately below a prepended session."""
+    """Gate-start entry may remain anywhere below the fresh top entry."""
     today = date.today().isoformat()
     previous_top = (
         f"- {today}:\n"
@@ -1505,7 +1505,7 @@ def _unit_test_gate_snapshot_requires_previous_entry_second(
     context = CheckContext(repo_root=tmp_path, all_files=[])
     violations = checker.check(context)
 
-    assert any("second position" in v.message for v in violations)
+    assert violations == []
 
 
 def _unit_test_gate_snapshot_blocks_entry_checks_until_new_entry(
@@ -2172,13 +2172,13 @@ class GeneratedUnittestCases(unittest.TestCase):
         finally:
             monkeypatch.undo()
 
-    def test_gate_snapshot_requires_previous_entry_second(self):
-        """Run test_gate_snapshot_requires_previous_entry_second."""
+    def test_gate_snapshot_allows_previous_entry_anywhere_below(self):
+        """Run test_gate_snapshot_allows_previous_entry_anywhere_below."""
         monkeypatch = MonkeyPatch()
         try:
             with tempfile.TemporaryDirectory() as temp_dir:
                 tmp_path = Path(temp_dir).resolve()
-                _unit_test_gate_snapshot_requires_previous_entry_second(
+                _unit_test_gate_snapshot_allows_previous_entry_anywhere_below(
                     tmp_path=tmp_path, monkeypatch=monkeypatch
                 )
         finally:

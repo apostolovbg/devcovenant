@@ -1,7 +1,7 @@
 [project]
 name = "{{ PROJECT_NAME }}"
 version = "{{version}}"
-description = "{{ PROJECT_DESCRIPTION }}"
+description = {{ PROJECT_DESCRIPTION_TOML }}
 readme = "README.md"
 authors = ["DevCovenant <devcovenant@example.com>"]
 license = { text = "MIT" }

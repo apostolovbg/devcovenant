@@ -223,7 +223,8 @@ def _unit_test_refresh_rewrites_pyproject_identity() -> None:
         governance = payload["project-governance"]
         governance["project_name"] = "Example Product"
         governance["project_description"] = (
-            "Example Product keeps repository governance explicit."
+            "Describe the project this repository ships: what it does, "
+            "who it helps, and what problem it solves."
         )
         config_path.write_text(
             yaml.safe_dump(payload, sort_keys=False),
@@ -241,14 +242,17 @@ def _unit_test_refresh_rewrites_pyproject_identity() -> None:
         result = refresh.refresh_repo(repo_root)
         assert result == 0
 
-        pyproject_payload = tomllib.loads(
-            (repo_root / "pyproject.toml").read_text(encoding="utf-8")
+        pyproject_text = (repo_root / "pyproject.toml").read_text(
+            encoding="utf-8"
         )
+        pyproject_payload = tomllib.loads(pyproject_text)
         assert pyproject_payload["project"]["name"] == "Example Product"
         assert (
             pyproject_payload["project"]["description"]
-            == "Example Product keeps repository governance explicit."
+            == "Describe the project this repository ships: what it does, "
+            "who it helps, and what problem it solves."
         )
+        assert max(len(line) for line in pyproject_text.splitlines()) <= 79
 
 
 _REFRESH_PYPROJECT_IDENTITY_CALLBACK = (

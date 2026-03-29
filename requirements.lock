@@ -4,7 +4,7 @@
 #
 #    pip-compile --allow-unsafe --strip-extras --output-file=requirements.lock requirements.in
 #
-build==1.4.1
+build==1.4.2
     # via pip-tools
 cfgv==3.5.0
     # via pre-commit
@@ -46,7 +46,7 @@ pyproject-hooks==1.2.0
     #   pip-tools
 pytest==9.0.2
     # via -r requirements.in
-python-discovery==1.2.0
+python-discovery==1.2.1
     # via virtualenv
 pyyaml==6.0.3
     # via

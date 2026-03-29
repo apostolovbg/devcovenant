@@ -61,6 +61,77 @@ Example:
 ## Version 1.0.0
 
 - 2026-03-29:
+  Change: fixed `changelog-coverage` to preserve the gate-start top entry by
+    fingerprint anywhere below the fresh session entry instead of requiring
+    a hard-coded second-slot position.
+  Why: corrected the old second-position rule that caused persistent false
+    failures across valid closed-session boundaries and made the policy care
+    about entry slot layout instead of the active gate session.
+  Impact: changelog coverage now stays session-local, stops tripping over
+    valid follow-up sessions, and still requires a fresh top entry while
+    keeping the pre-session entry intact somewhere below it.
+  Files:
+  CHANGELOG.md
+  devcovenant/builtin/policies/changelog_coverage/changelog_coverage.py
+  devcovenant/custom/profiles/devcovrepo/assets/docs/policies.md
+  devcovenant/custom/profiles/devcovrepo/assets/docs/registry.md
+  devcovenant/docs/policies.md
+  devcovenant/docs/registry.md
+  devcovenant/registry/registry.yaml
+  tests/devcovenant/builtin/policies/changelog_coverage/\
+    test_changelog_coverage.py
+
+- 2026-03-29:
+  Change: fixed long-description sync in generated `pyproject.toml` by
+    replacing the whole TOML field block and reusing the wrapped TOML
+    renderer during refresh.
+  Why: the previous wrapping attempt kept the full description text but left
+    stray TOML lines behind when refresh rewrote `description`, which broke
+    installed-artifact proof repos instead of actually satisfying the style
+    rule.
+  Impact: refresh now preserves the full project description, keeps generated
+    `pyproject.toml` valid TOML, and lets long repo-owned description text
+    stay wrapped without carving manifest files out of the line-length policy.
+  Files:
+  CHANGELOG.md
+  devcovenant/core/flow/refresh.py
+  devcovenant/core/services/project_governance.py
+  tests/devcovenant/test_refresh.py
+
+- 2026-03-29:
+  Change: updated the generic seeded project-description rendering across
+    generated
+    README and Python package metadata surfaces, and refreshed the routed
+    docs and dependency artifacts that track that manifest template.
+  Why: fixed the proof-repo line-length warnings without truncating the
+    default identity sentence and kept the current gate session honest after
+    dependency-management refreshed its lock and license evidence.
+  Impact: generic installs now preserve the full project-description prompt
+    while rendering wrapped README and TOML source lines, and the tracked
+    docs, registry, lockfile, and license report stay aligned with that
+    behavior.
+  Files:
+  CHANGELOG.md
+  devcovenant/builtin/profiles/global/assets/README.yaml
+  devcovenant/builtin/profiles/python/assets/pyproject.toml
+  devcovenant/core/flow/refresh.py
+  devcovenant/core/services/project_governance.py
+  devcovenant/custom/profiles/devcovrepo/assets/docs/config.md
+  devcovenant/custom/profiles/devcovrepo/assets/docs/installation.md
+  devcovenant/custom/profiles/devcovrepo/assets/docs/profiles.md
+  devcovenant/custom/profiles/devcovrepo/assets/docs/registry.md
+  devcovenant/docs/config.md
+  devcovenant/docs/installation.md
+  devcovenant/docs/profiles.md
+  devcovenant/docs/project_governance.md
+  devcovenant/docs/registry.md
+  devcovenant/registry/registry.yaml
+  licenses/THIRD_PARTY_LICENSES.md
+  requirements.lock
+  tests/devcovenant/test_refresh.py
+  tests/devcovenant/core/services/test_project_governance.py
+
+- 2026-03-29:
   Change: implemented real workflow-run ordering semantics with validated
     `after` and `before` references, truthful `mid` status reporting, and
     full packaged-workflow proof in the Build lifecycle.

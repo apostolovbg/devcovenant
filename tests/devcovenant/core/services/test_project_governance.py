@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import tempfile
+import tomllib
 import unittest
 from pathlib import Path
 
@@ -12,6 +13,7 @@ from devcovenant import install
 from devcovenant.core.services import project_governance
 
 ProjectGovernanceState = project_governance.ProjectGovernanceState
+render_identity_placeholders = project_governance.render_identity_placeholders
 resolve_release_headings = project_governance.resolve_release_headings
 resolve_runtime_state = project_governance.resolve_runtime_state
 validate_changelog_contract = project_governance.validate_changelog_contract
@@ -141,3 +143,39 @@ class GeneratedUnittestCases(unittest.TestCase):
         self.assertEqual(payload["versioning_mode"], "versioned")
         self.assertEqual(payload["codename"], "Atlas")
         self.assertEqual(payload["build_identity"], "2026.03.20.1")
+
+    def test_render_identity_placeholders_wraps_project_description(self):
+        """Wrapped identity placeholders should preserve the full meaning."""
+        state = ProjectGovernanceState(
+            project_description=(
+                "Describe the project this repository ships: what it does, "
+                "who it helps, and what problem it solves."
+            )
+        )
+        rendered = render_identity_placeholders(
+            "{{ PROJECT_DESCRIPTION_PARAGRAPH }}",
+            state,
+        )
+        self.assertIn("\n", rendered)
+        self.assertEqual(
+            " ".join(rendered.split()),
+            state.project_description,
+        )
+
+    def test_render_identity_placeholders_formats_toml_description(self):
+        """TOML placeholder rendering should preserve the description."""
+        state = ProjectGovernanceState(
+            project_description=(
+                "Describe the project this repository ships: what it does, "
+                "who it helps, and what problem it solves."
+            )
+        )
+        rendered = render_identity_placeholders(
+            "description = {{ PROJECT_DESCRIPTION_TOML }}\n",
+            state,
+        )
+        self.assertGreaterEqual(rendered.count("\n"), 2)
+        self.assertEqual(
+            tomllib.loads(rendered)["description"],
+            state.project_description,
+        )

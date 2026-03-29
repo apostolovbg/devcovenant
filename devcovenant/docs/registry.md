@@ -1,5 +1,5 @@
 # Registry
-**Last Updated:** 2026-03-28
+**Last Updated:** 2026-03-29
 **Project Version:** 1.0.0
 
 ## Overview
@@ -144,6 +144,12 @@ Run-event metadata is now stored only under `run_events`.
 Legacy `test_events` adapter declarations are rejected instead of normalized
 silently, so the runtime registry only preserves the final run-owned event
 contract.
+The tracked registry still records the logical `project_description` value
+once, even when generated README and `pyproject.toml` surfaces reflow that
+same text differently to satisfy line-length and format-specific constraints.
+The tracked registry also records the active `changelog-coverage` policy hash,
+which now reflects a session-scoped top-entry snapshot check instead of a
+hard-coded second-slot assumption.
 
 That is why `gate --status` is often the right first command when you need to
 know where a slice stands.
