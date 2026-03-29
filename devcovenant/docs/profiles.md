@@ -156,17 +156,17 @@ The CI boundary is important.
 The global workflow template should stay generic.
 If a repo family needs additional CI proof, that extension belongs in the
 relevant profile instead of in the builtin global workflow.
-The clean shape is to extend the main `ci-and-test` job with repo-family
-source-tree steps and keep built-artifact proof in the repo-maintained
-`build.yml` workflow.
+The clean shape is to extend the main `governance` job with repo-family
+source-tree steps and add any repo-family `Build` job through the same
+profile-owned `ci_and_test` surface.
 In this repository, the generated `CI` workflow now stays source-tree owned:
-the active repo-specific profile adds `pip-audit` and Bandit, while the
-repo-maintained `Build` workflow proves the actual wheel, sdist, and `pipx`
-install surfaces against the full public workflow contract itself:
+the active repo-specific profile adds `pip-audit`, Bandit, and a dependent
+`Build` job that proves the actual wheel, sdist, and `pipx` install surfaces
+against the full public workflow contract itself:
 `gate --start -> gate --mid -> run -> gate --end -> check`.
 The generated workflow file for that source-tree boundary is now
 `.github/workflows/ci.yml`.
-That build-owned proof should also keep its shell structure simple enough
+That repo-owned build proof should also keep its shell structure simple enough
 that inline activation helpers stay parse-stable in GitHub Actions.
 If a repo family needs a reviewed temporary scanner exception because an
 upstream advisory has no fix release yet, that exception belongs here too,

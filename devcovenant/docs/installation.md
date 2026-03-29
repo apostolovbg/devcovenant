@@ -137,14 +137,14 @@ Refresh can adopt compatible docs instead of overwriting their authored body.
 ## Lifecycle Commands
 
 Repository-maintained workflows matter here too.
-This repository keeps `.github/workflows/build.yml` and
-`.github/workflows/publish.yml` as repository-maintained workflows instead of
-refresh-generated output, so package and release behavior stay explicit and
-reviewable.
+This repository keeps `.github/workflows/publish.yml` as a
+repository-maintained manual workflow, while the generated
+`.github/workflows/ci.yml` now includes a repo-specific `Build` job.
+That keeps package and release behavior explicit and reviewable.
 That release boundary now includes artifact provenance explicitly:
-`build.yml` produces the validated dist artifacts and provenance record, and
-`publish.yml` should only publish that exact validated Build artifact instead
-of rebuilding inside publish.
+the `Build` job in `CI` produces the validated dist artifacts and provenance
+record, and `publish.yml` should only publish that exact validated CI artifact
+instead of rebuilding inside publish.
 ### install
 Copies the runtime, seeds config, and prepares tracked state.
 It does not activate managed docs or generated governance files.

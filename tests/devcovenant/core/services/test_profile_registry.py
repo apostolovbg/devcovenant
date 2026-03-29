@@ -261,7 +261,7 @@ def _governance_workflow_signature(
     """Extract a minimal workflow contract signature for CI alignment."""
     jobs = payload.get("jobs")
     assert isinstance(jobs, dict)
-    job = jobs.get("ci-and-test")
+    job = jobs.get("governance")
     assert isinstance(job, dict)
     env = job.get("env")
     assert isinstance(env, dict)
@@ -336,14 +336,14 @@ def _unit_test_global_governance_workflow_asset_stays_generic() -> None:
     jobs = payload.get("jobs")
     assert isinstance(jobs, dict)
     assert payload.get("name") == "CI"
-    assert set(jobs) == {"ci-and-test"}
+    assert set(jobs) == {"governance"}
     assert "compatibility-matrix" not in jobs
     assert "assurance" not in jobs
     assert "installed-cli-smoke" not in jobs
 
 
 def _unit_test_repo_workflow_includes_devcovrepo_jobs() -> None:
-    """Repo workflow should include devcovrepo-provided CI steps only."""
+    """Repo workflow should include devcovrepo-provided CI jobs."""
     repo_workflow = REPO_ROOT / ".github" / "workflows" / "ci.yml"
     payload = yaml.safe_load(repo_workflow.read_text(encoding="utf-8"))
     assert isinstance(payload, dict)
@@ -351,14 +351,14 @@ def _unit_test_repo_workflow_includes_devcovrepo_jobs() -> None:
 
     jobs = payload.get("jobs")
     assert isinstance(jobs, dict)
-    assert set(jobs) == {"ci-and-test"}
+    assert set(jobs) == {"governance", "build"}
     assert "compatibility-matrix" not in jobs
     assert "assurance" not in jobs
     assert "installed-cli-smoke" not in jobs
 
-    ci_and_test = jobs["ci-and-test"]
+    ci_and_test = jobs["governance"]
     assert isinstance(ci_and_test, dict)
-    assert ci_and_test.get("name") == "DevCovenant"
+    assert ci_and_test.get("name") == "Governance"
     steps = ci_and_test.get("steps")
     assert isinstance(steps, list)
     step_names = [
@@ -379,15 +379,17 @@ def _unit_test_repo_workflow_includes_devcovrepo_jobs() -> None:
     assert "--ignore-vuln CVE-2026-4539" in audit_run
 
 
-def _unit_test_build_workflow_uploads_provenance_artifact() -> None:
-    """Build workflow should emit provenance beside validated dists."""
+def _unit_test_ci_workflow_contains_build_job_artifact_proof() -> None:
+    """CI workflow should include the repo-specific Build artifact proof."""
     workflow = _load_raw_workflow(
-        REPO_ROOT / ".github" / "workflows" / "build.yml"
+        REPO_ROOT / ".github" / "workflows" / "ci.yml"
     )
     jobs = workflow.get("jobs")
     assert isinstance(jobs, dict)
-    build_job = jobs.get("build-distributions")
+    build_job = jobs.get("build")
     assert isinstance(build_job, dict)
+    assert build_job.get("name") == "Build"
+    assert build_job.get("needs") == "governance"
     steps = build_job.get("steps")
     assert isinstance(steps, list)
 
@@ -437,11 +439,14 @@ def _unit_test_build_workflow_uploads_provenance_artifact() -> None:
         in all_run_blocks
     )
     assert ".venv/bin/python -m devcovenant gate --start" in all_run_blocks
-    assert '"$PIPX_BIN_DIR/devcovenant" gate --start' in all_run_blocks
+    assert '"$PIPX_BIN_DIR/devcovenant" install' in all_run_blocks
+    assert '"$PIPX_BIN_DIR/devcovenant" deploy' in all_run_blocks
+    assert '"$PIPX_BIN_DIR/devcovenant" refresh' in all_run_blocks
+    assert '"$PIPX_BIN_DIR/devcovenant" gate --start' not in all_run_blocks
 
 
 def _unit_test_publish_workflow_uses_validated_build_artifacts() -> None:
-    """Publish workflow should download one validated Build artifact."""
+    """Publish workflow should download one validated CI artifact."""
     workflow = _load_raw_workflow(
         REPO_ROOT / ".github" / "workflows" / "publish.yml"
     )
@@ -451,9 +456,9 @@ def _unit_test_publish_workflow_uses_validated_build_artifacts() -> None:
     assert isinstance(workflow_dispatch, dict)
     inputs = workflow_dispatch.get("inputs")
     assert isinstance(inputs, dict)
-    build_run_id = inputs.get("build_run_id")
-    assert isinstance(build_run_id, dict)
-    assert build_run_id.get("required") == "true"
+    ci_run_id = inputs.get("ci_run_id")
+    assert isinstance(ci_run_id, dict)
+    assert ci_run_id.get("required") == "true"
 
     jobs = workflow.get("jobs")
     assert isinstance(jobs, dict)
@@ -473,7 +478,7 @@ def _unit_test_publish_workflow_uses_validated_build_artifacts() -> None:
         for step in steps
         if isinstance(step, dict)
     ]
-    assert "Validate selected Build run" in step_names
+    assert "Validate selected CI run" in step_names
     assert "Download validated distributions" in step_names
     assert "Download build provenance" in step_names
     assert "Verify downloaded provenance" in step_names
@@ -495,7 +500,7 @@ def _unit_test_publish_workflow_uses_validated_build_artifacts() -> None:
     )
     dist_with = dist_download.get("with")
     assert isinstance(dist_with, dict)
-    assert dist_with.get("run-id") == "${{ steps.build-run.outputs.run_id }}"
+    assert dist_with.get("run-id") == "${{ steps.ci-run.outputs.run_id }}"
     assert dist_with.get("name") == "devcovenant-dist"
 
     provenance_download = next(
@@ -507,7 +512,7 @@ def _unit_test_publish_workflow_uses_validated_build_artifacts() -> None:
     provenance_with = provenance_download.get("with")
     assert isinstance(provenance_with, dict)
     assert provenance_with.get("run-id") == (
-        "${{ steps.build-run.outputs.run_id }}"
+        "${{ steps.ci-run.outputs.run_id }}"
     )
     assert provenance_with.get("name") == "devcovenant-provenance"
 
@@ -563,9 +568,9 @@ class GeneratedUnittestCases(unittest.TestCase):
         """Run repo workflow extra-job assertions."""
         _unit_test_repo_workflow_includes_devcovrepo_jobs()
 
-    def test_build_workflow_uploads_provenance_artifact(self):
-        """Run build-workflow provenance artifact assertions."""
-        _unit_test_build_workflow_uploads_provenance_artifact()
+    def test_ci_workflow_contains_build_job_artifact_proof(self):
+        """Run CI build-job provenance artifact assertions."""
+        _unit_test_ci_workflow_contains_build_job_artifact_proof()
 
     def test_publish_workflow_uses_validated_build_artifacts(self):
         """Run publish-workflow artifact provenance assertions."""

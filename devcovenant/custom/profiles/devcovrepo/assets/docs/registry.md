@@ -44,12 +44,11 @@ hashes even when the visible behavior change is elsewhere.
 That is normal evidence of a real contract change, not registry noise.
 In this repository, tracked registry state now also records the repo-specific
 `ci_and_test` additions contributed by the active custom profile, including
-the scanner steps merged into the generated `CI` workflow at
+the scanner steps and `Build` job merged into the generated `CI` workflow at
 `.github/workflows/ci.yml`.
-Built-artifact proof now lives in the repo-maintained `build.yml` workflow
-instead of in the generated `ci_and_test` payload, even though that build
-workflow still proves the same wheel, sdist, and `pipx` install surfaces
-against the public workflow contract.
+Built-artifact proof now lives in that repo-specific `Build` job inside `CI`,
+including the same wheel, sdist, and `pipx` install surfaces against the
+public workflow contract.
 That same tracked state also changes when release-facing package-data or
 dependency-management semantics change, because the registry records the
 resolved metadata the runtime actually uses rather than just the visible
@@ -62,7 +61,7 @@ registry on macOS, Linux, or Windows.
 That same tracked state also records the current generated workflow contract,
 including the visible workflow name `CI`, the generated workflow file
 `.github/workflows/ci.yml`, and the repo-specific scanner steps merged into
-its main `ci-and-test` job.
+its main `governance` job.
 The tracked `workflow_contract` section is the workflow-owned part of that
 story: it records the reserved anchors, the declared runs resolved from
 active profiles, and which run ids are configured for execution.

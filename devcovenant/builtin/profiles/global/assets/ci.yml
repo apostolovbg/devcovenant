@@ -5,8 +5,8 @@ on:
   pull_request:
 
 jobs:
-  ci-and-test:
-    name: DevCovenant
+  governance:
+    name: Governance
     runs-on: ubuntu-latest
     permissions:
       contents: read

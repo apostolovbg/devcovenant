@@ -3,8 +3,8 @@ on:
   push:
   pull_request:
 jobs:
-  ci-and-test:
-    name: DevCovenant
+  governance:
+    name: Governance
     runs-on: ubuntu-latest
     permissions:
       contents: read
@@ -35,3 +35,298 @@ jobs:
       run: pip-audit -r requirements.lock --ignore-vuln CVE-2026-4539
     - name: Run Bandit
       run: bandit -q -c bandit.yaml -r devcovenant
+  build:
+    name: Build
+    needs: governance
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    env:
+      PYTHONPYCACHEPREFIX: .gha-pycache
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v4
+    - name: Set up Python
+      uses: actions/setup-python@v5
+      with:
+        python-version: '3.11'
+    - name: Clean local build artifacts
+      run: |
+        rm -rf build dist ./*.egg-info .pytest_cache .ruff_cache
+    - name: Install build tooling
+      run: |
+        python -m pip install --upgrade pip
+        python -m pip install build twine pipx cyclonedx-bom==7.2.2
+    - name: Build distributions
+      run: python -m build
+    - name: Validate distributions
+      run: twine check dist/*
+    - name: Generate CycloneDX SBOM
+      run: |
+        mkdir -p artifacts/sbom
+        cyclonedx-py requirements requirements.lock \
+          --pyproject pyproject.toml \
+          --mc-type application \
+          --output-reproducible \
+          --output-file artifacts/sbom/devcovenant-sbom.json
+    - name: Generate build provenance
+      env:
+        BUILD_RUN_ID: ${{ github.run_id }}
+        BUILD_RUN_ATTEMPT: ${{ github.run_attempt }}
+        BUILD_HEAD_SHA: ${{ github.sha }}
+      run: |
+        mkdir -p artifacts/provenance
+        python - <<'PY'
+        import hashlib
+        import json
+        import os
+        from pathlib import Path
+
+        def sha256_for(path: Path) -> str:
+            digest = hashlib.sha256()
+            digest.update(path.read_bytes())
+            return digest.hexdigest()
+
+        dist_files = sorted(Path("dist").glob("*"))
+        payload = {
+            "workflow": "CI",
+            "job": "Build",
+            "build_run_id": os.environ["BUILD_RUN_ID"],
+            "build_run_attempt": os.environ["BUILD_RUN_ATTEMPT"],
+            "head_sha": os.environ["BUILD_HEAD_SHA"],
+            "distributions": [
+                {
+                    "name": path.name,
+                    "sha256": sha256_for(path),
+                }
+                for path in dist_files
+            ],
+        }
+        Path("artifacts/provenance/build-provenance.json").write_text(
+            json.dumps(payload, indent=2) + "\n",
+            encoding="utf-8",
+        )
+        PY
+    - name: Prove wheel artifact lifecycle
+      run: |
+        set -euo pipefail
+        WHEEL_PATH="$(python - <<'PY'
+        from pathlib import Path
+
+        matches = sorted(Path("dist").glob("*.whl"))
+        if not matches:
+            raise SystemExit(1)
+        print(matches[0].resolve())
+        PY
+        )"
+        test -n "$WHEEL_PATH"
+        python -m venv .proof-wheel
+        . .proof-wheel/bin/activate
+        python -m pip install --upgrade pip
+        python -m pip install "$WHEEL_PATH"
+        git init -q artifacts/wheel-proof
+        pushd artifacts/wheel-proof >/dev/null
+        git config user.name ci
+        git config user.email ci@example.invalid
+        python -m devcovenant install
+        python - <<'PY'
+        from pathlib import Path
+
+        path = Path("devcovenant/config.yaml")
+        text = path.read_text(encoding="utf-8")
+        old = "config_reviewed: false"
+        if old not in text:
+            raise SystemExit(
+                "config_reviewed flag not found in config.yaml"
+            )
+        path.write_text(
+            text.replace(old, "config_reviewed: true", 1),
+            encoding="utf-8",
+        )
+        PY
+        python -m devcovenant deploy
+        mkdir -p tests
+        cat > tests/__init__.py <<'PY'
+        """Proof-test package for artifact workflow validation."""
+        PY
+        cat > tests/test_smoke.py <<'PY'
+        """Installed artifact smoke tests for lifecycle proof."""
+
+        import unittest
+
+
+        class SmokeTest(unittest.TestCase):
+            """Prove the packaged workflow can run a minimal test suite."""
+
+            def test_truth(self) -> None:
+                """Keep the installed-artifact proof suite non-empty."""
+                self.assertTrue(True)
+
+
+        if __name__ == "__main__":
+            unittest.main()
+        PY
+        python -m devcovenant refresh
+        git add .
+        git commit -m "bootstrap installed repo"
+        python3 -m venv .venv
+        .venv/bin/python -m pip install --upgrade pip
+        .venv/bin/python -m pip install -r requirements.lock "$WHEEL_PATH"
+        .venv/bin/python -m devcovenant gate --start
+        .venv/bin/python -m devcovenant gate --mid
+        .venv/bin/python -m devcovenant run
+        .venv/bin/python -m devcovenant gate --end
+        .venv/bin/python -m devcovenant check
+        popd >/dev/null
+    - name: Prove sdist artifact lifecycle
+      run: |
+        set -euo pipefail
+        SDIST_PATH="$(python - <<'PY'
+        from pathlib import Path
+
+        matches = sorted(Path("dist").glob("*.tar.gz"))
+        if not matches:
+            raise SystemExit(1)
+        print(matches[0].resolve())
+        PY
+        )"
+        test -n "$SDIST_PATH"
+        python -m venv .proof-sdist
+        . .proof-sdist/bin/activate
+        python -m pip install --upgrade pip
+        python -m pip install "$SDIST_PATH"
+        git init -q artifacts/sdist-proof
+        pushd artifacts/sdist-proof >/dev/null
+        git config user.name ci
+        git config user.email ci@example.invalid
+        python -m devcovenant install
+        python - <<'PY'
+        from pathlib import Path
+
+        path = Path("devcovenant/config.yaml")
+        text = path.read_text(encoding="utf-8")
+        old = "config_reviewed: false"
+        if old not in text:
+            raise SystemExit(
+                "config_reviewed flag not found in config.yaml"
+            )
+        path.write_text(
+            text.replace(old, "config_reviewed: true", 1),
+            encoding="utf-8",
+        )
+        PY
+        python -m devcovenant deploy
+        mkdir -p tests
+        cat > tests/__init__.py <<'PY'
+        """Proof-test package for artifact workflow validation."""
+        PY
+        cat > tests/test_smoke.py <<'PY'
+        """Installed artifact smoke tests for lifecycle proof."""
+
+        import unittest
+
+
+        class SmokeTest(unittest.TestCase):
+            """Prove the packaged workflow can run a minimal test suite."""
+
+            def test_truth(self) -> None:
+                """Keep the installed-artifact proof suite non-empty."""
+                self.assertTrue(True)
+
+
+        if __name__ == "__main__":
+            unittest.main()
+        PY
+        python -m devcovenant refresh
+        git add .
+        git commit -m "bootstrap installed repo"
+        python3 -m venv .venv
+        .venv/bin/python -m pip install --upgrade pip
+        .venv/bin/python -m pip install -r requirements.lock "$SDIST_PATH"
+        .venv/bin/python -m devcovenant gate --start
+        .venv/bin/python -m devcovenant gate --mid
+        .venv/bin/python -m devcovenant run
+        .venv/bin/python -m devcovenant gate --end
+        .venv/bin/python -m devcovenant check
+        popd >/dev/null
+    - name: Install DevCovenant with pipx
+      run: python -m pipx install --force dist/*.whl
+    - name: Resolve pipx bin directory
+      run: |
+        PIPX_BIN_DIR="$(python -m pipx environment --value PIPX_BIN_DIR)"
+        echo "PIPX_BIN_DIR=$PIPX_BIN_DIR" >> "$GITHUB_ENV"
+    - name: Prove pipx operator lifecycle
+      run: |
+        set -euo pipefail
+        TMPDIR="$(mktemp -d)"
+        trap 'rm -rf "$TMPDIR"' EXIT
+        git init -q artifacts/pipx-proof
+        pushd artifacts/pipx-proof >/dev/null
+        git config user.name ci
+        git config user.email ci@example.invalid
+        "$PIPX_BIN_DIR/devcovenant" --version
+        "$PIPX_BIN_DIR/devcovenant" install
+        python - <<'PY'
+        from pathlib import Path
+
+        path = Path("devcovenant/config.yaml")
+        text = path.read_text(encoding="utf-8")
+        old = "config_reviewed: false"
+        if old not in text:
+            raise SystemExit(
+                "config_reviewed flag not found in config.yaml"
+            )
+        path.write_text(
+            text.replace(old, "config_reviewed: true", 1),
+            encoding="utf-8",
+        )
+        PY
+        "$PIPX_BIN_DIR/devcovenant" deploy
+        mkdir -p tests
+        cat > tests/__init__.py <<'PY'
+        """Proof-test package for artifact workflow validation."""
+        PY
+        cat > tests/test_smoke.py <<'PY'
+        """Installed artifact smoke tests for lifecycle proof."""
+
+        import unittest
+
+
+        class SmokeTest(unittest.TestCase):
+            """Prove the packaged workflow can run a minimal test suite."""
+
+            def test_truth(self) -> None:
+                """Keep the installed-artifact proof suite non-empty."""
+                self.assertTrue(True)
+
+
+        if __name__ == "__main__":
+            unittest.main()
+        PY
+        "$PIPX_BIN_DIR/devcovenant" refresh
+        git add .
+        git commit -m "bootstrap pipx repo"
+        python3 -m venv .venv
+        .venv/bin/python -m pip install --upgrade pip
+        .venv/bin/python -m pip install -r requirements.lock
+        .venv/bin/python -m devcovenant gate --start
+        .venv/bin/python -m devcovenant gate --mid
+        .venv/bin/python -m devcovenant run
+        .venv/bin/python -m devcovenant gate --end
+        .venv/bin/python -m devcovenant check
+        popd >/dev/null
+    - name: Upload distributions
+      uses: actions/upload-artifact@v4
+      with:
+        name: devcovenant-dist
+        path: dist/*
+    - name: Upload SBOM
+      uses: actions/upload-artifact@v4
+      with:
+        name: devcovenant-sbom
+        path: artifacts/sbom/*.json
+    - name: Upload build provenance
+      uses: actions/upload-artifact@v4
+      with:
+        name: devcovenant-provenance
+        path: artifacts/provenance/*.json

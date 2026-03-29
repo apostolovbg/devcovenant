@@ -180,8 +180,8 @@ profile `ci_and_test` fragment instead.
 That is how a repository can extend the main generated source-tree `CI` job in
 `.github/workflows/ci.yml` without pushing repo-family checks into the global
 base workflow.
-Keep built-artifact proof in the repo-maintained `build.yml` workflow instead
-of trying to duplicate it through `ci_and_test`.
+That same `ci_and_test` surface can also add a sibling repo-family `Build` job
+when built-artifact proof belongs in `CI` instead of in the global base.
 
 The generated config commentary should tell the same story.
 The live `devcovenant/config.yaml` section header and comments for

@@ -83,13 +83,14 @@ DevCovenant keeps release assurance visible in normal automation:
 1. the generated `CI` workflow provides the generic source-tree gate/run
    automation on bootstrap Python `3.14`
 
-2. this repository's `devcovrepo` profile extends the main `ci-and-test`
-   job with `pip-audit -r requirements.lock` and
+2. this repository's `devcovrepo` profile extends the main `governance` job
+   with
+   `pip-audit -r requirements.lock` and
    `bandit -q -c bandit.yaml -r devcovenant`
 
-3. the repo-maintained `Build` workflow now owns built-artifact proof for the
-   wheel, sdist, and documented `pipx` install path, and each proof runs the
-   full public workflow: `gate --start`, `gate --mid`, `run`,
+3. the repo-specific `Build` job inside `CI` now owns built-artifact proof
+   for the wheel, sdist, and documented `pipx` install path, and each proof
+   runs the full public workflow: `gate --start`, `gate --mid`, `run`,
    `gate --end`, then `check`
 
 4. repo-specific CI jobs use DevCovenant's managed-environment contract

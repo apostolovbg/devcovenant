@@ -531,9 +531,10 @@ def _unit_test_ci_workflow_split_docs_are_consistent() -> None:
     assert "active profiles may contribute `ci_and_test` fragments" in (
         workflow
     )
-    assert ".github/workflows/build.yml" in installation
+    assert ".github/workflows/ci.yml" in installation
     assert ".github/workflows/publish.yml" in installation
-    assert "repository-maintained workflows" in installation
+    assert "repository-maintained manual workflow" in installation
+    assert "repo-specific `Build` job" in installation
     assert "refresh-generated governance gate pipeline" in readme
 
 

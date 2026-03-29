@@ -254,41 +254,44 @@ The ownership split matters:
 The global base should stay language-agnostic.
 If a repository family needs extra CI proof, that extension should come from
 the relevant profile instead of from the generic global template.
-The clean shape is to keep one main `ci-and-test` job for source-tree truth
-and keep built-artifact proof in the repo-maintained `build.yml` workflow.
+The clean shape is to keep one main `governance` job for source-tree truth
+and add any repo-specific `Build` job through the profile-owned
+`ci_and_test` surface instead of through the global base.
 
 In this repository, the active repo-specific profile extends the main
-`ci-and-test` job with `pip-audit` and Bandit steps only.
-The repo-maintained `build.yml` workflow then verifies the documented
-installed workflow on all three public install paths:
+`governance` job with `pip-audit` and Bandit steps, and it also adds a
+dependent `Build` job.
+That `Build` job then verifies the documented installed workflow on all three
+public install paths:
 
 - built wheel: `gate --start -> gate --mid -> run -> gate --end -> check`
 
 - built sdist: `gate --start -> gate --mid -> run -> gate --end -> check`
 
 - documented `pipx` machine-install path:
+  `pipx install -> install -> deploy -> refresh`, then
   `gate --start -> gate --mid -> run -> gate --end -> check`
 
 That keeps source-tree CI generated and profile-extended, while keeping
-artifact-release proof in the repo-maintained release workflow instead of
-pushing it back into the generic global CI base.
+artifact-release proof in a repo-specific `Build` job instead of pushing it
+back into the generic global CI base.
 When an upstream scanner advisory has no published fix release yet, a narrow
 reviewed exception may also live in that repo-specific CI layer.
 Keep that exception explicit, documented, and easy to delete once upstream
 publishes a real fix path.
 
-This repository also keeps `build.yml` and `publish.yml` as repo-maintained
-release workflows.
-They consume the result of `CI`, but they are not part of the
-generated CI-and-test workflow itself.
-The `build.yml` workflow follows the same truthfulness rule:
-it should prove the real artifact lifecycle from the built wheel and sdist,
-not just that the CLI can print help.
+This repository also keeps `publish.yml` as a repo-maintained manual release
+workflow.
+It consumes the result of `CI`, while the `Build` job itself lives inside the
+generated CI workflow.
+The `Build` job follows the same truthfulness rule: it should prove the real
+artifact lifecycle from the built wheel and sdist, not just that the CLI can
+print help.
 Those proof steps should enter their temp repositories directly instead of
 relying on indented subshell heredocs that can break shell parsing in GitHub
 Actions.
 The `publish.yml` workflow follows the provenance side of that same rule:
-it should accept a specific successful `Build` run, download the validated
+it should accept a specific successful `CI` run, download the validated
 artifact and provenance from that run, verify them, and publish without
 rebuilding a fresh dist inside publish.
 

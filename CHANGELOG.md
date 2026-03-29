@@ -61,6 +61,42 @@ Example:
 ## Version 1.0.0
 
 - 2026-03-29:
+  Change: moved built-artifact proof back into the `Build` job inside
+    `CI`, renamed the main `CI` job to `governance`, deleted the separate
+    `build.yml` workflow, switched manual publish to select a validated `CI`
+    run, and fixed the `pipx` proof to hand the governed gate/run path to
+    the repo-managed `.venv`.
+  Why: simplified the Actions surface back to `CI` plus manual `Publish`,
+    removed the duplicate workflow split, and resolved the `pipx` proof
+    failure where `gate --start` launched `pre_commit` from the wrong
+    interpreter path.
+  Impact: GitHub Actions now shows `Governance` and dependent `Build` in one
+    `CI` workflow, publish consumes the exact validated `CI` artifact, and
+    the `pipx` proof still verifies bootstrap before the governed workflow
+    runs in the managed environment.
+  Files:
+  .github/workflows/build.yml
+  .github/workflows/ci.yml
+  .github/workflows/publish.yml
+  CHANGELOG.md
+  SECURITY.md
+  devcovenant/custom/profiles/devcovrepo/assets/docs/config.md
+  devcovenant/custom/profiles/devcovrepo/assets/docs/installation.md
+  devcovenant/custom/profiles/devcovrepo/assets/docs/profiles.md
+  devcovenant/custom/profiles/devcovrepo/assets/docs/registry.md
+  devcovenant/custom/profiles/devcovrepo/assets/docs/workflow.md
+  devcovenant/custom/profiles/devcovrepo/devcovrepo.yaml
+  devcovenant/builtin/profiles/global/assets/ci.yml
+  devcovenant/docs/config.md
+  devcovenant/docs/installation.md
+  devcovenant/docs/profiles.md
+  devcovenant/docs/registry.md
+  devcovenant/docs/workflow.md
+  devcovenant/registry/registry.yaml
+  tests/devcovenant/core/runtime/test_execution.py
+  tests/devcovenant/core/services/test_profile_registry.py
+
+- 2026-03-29:
   Change: fixed the workflow-validation missing-runs message construction to
     avoid the multiline f-string parse failure in Python 3.11 and added a
     regression assertion for the rerun guidance.

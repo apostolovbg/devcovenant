@@ -3,8 +3,8 @@ name: Publish
 on:
   workflow_dispatch:
     inputs:
-      build_run_id:
-        description: Successful Build workflow run ID to publish from.
+      ci_run_id:
+        description: Successful CI workflow run ID to publish from.
         required: true
 
 jobs:
@@ -18,15 +18,15 @@ jobs:
       name: pypi
       url: https://pypi.org/p/devcovenant
     steps:
-      - name: Validate selected Build run
-        id: build-run
+      - name: Validate selected CI run
+        id: ci-run
         uses: actions/github-script@v7
         with:
           script: |
-            const rawRunId = `${{ inputs.build_run_id }}`.trim();
+            const rawRunId = `${{ inputs.ci_run_id }}`.trim();
             const runId = Number(rawRunId);
             if (!Number.isInteger(runId) || runId <= 0) {
-              core.setFailed(`Invalid build_run_id: ${rawRunId}`);
+              core.setFailed(`Invalid ci_run_id: ${rawRunId}`);
               return;
             }
 
@@ -36,9 +36,9 @@ jobs:
               run_id: runId,
             });
 
-            if (run.name !== "Build") {
+            if (run.name !== "CI") {
               core.setFailed(
-                `Run ${runId} is ${run.name}, expected Build.`,
+                `Run ${runId} is ${run.name}, expected CI.`,
               );
               return;
             }
@@ -62,7 +62,7 @@ jobs:
         with:
           github-token: ${{ github.token }}
           repository: ${{ github.repository }}
-          run-id: ${{ steps.build-run.outputs.run_id }}
+          run-id: ${{ steps.ci-run.outputs.run_id }}
           name: devcovenant-dist
           path: dist
       - name: Download build provenance
@@ -70,13 +70,13 @@ jobs:
         with:
           github-token: ${{ github.token }}
           repository: ${{ github.repository }}
-          run-id: ${{ steps.build-run.outputs.run_id }}
+          run-id: ${{ steps.ci-run.outputs.run_id }}
           name: devcovenant-provenance
           path: artifacts/provenance
       - name: Verify downloaded provenance
         env:
-          EXPECTED_BUILD_RUN_ID: ${{ steps.build-run.outputs.run_id }}
-          EXPECTED_HEAD_SHA: ${{ steps.build-run.outputs.head_sha }}
+          EXPECTED_CI_RUN_ID: ${{ steps.ci-run.outputs.run_id }}
+          EXPECTED_HEAD_SHA: ${{ steps.ci-run.outputs.head_sha }}
         run: |
           python - <<'PY'
           import hashlib
@@ -87,16 +87,16 @@ jobs:
           provenance_path = Path("artifacts/provenance/build-provenance.json")
           payload = json.loads(provenance_path.read_text(encoding="utf-8"))
           if str(payload.get("build_run_id")) != os.environ[
-              "EXPECTED_BUILD_RUN_ID"
+              "EXPECTED_CI_RUN_ID"
           ]:
               raise SystemExit(
                   "Downloaded provenance build_run_id does not match the "
-                  "selected Build run."
+                  "selected CI run."
               )
           if payload.get("head_sha") != os.environ["EXPECTED_HEAD_SHA"]:
               raise SystemExit(
                   "Downloaded provenance head_sha does not match the "
-                  "selected Build run."
+                  "selected CI run."
               )
 
           dist_dir = Path("dist")
@@ -120,12 +120,12 @@ jobs:
       - name: Record artifact provenance
         run: |
           {
-            echo "Publishing distributions from Build run "
-            echo "\`${{ steps.build-run.outputs.run_id }}\`"
+            echo "Publishing distributions from CI run "
+            echo "\`${{ steps.ci-run.outputs.run_id }}\`"
             echo
-            echo "Source SHA: \`${{ steps.build-run.outputs.head_sha }}\`"
+            echo "Source SHA: \`${{ steps.ci-run.outputs.head_sha }}\`"
             echo
-            echo "Build run URL: ${{ steps.build-run.outputs.html_url }}"
+            echo "CI run URL: ${{ steps.ci-run.outputs.html_url }}"
           } >> "$GITHUB_STEP_SUMMARY"
       - name: Publish to PyPI with trusted publishing
         uses: pypa/gh-action-pypi-publish@release/v1
