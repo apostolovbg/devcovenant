@@ -477,6 +477,9 @@ class DevflowRunGates(CoreInvariantCheck):
                 missing_runs.append(run_id)
                 continue
         if missing_runs:
+            rerun_instructions = _format_run_rerun_instructions(
+                missing_runs,
+            )
             violations.append(
                 Violation(
                     policy_id=self.policy_id,
@@ -484,11 +487,8 @@ class DevflowRunGates(CoreInvariantCheck):
                     file_path=workflow_session_rel,
                     message=(
                         "Latest recorded workflow session is missing "
-                        "runs: "
-                        f"{', '.join(missing_runs)}. Run "
-                        f"{_format_run_rerun_instructions(
-                            missing_runs,
-                        )}."
+                        f"runs: {', '.join(missing_runs)}. Run "
+                        f"{rerun_instructions}."
                     ),
                 )
             )

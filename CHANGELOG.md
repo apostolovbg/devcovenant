@@ -61,6 +61,19 @@ Example:
 ## Version 1.0.0
 
 - 2026-03-29:
+  Change: fixed the workflow-validation missing-runs message construction to
+    avoid the multiline f-string parse failure in Python 3.11 and added a
+    regression assertion for the rerun guidance.
+  Why: the wheel proof exposed a Python 3.11 syntax error in that message
+    path and broke `gate --start`.
+  Impact: keeps the missing-runs contract unchanged while restoring Build
+    compatibility for installed-artifact proof on Python 3.11.
+  Files:
+  CHANGELOG.md
+  devcovenant/core/flow/workflow_validation.py
+  tests/devcovenant/core/flow/test_workflow_validation.py
+
+- 2026-03-29:
   Change: renamed the generated CI workflow from `ci-and-test.yml` to
     `ci.yml`, updated refresh and policy ownership around the new path, and
     clarified that `build.yml` follows the `CI` workflow defined there.

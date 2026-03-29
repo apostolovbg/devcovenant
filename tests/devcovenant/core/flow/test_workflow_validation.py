@@ -448,6 +448,7 @@ class GeneratedUnittestCases(unittest.TestCase):
             violations = _configured_check().check(ctx)
             self.assertTrue(violations)
             self.assertIn("missing runs: tests", violations[0].message)
+            self.assertIn("Run `devcovenant run`.", violations[0].message)
 
     def test_custom_status_path(self):
         """Custom evidence paths from config overrides should be honored."""
