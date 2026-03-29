@@ -50,6 +50,13 @@ the scanner steps and `Build` job merged into the generated `CI` workflow at
 Built-artifact proof now lives in that repo-specific `Build` job inside `CI`,
 including the same wheel, sdist, and `pipx` install surfaces against the
 public workflow contract.
+That tracked workflow state now also reflects the repo's current Python test
+shape: the resolved `tests` run uses
+`python3 -m unittest discover -v` as the single Python test command instead
+of launching a second `pytest` pass over the same suites.
+For the `pipx` proof, the tracked build metadata now reflects the proof
+environment setup that seeds the proof `.venv` with the proven wheel before
+source-tree `python -m devcovenant` commands run.
 That same tracked state also changes when release-facing package-data or
 dependency-management semantics change, because the registry records the
 resolved metadata the runtime actually uses rather than just the visible

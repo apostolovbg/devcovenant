@@ -61,6 +61,60 @@ Example:
 ## Version 1.0.0
 
 - 2026-03-29:
+  Change: corrected the Python-family `tests` workflow runs to keep
+    `python3 -m unittest discover -v`, remove the redundant `pytest`
+    launcher, and preserve the separate `pipx` proof wheel-seeding fix.
+  Why: the previous slice fixed the `pipx` dependency gap correctly but
+    changed the wrong Python runner, even though this repo's intended single
+    structural Python test pass is the `unittest` command.
+  Impact: the repo and Python-family profiles now use one
+    `python3 -m unittest discover -v`-based Python test pass, while the
+    `pipx` proof still seeds its proof `.venv` with the proven wheel so
+    source-tree `python -m devcovenant` commands have the shipped runtime
+    dependencies.
+  Files:
+  CHANGELOG.md
+  devcovenant/builtin/profiles/fastapi/fastapi.yaml
+  devcovenant/builtin/profiles/frappe/frappe.yaml
+  devcovenant/builtin/profiles/python/python.yaml
+  devcovenant/custom/profiles/devcovrepo/assets/docs/profiles.md
+  devcovenant/custom/profiles/devcovrepo/assets/docs/registry.md
+  devcovenant/custom/profiles/devcovrepo/assets/docs/workflow.md
+  devcovenant/docs/profiles.md
+  devcovenant/docs/registry.md
+  devcovenant/docs/workflow.md
+  devcovenant/registry/registry.yaml
+  tests/devcovenant/core/services/test_profile_registry.py
+
+- 2026-03-29:
+  Change: removed the duplicate Python `unittest` launcher from the
+    Python-family `tests` workflow runs and seeded the `pipx` proof `.venv`
+    with the proven wheel before the governed lifecycle begins.
+  Why: prevented Build from running Python suites twice and fixed the `pipx`
+    proof path where source-tree `python -m devcovenant` re-exec could import
+    DevCovenant before `PyYAML` and the other shipped runtime dependencies
+    were present in the proof environment.
+  Impact: keeps the repo and Python-family profiles on one `pytest`-based
+    Python test pass, and lets the `pipx` proof complete
+    `gate --start -> gate --mid -> run -> gate --end -> check` with the same
+    runtime dependencies declared by the shipped artifact.
+  Files:
+  .github/workflows/ci.yml
+  CHANGELOG.md
+  devcovenant/builtin/profiles/fastapi/fastapi.yaml
+  devcovenant/builtin/profiles/frappe/frappe.yaml
+  devcovenant/builtin/profiles/python/python.yaml
+  devcovenant/custom/profiles/devcovrepo/assets/docs/profiles.md
+  devcovenant/custom/profiles/devcovrepo/assets/docs/registry.md
+  devcovenant/custom/profiles/devcovrepo/assets/docs/workflow.md
+  devcovenant/custom/profiles/devcovrepo/devcovrepo.yaml
+  devcovenant/docs/profiles.md
+  devcovenant/docs/registry.md
+  devcovenant/docs/workflow.md
+  devcovenant/registry/registry.yaml
+  tests/devcovenant/core/services/test_profile_registry.py
+
+- 2026-03-29:
   Change: extracted a detailed durable product specification into `SPEC.md`
     from the live code, CLI surface, generated workflow contract, and
     repository docs.

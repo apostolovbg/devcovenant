@@ -71,7 +71,6 @@ workflow_runs:
       kind: command_group
       commands:
         - python3 -m unittest discover -v
-        - pytest
         - npm test
     success_contract:
       kind: all_commands_exit_zero

@@ -258,6 +258,16 @@ jobs:
     - name: Prove pipx operator lifecycle
       run: |
         set -euo pipefail
+        WHEEL_PATH="$(python - <<'PY'
+        from pathlib import Path
+
+        matches = sorted(Path("dist").glob("*.whl"))
+        if not matches:
+            raise SystemExit(1)
+        print(matches[0].resolve())
+        PY
+        )"
+        test -n "$WHEEL_PATH"
         TMPDIR="$(mktemp -d)"
         trap 'rm -rf "$TMPDIR"' EXIT
         git init -q artifacts/pipx-proof
@@ -308,7 +318,7 @@ jobs:
         git commit -m "bootstrap pipx repo"
         python3 -m venv .venv
         .venv/bin/python -m pip install --upgrade pip
-        .venv/bin/python -m pip install -r requirements.lock
+        .venv/bin/python -m pip install -r requirements.lock "$WHEEL_PATH"
         .venv/bin/python -m devcovenant gate --start
         .venv/bin/python -m devcovenant gate --mid
         .venv/bin/python -m devcovenant run

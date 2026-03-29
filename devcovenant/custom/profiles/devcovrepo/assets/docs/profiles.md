@@ -172,6 +172,10 @@ When that repo-owned CI shape introduces runner-local hygiene needs, the
 shared generated-asset layer may also need a matching update.
 In this repository, the global generated ignore surface now includes
 `.gha-pycache/` so proof repos do not commit runner bytecode caches.
+The repo-owned `pipx` proof now also seeds its proof `.venv` with the proven
+wheel before the governed lifecycle begins, so source-tree
+`python -m devcovenant` inside the proof repo has the runtime dependencies
+declared by the shipped artifact.
 That repo-owned build proof should also keep its shell structure simple enough
 that inline activation helpers stay parse-stable in GitHub Actions.
 If a repo family needs a reviewed temporary scanner exception because an
@@ -200,6 +204,9 @@ workflow structure through core-invariant metadata.
 In the built-in Python profile, the standard `tests` run now lives there and
 declares its runner commands and success contract, while core owns the public
 `run` command surface used to execute it.
+That default Python run now uses `python3 -m unittest discover -v` as the
+single Python test command, so the repo keeps one structural Python test pass
+without a second `pytest` execution of the same suites.
 That same declaration can also carry `recording` hooks such as:
 
 - `output_mode_config_field`

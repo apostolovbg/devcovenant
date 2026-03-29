@@ -438,6 +438,11 @@ def _unit_test_ci_workflow_contains_build_job_artifact_proof() -> None:
         ".venv/bin/python -m pip install -r requirements.lock"
         in all_run_blocks
     )
+    assert "WHEEL_PATH=\"$(python - <<'PY'" in all_run_blocks
+    assert (
+        '.venv/bin/python -m pip install -r requirements.lock "$WHEEL_PATH"'
+        in all_run_blocks
+    )
     assert ".venv/bin/python -m devcovenant gate --start" in all_run_blocks
     assert '"$PIPX_BIN_DIR/devcovenant" install' in all_run_blocks
     assert '"$PIPX_BIN_DIR/devcovenant" deploy' in all_run_blocks
@@ -539,6 +544,33 @@ def _unit_test_publish_workflow_uses_validated_build_artifacts() -> None:
     assert "build_run_id" not in all_run_blocks
 
 
+def _unit_test_python_family_profiles_do_not_double_run_pytest() -> None:
+    """Python-family tests runs should not launch pytest beside unittest."""
+    profile_root = REPO_ROOT / "devcovenant" / "builtin" / "profiles"
+    manifest_paths = [
+        profile_root / "python" / "python.yaml",
+        profile_root / "fastapi" / "fastapi.yaml",
+        profile_root / "frappe" / "frappe.yaml",
+    ]
+    for manifest_path in manifest_paths:
+        payload = yaml.safe_load(manifest_path.read_text(encoding="utf-8"))
+        assert isinstance(payload, dict)
+        workflow_runs = payload.get("workflow_runs")
+        assert isinstance(workflow_runs, list)
+        tests_run = next(
+            run
+            for run in workflow_runs
+            if isinstance(run, dict) and str(run.get("id") or "") == "tests"
+        )
+        runner = tests_run.get("runner")
+        assert isinstance(runner, dict)
+        commands = runner.get("commands")
+        assert isinstance(commands, list)
+        command_text = [str(command).strip() for command in commands]
+        assert "python3 -m unittest discover -v" in command_text
+        assert "pytest" not in command_text
+
+
 class GeneratedUnittestCases(unittest.TestCase):
     """unittest wrappers for layered module sanity checks."""
 
@@ -597,3 +629,7 @@ class GeneratedUnittestCases(unittest.TestCase):
     def test_publish_workflow_uses_validated_build_artifacts(self):
         """Run publish-workflow artifact provenance assertions."""
         _unit_test_publish_workflow_uses_validated_build_artifacts()
+
+    def test_python_family_profiles_do_not_double_run_pytest(self):
+        """Run Python-family workflow command assertions."""
+        _unit_test_python_family_profiles_do_not_double_run_pytest()

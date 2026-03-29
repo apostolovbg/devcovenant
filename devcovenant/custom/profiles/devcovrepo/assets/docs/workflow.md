@@ -49,8 +49,8 @@ results are recorded.
 ### run
 Runs every configured workflow run in validated declared order and records
 evidence for each one in the active workflow session.
-In this repo that currently means the `tests` run, which runs the two-step
-`unittest` plus `pytest` sequence.
+In this repo that currently means the `tests` run, which uses
+`python3 -m unittest discover -v` as the single Python test command.
 Every public command also accepts `--quiet`, `--normal`, or `--verbose` as a
 per-invocation output override.
 
@@ -319,7 +319,8 @@ source-tree contract directly with normal `python -m devcovenant ...`
 commands from the checkout.
 The repo-specific artifact proof repos intentionally do something narrower:
 they bootstrap with the installed wheel, sdist, or `pipx` CLI first, then
-create `.venv` inside the proof repo and hand the governed
+create `.venv` inside the proof repo, seed that environment with the proven
+wheel plus the repo lockfile, and hand the governed
 `gate --start -> gate --mid -> run -> gate --end -> check` path to
 `.venv/bin/python -m devcovenant`.
 That keeps the source-tree job generic while still proving that the installed
