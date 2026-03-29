@@ -282,7 +282,7 @@ clean:
 ci_and_test:
   # Human-owned key.
   # Deep-merge patch applied to generated
-  # `.github/workflows/ci-and-test.yml`.
+  # `.github/workflows/ci.yml`.
   # Active profiles may also contribute reusable ci_and_test fragments.
   # Keep the global base workflow language-agnostic.
   # Use config overlays only for repo-local CI adjustments.

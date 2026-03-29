@@ -177,9 +177,11 @@ Do not use this section as the first place to add reusable extra jobs for a
 repo family.
 If the added job should travel with a profile stack, put that behavior in a
 profile `ci_and_test` fragment instead.
-That is how a repository can extend the main generated `ci-and-test` job or
-add one dependent verification job without pushing repo-family checks into the
-global base workflow.
+That is how a repository can extend the main generated source-tree `CI` job in
+`.github/workflows/ci.yml` without pushing repo-family checks into the global
+base workflow.
+Keep built-artifact proof in the repo-maintained `build.yml` workflow instead
+of trying to duplicate it through `ci_and_test`.
 
 The generated config commentary should tell the same story.
 The live `devcovenant/config.yaml` section header and comments for

@@ -239,7 +239,7 @@ The helper ownership now matches that split:
 
 ## CI Mapping
 The generated CI workflow lives at
-`.github/workflows/ci-and-test.yml`.
+`.github/workflows/ci.yml`.
 Its visible workflow name is `CI`.
 
 The ownership split matters:

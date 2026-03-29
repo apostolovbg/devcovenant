@@ -196,7 +196,7 @@ clean:
 # CI-and-test workflow generation
 # -------------------------------------------------------------------
 
-# Deep-merge patch applied to generated `.github/workflows/ci-and-test.yml`.
+# Deep-merge patch applied to generated `.github/workflows/ci.yml`.
 
 # Active profiles may also contribute reusable ci_and_test fragments.
 
@@ -382,7 +382,7 @@ autogen_metadata_overlays:
     - CHANGELOG.md
     - .gitignore
     - .pre-commit-config.yaml
-    - .github/workflows/ci-and-test.yml
+    - .github/workflows/ci.yml
     summary_labels:
     - Change
     - Why

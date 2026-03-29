@@ -89,7 +89,7 @@ managed-docs:
       project_governance_headers: false
       import_seed: true
       authoritative_source: true
-      body_fingerprint: bef9e321f4de141d8c534733e3394dec6971ddd8591775c3084a9e05701ce182
+      body_fingerprint: 0cc64abbd094d01170632132f4aa4abb35417750a23c302251937a006d854d97
       legacy_generic_body_fingerprints: []
     PROFILE_MAP.md:
       enabled: true
@@ -97,7 +97,7 @@ managed-docs:
       project_governance_headers: false
       import_seed: true
       authoritative_source: true
-      body_fingerprint: a97fd863571f87d5fd5a8783dd9ab28d96df10355b62b5cc7b72660a7d525b28
+      body_fingerprint: 8e1aa31d82c0fb4665d28bdf4842890da1965a8e37fba71d15556a47290bc4be
       legacy_generic_body_fingerprints: []
     README.md:
       enabled: true
@@ -735,7 +735,7 @@ policies:
       custom: 'false'
       main_changelog: CHANGELOG.md
       skipped_files: devcovenant/config.yaml, CHANGELOG.md, .gitignore, .pre-commit-config.yaml,
-        .github/workflows/ci-and-test.yml
+        .github/workflows/ci.yml
       skipped_globs: .vscode/**, .idea/**, .venv/**, .python/**, build/**, dist/**,
         __pycache__/**, *.egg-info/**, pip-wheel-metadata/**, .pytest_cache/**, .ruff_cache/**,
         .mypy_cache/**, .tox/**, .nox/**, .hypothesis/**, .coverage, .coverage.*,
@@ -848,7 +848,7 @@ policies:
           - CHANGELOG.md
           - .gitignore
           - .pre-commit-config.yaml
-          - .github/workflows/ci-and-test.yml
+          - .github/workflows/ci.yml
           behavior: append
         autogen_overlays:
           values:
@@ -856,7 +856,7 @@ policies:
           - CHANGELOG.md
           - .gitignore
           - .pre-commit-config.yaml
-          - .github/workflows/ci-and-test.yml
+          - .github/workflows/ci.yml
           behavior: append
         effective:
           values:
@@ -864,7 +864,7 @@ policies:
           - CHANGELOG.md
           - .gitignore
           - .pre-commit-config.yaml
-          - .github/workflows/ci-and-test.yml
+          - .github/workflows/ci.yml
       skipped_globs:
         descriptor:
           values:
@@ -1823,7 +1823,7 @@ policies:
       - CHANGELOG.md
       - .gitignore
       - .pre-commit-config.yaml
-      - .github/workflows/ci-and-test.yml
+      - .github/workflows/ci.yml
       skipped_globs: &id006
       - .vscode/**
       - .idea/**
@@ -2139,7 +2139,7 @@ policies:
     assets:
     - '*.egg-info/**'
     - '*.md'
-    - .github/workflows/ci-and-test.yml
+    - .github/workflows/ci.yml
     - .hypothesis/**
     - .idea/**
     - .md
@@ -9700,7 +9700,7 @@ profiles:
         - CHANGELOG.md
         - .gitignore
         - .pre-commit-config.yaml
-        - .github/workflows/ci-and-test.yml
+        - .github/workflows/ci.yml
         header_doc_suffixes:
         - .md
         - .rst
@@ -10518,7 +10518,7 @@ profiles:
       - devcovenant/registry/README.md
       - devcovenant/registry/registry.yaml
     gitignore_template: gitignore.yaml
-    ci_and_test_template: ci-and-test.yml
+    ci_and_test_template: ci.yml
     pre_commit:
       repos:
       - repo: https://github.com/pre-commit/pre-commit-hooks
@@ -10569,7 +10569,7 @@ profiles:
     - devcovenant/builtin/profiles/global/assets/PLAN.yaml
     - devcovenant/builtin/profiles/global/assets/README.yaml
     - devcovenant/builtin/profiles/global/assets/SPEC.yaml
-    - devcovenant/builtin/profiles/global/assets/ci-and-test.yml
+    - devcovenant/builtin/profiles/global/assets/ci.yml
     - devcovenant/builtin/profiles/global/assets/config.yaml
     - devcovenant/builtin/profiles/global/assets/devcovenant/README.yaml
     - devcovenant/builtin/profiles/global/assets/gitignore.yaml
@@ -12233,7 +12233,7 @@ inventory:
     - devcovenant/logs/README.md
     - devcovenant/registry/README.md
     - devcovenant/registry/registry.yaml
-    - devcovenant/builtin/profiles/global/assets/ci-and-test.yml
+    - devcovenant/builtin/profiles/global/assets/ci.yml
     - devcovenant/builtin/profiles/global/assets/gitignore.yaml
     - devcovenant/builtin/profiles/README.md
     - devcovenant/builtin/policies/README.md

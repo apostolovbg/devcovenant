@@ -113,7 +113,7 @@ policy_overlays:
       - CHANGELOG.md
       - .gitignore
       - .pre-commit-config.yaml
-      - .github/workflows/ci-and-test.yml
+      - .github/workflows/ci.yml
     header_doc_suffixes:
       - .md
       - .rst

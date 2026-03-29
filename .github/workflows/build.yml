@@ -2,6 +2,7 @@ name: Build
 
 on:
   workflow_run:
+    # Trigger after the generated CI workflow in .github/workflows/ci.yml.
     workflows: ["CI"]
     types: [completed]
 

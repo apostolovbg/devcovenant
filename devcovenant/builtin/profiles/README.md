@@ -1,5 +1,5 @@
 # Builtin Profiles
-**Last Updated:** 2026-03-28
+**Last Updated:** 2026-03-29
 **Project Version:** 1.0.0
 
 ## Table of Contents
@@ -74,7 +74,7 @@ manifest fragments and config overlays; profiles do not ship `.gitignore`
 asset files.
 Global template source:
 `devcovenant/builtin/profiles/global/assets/gitignore.yaml`.
-`.github/workflows/ci-and-test.yml` is generated from the global
+`.github/workflows/ci.yml` is generated from the global
 workflow template plus active-profile governance fragments and config
 overlays/overrides.
 

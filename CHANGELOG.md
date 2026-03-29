@@ -61,6 +61,51 @@ Example:
 ## Version 1.0.0
 
 - 2026-03-29:
+  Change: renamed the generated CI workflow from `ci-and-test.yml` to
+    `ci.yml`, updated refresh and policy ownership around the new path, and
+    clarified that `build.yml` follows the `CI` workflow defined there.
+  Why: kept the separate `CI`, `Build`, and `Publish` workflows while making
+    the generated workflow filename simpler and aligning the trigger/docs/test
+    surfaces with that exact GitHub Actions layout.
+  Impact: preserves separate workflow domains, keeps `Build` chained after
+    `CI` success, regenerates the governance workflow at
+    `.github/workflows/ci.yml`, and removes the old `ci-and-test.yml` path
+    from live repo contracts.
+  Files:
+  .github/workflows/build.yml
+  .github/workflows/ci-and-test.yml
+  .github/workflows/ci.yml
+  CHANGELOG.md
+  POLICY_MAP.md
+  PROFILE_MAP.md
+  devcovenant/builtin/profiles/README.md
+  devcovenant/builtin/profiles/defaults/defaults.yaml
+  devcovenant/builtin/profiles/global/assets/ci-and-test.yml
+  devcovenant/builtin/profiles/global/assets/ci.yml
+  devcovenant/builtin/profiles/global/assets/config.yaml
+  devcovenant/builtin/profiles/global/global.yaml
+  devcovenant/config.yaml
+  devcovenant/core/flow/refresh.py
+  devcovenant/core/services/manifest_inventory.py
+  devcovenant/custom/profiles/devcovrepo/assets/POLICY_MAP.yaml
+  devcovenant/custom/profiles/devcovrepo/assets/PROFILE_MAP.yaml
+  devcovenant/custom/profiles/devcovrepo/assets/docs/config.md
+  devcovenant/custom/profiles/devcovrepo/assets/docs/profiles.md
+  devcovenant/custom/profiles/devcovrepo/assets/docs/registry.md
+  devcovenant/custom/profiles/devcovrepo/assets/docs/workflow.md
+  devcovenant/docs/config.md
+  devcovenant/docs/profiles.md
+  devcovenant/docs/registry.md
+  devcovenant/docs/workflow.md
+  devcovenant/registry/registry.yaml
+  tests/devcovenant/builtin/policies/changelog_coverage/\
+    test_changelog_coverage.py
+  tests/devcovenant/builtin/policies/documentation_growth_tracking/\
+    test_documentation_growth_tracking.py
+  tests/devcovenant/core/services/test_profile_registry.py
+  tests/devcovenant/test_refresh.py
+
+- 2026-03-29:
   Change: simplified CI ownership by removing generated built-artifact proof
     from `ci_and_test`, moved the `pipx` lifecycle proof into `build.yml`,
     and aligned the package and security docs with the new

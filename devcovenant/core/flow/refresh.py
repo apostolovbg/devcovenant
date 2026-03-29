@@ -651,7 +651,7 @@ def _render_config_yaml(payload: dict[str, object]) -> str:
         comments["ci_and_test"],
         (
             "# Deep-merge patch applied to generated "
-            "`.github/workflows/ci-and-test.yml`."
+            "`.github/workflows/ci.yml`."
         ),
         (
             "# Active profiles may also contribute reusable ci_and_test "
@@ -1313,7 +1313,7 @@ def _refresh_ci_and_test(
     profile_registry: dict[str, dict],
     active_profiles: list[str],
 ) -> bool:
-    """Regenerate ci-and-test workflow from template and fragments."""
+    """Regenerate the CI workflow from template and fragments."""
     profiles_map = _profile_registry_profiles(profile_registry)
     payload = _load_global_ci_and_test_template(repo_root, profiles_map)
 
@@ -1333,7 +1333,7 @@ def _refresh_ci_and_test(
         payload = copy.deepcopy(overrides)
     payload = _normalize_governance_trigger_key(payload)
 
-    target_path = repo_root / ".github" / "workflows" / "ci-and-test.yml"
+    target_path = repo_root / ".github" / "workflows" / "ci.yml"
     rendered = _render_governance_workflow_yaml(payload)
     changed = True
     if target_path.exists():
@@ -2014,7 +2014,7 @@ def refresh_repo(repo_root: Path) -> int:
         print_step(f"CI-and-test workflow refresh failed: {error}", "🚫")
         return 1
     if ci_and_test_changed:
-        print_step("Regenerated ci-and-test workflow", "✅")
+        print_step("Regenerated CI workflow", "✅")
 
     try:
         pre_commit_changed = _refresh_pre_commit_config(

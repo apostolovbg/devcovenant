@@ -35,7 +35,7 @@ This map documents shipped policy contracts and ownership for 1.0.0.
   doc header-only edits are excluded when they touch only configured header
   keys inside the configured top-of-file header scan window. Generated
   governance targets (`.gitignore`, `.pre-commit-config.yaml`,
-  `.github/workflows/ci-and-test.yml`) are excluded by default.
+  `.github/workflows/ci.yml`) are excluded by default.
 - `dependency-management`: requires lock/dependency changes to stay aligned
   with `THIRD_PARTY_LICENSES.md` and `licenses/` artifacts (including
   generated `licenses/README.md`) using metadata-driven selectors. This

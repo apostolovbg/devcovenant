@@ -308,7 +308,7 @@ def _unit_test_governance_workflow_asset_matches_repo_contract() -> None:
     assert template_name
 
     asset_workflow = global_manifest.parent / "assets" / template_name
-    repo_workflow = REPO_ROOT / ".github" / "workflows" / "ci-and-test.yml"
+    repo_workflow = REPO_ROOT / ".github" / "workflows" / "ci.yml"
 
     asset_payload = yaml.safe_load(asset_workflow.read_text(encoding="utf-8"))
     repo_payload = yaml.safe_load(repo_workflow.read_text(encoding="utf-8"))
@@ -329,7 +329,7 @@ def _unit_test_global_governance_workflow_asset_stays_generic() -> None:
         / "profiles"
         / "global"
         / "assets"
-        / "ci-and-test.yml"
+        / "ci.yml"
     )
     payload = yaml.safe_load(asset_workflow.read_text(encoding="utf-8"))
     assert isinstance(payload, dict)
@@ -344,7 +344,7 @@ def _unit_test_global_governance_workflow_asset_stays_generic() -> None:
 
 def _unit_test_repo_workflow_includes_devcovrepo_jobs() -> None:
     """Repo workflow should include devcovrepo-provided CI steps only."""
-    repo_workflow = REPO_ROOT / ".github" / "workflows" / "ci-and-test.yml"
+    repo_workflow = REPO_ROOT / ".github" / "workflows" / "ci.yml"
     payload = yaml.safe_load(repo_workflow.read_text(encoding="utf-8"))
     assert isinstance(payload, dict)
     assert payload.get("name") == "CI"

@@ -283,7 +283,7 @@ skipped_files: devcovenant/config.yaml
   CHANGELOG.md
   .gitignore
   .pre-commit-config.yaml
-  .github/workflows/ci-and-test.yml
+  .github/workflows/ci.yml
 skipped_globs: .vscode/**
   .idea/**
   .venv/**

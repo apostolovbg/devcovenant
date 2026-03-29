@@ -164,6 +164,8 @@ the active repo-specific profile adds `pip-audit` and Bandit, while the
 repo-maintained `Build` workflow proves the actual wheel, sdist, and `pipx`
 install surfaces against the full public workflow contract itself:
 `gate --start -> gate --mid -> run -> gate --end -> check`.
+The generated workflow file for that source-tree boundary is now
+`.github/workflows/ci.yml`.
 That build-owned proof should also keep its shell structure simple enough
 that inline activation helpers stay parse-stable in GitHub Actions.
 If a repo family needs a reviewed temporary scanner exception because an

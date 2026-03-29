@@ -356,7 +356,7 @@ def _unit_test_skipped_generated_files_are_ignored(
             "skipped_files": [
                 ".gitignore",
                 ".pre-commit-config.yaml",
-                ".github/workflows/ci-and-test.yml",
+                ".github/workflows/ci.yml",
             ]
         },
     )
@@ -366,7 +366,7 @@ def _unit_test_skipped_generated_files_are_ignored(
             [
                 ".gitignore",
                 ".pre-commit-config.yaml",
-                ".github/workflows/ci-and-test.yml",
+                ".github/workflows/ci.yml",
             ]
         )
         + "\n",
