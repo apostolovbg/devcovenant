@@ -247,7 +247,7 @@ The ownership split matters:
 1. the builtin `global` profile owns the generic base workflow
 
 2. active profiles may contribute `ci_and_test` fragments that add
-   repo-family steps or one dependent verification job
+   repo-family source-tree steps
 
 3. local `config.ci_and_test.*` keys are for repo-local overlays or,
    rarely, a full local replacement
@@ -255,13 +255,12 @@ The ownership split matters:
 The global base should stay language-agnostic.
 If a repository family needs extra CI proof, that extension should come from
 the relevant profile instead of from the generic global template.
-The clean shape is to keep one main `ci-and-test` job and, when needed, add
-at most one dependent verification job.
+The clean shape is to keep one main `ci-and-test` job for source-tree truth
+and keep built-artifact proof in the repo-maintained `build.yml` workflow.
 
 In this repository, the active repo-specific profile extends the main
-`ci-and-test` job with `pip-audit` and Bandit steps, then adds one dependent
-`build-and-install-test` job.
-Together, those repo-specific proof surfaces now verify the documented
+`ci-and-test` job with `pip-audit` and Bandit steps only.
+The repo-maintained `build.yml` workflow then verifies the documented
 installed workflow on all three public install paths:
 
 - built wheel: `gate --start -> gate --mid -> run -> gate --end -> check`
@@ -271,8 +270,9 @@ installed workflow on all three public install paths:
 - documented `pipx` machine-install path:
   `gate --start -> gate --mid -> run -> gate --end -> check`
 
-That keeps Python-package proof in the repo-specific layer without pushing it
-back into the generic global CI base.
+That keeps source-tree CI generated and profile-extended, while keeping
+artifact-release proof in the repo-maintained release workflow instead of
+pushing it back into the generic global CI base.
 When an upstream scanner advisory has no published fix release yet, a narrow
 reviewed exception may also live in that repo-specific CI layer.
 Keep that exception explicit, documented, and easy to delete once upstream

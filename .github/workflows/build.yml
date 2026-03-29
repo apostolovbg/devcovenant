@@ -31,7 +31,7 @@ jobs:
       - name: Install build tooling
         run: |
           python -m pip install --upgrade pip
-          python -m pip install build twine cyclonedx-bom==7.2.2
+          python -m pip install build twine pipx cyclonedx-bom==7.2.2
 
       - name: Build distributions
         run: python -m build
@@ -230,6 +230,75 @@ jobs:
           .venv/bin/python -m devcovenant run
           .venv/bin/python -m devcovenant gate --end
           .venv/bin/python -m devcovenant check
+          popd >/dev/null
+
+      - name: Install DevCovenant with pipx
+        run: python -m pipx install --force dist/*.whl
+
+      - name: Resolve pipx bin directory
+        run: |
+          PIPX_BIN_DIR="$(python -m pipx environment --value PIPX_BIN_DIR)"
+          echo "PIPX_BIN_DIR=$PIPX_BIN_DIR" >> "$GITHUB_ENV"
+
+      - name: Prove pipx operator lifecycle
+        run: |
+          set -euo pipefail
+          TMPDIR="$(mktemp -d)"
+          trap 'rm -rf "$TMPDIR"' EXIT
+          git init -q artifacts/pipx-proof
+          pushd artifacts/pipx-proof >/dev/null
+          git config user.name ci
+          git config user.email ci@example.invalid
+          "$PIPX_BIN_DIR/devcovenant" --version
+          "$PIPX_BIN_DIR/devcovenant" install
+          python - <<'PY'
+          from pathlib import Path
+
+          path = Path("devcovenant/config.yaml")
+          text = path.read_text(encoding="utf-8")
+          old = "config_reviewed: false"
+          if old not in text:
+              raise SystemExit(
+                  "config_reviewed flag not found in config.yaml"
+              )
+          path.write_text(
+              text.replace(old, "config_reviewed: true", 1),
+              encoding="utf-8",
+          )
+          PY
+          "$PIPX_BIN_DIR/devcovenant" deploy
+          mkdir -p tests
+          cat > tests/__init__.py <<'PY'
+          """Proof-test package for installed artifact workflow validation."""
+          PY
+          cat > tests/test_smoke.py <<'PY'
+          """Installed artifact smoke tests for lifecycle proof."""
+
+          import unittest
+
+
+          class SmokeTest(unittest.TestCase):
+              """Prove the packaged workflow can run a minimal test suite."""
+
+              def test_truth(self) -> None:
+                  """Keep the installed-artifact proof suite non-empty."""
+                  self.assertTrue(True)
+
+
+          if __name__ == "__main__":
+              unittest.main()
+          PY
+          "$PIPX_BIN_DIR/devcovenant" refresh
+          git add .
+          git commit -m "bootstrap pipx repo"
+          python3 -m venv .venv
+          .venv/bin/python -m pip install --upgrade pip
+          .venv/bin/python -m pip install -r requirements.lock
+          "$PIPX_BIN_DIR/devcovenant" gate --start
+          "$PIPX_BIN_DIR/devcovenant" gate --mid
+          "$PIPX_BIN_DIR/devcovenant" run
+          "$PIPX_BIN_DIR/devcovenant" gate --end
+          "$PIPX_BIN_DIR/devcovenant" check
           popd >/dev/null
 
       - name: Upload distributions

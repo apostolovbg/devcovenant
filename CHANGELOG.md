@@ -61,6 +61,34 @@ Example:
 ## Version 1.0.0
 
 - 2026-03-29:
+  Change: simplified CI ownership by removing generated built-artifact proof
+    from `ci_and_test`, moved the `pipx` lifecycle proof into `build.yml`,
+    and aligned the package and security docs with the new
+    `CI = source tree` and `Build = shipped artifacts` contract.
+  Why: reduced overlap between generated and repo-maintained workflows so the
+    automation story stays easier to reason about and external audits see one
+    truthful proof boundary instead of two fuzzy ones.
+  Impact: keeps the generated `CI` workflow focused on source-tree checks,
+    makes `Build` the single owner of wheel/sdist/`pipx` artifact proof,
+    and updates the docs and tests to match the simplified workflow model.
+  Files:
+  .github/workflows/build.yml
+  .github/workflows/ci-and-test.yml
+  CHANGELOG.md
+  SECURITY.md
+  devcovenant/custom/profiles/devcovrepo/assets/docs/installation.md
+  devcovenant/custom/profiles/devcovrepo/assets/docs/profiles.md
+  devcovenant/custom/profiles/devcovrepo/assets/docs/registry.md
+  devcovenant/custom/profiles/devcovrepo/assets/docs/workflow.md
+  devcovenant/custom/profiles/devcovrepo/devcovrepo.yaml
+  devcovenant/docs/installation.md
+  devcovenant/docs/profiles.md
+  devcovenant/docs/registry.md
+  devcovenant/docs/workflow.md
+  devcovenant/registry/registry.yaml
+  tests/devcovenant/core/services/test_profile_registry.py
+
+- 2026-03-29:
   Change: aligned the last stale `test` workflow residue with the public
     `run` contract, strengthened the `pipx` lifecycle proof to execute the
     full installed workflow, and normalized the final managed-environment

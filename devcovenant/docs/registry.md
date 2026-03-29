@@ -45,12 +45,11 @@ hashes even when the visible behavior change is elsewhere.
 That is normal evidence of a real contract change, not registry noise.
 In this repository, tracked registry state now also records the repo-specific
 `ci_and_test` additions contributed by the active custom profile, including
-the scanner steps merged into `ci-and-test` and the dependent
-`build-and-install-test` proof for the built wheel, the built sdist, and the
-documented `pipx` machine-install path.
-That tracked CI metadata now reflects the stronger proof shape too: all three
-install paths are proven against the public workflow contract instead of
-leaving the `pipx` surface at a lighter activation-only check.
+the scanner steps merged into `ci-and-test`.
+Built-artifact proof now lives in the repo-maintained `build.yml` workflow
+instead of in the generated `ci_and_test` payload, even though that build
+workflow still proves the same wheel, sdist, and `pipx` install surfaces
+against the public workflow contract.
 That same tracked state also changes when release-facing package-data or
 dependency-management semantics change, because the registry records the
 resolved metadata the runtime actually uses rather than just the visible
@@ -61,8 +60,8 @@ The tracked registry also depends on deterministic discovery order, so
 profiles and policy-source inventories are sorted before refresh writes the
 registry on macOS, Linux, or Windows.
 That same tracked state also records the current generated workflow contract,
-including the visible workflow name `CI` and the repo-specific
-`build-and-install-test` verification job.
+including the visible workflow name `CI` and the repo-specific scanner steps
+merged into the main `ci-and-test` job.
 The tracked `workflow_contract` section is the workflow-owned part of that
 story: it records the reserved anchors, the declared runs resolved from
 active profiles, and which run ids are configured for execution.

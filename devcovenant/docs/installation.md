@@ -285,10 +285,12 @@ Then add custom extensions deliberately on top of an already-working normal
 activation.
 Separately, this repository's artifact automation now proves the earlier
 activation boundary directly from the built wheel, the built sdist, and the
-documented `pipx` machine-install path:
-`install`, config review, `deploy`, then a read-only `check`.
-That keeps release proof honest at the package boundary while leaving the full
-gate cycle as the practical proof for governed repository work.
+documented `pipx` machine-install path.
+That proof now runs the same full public workflow on all three install
+surfaces:
+`gate --start`, `gate --mid`, `run`, `gate --end`, then `check`.
+That keeps release proof honest at the package boundary instead of proving a
+narrower install-only path than the one the package docs actually promise.
 
 ## Normal Operating Routine
 After the first activation, the usual flow is simpler:

@@ -343,7 +343,7 @@ def _unit_test_global_governance_workflow_asset_stays_generic() -> None:
 
 
 def _unit_test_repo_workflow_includes_devcovrepo_jobs() -> None:
-    """Repo workflow should include devcovrepo-provided CI jobs."""
+    """Repo workflow should include devcovrepo-provided CI steps only."""
     repo_workflow = REPO_ROOT / ".github" / "workflows" / "ci-and-test.yml"
     payload = yaml.safe_load(repo_workflow.read_text(encoding="utf-8"))
     assert isinstance(payload, dict)
@@ -351,7 +351,7 @@ def _unit_test_repo_workflow_includes_devcovrepo_jobs() -> None:
 
     jobs = payload.get("jobs")
     assert isinstance(jobs, dict)
-    assert set(jobs) == {"ci-and-test", "build-and-install-test"}
+    assert set(jobs) == {"ci-and-test"}
     assert "compatibility-matrix" not in jobs
     assert "assurance" not in jobs
     assert "installed-cli-smoke" not in jobs
@@ -378,40 +378,6 @@ def _unit_test_repo_workflow_includes_devcovrepo_jobs() -> None:
     audit_run = str(audit_step.get("run") or "").strip()
     assert "--ignore-vuln CVE-2026-4539" in audit_run
 
-    build_and_install = jobs["build-and-install-test"]
-    assert isinstance(build_and_install, dict)
-    assert build_and_install.get("name") == "Build and Install"
-    assert build_and_install.get("needs") == "ci-and-test"
-    installed_steps = build_and_install.get("steps")
-    assert isinstance(installed_steps, list)
-    installed_step_names = [
-        str(step.get("name") or "").strip()
-        for step in installed_steps
-        if isinstance(step, dict)
-    ]
-    assert "Build package artifacts" in installed_step_names
-    assert "Validate built artifacts" in installed_step_names
-    assert "Prove wheel artifact lifecycle" in installed_step_names
-    assert "Prove sdist artifact lifecycle" in installed_step_names
-    assert "Install DevCovenant with pipx" in installed_step_names
-    assert "Resolve pipx bin directory" in installed_step_names
-    assert "Prove pipx operator lifecycle" in installed_step_names
-
-    lifecycle_run_blocks = "\n".join(
-        str(step.get("run") or "").strip()
-        for step in installed_steps
-        if isinstance(step, dict)
-        and str(step.get("name") or "").strip()
-        in {
-            "Prove wheel artifact lifecycle",
-            "Prove sdist artifact lifecycle",
-            "Prove pipx operator lifecycle",
-        }
-    )
-    assert 'pushd "$TMPDIR/repo" >/dev/null' in lifecycle_run_blocks
-    assert "popd >/dev/null" in lifecycle_run_blocks
-    assert '(\n          cd "$TMPDIR/repo"' not in lifecycle_run_blocks
-
 
 def _unit_test_build_workflow_uploads_provenance_artifact() -> None:
     """Build workflow should emit provenance beside validated dists."""
@@ -432,6 +398,9 @@ def _unit_test_build_workflow_uploads_provenance_artifact() -> None:
     ]
     assert "Generate build provenance" in step_names
     assert "Upload build provenance" in step_names
+    assert "Install DevCovenant with pipx" in step_names
+    assert "Resolve pipx bin directory" in step_names
+    assert "Prove pipx operator lifecycle" in step_names
 
     upload_step = next(
         step
@@ -450,6 +419,7 @@ def _unit_test_build_workflow_uploads_provenance_artifact() -> None:
     )
     assert "pushd artifacts/wheel-proof >/dev/null" in all_run_blocks
     assert "pushd artifacts/sdist-proof >/dev/null" in all_run_blocks
+    assert "pushd artifacts/pipx-proof >/dev/null" in all_run_blocks
     for command in (
         "python -m devcovenant gate --start",
         "python -m devcovenant gate --mid",
@@ -461,11 +431,13 @@ def _unit_test_build_workflow_uploads_provenance_artifact() -> None:
     assert "cat > tests/test_smoke.py <<'PY'" in all_run_blocks
     assert "python -m devcovenant refresh" in all_run_blocks
     assert 'git commit -m "bootstrap installed repo"' in all_run_blocks
+    assert 'git commit -m "bootstrap pipx repo"' in all_run_blocks
     assert (
         ".venv/bin/python -m pip install -r requirements.lock"
         in all_run_blocks
     )
     assert ".venv/bin/python -m devcovenant gate --start" in all_run_blocks
+    assert '"$PIPX_BIN_DIR/devcovenant" gate --start' in all_run_blocks
 
 
 def _unit_test_publish_workflow_uses_validated_build_artifacts() -> None:
