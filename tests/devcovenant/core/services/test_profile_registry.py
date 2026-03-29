@@ -444,6 +444,23 @@ def _unit_test_ci_workflow_contains_build_job_artifact_proof() -> None:
     assert '"$PIPX_BIN_DIR/devcovenant" refresh' in all_run_blocks
     assert '"$PIPX_BIN_DIR/devcovenant" gate --start' not in all_run_blocks
 
+    provenance_step = next(
+        step
+        for step in steps
+        if isinstance(step, dict)
+        and str(step.get("name") or "").strip() == "Generate build provenance"
+    )
+    provenance_env = provenance_step.get("env")
+    assert isinstance(provenance_env, dict)
+    assert provenance_env.get("CI_RUN_ID") == "${{ github.run_id }}"
+    assert provenance_env.get("CI_RUN_ATTEMPT") == "${{ github.run_attempt }}"
+    assert provenance_env.get("CI_HEAD_SHA") == "${{ github.sha }}"
+    provenance_run = str(provenance_step.get("run") or "").strip()
+    assert '"ci_run_id": os.environ["CI_RUN_ID"]' in provenance_run
+    assert '"ci_run_attempt": os.environ["CI_RUN_ATTEMPT"]' in provenance_run
+    assert '"head_sha": os.environ["CI_HEAD_SHA"]' in provenance_run
+    assert '"build_run_id"' not in provenance_run
+
 
 def _unit_test_publish_workflow_uses_validated_build_artifacts() -> None:
     """Publish workflow should download one validated CI artifact."""
@@ -515,6 +532,9 @@ def _unit_test_publish_workflow_uses_validated_build_artifacts() -> None:
         "${{ steps.ci-run.outputs.run_id }}"
     )
     assert provenance_with.get("name") == "devcovenant-provenance"
+    assert 'payload.get("ci_run_id")' in all_run_blocks
+    assert "EXPECTED_CI_RUN_ID" in all_run_blocks
+    assert "build_run_id" not in all_run_blocks
 
 
 class GeneratedUnittestCases(unittest.TestCase):

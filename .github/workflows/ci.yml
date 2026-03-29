@@ -71,9 +71,9 @@ jobs:
           --output-file artifacts/sbom/devcovenant-sbom.json
     - name: Generate build provenance
       env:
-        BUILD_RUN_ID: ${{ github.run_id }}
-        BUILD_RUN_ATTEMPT: ${{ github.run_attempt }}
-        BUILD_HEAD_SHA: ${{ github.sha }}
+        CI_RUN_ID: ${{ github.run_id }}
+        CI_RUN_ATTEMPT: ${{ github.run_attempt }}
+        CI_HEAD_SHA: ${{ github.sha }}
       run: |
         mkdir -p artifacts/provenance
         python - <<'PY'
@@ -91,9 +91,9 @@ jobs:
         payload = {
             "workflow": "CI",
             "job": "Build",
-            "build_run_id": os.environ["BUILD_RUN_ID"],
-            "build_run_attempt": os.environ["BUILD_RUN_ATTEMPT"],
-            "head_sha": os.environ["BUILD_HEAD_SHA"],
+            "ci_run_id": os.environ["CI_RUN_ID"],
+            "ci_run_attempt": os.environ["CI_RUN_ATTEMPT"],
+            "head_sha": os.environ["CI_HEAD_SHA"],
             "distributions": [
                 {
                     "name": path.name,

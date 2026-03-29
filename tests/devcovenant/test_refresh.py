@@ -834,6 +834,7 @@ def _unit_test_refresh_writes_global_artifact_gitignore_rules() -> None:
             "pip-wheel-metadata/",
             ".coverage",
             ".coverage.*",
+            ".gha-pycache/",
             "htmlcov/",
         ):
             assert expected in content

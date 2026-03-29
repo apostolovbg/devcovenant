@@ -311,13 +311,17 @@ That rule keeps CI generic:
 3. stage commands prepare or reuse that environment through metadata such as
    `expected_paths`, `expected_interpreters`, and `managed_commands`
 
-In this repository, repo-specific CI jobs prime the managed environment with
-`python -m devcovenant gate --status > /dev/null` before running their focused
-checks.
-The important part is not the exact command.
-The important part is that CI exercises the managed-environment contract
-generically, so a different environment type such as a bench can work through
-the same metadata-driven path.
+In this repository, the main `governance` job stays generic and runs the
+source-tree contract directly with normal `python -m devcovenant ...`
+commands from the checkout.
+The repo-specific artifact proof repos intentionally do something narrower:
+they bootstrap with the installed wheel, sdist, or `pipx` CLI first, then
+create `.venv` inside the proof repo and hand the governed
+`gate --start -> gate --mid -> run -> gate --end -> check` path to
+`.venv/bin/python -m devcovenant`.
+That keeps the source-tree job generic while still proving that the installed
+artifact can materialize and use the managed environment contract without
+interpreter drift.
 
 ## Refresh-Owned Config Normalization
 Refresh can clean up stale generated-config defaults when they would otherwise

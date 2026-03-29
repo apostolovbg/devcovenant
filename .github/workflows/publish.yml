@@ -86,11 +86,11 @@ jobs:
 
           provenance_path = Path("artifacts/provenance/build-provenance.json")
           payload = json.loads(provenance_path.read_text(encoding="utf-8"))
-          if str(payload.get("build_run_id")) != os.environ[
+          if str(payload.get("ci_run_id")) != os.environ[
               "EXPECTED_CI_RUN_ID"
           ]:
               raise SystemExit(
-                  "Downloaded provenance build_run_id does not match the "
+                  "Downloaded provenance ci_run_id does not match the "
                   "selected CI run."
               )
           if payload.get("head_sha") != os.environ["EXPECTED_HEAD_SHA"]:

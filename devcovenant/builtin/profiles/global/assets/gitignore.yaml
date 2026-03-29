@@ -38,6 +38,7 @@ base_fragments:
   - .coverage
   - .coverage.*
   - .cache/
+  - .gha-pycache/
   - .ruff_cache/
   - tmp/
   - temp/

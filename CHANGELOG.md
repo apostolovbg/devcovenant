@@ -61,6 +61,51 @@ Example:
 ## Version 1.0.0
 
 - 2026-03-29:
+  Change: clarified the profile and registry docs so they no longer say the
+    repo profile owns the `.gha-pycache/` ignore rule or that tracked
+    registry state itself records the generated ignore surface.
+  Why: the previous wording fixed behavior but still blurred ownership between
+    the repo-specific CI layer, the shared generated gitignore asset, and the
+    tracked registry document.
+  Impact: docs now describe the real split accurately: the repo profile owns
+    the CI behavior, the global generated asset owns `.gha-pycache/`, and the
+    registry docs distinguish tracked state from broader refresh outputs.
+  Files:
+  CHANGELOG.md
+  devcovenant/custom/profiles/devcovrepo/assets/docs/profiles.md
+  devcovenant/custom/profiles/devcovrepo/assets/docs/registry.md
+  devcovenant/docs/profiles.md
+  devcovenant/docs/registry.md
+
+- 2026-03-29:
+  Change: aligned the CI managed-environment docs with the real
+    `Governance` and `Build` behavior, renamed provenance fields from
+    build-run ids to CI-run ids, and added `.gha-pycache/` to the generated
+    ignore surface.
+  Why: the workflow docs still described a removed gate-status priming step,
+    the provenance payload still carried stale separate-build naming, and
+    proof repos could sweep runner bytecode caches into bootstrap commits.
+  Impact: reviewers now see the real CI contract, manual publish verifies CI
+    provenance with accurate field names, and wheel, sdist, and `pipx` proof
+    repos ignore `.gha-pycache` noise by default.
+  Files:
+  .github/workflows/ci.yml
+  .github/workflows/publish.yml
+  .gitignore
+  CHANGELOG.md
+  devcovenant/builtin/profiles/global/assets/gitignore.yaml
+  devcovenant/custom/profiles/devcovrepo/assets/docs/profiles.md
+  devcovenant/custom/profiles/devcovrepo/assets/docs/registry.md
+  devcovenant/custom/profiles/devcovrepo/assets/docs/workflow.md
+  devcovenant/custom/profiles/devcovrepo/devcovrepo.yaml
+  devcovenant/docs/profiles.md
+  devcovenant/docs/registry.md
+  devcovenant/docs/workflow.md
+  devcovenant/registry/registry.yaml
+  tests/devcovenant/core/services/test_profile_registry.py
+  tests/devcovenant/test_refresh.py
+
+- 2026-03-29:
   Change: moved built-artifact proof back into the `Build` job inside
     `CI`, renamed the main `CI` job to `governance`, deleted the separate
     `build.yml` workflow, switched manual publish to select a validated `CI`

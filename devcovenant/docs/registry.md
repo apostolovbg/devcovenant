@@ -63,6 +63,13 @@ That same tracked state also records the current generated workflow contract,
 including the visible workflow name `CI`, the generated workflow file
 `.github/workflows/ci.yml`, and the repo-specific scanner steps merged into
 its main `governance` job.
+For this repository, tracked workflow metadata also carries the repo-owned
+`Build` proof details that manual publish depends on, including CI-aligned
+provenance fields such as `ci_run_id` and `ci_run_attempt`.
+Separately from tracked registry state, the same refresh pass also regenerates
+ignore surfaces such as `.gitignore`.
+In this repository, that broader generated output now includes
+`.gha-pycache/` so proof repos do not commit runner bytecode caches.
 The tracked `workflow_contract` section is the workflow-owned part of that
 story: it records the reserved anchors, the declared runs resolved from
 active profiles, and which run ids are configured for execution.

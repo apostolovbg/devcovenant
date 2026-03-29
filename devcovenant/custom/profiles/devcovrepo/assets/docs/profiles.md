@@ -165,6 +165,13 @@ against the full public workflow contract itself:
 `gate --start -> gate --mid -> run -> gate --end -> check`.
 The generated workflow file for that source-tree boundary is now
 `.github/workflows/ci.yml`.
+That same repo-owned layer now also keeps provenance naming aligned with the
+manual publish contract by recording `ci_run_id` and `ci_run_attempt`, even
+though the proving job itself is named `Build`.
+When that repo-owned CI shape introduces runner-local hygiene needs, the
+shared generated-asset layer may also need a matching update.
+In this repository, the global generated ignore surface now includes
+`.gha-pycache/` so proof repos do not commit runner bytecode caches.
 That repo-owned build proof should also keep its shell structure simple enough
 that inline activation helpers stay parse-stable in GitHub Actions.
 If a repo family needs a reviewed temporary scanner exception because an
