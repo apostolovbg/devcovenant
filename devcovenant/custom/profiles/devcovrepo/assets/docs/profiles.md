@@ -165,6 +165,9 @@ the actual wheel, sdist, and `pipx` path, not from shallow `--help` or
 `--status` checks alone. That proof should exercise the installed public
 workflow contract itself:
 `gate --start -> gate --mid -> run -> gate --end`.
+In this repository, the active repo-specific profile now encodes that fuller
+proof directly for all three install paths instead of leaving the `pipx`
+surface at the lighter `install -> deploy -> check` level.
 That repo-specific proof should also keep its shell structure simple enough
 that inline activation helpers stay parse-stable in GitHub Actions.
 If a repo family needs a reviewed temporary scanner exception because an

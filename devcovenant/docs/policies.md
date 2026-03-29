@@ -91,6 +91,9 @@ The same policy now also aligns managed command stages with the public
 workflow contract: `start`, `run`, `end`, `command`, and `all`.
 That keeps managed-environment orchestration aligned with `devcovenant run`
 instead of preserving a special legacy `test` stage.
+The same runtime now also persists that prepared-stage state with the same
+`run` token, so managed re-exec hops no longer carry a stale internal
+`test` marker after the public workflow contract moved to `run`.
 The same runtime now resolves the tracked policy registry through the
 tracked-registry helper layer instead of depending on the catch-all
 registry service for runtime-evidence paths.

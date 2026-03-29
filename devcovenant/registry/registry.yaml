@@ -89,7 +89,7 @@ managed-docs:
       project_governance_headers: false
       import_seed: true
       authoritative_source: true
-      body_fingerprint: ee3bae6c48080358d96d7eb2700ef66baa74f69a0f6bb9275b66dc949dec27c0
+      body_fingerprint: bef9e321f4de141d8c534733e3394dec6971ddd8591775c3084a9e05701ce182
       legacy_generic_body_fingerprints: []
     PROFILE_MAP.md:
       enabled: true
@@ -12018,6 +12018,37 @@ profiles:
               )
               PY
               "$PIPX_BIN_DIR/devcovenant" deploy
+              mkdir -p tests
+              cat > tests/__init__.py <<'PY'
+              """Proof-test package for installed workflow validation."""
+              PY
+              cat > tests/test_smoke.py <<'PY'
+              """Installed artifact smoke tests for lifecycle proof."""
+
+              import unittest
+
+
+              class SmokeTest(unittest.TestCase):
+                  """Prove the packaged workflow can run a minimal test suite."""
+
+                  def test_truth(self) -> None:
+                      """Keep the installed-artifact proof suite non-empty."""
+                      self.assertTrue(True)
+
+
+              if __name__ == "__main__":
+                  unittest.main()
+              PY
+              "$PIPX_BIN_DIR/devcovenant" refresh
+              git add .
+              git commit -m "bootstrap pipx repo"
+              python3 -m venv .venv
+              .venv/bin/python -m pip install --upgrade pip
+              .venv/bin/python -m pip install -r requirements.lock
+              "$PIPX_BIN_DIR/devcovenant" gate --start
+              "$PIPX_BIN_DIR/devcovenant" gate --mid
+              "$PIPX_BIN_DIR/devcovenant" run
+              "$PIPX_BIN_DIR/devcovenant" gate --end
               "$PIPX_BIN_DIR/devcovenant" check
               popd >/dev/null
     policy_overlays:

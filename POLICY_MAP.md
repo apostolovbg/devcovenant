@@ -43,7 +43,7 @@ This map documents shipped policy contracts and ownership for 1.0.0.
   scope is handled by packaging contracts.
 - `devcov-integrity-guard`: validates descriptor/registry/runtime consistency.
 - `devcov-structure-guard`: enforces required repository shape constraints.
-- `devflow-run-gates`: enforces gate start -> test -> gate end evidence and
+- `devflow-run-gates`: enforces gate start -> run -> gate end evidence and
   validates required-command and pre-commit execution records.
 - `docstring-and-comment-coverage`: requires explanatory docs/comments for
   in-scope source files.

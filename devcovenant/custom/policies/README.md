@@ -1,5 +1,5 @@
 # Custom Policies
-**Last Updated:** 2026-03-09
+**Last Updated:** 2026-03-29
 **Project Version:** 1.0.0
 
 ## Table of Contents
@@ -43,4 +43,4 @@ policy scripts when declarative assets are sufficient.
 3. Run `devcovenant refresh` after descriptor/profile updates.
 4. Run full gate sequence:
    `gate --start` -> `gate --mid` (rerun until clean) ->
-   `test` -> `gate --end`.
+   `run` -> `gate --end`.

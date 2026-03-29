@@ -1,5 +1,5 @@
 # Workflow
-**Last Updated:** 2026-03-28
+**Last Updated:** 2026-03-29
 **Project Version:** 1.0.0
 
 ## Overview
@@ -261,10 +261,16 @@ at most one dependent verification job.
 In this repository, the active repo-specific profile extends the main
 `ci-and-test` job with `pip-audit` and Bandit steps, then adds one dependent
 `build-and-install-test` job.
-That second job builds artifacts, runs `twine check`, proves that both the
-built wheel and the built sdist can complete
-`install -> config review -> deploy -> check`, then proves the documented
-`pipx` machine-install path with the same activation flow.
+Together, those repo-specific proof surfaces now verify the documented
+installed workflow on all three public install paths:
+
+- built wheel: `gate --start -> gate --mid -> run -> gate --end -> check`
+
+- built sdist: `gate --start -> gate --mid -> run -> gate --end -> check`
+
+- documented `pipx` machine-install path:
+  `gate --start -> gate --mid -> run -> gate --end -> check`
+
 That keeps Python-package proof in the repo-specific layer without pushing it
 back into the generic global CI base.
 When an upstream scanner advisory has no published fix release yet, a narrow

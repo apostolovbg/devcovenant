@@ -302,7 +302,7 @@ def _write_managed_stage_runs(env: dict[str, str], stages: set[str]) -> None:
     """Persist prepared-stage set into process environment."""
     ordered = [
         stage
-        for stage in ("start", "test", "end", "command", "all")
+        for stage in ("start", "run", "end", "command", "all")
         if stage in stages
     ]
     env[_MANAGED_STAGE_RUNS_ENV] = ",".join(ordered)

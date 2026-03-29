@@ -61,6 +61,41 @@ Example:
 ## Version 1.0.0
 
 - 2026-03-29:
+  Change: aligned the last stale `test` workflow residue with the public
+    `run` contract, strengthened the `pipx` lifecycle proof to execute the
+    full installed workflow, and normalized the final managed-environment
+    stage token to `run`.
+  Why: closed the remaining doc/proof/internal seams that an external
+    release-candidate audit could still flag after the larger workflow
+    contract fixes had already landed.
+  Impact: preserves a fully truthful `run` contract across package and custom
+    docs, records gate-to-run evidence honestly in the policy maps, proves
+    the full documented workflow in `pipx` CI, and removes the old internal
+    `test` token from managed-environment stage persistence.
+  Files:
+  .github/workflows/ci-and-test.yml
+  CHANGELOG.md
+  POLICY_MAP.md
+  devcovenant/builtin/policies/README.md
+  devcovenant/builtin/policies/managed_environment/\
+    managed_environment_runtime.py
+  devcovenant/custom/README.md
+  devcovenant/custom/policies/README.md
+  devcovenant/custom/profiles/README.md
+  devcovenant/custom/profiles/devcovrepo/assets/POLICY_MAP.yaml
+  devcovenant/custom/profiles/devcovrepo/assets/docs/profiles.md
+  devcovenant/custom/profiles/devcovrepo/assets/docs/registry.md
+  devcovenant/custom/profiles/devcovrepo/assets/docs/workflow.md
+  devcovenant/custom/profiles/devcovrepo/devcovrepo.yaml
+  devcovenant/docs/policies.md
+  devcovenant/docs/profiles.md
+  devcovenant/docs/registry.md
+  devcovenant/docs/workflow.md
+  devcovenant/registry/registry.yaml
+  tests/devcovenant/builtin/policies/managed_environment/\
+    test_managed_environment_runtime.py
+
+- 2026-03-29:
   Change: tightened `devcovenant asset` to a Desktop-only copy contract with
     an optional Desktop output filename instead of accepting general
     destination paths.

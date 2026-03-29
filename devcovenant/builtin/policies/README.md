@@ -1,5 +1,5 @@
 # Builtin Policies
-**Last Updated:** 2026-03-28
+**Last Updated:** 2026-03-29
 **Project Version:** 1.0.0
 
 ## Table of Contents
@@ -64,4 +64,4 @@ A custom policy override suppresses builtin autofix helpers for that policy ID.
 4. Run `devcovenant refresh` after descriptor metadata changes.
 5. Run full gate sequence before finalizing:
    `gate --start` -> `gate --mid` (rerun until clean) ->
-   `test` -> `gate --end`.
+   `run` -> `gate --end`.

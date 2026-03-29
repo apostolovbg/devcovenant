@@ -48,6 +48,9 @@ In this repository, tracked registry state now also records the repo-specific
 the scanner steps merged into `ci-and-test` and the dependent
 `build-and-install-test` proof for the built wheel, the built sdist, and the
 documented `pipx` machine-install path.
+That tracked CI metadata now reflects the stronger proof shape too: all three
+install paths are proven against the public workflow contract instead of
+leaving the `pipx` surface at a lighter activation-only check.
 That same tracked state also changes when release-facing package-data or
 dependency-management semantics change, because the registry records the
 resolved metadata the runtime actually uses rather than just the visible

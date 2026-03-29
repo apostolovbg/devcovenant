@@ -161,5 +161,36 @@ jobs:
         )
         PY
         "$PIPX_BIN_DIR/devcovenant" deploy
+        mkdir -p tests
+        cat > tests/__init__.py <<'PY'
+        """Proof-test package for installed workflow validation."""
+        PY
+        cat > tests/test_smoke.py <<'PY'
+        """Installed artifact smoke tests for lifecycle proof."""
+
+        import unittest
+
+
+        class SmokeTest(unittest.TestCase):
+            """Prove the packaged workflow can run a minimal test suite."""
+
+            def test_truth(self) -> None:
+                """Keep the installed-artifact proof suite non-empty."""
+                self.assertTrue(True)
+
+
+        if __name__ == "__main__":
+            unittest.main()
+        PY
+        "$PIPX_BIN_DIR/devcovenant" refresh
+        git add .
+        git commit -m "bootstrap pipx repo"
+        python3 -m venv .venv
+        .venv/bin/python -m pip install --upgrade pip
+        .venv/bin/python -m pip install -r requirements.lock
+        "$PIPX_BIN_DIR/devcovenant" gate --start
+        "$PIPX_BIN_DIR/devcovenant" gate --mid
+        "$PIPX_BIN_DIR/devcovenant" run
+        "$PIPX_BIN_DIR/devcovenant" gate --end
         "$PIPX_BIN_DIR/devcovenant" check
         popd >/dev/null

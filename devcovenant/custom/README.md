@@ -1,5 +1,5 @@
 # Custom Extensions
-**Last Updated:** 2026-03-09
+**Last Updated:** 2026-03-29
 **Project Version:** 1.0.0
 
 ## Table of Contents
@@ -50,4 +50,4 @@ intentional and documented in `SPEC.md`.
 4. Run `devcovenant refresh` after manifest or descriptor changes.
 5. Run full gate sequence before handing off changes:
    `gate --start` -> `gate --mid` (rerun until clean) ->
-   `test` -> `gate --end`.
+   `run` -> `gate --end`.

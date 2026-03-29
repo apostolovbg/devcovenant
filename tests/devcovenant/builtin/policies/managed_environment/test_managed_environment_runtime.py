@@ -85,6 +85,19 @@ def _unit_test_invalid_managed_command_stage_raises() -> None:
         raise AssertionError("Expected ValueError for invalid stage token.")
 
 
+def _unit_test_write_managed_stage_runs_uses_run_token() -> None:
+    """Persisted managed-stage order should use `run`, not legacy `test`."""
+    module = importlib.import_module(MODULE)
+    env: dict[str, str] = {}
+
+    module._write_managed_stage_runs(
+        env,
+        {"start", "run", "end", "command", "all"},
+    )
+
+    assert env[module._MANAGED_STAGE_RUNS_ENV] == ("start,run,end,command,all")
+
+
 def _unit_test_stage_bootstrap_dedupes_on_reexec(
     monkeypatch: MonkeyPatch,
 ) -> None:
@@ -465,6 +478,10 @@ class GeneratedUnittestCases(unittest.TestCase):
     def test_invalid_managed_command_stage_raises(self):
         """Run invalid-stage parser assertion."""
         _unit_test_invalid_managed_command_stage_raises()
+
+    def test_write_managed_stage_runs_uses_run_token(self):
+        """Run managed-stage persistence assertions."""
+        _unit_test_write_managed_stage_runs_uses_run_token()
 
     def test_stage_bootstrap_dedupes_on_reexec(self):
         """Run stage bootstrap dedupe assertions."""

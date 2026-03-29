@@ -40,7 +40,7 @@ body: |-
     consistency as a first-class DevCovenant runtime invariant.
   - `devcov-structure-guard`: enforces required DevCovenant runtime shape and
     repo-local bytecode hygiene where configured.
-  - `devflow-run-gates`: enforces gate start -> test -> gate end evidence and
+  - `devflow-run-gates`: enforces gate start -> run -> gate end evidence and
     validates required-command and pre-commit execution records.
 
   ## Builtin Policies
