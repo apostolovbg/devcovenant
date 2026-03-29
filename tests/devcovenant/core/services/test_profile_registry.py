@@ -533,7 +533,9 @@ def _unit_test_publish_workflow_uses_validated_build_artifacts() -> None:
     )
     assert provenance_with.get("name") == "devcovenant-provenance"
     assert 'payload.get("ci_run_id")' in all_run_blocks
+    assert 'payload.get("ci_run_attempt")' in all_run_blocks
     assert "EXPECTED_CI_RUN_ID" in all_run_blocks
+    assert "EXPECTED_CI_RUN_ATTEMPT" in all_run_blocks
     assert "build_run_id" not in all_run_blocks
 
 

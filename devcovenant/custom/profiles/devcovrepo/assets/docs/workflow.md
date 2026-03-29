@@ -292,7 +292,8 @@ relying on indented subshell heredocs that can break shell parsing in GitHub
 Actions.
 The `publish.yml` workflow follows the provenance side of that same rule:
 it should accept a specific successful `CI` run, download the validated
-artifact and provenance from that run, verify them, and publish without
+artifact and provenance from that run, verify the recorded `ci_run_id`,
+`ci_run_attempt`, `head_sha`, and artifact hashes, and publish without
 rebuilding a fresh dist inside publish.
 
 ## Managed Environment In CI

@@ -274,6 +274,9 @@ class GeneratedUnittestCases(unittest.TestCase):
             violations = _configured_check().check(ctx)
             self.assertTrue(violations)
             self.assertIn("gate --start", violations[0].message)
+            self.assertIn("gate --mid", violations[0].message)
+            self.assertIn("devcovenant run", violations[0].message)
+            self.assertIn("gate --end", violations[0].message)
 
     def test_missing_status_allows_read_only_check_bootstrap(self):
         """Read-only check should not fail before first gate session."""
@@ -449,6 +452,27 @@ class GeneratedUnittestCases(unittest.TestCase):
             self.assertTrue(violations)
             self.assertIn("missing runs: tests", violations[0].message)
             self.assertIn("Run `devcovenant run`.", violations[0].message)
+
+    def test_missing_workflow_session_mentions_mid_gate(self):
+        """Missing workflow-session guidance should teach the full flow."""
+        with tempfile.TemporaryDirectory() as temp_dir:
+            tmp_path = Path(temp_dir).resolve()
+            status_path = _status_path(tmp_path)
+            status_path.parent.mkdir(parents=True, exist_ok=True)
+            status_path.write_text(
+                json.dumps(_closed_session_payload()),
+                encoding="utf-8",
+            )
+            ctx = _make_ctx(tmp_path, ["src/example.py"], working_numstat={})
+            session_path = _workflow_session_path(tmp_path)
+            if session_path.exists():
+                session_path.unlink()
+            violations = _configured_check().check(ctx)
+            self.assertTrue(violations)
+            self.assertIn("gate --start", violations[0].message)
+            self.assertIn("gate --mid", violations[0].message)
+            self.assertIn("devcovenant run", violations[0].message)
+            self.assertIn("gate --end", violations[0].message)
 
     def test_custom_status_path(self):
         """Custom evidence paths from config overrides should be honored."""

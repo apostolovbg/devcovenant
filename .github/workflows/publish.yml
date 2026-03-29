@@ -55,6 +55,7 @@ jobs:
             }
 
             core.setOutput("run_id", String(run.id));
+            core.setOutput("run_attempt", String(run.run_attempt));
             core.setOutput("head_sha", run.head_sha);
             core.setOutput("html_url", run.html_url);
       - name: Download validated distributions
@@ -76,6 +77,7 @@ jobs:
       - name: Verify downloaded provenance
         env:
           EXPECTED_CI_RUN_ID: ${{ steps.ci-run.outputs.run_id }}
+          EXPECTED_CI_RUN_ATTEMPT: ${{ steps.ci-run.outputs.run_attempt }}
           EXPECTED_HEAD_SHA: ${{ steps.ci-run.outputs.head_sha }}
         run: |
           python - <<'PY'
@@ -92,6 +94,13 @@ jobs:
               raise SystemExit(
                   "Downloaded provenance ci_run_id does not match the "
                   "selected CI run."
+              )
+          if str(payload.get("ci_run_attempt")) != os.environ[
+              "EXPECTED_CI_RUN_ATTEMPT"
+          ]:
+              raise SystemExit(
+                  "Downloaded provenance ci_run_attempt does not match "
+                  "the selected CI run attempt."
               )
           if payload.get("head_sha") != os.environ["EXPECTED_HEAD_SHA"]:
               raise SystemExit(

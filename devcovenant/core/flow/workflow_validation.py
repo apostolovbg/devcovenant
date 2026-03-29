@@ -1,4 +1,4 @@
-"""Session gate contract for start, workflow runs, and end."""
+"""Session gate contract for start, mid, workflow runs, and end."""
 
 from __future__ import annotations
 
@@ -239,7 +239,8 @@ class DevflowRunGates(CoreInvariantCheck):
                     file_path=status_rel,
                     message=(
                         "Gate status is missing. Run "
-                        "`devcovenant gate --start`, then `devcovenant run`, "
+                        "`devcovenant gate --start`, then "
+                        "`devcovenant gate --mid`, then `devcovenant run`, "
                         "then `devcovenant gate --end`."
                     ),
                 )
@@ -355,8 +356,10 @@ class DevflowRunGates(CoreInvariantCheck):
                     file_path=workflow_session_rel,
                     message=(
                         "Workflow session is missing. Run "
-                        "`devcovenant gate --start`, execute workflow "
-                        "runs, then `devcovenant gate --end`."
+                        "`devcovenant gate --start`, then "
+                        "`devcovenant gate --mid`, then execute workflow "
+                        "runs with `devcovenant run`, then "
+                        "`devcovenant gate --end`."
                     ),
                 )
             ]

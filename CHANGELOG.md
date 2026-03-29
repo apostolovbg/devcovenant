@@ -61,6 +61,28 @@ Example:
 ## Version 1.0.0
 
 - 2026-03-29:
+  Change: updated workflow-validation guidance to teach the four-stage
+    `gate --start -> gate --mid -> run -> gate --end` contract, extended
+    manual publish to verify `ci_run_attempt`, and reset `PLAN.md` to the
+    generic managed template body.
+  Why: the residual review found one stale operator-guidance surface, one
+    small provenance-verification gap, and the repo plan still carried
+    completed audit-remediation history instead of the generic active-work
+    template.
+  Impact: validation errors now teach the right workflow, manual publish
+    checks CI provenance more exactly, and `PLAN.md` is back to a neutral
+    template for future work instead of a frozen release-remediation record.
+  Files:
+  .github/workflows/publish.yml
+  CHANGELOG.md
+  PLAN.md
+  devcovenant/custom/profiles/devcovrepo/assets/docs/workflow.md
+  devcovenant/core/flow/workflow_validation.py
+  devcovenant/docs/workflow.md
+  tests/devcovenant/core/flow/test_workflow_validation.py
+  tests/devcovenant/core/services/test_profile_registry.py
+
+- 2026-03-29:
   Change: clarified the profile and registry docs so they no longer say the
     repo profile owns the `.gha-pycache/` ignore rule or that tracked
     registry state itself records the generated ignore surface.
