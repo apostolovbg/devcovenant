@@ -176,6 +176,7 @@ _TOP_LEVEL_COMMAND_ENV = "DEVCOV_TOP_COMMAND"
 _WAIT_PROGRESS_MESSAGE = output_runtime_module.WAIT_PROGRESS_MESSAGE
 _WAIT_PROGRESS_INITIAL_SECONDS = 15.0
 _WAIT_PROGRESS_REPEAT_SECONDS = 60.0
+_PTY_EOF_EXIT_WAIT_SECONDS = 0.1
 
 
 def _normalize_output_mode(raw_value: str | None) -> OutputMode:
@@ -1104,7 +1105,15 @@ def _run_subprocess_with_runtime_output_pty(
             try:
                 chunk_bytes = os.read(master_fd, 4096)
             except OSError as exc:
-                if exc.errno == errno.EIO and process.poll() is not None:
+                if exc.errno == errno.EIO:
+                    # Linux PTYs can raise EIO at EOF before poll() reflects
+                    # the child exit. Give the process a brief reap window
+                    # before treating this as a real runtime failure.
+                    try:
+                        process.wait(timeout=_PTY_EOF_EXIT_WAIT_SECONDS)
+                    except subprocess.TimeoutExpired:
+                        if process.poll() is None:
+                            continue
                     break
                 raise
             if not chunk_bytes:

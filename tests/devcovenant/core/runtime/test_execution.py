@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import errno
 import importlib
 import io
 import os
@@ -323,6 +324,85 @@ def _unit_test_streaming_helper_uses_pipe_when_console_is_suppressed() -> None:
     assert result.returncode == 0
     assert combined == ""
     assert calls == ["pipe"]
+
+
+def _unit_test_pty_transport_tolerates_eio_before_exit_poll() -> None:
+    """PTY EOF should not fail when Linux raises EIO before poll updates."""
+    module = importlib.import_module(MODULE)
+    previous_pty = module.pty
+    previous_popen = module.subprocess.Popen
+    previous_select = module.select.select
+    previous_os_read = module.os.read
+    previous_os_close = module.os.close
+
+    class _FakePty:
+        """Minimal PTY stub for focused EOF-race coverage."""
+
+        @staticmethod
+        def openpty():
+            """Return deterministic fake PTY file descriptors."""
+            return 11, 12
+
+    class _FakeProcess:
+        """Process stub that exits during the PTY EOF grace wait."""
+
+        def __init__(self) -> None:
+            """Initialize the fake process in a not-yet-exited state."""
+            self.returncode = None
+            self.wait_timeouts: list[float | None] = []
+
+        def poll(self):
+            """Mirror subprocess.poll() against the fake returncode."""
+            return self.returncode
+
+        def wait(self, timeout=None):
+            """Record the grace wait and resolve the fake process exit."""
+            self.wait_timeouts.append(timeout)
+            self.returncode = 0
+            return 0
+
+    fake_process = _FakeProcess()
+
+    def _fake_popen(*_args, **_kwargs):
+        """Return the focused fake process for PTY execution."""
+        return fake_process
+
+    def _fake_select(*_args, **_kwargs):
+        """Keep the PTY read path hot for the EOF-race scenario."""
+        return ([11], [], [])
+
+    def _fake_read(file_descriptor, _size):
+        """Raise the Linux PTY EOF signal used in the failing build."""
+        del file_descriptor
+        raise OSError(errno.EIO, "Input/output error")
+
+    def _fake_close(file_descriptor):
+        """Ignore close calls in the focused fake PTY setup."""
+        del file_descriptor
+        return None
+
+    try:
+        module.pty = _FakePty()
+        module.subprocess.Popen = _fake_popen
+        module.select.select = _fake_select
+        module.os.read = _fake_read
+        module.os.close = _fake_close
+        result, combined = module.run_subprocess_with_runtime_output(
+            ["echo", "ok"],
+            emit_console=True,
+            capture_combined_output=True,
+        )
+    finally:
+        module.pty = previous_pty
+        module.subprocess.Popen = previous_popen
+        module.select.select = previous_select
+        module.os.read = previous_os_read
+        module.os.close = previous_os_close
+
+    assert result.returncode == 0
+    assert combined == ""
+    assert fake_process.wait_timeouts
+    assert fake_process.wait_timeouts[0] == module._PTY_EOF_EXIT_WAIT_SECONDS
 
 
 def _unit_test_resolve_child_output_plan_uses_channel_policy_matrix() -> None:
@@ -1568,6 +1648,10 @@ class GeneratedUnittestCases(unittest.TestCase):
     def test_streaming_helper_uses_pipe_when_console_is_suppressed(self):
         """Run pipe-dispatch assertions for hidden-console subprocesses."""
         _unit_test_streaming_helper_uses_pipe_when_console_is_suppressed()
+
+    def test_pty_transport_tolerates_eio_before_exit_poll(self):
+        """Run PTY EOF-race handling assertions."""
+        _unit_test_pty_transport_tolerates_eio_before_exit_poll()
 
     def test_resolve_child_output_plan_uses_channel_policy_matrix(self):
         """Run channel-plan resolution assertions from active mode."""

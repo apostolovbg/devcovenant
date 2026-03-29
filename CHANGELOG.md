@@ -61,6 +61,23 @@ Example:
 ## Version 1.0.0
 
 - 2026-03-29:
+  Change: hardened the shared PTY child-output runner to treat Linux EOF
+    `EIO` races as normal command completion once the child exits, and added
+    regression coverage plus workflow-doc wording for the CI proof path.
+  Why: the Build wheel proof hit a successful `gate --mid` path that still
+    raised `[Errno 5] Input/output error` at PTY EOF before the child exit had
+    been reaped.
+  Impact: successful proof-gate commands now finish cleanly in Linux CI
+    instead of failing after all hook output has already passed, and the docs
+    now explain that runtime output behavior honestly.
+  Files:
+  CHANGELOG.md
+  devcovenant/core/runtime/execution.py
+  devcovenant/custom/profiles/devcovrepo/assets/docs/workflow.md
+  devcovenant/docs/workflow.md
+  tests/devcovenant/core/runtime/test_execution.py
+
+- 2026-03-29:
   Change: updated workflow-validation guidance to teach the four-stage
     `gate --start -> gate --mid -> run -> gate --end` contract, extended
     manual publish to verify `ci_run_attempt`, and reset `PLAN.md` to the

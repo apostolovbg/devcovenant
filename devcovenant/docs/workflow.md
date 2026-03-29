@@ -162,6 +162,9 @@ in that mode.
 In `normal` test mode, DevCovenant keeps console progress concise and leaves
 full child output in the run logs.
 That is why the log artifacts matter.
+The shared child-command runner also treats Linux PTY EOF races as normal
+command completion once the child exits, so successful CI and proof-gate runs
+do not fail after emitting their full output.
 Profiles declare those richer reporting hooks under
 `workflow_runs[*].recording`, so output-mode overrides, event adapters, and
 workflow profiling are run-owned instead of hardcoded by run id.
