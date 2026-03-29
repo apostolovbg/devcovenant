@@ -161,8 +161,8 @@ ChildOutputChannel = output_runtime_module.ChildOutputChannel
 _OUTPUT_MODE_DEFAULT: OutputMode = output_runtime_module.OUTPUT_MODE_DEFAULT
 _MANAGED_ENV_POLICY_ID = "managed-environment"
 _MANAGED_ENV_ACTION_RESOLVE_STAGE = "resolve-stage"
-_WORKFLOW_PHASE_COMMAND_OUTPUT_MODE: OutputMode | None = None
-_WORKFLOW_PHASE_COMMAND_LABEL = ""
+_WORKFLOW_RUN_COMMAND_OUTPUT_MODE: OutputMode | None = None
+_WORKFLOW_RUN_COMMAND_LABEL = ""
 _PYCACHE_PREFIX_ENABLED = False
 _PYCACHE_PREFIX_VALUE: str | None = None
 _LOGS_KEEP_LAST_DEFAULT = 0
@@ -1828,7 +1828,7 @@ def _run_command(
     cwd: Path | None = None,
 ) -> subprocess.CompletedProcess:
     """Execute command and raise when it fails."""
-    effective_mode = _WORKFLOW_PHASE_COMMAND_OUTPUT_MODE or get_output_mode()
+    effective_mode = _WORKFLOW_RUN_COMMAND_OUTPUT_MODE or get_output_mode()
     command_env = _apply_repo_bytecode_env(dict(env or os.environ))
     result, _ = run_child_command_with_output_policy(
         command,
@@ -2113,8 +2113,8 @@ def _execute_command_group_workflow_run(
 ) -> dict[str, object]:
     """Run one command-group workflow run and return result details."""
 
-    global _WORKFLOW_PHASE_COMMAND_LABEL
-    global _WORKFLOW_PHASE_COMMAND_OUTPUT_MODE
+    global _WORKFLOW_RUN_COMMAND_LABEL
+    global _WORKFLOW_RUN_COMMAND_OUTPUT_MODE
     run_id = str(run.get("id") or "").strip().lower()
     summary_label = (
         str(
@@ -2190,15 +2190,15 @@ def _execute_command_group_workflow_run(
                 if managed_env is not None:
                     run_kwargs["env"] = managed_env
                     run_kwargs["cwd"] = repo_root
-                previous_mode = _WORKFLOW_PHASE_COMMAND_OUTPUT_MODE
-                previous_label = _WORKFLOW_PHASE_COMMAND_LABEL
-                _WORKFLOW_PHASE_COMMAND_OUTPUT_MODE = run_output_mode
-                _WORKFLOW_PHASE_COMMAND_LABEL = raw
+                previous_mode = _WORKFLOW_RUN_COMMAND_OUTPUT_MODE
+                previous_label = _WORKFLOW_RUN_COMMAND_LABEL
+                _WORKFLOW_RUN_COMMAND_OUTPUT_MODE = run_output_mode
+                _WORKFLOW_RUN_COMMAND_LABEL = raw
                 try:
                     result = _run_command(command_tokens, **run_kwargs)
                 finally:
-                    _WORKFLOW_PHASE_COMMAND_OUTPUT_MODE = previous_mode
-                    _WORKFLOW_PHASE_COMMAND_LABEL = previous_label
+                    _WORKFLOW_RUN_COMMAND_OUTPUT_MODE = previous_mode
+                    _WORKFLOW_RUN_COMMAND_LABEL = previous_label
             except subprocess.CalledProcessError as exc:
                 finished = _dt.datetime.now(tz=_dt.timezone.utc)
                 failed_commands += 1

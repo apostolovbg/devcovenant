@@ -1460,6 +1460,77 @@ def _unit_test_show_gate_status_handles_missing_and_malformed_status() -> None:
         assert any(line.startswith("Error: ") for line in malformed_lines)
 
 
+def _unit_test_show_gate_status_reports_mid_stage() -> None:
+    """`show_gate_status` should report the public `mid` lifecycle stage."""
+
+    module = importlib.import_module(MODULE)
+    with tempfile.TemporaryDirectory() as tmpdir:
+        repo_root = Path(tmpdir)
+        status_path = (
+            repo_root
+            / "devcovenant"
+            / "registry"
+            / "runtime"
+            / "gate_status.json"
+        )
+        status_path.parent.mkdir(parents=True, exist_ok=True)
+        status_path.write_text(
+            json.dumps(
+                {
+                    "session_id": "mid-1",
+                    "session_state": "open",
+                    "pre_commit_start_epoch": 10.0,
+                    "pre_commit_start_utc": "2026-02-25T11:00:00+00:00",
+                },
+                indent=2,
+            )
+            + "\n",
+            encoding="utf-8",
+        )
+        workflow_session_path = (
+            repo_root
+            / "devcovenant"
+            / "registry"
+            / "runtime"
+            / "workflow_session.json"
+        )
+        workflow_session_path.write_text(
+            json.dumps(
+                {
+                    "schema_version": 1,
+                    "session_id": "mid-1",
+                    "session_state": "open",
+                    "anchors": {
+                        "mid": {
+                            "id": "mid",
+                            "status": "passed",
+                            "last_run_utc": "2026-02-25T11:02:00+00:00",
+                            "last_run_epoch": 12.0,
+                            "commands": ["devcovenant gate --mid"],
+                        }
+                    },
+                    "runs": {},
+                    "run_ids": ["tests"],
+                },
+                indent=2,
+            )
+            + "\n",
+            encoding="utf-8",
+        )
+        lines: list[str] = []
+        with mock.patch.object(
+            module,
+            "runtime_print",
+            side_effect=lines.append,
+        ):
+            exit_code = module.show_gate_status(repo_root)
+
+        assert exit_code == 0
+        assert "Gate Status: open" in lines
+        assert "Session ID: mid-1" in lines
+        assert "Last Stage: mid" in lines
+
+
 def _unit_test_status_pointer_skips_current_gate_status_run() -> None:
     """Status pointer should prefer the prior non-status run over itself."""
     module = importlib.import_module(MODULE)
@@ -1633,6 +1704,11 @@ class GeneratedUnittestCases(unittest.TestCase):
     def test_show_gate_status_handles_missing_and_malformed_status(self):
         """Run gate-status missing/malformed read-only handling assertions."""
         _unit_test_show_gate_status_handles_missing_and_malformed_status()
+
+    def test_show_gate_status_reports_mid_stage(self):
+        """Run gate-status `mid` reporting assertions."""
+
+        _unit_test_show_gate_status_reports_mid_stage()
 
     def test_status_pointer_skips_current_gate_status_run(self):
         """Run strict-pointer assertions for current `gate --status` runs."""

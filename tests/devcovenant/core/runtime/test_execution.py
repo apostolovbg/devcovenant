@@ -884,8 +884,8 @@ def _unit_test_active_run_log_captures_runtime_and_subprocess_output() -> None:
             "run",
             ["devcovenant", "run"],
         )
-        previous_test_mode = module._WORKFLOW_PHASE_COMMAND_OUTPUT_MODE
-        previous_test_label = module._WORKFLOW_PHASE_COMMAND_LABEL
+        previous_test_mode = module._WORKFLOW_RUN_COMMAND_OUTPUT_MODE
+        previous_test_label = module._WORKFLOW_RUN_COMMAND_LABEL
         stdout_buffer = io.StringIO()
         stderr_buffer = io.StringIO()
         try:
@@ -895,8 +895,8 @@ def _unit_test_active_run_log_captures_runtime_and_subprocess_output() -> None:
                 redirect_stderr(stderr_buffer),
             ):
                 module.runtime_print("runtime line")
-                module._WORKFLOW_PHASE_COMMAND_OUTPUT_MODE = None
-                module._WORKFLOW_PHASE_COMMAND_LABEL = ""
+                module._WORKFLOW_RUN_COMMAND_OUTPUT_MODE = None
+                module._WORKFLOW_RUN_COMMAND_LABEL = ""
                 module._run_command(
                     [
                         sys.executable,
@@ -916,8 +916,8 @@ def _unit_test_active_run_log_captures_runtime_and_subprocess_output() -> None:
                 status="success",
             )
         finally:
-            module._WORKFLOW_PHASE_COMMAND_OUTPUT_MODE = previous_test_mode
-            module._WORKFLOW_PHASE_COMMAND_LABEL = previous_test_label
+            module._WORKFLOW_RUN_COMMAND_OUTPUT_MODE = previous_test_mode
+            module._WORKFLOW_RUN_COMMAND_LABEL = previous_test_label
             module.clear_active_run_log_context()
 
         stdout_log = context.require_paths().stdout_log.read_text(
@@ -1007,14 +1007,14 @@ def _unit_test_normal_mode_workflow_child_output_is_logged() -> None:
             "run",
             ["devcovenant", "run"],
         )
-        previous_workflow_mode = module._WORKFLOW_PHASE_COMMAND_OUTPUT_MODE
-        previous_workflow_label = module._WORKFLOW_PHASE_COMMAND_LABEL
+        previous_workflow_mode = module._WORKFLOW_RUN_COMMAND_OUTPUT_MODE
+        previous_workflow_label = module._WORKFLOW_RUN_COMMAND_LABEL
         stdout_buffer = io.StringIO()
         stderr_buffer = io.StringIO()
         try:
             module.set_active_run_log_context(context)
-            module._WORKFLOW_PHASE_COMMAND_OUTPUT_MODE = "normal"
-            module._WORKFLOW_PHASE_COMMAND_LABEL = "pytest"
+            module._WORKFLOW_RUN_COMMAND_OUTPUT_MODE = "normal"
+            module._WORKFLOW_RUN_COMMAND_LABEL = "pytest"
             with (
                 redirect_stdout(stdout_buffer),
                 redirect_stderr(stderr_buffer),
@@ -1037,8 +1037,8 @@ def _unit_test_normal_mode_workflow_child_output_is_logged() -> None:
                 status="success",
             )
         finally:
-            module._WORKFLOW_PHASE_COMMAND_OUTPUT_MODE = previous_workflow_mode
-            module._WORKFLOW_PHASE_COMMAND_LABEL = previous_workflow_label
+            module._WORKFLOW_RUN_COMMAND_OUTPUT_MODE = previous_workflow_mode
+            module._WORKFLOW_RUN_COMMAND_LABEL = previous_workflow_label
             module.clear_active_run_log_context()
 
         console_output = stdout_buffer.getvalue()
@@ -1052,7 +1052,7 @@ def _unit_test_normal_mode_workflow_child_output_is_logged() -> None:
 
 
 def _unit_test_resolve_workflow_run_output_mode_uses_recording_hook() -> None:
-    """Phase output mode should follow the declared recording hook."""
+    """Run output mode should follow the declared recording hook."""
 
     module = importlib.import_module(MODULE)
     previous_mode = module.get_output_mode()

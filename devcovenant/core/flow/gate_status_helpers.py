@@ -8,6 +8,7 @@ from pathlib import Path
 import devcovenant.core.flow.gate_status_validation as status_validation
 import devcovenant.core.runtime.execution as execution_runtime_module
 import devcovenant.core.runtime.registry as registry_runtime_module
+import devcovenant.core.runtime.workflow_session as workflow_session_runtime
 
 
 def _load_status(path: Path) -> dict:
@@ -42,6 +43,7 @@ def _gate_status_summary_lines(repo_root: Path) -> list[str]:
         if latest_line:
             lines.append(latest_line)
         return lines
+    workflow_payload = _load_workflow_session_payload(repo_root)
 
     session_state = str(payload.get("session_state", "")).strip().lower()
     state_label = session_state or "unknown"
@@ -49,7 +51,7 @@ def _gate_status_summary_lines(repo_root: Path) -> list[str]:
     session_id = str(payload.get("session_id", "")).strip()
     if session_id:
         lines.append(f"Session ID: {session_id}")
-    last_stage = _infer_last_gate_stage(payload)
+    last_stage = _infer_last_gate_stage(payload, workflow_payload)
     if last_stage:
         lines.append(f"Last Stage: {last_stage}")
 
@@ -61,7 +63,7 @@ def _gate_status_summary_lines(repo_root: Path) -> list[str]:
     session_end = _status_time_token(payload, "session_end_utc")
     if session_end:
         lines.append(f"Session End: {session_end}")
-    last_workflow_run = _status_time_token(payload, "last_run_utc")
+    last_workflow_run = _latest_workflow_run_utc(payload, workflow_payload)
     if last_workflow_run:
         lines.append(f"Last Workflow Run: {last_workflow_run}")
     if latest_line:
@@ -69,18 +71,132 @@ def _gate_status_summary_lines(repo_root: Path) -> list[str]:
     return lines
 
 
-def _infer_last_gate_stage(payload: dict[str, object]) -> str:
-    """Infer the latest completed lifecycle stage from gate-status fields."""
-    pre_commit_end = _status_epoch(payload, "pre_commit_end_epoch")
-    if pre_commit_end > 0.0:
-        return "end"
-    pre_commit_start = _status_epoch(payload, "pre_commit_start_epoch")
-    last_run_epoch = _status_epoch(payload, "last_run_epoch")
-    if pre_commit_start > 0.0 and last_run_epoch >= pre_commit_start:
-        return "run"
-    if pre_commit_start > 0.0:
-        return "start"
-    return ""
+def _infer_last_gate_stage(
+    payload: dict[str, object],
+    workflow_payload: dict[str, object] | None = None,
+) -> str:
+    """Infer the latest completed public workflow stage."""
+
+    stage_epochs = _stage_epochs(payload, workflow_payload)
+    resolved = [
+        (index, stage, epoch)
+        for index, (stage, epoch) in enumerate(stage_epochs)
+        if epoch > 0.0
+    ]
+    if not resolved:
+        return ""
+    _, stage, _ = max(resolved, key=lambda item: (item[2], item[0]))
+    return stage
+
+
+def _load_workflow_session_payload(repo_root: Path) -> dict[str, object]:
+    """Load workflow-session payload for status rendering when available."""
+
+    try:
+        return workflow_session_runtime.load_workflow_session(repo_root)
+    except ValueError:
+        return {}
+
+
+def _anchor_epoch(
+    workflow_payload: dict[str, object] | None,
+    stage: str,
+) -> float:
+    """Return one workflow-session anchor epoch when present."""
+
+    if not isinstance(workflow_payload, dict):
+        return 0.0
+    anchors = workflow_payload.get("anchors")
+    if not isinstance(anchors, dict):
+        return 0.0
+    anchor = anchors.get(stage)
+    if not isinstance(anchor, dict):
+        return 0.0
+    return _status_epoch(anchor, "last_run_epoch")
+
+
+def _runs_epoch(workflow_payload: dict[str, object] | None) -> float:
+    """Return the latest workflow-run epoch from session state."""
+
+    if not isinstance(workflow_payload, dict):
+        return 0.0
+    runs = workflow_payload.get("runs")
+    if not isinstance(runs, dict):
+        return 0.0
+    latest = 0.0
+    for entry in runs.values():
+        if not isinstance(entry, dict):
+            continue
+        latest = max(latest, _status_epoch(entry, "last_run_epoch"))
+    return latest
+
+
+def _runs_last_run_utc(workflow_payload: dict[str, object] | None) -> str:
+    """Return the latest workflow-run UTC token from session state."""
+
+    if not isinstance(workflow_payload, dict):
+        return ""
+    runs = workflow_payload.get("runs")
+    if not isinstance(runs, dict):
+        return ""
+    latest_epoch = 0.0
+    latest_token = ""
+    for entry in runs.values():
+        if not isinstance(entry, dict):
+            continue
+        epoch = _status_epoch(entry, "last_run_epoch")
+        token = _status_time_token(entry, "last_run_utc")
+        if epoch > latest_epoch and token:
+            latest_epoch = epoch
+            latest_token = token
+    return latest_token
+
+
+def _stage_epochs(
+    payload: dict[str, object],
+    workflow_payload: dict[str, object] | None = None,
+) -> list[tuple[str, float]]:
+    """Return ordered public workflow stages with their latest epochs."""
+
+    return [
+        (
+            "start",
+            max(
+                _status_epoch(payload, "pre_commit_start_epoch"),
+                _anchor_epoch(workflow_payload, "start"),
+            ),
+        ),
+        ("mid", _anchor_epoch(workflow_payload, "mid")),
+        (
+            "run",
+            max(
+                _status_epoch(payload, "last_run_epoch"),
+                _runs_epoch(workflow_payload),
+            ),
+        ),
+        (
+            "end",
+            max(
+                _status_epoch(payload, "pre_commit_end_epoch"),
+                _anchor_epoch(workflow_payload, "end"),
+            ),
+        ),
+    ]
+
+
+def _latest_workflow_run_utc(
+    payload: dict[str, object],
+    workflow_payload: dict[str, object] | None = None,
+) -> str:
+    """Return the latest workflow-run UTC token across both ledgers."""
+
+    gate_epoch = _status_epoch(payload, "last_run_epoch")
+    gate_token = _status_time_token(payload, "last_run_utc")
+    session_epoch = _runs_epoch(workflow_payload)
+    session_token = _runs_last_run_utc(workflow_payload)
+    if session_epoch > gate_epoch and session_token:
+        return session_token
+    return gate_token
 
 
 def _status_epoch(payload: dict[str, object], key: str) -> float:

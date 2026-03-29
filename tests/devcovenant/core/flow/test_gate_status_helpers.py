@@ -24,6 +24,27 @@ def _write_status(repo_root: Path, payload: dict[str, object]) -> Path:
     return status_path
 
 
+def _write_workflow_session(
+    repo_root: Path,
+    payload: dict[str, object],
+) -> Path:
+    """Write one workflow-session payload under the runtime registry path."""
+
+    session_path = (
+        repo_root
+        / "devcovenant"
+        / "registry"
+        / "runtime"
+        / "workflow_session.json"
+    )
+    session_path.parent.mkdir(parents=True, exist_ok=True)
+    session_path.write_text(
+        json.dumps(payload, indent=2) + "\n",
+        encoding="utf-8",
+    )
+    return session_path
+
+
 def _unit_test_module_importable() -> None:
     """Module should import cleanly."""
     module = importlib.import_module(MODULE)
@@ -139,6 +160,46 @@ def _unit_test_gate_status_summary_lines_report_open_session() -> None:
         )
 
 
+def _unit_test_gate_status_summary_lines_report_mid_stage() -> None:
+    """Summary lines should report `mid` from workflow-session anchors."""
+
+    module = importlib.import_module(MODULE)
+    with tempfile.TemporaryDirectory() as tmpdir:
+        repo_root = Path(tmpdir)
+        _write_status(
+            repo_root,
+            {
+                "session_id": "open-mid-1",
+                "session_state": "open",
+                "pre_commit_start_epoch": 10.0,
+                "pre_commit_start_utc": "2026-02-27T06:00:00+00:00",
+            },
+        )
+        _write_workflow_session(
+            repo_root,
+            {
+                "schema_version": 1,
+                "session_id": "open-mid-1",
+                "session_state": "open",
+                "anchors": {
+                    "mid": {
+                        "id": "mid",
+                        "status": "passed",
+                        "last_run_utc": "2026-02-27T06:02:00+00:00",
+                        "last_run_epoch": 12.0,
+                        "commands": ["devcovenant gate --mid"],
+                    }
+                },
+                "runs": {},
+                "run_ids": ["tests"],
+            },
+        )
+        lines = module._gate_status_summary_lines(repo_root)
+        assert "Gate Status: open" in lines
+        assert "Session ID: open-mid-1" in lines
+        assert "Last Stage: mid" in lines
+
+
 class GeneratedUnittestCases(unittest.TestCase):
     """unittest wrappers for module-level tests."""
 
@@ -157,3 +218,8 @@ class GeneratedUnittestCases(unittest.TestCase):
     def test_gate_status_summary_lines_report_open_session(self):
         """Run gate-status summary line assertions for open sessions."""
         _unit_test_gate_status_summary_lines_report_open_session()
+
+    def test_gate_status_summary_lines_report_mid_stage(self):
+        """Run gate-status summary line assertions for `mid` sessions."""
+
+        _unit_test_gate_status_summary_lines_report_mid_stage()

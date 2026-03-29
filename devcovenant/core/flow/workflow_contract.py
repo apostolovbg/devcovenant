@@ -11,7 +11,7 @@ from devcovenant.core.services import (
 )
 from devcovenant.core.services import yaml_cache as yaml_cache_service
 
-SCHEMA_VERSION = 3
+SCHEMA_VERSION = 4
 ANCHOR_IDS = ("start", "mid", "end")
 _FRESHNESS_KINDS = {"ignore_paths", "any_change"}
 _RUNNER_KINDS = {
@@ -66,6 +66,16 @@ def _normalize_int(raw_value: object, *, default: int) -> int:
         return int(raw_value)
     except (TypeError, ValueError) as exc:
         raise ValueError(f"Invalid integer token `{raw_value}`.") from exc
+
+
+def _normalize_position_reference(
+    raw_value: object,
+    *,
+    default: str,
+) -> str:
+    """Normalize one workflow-position reference token."""
+
+    return str(raw_value or default).strip().lower() or default
 
 
 def _normalize_commands(raw_value: object, *, field_name: str) -> list[str]:
@@ -125,9 +135,20 @@ def _normalize_run_entry(
         raise ValueError(
             f"Profile `{profile_name}` has a workflow run without id."
         )
+    if run_id in ANCHOR_IDS:
+        raise ValueError(
+            f"Workflow run `{run_id}` in profile `{profile_name}` uses a "
+            "reserved anchor id."
+        )
     enabled = _normalize_bool(raw_entry.get("enabled"), default=True)
-    after = str(raw_entry.get("after") or "mid").strip().lower() or "mid"
-    before = str(raw_entry.get("before") or "end").strip().lower() or "end"
+    after = _normalize_position_reference(
+        raw_entry.get("after"),
+        default="mid",
+    )
+    before = _normalize_position_reference(
+        raw_entry.get("before"),
+        default="end",
+    )
     order = _normalize_int(raw_entry.get("order"), default=100)
 
     runner_raw = raw_entry.get("runner")
@@ -374,6 +395,129 @@ def _run_sort_key(run: Mapping[str, object]) -> tuple[int, str, str]:
     return (order, owner, run_id)
 
 
+def _graph_node_sort_key(
+    node_id: str,
+    run_map: Mapping[str, Mapping[str, object]],
+) -> tuple[int, int, int, str, str]:
+    """Return deterministic sort key for one anchor-or-run graph node."""
+
+    if node_id in ANCHOR_IDS:
+        return (0, ANCHOR_IDS.index(node_id), 0, "", "")
+    run = run_map.get(node_id, {})
+    order, owner, run_id = _run_sort_key(run)
+    return (1, 0, order, owner, run_id)
+
+
+def _position_token(
+    run: Mapping[str, object],
+    key: str,
+    *,
+    default: str,
+) -> str:
+    """Return one normalized position token from a run mapping."""
+
+    position = run.get("position")
+    if not isinstance(position, Mapping):
+        return default
+    return _normalize_position_reference(position.get(key), default=default)
+
+
+def _position_reference_error(
+    run_id: str,
+    field_name: str,
+    ref_id: str,
+    valid_ids: Sequence[str],
+) -> ValueError:
+    """Build one stable invalid-position-reference error."""
+
+    allowed = ", ".join(valid_ids)
+    return ValueError(
+        f"Workflow run `{run_id}` references unknown `{field_name}` target "
+        f"`{ref_id}`. Allowed targets: {allowed}."
+    )
+
+
+def _add_position_edge(
+    graph: dict[str, set[str]],
+    indegree: dict[str, int],
+    source: str,
+    target: str,
+) -> None:
+    """Add one directed ordering edge when it is not already present."""
+
+    if target in graph[source]:
+        return
+    graph[source].add(target)
+    indegree[target] += 1
+
+
+def _resolve_positioned_runs(
+    runs: Sequence[Mapping[str, object]],
+) -> list[dict[str, object]]:
+    """Return runs in validated deterministic workflow order."""
+
+    run_map = {
+        str(run.get("id") or "").strip().lower(): dict(run)
+        for run in runs
+        if str(run.get("id") or "").strip()
+    }
+    valid_ids = [*ANCHOR_IDS, *sorted(run_map)]
+    graph = {node_id: set() for node_id in [*ANCHOR_IDS, *sorted(run_map)]}
+    indegree = {node_id: 0 for node_id in graph}
+    _add_position_edge(graph, indegree, "start", "mid")
+    _add_position_edge(graph, indegree, "mid", "end")
+
+    for run_id, run in run_map.items():
+        after_id = _position_token(run, "after", default="mid")
+        before_id = _position_token(run, "before", default="end")
+        if after_id not in graph:
+            raise _position_reference_error(
+                run_id,
+                "after",
+                after_id,
+                valid_ids,
+            )
+        if before_id not in graph:
+            raise _position_reference_error(
+                run_id,
+                "before",
+                before_id,
+                valid_ids,
+            )
+        _add_position_edge(graph, indegree, after_id, run_id)
+        _add_position_edge(graph, indegree, run_id, before_id)
+
+    available = sorted(
+        [node_id for node_id, degree in indegree.items() if degree == 0],
+        key=lambda node_id: _graph_node_sort_key(node_id, run_map),
+    )
+    ordered_nodes: list[str] = []
+    while available:
+        node_id = available.pop(0)
+        ordered_nodes.append(node_id)
+        for neighbor in sorted(graph[node_id]):
+            indegree[neighbor] -= 1
+            if indegree[neighbor] == 0:
+                available.append(neighbor)
+                available.sort(
+                    key=lambda candidate: _graph_node_sort_key(
+                        candidate,
+                        run_map,
+                    )
+                )
+    if len(ordered_nodes) != len(graph):
+        unresolved = sorted(
+            node_id for node_id, degree in indegree.items() if degree > 0
+        )
+        raise ValueError(
+            "Workflow runs declare cyclic ordering constraints involving: "
+            f"{', '.join(unresolved)}."
+        )
+    return [
+        run_map[node_id] for node_id in ordered_nodes if node_id in run_map
+    ]
+
+
 def _default_anchor_rows() -> list[dict[str, object]]:
     """Return the reserved anchor definitions for every contract."""
 
@@ -407,7 +551,7 @@ def build_workflow_contract(
             profile_meta.get("workflow_runs"),
         ):
             run_map[str(run["id"])] = run
-    runs = sorted(run_map.values(), key=_run_sort_key)
+    runs = _resolve_positioned_runs(list(run_map.values()))
     run_ids = [
         str(run.get("id") or "") for run in runs if bool(run.get("enabled"))
     ]

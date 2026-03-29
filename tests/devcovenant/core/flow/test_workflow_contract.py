@@ -222,6 +222,108 @@ def _unit_test_run_relevant_paths_changed_uses_freshness_contract():
     )
 
 
+def _unit_test_build_workflow_contract_orders_runs_with_positions() -> None:
+    """
+    Ordering should honor anchors, run refs, and deterministic tie-breaks.
+    """
+
+    module = importlib.import_module(MODULE)
+    with tempfile.TemporaryDirectory() as tmpdir:
+        repo_root = Path(tmpdir)
+        contract = module.build_workflow_contract(
+            repo_root,
+            {
+                "python": {
+                    "workflow_runs": [
+                        {
+                            **_tests_run_entry(),
+                            "id": "alpha",
+                            "order": 200,
+                        },
+                        {
+                            **_tests_run_entry(),
+                            "id": "beta",
+                            "order": 50,
+                            "before": "gamma",
+                        },
+                        {
+                            **_tests_run_entry(),
+                            "id": "gamma",
+                            "order": 10,
+                            "after": "beta",
+                        },
+                        {
+                            **_tests_run_entry(),
+                            "id": "delta",
+                            "order": 0,
+                        },
+                    ]
+                }
+            },
+            ["python"],
+        )
+
+    assert contract["run_ids"] == ["delta", "beta", "gamma", "alpha"]
+
+
+def _unit_test_build_workflow_contract_rejects_unknown_position_targets():
+    """Unknown anchor or run refs should fail contract resolution."""
+
+    module = importlib.import_module(MODULE)
+    with tempfile.TemporaryDirectory() as tmpdir:
+        repo_root = Path(tmpdir)
+        with unittest.TestCase().assertRaisesRegex(
+            ValueError,
+            "unknown `after` target `banana`",
+        ):
+            module.build_workflow_contract(
+                repo_root,
+                {
+                    "python": {
+                        "workflow_runs": [
+                            {
+                                **_tests_run_entry(),
+                                "after": "banana",
+                            }
+                        ]
+                    }
+                },
+                ["python"],
+            )
+
+
+def _unit_test_build_workflow_contract_rejects_cyclic_positions() -> None:
+    """Cyclic run positioning should fail with a stable error."""
+
+    module = importlib.import_module(MODULE)
+    with tempfile.TemporaryDirectory() as tmpdir:
+        repo_root = Path(tmpdir)
+        with unittest.TestCase().assertRaisesRegex(
+            ValueError,
+            "cyclic ordering constraints",
+        ):
+            module.build_workflow_contract(
+                repo_root,
+                {
+                    "python": {
+                        "workflow_runs": [
+                            {
+                                **_tests_run_entry(),
+                                "id": "alpha",
+                                "after": "beta",
+                            },
+                            {
+                                **_tests_run_entry(),
+                                "id": "beta",
+                                "after": "alpha",
+                            },
+                        ]
+                    }
+                },
+                ["python"],
+            )
+
+
 class GeneratedUnittestCases(unittest.TestCase):
     """unittest wrappers for workflow-contract resolution checks."""
 
@@ -246,3 +348,18 @@ class GeneratedUnittestCases(unittest.TestCase):
         """Run workflow-run invalidation regression assertions."""
 
         _unit_test_run_relevant_paths_changed_uses_freshness_contract()
+
+    def test_build_workflow_contract_orders_runs_with_positions(self):
+        """Run workflow ordering assertions for anchors and run refs."""
+
+        _unit_test_build_workflow_contract_orders_runs_with_positions()
+
+    def test_build_workflow_contract_rejects_unknown_position_targets(self):
+        """Run invalid workflow-position target assertions."""
+
+        _unit_test_build_workflow_contract_rejects_unknown_position_targets()
+
+    def test_build_workflow_contract_rejects_cyclic_positions(self):
+        """Run cyclic workflow-position assertions."""
+
+        _unit_test_build_workflow_contract_rejects_cyclic_positions()

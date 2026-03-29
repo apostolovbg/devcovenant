@@ -133,7 +133,9 @@ In this repository, that generated workflow now uses the visible workflow
 name `CI`, while the specific job names stay descriptive underneath it.
 The repo-specific verification job should prove the public install story from
 the actual wheel, sdist, and `pipx` path, not from shallow `--help` or
-`--status` checks alone.
+`--status` checks alone. That proof should exercise the installed public
+workflow contract itself:
+`gate --start -> gate --mid -> run -> gate --end`.
 That repo-specific proof should also keep its shell structure simple enough
 that inline activation helpers stay parse-stable in GitHub Actions.
 If a repo family needs a reviewed temporary scanner exception because an
@@ -180,11 +182,22 @@ layer.
 Each run may declare:
 
 - `id`
-- ordering fields such as `after`, `before`, and `order`
+- ordering fields `after`, `before`, and `order`
 - `runner`
 - `success_contract`
 - `freshness`
 - `recording`
+
+Ordering is now executable contract, not decorative metadata.
+
+- `after` and `before` may reference reserved anchors:
+  `start`, `mid`, `end`
+- `after` and `before` may also reference other declared run ids
+- DevCovenant validates those references during contract resolution
+- DevCovenant rejects cyclic positioning rules instead of preserving them as
+  inert metadata
+- when multiple runs are simultaneously eligible, `order`, then owner id,
+  then run id break ties deterministically
 
 Supported runner kinds are:
 

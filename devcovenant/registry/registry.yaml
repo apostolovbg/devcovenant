@@ -663,7 +663,7 @@ core-invariants:
     descriptor_path: devcovenant/core/contracts/invariants/devflow_run_gates.yaml
     customizable: false
 workflow_contract:
-  schema_version: 3
+  schema_version: 4
   anchors:
   - id: start
     owner: core

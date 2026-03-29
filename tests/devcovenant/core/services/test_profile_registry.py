@@ -450,6 +450,22 @@ def _unit_test_build_workflow_uploads_provenance_artifact() -> None:
     )
     assert "pushd artifacts/wheel-proof >/dev/null" in all_run_blocks
     assert "pushd artifacts/sdist-proof >/dev/null" in all_run_blocks
+    for command in (
+        "python -m devcovenant gate --start",
+        "python -m devcovenant gate --mid",
+        "python -m devcovenant run",
+        "python -m devcovenant gate --end",
+    ):
+        assert command in all_run_blocks
+    assert "cat > tests/__init__.py <<'PY'" in all_run_blocks
+    assert "cat > tests/test_smoke.py <<'PY'" in all_run_blocks
+    assert "python -m devcovenant refresh" in all_run_blocks
+    assert 'git commit -m "bootstrap installed repo"' in all_run_blocks
+    assert (
+        ".venv/bin/python -m pip install -r requirements.lock"
+        in all_run_blocks
+    )
+    assert ".venv/bin/python -m devcovenant gate --start" in all_run_blocks
 
 
 def _unit_test_publish_workflow_uses_validated_build_artifacts() -> None:

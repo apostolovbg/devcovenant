@@ -34,7 +34,8 @@ gate session.
 ### gate --status
 Session inspection.
 Use it when you want to know whether a gate session is open and which run logs
-matter most right now.
+matter most right now. It reports the latest completed public workflow stage,
+including `mid`, by reading both runtime ledgers.
 
 ### gate --start
 Opens the tracked work session.
@@ -47,7 +48,7 @@ It is where hook mutations and DevCovenant autofixes must surface before test
 results are recorded.
 
 ### run
-Runs every configured workflow run in declared order and records
+Runs every configured workflow run in validated declared order and records
 evidence for each one in the active workflow session.
 In this repo that currently means the `tests` run, which runs the two-step
 `unittest` plus `pytest` sequence.
@@ -214,6 +215,9 @@ pre-commit evidence they require.
 `workflow_session.json` records the declared workflow runs for the
 active session, their pass/fail status, their last-session binding, and the
 runtime snapshots used to decide whether a run is still fresh.
+`gate --status` reads both files so it can report the real public lifecycle
+stage, including `mid`, without pretending the workflow is only
+`start -> run -> end`.
 The `devflow-run-gates` invariant may override `gate_status_file` and
 `workflow_session_file`, but both files must stay inside
 `devcovenant/registry/runtime/` so workflow evidence remains runtime-owned.

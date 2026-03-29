@@ -91,7 +91,15 @@ jobs:
       - name: Prove wheel artifact lifecycle
         run: |
           set -euo pipefail
-          WHEEL_PATH="$(find dist -maxdepth 1 -name '*.whl' -print -quit)"
+          WHEEL_PATH="$(python - <<'PY'
+          from pathlib import Path
+
+          matches = sorted(Path("dist").glob("*.whl"))
+          if not matches:
+              raise SystemExit(1)
+          print(matches[0].resolve())
+          PY
+          )"
           test -n "$WHEEL_PATH"
           python -m venv .proof-wheel
           . .proof-wheel/bin/activate
@@ -118,13 +126,52 @@ jobs:
           )
           PY
           python -m devcovenant deploy
-          python -m devcovenant check
+          mkdir -p tests
+          cat > tests/__init__.py <<'PY'
+          """Proof-test package for installed artifact workflow validation."""
+          PY
+          cat > tests/test_smoke.py <<'PY'
+          """Installed artifact smoke tests for lifecycle proof."""
+
+          import unittest
+
+
+          class SmokeTest(unittest.TestCase):
+              """Prove the packaged workflow can run a minimal test suite."""
+
+              def test_truth(self) -> None:
+                  """Keep the installed-artifact proof suite non-empty."""
+                  self.assertTrue(True)
+
+
+          if __name__ == "__main__":
+              unittest.main()
+          PY
+          python -m devcovenant refresh
+          git add .
+          git commit -m "bootstrap installed repo"
+          python3 -m venv .venv
+          .venv/bin/python -m pip install --upgrade pip
+          .venv/bin/python -m pip install -r requirements.lock "$WHEEL_PATH"
+          .venv/bin/python -m devcovenant gate --start
+          .venv/bin/python -m devcovenant gate --mid
+          .venv/bin/python -m devcovenant run
+          .venv/bin/python -m devcovenant gate --end
+          .venv/bin/python -m devcovenant check
           popd >/dev/null
 
       - name: Prove sdist artifact lifecycle
         run: |
           set -euo pipefail
-          SDIST_PATH="$(find dist -maxdepth 1 -name '*.tar.gz' -print -quit)"
+          SDIST_PATH="$(python - <<'PY'
+          from pathlib import Path
+
+          matches = sorted(Path("dist").glob("*.tar.gz"))
+          if not matches:
+              raise SystemExit(1)
+          print(matches[0].resolve())
+          PY
+          )"
           test -n "$SDIST_PATH"
           python -m venv .proof-sdist
           . .proof-sdist/bin/activate
@@ -151,7 +198,38 @@ jobs:
           )
           PY
           python -m devcovenant deploy
-          python -m devcovenant check
+          mkdir -p tests
+          cat > tests/__init__.py <<'PY'
+          """Proof-test package for installed artifact workflow validation."""
+          PY
+          cat > tests/test_smoke.py <<'PY'
+          """Installed artifact smoke tests for lifecycle proof."""
+
+          import unittest
+
+
+          class SmokeTest(unittest.TestCase):
+              """Prove the packaged workflow can run a minimal test suite."""
+
+              def test_truth(self) -> None:
+                  """Keep the installed-artifact proof suite non-empty."""
+                  self.assertTrue(True)
+
+
+          if __name__ == "__main__":
+              unittest.main()
+          PY
+          python -m devcovenant refresh
+          git add .
+          git commit -m "bootstrap installed repo"
+          python3 -m venv .venv
+          .venv/bin/python -m pip install --upgrade pip
+          .venv/bin/python -m pip install -r requirements.lock "$SDIST_PATH"
+          .venv/bin/python -m devcovenant gate --start
+          .venv/bin/python -m devcovenant gate --mid
+          .venv/bin/python -m devcovenant run
+          .venv/bin/python -m devcovenant gate --end
+          .venv/bin/python -m devcovenant check
           popd >/dev/null
 
       - name: Upload distributions

@@ -63,6 +63,10 @@ including the visible workflow name `CI` and the repo-specific
 The tracked `workflow_contract` section is the workflow-owned part of that
 story: it records the reserved anchors, the declared runs resolved from
 active profiles, and which run ids are configured for execution.
+It now also reflects the validated ordering contract itself:
+`after`, `before`, and `order` are resolved into the tracked run order, and
+unknown references or cycles fail refresh instead of surviving as inert
+metadata.
 That means run execution no longer lives in an invariant
 `required_commands` list.
 The tracked contract lives in `workflow_contract`, while freshness and

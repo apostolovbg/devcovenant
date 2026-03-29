@@ -6,7 +6,7 @@
 **Maintenance Stance:** active
 **Compatibility Policy:** breaking-allowed
 **Versioning Mode:** versioned
-**Last Updated:** 2026-03-28
+**Last Updated:** 2026-03-29
 **DevCovenant Version:** 1.0.0
 
 <!-- DEVCOV:BEGIN -->
@@ -59,6 +59,36 @@ Example:
 ## Log changes here
 
 ## Version 1.0.0
+
+- 2026-03-29:
+  Change: implemented real workflow-run ordering semantics with validated
+    `after` and `before` references, truthful `mid` status reporting, and
+    full packaged-workflow proof in the Build lifecycle.
+  Why: fixed release-candidate contract drift where run positioning was
+    decorative, `gate --status` hid the public `mid` stage, and installed
+    artifact proof was narrower than the documented workflow.
+  Impact: workflow contracts now reject unknown references and cycles, status
+    reports the real four-stage lifecycle, Build proves the installed
+    `gate --start -> gate --mid -> run -> gate --end` workflow for wheel and
+    sdist artifacts, and the last internal `phase` residue was removed.
+  Files:
+  .github/workflows/build.yml
+  CHANGELOG.md
+  devcovenant/core/flow/gate_status_helpers.py
+  devcovenant/core/flow/workflow_contract.py
+  devcovenant/core/runtime/execution.py
+  devcovenant/custom/profiles/devcovrepo/assets/docs/profiles.md
+  devcovenant/custom/profiles/devcovrepo/assets/docs/registry.md
+  devcovenant/custom/profiles/devcovrepo/assets/docs/workflow.md
+  devcovenant/docs/profiles.md
+  devcovenant/docs/registry.md
+  devcovenant/docs/workflow.md
+  devcovenant/registry/registry.yaml
+  tests/devcovenant/core/flow/test_gate.py
+  tests/devcovenant/core/flow/test_gate_status_helpers.py
+  tests/devcovenant/core/flow/test_workflow_contract.py
+  tests/devcovenant/core/runtime/test_execution.py
+  tests/devcovenant/core/services/test_profile_registry.py
 
 - 2026-03-29:
   Change: marked the release-candidate preparation roadmap item done after
