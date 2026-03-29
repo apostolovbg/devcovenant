@@ -61,6 +61,20 @@ Example:
 ## Version 1.0.0
 
 - 2026-03-29:
+  Change: extracted a detailed durable product specification into `SPEC.md`
+    from the live code, CLI surface, generated workflow contract, and
+    repository docs.
+  Why: the repository needed to define a real specification that states what
+    DevCovenant is, what contracts it enforces, and how workflow, policy,
+    registry, packaging, and publish behavior fit together.
+  Impact: `SPEC.md` now describes the stable product contract in one place,
+    making future audits, governance decisions, and release work easier to
+    reason about without reverse-engineering the implementation every time.
+  Files:
+  CHANGELOG.md
+  SPEC.md
+
+- 2026-03-29:
   Change: hardened the shared PTY child-output runner to treat Linux EOF
     `EIO` races as normal command completion once the child exits, and added
     regression coverage plus workflow-doc wording for the CI proof path.
