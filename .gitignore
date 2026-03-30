@@ -38,6 +38,11 @@ devcovenant/logs/**
 !devcovenant/logs/
 !devcovenant/logs/README.md
 
+# Profile: devcovrepo
+artifacts
+.proof-wheel
+.proof-sdist
+
 # Profile: docs
 _site
 site

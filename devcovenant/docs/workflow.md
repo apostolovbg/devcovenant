@@ -141,6 +141,11 @@ If a repository family needs extra proof or extra source-tree steps, that
 extension should come from profile-owned CI fragments instead of from the
 builtin base.
 
+Generated `.pre-commit-config.yaml` excludes also follow the resolved ignore
+contract. Active-profile `ignore_dirs` feed the shared pre-commit exclude
+block, and setuptools-style `*.egg-info` metadata directories are always
+excluded as disposable build outputs.
+
 When a repository adds installed-artifact proof, that proof should exercise
 the same public workflow the package docs promise across the install surfaces
 the repository supports.

@@ -1457,15 +1457,16 @@ def _normalize_ignore_dir(raw: object) -> str:
 
 def _build_pre_commit_exclude(ignore_dirs: list[str]) -> str:
     """Build a shared pre-commit exclude regex from ignore directories."""
-    escaped = [re.escape(entry) for entry in ignore_dirs if entry]
-    if not escaped:
+    pattern_parts = [re.escape(entry) for entry in ignore_dirs if entry]
+    pattern_parts.append(r"[^/]+\.egg-info")
+    if not pattern_parts:
         return ""
     body = "\n".join(
         [
             "(?x)",
             "(^|/)",
             "(",
-            "  " + "\n  | ".join(escaped),
+            "  " + "\n  | ".join(pattern_parts),
             ")",
             "(/|$)",
         ]

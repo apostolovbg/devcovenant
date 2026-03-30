@@ -55,33 +55,87 @@ Keep items dependency-ordered, concrete, and current.
   planning.
 
 ## Active Work
-1. [not done] Work item title.
+1. [not done] Release-readiness review and hardening for orphaned `1.0.1`.
    Goal:
-   - state the outcome this item must achieve
+   - finish one industry-standard pre-release QA review and any blocking
+     hardening needed to ship `1.0.1` as the first real public release after
+     orphaning the branch.
    Why this matters:
-   - explain the problem this item resolves
+   - `1.0.1` needs to ship from a source tree that is operationally clean,
+     contract-stable, packaging-correct, CI/publish-safe, and free of
+     accidental fallback behavior.
+   - this review must be one slice, not a five-slice roadmap, so release
+     readiness is judged as one coherent go/no-go decision instead of a queue
+     of loosely related mini-projects.
+   - orphaning removes the value of historical narrative, so the repo must be
+     self-explanatory and self-consistent from the current tree alone.
    Work to do:
-   - list the concrete implementation or documentation tasks
+   - run one read-only release-readiness audit across the entire repo:
+     runtime, packaging, docs, generated assets, workflow automation, publish
+     automation, and governed config.
+   - verify the public contract surfaces as one coherent release system:
+     CLI commands, gate workflow, managed-environment behavior, config knobs,
+     generated docs, and package metadata.
+   - verify package artifacts as artifacts, not only as source:
+     `sdist`, `wheel`, installed proof repo, and `pipx` proof repo.
+   - verify environment handling across every supported style of execution
+     environment:
+     repo `.venv`, explicit interpreter targets, external env roots,
+     bench-like env roots, and current-interpreter bootstrap hosts used only
+     until the declared target environment exists.
+   - verify child command execution is interpreter-driven where required, so
+     gate/workflow behavior does not depend on accidental `PATH` contents.
+   - audit `Governance`, `Build`, and `Publish` together:
+     source workflow ownership, action versions, Node 24 posture, artifact
+     handoff, provenance handoff, permissions, and run-ID publish flow.
+   - verify Publish is release-safe:
+     it must publish validated CI artifacts, not rebuild a divergent tree, and
+     it must work for the exact artifact set that Build proves.
+   - audit package docs for package scope only:
+     no repo-specific `devcovrepo` narration, no local-release operational
+     notes, and no history-dependent guidance that will look absurd after the
+     orphan step.
+   - audit repo docs and editable notes for release operator clarity:
+     root `README.md`, `AGENTS.md`, trust docs, and repo-specific workflow
+     notes must stay accurate for this repo while package docs stay generic.
+   - run a defallback/de-BS sweep as part of the same review:
+     remove silent legacy fallbacks, stale compatibility bridges, dead aliases,
+     history talk, and half-migrated contract language encountered in the
+     audit.
+   - verify project-governance ownership and config ownership surfaces:
+     only real human knobs belong in config; derived or engine-owned behavior
+     stays under the hood and is documented where operators actually need it.
+   - verify release metadata identity end-to-end:
+     package name, project-governance identity, `pyproject.toml`, generated
+     docs, editable install metadata, `*.egg-info`/`*.dist-info`, and publish
+     outputs must agree on `devcovenant` as the canonical machine identity.
+   - verify security and supply-chain release posture:
+     dependency inventory, license report, SBOM, provenance, trust docs, and
+     publish inputs/outputs must all be present and current.
+   - run the full governed validation loop on the hardened tree:
+     `gate --start`, `gate --mid`, `run`, `gate --end`, `check`, plus any
+     release-proof commands needed to validate build and publish surfaces.
+   - produce one explicit release-readiness verdict at the end:
+     blockers, non-blocking risks, exact fixes landed in the same slice, and a
+     final go/no-go recommendation for orphaning plus `1.0.1`.
    Done when:
-   - list the acceptance checks that prove this item is complete
-
-2. [not done] Work item title.
-   Goal:
-   - state the next outcome this item must achieve
-   Why this matters:
-   - explain why this item belongs in the plan now
-   Work to do:
-   - list the concrete tasks for this item
-   Done when:
-   - list the conditions that make this item complete
-
-3. [done] Completed item example.
-   Goal:
-   - state the outcome this completed item delivered
-   Completed work:
-   - list what actually landed in the completed slice
-   Outcome:
-   - state what is now true because the item is done
+   - the review has been executed as one slice and the blocker list is empty.
+   - all source-owned workflow surfaces are aligned and green:
+     Governance, Build, and Publish inputs/outputs all match the current
+     release contract.
+   - package identity is stable and lowercase `devcovenant` across metadata,
+     artifacts, and installed proof environments.
+   - the package docs are package-generic, the repo docs are repo-specific
+     where needed, and no pre-orphan history narration remains in the active
+     release-facing docs.
+   - managed-environment behavior is proven against the supported
+     every-style-environment matrix instead of only the happy-path `.venv`
+     case.
+   - release artifacts and release evidence are reproducible from the current
+     tree without depending on local accidents or stale ignored outputs.
+   - the final governed tree passes `devcovenant check`, and the release
+     review can end with a justified go/no-go recommendation for orphaning and
+     shipping `1.0.1`.
 
 ## Validation Routine
 - Verify checks and tests pass.

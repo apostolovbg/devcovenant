@@ -16,6 +16,8 @@ A profile can contribute:
 5. suffix inventories
 6. translator declarations
 7. CI fragments through `ci_and_test`
+8. ignore-directory hints that feed generated `.gitignore` and the shared
+   pre-commit exclude contract
 
 For the built-in `global` profile, that includes the canonical
 `workflow.pre_commit_command` value `pre-commit run --all-files`, while the
@@ -61,6 +63,11 @@ managed-environment contract for ordinary repos:
 - `expected_paths` / `expected_interpreters`
 - `required_commands` for the target env
 - manual guidance that uses `{current_python}` and `{managed_python}`
+
+Profiles may also contribute `ignore_dirs` for disposable local outputs that
+should stay out of generated `.gitignore` and out of pre-commit's all-files
+surface. That is the right place for repo-family proof or scratch directories,
+not for durable source paths.
 
 Repo profiles can then strengthen that baseline.
 One repo profile may add `managed_commands` so `gate --start` can materialize

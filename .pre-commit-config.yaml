@@ -58,7 +58,10 @@ exclude: |-
   (?x)
   (^|/)
   (
-    _site
+    artifacts
+    | \.proof\-wheel
+    | \.proof\-sdist
+    | _site
     | site
     | build
     | \.venv
@@ -73,5 +76,6 @@ exclude: |-
     | node_modules
     | \.cache
     | \.venv\.lock
+    | [^/]+\.egg-info
   )
   (/|$)

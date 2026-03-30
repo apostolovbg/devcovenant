@@ -823,6 +823,57 @@ def _unit_test_refresh_writes_global_artifact_gitignore_rules() -> None:
             assert expected in content
 
 
+def _unit_test_refresh_renders_pre_commit_excludes_for_build_outputs() -> None:
+    """refresh_repo should exclude disposable build/proof dirs from hooks."""
+    with tempfile.TemporaryDirectory() as temp_dir:
+        repo_root = Path(temp_dir)
+        repo_seed_cache.copy_refreshed_repo(repo_root)
+
+        profile_root = (
+            repo_root / "devcovenant" / "custom" / "profiles" / "proofdemo"
+        )
+        profile_root.mkdir(parents=True, exist_ok=True)
+        (profile_root / "proofdemo.yaml").write_text(
+            yaml.safe_dump(
+                {
+                    "version": 1,
+                    "profile": "proofdemo",
+                    "category": "repo",
+                    "suffixes": [],
+                    "ignore_dirs": [
+                        "artifacts",
+                        ".proof-wheel",
+                        ".proof-sdist",
+                    ],
+                },
+                sort_keys=False,
+            ),
+            encoding="utf-8",
+        )
+        config_path = repo_root / "devcovenant" / "config.yaml"
+        payload = yaml.safe_load(config_path.read_text(encoding="utf-8"))
+        assert isinstance(payload, dict)
+        profiles = payload.setdefault("profiles", {})
+        active_profiles = list(profiles.get("active", []))
+        active_profiles.append("proofdemo")
+        profiles["active"] = active_profiles
+        config_path.write_text(
+            yaml.safe_dump(payload, sort_keys=False),
+            encoding="utf-8",
+        )
+
+        result = refresh.refresh_repo(repo_root)
+        assert result == 0
+
+        pre_commit = (repo_root / ".pre-commit-config.yaml").read_text(
+            encoding="utf-8"
+        )
+        assert r"[^/]+\.egg-info" in pre_commit
+        assert "artifacts" in pre_commit
+        assert r"\.proof\-wheel" in pre_commit
+        assert r"\.proof\-sdist" in pre_commit
+
+
 def _unit_test_refresh_policy_registry_origin_metadata() -> None:
     """refresh_repo should record builtin/custom policy origins."""
     with tempfile.TemporaryDirectory() as temp_dir:
@@ -1308,6 +1359,10 @@ class GeneratedUnittestCases(unittest.TestCase):
     def test_refresh_writes_global_artifact_gitignore_rules(self):
         """Run global artifact gitignore assertions."""
         _unit_test_refresh_writes_global_artifact_gitignore_rules()
+
+    def test_refresh_renders_pre_commit_excludes_for_build_outputs(self):
+        """Run pre-commit build/proof exclude rendering assertions."""
+        _unit_test_refresh_renders_pre_commit_excludes_for_build_outputs()
 
     def test_refresh_policy_registry_origin_metadata(self):
         """Run test_refresh_policy_registry_origin_metadata."""

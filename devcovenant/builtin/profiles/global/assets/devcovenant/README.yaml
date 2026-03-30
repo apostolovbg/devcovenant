@@ -1,4 +1,4 @@
-title: DevCovenant
+title: devcovenant
 target_path: devcovenant/README.md
 doc_id: README
 doc_type: repo-readme
@@ -9,11 +9,11 @@ import_seed: false
 authoritative_source: false
 managed_block: ''
 body: |-
-  DevCovenant is a Repository Governance Framework.
+  devcovenant is a repository governance framework.
   It keeps repository workflow, policy prose, and evidence artifacts aligned.
 
   ## Overview
-  Use this README as the operator guide to the installed DevCovenant runtime in
+  Use this README as the operator guide to the installed devcovenant runtime in
   this repository.
   Keep policy source in `AGENTS.md`, durable requirements in `SPEC.md`, and
   active execution work in `PLAN.md` when those docs are present.

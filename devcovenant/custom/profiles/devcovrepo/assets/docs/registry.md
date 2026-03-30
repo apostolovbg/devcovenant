@@ -60,6 +60,9 @@ Those files are related to the tracked registry, but they are not themselves
 embedded as giant blobs inside the registry.
 The registry records the resolved inputs and ownership, while the generated
 files carry the rendered surface.
+That includes active-profile `ignore_dirs` contributions.
+Refresh records them in tracked profile metadata before rendering shared
+exclude surfaces such as `.gitignore` and `.pre-commit-config.yaml`.
 
 The helper ownership matches that split:
 - `devcovenant/core/services/tracked_registry.py` owns tracked-registry paths

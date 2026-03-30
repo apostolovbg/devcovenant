@@ -135,7 +135,7 @@ managed-docs:
       project_governance_headers: false
       import_seed: false
       authoritative_source: false
-      body_fingerprint: 69c44ed6db522f6a7c81ff1067a2c450326ddfce160292a6bd100456bac9ab58
+      body_fingerprint: e2ca13bb565486904c0d8baba80d1d3bcb7928f5a88fafd854d9fa04c7121e40
 workflow_contract:
   schema_version: 4
   anchors:
@@ -2126,7 +2126,8 @@ policies:
         => devcovenant/docs/architecture.md, devcovenant/*.py => devcovenant/docs/installation.md,
         pyproject.toml => devcovenant/docs/installation.md, MANIFEST.in => devcovenant/docs/installation.md,
         devcovenant/config.yaml => devcovenant/docs/config.md, devcovenant/registry/registry.yaml
-        => devcovenant/docs/registry.md, .github/workflows/*.yml => devcovenant/docs/workflow.md
+        => devcovenant/docs/registry.md, .pre-commit-config.yaml => devcovenant/docs/workflow.md,
+        .github/workflows/*.yml => devcovenant/docs/workflow.md
       require_mentions: 'true'
       mention_min_length: '3'
       mention_stopwords: devcovenant, tools, common, custom, policy, policies, script,
@@ -2643,6 +2644,7 @@ policies:
           - MANIFEST.in => devcovenant/docs/installation.md
           - devcovenant/config.yaml => devcovenant/docs/config.md
           - devcovenant/registry/registry.yaml => devcovenant/docs/registry.md
+          - .pre-commit-config.yaml => devcovenant/docs/workflow.md
           - .github/workflows/*.yml => devcovenant/docs/workflow.md
           behavior: append
         autogen_overlays:
@@ -2673,6 +2675,7 @@ policies:
           - MANIFEST.in => devcovenant/docs/installation.md
           - devcovenant/config.yaml => devcovenant/docs/config.md
           - devcovenant/registry/registry.yaml => devcovenant/docs/registry.md
+          - .pre-commit-config.yaml => devcovenant/docs/workflow.md
           - .github/workflows/*.yml => devcovenant/docs/workflow.md
           behavior: append
         effective:
@@ -2703,6 +2706,7 @@ policies:
           - MANIFEST.in => devcovenant/docs/installation.md
           - devcovenant/config.yaml => devcovenant/docs/config.md
           - devcovenant/registry/registry.yaml => devcovenant/docs/registry.md
+          - .pre-commit-config.yaml => devcovenant/docs/workflow.md
           - .github/workflows/*.yml => devcovenant/docs/workflow.md
       require_mentions:
         descriptor:
@@ -3161,6 +3165,7 @@ policies:
       - MANIFEST.in => devcovenant/docs/installation.md
       - devcovenant/config.yaml => devcovenant/docs/config.md
       - devcovenant/registry/registry.yaml => devcovenant/docs/registry.md
+      - .pre-commit-config.yaml => devcovenant/docs/workflow.md
       - .github/workflows/*.yml => devcovenant/docs/workflow.md
       require_mentions: true
       mention_min_length: 3
@@ -3270,6 +3275,7 @@ policies:
     - .mypy_cache/**
     - .nox/**
     - .pre-commit-config.yaml
+    - .pre-commit-config.yaml => devcovenant/docs/workflow.md
     - .pytest_cache/**
     - .python/**
     - .ruff_cache/**
@@ -11378,7 +11384,10 @@ profiles:
     profile: devcovrepo
     category: repo
     suffixes: []
-    ignore_dirs: []
+    ignore_dirs:
+    - artifacts
+    - .proof-wheel
+    - .proof-sdist
     assets:
     - path: devcovenant/docs/installation.md
       template: docs/installation.md
@@ -11766,6 +11775,7 @@ profiles:
         - MANIFEST.in => devcovenant/docs/installation.md
         - devcovenant/config.yaml => devcovenant/docs/config.md
         - devcovenant/registry/registry.yaml => devcovenant/docs/registry.md
+        - .pre-commit-config.yaml => devcovenant/docs/workflow.md
         - .github/workflows/*.yml => devcovenant/docs/workflow.md
         user_visible_files:
         - SECURITY.md

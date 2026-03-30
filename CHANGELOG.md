@@ -61,6 +61,37 @@ Example:
 ## Version 1.0.0
 
 - 2026-03-30:
+  Change: hardened proof-output workflow excludes, kept package identity
+    lowercase at the source, and detailed the `1.0.1` pre-release QA review as
+    one release-hardening slice.
+  Why: disposable proof/build byproducts were leaking into normal repo
+    workflow surfaces, one managed package README template still rendered a
+    capitalized package name, and the release-readiness review needed one
+    coherent plan item instead of fragmented slices.
+  Impact: aligns generated `.gitignore` and `.pre-commit-config.yaml` with repo
+    proof-output excludes plus `*.egg-info`, renders the package README source
+    as `devcovenant` consistently, proves ignore-dir wiring explicitly in
+    refresh coverage, and defines one end-to-end `1.0.1`
+    release-hardening review slice in `PLAN.md`.
+  Files:
+  .gitignore
+  .pre-commit-config.yaml
+  CHANGELOG.md
+  PLAN.md
+  devcovenant/builtin/profiles/global/assets/devcovenant/README.yaml
+  devcovenant/config.yaml
+  devcovenant/core/flow/refresh.py
+  devcovenant/custom/profiles/devcovrepo/assets/docs/profiles.md
+  devcovenant/custom/profiles/devcovrepo/assets/docs/registry.md
+  devcovenant/custom/profiles/devcovrepo/assets/docs/workflow.md
+  devcovenant/custom/profiles/devcovrepo/devcovrepo.yaml
+  devcovenant/docs/profiles.md
+  devcovenant/docs/registry.md
+  devcovenant/docs/workflow.md
+  devcovenant/registry/registry.yaml
+  tests/devcovenant/test_refresh.py
+
+- 2026-03-30:
   Change: stabilized managed-environment selection and CI release workflow
     readiness across repo `.venv`, external tool hosts, and generic profile
     contracts.

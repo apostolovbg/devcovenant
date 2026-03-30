@@ -138,6 +138,11 @@ If a repository family needs extra proof or extra source-tree steps, that
 extension should come from profile-owned CI fragments instead of from the
 builtin base.
 
+This repository's profile also marks local proof outputs under `artifacts/`
+and `.proof-*` as disposable workflow byproducts. They are excluded from the
+generated `.gitignore` and pre-commit all-files surface so release-proof runs
+do not pollute normal repo gates.
+
 When a repository adds installed-artifact proof, that proof should exercise
 the same public workflow the package docs promise across the install surfaces
 the repository supports.

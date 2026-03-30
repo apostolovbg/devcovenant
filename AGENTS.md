@@ -790,6 +790,7 @@ doc_routes: devcovenant/builtin/policies/ => devcovenant/docs/policies.md
   MANIFEST.in => devcovenant/docs/installation.md
   devcovenant/config.yaml => devcovenant/docs/config.md
   devcovenant/registry/registry.yaml => devcovenant/docs/registry.md
+  .pre-commit-config.yaml => devcovenant/docs/workflow.md
   .github/workflows/*.yml => devcovenant/docs/workflow.md
 require_mentions: true
 mention_min_length: 3

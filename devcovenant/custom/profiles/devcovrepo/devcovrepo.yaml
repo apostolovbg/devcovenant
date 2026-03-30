@@ -2,7 +2,10 @@ version: 1
 profile: devcovrepo
 category: repo
 suffixes: []
-ignore_dirs: []
+ignore_dirs:
+  - artifacts
+  - .proof-wheel
+  - .proof-sdist
 assets:
   - path: devcovenant/docs/installation.md
     template: docs/installation.md
@@ -409,6 +412,7 @@ policy_overlays:
       - "MANIFEST.in => devcovenant/docs/installation.md"
       - "devcovenant/config.yaml => devcovenant/docs/config.md"
       - "devcovenant/registry/registry.yaml => devcovenant/docs/registry.md"
+      - ".pre-commit-config.yaml => devcovenant/docs/workflow.md"
       - ".github/workflows/*.yml => devcovenant/docs/workflow.md"
     user_visible_files:
       - SECURITY.md
