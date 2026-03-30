@@ -61,6 +61,38 @@ Example:
 ## Version 1.0.0
 
 - 2026-03-30:
+  Change: hardened managed gate pre-commit launching around the selected
+    interpreter and updated the owned CI action pins to Node-24-ready
+    majors.
+  Why: fixed the remaining pipx-proof `gate --start` failure caused by
+    console-script shim dependence and cleared the GitHub Actions Node 20
+    deprecation warning at the workflow-template source.
+  Impact: Build proof repos now launch pre-commit through the managed Python
+    path deterministically, and Governance/Build use refreshed `checkout`
+    and `setup-python` action majors.
+  Files:
+  .github/workflows/ci.yml
+  CHANGELOG.md
+  devcovenant/builtin/profiles/global/assets/ci.yml
+  devcovenant/core/flow/gate.py
+  devcovenant/custom/profiles/devcovrepo/assets/docs/config.md
+  devcovenant/custom/profiles/devcovrepo/assets/docs/policies.md
+  devcovenant/custom/profiles/devcovrepo/assets/docs/profiles.md
+  devcovenant/custom/profiles/devcovrepo/assets/docs/registry.md
+  devcovenant/custom/profiles/devcovrepo/assets/docs/troubleshooting.md
+  devcovenant/custom/profiles/devcovrepo/assets/docs/workflow.md
+  devcovenant/custom/profiles/devcovrepo/devcovrepo.yaml
+  devcovenant/docs/config.md
+  devcovenant/docs/policies.md
+  devcovenant/docs/profiles.md
+  devcovenant/docs/registry.md
+  devcovenant/docs/troubleshooting.md
+  devcovenant/docs/workflow.md
+  devcovenant/registry/registry.yaml
+  tests/devcovenant/core/flow/test_gate.py
+  tests/devcovenant/core/services/test_profile_registry.py
+
+- 2026-03-30:
   Change: corrected managed-environment interpreter matching so DevCovenant
     only reuses the current Python when it actually matches the declared
     managed environment, and added a regression for the GitHub-hosted

@@ -58,10 +58,10 @@ Most runtime-mystery problems are really metadata-resolution problems.
 If the managed interpreter exists but is not executable, DevCovenant stops with
 an explicit error.
 Fix the interpreter path or permissions, then rerun the appropriate command.
-If a gate hook cannot find the `pre-commit` console script, check whether the
-selected interpreter still has the `pre_commit` package installed.
-Gate execution can resolve `python -m pre_commit`, but it still needs the
-module to exist in the resolved execution environment.
+If a gate hook fails before pre-commit starts, check whether the selected
+interpreter still has the `pre_commit` package installed.
+Gate execution runs `python -m pre_commit`, so the module still needs to
+exist in the resolved execution environment.
 
 ## Installed CLI Problems
 If you installed DevCovenant with `pipx` and the `devcovenant` command is

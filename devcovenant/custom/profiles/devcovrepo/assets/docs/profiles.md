@@ -18,8 +18,9 @@ A profile can contribute:
 
 For the built-in `global` profile, that includes the canonical
 `workflow.pre_commit_command` value `pre-commit run --all-files`, while the
-managed-environment runtime supplies the interpreter and `PATH` that make that
-launcher portable across local work, CI, and proof repositories.
+managed-environment runtime launches pre-commit through the selected
+interpreter so gate execution stays portable across local work, CI, and proof
+repositories.
 
 Profiles do not directly turn policies on or off.
 Policy activation remains config-driven through `policy_state`.

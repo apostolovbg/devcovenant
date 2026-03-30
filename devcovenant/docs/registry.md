@@ -45,6 +45,8 @@ That includes:
 If active profiles contribute generated workflow fragments or proof-job
 fragments, the tracked registry records the resolved workflow metadata they
 contribute.
+That includes generated GitHub Actions job structure and action-version
+inputs that later render into `.github/workflows/ci.yml`.
 If active profiles contribute managed-environment metadata, tracked state
 records that resolved execution contract too.
 That includes the selected interpreter expectations, bootstrap commands, and

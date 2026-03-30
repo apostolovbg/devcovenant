@@ -120,18 +120,18 @@ def _resolve_gate_execution_command(
     env: Mapping[str, str],
     managed_python: str | None,
 ) -> str:
-    """Prefer the console script, then resolve module form when needed."""
+    """Resolve managed pre-commit execution through the managed interpreter."""
     tokens = shlex.split(command)
     if not tokens:
         raise SystemExit("Pre-commit command is empty.")
     if managed_python is None or not _is_pre_commit_run_command(tokens):
         return command
     executable = tokens[0]
-    path_value = str(env.get("PATH", "")).strip() or None
-    if shutil.which(executable, path=path_value) is not None:
-        return command
     first_name = Path(executable).name.lower()
     if first_name not in _PRE_COMMIT_EXECUTABLE_TOKENS:
+        path_value = str(env.get("PATH", "")).strip() or None
+        if shutil.which(executable, path=path_value) is not None:
+            return command
         return command
     resolved_tokens = [managed_python, "-m", "pre_commit", *tokens[1:]]
     return shlex.join(resolved_tokens)

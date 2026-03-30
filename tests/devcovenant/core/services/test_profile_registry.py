@@ -386,12 +386,31 @@ def _unit_test_ci_workflow_contains_build_job_artifact_proof() -> None:
     )
     jobs = workflow.get("jobs")
     assert isinstance(jobs, dict)
+    governance_job = jobs.get("governance")
+    assert isinstance(governance_job, dict)
+    governance_steps = governance_job.get("steps")
+    assert isinstance(governance_steps, list)
+    governance_uses = [
+        str(step.get("uses") or "").strip()
+        for step in governance_steps
+        if isinstance(step, dict)
+    ]
+    assert "actions/checkout@v6" in governance_uses
+    assert "actions/setup-python@v6" in governance_uses
+
     build_job = jobs.get("build")
     assert isinstance(build_job, dict)
     assert build_job.get("name") == "Build"
     assert build_job.get("needs") == "governance"
     steps = build_job.get("steps")
     assert isinstance(steps, list)
+    build_uses = [
+        str(step.get("uses") or "").strip()
+        for step in steps
+        if isinstance(step, dict)
+    ]
+    assert "actions/checkout@v6" in build_uses
+    assert "actions/setup-python@v6" in build_uses
 
     step_names = [
         str(step.get("name") or "").strip()

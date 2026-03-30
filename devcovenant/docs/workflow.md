@@ -161,9 +161,9 @@ satisfies the contract.
 It also keeps the workflow portable across normal `.venv` repos, other managed
 environment layouts, and installed-artifact proof repos.
 
-For Python-owned tools such as the pre-commit gate hook, execution prefers the
-selected environment's console script and resolves `python -m pre_commit`
-through the same interpreter when the shim is absent.
+For Python-owned tools such as the pre-commit gate hook, execution runs
+`python -m pre_commit` through the selected interpreter instead of depending
+on a console-script shim.
 
 ## Recovery Rules
 Use these recovery rules consistently:

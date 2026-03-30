@@ -450,7 +450,7 @@ def _unit_test_start_targets_snapshot_files_for_pre_commit() -> None:
 
 
 def _unit_test_start_resolves_managed_python_module_pre_commit() -> None:
-    """Start gate should resolve `python -m pre_commit` when needed."""
+    """Start gate should resolve `python -m pre_commit` via managed Python."""
     module = importlib.import_module(MODULE)
     with tempfile.TemporaryDirectory() as tmpdir:
         repo_root = Path(tmpdir)
@@ -490,6 +490,56 @@ def _unit_test_start_resolves_managed_python_module_pre_commit() -> None:
         assert rendered.startswith(f"{managed_python} -m pre_commit run")
         assert "--files" in rendered
         assert "module_target.py" in rendered
+
+
+def _unit_test_start_avoids_pre_commit_console_script_shims() -> None:
+    """Start gate should not depend on a discovered pre-commit shim."""
+    module = importlib.import_module(MODULE)
+    with tempfile.TemporaryDirectory() as tmpdir:
+        repo_root = Path(tmpdir)
+        _write_policy_registry(repo_root)
+        _write_changelog(repo_root)
+        _write_agents(repo_root)
+        tracked_path = repo_root / "shim_target.py"
+        tracked_path.write_text("print('module')\n", encoding="utf-8")
+        managed_python = repo_root / ".venv" / "bin" / "python"
+        captured: dict[str, str] = {}
+        managed_env_target = (
+            "devcovenant.core.flow.gate.execution_runtime_module."
+            "resolve_managed_environment_for_stage"
+        )
+        run_command_target = (
+            "devcovenant.core.flow.gate._run_command_with_output"
+        )
+
+        def _capture_command(command, *, env=None):
+            """Capture the rendered hook command for assertions."""
+            del env
+            captured["command"] = str(command)
+            return (0, "")
+
+        with (
+            mock.patch(
+                managed_env_target,
+                return_value=(
+                    {"PATH": "/tmp/fake-bin"},
+                    str(managed_python),
+                ),
+            ),
+            mock.patch.object(
+                module.shutil,
+                "which",
+                return_value="/tmp/fake-bin/pre-commit",
+            ),
+            mock.patch(run_command_target, side_effect=_capture_command),
+        ):
+            exit_code = module.run_pre_commit_gate(repo_root, "start")
+
+        assert exit_code == 0
+        rendered = captured["command"]
+        assert rendered.startswith(f"{managed_python} -m pre_commit run")
+        assert "--files" in rendered
+        assert "shim_target.py" in rendered
 
 
 def _unit_test_start_reports_hook_induced_drift_explicitly() -> None:
@@ -1783,6 +1833,10 @@ class GeneratedUnittestCases(unittest.TestCase):
     def test_start_resolves_managed_python_module_pre_commit(self):
         """Run start-gate managed-python module-resolution assertions."""
         _unit_test_start_resolves_managed_python_module_pre_commit()
+
+    def test_start_avoids_pre_commit_console_script_shims(self):
+        """Run start-gate console-script-independence assertions."""
+        _unit_test_start_avoids_pre_commit_console_script_shims()
 
     def test_start_reports_hook_induced_drift_explicitly(self):
         """Run start-gate explicit drift-reporting assertions."""

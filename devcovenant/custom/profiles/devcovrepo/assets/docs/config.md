@@ -199,8 +199,9 @@ Those values belong to the gate/workflow contract, not to `policy_state`.
 The canonical pre-commit hook command is `pre-commit run --all-files`;
 the managed-environment runtime supplies the correct interpreter and `PATH`
 instead of relying on raw host `python3`.
-When the selected environment does not expose a `pre-commit` console script,
-gate execution resolves `python -m pre_commit` through that same interpreter.
+When a managed interpreter is active, gate execution runs
+`python -m pre_commit` through that interpreter instead of depending on a
+console-script shim.
 Every key in this section is human-owned.
 
 ### policy_state

@@ -73,9 +73,9 @@ That reuse rule is exact:
   or live under a declared `expected_paths` root
 - an unrelated host `.../bin/python` does not count as managed just because it
   is itself inside a generic `bin/` directory
-For Python-owned tools such as the gate hook, execution prefers the
-environment's console script and resolves `python -m ...` through the same
-interpreter when the shim is absent.
+For Python-owned tools such as the gate hook, execution runs `python -m ...`
+through the selected interpreter instead of depending on a console-script
+shim.
 
 ## Policy Commands
 DevCovenant supports namespaced policy commands.
