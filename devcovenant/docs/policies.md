@@ -1,6 +1,6 @@
 # Policies
 **Last Updated:** 2026-03-30
-**Project Version:** 1.0.0
+**Project Version:** 1.0.1
 
 ## Overview
 This document is the normative home for the policy descriptor contract.

@@ -1,9 +1,9 @@
 # Support and Maintenance
 **Doc ID:** SUPPORT
 **Doc Type:** support-policy
-**Project Version:** 1.0.0
+**Project Version:** 1.0.1
 **Last Updated:** 2026-03-30
-**DevCovenant Version:** 1.0.0
+**DevCovenant Version:** 1.0.1
 
 <!-- DEVCOV:BEGIN -->
 This opening section is managed by DevCovenant.

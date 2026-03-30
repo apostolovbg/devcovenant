@@ -1,13 +1,13 @@
 # DevCovenant Development Guide
 **Doc ID:** AGENTS
 **Doc Type:** policy-source
-**Project Version:** 1.0.0
+**Project Version:** 1.0.1
 **Project Stage:** stable
 **Maintenance Stance:** active
 **Compatibility Policy:** forward-only
 **Versioning Mode:** versioned
 **Last Updated:** 2026-03-30
-**DevCovenant Version:** 1.0.0
+**DevCovenant Version:** 1.0.1
 
 <!-- DEVCOV:BEGIN -->
 # Message from DevCovenant's Human (Read First)
@@ -46,7 +46,7 @@ DevCovenant lifecycle and command behavior used by this repository.
 - Remove stale notes immediately; stale notes are drift.
 
 ## Public Baseline Notes
-- This repository treats `1.0.0` as the public baseline.
+- This repository treats `1.0.1` as the public baseline.
 - Preserve command/runtime contracts unless an explicit plan item changes them.
 - Keep implementation ownership layered under
   `devcovenant/core/{flow,runtime,services,lib,contracts}`.
@@ -198,7 +198,7 @@ directly.
 <!-- DEVCOV:BEGIN -->
 ## Project Governance
 This block reflects the repository's active project-governance state.
-- Project Version: 1.0.0
+- Project Version: 1.0.1
 - Project Stage: stable
 - Maintenance Stance: active
 - Compatibility Policy: forward-only

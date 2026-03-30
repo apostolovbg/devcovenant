@@ -4,7 +4,7 @@ metadata:
 project-governance:
   project_name: devcovenant
   project_description: devcovenant is a repository governance framework.
-  project_version: 1.0.0
+  project_version: 1.0.1
   stage: stable
   maintenance_stance: active
   compatibility_policy: forward-only
@@ -86,7 +86,7 @@ managed-docs:
       project_governance_headers: false
       import_seed: true
       authoritative_source: true
-      body_fingerprint: 6bdc5f34b7fb98241ee434d8f0258522b37e5487a9db872675459a2bbdb876b7
+      body_fingerprint: 2a4a28b1a554afc8cf5c4a51a4fd4e39cf37212f03f382cb221ea516b4c2eac8
     PRIVACY.md:
       enabled: true
       descriptor_path: devcovenant/custom/profiles/devcovrepo/assets/PRIVACY.yaml
@@ -100,7 +100,7 @@ managed-docs:
       project_governance_headers: false
       import_seed: true
       authoritative_source: true
-      body_fingerprint: 4ecdbee0601a1f8b947d97fe5e6e068557878a1ab5245e4fbecc3ada387acb73
+      body_fingerprint: 79cd280d18cf5c8429d8d8c9670b359d4225c9d6f41b1ffa3d67b359d4f62f2c
     README.md:
       enabled: true
       descriptor_path: devcovenant/builtin/profiles/global/assets/README.yaml

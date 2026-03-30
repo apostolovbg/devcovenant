@@ -1,6 +1,6 @@
 # Run Logs
 **Last Updated:** 2026-02-27
-**Project Version:** 1.0.0
+**Project Version:** 1.0.1
 
 ## Overview
 This directory is the canonical runtime log root for DevCovenant command runs.

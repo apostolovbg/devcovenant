@@ -1,13 +1,13 @@
 # Changelog
 **Doc ID:** CHANGELOG
 **Doc Type:** changelog
-**Project Version:** 1.0.0
+**Project Version:** 1.0.1
 **Project Stage:** stable
 **Maintenance Stance:** active
 **Compatibility Policy:** forward-only
 **Versioning Mode:** versioned
 **Last Updated:** 2026-03-30
-**DevCovenant Version:** 1.0.0
+**DevCovenant Version:** 1.0.1
 
 <!-- DEVCOV:BEGIN -->
 ## DevCovenant Change Logging Rules
@@ -58,7 +58,69 @@ Example:
 
 ## Log changes here
 
-## Version 1.0.0
+## Version 1.0.1
+
+- 2026-03-30:
+  Change: bumped authoritative package, documentation, and managed-source
+    release surfaces from `1.0.0` to `1.0.1`.
+  Why: `1.0.0` was already burned on PyPI, so the next real public release
+    needs one consistent `1.0.1` identity across metadata, docs, and shipped
+    source assets.
+  Impact: refresh now regenerates a coherent `1.0.1` tree, release QA can
+    review the exact next publish candidate, and packaging/install surfaces no
+    longer present mixed release versions.
+  Files:
+  AGENTS.md
+  CHANGELOG.md
+  CONTRIBUTING.md
+  LICENSE
+  PLAN.md
+  POLICY_MAP.md
+  PRIVACY.md
+  PROFILE_MAP.md
+  README.md
+  SECURITY.md
+  SPEC.md
+  SUPPORT.md
+  devcovenant/README.md
+  devcovenant/VERSION
+  devcovenant/__init__.py
+  devcovenant/builtin/policies/README.md
+  devcovenant/builtin/profiles/README.md
+  devcovenant/builtin/profiles/global/assets/LICENSE.yaml
+  devcovenant/core/README.md
+  devcovenant/custom/README.md
+  devcovenant/custom/policies/README.md
+  devcovenant/custom/profiles/README.md
+  devcovenant/custom/profiles/devcovrepo/assets/POLICY_MAP.yaml
+  devcovenant/custom/profiles/devcovrepo/assets/PROFILE_MAP.yaml
+  devcovenant/custom/profiles/devcovrepo/assets/docs/config.md
+  devcovenant/custom/profiles/devcovrepo/assets/docs/installation.md
+  devcovenant/custom/profiles/devcovrepo/assets/docs/policies.md
+  devcovenant/custom/profiles/devcovrepo/assets/docs/profiles.md
+  devcovenant/custom/profiles/devcovrepo/assets/docs/registry.md
+  devcovenant/custom/profiles/devcovrepo/assets/docs/troubleshooting.md
+  devcovenant/custom/profiles/devcovrepo/assets/docs/workflow.md
+  devcovenant/docs/architecture.md
+  devcovenant/docs/config.md
+  devcovenant/docs/contracts.md
+  devcovenant/docs/installation.md
+  devcovenant/docs/policies.md
+  devcovenant/docs/profiles.md
+  devcovenant/docs/project_governance.md
+  devcovenant/docs/refresh.md
+  devcovenant/docs/registry.md
+  devcovenant/docs/troubleshooting.md
+  devcovenant/docs/workflow.md
+  devcovenant/logs/README.md
+  devcovenant/registry/README.md
+  devcovenant/registry/registry.yaml
+  pyproject.toml
+  tests/devcovenant/builtin/policies/last_updated/test_last_updated.py
+  tests/devcovenant/test_cli.py
+  tests/devcovenant/core/services/test_managed_docs.py
+  tests/devcovenant/test_deploy.py
+  tests/devcovenant/test_refresh.py
 
 - 2026-03-30:
   Change: hardened proof-output workflow excludes, kept package identity

@@ -1,5 +1,5 @@
 # Profiles
-**Project Version:** 1.0.0
+**Project Version:** 1.0.1
 
 ## Overview
 Profiles describe repository shape.

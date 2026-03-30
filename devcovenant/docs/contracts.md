@@ -1,6 +1,6 @@
 # Contracts
 **Last Updated:** 2026-03-30
-**Project Version:** 1.0.0
+**Project Version:** 1.0.1
 
 ## Overview
 This document is the contract map for the DevCovenant package docs.

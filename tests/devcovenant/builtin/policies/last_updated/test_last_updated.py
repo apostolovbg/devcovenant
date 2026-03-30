@@ -47,7 +47,7 @@ def _unit_test_last_updated_allowed_in_header_zone(tmp_path: Path) -> None:
                 "# Title",
                 "**Doc ID:** README",
                 "**Doc Type:** readme",
-                "**Project Version:** 1.0.0",
+                "**Project Version:** 1.0.1",
                 "**Last Updated:** 2026-01-07",
                 "<!-- DEVCOV:BEGIN -->",
                 "block",

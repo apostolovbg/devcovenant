@@ -1,6 +1,6 @@
 # Registry State
-**Last Updated:** 2026-03-28
-**Project Version:** 1.0.0
+**Last Updated:** 2026-03-30
+**Project Version:** 1.0.1
 
 ## Table of Contents
 - [Overview](#overview)

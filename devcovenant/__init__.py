@@ -73,5 +73,5 @@ _SOURCE_CHECKOUT_IMPORT_CACHE_CLEANUP_REGISTERED = (
     _register_source_checkout_import_cleanup()
 )
 
-__version__ = "1.0.0"
+__version__ = "1.0.1"
 __all__ = ["__version__"]

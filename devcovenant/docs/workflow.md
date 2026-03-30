@@ -1,6 +1,6 @@
 # Workflow
 **Last Updated:** 2026-03-30
-**Project Version:** 1.0.0
+**Project Version:** 1.0.1
 
 ## Overview
 Use this document for the gate sequence, workflow-run contract, CI mapping,
