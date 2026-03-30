@@ -571,6 +571,28 @@ def _unit_test_python_family_profiles_do_not_double_run_pytest() -> None:
         assert "pytest" not in command_text
 
 
+def _unit_test_devcovrepo_managed_env_requires_bootstrap_only() -> None:
+    """Repo managed-env prerequisites should stay at bootstrap minimum."""
+    manifest_path = (
+        REPO_ROOT
+        / "devcovenant"
+        / "custom"
+        / "profiles"
+        / "devcovrepo"
+        / "devcovrepo.yaml"
+    )
+    payload = yaml.safe_load(manifest_path.read_text(encoding="utf-8"))
+    assert isinstance(payload, dict)
+    policy_overlays = payload.get("policy_overlays")
+    assert isinstance(policy_overlays, dict)
+    managed_environment = policy_overlays.get("managed-environment")
+    assert isinstance(managed_environment, dict)
+    required_commands = managed_environment.get("required_commands")
+    assert isinstance(required_commands, list)
+    command_text = [str(command).strip() for command in required_commands]
+    assert command_text == ["python3"]
+
+
 class GeneratedUnittestCases(unittest.TestCase):
     """unittest wrappers for layered module sanity checks."""
 
@@ -633,3 +655,7 @@ class GeneratedUnittestCases(unittest.TestCase):
     def test_python_family_profiles_do_not_double_run_pytest(self):
         """Run Python-family workflow command assertions."""
         _unit_test_python_family_profiles_do_not_double_run_pytest()
+
+    def test_devcovrepo_managed_env_requires_bootstrap_only(self):
+        """Run repo managed-env bootstrap-prerequisite assertions."""
+        _unit_test_devcovrepo_managed_env_requires_bootstrap_only()

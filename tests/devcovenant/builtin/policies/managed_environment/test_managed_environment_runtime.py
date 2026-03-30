@@ -103,74 +103,232 @@ def _unit_test_stage_bootstrap_dedupes_on_reexec(
 ) -> None:
     """Stage-scoped bootstrap commands should run once across re-exec hops."""
     module = importlib.import_module(MODULE)
-    managed_root = Path("/tmp/repo/.venv")
-    managed_python = managed_root / "bin" / "python"
+    with tempfile.TemporaryDirectory() as temp_dir:
+        repo_root = Path(temp_dir)
+        managed_root = repo_root / ".venv"
+        managed_python = managed_root / "bin" / "python"
 
-    monkeypatch.setattr(
-        module,
-        "_load_policy_entry",
-        lambda repo_root: {
-            "enabled": True,
-            "metadata": {
-                "expected_paths": [".venv"],
-                "expected_interpreters": [".venv/bin/python"],
-                "managed_commands": ["start=>python3 -m venv .venv"],
+        monkeypatch.setattr(
+            module,
+            "_load_policy_entry",
+            lambda repo_root: {
+                "enabled": True,
+                "metadata": {
+                    "expected_paths": [".venv"],
+                    "expected_interpreters": [".venv/bin/python"],
+                    "managed_commands": ["start=>python3 -m venv .venv"],
+                },
             },
-        },
-    )
+        )
 
-    stage_calls: list[str] = []
+        stage_calls: list[str] = []
 
-    def _fake_run_managed_commands_for_stage(
-        repo_root: Path,
-        env: dict[str, str],
-        managed_commands: list[tuple[str, str]],
-        *,
-        target_stage: str,
-        expected_interpreters: list[Path],
-        expected_paths: list[Path],
-        include_all_stage: bool,
-    ) -> tuple[dict[str, str], bool]:
-        """Record stage invocation while returning env unchanged."""
-        del repo_root
-        del managed_commands
-        del expected_interpreters
-        del expected_paths
-        del include_all_stage
-        stage_calls.append(target_stage)
-        return dict(env), True
+        def _fake_run_managed_commands_for_stage(
+            repo_root: Path,
+            env: dict[str, str],
+            managed_commands: list[tuple[str, str]],
+            *,
+            target_stage: str,
+            expected_interpreters: list[Path],
+            expected_paths: list[Path],
+            include_all_stage: bool,
+        ) -> tuple[dict[str, str], bool]:
+            """Record stage invocation while returning env unchanged."""
+            del repo_root
+            del managed_commands
+            del expected_interpreters
+            del expected_paths
+            del include_all_stage
+            stage_calls.append(target_stage)
+            managed_python.parent.mkdir(parents=True, exist_ok=True)
+            managed_python.write_text("", encoding="utf-8")
+            managed_python.chmod(0o755)
+            return dict(env), True
 
-    monkeypatch.setattr(
-        module,
-        "_run_managed_commands_for_stage",
-        _fake_run_managed_commands_for_stage,
-    )
-    monkeypatch.setattr(
-        module,
-        "_detect_managed_python",
-        lambda expected_interpreters, expected_paths: (
-            managed_python,
-            managed_root,
-        ),
-    )
+        monkeypatch.setattr(
+            module,
+            "_run_managed_commands_for_stage",
+            _fake_run_managed_commands_for_stage,
+        )
+        monkeypatch.setattr(
+            module,
+            "_select_managed_environment",
+            lambda expected_interpreters, expected_paths: (
+                managed_python,
+                managed_root,
+            ),
+        )
 
-    first_env, first_python = module.resolve_managed_environment_for_stage(
-        Path("/tmp/repo"),
-        "start",
-        base_env={},
-    )
-    assert first_env is not None
-    assert first_python == str(managed_python)
-    assert stage_calls == ["start"]
-    assert first_env.get(module._MANAGED_STAGE_RUNS_ENV) == "start"
+        first_env, first_python = module.resolve_managed_environment_for_stage(
+            repo_root,
+            "start",
+            base_env={},
+        )
+        assert first_env is not None
+        assert first_python == str(managed_python)
+        assert stage_calls == ["start"]
+        assert first_env.get(module._MANAGED_STAGE_RUNS_ENV) == "start"
 
-    second_env, second_python = module.resolve_managed_environment_for_stage(
-        Path("/tmp/repo"),
-        "start",
-        base_env=first_env,
+        second_env, second_python = (
+            module.resolve_managed_environment_for_stage(
+                repo_root,
+                "start",
+                base_env=first_env,
+            )
+        )
+        assert second_env is not None
+        assert second_python == str(managed_python)
+        assert stage_calls == ["start"]
+
+
+def _unit_test_start_reuses_ready_current_interpreter(
+    monkeypatch: MonkeyPatch,
+) -> None:
+    """Start should reuse a matching ready interpreter without bootstrap."""
+    module = importlib.import_module(MODULE)
+    with tempfile.TemporaryDirectory() as temp_dir:
+        repo_root = Path(temp_dir)
+        managed_root = repo_root / ".venv"
+        managed_python = managed_root / "bin" / "python"
+        managed_python.parent.mkdir(parents=True, exist_ok=True)
+        managed_python.write_text("", encoding="utf-8")
+        managed_python.chmod(0o755)
+
+        monkeypatch.setattr(module.sys, "executable", str(managed_python))
+        monkeypatch.setattr(
+            module,
+            "_load_policy_entry",
+            lambda repo_root: {
+                "enabled": True,
+                "metadata": {
+                    "expected_paths": [".venv"],
+                    "expected_interpreters": [".venv/bin/python"],
+                    "required_commands": ["python3"],
+                    "managed_commands": [
+                        "start=>python3 -m venv .venv",
+                    ],
+                },
+            },
+        )
+        monkeypatch.setattr(
+            module,
+            "_command_available_in_env",
+            lambda command, env: command == "python3",
+        )
+
+        stage_calls: list[str] = []
+
+        def _fail_if_bootstrap_runs(*args, **kwargs):
+            """Record any unexpected bootstrap call for assertions."""
+            del args, kwargs
+            stage_calls.append("start")
+            return {}, True
+
+        monkeypatch.setattr(
+            module,
+            "_run_managed_commands_for_stage",
+            _fail_if_bootstrap_runs,
+        )
+
+        resolved_env, resolved_python = (
+            module.resolve_managed_environment_for_stage(
+                repo_root,
+                "start",
+                base_env={},
+            )
+        )
+
+    assert resolved_env is not None
+    assert resolved_python == str(managed_python.resolve())
+    assert resolved_env["DEVCOV_MANAGED_PYTHON"] == str(
+        managed_python.resolve()
     )
-    assert second_env is not None
-    assert second_python == str(managed_python)
+    assert resolved_env[module._MANAGED_STAGE_RUNS_ENV] == "start"
+    assert stage_calls == []
+
+
+def _unit_test_run_bootstraps_when_environment_is_missing(
+    monkeypatch: MonkeyPatch,
+) -> None:
+    """Non-start stages should bootstrap once when no valid env exists yet."""
+    module = importlib.import_module(MODULE)
+    with tempfile.TemporaryDirectory() as temp_dir:
+        repo_root = Path(temp_dir)
+        managed_root = repo_root / ".venv"
+        managed_python = managed_root / "bin" / "python"
+
+        monkeypatch.setattr(
+            module,
+            "_load_policy_entry",
+            lambda repo_root: {
+                "enabled": True,
+                "metadata": {
+                    "expected_paths": [".venv"],
+                    "expected_interpreters": [".venv/bin/python"],
+                    "managed_commands": [
+                        "start=>python3 -m venv .venv",
+                    ],
+                },
+            },
+        )
+        monkeypatch.setattr(
+            module,
+            "_command_available_in_env",
+            lambda command, env: True,
+        )
+        monkeypatch.setattr(
+            module,
+            "_select_managed_environment",
+            lambda expected_interpreters, expected_paths: (
+                managed_python,
+                managed_root,
+            ),
+        )
+
+        stage_calls: list[str] = []
+
+        def _fake_run_managed_commands_for_stage(
+            repo_root: Path,
+            env: dict[str, str],
+            managed_commands: list[tuple[str, str]],
+            *,
+            target_stage: str,
+            expected_interpreters: list[Path],
+            expected_paths: list[Path],
+            include_all_stage: bool,
+        ) -> tuple[dict[str, str], bool]:
+            """Create the missing interpreter only during start bootstrap."""
+            del repo_root
+            del managed_commands
+            del expected_interpreters
+            del expected_paths
+            del include_all_stage
+            if target_stage != "start":
+                return dict(env), False
+            stage_calls.append(target_stage)
+            managed_python.parent.mkdir(parents=True, exist_ok=True)
+            managed_python.write_text("", encoding="utf-8")
+            managed_python.chmod(0o755)
+            return dict(env), True
+
+        monkeypatch.setattr(
+            module,
+            "_run_managed_commands_for_stage",
+            _fake_run_managed_commands_for_stage,
+        )
+
+        resolved_env, resolved_python = (
+            module.resolve_managed_environment_for_stage(
+                repo_root,
+                "run",
+                base_env={},
+            )
+        )
+
+    assert resolved_env is not None
+    assert resolved_python == str(managed_python)
+    assert resolved_env["DEVCOV_MANAGED_PYTHON"] == str(managed_python)
+    assert resolved_env[module._MANAGED_STAGE_RUNS_ENV] == "start"
     assert stage_calls == ["start"]
 
 
@@ -488,6 +646,22 @@ class GeneratedUnittestCases(unittest.TestCase):
         monkeypatch = MonkeyPatch()
         try:
             _unit_test_stage_bootstrap_dedupes_on_reexec(monkeypatch)
+        finally:
+            monkeypatch.undo()
+
+    def test_start_reuses_ready_current_interpreter(self):
+        """Run start-stage environment reuse assertions."""
+        monkeypatch = MonkeyPatch()
+        try:
+            _unit_test_start_reuses_ready_current_interpreter(monkeypatch)
+        finally:
+            monkeypatch.undo()
+
+    def test_run_bootstraps_when_environment_is_missing(self):
+        """Run missing-environment bootstrap fallback assertions."""
+        monkeypatch = MonkeyPatch()
+        try:
+            _unit_test_run_bootstraps_when_environment_is_missing(monkeypatch)
         finally:
             monkeypatch.undo()
 

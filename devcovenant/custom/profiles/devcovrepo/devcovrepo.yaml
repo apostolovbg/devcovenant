@@ -350,8 +350,6 @@ policy_overlays:
       - .venv/Scripts/python.exe
     required_commands:
       - python3
-      - pre-commit
-      - pytest
     manual_commands:
       - python3 -m venv .venv
       - '{managed_python} -m pip install -r requirements.lock'

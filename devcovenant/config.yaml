@@ -17,6 +17,8 @@
 # Scope control
 # -------------------------------------------------------------------
 
+# Human-owned section.
+
 # Whether this repository is in DevCovenant developer mode.
 # - false: normal user-repo scope (exclude DevCovenant implementation internals from normal repo scope)
 # - true: DevCovenant developer mode (govern the full DevCovenant implementation tree)
@@ -26,6 +28,12 @@ developer_mode: true
 # -------------------------------------------------------------------
 # Profile activation
 # -------------------------------------------------------------------
+
+# Mixed-ownership section.
+
+# `profiles.active` is human-owned.
+
+# `profiles.generated` is refresh-owned diagnostic state.
 
 # Ordered profile list. `global` should stay first.
 
@@ -76,17 +84,31 @@ profiles:
 # Canonical paths
 # -------------------------------------------------------------------
 
+# Human-owned section.
+
+# Every key in `paths` is human-owned.
+
 # Runtime policy source parsed by the engine.
 
 # Generated local policy registry (hashes + diagnostics).
 
+# Runtime evidence files such as gate-status and workflow-session live here too.
+
 paths:
   policy_definitions: AGENTS.md
   registry_file: devcovenant/registry/registry.yaml
+  gate_status_file: devcovenant/registry/runtime/gate_status.json
+  workflow_session_file: devcovenant/registry/runtime/workflow_session.json
 
 # -------------------------------------------------------------------
 # Managed document controls
 # -------------------------------------------------------------------
+
+# Mixed-ownership section.
+
+# `doc_assets.autogen` is human-owned selection state.
+
+# `doc_assets.user` is human-owned exclusion state.
 
 # Documents that refresh may fully materialize from descriptor templates.
 # Empty list means runtime backfills defaults.
@@ -110,9 +132,15 @@ doc_assets:
 # Install/deploy safety
 # -------------------------------------------------------------------
 
-# True after install. Deploy is blocked until user reviews config.
+# Mixed-ownership section.
 
-# Set this to false after review to allow `devcovenant deploy`.
+# `install.config_reviewed` is human-owned.
+
+# `install.import_managed_docs` is refresh-owned memory.
+
+# `install` seeds `config_reviewed: false`. Deploy stays blocked until a human finishes the config review.
+
+# Set this to true after review to allow `devcovenant deploy`.
 
 install:
   config_reviewed: false
@@ -121,6 +149,8 @@ install:
 # -------------------------------------------------------------------
 # Engine behavior
 # -------------------------------------------------------------------
+
+# Human-owned section.
 
 # Violations at or above fail_threshold fail the run.
 
@@ -170,6 +200,8 @@ engine:
 # Cleanup targets
 # -------------------------------------------------------------------
 
+# Human-owned section.
+
 # Additive cleanup targets merged after active profile clean_overlays.
 
 # Use this for repository-specific build/cache/runtime-registry/log junk beyond builtin profiles.
@@ -196,6 +228,8 @@ clean:
 # CI-and-test workflow generation
 # -------------------------------------------------------------------
 
+# Human-owned section.
+
 # Deep-merge patch applied to generated `.github/workflows/ci.yml`.
 
 # Active profiles may also contribute reusable ci_and_test fragments.
@@ -216,6 +250,8 @@ ci_and_test:
 # Pre-commit generation
 # -------------------------------------------------------------------
 
+# Human-owned section.
+
 # `overlays` are merged into generated pre-commit config.
 
 # `overrides` replace generated payload when non-empty.
@@ -225,8 +261,25 @@ pre_commit:
   overrides: {}
 
 # -------------------------------------------------------------------
+# Workflow runtime contract
+# -------------------------------------------------------------------
+
+# Human-owned section.
+
+# DevCovenant-owned workflow contract knobs such as the canonical pre-commit command and invariant skip globs live here.
+
+# These are runtime contract settings, not policy toggles, so they do not belong under `policy_state`.
+
+workflow:
+  pre_commit_command: pre-commit run --all-files
+  skipped_globs:
+  - devcovenant/registry/runtime/**
+
+# -------------------------------------------------------------------
 # Project governance
 # -------------------------------------------------------------------
+
+# Human-owned section.
 
 # Repository lifecycle metadata rendered into managed docs, registry output, and changelog release flow.
 
@@ -275,6 +328,10 @@ project-governance:
 # Policy activation and customization
 # -------------------------------------------------------------------
 
+# Human-owned section.
+
+# Human-owned booleans in a refresh-synchronized map.
+
 # Canonical policy activation map: {policy-id: true|false}.
 
 # Critical-severity policies remain enforced even when set to false here.
@@ -306,6 +363,8 @@ policy_state:
 # Global ignore patterns
 # -------------------------------------------------------------------
 
+# Human-owned section.
+
 # Extra glob patterns excluded from CheckContext file collections.
 
 ignore:
@@ -331,6 +390,8 @@ ignore:
 # Gitignore generation
 # -------------------------------------------------------------------
 
+# Human-owned section.
+
 # Extra entries appended to generated `.gitignore`.
 
 # Entries are applied before the preserved user block.
@@ -344,6 +405,12 @@ gitignore:
 # -------------------------------------------------------------------
 # Metadata layers (resolution order matters)
 # -------------------------------------------------------------------
+
+# Mixed-ownership section.
+
+# `autogen_*` blocks below are refresh-owned.
+
+# `user_*` blocks below are human-owned.
 
 # Auto-generated metadata overlays written by refresh.
 
@@ -874,8 +941,6 @@ autogen_metadata_overlays:
     - '{managed_python} -m pip install -r requirements.lock'
     required_commands:
     - python3
-    - pre-commit
-    - pytest
   modules-need-tests:
     exclude_prefixes:
     - build
@@ -1038,6 +1103,8 @@ autogen_metadata_overlays:
     - package_manifest
     version_file: devcovenant/VERSION
 
+# Human-owned subsection.
+
 # User-owned overlays applied after autogen overlays.
 
 # Merge semantics: list append + dedupe, scalar replace.
@@ -1048,6 +1115,8 @@ user_metadata_overlays:
     - devcovenant/builtin/profiles/global/assets/*.yaml
     - devcovenant/registry/**
 
+# Refresh-owned subsection.
+
 # Auto-generated metadata overrides written by refresh.
 
 # Override semantics: full key replacement.
@@ -1055,6 +1124,8 @@ user_metadata_overlays:
 # Do not hand-edit unless you intentionally own this layer.
 
 autogen_metadata_overrides: {}
+
+# Human-owned subsection.
 
 # User-owned overrides applied last (highest precedence).
 
@@ -1070,23 +1141,3 @@ user_metadata_overrides:
     - devcovenant=>tests/devcovenant
   tests-coverage:
     severity: warning
-
-# -------------------------------------------------------------------
-
-# Extra user-defined keys (preserved)
-
-# -------------------------------------------------------------------
-
-core_invariants:
-  devcov-integrity-guard:
-    gate_status_file: devcovenant/registry/runtime/gate_status.json
-    policy_definitions:
-    - AGENTS.md
-    registry_file: devcovenant/registry/registry.yaml
-  devcov-structure-guard: {}
-  devflow-run-gates:
-    gate_status_file: devcovenant/registry/runtime/gate_status.json
-    pre_commit_command:
-    - pre-commit run --all-files
-    skipped_globs:
-    - devcovenant/registry/runtime/**

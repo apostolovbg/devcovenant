@@ -182,6 +182,10 @@ The repo-owned `pipx` proof now also seeds its proof `.venv` with the proven
 wheel before the governed lifecycle begins, so source-tree
 `python -m devcovenant` inside the proof repo has the runtime dependencies
 declared by the shipped artifact.
+That same repo-owned managed-environment overlay now keeps
+`required_commands` at the external bootstrap minimum (`python3`) and lets the
+gate contract resolve `pre-commit` through the selected interpreter when a
+console-script shim is absent.
 That repo-owned build proof should also keep its shell structure simple enough
 that inline activation helpers stay parse-stable in GitHub Actions.
 If a repo family needs a reviewed temporary scanner exception because an
@@ -196,6 +200,13 @@ The global config asset is where DevCovenant now lists the full
 allowed `maintenance_stance` values, the legal
 `compatibility_policy` values, and the two legal `versioning_mode` values
 directly in the generated config comments.
+That same config surface now marks ownership section-by-section as
+human-owned, refresh-owned, or mixed ownership so a repository can tell at a
+glance which settings it owns directly and which runtime state refresh writes
+for visibility.
+The invariant side of that contract now uses ordinary runtime sections such as
+`paths.*` and `workflow.*` instead of pretending invariants are policy-shaped
+config.
 The same boundary also matters for cleanup:
 the global profile can seed reusable cleanup targets, but it should not
 hardcode one language-specific managed environment path such as `.venv`.

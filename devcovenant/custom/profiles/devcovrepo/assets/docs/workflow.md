@@ -85,6 +85,31 @@ Use this exact order for ordinary repository work:
 If the console script is unavailable, use `python3 -m devcovenant ...`.
 On Windows, `py -m devcovenant ...` is the common equivalent form.
 
+## How This Workflow Connects To Policies
+Not every governed rule plugs into the workflow the same way.
+
+The clean split is:
+
+- core invariants own the non-optional engine boundaries such as gate and run
+  evidence
+
+- runtime/workflow plugs change how commands execute
+
+- session-evidence policies depend on gate or workflow ledgers
+
+- artifact-contract policies require repository files or synchronized outputs
+
+In practice:
+
+- `managed-environment` is the clearest policy-side runtime plug because it
+  selects or prepares the execution environment before commands run
+
+- `changelog-coverage` is the clearest session-evidence policy because it
+  compares the current work slice against gate-start state
+
+- `modules-need-tests`, `tests-coverage`, and `dependency-management` are
+  artifact-contract policies enforced by the governed check flow
+
 ## Read-Only Audit Path
 If you are investigating without making a governed edit, use:
 
@@ -312,10 +337,15 @@ That rule keeps CI generic:
 
 1. bootstrap Python installs DevCovenant's own dependencies
 
-2. DevCovenant resolves the configured managed environment for the stage
+2. DevCovenant resolves the configured target execution environment for the
+   stage
 
-3. stage commands prepare or reuse that environment through metadata such as
-   `expected_paths`, `expected_interpreters`, and `managed_commands`
+3. it first reuses the current interpreter when it already satisfies metadata
+   such as `expected_paths`, `expected_interpreters`, and
+   `required_commands`
+
+4. only when that target environment is still missing or invalid do
+   `managed_commands` prepare it
 
 In this repository, the main `governance` job stays generic and runs the
 source-tree contract directly with normal `python -m devcovenant ...`
@@ -326,6 +356,12 @@ create `.venv` inside the proof repo, seed that environment with the proven
 wheel plus the repo lockfile, and hand the governed
 `gate --start -> gate --mid -> run -> gate --end -> check` path to
 `.venv/bin/python -m devcovenant`.
+That prepared proof environment is now reused by `gate --start` once it
+already satisfies the managed-environment contract instead of being
+recreated unconditionally.
+The gate pre-commit step also prefers the environment's console script and can
+fall back to `python -m pre_commit` through the selected interpreter when the
+shim is absent.
 That keeps the source-tree job generic while still proving that the installed
 artifact can materialize and use the managed environment contract without
 interpreter drift.

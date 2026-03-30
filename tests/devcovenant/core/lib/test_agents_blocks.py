@@ -74,11 +74,15 @@ def _unit_test_refresh_inserts_core_invariant_block_from_registry() -> None:
                     "core-invariants": {
                         "devflow-run-gates": {
                             "name": "Devflow Run Gates",
-                            "severity": "critical",
                             "description": (
                                 "Require start, test, and end evidence."
                             ),
-                            "metadata": {},
+                            "metadata": {
+                                "gate_status_file": (
+                                    "devcovenant/registry/runtime/"
+                                    "gate_status.json"
+                                )
+                            },
                         }
                     }
                 },
@@ -98,6 +102,8 @@ def _unit_test_refresh_inserts_core_invariant_block_from_registry() -> None:
         assert result.updated is True
         assert "Require start, test, and end evidence." in content
         assert module.CORE_INVARIANTS_BEGIN in content
+        assert "severity:" not in content
+        assert "customizable:" not in content
 
 
 class GeneratedUnittestCases(unittest.TestCase):

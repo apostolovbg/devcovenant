@@ -27,7 +27,8 @@ body: |-
   ## Global Rules
   - Policy activation authority is `config.policy_state` only.
   - DevCovenant-owned runtime invariants surface separately through
-    `config.core_invariants`, AGENTS core-invariant block rendering, and the
+    dedicated config sections such as `paths.*` and `workflow.*`, AGENTS
+    core-invariant block rendering, and the
     tracked registry `core-invariants` section.
   - Policy descriptors are the canonical prose and metadata defaults.
   - AGENTS policy block is compiled from resolved metadata and parsed at
@@ -40,8 +41,9 @@ body: |-
     consistency as a first-class DevCovenant runtime invariant.
   - `devcov-structure-guard`: enforces required DevCovenant runtime shape and
     repo-local bytecode hygiene where configured.
-  - `devflow-run-gates`: enforces gate start -> run -> gate end evidence and
-    validates required-command and pre-commit execution records.
+  - `devflow-run-gates`: enforces
+    `gate --start -> gate --mid -> run -> gate --end` evidence and validates
+    workflow/pre-commit execution records.
 
   ## Builtin Policies
   - `changelog-coverage`: requires one fresh top changelog entry per work
@@ -113,8 +115,8 @@ body: |-
   Gate/session:
   - `gate_status_file`, `workflow_session_file`, pre-commit command/epoch
     keys
-  - core invariant metadata for `devflow-run-gates` lives under
-    `config.core_invariants`, not `policy_state`
+  - workflow/runtime invariant knobs live under `paths.*` and `workflow.*`,
+    not `policy_state`
 
   Runtime note:
   - workflow runs are resolved from tracked `workflow_contract`

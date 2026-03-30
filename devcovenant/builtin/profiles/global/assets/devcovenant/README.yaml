@@ -34,8 +34,8 @@ body: |-
 
   ## Configuration Checkpoints
   Summarize the few config decisions that matter most on first review, such as
-  `developer_mode`, the active profile stack, doc assets, core invariants,
-  policy activation, and output settings.
+  `developer_mode`, the active profile stack, runtime paths, workflow knobs,
+  doc assets, policy activation, and output settings.
 
   ## Evidence Artifacts
   Explain where run logs and related session state live and what to inspect

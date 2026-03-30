@@ -100,8 +100,11 @@ def _unit_test_core_invariant_descriptors_are_separate_from_policies() -> None:
             invariants_root / f"{invariant_id.replace('-', '_')}.yaml"
         )
         payload = yaml.safe_load(descriptor_path.read_text(encoding="utf-8"))
-        metadata_block = payload.get("metadata", {})
-        assert metadata_block["severity"] == "critical"
+        metadata_block = payload.get("metadata") or {}
+        assert isinstance(metadata_block, dict)
+        assert "severity" not in metadata_block
+        assert "customizable" not in metadata_block
+        assert "enforcement" not in metadata_block
         assert not (
             builtin_policies_root
             / invariant_id.replace("-", "_")

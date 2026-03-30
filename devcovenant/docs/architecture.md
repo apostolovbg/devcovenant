@@ -82,12 +82,24 @@ Customizable policies are the repository-facing enforcement units.
 They can be enabled, disabled, and tuned through config and profiles.
 Examples include changelog coverage, line length, and dependency management.
 
+The clean taxonomy is:
+
+- core invariants for engine-owned boundaries
+- runtime/workflow plugs for behavior that changes execution itself
+- session-evidence policies for checks that depend on gate/workflow ledgers
+- artifact-contract policies for required files and synchronized outputs
+
 That split matters because it keeps non-optional engine behavior out of the
 same conceptual bucket as repo-specific governance choices.
 It also means the package artifact has to ship the core invariant descriptor
 YAMLs under `devcovenant/core/contracts/invariants/`, because deploy and
 other runtime paths resolve those descriptors from the installed package, not
 from a source-only checkout assumption.
+Those descriptor YAMLs now carry invariant-specific metadata only.
+They no longer pretend to be policy descriptors with redundant fields such as
+severity, enforcement, or customizability.
+The repository-owned knobs for those invariants live in dedicated config
+sections such as `paths.*` and `workflow.*`.
 
 The implementation ownership now follows that split more honestly as well.
 `devcovenant/core/flow/gate_status_validation.py` and
@@ -133,6 +145,12 @@ That split is intentional.
 Policies can still require things about source layout or test structure, but a
 customizable policy should not be the thing that makes gate mechanics work at
 all.
+This is also where the runtime-plug distinction matters.
+`managed-environment` is a policy-owned execution plug because it affects
+which interpreter and command shims the workflow actually uses.
+By contrast, policies such as `modules-need-tests` and
+`dependency-management` remain artifact contracts enforced by the governed
+check flow rather than by the executor itself.
 
 ## Policy Runtime Model
 Policies combine three things:

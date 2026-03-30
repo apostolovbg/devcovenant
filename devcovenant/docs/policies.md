@@ -1,5 +1,5 @@
 # Policies
-**Last Updated:** 2026-03-29
+**Last Updated:** 2026-03-30
 **Project Version:** 1.0.0
 
 ## Overview
@@ -87,10 +87,18 @@ One example is cleanup protection: cleanup may ask the managed-environment
 runtime which roots should stay protected, using explicit
 `cleanup_protected_paths` metadata first and falling back to `expected_paths`
 when no custom cleanup roots are declared.
+The same policy now treats managed execution as one environment contract:
+it first reuses the current interpreter when that interpreter already matches
+metadata and its external prerequisites resolve, and only runs
+`managed_commands` when the selected target environment is still missing or
+invalid.
 The same policy now also aligns managed command stages with the public
 workflow contract: `start`, `run`, `end`, `command`, and `all`.
 That keeps managed-environment orchestration aligned with `devcovenant run`
 instead of preserving a special legacy `test` stage.
+For Python-owned tools such as the gate hook, execution prefers the
+environment's console script and can fall back to `python -m ...` through the
+same interpreter when the shim is absent.
 The same runtime now also persists that prepared-stage state with the same
 `run` token, so managed re-exec hops no longer carry a stale internal
 `test` marker after the public workflow contract moved to `run`.

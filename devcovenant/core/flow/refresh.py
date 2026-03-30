@@ -516,6 +516,7 @@ def _render_config_yaml(payload: dict[str, object]) -> str:
         "clean",
         "ci_and_test",
         "pre_commit",
+        "workflow",
         "project-governance",
         "policy_state",
         "ignore",
@@ -537,6 +538,7 @@ def _render_config_yaml(payload: dict[str, object]) -> str:
             "CI-and-test workflow generation"
         ),
         "pre_commit": _config_section_header("Pre-commit generation"),
+        "workflow": _config_section_header("Workflow runtime contract"),
         "project_governance": _config_section_header("Project governance"),
         "policy": _config_section_header(
             "Policy activation and customization"
@@ -551,6 +553,7 @@ def _render_config_yaml(payload: dict[str, object]) -> str:
     blocks = [
         _config_comment_header(),
         comments["scope"],
+        "# Human-owned section.",
         "\n".join(
             [
                 (
@@ -573,6 +576,9 @@ def _render_config_yaml(payload: dict[str, object]) -> str:
             }
         ),
         comments["profiles"],
+        "# Mixed-ownership section.",
+        "# `profiles.active` is human-owned.",
+        "# `profiles.generated` is refresh-owned diagnostic state.",
         "# Ordered profile list. `global` should stay first.",
         (
             "# Profiles contribute suffixes, assets, metadata overlays, "
@@ -589,10 +595,19 @@ def _render_config_yaml(payload: dict[str, object]) -> str:
         ),
         _yaml_block({"profiles": payload.get("profiles", {})}),
         comments["paths"],
+        "# Human-owned section.",
+        "# Every key in `paths` is human-owned.",
         "# Runtime policy source parsed by the engine.",
         "# Generated local policy registry (hashes + diagnostics).",
+        (
+            "# Runtime evidence files such as gate-status "
+            "and workflow-session live here too."
+        ),
         _yaml_block({"paths": payload.get("paths", {})}),
         comments["doc_assets"],
+        "# Mixed-ownership section.",
+        "# `doc_assets.autogen` is human-owned selection state.",
+        "# `doc_assets.user` is human-owned exclusion state.",
         "\n".join(
             [
                 (
@@ -612,13 +627,17 @@ def _render_config_yaml(payload: dict[str, object]) -> str:
         ),
         _yaml_block({"doc_assets": payload.get("doc_assets", {})}),
         comments["install"],
+        "# Mixed-ownership section.",
+        "# `install.config_reviewed` is human-owned.",
+        "# `install.import_managed_docs` is refresh-owned memory.",
         (
-            "# True after install. Deploy is blocked until user reviews "
-            "config."
+            "# `install` seeds `config_reviewed: false`. Deploy stays blocked "
+            "until a human finishes the config review."
         ),
-        ("# Set this to false after review to allow `devcovenant deploy`."),
+        ("# Set this to true after review to allow `devcovenant deploy`."),
         _yaml_block({"install": payload.get("install", {})}),
         comments["engine"],
+        "# Human-owned section.",
         "# Violations at or above fail_threshold fail the run.",
         "# Allowed levels: info, warning, error, critical.",
         "# auto_fix_enabled controls gate-managed policy auto-fix behavior.",
@@ -632,6 +651,7 @@ def _render_config_yaml(payload: dict[str, object]) -> str:
         "# file_suffixes and ignore_dirs define broad scan boundaries.",
         _yaml_block({"engine": payload.get("engine", {})}),
         comments["clean"],
+        "# Human-owned section.",
         (
             "# Additive cleanup targets merged after active profile "
             "clean_overlays."
@@ -649,6 +669,7 @@ def _render_config_yaml(payload: dict[str, object]) -> str:
         ),
         _yaml_block({"clean": payload.get("clean", {})}),
         comments["ci_and_test"],
+        "# Human-owned section.",
         (
             "# Deep-merge patch applied to generated "
             "`.github/workflows/ci.yml`."
@@ -670,10 +691,24 @@ def _render_config_yaml(payload: dict[str, object]) -> str:
             }
         ),
         comments["pre_commit"],
+        "# Human-owned section.",
         "# `overlays` are merged into generated pre-commit config.",
         "# `overrides` replace generated payload when non-empty.",
         _yaml_block({"pre_commit": payload.get("pre_commit", {})}),
+        comments["workflow"],
+        "# Human-owned section.",
+        (
+            "# DevCovenant-owned workflow contract knobs such as "
+            "the canonical pre-commit command and invariant skip "
+            "globs live here."
+        ),
+        (
+            "# These are runtime contract settings, not policy toggles, so "
+            "they do not belong under `policy_state`."
+        ),
+        _yaml_block({"workflow": payload.get("workflow", {})}),
         comments["project_governance"],
+        "# Human-owned section.",
         (
             "# Repository lifecycle metadata rendered into managed docs, "
             "registry output, and changelog release flow."
@@ -722,6 +757,8 @@ def _render_config_yaml(payload: dict[str, object]) -> str:
             }
         ),
         comments["policy"],
+        "# Human-owned section.",
+        "# Human-owned booleans in a refresh-synchronized map.",
         ("# Canonical policy activation map: {policy-id: true|false}."),
         (
             "# Critical-severity policies remain enforced even when set "
@@ -729,14 +766,19 @@ def _render_config_yaml(payload: dict[str, object]) -> str:
         ),
         _yaml_block({"policy_state": payload.get("policy_state", {})}),
         comments["ignore"],
+        "# Human-owned section.",
         "# Extra glob patterns excluded from CheckContext file collections.",
         _yaml_block({"ignore": payload.get("ignore", {})}),
         comments["gitignore"],
+        "# Human-owned section.",
         "# Extra entries appended to generated `.gitignore`.",
         "# Entries are applied before the preserved user block.",
         "# `overrides` replaces generated base/profile/os fragments entirely.",
         _yaml_block({"gitignore": payload.get("gitignore", {})}),
         comments["metadata"],
+        "# Mixed-ownership section.",
+        "# `autogen_*` blocks below are refresh-owned.",
+        "# `user_*` blocks below are human-owned.",
         "# Auto-generated metadata overlays written by refresh.",
         "# Merge semantics: list append + dedupe, scalar replace.",
         _yaml_block(
@@ -746,6 +788,7 @@ def _render_config_yaml(payload: dict[str, object]) -> str:
                 )
             }
         ),
+        "# Human-owned subsection.",
         "# User-owned overlays applied after autogen overlays.",
         "# Merge semantics: list append + dedupe, scalar replace.",
         _yaml_block(
@@ -755,6 +798,7 @@ def _render_config_yaml(payload: dict[str, object]) -> str:
                 )
             }
         ),
+        "# Refresh-owned subsection.",
         "# Auto-generated metadata overrides written by refresh.",
         "# Override semantics: full key replacement.",
         "# Do not hand-edit unless you intentionally own this layer.",
@@ -765,6 +809,7 @@ def _render_config_yaml(payload: dict[str, object]) -> str:
                 )
             }
         ),
+        "# Human-owned subsection.",
         "# User-owned overrides applied last (highest precedence).",
         "# Override semantics: full key replacement.",
         "# Shape: {policy-id: {metadata_key: value-or-list}}",
@@ -805,8 +850,7 @@ def _refresh_config_generated(
     template = _load_config_template(repo_root)
     merged = copy.deepcopy(template)
     _merge_user_config_values(merged, config)
-    _drop_legacy_project_governance_metadata(merged)
-    _drop_legacy_workflow_command_metadata(merged)
+    _drop_removed_config_keys(merged)
     _apply_profile_aware_engine_defaults(merged, user_config, active_profiles)
     _apply_profile_aware_project_governance_defaults(
         merged,
@@ -926,10 +970,8 @@ def _normalize_project_governance_mapping(
     }
 
 
-def _drop_legacy_project_governance_metadata(
-    payload: dict[str, object],
-) -> None:
-    """Remove retired policy-era project-governance config keys."""
+def _drop_removed_config_keys(payload: dict[str, object]) -> None:
+    """Remove config keys that no longer belong to the live schema."""
     policy_state = payload.get("policy_state")
     if isinstance(policy_state, dict):
         policy_state.pop("project-governance", None)
@@ -942,20 +984,7 @@ def _drop_legacy_project_governance_metadata(
         layer = payload.get(key_name)
         if isinstance(layer, dict):
             layer.pop("project-governance", None)
-
-
-def _drop_legacy_workflow_command_metadata(
-    payload: dict[str, object],
-) -> None:
-    """Remove retired gate-command config keys replaced by workflow runs."""
-
-    core_invariants = payload.get("core_invariants")
-    if not isinstance(core_invariants, dict):
-        return
-    devflow = core_invariants.get("devflow-run-gates")
-    if not isinstance(devflow, dict):
-        return
-    devflow.pop("required_commands", None)
+    payload.pop("core_invariants", None)
 
 
 def _profile_project_governance_defaults(
@@ -1902,8 +1931,7 @@ def refresh_repo(repo_root: Path) -> int:
         config = _load_config_template(repo_root)
         user_config = _read_yaml(config_path) if config_path.exists() else {}
         _merge_user_config_values(config, user_config)
-        _drop_legacy_project_governance_metadata(config)
-        _drop_legacy_workflow_command_metadata(config)
+        _drop_removed_config_keys(config)
         initial_active_profiles = _active_profiles(config)
         preview_profile_registry = profile_runtime.build_profile_registry(
             repo_root,

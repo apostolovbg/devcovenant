@@ -65,6 +65,10 @@ exception when an upstream advisory has no published fix release yet.
 The tracked registry also depends on deterministic discovery order, so
 profiles and policy-source inventories are sorted before refresh writes the
 registry on macOS, Linux, or Windows.
+Tracked invariant entries now also carry invariant-specific metadata only.
+They no longer repeat policy-style fields such as severity,
+customizability, or enforcement because those are implied by the invariant
+contract itself.
 That same tracked state also records the current generated workflow contract,
 including the visible workflow name `CI`, the generated workflow file
 `.github/workflows/ci.yml`, and the repo-specific scanner steps merged into
@@ -72,10 +76,21 @@ its main `governance` job.
 For this repository, tracked workflow metadata also carries the repo-owned
 `Build` proof details that manual publish depends on, including CI-aligned
 provenance fields such as `ci_run_id` and `ci_run_attempt`.
+Tracked core-invariant entries now carry invariant-specific metadata only.
+They do not repeat policy-style fields such as severity, enforcement, or
+customizability because those are implied by invariant kind rather than being
+repository policy choices.
 That tracked invariant metadata now also records the canonical gate hook
 launcher `pre-commit run --all-files`; older `python -m pre_commit` evidence
 is validation-compatible, but the resolved contract no longer depends on the
 host `python3` interpreter carrying `pre_commit`.
+The same tracked managed-environment metadata now records a simpler execution
+contract as well: the selected interpreter is reused when it already
+satisfies the repo contract, bootstrap commands only prepare the target
+environment when it is still missing or invalid, and
+`required_commands` stay limited to external bootstrap prerequisites instead
+of every Python console-script shim that might later run inside the
+environment.
 Separately from tracked registry state, the same refresh pass also regenerates
 ignore surfaces such as `.gitignore`.
 In this repository, that broader generated output now includes
@@ -87,6 +102,8 @@ It now also reflects the validated ordering contract itself:
 `after`, `before`, and `order` are resolved into the tracked run order, and
 unknown references or cycles fail refresh instead of surviving as inert
 metadata.
+The config knobs that feed that invariant now live under dedicated runtime
+sections such as `paths.*` and `workflow.*`.
 That means the tracked registry should now show runs under
 `workflow_contract`, not a legacy `devflow-run-gates.required_commands`
 fallback.

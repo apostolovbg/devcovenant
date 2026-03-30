@@ -1,4 +1,4 @@
-"""Base contracts for non-customizable DevCovenant core invariants."""
+"""Base contracts for DevCovenant core invariants."""
 
 from __future__ import annotations
 
@@ -17,7 +17,6 @@ class CoreInvariantDefinition:
 
     invariant_id: str
     name: str
-    severity: str
     description: str
     raw_metadata: Dict[str, str] = field(default_factory=dict)
 

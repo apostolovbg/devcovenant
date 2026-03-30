@@ -6,7 +6,7 @@
 **Maintenance Stance:** active
 **Compatibility Policy:** breaking-allowed
 **Versioning Mode:** versioned
-**Last Updated:** 2026-03-29
+**Last Updated:** 2026-03-30
 **DevCovenant Version:** 1.0.0
 
 <!-- DEVCOV:BEGIN -->
@@ -205,19 +205,12 @@ This block reflects the repository's active project-governance state.
 
 ```core-invariant-def
 id: devcov-integrity-guard
-severity: critical
-customizable: false
-enforcement: active
 policy_definitions: AGENTS.md
 registry_file: devcovenant/registry/registry.yaml
 gate_status_file: devcovenant/registry/runtime/gate_status.json
 watch_dirs:
 watch_files:
 selector_roles: watch,watch_files
-watch_globs:
-watch_files_globs:
-watch_files_files:
-watch_files_dirs:
 ```
 
 Enforce DevCovenant policy integrity: every policy must include descriptive
@@ -228,9 +221,6 @@ stay synchronized, and gate-status metadata must validate when configured.
 
 ```core-invariant-def
 id: devcov-structure-guard
-severity: critical
-customizable: false
-enforcement: active
 ```
 
 Ensure the DevCovenant repo keeps the required structure and tooling files.
@@ -239,9 +229,6 @@ Ensure the DevCovenant repo keeps the required structure and tooling files.
 
 ```core-invariant-def
 id: devflow-run-gates
-severity: critical
-customizable: false
-enforcement: active
 gate_status_file: devcovenant/registry/runtime/gate_status.json
 workflow_session_file:
 require_pre_commit_start: true
@@ -253,9 +240,6 @@ pre_commit_start_command_key: pre_commit_start_command
 pre_commit_end_command_key: pre_commit_end_command
 code_extensions:
 skipped_globs: devcovenant/registry/runtime/**
-selector_roles: skipped
-skipped_files:
-skipped_dirs:
 ```
 
 DevCovenant must record and enforce the standard workflow: pre-commit start,
@@ -1150,27 +1134,28 @@ expected_interpreters: .venv/bin/python
   .venv/Scripts/python.exe
 cleanup_protected_paths:
 required_commands: python3
-  pre-commit
-  pytest
 manual_commands: python3 -m venv .venv
   {managed_python} -m pip install -r requirements.lock
 managed_commands: start=>python3 -m venv .venv
   start=>{managed_python} -m pip install -r requirements.lock
 ```
 
-DevCovenant must run from the managed environment described in this
-policy's metadata. Use expected_paths for virtualenv or bench roots,
-expected_interpreters for explicit interpreter locations, and
-optional cleanup_protected_paths for cleanup-safe roots, and
-required_commands with `manual_commands`, stage-scoped
-`managed_commands` to define guidance and runtime preparation.
-Active managed-environment policy now also re-executes DevCovenant CLI
-commands in the managed interpreter automatically when the current
-interpreter does not match. Stage-scoped `managed_commands` accept
-`start`, `run`, `end`, `command`, and `all` prefixes; non-start
-commands reuse `start` bootstrap commands once when the interpreter is
-still missing. If the resolved managed interpreter is missing or not
-executable, DevCovenant now fails explicitly instead of rerunning through
+DevCovenant must run from one execution environment described by this
+policy's metadata. `expected_paths` and `expected_interpreters` point to
+that target environment, while optional `cleanup_protected_paths` define
+extra roots that cleanup must never delete. `required_commands`
+declare the external prerequisites that should already resolve once the
+target interpreter is selected. `manual_commands` document how a human
+can create or repair the environment, and stage-scoped `managed_commands`
+define how DevCovenant may prepare it automatically.
+Active managed-environment policy reuses the current interpreter when it
+already satisfies the contract, re-executes CLI commands in the selected
+interpreter when needed, and only runs bootstrap commands when the target
+environment is still missing or invalid. Stage-scoped `managed_commands`
+accept `start`, `run`, `end`, `command`, and `all` prefixes; non-start
+commands may still reuse `start` bootstrap commands once when the target
+environment is not ready. If the resolved interpreter is missing or not
+executable, DevCovenant fails explicitly instead of falling through to
 wrapper adapters or alternate policy sources.
 When enabled with empty metadata, the policy emits a warning so teams
 fill the required context.

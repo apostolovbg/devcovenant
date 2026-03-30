@@ -2,7 +2,7 @@
 **Doc ID:** README
 **Doc Type:** repo-readme
 **Project Version:** 1.0.0
-**Last Updated:** 2026-03-29
+**Last Updated:** 2026-03-30
 **DevCovenant Version:** 1.0.0
 
 <!-- DEVCOV:BEGIN -->
@@ -192,19 +192,24 @@ The most important first-review settings in `devcovenant/config.yaml` are:
 
    The stack description for the repository.
 
-3. `doc_assets`
+3. `paths`
+
+   Runtime evidence and registry path knobs owned by the repository.
+
+4. `doc_assets`
 
    Which managed docs are enabled, disabled, or supplied by custom profiles.
 
-4. `core_invariants`
+5. `workflow`
 
-   DevCovenant-owned runtime invariants such as gate evidence requirements.
+   Workflow-contract settings such as the canonical pre-commit command and
+   workflow evidence skip globs.
 
-5. `policy_state`
+6. `policy_state`
 
    Which customizable policies are on or off.
 
-6. `engine.*`
+7. `engine.*`
 
    Output, autofix, retention, and related runtime behavior.
 

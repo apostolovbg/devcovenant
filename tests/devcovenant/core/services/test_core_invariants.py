@@ -3,8 +3,11 @@
 from __future__ import annotations
 
 import importlib
+import tempfile
 import unittest
 from pathlib import Path
+
+import yaml
 
 MODULE = "devcovenant.core.services.core_invariants"
 REPO_ROOT = Path(__file__).resolve().parents[4]
@@ -94,6 +97,70 @@ def _unit_test_structure_location_uses_validation_module() -> None:
     )
 
 
+def _unit_test_runtime_overrides_use_dedicated_config_sections() -> None:
+    """Invariant config overrides should come from dedicated config keys."""
+    module = importlib.import_module(MODULE)
+    with tempfile.TemporaryDirectory() as tmpdir:
+        repo_root = Path(tmpdir)
+        config_path = repo_root / "devcovenant" / "config.yaml"
+        config_path.parent.mkdir(parents=True, exist_ok=True)
+        config_path.write_text(
+            yaml.safe_dump(
+                {
+                    "paths": {
+                        "policy_definitions": "AGENTS.md",
+                        "registry_file": "devcovenant/registry/registry.yaml",
+                        "gate_status_file": (
+                            "devcovenant/registry/runtime/evidence/status.json"
+                        ),
+                        "workflow_session_file": (
+                            "devcovenant/registry/runtime/evidence/"
+                            "workflow.json"
+                        ),
+                    },
+                    "workflow": {
+                        "pre_commit_command": "pre-commit run --all-files",
+                        "skipped_globs": ["devcovenant/registry/runtime/**"],
+                    },
+                },
+                sort_keys=False,
+            ),
+            encoding="utf-8",
+        )
+        overrides = module.runtime_core_invariant_config_overrides(
+            repo_root,
+            "devflow-run-gates",
+        )
+        assert overrides["gate_status_file"].endswith("status.json")
+        assert overrides["workflow_session_file"].endswith("workflow.json")
+        assert overrides["pre_commit_command"] == "pre-commit run --all-files"
+        assert overrides["skipped_globs"] == [
+            "devcovenant/registry/runtime/**"
+        ]
+
+
+def _unit_test_resolved_core_invariants_keep_only_invariant_metadata() -> None:
+    """Resolved invariants should not carry policy-style metadata fields."""
+    module = importlib.import_module(MODULE)
+    resolved = module.resolve_core_invariants(REPO_ROOT)
+    by_id = {item.definition.invariant_id: item for item in resolved}
+    devflow = by_id["devflow-run-gates"]
+    for forbidden_key in (
+        "severity",
+        "auto_fix",
+        "enforcement",
+        "enabled",
+        "custom",
+        "id",
+    ):
+        assert forbidden_key not in devflow.definition.raw_metadata
+        assert forbidden_key not in devflow.metadata_resolution
+        assert (
+            forbidden_key
+            not in devflow.runtime_option_views["runtime_metadata_options"]
+        )
+
+
 class GeneratedUnittestCases(unittest.TestCase):
     """unittest wrappers for layered module sanity checks."""
 
@@ -124,3 +191,11 @@ class GeneratedUnittestCases(unittest.TestCase):
     def test_structure_location_uses_validation_module(self):
         """Run structure invariant location assertions."""
         _unit_test_structure_location_uses_validation_module()
+
+    def test_runtime_overrides_use_dedicated_config_sections(self):
+        """Run dedicated invariant-config override assertions."""
+        _unit_test_runtime_overrides_use_dedicated_config_sections()
+
+    def test_resolved_core_invariants_keep_only_invariant_metadata(self):
+        """Run invariant metadata-shape assertions."""
+        _unit_test_resolved_core_invariants_keep_only_invariant_metadata()

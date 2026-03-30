@@ -740,6 +740,55 @@ def _unit_test_refresh_writes_clean_config_section() -> None:
         assert clean_block.get("overrides") == {}
 
 
+def _unit_test_refresh_moves_invariant_knobs_into_dedicated_sections() -> None:
+    """refresh_repo should render workflow/runtime knobs outside policies."""
+    with tempfile.TemporaryDirectory() as temp_dir:
+        repo_root = Path(temp_dir)
+        repo_seed_cache.copy_refreshed_repo(repo_root)
+
+        result = refresh.refresh_repo(repo_root)
+        assert result == 0
+
+        config_path = repo_root / "devcovenant" / "config.yaml"
+        payload = yaml.safe_load(config_path.read_text(encoding="utf-8"))
+        assert "core_invariants" not in payload
+        assert payload["paths"]["gate_status_file"] == (
+            "devcovenant/registry/runtime/gate_status.json"
+        )
+        assert payload["paths"]["workflow_session_file"] == (
+            "devcovenant/registry/runtime/workflow_session.json"
+        )
+        assert payload["workflow"]["pre_commit_command"] == (
+            "pre-commit run --all-files"
+        )
+        assert payload["workflow"]["skipped_globs"] == [
+            "devcovenant/registry/runtime/**"
+        ]
+
+
+def _unit_test_refresh_renders_config_ownership_comments() -> None:
+    """refresh_repo should label config ownership clearly and accurately."""
+    with tempfile.TemporaryDirectory() as temp_dir:
+        repo_root = Path(temp_dir)
+        repo_seed_cache.copy_refreshed_repo(repo_root)
+
+        result = refresh.refresh_repo(repo_root)
+        assert result == 0
+
+        config_text = (repo_root / "devcovenant" / "config.yaml").read_text(
+            encoding="utf-8"
+        )
+        assert "# Human-owned section." in config_text
+        assert "# Mixed-ownership section." in config_text
+        assert "# Every key in `paths` is human-owned." in config_text
+        assert (
+            "# Set this to true after review to allow `devcovenant deploy`."
+            in (config_text)
+        )
+        assert "Set this to false after review" not in config_text
+        assert "core_invariants:" not in config_text
+
+
 def _unit_test_refresh_collapses_legacy_default_clean_overrides() -> None:
     """refresh_repo should normalize legacy all-empty clean overrides."""
     from devcovenant.core.services.cleanup import resolve_clean_config
@@ -1309,6 +1358,14 @@ class GeneratedUnittestCases(unittest.TestCase):
     def test_refresh_writes_clean_config_section(self):
         """Run clean-config template rendering assertions."""
         _unit_test_refresh_writes_clean_config_section()
+
+    def test_refresh_moves_invariant_knobs_into_dedicated_sections(self):
+        """Run invariant-config placement assertions."""
+        _unit_test_refresh_moves_invariant_knobs_into_dedicated_sections()
+
+    def test_refresh_renders_config_ownership_comments(self):
+        """Run config ownership/comment rendering assertions."""
+        _unit_test_refresh_renders_config_ownership_comments()
 
     def test_refresh_collapses_legacy_default_clean_overrides(self):
         """Run legacy clean-override normalization assertions."""

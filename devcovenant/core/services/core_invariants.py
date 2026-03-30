@@ -9,15 +9,12 @@ from typing import Any, Dict, List
 
 import yaml
 
-import devcovenant.core.services.metadata as metadata_runtime
+import devcovenant.core.services.profile_registry as profile_runtime
 from devcovenant.core.contracts.invariant import (
     CoreInvariantCheck,
     CoreInvariantDefinition,
 )
 from devcovenant.core.contracts.policy import CheckContext, Violation
-from devcovenant.core.runtime.policy_runtime_actions import (
-    build_runtime_policy_option_views,
-)
 from devcovenant.core.services import yaml_cache as yaml_cache_service
 from devcovenant.core.services.policy_registry import PolicyDescriptor
 from devcovenant.core.services.tracked_registry import policy_registry_path
@@ -172,6 +169,286 @@ def _normalize_config_override_value(key: str, value: Any) -> Any:
     return ""
 
 
+def _load_config_payload(repo_root: Path) -> dict[str, object]:
+    """Load `devcovenant/config.yaml` into a dictionary."""
+    config_path = repo_root / "devcovenant" / "config.yaml"
+    if not config_path.exists():
+        raise ValueError(f"Missing config file: {config_path}")
+    try:
+        payload = yaml_cache_service.load_yaml(config_path)
+    except yaml.YAMLError as exc:
+        raise ValueError(
+            f"Invalid YAML in config file {config_path}: {exc}"
+        ) from exc
+    if not isinstance(payload, dict):
+        raise ValueError(f"Config file must be a YAML mapping: {config_path}")
+    return payload
+
+
+def _load_config_payload_or_empty(repo_root: Path) -> dict[str, object]:
+    """Load config when present, otherwise return an empty payload."""
+    config_path = repo_root / "devcovenant" / "config.yaml"
+    if not config_path.exists():
+        return {}
+    try:
+        payload = yaml_cache_service.load_yaml(config_path)
+    except (OSError, yaml.YAMLError):
+        return {}
+    if isinstance(payload, dict):
+        return payload
+    return {}
+
+
+def _normalize_invariant_metadata_values(raw_value: object) -> list[str]:
+    """Normalize one invariant metadata value into a string list."""
+    if raw_value is None:
+        return []
+    if isinstance(raw_value, list):
+        cleaned: list[str] = []
+        for entry in raw_value:
+            token = str(entry or "").strip()
+            if token:
+                cleaned.append(token)
+        return cleaned
+    token = str(raw_value or "").strip()
+    return [token] if token else []
+
+
+def _split_metadata_tokens(raw_values: list[str]) -> list[str]:
+    """Split comma-delimited metadata values into a flat string list."""
+    items: list[str] = []
+    for entry in raw_values:
+        for part in str(entry or "").split(","):
+            token = part.strip()
+            if token:
+                items.append(token)
+    return items
+
+
+def _decode_invariant_option_value(raw_value: object) -> Any:
+    """Decode one invariant option into a common scalar/list shape."""
+    if raw_value is None:
+        return ""
+    if isinstance(raw_value, bool):
+        return raw_value
+    if isinstance(raw_value, int):
+        return raw_value
+    if isinstance(raw_value, float):
+        return raw_value
+    if isinstance(raw_value, (list, tuple, set)):
+        return _split_metadata_tokens(
+            [str(entry or "").strip() for entry in raw_value]
+        )
+    text = str(raw_value or "").strip()
+    if not text:
+        return ""
+    lowered = text.lower()
+    if lowered in {"true", "false"}:
+        return lowered == "true"
+    if "," in text:
+        return _split_metadata_tokens([text])
+    try:
+        return int(text)
+    except ValueError:
+        pass
+    try:
+        return float(text)
+    except ValueError:
+        pass
+    return text
+
+
+def _decode_invariant_options(
+    raw_metadata: dict[str, object],
+) -> dict[str, Any]:
+    """Decode an invariant metadata map into typed runtime options."""
+    return {
+        str(key): _decode_invariant_option_value(value)
+        for key, value in raw_metadata.items()
+        if str(key).strip()
+    }
+
+
+def _option_value_is_empty(candidate: Any) -> bool:
+    """Return True when a runtime option value is an empty placeholder."""
+    if candidate is None:
+        return True
+    if isinstance(candidate, str):
+        return candidate.strip() == ""
+    if isinstance(candidate, dict):
+        return not candidate
+    if isinstance(candidate, (list, tuple, set)):
+        if not candidate:
+            return True
+        return all(not str(item).strip() for item in candidate)
+    return False
+
+
+def _build_runtime_option_views(
+    metadata_options: dict[str, Any],
+    config_overrides: dict[str, Any],
+) -> dict[str, dict[str, Any]]:
+    """Build registry/debug views for invariant runtime options."""
+    effective: dict[str, Any] = {}
+    for key in list(metadata_options.keys()) + list(config_overrides.keys()):
+        if key in effective:
+            continue
+        if key in config_overrides and not _option_value_is_empty(
+            config_overrides[key]
+        ):
+            effective[key] = config_overrides[key]
+            continue
+        if key in metadata_options and not _option_value_is_empty(
+            metadata_options[key]
+        ):
+            effective[key] = metadata_options[key]
+    return {
+        "runtime_metadata_options": dict(metadata_options),
+        "runtime_config_overrides": dict(config_overrides),
+        "runtime_effective_options": effective,
+    }
+
+
+def _record_resolution_values(
+    trace: dict[str, dict[str, Any]],
+    key: str,
+    layer: str,
+    values: list[str],
+    *,
+    behavior: str,
+) -> None:
+    """Record one invariant metadata resolution layer."""
+    trace.setdefault(key, {})[layer] = {
+        "values": [str(entry) for entry in values if str(entry).strip()],
+        "behavior": behavior,
+    }
+
+
+def _record_effective_resolution(
+    trace: dict[str, dict[str, Any]],
+    key: str,
+    values: list[str],
+) -> None:
+    """Record the final effective values for one invariant metadata key."""
+    trace.setdefault(key, {})["effective"] = {
+        "values": [str(entry) for entry in values if str(entry).strip()]
+    }
+
+
+def _merge_invariant_metadata_values(
+    current: list[str],
+    incoming: list[str],
+) -> list[str]:
+    """Append metadata values with de-duplication preserving order."""
+    merged: list[str] = list(current)
+    for entry in incoming:
+        if entry not in merged:
+            merged.append(entry)
+    return merged
+
+
+def _resolve_invariant_descriptor_metadata(
+    repo_root: Path,
+    config_payload: dict[str, object],
+    invariant_id: str,
+    descriptor: PolicyDescriptor,
+) -> tuple[dict[str, str], dict[str, dict[str, Any]]]:
+    """Resolve invariant metadata from descriptor text and profile overlays."""
+    values: dict[str, list[str]] = {}
+    trace: dict[str, dict[str, Any]] = {}
+    for key, raw_value in descriptor.metadata.items():
+        key_name = str(key).strip()
+        if not key_name:
+            continue
+        normalized = _normalize_invariant_metadata_values(raw_value)
+        values[key_name] = normalized
+        _record_resolution_values(
+            trace,
+            key_name,
+            "descriptor",
+            normalized,
+            behavior="base",
+        )
+
+    active_profiles = profile_runtime.parse_active_profiles(
+        config_payload,
+        include_global=True,
+    )
+    registry = profile_runtime.load_profile_registry(repo_root)
+    for profile_name in active_profiles:
+        profile_payload = registry.get(profile_name)
+        if not isinstance(profile_payload, dict):
+            continue
+        overlays = profile_payload.get("core_invariant_overlays")
+        if not isinstance(overlays, dict):
+            continue
+        overlay = overlays.get(invariant_id)
+        if not isinstance(overlay, dict):
+            continue
+        for key, raw_value in overlay.items():
+            key_name = str(key).strip()
+            if not key_name:
+                continue
+            normalized = _normalize_invariant_metadata_values(raw_value)
+            if isinstance(raw_value, list):
+                values[key_name] = _merge_invariant_metadata_values(
+                    values.get(key_name, []), normalized
+                )
+                behavior = "append"
+            else:
+                values[key_name] = list(normalized)
+                behavior = "replace"
+            _record_resolution_values(
+                trace,
+                key_name,
+                f"profile:{profile_name}",
+                normalized,
+                behavior=behavior,
+            )
+
+    rendered: dict[str, str] = {}
+    for key, entries in values.items():
+        rendered[key] = ", ".join(
+            entry for entry in entries if str(entry).strip()
+        )
+        _record_effective_resolution(trace, key, entries)
+    return rendered, trace
+
+
+def _dedicated_core_invariant_config_overrides(
+    payload: dict[str, Any],
+    invariant_id: str,
+) -> dict[str, Any]:
+    """Return dedicated config overrides for one core invariant."""
+    paths = payload.get("paths")
+    if not isinstance(paths, dict):
+        paths = {}
+    workflow = payload.get("workflow")
+    if not isinstance(workflow, dict):
+        workflow = {}
+    overrides: dict[str, Any] = {}
+    if invariant_id == "devcov-integrity-guard":
+        for key in ("policy_definitions", "registry_file", "gate_status_file"):
+            if key in paths:
+                overrides[key] = _normalize_config_override_value(
+                    key, paths[key]
+                )
+        return overrides
+    if invariant_id == "devflow-run-gates":
+        for key in ("gate_status_file", "workflow_session_file"):
+            if key in paths:
+                overrides[key] = _normalize_config_override_value(
+                    key, paths[key]
+                )
+        for key in ("pre_commit_command", "skipped_globs"):
+            if key in workflow:
+                overrides[key] = _normalize_config_override_value(
+                    key, workflow[key]
+                )
+        return overrides
+    return overrides
+
+
 def runtime_core_invariant_config_overrides(
     repo_root: Path,
     invariant_id: str,
@@ -186,20 +463,12 @@ def runtime_core_invariant_config_overrides(
         return {}
     if not isinstance(payload, dict):
         return {}
-    section = payload.get("core_invariants")
-    if isinstance(section, dict):
-        entry = section.get(invariant_id)
-        if isinstance(entry, dict):
-            normalized: dict[str, Any] = {}
-            for key, value in entry.items():
-                normalized[str(key)] = _normalize_config_override_value(
-                    str(key),
-                    value,
-                )
-            if normalized:
-                return normalized
-    context = CheckContext(repo_root=repo_root, config=payload)
-    return context.get_policy_config(invariant_id)
+    overrides = _dedicated_core_invariant_config_overrides(
+        payload, invariant_id
+    )
+    if overrides:
+        return overrides
+    return {}
 
 
 def runtime_core_invariant_metadata_options(
@@ -223,13 +492,18 @@ def runtime_core_invariant_metadata_options(
                         return dict(typed)
                     metadata = entry.get("metadata")
                     if isinstance(metadata, dict):
-                        return metadata_runtime.decode_metadata_options_map(
-                            metadata
-                        )
+                        return _decode_invariant_options(metadata)
+    config_payload = _load_config_payload_or_empty(repo_root)
     descriptor = load_core_invariant_descriptor(repo_root, invariant_id)
     if descriptor is None:
         return {}
-    return metadata_runtime.decode_metadata_options_map(descriptor.metadata)
+    resolved_metadata, _ = _resolve_invariant_descriptor_metadata(
+        repo_root,
+        config_payload,
+        invariant_id,
+        descriptor,
+    )
+    return _decode_invariant_options(resolved_metadata)
 
 
 def resolve_core_invariants(
@@ -239,24 +513,7 @@ def resolve_core_invariants(
 ) -> list[ResolvedCoreInvariant]:
     """Resolve core invariant descriptors, metadata, and registry payloads."""
     if config_payload is None:
-        config_path = repo_root / "devcovenant" / "config.yaml"
-        if not config_path.exists():
-            raise ValueError(f"Missing config file: {config_path}")
-        try:
-            loaded = yaml_cache_service.load_yaml(config_path)
-        except yaml.YAMLError as exc:
-            raise ValueError(
-                f"Invalid YAML in config file {config_path}: {exc}"
-            ) from exc
-        if not isinstance(loaded, dict):
-            raise ValueError(
-                f"Config file must be a YAML mapping: {config_path}"
-            )
-        config_payload = loaded
-    context = metadata_runtime.build_metadata_context_from_payload(
-        repo_root,
-        dict(config_payload),
-    )
+        config_payload = _load_config_payload(repo_root)
     resolved: list[ResolvedCoreInvariant] = []
     for invariant_id in core_invariant_ids():
         location = resolve_core_invariant_location(repo_root, invariant_id)
@@ -269,30 +526,18 @@ def resolve_core_invariants(
             raise ValueError(
                 f"Core invariant descriptor missing for `{invariant_id}`."
             )
-        order = list(descriptor.metadata.keys())
-        values = {
-            key: metadata_runtime.metadata_value_list(
-                descriptor.metadata.get(key)
+        resolved_metadata, metadata_trace = (
+            _resolve_invariant_descriptor_metadata(
+                repo_root,
+                dict(config_payload),
+                invariant_id,
+                descriptor,
             )
-            for key in order
-        }
-        bundle = metadata_runtime.resolve_policy_metadata_bundle(
-            invariant_id,
-            order,
-            values,
-            descriptor,
-            context,
-            custom_policy=False,
         )
-        resolved_metadata = {
-            key: str(bundle.string_map.get(key, "")).strip()
-            for key in bundle.order
-        }
-        runtime_option_views = build_runtime_policy_option_views(
-            bundle.decode_options(),
+        runtime_option_views = _build_runtime_option_views(
+            _decode_invariant_options(resolved_metadata),
             runtime_core_invariant_config_overrides(repo_root, invariant_id),
         )
-        severity = resolved_metadata.get("severity") or "critical"
         name = (
             resolved_metadata.get("name")
             or invariant_id.replace("-", " ").title()
@@ -302,7 +547,6 @@ def resolve_core_invariants(
                 definition=CoreInvariantDefinition(
                     invariant_id=invariant_id,
                     name=name,
-                    severity=severity,
                     description=str(descriptor.text or "").strip(),
                     raw_metadata=dict(resolved_metadata),
                 ),
@@ -312,8 +556,8 @@ def resolve_core_invariants(
                 descriptor_path=str(
                     location.descriptor_path.relative_to(repo_root)
                 ).replace("\\", "/"),
-                metadata_resolution=bundle.resolution_trace,
-                metadata_warnings=list(bundle.warnings),
+                metadata_resolution=metadata_trace,
+                metadata_warnings=[],
                 runtime_option_views=runtime_option_views,
             )
         )
@@ -333,7 +577,6 @@ def core_invariants_registry_payload(
     ):
         definition = resolved.definition
         entry: dict[str, Any] = {
-            "severity": definition.severity,
             "description": definition.name,
             "invariant_text": definition.description,
             "metadata": dict(definition.raw_metadata),
@@ -356,7 +599,6 @@ def core_invariants_registry_payload(
             ),
             "module_path": resolved.module_path,
             "descriptor_path": resolved.descriptor_path,
-            "customizable": False,
         }
         payload[definition.invariant_id] = entry
     return payload

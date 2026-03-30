@@ -58,7 +58,7 @@ def _unit_test_path_helpers_resolve_runtime_locations() -> None:
 
 
 def _unit_test_path_helpers_honor_runtime_evidence_overrides() -> None:
-    """Runtime evidence helpers should honor configured invariant paths."""
+    """Runtime evidence helpers should honor dedicated config path keys."""
 
     module = importlib.import_module(MODULE)
     with tempfile.TemporaryDirectory() as tmpdir:
@@ -68,11 +68,10 @@ def _unit_test_path_helpers_honor_runtime_evidence_overrides() -> None:
         config_path.write_text(
             "\n".join(
                 [
-                    "core_invariants:",
-                    "  devflow-run-gates:",
-                    "    gate_status_file: "
+                    "paths:",
+                    "  gate_status_file: "
                     "devcovenant/registry/runtime/evidence/status.json",
-                    "    workflow_session_file: "
+                    "  workflow_session_file: "
                     "devcovenant/registry/runtime/evidence/workflow.json",
                     "",
                 ]

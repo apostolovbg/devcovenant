@@ -444,6 +444,47 @@ def _unit_test_start_targets_snapshot_files_for_pre_commit() -> None:
         assert "--all-files" not in rendered
 
 
+def _unit_test_start_falls_back_to_managed_python_module_pre_commit() -> None:
+    """Start gate should fall back to `python -m pre_commit` when needed."""
+    module = importlib.import_module(MODULE)
+    with tempfile.TemporaryDirectory() as tmpdir:
+        repo_root = Path(tmpdir)
+        _write_policy_registry(repo_root)
+        _write_changelog(repo_root)
+        _write_agents(repo_root)
+        tracked_path = repo_root / "fallback_target.py"
+        tracked_path.write_text("print('fallback')\n", encoding="utf-8")
+        managed_python = repo_root / ".venv" / "bin" / "python"
+        captured: dict[str, str] = {}
+        managed_env_target = (
+            "devcovenant.core.flow.gate.execution_runtime_module."
+            "resolve_managed_environment_for_stage"
+        )
+        run_command_target = "devcovenant.core.flow.gate._run_command"
+
+        def _capture_command(command, *, env=None, strict=True):
+            """Capture the rendered hook command for assertions."""
+            del env, strict
+            captured["command"] = str(command)
+            return 0
+
+        with (
+            mock.patch(
+                managed_env_target,
+                return_value=({"PATH": ""}, str(managed_python)),
+            ),
+            mock.patch.object(module.shutil, "which", return_value=None),
+            mock.patch(run_command_target, side_effect=_capture_command),
+        ):
+            exit_code = module.run_pre_commit_gate(repo_root, "start")
+
+        assert exit_code == 0
+        rendered = captured["command"]
+        assert rendered.startswith(f"{managed_python} -m pre_commit run")
+        assert "--files" in rendered
+        assert "fallback_target.py" in rendered
+
+
 def _unit_test_mid_targets_snapshot_files_for_pre_commit() -> None:
     """Mid gate should run pre-commit against snapshot file targets."""
     module = importlib.import_module(MODULE)
@@ -1656,6 +1697,10 @@ class GeneratedUnittestCases(unittest.TestCase):
     def test_start_targets_snapshot_files_for_pre_commit(self):
         """Run start-gate snapshot target coverage assertions."""
         _unit_test_start_targets_snapshot_files_for_pre_commit()
+
+    def test_start_falls_back_to_managed_python_module_pre_commit(self):
+        """Run start-gate managed-python fallback assertions."""
+        _unit_test_start_falls_back_to_managed_python_module_pre_commit()
 
     def test_mid_targets_snapshot_files_for_pre_commit(self):
         """Run mid-gate snapshot target coverage assertions."""

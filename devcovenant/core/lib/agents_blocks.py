@@ -223,15 +223,13 @@ def render_core_invariants_block(registry_payload: dict[str, object]) -> str:
         sections.append("")
         sections.append("```core-invariant-def")
         sections.append(f"id: {invariant_id}")
-        severity = str(entry.get("severity", "critical")).strip() or "critical"
-        sections.append(f"severity: {severity}")
-        sections.append("customizable: false")
         metadata = entry.get("metadata", {})
         if isinstance(metadata, dict):
             for key, raw_value in metadata.items():
                 if str(key).strip() in {
                     "id",
                     "severity",
+                    "enforcement",
                     "enabled",
                     "custom",
                     "auto_fix",

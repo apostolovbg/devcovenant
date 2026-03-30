@@ -9,10 +9,6 @@ text: |
   Changelog-only edits remain gate-scoped but do not require a fresh
   run execution by themselves.
 metadata:
-  id: devflow-run-gates
-  severity: critical
-  auto_fix: 'false'
-  enforcement: active
   gate_status_file: ''
   workflow_session_file: ''
   require_pre_commit_start: 'true'

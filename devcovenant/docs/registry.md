@@ -1,5 +1,5 @@
 # Registry
-**Last Updated:** 2026-03-29
+**Last Updated:** 2026-03-30
 **Project Version:** 1.0.0
 
 ## Overview
@@ -66,6 +66,10 @@ exception when an upstream advisory has no published fix release yet.
 The tracked registry also depends on deterministic discovery order, so
 profiles and policy-source inventories are sorted before refresh writes the
 registry on macOS, Linux, or Windows.
+Tracked invariant entries now also carry invariant-specific metadata only.
+They no longer repeat policy-style fields such as severity,
+customizability, or enforcement because those are implied by the invariant
+contract itself.
 That same tracked state also records the current generated workflow contract,
 including the visible workflow name `CI`, the generated workflow file
 `.github/workflows/ci.yml`, and the repo-specific scanner steps merged into
@@ -77,6 +81,13 @@ That tracked invariant metadata now also records the canonical gate hook
 launcher `pre-commit run --all-files`; older `python -m pre_commit` evidence
 is validation-compatible, but the resolved contract no longer depends on the
 host `python3` interpreter carrying `pre_commit`.
+The same tracked managed-environment metadata now records a simpler execution
+contract as well: the selected interpreter is reused when it already
+satisfies the repo contract, bootstrap commands only prepare the target
+environment when it is still missing or invalid, and
+`required_commands` stay limited to external bootstrap prerequisites instead
+of every Python console-script shim that might later run inside the
+environment.
 Separately from tracked registry state, the same refresh pass also regenerates
 ignore surfaces such as `.gitignore`.
 In this repository, that broader generated output now includes

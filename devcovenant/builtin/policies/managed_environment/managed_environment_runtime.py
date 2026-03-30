@@ -5,6 +5,8 @@ from __future__ import annotations
 import os
 import re
 import shlex
+import shutil
+import sys
 from pathlib import Path
 from typing import Any, Mapping, Sequence
 
@@ -195,6 +197,113 @@ def _detect_managed_python(
         if windows_candidate.exists():
             return windows_candidate, root
     return None, None
+
+
+def _derive_managed_root(
+    interpreter: Path,
+    expected_paths: list[Path],
+) -> Path | None:
+    """Derive one managed root for an interpreter path when possible."""
+    for root in expected_paths:
+        if root == interpreter or root in interpreter.parents:
+            return root
+    parent_name = interpreter.parent.name.lower()
+    if parent_name in {"bin", "scripts"}:
+        return interpreter.parent.parent
+    return None
+
+
+def _matches_expected_interpreter(
+    interpreter: Path,
+    expected_interpreters: list[Path],
+    expected_paths: list[Path],
+) -> tuple[Path | None, Path | None]:
+    """Return interpreter/root when a candidate already matches metadata."""
+    try:
+        resolved = interpreter.resolve()
+    except OSError:
+        resolved = interpreter
+    for expected in expected_interpreters:
+        if resolved == expected:
+            return resolved, _derive_managed_root(resolved, expected_paths)
+    managed_root = _derive_managed_root(resolved, expected_paths)
+    if managed_root is not None:
+        return resolved, managed_root
+    return None, None
+
+
+def _select_managed_environment(
+    expected_interpreters: list[Path],
+    expected_paths: list[Path],
+) -> tuple[Path | None, Path | None]:
+    """Prefer the current matching interpreter, then fall back to detection."""
+    current_python, current_root = _matches_expected_interpreter(
+        Path(sys.executable),
+        expected_interpreters,
+        expected_paths,
+    )
+    if current_python is not None:
+        return current_python, current_root
+    return _detect_managed_python(expected_interpreters, expected_paths)
+
+
+def _command_candidates(command: str) -> list[str]:
+    """Return one command token plus common dash/underscore variants."""
+    token = str(command or "").strip()
+    if not token:
+        return []
+    candidates = [token]
+    if "_" in token:
+        candidates.append(token.replace("_", "-"))
+    if "-" in token:
+        candidates.append(token.replace("-", "_"))
+    return list(dict.fromkeys(candidates))
+
+
+def _command_available_in_env(
+    command: str,
+    env: Mapping[str, str],
+) -> bool:
+    """Return whether a command resolves inside one execution environment."""
+    path_value = str(env.get("PATH", "")).strip() or None
+    return any(
+        shutil.which(candidate, path=path_value) is not None
+        for candidate in _command_candidates(command)
+    )
+
+
+def _missing_required_commands_in_env(
+    required_commands: list[str],
+    env: Mapping[str, str],
+) -> list[str]:
+    """Return required commands that are unavailable in one environment."""
+    return [
+        command
+        for command in required_commands
+        if not _command_available_in_env(command, env)
+    ]
+
+
+def _environment_satisfies_contract(
+    env: Mapping[str, str],
+    interpreter: Path | None,
+    managed_root: Path | None,
+    *,
+    required_commands: list[str],
+) -> tuple[bool, dict[str, str]]:
+    """Return whether one candidate environment already satisfies policy."""
+    if interpreter is None:
+        return False, dict(env)
+    if not interpreter.exists():
+        return False, dict(env)
+    if not os.access(interpreter, os.X_OK):
+        return False, dict(env)
+    prepared_env = _apply_managed_env(env, interpreter, managed_root)
+    missing_commands = _missing_required_commands_in_env(
+        required_commands,
+        prepared_env,
+    )
+    return not missing_commands, prepared_env
 
 
 def _guidance_token_value(
@@ -455,6 +564,9 @@ def resolve_managed_environment_for_stage(
     manual_commands = _normalize_metadata_tokens(
         metadata_map.get("manual_commands")
     )
+    required_commands = _normalize_metadata_tokens(
+        metadata_map.get("required_commands")
+    )
     managed_commands_raw = _normalize_metadata_tokens(
         metadata_map.get("managed_commands")
     )
@@ -482,7 +594,21 @@ def resolve_managed_environment_for_stage(
         dict(base_env) if base_env is not None else dict(os.environ)
     )
     prepared_stages = _read_managed_stage_runs(env)
-    if stage_token not in prepared_stages:
+    managed_python, managed_root = _select_managed_environment(
+        expected_interpreters,
+        expected_paths,
+    )
+    environment_ready, env = _environment_satisfies_contract(
+        env,
+        managed_python,
+        managed_root,
+        required_commands=required_commands,
+    )
+
+    if stage_token == "start" and environment_ready:
+        prepared_stages.add("start")
+        _write_managed_stage_runs(env, prepared_stages)
+    elif stage_token not in prepared_stages:
         env, ran_stage_commands = _run_managed_commands_for_stage(
             repo_root,
             env,
@@ -495,13 +621,19 @@ def resolve_managed_environment_for_stage(
         if ran_stage_commands:
             prepared_stages.add(stage_token)
             _write_managed_stage_runs(env, prepared_stages)
+        managed_python, managed_root = _select_managed_environment(
+            expected_interpreters,
+            expected_paths,
+        )
+        environment_ready, env = _environment_satisfies_contract(
+            env,
+            managed_python,
+            managed_root,
+            required_commands=required_commands,
+        )
 
-    managed_python, managed_root = _detect_managed_python(
-        expected_interpreters,
-        expected_paths,
-    )
     if (
-        managed_python is None
+        not environment_ready
         and stage_token != "start"
         and "start" not in prepared_stages
     ):
@@ -517,22 +649,43 @@ def resolve_managed_environment_for_stage(
         if ran_start_commands:
             prepared_stages.add("start")
             _write_managed_stage_runs(env, prepared_stages)
-        managed_python, managed_root = _detect_managed_python(
+        managed_python, managed_root = _select_managed_environment(
             expected_interpreters,
             expected_paths,
         )
-    if managed_python is None:
+        environment_ready, env = _environment_satisfies_contract(
+            env,
+            managed_python,
+            managed_root,
+            required_commands=required_commands,
+        )
+    if not environment_ready or managed_python is None:
         guidance = _managed_guidance_suffix(
             manual_commands,
             repo_root=repo_root,
             managed_python=managed_python,
             managed_root=managed_root,
         )
-        raise ValueError(
-            "managed-environment is enabled, but no expected interpreter was "
-            f"found.{guidance}"
+        if managed_python is None:
+            raise ValueError(
+                "managed-environment is enabled, but no expected "
+                f"interpreter was found.{guidance}"
+            )
+        missing_commands = _missing_required_commands_in_env(
+            required_commands,
+            env,
         )
-    env = _apply_managed_env(env, managed_python, managed_root)
+        if missing_commands:
+            missing_text = ", ".join(missing_commands)
+            raise ValueError(
+                "managed-environment resolved an interpreter, but the "
+                "execution environment is still missing required "
+                f"commands: {missing_text}.{guidance}"
+            )
+        raise ValueError(
+            "managed-environment resolved an interpreter, but the "
+            "execution environment is not ready." + guidance
+        )
     return env, str(managed_python)
 
 

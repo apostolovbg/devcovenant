@@ -43,6 +43,7 @@
 # ---------------------------------------------------------------------------
 # Scope control
 # ---------------------------------------------------------------------------
+# Human-owned section.
 # Are you using DevCovenant as a tool, or using this repository to develop
 # DevCovenant itself?
 # - false: normal repo using DevCovenant
@@ -56,7 +57,10 @@ developer_mode: false
 # ---------------------------------------------------------------------------
 # Profile activation
 # ---------------------------------------------------------------------------
+# Mixed-ownership section.
 profiles:
+  # `active` is human-owned.
+  # `generated` is refresh-owned diagnostic state.
   # Ordered active profile stack. `global` should stay first.
   #
   # Profiles contribute:
@@ -108,14 +112,26 @@ profiles:
 # ---------------------------------------------------------------------------
 # Canonical runtime paths
 # ---------------------------------------------------------------------------
+# Human-owned section.
 paths:
+  # Human-owned keys.
   # Runtime policy source parsed by the engine at refresh/check/test time.
   policy_definitions: AGENTS.md
 
   # Local generated registry of resolved policy hashes and runtime metadata.
   registry_file: devcovenant/registry/registry.yaml
 
+  # Runtime gate-lifecycle ledger path.
+  # Must stay inside `devcovenant/registry/runtime/`.
+  gate_status_file: devcovenant/registry/runtime/gate_status.json
+
+  # Runtime workflow-session ledger path.
+  # Must stay inside `devcovenant/registry/runtime/`.
+  workflow_session_file: devcovenant/registry/runtime/workflow_session.json
+
 doc_assets:
+  # Mixed-ownership section.
+  # Human-owned key.
   # Managed docs that DevCovenant creates and refreshes from descriptors.
   # Keep `AGENTS.md` here.
   # Add a custom doc here only after creating a matching descriptor under an
@@ -138,6 +154,7 @@ doc_assets:
 # ---------------------------------------------------------------------------
 # Install/deploy safety switches
 # ---------------------------------------------------------------------------
+# Mixed-ownership section.
 install:
   # Human-owned key.
   # What this means:
@@ -161,6 +178,7 @@ install:
 # ---------------------------------------------------------------------------
 # Engine behavior
 # ---------------------------------------------------------------------------
+# Human-owned section.
 engine:
   # Human-owned key.
   # Violations at or above this severity block the command.
@@ -248,6 +266,7 @@ engine:
 # ---------------------------------------------------------------------------
 # Cleanup targets
 # ---------------------------------------------------------------------------
+# Human-owned section.
 clean:
   # Human-owned key.
   # Additive cleanup targets merged after active profile clean_overlays.
@@ -279,6 +298,7 @@ clean:
 # ---------------------------------------------------------------------------
 # CI-and-test workflow generation
 # ---------------------------------------------------------------------------
+# Human-owned section.
 ci_and_test:
   # Human-owned key.
   # Deep-merge patch applied to generated
@@ -295,6 +315,7 @@ ci_and_test:
 # ---------------------------------------------------------------------------
 # Pre-commit generation
 # ---------------------------------------------------------------------------
+# Human-owned section.
 pre_commit:
   # Human-owned key.
   # Deep-merge patch applied to generated `.pre-commit-config.yaml`.
@@ -304,8 +325,27 @@ pre_commit:
   overrides: {}
 
 # ---------------------------------------------------------------------------
+# Workflow runtime contract
+# ---------------------------------------------------------------------------
+# These are DevCovenant-owned workflow knobs, not policy toggles.
+# Keep them under the dedicated workflow contract instead of inventing a
+# separate invariant config section.
+# Human-owned section.
+workflow:
+  # Human-owned key.
+  # Canonical command recorded by `gate --start` / `gate --end`.
+  pre_commit_command: pre-commit run --all-files
+
+  # Paths ignored by the workflow-evidence invariant when deciding whether a
+  # closed session stayed fresh.
+  skipped_globs:
+    - devcovenant/registry/runtime/**
+
+# ---------------------------------------------------------------------------
 # Policy activation map (config activation authority for normal toggles)
 # ---------------------------------------------------------------------------
+# Human-owned section.
+# Human-owned booleans in a refresh-synchronized map.
 # `refresh` maintains a full alphabetical map of effective policy IDs:
 # - preserves existing booleans for known IDs;
 # - seeds new IDs from descriptor defaults;
@@ -319,31 +359,9 @@ policy_state:
   version-sync: false
 
 # ---------------------------------------------------------------------------
-# Core invariants (DevCovenant-owned runtime contracts)
-# ---------------------------------------------------------------------------
-# These are not ordinary policies and should not be toggled through
-# `policy_state`.
-# Use this section only when you need to adjust metadata for one of
-# DevCovenant's own non-optional runtime invariants.
-# Keep edits deliberate: these values shape gate evidence, registry
-# validation, and DevCovenant runtime structure checks.
-core_invariants:
-  devcov-integrity-guard:
-    gate_status_file: devcovenant/registry/runtime/gate_status.json
-    policy_definitions:
-      - AGENTS.md
-    registry_file: devcovenant/registry/registry.yaml
-  devcov-structure-guard: {}
-  devflow-run-gates:
-    gate_status_file: devcovenant/registry/runtime/gate_status.json
-    pre_commit_command:
-      - pre-commit run --all-files
-    skipped_globs:
-      - devcovenant/registry/runtime/**
-
-# ---------------------------------------------------------------------------
 # Project governance (repo lifecycle metadata)
 # ---------------------------------------------------------------------------
+# Human-owned section.
 # Source of truth for repo stage / maintenance stance / compatibility policy /
 # versioning mode / codename / build identity / changelog release flow.
 # `project-governance` is orthogonal to `version-governance`:
@@ -394,7 +412,9 @@ project-governance:
 # ---------------------------------------------------------------------------
 # Global ignore patterns
 # ---------------------------------------------------------------------------
+# Human-owned section.
 ignore:
+  # Human-owned key.
   # Additional glob patterns excluded from CheckContext file collections.
   # Use this for ubiquitous editor/build/runtime artifacts that are not best
   # expressed through simple directory-name ignores.
@@ -419,6 +439,7 @@ ignore:
 # ---------------------------------------------------------------------------
 # Gitignore generation
 # ---------------------------------------------------------------------------
+# Human-owned section.
 gitignore:
   # Human-owned key.
   # Extra lines appended to generated `.gitignore` before preserved user block.
@@ -431,6 +452,7 @@ gitignore:
 # ---------------------------------------------------------------------------
 # Metadata layers (effective policy metadata composition)
 # ---------------------------------------------------------------------------
+# Mixed-ownership section.
 # Resolution order (low -> high):
 # 1) policy descriptor defaults
 # 2) profile overlays

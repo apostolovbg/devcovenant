@@ -2,7 +2,3 @@ id: devcov-structure-guard
 text: |
   Ensure the DevCovenant repo keeps the required structure and tooling files.
 metadata:
-  id: devcov-structure-guard
-  severity: critical
-  auto_fix: 'false'
-  enforcement: active

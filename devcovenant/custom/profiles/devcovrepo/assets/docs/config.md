@@ -21,11 +21,12 @@ Most people should read it in this order:
 
 1. `developer_mode`
 2. `profiles.active`
-3. `doc_assets`
-4. `project-governance`
-5. `core_invariants`
-6. `policy_state`
-7. `engine`
+3. `paths`
+4. `doc_assets`
+5. `workflow`
+6. `project-governance`
+7. `policy_state`
+8. `engine`
 
 If you only remember one rule, remember this one:
 user-owned settings are where you decide how the repository behaves,
@@ -35,13 +36,17 @@ while autogen sections are there so the runtime can show resolved state.
 ### User-Owned Sections
 These are the parts a human is expected to review and edit:
 
+- `developer_mode`
+
 - `profiles.active`
 
 - `doc_assets`
 
-- `project-governance`
+- `paths.*`
 
-- `core_invariants`
+- `workflow.*`
+
+- `project-governance`
 
 - `policy_state`
 
@@ -72,6 +77,18 @@ editing targets:
 
 - `install.import_managed_docs`
 
+### Mixed-Ownership Sections
+These sections contain both human-owned and refresh-owned keys and should be
+read with that split in mind:
+
+- `profiles`
+
+- `doc_assets`
+
+- `install`
+
+- metadata layers as `autogen_*` vs `user_*`
+
 ## Core Sections
 ### profiles.active
 The active profile stack for the repository.
@@ -82,6 +99,8 @@ They do not, by themselves, activate policies.
 The managed-doc selection for the repository.
 Use it to decide which builtin docs stay on, which are turned off, and which
 custom managed docs are added by active profiles.
+`autogen` is the human-owned managed-doc selection list.
+Refresh then uses that list to decide which managed docs to materialize.
 
 ### project-governance
 Repository-owned identity and lifecycle metadata.
@@ -129,15 +148,39 @@ and whether it is intentionally unversioned or actively versioned.
 Managed docs, registry outputs, and related public surfaces render from this
 state.
 
-### core_invariants
-Metadata for DevCovenant-owned invariants.
-These are not ordinary policies and are not meant to be casual customization
-surfaces.
-They describe non-optional DevCovenant runtime contracts such as gate evidence
-requirements, integrity checks, and workflow-run evidence paths.
-For `devflow-run-gates`, the canonical pre-commit hook command is now
-`pre-commit run --all-files`; the managed-environment runtime supplies the
-correct interpreter and `PATH` instead of relying on raw host `python3`.
+### paths
+Repository-owned runtime paths and evidence files.
+This is where DevCovenant's non-policy runtime contracts expose their path
+knobs.
+
+That includes:
+
+- `policy_definitions`
+- `registry_file`
+- `gate_status_file`
+- `workflow_session_file`
+
+These keys are still DevCovenant runtime contracts, but they are not modeled
+as policy config.
+They live here because they are ordinary runtime path knobs, more like
+`project-governance` fields than like policy toggles.
+Every key in this section is human-owned.
+
+### workflow
+Repository-owned workflow runtime knobs.
+This is the dedicated home for execution-contract settings such as:
+
+- `pre_commit_command`
+- `skipped_globs`
+
+Those values belong to the gate/workflow contract, not to `policy_state`.
+The canonical pre-commit hook command is now `pre-commit run --all-files`;
+the managed-environment runtime supplies the correct interpreter and `PATH`
+instead of relying on raw host `python3`.
+When the selected environment does not expose a `pre-commit` console script,
+gate execution can still fall back to `python -m pre_commit` through that
+same interpreter.
+Every key in this section is human-owned.
 
 ### policy_state
 The on/off map for customizable policies.
@@ -165,6 +208,7 @@ about itself.
 They are defaults.
 Operators can override them per invocation with `--quiet`, `--normal`, or
 `--verbose`, and the CLI flag wins only for that one command.
+Every key in this section is human-owned.
 
 ### ci_and_test
 Repository-local customization for the generated `CI` workflow.
@@ -214,6 +258,13 @@ Profile and config cleanup lists decide what can be deleted, while the runtime
 also protects engine-critical paths such as the active clean run directory and
 the managed environment roots declared by the managed-environment policy.
 
+### install
+`install.config_reviewed` is human-owned release-control state.
+It starts as `false` after `install` and must be set to `true` by a human
+after the config review.
+`install.import_managed_docs` is refresh-owned runtime memory used only to
+adopt pre-authored managed docs during the first deploy/refresh.
+
 The generated config comments should describe that split directly.
 They should not claim that one hardcoded path such as `.venv` is globally
 protected when the real contract is metadata-driven managed-environment
@@ -229,6 +280,13 @@ protect specific roots during cleanup.
 If that metadata is empty, DevCovenant falls back to the policy's
 `expected_paths`, and only then to explicit interpreter paths when no root is
 available.
+The execution side of the same policy follows one simple rule:
+reuse the current interpreter when it already satisfies the contract, choose
+the configured target interpreter when it does not, and only run bootstrap
+commands when that target environment is still missing or invalid.
+`required_commands` should therefore describe external prerequisites for
+selecting or preparing the environment, not every Python console script that
+may later run from inside it.
 
 ## Project Governance In Practice
 Most repositories change these first:
@@ -301,14 +359,15 @@ When reviewing a newly installed config, confirm:
 
 1. `developer_mode`
 2. `profiles.active`
-3. `doc_assets`
-4. `project-governance`
-5. `core_invariants`
-6. `policy_state`
-7. `engine.output_mode`
-8. `engine.tests_output_mode`
-9. `engine.auto_fix_enabled`
-10. `install.config_reviewed`
+3. `paths`
+4. `doc_assets`
+5. `workflow`
+6. `project-governance`
+7. `policy_state`
+8. `engine.output_mode`
+9. `engine.tests_output_mode`
+10. `engine.auto_fix_enabled`
+11. `install.config_reviewed`
 
 Then set `install.config_reviewed: true` and run `deploy`.
 

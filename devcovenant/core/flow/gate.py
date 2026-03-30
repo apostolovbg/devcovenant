@@ -6,6 +6,7 @@ import datetime as _dt
 import json
 import os
 import shlex
+import shutil
 import sys
 from pathlib import Path
 from typing import Mapping
@@ -111,6 +112,29 @@ def _resolve_hook_command(repo_root: Path, command: str) -> str:
     if not replaced:
         return command
     return shlex.join(resolved)
+
+
+def _resolve_gate_execution_command(
+    command: str,
+    *,
+    env: Mapping[str, str],
+    managed_python: str | None,
+) -> str:
+    """Prefer the console script, then fall back to module form when needed."""
+    tokens = shlex.split(command)
+    if not tokens:
+        raise SystemExit("Pre-commit command is empty.")
+    if managed_python is None or not _is_pre_commit_run_command(tokens):
+        return command
+    executable = tokens[0]
+    path_value = str(env.get("PATH", "")).strip() or None
+    if shutil.which(executable, path=path_value) is not None:
+        return command
+    first_name = Path(executable).name.lower()
+    if first_name not in _PRE_COMMIT_EXECUTABLE_TOKENS:
+        return command
+    fallback_tokens = [managed_python, "-m", "pre_commit", *tokens[1:]]
+    return shlex.join(fallback_tokens)
 
 
 _TEST_IRRELEVANT_FILES = {"changelog.md"}
@@ -446,6 +470,11 @@ def run_pre_commit_gate(
         hook_env[_CHECK_RUN_REFRESH_ENV] = "1"
         hook_env[_CHECK_CLEAN_BYTECODE_ENV] = "1"
         hook_command = _resolve_hook_command(repo_root, effective_command)
+        hook_command = _resolve_gate_execution_command(
+            hook_command,
+            env=hook_env,
+            managed_python=managed_python,
+        )
         try:
             diff_before = _current_numstat_snapshot(repo_root)
         except ValueError as error:

@@ -705,10 +705,13 @@ def _unit_test_contract_index_freezes_documentation_writing_rules() -> None:
     """Contract index should hold the stable documentation writing rules."""
     content = _read_output_doc_contract_text("devcovenant/docs/contracts.md")
     for snippet in (
-        "operator-oriented and explanatory",
-        "expand an abbreviation on first use in each document",
-        "avoid soft marketing phrasing",
-        "duplicate\n  competing explanations as defects",
+        "what kind of contract am I looking at?",
+        "which document owns the explanation for that contract?",
+        "one stable map of ownership and vocabulary",
+        (
+            "The goal is not to turn every package doc into a "
+            "competing master index."
+        ),
     ):
         assert snippet in content
 

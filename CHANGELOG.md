@@ -61,6 +61,95 @@ Example:
 ## Version 1.0.0
 
 - 2026-03-30:
+  Change: clarified config ownership across the template and live config,
+    removed the remaining invariant-policy-shaped config narration, and
+    synchronized the package docs around the dedicated `paths.*` and
+    `workflow.*` runtime contract sections.
+  Why: the invariant refactor and contracts documentation were structurally
+    right, but a few operator-facing config comments and docs still mixed
+    ownership boundaries or described the removed `core_invariants` shape.
+  Impact: aligned the config, template, README surfaces, contracts docs,
+    registry docs, and refresh tests around one consistent ownership story
+    for human-owned, refresh-owned, and mixed sections.
+  Files:
+  AGENTS.md
+  CHANGELOG.md
+  README.md
+  devcovenant/README.md
+  devcovenant/builtin/profiles/global/assets/config.yaml
+  devcovenant/builtin/profiles/global/assets/devcovenant/README.yaml
+  devcovenant/config.yaml
+  devcovenant/core/contracts/invariant.py
+  devcovenant/core/contracts/invariants/devcov_integrity_guard.yaml
+  devcovenant/core/contracts/invariants/devcov_structure_guard.yaml
+  devcovenant/core/contracts/invariants/devflow_run_gates.yaml
+  devcovenant/core/flow/refresh.py
+  devcovenant/core/lib/agents_blocks.py
+  devcovenant/core/services/core_invariants.py
+  devcovenant/custom/profiles/devcovrepo/assets/POLICY_MAP.yaml
+  devcovenant/custom/profiles/devcovrepo/assets/docs/config.md
+  devcovenant/custom/profiles/devcovrepo/assets/docs/installation.md
+  devcovenant/custom/profiles/devcovrepo/assets/docs/policies.md
+  devcovenant/custom/profiles/devcovrepo/assets/docs/profiles.md
+  devcovenant/custom/profiles/devcovrepo/assets/docs/registry.md
+  devcovenant/custom/profiles/devcovrepo/assets/docs/workflow.md
+  devcovenant/docs/architecture.md
+  devcovenant/docs/config.md
+  devcovenant/docs/contracts.md
+  devcovenant/docs/installation.md
+  devcovenant/docs/profiles.md
+  devcovenant/docs/registry.md
+  devcovenant/registry/registry.yaml
+  tests/devcovenant/core/lib/test_agents_blocks.py
+  tests/devcovenant/core/runtime/test_execution.py
+  tests/devcovenant/core/runtime/test_registry.py
+  tests/devcovenant/core/services/test_core_invariants.py
+  tests/devcovenant/core/services/test_metadata.py
+  tests/devcovenant/test_refresh.py
+
+- 2026-03-30:
+  Change: simplified the managed-environment runtime to reuse a valid target
+    interpreter, bootstrap only when the configured environment is still
+    missing or invalid, and fall back to `python -m pre_commit` when a Python
+    console-script shim is absent.
+  Why: build and proof-repo gates were still failing because the runtime kept
+    treating environment preparation and environment selection as the same
+    thing, which made `gate --start` too destructive and too dependent on a
+    direct `pre-commit` executable on PATH.
+  Impact: stabilized DevCovenant behavior across repo `.venv`s, pre-seeded
+    proof environments, and other configured interpreters, while the repo
+    profile, tracked registry, and public docs now describe the same single
+    execution-environment contract.
+  Files:
+  AGENTS.md
+  CHANGELOG.md
+  devcovenant/builtin/policies/managed_environment/managed_environment.yaml
+  devcovenant/builtin/policies/managed_environment/\
+    managed_environment_runtime.py
+  devcovenant/config.yaml
+  devcovenant/core/flow/gate.py
+  devcovenant/custom/profiles/devcovrepo/assets/docs/config.md
+  devcovenant/custom/profiles/devcovrepo/assets/docs/installation.md
+  devcovenant/custom/profiles/devcovrepo/assets/docs/policies.md
+  devcovenant/custom/profiles/devcovrepo/assets/docs/profiles.md
+  devcovenant/custom/profiles/devcovrepo/assets/docs/registry.md
+  devcovenant/custom/profiles/devcovrepo/assets/docs/troubleshooting.md
+  devcovenant/custom/profiles/devcovrepo/assets/docs/workflow.md
+  devcovenant/custom/profiles/devcovrepo/devcovrepo.yaml
+  devcovenant/docs/config.md
+  devcovenant/docs/installation.md
+  devcovenant/docs/policies.md
+  devcovenant/docs/profiles.md
+  devcovenant/docs/registry.md
+  devcovenant/docs/troubleshooting.md
+  devcovenant/docs/workflow.md
+  devcovenant/registry/registry.yaml
+  tests/devcovenant/builtin/policies/managed_environment/\
+    test_managed_environment_runtime.py
+  tests/devcovenant/core/flow/test_gate.py
+  tests/devcovenant/core/services/test_profile_registry.py
+
+- 2026-03-30:
   Change: fixed managed-doc sync so `Last Updated` date rollover alone no
     longer rewrites clean descriptor-backed docs during refresh or start gate.
   Why: `gate --start` and CI were failing after UTC midnight because managed

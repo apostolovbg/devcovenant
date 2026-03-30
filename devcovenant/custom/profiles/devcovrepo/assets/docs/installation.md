@@ -106,9 +106,9 @@ The shortest accurate model is:
 
 2. config review is the human checkpoint.
 
-   This is where you decide profile stack, policy activation, core invariant
-   settings, doc assets, output behavior, and whether `developer_mode` is true
-   or false.
+   This is where you decide profile stack, policy activation, runtime contract
+   settings under `paths` and `workflow`, doc assets, output behavior, and
+   whether `developer_mode` is true or false.
 
 3. `deploy` is activation.
 
@@ -253,9 +253,11 @@ Use this as the practical first integration flow:
 
    - `profiles.active`
 
+   - `paths`
+
    - `doc_assets`
 
-   - `core_invariants`
+   - `workflow`
 
    - `policy_state`
 
@@ -321,8 +323,14 @@ The intended lifecycle is:
 review baseline first, then add repo-specific custom extensions.
 
 ## Managed Environment Notes
-When the managed-environment policy is enabled, later CLI runs can rerun inside
-the managed interpreter automatically.
+When the managed-environment policy is enabled, DevCovenant resolves one target
+execution environment for each CLI stage.
+It first reuses the current interpreter when that interpreter already matches
+the metadata contract and its declared external prerequisites still resolve.
+If not, it selects the configured interpreter or environment root and only
+then runs `managed_commands` to prepare it.
+That keeps `gate --start` non-destructive once a repo-managed `.venv`, bench,
+or other configured interpreter already satisfies the contract.
 If the resolved interpreter path exists but is not executable, DevCovenant
 stops with an explicit error so you can fix the path or permissions directly.
 
