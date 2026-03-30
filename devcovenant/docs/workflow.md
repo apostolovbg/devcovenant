@@ -41,6 +41,9 @@ including `mid`, by reading both runtime ledgers.
 Opens the tracked work session.
 It runs the start pre-commit pass and records the baseline the later checks use
 for change-scoped behavior.
+That gate hook now uses the canonical `pre-commit run --all-files` launcher
+through the managed environment `PATH`, so CI and proof repos do not depend on
+the host interpreter carrying `pre_commit`.
 
 ### gate --mid
 Required pre-run preflight.

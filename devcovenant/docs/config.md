@@ -136,6 +136,9 @@ These are not ordinary policies and are not meant to be casual customization
 surfaces.
 They describe non-optional DevCovenant runtime contracts such as gate evidence
 requirements, integrity checks, and workflow-run evidence paths.
+For `devflow-run-gates`, the canonical pre-commit hook command is now
+`pre-commit run --all-files`; the managed-environment runtime supplies the
+correct interpreter and `PATH` instead of relying on raw host `python3`.
 
 ### policy_state
 The on/off map for customizable policies.

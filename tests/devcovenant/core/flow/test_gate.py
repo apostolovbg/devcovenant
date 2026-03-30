@@ -202,7 +202,7 @@ def _unit_test_start_clears_stale_pre_commit_end() -> None:
             "session_end_utc": "2026-02-24T18:00:00+00:00",
             "pre_commit_end_epoch": 10.0,
             "pre_commit_end_utc": "2026-02-24T18:00:00+00:00",
-            "pre_commit_end_command": "python3 -m pre_commit run --all-files",
+            "pre_commit_end_command": "pre-commit run --all-files",
             "pre_commit_end_notes": "stale",
             "pre_commit_end_cache_enabled": True,
         }
@@ -338,7 +338,7 @@ def _unit_test_gate_child_output_streams_in_normal_mode() -> None:
         ),
     ):
         exit_code, output = module._run_command_with_output(
-            "python3 -m pre_commit run --all-files"
+            "pre-commit run --all-files"
         )
 
     kwargs = dict(captured["kwargs"])
@@ -370,7 +370,7 @@ def _unit_test_gate_child_output_is_suppressed_in_quiet_mode() -> None:
         ) as emit_tail,
     ):
         exit_code, output = module._run_command_with_output(
-            "python3 -m pre_commit run --all-files"
+            "pre-commit run --all-files"
         )
 
     assert exit_code == 1
@@ -400,7 +400,7 @@ def _unit_test_gate_child_output_streams_in_verbose_mode() -> None:
         ) as emit_tail,
     ):
         exit_code, output = module._run_command_with_output(
-            "python3 -m pre_commit run --all-files"
+            "pre-commit run --all-files"
         )
 
     assert exit_code == 1

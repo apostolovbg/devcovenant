@@ -26,6 +26,12 @@ metadata. A profile can contribute:
 
 8. core-invariant metadata overlays where DevCovenant exposes that contract
 
+For the built-in `global` profile, that now includes the canonical
+`devflow-run-gates.pre_commit_command` value
+`pre-commit run --all-files`, while the managed-environment runtime supplies
+the interpreter and `PATH` that make that launcher portable across local work,
+CI, and proof repositories.
+
 Profiles do not directly turn policies on or off.
 Policy activation remains config-driven through `policy_state`.
 

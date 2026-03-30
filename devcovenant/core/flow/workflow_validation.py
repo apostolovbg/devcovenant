@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import json
 import os
+import shlex
 from pathlib import Path
 from typing import List
 
@@ -15,11 +16,14 @@ from devcovenant.core.services import (
     core_invariants as core_invariants_service,
 )
 
-_DEFAULT_PRE_COMMIT_COMMAND = "python3 -m pre_commit run --all-files"
+_DEFAULT_PRE_COMMIT_COMMAND = "pre-commit run --all-files"
 _DEFAULT_PRE_COMMIT_START_KEY = "pre_commit_start_epoch"
 _DEFAULT_PRE_COMMIT_END_KEY = "pre_commit_end_epoch"
 _DEFAULT_PRE_COMMIT_START_COMMAND_KEY = "pre_commit_start_command"
 _DEFAULT_PRE_COMMIT_END_COMMAND_KEY = "pre_commit_end_command"
+_PRE_COMMIT_EXECUTABLE_TOKENS = frozenset(
+    {"pre-commit", "pre-commit.exe", "pre_commit", "pre_commit.exe"}
+)
 
 
 def _resolve_status_path(
@@ -52,6 +56,40 @@ def _format_run_rerun_instructions(
     """Render the canonical rerun instruction."""
     del run_ids
     return "`devcovenant run`"
+
+
+def _looks_like_python_launcher(token: str) -> bool:
+    """Return True when token points to a Python launcher."""
+    name = Path(str(token).strip()).name.lower()
+    if name in {"py", "py.exe"}:
+        return True
+    return name.startswith("python")
+
+
+def _normalize_pre_commit_command(raw_value: object) -> str:
+    """Canonicalize equivalent pre-commit launchers to one command string."""
+    raw = str(raw_value or "").strip()
+    if not raw:
+        return ""
+    try:
+        tokens = shlex.split(raw)
+    except ValueError:
+        return raw.lower()
+    if not tokens:
+        return ""
+    first = Path(tokens[0]).name.lower()
+    normalized = [str(token).strip().lower() for token in tokens]
+    if first in _PRE_COMMIT_EXECUTABLE_TOKENS:
+        normalized[0] = "pre-commit"
+        return shlex.join(normalized)
+    if (
+        _looks_like_python_launcher(tokens[0])
+        and len(tokens) >= 3
+        and tokens[1] == "-m"
+        and tokens[2] == "pre_commit"
+    ):
+        return shlex.join(["pre-commit", *normalized[3:]])
+    return shlex.join(normalized)
 
 
 def _load_gate_status(status_file: Path) -> dict | None:
@@ -92,12 +130,12 @@ def _pre_commit_command(invariant: "DevflowRunGates") -> str:
         for entry in option:
             token = str(entry or "").strip()
             if token:
-                return token.lower()
-        return _DEFAULT_PRE_COMMIT_COMMAND.lower()
+                return _normalize_pre_commit_command(token)
+        return _normalize_pre_commit_command(_DEFAULT_PRE_COMMIT_COMMAND)
     raw = str(option or "").strip()
     if not raw:
         raw = _DEFAULT_PRE_COMMIT_COMMAND
-    return raw.lower()
+    return _normalize_pre_commit_command(raw)
 
 
 def _pre_commit_key(
@@ -402,8 +440,10 @@ class DevflowRunGates(CoreInvariantCheck):
                         ),
                     )
                 )
-            start_command = str(status.get(start_command_key) or "").lower()
-            if pre_commit_command and pre_commit_command not in start_command:
+            start_command = _normalize_pre_commit_command(
+                status.get(start_command_key) or ""
+            )
+            if pre_commit_command and start_command != pre_commit_command:
                 violations.append(
                     Violation(
                         policy_id=self.policy_id,
@@ -521,8 +561,10 @@ class DevflowRunGates(CoreInvariantCheck):
                         ),
                     )
                 )
-            end_command = str(status.get(end_command_key) or "").lower()
-            if pre_commit_command and pre_commit_command not in end_command:
+            end_command = _normalize_pre_commit_command(
+                status.get(end_command_key) or ""
+            )
+            if pre_commit_command and end_command != pre_commit_command:
                 violations.append(
                     Violation(
                         policy_id=self.policy_id,

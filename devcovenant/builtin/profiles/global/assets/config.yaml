@@ -337,7 +337,7 @@ core_invariants:
   devflow-run-gates:
     gate_status_file: devcovenant/registry/runtime/gate_status.json
     pre_commit_command:
-      - python3 -m pre_commit run --all-files
+      - pre-commit run --all-files
     skipped_globs:
       - devcovenant/registry/runtime/**
 

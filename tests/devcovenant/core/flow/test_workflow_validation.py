@@ -223,9 +223,9 @@ def _closed_session_payload() -> dict:
         "session_id": "123",
         "session_state": "closed",
         "pre_commit_start_epoch": 10.0,
-        "pre_commit_start_command": "python3 -m pre_commit run --all-files",
+        "pre_commit_start_command": "pre-commit run --all-files",
         "pre_commit_end_epoch": 20.0,
-        "pre_commit_end_command": "python3 -m pre_commit run --all-files",
+        "pre_commit_end_command": "pre-commit run --all-files",
         "last_run_epoch": 15.0,
         "last_run_utc": "2026-02-18T00:00:15+00:00",
         "commands": list(_DEFAULT_REQUIRED_COMMANDS),
@@ -313,9 +313,27 @@ class GeneratedUnittestCases(unittest.TestCase):
             ctx = _make_ctx(tmp_path, ["src/example.py"], working_numstat={})
             violations = _configured_check(
                 extra_options={
-                    "pre_commit_command": [
-                        "python3 -m pre_commit run --all-files"
-                    ]
+                    "pre_commit_command": ["pre-commit run --all-files"]
+                }
+            ).check(ctx)
+            self.assertEqual(violations, [])
+
+    def test_python_module_pre_commit_record_matches_canonical_command(self):
+        """Legacy python-module launcher records should still validate."""
+        with tempfile.TemporaryDirectory() as temp_dir:
+            tmp_path = Path(temp_dir).resolve()
+            payload = _closed_session_payload()
+            payload["pre_commit_start_command"] = (
+                "python3 -m pre_commit run --all-files"
+            )
+            payload["pre_commit_end_command"] = (
+                "/tmp/.venv/bin/python -m pre_commit run --all-files"
+            )
+            _write_status(tmp_path, payload)
+            ctx = _make_ctx(tmp_path, ["src/example.py"], working_numstat={})
+            violations = _configured_check(
+                extra_options={
+                    "pre_commit_command": ["pre-commit run --all-files"]
                 }
             ).check(ctx)
             self.assertEqual(violations, [])

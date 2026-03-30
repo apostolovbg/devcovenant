@@ -43,6 +43,7 @@ prune_inline_session_snapshot_fields = (
 _CHECK_APPLY_FIXES_ENV = "DEVCOV_CHECK_APPLY_FIXES"
 _CHECK_RUN_REFRESH_ENV = "DEVCOV_CHECK_RUN_REFRESH"
 _CHECK_CLEAN_BYTECODE_ENV = "DEVCOV_CHECK_CLEAN_BYTECODE"
+_DEFAULT_PRE_COMMIT_COMMAND = "pre-commit run --all-files"
 _PRE_COMMIT_EXECUTABLE_TOKENS = frozenset(
     {"pre-commit", "pre-commit.exe", "pre_commit", "pre_commit.exe"}
 )
@@ -370,7 +371,7 @@ def run_pre_commit_gate(
     repo_root: Path,
     stage: str,
     *,
-    command: str = "python3 -m pre_commit run --all-files",
+    command: str = _DEFAULT_PRE_COMMIT_COMMAND,
     notes: str = "",
 ) -> int:
     """Run one gate pre-commit stage (`start`, `mid`, or `end`)."""

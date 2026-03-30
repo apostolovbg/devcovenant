@@ -73,6 +73,10 @@ its main `governance` job.
 For this repository, tracked workflow metadata also carries the repo-owned
 `Build` proof details that manual publish depends on, including CI-aligned
 provenance fields such as `ci_run_id` and `ci_run_attempt`.
+That tracked invariant metadata now also records the canonical gate hook
+launcher `pre-commit run --all-files`; older `python -m pre_commit` evidence
+is validation-compatible, but the resolved contract no longer depends on the
+host `python3` interpreter carrying `pre_commit`.
 Separately from tracked registry state, the same refresh pass also regenerates
 ignore surfaces such as `.gitignore`.
 In this repository, that broader generated output now includes

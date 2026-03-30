@@ -60,6 +60,37 @@ Example:
 
 ## Version 1.0.0
 
+- 2026-03-30:
+  Change: fixed the gate pre-commit contract to use the canonical
+    `pre-commit run --all-files` launcher, normalized equivalent
+    `python -m pre_commit` evidence in validation, and updated the matching
+    config, docs, registry, and tests.
+  Why: GitHub Build proof repos were still failing `gate --start` when the
+    hosted `python3` interpreter lacked `pre_commit`, even though the managed
+    `.venv` and its `PATH` were the real execution contract.
+  Impact: start, mid, and end gates now execute pre-commit through the managed
+    environment across local work and artifact proofs, while older recorded
+    gate evidence still validates as the same logical command.
+  Files:
+  CHANGELOG.md
+  AGENTS.md
+  devcovenant/builtin/profiles/global/assets/config.yaml
+  devcovenant/builtin/profiles/global/global.yaml
+  devcovenant/config.yaml
+  devcovenant/core/flow/gate.py
+  devcovenant/core/flow/workflow_validation.py
+  devcovenant/custom/profiles/devcovrepo/assets/docs/config.md
+  devcovenant/custom/profiles/devcovrepo/assets/docs/profiles.md
+  devcovenant/custom/profiles/devcovrepo/assets/docs/registry.md
+  devcovenant/custom/profiles/devcovrepo/assets/docs/workflow.md
+  devcovenant/docs/config.md
+  devcovenant/docs/profiles.md
+  devcovenant/docs/registry.md
+  devcovenant/docs/workflow.md
+  devcovenant/registry/registry.yaml
+  tests/devcovenant/core/flow/test_gate.py
+  tests/devcovenant/core/flow/test_workflow_validation.py
+
 - 2026-03-29:
   Change: corrected the Python-family `tests` workflow runs to keep
     `python3 -m unittest discover -v`, remove the redundant `pytest`

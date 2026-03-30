@@ -246,7 +246,7 @@ gate_status_file: devcovenant/registry/runtime/gate_status.json
 workflow_session_file:
 require_pre_commit_start: true
 require_pre_commit_end: true
-pre_commit_command: python3 -m pre_commit run --all-files
+pre_commit_command: pre-commit run --all-files
 pre_commit_start_epoch_key: pre_commit_start_epoch
 pre_commit_end_epoch_key: pre_commit_end_epoch
 pre_commit_start_command_key: pre_commit_start_command

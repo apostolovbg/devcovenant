@@ -430,7 +430,7 @@ core-invariants:
       workflow_session_file: ''
       require_pre_commit_start: 'true'
       require_pre_commit_end: 'true'
-      pre_commit_command: python3 -m pre_commit run --all-files
+      pre_commit_command: pre-commit run --all-files
       pre_commit_start_epoch_key: pre_commit_start_epoch
       pre_commit_end_epoch_key: pre_commit_end_epoch
       pre_commit_start_command_key: pre_commit_start_command
@@ -522,15 +522,15 @@ core-invariants:
           behavior: base
         profile_overlays:
           values:
-          - python3 -m pre_commit run --all-files
+          - pre-commit run --all-files
           behavior: replace
         autogen_overlays:
           values:
-          - python3 -m pre_commit run --all-files
+          - pre-commit run --all-files
           behavior: append
         effective:
           values:
-          - python3 -m pre_commit run --all-files
+          - pre-commit run --all-files
       pre_commit_start_epoch_key:
         descriptor:
           values:
@@ -626,7 +626,7 @@ core-invariants:
       workflow_session_file: ''
       require_pre_commit_start: true
       require_pre_commit_end: true
-      pre_commit_command: python3 -m pre_commit run --all-files
+      pre_commit_command: pre-commit run --all-files
       pre_commit_start_epoch_key: pre_commit_start_epoch
       pre_commit_end_epoch_key: pre_commit_end_epoch
       pre_commit_start_command_key: pre_commit_start_command
@@ -639,7 +639,7 @@ core-invariants:
     runtime_config_overrides:
       gate_status_file: devcovenant/registry/runtime/gate_status.json
       pre_commit_command: &id003
-      - python3 -m pre_commit run --all-files
+      - pre-commit run --all-files
       skipped_globs: &id004
       - devcovenant/registry/runtime/**
     runtime_effective_options:
@@ -10554,7 +10554,7 @@ profiles:
         gate_status_file: devcovenant/registry/runtime/gate_status.json
       devflow-run-gates:
         gate_status_file: devcovenant/registry/runtime/gate_status.json
-        pre_commit_command: python3 -m pre_commit run --all-files
+        pre_commit_command: pre-commit run --all-files
     source: builtin
     path: devcovenant/builtin/profiles/global
     assets_available:
