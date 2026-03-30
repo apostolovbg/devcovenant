@@ -7,7 +7,7 @@ project-governance:
   project_version: 1.0.0
   stage: stable
   maintenance_stance: active
-  compatibility_policy: breaking-allowed
+  compatibility_policy: forward-only
   versioning_mode: versioned
   unversioned_label: Unversioned
   unreleased_heading: '## Unreleased'
@@ -40,6 +40,9 @@ managed-docs:
   - CHANGELOG.md
   - PROFILE_MAP.md
   - POLICY_MAP.md
+  - SECURITY.md
+  - PRIVACY.md
+  - SUPPORT.md
   - devcovenant/README.md
   descriptors:
     AGENTS.md:
@@ -49,7 +52,6 @@ managed-docs:
       import_seed: true
       authoritative_source: true
       body_fingerprint: 7229bfff6b3c3352b5c7a0ea9adfcfebede9781ba363e50ecfc1406a1bbcf285
-      legacy_generic_body_fingerprints: []
     CHANGELOG.md:
       enabled: true
       descriptor_path: devcovenant/builtin/profiles/global/assets/CHANGELOG.yaml
@@ -57,7 +59,6 @@ managed-docs:
       import_seed: true
       authoritative_source: true
       body_fingerprint: 97da0420616c6bbdc7b548c3fd7dbb960b2f41d183ab90a203b61a48b5d31efd
-      legacy_generic_body_fingerprints: []
     CONTRIBUTING.md:
       enabled: true
       descriptor_path: devcovenant/builtin/profiles/global/assets/CONTRIBUTING.yaml
@@ -65,7 +66,6 @@ managed-docs:
       import_seed: true
       authoritative_source: true
       body_fingerprint: b962fa05210f0456777b4ef1b25a7370999fae90779e17759ee5c1f8299dbcc9
-      legacy_generic_body_fingerprints: []
     LICENSE:
       enabled: false
       descriptor_path: devcovenant/builtin/profiles/global/assets/LICENSE.yaml
@@ -73,7 +73,6 @@ managed-docs:
       import_seed: false
       authoritative_source: false
       body_fingerprint: e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855
-      legacy_generic_body_fingerprints: []
     PLAN.md:
       enabled: true
       descriptor_path: devcovenant/builtin/profiles/global/assets/PLAN.yaml
@@ -81,24 +80,27 @@ managed-docs:
       import_seed: true
       authoritative_source: true
       body_fingerprint: 641d27644b027a4edac788bfe847c131f84013922075584e3a14d866512c7582
-      legacy_generic_body_fingerprints:
-      - 9ca5f866398d1715312b39720b0c163674ce8b6e2562201f3eacf5cc140fc894
     POLICY_MAP.md:
       enabled: true
       descriptor_path: devcovenant/custom/profiles/devcovrepo/assets/POLICY_MAP.yaml
       project_governance_headers: false
       import_seed: true
       authoritative_source: true
-      body_fingerprint: 1cf2b1a61c4768c7d3fbf4867b552b6efb603021e5392185df6e0f5310b43446
-      legacy_generic_body_fingerprints: []
+      body_fingerprint: 6bdc5f34b7fb98241ee434d8f0258522b37e5487a9db872675459a2bbdb876b7
+    PRIVACY.md:
+      enabled: true
+      descriptor_path: devcovenant/custom/profiles/devcovrepo/assets/PRIVACY.yaml
+      project_governance_headers: false
+      import_seed: true
+      authoritative_source: true
+      body_fingerprint: 6195bcf6b491fb2c9e6bb29c2bdd5cc02785600e3ca14bc73f66ea44b0797d90
     PROFILE_MAP.md:
       enabled: true
       descriptor_path: devcovenant/custom/profiles/devcovrepo/assets/PROFILE_MAP.yaml
       project_governance_headers: false
       import_seed: true
       authoritative_source: true
-      body_fingerprint: 8e1aa31d82c0fb4665d28bdf4842890da1965a8e37fba71d15556a47290bc4be
-      legacy_generic_body_fingerprints: []
+      body_fingerprint: 4ecdbee0601a1f8b947d97fe5e6e068557878a1ab5245e4fbecc3ada387acb73
     README.md:
       enabled: true
       descriptor_path: devcovenant/builtin/profiles/global/assets/README.yaml
@@ -106,7 +108,13 @@ managed-docs:
       import_seed: true
       authoritative_source: true
       body_fingerprint: 34474b586af2331d9ae26bcc11c71d10ecb0d1cf22f5324662d905e0aa21af7a
-      legacy_generic_body_fingerprints: []
+    SECURITY.md:
+      enabled: true
+      descriptor_path: devcovenant/custom/profiles/devcovrepo/assets/SECURITY.yaml
+      project_governance_headers: false
+      import_seed: true
+      authoritative_source: true
+      body_fingerprint: e2fabe2357208746c2dcd261daf61e13ca592f82881b9fb424c584418204e08d
     SPEC.md:
       enabled: true
       descriptor_path: devcovenant/builtin/profiles/global/assets/SPEC.yaml
@@ -114,9 +122,13 @@ managed-docs:
       import_seed: true
       authoritative_source: true
       body_fingerprint: 092e59c0da1c48f4827137a699b3bc1b58d72dc3e56fef82c87560a4b7bd9f63
-      legacy_generic_body_fingerprints:
-      - 5b3cac9d37293ae3f40dec269922fcbce264442a67dc5a9642fadac6a0610043
-      - 2fad01922c9ba1b30b1cc736c32041fbf2418aef00349f6e7ffd28a67f547b37
+    SUPPORT.md:
+      enabled: true
+      descriptor_path: devcovenant/custom/profiles/devcovrepo/assets/SUPPORT.yaml
+      project_governance_headers: false
+      import_seed: true
+      authoritative_source: true
+      body_fingerprint: f222386c30ead2cf247f16ec5711b81aab39983a41f7c6f6e1e68aebc3b28fdb
     devcovenant/README.md:
       enabled: true
       descriptor_path: devcovenant/builtin/profiles/global/assets/devcovenant/README.yaml
@@ -124,257 +136,6 @@ managed-docs:
       import_seed: false
       authoritative_source: false
       body_fingerprint: 69c44ed6db522f6a7c81ff1067a2c450326ddfce160292a6bd100456bac9ab58
-      legacy_generic_body_fingerprints: []
-core-invariants:
-  devcov-integrity-guard:
-    description: Devcov Integrity Guard
-    invariant_text: |-
-      Enforce DevCovenant policy integrity: every policy must include descriptive
-      text, AGENTS prose must match policy descriptors, the policy registry must
-      stay synchronized, and gate-status metadata must validate when configured.
-    metadata:
-      policy_definitions: AGENTS.md
-      registry_file: devcovenant/registry/registry.yaml
-      gate_status_file: devcovenant/registry/runtime/gate_status.json
-      watch_dirs: ''
-      watch_files: ''
-      selector_roles: watch,watch_files
-    metadata_resolution:
-      policy_definitions:
-        descriptor:
-          values: []
-          behavior: base
-        profile:global:
-          values:
-          - AGENTS.md
-          behavior: replace
-        effective:
-          values:
-          - AGENTS.md
-      registry_file:
-        descriptor:
-          values: []
-          behavior: base
-        profile:global:
-          values:
-          - devcovenant/registry/registry.yaml
-          behavior: replace
-        effective:
-          values:
-          - devcovenant/registry/registry.yaml
-      gate_status_file:
-        descriptor:
-          values: []
-          behavior: base
-        profile:global:
-          values:
-          - devcovenant/registry/runtime/gate_status.json
-          behavior: replace
-        effective:
-          values:
-          - devcovenant/registry/runtime/gate_status.json
-      watch_dirs:
-        descriptor:
-          values: []
-          behavior: base
-        effective:
-          values: []
-      watch_files:
-        descriptor:
-          values: []
-          behavior: base
-        effective:
-          values: []
-      selector_roles:
-        descriptor:
-          values:
-          - watch,watch_files
-          behavior: base
-        effective:
-          values:
-          - watch,watch_files
-    metadata_warnings: []
-    runtime_metadata_options:
-      policy_definitions: AGENTS.md
-      registry_file: devcovenant/registry/registry.yaml
-      gate_status_file: devcovenant/registry/runtime/gate_status.json
-      watch_dirs: ''
-      watch_files: ''
-      selector_roles: &id001
-      - watch
-      - watch_files
-    runtime_config_overrides:
-      policy_definitions: AGENTS.md
-      registry_file: devcovenant/registry/registry.yaml
-      gate_status_file: devcovenant/registry/runtime/gate_status.json
-    runtime_effective_options:
-      policy_definitions: AGENTS.md
-      registry_file: devcovenant/registry/registry.yaml
-      gate_status_file: devcovenant/registry/runtime/gate_status.json
-      selector_roles: *id001
-    module_path: devcovenant/core/services/integrity_validation.py
-    descriptor_path: devcovenant/core/contracts/invariants/devcov_integrity_guard.yaml
-  devcov-structure-guard:
-    description: Devcov Structure Guard
-    invariant_text: Ensure the DevCovenant repo keeps the required structure and tooling
-      files.
-    metadata: {}
-    metadata_resolution: {}
-    metadata_warnings: []
-    runtime_metadata_options: {}
-    runtime_config_overrides: {}
-    runtime_effective_options: {}
-    module_path: devcovenant/core/services/structure_validation.py
-    descriptor_path: devcovenant/core/contracts/invariants/devcov_structure_guard.yaml
-  devflow-run-gates:
-    description: Devflow Run Gates
-    invariant_text: |-
-      DevCovenant must record and enforce the standard workflow: pre-commit start,
-      declared workflow runs, then pre-commit end. Gate status
-      preserves pre-commit evidence while workflow-session state records which
-      runs passed for the active session.
-      This check is enforced for every repository change (including
-      documentation-only updates) so the gate sequence cannot be skipped.
-      Changelog-only edits remain gate-scoped but do not require a fresh
-      run execution by themselves.
-    metadata:
-      gate_status_file: devcovenant/registry/runtime/gate_status.json
-      workflow_session_file: ''
-      require_pre_commit_start: 'true'
-      require_pre_commit_end: 'true'
-      pre_commit_command: pre-commit run --all-files
-      pre_commit_start_epoch_key: pre_commit_start_epoch
-      pre_commit_end_epoch_key: pre_commit_end_epoch
-      pre_commit_start_command_key: pre_commit_start_command
-      pre_commit_end_command_key: pre_commit_end_command
-      code_extensions: ''
-      skipped_globs: devcovenant/registry/runtime/**
-    metadata_resolution:
-      gate_status_file:
-        descriptor:
-          values: []
-          behavior: base
-        profile:global:
-          values:
-          - devcovenant/registry/runtime/gate_status.json
-          behavior: replace
-        effective:
-          values:
-          - devcovenant/registry/runtime/gate_status.json
-      workflow_session_file:
-        descriptor:
-          values: []
-          behavior: base
-        effective:
-          values: []
-      require_pre_commit_start:
-        descriptor:
-          values:
-          - 'true'
-          behavior: base
-        effective:
-          values:
-          - 'true'
-      require_pre_commit_end:
-        descriptor:
-          values:
-          - 'true'
-          behavior: base
-        effective:
-          values:
-          - 'true'
-      pre_commit_command:
-        descriptor:
-          values: []
-          behavior: base
-        profile:global:
-          values:
-          - pre-commit run --all-files
-          behavior: replace
-        effective:
-          values:
-          - pre-commit run --all-files
-      pre_commit_start_epoch_key:
-        descriptor:
-          values:
-          - pre_commit_start_epoch
-          behavior: base
-        effective:
-          values:
-          - pre_commit_start_epoch
-      pre_commit_end_epoch_key:
-        descriptor:
-          values:
-          - pre_commit_end_epoch
-          behavior: base
-        effective:
-          values:
-          - pre_commit_end_epoch
-      pre_commit_start_command_key:
-        descriptor:
-          values:
-          - pre_commit_start_command
-          behavior: base
-        effective:
-          values:
-          - pre_commit_start_command
-      pre_commit_end_command_key:
-        descriptor:
-          values:
-          - pre_commit_end_command
-          behavior: base
-        effective:
-          values:
-          - pre_commit_end_command
-      code_extensions:
-        descriptor:
-          values: []
-          behavior: base
-        effective:
-          values: []
-      skipped_globs:
-        descriptor:
-          values: []
-          behavior: base
-        profile:defaults:
-          values:
-          - devcovenant/registry/runtime/**
-          behavior: append
-        effective:
-          values:
-          - devcovenant/registry/runtime/**
-    metadata_warnings: []
-    runtime_metadata_options:
-      gate_status_file: devcovenant/registry/runtime/gate_status.json
-      workflow_session_file: ''
-      require_pre_commit_start: true
-      require_pre_commit_end: true
-      pre_commit_command: pre-commit run --all-files
-      pre_commit_start_epoch_key: pre_commit_start_epoch
-      pre_commit_end_epoch_key: pre_commit_end_epoch
-      pre_commit_start_command_key: pre_commit_start_command
-      pre_commit_end_command_key: pre_commit_end_command
-      code_extensions: ''
-      skipped_globs: devcovenant/registry/runtime/**
-    runtime_config_overrides:
-      gate_status_file: devcovenant/registry/runtime/gate_status.json
-      workflow_session_file: devcovenant/registry/runtime/workflow_session.json
-      pre_commit_command: pre-commit run --all-files
-      skipped_globs: &id002
-      - devcovenant/registry/runtime/**
-    runtime_effective_options:
-      gate_status_file: devcovenant/registry/runtime/gate_status.json
-      workflow_session_file: devcovenant/registry/runtime/workflow_session.json
-      require_pre_commit_start: true
-      require_pre_commit_end: true
-      pre_commit_command: pre-commit run --all-files
-      pre_commit_start_epoch_key: pre_commit_start_epoch
-      pre_commit_end_epoch_key: pre_commit_end_epoch
-      pre_commit_start_command_key: pre_commit_start_command
-      pre_commit_end_command_key: pre_commit_end_command
-      skipped_globs: *id002
-    module_path: devcovenant/core/flow/workflow_validation.py
-    descriptor_path: devcovenant/core/contracts/invariants/devflow_run_gates.yaml
 workflow_contract:
   schema_version: 4
   anchors:
@@ -1530,13 +1291,13 @@ policies:
       enabled: true
       custom: false
       main_changelog: CHANGELOG.md
-      skipped_files: &id003
+      skipped_files: &id001
       - devcovenant/config.yaml
       - CHANGELOG.md
       - .gitignore
       - .pre-commit-config.yaml
       - .github/workflows/ci.yml
-      skipped_globs: &id004
+      skipped_globs: &id002
       - .vscode/**
       - .idea/**
       - .venv/**
@@ -1558,11 +1319,11 @@ policies:
       - devcovenant/logs/**
       - devcovenant/registry/runtime/**
       skipped_prefixes: ''
-      summary_labels: &id005
+      summary_labels: &id003
       - Change
       - Why
       - Impact
-      summary_verbs: &id006
+      summary_verbs: &id004
       - add
       - added
       - address
@@ -1793,11 +1554,11 @@ policies:
       - tested
       gate_status_file: devcovenant/registry/runtime/gate_status.json
       collections: ''
-      header_doc_suffixes: &id007
+      header_doc_suffixes: &id005
       - .md
       - .rst
       - .txt
-      header_keys: &id008
+      header_keys: &id006
       - Last Updated
       - Project Version
       - Project Stage
@@ -1808,19 +1569,19 @@ policies:
       - Build Identity
       - DevCovenant Version
       header_scan_lines: 4
-      required_globs: &id009
+      required_globs: &id007
       - README.md
       - AGENTS.md
       - CONTRIBUTING.md
       - CHANGELOG.md
       - SPEC.md
       - PLAN.md
-      selector_roles: &id010
+      selector_roles: &id008
       - skipped
       - header_doc
       - required
       skipped_dirs: ''
-      header_doc_globs: &id011
+      header_doc_globs: &id009
       - '*.md'
       - '*.rst'
       - '*.txt'
@@ -1837,17 +1598,17 @@ policies:
       enabled: true
       custom: false
       main_changelog: CHANGELOG.md
-      skipped_files: *id003
-      skipped_globs: *id004
-      summary_labels: *id005
-      summary_verbs: *id006
+      skipped_files: *id001
+      skipped_globs: *id002
+      summary_labels: *id003
+      summary_verbs: *id004
       gate_status_file: devcovenant/registry/runtime/gate_status.json
-      header_doc_suffixes: *id007
-      header_keys: *id008
+      header_doc_suffixes: *id005
+      header_keys: *id006
       header_scan_lines: 4
-      required_globs: *id009
-      selector_roles: *id010
-      header_doc_globs: *id011
+      required_globs: *id007
+      selector_roles: *id008
+      header_doc_globs: *id009
     assets:
     - '*.egg-info/**'
     - '*.md'
@@ -2011,12 +1772,12 @@ policies:
       enforcement: active
       enabled: true
       custom: true
-      include_suffixes: &id012
+      include_suffixes: &id010
       - .py
       - .pyi
       - .pyw
       selector_roles: include
-      include_globs: &id013
+      include_globs: &id011
       - '*.py'
       - '*.pyi'
       - '*.pyw'
@@ -2030,9 +1791,9 @@ policies:
       enforcement: active
       enabled: true
       custom: true
-      include_suffixes: *id012
+      include_suffixes: *id010
       selector_roles: include
-      include_globs: *id013
+      include_globs: *id011
     assets: []
     origin: custom
     script_exists: true
@@ -2253,19 +2014,19 @@ policies:
       enabled: true
       custom: false
       include_suffixes: .py
-      exclude_prefixes: &id014
+      exclude_prefixes: &id012
       - build
       - dist
       - node_modules
       include_prefixes: ''
       include_globs: '*.py'
       exclude_suffixes: ''
-      exclude_globs: &id015
+      exclude_globs: &id013
       - build/**
       - dist/**
       - node_modules/**
       force_include_globs: ''
-      selector_roles: &id016
+      selector_roles: &id014
       - include
       - exclude
       - force_include
@@ -2284,10 +2045,10 @@ policies:
       enabled: true
       custom: false
       include_suffixes: .py
-      exclude_prefixes: *id014
+      exclude_prefixes: *id012
       include_globs: '*.py'
-      exclude_globs: *id015
-      selector_roles: *id016
+      exclude_globs: *id013
+      selector_roles: *id014
     assets:
     - build/**
     - dist/**
@@ -3248,7 +3009,7 @@ policies:
       enforcement: active
       enabled: true
       custom: false
-      selector_roles: &id017
+      selector_roles: &id015
       - user_facing
       - user_visible
       - doc_quality
@@ -3256,7 +3017,7 @@ policies:
       exclude_prefixes: ''
       user_facing_prefixes: ''
       user_facing_exclude_prefixes: tests
-      user_facing_suffixes: &id018
+      user_facing_suffixes: &id016
       - .py
       - .js
       - .ts
@@ -3274,12 +3035,12 @@ policies:
       - .yaml
       - .json
       - .toml
-      user_facing_files: &id019
+      user_facing_files: &id017
       - .pre-commit-config.yaml
       - pyproject.toml
       - devcovenant/cli.py
       - devcovenant/__main__.py
-      user_facing_globs: &id020
+      user_facing_globs: &id018
       - .github/workflows/*.yml
       - .github/workflows/*.yaml
       - '*.py'
@@ -3299,7 +3060,7 @@ policies:
       - '*.yaml'
       - '*.json'
       - '*.toml'
-      user_facing_keywords: &id021
+      user_facing_keywords: &id019
       - api
       - endpoint
       - endpoints
@@ -3331,7 +3092,7 @@ policies:
       - forms
       - workflow
       - workflows
-      user_visible_files: &id022
+      user_visible_files: &id020
       - README.md
       - CONTRIBUTING.md
       - AGENTS.md
@@ -3350,7 +3111,7 @@ policies:
       - devcovenant/docs/refresh.md
       - devcovenant/docs/workflow.md
       - devcovenant/docs/troubleshooting.md
-      doc_quality_files: &id023
+      doc_quality_files: &id021
       - README.md
       - CONTRIBUTING.md
       - AGENTS.md
@@ -3373,7 +3134,7 @@ policies:
       require_toc: false
       min_section_count: 3
       min_word_count: 120
-      doc_routes: &id024
+      doc_routes: &id022
       - devcovenant/builtin/policies/ => devcovenant/docs/policies.md
       - devcovenant/builtin/profiles/*/*.yaml => devcovenant/docs/profiles.md
       - devcovenant/*/profiles/*/*translator.py=> devcovenant/docs/profiles.md
@@ -3403,7 +3164,7 @@ policies:
       - .github/workflows/*.yml => devcovenant/docs/workflow.md
       require_mentions: true
       mention_min_length: 3
-      mention_stopwords: &id025
+      mention_stopwords: &id023
       - devcovenant
       - tools
       - common
@@ -3428,7 +3189,7 @@ policies:
       exclude_suffixes: ''
       exclude_globs: ''
       force_include_globs: ''
-      user_facing_exclude_globs: &id026
+      user_facing_exclude_globs: &id024
       - .vscode/**
       - .idea/**
       - .venv/**
@@ -3474,23 +3235,23 @@ policies:
       enforcement: active
       enabled: true
       custom: false
-      selector_roles: *id017
+      selector_roles: *id015
       user_facing_exclude_prefixes: tests
-      user_facing_suffixes: *id018
-      user_facing_files: *id019
-      user_facing_globs: *id020
-      user_facing_keywords: *id021
-      user_visible_files: *id022
-      doc_quality_files: *id023
+      user_facing_suffixes: *id016
+      user_facing_files: *id017
+      user_facing_globs: *id018
+      user_facing_keywords: *id019
+      user_visible_files: *id020
+      doc_quality_files: *id021
       required_headings: Overview
       require_toc: false
       min_section_count: 3
       min_word_count: 120
-      doc_routes: *id024
+      doc_routes: *id022
       require_mentions: true
       mention_min_length: 3
-      mention_stopwords: *id025
-      user_facing_exclude_globs: *id026
+      mention_stopwords: *id023
+      user_facing_exclude_globs: *id024
       user_visible_dirs: devcovenant/docs
       doc_quality_dirs: devcovenant/docs
       user_facing_exclude_files: devcovenant/config.yaml
@@ -3600,7 +3361,7 @@ policies:
         devcovenant/builtin/profiles/README.md, devcovenant/custom/policies/README.md,
         devcovenant/custom/profiles/README.md, devcovenant/docs/*.md, devcovenant/docs/**/*.md,
         README.md, AGENTS.md, CONTRIBUTING.md, CHANGELOG.md, SPEC.md, PLAN.md, PROFILE_MAP.md,
-        POLICY_MAP.md
+        POLICY_MAP.md, SECURITY.md, PRIVACY.md, SUPPORT.md
       allowed_files: ''
       allowed_suffixes: ''
       required_files: ''
@@ -3609,7 +3370,7 @@ policies:
         devcovenant/builtin/profiles/README.md, devcovenant/custom/policies/README.md,
         devcovenant/custom/profiles/README.md, devcovenant/docs/*.md, devcovenant/docs/**/*.md,
         README.md, AGENTS.md, CONTRIBUTING.md, CHANGELOG.md, SPEC.md, PLAN.md, PROFILE_MAP.md,
-        POLICY_MAP.md
+        POLICY_MAP.md, SECURITY.md, PRIVACY.md, SUPPORT.md
       selector_roles: include, allowed, required
       include_globs: '*.md'
       include_files: ''
@@ -3694,6 +3455,9 @@ policies:
           - PLAN.md
           - PROFILE_MAP.md
           - POLICY_MAP.md
+          - SECURITY.md
+          - PRIVACY.md
+          - SUPPORT.md
           - devcovenant/README.md
           - devcovenant/core/README.md
           - devcovenant/custom/README.md
@@ -3715,6 +3479,9 @@ policies:
           - PLAN.md
           - PROFILE_MAP.md
           - POLICY_MAP.md
+          - SECURITY.md
+          - PRIVACY.md
+          - SUPPORT.md
           - devcovenant/README.md
           - devcovenant/core/README.md
           - devcovenant/custom/README.md
@@ -3747,6 +3514,9 @@ policies:
           - PLAN.md
           - PROFILE_MAP.md
           - POLICY_MAP.md
+          - SECURITY.md
+          - PRIVACY.md
+          - SUPPORT.md
       allowed_files:
         descriptor:
           values: []
@@ -3790,6 +3560,9 @@ policies:
           - PLAN.md
           - PROFILE_MAP.md
           - POLICY_MAP.md
+          - SECURITY.md
+          - PRIVACY.md
+          - SUPPORT.md
           - devcovenant/README.md
           - devcovenant/core/README.md
           - devcovenant/custom/README.md
@@ -3811,6 +3584,9 @@ policies:
           - PLAN.md
           - PROFILE_MAP.md
           - POLICY_MAP.md
+          - SECURITY.md
+          - PRIVACY.md
+          - SUPPORT.md
           - devcovenant/README.md
           - devcovenant/core/README.md
           - devcovenant/custom/README.md
@@ -3843,6 +3619,9 @@ policies:
           - PLAN.md
           - PROFILE_MAP.md
           - POLICY_MAP.md
+          - SECURITY.md
+          - PRIVACY.md
+          - SUPPORT.md
       selector_roles:
         descriptor:
           values:
@@ -3928,7 +3707,7 @@ policies:
       enabled: true
       custom: false
       include_suffixes: .md
-      allowed_globs: &id027
+      allowed_globs: &id025
       - devcovenant/README.md
       - devcovenant/core/README.md
       - devcovenant/custom/README.md
@@ -3948,10 +3727,13 @@ policies:
       - PLAN.md
       - PROFILE_MAP.md
       - POLICY_MAP.md
+      - SECURITY.md
+      - PRIVACY.md
+      - SUPPORT.md
       allowed_files: ''
       allowed_suffixes: ''
       required_files: ''
-      required_globs: &id028
+      required_globs: &id026
       - devcovenant/README.md
       - devcovenant/core/README.md
       - devcovenant/custom/README.md
@@ -3971,7 +3753,10 @@ policies:
       - PLAN.md
       - PROFILE_MAP.md
       - POLICY_MAP.md
-      selector_roles: &id029
+      - SECURITY.md
+      - PRIVACY.md
+      - SUPPORT.md
+      selector_roles: &id027
       - include
       - allowed
       - required
@@ -3989,9 +3774,9 @@ policies:
       enabled: true
       custom: false
       include_suffixes: .md
-      allowed_globs: *id027
-      required_globs: *id028
-      selector_roles: *id029
+      allowed_globs: *id025
+      required_globs: *id026
+      selector_roles: *id027
       include_globs: '*.md'
     assets:
     - '*.md'
@@ -4001,9 +3786,12 @@ policies:
     - CONTRIBUTING.md
     - PLAN.md
     - POLICY_MAP.md
+    - PRIVACY.md
     - PROFILE_MAP.md
     - README.md
+    - SECURITY.md
     - SPEC.md
+    - SUPPORT.md
     - devcovenant/README.md
     - devcovenant/builtin/policies/README.md
     - devcovenant/builtin/profiles/README.md
@@ -4568,7 +4356,7 @@ policies:
       custom: false
       max_length: 79
       allow_long_url_lines: true
-      url_prefixes: &id030
+      url_prefixes: &id028
       - https://
       - http://
       - ftp://
@@ -4588,10 +4376,10 @@ policies:
       - 'urn:'
       allow_long_lines: true
       long_lines_contain: ''
-      long_lines_between: &id031
+      long_lines_between: &id029
       - devcovenant/builtin/policies/=>.yaml
       - devcovenant/custom/policies/=>.yaml
-      include_suffixes: &id032
+      include_suffixes: &id030
       - .py
       - .md
       - .rst
@@ -4601,11 +4389,11 @@ policies:
       - .json
       - .toml
       - .cff
-      exclude_prefixes: &id033
+      exclude_prefixes: &id031
       - build
       - dist
       - node_modules
-      exclude_globs: &id034
+      exclude_globs: &id032
       - .vscode/**
       - .idea/**
       - .venv/**
@@ -4633,7 +4421,7 @@ policies:
       - devcovenant/builtin/profiles/global/assets/**/*.yaml
       - devcovenant/registry/**
       include_prefixes: ''
-      include_globs: &id035
+      include_globs: &id033
       - '*.py'
       - '*.md'
       - '*.rst'
@@ -4645,11 +4433,11 @@ policies:
       - '*.cff'
       exclude_suffixes: ''
       force_include_globs: ''
-      selector_roles: &id036
+      selector_roles: &id034
       - include
       - exclude
       - force_include
-      url_globs: &id037
+      url_globs: &id035
       - https:/**
       - http:/**
       - ftp:/**
@@ -4685,15 +4473,15 @@ policies:
       custom: false
       max_length: 79
       allow_long_url_lines: true
-      url_prefixes: *id030
+      url_prefixes: *id028
       allow_long_lines: true
-      long_lines_between: *id031
-      include_suffixes: *id032
-      exclude_prefixes: *id033
-      exclude_globs: *id034
-      include_globs: *id035
-      selector_roles: *id036
-      url_globs: *id037
+      long_lines_between: *id029
+      include_suffixes: *id030
+      exclude_prefixes: *id031
+      exclude_globs: *id032
+      include_globs: *id033
+      selector_roles: *id034
+      url_globs: *id035
     assets:
     - '**/*.egg-info/**'
     - '*.egg-info/**'
@@ -5062,15 +4850,15 @@ policies:
       enabled: true
       custom: false
       expected_paths: .venv
-      expected_interpreters: &id038
+      expected_interpreters: &id036
       - .venv/bin/python
       - .venv/Scripts/python.exe
       cleanup_protected_paths: ''
       required_commands: python3
-      manual_commands: &id039
+      manual_commands: &id037
       - python3 -m venv .venv
       - '{managed_python} -m pip install -r requirements.lock'
-      managed_commands: &id040
+      managed_commands: &id038
       - start=>python3 -m venv .venv
       - start=>{managed_python} -m pip install -r requirements.lock
     runtime_config_overrides: {}
@@ -5082,10 +4870,10 @@ policies:
       enabled: true
       custom: false
       expected_paths: .venv
-      expected_interpreters: *id038
+      expected_interpreters: *id036
       required_commands: python3
-      manual_commands: *id039
-      managed_commands: *id040
+      manual_commands: *id037
+      managed_commands: *id038
     assets:
     - .venv/Scripts/python.exe
     - .venv/bin/python
@@ -5103,7 +4891,7 @@ policies:
       selected source roots. The policy enforces structural source-to-test
       alignment and rejects stale mirrored tests. Placeholder tests are not
       allowed. Python test files must use unittest.TestCase-style definitions;
-      pytest still runs as an execution layer.
+      workflow execution runs the declared unittest command directly.
     metadata:
       id: modules-need-tests
       severity: error
@@ -5445,7 +5233,7 @@ policies:
       custom: false
       include_suffixes: .py
       include_prefixes: ''
-      exclude_prefixes: &id041
+      exclude_prefixes: &id039
       - build
       - dist
       - node_modules
@@ -5459,7 +5247,7 @@ policies:
       watch_dirs: tests
       tests_watch_dirs: tests
       mirror_roots: devcovenant=>tests/devcovenant
-      mirror_test_name_templates: &id044
+      mirror_test_name_templates: &id042
       - python=>test_{stem}.py
       - python=>{stem}_test.py
       test_style_requirements: python=>python_unittest
@@ -5468,11 +5256,11 @@ policies:
       force_include_globs: ''
       watch_files: ''
       placeholder_test_methods: test_placeholder
-      placeholder_text_markers: &id045
+      placeholder_text_markers: &id043
       - placeholder-marker-alpha
       - placeholder-marker-beta
       - placeholder-marker-gamma
-      selector_roles: &id046
+      selector_roles: &id044
       - include
       - exclude
       - watch
@@ -5488,9 +5276,9 @@ policies:
       force_include_files: ''
       force_include_dirs: ''
     runtime_config_overrides:
-      exclude_globs: &id042
+      exclude_globs: &id040
       - devcovenant/builtin/profiles/**/assets/**
-      mirror_roots: &id043
+      mirror_roots: &id041
       - devcovenant=>tests/devcovenant
     runtime_effective_options:
       id: modules-need-tests
@@ -5500,17 +5288,17 @@ policies:
       enabled: true
       custom: false
       include_suffixes: .py
-      exclude_prefixes: *id041
-      exclude_globs: *id042
+      exclude_prefixes: *id039
+      exclude_globs: *id040
       watch_dirs: tests
       tests_watch_dirs: tests
-      mirror_roots: *id043
-      mirror_test_name_templates: *id044
+      mirror_roots: *id041
+      mirror_test_name_templates: *id042
       test_style_requirements: python=>python_unittest
       include_globs: '*.py'
       placeholder_test_methods: test_placeholder
-      placeholder_text_markers: *id045
-      selector_roles: *id046
+      placeholder_text_markers: *id043
+      selector_roles: *id044
     assets:
     - build/**
     - devcovenant/builtin/profiles/**/assets/**
@@ -5520,7 +5308,7 @@ policies:
     - tests/**
     origin: builtin
     script_exists: true
-    hash: 8b8a3181f37bfcd4746342f3cc6d59bde0a5ca2fe5d92c68029c9fac16e5910f
+    hash: fe210048b02245eeadd63c9f4f17483d002f07c8d5c8fd5cc067cbf105acb1b3
     script_path: builtin/modules_need_tests.py
   name-clarity:
     enabled: true
@@ -5754,7 +5542,7 @@ policies:
       enforcement: active
       enabled: true
       custom: false
-      exclude_prefixes: &id047
+      exclude_prefixes: &id045
       - build
       - dist
       - node_modules
@@ -5762,12 +5550,12 @@ policies:
       include_prefixes: ''
       include_globs: '*.py'
       exclude_suffixes: ''
-      exclude_globs: &id048
+      exclude_globs: &id046
       - build/**
       - dist/**
       - node_modules/**
       force_include_globs: ''
-      selector_roles: &id049
+      selector_roles: &id047
       - exclude
       - include
       - force_include
@@ -5785,11 +5573,11 @@ policies:
       enforcement: active
       enabled: true
       custom: false
-      exclude_prefixes: *id047
+      exclude_prefixes: *id045
       include_suffixes: .py
       include_globs: '*.py'
-      exclude_globs: *id048
-      selector_roles: *id049
+      exclude_globs: *id046
+      selector_roles: *id047
     assets:
     - build/**
     - dist/**
@@ -6196,7 +5984,7 @@ policies:
       enforcement: active
       enabled: true
       custom: false
-      selector_roles: &id050
+      selector_roles: &id048
       - include
       - exclude
       - force_include
@@ -6204,12 +5992,12 @@ policies:
       allowed_file_dirs: ''
       include_suffixes: .py
       include_prefixes: ''
-      include_globs: &id051
+      include_globs: &id049
       - devcovenant/**/*.py
       - '*.py'
       exclude_suffixes: ''
       exclude_prefixes: ''
-      exclude_globs: &id052
+      exclude_globs: &id050
       - devcovenant/builtin/profiles/**/assets/**
       - tests/**
       force_include_globs: ''
@@ -6219,7 +6007,7 @@ policies:
       exclude_dirs: ''
       force_include_files: ''
       force_include_dirs: ''
-      sink_call_targets: &id053
+      sink_call_targets: &id051
       - python=>print
       - python=>builtins.print
       sink_attr_targets: ''
@@ -6235,11 +6023,11 @@ policies:
       enforcement: active
       enabled: true
       custom: false
-      selector_roles: *id050
+      selector_roles: *id048
       include_suffixes: .py
-      include_globs: *id051
-      exclude_globs: *id052
-      sink_call_targets: *id053
+      include_globs: *id049
+      exclude_globs: *id050
+      sink_call_targets: *id051
       allowed_file_globs: devcovenant/core/runtime/execution.py
       allow_waiver_comment: 'DEVCOV_ALLOW_OUTPUT:'
     assets:
@@ -6585,7 +6373,7 @@ policies:
       enforcement: active
       enabled: true
       custom: false
-      selector_roles: &id054
+      selector_roles: &id052
       - include
       - exclude
       - force_include
@@ -6593,11 +6381,11 @@ policies:
       include_prefixes: ''
       include_globs: '*.py'
       exclude_suffixes: ''
-      exclude_prefixes: &id055
+      exclude_prefixes: &id053
       - build
       - dist
       - node_modules
-      exclude_globs: &id056
+      exclude_globs: &id054
       - build/**
       - dist/**
       - node_modules/**
@@ -6622,11 +6410,11 @@ policies:
       enforcement: active
       enabled: true
       custom: false
-      selector_roles: *id054
+      selector_roles: *id052
       include_suffixes: .py
       include_globs: '*.py'
-      exclude_prefixes: *id055
-      exclude_globs: *id056
+      exclude_prefixes: *id053
+      exclude_globs: *id054
       forbid_bare_except: true
       forbid_raise_exception: true
       forbid_broad_exception_handlers: true
@@ -6886,7 +6674,7 @@ policies:
       enforcement: active
       enabled: false
       custom: false
-      include_suffixes: &id057
+      include_suffixes: &id055
       - .py
       - .pyi
       - .pyw
@@ -6902,11 +6690,11 @@ policies:
       - .swift
       - .php
       - .rb
-      selector_roles: &id058
+      selector_roles: &id056
       - include
       - exclude
       - force_include
-      include_globs: &id059
+      include_globs: &id057
       - '*.py'
       - '*.pyi'
       - '*.pyw'
@@ -6945,9 +6733,9 @@ policies:
       enforcement: active
       enabled: false
       custom: false
-      include_suffixes: *id057
-      selector_roles: *id058
-      include_globs: *id059
+      include_suffixes: *id055
+      selector_roles: *id056
+      include_globs: *id057
     assets: []
     origin: builtin
     script_exists: true
@@ -7147,7 +6935,7 @@ policies:
       exclude_prefixes: ''
       exclude_globs: ''
       force_include_globs: ''
-      selector_roles: &id060
+      selector_roles: &id058
       - include
       - exclude
       - force_include
@@ -7165,7 +6953,7 @@ policies:
       enforcement: active
       enabled: true
       custom: false
-      selector_roles: *id060
+      selector_roles: *id058
     assets: []
     origin: builtin
     script_exists: true
@@ -7486,7 +7274,7 @@ policies:
       enforcement: active
       enabled: true
       custom: false
-      exclude_globs: &id061
+      exclude_globs: &id059
       - tests/**
       - '**/tests/**'
       include_suffixes: .py
@@ -7495,7 +7283,7 @@ policies:
       exclude_suffixes: ''
       exclude_prefixes: ''
       force_include_globs: ''
-      selector_roles: &id062
+      selector_roles: &id060
       - exclude
       - include
       - force_include
@@ -7513,10 +7301,10 @@ policies:
       enforcement: active
       enabled: true
       custom: false
-      exclude_globs: *id061
+      exclude_globs: *id059
       include_suffixes: .py
       include_globs: '*.py'
-      selector_roles: *id062
+      selector_roles: *id060
     assets:
     - '**/tests/**'
     - tests/**
@@ -7942,17 +7730,17 @@ policies:
       enabled: true
       custom: false
       enforce_symbol_fidelity: true
-      symbol_kinds: &id063
+      symbol_kinds: &id061
       - function
       - class
       symbol_name_min_length: 3
       symbol_assertion_window: 2
       fixture_marker_pattern: \bDEVCOV_FIXTURE_OK:\s*(?P<reason>\S.*)
-      assertion_signal_patterns: &id064
+      assertion_signal_patterns: &id062
       - '*=>\bassert\b'
       - python=>\bassert\b
       - python=>\bself\.assert[A-Za-z_]*\s*\(
-      tautology_patterns: &id065
+      tautology_patterns: &id063
       - '*=>^\s*assert\s*\(\s*true\s*\)\s*;?\s*$'
       - '*=>^\s*assert\s+true\s*;?\s*$'
       - rust=>^\s*assert!\s*\(\s*true\s*\)\s*;?\s*$
@@ -7960,12 +7748,12 @@ policies:
       - python=>^\s*self\.assertTrue\s*\(\s*True\s*\)\s*$
       include_suffixes: .py
       include_prefixes: ''
-      exclude_prefixes: &id066
+      exclude_prefixes: &id064
       - build
       - dist
       - node_modules
       - tests
-      exclude_globs: &id067
+      exclude_globs: &id065
       - devcovenant/core/*.py
       - devcovenant/custom/policies/**/fixers/**
       - build/**
@@ -7978,7 +7766,7 @@ policies:
       exclude_suffixes: ''
       force_include_globs: ''
       watch_files: ''
-      selector_roles: &id068
+      selector_roles: &id066
       - include
       - exclude
       - watch
@@ -8003,19 +7791,19 @@ policies:
       enabled: true
       custom: false
       enforce_symbol_fidelity: true
-      symbol_kinds: *id063
+      symbol_kinds: *id061
       symbol_name_min_length: 3
       symbol_assertion_window: 2
       fixture_marker_pattern: \bDEVCOV_FIXTURE_OK:\s*(?P<reason>\S.*)
-      assertion_signal_patterns: *id064
-      tautology_patterns: *id065
+      assertion_signal_patterns: *id062
+      tautology_patterns: *id063
       include_suffixes: .py
-      exclude_prefixes: *id066
-      exclude_globs: *id067
+      exclude_prefixes: *id064
+      exclude_globs: *id065
       watch_dirs: tests
       tests_watch_dirs: tests
       include_globs: '*.py'
-      selector_roles: *id068
+      selector_roles: *id066
     assets:
     - build/**
     - devcovenant/core/*.py
@@ -8062,7 +7850,8 @@ policies:
       role_legality_schemes: package_manifest=>pep440
       target_role_files: docs=>README.md, docs=>AGENTS.md, docs=>CONTRIBUTING.md,
         docs=>SPEC.md, docs=>PLAN.md, changelog=>CHANGELOG.md, docs=>CHANGELOG.md,
-        docs=>PROFILE_MAP.md, docs=>POLICY_MAP.md, docs=>devcovenant/README.md, docs=>devcovenant/core/README.md,
+        docs=>PROFILE_MAP.md, docs=>POLICY_MAP.md, docs=>SECURITY.md, docs=>PRIVACY.md,
+        docs=>SUPPORT.md, docs=>devcovenant/README.md, docs=>devcovenant/core/README.md,
         docs=>devcovenant/custom/README.md, docs=>devcovenant/registry/README.md,
         docs=>devcovenant/builtin/policies/README.md, docs=>devcovenant/builtin/profiles/README.md,
         docs=>devcovenant/custom/policies/README.md, docs=>devcovenant/custom/profiles/README.md,
@@ -8201,6 +7990,9 @@ policies:
           - docs=>CHANGELOG.md
           - docs=>PROFILE_MAP.md
           - docs=>POLICY_MAP.md
+          - docs=>SECURITY.md
+          - docs=>PRIVACY.md
+          - docs=>SUPPORT.md
           - docs=>devcovenant/README.md
           - docs=>devcovenant/core/README.md
           - docs=>devcovenant/custom/README.md
@@ -8222,6 +8014,9 @@ policies:
           - docs=>CHANGELOG.md
           - docs=>PROFILE_MAP.md
           - docs=>POLICY_MAP.md
+          - docs=>SECURITY.md
+          - docs=>PRIVACY.md
+          - docs=>SUPPORT.md
           - docs=>devcovenant/README.md
           - docs=>devcovenant/core/README.md
           - docs=>devcovenant/custom/README.md
@@ -8243,6 +8038,9 @@ policies:
           - docs=>CHANGELOG.md
           - docs=>PROFILE_MAP.md
           - docs=>POLICY_MAP.md
+          - docs=>SECURITY.md
+          - docs=>PRIVACY.md
+          - docs=>SUPPORT.md
           - docs=>devcovenant/README.md
           - docs=>devcovenant/core/README.md
           - docs=>devcovenant/custom/README.md
@@ -8364,16 +8162,16 @@ policies:
       enabled: true
       custom: false
       version_file: devcovenant/VERSION
-      target_roles: &id069
+      target_roles: &id067
       - docs
       - changelog
       - package_manifest
-      role_extractors: &id070
+      role_extractors: &id068
       - docs=>project_version_line
       - changelog=>changelog_header_version
       - package_manifest=>manifest_project_version
       role_legality_schemes: package_manifest=>pep440
-      target_role_files: &id071
+      target_role_files: &id069
       - docs=>README.md
       - docs=>AGENTS.md
       - docs=>CONTRIBUTING.md
@@ -8383,6 +8181,9 @@ policies:
       - docs=>CHANGELOG.md
       - docs=>PROFILE_MAP.md
       - docs=>POLICY_MAP.md
+      - docs=>SECURITY.md
+      - docs=>PRIVACY.md
+      - docs=>SUPPORT.md
       - docs=>devcovenant/README.md
       - docs=>devcovenant/core/README.md
       - docs=>devcovenant/custom/README.md
@@ -8409,10 +8210,10 @@ policies:
       enabled: true
       custom: false
       version_file: devcovenant/VERSION
-      target_roles: *id069
-      role_extractors: *id070
+      target_roles: *id067
+      role_extractors: *id068
       role_legality_schemes: package_manifest=>pep440
-      target_role_files: *id071
+      target_role_files: *id069
       target_role_globs: docs=>devcovenant/docs/**/*.md
       target_role_dirs: docs=>devcovenant/docs
       changelog_file: CHANGELOG.md
@@ -8427,9 +8228,12 @@ policies:
     - docs=>CONTRIBUTING.md
     - docs=>PLAN.md
     - docs=>POLICY_MAP.md
+    - docs=>PRIVACY.md
     - docs=>PROFILE_MAP.md
     - docs=>README.md
+    - docs=>SECURITY.md
     - docs=>SPEC.md
+    - docs=>SUPPORT.md
     - docs=>devcovenant/README.md
     - docs=>devcovenant/builtin/policies/README.md
     - docs=>devcovenant/builtin/profiles/README.md
@@ -9101,11 +8905,11 @@ policies:
       dependency_files: ''
       dependency_globs: ''
       dependency_dirs: ''
-      dependency_roles: &id072
+      dependency_roles: &id070
       - intent
       - resolved
       - package_manifest
-      dependency_role_files: &id073
+      dependency_role_files: &id071
       - intent=>requirements.in
       - resolved=>requirements.lock
       - package_manifest=>pyproject.toml
@@ -9123,8 +8927,8 @@ policies:
       enforcement: active
       enabled: true
       custom: false
-      dependency_roles: *id072
-      dependency_role_files: *id073
+      dependency_roles: *id070
+      dependency_role_files: *id071
       third_party_file: licenses/THIRD_PARTY_LICENSES.md
       licenses_dir: licenses
       report_heading: '## License Report'
@@ -9779,10 +9583,6 @@ profiles:
         - .venv/Scripts/python.exe
         manual_commands:
         - python3 -m venv .venv
-    core_invariant_overlays:
-      devflow-run-gates:
-        skipped_globs:
-        - devcovenant/registry/runtime/**
     project-governance:
       changelog_file: CHANGELOG.md
       unversioned_label: Unversioned
@@ -10254,14 +10054,6 @@ profiles:
       line-length-limit:
         exclude_globs:
         - devcovenant/logs/**
-    core_invariant_overlays:
-      devcov-integrity-guard:
-        policy_definitions: AGENTS.md
-        registry_file: devcovenant/registry/registry.yaml
-        gate_status_file: devcovenant/registry/runtime/gate_status.json
-      devflow-run-gates:
-        gate_status_file: devcovenant/registry/runtime/gate_status.json
-        pre_commit_command: pre-commit run --all-files
     source: builtin
     path: devcovenant/builtin/profiles/global
     assets_available:
@@ -10271,8 +10063,11 @@ profiles:
     - devcovenant/builtin/profiles/global/assets/CONTRIBUTING.yaml
     - devcovenant/builtin/profiles/global/assets/LICENSE.yaml
     - devcovenant/builtin/profiles/global/assets/PLAN.yaml
+    - devcovenant/builtin/profiles/global/assets/PRIVACY.yaml
     - devcovenant/builtin/profiles/global/assets/README.yaml
+    - devcovenant/builtin/profiles/global/assets/SECURITY.yaml
     - devcovenant/builtin/profiles/global/assets/SPEC.yaml
+    - devcovenant/builtin/profiles/global/assets/SUPPORT.yaml
     - devcovenant/builtin/profiles/global/assets/ci.yml
     - devcovenant/builtin/profiles/global/assets/config.yaml
     - devcovenant/builtin/profiles/global/assets/devcovenant/README.yaml
@@ -12016,6 +11811,9 @@ profiles:
         - CHANGELOG.md
         - PROFILE_MAP.md
         - POLICY_MAP.md
+        - SECURITY.md
+        - PRIVACY.md
+        - SUPPORT.md
         - devcovenant/README.md
         - devcovenant/core/README.md
         - devcovenant/custom/README.md
@@ -12035,6 +11833,9 @@ profiles:
         - CHANGELOG.md
         - PROFILE_MAP.md
         - POLICY_MAP.md
+        - SECURITY.md
+        - PRIVACY.md
+        - SUPPORT.md
         - devcovenant/README.md
         - devcovenant/core/README.md
         - devcovenant/custom/README.md
@@ -12072,6 +11873,9 @@ profiles:
         - docs=>CHANGELOG.md
         - docs=>PROFILE_MAP.md
         - docs=>POLICY_MAP.md
+        - docs=>SECURITY.md
+        - docs=>PRIVACY.md
+        - docs=>SUPPORT.md
         - docs=>devcovenant/README.md
         - docs=>devcovenant/core/README.md
         - docs=>devcovenant/custom/README.md
@@ -12091,13 +11895,16 @@ profiles:
     project-governance:
       stage: stable
       maintenance_stance: active
-      compatibility_policy: breaking-allowed
+      compatibility_policy: forward-only
       versioning_mode: versioned
     source: custom
     path: devcovenant/custom/profiles/devcovrepo
     assets_available:
     - devcovenant/custom/profiles/devcovrepo/assets/POLICY_MAP.yaml
+    - devcovenant/custom/profiles/devcovrepo/assets/PRIVACY.yaml
     - devcovenant/custom/profiles/devcovrepo/assets/PROFILE_MAP.yaml
+    - devcovenant/custom/profiles/devcovrepo/assets/SECURITY.yaml
+    - devcovenant/custom/profiles/devcovrepo/assets/SUPPORT.yaml
     - devcovenant/custom/profiles/devcovrepo/assets/docs/README.md
     - devcovenant/custom/profiles/devcovrepo/assets/docs/config.md
     - devcovenant/custom/profiles/devcovrepo/assets/docs/installation.md
@@ -12215,7 +12022,6 @@ inventory:
     - devcovenant/builtin/profiles/global
     - devcovenant/builtin/profiles/global/assets
     - devcovenant/core
-    - devcovenant/core/contracts/invariants
     - devcovenant/logs
     - devcovenant/registry
     files:
@@ -12243,13 +12049,8 @@ inventory:
     - devcovenant/builtin/profiles/global/assets/gitignore.yaml
     - devcovenant/builtin/profiles/README.md
     - devcovenant/builtin/policies/README.md
-    - devcovenant/core/contracts/invariant.py
-    - devcovenant/core/contracts/invariants/devcov_integrity_guard.yaml
-    - devcovenant/core/contracts/invariants/devcov_structure_guard.yaml
-    - devcovenant/core/contracts/invariants/devflow_run_gates.yaml
     - devcovenant/core/lib/agents_blocks.py
     - devcovenant/core/services/asset_materialization.py
-    - devcovenant/core/services/core_invariants.py
     - devcovenant/core/services/integrity_validation.py
     - devcovenant/core/services/manifest_inventory.py
     - devcovenant/core/services/policy_registry.py
@@ -12272,6 +12073,33 @@ inventory:
     - SPEC.md
     - PLAN.md
     custom: []
+    available:
+    - AGENTS.md
+    - CHANGELOG.md
+    - CONTRIBUTING.md
+    - LICENSE
+    - PLAN.md
+    - POLICY_MAP.md
+    - PRIVACY.md
+    - PROFILE_MAP.md
+    - README.md
+    - SECURITY.md
+    - SPEC.md
+    - SUPPORT.md
+    - devcovenant/README.md
+    enabled:
+    - AGENTS.md
+    - README.md
+    - CONTRIBUTING.md
+    - SPEC.md
+    - PLAN.md
+    - CHANGELOG.md
+    - PROFILE_MAP.md
+    - POLICY_MAP.md
+    - SECURITY.md
+    - PRIVACY.md
+    - SUPPORT.md
+    - devcovenant/README.md
   custom:
     dirs:
     - devcovenant/custom

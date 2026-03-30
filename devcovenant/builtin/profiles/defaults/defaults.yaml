@@ -486,10 +486,6 @@ policy_overlays:
       - .venv/Scripts/python.exe
     manual_commands:
       - python3 -m venv .venv
-core_invariant_overlays:
-  devflow-run-gates:
-    skipped_globs:
-      - devcovenant/registry/runtime/**
 project-governance:
   changelog_file: CHANGELOG.md
   unversioned_label: Unversioned

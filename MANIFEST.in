@@ -6,7 +6,6 @@ include requirements.in
 include requirements.lock
 include devcovenant/README.md
 include devcovenant/VERSION
-recursive-include devcovenant/core/contracts/invariants *.yaml
 include devcovenant/logs/README.md
 recursive-include devcovenant/docs *
 include devcovenant/registry/README.md

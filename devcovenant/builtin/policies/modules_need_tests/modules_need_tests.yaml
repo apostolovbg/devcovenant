@@ -5,7 +5,7 @@ text: |
   selected source roots. The policy enforces structural source-to-test
   alignment and rejects stale mirrored tests. Placeholder tests are not
   allowed. Python test files must use unittest.TestCase-style definitions;
-  pytest still runs as an execution layer.
+  workflow execution runs the declared unittest command directly.
 metadata:
   id: modules-need-tests
   severity: error

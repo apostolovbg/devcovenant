@@ -146,9 +146,11 @@ doc_assets:
     - CHANGELOG.md
     - devcovenant/README.md
 
-  # Optional exclusion list for docs that still appear in `autogen`.
-  # Use this when you want the full default list to stay visible here but do
-  # not want one specific doc to be managed in this repo right now.
+  # Exclusion list applied after `autogen`.
+  # Select managed docs by target path here.
+  # Any matching descriptor supplied by the global profile or an active
+  # profile can be enabled.
+  # Active profiles override the global descriptor for the same target.
   user: []
 
 # ---------------------------------------------------------------------------
@@ -325,21 +327,27 @@ pre_commit:
   overrides: {}
 
 # ---------------------------------------------------------------------------
+# Integrity runtime contract
+# ---------------------------------------------------------------------------
+# Human-owned section.
+integrity:
+  # Human-owned keys.
+  # Directories whose changes require a fresh gate-status update.
+  watch_dirs: []
+
+  # Human-owned keys.
+  # Files whose changes require a fresh gate-status update.
+  watch_files: []
+
+# ---------------------------------------------------------------------------
 # Workflow runtime contract
 # ---------------------------------------------------------------------------
-# These are DevCovenant-owned workflow knobs, not policy toggles.
-# Keep them under the dedicated workflow contract instead of inventing a
-# separate invariant config section.
+# These are workflow contract knobs, not policy toggles.
 # Human-owned section.
 workflow:
   # Human-owned key.
   # Canonical command recorded by `gate --start` / `gate --end`.
   pre_commit_command: pre-commit run --all-files
-
-  # Paths ignored by the workflow-evidence invariant when deciding whether a
-  # closed session stayed fresh.
-  skipped_globs:
-    - devcovenant/registry/runtime/**
 
 # ---------------------------------------------------------------------------
 # Policy activation map (config activation authority for normal toggles)
@@ -373,7 +381,10 @@ policy_state:
 # `stage` must be listed in `allowed_stages`.
 # `maintenance_stance` must be listed in `allowed_maintenance_stances`.
 # `compatibility_policy` must be `backward-compatible`,
-# `breaking-allowed`, or `unspecified`.
+# `breaking-allowed`, `forward-only`, or `unspecified`.
+# - `backward-compatible` preserves the current public contract.
+# - `breaking-allowed` makes compatibility optional.
+# - `forward-only` rejects legacy compatibility fallbacks.
 # `versioning_mode` must be `versioned` or `unversioned`.
 # `codename` and `build_identity` are optional free-form strings.
 # `unversioned_label`, `unreleased_heading`, and `changelog_file` are

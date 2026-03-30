@@ -1,5 +1,5 @@
 # Builtin Profiles
-**Last Updated:** 2026-03-29
+**Last Updated:** 2026-03-30
 **Project Version:** 1.0.0
 
 ## Table of Contents
@@ -11,8 +11,7 @@
 - [Workflow](#workflow)
 
 ## Overview
-Builtin profiles are shipped under
-`devcovenant/builtin/profiles/<name>/`.
+Builtin profiles are shipped under `devcovenant/builtin/profiles/<name>/`.
 
 Profiles are metadata and asset providers. They do not activate policies.
 Policy activation authority is `config.policy_state`.
@@ -24,16 +23,17 @@ current profile inventory. For the active builtin/custom profile catalog, use
 Profiles may provide:
 - metadata overlays
 - selector metadata
+- workflow runs
 - asset templates
 - pre-commit hook fragments
+- CI fragments
 - translator declarations (language profiles only)
 
 Any active profile category may contribute metadata overlays, and language or
-stack profiles may declare workflow runs through
-`workflow_runs`.
+stack profiles may declare workflow runs through `workflow_runs`.
 
 ## Manifest Schema
-Each profile directory contains `<name>.yaml` manifest.
+Each profile directory contains a `<name>.yaml` manifest.
 Common keys include:
 - `profile`
 - `category`
@@ -44,9 +44,9 @@ Common keys include:
 - optional `ci_and_test_template` (global workflow template)
 - optional `ci_and_test` (workflow fragment overlay)
 - `policy_overlays`
-- optional `core_invariant_overlays`
 - `assets`
 - `pre_commit`
+- optional `workflow_runs`
 - optional `translators`
 
 Custom profiles with the same profile name override builtin profiles.
@@ -62,7 +62,7 @@ Declaration fields include:
 Translator entrypoint paths are validated as profile-contained paths.
 
 ## Asset Materialization Rules
-During deploy/upgrade/refresh:
+During deploy, upgrade, or refresh:
 - missing assets are created from templates
 - existing non-one-line files are preserved
 - managed blocks are refreshed where document contracts require it
@@ -74,12 +74,11 @@ manifest fragments and config overlays; profiles do not ship `.gitignore`
 asset files.
 Global template source:
 `devcovenant/builtin/profiles/global/assets/gitignore.yaml`.
-`.github/workflows/ci.yml` is generated from the global
-workflow template plus active-profile governance fragments and config
-overlays/overrides.
+`.github/workflows/ci.yml` is generated from the global workflow template plus
+active-profile governance fragments and config overlays/overrides.
 
 ## Workflow
-1. Edit profile manifest and assets.
+1. Edit the profile manifest and assets.
 2. Run `devcovenant refresh`.
 3. Run `devcovenant gate --start`.
 4. Run `devcovenant gate --mid` until clean.

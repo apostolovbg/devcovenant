@@ -25,8 +25,6 @@ BLOCK_BEGIN = "<!-- DEVCOV:BEGIN -->"
 BLOCK_END = "<!-- DEVCOV:END -->"
 WORKFLOW_BEGIN = "<!-- DEVCOV-WORKFLOW:BEGIN -->"
 WORKFLOW_END = "<!-- DEVCOV-WORKFLOW:END -->"
-CORE_INVARIANTS_BEGIN = agents_blocks_lib.CORE_INVARIANTS_BEGIN
-CORE_INVARIANTS_END = agents_blocks_lib.CORE_INVARIANTS_END
 POLICIES_BEGIN = agents_blocks_lib.POLICIES_BEGIN
 POLICIES_END = agents_blocks_lib.POLICIES_END
 USER_PRESERVE_BEGIN = "<!-- DEVCOV-USER-PRESERVE:BEGIN -->"
@@ -38,7 +36,6 @@ PROJECT_STAGE_LABEL = "**Project Stage:**"
 MAINTENANCE_STANCE_LABEL = "**Maintenance Stance:**"
 COMPATIBILITY_POLICY_LABEL = "**Compatibility Policy:**"
 VERSIONING_MODE_LABEL = "**Versioning Mode:**"
-LEGACY_DEVELOPMENT_STANCE_LABEL = "**Development Stance:**"
 PROJECT_CODENAME_LABEL = "**Project Codename:**"
 BUILD_IDENTITY_LABEL = "**Build Identity:**"
 LAST_UPDATED_LABEL = "**Last Updated:**"
@@ -56,7 +53,6 @@ _MANAGED_DOC_DESCRIPTOR_KEYS = frozenset(
         "project_governance_headers",
         "import_seed",
         "authoritative_source",
-        "legacy_generic_body_fingerprints",
         "managed_block",
         "body",
         "workflow_block",
@@ -79,13 +75,11 @@ _MANAGED_DOC_OPTIONAL_BOOLEAN_KEYS = (
     "import_seed",
     "authoritative_source",
 )
-_MANAGED_DOC_OPTIONAL_LIST_KEYS = ("legacy_generic_body_fingerprints",)
 _MANAGED_DOC_REQUIRED_BOOLEAN_KEYS = (
     "project_version",
     "last_updated",
     "devcovenant_version",
 )
-_SHA256_HEX_RE = re.compile(r"^[0-9a-f]{64}$")
 _SEMVER_COMPARE_RE = re.compile(
     r"^(?P<core>\d+(?:\.\d+){0,2})"
     r"(?:-(?P<prerelease>[0-9A-Za-z.-]+))?"
@@ -372,9 +366,6 @@ def validate_managed_doc_descriptor(
     for field_name in _MANAGED_DOC_OPTIONAL_BOOLEAN_KEYS:
         if field_name in descriptor:
             required_prefix.append(field_name)
-    for field_name in _MANAGED_DOC_OPTIONAL_LIST_KEYS:
-        if field_name in descriptor:
-            required_prefix.append(field_name)
     required_prefix.extend(["managed_block", "body"])
     if descriptor_keys[: len(required_prefix)] != required_prefix:
         raise ValueError(
@@ -444,26 +435,6 @@ def validate_managed_doc_descriptor(
                 f"`{descriptor_path_value}` field `{field_name}` must be "
                 "boolean."
             )
-    for field_name in _MANAGED_DOC_OPTIONAL_LIST_KEYS:
-        if field_name not in descriptor:
-            continue
-        raw_value = descriptor.get(field_name)
-        if not isinstance(raw_value, list):
-            raise ValueError(
-                "Managed doc descriptor "
-                f"`{descriptor_path_value}` field `{field_name}` must be "
-                "a list."
-            )
-        for item in raw_value:
-            if not isinstance(item, str) or not _SHA256_HEX_RE.fullmatch(
-                item.strip()
-            ):
-                raise ValueError(
-                    "Managed doc descriptor "
-                    f"`{descriptor_path_value}` field `{field_name}` must "
-                    "contain SHA256 hex strings only."
-                )
-
     if descriptor.get("devcovenant_version") is not True:
         raise ValueError(
             "Managed doc descriptor "
@@ -556,21 +527,6 @@ def descriptor_is_authoritative_source(
     return descriptor_optional_bool(descriptor, "authoritative_source")
 
 
-def descriptor_legacy_generic_body_fingerprints(
-    descriptor: dict[str, object],
-) -> tuple[str, ...]:
-    """Return exact replaceable legacy generic body fingerprints."""
-    raw_value = descriptor.get("legacy_generic_body_fingerprints")
-    if raw_value is None:
-        return ()
-    if not isinstance(raw_value, list):
-        raise ValueError(
-            "Managed doc descriptor field "
-            "`legacy_generic_body_fingerprints` must be a list."
-        )
-    return tuple(str(item).strip() for item in raw_value if str(item).strip())
-
-
 def _managed_doc_descriptor_entries_from_root(
     assets_root: Path,
 ) -> list[dict[str, object]]:
@@ -609,19 +565,11 @@ def _managed_doc_descriptor_entries_from_root(
 def managed_doc_descriptor_entries_from_roots(
     assets_roots: list[Path],
 ) -> list[dict[str, object]]:
-    """Return validated managed-doc descriptors across descriptor roots."""
+    """Return winning managed-doc descriptors by precedence-ordered root."""
     discovered: dict[str, dict[str, object]] = {}
     for assets_root in assets_roots:
         for entry in _managed_doc_descriptor_entries_from_root(assets_root):
             doc_name = str(entry["doc"])
-            if doc_name in discovered:
-                existing = Path(str(discovered[doc_name]["descriptor_path"]))
-                incoming = Path(str(entry["descriptor_path"]))
-                raise ValueError(
-                    "Duplicate managed doc descriptor target "
-                    f"`{doc_name}` declared in `{existing}` and "
-                    f"`{incoming}`."
-                )
             discovered[doc_name] = entry
     return [discovered[key] for key in sorted(discovered)]
 
@@ -718,9 +666,6 @@ def managed_docs_registry_payload(
                 descriptor
             ),
             "body_fingerprint": descriptor_body_fingerprint(descriptor),
-            "legacy_generic_body_fingerprints": list(
-                descriptor_legacy_generic_body_fingerprints(descriptor)
-            ),
         }
     return {
         "descriptor_roots": descriptor_roots,
@@ -1074,7 +1019,6 @@ def render_doc_from_descriptor(
     if project_governance_section:
         parts.append(project_governance_section)
     if doc_name == "AGENTS.md":
-        parts.append(f"{CORE_INVARIANTS_BEGIN}\n{CORE_INVARIANTS_END}")
         parts.append(f"{POLICIES_BEGIN}\n{POLICIES_END}")
     if not parts:
         raise ValueError(
@@ -1126,17 +1070,6 @@ def doc_body_text(text: str) -> str:
     return normalize_body_text(body)
 
 
-def matches_legacy_generic_body(
-    current: str,
-    descriptor: dict[str, object],
-) -> bool:
-    """Return True when current doc body matches a known generic scaffold."""
-    fingerprints = descriptor_legacy_generic_body_fingerprints(descriptor)
-    if not fingerprints:
-        return False
-    return body_fingerprint(doc_body_text(current)) in set(fingerprints)
-
-
 def extract_managed_block(text: str) -> str | None:
     """Extract the first managed block from text."""
     spans = managed_block_spans(text)
@@ -1181,7 +1114,6 @@ def generated_header_text(rendered: str) -> str:
         "**project stage:**",
         "**maintenance stance:**",
         "**compatibility policy:**",
-        "**development stance:**",
         "**versioning mode:**",
         "**project codename:**",
         "**build identity:**",
@@ -1264,7 +1196,6 @@ def descriptor_contains_generated_headers(
             PROJECT_STAGE_LABEL,
             MAINTENANCE_STANCE_LABEL,
             COMPATIBILITY_POLICY_LABEL,
-            LEGACY_DEVELOPMENT_STANCE_LABEL,
             VERSIONING_MODE_LABEL,
             PROJECT_CODENAME_LABEL,
             BUILD_IDENTITY_LABEL,
@@ -1462,9 +1393,6 @@ def strip_existing_generated_headers(current: str) -> str:
         if token.startswith("**compatibility policy:**"):
             index += 1
             continue
-        if token.startswith("**development stance:**"):
-            index += 1
-            continue
         if token.startswith("**versioning mode:**"):
             index += 1
             continue
@@ -1532,14 +1460,6 @@ def next_control_block_start(text: str, search_start: int) -> int:
     workflow_spans = block_spans(text, WORKFLOW_BEGIN, WORKFLOW_END)
     if workflow_spans:
         starts.append(workflow_spans[0][0])
-
-    core_invariant_start = first_marker_start(
-        text,
-        CORE_INVARIANTS_BEGIN,
-        search_start,
-    )
-    if core_invariant_start >= 0:
-        starts.append(core_invariant_start)
 
     policy_start = first_marker_start(text, POLICIES_BEGIN, search_start)
     if policy_start >= 0:
@@ -1617,23 +1537,6 @@ def sync_agents_content(
         begin_marker=WORKFLOW_BEGIN,
         end_marker=WORKFLOW_END,
     )
-
-    current_core_invariant_block = first_block_text(
-        current,
-        CORE_INVARIANTS_BEGIN,
-        CORE_INVARIANTS_END,
-    )
-    template_core_invariant_block = first_block_text(
-        updated,
-        CORE_INVARIANTS_BEGIN,
-        CORE_INVARIANTS_END,
-    )
-    if current_core_invariant_block and template_core_invariant_block:
-        updated = updated.replace(
-            template_core_invariant_block,
-            current_core_invariant_block,
-            1,
-        )
 
     current_policy_block = first_block_text(
         current,
@@ -1785,7 +1688,6 @@ def extract_doc_info(doc_path: Path) -> dict[str, object]:
             PROJECT_STAGE_LABEL,
             MAINTENANCE_STANCE_LABEL,
             COMPATIBILITY_POLICY_LABEL,
-            LEGACY_DEVELOPMENT_STANCE_LABEL,
             VERSIONING_MODE_LABEL,
             PROJECT_CODENAME_LABEL,
             BUILD_IDENTITY_LABEL,
@@ -1867,9 +1769,6 @@ def sync_doc(
     current = target.read_text(encoding="utf-8")
     validate_preserve_markers(current, doc_name=doc_name)
     if doc_is_placeholder(current):
-        target.write_text(rendered, encoding="utf-8")
-        return True
-    if matches_legacy_generic_body(current, descriptor):
         target.write_text(rendered, encoding="utf-8")
         return True
 

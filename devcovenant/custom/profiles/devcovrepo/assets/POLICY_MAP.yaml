@@ -15,43 +15,33 @@ body: |-
   ## Table of Contents
   1. [Purpose](#purpose)
   2. [Global Rules](#global-rules)
-  3. [Core Invariants](#core-invariants)
-  4. [Builtin Policies](#builtin-policies)
-  5. [Custom Policies](#custom-policies)
-  6. [Language-Aware Policies](#language-aware-policies)
-  7. [Metadata Families](#metadata-families)
+  3. [Builtin Policies](#builtin-policies)
+  4. [Custom Policies](#custom-policies)
+  5. [Language-Aware Policies](#language-aware-policies)
+  6. [Metadata Families](#metadata-families)
 
   ## Purpose
   This map documents shipped policy contracts and ownership for 1.0.0.
 
   ## Global Rules
   - Policy activation authority is `config.policy_state` only.
-  - DevCovenant-owned runtime invariants surface separately through
-    dedicated config sections such as `paths.*` and `workflow.*`, AGENTS
-    core-invariant block rendering, and the
-    tracked registry `core-invariants` section.
   - Policy descriptors are the canonical prose and metadata defaults.
   - AGENTS policy block is compiled from resolved metadata and parsed at
     runtime.
   - Local registry stores synchronized hash and metadata diagnostics.
   - Same-id custom policy overrides same-id builtin policy.
-
-  ## Core Invariants
-  - `devcov-integrity-guard`: validates descriptor/registry/runtime
-    consistency as a first-class DevCovenant runtime invariant.
-  - `devcov-structure-guard`: enforces required DevCovenant runtime shape and
-    repo-local bytecode hygiene where configured.
-  - `devflow-run-gates`: enforces
-    `gate --start -> gate --mid -> run -> gate --end` evidence and validates
-    workflow/pre-commit execution records.
+  - Engine-owned runtime checks such as workflow validation, integrity
+    validation, and structure validation are documented in
+    `devcovenant/docs/workflow.md` and `devcovenant/docs/architecture.md`,
+    not in this policy inventory.
 
   ## Builtin Policies
   - `changelog-coverage`: requires one fresh top changelog entry per work
     session, with Change/Why/Impact summary lines and file list coverage;
-    DEVCOV managed-block-only edits are excluded for any file, and doc
-    header-only edits are excluded when they touch only configured header keys
-    inside the configured top-of-file header scan window. Generated governance
-    targets (`.gitignore`, `.pre-commit-config.yaml`,
+    DEVCOV managed-block-only edits are excluded for any file, and
+    doc header-only edits are excluded when they touch only configured header
+    keys inside the configured top-of-file header scan window. Generated
+    governance targets (`.gitignore`, `.pre-commit-config.yaml`,
     `.github/workflows/ci.yml`) are excluded by default.
   - `dependency-management`: requires lock/dependency changes to stay aligned
     with `THIRD_PARTY_LICENSES.md` and `licenses/` artifacts (including
@@ -62,8 +52,8 @@ body: |-
     in-scope source files.
   - `documentation-growth-tracking`: enforces docs-update expectations and
     quality gates for user-facing changes.
-  - `last-updated`: enforces top-level `Last Updated` placement and updates
-    date values for managed docs.
+  - `last-updated`: enforces top-level `Last Updated` placement and
+    updates date values for managed docs.
   - `line-length-limit`: warns when in-scope files exceed configured line
     limit.
   - `no-raw-errors`: blocks raw Python error anti-patterns (bare `except`,
@@ -112,15 +102,15 @@ body: |-
   Selectors:
   - `include_*`, `exclude_*`, `force_include_*`, `selector_roles`
 
-  Gate/session:
+  Workflow/session:
   - `gate_status_file`, `workflow_session_file`, pre-commit command/epoch
     keys
-  - workflow/runtime invariant knobs live under `paths.*` and `workflow.*`,
-    not `policy_state`
+  - workflow/runtime path and command knobs live in ordinary config sections
+    such as `paths.*` and `workflow.*`, not `policy_state`
 
   Runtime note:
   - workflow runs are resolved from tracked `workflow_contract`
-    data, not from ad hoc invariant command lists.
+    data, not from ad hoc command lists.
   - `run_events` payloads are runtime-owned workflow-run event metadata
     from profiles and are not policy descriptor metadata keys.
 

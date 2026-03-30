@@ -9,6 +9,7 @@ from typing import Any, Dict, List, Optional, Set
 import yaml
 
 import devcovenant.core.flow.policy_check_context as policy_check_context
+import devcovenant.core.flow.workflow_validation as workflow_validation
 import devcovenant.core.runtime.policy_reporting as policy_reporting
 import devcovenant.core.runtime.policy_runtime_actions as runtime_actions
 import devcovenant.core.services.policy_autofix as policy_autofix
@@ -22,10 +23,9 @@ from devcovenant.core.contracts.policy import (
     Violation,
 )
 from devcovenant.core.runtime.execution import get_output_mode, runtime_print
-from devcovenant.core.services import (
-    core_invariants as core_invariants_service,
-)
+from devcovenant.core.services import integrity_validation
 from devcovenant.core.services import metadata as metadata_runtime
+from devcovenant.core.services import structure_validation
 from devcovenant.core.services import yaml_cache as yaml_cache_service
 from devcovenant.core.services.manifest_inventory import ensure_manifest
 from devcovenant.core.services.policy_parse import (
@@ -364,18 +364,21 @@ class DevCovenantEngine:
         *,
         context: CheckContext,
     ) -> List[Violation]:
-        """Run invariant and policy checks for one resolved context."""
+        """Run built-in checks and policy checks for one resolved context."""
         self._reset_check_counts()
-        invariant_violations, invariant_passed, invariant_failed = (
-            core_invariants_service.run_core_invariant_checks(
-                self.repo_root,
-                context=context,
-                config_payload=self.config,
-            )
-        )
-        self.passed_count += invariant_passed
-        self.failed_count += invariant_failed
-        violations = list(invariant_violations)
+        built_in_violations: List[Violation] = []
+        for check_fn in (
+            integrity_validation.check_integrity,
+            structure_validation.check_structure,
+            workflow_validation.check_workflow_contract,
+        ):
+            current = list(check_fn(context))
+            built_in_violations.extend(current)
+            if current:
+                self.failed_count += 1
+            else:
+                self.passed_count += 1
+        violations = list(built_in_violations)
         violations.extend(self.run_policy_checks(policies, context))
         return violations
 

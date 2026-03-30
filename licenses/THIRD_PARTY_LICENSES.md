@@ -4,8 +4,7 @@ This report lists direct third-party dependencies declared in dependency
 manifests and the corresponding license texts stored under `licenses/`.
 
 ## License Report
-- `devcovenant/builtin/profiles/python/assets/pyproject.toml`
-- `requirements.lock`
+- `pyproject.toml`
 
 ## Dependency License Inventory
 - `packaging==26.0`: `licenses/packaging-26.0.txt`

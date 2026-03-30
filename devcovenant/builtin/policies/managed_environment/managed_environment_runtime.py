@@ -236,7 +236,7 @@ def _select_managed_environment(
     expected_interpreters: list[Path],
     expected_paths: list[Path],
 ) -> tuple[Path | None, Path | None]:
-    """Prefer the current matching interpreter, then fall back to detection."""
+    """Prefer the current matching interpreter, then inspect targets."""
     current_python, current_root = _matches_expected_interpreter(
         Path(sys.executable),
         expected_interpreters,

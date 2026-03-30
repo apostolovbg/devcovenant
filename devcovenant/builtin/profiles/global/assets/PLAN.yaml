@@ -8,8 +8,6 @@ devcovenant_version: true
 project_governance_headers: true
 import_seed: true
 authoritative_source: true
-legacy_generic_body_fingerprints:
-  - 9ca5f866398d1715312b39720b0c163674ce8b6e2562201f3eacf5cc140fc894
 managed_block: |-
   This opening section is managed by DevCovenant.
   Use `PLAN.md` to track active implementation work below this block.

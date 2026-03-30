@@ -4,132 +4,131 @@
 
 ## Overview
 This document is the contract map for the DevCovenant package docs.
-Use it when you need to answer two questions cleanly:
+Use it to answer two questions:
 
 1. what kind of contract am I looking at?
 2. which document owns the explanation for that contract?
 
+DevCovenant works best when ownership stays explicit.
+The package docs should not all try to be the same master document.
+Each page should own one surface clearly and point to the next page when the
+subject crosses a boundary.
+The goal is one stable map of ownership and vocabulary.
 The goal is not to turn every package doc into a competing master index.
-The goal is to keep one stable map of ownership and vocabulary so the rest of
-package documentation can stay readable.
 
 ## Contract Kinds
-DevCovenant has four distinct contract kinds.
-Keeping them separate is the key to understanding how the runtime fits
-together.
+DevCovenant has five practical contract kinds.
+Keeping them separate is the easiest way to understand the runtime.
 
-### 1. Core Invariants
-Core invariants are DevCovenant-owned runtime boundaries.
-They are not repository policies.
-They are always enforced, always critical, and not repository-toggle surfaces.
+### 1. Project Governance
+`project-governance` is the repository's public identity and lifecycle stance.
+It answers questions such as:
 
-Examples include:
-
-- repository structure requirements
-- descriptor and registry integrity requirements
-- gate and workflow evidence requirements
-
-Core invariants may still have invariant-specific runtime knobs, but those
-knobs live in dedicated config sections such as `paths.*` and `workflow.*`.
-They do not live in `policy_state`, and they do not use their own policy
-activation/config section.
+- what is this project called?
+- what stage is it in?
+- what compatibility promise does it make?
+- is it versioned or unversioned?
 
 Canonical docs:
 
-- `devcovenant/docs/architecture.md`
+- `devcovenant/docs/project_governance.md`
+- `devcovenant/docs/config.md`
+
+### 2. Workflow Contract
+The workflow contract is the non-optional gate/run sequence plus the declared
+workflow runs that live between `mid` and `end`.
+It covers:
+
+- `gate --start`, `gate --mid`, `run`, `gate --end`
+- reserved anchors `start`, `mid`, `end`
+- run ordering via `after`, `before`, and `order`
+- workflow freshness and evidence rules
+- CI mapping for the generated workflow surface
+
+Canonical docs:
+
 - `devcovenant/docs/workflow.md`
 - `devcovenant/docs/config.md`
 - `devcovenant/docs/registry.md`
 
-### 2. Runtime And Workflow Plugs
-Some behavior plugs directly into command execution rather than merely
-checking repository state after the fact.
-This is the most execution-sensitive integration pattern in the system.
-
-Examples include:
-
-- the managed-environment runtime choosing or preparing the interpreter
-- the workflow invariant enforcing gate and run evidence ordering
-
-These plugs affect how `gate` and `run` execute, which environment they use,
-and which evidence must exist for the session to close.
-
-Canonical docs:
-
-- `devcovenant/docs/workflow.md`
-- `devcovenant/docs/architecture.md`
-
-### 3. Session-Evidence Policies
-Some policies depend on gate-session state or workflow-session evidence.
-They are still customizable policies, but their truth depends on the active
-session, not only on a static file scan.
-
-The clearest example is `changelog-coverage`, which compares the live session
-against the gate-start snapshot instead of pretending git history alone owns
-the contract.
-
-Canonical docs:
-
-- `devcovenant/docs/policies.md`
-- `devcovenant/docs/workflow.md`
-
-### 4. Artifact-Contract Policies
-Most policies are artifact-contract policies.
-They require files, companion artifacts, or synchronized state to exist and
-stay aligned.
-
-Examples include:
-
-- `modules-need-tests`
-- `tests-coverage`
-- `dependency-management`
-- `documentation-growth-tracking`
-- `version-sync`
-- `version-governance` when enabled
-
-These policies do not plug into the executor itself.
-They are enforced by the governed check flow.
-If the required files or synchronized artifacts are missing or stale, the gate
-fails until the repository state is corrected.
+### 3. Configurable Policies
+Policies are the repository-facing enforcement units.
+They are enabled or disabled through `policy_state` and then tuned through
+profile metadata and config overrides.
+They cover things like changelog coverage, dependency management, test
+structure, docs growth, and version synchronization.
 
 Canonical docs:
 
 - `devcovenant/docs/policies.md`
 - `devcovenant/docs/config.md`
 
+### 4. Profiles, Assets, And Translators
+Profiles describe reusable repository shape.
+They contribute:
+
+- metadata overlays
+- workflow runs
+- managed assets
+- pre-commit fragments
+- CI fragments
+- translators
+
+Canonical docs:
+
+- `devcovenant/docs/profiles.md`
+- `devcovenant/docs/config.md`
+
+### 5. Generated And Runtime State
+DevCovenant writes both tracked and runtime-local state.
+That includes:
+
+- managed docs
+- tracked registry data
+- runtime session ledgers
+- run logs
+- generated workflow and ignore surfaces
+
+Canonical docs:
+
+- `devcovenant/docs/registry.md`
+- `devcovenant/docs/refresh.md`
+- `devcovenant/docs/workflow.md`
+
 ## Document Ownership Map
-The stable document ownership split is:
+Use the package docs like this:
 
 - `devcovenant/docs/installation.md`
-  installation, deploy, upgrade, uninstall, and first-review flow
+  install, deploy, upgrade, uninstall, and first-review flow
 
 - `devcovenant/docs/workflow.md`
-  gate sequence, workflow evidence, CI shape, and execution-time plugs
+  gate sequence, declared runs, evidence files, and CI mapping
 
 - `devcovenant/docs/config.md`
   public `devcovenant/config.yaml` contract and ownership model
 
 - `devcovenant/docs/policies.md`
-  customizable policy model, runtime actions, and artifact/session policy
-  boundaries
+  configurable policies, runtime actions, and policy commands
+
+- `devcovenant/docs/profiles.md`
+  profiles, assets, translators, workflow runs, and CI fragments
 
 - `devcovenant/docs/project_governance.md`
-  repository lifecycle and compatibility metadata
+  repository identity, maturity, compatibility, and versioning stance
 
 - `devcovenant/docs/registry.md`
-  tracked registry structure, runtime ledgers, and invariant/policy registry
-  state
+  tracked registry structure, runtime ledgers, and generated state
 
 - `devcovenant/docs/refresh.md`
   managed-doc refresh and descriptor-driven materialization
 
 - `devcovenant/docs/architecture.md`
-  runtime layer ownership and invariant-versus-policy architecture
+  internal layer ownership and runtime composition
 
 ## Writing Rule
 When behavior changes, update the owning contract page first.
-Then update summaries, templates, maps, or supporting docs that point back to
-that page.
+Then update summaries, templates, maps, and supporting docs that point back
+to that page.
 
-That keeps the package docs honest without forcing every document to explain
-every other document's job.
+That keeps the package docs honest without turning every page into a dump of
+every other page.

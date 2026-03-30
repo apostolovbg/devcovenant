@@ -1,4 +1,4 @@
-"""AGENTS managed-block rendering and refresh helpers."""
+"""AGENTS policy-block rendering and refresh helpers."""
 
 from __future__ import annotations
 
@@ -18,8 +18,6 @@ from devcovenant.core.services.policy_registry import (
 )
 from devcovenant.core.services.tracked_registry import policy_registry_path
 
-CORE_INVARIANTS_BEGIN = "<!-- DEVCOV-INVARIANTS:BEGIN -->"
-CORE_INVARIANTS_END = "<!-- DEVCOV-INVARIANTS:END -->"
 POLICIES_BEGIN = "<!-- DEVCOV-POLICIES:BEGIN -->"
 POLICIES_END = "<!-- DEVCOV-POLICIES:END -->"
 
@@ -33,23 +31,12 @@ class PolicyBlockRefreshResult:
     updated: bool
 
 
-@dataclass(frozen=True)
-class CoreInvariantBlockRefreshResult:
-    """Summary of core-invariant block refresh work."""
-
-    changed_invariants: Tuple[str, ...]
-    updated: bool
-
-
 @dataclass
 class _PolicyEntry:
     """Track a policy block's key attributes during refresh."""
 
     policy_id: str
     text: str
-    group: int
-    changed: bool
-    custom: bool
 
 
 def _read_yaml(path: Path) -> dict[str, object]:
@@ -84,26 +71,6 @@ def _locate_block(
     block_start = start
     block_end = end + len(end_marker)
     return block_start, block_end, text[block_start:block_end]
-
-
-def _ensure_core_invariant_block_scaffold(
-    agents_path: Path,
-    content: str,
-) -> tuple[str, bool]:
-    """Ensure AGENTS contains one empty core-invariant block scaffold."""
-    has_begin = CORE_INVARIANTS_BEGIN in content
-    has_end = CORE_INVARIANTS_END in content
-    if has_begin and has_end:
-        return content, False
-    scaffold = f"{CORE_INVARIANTS_BEGIN}\n{CORE_INVARIANTS_END}\n"
-    if POLICIES_BEGIN in content:
-        rebuilt = content.replace(
-            POLICIES_BEGIN, scaffold + "\n" + POLICIES_BEGIN, 1
-        )
-    else:
-        rebuilt = content.rstrip() + "\n\n" + scaffold
-    agents_path.write_text(rebuilt, encoding="utf-8")
-    return rebuilt, True
 
 
 def _ensure_policy_block_scaffold(
@@ -205,60 +172,6 @@ def _descriptor_text_or_error(
     )
 
 
-def render_core_invariants_block(registry_payload: dict[str, object]) -> str:
-    """Render the AGENTS core-invariants block from registry payload."""
-    if not isinstance(registry_payload, dict) or not registry_payload:
-        return ""
-    sections: list[str] = ["## DevCovenant Core Invariants"]
-    for invariant_id in sorted(registry_payload):
-        entry = registry_payload.get(invariant_id, {})
-        if not isinstance(entry, dict):
-            continue
-        sections.append("")
-        heading = (
-            str(entry.get("description", "")).strip()
-            or invariant_id.replace("-", " ").title()
-        )
-        sections.append(f"### {heading}")
-        sections.append("")
-        sections.append("```core-invariant-def")
-        sections.append(f"id: {invariant_id}")
-        metadata = entry.get("metadata", {})
-        if isinstance(metadata, dict):
-            for key, raw_value in metadata.items():
-                if str(key).strip() in {
-                    "id",
-                    "severity",
-                    "enforcement",
-                    "enabled",
-                    "custom",
-                    "auto_fix",
-                }:
-                    continue
-                if isinstance(raw_value, list):
-                    cleaned = [
-                        str(item).strip()
-                        for item in raw_value
-                        if str(item).strip()
-                    ]
-                    if not cleaned:
-                        sections.append(f"{key}:")
-                        continue
-                    sections.append(f"{key}: {cleaned[0]}")
-                    for item in cleaned[1:]:
-                        sections.append(f"  {item}")
-                    continue
-                token = str(raw_value).strip()
-                sections.append(f"{key}: {token}" if token else f"{key}:")
-        sections.append("```")
-        description = str(entry.get("invariant_text", "")).strip()
-        if description:
-            sections.append("")
-            sections.append(description)
-    body = "\n".join(sections).rstrip()
-    return f"{CORE_INVARIANTS_BEGIN}\n{body}\n{CORE_INVARIANTS_END}"
-
-
 def refresh_agents_policy_block(
     agents_path: Path,
     schema_path: Path | None,
@@ -273,7 +186,7 @@ def refresh_agents_policy_block(
     content = agents_path.read_text(encoding="utf-8")
     scaffolded = False
     try:
-        _, block_end, block_text = _locate_block(
+        _, block_end, _ = _locate_block(
             content,
             POLICIES_BEGIN,
             POLICIES_END,
@@ -283,7 +196,8 @@ def refresh_agents_policy_block(
         block_text = content[block_start : block_end - len(POLICIES_END)]
     except ValueError:
         content, scaffolded = _ensure_policy_block_scaffold(
-            agents_path, content
+            agents_path,
+            content,
         )
         try:
             _, block_end, _ = _locate_block(
@@ -339,18 +253,7 @@ def refresh_agents_policy_block(
             f"{heading}```policy-def\n{rendered}\n```\n\n{description}\n"
         )
         generated_sections[policy_id] = final_text
-        custom_flag = (
-            str(payload_entry.get("custom", False)).strip().lower() == "true"
-        )
-        entries.append(
-            _PolicyEntry(
-                policy_id=policy_id,
-                text=final_text,
-                group=0,
-                changed=False,
-                custom=custom_flag,
-            )
-        )
+        entries.append(_PolicyEntry(policy_id=policy_id, text=final_text))
 
     if not entries:
         return PolicyBlockRefreshResult((), tuple(skipped), scaffolded)
@@ -376,56 +279,7 @@ def refresh_agents_policy_block(
         }
     )
     return PolicyBlockRefreshResult(
-        tuple(changed), tuple(skipped), changed_file
+        tuple(changed),
+        tuple(skipped),
+        changed_file,
     )
-
-
-def refresh_agents_core_invariant_block(
-    agents_path: Path,
-    schema_path: Path | None,
-    *,
-    repo_root: Path | None = None,
-) -> CoreInvariantBlockRefreshResult:
-    """Refresh the AGENTS core-invariant block from registry data."""
-    del schema_path
-    if not agents_path.exists():
-        return CoreInvariantBlockRefreshResult((), False)
-    repo_root = repo_root or agents_path.parent
-    content = agents_path.read_text(encoding="utf-8")
-    scaffolded = False
-    try:
-        block_start, block_end, block_text = _locate_block(
-            content,
-            CORE_INVARIANTS_BEGIN,
-            CORE_INVARIANTS_END,
-            "Core-invariant",
-        )
-    except ValueError:
-        content, scaffolded = _ensure_core_invariant_block_scaffold(
-            agents_path, content
-        )
-        block_start, block_end, block_text = _locate_block(
-            content,
-            CORE_INVARIANTS_BEGIN,
-            CORE_INVARIANTS_END,
-            "Core-invariant",
-        )
-    registry_path = policy_registry_path(repo_root)
-    if not registry_path.exists():
-        return CoreInvariantBlockRefreshResult((), scaffolded)
-    payload = _read_yaml(registry_path)
-    invariants = payload.get("core-invariants", {})
-    if not isinstance(invariants, dict):
-        raise ValueError(
-            "Registry payload is invalid; expected "
-            f"`core-invariants` mapping in {registry_path}."
-        )
-    new_block = render_core_invariants_block(invariants)
-    if not new_block:
-        return CoreInvariantBlockRefreshResult((), scaffolded)
-    updated = new_block.strip() != block_text.strip()
-    if updated:
-        rebuilt = content[:block_start] + new_block + content[block_end:]
-        agents_path.write_text(rebuilt, encoding="utf-8")
-    changed_ids = tuple(sorted(invariants)) if updated or scaffolded else ()
-    return CoreInvariantBlockRefreshResult(changed_ids, updated or scaffolded)

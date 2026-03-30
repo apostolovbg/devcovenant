@@ -21,90 +21,6 @@ from tests.devcovenant import repo_seed_cache
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
 
-OLD_GENERIC_SPEC_BODY = """This is a generic SPEC guide template.
-
-Use `SPEC.md` only when your repository needs a durable specification layer.
-If your repo does not need one, keep this file brief and route details to
-your operational documentation.
-
-## Table of Contents
-1. [Overview](#overview)
-2. [When To Use SPEC](#when-to-use-spec)
-3. [Workflow](#workflow)
-4. [Ownership Boundaries](#ownership-boundaries)
-5. [Recommended Structure](#recommended-structure)
-6. [Maintenance Rules](#maintenance-rules)
-7. [Pointers](#pointers)
-
-## Overview
-`SPEC.md` is for durable repository-level contracts only.
-Do not use it as a backlog, scratchpad, or temporary planning area.
-
-## When To Use SPEC
-- Use SPEC when your repo needs a stable internal contract document.
-- Skip SPEC if AGENTS and operational docs already cover your needs.
-- Keep it small, explicit, and implementation-facing.
-
-## Workflow
-- Follow your repo's required gate workflow before and after edits.
-- Update SPEC only when durable contracts actually change.
-- Update operational docs in the same work slice when behavior changes.
-
-## Ownership Boundaries
-- `AGENTS.md`: workflow law, policy source, and temporary editable notes.
-- `PLAN.md`: active work backlog.
-- `docs/*`: operational and user-facing behavior guides.
-- `SPEC.md`: optional stable contract layer for this repository only.
-
-## Recommended Structure
-- Overview: what this repo treats as invariant.
-- Functional requirements: stable behavior contracts.
-- Non-functional requirements: quality, determinism, security baselines.
-- Pointers: links to detailed operational docs.
-
-If your repo needs architecture invariants, keep them in a dedicated
-architecture doc and keep SPEC at the meta-contract level.
-
-## Maintenance Rules
-- Prefer one-way pointers from SPEC to docs.
-- Do not make docs depend on SPEC to be understandable.
-- Keep SPEC synchronized with runtime reality.
-- Remove stale sections instead of keeping historical leftovers.
-- If your repo stops using SPEC, keep this file as a short usage note only.
-
-## Pointers
-Add pointers to the docs that hold your runtime and operational contracts.
-"""
-
-OLD_GENERIC_PLAN_BODY = (
-    "Use this plan to track active implementation work. Keep items\n"
-    "dependency-ordered, factual, and current.\n\n"
-    "## Table of Contents\n"
-    "1. [Overview](#overview)\n"
-    "2. [Workflow](#workflow)\n"
-    "3. [Active Work](#active-work)\n"
-    "4. [Validation Routine](#validation-routine)\n\n"
-    "## Overview\n"
-    "- Record durable requirements in `SPEC.md` when your repo uses SPEC.\n"
-    "- Record change history in `CHANGELOG.md`.\n"
-    "- Mark completed items as `[done]` and outstanding items as "
-    "`[not done]`.\n\n"
-    "## Workflow\n"
-    "- Work in dependency order unless an explicit blocker requires "
-    "reordering.\n"
-    "- Keep each item concrete and testable.\n"
-    "- Update status in the same session when work lands.\n\n"
-    "## Active Work\n"
-    "1. [not done] Item placeholder.\n"
-    "2. [not done] Item placeholder.\n"
-    "3. [done] Item placeholder.\n\n"
-    "## Validation Routine\n"
-    "- Verify checks and tests pass.\n"
-    "- Verify generated artifacts are synchronized after refresh.\n"
-    "- Verify documentation and changelog were updated where behavior "
-    "changed.\n"
-)
-
 
 def _unit_test_refresh_builds_tracked_registry_and_agents() -> None:
     """refresh_repo should build tracked registry content and render AGENTS."""
@@ -151,7 +67,7 @@ def _unit_test_refresh_builds_tracked_registry_and_agents() -> None:
         assert "managed-docs" in registry_payload
         spec_entry = registry_payload["managed-docs"]["descriptors"]["SPEC.md"]
         assert spec_entry["body_fingerprint"]
-        assert spec_entry["legacy_generic_body_fingerprints"]
+        assert "legacy_generic_body_fingerprints" not in spec_entry
         assert "project-governance" not in registry_payload["policies"]
 
 
@@ -426,76 +342,6 @@ def _unit_test_refresh_replaces_older_header_only_spec_doc() -> None:
         assert "## Acceptance Criteria" in updated
 
 
-def _unit_test_refresh_replaces_legacy_generic_spec_body() -> None:
-    """refresh_repo should replace exact legacy generic SPEC scaffolds."""
-    with tempfile.TemporaryDirectory() as temp_dir:
-        repo_root = Path(temp_dir)
-        repo_seed_cache.copy_refreshed_repo(repo_root)
-
-        spec_path = repo_root / "SPEC.md"
-        spec_path.write_text(
-            "# DevCovenant Specification\n"
-            "**Doc ID:** SPEC\n"
-            "**Doc Type:** specification\n"
-            "**Project Version:** 1.0.0\n"
-            "**Project Stage:** stable\n"
-            "**Maintenance Stance:** active\n"
-            "**Compatibility Policy:** breaking-allowed\n"
-            "**Versioning Mode:** versioned\n"
-            "**Last Updated:** 2026-01-01\n"
-            "**DevCovenant Version:** 1.0.0\n\n"
-            "<!-- DEVCOV:BEGIN -->\n"
-            "This opening section is managed by DevCovenant.\n"
-            "Use `SPEC.md` only for durable repository contracts below this "
-            "block.\n"
-            "<!-- DEVCOV:END -->\n\n" + OLD_GENERIC_SPEC_BODY,
-            encoding="utf-8",
-        )
-
-        result = refresh.refresh_repo(repo_root)
-        assert result == 0
-
-        updated = spec_path.read_text(encoding="utf-8")
-        assert "This is a generic SPEC guide template." not in updated
-        assert "## Project Intent" in updated
-        assert "## Acceptance Criteria" in updated
-
-
-def _unit_test_refresh_replaces_legacy_generic_plan_body() -> None:
-    """refresh_repo should replace exact legacy generic PLAN scaffolds."""
-    with tempfile.TemporaryDirectory() as temp_dir:
-        repo_root = Path(temp_dir)
-        repo_seed_cache.copy_refreshed_repo(repo_root)
-
-        plan_path = repo_root / "PLAN.md"
-        plan_path.write_text(
-            "# Development Plan\n"
-            "**Doc ID:** PLAN\n"
-            "**Doc Type:** plan\n"
-            "**Project Version:** 1.0.0\n"
-            "**Project Stage:** stable\n"
-            "**Maintenance Stance:** active\n"
-            "**Compatibility Policy:** breaking-allowed\n"
-            "**Versioning Mode:** versioned\n"
-            "**Last Updated:** 2026-01-01\n"
-            "**DevCovenant Version:** 1.0.0\n\n"
-            "<!-- DEVCOV:BEGIN -->\n"
-            "This opening section is managed by DevCovenant.\n"
-            "Use `PLAN.md` to track active implementation work below this "
-            "block.\n"
-            "<!-- DEVCOV:END -->\n\n" + OLD_GENERIC_PLAN_BODY,
-            encoding="utf-8",
-        )
-
-        result = refresh.refresh_repo(repo_root)
-        assert result == 0
-
-        updated = plan_path.read_text(encoding="utf-8")
-        assert "Item placeholder." not in updated
-        assert "## Writing Direction" in updated
-        assert "Completed item example." in updated
-
-
 def _unit_test_refresh_imports_same_version_managed_block_doc() -> None:
     """refresh_repo should adopt same-version managed-block docs."""
     with tempfile.TemporaryDirectory() as temp_dir:
@@ -633,6 +479,135 @@ def _unit_test_refresh_supports_custom_managed_docs() -> None:
         assert not (repo_root / "README.md").exists()
 
 
+def _unit_test_refresh_supports_custom_trust_docs() -> None:
+    """refresh_repo should let an active profile override a trust doc."""
+    with tempfile.TemporaryDirectory() as temp_dir:
+        repo_root = Path(temp_dir)
+        install.install_repo(repo_root)
+
+        profile_root = (
+            repo_root / "devcovenant" / "custom" / "profiles" / "trustdemo"
+        )
+        assets_root = profile_root / "assets"
+        assets_root.mkdir(parents=True, exist_ok=True)
+        (profile_root / "trustdemo.yaml").write_text(
+            yaml.safe_dump(
+                {
+                    "version": 1,
+                    "profile": "trustdemo",
+                    "category": "repo",
+                    "suffixes": [],
+                    "ignore_dirs": [],
+                },
+                sort_keys=False,
+            ),
+            encoding="utf-8",
+        )
+        (assets_root / "SECURITY.yaml").write_text(
+            "\n".join(
+                [
+                    "title: Security Policy",
+                    "target_path: SECURITY.md",
+                    "doc_id: SECURITY",
+                    "doc_type: security-policy",
+                    "project_version: true",
+                    "last_updated: true",
+                    "devcovenant_version: true",
+                    "project_governance_headers: false",
+                    "import_seed: true",
+                    "authoritative_source: true",
+                    "managed_block: |-",
+                    "  This opening section is managed by DevCovenant.",
+                    "body: |-",
+                    "  # Security Policy",
+                    "",
+                    "  ## Overview",
+                    "  Template security body.",
+                    "",
+                ]
+            ),
+            encoding="utf-8",
+        )
+
+        config_path = repo_root / "devcovenant" / "config.yaml"
+        payload = yaml.safe_load(config_path.read_text(encoding="utf-8"))
+        assert isinstance(payload, dict)
+        payload["profiles"] = {"active": ["trustdemo"]}
+        payload["doc_assets"] = {
+            "autogen": ["AGENTS.md", "SECURITY.md"],
+            "user": [],
+        }
+        config_path.write_text(
+            yaml.safe_dump(payload, sort_keys=False),
+            encoding="utf-8",
+        )
+
+        result = refresh.refresh_repo(repo_root)
+        assert result == 0
+
+        security = (repo_root / "SECURITY.md").read_text(encoding="utf-8")
+
+        assert "**Doc ID:** SECURITY" in security
+        assert "Template security body." in security
+        assert (
+            "Use this document for security reporting and disclosure notes."
+            not in security
+        )
+        assert "Project Stage" not in security
+        assert "Maintenance Stance" not in security
+        assert "Compatibility Policy" not in security
+        assert "Versioning Mode" not in security
+
+
+def _unit_test_refresh_supports_global_trust_docs() -> None:
+    """refresh_repo should render global trust-doc templates when enabled."""
+    with tempfile.TemporaryDirectory() as temp_dir:
+        repo_root = Path(temp_dir)
+        install.install_repo(repo_root)
+
+        config_path = repo_root / "devcovenant" / "config.yaml"
+        payload = yaml.safe_load(config_path.read_text(encoding="utf-8"))
+        assert isinstance(payload, dict)
+        payload["doc_assets"] = {
+            "autogen": [
+                "AGENTS.md",
+                "SECURITY.md",
+                "PRIVACY.md",
+                "SUPPORT.md",
+            ],
+            "user": [],
+        }
+        config_path.write_text(
+            yaml.safe_dump(payload, sort_keys=False),
+            encoding="utf-8",
+        )
+
+        result = refresh.refresh_repo(repo_root)
+        assert result == 0
+
+        security = (repo_root / "SECURITY.md").read_text(encoding="utf-8")
+        privacy = (repo_root / "PRIVACY.md").read_text(encoding="utf-8")
+        support = (repo_root / "SUPPORT.md").read_text(encoding="utf-8")
+
+        assert (
+            "Use this document for security reporting and disclosure notes."
+            in security
+        )
+        assert (
+            "Use this document for privacy and local data-handling notes."
+            in privacy
+        )
+        assert (
+            "Use this document for support and maintenance expectations."
+            in support
+        )
+        for rendered in (security, privacy, support):
+            assert "Project Stage" not in rendered
+            assert "Maintenance Stance" not in rendered
+            assert "Compatibility Policy" not in rendered
+            assert "Versioning Mode" not in rendered
+
+
 def _unit_test_refresh_updates_all_managed_blocks() -> None:
     """refresh_repo should normalize AGENTS managed/workflow/policy blocks."""
     with tempfile.TemporaryDirectory() as temp_dir:
@@ -740,8 +715,8 @@ def _unit_test_refresh_writes_clean_config_section() -> None:
         assert clean_block.get("overrides") == {}
 
 
-def _unit_test_refresh_moves_invariant_knobs_into_dedicated_sections() -> None:
-    """refresh_repo should render workflow/runtime knobs outside policies."""
+def _unit_test_refresh_renders_workflow_and_integrity_sections() -> None:
+    """refresh_repo should render workflow and integrity runtime sections."""
     with tempfile.TemporaryDirectory() as temp_dir:
         repo_root = Path(temp_dir)
         repo_seed_cache.copy_refreshed_repo(repo_root)
@@ -751,19 +726,18 @@ def _unit_test_refresh_moves_invariant_knobs_into_dedicated_sections() -> None:
 
         config_path = repo_root / "devcovenant" / "config.yaml"
         payload = yaml.safe_load(config_path.read_text(encoding="utf-8"))
-        assert "core_invariants" not in payload
+        assert "integrity" in payload
         assert payload["paths"]["gate_status_file"] == (
             "devcovenant/registry/runtime/gate_status.json"
         )
         assert payload["paths"]["workflow_session_file"] == (
             "devcovenant/registry/runtime/workflow_session.json"
         )
+        assert payload["integrity"]["watch_dirs"] == []
+        assert payload["integrity"]["watch_files"] == []
         assert payload["workflow"]["pre_commit_command"] == (
             "pre-commit run --all-files"
         )
-        assert payload["workflow"]["skipped_globs"] == [
-            "devcovenant/registry/runtime/**"
-        ]
 
 
 def _unit_test_refresh_renders_config_ownership_comments() -> None:
@@ -786,47 +760,7 @@ def _unit_test_refresh_renders_config_ownership_comments() -> None:
             in (config_text)
         )
         assert "Set this to false after review" not in config_text
-        assert "core_invariants:" not in config_text
-
-
-def _unit_test_refresh_collapses_legacy_default_clean_overrides() -> None:
-    """refresh_repo should normalize legacy all-empty clean overrides."""
-    from devcovenant.core.services.cleanup import resolve_clean_config
-
-    with tempfile.TemporaryDirectory() as temp_dir:
-        repo_root = Path(temp_dir)
-        repo_seed_cache.copy_refreshed_repo(repo_root)
-
-        config_path = repo_root / "devcovenant" / "config.yaml"
-        payload = yaml.safe_load(config_path.read_text(encoding="utf-8"))
-        payload["clean"]["overrides"] = {
-            "build_dirs": [],
-            "build_globs": [],
-            "cache_dirs": [],
-            "cache_globs": [],
-            "runtime_registry_dirs": [],
-            "runtime_registry_globs": [],
-            "logs_dirs": [],
-            "logs_globs": [],
-            "protected_dirs": [],
-            "protected_globs": [],
-        }
-        config_path.write_text(
-            yaml.safe_dump(payload, sort_keys=False),
-            encoding="utf-8",
-        )
-
-        with redirect_stdout(StringIO()):
-            result = refresh.refresh_repo(repo_root)
-        assert result == 0
-
-        updated = yaml.safe_load(config_path.read_text(encoding="utf-8"))
-        assert updated["clean"]["overrides"] == {}
-
-        resolved = resolve_clean_config(repo_root)
-        assert "build" in resolved.build_dirs
-        assert "dist" in resolved.build_dirs
-        assert "*.egg-info" in resolved.build_globs
+        assert "integrity:" in config_text
 
 
 def _unit_test_refresh_renders_devcov_managed_doc_intros() -> None:
@@ -1327,14 +1261,6 @@ class GeneratedUnittestCases(unittest.TestCase):
         """Run older SPEC replacement assertions."""
         _unit_test_refresh_replaces_older_header_only_spec_doc()
 
-    def test_refresh_replaces_legacy_generic_spec_body(self):
-        """Run legacy generic SPEC replacement assertions."""
-        _unit_test_refresh_replaces_legacy_generic_spec_body()
-
-    def test_refresh_replaces_legacy_generic_plan_body(self):
-        """Run legacy generic PLAN replacement assertions."""
-        _unit_test_refresh_replaces_legacy_generic_plan_body()
-
     def test_refresh_imports_same_version_managed_block_doc(self):
         """Run same-version managed-block import assertions."""
         _unit_test_refresh_imports_same_version_managed_block_doc()
@@ -1342,6 +1268,14 @@ class GeneratedUnittestCases(unittest.TestCase):
     def test_refresh_updates_all_managed_blocks(self):
         """Run test_refresh_updates_all_managed_blocks."""
         _unit_test_refresh_updates_all_managed_blocks()
+
+    def test_refresh_supports_custom_trust_docs(self):
+        """Run custom trust-doc rendering assertions."""
+        _unit_test_refresh_supports_custom_trust_docs()
+
+    def test_refresh_supports_global_trust_docs(self):
+        """Run global trust-doc rendering assertions."""
+        _unit_test_refresh_supports_global_trust_docs()
 
     def test_refresh_writes_ruff_cache_gitignore(self):
         """Run test_refresh_writes_ruff_cache_gitignore."""
@@ -1359,17 +1293,13 @@ class GeneratedUnittestCases(unittest.TestCase):
         """Run clean-config template rendering assertions."""
         _unit_test_refresh_writes_clean_config_section()
 
-    def test_refresh_moves_invariant_knobs_into_dedicated_sections(self):
-        """Run invariant-config placement assertions."""
-        _unit_test_refresh_moves_invariant_knobs_into_dedicated_sections()
+    def test_refresh_renders_workflow_and_integrity_sections(self):
+        """Run workflow/integrity config placement assertions."""
+        _unit_test_refresh_renders_workflow_and_integrity_sections()
 
     def test_refresh_renders_config_ownership_comments(self):
         """Run config ownership/comment rendering assertions."""
         _unit_test_refresh_renders_config_ownership_comments()
-
-    def test_refresh_collapses_legacy_default_clean_overrides(self):
-        """Run legacy clean-override normalization assertions."""
-        _unit_test_refresh_collapses_legacy_default_clean_overrides()
 
     def test_refresh_renders_devcov_managed_doc_intros(self):
         """Run DevCovenant managed-doc intro rendering assertions."""

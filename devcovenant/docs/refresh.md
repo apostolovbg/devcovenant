@@ -1,5 +1,5 @@
 # Refresh Behavior
-**Last Updated:** 2026-03-29
+**Last Updated:** 2026-03-30
 **Project Version:** 1.0.0
 
 ## Overview
@@ -57,7 +57,8 @@ The managed-doc runtime owns:
 
 - adoption of compatible seeded docs
 
-- replacement of known old generic scaffolds
+- replacement of placeholder or seed docs that match the managed-doc import
+  contract
 
 That keeps document behavior centralized instead of spreading it across many
 commands.
@@ -91,7 +92,7 @@ repository: the `<!-- DEVCOV:BEGIN -->` / `<!-- DEVCOV:END -->` block stays
 present but empty by design so DevCovenant does not inject runtime prose at
 the top of user-facing README surfaces.
 
-The same rendering machinery is now reused by `devcovenant asset`.
+The same rendering machinery is reused by `devcovenant asset`.
 That command does not own a second template engine.
 It renders plain profile assets through the same shared asset renderer that
 refresh uses, and it renders descriptor-backed docs through the same
@@ -99,9 +100,21 @@ managed-doc runtime, but writes the result as a Desktop copy instead of the
 repo-owned managed target path.
 
 ## Custom Managed Docs
-Profiles can add custom managed docs through their asset trees.
-That is how repo-specific docs such as API, auth, or error contracts can be
-introduced without hardcoding those docs into the global baseline.
+Profiles can add managed docs through their asset trees.
+The active model is:
+
+- the global profile contributes the baseline descriptor set
+
+- active profiles can add new managed-doc targets
+
+- active profiles can also override a global descriptor by reusing the same
+  target path
+
+- later active profiles win over earlier ones for the same target path
+
+That is how repo families can reuse a global baseline while still replacing
+individual docs such as `SECURITY.md`, `PRIVACY.md`, or `SUPPORT.md`
+without hardcoding repo-specific prose into the package docs.
 
 ## Validation And Failure Modes
 Refresh should fail explicitly when a managed-doc descriptor is invalid.
@@ -114,8 +127,6 @@ The common failure classes are:
 - invalid descriptor shape
 
 - broken target/template mapping
-
-- conflicting managed-doc ownership
 
 ## Practical Rule
 If a refresh-related change seems confusing, ask two questions first:

@@ -470,6 +470,9 @@ policy_overlays:
       - CHANGELOG.md
       - PROFILE_MAP.md
       - POLICY_MAP.md
+      - SECURITY.md
+      - PRIVACY.md
+      - SUPPORT.md
       - devcovenant/README.md
       - devcovenant/core/README.md
       - devcovenant/custom/README.md
@@ -489,6 +492,9 @@ policy_overlays:
       - CHANGELOG.md
       - PROFILE_MAP.md
       - POLICY_MAP.md
+      - SECURITY.md
+      - PRIVACY.md
+      - SUPPORT.md
       - devcovenant/README.md
       - devcovenant/core/README.md
       - devcovenant/custom/README.md
@@ -526,6 +532,9 @@ policy_overlays:
       - docs=>CHANGELOG.md
       - docs=>PROFILE_MAP.md
       - docs=>POLICY_MAP.md
+      - docs=>SECURITY.md
+      - docs=>PRIVACY.md
+      - docs=>SUPPORT.md
       - docs=>devcovenant/README.md
       - docs=>devcovenant/core/README.md
       - docs=>devcovenant/custom/README.md
@@ -545,5 +554,5 @@ policy_overlays:
 project-governance:
   stage: stable
   maintenance_stance: active
-  compatibility_policy: breaking-allowed
+  compatibility_policy: forward-only
   versioning_mode: versioned

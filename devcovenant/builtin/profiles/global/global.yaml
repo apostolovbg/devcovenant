@@ -64,11 +64,3 @@ policy_overlays:
   line-length-limit:
     exclude_globs:
       - devcovenant/logs/**
-core_invariant_overlays:
-  devcov-integrity-guard:
-    policy_definitions: AGENTS.md
-    registry_file: devcovenant/registry/registry.yaml
-    gate_status_file: devcovenant/registry/runtime/gate_status.json
-  devflow-run-gates:
-    gate_status_file: devcovenant/registry/runtime/gate_status.json
-    pre_commit_command: pre-commit run --all-files

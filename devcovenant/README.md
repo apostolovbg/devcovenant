@@ -83,7 +83,12 @@ What those steps mean:
 
 3. The config review is the human decision point.
 
-   You decide whether the repo is a normal repository using DevCovenant or a
+   Start with `project-governance`: project identity, stage,
+   `maintenance_stance`, `compatibility_policy`, and `versioning_mode`.
+   That sets the repo's public stance, generated governance headers, AGENTS
+   compatibility guidance, and release-heading behavior before you activate
+   anything else.
+   Then decide whether the repo is a normal repository using DevCovenant or a
    repository used to develop DevCovenant itself, which profiles are active,
    which policies are enabled, and which engine settings should govern the
    repo.
@@ -183,33 +188,40 @@ Keep machine installation and repository lifecycle separate:
 ## Configuration Checkpoints
 The most important first-review settings in `devcovenant/config.yaml` are:
 
-1. `developer_mode`
+1. `project-governance`
+
+   Review identity, maturity, `compatibility_policy`, and
+   `versioning_mode` first.
+   This block drives generated governance headers, AGENTS guidance, and
+   release-heading behavior.
+
+2. `developer_mode`
 
    `false` for a normal repository using DevCovenant.
    `true` only when the repository is being used to develop DevCovenant itself.
 
-2. `profiles.active`
+3. `profiles.active`
 
    The stack description for the repository.
 
-3. `paths`
+4. `paths`
 
    Runtime evidence and registry path knobs owned by the repository.
 
-4. `doc_assets`
+5. `doc_assets`
 
    Which managed docs are enabled, disabled, or supplied by custom profiles.
 
-5. `workflow`
+6. `workflow`
 
    Workflow-contract settings such as the canonical pre-commit command and
    workflow evidence skip globs.
 
-6. `policy_state`
+7. `policy_state`
 
    Which customizable policies are on or off.
 
-7. `engine.*`
+8. `engine.*`
 
    Output, autofix, retention, and related runtime behavior.
 
@@ -218,8 +230,6 @@ DevCovenant can manage several different repository surfaces.
 This includes the refresh-generated governance gate pipeline, while
 repository-maintained workflows remain ordinary repo files when a repo chooses
 that split.
-
-DevCovenant can manage several different repository surfaces:
 
 - selected documents
 
@@ -254,7 +264,7 @@ Use the shorter map below instead of treating the README as the whole manual.
 - [config.md](https://github.com/apostolovbg/devcovenant/blob/main/devcovenant/docs/config.md)
 
   How to read `devcovenant/config.yaml`, including project governance,
-  doc assets, core invariants, and policy activation.
+  doc assets, workflow/runtime knobs, and policy activation.
 
 - [profiles.md](https://github.com/apostolovbg/devcovenant/blob/main/devcovenant/docs/profiles.md)
 
@@ -271,7 +281,7 @@ Use the shorter map below instead of treating the README as the whole manual.
 
 - [architecture.md](https://github.com/apostolovbg/devcovenant/blob/main/devcovenant/docs/architecture.md)
 
-  Runtime layers, invariants, evidence flow, and contract map.
+  Runtime layers, evidence flow, and contract map.
 
 - [registry.md](https://github.com/apostolovbg/devcovenant/blob/main/devcovenant/docs/registry.md)
 
@@ -280,18 +290,6 @@ Use the shorter map below instead of treating the README as the whole manual.
 - [troubleshooting.md](https://github.com/apostolovbg/devcovenant/blob/main/devcovenant/docs/troubleshooting.md)
 
   Fast recovery paths for common failures.
-
-## Security, Privacy, and Support
-Public trust surfaces live in the repo root:
-
-- [SECURITY.md](https://github.com/apostolovbg/devcovenant/blob/main/SECURITY.md)
-
-- [PRIVACY.md](https://github.com/apostolovbg/devcovenant/blob/main/PRIVACY.md)
-
-- [SUPPORT.md](https://github.com/apostolovbg/devcovenant/blob/main/SUPPORT.md)
-
-Use those docs for vulnerability reporting, local data-handling boundaries,
-and support expectations.
 
 ## License
 DevCovenant is released under the MIT License.

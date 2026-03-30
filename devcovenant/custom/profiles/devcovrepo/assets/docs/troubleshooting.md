@@ -1,11 +1,11 @@
 # Troubleshooting
+**Project Version:** 1.0.0
 
 ## Overview
 Use this guide when DevCovenant is blocking work and you need the fastest clean
 way back to a stable state.
 
 The normal debug order is:
-
 1. read the command's `summary.txt`
 2. inspect `tail.txt` if present
 3. inspect `stdout.log` and `stderr.log`
@@ -13,7 +13,6 @@ The normal debug order is:
 
 ## Fast Triage
 Ask these questions first:
-
 1. was this a read-only audit or an active gate session?
 2. which command failed?
 3. did a gate stage mutate files?
@@ -22,6 +21,9 @@ Ask these questions first:
 ## Gate Failures
 If `gate --start` fails, clear the reported problem before editing.
 A failed start gate is not a usable baseline.
+If start reports hook-changed paths or says managed files were refreshed, the
+checkout was not in a settled baseline state. Apply or clear those changes,
+then rerun `gate --start`.
 
 If `gate --mid` fails, clear the issue and rerun `gate --mid` until it is
 clean before running `run`.
@@ -31,9 +33,7 @@ and then rerun `gate --end`.
 
 ## Changelog Coverage Problems
 The two common causes are:
-
 - the latest entry does not reflect the current slice
-
 - the summary lines do not use accepted action verbs
 
 When that happens, fix the top entry instead of adding noise below it.
@@ -46,13 +46,12 @@ instead of hand-editing the registry.
 
 ## Config And Metadata Problems
 If behavior looks wrong, inspect these in order:
-
 1. `devcovenant/config.yaml`
 2. active profile descriptors and overlays
 3. the tracked registry
-4. `AGENTS.md` generated policy and invariant output
+4. `AGENTS.md` generated workflow, project-governance, and policy output
 
-Most "runtime mystery" problems are really metadata-resolution problems.
+Most runtime-mystery problems are really metadata-resolution problems.
 
 ## Managed Environment Problems
 If the managed interpreter exists but is not executable, DevCovenant stops with
@@ -60,14 +59,13 @@ an explicit error.
 Fix the interpreter path or permissions, then rerun the appropriate command.
 If a gate hook cannot find the `pre-commit` console script, check whether the
 selected interpreter still has the `pre_commit` package installed.
-Gate execution can fall back to `python -m pre_commit`, but it still needs the
+Gate execution can resolve `python -m pre_commit`, but it still needs the
 module to exist in the resolved execution environment.
 
 ## Installed CLI Problems
 If you installed DevCovenant with `pipx` and the `devcovenant` command is
 missing, check the machine install first instead of debugging repository
 config:
-
 1. run `pipx list`
 2. run `pipx ensurepath`
 3. open a new shell and rerun `devcovenant --version`
@@ -82,15 +80,12 @@ If a language-specific policy path seems wrong, verify that the active language
 profile owns the relevant translator and that no overlapping profile is trying
 to claim the same extension ambiguously.
 
-## Build And Publish Problems
-When build or publish assurance fails, check:
-
-- workflow logs
-
-- scanner output
-
+## Packaging Problems
+When packaging or artifact-proof assurance fails, check:
+- build logs
+- package build configuration
 - package metadata
+- artifact validation and generation steps
 
-- SBOM and artifact generation steps
-
-Then fix the owning surface instead of papering over the symptom in CI.
+If a repository also keeps a separate release workflow, inspect that workflow's
+owning repo surfaces next instead of papering over the symptom in CI.

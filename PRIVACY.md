@@ -1,4 +1,16 @@
 # Privacy and Data Handling
+**Doc ID:** PRIVACY
+**Doc Type:** privacy-policy
+**Project Version:** 1.0.0
+**Last Updated:** 2026-03-30
+**DevCovenant Version:** 1.0.0
+
+<!-- DEVCOV:BEGIN -->
+This opening section is managed by DevCovenant.
+Use this document for repository-specific privacy and local
+data-handling notes.
+<!-- DEVCOV:END -->
+
 ## Table of Contents
 - [Overview](#overview)
 - [What DevCovenant Stores Locally](#what-devcovenant-stores-locally)

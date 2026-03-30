@@ -25,9 +25,6 @@ from devcovenant.core.runtime.execution import print_step, runtime_print
 from devcovenant.core.services import (
     asset_materialization as asset_materialization_service,
 )
-from devcovenant.core.services import (
-    core_invariants as core_invariants_service,
-)
 from devcovenant.core.services import managed_docs as managed_docs_service
 from devcovenant.core.services import (
     project_governance as project_governance_service,
@@ -46,18 +43,6 @@ ProjectGovernanceState = project_governance_service.ProjectGovernanceState
 
 USER_GITIGNORE_BEGIN = "# --- User entries (preserved) ---"
 USER_GITIGNORE_END = "# --- End user entries ---"
-_CLEAN_TARGET_KEYS = (
-    "build_dirs",
-    "build_globs",
-    "cache_dirs",
-    "cache_globs",
-    "runtime_registry_dirs",
-    "runtime_registry_globs",
-    "logs_dirs",
-    "logs_globs",
-    "protected_dirs",
-    "protected_globs",
-)
 
 
 def _utc_today() -> str:
@@ -516,6 +501,7 @@ def _render_config_yaml(payload: dict[str, object]) -> str:
         "clean",
         "ci_and_test",
         "pre_commit",
+        "integrity",
         "workflow",
         "project-governance",
         "policy_state",
@@ -538,6 +524,7 @@ def _render_config_yaml(payload: dict[str, object]) -> str:
             "CI-and-test workflow generation"
         ),
         "pre_commit": _config_section_header("Pre-commit generation"),
+        "integrity": _config_section_header("Integrity runtime contract"),
         "workflow": _config_section_header("Workflow runtime contract"),
         "project_governance": _config_section_header("Project governance"),
         "policy": _config_section_header(
@@ -606,18 +593,25 @@ def _render_config_yaml(payload: dict[str, object]) -> str:
         _yaml_block({"paths": payload.get("paths", {})}),
         comments["doc_assets"],
         "# Mixed-ownership section.",
-        "# `doc_assets.autogen` is human-owned selection state.",
+        "# `doc_assets.autogen` is human-owned enabled-doc selection.",
         "# `doc_assets.user` is human-owned exclusion state.",
         "\n".join(
             [
                 (
-                    "# Documents that refresh may fully materialize from "
-                    "descriptor templates."
+                    "# `autogen` entries are managed-doc target paths, not a "
+                    "builtin optional-doc class."
                 ),
-                "# Empty list means runtime backfills defaults.",
                 (
-                    "# Documents in `user` are excluded from full "
-                    "template materialization."
+                    "# Available descriptors come from the global asset root "
+                    "plus active profile asset roots."
+                ),
+                (
+                    "# Later active profiles override earlier profiles for "
+                    "the same target path."
+                ),
+                (
+                    "# Documents in `user` are excluded after `autogen` "
+                    "selection."
                 ),
                 (
                     "# Managed block refresh still applies when markers are "
@@ -695,12 +689,22 @@ def _render_config_yaml(payload: dict[str, object]) -> str:
         "# `overlays` are merged into generated pre-commit config.",
         "# `overrides` replace generated payload when non-empty.",
         _yaml_block({"pre_commit": payload.get("pre_commit", {})}),
+        comments["integrity"],
+        "# Human-owned section.",
+        (
+            "# Integrity watches are optional runtime knobs for the built-in "
+            "descriptor/registry/gate checks."
+        ),
+        (
+            "# Use them when specific directories or files should require a "
+            "fresh gate-status update."
+        ),
+        _yaml_block({"integrity": payload.get("integrity", {})}),
         comments["workflow"],
         "# Human-owned section.",
         (
-            "# DevCovenant-owned workflow contract knobs such as "
-            "the canonical pre-commit command and invariant skip "
-            "globs live here."
+            "# Workflow contract settings such as the canonical pre-commit "
+            "command live here."
         ),
         (
             "# These are runtime contract settings, not policy toggles, so "
@@ -728,7 +732,13 @@ def _render_config_yaml(payload: dict[str, object]) -> str:
         ),
         (
             "# `compatibility_policy` must be "
-            "`backward-compatible`, `breaking-allowed`, or `unspecified`."
+            "`backward-compatible`, `breaking-allowed`, "
+            "`forward-only`, or `unspecified`."
+        ),
+        (
+            "# `backward-compatible` preserves the public contract; "
+            "`breaking-allowed` makes compatibility optional; "
+            "`forward-only` rejects legacy compatibility fallbacks."
         ),
         "# `versioning_mode` must be `versioned` or `unversioned`.",
         (
@@ -850,7 +860,6 @@ def _refresh_config_generated(
     template = _load_config_template(repo_root)
     merged = copy.deepcopy(template)
     _merge_user_config_values(merged, config)
-    _drop_removed_config_keys(merged)
     _apply_profile_aware_engine_defaults(merged, user_config, active_profiles)
     _apply_profile_aware_project_governance_defaults(
         merged,
@@ -905,7 +914,6 @@ def _refresh_config_generated(
     else:
         doc_assets["user"] = []
     merged["doc_assets"] = doc_assets
-    _normalize_clean_config_defaults(merged)
 
     rendered = _render_config_yaml(merged)
     current = _read_text_if_exists(config_path)
@@ -914,26 +922,6 @@ def _refresh_config_generated(
     config_path.parent.mkdir(parents=True, exist_ok=True)
     config_path.write_text(rendered, encoding="utf-8")
     return merged, True
-
-
-def _normalize_clean_config_defaults(merged: dict[str, object]) -> None:
-    """Collapse legacy clean overrides that accidentally clear profiles."""
-    clean_block = merged.get("clean")
-    if not isinstance(clean_block, dict):
-        return
-    raw_overrides = clean_block.get("overrides")
-    if not isinstance(raw_overrides, dict):
-        return
-    override_keys = {str(key).strip() for key in raw_overrides}
-    if override_keys != set(_CLEAN_TARGET_KEYS):
-        return
-    for key in _CLEAN_TARGET_KEYS:
-        value = raw_overrides.get(key)
-        if not isinstance(value, list) or any(
-            str(item).strip() for item in value
-        ):
-            return
-    clean_block["overrides"] = {}
 
 
 def _apply_profile_aware_engine_defaults(
@@ -968,23 +956,6 @@ def _normalize_project_governance_mapping(
         for key, value in raw_value.items()
         if str(key).strip()
     }
-
-
-def _drop_removed_config_keys(payload: dict[str, object]) -> None:
-    """Remove config keys that no longer belong to the live schema."""
-    policy_state = payload.get("policy_state")
-    if isinstance(policy_state, dict):
-        policy_state.pop("project-governance", None)
-    for key_name in (
-        "autogen_metadata_overlays",
-        "user_metadata_overlays",
-        "autogen_metadata_overrides",
-        "user_metadata_overrides",
-    ):
-        layer = payload.get(key_name)
-        if isinstance(layer, dict):
-            layer.pop("project-governance", None)
-    payload.pop("core_invariants", None)
 
 
 def _profile_project_governance_defaults(
@@ -1931,7 +1902,6 @@ def refresh_repo(repo_root: Path) -> int:
         config = _load_config_template(repo_root)
         user_config = _read_yaml(config_path) if config_path.exists() else {}
         _merge_user_config_values(config, user_config)
-        _drop_removed_config_keys(config)
         initial_active_profiles = _active_profiles(config)
         preview_profile_registry = profile_runtime.build_profile_registry(
             repo_root,
@@ -1987,9 +1957,6 @@ def refresh_repo(repo_root: Path) -> int:
 
     agents_path = repo_root / "AGENTS.md"
     try:
-        refresh_agents_core_invariant_block(
-            agents_path, None, repo_root=repo_root
-        )
         refresh_agents_policy_block(agents_path, None, repo_root=repo_root)
     except ValueError as error:
         print_step(f"AGENTS block refresh failed: {error}", "🚫")
@@ -2136,9 +2103,6 @@ def refresh_repo(repo_root: Path) -> int:
 
 RefreshResult = agents_blocks_lib.PolicyBlockRefreshResult
 refresh_agents_policy_block = agents_blocks_lib.refresh_agents_policy_block
-refresh_agents_core_invariant_block = (
-    agents_blocks_lib.refresh_agents_core_invariant_block
-)
 
 
 # ---- Local policy registry refresh ----
@@ -2160,7 +2124,6 @@ def _discover_policy_sources(repo_root: Path) -> Dict[str, Dict[str, bool]]:
     """Return policy ids and whether builtin/custom scripts exist."""
 
     discovered: Dict[str, Dict[str, bool]] = {}
-    skipped_ids = set(core_invariants_service.core_invariant_ids())
     for source in ("builtin", "custom"):
         source_root = repo_root / "devcovenant" / source / "policies"
         if not source_root.exists():
@@ -2175,8 +2138,6 @@ def _discover_policy_sources(repo_root: Path) -> Dict[str, Dict[str, bool]]:
             if not script.exists():
                 continue
             policy_id = entry.name.replace("_", "-").strip()
-            if policy_id in skipped_ids:
-                continue
             record = discovered.setdefault(
                 policy_id, {"builtin": False, "custom": False}
             )
@@ -2408,12 +2369,6 @@ def refresh_policy_registry(
         )
         registry.update_managed_docs(
             managed_docs_service.managed_docs_registry_payload(
-                repo_root,
-                config_payload=config_payload,
-            )
-        )
-        registry.update_core_invariants(
-            core_invariants_service.core_invariants_registry_payload(
                 repo_root,
                 config_payload=config_payload,
             )

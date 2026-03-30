@@ -1,37 +1,136 @@
 # Refresh Behavior
 
 ## Overview
-Use this doc for the regeneration boundary.
-It should explain what refresh owns, when it runs, and how managed docs are
-preserved or replaced.
+This document is the normative home for the managed-documents contract.
+Use it together with `devcovenant/docs/contracts.md` when you need the stable
+rules for regeneration, preservation, adoption, and descriptor ownership.
 
-This page should answer a practical maintainer question: if a generated file
-changed, which input owns that change and what kind of rewrite is DevCovenant
-allowed to perform? Keep the answer concrete enough that someone can tell when
-a manual edit will survive refresh and when it will be replaced.
+`refresh` is the deterministic regeneration boundary for DevCovenant's tracked
+outputs.
+It updates the governed files that DevCovenant owns, but it does not invent
+fake live session state.
 
-## What This Doc Should Cover
-Explain:
+## What Refresh Owns
+Refresh can regenerate:
 
-- what refresh regenerates
+- tracked registry state
 
-- when full refresh runs
+- generated config sections
 
-- how `devcovenant asset` reuses the same renderers while writing Desktop
-  copies instead of taking over repo-owned target paths
+- managed policy output in `AGENTS.md`
 
-- managed-doc descriptors
+- generated workflow and tooling files
 
-- preservation rules
+- managed docs selected through `doc_assets`
 
-- seeded-doc adoption
+- generated `.gitignore` and pre-commit files
 
-- custom managed docs from profiles
+If profiles, descriptors, or managed templates changed, refresh is the point
+where those changes become real in the repository.
 
-- failure modes and validation
+## When Refresh Runs
+A full refresh runs in:
 
-## Writing Rules
-Keep the ownership questions obvious.
-Readers should leave knowing what input owns a generated output, what kind of
-mutation refresh is allowed to make, and when a full rerender is expected
-rather than surprising.
+- `devcovenant refresh`
+
+- `devcovenant deploy`
+
+- `devcovenant upgrade`
+
+- gate-owned refresh/autofix paths during the governed workflow
+
+`check` is read-only and does not run startup refresh.
+
+## Managed Docs
+Managed docs are descriptor-driven.
+The managed-doc runtime owns:
+
+- descriptor loading
+
+- descriptor validation
+
+- header rendering
+
+- managed block rendering
+
+- adoption of compatible seeded docs
+
+- replacement of placeholder or seed docs that match the managed-doc import
+  contract
+
+That keeps document behavior centralized instead of spreading it across many
+commands.
+
+## Preservation Rules
+The practical preservation rules are:
+
+- missing doc: may be created
+
+- empty doc: may be replaced
+
+- one-line doc: may be replaced
+
+- otherwise: only managed headers and managed blocks should change
+
+That rule is what allows DevCovenant to manage docs without treating ordinary
+human-written prose as disposable.
+
+## Managed Doc Descriptor Schema
+A managed-doc descriptor defines the target path, identity headers, managed
+block content, and body template.
+Some docs can also opt into project-governance header rendering.
+
+The descriptor is the source of structure.
+The live file is the source of preserved authored content outside the managed
+areas.
+
+Some descriptors intentionally keep the managed block empty.
+That is the rule for `README.md` and `devcovenant/README.md` in this
+repository: the `<!-- DEVCOV:BEGIN -->` / `<!-- DEVCOV:END -->` block stays
+present but empty by design so DevCovenant does not inject runtime prose at
+the top of user-facing README surfaces.
+
+The same rendering machinery is reused by `devcovenant asset`.
+That command does not own a second template engine.
+It renders plain profile assets through the same shared asset renderer that
+refresh uses, and it renders descriptor-backed docs through the same
+managed-doc runtime, but writes the result as a Desktop copy instead of the
+repo-owned managed target path.
+
+## Custom Managed Docs
+Profiles can add managed docs through their asset trees.
+The active model is:
+
+- the global profile contributes the baseline descriptor set
+
+- active profiles can add new managed-doc targets
+
+- active profiles can also override a global descriptor by reusing the same
+  target path
+
+- later active profiles win over earlier ones for the same target path
+
+That is how repo families can reuse a global baseline while still replacing
+individual docs such as `SECURITY.md`, `PRIVACY.md`, or `SUPPORT.md`
+without hardcoding repo-specific prose into the package docs.
+
+## Validation And Failure Modes
+Refresh should fail explicitly when a managed-doc descriptor is invalid.
+It should not guess what a broken descriptor meant.
+
+The common failure classes are:
+
+- missing descriptor for an enabled managed doc
+
+- invalid descriptor shape
+
+- broken target/template mapping
+
+## Practical Rule
+If a refresh-related change seems confusing, ask two questions first:
+
+1. which descriptor owns this output?
+2. is the file supposed to be preserved, regenerated, or adopted?
+
+Most refresh confusion becomes much easier once those two ownership questions
+are answered.

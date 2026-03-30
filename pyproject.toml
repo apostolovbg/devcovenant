@@ -76,7 +76,6 @@ namespaces = false
 "devcovenant" = [
   "README.md",
   "VERSION",
-  "core/contracts/invariants/*.yaml",
   "docs/*.md",
   "docs/*.png",
   "logs/README.md",

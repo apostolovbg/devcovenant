@@ -245,14 +245,14 @@ def _merge_values(existing: List[str], incoming: List[str]) -> List[str]:
 def _collect_profile_overlays(
     repo_root: Path, active_profiles: List[str]
 ) -> Dict[str, Dict[str, Tuple[List[str], bool]]]:
-    """Collect policy and core-invariant overlays from the profile registry."""
+    """Collect policy overlays from the profile registry."""
     registry = profile_runtime.load_profile_registry(repo_root)
     overlays: Dict[str, Dict[str, Tuple[List[str], bool]]] = {}
     for profile in active_profiles:
         meta = registry.get(profile)
         if not isinstance(meta, dict):
             continue
-        for section_name in ("policy_overlays", "core_invariant_overlays"):
+        for section_name in ("policy_overlays",):
             raw_overlays = meta.get(section_name) or {}
             if not isinstance(raw_overlays, dict):
                 continue

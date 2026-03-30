@@ -4,7 +4,7 @@
 **Project Version:** 1.0.0
 **Project Stage:** stable
 **Maintenance Stance:** active
-**Compatibility Policy:** breaking-allowed
+**Compatibility Policy:** forward-only
 **Versioning Mode:** versioned
 **Last Updated:** 2026-03-30
 **DevCovenant Version:** 1.0.0
@@ -46,15 +46,19 @@ DevCovenant lifecycle and command behavior used by this repository.
 - Remove stale notes immediately; stale notes are drift.
 
 ## Public Baseline Notes
-- This repository now treats `1.0.0` as the public baseline.
+- This repository treats `1.0.0` as the public baseline.
 - Preserve command/runtime contracts unless an explicit plan item changes them.
 - Keep implementation ownership layered under
   `devcovenant/core/{flow,runtime,services,lib,contracts}`.
-- Keep product-operation docs in `devcovenant/docs/*` and keep repo-internal
-  release notes out of package docs.
+- Keep product-operation docs in `devcovenant/docs/*`.
+- Keep repo-specific CI, release, and trust-surface details out of package
+  docs.
 
 ## Release Control Notes
 - Human-controlled release operations remain manual.
+- Root `README.md` owns repo automation notes.
+- Root `SECURITY.md`, `PRIVACY.md`, and `SUPPORT.md` own repo trust-surface
+  notes.
 - Destructive history operations require explicit human direction.
 - Keep CI (continuous integration)/governance checks green before publish
   decisions.
@@ -109,15 +113,18 @@ during command waits.
    (`<!-- DEVCOV-WORKFLOW:* -->`) before any repository edits.
 3. If `AGENTS.md` non-workflow content changed since the previous gate
    session, reread the entire `AGENTS.md` before work commands.
-4. Build an active-policy mental model from policies marked `enabled: true`
+4. Inspect the `## Project Governance` block and treat
+   `Compatibility Policy` as active development guidance before deciding
+   whether to preserve or remove old contract shapes.
+5. Build an active-policy mental model from policies marked `enabled: true`
    and follow those policies proactively while writing.
-5. If the human prompt ends with `?`, treat it as a question only. Answer
+6. If the human prompt ends with `?`, treat it as a question only. Answer
    without executing commands, editing files, or starting a work slice
    unless the human explicitly asks for action.
-6. If a managed environment is configured, activate/use it first. Run
+7. If a managed environment is configured, activate/use it first. Run
    DevCovenant commands and tests in that environment. Installing
    DevCovenant in that environment is recommended.
-7. Run `devcovenant gate --start` before any repository edits. For
+8. Run `devcovenant gate --start` before any repository edits. For
    long-running commands, use non-PTY (pseudoterminal) execution for
    non-interactive DevCovenant commands, prefer low-frequency polling,
    and avoid verbose or large-output streaming by default.
@@ -125,35 +132,35 @@ during command waits.
    150s, 180s, 240s, then every 60s.
    Do not narrate polling steps or cadence in routine progress updates
    unless the human explicitly asks.
-8. Before applying edits, clear start-gate complaints. Blocking violations
+9. Before applying edits, clear start-gate complaints. Blocking violations
    must be cleared; preferred behavior is to clear all complaints. When
    DevCovenant run artifacts are available, inspect summaries/tails/logs
    before rerunning commands.
-9. Apply edits while following policy text and metadata proactively.
-10. If any DevCovenant complaint appears (error, warning, or info), stop
+10. Apply edits while following policy text and metadata proactively.
+11. If any DevCovenant complaint appears (error, warning, or info), stop
    the requested task and clear blocking violations first. Use the latest
    `Run logs:` path and summary artifacts as the primary debug
    entrypoint.
-11. Preferred behavior: clear all DevCovenant complaints before continuing,
+12. Preferred behavior: clear all DevCovenant complaints before continuing,
    unless the human explicitly requests otherwise.
-12. Run `devcovenant gate --mid` before `devcovenant run` to surface
+13. Run `devcovenant gate --mid` before `devcovenant run` to surface
    hook-induced mutations and blocking DevCovenant complaints early.
    `gate --mid`
    requires an open session, does not record lifecycle state, and may
    need an explicit rerun until hooks converge.
-13. Run `devcovenant run`. For long runs, report status/run updates
+14. Run `devcovenant run`. For long runs, report status/run updates
    and final result, and prefer run-artifact summaries/tails before
    escalating to verbose streaming. Long silent waits in normal mode
    should surface `Please wait. In progress...`.
-14. Run `devcovenant gate --end`. Use the same artifact-first output
+15. Run `devcovenant gate --end`. Use the same artifact-first output
    discipline as workflow runs. Gate commands do not run required
    workflow runs internally.
-15. If end-gate hooks or checks produce additional changes or violations,
+16. If end-gate hooks or checks produce additional changes or violations,
    use `devcovenant gate --status` for lifecycle inspection and inspect
    the latest run artifacts before rerunning required commands until the
    repository is clean. When gates require workflow runs, run
    `devcovenant run` explicitly and rerun the gate command.
-16. Stage all changes after each completed work slice.
+17. Stage all changes after each completed work slice.
 
 Audits are not a separate workflow mode. The same gate discipline applies.
 Use `check` as the default read-only audit command. Gate commands own
@@ -194,63 +201,12 @@ This block reflects the repository's active project-governance state.
 - Project Version: 1.0.0
 - Project Stage: stable
 - Maintenance Stance: active
-- Compatibility Policy: breaking-allowed
+- Compatibility Policy: forward-only
 - Versioning Mode: versioned
+- Compatibility Guidance:
+  Do not leave legacy fallbacks behind. Remove deprecated readers,
+  aliases, and bridge paths instead of preserving them.
 <!-- DEVCOV:END -->
-
-<!-- DEVCOV-INVARIANTS:BEGIN -->
-## DevCovenant Core Invariants
-
-### Devcov Integrity Guard
-
-```core-invariant-def
-id: devcov-integrity-guard
-policy_definitions: AGENTS.md
-registry_file: devcovenant/registry/registry.yaml
-gate_status_file: devcovenant/registry/runtime/gate_status.json
-watch_dirs:
-watch_files:
-selector_roles: watch,watch_files
-```
-
-Enforce DevCovenant policy integrity: every policy must include descriptive
-text, AGENTS prose must match policy descriptors, the policy registry must
-stay synchronized, and gate-status metadata must validate when configured.
-
-### Devcov Structure Guard
-
-```core-invariant-def
-id: devcov-structure-guard
-```
-
-Ensure the DevCovenant repo keeps the required structure and tooling files.
-
-### Devflow Run Gates
-
-```core-invariant-def
-id: devflow-run-gates
-gate_status_file: devcovenant/registry/runtime/gate_status.json
-workflow_session_file:
-require_pre_commit_start: true
-require_pre_commit_end: true
-pre_commit_command: pre-commit run --all-files
-pre_commit_start_epoch_key: pre_commit_start_epoch
-pre_commit_end_epoch_key: pre_commit_end_epoch
-pre_commit_start_command_key: pre_commit_start_command
-pre_commit_end_command_key: pre_commit_end_command
-code_extensions:
-skipped_globs: devcovenant/registry/runtime/**
-```
-
-DevCovenant must record and enforce the standard workflow: pre-commit start,
-declared workflow runs, then pre-commit end. Gate status
-preserves pre-commit evidence while workflow-session state records which
-runs passed for the active session.
-This check is enforced for every repository change (including
-documentation-only updates) so the gate sequence cannot be skipped.
-Changelog-only edits remain gate-scoped but do not require a fresh
-run execution by themselves.
-<!-- DEVCOV-INVARIANTS:END -->
 
 <!-- DEVCOV-POLICIES:BEGIN -->
 ## Policy: Changelog Coverage
@@ -942,6 +898,9 @@ allowed_globs: devcovenant/README.md
   PLAN.md
   PROFILE_MAP.md
   POLICY_MAP.md
+  SECURITY.md
+  PRIVACY.md
+  SUPPORT.md
 allowed_files:
 allowed_suffixes:
 required_files:
@@ -964,6 +923,9 @@ required_globs: devcovenant/README.md
   PLAN.md
   PROFILE_MAP.md
   POLICY_MAP.md
+  SECURITY.md
+  PRIVACY.md
+  SUPPORT.md
 selector_roles: include
   allowed
   required
@@ -1218,7 +1180,7 @@ test roots. The rule is metadata-driven and supports mirror enforcement for
 selected source roots. The policy enforces structural source-to-test
 alignment and rejects stale mirrored tests. Placeholder tests are not
 allowed. Python test files must use unittest.TestCase-style definitions;
-pytest still runs as an execution layer.
+workflow execution runs the declared unittest command directly.
 
 
 ---
@@ -1660,6 +1622,9 @@ target_role_files: docs=>README.md
   docs=>CHANGELOG.md
   docs=>PROFILE_MAP.md
   docs=>POLICY_MAP.md
+  docs=>SECURITY.md
+  docs=>PRIVACY.md
+  docs=>SUPPORT.md
   docs=>devcovenant/README.md
   docs=>devcovenant/core/README.md
   docs=>devcovenant/custom/README.md

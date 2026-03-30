@@ -606,23 +606,25 @@ def _unit_test_ci_workflow_split_docs_are_consistent() -> None:
     assert "refresh-generated output" in profiles
     assert "`ci_and_test`" in profiles
     assert "global workflow template should stay generic" in profiles
-    assert "The generated CI workflow lives at" in workflow
-    assert "The global base should stay language-agnostic." in workflow
+    assert "The generated source-tree CI workflow lives at" in workflow
+    assert "The global base should stay generic." in workflow
     assert "active profiles may contribute `ci_and_test` fragments" in (
         workflow
     )
-    assert ".github/workflows/ci.yml" in installation
-    assert ".github/workflows/publish.yml" in installation
-    assert "repository-maintained manual workflow" in installation
-    assert "repo-specific `Build` job" in installation
-    assert "refresh-generated governance gate pipeline" in readme
+    assert "generated workflow files" in installation
+    assert ".github/workflows/publish.yml" not in installation
+    assert "repo-specific `Build` job" not in installation
+    assert "Repo Release And Assurance" in readme
+    assert "`Governance` plus a dependent `Build` proof job" in readme
+    assert ".github/workflows/publish.yml" in readme
 
 
 def _unit_test_workflow_doc_marks_mid_gate_required() -> None:
     """Workflow docs should keep gate --mid mandatory on command surfaces."""
     content = _read_output_doc_contract_text("devcovenant/docs/workflow.md")
-    assert "gate --start -> gate --mid loop (rerun until clean)" in content
-    assert "run `gate --mid` before `devcovenant run`" in content
+    assert "Required pre-run preflight." in content
+    assert "until it is clean." in content
+    assert "then a `gate --mid` loop" in content
     assert "optional mutating preflight" not in content
 
 
@@ -652,9 +654,9 @@ def _unit_test_primary_docs_identify_their_normative_contracts() -> None:
             "## Managed Doc Descriptor Schema",
         ),
         "devcovenant/docs/workflow.md": (
-            "Use this document for the gate sequence, CI contract, and "
-            "run-artifact",
-            "## Run Artifact Contract",
+            "Use this document for the gate sequence, workflow-run contract, "
+            "CI mapping,",
+            "## Run Artifacts",
         ),
         "devcovenant/docs/config.md": (
             "normative home for the public `devcovenant/config.yaml`",
@@ -683,15 +685,15 @@ def _unit_test_custom_extension_docs_explain_baseline_first_activation():
     expectations = {
         "devcovenant/docs/installation.md": (
             "Reach the first reviewed baseline first.",
-            "review baseline first, then add repo-specific custom extensions",
+            "prove that baseline, and only then add",
         ),
         "devcovenant/docs/profiles.md": (
             "Reach the first reviewed DevCovenant baseline first",
-            "after the initial `install` -> config review -> `deploy`",
+            "Add custom profiles after the initial `install`,",
         ),
         "devcovenant/docs/policies.md": (
-            "do not seed repo-specific custom policies before the",
-            "prove that baseline, and",
+            "Do not seed custom policies before the initial reviewed baseline",
+            "prove that baseline, and then extend",
         ),
     }
 

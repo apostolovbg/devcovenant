@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import hashlib
 import importlib.util
+import os
 import shutil
 import subprocess  # nosec B404
 import sys
@@ -84,9 +85,17 @@ def _ensure_tool(command_name: str) -> bool:
     return shutil.which(command_name) is not None
 
 
-def _run_command(repo_root: Path, args: Sequence[str]) -> None:
+def _run_command(
+    repo_root: Path,
+    args: Sequence[str],
+    *,
+    extra_env: Dict[str, str] | None = None,
+) -> None:
     """Run one lockfile command and raise on failure."""
 
+    env = dict(os.environ)
+    if extra_env:
+        env.update(extra_env)
     # Reviewed tokenized local command execution; shell use stays forbidden.
     subprocess.run(  # nosec B603
         list(args),
@@ -94,6 +103,7 @@ def _run_command(repo_root: Path, args: Sequence[str]) -> None:
         check=True,
         text=True,
         capture_output=True,
+        env=env,
     )
 
 
@@ -193,21 +203,23 @@ def _run_pip_compile(
         raise RuntimeError(
             "pip-tools is required for requirements.lock updates."
         )
-    _run_command(
-        repo_root,
-        (
-            sys.executable,
-            "-m",
-            "piptools",
-            "compile",
-            "--quiet",
-            "--allow-unsafe",
-            "--strip-extras",
-            "--output-file",
-            str(output_path),
-            requirements_in.name,
-        ),
-    )
+    with tempfile.TemporaryDirectory() as cache_dir:
+        _run_command(
+            repo_root,
+            (
+                sys.executable,
+                "-m",
+                "piptools",
+                "compile",
+                "--quiet",
+                "--allow-unsafe",
+                "--strip-extras",
+                "--output-file",
+                str(output_path),
+                requirements_in.name,
+            ),
+            extra_env={"PIP_TOOLS_CACHE_DIR": cache_dir},
+        )
 
 
 def _refresh_python_requirements_lock(repo_root: Path) -> LockHandlerResult:
@@ -555,6 +567,22 @@ LOCKFILE_HANDLERS: Dict[str, Callable[[Path], LockHandlerResult]] = {
     "Podfile.lock": _refresh_podfile_lock,
     "packages.lock.json": _refresh_dotnet_lock,
 }
+LOCKFILE_TRIGGER_FILES: Dict[str, Tuple[str, ...]] = {
+    "requirements.lock": ("requirements.in", "requirements.lock"),
+    "package-lock.json": ("package.json", "package-lock.json"),
+    "yarn.lock": ("package.json", "yarn.lock"),
+    "pnpm-lock.yaml": ("package.json", "pnpm-lock.yaml"),
+    "go.sum": ("go.mod", "go.sum"),
+    "Cargo.lock": ("Cargo.toml", "Cargo.lock"),
+    "composer.lock": ("composer.json", "composer.lock"),
+    "Gemfile.lock": ("Gemfile", "Gemfile.lock"),
+    "pubspec.lock": ("pubspec.yaml", "pubspec.lock"),
+    "Podfile.lock": ("Podfile", "Podfile.lock"),
+    "packages.lock.json": ("packages.lock.json",),
+}
+LOCKFILE_TRIGGER_SUFFIXES: Dict[str, Tuple[str, ...]] = {
+    "packages.lock.json": (".csproj", ".props", ".targets", ".sln"),
+}
 
 
 def _csv_to_list(raw_value: str) -> List[str]:
@@ -587,6 +615,28 @@ def _resolved_role_file_selectors(
         metadata_key="dependency_role_files",
     )
     return [selector for role, selector in pairs if role == "resolved"]
+
+
+def _lock_refresh_is_requested(
+    lock_name: str,
+    changed_dependency_files: Sequence[str],
+) -> bool:
+    """Return whether a lock refresh is required for changed files."""
+
+    normalized = [
+        str(entry).strip()
+        for entry in changed_dependency_files
+        if str(entry).strip()
+    ]
+    if not normalized:
+        return True
+    trigger_files = set(LOCKFILE_TRIGGER_FILES.get(lock_name, (lock_name,)))
+    if any(entry in trigger_files for entry in normalized):
+        return True
+    trigger_suffixes = LOCKFILE_TRIGGER_SUFFIXES.get(lock_name, ())
+    if not trigger_suffixes:
+        return False
+    return any(entry.endswith(trigger_suffixes) for entry in normalized)
 
 
 def _descriptor_metadata_lists(
@@ -668,12 +718,6 @@ def refresh_all(
     ]
     results: List[LockHandlerResult] = []
     changed_lockfiles: List[str] = []
-    for lock_name in targets:
-        handler = LOCKFILE_HANDLERS[lock_name]
-        result = handler(repo_root)
-        results.append(result)
-        if result.changed:
-            changed_lockfiles.append(lock_name)
     requested_dependency_files: list[str] = []
     if isinstance(payload, dict):
         raw_files = payload.get("changed_dependency_files")
@@ -682,6 +726,25 @@ def refresh_all(
                 text = str(entry).strip()
                 if text:
                     requested_dependency_files.append(text)
+    for lock_name in targets:
+        if not _lock_refresh_is_requested(
+            lock_name,
+            requested_dependency_files,
+        ):
+            results.append(
+                LockHandlerResult(
+                    lock_name,
+                    changed=False,
+                    attempted=False,
+                    message="Skipped: no direct lock inputs changed.",
+                )
+            )
+            continue
+        handler = LOCKFILE_HANDLERS[lock_name]
+        result = handler(repo_root)
+        results.append(result)
+        if result.changed:
+            changed_lockfiles.append(lock_name)
     changed_dependency_files = requested_dependency_files or changed_lockfiles
 
     modified_license_files = dependency_management.refresh_license_artifacts(

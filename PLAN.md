@@ -4,9 +4,9 @@
 **Project Version:** 1.0.0
 **Project Stage:** stable
 **Maintenance Stance:** active
-**Compatibility Policy:** breaking-allowed
+**Compatibility Policy:** forward-only
 **Versioning Mode:** versioned
-**Last Updated:** 2026-03-29
+**Last Updated:** 2026-03-30
 **DevCovenant Version:** 1.0.0
 
 <!-- DEVCOV:BEGIN -->

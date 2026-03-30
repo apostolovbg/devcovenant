@@ -122,7 +122,7 @@ class GeneratedUnittestCases(unittest.TestCase):
             ),
             stage="stable",
             maintenance_stance="active",
-            compatibility_policy="breaking-allowed",
+            compatibility_policy="forward-only",
             versioning_mode="versioned",
             codename="Atlas",
             build_identity="2026.03.20.1",
@@ -138,11 +138,35 @@ class GeneratedUnittestCases(unittest.TestCase):
         self.assertEqual(payload["maintenance_stance"], "active")
         self.assertEqual(
             payload["compatibility_policy"],
-            "breaking-allowed",
+            "forward-only",
         )
         self.assertEqual(payload["versioning_mode"], "versioned")
         self.assertEqual(payload["codename"], "Atlas")
         self.assertEqual(payload["build_identity"], "2026.03.20.1")
+
+    def test_section_lines_surface_compatibility_guidance(self):
+        """AGENTS governance block should surface policy-specific guidance."""
+        state = ProjectGovernanceState(
+            stage="stable",
+            maintenance_stance="active",
+            compatibility_policy="forward-only",
+            versioning_mode="versioned",
+        )
+        lines = state.section_lines("1.2.3")
+        self.assertIn("- Compatibility Policy: forward-only", lines)
+        self.assertIn(
+            "- Compatibility Guidance:",
+            lines,
+        )
+        self.assertIn(
+            "  Do not leave legacy fallbacks behind. Remove deprecated "
+            "readers,",
+            lines,
+        )
+        self.assertIn(
+            "  aliases, and bridge paths instead of preserving them.",
+            lines,
+        )
 
     def test_render_identity_placeholders_wraps_project_description(self):
         """Wrapped identity placeholders should preserve the full meaning."""

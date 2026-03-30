@@ -5,8 +5,12 @@ from __future__ import annotations
 from pathlib import Path
 from typing import Any, Dict, List
 
+import yaml
+
 from devcovenant.core.runtime import registry as runtime_registry_module
+from devcovenant.core.services import managed_docs as managed_docs_service
 from devcovenant.core.services import tracked_registry
+from devcovenant.core.services import yaml_cache as yaml_cache_service
 
 REGISTRY_DIR = tracked_registry.REGISTRY_DIR
 REGISTRY_REL_PATH = tracked_registry.REGISTRY_REL_PATH
@@ -24,7 +28,6 @@ DEFAULT_CORE_DIRS = [
     "devcovenant/builtin/profiles/global",
     "devcovenant/builtin/profiles/global/assets",
     "devcovenant/core",
-    "devcovenant/core/contracts/invariants",
     "devcovenant/logs",
     REGISTRY_DIR,
 ]
@@ -53,13 +56,8 @@ DEFAULT_CORE_FILES = [
     "devcovenant/builtin/profiles/global/assets/gitignore.yaml",
     "devcovenant/builtin/profiles/README.md",
     "devcovenant/builtin/policies/README.md",
-    "devcovenant/core/contracts/invariant.py",
-    "devcovenant/core/contracts/invariants/devcov_integrity_guard.yaml",
-    "devcovenant/core/contracts/invariants/devcov_structure_guard.yaml",
-    "devcovenant/core/contracts/invariants/devflow_run_gates.yaml",
     "devcovenant/core/lib/agents_blocks.py",
     "devcovenant/core/services/asset_materialization.py",
-    "devcovenant/core/services/core_invariants.py",
     "devcovenant/core/services/integrity_validation.py",
     "devcovenant/core/services/manifest_inventory.py",
     "devcovenant/core/services/policy_registry.py",
@@ -73,17 +71,28 @@ DEFAULT_CORE_FILES = [
     "devcovenant/core/runtime/registry.py",
     "devcovenant/core/runtime/workflow_session.py",
 ]
-DEFAULT_DOCS_CORE = [
+DEFAULT_AVAILABLE_DOCS = [
+    "AGENTS.md",
+    "README.md",
+    "CONTRIBUTING.md",
+    "CHANGELOG.md",
+    "SPEC.md",
+    "PLAN.md",
+    "SECURITY.md",
+    "PRIVACY.md",
+    "SUPPORT.md",
+    "LICENSE",
+    "devcovenant/README.md",
+]
+DEFAULT_ENABLED_DOCS = [
     "AGENTS.md",
     "README.md",
     "CHANGELOG.md",
     "CONTRIBUTING.md",
-]
-DEFAULT_DOCS_OPTIONAL = [
     "SPEC.md",
     "PLAN.md",
+    "devcovenant/README.md",
 ]
-DEFAULT_DOCS_CUSTOM: List[str] = []
 DEFAULT_CUSTOM_DIRS = [
     "devcovenant/custom",
     "devcovenant/custom/policies",
@@ -111,6 +120,8 @@ def build_manifest(
     options: Dict[str, Any] | None = None,
     installed: Dict[str, Any] | None = None,
     doc_blocks: List[str] | None = None,
+    available_docs: List[str] | None = None,
+    enabled_docs: List[str] | None = None,
 ) -> Dict[str, Any]:
     """Build a deterministic inventory payload for the tracked registry."""
     manifest: Dict[str, Any] = {
@@ -120,9 +131,8 @@ def build_manifest(
             "files": list(DEFAULT_CORE_FILES),
         },
         "docs": {
-            "core": list(DEFAULT_DOCS_CORE),
-            "optional": list(DEFAULT_DOCS_OPTIONAL),
-            "custom": list(DEFAULT_DOCS_CUSTOM),
+            "available": list(available_docs or DEFAULT_AVAILABLE_DOCS),
+            "enabled": list(enabled_docs or DEFAULT_ENABLED_DOCS),
         },
         "custom": {
             "dirs": list(DEFAULT_CUSTOM_DIRS),
@@ -146,6 +156,40 @@ def build_manifest(
     return manifest
 
 
+def _resolved_docs_manifest(repo_root: Path) -> dict[str, list[str]]:
+    """Return the available/enabled managed-doc inventory for one repo."""
+    available_docs = list(DEFAULT_AVAILABLE_DOCS)
+    enabled_docs = list(DEFAULT_ENABLED_DOCS)
+
+    try:
+        entries = managed_docs_service.managed_doc_descriptor_entries(
+            repo_root
+        )
+    except ValueError:
+        entries = []
+    if entries:
+        available_docs = [str(entry["doc"]) for entry in entries]
+
+    config_path = repo_root / "devcovenant" / "config.yaml"
+    if config_path.exists():
+        try:
+            config_payload = yaml_cache_service.load_yaml(config_path)
+        except (OSError, yaml.YAMLError):
+            config_payload = {}
+        if isinstance(config_payload, dict):
+            try:
+                enabled_docs = managed_docs_service.managed_docs_from_config(
+                    config_payload
+                )
+            except ValueError:
+                pass
+
+    return {
+        "available": available_docs,
+        "enabled": enabled_docs,
+    }
+
+
 def load_manifest(repo_root: Path) -> Dict[str, Any] | None:
     """Load the tracked inventory section if present, otherwise return None."""
     path = manifest_path(repo_root)
@@ -165,12 +209,17 @@ def write_manifest(repo_root: Path, manifest: Dict[str, Any]) -> Path:
 
 
 def _normalize_manifest_sections(
+    repo_root: Path,
     manifest: Dict[str, Any],
 ) -> tuple[Dict[str, Any], bool]:
     """Normalize inventory sections to the current default inventories."""
     normalized = dict(manifest)
     changed = False
-    defaults_manifest = build_manifest()
+    docs_manifest = _resolved_docs_manifest(repo_root)
+    defaults_manifest = build_manifest(
+        available_docs=docs_manifest["available"],
+        enabled_docs=docs_manifest["enabled"],
+    )
     for section_name in ("core", "docs", "custom", "generated"):
         defaults = defaults_manifest.get(section_name, {})
         current = normalized.get(section_name, {})
@@ -200,13 +249,21 @@ def ensure_manifest(repo_root: Path) -> Dict[str, Any] | None:
     if path.exists():
         payload = load_manifest(repo_root)
         if payload is None:
-            payload = build_manifest()
-        normalized, changed = _normalize_manifest_sections(payload)
+            docs_manifest = _resolved_docs_manifest(repo_root)
+            payload = build_manifest(
+                available_docs=docs_manifest["available"],
+                enabled_docs=docs_manifest["enabled"],
+            )
+        normalized, changed = _normalize_manifest_sections(repo_root, payload)
         if changed:
             write_manifest(repo_root, normalized)
         return normalized
     if not (repo_root / tracked_registry.DEV_COVENANT_DIR).exists():
         return None
-    manifest = build_manifest()
+    docs_manifest = _resolved_docs_manifest(repo_root)
+    manifest = build_manifest(
+        available_docs=docs_manifest["available"],
+        enabled_docs=docs_manifest["enabled"],
+    )
     write_manifest(repo_root, manifest)
     return manifest

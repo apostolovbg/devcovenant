@@ -120,7 +120,7 @@ def _resolve_gate_execution_command(
     env: Mapping[str, str],
     managed_python: str | None,
 ) -> str:
-    """Prefer the console script, then fall back to module form when needed."""
+    """Prefer the console script, then resolve module form when needed."""
     tokens = shlex.split(command)
     if not tokens:
         raise SystemExit("Pre-commit command is empty.")
@@ -133,8 +133,8 @@ def _resolve_gate_execution_command(
     first_name = Path(executable).name.lower()
     if first_name not in _PRE_COMMIT_EXECUTABLE_TOKENS:
         return command
-    fallback_tokens = [managed_python, "-m", "pre_commit", *tokens[1:]]
-    return shlex.join(fallback_tokens)
+    resolved_tokens = [managed_python, "-m", "pre_commit", *tokens[1:]]
+    return shlex.join(resolved_tokens)
 
 
 _TEST_IRRELEVANT_FILES = {"changelog.md"}
@@ -145,8 +145,10 @@ _DEVCOV_BLOCKING_MARKERS = (
     "critical violations must be fixed",
     "violations >= error threshold",
 )
+_HOOK_MODIFIED_FILES_MARKER = "files were modified by this hook"
 _SUPPRESSED_FAILURE_TAIL_MAX_LINES = 40
 _SUPPRESSED_FAILURE_TAIL_MAX_CHARS = 6000
+_START_GATE_DRIFT_PATH_LIMIT = 12
 
 
 def _emit_suppressed_failure_tail(command_output: str) -> None:
@@ -165,6 +167,71 @@ def _emit_suppressed_failure_tail(command_output: str) -> None:
     )
     for line in tail_text.splitlines():
         runtime_print(line, file=sys.stderr)
+
+
+def _format_changed_path_tail(changed_paths: set[str]) -> str:
+    """Render a bounded changed-path summary for gate failure messages."""
+    ordered = sorted(path for path in changed_paths if str(path).strip())
+    if not ordered:
+        return ""
+    visible = ordered[:_START_GATE_DRIFT_PATH_LIMIT]
+    rendered = ", ".join(visible)
+    hidden_count = len(ordered) - len(visible)
+    if hidden_count > 0:
+        rendered += f", ... (+{hidden_count} more)"
+    return rendered
+
+
+def _is_devcov_hook_modified_failure(command_output: str) -> bool:
+    """Return whether DevCovenant changed files during pre-commit."""
+    output = str(command_output or "").strip()
+    if not output:
+        return False
+    return (
+        _DEVCOV_POLICY_HOOK_TOKEN in output
+        and _HOOK_MODIFIED_FILES_MARKER in output
+    )
+
+
+def _emit_start_gate_drift_failure(
+    command: str,
+    *,
+    exit_code: int,
+    command_output: str,
+    changed_paths: set[str],
+) -> None:
+    """Explain why start gate rejected hook-induced baseline drift."""
+    runtime_print(
+        "Start gate detected hook-induced baseline drift and did not "
+        "record a usable session.",
+        file=sys.stderr,
+    )
+    rendered_paths = _format_changed_path_tail(changed_paths)
+    if rendered_paths:
+        runtime_print(
+            f"Hook-changed paths: {rendered_paths}",
+            file=sys.stderr,
+        )
+    if _is_devcov_hook_modified_failure(command_output):
+        runtime_print(
+            "The DevCovenant hook refreshed managed files during "
+            "`devcovenant gate --start`. Settle those managed updates "
+            "first, then rerun `devcovenant gate --start`.",
+            file=sys.stderr,
+        )
+        return
+    rendered = " ".join(shlex.split(command)) or command
+    if exit_code != 0:
+        runtime_print(
+            "Pre-commit command failed with exit code "
+            f"{exit_code}: {rendered}",
+            file=sys.stderr,
+        )
+    runtime_print(
+        "Clear the hook-induced edits and rerun "
+        "`devcovenant gate --start`.",
+        file=sys.stderr,
+    )
 
 
 def _restore_status_file(path: Path, previous_bytes: bytes | None) -> None:
@@ -681,7 +748,7 @@ def run_pre_commit_gate(
                 recovery_status_previous = None
 
         command_output = ""
-        if is_end or is_mid:
+        if is_start or is_end or is_mid:
             exit_code, command_output = _run_command_with_output(
                 hook_command,
                 env=hook_env,
@@ -692,6 +759,29 @@ def run_pre_commit_gate(
                 env=hook_env,
                 strict=False,
             )
+        try:
+            diff_after_hooks = _current_numstat_snapshot(repo_root)
+        except ValueError as error:
+            if stage == "start" and recovery_status_active:
+                _restore_status_file(status_path, recovery_status_previous)
+                recovery_status_active = False
+            runtime_print(str(error), file=sys.stderr)
+            return 1
+        hook_changed_paths = _changed_paths_between(
+            diff_before, diff_after_hooks
+        )
+        hooks_changed = bool(hook_changed_paths)
+        if is_start and hooks_changed:
+            if recovery_status_active:
+                _restore_status_file(status_path, recovery_status_previous)
+                recovery_status_active = False
+            _emit_start_gate_drift_failure(
+                command,
+                exit_code=exit_code,
+                command_output=command_output,
+                changed_paths=hook_changed_paths,
+            )
+            return 1
         if is_start and exit_code != 0:
             if recovery_status_active:
                 _restore_status_file(status_path, recovery_status_previous)
@@ -708,25 +798,6 @@ def run_pre_commit_gate(
                 file=sys.stderr,
             )
             return exit_code
-        try:
-            diff_after_hooks = _current_numstat_snapshot(repo_root)
-        except ValueError as error:
-            if stage == "start" and recovery_status_active:
-                _restore_status_file(status_path, recovery_status_previous)
-                recovery_status_active = False
-            runtime_print(str(error), file=sys.stderr)
-            return 1
-        if is_start and diff_before != diff_after_hooks:
-            if recovery_status_active:
-                _restore_status_file(status_path, recovery_status_previous)
-                recovery_status_active = False
-            runtime_print(
-                "Start gate must not mutate the baseline snapshot. "
-                "Clear hook-induced edits and rerun "
-                "`devcovenant gate --start`.",
-                file=sys.stderr,
-            )
-            return 1
 
         if stage == "start" and recovery_status_active and recovery_run_ids:
             _restore_status_file(status_path, recovery_status_previous)
@@ -785,10 +856,6 @@ def run_pre_commit_gate(
             )
             return exit_code
 
-        hook_changed_paths = _changed_paths_between(
-            diff_before, diff_after_hooks
-        )
-        hooks_changed = bool(hook_changed_paths)
         if is_mid and exit_code == 0 and hooks_changed:
             runtime_print(
                 "Mid gate detected hook-induced file changes. "

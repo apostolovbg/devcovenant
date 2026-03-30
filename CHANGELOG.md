@@ -4,7 +4,7 @@
 **Project Version:** 1.0.0
 **Project Stage:** stable
 **Maintenance Stance:** active
-**Compatibility Policy:** breaking-allowed
+**Compatibility Policy:** forward-only
 **Versioning Mode:** versioned
 **Last Updated:** 2026-03-30
 **DevCovenant Version:** 1.0.0
@@ -59,6 +59,227 @@ Example:
 ## Log changes here
 
 ## Version 1.0.0
+
+- 2026-03-30:
+  Change: aligned managed-doc inventory and refresh/docs ownership around
+    available-versus-enabled doc selection, documented descriptor precedence
+    by active profile order, and added trust-doc rendering tests for both the
+    global baseline and repo/profile overrides.
+  Why: removed the stale default/optional-doc mental model that no longer
+    matched runtime behavior and proved that `SECURITY.md`, `PRIVACY.md`, and
+    `SUPPORT.md` now follow the same descriptor-precedence contract as the
+    rest of the managed-doc system.
+  Impact: tracked inventory now reports available and enabled docs honestly,
+    structure validation only requires enabled docs, refresh/config docs
+    explain the real `doc_assets` contract, and the trust-doc template
+    precedence path is covered by focused regressions.
+  Files:
+  CHANGELOG.md
+  devcovenant/builtin/profiles/global/assets/PRIVACY.yaml
+  devcovenant/builtin/profiles/global/assets/SECURITY.yaml
+  devcovenant/builtin/profiles/global/assets/SUPPORT.yaml
+  devcovenant/builtin/profiles/global/assets/config.yaml
+  devcovenant/core/flow/refresh.py
+  devcovenant/core/services/managed_docs.py
+  devcovenant/core/services/manifest_inventory.py
+  devcovenant/core/services/structure_validation.py
+  devcovenant/custom/profiles/devcovrepo/assets/docs/config.md
+  devcovenant/custom/profiles/devcovrepo/assets/docs/profiles.md
+  devcovenant/custom/profiles/devcovrepo/assets/docs/refresh.md
+  devcovenant/custom/profiles/devcovrepo/assets/docs/registry.md
+  devcovenant/docs/config.md
+  devcovenant/docs/profiles.md
+  devcovenant/docs/refresh.md
+  devcovenant/docs/registry.md
+  devcovenant/registry/registry.yaml
+  tests/devcovenant/core/services/test_managed_docs.py
+  tests/devcovenant/core/services/test_manifest_inventory.py
+  tests/devcovenant/core/services/test_structure_validation.py
+  tests/devcovenant/test_refresh.py
+
+- 2026-03-30:
+  Change: removed the invariant framework from the runtime, split repo-only
+    trust and release surfaces out of package docs, tightened dependency-lock
+    refresh to use direct lock inputs, and aligned the generated repo surfaces
+    with the forward-only contract.
+  Why: addressed the stale invariant-era generated output, package-doc
+    leakage of repo-only details, and a dependency autofix path that tried to
+    recompile `requirements.lock` for unrelated package-metadata edits.
+  Impact: folded integrity, structure, and workflow checks fully under the
+    engine runtime, added repo-owned `SECURITY.md` / `PRIVACY.md` /
+    `SUPPORT.md`, kept package docs package-scoped, and made gate-time
+    dependency refresh converge without user-cache or needless network
+    dependence.
+  Files:
+  AGENTS.md
+  CHANGELOG.md
+  MANIFEST.in
+  PRIVACY.md
+  README.md
+  SECURITY.md
+  SPEC.md
+  SUPPORT.md
+  devcovenant/README.md
+  devcovenant/builtin/policies/dependency_management/\
+    dependency_lock_runtime.py
+  devcovenant/builtin/profiles/README.md
+  devcovenant/builtin/profiles/defaults/defaults.yaml
+  devcovenant/builtin/profiles/global/assets/PLAN.yaml
+  devcovenant/builtin/profiles/global/assets/SPEC.yaml
+  devcovenant/builtin/profiles/global/assets/config.yaml
+  devcovenant/builtin/profiles/global/global.yaml
+  devcovenant/config.yaml
+  devcovenant/core/README.md
+  devcovenant/core/contracts/invariant.py
+  devcovenant/core/contracts/invariants/devcov_integrity_guard.yaml
+  devcovenant/core/contracts/invariants/devcov_structure_guard.yaml
+  devcovenant/core/contracts/invariants/devflow_run_gates.yaml
+  devcovenant/core/flow/refresh.py
+  devcovenant/core/flow/workflow_validation.py
+  devcovenant/core/lib/agents_blocks.py
+  devcovenant/core/lib/document_exemptions.py
+  devcovenant/core/runtime/registry.py
+  devcovenant/core/runtime/workflow_session.py
+  devcovenant/core/services/core_invariants.py
+  devcovenant/core/services/integrity_validation.py
+  devcovenant/core/services/managed_docs.py
+  devcovenant/core/services/manifest_inventory.py
+  devcovenant/core/services/metadata.py
+  devcovenant/core/services/policy_engine.py
+  devcovenant/core/services/policy_registry.py
+  devcovenant/core/services/structure_validation.py
+  devcovenant/core/services/tracked_registry.py
+  devcovenant/custom/profiles/devcovrepo/assets/POLICY_MAP.yaml
+  devcovenant/custom/profiles/devcovrepo/assets/PROFILE_MAP.yaml
+  devcovenant/custom/profiles/devcovrepo/assets/PRIVACY.yaml
+  devcovenant/custom/profiles/devcovrepo/assets/SECURITY.yaml
+  devcovenant/custom/profiles/devcovrepo/assets/SUPPORT.yaml
+  devcovenant/custom/profiles/devcovrepo/assets/docs/README.md
+  devcovenant/custom/profiles/devcovrepo/assets/docs/config.md
+  devcovenant/custom/profiles/devcovrepo/assets/docs/installation.md
+  devcovenant/custom/profiles/devcovrepo/assets/docs/policies.md
+  devcovenant/custom/profiles/devcovrepo/assets/docs/profiles.md
+  devcovenant/custom/profiles/devcovrepo/assets/docs/registry.md
+  devcovenant/custom/profiles/devcovrepo/assets/docs/troubleshooting.md
+  devcovenant/custom/profiles/devcovrepo/assets/docs/workflow.md
+  devcovenant/custom/profiles/devcovrepo/devcovrepo.yaml
+  devcovenant/docs/architecture.md
+  devcovenant/docs/config.md
+  devcovenant/docs/contracts.md
+  devcovenant/docs/installation.md
+  devcovenant/docs/policies.md
+  devcovenant/docs/profiles.md
+  devcovenant/docs/project_governance.md
+  devcovenant/docs/refresh.md
+  devcovenant/docs/registry.md
+  devcovenant/docs/troubleshooting.md
+  devcovenant/docs/workflow.md
+  devcovenant/registry/registry.yaml
+  licenses/THIRD_PARTY_LICENSES.md
+  pyproject.toml
+  tests/devcovenant/builtin/policies/dependency_management/\
+    test_dependency_lock_runtime.py
+  tests/devcovenant/core/contracts/test_invariant.py
+  tests/devcovenant/core/flow/test_workflow_validation.py
+  tests/devcovenant/core/lib/test_agents_blocks.py
+  tests/devcovenant/core/runtime/test_execution.py
+  tests/devcovenant/core/runtime/test_workflow_session.py
+  tests/devcovenant/core/services/test_core_invariants.py
+  tests/devcovenant/core/services/test_integrity_validation.py
+  tests/devcovenant/core/services/test_managed_docs.py
+  tests/devcovenant/core/services/test_metadata.py
+  tests/devcovenant/core/services/test_structure_validation.py
+  tests/devcovenant/test_install.py
+  tests/devcovenant/test_refresh.py
+
+- 2026-03-30:
+  Change: removed the managed-doc generic-scaffold legacy bridge, split core
+    invariant descriptor loading away from policy descriptors, and corrected
+    the live `SPEC.md` compatibility story to match the repo's
+    `forward-only` governance state.
+  Why: the read-only QA audit found one stale contract doc, one still-active
+    legacy managed-doc migration path, and one remaining invariant/runtime
+    coupling seam that kept invariants looking more policy-shaped than they
+    really are.
+  Impact: eliminated the legacy `SPEC`/`PLAN` replacement fallback from the
+    managed-doc runtime and tracked registry, made invariants load and test as
+    invariant-owned descriptors, and aligned the spec with the current public
+    compatibility posture.
+  Files:
+  CHANGELOG.md
+  SPEC.md
+  devcovenant/builtin/profiles/global/assets/PLAN.yaml
+  devcovenant/builtin/profiles/global/assets/SPEC.yaml
+  devcovenant/core/contracts/invariant.py
+  devcovenant/core/flow/workflow_validation.py
+  devcovenant/core/services/core_invariants.py
+  devcovenant/core/services/integrity_validation.py
+  devcovenant/core/services/managed_docs.py
+  devcovenant/core/services/structure_validation.py
+  devcovenant/custom/profiles/devcovrepo/assets/docs/profiles.md
+  devcovenant/custom/profiles/devcovrepo/assets/docs/registry.md
+  devcovenant/docs/architecture.md
+  devcovenant/docs/profiles.md
+  devcovenant/docs/registry.md
+  devcovenant/registry/registry.yaml
+  tests/devcovenant/core/contracts/test_invariant.py
+  tests/devcovenant/core/flow/test_workflow_validation.py
+  tests/devcovenant/core/services/test_core_invariants.py
+  tests/devcovenant/core/services/test_managed_docs.py
+  tests/devcovenant/test_refresh.py
+
+- 2026-03-30:
+  Change: added the `forward-only` compatibility policy, generated
+    policy-specific AGENTS governance guidance, removed touched legacy
+    compatibility shims, and tightened `gate --start` to report managed drift
+    explicitly instead of as a generic pre-commit failure.
+  Why: aligned the repo around an explicit no-legacy-fallback stance,
+    required project-governance review up front in the workflow, and removed
+    the remaining start-gate/reporting and workflow-validation bridges that
+    were still hiding the real contract from operators.
+  Impact: made `Compatibility Policy` an active workflow decision in
+    `AGENTS.md`, switched this repo to `forward-only`, rejected old recorded
+    `python -m pre_commit` evidence shapes, aligned config/profile/workflow
+    docs with that stance, and made start-gate drift failures identify the
+    changed paths and managed-file refresh cause directly.
+  Files:
+  AGENTS.md
+  CHANGELOG.md
+  PLAN.md
+  README.md
+  SPEC.md
+  devcovenant/README.md
+  devcovenant/builtin/policies/managed_environment/\
+    managed_environment_runtime.py
+  devcovenant/builtin/policies/modules_need_tests/modules_need_tests.yaml
+  devcovenant/builtin/profiles/global/assets/AGENTS.yaml
+  devcovenant/builtin/profiles/global/assets/config.yaml
+  devcovenant/config.yaml
+  devcovenant/core/flow/gate.py
+  devcovenant/core/flow/refresh.py
+  devcovenant/core/flow/workflow_validation.py
+  devcovenant/core/services/managed_docs.py
+  devcovenant/core/services/project_governance.py
+  devcovenant/custom/profiles/devcovrepo/assets/docs/config.md
+  devcovenant/custom/profiles/devcovrepo/assets/docs/installation.md
+  devcovenant/custom/profiles/devcovrepo/assets/docs/policies.md
+  devcovenant/custom/profiles/devcovrepo/assets/docs/profiles.md
+  devcovenant/custom/profiles/devcovrepo/assets/docs/registry.md
+  devcovenant/custom/profiles/devcovrepo/assets/docs/troubleshooting.md
+  devcovenant/custom/profiles/devcovrepo/assets/docs/workflow.md
+  devcovenant/custom/profiles/devcovrepo/devcovrepo.yaml
+  devcovenant/docs/config.md
+  devcovenant/docs/installation.md
+  devcovenant/docs/policies.md
+  devcovenant/docs/profiles.md
+  devcovenant/docs/project_governance.md
+  devcovenant/docs/registry.md
+  devcovenant/docs/troubleshooting.md
+  devcovenant/docs/workflow.md
+  devcovenant/registry/registry.yaml
+  tests/devcovenant/core/flow/test_gate.py
+  tests/devcovenant/core/flow/test_workflow_validation.py
+  tests/devcovenant/core/services/test_project_governance.py
 
 - 2026-03-30:
   Change: clarified config ownership across the template and live config,

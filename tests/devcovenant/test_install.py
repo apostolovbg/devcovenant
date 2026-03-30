@@ -262,11 +262,10 @@ def _build_wheel(
         [
             sys.executable,
             "-m",
-            "pip",
-            "wheel",
-            str(build_root),
-            "--no-deps",
-            "-w",
+            "build",
+            "--wheel",
+            "--no-isolation",
+            "--outdir",
             str(output_dir),
         ],
         cwd=build_root,
@@ -330,6 +329,7 @@ def _build_sdist(
             "-m",
             "build",
             "--sdist",
+            "--no-isolation",
             "--outdir",
             str(output_dir),
         ],
@@ -558,7 +558,6 @@ def _unit_test_pyproject_uses_pep639_license_metadata() -> None:
     for required in [
         "README.md",
         "VERSION",
-        "core/contracts/invariants/*.yaml",
         "docs/*.md",
         "docs/*.png",
         "logs/README.md",
@@ -586,10 +585,6 @@ def _unit_test_manifest_includes_license_artifacts() -> None:
     assert "include licenses/THIRD_PARTY_LICENSES.md" in content
     assert "recursive-include licenses *.txt" in content
     assert "include devcovenant/logs/README.md" in content
-    assert (
-        "recursive-include devcovenant/core/contracts/invariants *.yaml"
-        in content
-    )
     assert "recursive-include devcovenant/docs *" in content
     assert "recursive-include devcovenant/builtin/profiles *" in content
     assert "recursive-include devcovenant/builtin/policies *" in content
@@ -626,34 +621,6 @@ def _unit_test_wheel_excludes_forbidden_artifacts() -> None:
     entries = _cached_wheel_entries()
 
     _assert_no_forbidden_wheel_entries(entries)
-
-
-def _unit_test_wheel_contains_core_invariant_descriptors() -> None:
-    """Wheel should ship the core invariant descriptor YAMLs."""
-    entries = _cached_wheel_entries()
-    for required in [
-        "devcovenant/core/contracts/invariants/devcov_integrity_guard.yaml",
-        "devcovenant/core/contracts/invariants/devcov_structure_guard.yaml",
-        "devcovenant/core/contracts/invariants/devflow_run_gates.yaml",
-    ]:
-        assert required in entries, (
-            "Wheel is missing required core invariant descriptor: "
-            f"{required}"
-        )
-
-
-def _unit_test_sdist_contains_core_invariant_descriptors() -> None:
-    """sdist should ship the core invariant descriptor YAMLs."""
-    entries = _cached_sdist_entries()
-    for required in [
-        "devcovenant/core/contracts/invariants/devcov_integrity_guard.yaml",
-        "devcovenant/core/contracts/invariants/devcov_structure_guard.yaml",
-        "devcovenant/core/contracts/invariants/devflow_run_gates.yaml",
-    ]:
-        assert any(entry.endswith(required) for entry in entries), (
-            "sdist is missing required core invariant descriptor: "
-            f"{required}"
-        )
 
 
 def _unit_test_dirty_build_tree_does_not_leak_into_wheel() -> None:
@@ -730,14 +697,6 @@ class GeneratedUnittestCases(unittest.TestCase):
     def test_wheel_excludes_forbidden_artifacts(self):
         """Run test_wheel_excludes_forbidden_artifacts."""
         _unit_test_wheel_excludes_forbidden_artifacts()
-
-    def test_wheel_contains_core_invariant_descriptors(self):
-        """Run core invariant descriptor wheel-content assertions."""
-        _unit_test_wheel_contains_core_invariant_descriptors()
-
-    def test_sdist_contains_core_invariant_descriptors(self):
-        """Run core invariant descriptor sdist-content assertions."""
-        _unit_test_sdist_contains_core_invariant_descriptors()
 
     def test_dirty_build_tree_does_not_leak_into_wheel(self):
         """Run test_dirty_build_tree_does_not_leak_into_wheel."""

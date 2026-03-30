@@ -33,20 +33,16 @@ def _normalize_commands(raw_value: object) -> list[str]:
 
 
 def _normalize_entry_payload(entry_raw: object) -> dict[str, object]:
-    """Normalize one anchor/run payload and purge legacy duplicate keys."""
+    """Normalize one anchor/run payload into the current session shape."""
 
     entry = dict(entry_raw) if isinstance(entry_raw, Mapping) else {}
-    last_run_utc = str(
-        entry.get("last_run_utc") or entry.get("last_run") or ""
-    ).strip()
+    last_run_utc = str(entry.get("last_run_utc") or "").strip()
     if last_run_utc:
         entry["last_run_utc"] = last_run_utc
     else:
         entry.pop("last_run_utc", None)
     entry.pop("last_run", None)
     commands = _normalize_commands(entry.get("commands"))
-    if not commands:
-        commands = _normalize_commands(entry.get("command"))
     if commands:
         entry["commands"] = commands
     else:

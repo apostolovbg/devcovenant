@@ -18,91 +18,6 @@ def _read_yaml(path: Path) -> dict[str, object]:
     return yaml.safe_load(path.read_text(encoding="utf-8")) or {}
 
 
-OLD_GENERIC_SPEC_BODY = """This is a generic SPEC guide template.
-
-Use `SPEC.md` only when your repository needs a durable specification layer.
-If your repo does not need one, keep this file brief and route details to
-your operational documentation.
-
-## Table of Contents
-1. [Overview](#overview)
-2. [When To Use SPEC](#when-to-use-spec)
-3. [Workflow](#workflow)
-4. [Ownership Boundaries](#ownership-boundaries)
-5. [Recommended Structure](#recommended-structure)
-6. [Maintenance Rules](#maintenance-rules)
-7. [Pointers](#pointers)
-
-## Overview
-`SPEC.md` is for durable repository-level contracts only.
-Do not use it as a backlog, scratchpad, or temporary planning area.
-
-## When To Use SPEC
-- Use SPEC when your repo needs a stable internal contract document.
-- Skip SPEC if AGENTS and operational docs already cover your needs.
-- Keep it small, explicit, and implementation-facing.
-
-## Workflow
-- Follow your repo's required gate workflow before and after edits.
-- Update SPEC only when durable contracts actually change.
-- Update operational docs in the same work slice when behavior changes.
-
-## Ownership Boundaries
-- `AGENTS.md`: workflow law, policy source, and temporary editable notes.
-- `PLAN.md`: active work backlog.
-- `docs/*`: operational and user-facing behavior guides.
-- `SPEC.md`: optional stable contract layer for this repository only.
-
-## Recommended Structure
-- Overview: what this repo treats as invariant.
-- Functional requirements: stable behavior contracts.
-- Non-functional requirements: quality, determinism, security baselines.
-- Pointers: links to detailed operational docs.
-
-If your repo needs architecture invariants, keep them in a dedicated
-architecture doc and keep SPEC at the meta-contract level.
-
-## Maintenance Rules
-- Prefer one-way pointers from SPEC to docs.
-- Do not make docs depend on SPEC to be understandable.
-- Keep SPEC synchronized with runtime reality.
-- Remove stale sections instead of keeping historical leftovers.
-- If your repo stops using SPEC, keep this file as a short usage note only.
-
-## Pointers
-Add pointers to the docs that hold your runtime and operational contracts.
-"""
-
-OLD_GENERIC_PLAN_BODY = (
-    "Use this plan to track active implementation work. Keep items\n"
-    "dependency-ordered, factual, and current.\n\n"
-    "## Table of Contents\n"
-    "1. [Overview](#overview)\n"
-    "2. [Workflow](#workflow)\n"
-    "3. [Active Work](#active-work)\n"
-    "4. [Validation Routine](#validation-routine)\n\n"
-    "## Overview\n"
-    "- Record durable requirements in `SPEC.md` when your repo uses SPEC.\n"
-    "- Record change history in `CHANGELOG.md`.\n"
-    "- Mark completed items as `[done]` and outstanding items as "
-    "`[not done]`.\n\n"
-    "## Workflow\n"
-    "- Work in dependency order unless an explicit blocker requires "
-    "reordering.\n"
-    "- Keep each item concrete and testable.\n"
-    "- Update status in the same session when work lands.\n\n"
-    "## Active Work\n"
-    "1. [not done] Item placeholder.\n"
-    "2. [not done] Item placeholder.\n"
-    "3. [done] Item placeholder.\n\n"
-    "## Validation Routine\n"
-    "- Verify checks and tests pass.\n"
-    "- Verify generated artifacts are synchronized after refresh.\n"
-    "- Verify documentation and changelog were updated where behavior "
-    "changed.\n"
-)
-
-
 def _write_demo_profile_descriptor(
     repo_root: Path,
     *,
@@ -355,8 +270,8 @@ class GeneratedUnittestCases(unittest.TestCase):
             self.assertIn("PROFILE_MAP.md", docs)
             self.assertNotIn("README.md", docs)
 
-    def test_duplicate_descriptor_targets_fail(self) -> None:
-        """Duplicate managed-doc targets should fail explicitly."""
+    def test_active_profile_descriptor_overrides_global_target(self) -> None:
+        """Active profile docs should override same-target global docs."""
         with tempfile.TemporaryDirectory() as temp_dir:
             repo_root = Path(temp_dir)
             install.install_repo(repo_root)
@@ -404,15 +319,26 @@ class GeneratedUnittestCases(unittest.TestCase):
                 autogen=["AGENTS.md", "README.md"],
             )
 
-            with self.assertRaisesRegex(
-                ValueError,
-                "Duplicate managed doc descriptor target `README.md`",
-            ):
-                managed_docs.descriptor_path(
-                    repo_root,
-                    "README.md",
-                    config_payload=payload,
-                )
+            resolved = managed_docs.descriptor_path(
+                repo_root,
+                "README.md",
+                config_payload=payload,
+            )
+            runtime_state = project_governance.resolve_runtime_state(repo_root)
+            rendered = managed_docs.render_doc(
+                repo_root,
+                "README.md",
+                project_version="1.0.0",
+                devcovenant_version="1.0.0",
+                project_governance_state=runtime_state,
+                config_payload=payload,
+            )
+
+            self.assertEqual(
+                resolved,
+                assets_root / "README.yaml",
+            )
+            self.assertIn("Override body.", rendered)
 
     def test_render_doc_uses_project_governance_identity(self) -> None:
         """Managed docs should render identity from governance state."""
@@ -548,102 +474,6 @@ class GeneratedUnittestCases(unittest.TestCase):
             self.assertIn("Preserve authored docs.", updated)
             self.assertNotIn("Item placeholder.", updated)
 
-    def test_sync_doc_replaces_legacy_generic_spec_body(self) -> None:
-        """Sync should replace the exact legacy generic SPEC scaffold."""
-        with tempfile.TemporaryDirectory() as temp_dir:
-            repo_root = Path(temp_dir)
-            install.install_repo(repo_root)
-            spec_path = repo_root / "SPEC.md"
-            spec_path.write_text(
-                "# DevCovenant Specification\n"
-                "**Doc ID:** SPEC\n"
-                "**Doc Type:** specification\n"
-                "**Project Version:** 1.0.0\n"
-                "**Project Stage:** stable\n"
-                "**Maintenance Stance:** active\n"
-                "**Compatibility Policy:** breaking-allowed\n"
-                "**Versioning Mode:** versioned\n"
-                "**Last Updated:** 2026-01-01\n"
-                "**DevCovenant Version:** 1.0.0\n\n"
-                "<!-- DEVCOV:BEGIN -->\n"
-                "This opening section is managed by DevCovenant.\n"
-                "Use `SPEC.md` only for durable repository contracts below "
-                "this block.\n"
-                "<!-- DEVCOV:END -->\n\n" + OLD_GENERIC_SPEC_BODY,
-                encoding="utf-8",
-            )
-
-            state = project_governance.resolve_runtime_state(repo_root)
-            project_version = state.displayed_project_version("")
-            devcovenant_version = (
-                (repo_root / "devcovenant" / "VERSION")
-                .read_text(encoding="utf-8")
-                .strip()
-            )
-
-            changed = managed_docs.sync_doc(
-                repo_root,
-                "SPEC.md",
-                project_version=project_version,
-                devcovenant_version=devcovenant_version,
-                project_governance_state=state,
-                import_managed_docs=set(),
-            )
-
-            updated = spec_path.read_text(encoding="utf-8")
-            self.assertTrue(changed)
-            self.assertNotIn("This is a generic SPEC guide template.", updated)
-            self.assertIn("## Project Intent", updated)
-            self.assertIn("## Acceptance Criteria", updated)
-
-    def test_sync_doc_replaces_legacy_generic_plan_body(self) -> None:
-        """Sync should replace the exact legacy generic PLAN scaffold."""
-        with tempfile.TemporaryDirectory() as temp_dir:
-            repo_root = Path(temp_dir)
-            install.install_repo(repo_root)
-            plan_path = repo_root / "PLAN.md"
-            plan_path.write_text(
-                "# Development Plan\n"
-                "**Doc ID:** PLAN\n"
-                "**Doc Type:** plan\n"
-                "**Project Version:** 1.0.0\n"
-                "**Project Stage:** stable\n"
-                "**Maintenance Stance:** active\n"
-                "**Compatibility Policy:** breaking-allowed\n"
-                "**Versioning Mode:** versioned\n"
-                "**Last Updated:** 2026-01-01\n"
-                "**DevCovenant Version:** 1.0.0\n\n"
-                "<!-- DEVCOV:BEGIN -->\n"
-                "This opening section is managed by DevCovenant.\n"
-                "Use `PLAN.md` to track active implementation work below "
-                "this block.\n"
-                "<!-- DEVCOV:END -->\n\n" + OLD_GENERIC_PLAN_BODY,
-                encoding="utf-8",
-            )
-
-            state = project_governance.resolve_runtime_state(repo_root)
-            project_version = state.displayed_project_version("")
-            devcovenant_version = (
-                (repo_root / "devcovenant" / "VERSION")
-                .read_text(encoding="utf-8")
-                .strip()
-            )
-
-            changed = managed_docs.sync_doc(
-                repo_root,
-                "PLAN.md",
-                project_version=project_version,
-                devcovenant_version=devcovenant_version,
-                project_governance_state=state,
-                import_managed_docs=set(),
-            )
-
-            updated = plan_path.read_text(encoding="utf-8")
-            self.assertTrue(changed)
-            self.assertNotIn("Item placeholder.", updated)
-            self.assertIn("## Writing Direction", updated)
-            self.assertIn("Completed item example.", updated)
-
     def test_sync_doc_ignores_last_updated_only_drift(self) -> None:
         """Sync should not rewrite docs when only Last Updated drifted."""
         with tempfile.TemporaryDirectory() as temp_dir:
@@ -705,27 +535,13 @@ class GeneratedUnittestCases(unittest.TestCase):
             plan_entry = payload["descriptors"]["PLAN.md"]
 
             self.assertRegex(spec_entry["body_fingerprint"], r"^[0-9a-f]{64}$")
-            self.assertEqual(
-                plan_entry["legacy_generic_body_fingerprints"],
-                [
-                    (
-                        "9ca5f866398d1715312b39720b0c163674ce8b6e"
-                        "2562201f3eacf5cc140fc894"
-                    )
-                ],
+            self.assertNotIn(
+                "legacy_generic_body_fingerprints",
+                plan_entry,
             )
-            self.assertEqual(
-                spec_entry["legacy_generic_body_fingerprints"],
-                [
-                    (
-                        "5b3cac9d37293ae3f40dec269922fcbce264442a"
-                        "67dc5a9642fadac6a0610043"
-                    ),
-                    (
-                        "2fad01922c9ba1b30b1cc736c32041fbf2418aef"
-                        "00349f6e7ffd28a67f547b37"
-                    ),
-                ],
+            self.assertNotIn(
+                "legacy_generic_body_fingerprints",
+                spec_entry,
             )
 
     def test_sync_doc_preserves_agents_editable_body(

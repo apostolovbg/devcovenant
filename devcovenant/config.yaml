@@ -106,13 +106,14 @@ paths:
 
 # Mixed-ownership section.
 
-# `doc_assets.autogen` is human-owned selection state.
+# `doc_assets.autogen` is human-owned enabled-doc selection.
 
 # `doc_assets.user` is human-owned exclusion state.
 
-# Documents that refresh may fully materialize from descriptor templates.
-# Empty list means runtime backfills defaults.
-# Documents in `user` are excluded from full template materialization.
+# `autogen` entries are managed-doc target paths, not a builtin optional-doc class.
+# Available descriptors come from the global asset root plus active profile asset roots.
+# Later active profiles override earlier profiles for the same target path.
+# Documents in `user` are excluded after `autogen` selection.
 # Managed block refresh still applies when markers are present.
 
 doc_assets:
@@ -125,6 +126,9 @@ doc_assets:
   - CHANGELOG.md
   - PROFILE_MAP.md
   - POLICY_MAP.md
+  - SECURITY.md
+  - PRIVACY.md
+  - SUPPORT.md
   - devcovenant/README.md
   user: []
 
@@ -261,19 +265,31 @@ pre_commit:
   overrides: {}
 
 # -------------------------------------------------------------------
+# Integrity runtime contract
+# -------------------------------------------------------------------
+
+# Human-owned section.
+
+# Integrity watches are optional runtime knobs for the built-in descriptor/registry/gate checks.
+
+# Use them when specific directories or files should require a fresh gate-status update.
+
+integrity:
+  watch_dirs: []
+  watch_files: []
+
+# -------------------------------------------------------------------
 # Workflow runtime contract
 # -------------------------------------------------------------------
 
 # Human-owned section.
 
-# DevCovenant-owned workflow contract knobs such as the canonical pre-commit command and invariant skip globs live here.
+# Workflow contract settings such as the canonical pre-commit command live here.
 
 # These are runtime contract settings, not policy toggles, so they do not belong under `policy_state`.
 
 workflow:
   pre_commit_command: pre-commit run --all-files
-  skipped_globs:
-  - devcovenant/registry/runtime/**
 
 # -------------------------------------------------------------------
 # Project governance
@@ -289,7 +305,9 @@ workflow:
 
 # `maintenance_stance` must be one of `allowed_maintenance_stances`; the default set is active, maintenance, frozen, sunset.
 
-# `compatibility_policy` must be `backward-compatible`, `breaking-allowed`, or `unspecified`.
+# `compatibility_policy` must be `backward-compatible`, `breaking-allowed`, `forward-only`, or `unspecified`.
+
+# `backward-compatible` preserves the public contract; `breaking-allowed` makes compatibility optional; `forward-only` rejects legacy compatibility fallbacks.
 
 # `versioning_mode` must be `versioned` or `unversioned`.
 
@@ -306,7 +324,7 @@ project-governance:
   project_description: DevCovenant is a Repository Governance Framework.
   stage: stable
   maintenance_stance: active
-  compatibility_policy: breaking-allowed
+  compatibility_policy: forward-only
   versioning_mode: versioned
   unversioned_label: Unversioned
   unreleased_heading: '## Unreleased'
@@ -701,17 +719,6 @@ autogen_metadata_overlays:
     report_heading:
     - '## License Report'
     third_party_file: licenses/THIRD_PARTY_LICENSES.md
-  devcov-integrity-guard:
-    gate_status_file: devcovenant/registry/runtime/gate_status.json
-    policy_definitions:
-    - AGENTS.md
-    registry_file: devcovenant/registry/registry.yaml
-  devflow-run-gates:
-    gate_status_file: devcovenant/registry/runtime/gate_status.json
-    pre_commit_command:
-    - pre-commit run --all-files
-    skipped_globs:
-    - devcovenant/registry/runtime/**
   docstring-and-comment-coverage:
     include_suffixes:
     - .py
@@ -831,6 +838,9 @@ autogen_metadata_overlays:
     - PLAN.md
     - PROFILE_MAP.md
     - POLICY_MAP.md
+    - SECURITY.md
+    - PRIVACY.md
+    - SUPPORT.md
     - devcovenant/README.md
     - devcovenant/core/README.md
     - devcovenant/custom/README.md
@@ -854,6 +864,9 @@ autogen_metadata_overlays:
     - PLAN.md
     - PROFILE_MAP.md
     - POLICY_MAP.md
+    - SECURITY.md
+    - PRIVACY.md
+    - SUPPORT.md
     - devcovenant/README.md
     - devcovenant/core/README.md
     - devcovenant/custom/README.md
@@ -1086,6 +1099,9 @@ autogen_metadata_overlays:
     - docs=>CHANGELOG.md
     - docs=>PROFILE_MAP.md
     - docs=>POLICY_MAP.md
+    - docs=>SECURITY.md
+    - docs=>PRIVACY.md
+    - docs=>SUPPORT.md
     - docs=>devcovenant/README.md
     - docs=>devcovenant/core/README.md
     - docs=>devcovenant/custom/README.md

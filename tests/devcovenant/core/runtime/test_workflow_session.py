@@ -72,8 +72,8 @@ def _unit_test_run_snapshots_share_the_session_snapshot_file() -> None:
         assert resolved == snapshot
 
 
-def _unit_test_workflow_session_write_normalizes_legacy_fields() -> None:
-    """Workflow-session writes should collapse legacy duplicate fields."""
+def _unit_test_workflow_session_write_drops_removed_fields() -> None:
+    """Workflow-session writes should keep only the current session shape."""
 
     module = importlib.import_module(MODULE)
     with tempfile.TemporaryDirectory() as tmpdir:
@@ -85,6 +85,8 @@ def _unit_test_workflow_session_write_normalizes_legacy_fields() -> None:
             "anchors": {
                 "start": {
                     "status": "passed",
+                    "last_run_utc": "2026-03-26T12:00:00+00:00",
+                    "commands": ["devcovenant gate --start"],
                     "last_run": "2026-03-26T12:00:00+00:00",
                     "command": "devcovenant gate --start",
                 }
@@ -92,6 +94,10 @@ def _unit_test_workflow_session_write_normalizes_legacy_fields() -> None:
             "runs": {
                 "tests": {
                     "status": "passed",
+                    "last_run_utc": "2026-03-26T12:05:00+00:00",
+                    "commands": [
+                        "python3 -m unittest discover -v",
+                    ],
                     "last_run": "2026-03-26T12:05:00+00:00",
                     "command": "pytest && python3 -m unittest discover -v",
                 }
@@ -116,7 +122,6 @@ def _unit_test_workflow_session_write_normalizes_legacy_fields() -> None:
             "2026-03-26T12:05:00+00:00"
         )
         assert loaded["runs"]["tests"]["commands"] == [
-            "pytest",
             "python3 -m unittest discover -v",
         ]
         assert "last_run" not in loaded["runs"]["tests"]
@@ -143,7 +148,7 @@ class GeneratedUnittestCases(unittest.TestCase):
 
         _unit_test_run_snapshots_share_the_session_snapshot_file()
 
-    def test_workflow_session_write_normalizes_legacy_fields(self):
-        """Run workflow-session normalization regression assertions."""
+    def test_workflow_session_write_drops_removed_fields(self):
+        """Run workflow-session field-filtering regression assertions."""
 
-        _unit_test_workflow_session_write_normalizes_legacy_fields()
+        _unit_test_workflow_session_write_drops_removed_fields()

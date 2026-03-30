@@ -4,9 +4,9 @@
 **Project Version:** 1.0.0
 **Project Stage:** stable
 **Maintenance Stance:** active
-**Compatibility Policy:** breaking-allowed
+**Compatibility Policy:** forward-only
 **Versioning Mode:** versioned
-**Last Updated:** 2026-03-29
+**Last Updated:** 2026-03-30
 **DevCovenant Version:** 1.0.0
 
 <!-- DEVCOV:BEGIN -->
@@ -64,8 +64,8 @@ Keep temporary execution work in `PLAN.md`, change history in
 ## Project Intent
 DevCovenant is meant for repositories where the expensive failures are not
 syntax mistakes but procedural drift. A team forgets a required run, a hook
-rewrites files after the last meaningful preflight, a changelog no longer
-covers what changed, a generated file drifts from the configuration that is
+rewrites files after the last meaningful preflight, a changelog fails to
+cover what changed, a generated file drifts from the configuration that is
 supposed to own it, or release automation proves something narrower than the
 public workflow it claims to protect.
 
@@ -85,7 +85,7 @@ registry generation, and artifact-backed operational proof.
 - Make the repository workflow explicit, enforceable, and evidence-backed.
 - Keep policy prose, runtime behavior, and generated governance surfaces in
   sync.
-- Preserve a clear boundary between DevCovenant-owned invariants and
+- Preserve a clear boundary between engine-owned runtime checks and
   repository-configurable policies.
 - Allow reusable stack behavior to be expressed through profiles instead of
   repeated local ad hoc config.
@@ -270,10 +270,9 @@ intentionally not trying to do.
 - Profile resolution and generated outputs shall be deterministic across
   filesystems and operating systems.
 
-### Policies And Core Invariants
-- DevCovenant shall preserve a hard boundary between core invariants and
-  configurable policies.
-- Core invariants shall remain DevCovenant-owned runtime boundaries.
+### Policies And Engine Checks
+- DevCovenant shall preserve a hard boundary between engine-owned runtime
+  checks and configurable policies.
 - Configurable policies shall remain the repository-facing enforcement units.
 - Policy checks shall remain read-only.
 - File mutation during check flows shall only occur through autofix when
@@ -295,13 +294,14 @@ intentionally not trying to do.
 - Managed documents shall follow preservation rules: missing docs may be
   created, empty docs may be replaced, one-line docs may be replaced, and
   otherwise only managed headers and managed blocks may change.
-- AGENTS policy and invariant blocks shall remain generated from descriptors
-  and synchronized with the resolved policy state.
+- AGENTS shall remain a generated governance surface whose workflow block,
+  project-governance block, and policy block stay synchronized with resolved
+  runtime state.
 
 ### Packaging, CI, And Publish
 - The published package shall ship the runtime-facing docs, built-in policies,
-  built-in profiles, translators, managed assets, and core invariant
-  descriptors required for install-time and runtime behavior.
+  built-in profiles, translators, and managed assets required for install-time
+  and runtime behavior.
 - The published package shall not ship live repository state such as
   `devcovenant/config.yaml`, tracked registry outputs, runtime registry state,
   timestamped log folders, or development debris.
@@ -358,7 +358,7 @@ intentionally not trying to do.
   - runtime registry state is local evidence and disposable
   - package metadata and built artifacts are derived outputs
   - run logs are evidence artifacts subject to retention and cleanup rules
-- Audit or history needs:
+- Audit and traceability needs:
   - every governed command run must be inspectable through run artifacts
   - session-scoped changelog coverage must remain traceable to the active work
     slice
@@ -380,16 +380,16 @@ intentionally not trying to do.
   - `core/services` for metadata resolution, policy execution, managed docs,
     and tracked registry behavior
   - `core/lib` for shared helper logic
-  - `core/contracts` for contract definitions and invariant descriptors
+  - `core/contracts` for shared contract definitions
 - Dependencies:
   - Python 3.10+
   - `packaging`, `pre-commit`, `pip-tools`, `PyYAML`, `pytest`, and `semver`
   - a git repository and filesystem access sufficient to manage repo-owned
     files
 - Compatibility expectations:
-  - the package version is currently `1.0.0`
-  - the repository is currently `stable`, `active`, and `versioned`
-  - the current repository compatibility policy is `breaking-allowed`
+  - the package version is `1.0.0`
+  - the repository is `stable`, `active`, and `versioned`
+  - the repository compatibility policy is `forward-only`
   - version-governance metadata uses the SemVer scheme, even though stricter
     SemVer enforcement is a separate governance choice from the presence of a
     SemVer-shaped version string
@@ -423,8 +423,8 @@ intentionally not trying to do.
 - Declared workflow runs execute in validated graph order, including `after`,
   `before`, `order`, reserved anchors, and cycle rejection.
 - Profiles, policies, managed docs, translators, and assets can extend the
-  repository contract without breaking the ownership split between core
-  invariants, configurable policies, and profile-owned stack behavior.
+  repository contract without breaking the ownership split between engine-owned
+  runtime checks, configurable policies, and profile-owned stack behavior.
 - The tracked registry reflects resolved durable contract state, while the
   runtime registry reflects recent execution evidence.
 - Built wheel, sdist, and documented `pipx` install paths can all prove the
@@ -436,13 +436,10 @@ This section should let someone decide whether the project meets the spec
 without having to guess what success means.
 
 ## Open Questions
-- When should this repository switch its public compatibility promise from
-  `breaking-allowed` to `backward-compatible` and enable stricter
-  version-governance enforcement?
-- Should the public history be reset so the current audited `1.0.0` tree
-  becomes the new root commit with a one-entry changelog?
 - Are there future product requirements for non-Python runtimes or additional
   operator surfaces beyond the current CLI-first, file-centric model?
+- What additional shipped examples or reference repos would make profile,
+  policy, and managed-doc authoring easier for downstream adopters?
 
 Keep unresolved questions here only while they are still real.
 Once answered, fold the answer into the relevant section above.

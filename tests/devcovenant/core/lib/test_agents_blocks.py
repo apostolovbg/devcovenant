@@ -50,20 +50,13 @@ def _unit_test_descriptor_text_contract_returns_canonical_text() -> None:
     assert result == "Demo policy prose."
 
 
-def _unit_test_refresh_inserts_core_invariant_block_from_registry() -> None:
-    """Refresh should scaffold and populate the AGENTS invariant block."""
+def _unit_test_refresh_scaffolds_policy_block_from_registry() -> None:
+    """Refresh should scaffold and populate the AGENTS policy block."""
     module = importlib.import_module(MODULE)
     with tempfile.TemporaryDirectory() as temp_dir:
         repo_root = Path(temp_dir).resolve()
         agents_path = repo_root / "AGENTS.md"
-        agents_path.write_text(
-            (
-                "# AGENTS\n\n"
-                "<!-- DEVCOV-POLICIES:BEGIN -->\n"
-                "<!-- DEVCOV-POLICIES:END -->\n"
-            ),
-            encoding="utf-8",
-        )
+        agents_path.write_text("# AGENTS\n", encoding="utf-8")
         registry_path = (
             repo_root / "devcovenant" / "registry" / "registry.yaml"
         )
@@ -71,17 +64,13 @@ def _unit_test_refresh_inserts_core_invariant_block_from_registry() -> None:
         registry_path.write_text(
             yaml.safe_dump(
                 {
-                    "core-invariants": {
-                        "devflow-run-gates": {
-                            "name": "Devflow Run Gates",
-                            "description": (
-                                "Require start, test, and end evidence."
-                            ),
+                    "policies": {
+                        "demo-policy": {
+                            "description": "Demo Policy",
+                            "policy_text": "Require the demo policy.",
                             "metadata": {
-                                "gate_status_file": (
-                                    "devcovenant/registry/runtime/"
-                                    "gate_status.json"
-                                )
+                                "severity": "error",
+                                "enabled": True,
                             },
                         }
                     }
@@ -92,7 +81,7 @@ def _unit_test_refresh_inserts_core_invariant_block_from_registry() -> None:
             encoding="utf-8",
         )
 
-        result = module.refresh_agents_core_invariant_block(
+        result = module.refresh_agents_policy_block(
             agents_path,
             None,
             repo_root=repo_root,
@@ -100,10 +89,10 @@ def _unit_test_refresh_inserts_core_invariant_block_from_registry() -> None:
 
         content = agents_path.read_text(encoding="utf-8")
         assert result.updated is True
-        assert "Require start, test, and end evidence." in content
-        assert module.CORE_INVARIANTS_BEGIN in content
-        assert "severity:" not in content
-        assert "customizable:" not in content
+        assert "## Policy: Demo Policy" in content
+        assert "Require the demo policy." in content
+        assert module.POLICIES_BEGIN in content
+        assert module.POLICIES_END in content
 
 
 class GeneratedUnittestCases(unittest.TestCase):
@@ -125,6 +114,10 @@ class GeneratedUnittestCases(unittest.TestCase):
         """Run canonical-policy-text contract assertions."""
         _unit_test_descriptor_text_contract_returns_canonical_text()
 
-    def test_refresh_inserts_core_invariant_block_from_registry(self):
-        """Run core-invariant block refresh assertions."""
-        _unit_test_refresh_inserts_core_invariant_block_from_registry()
+    def test_refresh_scaffolds_policy_block_from_registry(self):
+        """Run policy-block scaffold assertions."""
+        _unit_test_refresh_scaffolds_policy_block_from_registry()
+
+
+if __name__ == "__main__":
+    unittest.main()

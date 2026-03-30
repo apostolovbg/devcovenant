@@ -62,7 +62,6 @@ def _write_policy_registry(repo_root: Path) -> None:
                 "          kind: command_group",
                 "          commands:",
                 "            - python3 -m unittest discover -v",
-                "            - pytest",
                 "        success_contract:",
                 "          kind: all_commands_exit_zero",
                 "        recording:",
@@ -214,10 +213,12 @@ def _unit_test_start_clears_stale_pre_commit_end() -> None:
             "devcovenant.core.flow.gate.execution_runtime_module."
             "resolve_managed_environment_for_stage"
         )
-        run_command_target = "devcovenant.core.flow.gate._run_command"
+        run_command_target = (
+            "devcovenant.core.flow.gate._run_command_with_output"
+        )
         with (
             mock.patch(managed_env_target, return_value=(None, None)),
-            mock.patch(run_command_target, return_value=0),
+            mock.patch(run_command_target, return_value=(0, "")),
         ):
             exit_code = module.run_pre_commit_gate(repo_root, "start")
         assert exit_code == 0
@@ -243,14 +244,15 @@ def _unit_test_start_injects_check_orchestration_env() -> None:
             "devcovenant.core.flow.gate.execution_runtime_module."
             "resolve_managed_environment_for_stage"
         )
-        run_command_target = "devcovenant.core.flow.gate._run_command"
+        run_command_target = (
+            "devcovenant.core.flow.gate._run_command_with_output"
+        )
 
-        def _capture_env(_command, *, env=None, strict=True):
+        def _capture_env(_command, *, env=None):
             """Capture env passed into the pre-commit command wrapper."""
-            del strict
             assert env is not None
             captured_env.update(env)
-            return 0
+            return (0, "")
 
         with (
             mock.patch(managed_env_target, return_value=(None, None)),
@@ -295,14 +297,15 @@ def _unit_test_start_respects_autofix_enabled_config() -> None:
             "devcovenant.core.flow.gate.execution_runtime_module."
             "resolve_managed_environment_for_stage"
         )
-        run_command_target = "devcovenant.core.flow.gate._run_command"
+        run_command_target = (
+            "devcovenant.core.flow.gate._run_command_with_output"
+        )
 
-        def _capture_env(_command, *, env=None, strict=True):
+        def _capture_env(_command, *, env=None):
             """Capture env passed into the pre-commit command wrapper."""
-            del strict
             assert env is not None
             captured_env.update(env)
-            return 0
+            return (0, "")
 
         with (
             mock.patch(managed_env_target, return_value=(None, None)),
@@ -423,13 +426,15 @@ def _unit_test_start_targets_snapshot_files_for_pre_commit() -> None:
             "devcovenant.core.flow.gate.execution_runtime_module."
             "resolve_managed_environment_for_stage"
         )
-        run_command_target = "devcovenant.core.flow.gate._run_command"
+        run_command_target = (
+            "devcovenant.core.flow.gate._run_command_with_output"
+        )
 
-        def _capture_command(command, *, env=None, strict=True):
+        def _capture_command(command, *, env=None):
             """Capture hook command while preserving start success."""
-            del env, strict
+            del env
             captured["command"] = str(command)
-            return 0
+            return (0, "")
 
         with (
             mock.patch(managed_env_target, return_value=(None, None)),
@@ -444,29 +449,31 @@ def _unit_test_start_targets_snapshot_files_for_pre_commit() -> None:
         assert "--all-files" not in rendered
 
 
-def _unit_test_start_falls_back_to_managed_python_module_pre_commit() -> None:
-    """Start gate should fall back to `python -m pre_commit` when needed."""
+def _unit_test_start_resolves_managed_python_module_pre_commit() -> None:
+    """Start gate should resolve `python -m pre_commit` when needed."""
     module = importlib.import_module(MODULE)
     with tempfile.TemporaryDirectory() as tmpdir:
         repo_root = Path(tmpdir)
         _write_policy_registry(repo_root)
         _write_changelog(repo_root)
         _write_agents(repo_root)
-        tracked_path = repo_root / "fallback_target.py"
-        tracked_path.write_text("print('fallback')\n", encoding="utf-8")
+        tracked_path = repo_root / "module_target.py"
+        tracked_path.write_text("print('module')\n", encoding="utf-8")
         managed_python = repo_root / ".venv" / "bin" / "python"
         captured: dict[str, str] = {}
         managed_env_target = (
             "devcovenant.core.flow.gate.execution_runtime_module."
             "resolve_managed_environment_for_stage"
         )
-        run_command_target = "devcovenant.core.flow.gate._run_command"
+        run_command_target = (
+            "devcovenant.core.flow.gate._run_command_with_output"
+        )
 
-        def _capture_command(command, *, env=None, strict=True):
+        def _capture_command(command, *, env=None):
             """Capture the rendered hook command for assertions."""
-            del env, strict
+            del env
             captured["command"] = str(command)
-            return 0
+            return (0, "")
 
         with (
             mock.patch(
@@ -482,7 +489,78 @@ def _unit_test_start_falls_back_to_managed_python_module_pre_commit() -> None:
         rendered = captured["command"]
         assert rendered.startswith(f"{managed_python} -m pre_commit run")
         assert "--files" in rendered
-        assert "fallback_target.py" in rendered
+        assert "module_target.py" in rendered
+
+
+def _unit_test_start_reports_hook_induced_drift_explicitly() -> None:
+    """Start gate should report managed drift explicitly when hooks rewrite."""
+    module = importlib.import_module(MODULE)
+    with tempfile.TemporaryDirectory() as tmpdir:
+        repo_root = Path(tmpdir)
+        _write_policy_registry(repo_root)
+        _write_changelog(repo_root)
+        _write_agents(repo_root)
+        lines: list[str] = []
+        managed_env_target = (
+            "devcovenant.core.flow.gate.execution_runtime_module."
+            "resolve_managed_environment_for_stage"
+        )
+        run_command_target = (
+            "devcovenant.core.flow.gate._run_command_with_output"
+        )
+        snapshot_target = (
+            "devcovenant.core.flow.gate._current_numstat_snapshot"
+        )
+
+        def _capture_runtime_print(message, *args, **kwargs):
+            """Capture runtime messages while ignoring output kwargs."""
+            del args, kwargs
+            lines.append(str(message))
+
+        with (
+            mock.patch(managed_env_target, return_value=(None, None)),
+            mock.patch(
+                run_command_target,
+                return_value=(
+                    1,
+                    "\n".join(
+                        [
+                            "enforce repository policies (DevCovenant)"
+                            "................................Failed",
+                            "- hook id: devcovenant",
+                            "- files were modified by this hook",
+                        ]
+                    ),
+                ),
+            ),
+            mock.patch(
+                snapshot_target,
+                side_effect=[
+                    {"README.md": "before"},
+                    {
+                        "README.md": "after",
+                        "PLAN.md": "after",
+                    },
+                ],
+            ),
+            mock.patch.object(
+                module,
+                "runtime_print",
+                side_effect=_capture_runtime_print,
+            ),
+        ):
+            exit_code = module.run_pre_commit_gate(repo_root, "start")
+
+        assert exit_code == 1
+        assert any(
+            "hook-induced baseline drift" in line for line in lines
+        ), lines
+        assert any("Hook-changed paths:" in line for line in lines), lines
+        assert any("README.md" in line and "PLAN.md" in line for line in lines)
+        assert any(
+            "DevCovenant hook refreshed managed files" in line
+            for line in lines
+        ), lines
 
 
 def _unit_test_mid_targets_snapshot_files_for_pre_commit() -> None:
@@ -721,7 +799,9 @@ def _unit_test_start_recovery_requires_explicit_manual_tests() -> None:
             "devcovenant.core.flow.gate.execution_runtime_module."
             "snapshot_paths_changed_since"
         )
-        run_command_target = "devcovenant.core.flow.gate._run_command"
+        run_command_target = (
+            "devcovenant.core.flow.gate._run_command_with_output"
+        )
         snapshot_target = (
             "devcovenant.core.flow.gate._current_numstat_snapshot"
         )
@@ -737,7 +817,7 @@ def _unit_test_start_recovery_requires_explicit_manual_tests() -> None:
                 changed_since_target,
                 return_value={"devcovenant/core/flow/gate.py"},
             ),
-            mock.patch(run_command_target, return_value=0),
+            mock.patch(run_command_target, return_value=(0, "")),
             mock.patch(
                 snapshot_target,
                 side_effect=[
@@ -827,14 +907,16 @@ def _unit_test_start_recovery_allows_fresh_explicit_manual_tests() -> None:
             "devcovenant.core.flow.gate.execution_runtime_module."
             "resolve_managed_environment_for_stage"
         )
-        run_command_target = "devcovenant.core.flow.gate._run_command"
+        run_command_target = (
+            "devcovenant.core.flow.gate._run_command_with_output"
+        )
         snapshot_target = (
             "devcovenant.core.flow.gate._current_numstat_snapshot"
         )
 
         with (
             mock.patch(managed_env_target, return_value=(None, None)),
-            mock.patch(run_command_target, return_value=0),
+            mock.patch(run_command_target, return_value=(0, "")),
             mock.patch(
                 snapshot_target,
                 side_effect=[
@@ -1698,9 +1780,13 @@ class GeneratedUnittestCases(unittest.TestCase):
         """Run start-gate snapshot target coverage assertions."""
         _unit_test_start_targets_snapshot_files_for_pre_commit()
 
-    def test_start_falls_back_to_managed_python_module_pre_commit(self):
-        """Run start-gate managed-python fallback assertions."""
-        _unit_test_start_falls_back_to_managed_python_module_pre_commit()
+    def test_start_resolves_managed_python_module_pre_commit(self):
+        """Run start-gate managed-python module-resolution assertions."""
+        _unit_test_start_resolves_managed_python_module_pre_commit()
+
+    def test_start_reports_hook_induced_drift_explicitly(self):
+        """Run start-gate explicit drift-reporting assertions."""
+        _unit_test_start_reports_hook_induced_drift_explicitly()
 
     def test_mid_targets_snapshot_files_for_pre_commit(self):
         """Run mid-gate snapshot target coverage assertions."""

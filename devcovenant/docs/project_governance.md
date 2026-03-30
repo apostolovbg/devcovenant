@@ -1,5 +1,5 @@
 # Project Governance
-**Last Updated:** 2026-03-29
+**Last Updated:** 2026-03-30
 **Project Version:** 1.0.0
 
 ## Overview
@@ -30,7 +30,18 @@ what problem it solves.`
 default allowed set is `active`, `maintenance`, `frozen`, `sunset`.
 
 `compatibility_policy`: closed enum. Allowed values are
-`backward-compatible`, `breaking-allowed`, and `unspecified`.
+`backward-compatible`, `breaking-allowed`, `forward-only`, and
+`unspecified`.
+
+- `backward-compatible`: preserve the current public contract. Add
+  compatibility bridges only when they are intentional, documented, and
+  tested.
+- `breaking-allowed`: compatibility is optional. Do not imply support you do
+  not intend to keep.
+- `forward-only`: keep one active contract and fail explicitly on
+  unsupported shapes instead of carrying compatibility branches.
+- `unspecified`: no compatibility promise is implied yet. Make contract
+  changes explicit before code or docs start depending on them.
 
 `versioning_mode`: `versioned` or `unversioned`.
 
@@ -66,6 +77,8 @@ Project-governance metadata feeds several visible surfaces:
 - changelog and release-heading behavior
 
 - package metadata surfaces that are synchronized from repository identity
+
+- the generated compatibility-guidance line in `AGENTS.md`
 
 ## Working Rule
 If the repository identity, maturity, or versioning stance changes, update

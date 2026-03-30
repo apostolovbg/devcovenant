@@ -98,10 +98,26 @@ They do not, by themselves, activate policies.
 
 ### doc_assets
 The managed-doc selection for the repository.
-Use it to decide which builtin docs stay on, which are turned off, and which
-custom managed docs are added by active profiles.
+Use it to decide which managed-doc target paths are enabled for this repo.
+That selection is not an old core-versus-optional document class.
+The real model is:
+
+- global and active profiles contribute available managed-doc descriptors
+
+- `doc_assets.autogen` names the target paths this repo enables
+
+- `doc_assets.user` subtracts target paths after `autogen`
+
+- when multiple active descriptor roots provide the same target path, the
+  later active profile wins; active profiles beat the global baseline
+
 `autogen` is the human-owned managed-doc selection list.
-Refresh then uses that list to decide which managed docs to materialize.
+Refresh uses that list to decide which managed docs to materialize.
+The tracked manifest inventory then records both:
+
+- available docs discovered from descriptors
+
+- enabled docs resolved from `doc_assets`
 
 ### project-governance
 Repository-owned identity and lifecycle metadata.
@@ -121,8 +137,14 @@ it does, who it helps, and what problem it solves.`
 `maintenance_stance`: one value from `allowed_maintenance_stances`. The
 default set is `active`, `maintenance`, `frozen`, `sunset`.
 
-`compatibility_policy`: `backward-compatible`, `breaking-allowed`, or
-`unspecified`.
+`compatibility_policy`: `backward-compatible`, `breaking-allowed`,
+`forward-only`, or `unspecified`.
+
+- `backward-compatible`: preserve the current public contract.
+- `breaking-allowed`: compatibility is optional.
+- `forward-only`: keep one active contract and fail explicitly on unsupported
+  shapes.
+- `unspecified`: do not imply a compatibility promise yet.
 
 `versioning_mode`: `versioned` or `unversioned`.
 
@@ -175,12 +197,11 @@ This is the dedicated home for execution-contract settings such as:
 - `skipped_globs`
 
 Those values belong to the gate/workflow contract, not to `policy_state`.
-The canonical pre-commit hook command is now `pre-commit run --all-files`;
+The canonical pre-commit hook command is `pre-commit run --all-files`;
 the managed-environment runtime supplies the correct interpreter and `PATH`
 instead of relying on raw host `python3`.
 When the selected environment does not expose a `pre-commit` console script,
-gate execution can still fall back to `python -m pre_commit` through that
-same interpreter.
+gate execution resolves `python -m pre_commit` through that same interpreter.
 Every key in this section is human-owned.
 
 ### policy_state
@@ -228,14 +249,15 @@ profile `ci_and_test` fragment instead.
 That is how a repository can extend the main generated source-tree `CI` job in
 `.github/workflows/ci.yml` without pushing repo-family checks into the global
 base workflow.
-That same `ci_and_test` surface can also add a sibling repo-family `Build` job
-when built-artifact proof belongs in `CI` instead of in the global base.
+That same `ci_and_test` surface can also add a sibling repo-family proof job
+when built-artifact verification belongs in `CI` instead of in the global
+base.
 
 The generated config commentary should tell the same story.
 The live `devcovenant/config.yaml` section header and comments for
 `ci_and_test` are expected to match the active global config asset, so readers
 can trust that they are looking at the current workflow-generation contract
-instead of stale historical wording.
+described by the active global config asset.
 
 ### clean
 Cleanup targets are profile-driven.
@@ -250,9 +272,8 @@ one resolved cleanup key entirely.
 An empty `clean.overrides: {}` means "use the profile defaults."
 If you intentionally want to clear one inherited list, do it explicitly per
 key, for example `cache_dirs: []`.
-Refresh also normalizes the old legacy pattern where every override key was
-present with an empty list, because that stale template shape accidentally
-disabled all profile cleanup targets by default.
+Refresh treats explicitly populated `clean.overrides` keys as replacements and
+leaves empty inherited override maps at the profile-default contract.
 
 Cleanup protection uses a second ownership split.
 Profile and config cleanup lists decide what can be deleted, while the runtime
@@ -270,7 +291,7 @@ The generated config comments should describe that split directly.
 They should not claim that one hardcoded path such as `.venv` is globally
 protected when the real contract is metadata-driven managed-environment
 protection plus runtime-owned critical paths.
-Those same generated comments now also teach the standard command sequence as
+Those same generated comments also teach the standard command sequence as
 `gate --start -> gate --mid -> run -> gate --end`.
 The managed-environment contract uses the same `run` stage name, so generated
 operator guidance and runtime stage resolution stay aligned.
@@ -284,7 +305,7 @@ available.
 The execution side of the same policy follows one simple rule:
 reuse the current interpreter when it already satisfies the contract, choose
 the configured target interpreter when it does not, and only run bootstrap
-commands when that target environment is still missing or invalid.
+commands when that target environment is missing or invalid.
 `required_commands` should therefore describe external prerequisites for
 selecting or preparing the environment, not every Python console script that
 may later run from inside it.

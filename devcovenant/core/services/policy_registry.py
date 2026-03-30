@@ -217,14 +217,6 @@ class PolicyRegistry:
         self._data["managed-docs"] = dict(payload)
         self.save()
 
-    def update_core_invariants(
-        self,
-        payload: Dict[str, Any],
-    ) -> None:
-        """Update the tracked core-invariants registry section."""
-        self._data["core-invariants"] = dict(payload)
-        self.save()
-
     def update_workflow_contract(
         self,
         payload: Dict[str, Any],

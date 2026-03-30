@@ -28,6 +28,7 @@ _DEFAULT_MAINTENANCE_STANCES = (
 _ALLOWED_COMPATIBILITY_POLICIES = {
     "backward-compatible",
     "breaking-allowed",
+    "forward-only",
     "unspecified",
 }
 _ALLOWED_VERSIONING_MODES = {"versioned", "unversioned"}
@@ -42,6 +43,24 @@ _DEFAULT_PROJECT_DESCRIPTION = (
 _LOG_MARKER = "## Log changes here"
 _MANAGED_BEGIN = "<!-- DEVCOV:BEGIN -->"
 _MANAGED_END = "<!-- DEVCOV:END -->"
+_COMPATIBILITY_POLICY_GUIDANCE = {
+    "backward-compatible": (
+        "Preserve the current public contract. Add compatibility bridges "
+        "only when they are intentional, documented, and tested."
+    ),
+    "breaking-allowed": (
+        "Compatibility is optional. Do not imply support you do not intend "
+        "to keep."
+    ),
+    "forward-only": (
+        "Do not leave legacy fallbacks behind. Remove deprecated readers, "
+        "aliases, and bridge paths instead of preserving them."
+    ),
+    "unspecified": (
+        "No compatibility promise is implied. Make contract changes explicit "
+        "before code or docs start depending on them."
+    ),
+}
 
 
 @dataclass(frozen=True)
@@ -110,11 +129,26 @@ class ProjectGovernanceState:
             f"- Compatibility Policy: {self.compatibility_policy}",
             f"- Versioning Mode: {self.versioning_mode}",
         ]
+        lines.extend(self.compatibility_policy_guidance_lines())
         if self.codename:
             lines.append(f"- Project Codename: {self.codename}")
         if self.build_identity:
             lines.append(f"- Build Identity: {self.build_identity}")
         return lines
+
+    def compatibility_policy_guidance(self) -> str:
+        """Return the AGENTS guidance text for the active policy."""
+        return _COMPATIBILITY_POLICY_GUIDANCE[self.compatibility_policy]
+
+    def compatibility_policy_guidance_lines(self) -> list[str]:
+        """Render wrapped AGENTS lines for compatibility guidance."""
+        wrapped = textwrap.wrap(
+            self.compatibility_policy_guidance(),
+            width=72,
+            initial_indent="  ",
+            subsequent_indent="  ",
+        )
+        return ["- Compatibility Guidance:", *wrapped]
 
     def registry_payload(self, declared_version: str) -> dict[str, object]:
         """Return a deterministic registry mapping for project governance."""

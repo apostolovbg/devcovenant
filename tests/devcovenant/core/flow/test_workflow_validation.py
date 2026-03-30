@@ -1,4 +1,4 @@
-"""Tests for the DevFlow gate-session core invariant."""
+"""Tests for workflow-contract validation."""
 
 from __future__ import annotations
 
@@ -10,8 +10,6 @@ from pathlib import Path
 from devcovenant.core.contracts.policy import ChangeState, CheckContext
 from devcovenant.core.flow import workflow_validation
 from tests.devcovenant.support import MonkeyPatch
-
-DevflowRunGates = workflow_validation.DevflowRunGates
 
 _DEFAULT_REQUIRED_COMMANDS = [
     "run suite-a",
@@ -38,11 +36,13 @@ def _write_workflow_contract(
                 "project-governance:",
                 "  stage: stable",
                 "  maintenance_stance: active",
-                "  compatibility_policy: breaking-allowed",
+                "  compatibility_policy: forward-only",
                 "  versioning_mode: versioned",
                 "profiles:",
                 "  active:",
                 "    - python",
+                "workflow:",
+                "  pre_commit_command: pre-commit run --all-files",
                 "",
             ]
         ),
@@ -94,7 +94,6 @@ def _make_ctx(
     *,
     working_numstat: dict[str, str] | None = None,
     session_valid: bool = False,
-    session_error: str = "",
     session_reason_code: str = "",
     config: dict | None = None,
     workflow_runs: list[str] | None = None,
@@ -113,7 +112,6 @@ def _make_ctx(
         change_state=ChangeState(
             current_snapshot_numstat=dict(working_numstat or {}),
             session_valid=session_valid,
-            session_error=session_error,
             session_reason_code=session_reason_code,
         ),
     )
@@ -159,9 +157,11 @@ def _run_entry(
 def _write_workflow_session(
     tmp_path: Path,
     payload: dict[str, object],
+    *,
+    custom_path: Path | None = None,
 ) -> None:
-    """Write one workflow-session payload for invariant checks."""
-    path = _workflow_session_path(tmp_path)
+    """Write one workflow-session payload for workflow-contract checks."""
+    path = custom_path or _workflow_session_path(tmp_path)
     path.parent.mkdir(parents=True, exist_ok=True)
     path.write_text(json.dumps(payload), encoding="utf-8")
 
@@ -174,10 +174,12 @@ def _write_status(
     tests_run_present: bool = True,
     tests_run_status: str = "passed",
     tests_run_session_id: str | None = None,
+    custom_status_path: Path | None = None,
+    custom_workflow_session_path: Path | None = None,
 ) -> None:
     """Write gate status and aligned workflow-session payloads."""
     _write_workflow_contract(tmp_path, workflow_runs=workflow_runs)
-    path = _status_path(tmp_path)
+    path = custom_status_path or _status_path(tmp_path)
     path.parent.mkdir(parents=True, exist_ok=True)
     path.write_text(json.dumps(payload), encoding="utf-8")
     session_id = str(payload.get("session_id", "")).strip()
@@ -203,21 +205,11 @@ def _write_status(
             "anchors": {},
             "runs": runs,
         },
+        custom_path=custom_workflow_session_path,
     )
 
 
-def _configured_check(
-    *,
-    extra_options: dict | None = None,
-) -> DevflowRunGates:
-    """Return invariant instance with optional metadata overrides."""
-    options = dict(extra_options or {})
-    check = DevflowRunGates()
-    check.set_options(options, {})
-    return check
-
-
-def _closed_session_payload() -> dict:
+def _closed_session_payload() -> dict[str, object]:
     """Return a fully valid closed-session status payload."""
     return {
         "session_id": "123",
@@ -232,7 +224,7 @@ def _closed_session_payload() -> dict:
     }
 
 
-def _open_session_payload() -> dict:
+def _open_session_payload() -> dict[str, object]:
     """Return a fully valid open-session status payload."""
     payload = _closed_session_payload()
     payload["session_state"] = "open"
@@ -245,7 +237,7 @@ class GeneratedUnittestCases(unittest.TestCase):
     """unittest wrappers for module-level tests."""
 
     def test_start_stage_skips_checks(self):
-        """Start-stage pre-commit should skip session enforcement."""
+        """Start-stage pre-commit should skip workflow enforcement."""
         monkeypatch = MonkeyPatch()
         try:
             with tempfile.TemporaryDirectory() as temp_dir:
@@ -256,13 +248,13 @@ class GeneratedUnittestCases(unittest.TestCase):
                     working_numstat={"src/example.py": "1\t1\tsrc/example.py"},
                 )
                 monkeypatch.setenv("DEVCOV_DEVFLOW_STAGE", "start")
-                violations = _configured_check().check(ctx)
+                violations = workflow_validation.check_workflow_contract(ctx)
                 self.assertEqual(violations, [])
         finally:
             monkeypatch.undo()
 
-    def test_missing_status_with_edits_requires_start(self):
-        """Edits without status should require opening a session."""
+    def test_missing_status_with_edits_requires_full_flow(self):
+        """Edits without status should require the full gate flow."""
         with tempfile.TemporaryDirectory() as temp_dir:
             tmp_path = Path(temp_dir).resolve()
             ctx = _make_ctx(
@@ -271,7 +263,7 @@ class GeneratedUnittestCases(unittest.TestCase):
                 working_numstat={"src/example.py": "1\t1\tsrc/example.py"},
                 session_reason_code="unsessioned_edits_after_end",
             )
-            violations = _configured_check().check(ctx)
+            violations = workflow_validation.check_workflow_contract(ctx)
             self.assertTrue(violations)
             self.assertIn("gate --start", violations[0].message)
             self.assertIn("gate --mid", violations[0].message)
@@ -279,7 +271,7 @@ class GeneratedUnittestCases(unittest.TestCase):
             self.assertIn("gate --end", violations[0].message)
 
     def test_missing_status_allows_read_only_check_bootstrap(self):
-        """Read-only check should not fail before first gate session."""
+        """Read-only check should not fail before the first gate session."""
         monkeypatch = MonkeyPatch()
         try:
             with tempfile.TemporaryDirectory() as temp_dir:
@@ -291,7 +283,7 @@ class GeneratedUnittestCases(unittest.TestCase):
                     session_reason_code="missing_gate_status",
                 )
                 monkeypatch.setenv("DEVCOV_TOP_COMMAND", "check")
-                violations = _configured_check().check(ctx)
+                violations = workflow_validation.check_workflow_contract(ctx)
                 self.assertEqual(violations, [])
         finally:
             monkeypatch.undo()
@@ -302,24 +294,11 @@ class GeneratedUnittestCases(unittest.TestCase):
             tmp_path = Path(temp_dir).resolve()
             _write_status(tmp_path, _closed_session_payload())
             ctx = _make_ctx(tmp_path, ["src/example.py"], working_numstat={})
-            violations = _configured_check().check(ctx)
+            violations = workflow_validation.check_workflow_contract(ctx)
             self.assertEqual(violations, [])
 
-    def test_list_valued_pre_commit_command_is_normalized(self):
-        """List-valued command metadata should still match gate status."""
-        with tempfile.TemporaryDirectory() as temp_dir:
-            tmp_path = Path(temp_dir).resolve()
-            _write_status(tmp_path, _closed_session_payload())
-            ctx = _make_ctx(tmp_path, ["src/example.py"], working_numstat={})
-            violations = _configured_check(
-                extra_options={
-                    "pre_commit_command": ["pre-commit run --all-files"]
-                }
-            ).check(ctx)
-            self.assertEqual(violations, [])
-
-    def test_python_module_pre_commit_record_matches_canonical_command(self):
-        """Legacy python-module launcher records should still validate."""
+    def test_python_module_pre_commit_record_is_rejected(self):
+        """Recorded launcher drift should fail exact validation."""
         with tempfile.TemporaryDirectory() as temp_dir:
             tmp_path = Path(temp_dir).resolve()
             payload = _closed_session_payload()
@@ -331,18 +310,14 @@ class GeneratedUnittestCases(unittest.TestCase):
             )
             _write_status(tmp_path, payload)
             ctx = _make_ctx(tmp_path, ["src/example.py"], working_numstat={})
-            violations = _configured_check(
-                extra_options={
-                    "pre_commit_command": ["pre-commit run --all-files"]
-                }
-            ).check(ctx)
-            self.assertEqual(violations, [])
-
-    def test_invariant_id_contract(self):
-        """Invariant id should remain stable for runtime wiring."""
-        devflowrungates = DevflowRunGates()
-        self.assertEqual(devflowrungates.invariant_id, "devflow-run-gates")
-        self.assertEqual(devflowrungates.policy_id, "devflow-run-gates")
+            violations = workflow_validation.check_workflow_contract(ctx)
+            self.assertEqual(len(violations), 2)
+            self.assertTrue(
+                all(
+                    "pre-commit run --all-files" in violation.message
+                    for violation in violations
+                )
+            )
 
     def test_open_session_requires_end(self):
         """Non-end stage should fail while session remains open."""
@@ -355,89 +330,13 @@ class GeneratedUnittestCases(unittest.TestCase):
                 working_numstat={"src/example.py": "1\t1\tsrc/example.py"},
                 session_reason_code="unsessioned_edits_after_end",
             )
-            violations = _configured_check().check(ctx)
+            violations = workflow_validation.check_workflow_contract(ctx)
             self.assertTrue(
                 any("Session is still open" in v.message for v in violations)
             )
 
-    def test_end_stage_requires_missing_required_run(self):
-        """End-stage checks should require recorded runs."""
-        monkeypatch = MonkeyPatch()
-        try:
-            with tempfile.TemporaryDirectory() as temp_dir:
-                tmp_path = Path(temp_dir).resolve()
-                _write_status(
-                    tmp_path,
-                    _open_session_payload(),
-                    tests_run_present=False,
-                )
-                ctx = _make_ctx(
-                    tmp_path,
-                    ["src/example.py"],
-                    working_numstat={"src/example.py": "1\t1\tsrc/example.py"},
-                )
-                monkeypatch.setenv("DEVCOV_DEVFLOW_STAGE", "end")
-                violations = _configured_check().check(ctx)
-                self.assertTrue(
-                    any("missing runs: tests" in v.message for v in violations)
-                )
-        finally:
-            monkeypatch.undo()
-
-    def test_closed_session_with_unsessioned_edits_requires_start(self):
-        """Edits against a closed session require a new start gate."""
-        with tempfile.TemporaryDirectory() as temp_dir:
-            tmp_path = Path(temp_dir).resolve()
-            _write_status(tmp_path, _closed_session_payload())
-            ctx = _make_ctx(
-                tmp_path,
-                ["src/example.py"],
-                working_numstat={"src/example.py": "1\t1\tsrc/example.py"},
-                session_reason_code="unsessioned_edits_after_end",
-            )
-            violations = _configured_check().check(ctx)
-            self.assertTrue(
-                any(
-                    "outside an active session" in v.message
-                    for v in violations
-                )
-            )
-
-    def test_closed_session_with_matching_end_snapshot_passes(self):
-        """Closed-session edits pass when runtime marks the session valid."""
-        with tempfile.TemporaryDirectory() as temp_dir:
-            tmp_path = Path(temp_dir).resolve()
-            _write_status(tmp_path, _closed_session_payload())
-            ctx = _make_ctx(
-                tmp_path,
-                ["src/example.py"],
-                working_numstat={"src/example.py": "1\t1\tsrc/example.py"},
-                session_valid=True,
-            )
-            violations = _configured_check().check(ctx)
-            self.assertEqual(violations, [])
-
-    def test_closed_session_with_unsessioned_edits_still_blocks(self):
-        """Closed sessions with post-end edits must still block."""
-        with tempfile.TemporaryDirectory() as temp_dir:
-            tmp_path = Path(temp_dir).resolve()
-            _write_status(tmp_path, _closed_session_payload())
-            ctx = _make_ctx(
-                tmp_path,
-                ["src/example.py"],
-                working_numstat={"src/example.py": "1\t1\tsrc/example.py"},
-                session_reason_code="unsessioned_edits_after_end",
-            )
-            violations = _configured_check().check(ctx)
-            self.assertTrue(
-                any(
-                    "outside an active session" in violation.message
-                    for violation in violations
-                )
-            )
-
     def test_missing_required_run_configuration(self):
-        """Missing workflow runs should produce config violation."""
+        """Missing workflow runs should produce a config violation."""
         with tempfile.TemporaryDirectory() as temp_dir:
             tmp_path = Path(temp_dir).resolve()
             _write_status(
@@ -452,12 +351,12 @@ class GeneratedUnittestCases(unittest.TestCase):
                 working_numstat={},
                 workflow_runs=[],
             )
-            violations = _configured_check().check(ctx)
+            violations = workflow_validation.check_workflow_contract(ctx)
             self.assertTrue(violations)
             self.assertIn("No workflow runs", violations[0].message)
 
     def test_missing_required_run_for_current_session_is_reported(self):
-        """Required stage evidence must belong to the active session."""
+        """Required run evidence must belong to the active session."""
         with tempfile.TemporaryDirectory() as temp_dir:
             tmp_path = Path(temp_dir).resolve()
             _write_status(
@@ -466,7 +365,7 @@ class GeneratedUnittestCases(unittest.TestCase):
                 tests_run_session_id="older-session",
             )
             ctx = _make_ctx(tmp_path, ["src/example.py"], working_numstat={})
-            violations = _configured_check().check(ctx)
+            violations = workflow_validation.check_workflow_contract(ctx)
             self.assertTrue(violations)
             self.assertIn("missing runs: tests", violations[0].message)
             self.assertIn("Run `devcovenant run`.", violations[0].message)
@@ -485,19 +384,18 @@ class GeneratedUnittestCases(unittest.TestCase):
             session_path = _workflow_session_path(tmp_path)
             if session_path.exists():
                 session_path.unlink()
-            violations = _configured_check().check(ctx)
+            violations = workflow_validation.check_workflow_contract(ctx)
             self.assertTrue(violations)
             self.assertIn("gate --start", violations[0].message)
             self.assertIn("gate --mid", violations[0].message)
             self.assertIn("devcovenant run", violations[0].message)
             self.assertIn("gate --end", violations[0].message)
 
-    def test_custom_status_path(self):
-        """Custom evidence paths from config overrides should be honored."""
+    def test_custom_runtime_paths_are_honored(self):
+        """Custom evidence paths from config should be honored."""
         with tempfile.TemporaryDirectory() as temp_dir:
             tmp_path = Path(temp_dir).resolve()
-            _write_workflow_contract(tmp_path)
-            status_path = (
+            custom_status_path = (
                 tmp_path
                 / "devcovenant"
                 / "registry"
@@ -505,7 +403,7 @@ class GeneratedUnittestCases(unittest.TestCase):
                 / "evidence"
                 / "status.json"
             )
-            session_path = (
+            custom_workflow_path = (
                 tmp_path
                 / "devcovenant"
                 / "registry"
@@ -513,44 +411,27 @@ class GeneratedUnittestCases(unittest.TestCase):
                 / "evidence"
                 / "workflow.json"
             )
-            status_path.parent.mkdir(parents=True, exist_ok=True)
-            status_path.write_text(
-                json.dumps(_closed_session_payload()), encoding="utf-8"
-            )
-            session_path.write_text(
-                json.dumps(
-                    {
-                        "schema_version": 1,
-                        "workflow_contract_schema_version": 1,
-                        "session_id": "123",
-                        "session_state": "closed",
-                        "run_ids": ["tests"],
-                        "anchors": {},
-                        "runs": {"tests": _run_entry(session_id="123")},
-                    }
-                ),
-                encoding="utf-8",
+            _write_status(
+                tmp_path,
+                _closed_session_payload(),
+                custom_status_path=custom_status_path,
+                custom_workflow_session_path=custom_workflow_path,
             )
             ctx = _make_ctx(
                 tmp_path,
                 ["src/example.py"],
                 working_numstat={},
                 config={
-                    "user_metadata_overrides": {
-                        "devflow-run-gates": {
-                            "gate_status_file": (
-                                "devcovenant/registry/runtime/"
-                                "evidence/status.json"
-                            ),
-                            "workflow_session_file": (
-                                "devcovenant/registry/runtime/"
-                                "evidence/workflow.json"
-                            ),
-                        }
+                    "paths": {
+                        "gate_status_file": (
+                            "devcovenant/registry/runtime/evidence/status.json"
+                        ),
+                        "workflow_session_file": (
+                            "devcovenant/registry/runtime/evidence/"
+                            "workflow.json"
+                        ),
                     }
                 },
             )
-            check = DevflowRunGates()
-            check.set_options({}, ctx.get_policy_config("devflow-run-gates"))
-            violations = check.check(ctx)
+            violations = workflow_validation.check_workflow_contract(ctx)
             self.assertEqual(violations, [])

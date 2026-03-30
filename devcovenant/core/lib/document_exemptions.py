@@ -21,7 +21,6 @@ DEFAULT_HEADER_KEYS = frozenset(
         "last updated",
         "project version",
         "project stage",
-        "development stance",
         "versioning mode",
         "project codename",
         "build identity",

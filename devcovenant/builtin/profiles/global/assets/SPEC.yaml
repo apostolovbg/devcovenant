@@ -8,9 +8,6 @@ devcovenant_version: true
 project_governance_headers: true
 import_seed: true
 authoritative_source: true
-legacy_generic_body_fingerprints:
-  - 5b3cac9d37293ae3f40dec269922fcbce264442a67dc5a9642fadac6a0610043
-  - 2fad01922c9ba1b30b1cc736c32041fbf2418aef00349f6e7ffd28a67f547b37
 managed_block: |-
   This opening section is managed by DevCovenant.
   Use `SPEC.md` only for durable repository contracts below this block.
