@@ -2,8 +2,8 @@ metadata:
   schema_version: 1
   registry_layout: single-root
 project-governance:
-  project_name: DevCovenant
-  project_description: DevCovenant is a Repository Governance Framework.
+  project_name: devcovenant
+  project_description: devcovenant is a repository governance framework.
   project_version: 1.0.0
   stage: stable
   maintenance_stance: active
@@ -4657,19 +4657,25 @@ policies:
       policy's metadata. `expected_paths` and `expected_interpreters` point to
       that target environment, while optional `cleanup_protected_paths` define
       extra roots that cleanup must never delete. `required_commands`
-      declare the external prerequisites that should already resolve once the
-      target interpreter is selected. `manual_commands` document how a human
-      can create or repair the environment, and stage-scoped `managed_commands`
-      define how DevCovenant may prepare it automatically.
+      declare the commands that must resolve once the target interpreter is
+      selected. `manual_commands` document how a human can create or repair the
+      environment, and stage-scoped `managed_commands` define how DevCovenant may
+      prepare it automatically. Command templates may reference `{current_python}`
+      and `{current_bin}` for the currently running interpreter, and
+      `{managed_python}`, `{managed_bin}`, `{managed_root}`, `{repo_root}` for the
+      selected target environment.
       Active managed-environment policy reuses the current interpreter when it
       already satisfies the contract, re-executes CLI commands in the selected
       interpreter when needed, and only runs bootstrap commands when the target
       environment is still missing or invalid. Stage-scoped `managed_commands`
       accept `start`, `run`, `end`, `command`, and `all` prefixes; non-start
       commands may still reuse `start` bootstrap commands once when the target
-      environment is not ready. If the resolved interpreter is missing or not
-      executable, DevCovenant fails explicitly instead of falling through to
-      wrapper adapters or alternate policy sources.
+      environment is not ready. When no automatic bootstrap commands are
+      declared, non-gate `command` stage operations may keep using the current
+      interpreter until the target environment exists, while `start`, `run`, and
+      `end` remain strict about the target environment. If the resolved
+      interpreter is missing or not executable, DevCovenant fails explicitly
+      instead of falling through to wrapper adapters or alternate policy sources.
       When enabled with empty metadata, the policy emits a warning so teams
       fill the required context.
     metadata:
@@ -4682,10 +4688,11 @@ policies:
       expected_paths: .venv
       expected_interpreters: .venv/bin/python, .venv/Scripts/python.exe
       cleanup_protected_paths: ''
-      required_commands: python3
-      manual_commands: python3 -m venv .venv, {managed_python} -m pip install -r requirements.lock
-      managed_commands: start=>python3 -m venv .venv, start=>{managed_python} -m pip
-        install -r requirements.lock
+      required_commands: pre-commit, pytest
+      manual_commands: '{current_python} -m venv .venv, {managed_python} -m pip install
+        -r requirements.lock'
+      managed_commands: start=>{current_python} -m venv .venv, start=>{managed_python}
+        -m pip install -r requirements.lock
     metadata_resolution:
       id:
         descriptor:
@@ -4782,32 +4789,35 @@ policies:
           behavior: base
         profile_overlays:
           values:
-          - python3
+          - pre-commit
+          - pytest
           behavior: append
         autogen_overlays:
           values:
-          - python3
+          - pre-commit
+          - pytest
           behavior: append
         effective:
           values:
-          - python3
+          - pre-commit
+          - pytest
       manual_commands:
         descriptor:
           values: []
           behavior: base
         profile_overlays:
           values:
-          - python3 -m venv .venv
+          - '{current_python} -m venv .venv'
           - '{managed_python} -m pip install -r requirements.lock'
           behavior: append
         autogen_overlays:
           values:
-          - python3 -m venv .venv
+          - '{current_python} -m venv .venv'
           - '{managed_python} -m pip install -r requirements.lock'
           behavior: append
         effective:
           values:
-          - python3 -m venv .venv
+          - '{current_python} -m venv .venv'
           - '{managed_python} -m pip install -r requirements.lock'
       managed_commands:
         descriptor:
@@ -4815,17 +4825,17 @@ policies:
           behavior: base
         profile_overlays:
           values:
-          - start=>python3 -m venv .venv
+          - start=>{current_python} -m venv .venv
           - start=>{managed_python} -m pip install -r requirements.lock
           behavior: append
         autogen_overlays:
           values:
-          - start=>python3 -m venv .venv
+          - start=>{current_python} -m venv .venv
           - start=>{managed_python} -m pip install -r requirements.lock
           behavior: append
         effective:
           values:
-          - start=>python3 -m venv .venv
+          - start=>{current_python} -m venv .venv
           - start=>{managed_python} -m pip install -r requirements.lock
       custom:
         runtime_defaults:
@@ -4854,12 +4864,14 @@ policies:
       - .venv/bin/python
       - .venv/Scripts/python.exe
       cleanup_protected_paths: ''
-      required_commands: python3
-      manual_commands: &id037
-      - python3 -m venv .venv
+      required_commands: &id037
+      - pre-commit
+      - pytest
+      manual_commands: &id038
+      - '{current_python} -m venv .venv'
       - '{managed_python} -m pip install -r requirements.lock'
-      managed_commands: &id038
-      - start=>python3 -m venv .venv
+      managed_commands: &id039
+      - start=>{current_python} -m venv .venv
       - start=>{managed_python} -m pip install -r requirements.lock
     runtime_config_overrides: {}
     runtime_effective_options:
@@ -4871,15 +4883,15 @@ policies:
       custom: false
       expected_paths: .venv
       expected_interpreters: *id036
-      required_commands: python3
-      manual_commands: *id037
-      managed_commands: *id038
+      required_commands: *id037
+      manual_commands: *id038
+      managed_commands: *id039
     assets:
     - .venv/Scripts/python.exe
     - .venv/bin/python
     origin: builtin
     script_exists: true
-    hash: 1453f781c6b1125975a7f6cdcdba36eb7a99ee64b007756cf9316c5016279da5
+    hash: 35bbefd080ef20269c42906cedb7a3e9725183992b0da345c15f679a1346f88d
     script_path: builtin/managed_environment.py
   modules-need-tests:
     enabled: true
@@ -5233,7 +5245,7 @@ policies:
       custom: false
       include_suffixes: .py
       include_prefixes: ''
-      exclude_prefixes: &id039
+      exclude_prefixes: &id040
       - build
       - dist
       - node_modules
@@ -5247,7 +5259,7 @@ policies:
       watch_dirs: tests
       tests_watch_dirs: tests
       mirror_roots: devcovenant=>tests/devcovenant
-      mirror_test_name_templates: &id042
+      mirror_test_name_templates: &id043
       - python=>test_{stem}.py
       - python=>{stem}_test.py
       test_style_requirements: python=>python_unittest
@@ -5256,11 +5268,11 @@ policies:
       force_include_globs: ''
       watch_files: ''
       placeholder_test_methods: test_placeholder
-      placeholder_text_markers: &id043
+      placeholder_text_markers: &id044
       - placeholder-marker-alpha
       - placeholder-marker-beta
       - placeholder-marker-gamma
-      selector_roles: &id044
+      selector_roles: &id045
       - include
       - exclude
       - watch
@@ -5276,9 +5288,9 @@ policies:
       force_include_files: ''
       force_include_dirs: ''
     runtime_config_overrides:
-      exclude_globs: &id040
+      exclude_globs: &id041
       - devcovenant/builtin/profiles/**/assets/**
-      mirror_roots: &id041
+      mirror_roots: &id042
       - devcovenant=>tests/devcovenant
     runtime_effective_options:
       id: modules-need-tests
@@ -5288,17 +5300,17 @@ policies:
       enabled: true
       custom: false
       include_suffixes: .py
-      exclude_prefixes: *id039
-      exclude_globs: *id040
+      exclude_prefixes: *id040
+      exclude_globs: *id041
       watch_dirs: tests
       tests_watch_dirs: tests
-      mirror_roots: *id041
-      mirror_test_name_templates: *id042
+      mirror_roots: *id042
+      mirror_test_name_templates: *id043
       test_style_requirements: python=>python_unittest
       include_globs: '*.py'
       placeholder_test_methods: test_placeholder
-      placeholder_text_markers: *id043
-      selector_roles: *id044
+      placeholder_text_markers: *id044
+      selector_roles: *id045
     assets:
     - build/**
     - devcovenant/builtin/profiles/**/assets/**
@@ -5542,7 +5554,7 @@ policies:
       enforcement: active
       enabled: true
       custom: false
-      exclude_prefixes: &id045
+      exclude_prefixes: &id046
       - build
       - dist
       - node_modules
@@ -5550,12 +5562,12 @@ policies:
       include_prefixes: ''
       include_globs: '*.py'
       exclude_suffixes: ''
-      exclude_globs: &id046
+      exclude_globs: &id047
       - build/**
       - dist/**
       - node_modules/**
       force_include_globs: ''
-      selector_roles: &id047
+      selector_roles: &id048
       - exclude
       - include
       - force_include
@@ -5573,11 +5585,11 @@ policies:
       enforcement: active
       enabled: true
       custom: false
-      exclude_prefixes: *id045
+      exclude_prefixes: *id046
       include_suffixes: .py
       include_globs: '*.py'
-      exclude_globs: *id046
-      selector_roles: *id047
+      exclude_globs: *id047
+      selector_roles: *id048
     assets:
     - build/**
     - dist/**
@@ -5984,7 +5996,7 @@ policies:
       enforcement: active
       enabled: true
       custom: false
-      selector_roles: &id048
+      selector_roles: &id049
       - include
       - exclude
       - force_include
@@ -5992,12 +6004,12 @@ policies:
       allowed_file_dirs: ''
       include_suffixes: .py
       include_prefixes: ''
-      include_globs: &id049
+      include_globs: &id050
       - devcovenant/**/*.py
       - '*.py'
       exclude_suffixes: ''
       exclude_prefixes: ''
-      exclude_globs: &id050
+      exclude_globs: &id051
       - devcovenant/builtin/profiles/**/assets/**
       - tests/**
       force_include_globs: ''
@@ -6007,7 +6019,7 @@ policies:
       exclude_dirs: ''
       force_include_files: ''
       force_include_dirs: ''
-      sink_call_targets: &id051
+      sink_call_targets: &id052
       - python=>print
       - python=>builtins.print
       sink_attr_targets: ''
@@ -6023,11 +6035,11 @@ policies:
       enforcement: active
       enabled: true
       custom: false
-      selector_roles: *id048
+      selector_roles: *id049
       include_suffixes: .py
-      include_globs: *id049
-      exclude_globs: *id050
-      sink_call_targets: *id051
+      include_globs: *id050
+      exclude_globs: *id051
+      sink_call_targets: *id052
       allowed_file_globs: devcovenant/core/runtime/execution.py
       allow_waiver_comment: 'DEVCOV_ALLOW_OUTPUT:'
     assets:
@@ -6373,7 +6385,7 @@ policies:
       enforcement: active
       enabled: true
       custom: false
-      selector_roles: &id052
+      selector_roles: &id053
       - include
       - exclude
       - force_include
@@ -6381,11 +6393,11 @@ policies:
       include_prefixes: ''
       include_globs: '*.py'
       exclude_suffixes: ''
-      exclude_prefixes: &id053
+      exclude_prefixes: &id054
       - build
       - dist
       - node_modules
-      exclude_globs: &id054
+      exclude_globs: &id055
       - build/**
       - dist/**
       - node_modules/**
@@ -6410,11 +6422,11 @@ policies:
       enforcement: active
       enabled: true
       custom: false
-      selector_roles: *id052
+      selector_roles: *id053
       include_suffixes: .py
       include_globs: '*.py'
-      exclude_prefixes: *id053
-      exclude_globs: *id054
+      exclude_prefixes: *id054
+      exclude_globs: *id055
       forbid_bare_except: true
       forbid_raise_exception: true
       forbid_broad_exception_handlers: true
@@ -6674,7 +6686,7 @@ policies:
       enforcement: active
       enabled: false
       custom: false
-      include_suffixes: &id055
+      include_suffixes: &id056
       - .py
       - .pyi
       - .pyw
@@ -6690,11 +6702,11 @@ policies:
       - .swift
       - .php
       - .rb
-      selector_roles: &id056
+      selector_roles: &id057
       - include
       - exclude
       - force_include
-      include_globs: &id057
+      include_globs: &id058
       - '*.py'
       - '*.pyi'
       - '*.pyw'
@@ -6733,9 +6745,9 @@ policies:
       enforcement: active
       enabled: false
       custom: false
-      include_suffixes: *id055
-      selector_roles: *id056
-      include_globs: *id057
+      include_suffixes: *id056
+      selector_roles: *id057
+      include_globs: *id058
     assets: []
     origin: builtin
     script_exists: true
@@ -6935,7 +6947,7 @@ policies:
       exclude_prefixes: ''
       exclude_globs: ''
       force_include_globs: ''
-      selector_roles: &id058
+      selector_roles: &id059
       - include
       - exclude
       - force_include
@@ -6953,7 +6965,7 @@ policies:
       enforcement: active
       enabled: true
       custom: false
-      selector_roles: *id058
+      selector_roles: *id059
     assets: []
     origin: builtin
     script_exists: true
@@ -7274,7 +7286,7 @@ policies:
       enforcement: active
       enabled: true
       custom: false
-      exclude_globs: &id059
+      exclude_globs: &id060
       - tests/**
       - '**/tests/**'
       include_suffixes: .py
@@ -7283,7 +7295,7 @@ policies:
       exclude_suffixes: ''
       exclude_prefixes: ''
       force_include_globs: ''
-      selector_roles: &id060
+      selector_roles: &id061
       - exclude
       - include
       - force_include
@@ -7301,10 +7313,10 @@ policies:
       enforcement: active
       enabled: true
       custom: false
-      exclude_globs: *id059
+      exclude_globs: *id060
       include_suffixes: .py
       include_globs: '*.py'
-      selector_roles: *id060
+      selector_roles: *id061
     assets:
     - '**/tests/**'
     - tests/**
@@ -7730,17 +7742,17 @@ policies:
       enabled: true
       custom: false
       enforce_symbol_fidelity: true
-      symbol_kinds: &id061
+      symbol_kinds: &id062
       - function
       - class
       symbol_name_min_length: 3
       symbol_assertion_window: 2
       fixture_marker_pattern: \bDEVCOV_FIXTURE_OK:\s*(?P<reason>\S.*)
-      assertion_signal_patterns: &id062
+      assertion_signal_patterns: &id063
       - '*=>\bassert\b'
       - python=>\bassert\b
       - python=>\bself\.assert[A-Za-z_]*\s*\(
-      tautology_patterns: &id063
+      tautology_patterns: &id064
       - '*=>^\s*assert\s*\(\s*true\s*\)\s*;?\s*$'
       - '*=>^\s*assert\s+true\s*;?\s*$'
       - rust=>^\s*assert!\s*\(\s*true\s*\)\s*;?\s*$
@@ -7748,12 +7760,12 @@ policies:
       - python=>^\s*self\.assertTrue\s*\(\s*True\s*\)\s*$
       include_suffixes: .py
       include_prefixes: ''
-      exclude_prefixes: &id064
+      exclude_prefixes: &id065
       - build
       - dist
       - node_modules
       - tests
-      exclude_globs: &id065
+      exclude_globs: &id066
       - devcovenant/core/*.py
       - devcovenant/custom/policies/**/fixers/**
       - build/**
@@ -7766,7 +7778,7 @@ policies:
       exclude_suffixes: ''
       force_include_globs: ''
       watch_files: ''
-      selector_roles: &id066
+      selector_roles: &id067
       - include
       - exclude
       - watch
@@ -7791,19 +7803,19 @@ policies:
       enabled: true
       custom: false
       enforce_symbol_fidelity: true
-      symbol_kinds: *id061
+      symbol_kinds: *id062
       symbol_name_min_length: 3
       symbol_assertion_window: 2
       fixture_marker_pattern: \bDEVCOV_FIXTURE_OK:\s*(?P<reason>\S.*)
-      assertion_signal_patterns: *id062
-      tautology_patterns: *id063
+      assertion_signal_patterns: *id063
+      tautology_patterns: *id064
       include_suffixes: .py
-      exclude_prefixes: *id064
-      exclude_globs: *id065
+      exclude_prefixes: *id065
+      exclude_globs: *id066
       watch_dirs: tests
       tests_watch_dirs: tests
       include_globs: '*.py'
-      selector_roles: *id066
+      selector_roles: *id067
     assets:
     - build/**
     - devcovenant/core/*.py
@@ -8162,16 +8174,16 @@ policies:
       enabled: true
       custom: false
       version_file: devcovenant/VERSION
-      target_roles: &id067
+      target_roles: &id068
       - docs
       - changelog
       - package_manifest
-      role_extractors: &id068
+      role_extractors: &id069
       - docs=>project_version_line
       - changelog=>changelog_header_version
       - package_manifest=>manifest_project_version
       role_legality_schemes: package_manifest=>pep440
-      target_role_files: &id069
+      target_role_files: &id070
       - docs=>README.md
       - docs=>AGENTS.md
       - docs=>CONTRIBUTING.md
@@ -8210,10 +8222,10 @@ policies:
       enabled: true
       custom: false
       version_file: devcovenant/VERSION
-      target_roles: *id067
-      role_extractors: *id068
+      target_roles: *id068
+      role_extractors: *id069
       role_legality_schemes: package_manifest=>pep440
-      target_role_files: *id069
+      target_role_files: *id070
       target_role_globs: docs=>devcovenant/docs/**/*.md
       target_role_dirs: docs=>devcovenant/docs
       changelog_file: CHANGELOG.md
@@ -8905,11 +8917,11 @@ policies:
       dependency_files: ''
       dependency_globs: ''
       dependency_dirs: ''
-      dependency_roles: &id070
+      dependency_roles: &id071
       - intent
       - resolved
       - package_manifest
-      dependency_role_files: &id071
+      dependency_role_files: &id072
       - intent=>requirements.in
       - resolved=>requirements.lock
       - package_manifest=>pyproject.toml
@@ -8927,8 +8939,8 @@ policies:
       enforcement: active
       enabled: true
       custom: false
-      dependency_roles: *id070
-      dependency_role_files: *id071
+      dependency_roles: *id071
+      dependency_role_files: *id072
       third_party_file: licenses/THIRD_PARTY_LICENSES.md
       licenses_dir: licenses
       report_heading: '## License Report'
@@ -9581,8 +9593,12 @@ profiles:
         expected_interpreters:
         - .venv/bin/python
         - .venv/Scripts/python.exe
+        required_commands:
+        - pre-commit
+        - pytest
         manual_commands:
-        - python3 -m venv .venv
+        - '{current_python} -m venv .venv'
+        - '{managed_python} -m pip install -r requirements.lock'
     project-governance:
       changelog_file: CHANGELOG.md
       unversioned_label: Unversioned
@@ -11681,17 +11697,17 @@ profiles:
               .venv/bin/python -m devcovenant check
               popd >/dev/null
           - name: Upload distributions
-            uses: actions/upload-artifact@v4
+            uses: actions/upload-artifact@v7
             with:
               name: devcovenant-dist
               path: dist/*
           - name: Upload SBOM
-            uses: actions/upload-artifact@v4
+            uses: actions/upload-artifact@v7
             with:
               name: devcovenant-sbom
               path: artifacts/sbom/*.json
           - name: Upload build provenance
-            uses: actions/upload-artifact@v4
+            uses: actions/upload-artifact@v7
             with:
               name: devcovenant-provenance
               path: artifacts/provenance/*.json
@@ -11708,12 +11724,13 @@ profiles:
         - .venv/bin/python
         - .venv/Scripts/python.exe
         required_commands:
-        - python3
+        - pre-commit
+        - pytest
         manual_commands:
-        - python3 -m venv .venv
+        - '{current_python} -m venv .venv'
         - '{managed_python} -m pip install -r requirements.lock'
         managed_commands:
-        - start=>python3 -m venv .venv
+        - start=>{current_python} -m venv .venv
         - start=>{managed_python} -m pip install -r requirements.lock
       documentation-growth-tracking:
         user_facing_files:
@@ -11893,6 +11910,8 @@ profiles:
         semver_scope_tags_required: true
         version_file: devcovenant/VERSION
     project-governance:
+      project_name: devcovenant
+      project_description: devcovenant is a repository governance framework.
       stage: stable
       maintenance_stance: active
       compatibility_policy: forward-only

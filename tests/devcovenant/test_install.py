@@ -55,6 +55,9 @@ def _unit_test_install_writes_config_reviewed_and_manifest() -> None:
         assert isinstance(install_block, dict)
         assert install_block.get("config_reviewed") is False
         assert config.get("developer_mode") is False
+        policy_state = config.get("policy_state", {})
+        assert isinstance(policy_state, dict)
+        assert policy_state.get("managed-environment") is True
 
         profiles_block = config.get("profiles", {})
         assert isinstance(profiles_block, dict)

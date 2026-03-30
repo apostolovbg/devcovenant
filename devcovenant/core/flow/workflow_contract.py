@@ -13,6 +13,7 @@ from devcovenant.core.services import yaml_cache as yaml_cache_service
 
 SCHEMA_VERSION = 4
 ANCHOR_IDS = ("start", "mid", "end")
+DEFAULT_PRE_COMMIT_COMMAND = "pre-commit run --all-files"
 _FRESHNESS_KINDS = {"ignore_paths", "any_change"}
 _RUNNER_KINDS = {
     "command_group",
@@ -40,6 +41,20 @@ def _load_config_payload(repo_root: Path) -> dict[str, object]:
     if not isinstance(payload, dict):
         raise ValueError(f"Config must be a YAML mapping: {config_path}")
     return payload
+
+
+def resolve_pre_commit_command(repo_root: Path) -> str:
+    """Return the configured workflow pre-commit command for one repo."""
+    try:
+        payload = _load_config_payload(repo_root)
+    except ValueError:
+        return DEFAULT_PRE_COMMIT_COMMAND
+    workflow = payload.get("workflow")
+    if isinstance(workflow, Mapping):
+        command = str(workflow.get("pre_commit_command", "") or "").strip()
+        if command:
+            return command
+    return DEFAULT_PRE_COMMIT_COMMAND
 
 
 def _normalize_bool(raw_value: object, *, default: bool) -> bool:

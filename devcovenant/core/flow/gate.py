@@ -44,7 +44,9 @@ prune_inline_session_snapshot_fields = (
 _CHECK_APPLY_FIXES_ENV = "DEVCOV_CHECK_APPLY_FIXES"
 _CHECK_RUN_REFRESH_ENV = "DEVCOV_CHECK_RUN_REFRESH"
 _CHECK_CLEAN_BYTECODE_ENV = "DEVCOV_CHECK_CLEAN_BYTECODE"
-_DEFAULT_PRE_COMMIT_COMMAND = "pre-commit run --all-files"
+_DEFAULT_PRE_COMMIT_COMMAND = (
+    workflow_contract_module.DEFAULT_PRE_COMMIT_COMMAND
+)
 _PRE_COMMIT_EXECUTABLE_TOKENS = frozenset(
     {"pre-commit", "pre-commit.exe", "pre_commit", "pre_commit.exe"}
 )
@@ -462,7 +464,7 @@ def run_pre_commit_gate(
     repo_root: Path,
     stage: str,
     *,
-    command: str = _DEFAULT_PRE_COMMIT_COMMAND,
+    command: str | None = None,
     notes: str = "",
 ) -> int:
     """Run one gate pre-commit stage (`start`, `mid`, or `end`)."""
@@ -471,6 +473,12 @@ def run_pre_commit_gate(
     is_start = stage == "start"
     is_mid = stage == "mid"
     is_end = stage == "end"
+    resolved_command = str(command or "").strip()
+    if not resolved_command:
+        resolved_command = workflow_contract_module.resolve_pre_commit_command(
+            repo_root
+        )
+    command = resolved_command
 
     status_path = registry_runtime_module.gate_status_path(repo_root)
     status_path.parent.mkdir(parents=True, exist_ok=True)
@@ -511,7 +519,7 @@ def run_pre_commit_gate(
         return 1
     effective_command = (
         execution_runtime_module.rewrite_command_string_for_managed_python(
-            command,
+            resolved_command,
             managed_python,
         )
     )

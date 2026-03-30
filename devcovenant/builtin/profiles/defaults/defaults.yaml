@@ -484,8 +484,12 @@ policy_overlays:
     expected_interpreters:
       - .venv/bin/python
       - .venv/Scripts/python.exe
+    required_commands:
+      - pre-commit
+      - pytest
     manual_commands:
-      - python3 -m venv .venv
+      - '{current_python} -m venv .venv'
+      - '{managed_python} -m pip install -r requirements.lock'
 project-governance:
   changelog_file: CHANGELOG.md
   unversioned_label: Unversioned

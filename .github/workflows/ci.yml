@@ -2,6 +2,8 @@ name: CI
 on:
   push:
   pull_request:
+env:
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: 'true'
 jobs:
   governance:
     name: Governance
@@ -326,17 +328,17 @@ jobs:
         .venv/bin/python -m devcovenant check
         popd >/dev/null
     - name: Upload distributions
-      uses: actions/upload-artifact@v4
+      uses: actions/upload-artifact@v7
       with:
         name: devcovenant-dist
         path: dist/*
     - name: Upload SBOM
-      uses: actions/upload-artifact@v4
+      uses: actions/upload-artifact@v7
       with:
         name: devcovenant-sbom
         path: artifacts/sbom/*.json
     - name: Upload build provenance
-      uses: actions/upload-artifact@v4
+      uses: actions/upload-artifact@v7
       with:
         name: devcovenant-provenance
         path: artifacts/provenance/*.json

@@ -3,6 +3,8 @@
 from __future__ import annotations
 
 import importlib
+import os
+import sys
 import tempfile
 import unittest
 from pathlib import Path
@@ -239,9 +241,157 @@ def _unit_test_start_reuses_ready_current_interpreter(
         )
 
     assert resolved_env is not None
-    assert resolved_python == str(managed_python.resolve())
-    assert resolved_env["DEVCOV_MANAGED_PYTHON"] == str(
-        managed_python.resolve()
+    assert resolved_python == str(managed_python)
+    assert resolved_env["DEVCOV_MANAGED_PYTHON"] == str(managed_python)
+    assert resolved_env[module._MANAGED_STAGE_RUNS_ENV] == "start"
+    assert stage_calls == []
+
+
+def _unit_test_start_reuses_symlinked_environment_interpreter(
+    monkeypatch: MonkeyPatch,
+) -> None:
+    """Symlinked env interpreters should keep the env-local launcher path."""
+    module = importlib.import_module(MODULE)
+    with tempfile.TemporaryDirectory() as temp_dir:
+        repo_root = Path(temp_dir)
+        managed_root = repo_root / ".venv"
+        managed_python = managed_root / "bin" / "python"
+        real_python = repo_root / "python-home" / "bin" / "python"
+        real_python.parent.mkdir(parents=True, exist_ok=True)
+        real_python.write_text("", encoding="utf-8")
+        real_python.chmod(0o755)
+        managed_python.parent.mkdir(parents=True, exist_ok=True)
+        try:
+            managed_python.symlink_to(real_python)
+        except (AttributeError, NotImplementedError, OSError) as error:
+            raise unittest.SkipTest(
+                "Symlink support is unavailable in this environment."
+            ) from error
+
+        monkeypatch.setattr(module.sys, "executable", str(managed_python))
+        monkeypatch.setattr(
+            module,
+            "_load_policy_entry",
+            lambda repo_root: {
+                "enabled": True,
+                "metadata": {
+                    "expected_paths": [".venv"],
+                    "expected_interpreters": [".venv/bin/python"],
+                    "required_commands": ["python3"],
+                    "managed_commands": [
+                        "start=>python3 -m venv .venv",
+                    ],
+                },
+            },
+        )
+        monkeypatch.setattr(
+            module,
+            "_command_available_in_env",
+            lambda command, env: command == "python3",
+        )
+
+        stage_calls: list[str] = []
+
+        def _fail_if_bootstrap_runs(*args, **kwargs):
+            """Record any unexpected bootstrap call for assertions."""
+            del args, kwargs
+            stage_calls.append("start")
+            return {}, True
+
+        monkeypatch.setattr(
+            module,
+            "_run_managed_commands_for_stage",
+            _fail_if_bootstrap_runs,
+        )
+
+        resolved_env, resolved_python = (
+            module.resolve_managed_environment_for_stage(
+                repo_root,
+                "start",
+                base_env={},
+            )
+        )
+
+    assert resolved_env is not None
+    assert resolved_python == str(managed_python)
+    assert resolved_env["DEVCOV_MANAGED_PYTHON"] == str(managed_python)
+    assert (
+        Path(resolved_env["VIRTUAL_ENV"]).resolve() == managed_root.resolve()
+    )
+    assert resolved_env["PATH"].split(os.pathsep)[0] == str(
+        managed_python.parent
+    )
+    assert resolved_env[module._MANAGED_STAGE_RUNS_ENV] == "start"
+    assert stage_calls == []
+
+
+def _unit_test_start_reuses_external_environment_root(
+    monkeypatch: MonkeyPatch,
+) -> None:
+    """Managed roots may live outside the repository tree."""
+    module = importlib.import_module(MODULE)
+    with tempfile.TemporaryDirectory() as temp_dir:
+        temp_path = Path(temp_dir)
+        repo_root = temp_path / "repo"
+        repo_root.mkdir(parents=True, exist_ok=True)
+        managed_root = temp_path / "frappe-bench" / "env"
+        managed_python = managed_root / "bin" / "python"
+        managed_python.parent.mkdir(parents=True, exist_ok=True)
+        managed_python.write_text("", encoding="utf-8")
+        managed_python.chmod(0o755)
+
+        monkeypatch.setattr(module.sys, "executable", str(managed_python))
+        monkeypatch.setattr(
+            module,
+            "_load_policy_entry",
+            lambda repo_root: {
+                "enabled": True,
+                "metadata": {
+                    "expected_paths": [str(managed_root)],
+                    "expected_interpreters": [str(managed_python)],
+                    "required_commands": ["python3"],
+                    "managed_commands": [
+                        f"start=>{managed_python} -m pip --version",
+                    ],
+                },
+            },
+        )
+        monkeypatch.setattr(
+            module,
+            "_command_available_in_env",
+            lambda command, env: command == "python3",
+        )
+
+        stage_calls: list[str] = []
+
+        def _fail_if_bootstrap_runs(*args, **kwargs):
+            """Record any unexpected bootstrap call for assertions."""
+            del args, kwargs
+            stage_calls.append("start")
+            return {}, True
+
+        monkeypatch.setattr(
+            module,
+            "_run_managed_commands_for_stage",
+            _fail_if_bootstrap_runs,
+        )
+
+        resolved_env, resolved_python = (
+            module.resolve_managed_environment_for_stage(
+                repo_root,
+                "start",
+                base_env={},
+            )
+        )
+
+    assert resolved_env is not None
+    assert resolved_python == str(managed_python)
+    assert resolved_env["DEVCOV_MANAGED_PYTHON"] == str(managed_python)
+    assert (
+        Path(resolved_env["VIRTUAL_ENV"]).resolve() == managed_root.resolve()
+    )
+    assert resolved_env["PATH"].split(os.pathsep)[0] == str(
+        managed_python.parent
     )
     assert resolved_env[module._MANAGED_STAGE_RUNS_ENV] == "start"
     assert stage_calls == []
@@ -410,6 +560,107 @@ def _unit_test_run_bootstraps_when_environment_is_missing(
     assert stage_calls == ["start"]
 
 
+def _unit_test_command_stage_uses_current_interpreter_until_target_exists(
+    monkeypatch: MonkeyPatch,
+) -> None:
+    """Command stage may use the current interpreter before target creation."""
+    module = importlib.import_module(MODULE)
+    with tempfile.TemporaryDirectory() as temp_dir:
+        repo_root = Path(temp_dir) / "repo"
+        repo_root.mkdir(parents=True, exist_ok=True)
+        tool_root = Path(temp_dir) / "toolenv"
+        tool_python = tool_root / "bin" / "python"
+        tool_python.parent.mkdir(parents=True, exist_ok=True)
+        tool_python.write_text("", encoding="utf-8")
+        tool_python.chmod(0o755)
+        (tool_root / "pyvenv.cfg").write_text("", encoding="utf-8")
+
+        monkeypatch.setattr(module.sys, "executable", str(tool_python))
+        monkeypatch.setattr(
+            module,
+            "_load_policy_entry",
+            lambda repo_root: {
+                "enabled": True,
+                "metadata": {
+                    "expected_paths": [".venv"],
+                    "expected_interpreters": [".venv/bin/python"],
+                    "required_commands": ["pre-commit", "pytest"],
+                    "manual_commands": [
+                        "{current_python} -m venv .venv",
+                        "{managed_python} -m pip install -r requirements.lock",
+                    ],
+                    "managed_commands": [],
+                },
+            },
+        )
+
+        resolved_env, resolved_python = (
+            module.resolve_managed_environment_for_stage(
+                repo_root,
+                "command",
+                base_env={"PATH": "/usr/bin"},
+            )
+        )
+
+    assert resolved_env is not None
+    assert resolved_python == str(tool_python)
+    assert resolved_env["DEVCOV_MANAGED_PYTHON"] == str(tool_python)
+    assert resolved_env["PATH"].split(os.pathsep)[0] == str(tool_python.parent)
+    assert Path(resolved_env["VIRTUAL_ENV"]).resolve() == tool_root.resolve()
+
+
+def _unit_test_command_stage_does_not_mask_declared_bootstrap_contract(
+    monkeypatch: MonkeyPatch,
+) -> None:
+    """Command-stage reuse should not hide broken explicit bootstrap logic."""
+    module = importlib.import_module(MODULE)
+    with tempfile.TemporaryDirectory() as temp_dir:
+        repo_root = Path(temp_dir)
+        tool_root = repo_root / "toolenv"
+        tool_python = tool_root / "bin" / "python"
+        tool_python.parent.mkdir(parents=True, exist_ok=True)
+        tool_python.write_text("", encoding="utf-8")
+        tool_python.chmod(0o755)
+        (tool_root / "pyvenv.cfg").write_text("", encoding="utf-8")
+
+        monkeypatch.setattr(module.sys, "executable", str(tool_python))
+        monkeypatch.setattr(
+            module,
+            "_load_policy_entry",
+            lambda repo_root: {
+                "enabled": True,
+                "metadata": {
+                    "expected_paths": [".venv"],
+                    "expected_interpreters": [".venv/bin/python"],
+                    "managed_commands": [
+                        "start=>{current_python} -m venv .venv",
+                    ],
+                },
+            },
+        )
+        monkeypatch.setattr(
+            module,
+            "_run_managed_commands_for_stage",
+            lambda repo_root, env, managed_commands, **kwargs: (
+                dict(env),
+                True,
+            ),
+        )
+
+        try:
+            module.resolve_managed_environment_for_stage(
+                repo_root,
+                "command",
+                base_env={"PATH": "/usr/bin"},
+            )
+        except ValueError as error:
+            message = str(error)
+        else:  # pragma: no cover - defensive
+            raise AssertionError("Expected ValueError for missing target env.")
+
+    assert "no expected interpreter was found" in message
+
+
 def _unit_test_guidance_suffix_expands_tokens() -> None:
     """Guidance suffix should expand known tokens with paths."""
     module = importlib.import_module(MODULE)
@@ -417,6 +668,7 @@ def _unit_test_guidance_suffix_expands_tokens() -> None:
     managed_root = repo_root / ".venv"
     managed_python = managed_root / "bin" / "python"
     manual_commands = [
+        "{current_python} -m pip --version",
         "{managed_python} -m venv {managed_root}",
         "source {managed_bin}/activate",
         "cd {repo_root}",
@@ -427,6 +679,7 @@ def _unit_test_guidance_suffix_expands_tokens() -> None:
         managed_python=managed_python,
         managed_root=managed_root,
     )
+    assert sys.executable in suffix
     assert str(managed_python) in suffix
     assert str(managed_root) in suffix
     assert str(managed_root / "bin") in suffix
@@ -732,6 +985,24 @@ class GeneratedUnittestCases(unittest.TestCase):
         monkeypatch = MonkeyPatch()
         try:
             _unit_test_start_reuses_ready_current_interpreter(monkeypatch)
+        finally:
+            monkeypatch.undo()
+
+    def test_start_reuses_symlinked_environment_interpreter(self):
+        """Run symlinked-interpreter environment reuse assertions."""
+        monkeypatch = MonkeyPatch()
+        try:
+            _unit_test_start_reuses_symlinked_environment_interpreter(
+                monkeypatch
+            )
+        finally:
+            monkeypatch.undo()
+
+    def test_start_reuses_external_environment_root(self):
+        """Run external-environment-root reuse assertions."""
+        monkeypatch = MonkeyPatch()
+        try:
+            _unit_test_start_reuses_external_environment_root(monkeypatch)
         finally:
             monkeypatch.undo()
 

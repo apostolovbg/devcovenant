@@ -320,8 +320,8 @@ workflow:
 # When unversioned, the top visible changelog heading must match `unreleased_heading` exactly.
 
 project-governance:
-  project_name: DevCovenant
-  project_description: DevCovenant is a Repository Governance Framework.
+  project_name: devcovenant
+  project_description: devcovenant is a repository governance framework.
   stage: stable
   maintenance_stance: active
   compatibility_policy: forward-only
@@ -947,13 +947,14 @@ autogen_metadata_overlays:
     expected_paths:
     - .venv
     managed_commands:
-    - start=>python3 -m venv .venv
+    - start=>{current_python} -m venv .venv
     - start=>{managed_python} -m pip install -r requirements.lock
     manual_commands:
-    - python3 -m venv .venv
+    - '{current_python} -m venv .venv'
     - '{managed_python} -m pip install -r requirements.lock'
     required_commands:
-    - python3
+    - pre-commit
+    - pytest
   modules-need-tests:
     exclude_prefixes:
     - build

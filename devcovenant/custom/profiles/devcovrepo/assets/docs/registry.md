@@ -45,11 +45,13 @@ If active profiles contribute generated workflow fragments or proof-job
 fragments, the tracked registry records the resolved workflow metadata they
 contribute.
 That includes generated GitHub Actions job structure and action-version
-inputs that later render into `.github/workflows/ci.yml`.
+inputs and workflow-level environment values that later render into
+`.github/workflows/ci.yml`.
 If active profiles contribute managed-environment metadata, tracked state
 records that resolved execution contract too.
-That includes the selected interpreter expectations, bootstrap commands, and
-cleanup-protected roots the runtime actually uses.
+That includes the selected interpreter expectations, command templates such as
+`{current_python}` / `{managed_python}`, and cleanup-protected roots the
+runtime actually uses.
 
 Separately from tracked registry state, the same refresh pass may also
 regenerate output surfaces such as `.gitignore`, `.pre-commit-config.yaml`,

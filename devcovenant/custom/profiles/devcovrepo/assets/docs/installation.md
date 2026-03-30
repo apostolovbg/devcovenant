@@ -237,6 +237,9 @@ It first reuses the current interpreter when that interpreter already matches
 the metadata contract and its declared external prerequisites still resolve.
 If not, it selects the configured interpreter or environment root and only
 then runs `managed_commands` to prepare it.
+If no automatic bootstrap commands are declared yet, non-gate command-stage
+operations such as `check` or `refresh` may continue from the current
+interpreter until the target environment exists.
 That keeps `gate --start` non-destructive once a repo-managed environment
 already satisfies the contract.
 If the resolved interpreter path exists but is not executable, DevCovenant

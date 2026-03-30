@@ -15,7 +15,9 @@ from devcovenant.core.runtime import registry as runtime_registry_module
 from devcovenant.core.services import yaml_cache as yaml_cache_service
 
 CHECK_ID = "workflow-contract"
-_DEFAULT_PRE_COMMIT_COMMAND = "pre-commit run --all-files"
+_DEFAULT_PRE_COMMIT_COMMAND = (
+    workflow_contract_module.DEFAULT_PRE_COMMIT_COMMAND
+)
 _PRE_COMMIT_EXECUTABLE_TOKENS = frozenset(
     {"pre-commit", "pre-commit.exe", "pre_commit", "pre_commit.exe"}
 )

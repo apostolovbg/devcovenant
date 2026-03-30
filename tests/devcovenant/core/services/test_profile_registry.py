@@ -411,6 +411,7 @@ def _unit_test_ci_workflow_contains_build_job_artifact_proof() -> None:
     ]
     assert "actions/checkout@v6" in build_uses
     assert "actions/setup-python@v6" in build_uses
+    assert "actions/upload-artifact@v7" in build_uses
 
     step_names = [
         str(step.get("name") or "").strip()
@@ -539,6 +540,7 @@ def _unit_test_publish_workflow_uses_validated_build_artifacts() -> None:
         and str(step.get("name") or "").strip()
         == "Download validated distributions"
     )
+    assert dist_download.get("uses") == "actions/download-artifact@v8"
     dist_with = dist_download.get("with")
     assert isinstance(dist_with, dict)
     assert dist_with.get("run-id") == "${{ steps.ci-run.outputs.run_id }}"
@@ -550,6 +552,7 @@ def _unit_test_publish_workflow_uses_validated_build_artifacts() -> None:
         if isinstance(step, dict)
         and str(step.get("name") or "").strip() == "Download build provenance"
     )
+    assert provenance_download.get("uses") == "actions/download-artifact@v8"
     provenance_with = provenance_download.get("with")
     assert isinstance(provenance_with, dict)
     assert provenance_with.get("run-id") == (
@@ -561,6 +564,13 @@ def _unit_test_publish_workflow_uses_validated_build_artifacts() -> None:
     assert "EXPECTED_CI_RUN_ID" in all_run_blocks
     assert "EXPECTED_CI_RUN_ATTEMPT" in all_run_blocks
     assert "build_run_id" not in all_run_blocks
+    validate_step = next(
+        step
+        for step in steps
+        if isinstance(step, dict)
+        and str(step.get("name") or "").strip() == "Validate selected CI run"
+    )
+    assert validate_step.get("uses") == "actions/github-script@v8"
 
 
 def _unit_test_python_family_profiles_do_not_double_run_pytest() -> None:
@@ -590,8 +600,8 @@ def _unit_test_python_family_profiles_do_not_double_run_pytest() -> None:
         assert "pytest" not in command_text
 
 
-def _unit_test_devcovrepo_managed_env_requires_bootstrap_only() -> None:
-    """Repo managed-env prerequisites should stay at bootstrap minimum."""
+def _unit_test_devcovrepo_managed_env_requires_runtime_tools() -> None:
+    """Repo managed-env contract should require gate/runtime tools."""
     manifest_path = (
         REPO_ROOT
         / "devcovenant"
@@ -609,7 +619,7 @@ def _unit_test_devcovrepo_managed_env_requires_bootstrap_only() -> None:
     required_commands = managed_environment.get("required_commands")
     assert isinstance(required_commands, list)
     command_text = [str(command).strip() for command in required_commands]
-    assert command_text == ["python3"]
+    assert command_text == ["pre-commit", "pytest"]
 
 
 class GeneratedUnittestCases(unittest.TestCase):
@@ -675,6 +685,6 @@ class GeneratedUnittestCases(unittest.TestCase):
         """Run Python-family workflow command assertions."""
         _unit_test_python_family_profiles_do_not_double_run_pytest()
 
-    def test_devcovrepo_managed_env_requires_bootstrap_only(self):
-        """Run repo managed-env bootstrap-prerequisite assertions."""
-        _unit_test_devcovrepo_managed_env_requires_bootstrap_only()
+    def test_devcovrepo_managed_env_requires_runtime_tools(self):
+        """Run repo managed-env runtime-tool assertions."""
+        _unit_test_devcovrepo_managed_env_requires_runtime_tools()

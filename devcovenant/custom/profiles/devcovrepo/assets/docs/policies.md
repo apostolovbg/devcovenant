@@ -68,11 +68,19 @@ environment is missing or invalid.
 That reuse rule is exact:
 - the current interpreter must match a declared `expected_interpreters` path,
   or live under a declared `expected_paths` root
+- matching is symlink-safe, so env-local launchers such as `.venv/bin/python`
+  or bench `env/bin/python` stay tied to their declared environment roots
 - an unrelated host `.../bin/python` does not count as managed just because it
   is itself inside a generic `bin/` directory
+- when no automatic bootstrap is declared, non-gate `command` stage
+  operations may continue from the current interpreter until the target
+  environment exists
 For Python-owned tools such as the gate hook, execution runs `python -m ...`
 through the selected interpreter instead of depending on a console-script
 shim.
+Command templates may use `{current_python}` / `{current_bin}` for the running
+interpreter and `{managed_python}` / `{managed_bin}` / `{managed_root}` for the
+selected target environment.
 
 ## Policy Commands
 DevCovenant supports namespaced policy commands.

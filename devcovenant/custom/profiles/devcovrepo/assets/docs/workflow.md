@@ -144,6 +144,9 @@ the repository supports.
 If a repository adds a separate release workflow, that workflow should consume
 validated artifacts and provenance from the proof boundary rather than
 rebuilding a fresh distribution later.
+Keep GitHub Action refs current as runner runtimes evolve; proof and release
+workflows should use Node 24-capable action releases or equivalent non-JS
+steps instead of carrying older Node 20-only refs forward.
 
 ## Managed Environment In Workflow Execution
 When the managed-environment policy is enabled, DevCovenant resolves one target
@@ -152,11 +155,17 @@ It first reuses the current interpreter when that interpreter already satisfies
 the contract.
 If not, it selects the configured interpreter or environment root and only
 then runs `managed_commands` to prepare it.
+If the policy does not declare automatic bootstrap commands yet, non-gate
+`command` stage operations may keep using the current interpreter until the
+target environment exists.
 
 That keeps `gate --start` non-destructive once a configured environment already
 satisfies the contract.
 It also keeps the workflow portable across normal `.venv` repos, other managed
 environment layouts, and installed-artifact proof repos.
+The matcher is symlink-safe, so the selected interpreter stays anchored to the
+declared environment root even when the launcher points at a shared base
+Python binary.
 
 For Python-owned tools such as the pre-commit gate hook, execution runs
 `python -m pre_commit` through the selected interpreter instead of depending

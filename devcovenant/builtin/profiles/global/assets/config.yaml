@@ -362,6 +362,7 @@ workflow:
 # runtime emits a diagnostic instead of honoring the disable attempt.
 # Do not activate/deactivate policies through profile manifests.
 policy_state:
+  managed-environment: true
   raw-string-escapes: false
   version-governance: false
   version-sync: false

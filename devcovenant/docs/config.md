@@ -210,6 +210,8 @@ The on/off map for customizable policies.
 This is where you decide which non-core policies are enabled.
 Critical-severity policies can still remain enforced even if a config toggle
 tries to disable them.
+The installed baseline enables `managed-environment` so gate and run commands
+can consistently resolve the repository `.venv` contract out of the box.
 
 ### engine
 Runtime behavior such as:
@@ -307,9 +309,14 @@ The execution side of the same policy follows one simple rule:
 reuse the current interpreter when it already satisfies the contract, choose
 the configured target interpreter when it does not, and only run bootstrap
 commands when that target environment is missing or invalid.
-`required_commands` should therefore describe external prerequisites for
-selecting or preparing the environment, not every Python console script that
-may later run from inside it.
+Matching is path-stable across symlinked virtualenv launchers and external
+environment roots such as bench `env/` directories.
+When no automatic bootstrap is declared, non-gate `command` stage operations
+may keep using the current interpreter until the target environment exists.
+`required_commands` should describe the commands that must resolve inside the
+selected target environment once it is ready.
+Manual/bootstrap command templates may use `{current_python}` for the running
+interpreter and `{managed_python}` for the selected target interpreter.
 
 ## Project Governance In Practice
 Most repositories change these first:

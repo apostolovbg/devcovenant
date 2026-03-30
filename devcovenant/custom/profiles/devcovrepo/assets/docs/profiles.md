@@ -52,6 +52,17 @@ That includes things like:
 If the behavior should apply to many repositories of the same shape, it
 probably belongs in a profile instead of local config.
 
+The built-in `defaults` profile now seeds the baseline `.venv`
+managed-environment contract for ordinary repos:
+- `expected_paths` / `expected_interpreters`
+- `required_commands` for the target env
+- manual guidance that uses `{current_python}` and `{managed_python}`
+
+Repo profiles can then strengthen that baseline.
+One repo profile may add `managed_commands` so `gate --start` can materialize
+the repo-owned environment automatically, while the built-in `global` CI asset
+keeps shared runner-runtime choices in the generic workflow layer.
+
 ## Assets And Managed Docs
 Profiles can ship assets.
 Those assets can include managed-document templates.

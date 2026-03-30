@@ -6,9 +6,9 @@ requires = [
 build-backend = "setuptools.build_meta"
 
 [project]
-name = "DevCovenant"
+name = "devcovenant"
 version = "1.0.0"
-description = "DevCovenant is a Repository Governance Framework."
+description = "devcovenant is a repository governance framework."
 readme = {file = "devcovenant/README.md", content-type = "text/markdown"}
 requires-python = ">=3.10"
 license = "MIT"

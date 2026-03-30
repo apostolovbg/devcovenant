@@ -1,4 +1,4 @@
-# DevCovenant
+# devcovenant
 **Doc ID:** README
 **Doc Type:** repo-readme
 **Project Version:** 1.0.0
@@ -317,6 +317,8 @@ not belong in ordinary user repositories.
   includes `Governance` plus a dependent `Build` proof job.
 - `.github/workflows/publish.yml` stays repo-maintained and publishes only the
   validated CI artifacts and provenance it consumes.
+- Repo workflows should stay on Node 24-capable action releases and avoid
+  leaving Node 20-only GitHub Action refs behind.
 - Repo-only scanner choices and release-proof details belong in these root
   surfaces and the root trust docs, not in `devcovenant/docs/*`.
 

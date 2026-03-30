@@ -125,14 +125,47 @@ def _resolve_metadata_paths(
         path = Path(token)
         if not path.is_absolute():
             path = repo_root / path
+        absolute_path = Path(os.path.abspath(str(path)))
         if resolve_symlinks:
             try:
-                resolved.append(path.resolve())
+                resolved.append(absolute_path.resolve())
             except OSError:
-                resolved.append(path)
+                resolved.append(absolute_path)
             continue
-        resolved.append(Path(os.path.abspath(str(path))))
+        resolved.append(absolute_path)
     return resolved
+
+
+def _path_aliases(path: Path) -> tuple[Path, ...]:
+    """Return stable absolute and resolved aliases for one path."""
+    absolute_path = Path(os.path.abspath(str(path)))
+    aliases = [absolute_path]
+    try:
+        resolved_path = absolute_path.resolve()
+    except OSError:
+        resolved_path = absolute_path
+    if resolved_path != absolute_path:
+        aliases.append(resolved_path)
+    return tuple(aliases)
+
+
+def _paths_equivalent(left: Path, right: Path) -> bool:
+    """Return True when two path texts point to the same location."""
+    left_aliases = set(_path_aliases(left))
+    right_aliases = set(_path_aliases(right))
+    return bool(left_aliases.intersection(right_aliases))
+
+
+def _path_within_root(candidate: Path, root: Path) -> bool:
+    """Return True when one candidate path lives under one root path."""
+    for candidate_alias in _path_aliases(candidate):
+        for root_alias in _path_aliases(root):
+            if (
+                candidate_alias == root_alias
+                or root_alias in candidate_alias.parents
+            ):
+                return True
+    return False
 
 
 def _parse_managed_commands(entries: list[str]) -> list[tuple[str, str]]:
@@ -180,7 +213,7 @@ def _detect_managed_python(
     for interpreter in expected_interpreters:
         if interpreter.exists():
             for root in expected_paths:
-                if root == interpreter or root in interpreter.parents:
+                if _path_within_root(interpreter, root):
                     return interpreter, root
             parent_name = interpreter.parent.name.lower()
             if parent_name in {"bin", "scripts"}:
@@ -205,7 +238,7 @@ def _derive_managed_root(
 ) -> Path | None:
     """Derive one managed root for an interpreter path when possible."""
     for root in expected_paths:
-        if root == interpreter or root in interpreter.parents:
+        if _path_within_root(interpreter, root):
             return root
     parent_name = interpreter.parent.name.lower()
     if parent_name in {"bin", "scripts"}:
@@ -219,21 +252,18 @@ def _matches_expected_interpreter(
     expected_paths: list[Path],
 ) -> tuple[Path | None, Path | None]:
     """Return interpreter/root when a candidate already matches metadata."""
-    try:
-        resolved = interpreter.resolve()
-    except OSError:
-        resolved = interpreter
+    absolute_interpreter = Path(os.path.abspath(str(interpreter)))
     for expected in expected_interpreters:
-        if resolved == expected:
-            managed_root = _derive_managed_root(resolved, expected_paths)
+        if _paths_equivalent(absolute_interpreter, expected):
+            managed_root = _derive_managed_root(expected, expected_paths)
             if managed_root is None:
-                parent_name = resolved.parent.name.lower()
+                parent_name = expected.parent.name.lower()
                 if parent_name in {"bin", "scripts"}:
-                    managed_root = resolved.parent.parent
-            return resolved, managed_root
+                    managed_root = expected.parent.parent
+            return expected, managed_root
     for root in expected_paths:
-        if root == resolved or root in resolved.parents:
-            return resolved, root
+        if _path_within_root(absolute_interpreter, root):
+            return absolute_interpreter, root
     return None, None
 
 
@@ -321,6 +351,10 @@ def _guidance_token_value(
     normalized = str(token or "").strip()
     if normalized == "repo_root":
         return str(repo_root)
+    if normalized == "current_python":
+        return sys.executable
+    if normalized == "current_bin":
+        return str(Path(sys.executable).parent)
     if normalized == "managed_root":
         if managed_root is None:
             return "<managed_root>"
@@ -399,6 +433,36 @@ def _apply_managed_env(
     return updated
 
 
+def _current_interpreter_root(env: Mapping[str, str]) -> Path | None:
+    """Return one trusted root for the current interpreter when available."""
+    current_python = Path(os.path.abspath(str(sys.executable)))
+    raw_virtual_env = str(env.get("VIRTUAL_ENV", "")).strip()
+    if raw_virtual_env:
+        virtual_env_root = Path(raw_virtual_env)
+        if _path_within_root(current_python, virtual_env_root):
+            return virtual_env_root
+    parent_name = current_python.parent.name.lower()
+    if parent_name in {"bin", "scripts"}:
+        candidate_root = current_python.parent.parent
+        if (candidate_root / "pyvenv.cfg").exists():
+            return candidate_root
+    return None
+
+
+def _resolve_current_interpreter_environment(
+    env: Mapping[str, str],
+) -> tuple[dict[str, str] | None, str | None]:
+    """Return the current interpreter env when it can host command setup."""
+    current_python = Path(os.path.abspath(str(sys.executable)))
+    if not current_python.exists():
+        return None, None
+    if not os.access(current_python, os.X_OK):
+        return None, None
+    current_root = _current_interpreter_root(env)
+    prepared_env = _apply_managed_env(env, current_python, current_root)
+    return prepared_env, str(current_python)
+
+
 def _read_managed_stage_runs(env: Mapping[str, str]) -> set[str]:
     """Return normalized set of stages already prepared in this process env."""
     raw = str(env.get(_MANAGED_STAGE_RUNS_ENV, "")).strip()
@@ -433,6 +497,10 @@ def _expand_managed_command_tokens(
     expanded: list[str] = []
     for token in tokens:
         resolved = token.replace("{repo_root}", str(repo_root))
+        resolved = resolved.replace("{current_python}", sys.executable)
+        resolved = resolved.replace(
+            "{current_bin}", str(Path(sys.executable).parent)
+        )
         if "{managed_root}" in resolved:
             if managed_root is None:
                 raise ValueError(
@@ -665,6 +733,16 @@ def resolve_managed_environment_for_stage(
             required_commands=required_commands,
         )
     if not environment_ready or managed_python is None:
+        if (
+            managed_python is None
+            and stage_token == "command"
+            and not managed_commands
+        ):
+            bootstrap_env, bootstrap_python = (
+                _resolve_current_interpreter_environment(env)
+            )
+            if bootstrap_env is not None and bootstrap_python is not None:
+                return bootstrap_env, bootstrap_python
         guidance = _managed_guidance_suffix(
             manual_commands,
             repo_root=repo_root,

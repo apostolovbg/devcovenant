@@ -1095,10 +1095,11 @@ expected_paths: .venv
 expected_interpreters: .venv/bin/python
   .venv/Scripts/python.exe
 cleanup_protected_paths:
-required_commands: python3
-manual_commands: python3 -m venv .venv
+required_commands: pre-commit
+  pytest
+manual_commands: {current_python} -m venv .venv
   {managed_python} -m pip install -r requirements.lock
-managed_commands: start=>python3 -m venv .venv
+managed_commands: start=>{current_python} -m venv .venv
   start=>{managed_python} -m pip install -r requirements.lock
 ```
 
@@ -1106,19 +1107,25 @@ DevCovenant must run from one execution environment described by this
 policy's metadata. `expected_paths` and `expected_interpreters` point to
 that target environment, while optional `cleanup_protected_paths` define
 extra roots that cleanup must never delete. `required_commands`
-declare the external prerequisites that should already resolve once the
-target interpreter is selected. `manual_commands` document how a human
-can create or repair the environment, and stage-scoped `managed_commands`
-define how DevCovenant may prepare it automatically.
+declare the commands that must resolve once the target interpreter is
+selected. `manual_commands` document how a human can create or repair the
+environment, and stage-scoped `managed_commands` define how DevCovenant may
+prepare it automatically. Command templates may reference `{current_python}`
+and `{current_bin}` for the currently running interpreter, and
+`{managed_python}`, `{managed_bin}`, `{managed_root}`, `{repo_root}` for the
+selected target environment.
 Active managed-environment policy reuses the current interpreter when it
 already satisfies the contract, re-executes CLI commands in the selected
 interpreter when needed, and only runs bootstrap commands when the target
 environment is still missing or invalid. Stage-scoped `managed_commands`
 accept `start`, `run`, `end`, `command`, and `all` prefixes; non-start
 commands may still reuse `start` bootstrap commands once when the target
-environment is not ready. If the resolved interpreter is missing or not
-executable, DevCovenant fails explicitly instead of falling through to
-wrapper adapters or alternate policy sources.
+environment is not ready. When no automatic bootstrap commands are
+declared, non-gate `command` stage operations may keep using the current
+interpreter until the target environment exists, while `start`, `run`, and
+`end` remain strict about the target environment. If the resolved
+interpreter is missing or not executable, DevCovenant fails explicitly
+instead of falling through to wrapper adapters or alternate policy sources.
 When enabled with empty metadata, the policy emits a warning so teams
 fill the required context.
 

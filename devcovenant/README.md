@@ -1,4 +1,4 @@
-# DevCovenant
+# devcovenant
 **Doc ID:** README
 **Doc Type:** repo-readme
 **Project Version:** 1.0.0

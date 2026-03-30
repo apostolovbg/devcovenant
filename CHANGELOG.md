@@ -61,23 +61,106 @@ Example:
 ## Version 1.0.0
 
 - 2026-03-30:
-  Change: hardened managed gate pre-commit launching around the selected
-    interpreter and updated the owned CI action pins to Node-24-ready
-    majors.
-  Why: fixed the remaining pipx-proof `gate --start` failure caused by
-    console-script shim dependence and cleared the GitHub Actions Node 20
-    deprecation warning at the workflow-template source.
-  Impact: Build proof repos now launch pre-commit through the managed Python
-    path deterministically, and Governance/Build use refreshed `checkout`
-    and `setup-python` action majors.
+  Change: stabilized managed-environment selection and CI release workflow
+    readiness across repo `.venv`, external tool hosts, and generic profile
+    contracts.
+  Why: repeated proof and CI failures showed that command-stage setup, target
+    environment validation, and GitHub runner/runtime ownership were still
+    drifting apart.
+  Impact: enabled installed repos to finish setup from the current interpreter
+    until a target env exists, kept strict gate stages on the selected target
+    env, and aligned CI/publish sources for Node 24 and artifact-based release
+    proof.
   Files:
   .github/workflows/ci.yml
+  .github/workflows/publish.yml
+  AGENTS.md
   CHANGELOG.md
+  README.md
+  devcovenant/builtin/policies/managed_environment/\
+    managed_environment.yaml
+  devcovenant/builtin/policies/managed_environment/\
+    managed_environment_runtime.py
+  devcovenant/README.md
+  devcovenant/builtin/profiles/defaults/defaults.yaml
   devcovenant/builtin/profiles/global/assets/ci.yml
-  devcovenant/core/flow/gate.py
+  devcovenant/config.yaml
   devcovenant/custom/profiles/devcovrepo/assets/docs/config.md
+  devcovenant/custom/profiles/devcovrepo/assets/docs/installation.md
   devcovenant/custom/profiles/devcovrepo/assets/docs/policies.md
   devcovenant/custom/profiles/devcovrepo/assets/docs/profiles.md
+  devcovenant/custom/profiles/devcovrepo/assets/docs/registry.md
+  devcovenant/custom/profiles/devcovrepo/assets/docs/workflow.md
+  devcovenant/custom/profiles/devcovrepo/devcovrepo.yaml
+  devcovenant/docs/config.md
+  devcovenant/docs/installation.md
+  devcovenant/docs/policies.md
+  devcovenant/docs/profiles.md
+  devcovenant/docs/registry.md
+  devcovenant/docs/workflow.md
+  devcovenant/registry/registry.yaml
+  pyproject.toml
+  tests/devcovenant/builtin/policies/managed_environment/\
+    test_managed_environment_runtime.py
+  tests/devcovenant/core/services/test_profile_registry.py
+  tests/devcovenant/core/services/test_project_governance.py
+
+- 2026-03-30:
+  Change: aligned the installed baseline managed-environment contract,
+    gate command resolution, and Node 24-capable workflow refs into one
+    release-hardening slice.
+  Why: the open session needed a fresh top entry after the earlier top entry
+    was revised, and the repository now carries the full source fix for the
+    pipx-proof failure plus the current GitHub Actions deprecation class.
+  Impact: the previous entry remains preserved below it, while this session
+    now records the complete baseline, gate, CI, publish, docs, and test
+    hardening set as one governed change.
+  Files:
+  .github/workflows/ci.yml
+  .github/workflows/publish.yml
+  CHANGELOG.md
+  README.md
+  devcovenant/builtin/profiles/global/assets/config.yaml
+  devcovenant/core/flow/gate.py
+  devcovenant/core/flow/workflow_contract.py
+  devcovenant/core/flow/workflow_validation.py
+  devcovenant/custom/profiles/devcovrepo/assets/docs/config.md
+  devcovenant/custom/profiles/devcovrepo/assets/docs/workflow.md
+  devcovenant/custom/profiles/devcovrepo/devcovrepo.yaml
+  devcovenant/docs/config.md
+  devcovenant/docs/workflow.md
+  devcovenant/registry/registry.yaml
+  tests/devcovenant/core/services/test_profile_registry.py
+  tests/devcovenant/test_install.py
+
+- 2026-03-30:
+  Change: enabled the baseline managed-environment policy, resolved gate
+    pre-commit commands from the workflow contract, and updated owned GitHub
+    Action refs to Node 24-capable releases.
+  Why: fixed the remaining pipx-proof `gate --start` failure at the real
+    source boundary, removed command-source drift in gate execution, and
+    cleared the Node 20 deprecation class across current CI and publish
+    workflows.
+  Impact: installed proof repos now carry the managed `.venv` contract by
+    default, gate execution records the configured pre-commit command, and
+    Governance, Build, and Publish use current action runtimes.
+  Files:
+  .github/workflows/ci.yml
+  .github/workflows/publish.yml
+  CHANGELOG.md
+  README.md
+  devcovenant/builtin/profiles/global/assets/config.yaml
+  devcovenant/core/flow/gate.py
+  devcovenant/core/flow/workflow_contract.py
+  devcovenant/core/flow/workflow_validation.py
+  devcovenant/custom/profiles/devcovrepo/assets/docs/config.md
+  devcovenant/custom/profiles/devcovrepo/assets/docs/workflow.md
+  devcovenant/custom/profiles/devcovrepo/devcovrepo.yaml
+  devcovenant/docs/config.md
+  devcovenant/docs/workflow.md
+  devcovenant/registry/registry.yaml
+  tests/devcovenant/core/services/test_profile_registry.py
+  tests/devcovenant/test_install.py
   devcovenant/custom/profiles/devcovrepo/assets/docs/registry.md
   devcovenant/custom/profiles/devcovrepo/assets/docs/troubleshooting.md
   devcovenant/custom/profiles/devcovrepo/assets/docs/workflow.md
