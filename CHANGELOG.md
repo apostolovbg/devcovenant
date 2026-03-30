@@ -6,7 +6,7 @@
 **Maintenance Stance:** active
 **Compatibility Policy:** breaking-allowed
 **Versioning Mode:** versioned
-**Last Updated:** 2026-03-29
+**Last Updated:** 2026-03-30
 **DevCovenant Version:** 1.0.0
 
 <!-- DEVCOV:BEGIN -->
@@ -59,6 +59,21 @@ Example:
 ## Log changes here
 
 ## Version 1.0.0
+
+- 2026-03-30:
+  Change: fixed managed-doc sync so `Last Updated` date rollover alone no
+    longer rewrites clean descriptor-backed docs during refresh or start gate.
+  Why: `gate --start` and CI were failing after UTC midnight because managed
+    docs rewrote only their header date, which mutated the baseline even when
+    the repository content had not changed.
+  Impact: clean repositories now stay clean across day boundaries, start gate
+    no longer fails on date-only managed-doc churn, and real doc-content
+    updates still sync normally.
+  Files:
+  CHANGELOG.md
+  devcovenant/core/services/managed_docs.py
+  devcovenant/docs/architecture.md
+  tests/devcovenant/core/services/test_managed_docs.py
 
 - 2026-03-30:
   Change: fixed the gate pre-commit contract to use the canonical

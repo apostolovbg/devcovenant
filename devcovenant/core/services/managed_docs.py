@@ -1219,6 +1219,25 @@ def generated_header_map(text: str) -> dict[str, str]:
     return result
 
 
+def normalize_generated_last_updated_for_compare(text: str) -> str:
+    """Stabilize generated Last Updated values for no-op sync comparison."""
+    header_text = generated_header_text(text)
+    if not header_text:
+        return text
+    normalized_lines: list[str] = []
+    found_last_updated = False
+    for line in header_text.splitlines():
+        if line.strip().startswith(LAST_UPDATED_LABEL):
+            normalized_lines.append(f"{LAST_UPDATED_LABEL} <preserved>")
+            found_last_updated = True
+            continue
+        normalized_lines.append(line.rstrip())
+    if not found_last_updated:
+        return text
+    normalized_header = "\n".join(normalized_lines).strip("\n")
+    return text.replace(header_text, normalized_header, 1)
+
+
 def expected_managed_block(descriptor: dict[str, object]) -> str:
     """Build the managed block payload expected in rendered docs."""
     body = str(descriptor.get("managed_block", ""))
@@ -1867,6 +1886,10 @@ def sync_doc(
     else:
         updated, changed = inject_managed_header_and_block(current, rendered)
     if not changed:
+        return False
+    if normalize_generated_last_updated_for_compare(
+        updated
+    ) == normalize_generated_last_updated_for_compare(current):
         return False
 
     target.write_text(updated, encoding="utf-8")

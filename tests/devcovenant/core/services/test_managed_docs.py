@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import tempfile
 import unittest
+from datetime import date, timedelta
 from pathlib import Path
 
 import yaml
@@ -642,6 +643,54 @@ class GeneratedUnittestCases(unittest.TestCase):
             self.assertNotIn("Item placeholder.", updated)
             self.assertIn("## Writing Direction", updated)
             self.assertIn("Completed item example.", updated)
+
+    def test_sync_doc_ignores_last_updated_only_drift(self) -> None:
+        """Sync should not rewrite docs when only Last Updated drifted."""
+        with tempfile.TemporaryDirectory() as temp_dir:
+            repo_root = Path(temp_dir)
+            install.install_repo(repo_root)
+            state = project_governance.resolve_runtime_state(repo_root)
+            project_version = state.displayed_project_version("")
+            devcovenant_version = (
+                (repo_root / "devcovenant" / "VERSION")
+                .read_text(encoding="utf-8")
+                .strip()
+            )
+
+            created = managed_docs.sync_doc(
+                repo_root,
+                "PLAN.md",
+                project_version=project_version,
+                devcovenant_version=devcovenant_version,
+                project_governance_state=state,
+                import_managed_docs=set(),
+            )
+            self.assertTrue(created)
+
+            plan_path = repo_root / "PLAN.md"
+            current = plan_path.read_text(encoding="utf-8")
+            today = date.fromisoformat(managed_docs.utc_today())
+            yesterday = (today - timedelta(days=1)).isoformat()
+            stale = current.replace(
+                f"**Last Updated:** {today.isoformat()}",
+                f"**Last Updated:** {yesterday}",
+                1,
+            )
+            self.assertNotEqual(stale, current)
+            plan_path.write_text(stale, encoding="utf-8")
+
+            changed = managed_docs.sync_doc(
+                repo_root,
+                "PLAN.md",
+                project_version=project_version,
+                devcovenant_version=devcovenant_version,
+                project_governance_state=state,
+                import_managed_docs=set(),
+            )
+
+            updated = plan_path.read_text(encoding="utf-8")
+            self.assertFalse(changed)
+            self.assertEqual(updated, stale)
 
     def test_managed_docs_registry_payload_records_body_fingerprints(
         self,

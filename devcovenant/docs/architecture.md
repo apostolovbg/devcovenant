@@ -1,5 +1,5 @@
 # DevCovenant Architecture
-**Last Updated:** 2026-03-29
+**Last Updated:** 2026-03-30
 **Project Version:** 1.0.0
 
 ## Overview
@@ -180,6 +180,9 @@ The shared managed-doc runtime owns:
 The key preservation rule is stable:
 missing docs can be created, empty docs can be replaced, one-line docs can be
 replaced, and otherwise only managed headers and managed blocks should change.
+That same runtime now treats `Last Updated` as compare-stable when it is the
+only difference in a managed document, so crossing UTC midnight does not make
+`refresh` or `gate --start` rewrite a clean repository just to bump dates.
 The AGENTS-specific block scaffolding and rendering helpers now live under
 `devcovenant/core/lib/agents_blocks.py`, which keeps descriptor loading in the
 service layer while moving managed-block rendering out of the services
