@@ -225,10 +225,15 @@ def _matches_expected_interpreter(
         resolved = interpreter
     for expected in expected_interpreters:
         if resolved == expected:
-            return resolved, _derive_managed_root(resolved, expected_paths)
-    managed_root = _derive_managed_root(resolved, expected_paths)
-    if managed_root is not None:
-        return resolved, managed_root
+            managed_root = _derive_managed_root(resolved, expected_paths)
+            if managed_root is None:
+                parent_name = resolved.parent.name.lower()
+                if parent_name in {"bin", "scripts"}:
+                    managed_root = resolved.parent.parent
+            return resolved, managed_root
+    for root in expected_paths:
+        if root == resolved or root in resolved.parents:
+            return resolved, root
     return None, None
 
 

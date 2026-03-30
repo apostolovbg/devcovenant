@@ -61,6 +61,27 @@ Example:
 ## Version 1.0.0
 
 - 2026-03-30:
+  Change: corrected managed-environment interpreter matching so DevCovenant
+    only reuses the current Python when it actually matches the declared
+    managed environment, and added a regression for the GitHub-hosted
+    `.../bin/python` case.
+  Why: fixed the governance-job start-gate failure where a host runner Python
+    under a generic `bin/` path was incorrectly treated as the repo's managed
+    interpreter, which skipped `.venv` bootstrap and caused the pre-commit
+    DevCovenant hook to fail its own managed-environment policy.
+  Impact: host Python no longer masquerades as `.venv`, start-stage bootstrap
+    runs when the declared managed env is missing, and CI can re-enter the
+    real managed interpreter before policy enforcement.
+  Files:
+  CHANGELOG.md
+  devcovenant/builtin/policies/managed_environment/\
+    managed_environment_runtime.py
+  devcovenant/custom/profiles/devcovrepo/assets/docs/policies.md
+  devcovenant/docs/policies.md
+  tests/devcovenant/builtin/policies/managed_environment/\
+    test_managed_environment_runtime.py
+
+- 2026-03-30:
   Change: aligned managed-doc inventory and refresh/docs ownership around
     available-versus-enabled doc selection, documented descriptor precedence
     by active profile order, and added trust-doc rendering tests for both the

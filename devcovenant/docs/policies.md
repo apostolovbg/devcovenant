@@ -68,6 +68,11 @@ that other services can consume safely.
 It resolves one target execution environment, reuses it when it already
 satisfies the contract, and only runs `managed_commands` when the selected
 environment is missing or invalid.
+That reuse rule is exact:
+- the current interpreter must match a declared `expected_interpreters` path,
+  or live under a declared `expected_paths` root
+- an unrelated host `.../bin/python` does not count as managed just because it
+  is itself inside a generic `bin/` directory
 For Python-owned tools such as the gate hook, execution prefers the
 environment's console script and resolves `python -m ...` through the same
 interpreter when the shim is absent.
