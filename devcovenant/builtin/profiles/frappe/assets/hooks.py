@@ -1,3 +1,3 @@
-"""Frappe hooks stub for DevCovenant profile templates."""
+"""Starter Frappe hooks module."""
 
-# DevCovenant template hooks
+# Add Frappe hooks here.

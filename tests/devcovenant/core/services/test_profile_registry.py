@@ -270,7 +270,7 @@ def _governance_workflow_signature(
         "Checkout",
         "Set up Python",
         "Configure Python cache root",
-        "Install tooling and dependencies",
+        "Install DevCovenant runtime dependencies",
         "Run DevCovenant start gate",
         "Run DevCovenant mid gate",
         "Run DevCovenant workflow runs",
@@ -293,9 +293,9 @@ def _governance_workflow_signature(
 
 
 def _unit_test_governance_workflow_asset_matches_repo_contract() -> None:
-    """Repo workflow should stay aligned with the global asset baseline."""
+    """Repo workflow should stay aligned with the github asset baseline."""
     global_manifest = REPO_ROOT / "devcovenant" / "builtin" / "profiles"
-    global_manifest = global_manifest / "global" / "global.yaml"
+    global_manifest = global_manifest / "github" / "github.yaml"
     manifest_payload = yaml.safe_load(
         global_manifest.read_text(encoding="utf-8")
     )
@@ -319,13 +319,13 @@ def _unit_test_governance_workflow_asset_matches_repo_contract() -> None:
 
 
 def _unit_test_global_governance_workflow_asset_stays_generic() -> None:
-    """Global workflow asset should not absorb repo-specific jobs."""
+    """Github workflow asset should not absorb repo-specific jobs."""
     asset_workflow = (
         REPO_ROOT
         / "devcovenant"
         / "builtin"
         / "profiles"
-        / "global"
+        / "github"
         / "assets"
         / "ci.yml"
     )
@@ -338,6 +338,35 @@ def _unit_test_global_governance_workflow_asset_stays_generic() -> None:
     assert "compatibility-matrix" not in jobs
     assert "assurance" not in jobs
     assert "installed-cli-smoke" not in jobs
+    governance = jobs["governance"]
+    assert isinstance(governance, dict)
+    steps = governance.get("steps")
+    assert isinstance(steps, list)
+    install_step = next(
+        step
+        for step in steps
+        if isinstance(step, dict)
+        and str(step.get("name") or "").strip()
+        == "Install DevCovenant runtime dependencies"
+    )
+    install_run = str(install_step.get("run") or "").strip()
+    assert "devcovenant/runtime-requirements.lock" in install_run
+    assert "python -m pip install -r requirements.lock" not in install_run
+
+
+def _unit_test_global_profile_no_longer_owns_ci_template() -> None:
+    """Global profile should not own the CI template after the split."""
+    manifest_path = (
+        REPO_ROOT
+        / "devcovenant"
+        / "builtin"
+        / "profiles"
+        / "global"
+        / "global.yaml"
+    )
+    payload = yaml.safe_load(manifest_path.read_text(encoding="utf-8"))
+    assert isinstance(payload, dict)
+    assert "ci_and_test_template" not in payload
 
 
 def _unit_test_repo_workflow_includes_devcovrepo_jobs() -> None:
@@ -725,12 +754,16 @@ class GeneratedUnittestCases(unittest.TestCase):
         _unit_test_profile_registry_resolves_clean_overlays()
 
     def test_governance_workflow_asset_matches_repo_contract(self):
-        """Run global workflow asset vs repo workflow contract assertions."""
+        """Run github workflow asset vs repo workflow contract assertions."""
         _unit_test_governance_workflow_asset_matches_repo_contract()
 
     def test_global_governance_workflow_asset_stays_generic(self):
-        """Run global workflow generic-boundary assertions."""
+        """Run github workflow generic-boundary assertions."""
         _unit_test_global_governance_workflow_asset_stays_generic()
+
+    def test_global_profile_no_longer_owns_ci_template(self):
+        """Run global-profile CI ownership split assertions."""
+        _unit_test_global_profile_no_longer_owns_ci_template()
 
     def test_repo_workflow_includes_devcovrepo_jobs(self):
         """Run repo workflow extra-job assertions."""

@@ -77,6 +77,8 @@ profiles:
   # - provides generic repo-layout metadata defaults;
   # - keep it for standard layouts;
   # - disable it if you supply a custom layout profile with equivalent keys.
+  # If this repository uses GitHub Actions and wants a generated source-tree
+  # CI workflow, add the builtin `github` profile here.
   active:
     - global
     - defaults
@@ -255,7 +257,6 @@ engine:
     - .git
     - .venv
     - .python
-    - .gha-pycache
     - output
     - logs
     - build
@@ -311,8 +312,10 @@ ci_and_test:
   # Human-owned key.
   # Deep-merge patch applied to generated
   # `.github/workflows/ci.yml`.
+  # Activate the builtin `github` profile when this repo wants the standard
+  # GitHub Actions workflow generated here.
   # Active profiles may also contribute reusable ci_and_test fragments.
-  # Keep the global base workflow language-agnostic.
+  # Keep the github-owned base workflow generic.
   # Use config overlays only for repo-local CI adjustments.
   overlays: {}
   # Human-owned key.

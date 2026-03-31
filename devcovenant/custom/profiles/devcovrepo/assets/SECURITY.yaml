@@ -75,9 +75,9 @@ body: |-
 
   ## Static Analysis And Triage
   DevCovenant uses static-analysis tools such as Bandit and dependency
-  auditing as review surfaces, not as unquestioned truth.
+  auditing as review tools, not as unquestioned truth.
 
-  Current interpretation rules:
+  Interpret them this way:
   - real runtime-hardening defects should be fixed in code
   - boundary-reviewed process execution that uses explicit tokenized argument
     lists and avoids `shell=True` still requires review, but scanner warnings
@@ -91,7 +91,7 @@ body: |-
     Bandit output stays focused on unexpected subprocess surfaces rather than
     on the deliberate core runtime boundaries we already review manually
 
-  The current runtime contract intentionally keeps:
+  The runtime deliberately keeps:
   - no outbound telemetry in DevCovenant itself
   - explicit process boundaries
   - local evidence artifacts under `devcovenant/logs/` and
@@ -99,9 +99,11 @@ body: |-
 
   ## Continuous Assurance
   DevCovenant keeps release assurance visible in normal automation:
-  1. the generated `CI` workflow provides the generic source-tree gate/run
-     automation on bootstrap Python `3.14`
-  2. this repository's `devcovrepo` profile extends the main `governance` job
+  1. the builtin `github` profile supplies the generic source-tree `CI`
+     workflow for GitHub Actions, including the bootstrap gate/run automation
+     on Python `3.14`
+  2. this repository activates `github`, then its `devcovrepo` profile extends
+     the main `governance` job
      with `pip-audit -r requirements.lock` and
      `bandit -q -c bandit.yaml -r devcovenant`
   3. the repo-specific `Build` job inside `CI` owns built-artifact proof for
@@ -121,7 +123,7 @@ body: |-
   When scanners disagree, DevCovenant's rule is to document the disagreement,
   keep the reviewed boundary explicit, and avoid silently suppressing the
   result.
-  The current repo-specific `pip-audit` invocation carries one documented
+  The repo-specific `pip-audit` invocation carries one documented
   temporary ignore for `CVE-2026-4539` in transitive `pygments`, because
   `pytest` requires `pygments`, the advisory currently has no published fix
   release, and the report describes local-only exploitation.
@@ -141,8 +143,8 @@ body: |-
 
   ## Supported Security Baseline
   Security fixes are handled against:
-  - the current maintained public `1.x` release line
-  - the current mainline source state in this repository
+  - the maintained public `1.x` release line
+  - the main source tree in this repository
 
   If you report an issue against an older tree, reproduce it against the
-  latest maintained line or current mainline first when possible.
+  latest maintained line or the main source tree first when possible.

@@ -2,7 +2,7 @@
 **Doc ID:** SUPPORT
 **Doc Type:** support-policy
 **Project Version:** 1.0.1
-**Last Updated:** 2026-03-30
+**Last Updated:** 2026-03-31
 **DevCovenant Version:** 1.0.1
 
 <!-- DEVCOV:BEGIN -->
@@ -21,10 +21,11 @@ expectations.
 
 ## Overview
 DevCovenant is maintained as a serious open repository tool, but it does not
-come with a commercial support desk or a formal service-level agreement (SLA).
+come with a commercial support desk or a formal service-level agreement
+(SLA).
 
-This document explains how to ask for help and what kind of maintenance support
-this repository currently aims to provide.
+This document explains how to ask for help and what kind of maintenance
+support this repository provides.
 
 ## How To Ask For Help
 Use the public repository issue tracker for:
@@ -56,14 +57,14 @@ excerpt are enough to unblock triage.
 
 ## Support Scope
 Reasonable support scope for this repository includes:
-- the current maintained public release line
-- the current mainline source state in this repository
+- the maintained public release line
+- the main source tree in this repository
 - built-in policies, profiles, translators, commands, and managed docs
 - the documented workflow, config, and runtime evidence model
 
 Custom extensions are still supported at the interface level, but debugging
-custom policy or profile code is naturally more repo-specific and may require
-more self-service from the integrator.
+custom policy or profile code is naturally more repo-specific and may
+require more self-service from the integrator.
 
 ## Workflow
 Use this support flow when you need help:
@@ -76,12 +77,12 @@ Use this support flow when you need help:
   artifacts first, then expand only if follow-up triage needs more detail
 
 ## What Is Out Of Scope
-The current support posture does not promise:
+This support posture does not promise:
 - a formal uptime or response-time commitment
 - custom consulting for arbitrary downstream repositories
 - private support channels for ordinary non-security questions
-- maintenance of forks or heavily modified private derivatives as if they were
-  the upstream product
+- maintenance of forks or heavily modified private derivatives as if they
+  were the upstream product
 
-When a report falls outside the built-in product surface, we should still try
-to leave the reporter with a concrete next step rather than a dead end.
+When a report falls outside the built-in product surface, we should still
+try to leave the reporter with a concrete next step rather than a dead end.

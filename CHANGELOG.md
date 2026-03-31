@@ -61,6 +61,127 @@ Example:
 ## Version 1.0.1
 
 - 2026-03-31:
+  Change: added a builtin `github` profile, moved generated GitHub Actions
+    CI ownership out of the always-on `global` profile, and gave that base
+    workflow a DevCovenant-owned runtime lock instead of assuming a repo's
+    own dependency files belong to DevCovenant.
+  Why: clarified GitHub-specific ownership so repositories can opt into
+    generated GitHub Actions behavior without baking GitHub assumptions into
+    every DevCovenant install or making the generic workflow install project
+    dependencies as if they were DevCovenant's own runtime.
+  Impact: made generated `CI` opt-in through the `github` profile, kept
+    `devcovrepo` focused on repo-specific proof and scanners, and made the
+    generic GitHub base bootstrap DevCovenant from shipped runtime
+    requirements that work in user repos and this repo alike.
+  Files:
+  MANIFEST.in
+  .gitignore
+  .pre-commit-config.yaml
+  CHANGELOG.md
+  PROFILE_MAP.md
+  README.md
+  SECURITY.md
+  SPEC.md
+  licenses/THIRD_PARTY_LICENSES.md
+  pyproject.toml
+  devcovenant/builtin/profiles/README.md
+  devcovenant/builtin/profiles/github/assets/ci.yml
+  devcovenant/builtin/profiles/github/github.yaml
+  devcovenant/builtin/profiles/global/assets/.github/workflows/ci.yml
+  devcovenant/builtin/profiles/global/assets/ci.yml
+  devcovenant/builtin/profiles/global/assets/config.yaml
+  devcovenant/builtin/profiles/global/assets/gitignore.yaml
+  devcovenant/builtin/profiles/global/global.yaml
+  devcovenant/config.yaml
+  devcovenant/core/flow/refresh.py
+  devcovenant/core/services/manifest_inventory.py
+  devcovenant/custom/profiles/devcovrepo/assets/PROFILE_MAP.yaml
+  devcovenant/custom/profiles/devcovrepo/assets/SECURITY.yaml
+  devcovenant/custom/profiles/devcovrepo/assets/docs/config.md
+  devcovenant/custom/profiles/devcovrepo/assets/docs/installation.md
+  devcovenant/custom/profiles/devcovrepo/assets/docs/profiles.md
+  devcovenant/custom/profiles/devcovrepo/assets/docs/refresh.md
+  devcovenant/custom/profiles/devcovrepo/assets/docs/registry.md
+  devcovenant/custom/profiles/devcovrepo/assets/docs/workflow.md
+  devcovenant/docs/config.md
+  devcovenant/docs/installation.md
+  devcovenant/docs/profiles.md
+  devcovenant/docs/refresh.md
+  devcovenant/docs/registry.md
+  devcovenant/docs/workflow.md
+  devcovenant/runtime-requirements.lock
+  devcovenant/registry/registry.yaml
+  tests/devcovenant/core/runtime/test_execution.py
+  tests/devcovenant/core/services/test_profile_registry.py
+  tests/devcovenant/test_install.py
+  tests/devcovenant/test_refresh.py
+
+- 2026-03-31:
+  Change: rewrote the package and repo docs in plainer language, aligned
+    preserved root trust and map docs with their corrected asset owners, and
+    cleaned starter asset wording that still hard-coded DevCovenant into user
+    stubs.
+  Why: clarified doc and template ownership because the docs still mixed
+    package help with repo-internal notes, left preserved root docs out of
+    sync with their owners, and carried unnecessary DevCovenant-branded text
+    into shipped starter assets.
+  Impact: made the shipped docs easier to read, kept package docs
+    package-generic, kept repo-only notes in root docs, and made starter
+    assets feel like real project scaffolds instead of DevCovenant-branded
+    placeholders.
+  Files:
+  AGENTS.md
+  CHANGELOG.md
+  CONTRIBUTING.md
+  POLICY_MAP.md
+  PROFILE_MAP.md
+  README.md
+  SECURITY.md
+  devcovenant/README.md
+  SPEC.md
+  SUPPORT.md
+  devcovenant/builtin/profiles/dart/assets/pubspec.yaml
+  devcovenant/builtin/profiles/fastapi/assets/main.py
+  devcovenant/builtin/profiles/flutter/assets/pubspec.yaml
+  devcovenant/builtin/profiles/frappe/assets/hooks.py
+  devcovenant/builtin/profiles/global/assets/CONTRIBUTING.yaml
+  devcovenant/builtin/profiles/global/assets/README.yaml
+  devcovenant/builtin/profiles/global/assets/SPEC.yaml
+  devcovenant/builtin/profiles/kubernetes/assets/Chart.yaml
+  devcovenant/builtin/profiles/python/assets/pyproject.toml
+  devcovenant/builtin/profiles/python/assets/requirements.in
+  devcovenant/builtin/profiles/python/assets/requirements.lock
+  devcovenant/builtin/profiles/swift/assets/Package.swift
+  devcovenant/config.yaml
+  devcovenant/custom/profiles/devcovrepo/assets/POLICY_MAP.yaml
+  devcovenant/custom/profiles/devcovrepo/assets/PROFILE_MAP.yaml
+  devcovenant/custom/profiles/devcovrepo/assets/SECURITY.yaml
+  devcovenant/custom/profiles/devcovrepo/assets/SUPPORT.yaml
+  devcovenant/custom/profiles/devcovrepo/devcovrepo.yaml
+  devcovenant/custom/profiles/devcovrepo/assets/docs/README.md
+  devcovenant/custom/profiles/devcovrepo/assets/docs/config.md
+  devcovenant/custom/profiles/devcovrepo/assets/docs/installation.md
+  devcovenant/custom/profiles/devcovrepo/assets/docs/policies.md
+  devcovenant/custom/profiles/devcovrepo/assets/docs/profiles.md
+  devcovenant/custom/profiles/devcovrepo/assets/docs/refresh.md
+  devcovenant/custom/profiles/devcovrepo/assets/docs/registry.md
+  devcovenant/custom/profiles/devcovrepo/assets/docs/troubleshooting.md
+  devcovenant/custom/profiles/devcovrepo/assets/docs/workflow.md
+  devcovenant/docs/architecture.md
+  devcovenant/docs/config.md
+  devcovenant/docs/contracts.md
+  devcovenant/docs/installation.md
+  devcovenant/docs/policies.md
+  devcovenant/docs/profiles.md
+  devcovenant/docs/refresh.md
+  devcovenant/docs/registry.md
+  devcovenant/docs/troubleshooting.md
+  devcovenant/docs/workflow.md
+  devcovenant/registry/registry.yaml
+  licenses/THIRD_PARTY_LICENSES.md
+  tests/devcovenant/core/runtime/test_execution.py
+
+- 2026-03-31:
   Change: repaired the GitHub Actions workflow contract by replacing invalid
     job-level `runner.temp` expressions with GitHub-safe cache-root setup
     steps that export `PYTHONPYCACHEPREFIX` through `$GITHUB_ENV`.

@@ -77,6 +77,7 @@ namespaces = false
 "devcovenant" = [
   "README.md",
   "VERSION",
+  "runtime-requirements.lock",
   "docs/*.md",
   "docs/*.png",
   "logs/README.md",

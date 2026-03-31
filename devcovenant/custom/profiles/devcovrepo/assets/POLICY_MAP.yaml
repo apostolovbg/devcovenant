@@ -21,7 +21,7 @@ body: |-
   6. [Metadata Families](#metadata-families)
 
   ## Purpose
-  This map documents shipped policy contracts and ownership for 1.0.1.
+  This map lists the shipped policies and who owns them for 1.0.1.
 
   ## Global Rules
   - Policy activation authority is `config.policy_state` only.
@@ -47,7 +47,7 @@ body: |-
     with `THIRD_PARTY_LICENSES.md` and `licenses/` artifacts (including
     generated `licenses/README.md`) using metadata-driven selectors. This
     policy enforces repository dependency compliance; distribution-package
-    legal scope is handled by packaging contracts.
+    legal scope is handled by packaging rules.
   - `docstring-and-comment-coverage`: requires explanatory docs/comments for
     in-scope source files.
   - `documentation-growth-tracking`: enforces docs-update expectations and
@@ -109,7 +109,7 @@ body: |-
     such as `paths.*` and `workflow.*`, not `policy_state`
 
   Runtime note:
-  - workflow runs are resolved from tracked `workflow_contract`
+  - workflow runs are resolved from tracked workflow-definition
     data, not from ad hoc command lists.
   - `run_events` payloads are runtime-owned workflow-run event metadata
     from profiles and are not policy descriptor metadata keys.

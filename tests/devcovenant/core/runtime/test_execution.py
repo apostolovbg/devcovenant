@@ -603,11 +603,11 @@ def _unit_test_ci_workflow_split_docs_are_consistent() -> None:
     readme = _read_output_doc_contract_text("README.md")
 
     assert "repo-maintained copy of" not in profiles
-    assert "refresh-generated output" in profiles
     assert "`ci_and_test`" in profiles
-    assert "global workflow template should stay generic" in profiles
-    assert "The generated source-tree CI workflow lives at" in workflow
-    assert "The global base should stay generic." in workflow
+    assert "builtin `github` workflow template should stay generic" in profiles
+    assert "If a repo family needs extra proof" in profiles
+    assert "When the builtin `github` profile is active" in workflow
+    assert "The github-owned base should stay generic." in workflow
     assert "active profiles may contribute `ci_and_test` fragments" in (
         workflow
     )
@@ -615,16 +615,16 @@ def _unit_test_ci_workflow_split_docs_are_consistent() -> None:
     assert ".github/workflows/publish.yml" not in installation
     assert "repo-specific `Build` job" not in installation
     assert "Repo Release And Assurance" in readme
-    assert "`Governance` plus a dependent `Build` proof job" in readme
+    assert "`Governance` and `Build`" in readme
     assert ".github/workflows/publish.yml" in readme
 
 
 def _unit_test_workflow_doc_marks_mid_gate_required() -> None:
     """Workflow docs should keep gate --mid mandatory on command surfaces."""
     content = _read_output_doc_contract_text("devcovenant/docs/workflow.md")
-    assert "Required pre-run preflight." in content
-    assert "until it is clean." in content
-    assert "then a `gate --mid` loop" in content
+    assert "Required pre-run check." in content
+    assert "before `run` records workflow" in content
+    assert "rerun `gate --mid` until it is" in content
     assert "optional mutating preflight" not in content
 
 
@@ -644,56 +644,63 @@ def _unit_test_contract_index_lists_frozen_contract_homes() -> None:
 
 
 def _unit_test_primary_docs_identify_their_normative_contracts() -> None:
-    """Primary docs should name their contract role and point to the index."""
+    """Primary docs should describe their owned area clearly."""
     expectations = {
         "devcovenant/docs/installation.md": (
-            "normative home for the lifecycle command contract",
+            "This page explains how to install DevCovenant",
+            "## Lifecycle Commands",
+            "## First-Time Setup Runbook",
         ),
         "devcovenant/docs/refresh.md": (
-            "normative home for the managed-documents contract",
-            "## Managed Doc Descriptor Schema",
+            "`refresh` rebuilds the DevCovenant-owned files",
+            "## Preservation Rules",
+            "## Descriptor Model",
         ),
         "devcovenant/docs/workflow.md": (
-            "Use this document for the gate sequence, workflow-run contract, "
-            "CI mapping,",
-            "## Run Artifacts",
+            "Use this page for the required command order",
+            "## Run Logs",
+            "## CI Mapping",
         ),
         "devcovenant/docs/config.md": (
-            "normative home for the public `devcovenant/config.yaml`",
+            "`devcovenant/config.yaml` is the main control file",
+            "## Ownership Model",
+            "## Practical Review Order",
         ),
         "devcovenant/docs/project_governance.md": (
             "normative home for the `project-governance` contract",
+            "## Core Fields",
         ),
         "devcovenant/docs/registry.md": (
-            "normative home for the registry contract",
+            "Use the tracked registry for the saved setup.",
+            "## Gate Status And Workflow Session",
         ),
         "devcovenant/docs/policies.md": (
-            "normative home for the policy descriptor contract",
-            "## Version-Governance Adapter Contract",
+            "Policies are the named rule units in DevCovenant.",
+            "## Checks, Autofix, And Commands",
+            "## Version-Governance Adapters",
         ),
     }
 
     for path, snippets in expectations.items():
         content = _read_output_doc_contract_text(path)
-        assert "devcovenant/docs/contracts.md" in content
         for snippet in snippets:
             assert snippet in content
 
 
 def _unit_test_custom_extension_docs_explain_baseline_first_activation():
-    """Custom-extension docs should state the baseline-first lifecycle."""
+    """Docs should teach the baseline-first extension flow."""
     expectations = {
         "devcovenant/docs/installation.md": (
-            "Reach the first reviewed baseline first.",
-            "prove that baseline, and only then add",
+            "For a normal repository, do that first cycle before adding",
+            "Start from a clean working base, then add repo-specific",
         ),
         "devcovenant/docs/profiles.md": (
-            "Reach the first reviewed DevCovenant baseline first",
-            "Add custom profiles after the initial `install`,",
-        ),
-        "devcovenant/docs/policies.md": (
-            "Do not seed custom policies before the initial reviewed baseline",
-            "prove that baseline, and then extend",
+            "keep `devcovuser` active for an ordinary repository",
+            (
+                "add `github` when the repository wants a generated "
+                "GitHub Actions workflow"
+            ),
+            "add a repo-specific custom profile on top",
         ),
     }
 
@@ -707,13 +714,10 @@ def _unit_test_contract_index_freezes_documentation_writing_rules() -> None:
     """Contract index should hold the stable documentation writing rules."""
     content = _read_output_doc_contract_text("devcovenant/docs/contracts.md")
     for snippet in (
-        "what kind of contract am I looking at?",
-        "which document owns the explanation for that contract?",
-        "one stable map of ownership and vocabulary",
-        (
-            "The goal is not to turn every package doc into a "
-            "competing master index."
-        ),
+        "what kind of rule or definition am I looking at?",
+        "which document explains it?",
+        "Each page should explain one area clearly",
+        "Keeping them separate is the easiest way to understand",
     ):
         assert snippet in content
 

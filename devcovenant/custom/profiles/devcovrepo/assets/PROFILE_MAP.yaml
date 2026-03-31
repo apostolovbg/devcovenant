@@ -22,7 +22,7 @@ body: |-
   6. [Operational Notes](#operational-notes)
 
   ## Purpose
-  This map documents shipped profile contracts and ownership for 1.0.1.
+  This map lists the shipped profiles and who owns them for 1.0.1.
 
   ## Global Rules
   - `global` profile is always active at runtime.
@@ -61,15 +61,15 @@ body: |-
   - `flutter`
 
   Ops/tooling profiles:
+  - `github`
   - `docker`
   - `terraform`
   - `kubernetes`
 
   ## Custom Profiles
-  - `devcovrepo`: repository-specific overlays/assets for DevCovenant
-    dogfooding,
-    including documentation-route metadata, broader modules-test mirrors,
-    and root trust docs such as `SECURITY.md`, `PRIVACY.md`, and
+  - `devcovrepo`: repository-specific profile for developing DevCovenant
+    itself, including documentation-route metadata, broader source-to-test
+    mirrors, and root trust docs such as `SECURITY.md`, `PRIVACY.md`, and
     `SUPPORT.md`.
   - `restapi`: reusable API (application programming interface) governance
     profile that tightens API-focused documentation routes, security scope,
@@ -93,8 +93,8 @@ body: |-
   - `objective_c`
   - `sql`
 
-  Translator declarations are owned by language profile manifests and routed by
-  shared translator runtime.
+  Translator declarations are owned by language profile manifests and routed
+  by the shared translator runtime.
 
   ## Operational Notes
   - Profile overlays are materialized to `autogen_metadata_overlays`.
@@ -106,20 +106,21 @@ body: |-
     targets; language/framework profiles provide dependency selectors when
     active; `devcovrepo` adds this repository's selectors only.
   - Any active profile category may contribute declared `workflow_runs`;
-    core resolves runs in deterministic order from the tracked
-    workflow contract.
+    core resolves them in deterministic order from the tracked workflow
+    definition.
   - Language profiles may declare `run_events` adapter metadata for the
     relevant workflow run through `devcovenant/core/runtime/event.py`;
-    that contract is separate from translator declarations.
+    that is separate from translator declarations.
   - Session scoping is runtime-owned; profiles should not model policy scope
     switching metadata for bundled checks.
   - Assets are created when missing and preserved when existing content is
     user-authored outside managed blocks.
   - Pre-commit fragments from active profiles merge into generated
     `.pre-commit-config.yaml`, then config overlays and overrides are applied.
-  - `ci.yml` is refresh-generated from global template
-    metadata, active profile governance fragments, and config overlays and
-    overrides.
+  - `ci.yml` is refresh-generated when an active profile owns
+    `ci_and_test_template`, normally the builtin `github` profile, then active
+    profile governance fragments and config overlays/overrides are merged on
+    top.
   - `.gitignore` is generated from global template metadata plus active profile
     manifest metadata (`gitignore_fragments` or `ignore_dirs`) and
     `config.gitignore.overlays`/`config.gitignore.overrides`.

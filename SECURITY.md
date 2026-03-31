@@ -2,7 +2,7 @@
 **Doc ID:** SECURITY
 **Doc Type:** security-policy
 **Project Version:** 1.0.1
-**Last Updated:** 2026-03-30
+**Last Updated:** 2026-03-31
 **DevCovenant Version:** 1.0.1
 
 <!-- DEVCOV:BEGIN -->
@@ -22,8 +22,8 @@ disclosure, and assurance notes.
 - [Supported Security Baseline](#supported-security-baseline)
 
 ## Overview
-DevCovenant is maintained as a local repository-governance tool, but we still
-handle security defects as product defects.
+DevCovenant is maintained as a local repository-governance tool, but we
+still handle security defects as product defects.
 
 Use this document for:
 - vulnerability reporting
@@ -35,11 +35,13 @@ Use this document for:
 For non-sensitive security defects, open a normal repository issue.
 
 For potentially sensitive findings:
-- do not publish exploit details, proof-of-concept payloads, or secret-bearing
-  reproduction material in a public issue first
-- use the repository host's private security-reporting path if it is enabled
-- if no private reporting path is available, open a minimal public issue that
-  requests a private contact channel without disclosing the exploit details
+- do not publish exploit details, proof-of-concept payloads, or
+  secret-bearing reproduction material in a public issue first
+- use the repository host's private security-reporting path if it is
+  enabled
+- if no private reporting path is available, open a minimal public issue
+  that requests a private contact channel without disclosing the exploit
+  details
 
 ## What To Include
 A useful report should include:
@@ -48,8 +50,8 @@ A useful report should include:
 - whether the issue affects source checkout, installed package use, or both
 - exact commands, configuration, and files needed to reproduce
 - expected behavior, actual behavior, and practical impact
-- whether the issue is local-only, repository-content dependent, or package /
-  release-surface dependent
+- whether the issue is local-only, repository-content dependent, or package
+  or release-surface dependent
 
 Redact secrets before sharing logs or configs.
 If the defect depends on a secret-bearing value, describe the shape of the
@@ -62,29 +64,30 @@ Our normal security posture is:
 - fix the latest maintained line first
 - publish clear remediation guidance once the fix is ready
 
-We do not promise a paid bug bounty or a formal service-level agreement (SLA).
-We do promise to treat credible security reports as high-priority maintenance
-work.
+We do not promise a paid bug bounty or a formal service-level agreement
+(SLA).
+We do promise to treat credible security reports as high-priority
+maintenance work.
 
 ## Static Analysis And Triage
-DevCovenant uses static-analysis tools such as Bandit and dependency auditing
-as review surfaces, not as unquestioned truth.
+DevCovenant uses static-analysis tools such as Bandit and dependency
+auditing as review tools, not as unquestioned truth.
 
-Current interpretation rules:
+Interpret them this way:
 - real runtime-hardening defects should be fixed in code
 - boundary-reviewed process execution that uses explicit tokenized argument
-  lists and avoids `shell=True` still requires review, but scanner warnings on
-  those paths are not automatically vulnerabilities by themselves
-- false positives, such as secret-literal warnings on ordinary control tokens,
-  should be documented explicitly rather than silently ignored
+  lists and avoids `shell=True` still requires review, but scanner warnings
+  on those paths are not automatically vulnerabilities by themselves
+- false positives, such as secret-literal warnings on ordinary control
+  tokens, should be documented explicitly rather than silently ignored
 - `bandit.yaml` skips Bandit `B105` because that heuristic repeatedly
   misclassifies ordinary control tokens such as `start`, `critical`,
   `stdout`, and `false` as secret material
-- reviewed process boundaries now carry targeted `# nosec` markers so Bandit
-  output stays focused on unexpected subprocess surfaces rather than on the
-  deliberate core runtime boundaries we already review manually
+- reviewed process boundaries now carry targeted `# nosec` markers so
+  Bandit output stays focused on unexpected subprocess surfaces rather than
+  on the deliberate core runtime boundaries we already review manually
 
-The current runtime contract intentionally keeps:
+The runtime deliberately keeps:
 - no outbound telemetry in DevCovenant itself
 - explicit process boundaries
 - local evidence artifacts under `devcovenant/logs/` and
@@ -92,39 +95,36 @@ The current runtime contract intentionally keeps:
 
 ## Continuous Assurance
 DevCovenant keeps release assurance visible in normal automation:
-1. the generated `CI` workflow provides the generic source-tree gate/run
-   automation on bootstrap Python `3.14`
-
-2. this repository's `devcovrepo` profile extends the main `governance` job
-   with
-   `pip-audit -r requirements.lock` and
+1. the builtin `github` profile supplies the generic source-tree `CI`
+   workflow for GitHub Actions, including the bootstrap gate/run automation
+   on Python `3.14`
+2. this repository activates `github`, then its `devcovrepo` profile extends
+   the main `governance` job
+   with `pip-audit -r requirements.lock` and
    `bandit -q -c bandit.yaml -r devcovenant`
-
-3. the repo-specific `Build` job inside `CI` now owns built-artifact proof
-   for the wheel, sdist, and documented `pipx` install path, and each proof
+3. the repo-specific `Build` job inside `CI` owns built-artifact proof for
+   the wheel, sdist, and documented `pipx` install path, and each proof
    runs the full public workflow: `gate --start`, `gate --mid`, `run`,
    `gate --end`, then `check`
-
 4. repo-specific CI jobs use DevCovenant's managed-environment contract
    instead of hardcoding one environment type's shell-activation command
-
 5. `bandit.yaml` is the tracked Bandit configuration surface for this repo's
    low-signal skip list
-
-7. the publish workflow uses PyPI trusted publishing instead of a long-lived
+6. the publish workflow uses PyPI trusted publishing instead of a long-lived
    upload token, and PyPI-side attestations are emitted through that publish
    path
 
-These checks are review surfaces, not a claim that one scanner is infallible.
+These checks are review surfaces, not a claim that one scanner is
+infallible.
 When scanners disagree, DevCovenant's rule is to document the disagreement,
 keep the reviewed boundary explicit, and avoid silently suppressing the
 result.
-The current repo-specific `pip-audit` invocation carries one documented
-temporary ignore for `CVE-2026-4539` in transitive `pygments`, because
-`pytest` requires `pygments`, the advisory currently has no published fix
-release, and the report describes local-only exploitation. That exception
-belongs in repo-specific CI only and should be removed as soon as upstream
-publishes a fixable release path.
+The repo-specific `pip-audit` invocation carries one documented temporary
+ignore for `CVE-2026-4539` in transitive `pygments`, because `pytest`
+requires `pygments`, the advisory currently has no published fix release,
+and the report describes local-only exploitation.
+That exception belongs in repo-specific CI only and should be removed as
+soon as upstream publishes a fixable release path.
 
 ## Workflow
 Use this document in the normal reporting flow:
@@ -132,15 +132,15 @@ Use this document in the normal reporting flow:
   whether a defect crosses into security territory
 - use `PRIVACY.md` alongside it when the report includes logs, snapshots, or
   local evidence artifacts
-- use `SUPPORT.md` for ordinary non-security help requests after you rule out
-  a security angle
-- when the finding is sensitive, keep the first report minimal and private if
-  the repository host provides a private security-reporting path
+- use `SUPPORT.md` for ordinary non-security help requests after you rule
+  out a security angle
+- when the finding is sensitive, keep the first report minimal and private
+  if the repository host provides a private security-reporting path
 
 ## Supported Security Baseline
 Security fixes are handled against:
-- the current maintained public `1.x` release line
-- the current mainline source state in this repository
+- the maintained public `1.x` release line
+- the main source tree in this repository
 
-If you report an issue against an older tree, reproduce it against the latest
-maintained line or current mainline first when possible.
+If you report an issue against an older tree, reproduce it against the
+latest maintained line or the main source tree first when possible.

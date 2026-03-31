@@ -29,7 +29,7 @@ body: |-
   (SLA).
 
   This document explains how to ask for help and what kind of maintenance
-  support this repository currently aims to provide.
+  support this repository provides.
 
   ## How To Ask For Help
   Use the public repository issue tracker for:
@@ -61,8 +61,8 @@ body: |-
 
   ## Support Scope
   Reasonable support scope for this repository includes:
-  - the current maintained public release line
-  - the current mainline source state in this repository
+  - the maintained public release line
+  - the main source tree in this repository
   - built-in policies, profiles, translators, commands, and managed docs
   - the documented workflow, config, and runtime evidence model
 
@@ -81,7 +81,7 @@ body: |-
     artifacts first, then expand only if follow-up triage needs more detail
 
   ## What Is Out Of Scope
-  The current support posture does not promise:
+  This support posture does not promise:
   - a formal uptime or response-time commitment
   - custom consulting for arbitrary downstream repositories
   - private support channels for ordinary non-security questions

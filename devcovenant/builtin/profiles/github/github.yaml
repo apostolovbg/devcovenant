@@ -1,0 +1,13 @@
+version: 1
+profile: github
+category: tooling
+suffixes: []
+ignore_dirs:
+  - .gha-pycache
+gitignore_fragments:
+  - .gha-pycache/
+clean_overlays:
+  cache_dirs:
+    - .gha-pycache
+ci_and_test_template: ci.yml
+policy_overlays: {}

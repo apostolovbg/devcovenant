@@ -1,24 +1,21 @@
 # Contracts
-**Last Updated:** 2026-03-30
+**Last Updated:** 2026-03-31
 **Project Version:** 1.0.1
 
 ## Overview
-This document is the contract map for the DevCovenant package docs.
+This page is the ownership map for the DevCovenant package docs.
 Use it to answer two questions:
 
-1. what kind of contract am I looking at?
-2. which document owns the explanation for that contract?
+1. what kind of rule or definition am I looking at?
+2. which document explains it?
 
-DevCovenant works best when ownership stays explicit.
-The package docs should not all try to be the same master document.
-Each page should own one surface clearly and point to the next page when the
+The package docs work best when ownership stays explicit.
+Each page should explain one area clearly and point to the next page when the
 subject crosses a boundary.
-The goal is one stable map of ownership and vocabulary.
-The goal is not to turn every package doc into a competing master index.
 
-## Contract Kinds
-DevCovenant has five practical contract kinds.
-Keeping them separate is the easiest way to understand the runtime.
+## Main Kinds Of Rules
+DevCovenant has five practical kinds of rules and definitions.
+Keeping them separate is the easiest way to understand how the product works.
 
 ### 1. Project Governance
 `project-governance` is the repository's public identity and lifecycle stance.
@@ -29,23 +26,23 @@ It answers questions such as:
 - what compatibility promise does it make?
 - is it versioned or unversioned?
 
-Canonical docs:
+Read more in:
 
 - `devcovenant/docs/project_governance.md`
 - `devcovenant/docs/config.md`
 
-### 2. Workflow Contract
-The workflow contract is the non-optional gate/run sequence plus the declared
-workflow runs that live between `mid` and `end`.
+### 2. Workflow Definition
+The workflow definition is the fixed gate/run sequence plus the declared runs
+that live between `mid` and `end`.
 It covers:
 
 - `gate --start`, `gate --mid`, `run`, `gate --end`
 - reserved anchors `start`, `mid`, `end`
 - run ordering via `after`, `before`, and `order`
 - workflow freshness and evidence rules
-- CI mapping for the generated workflow surface
+- CI mapping for the generated workflow file
 
-Canonical docs:
+Read more in:
 
 - `devcovenant/docs/workflow.md`
 - `devcovenant/docs/config.md`
@@ -54,11 +51,11 @@ Canonical docs:
 ### 3. Configurable Policies
 Policies are the repository-facing enforcement units.
 They are enabled or disabled through `policy_state` and then tuned through
-profile metadata and config overrides.
+profile settings and config overrides.
 They cover things like changelog coverage, dependency management, test
 structure, docs growth, and version synchronization.
 
-Canonical docs:
+Read more in:
 
 - `devcovenant/docs/policies.md`
 - `devcovenant/docs/config.md`
@@ -67,19 +64,19 @@ Canonical docs:
 Profiles describe reusable repository shape.
 They contribute:
 
-- metadata overlays
+- settings overlays
 - workflow runs
 - managed assets
 - pre-commit fragments
 - CI fragments
 - translators
 
-Canonical docs:
+Read more in:
 
 - `devcovenant/docs/profiles.md`
 - `devcovenant/docs/config.md`
 
-### 5. Generated And Runtime State
+### 5. Generated And Local State
 DevCovenant writes both tracked and runtime-local state.
 That includes:
 
@@ -87,9 +84,9 @@ That includes:
 - tracked registry data
 - runtime session ledgers
 - run logs
-- generated workflow and ignore surfaces
+- generated workflow and ignore files
 
-Canonical docs:
+Read more in:
 
 - `devcovenant/docs/registry.md`
 - `devcovenant/docs/refresh.md`
@@ -105,7 +102,7 @@ Use the package docs like this:
   gate sequence, declared runs, evidence files, and CI mapping
 
 - `devcovenant/docs/config.md`
-  public `devcovenant/config.yaml` contract and ownership model
+  public `devcovenant/config.yaml` settings and ownership model
 
 - `devcovenant/docs/policies.md`
   configurable policies, runtime actions, and policy commands
@@ -126,9 +123,9 @@ Use the package docs like this:
   internal layer ownership and runtime composition
 
 ## Writing Rule
-When behavior changes, update the owning contract page first.
+When behavior changes, update the owning page first.
 Then update summaries, templates, maps, and supporting docs that point back
-to that page.
+to it.
 
 That keeps the package docs honest without turning every page into a dump of
 every other page.

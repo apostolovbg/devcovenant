@@ -10,12 +10,12 @@ import_seed: true
 authoritative_source: true
 managed_block: |-
   This opening section is managed by DevCovenant.
-  Use `SPEC.md` only for durable repository contracts below this block.
+  Use `SPEC.md` only for durable project rules below this block.
 body: |-
-  Use this document for durable project requirements and stable product
+  Use this document for durable product requirements and stable project
   decisions.
-  Keep temporary execution work in `PLAN.md`, change history in
-  `CHANGELOG.md`, and workflow law in `AGENTS.md`.
+  Keep active execution work in `PLAN.md`, change history in `CHANGELOG.md`,
+  and required workflow law in `AGENTS.md`.
 
   ## Table of Contents
   1. [Overview](#overview)
@@ -35,132 +35,146 @@ body: |-
   15. [Pointers](#pointers)
 
   ## Overview
-  - Project summary: [describe what this project is]
+  - Project summary: explain what the project is and who it helps.
 
-  - Primary problem: [describe the problem or opportunity]
+  - Primary problem: explain the main problem or opportunity.
 
-  - Current scope: [describe what is in scope right now]
+  - Current scope: explain what is in scope for the current release line.
 
-  - Success signal: [describe what would make this clearly successful]
+  - Success signal: explain what would clearly prove the project is working.
 
   ## Workflow
   - Keep durable product requirements here.
 
   - Keep active execution work in `PLAN.md`.
 
-  - Update this spec when stable project contracts change.
+  - Update this spec when stable product rules change.
 
   - Update operational docs in the same slice when runtime behavior changes.
 
+  - Treat this spec as durable product guidance, not as a temporary audit
+    notebook or release checklist.
+
   ## Project Intent
-  Describe the durable intent of the project in plain language.
-  Explain what the project should make possible, for whom, and why it is
-  worth building.
+  Explain the durable intent of the project in plain language.
+  Describe what it should make possible, for whom, and why it is worth
+  building.
 
   ## Goals
-  - [goal 1]
+  - list the main outcomes the project must achieve
 
-  - [goal 2]
+  - list the next important outcome
 
-  - [goal 3]
+  - list the outcome that defines a healthy release line
 
   Goals should describe outcomes, not implementation tasks.
 
   ## Non-Goals
-  - [non-goal 1]
+  - list what the project is intentionally not trying to do
 
-  - [non-goal 2]
+  - list the tempting scope you are deliberately excluding
 
-  - [non-goal 3]
+  - list the support or product promise you do not want readers to assume
 
   This section prevents scope drift by stating what the project is
   intentionally not trying to do.
 
   ## Users and Actors
-  - Primary user or actor: [who interacts with the system most directly]
+  - Primary user or actor: explain who interacts with the system most
+    directly.
 
-  - Secondary user or actor: [who else matters]
+  - Secondary user or actor: explain who else matters.
 
-  - Operational actor: [admin, operator, automation, or integration]
+  - Operational actor: explain the admin, operator, automation, or
+    integration role.
 
   For each actor, describe what they need from the system.
 
   ## Core Workflows
-  1. [workflow name]
-     - Trigger: [what starts it]
+  1. Name the first core workflow.
+     - Trigger: explain what starts it.
 
-     - Main path: [what normally happens]
+     - Main path: explain what normally happens.
 
-     - Result: [what the user or system gets]
-  2. [workflow name]
-     - Trigger: [what starts it]
+     - Result: explain what the user or system gets.
+  2. Name the next core workflow.
+     - Trigger: explain what starts it.
 
-     - Main path: [what normally happens]
+     - Main path: explain what normally happens.
 
-     - Result: [what the user or system gets]
+     - Result: explain what the user or system gets.
 
   ## Functional Requirements
-  - [requirement 1]
+  - write the first durable behavior the product must provide
 
-  - [requirement 2]
+  - write the next durable behavior the product must provide
 
-  - [requirement 3]
+  - write the behavior that would break the product promise if it were missing
 
   Write these as durable behavioral statements.
   Prefer requirements that can later be tested or demonstrated.
 
   ## Non-Functional Requirements
-  - Performance: [latency, throughput, scale, or responsiveness expectations]
+  - Performance: record latency, throughput, scale, or responsiveness
+    expectations.
 
-  - Reliability: [availability, recovery, or failure-handling expectations]
+  - Reliability: record availability, recovery, or failure-handling
+    expectations.
 
-  - Security: [authentication, authorization, audit, or data-protection needs]
+  - Security: record authentication, authorization, audit, or
+    data-protection needs.
 
-  - Maintainability: [clarity, modularity, testability, or operational needs]
+  - Maintainability: record clarity, modularity, testability, or operational
+    needs.
 
-  - Usability: [user-facing clarity and workflow expectations]
+  - Usability: record user-facing clarity and workflow expectations.
 
   ## Data and State
-  - Important entities: [core records, objects, or documents]
+  - Important entities: name the core records, objects, or documents.
 
-  - Important state transitions: [how those entities change over time]
+  - Important state transitions: explain how those entities change over time.
 
-  - Persistence rules: [what must be stored, derived, or ephemeral]
+  - Persistence rules: explain what must be stored, derived, or ephemeral.
 
-  - Audit or history needs: [what must be traceable later]
+  - Audit or history needs: explain what must be traceable later.
 
   ## Interfaces and Dependencies
-  - External interfaces: [API, CLI, UI, file formats, queues, webhooks]
+  - External interfaces: list the API, CLI, UI, file, queue, or webhook
+    boundaries the project exposes.
 
-  - Internal interfaces: [major module or service boundaries]
+  - Internal interfaces: list the major module or service boundaries.
 
-  - Dependencies: [systems, libraries, or services the project relies on]
+  - Dependencies: list the systems, libraries, or services the project relies
+    on.
 
-  - Compatibility expectations: [versions, protocols, or platform constraints]
+  - Compatibility expectations: list the versions, protocols, or platform
+    constraints that matter.
 
   ## Constraints and Assumptions
-  - Constraint: [technical, legal, operational, or organizational limit]
+  - Constraint: record the technical, legal, operational, or organizational
+    limit.
 
-  - Assumption: [what the project currently assumes to be true]
+  - Assumption: record what the project currently assumes to be true.
 
-  - Explicit tradeoff: [what is being optimized and what is being accepted]
+  - Explicit tradeoff: record what is being optimized and what is being
+    accepted.
 
   ## Acceptance Criteria
-  - [criterion 1 that would prove the spec is satisfied]
+  - write the first check that would prove the spec is satisfied
 
-  - [criterion 2 that would prove the spec is satisfied]
+  - write the next check that would prove the spec is satisfied
 
-  - [criterion 3 that would prove the spec is satisfied]
+  - write the check that would clearly show the project is ready
 
   This section should let someone decide whether the project meets the spec
   without having to guess what success means.
 
   ## Open Questions
-  - [question 1]
+  - list the first real open question
 
-  - [question 2]
+  - list the next real open question
 
-  - [question 3]
+  - list the question that still blocks confidence or clarity
 
   Keep unresolved questions here only while they are still real.
   Once answered, fold the answer into the relevant section above.

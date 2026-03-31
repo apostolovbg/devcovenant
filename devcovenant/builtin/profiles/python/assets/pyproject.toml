@@ -1,14 +1,11 @@
+[build-system]
+requires = ["setuptools>=68", "wheel"]
+build-backend = "setuptools.build_meta"
+
 [project]
 name = "{{ PROJECT_NAME }}"
 version = "{{version}}"
 description = {{ PROJECT_DESCRIPTION_TOML }}
 readme = "README.md"
-authors = ["DevCovenant <devcovenant@example.com>"]
+requires-python = ">=3.10"
 license = { text = "MIT" }
-keywords = ["devcovenant", "policy", "python"]
-
-[tool.poetry.dependencies]
-python = ">=3.10"
-
-[tool.poetry.dev-dependencies]
-pytest = "^7.0"

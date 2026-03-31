@@ -2,7 +2,7 @@
 **Doc ID:** POLICY_MAP
 **Doc Type:** reference-map
 **Project Version:** 1.0.1
-**Last Updated:** 2026-03-30
+**Last Updated:** 2026-03-31
 **DevCovenant Version:** 1.0.1
 
 <!-- DEVCOV:BEGIN -->
@@ -19,14 +19,19 @@ Use `POLICY_MAP.md` to track policy inventory and ownership below this block.
 6. [Metadata Families](#metadata-families)
 
 ## Purpose
-This map documents shipped policy contracts and ownership for 1.0.1.
+This map lists the shipped policies and who owns them for 1.0.1.
 
 ## Global Rules
 - Policy activation authority is `config.policy_state` only.
 - Policy descriptors are the canonical prose and metadata defaults.
-- AGENTS policy block is compiled from resolved metadata and parsed at runtime.
+- AGENTS policy block is compiled from resolved metadata and parsed at
+  runtime.
 - Local registry stores synchronized hash and metadata diagnostics.
 - Same-id custom policy overrides same-id builtin policy.
+- Engine-owned runtime checks such as workflow validation, integrity
+  validation, and structure validation are documented in
+  `devcovenant/docs/workflow.md` and `devcovenant/docs/architecture.md`,
+  not in this policy inventory.
 
 ## Builtin Policies
 - `changelog-coverage`: requires one fresh top changelog entry per work
@@ -39,25 +44,22 @@ This map documents shipped policy contracts and ownership for 1.0.1.
 - `dependency-management`: requires lock/dependency changes to stay aligned
   with `THIRD_PARTY_LICENSES.md` and `licenses/` artifacts (including
   generated `licenses/README.md`) using metadata-driven selectors. This
-  policy enforces repository dependency compliance; distribution-package legal
-  scope is handled by packaging contracts.
-- `devcov-integrity-guard`: validates descriptor/registry/runtime consistency.
-- `devcov-structure-guard`: enforces required repository shape constraints.
-- `devflow-run-gates`: enforces gate start -> run -> gate end evidence and
-  validates required-command and pre-commit execution records.
+  policy enforces repository dependency compliance; distribution-package
+  legal scope is handled by packaging rules.
 - `docstring-and-comment-coverage`: requires explanatory docs/comments for
   in-scope source files.
 - `documentation-growth-tracking`: enforces docs-update expectations and
   quality gates for user-facing changes.
 - `last-updated`: enforces top-level `Last Updated` placement and
   updates date values for managed docs.
-- `line-length-limit`: warns when in-scope files exceed configured line limit.
+- `line-length-limit`: warns when in-scope files exceed configured line
+  limit.
 - `no-raw-errors`: blocks raw Python error anti-patterns (bare `except`,
   generic `raise Exception(...)`, and silent `except Exception: pass`) in
   selector-scoped files.
 - `no-print-outside-output-runtime`: enforces metadata-driven output sinks.
   Language profiles declare sink targets, while repository profiles define
-  selectors and allowed output-boundary files/symbols.
+  selectors and allowed output-boundary files and symbols.
 - `managed-environment`: optional managed-runtime environment guard.
 - `modules-need-tests`: enforces structural source-to-test alignment and
   mirror-root correctness using metadata-driven mirror templates, and bans
@@ -68,7 +70,7 @@ This map documents shipped policy contracts and ownership for 1.0.1.
 - `name-clarity`: warns on unclear identifiers in in-scope code.
 - `no-future-dates`: blocks future dates in docs/changelog contexts.
 - `raw-string-escapes`: optional language-aware suspicious backslash escape
-  warnings with metadata-driven literal/escape patterns.
+  warnings with metadata-driven literal and escape patterns.
 - `read-only-directories`: blocks writes to declared read-only paths.
 - `security-scanner`: blocks risky patterns (`eval`, `exec`, shell risks).
 - `version-governance`: optional version-format validation, scheme-aware
@@ -78,8 +80,10 @@ This map documents shipped policy contracts and ownership for 1.0.1.
 
 ## Custom Policies
 - `devcov-raw-string-escapes`: repo-only raw-string warning guard.
-- `managed-doc-assets`: validates managed-doc descriptor/asset consistency.
-- `readme-sync`: syncs packaged README from repository README.
+- `managed-doc-assets`: validates managed-doc descriptor and asset
+  consistency.
+- `readme-sync`: syncs packaged README from repository README and rewrites
+  package-facing public links from package metadata for PyPI-safe rendering.
 
 ## Language-Aware Policies
 Policies that may request translation through shared translator runtime:
@@ -91,29 +95,33 @@ Policies that may request translation through shared translator runtime:
 - `no-print-outside-output-runtime`
 
 ## Metadata Families
-Activation/severity:
+Activation and severity:
 - `enabled`, `severity`, `enforcement`
 
 Selectors:
 - `include_*`, `exclude_*`, `force_include_*`, `selector_roles`
 
-Gate/session:
-- `gate_status_file`, pre-commit command/epoch keys
+Workflow and session:
+- `gate_status_file`, `workflow_session_file`, pre-commit command and epoch
+  keys
+- workflow and runtime path and command knobs live in ordinary config
+  sections such as `paths.*` and `workflow.*`, not `policy_state`
 
 Runtime note:
-- workflow runs are resolved from tracked `workflow_contract`
-  data, not from ad hoc invariant command lists.
+- workflow runs are resolved from tracked workflow-definition data, not from
+  ad hoc command lists
 - `run_events` payloads are runtime-owned workflow-run event metadata
-  from profiles and are not policy descriptor metadata keys.
+  from profiles and are not policy descriptor metadata keys
 
-Dependency/license:
-- `dependency_files`, `dependency_globs`, `dependency_dirs`,
+Dependency and license:
+- `dependency_files`, `dependency_globs`, `dependency_dirs`
 - `dependency_roles`, `dependency_role_files`, `dependency_role_globs`,
-  `dependency_role_dirs`,
-  `third_party_file`, `licenses_dir`, `report_heading`
+  `dependency_role_dirs`
+- `third_party_file`, `licenses_dir`, `report_heading`
 
 Versioning:
-- `version_file`, `changelog_file`, `changelog_header_prefix`, `target_roles`
+- `version_file`, `changelog_file`, `changelog_header_prefix`,
+  `target_roles`
 - `role_extractors`, `target_role_files`, `target_role_globs`,
   `target_role_dirs`
 - semantic-scope metadata: `version_file`, `changelog_file`,
@@ -123,7 +131,7 @@ Docs quality:
 - user-facing selectors, required headings, word-count, mention constraints
 - `doc_routes`
 
-Overlay/override layers:
+Overlay and override layers:
 - `autogen_metadata_overlays`, `user_metadata_overlays`
 - `autogen_metadata_overrides`, `user_metadata_overrides`
 

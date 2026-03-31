@@ -1,10 +1,10 @@
 # Troubleshooting
-**Last Updated:** 2026-03-30
+**Last Updated:** 2026-03-31
 **Project Version:** 1.0.1
 
 ## Overview
 Use this guide when DevCovenant is blocking work and you need the fastest clean
-way back to a stable state.
+way back to a usable state.
 
 The normal debug order is:
 1. read the command's `summary.txt`
@@ -16,18 +16,18 @@ The normal debug order is:
 Ask these questions first:
 1. was this a read-only audit or an active gate session?
 2. which command failed?
-3. did a gate stage mutate files?
-4. is the problem in config, metadata, generated state, or tests?
+3. did a gate stage change files?
+4. is the problem in config, generated files, runtime state, or tests?
 
 ## Gate Failures
 If `gate --start` fails, clear the reported problem before editing.
-A failed start gate is not a usable baseline.
+A failed start gate is not a usable starting point.
 If start reports hook-changed paths or says managed files were refreshed, the
-checkout was not in a settled baseline state. Apply or clear those changes,
-then rerun `gate --start`.
+checkout was not settled yet. Apply or clear those changes, then rerun
+`gate --start`.
 
 If `gate --mid` fails, clear the issue and rerun `gate --mid` until it is
-clean before running `run`.
+clean before `run`.
 
 If `gate --end` fails, inspect the latest run logs, rerun `run` if required,
 and then rerun `gate --end`.
@@ -45,14 +45,15 @@ or the normal gate workflow.
 If the problem persists, inspect the owning profile, config, or descriptor
 instead of hand-editing the registry.
 
-## Config And Metadata Problems
+## Config And Setup Problems
 If behavior looks wrong, inspect these in order:
 1. `devcovenant/config.yaml`
 2. active profile descriptors and overlays
 3. the tracked registry
 4. `AGENTS.md` generated workflow, project-governance, and policy output
 
-Most runtime-mystery problems are really metadata-resolution problems.
+Most strange runtime behavior comes from config, profile ownership, or stale
+tracked state rather than from a mysterious hidden engine rule.
 
 ## Managed Environment Problems
 If the managed interpreter exists but is not executable, DevCovenant stops with
@@ -60,8 +61,8 @@ an explicit error.
 Fix the interpreter path or permissions, then rerun the appropriate command.
 If a gate hook fails before pre-commit starts, check whether the selected
 interpreter still has the `pre_commit` package installed.
-Gate execution runs `python -m pre_commit`, so the module still needs to
-exist in the resolved execution environment.
+Gate execution runs `python -m pre_commit`, so the module still needs to exist
+in the selected environment.
 
 ## Installed CLI Problems
 If you installed DevCovenant with `pipx` and the `devcovenant` command is
@@ -77,16 +78,16 @@ Use `python3 -m devcovenant ...` when the checkout does not expose the console
 script directly.
 
 ## Translator And Profile Problems
-If a language-specific policy path seems wrong, verify that the active language
+If a language-specific policy path looks wrong, verify that the active language
 profile owns the relevant translator and that no overlapping profile is trying
 to claim the same extension ambiguously.
 
 ## Packaging Problems
-When packaging or artifact-proof assurance fails, check:
+When packaging or installed-artifact proof fails, check:
 - build logs
 - package build configuration
 - package metadata
 - artifact validation and generation steps
 
 If a repository also keeps a separate release workflow, inspect that workflow's
-owning repo surfaces next instead of papering over the symptom in CI.
+owning docs and config next instead of papering over the symptom in CI.

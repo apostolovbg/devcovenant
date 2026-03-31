@@ -1,5 +1,5 @@
 # Builtin Profiles
-**Last Updated:** 2026-03-30
+**Last Updated:** 2026-03-31
 **Project Version:** 1.0.1
 
 ## Table of Contents
@@ -41,7 +41,8 @@ Common keys include:
 - `ignore_dirs`
 - optional `gitignore_fragments`
 - optional `gitignore_template` (global baseline template)
-- optional `ci_and_test_template` (global workflow template)
+- optional `ci_and_test_template` (base workflow template on an opt-in CI
+  owner profile such as `github`)
 - optional `ci_and_test` (workflow fragment overlay)
 - `policy_overlays`
 - `assets`
@@ -74,8 +75,12 @@ manifest fragments and config overlays; profiles do not ship `.gitignore`
 asset files.
 Global template source:
 `devcovenant/builtin/profiles/global/assets/gitignore.yaml`.
-`.github/workflows/ci.yml` is generated from the global workflow template plus
-active-profile governance fragments and config overlays/overrides.
+`.github/workflows/ci.yml` is generated when an active profile owns
+`ci_and_test_template` such as the builtin `github` profile. Active-profile
+CI fragments and config overlays/overrides are then merged on top. The
+builtin `github` base bootstraps DevCovenant from the shipped
+`devcovenant/runtime-requirements.lock` so it does not assume the
+repository's own dependency files belong to DevCovenant.
 
 ## Workflow
 1. Edit the profile manifest and assets.

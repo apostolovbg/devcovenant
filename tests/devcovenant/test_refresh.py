@@ -194,6 +194,7 @@ def _unit_test_refresh_renders_current_clean_and_ci_commentary() -> None:
             "managed environment roots resolved from "
             "managed-environment metadata."
         ) in config_text
+        assert "Activate the `github` profile" in config_text
         assert "always protects .git, .venv" not in config_text
 
 
@@ -256,8 +257,12 @@ def _unit_test_release_metadata_keeps_support_floor_and_docs_truthful() -> (
     requirements_lock = (REPO_ROOT / "requirements.lock").read_text(
         encoding="utf-8"
     )
+    runtime_requirements_lock = (
+        REPO_ROOT / "devcovenant" / "runtime-requirements.lock"
+    ).read_text(encoding="utf-8")
     assert 'tomli==2.3.0; python_version < "3.11"' in requirements_in
     assert 'tomli==2.3.0 ; python_version < "3.11"' in requirements_lock
+    assert runtime_requirements_lock == requirements_lock
 
     assert urls["Documentation"].endswith(f"/tree/v{version}/devcovenant/docs")
     assert urls["Changelog"].endswith(f"/blob/v{version}/CHANGELOG.md")
@@ -857,10 +862,35 @@ def _unit_test_refresh_writes_global_artifact_gitignore_rules() -> None:
             "pip-wheel-metadata/",
             ".coverage",
             ".coverage.*",
-            ".gha-pycache/",
             "htmlcov/",
         ):
             assert expected in content
+
+
+def _unit_test_refresh_writes_github_gitignore_rules() -> None:
+    """refresh_repo should write github-profile gitignore rules."""
+    with tempfile.TemporaryDirectory() as temp_dir:
+        repo_root = Path(temp_dir)
+        repo_seed_cache.copy_installed_repo(repo_root)
+
+        config_path = repo_root / "devcovenant" / "config.yaml"
+        payload = yaml.safe_load(config_path.read_text(encoding="utf-8"))
+        assert isinstance(payload, dict)
+        profiles = payload.setdefault("profiles", {})
+        active_profiles = list(profiles.get("active", []))
+        active_profiles.insert(2, "github")
+        profiles["active"] = active_profiles
+        config_path.write_text(
+            yaml.safe_dump(payload, sort_keys=False),
+            encoding="utf-8",
+        )
+
+        result = refresh.refresh_repo(repo_root)
+        assert result == 0
+
+        gitignore_path = repo_root / ".gitignore"
+        content = gitignore_path.read_text(encoding="utf-8")
+        assert ".gha-pycache/" in content
 
 
 def _unit_test_refresh_renders_pre_commit_excludes_for_build_outputs() -> None:
@@ -911,10 +941,36 @@ def _unit_test_refresh_renders_pre_commit_excludes_for_build_outputs() -> None:
         )
         assert r"[^/]+\.egg-info" in pre_commit
         assert "artifacts" in pre_commit
-        assert r"\.gha\-pycache" in pre_commit
         assert r"\.proof\-wheel" in pre_commit
         assert r"\.proof\-sdist" in pre_commit
         assert r"\.proof\-py310" in pre_commit
+
+
+def _unit_test_refresh_adds_github_pre_commit_excludes() -> None:
+    """refresh_repo should add github-profile pre-commit excludes."""
+    with tempfile.TemporaryDirectory() as temp_dir:
+        repo_root = Path(temp_dir)
+        repo_seed_cache.copy_installed_repo(repo_root)
+
+        config_path = repo_root / "devcovenant" / "config.yaml"
+        payload = yaml.safe_load(config_path.read_text(encoding="utf-8"))
+        assert isinstance(payload, dict)
+        profiles = payload.setdefault("profiles", {})
+        active_profiles = list(profiles.get("active", []))
+        active_profiles.insert(2, "github")
+        profiles["active"] = active_profiles
+        config_path.write_text(
+            yaml.safe_dump(payload, sort_keys=False),
+            encoding="utf-8",
+        )
+
+        result = refresh.refresh_repo(repo_root)
+        assert result == 0
+
+        pre_commit = (repo_root / ".pre-commit-config.yaml").read_text(
+            encoding="utf-8"
+        )
+        assert r"\.gha\-pycache" in pre_commit
 
 
 def _unit_test_refresh_policy_registry_origin_metadata() -> None:
@@ -1166,7 +1222,22 @@ def _unit_test_refresh_renders_canonical_workflow_triggers() -> None:
     """refresh_repo should render canonical GitHub trigger syntax."""
     with tempfile.TemporaryDirectory() as temp_dir:
         repo_root = Path(temp_dir)
-        repo_seed_cache.copy_refreshed_repo(repo_root)
+        repo_seed_cache.copy_installed_repo(repo_root)
+
+        config_path = repo_root / "devcovenant" / "config.yaml"
+        payload = yaml.safe_load(config_path.read_text(encoding="utf-8"))
+        assert isinstance(payload, dict)
+        profiles = payload.setdefault("profiles", {})
+        active_profiles = list(profiles.get("active", []))
+        active_profiles.insert(2, "github")
+        profiles["active"] = active_profiles
+        config_path.write_text(
+            yaml.safe_dump(payload, sort_keys=False),
+            encoding="utf-8",
+        )
+
+        result = refresh.refresh_repo(repo_root)
+        assert result == 0
 
         workflow_path = repo_root / ".github" / "workflows" / "ci.yml"
         content = workflow_path.read_text(encoding="utf-8")
@@ -1179,6 +1250,87 @@ def _unit_test_refresh_renders_canonical_workflow_triggers() -> None:
         assert re.search(r"(?m)^  pull_request:$", content)
         assert re.search(r"(?m)^      run: \\|$", content)
         assert 'run: "python -m pytest -q' not in content
+        assert "devcovenant/runtime-requirements.lock" in content
+        assert "python -m pip install -r requirements.lock" not in content
+
+
+def _unit_test_refresh_skips_ci_generation_without_github_profile() -> None:
+    """refresh_repo should skip generated CI without a CI-owner profile."""
+    with tempfile.TemporaryDirectory() as temp_dir:
+        repo_root = Path(temp_dir)
+        repo_seed_cache.copy_installed_repo(repo_root)
+
+        workflow_path = repo_root / ".github" / "workflows" / "ci.yml"
+        assert not workflow_path.exists()
+
+        result = refresh.refresh_repo(repo_root)
+        assert result == 0
+        assert not workflow_path.exists()
+
+
+def _unit_test_refresh_allows_ci_override_without_github_profile() -> None:
+    """refresh_repo should allow full CI overrides without github active."""
+    with tempfile.TemporaryDirectory() as temp_dir:
+        repo_root = Path(temp_dir)
+        repo_seed_cache.copy_installed_repo(repo_root)
+
+        config_path = repo_root / "devcovenant" / "config.yaml"
+        payload = yaml.safe_load(config_path.read_text(encoding="utf-8"))
+        assert isinstance(payload, dict)
+        payload.setdefault("ci_and_test", {})
+        payload["ci_and_test"]["overrides"] = {
+            "name": "CI",
+            "on": {"push": None},
+            "jobs": {
+                "demo": {
+                    "runs-on": "ubuntu-latest",
+                    "steps": [{"name": "Demo", "run": "echo demo"}],
+                }
+            },
+        }
+        config_path.write_text(
+            yaml.safe_dump(payload, sort_keys=False),
+            encoding="utf-8",
+        )
+
+        result = refresh.refresh_repo(repo_root)
+        assert result == 0
+
+        workflow_path = repo_root / ".github" / "workflows" / "ci.yml"
+        rendered = workflow_path.read_text(encoding="utf-8")
+        assert "name: CI" in rendered
+        assert "demo:" in rendered
+        assert "echo demo" in rendered
+
+
+def _unit_test_refresh_rejects_ci_overlays_without_github_profile() -> None:
+    """refresh_repo should reject CI overlays without a base CI owner."""
+    with tempfile.TemporaryDirectory() as temp_dir:
+        repo_root = Path(temp_dir)
+        repo_seed_cache.copy_installed_repo(repo_root)
+
+        config_path = repo_root / "devcovenant" / "config.yaml"
+        payload = yaml.safe_load(config_path.read_text(encoding="utf-8"))
+        assert isinstance(payload, dict)
+        payload.setdefault("ci_and_test", {})
+        payload["ci_and_test"]["overlays"] = {
+            "jobs": {
+                "demo": {
+                    "runs-on": "ubuntu-latest",
+                    "steps": [{"name": "Demo", "run": "echo demo"}],
+                }
+            }
+        }
+        config_path.write_text(
+            yaml.safe_dump(payload, sort_keys=False),
+            encoding="utf-8",
+        )
+
+        output = StringIO()
+        with redirect_stdout(output):
+            result = refresh.refresh_repo(repo_root)
+        assert result == 1
+        assert "requires an active profile" in output.getvalue()
 
 
 def _unit_test_refresh_rejects_multiline_non_block_doc_descriptor() -> None:
@@ -1407,9 +1559,17 @@ class GeneratedUnittestCases(unittest.TestCase):
         """Run global artifact gitignore assertions."""
         _unit_test_refresh_writes_global_artifact_gitignore_rules()
 
+    def test_refresh_writes_github_gitignore_rules(self):
+        """Run github-profile gitignore assertions."""
+        _unit_test_refresh_writes_github_gitignore_rules()
+
     def test_refresh_renders_pre_commit_excludes_for_build_outputs(self):
         """Run pre-commit build/proof exclude rendering assertions."""
         _unit_test_refresh_renders_pre_commit_excludes_for_build_outputs()
+
+    def test_refresh_adds_github_pre_commit_excludes(self):
+        """Run github-profile pre-commit exclude assertions."""
+        _unit_test_refresh_adds_github_pre_commit_excludes()
 
     def test_refresh_policy_registry_origin_metadata(self):
         """Run test_refresh_policy_registry_origin_metadata."""
@@ -1450,6 +1610,18 @@ class GeneratedUnittestCases(unittest.TestCase):
     def test_refresh_renders_canonical_workflow_triggers(self):
         """Run canonical governance-trigger rendering refresh assertions."""
         _unit_test_refresh_renders_canonical_workflow_triggers()
+
+    def test_refresh_skips_ci_generation_without_github_profile(self):
+        """Run no-github generated-CI omission assertions."""
+        _unit_test_refresh_skips_ci_generation_without_github_profile()
+
+    def test_refresh_allows_ci_override_without_github_profile(self):
+        """Run no-github CI override rendering assertions."""
+        _unit_test_refresh_allows_ci_override_without_github_profile()
+
+    def test_refresh_rejects_ci_overlays_without_github_profile(self):
+        """Run no-github CI overlay rejection assertions."""
+        _unit_test_refresh_rejects_ci_overlays_without_github_profile()
 
     def test_refresh_rejects_multiline_non_block_doc_descriptor(self):
         """Run refresh rejection for non-block multiline descriptor strings."""

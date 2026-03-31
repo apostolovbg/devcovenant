@@ -6,7 +6,7 @@
 **Maintenance Stance:** active
 **Compatibility Policy:** forward-only
 **Versioning Mode:** versioned
-**Last Updated:** 2026-03-30
+**Last Updated:** 2026-03-31
 **DevCovenant Version:** 1.0.1
 
 <!-- DEVCOV:BEGIN -->
@@ -768,6 +768,7 @@ doc_routes: devcovenant/builtin/policies/ => devcovenant/docs/policies.md
   devcovenant/builtin/profiles/*/*.yaml => devcovenant/docs/profiles.md
   devcovenant/*/profiles/*/*translator.py=> devcovenant/docs/profiles.md
   devcovenant/builtin/profiles/**/config.yaml => devcovenant/docs/config.md
+  devcovenant/*/profiles/**/assets/** => devcovenant/docs/profiles.md
   devcovenant/*/profiles/*/assets/*.yaml=> devcovenant/docs/profiles.md
   devcovenant/*/profiles/*/assets/*.yml=> devcovenant/docs/profiles.md
   devcovenant/*/profiles/**/assets/**/*.yaml=> devcovenant/docs/profiles.md

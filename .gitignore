@@ -29,7 +29,6 @@ __pycache__/
 .coverage
 .coverage.*
 .cache/
-.gha-pycache/
 .ruff_cache/
 tmp/
 temp/
@@ -37,6 +36,9 @@ devcovenant/registry/runtime/
 devcovenant/logs/**
 !devcovenant/logs/
 !devcovenant/logs/README.md
+
+# Profile: github
+.gha-pycache/
 
 # Profile: devcovrepo
 artifacts

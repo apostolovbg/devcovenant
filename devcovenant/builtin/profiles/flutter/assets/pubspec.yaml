@@ -1,6 +1,6 @@
-name: devcovenant_flutter_app
-description: Starter Flutter app for DevCovenant profile scaffolding.
-version: 0.1.0
+name: project_name
+description: Starter Flutter app scaffold.
+version: 0.0.1
 environment:
   sdk: ">=3.0.0 <4.0.0"
 dependencies:

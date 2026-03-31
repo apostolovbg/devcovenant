@@ -3,11 +3,9 @@
 **Project Version:** 1.0.1
 
 ## Overview
-Profiles describe repository shape.
-They tell DevCovenant what kind of repository this is and what reusable stack
-behavior should come with that shape.
+Profiles tell DevCovenant what kind of repository it is working in and which
+reusable behavior should come with that setup.
 
-A profile can contribute refresh-generated output and reusable stack metadata.
 A profile can contribute:
 1. metadata overlays
 2. workflow runs
@@ -16,35 +14,36 @@ A profile can contribute:
 5. suffix inventories
 6. translator declarations
 7. CI fragments through `ci_and_test`
-8. ignore-directory hints that feed generated `.gitignore` and the shared
-   pre-commit exclude contract
-
-For the built-in `global` profile, that includes the canonical
-`workflow.pre_commit_command` value `pre-commit run --all-files`, while the
-managed-environment runtime launches pre-commit through the selected
-interpreter so gate execution stays portable across local work, CI, and proof
-repositories.
+8. ignore-directory hints that feed generated `.gitignore` and pre-commit
+   excludes
 
 Profiles do not directly turn policies on or off.
-Policy activation remains config-driven through `policy_state`.
-Reach the first reviewed DevCovenant baseline first.
-Add custom profiles after the initial `install`, config review, `deploy`, and
-full gate cycle prove the normal contract is already working.
+Policy activation still lives in `policy_state`.
 
 ## Profile Types
 The common profile categories are:
-- global and defaults baselines
+- `global` and `defaults` as the shared base
+- `devcovuser` as the normal user-repository layer
+- `github` as the opt-in GitHub Actions layer
 - language profiles
 - framework or tooling profiles
 - custom profiles
 
-The normal pattern is to keep `global` active, add the needed language or
-stack profiles, and then use config overrides only for repository-specific
-deltas.
+The normal pattern is:
+1. keep the base profiles active
+2. keep `devcovuser` active for an ordinary repository using DevCovenant
+3. add `github` when the repository wants a generated GitHub Actions workflow
+4. add the needed language or stack profiles
+5. add a repo-specific custom profile on top when the repository needs its own
+   rules, assets, or workflow additions
+
+Use direct overlays when you only need a very small local tweak.
+Use a custom profile when the repository has real repeatable behavior of its
+own.
 
 ## What Profiles Should Own
-Profiles are the right place for reusable stack behavior.
-That includes things like:
+Profiles are the right place for reusable behavior.
+That includes:
 1. dependency file roles for a language ecosystem
 2. managed-environment expectations for a stack
 3. generated asset templates
@@ -52,56 +51,56 @@ That includes things like:
 5. documentation routes for a reusable repo family
 6. extra CI jobs that should apply to a repo family instead of every
    DevCovenant repository
-7. declared workflow runs that should be required for repositories of the
-   same stack shape
+7. declared workflow runs that should be required for repositories of the same
+   shape
 
-If the behavior should apply to many repositories of the same shape, it
+If the behavior should apply to more than one repository of the same shape, it
 probably belongs in a profile instead of local config.
 
-The built-in `defaults` profile now seeds the baseline `.venv`
-managed-environment contract for ordinary repos:
-- `expected_paths` / `expected_interpreters`
-- `required_commands` for the target env
+The built-in `defaults` profile seeds the standard `.venv` expectations for
+ordinary repositories:
+- expected paths and interpreters
+- required commands for the target environment
 - manual guidance that uses `{current_python}` and `{managed_python}`
+
+Repositories that use a different environment should declare that environment
+through their active profile stack or metadata overlays instead of relying on
+the defaults to guess it.
+
+The built-in `devcovuser` profile is the normal user-repository layer.
+It keeps DevCovenant's own shipped runtime files out of ordinary app-code
+checks while still keeping `devcovenant/custom/**` in scope for repo-owned
+extensions.
 
 Profiles may also contribute `ignore_dirs` for disposable local outputs that
 should stay out of generated `.gitignore` and out of pre-commit's all-files
-surface. That is the right place for repo-family proof or scratch directories,
-not for durable source paths.
-Typical examples are proof roots such as `.proof-wheel` / `.proof-sdist`,
-support-floor envs such as `.proof-py310`, and repo-local runner cache roots
-such as `.gha-pycache` when one repo family needs to quarantine transient CI
-artifacts consistently.
+scan.
+Typical examples are proof roots such as `.proof-wheel` and `.proof-sdist`,
+support-floor environments such as `.proof-py310`, or runner cache roots such
+as `.gha-pycache` when a CI profile needs them.
 
-Repo profiles can then strengthen that baseline.
-One repo profile may add `managed_commands` so `gate --start` can materialize
-the repo-owned environment automatically, while the built-in `global` CI asset
-keeps shared runner-runtime choices in the generic workflow layer.
+A repo-specific custom profile can then strengthen the standard stack.
+For example, it may add `managed_commands`, extra assets, or CI proof that
+belongs to that repository or repo family.
 
 ## Assets And Managed Docs
-Profiles can ship assets.
-Those assets can include managed-document templates.
+Profiles can ship assets, including managed-document templates.
 
-`devcovenant asset FILE.ext [OUTPUTNAME.ext]` is the operator surface for
-those shipped assets.
-It resolves both:
+`devcovenant asset FILE.ext [OUTPUTNAME.ext]` is the command for those shipped
+assets.
+It can resolve both:
 - manifest-declared profile assets
 - descriptor-backed managed docs such as `SPEC.md`
 
-Resolution is deterministic:
+Resolution works like this:
 - exact target-path matches beat basename matches
-- active profiles are considered first in resolved active-profile order
-- remaining discovered profiles are considered afterward in deterministic
-  profile-name order
-- builtin versus custom is not a special tie-breaker after profiles are
-  discovered
+- active profiles are considered first in active-profile order
+- remaining discovered profiles are considered afterward in profile-name order
 - if the winning profile still exposes multiple basename matches,
-  DevCovenant fails and asks for an exact asset target path
+  DevCovenant stops and asks for an exact target path
 
 The command writes Desktop copies only.
-It reuses the same rendering machinery that normal refresh and deploy use:
-plain profile assets go through the shared profile-asset renderer, while
-managed docs go through the managed-doc descriptor renderer.
+It uses the same rendering code that refresh and deploy use.
 
 Managed-doc descriptor ownership follows profile precedence by target path:
 - the global profile provides the baseline descriptor set
@@ -110,14 +109,10 @@ Managed-doc descriptor ownership follows profile precedence by target path:
   path
 - later active profiles win over earlier ones for the same target path
 
-That precedence model is what lets one repo family replace a generalized
-global trust doc such as `SECURITY.md` with a repo-specific version without
-adding a second managed-doc system.
-
 ## Translators
 Translators are owned by language profiles.
-They keep policy logic language-agnostic by translating files into normalized
-units instead of forcing policies to understand each language directly.
+They let policies work with a normalized view of source files instead of making
+every policy understand every language directly.
 
 A translator declaration normally includes:
 - a stable translator id
@@ -136,8 +131,7 @@ Framework and tooling profiles should not become alternate language owners.
 Translator ownership belongs with language profiles.
 
 ## Metadata Overlays
-Profiles are the preferred place for operational metadata that depends on stack
-shape.
+Profiles are the preferred place for reusable stack-specific settings.
 Examples include:
 1. dependency-management selectors
 2. version-sync file roles
@@ -145,52 +139,31 @@ Examples include:
 4. no-print sink metadata from language profiles
 5. reusable workflow runs such as a stack's `tests` run
 6. reusable `ci_and_test` fragments for repo-family CI jobs
-7. managed-environment roots that other engine services may need to respect,
-   such as cleanup-safe environment paths
+7. managed-environment roots that cleanup and other services need to respect
 
-The CI boundary is important.
-The global workflow template should stay generic.
-If a repo family needs additional CI proof, that extension belongs in the
-relevant profile instead of in the builtin global workflow.
-That same profile boundary is where a repo family can add release-hardening
-proof such as:
-- immutable Action SHA pins for generated jobs
-- support-floor interpreter checks
-- install-surface proof jobs that stay on the documented public CLI surface
-- GitHub-safe runner-cache setup steps that export `PYTHONPYCACHEPREFIX`
-  through `$GITHUB_ENV` instead of using runner-only expression contexts in
-  job-level workflow metadata
+The CI boundary matters.
+The builtin `github` workflow template should stay generic.
+It should bootstrap DevCovenant from the shipped
+`devcovenant/runtime-requirements.lock`, not from the repository's own
+dependency files.
+If a repo family needs extra proof or extra project dependency setup, that
+extension belongs in the relevant profile instead of in the builtin base
+workflow.
 
-The same profile boundary helps with config readability.
-The global config asset is where DevCovenant lists the full
-`project-governance` key set, the allowed lifecycle values, the legal
-`compatibility_policy` values, and the legal `versioning_mode` values directly
-in the generated config comments.
-Repo overlays can then tighten that compatibility policy.
-That same config surface marks ownership section-by-section as human-owned,
-refresh-owned, or mixed ownership so a repository can tell at a glance which
-settings it owns directly and which state refresh writes for visibility.
+The same split helps config stay readable.
+The global config asset lists the full `project-governance` key set and the
+allowed values.
+Profiles and local config can then tighten or extend behavior without
+making the shared base too repo-specific.
 
-The same ownership split matters for workflow itself.
 If a language or stack has a standard run, the profile should declare it
 through `workflow_runs`.
-That keeps the engine-facing workflow contract explicit.
-In the built-in Python profile, the standard `tests` run lives there and
-declares its runner commands and success contract, while core owns the public
-`run` command surface used to execute it.
-That default Python run uses `python3 -m unittest discover -v` as the single
-Python test command, so the repo keeps one structural Python test pass without
-a second launcher executing the same suites.
-That same declaration can also carry `recording` hooks such as:
-- `output_mode_config_field`
-- `event_adapter_group`
-- `write_runtime_profile`
+That keeps shared run definitions in one place.
+In the built-in Python profile, the standard `tests` run lives there and uses
+`python3 -m unittest discover -v` as the default Python test command.
 
-Those hooks let a profile opt specific runs into richer reporting without
-reintroducing hardcoded executor behavior for a special run id.
-
-## Workflow Run Contract
-`workflow_runs` is a public profile-authoring contract.
+## Workflow Runs
+`workflow_runs` is the public profile authoring model for extra run steps.
 Each run may declare:
 - `id`
 - ordering fields `after`, `before`, and `order`
@@ -199,14 +172,13 @@ Each run may declare:
 - `freshness`
 - `recording`
 
-Ordering is executable contract, not decorative metadata.
+Ordering is real behavior, not decorative metadata.
 - `after` and `before` may reference reserved anchors: `start`, `mid`, `end`
 - `after` and `before` may also reference other declared run ids
-- DevCovenant validates those references during contract resolution
-- DevCovenant rejects cyclic positioning rules instead of preserving them as
-  inert metadata
-- when multiple runs are simultaneously eligible, `order`, then owner id,
-  then run id break ties deterministically
+- DevCovenant validates those references
+- DevCovenant rejects cycles instead of silently keeping broken rules
+- when multiple runs are eligible at the same time, `order`, then owner id,
+  then run id break ties
 
 Supported runner kinds are:
 - `command_group`
@@ -214,7 +186,7 @@ Supported runner kinds are:
 - `policy_command`
 - `manual_attestation`
 
-Supported success-contract kinds are:
+Supported success-check kinds are:
 - `all_commands_exit_zero`
 - `runtime_action_success`
 - `policy_command_success`

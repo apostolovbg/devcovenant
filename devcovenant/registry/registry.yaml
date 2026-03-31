@@ -29,6 +29,7 @@ project-governance:
 managed-docs:
   descriptor_roots:
   - devcovenant/builtin/profiles/global/assets
+  - devcovenant/builtin/profiles/github/assets
   - devcovenant/custom/profiles/devcovrepo/assets
   - devcovenant/builtin/profiles/python/assets
   enabled_docs:
@@ -65,7 +66,7 @@ managed-docs:
       project_governance_headers: false
       import_seed: true
       authoritative_source: true
-      body_fingerprint: b962fa05210f0456777b4ef1b25a7370999fae90779e17759ee5c1f8299dbcc9
+      body_fingerprint: 3346f452457f2efad2b17c58d48f71c411916aa7b0fa75bcb5143c59cebf13a8
     LICENSE:
       enabled: false
       descriptor_path: devcovenant/builtin/profiles/global/assets/LICENSE.yaml
@@ -86,7 +87,7 @@ managed-docs:
       project_governance_headers: false
       import_seed: true
       authoritative_source: true
-      body_fingerprint: 2a4a28b1a554afc8cf5c4a51a4fd4e39cf37212f03f382cb221ea516b4c2eac8
+      body_fingerprint: 0c2da4a9cb0a1da9fba803b54ae03d08f7d5b1901f0010066de2760857934775
     PRIVACY.md:
       enabled: true
       descriptor_path: devcovenant/custom/profiles/devcovrepo/assets/PRIVACY.yaml
@@ -100,35 +101,35 @@ managed-docs:
       project_governance_headers: false
       import_seed: true
       authoritative_source: true
-      body_fingerprint: 79cd280d18cf5c8429d8d8c9670b359d4225c9d6f41b1ffa3d67b359d4f62f2c
+      body_fingerprint: cbd6bda3b1e74a99a99ae2825efbac4ef043a71d10496c1f819fcc6484f20114
     README.md:
       enabled: true
       descriptor_path: devcovenant/builtin/profiles/global/assets/README.yaml
       project_governance_headers: false
       import_seed: true
       authoritative_source: true
-      body_fingerprint: 34474b586af2331d9ae26bcc11c71d10ecb0d1cf22f5324662d905e0aa21af7a
+      body_fingerprint: 79a4d7ecc7e04cef763b5eb6cf010b587eed9e46701b093d199a2a2232038a59
     SECURITY.md:
       enabled: true
       descriptor_path: devcovenant/custom/profiles/devcovrepo/assets/SECURITY.yaml
       project_governance_headers: false
       import_seed: true
       authoritative_source: true
-      body_fingerprint: e2fabe2357208746c2dcd261daf61e13ca592f82881b9fb424c584418204e08d
+      body_fingerprint: 2c2efb6269abb9bc72f710b687b1ce6432bef297b30486f05cb81e9f858d7ffc
     SPEC.md:
       enabled: true
       descriptor_path: devcovenant/builtin/profiles/global/assets/SPEC.yaml
       project_governance_headers: true
       import_seed: true
       authoritative_source: true
-      body_fingerprint: 092e59c0da1c48f4827137a699b3bc1b58d72dc3e56fef82c87560a4b7bd9f63
+      body_fingerprint: 158ad3987d5b81864b2c712e8fa6c580dda6beab2444bb122c7d31ac72ce64b5
     SUPPORT.md:
       enabled: true
       descriptor_path: devcovenant/custom/profiles/devcovrepo/assets/SUPPORT.yaml
       project_governance_headers: false
       import_seed: true
       authoritative_source: true
-      body_fingerprint: f222386c30ead2cf247f16ec5711b81aab39983a41f7c6f6e1e68aebc3b28fdb
+      body_fingerprint: 0e89d467341fb3a380a0380d3444083cfc4410de3c813788cda296e3acb0fbe5
     devcovenant/README.md:
       enabled: true
       descriptor_path: devcovenant/builtin/profiles/global/assets/devcovenant/README.yaml
@@ -180,6 +181,7 @@ workflow_contract:
   active_profiles:
   - global
   - defaults
+  - github
   - devcovrepo
   - docs
   - python
@@ -2111,8 +2113,9 @@ policies:
       doc_routes: devcovenant/builtin/policies/ => devcovenant/docs/policies.md, devcovenant/builtin/profiles/*/*.yaml
         => devcovenant/docs/profiles.md, devcovenant/*/profiles/*/*translator.py=>
         devcovenant/docs/profiles.md, devcovenant/builtin/profiles/**/config.yaml
-        => devcovenant/docs/config.md, devcovenant/*/profiles/*/assets/*.yaml=> devcovenant/docs/profiles.md,
-        devcovenant/*/profiles/*/assets/*.yml=> devcovenant/docs/profiles.md, devcovenant/*/profiles/**/assets/**/*.yaml=>
+        => devcovenant/docs/config.md, devcovenant/*/profiles/**/assets/** => devcovenant/docs/profiles.md,
+        devcovenant/*/profiles/*/assets/*.yaml=> devcovenant/docs/profiles.md, devcovenant/*/profiles/*/assets/*.yml=>
+        devcovenant/docs/profiles.md, devcovenant/*/profiles/**/assets/**/*.yaml=>
         devcovenant/docs/profiles.md, devcovenant/*/profiles/**/assets/**/*.yml=>
         devcovenant/docs/profiles.md, devcovenant/custom/profiles/__init__.py => devcovenant/docs/profiles.md,
         devcovenant/custom/profiles/*.py => devcovenant/docs/profiles.md, devcovenant/custom/profiles/**/*.py
@@ -2622,6 +2625,7 @@ policies:
           - devcovenant/builtin/profiles/*/*.yaml => devcovenant/docs/profiles.md
           - devcovenant/*/profiles/*/*translator.py=> devcovenant/docs/profiles.md
           - devcovenant/builtin/profiles/**/config.yaml => devcovenant/docs/config.md
+          - devcovenant/*/profiles/**/assets/** => devcovenant/docs/profiles.md
           - devcovenant/*/profiles/*/assets/*.yaml=> devcovenant/docs/profiles.md
           - devcovenant/*/profiles/*/assets/*.yml=> devcovenant/docs/profiles.md
           - devcovenant/*/profiles/**/assets/**/*.yaml=> devcovenant/docs/profiles.md
@@ -2653,6 +2657,7 @@ policies:
           - devcovenant/builtin/profiles/*/*.yaml => devcovenant/docs/profiles.md
           - devcovenant/*/profiles/*/*translator.py=> devcovenant/docs/profiles.md
           - devcovenant/builtin/profiles/**/config.yaml => devcovenant/docs/config.md
+          - devcovenant/*/profiles/**/assets/** => devcovenant/docs/profiles.md
           - devcovenant/*/profiles/*/assets/*.yaml=> devcovenant/docs/profiles.md
           - devcovenant/*/profiles/*/assets/*.yml=> devcovenant/docs/profiles.md
           - devcovenant/*/profiles/**/assets/**/*.yaml=> devcovenant/docs/profiles.md
@@ -2684,6 +2689,7 @@ policies:
           - devcovenant/builtin/profiles/*/*.yaml => devcovenant/docs/profiles.md
           - devcovenant/*/profiles/*/*translator.py=> devcovenant/docs/profiles.md
           - devcovenant/builtin/profiles/**/config.yaml => devcovenant/docs/config.md
+          - devcovenant/*/profiles/**/assets/** => devcovenant/docs/profiles.md
           - devcovenant/*/profiles/*/assets/*.yaml=> devcovenant/docs/profiles.md
           - devcovenant/*/profiles/*/assets/*.yml=> devcovenant/docs/profiles.md
           - devcovenant/*/profiles/**/assets/**/*.yaml=> devcovenant/docs/profiles.md
@@ -3143,6 +3149,7 @@ policies:
       - devcovenant/builtin/profiles/*/*.yaml => devcovenant/docs/profiles.md
       - devcovenant/*/profiles/*/*translator.py=> devcovenant/docs/profiles.md
       - devcovenant/builtin/profiles/**/config.yaml => devcovenant/docs/config.md
+      - devcovenant/*/profiles/**/assets/** => devcovenant/docs/profiles.md
       - devcovenant/*/profiles/*/assets/*.yaml=> devcovenant/docs/profiles.md
       - devcovenant/*/profiles/*/assets/*.yml=> devcovenant/docs/profiles.md
       - devcovenant/*/profiles/**/assets/**/*.yaml=> devcovenant/docs/profiles.md
@@ -3297,6 +3304,7 @@ policies:
     - bandit.yaml => SECURITY.md
     - build/**
     - devcovenant/*.py => devcovenant/docs/installation.md
+    - devcovenant/*/profiles/**/assets/** => devcovenant/docs/profiles.md
     - devcovenant/*/profiles/**/assets/**/*.yaml=> devcovenant/docs/profiles.md
     - devcovenant/*/profiles/**/assets/**/*.yml=> devcovenant/docs/profiles.md
     - devcovenant/*/profiles/*/*translator.py=> devcovenant/docs/profiles.md
@@ -10007,6 +10015,25 @@ profiles:
     - devcovenant/builtin/profiles/frappe/assets/hooks.py
     - devcovenant/builtin/profiles/frappe/assets/modules.txt
     active: false
+  github:
+    version: 1
+    profile: github
+    category: tooling
+    suffixes: []
+    ignore_dirs:
+    - .gha-pycache
+    gitignore_fragments:
+    - .gha-pycache/
+    clean_overlays:
+      cache_dirs:
+      - .gha-pycache
+    ci_and_test_template: ci.yml
+    policy_overlays: {}
+    source: builtin
+    path: devcovenant/builtin/profiles/github
+    assets_available:
+    - devcovenant/builtin/profiles/github/assets/ci.yml
+    active: true
   global:
     version: 1
     profile: global
@@ -10044,7 +10071,6 @@ profiles:
       - devcovenant/registry/README.md
       - devcovenant/registry/registry.yaml
     gitignore_template: gitignore.yaml
-    ci_and_test_template: ci.yml
     pre_commit:
       repos:
       - repo: https://github.com/pre-commit/pre-commit-hooks
@@ -10079,7 +10105,6 @@ profiles:
     source: builtin
     path: devcovenant/builtin/profiles/global
     assets_available:
-    - devcovenant/builtin/profiles/global/assets/.github/workflows/ci.yml
     - devcovenant/builtin/profiles/global/assets/AGENTS.yaml
     - devcovenant/builtin/profiles/global/assets/CHANGELOG.yaml
     - devcovenant/builtin/profiles/global/assets/CONTRIBUTING.yaml
@@ -10090,7 +10115,6 @@ profiles:
     - devcovenant/builtin/profiles/global/assets/SECURITY.yaml
     - devcovenant/builtin/profiles/global/assets/SPEC.yaml
     - devcovenant/builtin/profiles/global/assets/SUPPORT.yaml
-    - devcovenant/builtin/profiles/global/assets/ci.yml
     - devcovenant/builtin/profiles/global/assets/config.yaml
     - devcovenant/builtin/profiles/global/assets/devcovenant/README.yaml
     - devcovenant/builtin/profiles/global/assets/gitignore.yaml
@@ -11788,6 +11812,7 @@ profiles:
         - devcovenant/builtin/profiles/*/*.yaml => devcovenant/docs/profiles.md
         - devcovenant/*/profiles/*/*translator.py=> devcovenant/docs/profiles.md
         - devcovenant/builtin/profiles/**/config.yaml => devcovenant/docs/config.md
+        - devcovenant/*/profiles/**/assets/** => devcovenant/docs/profiles.md
         - devcovenant/*/profiles/*/assets/*.yaml=> devcovenant/docs/profiles.md
         - devcovenant/*/profiles/*/assets/*.yml=> devcovenant/docs/profiles.md
         - devcovenant/*/profiles/**/assets/**/*.yaml=> devcovenant/docs/profiles.md
@@ -12083,6 +12108,8 @@ inventory:
     - devcovenant/builtin
     - devcovenant/builtin/policies
     - devcovenant/builtin/profiles
+    - devcovenant/builtin/profiles/github
+    - devcovenant/builtin/profiles/github/assets
     - devcovenant/builtin/profiles/global
     - devcovenant/builtin/profiles/global/assets
     - devcovenant/core
@@ -12106,10 +12133,11 @@ inventory:
     - devcovenant/config.yaml
     - devcovenant/README.md
     - devcovenant/VERSION
+    - devcovenant/runtime-requirements.lock
     - devcovenant/logs/README.md
     - devcovenant/registry/README.md
     - devcovenant/registry/registry.yaml
-    - devcovenant/builtin/profiles/global/assets/ci.yml
+    - devcovenant/builtin/profiles/github/assets/ci.yml
     - devcovenant/builtin/profiles/global/assets/gitignore.yaml
     - devcovenant/builtin/profiles/README.md
     - devcovenant/builtin/policies/README.md
@@ -12183,6 +12211,7 @@ inventory:
     active:
     - global
     - defaults
+    - github
     - devcovrepo
     - docs
     - python

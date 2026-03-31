@@ -3,176 +3,101 @@
 **Project Version:** 1.0.1
 
 ## Overview
-This document is the normative home for the registry contract.
-Keep `devcovenant/docs/contracts.md` nearby when you need the stable document
-map for the rest of the package surfaces.
-
 DevCovenant uses `devcovenant/registry/` for generated state.
-Some of that state is tracked and durable.
-Some of it is runtime-local and disposable.
-Use this page when you need to answer one practical debugging question:
-is the thing I am looking at part of the repository's resolved contract, or is
-it only local evidence about recent command runs?
+Some of that state is tracked in git.
+Some of it is local working state that helps DevCovenant manage an open or
+recent work slice.
 
-Working rule:
-read the registry when you need to understand resolved state,
-but do not hand-edit generated registry files.
+The practical question is simple:
+are you looking for the repository's saved DevCovenant setup, or are you
+looking for local evidence about recent command runs?
+
+Use the tracked registry for the saved setup.
+Use the runtime registry for local working state.
+Do not hand-edit generated registry files.
 
 ## Tracked Registry
 `devcovenant/registry/registry.yaml` is the tracked registry.
-It stores deterministic governance state such as:
-
-1. resolved policy metadata
-2. active project-governance state
-3. active profile inventory
+It stores things such as:
+1. the active policy settings DevCovenant resolved
+2. project-governance state
+3. the active profile inventory
 4. managed-doc and generation state
-5. profile-provided generation fragments
-6. the resolved `workflow_contract`
-7. tracked inventory and resolution traces used for auditing and debugging
+5. the resolved workflow definition
+6. tracked inventory information used for debugging and audits
 
-Packaging and policy-runtime changes can legitimately update tracked-registry
-hashes even when the visible behavior change is elsewhere.
-That is normal evidence of a real contract change, not registry noise.
+Tracked-registry changes are normal when you change profiles, policy settings,
+managed docs, workflow generation, packaging inputs, or other DevCovenant-owned
+setup.
+That is not noise by itself.
+It is often the recorded result of a real repository change.
 
-Tracked registry state records the resolved workflow contract as well.
+The tracked registry also records the resolved workflow definition.
 That includes:
 - the reserved anchors `start`, `mid`, and `end`
-- the declared runs coming from active profiles
-- the run ids the engine must enforce
-- the validated ordering produced from `after`, `before`, and `order`
-- the freshness rules and recording hooks attached to those runs
+- the declared runs from active profiles
+- the run order DevCovenant must enforce
+- freshness and recording settings for those runs
 
-If active profiles contribute generated workflow fragments or proof-job
-fragments, the tracked registry records the resolved workflow metadata they
-contribute.
-That includes generated GitHub Actions job structure and action-version
-inputs and workflow-level environment values that later render into
-`.github/workflows/ci.yml`.
-Tracked registry state also records resolved package and dependency inputs that
-affect the public release contract, such as conditional support-floor
-dependencies and the managed-doc descriptors that feed version-stable package
-links.
-If active profiles contribute managed-environment metadata, tracked state
-records that resolved execution contract too.
-That includes the selected interpreter expectations, command templates such as
-`{current_python}` / `{managed_python}`, and cleanup-protected roots the
-runtime actually uses.
-
-Separately from tracked registry state, the same refresh pass may also
-regenerate output surfaces such as `.gitignore`, `.pre-commit-config.yaml`,
-and `.github/workflows/ci.yml`.
-Those files are related to the tracked registry, but they are not themselves
-embedded as giant blobs inside the registry.
-The registry records the resolved inputs and ownership, while the generated
-files carry the rendered surface.
-That includes active-profile `ignore_dirs` contributions.
-Refresh records them in tracked profile metadata before rendering shared
-exclude surfaces such as `.gitignore` and `.pre-commit-config.yaml`.
-The tracked workflow metadata also records runner-facing environment values
-that affect generated proof behavior, such as external bytecode-cache prefixes
-used to keep CI-created `*.pyc` junk out of repository snapshots.
-When workflow generation moves those values from static job metadata into
-GitHub-safe setup steps, the tracked registry still records the same resolved
-workflow intent through the contributed step structure and rendered contract.
-
-The helper ownership matches that split:
-- `devcovenant/core/services/tracked_registry.py` owns tracked-registry paths
-  and tracked-registry document I/O
-- `devcovenant/core/services/policy_registry.py` owns policy descriptors,
-  script resolution, and tracked policy state
-- `devcovenant/core/services/manifest_inventory.py` owns tracked inventory
-  persistence for required paths plus the available-doc and enabled-doc
-  inventory views
-- `devcovenant/core/flow/workflow_contract.py` owns workflow-contract
-  normalization and run resolution
-
-Commit tracked-registry changes when they are the result of real repo changes.
+If active profiles contribute workflow fragments or generated-file inputs, the
+tracked registry records the resolved inputs that later render into generated
+files such as `.gitignore`, `.pre-commit-config.yaml`, and
+`.github/workflows/ci.yml` when a CI-owner profile is active.
 
 ## Runtime Registry
-`devcovenant/registry/runtime/` stores runtime-local state such as:
+`devcovenant/registry/runtime/` stores local working state such as:
 - `gate_status.json`
 - `workflow_session.json`
 - latest-run pointers
 - session snapshot companions
 
-This state is about current or recent command history, not about the stable
-repo contract.
-It is also the registry surface cleaned by `devcovenant clean --registry`
-and by the registry portion of `devcovenant clean --all`.
-Tracked registry state in `devcovenant/registry/registry.yaml` is preserved.
-
-The runtime path contract is configured through ordinary config sections,
-primarily `paths.*`.
-That means `gate_status_file` and `workflow_session_file` are just runtime path
-knobs in config, not a separate engine metadata family.
-They must still remain repo-relative paths under
-`devcovenant/registry/runtime/` so runtime evidence stays disposable and local.
+This is about local command history, not the saved repository setup.
+It is the part cleaned by `devcovenant clean --registry` and by the registry
+portion of `devcovenant clean --all`.
+The tracked registry in `devcovenant/registry/registry.yaml` is preserved.
 
 ## Gate Status And Workflow Session
-`gate_status.json` is the short gate lifecycle ledger.
-It records gate start/end state and the pre-commit evidence those anchors
-require.
+`gate_status.json` records gate-stage state and the pre-commit evidence tied to
+those stages.
 
-`workflow_session.json` records the declared workflow runs for the active
-session, their pass/fail state, their freshness evidence, and the snapshots
-used to decide whether a run is still fresh.
-`gate --status` reads both files so it can report the real public lifecycle
-stage, including `mid`, without pretending the workflow is only
-`start -> run -> end`.
+`workflow_session.json` records the declared runs for the open session,
+whether they passed, and whether the results are still fresh.
 
-The tracked counterpart to that runtime state is `workflow_contract` in
-`devcovenant/registry/registry.yaml`.
-That tracked section records the resolved anchors, run order, and run metadata.
-The runtime registry records whether the current or last session actually
-satisfied that contract.
+`devcovenant gate --status` reads both files so it can tell you where the work
+slice stands.
+
+The tracked counterpart to that local state is the workflow section named
+`workflow_contract` in `devcovenant/registry/registry.yaml`.
+That section says what the workflow should be.
+The runtime registry says whether the open or last session satisfied it.
 
 ## Managed Docs And Maps
-Tracked managed-doc entries record descriptor paths, enablement,
-authoritative/import-source state, governance-header flags, and body
-fingerprints.
-They do not try to duplicate full rendered document bodies.
+Tracked managed-doc entries record which descriptor won for each target
+path and whether that doc is enabled.
+They do not try to copy full rendered document bodies into the registry.
 
-Tracked inventory is separate from tracked managed-doc descriptors:
-- managed-doc entries describe the winning descriptor for each target path
-- tracked inventory records which managed docs are available and which are
-  enabled for this repo
-
-That same tracked state also feeds generated governance surfaces such as:
+That tracked state also feeds generated files such as:
 - `AGENTS.md`
 - `PROFILE_MAP.md`
 - `POLICY_MAP.md`
 
-For `AGENTS.md`, the runtime renders the managed workflow block, the
-project-governance block, and the resolved policy block.
-The AGENTS helper ownership is:
-- `devcovenant/core/lib/agents_blocks.py` for policy-block rendering helpers
-- `devcovenant/core/services/managed_docs.py` for managed-doc sync and block
-  placement
-- `devcovenant/core/services/project_governance.py` for project-governance
-  section content
+## Which Registry Should You Read?
+Read `devcovenant/registry/registry.yaml` when you need to know:
+- which profiles are active
+- which workflow runs exist
+- which managed docs are enabled
+- which profile contributed a generated input
+- which saved DevCovenant settings are in force
 
-## When To Read Which Surface
-Read `registry.yaml` when you need to understand:
-1. resolved metadata
-2. active profiles
-3. managed-doc ownership and descriptor state
-4. which workflow runs are configured and why
-5. which profile contributed a generated workflow fragment or other generation
-   input
-6. which cleanup targets came from profiles versus which protected roots came
-   from runtime-owned sources
-
-Read `registry/runtime/` when you need to understand:
+Read `devcovenant/registry/runtime/` when you need to know:
 - whether a gate session is open
 - whether `mid` or `end` has been satisfied
-- whether workflow evidence is fresh
+- whether workflow evidence is still fresh
 - which run failed most recently
-- which run log folder belongs to the active slice
+- which run-log folder belongs to the active slice
 
-## Practical Debug Rule
-If the question is "what is the repo contract?", read the tracked registry.
-If the question is "what happened during this slice?", read the runtime
-registry and run logs.
-
-That split is what keeps DevCovenant debuggable instead of turning every file
-under `devcovenant/registry/` into one undifferentiated pile of state.
+## Practical Rule
+If the question is "what should this repository be doing?", read the tracked
+registry.
+If the question is "what happened during this work slice?", read the runtime
+registry and the run logs.

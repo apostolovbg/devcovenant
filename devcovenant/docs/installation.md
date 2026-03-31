@@ -1,33 +1,26 @@
 # Installation and Lifecycle
-**Last Updated:** 2026-03-30
+**Last Updated:** 2026-03-31
 **Project Version:** 1.0.1
 
 ## Overview
-This document is the normative home for the lifecycle command contract.
-Use it for the machine-install and lifecycle command story.
-Keep `devcovenant/docs/contracts.md` nearby when you need the stable document
-map for the rest of the runtime surfaces.
-It explains how to install the DevCovenant CLI, when to use `pipx` versus a
-source checkout, and what each lifecycle command changes inside a repository.
+This page explains how to install DevCovenant, when to use `pipx` versus a
+source checkout, and what each lifecycle command does inside a repository.
 
-DevCovenant separates setup from activation.
-That split is deliberate.
+DevCovenant separates setup from activation:
+- `install` copies DevCovenant into the repository and writes the starting
+  config
+- `deploy` applies that reviewed config and writes the managed outputs
 
-`install` puts the runtime into the repository and writes a review-required
-config baseline.
-`deploy` activates that reviewed config and writes the governed outputs.
-
-That means the important human decision happens between those two commands,
-not inside them.
-You review `devcovenant/config.yaml`, decide how the repo should behave, and
-only then let `deploy` activate the contract.
+The important human decision happens between those two commands.
+Review `devcovenant/config.yaml`, decide how the repository should work, and
+only then run `deploy`.
 
 ## Before You Start
 You need:
-- a machine-level way to run DevCovenant: `pipx` for normal CLI use, or a
-  managed source checkout when you are developing DevCovenant itself
+- a way to run DevCovenant on your machine: `pipx` for normal use, or a full
+  source checkout when you are developing DevCovenant itself
 - a git repository
-- Python and the toolchain required by the active profile stack
+- Python and any tools required by the active profile stack
 - permission to create or use the managed environment when that policy is
   enabled
 
@@ -35,24 +28,20 @@ You need:
 Use these two paths deliberately:
 
 1. `pipx` install for normal CLI use.
-   This is the preferred machine-install path when you want to use
-   DevCovenant in one or more repositories.
-   `pipx` keeps DevCovenant in its own application environment instead of
-   mixing it into your user-site Python packages.
+   This is the preferred machine install when you want to use DevCovenant in
+   one or more repositories.
 
 2. source checkout for DevCovenant development.
-   Use the repository-managed environment when you are developing DevCovenant
-   itself, testing unreleased runtime changes, or working directly in this
-   repository.
+   Use a full source checkout only when you are developing DevCovenant itself
+   or testing unreleased changes.
 
 If the console script is unavailable from a source checkout, use
 `python3 -m devcovenant ...`.
-On Windows, `py -m devcovenant ...` is the common equivalent form.
-Every public command also accepts `--quiet`, `--normal`, or `--verbose` as a
-per-invocation output override.
+On Windows, `py -m devcovenant ...` is the usual equivalent form.
+Every public command also accepts `--quiet`, `--normal`, or `--verbose`.
 
 ## Preferred Machine Install
-For ordinary users, install the CLI with `pipx`:
+For normal CLI use, install DevCovenant with `pipx`:
 
 ```bash
 pipx install devcovenant
@@ -66,39 +55,39 @@ pipx upgrade devcovenant
 pipx uninstall devcovenant
 ```
 
-That machine-level install is separate from repository activation.
+That machine install is separate from repository activation.
 Installing the CLI makes `devcovenant` available on the machine.
-Running `devcovenant install` inside a repository seeds DevCovenant into that
+Running `devcovenant install` inside a repository adds DevCovenant to that
 repository.
 
 ## Install Versus Deploy
 The shortest accurate model is:
+
 1. `install` is setup.
-   It copies the runtime, seeds config, and records enough baseline state for
-   the repo to become DevCovenant-managed later.
-2. config review is the human checkpoint.
-   Start with `project-governance`: project identity, stage,
-   `maintenance_stance`, `compatibility_policy`, and `versioning_mode`.
-   Those values define the repo's public stance, generated governance headers,
-   AGENTS compatibility guidance, and release-heading behavior.
-   Then decide profile stack, policy activation, runtime contract settings
-   under `paths`, `workflow`, and `integrity`, doc assets, output behavior,
-   and whether `developer_mode` is true or false.
+   It copies DevCovenant into the repository, writes config, and prepares the
+   tracked files DevCovenant needs.
+
+2. config review is the checkpoint.
+   Start with `project-governance`, `developer_mode`, and `profiles.active`.
+   For most repositories, keep `devcovuser` active and add a repo-specific
+   custom profile on top when the repo needs its own rules, assets, or workflow
+   additions. Add `github` when the repository wants a generated GitHub
+   Actions workflow. Use direct overlays only for small local exceptions.
+
 3. `deploy` is activation.
-   It runs the full refresh path and writes managed docs, registry outputs,
-   and other governed artifacts.
+   It runs the full refresh path and writes managed docs, generated files,
+   registry outputs, and other DevCovenant-managed outputs.
 
 `install.config_reviewed` exists only to make that checkpoint explicit.
-It means a human has reviewed the starting config and is ready to activate it.
-It is not a cache key and not a hidden runtime switch.
+It means a human reviewed the starting config and is ready to activate it.
+It is not a hidden switch.
 
 ## Common Starting Situations
 ### Empty Repository
-`install` writes the runtime and config baseline.
-`deploy` creates the initial managed docs and generated governance files.
-Set `project-governance` deliberately before that first `deploy` so the repo's
-initial identity, maturity, and compatibility stance are intentional from the
-start.
+`install` writes the starting runtime files and config.
+`deploy` creates the first managed docs and generated governance files.
+Set `project-governance` before that first `deploy` so the generated docs use
+real project identity and release settings from the start.
 
 ### Repository Seeded With DevCovenant-Shaped Docs
 If the repo already contains compatible `README.md`, `SPEC.md`, `PLAN.md`, or
@@ -106,15 +95,15 @@ similar docs, keep them in place before the first `deploy`.
 Refresh can adopt compatible docs instead of overwriting their authored body.
 
 ### Existing Repository With Real Content
-`install` leaves normal repository files alone.
+`install` leaves ordinary repository files alone.
 `deploy` adds DevCovenant around them using the managed-doc preservation rules.
-Before the first `deploy`, reconcile `project-governance` with the repository
-you already have so generated docs, changelog headings, and AGENTS governance
-guidance describe the real repo instead of a placeholder stance.
+Before the first `deploy`, make sure `project-governance` matches the real
+project so generated docs and headings describe the repository honestly.
 
 ## Lifecycle Commands
 ### install
-Copies the runtime, seeds config, and prepares tracked state.
+Copies DevCovenant into the repository, writes config, and prepares tracked
+state.
 It does not activate managed docs or generated governance files.
 If DevCovenant already exists, `install` stops and points you to `upgrade`.
 
@@ -124,30 +113,23 @@ Runs the full refresh path and writes the active managed outputs.
 
 ### refresh
 Rebuilds tracked registry state, managed docs, generated config sections,
-generated workflow files, `.gitignore`, and related governed artifacts.
+generated workflow files, `.gitignore`, and related outputs.
 
 ### asset
-Materializes one reusable profile asset or managed doc as a Desktop copy.
+Writes a Desktop copy of a shipped profile asset or managed doc template.
 The optional second argument is a filename only, not a path.
 Use `--overwrite` when the Desktop target already exists.
-`asset` reuses the same rendering machinery that refresh uses for plain profile
-assets and the same managed-doc renderer used by descriptor-backed docs such as
-`SPEC.md`.
 
 ### run
-Runs the declared workflow runs for the active contract.
-Use it when a gate command tells you that workflow evidence is stale and must
-be refreshed before a new start baseline or before end-gate closure.
+Runs the declared workflow steps for the repository.
+Use it when a gate command tells you that workflow evidence is stale and
+must be refreshed before a new `gate --start` or before `gate --end`
+can close.
 
 ### clean
-Removes disposable build, cache, runtime-registry, or log artifacts according
-to the resolved cleanup targets.
+Removes disposable build, cache, runtime-registry, or log files according to
+the cleanup rules.
 Run it only after the active gate session is closed.
-The CLI entrypoint lives in `devcovenant/clean.py`, while the flow-layer
-implementation lives in `devcovenant/core/flow/clean_command.py`.
-When the logs scope is selected, `clean` may delete older run folders, but it
-must keep the active clean run folder so the reported summary path stays
-available after the command finishes.
 
 ### upgrade
 Reconciles the installed DevCovenant package from source and then runs
@@ -156,7 +138,7 @@ Use it when DevCovenant is already present and you want the newer runtime.
 
 ### undeploy
 Removes managed outputs while keeping the installed core and config.
-Use it when you want to deactivate the governed outputs without uninstalling
+Use it when you want to deactivate the managed outputs without uninstalling
 DevCovenant entirely.
 
 ### uninstall
@@ -167,6 +149,8 @@ Use it only when you are truly removing DevCovenant from the repo.
 The published package intentionally ships the runtime-facing docs and profile
 assets that DevCovenant needs at install time:
 - the packaged `devcovenant/README.md` and `devcovenant/VERSION`
+- the packaged `devcovenant/runtime-requirements.lock` used to bootstrap the
+  generic GitHub Actions workflow
 - the built-in policy descriptors under `devcovenant/builtin/policies`
 - the built-in profile descriptors, translators, and asset templates under
   `devcovenant/builtin/profiles`
@@ -174,8 +158,8 @@ assets that DevCovenant needs at install time:
 - the tracked `README.md` files for `devcovenant/logs` and
   `devcovenant/registry`
 
-The published package must not ship live repository state or development
-debris such as:
+The published package must not ship live repository state or local debris such
+as:
 - `devcovenant/config.yaml`
 - `devcovenant/registry/registry.yaml`
 - `devcovenant/registry/runtime/**`
@@ -183,18 +167,14 @@ debris such as:
 - local test trees, build trees, or `*.egg-info` outputs
 
 `MANIFEST.in` and `pyproject.toml` should keep that boundary explicit.
-Published package metadata should declare only Python versions that the
-release workflow actually proves, and support-floor backports such as
-conditional dependencies belong in both package metadata and lock inputs when
-the floor needs them.
-Package-facing documentation links should resolve to release-stable docs and
-changelog surfaces for the published version instead of drifting with a
-mutable branch head.
-Package builds should be quiet: no stale MANIFEST exclusions, no ambiguous
-package-discovery warnings, and no accidental runtime-state leakage.
+Package metadata should only claim Python versions that the release workflow
+actually proves.
+Package links should point at release-stable docs instead of a moving branch
+head.
 
 ## First-Time Setup Runbook
 Use this as the practical first integration flow:
+
 1. Run `devcovenant install`.
 2. Open `devcovenant/config.yaml` and review:
    - `project-governance`
@@ -208,7 +188,7 @@ Use this as the practical first integration flow:
    - `engine.*`
 3. Set `install.config_reviewed: true`.
 4. Run `devcovenant deploy`.
-5. Prove the activated baseline with the full gate cycle:
+5. Prove the reviewed setup with the full gate cycle:
 
    ```bash
    devcovenant gate --start
@@ -217,43 +197,29 @@ Use this as the practical first integration flow:
    devcovenant gate --end
    ```
 
-That first full cycle matters.
-It is the proof that the repository can actually operate under the reviewed
-contract.
-For a normal repository, that proof should come before adding custom policies
-or profiles under `devcovenant/custom/`.
-Reach the first reviewed baseline first.
-Review baseline first, prove that baseline, and only then add custom policies
-or custom profiles.
-Then add custom extensions deliberately on top of an already-working normal
-activation.
+For a normal repository, do that first cycle before adding custom policies or
+profiles under `devcovenant/custom/`.
+Start from a clean working base, then add repo-specific extensions on top.
 
 ## Developer Mode
 `developer_mode: false` means a normal repository using DevCovenant as a tool.
 
-`developer_mode: true` means the repository itself is being used to develop
-DevCovenant.
-That enables development surfaces that ordinary user repos should not keep.
-
-When `developer_mode: false`, deploy cleanup removes DevCovenant development
-paths that do not belong in normal repos.
-That is why the baseline-first rule matters: review baseline first, then add
-custom extensions deliberately.
+`developer_mode: true` means the repository is being used to develop
+DevCovenant itself.
+That enables development-only paths that ordinary user repositories should not
+keep.
 
 ## Managed Environment Notes
-When the managed-environment policy is enabled, DevCovenant resolves one target
-execution environment for each CLI stage.
-It first reuses the current interpreter when that interpreter already matches
-the metadata contract and its declared external prerequisites still resolve.
-If not, it selects the configured interpreter or environment root and only
-then runs `managed_commands` to prepare it.
-If no automatic bootstrap commands are declared yet, non-gate command-stage
-operations such as `check` or `refresh` may continue from the current
-interpreter until the target environment exists.
-That keeps `gate --start` non-destructive once a repo-managed environment
-already satisfies the contract.
-If the resolved interpreter path exists but is not executable, DevCovenant
-stops with an explicit error so you can fix the path or permissions directly.
+When the managed-environment policy is enabled, DevCovenant chooses one target
+environment for each command stage.
+If the current interpreter already matches that setup, DevCovenant reuses it.
+If not, it selects the configured interpreter or environment root and then runs
+any declared bootstrap commands.
+If the selected interpreter path exists but is not executable, DevCovenant
+stops with a clear error.
+If the repository uses a bench-managed or other custom environment, declare
+that environment through the profile stack or metadata overlays instead of
+expecting DevCovenant to guess an unknown layout.
 
 ## Quick Reference
 ```bash

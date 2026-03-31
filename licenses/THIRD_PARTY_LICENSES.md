@@ -5,8 +5,6 @@ manifests and the corresponding license texts stored under `licenses/`.
 
 ## License Report
 - `pyproject.toml`
-- `requirements.in`
-- `requirements.lock`
 
 ## Dependency License Inventory
 - `packaging==26.0`: `licenses/packaging-26.0.txt`

@@ -58,7 +58,8 @@ exclude: |-
   (?x)
   (^|/)
   (
-    artifacts
+    \.gha\-pycache
+    | artifacts
     | \.proof\-wheel
     | \.proof\-sdist
     | \.proof\-py310
@@ -72,7 +73,6 @@ exclude: |-
     | dist
     | \.git
     | \.python
-    | \.gha\-pycache
     | output
     | logs
     | node_modules

@@ -38,6 +38,9 @@ body: |-
   ## Configuration Checkpoints
   Call out the few settings or files a human must review consciously.
   Prefer short explanations of what each checkpoint controls.
+  For most repositories, keep `devcovuser` active and add a repo-specific
+  custom profile on top when the repository needs its own reusable rules,
+  assets, or workflow additions.
 
   ## Docs Map
   List the smaller set of deeper docs and say what each one is for.

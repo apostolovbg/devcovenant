@@ -50,6 +50,10 @@ def _unit_test_install_writes_config_reviewed_and_manifest() -> None:
 
         config_path = repo_root / "devcovenant" / "config.yaml"
         assert config_path.exists()
+        runtime_requirements = (
+            repo_root / "devcovenant" / "runtime-requirements.lock"
+        )
+        assert runtime_requirements.exists()
         config = _read_yaml(config_path)
         install_block = config.get("install", {})
         assert isinstance(install_block, dict)
@@ -561,6 +565,7 @@ def _unit_test_pyproject_uses_pep639_license_metadata() -> None:
     for required in [
         "README.md",
         "VERSION",
+        "runtime-requirements.lock",
         "docs/*.md",
         "docs/*.png",
         "logs/README.md",
@@ -588,6 +593,7 @@ def _unit_test_manifest_includes_license_artifacts() -> None:
     assert "include licenses/THIRD_PARTY_LICENSES.md" in content
     assert "recursive-include licenses *.txt" in content
     assert "include devcovenant/logs/README.md" in content
+    assert "include devcovenant/runtime-requirements.lock" in content
     assert "recursive-include devcovenant/docs *" in content
     assert "recursive-include devcovenant/builtin/profiles *" in content
     assert "recursive-include devcovenant/builtin/policies *" in content
@@ -650,6 +656,12 @@ def _unit_test_wheel_excludes_runtime_logs_but_keeps_logs_readme() -> None:
     _assert_runtime_outputs_excluded_from_wheel(entries)
 
 
+def _unit_test_wheel_includes_runtime_requirements_lock() -> None:
+    """Wheel should ship the runtime lock used by generic GitHub CI."""
+    entries = _cached_wheel_entries()
+    assert "devcovenant/runtime-requirements.lock" in entries
+
+
 def _unit_test_install_symbol_contract_is_stable() -> None:
     """Install module should keep key command symbols stable."""
     assert hasattr(install, "replace_core_package")
@@ -708,6 +720,10 @@ class GeneratedUnittestCases(unittest.TestCase):
     def test_wheel_excludes_runtime_logs_but_keeps_logs_readme(self):
         """Run test_wheel_excludes_runtime_logs_but_keeps_logs_readme."""
         _unit_test_wheel_excludes_runtime_logs_but_keeps_logs_readme()
+
+    def test_wheel_includes_runtime_requirements_lock(self):
+        """Run test_wheel_includes_runtime_requirements_lock."""
+        _unit_test_wheel_includes_runtime_requirements_lock()
 
     def test_install_symbol_contract_is_stable(self):
         """Run test_install_symbol_contract_is_stable."""

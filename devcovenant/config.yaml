@@ -37,6 +37,8 @@ developer_mode: true
 
 # Ordered profile list. `global` should stay first.
 
+# Add `github` when the repository wants a generated GitHub Actions workflow.
+
 # Profiles contribute suffixes, assets, metadata overlays, and cleanup overlays.
 
 # Generated diagnostics include profile-level core path mappings.
@@ -49,6 +51,7 @@ profiles:
   active:
   - global
   - defaults
+  - github
   - devcovrepo
   - docs
   - python
@@ -242,15 +245,19 @@ clean:
 
 # Deep-merge patch applied to generated `.github/workflows/ci.yml`.
 
+# Activate the `github` profile to generate the standard GitHub Actions CI workflow.
+
+# The builtin github base bootstraps DevCovenant itself from the shipped `devcovenant/runtime-requirements.lock`, not from project dependency files.
+
 # Active profiles may also contribute reusable ci_and_test fragments.
 
-# Keep the global base workflow language-agnostic.
+# Keep the github-owned base workflow generic.
 
 # Use config overlays only for repo-local CI adjustments.
 
 # Full replacement payload for generated CI-and-test workflow.
 
-# Use only when complete local ownership is required.
+# Use full overrides only when the repository deliberately takes complete ownership.
 
 ci_and_test:
   overlays: {}
@@ -758,6 +765,7 @@ autogen_metadata_overlays:
     - devcovenant/builtin/profiles/*/*.yaml => devcovenant/docs/profiles.md
     - devcovenant/*/profiles/*/*translator.py=> devcovenant/docs/profiles.md
     - devcovenant/builtin/profiles/**/config.yaml => devcovenant/docs/config.md
+    - devcovenant/*/profiles/**/assets/** => devcovenant/docs/profiles.md
     - devcovenant/*/profiles/*/assets/*.yaml=> devcovenant/docs/profiles.md
     - devcovenant/*/profiles/*/assets/*.yml=> devcovenant/docs/profiles.md
     - devcovenant/*/profiles/**/assets/**/*.yaml=> devcovenant/docs/profiles.md

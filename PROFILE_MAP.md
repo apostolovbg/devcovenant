@@ -2,7 +2,7 @@
 **Doc ID:** PROFILE_MAP
 **Doc Type:** reference-map
 **Project Version:** 1.0.1
-**Last Updated:** 2026-03-30
+**Last Updated:** 2026-03-31
 **DevCovenant Version:** 1.0.1
 
 <!-- DEVCOV:BEGIN -->
@@ -20,12 +20,12 @@ this block.
 6. [Operational Notes](#operational-notes)
 
 ## Purpose
-This map documents shipped profile contracts and ownership for 1.0.1.
+This map lists the shipped profiles and who owns them for 1.0.1.
 
 ## Global Rules
 - `global` profile is always active at runtime.
 - Additional profiles are selected by `config.profiles.active`.
-- Profiles provide overlays, selectors, assets, hooks, translators.
+- Profiles provide overlays, selectors, assets, hooks, and translators.
 - Profiles do not activate policies.
 - Builtin/custom profile precedence is path-based.
 - Same-name custom profile overrides same-name builtin profile.
@@ -59,17 +59,20 @@ Framework profiles:
 - `flutter`
 
 Ops/tooling profiles:
+- `github`
 - `docker`
 - `terraform`
 - `kubernetes`
 
 ## Custom Profiles
-- `devcovrepo`: repository-specific overlays/assets for DevCovenant dogfooding,
-  including documentation-route metadata and broader modules-test mirrors.
+- `devcovrepo`: repository-specific profile for developing DevCovenant
+  itself, including documentation-route metadata, broader source-to-test
+  mirrors, and root trust docs such as `SECURITY.md`, `PRIVACY.md`, and
+  `SUPPORT.md`.
 - `restapi`: reusable API (application programming interface) governance
-  profile that tightens API-focused
-  documentation routes, security scope, and test coverage expectations, and
-  seeds `docs/api.md`, `docs/auth.md`, and `docs/errors.md` assets.
+  profile that tightens API-focused documentation routes, security scope,
+  and test coverage expectations, and seeds `docs/api.md`, `docs/auth.md`,
+  and `docs/errors.md` assets.
 
 ## Translator Ownership
 Language profiles with declared translators:
@@ -88,8 +91,8 @@ Language profiles with declared translators:
 - `objective_c`
 - `sql`
 
-Translator declarations are owned by language profile manifests and routed by
-shared translator runtime.
+Translator declarations are owned by language profile manifests and routed
+by the shared translator runtime.
 
 ## Operational Notes
 - Profile overlays are materialized to `autogen_metadata_overlays`.
@@ -101,19 +104,21 @@ shared translator runtime.
   targets; language/framework profiles provide dependency selectors when
   active; `devcovrepo` adds this repository's selectors only.
 - Any active profile category may contribute declared `workflow_runs`;
-  core resolves runs in deterministic order from the tracked
-  workflow contract.
+  core resolves them in deterministic order from the tracked workflow
+  definition.
 - Language profiles may declare `run_events` adapter metadata for the
   relevant workflow run through `devcovenant/core/runtime/event.py`;
-  that contract is separate from translator declarations.
+  that is separate from translator declarations.
 - Session scoping is runtime-owned; profiles should not model policy scope
   switching metadata for bundled checks.
 - Assets are created when missing and preserved when existing content is
   user-authored outside managed blocks.
 - Pre-commit fragments from active profiles merge into generated
   `.pre-commit-config.yaml`, then config overlays and overrides are applied.
-- `ci.yml` is refresh-generated from global template metadata,
-  active profile governance fragments, and config overlays/overrides.
+- `ci.yml` is refresh-generated when an active profile owns
+  `ci_and_test_template`, normally the builtin `github` profile, then active
+  profile governance fragments and config overlays/overrides are merged on
+  top.
 - `.gitignore` is generated from global template metadata plus active profile
   manifest metadata (`gitignore_fragments` or `ignore_dirs`) and
   `config.gitignore.overlays`/`config.gitignore.overrides`.

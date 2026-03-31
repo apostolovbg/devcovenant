@@ -1,4 +1,4 @@
-"""FastAPI profile template application stub for DevCovenant."""
+"""Starter FastAPI application."""
 
 from fastapi import FastAPI
 

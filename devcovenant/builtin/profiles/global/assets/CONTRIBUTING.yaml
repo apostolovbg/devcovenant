@@ -9,15 +9,15 @@ import_seed: true
 authoritative_source: true
 managed_block: |-
   This opening section is managed by DevCovenant.
-  It defines the standard contributor workflow used by
-  DevCovenant-managed repositories. Add repository-specific contributor
-  notes below the managed section.
+  It defines the standard contributor workflow used by repositories that use
+  DevCovenant. Add repository-specific contributor notes below the managed
+  section.
 body: |-
   ## Overview
-  This repository is managed by DevCovenant.
-  Contributors should read `AGENTS.md` first, use `README.md` as the entrypoint,
-  and treat this guide as the short contributor-facing explanation of how work
-  is expected to land.
+  This repository uses DevCovenant.
+  Contributors should read `AGENTS.md` first, use `README.md` as the
+  entrypoint, and treat this guide as the short explanation of how work is
+  expected to land.
 
   ## Before You Change Files
   Make sure you understand:

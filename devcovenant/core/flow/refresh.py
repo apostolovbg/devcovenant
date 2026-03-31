@@ -568,6 +568,10 @@ def _render_config_yaml(payload: dict[str, object]) -> str:
         "# `profiles.generated` is refresh-owned diagnostic state.",
         "# Ordered profile list. `global` should stay first.",
         (
+            "# Add `github` when the repository wants a generated GitHub "
+            "Actions workflow."
+        ),
+        (
             "# Profiles contribute suffixes, assets, metadata overlays, "
             "and cleanup overlays."
         ),
@@ -669,13 +673,25 @@ def _render_config_yaml(payload: dict[str, object]) -> str:
             "`.github/workflows/ci.yml`."
         ),
         (
+            "# Activate the `github` profile to generate the standard GitHub "
+            "Actions CI workflow."
+        ),
+        (
+            "# The builtin github base bootstraps DevCovenant itself from "
+            "the shipped `devcovenant/runtime-requirements.lock`, not from "
+            "project dependency files."
+        ),
+        (
             "# Active profiles may also contribute reusable ci_and_test "
             "fragments."
         ),
-        "# Keep the global base workflow language-agnostic.",
+        "# Keep the github-owned base workflow generic.",
         "# Use config overlays only for repo-local CI adjustments.",
         "# Full replacement payload for generated CI-and-test workflow.",
-        "# Use only when complete local ownership is required.",
+        (
+            "# Use full overrides only when the repository deliberately "
+            "takes complete ownership."
+        ),
         _yaml_block(
             {
                 "ci_and_test": payload.get(
@@ -1182,36 +1198,59 @@ def _merge_mapping_fragment(
     return merged
 
 
-def _load_global_ci_and_test_template(
+def _load_active_ci_and_test_template(
     repo_root: Path,
     profiles_map: dict[str, dict[str, object]],
-) -> dict[str, object]:
-    """Load CI-and-test workflow template from the global profile."""
-    global_profile = profiles_map.get("global", {})
-    template_name = str(global_profile.get("ci_and_test_template", "")).strip()
-    if not template_name:
-        raise ValueError("Global profile is missing ci_and_test_template.")
+    active_profiles: list[str],
+) -> tuple[str, dict[str, object]] | None:
+    """Load the one active CI-and-test workflow template, if any."""
+    active_owners: list[str] = []
+    for profile_name in active_profiles:
+        normalized = str(profile_name or "").strip().lower()
+        if not normalized:
+            continue
+        profile_payload = profiles_map.get(normalized, {})
+        template_name = str(
+            profile_payload.get("ci_and_test_template", "")
+        ).strip()
+        if template_name:
+            active_owners.append(normalized)
 
-    profile_path = str(global_profile.get("path", "")).strip()
+    if not active_owners:
+        return None
+    if len(active_owners) > 1:
+        owners = ", ".join(active_owners)
+        raise ValueError(
+            "Multiple active profiles define ci_and_test_template: "
+            f"{owners}."
+        )
+
+    owner_name = active_owners[0]
+    owner_profile = profiles_map.get(owner_name, {})
+    template_name = str(owner_profile.get("ci_and_test_template", "")).strip()
+    if not template_name:
+        raise ValueError(
+            f"Active profile '{owner_name}' is missing ci_and_test_template."
+        )
+
+    profile_path = str(owner_profile.get("path", "")).strip()
     if not profile_path:
-        raise ValueError("Global profile path is unavailable.")
+        raise ValueError(f"Active profile '{owner_name}' path is unavailable.")
     profile_root = _resolve_path_under_root(
         repo_root,
         profile_path,
-        field_name="global profile root",
+        field_name=f"profile root ({owner_name})",
     )
 
     template_path = _resolve_path_under_root(
         profile_root / "assets",
         template_name,
-        field_name="global CI-and-test template",
+        field_name=f"CI-and-test template ({owner_name})",
     )
     payload = _read_yaml(template_path)
     if not isinstance(payload, dict):
-        raise ValueError(
-            "Global CI-and-test template must contain a YAML mapping."
-        )
-    return payload
+        raise ValueError("CI-and-test template must contain a YAML mapping.")
+    return owner_name, payload
 
 
 def _config_ci_and_test_adjustments(
@@ -1315,18 +1354,33 @@ def _refresh_ci_and_test(
 ) -> bool:
     """Regenerate the CI workflow from template and fragments."""
     profiles_map = _profile_registry_profiles(profile_registry)
-    payload = _load_global_ci_and_test_template(repo_root, profiles_map)
+    overlays, overrides = _config_ci_and_test_adjustments(config)
+    loaded = _load_active_ci_and_test_template(
+        repo_root,
+        profiles_map,
+        active_profiles,
+    )
+    if loaded is None:
+        if overrides:
+            payload = copy.deepcopy(overrides)
+        elif overlays:
+            raise ValueError(
+                "config.ci_and_test.overlays requires an active profile "
+                "that defines ci_and_test_template, such as `github`."
+            )
+        else:
+            return False
+    else:
+        _, payload = loaded
 
     for profile_name in active_profiles:
         normalized = str(profile_name or "").strip().lower()
-        if not normalized or normalized == "global":
+        if not normalized:
             continue
         profile_payload = profiles_map.get(normalized, {})
         fragment = profile_payload.get("ci_and_test")
         if isinstance(fragment, dict):
             payload = _merge_mapping_fragment(payload, fragment)
-
-    overlays, overrides = _config_ci_and_test_adjustments(config)
     if overlays:
         payload = _merge_mapping_fragment(payload, overlays)
     if overrides:

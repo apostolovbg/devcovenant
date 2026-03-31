@@ -423,6 +423,9 @@ policy_overlays:
         devcovenant/builtin/profiles/**/config.yaml =>
         devcovenant/docs/config.md
       - >-
+        devcovenant/*/profiles/**/assets/** =>
+        devcovenant/docs/profiles.md
+      - >-
         devcovenant/*/profiles/*/assets/*.yaml=>
         devcovenant/docs/profiles.md
       - >-
