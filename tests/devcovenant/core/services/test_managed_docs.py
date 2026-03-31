@@ -186,6 +186,44 @@ class GeneratedUnittestCases(unittest.TestCase):
                 raw_yaml=raw_yaml,
             )
 
+    def test_validate_descriptor_allows_license_without_tool_version(
+        self,
+    ) -> None:
+        """License descriptors may omit the DevCovenant version header."""
+        descriptor = {
+            "title": "{{ PROJECT_NAME }} {{ PROJECT_VERSION }}",
+            "target_path": "LICENSE",
+            "doc_id": "LICENSE",
+            "doc_type": "license",
+            "project_version": False,
+            "last_updated": False,
+            "devcovenant_version": False,
+            "managed_block": "",
+            "body": "Permission text.\n",
+        }
+        raw_yaml = "\n".join(
+            [
+                'title: "{{ PROJECT_NAME }} {{ PROJECT_VERSION }}"',
+                "target_path: LICENSE",
+                "doc_id: LICENSE",
+                "doc_type: license",
+                "project_version: false",
+                "last_updated: false",
+                "devcovenant_version: false",
+                "managed_block: ''",
+                "body: |-",
+                "  Permission text.",
+                "",
+            ]
+        )
+
+        managed_docs.validate_managed_doc_descriptor(
+            descriptor,
+            descriptor_path_value=Path("LICENSE.yaml"),
+            doc_name="LICENSE",
+            raw_yaml=raw_yaml,
+        )
+
     def test_authoritative_entries_follow_descriptor_flags(self) -> None:
         """Authoritative doc coverage should come from descriptors."""
         with tempfile.TemporaryDirectory() as temp_dir:
@@ -339,6 +377,85 @@ class GeneratedUnittestCases(unittest.TestCase):
                 assets_root / "README.yaml",
             )
             self.assertIn("Override body.", rendered)
+
+    def test_render_license_doc_uses_only_synced_title_header(self) -> None:
+        """License docs should render one synced title and no metadata."""
+        with tempfile.TemporaryDirectory() as temp_dir:
+            repo_root = Path(temp_dir)
+            install.install_repo(repo_root)
+            state = project_governance.resolve_runtime_state(repo_root)
+            project_version = state.displayed_project_version("")
+            devcovenant_version = (
+                (repo_root / "devcovenant" / "VERSION")
+                .read_text(encoding="utf-8")
+                .strip()
+            )
+
+            rendered = managed_docs.render_doc(
+                repo_root,
+                "LICENSE",
+                project_version=project_version,
+                devcovenant_version=devcovenant_version,
+                project_governance_state=state,
+            )
+
+            self.assertTrue(
+                rendered.startswith(
+                    f"# {state.project_name} {project_version}\n"
+                )
+            )
+            self.assertNotIn("**Doc ID:**", rendered)
+            self.assertNotIn("**Doc Type:**", rendered)
+            self.assertNotIn("**Project Version:**", rendered)
+            self.assertNotIn("**DevCovenant Version:**", rendered)
+            self.assertNotIn("<!-- DEVCOV:BEGIN -->", rendered)
+            self.assertIn(
+                "Copyright (c) YEAR Legal Owner Name",
+                rendered,
+            )
+            self.assertIn("The MIT License (MIT)", rendered)
+            self.assertIn("All rights reserved.", rendered)
+            self.assertIn("Permission is hereby granted", rendered)
+
+    def test_sync_doc_preserves_authored_license_body(self) -> None:
+        """License sync should refresh the title line and keep the body."""
+        with tempfile.TemporaryDirectory() as temp_dir:
+            repo_root = Path(temp_dir)
+            install.install_repo(repo_root)
+            license_path = repo_root / "LICENSE"
+            license_path.write_text(
+                "MIT License\n"
+                "Project Version: 0.0.1\n\n"
+                "Custom legal body.\n"
+                "Second line.\n",
+                encoding="utf-8",
+            )
+
+            state = project_governance.resolve_runtime_state(repo_root)
+            project_version = "1.2.3"
+            devcovenant_version = (
+                (repo_root / "devcovenant" / "VERSION")
+                .read_text(encoding="utf-8")
+                .strip()
+            )
+
+            changed = managed_docs.sync_doc(
+                repo_root,
+                "LICENSE",
+                project_version=project_version,
+                devcovenant_version=devcovenant_version,
+                project_governance_state=state,
+                import_managed_docs=set(),
+            )
+
+            updated = license_path.read_text(encoding="utf-8")
+            self.assertTrue(changed)
+            self.assertTrue(updated.startswith("# Project Name 1.2.3\n"))
+            self.assertIn("Custom legal body.", updated)
+            self.assertIn("Second line.", updated)
+            self.assertNotIn("MIT License\n", updated)
+            self.assertNotIn("Project Version:", updated)
+            self.assertNotIn("<!-- DEVCOV:BEGIN -->", updated)
 
     def test_render_doc_uses_project_governance_identity(self) -> None:
         """Managed docs should render identity from governance state."""

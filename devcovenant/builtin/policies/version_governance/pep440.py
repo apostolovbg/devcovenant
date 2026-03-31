@@ -56,6 +56,12 @@ class Pep440Scheme:
 
     def compare_versions(self, left: Version, right: Version) -> int:
         """Compare two parsed PEP 440 versions."""
+        if (
+            left.release == right.release
+            and right.is_devrelease
+            and not left.is_devrelease
+        ):
+            return -1
         if left < right:
             return -1
         if left > right:

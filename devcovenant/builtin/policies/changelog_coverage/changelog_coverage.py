@@ -143,6 +143,7 @@ _DATE_PATTERN = re.compile(r"^\s*-\s*(\d{4}-\d{2}-\d{2})\b")
 _DEFAULT_GATE_STATUS_PATH = (
     Path("devcovenant") / "registry" / "runtime" / "gate_status.json"
 )
+_LOG_MARKER = "## Log changes here"
 _ALLOWLIST_DOC_SUFFIXES = set(DEFAULT_HEADER_DOC_SUFFIXES)
 _ALLOWLIST_HEADER_KEYS = set(DEFAULT_HEADER_KEYS)
 _ALLOWLIST_HEADER_SCAN_LINES = DEFAULT_HEADER_SCAN_LINES
@@ -264,6 +265,39 @@ def _normalize_paths(raw_value: object, default: list[str]) -> list[str]:
         if token:
             normalized.append(token)
     return normalized
+
+
+def _ordered_release_sections(
+    content: str,
+    *,
+    release_headings: list[str],
+) -> list[tuple[str, str]]:
+    """Return ordered changelog version labels paired with their sections."""
+    start = content.find(_LOG_MARKER)
+    visible = content[start:] if start >= 0 else content
+    _log_index, version_positions = _find_markers(
+        visible,
+        release_headings=release_headings,
+    )
+    sections: list[tuple[str, str]] = []
+    for index, position in enumerate(version_positions):
+        next_position = (
+            version_positions[index + 1]
+            if index + 1 < len(version_positions)
+            else len(visible)
+        )
+        line_end = visible.find("\n", position)
+        if line_end == -1 or line_end > next_position:
+            line_end = next_position
+        header_line = visible[position:line_end].strip()
+        version = ""
+        for heading in release_headings:
+            if header_line.startswith(heading):
+                version = header_line[len(heading) :].strip()
+                break
+        if version:
+            sections.append((version, visible[position:next_position]))
+    return sections
 
 
 def _session_deleted_paths(
@@ -805,6 +839,14 @@ class ChangelogCoverageCheck(PolicyCheck):
             if root_content is not None
             else None
         )
+        ordered_sections = (
+            _ordered_release_sections(
+                root_content,
+                release_headings=release_headings,
+            )
+            if root_content is not None
+            else []
+        )
         section_for_matching = (
             _collapse_line_continuations(root_section)
             if root_section is not None
@@ -863,11 +905,16 @@ class ChangelogCoverageCheck(PolicyCheck):
                         .lower()
                     )
                     snapshot_fingerprint = ""
+                    snapshot_version = ""
+                    snapshot_preserved = False
                     if session_state == "open":
                         snapshot_fingerprint = str(
                             gate_status.get(
                                 "changelog_start_top_entry_fingerprint", ""
                             )
+                        ).strip()
+                        snapshot_version = str(
+                            gate_status.get("changelog_start_top_version", "")
                         ).strip()
                     entry_blocks = _entry_blocks(root_section or "")
                     current_fingerprint = (
@@ -901,6 +948,11 @@ class ChangelogCoverageCheck(PolicyCheck):
                                 _entry_fingerprint(block)
                                 for block in entry_blocks[1:]
                             }
+                            for _version, section_text in ordered_sections[1:]:
+                                preserved_fingerprints.update(
+                                    _entry_fingerprint(block)
+                                    for block in _entry_blocks(section_text)
+                                )
                             if snapshot_fingerprint not in (
                                 preserved_fingerprints
                             ):
@@ -926,6 +978,8 @@ class ChangelogCoverageCheck(PolicyCheck):
                                         can_auto_fix=False,
                                     )
                                 )
+                            else:
+                                snapshot_preserved = True
                     elif not current_fingerprint:
                         violations.append(
                             Violation(
@@ -940,6 +994,43 @@ class ChangelogCoverageCheck(PolicyCheck):
                                     "Create a dated entry at the top of the "
                                     "current version section before listing "
                                     "changed files."
+                                ),
+                                can_auto_fix=False,
+                            )
+                        )
+                    if (
+                        snapshot_preserved
+                        and snapshot_version
+                        and ordered_sections
+                        and ordered_sections[0][0] != snapshot_version
+                        and (
+                            len(ordered_sections) < 2
+                            or ordered_sections[1][0] != snapshot_version
+                            or snapshot_fingerprint
+                            not in {
+                                _entry_fingerprint(block)
+                                for block in _entry_blocks(
+                                    ordered_sections[1][1]
+                                )
+                            }
+                        )
+                    ):
+                        violations.append(
+                            Violation(
+                                policy_id=self.policy_id,
+                                severity="error",
+                                file_path=root_changelog,
+                                message=(
+                                    "When the top changelog version changes "
+                                    "during an open session, prepend a new "
+                                    "version section and keep the prior top "
+                                    "version section directly below it."
+                                ),
+                                suggestion=(
+                                    "Add the fresh entry under a new top "
+                                    f"version heading and keep `## Version "
+                                    f"{snapshot_version}` as the next "
+                                    "section below it."
                                 ),
                                 can_auto_fix=False,
                             )

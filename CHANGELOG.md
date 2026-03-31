@@ -61,6 +61,182 @@ Example:
 ## Version 1.0.1.dev1
 
 - 2026-03-31:
+  Change: restored the missing `1.0.1` and `1.0.0` changelog boundaries,
+    recorded the gate-start top version for live slices, enforced that a
+    version bump prepends a new section instead of relabeling preserved old
+    entries, removed the `?` execution exception from the AGENTS workflow
+    source, and simplified package docs that were still talking like
+    repo-family CI/proof guides.
+  Why: version bumps needed one safe live-session rule that preserves the
+    previous top section without turning old-history resets into a permanent
+    blocker, and package docs still leaked repo-only workflow details.
+  Impact: preserves changelog version sections during active work, keeps
+    older release notes under their original headings, makes `?`
+    unambiguously question-only in the workflow contract, and keeps shipped
+    docs focused on normal user-repository behavior.
+  Files:
+  AGENTS.md
+  CHANGELOG.md
+  LICENSE
+  devcovenant/builtin/policies/changelog_coverage/changelog_coverage.py
+  devcovenant/builtin/policies/changelog_coverage/changelog_coverage.yaml
+  devcovenant/builtin/policies/version_governance/pep440.py
+  devcovenant/builtin/profiles/global/assets/AGENTS.yaml
+  devcovenant/builtin/profiles/global/assets/LICENSE.yaml
+  devcovenant/builtin/profiles/global/assets/config.yaml
+  devcovenant/config.yaml
+  devcovenant/core/flow/gate.py
+  devcovenant/core/flow/gate_changelog_helpers.py
+  devcovenant/core/services/project_governance.py
+  devcovenant/custom/profiles/devcovrepo/assets/docs/installation.md
+  devcovenant/custom/profiles/devcovrepo/assets/docs/config.md
+  devcovenant/custom/profiles/devcovrepo/assets/docs/policies.md
+  devcovenant/custom/profiles/devcovrepo/assets/docs/profiles.md
+  devcovenant/custom/profiles/devcovrepo/assets/docs/refresh.md
+  devcovenant/custom/profiles/devcovrepo/assets/docs/registry.md
+  devcovenant/custom/profiles/devcovrepo/assets/docs/troubleshooting.md
+  devcovenant/custom/profiles/devcovrepo/assets/docs/workflow.md
+  devcovenant/docs/architecture.md
+  devcovenant/docs/config.md
+  devcovenant/docs/installation.md
+  devcovenant/docs/policies.md
+  devcovenant/docs/profiles.md
+  devcovenant/docs/refresh.md
+  devcovenant/docs/registry.md
+  devcovenant/docs/troubleshooting.md
+  devcovenant/docs/workflow.md
+  devcovenant/licenses/LICENSE
+  devcovenant/registry/registry.yaml
+  tests/devcovenant/builtin/policies/changelog_coverage/\
+    test_changelog_coverage.py
+  tests/devcovenant/builtin/policies/version_governance/\
+    test_version_governance.py
+  tests/devcovenant/core/runtime/test_execution.py
+  tests/devcovenant/core/services/test_managed_docs.py
+  tests/devcovenant/core/services/test_project_governance.py
+
+- 2026-03-31:
+  Change: added `project-governance.copyright_notice`,
+    rendered the global `LICENSE` template from
+    `{{ COPYRIGHT_NOTICE }}`, seeded `All rights reserved.` as the next
+    legal line, and restored `The MIT License (MIT)` directly above the
+    legal text.
+  Why: replaced the hardcoded devcovenant copyright owner in the
+    builtin all-repos template with explicit repo-owned copyright
+    metadata that the license engine can render correctly.
+  Impact: makes seeded licenses carry repo-specific copyright text,
+    keeps the simple `# project-name version` title model, restores the
+    expected MIT body heading, and leaves the package copy as an exact
+    mirror of the root `LICENSE`.
+  Files:
+  CHANGELOG.md
+  LICENSE
+  devcovenant/builtin/profiles/global/assets/LICENSE.yaml
+  devcovenant/builtin/profiles/global/assets/config.yaml
+  devcovenant/config.yaml
+  devcovenant/core/services/project_governance.py
+  devcovenant/custom/profiles/devcovrepo/assets/docs/config.md
+  devcovenant/custom/profiles/devcovrepo/assets/docs/installation.md
+  devcovenant/custom/profiles/devcovrepo/assets/docs/policies.md
+  devcovenant/custom/profiles/devcovrepo/assets/docs/profiles.md
+  devcovenant/custom/profiles/devcovrepo/assets/docs/registry.md
+  devcovenant/custom/profiles/devcovrepo/assets/docs/workflow.md
+  devcovenant/docs/installation.md
+  devcovenant/docs/policies.md
+  devcovenant/docs/workflow.md
+  devcovenant/README.md
+  devcovenant/docs/architecture.md
+  devcovenant/docs/config.md
+  devcovenant/docs/profiles.md
+  devcovenant/docs/registry.md
+  devcovenant/licenses/LICENSE
+  devcovenant/registry/registry.yaml
+  tests/devcovenant/core/services/test_managed_docs.py
+  tests/devcovenant/core/services/test_project_governance.py
+
+- 2026-03-31:
+  Change: changed managed license rendering to sync only the
+    `# project-name version` title, added a general
+    `{{ PROJECT_VERSION }}` placeholder, and kept the packaged
+    `devcovenant/licenses/LICENSE` copy owned only by
+    `package-artifact-mirror`.
+  Why: split all-repo license generation from this repo's
+    in-package artifact mirror so legal text stays user-owned while the
+    root and packaged license identities stay aligned.
+  Impact: makes `LICENSE` behave like the shipped third-party license
+    files, keeps its body editable after the initial seed, and leaves
+    the package copy as an exact mirror instead of mixing generation and
+    copying rules.
+  Files:
+  CHANGELOG.md
+  LICENSE
+  devcovenant/builtin/profiles/global/assets/LICENSE.yaml
+  devcovenant/core/services/managed_docs.py
+  devcovenant/core/services/project_governance.py
+  devcovenant/custom/policies/package_artifact_mirror/\
+    autofix/global.py
+  devcovenant/custom/policies/package_artifact_mirror/\
+    package_artifact_mirror.py
+  devcovenant/custom/policies/package_artifact_mirror/\
+    package_artifact_mirror.yaml
+  devcovenant/custom/profiles/devcovrepo/assets/docs/policies.md
+  devcovenant/custom/profiles/devcovrepo/assets/docs/profiles.md
+  devcovenant/custom/profiles/devcovrepo/assets/docs/registry.md
+  devcovenant/docs/architecture.md
+  devcovenant/docs/policies.md
+  devcovenant/docs/profiles.md
+  devcovenant/docs/registry.md
+  devcovenant/licenses/LICENSE
+  devcovenant/licenses/README.md
+  devcovenant/registry/registry.yaml
+  tests/devcovenant/core/services/test_managed_docs.py
+  tests/devcovenant/core/services/test_project_governance.py
+  tests/devcovenant/custom/policies/package_artifact_mirror/\
+    autofix/test_global.py
+  tests/devcovenant/custom/policies/package_artifact_mirror/\
+    test_package_artifact_mirror.py
+
+- 2026-03-31:
+  Change: updated the managed `LICENSE` source to use project
+    version metadata, taught `package-artifact-mirror` to skip
+    `licenses/README.md`, and rewrote
+    `devcovenant/licenses/README.md` as package-owned artifact help.
+  Why: aligned license identity with the governed project instead of
+    the DevCovenant tool version and preserved package-local README
+    wording without forcing repo-root license prose into the shipped
+    package directory.
+  Impact: makes `LICENSE` carry project metadata instead of tool
+    metadata, keeps the root `LICENSE` mirror stable at
+    `devcovenant/licenses/LICENSE`, and lets the package keep its own
+    explanatory license README outside the exact mirror contract.
+  Files:
+  AGENTS.md
+  CHANGELOG.md
+  LICENSE
+  devcovenant/builtin/profiles/global/assets/LICENSE.yaml
+  devcovenant/core/services/managed_docs.py
+  devcovenant/custom/policies/package_artifact_mirror/\
+    autofix/global.py
+  devcovenant/custom/policies/package_artifact_mirror/\
+    package_artifact_mirror.py
+  devcovenant/custom/policies/package_artifact_mirror/\
+    package_artifact_mirror.yaml
+  devcovenant/custom/profiles/devcovrepo/assets/docs/profiles.md
+  devcovenant/custom/profiles/devcovrepo/assets/docs/policies.md
+  devcovenant/custom/profiles/devcovrepo/assets/docs/registry.md
+  devcovenant/docs/profiles.md
+  devcovenant/docs/policies.md
+  devcovenant/docs/registry.md
+  devcovenant/licenses/LICENSE
+  devcovenant/licenses/README.md
+  devcovenant/registry/registry.yaml
+  tests/devcovenant/custom/policies/package_artifact_mirror/\
+    autofix/test_global.py
+  tests/devcovenant/custom/policies/package_artifact_mirror/\
+    test_package_artifact_mirror.py
+  tests/devcovenant/core/services/test_managed_docs.py
+
+- 2026-03-31:
   Change: renamed the package mirror policy to
     `package-artifact-mirror`, copied the root `LICENSE` into
     `devcovenant/licenses/LICENSE`, and fixed the mirror checker and
@@ -531,6 +707,8 @@ Example:
   tests/devcovenant/core/services/test_profile_registry.py
   tests/devcovenant/custom/policies/readme_sync/test_readme_sync.py
   tests/devcovenant/test_refresh.py
+
+## Version 1.0.1
 
 - 2026-03-30:
   Change: bumped authoritative package, documentation, and managed-source
@@ -6890,6 +7068,8 @@ Example:
   tests/devcovenant/test_cli.py
   tests/devcovenant/test_refresh.py
 
+## Version 1.0.0
+
 - 2026-02-27:
   Change: Updated repository documentation through a full `.md` sweep,
     standardized required `gate --mid` guidance across stale docs/templates,
@@ -7007,3 +7187,12 @@ Example:
   devcovenant/registry/README.md
   licenses/THIRD_PARTY_LICENSES.md
   pyproject.toml
+
+- 2026-01-21:
+  Change: Added initial release for invoice import and notification flow.
+  Why: Defined a first production-ready baseline for billing automation.
+  Impact: Teams can import invoices and send notifications end-to-end.
+  Files:
+  billing/imports/parser.py
+  notifications/worker.py
+  CHANGELOG.md

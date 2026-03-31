@@ -31,6 +31,10 @@ managed docs, workflow generation, packaging inputs, or other DevCovenant-owned
 setup.
 That is not noise by itself.
 It is often the recorded result of a real repository change.
+That project-governance state includes identity fields such as
+`project_name`, `project_description`, `project_version`, and
+`copyright_notice`, so registry diffs can be the expected result of changing
+how managed docs and license text are rendered.
 
 The tracked registry also records the resolved workflow definition.
 That includes:
@@ -46,10 +50,6 @@ files such as `.gitignore`, `.pre-commit-config.yaml`, and
 That includes generated values such as `devcov_core_paths` and profile-owned
 CI fragments, so registry diffs often reflect real scan-boundary or workflow
 input changes.
-It also records repo-owned custom policy metadata, including package mirror
-contracts such as a shipped `devcovenant/requirements.lock` and
-`devcovenant/licenses/**` that mirror canonical repo-root artifacts,
-including the root `LICENSE`.
 
 ## Runtime Registry
 `devcovenant/registry/runtime/` stores local working state such as:

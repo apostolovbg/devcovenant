@@ -48,10 +48,12 @@ def _unit_test_syncs_dir_mirror_and_prunes_extra_files() -> None:
         target = repo_root / "devcovenant" / "licenses"
         source.mkdir(parents=True, exist_ok=True)
         target.mkdir(parents=True, exist_ok=True)
+        (source / "README.md").write_text("root readme\n", encoding="utf-8")
         (source / "THIRD_PARTY_LICENSES.md").write_text(
             "fresh\n", encoding="utf-8"
         )
         (target / "LICENSE").write_text("root license\n", encoding="utf-8")
+        (target / "README.md").write_text("package readme\n", encoding="utf-8")
         (target / "THIRD_PARTY_LICENSES.md").write_text(
             "stale\n", encoding="utf-8"
         )
@@ -66,7 +68,8 @@ def _unit_test_syncs_dir_mirror_and_prunes_extra_files() -> None:
                 "kind": "dir",
                 "source_path": str(source),
                 "target_path": str(target),
-                "preserved_paths": ["LICENSE"],
+                "preserved_paths": ["LICENSE", "README.md"],
+                "ignored_paths": ["README.md"],
             },
         )
 
@@ -78,6 +81,9 @@ def _unit_test_syncs_dir_mirror_and_prunes_extra_files() -> None:
         ) == "fresh\n"
         assert (target / "LICENSE").read_text(encoding="utf-8") == (
             "root license\n"
+        )
+        assert (target / "README.md").read_text(encoding="utf-8") == (
+            "package readme\n"
         )
         assert not (target / "EXTRA.txt").exists()
 

@@ -46,6 +46,7 @@ def _write_gate_status(
     tmp_path: Path,
     fingerprint: str,
     *,
+    top_version: str = "1.0.0",
     start_exemption_fingerprints: dict[str, dict[str, str]] | None = None,
     include_start_exemption_fingerprints: bool = True,
     session_state: str = "open",
@@ -70,6 +71,7 @@ def _write_gate_status(
     payload = {
         "changelog_start_top_entry_fingerprint": fingerprint,
         "changelog_start_top_entry_present": bool(fingerprint),
+        "changelog_start_top_version": top_version,
         "session_state": session_state,
         "session_snapshot_file": _SESSION_SNAPSHOT_REL,
     }
@@ -1599,6 +1601,125 @@ def _unit_test_gate_snapshot_allows_prepended_entry(
     assert violations == []
 
 
+def _unit_test_version_bump_requires_previous_section_directly_below(
+    tmp_path: Path, monkeypatch: MonkeyPatch
+):
+    """
+    A version bump must keep the prior top version section below the new one.
+    """
+    today = date.today().isoformat()
+    previous_top = (
+        f"- {today}:\n"
+        "  Change: Updated baseline entry for previous session\n"
+        "  Why: Clarified prior behavior in docs\n"
+        "  Impact: Users saw stable policy messaging\n"
+        "  Files:\n"
+        "  docs/old.md\n"
+    )
+    new_top = (
+        f"- {today}:\n"
+        "  Change: Updated module behavior for the new version\n"
+        "  Why: Clarified the new release boundary\n"
+        "  Impact: Users see the new version at the top of the log\n"
+        "  Files:\n"
+        "  src/module.py\n"
+    )
+    older_entry = (
+        "- 2026-03-30:\n"
+        "  Change: Updated older release notes\n"
+        "  Why: Preserved the older section below\n"
+        "  Impact: Users can still read older release notes\n"
+        "  Files:\n"
+        "  docs/older.md\n"
+    )
+    (tmp_path / "CHANGELOG.md").write_text(
+        (
+            "## Version 1.0.1\n"
+            f"{new_top}{previous_top}"
+            "## Version 1.0.0\n"
+            f"{older_entry}"
+        ),
+        encoding="utf-8",
+    )
+    _write_gate_status(
+        tmp_path,
+        _fingerprint(previous_top),
+        top_version="1.0.0",
+    )
+    _set_git_diff(monkeypatch, "src/module.py\n")
+
+    checker = _make_checker(tmp_path)
+    context = CheckContext(repo_root=tmp_path, all_files=[])
+    violations = checker.check(context)
+
+    assert any(
+        "prior top version section directly below it" in item.message
+        for item in violations
+    )
+
+
+def _unit_test_version_bump_allows_previous_entry_in_previous_section(
+    tmp_path: Path, monkeypatch: MonkeyPatch
+):
+    """
+    A version bump passes when the preserved entry stays in its old section.
+    """
+    today = date.today().isoformat()
+    previous_top = (
+        f"- {today}:\n"
+        "  Change: Updated baseline entry for previous session\n"
+        "  Why: Clarified prior behavior in docs\n"
+        "  Impact: Users saw stable policy messaging\n"
+        "  Files:\n"
+        "  docs/old.md\n"
+    )
+    new_top = (
+        f"- {today}:\n"
+        "  Change: Updated module behavior for the new version\n"
+        "  Why: Clarified the new release boundary\n"
+        "  Impact: Users see the new version at the top of the log\n"
+        "  Files:\n"
+        "  src/module.py\n"
+    )
+    older_entry = (
+        "- 2026-03-30:\n"
+        "  Change: Updated older release notes\n"
+        "  Why: Preserved the older section below\n"
+        "  Impact: Users can still read older release notes\n"
+        "  Files:\n"
+        "  docs/older.md\n"
+    )
+    (tmp_path / "CHANGELOG.md").write_text(
+        (
+            "## Version 1.0.1\n"
+            f"{new_top}"
+            "## Version 1.0.0\n"
+            f"{previous_top}{older_entry}"
+        ),
+        encoding="utf-8",
+    )
+    _write_gate_status(
+        tmp_path,
+        _fingerprint(previous_top),
+        top_version="1.0.0",
+    )
+    _set_git_diff(monkeypatch, "src/module.py\n")
+
+    checker = _make_checker(tmp_path)
+    context = CheckContext(repo_root=tmp_path, all_files=[])
+    violations = checker.check(context)
+
+    assert violations == []
+
+
+_VERSION_BUMP_REQUIRES_PREVIOUS_SECTION = (
+    _unit_test_version_bump_requires_previous_section_directly_below
+)
+_VERSION_BUMP_ALLOWS_PREVIOUS_SECTION = (
+    _unit_test_version_bump_allows_previous_entry_in_previous_section
+)
+
+
 def _unit_test_gate_snapshot_empty_requires_new_entry(
     tmp_path: Path, monkeypatch: MonkeyPatch
 ):
@@ -2218,6 +2339,30 @@ class GeneratedUnittestCases(unittest.TestCase):
                 tmp_path = Path(temp_dir).resolve()
                 _unit_test_gate_snapshot_allows_prepended_entry(
                     tmp_path=tmp_path, monkeypatch=monkeypatch
+                )
+        finally:
+            monkeypatch.undo()
+
+    def test_version_bump_requires_previous_section_directly_below(self):
+        """Run version-bump direct-below-section coverage."""
+        monkeypatch = MonkeyPatch()
+        try:
+            with tempfile.TemporaryDirectory() as temp_dir:
+                _VERSION_BUMP_REQUIRES_PREVIOUS_SECTION(
+                    Path(temp_dir).resolve(),
+                    monkeypatch,
+                )
+        finally:
+            monkeypatch.undo()
+
+    def test_version_bump_allows_previous_entry_in_previous_section(self):
+        """Run version-bump preserved-previous-section coverage."""
+        monkeypatch = MonkeyPatch()
+        try:
+            with tempfile.TemporaryDirectory() as temp_dir:
+                _VERSION_BUMP_ALLOWS_PREVIOUS_SECTION(
+                    Path(temp_dir).resolve(),
+                    monkeypatch,
                 )
         finally:
             monkeypatch.undo()

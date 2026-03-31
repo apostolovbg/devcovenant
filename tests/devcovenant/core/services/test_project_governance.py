@@ -53,6 +53,10 @@ class GeneratedUnittestCases(unittest.TestCase):
                 "Describe the project this repository ships",
                 state.project_description,
             )
+            self.assertEqual(
+                state.copyright_notice,
+                "YEAR Legal Owner Name",
+            )
             self.assertEqual(state.stage, "prototype")
             self.assertEqual(state.maintenance_stance, "active")
             self.assertEqual(state.compatibility_policy, "unspecified")
@@ -120,6 +124,7 @@ class GeneratedUnittestCases(unittest.TestCase):
             project_description=(
                 "devcovenant is a repository governance framework."
             ),
+            copyright_notice="2026 DevCovenant Authors",
             stage="stable",
             maintenance_stance="active",
             compatibility_policy="forward-only",
@@ -132,6 +137,10 @@ class GeneratedUnittestCases(unittest.TestCase):
         self.assertEqual(
             payload["project_description"],
             "devcovenant is a repository governance framework.",
+        )
+        self.assertEqual(
+            payload["copyright_notice"],
+            "2026 DevCovenant Authors",
         )
         self.assertEqual(payload["project_version"], "1.2.3")
         self.assertEqual(payload["stage"], "stable")
@@ -203,3 +212,28 @@ class GeneratedUnittestCases(unittest.TestCase):
             tomllib.loads(rendered)["description"],
             state.project_description,
         )
+
+    def test_render_identity_placeholders_replaces_project_version(self):
+        """Identity placeholders should support project-version titles."""
+        state = ProjectGovernanceState(project_name="devcovenant")
+
+        rendered = render_identity_placeholders(
+            "{{ PROJECT_NAME }} {{ PROJECT_VERSION }}",
+            state,
+            project_version="1.0.1.dev1",
+        )
+
+        self.assertEqual(rendered, "devcovenant 1.0.1.dev1")
+
+    def test_render_identity_placeholders_replaces_copyright_notice(self):
+        """Identity placeholders should support copyright notice text."""
+        state = ProjectGovernanceState(
+            copyright_notice="2026 DevCovenant Authors"
+        )
+
+        rendered = render_identity_placeholders(
+            "Copyright (c) {{ COPYRIGHT_NOTICE }}",
+            state,
+        )
+
+        self.assertEqual(rendered, "Copyright (c) 2026 DevCovenant Authors")

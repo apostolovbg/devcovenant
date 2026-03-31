@@ -605,7 +605,7 @@ def _unit_test_ci_workflow_split_docs_are_consistent() -> None:
     assert "repo-maintained copy of" not in profiles
     assert "`ci_and_test`" in profiles
     assert "builtin `github` workflow template should stay generic" in profiles
-    assert "If a repo family needs extra proof" in profiles
+    assert "If a repository needs extra project dependency setup" in profiles
     assert "When the builtin `github` profile is active" in workflow
     assert "The github-owned base should stay generic." in workflow
     assert "active profiles may contribute `ci_and_test` fragments" in (

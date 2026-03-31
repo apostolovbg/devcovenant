@@ -460,6 +460,28 @@ def _unit_test_pep440_prerelease_bump_passes(tmp_path: Path) -> None:
     assert check.check(context) == []
 
 
+def _unit_test_pep440_dev_review_line_can_follow_same_base_final_section(
+    tmp_path: Path,
+) -> None:
+    """PEP 440 review lines may reopen the same base version with `.devN`."""
+    version_file, changelog, other_file = _write_version_files(
+        tmp_path,
+        "1.0.1.dev1",
+        "1.0.1",
+        "- 2026-03-16: reopen release for review",
+    )
+    context = CheckContext(
+        repo_root=tmp_path,
+        changed_files=[version_file, changelog, other_file],
+    )
+    check = _configured_policy(
+        scheme="pep440",
+        enforce_bumping=True,
+        semver_scope_tags_required=False,
+    )
+    assert check.check(context) == []
+
+
 def _unit_test_pep440_invalid_format_is_rejected(tmp_path: Path) -> None:
     """PEP 440 mode should reject non-PEP 440 strings."""
     version_file, changelog, other_file = _write_version_files(
@@ -722,6 +744,11 @@ def _unit_test_unsupported_scheme_is_rejected(tmp_path: Path) -> None:
     )
 
 
+_PEP440_DEV_REVIEW_LINE = (
+    _unit_test_pep440_dev_review_line_can_follow_same_base_final_section
+)
+
+
 class GeneratedUnittestCases(unittest.TestCase):
     """unittest wrappers for module-level tests."""
 
@@ -834,6 +861,13 @@ class GeneratedUnittestCases(unittest.TestCase):
         """Run pep440 prerelease-bump coverage."""
         with tempfile.TemporaryDirectory() as temp_dir:
             _unit_test_pep440_prerelease_bump_passes(Path(temp_dir).resolve())
+
+    def test_pep440_dev_review_line_can_follow_same_base_final_section(
+        self,
+    ):
+        """Run pep440 same-base dev review-line coverage."""
+        with tempfile.TemporaryDirectory() as temp_dir:
+            _PEP440_DEV_REVIEW_LINE(Path(temp_dir).resolve())
 
     def test_pep440_invalid_format_is_rejected(self):
         """Run pep440 format validation coverage."""

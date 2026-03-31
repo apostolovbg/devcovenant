@@ -81,6 +81,23 @@ def _latest_changelog_entry(repo_root: Path) -> str:
     return "\n".join(lines[entry_start:entry_end]).strip()
 
 
+def _latest_changelog_version(repo_root: Path) -> str:
+    """Return the topmost changelog version label from the latest section."""
+    changelog_path = repo_root / _resolve_main_changelog(repo_root)
+    if not changelog_path.exists():
+        return ""
+    lines = _visible_changelog_lines(
+        changelog_path.read_text(encoding="utf-8")
+    )
+    release_headings = _resolve_release_headings(repo_root)
+    for line in lines:
+        stripped = line.strip()
+        for heading in release_headings:
+            if stripped.startswith(heading):
+                return stripped[len(heading) :].strip()
+    return ""
+
+
 def _resolve_main_changelog(repo_root: Path) -> Path:
     """Resolve main changelog path from changelog-coverage metadata."""
     metadata = _load_changelog_metadata(repo_root)

@@ -394,6 +394,9 @@ policy_state:
 # `project_name` and `project_description` are the project-identity source of
 # truth used by managed README surfaces and package metadata surfaces that
 # DevCovenant owns or synchronizes.
+# `copyright_notice` seeds the global `LICENSE` template through
+# `{{ COPYRIGHT_NOTICE }}`. Keep it as the full notice tail after
+# `Copyright (c)`, for example `2026 Example Corp`.
 # `stage` must be listed in `allowed_stages`.
 # `maintenance_stance` must be listed in `allowed_maintenance_stances`.
 # `compatibility_policy` must be `backward-compatible`,
@@ -416,6 +419,7 @@ project-governance:
   project_description: >-
     Describe the project this repository ships: what it does, who it helps,
     and what problem it solves.
+  copyright_notice: YEAR Legal Owner Name
   stage: prototype
   maintenance_stance: active
   compatibility_policy: unspecified

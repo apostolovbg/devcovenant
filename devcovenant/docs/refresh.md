@@ -89,7 +89,8 @@ The active model is:
   path
 - later active profiles win over earlier ones for the same target path
 
-That is how a repo family can reuse the shared base while still replacing
+That is how a shared custom profile can reuse the shared base while still
+replacing
 individual docs such as `SECURITY.md`, `PRIVACY.md`, or `SUPPORT.md`
 without pushing repo-specific prose into package docs.
 

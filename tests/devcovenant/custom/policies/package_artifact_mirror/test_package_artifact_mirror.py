@@ -24,6 +24,7 @@ def _build_check() -> PackageArtifactMirrorCheck:
                 "LICENSE=>devcovenant/licenses/LICENSE",
             ],
             "dir_mirrors": ["licenses=>devcovenant/licenses"],
+            "dir_skip_paths": ["licenses=>README.md"],
         },
         {},
     )
@@ -40,6 +41,10 @@ def _unit_test_reports_missing_file_and_dir_mirrors() -> None:
         (repo_root / "LICENSE").write_text("root license\n", encoding="utf-8")
         licenses_dir = repo_root / "licenses"
         licenses_dir.mkdir(parents=True, exist_ok=True)
+        (licenses_dir / "README.md").write_text(
+            "root readme\n",
+            encoding="utf-8",
+        )
         (licenses_dir / "THIRD_PARTY_LICENSES.md").write_text(
             "report\n",
             encoding="utf-8",
@@ -77,12 +82,20 @@ def _unit_test_accepts_exact_file_and_dir_mirrors() -> None:
 
         licenses_dir = repo_root / "licenses"
         licenses_dir.mkdir(parents=True, exist_ok=True)
+        (licenses_dir / "README.md").write_text(
+            "root readme\n",
+            encoding="utf-8",
+        )
         (licenses_dir / "THIRD_PARTY_LICENSES.md").write_text(
             "report\n",
             encoding="utf-8",
         )
         package_licenses = repo_root / "devcovenant" / "licenses"
         package_licenses.mkdir(parents=True, exist_ok=True)
+        (package_licenses / "README.md").write_text(
+            "package readme\n",
+            encoding="utf-8",
+        )
         (package_licenses / "THIRD_PARTY_LICENSES.md").write_text(
             "report\n",
             encoding="utf-8",
@@ -111,12 +124,20 @@ def _unit_test_reports_changed_and_extra_dir_entries() -> None:
 
         licenses_dir = repo_root / "licenses"
         licenses_dir.mkdir(parents=True, exist_ok=True)
+        (licenses_dir / "README.md").write_text(
+            "root readme\n",
+            encoding="utf-8",
+        )
         (licenses_dir / "THIRD_PARTY_LICENSES.md").write_text(
             "report\n",
             encoding="utf-8",
         )
         package_licenses = repo_root / "devcovenant" / "licenses"
         package_licenses.mkdir(parents=True, exist_ok=True)
+        (package_licenses / "README.md").write_text(
+            "package readme\n",
+            encoding="utf-8",
+        )
         (package_licenses / "THIRD_PARTY_LICENSES.md").write_text(
             "stale\n",
             encoding="utf-8",
@@ -145,6 +166,10 @@ def _unit_test_allows_separately_mirrored_file_inside_dir_mirror() -> None:
 
         licenses_dir = repo_root / "licenses"
         licenses_dir.mkdir(parents=True, exist_ok=True)
+        (licenses_dir / "README.md").write_text(
+            "root readme\n",
+            encoding="utf-8",
+        )
         (licenses_dir / "THIRD_PARTY_LICENSES.md").write_text(
             "report\n",
             encoding="utf-8",
@@ -156,6 +181,10 @@ def _unit_test_allows_separately_mirrored_file_inside_dir_mirror() -> None:
 
         package_licenses = repo_root / "devcovenant" / "licenses"
         package_licenses.mkdir(parents=True, exist_ok=True)
+        (package_licenses / "README.md").write_text(
+            "package readme\n",
+            encoding="utf-8",
+        )
         (package_licenses / "LICENSE").write_text(
             "root license\n", encoding="utf-8"
         )

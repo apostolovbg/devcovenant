@@ -90,11 +90,13 @@ class PackageArtifactMirrorCheck(PolicyCheck):
                 repo_root,
                 target_dir,
             )
+            skipped_rel_paths = self._dir_skip_rel_paths(source_rel)
             mismatch = self._dir_mismatch(
                 repo_root,
                 source_dir,
                 target_dir,
                 exempt_rel_paths=exempt_rel_paths,
+                skipped_rel_paths=skipped_rel_paths,
             )
             if mismatch is None:
                 continue
@@ -106,8 +108,15 @@ class PackageArtifactMirrorCheck(PolicyCheck):
                     kind="dir",
                     extra_context={
                         "preserved_paths": [
-                            path.as_posix() for path in exempt_rel_paths
-                        ]
+                            path.as_posix()
+                            for path in sorted(
+                                exempt_rel_paths | skipped_rel_paths
+                            )
+                        ],
+                        "ignored_paths": [
+                            path.as_posix()
+                            for path in sorted(skipped_rel_paths)
+                        ],
                     },
                 )
             )
@@ -174,6 +183,7 @@ class PackageArtifactMirrorCheck(PolicyCheck):
         target_dir: Path,
         *,
         exempt_rel_paths: set[Path],
+        skipped_rel_paths: set[Path],
     ) -> str | None:
         """Return one summary mismatch message for one mirrored directory."""
         source_rel = source_dir.relative_to(repo_root).as_posix()
@@ -186,8 +196,16 @@ class PackageArtifactMirrorCheck(PolicyCheck):
         if not target_dir.is_dir():
             return f"`{target_rel}` exists but is not a directory mirror."
 
-        source_files = self._relative_file_map(source_dir)
-        target_files = self._relative_file_map(target_dir)
+        source_files = {
+            rel_path: path
+            for rel_path, path in self._relative_file_map(source_dir).items()
+            if rel_path not in skipped_rel_paths
+        }
+        target_files = {
+            rel_path: path
+            for rel_path, path in self._relative_file_map(target_dir).items()
+            if rel_path not in skipped_rel_paths
+        }
         missing = sorted(set(source_files) - set(target_files))
         extra = sorted(
             rel_path
@@ -235,6 +253,32 @@ class PackageArtifactMirrorCheck(PolicyCheck):
             except ValueError:
                 continue
         return exempt_paths
+
+    def _dir_skip_rel_paths(self, source_dir_rel: Path) -> set[Path]:
+        """Return configured relative paths skipped for one dir mirror."""
+        raw_value = self.get_option("dir_skip_paths", [])
+        if isinstance(raw_value, str):
+            tokens = [
+                token.strip()
+                for token in raw_value.replace("\n", ",").split(",")
+                if token.strip()
+            ]
+        elif isinstance(raw_value, (list, tuple, set)):
+            tokens = [str(token).strip() for token in raw_value if str(token)]
+        else:
+            tokens = []
+
+        skipped_paths: set[Path] = set()
+        for token in tokens:
+            if "=>" not in token:
+                continue
+            left, right = token.split("=>", 1)
+            if Path(left.strip()) != source_dir_rel:
+                continue
+            right_token = right.strip()
+            if right_token:
+                skipped_paths.add(Path(right_token))
+        return skipped_paths
 
     def _relative_file_map(self, root: Path) -> dict[Path, Path]:
         """Return regular files under one root keyed by relative path."""

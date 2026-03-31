@@ -338,6 +338,7 @@ workflow:
 project-governance:
   project_name: devcovenant
   project_description: devcovenant is a repository governance framework.
+  copyright_notice: 2026 Black Epsilon Ltd. and Apostol Apostolov
   stage: stable
   maintenance_stance: active
   compatibility_policy: forward-only

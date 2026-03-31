@@ -40,6 +40,7 @@ _DEFAULT_PROJECT_DESCRIPTION = (
     "Describe the project this repository ships: what it does, who it "
     "helps, and what problem it solves."
 )
+_DEFAULT_COPYRIGHT_NOTICE = "YEAR Legal Owner Name"
 _LOG_MARKER = "## Log changes here"
 _MANAGED_BEGIN = "<!-- DEVCOV:BEGIN -->"
 _MANAGED_END = "<!-- DEVCOV:END -->"
@@ -70,6 +71,7 @@ class ProjectGovernanceState:
     enabled: bool = True
     project_name: str = _DEFAULT_PROJECT_NAME
     project_description: str = _DEFAULT_PROJECT_DESCRIPTION
+    copyright_notice: str = _DEFAULT_COPYRIGHT_NOTICE
     stage: str = ""
     maintenance_stance: str = ""
     compatibility_policy: str = "unspecified"
@@ -155,6 +157,7 @@ class ProjectGovernanceState:
         payload: dict[str, object] = {
             "project_name": self.project_name,
             "project_description": self.project_description,
+            "copyright_notice": self.copyright_notice,
             "project_version": self.displayed_project_version(
                 declared_version
             ),
@@ -199,6 +202,10 @@ def resolve_runtime_state(
     project_description = (
         _string_option(raw_block, "project_description")
         or _DEFAULT_PROJECT_DESCRIPTION
+    )
+    copyright_notice = (
+        _string_option(raw_block, "copyright_notice")
+        or _DEFAULT_COPYRIGHT_NOTICE
     )
     stage = _required_string(raw_block, "stage")
     maintenance_stance = _required_string(raw_block, "maintenance_stance")
@@ -251,6 +258,7 @@ def resolve_runtime_state(
     return ProjectGovernanceState(
         project_name=project_name,
         project_description=project_description,
+        copyright_notice=copyright_notice,
         stage=stage,
         maintenance_stance=maintenance_stance,
         compatibility_policy=compatibility_policy,
@@ -274,12 +282,16 @@ def resolve_runtime_state(
 def render_identity_placeholders(
     text: str,
     state: ProjectGovernanceState,
+    *,
+    project_version: str = "",
 ) -> str:
     """Render project-identity placeholders from governance state."""
     rendered = str(text or "")
     replacements = {
         "{{ PROJECT_NAME }}": state.project_name,
+        "{{ PROJECT_VERSION }}": str(project_version or "").strip(),
         "{{ PROJECT_DESCRIPTION }}": state.project_description,
+        "{{ COPYRIGHT_NOTICE }}": state.copyright_notice,
         "{{ PROJECT_DESCRIPTION_PARAGRAPH }}": textwrap.fill(
             state.project_description,
             width=72,

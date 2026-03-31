@@ -2,32 +2,23 @@
 
 ## Table of Contents
 - [Overview](#overview)
-- [Workflow](#workflow)
-- [Update Checklist](#update-checklist)
+- [Contents](#contents)
+- [Why It Ships](#why-it-ships)
 
 ## Overview
-This directory stores generated third-party license texts and
-generated compliance notes for direct repository dependencies.
-Keep these files synchronized whenever dependency declarations or
-resolved lock versions change. The goal is to preserve a clear audit
-trail that maps declared direct dependencies to local license
-artifacts without requiring manual reconstruction during release
-reviews or legal checks.
+This packaged directory ships the license artifacts that travel with the
+published DevCovenant distribution.
+It is meant to tell package users what these files are, not to instruct
+repository maintainers how to regenerate them.
 
-## Workflow
-- Keep `licenses/THIRD_PARTY_LICENSES.md` synchronized with dependency
-  manifest updates.
-- Add, remove, or refresh generated license files in this directory
-  when dependency versions change.
-- Record each changed dependency manifest in the report section so
-  coverage checks can verify synchronization.
-- Keep the dependency inventory aligned with the actual generated
-  license files.
+## Contents
+- `LICENSE` is the packaged mirror of the project license from the repo root.
+- `THIRD_PARTY_LICENSES.md` lists the direct dependencies represented in the
+  packaged lock and points to their bundled license texts.
+- `*.txt` files store the bundled third-party license texts that match the
+  packaged dependency surface.
 
-## Update Checklist
-- Verify each direct dependency entry points to a current license
-  file.
-- Verify generated license files reflect the currently installed
-  upstream distribution notices.
-- Re-run DevCovenant checks and commit both report and license
-  artifact updates together.
+## Why It Ships
+DevCovenant ships these files with the package so the project license, the
+dependency report, and the bundled third-party license texts stay together in
+one installed artifact.

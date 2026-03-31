@@ -117,7 +117,7 @@ unless `config.ci_and_test.overrides` takes full local ownership.
 The ownership split is:
 1. the built-in `github` profile owns the generic GitHub Actions base workflow
 2. active profiles may contribute `ci_and_test` fragments that extend it for a
-   stack or repo family
+   stack or shared custom profile
 3. local `config.ci_and_test.*` keys are for small local overlays or, more
    rarely, a full local replacement
 
@@ -125,19 +125,14 @@ The github-owned base should stay generic.
 It bootstraps DevCovenant from the shipped
 `devcovenant/requirements.lock` so it does not assume the
 repository's own dependency files belong to DevCovenant. The packaged
-`devcovenant/licenses/LICENSE` and `devcovenant/licenses/**` mirrors travel
-with the same shipped lock so bootstrap surfaces keep the root license,
-dependency report, and third-party license bundle together.
-Repo-family build proof should pin its own build tooling in the profile-owned
-fragment so reruns stay stable without making the builtin base repo-specific.
-If a repo family needs extra proof or extra source-tree steps, that extension
-should come from a profile-owned CI fragment instead of from the builtin base.
-
-When a repository adds installed-artifact proof, that proof should exercise the
-same public workflow the docs promise across the install surfaces the
-repository supports.
-If a repository documents `pipx` as the normal operator entrypoint, that proof
-should stay on the installed CLI for the full gate/run/end cycle.
+license and compliance files under `devcovenant/licenses/` travel with the
+same shipped lock so bootstrap surfaces keep the needed legal material close
+to the shipped dependency inventory.
+If a repository needs extra project dependency setup, extra CI steps, or extra
+install validation, that extension should come from a profile-owned CI
+fragment instead of from the builtin base.
+If a repository documents a particular public install path, test that same
+public path in the repository's own CI extension.
 If a repository adds a separate release workflow, that workflow should publish
 validated CI artifacts instead of rebuilding a fresh distribution later.
 
@@ -151,7 +146,7 @@ any declared bootstrap commands.
 That keeps `gate --start` non-destructive once a configured environment already
 exists.
 It also keeps the workflow portable across normal `.venv` repositories,
-bench-like environments, and installed-artifact proof repositories.
+bench-like environments, and other declared environment layouts.
 If a repository uses a different environment shape, it should declare that
 shape explicitly instead of expecting DevCovenant to guess it.
 

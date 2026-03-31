@@ -17,6 +17,7 @@ import devcovenant.core.runtime.registry as registry_runtime_module
 from devcovenant.core.flow.gate_changelog_helpers import (
     _entry_fingerprint,
     _latest_changelog_entry,
+    _latest_changelog_version,
     _resolve_doc_exemption_options,
 )
 from devcovenant.core.flow.gate_status_helpers import (
@@ -714,6 +715,9 @@ def run_pre_commit_gate(
                 recovery_payload["changelog_start_top_entry_present"] = bool(
                     top_entry
                 )
+                recovery_payload["changelog_start_top_version"] = (
+                    _latest_changelog_version(repo_root)
+                )
                 recovery_remove_keys = [
                     "session_end_snapshot",
                     "last_run_snapshot",
@@ -1041,6 +1045,9 @@ def run_pre_commit_gate(
             top_entry
         )
         payload["changelog_start_top_entry_present"] = bool(top_entry)
+        payload["changelog_start_top_version"] = _latest_changelog_version(
+            repo_root
+        )
     else:
         session_id = str(payload.get("session_id", "")).strip()
         session_state = str(payload.get("session_state", "")).strip().lower()

@@ -430,7 +430,11 @@ def validate_managed_doc_descriptor(
                 f"`{descriptor_path_value}` field `{field_name}` must be "
                 "boolean."
             )
-    if descriptor.get("devcovenant_version") is not True:
+    doc_type = str(descriptor.get("doc_type", "")).strip()
+    if (
+        descriptor.get("devcovenant_version") is not True
+        and doc_type != "license"
+    ):
         raise ValueError(
             "Managed doc descriptor "
             f"`{descriptor_path_value}` field `devcovenant_version` must "
@@ -726,15 +730,18 @@ def render_generated_header(
     project_governance_state: ProjectGovernanceState,
 ) -> list[str]:
     """Render deterministic top-of-doc header lines from descriptor keys."""
+    doc_type = str(descriptor.get("doc_type", "")).strip()
     title = project_governance_service.render_identity_placeholders(
         str(descriptor.get("title", "")),
         project_governance_state,
+        project_version=project_version,
     ).strip()
     if not title:
         raise ValueError("Managed doc descriptor field `title` is required.")
     doc_id = str(descriptor.get("doc_id", "")).strip()
-    doc_type = str(descriptor.get("doc_type", "")).strip()
     lines: list[str] = [f"# {title}"]
+    if doc_type == "license":
+        return lines
     if doc_id:
         lines.append(f"{DOC_ID_LABEL} {doc_id}")
     if doc_type:
@@ -948,6 +955,7 @@ def render_descriptor_body(
     rendered = project_governance_service.render_identity_placeholders(
         body_value,
         project_governance_state,
+        project_version=project_version,
     ).replace(
         "{{ RELEASE_HEADING }}",
         release_heading_for_render(
@@ -967,6 +975,7 @@ def render_doc_from_descriptor(
     project_governance_state: ProjectGovernanceState,
 ) -> str:
     """Render managed doc text from a validated YAML descriptor."""
+    doc_type = str(descriptor.get("doc_type", "")).strip()
     header_lines = render_generated_header(
         doc_name,
         descriptor,
@@ -977,7 +986,7 @@ def render_doc_from_descriptor(
 
     block_body = compose_managed_block_body(descriptor)
     managed_block = ""
-    if "managed_block" in descriptor:
+    if doc_type != "license" and "managed_block" in descriptor:
         managed_block = render_block(BLOCK_BEGIN, BLOCK_END, block_body)
 
     body_lines = render_descriptor_body(
@@ -1244,12 +1253,16 @@ def is_devcovenant_shaped_target_doc(current: str, rendered: str) -> bool:
 def merge_header_only_import_doc(
     current: str,
     rendered: str,
+    *,
+    doc_type: str = "",
 ) -> tuple[str, bool]:
     """Inject managed content while preserving imported body content."""
     header_text, managed_block = rendered_header_and_block(rendered)
     if not header_text:
         return rendered, rendered != current
     preserved = strip_existing_generated_headers(current).strip("\n")
+    if doc_type == "license":
+        preserved = strip_existing_license_legacy_prefix(preserved)
     parts = [header_text.strip("\n")]
     if managed_block:
         parts.append(managed_block.strip("\n"))
@@ -1414,9 +1427,55 @@ def strip_existing_generated_headers(current: str) -> str:
     return current.strip("\n")
 
 
+def strip_existing_license_legacy_prefix(text: str) -> str:
+    """Drop old non-markdown license headers that used metadata lines."""
+    lines = str(text or "").replace("\r\n", "\n").splitlines()
+    index = 0
+    while index < len(lines) and not lines[index].strip():
+        index += 1
+    if index >= len(lines):
+        return ""
+    if lines[index].lstrip().startswith("#"):
+        return "\n".join(lines[index:]).strip("\n")
+
+    probe = index + 1
+    while probe < len(lines) and not lines[probe].strip():
+        probe += 1
+    if probe >= len(lines):
+        return "\n".join(lines[index:]).strip("\n")
+
+    legacy_prefixes = (
+        "project version:",
+        "project stage:",
+        "maintenance stance:",
+        "compatibility policy:",
+        "versioning mode:",
+        "last updated:",
+        "devcovenant version:",
+        "doc id:",
+        "doc type:",
+    )
+    if not lines[probe].strip().lower().startswith(legacy_prefixes):
+        return "\n".join(lines[index:]).strip("\n")
+
+    index = probe
+    while index < len(lines):
+        token = lines[index].strip().lower()
+        if not token:
+            index += 1
+            continue
+        if token.startswith(legacy_prefixes):
+            index += 1
+            continue
+        break
+    return "\n".join(lines[index:]).strip("\n")
+
+
 def inject_managed_header_and_block(
     current: str,
     rendered: str,
+    *,
+    doc_type: str = "",
 ) -> tuple[str, bool]:
     """Inject rendered header/managed block into unmanaged existing docs."""
     if is_devcovenant_shaped_target_doc(
@@ -1427,7 +1486,11 @@ def inject_managed_header_and_block(
 
     header_text, managed_block = rendered_header_and_block(rendered)
     if not managed_block:
-        return merge_header_only_import_doc(current, rendered)
+        return merge_header_only_import_doc(
+            current,
+            rendered,
+            doc_type=doc_type,
+        )
 
     preserved = strip_existing_generated_headers(current)
     leading_preserve_blocks, preserved_remainder = (
@@ -1733,6 +1796,7 @@ def sync_doc(
         ),
         doc_name=doc_name,
     )
+    doc_type = str(descriptor.get("doc_type", "")).strip()
     rendered = render_doc_from_descriptor(
         doc_name,
         descriptor,
@@ -1763,9 +1827,17 @@ def sync_doc(
     elif managed_block_spans(current):
         updated, changed = replace_managed_block(current, rendered)
     elif importable_seed:
-        updated, changed = merge_header_only_import_doc(current, rendered)
+        updated, changed = merge_header_only_import_doc(
+            current,
+            rendered,
+            doc_type=doc_type,
+        )
     else:
-        updated, changed = inject_managed_header_and_block(current, rendered)
+        updated, changed = inject_managed_header_and_block(
+            current,
+            rendered,
+            doc_type=doc_type,
+        )
     if not changed:
         return False
     if normalize_generated_last_updated_for_compare(

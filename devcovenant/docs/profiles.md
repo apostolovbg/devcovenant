@@ -48,8 +48,8 @@ That includes:
 2. managed-environment expectations for a stack
 3. generated asset templates
 4. translator declarations for a language
-5. documentation routes for a reusable repo family
-6. extra CI jobs that should apply to a repo family instead of every
+5. documentation routes for a reusable profile stack
+6. extra CI jobs that should apply to similar repositories instead of every
    DevCovenant repository
 7. declared workflow runs that should be required for repositories of the same
    shape
@@ -76,13 +76,12 @@ extensions.
 Profiles may also contribute `ignore_dirs` for disposable local outputs that
 should stay out of generated `.gitignore` and out of pre-commit's all-files
 scan.
-Typical examples are proof roots such as `.proof-wheel` and `.proof-sdist`,
-support-floor environments such as `.proof-py310`, or runner cache roots such
-as `.gha-pycache` when a CI profile needs them.
+Typical examples are temporary build directories, cache roots, or declared
+environment folders that should not count as user-owned source files.
 
 A repo-specific custom profile can then strengthen the standard stack.
-For example, it may add `managed_commands`, extra assets, or CI proof that
-belongs to that repository or repo family.
+For example, it may add `managed_commands`, extra assets, or CI steps that
+belong to that repository.
 
 ## Assets And Managed Docs
 Profiles can ship assets, including managed-document templates.
@@ -109,6 +108,15 @@ Managed-doc descriptor ownership follows profile precedence by target path:
 - active profiles may override a global descriptor by shipping the same target
   path
 - later active profiles win over earlier ones for the same target path
+
+The global `LICENSE` descriptor is one special case worth calling out.
+It keeps only the title line in sync as
+`# {{ PROJECT_NAME }} {{ PROJECT_VERSION }}`.
+The rest of the legal text stays user-owned, so repositories can change
+their license body without fighting managed metadata lines.
+The seeded legal body begins with `The MIT License (MIT)`, then uses
+`{{ COPYRIGHT_NOTICE }}` from `project-governance`, and always places
+`All rights reserved.` on the next line.
 
 ## Translators
 Translators are owned by language profiles.
@@ -139,7 +147,7 @@ Examples include:
 3. documentation-growth routes
 4. no-print sink metadata from language profiles
 5. reusable workflow runs such as a stack's `tests` run
-6. reusable `ci_and_test` fragments for repo-family CI jobs
+6. reusable `ci_and_test` fragments for stack-specific CI jobs
 7. managed-environment roots that cleanup and other services need to respect
 
 The CI boundary matters.
@@ -147,7 +155,7 @@ The builtin `github` workflow template should stay generic.
 It should bootstrap DevCovenant from the shipped
 `devcovenant/requirements.lock`, not from the repository's own
 dependency files.
-If a repo family needs extra proof or extra project dependency setup, that
+If a repository needs extra project dependency setup or extra CI steps, that
 extension belongs in the relevant profile instead of in the builtin base
 workflow.
 
@@ -155,7 +163,7 @@ The same split helps config stay readable.
 The global config asset lists the full `project-governance` key set and the
 allowed values.
 Profiles and local config can then tighten or extend behavior without
-making the shared base too repo-specific.
+making the shared base too specific to one repository.
 
 If a language or stack has a standard run, the profile should declare it
 through `workflow_runs`.

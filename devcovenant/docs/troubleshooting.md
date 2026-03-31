@@ -83,7 +83,7 @@ profile owns the relevant translator and that no overlapping profile is trying
 to claim the same extension ambiguously.
 
 ## Packaging Problems
-When packaging or installed-artifact proof fails, check:
+When packaging or install validation fails, check:
 - build logs
 - package build configuration
 - package metadata

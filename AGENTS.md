@@ -91,8 +91,7 @@ canonical policy source and operational guide for the repository.
 - We are human and AI developers working on this project together.
 - We obey every AGENTS.md and DevCovenant instruction.
 - We treat a human prompt ending with `?` as a question only and do not
-  execute commands, edit files, or start a work slice unless the human
-  explicitly asks.
+  execute commands, edit files, or start a work slice.
 - We maintain clean repository hygiene and avoid unmanaged drift.
 - We never edit content inside managed `<!-- DEVCOV* -->` blocks.
 
@@ -119,8 +118,7 @@ during command waits.
 5. Build an active-policy mental model from policies marked `enabled: true`
    and follow those policies proactively while writing.
 6. If the human prompt ends with `?`, treat it as a question only. Answer
-   without executing commands, editing files, or starting a work slice
-   unless the human explicitly asks for action.
+   without executing commands, editing files, or starting a work slice.
 7. If a managed environment is configured, activate/use it first. Run
    DevCovenant commands and tests in that environment. Installing
    DevCovenant in that environment is recommended.
@@ -516,10 +514,12 @@ summary line must include an action verb listed in the summary_verbs
 metadata and a Files block that lists only the touched paths for this
 change. The policy compares the top changelog entry against the gate-start
 top-entry fingerprint to require a fresh entry for each work session, while
-resolving changed paths from the active gate session. Collection prefixes
-(when enabled) must be logged in their own changelog; prefixed files may not
-appear in the root changelog. This keeps release notes daily, file-complete,
-and traceable.
+resolving changed paths from the active gate session. If the top version
+changes during the session, the new version section must be prepended above
+the preserved previous top version section instead of relabeling old entries.
+Collection prefixes (when enabled) must be logged in their own changelog;
+prefixed files may not appear in the root changelog. This keeps release
+notes daily, file-complete, and traceable.
 
 
 ---
@@ -1354,6 +1354,7 @@ custom: true
 file_mirrors: requirements.lock=>devcovenant/requirements.lock
   LICENSE=>devcovenant/licenses/LICENSE
 dir_mirrors: licenses=>devcovenant/licenses
+dir_skip_paths: licenses=>README.md
 ```
 
 Ensure package-shipped dependency and compliance artifacts stay in exact
@@ -1361,9 +1362,11 @@ sync with the canonical repo-root artifacts they mirror. This repo uses the
 policy to keep `devcovenant/requirements.lock` aligned with the canonical
 root `requirements.lock`, `devcovenant/licenses/LICENSE` aligned with the
 canonical root `LICENSE`, and `devcovenant/licenses/**` aligned with the
-canonical root `licenses/**`. Auto-fix rewrites the package mirror from
-the configured source paths, preserves separately mirrored files that live
-inside mirrored directories, and removes stale mirrored files.
+canonical root `licenses/**`. The package-owned
+`devcovenant/licenses/README.md` stays outside the exact mirror contract.
+Auto-fix rewrites the package mirror from the configured source paths,
+preserves separately mirrored files that live inside mirrored directories,
+preserves package-owned skipped paths, and removes stale mirrored files.
 
 
 ---

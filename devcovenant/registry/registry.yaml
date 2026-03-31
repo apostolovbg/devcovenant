@@ -4,6 +4,7 @@ metadata:
 project-governance:
   project_name: devcovenant
   project_description: devcovenant is a repository governance framework.
+  copyright_notice: 2026 Black Epsilon Ltd. and Apostol Apostolov
   project_version: 1.0.1.dev1
   stage: stable
   maintenance_stance: active
@@ -73,7 +74,7 @@ managed-docs:
       project_governance_headers: false
       import_seed: false
       authoritative_source: false
-      body_fingerprint: e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855
+      body_fingerprint: e0f5f782523be29c1e064199a7233fae418d01b09c004043ad4eae1096d77fbe
     PLAN.md:
       enabled: true
       descriptor_path: devcovenant/builtin/profiles/global/assets/PLAN.yaml
@@ -197,10 +198,12 @@ policies:
       metadata and a Files block that lists only the touched paths for this
       change. The policy compares the top changelog entry against the gate-start
       top-entry fingerprint to require a fresh entry for each work session, while
-      resolving changed paths from the active gate session. Collection prefixes
-      (when enabled) must be logged in their own changelog; prefixed files may not
-      appear in the root changelog. This keeps release notes daily, file-complete,
-      and traceable.
+      resolving changed paths from the active gate session. If the top version
+      changes during the session, the new version section must be prepended above
+      the preserved previous top version section instead of relabeling old entries.
+      Collection prefixes (when enabled) must be logged in their own changelog;
+      prefixed files may not appear in the root changelog. This keeps release
+      notes daily, file-complete, and traceable.
     metadata:
       id: changelog-coverage
       severity: error
@@ -1644,7 +1647,7 @@ policies:
     - pip-wheel-metadata/**
     origin: builtin
     script_exists: true
-    hash: a7cc8d8576804e987dfc84c4f0e160d777333a48c2997c0c43d9b6853cc908e7
+    hash: ba3ca68aa36ccfab81cf8a074ee8c7659b8cfdd6fd0051f5c1aef0b2e3e24e33
     script_path: builtin/changelog_coverage.py
   devcov-raw-string-escapes:
     enabled: true
@@ -8975,9 +8978,11 @@ policies:
       policy to keep `devcovenant/requirements.lock` aligned with the canonical
       root `requirements.lock`, `devcovenant/licenses/LICENSE` aligned with the
       canonical root `LICENSE`, and `devcovenant/licenses/**` aligned with the
-      canonical root `licenses/**`. Auto-fix rewrites the package mirror from
-      the configured source paths, preserves separately mirrored files that live
-      inside mirrored directories, and removes stale mirrored files.
+      canonical root `licenses/**`. The package-owned
+      `devcovenant/licenses/README.md` stays outside the exact mirror contract.
+      Auto-fix rewrites the package mirror from the configured source paths,
+      preserves separately mirrored files that live inside mirrored directories,
+      preserves package-owned skipped paths, and removes stale mirrored files.
     metadata:
       id: package-artifact-mirror
       severity: error
@@ -8987,6 +8992,7 @@ policies:
       custom: 'true'
       file_mirrors: requirements.lock=>devcovenant/requirements.lock, LICENSE=>devcovenant/licenses/LICENSE
       dir_mirrors: licenses=>devcovenant/licenses
+      dir_skip_paths: licenses=>README.md
     metadata_resolution:
       id:
         descriptor:
@@ -9042,6 +9048,14 @@ policies:
         effective:
           values:
           - licenses=>devcovenant/licenses
+      dir_skip_paths:
+        descriptor:
+          values:
+          - licenses=>README.md
+          behavior: base
+        effective:
+          values:
+          - licenses=>README.md
       custom:
         runtime_custom_source:
           values:
@@ -9079,6 +9093,7 @@ policies:
       - requirements.lock=>devcovenant/requirements.lock
       - LICENSE=>devcovenant/licenses/LICENSE
       dir_mirrors: licenses=>devcovenant/licenses
+      dir_skip_paths: licenses=>README.md
     runtime_config_overrides: {}
     runtime_effective_options:
       id: package-artifact-mirror
@@ -9089,13 +9104,15 @@ policies:
       custom: true
       file_mirrors: *id073
       dir_mirrors: licenses=>devcovenant/licenses
+      dir_skip_paths: licenses=>README.md
     assets:
     - LICENSE=>devcovenant/licenses/LICENSE
+    - licenses=>README.md
     - licenses=>devcovenant/licenses
     - requirements.lock=>devcovenant/requirements.lock
     origin: custom
     script_exists: true
-    hash: ac5d11d6f85ed12ba5d88e9856e663b68c7d962a5396f4f97a729adc0b577baa
+    hash: 6403c5665ae317184c60df752f2071c3623b4f8b2c13ad2fe2b7ff74cba5a25a
     script_path: custom/package_artifact_mirror.py
 profiles:
   csharp:

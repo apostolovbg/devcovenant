@@ -43,7 +43,9 @@ The boundary matters:
 Checks should not quietly edit files.
 That keeps the CLI honest and makes side effects easier to understand.
 One good example is `changelog-coverage`: it works from the active gate slice,
-not from raw git history.
+not from raw git history. When the top changelog version changes during an
+open slice, it expects a new version section above the preserved previous top
+section instead of relabeling old entries.
 
 ## Policy Runtime Actions
 A policy can expose reusable runtime actions.
@@ -96,6 +98,9 @@ Version-governance adapters define how version schemes are parsed,
 validated, normalized, and compared.
 They are part of the supported extension model because repositories may need
 stricter rules than plain string equality.
+For the built-in `pep440` adapter, the format and canonical spelling still
+follow PEP 440, while repo progression may reopen the same base version with a
+`.devN` review line above an older final section.
 
 ## Custom Policies
 Custom policies live under `devcovenant/custom/policies/<id>/` and use the
@@ -110,9 +115,6 @@ model for docs that opt into those headers.
 Custom policies that sync package-facing docs should also keep release targets
 truthful. If a packaged README rewrites repo-relative links or images, those
 links should point at release-stable tagged URLs instead of a moving branch.
-Custom policies may also own exact root-to-package mirrors when a repo keeps
-one canonical source of truth and one shipped package copy, such as a bundled
-lockfile, the root license, and the matching third-party license directory.
 
 ## Practical Rule
 When policy behavior changes, update all of these together:

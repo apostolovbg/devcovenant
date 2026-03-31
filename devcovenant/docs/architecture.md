@@ -125,6 +125,13 @@ AGENTS-specific block refresh lives in
 `devcovenant/core/lib/agents_blocks.py`, which owns only the generated policy
 block.
 
+`LICENSE` is a deliberate exception to the usual metadata-heavy header shape.
+For license docs, managed-doc rendering syncs only the top title line
+`# {{ PROJECT_NAME }} {{ PROJECT_VERSION }}` and leaves the legal body as
+user-owned text after the file is first seeded.
+That seeded body still supports project-governance placeholders such as
+`{{ COPYRIGHT_NOTICE }}` for the repo's copyright line.
+
 ## Profiles, Translators, And Assets
 Profiles describe repository shape.
 They may contribute:
@@ -165,8 +172,7 @@ That split keeps saved setup separate from disposable runtime session state.
 The published package ships the docs, builtin policies, builtin profiles,
 assets, translators, and runtime modules that DevCovenant needs to operate.
 That includes the shipped `devcovenant/requirements.lock` bootstrap file and
-the mirrored `devcovenant/licenses/LICENSE` and
-`devcovenant/licenses/**` bundle that travels with it.
+the `devcovenant/licenses/` bundle that travels with it.
 It does not ship live repository state such as:
 
 - `devcovenant/config.yaml`

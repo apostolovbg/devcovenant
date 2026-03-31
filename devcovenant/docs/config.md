@@ -103,6 +103,7 @@ The simple model is:
 This section describes the project itself.
 It answers questions like:
 - what is the project called?
+- what copyright notice should seeded license docs use?
 - what stage is it in?
 - how actively is it maintained?
 - what compatibility promise does it make?
@@ -110,6 +111,9 @@ It answers questions like:
 
 Managed docs and generated headers read from this section.
 If those public-facing descriptions look wrong, start here.
+That includes the global `LICENSE` template, which seeds:
+- `Copyright (c) {{ COPYRIGHT_NOTICE }}`
+- `All rights reserved.`
 
 ### paths
 This section chooses where DevCovenant keeps important local files such as:
@@ -162,7 +166,8 @@ Use it for:
 2. the rarer case where the repository deliberately takes full ownership of the
    generated workflow payload
 
-Do not use it as the first place to add reusable behavior for a repo family.
+Do not use it as the first place to add reusable behavior for a shared custom
+profile.
 If the added job should travel with a profile stack, put that behavior in a
 profile `ci_and_test` fragment instead.
 The builtin `github` base bootstraps DevCovenant from the shipped
