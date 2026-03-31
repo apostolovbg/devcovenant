@@ -107,6 +107,11 @@ That mode is opt-in.
 When it preserves exact marker-gated direct pins, it must preserve real hashes
 too. If those hashes cannot be resolved, refresh fails explicitly instead of
 writing a partial lock.
+If one hash-locked file must work across supported platforms or Python
+versions, declare exact marker pins for those cross-environment dependencies
+in the intent manifest. That gives the runtime enough information to
+materialize them with real hashes even when the local compile host would
+otherwise omit them.
 
 ## Version-Governance Adapters
 Version-governance adapters define how version schemes are parsed,

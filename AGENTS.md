@@ -575,7 +575,11 @@ enabled versus disabled. For Python repositories, hash-locked
 `requirements.lock` generation is opt-in through
 `python_lock_generate_hashes`. When enabled, exact marker-gated direct pins
 must keep real hashes as well; the runtime resolves those hashes explicitly
-or fails loudly instead of writing a partial lock. Artifact refresh remains
+or fails loudly instead of writing a partial lock. Repositories that need
+one hash-locked file to work across supported platforms or Python versions
+should declare exact marker pins for those cross-environment dependencies in
+the intent manifest so the runtime can materialize them even when the local
+compile host would otherwise omit them. Artifact refresh remains
 deterministic/idempotent.
 
 

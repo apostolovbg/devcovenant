@@ -8687,7 +8687,11 @@ policies:
       `requirements.lock` generation is opt-in through
       `python_lock_generate_hashes`. When enabled, exact marker-gated direct pins
       must keep real hashes as well; the runtime resolves those hashes explicitly
-      or fails loudly instead of writing a partial lock. Artifact refresh remains
+      or fails loudly instead of writing a partial lock. Repositories that need
+      one hash-locked file to work across supported platforms or Python versions
+      should declare exact marker pins for those cross-environment dependencies in
+      the intent manifest so the runtime can materialize them even when the local
+      compile host would otherwise omit them. Artifact refresh remains
       deterministic/idempotent.
     metadata:
       id: dependency-management
@@ -9002,7 +9006,7 @@ policies:
     - licenses/THIRD_PARTY_LICENSES.md
     origin: builtin
     script_exists: true
-    hash: 21900f36fa2fa1273b948a6423be885f791b7f4060dfb04cfd5df178e29d8bb0
+    hash: 7b79dfeba1197ff31070c0584d0db6605298d58960b6e97191ebcea729cee4bf
     script_path: builtin/dependency_management.py
   package-artifact-mirror:
     enabled: true

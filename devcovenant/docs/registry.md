@@ -59,6 +59,9 @@ The same applies to policy-resolved metadata such as
 `dependency-management.python_lock_generate_hashes`: when profile or config
 overlays change those values, the tracked registry records the new resolved
 inputs that later drive lock refresh behavior.
+The same dependency surface can also include exact marker pins declared in the
+intent manifest when one hash-locked requirements file must stay valid across
+other supported platforms or Python versions.
 
 ## Runtime Registry
 `devcovenant/registry/runtime/` stores local working state such as:

@@ -267,8 +267,43 @@ def _unit_test_release_metadata_keeps_support_floor_and_docs_truthful() -> (
     packaged_license_report = (
         REPO_ROOT / "devcovenant" / "licenses" / "THIRD_PARTY_LICENSES.md"
     ).read_text(encoding="utf-8")
-    assert 'tomli==2.3.0; python_version < "3.11"' in requirements_in
-    assert 'tomli==2.3.0 ; python_version < "3.11"' in requirements_lock
+    expected_marker_pins = [
+        (
+            'colorama==0.4.6; sys_platform == "win32"',
+            'colorama==0.4.6 ; sys_platform == "win32"',
+        ),
+        (
+            'exceptiongroup==1.3.1; python_version < "3.11"',
+            'exceptiongroup==1.3.1 ; python_version < "3.11"',
+        ),
+        (
+            'importlib-metadata==9.0.0; python_version < "3.12"',
+            'importlib-metadata==9.0.0 ; python_version < "3.12"',
+        ),
+        (
+            'jeepney==0.9.0; sys_platform == "linux"',
+            'jeepney==0.9.0 ; sys_platform == "linux"',
+        ),
+        (
+            'pywin32-ctypes==0.2.3; sys_platform == "win32"',
+            'pywin32-ctypes==0.2.3 ; sys_platform == "win32"',
+        ),
+        (
+            'SecretStorage==3.5.0; sys_platform == "linux"',
+            'SecretStorage==3.5.0 ; sys_platform == "linux"',
+        ),
+        (
+            'tomli==2.3.0; python_version < "3.11"',
+            'tomli==2.3.0 ; python_version < "3.11"',
+        ),
+        (
+            'typing-extensions==4.15.0; python_version < "3.13"',
+            'typing-extensions==4.15.0 ; python_version < "3.13"',
+        ),
+    ]
+    for intent_pin, resolved_pin in expected_marker_pins:
+        assert intent_pin in requirements_in
+        assert resolved_pin in requirements_lock
     assert runtime_requirements_lock == requirements_lock
     assert packaged_license_report == root_license_report
 

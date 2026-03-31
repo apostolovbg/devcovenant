@@ -61,6 +61,31 @@ Example:
 ## Version 1.0.1.dev1
 
 - 2026-04-01:
+  Change: materialized exact cross-platform and cross-version marker pins in
+    `requirements.in`, refreshed the hash-locked requirements artifacts, and
+    documented the explicit marker-pin rule for hash-locked Python repos.
+  Why: prevent Linux and older supported Python installs from failing under
+    `--require-hashes` when a local compile host omits marker-gated
+    transitive dependencies, and prove that repo/package lock mirrors keep
+    those pins intact.
+  Impact: keeps GitHub and proof installs reproducible across supported
+    environments, gives `dependency-management` a clear marker-pin contract,
+    and adds a local regression so this drift is caught before CI.
+  Files:
+  AGENTS.md
+  CHANGELOG.md
+  devcovenant/builtin/policies/dependency_management/\
+    dependency_management.yaml
+  devcovenant/custom/profiles/devcovrepo/assets/docs/policies.md
+  devcovenant/custom/profiles/devcovrepo/assets/docs/registry.md
+  devcovenant/docs/policies.md
+  devcovenant/docs/registry.md
+  devcovenant/registry/registry.yaml
+  devcovenant/requirements.lock
+  requirements.in
+  requirements.lock
+  tests/devcovenant/test_refresh.py
+- 2026-04-01:
   Change: enabled opt-in hash-locked Python dependency refresh in the
     `dependency-management` policy command, removed live `pip` upgrades from
     the generic GitHub CI base, and split repo proof installs into locked
