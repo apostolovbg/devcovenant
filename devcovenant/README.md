@@ -1,15 +1,15 @@
 # devcovenant
 **Doc ID:** README
 **Doc Type:** repo-readme
-**Project Version:** 1.0.1
+**Project Version:** 1.0.1.dev1
 **Last Updated:** 2026-03-31
-**DevCovenant Version:** 1.0.1
+**DevCovenant Version:** 1.0.1.dev1
 
 <!-- DEVCOV:BEGIN -->
 
 <!-- DEVCOV:END -->
 
-![DevCovenant banner](https://raw.githubusercontent.com/apostolovbg/devcovenant/v1.0.1/devcovenant/docs/banner.png)
+![DevCovenant banner](https://raw.githubusercontent.com/apostolovbg/devcovenant/v1.0.1.dev1/devcovenant/docs/banner.png)
 
 DevCovenant is a repository governance framework.
 It keeps workflow rules, policy rules, generated files, and command logs in one
@@ -248,47 +248,47 @@ otherwise DevCovenant should only touch managed headers and managed blocks.
 ## Docs Map
 Use the shorter map below instead of treating the README as the whole manual.
 
-- [installation.md](https://github.com/apostolovbg/devcovenant/blob/v1.0.1/devcovenant/docs/installation.md)
+- [installation.md](https://github.com/apostolovbg/devcovenant/blob/v1.0.1.dev1/devcovenant/docs/installation.md)
 
   Install, deploy, upgrade, clean, undeploy, uninstall, and first-time setup.
 
-- [workflow.md](https://github.com/apostolovbg/devcovenant/blob/v1.0.1/devcovenant/docs/workflow.md)
+- [workflow.md](https://github.com/apostolovbg/devcovenant/blob/v1.0.1.dev1/devcovenant/docs/workflow.md)
 
   Gate sequence, command order, logs, and recovery.
 
-- [config.md](https://github.com/apostolovbg/devcovenant/blob/v1.0.1/devcovenant/docs/config.md)
+- [config.md](https://github.com/apostolovbg/devcovenant/blob/v1.0.1.dev1/devcovenant/docs/config.md)
 
   How to read `devcovenant/config.yaml`, including project settings,
   profile stacks, doc settings, workflow settings, and policy activation.
 
-- [profiles.md](https://github.com/apostolovbg/devcovenant/blob/v1.0.1/devcovenant/docs/profiles.md)
+- [profiles.md](https://github.com/apostolovbg/devcovenant/blob/v1.0.1.dev1/devcovenant/docs/profiles.md)
 
   Built-in profiles, custom profiles, assets, translators, and workflow runs.
 
-- [policies.md](https://github.com/apostolovbg/devcovenant/blob/v1.0.1/devcovenant/docs/policies.md)
+- [policies.md](https://github.com/apostolovbg/devcovenant/blob/v1.0.1.dev1/devcovenant/docs/policies.md)
 
   Policy descriptors, checks, runtime actions, policy commands, and
   version-governance adapters.
 
-- [refresh.md](https://github.com/apostolovbg/devcovenant/blob/v1.0.1/devcovenant/docs/refresh.md)
+- [refresh.md](https://github.com/apostolovbg/devcovenant/blob/v1.0.1.dev1/devcovenant/docs/refresh.md)
 
   What refresh rebuilds and which files it owns.
 
-- [architecture.md](https://github.com/apostolovbg/devcovenant/blob/v1.0.1/devcovenant/docs/architecture.md)
+- [architecture.md](https://github.com/apostolovbg/devcovenant/blob/v1.0.1.dev1/devcovenant/docs/architecture.md)
 
   Internal structure and major code ownership boundaries.
 
-- [registry.md](https://github.com/apostolovbg/devcovenant/blob/v1.0.1/devcovenant/docs/registry.md)
+- [registry.md](https://github.com/apostolovbg/devcovenant/blob/v1.0.1.dev1/devcovenant/docs/registry.md)
 
   Tracked registry, runtime registry, and gate state.
 
-- [troubleshooting.md](https://github.com/apostolovbg/devcovenant/blob/v1.0.1/devcovenant/docs/troubleshooting.md)
+- [troubleshooting.md](https://github.com/apostolovbg/devcovenant/blob/v1.0.1.dev1/devcovenant/docs/troubleshooting.md)
 
   Fast recovery paths for common failures.
 
 ## License
 DevCovenant is released under the MIT License.
-See [LICENSE](https://github.com/apostolovbg/devcovenant/blob/v1.0.1/LICENSE) and
-[licenses/THIRD_PARTY_LICENSES.md](https://github.com/apostolovbg/devcovenant/blob/v1.0.1/licenses/THIRD_PARTY_LICENSES.md).
-The published package mirrors that compliance bundle under
+See [LICENSE](https://github.com/apostolovbg/devcovenant/blob/v1.0.1.dev1/LICENSE) and
+[licenses/THIRD_PARTY_LICENSES.md](https://github.com/apostolovbg/devcovenant/blob/v1.0.1.dev1/licenses/THIRD_PARTY_LICENSES.md).
+The published package mirrors that license and compliance bundle under
 `devcovenant/licenses/`.

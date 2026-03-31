@@ -1,5 +1,5 @@
 # Registry
-**Project Version:** 1.0.1
+**Project Version:** 1.0.1.dev1
 
 ## Overview
 DevCovenant uses `devcovenant/registry/` for generated state.
@@ -47,7 +47,8 @@ CI fragments, so registry diffs often reflect real scan-boundary or workflow
 input changes.
 It also records repo-owned custom policy metadata, including package mirror
 contracts such as a shipped `devcovenant/requirements.lock` and
-`devcovenant/licenses/**` that mirror canonical repo-root artifacts.
+`devcovenant/licenses/**` that mirror canonical repo-root artifacts,
+including the root `LICENSE`.
 
 ## Runtime Registry
 `devcovenant/registry/runtime/` stores local working state such as:

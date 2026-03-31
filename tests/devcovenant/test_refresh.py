@@ -298,7 +298,7 @@ def _unit_test_refresh_imports_same_version_header_only_spec_doc() -> None:
             "**Doc ID:** SPEC\n"
             "**Doc Type:** specification\n"
             "**Project Version:** 9.9.9\n"
-            "**DevCovenant Version:** 1.0.1\n\n"
+            "**DevCovenant Version:** 1.0.1.dev1\n\n"
             "Custom imported spec body.\n",
             encoding="utf-8",
         )
@@ -325,7 +325,7 @@ def _unit_test_refresh_imports_same_version_header_only_plan_doc() -> None:
             "**Doc ID:** PLAN\n"
             "**Doc Type:** plan\n"
             "**Project Version:** 9.9.9\n"
-            "**DevCovenant Version:** 1.0.1\n\n"
+            "**DevCovenant Version:** 1.0.1.dev1\n\n"
             "Custom imported planning body.\n",
             encoding="utf-8",
         )
@@ -337,7 +337,7 @@ def _unit_test_refresh_imports_same_version_header_only_plan_doc() -> None:
         updated = plan_path.read_text(encoding="utf-8")
         assert "This opening section is managed by DevCovenant." in updated
         assert "Custom imported planning body." in updated
-        assert "**DevCovenant Version:** 1.0.1" in updated
+        assert "**DevCovenant Version:** 1.0.1.dev1" in updated
 
 
 def _unit_test_refresh_preserves_existing_non_placeholder_plan_body() -> None:
@@ -351,9 +351,9 @@ def _unit_test_refresh_preserves_existing_non_placeholder_plan_body() -> None:
             "# Development Plan\n"
             "**Doc ID:** PLAN\n"
             "**Doc Type:** plan\n"
-            "**Project Version:** 1.0.1\n"
+            "**Project Version:** 1.0.1.dev1\n"
             "**Last Updated:** 2026-03-01\n"
-            "**DevCovenant Version:** 1.0.1\n\n"
+            "**DevCovenant Version:** 1.0.1.dev1\n\n"
             "This is the real planning body.\n\n"
             "## Active Work\n"
             "1. [not done] Preserve authored docs.\n",
@@ -406,7 +406,7 @@ def _unit_test_refresh_imports_same_version_managed_block_doc() -> None:
             "**Doc ID:** README\n"
             "**Doc Type:** repo-readme\n"
             "**Project Version:** 0.1.0\n"
-            "**DevCovenant Version:** 1.0.1\n\n"
+            "**DevCovenant Version:** 1.0.1.dev1\n\n"
             "<!-- DEVCOV:BEGIN -->\n"
             "stale block\n"
             "<!-- DEVCOV:END -->\n\n"
@@ -421,7 +421,7 @@ def _unit_test_refresh_imports_same_version_managed_block_doc() -> None:
         updated = readme_path.read_text(encoding="utf-8")
         assert "Imported README body." in updated
         assert "stale block" not in updated
-        assert "**DevCovenant Version:** 1.0.1" in updated
+        assert "**DevCovenant Version:** 1.0.1.dev1" in updated
 
 
 def _unit_test_refresh_supports_custom_managed_docs() -> None:

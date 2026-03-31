@@ -1,5 +1,5 @@
 # Refresh Behavior
-**Project Version:** 1.0.1
+**Project Version:** 1.0.1.dev1
 
 ## Overview
 `refresh` rebuilds the DevCovenant-owned files that belong to the repository's

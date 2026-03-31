@@ -22,7 +22,7 @@ body: |-
   6. [Operational Notes](#operational-notes)
 
   ## Purpose
-  This map lists the shipped profiles and who owns them for 1.0.1.
+  This map lists the shipped profiles and who owns them.
 
   ## Global Rules
   - `global` profile is always active at runtime.

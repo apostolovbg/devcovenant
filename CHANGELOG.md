@@ -1,13 +1,13 @@
 # Changelog
 **Doc ID:** CHANGELOG
 **Doc Type:** changelog
-**Project Version:** 1.0.1
+**Project Version:** 1.0.1.dev1
 **Project Stage:** stable
 **Maintenance Stance:** active
 **Compatibility Policy:** forward-only
 **Versioning Mode:** versioned
 **Last Updated:** 2026-03-31
-**DevCovenant Version:** 1.0.1
+**DevCovenant Version:** 1.0.1.dev1
 
 <!-- DEVCOV:BEGIN -->
 ## DevCovenant Change Logging Rules
@@ -18,7 +18,7 @@ Keep entries newest-first and record dates in ISO format (`YYYY-MM-DD`).
 Each entry must include Change/Why/Impact summary lines with action verbs.
 Example:
 ```
-## Version 1.0.1
+## Version 1.2.3
 
 - 2026-01-23:
   Change: Fixed null-pointer crash in invoice import.
@@ -43,7 +43,7 @@ Example:
   notifications/retry.py
   notifications/test_retry.py
 
-## Version 1.0.0
+## Version 1.2.2
 
 - 2026-01-21:
   Change: Added initial release for invoice import and notification flow.
@@ -58,10 +58,141 @@ Example:
 
 ## Log changes here
 
-## Version 1.0.1
+## Version 1.0.1.dev1
 
 - 2026-03-31:
-  Change: added the `package-runtime-mirror` custom policy with an
+  Change: renamed the package mirror policy to
+    `package-artifact-mirror`, copied the root `LICENSE` into
+    `devcovenant/licenses/LICENSE`, and fixed the mirror checker and
+    autofixer so separately mirrored files can live inside mirrored
+    directories.
+  Why: preserved the shipped package artifact bundle as one
+    self-contained surface without
+    making the `licenses/**` directory mirror fight the nested root
+    `LICENSE` mirror or leaving stale runtime-only policy wording in the
+    source docs and registry surface.
+  Impact: preserved one coherent package artifact mirror contract for
+    the root lock, the root license, and the third-party license
+    bundle, aligned nested `LICENSE` handling during directory sync,
+    and documented the packaged artifact boundary consistently across
+    repo and package docs.
+  Files:
+  AGENTS.md
+  CHANGELOG.md
+  MANIFEST.in
+  README.md
+  devcovenant/README.md
+  devcovenant/config.yaml
+  devcovenant/core/services/manifest_inventory.py
+  devcovenant/custom/policies/package_runtime_mirror/autofix/global.py
+  devcovenant/custom/policies/package_runtime_mirror/\
+    package_runtime_mirror.py
+  devcovenant/custom/policies/package_runtime_mirror/\
+    package_runtime_mirror.yaml
+  devcovenant/custom/policies/package_artifact_mirror/\
+    autofix/global.py
+  devcovenant/custom/policies/package_artifact_mirror/\
+    package_artifact_mirror.py
+  devcovenant/custom/policies/package_artifact_mirror/\
+    package_artifact_mirror.yaml
+  devcovenant/custom/profiles/devcovrepo/assets/docs/installation.md
+  devcovenant/custom/profiles/devcovrepo/assets/docs/policies.md
+  devcovenant/custom/profiles/devcovrepo/assets/docs/registry.md
+  devcovenant/custom/profiles/devcovrepo/assets/docs/workflow.md
+  devcovenant/docs/architecture.md
+  devcovenant/docs/installation.md
+  devcovenant/docs/policies.md
+  devcovenant/docs/registry.md
+  devcovenant/docs/workflow.md
+  devcovenant/licenses/LICENSE
+  devcovenant/registry/registry.yaml
+  pyproject.toml
+  tests/devcovenant/custom/policies/package_runtime_mirror/autofix/\
+    test_global.py
+  tests/devcovenant/custom/policies/package_runtime_mirror/\
+    test_package_runtime_mirror.py
+  tests/devcovenant/custom/policies/package_artifact_mirror/\
+    autofix/test_global.py
+  tests/devcovenant/custom/policies/package_artifact_mirror/\
+    test_package_artifact_mirror.py
+  tests/devcovenant/test_install.py
+
+- 2026-03-31:
+  Change: enabled repo version-governance, switched the canonical
+    version scheme to PEP 440, and changed the governed prerelease line
+    to `1.0.1.dev1` from the single source file `devcovenant/VERSION`.
+  Why: aligned active enforcement with the one-file version model so
+    prerelease work no longer depends on stale SemVer assumptions or
+    prose-defined release identity in docs and templates.
+  Impact: aligns `devcovenant/VERSION` as the only version-defining file,
+    regenerates matching metadata and managed docs for `1.0.1.dev1`,
+    synchronizes the narrowed license report mirror, and removes unnecessary
+    release-number narration from repo and package documentation sources.
+  Files:
+  AGENTS.md
+  CHANGELOG.md
+  CONTRIBUTING.md
+  LICENSE
+  PLAN.md
+  POLICY_MAP.md
+  PRIVACY.md
+  PROFILE_MAP.md
+  README.md
+  SECURITY.md
+  SPEC.md
+  SUPPORT.md
+  devcovenant/README.md
+  devcovenant/VERSION
+  devcovenant/__init__.py
+  devcovenant/builtin/policies/README.md
+  devcovenant/builtin/profiles/README.md
+  devcovenant/builtin/profiles/global/assets/CHANGELOG.yaml
+  devcovenant/builtin/profiles/global/assets/LICENSE.yaml
+  devcovenant/config.yaml
+  devcovenant/core/README.md
+  devcovenant/core/services/managed_docs.py
+  devcovenant/custom/README.md
+  devcovenant/custom/policies/README.md
+  devcovenant/custom/profiles/README.md
+  devcovenant/custom/profiles/devcovrepo/assets/POLICY_MAP.yaml
+  devcovenant/custom/profiles/devcovrepo/assets/PROFILE_MAP.yaml
+  devcovenant/custom/profiles/devcovrepo/assets/docs/config.md
+  devcovenant/custom/profiles/devcovrepo/assets/docs/installation.md
+  devcovenant/custom/profiles/devcovrepo/assets/docs/policies.md
+  devcovenant/custom/profiles/devcovrepo/assets/docs/profiles.md
+  devcovenant/custom/profiles/devcovrepo/assets/docs/refresh.md
+  devcovenant/custom/profiles/devcovrepo/assets/docs/registry.md
+  devcovenant/custom/profiles/devcovrepo/assets/docs/troubleshooting.md
+  devcovenant/custom/profiles/devcovrepo/assets/docs/workflow.md
+  devcovenant/custom/profiles/devcovrepo/devcovrepo.yaml
+  devcovenant/docs/architecture.md
+  devcovenant/docs/config.md
+  devcovenant/docs/contracts.md
+  devcovenant/docs/installation.md
+  devcovenant/docs/policies.md
+  devcovenant/docs/profiles.md
+  devcovenant/docs/project_governance.md
+  devcovenant/docs/refresh.md
+  devcovenant/docs/registry.md
+  devcovenant/docs/troubleshooting.md
+  devcovenant/docs/workflow.md
+  devcovenant/licenses/THIRD_PARTY_LICENSES.md
+  devcovenant/logs/README.md
+  devcovenant/registry/README.md
+  devcovenant/registry/registry.yaml
+  devcovenant/upgrade.py
+  licenses/THIRD_PARTY_LICENSES.md
+  pyproject.toml
+  tests/devcovenant/builtin/policies/version_governance/\
+    test_version_governance.py
+  tests/devcovenant/core/services/test_managed_docs.py
+  tests/devcovenant/test_cli.py
+  tests/devcovenant/test_deploy.py
+  tests/devcovenant/test_refresh.py
+  tests/devcovenant/test_upgrade.py
+
+- 2026-03-31:
+  Change: added the `package-artifact-mirror` custom policy with an
     autofixer, mirrored the canonical root `requirements.lock` and
     `licenses/**` into `devcovenant/`, and aligned GitHub/governance
     installs with the one-root-lock packaging model.
@@ -111,9 +242,10 @@ Example:
   tests/devcovenant/core/services/test_profile_registry.py
   tests/devcovenant/test_install.py
   tests/devcovenant/test_refresh.py
-  devcovenant/custom/policies/package_runtime_mirror/autofix/global.py
-  devcovenant/custom/policies/package_runtime_mirror/package_runtime_mirror.py
-  devcovenant/custom/policies/package_runtime_mirror/package_runtime_mirror.yaml
+  devcovenant/custom/policies/package_artifact_mirror/autofix/global.py
+  devcovenant/custom/policies/package_artifact_mirror/\
+    package_artifact_mirror.py
+  devcovenant/custom/policies/package_artifact_mirror/package_artifact_mirror.yaml
   devcovenant/licenses/PyYAML-6.0.3.txt
   devcovenant/licenses/README.md
   devcovenant/licenses/THIRD_PARTY_LICENSES.md
@@ -138,12 +270,10 @@ Example:
   licenses/setuptools-82.0.1.txt
   licenses/twine-6.2.0.txt
   licenses/wheel-0.46.3.txt
-  tests/devcovenant/custom/policies/package_runtime_mirror/autofix/\
+  tests/devcovenant/custom/policies/package_artifact_mirror/autofix/\
     test_global.py
-  tests/devcovenant/custom/policies/package_runtime_mirror/\
-    test_package_runtime_mirror.py
-
-- 2026-03-31:
+  tests/devcovenant/custom/policies/package_artifact_mirror/\
+    test_package_artifact_mirror.py
   Change: corrected the first-run onboarding flow, synchronized the
     `devcov_core_paths` boundary with the real shipped runtime commands, and
     pinned the repo-specific build tooling used by the GitHub build proof.

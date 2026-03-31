@@ -1,5 +1,5 @@
 # Profiles
-**Project Version:** 1.0.1
+**Project Version:** 1.0.1.dev1
 
 ## Overview
 Profiles tell DevCovenant what kind of repository it is working in and which

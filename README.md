@@ -1,9 +1,9 @@
 # devcovenant
 **Doc ID:** README
 **Doc Type:** repo-readme
-**Project Version:** 1.0.1
+**Project Version:** 1.0.1.dev1
 **Last Updated:** 2026-03-31
-**DevCovenant Version:** 1.0.1
+**DevCovenant Version:** 1.0.1.dev1
 
 <!-- DEVCOV:BEGIN -->
 
@@ -308,8 +308,9 @@ ordinary user repositories do not need.
 - The builtin `github` profile owns the generic GitHub Actions CI base and
   bootstraps DevCovenant from the shipped
   `devcovenant/requirements.lock`.
-- The package ships `devcovenant/licenses/**` beside that lock so the bundled
-  dependency report and third-party license set stay self-contained.
+- The package ships `devcovenant/licenses/LICENSE` and
+  `devcovenant/licenses/**` beside that lock so the bundled root license,
+  dependency report, and third-party license set stay self-contained.
 - This repo activates `github`, and `devcovrepo` extends that workflow with
   repo-specific `Governance` and `Build` behavior.
 - `.github/workflows/publish.yml` stays repo-maintained and publishes only the
@@ -328,5 +329,5 @@ ordinary user repositories do not need.
 DevCovenant is released under the MIT License.
 See [LICENSE](LICENSE) and
 [licenses/THIRD_PARTY_LICENSES.md](licenses/THIRD_PARTY_LICENSES.md).
-The published package mirrors that compliance bundle under
+The published package mirrors that license and compliance bundle under
 `devcovenant/licenses/`.

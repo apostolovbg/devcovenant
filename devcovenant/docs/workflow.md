@@ -1,6 +1,6 @@
 # Workflow
 **Last Updated:** 2026-03-31
-**Project Version:** 1.0.1
+**Project Version:** 1.0.1.dev1
 
 ## Overview
 Use this page for the required command order, the meaning of each gate stage,
@@ -125,8 +125,9 @@ The github-owned base should stay generic.
 It bootstraps DevCovenant from the shipped
 `devcovenant/requirements.lock` so it does not assume the
 repository's own dependency files belong to DevCovenant. The packaged
-`devcovenant/licenses/**` mirror travels with the same shipped lock so
-bootstrap surfaces keep the dependency report and license bundle together.
+`devcovenant/licenses/LICENSE` and `devcovenant/licenses/**` mirrors travel
+with the same shipped lock so bootstrap surfaces keep the root license,
+dependency report, and third-party license bundle together.
 Repo-family build proof should pin its own build tooling in the profile-owned
 fragment so reruns stay stable without making the builtin base repo-specific.
 If a repo family needs extra proof or extra source-tree steps, that extension

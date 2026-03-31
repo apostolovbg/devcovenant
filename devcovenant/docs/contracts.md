@@ -1,6 +1,6 @@
 # Contracts
 **Last Updated:** 2026-03-31
-**Project Version:** 1.0.1
+**Project Version:** 1.0.1.dev1
 
 ## Overview
 This page is the ownership map for the DevCovenant package docs.

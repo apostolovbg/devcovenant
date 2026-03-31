@@ -1,13 +1,13 @@
 # Development Plan
 **Doc ID:** PLAN
 **Doc Type:** plan
-**Project Version:** 1.0.1
+**Project Version:** 1.0.1.dev1
 **Project Stage:** stable
 **Maintenance Stance:** active
 **Compatibility Policy:** forward-only
 **Versioning Mode:** versioned
-**Last Updated:** 2026-03-30
-**DevCovenant Version:** 1.0.1
+**Last Updated:** 2026-03-31
+**DevCovenant Version:** 1.0.1.dev1
 
 <!-- DEVCOV:BEGIN -->
 This opening section is managed by DevCovenant.
@@ -55,15 +55,16 @@ Keep items dependency-ordered, concrete, and current.
   planning.
 
 ## Active Work
-1. [not done] Release-readiness review and hardening for orphaned `1.0.1`.
+1. [not done] Release-readiness review and hardening for the orphaned
+   prerelease line.
    Goal:
    - finish one industry-standard pre-release QA review and any blocking
-     hardening needed to ship `1.0.1` as the first real public release after
-     orphaning the branch.
+     hardening needed to ship the next real public release after orphaning
+     the branch.
    Why this matters:
-   - `1.0.1` needs to ship from a source tree that is operationally clean,
-     contract-stable, packaging-correct, CI/publish-safe, and free of
-     accidental fallback behavior.
+   - the prerelease line needs to ship from a source tree that is
+     operationally clean, contract-stable, packaging-correct, CI/publish-safe,
+     and free of accidental fallback behavior.
    - this review must be one slice, not a five-slice roadmap, so release
      readiness is judged as one coherent go/no-go decision instead of a queue
      of loosely related mini-projects.
@@ -117,7 +118,8 @@ Keep items dependency-ordered, concrete, and current.
      release-proof commands needed to validate build and publish surfaces.
    - produce one explicit release-readiness verdict at the end:
      blockers, non-blocking risks, exact fixes landed in the same slice, and a
-     final go/no-go recommendation for orphaning plus `1.0.1`.
+     final go/no-go recommendation for orphaning plus the next real public
+     release.
    Done when:
    - the review has been executed as one slice and the blocker list is empty.
    - all source-owned workflow surfaces are aligned and green:
@@ -135,7 +137,7 @@ Keep items dependency-ordered, concrete, and current.
      tree without depending on local accidents or stale ignored outputs.
    - the final governed tree passes `devcovenant check`, and the release
      review can end with a justified go/no-go recommendation for orphaning and
-     shipping `1.0.1`.
+     shipping the next real public release.
 
 ## Validation Routine
 - Verify checks and tests pass.

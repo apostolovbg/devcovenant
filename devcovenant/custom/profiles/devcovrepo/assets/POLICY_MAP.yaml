@@ -21,7 +21,7 @@ body: |-
   6. [Metadata Families](#metadata-families)
 
   ## Purpose
-  This map lists the shipped policies and who owns them for 1.0.1.
+  This map lists the shipped policies and who owns them.
 
   ## Global Rules
   - Policy activation authority is `config.policy_state` only.

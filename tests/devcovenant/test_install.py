@@ -52,6 +52,8 @@ def _unit_test_install_writes_config_reviewed_and_manifest() -> None:
         assert config_path.exists()
         runtime_requirements = repo_root / "devcovenant" / "requirements.lock"
         assert runtime_requirements.exists()
+        package_license = repo_root / "devcovenant" / "licenses" / "LICENSE"
+        assert package_license.exists()
         package_licenses = (
             repo_root / "devcovenant" / "licenses" / "THIRD_PARTY_LICENSES.md"
         )
@@ -588,6 +590,7 @@ def _unit_test_pyproject_uses_pep639_license_metadata() -> None:
         "README.md",
         "VERSION",
         "requirements.lock",
+        "licenses/LICENSE",
         "licenses/README.md",
         "licenses/THIRD_PARTY_LICENSES.md",
         "licenses/*.txt",
@@ -619,6 +622,7 @@ def _unit_test_manifest_includes_license_artifacts() -> None:
     assert "recursive-include licenses *.txt" in content
     assert "include devcovenant/logs/README.md" in content
     assert "include devcovenant/requirements.lock" in content
+    assert "include devcovenant/licenses/LICENSE" in content
     assert "recursive-include devcovenant/licenses *.md" in content
     assert "recursive-include devcovenant/licenses *.txt" in content
     assert "recursive-include devcovenant/docs *" in content
@@ -687,6 +691,7 @@ def _unit_test_wheel_includes_packaged_runtime_artifacts() -> None:
     """Wheel should ship the packaged lock and mirrored license bundle."""
     entries = _cached_wheel_entries()
     assert "devcovenant/requirements.lock" in entries
+    assert "devcovenant/licenses/LICENSE" in entries
     assert "devcovenant/licenses/README.md" in entries
     assert "devcovenant/licenses/THIRD_PARTY_LICENSES.md" in entries
 

@@ -1,13 +1,13 @@
 # DevCovenant Development Guide
 **Doc ID:** AGENTS
 **Doc Type:** policy-source
-**Project Version:** 1.0.1
+**Project Version:** 1.0.1.dev1
 **Project Stage:** stable
 **Maintenance Stance:** active
 **Compatibility Policy:** forward-only
 **Versioning Mode:** versioned
 **Last Updated:** 2026-03-31
-**DevCovenant Version:** 1.0.1
+**DevCovenant Version:** 1.0.1.dev1
 
 <!-- DEVCOV:BEGIN -->
 # Message from DevCovenant's Human (Read First)
@@ -46,7 +46,7 @@ DevCovenant lifecycle and command behavior used by this repository.
 - Remove stale notes immediately; stale notes are drift.
 
 ## Public Baseline Notes
-- This repository treats `1.0.1` as the public baseline.
+- Treat `devcovenant/VERSION` as the only version-defining file.
 - Preserve command/runtime contracts unless an explicit plan item changes them.
 - Keep implementation ownership layered under
   `devcovenant/core/{flow,runtime,services,lib,contracts}`.
@@ -198,7 +198,7 @@ directly.
 <!-- DEVCOV:BEGIN -->
 ## Project Governance
 This block reflects the repository's active project-governance state.
-- Project Version: 1.0.1
+- Project Version: 1.0.1.dev1
 - Project Stage: stable
 - Maintenance Stance: active
 - Compatibility Policy: forward-only
@@ -1342,25 +1342,28 @@ through marker comments or marker regions.
 
 ---
 
-## Policy: Package Runtime Mirror
+## Policy: Package Artifact Mirror
 
 ```policy-def
-id: package-runtime-mirror
+id: package-artifact-mirror
 severity: error
 auto_fix: true
 enforcement: active
 enabled: true
 custom: true
 file_mirrors: requirements.lock=>devcovenant/requirements.lock
+  LICENSE=>devcovenant/licenses/LICENSE
 dir_mirrors: licenses=>devcovenant/licenses
 ```
 
-Ensure package-shipped runtime dependency and compliance artifacts stay in
-exact sync with the canonical repo-root artifacts they mirror. This repo
-uses the policy to keep `devcovenant/requirements.lock` aligned with the
-canonical root `requirements.lock`, and `devcovenant/licenses/**` aligned
-with the canonical root `licenses/**`. Auto-fix rewrites the package mirror
-from the configured source paths and removes stale mirrored files.
+Ensure package-shipped dependency and compliance artifacts stay in exact
+sync with the canonical repo-root artifacts they mirror. This repo uses the
+policy to keep `devcovenant/requirements.lock` aligned with the canonical
+root `requirements.lock`, `devcovenant/licenses/LICENSE` aligned with the
+canonical root `LICENSE`, and `devcovenant/licenses/**` aligned with the
+canonical root `licenses/**`. Auto-fix rewrites the package mirror from
+the configured source paths, preserves separately mirrored files that live
+inside mirrored directories, and removes stale mirrored files.
 
 
 ---
@@ -1595,16 +1598,16 @@ id: version-governance
 severity: error
 auto_fix: false
 enforcement: active
-enabled: false
+enabled: true
 custom: false
-scheme: semver
+scheme: pep440
 enforce_bumping: True
-canonical_versions_required: False
+canonical_versions_required: True
 version_file: devcovenant/VERSION
 changelog_file: CHANGELOG.md
 changelog_header_prefix: ## Version
 ignored_prefixes:
-semver_scope_tags_required: True
+semver_scope_tags_required: false
 pep440_allow_prereleases: True
 pep440_allow_dev_releases: True
 pep440_allow_post_releases: True

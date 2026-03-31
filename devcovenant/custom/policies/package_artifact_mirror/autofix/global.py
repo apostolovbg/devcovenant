@@ -1,5 +1,5 @@
 """
-Fixer: Package Runtime Mirror
+Fixer: Package Artifact Mirror
 
 Sync package-shipped mirror artifacts from their canonical repo-root sources.
 """
@@ -12,10 +12,10 @@ from pathlib import Path
 from devcovenant.core.contracts.policy import FixResult, PolicyFixer, Violation
 
 
-class PackageRuntimeMirrorFixer(PolicyFixer):
-    """Rewrite configured package-runtime mirrors from their source paths."""
+class PackageArtifactMirrorFixer(PolicyFixer):
+    """Rewrite configured package-artifact mirrors from their source paths."""
 
-    policy_id = "package-runtime-mirror"
+    policy_id = "package-artifact-mirror"
 
     def can_fix(self, violation: Violation) -> bool:
         """Return True when the violation belongs to this mirror policy."""
@@ -55,6 +55,7 @@ class PackageRuntimeMirrorFixer(PolicyFixer):
                     success=False,
                     message=f"Mirror source directory is missing: {source}.",
                 )
+            preserved_paths = self._preserved_file_payloads(violation)
             if target.exists():
                 if target.is_dir():
                     shutil.rmtree(target)
@@ -62,6 +63,10 @@ class PackageRuntimeMirrorFixer(PolicyFixer):
                     target.unlink()
             target.parent.mkdir(parents=True, exist_ok=True)
             shutil.copytree(source, target)
+            for relative_path, payload in preserved_paths.items():
+                preserved_target = target / relative_path
+                preserved_target.parent.mkdir(parents=True, exist_ok=True)
+                preserved_target.write_bytes(payload)
             return FixResult(
                 success=True,
                 message=f"Synced {target} from {source}.",
@@ -69,5 +74,24 @@ class PackageRuntimeMirrorFixer(PolicyFixer):
             )
         return FixResult(
             success=False,
-            message=f"Unsupported package-runtime mirror kind: {kind}.",
+            message=f"Unsupported package-artifact mirror kind: {kind}.",
         )
+
+    def _preserved_file_payloads(
+        self, violation: Violation
+    ) -> dict[Path, bytes]:
+        """Return separately mirrored file payloads under one dir target."""
+        target_value = str(violation.context.get("target_path") or "").strip()
+        preserved_values = violation.context.get("preserved_paths", [])
+        if not target_value or not isinstance(preserved_values, list):
+            return {}
+        target_root = Path(target_value)
+        preserved_payloads: dict[Path, bytes] = {}
+        for raw_path in preserved_values:
+            rel_path = Path(str(raw_path).strip())
+            if not str(rel_path):
+                continue
+            file_path = target_root / rel_path
+            if file_path.is_file():
+                preserved_payloads[rel_path] = file_path.read_bytes()
+        return preserved_payloads

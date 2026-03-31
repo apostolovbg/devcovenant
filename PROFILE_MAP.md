@@ -1,9 +1,9 @@
 # Profile Map
 **Doc ID:** PROFILE_MAP
 **Doc Type:** reference-map
-**Project Version:** 1.0.1
+**Project Version:** 1.0.1.dev1
 **Last Updated:** 2026-03-31
-**DevCovenant Version:** 1.0.1
+**DevCovenant Version:** 1.0.1.dev1
 
 <!-- DEVCOV:BEGIN -->
 This opening section is managed by DevCovenant.
@@ -20,7 +20,7 @@ this block.
 6. [Operational Notes](#operational-notes)
 
 ## Purpose
-This map lists the shipped profiles and who owns them for 1.0.1.
+This map lists the shipped profiles and who owns them.
 
 ## Global Rules
 - `global` profile is always active at runtime.

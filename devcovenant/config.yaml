@@ -385,13 +385,13 @@ policy_state:
   no-future-dates: true
   no-print-outside-output-runtime: true
   no-raw-errors: true
-  package-runtime-mirror: true
+  package-artifact-mirror: true
   raw-string-escapes: false
   read-only-directories: true
   readme-sync: true
   security-scanner: true
   tests-coverage: true
-  version-governance: false
+  version-governance: true
   version-sync: true
 
 # -------------------------------------------------------------------
@@ -1084,7 +1084,7 @@ autogen_metadata_overlays:
     - tests
   version-governance:
     canonical_versions_required:
-    - 'False'
+    - 'True'
     changelog_file: CHANGELOG.md
     changelog_header_prefix:
     - '## Version'
@@ -1097,9 +1097,7 @@ autogen_metadata_overlays:
     pep440_allow_prereleases:
     - 'True'
     scheme:
-    - semver
-    semver_scope_tags_required:
-    - 'True'
+    - pep440
     version_file: devcovenant/VERSION
   version-sync:
     changelog_file: CHANGELOG.md

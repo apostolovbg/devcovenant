@@ -232,7 +232,7 @@ class GeneratedUnittestCases(unittest.TestCase):
                 "**Doc ID:** SPEC\n"
                 "**Doc Type:** specification\n"
                 "**Project Version:** 0.1.0\n"
-                "**DevCovenant Version:** 1.0.1\n\n"
+                "**DevCovenant Version:** 1.0.1.dev1\n\n"
                 "Imported spec body.\n",
                 encoding="utf-8",
             )
@@ -442,9 +442,9 @@ class GeneratedUnittestCases(unittest.TestCase):
                 "# Development Plan\n"
                 "**Doc ID:** PLAN\n"
                 "**Doc Type:** plan\n"
-                "**Project Version:** 1.0.1\n"
+                "**Project Version:** 1.0.1.dev1\n"
                 "**Last Updated:** 2026-03-01\n"
-                "**DevCovenant Version:** 1.0.1\n\n"
+                "**DevCovenant Version:** 1.0.1.dev1\n\n"
                 "This is the real planning body.\n\n"
                 "## Active Work\n"
                 "1. [not done] Preserve authored docs.\n",
@@ -556,13 +556,13 @@ class GeneratedUnittestCases(unittest.TestCase):
                 "# DevCovenant Development Guide\n"
                 "**Doc ID:** AGENTS\n"
                 "**Doc Type:** policy-source\n"
-                "**Project Version:** 1.0.1\n"
+                "**Project Version:** 1.0.1.dev1\n"
                 "**Project Stage:** stable\n"
                 "**Maintenance Stance:** active\n"
                 "**Compatibility Policy:** breaking-allowed\n"
                 "**Versioning Mode:** versioned\n"
                 "**Last Updated:** 2026-03-01\n"
-                "**DevCovenant Version:** 1.0.1\n\n"
+                "**DevCovenant Version:** 1.0.1.dev1\n\n"
                 "<!-- DEVCOV:BEGIN -->\n"
                 "old managed block\n"
                 "<!-- DEVCOV:END -->\n\n"

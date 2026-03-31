@@ -4,7 +4,7 @@ metadata:
 project-governance:
   project_name: devcovenant
   project_description: devcovenant is a repository governance framework.
-  project_version: 1.0.1
+  project_version: 1.0.1.dev1
   stage: stable
   maintenance_stance: active
   compatibility_policy: forward-only
@@ -87,7 +87,7 @@ managed-docs:
       project_governance_headers: false
       import_seed: true
       authoritative_source: true
-      body_fingerprint: 0c2da4a9cb0a1da9fba803b54ae03d08f7d5b1901f0010066de2760857934775
+      body_fingerprint: da66580a2541aed4f2bb747e4e7a6f41b1d4909c9b11d8e08b467d0aa1fed5b4
     PRIVACY.md:
       enabled: true
       descriptor_path: devcovenant/custom/profiles/devcovrepo/assets/PRIVACY.yaml
@@ -101,7 +101,7 @@ managed-docs:
       project_governance_headers: false
       import_seed: true
       authoritative_source: true
-      body_fingerprint: cbd6bda3b1e74a99a99ae2825efbac4ef043a71d10496c1f819fcc6484f20114
+      body_fingerprint: e9dfe82219056c68bd75e6b99e3966d7297b230ecf305dd4303ffcfb5dc444cb
     README.md:
       enabled: true
       descriptor_path: devcovenant/builtin/profiles/global/assets/README.yaml
@@ -8285,7 +8285,7 @@ policies:
     hash: d760b491b68f395a079cd594bade23e82d06cbb716102195e0261b145383211c
     script_path: builtin/version_sync.py
   version-governance:
-    enabled: false
+    enabled: true
     custom: false
     description: Version Governance
     policy_text: |-
@@ -8303,16 +8303,16 @@ policies:
       severity: error
       auto_fix: 'false'
       enforcement: active
-      enabled: 'false'
+      enabled: 'true'
       custom: 'false'
-      scheme: semver
+      scheme: pep440
       enforce_bumping: 'True'
-      canonical_versions_required: 'False'
+      canonical_versions_required: 'True'
       version_file: devcovenant/VERSION
       changelog_file: CHANGELOG.md
       changelog_header_prefix: '## Version'
       ignored_prefixes: ''
-      semver_scope_tags_required: 'True'
+      semver_scope_tags_required: 'false'
       pep440_allow_prereleases: 'True'
       pep440_allow_dev_releases: 'True'
       pep440_allow_post_releases: 'True'
@@ -8366,15 +8366,15 @@ policies:
           behavior: base
         profile_overlays:
           values:
-          - semver
+          - pep440
           behavior: replace
         autogen_overlays:
           values:
-          - semver
+          - pep440
           behavior: append
         effective:
           values:
-          - semver
+          - pep440
       enforce_bumping:
         descriptor:
           values:
@@ -8400,17 +8400,17 @@ policies:
           behavior: base
         profile_overlays:
           values:
-          - 'False'
+          - 'True'
           behavior: replace
           replaced_inherited_values:
           - 'false'
         autogen_overlays:
           values:
-          - 'False'
+          - 'True'
           behavior: append
         effective:
           values:
-          - 'False'
+          - 'True'
       version_file:
         descriptor:
           values: []
@@ -8471,19 +8471,9 @@ policies:
           values:
           - 'false'
           behavior: base
-        profile_overlays:
-          values:
-          - 'True'
-          behavior: replace
-          replaced_inherited_values:
-          - 'false'
-        autogen_overlays:
-          values:
-          - 'True'
-          behavior: append
         effective:
           values:
-          - 'True'
+          - 'false'
       pep440_allow_prereleases:
         descriptor:
           values:
@@ -8589,13 +8579,13 @@ policies:
           behavior: default
         policy_state:
           values:
-          - 'false'
+          - 'true'
           behavior: replace
           replaced_inherited_values:
           - 'true'
         effective:
           values:
-          - 'false'
+          - 'true'
       custom:
         runtime_defaults:
           values:
@@ -8612,16 +8602,16 @@ policies:
       severity: error
       auto_fix: false
       enforcement: active
-      enabled: false
+      enabled: true
       custom: false
-      scheme: semver
+      scheme: pep440
       enforce_bumping: true
-      canonical_versions_required: false
+      canonical_versions_required: true
       version_file: devcovenant/VERSION
       changelog_file: CHANGELOG.md
       changelog_header_prefix: '## Version'
       ignored_prefixes: ''
-      semver_scope_tags_required: true
+      semver_scope_tags_required: false
       pep440_allow_prereleases: true
       pep440_allow_dev_releases: true
       pep440_allow_post_releases: true
@@ -8638,15 +8628,15 @@ policies:
       severity: error
       auto_fix: false
       enforcement: active
-      enabled: false
+      enabled: true
       custom: false
-      scheme: semver
+      scheme: pep440
       enforce_bumping: true
-      canonical_versions_required: false
+      canonical_versions_required: true
       version_file: devcovenant/VERSION
       changelog_file: CHANGELOG.md
       changelog_header_prefix: '## Version'
-      semver_scope_tags_required: true
+      semver_scope_tags_required: false
       pep440_allow_prereleases: true
       pep440_allow_dev_releases: true
       pep440_allow_post_releases: true
@@ -8975,39 +8965,41 @@ policies:
     script_exists: true
     hash: c889d4319662e8f166cca2158587a84b7e625bf85a8e4df60b6b48ae80b59e0e
     script_path: builtin/dependency_management.py
-  package-runtime-mirror:
+  package-artifact-mirror:
     enabled: true
     custom: true
-    description: Package Runtime Mirror
+    description: Package Artifact Mirror
     policy_text: |-
-      Ensure package-shipped runtime dependency and compliance artifacts stay in
-      exact sync with the canonical repo-root artifacts they mirror. This repo
-      uses the policy to keep `devcovenant/requirements.lock` aligned with the
-      canonical root `requirements.lock`, and `devcovenant/licenses/**` aligned
-      with the canonical root `licenses/**`. Auto-fix rewrites the package mirror
-      from the configured source paths and removes stale mirrored files.
+      Ensure package-shipped dependency and compliance artifacts stay in exact
+      sync with the canonical repo-root artifacts they mirror. This repo uses the
+      policy to keep `devcovenant/requirements.lock` aligned with the canonical
+      root `requirements.lock`, `devcovenant/licenses/LICENSE` aligned with the
+      canonical root `LICENSE`, and `devcovenant/licenses/**` aligned with the
+      canonical root `licenses/**`. Auto-fix rewrites the package mirror from
+      the configured source paths, preserves separately mirrored files that live
+      inside mirrored directories, and removes stale mirrored files.
     metadata:
-      id: package-runtime-mirror
+      id: package-artifact-mirror
       severity: error
       auto_fix: 'true'
       enforcement: active
       enabled: 'true'
       custom: 'true'
-      file_mirrors: requirements.lock=>devcovenant/requirements.lock
+      file_mirrors: requirements.lock=>devcovenant/requirements.lock, LICENSE=>devcovenant/licenses/LICENSE
       dir_mirrors: licenses=>devcovenant/licenses
     metadata_resolution:
       id:
         descriptor:
           values:
-          - package-runtime-mirror
+          - package-artifact-mirror
           behavior: base
         runtime_identity:
           values:
-          - package-runtime-mirror
+          - package-artifact-mirror
           behavior: replace
         effective:
           values:
-          - package-runtime-mirror
+          - package-artifact-mirror
       severity:
         descriptor:
           values:
@@ -9036,10 +9028,12 @@ policies:
         descriptor:
           values:
           - requirements.lock=>devcovenant/requirements.lock
+          - LICENSE=>devcovenant/licenses/LICENSE
           behavior: base
         effective:
           values:
           - requirements.lock=>devcovenant/requirements.lock
+          - LICENSE=>devcovenant/licenses/LICENSE
       dir_mirrors:
         descriptor:
           values:
@@ -9075,31 +9069,34 @@ policies:
     runtime_actions: []
     commands: []
     runtime_metadata_options:
-      id: package-runtime-mirror
+      id: package-artifact-mirror
       severity: error
       auto_fix: true
       enforcement: active
       enabled: true
       custom: true
-      file_mirrors: requirements.lock=>devcovenant/requirements.lock
+      file_mirrors: &id073
+      - requirements.lock=>devcovenant/requirements.lock
+      - LICENSE=>devcovenant/licenses/LICENSE
       dir_mirrors: licenses=>devcovenant/licenses
     runtime_config_overrides: {}
     runtime_effective_options:
-      id: package-runtime-mirror
+      id: package-artifact-mirror
       severity: error
       auto_fix: true
       enforcement: active
       enabled: true
       custom: true
-      file_mirrors: requirements.lock=>devcovenant/requirements.lock
+      file_mirrors: *id073
       dir_mirrors: licenses=>devcovenant/licenses
     assets:
+    - LICENSE=>devcovenant/licenses/LICENSE
     - licenses=>devcovenant/licenses
     - requirements.lock=>devcovenant/requirements.lock
     origin: custom
     script_exists: true
-    hash: ed1b2129693c738549bb5610e23956dfee0477ca5249e3ac83da70118f9dbafc
-    script_path: custom/package_runtime_mirror.py
+    hash: ac5d11d6f85ed12ba5d88e9856e663b68c7d962a5396f4f97a729adc0b577baa
+    script_path: custom/package_artifact_mirror.py
 profiles:
   csharp:
     version: 1
@@ -12114,8 +12111,8 @@ profiles:
         target_role_dirs:
         - docs=>devcovenant/docs
       version-governance:
-        scheme: semver
-        semver_scope_tags_required: true
+        canonical_versions_required: true
+        scheme: pep440
         version_file: devcovenant/VERSION
     project-governance:
       project_name: devcovenant
@@ -12273,6 +12270,7 @@ inventory:
     - devcovenant/README.md
     - devcovenant/VERSION
     - devcovenant/requirements.lock
+    - devcovenant/licenses/LICENSE
     - devcovenant/licenses/README.md
     - devcovenant/licenses/THIRD_PARTY_LICENSES.md
     - devcovenant/logs/README.md

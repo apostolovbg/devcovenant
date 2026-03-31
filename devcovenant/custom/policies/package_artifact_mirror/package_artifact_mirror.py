@@ -1,8 +1,8 @@
 """
-Policy: Package Runtime Mirror
+Policy: Package Artifact Mirror
 
-Ensure package-shipped runtime artifacts mirror the canonical repo-root
-artifacts they are derived from.
+Ensure package-shipped artifacts mirror the canonical repo-root artifacts
+they are derived from.
 """
 
 from __future__ import annotations
@@ -17,10 +17,10 @@ from devcovenant.core.contracts.policy import (
 )
 
 
-class PackageRuntimeMirrorCheck(PolicyCheck):
+class PackageArtifactMirrorCheck(PolicyCheck):
     """Verify configured repo-root files and dirs mirror into the package."""
 
-    policy_id = "package-runtime-mirror"
+    policy_id = "package-artifact-mirror"
     version = "0.1.0"
 
     def check(self, context: CheckContext) -> List[Violation]:
@@ -38,7 +38,7 @@ class PackageRuntimeMirrorCheck(PolicyCheck):
                         severity="error",
                         file_path=source_path,
                         message=(
-                            "Configured package-runtime file mirror source "
+                            "Configured package-artifact file mirror source "
                             f"`{source_rel.as_posix()}` is missing."
                         ),
                     )
@@ -80,13 +80,22 @@ class PackageRuntimeMirrorCheck(PolicyCheck):
                         severity="error",
                         file_path=source_dir,
                         message=(
-                            "Configured package-runtime dir mirror source "
+                            "Configured package-artifact dir mirror source "
                             f"`{source_rel.as_posix()}` is missing."
                         ),
                     )
                 )
                 continue
-            mismatch = self._dir_mismatch(repo_root, source_dir, target_dir)
+            exempt_rel_paths = self._dir_exempt_target_rel_paths(
+                repo_root,
+                target_dir,
+            )
+            mismatch = self._dir_mismatch(
+                repo_root,
+                source_dir,
+                target_dir,
+                exempt_rel_paths=exempt_rel_paths,
+            )
             if mismatch is None:
                 continue
             violations.append(
@@ -95,6 +104,11 @@ class PackageRuntimeMirrorCheck(PolicyCheck):
                     target_path=target_dir,
                     message=mismatch,
                     kind="dir",
+                    extra_context={
+                        "preserved_paths": [
+                            path.as_posix() for path in exempt_rel_paths
+                        ]
+                    },
                 )
             )
 
@@ -107,8 +121,16 @@ class PackageRuntimeMirrorCheck(PolicyCheck):
         target_path: Path,
         message: str,
         kind: str,
+        extra_context: dict[str, object] | None = None,
     ) -> Violation:
         """Build one auto-fixable mirror-sync violation."""
+        context: dict[str, object] = {
+            "kind": kind,
+            "source_path": str(source_path),
+            "target_path": str(target_path),
+        }
+        if extra_context:
+            context.update(extra_context)
         return Violation(
             policy_id=self.policy_id,
             severity="error",
@@ -119,11 +141,7 @@ class PackageRuntimeMirrorCheck(PolicyCheck):
                 "sources."
             ),
             can_auto_fix=True,
-            context={
-                "kind": kind,
-                "source_path": str(source_path),
-                "target_path": str(target_path),
-            },
+            context=context,
         )
 
     def _mirror_pairs(self, option_key: str) -> list[tuple[Path, Path]]:
@@ -154,6 +172,8 @@ class PackageRuntimeMirrorCheck(PolicyCheck):
         repo_root: Path,
         source_dir: Path,
         target_dir: Path,
+        *,
+        exempt_rel_paths: set[Path],
     ) -> str | None:
         """Return one summary mismatch message for one mirrored directory."""
         source_rel = source_dir.relative_to(repo_root).as_posix()
@@ -169,7 +189,11 @@ class PackageRuntimeMirrorCheck(PolicyCheck):
         source_files = self._relative_file_map(source_dir)
         target_files = self._relative_file_map(target_dir)
         missing = sorted(set(source_files) - set(target_files))
-        extra = sorted(set(target_files) - set(source_files))
+        extra = sorted(
+            rel_path
+            for rel_path in set(target_files) - set(source_files)
+            if rel_path not in exempt_rel_paths
+        )
         changed = sorted(
             rel_path
             for rel_path in set(source_files) & set(target_files)
@@ -196,6 +220,21 @@ class PackageRuntimeMirrorCheck(PolicyCheck):
             f"`{target_rel}` must mirror `{source_rel}` exactly "
             f"({'; '.join(details)})."
         )
+
+    def _dir_exempt_target_rel_paths(
+        self, repo_root: Path, target_dir: Path
+    ) -> set[Path]:
+        """Return file-mirror targets that live under one dir mirror root."""
+        exempt_paths: set[Path] = set()
+        for _, target_rel in self._mirror_pairs("file_mirrors"):
+            absolute_target = repo_root / target_rel
+            if absolute_target == target_dir:
+                continue
+            try:
+                exempt_paths.add(absolute_target.relative_to(target_dir))
+            except ValueError:
+                continue
+        return exempt_paths
 
     def _relative_file_map(self, root: Path) -> dict[Path, Path]:
         """Return regular files under one root keyed by relative path."""

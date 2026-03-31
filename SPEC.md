@@ -1,13 +1,13 @@
 # Project Specification
 **Doc ID:** SPEC
 **Doc Type:** specification
-**Project Version:** 1.0.1
+**Project Version:** 1.0.1.dev1
 **Project Stage:** stable
 **Maintenance Stance:** active
 **Compatibility Policy:** forward-only
 **Versioning Mode:** versioned
 **Last Updated:** 2026-03-31
-**DevCovenant Version:** 1.0.1
+**DevCovenant Version:** 1.0.1.dev1
 
 <!-- DEVCOV:BEGIN -->
 This opening section is managed by DevCovenant.
@@ -402,12 +402,11 @@ intentionally not trying to do.
   - a git repository and filesystem access sufficient to manage repo-owned
     files
 - Compatibility expectations:
-  - the package version is `1.0.1`
+  - the package version comes from `devcovenant/VERSION`
   - the repository is `stable`, `active`, and `versioned`
   - the repository compatibility policy is `forward-only`
-  - version-governance metadata uses the SemVer scheme, even though stricter
-    SemVer enforcement is a separate governance choice from the presence of a
-    SemVer-shaped version string
+  - version-governance constrains the canonical version with the active
+    repository scheme instead of letting prose define release identity
 
 ## Constraints and Assumptions
 - Constraint: DevCovenant is a repository-local, file-centric tool. It assumes

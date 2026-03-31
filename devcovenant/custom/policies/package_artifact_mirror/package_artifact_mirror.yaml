@@ -1,0 +1,20 @@
+id: package-artifact-mirror
+text: |
+  Ensure package-shipped dependency and compliance artifacts stay in exact
+  sync with the canonical repo-root artifacts they mirror. This repo uses the
+  policy to keep `devcovenant/requirements.lock` aligned with the canonical
+  root `requirements.lock`, `devcovenant/licenses/LICENSE` aligned with the
+  canonical root `LICENSE`, and `devcovenant/licenses/**` aligned with the
+  canonical root `licenses/**`. Auto-fix rewrites the package mirror from
+  the configured source paths, preserves separately mirrored files that live
+  inside mirrored directories, and removes stale mirrored files.
+metadata:
+  id: package-artifact-mirror
+  severity: error
+  auto_fix: 'true'
+  enforcement: active
+  file_mirrors:
+    - requirements.lock=>devcovenant/requirements.lock
+    - LICENSE=>devcovenant/licenses/LICENSE
+  dir_mirrors:
+    - licenses=>devcovenant/licenses

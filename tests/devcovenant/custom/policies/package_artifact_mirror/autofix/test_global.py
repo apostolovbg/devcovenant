@@ -1,4 +1,4 @@
-"""Unit tests for package-runtime-mirror autofix."""
+"""Unit tests for package-artifact-mirror autofix."""
 
 from __future__ import annotations
 
@@ -9,9 +9,9 @@ from pathlib import Path
 
 from devcovenant.core.contracts.policy import Violation
 
-PackageRuntimeMirrorFixer = import_module(
-    "devcovenant.custom.policies.package_runtime_mirror.autofix.global"
-).PackageRuntimeMirrorFixer
+PackageArtifactMirrorFixer = import_module(
+    "devcovenant.custom.policies.package_artifact_mirror.autofix.global"
+).PackageArtifactMirrorFixer
 
 
 def _unit_test_syncs_file_mirror() -> None:
@@ -22,9 +22,9 @@ def _unit_test_syncs_file_mirror() -> None:
         target = repo_root / "devcovenant" / "requirements.lock"
         source.write_text("root lock\n", encoding="utf-8")
 
-        fixer = PackageRuntimeMirrorFixer()
+        fixer = PackageArtifactMirrorFixer()
         violation = Violation(
-            policy_id="package-runtime-mirror",
+            policy_id="package-artifact-mirror",
             severity="error",
             message="sync",
             context={
@@ -51,20 +51,22 @@ def _unit_test_syncs_dir_mirror_and_prunes_extra_files() -> None:
         (source / "THIRD_PARTY_LICENSES.md").write_text(
             "fresh\n", encoding="utf-8"
         )
+        (target / "LICENSE").write_text("root license\n", encoding="utf-8")
         (target / "THIRD_PARTY_LICENSES.md").write_text(
             "stale\n", encoding="utf-8"
         )
         (target / "EXTRA.txt").write_text("extra\n", encoding="utf-8")
 
-        fixer = PackageRuntimeMirrorFixer()
+        fixer = PackageArtifactMirrorFixer()
         violation = Violation(
-            policy_id="package-runtime-mirror",
+            policy_id="package-artifact-mirror",
             severity="error",
             message="sync",
             context={
                 "kind": "dir",
                 "source_path": str(source),
                 "target_path": str(target),
+                "preserved_paths": ["LICENSE"],
             },
         )
 
@@ -74,13 +76,16 @@ def _unit_test_syncs_dir_mirror_and_prunes_extra_files() -> None:
         assert (target / "THIRD_PARTY_LICENSES.md").read_text(
             encoding="utf-8"
         ) == "fresh\n"
+        assert (target / "LICENSE").read_text(encoding="utf-8") == (
+            "root license\n"
+        )
         assert not (target / "EXTRA.txt").exists()
 
 
 def _unit_test_fixer_symbol_contract_is_stable() -> None:
     """Fixer symbol contract should stay explicit and importable."""
-    assert PackageRuntimeMirrorFixer.__name__ == "PackageRuntimeMirrorFixer"
-    assert hasattr(PackageRuntimeMirrorFixer, "fix")
+    assert PackageArtifactMirrorFixer.__name__ == "PackageArtifactMirrorFixer"
+    assert hasattr(PackageArtifactMirrorFixer, "fix")
 
 
 class GeneratedUnittestCases(unittest.TestCase):

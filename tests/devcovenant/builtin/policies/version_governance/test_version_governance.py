@@ -109,7 +109,7 @@ def _unit_test_runtime_check_resolves_effective_options() -> None:
     )
     assert isinstance(check, version_governance.VersionGovernanceCheck)
     assert check.get_option("version_file") == "devcovenant/VERSION"
-    assert check._scheme_name() == "semver"
+    assert check._scheme_name() == "pep440"
 
 
 def _unit_test_runtime_scheme_resolves_override_scheme() -> None:

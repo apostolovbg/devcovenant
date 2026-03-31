@@ -75,6 +75,7 @@ DEFAULT_CORE_FILES = [
     "devcovenant/README.md",
     "devcovenant/VERSION",
     "devcovenant/requirements.lock",
+    "devcovenant/licenses/LICENSE",
     "devcovenant/licenses/README.md",
     "devcovenant/licenses/THIRD_PARTY_LICENSES.md",
     "devcovenant/logs/README.md",

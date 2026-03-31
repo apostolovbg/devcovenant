@@ -7,8 +7,8 @@ import re
 from datetime import datetime, timezone
 from pathlib import Path
 
-import semver
 import yaml
+from packaging.version import InvalidVersion, Version
 
 from devcovenant.core.lib import agents_blocks as agents_blocks_lib
 from devcovenant.core.services import (
@@ -79,11 +79,6 @@ _MANAGED_DOC_REQUIRED_BOOLEAN_KEYS = (
     "project_version",
     "last_updated",
     "devcovenant_version",
-)
-_SEMVER_COMPARE_RE = re.compile(
-    r"^(?P<core>\d+(?:\.\d+){0,2})"
-    r"(?:-(?P<prerelease>[0-9A-Za-z.-]+))?"
-    r"(?:\+(?P<build>[0-9A-Za-z.-]+))?$"
 )
 
 
@@ -1572,34 +1567,21 @@ def sync_agents_content(
 
 
 def normalize_devcovenant_version_for_compare(raw: str) -> str:
-    """Normalize DevCovenant version text into SemVer-compatible form."""
+    """Normalize DevCovenant version text into canonical PEP 440."""
     token = str(raw or "").strip()
     if not token:
         raise ValueError("DevCovenant version cannot be empty.")
-    if token[:1] in {"v", "V"}:
-        token = token[1:].strip()
-    match = _SEMVER_COMPARE_RE.fullmatch(token)
-    if match is None:
-        raise ValueError(f"Invalid DevCovenant version string `{raw}`.")
-    core_parts = [part.strip() for part in match.group("core").split(".")]
-    if any(not part.isdigit() for part in core_parts):
-        raise ValueError(f"Invalid DevCovenant version string `{raw}`.")
-    while len(core_parts) < 3:
-        core_parts.append("0")
-    normalized = ".".join(core_parts[:3])
-    prerelease = str(match.group("prerelease") or "").strip()
-    build = str(match.group("build") or "").strip()
-    if prerelease:
-        normalized = f"{normalized}-{prerelease}"
-    if build:
-        normalized = f"{normalized}+{build}"
-    semver.Version.parse(normalized)
-    return normalized
+    try:
+        return str(Version(token))
+    except InvalidVersion as exc:
+        raise ValueError(
+            f"Invalid DevCovenant version string `{raw}`."
+        ) from exc
 
 
-def parse_devcovenant_version_for_compare(raw: str) -> semver.Version:
+def parse_devcovenant_version_for_compare(raw: str) -> Version:
     """Parse one DevCovenant version for ordering checks."""
-    return semver.Version.parse(normalize_devcovenant_version_for_compare(raw))
+    return Version(normalize_devcovenant_version_for_compare(raw))
 
 
 def detect_importable_managed_docs(

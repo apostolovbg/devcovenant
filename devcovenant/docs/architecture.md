@@ -1,6 +1,6 @@
 # DevCovenant Architecture
 **Last Updated:** 2026-03-31
-**Project Version:** 1.0.1
+**Project Version:** 1.0.1.dev1
 
 ## Overview
 This document explains how DevCovenant is put together.
@@ -165,7 +165,8 @@ That split keeps saved setup separate from disposable runtime session state.
 The published package ships the docs, builtin policies, builtin profiles,
 assets, translators, and runtime modules that DevCovenant needs to operate.
 That includes the shipped `devcovenant/requirements.lock` bootstrap file and
-the mirrored `devcovenant/licenses/**` bundle that travels with it.
+the mirrored `devcovenant/licenses/LICENSE` and
+`devcovenant/licenses/**` bundle that travels with it.
 It does not ship live repository state such as:
 
 - `devcovenant/config.yaml`

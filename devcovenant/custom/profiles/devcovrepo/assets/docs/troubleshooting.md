@@ -1,5 +1,5 @@
 # Troubleshooting
-**Project Version:** 1.0.1
+**Project Version:** 1.0.1.dev1
 
 ## Overview
 Use this guide when DevCovenant is blocking work and you need the fastest clean

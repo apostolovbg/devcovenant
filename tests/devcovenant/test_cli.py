@@ -179,7 +179,7 @@ def _unit_test_cli_version_flag_prints_version(monkeypatch) -> None:
             raise AssertionError("Expected SystemExit from cli.main().")
 
     assert code == 0
-    assert stdout_buffer.getvalue().strip() == "devcovenant 1.0.1"
+    assert stdout_buffer.getvalue().strip() == "devcovenant 1.0.1.dev1"
 
 
 def _unit_test_cli_reexecs_when_managed_env_differs(monkeypatch) -> None:
@@ -906,7 +906,7 @@ def _unit_test_source_checkout_import_cleans_repo_cache_on_exit() -> None:
         text=True,
     )
     assert result.returncode == 0, result.stderr
-    assert result.stdout.strip() == "1.0.1"
+    assert result.stdout.strip() == "1.0.1.dev1"
     assert not cache_dir.exists()
 
 

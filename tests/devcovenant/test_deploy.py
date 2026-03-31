@@ -72,7 +72,7 @@ def _unit_test_deploy_adopts_pre_authored_spec_doc() -> None:
             "**Doc ID:** SPEC\n"
             "**Doc Type:** specification\n"
             "**Project Version:** 9.9.9\n"
-            "**DevCovenant Version:** 1.0.1\n\n"
+            "**DevCovenant Version:** 1.0.1.dev1\n\n"
             "Imported app specification body.\n",
             encoding="utf-8",
         )

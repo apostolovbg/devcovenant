@@ -306,17 +306,17 @@ def _unit_test_upgrade_recreates_missing_tracked_registry_only() -> None:
 def _unit_test_parse_version_for_compare_normalizes_partial_and_v_prefix() -> (
     None
 ):
-    """Upgrade parser should normalize partial tokens and `v` prefix."""
+    """Upgrade parser should canonicalize partial tokens and `v` prefix."""
     parsed = upgrade._parse_version_for_compare("v1.2")
-    assert str(parsed) == "1.2.0"
+    assert str(parsed) == "1.2"
     parsed_plain = upgrade._parse_version_for_compare("1")
-    assert str(parsed_plain) == "1.0.0"
+    assert str(parsed_plain) == "1"
 
 
 def _unit_test_parse_version_for_compare_supports_prerelease_ordering() -> (
     None
 ):
-    """Upgrade version parser should preserve SemVer prerelease ordering."""
+    """Upgrade version parser should preserve prerelease ordering."""
     release = upgrade._parse_version_for_compare("1.0.0")
     prerelease = upgrade._parse_version_for_compare("1.0.0-rc.1")
     next_prerelease = upgrade._parse_version_for_compare("1.0.0-rc.2")
@@ -325,7 +325,7 @@ def _unit_test_parse_version_for_compare_supports_prerelease_ordering() -> (
 
 
 def _unit_test_parse_version_for_compare_rejects_invalid_tokens() -> None:
-    """Upgrade version parser should reject invalid non-semver strings."""
+    """Upgrade version parser should reject invalid package versions."""
     try:
         upgrade._parse_version_for_compare("1.2.x")
     except ValueError as error:

@@ -1,9 +1,9 @@
 # Policy Map
 **Doc ID:** POLICY_MAP
 **Doc Type:** reference-map
-**Project Version:** 1.0.1
+**Project Version:** 1.0.1.dev1
 **Last Updated:** 2026-03-31
-**DevCovenant Version:** 1.0.1
+**DevCovenant Version:** 1.0.1.dev1
 
 <!-- DEVCOV:BEGIN -->
 This opening section is managed by DevCovenant.
@@ -19,7 +19,7 @@ Use `POLICY_MAP.md` to track policy inventory and ownership below this block.
 6. [Metadata Families](#metadata-families)
 
 ## Purpose
-This map lists the shipped policies and who owns them for 1.0.1.
+This map lists the shipped policies and who owns them.
 
 ## Global Rules
 - Policy activation authority is `config.policy_state` only.

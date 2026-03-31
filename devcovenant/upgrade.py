@@ -11,13 +11,12 @@ if __package__ in {None, ""}:  # pragma: no cover
 
 import argparse
 import importlib.metadata as importlib_metadata
-import re
 import shutil
 import tempfile
 from collections.abc import Callable
 from pathlib import Path
 
-import semver
+from packaging.version import InvalidVersion, Version
 
 from devcovenant import install
 from devcovenant.core.flow.refresh import refresh_repo
@@ -42,11 +41,6 @@ _UPGRADE_REPO_ONLY_CUSTOM_PRUNE_DIRS = (
     Path("devcovenant/custom/policies/readme_sync"),
     Path("devcovenant/custom/profiles/devcovrepo"),
 )
-_SEMVER_COMPARE_RE = re.compile(
-    r"^(?P<core>\d+(?:\.\d+){0,2})"
-    r"(?:-(?P<prerelease>[0-9A-Za-z.-]+))?"
-    r"(?:\+(?P<build>[0-9A-Za-z.-]+))?$"
-)
 
 
 def _read_version(path: Path) -> str:
@@ -58,46 +52,22 @@ def _read_version(path: Path) -> str:
 
 
 def _normalize_version_for_compare(raw: str) -> str:
-    """Normalize DevCovenant package version text into parseable SemVer."""
+    """Normalize DevCovenant package version text into canonical PEP 440."""
     token = str(raw or "").strip()
     if not token:
-        return "0.0.0"
-    if token[:1] in {"v", "V"}:
-        token = token[1:].strip()
-    match = _SEMVER_COMPARE_RE.fullmatch(token)
-    if match is None:
-        raise ValueError(
-            "Invalid DevCovenant package version string "
-            f"`{raw}` for upgrade compare."
-        )
-    core_parts = [part.strip() for part in match.group("core").split(".")]
-    if any(not part.isdigit() for part in core_parts):
-        raise ValueError(
-            "Invalid DevCovenant package version string "
-            f"`{raw}` for upgrade compare."
-        )
-    while len(core_parts) < 3:
-        core_parts.append("0")
-    normalized = ".".join(core_parts[:3])
-    prerelease = str(match.group("prerelease") or "").strip()
-    build = str(match.group("build") or "").strip()
-    if prerelease:
-        normalized = f"{normalized}-{prerelease}"
-    if build:
-        normalized = f"{normalized}+{build}"
+        return "0"
     try:
-        semver.Version.parse(normalized)
-    except ValueError as exc:
+        return str(Version(token))
+    except InvalidVersion as exc:
         raise ValueError(
             "Invalid DevCovenant package version string "
             f"`{raw}` for upgrade compare."
         ) from exc
-    return normalized
 
 
-def _parse_version_for_compare(raw: str) -> semver.Version:
-    """Parse one DevCovenant package version into SemVer ordering."""
-    return semver.Version.parse(_normalize_version_for_compare(raw))
+def _parse_version_for_compare(raw: str) -> Version:
+    """Parse one DevCovenant package version into ordering-safe form."""
+    return Version(_normalize_version_for_compare(raw))
 
 
 def _preserve_upgrade_runtime_state(repo_root: Path, temp_root: Path) -> None:

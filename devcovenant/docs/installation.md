@@ -1,6 +1,6 @@
 # Installation and Lifecycle
 **Last Updated:** 2026-03-31
-**Project Version:** 1.0.1
+**Project Version:** 1.0.1.dev1
 
 ## Overview
 This page explains how to install DevCovenant, when to use `pipx` versus a
@@ -151,6 +151,7 @@ assets that DevCovenant needs at install time:
 - the packaged `devcovenant/README.md` and `devcovenant/VERSION`
 - the packaged `devcovenant/requirements.lock` used to bootstrap the
   generic GitHub Actions workflow
+- the packaged `devcovenant/licenses/LICENSE` mirror for the root license
 - the packaged `devcovenant/licenses/**` mirror for the shipped lock's
   dependency inventory and third-party license bundle
 - the built-in policy descriptors under `devcovenant/builtin/policies`
