@@ -99,15 +99,25 @@ def _unit_test_public_session_snapshot_helpers_are_deterministic() -> None:
             encoding="utf-8",
         )
         (repo_root / "sample.py").write_text("value = 1\n", encoding="utf-8")
+        pycache_dir = repo_root / ".gha-pycache" / "tmp"
+        pycache_dir.mkdir(parents=True, exist_ok=True)
+        (pycache_dir / "sample.cpython-311.pyc").write_bytes(b"x")
+        (repo_root / "scratch.pyc").write_bytes(b"x")
 
         current_paths = module.capture_current_snapshot_paths(repo_root)
         assert "AGENTS.md" in current_paths
         assert "README.md" in current_paths
         assert "sample.py" in current_paths
+        assert ".gha-pycache/tmp/sample.cpython-311.pyc" not in current_paths
+        assert "scratch.pyc" not in current_paths
 
         current_snapshot = module.capture_current_numstat_snapshot(repo_root)
         assert "sample.py" in current_snapshot
         assert current_snapshot["sample.py"].endswith("\tsample.py")
+        assert (
+            ".gha-pycache/tmp/sample.cpython-311.pyc" not in current_snapshot
+        )
+        assert "scratch.pyc" not in current_snapshot
         assert module.snapshot_row_style(current_snapshot) == "filesystem_hash"
         assert module.snapshot_row_style({"a.py": "1\t1\ta.py"}) == (
             "unsupported_legacy"

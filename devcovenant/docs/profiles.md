@@ -1,5 +1,5 @@
 # Profiles
-**Last Updated:** 2026-03-30
+**Last Updated:** 2026-03-31
 **Project Version:** 1.0.1
 
 ## Overview
@@ -68,6 +68,10 @@ Profiles may also contribute `ignore_dirs` for disposable local outputs that
 should stay out of generated `.gitignore` and out of pre-commit's all-files
 surface. That is the right place for repo-family proof or scratch directories,
 not for durable source paths.
+Typical examples are proof roots such as `.proof-wheel` / `.proof-sdist`,
+support-floor envs such as `.proof-py310`, and repo-local runner cache roots
+such as `.gha-pycache` when one repo family needs to quarantine transient CI
+artifacts consistently.
 
 Repo profiles can then strengthen that baseline.
 One repo profile may add `managed_commands` so `gate --start` can materialize

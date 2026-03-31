@@ -6,7 +6,7 @@
 **Maintenance Stance:** active
 **Compatibility Policy:** forward-only
 **Versioning Mode:** versioned
-**Last Updated:** 2026-03-30
+**Last Updated:** 2026-03-31
 **DevCovenant Version:** 1.0.1
 
 <!-- DEVCOV:BEGIN -->
@@ -59,6 +59,40 @@ Example:
 ## Log changes here
 
 ## Version 1.0.1
+
+- 2026-03-31:
+  Change: aligned workflow cache routing, snapshot ignore rules, cleanup
+    behavior, and publish interpreter setup so CI bytecode junk cannot
+    invalidate proof baselines.
+  Why: exposed that GitHub Actions was still writing repo-local `.gha-pycache`
+    and `*.pyc`
+    artifacts that `gate --start` treated as drift, while Publish still relied
+    on ambient runner Python instead of an explicit setup step.
+  Impact: Governance and Build now route Python caches outside the checkout,
+    snapshots and cleanup tolerate or remove leaked bytecode safely, Publish
+    uses an explicit interpreter, and regressions cover the cache-leak class
+    across generated workflow surfaces.
+  Files:
+  .github/workflows/ci.yml
+  .github/workflows/publish.yml
+  .gitignore
+  .pre-commit-config.yaml
+  CHANGELOG.md
+  devcovenant/builtin/profiles/global/assets/ci.yml
+  devcovenant/builtin/profiles/global/assets/config.yaml
+  devcovenant/config.yaml
+  devcovenant/core/runtime/execution.py
+  devcovenant/core/runtime/session_snapshot.py
+  devcovenant/custom/profiles/devcovrepo/devcovrepo.yaml
+  devcovenant/docs/config.md
+  devcovenant/docs/profiles.md
+  devcovenant/docs/registry.md
+  devcovenant/docs/workflow.md
+  devcovenant/registry/registry.yaml
+  tests/devcovenant/core/runtime/test_execution.py
+  tests/devcovenant/core/runtime/test_session_snapshot.py
+  tests/devcovenant/core/services/test_profile_registry.py
+  tests/devcovenant/test_refresh.py
 
 - 2026-03-31:
   Change: hardened the `1.0.1` release candidate by making Python 3.10 support

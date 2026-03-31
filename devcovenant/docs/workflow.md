@@ -1,5 +1,5 @@
 # Workflow
-**Last Updated:** 2026-03-30
+**Last Updated:** 2026-03-31
 **Project Version:** 1.0.1
 
 ## Overview
@@ -145,6 +145,11 @@ Generated `.pre-commit-config.yaml` excludes also follow the resolved ignore
 contract. Active-profile `ignore_dirs` feed the shared pre-commit exclude
 block, and setuptools-style `*.egg-info` metadata directories are always
 excluded as disposable build outputs.
+Generated workflow jobs that invoke Python should keep transient bytecode
+caches outside the repository checkout, and the runtime snapshot layer also
+ignores
+repo-local `*.pyc`, `__pycache__`, and known cache roots such as
+`.gha-pycache` if a runner or shell leaks them back in anyway.
 
 When a repository adds installed-artifact proof, that proof should exercise
 the same public workflow the package docs promise across the install surfaces
@@ -158,6 +163,9 @@ floor explicitly instead of relying only on newer interpreter runs.
 If a repository adds a separate release workflow, that workflow should consume
 validated artifacts and provenance from the proof boundary rather than
 rebuilding a fresh distribution later.
+If that release workflow runs inline Python for provenance or artifact checks,
+it should also set up an explicit interpreter instead of relying on whatever
+ambient `python` happens to be on the runner image.
 Pin GitHub Action refs to immutable commit SHAs and keep them current as
 runner runtimes evolve; proof and release workflows should use Node 24-capable
 action releases or equivalent non-JS steps instead of carrying older Node

@@ -1,5 +1,5 @@
 # Registry
-**Last Updated:** 2026-03-30
+**Last Updated:** 2026-03-31
 **Project Version:** 1.0.1
 
 ## Overview
@@ -68,6 +68,9 @@ files carry the rendered surface.
 That includes active-profile `ignore_dirs` contributions.
 Refresh records them in tracked profile metadata before rendering shared
 exclude surfaces such as `.gitignore` and `.pre-commit-config.yaml`.
+The tracked workflow metadata also records runner-facing environment values
+that affect generated proof behavior, such as external bytecode-cache prefixes
+used to keep CI-created `*.pyc` junk out of repository snapshots.
 
 The helper ownership matches that split:
 - `devcovenant/core/services/tracked_registry.py` owns tracked-registry paths

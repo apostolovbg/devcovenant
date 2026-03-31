@@ -884,6 +884,7 @@ def _unit_test_refresh_renders_pre_commit_excludes_for_build_outputs() -> None:
                         "artifacts",
                         ".proof-wheel",
                         ".proof-sdist",
+                        ".proof-py310",
                     ],
                 },
                 sort_keys=False,
@@ -910,8 +911,10 @@ def _unit_test_refresh_renders_pre_commit_excludes_for_build_outputs() -> None:
         )
         assert r"[^/]+\.egg-info" in pre_commit
         assert "artifacts" in pre_commit
+        assert r"\.gha\-pycache" in pre_commit
         assert r"\.proof\-wheel" in pre_commit
         assert r"\.proof\-sdist" in pre_commit
+        assert r"\.proof\-py310" in pre_commit
 
 
 def _unit_test_refresh_policy_registry_origin_metadata() -> None:

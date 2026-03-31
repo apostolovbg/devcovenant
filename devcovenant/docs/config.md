@@ -1,5 +1,5 @@
 # Configuration
-**Last Updated:** 2026-03-30
+**Last Updated:** 2026-03-31
 **Project Version:** 1.0.1
 
 ## Overview
@@ -217,6 +217,8 @@ can consistently resolve the repository `.venv` contract out of the box.
 Runtime behavior such as:
 
 - failure threshold
+- broad collector suffixes and ignore roots
+- bytecode-cache routing and cleanup
 
 - autofix enablement
 
@@ -234,6 +236,13 @@ They are defaults.
 Operators can override them per invocation with `--quiet`, `--normal`, or
 `--verbose`, and the CLI flag wins only for that one command.
 Every key in this section is human-owned.
+`ignore_dirs` is the shared technical-junk boundary for recursive collectors
+and generated pre-commit excludes. Keep only disposable cache or build roots
+there, such as `__pycache__`, `.pytest_cache`, `.ruff_cache`, `.tox`, `.nox`,
+or runner-owned bytecode roots like `.gha-pycache`.
+When `pycache_prefix_enabled` is true, leave `pycache_prefix` empty to route
+DevCovenant-managed Python bytecode into a deterministic temp location outside
+the repository, or point it at another deliberate non-source cache root.
 
 ### ci_and_test
 Repository-local customization for the generated `CI` workflow.

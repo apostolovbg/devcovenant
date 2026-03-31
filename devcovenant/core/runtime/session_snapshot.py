@@ -24,6 +24,7 @@ _SNAPSHOT_BASE_IGNORED_DIRS = frozenset(
         ".git",
         ".venv",
         ".python",
+        ".gha-pycache",
         "output",
         "logs",
         "build",
@@ -34,6 +35,9 @@ _SNAPSHOT_BASE_IGNORED_DIRS = frozenset(
         ".ruff_cache",
         ".pytest_cache",
         ".mypy_cache",
+        ".tox",
+        ".nox",
+        ".hypothesis",
         ".venv.lock",
     }
 )
@@ -47,6 +51,7 @@ _SNAPSHOT_IGNORED_FILES = frozenset(
 )
 
 _SNAPSHOT_IGNORED_PREFIXES = ("devcovenant/registry/runtime/",)
+_SNAPSHOT_IGNORED_SUFFIXES = frozenset({".pyc", ".pyo", ".pyd"})
 _AGENTS_WORKFLOW_BEGIN = "<!-- DEVCOV-WORKFLOW:BEGIN -->"
 _AGENTS_WORKFLOW_END = "<!-- DEVCOV-WORKFLOW:END -->"
 SESSION_SNAPSHOT_POINTER_KEY = "session_snapshot_file"
@@ -385,6 +390,8 @@ def _snapshot_files(repo_root: Path, ignored_dirs: set[str]) -> list[Path]:
             ):
                 continue
             if any(part in ignored_dirs for part in file_path.parts):
+                continue
+            if file_path.suffix in _SNAPSHOT_IGNORED_SUFFIXES:
                 continue
             if not file_path.is_file():
                 continue

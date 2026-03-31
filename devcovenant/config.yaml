@@ -190,6 +190,7 @@ engine:
   - .git
   - .venv
   - .python
+  - .gha-pycache
   - output
   - logs
   - build
@@ -197,6 +198,11 @@ engine:
   - node_modules
   - __pycache__
   - .pytest_cache
+  - .ruff_cache
+  - .mypy_cache
+  - .tox
+  - .nox
+  - .hypothesis
   - .cache
   - .venv.lock
 

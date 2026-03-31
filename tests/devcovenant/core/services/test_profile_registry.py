@@ -388,6 +388,11 @@ def _unit_test_ci_workflow_contains_build_job_artifact_proof() -> None:
     assert isinstance(jobs, dict)
     governance_job = jobs.get("governance")
     assert isinstance(governance_job, dict)
+    governance_env = governance_job.get("env")
+    assert isinstance(governance_env, dict)
+    assert governance_env.get("PYTHONPYCACHEPREFIX") == (
+        "${{ runner.temp }}/devcovenant-pycache"
+    )
     governance_steps = governance_job.get("steps")
     assert isinstance(governance_steps, list)
     governance_uses = [
@@ -408,6 +413,11 @@ def _unit_test_ci_workflow_contains_build_job_artifact_proof() -> None:
     assert isinstance(build_job, dict)
     assert build_job.get("name") == "Build"
     assert build_job.get("needs") == "governance"
+    build_env = build_job.get("env")
+    assert isinstance(build_env, dict)
+    assert build_env.get("PYTHONPYCACHEPREFIX") == (
+        "${{ runner.temp }}/devcovenant-pycache"
+    )
     steps = build_job.get("steps")
     assert isinstance(steps, list)
     build_uses = [
@@ -533,6 +543,11 @@ def _unit_test_publish_workflow_uses_validated_build_artifacts() -> None:
     assert set(jobs) == {"publish"}
     publish_job = jobs.get("publish")
     assert isinstance(publish_job, dict)
+    publish_env = publish_job.get("env")
+    assert isinstance(publish_env, dict)
+    assert publish_env.get("PYTHONPYCACHEPREFIX") == (
+        "${{ runner.temp }}/devcovenant-pycache"
+    )
 
     permissions = publish_job.get("permissions")
     assert isinstance(permissions, dict)
@@ -547,6 +562,7 @@ def _unit_test_publish_workflow_uses_validated_build_artifacts() -> None:
         if isinstance(step, dict)
     ]
     assert "Validate selected CI run" in step_names
+    assert "Set up Python" in step_names
     assert "Download validated distributions" in step_names
     assert "Download build provenance" in step_names
     assert "Verify downloaded provenance" in step_names
@@ -606,6 +622,18 @@ def _unit_test_publish_workflow_uses_validated_build_artifacts() -> None:
         validate_step.get("uses")
         == "actions/github-script@ed597411d8f924073f98dfc5c65a23a2325f34cd"
     )
+    setup_python_step = next(
+        step
+        for step in steps
+        if isinstance(step, dict)
+        and str(step.get("name") or "").strip() == "Set up Python"
+    )
+    assert setup_python_step.get("uses") == (
+        "actions/setup-python@a309ff8b426b58ec0e2a45f0f869d46889d02405"
+    )
+    setup_python_with = setup_python_step.get("with")
+    assert isinstance(setup_python_with, dict)
+    assert setup_python_with.get("python-version") == "3.11"
     publish_step = next(
         step
         for step in steps

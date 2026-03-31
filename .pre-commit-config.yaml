@@ -61,6 +61,7 @@ exclude: |-
     artifacts
     | \.proof\-wheel
     | \.proof\-sdist
+    | \.proof\-py310
     | _site
     | site
     | build
@@ -71,9 +72,14 @@ exclude: |-
     | dist
     | \.git
     | \.python
+    | \.gha\-pycache
     | output
     | logs
     | node_modules
+    | \.ruff_cache
+    | \.tox
+    | \.nox
+    | \.hypothesis
     | \.cache
     | \.venv\.lock
     | [^/]+\.egg-info

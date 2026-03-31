@@ -17,6 +17,8 @@ jobs:
       actions: read
       contents: read
       id-token: write
+    env:
+      PYTHONPYCACHEPREFIX: ${{ runner.temp }}/devcovenant-pycache
     environment:
       name: pypi
       url: https://pypi.org/p/devcovenant
@@ -62,6 +64,11 @@ jobs:
             core.setOutput("run_attempt", String(run.run_attempt));
             core.setOutput("head_sha", run.head_sha);
             core.setOutput("html_url", run.html_url);
+      - name: Set up Python
+        uses: actions/setup-python@a309ff8b426b58ec0e2a45f0f869d46889d02405
+        # v6
+        with:
+          python-version: "3.11"
       - name: Download validated distributions
         uses: "actions/download-artifact@\
           3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c"

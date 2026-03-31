@@ -840,6 +840,15 @@ def _unit_test_repo_bytecode_cleanup_removes_artifacts() -> None:
         cache_dir.mkdir(parents=True, exist_ok=True)
         pyc_path = cache_dir / "execution.cpython-314.pyc"
         pyc_path.write_text("test", encoding="utf-8")
+        gha_cache = repo_root / ".gha-pycache" / "worker"
+        gha_cache.mkdir(parents=True, exist_ok=True)
+        gha_cache_pyc = gha_cache / "sample.cpython-314.pyc"
+        gha_cache_pyc.write_bytes(b"x")
+        stray_pyc = repo_root / "scratch.pyc"
+        stray_pyc.write_bytes(b"x")
+        protected_pyc = repo_root / ".venv" / "lib" / "keep.pyc"
+        protected_pyc.parent.mkdir(parents=True, exist_ok=True)
+        protected_pyc.write_bytes(b"x")
         config_path.parent.mkdir(parents=True, exist_ok=True)
         config_path.write_text(
             "engine:\n  pycache_prefix_enabled: true\n",
@@ -849,6 +858,10 @@ def _unit_test_repo_bytecode_cleanup_removes_artifacts() -> None:
         assert removed is True
         assert not cache_dir.exists()
         assert not pyc_path.exists()
+        assert not gha_cache.exists()
+        assert not gha_cache_pyc.exists()
+        assert not stray_pyc.exists()
+        assert protected_pyc.exists()
 
 
 def _unit_test_repo_bytecode_cleanup_requires_explicit_opt_in() -> None:

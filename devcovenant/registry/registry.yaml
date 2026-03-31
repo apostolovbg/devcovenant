@@ -11388,6 +11388,7 @@ profiles:
     - artifacts
     - .proof-wheel
     - .proof-sdist
+    - .proof-py310
     assets:
     - path: devcovenant/docs/installation.md
       template: docs/installation.md
@@ -11422,7 +11423,7 @@ profiles:
           permissions:
             contents: read
           env:
-            PYTHONPYCACHEPREFIX: .gha-pycache
+            PYTHONPYCACHEPREFIX: ${{ runner.temp }}/devcovenant-pycache
           steps:
           - name: Checkout
             uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd

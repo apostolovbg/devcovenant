@@ -765,32 +765,85 @@ def cleanup_repo_bytecode_artifacts(repo_root: Path) -> bool:
     """Remove repo-local bytecode artifacts when routing is enabled."""
     if not _read_pycache_prefix_enabled_from_config(repo_root):
         return False
-    root = repo_root / "devcovenant"
-    if not root.exists():
-        return False
+    protected_dirs = {
+        ".git",
+        ".venv",
+        ".python",
+        "node_modules",
+    }
     removed = False
-    for path in root.rglob("__pycache__"):
-        if path.is_dir():
-            shutil.rmtree(path, ignore_errors=True)
+
+    def _repo_local_pycache_root(raw_value: str | None) -> Path | None:
+        """Resolve one repo-local pycache root candidate when it is safe."""
+        token = str(raw_value or "").strip()
+        if not token:
+            return None
+        path = Path(token).expanduser()
+        if not path.is_absolute():
+            path = repo_root / path
+        try:
+            resolved = path.resolve(strict=False)
+            repo_resolved = repo_root.resolve(strict=False)
+        except OSError:
+            return None
+        if resolved == repo_resolved:
+            return None
+        if not resolved.is_relative_to(repo_resolved):
+            return None
+        if any(
+            part in protected_dirs
+            for part in resolved.relative_to(repo_resolved).parts
+        ):
+            return None
+        return resolved
+
+    repo_local_prefixes = {
+        path
+        for path in (
+            _repo_local_pycache_root(os.environ.get("PYTHONPYCACHEPREFIX")),
+            _repo_local_pycache_root(_PYCACHE_PREFIX_VALUE),
+            _repo_local_pycache_root(
+                _read_pycache_prefix_from_config(repo_root)
+            ),
+        )
+        if path is not None
+    }
+    for prefix in sorted(repo_local_prefixes):
+        if prefix.is_dir():
+            shutil.rmtree(prefix, ignore_errors=True)
             removed = True
-    for path in root.rglob("*.pyc"):
-        if path.is_file():
+        elif prefix.exists():
             try:
-                path.unlink()
+                prefix.unlink()
             except OSError:
                 continue
             removed = True
-    for path in root.rglob("*.pyo"):
-        if path.is_file():
-            try:
-                path.unlink()
-            except OSError:
-                continue
+
+    for root, dirs, names in os.walk(repo_root):
+        root_path = Path(root)
+        dirs[:] = [name for name in dirs if name not in protected_dirs]
+        if ".gha-pycache" in dirs:
+            gha_cache_dir = root_path / ".gha-pycache"
+            shutil.rmtree(gha_cache_dir, ignore_errors=True)
+            dirs.remove(".gha-pycache")
             removed = True
-    for path in root.rglob("*.pyd"):
-        if path.is_file():
+        if "__pycache__" in dirs:
+            cache_dir = root_path / "__pycache__"
+            shutil.rmtree(cache_dir, ignore_errors=True)
+            dirs.remove("__pycache__")
+            removed = True
+        for name in names:
+            if not name.endswith((".pyc", ".pyo", ".pyd")):
+                continue
+            file_path = root_path / name
             try:
-                path.unlink()
+                rel_parts = file_path.relative_to(repo_root).parts
+            except ValueError:
+                continue
+            if any(part in protected_dirs for part in rel_parts):
+                continue
+            try:
+                file_path.unlink()
             except OSError:
                 continue
             removed = True

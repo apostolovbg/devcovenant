@@ -42,6 +42,7 @@ devcovenant/logs/**
 artifacts
 .proof-wheel
 .proof-sdist
+.proof-py310
 
 # Profile: docs
 _site
