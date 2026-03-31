@@ -6,28 +6,10 @@ import os
 from pathlib import Path, PurePosixPath
 from typing import Any, Collection
 
+from devcovenant.core.services import manifest_inventory as manifest_module
 from devcovenant.core.services.profile_registry import (
     resolve_profile_ignore_dirs,
     resolve_profile_suffixes,
-)
-
-_FALLBACK_CORE_EXCLUSION_PATHS = (
-    "devcovenant/core",
-    "devcovenant/builtin",
-    "devcovenant/__init__.py",
-    "devcovenant/__main__.py",
-    "devcovenant/cli.py",
-    "devcovenant/check.py",
-    "devcovenant/gate.py",
-    "devcovenant/policy.py",
-    "devcovenant/test.py",
-    "devcovenant/install.py",
-    "devcovenant/deploy.py",
-    "devcovenant/upgrade.py",
-    "devcovenant/refresh.py",
-    "devcovenant/uninstall.py",
-    "devcovenant/undeploy.py",
-    "devcovenant/registry",
 )
 
 
@@ -120,10 +102,10 @@ def core_exclusion_paths(
     if isinstance(generated_cfg, dict):
         core_paths = generated_cfg.get(
             "devcov_core_paths",
-            list(_FALLBACK_CORE_EXCLUSION_PATHS),
+            manifest_module.default_scan_excluded_core_paths(),
         )
     else:
-        core_paths = list(_FALLBACK_CORE_EXCLUSION_PATHS)
+        core_paths = manifest_module.default_scan_excluded_core_paths()
     entries = [core_paths] if isinstance(core_paths, str) else list(core_paths)
     results: list[Path] = []
     for entry in entries:

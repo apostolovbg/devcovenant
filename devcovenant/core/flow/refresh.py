@@ -678,7 +678,7 @@ def _render_config_yaml(payload: dict[str, object]) -> str:
         ),
         (
             "# The builtin github base bootstraps DevCovenant itself from "
-            "the shipped `devcovenant/runtime-requirements.lock`, not from "
+            "the shipped `devcovenant/requirements.lock`, not from "
             "project dependency files."
         ),
         (
@@ -1074,47 +1074,9 @@ def _normalize_string_list(raw_value: object) -> list[str]:
 
 
 def _default_core_paths(repo_root: Path) -> list[str]:
-    """Load canonical devcov core paths from the config asset."""
-    asset_path = (
-        repo_root
-        / "devcovenant"
-        / "builtin"
-        / "profiles"
-        / "global"
-        / "assets"
-        / "config.yaml"
-    )
-    payload = _read_yaml(asset_path)
-    profiles = payload.get("profiles", {}) if isinstance(payload, dict) else {}
-    if isinstance(profiles, dict):
-        generated = profiles.get("generated", {})
-    else:
-        generated = {}
-    if isinstance(generated, dict):
-        configured = _normalize_string_list(generated.get("devcov_core_paths"))
-    else:
-        configured = []
-    if configured:
-        return configured
-    return [
-        "devcovenant/core",
-        "devcovenant/builtin",
-        "devcovenant/__init__.py",
-        "devcovenant/__main__.py",
-        "devcovenant/cli.py",
-        "devcovenant/check.py",
-        "devcovenant/clean.py",
-        "devcovenant/gate.py",
-        "devcovenant/policy.py",
-        "devcovenant/test.py",
-        "devcovenant/install.py",
-        "devcovenant/deploy.py",
-        "devcovenant/upgrade.py",
-        "devcovenant/refresh.py",
-        "devcovenant/uninstall.py",
-        "devcovenant/undeploy.py",
-        "devcovenant/registry",
-    ]
+    """Return canonical devcov core paths from manifest inventory."""
+    del repo_root
+    return manifest_module.default_scan_excluded_core_paths()
 
 
 def _config_autogen_metadata_overlays(

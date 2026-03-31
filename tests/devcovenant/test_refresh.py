@@ -17,6 +17,7 @@ import yaml
 
 from devcovenant import install, refresh
 from devcovenant.core.flow import refresh as refresh_flow
+from devcovenant.core.services import manifest_inventory as manifest_module
 from tests.devcovenant import repo_seed_cache
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
@@ -258,11 +259,18 @@ def _unit_test_release_metadata_keeps_support_floor_and_docs_truthful() -> (
         encoding="utf-8"
     )
     runtime_requirements_lock = (
-        REPO_ROOT / "devcovenant" / "runtime-requirements.lock"
+        REPO_ROOT / "devcovenant" / "requirements.lock"
+    ).read_text(encoding="utf-8")
+    root_license_report = (
+        REPO_ROOT / "licenses" / "THIRD_PARTY_LICENSES.md"
+    ).read_text(encoding="utf-8")
+    packaged_license_report = (
+        REPO_ROOT / "devcovenant" / "licenses" / "THIRD_PARTY_LICENSES.md"
     ).read_text(encoding="utf-8")
     assert 'tomli==2.3.0; python_version < "3.11"' in requirements_in
     assert 'tomli==2.3.0 ; python_version < "3.11"' in requirements_lock
     assert runtime_requirements_lock == requirements_lock
+    assert packaged_license_report == root_license_report
 
     assert urls["Documentation"].endswith(f"/tree/v{version}/devcovenant/docs")
     assert urls["Changelog"].endswith(f"/blob/v{version}/CHANGELOG.md")
@@ -1250,7 +1258,7 @@ def _unit_test_refresh_renders_canonical_workflow_triggers() -> None:
         assert re.search(r"(?m)^  pull_request:$", content)
         assert re.search(r"(?m)^      run: \\|$", content)
         assert 'run: "python -m pytest -q' not in content
-        assert "devcovenant/runtime-requirements.lock" in content
+        assert "devcovenant/requirements.lock" in content
         assert "python -m pip install -r requirements.lock" not in content
 
 
@@ -1266,6 +1274,46 @@ def _unit_test_refresh_skips_ci_generation_without_github_profile() -> None:
         result = refresh.refresh_repo(repo_root)
         assert result == 0
         assert not workflow_path.exists()
+
+
+def _unit_test_refresh_default_core_paths_match_manifest() -> None:
+    """Refresh fallback core paths should match manifest helpers."""
+    assert refresh_flow._default_core_paths(REPO_ROOT) == (
+        manifest_module.default_scan_excluded_core_paths()
+    )
+
+
+def _unit_test_refresh_rewrites_stale_generated_core_paths() -> None:
+    """Refresh should rewrite stale core paths from canonical data."""
+    with tempfile.TemporaryDirectory() as temp_dir:
+        repo_root = Path(temp_dir)
+        repo_seed_cache.copy_installed_repo(repo_root)
+
+        config_path = repo_root / "devcovenant" / "config.yaml"
+        payload = yaml.safe_load(config_path.read_text(encoding="utf-8"))
+        assert isinstance(payload, dict)
+        profiles = payload.setdefault("profiles", {})
+        assert isinstance(profiles, dict)
+        generated = profiles.setdefault("generated", {})
+        assert isinstance(generated, dict)
+        generated["devcov_core_paths"] = ["devcovenant/test.py"]
+        config_path.write_text(
+            yaml.safe_dump(payload, sort_keys=False),
+            encoding="utf-8",
+        )
+
+        result = refresh.refresh_repo(repo_root)
+        assert result == 0
+
+        refreshed = yaml.safe_load(config_path.read_text(encoding="utf-8"))
+        assert isinstance(refreshed, dict)
+        refreshed_profiles = refreshed.get("profiles", {})
+        assert isinstance(refreshed_profiles, dict)
+        refreshed_generated = refreshed_profiles.get("generated", {})
+        assert isinstance(refreshed_generated, dict)
+        assert refreshed_generated.get("devcov_core_paths") == (
+            manifest_module.default_scan_excluded_core_paths()
+        )
 
 
 def _unit_test_refresh_allows_ci_override_without_github_profile() -> None:
@@ -1614,6 +1662,14 @@ class GeneratedUnittestCases(unittest.TestCase):
     def test_refresh_skips_ci_generation_without_github_profile(self):
         """Run no-github generated-CI omission assertions."""
         _unit_test_refresh_skips_ci_generation_without_github_profile()
+
+    def test_refresh_default_core_paths_match_manifest(self):
+        """Run refresh core-path alignment assertions."""
+        _unit_test_refresh_default_core_paths_match_manifest()
+
+    def test_refresh_rewrites_stale_generated_core_paths(self):
+        """Run refresh stale-generated-core-path rewrite assertions."""
+        _unit_test_refresh_rewrites_stale_generated_core_paths()
 
     def test_refresh_allows_ci_override_without_github_profile(self):
         """Run no-github CI override rendering assertions."""

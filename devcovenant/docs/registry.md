@@ -43,6 +43,12 @@ If active profiles contribute workflow fragments or generated-file inputs, the
 tracked registry records the resolved inputs that later render into generated
 files such as `.gitignore`, `.pre-commit-config.yaml`, and
 `.github/workflows/ci.yml` when a CI-owner profile is active.
+That includes generated values such as `devcov_core_paths` and profile-owned
+CI fragments, so registry diffs often reflect real scan-boundary or workflow
+input changes.
+It also records repo-owned custom policy metadata, including package mirror
+contracts such as a shipped `devcovenant/requirements.lock` and
+`devcovenant/licenses/**` that mirror canonical repo-root artifacts.
 
 ## Runtime Registry
 `devcovenant/registry/runtime/` stores local working state such as:

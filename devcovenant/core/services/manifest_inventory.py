@@ -30,8 +30,31 @@ DEFAULT_CORE_DIRS = [
     "devcovenant/builtin/profiles/global",
     "devcovenant/builtin/profiles/global/assets",
     "devcovenant/core",
+    "devcovenant/licenses",
     "devcovenant/logs",
     REGISTRY_DIR,
+]
+DEFAULT_SCAN_EXCLUDED_CORE_PATHS = [
+    "devcovenant/core",
+    "devcovenant/builtin",
+    "devcovenant/licenses",
+    "devcovenant/__init__.py",
+    "devcovenant/__main__.py",
+    "devcovenant/asset.py",
+    "devcovenant/cli.py",
+    "devcovenant/check.py",
+    "devcovenant/clean.py",
+    "devcovenant/gate.py",
+    "devcovenant/run.py",
+    "devcovenant/policy.py",
+    "devcovenant/install.py",
+    "devcovenant/deploy.py",
+    "devcovenant/upgrade.py",
+    "devcovenant/refresh.py",
+    "devcovenant/uninstall.py",
+    "devcovenant/undeploy.py",
+    "devcovenant/requirements.lock",
+    "devcovenant/registry",
 ]
 DEFAULT_CORE_FILES = [
     "devcovenant/__init__.py",
@@ -51,7 +74,9 @@ DEFAULT_CORE_FILES = [
     "devcovenant/config.yaml",
     "devcovenant/README.md",
     "devcovenant/VERSION",
-    "devcovenant/runtime-requirements.lock",
+    "devcovenant/requirements.lock",
+    "devcovenant/licenses/README.md",
+    "devcovenant/licenses/THIRD_PARTY_LICENSES.md",
     "devcovenant/logs/README.md",
     f"{REGISTRY_DIR}/README.md",
     REGISTRY_REL_PATH,
@@ -111,6 +136,11 @@ DEFAULT_GENERATED_FILES = [
     f"{RUNTIME_REGISTRY_DIR}/{WORKFLOW_SESSION_FILENAME}",
 ]
 DEFAULT_GENERATED_DIRS: List[str] = [RUNTIME_REGISTRY_DIR]
+
+
+def default_scan_excluded_core_paths() -> list[str]:
+    """Return the canonical core paths hidden from normal repo scans."""
+    return list(DEFAULT_SCAN_EXCLUDED_CORE_PATHS)
 
 
 def manifest_path(repo_root: Path) -> Path:

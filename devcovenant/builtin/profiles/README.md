@@ -79,8 +79,11 @@ Global template source:
 `ci_and_test_template` such as the builtin `github` profile. Active-profile
 CI fragments and config overlays/overrides are then merged on top. The
 builtin `github` base bootstraps DevCovenant from the shipped
-`devcovenant/runtime-requirements.lock` so it does not assume the
-repository's own dependency files belong to DevCovenant.
+`devcovenant/requirements.lock` so it does not assume the
+repository's own dependency files belong to DevCovenant. The package also
+ships `devcovenant/licenses/**` beside that lock so the dependency report
+and third-party license bundle travel with the same runtime bootstrap
+surface.
 
 ## Workflow
 1. Edit the profile manifest and assets.

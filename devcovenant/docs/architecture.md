@@ -164,6 +164,8 @@ That split keeps saved setup separate from disposable runtime session state.
 ## Package Boundary
 The published package ships the docs, builtin policies, builtin profiles,
 assets, translators, and runtime modules that DevCovenant needs to operate.
+That includes the shipped `devcovenant/requirements.lock` bootstrap file and
+the mirrored `devcovenant/licenses/**` bundle that travels with it.
 It does not ship live repository state such as:
 
 - `devcovenant/config.yaml`

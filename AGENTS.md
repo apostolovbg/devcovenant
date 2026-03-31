@@ -780,6 +780,7 @@ doc_routes: devcovenant/builtin/policies/ => devcovenant/docs/policies.md
   bandit.yaml => SECURITY.md
   devcovenant/custom/policies/**/*.yaml => devcovenant/docs/policies.md
   devcovenant/custom/policies/**/*.py => devcovenant/docs/policies.md
+  devcovenant/custom/policies/**/autofix/**=> devcovenant/docs/policies.md
   devcovenant/core/flow/*.py => devcovenant/docs/workflow.md
   devcovenant/core/runtime/*.py => devcovenant/docs/workflow.md
   devcovenant/core/services/*.py => devcovenant/docs/architecture.md
@@ -1008,6 +1009,7 @@ exclude_globs: .vscode/**
   .coverage.*
   htmlcov/**
   licenses/*.txt
+  devcovenant/licenses/*.txt
   devcovenant/logs/**
   devcovenant/registry/runtime/**
   node_modules/**
@@ -1336,6 +1338,29 @@ This policy flags bare `except`, broad `except Exception` handlers,
 generic `raise Exception(...)`, and silent `except Exception: pass`
 handlers in selected source files. Broad-handler waivers are explicit
 through marker comments or marker regions.
+
+
+---
+
+## Policy: Package Runtime Mirror
+
+```policy-def
+id: package-runtime-mirror
+severity: error
+auto_fix: true
+enforcement: active
+enabled: true
+custom: true
+file_mirrors: requirements.lock=>devcovenant/requirements.lock
+dir_mirrors: licenses=>devcovenant/licenses
+```
+
+Ensure package-shipped runtime dependency and compliance artifacts stay in
+exact sync with the canonical repo-root artifacts they mirror. This repo
+uses the policy to keep `devcovenant/requirements.lock` aligned with the
+canonical root `requirements.lock`, and `devcovenant/licenses/**` aligned
+with the canonical root `licenses/**`. Auto-fix rewrites the package mirror
+from the configured source paths and removes stale mirrored files.
 
 
 ---

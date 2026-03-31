@@ -148,8 +148,10 @@ Use it only when you are truly removing DevCovenant from the repo.
 The published package intentionally ships the runtime-facing docs and profile
 assets that DevCovenant needs at install time:
 - the packaged `devcovenant/README.md` and `devcovenant/VERSION`
-- the packaged `devcovenant/runtime-requirements.lock` used to bootstrap the
+- the packaged `devcovenant/requirements.lock` used to bootstrap the
   generic GitHub Actions workflow
+- the packaged `devcovenant/licenses/**` mirror for the shipped lock's
+  dependency inventory and third-party license bundle
 - the built-in policy descriptors under `devcovenant/builtin/policies`
 - the built-in profile descriptors, translators, and asset templates under
   `devcovenant/builtin/profiles`
@@ -187,7 +189,16 @@ Use this as the practical first integration flow:
    - `engine.*`
 3. Set `install.config_reviewed: true`.
 4. Run `devcovenant deploy`.
-5. Prove the reviewed setup with the full gate cycle:
+5. Prepare the environment declared by the active profile stack.
+
+   If you keep the seeded `defaults` + `python` stack, create `.venv` and
+   install `requirements.lock` before the first gate cycle.
+   On Windows, use `.venv\\Scripts\\python.exe -m pip install -r \
+   requirements.lock`.
+   If the repository uses bench or another environment layout, declare that
+   environment first through the profile stack or metadata overlays, then
+   prepare it.
+6. Prove the reviewed setup with the full gate cycle:
 
    ```bash
    devcovenant gate --start

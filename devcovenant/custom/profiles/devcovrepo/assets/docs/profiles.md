@@ -56,15 +56,16 @@ That includes:
 If the behavior should apply to more than one repository of the same shape, it
 probably belongs in a profile instead of local config.
 
-The built-in `defaults` profile seeds the standard `.venv` expectations for
-ordinary repositories:
+The built-in `defaults` profile seeds a plain Python `.venv` starting point:
 - expected paths and interpreters
 - required commands for the target environment
 - manual guidance that uses `{current_python}` and `{managed_python}`
 
-Repositories that use a different environment should declare that environment
-through their active profile stack or metadata overlays instead of relying on
-the defaults to guess it.
+That is a starting point, not a promise that every repository should use
+`.venv`.
+Repositories that use bench or another environment should declare that
+environment through their active profile stack or metadata overlays instead of
+relying on the defaults to guess it.
 
 The built-in `devcovuser` profile is the normal user-repository layer.
 It keeps DevCovenant's own shipped runtime files out of ordinary app-code
@@ -143,7 +144,7 @@ Examples include:
 The CI boundary matters.
 The builtin `github` workflow template should stay generic.
 It should bootstrap DevCovenant from the shipped
-`devcovenant/runtime-requirements.lock`, not from the repository's own
+`devcovenant/requirements.lock`, not from the repository's own
 dependency files.
 If a repo family needs extra proof or extra project dependency setup, that
 extension belongs in the relevant profile instead of in the builtin base

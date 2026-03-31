@@ -81,6 +81,10 @@ For most repositories, the normal pattern is:
 Use direct overlays for small one-off tweaks.
 Use a custom profile when the repository has real repeatable behavior of its
 own.
+Before the first gate cycle, make sure the environment declared by that stack
+actually exists.
+If you keep the seeded `defaults` + `python` stack, that means creating
+`.venv` and installing `requirements.lock`.
 If the repository uses a bench-managed or other custom environment, declare
 that environment in the profile stack or metadata overlays instead of relying
 on DevCovenant to guess an unknown layout.
@@ -162,7 +166,7 @@ Do not use it as the first place to add reusable behavior for a repo family.
 If the added job should travel with a profile stack, put that behavior in a
 profile `ci_and_test` fragment instead.
 The builtin `github` base bootstraps DevCovenant from the shipped
-`devcovenant/runtime-requirements.lock`. If a repository needs extra project
+`devcovenant/requirements.lock`. If a repository needs extra project
 dependency setup, keep that in the relevant profile or explicit local
 override instead of changing the builtin base.
 

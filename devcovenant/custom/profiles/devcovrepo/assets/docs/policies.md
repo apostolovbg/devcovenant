@@ -110,6 +110,9 @@ model for docs that opt into those headers.
 Custom policies that sync package-facing docs should also keep release targets
 truthful. If a packaged README rewrites repo-relative links or images, those
 links should point at release-stable tagged URLs instead of a moving branch.
+Custom policies may also own exact root-to-package mirrors when a repo keeps
+one canonical source of truth and one shipped package copy, such as a bundled
+lockfile and the matching third-party license directory.
 
 ## Practical Rule
 When policy behavior changes, update all of these together:

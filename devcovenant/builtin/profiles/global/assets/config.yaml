@@ -20,7 +20,10 @@
 # 2) review this file
 # 3) set `install.config_reviewed: true`
 # 4) run `devcovenant deploy`
-# 5) start normal work with
+# 5) prepare the repository's declared environment
+#    if you keep the seeded `defaults` + `python` stack, that means
+#    creating `.venv` and installing `requirements.lock`
+# 6) start normal work with
 #    `gate --start` -> `gate --mid` -> `run` -> `gate --end`
 #
 # Three common starting situations:
@@ -95,20 +98,23 @@ profiles:
     devcov_core_paths:
       - devcovenant/core
       - devcovenant/builtin
+      - devcovenant/licenses
       - devcovenant/__init__.py
       - devcovenant/__main__.py
+      - devcovenant/asset.py
       - devcovenant/cli.py
       - devcovenant/check.py
       - devcovenant/clean.py
       - devcovenant/gate.py
+      - devcovenant/run.py
       - devcovenant/policy.py
-      - devcovenant/test.py
       - devcovenant/install.py
       - devcovenant/deploy.py
       - devcovenant/upgrade.py
       - devcovenant/refresh.py
       - devcovenant/uninstall.py
       - devcovenant/undeploy.py
+      - devcovenant/requirements.lock
       - devcovenant/registry
 
 # ---------------------------------------------------------------------------

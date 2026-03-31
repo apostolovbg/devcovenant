@@ -131,6 +131,21 @@ def _unit_test_core_exclusion_paths_respect_include_toggle() -> None:
     assert enabled == []
 
 
+def _unit_test_core_exclusion_paths_fallback_matches_manifest() -> None:
+    """Fallback core exclusions should stay aligned with manifest helpers."""
+    module = importlib.import_module(MODULE)
+    manifest_module = importlib.import_module(
+        "devcovenant.core.services.manifest_inventory"
+    )
+    repo_root = Path("/tmp/devcovenant")
+    actual = module.core_exclusion_paths(repo_root, {"developer_mode": False})
+    expected = [
+        repo_root / entry
+        for entry in manifest_module.default_scan_excluded_core_paths()
+    ]
+    assert actual == expected
+
+
 def _unit_test_discover_custom_policy_overrides_finds_script_dirs() -> None:
     """Custom policy override discovery should require matching script file."""
     module = importlib.import_module(MODULE)
@@ -327,6 +342,10 @@ class GeneratedUnittestCases(unittest.TestCase):
     def test_core_exclusion_paths_respect_include_toggle(self):
         """Run core-exclusion path toggle assertions."""
         _unit_test_core_exclusion_paths_respect_include_toggle()
+
+    def test_core_exclusion_paths_fallback_matches_manifest(self):
+        """Run fallback core-exclusion alignment assertions."""
+        _unit_test_core_exclusion_paths_fallback_matches_manifest()
 
     def test_discover_custom_policy_overrides_finds_script_dirs(self):
         """Run custom-policy override discovery assertions."""

@@ -50,10 +50,12 @@ def _unit_test_install_writes_config_reviewed_and_manifest() -> None:
 
         config_path = repo_root / "devcovenant" / "config.yaml"
         assert config_path.exists()
-        runtime_requirements = (
-            repo_root / "devcovenant" / "runtime-requirements.lock"
-        )
+        runtime_requirements = repo_root / "devcovenant" / "requirements.lock"
         assert runtime_requirements.exists()
+        package_licenses = (
+            repo_root / "devcovenant" / "licenses" / "THIRD_PARTY_LICENSES.md"
+        )
+        assert package_licenses.exists()
         config = _read_yaml(config_path)
         install_block = config.get("install", {})
         assert isinstance(install_block, dict)
@@ -109,6 +111,26 @@ def _unit_test_install_writes_config_reviewed_and_manifest() -> None:
 
         manifest_path = manifest_module.manifest_path(repo_root)
         assert manifest_path.exists()
+
+
+def _unit_test_install_seeds_current_devcov_core_paths() -> None:
+    """install_repo should seed current core-scan exclusions in config."""
+    with tempfile.TemporaryDirectory() as temp_dir:
+        repo_root = Path(temp_dir)
+        with redirect_stderr(StringIO()):
+            result = install.install_repo(repo_root)
+        assert result == 0
+
+        config = _read_yaml(repo_root / "devcovenant" / "config.yaml")
+        profiles_block = config.get("profiles", {})
+        assert isinstance(profiles_block, dict)
+        generated = profiles_block.get("generated", {})
+        assert isinstance(generated, dict)
+        core_paths = generated.get("devcov_core_paths")
+        assert core_paths == manifest_module.default_scan_excluded_core_paths()
+        assert "devcovenant/asset.py" in core_paths
+        assert "devcovenant/run.py" in core_paths
+        assert "devcovenant/test.py" not in core_paths
 
 
 def _unit_test_install_writes_tracked_registry_without_runtime_state() -> None:
@@ -537,8 +559,8 @@ def _unit_test_pyproject_uses_pep639_license_metadata() -> None:
     assert build_system.get("build-backend") == "setuptools.build_meta"
     build_requires = build_system.get("requires")
     assert isinstance(build_requires, list)
-    assert "setuptools>=77" in build_requires
-    assert "wheel" in build_requires
+    assert "setuptools==82.0.1" in build_requires
+    assert "wheel==0.46.3" in build_requires
     project_data = pyproject_data.get("project", {})
     assert project_data.get("license") == "MIT"
     readme_value = project_data.get("readme")
@@ -565,7 +587,10 @@ def _unit_test_pyproject_uses_pep639_license_metadata() -> None:
     for required in [
         "README.md",
         "VERSION",
-        "runtime-requirements.lock",
+        "requirements.lock",
+        "licenses/README.md",
+        "licenses/THIRD_PARTY_LICENSES.md",
+        "licenses/*.txt",
         "docs/*.md",
         "docs/*.png",
         "logs/README.md",
@@ -593,7 +618,9 @@ def _unit_test_manifest_includes_license_artifacts() -> None:
     assert "include licenses/THIRD_PARTY_LICENSES.md" in content
     assert "recursive-include licenses *.txt" in content
     assert "include devcovenant/logs/README.md" in content
-    assert "include devcovenant/runtime-requirements.lock" in content
+    assert "include devcovenant/requirements.lock" in content
+    assert "recursive-include devcovenant/licenses *.md" in content
+    assert "recursive-include devcovenant/licenses *.txt" in content
     assert "recursive-include devcovenant/docs *" in content
     assert "recursive-include devcovenant/builtin/profiles *" in content
     assert "recursive-include devcovenant/builtin/policies *" in content
@@ -656,10 +683,12 @@ def _unit_test_wheel_excludes_runtime_logs_but_keeps_logs_readme() -> None:
     _assert_runtime_outputs_excluded_from_wheel(entries)
 
 
-def _unit_test_wheel_includes_runtime_requirements_lock() -> None:
-    """Wheel should ship the runtime lock used by generic GitHub CI."""
+def _unit_test_wheel_includes_packaged_runtime_artifacts() -> None:
+    """Wheel should ship the packaged lock and mirrored license bundle."""
     entries = _cached_wheel_entries()
-    assert "devcovenant/runtime-requirements.lock" in entries
+    assert "devcovenant/requirements.lock" in entries
+    assert "devcovenant/licenses/README.md" in entries
+    assert "devcovenant/licenses/THIRD_PARTY_LICENSES.md" in entries
 
 
 def _unit_test_install_symbol_contract_is_stable() -> None:
@@ -676,6 +705,10 @@ class GeneratedUnittestCases(unittest.TestCase):
     def test_install_writes_config_reviewed_and_manifest(self):
         """Run test_install_writes_config_reviewed_and_manifest."""
         _unit_test_install_writes_config_reviewed_and_manifest()
+
+    def test_install_seeds_current_devcov_core_paths(self):
+        """Run install core-path seed alignment assertions."""
+        _unit_test_install_seeds_current_devcov_core_paths()
 
     def test_install_writes_tracked_registry_without_runtime_state(self):
         """Run test_install_writes_tracked_registry_without_runtime_state."""
@@ -721,9 +754,9 @@ class GeneratedUnittestCases(unittest.TestCase):
         """Run test_wheel_excludes_runtime_logs_but_keeps_logs_readme."""
         _unit_test_wheel_excludes_runtime_logs_but_keeps_logs_readme()
 
-    def test_wheel_includes_runtime_requirements_lock(self):
-        """Run test_wheel_includes_runtime_requirements_lock."""
-        _unit_test_wheel_includes_runtime_requirements_lock()
+    def test_wheel_includes_packaged_runtime_artifacts(self):
+        """Run test_wheel_includes_packaged_runtime_artifacts."""
+        _unit_test_wheel_includes_packaged_runtime_artifacts()
 
     def test_install_symbol_contract_is_stable(self):
         """Run test_install_symbol_contract_is_stable."""

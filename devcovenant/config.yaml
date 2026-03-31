@@ -67,20 +67,23 @@ profiles:
     devcov_core_paths:
     - devcovenant/core
     - devcovenant/builtin
+    - devcovenant/licenses
     - devcovenant/__init__.py
     - devcovenant/__main__.py
+    - devcovenant/asset.py
     - devcovenant/cli.py
     - devcovenant/check.py
     - devcovenant/clean.py
     - devcovenant/gate.py
+    - devcovenant/run.py
     - devcovenant/policy.py
-    - devcovenant/test.py
     - devcovenant/install.py
     - devcovenant/deploy.py
     - devcovenant/upgrade.py
     - devcovenant/refresh.py
     - devcovenant/uninstall.py
     - devcovenant/undeploy.py
+    - devcovenant/requirements.lock
     - devcovenant/registry
 
 # -------------------------------------------------------------------
@@ -247,7 +250,7 @@ clean:
 
 # Activate the `github` profile to generate the standard GitHub Actions CI workflow.
 
-# The builtin github base bootstraps DevCovenant itself from the shipped `devcovenant/runtime-requirements.lock`, not from project dependency files.
+# The builtin github base bootstraps DevCovenant itself from the shipped `devcovenant/requirements.lock`, not from project dependency files.
 
 # Active profiles may also contribute reusable ci_and_test fragments.
 
@@ -382,6 +385,7 @@ policy_state:
   no-future-dates: true
   no-print-outside-output-runtime: true
   no-raw-errors: true
+  package-runtime-mirror: true
   raw-string-escapes: false
   read-only-directories: true
   readme-sync: true
@@ -777,6 +781,7 @@ autogen_metadata_overlays:
     - bandit.yaml => SECURITY.md
     - devcovenant/custom/policies/**/*.yaml => devcovenant/docs/policies.md
     - devcovenant/custom/policies/**/*.py => devcovenant/docs/policies.md
+    - devcovenant/custom/policies/**/autofix/**=> devcovenant/docs/policies.md
     - devcovenant/core/flow/*.py => devcovenant/docs/workflow.md
     - devcovenant/core/runtime/*.py => devcovenant/docs/workflow.md
     - devcovenant/core/services/*.py => devcovenant/docs/architecture.md

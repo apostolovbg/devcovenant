@@ -61,6 +61,127 @@ Example:
 ## Version 1.0.1
 
 - 2026-03-31:
+  Change: added the `package-runtime-mirror` custom policy with an
+    autofixer, mirrored the canonical root `requirements.lock` and
+    `licenses/**` into `devcovenant/`, and aligned GitHub/governance
+    installs with the one-root-lock packaging model.
+  Why: replaced the split runtime-lock approach with one repo-root
+    source of truth so package-shipped dependency and license artifacts
+    stay synchronized automatically and GitHub workflow tooling uses the
+    same canonical lock as this repository.
+  Impact: added an exact mirrored dependency and license artifact
+    surface under `devcovenant/`, kept the mirror enforceable through a
+    custom auto-fixable policy, and kept governance/build bootstrap on a
+    reproducible single repo lock while package consumers use a stable
+    in-package mirror surface.
+  Files:
+  .github/workflows/ci.yml
+  AGENTS.md
+  CHANGELOG.md
+  MANIFEST.in
+  README.md
+  devcovenant/README.md
+  devcovenant/builtin/policies/line_length_limit/line_length_limit.yaml
+  devcovenant/builtin/profiles/README.md
+  devcovenant/builtin/profiles/github/assets/ci.yml
+  devcovenant/builtin/profiles/global/assets/config.yaml
+  devcovenant/config.yaml
+  devcovenant/core/flow/refresh.py
+  devcovenant/core/services/manifest_inventory.py
+  devcovenant/custom/profiles/devcovrepo/assets/docs/config.md
+  devcovenant/custom/profiles/devcovrepo/assets/docs/installation.md
+  devcovenant/custom/profiles/devcovrepo/assets/docs/policies.md
+  devcovenant/custom/profiles/devcovrepo/assets/docs/profiles.md
+  devcovenant/custom/profiles/devcovrepo/assets/docs/registry.md
+  devcovenant/custom/profiles/devcovrepo/assets/docs/workflow.md
+  devcovenant/custom/profiles/devcovrepo/devcovrepo.yaml
+  devcovenant/docs/architecture.md
+  devcovenant/docs/config.md
+  devcovenant/docs/installation.md
+  devcovenant/docs/policies.md
+  devcovenant/docs/profiles.md
+  devcovenant/docs/registry.md
+  devcovenant/docs/workflow.md
+  devcovenant/registry/registry.yaml
+  devcovenant/runtime-requirements.lock
+  licenses/THIRD_PARTY_LICENSES.md
+  pyproject.toml
+  requirements.in
+  requirements.lock
+  tests/devcovenant/core/services/test_profile_registry.py
+  tests/devcovenant/test_install.py
+  tests/devcovenant/test_refresh.py
+  devcovenant/custom/policies/package_runtime_mirror/autofix/global.py
+  devcovenant/custom/policies/package_runtime_mirror/package_runtime_mirror.py
+  devcovenant/custom/policies/package_runtime_mirror/package_runtime_mirror.yaml
+  devcovenant/licenses/PyYAML-6.0.3.txt
+  devcovenant/licenses/README.md
+  devcovenant/licenses/THIRD_PARTY_LICENSES.md
+  devcovenant/licenses/bandit-1.9.4.txt
+  devcovenant/licenses/build-1.4.2.txt
+  devcovenant/licenses/cyclonedx-bom-7.2.2.txt
+  devcovenant/licenses/packaging-26.0.txt
+  devcovenant/licenses/pip-audit-2.10.0.txt
+  devcovenant/licenses/pip-tools-7.5.3.txt
+  devcovenant/licenses/pre-commit-4.5.1.txt
+  devcovenant/licenses/pytest-9.0.2.txt
+  devcovenant/licenses/semver-3.0.4.txt
+  devcovenant/licenses/setuptools-82.0.1.txt
+  devcovenant/licenses/tomli-2.3.0.txt
+  devcovenant/licenses/twine-6.2.0.txt
+  devcovenant/licenses/wheel-0.46.3.txt
+  devcovenant/requirements.lock
+  licenses/bandit-1.9.4.txt
+  licenses/build-1.4.2.txt
+  licenses/cyclonedx-bom-7.2.2.txt
+  licenses/pip-audit-2.10.0.txt
+  licenses/setuptools-82.0.1.txt
+  licenses/twine-6.2.0.txt
+  licenses/wheel-0.46.3.txt
+  tests/devcovenant/custom/policies/package_runtime_mirror/autofix/\
+    test_global.py
+  tests/devcovenant/custom/policies/package_runtime_mirror/\
+    test_package_runtime_mirror.py
+
+- 2026-03-31:
+  Change: corrected the first-run onboarding flow, synchronized the
+    `devcov_core_paths` boundary with the real shipped runtime commands, and
+    pinned the repo-specific build tooling used by the GitHub build proof.
+  Why: clarified that package docs were sending ordinary repositories into the
+    first gate
+    cycle before their declared environment existed, the normal-repo scan
+    boundary had drifted across code and config, and repo build tooling could
+    still change across CI reruns.
+  Impact: improved first-run setup guidance, ordinary
+    repositories keep the intended DevCovenant runtime files out of normal
+    scans, and this repo's GitHub build proof uses a stable pinned toolchain.
+  Files:
+  CHANGELOG.md
+  README.md
+  devcovenant/README.md
+  devcovenant/builtin/profiles/global/assets/config.yaml
+  devcovenant/config.yaml
+  devcovenant/core/flow/refresh.py
+  devcovenant/core/services/manifest_inventory.py
+  devcovenant/core/services/policy_file_scope.py
+  devcovenant/custom/profiles/devcovrepo/assets/docs/config.md
+  devcovenant/custom/profiles/devcovrepo/assets/docs/installation.md
+  devcovenant/custom/profiles/devcovrepo/assets/docs/profiles.md
+  devcovenant/custom/profiles/devcovrepo/assets/docs/registry.md
+  devcovenant/custom/profiles/devcovrepo/assets/docs/workflow.md
+  devcovenant/custom/profiles/devcovrepo/devcovrepo.yaml
+  devcovenant/docs/config.md
+  devcovenant/docs/installation.md
+  devcovenant/docs/profiles.md
+  devcovenant/docs/registry.md
+  devcovenant/docs/workflow.md
+  devcovenant/registry/registry.yaml
+  tests/devcovenant/core/services/test_policy_file_scope.py
+  tests/devcovenant/core/services/test_profile_registry.py
+  tests/devcovenant/test_install.py
+  tests/devcovenant/test_refresh.py
+
+- 2026-03-31:
   Change: added a builtin `github` profile, moved generated GitHub Actions
     CI ownership out of the always-on `global` profile, and gave that base
     workflow a DevCovenant-owned runtime lock instead of assuming a repo's

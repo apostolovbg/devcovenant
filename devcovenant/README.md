@@ -66,6 +66,10 @@ devcovenant install
 # review devcovenant/config.yaml
 # set install.config_reviewed: true
 devcovenant deploy
+# if you keep the seeded defaults + python stack:
+python3 -m venv .venv
+.venv/bin/python -m pip install -r requirements.lock
+# otherwise declare and prepare the repo's real environment first
 devcovenant gate --start
 # make your edits
 devcovenant gate --mid
@@ -92,7 +96,17 @@ What those steps mean:
 4. `deploy` writes the managed docs, generated files, and other DevCovenant
    outputs.
 
-5. The first full gate cycle proves the reviewed setup actually works.
+5. Prepare the environment declared by the active profile stack before the
+   first gate cycle.
+
+   If you keep the seeded `defaults` + `python` stack, create `.venv` and
+   install `requirements.lock`.
+   On Windows, use `.venv\\Scripts\\python.exe -m pip install -r \
+   requirements.lock`.
+   If the repository uses bench or another environment layout, declare that
+   first through the profile stack or metadata overlays, then prepare it.
+
+6. The first full gate cycle proves the reviewed setup actually works.
 
 Use a source checkout instead of `pipx` only when you are developing
 DevCovenant itself or testing unreleased changes.
@@ -276,3 +290,5 @@ Use the shorter map below instead of treating the README as the whole manual.
 DevCovenant is released under the MIT License.
 See [LICENSE](https://github.com/apostolovbg/devcovenant/blob/v1.0.1/LICENSE) and
 [licenses/THIRD_PARTY_LICENSES.md](https://github.com/apostolovbg/devcovenant/blob/v1.0.1/licenses/THIRD_PARTY_LICENSES.md).
+The published package mirrors that compliance bundle under
+`devcovenant/licenses/`.

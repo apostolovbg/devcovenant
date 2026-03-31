@@ -66,6 +66,10 @@ devcovenant install
 # review devcovenant/config.yaml
 # set install.config_reviewed: true
 devcovenant deploy
+# if you keep the seeded defaults + python stack:
+python3 -m venv .venv
+.venv/bin/python -m pip install -r requirements.lock
+# otherwise declare and prepare the repo's real environment first
 devcovenant gate --start
 # make your edits
 devcovenant gate --mid
@@ -92,7 +96,17 @@ What those steps mean:
 4. `deploy` writes the managed docs, generated files, and other DevCovenant
    outputs.
 
-5. The first full gate cycle proves the reviewed setup actually works.
+5. Prepare the environment declared by the active profile stack before the
+   first gate cycle.
+
+   If you keep the seeded `defaults` + `python` stack, create `.venv` and
+   install `requirements.lock`.
+   On Windows, use `.venv\\Scripts\\python.exe -m pip install -r \
+   requirements.lock`.
+   If the repository uses bench or another environment layout, declare that
+   first through the profile stack or metadata overlays, then prepare it.
+
+6. The first full gate cycle proves the reviewed setup actually works.
 
 Use a source checkout instead of `pipx` only when you are developing
 DevCovenant itself or testing unreleased changes.
@@ -293,7 +307,9 @@ ordinary user repositories do not need.
 - Root automation notes live here and in `AGENTS.md`, not in package docs.
 - The builtin `github` profile owns the generic GitHub Actions CI base and
   bootstraps DevCovenant from the shipped
-  `devcovenant/runtime-requirements.lock`.
+  `devcovenant/requirements.lock`.
+- The package ships `devcovenant/licenses/**` beside that lock so the bundled
+  dependency report and third-party license set stay self-contained.
 - This repo activates `github`, and `devcovrepo` extends that workflow with
   repo-specific `Governance` and `Build` behavior.
 - `.github/workflows/publish.yml` stays repo-maintained and publishes only the
@@ -312,3 +328,5 @@ ordinary user repositories do not need.
 DevCovenant is released under the MIT License.
 See [LICENSE](LICENSE) and
 [licenses/THIRD_PARTY_LICENSES.md](licenses/THIRD_PARTY_LICENSES.md).
+The published package mirrors that compliance bundle under
+`devcovenant/licenses/`.

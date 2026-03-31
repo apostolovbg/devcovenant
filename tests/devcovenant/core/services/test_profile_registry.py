@@ -350,7 +350,7 @@ def _unit_test_global_governance_workflow_asset_stays_generic() -> None:
         == "Install DevCovenant runtime dependencies"
     )
     install_run = str(install_step.get("run") or "").strip()
-    assert "devcovenant/runtime-requirements.lock" in install_run
+    assert "devcovenant/requirements.lock" in install_run
     assert "python -m pip install -r requirements.lock" not in install_run
 
 
@@ -393,7 +393,7 @@ def _unit_test_repo_workflow_includes_devcovrepo_jobs() -> None:
         for step in steps
         if isinstance(step, dict)
     ]
-    assert "Install scanner dependencies" in step_names
+    assert "Install governance tooling" in step_names
     assert "Audit locked dependencies" in step_names
     assert "Run Bandit" in step_names
     audit_step = next(
@@ -486,6 +486,8 @@ def _unit_test_ci_workflow_contains_build_job_artifact_proof() -> None:
     )
     assert "$RUNNER_TEMP/devcovenant-pycache" in all_run_blocks
     assert "${{ runner.temp }}" not in all_run_blocks
+    assert "python -m pip install -r requirements.lock" in all_run_blocks
+    assert "python -m pip install build twine pipx" not in all_run_blocks
     assert "pushd artifacts/wheel-proof >/dev/null" in all_run_blocks
     assert "pushd artifacts/sdist-proof >/dev/null" in all_run_blocks
     assert "pushd artifacts/pipx-proof >/dev/null" in all_run_blocks

@@ -32,7 +32,7 @@ jobs:
       - name: Install DevCovenant runtime dependencies
         run: |
           python -m pip install --upgrade pip
-          python -m pip install -r devcovenant/runtime-requirements.lock
+          python -m pip install -r devcovenant/requirements.lock
 
       - name: Run DevCovenant start gate
         run: python -m devcovenant gate --start
