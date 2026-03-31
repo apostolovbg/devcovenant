@@ -126,9 +126,15 @@ It bootstraps DevCovenant from the shipped
 repository's own dependency files belong to DevCovenant. The packaged
 license files under `devcovenant/licenses/` ship with DevCovenant as part of
 the package.
+When that shipped lock pins `pip`, the generic workflow should install from
+the lock instead of upgrading `pip` live first.
 If a repository needs extra project dependency setup, extra CI steps, or extra
 install validation, that extension should come from a profile-owned CI
 fragment instead of from the builtin base.
+If a repo uses a hash-locked Python requirements file and also installs a
+local wheel or sdist in CI, split that into:
+1. install the locked requirements
+2. install the local artifact with `--no-deps`
 If a repository documents a particular public install path, test that same
 public path in the repository's own CI extension.
 If a repository adds a separate release workflow, that workflow should publish

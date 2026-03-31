@@ -37,11 +37,6 @@ from devcovenant.core.services import (
     project_governance as project_governance_service,
 )
 
-# Compatibility alias used by tests that monkeypatch runtime snapshot capture.
-capture_current_numstat_snapshot = (
-    execution_runtime_module.capture_current_numstat_snapshot
-)
-
 
 def _find_markers(
     content: str,

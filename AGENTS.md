@@ -550,6 +550,7 @@ dependency_role_dirs:
 third_party_file: licenses/THIRD_PARTY_LICENSES.md
 licenses_dir: licenses
 report_heading: ## License Report
+python_lock_generate_hashes: True
 selector_roles: dependency
 ```
 
@@ -570,7 +571,12 @@ configured report file (`third_party_file`) and configured license directory
 Policy checks remain read-only. Autofixers may invoke declared policy
 runtime actions, and explicit policy-born CLI commands may invoke those same
 runtime actions manually. Remediation messaging may differ when autofix is
-enabled versus disabled. Artifact refresh remains deterministic/idempotent.
+enabled versus disabled. For Python repositories, hash-locked
+`requirements.lock` generation is opt-in through
+`python_lock_generate_hashes`. When enabled, exact marker-gated direct pins
+must keep real hashes as well; the runtime resolves those hashes explicitly
+or fails loudly instead of writing a partial lock. Artifact refresh remains
+deterministic/idempotent.
 
 
 ---

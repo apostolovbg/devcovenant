@@ -78,11 +78,13 @@ def _unit_test_refresh_runtime_updates_inventory_without_lock_change() -> None:
             "licenses_dir": "licenses",
             "report_heading": "## License Report",
         }
-        module._compile_requirements_lock = (
-            lambda _repo_root, _requirements_in: module.LockFilePieces(
-                [f"packaging=={packaging_version}"]
-            )
-        )
+
+        def _fake_compile(_repo_root, _requirements_in, **_kwargs):
+            """Return the existing lock content without changing it."""
+
+            return module.LockFilePieces([f"packaging=={packaging_version}"])
+
+        module._compile_requirements_lock = _fake_compile
         try:
             payload = module.refresh_all(repo_root)
         finally:
@@ -143,11 +145,13 @@ def _unit_test_refresh_runtime_preserves_changed_manifest_references() -> None:
             "licenses_dir": "licenses",
             "report_heading": "## License Report",
         }
-        module._compile_requirements_lock = (
-            lambda _repo_root, _requirements_in: module.LockFilePieces(
-                [f"packaging=={packaging_version}"]
-            )
-        )
+
+        def _fake_compile(_repo_root, _requirements_in, **_kwargs):
+            """Return one stable resolved dependency line for the report."""
+
+            return module.LockFilePieces([f"packaging=={packaging_version}"])
+
+        module._compile_requirements_lock = _fake_compile
         try:
             module.refresh_all(
                 repo_root,
@@ -256,14 +260,18 @@ def _unit_test_refresh_runtime_ignores_environment_option_lines() -> None:
             encoding="utf-8",
         )
         original_compile = module._compile_requirements_lock
-        module._compile_requirements_lock = (
-            lambda _repo_root, _requirements_in: module.LockFilePieces(
+
+        def _fake_compile(_repo_root, _requirements_in, **_kwargs):
+            """Return one lock result with a private index option line."""
+
+            return module.LockFilePieces(
                 [
                     "--index-url https://mirror.example/simple",
                     f"packaging=={packaging_version}",
                 ]
             )
-        )
+
+        module._compile_requirements_lock = _fake_compile
         try:
             result = module._refresh_python_requirements_lock(repo_root)
         finally:
@@ -293,14 +301,18 @@ def _unit_test_refresh_runtime_scrubs_environment_option_lines() -> None:
             encoding="utf-8",
         )
         original_compile = module._compile_requirements_lock
-        module._compile_requirements_lock = (
-            lambda _repo_root, _requirements_in: module.LockFilePieces(
+
+        def _fake_compile(_repo_root, _requirements_in, **_kwargs):
+            """Return one preserved exact-marker lock payload."""
+
+            return module.LockFilePieces(
                 module._preserve_exact_marker_pins(
                     [f"packaging=={packaging_version}"],
                     _requirements_in,
                 )
             )
-        )
+
+        module._compile_requirements_lock = _fake_compile
         try:
             result = module._refresh_python_requirements_lock(repo_root)
         finally:
@@ -335,14 +347,18 @@ def _unit_test_refresh_runtime_preserves_exact_marker_pins() -> None:
             encoding="utf-8",
         )
         original_compile = module._compile_requirements_lock
-        module._compile_requirements_lock = (
-            lambda _repo_root, _requirements_in: module.LockFilePieces(
+
+        def _fake_compile(_repo_root, _requirements_in, **_kwargs):
+            """Return one exact-marker lock payload for refresh coverage."""
+
+            return module.LockFilePieces(
                 module._preserve_exact_marker_pins(
                     [f"packaging=={packaging_version}"],
                     _requirements_in,
                 )
             )
-        )
+
+        module._compile_requirements_lock = _fake_compile
         try:
             result = module._refresh_python_requirements_lock(repo_root)
         finally:
@@ -408,6 +424,157 @@ def _unit_test_run_pip_compile_uses_private_cache_dir() -> None:
         assert env["PIP_TOOLS_CACHE_DIR"] != "/__devcov__/pip-tools-cache"
 
 
+def _unit_test_run_pip_compile_adds_generate_hashes_when_enabled() -> None:
+    """Hash mode should forward `--generate-hashes` to pip-compile."""
+
+    module = importlib.import_module(MODULE)
+    with tempfile.TemporaryDirectory() as temp_dir:
+        repo_root = Path(temp_dir)
+        output_path = repo_root / "requirements.lock"
+        requirements_in = repo_root / "requirements.in"
+        requirements_in.write_text("packaging>=26.0\n", encoding="utf-8")
+        captured: dict[str, object] = {}
+
+        def _fake_run(command, **kwargs):
+            """Capture the pip-compile argv without executing it."""
+
+            captured["command"] = list(command)
+            captured["env"] = dict(kwargs.get("env") or {})
+
+            class _Result:
+                """Minimal subprocess result stub for the captured call."""
+
+                returncode = 0
+
+            return _Result()
+
+        with patch.object(
+            module.importlib.util,
+            "find_spec",
+            return_value=object(),
+        ):
+            with patch.object(module.subprocess, "run", side_effect=_fake_run):
+                module._run_pip_compile(
+                    repo_root,
+                    requirements_in,
+                    output_path,
+                    generate_hashes=True,
+                )
+
+        command = captured["command"]
+        assert isinstance(command, list)
+        assert "--generate-hashes" in command
+
+
+def _unit_test_hash_mode_semantics_include_hash_lines() -> None:
+    """Hash mode should treat different hash sets as real lock drift."""
+
+    module = importlib.import_module(MODULE)
+    first = [
+        "packaging==26.0 \\",
+        "    --hash=sha256:aaa \\",
+        "    --hash=sha256:bbb",
+        "    # via -r requirements.in",
+    ]
+    second = [
+        "packaging==26.0 \\",
+        "    --hash=sha256:aaa \\",
+        "    --hash=sha256:ccc",
+        "    # via -r requirements.in",
+    ]
+
+    assert module._normalize_python_lock_semantics_for_mode(
+        first,
+        generate_hashes=True,
+    ) != module._normalize_python_lock_semantics_for_mode(
+        second,
+        generate_hashes=True,
+    )
+
+
+def _unit_test_preserve_exact_marker_pins_adds_real_hashes() -> None:
+    """Missing exact marker pins should gain real hash lines in hash mode."""
+
+    module = importlib.import_module(MODULE)
+    with tempfile.TemporaryDirectory() as temp_dir:
+        repo_root = Path(temp_dir)
+        requirements_in = repo_root / "requirements.in"
+        requirements_in.write_text(
+            'tomli==2.3.0; python_version < "3.11"\n',
+            encoding="utf-8",
+        )
+        original_fetch = module._fetch_pypi_release_hashes
+        module._fetch_pypi_release_hashes = lambda _requirement: [
+            "aaa",
+            "bbb",
+        ]
+        try:
+            preserved = module._preserve_exact_marker_pins(
+                [],
+                requirements_in,
+                generate_hashes=True,
+            )
+        finally:
+            module._fetch_pypi_release_hashes = original_fetch
+
+        assert preserved == [
+            'tomli==2.3.0 ; python_version < "3.11" \\',
+            "    --hash=sha256:aaa \\",
+            "    --hash=sha256:bbb",
+            "    # via -r requirements.in",
+        ]
+
+
+def _unit_test_refresh_runtime_passes_hash_mode_from_metadata() -> None:
+    """Metadata-selected hash mode should reach the Python lock refresher."""
+
+    module = importlib.import_module(MODULE)
+    with tempfile.TemporaryDirectory() as temp_dir:
+        repo_root = Path(temp_dir)
+        licenses_dir = repo_root / "licenses"
+        licenses_dir.mkdir(parents=True, exist_ok=True)
+        captured: dict[str, object] = {}
+        original_resolver = module._resolve_dependency_metadata
+        original_refresh = module._refresh_python_requirements_lock
+        original_license_refresh = (
+            module.dependency_management.refresh_license_artifacts
+        )
+        module._resolve_dependency_metadata = lambda _repo_root: {
+            "resolved_dependency_files": ["requirements.lock"],
+            "third_party_file": "licenses/THIRD_PARTY_LICENSES.md",
+            "licenses_dir": "licenses",
+            "report_heading": "## License Report",
+            "python_lock_generate_hashes": True,
+        }
+
+        def _fake_refresh(_repo_root, *, generate_hashes=False):
+            """Capture the selected hash mode from refresh_all."""
+
+            captured["generate_hashes"] = generate_hashes
+            return module.LockHandlerResult(
+                "requirements.lock",
+                changed=False,
+                attempted=True,
+                message="No change.",
+            )
+
+        module._refresh_python_requirements_lock = _fake_refresh
+        module.dependency_management.refresh_license_artifacts = (
+            lambda *_args, **_kwargs: []
+        )
+        try:
+            payload = module.refresh_all(repo_root)
+        finally:
+            module._resolve_dependency_metadata = original_resolver
+            module._refresh_python_requirements_lock = original_refresh
+            module.dependency_management.refresh_license_artifacts = (
+                original_license_refresh
+            )
+
+        assert payload["lock_results"]
+        assert captured["generate_hashes"] is True
+
+
 class GeneratedUnittestCases(unittest.TestCase):
     """unittest wrappers for layered module sanity checks."""
 
@@ -450,3 +617,19 @@ class GeneratedUnittestCases(unittest.TestCase):
     def test_run_pip_compile_uses_private_cache_dir(self):
         """Run pip-tools cache-dir isolation assertions."""
         _unit_test_run_pip_compile_uses_private_cache_dir()
+
+    def test_run_pip_compile_adds_generate_hashes_when_enabled(self):
+        """Run pip-compile hash-mode argv assertions."""
+        _unit_test_run_pip_compile_adds_generate_hashes_when_enabled()
+
+    def test_hash_mode_semantics_include_hash_lines(self):
+        """Run hash-aware lock semantics assertions."""
+        _unit_test_hash_mode_semantics_include_hash_lines()
+
+    def test_preserve_exact_marker_pins_adds_real_hashes(self):
+        """Run exact marker pin hash-preservation assertions."""
+        _unit_test_preserve_exact_marker_pins_adds_real_hashes()
+
+    def test_refresh_runtime_passes_hash_mode_from_metadata(self):
+        """Run metadata-to-runtime hash-mode propagation assertions."""
+        _unit_test_refresh_runtime_passes_hash_mode_from_metadata()

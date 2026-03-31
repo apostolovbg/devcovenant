@@ -1657,7 +1657,7 @@ policies:
     - pip-wheel-metadata/**
     origin: builtin
     script_exists: true
-    hash: d5283cdcaf2149365633db263aadfeac0a857fbd4edca5345498813385fd758e
+    hash: 0cfb5dd5cd8872382d02b51709d59bca5805d490caa735efa3573ebe8814c2a9
     script_path: builtin/changelog_coverage.py
   devcov-raw-string-escapes:
     enabled: true
@@ -8683,7 +8683,12 @@ policies:
       Policy checks remain read-only. Autofixers may invoke declared policy
       runtime actions, and explicit policy-born CLI commands may invoke those same
       runtime actions manually. Remediation messaging may differ when autofix is
-      enabled versus disabled. Artifact refresh remains deterministic/idempotent.
+      enabled versus disabled. For Python repositories, hash-locked
+      `requirements.lock` generation is opt-in through
+      `python_lock_generate_hashes`. When enabled, exact marker-gated direct pins
+      must keep real hashes as well; the runtime resolves those hashes explicitly
+      or fails loudly instead of writing a partial lock. Artifact refresh remains
+      deterministic/idempotent.
     metadata:
       id: dependency-management
       severity: error
@@ -8702,6 +8707,7 @@ policies:
       third_party_file: licenses/THIRD_PARTY_LICENSES.md
       licenses_dir: licenses
       report_heading: '## License Report'
+      python_lock_generate_hashes: 'True'
       selector_roles: dependency
     metadata_resolution:
       id:
@@ -8894,6 +8900,24 @@ policies:
         effective:
           values:
           - '## License Report'
+      python_lock_generate_hashes:
+        descriptor:
+          values:
+          - 'false'
+          behavior: base
+        profile_overlays:
+          values:
+          - 'True'
+          behavior: replace
+          replaced_inherited_values:
+          - 'false'
+        autogen_overlays:
+          values:
+          - 'True'
+          behavior: append
+        effective:
+          values:
+          - 'True'
       selector_roles:
         descriptor:
           values:
@@ -8957,6 +8981,7 @@ policies:
       third_party_file: licenses/THIRD_PARTY_LICENSES.md
       licenses_dir: licenses
       report_heading: '## License Report'
+      python_lock_generate_hashes: true
       selector_roles: dependency
     runtime_config_overrides: {}
     runtime_effective_options:
@@ -8971,12 +8996,13 @@ policies:
       third_party_file: licenses/THIRD_PARTY_LICENSES.md
       licenses_dir: licenses
       report_heading: '## License Report'
+      python_lock_generate_hashes: true
       selector_roles: dependency
     assets:
     - licenses/THIRD_PARTY_LICENSES.md
     origin: builtin
     script_exists: true
-    hash: c889d4319662e8f166cca2158587a84b7e625bf85a8e4df60b6b48ae80b59e0e
+    hash: 21900f36fa2fa1273b948a6423be885f791b7f4060dfb04cfd5df178e29d8bb0
     script_path: builtin/dependency_management.py
   package-artifact-mirror:
     enabled: true
@@ -11595,7 +11621,6 @@ profiles:
           steps:
           - name: Install governance tooling
             run: |
-              python -m pip install --upgrade pip
               python -m pip install -r requirements.lock
           - name: Audit locked dependencies
             run: pip-audit -r requirements.lock --ignore-vuln CVE-2026-4539
@@ -11623,7 +11648,6 @@ profiles:
               rm -rf build dist ./*.egg-info .pytest_cache .ruff_cache
           - name: Install build tooling
             run: |
-              python -m pip install --upgrade pip
               python -m pip install -r requirements.lock
           - name: Build distributions
             run: python -m build
@@ -11690,8 +11714,8 @@ profiles:
               test -n "$WHEEL_PATH"
               python -m venv .proof-wheel
               . .proof-wheel/bin/activate
-              python -m pip install --upgrade pip
-              python -m pip install "$WHEEL_PATH"
+              python -m pip install -r requirements.lock
+              python -m pip install --no-deps "$WHEEL_PATH"
               git init -q artifacts/wheel-proof
               pushd artifacts/wheel-proof >/dev/null
               git config user.name ci
@@ -11738,8 +11762,8 @@ profiles:
               git add .
               git commit -m "bootstrap installed repo"
               python3 -m venv .venv
-              .venv/bin/python -m pip install --upgrade pip
-              .venv/bin/python -m pip install -r requirements.lock "$WHEEL_PATH"
+              .venv/bin/python -m pip install -r requirements.lock
+              .venv/bin/python -m pip install --no-deps "$WHEEL_PATH"
               .venv/bin/python -m devcovenant gate --start
               .venv/bin/python -m devcovenant gate --mid
               .venv/bin/python -m devcovenant run
@@ -11761,8 +11785,8 @@ profiles:
               test -n "$SDIST_PATH"
               python -m venv .proof-sdist
               . .proof-sdist/bin/activate
-              python -m pip install --upgrade pip
-              python -m pip install "$SDIST_PATH"
+              python -m pip install -r requirements.lock
+              python -m pip install --no-deps "$SDIST_PATH"
               git init -q artifacts/sdist-proof
               pushd artifacts/sdist-proof >/dev/null
               git config user.name ci
@@ -11809,8 +11833,8 @@ profiles:
               git add .
               git commit -m "bootstrap installed repo"
               python3 -m venv .venv
-              .venv/bin/python -m pip install --upgrade pip
-              .venv/bin/python -m pip install -r requirements.lock "$SDIST_PATH"
+              .venv/bin/python -m pip install -r requirements.lock
+              .venv/bin/python -m pip install --no-deps "$SDIST_PATH"
               .venv/bin/python -m devcovenant gate --start
               .venv/bin/python -m devcovenant gate --mid
               .venv/bin/python -m devcovenant run
@@ -11885,8 +11909,8 @@ profiles:
               git add .
               git commit -m "bootstrap pipx repo"
               python3 -m venv .venv
-              .venv/bin/python -m pip install --upgrade pip
-              .venv/bin/python -m pip install -r requirements.lock "$WHEEL_PATH"
+              .venv/bin/python -m pip install -r requirements.lock
+              .venv/bin/python -m pip install --no-deps "$WHEEL_PATH"
               "$PIPX_BIN_DIR/devcovenant" gate --start
               "$PIPX_BIN_DIR/devcovenant" gate --mid
               "$PIPX_BIN_DIR/devcovenant" run
@@ -11912,8 +11936,8 @@ profiles:
               test -n "$WHEEL_PATH"
               python -m venv .proof-py310
               . .proof-py310/bin/activate
-              python -m pip install --upgrade pip
-              python -m pip install "$WHEEL_PATH"
+              python -m pip install -r requirements.lock
+              python -m pip install --no-deps "$WHEEL_PATH"
               python -m devcovenant --version
               python - <<'PY'
               import devcovenant
@@ -11946,6 +11970,7 @@ profiles:
         - intent=>requirements.in
         - resolved=>requirements.lock
         - package_manifest=>pyproject.toml
+        python_lock_generate_hashes: true
       managed-environment:
         expected_paths:
         - .venv

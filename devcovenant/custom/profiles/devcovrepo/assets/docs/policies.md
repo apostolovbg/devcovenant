@@ -46,8 +46,9 @@ One good example is `changelog-coverage`: it works from the active gate slice,
 not from raw git history. When the top changelog version changes during an
 open slice, it expects a new version section above the preserved previous top
 section, and it expects the preserved pre-session top entry to stay first in
-that older section instead of relabeling old entries. It does not depend on
-bump wording inside the entry text.
+that older section instead of relabeling old entries. It tracks that
+preserved entry by fingerprint, so the rule does not depend on bump wording
+inside the entry text.
 If you intentionally rebuild changelog history, run
 `devcovenant policy changelog-coverage reset-baseline` during the open
 session. That command relaxes only the preserved-old-entry requirement for the
@@ -99,6 +100,13 @@ resolution content, not environment-local pip control lines.
 Refresh strips environment-specific directives from comparison and from the
 written lock body so repositories keep package-source behavior in metadata and
 config instead of baking it into the lock file.
+If a Python repo enables `python_lock_generate_hashes`, the same
+`dependency-management refresh-all` command also runs `pip-compile
+--generate-hashes`.
+That mode is opt-in.
+When it preserves exact marker-gated direct pins, it must preserve real hashes
+too. If those hashes cannot be resolved, refresh fails explicitly instead of
+writing a partial lock.
 
 ## Version-Governance Adapters
 Version-governance adapters define how version schemes are parsed,

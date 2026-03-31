@@ -30,7 +30,6 @@ ci_and_test:
       steps:
         - name: Install governance tooling
           run: |
-            python -m pip install --upgrade pip
             python -m pip install -r requirements.lock
         - name: Audit locked dependencies
           run: >-
@@ -61,7 +60,6 @@ ci_and_test:
             rm -rf build dist ./*.egg-info .pytest_cache .ruff_cache
         - name: Install build tooling
           run: |
-            python -m pip install --upgrade pip
             python -m pip install -r requirements.lock
         - name: Build distributions
           run: python -m build
@@ -128,8 +126,8 @@ ci_and_test:
             test -n "$WHEEL_PATH"
             python -m venv .proof-wheel
             . .proof-wheel/bin/activate
-            python -m pip install --upgrade pip
-            python -m pip install "$WHEEL_PATH"
+            python -m pip install -r requirements.lock
+            python -m pip install --no-deps "$WHEEL_PATH"
             git init -q artifacts/wheel-proof
             pushd artifacts/wheel-proof >/dev/null
             git config user.name ci
@@ -176,8 +174,8 @@ ci_and_test:
             git add .
             git commit -m "bootstrap installed repo"
             python3 -m venv .venv
-            .venv/bin/python -m pip install --upgrade pip
-            .venv/bin/python -m pip install -r requirements.lock "$WHEEL_PATH"
+            .venv/bin/python -m pip install -r requirements.lock
+            .venv/bin/python -m pip install --no-deps "$WHEEL_PATH"
             .venv/bin/python -m devcovenant gate --start
             .venv/bin/python -m devcovenant gate --mid
             .venv/bin/python -m devcovenant run
@@ -199,8 +197,8 @@ ci_and_test:
             test -n "$SDIST_PATH"
             python -m venv .proof-sdist
             . .proof-sdist/bin/activate
-            python -m pip install --upgrade pip
-            python -m pip install "$SDIST_PATH"
+            python -m pip install -r requirements.lock
+            python -m pip install --no-deps "$SDIST_PATH"
             git init -q artifacts/sdist-proof
             pushd artifacts/sdist-proof >/dev/null
             git config user.name ci
@@ -247,8 +245,8 @@ ci_and_test:
             git add .
             git commit -m "bootstrap installed repo"
             python3 -m venv .venv
-            .venv/bin/python -m pip install --upgrade pip
-            .venv/bin/python -m pip install -r requirements.lock "$SDIST_PATH"
+            .venv/bin/python -m pip install -r requirements.lock
+            .venv/bin/python -m pip install --no-deps "$SDIST_PATH"
             .venv/bin/python -m devcovenant gate --start
             .venv/bin/python -m devcovenant gate --mid
             .venv/bin/python -m devcovenant run
@@ -323,8 +321,8 @@ ci_and_test:
             git add .
             git commit -m "bootstrap pipx repo"
             python3 -m venv .venv
-            .venv/bin/python -m pip install --upgrade pip
-            .venv/bin/python -m pip install -r requirements.lock "$WHEEL_PATH"
+            .venv/bin/python -m pip install -r requirements.lock
+            .venv/bin/python -m pip install --no-deps "$WHEEL_PATH"
             "$PIPX_BIN_DIR/devcovenant" gate --start
             "$PIPX_BIN_DIR/devcovenant" gate --mid
             "$PIPX_BIN_DIR/devcovenant" run
@@ -351,8 +349,8 @@ ci_and_test:
             test -n "$WHEEL_PATH"
             python -m venv .proof-py310
             . .proof-py310/bin/activate
-            python -m pip install --upgrade pip
-            python -m pip install "$WHEEL_PATH"
+            python -m pip install -r requirements.lock
+            python -m pip install --no-deps "$WHEEL_PATH"
             python -m devcovenant --version
             python - <<'PY'
             import devcovenant
@@ -391,6 +389,7 @@ policy_overlays:
       - intent=>requirements.in
       - resolved=>requirements.lock
       - package_manifest=>pyproject.toml
+    python_lock_generate_hashes: true
   managed-environment:
     expected_paths:
       - .venv

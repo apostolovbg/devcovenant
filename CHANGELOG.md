@@ -60,6 +60,69 @@ Example:
 
 ## Version 1.0.1.dev1
 
+- 2026-04-01:
+  Change: enabled opt-in hash-locked Python dependency refresh in the
+    `dependency-management` policy command, removed live `pip` upgrades from
+    the generic GitHub CI base, and split repo proof installs into locked
+    requirements plus local artifacts with `--no-deps`.
+  Why: align one policy-owned path for reproducible Python lock refresh,
+    preserve exact marker pins with real hashes, and prevent CI/proof behavior
+    from floating installer state when a repository turns hash mode on.
+  Impact: enabled `pip-compile --generate-hashes` as an opt-in Python mode,
+    stabilized lock/report refresh around real exact-marker hashes, and
+    documented the CI/install split that keeps local artifact proofs
+    reproducible.
+  Files:
+  .github/workflows/ci.yml
+  AGENTS.md
+  CHANGELOG.md
+  devcovenant/builtin/policies/dependency_management/\
+    dependency_lock_runtime.py
+  devcovenant/builtin/policies/dependency_management/\
+    dependency_management.yaml
+  devcovenant/builtin/profiles/github/assets/ci.yml
+  devcovenant/config.yaml
+  devcovenant/custom/profiles/devcovrepo/assets/docs/config.md
+  devcovenant/custom/profiles/devcovrepo/assets/docs/policies.md
+  devcovenant/custom/profiles/devcovrepo/assets/docs/profiles.md
+  devcovenant/custom/profiles/devcovrepo/assets/docs/registry.md
+  devcovenant/custom/profiles/devcovrepo/assets/docs/workflow.md
+  devcovenant/custom/profiles/devcovrepo/devcovrepo.yaml
+  devcovenant/docs/config.md
+  devcovenant/docs/policies.md
+  devcovenant/docs/profiles.md
+  devcovenant/docs/registry.md
+  devcovenant/docs/workflow.md
+  devcovenant/licenses/THIRD_PARTY_LICENSES.md
+  devcovenant/requirements.lock
+  devcovenant/registry/registry.yaml
+  licenses/THIRD_PARTY_LICENSES.md
+  requirements.lock
+  tests/devcovenant/builtin/policies/dependency_management/\
+    test_dependency_lock_runtime.py
+  tests/devcovenant/core/services/test_profile_registry.py
+- 2026-04-01:
+  Change: hardened the CLI managed-reexec tests to mock interpreter
+    executability, removed leftover compatibility wording from core
+    package surfaces, and clarified that `changelog-coverage` tracks
+    the preserved old entry by fingerprint.
+  Why: prevented environment-dependent audit noise from turning into a
+    fake blocker, cleared small migration residue from public source,
+    and documented the robust preserved-entry rule more directly.
+  Impact: keeps the reexec regression tests hermetic across audit
+    environments, makes the public source cleaner for prerelease review,
+    and gives future reviewers a clearer explanation of the changelog
+    boundary check.
+  Files:
+  CHANGELOG.md
+  devcovenant/builtin/policies/changelog_coverage/changelog_coverage.py
+  devcovenant/core/__init__.py
+  devcovenant/custom/profiles/devcovrepo/assets/docs/policies.md
+  devcovenant/custom/profiles/devcovrepo/assets/docs/registry.md
+  devcovenant/docs/policies.md
+  devcovenant/docs/registry.md
+  devcovenant/registry/registry.yaml
+  tests/devcovenant/test_cli.py
 - 2026-03-31:
   Change: corrected the changelog version cut points, replaced the live
     version-change guard with preserved-entry tracking plus an explicit

@@ -174,6 +174,10 @@ The builtin `github` base bootstraps DevCovenant from the shipped
 `devcovenant/requirements.lock`. If a repository needs extra project
 dependency setup, keep that in the relevant profile or explicit local
 override instead of changing the builtin base.
+For Python repositories, set
+`dependency-management.python_lock_generate_hashes: true`
+only when the repo wants `pip-compile --generate-hashes` for
+`requirements.lock`.
 
 ### clean
 Cleanup settings decide what DevCovenant may delete.

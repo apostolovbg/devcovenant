@@ -155,9 +155,16 @@ The builtin `github` workflow template should stay generic.
 It should bootstrap DevCovenant from the shipped
 `devcovenant/requirements.lock`, not from the repository's own
 dependency files.
+That generic base should avoid floating installer state.
+If the shipped lock pins `pip`, the workflow should install from that lock
+instead of upgrading `pip` live first.
 If a repository needs extra project dependency setup or extra CI steps, that
 extension belongs in the relevant profile instead of in the builtin base
 workflow.
+If a Python repository turns on hash-locked `requirements.lock`, keep any
+local-artifact install path split into two steps:
+1. install the locked requirements
+2. install the local wheel or sdist with `--no-deps`
 
 The same split helps config stay readable.
 The global config asset lists the full `project-governance` key set and the

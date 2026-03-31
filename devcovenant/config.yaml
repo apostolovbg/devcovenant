@@ -737,6 +737,8 @@ autogen_metadata_overlays:
     - resolved
     - package_manifest
     licenses_dir: licenses
+    python_lock_generate_hashes:
+    - 'True'
     report_heading:
     - '## License Report'
     third_party_file: licenses/THIRD_PARTY_LICENSES.md

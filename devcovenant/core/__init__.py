@@ -1,4 +1,4 @@
-"""Core DevCovenant kernel package and layered migration facades."""
+"""Core DevCovenant packages for contracts, flow, runtime, and services."""
 
 from __future__ import annotations
 

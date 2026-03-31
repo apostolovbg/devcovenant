@@ -351,6 +351,7 @@ def _unit_test_global_governance_workflow_asset_stays_generic() -> None:
     )
     install_run = str(install_step.get("run") or "").strip()
     assert "devcovenant/requirements.lock" in install_run
+    assert "python -m pip install --upgrade pip" not in install_run
     assert "python -m pip install -r requirements.lock" not in install_run
 
 
@@ -487,6 +488,7 @@ def _unit_test_ci_workflow_contains_build_job_artifact_proof() -> None:
     assert "$RUNNER_TEMP/devcovenant-pycache" in all_run_blocks
     assert "${{ runner.temp }}" not in all_run_blocks
     assert "python -m pip install -r requirements.lock" in all_run_blocks
+    assert "python -m pip install --upgrade pip" not in all_run_blocks
     assert "python -m pip install build twine pipx" not in all_run_blocks
     assert "pushd artifacts/wheel-proof >/dev/null" in all_run_blocks
     assert "pushd artifacts/sdist-proof >/dev/null" in all_run_blocks
@@ -508,9 +510,11 @@ def _unit_test_ci_workflow_contains_build_job_artifact_proof() -> None:
         in all_run_blocks
     )
     assert "WHEEL_PATH=\"$(python - <<'PY'" in all_run_blocks
-    assert (
-        '.venv/bin/python -m pip install -r requirements.lock "$WHEEL_PATH"'
-        in all_run_blocks
+    assert '.venv/bin/python -m pip install --no-deps "$WHEEL_PATH"' in (
+        all_run_blocks
+    )
+    assert '.venv/bin/python -m pip install --no-deps "$SDIST_PATH"' in (
+        all_run_blocks
     )
     assert ".venv/bin/python -m devcovenant gate --start" in all_run_blocks
     assert '"$PIPX_BIN_DIR/devcovenant" install' in all_run_blocks

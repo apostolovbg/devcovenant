@@ -4,7 +4,9 @@ This report lists direct third-party dependencies declared in dependency
 manifests and the corresponding license texts stored under `licenses/`.
 
 ## License Report
-- `pyproject.toml`
+- `devcovenant/requirements.lock`
+- `requirements.in`
+- `requirements.lock`
 
 ## Dependency License Inventory
 - `bandit==1.9.4`: `licenses/bandit-1.9.4.txt`

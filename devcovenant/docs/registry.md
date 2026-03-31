@@ -51,6 +51,14 @@ That includes generated values such as `devcov_core_paths` and profile-owned
 CI fragments, plus declared policy runtime actions and policy commands such as
 `changelog-coverage reset-baseline`, so registry diffs often reflect real
 scan-boundary, command-surface, or workflow input changes.
+Policy script and descriptor changes also refresh the tracked hash for the
+affected policy entry, so registry diffs can be the expected result of a
+policy implementation change even when the generated workflow shape stays the
+same.
+The same applies to policy-resolved metadata such as
+`dependency-management.python_lock_generate_hashes`: when profile or config
+overlays change those values, the tracked registry records the new resolved
+inputs that later drive lock refresh behavior.
 
 ## Runtime Registry
 `devcovenant/registry/runtime/` stores local working state such as:

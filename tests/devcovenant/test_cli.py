@@ -208,6 +208,11 @@ def _unit_test_cli_reexecs_when_managed_env_differs(monkeypatch) -> None:
         "_initialize_cli_run_logging",
         lambda *_args, **_kwargs: None,
     )
+    monkeypatch.setattr(
+        cli,
+        "_managed_python_is_executable",
+        lambda _path: True,
+    )
 
     def _fake_execve(path: str, argv: list[str], env: dict[str, str]) -> None:
         """Capture execve contract and stop control flow."""
@@ -267,6 +272,11 @@ def _unit_test_cli_reexec_guard_prevents_loop(monkeypatch) -> None:
         cli,
         "_initialize_cli_run_logging",
         lambda *_args, **_kwargs: None,
+    )
+    monkeypatch.setattr(
+        cli,
+        "_managed_python_is_executable",
+        lambda _path: True,
     )
     monkeypatch.setenv(cli._MANAGED_REEXEC_GUARD_ENV, "1")
 
