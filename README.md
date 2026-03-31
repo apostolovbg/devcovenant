@@ -329,5 +329,5 @@ ordinary user repositories do not need.
 DevCovenant is released under the MIT License.
 See [LICENSE](LICENSE) and
 [licenses/THIRD_PARTY_LICENSES.md](licenses/THIRD_PARTY_LICENSES.md).
-The published package mirrors that license and compliance bundle under
+The published package includes the same license and compliance files under
 `devcovenant/licenses/`.

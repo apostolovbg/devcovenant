@@ -45,7 +45,14 @@ That keeps the CLI honest and makes side effects easier to understand.
 One good example is `changelog-coverage`: it works from the active gate slice,
 not from raw git history. When the top changelog version changes during an
 open slice, it expects a new version section above the preserved previous top
-section instead of relabeling old entries.
+section, and it expects the preserved pre-session top entry to stay first in
+that older section instead of relabeling old entries. It does not depend on
+bump wording inside the entry text.
+If you intentionally rebuild changelog history, run
+`devcovenant policy changelog-coverage reset-baseline` during the open
+session. That command relaxes only the preserved-old-entry requirement for the
+active session. It does not relax the normal date, summary, or file-coverage
+rules.
 
 ## Policy Runtime Actions
 A policy can expose reusable runtime actions.

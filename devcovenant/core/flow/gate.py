@@ -709,6 +709,9 @@ def run_pre_commit_gate(
                 recovery_payload["session_state"] = "open"
                 recovery_payload["session_start_utc"] = start_ts.isoformat()
                 recovery_payload["session_start_epoch"] = start_ts.timestamp()
+                recovery_payload.pop("changelog_baseline_reset", None)
+                recovery_payload.pop("changelog_baseline_reset_utc", None)
+                recovery_payload.pop("changelog_baseline_reset_epoch", None)
                 recovery_payload["changelog_start_top_entry_fingerprint"] = (
                     _entry_fingerprint(top_entry)
                 )
@@ -977,6 +980,9 @@ def run_pre_commit_gate(
         payload["session_start_utc"] = start_ts.isoformat()
         payload["session_start_epoch"] = start_ts.timestamp()
         payload.pop("session_baseline_epoch", None)
+        payload.pop("changelog_baseline_reset", None)
+        payload.pop("changelog_baseline_reset_utc", None)
+        payload.pop("changelog_baseline_reset_epoch", None)
         try:
             header_doc_suffixes, header_keys, header_scan_lines = (
                 _resolve_doc_exemption_options(repo_root)
@@ -1061,6 +1067,9 @@ def run_pre_commit_gate(
         payload["session_state"] = "closed"
         payload["session_end_utc"] = now.isoformat()
         payload["session_end_epoch"] = now.timestamp()
+        payload.pop("changelog_baseline_reset", None)
+        payload.pop("changelog_baseline_reset_utc", None)
+        payload.pop("changelog_baseline_reset_epoch", None)
         (
             snapshot_rel_path,
             _snapshot_payload,

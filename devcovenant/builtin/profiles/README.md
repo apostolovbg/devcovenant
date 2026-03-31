@@ -81,9 +81,8 @@ CI fragments and config overlays/overrides are then merged on top. The
 builtin `github` base bootstraps DevCovenant from the shipped
 `devcovenant/requirements.lock` so it does not assume the
 repository's own dependency files belong to DevCovenant. The package also
-ships `devcovenant/licenses/**` beside that lock so the dependency report
-and third-party license bundle travel with the same runtime bootstrap
-surface.
+ships `devcovenant/licenses/**`, which contains DevCovenant's packaged
+license files.
 
 ## Workflow
 1. Edit the profile manifest and assets.

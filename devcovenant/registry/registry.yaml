@@ -200,7 +200,10 @@ policies:
       top-entry fingerprint to require a fresh entry for each work session, while
       resolving changed paths from the active gate session. If the top version
       changes during the session, the new version section must be prepended above
-      the preserved previous top version section instead of relabeling old entries.
+      the preserved previous top version section and that preserved pre-session
+      top entry must remain first in the previous section instead of relabeling
+      old entries. This rule depends on section placement, not on bump wording
+      inside the entry text.
       Collection prefixes (when enabled) must be logged in their own changelog;
       prefixed files may not appear in the root changelog. This keeps release
       notes daily, file-complete, and traceable.
@@ -1286,8 +1289,15 @@ policies:
         effective:
           values: []
     metadata_warnings: []
-    runtime_actions: []
-    commands: []
+    runtime_actions:
+    - id: reset-baseline
+      description: Reset changelog baseline preservation for the active gate session.
+      mutates_repo: true
+    commands:
+    - name: reset-baseline
+      help: Reset changelog baseline preservation for the active gate session.
+      runtime_action: reset-baseline
+      mutates_repo: true
     runtime_metadata_options:
       id: changelog-coverage
       severity: error
@@ -1647,7 +1657,7 @@ policies:
     - pip-wheel-metadata/**
     origin: builtin
     script_exists: true
-    hash: ba3ca68aa36ccfab81cf8a074ee8c7659b8cfdd6fd0051f5c1aef0b2e3e24e33
+    hash: d5283cdcaf2149365633db263aadfeac0a857fbd4edca5345498813385fd758e
     script_path: builtin/changelog_coverage.py
   devcov-raw-string-escapes:
     enabled: true

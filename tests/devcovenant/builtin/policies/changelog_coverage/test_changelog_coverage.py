@@ -50,6 +50,8 @@ def _write_gate_status(
     start_exemption_fingerprints: dict[str, dict[str, str]] | None = None,
     include_start_exemption_fingerprints: bool = True,
     session_state: str = "open",
+    session_id: str = "session-1",
+    reset_baseline: bool = False,
     session_snapshot: dict[str, object] | None = None,
 ) -> None:
     """Write gate-status fixture with a changelog start snapshot."""
@@ -73,8 +75,11 @@ def _write_gate_status(
         "changelog_start_top_entry_present": bool(fingerprint),
         "changelog_start_top_version": top_version,
         "session_state": session_state,
+        "session_id": session_id,
         "session_snapshot_file": _SESSION_SNAPSHOT_REL,
     }
+    if reset_baseline:
+        payload["changelog_baseline_reset"] = True
     status_path.write_text(json.dumps(payload), encoding="utf-8")
 
 
@@ -1635,9 +1640,11 @@ def _unit_test_version_bump_requires_previous_section_directly_below(
     (tmp_path / "CHANGELOG.md").write_text(
         (
             "## Version 1.0.1\n"
-            f"{new_top}{previous_top}"
-            "## Version 1.0.0\n"
+            f"{new_top}"
+            "## Version 0.9.9\n"
             f"{older_entry}"
+            "## Version 1.0.0\n"
+            f"{previous_top}"
         ),
         encoding="utf-8",
     )
@@ -1712,11 +1719,151 @@ def _unit_test_version_bump_allows_previous_entry_in_previous_section(
     assert violations == []
 
 
+def _unit_test_version_bump_requires_previous_entry_first_in_old_section(
+    tmp_path: Path, monkeypatch: MonkeyPatch
+):
+    """
+    A version bump must keep the preserved entry first in the old section.
+    """
+    today = date.today().isoformat()
+    previous_top = (
+        f"- {today}:\n"
+        "  Change: Updated baseline entry for previous session\n"
+        "  Why: Clarified prior behavior in docs\n"
+        "  Impact: Users saw stable policy messaging\n"
+        "  Files:\n"
+        "  docs/old.md\n"
+    )
+    new_top = (
+        f"- {today}:\n"
+        "  Change: Updated module behavior for the new version\n"
+        "  Why: Clarified the new release boundary\n"
+        "  Impact: Users see the new version at the top of the log\n"
+        "  Files:\n"
+        "  src/module.py\n"
+    )
+    newer_old_section_entry = (
+        "- 2026-03-30:\n"
+        "  Change: Updated older release notes without bump wording\n"
+        "  Why: Preserved the older section below\n"
+        "  Impact: Users can still read older release notes\n"
+        "  Files:\n"
+        "  docs/older.md\n"
+    )
+    (tmp_path / "CHANGELOG.md").write_text(
+        (
+            "## Version 1.0.1\n"
+            f"{new_top}"
+            "## Version 1.0.0\n"
+            f"{newer_old_section_entry}{previous_top}"
+        ),
+        encoding="utf-8",
+    )
+    _write_gate_status(
+        tmp_path,
+        _fingerprint(previous_top),
+        top_version="1.0.0",
+    )
+    _set_git_diff(monkeypatch, "src/module.py\n")
+
+    checker = _make_checker(tmp_path)
+    context = CheckContext(repo_root=tmp_path, all_files=[])
+    violations = checker.check(context)
+
+    assert any(
+        "must remain the first entry under the previous version section"
+        in item.message
+        for item in violations
+    )
+
+
+def _unit_test_version_bump_reset_baseline_allows_history_rebuild(
+    tmp_path: Path, monkeypatch: MonkeyPatch
+):
+    """Explicit reset should relax preserved-entry enforcement only."""
+    today = date.today().isoformat()
+    previous_top = (
+        f"- {today}:\n"
+        "  Change: Updated baseline entry for previous session\n"
+        "  Why: Clarified prior behavior in docs\n"
+        "  Impact: Users saw stable policy messaging\n"
+        "  Files:\n"
+        "  docs/old.md\n"
+    )
+    new_top = (
+        f"- {today}:\n"
+        "  Change: Updated module behavior for the reset session\n"
+        "  Why: Clarified the deliberate changelog reset\n"
+        "  Impact: Users see the new reset baseline at the top of the log\n"
+        "  Files:\n"
+        "  src/module.py\n"
+    )
+    (tmp_path / "CHANGELOG.md").write_text(
+        ("## Version 1.0.1\n" f"{new_top}"),
+        encoding="utf-8",
+    )
+    _write_gate_status(
+        tmp_path,
+        _fingerprint(previous_top),
+        top_version="1.0.0",
+        reset_baseline=True,
+    )
+    _set_git_diff(monkeypatch, "src/module.py\n")
+
+    checker = _make_checker(tmp_path)
+    context = CheckContext(repo_root=tmp_path, all_files=[])
+    violations = checker.check(context)
+
+    assert not any(
+        "Gate-start changelog snapshot was edited or removed" in item.message
+        or "prior top version section directly below it" in item.message
+        or "must remain the first entry under the previous version section"
+        in item.message
+        for item in violations
+    )
+
+
+def _unit_test_run_runtime_action_reset_baseline_marks_open_session(
+    tmp_path: Path,
+) -> None:
+    """Runtime action should mark the active session for baseline reset."""
+    status_path = (
+        tmp_path / "devcovenant" / "registry" / "runtime" / "gate_status.json"
+    )
+    _write_gate_status(
+        tmp_path,
+        "fingerprint",
+        session_state="open",
+        session_id="session-42",
+    )
+    checker = ChangelogCoverageCheck()
+
+    result = checker.run_runtime_action(
+        "reset-baseline",
+        repo_root=tmp_path,
+        payload=None,
+    )
+
+    payload = json.loads(status_path.read_text(encoding="utf-8"))
+    # run_runtime_action should mark the active session for one reset.
+    assert payload["changelog_baseline_reset"] is True
+    assert "Recorded changelog baseline reset" in result["message"]
+
+
 _VERSION_BUMP_REQUIRES_PREVIOUS_SECTION = (
     _unit_test_version_bump_requires_previous_section_directly_below
 )
 _VERSION_BUMP_ALLOWS_PREVIOUS_SECTION = (
     _unit_test_version_bump_allows_previous_entry_in_previous_section
+)
+_VERSION_BUMP_REQUIRES_PREVIOUS_TOP_FIRST = (
+    _unit_test_version_bump_requires_previous_entry_first_in_old_section
+)
+_VERSION_BUMP_RESET_BASELINE = (
+    _unit_test_version_bump_reset_baseline_allows_history_rebuild
+)
+_RESET_BASELINE_RUNTIME_ACTION = (
+    _unit_test_run_runtime_action_reset_baseline_marks_open_session
 )
 
 
@@ -2366,6 +2513,37 @@ class GeneratedUnittestCases(unittest.TestCase):
                 )
         finally:
             monkeypatch.undo()
+
+    def test_version_bump_requires_previous_entry_first_in_old_section(
+        self,
+    ):
+        """Run version-bump previous-entry-order coverage."""
+        monkeypatch = MonkeyPatch()
+        try:
+            with tempfile.TemporaryDirectory() as temp_dir:
+                _VERSION_BUMP_REQUIRES_PREVIOUS_TOP_FIRST(
+                    Path(temp_dir).resolve(),
+                    monkeypatch,
+                )
+        finally:
+            monkeypatch.undo()
+
+    def test_version_bump_reset_baseline_allows_history_rebuild(self):
+        """Run reset-baseline changelog rebuild coverage."""
+        monkeypatch = MonkeyPatch()
+        try:
+            with tempfile.TemporaryDirectory() as temp_dir:
+                _VERSION_BUMP_RESET_BASELINE(
+                    Path(temp_dir).resolve(),
+                    monkeypatch,
+                )
+        finally:
+            monkeypatch.undo()
+
+    def test_run_runtime_action_reset_baseline_marks_open_session(self):
+        """Run changelog baseline-reset runtime-action coverage."""
+        with tempfile.TemporaryDirectory() as temp_dir:
+            _RESET_BASELINE_RUNTIME_ACTION(Path(temp_dir).resolve())
 
     def test_gate_snapshot_empty_requires_new_entry(self):
         """Run test_gate_snapshot_empty_requires_new_entry."""

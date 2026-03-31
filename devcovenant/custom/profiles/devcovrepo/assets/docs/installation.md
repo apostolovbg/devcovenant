@@ -151,7 +151,7 @@ assets that DevCovenant needs at install time:
 - the packaged `devcovenant/requirements.lock` used when the builtin
   `github` profile bootstraps DevCovenant
 - the packaged `devcovenant/licenses/LICENSE`
-- the packaged `devcovenant/licenses/**` license and compliance bundle
+- the packaged `devcovenant/licenses/**` license files
 - the built-in policy descriptors under `devcovenant/builtin/policies`
 - the built-in profile descriptors, translators, and asset templates under
   `devcovenant/builtin/profiles`

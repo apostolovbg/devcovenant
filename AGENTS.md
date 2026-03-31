@@ -516,7 +516,10 @@ change. The policy compares the top changelog entry against the gate-start
 top-entry fingerprint to require a fresh entry for each work session, while
 resolving changed paths from the active gate session. If the top version
 changes during the session, the new version section must be prepended above
-the preserved previous top version section instead of relabeling old entries.
+the preserved previous top version section and that preserved pre-session
+top entry must remain first in the previous section instead of relabeling
+old entries. This rule depends on section placement, not on bump wording
+inside the entry text.
 Collection prefixes (when enabled) must be logged in their own changelog;
 prefixed files may not appear in the root changelog. This keeps release
 notes daily, file-complete, and traceable.

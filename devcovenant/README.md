@@ -290,5 +290,5 @@ Use the shorter map below instead of treating the README as the whole manual.
 DevCovenant is released under the MIT License.
 See [LICENSE](https://github.com/apostolovbg/devcovenant/blob/v1.0.1.dev1/LICENSE) and
 [licenses/THIRD_PARTY_LICENSES.md](https://github.com/apostolovbg/devcovenant/blob/v1.0.1.dev1/licenses/THIRD_PARTY_LICENSES.md).
-The published package mirrors that license and compliance bundle under
+The published package includes the same license and compliance files under
 `devcovenant/licenses/`.

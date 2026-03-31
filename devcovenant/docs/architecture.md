@@ -172,7 +172,7 @@ That split keeps saved setup separate from disposable runtime session state.
 The published package ships the docs, builtin policies, builtin profiles,
 assets, translators, and runtime modules that DevCovenant needs to operate.
 That includes the shipped `devcovenant/requirements.lock` bootstrap file and
-the `devcovenant/licenses/` bundle that travels with it.
+DevCovenant's packaged license files under `devcovenant/licenses/`.
 It does not ship live repository state such as:
 
 - `devcovenant/config.yaml`

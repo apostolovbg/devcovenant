@@ -124,9 +124,8 @@ The github-owned base should stay generic.
 It bootstraps DevCovenant from the shipped
 `devcovenant/requirements.lock` so it does not assume the
 repository's own dependency files belong to DevCovenant. The packaged
-license and compliance files under `devcovenant/licenses/` travel with the
-same shipped lock so bootstrap surfaces keep the needed legal material close
-to the shipped dependency inventory.
+license files under `devcovenant/licenses/` ship with DevCovenant as part of
+the package.
 If a repository needs extra project dependency setup, extra CI steps, or extra
 install validation, that extension should come from a profile-owned CI
 fragment instead of from the builtin base.
@@ -134,6 +133,12 @@ If a repository documents a particular public install path, test that same
 public path in the repository's own CI extension.
 If a repository adds a separate release workflow, that workflow should publish
 validated CI artifacts instead of rebuilding a fresh distribution later.
+
+If you intentionally rebuild or re-baseline the changelog during an open work
+session, run `devcovenant policy changelog-coverage reset-baseline` after
+`devcovenant gate --start`. That command relaxes only the preserved-old-entry
+rule for the active session. Normal changelog entry shape, date, summary, and
+file-coverage checks still apply.
 
 ## Managed Environment In Workflow Execution
 When the managed-environment policy is enabled, DevCovenant chooses one target

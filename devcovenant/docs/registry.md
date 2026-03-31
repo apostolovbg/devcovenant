@@ -48,8 +48,9 @@ tracked registry records the resolved inputs that later render into generated
 files such as `.gitignore`, `.pre-commit-config.yaml`, and
 `.github/workflows/ci.yml` when a CI-owner profile is active.
 That includes generated values such as `devcov_core_paths` and profile-owned
-CI fragments, so registry diffs often reflect real scan-boundary or workflow
-input changes.
+CI fragments, plus declared policy runtime actions and policy commands such as
+`changelog-coverage reset-baseline`, so registry diffs often reflect real
+scan-boundary, command-surface, or workflow input changes.
 
 ## Runtime Registry
 `devcovenant/registry/runtime/` stores local working state such as:

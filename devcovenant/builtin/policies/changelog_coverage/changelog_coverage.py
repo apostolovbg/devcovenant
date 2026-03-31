@@ -10,12 +10,13 @@ import hashlib
 import json
 import os
 import re
-from datetime import date
+from datetime import date, datetime, timezone
 from pathlib import Path
 from typing import Any, List
 
 import devcovenant.core.lib.document_exemptions as document_exemptions_lib
 import devcovenant.core.runtime.execution as execution_runtime_module
+import devcovenant.core.runtime.registry as registry_runtime_module
 from devcovenant.core.contracts.policy import (
     CheckContext,
     PolicyCheck,
@@ -144,6 +145,10 @@ _DEFAULT_GATE_STATUS_PATH = (
     Path("devcovenant") / "registry" / "runtime" / "gate_status.json"
 )
 _LOG_MARKER = "## Log changes here"
+_RESET_BASELINE_ACTION = "reset-baseline"
+_RESET_BASELINE_FLAG = "changelog_baseline_reset"
+_RESET_BASELINE_UTC_KEY = "changelog_baseline_reset_utc"
+_RESET_BASELINE_EPOCH_KEY = "changelog_baseline_reset_epoch"
 _ALLOWLIST_DOC_SUFFIXES = set(DEFAULT_HEADER_DOC_SUFFIXES)
 _ALLOWLIST_HEADER_KEYS = set(DEFAULT_HEADER_KEYS)
 _ALLOWLIST_HEADER_SCAN_LINES = DEFAULT_HEADER_SCAN_LINES
@@ -541,6 +546,15 @@ def _load_gate_status(status_path: Path) -> dict[str, object]:
     return payload
 
 
+def _write_gate_status(status_path: Path, payload: dict[str, object]) -> None:
+    """Persist one gate-status payload with stable formatting."""
+    status_path.parent.mkdir(parents=True, exist_ok=True)
+    status_path.write_text(
+        json.dumps(payload, indent=2) + "\n",
+        encoding="utf-8",
+    )
+
+
 _COLLECTIONS_DISABLE_TOKENS = {"none", "off", "false", "no"}
 
 
@@ -566,11 +580,68 @@ def _find_order_violation(section: str) -> tuple[str, str] | None:
     return None
 
 
+def _find_entry_location(
+    ordered_sections: list[tuple[str, str]],
+    fingerprint: str,
+) -> tuple[int | None, str, int | None]:
+    """Return section index/version/entry index for one preserved entry."""
+    if not fingerprint:
+        return None, "", None
+    for section_index, (version, section_text) in enumerate(ordered_sections):
+        entries = _entry_blocks(section_text)
+        for entry_index, block in enumerate(entries):
+            if _entry_fingerprint(block) == fingerprint:
+                return section_index, version, entry_index
+    return None, "", None
+
+
 class ChangelogCoverageCheck(PolicyCheck):
     """Verify that modified files land in the appropriate changelog."""
 
     policy_id = "changelog-coverage"
     version = "2.4.0"
+
+    def run_runtime_action(
+        self,
+        action: str,
+        *,
+        repo_root: Path,
+        payload: dict[str, object] | None = None,
+    ) -> dict[str, object]:
+        """Run changelog-coverage policy commands."""
+        if action != _RESET_BASELINE_ACTION:
+            raise ValueError(
+                "Unsupported changelog-coverage runtime action: "
+                f"`{action}`."
+            )
+        status_path = registry_runtime_module.gate_status_path(repo_root)
+        status_payload = _load_gate_status(status_path)
+        session_id = str(status_payload.get("session_id", "")).strip()
+        session_state = (
+            str(status_payload.get("session_state", "")).strip().lower()
+        )
+        if not session_id or session_state != "open":
+            raise ValueError(
+                "Cannot reset the changelog baseline without an active open "
+                "gate session. Run `devcovenant gate --start` first."
+            )
+        now = datetime.now(timezone.utc)
+        status_payload[_RESET_BASELINE_FLAG] = True
+        status_payload[_RESET_BASELINE_UTC_KEY] = now.isoformat()
+        status_payload[_RESET_BASELINE_EPOCH_KEY] = now.timestamp()
+        _write_gate_status(status_path, status_payload)
+        return {
+            "message": (
+                "Recorded changelog baseline reset for the active gate "
+                "session."
+            ),
+            "lines": [
+                "Changelog-coverage will stop requiring preservation of the "
+                "pre-session top entry for this session only.",
+                "Normal changelog entry shape, date, summary, and file "
+                "coverage rules still apply.",
+            ],
+        }
 
     def check(self, context: CheckContext) -> List[Violation]:
         """
@@ -907,6 +978,7 @@ class ChangelogCoverageCheck(PolicyCheck):
                     snapshot_fingerprint = ""
                     snapshot_version = ""
                     snapshot_preserved = False
+                    reset_baseline_active = False
                     if session_state == "open":
                         snapshot_fingerprint = str(
                             gate_status.get(
@@ -916,6 +988,9 @@ class ChangelogCoverageCheck(PolicyCheck):
                         snapshot_version = str(
                             gate_status.get("changelog_start_top_version", "")
                         ).strip()
+                        reset_baseline_active = bool(
+                            gate_status.get(_RESET_BASELINE_FLAG, False)
+                        )
                     entry_blocks = _entry_blocks(root_section or "")
                     current_fingerprint = (
                         _entry_fingerprint(entry_blocks[0])
@@ -953,8 +1028,10 @@ class ChangelogCoverageCheck(PolicyCheck):
                                     _entry_fingerprint(block)
                                     for block in _entry_blocks(section_text)
                                 )
-                            if snapshot_fingerprint not in (
-                                preserved_fingerprints
+                            if (
+                                not reset_baseline_active
+                                and snapshot_fingerprint
+                                not in preserved_fingerprints
                             ):
                                 snapshot_preservation_failed = True
                                 snapshot_message = (
@@ -979,7 +1056,11 @@ class ChangelogCoverageCheck(PolicyCheck):
                                     )
                                 )
                             else:
-                                snapshot_preserved = True
+                                snapshot_preserved = bool(
+                                    snapshot_fingerprint
+                                    and snapshot_fingerprint
+                                    in preserved_fingerprints
+                                )
                     elif not current_fingerprint:
                         violations.append(
                             Violation(
@@ -999,42 +1080,71 @@ class ChangelogCoverageCheck(PolicyCheck):
                             )
                         )
                     if (
-                        snapshot_preserved
+                        not reset_baseline_active
+                        and snapshot_preserved
                         and snapshot_version
                         and ordered_sections
                         and ordered_sections[0][0] != snapshot_version
-                        and (
-                            len(ordered_sections) < 2
-                            or ordered_sections[1][0] != snapshot_version
-                            or snapshot_fingerprint
-                            not in {
-                                _entry_fingerprint(block)
-                                for block in _entry_blocks(
-                                    ordered_sections[1][1]
-                                )
-                            }
-                        )
                     ):
-                        violations.append(
-                            Violation(
-                                policy_id=self.policy_id,
-                                severity="error",
-                                file_path=root_changelog,
-                                message=(
-                                    "When the top changelog version changes "
-                                    "during an open session, prepend a new "
-                                    "version section and keep the prior top "
-                                    "version section directly below it."
-                                ),
-                                suggestion=(
-                                    "Add the fresh entry under a new top "
-                                    f"version heading and keep `## Version "
-                                    f"{snapshot_version}` as the next "
-                                    "section below it."
-                                ),
-                                can_auto_fix=False,
-                            )
+                        (
+                            preserved_section_index,
+                            preserved_section_version,
+                            preserved_entry_index,
+                        ) = _find_entry_location(
+                            ordered_sections,
+                            snapshot_fingerprint,
                         )
+                        if (
+                            preserved_section_index != 1
+                            or preserved_section_version != snapshot_version
+                        ):
+                            violations.append(
+                                Violation(
+                                    policy_id=self.policy_id,
+                                    severity="error",
+                                    file_path=root_changelog,
+                                    message=(
+                                        "When the top changelog version "
+                                        "changes during an open session, "
+                                        "prepend a new version section and "
+                                        "keep the prior top version section "
+                                        "directly below it."
+                                    ),
+                                    suggestion=(
+                                        "Add the fresh entry under a new top "
+                                        f"version heading and keep "
+                                        f"`## Version {snapshot_version}` "
+                                        "as the next section below it."
+                                    ),
+                                    can_auto_fix=False,
+                                )
+                            )
+                        elif (
+                            snapshot_fingerprint and preserved_entry_index != 0
+                        ):
+                            violations.append(
+                                Violation(
+                                    policy_id=self.policy_id,
+                                    severity="error",
+                                    file_path=root_changelog,
+                                    message=(
+                                        "When the top changelog version "
+                                        "changes during an open session, "
+                                        "the preserved pre-session top "
+                                        "entry must remain the first entry "
+                                        "under the previous version "
+                                        "section."
+                                    ),
+                                    suggestion=(
+                                        "Keep the fresh entry under the new "
+                                        "top version section, then keep the "
+                                        "preserved pre-session top entry as "
+                                        f"the first entry under `## Version "
+                                        f"{snapshot_version}`."
+                                    ),
+                                    can_auto_fix=False,
+                                )
+                            )
                 if not (
                     require_new_session_entry or snapshot_preservation_failed
                 ):
