@@ -263,14 +263,13 @@ def _governance_workflow_signature(
     assert isinstance(jobs, dict)
     job = jobs.get("governance")
     assert isinstance(job, dict)
-    env = job.get("env")
-    assert isinstance(env, dict)
     steps = job.get("steps")
     assert isinstance(steps, list)
 
     interesting_names = {
         "Checkout",
         "Set up Python",
+        "Configure Python cache root",
         "Install tooling and dependencies",
         "Run DevCovenant start gate",
         "Run DevCovenant mid gate",
@@ -289,7 +288,6 @@ def _governance_workflow_signature(
         "workflow_name": str(payload.get("name") or "").strip(),
         "runs-on": str(job.get("runs-on") or "").strip(),
         "job_name": str(job.get("name") or "").strip(),
-        "pycacheprefix": str(env.get("PYTHONPYCACHEPREFIX") or "").strip(),
         "steps": selected_steps,
     }
 
@@ -388,11 +386,6 @@ def _unit_test_ci_workflow_contains_build_job_artifact_proof() -> None:
     assert isinstance(jobs, dict)
     governance_job = jobs.get("governance")
     assert isinstance(governance_job, dict)
-    governance_env = governance_job.get("env")
-    assert isinstance(governance_env, dict)
-    assert governance_env.get("PYTHONPYCACHEPREFIX") == (
-        "${{ runner.temp }}/devcovenant-pycache"
-    )
     governance_steps = governance_job.get("steps")
     assert isinstance(governance_steps, list)
     governance_uses = [
@@ -413,11 +406,6 @@ def _unit_test_ci_workflow_contains_build_job_artifact_proof() -> None:
     assert isinstance(build_job, dict)
     assert build_job.get("name") == "Build"
     assert build_job.get("needs") == "governance"
-    build_env = build_job.get("env")
-    assert isinstance(build_env, dict)
-    assert build_env.get("PYTHONPYCACHEPREFIX") == (
-        "${{ runner.temp }}/devcovenant-pycache"
-    )
     steps = build_job.get("steps")
     assert isinstance(steps, list)
     build_uses = [
@@ -450,6 +438,7 @@ def _unit_test_ci_workflow_contains_build_job_artifact_proof() -> None:
     assert "Prove pipx operator lifecycle" in step_names
     assert "Set up Python support floor" in step_names
     assert "Prove Python 3.10 support floor" in step_names
+    assert "Configure Python cache root" in step_names
 
     upload_step = next(
         step
@@ -466,6 +455,8 @@ def _unit_test_ci_workflow_contains_build_job_artifact_proof() -> None:
         for step in steps
         if isinstance(step, dict)
     )
+    assert "$RUNNER_TEMP/devcovenant-pycache" in all_run_blocks
+    assert "${{ runner.temp }}" not in all_run_blocks
     assert "pushd artifacts/wheel-proof >/dev/null" in all_run_blocks
     assert "pushd artifacts/sdist-proof >/dev/null" in all_run_blocks
     assert "pushd artifacts/pipx-proof >/dev/null" in all_run_blocks
@@ -543,11 +534,6 @@ def _unit_test_publish_workflow_uses_validated_build_artifacts() -> None:
     assert set(jobs) == {"publish"}
     publish_job = jobs.get("publish")
     assert isinstance(publish_job, dict)
-    publish_env = publish_job.get("env")
-    assert isinstance(publish_env, dict)
-    assert publish_env.get("PYTHONPYCACHEPREFIX") == (
-        "${{ runner.temp }}/devcovenant-pycache"
-    )
 
     permissions = publish_job.get("permissions")
     assert isinstance(permissions, dict)
@@ -563,6 +549,7 @@ def _unit_test_publish_workflow_uses_validated_build_artifacts() -> None:
     ]
     assert "Validate selected CI run" in step_names
     assert "Set up Python" in step_names
+    assert "Configure Python cache root" in step_names
     assert "Download validated distributions" in step_names
     assert "Download build provenance" in step_names
     assert "Verify downloaded provenance" in step_names
@@ -573,6 +560,8 @@ def _unit_test_publish_workflow_uses_validated_build_artifacts() -> None:
         for step in steps
         if isinstance(step, dict)
     )
+    assert "$RUNNER_TEMP/devcovenant-pycache" in all_run_blocks
+    assert "${{ runner.temp }}" not in all_run_blocks
     assert "python -m build" not in all_run_blocks
 
     dist_download = next(

@@ -150,6 +150,9 @@ caches outside the repository checkout, and the runtime snapshot layer also
 ignores
 repo-local `*.pyc`, `__pycache__`, and known cache roots such as
 `.gha-pycache` if a runner or shell leaks them back in anyway.
+In GitHub Actions, prefer exporting `PYTHONPYCACHEPREFIX` from a normal shell
+step through `$GITHUB_ENV` using `$RUNNER_TEMP` rather than embedding
+runner-only contexts in workflow-level or job-level `env` expressions.
 
 When a repository adds installed-artifact proof, that proof should exercise
 the same public workflow the package docs promise across the install surfaces

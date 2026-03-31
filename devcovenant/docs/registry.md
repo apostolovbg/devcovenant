@@ -71,6 +71,9 @@ exclude surfaces such as `.gitignore` and `.pre-commit-config.yaml`.
 The tracked workflow metadata also records runner-facing environment values
 that affect generated proof behavior, such as external bytecode-cache prefixes
 used to keep CI-created `*.pyc` junk out of repository snapshots.
+When workflow generation moves those values from static job metadata into
+GitHub-safe setup steps, the tracked registry still records the same resolved
+workflow intent through the contributed step structure and rendered contract.
 
 The helper ownership matches that split:
 - `devcovenant/core/services/tracked_registry.py` owns tracked-registry paths

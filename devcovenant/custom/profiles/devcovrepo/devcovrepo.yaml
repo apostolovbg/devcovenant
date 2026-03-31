@@ -41,8 +41,6 @@ ci_and_test:
       runs-on: ubuntu-latest
       permissions:
         contents: read
-      env:
-        PYTHONPYCACHEPREFIX: ${{ runner.temp }}/devcovenant-pycache
       steps:
         - name: Checkout
           uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd
@@ -52,6 +50,10 @@ ci_and_test:
           # v6
           with:
             python-version: '3.11'
+        - name: Configure Python cache root
+          run: |
+            echo "PYTHONPYCACHEPREFIX=$RUNNER_TEMP/devcovenant-pycache" \
+              >> "$GITHUB_ENV"
         - name: Clean local build artifacts
           run: |
             rm -rf build dist ./*.egg-info .pytest_cache .ruff_cache

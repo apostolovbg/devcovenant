@@ -61,6 +61,29 @@ Example:
 ## Version 1.0.1
 
 - 2026-03-31:
+  Change: repaired the GitHub Actions workflow contract by replacing invalid
+    job-level `runner.temp` expressions with GitHub-safe cache-root setup
+    steps that export `PYTHONPYCACHEPREFIX` through `$GITHUB_ENV`.
+  Why: the previous cache hardening slice fixed the runtime bug but used an
+    unsupported workflow expression context, which made both `CI` and
+    `Publish` fail to parse on GitHub instead of staying manual and runnable.
+  Impact: `CI` and `Publish` keep their intended workflow names and triggers,
+    `Publish` stays manual-only, runner temp paths are resolved at step
+    runtime instead of workflow-parse time, and regressions now reject
+    `${{ runner.temp }}` in workflow bodies.
+  Files:
+  .github/workflows/ci.yml
+  .github/workflows/publish.yml
+  CHANGELOG.md
+  devcovenant/builtin/profiles/global/assets/ci.yml
+  devcovenant/custom/profiles/devcovrepo/devcovrepo.yaml
+  devcovenant/docs/profiles.md
+  devcovenant/docs/registry.md
+  devcovenant/docs/workflow.md
+  devcovenant/registry/registry.yaml
+  tests/devcovenant/core/services/test_profile_registry.py
+
+- 2026-03-31:
   Change: aligned workflow cache routing, snapshot ignore rules, cleanup
     behavior, and publish interpreter setup so CI bytecode junk cannot
     invalidate proof baselines.

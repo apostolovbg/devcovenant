@@ -13,8 +13,6 @@ jobs:
     runs-on: ubuntu-latest
     permissions:
       contents: read
-    env:
-      PYTHONPYCACHEPREFIX: ${{ runner.temp }}/devcovenant-pycache
     steps:
       - name: Checkout
         uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd
@@ -25,6 +23,11 @@ jobs:
         # v6
         with:
           python-version: "3.14"
+
+      - name: Configure Python cache root
+        run: |
+          echo "PYTHONPYCACHEPREFIX=$RUNNER_TEMP/devcovenant-pycache" \
+            >> "$GITHUB_ENV"
 
       - name: Install tooling and dependencies
         run: |

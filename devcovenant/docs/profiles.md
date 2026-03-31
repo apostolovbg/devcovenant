@@ -157,6 +157,9 @@ proof such as:
 - immutable Action SHA pins for generated jobs
 - support-floor interpreter checks
 - install-surface proof jobs that stay on the documented public CLI surface
+- GitHub-safe runner-cache setup steps that export `PYTHONPYCACHEPREFIX`
+  through `$GITHUB_ENV` instead of using runner-only expression contexts in
+  job-level workflow metadata
 
 The same profile boundary helps with config readability.
 The global config asset is where DevCovenant lists the full
