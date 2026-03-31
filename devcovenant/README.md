@@ -9,7 +9,7 @@
 
 <!-- DEVCOV:END -->
 
-![DevCovenant banner](https://raw.githubusercontent.com/apostolovbg/devcovenant/main/devcovenant/docs/banner.png)
+![DevCovenant banner](https://raw.githubusercontent.com/apostolovbg/devcovenant/v1.0.1/devcovenant/docs/banner.png)
 
 DevCovenant is a repository governance framework.
 It turns workflow law, policy prose, and enforcement evidence into one system
@@ -253,45 +253,45 @@ managed blocks.
 ## Docs Map
 Use the shorter map below instead of treating the README as the whole manual.
 
-- [installation.md](https://github.com/apostolovbg/devcovenant/blob/main/devcovenant/docs/installation.md)
+- [installation.md](https://github.com/apostolovbg/devcovenant/blob/v1.0.1/devcovenant/docs/installation.md)
 
   Install, deploy, upgrade, clean, undeploy, uninstall, and first-time setup.
 
-- [workflow.md](https://github.com/apostolovbg/devcovenant/blob/main/devcovenant/docs/workflow.md)
+- [workflow.md](https://github.com/apostolovbg/devcovenant/blob/v1.0.1/devcovenant/docs/workflow.md)
 
   Exact gate sequence, command choice, run artifacts, and recovery.
 
-- [config.md](https://github.com/apostolovbg/devcovenant/blob/main/devcovenant/docs/config.md)
+- [config.md](https://github.com/apostolovbg/devcovenant/blob/v1.0.1/devcovenant/docs/config.md)
 
   How to read `devcovenant/config.yaml`, including project governance,
   doc assets, workflow/runtime knobs, and policy activation.
 
-- [profiles.md](https://github.com/apostolovbg/devcovenant/blob/main/devcovenant/docs/profiles.md)
+- [profiles.md](https://github.com/apostolovbg/devcovenant/blob/v1.0.1/devcovenant/docs/profiles.md)
 
   Profiles, overlays, assets, and translator ownership.
 
-- [policies.md](https://github.com/apostolovbg/devcovenant/blob/main/devcovenant/docs/policies.md)
+- [policies.md](https://github.com/apostolovbg/devcovenant/blob/v1.0.1/devcovenant/docs/policies.md)
 
   Policy descriptors, runtime actions, policy commands, autofix boundaries,
   and version-governance adapters.
 
-- [refresh.md](https://github.com/apostolovbg/devcovenant/blob/main/devcovenant/docs/refresh.md)
+- [refresh.md](https://github.com/apostolovbg/devcovenant/blob/v1.0.1/devcovenant/docs/refresh.md)
 
   Refresh behavior, managed docs, descriptor schema, and preservation rules.
 
-- [architecture.md](https://github.com/apostolovbg/devcovenant/blob/main/devcovenant/docs/architecture.md)
+- [architecture.md](https://github.com/apostolovbg/devcovenant/blob/v1.0.1/devcovenant/docs/architecture.md)
 
   Runtime layers, evidence flow, and contract map.
 
-- [registry.md](https://github.com/apostolovbg/devcovenant/blob/main/devcovenant/docs/registry.md)
+- [registry.md](https://github.com/apostolovbg/devcovenant/blob/v1.0.1/devcovenant/docs/registry.md)
 
   Tracked registry, runtime registry, and gate-status state.
 
-- [troubleshooting.md](https://github.com/apostolovbg/devcovenant/blob/main/devcovenant/docs/troubleshooting.md)
+- [troubleshooting.md](https://github.com/apostolovbg/devcovenant/blob/v1.0.1/devcovenant/docs/troubleshooting.md)
 
   Fast recovery paths for common failures.
 
 ## License
 DevCovenant is released under the MIT License.
-See [LICENSE](https://github.com/apostolovbg/devcovenant/blob/main/LICENSE) and
-[licenses/THIRD_PARTY_LICENSES.md](https://github.com/apostolovbg/devcovenant/blob/main/licenses/THIRD_PARTY_LICENSES.md).
+See [LICENSE](https://github.com/apostolovbg/devcovenant/blob/v1.0.1/LICENSE) and
+[licenses/THIRD_PARTY_LICENSES.md](https://github.com/apostolovbg/devcovenant/blob/v1.0.1/licenses/THIRD_PARTY_LICENSES.md).

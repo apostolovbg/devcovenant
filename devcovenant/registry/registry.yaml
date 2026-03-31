@@ -7076,7 +7076,7 @@ policies:
     assets: []
     origin: custom
     script_exists: true
-    hash: 9f22a04e615e91e37f8da38d18a92100ac5ca73aebd380bf3989d66a003b09b9
+    hash: 6e8c343d11c55f9dd0fcfd66e404c3da5c4015b9672682655b740717d51013af
     script_path: custom/readme_sync.py
   security-scanner:
     enabled: true
@@ -11425,9 +11425,9 @@ profiles:
             PYTHONPYCACHEPREFIX: .gha-pycache
           steps:
           - name: Checkout
-            uses: actions/checkout@v6
+            uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd
           - name: Set up Python
-            uses: actions/setup-python@v6
+            uses: actions/setup-python@a309ff8b426b58ec0e2a45f0f869d46889d02405
             with:
               python-version: '3.11'
           - name: Clean local build artifacts
@@ -11699,24 +11699,56 @@ profiles:
               python3 -m venv .venv
               .venv/bin/python -m pip install --upgrade pip
               .venv/bin/python -m pip install -r requirements.lock "$WHEEL_PATH"
-              .venv/bin/python -m devcovenant gate --start
-              .venv/bin/python -m devcovenant gate --mid
-              .venv/bin/python -m devcovenant run
-              .venv/bin/python -m devcovenant gate --end
-              .venv/bin/python -m devcovenant check
+              "$PIPX_BIN_DIR/devcovenant" gate --start
+              "$PIPX_BIN_DIR/devcovenant" gate --mid
+              "$PIPX_BIN_DIR/devcovenant" run
+              "$PIPX_BIN_DIR/devcovenant" gate --end
+              "$PIPX_BIN_DIR/devcovenant" check
               popd >/dev/null
+          - name: Set up Python support floor
+            uses: actions/setup-python@a309ff8b426b58ec0e2a45f0f869d46889d02405
+            with:
+              python-version: '3.10'
+          - name: Prove Python 3.10 support floor
+            run: |
+              set -euo pipefail
+              WHEEL_PATH="$(python - <<'PY'
+              from pathlib import Path
+
+              matches = sorted(Path("dist").glob("*.whl"))
+              if not matches:
+                  raise SystemExit(1)
+              print(matches[0].resolve())
+              PY
+              )"
+              test -n "$WHEEL_PATH"
+              python -m venv .proof-py310
+              . .proof-py310/bin/activate
+              python -m pip install --upgrade pip
+              python -m pip install "$WHEEL_PATH"
+              python -m devcovenant --version
+              python - <<'PY'
+              import devcovenant
+              import devcovenant.core.services.cleanup
+              from devcovenant.builtin.policies.version_sync import (
+                  version_sync,
+              )
+
+              assert version_sync is not None
+              print(devcovenant.__version__)
+              PY
           - name: Upload distributions
-            uses: actions/upload-artifact@v7
+            uses: actions/upload-artifact@bbbca2ddaa5d8feaa63e36b76fdaad77386f024f
             with:
               name: devcovenant-dist
               path: dist/*
           - name: Upload SBOM
-            uses: actions/upload-artifact@v7
+            uses: actions/upload-artifact@bbbca2ddaa5d8feaa63e36b76fdaad77386f024f
             with:
               name: devcovenant-sbom
               path: artifacts/sbom/*.json
           - name: Upload build provenance
-            uses: actions/upload-artifact@v7
+            uses: actions/upload-artifact@bbbca2ddaa5d8feaa63e36b76fdaad77386f024f
             with:
               name: devcovenant-provenance
               path: artifacts/provenance/*.json

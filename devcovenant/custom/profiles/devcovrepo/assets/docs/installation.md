@@ -182,6 +182,13 @@ debris such as:
 - local test trees, build trees, or `*.egg-info` outputs
 
 `MANIFEST.in` and `pyproject.toml` should keep that boundary explicit.
+Published package metadata should declare only Python versions that the
+release workflow actually proves, and support-floor backports such as
+conditional dependencies belong in both package metadata and lock inputs when
+the floor needs them.
+Package-facing documentation links should resolve to release-stable docs and
+changelog surfaces for the published version instead of drifting with a
+mutable branch head.
 Package builds should be quiet: no stale MANIFEST exclusions, no ambiguous
 package-discovery warnings, and no accidental runtime-state leakage.
 

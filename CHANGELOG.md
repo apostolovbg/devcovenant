@@ -60,6 +60,49 @@ Example:
 
 ## Version 1.0.1
 
+- 2026-03-31:
+  Change: hardened the `1.0.1` release candidate by making Python 3.10 support
+    self-sufficient, pinning workflow actions to immutable SHAs, keeping the
+    pipx proof on the installed CLI path, and switching package-facing docs
+    links to release-stable targets.
+  Why: the release review found one real support-floor blocker plus several
+    workflow and package-truthfulness gaps that were still acceptable locally
+    but not strong enough for a stable public release.
+  Impact: published installs now carry the required 3.10 backport dependency,
+    CI proves the declared support floor, package links stop drifting with
+    `main`, and release workflows no longer rely on mutable action tags.
+  Files:
+  .github/workflows/ci.yml
+  .github/workflows/publish.yml
+  CHANGELOG.md
+  README.md
+  devcovenant/README.md
+  devcovenant/builtin/policies/dependency_management/dependency_lock_runtime.py
+  devcovenant/builtin/profiles/global/assets/ci.yml
+  devcovenant/custom/policies/readme_sync/readme_sync.py
+  devcovenant/custom/profiles/devcovrepo/assets/docs/installation.md
+  devcovenant/custom/profiles/devcovrepo/assets/docs/policies.md
+  devcovenant/custom/profiles/devcovrepo/assets/docs/profiles.md
+  devcovenant/custom/profiles/devcovrepo/assets/docs/registry.md
+  devcovenant/custom/profiles/devcovrepo/assets/docs/workflow.md
+  devcovenant/custom/profiles/devcovrepo/devcovrepo.yaml
+  devcovenant/docs/installation.md
+  devcovenant/docs/policies.md
+  devcovenant/docs/profiles.md
+  devcovenant/docs/registry.md
+  devcovenant/docs/workflow.md
+  devcovenant/registry/registry.yaml
+  licenses/THIRD_PARTY_LICENSES.md
+  licenses/tomli-2.3.0.txt
+  pyproject.toml
+  requirements.in
+  requirements.lock
+  tests/devcovenant/builtin/policies/dependency_management/\
+    test_dependency_lock_runtime.py
+  tests/devcovenant/core/services/test_profile_registry.py
+  tests/devcovenant/custom/policies/readme_sync/test_readme_sync.py
+  tests/devcovenant/test_refresh.py
+
 - 2026-03-30:
   Change: bumped authoritative package, documentation, and managed-source
     release surfaces from `1.0.0` to `1.0.1`.

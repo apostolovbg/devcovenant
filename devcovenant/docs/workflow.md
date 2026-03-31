@@ -149,12 +149,19 @@ excluded as disposable build outputs.
 When a repository adds installed-artifact proof, that proof should exercise
 the same public workflow the package docs promise across the install surfaces
 the repository supports.
+If a repository documents `pipx` as the normal operator entrypoint, the
+installed-CLI proof should stay on that CLI through the full gate/run/end
+cycle even when DevCovenant re-executes into a managed repository
+environment internally.
+If a repository declares a Python support floor, release CI should prove that
+floor explicitly instead of relying only on newer interpreter runs.
 If a repository adds a separate release workflow, that workflow should consume
 validated artifacts and provenance from the proof boundary rather than
 rebuilding a fresh distribution later.
-Keep GitHub Action refs current as runner runtimes evolve; proof and release
-workflows should use Node 24-capable action releases or equivalent non-JS
-steps instead of carrying older Node 20-only refs forward.
+Pin GitHub Action refs to immutable commit SHAs and keep them current as
+runner runtimes evolve; proof and release workflows should use Node 24-capable
+action releases or equivalent non-JS steps instead of carrying older Node
+20-only refs forward.
 
 ## Managed Environment In Workflow Execution
 When the managed-environment policy is enabled, DevCovenant resolves one target

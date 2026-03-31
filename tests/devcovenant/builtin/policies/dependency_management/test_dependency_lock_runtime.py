@@ -295,7 +295,10 @@ def _unit_test_refresh_runtime_scrubs_environment_option_lines() -> None:
         original_compile = module._compile_requirements_lock
         module._compile_requirements_lock = (
             lambda _repo_root, _requirements_in: module.LockFilePieces(
-                [f"packaging=={packaging_version}"]
+                module._preserve_exact_marker_pins(
+                    [f"packaging=={packaging_version}"],
+                    _requirements_in,
+                )
             )
         )
         try:
@@ -312,6 +315,48 @@ def _unit_test_refresh_runtime_scrubs_environment_option_lines() -> None:
         assert (repo_root / "requirements.lock").read_text(
             encoding="utf-8"
         ) == f"packaging=={packaging_version}\n"
+
+
+def _unit_test_refresh_runtime_preserves_exact_marker_pins() -> None:
+    """Exact conditional pins should survive refresh on newer interpreters."""
+
+    module = importlib.import_module(MODULE)
+    with tempfile.TemporaryDirectory() as temp_dir:
+        repo_root = Path(temp_dir)
+        packaging_version = importlib_metadata.version("packaging")
+        (repo_root / "requirements.in").write_text(
+            "packaging>=26.0\n" 'tomli==2.3.0; python_version < "3.11"\n',
+            encoding="utf-8",
+        )
+        (repo_root / "requirements.lock").write_text(
+            f"packaging=={packaging_version}\n\n"
+            'tomli==2.3.0 ; python_version < "3.11"\n'
+            "    # via -r requirements.in\n",
+            encoding="utf-8",
+        )
+        original_compile = module._compile_requirements_lock
+        module._compile_requirements_lock = (
+            lambda _repo_root, _requirements_in: module.LockFilePieces(
+                module._preserve_exact_marker_pins(
+                    [f"packaging=={packaging_version}"],
+                    _requirements_in,
+                )
+            )
+        )
+        try:
+            result = module._refresh_python_requirements_lock(repo_root)
+        finally:
+            module._compile_requirements_lock = original_compile
+
+        assert result.attempted is True
+        assert result.changed is False
+        assert (repo_root / "requirements.lock").read_text(
+            encoding="utf-8"
+        ) == (
+            f"packaging=={packaging_version}\n\n"
+            'tomli==2.3.0 ; python_version < "3.11"\n'
+            "    # via -r requirements.in\n"
+        )
 
 
 def _unit_test_run_pip_compile_uses_private_cache_dir() -> None:
@@ -397,6 +442,10 @@ class GeneratedUnittestCases(unittest.TestCase):
     def test_refresh_runtime_scrubs_environment_option_lines(self):
         """Run environment-specific option-line cleanup assertions."""
         _unit_test_refresh_runtime_scrubs_environment_option_lines()
+
+    def test_refresh_runtime_preserves_exact_marker_pins(self):
+        """Run exact conditional backport pin preservation assertions."""
+        _unit_test_refresh_runtime_preserves_exact_marker_pins()
 
     def test_run_pip_compile_uses_private_cache_dir(self):
         """Run pip-tools cache-dir isolation assertions."""

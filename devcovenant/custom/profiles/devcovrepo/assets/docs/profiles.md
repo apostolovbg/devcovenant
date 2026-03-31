@@ -144,6 +144,11 @@ The CI boundary is important.
 The global workflow template should stay generic.
 If a repo family needs additional CI proof, that extension belongs in the
 relevant profile instead of in the builtin global workflow.
+That same profile boundary is where a repo family can add release-hardening
+proof such as:
+- immutable Action SHA pins for generated jobs
+- support-floor interpreter checks
+- install-surface proof jobs that stay on the documented public CLI surface
 
 The same profile boundary helps with config readability.
 The global config asset is where DevCovenant lists the full

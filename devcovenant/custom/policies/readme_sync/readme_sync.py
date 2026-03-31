@@ -34,6 +34,7 @@ class ReadmeSyncCheck(PolicyCheck):
     policy_id = "readme-sync"
     version = "0.1.0"
     MARKDOWN_LINK_PATTERN = re.compile(r"(?<!!)\[([^\]]+)\]\(([^)\s]+)\)")
+    MARKDOWN_IMAGE_PATTERN = re.compile(r"!\[([^\]]*)\]\(([^)\s]+)\)")
     ABSOLUTE_TARGET_PATTERN = re.compile(r"^[A-Za-z][A-Za-z0-9+.-]*:")
 
     REPO_ONLY_BEGIN = "<!-- REPO-ONLY:BEGIN -->"
@@ -174,18 +175,35 @@ class ReadmeSyncCheck(PolicyCheck):
         text: str,
     ) -> Tuple[str | None, str | None]:
         """Rewrite repo-relative public Markdown links for packaged README."""
-        if not any(
+        has_repo_relative_links = any(
             self._is_repo_relative_target(match.group(2).strip())
             for match in self.MARKDOWN_LINK_PATTERN.finditer(text)
-        ):
+        )
+        has_repo_relative_images = any(
+            self._is_repo_relative_target(match.group(2).strip())
+            for match in self.MARKDOWN_IMAGE_PATTERN.finditer(text)
+        )
+        if not has_repo_relative_links and not has_repo_relative_images:
             return text, None
 
-        blob_base, error = self._resolve_repository_blob_base(repo_root)
+        blob_base, raw_base, error = self._resolve_repository_link_bases(
+            repo_root
+        )
         if error:
             return None, error
 
-        # Rewrite only repo-relative public Markdown targets for the packaged
-        # README, leaving images, anchors, and absolute URLs unchanged.
+        # Rewrite repo-relative public Markdown targets for the packaged README
+        # so released packages point at release-stable docs and assets.
+        def _replace_image(match: re.Match[str]) -> str:
+            label = match.group(1)
+            target = match.group(2).strip()
+            if not self._is_repo_relative_target(target):
+                return match.group(0)
+            normalized = target[2:] if target.startswith("./") else target
+            return f"![{label}]({raw_base}{normalized})"
+
+        # Non-image Markdown links should resolve to the tagged repository tree
+        # so packaged docs stay on the released version instead of branch head.
         def _replace(match: re.Match[str]) -> str:
             label = match.group(1)
             target = match.group(2).strip()
@@ -194,16 +212,19 @@ class ReadmeSyncCheck(PolicyCheck):
             normalized = target[2:] if target.startswith("./") else target
             return f"[{label}]({blob_base}{normalized})"
 
-        return self.MARKDOWN_LINK_PATTERN.sub(_replace, text), None
+        rewritten = self.MARKDOWN_IMAGE_PATTERN.sub(_replace_image, text)
+        rewritten = self.MARKDOWN_LINK_PATTERN.sub(_replace, rewritten)
+        return rewritten, None
 
-    def _resolve_repository_blob_base(
+    def _resolve_repository_link_bases(
         self,
         repo_root: Path,
-    ) -> Tuple[str | None, str | None]:
-        """Resolve the repository blob base from `pyproject.toml` URLs."""
+    ) -> Tuple[str | None, str | None, str | None]:
+        """Resolve release-stable link bases from `pyproject.toml` metadata."""
         pyproject_path = repo_root / "pyproject.toml"
         if not pyproject_path.exists():
             return (
+                None,
                 None,
                 "README.md contains repo-relative public links, but "
                 "`pyproject.toml` is missing.",
@@ -212,14 +233,23 @@ class ReadmeSyncCheck(PolicyCheck):
             with pyproject_path.open("rb") as handle:
                 payload = tomllib.load(handle)
         except OSError as exc:
-            return None, f"Failed to read `pyproject.toml`: {exc}."
+            return None, None, f"Failed to read `pyproject.toml`: {exc}."
 
         project = payload.get("project")
         if not isinstance(project, dict):
             return (
                 None,
+                None,
                 "README.md contains repo-relative public links, but "
                 "`pyproject.toml` is missing `[project]` metadata.",
+            )
+        version = str(project.get("version") or "").strip()
+        if not version:
+            return (
+                None,
+                None,
+                "README.md contains repo-relative public links, but "
+                "`pyproject.toml` is missing `project.version`.",
             )
         urls = project.get("urls")
         if not isinstance(urls, dict):
@@ -230,12 +260,23 @@ class ReadmeSyncCheck(PolicyCheck):
         if not repository_url:
             return (
                 None,
+                None,
                 "README.md contains repo-relative public links, but "
                 "`pyproject.toml` is missing `project.urls.Repository` "
                 "or `project.urls.Homepage`.",
             )
         normalized = repository_url.removesuffix(".git").rstrip("/")
-        return f"{normalized}/blob/main/", None
+        version_tag = f"v{version}"
+        blob_base = f"{normalized}/blob/{version_tag}/"
+        if normalized.startswith("https://github.com/"):
+            owner_repo = normalized.removeprefix("https://github.com/")
+            raw_base = (
+                f"https://raw.githubusercontent.com/{owner_repo}/"
+                f"{version_tag}/"
+            )
+        else:
+            raw_base = f"{normalized}/raw/{version_tag}/"
+        return blob_base, raw_base, None
 
     def _is_repo_relative_target(self, target: str) -> bool:
         """Return True when one Markdown link target is repo-relative."""

@@ -234,6 +234,46 @@ def _unit_test_refresh_keeps_root_and_packaged_readme_blocks_empty() -> None:
             assert "Managed runtime note:" not in content
 
 
+def _unit_test_release_metadata_keeps_support_floor_and_docs_truthful() -> (
+    None
+):
+    """Release metadata should prove the Python floor and doc links."""
+    pyproject_payload = tomllib.loads(
+        (REPO_ROOT / "pyproject.toml").read_text(encoding="utf-8")
+    )
+    project = pyproject_payload["project"]
+    version = str(project["version"])
+    dependencies = [str(item) for item in project["dependencies"]]
+    urls = project["urls"]
+
+    assert project["requires-python"] == ">=3.10"
+    assert "Programming Language :: Python :: 3.10" in project["classifiers"]
+    assert "tomli>=2.3.0; python_version < '3.11'" in dependencies
+
+    requirements_in = (REPO_ROOT / "requirements.in").read_text(
+        encoding="utf-8"
+    )
+    requirements_lock = (REPO_ROOT / "requirements.lock").read_text(
+        encoding="utf-8"
+    )
+    assert 'tomli==2.3.0; python_version < "3.11"' in requirements_in
+    assert 'tomli==2.3.0 ; python_version < "3.11"' in requirements_lock
+
+    assert urls["Documentation"].endswith(f"/tree/v{version}/devcovenant/docs")
+    assert urls["Changelog"].endswith(f"/blob/v{version}/CHANGELOG.md")
+
+    packaged_readme = (REPO_ROOT / "devcovenant" / "README.md").read_text(
+        encoding="utf-8"
+    )
+    assert f"/blob/v{version}/devcovenant/docs/workflow.md" in packaged_readme
+    assert (
+        "https://raw.githubusercontent.com/apostolovbg/devcovenant/"
+        f"v{version}/devcovenant/docs/banner.png"
+    ) in packaged_readme
+    assert "blob/main" not in packaged_readme
+    assert "/main/devcovenant/docs/banner.png" not in packaged_readme
+
+
 def _unit_test_refresh_imports_same_version_header_only_spec_doc() -> None:
     """refresh_repo should adopt a same-version preauthored SPEC body."""
     with tempfile.TemporaryDirectory() as temp_dir:
@@ -1295,6 +1335,10 @@ class GeneratedUnittestCases(unittest.TestCase):
     def test_refresh_keeps_root_and_packaged_readme_blocks_empty(self):
         """Run README empty-managed-block assertions."""
         _unit_test_refresh_keeps_root_and_packaged_readme_blocks_empty()
+
+    def test_release_metadata_keeps_support_floor_and_docs_truthful(self):
+        """Run release metadata truthfulness assertions."""
+        _unit_test_release_metadata_keeps_support_floor_and_docs_truthful()
 
     def test_refresh_imports_same_version_header_only_spec_doc(self):
         """Run same-version SPEC import assertions."""

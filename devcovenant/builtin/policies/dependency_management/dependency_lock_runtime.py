@@ -13,6 +13,8 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Callable, Dict, Iterable, List, Sequence, Tuple
 
+from packaging.requirements import InvalidRequirement, Requirement
+
 from devcovenant.builtin.policies.dependency_management import (
     dependency_management,
 )
@@ -191,7 +193,66 @@ def _compile_requirements_lock(
         _run_pip_compile(repo_root, requirements_in, tmp_lock)
         normalised = _normalise_header(tmp_lock.read_text().splitlines())
         cleaned = _strip_python_lock_option_lines(normalised)
-    return _split_last_updated(cleaned)
+    with_backports = _preserve_exact_marker_pins(cleaned, requirements_in)
+    return _split_last_updated(with_backports)
+
+
+def _preserve_exact_marker_pins(
+    compiled_lines: Sequence[str], requirements_in: Path
+) -> List[str]:
+    """Keep exact conditional backport pins visible in the normalized lock."""
+
+    preserved_pins = _collect_exact_marker_pins(requirements_in)
+    if not preserved_pins:
+        return list(compiled_lines)
+
+    existing_entries = {
+        str(raw_line).strip()
+        for raw_line in compiled_lines
+        if str(raw_line).strip()
+        and not str(raw_line).lstrip().startswith("#")
+        and not str(raw_line)[:1].isspace()
+    }
+    result = list(compiled_lines)
+    for pin_line in preserved_pins:
+        if pin_line in existing_entries:
+            continue
+        if result and result[-1] != "":
+            result.append("")
+        result.append(pin_line)
+        result.append("    # via -r requirements.in")
+    return result
+
+
+def _collect_exact_marker_pins(requirements_in: Path) -> List[str]:
+    """Return direct marker-gated exact pins declared in requirements.in."""
+
+    collected: List[str] = []
+    for raw_line in requirements_in.read_text(encoding="utf-8").splitlines():
+        stripped = raw_line.strip()
+        if not stripped or stripped.startswith("#"):
+            continue
+        if _is_python_lock_option_line(raw_line):
+            continue
+        try:
+            requirement = Requirement(stripped)
+        except InvalidRequirement:
+            continue
+        if requirement.marker is None:
+            continue
+        specifiers = list(requirement.specifier)
+        if len(specifiers) != 1 or specifiers[0].operator != "==":
+            continue
+        extras = (
+            f"[{','.join(sorted(requirement.extras))}]"
+            if requirement.extras
+            else ""
+        )
+        collected.append(
+            f"{requirement.name}{extras}=={specifiers[0].version} ; "
+            f"{requirement.marker}"
+        )
+    return collected
 
 
 def _run_pip_compile(

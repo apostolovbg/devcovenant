@@ -48,13 +48,14 @@ dependencies = [
   "PyYAML>=6.0.2",
   "pytest>=9.0.2",
   "semver>=3.0.2",
+  "tomli>=2.3.0; python_version < '3.11'",
 ]
 [project.urls]
 Homepage = "https://github.com/apostolovbg/devcovenant"
-Documentation = "https://github.com/apostolovbg/devcovenant/tree/main/devcovenant/docs"
+Documentation = "https://github.com/apostolovbg/devcovenant/tree/v1.0.1/devcovenant/docs"
 Repository = "https://github.com/apostolovbg/devcovenant"
 Issues = "https://github.com/apostolovbg/devcovenant/issues"
-Changelog = "https://github.com/apostolovbg/devcovenant/blob/main/CHANGELOG.md"
+Changelog = "https://github.com/apostolovbg/devcovenant/blob/v1.0.1/CHANGELOG.md"
 
 [tool.setuptools]
 include-package-data = false

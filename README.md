@@ -9,7 +9,7 @@
 
 <!-- DEVCOV:END -->
 
-![DevCovenant banner](https://raw.githubusercontent.com/apostolovbg/devcovenant/main/devcovenant/docs/banner.png)
+![DevCovenant banner](devcovenant/docs/banner.png)
 
 DevCovenant is a repository governance framework.
 It turns workflow law, policy prose, and enforcement evidence into one system
@@ -317,8 +317,10 @@ not belong in ordinary user repositories.
   includes `Governance` plus a dependent `Build` proof job.
 - `.github/workflows/publish.yml` stays repo-maintained and publishes only the
   validated CI artifacts and provenance it consumes.
-- Repo workflows should stay on Node 24-capable action releases and avoid
-  leaving Node 20-only GitHub Action refs behind.
+- Repo workflows should pin GitHub Actions to immutable commit SHAs and stay
+  on Node 24-capable action releases.
+- Repo release proof should cover the declared Python support floor and keep
+  the pipx lifecycle proof on the installed CLI path end-to-end.
 - Repo-only scanner choices and release-proof details belong in these root
   surfaces and the root trust docs, not in `devcovenant/docs/*`.
 

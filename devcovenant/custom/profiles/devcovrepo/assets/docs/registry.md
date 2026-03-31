@@ -47,6 +47,10 @@ contribute.
 That includes generated GitHub Actions job structure and action-version
 inputs and workflow-level environment values that later render into
 `.github/workflows/ci.yml`.
+Tracked registry state also records resolved package and dependency inputs that
+affect the public release contract, such as conditional support-floor
+dependencies and the managed-doc descriptors that feed version-stable package
+links.
 If active profiles contribute managed-environment metadata, tracked state
 records that resolved execution contract too.
 That includes the selected interpreter expectations, command templates such as

@@ -136,6 +136,10 @@ Custom policies that inspect managed docs should treat the generated header
 model as a stable contract.
 That means header-aware checks need to expect the current project-governance
 header set when a document opts into those headers.
+Custom policies that synchronize package-facing docs should also keep release
+targets truthful. If a packaged README rewrites repo-relative links or images,
+those targets should resolve to release-stable tagged URLs instead of a
+mutable branch head.
 
 ## Practical Guidance
 When changing a policy, update all of the following together:

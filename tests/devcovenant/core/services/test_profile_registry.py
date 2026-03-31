@@ -395,8 +395,14 @@ def _unit_test_ci_workflow_contains_build_job_artifact_proof() -> None:
         for step in governance_steps
         if isinstance(step, dict)
     ]
-    assert "actions/checkout@v6" in governance_uses
-    assert "actions/setup-python@v6" in governance_uses
+    assert (
+        "actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd"
+        in governance_uses
+    )
+    assert (
+        "actions/setup-python@a309ff8b426b58ec0e2a45f0f869d46889d02405"
+        in governance_uses
+    )
 
     build_job = jobs.get("build")
     assert isinstance(build_job, dict)
@@ -409,9 +415,18 @@ def _unit_test_ci_workflow_contains_build_job_artifact_proof() -> None:
         for step in steps
         if isinstance(step, dict)
     ]
-    assert "actions/checkout@v6" in build_uses
-    assert "actions/setup-python@v6" in build_uses
-    assert "actions/upload-artifact@v7" in build_uses
+    assert (
+        "actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd"
+        in build_uses
+    )
+    assert (
+        "actions/setup-python@a309ff8b426b58ec0e2a45f0f869d46889d02405"
+        in build_uses
+    )
+    assert (
+        "actions/upload-artifact@bbbca2ddaa5d8feaa63e36b76fdaad77386f024f"
+        in build_uses
+    )
 
     step_names = [
         str(step.get("name") or "").strip()
@@ -423,6 +438,8 @@ def _unit_test_ci_workflow_contains_build_job_artifact_proof() -> None:
     assert "Install DevCovenant with pipx" in step_names
     assert "Resolve pipx bin directory" in step_names
     assert "Prove pipx operator lifecycle" in step_names
+    assert "Set up Python support floor" in step_names
+    assert "Prove Python 3.10 support floor" in step_names
 
     upload_step = next(
         step
@@ -467,7 +484,16 @@ def _unit_test_ci_workflow_contains_build_job_artifact_proof() -> None:
     assert '"$PIPX_BIN_DIR/devcovenant" install' in all_run_blocks
     assert '"$PIPX_BIN_DIR/devcovenant" deploy' in all_run_blocks
     assert '"$PIPX_BIN_DIR/devcovenant" refresh' in all_run_blocks
-    assert '"$PIPX_BIN_DIR/devcovenant" gate --start' not in all_run_blocks
+    assert '"$PIPX_BIN_DIR/devcovenant" gate --start' in all_run_blocks
+    assert '"$PIPX_BIN_DIR/devcovenant" gate --mid' in all_run_blocks
+    assert '"$PIPX_BIN_DIR/devcovenant" run' in all_run_blocks
+    assert '"$PIPX_BIN_DIR/devcovenant" gate --end' in all_run_blocks
+    assert '"$PIPX_BIN_DIR/devcovenant" check' in all_run_blocks
+    assert "python -m devcovenant --version" in all_run_blocks
+    assert (
+        "from devcovenant.builtin.policies.version_sync import ("
+        in all_run_blocks
+    )
 
     provenance_step = next(
         step
@@ -540,7 +566,10 @@ def _unit_test_publish_workflow_uses_validated_build_artifacts() -> None:
         and str(step.get("name") or "").strip()
         == "Download validated distributions"
     )
-    assert dist_download.get("uses") == "actions/download-artifact@v8"
+    assert (
+        dist_download.get("uses")
+        == "actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c"
+    )
     dist_with = dist_download.get("with")
     assert isinstance(dist_with, dict)
     assert dist_with.get("run-id") == "${{ steps.ci-run.outputs.run_id }}"
@@ -552,7 +581,10 @@ def _unit_test_publish_workflow_uses_validated_build_artifacts() -> None:
         if isinstance(step, dict)
         and str(step.get("name") or "").strip() == "Download build provenance"
     )
-    assert provenance_download.get("uses") == "actions/download-artifact@v8"
+    assert (
+        provenance_download.get("uses")
+        == "actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c"
+    )
     provenance_with = provenance_download.get("with")
     assert isinstance(provenance_with, dict)
     assert provenance_with.get("run-id") == (
@@ -570,7 +602,21 @@ def _unit_test_publish_workflow_uses_validated_build_artifacts() -> None:
         if isinstance(step, dict)
         and str(step.get("name") or "").strip() == "Validate selected CI run"
     )
-    assert validate_step.get("uses") == "actions/github-script@v8"
+    assert (
+        validate_step.get("uses")
+        == "actions/github-script@ed597411d8f924073f98dfc5c65a23a2325f34cd"
+    )
+    publish_step = next(
+        step
+        for step in steps
+        if isinstance(step, dict)
+        and str(step.get("name") or "").strip()
+        == "Publish to PyPI with trusted publishing"
+    )
+    assert publish_step.get("uses") == (
+        "pypa/gh-action-pypi-publish@"
+        "ed0c53931b1dc9bd32cbe73a98c7f6766f8a527e"
+    )
 
 
 def _unit_test_python_family_profiles_do_not_double_run_pytest() -> None:
