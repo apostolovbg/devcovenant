@@ -60,6 +60,9 @@ The same applies to policy-resolved metadata such as
 surface declarations, the tracked registry records the new resolved lock
 paths, dependency selectors, artifact targets, and hash-target settings that
 later drive lock refresh behavior.
+That includes non-hash surfaces too: the registry records the declared target
+matrix and composed surface inputs that the shared target-aware resolver uses
+before hash mode is turned on.
 Those tracked surface definitions also explain why dependency-report and
 license-artifact refreshes can land next to a registry diff in the same slice:
 the registry is recording the dependency surface contract that generated them.

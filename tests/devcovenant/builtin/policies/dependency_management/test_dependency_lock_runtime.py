@@ -680,6 +680,240 @@ def _unit_test_refresh_runtime_passes_hash_mode_from_metadata() -> None:
         assert captured["generate_hashes"] is True
 
 
+def _unit_test_surface_dependency_strings_expand_requirements_includes() -> (
+    None
+):
+    """Surface dependency collection should expand nested `-r` includes."""
+
+    module = importlib.import_module(MODULE)
+    with tempfile.TemporaryDirectory() as temp_dir:
+        repo_root = Path(temp_dir)
+        runtime_lock = repo_root / "devcovenant" / "runtime-requirements.lock"
+        runtime_lock.parent.mkdir(parents=True, exist_ok=True)
+        runtime_lock.write_text(
+            "packaging==26.0\n" "pyyaml==6.0.3\n",
+            encoding="utf-8",
+        )
+        (repo_root / "requirements.in").write_text(
+            "-r devcovenant/runtime-requirements.lock\n" "bandit==1.9.4\n",
+            encoding="utf-8",
+        )
+
+        collected = module._surface_dependency_strings(
+            repo_root,
+            dependency_files=["requirements.in"],
+        )
+
+        assert collected == [
+            "packaging==26.0",
+            "pyyaml==6.0.3",
+            "bandit==1.9.4",
+        ]
+
+
+def _unit_test_complete_target_report_closes_marker_only_gaps() -> None:
+    """Target completion should add requirements omitted by host markers."""
+
+    module = importlib.import_module(MODULE)
+    target = module.dependency_management.DependencySurfaceTarget(
+        target_id="linux-py311",
+        marker='sys_platform == "linux" and python_version == "3.11"',
+        pip={
+            "platform": "manylinux2014_x86_64",
+            "implementation": "cp",
+            "python-version": "3.11",
+            "abi": "cp311",
+        },
+    )
+    original_report = module._run_pip_hash_target_report
+    original_loader = module._load_target_distribution_requirements
+
+    def _entry(name: str, version: str) -> dict[str, object]:
+        """Build one minimal report entry."""
+
+        return {
+            "metadata": {"name": name, "version": version},
+            "download_info": {
+                "archive_info": {"hashes": {"sha256": f"{name}-{version}"}}
+            },
+        }
+
+    def _fake_report(_repo_root, *, dependency_lines, target):
+        """Return deterministic target report payloads for the test graph."""
+
+        normalized = set(dependency_lines)
+        if normalized == {"keyring==25.7.0", "jaraco-context==6.1.2"}:
+            return [
+                _entry("keyring", "25.7.0"),
+                _entry("jaraco.context", "6.1.2"),
+            ]
+        if normalized == {
+            "SecretStorage>=3.2",
+            "jeepney>=0.4.2",
+            "importlib_metadata>=4.11.4",
+            "backports.tarfile",
+        }:
+            return [
+                _entry("SecretStorage", "3.5.0"),
+                _entry("jeepney", "0.9.0"),
+                _entry("importlib_metadata", "9.0.0"),
+                _entry("backports.tarfile", "1.2.0"),
+            ]
+        if normalized == {"cryptography>=2.0", "zipp>=3.20"}:
+            return [
+                _entry("cryptography", "46.0.6"),
+                _entry("zipp", "3.23.0"),
+            ]
+        if normalized == {"cffi>=2.0.0"}:
+            return [_entry("cffi", "2.0.0")]
+        if normalized == {"pycparser"}:
+            return [_entry("pycparser", "3.0")]
+        raise AssertionError(
+            f"Unexpected dependency closure request: {sorted(normalized)}"
+        )
+
+    def _fake_loader(
+        _repo_root,
+        *,
+        target,
+        distribution_name,
+        version,
+        metadata_cache,
+    ):
+        """Return wheel metadata requirements for the synthetic graph."""
+
+        del target, version, metadata_cache
+        if distribution_name == "keyring":
+            return [
+                'SecretStorage>=3.2; sys_platform == "linux"',
+                'jeepney>=0.4.2; sys_platform == "linux"',
+                'importlib_metadata>=4.11.4; python_version < "3.12"',
+                "jaraco.context",
+            ]
+        if distribution_name == "jaraco.context":
+            return ['backports.tarfile; python_version < "3.12"']
+        if distribution_name == "SecretStorage":
+            return ["cryptography>=2.0", "jeepney>=0.4.2"]
+        if distribution_name == "importlib_metadata":
+            return ["zipp>=3.20"]
+        if distribution_name == "cryptography":
+            return ["cffi>=2.0.0"]
+        if distribution_name == "cffi":
+            return ["pycparser"]
+        return []
+
+    module._run_pip_hash_target_report = _fake_report
+    module._load_target_distribution_requirements = _fake_loader
+    try:
+        installs = module._resolve_complete_target_report(
+            Path("."),
+            dependency_lines=[
+                "keyring==25.7.0",
+                "jaraco-context==6.1.2",
+            ],
+            target=target,
+        )
+    finally:
+        module._run_pip_hash_target_report = original_report
+        module._load_target_distribution_requirements = original_loader
+
+    names = {
+        str((item.get("metadata") or {}).get("name", "")) for item in installs
+    }
+    assert names >= {
+        "keyring",
+        "jaraco.context",
+        "SecretStorage",
+        "jeepney",
+        "importlib_metadata",
+        "backports.tarfile",
+        "cryptography",
+        "zipp",
+        "cffi",
+        "pycparser",
+    }
+
+
+def _unit_test_complete_target_report_filters_host_spurious_branches() -> None:
+    """Target completion should drop packages that are not target-reachable."""
+
+    module = importlib.import_module(MODULE)
+    target = module.dependency_management.DependencySurfaceTarget(
+        target_id="windows-py311",
+        marker='sys_platform == "win32" and python_version == "3.11"',
+        pip={
+            "platform": "win_amd64",
+            "implementation": "cp",
+            "python-version": "3.11",
+            "abi": "cp311",
+        },
+    )
+    original_report = module._run_pip_hash_target_report
+    original_loader = module._load_target_distribution_requirements
+
+    def _entry(name: str, version: str) -> dict[str, object]:
+        """Build one minimal report entry."""
+
+        return {
+            "metadata": {"name": name, "version": version},
+            "download_info": {
+                "archive_info": {"hashes": {"sha256": f"{name}-{version}"}}
+            },
+        }
+
+    def _fake_report(_repo_root, *, dependency_lines, target):
+        """Return a host-skewed report payload for the test graph."""
+
+        normalized = set(dependency_lines)
+        if normalized == {"keyring==25.7.0"}:
+            return [
+                _entry("keyring", "25.7.0"),
+                _entry("SecretStorage", "3.5.0"),
+            ]
+        if normalized == {"pywin32-ctypes>=0.2.0"}:
+            return [_entry("pywin32-ctypes", "0.2.3")]
+        raise AssertionError(
+            f"Unexpected dependency closure request: {sorted(normalized)}"
+        )
+
+    def _fake_loader(
+        _repo_root,
+        *,
+        target,
+        distribution_name,
+        version,
+        metadata_cache,
+    ):
+        """Return wheel metadata requirements for the synthetic graph."""
+
+        del target, version, metadata_cache
+        if distribution_name == "keyring":
+            return [
+                'SecretStorage>=3.2; sys_platform == "linux"',
+                'pywin32-ctypes>=0.2.0; sys_platform == "win32"',
+            ]
+        return []
+
+    module._run_pip_hash_target_report = _fake_report
+    module._load_target_distribution_requirements = _fake_loader
+    try:
+        installs = module._resolve_complete_target_report(
+            Path("."),
+            dependency_lines=["keyring==25.7.0"],
+            target=target,
+        )
+    finally:
+        module._run_pip_hash_target_report = original_report
+        module._load_target_distribution_requirements = original_loader
+
+    names = {
+        str((item.get("metadata") or {}).get("name", "")) for item in installs
+    }
+    assert "keyring" in names
+    assert "pywin32-ctypes" in names
+    assert "SecretStorage" not in names
+
+
 class GeneratedUnittestCases(unittest.TestCase):
     """unittest wrappers for layered module sanity checks."""
 
@@ -746,3 +980,15 @@ class GeneratedUnittestCases(unittest.TestCase):
     def test_refresh_runtime_passes_hash_mode_from_metadata(self):
         """Run metadata-to-runtime hash-mode propagation assertions."""
         _unit_test_refresh_runtime_passes_hash_mode_from_metadata()
+
+    def test_surface_dependency_strings_expand_requirements_includes(self):
+        """Run requirements-include expansion assertions."""
+        _unit_test_surface_dependency_strings_expand_requirements_includes()
+
+    def test_complete_target_report_closes_marker_only_gaps(self):
+        """Run target-closure completion assertions."""
+        _unit_test_complete_target_report_closes_marker_only_gaps()
+
+    def test_complete_target_report_filters_host_spurious_branches(self):
+        """Run target-reachability filtering assertions."""
+        _unit_test_complete_target_report_filters_host_spurious_branches()

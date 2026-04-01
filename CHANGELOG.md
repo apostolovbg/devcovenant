@@ -61,6 +61,59 @@ Example:
 ## Version 1.0.1.dev1
 
 - 2026-04-01:
+  Change: refactored dependency-management Python surface resolution around one
+    target-aware closure engine, composed `root_workspace` through the shipped
+    `devcovenant_runtime` surface, expanded the builtin CPython target matrix
+    to 3.10 through 3.14 on Linux/Windows/macOS, and regenerated the managed
+    dependency, registry, and policy docs artifacts.
+  Why: fix the real cross-environment drift where host-local refreshes rewrote
+    `requirements.lock` on GitHub/Linux, stop source and CI execution from
+    maintaining a duplicate runtime dependency list separate from the shipped
+    DevCovenant runtime surface, and make non-hash mode and hash mode share
+    the same declared target model before the later hash flip.
+  Impact: stabilized non-hash refresh around target-stable all-platform
+    workspace and
+    bundled-runtime locks, per-surface license reports follow the effective
+    dependency ownership split, and fresh/bootstrap paths can prove the same
+    runtime contract that installed repos inherit.
+  Files:
+  AGENTS.md
+  CHANGELOG.md
+  devcovenant/builtin/policies/dependency_management/\
+    dependency_lock_runtime.py
+  devcovenant/builtin/profiles/github/github.yaml
+  devcovenant/builtin/profiles/python/python.yaml
+  devcovenant/config.yaml
+  devcovenant/custom/profiles/devcovrepo/assets/docs/config.md
+  devcovenant/custom/profiles/devcovrepo/assets/docs/policies.md
+  devcovenant/custom/profiles/devcovrepo/assets/docs/profiles.md
+  devcovenant/custom/profiles/devcovrepo/assets/docs/registry.md
+  devcovenant/docs/config.md
+  devcovenant/docs/policies.md
+  devcovenant/docs/profiles.md
+  devcovenant/docs/registry.md
+  devcovenant/licenses/THIRD_PARTY_LICENSES.md
+  devcovenant/licenses/tomli-2.4.1.txt
+  devcovenant/registry/registry.yaml
+  devcovenant/runtime-requirements.lock
+  licenses/PyYAML-6.0.3.txt
+  licenses/THIRD_PARTY_LICENSES.md
+  licenses/build-1.4.2.txt
+  licenses/packaging-26.0.txt
+  licenses/pip-tools-7.5.3.txt
+  licenses/pre-commit-4.5.1.txt
+  licenses/pytest-9.0.2.txt
+  licenses/semver-3.0.4.txt
+  licenses/setuptools-82.0.1.txt
+  licenses/tomli-2.3.0.txt
+  licenses/wheel-0.46.3.txt
+  requirements.in
+  requirements.lock
+  tests/devcovenant/builtin/policies/dependency_management/\
+    test_dependency_lock_runtime.py
+  tests/devcovenant/test_refresh.py
+
+- 2026-04-01:
   Change: stabilized the non-lock fresh-repo bootstrap contract, removed the
     duplicate dependency refresh pass, materialized the full first-refresh
     `policy_state`/registry provenance, and rewrote the package docs/license

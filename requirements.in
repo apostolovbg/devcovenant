@@ -1,17 +1,11 @@
-# Top-level dependency manifest for DevCovenant.  Keep this file minimal so
-# package managers such as pip-tools can produce reproducible locks quickly.
-packaging>=26.0
-pre-commit>=4.5.1
-pip-tools>=7.5.3
-PyYAML>=6.0.2
-pytest>=9.0.2
-semver>=3.0.2
+# Root workspace dependencies for DevCovenant development and release work.
+# Keep the shipped DevCovenant runtime reference so source/CI execution uses
+# the same runtime surface as installed repos.
+-r devcovenant/runtime-requirements.lock
+
+# Add repository-only workspace dependencies below.
 bandit==1.9.4
-build==1.4.2
 cyclonedx-bom==7.2.2
 pip-audit==2.10.0
 pipx==1.11.1
-setuptools==82.0.1
-tomli==2.3.0; python_version < "3.11"
 twine==6.2.0
-wheel==0.46.3

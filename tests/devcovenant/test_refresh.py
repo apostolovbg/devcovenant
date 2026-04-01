@@ -463,19 +463,29 @@ def _unit_test_release_metadata_keeps_support_floor_and_docs_truthful() -> (
     packaged_license_report = (
         REPO_ROOT / "devcovenant" / "licenses" / "THIRD_PARTY_LICENSES.md"
     ).read_text(encoding="utf-8")
-    assert 'tomli==2.3.0; python_version < "3.11"' in requirements_in
-    assert 'tomli==2.3.0 ; python_version < "3.11"' in requirements_lock
-    assert (
-        'SecretStorage==3.5.0; sys_platform == "linux"' not in requirements_in
+    active_requirements_in_lines = [
+        line.strip()
+        for line in requirements_in.splitlines()
+        if line.strip() and not line.lstrip().startswith("#")
+    ]
+    assert active_requirements_in_lines[0] == (
+        "-r devcovenant/runtime-requirements.lock"
     )
-    assert 'jeepney==0.9.0; sys_platform == "linux"' not in requirements_in
-    assert (
-        'importlib-metadata==9.0.0; python_version < "3.12"'
-        not in requirements_in
-    )
+    assert "packaging>=26.0" not in requirements_in
+    assert "pytest>=9.0.2" not in requirements_in
+    assert "pip-tools>=7.5.3" not in requirements_in
+    assert "bandit==1.9.4" in requirements_in
+    assert "pip-audit==2.10.0" in requirements_in
+    assert "twine==6.2.0" in requirements_in
+    assert "SecretStorage==3.5.0" not in requirements_in
+    assert "importlib-metadata==9.0.0" not in requirements_in
     assert runtime_requirements_lock != requirements_lock
-    assert "pip-audit==2.10.0" in requirements_lock
-    assert "pip-audit==2.10.0" not in runtime_requirements_lock
+    assert "pip_audit==2.10.0" in requirements_lock
+    assert "pip_audit==2.10.0" not in runtime_requirements_lock
+    assert "SecretStorage==3.5.0" in requirements_lock
+    assert "backports.tarfile==1.2.0" in requirements_lock
+    assert "typing_extensions==4.15.0" in requirements_lock
+    assert 'python_version == "3.10"' in requirements_lock
     assert packaged_license_report != root_license_report
     assert "- `requirements.lock`" in root_license_report
     assert (

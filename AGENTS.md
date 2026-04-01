@@ -557,6 +557,13 @@ surfaces:
   required_paths:
   - devcovenant/runtime-requirements.lock
   hash_targets:
+  - id: linux-py310
+    marker: sys_platform == "linux" and python_version == "3.10"
+    pip:
+      platform: manylinux2014_x86_64
+      implementation: cp
+      python_version: '3.10'
+      abi: cp310
   - id: linux-py311
     marker: sys_platform == "linux" and python_version == "3.11"
     pip:
@@ -564,6 +571,20 @@ surfaces:
       implementation: cp
       python_version: '3.11'
       abi: cp311
+  - id: linux-py312
+    marker: sys_platform == "linux" and python_version == "3.12"
+    pip:
+      platform: manylinux2014_x86_64
+      implementation: cp
+      python_version: '3.12'
+      abi: cp312
+  - id: linux-py313
+    marker: sys_platform == "linux" and python_version == "3.13"
+    pip:
+      platform: manylinux2014_x86_64
+      implementation: cp
+      python_version: '3.13'
+      abi: cp313
   - id: linux-py314
     marker: sys_platform == "linux" and python_version == "3.14"
     pip:
@@ -571,6 +592,13 @@ surfaces:
       implementation: cp
       python_version: '3.14'
       abi: cp314
+  - id: windows-py310
+    marker: sys_platform == "win32" and python_version == "3.10"
+    pip:
+      platform: win_amd64
+      implementation: cp
+      python_version: '3.10'
+      abi: cp310
   - id: windows-py311
     marker: sys_platform == "win32" and python_version == "3.11"
     pip:
@@ -578,6 +606,20 @@ surfaces:
       implementation: cp
       python_version: '3.11'
       abi: cp311
+  - id: windows-py312
+    marker: sys_platform == "win32" and python_version == "3.12"
+    pip:
+      platform: win_amd64
+      implementation: cp
+      python_version: '3.12'
+      abi: cp312
+  - id: windows-py313
+    marker: sys_platform == "win32" and python_version == "3.13"
+    pip:
+      platform: win_amd64
+      implementation: cp
+      python_version: '3.13'
+      abi: cp313
   - id: windows-py314
     marker: sys_platform == "win32" and python_version == "3.14"
     pip:
@@ -585,6 +627,13 @@ surfaces:
       implementation: cp
       python_version: '3.14'
       abi: cp314
+  - id: macos-py310
+    marker: sys_platform == "darwin" and python_version == "3.10"
+    pip:
+      platform: macosx_11_0_x86_64
+      implementation: cp
+      python_version: '3.10'
+      abi: cp310
   - id: macos-py311
     marker: sys_platform == "darwin" and python_version == "3.11"
     pip:
@@ -592,6 +641,20 @@ surfaces:
       implementation: cp
       python_version: '3.11'
       abi: cp311
+  - id: macos-py312
+    marker: sys_platform == "darwin" and python_version == "3.12"
+    pip:
+      platform: macosx_11_0_x86_64
+      implementation: cp
+      python_version: '3.12'
+      abi: cp312
+  - id: macos-py313
+    marker: sys_platform == "darwin" and python_version == "3.13"
+    pip:
+      platform: macosx_11_0_x86_64
+      implementation: cp
+      python_version: '3.13'
+      abi: cp313
   - id: macos-py314
     marker: sys_platform == "darwin" and python_version == "3.14"
     pip:
@@ -617,6 +680,13 @@ surfaces:
   - requirements.in
   - devcovenant/runtime-requirements.lock
   hash_targets:
+  - id: linux-py310
+    marker: sys_platform == "linux" and python_version == "3.10"
+    pip:
+      platform: manylinux2014_x86_64
+      implementation: cp
+      python_version: '3.10'
+      abi: cp310
   - id: linux-py311
     marker: sys_platform == "linux" and python_version == "3.11"
     pip:
@@ -624,6 +694,20 @@ surfaces:
       implementation: cp
       python_version: '3.11'
       abi: cp311
+  - id: linux-py312
+    marker: sys_platform == "linux" and python_version == "3.12"
+    pip:
+      platform: manylinux2014_x86_64
+      implementation: cp
+      python_version: '3.12'
+      abi: cp312
+  - id: linux-py313
+    marker: sys_platform == "linux" and python_version == "3.13"
+    pip:
+      platform: manylinux2014_x86_64
+      implementation: cp
+      python_version: '3.13'
+      abi: cp313
   - id: linux-py314
     marker: sys_platform == "linux" and python_version == "3.14"
     pip:
@@ -631,6 +715,13 @@ surfaces:
       implementation: cp
       python_version: '3.14'
       abi: cp314
+  - id: windows-py310
+    marker: sys_platform == "win32" and python_version == "3.10"
+    pip:
+      platform: win_amd64
+      implementation: cp
+      python_version: '3.10'
+      abi: cp310
   - id: windows-py311
     marker: sys_platform == "win32" and python_version == "3.11"
     pip:
@@ -638,6 +729,20 @@ surfaces:
       implementation: cp
       python_version: '3.11'
       abi: cp311
+  - id: windows-py312
+    marker: sys_platform == "win32" and python_version == "3.12"
+    pip:
+      platform: win_amd64
+      implementation: cp
+      python_version: '3.12'
+      abi: cp312
+  - id: windows-py313
+    marker: sys_platform == "win32" and python_version == "3.13"
+    pip:
+      platform: win_amd64
+      implementation: cp
+      python_version: '3.13'
+      abi: cp313
   - id: windows-py314
     marker: sys_platform == "win32" and python_version == "3.14"
     pip:
@@ -645,6 +750,13 @@ surfaces:
       implementation: cp
       python_version: '3.14'
       abi: cp314
+  - id: macos-py310
+    marker: sys_platform == "darwin" and python_version == "3.10"
+    pip:
+      platform: macosx_11_0_x86_64
+      implementation: cp
+      python_version: '3.10'
+      abi: cp310
   - id: macos-py311
     marker: sys_platform == "darwin" and python_version == "3.11"
     pip:
@@ -652,6 +764,20 @@ surfaces:
       implementation: cp
       python_version: '3.11'
       abi: cp311
+  - id: macos-py312
+    marker: sys_platform == "darwin" and python_version == "3.12"
+    pip:
+      platform: macosx_11_0_x86_64
+      implementation: cp
+      python_version: '3.12'
+      abi: cp312
+  - id: macos-py313
+    marker: sys_platform == "darwin" and python_version == "3.13"
+    pip:
+      platform: macosx_11_0_x86_64
+      implementation: cp
+      python_version: '3.13'
+      abi: cp313
   - id: macos-py314
     marker: sys_platform == "darwin" and python_version == "3.14"
     pip:
@@ -675,6 +801,13 @@ surfaces:
   - pyproject.toml
   - '{{ PROJECT_NAME_PATH }}'
   hash_targets:
+  - id: linux-py310
+    marker: sys_platform == "linux" and python_version == "3.10"
+    pip:
+      platform: manylinux2014_x86_64
+      implementation: cp
+      python_version: '3.10'
+      abi: cp310
   - id: linux-py311
     marker: sys_platform == "linux" and python_version == "3.11"
     pip:
@@ -682,6 +815,20 @@ surfaces:
       implementation: cp
       python_version: '3.11'
       abi: cp311
+  - id: linux-py312
+    marker: sys_platform == "linux" and python_version == "3.12"
+    pip:
+      platform: manylinux2014_x86_64
+      implementation: cp
+      python_version: '3.12'
+      abi: cp312
+  - id: linux-py313
+    marker: sys_platform == "linux" and python_version == "3.13"
+    pip:
+      platform: manylinux2014_x86_64
+      implementation: cp
+      python_version: '3.13'
+      abi: cp313
   - id: linux-py314
     marker: sys_platform == "linux" and python_version == "3.14"
     pip:
@@ -689,6 +836,13 @@ surfaces:
       implementation: cp
       python_version: '3.14'
       abi: cp314
+  - id: windows-py310
+    marker: sys_platform == "win32" and python_version == "3.10"
+    pip:
+      platform: win_amd64
+      implementation: cp
+      python_version: '3.10'
+      abi: cp310
   - id: windows-py311
     marker: sys_platform == "win32" and python_version == "3.11"
     pip:
@@ -696,6 +850,20 @@ surfaces:
       implementation: cp
       python_version: '3.11'
       abi: cp311
+  - id: windows-py312
+    marker: sys_platform == "win32" and python_version == "3.12"
+    pip:
+      platform: win_amd64
+      implementation: cp
+      python_version: '3.12'
+      abi: cp312
+  - id: windows-py313
+    marker: sys_platform == "win32" and python_version == "3.13"
+    pip:
+      platform: win_amd64
+      implementation: cp
+      python_version: '3.13'
+      abi: cp313
   - id: windows-py314
     marker: sys_platform == "win32" and python_version == "3.14"
     pip:
@@ -703,6 +871,13 @@ surfaces:
       implementation: cp
       python_version: '3.14'
       abi: cp314
+  - id: macos-py310
+    marker: sys_platform == "darwin" and python_version == "3.10"
+    pip:
+      platform: macosx_11_0_x86_64
+      implementation: cp
+      python_version: '3.10'
+      abi: cp310
   - id: macos-py311
     marker: sys_platform == "darwin" and python_version == "3.11"
     pip:
@@ -710,6 +885,20 @@ surfaces:
       implementation: cp
       python_version: '3.11'
       abi: cp311
+  - id: macos-py312
+    marker: sys_platform == "darwin" and python_version == "3.12"
+    pip:
+      platform: macosx_11_0_x86_64
+      implementation: cp
+      python_version: '3.12'
+      abi: cp312
+  - id: macos-py313
+    marker: sys_platform == "darwin" and python_version == "3.13"
+    pip:
+      platform: macosx_11_0_x86_64
+      implementation: cp
+      python_version: '3.13'
+      abi: cp313
   - id: macos-py314
     marker: sys_platform == "darwin" and python_version == "3.14"
     pip:

@@ -2,7 +2,9 @@
 
 from __future__ import annotations
 
+import email
 import hashlib
+import importlib.metadata as importlib_metadata
 import importlib.util
 import json
 import os
@@ -11,10 +13,12 @@ import shutil
 import subprocess  # nosec B404
 import sys
 import tempfile
+import zipfile
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Callable, Dict, Iterable, List, Mapping, Sequence, Tuple
 
+from packaging.markers import default_environment
 from packaging.requirements import InvalidRequirement, Requirement
 
 from devcovenant.builtin.policies.dependency_management import (
@@ -405,6 +409,19 @@ def _build_hashed_requirement_block(
     return block
 
 
+def _build_plain_requirement_block(
+    requirement_line: str,
+    *,
+    source_display_name: str = "requirements.in",
+) -> List[str]:
+    """Return one deterministic non-hash requirement block."""
+
+    return [
+        requirement_line,
+        f"    # via -r {source_display_name}",
+    ]
+
+
 def _run_pip_compile(
     repo_root: Path,
     requirements_in: Path,
@@ -464,18 +481,19 @@ def _refresh_python_surface_lock(
         if lock_path.exists()
         else LockFilePieces([])
     )
-    if surface.generate_hashes:
-        if not surface.hash_targets:
-            raise RuntimeError(
-                "Hash-locked dependency surface "
-                f"`{surface.surface_id}` requires configured hash_targets."
-            )
-        compiled = _compile_hash_locked_surface(
+    if surface.hash_targets:
+        compiled = _compile_target_surface_lock(
             repo_root,
             surface_id=surface.surface_id,
             dependency_files=surface.direct_dependency_files,
             hash_targets=surface.hash_targets,
             source_display_name=input_display_name,
+            generate_hashes=surface.generate_hashes,
+        )
+    elif surface.generate_hashes:
+        raise RuntimeError(
+            "Hash-locked dependency surface "
+            f"`{surface.surface_id}` requires configured hash_targets."
         )
     elif len(surface.direct_dependency_files) == 1 and (
         Path(surface.direct_dependency_files[0]).name == "requirements.in"
@@ -634,17 +652,328 @@ def _surface_dependency_strings(
     """Collect dependency strings from one surface's direct inputs."""
 
     dependency_lines: List[str] = []
+    seen_paths: set[Path] = set()
     for raw_path in dependency_files:
         path_token = _normalize_repo_relative_path_token(raw_path)
         if not path_token:
             continue
         manifest_path = repo_root / path_token
         dependency_lines.extend(
-            dependency_management._direct_dependency_strings_from_file(
-                manifest_path
+            _collect_dependency_strings_from_manifest(
+                repo_root,
+                manifest_path,
+                seen_paths=seen_paths,
             )
         )
     return dependency_lines
+
+
+def _collect_dependency_strings_from_manifest(
+    repo_root: Path,
+    manifest_path: Path,
+    *,
+    seen_paths: set[Path],
+) -> List[str]:
+    """Collect one manifest's direct dependency strings with `-r` expansion."""
+
+    resolved_path = manifest_path.resolve()
+    if resolved_path in seen_paths:
+        return []
+    seen_paths.add(resolved_path)
+    if not manifest_path.exists():
+        raise RuntimeError(
+            "dependency-management input is missing: "
+            f"{manifest_path.relative_to(repo_root)}"
+        )
+    collected: List[str] = []
+    entries = dependency_management._direct_dependency_strings_from_file(
+        manifest_path
+    )
+    for entry in entries:
+        include_target = _extract_requirements_include_target(str(entry))
+        if include_target is None:
+            collected.append(str(entry).strip())
+            continue
+        include_path = (manifest_path.parent / include_target).resolve()
+        collected.extend(
+            _collect_dependency_strings_from_manifest(
+                repo_root,
+                include_path,
+                seen_paths=seen_paths,
+            )
+        )
+    return collected
+
+
+def _extract_requirements_include_target(raw_line: str) -> str | None:
+    """Return the referenced path for supported requirements includes."""
+
+    stripped = str(raw_line).strip()
+    if not stripped:
+        return None
+    for prefix in ("-r", "--requirement"):
+        if stripped == prefix:
+            return None
+        if stripped.startswith(prefix + "="):
+            return stripped.split("=", 1)[1].strip()
+        if stripped.startswith(prefix + " "):
+            return stripped.split(None, 1)[1].strip()
+        if prefix == "-r" and stripped.startswith("-r") and len(stripped) > 2:
+            return stripped[2:].strip()
+    return None
+
+
+def _canonical_target_python_version(
+    target: dependency_management.DependencySurfaceTarget,
+) -> str:
+    """Return one stable dotted Python version string for a target."""
+
+    raw_value = (
+        target.pip.get("python-version")
+        or target.pip.get("python_version")
+        or ""
+    )
+    text = str(raw_value).strip()
+    abi = str(target.pip.get("abi", "")).strip().lower()
+    abi_match = re.fullmatch(r"cp(?P<major>\d)(?P<minor>\d{2})", abi)
+    if abi_match is None:
+        return text
+    abi_version = f"{abi_match.group('major')}.{abi_match.group('minor')}"
+    if not text:
+        return abi_version
+    if text != abi_version and text.startswith(f"{abi_match.group('major')}."):
+        return abi_version
+    return text
+
+
+def _canonicalize_requirement_string(requirement: Requirement) -> str:
+    """Return one marker-free requirement string for resolver input."""
+
+    extras = (
+        f"[{','.join(sorted(requirement.extras))}]"
+        if requirement.extras
+        else ""
+    )
+    if requirement.url:
+        return f"{requirement.name}{extras} @ {requirement.url}"
+    specifier = str(requirement.specifier)
+    return f"{requirement.name}{extras}{specifier}"
+
+
+def _target_marker_environment(
+    target: dependency_management.DependencySurfaceTarget,
+) -> Dict[str, str]:
+    """Build one PEP 508 marker environment for a configured target."""
+
+    environment = default_environment()
+    normalized_pip = {
+        str(key).strip().replace("_", "-"): str(value).strip()
+        for key, value in target.pip.items()
+        if str(key).strip() and str(value).strip()
+    }
+    python_version = _canonical_target_python_version(
+        target
+    ) or environment.get(
+        "python_version",
+        "3.11",
+    )
+    environment["python_version"] = python_version
+    environment["python_full_version"] = (
+        python_version
+        if python_version.count(".") >= 2
+        else f"{python_version}.0"
+    )
+    implementation = normalized_pip.get("implementation", "").lower()
+    if implementation == "cp":
+        environment["implementation_name"] = "cpython"
+        environment["platform_python_implementation"] = "CPython"
+    elif implementation:
+        environment["implementation_name"] = implementation
+        environment["platform_python_implementation"] = implementation.upper()
+    platform_token = normalized_pip.get("platform", "")
+    if platform_token.startswith("manylinux") or "linux" in platform_token:
+        environment["sys_platform"] = "linux"
+        environment["os_name"] = "posix"
+        environment["platform_system"] = "Linux"
+        environment["platform_machine"] = platform_token.rsplit("_", 1)[-1]
+    elif platform_token.startswith("win"):
+        environment["sys_platform"] = "win32"
+        environment["os_name"] = "nt"
+        environment["platform_system"] = "Windows"
+        machine = platform_token.split("_", 1)[-1]
+        environment["platform_machine"] = (
+            "AMD64" if machine.lower() == "amd64" else machine
+        )
+    elif platform_token.startswith("macosx"):
+        environment["sys_platform"] = "darwin"
+        environment["os_name"] = "posix"
+        environment["platform_system"] = "Darwin"
+        environment["platform_machine"] = platform_token.rsplit("_", 1)[-1]
+    environment["extra"] = ""
+    return {str(key): str(value) for key, value in environment.items()}
+
+
+def _requirement_is_active_for_target(
+    requirement: Requirement,
+    *,
+    target_environment: Mapping[str, str],
+    selected_extras: Iterable[str] = (),
+) -> bool:
+    """Return True when one requirement applies to the configured target."""
+
+    if requirement.marker is None:
+        return True
+    environment = dict(target_environment)
+    environment["extra"] = ""
+    if requirement.marker.evaluate(environment):
+        return True
+    for extra in selected_extras:
+        environment = dict(target_environment)
+        environment["extra"] = str(extra)
+        if requirement.marker.evaluate(environment):
+            return True
+    return False
+
+
+def _iter_active_target_requirements(
+    requirement_lines: Sequence[str],
+    *,
+    target_environment: Mapping[str, str],
+    selected_extras: Iterable[str] = (),
+) -> List[Requirement]:
+    """Return active requirements after evaluating target markers."""
+
+    active: List[Requirement] = []
+    for raw_line in requirement_lines:
+        stripped = str(raw_line).strip()
+        if not stripped or stripped.startswith("#"):
+            continue
+        if _is_python_lock_option_line(stripped):
+            continue
+        try:
+            requirement = Requirement(stripped)
+        except InvalidRequirement:
+            continue
+        if _requirement_is_active_for_target(
+            requirement,
+            target_environment=target_environment,
+            selected_extras=selected_extras,
+        ):
+            active.append(requirement)
+    return active
+
+
+def _record_selected_extras(
+    selected_extras: Dict[str, set[str]],
+    requirement: Requirement,
+) -> bool:
+    """Merge selected extras for one requirement and report growth."""
+
+    normalized_name = dependency_management._normalize_distribution_name(
+        requirement.name
+    )
+    if not requirement.extras:
+        selected_extras.setdefault(normalized_name, set())
+        return False
+    current = selected_extras.setdefault(normalized_name, set())
+    before = set(current)
+    current.update(str(extra) for extra in requirement.extras)
+    return current != before
+
+
+def _resolved_requirement_satisfies(
+    requirement: Requirement,
+    resolved_entries: Mapping[str, Mapping[str, object]],
+) -> bool:
+    """Return True when one resolved entry satisfies a requirement."""
+
+    normalized_name = dependency_management._normalize_distribution_name(
+        requirement.name
+    )
+    entry = resolved_entries.get(normalized_name)
+    if entry is None:
+        return False
+    metadata = entry.get("metadata", {})
+    if not isinstance(metadata, Mapping):
+        return False
+    version = str(metadata.get("version", "")).strip()
+    if not version:
+        return False
+    if not requirement.specifier:
+        return True
+    return requirement.specifier.contains(version, prereleases=True)
+
+
+def _merge_target_report_entries(
+    resolved_entries: Dict[str, Dict[str, object]],
+    installs: Sequence[Mapping[str, object]],
+) -> List[str]:
+    """Merge one pip report payload into the resolved target closure."""
+
+    added_names: List[str] = []
+    for item in installs:
+        if not isinstance(item, Mapping):
+            continue
+        metadata = item.get("metadata", {})
+        if not isinstance(metadata, Mapping):
+            continue
+        name = str(metadata.get("name", "")).strip()
+        version = str(metadata.get("version", "")).strip()
+        if not name or not version:
+            continue
+        normalized_name = dependency_management._normalize_distribution_name(
+            name
+        )
+        existing = resolved_entries.get(normalized_name)
+        if existing is None:
+            resolved_entries[normalized_name] = dict(item)
+            added_names.append(normalized_name)
+            continue
+        existing_metadata = existing.get("metadata", {})
+        existing_version = (
+            str(existing_metadata.get("version", "")).strip()
+            if isinstance(existing_metadata, Mapping)
+            else ""
+        )
+        if existing_version and existing_version != version:
+            raise RuntimeError(
+                "Target dependency closure resolved conflicting versions for "
+                f"`{name}`: `{existing_version}` vs `{version}`."
+            )
+    return added_names
+
+
+def _target_report_command(
+    target: dependency_management.DependencySurfaceTarget,
+    *,
+    report_path: Path,
+    requirements_path: Path,
+) -> List[str]:
+    """Return one pip dry-run report command for a target."""
+
+    command = [
+        sys.executable,
+        "-m",
+        "pip",
+        "install",
+        "--dry-run",
+        "--ignore-installed",
+        "--report",
+        str(report_path),
+        "--only-binary=:all:",
+    ]
+    for key, value in target.pip.items():
+        normalized_key = str(key).strip().replace("_", "-")
+        normalized_value = (
+            _canonical_target_python_version(target)
+            if normalized_key == "python-version"
+            else str(value).strip()
+        )
+        if not normalized_key or not normalized_value:
+            continue
+        command.extend([f"--{normalized_key}", normalized_value])
+    command.extend(["-r", str(requirements_path)])
+    return command
 
 
 def _run_pip_hash_target_report(
@@ -664,24 +993,11 @@ def _run_pip_hash_target_report(
             "\n".join(dependency_lines).rstrip() + "\n",
             encoding="utf-8",
         )
-        command = [
-            sys.executable,
-            "-m",
-            "pip",
-            "install",
-            "--dry-run",
-            "--ignore-installed",
-            "--report",
-            str(tmp_report),
-            "--only-binary=:all:",
-        ]
-        for key, value in target.pip.items():
-            normalized_key = str(key).strip().replace("_", "-")
-            normalized_value = str(value).strip()
-            if not normalized_key or not normalized_value:
-                continue
-            command.extend([f"--{normalized_key}", normalized_value])
-        command.extend(["-r", str(tmp_in)])
+        command = _target_report_command(
+            target,
+            report_path=tmp_report,
+            requirements_path=tmp_in,
+        )
         env = dict(os.environ)
         env["PIP_DISABLE_PIP_VERSION_CHECK"] = "1"
         # Reviewed tokenized local command execution.
@@ -703,13 +1019,307 @@ def _run_pip_hash_target_report(
     return installs
 
 
-def _merge_hash_target_reports(
+def _read_distribution_requirements_from_wheel(
+    wheel_path: Path,
+) -> List[str]:
+    """Return `Requires-Dist` lines from one wheel's METADATA payload."""
+
+    with zipfile.ZipFile(wheel_path) as archive:
+        metadata_members = [
+            member
+            for member in archive.namelist()
+            if member.endswith(".dist-info/METADATA")
+        ]
+        if not metadata_members:
+            raise RuntimeError(
+                "Downloaded wheel did not contain a dist-info METADATA file: "
+                f"{wheel_path.name}"
+            )
+        payload = archive.read(metadata_members[0]).decode(
+            "utf-8",
+            errors="replace",
+        )
+    message = email.message_from_string(payload)
+    values = message.get_all("Requires-Dist")
+    if values is None:
+        return []
+    return [str(value).strip() for value in values if str(value).strip()]
+
+
+def _load_target_distribution_requirements(
+    repo_root: Path,
+    *,
+    target: dependency_management.DependencySurfaceTarget,
+    distribution_name: str,
+    version: str,
+    metadata_cache: Dict[Tuple[str, str, str], List[str]],
+) -> List[str]:
+    """Download one target wheel and return its active requirement lines."""
+
+    normalized_name = dependency_management._normalize_distribution_name(
+        distribution_name
+    )
+    cache_key = (target.target_id, normalized_name, str(version).strip())
+    cached = metadata_cache.get(cache_key)
+    if cached is not None:
+        return list(cached)
+    try:
+        installed = importlib_metadata.distribution(distribution_name)
+    except importlib_metadata.PackageNotFoundError:
+        installed = None
+    if (
+        installed is not None
+        and str(installed.version).strip() == str(version).strip()
+    ):
+        requirements = [
+            str(value).strip()
+            for value in (installed.requires or [])
+            if str(value).strip()
+        ]
+        metadata_cache[cache_key] = list(requirements)
+        return list(requirements)
+    with tempfile.TemporaryDirectory() as tmpdir:
+        download_dir = Path(tmpdir)
+        command = [
+            sys.executable,
+            "-m",
+            "pip",
+            "download",
+            "--no-deps",
+            "--only-binary=:all:",
+            "--dest",
+            str(download_dir),
+        ]
+        for key, value in target.pip.items():
+            normalized_key = str(key).strip().replace("_", "-")
+            normalized_value = (
+                _canonical_target_python_version(target)
+                if normalized_key == "python-version"
+                else str(value).strip()
+            )
+            if not normalized_key or not normalized_value:
+                continue
+            command.extend([f"--{normalized_key}", normalized_value])
+        command.append(f"{distribution_name}=={version}")
+        _run_command(repo_root, command)
+        files = [path for path in download_dir.iterdir() if path.is_file()]
+        if len(files) != 1:
+            raise RuntimeError(
+                "Expected exactly one downloaded wheel for target metadata "
+                f"inspection of `{distribution_name}=={version}`."
+            )
+        wheel_path = files[0]
+        if wheel_path.suffix != ".whl":
+            raise RuntimeError(
+                "Target-aware dependency closure requires wheel metadata for "
+                f"`{distribution_name}=={version}`, but pip downloaded "
+                f"`{wheel_path.name}`."
+            )
+        requirements = _read_distribution_requirements_from_wheel(wheel_path)
+    metadata_cache[cache_key] = list(requirements)
+    return list(requirements)
+
+
+def _resolve_complete_target_report(
+    repo_root: Path,
+    *,
+    dependency_lines: Sequence[str],
+    target: dependency_management.DependencySurfaceTarget,
+) -> List[Dict[str, object]]:
+    """Resolve one target closure completely, independent of the host."""
+
+    if not dependency_lines:
+        return []
+    target_environment = _target_marker_environment(target)
+    resolved_entries: Dict[str, Dict[str, object]] = {}
+    selected_extras: Dict[str, set[str]] = {}
+    scanned_extras: Dict[str, set[str]] = {}
+    metadata_cache: Dict[Tuple[str, str, str], List[str]] = {}
+    top_level_requirements = _iter_active_target_requirements(
+        dependency_lines,
+        target_environment=target_environment,
+    )
+    for requirement in top_level_requirements:
+        _record_selected_extras(selected_extras, requirement)
+    scan_queue = set(
+        _merge_target_report_entries(
+            resolved_entries,
+            _run_pip_hash_target_report(
+                repo_root,
+                dependency_lines=dependency_lines,
+                target=target,
+            ),
+        )
+    )
+    while True:
+        missing_requirements: List[Requirement] = []
+        for requirement in top_level_requirements:
+            if not _resolved_requirement_satisfies(
+                requirement,
+                resolved_entries,
+            ):
+                missing_requirements.append(requirement)
+        packages_to_scan = sorted(scan_queue)
+        scan_queue.clear()
+        for normalized_name in packages_to_scan:
+            extras = set(selected_extras.get(normalized_name, set()))
+            if (
+                normalized_name in scanned_extras
+                and extras == scanned_extras[normalized_name]
+            ):
+                continue
+            entry = resolved_entries[normalized_name]
+            metadata = entry.get("metadata", {})
+            if not isinstance(metadata, Mapping):
+                continue
+            distribution_name = str(metadata.get("name", "")).strip()
+            version = str(metadata.get("version", "")).strip()
+            if not distribution_name or not version:
+                continue
+            requirement_lines = _load_target_distribution_requirements(
+                repo_root,
+                target=target,
+                distribution_name=distribution_name,
+                version=version,
+                metadata_cache=metadata_cache,
+            )
+            active_requirements = _iter_active_target_requirements(
+                requirement_lines,
+                target_environment=target_environment,
+                selected_extras=extras,
+            )
+            scanned_extras[normalized_name] = set(extras)
+            for requirement in active_requirements:
+                dependency_name = (
+                    dependency_management._normalize_distribution_name(
+                        requirement.name
+                    )
+                )
+                extras_grew = _record_selected_extras(
+                    selected_extras,
+                    requirement,
+                )
+                if dependency_name in resolved_entries and extras_grew:
+                    scan_queue.add(dependency_name)
+                if not _resolved_requirement_satisfies(
+                    requirement,
+                    resolved_entries,
+                ):
+                    missing_requirements.append(requirement)
+        pending_lines = sorted(
+            {
+                _canonicalize_requirement_string(requirement)
+                for requirement in missing_requirements
+            }
+        )
+        if not pending_lines:
+            break
+        scan_queue.update(
+            _merge_target_report_entries(
+                resolved_entries,
+                _run_pip_hash_target_report(
+                    repo_root,
+                    dependency_lines=pending_lines,
+                    target=target,
+                ),
+            )
+        )
+    reachable_names = _collect_reachable_target_entries(
+        repo_root,
+        resolved_entries=resolved_entries,
+        top_level_requirements=top_level_requirements,
+        target=target,
+        target_environment=target_environment,
+        selected_extras=selected_extras,
+        metadata_cache=metadata_cache,
+    )
+    return [resolved_entries[name] for name in sorted(reachable_names)]
+
+
+def _collect_reachable_target_entries(
+    repo_root: Path,
+    *,
+    resolved_entries: Mapping[str, Mapping[str, object]],
+    top_level_requirements: Sequence[Requirement],
+    target: dependency_management.DependencySurfaceTarget,
+    target_environment: Mapping[str, str],
+    selected_extras: Mapping[str, set[str]],
+    metadata_cache: Dict[Tuple[str, str, str], List[str]],
+) -> set[str]:
+    """Return only packages reachable through active target requirements."""
+
+    reachable: set[str] = set()
+    scan_queue: List[str] = []
+    for requirement in top_level_requirements:
+        if not _resolved_requirement_satisfies(requirement, resolved_entries):
+            raise RuntimeError(
+                "Target dependency closure did not resolve the active "
+                f"requirement `{requirement}`."
+            )
+        normalized_name = dependency_management._normalize_distribution_name(
+            requirement.name
+        )
+        if normalized_name not in reachable:
+            reachable.add(normalized_name)
+            scan_queue.append(normalized_name)
+    scanned_states: set[Tuple[str, Tuple[str, ...]]] = set()
+    while scan_queue:
+        normalized_name = scan_queue.pop(0)
+        entry = resolved_entries.get(normalized_name)
+        if entry is None:
+            continue
+        extras = tuple(sorted(selected_extras.get(normalized_name, set())))
+        state = (normalized_name, extras)
+        if state in scanned_states:
+            continue
+        scanned_states.add(state)
+        metadata = entry.get("metadata", {})
+        if not isinstance(metadata, Mapping):
+            continue
+        distribution_name = str(metadata.get("name", "")).strip()
+        version = str(metadata.get("version", "")).strip()
+        if not distribution_name or not version:
+            continue
+        requirement_lines = _load_target_distribution_requirements(
+            repo_root,
+            target=target,
+            distribution_name=distribution_name,
+            version=version,
+            metadata_cache=metadata_cache,
+        )
+        active_requirements = _iter_active_target_requirements(
+            requirement_lines,
+            target_environment=target_environment,
+            selected_extras=extras,
+        )
+        for requirement in active_requirements:
+            dependency_name = (
+                dependency_management._normalize_distribution_name(
+                    requirement.name
+                )
+            )
+            if not _resolved_requirement_satisfies(
+                requirement,
+                resolved_entries,
+            ):
+                raise RuntimeError(
+                    "Target dependency closure is missing reachable "
+                    f"requirement `{requirement}`."
+                )
+            if dependency_name not in reachable:
+                reachable.add(dependency_name)
+                scan_queue.append(dependency_name)
+    return reachable
+
+
+def _merge_target_reports(
     *,
     targets: Sequence[dependency_management.DependencySurfaceTarget],
     report_entries: Mapping[str, Sequence[Mapping[str, object]]],
     source_display_name: str,
+    generate_hashes: bool,
 ) -> List[str]:
-    """Build one hash-locked requirements body from target reports."""
+    """Build one deterministic requirements body from target reports."""
 
     grouped: Dict[str, Dict[str, Dict[str, object]]] = {}
     ordered_target_ids = [target.target_id for target in targets]
@@ -776,28 +1386,37 @@ def _merge_hash_target_reports(
                     if target_id in target_ids
                 ]
                 requirement_line += " ; " + " or ".join(marker_parts)
-            lines.extend(
-                _build_hashed_requirement_block(
-                    requirement_line,
-                    sorted(entry["hashes"]),
-                    source_display_name=source_display_name,
+            if generate_hashes:
+                lines.extend(
+                    _build_hashed_requirement_block(
+                        requirement_line,
+                        sorted(entry["hashes"]),
+                        source_display_name=source_display_name,
+                    )
                 )
-            )
+            else:
+                lines.extend(
+                    _build_plain_requirement_block(
+                        requirement_line,
+                        source_display_name=source_display_name,
+                    )
+                )
             lines.append("")
     if lines and lines[-1] == "":
         lines.pop()
     return lines
 
 
-def _compile_hash_locked_surface(
+def _compile_target_surface_lock(
     repo_root: Path,
     *,
     surface_id: str,
     dependency_files: Sequence[str],
     hash_targets: Sequence[dependency_management.DependencySurfaceTarget],
     source_display_name: str,
+    generate_hashes: bool,
 ) -> LockFilePieces:
-    """Resolve a hash-locked requirements body across configured targets."""
+    """Resolve one deterministic lock body across configured targets."""
 
     del surface_id
     dependency_lines = _surface_dependency_strings(
@@ -808,16 +1427,17 @@ def _compile_hash_locked_surface(
         return LockFilePieces([])
     reports: Dict[str, Sequence[Mapping[str, object]]] = {}
     for target in hash_targets:
-        reports[target.target_id] = _run_pip_hash_target_report(
+        reports[target.target_id] = _resolve_complete_target_report(
             repo_root,
             dependency_lines=dependency_lines,
             target=target,
         )
     return LockFilePieces(
-        _merge_hash_target_reports(
+        _merge_target_reports(
             targets=hash_targets,
             report_entries=reports,
             source_display_name=source_display_name,
+            generate_hashes=generate_hashes,
         )
     )
 

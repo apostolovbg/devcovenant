@@ -153,6 +153,10 @@ For the seeded Python stack, `root_workspace` starts from
 `dependency-management refresh-all` then writes the resolved
 `requirements.lock` and the matching license artifacts for that surface.
 Resolved locks are policy-owned outputs, not starter profile assets.
+For the builtin Python surfaces, the default target matrix covers supported
+CPython 3.10 through 3.14 on Linux, Windows, and macOS.
+Normal non-hash mode and hash mode both resolve against that same declared
+matrix; hash mode only adds hashes to the emitted all-target result.
 
 If a repository overrides one of those surfaces, do it in the profile or
 config layer for that surface id instead of inventing a second metadata shape.

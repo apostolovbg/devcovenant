@@ -201,6 +201,9 @@ In the default Python stack, `root_workspace` starts from `requirements.in`.
 That input inherits the shipped `devcovenant/runtime-requirements.lock`, and
 `dependency-management` then writes the real `requirements.lock` during
 `deploy`/`refresh`.
+The builtin Python surfaces resolve against the supported CPython 3.10 through
+3.14 matrix on Linux, Windows, and macOS so workspace locks do not depend on
+the machine that happened to run refresh.
 
 The shipped defaults keep `root_workspace` and `package_runtime` in normal
 non-hash mode, while `devcovenant_runtime` is declared hash-locked in the

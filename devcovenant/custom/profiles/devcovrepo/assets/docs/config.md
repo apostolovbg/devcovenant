@@ -203,6 +203,8 @@ dependency setup, keep that in the relevant profile or explicit local
 override instead of changing the builtin base.
 If a repository needs to change dependency lock mode, do that by overriding the
 relevant `dependency-management.surfaces` entry.
+Those surface entries can keep `generate_hashes` off while still using the
+same declared target matrix that hash mode uses later.
 For example, a repo-specific custom profile may own workspace dependency
 surfaces while an optional GitHub-specific custom profile adds extra CI
 fragments.
