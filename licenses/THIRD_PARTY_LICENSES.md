@@ -16,6 +16,7 @@ texts stored under `licenses/`.
 - `packaging==26.0`: `licenses/packaging-26.0.txt`
 - `pip-audit==2.10.0`: `licenses/pip-audit-2.10.0.txt`
 - `pip-tools==7.5.3`: `licenses/pip-tools-7.5.3.txt`
+- `pipx==1.11.1`: `licenses/pipx-1.11.1.txt`
 - `pre-commit==4.5.1`: `licenses/pre-commit-4.5.1.txt`
 - `pytest==9.0.2`: `licenses/pytest-9.0.2.txt`
 - `PyYAML==6.0.3`: `licenses/PyYAML-6.0.3.txt`

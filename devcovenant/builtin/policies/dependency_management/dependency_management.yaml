@@ -3,60 +3,33 @@ text: |
   Manage dependency-maintenance artifacts as one coherent policy surface.
   When dependency inputs in this repository change, lockfiles and repository
   compliance artifacts must stay synchronized together.
-  Dependency input modeling supports role-based taxonomy for mixed ecosystems:
+  Artifact ownership is declared through structured `surfaces` metadata.
+  Each surface defines one lock/report/license bundle with its own lock file,
+  direct dependency inputs, dependency selectors, license report path,
+  license directory, and optional hash-lock target matrix.
+  Surface selectors support role-based taxonomy for mixed ecosystems:
   `intent`, `resolved`, and `package_manifest`.
-  Role selectors are metadata-driven via
-  (`dependency_role_files`, `dependency_role_globs`,
-  `dependency_role_dirs`) using `role=>selector` tokens.
-  Dependency selectors are metadata-driven
-  (`dependency_files`, `dependency_globs`, `dependency_dirs`) and may include
-  both manifest files and lock/resolution files so mixed-language repositories
-  can define their own layout. Every dependency change must keep the
-  configured report file (`third_party_file`) and configured license directory
-  (`licenses_dir`) synchronized, including the configured `report_heading`.
+  Each surface may declare nested selector keys:
+  `dependency_files`, `dependency_globs`, `dependency_dirs`,
+  `dependency_role_files`, `dependency_role_globs`,
+  `dependency_role_dirs`.
+  Surface selectors decide when checks and license/report refresh must react.
+  Direct dependency inputs decide when a lock refresh must recompile.
   Policy checks remain read-only. Autofixers may invoke declared policy
   runtime actions, and explicit policy-born CLI commands may invoke those same
   runtime actions manually. Remediation messaging may differ when autofix is
-  enabled versus disabled. For Python repositories, hash-locked
-  `requirements.lock` generation is opt-in through
-  `python_lock_generate_hashes`. When enabled, exact marker-gated direct pins
-  must keep real hashes as well; the runtime resolves those hashes explicitly
-  or fails loudly instead of writing a partial lock. Repositories that need
-  one hash-locked file to work across supported platforms or Python versions
-  should declare exact marker pins for those cross-environment dependencies in
-  the intent manifest so the runtime can materialize them even when the local
-  compile host would otherwise omit them. Repositories may also declare one
-  auxiliary Python lock/license surface with
-  `auxiliary_lock_file`, `auxiliary_direct_dependency_files`,
-  `auxiliary_third_party_file`, and `auxiliary_licenses_dir`. That extra
-  surface is useful when a repo ships a package runtime/bootstrap lock that
-  must stay separate from the repo's own development lock. Artifact refresh
-  remains deterministic/idempotent.
+  enabled versus disabled. When one Python surface enables
+  `generate_hashes`, DevCovenant resolves the full configured target closure
+  from `hash_targets` and writes an all-target hash lock or fails explicitly.
+  Hash mode does not patch a host-local compile result or depend on
+  GitHub-specific dependency logic. Artifact refresh remains
+  deterministic/idempotent.
 metadata:
   id: dependency-management
   severity: error
   auto_fix: 'true'
   enforcement: active
-  dependency_files: []
-  dependency_globs: []
-  dependency_dirs: []
-  dependency_roles:
-    - intent
-    - resolved
-    - package_manifest
-  dependency_role_files: []
-  dependency_role_globs: []
-  dependency_role_dirs: []
-  third_party_file: ''
-  licenses_dir: ''
-  report_heading: ''
-  python_lock_generate_hashes: 'false'
-  auxiliary_lock_file: ''
-  auxiliary_direct_dependency_files: []
-  auxiliary_third_party_file: ''
-  auxiliary_licenses_dir: ''
-  auxiliary_report_heading: ''
-  auxiliary_lock_generate_hashes: 'false'
+  surfaces: []
   selector_roles: dependency
 runtime_actions:
   - id: refresh-all

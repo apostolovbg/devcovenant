@@ -46,11 +46,56 @@ class PolicyDescriptor:
 
 def parse_metadata_block(
     block: str,
-) -> Tuple[List[str], Dict[str, List[str]]]:
-    """Return ordered keys and per-key line values from a metadata block."""
-    order: List[str] = []
-    values: Dict[str, List[str]] = {}
+) -> Tuple[List[str], Dict[str, Any]]:
+    """Return ordered keys and typed YAML values from a metadata block."""
+    if _looks_like_legacy_metadata_block(block):
+        payload = _parse_legacy_metadata_block(block)
+    else:
+        payload = None
+    try:
+        if payload is None:
+            payload = yaml.safe_load(block)
+    except yaml.YAMLError as exc:
+        payload = _parse_legacy_metadata_block(block)
+        if payload is None:
+            raise ValueError(f"Invalid policy metadata YAML: {exc}") from exc
+    if payload is None:
+        return [], {}
+    if not isinstance(payload, dict):
+        raise ValueError("Policy metadata block must be a YAML mapping.")
+    order = [str(key).strip() for key in payload.keys() if str(key).strip()]
+    values = {
+        str(key).strip(): _normalize_metadata_value(value)
+        for key, value in payload.items()
+        if str(key).strip()
+    }
+    return order, values
+
+
+def _looks_like_legacy_metadata_block(block: str) -> bool:
+    """Return True when indented lines behave like legacy continuations."""
+    top_level_with_inline_value = False
+    key_pattern = re.compile(r"^[A-Za-z0-9_.-]+\s*:")
+    for line in block.splitlines():
+        stripped = line.strip()
+        if not stripped:
+            continue
+        if not line[:1].isspace():
+            top_level_with_inline_value = False
+            if key_pattern.match(stripped):
+                _, raw_value = stripped.split(":", 1)
+                top_level_with_inline_value = bool(raw_value.strip())
+            continue
+        if top_level_with_inline_value and not stripped.startswith("- "):
+            return True
+    return False
+
+
+def _parse_legacy_metadata_block(block: str) -> Dict[str, Any] | None:
+    """Parse legacy flat metadata blocks that are not valid YAML."""
+    values: Dict[str, Any] = {}
     current_key = ""
+    saw_key = False
     key_pattern = re.compile(r"^[A-Za-z0-9_.-]+\s*:")
     for line in block.splitlines():
         stripped = line.strip()
@@ -60,14 +105,50 @@ def parse_metadata_block(
         if (not is_indented) and key_pattern.match(stripped):
             key, raw_value = stripped.split(":", 1)
             key = key.strip()
-            value_text = raw_value.strip()
-            order.append(key)
-            values[key] = [] if not value_text else [value_text]
+            values[key] = raw_value.strip()
             current_key = key
+            saw_key = True
             continue
-        if current_key:
-            values[current_key].append(stripped)
-    return order, values
+        if not current_key:
+            return None
+        existing = str(values.get(current_key, "")).strip()
+        continuation = stripped
+        if not existing:
+            values[current_key] = continuation
+            continue
+        if existing.endswith(",") or continuation.startswith(","):
+            values[current_key] = f"{existing}{continuation}"
+            continue
+        values[current_key] = f"{existing},{continuation}"
+    return values if saw_key else None
+
+
+def _normalize_metadata_value(raw_value: Any) -> Any:
+    """Normalize parsed metadata values to the runtime storage shape."""
+    if isinstance(raw_value, dict):
+        return {
+            str(key).strip(): _normalize_metadata_value(value)
+            for key, value in raw_value.items()
+            if str(key).strip()
+        }
+    if isinstance(raw_value, list):
+        normalized_list = [
+            _normalize_metadata_value(entry) for entry in raw_value
+        ]
+        if any(isinstance(entry, (dict, list)) for entry in normalized_list):
+            return [
+                entry for entry in normalized_list if entry not in ("", [], {})
+            ]
+        return [
+            str(entry).strip()
+            for entry in normalized_list
+            if str(entry).strip()
+        ]
+    if isinstance(raw_value, bool):
+        return "true" if raw_value else "false"
+    if raw_value is None:
+        return ""
+    return str(raw_value).strip()
 
 
 def _script_name(policy_id: str) -> str:
@@ -332,16 +413,31 @@ class PolicyRegistry:
         return str(relative)
 
     def _split_metadata_values(self, raw_value: object) -> List[str]:
-        """Split metadata values on commas and newlines."""
+        """Split nested metadata values into flat readable tokens."""
         items: List[str] = []
-        text = str(raw_value) if raw_value is not None else ""
-        for part in text.replace("\n", ",").split(","):
-            normalized = part.strip()
-            if normalized:
-                items.append(normalized)
+
+        def _collect(value: object) -> None:
+            """Collect leaf values from nested metadata."""
+            if value is None:
+                return
+            if isinstance(value, dict):
+                for nested in value.values():
+                    _collect(nested)
+                return
+            if isinstance(value, list):
+                for nested in value:
+                    _collect(nested)
+                return
+            text = str(value)
+            for part in text.replace("\n", ",").split(","):
+                normalized = part.strip()
+                if normalized:
+                    items.append(normalized)
+
+        _collect(raw_value)
         return items
 
-    def _extract_asset_values(self, metadata: Dict[str, str]) -> List[str]:
+    def _extract_asset_values(self, metadata: Dict[str, Any]) -> List[str]:
         """Return metadata values that look like asset paths."""
         candidates: List[str] = []
         for metadata_value in metadata.values():
@@ -360,7 +456,7 @@ class PolicyRegistry:
         script_location,
         descriptor: PolicyDescriptor | None = None,
         *,
-        resolved_metadata: Dict[str, str] | None = None,
+        resolved_metadata: Dict[str, Any] | None = None,
         metadata_resolution: Dict[str, Dict[str, Any]] | None = None,
         metadata_warnings: List[Dict[str, Any]] | None = None,
         runtime_option_views: Dict[str, Dict[str, Any]] | None = None,
@@ -417,24 +513,24 @@ class PolicyRegistry:
         )
         return self._normalize_hash_value(raw_hash)
 
-    def get_policy_metadata_map(self, policy_id: str) -> Dict[str, str]:
-        """Return a copy of the stored string metadata map for one policy."""
+    def get_policy_metadata_map(self, policy_id: str) -> Dict[str, Any]:
+        """Return a copy of the stored metadata map for one policy."""
         entry = self._data.get("policies", {}).get(policy_id, {})
         if not isinstance(entry, dict):
             return {}
         raw_metadata = entry.get("metadata", {})
         if not isinstance(raw_metadata, dict):
             return {}
-        metadata_map: Dict[str, str] = {}
+        metadata_map: Dict[str, Any] = {}
         for raw_key, raw_value in raw_metadata.items():
             key = str(raw_key or "").strip()
             if not key:
                 continue
-            metadata_map[key] = str(raw_value) if raw_value is not None else ""
+            metadata_map[key] = raw_value
         return metadata_map
 
     def get_policy_metadata_typed(self, policy_id: str) -> Dict[str, Any]:
-        """Return a typed metadata view decoded from stored strings."""
+        """Return a typed metadata view decoded from stored metadata."""
         import devcovenant.core.services.metadata as metadata_runtime
 
         return metadata_runtime.decode_metadata_options_map(

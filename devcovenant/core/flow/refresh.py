@@ -806,7 +806,11 @@ def _render_config_yaml(payload: dict[str, object]) -> str:
         "# `autogen_*` blocks below are refresh-owned.",
         "# `user_*` blocks below are human-owned.",
         "# Auto-generated metadata overlays written by refresh.",
-        "# Merge semantics: list append + dedupe, scalar replace.",
+        "# Overlay semantics: scalar values replace prior scalars.",
+        "# Plain scalar lists append with de-duplication.",
+        "# Mapping values merge by subkey.",
+        "# Lists of mappings with stable `id` fields merge by `id`.",
+        "# Keep one metadata key in one shape across layers.",
         _yaml_block(
             {
                 "autogen_metadata_overlays": payload.get(
@@ -816,7 +820,7 @@ def _render_config_yaml(payload: dict[str, object]) -> str:
         ),
         "# Human-owned subsection.",
         "# User-owned overlays applied after autogen overlays.",
-        "# Merge semantics: list append + dedupe, scalar replace.",
+        "# Use the same metadata-key shape here as the inherited layer.",
         _yaml_block(
             {
                 "user_metadata_overlays": payload.get(
@@ -838,7 +842,8 @@ def _render_config_yaml(payload: dict[str, object]) -> str:
         "# Human-owned subsection.",
         "# User-owned overrides applied last (highest precedence).",
         "# Override semantics: full key replacement.",
-        "# Shape: {policy-id: {metadata_key: value-or-list}}",
+        "# Shape: {policy-id: {metadata_key: scalar|list|mapping}}",
+        "# Do not replace a mapping with ad-hoc sibling flat keys.",
         _yaml_block(
             {
                 "user_metadata_overrides": payload.get(
@@ -1091,14 +1096,10 @@ def _config_autogen_metadata_overlays(
         policy_map = overlays[policy_id]
         key_map: Dict[str, object] = {}
         for key_name in sorted(policy_map.keys()):
-            values, merge_values = policy_map[key_name]
-            if merge_values:
-                key_map[key_name] = list(values)
+            value = copy.deepcopy(policy_map[key_name])
+            if value in ("", [], {}):
                 continue
-            if _is_scalar_path_override_key(key_name):
-                key_map[key_name] = values[0] if values else ""
-                continue
-            key_map[key_name] = list(values)
+            key_map[key_name] = value
         if key_map:
             normalized[policy_id] = key_map
     return normalized
@@ -1107,16 +1108,6 @@ def _config_autogen_metadata_overlays(
 def _config_autogen_metadata_overrides() -> Dict[str, Dict[str, object]]:
     """Return generated metadata overrides owned by refresh runtime."""
     return {}
-
-
-def _is_scalar_path_override_key(key_name: str) -> bool:
-    """Return True when override key represents a singular path value."""
-    token = str(key_name or "").strip().lower()
-    if not token:
-        return False
-    if token.endswith(("_files", "_paths", "_dirs", "_roots")):
-        return False
-    return token.endswith(("_file", "_path", "_dir", "_root"))
 
 
 def _profile_registry_profiles(
@@ -2165,23 +2156,22 @@ def _discover_policy_sources(repo_root: Path) -> Dict[str, Dict[str, bool]]:
     return discovered
 
 
-def _descriptor_values(raw_value: object | None) -> List[str]:
-    """Normalize descriptor metadata values into a list of strings."""
-
-    if raw_value is None:
-        return []
-    if isinstance(raw_value, list):
-        return [str(item).strip() for item in raw_value if str(item).strip()]
-    text = str(raw_value).strip()
-    return [text] if text else []
-
-
-def _as_bool(raw_value: str | None, *, default: bool) -> bool:
+def _as_bool(raw_value: object, *, default: bool) -> bool:
     """Interpret a resolved metadata value as a boolean."""
 
     if raw_value is None:
         return default
-    token = raw_value.strip().lower()
+    if isinstance(raw_value, list):
+        for entry in raw_value:
+            token = str(entry or "").strip().lower()
+            if token:
+                break
+        else:
+            return default
+    elif isinstance(raw_value, dict):
+        return default
+    else:
+        token = str(raw_value).strip().lower()
     if token in {"true", "1", "yes", "on"}:
         return True
     if token in {"false", "0", "no", "off"}:
@@ -2283,7 +2273,7 @@ def refresh_policy_registry(
 
         current_order = list(descriptor.metadata.keys())
         current_values = {
-            key: _descriptor_values(descriptor.metadata.get(key))
+            key: copy.deepcopy(descriptor.metadata.get(key))
             for key in current_order
         }
         bundle = metadata_runtime.resolve_policy_metadata_bundle(
@@ -2295,10 +2285,9 @@ def refresh_policy_registry(
             custom_policy=bool(custom_available and not builtin_available),
         )
         resolved_order = bundle.order
-        resolved_metadata = bundle.string_map
+        resolved_metadata = bundle.raw_map
         ordered_metadata = {
-            key: str(resolved_metadata.get(key, "")).strip()
-            for key in resolved_order
+            key: resolved_metadata.get(key, "") for key in resolved_order
         }
         runtime_option_views = (
             runtime_actions_module.build_runtime_policy_option_views(

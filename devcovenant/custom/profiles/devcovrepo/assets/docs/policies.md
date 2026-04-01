@@ -100,27 +100,49 @@ resolution content, not environment-local pip control lines.
 Refresh strips environment-specific directives from comparison and from the
 written lock body so repositories keep package-source behavior in metadata and
 config instead of baking it into the lock file.
-If a Python repo enables `python_lock_generate_hashes`, the same
-`dependency-management refresh-all` command also runs `pip-compile
---generate-hashes`.
-That mode is opt-in.
-When it preserves exact marker-gated direct pins, it must preserve real hashes
-too. If those hashes cannot be resolved, refresh fails explicitly instead of
-writing a partial lock.
-If one hash-locked file must work across supported platforms or Python
-versions, declare exact marker pins for those cross-environment dependencies
-in the intent manifest. That gives the runtime enough information to
-materialize them with real hashes even when the local compile host would
-otherwise omit them.
-The same policy can also own more than one dependency surface when a project
-needs separate artifacts for different jobs.
-For example, one surface can keep developer/build dependency artifacts local,
-while a second packaged runtime surface is generated separately from
-`pyproject.toml` into `devcovenant/runtime-requirements.lock` and
-`devcovenant/licenses/THIRD_PARTY_LICENSES.md`.
-That split keeps the shipped package surface smaller than a developer/build
-toolchain while still letting one policy command refresh both surfaces
-coherently.
+Dependency-management metadata is now surface-based.
+It uses one typed metadata model:
+- scalars stay scalars
+- lists stay lists
+- mappings stay mappings
+- lists of mappings with stable `id` values merge by `id`
+
+That means repositories should express one concept in one metadata shape.
+Do not mix a structured `surfaces` list with separate flat fallback keys for
+the same dependency surface model.
+
+Each surface owns:
+- one `lock_file`
+- its direct dependency inputs
+- the dependency selectors that should trigger report/license refresh
+- one `third_party_file`
+- one `licenses_dir`
+- optional hash-lock targets
+
+That means the policy can own more than one dependency surface at once.
+For example:
+1. `root_workspace`
+2. `package_runtime`
+3. `devcovenant_runtime`
+
+There is no special root-versus-auxiliary split anymore.
+Repositories can declare additional surfaces the same way when they need them.
+
+When one surface enables `generate_hashes`, `dependency-management refresh-all`
+does not try to patch a host-local `pip-compile` result.
+Instead it resolves the full configured target closure from that surface's
+`hash_targets`, then writes one hash-locked result that covers those targets
+or fails explicitly.
+That keeps hash mode target-aware instead of GitHub-specific or
+host-platform-specific.
+
+The shipped defaults are:
+1. `root_workspace`: non-hash mode
+2. `package_runtime`: non-hash mode
+3. `devcovenant_runtime`: hash mode in the builtin `github` profile
+
+If a repository overrides one of those surfaces, do it in the profile or
+config layer for that surface id instead of inventing a second metadata shape.
 
 ## Version-Governance Adapters
 Version-governance adapters define how version schemes are parsed,

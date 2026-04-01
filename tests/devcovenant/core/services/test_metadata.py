@@ -61,7 +61,7 @@ def _unit_test_apply_policy_control_preserves_critical_enablement() -> None:
         control,
     )
 
-    assert updated_values["enabled"] == ["true"]
+    assert updated_values["enabled"] == "true"
 
 
 def _unit_test_apply_policy_control_allows_noncritical_disablement() -> None:
@@ -78,7 +78,7 @@ def _unit_test_apply_policy_control_allows_noncritical_disablement() -> None:
         control,
     )
 
-    assert updated_values["enabled"] == ["false"]
+    assert updated_values["enabled"] == "false"
 
 
 def _unit_test_decode_metadata_option_value_normalizes_common_shapes() -> None:
@@ -178,11 +178,9 @@ def _unit_test_resolved_bundle_tracks_layer_trace_and_warnings() -> None:
     )
     context = module.MetadataContext(
         control=module.PolicyControl(policy_state={"demo-policy": False}),
-        profile_overlays={
-            "demo-policy": {"required_globs": (["AGENTS.md"], True)}
-        },
+        profile_overlays={"demo-policy": {"required_globs": ["AGENTS.md"]}},
         autogen_overlays={},
-        user_overlays={"demo-policy": {"required_globs": (["PLAN.md"], True)}},
+        user_overlays={"demo-policy": {"required_globs": ["PLAN.md"]}},
         autogen_overrides={},
         user_overrides={"demo-policy": {"required_globs": ["SPEC.md"]}},
     )
@@ -267,7 +265,56 @@ def _unit_test_profile_overlays_collect_policy_sections() -> None:
     finally:
         module.profile_runtime.load_profile_registry = original
 
-    assert overlays["demo-policy"]["header_scan_lines"] == (["4"], False)
+    assert overlays["demo-policy"]["header_scan_lines"] == "4"
+
+
+def _unit_test_profile_overlays_preserve_structured_mapping_lists() -> None:
+    """Structured overlay lists should stay structured and merge by id."""
+    module = importlib.import_module(MODULE)
+    original = module.profile_runtime.load_profile_registry
+    try:
+        module.profile_runtime.load_profile_registry = lambda repo_root: {
+            "global": {
+                "policy_overlays": {
+                    "demo-policy": {
+                        "surfaces": [
+                            {
+                                "id": "root_workspace",
+                                "lock_file": "requirements.lock",
+                            }
+                        ]
+                    }
+                }
+            },
+            "custom": {
+                "policy_overlays": {
+                    "demo-policy": {
+                        "surfaces": [
+                            {
+                                "id": "root_workspace",
+                                "generate_hashes": "false",
+                            },
+                            {
+                                "id": "package_runtime",
+                                "lock_file": "pkg/runtime-requirements.lock",
+                            },
+                        ]
+                    }
+                }
+            },
+        }
+        overlays = module.collect_profile_overlays(
+            REPO_ROOT, ["global", "custom"]
+        )
+    finally:
+        module.profile_runtime.load_profile_registry = original
+
+    surfaces = overlays["demo-policy"]["surfaces"]
+    assert isinstance(surfaces, list)
+    assert surfaces[0]["id"] == "root_workspace"
+    assert surfaces[0]["lock_file"] == "requirements.lock"
+    assert surfaces[0]["generate_hashes"] == "false"
+    assert surfaces[1]["id"] == "package_runtime"
 
 
 def _unit_test_active_policy_metadata_bundle_shapes_are_valid() -> None:
@@ -373,3 +420,7 @@ class GeneratedUnittestCases(unittest.TestCase):
     def test_active_policy_metadata_bundle_shapes_are_valid(self):
         """Run enabled-policy resolved-metadata shape assertions."""
         _unit_test_active_policy_metadata_bundle_shapes_are_valid()
+
+    def test_profile_overlays_preserve_structured_mapping_lists(self):
+        """Run structured overlay-list preservation assertions."""
+        _unit_test_profile_overlays_preserve_structured_mapping_lists()

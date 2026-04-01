@@ -697,8 +697,8 @@ def _unit_test_custom_extension_docs_explain_baseline_first_activation():
         "devcovenant/docs/profiles.md": (
             "keep `devcovuser` active for an ordinary repository",
             (
-                "add `github` when the repository wants a generated "
-                "GitHub Actions workflow"
+                "keep `github` active when the repository wants the "
+                "generic generated GitHub"
             ),
             "add a repo-specific custom profile on top",
         ),

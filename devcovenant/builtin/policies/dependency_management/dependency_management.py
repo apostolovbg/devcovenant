@@ -3,8 +3,9 @@
 import fnmatch
 import importlib.metadata as importlib_metadata
 import re
+from dataclasses import dataclass
 from pathlib import Path
-from typing import Iterable, List
+from typing import Dict, Iterable, List, Mapping, Sequence
 
 try:  # pragma: no cover - Python 3.11+ path in managed env.
     import tomllib
@@ -19,9 +20,13 @@ from devcovenant.core.contracts.policy import (
     Violation,
 )
 from devcovenant.core.runtime import policy_commands as policy_commands_service
+from devcovenant.core.services import (
+    project_governance as project_governance_service,
+)
 
 LICENSES_README_NAME = "README.md"
 LICENSE_INVENTORY_HEADING = "## Dependency License Inventory"
+DEFAULT_REPORT_HEADING = "## License Report"
 CANONICAL_DEPENDENCY_ROLES = (
     "intent",
     "resolved",
@@ -41,6 +46,36 @@ _LICENSE_NAME_RE = re.compile(
     r"^(license|licence|copying|notice)([.-]|$)",
     re.IGNORECASE,
 )
+
+
+@dataclass(frozen=True)
+class DependencySurfaceTarget:
+    """One target used when hash-lock generation resolves a full closure."""
+
+    target_id: str
+    marker: str
+    pip: Dict[str, str]
+
+
+@dataclass(frozen=True)
+class DependencySurface:
+    """One declared dependency-management artifact surface."""
+
+    surface_id: str
+    enabled: bool
+    active: bool
+    lock_file: str
+    direct_dependency_files: List[str]
+    dependency_files: List[str]
+    dependency_globs: List[str]
+    dependency_dirs: List[str]
+    third_party_file: str
+    licenses_dir: str
+    report_heading: str
+    manage_licenses_readme: bool
+    generate_hashes: bool
+    required_paths: List[str]
+    hash_targets: List[DependencySurfaceTarget]
 
 
 def _normalize_list(value: object) -> list[str]:
@@ -109,6 +144,422 @@ def _resolve_artifact_targets(
         label="licenses_dir",
     )
     return report_path, licenses_path
+
+
+def _normalize_bool(
+    value: object,
+    *,
+    default: bool,
+    label: str,
+) -> bool:
+    """Normalize one boolean-like metadata value."""
+
+    if isinstance(value, bool):
+        return value
+    if value is None:
+        return default
+    text = str(value).strip()
+    if not text:
+        return default
+    lowered = text.lower()
+    if lowered in {"true", "1", "yes", "y", "on"}:
+        return True
+    if lowered in {"false", "0", "no", "n", "off"}:
+        return False
+    raise ValueError(f"dependency-management `{label}` must be boolean.")
+
+
+def _render_surface_template(
+    repo_root: Path,
+    raw_value: object,
+) -> str:
+    """Render project-governance placeholders inside one surface value."""
+
+    text = str(raw_value or "").strip()
+    if not text:
+        return ""
+    if "{{" not in text or "}}" not in text:
+        return text
+    state = project_governance_service.resolve_runtime_state(repo_root)
+    return project_governance_service.render_identity_placeholders(
+        text,
+        state,
+    ).strip()
+
+
+def _normalize_surface_paths(
+    repo_root: Path,
+    values: object,
+    *,
+    label: str,
+) -> List[str]:
+    """Normalize one repo-relative path list for a surface field."""
+
+    normalized: List[str] = []
+    for raw_entry in _normalize_list(values):
+        rendered = _render_surface_template(repo_root, raw_entry)
+        if not rendered:
+            continue
+        _validate_repo_relative_target(
+            repo_root=repo_root,
+            raw_value=rendered,
+            label=label,
+        )
+        normalized.append(_normalized_rel(rendered))
+    return normalized
+
+
+def _normalize_surface_globs(values: object) -> List[str]:
+    """Normalize one surface glob list."""
+
+    return [
+        _normalized_rel(entry)
+        for entry in _normalize_list(values)
+        if _normalized_rel(entry)
+    ]
+
+
+def _normalize_surface_dirs(
+    repo_root: Path,
+    values: object,
+    *,
+    label: str,
+) -> List[str]:
+    """Normalize one surface directory selector list."""
+
+    normalized: List[str] = []
+    for raw_entry in _normalize_list(values):
+        rendered = _render_surface_template(repo_root, raw_entry)
+        if not rendered:
+            continue
+        _validate_repo_relative_target(
+            repo_root=repo_root,
+            raw_value=rendered,
+            label=label,
+        )
+        normalized.append(_normalized_rel(rendered).rstrip("/"))
+    return normalized
+
+
+def _normalize_surface_target(
+    repo_root: Path,
+    raw_value: object,
+    *,
+    surface_id: str,
+    index: int,
+) -> DependencySurfaceTarget:
+    """Validate one hash-target mapping."""
+
+    if not isinstance(raw_value, Mapping):
+        raise ValueError(
+            "dependency-management `surfaces` hash_targets entries must "
+            "be mappings."
+        )
+    target_id = str(raw_value.get("id", "")).strip() or (
+        f"{surface_id}-target-{index + 1}"
+    )
+    marker = str(raw_value.get("marker", "")).strip()
+    if not marker:
+        raise ValueError(
+            "dependency-management `surfaces[].hash_targets[].marker` is "
+            f"missing for `{surface_id}`."
+        )
+    raw_pip = raw_value.get("pip", {})
+    if not isinstance(raw_pip, Mapping):
+        raise ValueError(
+            "dependency-management `surfaces[].hash_targets[].pip` must "
+            f"be a mapping for `{surface_id}`."
+        )
+    pip_options: Dict[str, str] = {}
+    for raw_key, raw_option in raw_pip.items():
+        key = str(raw_key or "").strip()
+        if not key:
+            continue
+        option = _render_surface_template(repo_root, raw_option)
+        if option:
+            pip_options[key] = option
+    if not pip_options:
+        raise ValueError(
+            "dependency-management `surfaces[].hash_targets[].pip` is "
+            f"empty for `{surface_id}`."
+        )
+    return DependencySurfaceTarget(
+        target_id=target_id,
+        marker=marker,
+        pip=pip_options,
+    )
+
+
+def resolve_dependency_surfaces(
+    *,
+    repo_root: Path,
+    raw_surfaces: object,
+    include_inactive: bool = False,
+) -> List[DependencySurface]:
+    """Return normalized dependency surfaces from structured metadata."""
+
+    if raw_surfaces in (None, "", []):
+        return []
+    if not isinstance(raw_surfaces, list):
+        raise ValueError(
+            "dependency-management `surfaces` must be a list of mappings."
+        )
+    surfaces: List[DependencySurface] = []
+    seen_ids: set[str] = set()
+    for index, raw_entry in enumerate(raw_surfaces):
+        if not isinstance(raw_entry, Mapping):
+            raise ValueError(
+                "dependency-management `surfaces` entries must be mappings."
+            )
+        surface_id = str(raw_entry.get("id", "")).strip()
+        if not surface_id:
+            raise ValueError(
+                "dependency-management `surfaces[].id` is required."
+            )
+        if surface_id in seen_ids:
+            raise ValueError(
+                "dependency-management `surfaces` contains duplicate id "
+                f"`{surface_id}`."
+            )
+        seen_ids.add(surface_id)
+
+        enabled = _normalize_bool(
+            raw_entry.get("enabled"),
+            default=True,
+            label=f"surfaces[{surface_id}].enabled",
+        )
+        lock_file = _render_surface_template(
+            repo_root,
+            raw_entry.get("lock_file", ""),
+        )
+        if lock_file:
+            _validate_repo_relative_target(
+                repo_root=repo_root,
+                raw_value=lock_file,
+                label=f"surfaces[{surface_id}].lock_file",
+            )
+        third_party_file = _render_surface_template(
+            repo_root,
+            raw_entry.get("third_party_file", ""),
+        )
+        licenses_dir = _render_surface_template(
+            repo_root,
+            raw_entry.get("licenses_dir", ""),
+        )
+        if third_party_file:
+            _validate_repo_relative_target(
+                repo_root=repo_root,
+                raw_value=third_party_file,
+                label=f"surfaces[{surface_id}].third_party_file",
+            )
+        if licenses_dir:
+            _validate_repo_relative_target(
+                repo_root=repo_root,
+                raw_value=licenses_dir,
+                label=f"surfaces[{surface_id}].licenses_dir",
+            )
+        direct_dependency_files = _normalize_surface_paths(
+            repo_root,
+            raw_entry.get("direct_dependency_files", []),
+            label=f"surfaces[{surface_id}].direct_dependency_files",
+        )
+        dependency_roles = _normalize_dependency_roles(
+            raw_entry.get(
+                "dependency_roles",
+                list(CANONICAL_DEPENDENCY_ROLES),
+            )
+        )
+        role_dependency_files = _normalize_surface_paths(
+            repo_root,
+            _expand_role_selectors(
+                entries=_normalize_list(
+                    raw_entry.get("dependency_role_files", [])
+                ),
+                allowed_roles=dependency_roles,
+                metadata_key=("surfaces[].dependency_role_files"),
+            ),
+            label=f"surfaces[{surface_id}].dependency_role_files",
+        )
+        dependency_files = _normalize_surface_paths(
+            repo_root,
+            raw_entry.get("dependency_files", []),
+            label=f"surfaces[{surface_id}].dependency_files",
+        )
+        dependency_globs = _normalize_surface_globs(
+            [
+                *(_normalize_list(raw_entry.get("dependency_globs", []))),
+                *(
+                    _expand_role_selectors(
+                        entries=_normalize_list(
+                            raw_entry.get("dependency_role_globs", [])
+                        ),
+                        allowed_roles=dependency_roles,
+                        metadata_key=("surfaces[].dependency_role_globs"),
+                    )
+                ),
+            ]
+        )
+        dependency_dirs = _normalize_surface_dirs(
+            repo_root,
+            [
+                *(_normalize_list(raw_entry.get("dependency_dirs", []))),
+                *(
+                    _expand_role_selectors(
+                        entries=_normalize_list(
+                            raw_entry.get("dependency_role_dirs", [])
+                        ),
+                        allowed_roles=dependency_roles,
+                        metadata_key=("surfaces[].dependency_role_dirs"),
+                    )
+                ),
+            ],
+            label=f"surfaces[{surface_id}].dependency_dirs",
+        )
+        required_paths = _normalize_surface_paths(
+            repo_root,
+            raw_entry.get("required_paths", []),
+            label=f"surfaces[{surface_id}].required_paths",
+        )
+        report_heading = (
+            str(raw_entry.get("report_heading", "")).strip()
+            or DEFAULT_REPORT_HEADING
+        )
+        manage_licenses_readme = _normalize_bool(
+            raw_entry.get("manage_licenses_readme"),
+            default=True,
+            label=f"surfaces[{surface_id}].manage_licenses_readme",
+        )
+        generate_hashes = _normalize_bool(
+            raw_entry.get("generate_hashes"),
+            default=False,
+            label=f"surfaces[{surface_id}].generate_hashes",
+        )
+        raw_hash_targets = raw_entry.get("hash_targets", [])
+        if raw_hash_targets in ("", None):
+            raw_hash_targets = []
+        if not isinstance(raw_hash_targets, list):
+            raise ValueError(
+                "dependency-management `surfaces[].hash_targets` must be "
+                f"a list for `{surface_id}`."
+            )
+        hash_targets = [
+            _normalize_surface_target(
+                repo_root,
+                item,
+                surface_id=surface_id,
+                index=target_index,
+            )
+            for target_index, item in enumerate(raw_hash_targets)
+        ]
+        if enabled and not lock_file:
+            raise ValueError(
+                "dependency-management `surfaces[].lock_file` is missing "
+                f"for `{surface_id}`."
+            )
+        if enabled and direct_dependency_files and not third_party_file:
+            raise ValueError(
+                "dependency-management `surfaces[].third_party_file` is "
+                f"missing for `{surface_id}`."
+            )
+        if enabled and direct_dependency_files and not licenses_dir:
+            raise ValueError(
+                "dependency-management `surfaces[].licenses_dir` is "
+                f"missing for `{surface_id}`."
+            )
+        if (
+            enabled
+            and generate_hashes
+            and direct_dependency_files
+            and not hash_targets
+        ):
+            raise ValueError(
+                "dependency-management hash-locked surface "
+                f"`{surface_id}` must declare `hash_targets`."
+            )
+        active = enabled
+        for required in required_paths:
+            if not (repo_root / required).exists():
+                active = False
+                break
+        effective_dependency_files = list(
+            dict.fromkeys(
+                [
+                    *direct_dependency_files,
+                    *role_dependency_files,
+                    *dependency_files,
+                ]
+            )
+        )
+        surface = DependencySurface(
+            surface_id=surface_id,
+            enabled=enabled,
+            active=active,
+            lock_file=_normalized_rel(lock_file),
+            direct_dependency_files=direct_dependency_files,
+            dependency_files=effective_dependency_files,
+            dependency_globs=dependency_globs,
+            dependency_dirs=dependency_dirs,
+            third_party_file=_normalized_rel(third_party_file),
+            licenses_dir=_normalized_rel(licenses_dir),
+            report_heading=report_heading,
+            manage_licenses_readme=manage_licenses_readme,
+            generate_hashes=generate_hashes,
+            required_paths=required_paths,
+            hash_targets=hash_targets,
+        )
+        if include_inactive or surface.active:
+            surfaces.append(surface)
+    return surfaces
+
+
+def dependency_surface_trigger_files(
+    surface: DependencySurface,
+) -> List[str]:
+    """Return lock/manifests that trigger one dependency surface."""
+
+    entries = [surface.lock_file, *surface.dependency_files]
+    return [
+        _normalized_rel(entry) for entry in entries if _normalized_rel(entry)
+    ]
+
+
+def dependency_surface_matches(
+    surface: DependencySurface,
+    rel_path: str,
+) -> bool:
+    """Return True when one repo-relative path belongs to a surface."""
+
+    normalized = _normalized_rel(rel_path)
+    if not normalized:
+        return False
+    if normalized == _normalized_rel(surface.lock_file):
+        return True
+    return _matches_dependency(
+        normalized,
+        dependency_files=surface.dependency_files,
+        dependency_globs=surface.dependency_globs,
+        dependency_dirs=surface.dependency_dirs,
+    )
+
+
+def dependency_surface_lock_refresh_requested(
+    surface: DependencySurface,
+    changed_dependency_files: Sequence[str],
+) -> bool:
+    """Return whether one surface's lock should refresh for changed files."""
+
+    normalized = [
+        _normalized_rel(str(entry))
+        for entry in changed_dependency_files
+        if _normalized_rel(str(entry))
+    ]
+    if not normalized:
+        return True
+    direct_triggers = {
+        _normalized_rel(surface.lock_file),
+        *[_normalized_rel(entry) for entry in surface.direct_dependency_files],
+    }
+    return any(entry in direct_triggers for entry in normalized)
 
 
 def _relative_posix(path: Path, repo_root: Path) -> str | None:
@@ -233,42 +684,6 @@ def _expand_role_selectors(
     ]
 
 
-def _resolve_dependency_selectors(
-    policy: PolicyCheck,
-) -> tuple[list[str], list[str], list[str]]:
-    """
-    Resolve flat selectors plus role-based selectors into one selector set.
-    """
-    files = _normalize_list(policy.get_option("dependency_files", []))
-    globs = _normalize_list(policy.get_option("dependency_globs", []))
-    dirs = _normalize_list(policy.get_option("dependency_dirs", []))
-    roles = _normalize_dependency_roles(
-        policy.get_option("dependency_roles", list(CANONICAL_DEPENDENCY_ROLES))
-    )
-
-    role_files = _expand_role_selectors(
-        entries=_normalize_list(
-            policy.get_option("dependency_role_files", [])
-        ),
-        allowed_roles=roles,
-        metadata_key="dependency_role_files",
-    )
-    role_globs = _expand_role_selectors(
-        entries=_normalize_list(
-            policy.get_option("dependency_role_globs", [])
-        ),
-        allowed_roles=roles,
-        metadata_key="dependency_role_globs",
-    )
-    role_dirs = _expand_role_selectors(
-        entries=_normalize_list(policy.get_option("dependency_role_dirs", [])),
-        allowed_roles=roles,
-        metadata_key="dependency_role_dirs",
-    )
-
-    return files + role_files, globs + role_globs, dirs + role_dirs
-
-
 def _render_licenses_readme(third_party_file: str) -> str:
     """Build generic README text for the licenses directory."""
     lines = [
@@ -293,8 +708,9 @@ def _render_licenses_readme(third_party_file: str) -> str:
         "  that match the current direct dependency set.",
         "",
         "## Update Checklist",
-        f"- Keep `{third_party_file}` synchronized with dependency",
-        "  manifest and lock updates for this surface.",
+        f"- Keep `{third_party_file}` synchronized with",
+        "  dependency manifest and lock updates for this",
+        "  surface.",
         "- Add, remove, or refresh generated license files when dependency",
         "  versions change.",
         "- Re-run DevCovenant checks and commit report and license artifact",
@@ -344,6 +760,8 @@ def _contains_reference(section: str, needle: str) -> bool:
 
 def _normalize_report_entries(
     changed_dependency_files: Iterable[str],
+    *,
+    resolved_lock_file: str = "",
 ) -> list[str]:
     """Normalize dependency entries for deterministic report rendering."""
     entries: set[str] = set()
@@ -351,16 +769,24 @@ def _normalize_report_entries(
         normalized = _normalized_rel(entry)
         if normalized:
             entries.add(normalized)
+    normalized_lock = _normalized_rel(resolved_lock_file)
+    if normalized_lock:
+        entries.add(normalized_lock)
     return sorted(entries)
 
 
 def _render_report_section(
     heading: str,
     changed_dependency_files: Iterable[str],
+    *,
+    resolved_lock_file: str = "",
 ) -> str:
     """Render deterministic `License Report` section content."""
     lines: List[str] = [heading]
-    for dep_file in _normalize_report_entries(changed_dependency_files):
+    for dep_file in _normalize_report_entries(
+        changed_dependency_files,
+        resolved_lock_file=resolved_lock_file,
+    ):
         lines.append(f"- `{dep_file}`")
     return "\n".join(lines)
 
@@ -889,6 +1315,7 @@ def _license_artifacts_need_refresh(
     report_section = _render_report_section(
         report_heading,
         changed_dependency_files,
+        resolved_lock_file=resolved_lock_file,
     )
     existing_inventory_paths = _inventory_paths_from_report(existing)
     inventory_section = _render_inventory_section(
@@ -949,6 +1376,7 @@ def refresh_license_artifacts(
     report_section = _render_report_section(
         report_heading,
         changed_dependency_files,
+        resolved_lock_file=resolved_lock_file,
     )
     existing_inventory_paths = _inventory_paths_from_report(existing)
     inventory_section = _render_inventory_section(
@@ -1212,8 +1640,10 @@ class DependencyManagementCheck(PolicyCheck):
             return []
 
         try:
-            dependency_files, dependency_globs, dependency_dirs = (
-                _resolve_dependency_selectors(self)
+            surfaces = resolve_dependency_surfaces(
+                repo_root=context.repo_root,
+                raw_surfaces=self.get_option("surfaces", []),
+                include_inactive=False,
             )
         except ValueError as error:
             return [
@@ -1224,84 +1654,38 @@ class DependencyManagementCheck(PolicyCheck):
                     can_auto_fix=False,
                 )
             ]
-        if not (dependency_files or dependency_globs or dependency_dirs):
+        if not surfaces:
             return []
 
         changed_rel_paths: set[str] = set()
-        changed_dependency_files = set()
         for path in files:
             rel_path = _relative_posix(path, context.repo_root)
             if rel_path is None:
                 continue
             changed_rel_paths.add(rel_path)
-            if _matches_dependency(
-                rel_path,
-                dependency_files=dependency_files,
-                dependency_globs=dependency_globs,
-                dependency_dirs=dependency_dirs,
-            ):
-                changed_dependency_files.add(rel_path)
-        if not changed_dependency_files:
-            return []
 
-        violations = _surface_violations(
-            context=context,
-            changed_rel_paths=changed_rel_paths,
-            changed_dependency_files=sorted(changed_dependency_files),
-            third_party_file=str(
-                self.get_option("third_party_file", "")
-            ).strip(),
-            licenses_dir=str(self.get_option("licenses_dir", "")).strip(),
-            report_heading=str(self.get_option("report_heading", "")).strip(),
-        )
-
-        auxiliary_lock_file = str(
-            self.get_option("auxiliary_lock_file", "")
-        ).strip()
-        auxiliary_third_party_file = str(
-            self.get_option("auxiliary_third_party_file", "")
-        ).strip()
-        auxiliary_licenses_dir = str(
-            self.get_option("auxiliary_licenses_dir", "")
-        ).strip()
-        auxiliary_report_heading = str(
-            self.get_option("auxiliary_report_heading", "")
-        ).strip()
-        auxiliary_direct_dependency_files = _normalize_list(
-            self.get_option("auxiliary_direct_dependency_files", [])
-        )
-        if any(
-            [
-                auxiliary_lock_file,
-                auxiliary_third_party_file,
-                auxiliary_licenses_dir,
-                auxiliary_report_heading,
-                *auxiliary_direct_dependency_files,
-            ]
-        ):
-            auxiliary_trigger_files = {
-                _normalized_rel(auxiliary_lock_file),
-                *(
-                    _normalized_rel(entry)
-                    for entry in auxiliary_direct_dependency_files
-                ),
-            }
-            auxiliary_changed_files = sorted(
+        violations: list[Violation] = []
+        for surface in surfaces:
+            if not surface.direct_dependency_files:
+                continue
+            surface_changed_files = sorted(
                 rel_path
-                for rel_path in changed_dependency_files
-                if rel_path in auxiliary_trigger_files
+                for rel_path in changed_rel_paths
+                if dependency_surface_matches(surface, rel_path)
             )
+            if not surface_changed_files:
+                continue
             violations.extend(
                 _surface_violations(
                     context=context,
                     changed_rel_paths=changed_rel_paths,
-                    changed_dependency_files=auxiliary_changed_files,
-                    third_party_file=auxiliary_third_party_file,
-                    licenses_dir=auxiliary_licenses_dir,
-                    report_heading=auxiliary_report_heading,
-                    resolved_lock_file=auxiliary_lock_file,
-                    direct_dependency_files=auxiliary_direct_dependency_files,
-                    manage_licenses_readme=False,
+                    changed_dependency_files=surface_changed_files,
+                    third_party_file=surface.third_party_file,
+                    licenses_dir=surface.licenses_dir,
+                    report_heading=surface.report_heading,
+                    resolved_lock_file=surface.lock_file,
+                    direct_dependency_files=surface.direct_dependency_files,
+                    manage_licenses_readme=surface.manage_licenses_readme,
                 )
             )
         return violations

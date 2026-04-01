@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import re
 import textwrap
 from dataclasses import dataclass
 from pathlib import Path
@@ -62,6 +63,14 @@ _COMPATIBILITY_POLICY_GUIDANCE = {
         "before code or docs start depending on them."
     ),
 }
+
+
+def _project_name_path_value(raw_name: str) -> str:
+    """Return one filesystem-safe default package-path token."""
+    normalized = re.sub(r"[^A-Za-z0-9._-]+", "_", str(raw_name or "").strip())
+    normalized = normalized.replace("-", "_")
+    normalized = re.sub(r"_+", "_", normalized).strip("._")
+    return normalized or "project"
 
 
 @dataclass(frozen=True)
@@ -289,6 +298,9 @@ def render_identity_placeholders(
     rendered = str(text or "")
     replacements = {
         "{{ PROJECT_NAME }}": state.project_name,
+        "{{ PROJECT_NAME_PATH }}": _project_name_path_value(
+            state.project_name
+        ),
         "{{ PROJECT_VERSION }}": str(project_version or "").strip(),
         "{{ PROJECT_DESCRIPTION }}": state.project_description,
         "{{ COPYRIGHT_NOTICE }}": state.copyright_notice,

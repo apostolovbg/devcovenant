@@ -94,27 +94,19 @@ def _ensure_policy_block_scaffold(
 def _metadata_from_registry(
     policy_id: str,
     metadata_map: object,
-) -> Tuple[List[str], Dict[str, List[str]]]:
+) -> Tuple[List[str], Dict[str, object]]:
     """Return ordered metadata keys and values sourced from registry data."""
     if not isinstance(metadata_map, dict):
-        return ["id"], {"id": [policy_id]}
+        return ["id"], {"id": policy_id}
     order: List[str] = []
-    values: Dict[str, List[str]] = {}
+    values: Dict[str, object] = {}
     for key, raw_value in metadata_map.items():
         key_name = str(key).strip()
         if not key_name:
             continue
         order.append(key_name)
-        if isinstance(raw_value, list):
-            normalized = [
-                str(item).strip() for item in raw_value if str(item).strip()
-            ]
-        else:
-            normalized = metadata_runtime.split_metadata_values(
-                [str(raw_value)]
-            )
-        values[key_name] = normalized
-    values["id"] = [policy_id]
+        values[key_name] = raw_value
+    values["id"] = policy_id
     if "id" not in order:
         order.insert(0, "id")
     return order, values
@@ -143,7 +135,8 @@ def _section_map(block_text: str) -> Dict[str, str]:
         heading = match.group(1)
         metadata_block = match.group(2).strip()
         order, values = parse_metadata_block(metadata_block)
-        policy_id = values.get("id", [""])[0] if values.get("id") else ""
+        raw_policy_id = values.get("id", "")
+        policy_id = str(raw_policy_id or "").strip()
         if not policy_id:
             continue
         description = match.group(3).strip()

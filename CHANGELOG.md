@@ -61,6 +61,73 @@ Example:
 ## Version 1.0.1.dev1
 
 - 2026-04-01:
+  Change: restructured policy metadata around typed dependency surfaces,
+    implemented the generic multi-surface hash-resolution engine behind the
+    toggle, and synchronized the package docs/config comments with the new
+    structured contract.
+  Why: remove the old flat auxiliary-lock model, stop structured metadata
+    from collapsing into scalar/list drift during refresh and registry
+    rendering, and leave slice 1 blue with hash mode still off in this repo.
+  Impact: enabled an extensible `surfaces` model with `id`-based overlay
+    merging, kept `github` optional but default-enabled with builtin surface
+    defaults, and prepared the repo for a later hash-mode-only enablement
+    slice instead of more architecture churn.
+  Files:
+  AGENTS.md
+  CHANGELOG.md
+  devcovenant/builtin/policies/changelog_coverage/changelog_coverage.py
+  devcovenant/builtin/policies/dependency_management/\
+    dependency_lock_runtime.py
+  devcovenant/builtin/policies/dependency_management/\
+    dependency_management.py
+  devcovenant/builtin/policies/dependency_management/\
+    dependency_management.yaml
+  devcovenant/builtin/profiles/defaults/defaults.yaml
+  devcovenant/builtin/profiles/github/github.yaml
+  devcovenant/builtin/profiles/global/assets/config.yaml
+  devcovenant/builtin/profiles/python/python.yaml
+  devcovenant/config.yaml
+  devcovenant/core/flow/refresh.py
+  devcovenant/core/lib/agents_blocks.py
+  devcovenant/core/services/metadata.py
+  devcovenant/core/services/policy_parse.py
+  devcovenant/core/services/policy_registry.py
+  devcovenant/core/services/project_governance.py
+  devcovenant/custom/profiles/devcovrepo/assets/POLICY_MAP.yaml
+  devcovenant/custom/profiles/devcovrepo/assets/docs/config.md
+  devcovenant/custom/profiles/devcovrepo/assets/docs/installation.md
+  devcovenant/custom/profiles/devcovrepo/assets/docs/policies.md
+  devcovenant/custom/profiles/devcovrepo/assets/docs/profiles.md
+  devcovenant/custom/profiles/devcovrepo/assets/docs/registry.md
+  devcovenant/custom/profiles/devcovrepo/assets/docs/workflow.md
+  devcovenant/custom/profiles/devcovrepo/devcovrepo.yaml
+  devcovenant/docs/config.md
+  devcovenant/docs/installation.md
+  devcovenant/docs/policies.md
+  devcovenant/docs/profiles.md
+  devcovenant/docs/refresh.md
+  devcovenant/docs/registry.md
+  devcovenant/docs/troubleshooting.md
+  devcovenant/docs/workflow.md
+  devcovenant/licenses/README.md
+  devcovenant/registry/registry.yaml
+  licenses/README.md
+  licenses/THIRD_PARTY_LICENSES.md
+  licenses/pipx-1.11.1.txt
+  requirements.in
+  requirements.lock
+  tests/devcovenant/builtin/policies/dependency_management/\
+    test_dependency_lock_runtime.py
+  tests/devcovenant/builtin/policies/dependency_management/\
+    test_dependency_management.py
+  tests/devcovenant/builtin/policies/managed_environment/\
+    test_managed_environment_runtime.py
+  tests/devcovenant/core/runtime/test_execution.py
+  tests/devcovenant/core/services/test_metadata.py
+  tests/devcovenant/core/services/test_policy_registry.py
+  tests/devcovenant/test_install.py
+  tests/devcovenant/test_refresh.py
+- 2026-04-01:
   Change: generalized the remaining package-doc wording, documented the split
     dependency surfaces in the policy and registry docs, and hardened
     dependency refresh against normalized comment-only lock drift and macOS

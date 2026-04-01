@@ -56,18 +56,14 @@ affected policy entry, so registry diffs can be the expected result of a
 policy implementation change even when the generated workflow shape stays the
 same.
 The same applies to policy-resolved metadata such as
-`dependency-management.python_lock_generate_hashes`: when profile or config
-overlays change those values, the tracked registry records the new resolved
-inputs that later drive lock refresh behavior.
-The same dependency surface can also include exact marker pins declared in the
-intent manifest when one hash-locked requirements file must stay valid across
-other supported platforms or Python versions.
-When dependency management owns an auxiliary packaged surface, the tracked
-registry also records the resolved auxiliary lock path, direct-input files,
-report file, and license directory.
-That is why `devcovenant/registry/registry.yaml` can change when the packaged
-runtime lock or packaged dependency-license targets move even if the root
-repo dependency artifacts stay in place.
+`dependency-management.surfaces`: when profile or config overlays change those
+surface declarations, the tracked registry records the new resolved lock
+paths, dependency selectors, artifact targets, and hash-target settings that
+later drive lock refresh behavior.
+That is why `devcovenant/registry/registry.yaml` can change when one declared
+surface moves, when a repo-specific custom profile overrides
+`root_workspace`, when a packaged runtime surface appears, or when the builtin
+`github` surface changes its bootstrap lock behavior.
 
 ## Runtime Registry
 `devcovenant/registry/runtime/` stores local working state such as:

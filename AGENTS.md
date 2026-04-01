@@ -6,7 +6,7 @@
 **Maintenance Stance:** active
 **Compatibility Policy:** forward-only
 **Versioning Mode:** versioned
-**Last Updated:** 2026-03-31
+**Last Updated:** 2026-04-01
 **DevCovenant Version:** 1.0.1.dev1
 
 <!-- DEVCOV:BEGIN -->
@@ -212,300 +212,308 @@ This block reflects the repository's active project-governance state.
 ```policy-def
 id: changelog-coverage
 severity: error
-auto_fix: false
+auto_fix: 'false'
 enforcement: active
-enabled: true
-custom: false
-main_changelog: CHANGELOG.md
-skipped_files: devcovenant/config.yaml
-  CHANGELOG.md
-  .gitignore
-  .pre-commit-config.yaml
-  .github/workflows/ci.yml
-skipped_globs: .vscode/**
-  .idea/**
-  .venv/**
-  .python/**
-  build/**
-  dist/**
-  __pycache__/**
-  *.egg-info/**
-  pip-wheel-metadata/**
-  .pytest_cache/**
-  .ruff_cache/**
-  .mypy_cache/**
-  .tox/**
-  .nox/**
-  .hypothesis/**
-  .coverage
-  .coverage.*
-  htmlcov/**
-  devcovenant/logs/**
-  devcovenant/registry/runtime/**
-skipped_prefixes:
-summary_labels: Change
-  Why
-  Impact
-summary_verbs: add
-  added
-  address
-  addressed
-  adjust
-  adjusted
-  align
-  aligned
-  amend
-  amended
-  automate
-  automated
-  bootstrap
-  build
-  built
-  bump
-  bumped
-  cache
-  clean
-  cleaned
-  clarify
-  clarified
-  consolidate
-  consolidated
-  configure
-  correct
-  corrected
-  create
-  created
-  define
-  defined
-  deserialize
-  deprecate
-  deprecated
-  detect
-  document
-  documented
-  drop
-  dropped
-  enable
-  enabled
-  enforce
-  enforced
-  expand
-  expanded
-  extract
-  fix
-  fixed
-  harden
-  hardened
-  implement
-  improve
-  improved
-  instrument
-  integrate
-  introduce
-  introduced
-  invalidate
-  lock
-  materialize
-  merge
-  migrate
-  migrated
-  normalize
-  normalized
-  optimize
-  pin
-  preserve
-  prevent
-  profile
-  publish
-  reconcile
-  regenerate
-  refactor
-  refactored
-  release
-  remove
-  removed
-  rename
-  renamed
-  replace
-  replaced
-  resolve
-  restructure
-  restructured
-  revert
-  revise
-  revised
-  sanitize
-  scaffold
-  serialize
-  simplify
-  simplified
-  split
-  stabilize
-  stabilized
-  streamline
-  streamlined
-  support
-  supported
-  sync
-  tune
-  unpin
-  update
-  updated
-  upgrade
-  upgraded
-  validate
-  validated
-  verify
-  verified
-  wrap
-  wrapped
-  allow
-  allowed
-  analyze
-  analyzed
-  annotate
-  annotated
-  assess
-  assessed
-  audit
-  audited
-  calculate
-  calculated
-  check
-  checked
-  choose
-  chosen
-  close
-  closed
-  collect
-  collected
-  compare
-  compared
-  complete
-  completed
-  compose
-  composed
-  constrain
-  constrained
-  convert
-  converted
-  copy
-  copied
-  cover
-  covered
-  delete
-  deleted
-  derive
-  derived
-  describe
-  described
-  design
-  designed
-  diagnose
-  diagnosed
-  disable
-  disabled
-  ensure
-  ensured
-  estimate
-  estimated
-  evaluate
-  evaluated
-  execute
-  executed
-  explain
-  explained
-  expose
-  exposed
-  finalize
-  finalized
-  make
-  made
-  map
-  mapped
-  mark
-  marked
-  measure
-  measured
-  organize
-  organized
-  prioritize
-  prioritized
-  promote
-  promoted
-  prune
-  pruned
-  prove
-  proved
-  record
-  recorded
-  reduce
-  reduced
-  reject
-  rejected
-  repair
-  repaired
-  report
-  reported
-  reset
-  restore
-  restored
-  retain
-  retained
-  review
-  reviewed
-  rewrite
-  rewrote
-  select
-  selected
-  sequence
-  sequenced
-  show
-  showed
-  sort
-  sorted
-  stage
-  staged
-  standardize
-  standardized
-  strengthen
-  strengthened
-  suppress
-  suppressed
-  test
-  tested
+enabled: 'true'
+custom: 'false'
+main_changelog:
+- CHANGELOG.md
+skipped_files:
+- devcovenant/config.yaml
+- CHANGELOG.md
+- .gitignore
+- .pre-commit-config.yaml
+- .github/workflows/ci.yml
+skipped_globs:
+- .vscode/**
+- .idea/**
+- .venv/**
+- .python/**
+- build/**
+- dist/**
+- __pycache__/**
+- '*.egg-info/**'
+- pip-wheel-metadata/**
+- .pytest_cache/**
+- .ruff_cache/**
+- .mypy_cache/**
+- .tox/**
+- .nox/**
+- .hypothesis/**
+- .coverage
+- .coverage.*
+- htmlcov/**
+- devcovenant/logs/**
+- devcovenant/registry/runtime/**
+skipped_prefixes: []
+summary_labels:
+- Change
+- Why
+- Impact
+summary_verbs:
+- add
+- added
+- address
+- addressed
+- adjust
+- adjusted
+- align
+- aligned
+- amend
+- amended
+- automate
+- automated
+- bootstrap
+- build
+- built
+- bump
+- bumped
+- cache
+- clean
+- cleaned
+- clarify
+- clarified
+- consolidate
+- consolidated
+- configure
+- correct
+- corrected
+- create
+- created
+- define
+- defined
+- deserialize
+- deprecate
+- deprecated
+- detect
+- document
+- documented
+- drop
+- dropped
+- enable
+- enabled
+- enforce
+- enforced
+- expand
+- expanded
+- extract
+- fix
+- fixed
+- harden
+- hardened
+- implement
+- improve
+- improved
+- instrument
+- integrate
+- introduce
+- introduced
+- invalidate
+- lock
+- materialize
+- merge
+- migrate
+- migrated
+- normalize
+- normalized
+- optimize
+- pin
+- preserve
+- prevent
+- profile
+- publish
+- reconcile
+- regenerate
+- refactor
+- refactored
+- release
+- remove
+- removed
+- rename
+- renamed
+- replace
+- replaced
+- resolve
+- restructure
+- restructured
+- revert
+- revise
+- revised
+- sanitize
+- scaffold
+- serialize
+- simplify
+- simplified
+- split
+- stabilize
+- stabilized
+- streamline
+- streamlined
+- support
+- supported
+- sync
+- tune
+- unpin
+- update
+- updated
+- upgrade
+- upgraded
+- validate
+- validated
+- verify
+- verified
+- wrap
+- wrapped
+- allow
+- allowed
+- analyze
+- analyzed
+- annotate
+- annotated
+- assess
+- assessed
+- audit
+- audited
+- calculate
+- calculated
+- check
+- checked
+- choose
+- chosen
+- close
+- closed
+- collect
+- collected
+- compare
+- compared
+- complete
+- completed
+- compose
+- composed
+- constrain
+- constrained
+- convert
+- converted
+- copy
+- copied
+- cover
+- covered
+- delete
+- deleted
+- derive
+- derived
+- describe
+- described
+- design
+- designed
+- diagnose
+- diagnosed
+- disable
+- disabled
+- ensure
+- ensured
+- estimate
+- estimated
+- evaluate
+- evaluated
+- execute
+- executed
+- explain
+- explained
+- expose
+- exposed
+- finalize
+- finalized
+- make
+- made
+- map
+- mapped
+- mark
+- marked
+- measure
+- measured
+- organize
+- organized
+- prioritize
+- prioritized
+- promote
+- promoted
+- prune
+- pruned
+- prove
+- proved
+- record
+- recorded
+- reduce
+- reduced
+- reject
+- rejected
+- repair
+- repaired
+- report
+- reported
+- reset
+- restore
+- restored
+- retain
+- retained
+- review
+- reviewed
+- rewrite
+- rewrote
+- select
+- selected
+- sequence
+- sequenced
+- show
+- showed
+- sort
+- sorted
+- stage
+- staged
+- standardize
+- standardized
+- strengthen
+- strengthened
+- suppress
+- suppressed
+- test
+- tested
 gate_status_file: devcovenant/registry/runtime/gate_status.json
-collections:
-header_doc_suffixes: .md
-  .rst
-  .txt
-header_keys: Last Updated
-  Project Version
-  Project Stage
-  Maintenance Stance
-  Compatibility Policy
-  Versioning Mode
-  Project Codename
-  Build Identity
-  DevCovenant Version
-header_scan_lines: 4
-required_globs: README.md
-  AGENTS.md
-  CONTRIBUTING.md
-  CHANGELOG.md
-  SPEC.md
-  PLAN.md
-selector_roles: skipped
-  header_doc
-  required
-skipped_dirs:
-header_doc_globs: *.md
-  *.rst
-  *.txt
-header_doc_files:
-header_doc_dirs:
-required_files:
-required_dirs:
+collections: []
+header_doc_suffixes:
+- .md
+- .rst
+- .txt
+header_keys:
+- Last Updated
+- Project Version
+- Project Stage
+- Maintenance Stance
+- Compatibility Policy
+- Versioning Mode
+- Project Codename
+- Build Identity
+- DevCovenant Version
+header_scan_lines: '4'
+required_globs:
+- README.md
+- AGENTS.md
+- CONTRIBUTING.md
+- CHANGELOG.md
+- SPEC.md
+- PLAN.md
+selector_roles:
+- skipped,header_doc,required
+skipped_dirs: []
+header_doc_globs:
+- '*.md'
+- '*.rst'
+- '*.txt'
+header_doc_files: []
+header_doc_dirs: []
+required_files: []
+required_dirs: []
 ```
 
 Every change must be logged in a new changelog entry dated today, under the
@@ -532,69 +540,212 @@ notes daily, file-complete, and traceable.
 ```policy-def
 id: dependency-management
 severity: error
-auto_fix: true
+auto_fix: 'true'
 enforcement: active
-enabled: true
-custom: false
-dependency_files:
-dependency_globs:
-dependency_dirs:
-dependency_roles: intent
-  resolved
-  package_manifest
-dependency_role_files: intent=>requirements.in
-  resolved=>requirements.lock
-  resolved=>devcovenant/runtime-requirements.lock
-  package_manifest=>pyproject.toml
-dependency_role_globs:
-dependency_role_dirs:
-third_party_file: licenses/THIRD_PARTY_LICENSES.md
-licenses_dir: licenses
-report_heading: ## License Report
-python_lock_generate_hashes: True
-auxiliary_lock_file: devcovenant/runtime-requirements.lock
-auxiliary_direct_dependency_files: pyproject.toml
-auxiliary_third_party_file: devcovenant/licenses/THIRD_PARTY_LICENSES.md
-auxiliary_licenses_dir: devcovenant/licenses
-auxiliary_report_heading: ## License Report
-auxiliary_lock_generate_hashes: False
+enabled: 'true'
+custom: 'false'
+surfaces:
+- id: devcovenant_runtime
+  lock_file: devcovenant/runtime-requirements.lock
+  direct_dependency_files:
+  - pyproject.toml
+  third_party_file: devcovenant/licenses/THIRD_PARTY_LICENSES.md
+  licenses_dir: devcovenant/licenses
+  report_heading: '## License Report'
+  manage_licenses_readme: 'true'
+  generate_hashes: 'false'
+  required_paths:
+  - devcovenant/runtime-requirements.lock
+  hash_targets:
+  - id: linux-py311
+    marker: sys_platform == "linux" and python_version == "3.11"
+    pip:
+      platform: manylinux2014_x86_64
+      implementation: cp
+      python_version: '3.11'
+      abi: cp311
+  - id: linux-py314
+    marker: sys_platform == "linux" and python_version == "3.14"
+    pip:
+      platform: manylinux2014_x86_64
+      implementation: cp
+      python_version: '3.14'
+      abi: cp314
+  - id: windows-py311
+    marker: sys_platform == "win32" and python_version == "3.11"
+    pip:
+      platform: win_amd64
+      implementation: cp
+      python_version: '3.11'
+      abi: cp311
+  - id: windows-py314
+    marker: sys_platform == "win32" and python_version == "3.14"
+    pip:
+      platform: win_amd64
+      implementation: cp
+      python_version: '3.14'
+      abi: cp314
+  - id: macos-py311
+    marker: sys_platform == "darwin" and python_version == "3.11"
+    pip:
+      platform: macosx_11_0_x86_64
+      implementation: cp
+      python_version: '3.11'
+      abi: cp311
+  - id: macos-py314
+    marker: sys_platform == "darwin" and python_version == "3.14"
+    pip:
+      platform: macosx_11_0_x86_64
+      implementation: cp
+      python_version: '3.14'
+      abi: cp314
+  dependency_files:
+  - pyproject.toml
+- id: root_workspace
+  generate_hashes: 'false'
+  lock_file: requirements.lock
+  direct_dependency_files:
+  - requirements.in
+  dependency_files:
+  - requirements.in
+  - pyproject.toml
+  third_party_file: licenses/THIRD_PARTY_LICENSES.md
+  licenses_dir: licenses
+  report_heading: '## License Report'
+  manage_licenses_readme: 'true'
+  required_paths:
+  - requirements.in
+  hash_targets:
+  - id: linux-py311
+    marker: sys_platform == "linux" and python_version == "3.11"
+    pip:
+      platform: manylinux2014_x86_64
+      implementation: cp
+      python_version: '3.11'
+      abi: cp311
+  - id: linux-py314
+    marker: sys_platform == "linux" and python_version == "3.14"
+    pip:
+      platform: manylinux2014_x86_64
+      implementation: cp
+      python_version: '3.14'
+      abi: cp314
+  - id: windows-py311
+    marker: sys_platform == "win32" and python_version == "3.11"
+    pip:
+      platform: win_amd64
+      implementation: cp
+      python_version: '3.11'
+      abi: cp311
+  - id: windows-py314
+    marker: sys_platform == "win32" and python_version == "3.14"
+    pip:
+      platform: win_amd64
+      implementation: cp
+      python_version: '3.14'
+      abi: cp314
+  - id: macos-py311
+    marker: sys_platform == "darwin" and python_version == "3.11"
+    pip:
+      platform: macosx_11_0_x86_64
+      implementation: cp
+      python_version: '3.11'
+      abi: cp311
+  - id: macos-py314
+    marker: sys_platform == "darwin" and python_version == "3.14"
+    pip:
+      platform: macosx_11_0_x86_64
+      implementation: cp
+      python_version: '3.14'
+      abi: cp314
+- id: package_runtime
+  enabled: 'false'
+  lock_file: '{{ PROJECT_NAME_PATH }}/runtime-requirements.lock'
+  direct_dependency_files:
+  - pyproject.toml
+  dependency_files:
+  - pyproject.toml
+  third_party_file: '{{ PROJECT_NAME_PATH }}/licenses/THIRD_PARTY_LICENSES.md'
+  licenses_dir: '{{ PROJECT_NAME_PATH }}/licenses'
+  report_heading: '## License Report'
+  manage_licenses_readme: 'true'
+  generate_hashes: 'false'
+  required_paths:
+  - pyproject.toml
+  - '{{ PROJECT_NAME_PATH }}'
+  hash_targets:
+  - id: linux-py311
+    marker: sys_platform == "linux" and python_version == "3.11"
+    pip:
+      platform: manylinux2014_x86_64
+      implementation: cp
+      python_version: '3.11'
+      abi: cp311
+  - id: linux-py314
+    marker: sys_platform == "linux" and python_version == "3.14"
+    pip:
+      platform: manylinux2014_x86_64
+      implementation: cp
+      python_version: '3.14'
+      abi: cp314
+  - id: windows-py311
+    marker: sys_platform == "win32" and python_version == "3.11"
+    pip:
+      platform: win_amd64
+      implementation: cp
+      python_version: '3.11'
+      abi: cp311
+  - id: windows-py314
+    marker: sys_platform == "win32" and python_version == "3.14"
+    pip:
+      platform: win_amd64
+      implementation: cp
+      python_version: '3.14'
+      abi: cp314
+  - id: macos-py311
+    marker: sys_platform == "darwin" and python_version == "3.11"
+    pip:
+      platform: macosx_11_0_x86_64
+      implementation: cp
+      python_version: '3.11'
+      abi: cp311
+  - id: macos-py314
+    marker: sys_platform == "darwin" and python_version == "3.14"
+    pip:
+      platform: macosx_11_0_x86_64
+      implementation: cp
+      python_version: '3.14'
+      abi: cp314
 selector_roles: dependency
-auxiliary_direct_dependency_globs:
-auxiliary_direct_dependency_dirs:
+dependency_globs: []
+dependency_files: []
+dependency_dirs: []
 ```
 
 Manage dependency-maintenance artifacts as one coherent policy surface.
 When dependency inputs in this repository change, lockfiles and repository
 compliance artifacts must stay synchronized together.
-Dependency input modeling supports role-based taxonomy for mixed ecosystems:
+Artifact ownership is declared through structured `surfaces` metadata.
+Each surface defines one lock/report/license bundle with its own lock file,
+direct dependency inputs, dependency selectors, license report path,
+license directory, and optional hash-lock target matrix.
+Surface selectors support role-based taxonomy for mixed ecosystems:
 `intent`, `resolved`, and `package_manifest`.
-Role selectors are metadata-driven via
-(`dependency_role_files`, `dependency_role_globs`,
-`dependency_role_dirs`) using `role=>selector` tokens.
-Dependency selectors are metadata-driven
-(`dependency_files`, `dependency_globs`, `dependency_dirs`) and may include
-both manifest files and lock/resolution files so mixed-language repositories
-can define their own layout. Every dependency change must keep the
-configured report file (`third_party_file`) and configured license directory
-(`licenses_dir`) synchronized, including the configured `report_heading`.
+Each surface may declare nested selector keys:
+`dependency_files`, `dependency_globs`, `dependency_dirs`,
+`dependency_role_files`, `dependency_role_globs`,
+`dependency_role_dirs`.
+Surface selectors decide when checks and license/report refresh must react.
+Direct dependency inputs decide when a lock refresh must recompile.
 Policy checks remain read-only. Autofixers may invoke declared policy
 runtime actions, and explicit policy-born CLI commands may invoke those same
 runtime actions manually. Remediation messaging may differ when autofix is
-enabled versus disabled. For Python repositories, hash-locked
-`requirements.lock` generation is opt-in through
-`python_lock_generate_hashes`. When enabled, exact marker-gated direct pins
-must keep real hashes as well; the runtime resolves those hashes explicitly
-or fails loudly instead of writing a partial lock. Repositories that need
-one hash-locked file to work across supported platforms or Python versions
-should declare exact marker pins for those cross-environment dependencies in
-the intent manifest so the runtime can materialize them even when the local
-compile host would otherwise omit them. Repositories may also declare one
-auxiliary Python lock/license surface with
-`auxiliary_lock_file`, `auxiliary_direct_dependency_files`,
-`auxiliary_third_party_file`, and `auxiliary_licenses_dir`. That extra
-surface is useful when a repo ships a package runtime/bootstrap lock that
-must stay separate from the repo's own development lock. Artifact refresh
-remains deterministic/idempotent.
+enabled versus disabled. When one Python surface enables
+`generate_hashes`, DevCovenant resolves the full configured target closure
+from `hash_targets` and writes an all-target hash lock or fails explicitly.
+Hash mode does not patch a host-local compile result or depend on
+GitHub-specific dependency logic. Artifact refresh remains
+deterministic/idempotent.
 
 
 ---
@@ -604,19 +755,22 @@ remains deterministic/idempotent.
 ```policy-def
 id: devcov-raw-string-escapes
 severity: warning
-auto_fix: false
+auto_fix: 'false'
 enforcement: active
-enabled: true
-custom: true
-include_suffixes: .py
-  .pyi
-  .pyw
-selector_roles: include
-include_globs: *.py
-  *.pyi
-  *.pyw
-include_files:
-include_dirs:
+enabled: 'true'
+custom: 'true'
+include_suffixes:
+- .py
+- .pyi
+- .pyw
+selector_roles:
+- include
+include_globs:
+- '*.py'
+- '*.pyi'
+- '*.pyw'
+include_files: []
+include_dirs: []
 ```
 
 Warn when DevCovenant repo Python strings contain bare backslashes.
@@ -631,30 +785,35 @@ forcing it on user repos.
 ```policy-def
 id: docstring-and-comment-coverage
 severity: error
-auto_fix: false
+auto_fix: 'false'
 enforcement: active
-enabled: true
-custom: false
-include_suffixes: .py
-exclude_prefixes: build
-  dist
-  node_modules
-include_prefixes:
-include_globs: *.py
-exclude_suffixes:
-exclude_globs: build/**
-  dist/**
-  node_modules/**
-force_include_globs:
-selector_roles: include
-  exclude
-  force_include
-include_files:
-include_dirs:
-exclude_files:
-exclude_dirs:
-force_include_files:
-force_include_dirs:
+enabled: 'true'
+custom: 'false'
+include_suffixes:
+- .py
+exclude_prefixes:
+- build
+- dist
+- node_modules
+include_prefixes: []
+include_globs:
+- '*.py'
+exclude_suffixes: []
+exclude_globs:
+- build/**
+- dist/**
+- node_modules/**
+force_include_globs: []
+selector_roles:
+- include
+- exclude
+- force_include
+include_files: []
+include_dirs: []
+exclude_files: []
+exclude_dirs: []
+force_include_files: []
+force_include_dirs: []
 ```
 
 Source files must include a docstring or nearby explanatory comment so
@@ -669,221 +828,237 @@ language satisfies the requirement.
 ```policy-def
 id: documentation-growth-tracking
 severity: warning
-auto_fix: false
+auto_fix: 'false'
 enforcement: active
-enabled: true
-custom: false
-selector_roles: user_facing
-  user_visible
-  doc_quality
-include_prefixes:
-exclude_prefixes:
-user_facing_prefixes:
-user_facing_exclude_prefixes: tests
-user_facing_suffixes: .py
-  .js
-  .ts
-  .tsx
-  .vue
-  .go
-  .rs
-  .java
-  .kt
-  .swift
-  .rb
-  .php
-  .cs
-  .yml
-  .yaml
-  .json
-  .toml
-user_facing_files: .pre-commit-config.yaml
-  pyproject.toml
-  devcovenant/cli.py
-  devcovenant/__main__.py
-user_facing_globs: .github/workflows/*.yml
-  .github/workflows/*.yaml
-  *.py
-  *.js
-  *.ts
-  *.tsx
-  *.vue
-  *.go
-  *.rs
-  *.java
-  *.kt
-  *.swift
-  *.rb
-  *.php
-  *.cs
-  *.yml
-  *.yaml
-  *.json
-  *.toml
-user_facing_keywords: api
-  endpoint
-  endpoints
-  route
-  routes
-  routing
-  service
-  services
-  controller
-  controllers
-  handler
-  handlers
-  client
-  clients
-  webhook
-  webhooks
-  integration
-  integrations
-  sdk
-  cli
-  ui
-  view
-  views
-  page
-  pages
-  screen
-  screens
-  form
-  forms
-  workflow
-  workflows
-user_visible_files: README.md
-  CONTRIBUTING.md
-  AGENTS.md
-  SPEC.md
-  PLAN.md
-  SECURITY.md
-  PRIVACY.md
-  SUPPORT.md
-  devcovenant/README.md
-  devcovenant/docs/architecture.md
-  devcovenant/docs/installation.md
-  devcovenant/docs/config.md
-  devcovenant/docs/profiles.md
-  devcovenant/docs/policies.md
-  devcovenant/docs/registry.md
-  devcovenant/docs/refresh.md
-  devcovenant/docs/workflow.md
-  devcovenant/docs/troubleshooting.md
-doc_quality_files: README.md
-  CONTRIBUTING.md
-  AGENTS.md
-  SPEC.md
-  PLAN.md
-  SECURITY.md
-  PRIVACY.md
-  SUPPORT.md
-  devcovenant/README.md
-  devcovenant/docs/architecture.md
-  devcovenant/docs/installation.md
-  devcovenant/docs/config.md
-  devcovenant/docs/profiles.md
-  devcovenant/docs/policies.md
-  devcovenant/docs/registry.md
-  devcovenant/docs/refresh.md
-  devcovenant/docs/workflow.md
-  devcovenant/docs/troubleshooting.md
-required_headings: Overview
-require_toc: false
-min_section_count: 3
-min_word_count: 120
-doc_routes: devcovenant/builtin/policies/ => devcovenant/docs/policies.md
-  devcovenant/builtin/profiles/*/*.yaml => devcovenant/docs/profiles.md
-  devcovenant/*/profiles/*/*translator.py=> devcovenant/docs/profiles.md
-  devcovenant/builtin/profiles/**/config.yaml => devcovenant/docs/config.md
-  devcovenant/*/profiles/**/assets/** => devcovenant/docs/profiles.md
-  devcovenant/*/profiles/*/assets/*.yaml=> devcovenant/docs/profiles.md
-  devcovenant/*/profiles/*/assets/*.yml=> devcovenant/docs/profiles.md
-  devcovenant/*/profiles/**/assets/**/*.yaml=> devcovenant/docs/profiles.md
-  devcovenant/*/profiles/**/assets/**/*.yml=> devcovenant/docs/profiles.md
-  devcovenant/custom/profiles/__init__.py => devcovenant/docs/profiles.md
-  devcovenant/custom/profiles/*.py => devcovenant/docs/profiles.md
-  devcovenant/custom/profiles/**/*.py => devcovenant/docs/profiles.md
-  devcovenant/custom/profiles/**/*.yaml => devcovenant/docs/profiles.md
-  bandit.yaml => SECURITY.md
-  devcovenant/custom/policies/**/*.yaml => devcovenant/docs/policies.md
-  devcovenant/custom/policies/**/*.py => devcovenant/docs/policies.md
-  devcovenant/custom/policies/**/autofix/**=> devcovenant/docs/policies.md
-  devcovenant/core/flow/*.py => devcovenant/docs/workflow.md
-  devcovenant/core/runtime/*.py => devcovenant/docs/workflow.md
-  devcovenant/core/services/*.py => devcovenant/docs/architecture.md
-  devcovenant/core/lib/*.py => devcovenant/docs/architecture.md
-  devcovenant/core/contracts/*.py => devcovenant/docs/architecture.md
-  devcovenant/core/contracts/**/*.yaml => devcovenant/docs/architecture.md
-  devcovenant/*.py => devcovenant/docs/installation.md
-  pyproject.toml => devcovenant/docs/installation.md
-  MANIFEST.in => devcovenant/docs/installation.md
-  devcovenant/config.yaml => devcovenant/docs/config.md
-  devcovenant/registry/registry.yaml => devcovenant/docs/registry.md
-  .pre-commit-config.yaml => devcovenant/docs/workflow.md
-  .github/workflows/*.yml => devcovenant/docs/workflow.md
-require_mentions: true
-mention_min_length: 3
-mention_stopwords: devcovenant
-  tools
-  common
-  custom
-  policy
-  policies
-  script
-  scripts
-  py
-  js
-  ts
-  json
-  yml
-  yaml
-  toml
-  md
-  readme
-  plan
-  spec
-include_suffixes:
-include_globs:
-exclude_suffixes:
-exclude_globs:
-force_include_globs:
-user_facing_exclude_globs: .vscode/**
-  .idea/**
-  .venv/**
-  .python/**
-  build/**
-  dist/**
-  __pycache__/**
-  *.egg-info/**
-  pip-wheel-metadata/**
-  .pytest_cache/**
-  .ruff_cache/**
-  .mypy_cache/**
-  .tox/**
-  .nox/**
-  .hypothesis/**
-  .coverage
-  .coverage.*
-  htmlcov/**
-  devcovenant/logs/**
-  devcovenant/registry/runtime/**
-  devcovenant/core/*.py
-  devcovenant/custom/policies/**/fixers/**
-  tests/**
-user_facing_exclude_suffixes:
-user_facing_dirs:
-user_visible_globs:
-user_visible_dirs: devcovenant/docs
-doc_quality_globs:
-doc_quality_dirs: devcovenant/docs
-include_files:
-include_dirs:
-exclude_files:
-exclude_dirs:
-user_facing_exclude_files: devcovenant/config.yaml
-user_facing_exclude_dirs: tests/**
-force_include_files:
-force_include_dirs:
+enabled: 'true'
+custom: 'false'
+selector_roles:
+- user_facing
+- user_visible
+- doc_quality
+include_prefixes: []
+exclude_prefixes: []
+user_facing_prefixes: []
+user_facing_exclude_prefixes:
+- tests
+user_facing_suffixes:
+- .py
+- .js
+- .ts
+- .tsx
+- .vue
+- .go
+- .rs
+- .java
+- .kt
+- .swift
+- .rb
+- .php
+- .cs
+- .yml
+- .yaml
+- .json
+- .toml
+user_facing_files:
+- .pre-commit-config.yaml
+- pyproject.toml
+- devcovenant/cli.py
+- devcovenant/__main__.py
+user_facing_globs:
+- .github/workflows/*.yml
+- .github/workflows/*.yaml
+- '*.py'
+- '*.js'
+- '*.ts'
+- '*.tsx'
+- '*.vue'
+- '*.go'
+- '*.rs'
+- '*.java'
+- '*.kt'
+- '*.swift'
+- '*.rb'
+- '*.php'
+- '*.cs'
+- '*.yml'
+- '*.yaml'
+- '*.json'
+- '*.toml'
+user_facing_keywords:
+- api
+- endpoint
+- endpoints
+- route
+- routes
+- routing
+- service
+- services
+- controller
+- controllers
+- handler
+- handlers
+- client
+- clients
+- webhook
+- webhooks
+- integration
+- integrations
+- sdk
+- cli
+- ui
+- view
+- views
+- page
+- pages
+- screen
+- screens
+- form
+- forms
+- workflow
+- workflows
+user_visible_files:
+- README.md
+- CONTRIBUTING.md
+- AGENTS.md
+- SPEC.md
+- PLAN.md
+- SECURITY.md
+- PRIVACY.md
+- SUPPORT.md
+- devcovenant/README.md
+- devcovenant/docs/architecture.md
+- devcovenant/docs/installation.md
+- devcovenant/docs/config.md
+- devcovenant/docs/profiles.md
+- devcovenant/docs/policies.md
+- devcovenant/docs/registry.md
+- devcovenant/docs/refresh.md
+- devcovenant/docs/workflow.md
+- devcovenant/docs/troubleshooting.md
+doc_quality_files:
+- README.md
+- CONTRIBUTING.md
+- AGENTS.md
+- SPEC.md
+- PLAN.md
+- SECURITY.md
+- PRIVACY.md
+- SUPPORT.md
+- devcovenant/README.md
+- devcovenant/docs/architecture.md
+- devcovenant/docs/installation.md
+- devcovenant/docs/config.md
+- devcovenant/docs/profiles.md
+- devcovenant/docs/policies.md
+- devcovenant/docs/registry.md
+- devcovenant/docs/refresh.md
+- devcovenant/docs/workflow.md
+- devcovenant/docs/troubleshooting.md
+required_headings:
+- Overview
+require_toc: 'false'
+min_section_count: '3'
+min_word_count: '120'
+doc_routes:
+- devcovenant/builtin/policies/ => devcovenant/docs/policies.md
+- devcovenant/builtin/profiles/*/*.yaml => devcovenant/docs/profiles.md
+- devcovenant/*/profiles/*/*translator.py=> devcovenant/docs/profiles.md
+- devcovenant/builtin/profiles/**/config.yaml => devcovenant/docs/config.md
+- devcovenant/*/profiles/**/assets/** => devcovenant/docs/profiles.md
+- devcovenant/*/profiles/*/assets/*.yaml=> devcovenant/docs/profiles.md
+- devcovenant/*/profiles/*/assets/*.yml=> devcovenant/docs/profiles.md
+- devcovenant/*/profiles/**/assets/**/*.yaml=> devcovenant/docs/profiles.md
+- devcovenant/*/profiles/**/assets/**/*.yml=> devcovenant/docs/profiles.md
+- devcovenant/custom/profiles/__init__.py => devcovenant/docs/profiles.md
+- devcovenant/custom/profiles/*.py => devcovenant/docs/profiles.md
+- devcovenant/custom/profiles/**/*.py => devcovenant/docs/profiles.md
+- devcovenant/custom/profiles/**/*.yaml => devcovenant/docs/profiles.md
+- bandit.yaml => SECURITY.md
+- devcovenant/custom/policies/**/*.yaml => devcovenant/docs/policies.md
+- devcovenant/custom/policies/**/*.py => devcovenant/docs/policies.md
+- devcovenant/custom/policies/**/autofix/**=> devcovenant/docs/policies.md
+- devcovenant/core/flow/*.py => devcovenant/docs/workflow.md
+- devcovenant/core/runtime/*.py => devcovenant/docs/workflow.md
+- devcovenant/core/services/*.py => devcovenant/docs/architecture.md
+- devcovenant/core/lib/*.py => devcovenant/docs/architecture.md
+- devcovenant/core/contracts/*.py => devcovenant/docs/architecture.md
+- devcovenant/core/contracts/**/*.yaml => devcovenant/docs/architecture.md
+- devcovenant/*.py => devcovenant/docs/installation.md
+- pyproject.toml => devcovenant/docs/installation.md
+- MANIFEST.in => devcovenant/docs/installation.md
+- devcovenant/config.yaml => devcovenant/docs/config.md
+- devcovenant/registry/registry.yaml => devcovenant/docs/registry.md
+- .pre-commit-config.yaml => devcovenant/docs/workflow.md
+- .github/workflows/*.yml => devcovenant/docs/workflow.md
+require_mentions: 'true'
+mention_min_length: '3'
+mention_stopwords:
+- devcovenant
+- tools
+- common
+- custom
+- policy
+- policies
+- script
+- scripts
+- py
+- js
+- ts
+- json
+- yml
+- yaml
+- toml
+- md
+- readme
+- plan
+- spec
+include_suffixes: []
+include_globs: []
+exclude_suffixes: []
+exclude_globs: []
+force_include_globs: []
+user_facing_exclude_globs:
+- .vscode/**
+- .idea/**
+- .venv/**
+- .python/**
+- build/**
+- dist/**
+- __pycache__/**
+- '*.egg-info/**'
+- pip-wheel-metadata/**
+- .pytest_cache/**
+- .ruff_cache/**
+- .mypy_cache/**
+- .tox/**
+- .nox/**
+- .hypothesis/**
+- .coverage
+- .coverage.*
+- htmlcov/**
+- devcovenant/logs/**
+- devcovenant/registry/runtime/**
+- devcovenant/core/*.py
+- devcovenant/custom/policies/**/fixers/**
+- tests/**
+user_facing_exclude_suffixes: []
+user_facing_dirs: []
+user_visible_globs: []
+user_visible_dirs:
+- devcovenant/docs
+doc_quality_globs: []
+doc_quality_dirs:
+- devcovenant/docs
+include_files: []
+include_dirs: []
+exclude_files: []
+exclude_dirs: []
+user_facing_exclude_files:
+- devcovenant/config.yaml
+user_facing_exclude_dirs:
+- tests/**
+force_include_files: []
+force_include_dirs: []
 ```
 
 When user-facing files change (as defined by the user-facing selectors and
@@ -904,66 +1079,71 @@ docs.
 ```policy-def
 id: last-updated
 severity: error
-auto_fix: true
+auto_fix: 'true'
 enforcement: active
-enabled: true
-custom: false
-include_suffixes: .md
-allowed_globs: devcovenant/README.md
-  devcovenant/core/README.md
-  devcovenant/custom/README.md
-  devcovenant/registry/README.md
-  devcovenant/logs/README.md
-  devcovenant/builtin/policies/README.md
-  devcovenant/builtin/profiles/README.md
-  devcovenant/custom/policies/README.md
-  devcovenant/custom/profiles/README.md
-  devcovenant/docs/*.md
-  devcovenant/docs/**/*.md
-  README.md
-  AGENTS.md
-  CONTRIBUTING.md
-  CHANGELOG.md
-  SPEC.md
-  PLAN.md
-  PROFILE_MAP.md
-  POLICY_MAP.md
-  SECURITY.md
-  PRIVACY.md
-  SUPPORT.md
-allowed_files:
-allowed_suffixes:
-required_files:
-required_globs: devcovenant/README.md
-  devcovenant/core/README.md
-  devcovenant/custom/README.md
-  devcovenant/registry/README.md
-  devcovenant/logs/README.md
-  devcovenant/builtin/policies/README.md
-  devcovenant/builtin/profiles/README.md
-  devcovenant/custom/policies/README.md
-  devcovenant/custom/profiles/README.md
-  devcovenant/docs/*.md
-  devcovenant/docs/**/*.md
-  README.md
-  AGENTS.md
-  CONTRIBUTING.md
-  CHANGELOG.md
-  SPEC.md
-  PLAN.md
-  PROFILE_MAP.md
-  POLICY_MAP.md
-  SECURITY.md
-  PRIVACY.md
-  SUPPORT.md
-selector_roles: include
-  allowed
-  required
-include_globs: *.md
-include_files:
-include_dirs:
-allowed_dirs:
-required_dirs:
+enabled: 'true'
+custom: 'false'
+include_suffixes:
+- .md
+allowed_globs:
+- devcovenant/README.md
+- devcovenant/core/README.md
+- devcovenant/custom/README.md
+- devcovenant/registry/README.md
+- devcovenant/logs/README.md
+- devcovenant/builtin/policies/README.md
+- devcovenant/builtin/profiles/README.md
+- devcovenant/custom/policies/README.md
+- devcovenant/custom/profiles/README.md
+- devcovenant/docs/*.md
+- devcovenant/docs/**/*.md
+- README.md
+- AGENTS.md
+- CONTRIBUTING.md
+- CHANGELOG.md
+- SPEC.md
+- PLAN.md
+- PROFILE_MAP.md
+- POLICY_MAP.md
+- SECURITY.md
+- PRIVACY.md
+- SUPPORT.md
+allowed_files: []
+allowed_suffixes: []
+required_files: []
+required_globs:
+- devcovenant/README.md
+- devcovenant/core/README.md
+- devcovenant/custom/README.md
+- devcovenant/registry/README.md
+- devcovenant/logs/README.md
+- devcovenant/builtin/policies/README.md
+- devcovenant/builtin/profiles/README.md
+- devcovenant/custom/policies/README.md
+- devcovenant/custom/profiles/README.md
+- devcovenant/docs/*.md
+- devcovenant/docs/**/*.md
+- README.md
+- AGENTS.md
+- CONTRIBUTING.md
+- CHANGELOG.md
+- SPEC.md
+- PLAN.md
+- PROFILE_MAP.md
+- POLICY_MAP.md
+- SECURITY.md
+- PRIVACY.md
+- SUPPORT.md
+selector_roles:
+- include
+- allowed
+- required
+include_globs:
+- '*.md'
+include_files: []
+include_dirs: []
+allowed_dirs: []
+required_dirs: []
 ```
 
 Docs must include a `Last Updated` header in the generated header zone so
@@ -978,112 +1158,120 @@ allowlisted docs while respecting allowlist selectors.
 ```policy-def
 id: line-length-limit
 severity: warning
-auto_fix: false
+auto_fix: 'false'
 enforcement: active
-enabled: true
-custom: false
-max_length: 79
-allow_long_url_lines: True
-url_prefixes: https://
-  http://
-  ftp://
-  ftps://
-  sftp://
-  ssh://
-  ws://
-  wss://
-  file://
-  git://
-  svn://
-  mailto:
-  tel:
-  magnet:
-  torrent:
-  data:
-  urn:
-allow_long_lines: True
-long_lines_contain:
-long_lines_between: devcovenant/builtin/policies/=>.yaml
-  devcovenant/custom/policies/=>.yaml
-include_suffixes: .py
-  .md
-  .rst
-  .txt
-  .yml
-  .yaml
-  .json
-  .toml
-  .cff
-exclude_prefixes: build
-  dist
-  node_modules
-exclude_globs: .vscode/**
-  .idea/**
-  .venv/**
-  .python/**
-  build/**
-  dist/**
-  __pycache__/**
-  *.egg-info/**
-  pip-wheel-metadata/**
-  .pytest_cache/**
-  .ruff_cache/**
-  .mypy_cache/**
-  .tox/**
-  .nox/**
-  .hypothesis/**
-  .coverage
-  .coverage.*
-  htmlcov/**
-  licenses/*.txt
-  devcovenant/licenses/*.txt
-  devcovenant/logs/**
-  devcovenant/registry/runtime/**
-  node_modules/**
-  **/*.egg-info/**
-  devcovenant/builtin/profiles/global/assets/*.yaml
-  devcovenant/builtin/profiles/global/assets/**/*.yaml
-  devcovenant/registry/**
-include_prefixes:
-include_globs: *.py
-  *.md
-  *.rst
-  *.txt
-  *.yml
-  *.yaml
-  *.json
-  *.toml
-  *.cff
-exclude_suffixes:
-force_include_globs:
-selector_roles: include
-  exclude
-  force_include
-url_globs: https:/**
-  http:/**
-  ftp:/**
-  ftps:/**
-  sftp:/**
-  ssh:/**
-  ws:/**
-  wss:/**
-  file:/**
-  git:/**
-  svn:/**
-  mailto:/**
-  tel:/**
-  magnet:/**
-  torrent:/**
-  data:/**
-  urn:/**
-url_files:
-url_dirs:
-include_files:
-include_dirs:
-exclude_files:
-exclude_dirs:
-force_include_files:
-force_include_dirs:
+enabled: 'true'
+custom: 'false'
+max_length: '79'
+allow_long_url_lines: 'true'
+url_prefixes:
+- https://
+- http://
+- ftp://
+- ftps://
+- sftp://
+- ssh://
+- ws://
+- wss://
+- file://
+- git://
+- svn://
+- 'mailto:'
+- 'tel:'
+- 'magnet:'
+- 'torrent:'
+- 'data:'
+- 'urn:'
+allow_long_lines: 'true'
+long_lines_contain: []
+long_lines_between:
+- devcovenant/builtin/policies/=>.yaml
+- devcovenant/custom/policies/=>.yaml
+include_suffixes:
+- .py
+- .md
+- .rst
+- .txt
+- .yml
+- .yaml
+- .json
+- .toml
+- .cff
+exclude_prefixes:
+- build
+- dist
+- node_modules
+exclude_globs:
+- .vscode/**
+- .idea/**
+- .venv/**
+- .python/**
+- build/**
+- dist/**
+- __pycache__/**
+- '*.egg-info/**'
+- pip-wheel-metadata/**
+- .pytest_cache/**
+- .ruff_cache/**
+- .mypy_cache/**
+- .tox/**
+- .nox/**
+- .hypothesis/**
+- .coverage
+- .coverage.*
+- htmlcov/**
+- licenses/*.txt
+- devcovenant/licenses/*.txt
+- devcovenant/logs/**
+- devcovenant/registry/runtime/**
+- node_modules/**
+- '**/*.egg-info/**'
+- devcovenant/builtin/profiles/global/assets/*.yaml
+- devcovenant/builtin/profiles/global/assets/**/*.yaml
+- devcovenant/registry/**
+include_prefixes: []
+include_globs:
+- '*.py'
+- '*.md'
+- '*.rst'
+- '*.txt'
+- '*.yml'
+- '*.yaml'
+- '*.json'
+- '*.toml'
+- '*.cff'
+exclude_suffixes: []
+force_include_globs: []
+selector_roles:
+- include
+- exclude
+- force_include
+url_globs:
+- https:/**
+- http:/**
+- ftp:/**
+- ftps:/**
+- sftp:/**
+- ssh:/**
+- ws:/**
+- wss:/**
+- file:/**
+- git:/**
+- svn:/**
+- mailto:/**
+- tel:/**
+- magnet:/**
+- torrent:/**
+- data:/**
+- urn:/**
+url_files: []
+url_dirs: []
+include_files: []
+include_dirs: []
+exclude_files: []
+exclude_dirs: []
+force_include_files: []
+force_include_dirs: []
 ```
 
 Keep lines within the configured maximum so documentation and code remain
@@ -1099,10 +1287,10 @@ or explicit marker patterns when repositories need targeted flexibility.
 ```policy-def
 id: managed-doc-assets
 severity: error
-auto_fix: false
+auto_fix: 'false'
 enforcement: active
-enabled: true
-custom: true
+enabled: 'true'
+custom: 'true'
 ```
 
 Ensure the managed docs marked as authoritative sources stay synchronized
@@ -1118,20 +1306,25 @@ deterministic.
 ```policy-def
 id: managed-environment
 severity: error
-auto_fix: false
+auto_fix: 'false'
 enforcement: active
-enabled: true
-custom: false
-expected_paths: .venv
-expected_interpreters: .venv/bin/python
-  .venv/Scripts/python.exe
-cleanup_protected_paths:
-required_commands: pre-commit
-  pytest
-manual_commands: {current_python} -m venv .venv
-  {managed_python} -m pip install -r requirements.lock
-managed_commands: start=>{current_python} -m venv .venv
-  start=>{managed_python} -m pip install -r requirements.lock
+enabled: 'true'
+custom: 'false'
+expected_paths:
+- .venv
+expected_interpreters:
+- .venv/bin/python
+- .venv/Scripts/python.exe
+cleanup_protected_paths: []
+required_commands:
+- pre-commit
+- pytest
+manual_commands:
+- '{current_python} -m venv .venv'
+- '{managed_python} -m pip install -r requirements.lock'
+managed_commands:
+- start=>{current_python} -m venv .venv
+- start=>{managed_python} -m pip install -r requirements.lock
 ```
 
 DevCovenant must run from one execution environment described by this
@@ -1168,49 +1361,57 @@ fill the required context.
 ```policy-def
 id: modules-need-tests
 severity: error
-auto_fix: false
+auto_fix: 'false'
 enforcement: active
-enabled: true
-custom: false
-include_suffixes: .py
-include_prefixes:
-exclude_prefixes: build
-  dist
-  node_modules
-  tests
-exclude_globs: devcovenant/builtin/profiles/**/assets/**
-  build/**
-  dist/**
-  node_modules/**
-  tests/**
-watch_dirs: tests
-tests_watch_dirs: tests
-mirror_roots: devcovenant=>tests/devcovenant
-mirror_test_name_templates: python=>test_{stem}.py
-  python=>{stem}_test.py
-test_style_requirements: python=>python_unittest
-include_globs: *.py
-exclude_suffixes:
-force_include_globs:
-watch_files:
-placeholder_test_methods: test_placeholder
-placeholder_text_markers: placeholder-marker-alpha
-  placeholder-marker-beta
-  placeholder-marker-gamma
-selector_roles: include
-  exclude
-  watch
-  tests_watch
-  force_include
-include_files:
-include_dirs:
-exclude_files:
-exclude_dirs:
-watch_globs:
-tests_watch_globs:
-tests_watch_files:
-force_include_files:
-force_include_dirs:
+enabled: 'true'
+custom: 'false'
+include_suffixes:
+- .py
+include_prefixes: []
+exclude_prefixes:
+- build
+- dist
+- node_modules
+- tests
+exclude_globs:
+- devcovenant/builtin/profiles/**/assets/**
+- build/**
+- dist/**
+- node_modules/**
+- tests/**
+watch_dirs:
+- tests
+tests_watch_dirs:
+- tests
+mirror_roots:
+- devcovenant=>tests/devcovenant
+mirror_test_name_templates:
+- python=>test_{stem}.py
+- python=>{stem}_test.py
+test_style_requirements:
+- python=>python_unittest
+include_globs:
+- '*.py'
+exclude_suffixes: []
+force_include_globs: []
+watch_files: []
+placeholder_test_methods:
+- test_placeholder
+placeholder_text_markers:
+- placeholder-marker-alpha
+- placeholder-marker-beta
+- placeholder-marker-gamma
+selector_roles:
+- include,exclude,watch,tests_watch,force_include
+include_files: []
+include_dirs: []
+exclude_files: []
+exclude_dirs: []
+watch_globs: []
+tests_watch_globs: []
+tests_watch_files: []
+force_include_files: []
+force_include_dirs: []
 ```
 
 In-scope non-test modules must have corresponding tests under configured
@@ -1228,30 +1429,35 @@ workflow execution runs the declared unittest command directly.
 ```policy-def
 id: name-clarity
 severity: warning
-auto_fix: false
+auto_fix: 'false'
 enforcement: active
-enabled: true
-custom: false
-exclude_prefixes: build
-  dist
-  node_modules
-include_suffixes: .py
-include_prefixes:
-include_globs: *.py
-exclude_suffixes:
-exclude_globs: build/**
-  dist/**
-  node_modules/**
-force_include_globs:
-selector_roles: exclude
-  include
-  force_include
-exclude_files:
-exclude_dirs:
-include_files:
-include_dirs:
-force_include_files:
-force_include_dirs:
+enabled: 'true'
+custom: 'false'
+exclude_prefixes:
+- build
+- dist
+- node_modules
+include_suffixes:
+- .py
+include_prefixes: []
+include_globs:
+- '*.py'
+exclude_suffixes: []
+exclude_globs:
+- build/**
+- dist/**
+- node_modules/**
+force_include_globs: []
+selector_roles:
+- exclude
+- include
+- force_include
+exclude_files: []
+exclude_dirs: []
+include_files: []
+include_dirs: []
+force_include_files: []
+force_include_dirs: []
 ```
 
 Identifiers should be descriptive enough to communicate intent without
@@ -1266,10 +1472,10 @@ explicitly justified.
 ```policy-def
 id: no-future-dates
 severity: error
-auto_fix: true
+auto_fix: 'true'
 enforcement: active
-enabled: true
-custom: false
+enabled: 'true'
+custom: 'false'
 ```
 
 Dates in changelogs or documentation must not be in the future. Auto-fixers
@@ -1283,37 +1489,43 @@ should correct accidental placeholders to today’s date.
 ```policy-def
 id: no-print-outside-output-runtime
 severity: error
-auto_fix: false
+auto_fix: 'false'
 enforcement: active
-enabled: true
-custom: false
-selector_roles: include
-  exclude
-  force_include
-allowed_file_files:
-allowed_file_dirs:
-include_suffixes: .py
-include_prefixes:
-include_globs: devcovenant/**/*.py
-  *.py
-exclude_suffixes:
-exclude_prefixes:
-exclude_globs: devcovenant/builtin/profiles/**/assets/**
-  tests/**
-force_include_globs:
-include_files:
-include_dirs:
-exclude_files:
-exclude_dirs:
-force_include_files:
-force_include_dirs:
-sink_call_targets: python=>print
-  python=>builtins.print
-sink_attr_targets:
-sink_macro_targets:
-allowed_symbol_targets:
-allowed_file_globs: devcovenant/core/runtime/execution.py
-allow_waiver_comment: DEVCOV_ALLOW_OUTPUT:
+enabled: 'true'
+custom: 'false'
+selector_roles:
+- include
+- exclude
+- force_include
+allowed_file_files: []
+allowed_file_dirs: []
+include_suffixes:
+- .py
+include_prefixes: []
+include_globs:
+- devcovenant/**/*.py
+- '*.py'
+exclude_suffixes: []
+exclude_prefixes: []
+exclude_globs:
+- devcovenant/builtin/profiles/**/assets/**
+- tests/**
+force_include_globs: []
+include_files: []
+include_dirs: []
+exclude_files: []
+exclude_dirs: []
+force_include_files: []
+force_include_dirs: []
+sink_call_targets:
+- python=>print
+- python=>builtins.print
+sink_attr_targets: []
+sink_macro_targets: []
+allowed_symbol_targets: []
+allowed_file_globs:
+- devcovenant/core/runtime/execution.py
+allow_waiver_comment: 'DEVCOV_ALLOW_OUTPUT:'
 ```
 
 Enforce metadata-driven direct-output sink boundaries across configured
@@ -1328,36 +1540,43 @@ repository profiles define in-scope selectors and boundary allowlists.
 ```policy-def
 id: no-raw-errors
 severity: error
-auto_fix: false
+auto_fix: 'false'
 enforcement: active
-enabled: true
-custom: false
-selector_roles: include
-  exclude
-  force_include
-include_suffixes: .py
-include_prefixes:
-include_globs: *.py
-exclude_suffixes:
-exclude_prefixes: build
-  dist
-  node_modules
-exclude_globs: build/**
-  dist/**
-  node_modules/**
-force_include_globs:
-include_files:
-include_dirs:
-exclude_files:
-exclude_dirs:
-force_include_files:
-force_include_dirs:
-forbid_bare_except: True
-forbid_raise_exception: True
-forbid_broad_exception_handlers: True
-forbid_silent_exception_pass: True
-broad_exception_waiver_markers: DEVCOV_ALLOW_BROAD_ONCE
-broad_exception_waiver_between: DEVCOV_BROAD_BEGIN=>DEVCOV_BROAD_END
+enabled: 'true'
+custom: 'false'
+selector_roles:
+- include
+- exclude
+- force_include
+include_suffixes:
+- .py
+include_prefixes: []
+include_globs:
+- '*.py'
+exclude_suffixes: []
+exclude_prefixes:
+- build
+- dist
+- node_modules
+exclude_globs:
+- build/**
+- dist/**
+- node_modules/**
+force_include_globs: []
+include_files: []
+include_dirs: []
+exclude_files: []
+exclude_dirs: []
+force_include_files: []
+force_include_dirs: []
+forbid_bare_except: 'true'
+forbid_raise_exception: 'true'
+forbid_broad_exception_handlers: 'true'
+forbid_silent_exception_pass: 'true'
+broad_exception_waiver_markers:
+- DEVCOV_ALLOW_BROAD_ONCE
+broad_exception_waiver_between:
+- DEVCOV_BROAD_BEGIN=>DEVCOV_BROAD_END
 ```
 
 Enforce explicit error surfaces and block raw exception anti-patterns.
@@ -1374,13 +1593,14 @@ through marker comments or marker regions.
 ```policy-def
 id: package-artifact-mirror
 severity: error
-auto_fix: true
+auto_fix: 'true'
 enforcement: active
-enabled: true
-custom: true
-file_mirrors: LICENSE=>devcovenant/licenses/LICENSE
-dir_mirrors:
-dir_skip_paths:
+enabled: 'true'
+custom: 'true'
+file_mirrors:
+- LICENSE=>devcovenant/licenses/LICENSE
+dir_mirrors: []
+dir_skip_paths: []
 ```
 
 Ensure package-shipped artifacts that are true mirrors stay in exact sync
@@ -1401,58 +1621,61 @@ stale mirrored files.
 ```policy-def
 id: raw-string-escapes
 severity: warning
-auto_fix: false
+auto_fix: 'false'
 enforcement: active
-enabled: false
-custom: false
-include_suffixes: .py
-  .pyi
-  .pyw
-  .js
-  .jsx
-  .ts
-  .tsx
-  .go
-  .rs
-  .java
-  .cs
-  .kt
-  .swift
-  .php
-  .rb
-selector_roles: include
-  exclude
-  force_include
-include_globs: *.py
-  *.pyi
-  *.pyw
-  *.js
-  *.jsx
-  *.ts
-  *.tsx
-  *.go
-  *.rs
-  *.java
-  *.cs
-  *.kt
-  *.swift
-  *.php
-  *.rb
-include_files:
-include_dirs:
-exclude_globs:
-exclude_files:
-exclude_dirs:
-force_include_globs:
-force_include_files:
-force_include_dirs:
-language_globs:
-language_files:
-language_dirs:
-language_suffixes:
-literal_patterns:
-raw_literal_patterns:
-suspicious_escape_patterns:
+enabled: 'false'
+custom: 'false'
+include_suffixes:
+- .py
+- .pyi
+- .pyw
+- .js
+- .jsx
+- .ts
+- .tsx
+- .go
+- .rs
+- .java
+- .cs
+- .kt
+- .swift
+- .php
+- .rb
+selector_roles:
+- include
+- exclude
+- force_include
+include_globs:
+- '*.py'
+- '*.pyi'
+- '*.pyw'
+- '*.js'
+- '*.jsx'
+- '*.ts'
+- '*.tsx'
+- '*.go'
+- '*.rs'
+- '*.java'
+- '*.cs'
+- '*.kt'
+- '*.swift'
+- '*.php'
+- '*.rb'
+include_files: []
+include_dirs: []
+exclude_globs: []
+exclude_files: []
+exclude_dirs: []
+force_include_globs: []
+force_include_files: []
+force_include_dirs: []
+language_globs: []
+language_files: []
+language_dirs: []
+language_suffixes: []
+literal_patterns: []
+raw_literal_patterns: []
+suspicious_escape_patterns: []
 ```
 
 Warn when in-scope string literals contain suspicious bare backslashes.
@@ -1467,26 +1690,27 @@ languages use metadata-driven literal and escape patterns.
 ```policy-def
 id: read-only-directories
 severity: error
-auto_fix: false
+auto_fix: 'false'
 enforcement: active
-enabled: true
-custom: false
-include_globs:
-include_suffixes:
-include_prefixes:
-exclude_suffixes:
-exclude_prefixes:
-exclude_globs:
-force_include_globs:
-selector_roles: include
-  exclude
-  force_include
-include_files:
-include_dirs:
-exclude_files:
-exclude_dirs:
-force_include_files:
-force_include_dirs:
+enabled: 'true'
+custom: 'false'
+include_globs: []
+include_suffixes: []
+include_prefixes: []
+exclude_suffixes: []
+exclude_prefixes: []
+exclude_globs: []
+force_include_globs: []
+selector_roles:
+- include
+- exclude
+- force_include
+include_files: []
+include_dirs: []
+exclude_files: []
+exclude_dirs: []
+force_include_files: []
+force_include_dirs: []
 ```
 
 Protect declared read-only directories from modification. If a directory must
@@ -1500,10 +1724,10 @@ be editable, update this policy definition first.
 ```policy-def
 id: readme-sync
 severity: error
-auto_fix: true
+auto_fix: 'true'
 enforcement: active
-enabled: true
-custom: true
+enabled: 'true'
+custom: 'true'
 ```
 
 Ensure `devcovenant/README.md` stays synchronized with the authored root
@@ -1521,27 +1745,31 @@ the repo README.
 ```policy-def
 id: security-scanner
 severity: error
-auto_fix: false
+auto_fix: 'false'
 enforcement: active
-enabled: true
-custom: false
-exclude_globs: tests/**
-  **/tests/**
-include_suffixes: .py
-include_prefixes:
-include_globs: *.py
-exclude_suffixes:
-exclude_prefixes:
-force_include_globs:
-selector_roles: exclude
-  include
-  force_include
-exclude_files:
-exclude_dirs:
-include_files:
-include_dirs:
-force_include_files:
-force_include_dirs:
+enabled: 'true'
+custom: 'false'
+exclude_globs:
+- tests/**
+- '**/tests/**'
+include_suffixes:
+- .py
+include_prefixes: []
+include_globs:
+- '*.py'
+exclude_suffixes: []
+exclude_prefixes: []
+force_include_globs: []
+selector_roles:
+- exclude
+- include
+- force_include
+exclude_files: []
+exclude_dirs: []
+include_files: []
+include_dirs: []
+force_include_files: []
+force_include_dirs: []
 ```
 
 Scan source files for risky constructs like `eval`, `exec`, or
@@ -1556,56 +1784,62 @@ review approves the exception.
 ```policy-def
 id: tests-coverage
 severity: warning
-auto_fix: false
+auto_fix: 'false'
 enforcement: active
-enabled: true
-custom: false
-enforce_symbol_fidelity: True
-symbol_kinds: function
-  class
-symbol_name_min_length: 3
-symbol_assertion_window: 2
+enabled: 'true'
+custom: 'false'
+enforce_symbol_fidelity: 'true'
+symbol_kinds:
+- function
+- class
+symbol_name_min_length: '3'
+symbol_assertion_window: '2'
 fixture_marker_pattern: \bDEVCOV_FIXTURE_OK:\s*(?P<reason>\S.*)
-assertion_signal_patterns: *=>\bassert\b
-  python=>\bassert\b
-  python=>\bself\.assert[A-Za-z_]*\s*\(
-tautology_patterns: *=>^\s*assert\s*\(\s*true\s*\)\s*;?\s*$
-  *=>^\s*assert\s+true\s*;?\s*$
-  rust=>^\s*assert!\s*\(\s*true\s*\)\s*;?\s*$
-  python=>^\s*assert\s+True\s*$
-  python=>^\s*self\.assertTrue\s*\(\s*True\s*\)\s*$
-include_suffixes: .py
-include_prefixes:
-exclude_prefixes: build
-  dist
-  node_modules
-  tests
-exclude_globs: devcovenant/core/*.py
-  devcovenant/custom/policies/**/fixers/**
-  build/**
-  dist/**
-  node_modules/**
-  tests/**
-watch_dirs: tests
-tests_watch_dirs: tests
-include_globs: *.py
-exclude_suffixes:
-force_include_globs:
-watch_files:
-selector_roles: include
-  exclude
-  watch
-  tests_watch
-  force_include
-include_files:
-include_dirs:
-exclude_files:
-exclude_dirs:
-watch_globs:
-tests_watch_globs:
-tests_watch_files:
-force_include_files:
-force_include_dirs:
+assertion_signal_patterns:
+- '*=>\bassert\b'
+- python=>\bassert\b
+- python=>\bself\.assert[A-Za-z_]*\s*\(
+tautology_patterns:
+- '*=>^\s*assert\s*\(\s*true\s*\)\s*;?\s*$'
+- '*=>^\s*assert\s+true\s*;?\s*$'
+- rust=>^\s*assert!\s*\(\s*true\s*\)\s*;?\s*$
+- python=>^\s*assert\s+True\s*$
+- python=>^\s*self\.assertTrue\s*\(\s*True\s*\)\s*$
+include_suffixes:
+- .py
+include_prefixes: []
+exclude_prefixes:
+- build
+- dist
+- node_modules
+- tests
+exclude_globs:
+- devcovenant/core/*.py
+- devcovenant/custom/policies/**/fixers/**
+- build/**
+- dist/**
+- node_modules/**
+- tests/**
+watch_dirs:
+- tests
+tests_watch_dirs:
+- tests
+include_globs:
+- '*.py'
+exclude_suffixes: []
+force_include_globs: []
+watch_files: []
+selector_roles:
+- include,exclude,watch,tests_watch,force_include
+include_files: []
+include_dirs: []
+exclude_files: []
+exclude_dirs: []
+watch_globs: []
+tests_watch_globs: []
+tests_watch_files: []
+force_include_files: []
+force_include_dirs: []
 ```
 
 In-scope modules with related tests must include assertion signals in those
@@ -1624,28 +1858,28 @@ marker `DEVCOV_FIXTURE_OK: <reason>` immediately above the assertion.
 ```policy-def
 id: version-governance
 severity: error
-auto_fix: false
+auto_fix: 'false'
 enforcement: active
-enabled: true
-custom: false
+enabled: 'true'
+custom: 'false'
 scheme: pep440
-enforce_bumping: True
-canonical_versions_required: True
+enforce_bumping: 'true'
+canonical_versions_required: 'true'
 version_file: devcovenant/VERSION
 changelog_file: CHANGELOG.md
-changelog_header_prefix: ## Version
-ignored_prefixes:
-semver_scope_tags_required: false
-pep440_allow_prereleases: True
-pep440_allow_dev_releases: True
-pep440_allow_post_releases: True
-calver_pattern:
-custom_regex_pattern:
-custom_adapter_path:
+changelog_header_prefix: '## Version'
+ignored_prefixes: []
+semver_scope_tags_required: 'false'
+pep440_allow_prereleases: 'true'
+pep440_allow_dev_releases: 'true'
+pep440_allow_post_releases: 'true'
+calver_pattern: []
+custom_regex_pattern: []
+custom_adapter_path: []
 selector_roles: ignored
-ignored_globs:
-ignored_files:
-ignored_dirs:
+ignored_globs: []
+ignored_files: []
+ignored_dirs: []
 ```
 
 When enabled, this policy governs repository version format and optional
@@ -1666,47 +1900,54 @@ metadata, then tune bump enforcement to match the selected scheme.
 ```policy-def
 id: version-sync
 severity: error
-auto_fix: false
+auto_fix: 'false'
 enforcement: active
-enabled: true
-custom: false
+enabled: 'true'
+custom: 'false'
 version_file: devcovenant/VERSION
-target_roles: docs
-  changelog
-  package_manifest
-role_extractors: docs=>project_version_line
-  changelog=>changelog_header_version
-  package_manifest=>manifest_project_version
-role_legality_schemes: package_manifest=>pep440
-target_role_files: docs=>README.md
-  docs=>AGENTS.md
-  docs=>CONTRIBUTING.md
-  docs=>SPEC.md
-  docs=>PLAN.md
-  changelog=>CHANGELOG.md
-  docs=>CHANGELOG.md
-  docs=>PROFILE_MAP.md
-  docs=>POLICY_MAP.md
-  docs=>SECURITY.md
-  docs=>PRIVACY.md
-  docs=>SUPPORT.md
-  docs=>devcovenant/README.md
-  docs=>devcovenant/core/README.md
-  docs=>devcovenant/custom/README.md
-  docs=>devcovenant/registry/README.md
-  docs=>devcovenant/builtin/policies/README.md
-  docs=>devcovenant/builtin/profiles/README.md
-  docs=>devcovenant/custom/policies/README.md
-  docs=>devcovenant/custom/profiles/README.md
-  package_manifest=>pyproject.toml
-target_role_globs: docs=>devcovenant/docs/**/*.md
-target_role_dirs: docs=>devcovenant/docs
+target_roles:
+- docs
+- changelog
+- package_manifest
+role_extractors:
+- docs=>project_version_line
+- changelog=>changelog_header_version
+- package_manifest=>manifest_project_version
+role_legality_schemes:
+- package_manifest=>pep440
+target_role_files:
+- docs=>README.md
+- docs=>AGENTS.md
+- docs=>CONTRIBUTING.md
+- docs=>SPEC.md
+- docs=>PLAN.md
+- changelog=>CHANGELOG.md
+- docs=>CHANGELOG.md
+- docs=>PROFILE_MAP.md
+- docs=>POLICY_MAP.md
+- docs=>SECURITY.md
+- docs=>PRIVACY.md
+- docs=>SUPPORT.md
+- docs=>devcovenant/README.md
+- docs=>devcovenant/core/README.md
+- docs=>devcovenant/custom/README.md
+- docs=>devcovenant/registry/README.md
+- docs=>devcovenant/builtin/policies/README.md
+- docs=>devcovenant/builtin/profiles/README.md
+- docs=>devcovenant/custom/policies/README.md
+- docs=>devcovenant/custom/profiles/README.md
+- package_manifest=>pyproject.toml
+target_role_globs:
+- docs=>devcovenant/docs/**/*.md
+target_role_dirs:
+- docs=>devcovenant/docs
 changelog_file: CHANGELOG.md
-changelog_header_prefix: ## Version
-selector_roles: target
-target_globs:
-target_files:
-target_dirs:
+changelog_header_prefix: '## Version'
+selector_roles:
+- target
+target_globs: []
+target_files: []
+target_dirs: []
 ```
 
 All version-bearing targets must match the canonical version file (default

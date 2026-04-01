@@ -75,6 +75,7 @@ def _unit_test_install_writes_config_reviewed_and_manifest() -> None:
             "global",
             "defaults",
             "devcovuser",
+            "github",
             "python",
             "docs",
         ]

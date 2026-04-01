@@ -3,24 +3,26 @@
 ## Table of Contents
 - [Overview](#overview)
 - [Contents](#contents)
-- [Use](#use)
+- [Update Checklist](#update-checklist)
 
 ## Overview
-This packaged directory stores the license files that ship with this
-distribution.
-It is meant to help package users understand what is included here, not to
-explain repository maintenance steps.
+This directory stores generated dependency license artifacts for the
+surface tracked here.
+Keep these files synchronized whenever the owning dependency
+manifests or resolved lockfiles change so the local license set
+stays readable and auditable.
 
 ## Contents
-- `LICENSE` is the packaged project license.
-- `THIRD_PARTY_LICENSES.md` lists the direct packaged dependencies and points
-  to their bundled license texts.
-- `*.txt` files store the bundled third-party license texts that match this
-  packaged dependency surface.
+- `THIRD_PARTY_LICENSES.md` records the dependency inputs and
+  generated license inventory for this surface.
+- `*.txt` files store the generated upstream license texts
+  that match the current direct dependency set.
 
-## Use
-These files let package users review the project license, inspect the packaged
-dependency report, and read the bundled third-party license texts without
-needing a source checkout.
-They also help package users verify that the packaged dependency surface and
-its bundled notices stay together in the installed distribution.
+## Update Checklist
+- Keep `devcovenant/licenses/THIRD_PARTY_LICENSES.md` synchronized with
+  dependency manifest and lock updates for this
+  surface.
+- Add, remove, or refresh generated license files when dependency
+  versions change.
+- Re-run DevCovenant checks and commit report and license artifact
+  updates together.

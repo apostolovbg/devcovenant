@@ -12,18 +12,6 @@ cyclonedx-bom==7.2.2
 pip-audit==2.10.0
 pipx==1.11.1
 setuptools==82.0.1
-#
-# Hash-locked repos may need exact marker pins for transitive dependencies
-# that only apply on other supported platforms or Python versions. These pins
-# let DevCovenant materialize real hashes even when the local compiler host
-# would otherwise omit them.
-colorama==0.4.6; sys_platform == "win32"
-exceptiongroup==1.3.1; python_version < "3.11"
-importlib-metadata==9.0.0; python_version < "3.12"
-jeepney==0.9.0; sys_platform == "linux"
-pywin32-ctypes==0.2.3; sys_platform == "win32"
-SecretStorage==3.5.0; sys_platform == "linux"
 tomli==2.3.0; python_version < "3.11"
-typing-extensions==4.15.0; python_version < "3.13"
 twine==6.2.0
 wheel==0.46.3

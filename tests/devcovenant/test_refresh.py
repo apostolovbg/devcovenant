@@ -267,43 +267,16 @@ def _unit_test_release_metadata_keeps_support_floor_and_docs_truthful() -> (
     packaged_license_report = (
         REPO_ROOT / "devcovenant" / "licenses" / "THIRD_PARTY_LICENSES.md"
     ).read_text(encoding="utf-8")
-    expected_marker_pins = [
-        (
-            'colorama==0.4.6; sys_platform == "win32"',
-            'colorama==0.4.6 ; sys_platform == "win32"',
-        ),
-        (
-            'exceptiongroup==1.3.1; python_version < "3.11"',
-            'exceptiongroup==1.3.1 ; python_version < "3.11"',
-        ),
-        (
-            'importlib-metadata==9.0.0; python_version < "3.12"',
-            'importlib-metadata==9.0.0 ; python_version < "3.12"',
-        ),
-        (
-            'jeepney==0.9.0; sys_platform == "linux"',
-            'jeepney==0.9.0 ; sys_platform == "linux"',
-        ),
-        (
-            'pywin32-ctypes==0.2.3; sys_platform == "win32"',
-            'pywin32-ctypes==0.2.3 ; sys_platform == "win32"',
-        ),
-        (
-            'SecretStorage==3.5.0; sys_platform == "linux"',
-            'SecretStorage==3.5.0 ; sys_platform == "linux"',
-        ),
-        (
-            'tomli==2.3.0; python_version < "3.11"',
-            'tomli==2.3.0 ; python_version < "3.11"',
-        ),
-        (
-            'typing-extensions==4.15.0; python_version < "3.13"',
-            'typing-extensions==4.15.0 ; python_version < "3.13"',
-        ),
-    ]
-    for intent_pin, resolved_pin in expected_marker_pins:
-        assert intent_pin in requirements_in
-        assert resolved_pin in requirements_lock
+    assert 'tomli==2.3.0; python_version < "3.11"' in requirements_in
+    assert 'tomli==2.3.0 ; python_version < "3.11"' in requirements_lock
+    assert (
+        'SecretStorage==3.5.0; sys_platform == "linux"' not in requirements_in
+    )
+    assert 'jeepney==0.9.0; sys_platform == "linux"' not in requirements_in
+    assert (
+        'importlib-metadata==9.0.0; python_version < "3.12"'
+        not in requirements_in
+    )
     assert runtime_requirements_lock != requirements_lock
     assert "pip-audit==2.10.0" in requirements_lock
     assert "pip-audit==2.10.0" not in runtime_requirements_lock
@@ -1309,6 +1282,21 @@ def _unit_test_refresh_skips_ci_generation_without_github_profile() -> None:
         repo_root = Path(temp_dir)
         repo_seed_cache.copy_installed_repo(repo_root)
 
+        config_path = repo_root / "devcovenant" / "config.yaml"
+        payload = yaml.safe_load(config_path.read_text(encoding="utf-8"))
+        assert isinstance(payload, dict)
+        profiles = payload.setdefault("profiles", {})
+        active_profiles = [
+            profile
+            for profile in list(profiles.get("active", []))
+            if str(profile).strip() != "github"
+        ]
+        profiles["active"] = active_profiles
+        config_path.write_text(
+            yaml.safe_dump(payload, sort_keys=False),
+            encoding="utf-8",
+        )
+
         workflow_path = repo_root / ".github" / "workflows" / "ci.yml"
         assert not workflow_path.exists()
 
@@ -1366,6 +1354,13 @@ def _unit_test_refresh_allows_ci_override_without_github_profile() -> None:
         config_path = repo_root / "devcovenant" / "config.yaml"
         payload = yaml.safe_load(config_path.read_text(encoding="utf-8"))
         assert isinstance(payload, dict)
+        profiles = payload.setdefault("profiles", {})
+        active_profiles = [
+            profile
+            for profile in list(profiles.get("active", []))
+            if str(profile).strip() != "github"
+        ]
+        profiles["active"] = active_profiles
         payload.setdefault("ci_and_test", {})
         payload["ci_and_test"]["overrides"] = {
             "name": "CI",
@@ -1401,6 +1396,13 @@ def _unit_test_refresh_rejects_ci_overlays_without_github_profile() -> None:
         config_path = repo_root / "devcovenant" / "config.yaml"
         payload = yaml.safe_load(config_path.read_text(encoding="utf-8"))
         assert isinstance(payload, dict)
+        profiles = payload.setdefault("profiles", {})
+        active_profiles = [
+            profile
+            for profile in list(profiles.get("active", []))
+            if str(profile).strip() != "github"
+        ]
+        profiles["active"] = active_profiles
         payload.setdefault("ci_and_test", {})
         payload["ci_and_test"]["overlays"] = {
             "jobs": {

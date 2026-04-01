@@ -23,7 +23,7 @@ Policy activation still lives in `policy_state`.
 The common profile categories are:
 - `global` and `defaults` as the shared base
 - `devcovuser` as the normal user-repository layer
-- `github` as the opt-in GitHub Actions layer
+- `github` as the optional but default-enabled GitHub Actions layer
 - language profiles
 - framework or tooling profiles
 - custom profiles
@@ -31,10 +31,14 @@ The common profile categories are:
 The normal pattern is:
 1. keep the base profiles active
 2. keep `devcovuser` active for an ordinary repository using DevCovenant
-3. add `github` when the repository wants a generated GitHub Actions workflow
+3. keep `github` active when the repository wants the generic generated GitHub
+   Actions workflow; remove it when the repository does not want that
+   workflow
 4. add the needed language or stack profiles
 5. add a repo-specific custom profile on top when the repository needs its own
-   rules, assets, or workflow additions
+   rules, assets, workflow additions, or dependency-surface ownership
+6. add an optional GitHub-specific custom profile when the repository needs
+   reusable GitHub-only CI fragments that should not affect local behavior
 
 Use direct overlays when you only need a very small local tweak.
 Use a custom profile when the repository has real repeatable behavior of its
@@ -79,8 +83,11 @@ Typical examples are temporary build directories, cache roots, or declared
 environment folders that should not count as user-owned source files.
 
 A repo-specific custom profile can then strengthen the standard stack.
-For example, it may add `managed_commands`, extra assets, or CI steps that
-belong to that repository.
+For example, it may add `managed_commands`, extra assets, CI steps, or
+surface overrides such as a repository-owned `root_workspace`.
+A separate GitHub-oriented custom profile is useful when a repository wants
+GitHub-only CI extensions without making those rules part of the local
+runtime model.
 
 ## Assets And Managed Docs
 Profiles can ship assets, including managed-document templates.
@@ -141,7 +148,7 @@ Translator ownership belongs with language profiles.
 ## Metadata Overlays
 Profiles are the preferred place for reusable stack-specific settings.
 Examples include:
-1. dependency-management selectors
+1. dependency-management surfaces
 2. version-sync file roles
 3. documentation-growth routes
 4. no-print sink metadata from language profiles
@@ -176,6 +183,20 @@ through `workflow_runs`.
 That keeps shared run definitions in one place.
 In the built-in Python profile, the standard `tests` run lives there and uses
 `python3 -m unittest discover -v` as the default Python test command.
+
+The built-in Python and GitHub profiles also demonstrate the default
+dependency-surface split:
+1. `root_workspace` for the repository's working environment
+2. `package_runtime` for the repository's shipped Python package, when the
+   package path exists
+3. `devcovenant_runtime` for the shipped DevCovenant bootstrap surface used by
+   the builtin `github` workflow
+
+The shipped defaults keep `root_workspace` and `package_runtime` in normal
+non-hash mode, while `devcovenant_runtime` is declared hash-locked in the
+builtin `github` profile.
+A repo-specific custom profile can override those defaults per surface instead
+of inventing a second special-case dependency model.
 
 ## Workflow Runs
 `workflow_runs` is the public profile authoring model for extra run steps.

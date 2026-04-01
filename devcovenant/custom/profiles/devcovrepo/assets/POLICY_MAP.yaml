@@ -115,10 +115,11 @@ body: |-
     from profiles and are not policy descriptor metadata keys.
 
   Dependency/license:
-  - `dependency_files`, `dependency_globs`, `dependency_dirs`
-  - `dependency_roles`, `dependency_role_files`, `dependency_role_globs`,
-    `dependency_role_dirs`
-  - `third_party_file`, `licenses_dir`, `report_heading`
+  - `surfaces`
+  - per-surface keys such as `lock_file`, `direct_dependency_files`,
+    `dependency_files`, `dependency_globs`, `dependency_dirs`,
+    `dependency_role_*`, `third_party_file`, `licenses_dir`,
+    `report_heading`, and `hash_targets`
 
   Versioning:
   - `version_file`, `changelog_file`, `changelog_header_prefix`,

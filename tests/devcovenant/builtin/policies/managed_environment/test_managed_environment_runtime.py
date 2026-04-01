@@ -762,11 +762,8 @@ def _unit_test_bootstrap_from_config_when_registry_missing(
                 profile_overlays={},
                 autogen_overlays={
                     "managed-environment": {
-                        "expected_interpreters": (
-                            [".venv/bin/python"],
-                            True,
-                        ),
-                        "expected_paths": ([".venv"], True),
+                        "expected_interpreters": [".venv/bin/python"],
+                        "expected_paths": [".venv"],
                     }
                 },
                 user_overlays={},

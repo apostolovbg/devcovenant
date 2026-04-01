@@ -73,20 +73,6 @@ policy_overlays:
     pep440_allow_prereleases: true
     pep440_allow_dev_releases: true
     pep440_allow_post_releases: true
-  dependency-management:
-    dependency_files: []
-    dependency_globs: []
-    dependency_dirs: []
-    dependency_roles:
-      - intent
-      - resolved
-      - package_manifest
-    dependency_role_files: []
-    dependency_role_globs: []
-    dependency_role_dirs: []
-    third_party_file: licenses/THIRD_PARTY_LICENSES.md
-    licenses_dir: licenses
-    report_heading: '## License Report'
   last-updated:
     include_suffixes:
       - .md

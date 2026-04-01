@@ -80,12 +80,14 @@ profiles:
   # - provides generic repo-layout metadata defaults;
   # - keep it for standard layouts;
   # - disable it if you supply a custom layout profile with equivalent keys.
-  # If this repository uses GitHub Actions and wants a generated source-tree
-  # CI workflow, add the builtin `github` profile here.
+  # The shipped user-repo baseline keeps `github` active by default so
+  # GitHub-hosted repositories get the generic generated CI workflow out of
+  # the box. Remove it only when this repo does not want that workflow.
   active:
     - global
     - defaults
     - devcovuser
+    - github
     - python
     - docs
 
@@ -318,8 +320,10 @@ ci_and_test:
   # Human-owned key.
   # Deep-merge patch applied to generated
   # `.github/workflows/ci.yml`.
-  # Activate the builtin `github` profile when this repo wants the standard
-  # GitHub Actions workflow generated here.
+  # The builtin `github` profile is default-enabled in the shipped user stack.
+  # Keep it active when this repo wants the standard generated GitHub Actions
+  # workflow here. Remove the profile if this repo does not want that
+  # workflow.
   # Active profiles may also contribute reusable ci_and_test fragments.
   # Keep the github-owned base workflow generic.
   # Use config overlays only for repo-local CI adjustments.
@@ -493,8 +497,11 @@ gitignore:
 # 6) user_metadata_overrides
 #
 # Overlay semantics:
-# - list values append with de-duplication;
-# - scalar values replace previous scalar values.
+# - scalar values replace previous scalar values;
+# - plain scalar lists append with de-duplication;
+# - mapping values merge by subkey;
+# - lists of mappings with stable `id` fields merge by `id`.
+# Keep one metadata key in one shape across layers.
 #
 # Override semantics:
 # - targeted keys are replaced as complete values.
@@ -504,8 +511,9 @@ gitignore:
 autogen_metadata_overlays: {}
 
 # Human-owned additive overlay layer.
-# Shape: { policy-id: { metadata_key: value-or-list } }
+# Shape: { policy-id: { metadata_key: scalar|list|mapping } }
 # Use for additive tuning without replacing the whole key.
+# Use the same metadata-key shape here as the inherited layer.
 user_metadata_overlays:
   {}
 
@@ -514,14 +522,19 @@ user_metadata_overlays:
 autogen_metadata_overrides: {}
 
 # Human-owned replacement layer (highest precedence).
-# Shape: { policy-id: { metadata_key: value-or-list } }
+# Shape: { policy-id: { metadata_key: scalar|list|mapping } }
 # Use when you need full control of a specific metadata key.
+# Structured metadata is supported directly here. Keep one key in one shape:
+# do not replace a mapping with a scalar or flatten a structured key into
+# ad-hoc sibling keys. When a key contains a list of mappings with stable
+# `id` fields, overlays merge entries by `id`.
 #
 # Mixed-repo examples (kept here for discoverability):
-# - dependency-management selectors are role-based with
-#   `role=>selector` entries under
-#   `dependency_role_files`, `dependency_role_globs`,
-#   `dependency_role_dirs`.
+# - dependency-management surfaces live under
+#   `dependency-management.surfaces`.
+#   Each surface owns its own `lock_file`, `direct_dependency_files`,
+#   nested dependency selectors, compliance artifacts, and optional
+#   hash-lock targets.
 # - version-sync targets are role-based with `role=>selector` entries under
 #   `target_role_files`, `target_role_globs`, `target_role_dirs`, and role
 #   extractor mapping under `role_extractors`. Optional

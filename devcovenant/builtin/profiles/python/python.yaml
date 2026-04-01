@@ -85,10 +85,122 @@ translators:
       entrypoint: python_translator.py:translate
 policy_overlays:
   dependency-management:
-    dependency_role_files:
-      - intent=>requirements.in
-      - resolved=>requirements.lock
-      - package_manifest=>pyproject.toml
+    surfaces:
+      - id: root_workspace
+        lock_file: requirements.lock
+        direct_dependency_files:
+          - requirements.in
+        dependency_files:
+          - requirements.in
+          - pyproject.toml
+        third_party_file: licenses/THIRD_PARTY_LICENSES.md
+        licenses_dir: licenses
+        report_heading: '## License Report'
+        manage_licenses_readme: true
+        generate_hashes: false
+        required_paths:
+          - requirements.in
+        hash_targets:
+          - id: linux-py311
+            marker: sys_platform == "linux" and python_version == "3.11"
+            pip:
+              platform: manylinux2014_x86_64
+              implementation: cp
+              python_version: '3.11'
+              abi: cp311
+          - id: linux-py314
+            marker: sys_platform == "linux" and python_version == "3.14"
+            pip:
+              platform: manylinux2014_x86_64
+              implementation: cp
+              python_version: '3.14'
+              abi: cp314
+          - id: windows-py311
+            marker: sys_platform == "win32" and python_version == "3.11"
+            pip:
+              platform: win_amd64
+              implementation: cp
+              python_version: '3.11'
+              abi: cp311
+          - id: windows-py314
+            marker: sys_platform == "win32" and python_version == "3.14"
+            pip:
+              platform: win_amd64
+              implementation: cp
+              python_version: '3.14'
+              abi: cp314
+          - id: macos-py311
+            marker: sys_platform == "darwin" and python_version == "3.11"
+            pip:
+              platform: macosx_11_0_x86_64
+              implementation: cp
+              python_version: '3.11'
+              abi: cp311
+          - id: macos-py314
+            marker: sys_platform == "darwin" and python_version == "3.14"
+            pip:
+              platform: macosx_11_0_x86_64
+              implementation: cp
+              python_version: '3.14'
+              abi: cp314
+      - id: package_runtime
+        lock_file: '{{ PROJECT_NAME_PATH }}/runtime-requirements.lock'
+        direct_dependency_files:
+          - pyproject.toml
+        dependency_files:
+          - pyproject.toml
+        third_party_file: >-
+          {{ PROJECT_NAME_PATH }}/licenses/THIRD_PARTY_LICENSES.md
+        licenses_dir: '{{ PROJECT_NAME_PATH }}/licenses'
+        report_heading: '## License Report'
+        manage_licenses_readme: true
+        generate_hashes: false
+        required_paths:
+          - pyproject.toml
+          - '{{ PROJECT_NAME_PATH }}'
+        hash_targets:
+          - id: linux-py311
+            marker: sys_platform == "linux" and python_version == "3.11"
+            pip:
+              platform: manylinux2014_x86_64
+              implementation: cp
+              python_version: '3.11'
+              abi: cp311
+          - id: linux-py314
+            marker: sys_platform == "linux" and python_version == "3.14"
+            pip:
+              platform: manylinux2014_x86_64
+              implementation: cp
+              python_version: '3.14'
+              abi: cp314
+          - id: windows-py311
+            marker: sys_platform == "win32" and python_version == "3.11"
+            pip:
+              platform: win_amd64
+              implementation: cp
+              python_version: '3.11'
+              abi: cp311
+          - id: windows-py314
+            marker: sys_platform == "win32" and python_version == "3.14"
+            pip:
+              platform: win_amd64
+              implementation: cp
+              python_version: '3.14'
+              abi: cp314
+          - id: macos-py311
+            marker: sys_platform == "darwin" and python_version == "3.11"
+            pip:
+              platform: macosx_11_0_x86_64
+              implementation: cp
+              python_version: '3.11'
+              abi: cp311
+          - id: macos-py314
+            marker: sys_platform == "darwin" and python_version == "3.14"
+            pip:
+              platform: macosx_11_0_x86_64
+              implementation: cp
+              python_version: '3.14'
+              abi: cp314
   documentation-growth-tracking:
     user_facing_suffixes:
       - .py

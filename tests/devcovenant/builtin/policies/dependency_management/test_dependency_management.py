@@ -46,14 +46,14 @@ def _build_checker() -> dependency_management.DependencyManagementCheck:
     """Create a checker with dependency manifests configured."""
     return _build_checker_with_options(
         {
-            "dependency_files": [
-                "requirements.in",
-                "requirements.lock",
-                "pyproject.toml",
-            ],
-            "third_party_file": "licenses/THIRD_PARTY_LICENSES.md",
-            "licenses_dir": "licenses",
-            "report_heading": "## License Report",
+            "surfaces": [
+                _surface_options(
+                    dependency_files=[
+                        "requirements.in",
+                        "pyproject.toml",
+                    ]
+                )
+            ]
         }
     )
 
@@ -68,6 +68,24 @@ def _build_checker_with_options(
         config_overrides=None,
     )
     return checker
+
+
+def _surface_options(**overrides: object) -> dict[str, object]:
+    """Return one dependency-management surface mapping for tests."""
+
+    surface: dict[str, object] = {
+        "id": "root_workspace",
+        "lock_file": "requirements.lock",
+        "direct_dependency_files": ["requirements.in"],
+        "dependency_files": ["requirements.in"],
+        "dependency_globs": [],
+        "dependency_dirs": [],
+        "third_party_file": "licenses/THIRD_PARTY_LICENSES.md",
+        "licenses_dir": "licenses",
+        "report_heading": "## License Report",
+    }
+    surface.update(overrides)
+    return surface
 
 
 def _unit_test_requires_license_table_update(tmp_path: Path):
@@ -146,12 +164,12 @@ def _unit_test_glob_metadata_matches_nested_manifest(tmp_path: Path):
     manifest.write_text('{"name": "api"}\n', encoding="utf-8")
     checker = _build_checker_with_options(
         {
-            "dependency_files": [],
-            "dependency_globs": ["services/*/package.json"],
-            "dependency_dirs": [],
-            "third_party_file": "licenses/THIRD_PARTY_LICENSES.md",
-            "licenses_dir": "licenses",
-            "report_heading": "## License Report",
+            "surfaces": [
+                _surface_options(
+                    dependency_files=[],
+                    dependency_globs=["services/*/package.json"],
+                )
+            ]
         }
     )
     context = CheckContext(repo_root=repo, changed_files=[manifest])
@@ -171,12 +189,12 @@ def _unit_test_third_party_path_is_exact_not_name_only(tmp_path: Path):
     root_report = repo / "licenses" / "THIRD_PARTY_LICENSES.md"
     checker = _build_checker_with_options(
         {
-            "dependency_files": ["requirements.in"],
-            "dependency_globs": [],
-            "dependency_dirs": [],
-            "third_party_file": "docs/THIRD_PARTY_LICENSES.md",
-            "licenses_dir": "licenses",
-            "report_heading": "## License Report",
+            "surfaces": [
+                _surface_options(
+                    dependency_files=["requirements.in"],
+                    third_party_file="docs/THIRD_PARTY_LICENSES.md",
+                )
+            ]
         }
     )
     context = CheckContext(
@@ -268,6 +286,25 @@ def _unit_test_synced_artifacts_need_no_touch_churn_for_manifest_edit(
     )
     violations = checker.check(context)
     assert violations == []
+
+
+def _unit_test_manifest_refresh_keeps_resolved_lock_in_report(
+    tmp_path: Path,
+):
+    """Manifest-led refresh should still cite the resolved lock file."""
+    repo = _setup_repo(tmp_path)
+    dependency_management.refresh_license_artifacts(
+        repo,
+        changed_dependency_files=["requirements.in"],
+        third_party_file="licenses/THIRD_PARTY_LICENSES.md",
+        licenses_dir="licenses",
+        report_heading="## License Report",
+    )
+    report = (repo / "licenses" / "THIRD_PARTY_LICENSES.md").read_text(
+        encoding="utf-8"
+    )
+    assert "- `requirements.in`" in report
+    assert "- `requirements.lock`" in report
 
 
 def _unit_test_refresh_uses_stable_report_entries(tmp_path: Path):
@@ -373,12 +410,12 @@ def _unit_test_invalid_artifact_paths_raise_configuration_error(
     repo = _setup_repo(tmp_path)
     checker = _build_checker_with_options(
         {
-            "dependency_files": ["requirements.in"],
-            "dependency_globs": [],
-            "dependency_dirs": [],
-            "third_party_file": "../outside.md",
-            "licenses_dir": "licenses",
-            "report_heading": "## License Report",
+            "surfaces": [
+                _surface_options(
+                    dependency_files=["requirements.in"],
+                    third_party_file="../outside.md",
+                )
+            ]
         }
     )
     context = CheckContext(
@@ -394,16 +431,17 @@ def _unit_test_role_selectors_match_dependency_file(tmp_path: Path):
     repo = _setup_repo(tmp_path)
     checker = _build_checker_with_options(
         {
-            "dependency_files": [],
-            "dependency_globs": [],
-            "dependency_dirs": [],
-            "dependency_roles": ["intent", "resolved", "package_manifest"],
-            "dependency_role_files": ["intent=>requirements.in"],
-            "dependency_role_globs": [],
-            "dependency_role_dirs": [],
-            "third_party_file": "licenses/THIRD_PARTY_LICENSES.md",
-            "licenses_dir": "licenses",
-            "report_heading": "## License Report",
+            "surfaces": [
+                _surface_options(
+                    dependency_files=[],
+                    dependency_roles=[
+                        "intent",
+                        "resolved",
+                        "package_manifest",
+                    ],
+                    dependency_role_files=["intent=>requirements.in"],
+                )
+            ]
         }
     )
     context = CheckContext(
@@ -423,18 +461,20 @@ def _unit_test_role_selectors_support_mixed_role_entries(tmp_path: Path):
     manifest.write_text('{"name":"api"}\n', encoding="utf-8")
     checker = _build_checker_with_options(
         {
-            "dependency_files": [],
-            "dependency_globs": [],
-            "dependency_dirs": [],
-            "dependency_roles": ["intent", "resolved", "package_manifest"],
-            "dependency_role_files": ["resolved=>requirements.lock"],
-            "dependency_role_globs": [
-                "package_manifest=>services/*/package.json"
-            ],
-            "dependency_role_dirs": [],
-            "third_party_file": "licenses/THIRD_PARTY_LICENSES.md",
-            "licenses_dir": "licenses",
-            "report_heading": "## License Report",
+            "surfaces": [
+                _surface_options(
+                    dependency_files=[],
+                    dependency_roles=[
+                        "intent",
+                        "resolved",
+                        "package_manifest",
+                    ],
+                    dependency_role_files=["resolved=>requirements.lock"],
+                    dependency_role_globs=[
+                        "package_manifest=>services/*/package.json"
+                    ],
+                )
+            ]
         }
     )
     context = CheckContext(repo_root=repo, changed_files=[manifest])
@@ -449,16 +489,17 @@ def _unit_test_role_selector_invalid_role_reports_configuration_error(
     repo = _setup_repo(tmp_path)
     checker = _build_checker_with_options(
         {
-            "dependency_files": [],
-            "dependency_globs": [],
-            "dependency_dirs": [],
-            "dependency_roles": ["intent", "resolved", "package_manifest"],
-            "dependency_role_files": ["unknown=>requirements.in"],
-            "dependency_role_globs": [],
-            "dependency_role_dirs": [],
-            "third_party_file": "licenses/THIRD_PARTY_LICENSES.md",
-            "licenses_dir": "licenses",
-            "report_heading": "## License Report",
+            "surfaces": [
+                _surface_options(
+                    dependency_files=[],
+                    dependency_roles=[
+                        "intent",
+                        "resolved",
+                        "package_manifest",
+                    ],
+                    dependency_role_files=["unknown=>requirements.in"],
+                )
+            ]
         }
     )
     context = CheckContext(
@@ -474,8 +515,14 @@ def _unit_test_policy_symbol_contract_is_stable():
     """Dependency-management symbol contract should stay stable."""
     module = dependency_management
     assert hasattr(module, "DependencyManagementCheck")
+    assert hasattr(module, "DependencySurface")
+    assert hasattr(module, "DependencySurfaceTarget")
+    assert hasattr(module, "dependency_surface_lock_refresh_requested")
+    assert hasattr(module, "dependency_surface_matches")
+    assert hasattr(module, "dependency_surface_trigger_files")
     assert hasattr(module, "parse_role_selector_entries")
     assert hasattr(module, "refresh_license_artifacts")
+    assert hasattr(module, "resolve_dependency_surfaces")
     assert hasattr(module, "resolve_dependency_roles")
 
     checker = module.DependencyManagementCheck()
@@ -540,6 +587,14 @@ class GeneratedUnittestCases(unittest.TestCase):
         with tempfile.TemporaryDirectory() as temp_dir:
             tmp_path = Path(temp_dir).resolve()
             _unit_test_synced_artifacts_need_no_touch_churn_for_manifest_edit(
+                tmp_path=tmp_path
+            )
+
+    def test_manifest_refresh_keeps_resolved_lock_in_report(self):
+        """Run manifest-led report rendering assertions."""
+        with tempfile.TemporaryDirectory() as temp_dir:
+            tmp_path = Path(temp_dir).resolve()
+            _unit_test_manifest_refresh_keeps_resolved_lock_in_report(
                 tmp_path=tmp_path
             )
 

@@ -385,19 +385,17 @@ ci_and_test:
             path: artifacts/provenance/*.json
 policy_overlays:
   dependency-management:
-    dependency_role_files:
-      - intent=>requirements.in
-      - resolved=>requirements.lock
-      - resolved=>devcovenant/runtime-requirements.lock
-      - package_manifest=>pyproject.toml
-    python_lock_generate_hashes: true
-    auxiliary_lock_file: devcovenant/runtime-requirements.lock
-    auxiliary_direct_dependency_files:
-      - pyproject.toml
-    auxiliary_third_party_file: devcovenant/licenses/THIRD_PARTY_LICENSES.md
-    auxiliary_licenses_dir: devcovenant/licenses
-    auxiliary_report_heading: '## License Report'
-    auxiliary_lock_generate_hashes: false
+    surfaces:
+      - id: root_workspace
+        generate_hashes: false
+      - id: package_runtime
+        enabled: false
+      - id: devcovenant_runtime
+        direct_dependency_files:
+          - pyproject.toml
+        dependency_files:
+          - pyproject.toml
+        generate_hashes: false
   managed-environment:
     expected_paths:
       - .venv

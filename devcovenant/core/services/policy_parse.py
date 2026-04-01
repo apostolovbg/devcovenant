@@ -5,7 +5,9 @@ from __future__ import annotations
 import re
 from dataclasses import dataclass, field
 from pathlib import Path
-from typing import Dict, List, Optional
+from typing import Any, Dict, List, Optional
+
+import yaml
 
 
 @dataclass
@@ -20,7 +22,7 @@ class PolicyDefinition:
     custom: bool
     description: str
     hash_from_file: Optional[str] = None
-    raw_metadata: Dict[str, str] = field(default_factory=dict)
+    raw_metadata: Dict[str, Any] = field(default_factory=dict)
 
 
 class PolicyParser:
@@ -91,11 +93,53 @@ class PolicyParser:
         return content[begin:end]
 
     @staticmethod
-    def _parse_metadata_block(block: str) -> Dict[str, str]:
-        """Parse key/value metadata from a policy-def block."""
-        metadata: dict[str, str] = {}
+    def _parse_metadata_block(block: str) -> Dict[str, Any]:
+        """Parse YAML metadata from a policy-def block."""
+        if PolicyParser._looks_like_legacy_metadata_block(block):
+            payload = PolicyParser._parse_legacy_metadata_block(block)
+        else:
+            payload = None
+        try:
+            if payload is None:
+                payload = yaml.safe_load(block)
+        except yaml.YAMLError as exc:
+            payload = PolicyParser._parse_legacy_metadata_block(block)
+            if payload is None:
+                raise ValueError(
+                    f"Invalid policy metadata YAML: {exc}"
+                ) from exc
+        if payload is None:
+            return {}
+        if not isinstance(payload, dict):
+            raise ValueError("Policy metadata block must be a YAML mapping.")
+        return PolicyParser._normalize_metadata_payload(dict(payload))
+
+    @staticmethod
+    def _looks_like_legacy_metadata_block(block: str) -> bool:
+        """Return True when indented lines behave like legacy continuations."""
+        top_level_with_inline_value = False
+        key_pattern = re.compile(r"^[A-Za-z0-9_.-]+\s*:")
+        for line in block.splitlines():
+            stripped = line.strip()
+            if not stripped:
+                continue
+            if not line[:1].isspace():
+                top_level_with_inline_value = False
+                if key_pattern.match(stripped):
+                    _, raw_value = stripped.split(":", 1)
+                    top_level_with_inline_value = bool(raw_value.strip())
+                continue
+            if top_level_with_inline_value and not stripped.startswith("- "):
+                return True
+        return False
+
+    @staticmethod
+    def _parse_legacy_metadata_block(block: str) -> Dict[str, Any] | None:
+        """Parse legacy flat metadata blocks that are not valid YAML."""
+        metadata: dict[str, Any] = {}
         current_key: str | None = None
         key_pattern = re.compile(r"^[A-Za-z0-9_.-]+\s*:")
+        saw_key = False
         for line in block.split("\n"):
             stripped = line.strip()
             if not stripped:
@@ -105,11 +149,12 @@ class PolicyParser:
                 key, value = stripped.split(":", 1)
                 current_key = key.strip()
                 metadata[current_key] = value.strip()
+                saw_key = True
                 continue
             if not current_key:
-                continue
+                return None
             continuation = stripped
-            existing = metadata.get(current_key, "")
+            existing = str(metadata.get(current_key, "")).strip()
             if not existing:
                 metadata[current_key] = continuation
                 continue
@@ -117,19 +162,66 @@ class PolicyParser:
                 metadata[current_key] = f"{existing}{continuation}"
                 continue
             metadata[current_key] = f"{existing},{continuation}"
-        return metadata
+        return metadata if saw_key else None
 
     @staticmethod
-    def _required_metadata(metadata: Dict[str, str], key: str) -> str:
+    def _normalize_metadata_payload(payload: Dict[str, Any]) -> Dict[str, Any]:
+        """Normalize parsed metadata values to the runtime storage shape."""
+        normalized: Dict[str, Any] = {}
+        for raw_key, raw_value in payload.items():
+            key = str(raw_key).strip()
+            if not key:
+                continue
+            normalized[key] = PolicyParser._normalize_metadata_value(raw_value)
+        return normalized
+
+    @staticmethod
+    def _normalize_metadata_value(raw_value: Any) -> Any:
+        """Normalize one parsed metadata value recursively."""
+        if isinstance(raw_value, dict):
+            return PolicyParser._normalize_metadata_payload(raw_value)
+        if isinstance(raw_value, list):
+            normalized_list = [
+                PolicyParser._normalize_metadata_value(entry)
+                for entry in raw_value
+            ]
+            if any(
+                isinstance(entry, (dict, list)) for entry in normalized_list
+            ):
+                return [
+                    entry
+                    for entry in normalized_list
+                    if entry not in ("", [], {})
+                ]
+            return [
+                str(entry).strip()
+                for entry in normalized_list
+                if str(entry).strip()
+            ]
+        if isinstance(raw_value, bool):
+            return "true" if raw_value else "false"
+        if raw_value is None:
+            return ""
+        return str(raw_value).strip()
+
+    @staticmethod
+    def _required_metadata(metadata: Dict[str, Any], key: str) -> str:
         """Return required metadata key value or raise parse error."""
-        raw = str(metadata.get(key, "")).strip()
+        raw_value = metadata.get(key, "")
+        if isinstance(raw_value, list):
+            for entry in raw_value:
+                raw = str(entry or "").strip()
+                if raw:
+                    return raw
+            raise ValueError(f"Missing required metadata key `{key}`.")
+        raw = str(raw_value).strip()
         if raw:
             return raw
         raise ValueError(f"Missing required metadata key `{key}`.")
 
     @staticmethod
     def _parse_bool_metadata(
-        metadata: Dict[str, str],
+        metadata: Dict[str, Any],
         key: str,
         *,
         policy_id: str,

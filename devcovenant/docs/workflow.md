@@ -122,6 +122,9 @@ The ownership split is:
    rarely, a full local replacement
 
 The github-owned base should stay generic.
+The shipped user stack keeps `github` active by default, but the profile is
+still optional: remove it when the repository does not want generated GitHub
+Actions CI.
 It bootstraps DevCovenant from the shipped
 `devcovenant/runtime-requirements.lock` so it does not assume the
 project dependency files belong to DevCovenant. The packaged
@@ -132,6 +135,11 @@ the lock instead of upgrading `pip` live first.
 If a repository needs extra project dependency setup, extra CI steps, or extra
 install validation, that extension should come from a profile-owned CI
 fragment instead of from the builtin base.
+That split usually looks like this:
+1. a repo-specific custom profile owns local behavior such as
+   `root_workspace`, managed environment details, and repository workflow runs
+2. an optional GitHub-specific custom profile owns reusable GitHub-only CI
+   fragments when the repository wants more than the builtin base
 If a repo uses a hash-locked Python requirements file and also installs a
 local wheel or sdist in CI, split that into:
 1. install the locked requirements

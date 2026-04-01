@@ -19,8 +19,9 @@ stays readable and auditable.
   that match the current direct dependency set.
 
 ## Update Checklist
-- Keep `licenses/THIRD_PARTY_LICENSES.md` synchronized with dependency
-  manifest and lock updates for this surface.
+- Keep `licenses/THIRD_PARTY_LICENSES.md` synchronized with
+  dependency manifest and lock updates for this
+  surface.
 - Add, remove, or refresh generated license files when dependency
   versions change.
 - Re-run DevCovenant checks and commit report and license artifact

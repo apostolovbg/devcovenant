@@ -13,10 +13,7 @@ import sys
 import tempfile
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Callable, Dict, Iterable, List, Sequence, Tuple
-from urllib.error import HTTPError, URLError
-from urllib.parse import quote
-from urllib.request import urlopen
+from typing import Callable, Dict, Iterable, List, Mapping, Sequence, Tuple
 
 from packaging.requirements import InvalidRequirement, Requirement
 
@@ -26,7 +23,7 @@ from devcovenant.builtin.policies.dependency_management import (
 from devcovenant.core.services.metadata import (
     build_metadata_context,
     metadata_value_list,
-    resolve_policy_metadata_map,
+    resolve_policy_metadata_bundle,
 )
 from devcovenant.core.services.policy_registry import (
     load_policy_descriptor,
@@ -34,7 +31,6 @@ from devcovenant.core.services.policy_registry import (
 )
 
 POLICY_ID = "dependency-management"
-_PYPI_JSON_TIMEOUT_SECONDS = 20
 _PYTHON_LOCK_OPTION_TOKENS = {
     "--cert",
     "--client-cert",
@@ -60,20 +56,6 @@ def _normalize_repo_relative_path_token(raw_value: object) -> str:
     """Return one normalized repo-relative path token."""
 
     return str(raw_value or "").replace("\\", "/").strip()
-
-
-def _optional_bool_metadata(
-    resolved: Dict[str, object],
-    key: str,
-) -> bool:
-    """Return one optional boolean metadata flag."""
-
-    raw_value = str(resolved.get(key, "false")).strip()
-    if raw_value.lower() not in {"true", "false"}:
-        raise ValueError(
-            f"dependency-management.metadata.{key} must be boolean."
-        )
-    return raw_value.lower() == "true"
 
 
 @dataclass(frozen=True)
@@ -297,27 +279,25 @@ def _compile_requirements_lock(
             _strip_python_lock_option_lines(normalised),
             input_name=input_name,
         )
-    with_backports = _preserve_exact_marker_pins(
+    if generate_hashes:
+        return _split_last_updated(cleaned)
+    with_direct_conditionals = _preserve_direct_conditional_requirements(
         cleaned,
         requirements_in,
-        existing_lock_lines=existing_lock_lines,
-        generate_hashes=generate_hashes,
         source_display_name=input_name,
     )
-    return _split_last_updated(with_backports)
+    return _split_last_updated(with_direct_conditionals)
 
 
-def _preserve_exact_marker_pins(
+def _preserve_direct_conditional_requirements(
     compiled_lines: Sequence[str],
     requirements_in: Path,
     *,
-    existing_lock_lines: Sequence[str] | None = None,
-    generate_hashes: bool = False,
     source_display_name: str = "requirements.in",
 ) -> List[str]:
-    """Keep exact conditional backport pins visible in the normalized lock."""
+    """Keep direct exact conditional requirements visible in the lock."""
 
-    preserved_requirements = _collect_exact_marker_requirements(
+    preserved_requirements = _collect_direct_conditional_requirements(
         requirements_in
     )
     if not preserved_requirements:
@@ -330,37 +310,22 @@ def _preserve_exact_marker_pins(
         and not str(raw_line).lstrip().startswith("#")
         and not str(raw_line)[:1].isspace()
     }
-    existing_hashes = _extract_hashed_requirement_entries(
-        existing_lock_lines or ()
-    )
     result = list(compiled_lines)
     for requirement in preserved_requirements:
-        pin_line = _format_exact_marker_requirement(requirement)
+        pin_line = _format_direct_conditional_requirement(requirement)
         if pin_line in existing_entries:
             continue
         if result and result[-1] != "":
             result.append("")
-        if generate_hashes:
-            hashes = existing_hashes.get(pin_line)
-            if not hashes:
-                hashes = _fetch_pypi_release_hashes(requirement)
-            result.extend(
-                _build_hashed_requirement_block(
-                    pin_line,
-                    hashes,
-                    source_display_name=source_display_name,
-                )
-            )
-        else:
-            result.append(pin_line)
-            result.append(f"    # via -r {source_display_name}")
+        result.append(pin_line)
+        result.append(f"    # via -r {source_display_name}")
     return result
 
 
-def _collect_exact_marker_requirements(
+def _collect_direct_conditional_requirements(
     requirements_in: Path,
 ) -> List[Requirement]:
-    """Return direct marker-gated exact requirements from requirements.in."""
+    """Return direct exact conditional requirements from requirements.in."""
 
     collected: List[Requirement] = []
     for raw_line in requirements_in.read_text(encoding="utf-8").splitlines():
@@ -382,8 +347,8 @@ def _collect_exact_marker_requirements(
     return collected
 
 
-def _format_exact_marker_requirement(requirement: Requirement) -> str:
-    """Return canonical text for one exact marker-gated requirement."""
+def _format_direct_conditional_requirement(requirement: Requirement) -> str:
+    """Return canonical text for one direct exact conditional requirement."""
 
     specifiers = list(requirement.specifier)
     exact = specifiers[0]
@@ -396,73 +361,6 @@ def _format_exact_marker_requirement(requirement: Requirement) -> str:
         f"{requirement.name}{extras}=={exact.version} ; "
         f"{requirement.marker}"
     )
-
-
-def _extract_hashed_requirement_entries(
-    lines: Sequence[str],
-) -> Dict[str, List[str]]:
-    """Map hashed requirement lines to their recorded sha256 digests."""
-
-    collected: Dict[str, List[str]] = {}
-    current: str | None = None
-    current_hashes: List[str] = []
-
-    def _flush() -> None:
-        """Persist the current requirement hash set when present."""
-
-        if current and current_hashes:
-            collected[current] = sorted(set(current_hashes))
-
-    for raw_line in lines:
-        stripped = str(raw_line).strip()
-        if not stripped or stripped.startswith("#"):
-            continue
-        if raw_line[:1].isspace():
-            cleaned = stripped.rstrip("\\").strip()
-            if cleaned.startswith("--hash=sha256:") and current:
-                current_hashes.append(cleaned.split("sha256:", 1)[1])
-            continue
-        _flush()
-        current = stripped.rstrip("\\").strip()
-        current_hashes = []
-    _flush()
-    return collected
-
-
-def _fetch_pypi_release_hashes(requirement: Requirement) -> List[str]:
-    """Return PyPI sha256 hashes for one exact marker-gated requirement."""
-
-    specifiers = list(requirement.specifier)
-    exact = specifiers[0]
-    package_name = quote(requirement.name, safe="")
-    version = quote(exact.version, safe="")
-    url = f"https://pypi.org/pypi/{package_name}/{version}/json"
-    try:
-        with urlopen(url, timeout=_PYPI_JSON_TIMEOUT_SECONDS) as response:
-            payload = json.load(response)
-    except (HTTPError, URLError, TimeoutError, json.JSONDecodeError) as exc:
-        raise RuntimeError(
-            "Could not resolve hashes for exact marker pin "
-            f"`{_format_exact_marker_requirement(requirement)}` from PyPI. "
-            "Regenerate the lock under an interpreter where the marker "
-            "applies, or disable `python_lock_generate_hashes`."
-        ) from exc
-
-    urls = payload.get("urls", [])
-    hashes = sorted(
-        {
-            str(digest).strip()
-            for item in urls
-            for digest in [item.get("digests", {}).get("sha256")]
-            if str(digest or "").strip()
-        }
-    )
-    if not hashes:
-        raise RuntimeError(
-            "PyPI did not return any release hashes for exact marker pin "
-            f"`{_format_exact_marker_requirement(requirement)}`."
-        )
-    return hashes
 
 
 def _build_hashed_requirement_block(
@@ -478,7 +376,7 @@ def _build_hashed_requirement_block(
     )
     if not unique_hashes:
         raise RuntimeError(
-            f"Missing hashes for exact marker pin `{requirement_line}`."
+            f"Missing hashes for locked requirement `{requirement_line}`."
         )
     block = [f"{requirement_line} \\"]
     last_index = len(unique_hashes) - 1
@@ -522,145 +420,25 @@ def _run_pip_compile(
         )
 
 
-def _refresh_python_requirements_lock(
+def _refresh_python_surface_lock(
     repo_root: Path,
     *,
-    generate_hashes: bool = False,
+    surface: dependency_management.DependencySurface,
 ) -> LockHandlerResult:
-    """Refresh requirements.lock from requirements.in."""
+    """Refresh one declared Python dependency surface."""
 
-    req_in = repo_root / "requirements.in"
-    lock_path = repo_root / "requirements.lock"
-    if not req_in.exists():
+    normalized_lock = _normalize_repo_relative_path_token(surface.lock_file)
+    lock_path = repo_root / normalized_lock
+    if not surface.direct_dependency_files:
         return LockHandlerResult(
-            "requirements.lock",
+            normalized_lock,
             changed=False,
             attempted=False,
-            message="Skipped: requirements.in missing.",
+            message="Skipped: no direct dependency files are declared.",
         )
-
-    previous = (
-        _split_last_updated(lock_path.read_text().splitlines())
-        if lock_path.exists()
-        else LockFilePieces([])
-    )
-    compiled = _compile_requirements_lock(
-        repo_root,
-        req_in,
-        generate_hashes=generate_hashes,
-        existing_lock_lines=previous.body,
-    )
-    compiled_cleaned = LockFilePieces(
-        _strip_python_lock_option_lines(compiled.body)
-    )
-    previous_cleaned = LockFilePieces(
-        _strip_python_lock_option_lines(previous.body)
-    )
-    if _normalize_python_lock_semantics_for_mode(
-        previous_cleaned.body,
-        generate_hashes=generate_hashes,
-    ) == _normalize_python_lock_semantics_for_mode(
-        compiled_cleaned.body,
-        generate_hashes=generate_hashes,
-    ):
-        if previous_cleaned.body != previous.body:
-            lock_path.write_text(
-                "\n".join(compiled_cleaned.body) + "\n",
-                encoding="utf-8",
-            )
-            return LockHandlerResult(
-                "requirements.lock",
-                changed=True,
-                attempted=True,
-                message=(
-                    "Normalized requirements.lock by removing "
-                    "environment-specific pip option lines."
-                ),
-            )
-        if previous.body != compiled_cleaned.body:
-            lock_path.write_text(
-                "\n".join(compiled_cleaned.body) + "\n",
-                encoding="utf-8",
-            )
-            return LockHandlerResult(
-                "requirements.lock",
-                changed=True,
-                attempted=True,
-                message=(
-                    "Normalized requirements.lock without changing "
-                    "resolved pins."
-                ),
-            )
-        return LockHandlerResult(
-            "requirements.lock",
-            changed=False,
-            attempted=True,
-            message="No content change after pip-compile.",
-        )
-    lock_path.write_text("\n".join(compiled.body) + "\n", encoding="utf-8")
-    return LockHandlerResult(
-        "requirements.lock",
-        changed=True,
-        attempted=True,
-        message="Updated requirements.lock.",
-    )
-
-
-def _compile_lock_from_dependency_files(
-    repo_root: Path,
-    *,
-    dependency_files: Sequence[str],
-    output_name: str,
-    generate_hashes: bool,
-    existing_lock_lines: Sequence[str] | None = None,
-    input_display_name: str,
-) -> LockFilePieces:
-    """Compile one lock from dependency strings declared in manifest files."""
-
-    dependency_lines: List[str] = []
-    for raw_path in dependency_files:
-        path_token = _normalize_repo_relative_path_token(raw_path)
-        if not path_token:
-            continue
-        manifest_path = repo_root / path_token
-        dependency_lines.extend(
-            dependency_management._direct_dependency_strings_from_file(
-                manifest_path
-            )
-        )
-    if not dependency_lines:
-        return LockFilePieces([])
-
-    with tempfile.TemporaryDirectory() as tmpdir:
-        tmp_in = Path(tmpdir) / "runtime-requirements.in"
-        tmp_in.write_text(
-            "\n".join(dependency_lines).rstrip() + "\n",
-            encoding="utf-8",
-        )
-        return _compile_requirements_lock(
-            repo_root,
-            tmp_in,
-            generate_hashes=generate_hashes,
-            existing_lock_lines=existing_lock_lines,
-            output_name=output_name,
-            input_name=input_display_name,
-        )
-
-
-def _refresh_auxiliary_python_lock(
-    repo_root: Path,
-    *,
-    lock_file: str,
-    direct_dependency_files: Sequence[str],
-    generate_hashes: bool = False,
-) -> LockHandlerResult:
-    """Refresh one auxiliary Python lock from configured dependency files."""
-
-    normalized_lock = _normalize_repo_relative_path_token(lock_file)
-    lock_path = repo_root / normalized_lock
     input_display_name = (
-        _normalize_repo_relative_path_token(direct_dependency_files[0])
-        if len(direct_dependency_files) == 1
+        _normalize_repo_relative_path_token(surface.direct_dependency_files[0])
+        if len(surface.direct_dependency_files) == 1
         else "configured dependency inputs"
     )
     previous = (
@@ -668,25 +446,39 @@ def _refresh_auxiliary_python_lock(
         if lock_path.exists()
         else LockFilePieces([])
     )
-    compiled = _compile_lock_from_dependency_files(
-        repo_root,
-        dependency_files=direct_dependency_files,
-        output_name=Path(normalized_lock).name,
-        generate_hashes=generate_hashes,
-        existing_lock_lines=previous.body,
-        input_display_name=input_display_name,
-    )
-    if not compiled.body:
-        return LockHandlerResult(
-            normalized_lock,
-            changed=False,
-            attempted=False,
-            message=(
-                "Skipped: no dependency strings were found for "
-                f"`{normalized_lock}`."
-            ),
+    if surface.generate_hashes:
+        if not surface.hash_targets:
+            raise RuntimeError(
+                "Hash-locked dependency surface "
+                f"`{surface.surface_id}` requires configured hash_targets."
+            )
+        compiled = _compile_hash_locked_surface(
+            repo_root,
+            surface_id=surface.surface_id,
+            dependency_files=surface.direct_dependency_files,
+            hash_targets=surface.hash_targets,
+            source_display_name=input_display_name,
         )
-
+    elif len(surface.direct_dependency_files) == 1 and (
+        Path(surface.direct_dependency_files[0]).name == "requirements.in"
+    ):
+        compiled = _compile_requirements_lock(
+            repo_root,
+            repo_root / surface.direct_dependency_files[0],
+            generate_hashes=False,
+            existing_lock_lines=previous.body,
+            output_name=Path(normalized_lock).name,
+            input_name=input_display_name,
+        )
+    else:
+        compiled = _compile_lock_from_dependency_files(
+            repo_root,
+            dependency_files=surface.direct_dependency_files,
+            output_name=Path(normalized_lock).name,
+            generate_hashes=False,
+            existing_lock_lines=previous.body,
+            input_display_name=input_display_name,
+        )
     compiled_cleaned = LockFilePieces(
         _strip_python_lock_option_lines(compiled.body)
     )
@@ -695,10 +487,10 @@ def _refresh_auxiliary_python_lock(
     )
     if _normalize_python_lock_semantics_for_mode(
         previous_cleaned.body,
-        generate_hashes=generate_hashes,
+        generate_hashes=surface.generate_hashes,
     ) == _normalize_python_lock_semantics_for_mode(
         compiled_cleaned.body,
-        generate_hashes=generate_hashes,
+        generate_hashes=surface.generate_hashes,
     ):
         if previous_cleaned.body != previous.body:
             lock_path.parent.mkdir(parents=True, exist_ok=True)
@@ -744,6 +536,271 @@ def _refresh_auxiliary_python_lock(
         changed=True,
         attempted=True,
         message=f"Updated {normalized_lock}.",
+    )
+
+
+def _refresh_python_requirements_lock(
+    repo_root: Path,
+    *,
+    generate_hashes: bool = False,
+) -> LockHandlerResult:
+    """Refresh requirements.lock from requirements.in."""
+    return _refresh_python_surface_lock(
+        repo_root,
+        surface=dependency_management.DependencySurface(
+            surface_id="requirements-lock",
+            enabled=True,
+            active=True,
+            lock_file="requirements.lock",
+            direct_dependency_files=["requirements.in"],
+            dependency_files=["requirements.in"],
+            dependency_globs=[],
+            dependency_dirs=[],
+            third_party_file="licenses/THIRD_PARTY_LICENSES.md",
+            licenses_dir="licenses",
+            report_heading=dependency_management.DEFAULT_REPORT_HEADING,
+            manage_licenses_readme=True,
+            generate_hashes=generate_hashes,
+            required_paths=[],
+            hash_targets=[],
+        ),
+    )
+
+
+def _compile_lock_from_dependency_files(
+    repo_root: Path,
+    *,
+    dependency_files: Sequence[str],
+    output_name: str,
+    generate_hashes: bool,
+    existing_lock_lines: Sequence[str] | None = None,
+    input_display_name: str,
+) -> LockFilePieces:
+    """Compile one lock from dependency strings declared in manifest files."""
+
+    dependency_lines: List[str] = []
+    for raw_path in dependency_files:
+        path_token = _normalize_repo_relative_path_token(raw_path)
+        if not path_token:
+            continue
+        manifest_path = repo_root / path_token
+        dependency_lines.extend(
+            dependency_management._direct_dependency_strings_from_file(
+                manifest_path
+            )
+        )
+    if not dependency_lines:
+        return LockFilePieces([])
+
+    with tempfile.TemporaryDirectory() as tmpdir:
+        tmp_in = Path(tmpdir) / "runtime-requirements.in"
+        tmp_in.write_text(
+            "\n".join(dependency_lines).rstrip() + "\n",
+            encoding="utf-8",
+        )
+        return _compile_requirements_lock(
+            repo_root,
+            tmp_in,
+            generate_hashes=generate_hashes,
+            existing_lock_lines=existing_lock_lines,
+            output_name=output_name,
+            input_name=input_display_name,
+        )
+
+
+def _surface_dependency_strings(
+    repo_root: Path,
+    *,
+    dependency_files: Sequence[str],
+) -> List[str]:
+    """Collect dependency strings from one surface's direct inputs."""
+
+    dependency_lines: List[str] = []
+    for raw_path in dependency_files:
+        path_token = _normalize_repo_relative_path_token(raw_path)
+        if not path_token:
+            continue
+        manifest_path = repo_root / path_token
+        dependency_lines.extend(
+            dependency_management._direct_dependency_strings_from_file(
+                manifest_path
+            )
+        )
+    return dependency_lines
+
+
+def _run_pip_hash_target_report(
+    repo_root: Path,
+    *,
+    dependency_lines: Sequence[str],
+    target: dependency_management.DependencySurfaceTarget,
+) -> List[Dict[str, object]]:
+    """Resolve one full dependency closure for a configured hash target."""
+
+    if not dependency_lines:
+        return []
+    with tempfile.TemporaryDirectory() as tmpdir:
+        tmp_in = Path(tmpdir) / "hash-target.in"
+        tmp_report = Path(tmpdir) / "hash-target-report.json"
+        tmp_in.write_text(
+            "\n".join(dependency_lines).rstrip() + "\n",
+            encoding="utf-8",
+        )
+        command = [
+            sys.executable,
+            "-m",
+            "pip",
+            "install",
+            "--dry-run",
+            "--ignore-installed",
+            "--report",
+            str(tmp_report),
+            "--only-binary=:all:",
+        ]
+        for key, value in target.pip.items():
+            normalized_key = str(key).strip().replace("_", "-")
+            normalized_value = str(value).strip()
+            if not normalized_key or not normalized_value:
+                continue
+            command.extend([f"--{normalized_key}", normalized_value])
+        command.extend(["-r", str(tmp_in)])
+        env = dict(os.environ)
+        env["PIP_DISABLE_PIP_VERSION_CHECK"] = "1"
+        # Reviewed tokenized local command execution.
+        # Shell use stays forbidden.
+        subprocess.run(  # nosec B603
+            command,
+            cwd=repo_root,
+            check=True,
+            text=True,
+            capture_output=True,
+            env=env,
+        )
+        payload = json.loads(tmp_report.read_text(encoding="utf-8"))
+    installs = payload.get("install", [])
+    if not isinstance(installs, list):
+        raise RuntimeError(
+            "pip hash-target report did not contain an install list."
+        )
+    return installs
+
+
+def _merge_hash_target_reports(
+    *,
+    targets: Sequence[dependency_management.DependencySurfaceTarget],
+    report_entries: Mapping[str, Sequence[Mapping[str, object]]],
+    source_display_name: str,
+) -> List[str]:
+    """Build one hash-locked requirements body from target reports."""
+
+    grouped: Dict[str, Dict[str, Dict[str, object]]] = {}
+    ordered_target_ids = [target.target_id for target in targets]
+    target_markers = {target.target_id: target.marker for target in targets}
+    all_target_ids = set(ordered_target_ids)
+    for target in targets:
+        installs = report_entries.get(target.target_id, [])
+        for item in installs:
+            if not isinstance(item, Mapping):
+                continue
+            metadata = item.get("metadata", {})
+            if not isinstance(metadata, Mapping):
+                continue
+            name = str(metadata.get("name", "")).strip()
+            version = str(metadata.get("version", "")).strip()
+            if not name or not version:
+                continue
+            archive_hashes = (
+                item.get("download_info", {})
+                .get("archive_info", {})
+                .get("hashes", {})
+            )
+            hashes: set[str] = set()
+            if isinstance(archive_hashes, Mapping):
+                sha256 = str(archive_hashes.get("sha256", "")).strip()
+                if sha256:
+                    hashes.add(sha256)
+            if not hashes:
+                raise RuntimeError(
+                    "pip hash-target report did not provide sha256 hashes "
+                    f"for `{name}=={version}` in target "
+                    f"`{target.target_id}`."
+                )
+            normalized_name = (
+                dependency_management._normalize_distribution_name(name)
+            )
+            version_map = grouped.setdefault(normalized_name, {})
+            entry = version_map.setdefault(
+                version,
+                {
+                    "display_name": name,
+                    "hashes": set(),
+                    "targets": set(),
+                },
+            )
+            entry["hashes"].update(hashes)
+            entry["targets"].add(target.target_id)
+
+    lines: List[str] = [
+        "# This file is autogenerated by DevCovenant dependency-management.",
+        "",
+    ]
+    for normalized_name in sorted(grouped):
+        versions = grouped[normalized_name]
+        for version in sorted(versions):
+            entry = versions[version]
+            display_name = str(entry["display_name"])
+            target_ids = set(entry["targets"])
+            requirement_line = f"{display_name}=={version}"
+            if target_ids != all_target_ids:
+                marker_parts = [
+                    f"({target_markers[target_id]})"
+                    for target_id in ordered_target_ids
+                    if target_id in target_ids
+                ]
+                requirement_line += " ; " + " or ".join(marker_parts)
+            lines.extend(
+                _build_hashed_requirement_block(
+                    requirement_line,
+                    sorted(entry["hashes"]),
+                    source_display_name=source_display_name,
+                )
+            )
+            lines.append("")
+    if lines and lines[-1] == "":
+        lines.pop()
+    return lines
+
+
+def _compile_hash_locked_surface(
+    repo_root: Path,
+    *,
+    surface_id: str,
+    dependency_files: Sequence[str],
+    hash_targets: Sequence[dependency_management.DependencySurfaceTarget],
+    source_display_name: str,
+) -> LockFilePieces:
+    """Resolve a hash-locked requirements body across configured targets."""
+
+    del surface_id
+    dependency_lines = _surface_dependency_strings(
+        repo_root,
+        dependency_files=dependency_files,
+    )
+    if not dependency_lines:
+        return LockFilePieces([])
+    reports: Dict[str, Sequence[Mapping[str, object]]] = {}
+    for target in hash_targets:
+        reports[target.target_id] = _run_pip_hash_target_report(
+            repo_root,
+            dependency_lines=dependency_lines,
+            target=target,
+        )
+    return LockFilePieces(
+        _merge_hash_target_reports(
+            targets=hash_targets,
+            report_entries=reports,
+            source_display_name=source_display_name,
+        )
     )
 
 
@@ -1038,76 +1095,6 @@ LOCKFILE_HANDLERS: Dict[str, Callable[[Path], LockHandlerResult]] = {
     "Podfile.lock": _refresh_podfile_lock,
     "packages.lock.json": _refresh_dotnet_lock,
 }
-LOCKFILE_TRIGGER_FILES: Dict[str, Tuple[str, ...]] = {
-    "requirements.lock": ("requirements.in", "requirements.lock"),
-    "package-lock.json": ("package.json", "package-lock.json"),
-    "yarn.lock": ("package.json", "yarn.lock"),
-    "pnpm-lock.yaml": ("package.json", "pnpm-lock.yaml"),
-    "go.sum": ("go.mod", "go.sum"),
-    "Cargo.lock": ("Cargo.toml", "Cargo.lock"),
-    "composer.lock": ("composer.json", "composer.lock"),
-    "Gemfile.lock": ("Gemfile", "Gemfile.lock"),
-    "pubspec.lock": ("pubspec.yaml", "pubspec.lock"),
-    "Podfile.lock": ("Podfile", "Podfile.lock"),
-    "packages.lock.json": ("packages.lock.json",),
-}
-LOCKFILE_TRIGGER_SUFFIXES: Dict[str, Tuple[str, ...]] = {
-    "packages.lock.json": (".csproj", ".props", ".targets", ".sln"),
-}
-
-
-def _csv_to_list(raw_value: str) -> List[str]:
-    """Expand a comma-separated metadata string into a clean list."""
-
-    items = []
-    for token in str(raw_value or "").split(","):
-        cleaned = token.strip()
-        if cleaned:
-            items.append(cleaned)
-    return items
-
-
-def _resolved_role_file_selectors(
-    *,
-    raw_roles: str,
-    raw_role_files: str,
-) -> List[str]:
-    """Resolve `resolved` role file selectors from merged metadata."""
-
-    if raw_roles.strip():
-        roles = dependency_management.resolve_dependency_roles(
-            _csv_to_list(raw_roles)
-        )
-    else:
-        roles = list(dependency_management.CANONICAL_DEPENDENCY_ROLES)
-    pairs = dependency_management.parse_role_selector_entries(
-        entries=_csv_to_list(raw_role_files),
-        allowed_roles=roles,
-        metadata_key="dependency_role_files",
-    )
-    return [selector for role, selector in pairs if role == "resolved"]
-
-
-def _lock_refresh_is_requested(
-    lock_name: str,
-    changed_dependency_files: Sequence[str],
-) -> bool:
-    """Return whether a lock refresh is required for changed files."""
-
-    normalized = [
-        str(entry).strip()
-        for entry in changed_dependency_files
-        if str(entry).strip()
-    ]
-    if not normalized:
-        return True
-    trigger_files = set(LOCKFILE_TRIGGER_FILES.get(lock_name, (lock_name,)))
-    if any(entry in trigger_files for entry in normalized):
-        return True
-    trigger_suffixes = LOCKFILE_TRIGGER_SUFFIXES.get(lock_name, ())
-    if not trigger_suffixes:
-        return False
-    return any(entry.endswith(trigger_suffixes) for entry in normalized)
 
 
 def _descriptor_metadata_lists(
@@ -1138,7 +1125,7 @@ def _resolve_dependency_metadata(repo_root: Path) -> Dict[str, object]:
     context = build_metadata_context(repo_root)
     location = resolve_script_location(repo_root, POLICY_ID)
     custom_policy = bool(location and location.kind == "custom")
-    _, resolved = resolve_policy_metadata_map(
+    bundle = resolve_policy_metadata_bundle(
         POLICY_ID,
         order,
         values,
@@ -1146,105 +1133,12 @@ def _resolve_dependency_metadata(repo_root: Path) -> Dict[str, object]:
         context,
         custom_policy=custom_policy,
     )
-    resolved_role_files = _resolved_role_file_selectors(
-        raw_roles=str(resolved.get("dependency_roles", "")),
-        raw_role_files=str(resolved.get("dependency_role_files", "")),
+    surfaces = dependency_management.resolve_dependency_surfaces(
+        repo_root=repo_root,
+        raw_surfaces=bundle.decode_options().get("surfaces", []),
+        include_inactive=True,
     )
-    third_party_file = str(resolved.get("third_party_file", "")).strip()
-    licenses_dir = str(resolved.get("licenses_dir", "")).strip()
-    report_heading = str(resolved.get("report_heading", "")).strip()
-    if not third_party_file:
-        raise ValueError(
-            "dependency-management.metadata.third_party_file is missing."
-        )
-    if not licenses_dir:
-        raise ValueError(
-            "dependency-management.metadata.licenses_dir is missing."
-        )
-    if not report_heading:
-        raise ValueError(
-            "dependency-management.metadata.report_heading is missing."
-        )
-    metadata: Dict[str, object] = {
-        "resolved_dependency_files": resolved_role_files,
-        "third_party_file": third_party_file,
-        "licenses_dir": licenses_dir,
-        "report_heading": report_heading,
-        "python_lock_generate_hashes": _optional_bool_metadata(
-            resolved,
-            "python_lock_generate_hashes",
-        ),
-    }
-
-    auxiliary_lock_file = _normalize_repo_relative_path_token(
-        resolved.get("auxiliary_lock_file", "")
-    )
-    auxiliary_third_party_file = _normalize_repo_relative_path_token(
-        resolved.get("auxiliary_third_party_file", "")
-    )
-    auxiliary_licenses_dir = _normalize_repo_relative_path_token(
-        resolved.get("auxiliary_licenses_dir", "")
-    )
-    auxiliary_report_heading = str(
-        resolved.get("auxiliary_report_heading", "")
-    ).strip()
-    auxiliary_direct_dependency_files = [
-        _normalize_repo_relative_path_token(entry)
-        for entry in metadata_value_list(
-            resolved.get("auxiliary_direct_dependency_files", [])
-        )
-        if _normalize_repo_relative_path_token(entry)
-    ]
-    auxiliary_fields = [
-        auxiliary_lock_file,
-        auxiliary_third_party_file,
-        auxiliary_licenses_dir,
-        auxiliary_report_heading,
-        *auxiliary_direct_dependency_files,
-    ]
-    if any(auxiliary_fields):
-        if not auxiliary_lock_file:
-            raise ValueError(
-                "dependency-management.metadata.auxiliary_lock_file is "
-                "missing."
-            )
-        if auxiliary_lock_file not in resolved_role_files:
-            raise ValueError(
-                "dependency-management.metadata.auxiliary_lock_file must be "
-                "listed in dependency-management `resolved` selectors."
-            )
-        if not auxiliary_third_party_file:
-            raise ValueError(
-                "dependency-management.metadata.auxiliary_third_party_file "
-                "is missing."
-            )
-        if not auxiliary_licenses_dir:
-            raise ValueError(
-                "dependency-management.metadata.auxiliary_licenses_dir is "
-                "missing."
-            )
-        if not auxiliary_report_heading:
-            raise ValueError(
-                "dependency-management.metadata.auxiliary_report_heading "
-                "is missing."
-            )
-        if not auxiliary_direct_dependency_files:
-            raise ValueError(
-                "dependency-management.metadata."
-                "auxiliary_direct_dependency_files is missing."
-            )
-        metadata["auxiliary_surface"] = {
-            "lock_file": auxiliary_lock_file,
-            "third_party_file": auxiliary_third_party_file,
-            "licenses_dir": auxiliary_licenses_dir,
-            "report_heading": auxiliary_report_heading,
-            "direct_dependency_files": auxiliary_direct_dependency_files,
-            "generate_hashes": _optional_bool_metadata(
-                resolved,
-                "auxiliary_lock_generate_hashes",
-            ),
-        }
-    return metadata
+    return {"surfaces": surfaces}
 
 
 def refresh_all(
@@ -1255,24 +1149,12 @@ def refresh_all(
     """Refresh selected lockfiles and dependency-management artifacts."""
 
     metadata = _resolve_dependency_metadata(repo_root)
-    dependency_files = set(metadata["resolved_dependency_files"])
-    python_lock_generate_hashes = bool(
-        metadata.get("python_lock_generate_hashes")
-    )
-    auxiliary_surface = metadata.get("auxiliary_surface")
-    if not isinstance(auxiliary_surface, dict):
-        auxiliary_surface = None
-    targets = [
-        lock_name
-        for lock_name in LOCKFILE_HANDLERS
-        if lock_name in dependency_files
+    surfaces = [
+        surface
+        for surface in metadata.get("surfaces", [])
+        if isinstance(surface, dependency_management.DependencySurface)
+        and surface.active
     ]
-    if auxiliary_surface is not None:
-        auxiliary_lock_file = str(
-            auxiliary_surface.get("lock_file", "")
-        ).strip()
-        if auxiliary_lock_file and auxiliary_lock_file not in targets:
-            targets.append(auxiliary_lock_file)
     results: List[LockHandlerResult] = []
     changed_lockfiles: List[str] = []
     requested_dependency_files: list[str] = []
@@ -1283,9 +1165,10 @@ def refresh_all(
                 text = str(entry).strip()
                 if text:
                     requested_dependency_files.append(text)
-    for lock_name in targets:
-        if not _lock_refresh_is_requested(
-            lock_name,
+    for surface in surfaces:
+        lock_name = surface.lock_file
+        if not dependency_management.dependency_surface_lock_refresh_requested(
+            surface,
             requested_dependency_files,
         ):
             results.append(
@@ -1297,58 +1180,18 @@ def refresh_all(
                 )
             )
             continue
-        if (
-            auxiliary_surface is not None
-            and lock_name
-            == str(auxiliary_surface.get("lock_file", "")).strip()
-        ):
-            auxiliary_trigger_files = list(
-                auxiliary_surface.get("direct_dependency_files", [])
-            ) + [lock_name]
-            if requested_dependency_files and not any(
-                entry in auxiliary_trigger_files
-                for entry in requested_dependency_files
-            ):
-                results.append(
-                    LockHandlerResult(
-                        lock_name,
-                        changed=False,
-                        attempted=False,
-                        message="Skipped: no direct lock inputs changed.",
-                    )
-                )
-                continue
-            result = _refresh_auxiliary_python_lock(
-                repo_root,
-                lock_file=lock_name,
-                direct_dependency_files=list(
-                    auxiliary_surface.get("direct_dependency_files", [])
-                ),
-                generate_hashes=bool(auxiliary_surface.get("generate_hashes")),
-            )
-        elif lock_name == "requirements.lock":
-            result = _refresh_python_requirements_lock(
-                repo_root,
-                generate_hashes=python_lock_generate_hashes,
-            )
-        else:
-            handler = LOCKFILE_HANDLERS[lock_name]
-            result = handler(repo_root)
+        result = _refresh_python_surface_lock(
+            repo_root,
+            surface=surface,
+        )
         results.append(result)
         if result.changed:
             changed_lockfiles.append(lock_name)
     changed_dependency_files: List[str] = []
     for dependency_file in requested_dependency_files:
-        changed_dependency_files.extend(
-            LOCKFILE_TRIGGER_FILES.get(
-                dependency_file,
-                (dependency_file,),
-            )
-        )
+        changed_dependency_files.append(dependency_file)
     for lock_name in changed_lockfiles:
-        changed_dependency_files.extend(
-            LOCKFILE_TRIGGER_FILES.get(lock_name, (lock_name,))
-        )
+        changed_dependency_files.append(lock_name)
     if not changed_dependency_files:
         changed_dependency_files = list(changed_lockfiles)
     changed_dependency_files = list(
@@ -1358,62 +1201,32 @@ def refresh_all(
             if str(entry).strip()
         )
     )
-
-    root_trigger_files = list(
-        dict.fromkeys(
-            list(LOCKFILE_TRIGGER_FILES.get("requirements.lock", ()))
-            + ["pyproject.toml"]
-        )
-    )
-    root_changed_dependency_files = [
-        entry
-        for entry in changed_dependency_files
-        if entry in root_trigger_files
-    ]
-    if not requested_dependency_files:
-        root_changed_dependency_files = root_trigger_files
-    modified_license_files = dependency_management.refresh_license_artifacts(
-        repo_root,
-        changed_dependency_files=root_changed_dependency_files,
-        third_party_file=str(metadata["third_party_file"]),
-        licenses_dir=str(metadata["licenses_dir"]),
-        report_heading=str(metadata["report_heading"]),
-    )
-    if auxiliary_surface is not None:
-        auxiliary_lock_file = str(
-            auxiliary_surface.get("lock_file", "")
-        ).strip()
-        auxiliary_trigger_files = set(
-            str(entry).strip()
-            for entry in auxiliary_surface.get("direct_dependency_files", [])
-            if str(entry).strip()
-        )
-        auxiliary_trigger_files.add(auxiliary_lock_file)
-        auxiliary_changed_dependency_files = [
+    modified_license_files: List[Path] = []
+    for surface in surfaces:
+        if not surface.direct_dependency_files:
+            continue
+        surface_changed_dependency_files = [
             entry
             for entry in changed_dependency_files
-            if entry in auxiliary_trigger_files
+            if dependency_management.dependency_surface_matches(
+                surface,
+                entry,
+            )
         ]
         if not requested_dependency_files:
-            auxiliary_changed_dependency_files = sorted(
-                auxiliary_trigger_files
+            surface_changed_dependency_files = sorted(
+                dependency_management.dependency_surface_trigger_files(surface)
             )
         modified_license_files.extend(
             dependency_management.refresh_license_artifacts(
                 repo_root,
-                changed_dependency_files=auxiliary_changed_dependency_files,
-                third_party_file=str(
-                    auxiliary_surface.get("third_party_file", "")
-                ),
-                licenses_dir=str(auxiliary_surface.get("licenses_dir", "")),
-                report_heading=str(
-                    auxiliary_surface.get("report_heading", "")
-                ),
-                resolved_lock_file=auxiliary_lock_file,
-                direct_dependency_files=list(
-                    auxiliary_surface.get("direct_dependency_files", [])
-                ),
-                manage_licenses_readme=False,
+                changed_dependency_files=surface_changed_dependency_files,
+                third_party_file=surface.third_party_file,
+                licenses_dir=surface.licenses_dir,
+                report_heading=surface.report_heading,
+                resolved_lock_file=surface.lock_file,
+                direct_dependency_files=surface.direct_dependency_files,
+                manage_licenses_readme=surface.manage_licenses_readme,
             )
         )
     result_payload = [

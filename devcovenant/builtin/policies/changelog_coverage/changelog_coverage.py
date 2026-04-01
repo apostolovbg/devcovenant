@@ -219,6 +219,19 @@ def _normalize_verbs(raw_value: object) -> list[str]:
     return verbs
 
 
+def _scalar_token(raw_value: object, default: str) -> str:
+    """Return one non-empty scalar token from metadata or a default."""
+
+    if isinstance(raw_value, list):
+        for entry in raw_value:
+            token = str(entry or "").strip()
+            if token:
+                return token
+        return default
+    token = str(raw_value or "").strip()
+    return token or default
+
+
 def _line_has_verb(line: str, verbs: list[str]) -> bool:
     """Return True if any configured verb root appears at word-start."""
     if not line or not verbs:
@@ -650,7 +663,10 @@ class ChangelogCoverageCheck(PolicyCheck):
         """
         violations: List[Violation] = []
         main_changelog_rel = Path(
-            self.get_option("main_changelog", "CHANGELOG.md")
+            _scalar_token(
+                self.get_option("main_changelog", "CHANGELOG.md"),
+                "CHANGELOG.md",
+            )
         )
         skip_option = self.get_option(
             "skipped_files",
@@ -716,7 +732,13 @@ class ChangelogCoverageCheck(PolicyCheck):
             )
             return violations
         gate_status_rel = Path(
-            self.get_option("gate_status_file", str(_DEFAULT_GATE_STATUS_PATH))
+            _scalar_token(
+                self.get_option(
+                    "gate_status_file",
+                    str(_DEFAULT_GATE_STATUS_PATH),
+                ),
+                str(_DEFAULT_GATE_STATUS_PATH),
+            )
         )
         stage = (
             context.change_state.stage

@@ -13,6 +13,32 @@ MODULE = (
     "devcovenant.builtin.policies.dependency_management."
     "dependency_lock_runtime"
 )
+REPO_ROOT = Path(__file__).resolve().parents[5]
+
+
+def _surface(module, **overrides):
+    """Build one dependency surface object for runtime tests."""
+
+    surface = module.dependency_management.DependencySurface(
+        surface_id="root_workspace",
+        enabled=True,
+        active=True,
+        lock_file="requirements.lock",
+        direct_dependency_files=["requirements.in"],
+        dependency_files=["requirements.in", "pyproject.toml"],
+        dependency_globs=[],
+        dependency_dirs=[],
+        third_party_file="licenses/THIRD_PARTY_LICENSES.md",
+        licenses_dir="licenses",
+        report_heading=module.dependency_management.DEFAULT_REPORT_HEADING,
+        manage_licenses_readme=True,
+        generate_hashes=False,
+        required_paths=[],
+        hash_targets=[],
+    )
+    return module.dependency_management.DependencySurface(
+        **{**surface.__dict__, **overrides}
+    )
 
 
 def _unit_test_module_importable() -> None:
@@ -26,6 +52,29 @@ def _unit_test_module_has_public_symbols() -> None:
     module = importlib.import_module(MODULE)
     public_symbols = [name for name in dir(module) if not name.startswith("_")]
     assert public_symbols
+
+
+def _unit_test_runtime_resolves_structured_surfaces_from_repo_metadata() -> (
+    None
+):
+    """Runtime metadata resolution should keep structured surface mappings."""
+
+    module = importlib.import_module(MODULE)
+    payload = module._resolve_dependency_metadata(REPO_ROOT)
+    surfaces = payload.get("surfaces")
+    assert isinstance(surfaces, list)
+    assert surfaces
+    assert all(
+        isinstance(
+            surface,
+            module.dependency_management.DependencySurface,
+        )
+        for surface in surfaces
+    )
+    assert {surface.surface_id for surface in surfaces} >= {
+        "root_workspace",
+        "devcovenant_runtime",
+    }
 
 
 def _unit_test_runtime_symbol_contract_is_stable() -> None:
@@ -73,10 +122,7 @@ def _unit_test_refresh_runtime_updates_inventory_without_lock_change() -> None:
         original_resolver = module._resolve_dependency_metadata
         original_compile = module._compile_requirements_lock
         module._resolve_dependency_metadata = lambda _repo_root: {
-            "resolved_dependency_files": ["requirements.lock"],
-            "third_party_file": "licenses/THIRD_PARTY_LICENSES.md",
-            "licenses_dir": "licenses",
-            "report_heading": "## License Report",
+            "surfaces": [_surface(module)],
         }
 
         def _fake_compile(_repo_root, _requirements_in, **_kwargs):
@@ -140,10 +186,7 @@ def _unit_test_refresh_runtime_preserves_changed_manifest_references() -> None:
         original_resolver = module._resolve_dependency_metadata
         original_compile = module._compile_requirements_lock
         module._resolve_dependency_metadata = lambda _repo_root: {
-            "resolved_dependency_files": ["requirements.lock"],
-            "third_party_file": "licenses/THIRD_PARTY_LICENSES.md",
-            "licenses_dir": "licenses",
-            "report_heading": "## License Report",
+            "surfaces": [_surface(module)],
         }
 
         def _fake_compile(_repo_root, _requirements_in, **_kwargs):
@@ -208,10 +251,7 @@ def _unit_test_refresh_runtime_skips_compile_for_manifest_only() -> None:
         original_resolver = module._resolve_dependency_metadata
         original_compile = module._compile_requirements_lock
         module._resolve_dependency_metadata = lambda _repo_root: {
-            "resolved_dependency_files": ["requirements.lock"],
-            "third_party_file": "licenses/THIRD_PARTY_LICENSES.md",
-            "licenses_dir": "licenses",
-            "report_heading": "## License Report",
+            "surfaces": [_surface(module)],
         }
 
         def _unexpected_compile(*_args, **_kwargs):
@@ -303,10 +343,10 @@ def _unit_test_refresh_runtime_scrubs_environment_option_lines() -> None:
         original_compile = module._compile_requirements_lock
 
         def _fake_compile(_repo_root, _requirements_in, **_kwargs):
-            """Return one preserved exact-marker lock payload."""
+            """Return one preserved direct-conditional lock payload."""
 
             return module.LockFilePieces(
-                module._preserve_exact_marker_pins(
+                module._preserve_direct_conditional_requirements(
                     [f"packaging=={packaging_version}"],
                     _requirements_in,
                 )
@@ -329,8 +369,10 @@ def _unit_test_refresh_runtime_scrubs_environment_option_lines() -> None:
         ) == f"packaging=={packaging_version}\n"
 
 
-def _unit_test_refresh_runtime_preserves_exact_marker_pins() -> None:
-    """Exact conditional pins should survive refresh on newer interpreters."""
+def _unit_test_refresh_runtime_preserves_direct_conditional_requirements() -> (
+    None
+):
+    """Direct exact conditional requirements should survive refresh."""
 
     module = importlib.import_module(MODULE)
     with tempfile.TemporaryDirectory() as temp_dir:
@@ -349,10 +391,10 @@ def _unit_test_refresh_runtime_preserves_exact_marker_pins() -> None:
         original_compile = module._compile_requirements_lock
 
         def _fake_compile(_repo_root, _requirements_in, **_kwargs):
-            """Return one exact-marker lock payload for refresh coverage."""
+            """Return one direct-conditional lock payload for refresh."""
 
             return module.LockFilePieces(
-                module._preserve_exact_marker_pins(
+                module._preserve_direct_conditional_requirements(
                     [f"packaging=={packaging_version}"],
                     _requirements_in,
                 )
@@ -572,39 +614,6 @@ def _unit_test_refresh_runtime_rewrites_normalized_comment_only_drift() -> (
         )
 
 
-def _unit_test_preserve_exact_marker_pins_adds_real_hashes() -> None:
-    """Missing exact marker pins should gain real hash lines in hash mode."""
-
-    module = importlib.import_module(MODULE)
-    with tempfile.TemporaryDirectory() as temp_dir:
-        repo_root = Path(temp_dir)
-        requirements_in = repo_root / "requirements.in"
-        requirements_in.write_text(
-            'tomli==2.3.0; python_version < "3.11"\n',
-            encoding="utf-8",
-        )
-        original_fetch = module._fetch_pypi_release_hashes
-        module._fetch_pypi_release_hashes = lambda _requirement: [
-            "aaa",
-            "bbb",
-        ]
-        try:
-            preserved = module._preserve_exact_marker_pins(
-                [],
-                requirements_in,
-                generate_hashes=True,
-            )
-        finally:
-            module._fetch_pypi_release_hashes = original_fetch
-
-        assert preserved == [
-            'tomli==2.3.0 ; python_version < "3.11" \\',
-            "    --hash=sha256:aaa \\",
-            "    --hash=sha256:bbb",
-            "    # via -r requirements.in",
-        ]
-
-
 def _unit_test_refresh_runtime_passes_hash_mode_from_metadata() -> None:
     """Metadata-selected hash mode should reach the Python lock refresher."""
 
@@ -615,22 +624,38 @@ def _unit_test_refresh_runtime_passes_hash_mode_from_metadata() -> None:
         licenses_dir.mkdir(parents=True, exist_ok=True)
         captured: dict[str, object] = {}
         original_resolver = module._resolve_dependency_metadata
-        original_refresh = module._refresh_python_requirements_lock
+        original_refresh = module._refresh_python_surface_lock
         original_license_refresh = (
             module.dependency_management.refresh_license_artifacts
         )
         module._resolve_dependency_metadata = lambda _repo_root: {
-            "resolved_dependency_files": ["requirements.lock"],
-            "third_party_file": "licenses/THIRD_PARTY_LICENSES.md",
-            "licenses_dir": "licenses",
-            "report_heading": "## License Report",
-            "python_lock_generate_hashes": True,
+            "surfaces": [
+                _surface(
+                    module,
+                    generate_hashes=True,
+                    hash_targets=[
+                        module.dependency_management.DependencySurfaceTarget(
+                            target_id="linux-py311",
+                            marker=(
+                                'sys_platform == "linux" and '
+                                'python_version == "3.11"'
+                            ),
+                            pip={
+                                "platform": "manylinux2014_x86_64",
+                                "implementation": "cp",
+                                "python-version": "3.11",
+                                "abi": "cp311",
+                            },
+                        )
+                    ],
+                )
+            ],
         }
 
-        def _fake_refresh(_repo_root, *, generate_hashes=False):
+        def _fake_refresh(_repo_root, *, surface):
             """Capture the selected hash mode from refresh_all."""
 
-            captured["generate_hashes"] = generate_hashes
+            captured["generate_hashes"] = surface.generate_hashes
             return module.LockHandlerResult(
                 "requirements.lock",
                 changed=False,
@@ -638,7 +663,7 @@ def _unit_test_refresh_runtime_passes_hash_mode_from_metadata() -> None:
                 message="No change.",
             )
 
-        module._refresh_python_requirements_lock = _fake_refresh
+        module._refresh_python_surface_lock = _fake_refresh
         module.dependency_management.refresh_license_artifacts = (
             lambda *_args, **_kwargs: []
         )
@@ -646,7 +671,7 @@ def _unit_test_refresh_runtime_passes_hash_mode_from_metadata() -> None:
             payload = module.refresh_all(repo_root)
         finally:
             module._resolve_dependency_metadata = original_resolver
-            module._refresh_python_requirements_lock = original_refresh
+            module._refresh_python_surface_lock = original_refresh
             module.dependency_management.refresh_license_artifacts = (
                 original_license_refresh
             )
@@ -665,6 +690,10 @@ class GeneratedUnittestCases(unittest.TestCase):
     def test_module_has_public_symbols(self):
         """Run module public-symbol sanity check."""
         _unit_test_module_has_public_symbols()
+
+    def test_runtime_resolves_structured_surfaces_from_repo_metadata(self):
+        """Run structured surface-resolution regression assertions."""
+        _unit_test_runtime_resolves_structured_surfaces_from_repo_metadata()
 
     def test_runtime_symbol_contract_is_stable(self):
         """Run dependency lock runtime symbol contract assertions."""
@@ -690,9 +719,9 @@ class GeneratedUnittestCases(unittest.TestCase):
         """Run environment-specific option-line cleanup assertions."""
         _unit_test_refresh_runtime_scrubs_environment_option_lines()
 
-    def test_refresh_runtime_preserves_exact_marker_pins(self):
-        """Run exact conditional backport pin preservation assertions."""
-        _unit_test_refresh_runtime_preserves_exact_marker_pins()
+    def test_refresh_runtime_preserves_direct_conditional_requirements(self):
+        """Run direct exact conditional requirement preservation assertions."""
+        _unit_test_refresh_runtime_preserves_direct_conditional_requirements()
 
     def test_run_pip_compile_uses_private_cache_dir(self):
         """Run pip-tools cache-dir isolation assertions."""
@@ -713,10 +742,6 @@ class GeneratedUnittestCases(unittest.TestCase):
     def test_refresh_runtime_rewrites_normalized_comment_only_drift(self):
         """Run comment-only normalized lock rewrite assertions."""
         _unit_test_refresh_runtime_rewrites_normalized_comment_only_drift()
-
-    def test_preserve_exact_marker_pins_adds_real_hashes(self):
-        """Run exact marker pin hash-preservation assertions."""
-        _unit_test_preserve_exact_marker_pins_adds_real_hashes()
 
     def test_refresh_runtime_passes_hash_mode_from_metadata(self):
         """Run metadata-to-runtime hash-mode propagation assertions."""

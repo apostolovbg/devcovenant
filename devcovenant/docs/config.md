@@ -73,10 +73,13 @@ and workflow additions.
 For most repositories, the normal pattern is:
 - keep the shared base profiles
 - keep `devcovuser` active
-- add `github` when the repository wants a generated GitHub Actions workflow
+- keep `github` active when the repository wants the generic generated GitHub
+  Actions workflow; remove it when the repository does not want that workflow
 - add language or framework profiles as needed
 - add a repo-specific custom profile on top when the repository needs its own
-  rules, assets, or workflow additions
+  rules, assets, workflow additions, or dependency-surface ownership
+- add an optional GitHub-specific custom profile when the repository needs
+  reusable GitHub-only CI fragments beyond the builtin base
 
 Use direct overlays for small one-off tweaks.
 Use a custom profile when the repository has real repeatable behavior of its
@@ -88,6 +91,11 @@ If you keep the seeded `defaults` + `python` stack, that means creating
 If the repository uses a bench-managed or other custom environment, declare
 that environment in the profile stack or metadata overlays instead of relying
 on DevCovenant to guess an unknown layout.
+
+The shipped user baseline keeps `github` active by default.
+That makes the generated GitHub Actions workflow available out of the box for
+GitHub-hosted repositories, but the profile is still optional: remove it when
+the repository does not want generated GitHub Actions CI.
 
 ### doc_assets
 This is the managed-doc selection.
@@ -142,6 +150,22 @@ Use it to decide which non-core policies are enabled.
 Critical policies can still remain enforced even if a config toggle tries to
 turn them off.
 
+### user_metadata_overlays and user_metadata_overrides
+These sections are where nested policy metadata lives.
+They accept scalars, lists, and mappings directly.
+
+The important rule is shape discipline:
+- keep one metadata key in one shape
+- do not replace a structured mapping with ad-hoc sibling flat keys
+- do not overlay a scalar onto a mapping for the same key
+
+For dependency management, that means using one structured
+`dependency-management.surfaces` list instead of inventing separate
+special-case root-versus-extra keys.
+Surface overlays merge by `id`, so the normal pattern is:
+1. inherit the default surface ids
+2. override only the subkeys a repository needs to change
+
 ### engine
 This section controls general CLI behavior such as:
 - failure threshold
@@ -174,10 +198,10 @@ The builtin `github` base bootstraps DevCovenant from the shipped
 `devcovenant/runtime-requirements.lock`. If a repository needs extra project
 dependency setup, keep that in the relevant profile or explicit local
 override instead of changing the builtin base.
-For Python repositories, set
-`dependency-management.python_lock_generate_hashes: true`
-only when the repo wants `pip-compile --generate-hashes` for
-`requirements.lock`.
+If a repository needs to change dependency lock mode, do that by overriding the
+relevant `dependency-management.surfaces` entry.
+For example, a repo-specific custom profile may own `root_workspace` while an
+optional GitHub-specific custom profile adds extra CI fragments.
 
 ### clean
 Cleanup settings decide what DevCovenant may delete.
@@ -199,7 +223,9 @@ For a new repository, this is the shortest useful config review:
 2. confirm `developer_mode`
 3. review `profiles.active`
 4. keep `devcovuser` active for a normal repository
-5. add `github` if the repository wants a generated GitHub Actions workflow
+5. keep `github` if the repository wants the generated GitHub Actions workflow
+   that ships in the default stack, or remove it if the repository does not
+   want that workflow
 6. add a repo-specific custom profile if the repository needs one
 7. review `doc_assets`
 8. review `workflow` and `policy_state`

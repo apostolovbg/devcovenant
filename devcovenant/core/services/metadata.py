@@ -13,6 +13,7 @@ from devcovenant.core.lib.selectors import _normalize_globs
 from devcovenant.core.services import yaml_cache as yaml_cache_service
 from devcovenant.core.services.policy_registry import PolicyDescriptor
 
+# fmt: off
 _COMMON_KEYS = [
     "id",
     "severity",
@@ -21,12 +22,12 @@ _COMMON_KEYS = [
     "enabled",
     "custom",
 ]
-_COMMON_DEFAULTS: Dict[str, List[str]] = {
-    "severity": ["warning"],
-    "auto_fix": ["false"],
-    "enforcement": ["active"],
-    "enabled": ["true"],
-    "custom": ["false"],
+_COMMON_DEFAULTS: Dict[str, str] = {
+    "severity": "warning",
+    "auto_fix": "false",
+    "enforcement": "active",
+    "enabled": "true",
+    "custom": "false",
 }
 _ROLE_SUFFIXES: Tuple[str, ...] = ("globs", "files", "dirs")
 _GLOB_SUFFIXES: Tuple[str, ...] = ("prefixes", "suffixes")
@@ -68,8 +69,100 @@ def metadata_value_list(raw_value: object) -> List[str]:
     if raw_value is None:
         return []
     if isinstance(raw_value, list):
-        return [str(item) for item in raw_value if str(item)]
+        values: List[str] = []
+        for item in raw_value:
+            if isinstance(item, (dict, list)):
+                dumped = yaml.safe_dump(
+                    item,
+                    sort_keys=False,
+                    default_flow_style=False,
+                    allow_unicode=False,
+                ).strip()
+                if dumped:
+                    values.append(dumped)
+                continue
+            if str(item):
+                values.append(str(item))
+        return values
+    if isinstance(raw_value, dict):
+        dumped = yaml.safe_dump(
+            raw_value,
+            sort_keys=False,
+            default_flow_style=False,
+            allow_unicode=False,
+        ).strip()
+        return [dumped] if dumped else []
     return [str(raw_value)]
+
+
+def _normalize_metadata_value(raw_value: object) -> Any:
+    """Normalize one raw metadata value while preserving structure."""
+    if raw_value is None:
+        return ""
+    if isinstance(raw_value, dict):
+        normalized: Dict[str, Any] = {}
+        for key, value in raw_value.items():
+            key_name = str(key).strip()
+            if not key_name:
+                continue
+            normalized[key_name] = _normalize_metadata_value(value)
+        return normalized
+    if isinstance(raw_value, list):
+        normalized_list: List[Any] = []
+        for value in raw_value:
+            normalized = _normalize_metadata_value(value)
+            if normalized == "" or normalized == [] or normalized == {}:
+                continue
+            normalized_list.append(normalized)
+        return normalized_list
+    if isinstance(raw_value, (bool, int, float)):
+        return (
+            str(raw_value).lower()
+            if isinstance(raw_value, bool)
+            else str(raw_value)
+        )
+    return str(raw_value).strip()
+
+
+def _normalize_layer_value(raw_value: object) -> Any:
+    """Normalize overlay/override values while preserving list semantics."""
+    return _normalize_metadata_value(raw_value)
+
+
+def _uses_sequence_semantics(
+    key: str,
+    inherited_value: Any,
+    incoming_value: Any,
+) -> bool:
+    """Return True when one metadata update should keep list semantics."""
+
+    if isinstance(inherited_value, list):
+        return True
+    if not isinstance(incoming_value, list):
+        return False
+    if any(isinstance(entry, (dict, list)) for entry in incoming_value):
+        return True
+    return len(incoming_value) != 1
+
+
+def _coerce_scalar_against_inherited(
+    key: str,
+    inherited_value: Any,
+    incoming_value: Any,
+) -> Any:
+    """Collapse legacy singleton lists only for inherited scalar shapes."""
+
+    if _uses_sequence_semantics(key, inherited_value, incoming_value):
+        return incoming_value
+    if (
+        isinstance(incoming_value, list)
+        and len(incoming_value) == 1
+        and all(
+            not isinstance(entry, (dict, list)) for entry in incoming_value
+        )
+    ):
+        return str(incoming_value[0]).strip()
+    return incoming_value
 
 
 @dataclass(frozen=True)
@@ -84,11 +177,11 @@ class MetadataContext:
     """Resolved metadata context for policy normalization."""
 
     control: PolicyControl
-    profile_overlays: Dict[str, Dict[str, Tuple[List[str], bool]]]
-    autogen_overlays: Dict[str, Dict[str, Tuple[List[str], bool]]]
-    user_overlays: Dict[str, Dict[str, Tuple[List[str], bool]]]
-    autogen_overrides: Dict[str, Dict[str, List[str]]]
-    user_overrides: Dict[str, Dict[str, List[str]]]
+    profile_overlays: Dict[str, Dict[str, Any]]
+    autogen_overlays: Dict[str, Dict[str, Any]]
+    user_overlays: Dict[str, Dict[str, Any]]
+    autogen_overrides: Dict[str, Dict[str, Any]]
+    user_overrides: Dict[str, Dict[str, Any]]
 
 
 @dataclass(frozen=True)
@@ -96,6 +189,7 @@ class ResolvedPolicyMetadata:
     """Canonical resolved metadata views for one policy."""
 
     order: List[str]
+    raw_map: Dict[str, Any]
     list_map: Dict[str, List[str]]
     string_map: Dict[str, str]
     resolution_trace: Dict[str, Dict[str, Any]]
@@ -108,7 +202,7 @@ class ResolvedPolicyMetadata:
     ) -> Dict[str, Any]:
         """Return a typed view of metadata suitable for policy options."""
         return decode_metadata_options_map(
-            self.string_map,
+            self.raw_map,
             reserved_keys=reserved_keys,
         )
 
@@ -167,23 +261,23 @@ def _normalize_metadata_values(raw_value: object) -> List[str]:
 
 def _normalize_override_map(
     raw_value: object,
-) -> Dict[str, Dict[str, List[str]]]:
-    """Normalize policy override maps into list-valued metadata entries."""
+) -> Dict[str, Dict[str, Any]]:
+    """Normalize policy override maps into typed metadata entries."""
     if not isinstance(raw_value, dict):
         return {}
-    normalized: Dict[str, Dict[str, List[str]]] = {}
+    normalized: Dict[str, Dict[str, Any]] = {}
     for policy_id, mapping in raw_value.items():
         if not isinstance(mapping, dict):
             continue
         policy_key = str(policy_id).strip()
         if not policy_key:
             continue
-        entries: Dict[str, List[str]] = {}
+        entries: Dict[str, Any] = {}
         for key, metadata_value in mapping.items():
             key_name = str(key).strip()
             if not key_name:
                 continue
-            entries[key_name] = _normalize_metadata_values(metadata_value)
+            entries[key_name] = _normalize_layer_value(metadata_value)
         if entries:
             normalized[policy_key] = entries
     return normalized
@@ -191,25 +285,23 @@ def _normalize_override_map(
 
 def _normalize_overlay_map(
     raw_value: object,
-) -> Dict[str, Dict[str, Tuple[List[str], bool]]]:
+) -> Dict[str, Dict[str, Any]]:
     """Normalize metadata overlays into merge/replace-aware entries."""
     if not isinstance(raw_value, dict):
         return {}
-    normalized: Dict[str, Dict[str, Tuple[List[str], bool]]] = {}
+    normalized: Dict[str, Dict[str, Any]] = {}
     for policy_id, mapping in raw_value.items():
         if not isinstance(mapping, dict):
             continue
         policy_key = str(policy_id).strip()
         if not policy_key:
             continue
-        entries: Dict[str, Tuple[List[str], bool]] = {}
+        entries: Dict[str, Any] = {}
         for key, metadata_value in mapping.items():
             key_name = str(key).strip()
             if not key_name:
                 continue
-            merge_values = isinstance(metadata_value, list)
-            values = _normalize_metadata_values(metadata_value)
-            entries[key_name] = (values, merge_values)
+            entries[key_name] = _normalize_layer_value(metadata_value)
         if entries:
             normalized[policy_key] = entries
     return normalized
@@ -218,10 +310,10 @@ def _normalize_overlay_map(
 def _load_metadata_layers(
     payload: Dict[str, object],
 ) -> Tuple[
-    Dict[str, Dict[str, Tuple[List[str], bool]]],
-    Dict[str, Dict[str, Tuple[List[str], bool]]],
-    Dict[str, Dict[str, List[str]]],
-    Dict[str, Dict[str, List[str]]],
+    Dict[str, Dict[str, Any]],
+    Dict[str, Dict[str, Any]],
+    Dict[str, Dict[str, Any]],
+    Dict[str, Dict[str, Any]],
 ]:
     """Return autogen/user metadata overlays and overrides from config."""
     autogen_overlays = _normalize_overlay_map(
@@ -239,15 +331,112 @@ def _load_metadata_layers(
 
 def _merge_values(existing: List[str], incoming: List[str]) -> List[str]:
     """Merge values with de-duplication preserving order."""
-    return _dedupe(existing + incoming)
+    existing_values = (
+        existing
+        if isinstance(existing, list)
+        else [str(existing)] if str(existing or "").strip() else []
+    )
+    incoming_values = (
+        incoming
+        if isinstance(incoming, list)
+        else [str(incoming)] if str(incoming or "").strip() else []
+    )
+    return _dedupe(existing_values + incoming_values)
+
+
+def _list_supports_merge_by_id(value: Any) -> bool:
+    """Return True when a list contains mapping entries keyed by stable ids."""
+
+    if not isinstance(value, list) or not value:
+        return False
+    for entry in value:
+        normalized = _normalize_metadata_value(entry)
+        if not isinstance(normalized, dict):
+            return False
+        if not str(normalized.get("id", "")).strip():
+            return False
+    return True
+
+
+def _merge_mapping_lists_by_id(
+    existing: Sequence[object],
+    incoming: Sequence[object],
+) -> List[Any]:
+    """Merge structured mapping lists by stable `id` while preserving order."""
+    merged: List[Any] = []
+    index_by_id: Dict[str, int] = {}
+    for entry in list(existing) + list(incoming):
+        normalized = _normalize_metadata_value(entry)
+        if not isinstance(normalized, dict):
+            if normalized not in merged:
+                merged.append(normalized)
+            continue
+        surface_id = str(normalized.get("id", "")).strip()
+        if not surface_id:
+            merged.append(normalized)
+            continue
+        if surface_id not in index_by_id:
+            index_by_id[surface_id] = len(merged)
+            merged.append(normalized)
+            continue
+        current = merged[index_by_id[surface_id]]
+        if not isinstance(current, dict):
+            merged[index_by_id[surface_id]] = normalized
+            continue
+        updated = dict(current)
+        for key, value in normalized.items():
+            if key == "id":
+                updated[key] = value
+                continue
+            if isinstance(updated.get(key), list) and isinstance(value, list):
+                updated[key] = _merge_metadata_values(
+                    key,
+                    updated.get(key, []),
+                    value,
+                )
+                continue
+            updated[key] = value
+        merged[index_by_id[surface_id]] = updated
+    return merged
+
+
+def _merge_metadata_values(key: str, existing: Any, incoming: Any) -> Any:
+    """Merge metadata values using key-aware behavior."""
+    del key
+    existing_normalized = _normalize_metadata_value(existing)
+    incoming_normalized = _normalize_metadata_value(incoming)
+    if _list_supports_merge_by_id(incoming_normalized):
+        if not isinstance(existing_normalized, list):
+            return list(incoming_normalized)
+        if existing_normalized and not _list_supports_merge_by_id(
+            existing_normalized
+        ):
+            return list(incoming_normalized)
+        return _merge_mapping_lists_by_id(
+            existing_normalized,
+            incoming_normalized,
+        )
+    if _list_supports_merge_by_id(existing_normalized):
+        return existing_normalized
+    if isinstance(incoming, list):
+        existing_list = (
+            existing
+            if isinstance(existing, list)
+            else [str(existing)] if str(existing or "").strip() else []
+        )
+        return _merge_values(
+            [str(entry) for entry in existing_list],
+            [str(entry) for entry in incoming],
+        )
+    return incoming
 
 
 def _collect_profile_overlays(
     repo_root: Path, active_profiles: List[str]
-) -> Dict[str, Dict[str, Tuple[List[str], bool]]]:
+) -> Dict[str, Dict[str, Any]]:
     """Collect policy overlays from the profile registry."""
     registry = profile_runtime.load_profile_registry(repo_root)
-    overlays: Dict[str, Dict[str, Tuple[List[str], bool]]] = {}
+    overlays: Dict[str, Dict[str, Any]] = {}
     for profile in active_profiles:
         meta = registry.get(profile)
         if not isinstance(meta, dict):
@@ -267,22 +456,25 @@ def _collect_profile_overlays(
                     key_name = str(key).strip()
                     if not key_name:
                         continue
-                    merge_values = isinstance(raw_value, list)
-                    values = _normalize_metadata_values(raw_value)
-                    if merge_values:
-                        current_values = policy_map.get(key_name, ([], True))[
-                            0
-                        ]
-                        merged = _merge_values(current_values, values)
-                        policy_map[key_name] = (merged, True)
+                    value = _normalize_layer_value(raw_value)
+                    if key_name in policy_map and _uses_sequence_semantics(
+                        key_name,
+                        policy_map.get(key_name, []),
+                        value,
+                    ):
+                        policy_map[key_name] = _merge_metadata_values(
+                            key_name,
+                            policy_map.get(key_name, []),
+                            value,
+                        )
                         continue
-                    policy_map[key_name] = (list(values), False)
+                    policy_map[key_name] = value
     return overlays
 
 
 def collect_profile_overlays(
     repo_root: Path, active_profiles: List[str]
-) -> Dict[str, Dict[str, Tuple[List[str], bool]]]:
+) -> Dict[str, Dict[str, Any]]:
     """Public wrapper for resolved profile policy overlays."""
     return _collect_profile_overlays(repo_root, active_profiles)
 
@@ -350,7 +542,7 @@ def build_metadata_context_from_payload(
 
 def _ensure_metadata_key(
     order: List[str],
-    values: Dict[str, List[str]],
+    values: Dict[str, Any],
     key: str,
 ) -> None:
     """Ensure a metadata key exists in order and values."""
@@ -361,22 +553,26 @@ def _ensure_metadata_key(
 
 
 def _first_metadata_token(
-    values: Dict[str, List[str]],
+    values: Dict[str, Any],
     key: str,
 ) -> str:
     """Return the first normalized metadata token for a key."""
-    entries = values.get(key, [])
-    if not isinstance(entries, list) or not entries:
+    raw_value = values.get(key, [])
+    if isinstance(raw_value, list):
+        if not raw_value:
+            return ""
+        return str(raw_value[0] or "").strip().lower()
+    if isinstance(raw_value, (dict, tuple, set)):
         return ""
-    return str(entries[0] or "").strip().lower()
+    return str(raw_value or "").strip().lower()
 
 
 def apply_policy_control(
     order: List[str],
-    values: Dict[str, List[str]],
+    values: Dict[str, Any],
     policy_id: str,
     control: PolicyControl,
-) -> Tuple[List[str], Dict[str, List[str]]]:
+) -> Tuple[List[str], Dict[str, Any]]:
     """Apply enabled controls to metadata values."""
     if policy_id in control.policy_state:
         requested_enabled = bool(control.policy_state[policy_id])
@@ -384,18 +580,18 @@ def apply_policy_control(
         if severity_token == "critical" and not requested_enabled:
             requested_enabled = True
         _ensure_metadata_key(order, values, "enabled")
-        values["enabled"] = ["true" if requested_enabled else "false"]
+        values["enabled"] = "true" if requested_enabled else "false"
     return order, values
 
 
 def descriptor_metadata_order_values(
     descriptor: PolicyDescriptor,
-) -> Tuple[List[str], Dict[str, List[str]]]:
-    """Return ordered keys and list values from a descriptor."""
+) -> Tuple[List[str], Dict[str, Any]]:
+    """Return ordered keys and normalized values from a descriptor."""
     order = list(descriptor.metadata.keys())
-    values: Dict[str, List[str]] = {}
+    values: Dict[str, Any] = {}
     for key in order:
-        values[key] = metadata_value_list(descriptor.metadata.get(key))
+        values[key] = _normalize_metadata_value(descriptor.metadata.get(key))
     return order, values
 
 
@@ -419,6 +615,14 @@ def decode_metadata_option_value(raw_value: object) -> Any:
     """Decode one metadata value into a common scalar/list representation."""
     if raw_value is None:
         return ""
+    if isinstance(raw_value, Mapping):
+        decoded: Dict[str, Any] = {}
+        for raw_key, nested_value in raw_value.items():
+            key = str(raw_key or "").strip()
+            if not key:
+                continue
+            decoded[key] = decode_metadata_option_value(nested_value)
+        return decoded
     if isinstance(raw_value, bool):
         return raw_value
     if isinstance(raw_value, int):
@@ -426,15 +630,18 @@ def decode_metadata_option_value(raw_value: object) -> Any:
     if isinstance(raw_value, float):
         return raw_value
     if isinstance(raw_value, (list, tuple, set)):
-        items: List[str] = []
+        items: List[Any] = []
         for entry in raw_value:
-            text = str(entry or "").strip()
-            if not text:
+            decoded = decode_metadata_option_value(entry)
+            if decoded == "" or decoded == [] or decoded == {}:
                 continue
-            if "," in text:
-                items.extend(_split_values([text]))
+            if isinstance(decoded, list):
+                items.extend(decoded)
                 continue
-            items.append(text)
+            if isinstance(decoded, str) and "," in decoded:
+                items.extend(_split_values([decoded]))
+                continue
+            items.append(decoded)
         return items
 
     text = str(raw_value).strip()
@@ -503,25 +710,50 @@ def _trace_bucket(
     return trace.setdefault(key, {})
 
 
+def _trace_value_list(raw_value: object) -> List[str]:
+    """Render one metadata value into stable trace strings."""
+    if raw_value is None:
+        return []
+    if isinstance(raw_value, list):
+        if raw_value and all(
+            not isinstance(item, (dict, list)) for item in raw_value
+        ):
+            return [str(entry) for entry in raw_value if str(entry)]
+        dumped = yaml.safe_dump(
+            raw_value,
+            sort_keys=False,
+            default_flow_style=False,
+            allow_unicode=False,
+        ).strip()
+        return [dumped] if dumped else []
+    if isinstance(raw_value, dict):
+        dumped = yaml.safe_dump(
+            raw_value,
+            sort_keys=False,
+            default_flow_style=False,
+            allow_unicode=False,
+        ).strip()
+        return [dumped] if dumped else []
+    return [str(raw_value)] if str(raw_value) else []
+
+
 def _record_trace_layer(
     trace: Dict[str, Dict[str, Any]],
     key: str,
     *,
     layer: str,
-    values: Sequence[str],
+    values: object,
     behavior: str,
-    replaced_inherited_values: Sequence[str] = (),
+    replaced_inherited_values: object = (),
     note: str = "",
 ) -> None:
     """Record one resolution-layer contribution for a metadata key."""
     bucket = _trace_bucket(trace, key)
     payload: Dict[str, Any] = {
-        "values": [str(entry) for entry in values if str(entry)],
+        "values": _trace_value_list(values),
         "behavior": behavior,
     }
-    replaced = [
-        str(entry) for entry in replaced_inherited_values if str(entry)
-    ]
+    replaced = _trace_value_list(replaced_inherited_values)
     if replaced:
         payload["replaced_inherited_values"] = replaced
     if note.strip():
@@ -532,13 +764,11 @@ def _record_trace_layer(
 def _record_effective_trace(
     trace: Dict[str, Dict[str, Any]],
     key: str,
-    values: Sequence[str],
+    values: object,
 ) -> None:
     """Record the final effective values for one metadata key."""
     bucket = _trace_bucket(trace, key)
-    bucket["effective"] = {
-        "values": [str(entry) for entry in values if str(entry)]
-    }
+    bucket["effective"] = {"values": _trace_value_list(values)}
 
 
 def _build_override_warning(
@@ -546,12 +776,12 @@ def _build_override_warning(
     key: str,
     *,
     layer: str,
-    inherited_values: Sequence[str],
-    replacement_values: Sequence[str],
+    inherited_values: object,
+    replacement_values: object,
 ) -> Dict[str, Any]:
     """Build one structured override-replacement warning payload."""
-    inherited = [str(entry) for entry in inherited_values if str(entry)]
-    replacement = [str(entry) for entry in replacement_values if str(entry)]
+    inherited = _trace_value_list(inherited_values)
+    replacement = _trace_value_list(replacement_values)
     return {
         "policy_id": policy_id,
         "key": key,
@@ -607,12 +837,16 @@ def _role_from_key(key: str) -> Tuple[str, str] | None:
 
 def _apply_selector_roles(
     order: List[str],
-    values: Dict[str, List[str]],
-) -> Tuple[List[str], Dict[str, List[str]]]:
+    values: Dict[str, Any],
+) -> Tuple[List[str], Dict[str, Any]]:
     """Insert selector role keys and normalize selector values."""
     roles: List[str] = []
     if "selector_roles" in values:
-        roles = _split_values(values["selector_roles"])
+        selector_roles = values["selector_roles"]
+        if isinstance(selector_roles, list):
+            roles = _split_values([str(entry) for entry in selector_roles])
+        elif selector_roles:
+            roles = _split_values([str(selector_roles)])
     role_values: Dict[str, Dict[str, List[str]]] = {}
     for key, raw_values in values.items():
         if key == "selector_roles":
@@ -620,13 +854,21 @@ def _apply_selector_roles(
         role_info = _role_from_key(key)
         if not role_info:
             continue
+        if isinstance(raw_values, (dict, list)) and (
+            isinstance(raw_values, dict)
+            or any(isinstance(item, (dict, list)) for item in raw_values)
+        ):
+            continue
         role, target = role_info
         if role not in roles:
             roles.append(role)
         bucket = role_values.setdefault(
             role, {"globs": [], "files": [], "dirs": []}
         )
-        items = _split_values(raw_values)
+        if isinstance(raw_values, list):
+            items = _split_values([str(entry) for entry in raw_values])
+        else:
+            items = _split_values([str(raw_values)])
         if key.endswith("_prefixes"):
             items = _convert_prefixes(items)
         elif key.endswith("_suffixes"):
@@ -658,8 +900,8 @@ def _apply_selector_roles(
 
 
 def _apply_overrides_replace(
-    values: Dict[str, List[str]],
-    overrides: Dict[str, List[str]],
+    values: Dict[str, Any],
+    overrides: Dict[str, Any],
     *,
     policy_id: str,
     layer_name: str,
@@ -668,40 +910,52 @@ def _apply_overrides_replace(
 ) -> None:
     """Apply override values by replacing existing entries."""
     for key, override_values in overrides.items():
-        inherited_values = list(values.get(key, []))
-        values[key] = list(override_values)
+        inherited_values = values.get(key, [])
+        values[key] = _coerce_scalar_against_inherited(
+            key,
+            inherited_values,
+            override_values,
+        )
         _record_trace_layer(
             trace,
             key,
             layer=layer_name,
-            values=override_values,
+            values=values[key],
             behavior="replace",
             replaced_inherited_values=inherited_values,
         )
-        if inherited_values and inherited_values != list(override_values):
+        if inherited_values and inherited_values != values[key]:
             warnings.append(
                 _build_override_warning(
                     policy_id,
                     key,
                     layer=layer_name,
                     inherited_values=inherited_values,
-                    replacement_values=override_values,
+                    replacement_values=values[key],
                 )
             )
 
 
 def _apply_profile_overlays(
-    values: Dict[str, List[str]],
-    overlays: Dict[str, Tuple[List[str], bool]],
+    values: Dict[str, Any],
+    overlays: Dict[str, Any],
     *,
     layer_name: str,
     trace: Dict[str, Dict[str, Any]],
 ) -> None:
     """Apply profile overlays, merging list values and replacing scalars."""
-    for key, (overlay_values, merge_lists) in overlays.items():
-        inherited_values = list(values.get(key, []))
-        if merge_lists:
-            values[key] = _merge_values(values.get(key, []), overlay_values)
+    for key, overlay_values in overlays.items():
+        inherited_values = values.get(key, [])
+        if _uses_sequence_semantics(
+            key,
+            inherited_values,
+            overlay_values,
+        ):
+            values[key] = _merge_metadata_values(
+                key,
+                values.get(key, []),
+                overlay_values,
+            )
             _record_trace_layer(
                 trace,
                 key,
@@ -710,18 +964,22 @@ def _apply_profile_overlays(
                 behavior="append",
             )
             continue
-        values[key] = list(overlay_values)
+        values[key] = _coerce_scalar_against_inherited(
+            key,
+            inherited_values,
+            overlay_values,
+        )
         _record_trace_layer(
             trace,
             key,
             layer=layer_name,
-            values=overlay_values,
+            values=values[key],
             behavior="replace",
             replaced_inherited_values=inherited_values,
         )
 
 
-def _strip_derived_values(values: Dict[str, List[str]]) -> None:
+def _strip_derived_values(values: Dict[str, Any]) -> None:
     """Remove derived metadata values before recomputing."""
     for key in _DERIVED_VALUE_KEYS:
         values.pop(key, None)
@@ -730,14 +988,14 @@ def _strip_derived_values(values: Dict[str, List[str]]) -> None:
 def _resolve_metadata(
     policy_id: str,
     current_order: List[str],
-    current_values: Dict[str, List[str]],
+    current_values: Dict[str, Any],
     descriptor: PolicyDescriptor | None,
     context: MetadataContext,
     *,
     custom_policy: bool = False,
 ) -> Tuple[
     List[str],
-    Dict[str, List[str]],
+    Dict[str, Any],
     Dict[str, Dict[str, Any]],
     List[Dict[str, Any]],
 ]:
@@ -749,7 +1007,7 @@ def _resolve_metadata(
         base_order = [
             key for key in base_order if key not in _ORDER_EXCLUDE_KEYS
         ]
-        values = {key: list(entries) for key, entries in base_values.items()}
+        values = {key: base_values.get(key) for key in base_values}
         for key in base_order:
             _record_trace_layer(
                 trace,
@@ -762,9 +1020,7 @@ def _resolve_metadata(
         base_order = [
             key for key in current_order if key not in _ORDER_EXCLUDE_KEYS
         ]
-        values = {
-            key: list(entries) for key, entries in current_values.items()
-        }
+        values = {key: current_values.get(key) for key in current_values}
         for key in base_order:
             _record_trace_layer(
                 trace,
@@ -777,7 +1033,7 @@ def _resolve_metadata(
         for key in current_order:
             if key in _ORDER_EXCLUDE_KEYS:
                 continue
-            values.setdefault(key, list(current_values.get(key, [])))
+            values.setdefault(key, current_values.get(key, []))
 
     overlays = context.profile_overlays.get(policy_id, {})
     _apply_profile_overlays(
@@ -855,21 +1111,21 @@ def _resolve_metadata(
                 continue
             _ensure_metadata_key(ordered_keys, values, key)
 
-    values["id"] = [policy_id]
+    values["id"] = policy_id
     _record_trace_layer(
         trace,
         "id",
         layer=_TRACE_LAYER_RUNTIME_IDENTITY,
-        values=[policy_id],
+        values=policy_id,
         behavior="replace",
     )
     if custom_policy:
-        values["custom"] = ["true"]
+        values["custom"] = "true"
         _record_trace_layer(
             trace,
             "custom",
             layer=_TRACE_LAYER_RUNTIME_CUSTOM,
-            values=["true"],
+            values="true",
             behavior="replace",
             note="Resolved from active custom policy script.",
         )
@@ -877,10 +1133,20 @@ def _resolve_metadata(
     for key in ordered_keys:
         current = values.get(key, [])
         if current:
-            values[key] = _dedupe(list(current))
+            if isinstance(current, list):
+                if _list_supports_merge_by_id(current):
+                    values[key] = _merge_metadata_values(key, [], current)
+                elif all(
+                    not isinstance(entry, (dict, list)) for entry in current
+                ):
+                    values[key] = _dedupe([str(entry) for entry in current])
+                else:
+                    values[key] = list(current)
+            else:
+                values[key] = current
             continue
         if key in _COMMON_DEFAULTS:
-            values[key] = _dedupe(list(_COMMON_DEFAULTS[key]))
+            values[key] = _COMMON_DEFAULTS[key]
             _record_trace_layer(
                 trace,
                 key,
@@ -892,7 +1158,7 @@ def _resolve_metadata(
         values[key] = []
 
     control_requested = context.control.policy_state.get(policy_id)
-    pre_control_enabled = list(values.get("enabled", []))
+    pre_control_enabled = values.get("enabled", [])
     severity_token = _first_metadata_token(values, "severity")
     ordered_keys, values = apply_policy_control(
         ordered_keys,
@@ -917,16 +1183,29 @@ def _resolve_metadata(
         )
 
     pre_selector_values = {
-        key: list(entries) for key, entries in values.items()
+        key: (
+            list(entries)
+            if isinstance(entries, list)
+            else dict(entries) if isinstance(entries, dict) else entries
+        )
+        for key, entries in values.items()
     }
     ordered_keys, values = _apply_selector_roles(ordered_keys, values)
     for key, resolved_values in values.items():
         previous_values = pre_selector_values.get(key, [])
         if resolved_values == previous_values:
             continue
-        derived_values = [
-            entry for entry in resolved_values if entry not in previous_values
-        ]
+        if isinstance(resolved_values, list) and isinstance(
+            previous_values,
+            list,
+        ):
+            derived_values = [
+                entry
+                for entry in resolved_values
+                if entry not in previous_values
+            ]
+        else:
+            derived_values = resolved_values
         _record_trace_layer(
             trace,
             key,
@@ -942,7 +1221,7 @@ def _resolve_metadata(
 def resolve_policy_metadata_map(
     policy_id: str,
     current_order: List[str],
-    current_values: Dict[str, List[str]],
+    current_values: Dict[str, Any],
     descriptor: PolicyDescriptor | None,
     context: MetadataContext,
     *,
@@ -963,7 +1242,7 @@ def resolve_policy_metadata_map(
 def resolve_policy_metadata_bundle(
     policy_id: str,
     current_order: List[str],
-    current_values: Dict[str, List[str]],
+    current_values: Dict[str, Any],
     descriptor: PolicyDescriptor | None,
     context: MetadataContext,
     *,
@@ -978,14 +1257,29 @@ def resolve_policy_metadata_bundle(
         context,
         custom_policy=custom_policy,
     )
+    raw_map: Dict[str, Any] = {}
     list_map: Dict[str, List[str]] = {}
     string_map: Dict[str, str] = {}
     for key in order:
-        entries = list(values.get(key, []))
+        raw_value = values.get(key, [])
+        raw_map[key] = raw_value
+        entries = metadata_value_list(raw_value)
         list_map[key] = entries
-        string_map[key] = ", ".join(entry for entry in entries if entry)
+        if isinstance(raw_value, (dict, list)) and (
+            isinstance(raw_value, dict)
+            or any(isinstance(item, (dict, list)) for item in raw_value)
+        ):
+            string_map[key] = yaml.safe_dump(
+                raw_value,
+                sort_keys=False,
+                default_flow_style=False,
+                allow_unicode=False,
+            ).strip()
+        else:
+            string_map[key] = ", ".join(entry for entry in entries if entry)
     return ResolvedPolicyMetadata(
         order=list(order),
+        raw_map=raw_map,
         list_map=list_map,
         string_map=string_map,
         resolution_trace=trace,
@@ -993,24 +1287,15 @@ def resolve_policy_metadata_bundle(
     )
 
 
-def render_metadata_block(
-    keys: Iterable[str], values: Dict[str, List[str]]
-) -> str:
+def render_metadata_block(keys: Iterable[str], values: Dict[str, Any]) -> str:
     """Render a policy-def block from ordered keys and values."""
-    lines: List[str] = []
+    ordered: Dict[str, Any] = {}
     for key in keys:
-        entries = values.get(key, [])
-        if not entries:
-            lines.append(f"{key}:")
-            continue
-        non_empty = [entry for entry in entries if entry]
-        if not non_empty:
-            lines.append(f"{key}:")
-            continue
-        if len(non_empty) == 1:
-            lines.append(f"{key}: {non_empty[0]}")
-            continue
-        lines.append(f"{key}: {non_empty[0]}")
-        for entry in non_empty[1:]:
-            lines.append(f"  {entry}")
-    return "\n".join(lines)
+        ordered[key] = values.get(key, [])
+    return yaml.safe_dump(
+        ordered,
+        sort_keys=False,
+        default_flow_style=False,
+        allow_unicode=False,
+    ).rstrip()
+# fmt: on

@@ -453,7 +453,15 @@ gitignore:
 
 # Auto-generated metadata overlays written by refresh.
 
-# Merge semantics: list append + dedupe, scalar replace.
+# Overlay semantics: scalar values replace prior scalars.
+
+# Plain scalar lists append with de-duplication.
+
+# Mapping values merge by subkey.
+
+# Lists of mappings with stable `id` fields merge by `id`.
+
+# Keep one metadata key in one shape across layers.
 
 autogen_metadata_overlays:
   changelog-coverage:
@@ -472,8 +480,7 @@ autogen_metadata_overlays:
     - Project Codename
     - Build Identity
     - DevCovenant Version
-    header_scan_lines:
-    - '4'
+    header_scan_lines: '4'
     main_changelog:
     - CHANGELOG.md
     required_globs:
@@ -723,35 +730,178 @@ autogen_metadata_overlays:
     - test
     - tested
   dependency-management:
-    auxiliary_direct_dependency_files:
-    - pyproject.toml
-    auxiliary_licenses_dir: devcovenant/licenses
-    auxiliary_lock_file: devcovenant/runtime-requirements.lock
-    auxiliary_lock_generate_hashes:
-    - 'False'
-    auxiliary_report_heading:
-    - '## License Report'
-    auxiliary_third_party_file: devcovenant/licenses/THIRD_PARTY_LICENSES.md
-    dependency_dirs: []
-    dependency_files: []
-    dependency_globs: []
-    dependency_role_dirs: []
-    dependency_role_files:
-    - intent=>requirements.in
-    - resolved=>requirements.lock
-    - resolved=>devcovenant/runtime-requirements.lock
-    - package_manifest=>pyproject.toml
-    dependency_role_globs: []
-    dependency_roles:
-    - intent
-    - resolved
-    - package_manifest
-    licenses_dir: licenses
-    python_lock_generate_hashes:
-    - 'True'
-    report_heading:
-    - '## License Report'
-    third_party_file: licenses/THIRD_PARTY_LICENSES.md
+    surfaces:
+    - id: devcovenant_runtime
+      lock_file: devcovenant/runtime-requirements.lock
+      direct_dependency_files:
+      - pyproject.toml
+      third_party_file: devcovenant/licenses/THIRD_PARTY_LICENSES.md
+      licenses_dir: devcovenant/licenses
+      report_heading: '## License Report'
+      manage_licenses_readme: 'true'
+      generate_hashes: 'false'
+      required_paths:
+      - devcovenant/runtime-requirements.lock
+      hash_targets:
+      - id: linux-py311
+        marker: sys_platform == "linux" and python_version == "3.11"
+        pip:
+          platform: manylinux2014_x86_64
+          implementation: cp
+          python_version: '3.11'
+          abi: cp311
+      - id: linux-py314
+        marker: sys_platform == "linux" and python_version == "3.14"
+        pip:
+          platform: manylinux2014_x86_64
+          implementation: cp
+          python_version: '3.14'
+          abi: cp314
+      - id: windows-py311
+        marker: sys_platform == "win32" and python_version == "3.11"
+        pip:
+          platform: win_amd64
+          implementation: cp
+          python_version: '3.11'
+          abi: cp311
+      - id: windows-py314
+        marker: sys_platform == "win32" and python_version == "3.14"
+        pip:
+          platform: win_amd64
+          implementation: cp
+          python_version: '3.14'
+          abi: cp314
+      - id: macos-py311
+        marker: sys_platform == "darwin" and python_version == "3.11"
+        pip:
+          platform: macosx_11_0_x86_64
+          implementation: cp
+          python_version: '3.11'
+          abi: cp311
+      - id: macos-py314
+        marker: sys_platform == "darwin" and python_version == "3.14"
+        pip:
+          platform: macosx_11_0_x86_64
+          implementation: cp
+          python_version: '3.14'
+          abi: cp314
+      dependency_files:
+      - pyproject.toml
+    - id: root_workspace
+      generate_hashes: 'false'
+      lock_file: requirements.lock
+      direct_dependency_files:
+      - requirements.in
+      dependency_files:
+      - requirements.in
+      - pyproject.toml
+      third_party_file: licenses/THIRD_PARTY_LICENSES.md
+      licenses_dir: licenses
+      report_heading: '## License Report'
+      manage_licenses_readme: 'true'
+      required_paths:
+      - requirements.in
+      hash_targets:
+      - id: linux-py311
+        marker: sys_platform == "linux" and python_version == "3.11"
+        pip:
+          platform: manylinux2014_x86_64
+          implementation: cp
+          python_version: '3.11'
+          abi: cp311
+      - id: linux-py314
+        marker: sys_platform == "linux" and python_version == "3.14"
+        pip:
+          platform: manylinux2014_x86_64
+          implementation: cp
+          python_version: '3.14'
+          abi: cp314
+      - id: windows-py311
+        marker: sys_platform == "win32" and python_version == "3.11"
+        pip:
+          platform: win_amd64
+          implementation: cp
+          python_version: '3.11'
+          abi: cp311
+      - id: windows-py314
+        marker: sys_platform == "win32" and python_version == "3.14"
+        pip:
+          platform: win_amd64
+          implementation: cp
+          python_version: '3.14'
+          abi: cp314
+      - id: macos-py311
+        marker: sys_platform == "darwin" and python_version == "3.11"
+        pip:
+          platform: macosx_11_0_x86_64
+          implementation: cp
+          python_version: '3.11'
+          abi: cp311
+      - id: macos-py314
+        marker: sys_platform == "darwin" and python_version == "3.14"
+        pip:
+          platform: macosx_11_0_x86_64
+          implementation: cp
+          python_version: '3.14'
+          abi: cp314
+    - id: package_runtime
+      enabled: 'false'
+      lock_file: '{{ PROJECT_NAME_PATH }}/runtime-requirements.lock'
+      direct_dependency_files:
+      - pyproject.toml
+      dependency_files:
+      - pyproject.toml
+      third_party_file: '{{ PROJECT_NAME_PATH }}/licenses/THIRD_PARTY_LICENSES.md'
+      licenses_dir: '{{ PROJECT_NAME_PATH }}/licenses'
+      report_heading: '## License Report'
+      manage_licenses_readme: 'true'
+      generate_hashes: 'false'
+      required_paths:
+      - pyproject.toml
+      - '{{ PROJECT_NAME_PATH }}'
+      hash_targets:
+      - id: linux-py311
+        marker: sys_platform == "linux" and python_version == "3.11"
+        pip:
+          platform: manylinux2014_x86_64
+          implementation: cp
+          python_version: '3.11'
+          abi: cp311
+      - id: linux-py314
+        marker: sys_platform == "linux" and python_version == "3.14"
+        pip:
+          platform: manylinux2014_x86_64
+          implementation: cp
+          python_version: '3.14'
+          abi: cp314
+      - id: windows-py311
+        marker: sys_platform == "win32" and python_version == "3.11"
+        pip:
+          platform: win_amd64
+          implementation: cp
+          python_version: '3.11'
+          abi: cp311
+      - id: windows-py314
+        marker: sys_platform == "win32" and python_version == "3.14"
+        pip:
+          platform: win_amd64
+          implementation: cp
+          python_version: '3.14'
+          abi: cp314
+      - id: macos-py311
+        marker: sys_platform == "darwin" and python_version == "3.11"
+        pip:
+          platform: macosx_11_0_x86_64
+          implementation: cp
+          python_version: '3.11'
+          abi: cp311
+      - id: macos-py314
+        marker: sys_platform == "darwin" and python_version == "3.14"
+        pip:
+          platform: macosx_11_0_x86_64
+          implementation: cp
+          python_version: '3.14'
+          abi: cp314
   docstring-and-comment-coverage:
     include_suffixes:
     - .py
@@ -914,10 +1064,8 @@ autogen_metadata_overlays:
     - devcovenant/docs/*.md
     - devcovenant/docs/**/*.md
   line-length-limit:
-    allow_long_lines:
-    - 'True'
-    allow_long_url_lines:
-    - 'True'
+    allow_long_lines: 'true'
+    allow_long_url_lines: 'true'
     exclude_globs:
     - devcovenant/logs/**
     - build/**
@@ -955,9 +1103,7 @@ autogen_metadata_overlays:
     long_lines_between:
     - devcovenant/builtin/policies/=>.yaml
     - devcovenant/custom/policies/=>.yaml
-    long_lines_contain: []
-    max_length:
-    - '79'
+    max_length: '79'
     url_prefixes:
     - https://
     - http://
@@ -1022,8 +1168,7 @@ autogen_metadata_overlays:
     include_suffixes:
     - .py
   no-print-outside-output-runtime:
-    allow_waiver_comment:
-    - 'DEVCOV_ALLOW_OUTPUT:'
+    allow_waiver_comment: 'DEVCOV_ALLOW_OUTPUT:'
     allowed_file_globs:
     - devcovenant/core/runtime/execution.py
     exclude_globs:
@@ -1049,14 +1194,10 @@ autogen_metadata_overlays:
     - build
     - dist
     - node_modules
-    forbid_bare_except:
-    - 'True'
-    forbid_broad_exception_handlers:
-    - 'True'
-    forbid_raise_exception:
-    - 'True'
-    forbid_silent_exception_pass:
-    - 'True'
+    forbid_bare_except: 'true'
+    forbid_broad_exception_handlers: 'true'
+    forbid_raise_exception: 'true'
+    forbid_silent_exception_pass: 'true'
     include_globs:
     - '*.py'
     include_suffixes:
@@ -1081,13 +1222,11 @@ autogen_metadata_overlays:
     - tests
     include_suffixes:
     - .py
-    symbol_assertion_window:
-    - '2'
+    symbol_assertion_window: '2'
     symbol_kinds:
     - function
     - class
-    symbol_name_min_length:
-    - '3'
+    symbol_name_min_length: '3'
     tautology_patterns:
     - python=>^\s*assert\s+True\s*$
     - python=>^\s*self\.assertTrue\s*\(\s*True\s*\)\s*$
@@ -1096,26 +1235,18 @@ autogen_metadata_overlays:
     watch_dirs:
     - tests
   version-governance:
-    canonical_versions_required:
-    - 'True'
+    canonical_versions_required: 'true'
     changelog_file: CHANGELOG.md
-    changelog_header_prefix:
-    - '## Version'
-    enforce_bumping:
-    - 'True'
-    pep440_allow_dev_releases:
-    - 'True'
-    pep440_allow_post_releases:
-    - 'True'
-    pep440_allow_prereleases:
-    - 'True'
-    scheme:
-    - pep440
+    changelog_header_prefix: '## Version'
+    enforce_bumping: 'true'
+    pep440_allow_dev_releases: 'true'
+    pep440_allow_post_releases: 'true'
+    pep440_allow_prereleases: 'true'
+    scheme: pep440
     version_file: devcovenant/VERSION
   version-sync:
     changelog_file: CHANGELOG.md
-    changelog_header_prefix:
-    - '## Version'
+    changelog_header_prefix: '## Version'
     role_extractors:
     - docs=>project_version_line
     - changelog=>changelog_header_version
@@ -1158,7 +1289,7 @@ autogen_metadata_overlays:
 
 # User-owned overlays applied after autogen overlays.
 
-# Merge semantics: list append + dedupe, scalar replace.
+# Use the same metadata-key shape here as the inherited layer.
 
 user_metadata_overlays:
   line-length-limit:
@@ -1182,7 +1313,9 @@ autogen_metadata_overrides: {}
 
 # Override semantics: full key replacement.
 
-# Shape: {policy-id: {metadata_key: value-or-list}}
+# Shape: {policy-id: {metadata_key: scalar|list|mapping}}
+
+# Do not replace a mapping with ad-hoc sibling flat keys.
 
 user_metadata_overrides:
   modules-need-tests:

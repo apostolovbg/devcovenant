@@ -81,7 +81,7 @@ def _unit_test_registry_symbol_assertions_cover_public_api() -> None:
 
 
 def _unit_test_parse_metadata_block_preserves_colon_continuations() -> None:
-    """Registry metadata parser should keep indented values with colons."""
+    """Registry metadata parser should keep legacy continuation text intact."""
     module = importlib.import_module(MODULE)
     block = """
 id: demo-policy
@@ -92,8 +92,8 @@ long_lines_contain: marker://
 """
     order, values = module.parse_metadata_block(block.strip())
     assert order == ["id", "url_prefixes", "long_lines_contain"]
-    assert values["url_prefixes"] == ["http://", "https://"]
-    assert values["long_lines_contain"] == ["marker://", "token:with:colon"]
+    assert values["url_prefixes"] == "http://,https://"
+    assert values["long_lines_contain"] == "marker://,token:with:colon"
 
 
 def _unit_test_layered_core_namespaces_remain_importable() -> None:
