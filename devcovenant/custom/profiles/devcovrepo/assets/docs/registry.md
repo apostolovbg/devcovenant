@@ -61,6 +61,13 @@ inputs that later drive lock refresh behavior.
 The same dependency surface can also include exact marker pins declared in the
 intent manifest when one hash-locked requirements file must stay valid across
 other supported platforms or Python versions.
+When dependency management owns an auxiliary packaged surface, the tracked
+registry also records the resolved auxiliary lock path, direct-input files,
+report file, and license directory.
+That is why `devcovenant/registry/registry.yaml` can change when the packaged
+runtime lock or packaged dependency-license targets move even if the root
+repo dependency artifacts stay in place.
+
 ## Runtime Registry
 `devcovenant/registry/runtime/` stores local working state such as:
 - `gate_status.json`
@@ -114,7 +121,7 @@ Read `devcovenant/registry/runtime/` when you need to know:
 - which run-log folder belongs to the active slice
 
 ## Practical Rule
-If the question is "what should this repository be doing?", read the tracked
+If the question is "what should the project be doing?", read the tracked
 registry.
 If the question is "what happened during this work slice?", read the runtime
 registry and the run logs.

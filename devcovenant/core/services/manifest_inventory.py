@@ -53,7 +53,7 @@ DEFAULT_SCAN_EXCLUDED_CORE_PATHS = [
     "devcovenant/refresh.py",
     "devcovenant/uninstall.py",
     "devcovenant/undeploy.py",
-    "devcovenant/requirements.lock",
+    "devcovenant/runtime-requirements.lock",
     "devcovenant/registry",
 ]
 DEFAULT_CORE_FILES = [
@@ -74,7 +74,7 @@ DEFAULT_CORE_FILES = [
     "devcovenant/config.yaml",
     "devcovenant/README.md",
     "devcovenant/VERSION",
-    "devcovenant/requirements.lock",
+    "devcovenant/runtime-requirements.lock",
     "devcovenant/licenses/LICENSE",
     "devcovenant/licenses/README.md",
     "devcovenant/licenses/THIRD_PARTY_LICENSES.md",

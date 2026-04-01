@@ -1,5 +1,5 @@
 # Project Governance
-**Last Updated:** 2026-03-31
+**Last Updated:** 2026-04-01
 **Project Version:** 1.0.1.dev1
 
 ## Overview
@@ -20,7 +20,7 @@ Other public surfaces render from this metadata.
 `project_name`: any non-empty string. Default seed value: `Project Name`.
 
 `project_description`: any non-empty string. Default seed value:
-`Describe the project this repository ships: what it does, who it helps, and
+`Describe the project: what it does, who it helps, and
 what problem it solves.`
 
 `stage`: one value from `allowed_stages`. The default allowed set is

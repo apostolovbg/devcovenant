@@ -259,7 +259,7 @@ def _unit_test_release_metadata_keeps_support_floor_and_docs_truthful() -> (
         encoding="utf-8"
     )
     runtime_requirements_lock = (
-        REPO_ROOT / "devcovenant" / "requirements.lock"
+        REPO_ROOT / "devcovenant" / "runtime-requirements.lock"
     ).read_text(encoding="utf-8")
     root_license_report = (
         REPO_ROOT / "licenses" / "THIRD_PARTY_LICENSES.md"
@@ -304,8 +304,14 @@ def _unit_test_release_metadata_keeps_support_floor_and_docs_truthful() -> (
     for intent_pin, resolved_pin in expected_marker_pins:
         assert intent_pin in requirements_in
         assert resolved_pin in requirements_lock
-    assert runtime_requirements_lock == requirements_lock
-    assert packaged_license_report == root_license_report
+    assert runtime_requirements_lock != requirements_lock
+    assert "pip-audit==2.10.0" in requirements_lock
+    assert "pip-audit==2.10.0" not in runtime_requirements_lock
+    assert packaged_license_report != root_license_report
+    assert "- `requirements.lock`" in root_license_report
+    assert (
+        "- `devcovenant/runtime-requirements.lock`" in packaged_license_report
+    )
 
     assert urls["Documentation"].endswith(f"/tree/v{version}/devcovenant/docs")
     assert urls["Changelog"].endswith(f"/blob/v{version}/CHANGELOG.md")
@@ -1293,7 +1299,7 @@ def _unit_test_refresh_renders_canonical_workflow_triggers() -> None:
         assert re.search(r"(?m)^  pull_request:$", content)
         assert re.search(r"(?m)^      run: \\|$", content)
         assert 'run: "python -m pytest -q' not in content
-        assert "devcovenant/requirements.lock" in content
+        assert "devcovenant/runtime-requirements.lock" in content
         assert "python -m pip install -r requirements.lock" not in content
 
 

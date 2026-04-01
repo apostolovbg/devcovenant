@@ -544,6 +544,7 @@ dependency_roles: intent
   package_manifest
 dependency_role_files: intent=>requirements.in
   resolved=>requirements.lock
+  resolved=>devcovenant/runtime-requirements.lock
   package_manifest=>pyproject.toml
 dependency_role_globs:
 dependency_role_dirs:
@@ -551,7 +552,15 @@ third_party_file: licenses/THIRD_PARTY_LICENSES.md
 licenses_dir: licenses
 report_heading: ## License Report
 python_lock_generate_hashes: True
+auxiliary_lock_file: devcovenant/runtime-requirements.lock
+auxiliary_direct_dependency_files: pyproject.toml
+auxiliary_third_party_file: devcovenant/licenses/THIRD_PARTY_LICENSES.md
+auxiliary_licenses_dir: devcovenant/licenses
+auxiliary_report_heading: ## License Report
+auxiliary_lock_generate_hashes: False
 selector_roles: dependency
+auxiliary_direct_dependency_globs:
+auxiliary_direct_dependency_dirs:
 ```
 
 Manage dependency-maintenance artifacts as one coherent policy surface.
@@ -579,8 +588,13 @@ or fails loudly instead of writing a partial lock. Repositories that need
 one hash-locked file to work across supported platforms or Python versions
 should declare exact marker pins for those cross-environment dependencies in
 the intent manifest so the runtime can materialize them even when the local
-compile host would otherwise omit them. Artifact refresh remains
-deterministic/idempotent.
+compile host would otherwise omit them. Repositories may also declare one
+auxiliary Python lock/license surface with
+`auxiliary_lock_file`, `auxiliary_direct_dependency_files`,
+`auxiliary_third_party_file`, and `auxiliary_licenses_dir`. That extra
+surface is useful when a repo ships a package runtime/bootstrap lock that
+must stay separate from the repo's own development lock. Artifact refresh
+remains deterministic/idempotent.
 
 
 ---
@@ -1364,22 +1378,20 @@ auto_fix: true
 enforcement: active
 enabled: true
 custom: true
-file_mirrors: requirements.lock=>devcovenant/requirements.lock
-  LICENSE=>devcovenant/licenses/LICENSE
-dir_mirrors: licenses=>devcovenant/licenses
-dir_skip_paths: licenses=>README.md
+file_mirrors: LICENSE=>devcovenant/licenses/LICENSE
+dir_mirrors:
+dir_skip_paths:
 ```
 
-Ensure package-shipped dependency and compliance artifacts stay in exact
-sync with the canonical repo-root artifacts they mirror. This repo uses the
-policy to keep `devcovenant/requirements.lock` aligned with the canonical
-root `requirements.lock`, `devcovenant/licenses/LICENSE` aligned with the
-canonical root `LICENSE`, and `devcovenant/licenses/**` aligned with the
-canonical root `licenses/**`. The package-owned
-`devcovenant/licenses/README.md` stays outside the exact mirror contract.
-Auto-fix rewrites the package mirror from the configured source paths,
-preserves separately mirrored files that live inside mirrored directories,
-preserves package-owned skipped paths, and removes stale mirrored files.
+Ensure package-shipped artifacts that are true mirrors stay in exact sync
+with their canonical repo-root sources. This repo uses the policy only for
+`LICENSE => devcovenant/licenses/LICENSE`. Dependency lockfiles and
+third-party license inventories under `devcovenant/licenses/**` are not
+mirrors; they are generated from the packaged runtime dependency surface by
+dependency-management. Auto-fix rewrites the configured exact mirrors from
+their source paths, preserves separately mirrored files that live inside
+mirrored directories, preserves package-owned skipped paths, and removes
+stale mirrored files.
 
 
 ---

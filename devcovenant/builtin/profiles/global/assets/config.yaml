@@ -114,7 +114,7 @@ profiles:
       - devcovenant/refresh.py
       - devcovenant/uninstall.py
       - devcovenant/undeploy.py
-      - devcovenant/requirements.lock
+      - devcovenant/runtime-requirements.lock
       - devcovenant/registry
 
 # ---------------------------------------------------------------------------

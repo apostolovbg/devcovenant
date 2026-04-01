@@ -93,7 +93,7 @@ This is the managed-doc selection.
 Use it to choose which managed doc target paths are enabled for the repository.
 The simple model is:
 - global and active profiles contribute available managed-doc descriptors
-- `doc_assets.autogen` names the target paths this repository enables
+- `doc_assets.autogen` names the target paths the current config enables
 - `doc_assets.user` subtracts target paths after `autogen`
 - when multiple active descriptor roots provide the same target path, the later
   active profile wins
@@ -170,7 +170,7 @@ profile.
 If the added job should travel with a profile stack, put that behavior in a
 profile `ci_and_test` fragment instead.
 The builtin `github` base bootstraps DevCovenant from the shipped
-`devcovenant/requirements.lock`. If a repository needs extra project
+`devcovenant/runtime-requirements.lock`. If a repository needs extra project
 dependency setup, keep that in the relevant profile or explicit local
 override instead of changing the builtin base.
 For Python repositories, set
@@ -186,7 +186,7 @@ inherited cleanup lists.
 
 ### developer_mode
 `developer_mode` answers a simple question:
-is this repository using DevCovenant as a tool, or is it being used to develop
+is the project using DevCovenant as a tool, or is it being used to develop
 DevCovenant itself?
 
 Use `false` for a normal repository using DevCovenant.

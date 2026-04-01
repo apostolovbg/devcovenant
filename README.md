@@ -307,7 +307,7 @@ ordinary user repositories do not need.
 - Root automation notes live here and in `AGENTS.md`, not in package docs.
 - The builtin `github` profile owns the generic GitHub Actions CI base and
   bootstraps DevCovenant from the shipped
-  `devcovenant/requirements.lock`.
+  `devcovenant/runtime-requirements.lock`.
 - The package ships `devcovenant/licenses/LICENSE` and
   `devcovenant/licenses/**` beside that lock so the bundled root license,
   dependency report, and third-party license set stay self-contained.

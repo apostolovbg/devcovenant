@@ -276,35 +276,29 @@ def _render_licenses_readme(third_party_file: str) -> str:
         "",
         "## Table of Contents",
         "- [Overview](#overview)",
-        "- [Workflow](#workflow)",
+        "- [Contents](#contents)",
         "- [Update Checklist](#update-checklist)",
         "",
         "## Overview",
-        "This directory stores generated third-party license texts and",
-        "generated compliance notes for direct repository dependencies.",
-        "Keep these files synchronized whenever dependency declarations or",
-        "resolved lock versions change. The goal is to preserve a clear audit",
-        "trail that maps declared direct dependencies to local license",
-        "artifacts without requiring manual reconstruction during release",
-        "reviews or legal checks.",
+        "This directory stores generated dependency license artifacts for the",
+        "surface tracked here.",
+        "Keep these files synchronized whenever the owning dependency",
+        "manifests or resolved lockfiles change so the local license set",
+        "stays readable and auditable.",
         "",
-        "## Workflow",
-        f"- Keep `{third_party_file}` synchronized with dependency",
-        "  manifest updates.",
-        "- Add, remove, or refresh generated license files in this directory",
-        "  when dependency versions change.",
-        "- Record each changed dependency manifest in the report section so",
-        "  coverage checks can verify synchronization.",
-        "- Keep the dependency inventory aligned with the actual generated",
-        "  license files.",
+        "## Contents",
+        f"- `{Path(third_party_file).name}` records the dependency inputs and",
+        "  generated license inventory for this surface.",
+        "- `*.txt` files store the generated upstream license texts",
+        "  that match the current direct dependency set.",
         "",
         "## Update Checklist",
-        "- Verify each direct dependency entry points to a current license",
-        "  file.",
-        "- Verify generated license files reflect the currently installed",
-        "  upstream distribution notices.",
-        "- Re-run DevCovenant checks and commit both report and license",
-        "  artifact updates together.",
+        f"- Keep `{third_party_file}` synchronized with dependency",
+        "  manifest and lock updates for this surface.",
+        "- Add, remove, or refresh generated license files when dependency",
+        "  versions change.",
+        "- Re-run DevCovenant checks and commit report and license artifact",
+        "  updates together.",
         "",
     ]
     return "\n".join(lines)
@@ -389,7 +383,7 @@ def _parse_requirement_strings(requirement_lines: Iterable[str]) -> list[str]:
 
 
 def _parse_requirements_in(path: Path) -> list[str]:
-    """Return direct dependency names declared in requirements.in."""
+    """Return direct dependency names declared in one requirements file."""
     if not path.exists():
         return []
     return _parse_requirement_strings(
@@ -429,8 +423,8 @@ def _fallback_project_dependency_strings(path: Path) -> list[str]:
     return strings
 
 
-def _parse_pyproject_dependencies(path: Path) -> list[str]:
-    """Return direct dependency names declared in pyproject metadata."""
+def _parse_pyproject_dependency_strings(path: Path) -> list[str]:
+    """Return raw dependency requirement strings from pyproject metadata."""
     if not path.exists():
         return []
     dependency_strings: list[str] = []
@@ -442,17 +436,56 @@ def _parse_pyproject_dependencies(path: Path) -> list[str]:
             dependency_strings = [str(entry) for entry in raw_dependencies]
     if not dependency_strings:
         dependency_strings = _fallback_project_dependency_strings(path)
-    return _parse_requirement_strings(dependency_strings)
+    return dependency_strings
 
 
-def _direct_dependency_display_names(repo_root: Path) -> dict[str, str]:
+def _parse_pyproject_dependencies(path: Path) -> list[str]:
+    """Return direct dependency names declared in pyproject metadata."""
+    return _parse_requirement_strings(
+        _parse_pyproject_dependency_strings(path)
+    )
+
+
+def _direct_dependency_strings_from_file(path: Path) -> list[str]:
+    """Return raw dependency strings from one supported manifest."""
+    if not path.exists() or not path.is_file():
+        return []
+    if path.name == "pyproject.toml":
+        return _parse_pyproject_dependency_strings(path)
+    return [
+        str(raw_line).split("#", 1)[0].strip()
+        for raw_line in path.read_text(encoding="utf-8").splitlines()
+        if str(raw_line).split("#", 1)[0].strip()
+    ]
+
+
+def _direct_dependency_names_from_file(path: Path) -> list[str]:
+    """Return direct dependency names declared in one supported manifest."""
+    return _parse_requirement_strings(
+        _direct_dependency_strings_from_file(path)
+    )
+
+
+def _direct_dependency_display_names(
+    repo_root: Path,
+    *,
+    direct_dependency_files: Iterable[str] | None = None,
+) -> dict[str, str]:
     """Return normalized direct dependency names mapped to display casing."""
     display_names: dict[str, str] = {}
-    candidates = []
-    candidates.extend(_parse_requirements_in(repo_root / "requirements.in"))
-    candidates.extend(
-        _parse_pyproject_dependencies(repo_root / "pyproject.toml")
-    )
+    selector_paths = [
+        repo_root / "requirements.in",
+        repo_root / "pyproject.toml",
+    ]
+    if direct_dependency_files is not None:
+        selector_paths = []
+        for raw_path in direct_dependency_files:
+            token = _normalized_rel(str(raw_path))
+            if token:
+                selector_paths.append(repo_root / token)
+    candidates: list[str] = []
+    for manifest_path in selector_paths:
+        candidates.extend(_direct_dependency_names_from_file(manifest_path))
     for name in candidates:
         normalized = _normalize_distribution_name(name)
         if normalized and normalized not in display_names:
@@ -462,9 +495,11 @@ def _direct_dependency_display_names(repo_root: Path) -> dict[str, str]:
 
 def _resolved_python_lock_versions(
     repo_root: Path,
+    *,
+    resolved_lock_file: str = "requirements.lock",
 ) -> dict[str, tuple[str, str]]:
     """Return normalized lockfile names mapped to display name/version."""
-    lock_path = repo_root / "requirements.lock"
+    lock_path = repo_root / _normalized_rel(resolved_lock_file)
     if not lock_path.exists():
         return {}
     resolved: dict[str, tuple[str, str]] = {}
@@ -568,12 +603,20 @@ def _build_dependency_inventory(
     repo_root: Path,
     *,
     licenses_dir_path: Path,
+    resolved_lock_file: str = "requirements.lock",
+    direct_dependency_files: Iterable[str] | None = None,
 ) -> list[dict[str, str]]:
     """Resolve direct dependency inventory with generated license targets."""
-    direct_display_names = _direct_dependency_display_names(repo_root)
+    direct_display_names = _direct_dependency_display_names(
+        repo_root,
+        direct_dependency_files=direct_dependency_files,
+    )
     if not direct_display_names:
         return []
-    resolved_versions = _resolved_python_lock_versions(repo_root)
+    resolved_versions = _resolved_python_lock_versions(
+        repo_root,
+        resolved_lock_file=resolved_lock_file,
+    )
     inventory: list[dict[str, str]] = []
     for normalized_name in sorted(direct_display_names):
         if normalized_name not in resolved_versions:
@@ -615,6 +658,24 @@ def _render_inventory_section(
             f"`{relative_path}`"
         )
     return "\n".join(lines)
+
+
+def _render_full_report(
+    *,
+    licenses_dir: str,
+    report_section: str,
+    inventory_section: str,
+) -> str:
+    """Render one deterministic third-party report document."""
+    normalized_licenses_dir = _normalized_rel(licenses_dir).strip("/")
+    return (
+        "# Third-Party Licenses\n\n"
+        "This report lists the direct third-party dependencies declared in\n"
+        "the tracked dependency manifests and the corresponding license\n"
+        f"texts stored under `{normalized_licenses_dir}/`.\n\n"
+        f"{report_section}\n\n"
+        f"{inventory_section}\n"
+    )
 
 
 def _inventory_paths_from_report(text: str) -> set[str]:
@@ -673,6 +734,7 @@ def _sync_dependency_license_files(
 ) -> list[Path]:
     """Materialize current dependency license texts and prune stale ones."""
     modified: list[Path] = []
+    normalized_licenses_dir = _normalized_rel(licenses_dir).strip("/")
     desired_inventory_paths = {
         _normalized_rel(str(Path(licenses_dir) / entry["relative_path"]))
         for entry in inventory
@@ -696,8 +758,20 @@ def _sync_dependency_license_files(
             modified.append(target_path)
 
     stale_inventory_paths = sorted(
-        existing_inventory_paths - desired_inventory_paths
+        relative_path
+        for relative_path in (
+            existing_inventory_paths - desired_inventory_paths
+        )
+        if relative_path == normalized_licenses_dir
+        or relative_path.startswith(f"{normalized_licenses_dir}/")
     )
+    for extra_file in sorted(licenses_dir_path.glob("*.txt")):
+        relative_path = _normalized_rel(
+            str(extra_file.resolve().relative_to(repo_root.resolve()))
+        )
+        if relative_path not in desired_inventory_paths:
+            stale_inventory_paths.append(relative_path)
+    stale_inventory_paths = sorted(set(stale_inventory_paths))
     for relative_path in stale_inventory_paths:
         stale_path = repo_root / relative_path
         if stale_path.exists() and stale_path.is_file():
@@ -731,8 +805,10 @@ def _licenses_dir_is_in_sync(
     third_party_file: str,
     inventory: list[dict[str, str]],
     existing_inventory_paths: set[str],
+    manage_licenses_readme: bool,
 ) -> bool:
     """Return True when generated license artifacts already match runtime."""
+    normalized_licenses_dir = _normalized_rel(licenses_dir).strip("/")
     desired_inventory_paths = {
         _normalized_rel(str(Path(licenses_dir) / entry["relative_path"]))
         for entry in inventory
@@ -754,13 +830,24 @@ def _licenses_dir_is_in_sync(
             return False
 
     stale_inventory_paths = sorted(
-        existing_inventory_paths - desired_inventory_paths
+        relative_path
+        for relative_path in (
+            existing_inventory_paths - desired_inventory_paths
+        )
+        if relative_path == normalized_licenses_dir
+        or relative_path.startswith(f"{normalized_licenses_dir}/")
     )
+    for extra_file in sorted(licenses_dir_path.glob("*.txt")):
+        relative_path = _normalized_rel(str(extra_file.relative_to(repo_root)))
+        if relative_path not in desired_inventory_paths:
+            return False
     for relative_path in stale_inventory_paths:
         stale_path = repo_root / relative_path
         if stale_path.exists() and stale_path.is_file():
             return False
 
+    if not manage_licenses_readme:
+        return True
     readme_path = licenses_dir_path / LICENSES_README_NAME
     desired_readme = _render_licenses_readme(third_party_file)
     if not readme_path.exists():
@@ -775,6 +862,9 @@ def _license_artifacts_need_refresh(
     third_party_file: str,
     licenses_dir: str,
     report_heading: str,
+    resolved_lock_file: str = "requirements.lock",
+    direct_dependency_files: Iterable[str] | None = None,
+    manage_licenses_readme: bool = True,
 ) -> tuple[bool, bool]:
     """Return whether the report or licenses directory is out of sync."""
     third_party_path, licenses_dir_path = _resolve_artifact_targets(
@@ -793,26 +883,22 @@ def _license_artifacts_need_refresh(
     inventory = _build_dependency_inventory(
         repo_root,
         licenses_dir_path=licenses_dir_path,
+        resolved_lock_file=resolved_lock_file,
+        direct_dependency_files=direct_dependency_files,
     )
-    updated_report = existing
-    if _normalize_report_entries(changed_dependency_files):
-        report_section = _render_report_section(
-            report_heading, changed_dependency_files
-        )
-        updated_report = _replace_report_section(
-            updated_report,
-            heading=report_heading,
-            replacement=report_section,
-        )
-    existing_inventory_paths = _inventory_paths_from_report(updated_report)
+    report_section = _render_report_section(
+        report_heading,
+        changed_dependency_files,
+    )
+    existing_inventory_paths = _inventory_paths_from_report(existing)
     inventory_section = _render_inventory_section(
         licenses_dir=licenses_dir,
         inventory=inventory,
     )
-    updated_report = _replace_report_section(
-        updated_report,
-        heading=LICENSE_INVENTORY_HEADING,
-        replacement=inventory_section,
+    updated_report = _render_full_report(
+        licenses_dir=licenses_dir,
+        report_section=report_section,
+        inventory_section=inventory_section,
     )
     report_needs_refresh = updated_report != existing
     licenses_dir_needs_refresh = not _licenses_dir_is_in_sync(
@@ -822,6 +908,7 @@ def _license_artifacts_need_refresh(
         third_party_file=third_party_rel,
         inventory=inventory,
         existing_inventory_paths=existing_inventory_paths,
+        manage_licenses_readme=manage_licenses_readme,
     )
     return report_needs_refresh, licenses_dir_needs_refresh
 
@@ -833,6 +920,9 @@ def refresh_license_artifacts(
     third_party_file: str,
     licenses_dir: str,
     report_heading: str,
+    resolved_lock_file: str = "requirements.lock",
+    direct_dependency_files: Iterable[str] | None = None,
+    manage_licenses_readme: bool = True,
 ) -> List[Path]:
     """Refresh configured report file and licenses marker files."""
 
@@ -853,26 +943,22 @@ def refresh_license_artifacts(
     inventory = _build_dependency_inventory(
         repo_root,
         licenses_dir_path=licenses_dir_path,
+        resolved_lock_file=resolved_lock_file,
+        direct_dependency_files=direct_dependency_files,
     )
-    updated_report = existing
-    if _normalize_report_entries(changed_dependency_files):
-        report_section = _render_report_section(
-            report_heading, changed_dependency_files
-        )
-        updated_report = _replace_report_section(
-            updated_report,
-            heading=report_heading,
-            replacement=report_section,
-        )
-    existing_inventory_paths = _inventory_paths_from_report(updated_report)
+    report_section = _render_report_section(
+        report_heading,
+        changed_dependency_files,
+    )
+    existing_inventory_paths = _inventory_paths_from_report(existing)
     inventory_section = _render_inventory_section(
         licenses_dir=licenses_dir,
         inventory=inventory,
     )
-    updated_report = _replace_report_section(
-        updated_report,
-        heading=LICENSE_INVENTORY_HEADING,
-        replacement=inventory_section,
+    updated_report = _render_full_report(
+        licenses_dir=licenses_dir,
+        report_section=report_section,
+        inventory_section=inventory_section,
     )
     if updated_report != existing:
         third_party_path.parent.mkdir(parents=True, exist_ok=True)
@@ -889,12 +975,13 @@ def refresh_license_artifacts(
         )
     )
 
-    readme_path = _ensure_licenses_readme(
-        licenses_dir_path=licenses_dir_path,
-        third_party_file=third_party_rel,
-    )
-    if readme_path is not None:
-        modified.append(readme_path)
+    if manage_licenses_readme:
+        readme_path = _ensure_licenses_readme(
+            licenses_dir_path=licenses_dir_path,
+            third_party_file=third_party_rel,
+        )
+        if readme_path is not None:
+            modified.append(readme_path)
     return modified
 
 
@@ -915,6 +1002,179 @@ def _remediation_suggestion(context: CheckContext) -> str:
         "enabled so the dependency-management autofixer can invoke the same "
         "runtime action for you."
     )
+
+
+def _surface_violations(
+    *,
+    context: CheckContext,
+    changed_rel_paths: set[str],
+    changed_dependency_files: Iterable[str],
+    third_party_file: str,
+    licenses_dir: str,
+    report_heading: str,
+    resolved_lock_file: str = "requirements.lock",
+    direct_dependency_files: Iterable[str] | None = None,
+    manage_licenses_readme: bool = True,
+) -> list[Violation]:
+    """Return dependency-artifact drift violations for one artifact surface."""
+
+    try:
+        third_party_path, license_dir_path = _resolve_artifact_targets(
+            repo_root=context.repo_root,
+            third_party_file=third_party_file,
+            licenses_dir=licenses_dir,
+        )
+    except ValueError as error:
+        return [
+            Violation(
+                policy_id=DependencyManagementCheck.policy_id,
+                severity="error",
+                message=str(error),
+                can_auto_fix=False,
+            )
+        ]
+    if not report_heading:
+        return [
+            Violation(
+                policy_id=DependencyManagementCheck.policy_id,
+                severity="error",
+                message=(
+                    "dependency-management metadata is missing "
+                    "`report_heading`."
+                ),
+                can_auto_fix=False,
+            )
+        ]
+
+    repo_root_resolved = context.repo_root.resolve()
+    third_party_rel_text = third_party_path.relative_to(
+        repo_root_resolved
+    ).as_posix()
+    licenses_rel_text = license_dir_path.relative_to(
+        repo_root_resolved
+    ).as_posix()
+    normalized_changed_dependency_files = sorted(
+        {
+            _normalized_rel(entry)
+            for entry in changed_dependency_files
+            if _normalized_rel(entry)
+        }
+    )
+    if not normalized_changed_dependency_files:
+        return []
+
+    context_payload = {
+        "changed_dependency_files": normalized_changed_dependency_files,
+        "third_party_file": third_party_rel_text,
+        "licenses_dir": licenses_rel_text,
+        "report_heading": report_heading,
+        "resolved_lock_file": _normalized_rel(resolved_lock_file),
+        "direct_dependency_files": [
+            _normalized_rel(entry)
+            for entry in (direct_dependency_files or [])
+            if _normalized_rel(entry)
+        ],
+    }
+    report_needs_refresh, licenses_dir_needs_refresh = (
+        _license_artifacts_need_refresh(
+            repo_root=context.repo_root,
+            changed_dependency_files=normalized_changed_dependency_files,
+            third_party_file=third_party_rel_text,
+            licenses_dir=licenses_rel_text,
+            report_heading=report_heading,
+            resolved_lock_file=resolved_lock_file,
+            direct_dependency_files=direct_dependency_files,
+            manage_licenses_readme=manage_licenses_readme,
+        )
+    )
+
+    violations: list[Violation] = []
+    if third_party_rel_text not in changed_rel_paths and report_needs_refresh:
+        violations.append(
+            Violation(
+                policy_id=DependencyManagementCheck.policy_id,
+                severity="error",
+                file_path=third_party_path,
+                message=(
+                    "Dependencies changed without updating "
+                    f"the license table `{third_party_rel_text}`."
+                ),
+                suggestion=_remediation_suggestion(context),
+                can_auto_fix=True,
+                context={**context_payload, "issue": "third_party"},
+            )
+        )
+
+    normalized_licenses_dir = _normalized_rel(licenses_rel_text).strip("/")
+    license_dir_touched = any(
+        rel == normalized_licenses_dir
+        or rel.startswith(f"{normalized_licenses_dir}/")
+        for rel in changed_rel_paths
+    )
+    if not license_dir_touched and licenses_dir_needs_refresh:
+        violations.append(
+            Violation(
+                policy_id=DependencyManagementCheck.policy_id,
+                severity="error",
+                file_path=license_dir_path,
+                message=(
+                    "License files under "
+                    f"{licenses_rel_text}/ must be refreshed."
+                ),
+                suggestion=_remediation_suggestion(context),
+                can_auto_fix=True,
+                context={**context_payload, "issue": "licenses_dir"},
+            )
+        )
+
+    if third_party_path.is_file():
+        raw_report = third_party_path.read_text(encoding="utf-8")
+        report = _extract_license_report(raw_report, report_heading)
+    else:
+        report = ""
+
+    if not report:
+        violations.append(
+            Violation(
+                policy_id=DependencyManagementCheck.policy_id,
+                severity="error",
+                file_path=third_party_path,
+                message=(
+                    f"Add a '{report_heading}' section to "
+                    f"`{third_party_rel_text}` that chronicles dependency "
+                    "updates."
+                ),
+                suggestion=_remediation_suggestion(context),
+                can_auto_fix=True,
+                context={**context_payload, "issue": "missing_report"},
+            )
+        )
+    else:
+        missing_references = [
+            dep_file
+            for dep_file in normalized_changed_dependency_files
+            if not _contains_reference(report, dep_file)
+        ]
+        if missing_references:
+            violations.append(
+                Violation(
+                    policy_id=DependencyManagementCheck.policy_id,
+                    severity="error",
+                    file_path=third_party_path,
+                    message=(
+                        "Dependency report is missing changed files: "
+                        + ", ".join(missing_references)
+                    ),
+                    suggestion=_remediation_suggestion(context),
+                    can_auto_fix=True,
+                    context={
+                        **context_payload,
+                        "issue": "missing_references",
+                        "missing_references": missing_references,
+                    },
+                )
+            )
+    return violations
 
 
 class DependencyManagementCheck(PolicyCheck):
@@ -967,43 +1227,6 @@ class DependencyManagementCheck(PolicyCheck):
         if not (dependency_files or dependency_globs or dependency_dirs):
             return []
 
-        third_party_text = str(self.get_option("third_party_file", "")).strip()
-        licenses_dir = str(self.get_option("licenses_dir", "")).strip()
-        report_heading = str(self.get_option("report_heading", "")).strip()
-        try:
-            third_party_path, license_dir_path = _resolve_artifact_targets(
-                repo_root=context.repo_root,
-                third_party_file=third_party_text,
-                licenses_dir=licenses_dir,
-            )
-        except ValueError as error:
-            return [
-                Violation(
-                    policy_id=self.policy_id,
-                    severity="error",
-                    message=str(error),
-                    can_auto_fix=False,
-                )
-            ]
-        if not report_heading:
-            return [
-                Violation(
-                    policy_id=self.policy_id,
-                    severity="error",
-                    message=(
-                        "dependency-management metadata is missing "
-                        "`report_heading`."
-                    ),
-                    can_auto_fix=False,
-                )
-            ]
-        third_party_rel_text = third_party_path.relative_to(
-            context.repo_root.resolve()
-        ).as_posix()
-        licenses_rel_text = license_dir_path.relative_to(
-            context.repo_root.resolve()
-        ).as_posix()
-
         changed_rel_paths: set[str] = set()
         changed_dependency_files = set()
         for path in files:
@@ -1021,113 +1244,64 @@ class DependencyManagementCheck(PolicyCheck):
         if not changed_dependency_files:
             return []
 
-        violations = []
-        context_payload = {
-            "changed_dependency_files": sorted(changed_dependency_files),
-            "third_party_file": third_party_rel_text,
-            "licenses_dir": licenses_rel_text,
-            "report_heading": report_heading,
-        }
-        (
-            report_needs_refresh,
-            licenses_dir_needs_refresh,
-        ) = _license_artifacts_need_refresh(
-            repo_root=context.repo_root,
+        violations = _surface_violations(
+            context=context,
+            changed_rel_paths=changed_rel_paths,
             changed_dependency_files=sorted(changed_dependency_files),
-            third_party_file=third_party_rel_text,
-            licenses_dir=licenses_rel_text,
-            report_heading=report_heading,
+            third_party_file=str(
+                self.get_option("third_party_file", "")
+            ).strip(),
+            licenses_dir=str(self.get_option("licenses_dir", "")).strip(),
+            report_heading=str(self.get_option("report_heading", "")).strip(),
         )
 
-        if (
-            third_party_rel_text not in changed_rel_paths
-            and report_needs_refresh
-        ):
-            violations.append(
-                Violation(
-                    policy_id=self.policy_id,
-                    severity="error",
-                    file_path=third_party_path,
-                    message=(
-                        "Dependencies changed without updating "
-                        "the license table "
-                        f"`{third_party_rel_text}`."
-                    ),
-                    suggestion=_remediation_suggestion(context),
-                    can_auto_fix=True,
-                    context={**context_payload, "issue": "third_party"},
-                )
-            )
-
-        normalized_licenses_dir = _normalized_rel(licenses_rel_text).strip("/")
-        license_dir_touched = any(
-            rel == normalized_licenses_dir
-            or rel.startswith(f"{normalized_licenses_dir}/")
-            for rel in changed_rel_paths
+        auxiliary_lock_file = str(
+            self.get_option("auxiliary_lock_file", "")
+        ).strip()
+        auxiliary_third_party_file = str(
+            self.get_option("auxiliary_third_party_file", "")
+        ).strip()
+        auxiliary_licenses_dir = str(
+            self.get_option("auxiliary_licenses_dir", "")
+        ).strip()
+        auxiliary_report_heading = str(
+            self.get_option("auxiliary_report_heading", "")
+        ).strip()
+        auxiliary_direct_dependency_files = _normalize_list(
+            self.get_option("auxiliary_direct_dependency_files", [])
         )
-
-        if not license_dir_touched and licenses_dir_needs_refresh:
-            violations.append(
-                Violation(
-                    policy_id=self.policy_id,
-                    severity="error",
-                    file_path=license_dir_path,
-                    message=(
-                        "License files under "
-                        f"{licenses_rel_text}/ must be refreshed."
-                    ),
-                    suggestion=_remediation_suggestion(context),
-                    can_auto_fix=True,
-                    context={**context_payload, "issue": "licenses_dir"},
-                )
-            )
-
-        if third_party_path.is_file():
-            raw_report = third_party_path.read_text(encoding="utf-8")
-            report = _extract_license_report(raw_report, report_heading)
-        else:
-            report = ""
-
-        if not report:
-            violations.append(
-                Violation(
-                    policy_id=self.policy_id,
-                    severity="error",
-                    file_path=third_party_path,
-                    message=(
-                        f"Add a '{report_heading}' section to "
-                        f"`{third_party_rel_text}` that chronicles dependency "
-                        "updates."
-                    ),
-                    suggestion=_remediation_suggestion(context),
-                    can_auto_fix=True,
-                    context={**context_payload, "issue": "missing_report"},
-                )
-            )
-        else:
-            missing_references = [
-                dep_file
-                for dep_file in sorted(changed_dependency_files)
-                if not _contains_reference(report, dep_file)
+        if any(
+            [
+                auxiliary_lock_file,
+                auxiliary_third_party_file,
+                auxiliary_licenses_dir,
+                auxiliary_report_heading,
+                *auxiliary_direct_dependency_files,
             ]
-            if missing_references:
-                violations.append(
-                    Violation(
-                        policy_id=self.policy_id,
-                        severity="error",
-                        file_path=third_party_path,
-                        message=(
-                            "The license report must mention each changed "
-                            "dependency manifest."
-                        ),
-                        suggestion=_remediation_suggestion(context),
-                        can_auto_fix=True,
-                        context={
-                            **context_payload,
-                            "issue": "missing_reference",
-                            "missing_references": missing_references,
-                        },
-                    )
+        ):
+            auxiliary_trigger_files = {
+                _normalized_rel(auxiliary_lock_file),
+                *(
+                    _normalized_rel(entry)
+                    for entry in auxiliary_direct_dependency_files
+                ),
+            }
+            auxiliary_changed_files = sorted(
+                rel_path
+                for rel_path in changed_dependency_files
+                if rel_path in auxiliary_trigger_files
+            )
+            violations.extend(
+                _surface_violations(
+                    context=context,
+                    changed_rel_paths=changed_rel_paths,
+                    changed_dependency_files=auxiliary_changed_files,
+                    third_party_file=auxiliary_third_party_file,
+                    licenses_dir=auxiliary_licenses_dir,
+                    report_heading=auxiliary_report_heading,
+                    resolved_lock_file=auxiliary_lock_file,
+                    direct_dependency_files=auxiliary_direct_dependency_files,
+                    manage_licenses_readme=False,
                 )
-
+            )
         return violations

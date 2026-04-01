@@ -1,24 +1,20 @@
 id: package-artifact-mirror
 text: |
-  Ensure package-shipped dependency and compliance artifacts stay in exact
-  sync with the canonical repo-root artifacts they mirror. This repo uses the
-  policy to keep `devcovenant/requirements.lock` aligned with the canonical
-  root `requirements.lock`, `devcovenant/licenses/LICENSE` aligned with the
-  canonical root `LICENSE`, and `devcovenant/licenses/**` aligned with the
-  canonical root `licenses/**`. The package-owned
-  `devcovenant/licenses/README.md` stays outside the exact mirror contract.
-  Auto-fix rewrites the package mirror from the configured source paths,
-  preserves separately mirrored files that live inside mirrored directories,
-  preserves package-owned skipped paths, and removes stale mirrored files.
+  Ensure package-shipped artifacts that are true mirrors stay in exact sync
+  with their canonical repo-root sources. This repo uses the policy only for
+  `LICENSE => devcovenant/licenses/LICENSE`. Dependency lockfiles and
+  third-party license inventories under `devcovenant/licenses/**` are not
+  mirrors; they are generated from the packaged runtime dependency surface by
+  dependency-management. Auto-fix rewrites the configured exact mirrors from
+  their source paths, preserves separately mirrored files that live inside
+  mirrored directories, preserves package-owned skipped paths, and removes
+  stale mirrored files.
 metadata:
   id: package-artifact-mirror
   severity: error
   auto_fix: 'true'
   enforcement: active
   file_mirrors:
-    - requirements.lock=>devcovenant/requirements.lock
     - LICENSE=>devcovenant/licenses/LICENSE
-  dir_mirrors:
-    - licenses=>devcovenant/licenses
-  dir_skip_paths:
-    - licenses=>README.md
+  dir_mirrors: []
+  dir_skip_paths: []

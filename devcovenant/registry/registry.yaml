@@ -137,7 +137,7 @@ managed-docs:
       project_governance_headers: false
       import_seed: false
       authoritative_source: false
-      body_fingerprint: e2ca13bb565486904c0d8baba80d1d3bcb7928f5a88fafd854d9fa04c7121e40
+      body_fingerprint: 68e8fcec2645803b62b846443ddb97754359fcbaed0c2aa2bc250aa2058af3fb
 workflow_contract:
   schema_version: 4
   anchors:
@@ -8691,8 +8691,13 @@ policies:
       one hash-locked file to work across supported platforms or Python versions
       should declare exact marker pins for those cross-environment dependencies in
       the intent manifest so the runtime can materialize them even when the local
-      compile host would otherwise omit them. Artifact refresh remains
-      deterministic/idempotent.
+      compile host would otherwise omit them. Repositories may also declare one
+      auxiliary Python lock/license surface with
+      `auxiliary_lock_file`, `auxiliary_direct_dependency_files`,
+      `auxiliary_third_party_file`, and `auxiliary_licenses_dir`. That extra
+      surface is useful when a repo ships a package runtime/bootstrap lock that
+      must stay separate from the repo's own development lock. Artifact refresh
+      remains deterministic/idempotent.
     metadata:
       id: dependency-management
       severity: error
@@ -8705,14 +8710,22 @@ policies:
       dependency_dirs: ''
       dependency_roles: intent, resolved, package_manifest
       dependency_role_files: intent=>requirements.in, resolved=>requirements.lock,
-        package_manifest=>pyproject.toml
+        resolved=>devcovenant/runtime-requirements.lock, package_manifest=>pyproject.toml
       dependency_role_globs: ''
       dependency_role_dirs: ''
       third_party_file: licenses/THIRD_PARTY_LICENSES.md
       licenses_dir: licenses
       report_heading: '## License Report'
       python_lock_generate_hashes: 'True'
+      auxiliary_lock_file: devcovenant/runtime-requirements.lock
+      auxiliary_direct_dependency_files: pyproject.toml
+      auxiliary_third_party_file: devcovenant/licenses/THIRD_PARTY_LICENSES.md
+      auxiliary_licenses_dir: devcovenant/licenses
+      auxiliary_report_heading: '## License Report'
+      auxiliary_lock_generate_hashes: 'False'
       selector_roles: dependency
+      auxiliary_direct_dependency_globs: ''
+      auxiliary_direct_dependency_dirs: ''
     metadata_resolution:
       id:
         descriptor:
@@ -8818,18 +8831,21 @@ policies:
           values:
           - intent=>requirements.in
           - resolved=>requirements.lock
+          - resolved=>devcovenant/runtime-requirements.lock
           - package_manifest=>pyproject.toml
           behavior: append
         autogen_overlays:
           values:
           - intent=>requirements.in
           - resolved=>requirements.lock
+          - resolved=>devcovenant/runtime-requirements.lock
           - package_manifest=>pyproject.toml
           behavior: append
         effective:
           values:
           - intent=>requirements.in
           - resolved=>requirements.lock
+          - resolved=>devcovenant/runtime-requirements.lock
           - package_manifest=>pyproject.toml
       dependency_role_globs:
         descriptor:
@@ -8922,6 +8938,105 @@ policies:
         effective:
           values:
           - 'True'
+      auxiliary_lock_file:
+        descriptor:
+          values: []
+          behavior: base
+        profile_overlays:
+          values:
+          - devcovenant/runtime-requirements.lock
+          behavior: replace
+        autogen_overlays:
+          values:
+          - devcovenant/runtime-requirements.lock
+          behavior: replace
+          replaced_inherited_values:
+          - devcovenant/runtime-requirements.lock
+        effective:
+          values:
+          - devcovenant/runtime-requirements.lock
+      auxiliary_direct_dependency_files:
+        descriptor:
+          values: []
+          behavior: base
+        profile_overlays:
+          values:
+          - pyproject.toml
+          behavior: append
+        autogen_overlays:
+          values:
+          - pyproject.toml
+          behavior: append
+        effective:
+          values:
+          - pyproject.toml
+      auxiliary_third_party_file:
+        descriptor:
+          values: []
+          behavior: base
+        profile_overlays:
+          values:
+          - devcovenant/licenses/THIRD_PARTY_LICENSES.md
+          behavior: replace
+        autogen_overlays:
+          values:
+          - devcovenant/licenses/THIRD_PARTY_LICENSES.md
+          behavior: replace
+          replaced_inherited_values:
+          - devcovenant/licenses/THIRD_PARTY_LICENSES.md
+        effective:
+          values:
+          - devcovenant/licenses/THIRD_PARTY_LICENSES.md
+      auxiliary_licenses_dir:
+        descriptor:
+          values: []
+          behavior: base
+        profile_overlays:
+          values:
+          - devcovenant/licenses
+          behavior: replace
+        autogen_overlays:
+          values:
+          - devcovenant/licenses
+          behavior: replace
+          replaced_inherited_values:
+          - devcovenant/licenses
+        effective:
+          values:
+          - devcovenant/licenses
+      auxiliary_report_heading:
+        descriptor:
+          values: []
+          behavior: base
+        profile_overlays:
+          values:
+          - '## License Report'
+          behavior: replace
+        autogen_overlays:
+          values:
+          - '## License Report'
+          behavior: append
+        effective:
+          values:
+          - '## License Report'
+      auxiliary_lock_generate_hashes:
+        descriptor:
+          values:
+          - 'false'
+          behavior: base
+        profile_overlays:
+          values:
+          - 'False'
+          behavior: replace
+          replaced_inherited_values:
+          - 'false'
+        autogen_overlays:
+          values:
+          - 'False'
+          behavior: append
+        effective:
+          values:
+          - 'False'
       selector_roles:
         descriptor:
           values:
@@ -8952,6 +9067,12 @@ policies:
         effective:
           values:
           - 'false'
+      auxiliary_direct_dependency_globs:
+        effective:
+          values: []
+      auxiliary_direct_dependency_dirs:
+        effective:
+          values: []
     metadata_warnings: []
     runtime_actions:
     - id: refresh-all
@@ -8979,6 +9100,7 @@ policies:
       dependency_role_files: &id072
       - intent=>requirements.in
       - resolved=>requirements.lock
+      - resolved=>devcovenant/runtime-requirements.lock
       - package_manifest=>pyproject.toml
       dependency_role_globs: ''
       dependency_role_dirs: ''
@@ -8986,7 +9108,15 @@ policies:
       licenses_dir: licenses
       report_heading: '## License Report'
       python_lock_generate_hashes: true
+      auxiliary_lock_file: devcovenant/runtime-requirements.lock
+      auxiliary_direct_dependency_files: pyproject.toml
+      auxiliary_third_party_file: devcovenant/licenses/THIRD_PARTY_LICENSES.md
+      auxiliary_licenses_dir: devcovenant/licenses
+      auxiliary_report_heading: '## License Report'
+      auxiliary_lock_generate_hashes: false
       selector_roles: dependency
+      auxiliary_direct_dependency_globs: ''
+      auxiliary_direct_dependency_dirs: ''
     runtime_config_overrides: {}
     runtime_effective_options:
       id: dependency-management
@@ -9001,28 +9131,37 @@ policies:
       licenses_dir: licenses
       report_heading: '## License Report'
       python_lock_generate_hashes: true
+      auxiliary_lock_file: devcovenant/runtime-requirements.lock
+      auxiliary_direct_dependency_files: pyproject.toml
+      auxiliary_third_party_file: devcovenant/licenses/THIRD_PARTY_LICENSES.md
+      auxiliary_licenses_dir: devcovenant/licenses
+      auxiliary_report_heading: '## License Report'
+      auxiliary_lock_generate_hashes: false
       selector_roles: dependency
     assets:
+    - devcovenant/licenses
+    - devcovenant/licenses/THIRD_PARTY_LICENSES.md
+    - devcovenant/runtime-requirements.lock
     - licenses/THIRD_PARTY_LICENSES.md
+    - resolved=>devcovenant/runtime-requirements.lock
     origin: builtin
     script_exists: true
-    hash: 7b79dfeba1197ff31070c0584d0db6605298d58960b6e97191ebcea729cee4bf
+    hash: a054d485df226cc28d0367ba296e7a167a897f64a79105cc11245f9e0d4b81fd
     script_path: builtin/dependency_management.py
   package-artifact-mirror:
     enabled: true
     custom: true
     description: Package Artifact Mirror
     policy_text: |-
-      Ensure package-shipped dependency and compliance artifacts stay in exact
-      sync with the canonical repo-root artifacts they mirror. This repo uses the
-      policy to keep `devcovenant/requirements.lock` aligned with the canonical
-      root `requirements.lock`, `devcovenant/licenses/LICENSE` aligned with the
-      canonical root `LICENSE`, and `devcovenant/licenses/**` aligned with the
-      canonical root `licenses/**`. The package-owned
-      `devcovenant/licenses/README.md` stays outside the exact mirror contract.
-      Auto-fix rewrites the package mirror from the configured source paths,
-      preserves separately mirrored files that live inside mirrored directories,
-      preserves package-owned skipped paths, and removes stale mirrored files.
+      Ensure package-shipped artifacts that are true mirrors stay in exact sync
+      with their canonical repo-root sources. This repo uses the policy only for
+      `LICENSE => devcovenant/licenses/LICENSE`. Dependency lockfiles and
+      third-party license inventories under `devcovenant/licenses/**` are not
+      mirrors; they are generated from the packaged runtime dependency surface by
+      dependency-management. Auto-fix rewrites the configured exact mirrors from
+      their source paths, preserves separately mirrored files that live inside
+      mirrored directories, preserves package-owned skipped paths, and removes
+      stale mirrored files.
     metadata:
       id: package-artifact-mirror
       severity: error
@@ -9030,9 +9169,9 @@ policies:
       enforcement: active
       enabled: 'true'
       custom: 'true'
-      file_mirrors: requirements.lock=>devcovenant/requirements.lock, LICENSE=>devcovenant/licenses/LICENSE
-      dir_mirrors: licenses=>devcovenant/licenses
-      dir_skip_paths: licenses=>README.md
+      file_mirrors: LICENSE=>devcovenant/licenses/LICENSE
+      dir_mirrors: ''
+      dir_skip_paths: ''
     metadata_resolution:
       id:
         descriptor:
@@ -9073,29 +9212,23 @@ policies:
       file_mirrors:
         descriptor:
           values:
-          - requirements.lock=>devcovenant/requirements.lock
           - LICENSE=>devcovenant/licenses/LICENSE
           behavior: base
         effective:
           values:
-          - requirements.lock=>devcovenant/requirements.lock
           - LICENSE=>devcovenant/licenses/LICENSE
       dir_mirrors:
         descriptor:
-          values:
-          - licenses=>devcovenant/licenses
+          values: []
           behavior: base
         effective:
-          values:
-          - licenses=>devcovenant/licenses
+          values: []
       dir_skip_paths:
         descriptor:
-          values:
-          - licenses=>README.md
+          values: []
           behavior: base
         effective:
-          values:
-          - licenses=>README.md
+          values: []
       custom:
         runtime_custom_source:
           values:
@@ -9129,11 +9262,9 @@ policies:
       enforcement: active
       enabled: true
       custom: true
-      file_mirrors: &id073
-      - requirements.lock=>devcovenant/requirements.lock
-      - LICENSE=>devcovenant/licenses/LICENSE
-      dir_mirrors: licenses=>devcovenant/licenses
-      dir_skip_paths: licenses=>README.md
+      file_mirrors: LICENSE=>devcovenant/licenses/LICENSE
+      dir_mirrors: ''
+      dir_skip_paths: ''
     runtime_config_overrides: {}
     runtime_effective_options:
       id: package-artifact-mirror
@@ -9142,17 +9273,12 @@ policies:
       enforcement: active
       enabled: true
       custom: true
-      file_mirrors: *id073
-      dir_mirrors: licenses=>devcovenant/licenses
-      dir_skip_paths: licenses=>README.md
+      file_mirrors: LICENSE=>devcovenant/licenses/LICENSE
     assets:
     - LICENSE=>devcovenant/licenses/LICENSE
-    - licenses=>README.md
-    - licenses=>devcovenant/licenses
-    - requirements.lock=>devcovenant/requirements.lock
     origin: custom
     script_exists: true
-    hash: 6403c5665ae317184c60df752f2071c3623b4f8b2c13ad2fe2b7ff74cba5a25a
+    hash: 4d3da33188c3e0c3be2abe6d202c7cb939720d7d1b9f59fb8b77c498e7d810f1
     script_path: custom/package_artifact_mirror.py
 profiles:
   csharp:
@@ -11973,8 +12099,16 @@ profiles:
         dependency_role_files:
         - intent=>requirements.in
         - resolved=>requirements.lock
+        - resolved=>devcovenant/runtime-requirements.lock
         - package_manifest=>pyproject.toml
         python_lock_generate_hashes: true
+        auxiliary_lock_file: devcovenant/runtime-requirements.lock
+        auxiliary_direct_dependency_files:
+        - pyproject.toml
+        auxiliary_third_party_file: devcovenant/licenses/THIRD_PARTY_LICENSES.md
+        auxiliary_licenses_dir: devcovenant/licenses
+        auxiliary_report_heading: '## License Report'
+        auxiliary_lock_generate_hashes: false
       managed-environment:
         expected_paths:
         - .venv
@@ -12325,7 +12459,7 @@ inventory:
     - devcovenant/config.yaml
     - devcovenant/README.md
     - devcovenant/VERSION
-    - devcovenant/requirements.lock
+    - devcovenant/runtime-requirements.lock
     - devcovenant/licenses/LICENSE
     - devcovenant/licenses/README.md
     - devcovenant/licenses/THIRD_PARTY_LICENSES.md

@@ -1,10 +1,11 @@
 # Third-Party Licenses
 
-This report lists direct third-party dependencies declared in dependency
-manifests and the corresponding license texts stored under `licenses/`.
+This report lists the direct third-party dependencies declared in
+the tracked dependency manifests and the corresponding license
+texts stored under `licenses/`.
 
 ## License Report
-- `devcovenant/requirements.lock`
+- `pyproject.toml`
 - `requirements.in`
 - `requirements.lock`
 

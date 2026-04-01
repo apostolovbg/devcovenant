@@ -350,7 +350,7 @@ def _unit_test_global_governance_workflow_asset_stays_generic() -> None:
         == "Install DevCovenant runtime dependencies"
     )
     install_run = str(install_step.get("run") or "").strip()
-    assert "devcovenant/requirements.lock" in install_run
+    assert "devcovenant/runtime-requirements.lock" in install_run
     assert "python -m pip install --upgrade pip" not in install_run
     assert "python -m pip install -r requirements.lock" not in install_run
 

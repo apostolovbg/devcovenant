@@ -14,13 +14,13 @@ body: |-
 
   ## Overview
   Use this README as the operator guide to the installed devcovenant runtime in
-  this repository.
+  the governed project.
   Keep policy source in `AGENTS.md`, durable requirements in `SPEC.md`, and
   active execution work in `PLAN.md` when those docs are present.
 
   ## Quick Start
   Explain the smallest correct command flow for using DevCovenant in this
-  repository.
+  project.
   Include `install`, config review, `deploy`, and the standard gate sequence
   when they apply.
 

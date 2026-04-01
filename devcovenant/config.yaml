@@ -83,7 +83,7 @@ profiles:
     - devcovenant/refresh.py
     - devcovenant/uninstall.py
     - devcovenant/undeploy.py
-    - devcovenant/requirements.lock
+    - devcovenant/runtime-requirements.lock
     - devcovenant/registry
 
 # -------------------------------------------------------------------
@@ -250,7 +250,7 @@ clean:
 
 # Activate the `github` profile to generate the standard GitHub Actions CI workflow.
 
-# The builtin github base bootstraps DevCovenant itself from the shipped `devcovenant/requirements.lock`, not from project dependency files.
+# The builtin github base bootstraps DevCovenant itself from the shipped `devcovenant/runtime-requirements.lock`, not from project dependency files.
 
 # Active profiles may also contribute reusable ci_and_test fragments.
 
@@ -723,6 +723,15 @@ autogen_metadata_overlays:
     - test
     - tested
   dependency-management:
+    auxiliary_direct_dependency_files:
+    - pyproject.toml
+    auxiliary_licenses_dir: devcovenant/licenses
+    auxiliary_lock_file: devcovenant/runtime-requirements.lock
+    auxiliary_lock_generate_hashes:
+    - 'False'
+    auxiliary_report_heading:
+    - '## License Report'
+    auxiliary_third_party_file: devcovenant/licenses/THIRD_PARTY_LICENSES.md
     dependency_dirs: []
     dependency_files: []
     dependency_globs: []
@@ -730,6 +739,7 @@ autogen_metadata_overlays:
     dependency_role_files:
     - intent=>requirements.in
     - resolved=>requirements.lock
+    - resolved=>devcovenant/runtime-requirements.lock
     - package_manifest=>pyproject.toml
     dependency_role_globs: []
     dependency_roles:

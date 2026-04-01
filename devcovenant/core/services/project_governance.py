@@ -37,8 +37,8 @@ _DEFAULT_UNRELEASED_HEADING = "## Unreleased"
 _DEFAULT_CHANGELOG_FILE = "CHANGELOG.md"
 _DEFAULT_PROJECT_NAME = "Project Name"
 _DEFAULT_PROJECT_DESCRIPTION = (
-    "Describe the project this repository ships: what it does, who it "
-    "helps, and what problem it solves."
+    "Describe the project: what it does, who it helps, and what problem "
+    "it solves."
 )
 _DEFAULT_COPYRIGHT_NOTICE = "YEAR Legal Owner Name"
 _LOG_MARKER = "## Log changes here"

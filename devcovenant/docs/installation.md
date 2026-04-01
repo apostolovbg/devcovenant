@@ -149,7 +149,7 @@ Use it only when you are truly removing DevCovenant from the repo.
 The published package intentionally ships the runtime-facing docs and profile
 assets that DevCovenant needs at install time:
 - the packaged `devcovenant/README.md` and `devcovenant/VERSION`
-- the packaged `devcovenant/requirements.lock` used when the builtin
+- the packaged `devcovenant/runtime-requirements.lock` used when the builtin
   `github` profile bootstraps DevCovenant
 - the packaged `devcovenant/licenses/LICENSE`
 - the packaged `devcovenant/licenses/**` license files

@@ -25,8 +25,13 @@ text: |
   one hash-locked file to work across supported platforms or Python versions
   should declare exact marker pins for those cross-environment dependencies in
   the intent manifest so the runtime can materialize them even when the local
-  compile host would otherwise omit them. Artifact refresh remains
-  deterministic/idempotent.
+  compile host would otherwise omit them. Repositories may also declare one
+  auxiliary Python lock/license surface with
+  `auxiliary_lock_file`, `auxiliary_direct_dependency_files`,
+  `auxiliary_third_party_file`, and `auxiliary_licenses_dir`. That extra
+  surface is useful when a repo ships a package runtime/bootstrap lock that
+  must stay separate from the repo's own development lock. Artifact refresh
+  remains deterministic/idempotent.
 metadata:
   id: dependency-management
   severity: error
@@ -46,6 +51,12 @@ metadata:
   licenses_dir: ''
   report_heading: ''
   python_lock_generate_hashes: 'false'
+  auxiliary_lock_file: ''
+  auxiliary_direct_dependency_files: []
+  auxiliary_third_party_file: ''
+  auxiliary_licenses_dir: ''
+  auxiliary_report_heading: ''
+  auxiliary_lock_generate_hashes: 'false'
   selector_roles: dependency
 runtime_actions:
   - id: refresh-all

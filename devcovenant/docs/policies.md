@@ -1,5 +1,5 @@
 # Policies
-**Last Updated:** 2026-03-31
+**Last Updated:** 2026-04-01
 **Project Version:** 1.0.1.dev1
 
 ## Overview
@@ -113,6 +113,15 @@ versions, declare exact marker pins for those cross-environment dependencies
 in the intent manifest. That gives the runtime enough information to
 materialize them with real hashes even when the local compile host would
 otherwise omit them.
+The same policy can also own more than one dependency surface when a project
+needs separate artifacts for different jobs.
+For example, one surface can keep developer/build dependency artifacts local,
+while a second packaged runtime surface is generated separately from
+`pyproject.toml` into `devcovenant/runtime-requirements.lock` and
+`devcovenant/licenses/THIRD_PARTY_LICENSES.md`.
+That split keeps the shipped package surface smaller than a developer/build
+toolchain while still letting one policy command refresh both surfaces
+coherently.
 
 ## Version-Governance Adapters
 Version-governance adapters define how version schemes are parsed,

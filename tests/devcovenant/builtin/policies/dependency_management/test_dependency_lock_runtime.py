@@ -492,6 +492,86 @@ def _unit_test_hash_mode_semantics_include_hash_lines() -> None:
     )
 
 
+def _unit_test_input_reference_comments_scrub_nested_tmp_paths() -> None:
+    """Nested input-reference comments should use the configured label."""
+
+    module = importlib.import_module(MODULE)
+    normalized = module._normalise_input_reference_comments(
+        [
+            "packaging==26.0",
+            "    # via",
+            "    #   -r /tmp/runtime-requirements.in",
+            "    #   build",
+            "pre-commit==4.5.1",
+            "    # via -r /tmp/runtime-requirements.in",
+        ],
+        input_name="pyproject.toml",
+    )
+
+    assert normalized == [
+        "packaging==26.0",
+        "    # via",
+        "    #   -r pyproject.toml",
+        "    #   build",
+        "pre-commit==4.5.1",
+        "    # via -r pyproject.toml",
+    ]
+
+
+def _unit_test_refresh_runtime_rewrites_normalized_comment_only_drift() -> (
+    None
+):
+    """Comment-only normalization should still rewrite the lock file."""
+
+    module = importlib.import_module(MODULE)
+    with tempfile.TemporaryDirectory() as temp_dir:
+        repo_root = Path(temp_dir)
+        (repo_root / "requirements.in").write_text(
+            "packaging>=26.0\n",
+            encoding="utf-8",
+        )
+        (repo_root / "requirements.lock").write_text(
+            "packaging==26.0\n"
+            "    # via\n"
+            "    #   -r /tmp/runtime-requirements.in\n"
+            "    #   build\n",
+            encoding="utf-8",
+        )
+        original_compile = module._compile_requirements_lock
+
+        def _fake_compile(_repo_root, _requirements_in, **_kwargs):
+            """Return the normalized comment form for the same resolved pin."""
+
+            return module.LockFilePieces(
+                [
+                    "packaging==26.0",
+                    "    # via",
+                    "    #   -r requirements.in",
+                    "    #   build",
+                ]
+            )
+
+        module._compile_requirements_lock = _fake_compile
+        try:
+            result = module._refresh_python_requirements_lock(repo_root)
+        finally:
+            module._compile_requirements_lock = original_compile
+
+        assert result.attempted is True
+        assert result.changed is True
+        assert result.message == (
+            "Normalized requirements.lock without changing resolved pins."
+        )
+        assert (repo_root / "requirements.lock").read_text(
+            encoding="utf-8"
+        ) == (
+            "packaging==26.0\n"
+            "    # via\n"
+            "    #   -r requirements.in\n"
+            "    #   build\n"
+        )
+
+
 def _unit_test_preserve_exact_marker_pins_adds_real_hashes() -> None:
     """Missing exact marker pins should gain real hash lines in hash mode."""
 
@@ -625,6 +705,14 @@ class GeneratedUnittestCases(unittest.TestCase):
     def test_hash_mode_semantics_include_hash_lines(self):
         """Run hash-aware lock semantics assertions."""
         _unit_test_hash_mode_semantics_include_hash_lines()
+
+    def test_input_reference_comments_scrub_nested_tmp_paths(self):
+        """Run nested input-reference comment normalization assertions."""
+        _unit_test_input_reference_comments_scrub_nested_tmp_paths()
+
+    def test_refresh_runtime_rewrites_normalized_comment_only_drift(self):
+        """Run comment-only normalized lock rewrite assertions."""
+        _unit_test_refresh_runtime_rewrites_normalized_comment_only_drift()
 
     def test_preserve_exact_marker_pins_adds_real_hashes(self):
         """Run exact marker pin hash-preservation assertions."""

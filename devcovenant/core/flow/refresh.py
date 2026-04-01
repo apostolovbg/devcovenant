@@ -678,7 +678,7 @@ def _render_config_yaml(payload: dict[str, object]) -> str:
         ),
         (
             "# The builtin github base bootstraps DevCovenant itself from "
-            "the shipped `devcovenant/requirements.lock`, not from "
+            "the shipped `devcovenant/runtime-requirements.lock`, not from "
             "project dependency files."
         ),
         (

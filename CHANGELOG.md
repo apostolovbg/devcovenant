@@ -6,7 +6,7 @@
 **Maintenance Stance:** active
 **Compatibility Policy:** forward-only
 **Versioning Mode:** versioned
-**Last Updated:** 2026-03-31
+**Last Updated:** 2026-04-01
 **DevCovenant Version:** 1.0.1.dev1
 
 <!-- DEVCOV:BEGIN -->
@@ -60,6 +60,40 @@ Example:
 
 ## Version 1.0.1.dev1
 
+- 2026-04-01:
+  Change: generalized the remaining package-doc wording, documented the split
+    dependency surfaces in the policy and registry docs, and hardened
+    dependency refresh against normalized comment-only lock drift and macOS
+    temp-root alias paths.
+  Why: keep the current session focused on the actual repair, remove the last
+    `this repository` style leaks from shipped package docs, and stop
+    refresh/tests from failing on `/private` versus `/var` temp paths or
+    harmless lock-comment normalization.
+  Impact: clarified the shipped docs to talk about the project and governed
+    repository generically, made the dependency artifact split clearer at the
+    routed docs, and kept dependency refresh stable when only lock comments or
+    macOS temp-root aliases differ.
+  Files:
+  CHANGELOG.md
+  devcovenant/builtin/policies/dependency_management/\
+    dependency_lock_runtime.py
+  devcovenant/builtin/policies/dependency_management/\
+    dependency_management.py
+  devcovenant/builtin/profiles/global/assets/devcovenant/README.yaml
+  devcovenant/core/services/project_governance.py
+  devcovenant/custom/profiles/devcovrepo/assets/docs/config.md
+  devcovenant/custom/profiles/devcovrepo/assets/docs/policies.md
+  devcovenant/custom/profiles/devcovrepo/assets/docs/profiles.md
+  devcovenant/custom/profiles/devcovrepo/assets/docs/registry.md
+  devcovenant/custom/profiles/devcovrepo/assets/docs/workflow.md
+  devcovenant/docs/config.md
+  devcovenant/docs/policies.md
+  devcovenant/docs/profiles.md
+  devcovenant/docs/project_governance.md
+  devcovenant/docs/registry.md
+  devcovenant/docs/workflow.md
+  devcovenant/licenses/README.md
+  devcovenant/registry/registry.yaml
 - 2026-04-01:
   Change: materialized exact cross-platform and cross-version marker pins in
     `requirements.in`, refreshed the hash-locked requirements artifacts, and

@@ -6,6 +6,7 @@ import hashlib
 import importlib.util
 import json
 import os
+import re
 import shutil
 import subprocess  # nosec B404
 import sys
@@ -53,6 +54,26 @@ _PYTHON_LOCK_OPTION_TOKENS = {
     "-i",
     "-r",
 }
+
+
+def _normalize_repo_relative_path_token(raw_value: object) -> str:
+    """Return one normalized repo-relative path token."""
+
+    return str(raw_value or "").replace("\\", "/").strip()
+
+
+def _optional_bool_metadata(
+    resolved: Dict[str, object],
+    key: str,
+) -> bool:
+    """Return one optional boolean metadata flag."""
+
+    raw_value = str(resolved.get(key, "false")).strip()
+    if raw_value.lower() not in {"true", "false"}:
+        raise ValueError(
+            f"dependency-management.metadata.{key} must be boolean."
+        )
+    return raw_value.lower() == "true"
 
 
 @dataclass(frozen=True)
@@ -135,6 +156,8 @@ def _normalise_header_for_mode(
     lines: Sequence[str],
     *,
     generate_hashes: bool,
+    output_name: str = "requirements.lock",
+    input_name: str = "requirements.in",
 ) -> List[str]:
     """Stabilise pip-compile banners across Python versions and modes."""
 
@@ -145,8 +168,8 @@ def _normalise_header_for_mode(
     command_tokens.extend(
         [
             "--strip-extras",
-            "--output-file=requirements.lock",
-            "requirements.in",
+            f"--output-file={output_name}",
+            input_name,
         ]
     )
     target = "#    " + " ".join(command_tokens)
@@ -193,6 +216,29 @@ def _strip_python_lock_option_lines(lines: Sequence[str]) -> List[str]:
     ]
 
 
+def _normalise_input_reference_comments(
+    lines: Sequence[str],
+    *,
+    input_name: str,
+) -> List[str]:
+    """Rewrite `# via -r ...` comments to the configured input label."""
+
+    normalized: List[str] = []
+    for raw_line in lines:
+        raw_text = str(raw_line)
+        match = re.match(
+            r"^(?P<indent>\s*#\s*)(?:(?P<via>via)\s+)?-r\s+.+$",
+            raw_text,
+        )
+        if match is not None:
+            prefix = match.group("indent")
+            via = "via " if match.group("via") else ""
+            normalized.append(f"{prefix}{via}-r {input_name}")
+            continue
+        normalized.append(raw_text)
+    return normalized
+
+
 def _normalize_python_lock_semantics(lines: Sequence[str]) -> List[str]:
     """Compare Python lockfiles by resolved pins, not banner formatting."""
 
@@ -228,11 +274,13 @@ def _compile_requirements_lock(
     *,
     generate_hashes: bool = False,
     existing_lock_lines: Sequence[str] | None = None,
+    output_name: str = "requirements.lock",
+    input_name: str = "requirements.in",
 ) -> LockFilePieces:
     """Generate normalised requirements.lock content without touching disk."""
 
     with tempfile.TemporaryDirectory() as tmpdir:
-        tmp_lock = Path(tmpdir) / "requirements.lock"
+        tmp_lock = Path(tmpdir) / output_name
         _run_pip_compile(
             repo_root,
             requirements_in,
@@ -242,13 +290,19 @@ def _compile_requirements_lock(
         normalised = _normalise_header_for_mode(
             tmp_lock.read_text().splitlines(),
             generate_hashes=generate_hashes,
+            output_name=output_name,
+            input_name=input_name,
         )
-        cleaned = _strip_python_lock_option_lines(normalised)
+        cleaned = _normalise_input_reference_comments(
+            _strip_python_lock_option_lines(normalised),
+            input_name=input_name,
+        )
     with_backports = _preserve_exact_marker_pins(
         cleaned,
         requirements_in,
         existing_lock_lines=existing_lock_lines,
         generate_hashes=generate_hashes,
+        source_display_name=input_name,
     )
     return _split_last_updated(with_backports)
 
@@ -259,6 +313,7 @@ def _preserve_exact_marker_pins(
     *,
     existing_lock_lines: Sequence[str] | None = None,
     generate_hashes: bool = False,
+    source_display_name: str = "requirements.in",
 ) -> List[str]:
     """Keep exact conditional backport pins visible in the normalized lock."""
 
@@ -289,10 +344,16 @@ def _preserve_exact_marker_pins(
             hashes = existing_hashes.get(pin_line)
             if not hashes:
                 hashes = _fetch_pypi_release_hashes(requirement)
-            result.extend(_build_hashed_requirement_block(pin_line, hashes))
+            result.extend(
+                _build_hashed_requirement_block(
+                    pin_line,
+                    hashes,
+                    source_display_name=source_display_name,
+                )
+            )
         else:
             result.append(pin_line)
-            result.append("    # via -r requirements.in")
+            result.append(f"    # via -r {source_display_name}")
     return result
 
 
@@ -407,6 +468,8 @@ def _fetch_pypi_release_hashes(requirement: Requirement) -> List[str]:
 def _build_hashed_requirement_block(
     requirement_line: str,
     hashes: Sequence[str],
+    *,
+    source_display_name: str = "requirements.in",
 ) -> List[str]:
     """Return one pip-compile-style hashed requirement block."""
 
@@ -422,7 +485,7 @@ def _build_hashed_requirement_block(
     for index, digest in enumerate(unique_hashes):
         suffix = " \\" if index < last_index else ""
         block.append(f"    --hash=sha256:{digest}{suffix}")
-    block.append("    # via -r requirements.in")
+    block.append(f"    # via -r {source_display_name}")
     return block
 
 
@@ -453,7 +516,7 @@ def _run_pip_compile(
                 "--strip-extras",
                 "--output-file",
                 str(output_path),
-                requirements_in.name,
+                str(requirements_in),
             ),
             extra_env={"PIP_TOOLS_CACHE_DIR": cache_dir},
         )
@@ -487,6 +550,9 @@ def _refresh_python_requirements_lock(
         generate_hashes=generate_hashes,
         existing_lock_lines=previous.body,
     )
+    compiled_cleaned = LockFilePieces(
+        _strip_python_lock_option_lines(compiled.body)
+    )
     previous_cleaned = LockFilePieces(
         _strip_python_lock_option_lines(previous.body)
     )
@@ -494,12 +560,12 @@ def _refresh_python_requirements_lock(
         previous_cleaned.body,
         generate_hashes=generate_hashes,
     ) == _normalize_python_lock_semantics_for_mode(
-        compiled.body,
+        compiled_cleaned.body,
         generate_hashes=generate_hashes,
     ):
         if previous_cleaned.body != previous.body:
             lock_path.write_text(
-                "\n".join(compiled.body) + "\n",
+                "\n".join(compiled_cleaned.body) + "\n",
                 encoding="utf-8",
             )
             return LockHandlerResult(
@@ -509,6 +575,20 @@ def _refresh_python_requirements_lock(
                 message=(
                     "Normalized requirements.lock by removing "
                     "environment-specific pip option lines."
+                ),
+            )
+        if previous.body != compiled_cleaned.body:
+            lock_path.write_text(
+                "\n".join(compiled_cleaned.body) + "\n",
+                encoding="utf-8",
+            )
+            return LockHandlerResult(
+                "requirements.lock",
+                changed=True,
+                attempted=True,
+                message=(
+                    "Normalized requirements.lock without changing "
+                    "resolved pins."
                 ),
             )
         return LockHandlerResult(
@@ -523,6 +603,147 @@ def _refresh_python_requirements_lock(
         changed=True,
         attempted=True,
         message="Updated requirements.lock.",
+    )
+
+
+def _compile_lock_from_dependency_files(
+    repo_root: Path,
+    *,
+    dependency_files: Sequence[str],
+    output_name: str,
+    generate_hashes: bool,
+    existing_lock_lines: Sequence[str] | None = None,
+    input_display_name: str,
+) -> LockFilePieces:
+    """Compile one lock from dependency strings declared in manifest files."""
+
+    dependency_lines: List[str] = []
+    for raw_path in dependency_files:
+        path_token = _normalize_repo_relative_path_token(raw_path)
+        if not path_token:
+            continue
+        manifest_path = repo_root / path_token
+        dependency_lines.extend(
+            dependency_management._direct_dependency_strings_from_file(
+                manifest_path
+            )
+        )
+    if not dependency_lines:
+        return LockFilePieces([])
+
+    with tempfile.TemporaryDirectory() as tmpdir:
+        tmp_in = Path(tmpdir) / "runtime-requirements.in"
+        tmp_in.write_text(
+            "\n".join(dependency_lines).rstrip() + "\n",
+            encoding="utf-8",
+        )
+        return _compile_requirements_lock(
+            repo_root,
+            tmp_in,
+            generate_hashes=generate_hashes,
+            existing_lock_lines=existing_lock_lines,
+            output_name=output_name,
+            input_name=input_display_name,
+        )
+
+
+def _refresh_auxiliary_python_lock(
+    repo_root: Path,
+    *,
+    lock_file: str,
+    direct_dependency_files: Sequence[str],
+    generate_hashes: bool = False,
+) -> LockHandlerResult:
+    """Refresh one auxiliary Python lock from configured dependency files."""
+
+    normalized_lock = _normalize_repo_relative_path_token(lock_file)
+    lock_path = repo_root / normalized_lock
+    input_display_name = (
+        _normalize_repo_relative_path_token(direct_dependency_files[0])
+        if len(direct_dependency_files) == 1
+        else "configured dependency inputs"
+    )
+    previous = (
+        _split_last_updated(lock_path.read_text().splitlines())
+        if lock_path.exists()
+        else LockFilePieces([])
+    )
+    compiled = _compile_lock_from_dependency_files(
+        repo_root,
+        dependency_files=direct_dependency_files,
+        output_name=Path(normalized_lock).name,
+        generate_hashes=generate_hashes,
+        existing_lock_lines=previous.body,
+        input_display_name=input_display_name,
+    )
+    if not compiled.body:
+        return LockHandlerResult(
+            normalized_lock,
+            changed=False,
+            attempted=False,
+            message=(
+                "Skipped: no dependency strings were found for "
+                f"`{normalized_lock}`."
+            ),
+        )
+
+    compiled_cleaned = LockFilePieces(
+        _strip_python_lock_option_lines(compiled.body)
+    )
+    previous_cleaned = LockFilePieces(
+        _strip_python_lock_option_lines(previous.body)
+    )
+    if _normalize_python_lock_semantics_for_mode(
+        previous_cleaned.body,
+        generate_hashes=generate_hashes,
+    ) == _normalize_python_lock_semantics_for_mode(
+        compiled_cleaned.body,
+        generate_hashes=generate_hashes,
+    ):
+        if previous_cleaned.body != previous.body:
+            lock_path.parent.mkdir(parents=True, exist_ok=True)
+            lock_path.write_text(
+                "\n".join(compiled_cleaned.body) + "\n",
+                encoding="utf-8",
+            )
+            return LockHandlerResult(
+                normalized_lock,
+                changed=True,
+                attempted=True,
+                message=(
+                    f"Normalized {normalized_lock} by removing "
+                    "environment-specific pip option lines."
+                ),
+            )
+        if previous.body != compiled_cleaned.body:
+            lock_path.parent.mkdir(parents=True, exist_ok=True)
+            lock_path.write_text(
+                "\n".join(compiled_cleaned.body) + "\n",
+                encoding="utf-8",
+            )
+            return LockHandlerResult(
+                normalized_lock,
+                changed=True,
+                attempted=True,
+                message=(
+                    f"Normalized {normalized_lock} without changing "
+                    "resolved pins."
+                ),
+            )
+        return LockHandlerResult(
+            normalized_lock,
+            changed=False,
+            attempted=True,
+            message="No content change after pip-compile.",
+        )
+
+    lock_path.parent.mkdir(parents=True, exist_ok=True)
+    lock_path.write_text("\n".join(compiled.body) + "\n", encoding="utf-8")
+    return LockHandlerResult(
+        normalized_lock,
+        changed=True,
+        attempted=True,
+        message=f"Updated {normalized_lock}.",
     )
 
 
@@ -944,21 +1165,86 @@ def _resolve_dependency_metadata(repo_root: Path) -> Dict[str, object]:
         raise ValueError(
             "dependency-management.metadata.report_heading is missing."
         )
-    raw_hashes = str(
-        resolved.get("python_lock_generate_hashes", "false")
-    ).strip()
-    if raw_hashes.lower() not in {"true", "false"}:
-        raise ValueError(
-            "dependency-management.metadata.python_lock_generate_hashes "
-            "must be boolean."
-        )
-    return {
+    metadata: Dict[str, object] = {
         "resolved_dependency_files": resolved_role_files,
         "third_party_file": third_party_file,
         "licenses_dir": licenses_dir,
         "report_heading": report_heading,
-        "python_lock_generate_hashes": raw_hashes.lower() == "true",
+        "python_lock_generate_hashes": _optional_bool_metadata(
+            resolved,
+            "python_lock_generate_hashes",
+        ),
     }
+
+    auxiliary_lock_file = _normalize_repo_relative_path_token(
+        resolved.get("auxiliary_lock_file", "")
+    )
+    auxiliary_third_party_file = _normalize_repo_relative_path_token(
+        resolved.get("auxiliary_third_party_file", "")
+    )
+    auxiliary_licenses_dir = _normalize_repo_relative_path_token(
+        resolved.get("auxiliary_licenses_dir", "")
+    )
+    auxiliary_report_heading = str(
+        resolved.get("auxiliary_report_heading", "")
+    ).strip()
+    auxiliary_direct_dependency_files = [
+        _normalize_repo_relative_path_token(entry)
+        for entry in metadata_value_list(
+            resolved.get("auxiliary_direct_dependency_files", [])
+        )
+        if _normalize_repo_relative_path_token(entry)
+    ]
+    auxiliary_fields = [
+        auxiliary_lock_file,
+        auxiliary_third_party_file,
+        auxiliary_licenses_dir,
+        auxiliary_report_heading,
+        *auxiliary_direct_dependency_files,
+    ]
+    if any(auxiliary_fields):
+        if not auxiliary_lock_file:
+            raise ValueError(
+                "dependency-management.metadata.auxiliary_lock_file is "
+                "missing."
+            )
+        if auxiliary_lock_file not in resolved_role_files:
+            raise ValueError(
+                "dependency-management.metadata.auxiliary_lock_file must be "
+                "listed in dependency-management `resolved` selectors."
+            )
+        if not auxiliary_third_party_file:
+            raise ValueError(
+                "dependency-management.metadata.auxiliary_third_party_file "
+                "is missing."
+            )
+        if not auxiliary_licenses_dir:
+            raise ValueError(
+                "dependency-management.metadata.auxiliary_licenses_dir is "
+                "missing."
+            )
+        if not auxiliary_report_heading:
+            raise ValueError(
+                "dependency-management.metadata.auxiliary_report_heading "
+                "is missing."
+            )
+        if not auxiliary_direct_dependency_files:
+            raise ValueError(
+                "dependency-management.metadata."
+                "auxiliary_direct_dependency_files is missing."
+            )
+        metadata["auxiliary_surface"] = {
+            "lock_file": auxiliary_lock_file,
+            "third_party_file": auxiliary_third_party_file,
+            "licenses_dir": auxiliary_licenses_dir,
+            "report_heading": auxiliary_report_heading,
+            "direct_dependency_files": auxiliary_direct_dependency_files,
+            "generate_hashes": _optional_bool_metadata(
+                resolved,
+                "auxiliary_lock_generate_hashes",
+            ),
+        }
+    return metadata
 
 
 def refresh_all(
@@ -973,11 +1259,20 @@ def refresh_all(
     python_lock_generate_hashes = bool(
         metadata.get("python_lock_generate_hashes")
     )
+    auxiliary_surface = metadata.get("auxiliary_surface")
+    if not isinstance(auxiliary_surface, dict):
+        auxiliary_surface = None
     targets = [
         lock_name
         for lock_name in LOCKFILE_HANDLERS
         if lock_name in dependency_files
     ]
+    if auxiliary_surface is not None:
+        auxiliary_lock_file = str(
+            auxiliary_surface.get("lock_file", "")
+        ).strip()
+        if auxiliary_lock_file and auxiliary_lock_file not in targets:
+            targets.append(auxiliary_lock_file)
     results: List[LockHandlerResult] = []
     changed_lockfiles: List[str] = []
     requested_dependency_files: list[str] = []
@@ -1002,7 +1297,36 @@ def refresh_all(
                 )
             )
             continue
-        if lock_name == "requirements.lock":
+        if (
+            auxiliary_surface is not None
+            and lock_name
+            == str(auxiliary_surface.get("lock_file", "")).strip()
+        ):
+            auxiliary_trigger_files = list(
+                auxiliary_surface.get("direct_dependency_files", [])
+            ) + [lock_name]
+            if requested_dependency_files and not any(
+                entry in auxiliary_trigger_files
+                for entry in requested_dependency_files
+            ):
+                results.append(
+                    LockHandlerResult(
+                        lock_name,
+                        changed=False,
+                        attempted=False,
+                        message="Skipped: no direct lock inputs changed.",
+                    )
+                )
+                continue
+            result = _refresh_auxiliary_python_lock(
+                repo_root,
+                lock_file=lock_name,
+                direct_dependency_files=list(
+                    auxiliary_surface.get("direct_dependency_files", [])
+                ),
+                generate_hashes=bool(auxiliary_surface.get("generate_hashes")),
+            )
+        elif lock_name == "requirements.lock":
             result = _refresh_python_requirements_lock(
                 repo_root,
                 generate_hashes=python_lock_generate_hashes,
@@ -1035,13 +1359,63 @@ def refresh_all(
         )
     )
 
+    root_trigger_files = list(
+        dict.fromkeys(
+            list(LOCKFILE_TRIGGER_FILES.get("requirements.lock", ()))
+            + ["pyproject.toml"]
+        )
+    )
+    root_changed_dependency_files = [
+        entry
+        for entry in changed_dependency_files
+        if entry in root_trigger_files
+    ]
+    if not requested_dependency_files:
+        root_changed_dependency_files = root_trigger_files
     modified_license_files = dependency_management.refresh_license_artifacts(
         repo_root,
-        changed_dependency_files=changed_dependency_files,
+        changed_dependency_files=root_changed_dependency_files,
         third_party_file=str(metadata["third_party_file"]),
         licenses_dir=str(metadata["licenses_dir"]),
         report_heading=str(metadata["report_heading"]),
     )
+    if auxiliary_surface is not None:
+        auxiliary_lock_file = str(
+            auxiliary_surface.get("lock_file", "")
+        ).strip()
+        auxiliary_trigger_files = set(
+            str(entry).strip()
+            for entry in auxiliary_surface.get("direct_dependency_files", [])
+            if str(entry).strip()
+        )
+        auxiliary_trigger_files.add(auxiliary_lock_file)
+        auxiliary_changed_dependency_files = [
+            entry
+            for entry in changed_dependency_files
+            if entry in auxiliary_trigger_files
+        ]
+        if not requested_dependency_files:
+            auxiliary_changed_dependency_files = sorted(
+                auxiliary_trigger_files
+            )
+        modified_license_files.extend(
+            dependency_management.refresh_license_artifacts(
+                repo_root,
+                changed_dependency_files=auxiliary_changed_dependency_files,
+                third_party_file=str(
+                    auxiliary_surface.get("third_party_file", "")
+                ),
+                licenses_dir=str(auxiliary_surface.get("licenses_dir", "")),
+                report_heading=str(
+                    auxiliary_surface.get("report_heading", "")
+                ),
+                resolved_lock_file=auxiliary_lock_file,
+                direct_dependency_files=list(
+                    auxiliary_surface.get("direct_dependency_files", [])
+                ),
+                manage_licenses_readme=False,
+            )
+        )
     result_payload = [
         {
             "lock_file": result.lock_file,

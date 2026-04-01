@@ -1,5 +1,5 @@
 # Workflow
-**Last Updated:** 2026-03-31
+**Last Updated:** 2026-04-01
 **Project Version:** 1.0.1.dev1
 
 ## Overview
@@ -123,8 +123,8 @@ The ownership split is:
 
 The github-owned base should stay generic.
 It bootstraps DevCovenant from the shipped
-`devcovenant/requirements.lock` so it does not assume the
-repository's own dependency files belong to DevCovenant. The packaged
+`devcovenant/runtime-requirements.lock` so it does not assume the
+project dependency files belong to DevCovenant. The packaged
 license files under `devcovenant/licenses/` ship with DevCovenant as part of
 the package.
 When that shipped lock pins `pip`, the generic workflow should install from
@@ -137,7 +137,7 @@ local wheel or sdist in CI, split that into:
 1. install the locked requirements
 2. install the local artifact with `--no-deps`
 If a repository documents a particular public install path, test that same
-public path in the repository's own CI extension.
+public path in a project-owned CI extension.
 If a repository adds a separate release workflow, that workflow should publish
 validated CI artifacts instead of rebuilding a fresh distribution later.
 

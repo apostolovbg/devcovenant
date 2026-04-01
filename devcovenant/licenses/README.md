@@ -3,25 +3,24 @@
 ## Table of Contents
 - [Overview](#overview)
 - [Contents](#contents)
-- [Why It Ships](#why-it-ships)
+- [Use](#use)
 
 ## Overview
-This packaged directory ships the license artifacts that travel with the
-published DevCovenant distribution.
-It is meant to tell package users what these files are, not to instruct
-repository maintainers how to regenerate them.
+This packaged directory stores the license files that ship with this
+distribution.
+It is meant to help package users understand what is included here, not to
+explain repository maintenance steps.
 
 ## Contents
-- `LICENSE` is DevCovenant's packaged project license.
-- `THIRD_PARTY_LICENSES.md` lists the direct dependencies represented in the
-  packaged lock and points to their bundled license texts.
-- `*.txt` files store the bundled third-party license texts that match the
+- `LICENSE` is the packaged project license.
+- `THIRD_PARTY_LICENSES.md` lists the direct packaged dependencies and points
+  to their bundled license texts.
+- `*.txt` files store the bundled third-party license texts that match this
   packaged dependency surface.
 
-## Why It Ships
-DevCovenant ships these files with the package so the package comes with its
-own license files.
-That lets package users read DevCovenant's project license, inspect the
-packaged dependency report, and review the bundled third-party license texts
-that match the packaged dependency surface without needing the repository
-checkout.
+## Use
+These files let package users review the project license, inspect the packaged
+dependency report, and read the bundled third-party license texts without
+needing a source checkout.
+They also help package users verify that the packaged dependency surface and
+its bundled notices stay together in the installed distribution.

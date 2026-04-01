@@ -77,7 +77,7 @@ namespaces = false
 "devcovenant" = [
   "README.md",
   "VERSION",
-  "requirements.lock",
+  "runtime-requirements.lock",
   "licenses/LICENSE",
   "licenses/README.md",
   "licenses/THIRD_PARTY_LICENSES.md",

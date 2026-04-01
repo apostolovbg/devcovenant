@@ -1,5 +1,5 @@
 # Profiles
-**Last Updated:** 2026-03-31
+**Last Updated:** 2026-04-01
 **Project Version:** 1.0.1.dev1
 
 ## Overview
@@ -153,7 +153,7 @@ Examples include:
 The CI boundary matters.
 The builtin `github` workflow template should stay generic.
 It should bootstrap DevCovenant from the shipped
-`devcovenant/requirements.lock`, not from the repository's own
+`devcovenant/runtime-requirements.lock`, not from the project's
 dependency files.
 That generic base should avoid floating installer state.
 If the shipped lock pins `pip`, the workflow should install from that lock
