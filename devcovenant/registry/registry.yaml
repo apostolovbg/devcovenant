@@ -10964,13 +10964,14 @@ policies:
         - requirements.in
         dependency_files:
         - requirements.in
-        - pyproject.toml
+        - devcovenant/runtime-requirements.lock
         third_party_file: licenses/THIRD_PARTY_LICENSES.md
         licenses_dir: licenses
         report_heading: '## License Report'
         manage_licenses_readme: 'true'
         required_paths:
         - requirements.in
+        - devcovenant/runtime-requirements.lock
         hash_targets:
         - id: linux-py311
           marker: sys_platform == "linux" and python_version == "3.11"
@@ -11196,13 +11197,14 @@ policies:
               - requirements.in
               dependency_files:
               - requirements.in
-              - pyproject.toml
+              - devcovenant/runtime-requirements.lock
               third_party_file: licenses/THIRD_PARTY_LICENSES.md
               licenses_dir: licenses
               report_heading: '## License Report'
               manage_licenses_readme: 'true'
               required_paths:
               - requirements.in
+              - devcovenant/runtime-requirements.lock
               hash_targets:
               - id: linux-py311
                 marker: sys_platform == "linux" and python_version == "3.11"
@@ -11373,13 +11375,14 @@ policies:
               - requirements.in
               dependency_files:
               - requirements.in
-              - pyproject.toml
+              - devcovenant/runtime-requirements.lock
               third_party_file: licenses/THIRD_PARTY_LICENSES.md
               licenses_dir: licenses
               report_heading: '## License Report'
               manage_licenses_readme: 'true'
               required_paths:
               - requirements.in
+              - devcovenant/runtime-requirements.lock
               hash_targets:
               - id: linux-py311
                 marker: sys_platform == "linux" and python_version == "3.11"
@@ -11550,13 +11553,14 @@ policies:
               - requirements.in
               dependency_files:
               - requirements.in
-              - pyproject.toml
+              - devcovenant/runtime-requirements.lock
               third_party_file: licenses/THIRD_PARTY_LICENSES.md
               licenses_dir: licenses
               report_heading: '## License Report'
               manage_licenses_readme: 'true'
               required_paths:
               - requirements.in
+              - devcovenant/runtime-requirements.lock
               hash_targets:
               - id: linux-py311
                 marker: sys_platform == "linux" and python_version == "3.11"
@@ -11787,13 +11791,14 @@ policies:
         - requirements.in
         dependency_files:
         - requirements.in
-        - pyproject.toml
+        - devcovenant/runtime-requirements.lock
         third_party_file: licenses/THIRD_PARTY_LICENSES.md
         licenses_dir: licenses
         report_heading: '## License Report'
         manage_licenses_readme: true
         required_paths:
         - requirements.in
+        - devcovenant/runtime-requirements.lock
         hash_targets:
         - id: linux-py311
           marker: sys_platform == "linux" and python_version == "3.11"
@@ -11919,7 +11924,7 @@ policies:
     - '{{ PROJECT_NAME_PATH }}/runtime-requirements.lock'
     origin: builtin
     script_exists: true
-    hash: af10bc8b7c9c088cdfaf293323597fe34b55041d087ee42df7ad6cc6051e30fd
+    hash: 0347993ebd6a610c11ec4e8e9cb8cc0e65195b3987fa47aed7913c4787d9f889
     script_path: builtin/dependency_management.py
   package-artifact-mirror:
     enabled: true
@@ -13929,8 +13934,6 @@ profiles:
     assets:
     - path: requirements.in
       template: requirements.in
-    - path: requirements.lock
-      template: requirements.lock
     - path: .python-version
       template: .python-version
     - path: pyproject.toml
@@ -14012,7 +14015,7 @@ profiles:
           - requirements.in
           dependency_files:
           - requirements.in
-          - pyproject.toml
+          - devcovenant/runtime-requirements.lock
           third_party_file: licenses/THIRD_PARTY_LICENSES.md
           licenses_dir: licenses
           report_heading: '## License Report'
@@ -14020,6 +14023,7 @@ profiles:
           generate_hashes: false
           required_paths:
           - requirements.in
+          - devcovenant/runtime-requirements.lock
           hash_targets:
           - id: linux-py311
             marker: sys_platform == "linux" and python_version == "3.11"
@@ -14187,7 +14191,6 @@ profiles:
     - devcovenant/builtin/profiles/python/assets/.python-version
     - devcovenant/builtin/profiles/python/assets/pyproject.toml
     - devcovenant/builtin/profiles/python/assets/requirements.in
-    - devcovenant/builtin/profiles/python/assets/requirements.lock
     active: true
   ruby:
     version: 1

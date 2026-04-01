@@ -2,7 +2,7 @@
 **Doc ID:** README
 **Doc Type:** repo-readme
 **Project Version:** 1.0.1.dev1
-**Last Updated:** 2026-03-31
+**Last Updated:** 2026-04-01
 **DevCovenant Version:** 1.0.1.dev1
 
 <!-- DEVCOV:BEGIN -->
@@ -66,10 +66,11 @@ devcovenant install
 # review devcovenant/config.yaml
 # set install.config_reviewed: true
 devcovenant deploy
-# if you keep the seeded defaults + python stack:
+# prepare the environment declared by the active profile stack
+# for the seeded defaults + python stack, one manual equivalent is:
 python3 -m venv .venv
 .venv/bin/python -m pip install -r requirements.lock
-# otherwise declare and prepare the repo's real environment first
+# gate --start can also run the declared bootstrap commands
 devcovenant gate --start
 # make your edits
 devcovenant gate --mid
@@ -94,13 +95,14 @@ What those steps mean:
    exceptions.
 
 4. `deploy` writes the managed docs, generated files, and other DevCovenant
-   outputs.
+   outputs, including dependency artifacts owned by the active surfaces.
 
 5. Prepare the environment declared by the active profile stack before the
    first gate cycle.
 
-   If you keep the seeded `defaults` + `python` stack, create `.venv` and
-   install `requirements.lock`.
+   If you keep the seeded `defaults` + `python` stack, `deploy` materializes
+   the workspace dependency artifacts and one manual equivalent is creating
+   `.venv` and installing `requirements.lock`.
    On Windows, use `.venv\\Scripts\\python.exe -m pip install -r \
    requirements.lock`.
    If the repository uses bench or another environment layout, declare that

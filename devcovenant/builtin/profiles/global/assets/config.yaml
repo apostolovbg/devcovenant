@@ -21,8 +21,13 @@
 # 3) set `install.config_reviewed: true`
 # 4) run `devcovenant deploy`
 # 5) prepare the repository's declared environment
-#    if you keep the seeded `defaults` + `python` stack, that means
-#    creating `.venv` and installing `requirements.lock`
+#    if you keep the seeded `defaults` + `python` stack, deploy/refresh
+#    writes `requirements.lock` from `requirements.in`
+#    and that seeded `requirements.in` starts from the shipped
+#    `devcovenant/runtime-requirements.lock`
+#    and `gate --start` may bootstrap `.venv` from that lock automatically
+#    the manual equivalent is still creating `.venv` and installing
+#    `requirements.lock`
 # 6) start normal work with
 #    `gate --start` -> `gate --mid` -> `run` -> `gate --end`
 #
@@ -83,6 +88,10 @@ profiles:
   # The shipped user-repo baseline keeps `github` active by default so
   # GitHub-hosted repositories get the generic generated CI workflow out of
   # the box. Remove it only when this repo does not want that workflow.
+  # A repo-specific custom profile usually owns local behavior such as
+  # `root_workspace`.
+  # Keep GitHub-only CI extensions in a separate optional GitHub-specific
+  # custom profile.
   active:
     - global
     - defaults

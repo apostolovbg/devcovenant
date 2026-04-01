@@ -1,5 +1,6 @@
 # Workflow
 **Last Updated:** 2026-04-01
+
 **Project Version:** 1.0.1.dev1
 
 ## Overview
@@ -130,6 +131,8 @@ It bootstraps DevCovenant from the shipped
 project dependency files belong to DevCovenant. The packaged
 license files under `devcovenant/licenses/` ship with DevCovenant as part of
 the package.
+Workspace dependency setup belongs in the owning profile or config overlays,
+not in the builtin GitHub base.
 When that shipped lock pins `pip`, the generic workflow should install from
 the lock instead of upgrading `pip` live first.
 If a repository needs extra project dependency setup, extra CI steps, or extra
@@ -166,6 +169,9 @@ That keeps `gate --start` non-destructive once a configured environment already
 exists.
 It also keeps the workflow portable across normal `.venv` repositories,
 bench-like environments, and other declared environment layouts.
+With the default Python stack, `deploy`/`refresh` materializes the workspace
+dependency artifacts, and `gate --start` can run the declared bootstrap
+commands when the target environment is still missing.
 If a repository uses a different environment shape, it should declare that
 shape explicitly instead of expecting DevCovenant to guess it.
 

@@ -3,7 +3,10 @@
 from __future__ import annotations
 
 import json
+import os
 import re
+import subprocess
+import sys
 import tempfile
 import tomllib
 import unittest
@@ -15,7 +18,7 @@ from unittest.mock import patch
 
 import yaml
 
-from devcovenant import install, refresh
+from devcovenant import deploy, install, refresh
 from devcovenant.core.flow import refresh as refresh_flow
 from devcovenant.core.services import manifest_inventory as manifest_module
 from tests.devcovenant import repo_seed_cache
@@ -39,10 +42,20 @@ def _unit_test_refresh_builds_tracked_registry_and_agents() -> None:
             repo_root / "devcovenant" / "registry" / "registry.yaml"
         )
         agents_path = repo_root / "AGENTS.md"
+        config_path = repo_root / "devcovenant" / "config.yaml"
 
         assert policy_registry.exists()
         assert profile_registry.exists()
         assert agents_path.exists()
+        config_payload = yaml.safe_load(
+            config_path.read_text(encoding="utf-8")
+        )
+        policy_state = config_payload.get("policy_state", {})
+        assert isinstance(policy_state, dict)
+        assert policy_state["changelog-coverage"] is True
+        assert policy_state["dependency-management"] is True
+        assert policy_state["managed-environment"] is True
+        assert policy_state["version-governance"] is False
         changelog_path = repo_root / "CHANGELOG.md"
         spec_path = repo_root / "SPEC.md"
         assert changelog_path.exists()
@@ -199,6 +212,122 @@ def _unit_test_refresh_renders_current_clean_and_ci_commentary() -> None:
         assert "always protects .git, .venv" not in config_text
 
 
+def _unit_test_refresh_calls_dependency_refresh_once() -> None:
+    """refresh_repo should invoke dependency refresh exactly once."""
+    with tempfile.TemporaryDirectory() as temp_dir:
+        repo_root = Path(temp_dir)
+        repo_seed_cache.copy_installed_repo(repo_root)
+
+        with patch.object(
+            refresh_flow,
+            "_refresh_dependency_artifacts",
+            return_value=[],
+        ) as mock_refresh_dependencies:
+            result = refresh.refresh_repo(repo_root)
+
+    assert result == 0
+    mock_refresh_dependencies.assert_called_once_with(repo_root)
+
+
+def _unit_test_refresh_builds_registry_after_generated_config() -> None:
+    """refresh_repo should build registry and AGENTS after config refresh."""
+    with tempfile.TemporaryDirectory() as temp_dir:
+        repo_root = Path(temp_dir)
+        repo_seed_cache.copy_installed_repo(repo_root)
+        order: list[str] = []
+
+        def _fake_refresh_config_generated(
+            repo_root_arg,
+            config_path,
+            config,
+            user_config,
+            profile_registry,
+            active_profiles,
+        ):
+            """Record config generation before later refresh steps."""
+            order.append("config")
+            return config, False
+
+        def _fake_refresh_policy_registry(repo_root_arg, config_payload=None):
+            """Record tracked-registry persistence after config refresh."""
+            order.append("registry")
+            return 0
+
+        def _fake_refresh_agents_policy_block(
+            agents_path, refresh_result, repo_root=None
+        ):
+            """Record AGENTS block refresh after registry persistence."""
+            order.append("agents")
+            return None
+
+        with (
+            patch.object(
+                refresh_flow,
+                "_refresh_profile_assets",
+                return_value=[],
+            ),
+            patch.object(
+                refresh_flow,
+                "_refresh_config_generated",
+                side_effect=_fake_refresh_config_generated,
+            ),
+            patch.object(
+                refresh_flow,
+                "refresh_policy_registry",
+                side_effect=_fake_refresh_policy_registry,
+            ),
+            patch.object(
+                refresh_flow,
+                "refresh_agents_policy_block",
+                side_effect=_fake_refresh_agents_policy_block,
+            ),
+            patch.object(
+                refresh_flow,
+                "_refresh_dependency_artifacts",
+                return_value=[],
+            ),
+            patch.object(
+                refresh_flow,
+                "_refresh_ci_and_test",
+                return_value=False,
+            ),
+            patch.object(
+                refresh_flow,
+                "_refresh_pre_commit_config",
+                return_value=False,
+            ),
+            patch.object(
+                refresh_flow,
+                "_refresh_gitignore",
+                return_value=False,
+            ),
+            patch.object(
+                refresh_flow,
+                "_managed_docs_from_config",
+                return_value=[],
+            ),
+            patch.object(
+                refresh_flow,
+                "_sync_doc",
+                return_value=False,
+            ),
+            patch.object(
+                refresh_flow,
+                "_sync_project_pyproject_identity",
+                return_value=False,
+            ),
+            patch.object(
+                refresh_flow.manifest_module,
+                "ensure_manifest",
+                return_value=None,
+            ),
+        ):
+            result = refresh.refresh_repo(repo_root)
+
+    assert result == 0
+    assert order == ["config", "registry", "agents"]
+
+
 def _unit_test_refresh_discovers_policy_sources_deterministically() -> None:
     """Policy-source discovery should not depend on filesystem iteration."""
     discovered = refresh_flow._discover_policy_sources(REPO_ROOT)
@@ -234,6 +363,73 @@ def _unit_test_refresh_keeps_root_and_packaged_readme_blocks_empty() -> None:
             content = (repo_root / relative_path).read_text(encoding="utf-8")
             assert "<!-- DEVCOV:BEGIN -->\n\n<!-- DEVCOV:END -->" in content
             assert "Managed runtime note:" not in content
+
+
+def _unit_test_deploy_compiles_workspace_lock_for_fresh_repo() -> None:
+    """deploy should compile a usable root_workspace lock for fresh repos."""
+    with tempfile.TemporaryDirectory() as temp_dir:
+        repo_root = Path(temp_dir)
+        install.install_repo(repo_root)
+
+        config_path = repo_root / "devcovenant" / "config.yaml"
+        payload = yaml.safe_load(config_path.read_text(encoding="utf-8"))
+        payload["install"]["config_reviewed"] = True
+        config_path.write_text(
+            yaml.safe_dump(payload, sort_keys=False),
+            encoding="utf-8",
+        )
+
+        result = deploy.deploy_repo(repo_root)
+        assert result == 0
+
+        requirements_in = (repo_root / "requirements.in").read_text(
+            encoding="utf-8"
+        )
+        requirements_lock = (repo_root / "requirements.lock").read_text(
+            encoding="utf-8"
+        )
+
+        assert requirements_in.startswith(
+            "-r devcovenant/runtime-requirements.lock\n"
+        )
+        assert "Starter lock file." not in requirements_lock
+        assert "pyyaml==" in requirements_lock.lower()
+
+        venv_root = repo_root / ".venv"
+        managed_python = venv_root / (
+            "Scripts/python.exe" if os.name == "nt" else "bin/python"
+        )
+        subprocess.run(
+            [sys.executable, "-m", "venv", str(venv_root)],
+            cwd=repo_root,
+            check=True,
+        )
+        subprocess.run(
+            [
+                str(managed_python),
+                "-m",
+                "pip",
+                "install",
+                "-q",
+                "-r",
+                "requirements.lock",
+            ],
+            cwd=repo_root,
+            check=True,
+        )
+        subprocess.run(
+            [
+                str(managed_python),
+                "-c",
+                (
+                    "import yaml; "
+                    "import devcovenant.cli; "
+                    "import devcovenant.core.runtime.execution"
+                ),
+            ],
+            cwd=repo_root,
+            check=True,
+        )
 
 
 def _unit_test_release_metadata_keeps_support_floor_and_docs_truthful() -> (
@@ -1023,9 +1219,12 @@ def _unit_test_refresh_policy_registry_records_metadata_resolution() -> None:
         payload = yaml.safe_load(policy_registry.read_text(encoding="utf-8"))
         policy_entry = payload["policies"]["changelog-coverage"]
         resolution = policy_entry["metadata_resolution"]["skipped_globs"]
+        enabled_resolution = policy_entry["metadata_resolution"]["enabled"]
 
         assert resolution["effective"]["values"]
         assert any(key != "effective" for key in resolution)
+        assert enabled_resolution["policy_state"]["values"] == ["true"]
+        assert enabled_resolution["policy_state"]["behavior"] == "replace"
         assert isinstance(policy_entry["metadata_warnings"], list)
         assert isinstance(policy_entry["runtime_metadata_options"], dict)
         assert isinstance(policy_entry["runtime_config_overrides"], dict)
@@ -1574,6 +1773,14 @@ class GeneratedUnittestCases(unittest.TestCase):
         """Run generated-config commentary assertions."""
         _unit_test_refresh_renders_current_clean_and_ci_commentary()
 
+    def test_refresh_calls_dependency_refresh_once(self):
+        """Run single dependency-refresh invocation assertions."""
+        _unit_test_refresh_calls_dependency_refresh_once()
+
+    def test_refresh_builds_registry_after_generated_config(self):
+        """Run registry/AGENTS refresh-order assertions."""
+        _unit_test_refresh_builds_registry_after_generated_config()
+
     def test_refresh_discovers_policy_sources_deterministically(self):
         """Run deterministic policy-source discovery assertions."""
         _unit_test_refresh_discovers_policy_sources_deterministically()
@@ -1645,6 +1852,10 @@ class GeneratedUnittestCases(unittest.TestCase):
     def test_refresh_renders_devcov_managed_doc_intros(self):
         """Run DevCovenant managed-doc intro rendering assertions."""
         _unit_test_refresh_renders_devcov_managed_doc_intros()
+
+    def test_deploy_compiles_workspace_lock_for_fresh_repo(self):
+        """Run fresh-repo non-lock bootstrap assertions for deploy."""
+        _unit_test_deploy_compiles_workspace_lock_for_fresh_repo()
 
     def test_refresh_writes_global_artifact_gitignore_rules(self):
         """Run global artifact gitignore assertions."""

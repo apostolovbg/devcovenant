@@ -608,13 +608,14 @@ surfaces:
   - requirements.in
   dependency_files:
   - requirements.in
-  - pyproject.toml
+  - devcovenant/runtime-requirements.lock
   third_party_file: licenses/THIRD_PARTY_LICENSES.md
   licenses_dir: licenses
   report_heading: '## License Report'
   manage_licenses_readme: 'true'
   required_paths:
   - requirements.in
+  - devcovenant/runtime-requirements.lock
   hash_targets:
   - id: linux-py311
     marker: sys_platform == "linux" and python_version == "3.11"

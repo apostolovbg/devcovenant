@@ -1,5 +1,6 @@
 # Installation and Lifecycle
 **Last Updated:** 2026-04-01
+
 **Project Version:** 1.0.1.dev1
 
 ## Overview
@@ -117,7 +118,7 @@ Runs the full refresh path and writes the active managed outputs.
 
 ### refresh
 Rebuilds tracked registry state, managed docs, generated config sections,
-generated workflow files, `.gitignore`, and related outputs.
+generated workflow files, `.gitignore`, dependency locks, and related outputs.
 
 ### asset
 Writes a Desktop copy of a shipped profile asset or managed doc template.
@@ -196,8 +197,11 @@ Use this as the practical first integration flow:
 4. Run `devcovenant deploy`.
 5. Prepare the environment declared by the active profile stack.
 
-   If you keep the seeded `defaults` + `python` stack, create `.venv` and
-   install `requirements.lock` before the first gate cycle.
+   If you keep the seeded `defaults` + `python` stack, `deploy` materializes
+   the workspace dependency artifacts and one manual equivalent is creating
+   `.venv` and installing `requirements.lock`.
+   `gate --start` can also run the declared bootstrap commands when the target
+   environment is still missing.
    On Windows, use `.venv\\Scripts\\python.exe -m pip install -r \
    requirements.lock`.
    If the repository uses bench or another environment layout, declare that

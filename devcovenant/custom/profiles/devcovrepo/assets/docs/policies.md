@@ -141,6 +141,19 @@ The shipped defaults are:
 2. `package_runtime`: non-hash mode
 3. `devcovenant_runtime`: hash mode in the builtin `github` profile
 
+Most governed repositories only work directly with `root_workspace` and,
+when they ship their own Python package, `package_runtime`.
+`devcovenant_runtime` is DevCovenant's bundled bootstrap/runtime surface for
+the package-maintained GitHub bootstrap path rather than a surface ordinary
+adopters usually maintain themselves.
+
+For the seeded Python stack, `root_workspace` starts from
+`requirements.in`, and that seeded file includes the shipped
+`devcovenant/runtime-requirements.lock`.
+`dependency-management refresh-all` then writes the resolved
+`requirements.lock` and the matching license artifacts for that surface.
+Resolved locks are policy-owned outputs, not starter profile assets.
+
 If a repository overrides one of those surfaces, do it in the profile or
 config layer for that surface id instead of inventing a second metadata shape.
 

@@ -23,8 +23,6 @@ clean_overlays:
 assets:
   - path: requirements.in
     template: requirements.in
-  - path: requirements.lock
-    template: requirements.lock
   - path: .python-version
     template: .python-version
   - path: pyproject.toml
@@ -92,7 +90,7 @@ policy_overlays:
           - requirements.in
         dependency_files:
           - requirements.in
-          - pyproject.toml
+          - devcovenant/runtime-requirements.lock
         third_party_file: licenses/THIRD_PARTY_LICENSES.md
         licenses_dir: licenses
         report_heading: '## License Report'
@@ -100,6 +98,7 @@ policy_overlays:
         generate_hashes: false
         required_paths:
           - requirements.in
+          - devcovenant/runtime-requirements.lock
         hash_targets:
           - id: linux-py311
             marker: sys_platform == "linux" and python_version == "3.11"

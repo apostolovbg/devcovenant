@@ -1,5 +1,6 @@
 # Policies
 **Last Updated:** 2026-04-01
+
 **Project Version:** 1.0.1.dev1
 
 ## Overview
@@ -102,6 +103,16 @@ Refresh strips environment-specific directives from comparison and from the
 written lock body so repositories keep package-source behavior in metadata and
 config instead of baking it into the lock file.
 Dependency-management metadata is now surface-based.
+It uses one typed metadata model:
+- scalars stay scalars
+- lists stay lists
+- mappings stay mappings
+- lists of mappings with stable `id` values merge by `id`
+
+That means repositories should express one concept in one metadata shape.
+Do not mix a structured `surfaces` list with separate flat fallback keys for
+the same dependency surface model.
+
 Each surface owns:
 - one `lock_file`
 - its direct dependency inputs
@@ -131,6 +142,19 @@ The shipped defaults are:
 1. `root_workspace`: non-hash mode
 2. `package_runtime`: non-hash mode
 3. `devcovenant_runtime`: hash mode in the builtin `github` profile
+
+Most governed repositories only work directly with `root_workspace` and,
+when they ship their own Python package, `package_runtime`.
+`devcovenant_runtime` is DevCovenant's bundled bootstrap/runtime surface for
+the package-maintained GitHub bootstrap path rather than a surface ordinary
+adopters usually maintain themselves.
+
+For the seeded Python stack, `root_workspace` starts from
+`requirements.in`, and that seeded file includes the shipped
+`devcovenant/runtime-requirements.lock`.
+`dependency-management refresh-all` then writes the resolved
+`requirements.lock` and the matching license artifacts for that surface.
+Resolved locks are policy-owned outputs, not starter profile assets.
 
 If a repository overrides one of those surfaces, do it in the profile or
 config layer for that surface id instead of inventing a second metadata shape.

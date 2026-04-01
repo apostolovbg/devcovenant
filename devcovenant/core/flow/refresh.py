@@ -6,6 +6,7 @@ import copy
 import json
 import os
 import re
+import subprocess
 import sys
 from datetime import datetime, timezone
 from pathlib import Path
@@ -1027,28 +1028,17 @@ def _apply_profile_aware_project_governance_defaults(
 def _materialize_policy_state_map(
     repo_root: Path, current_state: Dict[str, bool]
 ) -> Dict[str, bool]:
-    """Return full alphabetical policy_state map from the tracked registry."""
-    registry_path = policy_registry_path(repo_root)
-    payload = _read_yaml(registry_path)
-    raw_policies = payload.get("policies")
-    if not isinstance(raw_policies, dict):
-        raise ValueError(
-            "Policy registry payload is invalid; expected `policies` mapping "
-            f"in {registry_path}."
-        )
-
+    """Return full alphabetical policy_state map from live policy sources."""
+    discovered = _discover_policy_sources(repo_root)
     resolved: Dict[str, bool] = {}
-    for raw_policy_id in sorted(raw_policies):
-        policy_id = str(raw_policy_id or "").strip()
-        if not policy_id:
-            continue
+    for policy_id in sorted(discovered):
         if policy_id in current_state:
             resolved[policy_id] = current_state[policy_id]
             continue
-        entry = raw_policies.get(raw_policy_id)
         default_enabled = True
-        if isinstance(entry, dict):
-            raw_enabled = entry.get("enabled")
+        descriptor = load_policy_descriptor(repo_root, policy_id)
+        if descriptor is not None:
+            raw_enabled = descriptor.metadata.get("enabled")
             if isinstance(raw_enabled, bool):
                 default_enabled = raw_enabled
             elif raw_enabled is not None:
@@ -1903,6 +1893,46 @@ def _refresh_gitignore(
     return True
 
 
+def _refresh_dependency_artifacts(repo_root: Path) -> list[str]:
+    """Refresh dependency-management outputs during full refresh."""
+
+    try:
+        payload = runtime_actions_module.run_policy_runtime_action(
+            repo_root,
+            policy_id="dependency-management",
+            action="refresh-all",
+            payload={},
+        )
+    except (
+        ValueError,
+        RuntimeError,
+        subprocess.CalledProcessError,
+    ) as error:
+        raise ValueError(
+            "Dependency-management refresh failed: " f"{error}"
+        ) from error
+    if not isinstance(payload, dict):
+        raise ValueError(
+            "Dependency-management refresh returned an invalid payload."
+        )
+    changed: list[str] = []
+    raw_lock_results = payload.get("lock_results")
+    if isinstance(raw_lock_results, list):
+        for entry in raw_lock_results:
+            if not isinstance(entry, dict) or not entry.get("changed"):
+                continue
+            token = str(entry.get("lock_file") or "").strip()
+            if token:
+                changed.append(token)
+    raw_artifacts = payload.get("refreshed_artifacts")
+    if isinstance(raw_artifacts, list):
+        for entry in raw_artifacts:
+            token = str(entry or "").strip()
+            if token:
+                changed.append(token)
+    return list(dict.fromkeys(changed))
+
+
 def refresh_repo(repo_root: Path) -> int:
     """Run full refresh for the repository."""
     config_path = repo_root / "devcovenant" / "config.yaml"
@@ -1956,22 +1986,8 @@ def refresh_repo(repo_root: Path) -> int:
         print_step(f"Refresh failed: {error}", "🚫")
         return 1
 
-    registry_result = refresh_policy_registry(
-        repo_root,
-        config_payload=config,
-    )
-    if registry_result != 0:
-        return registry_result
-
-    agents_path = repo_root / "AGENTS.md"
-    try:
-        refresh_agents_policy_block(agents_path, None, repo_root=repo_root)
-    except ValueError as error:
-        print_step(f"AGENTS block refresh failed: {error}", "🚫")
-        return 1
-
     active_profiles = _active_profiles(config)
-    profile_registry = profile_runtime.refresh_profile_registry(
+    profile_registry = profile_runtime.build_profile_registry(
         repo_root, active_profiles
     )
 
@@ -2005,6 +2021,35 @@ def refresh_repo(repo_root: Path) -> int:
         return 1
     if config_changed:
         print_step("Refreshed config generated profile metadata", "✅")
+
+    profile_runtime.write_profile_registry(repo_root, profile_registry)
+    registry_result = refresh_policy_registry(
+        repo_root,
+        config_payload=config,
+    )
+    if registry_result != 0:
+        return registry_result
+
+    agents_path = repo_root / "AGENTS.md"
+    try:
+        refresh_agents_policy_block(agents_path, None, repo_root=repo_root)
+    except ValueError as error:
+        print_step(f"AGENTS block refresh failed: {error}", "🚫")
+        return 1
+
+    try:
+        refreshed_dependency_artifacts = _refresh_dependency_artifacts(
+            repo_root
+        )
+    except ValueError as error:
+        print_step(str(error), "🚫")
+        return 1
+    if refreshed_dependency_artifacts:
+        print_step(
+            "Refreshed dependency artifacts: "
+            + ", ".join(refreshed_dependency_artifacts),
+            "✅",
+        )
 
     try:
         ci_and_test_changed = _refresh_ci_and_test(

@@ -61,6 +61,56 @@ Example:
 ## Version 1.0.1.dev1
 
 - 2026-04-01:
+  Change: stabilized the non-lock fresh-repo bootstrap contract, removed the
+    duplicate dependency refresh pass, materialized the full first-refresh
+    `policy_state`/registry provenance, and rewrote the package docs/license
+    readmes to stay reader-facing.
+  Why: fix the real fresh-repo failures where `deploy` left no usable
+    workspace lock for managed-environment bootstrap and first refresh derived
+    `policy_state` from prior tracked-registry state, prevent `refresh` from
+    running the same dependency action twice, and stop package docs from
+    telling normal adopters to maintain DevCovenant's bundled runtime/license
+    artifacts.
+  Impact: proved the clean fresh wheel/user-repo bootstrap path through
+    managed `.venv` and `gate --start`, clarified packaged runtime/license
+    artifacts as shipped reference material instead of user-owned maintenance
+    surfaces, and kept dependency artifacts traceable through the tracked
+    registry.
+  Files:
+  CHANGELOG.md
+  AGENTS.md
+  README.md
+  devcovenant/README.md
+  devcovenant/builtin/policies/dependency_management/\
+    dependency_lock_runtime.py
+  devcovenant/builtin/policies/dependency_management/\
+    dependency_management.py
+  devcovenant/builtin/profiles/global/assets/config.yaml
+  devcovenant/builtin/profiles/python/assets/requirements.in
+  devcovenant/builtin/profiles/python/assets/requirements.lock
+  devcovenant/builtin/profiles/python/python.yaml
+  devcovenant/config.yaml
+  devcovenant/core/flow/refresh.py
+  devcovenant/custom/profiles/devcovrepo/assets/docs/config.md
+  devcovenant/custom/profiles/devcovrepo/assets/docs/installation.md
+  devcovenant/custom/profiles/devcovrepo/assets/docs/policies.md
+  devcovenant/custom/profiles/devcovrepo/assets/docs/profiles.md
+  devcovenant/custom/profiles/devcovrepo/assets/docs/registry.md
+  devcovenant/custom/profiles/devcovrepo/assets/docs/workflow.md
+  devcovenant/docs/config.md
+  devcovenant/docs/installation.md
+  devcovenant/docs/policies.md
+  devcovenant/docs/profiles.md
+  devcovenant/docs/registry.md
+  devcovenant/docs/workflow.md
+  devcovenant/licenses/README.md
+  devcovenant/registry/registry.yaml
+  licenses/README.md
+  licenses/THIRD_PARTY_LICENSES.md
+  tests/devcovenant/test_install.py
+  tests/devcovenant/test_refresh.py
+
+- 2026-04-01:
   Change: restructured policy metadata around typed dependency surfaces,
     implemented the generic multi-surface hash-resolution engine behind the
     toggle, and synchronized the package docs/config comments with the new

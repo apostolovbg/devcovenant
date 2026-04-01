@@ -106,15 +106,33 @@ def _run_command(
     env = dict(os.environ)
     if extra_env:
         env.update(extra_env)
-    # Reviewed tokenized local command execution; shell use stays forbidden.
-    subprocess.run(  # nosec B603
-        list(args),
-        cwd=repo_root,
-        check=True,
-        text=True,
-        capture_output=True,
-        env=env,
-    )
+    try:
+        # Reviewed tokenized local command execution; shell use stays
+        # forbidden.
+        subprocess.run(  # nosec B603
+            list(args),
+            cwd=repo_root,
+            check=True,
+            text=True,
+            capture_output=True,
+            env=env,
+        )
+    except subprocess.CalledProcessError as exc:
+        rendered = " ".join(str(token) for token in args)
+        output_parts: List[str] = []
+        stdout = str(exc.stdout or "").strip()
+        stderr = str(exc.stderr or "").strip()
+        if stdout:
+            output_parts.append("stdout:\n" + stdout)
+        if stderr:
+            output_parts.append("stderr:\n" + stderr)
+        suffix = ""
+        if output_parts:
+            suffix = "\n\n" + "\n\n".join(output_parts[-2:])
+        raise RuntimeError(
+            "dependency-management command failed "
+            f"({int(exc.returncode)}): {rendered}{suffix}"
+        ) from exc
 
 
 def _run_and_detect_change(
@@ -1239,7 +1257,16 @@ def refresh_all(
         for result in results
     ]
     refreshed_artifacts = [
-        path.as_posix() if isinstance(path, Path) else str(path)
+        (
+            _normalize_repo_relative_path_token(
+                os.path.relpath(
+                    os.path.realpath(path),
+                    os.path.realpath(repo_root),
+                )
+            )
+            if isinstance(path, Path)
+            else str(path)
+        )
         for path in modified_license_files
     ]
     return {

@@ -5,7 +5,7 @@ the tracked dependency manifests and the corresponding license
 texts stored under `licenses/`.
 
 ## License Report
-- `pyproject.toml`
+- `devcovenant/runtime-requirements.lock`
 - `requirements.in`
 - `requirements.lock`
 

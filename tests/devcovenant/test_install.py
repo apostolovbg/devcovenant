@@ -138,6 +138,19 @@ def _unit_test_install_seeds_current_devcov_core_paths() -> None:
         assert "devcovenant/test.py" not in core_paths
 
 
+def _unit_test_install_ships_packaged_runtime_lock() -> None:
+    """install_repo should ship the packaged runtime bootstrap surface."""
+    with tempfile.TemporaryDirectory() as temp_dir:
+        repo_root = Path(temp_dir)
+        with redirect_stderr(StringIO()):
+            result = install.install_repo(repo_root)
+        assert result == 0
+
+        runtime_lock = repo_root / "devcovenant" / "runtime-requirements.lock"
+        assert runtime_lock.exists()
+        assert not (repo_root / "requirements.in").exists()
+
+
 def _unit_test_install_writes_tracked_registry_without_runtime_state() -> None:
     """install_repo should seed tracked registry.yaml without runtime state."""
     with tempfile.TemporaryDirectory() as temp_dir:
@@ -717,6 +730,10 @@ class GeneratedUnittestCases(unittest.TestCase):
     def test_install_seeds_current_devcov_core_paths(self):
         """Run install core-path seed alignment assertions."""
         _unit_test_install_seeds_current_devcov_core_paths()
+
+    def test_install_ships_packaged_runtime_lock(self):
+        """Run packaged runtime bootstrap assertions for install."""
+        _unit_test_install_ships_packaged_runtime_lock()
 
     def test_install_writes_tracked_registry_without_runtime_state(self):
         """Run test_install_writes_tracked_registry_without_runtime_state."""

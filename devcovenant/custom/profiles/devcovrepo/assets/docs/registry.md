@@ -59,10 +59,14 @@ The same applies to policy-resolved metadata such as
 surface declarations, the tracked registry records the new resolved lock
 paths, dependency selectors, artifact targets, and hash-target settings that
 later drive lock refresh behavior.
+Those tracked surface definitions also explain why dependency-report and
+license-artifact refreshes can land next to a registry diff in the same slice:
+the registry is recording the dependency surface contract that generated them.
 That is why `devcovenant/registry/registry.yaml` can change when one declared
 surface moves, when a repo-specific custom profile overrides
-`root_workspace`, when a packaged runtime surface appears, or when the builtin
-`github` surface changes its bootstrap lock behavior.
+`root_workspace`, when a repository adds its own `package_runtime`, or when
+DevCovenant's bundled `devcovenant_runtime` surface changes its bootstrap lock
+behavior.
 
 ## Runtime Registry
 `devcovenant/registry/runtime/` stores local working state such as:

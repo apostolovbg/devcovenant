@@ -1,5 +1,6 @@
 # Profiles
 **Last Updated:** 2026-04-01
+
 **Project Version:** 1.0.1.dev1
 
 ## Overview
@@ -192,6 +193,16 @@ dependency-surface split:
    package path exists
 3. `devcovenant_runtime` for the shipped DevCovenant bootstrap surface used by
    the builtin `github` workflow
+
+For most repositories, the first two surfaces are the ones they actually own.
+`devcovenant_runtime` exists so the packaged DevCovenant bootstrap path can
+ship its own runtime contract; it is not usually a surface that ordinary
+adopters edit directly.
+
+In the default Python stack, `root_workspace` starts from `requirements.in`.
+That input inherits the shipped `devcovenant/runtime-requirements.lock`, and
+`dependency-management` then writes the real `requirements.lock` during
+`deploy`/`refresh`.
 
 The shipped defaults keep `root_workspace` and `package_runtime` in normal
 non-hash mode, while `devcovenant_runtime` is declared hash-locked in the

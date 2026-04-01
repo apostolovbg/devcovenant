@@ -85,8 +85,9 @@ Use a custom profile when the repository has real repeatable behavior of its
 own.
 Before the first gate cycle, make sure the environment declared by that stack
 actually exists.
-If you keep the seeded `defaults` + `python` stack, that means creating
-`.venv` and installing `requirements.lock`.
+If you keep the seeded `defaults` + `python` stack, `deploy`/`refresh`
+materializes the workspace dependency artifacts and one manual realization is
+creating `.venv` and installing `requirements.lock`.
 If the repository uses a bench-managed or other custom environment, declare
 that environment in the profile stack or metadata overlays instead of relying
 on DevCovenant to guess an unknown layout.
@@ -202,8 +203,9 @@ dependency setup, keep that in the relevant profile or explicit local
 override instead of changing the builtin base.
 If a repository needs to change dependency lock mode, do that by overriding the
 relevant `dependency-management.surfaces` entry.
-For example, a repo-specific custom profile may own `root_workspace` while an
-optional GitHub-specific custom profile adds extra CI fragments.
+For example, a repo-specific custom profile may own workspace dependency
+surfaces while an optional GitHub-specific custom profile adds extra CI
+fragments.
 
 ### clean
 Cleanup settings decide what DevCovenant may delete.

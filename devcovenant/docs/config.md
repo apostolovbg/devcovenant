@@ -1,5 +1,6 @@
 # Configuration
 **Last Updated:** 2026-04-01
+
 **Project Version:** 1.0.1.dev1
 
 ## Overview
@@ -86,8 +87,9 @@ Use a custom profile when the repository has real repeatable behavior of its
 own.
 Before the first gate cycle, make sure the environment declared by that stack
 actually exists.
-If you keep the seeded `defaults` + `python` stack, that means creating
-`.venv` and installing `requirements.lock`.
+If you keep the seeded `defaults` + `python` stack, `deploy`/`refresh`
+materializes the workspace dependency artifacts and one manual realization is
+creating `.venv` and installing `requirements.lock`.
 If the repository uses a bench-managed or other custom environment, declare
 that environment in the profile stack or metadata overlays instead of relying
 on DevCovenant to guess an unknown layout.
@@ -153,6 +155,9 @@ turn them off.
 ### user_metadata_overlays and user_metadata_overrides
 These sections are where nested policy metadata lives.
 They accept scalars, lists, and mappings directly.
+There is not a separate "flat companion key" mode for structured metadata.
+If one key is a mapping or a list of mappings, keep using subkeys under that
+same key instead of inventing suffixed sibling keys for the same meaning.
 
 The important rule is shape discipline:
 - keep one metadata key in one shape
@@ -200,8 +205,9 @@ dependency setup, keep that in the relevant profile or explicit local
 override instead of changing the builtin base.
 If a repository needs to change dependency lock mode, do that by overriding the
 relevant `dependency-management.surfaces` entry.
-For example, a repo-specific custom profile may own `root_workspace` while an
-optional GitHub-specific custom profile adds extra CI fragments.
+For example, a repo-specific custom profile may own workspace dependency
+surfaces while an optional GitHub-specific custom profile adds extra CI
+fragments.
 
 ### clean
 Cleanup settings decide what DevCovenant may delete.
