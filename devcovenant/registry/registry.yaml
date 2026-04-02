@@ -12881,7 +12881,7 @@ policies:
     runtime_state:
       surfaces:
         devcovenant_runtime:
-          input_fingerprint: 543a5ec47ffe6a10076004169b79a12bbc27328c89f8516a382f88237998d5e4
+          input_fingerprint: c0b546ed676189a21e6e66eb4266adece98a2f52039dda796060a4957873d406
           output_fingerprints:
             lock_file: a5788217543e1d7049dcd206db7d35542c9bd7c6ca087baccbc9f4e3eaa45af0
             third_party_file: 03710e4b9b1d4a694b7f319950a3ac27222743eb35b0409771f9df366a8e8368

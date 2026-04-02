@@ -87,6 +87,9 @@ namespaces = false
   "logs/README.md",
   "registry/README.md",
 ]
+"devcovenant.core" = [
+  "README.md",
+]
 "devcovenant.builtin.policies" = [
   "README.md",
   "*/*.yaml",

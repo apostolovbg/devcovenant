@@ -184,6 +184,8 @@ assets that DevCovenant needs at install time:
 - the built-in policy descriptors under `devcovenant/builtin/policies`
 - the built-in profile descriptors, translators, and asset templates under
   `devcovenant/builtin/profiles`
+- the packaged `devcovenant/core/README.md`, because structure validation
+  treats the flat-core README as part of the shipped core surface
 - the packaged docs under `devcovenant/docs`
 - the tracked `README.md` files for `devcovenant/logs` and
   `devcovenant/registry`

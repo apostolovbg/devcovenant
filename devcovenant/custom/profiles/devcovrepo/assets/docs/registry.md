@@ -96,6 +96,9 @@ Files such as `devcovenant/core/repository_paths.py`,
 the rule stays the same:
 tracked registry entries must describe repo-stable state, while open-session
 and latest-run evidence belongs only under `devcovenant/registry/runtime/`.
+That tracked state includes the packaged core inventory, so shipped files such
+as `devcovenant/core/README.md` must stay aligned with the manifest recorded in
+`devcovenant/registry/registry.yaml`.
 
 ## Runtime Registry
 `devcovenant/registry/runtime/` stores local working state such as:

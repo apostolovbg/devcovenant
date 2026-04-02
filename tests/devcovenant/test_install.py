@@ -490,6 +490,7 @@ def _assert_runtime_outputs_excluded_from_wheel(entries: list[str]) -> None:
         assert entry not in entries, (
             "Wheel leaked runtime log artifact: " f"{entry}"
         )
+    assert "devcovenant/core/README.md" in entries
     assert "devcovenant/logs/README.md" in entries
     assert "devcovenant/registry/README.md" in entries
 
@@ -616,6 +617,9 @@ def _unit_test_pyproject_uses_pep639_license_metadata() -> None:
         "registry/README.md",
     ]:
         assert required in devcovenant_package_data
+    devcovenant_core_package_data = package_data.get("devcovenant.core")
+    assert isinstance(devcovenant_core_package_data, list)
+    assert "README.md" in devcovenant_core_package_data
     builtin_profiles_data = package_data.get("devcovenant.builtin.profiles")
     assert isinstance(builtin_profiles_data, list)
     for required in [
@@ -637,6 +641,7 @@ def _unit_test_manifest_includes_license_artifacts() -> None:
     assert "include licenses/THIRD_PARTY_LICENSES.md" in content
     assert "recursive-include licenses *.txt" in content
     assert "include devcovenant/logs/README.md" in content
+    assert "include devcovenant/core/README.md" in content
     assert "include devcovenant/runtime-requirements.lock" in content
     assert "include devcovenant/licenses/LICENSE" in content
     assert "recursive-include devcovenant/licenses *.md" in content

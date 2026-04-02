@@ -11,6 +11,7 @@ include devcovenant/licenses/LICENSE
 recursive-include devcovenant/licenses *.md
 recursive-include devcovenant/licenses *.txt
 include devcovenant/logs/README.md
+include devcovenant/core/README.md
 recursive-include devcovenant/docs *
 include devcovenant/registry/README.md
 recursive-include devcovenant/builtin/profiles *

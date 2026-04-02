@@ -62,6 +62,25 @@ Example:
 
 
 - 2026-04-02:
+  Change: added `devcovenant/core/README.md` to the packaged manifest and
+          setuptools package-data contract.
+  Why: fixed installed artifact proof so structure-validation can restore the
+       required flat-core README in build verification.
+  Impact: build proof installs include the core README and keep packaged
+          structure-validation green.
+  Files:
+  CHANGELOG.md
+  MANIFEST.in
+  devcovenant/custom/profiles/devcovrepo/assets/docs/installation.md
+  devcovenant/custom/profiles/devcovrepo/assets/docs/registry.md
+  devcovenant/docs/installation.md
+  devcovenant/docs/registry.md
+  devcovenant/registry/registry.yaml
+  pyproject.toml
+  tests/devcovenant/test_install.py
+
+
+- 2026-04-02:
   Change: hardened the reviewed subprocess import boundary and annotated the
           safe YAML-loader cache helpers for Bandit.
   Why: aligned CI scanner handling with known safe loader paths and reviewed
