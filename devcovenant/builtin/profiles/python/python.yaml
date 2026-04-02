@@ -95,7 +95,7 @@ policy_overlays:
         licenses_dir: licenses
         report_heading: '## License Report'
         manage_licenses_readme: true
-        generate_hashes: false
+        generate_hashes: true
         required_paths:
           - requirements.in
           - devcovenant/runtime-requirements.lock
@@ -216,7 +216,7 @@ policy_overlays:
         licenses_dir: '{{ PROJECT_NAME_PATH }}/licenses'
         report_heading: '## License Report'
         manage_licenses_readme: true
-        generate_hashes: false
+        generate_hashes: true
         required_paths:
           - pyproject.toml
           - '{{ PROJECT_NAME_PATH }}'

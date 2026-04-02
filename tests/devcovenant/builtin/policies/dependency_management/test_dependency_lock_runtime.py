@@ -954,6 +954,40 @@ def _unit_test_surface_dependency_strings_expand_requirements_includes() -> (
         ]
 
 
+def _unit_test_surface_dependency_strings_strip_inherited_hash_lines() -> None:
+    """Surface dependency collection should strip inherited hash blocks."""
+
+    module = importlib.import_module(MODULE)
+    with tempfile.TemporaryDirectory() as temp_dir:
+        repo_root = Path(temp_dir)
+        runtime_lock = repo_root / "devcovenant" / "runtime-requirements.lock"
+        runtime_lock.parent.mkdir(parents=True, exist_ok=True)
+        runtime_lock.write_text(
+            "packaging==26.0 \\\n"
+            "    --hash=sha256:packaging-hash\n"
+            "    # via -r requirements.in\n"
+            "pyyaml==6.0.3 \\\n"
+            "    --hash=sha256:pyyaml-hash\n"
+            "    # via -r requirements.in\n",
+            encoding="utf-8",
+        )
+        (repo_root / "requirements.in").write_text(
+            "-r devcovenant/runtime-requirements.lock\n" "bandit==1.9.4\n",
+            encoding="utf-8",
+        )
+
+        collected = module._surface_dependency_strings(
+            repo_root,
+            dependency_files=["requirements.in"],
+        )
+
+        assert collected == [
+            "packaging==26.0",
+            "pyyaml==6.0.3",
+            "bandit==1.9.4",
+        ]
+
+
 def _unit_test_complete_target_report_closes_marker_only_gaps() -> None:
     """Target completion should add requirements omitted by host markers."""
 
@@ -1239,6 +1273,10 @@ class GeneratedUnittestCases(unittest.TestCase):
     def test_surface_dependency_strings_expand_requirements_includes(self):
         """Run requirements-include expansion assertions."""
         _unit_test_surface_dependency_strings_expand_requirements_includes()
+
+    def test_surface_dependency_strings_strip_inherited_hash_lines(self):
+        """Run inherited hash-block stripping assertions."""
+        _unit_test_surface_dependency_strings_strip_inherited_hash_lines()
 
     def test_complete_target_report_closes_marker_only_gaps(self):
         """Run target-closure completion assertions."""

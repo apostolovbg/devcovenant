@@ -910,7 +910,9 @@ def _refresh_config_generated(
     merged.pop("version", None)
     merged.pop("docs", None)
     merged["autogen_metadata_overlays"] = _config_autogen_metadata_overlays(
-        repo_root, active_profiles
+        repo_root,
+        active_profiles,
+        profile_registry=registry,
     )
     merged["autogen_metadata_overrides"] = _config_autogen_metadata_overrides()
     merged["policy_state"] = _materialize_policy_state_map(
@@ -1074,11 +1076,16 @@ def _default_core_paths(repo_root: Path) -> list[str]:
 
 
 def _config_autogen_metadata_overlays(
-    repo_root: Path, active_profiles: list[str]
+    repo_root: Path,
+    active_profiles: list[str],
+    *,
+    profile_registry: dict[str, dict[str, object]],
 ) -> Dict[str, Dict[str, object]]:
     """Build deterministic profile-derived autogen metadata overlays."""
     overlays = metadata_runtime.collect_profile_overlays(
-        repo_root, active_profiles
+        repo_root,
+        active_profiles,
+        profile_registry=profile_registry,
     )
     normalized: Dict[str, Dict[str, object]] = {}
     for policy_id in sorted(overlays.keys()):
@@ -1956,6 +1963,7 @@ def refresh_repo(repo_root: Path) -> int:
             _config_autogen_metadata_overlays(
                 repo_root,
                 initial_active_profiles,
+                profile_registry=preview_profile_registry,
             )
         )
         project_governance_state = (

@@ -291,6 +291,53 @@ def _metadata_profile_overlays_preserve_structured_mapping_lists() -> None:
     assert surfaces[1]["id"] == "package_runtime"
 
 
+def _metadata_profile_overlays_accept_explicit_registry_payload() -> None:
+    """Explicit registry payloads should bypass stale registry loads."""
+    module = importlib.import_module(MODULE)
+    original = module.profile_runtime.load_profile_registry
+    try:
+        module.profile_runtime.load_profile_registry = lambda _repo_root: {
+            "global": {
+                "policy_overlays": {
+                    "demo-policy": {
+                        "surfaces": [
+                            {
+                                "id": "root_workspace",
+                                "generate_hashes": "false",
+                            }
+                        ]
+                    }
+                }
+            }
+        }
+        overlays = module.collect_profile_overlays(
+            REPO_ROOT,
+            ["global"],
+            profile_registry={
+                "profiles": {
+                    "global": {
+                        "policy_overlays": {
+                            "demo-policy": {
+                                "surfaces": [
+                                    {
+                                        "id": "root_workspace",
+                                        "generate_hashes": "true",
+                                    }
+                                ]
+                            }
+                        }
+                    }
+                },
+                "workflow_contract": {},
+            },
+        )
+    finally:
+        module.profile_runtime.load_profile_registry = original
+    surfaces = overlays["demo-policy"]["surfaces"]
+    assert isinstance(surfaces, list)
+    assert surfaces[0]["generate_hashes"] == "true"
+
+
 def _metadata_active_policy_metadata_bundle_shapes_are_valid() -> None:
     """Resolved metadata for enabled policies should keep stable shapes."""
     module = importlib.import_module(MODULE)
@@ -394,6 +441,10 @@ class PolicyMetadataTests(unittest.TestCase):
     def test_profile_overlays_preserve_structured_mapping_lists(self):
         """Run structured overlay-list preservation assertions."""
         _metadata_profile_overlays_preserve_structured_mapping_lists()
+
+    def test_profile_overlays_accept_explicit_registry_payload(self):
+        """Run explicit profile-registry overlay assertions."""
+        _metadata_profile_overlays_accept_explicit_registry_payload()
 
 
 MODULE = "devcovenant.core.policy_metadata"

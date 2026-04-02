@@ -1,7 +1,7 @@
 metadata:
   schema_version: 1
   registry_layout: single-root
-  policy_registry_input_hash: 45c7334ccdb10759dff7490d36252a1a2ff0f6b2bbca1ff7f22f5d4b78ec0220
+  policy_registry_input_hash: 21084a11785a51f6e0b8e3df0ea7604bbc16c4b52b0794b8000c0051aee94227
 project-governance:
   project_name: devcovenant
   project_description: devcovenant is a repository governance framework.
@@ -10916,7 +10916,7 @@ policies:
         licenses_dir: devcovenant/licenses
         report_heading: '## License Report'
         manage_licenses_readme: 'true'
-        generate_hashes: 'false'
+        generate_hashes: 'true'
         required_paths:
         - devcovenant/runtime-requirements.lock
         hash_targets:
@@ -11028,7 +11028,7 @@ policies:
         dependency_files:
         - pyproject.toml
       - id: root_workspace
-        generate_hashes: 'false'
+        generate_hashes: 'true'
         lock_file: requirements.lock
         direct_dependency_files:
         - requirements.in
@@ -11159,7 +11159,7 @@ policies:
         licenses_dir: '{{ PROJECT_NAME_PATH }}/licenses'
         report_heading: '## License Report'
         manage_licenses_readme: 'true'
-        generate_hashes: 'false'
+        generate_hashes: 'true'
         required_paths:
         - pyproject.toml
         - '{{ PROJECT_NAME_PATH }}'
@@ -11338,7 +11338,7 @@ policies:
               licenses_dir: devcovenant/licenses
               report_heading: '## License Report'
               manage_licenses_readme: 'true'
-              generate_hashes: 'false'
+              generate_hashes: 'true'
               required_paths:
               - devcovenant/runtime-requirements.lock
               hash_targets:
@@ -11450,7 +11450,7 @@ policies:
               dependency_files:
               - pyproject.toml
             - id: root_workspace
-              generate_hashes: 'false'
+              generate_hashes: 'true'
               lock_file: requirements.lock
               direct_dependency_files:
               - requirements.in
@@ -11581,7 +11581,7 @@ policies:
               licenses_dir: '{{ PROJECT_NAME_PATH }}/licenses'
               report_heading: '## License Report'
               manage_licenses_readme: 'true'
-              generate_hashes: 'false'
+              generate_hashes: 'true'
               required_paths:
               - pyproject.toml
               - '{{ PROJECT_NAME_PATH }}'
@@ -11705,7 +11705,7 @@ policies:
               licenses_dir: devcovenant/licenses
               report_heading: '## License Report'
               manage_licenses_readme: 'true'
-              generate_hashes: 'false'
+              generate_hashes: 'true'
               required_paths:
               - devcovenant/runtime-requirements.lock
               hash_targets:
@@ -11817,7 +11817,7 @@ policies:
               dependency_files:
               - pyproject.toml
             - id: root_workspace
-              generate_hashes: 'false'
+              generate_hashes: 'true'
               lock_file: requirements.lock
               direct_dependency_files:
               - requirements.in
@@ -11948,7 +11948,7 @@ policies:
               licenses_dir: '{{ PROJECT_NAME_PATH }}/licenses'
               report_heading: '## License Report'
               manage_licenses_readme: 'true'
-              generate_hashes: 'false'
+              generate_hashes: 'true'
               required_paths:
               - pyproject.toml
               - '{{ PROJECT_NAME_PATH }}'
@@ -12072,7 +12072,7 @@ policies:
               licenses_dir: devcovenant/licenses
               report_heading: '## License Report'
               manage_licenses_readme: 'true'
-              generate_hashes: 'false'
+              generate_hashes: 'true'
               required_paths:
               - devcovenant/runtime-requirements.lock
               hash_targets:
@@ -12184,7 +12184,7 @@ policies:
               dependency_files:
               - pyproject.toml
             - id: root_workspace
-              generate_hashes: 'false'
+              generate_hashes: 'true'
               lock_file: requirements.lock
               direct_dependency_files:
               - requirements.in
@@ -12315,7 +12315,7 @@ policies:
               licenses_dir: '{{ PROJECT_NAME_PATH }}/licenses'
               report_heading: '## License Report'
               manage_licenses_readme: 'true'
-              generate_hashes: 'false'
+              generate_hashes: 'true'
               required_paths:
               - pyproject.toml
               - '{{ PROJECT_NAME_PATH }}'
@@ -12499,7 +12499,7 @@ policies:
         licenses_dir: devcovenant/licenses
         report_heading: '## License Report'
         manage_licenses_readme: true
-        generate_hashes: false
+        generate_hashes: true
         required_paths:
         - devcovenant/runtime-requirements.lock
         hash_targets:
@@ -12611,7 +12611,7 @@ policies:
         dependency_files:
         - pyproject.toml
       - id: root_workspace
-        generate_hashes: false
+        generate_hashes: true
         lock_file: requirements.lock
         direct_dependency_files:
         - requirements.in
@@ -12742,7 +12742,7 @@ policies:
         licenses_dir: '{{ PROJECT_NAME_PATH }}/licenses'
         report_heading: '## License Report'
         manage_licenses_readme: true
-        generate_hashes: false
+        generate_hashes: true
         required_paths:
         - pyproject.toml
         - '{{ PROJECT_NAME_PATH }}'
@@ -12881,17 +12881,17 @@ policies:
     runtime_state:
       surfaces:
         devcovenant_runtime:
-          input_fingerprint: 4b404741182d8b99b5bc2eadc2e47277adc581f1f94602fcc4b6e1ef68975cc3
+          input_fingerprint: 387876d73ab18dfe2a5057bd3b2b2784a7605db93873e4b82264973001a2282d
           output_fingerprints:
-            lock_file: a5788217543e1d7049dcd206db7d35542c9bd7c6ca087baccbc9f4e3eaa45af0
-            third_party_file: 6984f3fa8399840d66c4896560847c82b248501209c8785425e627b76a07fb11
-            licenses_dir: 30121e09034ad3935ff9021360123866ccb66a2f258bf25d9e2f1d6b1f1d0235
+            lock_file: d15044f8967ae94c97f8ff2ced7b2a8190281243948aae40cf4d2d5c3e911bcc
+            third_party_file: 03710e4b9b1d4a694b7f319950a3ac27222743eb35b0409771f9df366a8e8368
+            licenses_dir: 96af1bb880755dbfc4adf03d904e33e432446926fb2e04cf315c349d45897fee
         root_workspace:
-          input_fingerprint: 5d39df2f87cbabef41fc81ce929ffbbff51f4b3585563649ccd9ef3404731693
+          input_fingerprint: 38392b75c4842ff61a41365f406eed7042ea3edc8147847f339ec8415fbf5889
           output_fingerprints:
-            lock_file: 52d7f27ce6643cbcced6325ac9440808f85507c0cc6b6727a46dd703323bc9cc
-            third_party_file: e688fd62939652f6d6a8a8f12260a7f9558a874f01e441baaedf4f2667d96401
-            licenses_dir: ce8e7f74664501e40629e978541db1ff623a125d03ab0632effcaae88bab5efe
+            lock_file: 1ffa0010221836adf150a7d57943660c12b741622e30574fed37634b7b16c24f
+            third_party_file: 0c5b309147bb696e457e9a2b5c133dd5c5ce79b5ee4fdf2862f861bbd601219f
+            licenses_dir: 73b4a7d61db762ac3a574fc7ed33306ca8f26baf4516b4062a0f9163483ebb0e
   package-artifact-mirror:
     enabled: true
     custom: true
@@ -15058,7 +15058,7 @@ profiles:
           licenses_dir: licenses
           report_heading: '## License Report'
           manage_licenses_readme: true
-          generate_hashes: false
+          generate_hashes: true
           required_paths:
           - requirements.in
           - devcovenant/runtime-requirements.lock
@@ -15178,7 +15178,7 @@ profiles:
           licenses_dir: '{{ PROJECT_NAME_PATH }}/licenses'
           report_heading: '## License Report'
           manage_licenses_readme: true
-          generate_hashes: false
+          generate_hashes: true
           required_paths:
           - pyproject.toml
           - '{{ PROJECT_NAME_PATH }}'
@@ -16216,7 +16216,7 @@ profiles:
       dependency-management:
         surfaces:
         - id: root_workspace
-          generate_hashes: false
+          generate_hashes: true
         - id: package_runtime
           enabled: false
         - id: devcovenant_runtime
@@ -16224,7 +16224,7 @@ profiles:
           - pyproject.toml
           dependency_files:
           - pyproject.toml
-          generate_hashes: false
+          generate_hashes: true
       managed-environment:
         expected_paths:
         - .venv

@@ -220,9 +220,9 @@ Tracked dependency fingerprints for those surfaces must stay repo-relative and
 checkout-stable so a refresh on one machine does not rewrite registry state on
 another just because the checkout root changed.
 
-The shipped defaults keep `root_workspace` and `package_runtime` in normal
-non-hash mode, while `devcovenant_runtime` is declared hash-locked in the
-builtin `github` profile.
+The shipped defaults keep the Python dependency surfaces hash-locked:
+`root_workspace`, `devcovenant_runtime`, and `package_runtime` when a
+repository enables that optional package surface.
 A repo-specific custom profile can override those defaults per surface instead
 of inventing a second special-case dependency model.
 

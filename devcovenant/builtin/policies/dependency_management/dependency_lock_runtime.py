@@ -491,9 +491,11 @@ def _normalize_python_lock_semantics_for_mode(
         stripped = str(raw_line).strip()
         if not stripped or stripped.startswith("#"):
             continue
-        if raw_line[:1].isspace():
-            if generate_hashes and stripped.startswith("--hash=sha256:"):
+        if stripped.startswith("--hash=sha256:"):
+            if generate_hashes:
                 normalized.append(stripped.rstrip("\\").strip())
+            continue
+        if raw_line[:1].isspace():
             continue
         normalized.append(stripped.rstrip("\\").strip())
     return normalized
@@ -892,7 +894,10 @@ def _surface_dependency_strings(
                 seen_paths=seen_paths,
             )
         )
-    return dependency_lines
+    return _normalize_python_lock_semantics_for_mode(
+        dependency_lines,
+        generate_hashes=False,
+    )
 
 
 def _collect_dependency_strings_from_manifest(

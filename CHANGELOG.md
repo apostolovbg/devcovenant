@@ -62,6 +62,43 @@ Example:
 
 
 - 2026-04-02:
+  Change: enabled hashed dependency locks for the shipped Python surfaces and
+          normalized metadata/lock refresh paths to honor the fresh
+          profile registry.
+  Why: fixed the wrapped profile-registry overlay seam and stripped inherited
+       hash lines from target resolution inputs so hash refresh can
+       converge cleanly.
+  Impact: generated hashed `requirements.lock` and `runtime-requirements.lock`
+          deterministically, kept version-sync resolution stable, and
+          aligned docs with hash mode.
+  Files:
+  AGENTS.md
+  CHANGELOG.md
+  devcovenant/builtin/policies/dependency_management/\
+    dependency_lock_runtime.py
+  devcovenant/builtin/profiles/python/python.yaml
+  devcovenant/config.yaml
+  devcovenant/core/policy_metadata.py
+  devcovenant/core/refresh_runtime.py
+  devcovenant/custom/profiles/devcovrepo/assets/docs/config.md
+  devcovenant/custom/profiles/devcovrepo/assets/docs/policies.md
+  devcovenant/custom/profiles/devcovrepo/assets/docs/profiles.md
+  devcovenant/custom/profiles/devcovrepo/assets/docs/registry.md
+  devcovenant/custom/profiles/devcovrepo/devcovrepo.yaml
+  devcovenant/docs/config.md
+  devcovenant/docs/policies.md
+  devcovenant/docs/profiles.md
+  devcovenant/docs/registry.md
+  devcovenant/licenses/THIRD_PARTY_LICENSES.md
+  devcovenant/registry/registry.yaml
+  devcovenant/runtime-requirements.lock
+  licenses/THIRD_PARTY_LICENSES.md
+  requirements.lock
+  tests/devcovenant/builtin/policies/dependency_management/\
+    test_dependency_lock_runtime.py
+  tests/devcovenant/core/test_policy_metadata.py
+
+- 2026-04-02:
   Change: hardened operator-stable dependency fingerprints and replaced
           generic command banners with the packaged DevCovenant version.
   Why: fixed pipx/source lifecycle drift in tracked dependency state and

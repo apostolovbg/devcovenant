@@ -387,7 +387,7 @@ policy_overlays:
   dependency-management:
     surfaces:
       - id: root_workspace
-        generate_hashes: false
+        generate_hashes: true
       - id: package_runtime
         enabled: false
       - id: devcovenant_runtime
@@ -395,7 +395,7 @@ policy_overlays:
           - pyproject.toml
         dependency_files:
           - pyproject.toml
-        generate_hashes: false
+        generate_hashes: true
   managed-environment:
     expected_paths:
       - .venv

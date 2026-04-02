@@ -553,7 +553,7 @@ surfaces:
   licenses_dir: devcovenant/licenses
   report_heading: '## License Report'
   manage_licenses_readme: 'true'
-  generate_hashes: 'false'
+  generate_hashes: 'true'
   required_paths:
   - devcovenant/runtime-requirements.lock
   hash_targets:
@@ -665,7 +665,7 @@ surfaces:
   dependency_files:
   - pyproject.toml
 - id: root_workspace
-  generate_hashes: 'false'
+  generate_hashes: 'true'
   lock_file: requirements.lock
   direct_dependency_files:
   - requirements.in
@@ -796,7 +796,7 @@ surfaces:
   licenses_dir: '{{ PROJECT_NAME_PATH }}/licenses'
   report_heading: '## License Report'
   manage_licenses_readme: 'true'
-  generate_hashes: 'false'
+  generate_hashes: 'true'
   required_paths:
   - pyproject.toml
   - '{{ PROJECT_NAME_PATH }}'

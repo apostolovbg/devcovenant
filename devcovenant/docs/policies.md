@@ -143,9 +143,9 @@ That keeps hash mode target-aware instead of GitHub-specific or
 host-platform-specific.
 
 The shipped defaults are:
-1. `root_workspace`: non-hash mode
-2. `package_runtime`: non-hash mode
-3. `devcovenant_runtime`: hash mode in the builtin `github` profile
+1. `root_workspace`: hash mode
+2. `package_runtime`: hash mode when enabled
+3. `devcovenant_runtime`: hash mode
 
 Most governed repositories only work directly with `root_workspace` and,
 when they ship their own Python package, `package_runtime`.
@@ -161,8 +161,8 @@ For the seeded Python stack, `root_workspace` starts from
 Resolved locks are policy-owned outputs, not starter profile assets.
 For the builtin Python surfaces, the default target matrix covers supported
 CPython 3.10 through 3.14 on Linux, Windows, and macOS.
-Normal non-hash mode and hash mode both resolve against that same declared
-matrix; hash mode only adds hashes to the emitted all-target result.
+Hash mode resolves against that same declared matrix and emits one
+all-target result with hashes.
 After a surface is converged, the policy stores tracked per-surface input and
 output fingerprints.
 That lets later no-change refreshes skip rebuilding the lock and the matching

@@ -608,10 +608,24 @@ def _merge_metadata_values(key: str, existing: Any, incoming: Any) -> Any:
 
 
 def _collect_profile_overlays(
-    repo_root: Path, active_profiles: List[str]
+    repo_root: Path,
+    active_profiles: List[str],
+    *,
+    profile_registry: Dict[str, Dict[str, Any]] | None = None,
 ) -> Dict[str, Dict[str, Any]]:
     """Collect policy overlays from the profile registry."""
-    registry = profile_runtime.load_profile_registry(repo_root)
+    raw_registry = (
+        profile_registry
+        if isinstance(profile_registry, dict)
+        else profile_runtime.load_profile_registry(repo_root)
+    )
+    if not isinstance(raw_registry, dict):
+        return {}
+    registry = (
+        profile_runtime._normalize_registry(raw_registry)
+        if "profiles" in raw_registry
+        else raw_registry
+    )
     overlays: Dict[str, Dict[str, Any]] = {}
     for profile in active_profiles:
         meta = registry.get(profile)
@@ -648,10 +662,17 @@ def _collect_profile_overlays(
 
 
 def collect_profile_overlays(
-    repo_root: Path, active_profiles: List[str]
+    repo_root: Path,
+    active_profiles: List[str],
+    *,
+    profile_registry: Dict[str, Dict[str, Any]] | None = None,
 ) -> Dict[str, Dict[str, Any]]:
     """Public wrapper for resolved profile policy overlays."""
-    return _collect_profile_overlays(repo_root, active_profiles)
+    return _collect_profile_overlays(
+        repo_root,
+        active_profiles,
+        profile_registry=profile_registry,
+    )
 
 
 def _normalize_policy_state(raw_value: object) -> Dict[str, bool]:
