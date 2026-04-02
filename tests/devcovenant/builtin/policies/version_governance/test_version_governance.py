@@ -7,7 +7,7 @@ from pathlib import Path
 import yaml
 
 from devcovenant.builtin.policies.version_governance import version_governance
-from devcovenant.core.contracts.policy import CheckContext
+from devcovenant.core.policy_contract import CheckContext
 
 
 def _write_version_files(

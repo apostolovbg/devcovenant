@@ -6,7 +6,7 @@ import re
 from pathlib import Path
 from typing import TYPE_CHECKING, List, Optional, Tuple
 
-from devcovenant.core.contracts.policy import Violation
+from devcovenant.core.policy_contract import Violation
 
 if TYPE_CHECKING:
     from .version_governance import (

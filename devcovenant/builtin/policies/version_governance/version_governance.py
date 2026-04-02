@@ -7,13 +7,13 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Any, List, Mapping, Optional, Protocol
 
-import devcovenant.core.services.metadata as metadata_runtime
-from devcovenant.core.contracts.policy import (
+import devcovenant.core.policy_metadata as metadata_runtime
+from devcovenant.core.policy_contract import (
     CheckContext,
     PolicyCheck,
     Violation,
 )
-from devcovenant.core.services.policy_registry import load_policy_descriptor
+from devcovenant.core.policy_registry import load_policy_descriptor
 
 _DEFAULT_CHANGELOG_HEADER_PREFIX = "## Version"
 _LOG_MARKER = "## Log changes here"

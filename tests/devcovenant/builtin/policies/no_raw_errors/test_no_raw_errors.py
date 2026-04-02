@@ -10,7 +10,7 @@ from devcovenant.builtin.policies.no_raw_errors.no_raw_errors import (
     NoRawErrorsCheck,
     _RawErrorVisitor,
 )
-from devcovenant.core.contracts.policy import CheckContext
+from devcovenant.core.policy_contract import CheckContext
 
 
 def _write_file(repo_root: Path, relative: str, body: str) -> Path:

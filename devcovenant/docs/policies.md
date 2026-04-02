@@ -1,5 +1,5 @@
 # Policies
-**Last Updated:** 2026-04-01
+**Last Updated:** 2026-04-02
 
 **Project Version:** 1.0.1.dev1
 
@@ -88,8 +88,11 @@ devcovenant policy <policy-id> <command>
 
 That keeps policy-owned operations explicit and stops the CLI from turning into
 an unrelated pile of top-level commands.
-The parser and dispatcher live under `devcovenant/core/runtime/`, so policy
-commands run through the same execution boundary as the rest of the CLI.
+The parser and dispatcher live in
+`devcovenant/core/policy_commands.py`,
+`devcovenant/core/policy_runtime_actions.py`, and
+`devcovenant/core/execution.py`, so policy commands run through the same
+execution boundary as the rest of the CLI.
 
 ## Dependency Management
 Dependency management is one policy area, not a loose group of unrelated
@@ -102,7 +105,7 @@ resolution content, not environment-local pip control lines.
 Refresh strips environment-specific directives from comparison and from the
 written lock body so repositories keep package-source behavior in metadata and
 config instead of baking it into the lock file.
-Dependency-management metadata is now surface-based.
+Dependency-management metadata is surface-based.
 It uses one typed metadata model:
 - scalars stay scalars
 - lists stay lists
@@ -110,8 +113,9 @@ It uses one typed metadata model:
 - lists of mappings with stable `id` values merge by `id`
 
 That means repositories should express one concept in one metadata shape.
-Do not mix a structured `surfaces` list with separate flat fallback keys for
-the same dependency surface model.
+Use the structured `surfaces` list only for dependency-surface declarations.
+Unsupported continuation shortcuts and old flat surface keys are rejected
+instead of being normalized silently.
 
 Each surface owns:
 - one `lock_file`
@@ -166,6 +170,11 @@ license artifacts for that surface entirely.
 When a surface really does need recompute, independent target closures resolve
 in bounded parallel and then merge back in configured target order so the
 emitted lock stays deterministic.
+Tracked dependency fingerprints must stay checkout-stable.
+They should come from repo-relative identities plus file content, not from
+absolute local paths or machine-local runtime details.
+Anything that only makes sense for one machine or one command run belongs
+under `devcovenant/registry/runtime/**`, not in tracked registry state.
 
 If a repository overrides one of those surfaces, do it in the profile or
 config layer for that surface id instead of inventing a second metadata shape.
@@ -199,6 +208,11 @@ When policy behavior changes, update all of these together:
 2. runtime code
 3. tests
 4. user-facing docs when behavior changes
+
+When several Python policies need the same file analysis, share that work.
+Use run-scoped analysis attached to the active check context or ask a
+translator for a lighter facts-only path when the full symbol model is not
+needed.
 
 That keeps policy docs readable instead of turning them into code that only the
 runtime understands.

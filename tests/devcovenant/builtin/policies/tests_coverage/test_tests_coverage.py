@@ -9,8 +9,8 @@ from pathlib import Path
 from devcovenant.builtin.policies.tests_coverage.tests_coverage import (
     TestsCoverageCheck,
 )
-from devcovenant.core.contracts.policy import ChangeState, CheckContext
-from devcovenant.core.services.translator_engine import TranslatorRuntime
+from devcovenant.core.policy_contract import ChangeState, CheckContext
+from devcovenant.core.translator import TranslatorRuntime
 
 
 def _runtime(profile: str, suffixes: list[str]) -> TranslatorRuntime:

@@ -354,7 +354,7 @@ jobs:
         python -m devcovenant --version
         python - <<'PY'
         import devcovenant
-        import devcovenant.core.services.cleanup
+        import devcovenant.core.cleanup
         from devcovenant.builtin.policies.version_sync import (
             version_sync,
         )

@@ -12,7 +12,7 @@ from types import SimpleNamespace
 from unittest.mock import patch
 
 from devcovenant import clean
-from tests.devcovenant import repo_seed_cache
+from tests import copy_installed_repo
 
 
 def _unit_test_clean_module_symbol_contract_is_stable() -> None:
@@ -24,7 +24,7 @@ def _unit_test_clean_module_symbol_contract_is_stable() -> None:
 def _unit_test_clean_flow_symbol_contract_is_stable() -> None:
     """Clean flow module should expose the orchestration entrypoint."""
     module = __import__(
-        "devcovenant.core.flow.clean_command",
+        "devcovenant.core.cleanup",
         fromlist=["clean_repo"],
     )
     assert module.clean_repo
@@ -62,14 +62,14 @@ def _unit_test_clean_run_honors_all_cleanup_scope() -> None:
     """`clean.run()` should honor the explicit all-scope selection."""
     with tempfile.TemporaryDirectory() as temp_dir:
         repo_root = Path(temp_dir)
-        repo_seed_cache.copy_installed_repo(repo_root)
+        copy_installed_repo(repo_root)
         (repo_root / "build").mkdir()
         (repo_root / "pkg" / "__pycache__").mkdir(parents=True)
 
         output = io.StringIO()
         with redirect_stdout(output):
             with patch(
-                "devcovenant.clean.resolve_repo_root",
+                "devcovenant.core.execution.resolve_repo_root",
                 return_value=repo_root,
             ):
                 result = clean.run(
@@ -94,7 +94,7 @@ def _unit_test_clean_run_can_limit_to_build_only() -> None:
     """`clean.run()` should honor build-only selection."""
     with tempfile.TemporaryDirectory() as temp_dir:
         repo_root = Path(temp_dir)
-        repo_seed_cache.copy_installed_repo(repo_root)
+        copy_installed_repo(repo_root)
         (repo_root / "dist").mkdir()
         release_tree = repo_root / f"{repo_root.name}-2.45.6"
         release_tree.mkdir()
@@ -108,7 +108,7 @@ def _unit_test_clean_run_can_limit_to_build_only() -> None:
         (repo_root / ".coverage").write_text("coverage\n", encoding="utf-8")
 
         with patch(
-            "devcovenant.clean.resolve_repo_root",
+            "devcovenant.core.execution.resolve_repo_root",
             return_value=repo_root,
         ):
             result = clean.run(
@@ -132,7 +132,7 @@ def _unit_test_clean_run_can_limit_to_logs_only() -> None:
     """`clean.run()` should honor logs-only selection."""
     with tempfile.TemporaryDirectory() as temp_dir:
         repo_root = Path(temp_dir)
-        repo_seed_cache.copy_installed_repo(repo_root)
+        copy_installed_repo(repo_root)
         logs_root = repo_root / "devcovenant" / "logs"
         logs_root.mkdir(parents=True, exist_ok=True)
         (logs_root / "README.md").write_text("tracked\n", encoding="utf-8")
@@ -140,7 +140,7 @@ def _unit_test_clean_run_can_limit_to_logs_only() -> None:
         run_dir.mkdir()
 
         with patch(
-            "devcovenant.clean.resolve_repo_root",
+            "devcovenant.core.execution.resolve_repo_root",
             return_value=repo_root,
         ):
             result = clean.run(
@@ -162,7 +162,7 @@ def _unit_test_clean_run_rejects_open_gate_session() -> None:
     """`clean.run()` should fail when a gate session is open."""
     with tempfile.TemporaryDirectory() as temp_dir:
         repo_root = Path(temp_dir)
-        repo_seed_cache.copy_installed_repo(repo_root)
+        copy_installed_repo(repo_root)
         status_path = (
             repo_root
             / "devcovenant"
@@ -183,7 +183,7 @@ def _unit_test_clean_run_rejects_open_gate_session() -> None:
             redirect_stdout(stdout),
             redirect_stderr(stderr),
             patch(
-                "devcovenant.clean.resolve_repo_root",
+                "devcovenant.core.execution.resolve_repo_root",
                 return_value=repo_root,
             ),
         ):

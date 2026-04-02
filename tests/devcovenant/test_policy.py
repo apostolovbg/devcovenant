@@ -7,8 +7,11 @@ import unittest
 from contextlib import redirect_stdout
 from pathlib import Path
 
+import devcovenant.core.execution as execution_runtime
+import devcovenant.core.policy_commands as policy_commands_runtime
+import devcovenant.core.policy_runtime as policy_engine_service
 from devcovenant import policy
-from tests.devcovenant.support import MonkeyPatch
+from tests import MonkeyPatch
 
 
 def _unit_test_run_dispatches_declared_policy_command(
@@ -36,14 +39,14 @@ def _unit_test_run_dispatches_declared_policy_command(
         return {"message": "Refreshed."}
 
     monkeypatch.setattr(
-        policy,
+        execution_runtime,
         "resolve_repo_root",
         lambda require_install=True: Path("/tmp/repo"),
     )
 
     def _fake_find_policy_command(*_args, **_kwargs):
         """Return the declared dependency-management policy command."""
-        return policy.policy_commands_service.PolicyCommandDefinition(
+        return policy_commands_runtime.PolicyCommandDefinition(
             name="refresh-all",
             help_text="Refresh dependency artifacts.",
             runtime_action="refresh-all",
@@ -51,17 +54,17 @@ def _unit_test_run_dispatches_declared_policy_command(
         )
 
     monkeypatch.setattr(
-        policy.policy_commands_service,
+        policy_commands_runtime,
         "find_policy_command",
         _fake_find_policy_command,
     )
     monkeypatch.setattr(
-        policy.policy_commands_service,
+        policy_commands_runtime,
         "parse_policy_command_payload",
         lambda *_args, **_kwargs: {"scope": "full"},
     )
     monkeypatch.setattr(
-        policy,
+        policy_engine_service,
         "run_policy_runtime_action",
         _fake_run_policy_runtime_action,
     )

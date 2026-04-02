@@ -5,7 +5,7 @@ import importlib.util
 import unittest
 from pathlib import Path
 
-from devcovenant.core.services.translator_engine import TranslatorDeclaration
+from devcovenant.core.translator import TranslatorDeclaration
 
 _REPO_ROOT = Path(__file__).resolve().parents[5]
 _TRANSLATOR_PATH = (
@@ -69,7 +69,9 @@ class PythonTranslatorTests(unittest.TestCase):
         """The translator should keep one explicit Python-facts visitor."""
         module = _load_translator_module()
         self.assertTrue(hasattr(module, "translate"))
+        self.assertTrue(hasattr(module, "translate_minimal"))
         self.assertTrue(hasattr(module, "_PythonFactsVisitor"))
+        self.assertTrue(hasattr(module, "_PythonDocumentationFactsVisitor"))
         self.assertTrue(
             hasattr(module._PythonFactsVisitor, "visit_FunctionDef")
         )
@@ -105,6 +107,33 @@ class PythonTranslatorTests(unittest.TestCase):
         self.assertIn("run", names)
         self.assertIn("run_async", names)
         self.assertIn("helper", names)
+
+    def test_translate_minimal_emits_doc_facts_without_identifier_facts(self):
+        """Minimal translation should keep doc facts without extra payload."""
+        module = _load_translator_module()
+        unit = module.translate_minimal(
+            path=Path("sample.py"),
+            source=(
+                "# module docs\n"
+                "class Widget:\n"
+                '    """Widget docs."""\n'
+                "    pass\n"
+                "def run(value):\n"
+                "    # explain run\n"
+                "    return value\n"
+            ),
+            declaration=_declaration(),
+        )
+        self.assertTrue(unit.module_documented)
+        self.assertFalse(unit.identifier_facts)
+        self.assertFalse(unit.risk_facts)
+        names = {fact.name for fact in unit.symbol_doc_facts}
+        self.assertIn("Widget", names)
+        self.assertIn("run", names)
+        self.assertEqual(
+            unit.test_name_templates,
+            ("test_{stem}.py", "{stem}_test.py"),
+        )
 
 
 if __name__ == "__main__":

@@ -15,13 +15,8 @@ from pathlib import Path
 
 import yaml
 
-from devcovenant.core.runtime.execution import (
-    build_command_parser,
-    print_banner,
-    print_step,
-    resolve_repo_root,
-)
-from devcovenant.core.services import yaml_cache as yaml_cache_service
+import devcovenant.core.cli_support as cli_args_module
+import devcovenant.core.repository_paths as yaml_cache_service
 
 BLOCK_BEGIN = "<!-- DEVCOV:BEGIN -->"
 BLOCK_END = "<!-- DEVCOV:END -->"
@@ -201,6 +196,8 @@ def _remove_generated_gitignore(repo_root: Path) -> bool:
 
 def undeploy_repo(repo_root: Path) -> int:
     """Remove managed blocks and generated registry state."""
+    from devcovenant.core.execution import print_step
+
     docs: list[str]
     try:
         docs = _managed_docs_from_config(repo_root)
@@ -261,7 +258,7 @@ def undeploy_repo(repo_root: Path) -> int:
 
 def _build_parser() -> argparse.ArgumentParser:
     """Build parser for undeploy command."""
-    return build_command_parser(
+    return cli_args_module.build_command_parser(
         "undeploy",
         "Remove deployed managed artifacts and keep core files.",
     )
@@ -269,6 +266,12 @@ def _build_parser() -> argparse.ArgumentParser:
 
 def run(args: argparse.Namespace) -> int:
     """Execute undeploy command."""
+    from devcovenant.core.execution import (
+        print_banner,
+        print_step,
+        resolve_repo_root,
+    )
+
     del args
     repo_root = resolve_repo_root(require_install=True)
 
@@ -283,6 +286,7 @@ def main(argv: list[str] | None = None) -> None:
     """CLI entry point."""
     parser = _build_parser()
     args = parser.parse_args(argv)
+    cli_args_module.apply_output_mode_override_from_namespace(args)
     raise SystemExit(run(args))
 
 

@@ -4,16 +4,13 @@ from __future__ import annotations
 
 from typing import List
 
-from devcovenant.core.contracts.policy import (
+from devcovenant.core.policy_contract import (
     CheckContext,
     PolicyCheck,
     Violation,
 )
-from devcovenant.core.lib.selectors import SelectorSet
-from devcovenant.core.services.translator_engine import (
-    IdentifierFact,
-    LanguageUnit,
-)
+from devcovenant.core.selectors import SelectorSet
+from devcovenant.core.translator import IdentifierFact, LanguageUnit
 
 ALLOW_NAME_CLARITY = "name-clarity: allow"
 _PLACEHOLDER_NAMES = {

@@ -34,15 +34,22 @@ def _unit_test_asset_materializes_named_asset() -> None:
         output_path=Path("/Desktop/OTHERNAME.md"),
     )
 
-    with patch("devcovenant.asset.resolve_repo_root", return_value=repo_root):
-        with patch("devcovenant.asset.warn_version_mismatch") as mismatch:
-            with patch("devcovenant.asset.print_banner") as print_banner:
-                with patch("devcovenant.asset.print_step") as print_step:
+    with patch(
+        "devcovenant.core.execution.resolve_repo_root",
+        return_value=repo_root,
+    ):
+        with patch(
+            "devcovenant.core.execution.warn_version_mismatch"
+        ) as mismatch:
+            with patch(
+                "devcovenant.core.execution.print_banner"
+            ) as print_banner:
+                with patch(
+                    "devcovenant.core.execution.print_step"
+                ) as print_step:
                     with patch(
-                        (
-                            "devcovenant.asset.asset_service."
-                            "materialize_named_asset"
-                        ),
+                        "devcovenant.core."
+                        "asset_materialization.materialize_named_asset",
                         return_value=result_payload,
                     ) as materialize:
                         exit_code = asset_command.run(args)

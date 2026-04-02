@@ -18,14 +18,7 @@ from pathlib import Path
 
 from packaging.version import InvalidVersion, Version
 
-from devcovenant import install
-from devcovenant.core.flow.refresh import refresh_repo
-from devcovenant.core.runtime.execution import (
-    build_command_parser,
-    print_banner,
-    print_step,
-    resolve_repo_root,
-)
+import devcovenant.core.cli_support as cli_args_module
 
 _UPGRADE_RUNTIME_PRESERVE_DIRS = (
     Path("devcovenant/registry/runtime"),
@@ -122,6 +115,8 @@ def _restore_upgrade_runtime_state(repo_root: Path, temp_root: Path) -> None:
 
 def _ensure_upgrade_config(repo_root: Path) -> None:
     """Seed review-required config when missing after core refresh."""
+    from devcovenant.core.execution import print_step
+
     config_path = repo_root / "devcovenant" / "config.yaml"
     if config_path.exists():
         return
@@ -153,6 +148,9 @@ def _resolve_upgrade_source_dir(
     ] = importlib_metadata.distribution,
 ) -> Path:
     """Resolve source package path, guarding against local import shadowing."""
+    from devcovenant import install
+    from devcovenant.core.execution import print_step
+
     source_dir = Path(install.__file__).resolve().parent
     target_dir = (repo_root / "devcovenant").resolve()
     if source_dir != target_dir:
@@ -176,6 +174,8 @@ def _resolve_upgrade_source_dir(
 
 def _replace_core_package_for_upgrade(repo_root: Path) -> None:
     """Replace core package while preserving upgrade-owned runtime state."""
+    from devcovenant import install
+
     source_dir = _resolve_upgrade_source_dir(repo_root)
     with tempfile.TemporaryDirectory() as temp_dir:
         temp_root = Path(temp_dir)
@@ -201,6 +201,10 @@ def _prune_repo_only_custom_payload(repo_root: Path) -> list[Path]:
 
 def upgrade_repo(repo_root: Path) -> int:
     """Upgrade DevCovenant core and run full refresh."""
+    from devcovenant.core.execution import print_step
+    from devcovenant.core.refresh_runtime import refresh_repo
+    from devcovenant.core.repository_paths import display_path
+
     source_version_path = Path(__file__).resolve().parent / "VERSION"
     target_version_path = repo_root / "devcovenant" / "VERSION"
 
@@ -221,7 +225,9 @@ def upgrade_repo(repo_root: Path) -> int:
     _replace_core_package_for_upgrade(repo_root)
     pruned_paths = _prune_repo_only_custom_payload(repo_root)
     if pruned_paths:
-        formatted = ", ".join(str(path) for path in pruned_paths)
+        formatted = ", ".join(
+            display_path(path, repo_root=repo_root) for path in pruned_paths
+        )
         print_step(
             f"Pruned repo-only custom payload: {formatted}",
             "ℹ️",
@@ -253,7 +259,7 @@ def upgrade_repo(repo_root: Path) -> int:
 
 def _build_parser() -> argparse.ArgumentParser:
     """Build parser for upgrade command."""
-    return build_command_parser(
+    return cli_args_module.build_command_parser(
         "upgrade",
         "Upgrade DevCovenant core in the current repository.",
     )
@@ -261,6 +267,12 @@ def _build_parser() -> argparse.ArgumentParser:
 
 def run(args: argparse.Namespace) -> int:
     """Execute upgrade command."""
+    from devcovenant.core.execution import (
+        print_banner,
+        print_step,
+        resolve_repo_root,
+    )
+
     del args
     repo_root = resolve_repo_root(require_install=True)
 
@@ -275,6 +287,7 @@ def main(argv: list[str] | None = None) -> None:
     """CLI entry point."""
     parser = _build_parser()
     args = parser.parse_args(argv)
+    cli_args_module.apply_output_mode_override_from_namespace(args)
     raise SystemExit(run(args))
 
 

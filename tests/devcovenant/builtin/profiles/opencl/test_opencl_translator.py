@@ -4,7 +4,7 @@ import importlib.util
 import unittest
 from pathlib import Path
 
-from devcovenant.core.services.translator_engine import TranslatorDeclaration
+from devcovenant.core.translator import TranslatorDeclaration
 
 _REPO_ROOT = Path(__file__).resolve().parents[5]
 _TRANSLATOR_PATH = (

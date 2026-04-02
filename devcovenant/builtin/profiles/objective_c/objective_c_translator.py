@@ -6,7 +6,7 @@ import re
 from pathlib import Path
 from typing import Any
 
-from devcovenant.core.services.translator_engine import (
+from devcovenant.core.translator import (
     IdentifierFact,
     LanguageUnit,
     RiskFact,

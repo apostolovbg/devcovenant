@@ -13,16 +13,7 @@ import argparse
 import os
 from pathlib import Path
 
-from devcovenant.core.flow.refresh import refresh_repo
-from devcovenant.core.runtime.execution import (
-    build_command_parser,
-    cleanup_repo_bytecode_artifacts,
-    print_banner,
-    print_step,
-    resolve_repo_root,
-    warn_version_mismatch,
-)
-from devcovenant.core.services.policy_engine import DevCovenantEngine
+import devcovenant.core.cli_support as cli_args_module
 
 _CHECK_APPLY_FIXES_ENV = "DEVCOV_CHECK_APPLY_FIXES"
 _CHECK_RUN_REFRESH_ENV = "DEVCOV_CHECK_RUN_REFRESH"
@@ -37,7 +28,7 @@ def _env_flag(name: str) -> bool:
 
 def _build_parser() -> argparse.ArgumentParser:
     """Build parser for check command."""
-    return build_command_parser(
+    return cli_args_module.build_command_parser(
         "check",
         "Run read-only DevCovenant audit checks.",
     )
@@ -51,6 +42,15 @@ def _run_check(
     cleanup_bytecode: bool,
 ) -> int:
     """Run policy checks through the engine."""
+    from devcovenant.core.execution import (
+        cleanup_repo_bytecode_artifacts,
+        print_banner,
+        print_step,
+        warn_version_mismatch,
+    )
+    from devcovenant.core.policy_runtime import DevCovenantEngine
+    from devcovenant.core.refresh_runtime import refresh_repo
+
     print_banner("DevCovenant run", "🚀")
     print_step("Command: check", "🧭")
     if apply_fixes or run_refresh or cleanup_bytecode:
@@ -94,6 +94,8 @@ def _run_check(
 
 def run(_args: argparse.Namespace) -> int:
     """Execute check command."""
+    from devcovenant.core.execution import resolve_repo_root
+
     repo_root = resolve_repo_root(require_install=True)
     # `check` is the read-only audit command. Gate orchestration can opt into
     # refresh/autofix/cleanup for the same checking routine via environment.
@@ -112,6 +114,7 @@ def main(argv: list[str] | None = None) -> None:
     """CLI entry point."""
     parser = _build_parser()
     args = parser.parse_args(argv)
+    cli_args_module.apply_output_mode_override_from_namespace(args)
     raise SystemExit(run(args))
 
 

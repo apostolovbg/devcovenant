@@ -12,12 +12,12 @@ from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Iterable, List, Pattern
 
-from devcovenant.core.contracts.policy import (
+from devcovenant.core.policy_contract import (
     CheckContext,
     PolicyCheck,
     Violation,
 )
-from devcovenant.core.lib.selectors import SelectorSet
+from devcovenant.core.selectors import SelectorSet
 
 _VALID_SEVERITIES = {"critical", "error", "warning", "info"}
 _PYTHON_PREFIX_RE = re.compile(r"(?P<prefix>[rubfRUBF]*)(?P<quote>['\"]{1,3})")
@@ -172,6 +172,26 @@ def _contains_match(text: str, patterns: tuple[Pattern[str], ...]) -> bool:
 def _line_number_from_offset(source: str, offset: int) -> int:
     """Convert one zero-based offset into one-based line number."""
     return source.count("\n", 0, max(offset, 0)) + 1
+
+
+def _compiled_pattern_key(
+    patterns: tuple[Pattern[str], ...],
+) -> tuple[str, ...]:
+    """Return one stable cache key for compiled regex patterns."""
+    return tuple(pattern.pattern for pattern in patterns)
+
+
+def _path_cache_key(path: Path, *, repo_root: Path) -> tuple[object, ...]:
+    """Return one run-scoped cache key for a file path."""
+    try:
+        relative = path.relative_to(repo_root).as_posix()
+    except ValueError:
+        relative = path.as_posix()
+    try:
+        stat = path.stat()
+    except OSError:
+        return (relative, None, None)
+    return (relative, stat.st_mtime_ns, stat.st_size)
 
 
 def _is_python_raw_literal(
@@ -397,28 +417,46 @@ class RawStringEscapesCheck(PolicyCheck):
             if not suspicious_patterns:
                 suspicious_patterns = (_SUSPICIOUS_ESCAPE_RE,)
             raw_patterns = _values_for_language(raw_literal_map, language)
-
-            if language == "python" or path.suffix.lower() in _PYTHON_SUFFIXES:
-                hits = _scan_python_literals(
-                    path,
-                    suspicious_patterns=suspicious_patterns,
-                    raw_patterns=raw_patterns,
-                )
+            cache_bucket = context.runtime_cache_bucket("raw_string_escapes")
+            literal_patterns = _values_for_language(literal_map, language)
+            cache_key = (
+                _path_cache_key(path, repo_root=context.repo_root),
+                language,
+                _compiled_pattern_key(literal_patterns),
+                _compiled_pattern_key(raw_patterns),
+                _compiled_pattern_key(suspicious_patterns),
+            )
+            cached_hits = cache_bucket.get(cache_key)
+            if isinstance(cached_hits, tuple):
+                hits = list(cached_hits)
+            elif isinstance(cached_hits, list):
+                hits = list(cached_hits)
             else:
-                try:
-                    source = path.read_text(encoding="utf-8")
-                except (OSError, UnicodeDecodeError):
-                    continue
-                literal_patterns = _values_for_language(literal_map, language)
-                hits = _scan_generic_literals(
-                    source,
-                    literal_patterns=literal_patterns,
-                    raw_patterns=raw_patterns,
-                    suspicious_patterns=suspicious_patterns,
-                )
+                if (
+                    language == "python"
+                    or path.suffix.lower() in _PYTHON_SUFFIXES
+                ):
+                    hits = _scan_python_literals(
+                        path,
+                        suspicious_patterns=suspicious_patterns,
+                        raw_patterns=raw_patterns,
+                    )
+                else:
+                    try:
+                        source = path.read_text(encoding="utf-8")
+                    except (OSError, UnicodeDecodeError):
+                        continue
+                    hits = _scan_generic_literals(
+                        source,
+                        literal_patterns=literal_patterns,
+                        raw_patterns=raw_patterns,
+                        suspicious_patterns=suspicious_patterns,
+                    )
+                hits = _dedupe_hits(hits)
+                cache_bucket[cache_key] = tuple(hits)
 
             language_label = language or "unknown"
-            for hit in _dedupe_hits(hits):
+            for hit in hits:
                 violations.append(
                     Violation(
                         policy_id=self.policy_id,

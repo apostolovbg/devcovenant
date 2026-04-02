@@ -7,7 +7,7 @@ from importlib import import_module
 from pathlib import Path
 from tempfile import TemporaryDirectory
 
-from devcovenant.core.contracts.policy import Violation
+from devcovenant.core.policy_contract import Violation
 
 DependencyManagementFixer = import_module(
     "devcovenant.builtin.policies.dependency_management.autofix.global"

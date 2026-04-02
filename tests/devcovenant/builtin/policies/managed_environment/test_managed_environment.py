@@ -8,8 +8,8 @@ from pathlib import Path
 from devcovenant.builtin.policies.managed_environment import (
     managed_environment,
 )
-from devcovenant.core.contracts.policy import CheckContext
-from tests.devcovenant.support import MonkeyPatch
+from devcovenant.core.policy_contract import CheckContext
+from tests import MonkeyPatch
 
 ManagedEnvironmentCheck = managed_environment.ManagedEnvironmentCheck
 

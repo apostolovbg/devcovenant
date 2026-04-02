@@ -2,7 +2,7 @@
 **Doc ID:** PROFILE_MAP
 **Doc Type:** reference-map
 **Project Version:** 1.0.1.dev1
-**Last Updated:** 2026-03-31
+**Last Updated:** 2026-04-02
 **DevCovenant Version:** 1.0.1.dev1
 
 <!-- DEVCOV:BEGIN -->
@@ -107,8 +107,8 @@ by the shared translator runtime.
   core resolves them in deterministic order from the tracked workflow
   definition.
 - Language profiles may declare `run_events` adapter metadata for the
-  relevant workflow run through `devcovenant/core/runtime/event.py`;
-  that is separate from translator declarations.
+  relevant workflow run through `devcovenant/core/run_events.py`; that is
+  separate from translator declarations.
 - Session scoping is runtime-owned; profiles should not model policy scope
   switching metadata for bundled checks.
 - Assets are created when missing and preserved when existing content is

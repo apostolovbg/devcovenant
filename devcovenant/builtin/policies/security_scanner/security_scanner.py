@@ -4,12 +4,12 @@ from __future__ import annotations
 
 from typing import List
 
-from devcovenant.core.contracts.policy import (
+from devcovenant.core.policy_contract import (
     CheckContext,
     PolicyCheck,
     Violation,
 )
-from devcovenant.core.lib.selectors import SelectorSet
+from devcovenant.core.selectors import SelectorSet
 
 
 class SecurityScannerCheck(PolicyCheck):

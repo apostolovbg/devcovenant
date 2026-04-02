@@ -6,7 +6,7 @@
 **Maintenance Stance:** active
 **Compatibility Policy:** forward-only
 **Versioning Mode:** versioned
-**Last Updated:** 2026-03-31
+**Last Updated:** 2026-04-02
 **DevCovenant Version:** 1.0.1.dev1
 
 <!-- DEVCOV:BEGIN -->
@@ -341,10 +341,10 @@ intentionally not trying to do.
   shall remain manual, provenance shall be validated before release, and
   command execution shall use tokenized subprocess invocation rather than
   ad hoc shell-string evaluation.
-- Maintainability: the implementation shall preserve the layered split between
-  `core/flow`, `core/runtime`, `core/services`, `core/lib`, and
-  `core/contracts`, and docs shall be updated in the same slice when stable
-  behavior changes.
+- Maintainability: the implementation shall stay organized around a flat
+  `devcovenant/core/*.py` engine surface with clear module families and
+  stable responsibilities, and docs shall be updated in the same slice when
+  stable behavior changes.
 - Usability: operators shall be able to understand state through a small CLI
   set, stable command names, summary-first run logs, readable config,
   and deterministic generated files.
@@ -389,13 +389,22 @@ intentionally not trying to do.
   - GitHub Actions for CI, built-artifact proof, and manual publish
   - environment variables for manual attestation and runtime behavior
 - Internal interfaces:
-  - `core/flow` for lifecycle orchestration and workflow validation
-  - `core/runtime` for execution, output policy, run logging, and runtime
-    registry paths
-  - `core/services` for metadata resolution, policy execution, managed docs,
-    and tracked registry behavior
-  - `core/lib` for shared helper logic
-  - `core/contracts` for shared typed definitions
+  - `core/gate_runtime.py`, `core/refresh_runtime.py`, and
+    `core/workflow_support.py` for lifecycle orchestration and workflow
+    validation
+  - `core/execution.py`, `core/cli_support.py`, `core/run_events.py`, and
+    `core/run_logs.py` for command execution, output policy, and run evidence
+  - `core/policy_metadata.py`, `core/policy_registry.py`,
+    `core/policy_commands.py`, `core/policy_runtime_actions.py`,
+    `core/policy_runtime.py`, `core/repository_paths.py`,
+    `core/tracked_registry.py`, `core/profile_registry.py`,
+    `core/project_governance.py`, and `core/repository_validation.py` for
+    policy, metadata, registry, and repository state logic
+  - `core/managed_docs.py`, `core/asset_materialization.py`,
+    `core/translator.py`, and `core/cleanup.py` for document, asset,
+    translation, and maintenance operations
+  - `core/policy_contract.py` and `core/runtime_errors.py` for explicit typed
+    runtime contracts
 - Dependencies:
   - Python 3.10+
   - `packaging`, `pre-commit`, `pip-tools`, `PyYAML`, `pytest`, and `semver`

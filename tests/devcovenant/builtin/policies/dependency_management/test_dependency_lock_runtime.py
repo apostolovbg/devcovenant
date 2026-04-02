@@ -85,6 +85,76 @@ def _unit_test_runtime_symbol_contract_is_stable() -> None:
     assert hasattr(module, "refresh_all")
 
 
+def _unit_test_engine_hash_is_checkout_path_insensitive() -> None:
+    """Engine hash should not depend on absolute checkout roots."""
+
+    module = importlib.import_module(MODULE)
+    with tempfile.TemporaryDirectory() as temp_dir:
+        sandbox_root = Path(temp_dir)
+        checkout_a = sandbox_root / "checkout-a"
+        checkout_b = sandbox_root / "checkout-b"
+        runtime_rel = Path(
+            "devcovenant/builtin/policies/dependency_management/"
+            "dependency_lock_runtime.py"
+        )
+        policy_rel = Path(
+            "devcovenant/builtin/policies/dependency_management/"
+            "dependency_management.py"
+        )
+        script_rel = Path("devcovenant/custom/policies/demo/demo.py")
+        descriptor_rel = script_rel.with_suffix(".yaml")
+
+        for checkout_root in (checkout_a, checkout_b):
+            for rel_path, content in (
+                (runtime_rel, "runtime\n"),
+                (policy_rel, "policy\n"),
+                (script_rel, "script\n"),
+                (descriptor_rel, "descriptor\n"),
+            ):
+                target = checkout_root / rel_path
+                target.parent.mkdir(parents=True, exist_ok=True)
+                target.write_text(content, encoding="utf-8")
+
+        fake_script_a = type(
+            "ResolvedScriptLocation",
+            (),
+            {"path": checkout_a / script_rel},
+        )()
+        fake_script_b = type(
+            "ResolvedScriptLocation",
+            (),
+            {"path": checkout_b / script_rel},
+        )()
+
+        with patch.object(module, "__file__", checkout_a / runtime_rel):
+            with patch.object(
+                module.dependency_management,
+                "__file__",
+                checkout_a / policy_rel,
+            ):
+                with patch.object(
+                    module,
+                    "resolve_script_location",
+                    return_value=fake_script_a,
+                ):
+                    first = module._dependency_refresh_engine_hash(checkout_a)
+
+        with patch.object(module, "__file__", checkout_b / runtime_rel):
+            with patch.object(
+                module.dependency_management,
+                "__file__",
+                checkout_b / policy_rel,
+            ):
+                with patch.object(
+                    module,
+                    "resolve_script_location",
+                    return_value=fake_script_b,
+                ):
+                    second = module._dependency_refresh_engine_hash(checkout_b)
+
+        assert first == second
+
+
 def _unit_test_refresh_runtime_updates_inventory_without_lock_change() -> None:
     """Lock refresh should still repair stale license inventory artifacts."""
     module = importlib.import_module(MODULE)
@@ -1031,6 +1101,10 @@ class GeneratedUnittestCases(unittest.TestCase):
     def test_runtime_symbol_contract_is_stable(self):
         """Run dependency lock runtime symbol contract assertions."""
         _unit_test_runtime_symbol_contract_is_stable()
+
+    def test_engine_hash_is_checkout_path_insensitive(self):
+        """Run path-stable dependency engine hash assertions."""
+        _unit_test_engine_hash_is_checkout_path_insensitive()
 
     def test_refresh_runtime_updates_inventory_even_without_lock_change(self):
         """Run no-lock-change inventory repair assertions."""

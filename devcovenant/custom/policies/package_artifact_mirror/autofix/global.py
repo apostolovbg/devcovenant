@@ -9,7 +9,7 @@ from __future__ import annotations
 import shutil
 from pathlib import Path
 
-from devcovenant.core.contracts.policy import FixResult, PolicyFixer, Violation
+from devcovenant.core.policy_contract import FixResult, PolicyFixer, Violation
 
 
 class PackageArtifactMirrorFixer(PolicyFixer):

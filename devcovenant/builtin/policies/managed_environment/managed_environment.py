@@ -11,7 +11,7 @@ from typing import Any, List
 from devcovenant.builtin.policies.managed_environment import (
     managed_environment_runtime,
 )
-from devcovenant.core.contracts.policy import (
+from devcovenant.core.policy_contract import (
     CheckContext,
     PolicyCheck,
     Violation,

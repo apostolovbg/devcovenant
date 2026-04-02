@@ -10,7 +10,7 @@ import unittest
 from pathlib import Path
 from unittest import mock
 
-from tests.devcovenant.support import MonkeyPatch
+from tests import MonkeyPatch
 
 MODULE = (
     "devcovenant.builtin.policies.managed_environment."

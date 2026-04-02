@@ -75,6 +75,9 @@ The built-in `devcovuser` profile is the normal user-repository layer.
 It keeps DevCovenant's own shipped runtime files out of ordinary app-code
 checks while still keeping `devcovenant/custom/**` in scope for repo-owned
 extensions.
+That same narrowing applies to mirrored test expectations and assertion
+coverage, so normal repos keep DevCovenant internals out of scope while still
+enforcing `devcovenant/custom/**` and `tests/devcovenant/custom/**`.
 
 Profiles may also contribute `ignore_dirs` for disposable local outputs that
 should stay out of generated `.gitignore` and out of pre-commit's all-files
@@ -145,9 +148,12 @@ Practical resolution flow:
 Framework and tooling profiles should not become alternate language owners.
 Translator ownership belongs with language profiles.
 The translator should also do the expensive parsing work once.
-For example, the builtin Python translator now collects identifier,
+For example, the builtin Python translator collects identifier,
 symbol-doc, and risk facts in one tree walk so translator-driven policies can
 reuse the same language unit instead of reparsing the same module repeatedly.
+When a policy only needs a narrow fact set, the language profile may also
+expose a lighter translation path instead of forcing every caller through the
+full normalized symbol model.
 
 ## Metadata Overlays
 Profiles are the preferred place for reusable stack-specific settings.
@@ -208,12 +214,25 @@ That input inherits the shipped `devcovenant/runtime-requirements.lock`, and
 The builtin Python surfaces resolve against the supported CPython 3.10 through
 3.14 matrix on Linux, Windows, and macOS so workspace locks do not depend on
 the machine that happened to run refresh.
+Tracked dependency fingerprints for those surfaces must stay repo-relative and
+checkout-stable so a refresh on one machine does not rewrite registry state on
+another just because the checkout root changed.
 
 The shipped defaults keep `root_workspace` and `package_runtime` in normal
 non-hash mode, while `devcovenant_runtime` is declared hash-locked in the
 builtin `github` profile.
 A repo-specific custom profile can override those defaults per surface instead
 of inventing a second special-case dependency model.
+
+Profile ownership also includes the shipped translator maps.
+The builtin language translator set currently covers `csharp`, `dart`, `go`,
+`java`, `javascript`, `objective_c`, `opencl`, `php`, `python`, `ruby`,
+`rust`, `sql`, `swift`, and `typescript`.
+Those profiles continue to own `can_handle`, `translate`, and their asset
+metadata through files such as `python.yaml`, profile assets such as
+`PROFILE_MAP.yaml`, and repo-specific custom-profile overlays,
+while the shared translator runtime lives in the flat core modules
+`devcovenant/core/translator.py` and `devcovenant/core/run_events.py`.
 
 ## Workflow Runs
 `workflow_runs` is the public profile authoring model for extra run steps.

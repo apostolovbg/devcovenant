@@ -20,8 +20,8 @@ from unittest.mock import patch
 
 import yaml
 
+import devcovenant.core.repository_validation as manifest_module
 from devcovenant import install
-from devcovenant.core.services import manifest_inventory as manifest_module
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
 FORBIDDEN_WHEEL_PATH_FRAGMENTS = (
@@ -258,7 +258,7 @@ def _unit_test_install_run_requires_upgrade_when_present() -> None:
         output_buffer = io.StringIO()
         with redirect_stdout(output_buffer):
             with patch(
-                "devcovenant.install.resolve_repo_root",
+                "devcovenant.core.execution.resolve_repo_root",
                 return_value=repo_root,
             ):
                 with patch("devcovenant.install.install_repo") as install_mock:

@@ -7,7 +7,7 @@ from pathlib import Path
 from devcovenant.builtin.policies.documentation_growth_tracking import (
     documentation_growth_tracking,
 )
-from devcovenant.core.contracts.policy import ChangeState, CheckContext
+from devcovenant.core.policy_contract import ChangeState, CheckContext
 
 DocumentationGrowthTrackingCheck = (
     documentation_growth_tracking.DocumentationGrowthTrackingCheck

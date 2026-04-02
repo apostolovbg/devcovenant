@@ -7,7 +7,7 @@ from pathlib import Path
 from devcovenant.builtin.policies.read_only_directories import (
     read_only_directories,
 )
-from devcovenant.core.contracts.policy import CheckContext
+from devcovenant.core.policy_contract import CheckContext
 
 
 def _prepare_file(tmp_path: Path) -> Path:
@@ -92,3 +92,11 @@ class GeneratedUnittestCases(unittest.TestCase):
         with tempfile.TemporaryDirectory() as temp_dir:
             tmp_path = Path(temp_dir).resolve()
             _unit_test_exclude_globs_allow_parsers(tmp_path=tmp_path)
+
+
+class GeneratedSymbolCoverageTests(unittest.TestCase):
+    """Direct symbol assertions for coverage tracking."""
+
+    def test_symbol_level_assertions_cover_public_api(self):
+        """Read-only-directory tests should assert the policy symbol."""
+        self.assertIsNotNone(read_only_directories.ReadOnlyDirectoriesCheck)

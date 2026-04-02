@@ -10,19 +10,12 @@ if __package__ in {None, ""}:  # pragma: no cover
 
 import argparse
 
-from devcovenant.core.runtime.execution import (
-    build_command_parser,
-    print_banner,
-    print_step,
-    resolve_repo_root,
-    warn_version_mismatch,
-)
-from devcovenant.core.services import asset_materialization as asset_service
+import devcovenant.core.cli_support as cli_args_module
 
 
 def _build_parser() -> argparse.ArgumentParser:
     """Build parser for the asset command."""
-    parser = build_command_parser(
+    parser = cli_args_module.build_command_parser(
         "asset",
         "Materialize one reusable asset or managed doc.",
     )
@@ -51,6 +44,14 @@ def _build_parser() -> argparse.ArgumentParser:
 
 def run(args: argparse.Namespace) -> int:
     """Execute the asset command."""
+    import devcovenant.core.asset_materialization as asset_service
+    from devcovenant.core.execution import (
+        print_banner,
+        print_step,
+        resolve_repo_root,
+        warn_version_mismatch,
+    )
+
     repo_root = resolve_repo_root(require_install=True)
 
     print_banner("DevCovenant asset", "🧰")
@@ -80,6 +81,7 @@ def main(argv: list[str] | None = None) -> None:
     """CLI entry point."""
     parser = _build_parser()
     args = parser.parse_args(argv)
+    cli_args_module.apply_output_mode_override_from_namespace(args)
     raise SystemExit(run(args))
 
 

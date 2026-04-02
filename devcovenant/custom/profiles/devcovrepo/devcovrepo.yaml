@@ -354,7 +354,7 @@ ci_and_test:
             python -m devcovenant --version
             python - <<'PY'
             import devcovenant
-            import devcovenant.core.services.cleanup
+            import devcovenant.core.cleanup
             from devcovenant.builtin.policies.version_sync import (
                 version_sync,
             )
@@ -456,14 +456,13 @@ policy_overlays:
       - >-
         devcovenant/custom/policies/**/autofix/**=>
         devcovenant/docs/policies.md
-      - "devcovenant/core/flow/*.py => devcovenant/docs/workflow.md"
-      - "devcovenant/core/runtime/*.py => devcovenant/docs/workflow.md"
-      - "devcovenant/core/services/*.py => devcovenant/docs/architecture.md"
-      - "devcovenant/core/lib/*.py => devcovenant/docs/architecture.md"
-      - "devcovenant/core/contracts/*.py => devcovenant/docs/architecture.md"
-      - >-
-        devcovenant/core/contracts/**/*.yaml =>
-        devcovenant/docs/architecture.md
+      - "devcovenant/core/*.py => devcovenant/docs/architecture.md"
+      - "devcovenant/core/cli_support.py => devcovenant/docs/workflow.md"
+      - "devcovenant/core/execution.py => devcovenant/docs/workflow.md"
+      - "devcovenant/core/gate_runtime.py => devcovenant/docs/workflow.md"
+      - "devcovenant/core/refresh_runtime.py => devcovenant/docs/workflow.md"
+      - "devcovenant/core/run_*.py => devcovenant/docs/workflow.md"
+      - "devcovenant/core/workflow_support.py => devcovenant/docs/workflow.md"
       - "devcovenant/*.py => devcovenant/docs/installation.md"
       - "pyproject.toml => devcovenant/docs/installation.md"
       - "MANIFEST.in => devcovenant/docs/installation.md"
@@ -520,7 +519,7 @@ policy_overlays:
       - devcovenant/builtin/profiles/**/assets/**
       - tests/**
     allowed_file_globs:
-      - devcovenant/core/runtime/execution.py
+      - devcovenant/core/execution.py
     allow_waiver_comment: 'DEVCOV_ALLOW_OUTPUT:'
   last-updated:
     allowed_globs:

@@ -5,19 +5,19 @@ from __future__ import annotations
 from pathlib import Path
 from typing import Iterable, List
 
+import devcovenant.core.repository_paths as yaml_cache_service
 from devcovenant.builtin.policies.modules_need_tests import (
     modules_need_tests as modules_runtime,
 )
 from devcovenant.builtin.policies.tests_coverage.assertion_signal import (
     analyze_assertion_signal,
 )
-from devcovenant.core.contracts.policy import (
+from devcovenant.core.policy_contract import (
     CheckContext,
     PolicyCheck,
     Violation,
 )
-from devcovenant.core.lib.selectors import SelectorSet
-from devcovenant.core.services import yaml_cache as yaml_cache_service
+from devcovenant.core.selectors import SelectorSet
 
 _VALID_SEVERITIES = {"critical", "error", "warning", "info"}
 _DEFAULT_SYMBOL_KINDS = ("function", "class")
@@ -158,12 +158,17 @@ class TestsCoverageCheck(PolicyCheck):
         test_files = modules_runtime._list_existing_tests(
             context.repo_root,
             tests_dirs,
+            context=context,
         )
         indexed_tests = modules_runtime._index_tests(
             test_files,
             repo_root=context.repo_root,
+            context=context,
         )
-        repo_files = modules_runtime._collect_repo_files(context.repo_root)
+        repo_files = modules_runtime._collect_repo_files(
+            context.repo_root,
+            context=context,
+        )
 
         modules = [
             path

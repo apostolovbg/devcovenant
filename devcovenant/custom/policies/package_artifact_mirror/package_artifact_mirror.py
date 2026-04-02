@@ -10,7 +10,7 @@ from __future__ import annotations
 from pathlib import Path
 from typing import List
 
-from devcovenant.core.contracts.policy import (
+from devcovenant.core.policy_contract import (
     CheckContext,
     PolicyCheck,
     Violation,

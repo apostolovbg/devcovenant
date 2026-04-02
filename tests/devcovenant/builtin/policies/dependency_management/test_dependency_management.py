@@ -8,7 +8,7 @@ from pathlib import Path
 from devcovenant.builtin.policies.dependency_management import (
     dependency_management,
 )
-from devcovenant.core.contracts.policy import CheckContext
+from devcovenant.core.policy_contract import CheckContext
 
 
 def _setup_repo(tmp_path: Path) -> Path:

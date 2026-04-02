@@ -387,5 +387,5 @@ policy_overlays:
 
 run_events:
   - id: python
-    entrypoint: "devcovenant.core.runtime.event:\
-python_run_event_adapter_factory"
+    entrypoint: "devcovenant.core.run_events:\
+    python_run_event_adapter_factory"

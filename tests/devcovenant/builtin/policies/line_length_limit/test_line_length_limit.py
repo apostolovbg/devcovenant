@@ -8,7 +8,7 @@ import unittest
 from pathlib import Path
 
 from devcovenant.builtin.policies.line_length_limit import line_length_limit
-from devcovenant.core.contracts.policy import CheckContext
+from devcovenant.core.policy_contract import CheckContext
 
 LineLengthLimitCheck = line_length_limit.LineLengthLimitCheck
 

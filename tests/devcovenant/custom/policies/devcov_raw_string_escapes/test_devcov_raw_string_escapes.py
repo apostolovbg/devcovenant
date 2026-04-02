@@ -6,7 +6,7 @@ import tempfile
 import unittest
 from pathlib import Path
 
-from devcovenant.core.contracts.policy import CheckContext
+from devcovenant.core.policy_contract import CheckContext
 from devcovenant.custom.policies.devcov_raw_string_escapes import (
     devcov_raw_string_escapes as policy_module,
 )

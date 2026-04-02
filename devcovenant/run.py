@@ -10,20 +10,12 @@ if __package__ in {None, ""}:  # pragma: no cover
 
 import argparse
 
-from devcovenant.core.runtime.execution import (
-    build_command_parser,
-    print_banner,
-    print_step,
-    resolve_repo_root,
-    run_bootstrap_registry_refresh,
-    run_workflow_runs,
-    warn_version_mismatch,
-)
+import devcovenant.core.cli_support as cli_args_module
 
 
 def _build_parser() -> argparse.ArgumentParser:
     """Build parser for the run command."""
-    return build_command_parser(
+    return cli_args_module.build_command_parser(
         "run",
         "Run all declared DevCovenant workflow runs.",
     )
@@ -31,6 +23,15 @@ def _build_parser() -> argparse.ArgumentParser:
 
 def run(args: argparse.Namespace) -> int:
     """Execute the workflow-run command from parsed arguments."""
+    from devcovenant.core.execution import (
+        print_banner,
+        print_step,
+        resolve_repo_root,
+        run_bootstrap_registry_refresh,
+        run_workflow_runs,
+        warn_version_mismatch,
+    )
+
     del args
     repo_root = resolve_repo_root(require_install=True)
 
@@ -48,6 +49,7 @@ def main(argv: list[str] | None = None) -> None:
     """CLI entry point."""
     parser = _build_parser()
     args = parser.parse_args(argv)
+    cli_args_module.apply_output_mode_override_from_namespace(args)
     raise SystemExit(run(args))
 
 

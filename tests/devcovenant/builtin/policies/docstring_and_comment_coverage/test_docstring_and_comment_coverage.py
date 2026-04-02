@@ -7,8 +7,8 @@ from pathlib import Path
 from devcovenant.builtin.policies.docstring_and_comment_coverage import (
     docstring_and_comment_coverage,
 )
-from devcovenant.core.contracts.policy import CheckContext
-from devcovenant.core.services.translator_engine import TranslatorRuntime
+from devcovenant.core.policy_contract import CheckContext
+from devcovenant.core.translator import TranslatorRuntime
 
 DocstringAndCommentCoverageCheck = (
     docstring_and_comment_coverage.DocstringAndCommentCoverageCheck

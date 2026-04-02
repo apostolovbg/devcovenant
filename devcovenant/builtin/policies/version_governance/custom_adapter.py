@@ -7,7 +7,7 @@ import sys
 from pathlib import Path
 from typing import TYPE_CHECKING, Any, List
 
-from devcovenant.core.contracts.policy import Violation
+from devcovenant.core.policy_contract import Violation
 
 if TYPE_CHECKING:
     from .version_governance import (

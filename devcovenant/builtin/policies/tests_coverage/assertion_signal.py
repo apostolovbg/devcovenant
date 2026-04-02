@@ -8,7 +8,7 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Iterable, Pattern
 
-from devcovenant.core.services import yaml_cache as yaml_cache_service
+import devcovenant.core.repository_paths as yaml_cache_service
 
 _DEFAULT_FIXTURE_MARKER = r"\bDEVCOV_FIXTURE_OK:\s*(?P<reason>\S.*)"
 _DEFAULT_ASSERTION_PATTERN = r"\bassert\b"
@@ -361,6 +361,6 @@ def analyze_assertion_signal(
     )
 
 
-def has_assertion_signal(path: Path) -> bool:
-    """Compatibility wrapper returning only assertion-presence signal."""
-    return analyze_assertion_signal(path).has_assertion_signal
+def has_assertion_signal(path: Path, **kwargs: object) -> bool:
+    """Return True when one test file carries usable assertion signal."""
+    return analyze_assertion_signal(path, **kwargs).has_assertion_signal

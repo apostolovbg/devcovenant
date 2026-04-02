@@ -25,16 +25,22 @@ def _unit_test_run_is_read_only_by_default() -> None:
     repo_root = Path("/repo")
     args = SimpleNamespace()
 
-    with patch("devcovenant.check.resolve_repo_root", return_value=repo_root):
-        with patch("devcovenant.check.refresh_repo") as refresh_mock:
+    with patch(
+        "devcovenant.core.execution.resolve_repo_root",
+        return_value=repo_root,
+    ):
+        with patch(
+            "devcovenant.core.refresh_runtime.refresh_repo"
+        ) as refresh_mock:
             with patch(
-                "devcovenant.check.cleanup_repo_bytecode_artifacts"
+                "devcovenant.core.execution." "cleanup_repo_bytecode_artifacts"
             ) as cleanup_mock:
-                with patch("devcovenant.check.warn_version_mismatch"):
-                    with patch("devcovenant.check.print_banner"):
-                        with patch("devcovenant.check.print_step"):
+                with patch("devcovenant.core.execution.warn_version_mismatch"):
+                    with patch("devcovenant.core.execution.print_banner"):
+                        with patch("devcovenant.core.execution.print_step"):
                             with patch(
-                                "devcovenant.check.DevCovenantEngine"
+                                "devcovenant.core.policy_runtime."
+                                "DevCovenantEngine"
                             ) as engine:
                                 engine.return_value.check.return_value = (
                                     _mock_check_result()
@@ -59,20 +65,27 @@ def _unit_test_run_uses_gate_env_for_refresh_and_autofix() -> None:
 
     with patch.dict("devcovenant.check.os.environ", gate_env, clear=False):
         with patch(
-            "devcovenant.check.resolve_repo_root", return_value=repo_root
+            "devcovenant.core.execution.resolve_repo_root",
+            return_value=repo_root,
         ):
             with patch(
-                "devcovenant.check.refresh_repo",
+                "devcovenant.core.refresh_runtime.refresh_repo",
                 return_value=0,
             ) as refresh_mock:
                 with patch(
-                    "devcovenant.check.cleanup_repo_bytecode_artifacts"
+                    "devcovenant.core.execution."
+                    "cleanup_repo_bytecode_artifacts"
                 ) as cleanup_mock:
-                    with patch("devcovenant.check.warn_version_mismatch"):
-                        with patch("devcovenant.check.print_banner"):
-                            with patch("devcovenant.check.print_step"):
+                    with patch(
+                        "devcovenant.core.execution." "warn_version_mismatch"
+                    ):
+                        with patch("devcovenant.core.execution.print_banner"):
+                            with patch(
+                                "devcovenant.core.execution.print_step"
+                            ):
                                 with patch(
-                                    "devcovenant.check.DevCovenantEngine"
+                                    "devcovenant.core.policy_runtime."
+                                    "DevCovenantEngine"
                                 ) as engine:
                                     engine.return_value.check.return_value = (
                                         _mock_check_result()
@@ -93,17 +106,26 @@ def _unit_test_run_stops_when_gate_refresh_fails() -> None:
 
     with patch.dict("devcovenant.check.os.environ", gate_env, clear=False):
         with patch(
-            "devcovenant.check.resolve_repo_root", return_value=repo_root
+            "devcovenant.core.execution.resolve_repo_root",
+            return_value=repo_root,
         ):
-            with patch("devcovenant.check.refresh_repo", return_value=9):
+            with patch(
+                "devcovenant.core.refresh_runtime.refresh_repo", return_value=9
+            ):
                 with patch(
-                    "devcovenant.check.cleanup_repo_bytecode_artifacts"
+                    "devcovenant.core.execution."
+                    "cleanup_repo_bytecode_artifacts"
                 ) as cleanup_mock:
-                    with patch("devcovenant.check.warn_version_mismatch"):
-                        with patch("devcovenant.check.print_banner"):
-                            with patch("devcovenant.check.print_step"):
+                    with patch(
+                        "devcovenant.core.execution." "warn_version_mismatch"
+                    ):
+                        with patch("devcovenant.core.execution.print_banner"):
+                            with patch(
+                                "devcovenant.core.execution.print_step"
+                            ):
                                 with patch(
-                                    "devcovenant.check.DevCovenantEngine"
+                                    "devcovenant.core.policy_runtime."
+                                    "DevCovenantEngine"
                                 ) as engine:
                                     exit_code = check.run(args)
     assert exit_code == 9
@@ -116,16 +138,22 @@ def _unit_test_run_blocks_when_sync_issues_exist() -> None:
     repo_root = Path("/repo")
     args = SimpleNamespace()
 
-    with patch("devcovenant.check.resolve_repo_root", return_value=repo_root):
-        with patch("devcovenant.check.refresh_repo") as refresh_mock:
+    with patch(
+        "devcovenant.core.execution.resolve_repo_root",
+        return_value=repo_root,
+    ):
+        with patch(
+            "devcovenant.core.refresh_runtime.refresh_repo"
+        ) as refresh_mock:
             with patch(
-                "devcovenant.check.cleanup_repo_bytecode_artifacts"
+                "devcovenant.core.execution." "cleanup_repo_bytecode_artifacts"
             ) as cleanup_mock:
-                with patch("devcovenant.check.warn_version_mismatch"):
-                    with patch("devcovenant.check.print_banner"):
-                        with patch("devcovenant.check.print_step"):
+                with patch("devcovenant.core.execution.warn_version_mismatch"):
+                    with patch("devcovenant.core.execution.print_banner"):
+                        with patch("devcovenant.core.execution.print_step"):
                             with patch(
-                                "devcovenant.check.DevCovenantEngine"
+                                "devcovenant.core.policy_runtime."
+                                "DevCovenantEngine"
                             ) as engine:
                                 engine.return_value.check.return_value = (
                                     _mock_check_result(sync_issues=True)
@@ -173,17 +201,26 @@ def _unit_test_run_does_not_mutate_gate_status_file() -> None:
         status_path.write_bytes(status_bytes)
 
         with patch(
-            "devcovenant.check.resolve_repo_root", return_value=repo_root
+            "devcovenant.core.execution.resolve_repo_root",
+            return_value=repo_root,
         ):
-            with patch("devcovenant.check.refresh_repo") as refresh_mock:
+            with patch(
+                "devcovenant.core.refresh_runtime.refresh_repo"
+            ) as refresh_mock:
                 with patch(
-                    "devcovenant.check.cleanup_repo_bytecode_artifacts"
+                    "devcovenant.core.execution."
+                    "cleanup_repo_bytecode_artifacts"
                 ) as cleanup_mock:
-                    with patch("devcovenant.check.warn_version_mismatch"):
-                        with patch("devcovenant.check.print_banner"):
-                            with patch("devcovenant.check.print_step"):
+                    with patch(
+                        "devcovenant.core.execution." "warn_version_mismatch"
+                    ):
+                        with patch("devcovenant.core.execution.print_banner"):
+                            with patch(
+                                "devcovenant.core.execution.print_step"
+                            ):
                                 with patch(
-                                    "devcovenant.check.DevCovenantEngine"
+                                    "devcovenant.core.policy_runtime."
+                                    "DevCovenantEngine"
                                 ) as engine:
                                     engine.return_value.check.return_value = (
                                         _mock_check_result()

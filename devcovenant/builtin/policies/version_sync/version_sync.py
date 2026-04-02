@@ -11,7 +11,7 @@ from typing import Any, Iterable, List, Optional
 import yaml
 
 from devcovenant.builtin.policies.version_governance import version_governance
-from devcovenant.core.contracts.policy import (
+from devcovenant.core.policy_contract import (
     CheckContext,
     PolicyCheck,
     Violation,

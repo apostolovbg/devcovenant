@@ -6,13 +6,13 @@ import ast
 from pathlib import Path
 from typing import List, Sequence
 
-from devcovenant.core.contracts.policy import (
+import devcovenant.core.repository_paths as yaml_cache_service
+from devcovenant.core.policy_contract import (
     CheckContext,
     PolicyCheck,
     Violation,
 )
-from devcovenant.core.lib.selectors import SelectorSet
-from devcovenant.core.services import yaml_cache as yaml_cache_service
+from devcovenant.core.selectors import SelectorSet
 
 _VALID_SEVERITIES = {"critical", "error", "warning", "info"}
 _DEFAULT_WAIVER_MARKERS = ("DEVCOV_ALLOW_BROAD_ONCE",)

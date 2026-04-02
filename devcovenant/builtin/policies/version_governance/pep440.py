@@ -154,7 +154,7 @@ class Pep440Scheme:
         message: str,
     ):
         """Build one policy violation for a release-marker rule."""
-        from devcovenant.core.contracts.policy import Violation
+        from devcovenant.core.policy_contract import Violation
 
         return Violation(
             policy_id=release.policy_id,

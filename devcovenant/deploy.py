@@ -15,14 +15,8 @@ from pathlib import Path
 
 import yaml
 
-from devcovenant.core.flow.refresh import refresh_repo
-from devcovenant.core.runtime.execution import (
-    build_command_parser,
-    print_banner,
-    print_step,
-    resolve_repo_root,
-)
-from devcovenant.core.services import yaml_cache as yaml_cache_service
+import devcovenant.core.cli_support as cli_args_module
+import devcovenant.core.repository_paths as yaml_cache_service
 
 NORMAL_REPO_PRUNE_PATHS = (
     Path("devcovenant/custom/policies"),
@@ -101,6 +95,9 @@ def _prune_repo_only_developer_paths(repo_root: Path) -> list[str]:
 
 def deploy_repo(repo_root: Path) -> int:
     """Deploy managed DevCovenant docs/assets to a repo."""
+    from devcovenant.core.execution import print_step
+    from devcovenant.core.refresh_runtime import refresh_repo
+
     config_path = repo_root / "devcovenant" / "config.yaml"
     config = _read_yaml(config_path)
     if not _is_config_reviewed(config):
@@ -122,7 +119,7 @@ def deploy_repo(repo_root: Path) -> int:
 
 def _build_parser() -> argparse.ArgumentParser:
     """Build parser for deploy command."""
-    return build_command_parser(
+    return cli_args_module.build_command_parser(
         "deploy",
         "Deploy managed docs/assets in the current repository.",
     )
@@ -130,6 +127,12 @@ def _build_parser() -> argparse.ArgumentParser:
 
 def run(args: argparse.Namespace) -> int:
     """Execute deploy command."""
+    from devcovenant.core.execution import (
+        print_banner,
+        print_step,
+        resolve_repo_root,
+    )
+
     del args
     repo_root = resolve_repo_root(require_install=True)
 
@@ -144,6 +147,7 @@ def main(argv: list[str] | None = None) -> None:
     """CLI entry point."""
     parser = _build_parser()
     args = parser.parse_args(argv)
+    cli_args_module.apply_output_mode_override_from_namespace(args)
     raise SystemExit(run(args))
 
 

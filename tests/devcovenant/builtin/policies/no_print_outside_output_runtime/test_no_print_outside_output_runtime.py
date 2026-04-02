@@ -11,7 +11,7 @@ from pathlib import Path
 from devcovenant.builtin.policies.no_print_outside_output_runtime import (
     NoPrintOutsideOutputRuntimeCheck,
 )
-from devcovenant.core.contracts.policy import CheckContext
+from devcovenant.core.policy_contract import CheckContext
 
 
 class _FakeDeclaration:
@@ -66,7 +66,7 @@ def _configured_check() -> NoPrintOutsideOutputRuntimeCheck:
             ],
             "sink_attr_targets": ["javascript=>console.log"],
             "sink_macro_targets": ["rust=>println"],
-            "allowed_file_globs": ["devcovenant/core/runtime/execution.py"],
+            "allowed_file_globs": ["devcovenant/core/execution.py"],
         },
         {},
     )
@@ -104,7 +104,7 @@ def _unit_test_python_sink_violation_detected() -> None:
         root = Path(tmpdir)
         module = _write_module(
             root,
-            "devcovenant/core/flow/gate.py",
+            "devcovenant/core/gate_runtime.py",
             """
 def emit():
     print("bad")
@@ -121,7 +121,7 @@ def _unit_test_allowed_file_glob_is_respected() -> None:
         root = Path(tmpdir)
         module = _write_module(
             root,
-            "devcovenant/core/runtime/execution.py",
+            "devcovenant/core/execution.py",
             """
 def emit():
     print("ok")

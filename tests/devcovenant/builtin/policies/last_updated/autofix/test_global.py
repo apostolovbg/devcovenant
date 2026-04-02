@@ -7,7 +7,7 @@ import unittest
 from importlib import import_module
 from pathlib import Path
 
-from devcovenant.core.contracts.policy import Violation
+from devcovenant.core.policy_contract import Violation
 
 LastUpdatedFixer = import_module(
     "devcovenant.builtin.policies.last_updated.autofix.global"

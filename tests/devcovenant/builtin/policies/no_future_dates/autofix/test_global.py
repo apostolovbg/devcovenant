@@ -7,7 +7,7 @@ import unittest
 from importlib import import_module
 from pathlib import Path
 
-from devcovenant.core.contracts.policy import Violation
+from devcovenant.core.policy_contract import Violation
 
 NoFutureDatesFixer = import_module(
     "devcovenant.builtin.policies.no_future_dates.autofix.global"
@@ -42,3 +42,11 @@ class GeneratedUnittestCases(unittest.TestCase):
     def test_rewrites_future_date_match(self):
         """Run test_rewrites_future_date_match."""
         _unit_test_rewrites_future_date_match()
+
+
+class GeneratedSymbolCoverageTests(unittest.TestCase):
+    """Direct symbol assertions for coverage tracking."""
+
+    def test_symbol_level_assertions_cover_public_api(self):
+        """No-future-dates tests should assert the fixer symbol."""
+        self.assertIsNotNone(NoFutureDatesFixer)

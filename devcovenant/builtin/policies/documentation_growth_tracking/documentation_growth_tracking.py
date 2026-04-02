@@ -5,7 +5,7 @@ import re
 from pathlib import Path, PurePosixPath
 from typing import Iterable, List, Sequence
 
-from devcovenant.core.contracts.policy import (
+from devcovenant.core.policy_contract import (
     CheckContext,
     PolicyCheck,
     Violation,

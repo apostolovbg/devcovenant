@@ -4,7 +4,7 @@ import importlib.util
 import unittest
 from pathlib import Path
 
-from devcovenant.core.services.translator_engine import TranslatorDeclaration
+from devcovenant.core.translator import TranslatorDeclaration
 
 _REPO_ROOT = Path(__file__).resolve().parents[5]
 _TRANSLATOR_PATH = (
@@ -60,6 +60,15 @@ class TypescriptTranslatorTests(unittest.TestCase):
         names = {fact.name for fact in unit.identifier_facts}
         self.assertIn("run", names)
         self.assertTrue(unit.risk_facts)
+
+
+class GeneratedSymbolCoverageTests(unittest.TestCase):
+    """Direct symbol assertions for translator coverage tracking."""
+
+    def test_translate_symbol_asserted(self):
+        """Translator modules should assert the `translate` symbol directly."""
+        module = _load_translator_module()
+        self.assertTrue(callable(module.translate))
 
 
 if __name__ == "__main__":

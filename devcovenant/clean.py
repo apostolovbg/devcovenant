@@ -10,18 +10,12 @@ if __package__ in {None, ""}:  # pragma: no cover
 
 import argparse
 
-from devcovenant.core.flow.clean_command import clean_repo
-from devcovenant.core.runtime.execution import (
-    build_command_parser,
-    print_banner,
-    print_step,
-    resolve_repo_root,
-)
+import devcovenant.core.cli_support as cli_args_module
 
 
 def _build_parser() -> argparse.ArgumentParser:
     """Build parser for the clean command."""
-    parser = build_command_parser(
+    parser = cli_args_module.build_command_parser(
         "clean",
         (
             "Remove disposable build, cache, runtime-registry, "
@@ -58,6 +52,13 @@ def _build_parser() -> argparse.ArgumentParser:
 
 def run(args: argparse.Namespace) -> int:
     """Execute clean command from parsed arguments."""
+    from devcovenant.core.cleanup import clean_repo
+    from devcovenant.core.execution import (
+        print_banner,
+        print_step,
+        resolve_repo_root,
+    )
+
     repo_root = resolve_repo_root(require_install=True)
 
     print_banner("DevCovenant run", "🚀")
@@ -78,6 +79,7 @@ def main(argv: list[str] | None = None) -> None:
     """CLI entry point."""
     parser = _build_parser()
     args = parser.parse_args(argv)
+    cli_args_module.apply_output_mode_override_from_namespace(args)
     if args.all and (args.build or args.cache or args.registry or args.logs):
         parser.error(
             "`--all` cannot be combined with `--build`, `--cache`, "

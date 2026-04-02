@@ -13,17 +13,14 @@ import argparse
 import shutil
 from pathlib import Path
 
-from devcovenant import undeploy
-from devcovenant.core.runtime.execution import (
-    build_command_parser,
-    print_banner,
-    print_step,
-    resolve_repo_root,
-)
+import devcovenant.core.cli_support as cli_args_module
 
 
 def uninstall_repo(repo_root: Path) -> int:
     """Remove DevCovenant package and managed artifacts from repo."""
+    from devcovenant import undeploy
+    from devcovenant.core.execution import print_step
+
     undeploy.undeploy_repo(repo_root)
 
     package_dir = repo_root / "devcovenant"
@@ -36,7 +33,7 @@ def uninstall_repo(repo_root: Path) -> int:
 
 def _build_parser() -> argparse.ArgumentParser:
     """Build parser for uninstall command."""
-    return build_command_parser(
+    return cli_args_module.build_command_parser(
         "uninstall",
         "Remove DevCovenant from the current repository.",
     )
@@ -44,6 +41,12 @@ def _build_parser() -> argparse.ArgumentParser:
 
 def run(args: argparse.Namespace) -> int:
     """Execute uninstall command."""
+    from devcovenant.core.execution import (
+        print_banner,
+        print_step,
+        resolve_repo_root,
+    )
+
     del args
     repo_root = resolve_repo_root(require_install=True)
 
@@ -58,6 +61,7 @@ def main(argv: list[str] | None = None) -> None:
     """CLI entry point."""
     parser = _build_parser()
     args = parser.parse_args(argv)
+    cli_args_module.apply_output_mode_override_from_namespace(args)
     raise SystemExit(run(args))
 
 

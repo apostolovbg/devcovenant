@@ -8,7 +8,7 @@ import datetime as dt
 import re
 from typing import List
 
-from devcovenant.core.contracts.policy import (
+from devcovenant.core.policy_contract import (
     CheckContext,
     PolicyCheck,
     Violation,

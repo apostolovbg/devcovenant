@@ -1,5 +1,5 @@
 # Installation and Lifecycle
-**Last Updated:** 2026-04-01
+**Last Updated:** 2026-04-02
 
 **Project Version:** 1.0.1.dev1
 
@@ -150,6 +150,49 @@ DevCovenant entirely.
 Removes the DevCovenant footprint from the repository.
 Use it only when you are truly removing DevCovenant from the repo.
 
+## Command Startup Behavior
+DevCovenant does not treat every command path the same.
+Lightweight command paths should stay lightweight:
+- `devcovenant --help`
+- `devcovenant <command> --help`
+- `devcovenant gate --status`
+
+Those paths should not pay for the full workflow runtime, managed-environment
+re-exec checks, or tracked run-log setup when they only need parser output or
+read-only local session inspection.
+Heavy runtime setup belongs to commands that actually execute policy, gate, or
+workflow behavior.
+
+The same principle applies after the repository is converged.
+Normal startup paths compare tracked fingerprints first and should skip
+rebuilding current policy-registry or dependency-surface state when the
+effective inputs did not change.
+
+## Command Surface Ownership
+The source-owned command modules under `devcovenant/*.py` stay intentionally
+small.
+`cli.py` owns argument dispatch, while `check.py`, `clean.py`, `install.py`,
+`deploy.py`, `refresh.py`, `run.py`, `gate.py`, `policy.py`, `asset.py`,
+`undeploy.py`, `uninstall.py`, and `upgrade.py` hand work to the flat
+`devcovenant/core/*.py` runtime surface.
+
+That split keeps the public command entrypoints readable while the flat core
+modules own the real orchestration logic.
+Operator-facing command behavior should stay documented here in lockstep with
+the owning flat-core runtime module instead of drifting into hidden wrapper
+logic.
+
+When you run DevCovenant from a source checkout, DevCovenant-owned trees also
+have a stricter hygiene contract than ordinary user code:
+- `devcovenant/**`
+- `tests/devcovenant/**`
+
+Those owned trees must not write repo-local `__pycache__`, `*.pyc`,
+`*.pyo`, or similar compiled Python artifacts during normal DevCovenant
+source and test runs.
+If one of those artifacts appears under the owned trees, treat it as a
+DevCovenant bug rather than normal Python residue.
+
 ## Package Build Surface
 The published package intentionally ships the runtime-facing docs and profile
 assets that DevCovenant needs at install time:
@@ -244,6 +287,10 @@ stops with a clear error.
 If the repository uses a bench-managed or other custom environment, declare
 that environment through the profile stack or metadata overlays instead of
 expecting DevCovenant to guess an unknown layout.
+Tracked dependency and registry fingerprints should stay repo-relative and
+checkout-stable.
+Machine-local evidence belongs in `devcovenant/registry/runtime/`, not in the
+tracked registry or other committed artifacts.
 
 ## Quick Reference
 ```bash

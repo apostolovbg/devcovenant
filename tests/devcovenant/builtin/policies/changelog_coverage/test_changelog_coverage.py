@@ -13,8 +13,8 @@ from pathlib import Path
 from textwrap import dedent
 from types import SimpleNamespace
 
-from devcovenant.core.contracts.policy import ChangeState, CheckContext
-from tests.devcovenant.support import MonkeyPatch
+from devcovenant.core.policy_contract import ChangeState, CheckContext
+from tests import MonkeyPatch
 
 ChangelogCoverageModule = import_module(
     "devcovenant.builtin.policies.changelog_coverage.changelog_coverage"

@@ -65,3 +65,12 @@ policy_overlays:
       - tests
     mirror_roots:
       - devcovenant/custom=>tests/devcovenant/custom
+  tests-coverage:
+    exclude_prefixes:
+      - build
+      - dist
+      - node_modules
+      - tests
+      - devcovenant
+    force_include_globs:
+      - devcovenant/custom/**/*.py

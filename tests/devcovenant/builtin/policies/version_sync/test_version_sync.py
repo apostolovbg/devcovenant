@@ -13,7 +13,7 @@ from devcovenant.builtin.policies.version_governance.custom_regex import (
 from devcovenant.builtin.policies.version_governance.pep440 import Pep440Scheme
 from devcovenant.builtin.policies.version_governance.semver import SemverScheme
 from devcovenant.builtin.policies.version_sync import version_sync
-from devcovenant.core.contracts.policy import CheckContext
+from devcovenant.core.policy_contract import CheckContext
 
 VersionSyncCheck = version_sync.VersionSyncCheck
 

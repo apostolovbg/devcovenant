@@ -6,7 +6,7 @@
 **Maintenance Stance:** active
 **Compatibility Policy:** forward-only
 **Versioning Mode:** versioned
-**Last Updated:** 2026-04-01
+**Last Updated:** 2026-04-02
 **DevCovenant Version:** 1.0.1.dev1
 
 <!-- DEVCOV:BEGIN -->
@@ -48,8 +48,8 @@ DevCovenant lifecycle and command behavior used by this repository.
 ## Public Baseline Notes
 - Treat `devcovenant/VERSION` as the only version-defining file.
 - Preserve command/runtime contracts unless an explicit plan item changes them.
-- Keep implementation ownership layered under
-  `devcovenant/core/{flow,runtime,services,lib,contracts}`.
+- Keep implementation ownership in the flat `devcovenant/core/*.py`
+  module surface.
 - Keep product-operation docs in `devcovenant/docs/*`.
 - Keep repo-specific CI, release, and trust-surface details out of package
   docs.
@@ -1167,12 +1167,13 @@ doc_routes:
 - devcovenant/custom/policies/**/*.yaml => devcovenant/docs/policies.md
 - devcovenant/custom/policies/**/*.py => devcovenant/docs/policies.md
 - devcovenant/custom/policies/**/autofix/**=> devcovenant/docs/policies.md
-- devcovenant/core/flow/*.py => devcovenant/docs/workflow.md
-- devcovenant/core/runtime/*.py => devcovenant/docs/workflow.md
-- devcovenant/core/services/*.py => devcovenant/docs/architecture.md
-- devcovenant/core/lib/*.py => devcovenant/docs/architecture.md
-- devcovenant/core/contracts/*.py => devcovenant/docs/architecture.md
-- devcovenant/core/contracts/**/*.yaml => devcovenant/docs/architecture.md
+- devcovenant/core/*.py => devcovenant/docs/architecture.md
+- devcovenant/core/cli_support.py => devcovenant/docs/workflow.md
+- devcovenant/core/execution.py => devcovenant/docs/workflow.md
+- devcovenant/core/gate_runtime.py => devcovenant/docs/workflow.md
+- devcovenant/core/refresh_runtime.py => devcovenant/docs/workflow.md
+- devcovenant/core/run_*.py => devcovenant/docs/workflow.md
+- devcovenant/core/workflow_support.py => devcovenant/docs/workflow.md
 - devcovenant/*.py => devcovenant/docs/installation.md
 - pyproject.toml => devcovenant/docs/installation.md
 - MANIFEST.in => devcovenant/docs/installation.md
@@ -1714,7 +1715,7 @@ sink_attr_targets: []
 sink_macro_targets: []
 allowed_symbol_targets: []
 allowed_file_globs:
-- devcovenant/core/runtime/execution.py
+- devcovenant/core/execution.py
 allow_waiver_comment: 'DEVCOV_ALLOW_OUTPUT:'
 ```
 

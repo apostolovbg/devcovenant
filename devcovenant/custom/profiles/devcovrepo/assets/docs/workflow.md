@@ -156,6 +156,15 @@ session, run `devcovenant policy changelog-coverage reset-baseline` after
 rule for the active session. Normal changelog entry shape, date, summary, and
 file-coverage checks still apply.
 
+The generated `.github/workflows/ci.yml` file should stay aligned with the
+same public lifecycle the CLI exposes locally:
+- `devcovenant gate --start`
+- `devcovenant gate --mid`
+- `devcovenant run`
+- `devcovenant gate --end`
+
+That CI file is part of the workflow contract, not a second workflow model.
+
 ## Managed Environment In Workflow Execution
 When the managed-environment policy is enabled, DevCovenant chooses one target
 environment for each stage.
@@ -181,6 +190,9 @@ policy, config, or dependency inputs actually changed.
 For Python-owned tools such as the pre-commit gate hook, execution runs
 `python -m pre_commit` through the selected interpreter instead of depending on
 a console-script shim.
+Workflow diagnostics should also stay repo-safe: when a gate or run reports a
+path, it should prefer repo-relative rendering over leaking absolute checkout
+roots.
 
 ## Recovery Rules
 Use these recovery rules consistently:

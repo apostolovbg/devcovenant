@@ -14,14 +14,12 @@ except ModuleNotFoundError:  # pragma: no cover - Python 3.10 fallback path.
 
 from packaging.requirements import Requirement
 
-from devcovenant.core.contracts.policy import (
+import devcovenant.core.policy_commands as policy_commands_service
+import devcovenant.core.project_governance as project_governance_service
+from devcovenant.core.policy_contract import (
     CheckContext,
     PolicyCheck,
     Violation,
-)
-from devcovenant.core.runtime import policy_commands as policy_commands_service
-from devcovenant.core.services import (
-    project_governance as project_governance_service,
 )
 
 LICENSES_README_NAME = "README.md"

@@ -6,7 +6,7 @@ import unittest
 from pathlib import Path
 
 from devcovenant.builtin.policies.raw_string_escapes import raw_string_escapes
-from devcovenant.core.contracts.policy import CheckContext
+from devcovenant.core.policy_contract import CheckContext
 
 FIXER_MODULE = "devcovenant.builtin.policies.raw_string_escapes.autofix.global"
 fixer_module = importlib.import_module(FIXER_MODULE)

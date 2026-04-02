@@ -25,17 +25,17 @@ from packaging.requirements import InvalidRequirement, Requirement
 from devcovenant.builtin.policies.dependency_management import (
     dependency_management,
 )
-from devcovenant.core.services.metadata import (
+from devcovenant.core.policy_metadata import (
     build_metadata_context,
     metadata_value_list,
     resolve_policy_metadata_bundle,
 )
-from devcovenant.core.services.policy_registry import (
+from devcovenant.core.policy_registry import (
     PolicyRegistry,
     load_policy_descriptor,
     resolve_script_location,
 )
-from devcovenant.core.services.tracked_registry import policy_registry_path
+from devcovenant.core.tracked_registry import policy_registry_path
 
 POLICY_ID = "dependency-management"
 _TARGET_RESOLUTION_MAX_WORKERS = 4
@@ -121,14 +121,34 @@ def _dependency_refresh_engine_hash(repo_root: Path) -> str:
 
     digest = hashlib.sha256()
     active_policy_script = resolve_script_location(repo_root, POLICY_ID)
-    paths: list[Path] = [Path(__file__).resolve()]
+    repo_root = repo_root.resolve()
+    paths: list[tuple[str, Path]] = [("runtime", Path(__file__).resolve())]
     if getattr(dependency_management, "__file__", None):
-        paths.append(Path(str(dependency_management.__file__)).resolve())
+        paths.append(
+            (
+                "policy_module",
+                Path(str(dependency_management.__file__)).resolve(),
+            )
+        )
     if active_policy_script is not None:
-        paths.append(active_policy_script.path.resolve())
-        paths.append(active_policy_script.path.with_suffix(".yaml").resolve())
-    for path in paths:
-        digest.update(str(path).encode("utf-8"))
+        paths.append(
+            (
+                "active_policy_script",
+                active_policy_script.path.resolve(),
+            )
+        )
+        paths.append(
+            (
+                "active_policy_descriptor",
+                active_policy_script.path.with_suffix(".yaml").resolve(),
+            )
+        )
+    for label, path in paths:
+        try:
+            component_token = "repo:" + path.relative_to(repo_root).as_posix()
+        except ValueError:
+            component_token = f"component:{label}"
+        digest.update(component_token.encode("utf-8"))
         digest.update(b"\0")
         digest.update(_file_hash_or_missing(path).encode("utf-8"))
         digest.update(b"\n")

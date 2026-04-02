@@ -7,7 +7,7 @@ import unittest
 from pathlib import Path
 
 from devcovenant.builtin.policies.no_future_dates import no_future_dates
-from devcovenant.core.contracts.policy import CheckContext
+from devcovenant.core.policy_contract import CheckContext
 
 FIXER_MODULE = "devcovenant.builtin.policies.no_future_dates.autofix.global"
 fixer_module = importlib.import_module(FIXER_MODULE)

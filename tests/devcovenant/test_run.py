@@ -24,15 +24,20 @@ def _unit_test_run_executes_configured_workflow_runs() -> None:
     repo_root = Path("/repo")
     args = SimpleNamespace()
 
-    with patch("devcovenant.run.resolve_repo_root", return_value=repo_root):
+    with patch(
+        "devcovenant.core.execution.resolve_repo_root",
+        return_value=repo_root,
+    ):
         with patch(
-            "devcovenant.run.run_bootstrap_registry_refresh"
+            "devcovenant.core.execution." "run_bootstrap_registry_refresh"
         ) as refresh:
-            with patch("devcovenant.run.warn_version_mismatch") as mismatch:
-                with patch("devcovenant.run.print_banner"):
-                    with patch("devcovenant.run.print_step"):
+            with patch(
+                "devcovenant.core.execution.warn_version_mismatch"
+            ) as mismatch:
+                with patch("devcovenant.core.execution.print_banner"):
+                    with patch("devcovenant.core.execution.print_step"):
                         with patch(
-                            "devcovenant.run.run_workflow_runs",
+                            "devcovenant.core.execution." "run_workflow_runs",
                             return_value=0,
                         ) as run_runs:
                             exit_code = run_command.run(args)

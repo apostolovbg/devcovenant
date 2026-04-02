@@ -1,7 +1,7 @@
 metadata:
   schema_version: 1
   registry_layout: single-root
-  policy_registry_input_hash: 020c38244192c165f750c55502701f1a4ba2c7fd68b06a1d9f16de8a39696a58
+  policy_registry_input_hash: 45c7334ccdb10759dff7490d36252a1a2ff0f6b2bbca1ff7f22f5d4b78ec0220
 project-governance:
   project_name: devcovenant
   project_description: devcovenant is a repository governance framework.
@@ -103,7 +103,7 @@ managed-docs:
       project_governance_headers: false
       import_seed: true
       authoritative_source: true
-      body_fingerprint: e9dfe82219056c68bd75e6b99e3966d7297b230ecf305dd4303ffcfb5dc444cb
+      body_fingerprint: 4cee3162ef6a2d2c69f4304dd08530a67b190328227767c52437b4e5c4d35cde
     README.md:
       enabled: true
       descriptor_path: devcovenant/builtin/profiles/global/assets/README.yaml
@@ -1983,7 +1983,7 @@ policies:
     - pip-wheel-metadata/**
     origin: builtin
     script_exists: true
-    hash: 9de723b7ed9601f590311ee16b1fde00fe8ddcacf7ef4278b5db9a1c0d51aa58
+    hash: 588252bf98b8a268ec70b51e297c40942650d3789fb0edd8ae9d5d4381445ccc
     script_path: builtin/changelog_coverage.py
   devcov-raw-string-escapes:
     enabled: true
@@ -2507,7 +2507,7 @@ policies:
     - node_modules/**
     origin: builtin
     script_exists: true
-    hash: ab3293c016145776d61b5465c237ff1cc1c4ef304a1f0fed711522f3c6f8f0ae
+    hash: a9d49992c3e5fbdeea14a78aec2ef741d04e9ecee46a7bd9e4f7f2442fd65fa2
     script_path: builtin/docstring_and_comment_coverage.py
   documentation-growth-tracking:
     enabled: true
@@ -2675,12 +2675,13 @@ policies:
       - devcovenant/custom/policies/**/*.yaml => devcovenant/docs/policies.md
       - devcovenant/custom/policies/**/*.py => devcovenant/docs/policies.md
       - devcovenant/custom/policies/**/autofix/**=> devcovenant/docs/policies.md
-      - devcovenant/core/flow/*.py => devcovenant/docs/workflow.md
-      - devcovenant/core/runtime/*.py => devcovenant/docs/workflow.md
-      - devcovenant/core/services/*.py => devcovenant/docs/architecture.md
-      - devcovenant/core/lib/*.py => devcovenant/docs/architecture.md
-      - devcovenant/core/contracts/*.py => devcovenant/docs/architecture.md
-      - devcovenant/core/contracts/**/*.yaml => devcovenant/docs/architecture.md
+      - devcovenant/core/*.py => devcovenant/docs/architecture.md
+      - devcovenant/core/cli_support.py => devcovenant/docs/workflow.md
+      - devcovenant/core/execution.py => devcovenant/docs/workflow.md
+      - devcovenant/core/gate_runtime.py => devcovenant/docs/workflow.md
+      - devcovenant/core/refresh_runtime.py => devcovenant/docs/workflow.md
+      - devcovenant/core/run_*.py => devcovenant/docs/workflow.md
+      - devcovenant/core/workflow_support.py => devcovenant/docs/workflow.md
       - devcovenant/*.py => devcovenant/docs/installation.md
       - pyproject.toml => devcovenant/docs/installation.md
       - MANIFEST.in => devcovenant/docs/installation.md
@@ -3317,12 +3318,13 @@ policies:
           - devcovenant/custom/policies/**/*.yaml => devcovenant/docs/policies.md
           - devcovenant/custom/policies/**/*.py => devcovenant/docs/policies.md
           - devcovenant/custom/policies/**/autofix/**=> devcovenant/docs/policies.md
-          - devcovenant/core/flow/*.py => devcovenant/docs/workflow.md
-          - devcovenant/core/runtime/*.py => devcovenant/docs/workflow.md
-          - devcovenant/core/services/*.py => devcovenant/docs/architecture.md
-          - devcovenant/core/lib/*.py => devcovenant/docs/architecture.md
-          - devcovenant/core/contracts/*.py => devcovenant/docs/architecture.md
-          - devcovenant/core/contracts/**/*.yaml => devcovenant/docs/architecture.md
+          - devcovenant/core/*.py => devcovenant/docs/architecture.md
+          - devcovenant/core/cli_support.py => devcovenant/docs/workflow.md
+          - devcovenant/core/execution.py => devcovenant/docs/workflow.md
+          - devcovenant/core/gate_runtime.py => devcovenant/docs/workflow.md
+          - devcovenant/core/refresh_runtime.py => devcovenant/docs/workflow.md
+          - devcovenant/core/run_*.py => devcovenant/docs/workflow.md
+          - devcovenant/core/workflow_support.py => devcovenant/docs/workflow.md
           - devcovenant/*.py => devcovenant/docs/installation.md
           - pyproject.toml => devcovenant/docs/installation.md
           - MANIFEST.in => devcovenant/docs/installation.md
@@ -3352,12 +3354,13 @@ policies:
           - devcovenant/custom/policies/**/*.yaml => devcovenant/docs/policies.md
           - devcovenant/custom/policies/**/*.py => devcovenant/docs/policies.md
           - devcovenant/custom/policies/**/autofix/**=> devcovenant/docs/policies.md
-          - devcovenant/core/flow/*.py => devcovenant/docs/workflow.md
-          - devcovenant/core/runtime/*.py => devcovenant/docs/workflow.md
-          - devcovenant/core/services/*.py => devcovenant/docs/architecture.md
-          - devcovenant/core/lib/*.py => devcovenant/docs/architecture.md
-          - devcovenant/core/contracts/*.py => devcovenant/docs/architecture.md
-          - devcovenant/core/contracts/**/*.yaml => devcovenant/docs/architecture.md
+          - devcovenant/core/*.py => devcovenant/docs/architecture.md
+          - devcovenant/core/cli_support.py => devcovenant/docs/workflow.md
+          - devcovenant/core/execution.py => devcovenant/docs/workflow.md
+          - devcovenant/core/gate_runtime.py => devcovenant/docs/workflow.md
+          - devcovenant/core/refresh_runtime.py => devcovenant/docs/workflow.md
+          - devcovenant/core/run_*.py => devcovenant/docs/workflow.md
+          - devcovenant/core/workflow_support.py => devcovenant/docs/workflow.md
           - devcovenant/*.py => devcovenant/docs/installation.md
           - pyproject.toml => devcovenant/docs/installation.md
           - MANIFEST.in => devcovenant/docs/installation.md
@@ -3387,12 +3390,13 @@ policies:
           - devcovenant/custom/policies/**/*.yaml => devcovenant/docs/policies.md
           - devcovenant/custom/policies/**/*.py => devcovenant/docs/policies.md
           - devcovenant/custom/policies/**/autofix/**=> devcovenant/docs/policies.md
-          - devcovenant/core/flow/*.py => devcovenant/docs/workflow.md
-          - devcovenant/core/runtime/*.py => devcovenant/docs/workflow.md
-          - devcovenant/core/services/*.py => devcovenant/docs/architecture.md
-          - devcovenant/core/lib/*.py => devcovenant/docs/architecture.md
-          - devcovenant/core/contracts/*.py => devcovenant/docs/architecture.md
-          - devcovenant/core/contracts/**/*.yaml => devcovenant/docs/architecture.md
+          - devcovenant/core/*.py => devcovenant/docs/architecture.md
+          - devcovenant/core/cli_support.py => devcovenant/docs/workflow.md
+          - devcovenant/core/execution.py => devcovenant/docs/workflow.md
+          - devcovenant/core/gate_runtime.py => devcovenant/docs/workflow.md
+          - devcovenant/core/refresh_runtime.py => devcovenant/docs/workflow.md
+          - devcovenant/core/run_*.py => devcovenant/docs/workflow.md
+          - devcovenant/core/workflow_support.py => devcovenant/docs/workflow.md
           - devcovenant/*.py => devcovenant/docs/installation.md
           - pyproject.toml => devcovenant/docs/installation.md
           - MANIFEST.in => devcovenant/docs/installation.md
@@ -3956,12 +3960,13 @@ policies:
       - devcovenant/custom/policies/**/*.yaml => devcovenant/docs/policies.md
       - devcovenant/custom/policies/**/*.py => devcovenant/docs/policies.md
       - devcovenant/custom/policies/**/autofix/**=> devcovenant/docs/policies.md
-      - devcovenant/core/flow/*.py => devcovenant/docs/workflow.md
-      - devcovenant/core/runtime/*.py => devcovenant/docs/workflow.md
-      - devcovenant/core/services/*.py => devcovenant/docs/architecture.md
-      - devcovenant/core/lib/*.py => devcovenant/docs/architecture.md
-      - devcovenant/core/contracts/*.py => devcovenant/docs/architecture.md
-      - devcovenant/core/contracts/**/*.yaml => devcovenant/docs/architecture.md
+      - devcovenant/core/*.py => devcovenant/docs/architecture.md
+      - devcovenant/core/cli_support.py => devcovenant/docs/workflow.md
+      - devcovenant/core/execution.py => devcovenant/docs/workflow.md
+      - devcovenant/core/gate_runtime.py => devcovenant/docs/workflow.md
+      - devcovenant/core/refresh_runtime.py => devcovenant/docs/workflow.md
+      - devcovenant/core/run_*.py => devcovenant/docs/workflow.md
+      - devcovenant/core/workflow_support.py => devcovenant/docs/workflow.md
       - devcovenant/*.py => devcovenant/docs/installation.md
       - pyproject.toml => devcovenant/docs/installation.md
       - MANIFEST.in => devcovenant/docs/installation.md
@@ -4118,12 +4123,13 @@ policies:
     - devcovenant/config.yaml
     - devcovenant/config.yaml => devcovenant/docs/config.md
     - devcovenant/core/*.py
-    - devcovenant/core/contracts/**/*.yaml => devcovenant/docs/architecture.md
-    - devcovenant/core/contracts/*.py => devcovenant/docs/architecture.md
-    - devcovenant/core/flow/*.py => devcovenant/docs/workflow.md
-    - devcovenant/core/lib/*.py => devcovenant/docs/architecture.md
-    - devcovenant/core/runtime/*.py => devcovenant/docs/workflow.md
-    - devcovenant/core/services/*.py => devcovenant/docs/architecture.md
+    - devcovenant/core/*.py => devcovenant/docs/architecture.md
+    - devcovenant/core/cli_support.py => devcovenant/docs/workflow.md
+    - devcovenant/core/execution.py => devcovenant/docs/workflow.md
+    - devcovenant/core/gate_runtime.py => devcovenant/docs/workflow.md
+    - devcovenant/core/refresh_runtime.py => devcovenant/docs/workflow.md
+    - devcovenant/core/run_*.py => devcovenant/docs/workflow.md
+    - devcovenant/core/workflow_support.py => devcovenant/docs/workflow.md
     - devcovenant/custom/policies/**/*.py => devcovenant/docs/policies.md
     - devcovenant/custom/policies/**/*.yaml => devcovenant/docs/policies.md
     - devcovenant/custom/policies/**/autofix/**=> devcovenant/docs/policies.md
@@ -4152,7 +4158,7 @@ policies:
     - tests/**
     origin: builtin
     script_exists: true
-    hash: d8fc4147011474191978e21066db989dbc4db68fd1231b6648445f3cea9026af
+    hash: 525488413b4df93f0e002918312ec64f393426a68df266cb04b67175703fbfc0
     script_path: builtin/documentation_growth_tracking.py
   last-updated:
     enabled: true
@@ -4728,7 +4734,7 @@ policies:
     - devcovenant/registry/README.md
     origin: builtin
     script_exists: true
-    hash: 13abb7e8adf6cea0fdd4f9f563f34e4cf362e3fce7e609a3412df8be3fc32a2b
+    hash: 10de4653363d27f60c8365151caea940c192a3b58e0136a7152456ec38db1245
     script_path: builtin/last_updated.py
   line-length-limit:
     enabled: true
@@ -5668,7 +5674,7 @@ policies:
     - wss://
     origin: builtin
     script_exists: true
-    hash: 94bc28b380cc7228241194dac46728b4ba1564e99b6238b1b677cea7bda91f59
+    hash: 2d4523e6d519c57d8bf2167f80539697ca6a3059ea6cd3e511c60b85e99e828d
     script_path: builtin/line_length_limit.py
   managed-doc-assets:
     enabled: true
@@ -5781,7 +5787,7 @@ policies:
     assets: []
     origin: custom
     script_exists: true
-    hash: 57dc1f1c4e075cff6e47885c07300b7b4d182dabdebce5461bc51e2af3f73c30
+    hash: ddf35cb77bc771728ea3b7076023ddd9c573df4f84eadb7216e555afeefa19f8
     script_path: custom/managed_doc_assets.py
   managed-environment:
     enabled: true
@@ -6087,7 +6093,7 @@ policies:
     - .venv/bin/python
     origin: builtin
     script_exists: true
-    hash: 35bbefd080ef20269c42906cedb7a3e9725183992b0da345c15f679a1346f88d
+    hash: ff9680ac761d96f9cd5bf5910946405a8a2afbac2f96ae86dc7f413b9eb7d5ee
     script_path: builtin/managed_environment.py
   modules-need-tests:
     enabled: true
@@ -6648,7 +6654,7 @@ policies:
     - tests/**
     origin: builtin
     script_exists: true
-    hash: d116b7a51eadd283809d0bcc98816fedc57cf2a677f460193387b3d66c053f2e
+    hash: 8c27c85189c205b2ed49426ae99c1f0f59eae49c82412713c6bc4ce7388d869e
     script_path: builtin/modules_need_tests.py
   name-clarity:
     enabled: true
@@ -7015,7 +7021,7 @@ policies:
     - node_modules/**
     origin: builtin
     script_exists: true
-    hash: 5b79b22f0008610f3420057f955bcd9cf88dcea8781096b4b21672c08e4741c6
+    hash: cfc7fc1129a950c51c97b7cb941af6170ecf76c993f61d92667a099b34e8613d
     script_path: builtin/name_clarity.py
   no-future-dates:
     enabled: true
@@ -7124,7 +7130,7 @@ policies:
     assets: []
     origin: builtin
     script_exists: true
-    hash: 98dc7c376a1a7037836b6101fb61c92e7f7f3bceacec82cd4ba3096d18aa5400
+    hash: d1b7b226bb4b4b8cb22aab2a3d337b907c763d6ca3f7200e92fdda33ad359aa9
     script_path: builtin/no_future_dates.py
   no-print-outside-output-runtime:
     enabled: true
@@ -7172,7 +7178,7 @@ policies:
       sink_macro_targets: []
       allowed_symbol_targets: []
       allowed_file_globs:
-      - devcovenant/core/runtime/execution.py
+      - devcovenant/core/execution.py
       allow_waiver_comment: 'DEVCOV_ALLOW_OUTPUT:'
     metadata_resolution:
       id:
@@ -7501,19 +7507,19 @@ policies:
           - ()
         profile_overlays:
           values:
-          - devcovenant/core/runtime/execution.py
+          - devcovenant/core/execution.py
           behavior: append
           replaced_inherited_values:
           - ()
         autogen_overlays:
           values:
-          - devcovenant/core/runtime/execution.py
+          - devcovenant/core/execution.py
           behavior: append
           replaced_inherited_values:
           - ()
         effective:
           values:
-          - devcovenant/core/runtime/execution.py
+          - devcovenant/core/execution.py
       allow_waiver_comment:
         descriptor:
           values: []
@@ -7582,7 +7588,7 @@ policies:
       sink_macro_targets: []
       allowed_symbol_targets: []
       allowed_file_globs: &id075
-      - devcovenant/core/runtime/execution.py
+      - devcovenant/core/execution.py
       allow_waiver_comment: 'DEVCOV_ALLOW_OUTPUT:'
     runtime_config_overrides: {}
     runtime_effective_options:
@@ -7602,11 +7608,11 @@ policies:
     assets:
     - devcovenant/**/*.py
     - devcovenant/builtin/profiles/**/assets/**
-    - devcovenant/core/runtime/execution.py
+    - devcovenant/core/execution.py
     - tests/**
     origin: builtin
     script_exists: true
-    hash: bd811017cf7eb59045cfb095245667dea36c5568e299e486734889d9167114e7
+    hash: c7393e88db02846c576b6de5a09ebed689c8fa554a973d7de3bf112185d8819e
     script_path: builtin/no_print_outside_output_runtime.py
   no-raw-errors:
     enabled: true
@@ -8123,7 +8129,7 @@ policies:
     - node_modules/**
     origin: builtin
     script_exists: true
-    hash: e4c9791434cf4ce255a055cf98cf7f447d5c1e10ad69239b5b8eb44d20974a81
+    hash: 5104da9383a7702ce8cc10a0c81bf89e299c02b6f9da0f14244274ffa1a9a34d
     script_path: builtin/no_raw_errors.py
   raw-string-escapes:
     enabled: false
@@ -8513,7 +8519,7 @@ policies:
     assets: []
     origin: builtin
     script_exists: true
-    hash: f7a6c0a7caeecb7e17aa6d31d061b42aff2f1256da79886a09fed91bd60c18b8
+    hash: fb80691eec0a876b9b48f371936e92ed95511e88dee77870782d4babd6658418
     script_path: builtin/raw_string_escapes.py
   read-only-directories:
     enabled: true
@@ -8802,7 +8808,7 @@ policies:
     assets: []
     origin: builtin
     script_exists: true
-    hash: 89267bfc80842c177cf2dd8d70fa7ea5da8f68b9be9ca5e03a6f94bcfc8c62d8
+    hash: aa433f28fe2ee290de3be725967b537abacf83ff59241afe777e2f4a5223c249
     script_path: builtin/read_only_directories.py
   readme-sync:
     enabled: true
@@ -8917,7 +8923,7 @@ policies:
     assets: []
     origin: custom
     script_exists: true
-    hash: 6e8c343d11c55f9dd0fcfd66e404c3da5c4015b9672682655b740717d51013af
+    hash: 22d6bd4d068e093d5b6bcfb79e7f063312c023e733c831d857c7008631809cb1
     script_path: custom/readme_sync.py
   security-scanner:
     enabled: true
@@ -9253,7 +9259,7 @@ policies:
     - tests/**
     origin: builtin
     script_exists: true
-    hash: 0bbd23942924fbb0b52cc9796a48f4738c3ba91d4b2152d79ff70a7e2f7c4ac1
+    hash: 42c0cc2468d3d2ba86510433af17ec136d5c3c421f01d0c533cd037026165081
     script_path: builtin/security_scanner.py
   tests-coverage:
     enabled: true
@@ -9895,7 +9901,7 @@ policies:
     - tests/**
     origin: builtin
     script_exists: true
-    hash: af36e91181dc3cffd63873493848cae5a959664b52f6dcefce59bcc4e7d31f13
+    hash: 28ba620ab2070e77f8d71635700cdc9732213829dd2f87abb814e4e00a6846e6
     script_path: builtin/tests_coverage.py
   version-sync:
     enabled: true
@@ -10424,7 +10430,7 @@ policies:
     - docs=>devcovenant/registry/README.md
     origin: builtin
     script_exists: true
-    hash: d760b491b68f395a079cd594bade23e82d06cbb716102195e0261b145383211c
+    hash: 04b522d60f1246bd264dad07ebdb44e1ca9e09c182ba2193d10935f7c315e01b
     script_path: builtin/version_sync.py
   version-governance:
     enabled: true
@@ -10863,7 +10869,7 @@ policies:
     - devcovenant/VERSION
     origin: builtin
     script_exists: true
-    hash: c727418dc7b3431eb9ac9d812a7aa5988c53c6fe722850873a85226615599322
+    hash: 551c785979d70f7cf9ea2c0d3207d62f6d2323214943c088b1e7cc96ed457df9
     script_path: builtin/version_governance.py
   dependency-management:
     enabled: true
@@ -12870,20 +12876,20 @@ policies:
     - '{{ PROJECT_NAME_PATH }}/runtime-requirements.lock'
     origin: builtin
     script_exists: true
-    hash: 0347993ebd6a610c11ec4e8e9cb8cc0e65195b3987fa47aed7913c4787d9f889
+    hash: d9db3da3739d21b2b58a84b9d114036324fda86e4ce07a402efa02b0deeb3490
     script_path: builtin/dependency_management.py
     runtime_state:
       surfaces:
         devcovenant_runtime:
-          input_fingerprint: 8c8a1412023e1a31306e4154484280eaa0f29ab65920d0ec2ba45fa083e05099
+          input_fingerprint: 543a5ec47ffe6a10076004169b79a12bbc27328c89f8516a382f88237998d5e4
           output_fingerprints:
             lock_file: a5788217543e1d7049dcd206db7d35542c9bd7c6ca087baccbc9f4e3eaa45af0
             third_party_file: 03710e4b9b1d4a694b7f319950a3ac27222743eb35b0409771f9df366a8e8368
             licenses_dir: 96af1bb880755dbfc4adf03d904e33e432446926fb2e04cf315c349d45897fee
         root_workspace:
-          input_fingerprint: 96fe82bd88f7e304f71b8bc1109574731594b3e662d647193901b4943836125e
+          input_fingerprint: b0a5aa7b6307f7f08a3b4a39cff2c9a8d2c818e4931355c0edc86c0b9da49a11
           output_fingerprints:
-            lock_file: 64ded6b1656146f36631554c93f10f3112206a6a4f80fbbe71add09e35e832ad
+            lock_file: 6ee36a77308b3c9d7c1d5a0af0cbdb6345e63c0d24a4dc44e0ab27cd53ae3f3f
             third_party_file: 0c5b309147bb696e457e9a2b5c133dd5c5ce79b5ee4fdf2862f861bbd601219f
             licenses_dir: 73b4a7d61db762ac3a574fc7ed33306ca8f26baf4516b4062a0f9163483ebb0e
   package-artifact-mirror:
@@ -13042,7 +13048,7 @@ policies:
     - LICENSE=>devcovenant/licenses/LICENSE
     origin: custom
     script_exists: true
-    hash: 4d3da33188c3e0c3be2abe6d202c7cb939720d7d1b9f59fb8b77c498e7d810f1
+    hash: 7148e3e0fe2e9b023c8f1857ee142690e946ff0aca677f6528de74ca6a054b71
     script_path: custom/package_artifact_mirror.py
 profiles:
   csharp:
@@ -13766,6 +13772,15 @@ profiles:
         - tests
         mirror_roots:
         - devcovenant/custom=>tests/devcovenant/custom
+      tests-coverage:
+        exclude_prefixes:
+        - build
+        - dist
+        - node_modules
+        - tests
+        - devcovenant
+        force_include_globs:
+        - devcovenant/custom/**/*.py
     source: builtin
     path: devcovenant/builtin/profiles/devcovuser
     assets_available: []
@@ -15333,7 +15348,7 @@ profiles:
         - python=>builtins.print
     run_events:
     - id: python
-      entrypoint: devcovenant.core.runtime.event:python_run_event_adapter_factory
+      entrypoint: devcovenant.core.run_events:python_run_event_adapter_factory
     source: builtin
     path: devcovenant/builtin/profiles/python
     assets_available:
@@ -16174,7 +16189,7 @@ profiles:
               python -m devcovenant --version
               python - <<'PY'
               import devcovenant
-              import devcovenant.core.services.cleanup
+              import devcovenant.core.cleanup
               from devcovenant.builtin.policies.version_sync import (
                   version_sync,
               )
@@ -16250,12 +16265,13 @@ profiles:
         - devcovenant/custom/policies/**/*.yaml => devcovenant/docs/policies.md
         - devcovenant/custom/policies/**/*.py => devcovenant/docs/policies.md
         - devcovenant/custom/policies/**/autofix/**=> devcovenant/docs/policies.md
-        - devcovenant/core/flow/*.py => devcovenant/docs/workflow.md
-        - devcovenant/core/runtime/*.py => devcovenant/docs/workflow.md
-        - devcovenant/core/services/*.py => devcovenant/docs/architecture.md
-        - devcovenant/core/lib/*.py => devcovenant/docs/architecture.md
-        - devcovenant/core/contracts/*.py => devcovenant/docs/architecture.md
-        - devcovenant/core/contracts/**/*.yaml => devcovenant/docs/architecture.md
+        - devcovenant/core/*.py => devcovenant/docs/architecture.md
+        - devcovenant/core/cli_support.py => devcovenant/docs/workflow.md
+        - devcovenant/core/execution.py => devcovenant/docs/workflow.md
+        - devcovenant/core/gate_runtime.py => devcovenant/docs/workflow.md
+        - devcovenant/core/refresh_runtime.py => devcovenant/docs/workflow.md
+        - devcovenant/core/run_*.py => devcovenant/docs/workflow.md
+        - devcovenant/core/workflow_support.py => devcovenant/docs/workflow.md
         - devcovenant/*.py => devcovenant/docs/installation.md
         - pyproject.toml => devcovenant/docs/installation.md
         - MANIFEST.in => devcovenant/docs/installation.md
@@ -16312,7 +16328,7 @@ profiles:
         - devcovenant/builtin/profiles/**/assets/**
         - tests/**
         allowed_file_globs:
-        - devcovenant/core/runtime/execution.py
+        - devcovenant/core/execution.py
         allow_waiver_comment: 'DEVCOV_ALLOW_OUTPUT:'
       last-updated:
         allowed_globs:
@@ -16571,20 +16587,36 @@ inventory:
     - devcovenant/builtin/profiles/global/assets/gitignore.yaml
     - devcovenant/builtin/profiles/README.md
     - devcovenant/builtin/policies/README.md
-    - devcovenant/core/lib/agents_blocks.py
-    - devcovenant/core/services/asset_materialization.py
-    - devcovenant/core/services/integrity_validation.py
-    - devcovenant/core/services/manifest_inventory.py
-    - devcovenant/core/services/policy_registry.py
-    - devcovenant/core/services/structure_validation.py
-    - devcovenant/core/services/tracked_registry.py
-    - devcovenant/core/flow/gate_status_validation.py
-    - devcovenant/core/flow/workflow_contract.py
-    - devcovenant/core/flow/workflow_validation.py
-    - devcovenant/core/runtime/policy_commands.py
-    - devcovenant/core/runtime/policy_runtime_actions.py
-    - devcovenant/core/runtime/registry.py
-    - devcovenant/core/runtime/workflow_session.py
+    - devcovenant/core/README.md
+    - devcovenant/core/__init__.py
+    - devcovenant/core/agents_blocks.py
+    - devcovenant/core/asset_materialization.py
+    - devcovenant/core/cleanup.py
+    - devcovenant/core/cli_support.py
+    - devcovenant/core/execution.py
+    - devcovenant/core/gate_runtime.py
+    - devcovenant/core/managed_docs.py
+    - devcovenant/core/policy_autofix.py
+    - devcovenant/core/policy_contract.py
+    - devcovenant/core/policy_runtime.py
+    - devcovenant/core/policy_commands.py
+    - devcovenant/core/policy_metadata.py
+    - devcovenant/core/policy_registry.py
+    - devcovenant/core/policy_runtime_actions.py
+    - devcovenant/core/refresh_runtime.py
+    - devcovenant/core/profile_registry.py
+    - devcovenant/core/project_governance.py
+    - devcovenant/core/repository_paths.py
+    - devcovenant/core/repository_validation.py
+    - devcovenant/core/run_events.py
+    - devcovenant/core/run_logs.py
+    - devcovenant/core/runtime_errors.py
+    - devcovenant/core/runtime_profile.py
+    - devcovenant/core/selectors.py
+    - devcovenant/core/tracked_registry.py
+    - devcovenant/core/translator.py
+    - devcovenant/core/workflow_support.py
+    - devcovenant/core/document_exemptions.py
   docs:
     core:
     - AGENTS.md

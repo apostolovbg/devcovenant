@@ -7,8 +7,8 @@ import re
 from pathlib import Path
 from typing import Any
 
-from devcovenant.core.services import yaml_cache as yaml_cache_service
-from devcovenant.core.services.translator_engine import (
+import devcovenant.core.repository_paths as yaml_cache_service
+from devcovenant.core.translator import (
     IdentifierFact,
     LanguageUnit,
     RiskFact,
@@ -52,6 +52,26 @@ def _has_nearby_comment(line_number: int, lines: list[str]) -> bool:
         if lines[current - 1].strip().startswith("#"):
             return True
     return False
+
+
+def _path_signature(path: Path) -> tuple[object, ...]:
+    """Return one run-scoped path signature for lightweight caches."""
+    normalized = path.as_posix()
+    try:
+        stat = path.stat()
+    except OSError:
+        return (normalized, None, None)
+    return (normalized, stat.st_mtime_ns, stat.st_size)
+
+
+def _parse_python_module(path: Path, source: str) -> ast.AST | None:
+    """Parse Python source using the shared AST cache when possible."""
+    if path.exists():
+        return yaml_cache_service.parse_python_ast(path)
+    try:
+        return ast.parse(source, filename=str(path))
+    except SyntaxError:
+        return None
 
 
 class _PythonFactsVisitor(ast.NodeVisitor):
@@ -127,20 +147,56 @@ class _PythonFactsVisitor(ast.NodeVisitor):
             )
 
 
+class _PythonDocumentationFactsVisitor(ast.NodeVisitor):
+    """Collect only documentation facts for lightweight policy paths."""
+
+    def __init__(self, *, lines: list[str]) -> None:
+        """Store source lines and initialize symbol-doc facts."""
+        self.lines = lines
+        self.symbol_docs: list[SymbolDocFact] = []
+
+    def visit_FunctionDef(self, node: ast.FunctionDef) -> None:
+        """Collect function documentation facts."""
+        self._record_function(node)
+        self.generic_visit(node)
+
+    def visit_AsyncFunctionDef(self, node: ast.AsyncFunctionDef) -> None:
+        """Collect async-function documentation facts."""
+        self._record_function(node)
+        self.generic_visit(node)
+
+    def visit_ClassDef(self, node: ast.ClassDef) -> None:
+        """Collect class documentation facts."""
+        documented = bool(ast.get_docstring(node)) or _has_nearby_comment(
+            node.lineno,
+            self.lines,
+        )
+        self.symbol_docs.append(
+            SymbolDocFact("class", node.name, node.lineno, documented)
+        )
+        self.generic_visit(node)
+
+    def _record_function(
+        self,
+        node: ast.FunctionDef | ast.AsyncFunctionDef,
+    ) -> None:
+        """Collect one sync or async function documentation fact."""
+        documented = bool(ast.get_docstring(node)) or _has_nearby_comment(
+            node.lineno,
+            self.lines,
+        )
+        self.symbol_docs.append(
+            SymbolDocFact("function", node.name, node.lineno, documented)
+        )
+
+
 def translate(
     *, path: Path, source: str, declaration: TranslatorDeclaration, **_: Any
 ) -> LanguageUnit:
     """Translate Python source into a policy-agnostic LanguageUnit."""
     lines = source.splitlines()
     risks: list[RiskFact] = []
-
-    if path.exists():
-        module = yaml_cache_service.parse_python_ast(path)
-    else:
-        try:
-            module = ast.parse(source, filename=str(path))
-        except SyntaxError:
-            module = None
+    module = _parse_python_module(path, source)
     if module is None:
         return LanguageUnit(
             translator_id=declaration.translator_id,
@@ -183,3 +239,69 @@ def translate(
         risk_facts=tuple(risks),
         test_name_templates=TEST_TEMPLATES,
     )
+
+
+def translate_minimal(
+    *,
+    path: Path,
+    source: str,
+    declaration: TranslatorDeclaration,
+    context: Any | None = None,
+    **_: Any,
+) -> LanguageUnit:
+    """Translate Python source without identifier/risk collection."""
+    cache_bucket_getter = getattr(context, "runtime_cache_bucket", None)
+    cache_bucket = (
+        cache_bucket_getter("python_translator_minimal")
+        if callable(cache_bucket_getter)
+        else None
+    )
+    cache_key = (
+        _path_signature(path),
+        declaration.translator_id,
+        declaration.profile_name,
+    )
+    if isinstance(cache_bucket, dict) and cache_key in cache_bucket:
+        cached = cache_bucket[cache_key]
+        if isinstance(cached, LanguageUnit):
+            return cached
+
+    lines = source.splitlines()
+    module = _parse_python_module(path, source)
+    if module is None:
+        unit = LanguageUnit(
+            translator_id=declaration.translator_id,
+            profile_name=declaration.profile_name,
+            language="python",
+            path=str(path),
+            suffix=path.suffix.lower(),
+            source=source,
+            module_documented=False,
+            identifier_facts=tuple(),
+            symbol_doc_facts=tuple(),
+            risk_facts=tuple(),
+            test_name_templates=TEST_TEMPLATES,
+        )
+    else:
+        module_documented = bool(ast.get_docstring(module)) or any(
+            line.strip().startswith("#") for line in lines[:5]
+        )
+        visitor = _PythonDocumentationFactsVisitor(lines=lines)
+        visitor.visit(module)
+        unit = LanguageUnit(
+            translator_id=declaration.translator_id,
+            profile_name=declaration.profile_name,
+            language="python",
+            path=str(path),
+            suffix=path.suffix.lower(),
+            source=source,
+            module_documented=module_documented,
+            identifier_facts=tuple(),
+            symbol_doc_facts=tuple(visitor.symbol_docs),
+            risk_facts=tuple(),
+            test_name_templates=TEST_TEMPLATES,
+        )
+
+    if isinstance(cache_bucket, dict):
+        cache_bucket[cache_key] = unit
+    return unit

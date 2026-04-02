@@ -11,14 +11,12 @@ import re
 from pathlib import Path
 from typing import Dict, List
 
-from devcovenant.core.contracts.policy import (
+import devcovenant.core.managed_docs as managed_docs_service
+import devcovenant.core.project_governance as project_governance_service
+from devcovenant.core.policy_contract import (
     CheckContext,
     PolicyCheck,
     Violation,
-)
-from devcovenant.core.services import managed_docs as managed_docs_service
-from devcovenant.core.services import (
-    project_governance as project_governance_service,
 )
 
 ProjectGovernanceState = project_governance_service.ProjectGovernanceState

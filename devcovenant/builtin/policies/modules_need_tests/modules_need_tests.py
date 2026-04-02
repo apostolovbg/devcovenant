@@ -8,16 +8,14 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import List, Set, Tuple
 
-from devcovenant.core.contracts.policy import (
+import devcovenant.core.repository_paths as yaml_cache_service
+from devcovenant.core.gate_runtime import capture_current_snapshot_paths
+from devcovenant.core.policy_contract import (
     CheckContext,
     PolicyCheck,
     Violation,
 )
-from devcovenant.core.lib.selectors import SelectorSet, build_watchlists
-from devcovenant.core.runtime.session_snapshot import (
-    capture_current_snapshot_paths,
-)
-from devcovenant.core.services import yaml_cache as yaml_cache_service
+from devcovenant.core.selectors import SelectorSet, build_watchlists
 
 IGNORED_MODULE_STEMS = {"__init__", "__main__"}
 IGNORED_TEST_FILE_NAMES = {"__init__.py", ".DS_Store"}
@@ -127,8 +125,13 @@ def _is_under_tests(
     )
 
 
-def _collect_repo_files(repo_root: Path) -> Set[Path]:
+def _collect_repo_files(
+    repo_root: Path,
+    *,
+    context: CheckContext | None = None,
+) -> Set[Path]:
     """Return repository files using shared snapshot-scanner semantics."""
+    del context
     return {
         repo_root / rel_path
         for rel_path in capture_current_snapshot_paths(repo_root)
@@ -172,8 +175,14 @@ def _is_module_candidate(
     return selector.matches(path, repo_root)
 
 
-def _list_existing_tests(repo_root: Path, tests_dirs: List[str]) -> list[Path]:
+def _list_existing_tests(
+    repo_root: Path,
+    tests_dirs: List[str],
+    *,
+    context: CheckContext | None = None,
+) -> list[Path]:
     """Return existing files under configured tests roots."""
+    del context
     discovered: list[Path] = []
     for tests_dir in tests_dirs:
         root = repo_root / tests_dir
@@ -192,8 +201,20 @@ def _index_tests(
     tests: list[Path],
     *,
     repo_root: Path,
+    context: CheckContext | None = None,
 ) -> tuple[IndexedTestPath, ...]:
     """Return reusable lowercase test-path metadata."""
+    cache_bucket = (
+        context.runtime_cache_bucket("modules_need_tests")
+        if context is not None
+        else None
+    )
+    cache_key = (
+        "indexed_tests",
+        tuple(path.relative_to(repo_root).as_posix() for path in tests),
+    )
+    if cache_bucket is not None and cache_key in cache_bucket:
+        return tuple(cache_bucket[cache_key])
     indexed: list[IndexedTestPath] = []
     for test_path in tests:
         relative = test_path.relative_to(repo_root).as_posix().lower()
@@ -206,7 +227,10 @@ def _index_tests(
                 compact_test_name=re.sub(r"[^a-zA-Z0-9]+", "", test_name),
             )
         )
-    return tuple(indexed)
+    result = tuple(indexed)
+    if cache_bucket is not None:
+        cache_bucket[cache_key] = result
+    return result
 
 
 def _is_test_file_candidate(path: Path, repo_root: Path) -> bool:
@@ -309,17 +333,6 @@ def _mirror_candidates(
             seen.add(candidate)
             expected.append(candidate)
     return expected
-
-
-def _looks_like_test_artifact(path: Path) -> bool:
-    """Return True when path name resembles a concrete test artifact."""
-    lowered = path.name.lower()
-    return (
-        lowered.startswith("test_")
-        or "_test." in lowered
-        or ".test." in lowered
-        or ".spec." in lowered
-    )
 
 
 def _within_root(path: Path, root: Path) -> bool:
@@ -483,7 +496,7 @@ class ModulesNeedTestsCheck(PolicyCheck):
             return []
 
         violations: List[Violation] = []
-        repo_files = _collect_repo_files(context.repo_root)
+        repo_files = _collect_repo_files(context.repo_root, context=context)
         selector = SelectorSet.from_policy(self)
         tests_dirs = _test_roots(self)
         tests_label = ", ".join(sorted(tests_dirs))
@@ -516,10 +529,15 @@ class ModulesNeedTestsCheck(PolicyCheck):
         if not placeholder_markers:
             placeholder_markers = PLACEHOLDER_TEXT_MARKERS
 
-        test_files = _list_existing_tests(context.repo_root, tests_dirs)
+        test_files = _list_existing_tests(
+            context.repo_root,
+            tests_dirs,
+            context=context,
+        )
         indexed_tests = _index_tests(
             test_files,
             repo_root=context.repo_root,
+            context=context,
         )
         module_files = [
             path
@@ -656,8 +674,6 @@ class ModulesNeedTestsCheck(PolicyCheck):
                 for _, tests_prefix in mirror_roots
             ]
             for test_file in sorted(test_files):
-                if not _looks_like_test_artifact(test_file):
-                    continue
                 if not any(
                     _within_root(test_file, mirror_root)
                     for mirror_root in mirror_roots_abs
@@ -672,7 +688,7 @@ class ModulesNeedTestsCheck(PolicyCheck):
                         severity="error",
                         file_path=test_file,
                         message=(
-                            "Remove stale mirrored test with no valid "
+                            "Remove stale mirrored file with no valid "
                             f"source module: {test_rel}"
                         ),
                     )

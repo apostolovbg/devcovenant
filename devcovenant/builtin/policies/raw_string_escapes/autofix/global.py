@@ -7,7 +7,7 @@ from __future__ import annotations
 from pathlib import Path
 from typing import Tuple
 
-from devcovenant.core.contracts.policy import FixResult, PolicyFixer, Violation
+from devcovenant.core.policy_contract import FixResult, PolicyFixer, Violation
 
 from ..raw_string_escapes import _SUSPICIOUS_ESCAPE_RE
 

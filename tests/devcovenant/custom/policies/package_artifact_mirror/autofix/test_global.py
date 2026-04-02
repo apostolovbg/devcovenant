@@ -7,7 +7,7 @@ import unittest
 from importlib import import_module
 from pathlib import Path
 
-from devcovenant.core.contracts.policy import Violation
+from devcovenant.core.policy_contract import Violation
 
 PackageArtifactMirrorFixer = import_module(
     "devcovenant.custom.policies.package_artifact_mirror.autofix.global"

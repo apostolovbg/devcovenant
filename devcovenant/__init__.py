@@ -8,7 +8,6 @@ scripts, and enforces policies automatically during development.
 from __future__ import annotations
 
 import atexit
-import os
 import shutil
 import sys
 from pathlib import Path
@@ -32,36 +31,54 @@ def _source_checkout_root(
     return repo_root
 
 
+def _source_checkout_cache_roots(
+    package_file: str | Path | None = None,
+) -> tuple[Path, ...]:
+    """Return owned source trees that must stay free of Python caches."""
+    repo_root = _source_checkout_root(package_file)
+    if repo_root is None:
+        return ()
+    return (
+        repo_root / "devcovenant",
+        repo_root / "tests" / "devcovenant",
+    )
+
+
 def _disable_source_checkout_bytecode(
     package_file: str | Path | None = None,
 ) -> bool:
     """Disable Python cache-file writes when imported from source."""
-    if _source_checkout_root(package_file) is None:
+    if not _source_checkout_cache_roots(package_file):
         return False
     sys.dont_write_bytecode = True
-    os.environ["PYTHONDONTWRITEBYTECODE"] = "1"
     return True
 
 
 def _cleanup_source_checkout_import_cache(
     package_file: str | Path | None = None,
 ) -> bool:
-    """Remove source-package cache files that should not linger in repo."""
-    repo_root = _source_checkout_root(package_file)
-    if repo_root is None:
-        return False
-    cache_dir = repo_root / "devcovenant" / "__pycache__"
-    if not cache_dir.exists():
-        return False
-    shutil.rmtree(cache_dir, ignore_errors=True)
-    return True
+    """Remove owned source-tree cache files that should not linger in repo."""
+    removed = False
+    for cache_root in _source_checkout_cache_roots(package_file):
+        if not cache_root.exists():
+            continue
+        for cache_dir in cache_root.rglob("__pycache__"):
+            shutil.rmtree(cache_dir, ignore_errors=True)
+            removed = True
+        for compiled_file in cache_root.rglob("*.py[co]"):
+            try:
+                compiled_file.unlink()
+            except OSError:
+                continue
+            removed = True
+    return removed
 
 
 def _register_source_checkout_import_cleanup(
     package_file: str | Path | None = None,
 ) -> bool:
     """Register exit-time cleanup for source-package import cache."""
-    if _source_checkout_root(package_file) is None:
+    if not _source_checkout_cache_roots(package_file):
         return False
     atexit.register(_cleanup_source_checkout_import_cache, package_file)
     return True

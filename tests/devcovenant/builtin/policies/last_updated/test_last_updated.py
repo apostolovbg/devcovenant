@@ -6,11 +6,11 @@ import unittest
 from datetime import datetime, timezone
 from pathlib import Path
 
+import devcovenant.core.policy_metadata as metadata_runtime
 from devcovenant.builtin.policies.last_updated import last_updated
-from devcovenant.core.contracts.policy import CheckContext, Violation
-from devcovenant.core.services import metadata as metadata_runtime
-from devcovenant.core.services.policy_registry import load_policy_descriptor
-from tests.devcovenant import repo_seed_cache
+from devcovenant.core.policy_contract import CheckContext, Violation
+from devcovenant.core.policy_registry import load_policy_descriptor
+from tests import copy_installed_repo
 
 fixer_module = importlib.import_module(
     "devcovenant.builtin.policies.last_updated.autofix.global"
@@ -222,7 +222,7 @@ def _unit_test_installed_package_docs_are_allowlisted() -> None:
     """Installed package docs should inherit allowlist coverage."""
     with tempfile.TemporaryDirectory() as temp_dir:
         repo_root = Path(temp_dir).resolve()
-        repo_seed_cache.copy_installed_repo(repo_root)
+        copy_installed_repo(repo_root)
 
         checker = last_updated.LastUpdatedCheck()
         descriptor = load_policy_descriptor(repo_root, "last-updated")

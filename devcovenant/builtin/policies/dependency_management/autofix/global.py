@@ -4,8 +4,8 @@ from __future__ import annotations
 
 from pathlib import Path
 
-from devcovenant.core.contracts.policy import FixResult, PolicyFixer, Violation
-from devcovenant.core.services.policy_engine import run_policy_runtime_action
+from devcovenant.core.policy_contract import FixResult, PolicyFixer, Violation
+from devcovenant.core.policy_runtime import run_policy_runtime_action
 
 
 class DependencyManagementFixer(PolicyFixer):

@@ -148,6 +148,31 @@ DevCovenant entirely.
 Removes the DevCovenant footprint from the repository.
 Use it only when you are truly removing DevCovenant from the repo.
 
+## Command Surface Ownership
+The source-owned command modules under `devcovenant/*.py` stay intentionally
+small.
+`cli.py` owns argument dispatch, while `check.py`, `clean.py`, `install.py`,
+`deploy.py`, `refresh.py`, `run.py`, `gate.py`, `policy.py`, `asset.py`,
+`undeploy.py`, `uninstall.py`, and `upgrade.py` hand work to the flat
+`devcovenant/core/*.py` runtime surface.
+
+That split keeps the public command entrypoints readable while the flat core
+modules own the real orchestration logic.
+Operator-facing command behavior should stay documented here in lockstep with
+the owning flat-core runtime module instead of drifting into hidden wrapper
+logic.
+
+When you run DevCovenant from a source checkout, DevCovenant-owned trees also
+have a stricter hygiene contract than ordinary user code:
+- `devcovenant/**`
+- `tests/devcovenant/**`
+
+Those owned trees must not write repo-local `__pycache__`, `*.pyc`,
+`*.pyo`, or similar compiled Python artifacts during normal DevCovenant
+source and test runs.
+If one of those artifacts appears under the owned trees, treat it as a
+DevCovenant bug rather than normal Python residue.
+
 ## Package Build Surface
 The published package intentionally ships the runtime-facing docs and profile
 assets that DevCovenant needs at install time:

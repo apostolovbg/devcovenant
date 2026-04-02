@@ -6,8 +6,8 @@ from pathlib import Path
 from unittest.mock import patch
 
 from devcovenant.builtin.policies.modules_need_tests import modules_need_tests
-from devcovenant.core.contracts.policy import CheckContext
-from devcovenant.core.services.translator_engine import TranslatorRuntime
+from devcovenant.core.policy_contract import CheckContext
+from devcovenant.core.translator import TranslatorRuntime
 
 ModulesNeedTestsCheck = modules_need_tests.ModulesNeedTestsCheck
 
@@ -487,7 +487,7 @@ class TestModulesNeedTestsPolicy(unittest.TestCase):
 
             self.assertTrue(
                 any(
-                    "Remove stale mirrored test" in v.message
+                    "Remove stale mirrored file" in v.message
                     for v in violations
                 )
             )
@@ -530,7 +530,7 @@ class TestModulesNeedTestsPolicy(unittest.TestCase):
 
             self.assertTrue(
                 any(
-                    "Remove stale mirrored test" in violation.message
+                    "Remove stale mirrored file" in violation.message
                     for violation in violations
                 )
             )
@@ -578,6 +578,67 @@ class TestModulesNeedTestsPolicy(unittest.TestCase):
             self.assertTrue(
                 any(
                     "ghost.test.js" in violation.message
+                    for violation in violations
+                )
+            )
+
+    @patch("subprocess.check_output")
+    def test_mirror_mode_flags_extra_python_helper(
+        self,
+        mock_subprocess,
+    ):
+        """Mirror mode should reject extra Python helpers in mirror roots."""
+        with tempfile.TemporaryDirectory() as tmpdir:
+            repo_root = Path(tmpdir)
+            module = repo_root / "devcovenant" / "core" / "runner.py"
+            module.parent.mkdir(parents=True, exist_ok=True)
+            module.write_text(
+                "def run():\n    return True\n",
+                encoding="utf-8",
+            )
+
+            mirrored_test = (
+                repo_root / "tests" / "devcovenant" / "core" / "test_runner.py"
+            )
+            mirrored_test.parent.mkdir(parents=True, exist_ok=True)
+            mirrored_test.write_text(
+                "import unittest\n\n"
+                "class TestRunner(unittest.TestCase):\n"
+                "    def test_ok(self):\n"
+                "        self.assertTrue(True)\n",
+                encoding="utf-8",
+            )
+            helper = repo_root / "tests" / "devcovenant" / "helper_module.py"
+            helper.write_text(
+                "def helper():\n    return True\n",
+                encoding="utf-8",
+            )
+
+            mock_subprocess.return_value = (
+                "devcovenant/core/runner.py\n"
+                "tests/devcovenant/core/test_runner.py\n"
+                "tests/devcovenant/helper_module.py\n"
+            )
+
+            policy = ModulesNeedTestsCheck()
+            policy.set_options(
+                {
+                    "include_prefixes": ["devcovenant"],
+                    "include_suffixes": [".py"],
+                    "mirror_roots": ["devcovenant=>tests/devcovenant"],
+                },
+                {},
+            )
+            context = CheckContext(
+                repo_root=repo_root,
+                translator_runtime=_runtime("python", [".py"]),
+            )
+            violations = policy.check(context)
+
+            self.assertTrue(
+                any(
+                    "tests/devcovenant/helper_module.py" in violation.message
+                    and "Remove stale mirrored file" in violation.message
                     for violation in violations
                 )
             )

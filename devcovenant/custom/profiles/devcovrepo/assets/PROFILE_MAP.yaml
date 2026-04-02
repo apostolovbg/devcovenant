@@ -109,7 +109,7 @@ body: |-
     core resolves them in deterministic order from the tracked workflow
     definition.
   - Language profiles may declare `run_events` adapter metadata for the
-    relevant workflow run through `devcovenant/core/runtime/event.py`;
+    relevant workflow run through `devcovenant/core/run_events.py`;
     that is separate from translator declarations.
   - Session scoping is runtime-owned; profiles should not model policy scope
     switching metadata for bundled checks.

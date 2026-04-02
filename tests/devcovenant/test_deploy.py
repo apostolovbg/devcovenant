@@ -10,8 +10,9 @@ from unittest.mock import patch
 
 import yaml
 
-from devcovenant import deploy, install, refresh
-from tests.devcovenant import repo_seed_cache
+import devcovenant.core.refresh_runtime as refresh_flow
+from devcovenant import deploy, install
+from tests import copy_installed_repo
 
 
 def _set_config_reviewed(repo_root: Path, enabled: bool) -> None:
@@ -33,7 +34,7 @@ def _unit_test_deploy_blocks_when_config_review_is_incomplete() -> None:
     """deploy_repo should block if install.config_reviewed is false."""
     with tempfile.TemporaryDirectory() as temp_dir:
         repo_root = Path(temp_dir)
-        repo_seed_cache.copy_installed_repo(repo_root)
+        copy_installed_repo(repo_root)
 
         try:
             deploy.deploy_repo(repo_root)
@@ -49,7 +50,7 @@ def _unit_test_deploy_runs_full_refresh_when_config_ready() -> None:
     """deploy_repo should run refresh and generate tracked registry data."""
     with tempfile.TemporaryDirectory() as temp_dir:
         repo_root = Path(temp_dir)
-        repo_seed_cache.copy_installed_repo(repo_root)
+        copy_installed_repo(repo_root)
         _set_config_reviewed(repo_root, enabled=True)
 
         result = deploy.deploy_repo(repo_root)
@@ -125,7 +126,7 @@ def _unit_test_deploy_cleanup_is_deploy_only() -> None:
     """
     with tempfile.TemporaryDirectory() as temp_dir:
         repo_root = Path(temp_dir)
-        repo_seed_cache.copy_installed_repo(repo_root)
+        copy_installed_repo(repo_root)
         _set_config_reviewed(repo_root, enabled=True)
 
         policy_marker = (
@@ -168,7 +169,7 @@ def _unit_test_deploy_cleanup_is_deploy_only() -> None:
         _write_marker(kept_profile_marker)
         _write_profile_descriptor(kept_profile_marker.parent)
 
-        refresh_result = refresh.refresh_repo(repo_root)
+        refresh_result = refresh_flow.refresh_repo(repo_root)
         assert refresh_result == 0
         assert policy_marker.exists()
         assert tests_marker.exists()
@@ -189,7 +190,7 @@ def _unit_test_deploy_run_calls_deploy_repo() -> None:
     with tempfile.TemporaryDirectory() as temp_dir:
         repo_root = Path(temp_dir)
         with patch(
-            "devcovenant.deploy.resolve_repo_root",
+            "devcovenant.core.execution.resolve_repo_root",
             return_value=repo_root,
         ):
             with patch(

@@ -7,7 +7,7 @@ from __future__ import annotations
 import datetime as dt
 from pathlib import Path
 
-from devcovenant.core.contracts.policy import FixResult, PolicyFixer, Violation
+from devcovenant.core.policy_contract import FixResult, PolicyFixer, Violation
 
 
 class NoFutureDatesFixer(PolicyFixer):

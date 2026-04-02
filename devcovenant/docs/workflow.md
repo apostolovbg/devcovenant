@@ -1,5 +1,5 @@
 # Workflow
-**Last Updated:** 2026-04-01
+**Last Updated:** 2026-04-02
 
 **Project Version:** 1.0.1.dev1
 
@@ -31,6 +31,8 @@ gate session.
 Session inspection.
 Use it when you want to know whether a gate session is open and which run logs
 matter for the work slice.
+It should stay a lightweight read-only path and should not behave like a full
+gate or workflow run.
 
 ### gate --start
 Opens the tracked work session.
@@ -158,6 +160,15 @@ session, run `devcovenant policy changelog-coverage reset-baseline` after
 rule for the active session. Normal changelog entry shape, date, summary, and
 file-coverage checks still apply.
 
+The generated `.github/workflows/ci.yml` file should stay aligned with the
+same public lifecycle the CLI exposes locally:
+- `devcovenant gate --start`
+- `devcovenant gate --mid`
+- `devcovenant run`
+- `devcovenant gate --end`
+
+That CI file is part of the workflow contract, not a second workflow model.
+
 ## Managed Environment In Workflow Execution
 When the managed-environment policy is enabled, DevCovenant chooses one target
 environment for each stage.
@@ -179,6 +190,12 @@ not intentionally rebuild current tracked registry content or current
 dependency surfaces.
 They compare tracked fingerprints first and only rebuild those artifacts when
 policy, config, or dependency inputs actually changed.
+Help paths and command-status paths should stay lighter still:
+they should not initialize the full workflow runtime when they only need parser
+output or local session inspection.
+Workflow diagnostics should also stay repo-safe: when a gate or run reports a
+path, it should prefer repo-relative rendering over leaking absolute checkout
+roots.
 
 For Python-owned tools such as the pre-commit gate hook, execution runs
 `python -m pre_commit` through the selected interpreter instead of depending on

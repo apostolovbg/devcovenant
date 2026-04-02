@@ -14,27 +14,25 @@ from datetime import date, datetime, timezone
 from pathlib import Path
 from typing import Any, List
 
-import devcovenant.core.lib.document_exemptions as document_exemptions_lib
-import devcovenant.core.runtime.execution as execution_runtime_module
-import devcovenant.core.runtime.registry as registry_runtime_module
-from devcovenant.core.contracts.policy import (
-    CheckContext,
-    PolicyCheck,
-    Violation,
-)
-from devcovenant.core.lib.document_exemptions import (
+import devcovenant.core.document_exemptions as document_exemptions_lib
+import devcovenant.core.execution as execution_runtime_module
+import devcovenant.core.project_governance as project_governance_service
+import devcovenant.core.workflow_support as registry_runtime_module
+from devcovenant.core.document_exemptions import (
     DEFAULT_HEADER_DOC_SUFFIXES,
     DEFAULT_HEADER_KEYS,
     DEFAULT_HEADER_SCAN_LINES,
 )
-from devcovenant.core.lib.document_exemptions import (
+from devcovenant.core.document_exemptions import (
     document_exemption_fingerprint_for_path as _allowlist_fingerprint_for_path,
 )
-from devcovenant.core.lib.document_exemptions import (
+from devcovenant.core.document_exemptions import (
     normalize_document_exemption_entry as _normalize_exemption_entry,
 )
-from devcovenant.core.services import (
-    project_governance as project_governance_service,
+from devcovenant.core.policy_contract import (
+    CheckContext,
+    PolicyCheck,
+    Violation,
 )
 
 
@@ -415,7 +413,7 @@ def _normalize_header_scan_lines(raw_value: object) -> int:
 
 
 # Shared exemption fingerprint helpers are imported from
-# `devcovenant.core.lib.document_exemptions` to keep gate-session baseline
+# `devcovenant.core.document_exemptions` to keep gate-session baseline
 # capture and changelog-coverage checks on one canonical implementation.
 
 

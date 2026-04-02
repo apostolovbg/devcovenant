@@ -12,14 +12,15 @@ from typing import Any, Mapping, Sequence
 
 import yaml
 
-import devcovenant.core.services.metadata as metadata_runtime_module
-import devcovenant.core.services.policy_registry as registry_service_module
-import devcovenant.core.services.tracked_registry as tracked_registry_module
-from devcovenant.core.runtime.execution import (
+import devcovenant.core.policy_metadata as metadata_runtime_module
+import devcovenant.core.policy_registry as registry_service_module
+import devcovenant.core.repository_paths as yaml_cache_service
+import devcovenant.core.tracked_registry as tracked_registry_module
+from devcovenant.core.execution import (
     run_child_command_with_output_policy,
     runtime_print,
 )
-from devcovenant.core.services import yaml_cache as yaml_cache_service
+from devcovenant.core.repository_paths import display_path
 
 POLICY_ID = "managed-environment"
 RUNTIME_ACTION_RESOLVE_STAGE = "resolve-stage"
@@ -31,12 +32,13 @@ _GUIDANCE_TOKEN_PATTERN = re.compile(r"{([a-zA-Z0-9_]+)}")
 def _load_policy_entry(repo_root: Path) -> dict[str, Any] | None:
     """Load managed-environment policy entry from the tracked registry."""
     registry_path = tracked_registry_module.policy_registry_path(repo_root)
+    rendered = display_path(registry_path, repo_root=repo_root)
     if not registry_path.exists():
         config_path = repo_root / "devcovenant" / "config.yaml"
         if not config_path.exists():
             raise ValueError(
                 "managed-environment runtime requires tracked registry "
-                f"at {registry_path}. Run `devcovenant refresh`."
+                f"at {rendered}. Run `devcovenant refresh`."
             )
         descriptor = registry_service_module.load_policy_descriptor(
             repo_root,
@@ -67,16 +69,16 @@ def _load_policy_entry(repo_root: Path) -> dict[str, Any] | None:
         registry_data = yaml_cache_service.load_yaml(registry_path)
     except yaml.YAMLError as exc:
         raise ValueError(
-            f"Invalid YAML in policy registry {registry_path}: {exc}"
+            f"Invalid YAML in policy registry {rendered}: {exc}"
         ) from exc
     except OSError as exc:
         raise ValueError(
-            f"Unable to read policy registry {registry_path}: {exc}"
+            f"Unable to read policy registry {rendered}: {exc}"
         ) from exc
 
     if not isinstance(registry_data, dict):
         raise ValueError(
-            f"Invalid policy registry payload in {registry_path}: "
+            f"Invalid policy registry payload in {rendered}: "
             "expected a mapping."
         )
     policies = registry_data.get("policies")

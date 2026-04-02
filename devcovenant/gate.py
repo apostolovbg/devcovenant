@@ -11,18 +11,12 @@ if __package__ in {None, ""}:  # pragma: no cover
 
 import argparse
 
-from devcovenant.core.flow.gate import run_pre_commit_gate, show_gate_status
-from devcovenant.core.runtime.execution import (
-    build_command_parser,
-    print_banner,
-    print_step,
-    resolve_repo_root,
-)
+import devcovenant.core.cli_support as cli_args_module
 
 
 def _build_parser() -> argparse.ArgumentParser:
     """Build parser for gate command."""
-    parser = build_command_parser(
+    parser = cli_args_module.build_command_parser(
         "gate",
         "Run DevCovenant gate session lifecycle commands.",
     )
@@ -57,6 +51,16 @@ def _build_parser() -> argparse.ArgumentParser:
 
 def run(args: argparse.Namespace) -> int:
     """Execute gate command."""
+    from devcovenant.core.execution import (
+        print_banner,
+        print_step,
+        resolve_repo_root,
+    )
+    from devcovenant.core.gate_runtime import (
+        run_pre_commit_gate,
+        show_gate_status,
+    )
+
     repo_root = resolve_repo_root(require_install=True)
     if getattr(args, "status", False):
         return show_gate_status(repo_root)
@@ -83,6 +87,7 @@ def main(argv: list[str] | None = None) -> None:
     """CLI entry point."""
     parser = _build_parser()
     args = parser.parse_args(argv)
+    cli_args_module.apply_output_mode_override_from_namespace(args)
     raise SystemExit(run(args))
 
 

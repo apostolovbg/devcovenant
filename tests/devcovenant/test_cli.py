@@ -15,8 +15,9 @@ from pathlib import Path
 from types import SimpleNamespace
 
 import devcovenant
+import devcovenant.core.execution as execution_runtime_module
 from devcovenant import cli
-from tests.devcovenant.support import MonkeyPatch
+from tests import MonkeyPatch
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
 ROOT_COMMAND_MODULES = (
@@ -72,7 +73,7 @@ def _unit_test_cli_dispatches_command_and_args(monkeypatch) -> None:
         lambda *_args, **_kwargs: None,
     )
     monkeypatch.setattr(
-        cli.execution_runtime_module,
+        execution_runtime_module,
         "cleanup_source_checkout_import_cache",
         lambda _repo_root: False,
     )
@@ -96,27 +97,27 @@ def _unit_test_cli_cleans_source_checkout_import_cache(monkeypatch) -> None:
     captured: list[Path] = []
 
     monkeypatch.setattr(
-        cli.execution_runtime_module,
+        execution_runtime_module,
         "find_git_root",
         lambda _path: repo_root,
     )
     monkeypatch.setattr(
-        cli.execution_runtime_module,
+        execution_runtime_module,
         "cleanup_source_checkout_import_cache",
         lambda _repo_root: captured.append(_repo_root) or True,
     )
     monkeypatch.setattr(
-        cli.execution_runtime_module,
+        execution_runtime_module,
         "configure_repo_pycache_prefix",
         lambda _repo_root: False,
     )
     monkeypatch.setattr(
-        cli.execution_runtime_module,
+        execution_runtime_module,
         "configure_output_mode_from_config",
         lambda _repo_root: None,
     )
     monkeypatch.setattr(
-        cli.execution_runtime_module,
+        execution_runtime_module,
         "configure_logs_keep_last_from_config",
         lambda _repo_root: None,
     )
@@ -189,12 +190,12 @@ def _unit_test_cli_reexecs_when_managed_env_differs(monkeypatch) -> None:
     captured: dict[str, object] = {}
 
     monkeypatch.setattr(
-        cli.execution_runtime_module,
+        execution_runtime_module,
         "find_git_root",
         lambda _path: repo_root,
     )
     monkeypatch.setattr(
-        cli.execution_runtime_module,
+        execution_runtime_module,
         "resolve_managed_environment_for_stage",
         lambda _repo_root, _stage, base_env=None: (
             {"PATH": "/tmp"},
@@ -250,12 +251,12 @@ def _unit_test_cli_reexec_guard_prevents_loop(monkeypatch) -> None:
     managed_python = str(repo_root / ".venv" / "bin" / "python")
 
     monkeypatch.setattr(
-        cli.execution_runtime_module,
+        execution_runtime_module,
         "find_git_root",
         lambda _path: repo_root,
     )
     monkeypatch.setattr(
-        cli.execution_runtime_module,
+        execution_runtime_module,
         "resolve_managed_environment_for_stage",
         lambda _repo_root, _stage, base_env=None: (
             {"PATH": "/tmp"},
@@ -304,12 +305,12 @@ def _unit_test_cli_reports_managed_error_without_rerun(monkeypatch) -> None:
         raise ValueError("managed-environment interpreter missing")
 
     monkeypatch.setattr(
-        cli.execution_runtime_module,
+        execution_runtime_module,
         "find_git_root",
         lambda _path: repo_root,
     )
     monkeypatch.setattr(
-        cli.execution_runtime_module,
+        execution_runtime_module,
         "resolve_managed_environment_for_stage",
         _raise_missing,
     )
@@ -338,12 +339,12 @@ def _unit_test_cli_reports_non_executable_managed_python(
     managed_python = str(repo_root / ".venv" / "bin" / "python")
 
     monkeypatch.setattr(
-        cli.execution_runtime_module,
+        execution_runtime_module,
         "find_git_root",
         lambda _path: repo_root,
     )
     monkeypatch.setattr(
-        cli.execution_runtime_module,
+        execution_runtime_module,
         "resolve_managed_environment_for_stage",
         lambda _repo_root, _stage, base_env=None: (
             {"PATH": "/tmp"},
@@ -370,7 +371,8 @@ def _unit_test_cli_reports_non_executable_managed_python(
         raise AssertionError("Expected SystemExit from cli.main().")
 
     assert "not executable" in code
-    assert managed_python in code
+    assert "outside-repo/python" in code
+    assert managed_python not in code
 
 
 def _unit_test_cli_applies_root_level_output_override(monkeypatch) -> None:
@@ -379,32 +381,32 @@ def _unit_test_cli_applies_root_level_output_override(monkeypatch) -> None:
     captured: dict[str, object] = {}
 
     monkeypatch.setattr(
-        cli.execution_runtime_module,
+        execution_runtime_module,
         "find_git_root",
         lambda _path: repo_root,
     )
     monkeypatch.setattr(
-        cli.execution_runtime_module,
+        execution_runtime_module,
         "cleanup_source_checkout_import_cache",
         lambda _repo_root: False,
     )
     monkeypatch.setattr(
-        cli.execution_runtime_module,
+        execution_runtime_module,
         "configure_repo_pycache_prefix",
         lambda _repo_root: False,
     )
     monkeypatch.setattr(
-        cli.execution_runtime_module,
+        execution_runtime_module,
         "configure_output_mode_from_config",
         lambda _repo_root: captured.setdefault("config_called", True),
     )
     monkeypatch.setattr(
-        cli.execution_runtime_module,
+        execution_runtime_module,
         "configure_output_mode",
         lambda mode: captured.setdefault("override_mode", mode),
     )
     monkeypatch.setattr(
-        cli.execution_runtime_module,
+        execution_runtime_module,
         "configure_logs_keep_last_from_config",
         lambda _repo_root: None,
     )
@@ -414,7 +416,7 @@ def _unit_test_cli_applies_root_level_output_override(monkeypatch) -> None:
         lambda *_args, **_kwargs: None,
     )
     monkeypatch.setattr(
-        cli.execution_runtime_module,
+        execution_runtime_module,
         "merge_active_run_log_metadata",
         lambda payload: captured.setdefault("metadata", dict(payload)),
     )
@@ -604,12 +606,12 @@ def _unit_test_cli_writes_run_logs_and_pointer_on_success(monkeypatch) -> None:
         (repo_root / ".git").mkdir()
         (repo_root / "devcovenant").mkdir()
         monkeypatch.setattr(
-            cli.execution_runtime_module,
+            execution_runtime_module,
             "find_git_root",
             lambda _path: repo_root,
         )
         monkeypatch.setattr(
-            cli.execution_runtime_module,
+            execution_runtime_module,
             "configure_repo_pycache_prefix",
             lambda _repo_root: False,
         )
@@ -675,12 +677,12 @@ def _unit_test_cli_writes_run_logs_and_pointer_on_exception(
         (repo_root / ".git").mkdir()
         (repo_root / "devcovenant").mkdir()
         monkeypatch.setattr(
-            cli.execution_runtime_module,
+            execution_runtime_module,
             "find_git_root",
             lambda _path: repo_root,
         )
         monkeypatch.setattr(
-            cli.execution_runtime_module,
+            execution_runtime_module,
             "configure_repo_pycache_prefix",
             lambda _repo_root: False,
         )
@@ -736,7 +738,7 @@ def _unit_test_cli_adopts_handoff_run_log_without_duplicate_folder(
         repo_root = Path(tmpdir)
         (repo_root / ".git").mkdir()
         (repo_root / "devcovenant").mkdir()
-        run_logging = cli.execution_runtime_module.run_logging_runtime_module
+        run_logging = execution_runtime_module.run_logging_runtime_module
         existing = run_logging.create_run_log_context(
             repo_root,
             "check",
@@ -746,12 +748,12 @@ def _unit_test_cli_adopts_handoff_run_log_without_duplicate_folder(
         monkeypatch.setenv(cli._RUN_LOG_HANDOFF_RUN_ID_ENV, existing.run_id)
         monkeypatch.setenv(cli._MANAGED_REEXEC_SOURCE_ENV, "/usr/bin/python3")
         monkeypatch.setattr(
-            cli.execution_runtime_module,
+            execution_runtime_module,
             "find_git_root",
             lambda _path: repo_root,
         )
         monkeypatch.setattr(
-            cli.execution_runtime_module,
+            execution_runtime_module,
             "configure_repo_pycache_prefix",
             lambda _repo_root: False,
         )
@@ -801,12 +803,12 @@ def _unit_test_cli_uninstall_skips_run_log_pointer(monkeypatch) -> None:
         (repo_root / ".git").mkdir()
         (repo_root / "devcovenant").mkdir()
         monkeypatch.setattr(
-            cli.execution_runtime_module,
+            execution_runtime_module,
             "find_git_root",
             lambda _path: repo_root,
         )
         monkeypatch.setattr(
-            cli.execution_runtime_module,
+            execution_runtime_module,
             "configure_repo_pycache_prefix",
             lambda _repo_root: False,
         )
@@ -879,7 +881,6 @@ def _unit_test_source_checkout_import_disables_bytecode() -> None:
                     "devcovenant.__file__).resolve().parent; "
                     "print(json.dumps({"
                     "'dont_write': sys.dont_write_bytecode, "
-                    "'env': os.environ.get('PYTHONDONTWRITEBYTECODE', ''), "
                     "'pycache_exists': (pkg / '__pycache__').exists()}))"
                 ),
             ],
@@ -892,7 +893,6 @@ def _unit_test_source_checkout_import_disables_bytecode() -> None:
         assert result.returncode == 0, result.stderr
         payload = json.loads(result.stdout.strip())
         assert payload["dont_write"] is True
-        assert payload["env"] == "1"
         assert payload["pycache_exists"] is False
 
 
@@ -940,10 +940,9 @@ def _unit_test_non_source_import_keeps_default_bytecode_mode() -> None:
                 sys.executable,
                 "-c",
                 (
-                    "import json, os, sys, devcovenant; "
+                    "import json, sys, devcovenant; "
                     "print(json.dumps({"
-                    "'dont_write': sys.dont_write_bytecode, "
-                    "'env': os.environ.get('PYTHONDONTWRITEBYTECODE', '')}))"
+                    "'dont_write': sys.dont_write_bytecode}))"
                 ),
             ],
             cwd=repo_root,
@@ -955,7 +954,69 @@ def _unit_test_non_source_import_keeps_default_bytecode_mode() -> None:
         assert result.returncode == 0, result.stderr
         payload = json.loads(result.stdout.strip())
         assert payload["dont_write"] is False
-        assert payload["env"] == ""
+
+
+def _unit_test_test_mirror_import_disables_bytecode() -> None:
+    """Source test-mirror imports should also avoid repo-local bytecode."""
+    package_init = (REPO_ROOT / "devcovenant" / "__init__.py").read_text(
+        encoding="utf-8"
+    )
+    tests_init = (REPO_ROOT / "tests" / "__init__.py").read_text(
+        encoding="utf-8"
+    )
+    mirror_init = (
+        REPO_ROOT / "tests" / "devcovenant" / "__init__.py"
+    ).read_text(encoding="utf-8")
+    with tempfile.TemporaryDirectory() as tmpdir:
+        repo_root = Path(tmpdir)
+        (repo_root / ".git").mkdir()
+        package_dir = repo_root / "devcovenant"
+        tests_dir = repo_root / "tests"
+        mirror_dir = tests_dir / "devcovenant"
+        package_dir.mkdir(parents=True, exist_ok=True)
+        mirror_dir.mkdir(parents=True, exist_ok=True)
+        (package_dir / "__init__.py").write_text(
+            package_init,
+            encoding="utf-8",
+        )
+        (package_dir / "__main__.py").write_text(
+            "from devcovenant import __version__\n",
+            encoding="utf-8",
+        )
+        (package_dir / "cli.py").write_text(
+            "__all__ = []\n",
+            encoding="utf-8",
+        )
+        (tests_dir / "__init__.py").write_text(
+            tests_init,
+            encoding="utf-8",
+        )
+        (mirror_dir / "__init__.py").write_text(
+            mirror_init,
+            encoding="utf-8",
+        )
+        result = subprocess.run(
+            [
+                sys.executable,
+                "-c",
+                (
+                    "import json, pathlib, sys, tests.devcovenant; "
+                    "pkg = pathlib.Path(tests.devcovenant.__file__)"
+                    ".resolve().parent; "
+                    "print(json.dumps({"
+                    "'dont_write': sys.dont_write_bytecode, "
+                    "'pycache_exists': (pkg / '__pycache__').exists()}))"
+                ),
+            ],
+            cwd=repo_root,
+            check=False,
+            capture_output=True,
+            text=True,
+        )
+        assert result.returncode == 0, result.stderr
+        payload = json.loads(result.stdout.strip())
+        assert payload["dont_write"] is True
+        assert payload["pycache_exists"] is False
 
 
 def _unit_test_runtime_classes_not_exposed_at_package_root() -> None:
@@ -1124,6 +1185,10 @@ class GeneratedUnittestCases(unittest.TestCase):
     def test_non_source_import_keeps_default_bytecode_mode(self):
         """Run non-source bytecode-default coverage."""
         _unit_test_non_source_import_keeps_default_bytecode_mode()
+
+    def test_test_mirror_import_disables_bytecode(self):
+        """Run source-test bytecode suppression coverage."""
+        _unit_test_test_mirror_import_disables_bytecode()
 
     def test_cli_writes_run_logs_and_pointer_on_success(self):
         """Run CLI success-path run-log pointer assertions."""

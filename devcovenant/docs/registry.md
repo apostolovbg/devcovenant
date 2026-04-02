@@ -1,5 +1,5 @@
 # Registry
-**Last Updated:** 2026-04-01
+**Last Updated:** 2026-04-02
 **Project Version:** 1.0.1.dev1
 
 ## Overview
@@ -79,6 +79,24 @@ surface moves, when a repo-specific custom profile overrides
 `root_workspace`, when a repository adds its own `package_runtime`, or when
 DevCovenant's bundled `devcovenant_runtime` surface changes its bootstrap lock
 behavior.
+Tracked fingerprints must stay checkout-stable.
+They should be derived from repo-relative identity plus content, not from
+absolute machine-local checkout paths.
+If evidence is inherently machine-local or session-local, it belongs under
+`devcovenant/registry/runtime/` instead.
+The same rule applies to rendered messages and diagnostics that talk about
+tracked state: they should prefer repo-relative paths over absolute checkout
+roots.
+
+The tracked registry is also where the flat-core runtime meets generated
+repository state.
+Files such as `devcovenant/core/repository_paths.py`,
+`devcovenant/core/tracked_registry.py`,
+`devcovenant/core/workflow_support.py`, and
+`devcovenant/core/gate_runtime.py` all read or write registry material, but
+the rule stays the same:
+tracked registry entries must describe repo-stable state, while open-session
+and latest-run evidence belongs only under `devcovenant/registry/runtime/`.
 
 ## Runtime Registry
 `devcovenant/registry/runtime/` stores local working state such as:

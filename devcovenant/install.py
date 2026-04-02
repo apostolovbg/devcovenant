@@ -16,15 +16,9 @@ from pathlib import Path
 
 import yaml
 
-import devcovenant.core.services.manifest_inventory as manifest_module
-from devcovenant.core.runtime.execution import (
-    build_command_parser,
-    print_banner,
-    print_step,
-    resolve_repo_root,
-)
-from devcovenant.core.services import managed_docs as managed_docs_service
-from devcovenant.core.services import yaml_cache as yaml_cache_service
+import devcovenant.core.cli_support as cli_args_module
+import devcovenant.core.managed_docs as managed_docs_service
+import devcovenant.core.repository_paths as yaml_cache_service
 
 
 def _source_package_dir() -> Path:
@@ -196,6 +190,8 @@ def _ensure_review_required_config(
 
 def install_repo(repo_root: Path) -> int:
     """Install DevCovenant core and review-required config in a repository."""
+    import devcovenant.core.repository_validation as manifest_module
+
     source_dir = _source_package_dir()
     import_managed_docs = _detect_importable_managed_docs(
         repo_root,
@@ -227,7 +223,7 @@ def _is_existing_install(repo_root: Path) -> bool:
 
 def _build_parser() -> argparse.ArgumentParser:
     """Build parser for install command."""
-    return build_command_parser(
+    return cli_args_module.build_command_parser(
         "install",
         "Install DevCovenant into the current repository.",
     )
@@ -235,6 +231,12 @@ def _build_parser() -> argparse.ArgumentParser:
 
 def run(args: argparse.Namespace) -> int:
     """Execute install command."""
+    from devcovenant.core.execution import (
+        print_banner,
+        print_step,
+        resolve_repo_root,
+    )
+
     del args
     repo_root = resolve_repo_root(require_install=False)
 
@@ -268,6 +270,7 @@ def main(argv: list[str] | None = None) -> None:
     """CLI entry point."""
     parser = _build_parser()
     args = parser.parse_args(argv)
+    cli_args_module.apply_output_mode_override_from_namespace(args)
     raise SystemExit(run(args))
 
 

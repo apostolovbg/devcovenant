@@ -9,13 +9,13 @@ from dataclasses import dataclass
 from pathlib import Path, PurePosixPath
 from typing import Iterable, List
 
-from devcovenant.core.contracts.policy import (
+import devcovenant.core.repository_paths as yaml_cache_service
+from devcovenant.core.policy_contract import (
     CheckContext,
     PolicyCheck,
     Violation,
 )
-from devcovenant.core.lib.selectors import SelectorSet
-from devcovenant.core.services import yaml_cache as yaml_cache_service
+from devcovenant.core.selectors import SelectorSet
 
 _VALID_SEVERITIES = {"critical", "error", "warning", "info"}
 

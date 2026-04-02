@@ -9,14 +9,14 @@ from types import SimpleNamespace
 from unittest.mock import patch
 
 from devcovenant import undeploy
-from tests.devcovenant import repo_seed_cache
+from tests import copy_refreshed_repo
 
 
 def _unit_test_undeploy_removes_registry_state_and_managed_blocks() -> None:
     """undeploy_repo should remove registry state and managed doc blocks."""
     with tempfile.TemporaryDirectory() as temp_dir:
         repo_root = Path(temp_dir)
-        repo_seed_cache.copy_refreshed_repo(repo_root)
+        copy_refreshed_repo(repo_root)
 
         agents = repo_root / "AGENTS.md"
         assert "<!-- DEVCOV:BEGIN -->" in agents.read_text(encoding="utf-8")
@@ -43,7 +43,7 @@ def _unit_test_undeploy_removes_generated_gitignore_fragments() -> None:
     """undeploy_repo should keep user gitignore entries only."""
     with tempfile.TemporaryDirectory() as temp_dir:
         repo_root = Path(temp_dir)
-        repo_seed_cache.copy_refreshed_repo(repo_root)
+        copy_refreshed_repo(repo_root)
 
         gitignore_path = repo_root / ".gitignore"
         existing = gitignore_path.read_text(encoding="utf-8")
@@ -72,7 +72,7 @@ def _unit_test_undeploy_recovers_when_config_is_invalid() -> None:
     """undeploy_repo should still clean managed blocks with broken config."""
     with tempfile.TemporaryDirectory() as temp_dir:
         repo_root = Path(temp_dir)
-        repo_seed_cache.copy_refreshed_repo(repo_root)
+        copy_refreshed_repo(repo_root)
 
         agents = repo_root / "AGENTS.md"
         assert "<!-- DEVCOV:BEGIN -->" in agents.read_text(encoding="utf-8")
@@ -100,7 +100,7 @@ def _unit_test_undeploy_run_calls_undeploy_repo() -> None:
     with tempfile.TemporaryDirectory() as temp_dir:
         repo_root = Path(temp_dir)
         with patch(
-            "devcovenant.undeploy.resolve_repo_root",
+            "devcovenant.core.execution.resolve_repo_root",
             return_value=repo_root,
         ):
             with patch(

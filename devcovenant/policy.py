@@ -14,18 +14,12 @@ import sys
 from pathlib import Path
 from typing import Sequence
 
-from devcovenant.core.runtime import policy_commands as policy_commands_service
-from devcovenant.core.runtime.execution import (
-    build_command_parser,
-    resolve_repo_root,
-    runtime_print,
-)
-from devcovenant.core.services.policy_engine import run_policy_runtime_action
+import devcovenant.core.cli_support as cli_args_module
 
 
 def _build_parser() -> argparse.ArgumentParser:
     """Build the parser for the namespaced policy command surface."""
-    parser = build_command_parser(
+    parser = cli_args_module.build_command_parser(
         "policy",
         "Run one explicit policy-born command declared by an enabled policy.",
     )
@@ -41,6 +35,8 @@ def _build_parser() -> argparse.ArgumentParser:
 
 def _render_generic_result(result: object) -> None:
     """Print a stable human-readable summary from one runtime result."""
+    from devcovenant.core.execution import runtime_print
+
     if isinstance(result, dict):
         message = str(result.get("message", "")).strip()
         if message:
@@ -75,6 +71,10 @@ def _render_generic_result(result: object) -> None:
 
 def run(args: argparse.Namespace) -> int:
     """Execute one declared policy-born command."""
+    import devcovenant.core.policy_commands as policy_commands_service
+    from devcovenant.core.execution import resolve_repo_root, runtime_print
+    from devcovenant.core.policy_runtime import run_policy_runtime_action
+
     repo_root = resolve_repo_root(require_install=True)
     command = policy_commands_service.find_policy_command(
         repo_root,
@@ -110,6 +110,7 @@ def main(argv: Sequence[str] | None = None) -> None:
     """CLI entry point."""
     parser = _build_parser()
     args = parser.parse_args(argv)
+    cli_args_module.apply_output_mode_override_from_namespace(args)
     raise SystemExit(run(args))
 
 

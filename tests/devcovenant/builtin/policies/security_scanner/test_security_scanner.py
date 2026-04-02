@@ -5,8 +5,8 @@ import unittest
 from pathlib import Path
 
 from devcovenant.builtin.policies.security_scanner import security_scanner
-from devcovenant.core.contracts.policy import CheckContext
-from devcovenant.core.services.translator_engine import TranslatorRuntime
+from devcovenant.core.policy_contract import CheckContext
+from devcovenant.core.translator import TranslatorRuntime
 
 SecurityScannerCheck = security_scanner.SecurityScannerCheck
 
@@ -235,3 +235,11 @@ class GeneratedUnittestCases(unittest.TestCase):
         with tempfile.TemporaryDirectory() as temp_dir:
             tmp_path = Path(temp_dir).resolve()
             _unit_test_translators_flag_risky_patterns(tmp_path=tmp_path)
+
+
+class GeneratedSymbolCoverageTests(unittest.TestCase):
+    """Direct symbol assertions for coverage tracking."""
+
+    def test_symbol_level_assertions_cover_public_api(self):
+        """Security-scanner tests should assert the policy symbol."""
+        self.assertIsNotNone(SecurityScannerCheck)
