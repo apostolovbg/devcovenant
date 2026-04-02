@@ -63,7 +63,8 @@ def _load_yaml_cached(
     signature: tuple[str, bool, int, int], encoding: str
 ) -> Any:
     """Load one YAML document once per path signature."""
-    return yaml.load(
+    # `_YAML_LOADER` is always `SafeLoader` or `CSafeLoader`.
+    return yaml.load(  # nosec B506
         _read_text_cached(signature, encoding),
         Loader=_YAML_LOADER,
     )
@@ -76,7 +77,8 @@ def load_yaml(path: Path, *, encoding: str = "utf-8") -> Any:
 
 def load_yaml_text(text: str) -> Any:
     """Parse YAML text with the fastest available safe loader."""
-    return yaml.load(text, Loader=_YAML_LOADER)
+    # `_YAML_LOADER` is always `SafeLoader` or `CSafeLoader`.
+    return yaml.load(text, Loader=_YAML_LOADER)  # nosec B506
 
 
 @lru_cache(maxsize=512)

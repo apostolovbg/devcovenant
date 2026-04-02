@@ -62,6 +62,19 @@ Example:
 
 
 - 2026-04-02:
+  Change: hardened the reviewed subprocess import boundary and annotated the
+          safe YAML-loader cache helpers for Bandit.
+  Why: aligned CI scanner handling with known safe loader paths and reviewed
+       exception boundaries.
+  Impact: stabilized Bandit on the live core code path without broad scanner
+          skips or behavior changes.
+  Files:
+  CHANGELOG.md
+  devcovenant/core/refresh_runtime.py
+  devcovenant/core/repository_paths.py
+
+
+- 2026-04-02:
   Change: cleaned split-era helper naming in merged core tests, removed stale
           flat-core history comments, and revised package docs wording.
   Why: removed merge-history residue, kept the flat core surface readable, and

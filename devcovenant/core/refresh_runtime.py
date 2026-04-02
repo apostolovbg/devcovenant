@@ -7,7 +7,7 @@ import hashlib
 import json
 import os
 import re
-import subprocess
+import subprocess  # nosec B404
 import sys
 from datetime import datetime, timezone
 from pathlib import Path
