@@ -60,6 +60,67 @@ Example:
 
 ## Version 1.0.1.dev1
 
+- 2026-04-02:
+  Change: optimized tracked policy-registry refresh to batch writes, cached
+    YAML and AST parsing across shared services and Python policies, and
+    stabilized dependency-management around tracked per-surface convergence
+    fingerprints plus bounded parallel target resolution for real recomputes.
+  Why: remove the older repeated-registry-write bottleneck and the newer
+    all-target recompute bottleneck, then cut the remaining orchestration cost
+    from repeated parsing and translator-heavy policy checks that still made
+    converged `refresh`, `gate`, `check`, and tests much slower than expected.
+  Impact: improved repeated no-change refresh paths so they skip registry and
+    dependency work quickly, while read-only checks and test-heavy policy
+    passes reuse parsed source data instead of reparsing the same files across
+    every operation.
+  Files:
+  CHANGELOG.md
+  devcovenant/builtin/policies/dependency_management/\
+    dependency_lock_runtime.py
+  devcovenant/builtin/policies/docstring_and_comment_coverage/\
+    docstring_and_comment_coverage.py
+  devcovenant/builtin/policies/modules_need_tests/modules_need_tests.py
+  devcovenant/builtin/policies/no_print_outside_output_runtime/\
+    no_print_outside_output_runtime.py
+  devcovenant/builtin/policies/no_raw_errors/no_raw_errors.py
+  devcovenant/builtin/policies/tests_coverage/assertion_signal.py
+  devcovenant/builtin/policies/tests_coverage/tests_coverage.py
+  devcovenant/builtin/profiles/python/python_translator.py
+  devcovenant/core/contracts/policy.py
+  devcovenant/core/flow/policy_check_context.py
+  devcovenant/core/flow/refresh.py
+  devcovenant/core/services/policy_file_scope.py
+  devcovenant/core/services/policy_parse.py
+  devcovenant/core/services/policy_registry.py
+  devcovenant/core/services/tracked_registry.py
+  devcovenant/core/services/translator_engine.py
+  devcovenant/core/services/yaml_cache.py
+  devcovenant/docs/architecture.md
+  devcovenant/docs/policies.md
+  devcovenant/docs/profiles.md
+  devcovenant/docs/registry.md
+  devcovenant/docs/workflow.md
+  devcovenant/registry/registry.yaml
+  devcovenant/custom/profiles/devcovrepo/assets/docs/policies.md
+  devcovenant/custom/profiles/devcovrepo/assets/docs/profiles.md
+  devcovenant/custom/profiles/devcovrepo/assets/docs/registry.md
+  devcovenant/custom/profiles/devcovrepo/assets/docs/workflow.md
+  tests/devcovenant/builtin/policies/dependency_management/\
+    test_dependency_lock_runtime.py
+  tests/devcovenant/builtin/policies/docstring_and_comment_coverage/\
+    test_docstring_and_comment_coverage.py
+  tests/devcovenant/builtin/policies/modules_need_tests/\
+    test_modules_need_tests.py
+  tests/devcovenant/builtin/policies/no_print_outside_output_runtime/\
+    test_no_print_outside_output_runtime.py
+  tests/devcovenant/builtin/policies/no_raw_errors/test_no_raw_errors.py
+  tests/devcovenant/builtin/policies/tests_coverage/test_assertion_signal.py
+  tests/devcovenant/builtin/profiles/python/test_python_translator.py
+  tests/devcovenant/core/flow/test_policy_check_context.py
+  tests/devcovenant/core/services/test_policy_registry.py
+  tests/devcovenant/core/services/test_yaml_cache.py
+  tests/devcovenant/test_refresh.py
+
 - 2026-04-01:
   Change: refactored dependency-management Python surface resolution around one
     target-aware closure engine, composed `root_workspace` through the shipped
@@ -746,7 +807,8 @@ Example:
   devcovenant/custom/policies/package_artifact_mirror/autofix/global.py
   devcovenant/custom/policies/package_artifact_mirror/\
     package_artifact_mirror.py
-  devcovenant/custom/policies/package_artifact_mirror/package_artifact_mirror.yaml
+  devcovenant/custom/policies/package_artifact_mirror/\
+    package_artifact_mirror.yaml
   devcovenant/licenses/PyYAML-6.0.3.txt
   devcovenant/licenses/README.md
   devcovenant/licenses/THIRD_PARTY_LICENSES.md

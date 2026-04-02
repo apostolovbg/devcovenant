@@ -48,8 +48,12 @@ def _unit_test_registry_symbol_contract_is_stable() -> None:
         "get_policy_hash",
         "get_policy_metadata_map",
         "get_policy_metadata_typed",
+        "get_policy_runtime_state",
+        "get_registry_metadata_value",
         "load",
         "save",
+        "update_policy_runtime_state",
+        "update_registry_metadata_value",
         "update_policy_entry",
     ]
     for symbol in registry_method_contract:
@@ -73,10 +77,14 @@ def _unit_test_registry_symbol_assertions_cover_public_api() -> None:
     assert module.PolicyRegistry.get_policy_hash
     assert module.PolicyRegistry.get_policy_metadata_map
     assert module.PolicyRegistry.get_policy_metadata_typed
+    assert module.PolicyRegistry.get_policy_runtime_state
+    assert module.PolicyRegistry.get_registry_metadata_value
     assert module.PolicyRegistry.load
     assert module.PolicyRegistry.policy_ids
     assert module.PolicyRegistry.prune_policies
     assert module.PolicyRegistry.save
+    assert module.PolicyRegistry.update_policy_runtime_state
+    assert module.PolicyRegistry.update_registry_metadata_value
     assert module.PolicyRegistry.update_policy_entry
 
 
@@ -163,6 +171,90 @@ def _unit_test_registry_metadata_typed_view_preserves_storage_contract() -> (
         assert typed_map["severity"] == "error"
 
 
+def _unit_test_registry_can_batch_entry_updates_before_save() -> None:
+    """Policy registry should support in-memory entry batching before save."""
+
+    module = importlib.import_module(MODULE)
+    with tempfile.TemporaryDirectory() as tmpdir:
+        repo_root = Path(tmpdir)
+        registry_path = (
+            repo_root / "devcovenant" / "registry" / "registry.yaml"
+        )
+        registry = module.PolicyRegistry(registry_path, repo_root)
+        policy = PolicyDefinition(
+            policy_id="demo-policy",
+            name="Demo Policy",
+            severity="warning",
+            auto_fix=False,
+            enabled=True,
+            custom=False,
+            description="demo policy text",
+            raw_metadata={"id": "demo-policy"},
+        )
+        registry.update_policy_entry(
+            policy,
+            None,
+            resolved_metadata={"enabled": "true"},
+            save=False,
+        )
+        registry.update_registry_metadata_value(
+            "policy_registry_input_hash",
+            "demo",
+            save=False,
+        )
+
+        assert not registry_path.exists()
+
+        registry.save()
+
+        reloaded = module.PolicyRegistry(registry_path, repo_root)
+        assert reloaded.get_policy_metadata_map("demo-policy")["enabled"] == (
+            "true"
+        )
+        assert (
+            reloaded.get_registry_metadata_value("policy_registry_input_hash")
+            == "demo"
+        )
+
+
+def _unit_test_registry_preserves_policy_runtime_state_on_entry_refresh() -> (
+    None
+):
+    """Refreshing one policy entry should keep its stored runtime state."""
+
+    module = importlib.import_module(MODULE)
+    with tempfile.TemporaryDirectory() as tmpdir:
+        repo_root = Path(tmpdir)
+        registry_path = (
+            repo_root / "devcovenant" / "registry" / "registry.yaml"
+        )
+        registry = module.PolicyRegistry(registry_path, repo_root)
+        policy = PolicyDefinition(
+            policy_id="demo-policy",
+            name="Demo Policy",
+            severity="warning",
+            auto_fix=False,
+            enabled=True,
+            custom=False,
+            description="demo policy text",
+            raw_metadata={"id": "demo-policy"},
+        )
+        runtime_state = {
+            "surfaces": {"root_workspace": {"input_fingerprint": "abc123"}}
+        }
+        registry.update_policy_runtime_state("demo-policy", runtime_state)
+        registry.update_policy_entry(
+            policy,
+            None,
+            resolved_metadata={"enabled": "true"},
+        )
+
+        reloaded = module.PolicyRegistry(registry_path, repo_root)
+        assert (
+            reloaded.get_policy_runtime_state("demo-policy") == runtime_state
+        )
+
+
 class GeneratedUnittestCases(unittest.TestCase):
     """unittest wrappers for layered policy-registry checks."""
 
@@ -193,3 +285,11 @@ class GeneratedUnittestCases(unittest.TestCase):
     def test_registry_metadata_typed_view_preserves_storage_contract(self):
         """Run registry raw-vs-typed metadata contract assertions."""
         _unit_test_registry_metadata_typed_view_preserves_storage_contract()
+
+    def test_registry_can_batch_entry_updates_before_save(self):
+        """Run registry in-memory batching assertions."""
+        _unit_test_registry_can_batch_entry_updates_before_save()
+
+    def test_registry_preserves_policy_runtime_state_on_entry_refresh(self):
+        """Run runtime-state preservation assertions."""
+        _unit_test_registry_preserves_policy_runtime_state_on_entry_refresh()

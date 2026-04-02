@@ -154,6 +154,7 @@ class TranslatorRuntime:
         self.active_profiles = sorted(set(active_profiles))
         self._by_extension = self._build_extension_map()
         self._file_module_cache: dict[str, Any] = {}
+        self._entrypoint_function_cache: dict[tuple[str, str], Any] = {}
         self._can_handle_result_cache: dict[tuple[Any, ...], bool] = {}
         self._translate_result_cache: dict[tuple[Any, ...], LanguageUnit] = {}
 
@@ -415,6 +416,12 @@ class TranslatorRuntime:
             raise ValueError(
                 f"Translator module path is not a file: {module_path}"
             )
+        function_cache_key = (str(module_path), function_name)
+        cached_function = self._entrypoint_function_cache.get(
+            function_cache_key
+        )
+        if cached_function is not None:
+            return cached_function
         cache_key = str(module_path)
         module = self._file_module_cache.get(cache_key)
         if module is None:
@@ -435,4 +442,5 @@ class TranslatorRuntime:
                 f"Translator function '{function_name}' "
                 f"not found in {module_path}"
             )
+        self._entrypoint_function_cache[function_cache_key] = function
         return function

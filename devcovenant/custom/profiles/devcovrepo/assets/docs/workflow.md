@@ -172,6 +172,11 @@ dependency artifacts, and `gate --start` can run the declared bootstrap
 commands when the target environment is still missing.
 If a repository uses a different environment shape, it should declare that
 shape explicitly instead of expecting DevCovenant to guess it.
+On a converged repository, repeated `check`, `gate`, and `run` startup paths do
+not intentionally rebuild current tracked registry content or current
+dependency surfaces.
+They compare tracked fingerprints first and only rebuild those artifacts when
+policy, config, or dependency inputs actually changed.
 
 For Python-owned tools such as the pre-commit gate hook, execution runs
 `python -m pre_commit` through the selected interpreter instead of depending on

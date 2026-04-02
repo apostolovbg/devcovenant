@@ -15,6 +15,7 @@ from devcovenant.core.contracts.policy import (
     Violation,
 )
 from devcovenant.core.lib.selectors import SelectorSet
+from devcovenant.core.services import yaml_cache as yaml_cache_service
 
 _VALID_SEVERITIES = {"critical", "error", "warning", "info"}
 
@@ -201,15 +202,15 @@ def _line_has_waiver(
 
 
 def _scan_python(
+    path: Path,
     source: str,
     *,
     call_targets: set[str],
     attr_targets: set[str],
 ) -> list[SinkHit]:
     """Detect sinks in Python source via AST traversal."""
-    try:
-        tree = ast.parse(source)
-    except SyntaxError:
+    tree = yaml_cache_service.parse_python_ast(path)
+    if tree is None:
         return []
     visitor = _PythonSinkVisitor(
         call_targets=call_targets,
@@ -357,6 +358,7 @@ class NoPrintOutsideOutputRuntimeCheck(PolicyCheck):
     def _scan_language_sinks(
         self,
         *,
+        path: Path,
         source: str,
         language: str,
         call_targets: set[str],
@@ -367,6 +369,7 @@ class NoPrintOutsideOutputRuntimeCheck(PolicyCheck):
         if language == "python":
             return _dedupe_hits(
                 _scan_python(
+                    path,
                     source,
                     call_targets=call_targets,
                     attr_targets=attr_targets,
@@ -457,8 +460,9 @@ class NoPrintOutsideOutputRuntimeCheck(PolicyCheck):
             if not any((call_targets, attr_targets, macro_targets)):
                 continue
 
-            source = path.read_text(encoding="utf-8")
+            source = yaml_cache_service.read_text(path)
             sink_hits = self._scan_language_sinks(
+                path=path,
                 source=source,
                 language=language,
                 call_targets=call_targets,

@@ -17,6 +17,7 @@ from devcovenant.core.contracts.policy import (
     Violation,
 )
 from devcovenant.core.lib.selectors import SelectorSet
+from devcovenant.core.services import yaml_cache as yaml_cache_service
 
 _VALID_SEVERITIES = {"critical", "error", "warning", "info"}
 _DEFAULT_SYMBOL_KINDS = ("function", "class")
@@ -158,6 +159,10 @@ class TestsCoverageCheck(PolicyCheck):
             context.repo_root,
             tests_dirs,
         )
+        indexed_tests = modules_runtime._index_tests(
+            test_files,
+            repo_root=context.repo_root,
+        )
         repo_files = modules_runtime._collect_repo_files(context.repo_root)
 
         modules = [
@@ -216,7 +221,7 @@ class TestsCoverageCheck(PolicyCheck):
                 violations.extend(resolution.violations)
                 continue
 
-            source = module.read_text(encoding="utf-8")
+            source = yaml_cache_service.read_text(module)
             unit = runtime.translate(
                 resolution,
                 path=module,
@@ -229,8 +234,7 @@ class TestsCoverageCheck(PolicyCheck):
             related_tests = modules_runtime._related_tests(
                 module=module,
                 unit_templates=unit.test_name_templates,
-                tests=test_files,
-                repo_root=context.repo_root,
+                indexed_tests=indexed_tests,
             )
 
             module_rel = module.relative_to(context.repo_root).as_posix()

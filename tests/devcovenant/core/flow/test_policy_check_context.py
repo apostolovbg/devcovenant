@@ -327,10 +327,7 @@ def _unit_test_build_check_context_assembles_context_with_helper_state() -> (
                 autofix_requested=False,
                 is_ignored_path=lambda path: path.name == "ignored.py",
                 resolve_file_suffixes=lambda: [".py"],
-                collect_all_files=lambda suffixes: [
-                    repo_root / "all.py",
-                    repo_root / "ignored.py",
-                ],
+                collect_all_files=lambda suffixes: [repo_root / "all.py"],
             )
 
         assert calls["repo_root"] == repo_root
@@ -344,6 +341,48 @@ def _unit_test_build_check_context_assembles_context_with_helper_state() -> (
         assert context.change_state is expected_state
         assert context.autofix_enabled is True
         assert context.autofix_requested is False
+
+
+def _unit_test_build_check_context_prefers_snapshot_paths_for_all_files() -> (
+    None
+):
+    """Check-context builder should reuse snapshot paths before rescanning."""
+    module = importlib.import_module(MODULE)
+    with tempfile.TemporaryDirectory() as tmpdir:
+        repo_root = Path(tmpdir)
+        expected_state = ChangeState(
+            stage="mid",
+            gate_status_path="devcovenant/registry/runtime/gate_status.json",
+            session_valid=True,
+            session_paths=[repo_root / "changed.py"],
+            current_snapshot_paths=[
+                repo_root / "all.py",
+                repo_root / "notes.txt",
+            ],
+        )
+
+        with mock.patch.object(
+            module,
+            "build_change_state",
+            return_value=expected_state,
+        ):
+            context = module.build_check_context(
+                repo_root,
+                config={"ignore": {"patterns": []}},
+                translator_runtime="translator-runtime",
+                gate_status_path=Path(
+                    "devcovenant/registry/runtime/gate_status.json"
+                ),
+                autofix_enabled=False,
+                autofix_requested=False,
+                is_ignored_path=lambda _path: False,
+                resolve_file_suffixes=lambda: [".py"],
+                collect_all_files=lambda _suffixes: [
+                    repo_root / "fallback.py"
+                ],
+            )
+
+        assert context.all_files == [repo_root / "all.py"]
 
 
 class GeneratedUnittestCases(unittest.TestCase):
@@ -384,3 +423,7 @@ class GeneratedUnittestCases(unittest.TestCase):
     def test_build_check_context_assembles_context_with_helper_state(self):
         """Run check-context builder assembly assertions."""
         _unit_test_build_check_context_assembles_context_with_helper_state()
+
+    def test_build_check_context_prefers_snapshot_paths_for_all_files(self):
+        """Run snapshot-path check-context fast-path assertions."""
+        _unit_test_build_check_context_prefers_snapshot_paths_for_all_files()

@@ -193,6 +193,14 @@ def _unit_test_non_python_files_are_checked(tmp_path: Path):
         assert not any(v.file_path == good for v in violations)
 
 
+def _unit_test_policy_symbol_contract_is_stable():
+    """The public policy class name should stay explicit and importable."""
+    assert (
+        DocstringAndCommentCoverageCheck.__name__
+        == "DocstringAndCommentCoverageCheck"
+    )
+
+
 class GeneratedUnittestCases(unittest.TestCase):
     """unittest wrappers for module-level tests."""
 
@@ -225,3 +233,7 @@ class GeneratedUnittestCases(unittest.TestCase):
         with tempfile.TemporaryDirectory() as temp_dir:
             tmp_path = Path(temp_dir).resolve()
             _unit_test_non_python_files_are_checked(tmp_path=tmp_path)
+
+    def test_policy_symbol_contract_is_stable(self):
+        """Run policy symbol-contract assertions."""
+        _unit_test_policy_symbol_contract_is_stable()

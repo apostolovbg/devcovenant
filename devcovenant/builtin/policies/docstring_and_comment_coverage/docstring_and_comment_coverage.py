@@ -10,6 +10,7 @@ from devcovenant.core.contracts.policy import (
     Violation,
 )
 from devcovenant.core.lib.selectors import SelectorSet
+from devcovenant.core.services import yaml_cache as yaml_cache_service
 
 
 class DocstringAndCommentCoverageCheck(PolicyCheck):
@@ -61,7 +62,7 @@ class DocstringAndCommentCoverageCheck(PolicyCheck):
                 violations.extend(resolution.violations)
                 continue
 
-            source = path.read_text(encoding="utf-8")
+            source = yaml_cache_service.read_text(path)
             unit = runtime.translate(
                 resolution,
                 path=path,

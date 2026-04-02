@@ -9,6 +9,8 @@ from typing import Any, Dict, List, Optional
 
 import yaml
 
+from devcovenant.core.services import yaml_cache as yaml_cache_service
+
 
 @dataclass
 class PolicyDefinition:
@@ -101,7 +103,7 @@ class PolicyParser:
             payload = None
         try:
             if payload is None:
-                payload = yaml.safe_load(block)
+                payload = yaml_cache_service.load_yaml_text(block)
         except yaml.YAMLError as exc:
             payload = PolicyParser._parse_legacy_metadata_block(block)
             if payload is None:

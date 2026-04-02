@@ -23,19 +23,19 @@ class GeneratedUnittestCases(unittest.TestCase):
             path.write_text("value: 1\n", encoding="utf-8")
 
             calls = {"count": 0}
-            original = yaml_cache_service.yaml.safe_load
+            original = yaml_cache_service.yaml.load
 
-            def counting_safe_load(text):
+            def counting_safe_load(text, *, Loader):
                 """Count parser calls so the test can prove cache reuse."""
                 calls["count"] += 1
-                return original(text)
+                return original(text, Loader=Loader)
 
-            yaml_cache_service.yaml.safe_load = counting_safe_load
+            yaml_cache_service.yaml.load = counting_safe_load
             try:
                 first = yaml_cache_service.load_yaml(path)
                 second = yaml_cache_service.load_yaml(path)
             finally:
-                yaml_cache_service.yaml.safe_load = original
+                yaml_cache_service.yaml.load = original
 
             self.assertEqual({"value": 1}, first)
             self.assertEqual({"value": 1}, second)

@@ -65,6 +65,14 @@ before hash mode is turned on.
 Those tracked surface definitions also explain why dependency-report and
 license-artifact refreshes can land next to a registry diff in the same slice:
 the registry is recording the dependency surface contract that generated them.
+The tracked registry can also hold policy-owned runtime state when that state
+is deterministic and should travel with the repository.
+For `dependency-management`, that includes per-surface input and output
+fingerprints used to prove that a converged surface is still current before
+DevCovenant rebuilds locks or license artifacts again.
+The registry metadata also records a policy-registry input fingerprint so
+startup commands can skip rebuilding the tracked policy section when the
+descriptors, scripts, and effective config are unchanged.
 That is why `devcovenant/registry/registry.yaml` can change when one declared
 surface moves, when a repo-specific custom profile overrides
 `root_workspace`, when a repository adds its own `package_runtime`, or when

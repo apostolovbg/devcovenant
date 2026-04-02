@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+import ast
+import importlib
 import tempfile
 import unittest
 from pathlib import Path
@@ -69,6 +71,14 @@ def _configured_check() -> NoPrintOutsideOutputRuntimeCheck:
         {},
     )
     return check
+
+
+def _policy_module():
+    """Return the concrete no-print policy module for symbol-contract tests."""
+    return importlib.import_module(
+        "devcovenant.builtin.policies.no_print_outside_output_runtime."
+        "no_print_outside_output_runtime"
+    )
 
 
 def _run_policy(repo_root: Path, path: Path) -> list:
@@ -157,6 +167,29 @@ fn report() {
         assert violations[0].line_number == 2
 
 
+def _unit_test_python_sink_visitor_tracks_named_symbols() -> None:
+    """The Python sink visitor should keep explicit symbol-tracking hooks."""
+    module = _policy_module()
+    visitor = module._PythonSinkVisitor(
+        call_targets={"print"},
+        attr_targets={"console.log"},
+    )
+    tree = ast.parse(
+        "def emit():\n"
+        "    print('sync')\n"
+        "\n"
+        "async def emit_async():\n"
+        "    print('async')\n"
+    )
+    visitor.visit(tree)
+    assert hasattr(NoPrintOutsideOutputRuntimeCheck, "check")
+    assert hasattr(module._PythonSinkVisitor, "visit_FunctionDef")
+    assert hasattr(module._PythonSinkVisitor, "visit_AsyncFunctionDef")
+    assert hasattr(module._PythonSinkVisitor, "visit_Call")
+    assert isinstance(visitor.hits[0], module.SinkHit)
+    assert {hit.symbol for hit in visitor.hits} == {"emit", "emit_async"}
+
+
 class GeneratedUnittestCases(unittest.TestCase):
     """Unittest wrappers for module-level verification helpers."""
 
@@ -175,3 +208,7 @@ class GeneratedUnittestCases(unittest.TestCase):
     def test_rust_macro_sink_detected(self):
         """Run _unit_test_rust_macro_sink_detected."""
         _unit_test_rust_macro_sink_detected()
+
+    def test_python_sink_visitor_tracks_named_symbols(self):
+        """Run Python sink-visitor contract assertions."""
+        _unit_test_python_sink_visitor_tracks_named_symbols()

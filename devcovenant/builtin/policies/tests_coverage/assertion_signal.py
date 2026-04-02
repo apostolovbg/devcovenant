@@ -8,6 +8,8 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Iterable, Pattern
 
+from devcovenant.core.services import yaml_cache as yaml_cache_service
+
 _DEFAULT_FIXTURE_MARKER = r"\bDEVCOV_FIXTURE_OK:\s*(?P<reason>\S.*)"
 _DEFAULT_ASSERTION_PATTERN = r"\bassert\b"
 _DEFAULT_TAUTOLOGY_PATTERNS = (
@@ -193,6 +195,7 @@ def _collect_symbol_hits(
 def _analyze_python(
     text: str,
     *,
+    tree: ast.AST,
     marker_pattern: Pattern[str],
     tautology_patterns: tuple[Pattern[str], ...],
     symbol_patterns: dict[str, Pattern[str]],
@@ -202,22 +205,44 @@ def _analyze_python(
     lines = text.splitlines()
     escaped_lines = _fixture_escaped_assert_lines(lines, marker_pattern)
     covered_symbols: set[str] = set()
-    has_assertion = False
 
-    try:
-        tree = ast.parse(text)
-    except SyntaxError:
-        return AssertionSignalAnalysis(False, tuple())
+    class _AssertionVisitor(ast.NodeVisitor):
+        """Collect assertion signal without a full generic ast.walk loop."""
 
-    for node in ast.walk(tree):
-        line_no = getattr(node, "lineno", 0)
-        if isinstance(node, ast.Assert):
+        def __init__(self) -> None:
+            """Initialize the visitor-level assertion flag."""
+            self.has_assertion = False
+
+        def visit_Assert(self, node: ast.Assert) -> None:
+            """Record direct `assert` statements before visiting children."""
+            self._record_if_signal(node)
+            self.generic_visit(node)
+
+        def visit_Call(self, node: ast.Call) -> None:
+            """Record assertion-style helper calls before visiting children."""
+            func = node.func
+            if isinstance(func, ast.Attribute):
+                name = func.attr.lower()
+            elif isinstance(func, ast.Name):
+                name = func.id.lower()
+            else:
+                self.generic_visit(node)
+                return
+            if name.startswith("assert"):
+                self._record_if_signal(node)
+            self.generic_visit(node)
+
+        def _record_if_signal(self, node: ast.AST) -> None:
+            """Persist one assertion hit when it is not tautological noise."""
+            line_no = getattr(node, "lineno", 0)
             tautology = _is_python_tautology(node) or _line_matches_any(
-                lines, line_no, tautology_patterns
+                lines,
+                line_no,
+                tautology_patterns,
             )
             if tautology and line_no not in escaped_lines:
-                continue
-            has_assertion = True
+                return
+            self.has_assertion = True
             covered_symbols.update(
                 _collect_symbol_hits(
                     lines,
@@ -226,35 +251,12 @@ def _analyze_python(
                     symbol_window=symbol_window,
                 )
             )
-            continue
-        if not isinstance(node, ast.Call):
-            continue
-        func = node.func
-        if isinstance(func, ast.Attribute):
-            name = func.attr.lower()
-        elif isinstance(func, ast.Name):
-            name = func.id.lower()
-        else:
-            continue
-        if not name.startswith("assert"):
-            continue
-        tautology = _is_python_tautology(node) or _line_matches_any(
-            lines, line_no, tautology_patterns
-        )
-        if tautology and line_no not in escaped_lines:
-            continue
-        has_assertion = True
-        covered_symbols.update(
-            _collect_symbol_hits(
-                lines,
-                line_number=line_no,
-                symbol_patterns=symbol_patterns,
-                symbol_window=symbol_window,
-            )
-        )
+
+    visitor = _AssertionVisitor()
+    visitor.visit(tree)
 
     return AssertionSignalAnalysis(
-        has_assertion_signal=has_assertion,
+        has_assertion_signal=visitor.has_assertion,
         covered_symbols=tuple(sorted(covered_symbols)),
     )
 
@@ -311,13 +313,8 @@ def analyze_assertion_signal(
 ) -> AssertionSignalAnalysis:
     """Return assertion signal and covered symbols for one test file."""
     try:
-        raw = path.read_bytes()
-    except OSError:
-        return AssertionSignalAnalysis(False, tuple())
-
-    try:
-        text = raw.decode("utf-8")
-    except UnicodeDecodeError:
+        text = yaml_cache_service.read_text(path)
+    except (OSError, UnicodeDecodeError):
         return AssertionSignalAnalysis(False, tuple())
 
     marker = fixture_marker_pattern.strip() or _DEFAULT_FIXTURE_MARKER
@@ -342,8 +339,12 @@ def analyze_assertion_signal(
     window = max(symbol_window, 0)
     normalized_language = str(language or "").strip().lower()
     if normalized_language == "python" or path.suffix.lower() == ".py":
+        tree = yaml_cache_service.parse_python_ast(path)
+        if tree is None:
+            return AssertionSignalAnalysis(False, tuple())
         return _analyze_python(
             text,
+            tree=tree,
             marker_pattern=marker_pattern,
             tautology_patterns=compiled_tautologies,
             symbol_patterns=symbol_patterns,

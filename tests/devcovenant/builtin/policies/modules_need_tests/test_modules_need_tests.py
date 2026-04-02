@@ -63,6 +63,31 @@ class TestModulesNeedTestsPolicy(unittest.TestCase):
         )
         return policy
 
+    def test_indexed_test_paths_keep_lookup_fields_explicit(self):
+        """Indexed test-path metadata should stay explicit and reusable."""
+        with tempfile.TemporaryDirectory() as tmpdir:
+            repo_root = Path(tmpdir)
+            test_path = repo_root / "tests" / "test_service_module.py"
+            test_path.parent.mkdir(parents=True, exist_ok=True)
+            test_path.write_text("import unittest\n", encoding="utf-8")
+            indexed = modules_need_tests._index_tests(
+                [test_path],
+                repo_root=repo_root,
+            )
+
+            self.assertEqual(len(indexed), 1)
+            self.assertIsInstance(
+                indexed[0], modules_need_tests.IndexedTestPath
+            )
+            self.assertEqual(
+                indexed[0].relative_lower,
+                "tests/test_service_module.py",
+            )
+            self.assertEqual(
+                indexed[0].compact_test_name,
+                "testservicemodulepy",
+            )
+
     @patch("subprocess.check_output")
     def test_detects_module_without_tests(self, mock_subprocess):
         """Policy should detect modules that have no related tests."""

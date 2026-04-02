@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import fnmatch
 import os
 from pathlib import Path, PurePosixPath
 from typing import Any, Collection
@@ -74,15 +75,18 @@ def matches_config_ignore_pattern(
         rel_path = candidate.relative_to(repo_root)
     except ValueError:
         rel_path = candidate
-    rel_posix = PurePosixPath(rel_path.as_posix())
-    rel_text = rel_posix.as_posix()
+    rel_text = PurePosixPath(rel_path.as_posix()).as_posix()
     for pattern in patterns:
-        if rel_posix.match(pattern):
-            return True
         if pattern.endswith("/**"):
             dir_token = pattern[: -len("/**")].rstrip("/")
-            if rel_text == dir_token:
+            if rel_text == dir_token or rel_text.startswith(f"{dir_token}/"):
                 return True
+        if "*" not in pattern and "?" not in pattern and "[" not in pattern:
+            if rel_text == pattern:
+                return True
+            continue
+        if fnmatch.fnmatch(rel_text, pattern):
+            return True
     return False
 
 

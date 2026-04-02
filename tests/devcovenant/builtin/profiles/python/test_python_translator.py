@@ -1,5 +1,6 @@
 """Unit tests for the Python language translator."""
 
+import ast
 import importlib.util
 import unittest
 from pathlib import Path
@@ -63,6 +64,47 @@ class PythonTranslatorTests(unittest.TestCase):
         names = {fact.name for fact in unit.identifier_facts}
         self.assertIn("run", names)
         self.assertTrue(unit.risk_facts)
+
+    def test_translate_exposes_cached_visitor_contract(self):
+        """The translator should keep one explicit Python-facts visitor."""
+        module = _load_translator_module()
+        self.assertTrue(hasattr(module, "translate"))
+        self.assertTrue(hasattr(module, "_PythonFactsVisitor"))
+        self.assertTrue(
+            hasattr(module._PythonFactsVisitor, "visit_FunctionDef")
+        )
+        self.assertTrue(
+            hasattr(module._PythonFactsVisitor, "visit_AsyncFunctionDef")
+        )
+        self.assertTrue(hasattr(module._PythonFactsVisitor, "visit_ClassDef"))
+        self.assertTrue(hasattr(module._PythonFactsVisitor, "visit_Name"))
+
+        visitor = module._PythonFactsVisitor(
+            lines=[
+                "# module docs",
+                "class Widget:",
+                "    pass",
+                "def run(value):",
+                "    return helper",
+                "async def run_async(flag):",
+                "    return flag",
+            ]
+        )
+        visitor.visit(
+            ast.parse(
+                "class Widget:\n"
+                "    pass\n"
+                "def run(value):\n"
+                "    return helper\n"
+                "async def run_async(flag):\n"
+                "    return flag\n"
+            )
+        )
+        names = {fact.name for fact in visitor.identifiers}
+        self.assertIn("Widget", names)
+        self.assertIn("run", names)
+        self.assertIn("run_async", names)
+        self.assertIn("helper", names)
 
 
 if __name__ == "__main__":

@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import concurrent.futures
 import email
 import hashlib
 import importlib.metadata as importlib_metadata
@@ -30,11 +31,14 @@ from devcovenant.core.services.metadata import (
     resolve_policy_metadata_bundle,
 )
 from devcovenant.core.services.policy_registry import (
+    PolicyRegistry,
     load_policy_descriptor,
     resolve_script_location,
 )
+from devcovenant.core.services.tracked_registry import policy_registry_path
 
 POLICY_ID = "dependency-management"
+_TARGET_RESOLUTION_MAX_WORKERS = 4
 _PYTHON_LOCK_OPTION_TOKENS = {
     "--cert",
     "--client-cert",
@@ -91,6 +95,183 @@ def _file_hash_or_missing(path: Path) -> str:
     if not path.exists():
         return "__missing__"
     return _compute_file_hash(path)
+
+
+def _directory_hash_or_missing(path: Path) -> str:
+    """Return one stable recursive digest string for a directory tree."""
+
+    if not path.exists():
+        return "__missing__"
+    if not path.is_dir():
+        return "__not_dir__"
+    digest = hashlib.sha256()
+    for child in sorted(path.rglob("*")):
+        if not child.is_file():
+            continue
+        relative = child.relative_to(path).as_posix()
+        digest.update(relative.encode("utf-8"))
+        digest.update(b"\0")
+        digest.update(_compute_file_hash(child).encode("utf-8"))
+        digest.update(b"\n")
+    return digest.hexdigest()
+
+
+def _dependency_refresh_engine_hash(repo_root: Path) -> str:
+    """Return one stable digest for the active dependency-refresh engine."""
+
+    digest = hashlib.sha256()
+    active_policy_script = resolve_script_location(repo_root, POLICY_ID)
+    paths: list[Path] = [Path(__file__).resolve()]
+    if getattr(dependency_management, "__file__", None):
+        paths.append(Path(str(dependency_management.__file__)).resolve())
+    if active_policy_script is not None:
+        paths.append(active_policy_script.path.resolve())
+        paths.append(active_policy_script.path.with_suffix(".yaml").resolve())
+    for path in paths:
+        digest.update(str(path).encode("utf-8"))
+        digest.update(b"\0")
+        digest.update(_file_hash_or_missing(path).encode("utf-8"))
+        digest.update(b"\n")
+    return digest.hexdigest()
+
+
+def _serialize_hash_targets(
+    hash_targets: Sequence[dependency_management.DependencySurfaceTarget],
+) -> list[dict[str, object]]:
+    """Return one stable JSON-serializable view of surface hash targets."""
+
+    serialized: list[dict[str, object]] = []
+    for target in hash_targets:
+        serialized.append(
+            {
+                "id": target.target_id,
+                "marker": target.marker,
+                "pip": dict(target.pip),
+            }
+        )
+    return serialized
+
+
+def _surface_input_fingerprint(
+    repo_root: Path,
+    *,
+    surface: dependency_management.DependencySurface,
+) -> str:
+    """Return one stable fingerprint for a surface's refresh inputs."""
+
+    dependency_inputs = sorted(
+        {
+            _normalize_repo_relative_path_token(entry)
+            for entry in [
+                *surface.direct_dependency_files,
+                *surface.dependency_files,
+            ]
+            if _normalize_repo_relative_path_token(entry)
+        }
+    )
+    serialized = json.dumps(
+        {
+            "surface_id": surface.surface_id,
+            "lock_file": _normalize_repo_relative_path_token(
+                surface.lock_file
+            ),
+            "direct_dependency_files": list(surface.direct_dependency_files),
+            "dependency_files": list(surface.dependency_files),
+            "third_party_file": _normalize_repo_relative_path_token(
+                surface.third_party_file
+            ),
+            "licenses_dir": _normalize_repo_relative_path_token(
+                surface.licenses_dir
+            ),
+            "report_heading": surface.report_heading,
+            "manage_licenses_readme": surface.manage_licenses_readme,
+            "generate_hashes": surface.generate_hashes,
+            "hash_targets": _serialize_hash_targets(surface.hash_targets),
+            "dependency_inputs": {
+                path_text: _file_hash_or_missing(repo_root / path_text)
+                for path_text in dependency_inputs
+            },
+            "engine_hash": _dependency_refresh_engine_hash(repo_root),
+        },
+        sort_keys=True,
+        separators=(",", ":"),
+    ).encode("utf-8")
+    return hashlib.sha256(serialized).hexdigest()
+
+
+def _surface_output_fingerprints(
+    repo_root: Path,
+    *,
+    surface: dependency_management.DependencySurface,
+) -> dict[str, str]:
+    """Return one stable fingerprint map for a surface's managed outputs."""
+
+    return {
+        "lock_file": _file_hash_or_missing(
+            repo_root / _normalize_repo_relative_path_token(surface.lock_file)
+        ),
+        "third_party_file": _file_hash_or_missing(
+            repo_root
+            / _normalize_repo_relative_path_token(surface.third_party_file)
+        ),
+        "licenses_dir": _directory_hash_or_missing(
+            repo_root
+            / _normalize_repo_relative_path_token(surface.licenses_dir)
+        ),
+    }
+
+
+def _surface_runtime_state_is_current(
+    repo_root: Path,
+    *,
+    surface: dependency_management.DependencySurface,
+    runtime_state: Mapping[str, object] | None,
+) -> bool:
+    """Return True when one stored runtime-state still matches disk."""
+
+    if not isinstance(runtime_state, Mapping):
+        return False
+    stored_input_fingerprint = str(
+        runtime_state.get("input_fingerprint", "")
+    ).strip()
+    if not stored_input_fingerprint:
+        return False
+    output_fingerprints = runtime_state.get("output_fingerprints", {})
+    if not isinstance(output_fingerprints, Mapping):
+        return False
+    current_outputs = _surface_output_fingerprints(
+        repo_root,
+        surface=surface,
+    )
+    if any(
+        current_outputs[key] in {"__missing__", "__not_dir__"}
+        for key in ("lock_file", "third_party_file", "licenses_dir")
+    ):
+        return False
+    return (
+        stored_input_fingerprint
+        == _surface_input_fingerprint(repo_root, surface=surface)
+        and dict(output_fingerprints) == current_outputs
+    )
+
+
+def _build_surface_runtime_state(
+    repo_root: Path,
+    *,
+    surface: dependency_management.DependencySurface,
+) -> dict[str, object]:
+    """Build one runtime-state snapshot for a managed dependency surface."""
+
+    return {
+        "input_fingerprint": _surface_input_fingerprint(
+            repo_root,
+            surface=surface,
+        ),
+        "output_fingerprints": _surface_output_fingerprints(
+            repo_root,
+            surface=surface,
+        ),
+    }
 
 
 def _ensure_tool(command_name: str) -> bool:
@@ -1426,12 +1607,35 @@ def _compile_target_surface_lock(
     if not dependency_lines:
         return LockFilePieces([])
     reports: Dict[str, Sequence[Mapping[str, object]]] = {}
-    for target in hash_targets:
-        reports[target.target_id] = _resolve_complete_target_report(
-            repo_root,
-            dependency_lines=dependency_lines,
-            target=target,
-        )
+    max_workers = min(
+        len(hash_targets),
+        max(1, _TARGET_RESOLUTION_MAX_WORKERS),
+    )
+    if max_workers <= 1:
+        for target in hash_targets:
+            reports[target.target_id] = _resolve_complete_target_report(
+                repo_root,
+                dependency_lines=dependency_lines,
+                target=target,
+            )
+    else:
+        with concurrent.futures.ThreadPoolExecutor(
+            max_workers=max_workers
+        ) as executor:
+            submitted = [
+                (
+                    target,
+                    executor.submit(
+                        _resolve_complete_target_report,
+                        repo_root,
+                        dependency_lines=dependency_lines,
+                        target=target,
+                    ),
+                )
+                for target in hash_targets
+            ]
+            for target, future in submitted:
+                reports[target.target_id] = future.result()
     return LockFilePieces(
         _merge_target_reports(
             targets=hash_targets,
@@ -1793,6 +1997,13 @@ def refresh_all(
         if isinstance(surface, dependency_management.DependencySurface)
         and surface.active
     ]
+    registry = PolicyRegistry(policy_registry_path(repo_root), repo_root)
+    stored_runtime_state = registry.get_policy_runtime_state(POLICY_ID)
+    stored_surface_states = stored_runtime_state.get("surfaces", {})
+    if not isinstance(stored_surface_states, Mapping):
+        stored_surface_states = {}
+    updated_surface_states: dict[str, dict[str, object]] = {}
+    current_surface_ids: set[str] = set()
     results: List[LockHandlerResult] = []
     changed_lockfiles: List[str] = []
     requested_dependency_files: list[str] = []
@@ -1805,6 +2016,28 @@ def refresh_all(
                     requested_dependency_files.append(text)
     for surface in surfaces:
         lock_name = surface.lock_file
+        stored_surface_state = stored_surface_states.get(surface.surface_id)
+        if (
+            not requested_dependency_files
+            and _surface_runtime_state_is_current(
+                repo_root,
+                surface=surface,
+                runtime_state=stored_surface_state,
+            )
+        ):
+            results.append(
+                LockHandlerResult(
+                    lock_name,
+                    changed=False,
+                    attempted=False,
+                    message="Skipped: surface artifacts already current.",
+                )
+            )
+            updated_surface_states[surface.surface_id] = dict(
+                stored_surface_state
+            )
+            current_surface_ids.add(surface.surface_id)
+            continue
         if not dependency_management.dependency_surface_lock_refresh_requested(
             surface,
             requested_dependency_files,
@@ -1841,6 +2074,8 @@ def refresh_all(
     )
     modified_license_files: List[Path] = []
     for surface in surfaces:
+        if surface.surface_id in current_surface_ids:
+            continue
         if not surface.direct_dependency_files:
             continue
         surface_changed_dependency_files = [
@@ -1867,6 +2102,23 @@ def refresh_all(
                 manage_licenses_readme=surface.manage_licenses_readme,
             )
         )
+        updated_surface_states[surface.surface_id] = (
+            _build_surface_runtime_state(
+                repo_root,
+                surface=surface,
+            )
+        )
+    registry.update_policy_runtime_state(
+        POLICY_ID,
+        {
+            **(
+                stored_runtime_state
+                if isinstance(stored_runtime_state, Mapping)
+                else {}
+            ),
+            "surfaces": updated_surface_states,
+        },
+    )
     result_payload = [
         {
             "lock_file": result.lock_file,

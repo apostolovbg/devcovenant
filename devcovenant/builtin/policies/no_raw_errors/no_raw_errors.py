@@ -12,6 +12,7 @@ from devcovenant.core.contracts.policy import (
     Violation,
 )
 from devcovenant.core.lib.selectors import SelectorSet
+from devcovenant.core.services import yaml_cache as yaml_cache_service
 
 _VALID_SEVERITIES = {"critical", "error", "warning", "info"}
 _DEFAULT_WAIVER_MARKERS = ("DEVCOV_ALLOW_BROAD_ONCE",)
@@ -157,6 +158,129 @@ def _is_silent_pass_handler(node: ast.ExceptHandler) -> bool:
     return len(node.body) == 1 and isinstance(node.body[0], ast.Pass)
 
 
+class _RawErrorVisitor(ast.NodeVisitor):
+    """Visit only exception constructs relevant to this policy."""
+
+    def __init__(
+        self,
+        *,
+        path: Path,
+        severity: str,
+        policy_id: str,
+        lines: Sequence[str],
+        waiver_markers: Sequence[str],
+        waiver_regions: Sequence[tuple[int, int]],
+        forbid_bare_except: bool,
+        forbid_raise_exception: bool,
+        forbid_broad_exception_handlers: bool,
+        forbid_silent_exception_pass: bool,
+    ) -> None:
+        """Store runtime options used while collecting violations."""
+        self.path = path
+        self.severity = severity
+        self.policy_id = policy_id
+        self.lines = lines
+        self.waiver_markers = waiver_markers
+        self.waiver_regions = waiver_regions
+        self.forbid_bare_except = forbid_bare_except
+        self.forbid_raise_exception = forbid_raise_exception
+        self.forbid_broad_exception_handlers = forbid_broad_exception_handlers
+        self.forbid_silent_exception_pass = forbid_silent_exception_pass
+        self.violations: list[Violation] = []
+
+    def visit_ExceptHandler(self, node: ast.ExceptHandler) -> None:
+        """Validate one except-handler node."""
+        if self.forbid_bare_except and node.type is None:
+            self.violations.append(
+                Violation(
+                    policy_id=self.policy_id,
+                    severity=self.severity,
+                    file_path=self.path,
+                    line_number=node.lineno,
+                    message=(
+                        "Bare `except:` is not allowed; catch specific "
+                        "exception types."
+                    ),
+                    suggestion=(
+                        "Catch explicit exception classes and raise/report "
+                        "explicit failures."
+                    ),
+                )
+            )
+        is_broad_handler = _is_broad_exception_handler(node)
+        is_silent_handler = _is_silent_pass_handler(node)
+        if (
+            self.forbid_silent_exception_pass
+            and is_broad_handler
+            and is_silent_handler
+        ):
+            self.violations.append(
+                Violation(
+                    policy_id=self.policy_id,
+                    severity=self.severity,
+                    file_path=self.path,
+                    line_number=node.lineno,
+                    message="Silent `except Exception: pass` hides failures.",
+                    suggestion=(
+                        "Handle explicitly with error context or narrow the "
+                        "exception to expected cases."
+                    ),
+                )
+            )
+        if (
+            self.forbid_broad_exception_handlers
+            and is_broad_handler
+            and not is_silent_handler
+        ):
+            line_number = int(getattr(node, "lineno", 0) or 0)
+            has_comment_waiver = _line_has_comment_waiver(
+                self.lines,
+                line_number,
+                self.waiver_markers,
+            )
+            in_waiver_region = _line_in_regions(
+                line_number,
+                self.waiver_regions,
+            )
+            if not (has_comment_waiver or in_waiver_region):
+                self.violations.append(
+                    Violation(
+                        policy_id=self.policy_id,
+                        severity=self.severity,
+                        file_path=self.path,
+                        line_number=line_number,
+                        message=(
+                            "Broad `except Exception` handlers are not "
+                            "allowed."
+                        ),
+                        suggestion=(
+                            "Catch specific exception classes; use a waiver "
+                            "marker only at an explicit boundary with "
+                            "rationale."
+                        ),
+                    )
+                )
+        self.generic_visit(node)
+
+    def visit_Raise(self, node: ast.Raise) -> None:
+        """Validate one raise node for generic exceptions."""
+        if self.forbid_raise_exception and _is_generic_exception_raise(node):
+            self.violations.append(
+                Violation(
+                    policy_id=self.policy_id,
+                    severity=self.severity,
+                    file_path=self.path,
+                    line_number=node.lineno,
+                    message=("Generic `raise Exception(...)` is not allowed."),
+                    suggestion=(
+                        "Raise a specific exception type with explicit "
+                        "failure context."
+                    ),
+                )
+            )
+        self.generic_visit(node)
+
+
 class NoRawErrorsCheck(PolicyCheck):
     """Block raw error anti-patterns that hide explicit failure intent."""
 
@@ -221,7 +345,7 @@ class NoRawErrorsCheck(PolicyCheck):
             if not selector.matches(candidate, context.repo_root):
                 continue
             try:
-                source = candidate.read_text(encoding="utf-8")
+                source = yaml_cache_service.read_text(candidate)
             except OSError as error:
                 violations.append(
                     Violation(
@@ -238,111 +362,26 @@ class NoRawErrorsCheck(PolicyCheck):
                     )
                 )
                 continue
-            try:
-                tree = ast.parse(source)
-            except SyntaxError:
+            tree = yaml_cache_service.parse_python_ast(candidate)
+            if tree is None:
                 continue
             lines = source.splitlines()
             waiver_regions = _waiver_regions(lines, waiver_between)
-
-            for node in ast.walk(tree):
-                if isinstance(node, ast.ExceptHandler):
-                    if forbid_bare_except and node.type is None:
-                        violations.append(
-                            Violation(
-                                policy_id=self.policy_id,
-                                severity=severity,
-                                file_path=candidate,
-                                line_number=node.lineno,
-                                message=(
-                                    "Bare `except:` is not allowed; catch "
-                                    "specific exception types."
-                                ),
-                                suggestion=(
-                                    "Catch explicit exception classes and "
-                                    "raise/report explicit failures."
-                                ),
-                            )
-                        )
-                    is_broad_handler = _is_broad_exception_handler(node)
-                    is_silent_handler = _is_silent_pass_handler(node)
-                    if (
-                        forbid_silent_exception_pass
-                        and is_broad_handler
-                        and is_silent_handler
-                    ):
-                        violations.append(
-                            Violation(
-                                policy_id=self.policy_id,
-                                severity=severity,
-                                file_path=candidate,
-                                line_number=node.lineno,
-                                message=(
-                                    "Silent `except Exception: pass` hides "
-                                    "failures."
-                                ),
-                                suggestion=(
-                                    "Handle explicitly with error context or "
-                                    "narrow the exception to expected cases."
-                                ),
-                            )
-                        )
-                    if (
-                        forbid_broad_exception_handlers
-                        and is_broad_handler
-                        and not is_silent_handler
-                    ):
-                        line_number = int(getattr(node, "lineno", 0) or 0)
-                        has_comment_waiver = _line_has_comment_waiver(
-                            lines,
-                            line_number,
-                            waiver_markers,
-                        )
-                        in_waiver_region = _line_in_regions(
-                            line_number,
-                            waiver_regions,
-                        )
-                        if has_comment_waiver or in_waiver_region:
-                            continue
-                        violations.append(
-                            Violation(
-                                policy_id=self.policy_id,
-                                severity=severity,
-                                file_path=candidate,
-                                line_number=line_number,
-                                message=(
-                                    "Broad `except Exception` handlers are "
-                                    "not allowed."
-                                ),
-                                suggestion=(
-                                    "Catch specific exception classes; use "
-                                    "a waiver marker only at an explicit "
-                                    "boundary with rationale."
-                                ),
-                            )
-                        )
-                    continue
-
-                if (
-                    forbid_raise_exception
-                    and isinstance(node, ast.Raise)
-                    and _is_generic_exception_raise(node)
-                ):
-                    violations.append(
-                        Violation(
-                            policy_id=self.policy_id,
-                            severity=severity,
-                            file_path=candidate,
-                            line_number=node.lineno,
-                            message=(
-                                "Generic `raise Exception(...)` is not "
-                                "allowed."
-                            ),
-                            suggestion=(
-                                "Raise a specific exception type with "
-                                "explicit failure context."
-                            ),
-                        )
-                    )
+            visitor = _RawErrorVisitor(
+                path=candidate,
+                severity=severity,
+                policy_id=self.policy_id,
+                lines=lines,
+                waiver_markers=waiver_markers,
+                waiver_regions=waiver_regions,
+                forbid_bare_except=forbid_bare_except,
+                forbid_raise_exception=forbid_raise_exception,
+                forbid_broad_exception_handlers=(
+                    forbid_broad_exception_handlers
+                ),
+                forbid_silent_exception_pass=forbid_silent_exception_pass,
+            )
+            visitor.visit(tree)
+            violations.extend(visitor.violations)
 
         return violations

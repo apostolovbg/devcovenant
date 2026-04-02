@@ -8,6 +8,7 @@ from pathlib import Path
 
 from devcovenant.builtin.policies.no_raw_errors.no_raw_errors import (
     NoRawErrorsCheck,
+    _RawErrorVisitor,
 )
 from devcovenant.core.contracts.policy import CheckContext
 
@@ -196,6 +197,8 @@ def _unit_test_policy_symbol_contract_is_stable() -> None:
     """Policy class/method symbols should stay explicit and importable."""
     assert NoRawErrorsCheck.__name__ == "NoRawErrorsCheck"
     assert hasattr(NoRawErrorsCheck, "check")
+    assert hasattr(_RawErrorVisitor, "visit_ExceptHandler")
+    assert hasattr(_RawErrorVisitor, "visit_Raise")
 
 
 class GeneratedUnittestCases(unittest.TestCase):

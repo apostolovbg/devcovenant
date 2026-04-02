@@ -3,12 +3,11 @@
 from __future__ import annotations
 
 import ast
-import io
 import re
-import tokenize
 from pathlib import Path
 from typing import Any
 
+from devcovenant.core.services import yaml_cache as yaml_cache_service
 from devcovenant.core.services.translator_engine import (
     IdentifierFact,
     LanguageUnit,
@@ -44,19 +43,6 @@ def can_handle(
     )
 
 
-def _comment_lines(source: str) -> set[int]:
-    """Return source line numbers containing comments."""
-    lines: set[int] = set()
-    reader = io.StringIO(source).readline
-    try:
-        for token in tokenize.generate_tokens(reader):
-            if token.type == tokenize.COMMENT:
-                lines.add(token.start[0])
-    except tokenize.TokenError:
-        return lines
-    return lines
-
-
 def _has_nearby_comment(line_number: int, lines: list[str]) -> bool:
     """Return True when a nearby comment marker is present."""
     start = max(1, line_number - 3)
@@ -68,19 +54,94 @@ def _has_nearby_comment(line_number: int, lines: list[str]) -> bool:
     return False
 
 
+class _PythonFactsVisitor(ast.NodeVisitor):
+    """Collect identifier and documentation facts in one tree walk."""
+
+    def __init__(self, *, lines: list[str]) -> None:
+        """Store source lines and initialize fact containers."""
+        self.lines = lines
+        self.identifiers: list[IdentifierFact] = []
+        self.symbol_docs: list[SymbolDocFact] = []
+
+    def visit_FunctionDef(self, node: ast.FunctionDef) -> None:
+        """Collect function identifiers and documentation facts."""
+        self._visit_function(node)
+        self.generic_visit(node)
+
+    def visit_AsyncFunctionDef(self, node: ast.AsyncFunctionDef) -> None:
+        """Collect async-function identifiers and documentation facts."""
+        self._visit_function(node)
+        self.generic_visit(node)
+
+    def visit_ClassDef(self, node: ast.ClassDef) -> None:
+        """Collect class identifiers and documentation facts."""
+        self.identifiers.append(
+            IdentifierFact(node.name, node.lineno, "class")
+        )
+        documented = bool(ast.get_docstring(node)) or _has_nearby_comment(
+            node.lineno,
+            self.lines,
+        )
+        self.symbol_docs.append(
+            SymbolDocFact("class", node.name, node.lineno, documented)
+        )
+        self.generic_visit(node)
+
+    def visit_Name(self, node: ast.Name) -> None:
+        """Collect generic identifier facts."""
+        self.identifiers.append(
+            IdentifierFact(node.id, getattr(node, "lineno", 1), "identifier")
+        )
+
+    def _visit_function(
+        self,
+        node: ast.FunctionDef | ast.AsyncFunctionDef,
+    ) -> None:
+        """Collect function facts for sync and async nodes."""
+        self.identifiers.append(
+            IdentifierFact(node.name, node.lineno, "function")
+        )
+        documented = bool(ast.get_docstring(node)) or _has_nearby_comment(
+            node.lineno,
+            self.lines,
+        )
+        self.symbol_docs.append(
+            SymbolDocFact("function", node.name, node.lineno, documented)
+        )
+        args = node.args.posonlyargs + node.args.args + node.args.kwonlyargs
+        for arg in args:
+            self.identifiers.append(
+                IdentifierFact(
+                    arg.arg,
+                    getattr(arg, "lineno", node.lineno),
+                    "argument",
+                )
+            )
+        if node.args.vararg:
+            self.identifiers.append(
+                IdentifierFact(node.args.vararg.arg, node.lineno, "argument")
+            )
+        if node.args.kwarg:
+            self.identifiers.append(
+                IdentifierFact(node.args.kwarg.arg, node.lineno, "argument")
+            )
+
+
 def translate(
     *, path: Path, source: str, declaration: TranslatorDeclaration, **_: Any
 ) -> LanguageUnit:
     """Translate Python source into a policy-agnostic LanguageUnit."""
     lines = source.splitlines()
-    comments = _comment_lines(source)
-    identifiers: list[IdentifierFact] = []
-    symbol_docs: list[SymbolDocFact] = []
     risks: list[RiskFact] = []
 
-    try:
-        module = ast.parse(source)
-    except SyntaxError:
+    if path.exists():
+        module = yaml_cache_service.parse_python_ast(path)
+    else:
+        try:
+            module = ast.parse(source, filename=str(path))
+        except SyntaxError:
+            module = None
+    if module is None:
         return LanguageUnit(
             translator_id=declaration.translator_id,
             profile_name=declaration.profile_name,
@@ -96,58 +157,10 @@ def translate(
         )
 
     module_documented = bool(ast.get_docstring(module)) or any(
-        line <= 5 for line in comments
+        line.strip().startswith("#") for line in lines[:5]
     )
-    for node in ast.walk(module):
-        if isinstance(node, (ast.FunctionDef, ast.AsyncFunctionDef)):
-            identifiers.append(
-                IdentifierFact(node.name, node.lineno, "function")
-            )
-            documented = bool(ast.get_docstring(node)) or _has_nearby_comment(
-                node.lineno, lines
-            )
-            symbol_docs.append(
-                SymbolDocFact("function", node.name, node.lineno, documented)
-            )
-            args = (
-                node.args.posonlyargs + node.args.args + node.args.kwonlyargs
-            )
-            for arg in args:
-                identifiers.append(
-                    IdentifierFact(
-                        arg.arg,
-                        getattr(arg, "lineno", node.lineno),
-                        "argument",
-                    )
-                )
-            if node.args.vararg:
-                identifiers.append(
-                    IdentifierFact(
-                        node.args.vararg.arg, node.lineno, "argument"
-                    )
-                )
-            if node.args.kwarg:
-                identifiers.append(
-                    IdentifierFact(
-                        node.args.kwarg.arg, node.lineno, "argument"
-                    )
-                )
-            continue
-        if isinstance(node, ast.ClassDef):
-            identifiers.append(IdentifierFact(node.name, node.lineno, "class"))
-            documented = bool(ast.get_docstring(node)) or _has_nearby_comment(
-                node.lineno, lines
-            )
-            symbol_docs.append(
-                SymbolDocFact("class", node.name, node.lineno, documented)
-            )
-            continue
-        if isinstance(node, ast.Name):
-            identifiers.append(
-                IdentifierFact(
-                    node.id, getattr(node, "lineno", 1), "identifier"
-                )
-            )
+    visitor = _PythonFactsVisitor(lines=lines)
+    visitor.visit(module)
 
     for pattern, message in RISK_PATTERNS:
         for match in pattern.finditer(source):
@@ -165,8 +178,8 @@ def translate(
         suffix=path.suffix.lower(),
         source=source,
         module_documented=module_documented,
-        identifier_facts=tuple(identifiers),
-        symbol_doc_facts=tuple(symbol_docs),
+        identifier_facts=tuple(visitor.identifiers),
+        symbol_doc_facts=tuple(visitor.symbol_docs),
         risk_facts=tuple(risks),
         test_name_templates=TEST_TEMPLATES,
     )

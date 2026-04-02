@@ -2,6 +2,7 @@
 Base classes and interfaces for devcovenant policies and fixers.
 """
 
+import fnmatch
 import os
 from abc import ABC, abstractmethod
 from dataclasses import dataclass, field
@@ -95,6 +96,9 @@ class CheckContext:
     _ignore_patterns: List[str] = field(
         default_factory=list, init=False, repr=False
     )
+    _ignore_cache: Dict[str, bool] = field(
+        default_factory=dict, init=False, repr=False
+    )
 
     def __post_init__(self) -> None:
         """Load ignore patterns and sanitize file lists."""
@@ -144,10 +148,29 @@ class CheckContext:
             rel_path = path.relative_to(self.repo_root)
         except ValueError:
             rel_path = path
-        rel_posix = PurePosixPath(rel_path.as_posix())
+        rel_posix = PurePosixPath(rel_path.as_posix()).as_posix()
+        cached = self._ignore_cache.get(rel_posix)
+        if cached is not None:
+            return cached
         for pattern in self._ignore_patterns:
-            if rel_posix.match(pattern):
+            if pattern.endswith("/**"):
+                prefix = pattern[: -len("/**")].rstrip("/")
+                if rel_posix == prefix or rel_posix.startswith(f"{prefix}/"):
+                    self._ignore_cache[rel_posix] = True
+                    return True
+            if (
+                "*" not in pattern
+                and "?" not in pattern
+                and "[" not in pattern
+            ):
+                if rel_posix == pattern:
+                    self._ignore_cache[rel_posix] = True
+                    return True
+                continue
+            if fnmatch.fnmatch(rel_posix, pattern):
+                self._ignore_cache[rel_posix] = True
                 return True
+        self._ignore_cache[rel_posix] = False
         return False
 
     def get_policy_config(self, policy_id: str) -> Dict[str, Any]:

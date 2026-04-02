@@ -80,7 +80,9 @@ def load_registry_document(path: Path) -> Dict[str, Any]:
     return normalized
 
 
-class _TrackedRegistryYamlDumper(yaml.SafeDumper):
+class _TrackedRegistryYamlDumper(
+    getattr(yaml, "CSafeDumper", yaml.SafeDumper)
+):
     """YAML dumper for tracked-registry files with readable strings."""
 
 

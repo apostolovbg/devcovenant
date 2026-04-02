@@ -1281,6 +1281,42 @@ def _unit_test_refresh_records_override_replacement_warning() -> None:
         )
 
 
+def _unit_test_refresh_policy_registry_short_circuits_when_inputs_match() -> (
+    None
+):
+    """refresh_policy_registry should skip rebuilding a current registry."""
+
+    with tempfile.TemporaryDirectory() as temp_dir:
+        repo_root = Path(temp_dir)
+        repo_seed_cache.copy_refreshed_repo(repo_root)
+        assert refresh.refresh_repo(repo_root) == 0
+
+        config_path = repo_root / "devcovenant" / "config.yaml"
+        config_payload = yaml.safe_load(
+            config_path.read_text(encoding="utf-8")
+        )
+        assert isinstance(config_payload, dict)
+
+        original_update = refresh_flow.PolicyRegistry.update_policy_entry
+
+        def _unexpected_update(*args, **kwargs):
+            """Fail if the current-input short-circuit still rebuilds."""
+
+            del args, kwargs
+            raise AssertionError("policy registry rebuild should be skipped")
+
+        refresh_flow.PolicyRegistry.update_policy_entry = _unexpected_update
+        try:
+            result = refresh_flow.refresh_policy_registry(
+                repo_root,
+                config_payload=config_payload,
+            )
+        finally:
+            refresh_flow.PolicyRegistry.update_policy_entry = original_update
+
+        assert result == 0
+
+
 def _unit_test_refresh_preserves_existing_gate_status() -> None:
     """refresh_repo should leave an open gate status file untouched."""
     with tempfile.TemporaryDirectory() as temp_dir:
@@ -1894,6 +1930,10 @@ class GeneratedUnittestCases(unittest.TestCase):
     def test_refresh_records_override_replacement_warning(self):
         """Run destructive-override warning persistence assertions."""
         _unit_test_refresh_records_override_replacement_warning()
+
+    def test_refresh_policy_registry_short_circuits_when_inputs_match(self):
+        """Run policy-registry current-input short-circuit assertions."""
+        _unit_test_refresh_policy_registry_short_circuits_when_inputs_match()
 
     def test_refresh_preserves_existing_gate_status(self):
         """Run open-gate preservation assertions for refresh."""

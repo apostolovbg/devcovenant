@@ -1,5 +1,5 @@
 # DevCovenant Architecture
-**Last Updated:** 2026-03-31
+**Last Updated:** 2026-04-01
 **Project Version:** 1.0.1.dev1
 
 ## Overview
@@ -167,6 +167,14 @@ The tracked registry and runtime registry are different.
   owns policy descriptors, script resolution, and tracked policy state
 
 That split keeps saved setup separate from disposable runtime session state.
+`policy_registry.py` also batches tracked policy updates into one save and
+records a top-level input fingerprint so startup commands can skip rebuilding
+that tracked section when policy sources and effective config are unchanged.
+Policy-owned tracked runtime state stays separate from ephemeral
+`registry/runtime/` data: for example, dependency-management stores
+per-surface convergence fingerprints in the tracked registry so no-change
+refreshes can skip current surfaces while still leaving transient gate/session
+evidence under `registry/runtime/`.
 
 ## Package Boundary
 The published package ships the docs, builtin policies, builtin profiles,

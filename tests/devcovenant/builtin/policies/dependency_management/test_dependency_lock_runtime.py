@@ -369,6 +369,105 @@ def _unit_test_refresh_runtime_scrubs_environment_option_lines() -> None:
         ) == f"packaging=={packaging_version}\n"
 
 
+def _unit_test_refresh_runtime_skips_current_surface_state() -> None:
+    """Converged surfaces should skip lock/license work on no-op refresh."""
+
+    module = importlib.import_module(MODULE)
+    with tempfile.TemporaryDirectory() as temp_dir:
+        repo_root = Path(temp_dir)
+        licenses_dir = repo_root / "licenses"
+        licenses_dir.mkdir(parents=True, exist_ok=True)
+        packaging_version = importlib_metadata.version("packaging")
+        surface = _surface(module)
+        (repo_root / "requirements.in").write_text(
+            "packaging>=26.0\n",
+            encoding="utf-8",
+        )
+        (repo_root / "requirements.lock").write_text(
+            f"packaging=={packaging_version}\n",
+            encoding="utf-8",
+        )
+        (repo_root / "pyproject.toml").write_text(
+            "[project]\n"
+            "name = 'demo'\n"
+            "dependencies = ['packaging>=26.0']\n",
+            encoding="utf-8",
+        )
+        (licenses_dir / "THIRD_PARTY_LICENSES.md").write_text(
+            "# Third-Party Licenses\n\n"
+            "## License Report\n"
+            "- `requirements.lock`\n\n"
+            "## Dependency License Inventory\n"
+            f"- `packaging=={packaging_version}`: "
+            f"`licenses/packaging-{packaging_version}.txt`\n",
+            encoding="utf-8",
+        )
+        (licenses_dir / f"packaging-{packaging_version}.txt").write_text(
+            "license\n",
+            encoding="utf-8",
+        )
+        (licenses_dir / "README.md").write_text(
+            "runtime license readme\n",
+            encoding="utf-8",
+        )
+        registry_path = (
+            repo_root / "devcovenant" / "registry" / "registry.yaml"
+        )
+        registry = module.PolicyRegistry(registry_path, repo_root)
+        registry.update_policy_runtime_state(
+            module.POLICY_ID,
+            {
+                "surfaces": {
+                    surface.surface_id: module._build_surface_runtime_state(
+                        repo_root,
+                        surface=surface,
+                    )
+                }
+            },
+        )
+        original_resolver = module._resolve_dependency_metadata
+        original_compile = module._compile_requirements_lock
+        original_refresh_licenses = (
+            module.dependency_management.refresh_license_artifacts
+        )
+        module._resolve_dependency_metadata = lambda _repo_root: {
+            "surfaces": [surface],
+        }
+
+        def _unexpected_compile(*_args, **_kwargs):
+            """Fail if no-op refresh attempts to rebuild the lock."""
+
+            raise AssertionError("lock refresh should be skipped")
+
+        def _unexpected_refresh_license_artifacts(*_args, **_kwargs):
+            """Fail if no-op refresh attempts to rewrite license artifacts."""
+
+            raise AssertionError("license refresh should be skipped")
+
+        module._compile_requirements_lock = _unexpected_compile
+        module.dependency_management.refresh_license_artifacts = (
+            _unexpected_refresh_license_artifacts
+        )
+        try:
+            payload = module.refresh_all(repo_root)
+        finally:
+            module._resolve_dependency_metadata = original_resolver
+            module._compile_requirements_lock = original_compile
+            module.dependency_management.refresh_license_artifacts = (
+                original_refresh_licenses
+            )
+
+        assert payload["lock_results"] == [
+            {
+                "lock_file": "requirements.lock",
+                "changed": False,
+                "attempted": False,
+                "message": "Skipped: surface artifacts already current.",
+            }
+        ]
+        assert payload["refreshed_artifacts"] == []
+
+
 def _unit_test_refresh_runtime_preserves_direct_conditional_requirements() -> (
     None
 ):
@@ -952,6 +1051,10 @@ class GeneratedUnittestCases(unittest.TestCase):
     def test_refresh_runtime_scrubs_environment_option_lines(self):
         """Run environment-specific option-line cleanup assertions."""
         _unit_test_refresh_runtime_scrubs_environment_option_lines()
+
+    def test_refresh_runtime_skips_current_surface_state_without_rebuild(self):
+        """Run converged-surface no-op skip assertions."""
+        _unit_test_refresh_runtime_skips_current_surface_state()
 
     def test_refresh_runtime_preserves_direct_conditional_requirements(self):
         """Run direct exact conditional requirement preservation assertions."""

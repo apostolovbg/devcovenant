@@ -144,6 +144,10 @@ Practical resolution flow:
 
 Framework and tooling profiles should not become alternate language owners.
 Translator ownership belongs with language profiles.
+The translator should also do the expensive parsing work once.
+For example, the builtin Python translator now collects identifier,
+symbol-doc, and risk facts in one tree walk so translator-driven policies can
+reuse the same language unit instead of reparsing the same module repeatedly.
 
 ## Metadata Overlays
 Profiles are the preferred place for reusable stack-specific settings.

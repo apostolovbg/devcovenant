@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import ast
 import re
+from dataclasses import dataclass
 from pathlib import Path
 from typing import List, Set, Tuple
 
@@ -16,6 +17,7 @@ from devcovenant.core.lib.selectors import SelectorSet, build_watchlists
 from devcovenant.core.runtime.session_snapshot import (
     capture_current_snapshot_paths,
 )
+from devcovenant.core.services import yaml_cache as yaml_cache_service
 
 IGNORED_MODULE_STEMS = {"__init__", "__main__"}
 IGNORED_TEST_FILE_NAMES = {"__init__.py", ".DS_Store"}
@@ -28,6 +30,16 @@ PLACEHOLDER_TEXT_MARKERS = (
     "placeholder-marker-gamma",
 )
 DEFAULT_TEST_STYLE_REQUIREMENTS = ("python=>python_unittest",)
+
+
+@dataclass(frozen=True)
+class IndexedTestPath:
+    """Pre-indexed test-path strings for repeated related-test lookups."""
+
+    path: Path
+    relative_lower: str
+    test_name_lower: str
+    compact_test_name: str
 
 
 def _normalize_tokens(raw: object) -> list[str]:
@@ -176,6 +188,27 @@ def _list_existing_tests(repo_root: Path, tests_dirs: List[str]) -> list[Path]:
     return discovered
 
 
+def _index_tests(
+    tests: list[Path],
+    *,
+    repo_root: Path,
+) -> tuple[IndexedTestPath, ...]:
+    """Return reusable lowercase test-path metadata."""
+    indexed: list[IndexedTestPath] = []
+    for test_path in tests:
+        relative = test_path.relative_to(repo_root).as_posix().lower()
+        test_name = Path(relative).name
+        indexed.append(
+            IndexedTestPath(
+                path=test_path,
+                relative_lower=relative,
+                test_name_lower=test_name,
+                compact_test_name=re.sub(r"[^a-zA-Z0-9]+", "", test_name),
+            )
+        )
+    return tuple(indexed)
+
+
 def _is_test_file_candidate(path: Path, repo_root: Path) -> bool:
     """Return True when one file path should count as a test file."""
     try:
@@ -195,31 +228,29 @@ def _related_tests(
     module: Path,
     *,
     unit_templates: tuple[str, ...],
-    tests: list[Path],
-    repo_root: Path,
+    indexed_tests: tuple[IndexedTestPath, ...],
 ) -> set[Path]:
     """Return related test paths for a source module."""
     stem = module.stem
     compact_stem = re.sub(r"[^a-zA-Z0-9]+", "", stem.lower())
     related: set[Path] = set()
+    candidate_names = tuple(
+        template.format(stem=stem).lower() for template in unit_templates
+    )
 
-    for test_path in tests:
-        test = test_path.relative_to(repo_root).as_posix().lower()
-        for template in unit_templates:
-            candidate_name = template.format(stem=stem).lower()
+    for indexed in indexed_tests:
+        test = indexed.relative_lower
+        for candidate_name in candidate_names:
             if test.endswith(f"/{candidate_name}") or test == candidate_name:
-                related.add(test_path)
+                related.add(indexed.path)
                 break
 
-    for test_path in tests:
-        test = test_path.relative_to(repo_root).as_posix().lower()
-        test_name = Path(test).name
-        if stem.lower() in test_name:
-            related.add(test_path)
+    for indexed in indexed_tests:
+        if stem.lower() in indexed.test_name_lower:
+            related.add(indexed.path)
             continue
-        compact_test = re.sub(r"[^a-zA-Z0-9]+", "", test_name)
-        if compact_stem and compact_stem in compact_test:
-            related.add(test_path)
+        if compact_stem and compact_stem in indexed.compact_test_name:
+            related.add(indexed.path)
 
     return related
 
@@ -338,7 +369,7 @@ def _validate_python_unittest_style(
     if path.suffix.lower() != ".py" or not path.name.startswith("test_"):
         return None
     try:
-        content = path.read_text(encoding="utf-8")
+        content = yaml_cache_service.read_text(path)
     except UnicodeDecodeError as error:
         return (
             "Python test modules must be UTF-8 decodable; "
@@ -362,9 +393,8 @@ def _validate_python_unittest_style(
             "unittest.TestCase tests."
         )
 
-    try:
-        tree = ast.parse(content)
-    except SyntaxError:
+    tree = yaml_cache_service.parse_python_ast(path)
+    if tree is None:
         return None
 
     has_top_level = any(
@@ -487,6 +517,10 @@ class ModulesNeedTestsCheck(PolicyCheck):
             placeholder_markers = PLACEHOLDER_TEXT_MARKERS
 
         test_files = _list_existing_tests(context.repo_root, tests_dirs)
+        indexed_tests = _index_tests(
+            test_files,
+            repo_root=context.repo_root,
+        )
         module_files = [
             path
             for path in sorted(repo_files)
@@ -528,7 +562,7 @@ class ModulesNeedTestsCheck(PolicyCheck):
                 violations.extend(resolution.violations)
                 continue
             try:
-                source = module.read_text(encoding="utf-8")
+                source = yaml_cache_service.read_text(module)
             except UnicodeDecodeError as error:
                 violations.append(
                     Violation(
@@ -599,8 +633,7 @@ class ModulesNeedTestsCheck(PolicyCheck):
             related_tests = _related_tests(
                 module=module,
                 unit_templates=unit.test_name_templates,
-                tests=test_files,
-                repo_root=context.repo_root,
+                indexed_tests=indexed_tests,
             )
             if related_tests:
                 continue

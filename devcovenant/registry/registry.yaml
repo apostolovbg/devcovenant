@@ -1,6 +1,7 @@
 metadata:
   schema_version: 1
   registry_layout: single-root
+  policy_registry_input_hash: 020c38244192c165f750c55502701f1a4ba2c7fd68b06a1d9f16de8a39696a58
 project-governance:
   project_name: devcovenant
   project_description: devcovenant is a repository governance framework.
@@ -2506,7 +2507,7 @@ policies:
     - node_modules/**
     origin: builtin
     script_exists: true
-    hash: ce4c48074c10f75e40334eae670d129abbe9f2cf9a9a4a58aedecc8270031b3c
+    hash: ab3293c016145776d61b5465c237ff1cc1c4ef304a1f0fed711522f3c6f8f0ae
     script_path: builtin/docstring_and_comment_coverage.py
   documentation-growth-tracking:
     enabled: true
@@ -6647,7 +6648,7 @@ policies:
     - tests/**
     origin: builtin
     script_exists: true
-    hash: fe210048b02245eeadd63c9f4f17483d002f07c8d5c8fd5cc067cbf105acb1b3
+    hash: d116b7a51eadd283809d0bcc98816fedc57cf2a677f460193387b3d66c053f2e
     script_path: builtin/modules_need_tests.py
   name-clarity:
     enabled: true
@@ -7020,8 +7021,8 @@ policies:
     enabled: true
     custom: false
     description: No Future Dates
-    policy_text: "Dates in changelogs or documentation must not be in the future.\
-      \ Auto-fixers\nshould correct accidental placeholders to today\u2019s date."
+    policy_text: "Dates in changelogs or documentation must not be in the future.
+      Auto-fixers\nshould correct accidental placeholders to today\u2019s date."
     metadata:
       id: no-future-dates
       severity: error
@@ -7605,7 +7606,7 @@ policies:
     - tests/**
     origin: builtin
     script_exists: true
-    hash: 33c529f7b8a47fe21b72988b910c7f0373285567ded1359e088103ca6a3a34cc
+    hash: bd811017cf7eb59045cfb095245667dea36c5568e299e486734889d9167114e7
     script_path: builtin/no_print_outside_output_runtime.py
   no-raw-errors:
     enabled: true
@@ -8122,7 +8123,7 @@ policies:
     - node_modules/**
     origin: builtin
     script_exists: true
-    hash: 8d58488c3ce23842d0added7cb2eb25a45d843f1d85f7e6076d68d0316bd1cac
+    hash: e4c9791434cf4ce255a055cf98cf7f447d5c1e10ad69239b5b8eb44d20974a81
     script_path: builtin/no_raw_errors.py
   raw-string-escapes:
     enabled: false
@@ -9894,7 +9895,7 @@ policies:
     - tests/**
     origin: builtin
     script_exists: true
-    hash: 99a71a5c3d684de7c3ede0427e1c1d25431de646743339537b3e5c326767b14f
+    hash: af36e91181dc3cffd63873493848cae5a959664b52f6dcefce59bcc4e7d31f13
     script_path: builtin/tests_coverage.py
   version-sync:
     enabled: true
@@ -12871,6 +12872,20 @@ policies:
     script_exists: true
     hash: 0347993ebd6a610c11ec4e8e9cb8cc0e65195b3987fa47aed7913c4787d9f889
     script_path: builtin/dependency_management.py
+    runtime_state:
+      surfaces:
+        devcovenant_runtime:
+          input_fingerprint: 8c8a1412023e1a31306e4154484280eaa0f29ab65920d0ec2ba45fa083e05099
+          output_fingerprints:
+            lock_file: a5788217543e1d7049dcd206db7d35542c9bd7c6ca087baccbc9f4e3eaa45af0
+            third_party_file: 03710e4b9b1d4a694b7f319950a3ac27222743eb35b0409771f9df366a8e8368
+            licenses_dir: 96af1bb880755dbfc4adf03d904e33e432446926fb2e04cf315c349d45897fee
+        root_workspace:
+          input_fingerprint: 96fe82bd88f7e304f71b8bc1109574731594b3e662d647193901b4943836125e
+          output_fingerprints:
+            lock_file: 64ded6b1656146f36631554c93f10f3112206a6a4f80fbbe71add09e35e832ad
+            third_party_file: 0c5b309147bb696e457e9a2b5c133dd5c5ce79b5ee4fdf2862f861bbd601219f
+            licenses_dir: 73b4a7d61db762ac3a574fc7ed33306ca8f26baf4516b4062a0f9163483ebb0e
   package-artifact-mirror:
     enabled: true
     custom: true

@@ -157,6 +157,13 @@ For the builtin Python surfaces, the default target matrix covers supported
 CPython 3.10 through 3.14 on Linux, Windows, and macOS.
 Normal non-hash mode and hash mode both resolve against that same declared
 matrix; hash mode only adds hashes to the emitted all-target result.
+After a surface is converged, the policy stores tracked per-surface input and
+output fingerprints.
+That lets later no-change refreshes skip rebuilding the lock and the matching
+license artifacts for that surface entirely.
+When a surface really does need recompute, independent target closures resolve
+in bounded parallel and then merge back in configured target order so the
+emitted lock stays deterministic.
 
 If a repository overrides one of those surfaces, do it in the profile or
 config layer for that surface id instead of inventing a second metadata shape.

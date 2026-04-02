@@ -54,7 +54,7 @@ def parse_metadata_block(
         payload = None
     try:
         if payload is None:
-            payload = yaml.safe_load(block)
+            payload = yaml_cache_service.load_yaml_text(block)
     except yaml.YAMLError as exc:
         payload = _parse_legacy_metadata_block(block)
         if payload is None:
@@ -282,29 +282,67 @@ class PolicyRegistry:
             self.registry_path, self._data
         )
 
+    def get_registry_metadata_value(
+        self,
+        key: str,
+        default: Any | None = None,
+    ) -> Any | None:
+        """Return one stored top-level registry metadata value."""
+
+        metadata = self._data.get("metadata", {})
+        if not isinstance(metadata, dict):
+            return default
+        return metadata.get(key, default)
+
+    def update_registry_metadata_value(
+        self,
+        key: str,
+        value: Any,
+        *,
+        save: bool = True,
+    ) -> None:
+        """Update one top-level registry metadata value."""
+
+        metadata = self._data.setdefault("metadata", {})
+        if not isinstance(metadata, dict):
+            metadata = {}
+            self._data["metadata"] = metadata
+        metadata[str(key).strip()] = value
+        if save:
+            self.save()
+
     def update_project_governance(
         self,
         payload: Dict[str, Any],
+        *,
+        save: bool = True,
     ) -> None:
         """Update the tracked project-governance registry section."""
         self._data["project-governance"] = dict(payload)
-        self.save()
+        if save:
+            self.save()
 
     def update_managed_docs(
         self,
         payload: Dict[str, Any],
+        *,
+        save: bool = True,
     ) -> None:
         """Update the tracked managed-doc registry section."""
         self._data["managed-docs"] = dict(payload)
-        self.save()
+        if save:
+            self.save()
 
     def update_workflow_contract(
         self,
         payload: Dict[str, Any],
+        *,
+        save: bool = True,
     ) -> None:
         """Update the tracked workflow-contract registry section."""
         self._data["workflow_contract"] = dict(payload)
-        self.save()
+        if save:
+            self.save()
 
     def policy_ids(self) -> set[str]:
         """Return policy ids currently stored in the registry."""
@@ -313,7 +351,12 @@ class PolicyRegistry:
             return set()
         return {str(policy_id) for policy_id in policies.keys()}
 
-    def prune_policies(self, keep_ids: set[str]) -> list[str]:
+    def prune_policies(
+        self,
+        keep_ids: set[str],
+        *,
+        save: bool = True,
+    ) -> list[str]:
         """Remove policy entries not present in keep_ids."""
         policies = self._data.get("policies", {})
         if not isinstance(policies, dict):
@@ -324,7 +367,7 @@ class PolicyRegistry:
         )
         for policy_id in removed:
             policies.pop(policy_id, None)
-        if removed:
+        if removed and save:
             self.save()
         return removed
 
@@ -460,10 +503,12 @@ class PolicyRegistry:
         metadata_resolution: Dict[str, Dict[str, Any]] | None = None,
         metadata_warnings: List[Dict[str, Any]] | None = None,
         runtime_option_views: Dict[str, Dict[str, Any]] | None = None,
+        save: bool = True,
     ):
         """Update one policy entry in the tracked registry."""
         entry = self._data["policies"].setdefault(policy.policy_id, {})
         previous_hash = entry.get("hash")
+        previous_runtime_state = entry.get("runtime_state")
         entry.clear()
         entry["enabled"] = policy.enabled
         entry["custom"] = policy.custom
@@ -504,7 +549,43 @@ class PolicyRegistry:
             entry["hash"] = previous_hash
             entry["script_path"] = None
 
-        self.save()
+        if isinstance(previous_runtime_state, dict) and previous_runtime_state:
+            entry["runtime_state"] = dict(previous_runtime_state)
+
+        if save:
+            self.save()
+
+    def get_policy_runtime_state(self, policy_id: str) -> Dict[str, Any]:
+        """Return one stored per-policy runtime-state mapping."""
+
+        entry = self._data.get("policies", {}).get(policy_id, {})
+        if not isinstance(entry, dict):
+            return {}
+        runtime_state = entry.get("runtime_state", {})
+        if not isinstance(runtime_state, dict):
+            return {}
+        return dict(runtime_state)
+
+    def update_policy_runtime_state(
+        self,
+        policy_id: str,
+        payload: Dict[str, Any],
+        *,
+        save: bool = True,
+    ) -> None:
+        """Persist one per-policy runtime-state mapping."""
+
+        policies = self._data.setdefault("policies", {})
+        if not isinstance(policies, dict):
+            policies = {}
+            self._data["policies"] = policies
+        entry = policies.setdefault(policy_id, {})
+        if not isinstance(entry, dict):
+            entry = {}
+            policies[policy_id] = entry
+        entry["runtime_state"] = dict(payload)
+        if save:
+            self.save()
 
     def get_policy_hash(self, policy_id: str) -> Optional[str]:
         """Get the stored hash for one policy."""

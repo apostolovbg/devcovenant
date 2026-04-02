@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import copy
+import hashlib
 import json
 import os
 import re
@@ -2237,6 +2238,62 @@ def _resolve_policy_sources(
     return location, "builtin" in available, "custom" in available
 
 
+def _sha256_bytes(payload: bytes) -> str:
+    """Return one stable SHA-256 digest string."""
+
+    return hashlib.sha256(payload).hexdigest()
+
+
+def _hash_file_or_missing(path: Path) -> str:
+    """Return one stable file digest or a placeholder for missing files."""
+
+    if not path.exists():
+        return "__missing__"
+    return _sha256_bytes(path.read_bytes())
+
+
+def _policy_registry_input_fingerprint(
+    repo_root: Path,
+    *,
+    config_payload: dict[str, object],
+    discovered: set[str],
+) -> str:
+    """Return one stable fingerprint for policy-registry refresh inputs."""
+
+    policy_sources: list[dict[str, object]] = []
+    for policy_id in sorted(discovered):
+        (
+            location,
+            builtin_available,
+            custom_available,
+        ) = _resolve_policy_sources(repo_root, policy_id)
+        if location is None:
+            continue
+        descriptor_path = location.path.with_suffix(".yaml")
+        policy_sources.append(
+            {
+                "id": policy_id,
+                "origin": location.kind,
+                "builtin_available": builtin_available,
+                "custom_available": custom_available,
+                "script_path": str(location.path.relative_to(repo_root)),
+                "script_hash": _hash_file_or_missing(location.path),
+                "descriptor_path": str(descriptor_path.relative_to(repo_root)),
+                "descriptor_hash": _hash_file_or_missing(descriptor_path),
+            }
+        )
+    serialized = json.dumps(
+        {
+            "config_payload": config_payload,
+            "policies": policy_sources,
+        },
+        sort_keys=True,
+        separators=(",", ":"),
+        default=str,
+    ).encode("utf-8")
+    return _sha256_bytes(serialized)
+
+
 def refresh_policy_registry(
     repo_root: Path | None = None,
     *,
@@ -2280,6 +2337,17 @@ def refresh_policy_registry(
     discovered = _discover_policy_sources(repo_root)
 
     registry = PolicyRegistry(registry_path, repo_root)
+    input_fingerprint = _policy_registry_input_fingerprint(
+        repo_root,
+        config_payload=dict(config_payload),
+        discovered=discovered,
+    )
+    if registry_path.exists() and (
+        registry.get_registry_metadata_value("policy_registry_input_hash")
+        == input_fingerprint
+    ):
+        runtime_print("Policy registry already current.", verbose_only=True)
+        return 0
 
     updated = 0
     policies: List[PolicyDefinition] = []
@@ -2365,6 +2433,7 @@ def refresh_policy_registry(
             metadata_resolution=bundle.resolution_trace,
             metadata_warnings=bundle.warnings,
             runtime_option_views=runtime_option_views,
+            save=False,
         )
         for warning in bundle.warning_messages():
             metadata_warning_targets.append(f"{policy_id}: {warning}")
@@ -2376,12 +2445,19 @@ def refresh_policy_registry(
             verbose_only=True,
         )
 
-    stale_ids = registry.prune_policies(seen_policy_ids)
+    stale_ids = registry.prune_policies(seen_policy_ids, save=False)
     for stale_id in stale_ids:
         runtime_print(
             f"Removed stale policy entry: {stale_id}",
             verbose_only=True,
         )
+
+    registry.update_registry_metadata_value(
+        "policy_registry_input_hash",
+        input_fingerprint,
+        save=False,
+    )
+    registry.save()
 
     if updated == 0:
         runtime_print("All policy hashes are up to date.", verbose_only=True)

@@ -37,11 +37,12 @@ def build_check_context(
         is_ignored_path=is_ignored_path,
     )
     suffixes = set(resolve_file_suffixes())
-    all_files = [
+    snapshot_files = [
         path
-        for path in collect_all_files(suffixes)
-        if not is_ignored_path(path)
+        for path in change_state.current_snapshot_paths
+        if path.suffix.lower() in suffixes
     ]
+    all_files = snapshot_files or collect_all_files(suffixes)
     changed_files = (
         list(change_state.session_paths) if change_state.session_valid else []
     )
