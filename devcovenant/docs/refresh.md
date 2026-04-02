@@ -1,5 +1,5 @@
 # Refresh Behavior
-**Last Updated:** 2026-04-01
+**Last Updated:** 2026-04-02
 **Project Version:** 1.0.1.dev1
 
 ## Overview
@@ -78,7 +78,7 @@ That command does not own a second template engine.
 It renders plain profile assets through the same shared asset renderer that
 refresh uses, and it renders descriptor-backed docs through the same
 managed-doc runtime, but writes the result as a Desktop copy instead of the
-repo-managed target path.
+repository-managed target path.
 
 ## Custom Managed Docs
 Profiles can add managed docs through their asset trees.
@@ -92,7 +92,7 @@ The active model is:
 That is how a shared custom profile can reuse the shared base while still
 replacing
 individual docs such as `SECURITY.md`, `PRIVACY.md`, or `SUPPORT.md`
-without pushing repo-specific prose into package docs.
+without pushing repository-specific prose into package docs.
 
 ## Failure Modes
 Refresh should fail clearly when a managed-doc descriptor is invalid.

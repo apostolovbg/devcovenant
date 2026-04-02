@@ -68,7 +68,7 @@ body: |-
      Goal:
      - state the next outcome this item must achieve
      Why this matters:
-     - explain why this item belongs in the plan now
+     - explain why this item belongs in the plan at this stage
      Work to do:
      - list the concrete tasks for this item
      Done when:
@@ -80,7 +80,7 @@ body: |-
      Completed work:
      - list what actually landed in the completed slice
      Outcome:
-     - state what is now true because the item is done
+     - state what the completed item makes true
 
   ## Validation Routine
   - Verify checks and tests pass.

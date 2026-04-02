@@ -23,7 +23,7 @@ Example:
 - 2026-01-23:
   Change: Fixed null-pointer crash in invoice import.
   Why: Production job failed when optional contact data was missing.
-  Impact: Imports now complete for records with partial contact details.
+  Impact: Imports complete for records with partial contact details.
   Files:
   billing/imports/parser.py
   billing/imports/test_parser.py
@@ -37,7 +37,7 @@ Example:
 - 2026-01-22:
   Change: Fixed duplicate email notifications on retry.
   Why: Retry worker re-enqueued already-confirmed notification events.
-  Impact: Users now receive one email per successful notification event.
+  Impact: Users receive one email per successful notification event.
   Files:
   notifications/worker.py
   notifications/retry.py
@@ -60,6 +60,88 @@ Example:
 
 ## Version 1.0.1.dev1
 
+
+- 2026-04-02:
+  Change: audited documentation, comments, docstrings, and managed prose,
+          then normalized repository-facing wording across the live and
+          generated surfaces.
+  Why: removed stale transitional language and split repo/repository wording
+       so source assets, generated docs, config comments, registry prose,
+       and runtime messages describe one current baseline.
+  Impact: refreshed the managed documentation and metadata surfaces so the
+          project speaks consistently after refresh without reintroducing
+          stale wording.
+  Files:
+  AGENTS.md
+  CHANGELOG.md
+  PLAN.md
+  PRIVACY.md
+  README.md
+  SPEC.md
+  devcovenant/README.md
+  devcovenant/__init__.py
+  devcovenant/builtin/policies/dependency_management/autofix/global.py
+  devcovenant/builtin/policies/dependency_management/\
+    dependency_lock_runtime.py
+  devcovenant/builtin/policies/dependency_management/\
+    dependency_management.yaml
+  devcovenant/builtin/policies/managed_environment/\
+    managed_environment.py
+  devcovenant/builtin/policies/managed_environment/\
+    managed_environment_runtime.py
+  devcovenant/builtin/policies/version_governance/calver.py
+  devcovenant/builtin/policies/version_governance/custom_adapter.py
+  devcovenant/builtin/policies/version_governance/version_governance.py
+  devcovenant/builtin/policies/version_sync/version_sync.yaml
+  devcovenant/builtin/profiles/global/assets/AGENTS.yaml
+  devcovenant/builtin/profiles/global/assets/CHANGELOG.yaml
+  devcovenant/builtin/profiles/global/assets/CONTRIBUTING.yaml
+  devcovenant/builtin/profiles/global/assets/PLAN.yaml
+  devcovenant/builtin/profiles/global/assets/README.yaml
+  devcovenant/builtin/profiles/global/assets/SUPPORT.yaml
+  devcovenant/builtin/profiles/global/assets/config.yaml
+  devcovenant/config.yaml
+  devcovenant/core/README.md
+  devcovenant/core/cleanup.py
+  devcovenant/core/execution.py
+  devcovenant/core/gate_runtime.py
+  devcovenant/core/policy_runtime.py
+  devcovenant/core/refresh_runtime.py
+  devcovenant/custom/policies/devcov_raw_string_escapes/\
+    devcov_raw_string_escapes.yaml
+  devcovenant/custom/policies/package_artifact_mirror/autofix/global.py
+  devcovenant/custom/policies/package_artifact_mirror/\
+    package_artifact_mirror.py
+  devcovenant/custom/policies/package_artifact_mirror/\
+    package_artifact_mirror.yaml
+  devcovenant/custom/policies/readme_sync/readme_sync.py
+  devcovenant/custom/profiles/devcovrepo/assets/POLICY_MAP.yaml
+  devcovenant/custom/profiles/devcovrepo/assets/PRIVACY.yaml
+  devcovenant/custom/profiles/devcovrepo/assets/SECURITY.yaml
+  devcovenant/custom/profiles/devcovrepo/assets/SUPPORT.yaml
+  devcovenant/custom/profiles/devcovrepo/assets/docs/config.md
+  devcovenant/custom/profiles/devcovrepo/assets/docs/installation.md
+  devcovenant/custom/profiles/devcovrepo/assets/docs/policies.md
+  devcovenant/custom/profiles/devcovrepo/assets/docs/profiles.md
+  devcovenant/custom/profiles/devcovrepo/assets/docs/refresh.md
+  devcovenant/custom/profiles/devcovrepo/assets/docs/registry.md
+  devcovenant/custom/profiles/devcovrepo/assets/docs/troubleshooting.md
+  devcovenant/custom/profiles/devcovrepo/assets/docs/workflow.md
+  devcovenant/deploy.py
+  devcovenant/docs/architecture.md
+  devcovenant/docs/config.md
+  devcovenant/docs/installation.md
+  devcovenant/docs/policies.md
+  devcovenant/docs/profiles.md
+  devcovenant/docs/project_governance.md
+  devcovenant/docs/refresh.md
+  devcovenant/docs/registry.md
+  devcovenant/docs/troubleshooting.md
+  devcovenant/docs/workflow.md
+  devcovenant/install.py
+  devcovenant/registry/registry.yaml
+  devcovenant/upgrade.py
+  tests/devcovenant/core/test_execution.py
 
 - 2026-04-02:
   Change: enabled hashed dependency locks for the shipped Python surfaces and

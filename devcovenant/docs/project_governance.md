@@ -1,5 +1,5 @@
 # Project Governance
-**Last Updated:** 2026-04-01
+**Last Updated:** 2026-04-02
 **Project Version:** 1.0.1.dev1
 
 ## Overview
@@ -83,5 +83,5 @@ Project-governance metadata feeds several visible surfaces:
 ## Working Rule
 If the repository identity, maturity, or versioning stance changes, update
 `project-governance` first and then let the governed outputs regenerate.
-That keeps the repo's public identity sourced from one place instead of being
-duplicated across unrelated files.
+That keeps the repository's public identity sourced from one place instead
+of being duplicated across unrelated files.

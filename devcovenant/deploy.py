@@ -65,7 +65,8 @@ def _is_config_reviewed(config: dict[str, object]) -> bool:
 
 
 def _is_developer_mode(config: dict[str, object]) -> bool:
-    """Return True when the repo is used to develop DevCovenant itself."""
+    """Return True when the repository is used to develop DevCovenant
+    itself."""
     developer_mode = config.get("developer_mode")
     if not isinstance(developer_mode, bool):
         raise SystemExit("Deploy blocked: `developer_mode` must be boolean.")

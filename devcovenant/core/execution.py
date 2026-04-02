@@ -717,7 +717,7 @@ def cleanup_source_checkout_import_cache(
 
 
 def cleanup_repo_bytecode_artifacts(repo_root: Path) -> bool:
-    """Remove repo-local bytecode artifacts when routing is enabled."""
+    """Remove repository-local bytecode artifacts when routing is enabled."""
     if not _read_pycache_prefix_enabled_from_config(repo_root):
         return False
     protected_dirs = {
@@ -729,7 +729,8 @@ def cleanup_repo_bytecode_artifacts(repo_root: Path) -> bool:
     removed = False
 
     def _repo_local_pycache_root(raw_value: str | None) -> Path | None:
-        """Resolve one repo-local pycache root candidate when it is safe."""
+        """Resolve one repository-local pycache root candidate when it is
+        safe."""
         token = str(raw_value or "").strip()
         if not token:
             return None
@@ -1292,7 +1293,7 @@ def resolve_repo_root(*, require_install: bool = False) -> Path:
         )
     if require_install and not (repo_root / "devcovenant").exists():
         raise SystemExit(
-            "DevCovenant is not installed in this repo. "
+            "DevCovenant is not installed in this repository. "
             "Run `devcovenant install` first."
         )
     configure_repo_pycache_prefix(repo_root)
@@ -1306,7 +1307,8 @@ def _snapshot_ignored_dirs(repo_root: Path) -> set[str]:
 
 
 def _snapshot_files(repo_root: Path, ignored_dirs: set[str]) -> list[Path]:
-    """Collect snapshot files under repo root using ignore-dir filtering."""
+    """Collect snapshot files under the repository root using ignore-dir
+    filtering."""
     return session_snapshot_runtime_module._snapshot_files(
         repo_root,
         ignored_dirs,

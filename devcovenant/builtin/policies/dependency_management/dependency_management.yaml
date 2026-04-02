@@ -1,7 +1,7 @@
 id: dependency-management
 text: |
   Manage dependency-maintenance artifacts as one coherent policy surface.
-  When dependency inputs in this repository change, lockfiles and repository
+  When dependency inputs change, lockfiles and repository
   compliance artifacts must stay synchronized together.
   Artifact ownership is declared through structured `surfaces` metadata.
   Each surface defines one lock/report/license bundle with its own lock file,

@@ -16,7 +16,7 @@ from pathlib import Path
 def _source_checkout_root(
     package_file: str | Path | None = None,
 ) -> Path | None:
-    """Return the repo root when this package is imported from source."""
+    """Return the repository root when this package is imported from source."""
     module_path = Path(package_file or __file__).resolve()
     package_dir = module_path.parent
     if package_dir.name != "devcovenant":

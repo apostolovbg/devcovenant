@@ -1,8 +1,9 @@
 id: package-artifact-mirror
 text: |
   Ensure package-shipped artifacts that are true mirrors stay in exact sync
-  with their canonical repo-root sources. This repo uses the policy only for
-  `LICENSE => devcovenant/licenses/LICENSE`. Dependency lockfiles and
+  with their canonical repository-root sources. This development repository
+  uses the policy only for `LICENSE => devcovenant/licenses/LICENSE`.
+  Dependency lockfiles and
   third-party license inventories under `devcovenant/licenses/**` are not
   mirrors; they are generated from the packaged runtime dependency surface by
   dependency-management. Auto-fix rewrites the configured exact mirrors from

@@ -6,7 +6,7 @@
 **Maintenance Stance:** active
 **Compatibility Policy:** forward-only
 **Versioning Mode:** versioned
-**Last Updated:** 2026-03-31
+**Last Updated:** 2026-04-02
 **DevCovenant Version:** 1.0.1.dev1
 
 <!-- DEVCOV:BEGIN -->
@@ -26,7 +26,8 @@ Keep items dependency-ordered, concrete, and current.
 ## Overview
 - Use `PLAN.md` for active multi-slice work, not for durable product
   requirements.
-- Record durable project requirements in `SPEC.md` when your repo uses SPEC.
+- Record durable project requirements in `SPEC.md` when the repository uses
+  SPEC.
 
 - Record completed slice history in `CHANGELOG.md`.
 
@@ -93,12 +94,14 @@ Keep items dependency-ordered, concrete, and current.
      it must publish validated CI artifacts, not rebuild a divergent tree, and
      it must work for the exact artifact set that Build proves.
    - audit package docs for package scope only:
-     no repo-specific `devcovrepo` narration, no local-release operational
+     no repository-specific `devcovrepo` narration, no local-release
+     operational
      notes, and no history-dependent guidance that will look absurd after the
      orphan step.
    - audit repo docs and editable notes for release operator clarity:
-     root `README.md`, `AGENTS.md`, trust docs, and repo-specific workflow
-     notes must stay accurate for this repo while package docs stay generic.
+     root `README.md`, `AGENTS.md`, trust docs, and
+     repository-specific workflow notes must stay accurate for the repository
+     while package docs stay generic.
    - run a defallback/de-BS sweep as part of the same review:
      remove silent legacy fallbacks, stale compatibility bridges, dead aliases,
      history talk, and half-migrated contract language encountered in the
@@ -127,9 +130,9 @@ Keep items dependency-ordered, concrete, and current.
      release contract.
    - package identity is stable and lowercase `devcovenant` across metadata,
      artifacts, and installed proof environments.
-   - the package docs are package-generic, the repo docs are repo-specific
-     where needed, and no pre-orphan history narration remains in the active
-     release-facing docs.
+   - the package docs are package-generic, the repository docs are
+     repository-specific where needed, and no pre-orphan history narration
+     remains in the active release-facing docs.
    - managed-environment behavior is proven against the supported
      every-style-environment matrix instead of only the happy-path `.venv`
      case.

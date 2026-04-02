@@ -68,12 +68,13 @@ The shortest accurate model is:
 
 2. config review is the checkpoint.
    Start with `project-governance`, `developer_mode`, and `profiles.active`.
-   For most repositories, keep `devcovuser` active and add a repo-specific
-   custom profile on top when the repo needs its own rules, assets, workflow
-   additions, or dependency-surface overrides. Keep `github` active when the
-   repository wants the generic generated GitHub Actions workflow that ships in
-   the default user stack; remove it when the repository does not want that
-   workflow. Use an optional GitHub-specific custom profile when the
+   For most repositories, keep `devcovuser` active and add a
+   repository-specific custom profile on top when the repository needs its
+   own rules, assets, workflow additions, or dependency-surface overrides.
+   Keep `github` active when the repository wants the generic generated
+   GitHub Actions workflow that ships in the default user stack; remove it
+   when the repository does not want that workflow.
+   Use an optional GitHub-specific custom profile when the
    repository needs reusable GitHub-only CI fragments beyond the builtin base.
    Use direct overlays only for small local exceptions.
 
@@ -167,7 +168,7 @@ have a stricter hygiene contract than ordinary user code:
 - `devcovenant/**`
 - `tests/devcovenant/**`
 
-Those owned trees must not write repo-local `__pycache__`, `*.pyc`,
+Those owned trees must not write repository-local `__pycache__`, `*.pyc`,
 `*.pyo`, or similar compiled Python artifacts during normal DevCovenant
 source and test runs.
 If one of those artifacts appears under the owned trees, treat it as a
@@ -246,10 +247,11 @@ Use this as the practical first integration flow:
 
 For a normal repository, do that first cycle before adding custom policies or
 profiles under `devcovenant/custom/`.
-Start from a clean working base, then add repo-specific extensions on top.
+Start from a clean working base, then add repository-specific extensions
+on top.
 That usually means:
-1. a repo-specific custom profile for repository-owned behavior such as
-   `root_workspace`
+1. a repository-specific custom profile for repository-owned behavior such
+   as `root_workspace`
 2. an optional GitHub-specific custom profile only when the repository wants
    extra GitHub CI behavior beyond the builtin base
 

@@ -14,8 +14,8 @@ DevCovenant keeps its implementation in a flat `devcovenant/core/*.py`
 surface.
 There are no subpackages under `devcovenant/core/`.
 The goal is to keep the runtime easy to scan without scattering one feature
-across five tiny layer folders or collapsing everything into a few giant
-files.
+across retired layer folders or mixing unrelated responsibilities into one
+file.
 
 The root CLI remains intentionally thin.
 It resolves the top-level command first and then loads the heavier runtime

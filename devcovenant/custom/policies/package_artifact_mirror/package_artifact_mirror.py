@@ -1,7 +1,7 @@
 """
 Policy: Package Artifact Mirror
 
-Ensure package-shipped artifacts mirror the canonical repo-root artifacts
+Ensure package-shipped artifacts mirror the canonical repository-root artifacts
 they are derived from.
 """
 
@@ -18,7 +18,8 @@ from devcovenant.core.policy_contract import (
 
 
 class PackageArtifactMirrorCheck(PolicyCheck):
-    """Verify configured repo-root files and dirs mirror into the package."""
+    """Verify configured repository-root files and directories mirror into
+    the package."""
 
     policy_id = "package-artifact-mirror"
     version = "0.1.0"
@@ -146,8 +147,8 @@ class PackageArtifactMirrorCheck(PolicyCheck):
             file_path=target_path,
             message=message,
             suggestion=(
-                "Sync package mirror artifacts from the canonical repo-root "
-                "sources."
+                "Sync package mirror artifacts from the canonical "
+                "repository-root sources."
             ),
             can_auto_fix=True,
             context=context,

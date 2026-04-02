@@ -38,7 +38,7 @@ body: |-
   ## Configuration Checkpoints
   Call out the few settings or files a human must review consciously.
   Prefer short explanations of what each checkpoint controls.
-  For most repositories, keep `devcovuser` active and add a repo-specific
+  For most repositories, keep `devcovuser` active and add a repository-specific
   custom profile on top when the repository needs its own reusable rules,
   assets, or workflow additions.
 
@@ -47,7 +47,7 @@ body: |-
   Keep the descriptions concrete so the reader knows which page to open next.
 
   ## Security, Privacy, and Support
-  Point readers at the trust-surface docs that matter for this repository.
+  Point readers at the trust-surface docs that matter for the repository.
 
   ## License
   Document the repository licensing terms here.

@@ -168,7 +168,8 @@ class ManagedEnvironmentCheck(PolicyCheck):
     def _resolve_paths(
         self, repo_root: Path, entries: list[str]
     ) -> List[Path]:
-        """Resolve metadata paths relative to the repo root when needed."""
+        """Resolve metadata paths relative to the repository root when
+        needed."""
         resolved: list[Path] = []
         for entry in entries:
             entry_path = Path(entry)

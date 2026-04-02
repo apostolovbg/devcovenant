@@ -53,7 +53,7 @@ class ReadmeSyncCheck(PolicyCheck):
                     policy_id=self.policy_id,
                     severity="error",
                     file_path=source_path,
-                    message="README.md is missing from the repo root.",
+                    message="README.md is missing from the repository root.",
                 )
             )
             return violations

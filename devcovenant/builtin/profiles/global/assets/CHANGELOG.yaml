@@ -22,7 +22,7 @@ managed_block: |-
   - 2026-01-23:
     Change: Fixed null-pointer crash in invoice import.
     Why: Production job failed when optional contact data was missing.
-    Impact: Imports now complete for records with partial contact details.
+    Impact: Imports complete for records with partial contact details.
     Files:
     billing/imports/parser.py
     billing/imports/test_parser.py
@@ -36,7 +36,7 @@ managed_block: |-
   - 2026-01-22:
     Change: Fixed duplicate email notifications on retry.
     Why: Retry worker re-enqueued already-confirmed notification events.
-    Impact: Users now receive one email per successful notification event.
+    Impact: Users receive one email per successful notification event.
     Files:
     notifications/worker.py
     notifications/retry.py

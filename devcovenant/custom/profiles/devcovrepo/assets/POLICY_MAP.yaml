@@ -81,7 +81,8 @@ body: |-
     only.
 
   ## Custom Policies
-  - `devcov-raw-string-escapes`: repo-only raw-string warning guard.
+  - `devcov-raw-string-escapes`: development-repository-only raw-string
+    warning guard.
   - `managed-doc-assets`: validates managed-doc descriptor/asset consistency.
   - `readme-sync`: syncs packaged README from repository README and rewrites
     package-facing public links from package metadata for PyPI-safe rendering.

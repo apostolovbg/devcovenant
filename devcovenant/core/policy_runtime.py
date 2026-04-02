@@ -542,7 +542,7 @@ def core_exclusion_paths(
     repo_root: Path,
     config: dict[str, Any] | None,
 ) -> list[Path]:
-    """Return repo-rooted core exclusion paths based on config."""
+    """Return repository-rooted core exclusion paths based on config."""
     developer_mode = bool((config or {}).get("developer_mode", False))
     if developer_mode:
         return []

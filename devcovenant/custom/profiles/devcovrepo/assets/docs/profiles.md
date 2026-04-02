@@ -35,14 +35,35 @@ The normal pattern is:
    Actions workflow; remove it when the repository does not want that
    workflow
 4. add the needed language or stack profiles
-5. add a repo-specific custom profile on top when the repository needs its own
-   rules, assets, workflow additions, or dependency-surface ownership
+5. add a repository-specific custom profile on top when the repository needs
+   its own rules, assets, workflow additions, or dependency-surface
+   ownership
 6. add an optional GitHub-specific custom profile when the repository needs
    reusable GitHub-only CI fragments that should not affect local behavior
 
 Use direct overlays when you only need a very small local tweak.
 Use a custom profile when the repository has real repeatable behavior of its
 own.
+
+## Custom Profiles As Governance Packs
+A custom profile is the normal way to package repository-specific governance
+so it travels as one coherent stack instead of a pile of one-off config
+edits.
+
+A custom profile can contribute:
+- metadata overlays for builtin or custom policies
+- managed docs and other assets
+- workflow runs
+- CI fragments
+- managed-environment declarations
+- dependency roles and dependency-surface ownership
+- translator declarations for a language or stack
+- ignore-directory hints and other reusable repo-shape facts
+
+That is why custom policies and custom profiles work best together.
+The policy owns rule logic.
+The profile packages the reusable metadata, assets, environment model, and run
+shape that make the rule meaningful for a given repository family.
 
 ## What Profiles Should Own
 Profiles are the right place for reusable behavior.
@@ -73,11 +94,12 @@ relying on the defaults to guess it.
 
 The built-in `devcovuser` profile is the normal user-repository layer.
 It keeps DevCovenant's own shipped runtime files out of ordinary app-code
-checks while still keeping `devcovenant/custom/**` in scope for repo-owned
-extensions.
+checks while still keeping `devcovenant/custom/**` in scope for
+repository-owned extensions.
 That same narrowing applies to mirrored test expectations and assertion
-coverage, so normal repos keep DevCovenant internals out of scope while still
-enforcing `devcovenant/custom/**` and `tests/devcovenant/custom/**`.
+coverage, so normal repositories keep DevCovenant internals out of scope
+while still enforcing `devcovenant/custom/**` and
+`tests/devcovenant/custom/**`.
 
 Profiles may also contribute `ignore_dirs` for disposable local outputs that
 should stay out of generated `.gitignore` and out of pre-commit's all-files
@@ -85,7 +107,7 @@ scan.
 Typical examples are temporary build directories, cache roots, or declared
 environment folders that should not count as user-owned source files.
 
-A repo-specific custom profile can then strengthen the standard stack.
+A repository-specific custom profile can then strengthen the standard stack.
 For example, it may add `managed_commands`, extra assets, CI steps, or
 surface overrides such as a repository-owned `root_workspace`.
 A separate GitHub-oriented custom profile is useful when a repository wants
@@ -188,6 +210,13 @@ allowed values.
 Profiles and local config can then tighten or extend behavior without
 making the shared base too specific to one repository.
 
+That same model is what makes custom policies versatile.
+A profile can feed structured YAML into a custom policy without changing the
+policy code again.
+Because mapping lists with stable `id` keys merge by `id`, a profile can
+extend inventories such as dependency surfaces, route groups, evidence sets,
+or ownership maps instead of replacing the whole list every time.
+
 If a language or stack has a standard run, the profile should declare it
 through `workflow_runs`.
 That keeps shared run definitions in one place.
@@ -221,8 +250,8 @@ another just because the checkout root changed.
 The shipped defaults keep the Python dependency surfaces hash-locked:
 `root_workspace`, `devcovenant_runtime`, and `package_runtime` when a
 repository enables that optional package surface.
-A repo-specific custom profile can override those defaults per surface instead
-of inventing a second special-case dependency model.
+A repository-specific custom profile can override those defaults per
+surface instead of inventing a second special-case dependency model.
 
 Profile ownership also includes the shipped translator maps.
 The builtin language translator set currently covers `csharp`, `dart`, `go`,
@@ -230,7 +259,7 @@ The builtin language translator set currently covers `csharp`, `dart`, `go`,
 `rust`, `sql`, `swift`, and `typescript`.
 Those profiles continue to own `can_handle`, `translate`, and their asset
 metadata through files such as `python.yaml`, profile assets such as
-`PROFILE_MAP.yaml`, and repo-specific custom-profile overlays,
+`PROFILE_MAP.yaml`, and repository-specific custom-profile overlays,
 while the shared translator runtime lives in the flat core modules
 `devcovenant/core/translator.py` and `devcovenant/core/run_events.py`.
 

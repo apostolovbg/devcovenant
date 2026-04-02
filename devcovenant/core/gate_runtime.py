@@ -1101,7 +1101,8 @@ def _snapshot_ignored_dirs(repo_root: Path) -> set[str]:
 
 
 def _snapshot_files(repo_root: Path, ignored_dirs: set[str]) -> list[Path]:
-    """Collect snapshot files under repo root using ignore-dir filtering."""
+    """Collect snapshot files under the repository root using ignore-dir
+    filtering."""
     files: list[Path] = []
     for root, dirs, names in os.walk(repo_root):
         root_path = Path(root)

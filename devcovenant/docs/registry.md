@@ -75,7 +75,7 @@ The registry metadata also records a policy-registry input fingerprint so
 startup commands can skip rebuilding the tracked policy section when the
 descriptors, scripts, and effective config are unchanged.
 That is why `devcovenant/registry/registry.yaml` can change when one declared
-surface moves, when a repo-specific custom profile overrides
+surface moves, when a repository-specific custom profile overrides
 `root_workspace`, when a repository adds its own `package_runtime`, or when
 DevCovenant's bundled `devcovenant_runtime` surface changes its bootstrap lock
 behavior.

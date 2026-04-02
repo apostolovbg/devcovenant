@@ -109,7 +109,7 @@ def replace_core_package(
     repo_root: Path,
     source_dir: Path | None = None,
 ) -> None:
-    """Replace repo-root devcovenant package with packaged source."""
+    """Replace the repository-root devcovenant package with packaged source."""
     source_dir = (source_dir or _source_package_dir()).resolve()
     target_dir = _target_package_dir(repo_root).resolve()
     if source_dir == target_dir:

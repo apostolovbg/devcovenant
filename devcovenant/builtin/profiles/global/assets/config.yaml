@@ -4,8 +4,8 @@
 # `devcovenant install` copies this file into the repository as
 # `devcovenant/config.yaml`.
 #
-# Read this file as the repo's operating contract:
-# - human-owned keys say what this repo wants;
+# Read this file as the repository's operating contract:
+# - human-owned keys say what this repository wants;
 # - refresh-owned keys show what DevCovenant resolved/generated from that.
 #
 # Why install stops before deploy:
@@ -54,10 +54,10 @@
 # Human-owned section.
 # Are you using DevCovenant as a tool, or using this repository to develop
 # DevCovenant itself?
-# - false: normal repo using DevCovenant
-#          deploy removes repo-only DevCovenant development paths and tests
+# - false: normal repository using DevCovenant
+#          deploy removes repository-only DevCovenant development paths and tests
 #          that ordinary repos should not own
-# - true: this repo is being used to develop DevCovenant itself
+# - true: this repository is being used to develop DevCovenant itself
 #         keep DevCovenant source files, self-hosting profiles/policies, and
 #         DevCovenant-only tests in scope
 developer_mode: false
@@ -85,10 +85,10 @@ profiles:
   # - provides generic repo-layout metadata defaults;
   # - keep it for standard layouts;
   # - disable it if you supply a custom layout profile with equivalent keys.
-  # The shipped user-repo baseline keeps `github` active by default so
+  # The shipped user-repository baseline keeps `github` active by default so
   # GitHub-hosted repositories get the generic generated CI workflow out of
-  # the box. Remove it only when this repo does not want that workflow.
-  # A repo-specific custom profile usually owns local behavior such as
+  # the box. Remove it only when this repository does not want that workflow.
+  # A repository-specific custom profile usually owns local behavior such as
   # `root_workspace`.
   # Keep GitHub-only CI extensions in a separate optional GitHub-specific
   # custom profile.
@@ -155,7 +155,7 @@ doc_assets:
   # Keep `AGENTS.md` here.
   # Add a custom doc here only after creating a matching descriptor under an
   # active profile `assets/` tree.
-  # Remove a builtin doc here to turn that managed doc off for this repo.
+  # Remove a builtin doc here to turn that managed doc off for this repository.
   autogen:
     - AGENTS.md
     - README.md
@@ -184,7 +184,7 @@ install:
   # - true: the config review is complete; deploy may run
   #
   # Review this before you flip it to true:
-  # - is `developer_mode` correct for this repo?
+  # - is `developer_mode` correct for this repository?
   # - is `profiles.active` the right profile stack?
   # - is `policy_state` correct?
   # - are the key `engine` settings acceptable?
@@ -244,17 +244,17 @@ engine:
 
   # Human-owned key.
   # Path used for `PYTHONPYCACHEPREFIX` when `pycache_prefix_enabled` is true.
-  # - `''` (empty string): auto-select a stable repo-specific temp path
+  # - `''` (empty string): auto-select a stable repository-specific temp path
   # - absolute path: use as-is
-  # - relative path: resolve from repo root
+  # - relative path: resolve from the repository root
   # Source-checkout top-level `python3 -m devcovenant ...` launches no longer
-  # need shell or CI env wrapping just to avoid repo-local cache-file drift.
+  # need shell or CI env wrapping just to avoid repository-local cache-file drift.
   pycache_prefix: ''
 
   # Human-owned key.
   # Enables gate-managed policy auto-fixers when fixes are available.
   # `devcovenant check` remains read-only regardless of this setting.
-  # Default is disabled unless a repo profile seeds a different baseline.
+  # Default is disabled unless a repository profile seeds a different baseline.
   auto_fix_enabled: false
 
   # Broad scan suffix list used by core collectors.
@@ -330,12 +330,12 @@ ci_and_test:
   # Deep-merge patch applied to generated
   # `.github/workflows/ci.yml`.
   # The builtin `github` profile is default-enabled in the shipped user stack.
-  # Keep it active when this repo wants the standard generated GitHub Actions
-  # workflow here. Remove the profile if this repo does not want that
+  # Keep it active when this repository wants the standard generated GitHub Actions
+  # workflow here. Remove the profile if this repository does not want that
   # workflow.
   # Active profiles may also contribute reusable ci_and_test fragments.
   # Keep the github-owned base workflow generic.
-  # Use config overlays only for repo-local CI adjustments.
+  # Use config overlays only for repository-local CI adjustments.
   overlays: {}
   # Human-owned key.
   # Full replacement payload for generated CI-and-test workflow.

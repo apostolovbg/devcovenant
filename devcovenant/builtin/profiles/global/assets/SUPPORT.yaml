@@ -45,7 +45,7 @@ body: |-
   ## Support Scope
   Reasonable support scope includes the current maintained product surface,
   documented workflow behavior, built-in policies, and built-in profiles.
-  Custom extensions may require more repo-specific investigation.
+  Custom extensions may require more repository-specific investigation.
 
   ## Workflow
   Use `PRIVACY.md` before attaching logs or snapshots.

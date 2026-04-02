@@ -20,7 +20,7 @@
 # Human-owned section.
 
 # Whether this repository is in DevCovenant developer mode.
-# - false: normal user-repo scope (exclude DevCovenant implementation internals from normal repo scope)
+# - false: normal user-repository scope (exclude DevCovenant implementation internals from ordinary repository scope)
 # - true: DevCovenant developer mode (govern the full DevCovenant implementation tree)
 
 developer_mode: true
@@ -256,7 +256,7 @@ clean:
 
 # Keep the github-owned base workflow generic.
 
-# Use config overlays only for repo-local CI adjustments.
+# Use config overlays only for repository-local CI adjustments.
 
 # Full replacement payload for generated CI-and-test workflow.
 

@@ -25,6 +25,52 @@ A normal policy directory contains:
 The descriptor explains the rule and declares its metadata.
 The runtime code enforces the rule.
 
+## Custom Policies Are First-Class
+Built-in policies are the shipped baseline and a library of reference patterns.
+They are not the limit of what DevCovenant can govern.
+
+A repository can define brand-new policy ids or replace builtin policies with
+custom ones under `devcovenant/custom/policies/<policy-id>/`.
+Custom policies run through the same engine surface as builtin policies:
+- the same metadata resolver
+- the same check context
+- the same autofix contract
+- the same policy-command dispatcher
+- the same translator runtime
+
+That makes custom policy authoring the main governance-extension model.
+If a repository needs endpoint contract checks, release-proof rules, deployment
+preconditions, docs-map rules, generated-asset ownership, stack-specific
+safety rules, or project-specific process gates, those belong in custom
+policies instead of ad-hoc scripts or tribal prose.
+
+## Metadata Is The Policy API
+A policy descriptor can carry more than the common control keys such as
+`id`, `severity`, `enabled`, and `auto_fix`.
+Any additional YAML key becomes runtime option data after metadata resolution.
+
+DevCovenant keeps metadata in shape:
+- scalars stay scalars
+- lists stay lists
+- mappings stay mappings
+- lists of mappings with stable `id` keys merge by `id`
+
+Metadata then resolves through the normal precedence layers:
+1. descriptor defaults
+2. profile overlays
+3. generated overlays
+4. user overlays
+5. generated overrides
+6. user overrides
+
+Policy code reads the effective result through `get_option(...)`.
+That makes descriptor metadata and config overlays the real authoring API for
+custom governance.
+A policy can model thresholds, route groups, contract inventories,
+environment commands, attestation requirements, exception lists, release
+surfaces, ownership maps, or other structured rule data without inventing a
+second parser.
+
 ## Turning Policies On And Tuning Them
 `config.policy_state` decides which configurable policies are enabled.
 Profiles and config overlays then shape how those enabled policies behave.
@@ -33,6 +79,49 @@ That gives a clear split:
 - config turns a policy on or off
 - profile metadata shapes how it behaves
 - runtime code enforces the result
+
+## Selector Roles And Multiple Scopes
+Many policies need more than one file scope.
+`selector_roles` is the standard way to declare those scope families.
+
+For each selector role, DevCovenant can materialize:
+- `<role>_globs`
+- `<role>_files`
+- `<role>_dirs`
+
+`*_prefixes` and `*_suffixes` also normalize into selector globs, and roles
+can be explicit in `selector_roles` or inferred from the selector keys a
+policy uses.
+
+That lets one policy define several path families without inventing custom
+selection syntax.
+Built-in examples include:
+- `dependency` for dependency-management surfaces
+- `user_facing`, `user_visible`, and `doc_quality` for documentation growth
+- `watch` and `tests_watch` for change-sensitive scopes
+
+Custom policies can declare their own roles the same way.
+Examples might include `api_contract`, `release_docs`, `migration`,
+`seed_data`, `schema`, or `generated_payload`.
+
+## What Policies Can Actually Do
+A policy runtime is not limited to reporting a string.
+Through the standard contracts, a policy can:
+- inspect the current repository snapshot and active gate-session change state
+- read merged descriptor metadata plus config overrides
+- share expensive analysis through run-scoped cache buckets on the check
+  context
+- consume translator-produced language facts instead of reparsing a language
+  in every policy
+- report violations with file, line, severity, and remediation details
+- participate in autofix through `autofix/` helpers
+- expose reusable runtime actions
+- expose namespaced operator commands through declared command metadata
+
+That range is why DevCovenant can express governance routines as well as
+governance checks.
+The rule can stay read-only, repairable, command-driven, or some combination
+of those as long as the contract stays explicit.
 
 ## Checks, Autofix, And Commands
 The boundary matters:
@@ -54,6 +143,24 @@ If you intentionally rebuild changelog history, run
 session. That command relaxes only the preserved-old-entry requirement for the
 active session. It does not relax the normal date, summary, or file-coverage
 rules.
+
+## Translators And Language-Aware Policies
+Policies do not need to embed a bespoke parser for every language they touch.
+Language profiles own translator declarations, and policies can ask the shared
+translator runtime for one normalized `LanguageUnit`.
+
+A translator can provide:
+- basic file identity
+- identifier facts
+- symbol-documentation facts
+- risk facts
+- test-name templates
+
+That lets custom policies stay focused on governance logic instead of language
+plumbing.
+When a repository needs a new language or a lighter-weight fact path, add or
+override the translator in a profile instead of duplicating parser logic
+across several policies.
 
 ## Policy Runtime Actions
 A policy can expose reusable runtime actions.
@@ -91,6 +198,22 @@ The parser and dispatcher live in
 `devcovenant/core/policy_runtime_actions.py`, and
 `devcovenant/core/execution.py`, so policy commands run through the same
 execution boundary as the rest of the CLI.
+
+## Practical Extension Patterns
+Custom policies are useful when a repository needs governance that is too
+specific for a shared builtin but too important to leave in comments or shell
+scripts.
+Common patterns include:
+- endpoint, route, or schema contract checks
+- generated-spec and generated-file ownership rules
+- release evidence and attestation completeness
+- environment/bootstrap preconditions for custom stacks
+- documentation-route and support-surface requirements
+- naming, layering, or source-boundary rules that are unique to one product
+
+The common thread is the same: if the rule depends on repository state,
+structured metadata, and evidence recorded by governed commands, DevCovenant
+can usually model it as a custom policy or a custom policy plus a profile.
 
 ## Dependency Management
 Dependency management is one policy area, not a loose group of unrelated
@@ -169,8 +292,8 @@ When a surface really does need recompute, independent target closures resolve
 in bounded parallel and then merge back in configured target order so the
 emitted lock stays deterministic.
 Tracked dependency fingerprints must stay checkout-stable.
-They should come from repo-relative identities plus file content, not from
-absolute local paths or machine-local runtime details.
+They should come from repository-relative identities plus file content, not
+from absolute local paths or machine-local runtime details.
 That operator-stable identity rule also covers installed-command paths such as
 `pipx`, so the same surface inputs produce the same tracked fingerprint whether
 DevCovenant runs from a source checkout or from an installed operator.
@@ -186,16 +309,30 @@ validated, normalized, and compared.
 They are part of the supported extension model because repositories may need
 stricter rules than plain string equality.
 For the built-in `pep440` adapter, the format and canonical spelling still
-follow PEP 440, while repo progression may reopen the same base version with a
-`.devN` review line above an older final section.
+follow PEP 440, while repository progression may reopen the same base version
+with a `.devN` review line above an older final section.
 
 ## Custom Policies
 Custom policies live under `devcovenant/custom/policies/<id>/` and use the
 same descriptor-plus-runtime structure as built-in policies.
+They may either introduce a new policy id or replace a builtin policy with the
+same id.
 They should keep the same boundary discipline:
 - checks report
 - autofixers fix
 - commands run explicit operations
+
+The directory can include:
+- `<policy-id>.yaml`
+- `<policy-id>.py`
+- optional `autofix/*.py`
+- optional assets or support files
+
+Custom policy descriptors can define repository-specific metadata keys,
+selector roles, runtime actions, and command declarations.
+Those capabilities are what let a repository move from "one extra rule" to a
+full governance subsystem with its own metadata, scopes, repair paths, and
+operator routines.
 
 Custom policies that inspect managed docs should expect the generated header
 model for docs that opt into those headers.
@@ -209,6 +346,9 @@ When policy behavior changes, update all of these together:
 2. runtime code
 3. tests
 4. user-facing docs when behavior changes
+
+Keep descriptor prose, remediation messages, and policy docs aligned on
+repository-relative terminology so generated outputs stay consistent.
 
 When several Python policies need the same file analysis, share that work.
 Use run-scoped analysis attached to the active check context or ask a

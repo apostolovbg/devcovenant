@@ -77,8 +77,9 @@ For most repositories, the normal pattern is:
 - keep `github` active when the repository wants the generic generated GitHub
   Actions workflow; remove it when the repository does not want that workflow
 - add language or framework profiles as needed
-- add a repo-specific custom profile on top when the repository needs its own
-  rules, assets, workflow additions, or dependency-surface ownership
+- add a repository-specific custom profile on top when the repository needs
+  its own rules, assets, workflow additions, or dependency-surface
+  ownership
 - add an optional GitHub-specific custom profile when the repository needs
   reusable GitHub-only CI fragments beyond the builtin base
 
@@ -159,10 +160,43 @@ There is not a separate "flat companion key" mode for structured metadata.
 If one key is a mapping or a list of mappings, keep using subkeys under that
 same key instead of inventing suffixed sibling keys for the same meaning.
 
+This is also where most custom-policy tuning happens.
+Any non-reserved descriptor key can be shaped here.
+If a custom policy defines metadata such as:
+- contract groups
+- route inventories
+- exception lists
+- evidence requirements
+- ownership maps
+- environment commands
+- stack-specific thresholds
+
+those keys can be overlaid or overridden directly in YAML.
+
+Selector-role metadata belongs here too.
+If a policy declares or infers a role such as `api_contract`,
+`release_docs`, or `seed_data`, config can supply:
+- `<role>_globs`
+- `<role>_files`
+- `<role>_dirs`
+
+That keeps scope shaping declarative instead of forcing policy code changes
+for every repository.
+
 The important rule is shape discipline:
 - keep one metadata key in one shape
 - do not replace a structured mapping with ad-hoc sibling flat keys
 - do not overlay a scalar onto a mapping for the same key
+
+Overlay and override have different jobs:
+- overlays extend inherited metadata
+- overrides replace inherited metadata
+
+When a metadata key is a list of mappings with stable `id` values,
+DevCovenant merges by `id` instead of treating the list as plain strings.
+That is what lets repositories extend structured inventories such as
+dependency surfaces or other policy-specific mapping lists without copying the
+entire inherited payload.
 
 For dependency management, that means using one structured
 `dependency-management.surfaces` list instead of inventing separate
@@ -207,7 +241,7 @@ If a repository needs to change dependency lock mode, do that by overriding the
 relevant `dependency-management.surfaces` entry.
 Those surface entries can turn `generate_hashes` on or off while still using
 the same declared target matrix and refresh engine.
-For example, a repo-specific custom profile may own workspace dependency
+For example, a repository-specific custom profile may own workspace dependency
 surfaces while an optional GitHub-specific custom profile adds extra CI
 fragments.
 
@@ -234,7 +268,7 @@ For a new repository, this is the shortest useful config review:
 5. keep `github` if the repository wants the generated GitHub Actions workflow
    that ships in the default stack, or remove it if the repository does not
    want that workflow
-6. add a repo-specific custom profile if the repository needs one
+6. add a repository-specific custom profile if the repository needs one
 7. review `doc_assets`
 8. review `workflow` and `policy_state`
 9. review `engine.*`

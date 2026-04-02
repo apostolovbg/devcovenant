@@ -246,7 +246,7 @@ def resolve_clean_config(repo_root: Path) -> CleanConfig:
 
 
 def _resolve_path_under_root(repo_root: Path, raw_path: str) -> Path | None:
-    """Resolve one relative cleanup path under repo root safely."""
+    """Resolve one relative cleanup path under the repository root safely."""
     token = str(raw_path or "").strip()
     if not token:
         return None
@@ -350,7 +350,7 @@ def _project_name_candidates(repo_root: Path) -> tuple[str, ...]:
 
 
 def _collect_release_tree_targets(repo_root: Path) -> list[Path]:
-    """Return repo-root unpacked release-tree directories for build cleanup."""
+    """Return repository-root unpacked release-tree directories for cleanup."""
     name_candidates = _project_name_candidates(repo_root)
     if not name_candidates:
         return []

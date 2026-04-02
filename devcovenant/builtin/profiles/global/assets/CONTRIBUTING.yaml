@@ -14,7 +14,7 @@ managed_block: |-
   section.
 body: |-
   ## Overview
-  This repository uses DevCovenant.
+  This project uses DevCovenant.
   Contributors should read `AGENTS.md` first, use `README.md` as the
   entrypoint, and treat this guide as the short explanation of how work is
   expected to land.
@@ -24,9 +24,9 @@ body: |-
 
   - the active workflow law in `AGENTS.md`
 
-  - the current plan in `PLAN.md` when the repo uses one
+  - the current plan in `PLAN.md` when the repository uses one
 
-  - the current project requirements in `SPEC.md` when the repo uses one
+  - the current project requirements in `SPEC.md` when the repository uses one
 
   - whether the repository expects a managed environment
 

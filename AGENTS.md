@@ -12,10 +12,10 @@
 <!-- DEVCOV:BEGIN -->
 # Message from DevCovenant's Human (Read First)
 
-This document is the canonical law of this repository for both humans and
+This document is the canonical law of the project for both humans and
 AI (artificial intelligence).
 If you do not follow it, commits will fail, development quality will drift, and
-the project in this repository will be compromised.
+the project will be compromised.
 
 Read this entire file end-to-end before doing any work: this managed message,
 the editable section, the workflow block, and the active policies.
@@ -26,21 +26,22 @@ will get to know everything about it.
 Build an active-policy mental model from policies marked `enabled: true` and
 follow those policies proactively while writing, not after violations appear.
 
-Use the editable section as a live repo-specific notepad. Keep notes short,
-factual, and current so they do not grow beards. When decisions change, update
-notes in the same session. When operational behavior changes, update notes so
-future sessions do not run on stale assumptions. Treat stale notes as drift and
-clear them.
+Use the editable section as a live repository-specific notepad.
+Keep notes short, factual, and current so they do not grow beards.
+When decisions change, update notes in the same session.
+When operational behavior changes, update notes so future sessions do not run
+on stale assumptions.
+Treat stale notes as drift and clear them.
 
 Never edit content inside managed `<!-- DEVCOV* -->` blocks in any file.
 Read `README.md` for project context and `devcovenant/README.md` for the
-DevCovenant lifecycle and command behavior used by this repository.
+DevCovenant lifecycle and command behavior used by the project.
 <!-- DEVCOV:END -->
 
 # EDITABLE SECTION
 
 ## Editable-Section Hygiene
-- Keep this section focused on repo-specific direction and constraints.
+- Keep this section focused on repository-specific direction and constraints.
 - Do not restate standard workflow steps that are already defined elsewhere.
 - Update notes in the same session when decisions change.
 - Remove stale notes immediately; stale notes are drift.
@@ -51,13 +52,15 @@ DevCovenant lifecycle and command behavior used by this repository.
 - Keep implementation ownership in the flat `devcovenant/core/*.py`
   module surface.
 - Keep product-operation docs in `devcovenant/docs/*`.
-- Keep repo-specific CI, release, and trust-surface details out of package
+- Keep repository-specific CI, release, and trust-surface details out of
+  package
   docs.
 
 ## Release Control Notes
 - Human-controlled release operations remain manual.
-- Root `README.md` owns repo automation notes.
-- Root `SECURITY.md`, `PRIVACY.md`, and `SUPPORT.md` own repo trust-surface
+- Root `README.md` owns repository automation notes.
+- Root `SECURITY.md`, `PRIVACY.md`, and `SUPPORT.md` own repository
+  trust-surface
   notes.
 - Destructive history operations require explicit human direction.
 - Keep CI (continuous integration)/governance checks green before publish
@@ -913,7 +916,7 @@ dependency_dirs: []
 ```
 
 Manage dependency-maintenance artifacts as one coherent policy surface.
-When dependency inputs in this repository change, lockfiles and repository
+When dependency inputs change, lockfiles and repository
 compliance artifacts must stay synchronized together.
 Artifact ownership is declared through structured `surfaces` metadata.
 Each surface defines one lock/report/license bundle with its own lock file,
@@ -964,8 +967,8 @@ include_dirs: []
 ```
 
 Warn when DevCovenant repo Python strings contain bare backslashes.
-This repo-only policy keeps the raw-string guidance active without
-forcing it on user repos.
+This repository-only policy keeps the raw-string guidance active without
+forcing it on user repositories.
 
 
 ---
@@ -1795,8 +1798,9 @@ dir_skip_paths: []
 ```
 
 Ensure package-shipped artifacts that are true mirrors stay in exact sync
-with their canonical repo-root sources. This repo uses the policy only for
-`LICENSE => devcovenant/licenses/LICENSE`. Dependency lockfiles and
+with their canonical repository-root sources. This development repository
+uses the policy only for `LICENSE => devcovenant/licenses/LICENSE`.
+Dependency lockfiles and
 third-party license inventories under `devcovenant/licenses/**` are not
 mirrors; they are generated from the packaged runtime dependency surface by
 dependency-management. Auto-fix rewrites the configured exact mirrors from
@@ -2150,7 +2154,7 @@ Target selection is role-based via `target_roles` and role selectors
 (`project_version_line`, `changelog_header_version`,
 `manifest_project_version`). Manifest extraction remains format-aware
 (TOML/JSON/YAML) while selector routing stays role-based. Version-sync
-now validates and compares every extracted value through the active
+validates and compares every extracted value through the active
 `version-governance` scheme so canonical docs, changelog, manifests,
 and any opted-in legal text stay synchronized even when repositories
 use non-SemVer version formats. Optional `role_legality_schemes`

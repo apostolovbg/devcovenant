@@ -1,5 +1,5 @@
 # Troubleshooting
-**Last Updated:** 2026-04-01
+**Last Updated:** 2026-04-02
 **Project Version:** 1.0.1.dev1
 
 ## Overview
@@ -73,7 +73,7 @@ config:
 3. open a new shell and rerun `devcovenant --version`
 
 If you are in a source checkout, do not confuse that machine install with the
-repo-managed environment.
+repository-managed environment.
 Use `python3 -m devcovenant ...` when the checkout does not expose the console
 script directly.
 

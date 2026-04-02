@@ -1,7 +1,7 @@
 metadata:
   schema_version: 1
   registry_layout: single-root
-  policy_registry_input_hash: 21084a11785a51f6e0b8e3df0ea7604bbc16c4b52b0794b8000c0051aee94227
+  policy_registry_input_hash: 42154dc5e9164d9ff5c91704f97e55d6e341514d286eb7d834887bfce00d0bfc
 project-governance:
   project_name: devcovenant
   project_description: devcovenant is a repository governance framework.
@@ -54,7 +54,7 @@ managed-docs:
       project_governance_headers: true
       import_seed: true
       authoritative_source: true
-      body_fingerprint: 7229bfff6b3c3352b5c7a0ea9adfcfebede9781ba363e50ecfc1406a1bbcf285
+      body_fingerprint: 18bb265ffe8059c631b1b2e70e61509c0e9cb99c6c68aa4dd997da55ca4b39af
     CHANGELOG.md:
       enabled: true
       descriptor_path: devcovenant/builtin/profiles/global/assets/CHANGELOG.yaml
@@ -68,7 +68,7 @@ managed-docs:
       project_governance_headers: false
       import_seed: true
       authoritative_source: true
-      body_fingerprint: 3346f452457f2efad2b17c58d48f71c411916aa7b0fa75bcb5143c59cebf13a8
+      body_fingerprint: e187a7057d76936f8a1c437b36c526102bf1b6c7e4c664fbaf05a750a07dbdd1
     LICENSE:
       enabled: false
       descriptor_path: devcovenant/builtin/profiles/global/assets/LICENSE.yaml
@@ -82,21 +82,21 @@ managed-docs:
       project_governance_headers: true
       import_seed: true
       authoritative_source: true
-      body_fingerprint: 641d27644b027a4edac788bfe847c131f84013922075584e3a14d866512c7582
+      body_fingerprint: 2e05ec85c06b8c0a57421369ab32c001f63d6a9e5207f614e77d11f961cd12ec
     POLICY_MAP.md:
       enabled: true
       descriptor_path: devcovenant/custom/profiles/devcovrepo/assets/POLICY_MAP.yaml
       project_governance_headers: false
       import_seed: true
       authoritative_source: true
-      body_fingerprint: 375f55a43c1bfd201ca6698c555f856173bdbb6c6a19fd3a3eb11c133b285b65
+      body_fingerprint: 7141107d0e8be2c6e965344e46dfa72d8ac7312637e249f5331ab226c8e66b57
     PRIVACY.md:
       enabled: true
       descriptor_path: devcovenant/custom/profiles/devcovrepo/assets/PRIVACY.yaml
       project_governance_headers: false
       import_seed: true
       authoritative_source: true
-      body_fingerprint: 6195bcf6b491fb2c9e6bb29c2bdd5cc02785600e3ca14bc73f66ea44b0797d90
+      body_fingerprint: 625c1ef97e4c02795ae9ca73d9706ca62ec2b90cd24af96cafc8817cfeef4299
     PROFILE_MAP.md:
       enabled: true
       descriptor_path: devcovenant/custom/profiles/devcovrepo/assets/PROFILE_MAP.yaml
@@ -110,14 +110,14 @@ managed-docs:
       project_governance_headers: false
       import_seed: true
       authoritative_source: true
-      body_fingerprint: 79a4d7ecc7e04cef763b5eb6cf010b587eed9e46701b093d199a2a2232038a59
+      body_fingerprint: 3130e3d3782991a2ec2471151c05a62bdae4fc3cb404358822f3b51d843caa48
     SECURITY.md:
       enabled: true
       descriptor_path: devcovenant/custom/profiles/devcovrepo/assets/SECURITY.yaml
       project_governance_headers: false
       import_seed: true
       authoritative_source: true
-      body_fingerprint: 2c2efb6269abb9bc72f710b687b1ce6432bef297b30486f05cb81e9f858d7ffc
+      body_fingerprint: 0cf19cd55fd6efc85c3c10c4f144fa9855ce37023934fc68d009d882d78bca5c
     SPEC.md:
       enabled: true
       descriptor_path: devcovenant/builtin/profiles/global/assets/SPEC.yaml
@@ -131,7 +131,7 @@ managed-docs:
       project_governance_headers: false
       import_seed: true
       authoritative_source: true
-      body_fingerprint: 0e89d467341fb3a380a0380d3444083cfc4410de3c813788cda296e3acb0fbe5
+      body_fingerprint: 663923ddfc6f6fb0e71a03e2e05a6a3f0339010d60c0f502f4b908bb0d311e9a
     devcovenant/README.md:
       enabled: true
       descriptor_path: devcovenant/builtin/profiles/global/assets/devcovenant/README.yaml
@@ -1991,8 +1991,8 @@ policies:
     description: Devcov Raw String Escapes
     policy_text: |-
       Warn when DevCovenant repo Python strings contain bare backslashes.
-      This repo-only policy keeps the raw-string guidance active without
-      forcing it on user repos.
+      This repository-only policy keeps the raw-string guidance active without
+      forcing it on user repositories.
     metadata:
       id: devcov-raw-string-escapes
       severity: warning
@@ -2168,7 +2168,7 @@ policies:
     assets: []
     origin: custom
     script_exists: true
-    hash: dad74c49cfed791c8186fe94480ab37a12952d37a945ade86c40a8cc60539458
+    hash: 4c95b6619aaf4fd6a15fd0ccf08506079f0339f7472dda672bf563e70e752fab
     script_path: custom/devcov_raw_string_escapes.py
   docstring-and-comment-coverage:
     enabled: true
@@ -6093,7 +6093,7 @@ policies:
     - .venv/bin/python
     origin: builtin
     script_exists: true
-    hash: ff9680ac761d96f9cd5bf5910946405a8a2afbac2f96ae86dc7f413b9eb7d5ee
+    hash: 4d3f719413e8b62fa48ce28bbf8f0799213da0ee8913ff8a035ff9311630f292
     script_path: builtin/managed_environment.py
   modules-need-tests:
     enabled: true
@@ -8923,7 +8923,7 @@ policies:
     assets: []
     origin: custom
     script_exists: true
-    hash: 22d6bd4d068e093d5b6bcfb79e7f063312c023e733c831d857c7008631809cb1
+    hash: e0e6738f503ee7b16f90bef7304fdf260b2495e5d598f20502d1f84677f7f1e6
     script_path: custom/readme_sync.py
   security-scanner:
     enabled: true
@@ -9917,7 +9917,7 @@ policies:
       (`project_version_line`, `changelog_header_version`,
       `manifest_project_version`). Manifest extraction remains format-aware
       (TOML/JSON/YAML) while selector routing stays role-based. Version-sync
-      now validates and compares every extracted value through the active
+      validates and compares every extracted value through the active
       `version-governance` scheme so canonical docs, changelog, manifests,
       and any opted-in legal text stay synchronized even when repositories
       use non-SemVer version formats. Optional `role_legality_schemes`
@@ -10430,7 +10430,7 @@ policies:
     - docs=>devcovenant/registry/README.md
     origin: builtin
     script_exists: true
-    hash: 04b522d60f1246bd264dad07ebdb44e1ca9e09c182ba2193d10935f7c315e01b
+    hash: ee8edeb4f261ae144b4df6938fd5e4d2133e18755690adc937d34ebe3832bfe1
     script_path: builtin/version_sync.py
   version-governance:
     enabled: true
@@ -10869,7 +10869,7 @@ policies:
     - devcovenant/VERSION
     origin: builtin
     script_exists: true
-    hash: 551c785979d70f7cf9ea2c0d3207d62f6d2323214943c088b1e7cc96ed457df9
+    hash: ae76928adcea8bf38adb4fe7e5ca4edf16a124c92f5a16b5b4d790a49851586f
     script_path: builtin/version_governance.py
   dependency-management:
     enabled: true
@@ -10877,7 +10877,7 @@ policies:
     description: Dependency Management
     policy_text: |-
       Manage dependency-maintenance artifacts as one coherent policy surface.
-      When dependency inputs in this repository change, lockfiles and repository
+      When dependency inputs change, lockfiles and repository
       compliance artifacts must stay synchronized together.
       Artifact ownership is declared through structured `surfaces` metadata.
       Each surface defines one lock/report/license bundle with its own lock file,
@@ -12876,18 +12876,18 @@ policies:
     - '{{ PROJECT_NAME_PATH }}/runtime-requirements.lock'
     origin: builtin
     script_exists: true
-    hash: d9db3da3739d21b2b58a84b9d114036324fda86e4ce07a402efa02b0deeb3490
+    hash: 26eef9001ada3225ce4d509b838d3d26f3127f1878e980d41980dbebe42c2e69
     script_path: builtin/dependency_management.py
     runtime_state:
       surfaces:
         devcovenant_runtime:
-          input_fingerprint: 387876d73ab18dfe2a5057bd3b2b2784a7605db93873e4b82264973001a2282d
+          input_fingerprint: cb9ae2509b07a76a1361eaeb9d657eb90f8126588c16c3ef26d48e69e9f3ee41
           output_fingerprints:
             lock_file: d15044f8967ae94c97f8ff2ced7b2a8190281243948aae40cf4d2d5c3e911bcc
             third_party_file: 03710e4b9b1d4a694b7f319950a3ac27222743eb35b0409771f9df366a8e8368
             licenses_dir: 96af1bb880755dbfc4adf03d904e33e432446926fb2e04cf315c349d45897fee
         root_workspace:
-          input_fingerprint: 38392b75c4842ff61a41365f406eed7042ea3edc8147847f339ec8415fbf5889
+          input_fingerprint: f32cf324e3fb1e0f59c6d39667fefec8062556c4d7f2a5c3551a7ed6ec492477
           output_fingerprints:
             lock_file: 1ffa0010221836adf150a7d57943660c12b741622e30574fed37634b7b16c24f
             third_party_file: 0c5b309147bb696e457e9a2b5c133dd5c5ce79b5ee4fdf2862f861bbd601219f
@@ -12898,8 +12898,9 @@ policies:
     description: Package Artifact Mirror
     policy_text: |-
       Ensure package-shipped artifacts that are true mirrors stay in exact sync
-      with their canonical repo-root sources. This repo uses the policy only for
-      `LICENSE => devcovenant/licenses/LICENSE`. Dependency lockfiles and
+      with their canonical repository-root sources. This development repository
+      uses the policy only for `LICENSE => devcovenant/licenses/LICENSE`.
+      Dependency lockfiles and
       third-party license inventories under `devcovenant/licenses/**` are not
       mirrors; they are generated from the packaged runtime dependency surface by
       dependency-management. Auto-fix rewrites the configured exact mirrors from
@@ -13048,7 +13049,7 @@ policies:
     - LICENSE=>devcovenant/licenses/LICENSE
     origin: custom
     script_exists: true
-    hash: 7148e3e0fe2e9b023c8f1857ee142690e946ff0aca677f6528de74ca6a054b71
+    hash: 4ce8cdb98c160802b939e3874d6b24976e63a98a910b09a0b1cd6230a66e7acf
     script_path: custom/package_artifact_mirror.py
 profiles:
   csharp:

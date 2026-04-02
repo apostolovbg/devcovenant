@@ -185,7 +185,8 @@ def _replace_core_package_for_upgrade(repo_root: Path) -> None:
 
 
 def _prune_repo_only_custom_payload(repo_root: Path) -> list[Path]:
-    """Remove known repo-only custom payload leaked into user repos."""
+    """Remove known development-repository-only custom payload leaked into
+    user repositories."""
     removed: list[Path] = []
     for rel_path in _UPGRADE_REPO_ONLY_CUSTOM_PRUNE_DIRS:
         target_path = repo_root / rel_path
@@ -229,7 +230,7 @@ def upgrade_repo(repo_root: Path) -> int:
             display_path(path, repo_root=repo_root) for path in pruned_paths
         )
         print_step(
-            f"Pruned repo-only custom payload: {formatted}",
+            f"Pruned development-repository-only custom payload: {formatted}",
             "ℹ️",
         )
     target_version_path.write_text(f"{source_version}\n", encoding="utf-8")

@@ -118,7 +118,7 @@ def _resolve_metadata_paths(
     *,
     resolve_symlinks: bool = True,
 ) -> list[Path]:
-    """Resolve metadata path entries relative to repo root."""
+    """Resolve metadata path entries relative to the repository root."""
     resolved: list[Path] = []
     for entry in entries:
         token = entry.strip()

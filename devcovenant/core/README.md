@@ -9,8 +9,8 @@ and translator routing.
 
 The core is intentionally flat.
 There are no subpackages under `devcovenant/core/`.
-Instead, related logic is grouped into mid-sized modules that own one clear
-runtime surface.
+Instead, related logic stays in cohesive modules that own one clear runtime
+surface.
 
 ## Module Families
 The flat core is organized by responsibility families.
@@ -36,8 +36,9 @@ The families are conceptual; the code stays in `devcovenant/core/*.py`.
 ## Why Flat
 The old split across `flow/`, `runtime/`, `services/`, `lib/`, and
 `contracts/` made the core harder to scan because one feature often lived in
-several tiny folders at once.
-A fully collapsed design would be just as hard to maintain.
+several separate folders at once.
+A fully collapsed design would be just as hard to maintain when unrelated
+responsibilities land in the same file.
 The flat core keeps the runtime in one visible surface while still preserving
 modular ownership.
 

@@ -73,7 +73,8 @@ class CalverScheme:
         check: "VersionGovernanceCheck",
         repo_root: Path,
     ) -> str | None:
-        """CalVer keeps the repo's chosen formatting, including padding."""
+        """CalVer keeps the repository's chosen formatting, including
+        padding."""
         del parsed, check, repo_root
         return None
 

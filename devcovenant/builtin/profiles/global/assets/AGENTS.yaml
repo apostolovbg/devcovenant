@@ -11,10 +11,10 @@ authoritative_source: true
 managed_block: |-
   # Message from DevCovenant's Human (Read First)
 
-  This document is the canonical law of this repository for both humans and
+  This document is the canonical law of the project for both humans and
   AI (artificial intelligence).
   If you do not follow it, commits will fail, development quality will drift, and
-  the project in this repository will be compromised.
+  the project will be compromised.
 
   Read this entire file end-to-end before doing any work: this managed message,
   the editable section, the workflow block, and the active policies.
@@ -25,25 +25,27 @@ managed_block: |-
   Build an active-policy mental model from policies marked `enabled: true` and
   follow those policies proactively while writing, not after violations appear.
 
-  Use the editable section as a live repo-specific notepad. Keep notes short,
-  factual, and current so they do not grow beards. When decisions change, update
-  notes in the same session. When operational behavior changes, update notes so
-  future sessions do not run on stale assumptions. Treat stale notes as drift and
-  clear them.
+  Use the editable section as a live repository-specific notepad.
+  Keep notes short, factual, and current so they do not grow beards.
+  When decisions change, update notes in the same session.
+  When operational behavior changes, update notes so future sessions do not run
+  on stale assumptions.
+  Treat stale notes as drift and clear them.
 
   Never edit content inside managed `<!-- DEVCOV* -->` blocks in any file.
   Read `README.md` for project context and `devcovenant/README.md` for the
-  DevCovenant lifecycle and command behavior used by this repository.
+  DevCovenant lifecycle and command behavior used by the project.
 body: |-
   # EDITABLE SECTION
 
   ## Editable-Section Hygiene
-  - Keep this section focused on repo-specific direction and constraints.
+  - Keep this section focused on repository-specific direction and
+    constraints.
   - Do not restate standard workflow steps that are already defined elsewhere.
   - Update notes in the same session when decisions change.
   - Remove stale notes immediately; stale notes are drift.
 
-  - YYYY-MM-DD: Add repository-specific notes here. This section is preserved
+  - YYYY-MM-DD: Add project-specific notes here. This section is preserved
     across install and refresh runs.
 workflow_block: |-
 

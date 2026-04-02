@@ -380,7 +380,8 @@ def _sync_project_pyproject_identity(
 
 
 def _repo_relative_path(repo_root: Path, target: Path) -> str:
-    """Return a target path relative to repo root across symlink aliases."""
+    """Return a target path relative to the repository root across symlink
+    aliases."""
     root_path = Path(os.path.realpath(repo_root))
     target_path = Path(os.path.realpath(target))
     relative = os.path.relpath(str(target_path), str(root_path))
@@ -548,8 +549,9 @@ def _render_config_yaml(payload: dict[str, object]) -> str:
                     "mode."
                 ),
                 (
-                    "# - false: normal user-repo scope (exclude DevCovenant "
-                    "implementation internals from normal repo scope)"
+                    "# - false: normal user-repository scope (exclude "
+                    "DevCovenant implementation internals from ordinary "
+                    "repository scope)"
                 ),
                 (
                     "# - true: DevCovenant developer mode "
@@ -686,7 +688,7 @@ def _render_config_yaml(payload: dict[str, object]) -> str:
             "fragments."
         ),
         "# Keep the github-owned base workflow generic.",
-        "# Use config overlays only for repo-local CI adjustments.",
+        "# Use config overlays only for repository-local CI adjustments.",
         "# Full replacement payload for generated CI-and-test workflow.",
         (
             "# Use full overrides only when the repository deliberately "

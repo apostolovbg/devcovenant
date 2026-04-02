@@ -86,12 +86,12 @@ state, and release proof that can be audited afterward.
 - Preserve a clear boundary between engine-owned runtime checks and
   repository-configurable policies.
 - Let ordinary repositories start from the shared base plus `devcovuser`,
-  then add a repo-specific custom profile when they need their own reusable
-  behavior.
+  then add a repository-specific custom profile when they need their own
+  reusable behavior.
 - Keep operator-facing commands inspectable through stable run-log artifacts,
   concise summaries, and clear local state files.
-- Keep shipped package docs package-generic while leaving repo-only release
-  notes and operations in root docs.
+- Keep shipped package docs package-generic while leaving
+  repository-only release notes and operations in root docs.
 - Support wheel, sdist, and documented `pipx` proof that matches the same
   public workflow the product teaches to human operators.
 
@@ -201,7 +201,7 @@ intentionally not trying to do.
   Desktop copy, optionally renamed by a filename-only second argument and
   guarded by `--overwrite` when the target already exists.
 - Ordinary repositories shall be able to keep `devcovuser` active and add a
-  repo-specific custom profile on top when they need their own reusable
+  repository-specific custom profile on top when they need their own reusable
   rules, assets, or workflow additions.
 
 ### Workflow And Evidence
@@ -227,7 +227,8 @@ intentionally not trying to do.
   treated as normal completion even when Linux PTY EOF races raise `EIO`
   before the child exit is fully reaped.
 - The package README and shipped package docs shall stay package-generic and
-  shall not depend on repo-only release notes or repo-only profile names.
+  shall not depend on repository-only release notes or repository-only
+  profile names.
 
 ### Workflow Contract And Extensibility
 - The workflow contract shall reserve the anchors `start`, `mid`, and `end`.
@@ -408,8 +409,8 @@ intentionally not trying to do.
 - Dependencies:
   - Python 3.10+
   - `packaging`, `pre-commit`, `pip-tools`, `PyYAML`, `pytest`, and `semver`
-  - a git repository and filesystem access sufficient to manage repo-owned
-    files
+  - a git repository and filesystem access sufficient to manage
+    repository-owned files
 - Compatibility expectations:
   - the package version comes from `devcovenant/VERSION`
   - the repository is `stable`, `active`, and `versioned`
@@ -428,7 +429,7 @@ intentionally not trying to do.
   between `install` and `deploy`.
 - Assumption: repositories can commit tracked registry and managed output
   changes that result from real setup changes.
-- Assumption: CI and release proof for this repository continue to run through
+- Assumption: CI and release proof for the project continue to run through
   GitHub Actions.
 - Explicit tradeoff: DevCovenant prefers explicit evidence, generated state,
   and stable ownership boundaries over silent convenience or hidden behavior.
@@ -453,7 +454,8 @@ intentionally not trying to do.
   full public workflow in CI.
 - Manual publish can release only a validated CI artifact and provenance set
   without rebuilding.
-- The shipped package README and docs stay package-generic, while repo-only
+- The shipped package README and docs stay package-generic, while
+  repository-only
   release notes and operations remain in root docs.
 
 This section should let someone decide whether the project meets the spec

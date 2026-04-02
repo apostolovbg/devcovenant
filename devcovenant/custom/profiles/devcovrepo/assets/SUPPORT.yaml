@@ -29,7 +29,7 @@ body: |-
   (SLA).
 
   This document explains how to ask for help and what kind of maintenance
-  support this repository provides.
+  support is available for the project.
 
   ## How To Ask For Help
   Use the public repository issue tracker for:
@@ -60,14 +60,14 @@ body: |-
   excerpt are enough to unblock triage.
 
   ## Support Scope
-  Reasonable support scope for this repository includes:
+  Reasonable support scope for this project includes:
   - the maintained public release line
-  - the main source tree in this repository
+  - the main project source tree
   - built-in policies, profiles, translators, commands, and managed docs
   - the documented workflow, config, and runtime evidence model
 
   Custom extensions are still supported at the interface level, but debugging
-  custom policy or profile code is naturally more repo-specific and may
+  custom policy or profile code is naturally more repository-specific and may
   require more self-service from the integrator.
 
   ## Workflow

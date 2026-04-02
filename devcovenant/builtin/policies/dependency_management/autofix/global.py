@@ -25,7 +25,7 @@ class DependencyManagementFixer(PolicyFixer):
         if repo_root is None:
             return FixResult(
                 success=False,
-                message="Autofix repo root is unavailable.",
+                message="Autofix repository root is unavailable.",
             )
         try:
             payload = run_policy_runtime_action(

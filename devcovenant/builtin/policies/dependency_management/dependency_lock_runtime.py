@@ -2196,7 +2196,8 @@ def refresh_all(
         "message": (
             "Dependency-management refresh completed."
             if results
-            else "No metadata-selected lockfiles are configured for this repo."
+            else "No metadata-selected lockfiles are configured for this "
+            "repository."
         ),
         "lock_results": result_payload,
         "refreshed_artifacts": refreshed_artifacts,

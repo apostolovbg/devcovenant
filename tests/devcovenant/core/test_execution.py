@@ -635,7 +635,7 @@ def _unit_test_ci_workflow_split_docs_are_consistent() -> None:
     assert "generated workflow files" in installation
     assert ".github/workflows/publish.yml" not in installation
     assert "repo-specific `Build` job" not in installation
-    assert "Repo Release And Assurance" in readme
+    assert "Repository Release And Assurance" in readme
     assert "`Governance` and `Build`" in readme
     assert ".github/workflows/publish.yml" in readme
 
@@ -713,7 +713,7 @@ def _unit_test_custom_extension_docs_explain_baseline_first_activation():
     expectations = {
         "devcovenant/docs/installation.md": (
             "For a normal repository, do that first cycle before adding",
-            "Start from a clean working base, then add repo-specific",
+            "Start from a clean working base, then add repository-specific",
         ),
         "devcovenant/docs/profiles.md": (
             "keep `devcovuser` active for an ordinary repository",
@@ -721,7 +721,7 @@ def _unit_test_custom_extension_docs_explain_baseline_first_activation():
                 "keep `github` active when the repository wants the "
                 "generic generated GitHub"
             ),
-            "add a repo-specific custom profile on top",
+            "add a repository-specific custom profile on top",
         ),
     }
 

@@ -1,7 +1,7 @@
-"""
-Fixer: Package Artifact Mirror
+"""Fixer: Package Artifact Mirror.
 
-Sync package-shipped mirror artifacts from their canonical repo-root sources.
+Sync package-shipped mirror artifacts from their canonical
+repository-root sources.
 """
 
 from __future__ import annotations

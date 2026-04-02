@@ -9,7 +9,7 @@ text: |
   (`project_version_line`, `changelog_header_version`,
   `manifest_project_version`). Manifest extraction remains format-aware
   (TOML/JSON/YAML) while selector routing stays role-based. Version-sync
-  now validates and compares every extracted value through the active
+  validates and compares every extracted value through the active
   `version-governance` scheme so canonical docs, changelog, manifests,
   and any opted-in legal text stay synchronized even when repositories
   use non-SemVer version formats. Optional `role_legality_schemes`

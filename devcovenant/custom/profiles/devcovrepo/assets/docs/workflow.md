@@ -137,11 +137,11 @@ If a repository needs extra project dependency setup, extra CI steps, or extra
 install validation, that extension should come from a profile-owned CI
 fragment instead of from the builtin base.
 That split usually looks like this:
-1. a repo-specific custom profile owns local behavior such as
+1. a repository-specific custom profile owns local behavior such as
    `root_workspace`, managed environment details, and repository workflow runs
 2. an optional GitHub-specific custom profile owns reusable GitHub-only CI
    fragments when the repository wants more than the builtin base
-If a repo uses a hash-locked Python requirements file and also installs a
+If a repository uses a hash-locked Python requirements file and also installs a
 local wheel or sdist in CI, split that into:
 1. install the locked requirements
 2. install the local artifact with `--no-deps`

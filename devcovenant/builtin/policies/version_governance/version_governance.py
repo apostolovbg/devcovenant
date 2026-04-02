@@ -454,7 +454,7 @@ class VersionGovernanceCheck(PolicyCheck):
         return str(raw).strip().lower() in {"1", "true", "yes", "on"}
 
     def _ignored_prefixes(self) -> tuple[str, ...]:
-        """Return ignored repo-root prefixes for relevance filtering."""
+        """Return ignored repository-root prefixes for relevance filtering."""
         prefixes_option = self.get_option("ignored_prefixes", [])
         if isinstance(prefixes_option, str):
             return (prefixes_option,) if prefixes_option else ()

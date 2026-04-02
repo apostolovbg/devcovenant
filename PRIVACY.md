@@ -2,7 +2,7 @@
 **Doc ID:** PRIVACY
 **Doc Type:** privacy-policy
 **Project Version:** 1.0.1.dev1
-**Last Updated:** 2026-03-31
+**Last Updated:** 2026-04-02
 **DevCovenant Version:** 1.0.1.dev1
 
 <!-- DEVCOV:BEGIN -->
@@ -22,7 +22,7 @@ data-handling notes.
 - [Before Sharing Artifacts](#before-sharing-artifacts)
 
 ## Overview
-DevCovenant is designed as a repo-local governance tool.
+DevCovenant is designed as a repository-local governance tool.
 It records local evidence artifacts so operators can understand what happened
 in a work slice, but it does not contain outbound telemetry or analytics in
 its own runtime.

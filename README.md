@@ -2,7 +2,7 @@
 **Doc ID:** README
 **Doc Type:** repo-readme
 **Project Version:** 1.0.1.dev1
-**Last Updated:** 2026-04-01
+**Last Updated:** 2026-04-02
 **DevCovenant Version:** 1.0.1.dev1
 
 <!-- DEVCOV:BEGIN -->
@@ -54,6 +54,40 @@ DevCovenant makes those failures visible and repeatable to fix.
 It does that by making the workflow explicit, storing the active rule set
 in the repo, and writing logs for each governed command.
 
+## Custom Governance
+Built-in policies and profiles are the shipped baseline, not the boundary.
+DevCovenant is designed so a repository can define its own governance model
+instead of waiting for the core project to add one built-in rule at a time.
+
+A custom governance stack can combine:
+
+- custom policies under `devcovenant/custom/policies/`
+- custom profiles under `devcovenant/custom/profiles/`
+- structured metadata overlays and overrides in `devcovenant/config.yaml`
+- selector-role scopes for different file families inside one policy
+- translators from language profiles for language-aware checks
+- autofix helpers, runtime actions, and `devcovenant policy <policy-id> \
+  <command>` routines
+- workflow runs, CI fragments, managed docs, and managed-environment contracts
+
+That means DevCovenant can govern much more than lint-style rules.
+A repository can encode API contracts, release evidence, generated-file
+ownership, environment layouts, dependency surfaces, documentation routes,
+naming conventions, support/trust docs, or stack-specific safety routines as
+first-class governed behavior.
+
+The practical split is:
+
+- policies define and enforce rules
+- profiles package reusable governance for a repository shape
+- translators provide language-aware facts
+- config tunes the active stack with local overlays and overrides
+
+For the deeper authoring model, go straight to
+[policies.md](devcovenant/docs/policies.md),
+[profiles.md](devcovenant/docs/profiles.md), and
+[config.md](devcovenant/docs/config.md).
+
 ## Quick Start
 For most users, the right start is an isolated machine install with `pipx`,
 followed by activation inside the repository you want to govern.
@@ -90,9 +124,9 @@ What those steps mean:
 
    Start with `project-governance`, `developer_mode`, and `profiles.active`.
    For most repositories, keep the standard stack with `devcovuser` active and
-   add a repo-specific custom profile on top when the repo needs its own rules,
-   assets, or workflow additions. Use direct overlays only for small local
-   exceptions.
+   add a repository-specific custom profile on top when the repository needs
+   its own rules, assets, or workflow additions.
+   Use direct overlays only for small local exceptions.
 
 4. `deploy` writes the managed docs, generated files, and other DevCovenant
    outputs, including dependency artifacts owned by the active surfaces.
@@ -132,8 +166,8 @@ Use the commands this way:
 - `check`
 
   Read-only audit.
-  It inspects the repo and writes logs, but it does not open or close a gate
-  session.
+  It inspects the repository and writes logs, but it does not open or close a
+  gate session.
 
 - `gate --start`
 
@@ -207,8 +241,9 @@ The most important first-review settings in `devcovenant/config.yaml` are:
 
 3. `profiles.active`
 
-   For most repos, keep `devcovuser` in the stack and layer a repo-specific
-   custom profile on top when the repo needs its own behavior.
+   For most repositories, keep `devcovuser` in the stack and layer a
+   repository-specific custom profile on top when the repository needs its own
+   behavior.
 
 4. `paths`
 
@@ -261,16 +296,18 @@ Use the shorter map below instead of treating the README as the whole manual.
 - [config.md](devcovenant/docs/config.md)
 
   How to read `devcovenant/config.yaml`, including project settings,
-  profile stacks, doc settings, workflow settings, and policy activation.
+  profile stacks, workflow settings, policy activation, and metadata overlays
+  and overrides.
 
 - [profiles.md](devcovenant/docs/profiles.md)
 
-  Built-in profiles, custom profiles, assets, translators, and workflow runs.
+  Built-in profiles, custom profiles, translators, workflow runs, CI
+  fragments, and reusable governance stacks.
 
 - [policies.md](devcovenant/docs/policies.md)
 
-  Policy descriptors, checks, runtime actions, policy commands, and
-  version-governance adapters.
+  Built-in and custom policy authoring, selector roles, runtime actions,
+  autofixers, policy commands, and version-governance adapters.
 
 - [refresh.md](devcovenant/docs/refresh.md)
 
@@ -290,7 +327,7 @@ Use the shorter map below instead of treating the README as the whole manual.
 
 <!-- REPO-ONLY:BEGIN -->
 ## Security, Privacy, and Support
-Public trust docs live in the repo root:
+Public trust docs live in the repository root:
 
 - [SECURITY.md](SECURITY.md)
 - [PRIVACY.md](PRIVACY.md)
@@ -299,13 +336,13 @@ Public trust docs live in the repo root:
 Use those docs for vulnerability reporting, local data-handling boundaries,
 and support expectations.
 
-## Repo Notes
+## Repository Notes
 This repository is also the development repository for DevCovenant itself.
-That is why `developer_mode` is enabled here and why the repo includes the
-`github` and `devcovrepo` profiles plus repo-only policies and assets that
-ordinary user repositories do not need.
+That is why `developer_mode` is enabled here and why the repository includes
+the `github` and `devcovrepo` profiles plus repository-only policies and
+assets that ordinary user repositories do not need.
 
-## Repo Release And Assurance
+## Repository Release And Assurance
 - Root automation notes live here and in `AGENTS.md`, not in package docs.
 - The builtin `github` profile owns the generic GitHub Actions CI base and
   bootstraps DevCovenant from the shipped
@@ -313,15 +350,18 @@ ordinary user repositories do not need.
 - The package ships `devcovenant/licenses/LICENSE` and
   `devcovenant/licenses/**` beside that lock so the bundled root license,
   dependency report, and third-party license set stay self-contained.
-- This repo activates `github`, and `devcovrepo` extends that workflow with
-  repo-specific `Governance` and `Build` behavior.
+- This repository activates `github`, and `devcovrepo` extends that workflow
+  with
+  repository-specific `Governance` and `Build` behavior.
 - `.github/workflows/publish.yml` stays repo-maintained and publishes only the
   validated CI artifacts and provenance it downloads.
-- Repo release proof covers the declared Python support floor and keeps the
+- Repository release proof covers the declared Python support floor and keeps
+  the
   pipx proof on the installed CLI path end to end.
 
-## Repo Trust Docs
-- `SECURITY.md`, `PRIVACY.md`, and `SUPPORT.md` are repo-owned managed docs
+## Repository Trust Docs
+- `SECURITY.md`, `PRIVACY.md`, and `SUPPORT.md` are repository-owned managed
+  docs
   supplied by the active `devcovrepo` profile.
 - Those trust docs intentionally stay out of the project-governance header
   area.

@@ -26,7 +26,7 @@ body: |-
   - [Before Sharing Artifacts](#before-sharing-artifacts)
 
   ## Overview
-  DevCovenant is designed as a repo-local governance tool.
+  DevCovenant is designed as a repository-local governance tool.
   It records local evidence artifacts so operators can understand what
   happened in a work slice, but it does not contain outbound telemetry or
   analytics in its own runtime.

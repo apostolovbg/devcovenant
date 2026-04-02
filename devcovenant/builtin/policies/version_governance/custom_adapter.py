@@ -18,7 +18,7 @@ if TYPE_CHECKING:
 
 
 class CustomAdapterScheme:
-    """Delegate version-governance to one repo-local scheme module."""
+    """Delegate version-governance to one repository-local scheme module."""
 
     name = "custom_adapter"
 
@@ -64,12 +64,12 @@ class CustomAdapterScheme:
         check: "VersionGovernanceCheck",
         repo_root: Path,
     ) -> Any:
-        """Parse one version string through the repo-local adapter."""
+        """Parse one version string through the repository-local adapter."""
         scheme = self._load_scheme(check, repo_root)
         return scheme.parse_version(value, check, repo_root)
 
     def compare_versions(self, left: Any, right: Any) -> int:
-        """Compare parsed versions through the repo-local adapter."""
+        """Compare parsed versions through the repository-local adapter."""
         compare = getattr(self._loaded_scheme, "compare_versions", None)
         if not callable(compare):
             raise ValueError("Custom adapter is missing `compare_versions`.")
@@ -124,7 +124,7 @@ class CustomAdapterScheme:
         check: "VersionGovernanceCheck",
         repo_root: Path,
     ) -> "VersionScheme":
-        """Load and cache the repo-local scheme object for this run."""
+        """Load and cache the repository-local scheme object for this run."""
         path = self._resolve_adapter_path(check, repo_root)
         cached = self._cache.get(path)
         if cached is not None:
@@ -174,7 +174,7 @@ class CustomAdapterScheme:
         check: "VersionGovernanceCheck",
         repo_root: Path,
     ) -> Path:
-        """Resolve and validate the repo-local adapter path."""
+        """Resolve and validate the repository-local adapter path."""
         raw = str(check.get_option("custom_adapter_path", "")).strip()
         if not raw:
             raise ValueError(
