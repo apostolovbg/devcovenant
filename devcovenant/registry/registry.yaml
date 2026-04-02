@@ -12881,17 +12881,17 @@ policies:
     runtime_state:
       surfaces:
         devcovenant_runtime:
-          input_fingerprint: c0b546ed676189a21e6e66eb4266adece98a2f52039dda796060a4957873d406
+          input_fingerprint: 4b404741182d8b99b5bc2eadc2e47277adc581f1f94602fcc4b6e1ef68975cc3
           output_fingerprints:
             lock_file: a5788217543e1d7049dcd206db7d35542c9bd7c6ca087baccbc9f4e3eaa45af0
-            third_party_file: 03710e4b9b1d4a694b7f319950a3ac27222743eb35b0409771f9df366a8e8368
-            licenses_dir: 96af1bb880755dbfc4adf03d904e33e432446926fb2e04cf315c349d45897fee
+            third_party_file: 6984f3fa8399840d66c4896560847c82b248501209c8785425e627b76a07fb11
+            licenses_dir: 30121e09034ad3935ff9021360123866ccb66a2f258bf25d9e2f1d6b1f1d0235
         root_workspace:
-          input_fingerprint: b0a5aa7b6307f7f08a3b4a39cff2c9a8d2c818e4931355c0edc86c0b9da49a11
+          input_fingerprint: 5d39df2f87cbabef41fc81ce929ffbbff51f4b3585563649ccd9ef3404731693
           output_fingerprints:
-            lock_file: 6ee36a77308b3c9d7c1d5a0af0cbdb6345e63c0d24a4dc44e0ab27cd53ae3f3f
-            third_party_file: 0c5b309147bb696e457e9a2b5c133dd5c5ce79b5ee4fdf2862f861bbd601219f
-            licenses_dir: 73b4a7d61db762ac3a574fc7ed33306ca8f26baf4516b4062a0f9163483ebb0e
+            lock_file: 52d7f27ce6643cbcced6325ac9440808f85507c0cc6b6727a46dd703323bc9cc
+            third_party_file: e688fd62939652f6d6a8a8f12260a7f9558a874f01e441baaedf4f2667d96401
+            licenses_dir: ce8e7f74664501e40629e978541db1ff623a125d03ab0632effcaae88bab5efe
   package-artifact-mirror:
     enabled: true
     custom: true

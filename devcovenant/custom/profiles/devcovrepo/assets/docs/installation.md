@@ -203,6 +203,9 @@ Package metadata should only claim Python versions that the release workflow
 actually proves.
 Package links should point at release-stable docs instead of a moving branch
 head.
+Command banners should identify the active packaged build by reading
+`devcovenant/VERSION`, so installed operators and source-checkout launches
+report the same version string for the same package build.
 
 ## First-Time Setup Runbook
 Use this as the practical first integration flow:

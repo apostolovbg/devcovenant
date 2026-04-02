@@ -118,6 +118,7 @@ _ACTIVE_RUN_LOG_CONTEXT: run_logging_runtime_module.RunLogContext | None = None
 _ACTIVE_RUN_TAIL_LINES: list[str] = []
 _ACTIVE_RUN_LOG_POINTER_EMITTED = False
 _TOP_LEVEL_COMMAND_ENV = "DEVCOV_TOP_COMMAND"
+_PACKAGE_VERSION_CACHE: str | None = None
 _WAIT_PROGRESS_MESSAGE = output_runtime_module.WAIT_PROGRESS_MESSAGE
 _WAIT_PROGRESS_INITIAL_SECONDS = 15.0
 _WAIT_PROGRESS_REPEAT_SECONDS = 60.0
@@ -913,6 +914,25 @@ def print_banner(title: str, emoji: str) -> None:
     _REPORTER.banner(title, emoji)
 
 
+def read_package_version() -> str:
+    """Read the packaged DevCovenant version from VERSION."""
+    global _PACKAGE_VERSION_CACHE
+    if _PACKAGE_VERSION_CACHE is not None:
+        return _PACKAGE_VERSION_CACHE
+    version_path = Path(__file__).resolve().parents[1] / "VERSION"
+    try:
+        version_text = version_path.read_text(encoding="utf-8").strip()
+    except OSError:
+        version_text = ""
+    _PACKAGE_VERSION_CACHE = version_text or package_version
+    return _PACKAGE_VERSION_CACHE
+
+
+def devcovenant_banner_title() -> str:
+    """Return the canonical top banner title with the active package."""
+    return f"DevCovenant {read_package_version()}"
+
+
 def print_step(message: str, emoji: str = "•") -> None:
     """Print a short, single-line status step via output boundary."""
     _REPORTER.step(message, emoji)
@@ -1447,14 +1467,11 @@ def prune_inline_session_snapshot_fields(*args: Any, **kwargs: Any) -> Any:
 
 def read_local_version(repo_root: Path) -> str | None:
     """Read the local devcovenant version from repo_root."""
-    init_path = repo_root / "devcovenant" / "__init__.py"
-    if not init_path.exists():
+    version_path = repo_root / "devcovenant" / "VERSION"
+    if not version_path.exists():
         return None
-    pattern = re.compile(r'__version__\s*=\s*["\']([^"\']+)["\']')
-    match = pattern.search(init_path.read_text(encoding="utf-8"))
-    if match:
-        return match.group(1).strip()
-    return None
+    version_text = version_path.read_text(encoding="utf-8").strip()
+    return version_text or None
 
 
 def warn_version_mismatch(repo_root: Path) -> None:
@@ -1462,11 +1479,12 @@ def warn_version_mismatch(repo_root: Path) -> None:
     local_version = read_local_version(repo_root)
     if not local_version:
         return
-    if local_version != package_version:
+    cli_version = read_package_version()
+    if local_version != cli_version:
         message = (
             "⚠️  Local DevCovenant version differs from CLI.\n"
             f"   Local: {local_version}\n"
-            f"   CLI:   {package_version}\n"
+            f"   CLI:   {cli_version}\n"
             "Use the local version via `python3 -m devcovenant` or update."
         )
         runtime_print(message)

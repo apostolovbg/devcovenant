@@ -144,15 +144,41 @@ def _dependency_refresh_engine_hash(repo_root: Path) -> str:
             )
         )
     for label, path in paths:
-        try:
-            component_token = "repo:" + path.relative_to(repo_root).as_posix()
-        except ValueError:
-            component_token = f"component:{label}"
+        component_token = _stable_engine_component_token(
+            repo_root,
+            path,
+            label=label,
+        )
         digest.update(component_token.encode("utf-8"))
         digest.update(b"\0")
         digest.update(_file_hash_or_missing(path).encode("utf-8"))
         digest.update(b"\n")
     return digest.hexdigest()
+
+
+def _stable_engine_component_token(
+    repo_root: Path,
+    path: Path,
+    *,
+    label: str,
+) -> str:
+    """Return one operator-stable engine component identity token."""
+
+    resolved_path = path.resolve()
+    repo_root = repo_root.resolve()
+    path_parts = resolved_path.parts
+    if "devcovenant" in path_parts:
+        package_root_index = max(
+            index
+            for index, path_part in enumerate(path_parts)
+            if path_part == "devcovenant"
+        )
+        package_relative = Path(*path_parts[package_root_index:]).as_posix()
+        return f"module:{package_relative}"
+    try:
+        return "repo:" + resolved_path.relative_to(repo_root).as_posix()
+    except ValueError:
+        return f"component:{label}"
 
 
 def _serialize_hash_targets(

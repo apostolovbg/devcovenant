@@ -44,6 +44,7 @@ def _run_check(
     """Run policy checks through the engine."""
     from devcovenant.core.execution import (
         cleanup_repo_bytecode_artifacts,
+        devcovenant_banner_title,
         print_banner,
         print_step,
         warn_version_mismatch,
@@ -51,7 +52,7 @@ def _run_check(
     from devcovenant.core.policy_runtime import DevCovenantEngine
     from devcovenant.core.refresh_runtime import refresh_repo
 
-    print_banner("DevCovenant run", "🚀")
+    print_banner(devcovenant_banner_title(), "🚀")
     print_step("Command: check", "🧭")
     if apply_fixes or run_refresh or cleanup_bytecode:
         print_step("Mode: gate-orchestrated", "🛡️")

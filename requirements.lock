@@ -129,7 +129,7 @@ markdown-it-py==4.0.0
 mdurl==0.1.2
     # via -r requirements.in
 
-more-itertools==10.8.0
+more-itertools==11.0.1
     # via -r requirements.in
 
 msgpack==1.1.2

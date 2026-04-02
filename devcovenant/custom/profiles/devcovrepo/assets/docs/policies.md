@@ -171,6 +171,9 @@ emitted lock stays deterministic.
 Tracked dependency fingerprints must stay checkout-stable.
 They should come from repo-relative identities plus file content, not from
 absolute local paths or machine-local runtime details.
+That operator-stable identity rule also covers installed-command paths such as
+`pipx`, so the same surface inputs produce the same tracked fingerprint whether
+DevCovenant runs from a source checkout or from an installed operator.
 Anything that only makes sense for one machine or one command run belongs
 under `devcovenant/registry/runtime/**`, not in tracked registry state.
 

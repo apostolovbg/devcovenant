@@ -54,6 +54,7 @@ def run(args: argparse.Namespace) -> int:
     """Execute clean command from parsed arguments."""
     from devcovenant.core.cleanup import clean_repo
     from devcovenant.core.execution import (
+        devcovenant_banner_title,
         print_banner,
         print_step,
         resolve_repo_root,
@@ -61,7 +62,7 @@ def run(args: argparse.Namespace) -> int:
 
     repo_root = resolve_repo_root(require_install=True)
 
-    print_banner("DevCovenant run", "🚀")
+    print_banner(devcovenant_banner_title(), "🚀")
     print_step("Command: clean", "🧭")
     print_banner("Cleanup", "🧹")
 

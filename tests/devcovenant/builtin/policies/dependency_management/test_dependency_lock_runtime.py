@@ -155,6 +155,80 @@ def _unit_test_engine_hash_is_checkout_path_insensitive() -> None:
         assert first == second
 
 
+def _unit_test_engine_hash_is_operator_path_insensitive() -> None:
+    """Engine hash should match source-tree and installed operator roots."""
+
+    module = importlib.import_module(MODULE)
+    with tempfile.TemporaryDirectory() as temp_dir:
+        repo_root = Path(temp_dir)
+        runtime_rel = Path(
+            "devcovenant/builtin/policies/dependency_management/"
+            "dependency_lock_runtime.py"
+        )
+        policy_rel = Path(
+            "devcovenant/builtin/policies/dependency_management/"
+            "dependency_management.py"
+        )
+        script_rel = Path("devcovenant/custom/policies/demo/demo.py")
+        descriptor_rel = script_rel.with_suffix(".yaml")
+        installed_root = repo_root / ".pipx" / "venvs" / "devcovenant"
+        installed_runtime = installed_root / runtime_rel
+        installed_policy = installed_root / policy_rel
+        local_runtime = repo_root / runtime_rel
+        local_policy = repo_root / policy_rel
+        local_script = repo_root / script_rel
+        local_descriptor = repo_root / descriptor_rel
+
+        for target, content in (
+            (installed_runtime, "runtime\n"),
+            (installed_policy, "policy\n"),
+            (local_runtime, "runtime\n"),
+            (local_policy, "policy\n"),
+            (local_script, "script\n"),
+            (local_descriptor, "descriptor\n"),
+        ):
+            target.parent.mkdir(parents=True, exist_ok=True)
+            target.write_text(content, encoding="utf-8")
+
+        fake_script = type(
+            "ResolvedScriptLocation",
+            (),
+            {"path": local_script},
+        )()
+
+        with patch.object(module, "__file__", str(installed_runtime)):
+            with patch.object(
+                module.dependency_management,
+                "__file__",
+                str(installed_policy),
+            ):
+                with patch.object(
+                    module,
+                    "resolve_script_location",
+                    return_value=fake_script,
+                ):
+                    installed_hash = module._dependency_refresh_engine_hash(
+                        repo_root
+                    )
+
+        with patch.object(module, "__file__", str(local_runtime)):
+            with patch.object(
+                module.dependency_management,
+                "__file__",
+                str(local_policy),
+            ):
+                with patch.object(
+                    module,
+                    "resolve_script_location",
+                    return_value=fake_script,
+                ):
+                    local_hash = module._dependency_refresh_engine_hash(
+                        repo_root
+                    )
+
+        assert installed_hash == local_hash
+
+
 def _unit_test_refresh_runtime_updates_inventory_without_lock_change() -> None:
     """Lock refresh should still repair stale license inventory artifacts."""
     module = importlib.import_module(MODULE)
@@ -1105,6 +1179,10 @@ class GeneratedUnittestCases(unittest.TestCase):
     def test_engine_hash_is_checkout_path_insensitive(self):
         """Run path-stable dependency engine hash assertions."""
         _unit_test_engine_hash_is_checkout_path_insensitive()
+
+    def test_engine_hash_is_operator_path_insensitive(self):
+        """Run source-vs-installed engine hash stability assertions."""
+        _unit_test_engine_hash_is_operator_path_insensitive()
 
     def test_refresh_runtime_updates_inventory_even_without_lock_change(self):
         """Run no-lock-change inventory repair assertions."""

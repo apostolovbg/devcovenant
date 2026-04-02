@@ -24,6 +24,7 @@ def _build_parser() -> argparse.ArgumentParser:
 def run(args: argparse.Namespace) -> int:
     """Execute the workflow-run command from parsed arguments."""
     from devcovenant.core.execution import (
+        devcovenant_banner_title,
         print_banner,
         print_step,
         resolve_repo_root,
@@ -35,7 +36,7 @@ def run(args: argparse.Namespace) -> int:
     del args
     repo_root = resolve_repo_root(require_install=True)
 
-    print_banner("DevCovenant run", "🚀")
+    print_banner(devcovenant_banner_title(), "🚀")
     print_step("Command: run", "🧭")
     run_bootstrap_registry_refresh(repo_root)
     warn_version_mismatch(repo_root)

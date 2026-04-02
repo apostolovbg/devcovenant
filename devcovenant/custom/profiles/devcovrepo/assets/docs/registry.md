@@ -81,6 +81,9 @@ behavior.
 Tracked fingerprints must stay checkout-stable.
 They should be derived from repo-relative identity plus content, not from
 absolute machine-local checkout paths.
+Installed operator roots such as `pipx` must not change those tracked values;
+the same repo content should converge to the same tracked registry state from
+source and installed command paths alike.
 If evidence is inherently machine-local or session-local, it belongs under
 `devcovenant/registry/runtime/` instead.
 The same rule applies to rendered messages and diagnostics that talk about

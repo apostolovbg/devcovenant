@@ -35,7 +35,9 @@ def _unit_test_execution_symbol_contract_is_stable() -> None:
     expected = [
         "ChildOutputChannel",
         "configure_repo_pycache_prefix",
+        "devcovenant_banner_title",
         "record_workflow_run_result",
+        "read_package_version",
         "resolve_declared_workflow_run",
         "resolve_managed_environment_for_stage",
         "resolve_child_output_plan_for_channel",
@@ -69,6 +71,7 @@ def _unit_test_execution_symbols_cover_runtime_helpers() -> None:
         "configure_logs_keep_last_from_config",
         "configure_output_mode_from_config",
         "clear_active_run_log_context",
+        "devcovenant_banner_title",
         "emit_active_run_log_pointer",
         "find_git_root",
         "finalize_active_run_log_context",
@@ -80,6 +83,7 @@ def _unit_test_execution_symbols_cover_runtime_helpers() -> None:
         "print_banner",
         "print_step",
         "read_local_version",
+        "read_package_version",
         "record_gate_status",
         "resolve_repo_root",
         "resolve_child_output_plan_for_channel",
@@ -130,6 +134,7 @@ def _unit_test_execution_symbol_assertions_cover_public_api() -> None:
     assert module.configure_logs_keep_last_from_config
     assert module.configure_output_mode
     assert module.configure_output_mode_from_config
+    assert module.devcovenant_banner_title
     assert module.emit_active_run_log_pointer
     assert module.finalize_active_run_log_context
     assert module.find_git_root
@@ -141,6 +146,7 @@ def _unit_test_execution_symbol_assertions_cover_public_api() -> None:
     assert module.print_banner
     assert module.print_step
     assert module.read_local_version
+    assert module.read_package_version
     assert module.record_gate_status
     assert module.record_workflow_run_result
     assert module.registry_run_commands
@@ -204,6 +210,23 @@ def _unit_test_console_reporter_flushes_console_streams_by_default() -> None:
 
     assert stream.writes == ["live line\n"]
     assert stream.flush_calls == 1
+
+
+def _unit_test_banner_title_reads_canonical_version_file() -> None:
+    """Banner helpers should read the packaged version from VERSION."""
+    module = importlib.import_module(MODULE)
+    version_path = Path(module.__file__).resolve().parents[1] / "VERSION"
+    expected_version = version_path.read_text(encoding="utf-8").strip()
+    previous_cache = module._PACKAGE_VERSION_CACHE
+    try:
+        module._PACKAGE_VERSION_CACHE = None
+        assert module.read_package_version() == expected_version
+        assert (
+            module.devcovenant_banner_title()
+            == f"DevCovenant {expected_version}"
+        )
+    finally:
+        module._PACKAGE_VERSION_CACHE = previous_cache
 
 
 def _unit_test_console_reporter_suppresses_stdout_in_quiet_mode() -> None:
@@ -1724,6 +1747,10 @@ class ExecutionTests(unittest.TestCase):
     def test_contract_index_freezes_documentation_writing_rules(self):
         """Run documentation-writing contract assertions."""
         _unit_test_contract_index_freezes_documentation_writing_rules()
+
+    def test_banner_title_reads_canonical_version_file(self):
+        """Run canonical VERSION banner-title assertions."""
+        _unit_test_banner_title_reads_canonical_version_file()
 
     def test_repo_pycache_prefix_sets_env_and_runtime_prefix(self):
         """Run repo pycache-prefix env and runtime-prefix assertions."""

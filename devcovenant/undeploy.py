@@ -267,6 +267,7 @@ def _build_parser() -> argparse.ArgumentParser:
 def run(args: argparse.Namespace) -> int:
     """Execute undeploy command."""
     from devcovenant.core.execution import (
+        devcovenant_banner_title,
         print_banner,
         print_step,
         resolve_repo_root,
@@ -275,7 +276,7 @@ def run(args: argparse.Namespace) -> int:
     del args
     repo_root = resolve_repo_root(require_install=True)
 
-    print_banner("DevCovenant run", "🚀")
+    print_banner(devcovenant_banner_title(), "🚀")
     print_step("Command: undeploy", "🧭")
     print_banner("Undeploy", "📤")
 

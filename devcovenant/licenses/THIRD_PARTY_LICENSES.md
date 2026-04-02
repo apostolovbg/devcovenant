@@ -6,7 +6,6 @@ texts stored under `devcovenant/licenses/`.
 
 ## License Report
 - `devcovenant/runtime-requirements.lock`
-- `pyproject.toml`
 
 ## Dependency License Inventory
 - `packaging==26.0`: `devcovenant/licenses/packaging-26.0.txt`

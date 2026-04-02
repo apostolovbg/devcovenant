@@ -62,6 +62,41 @@ Example:
 
 
 - 2026-04-02:
+  Change: hardened operator-stable dependency fingerprints and replaced
+          generic command banners with the packaged DevCovenant version.
+  Why: fixed pipx/source lifecycle drift in tracked dependency state and
+       aligned runtime banners with the canonical `devcovenant/VERSION` file.
+  Impact: stabilized gate/start proofs across operator modes and identified
+          the active package build in command banners.
+  Files:
+  CHANGELOG.md
+  devcovenant/builtin/policies/dependency_management/\
+    dependency_lock_runtime.py
+  devcovenant/check.py
+  devcovenant/clean.py
+  devcovenant/core/execution.py
+  devcovenant/custom/profiles/devcovrepo/assets/docs/installation.md
+  devcovenant/custom/profiles/devcovrepo/assets/docs/policies.md
+  devcovenant/custom/profiles/devcovrepo/assets/docs/registry.md
+  devcovenant/deploy.py
+  devcovenant/docs/installation.md
+  devcovenant/docs/policies.md
+  devcovenant/docs/registry.md
+  devcovenant/install.py
+  devcovenant/licenses/THIRD_PARTY_LICENSES.md
+  devcovenant/refresh.py
+  devcovenant/registry/registry.yaml
+  devcovenant/run.py
+  devcovenant/undeploy.py
+  devcovenant/uninstall.py
+  devcovenant/upgrade.py
+  licenses/THIRD_PARTY_LICENSES.md
+  requirements.lock
+  tests/devcovenant/builtin/policies/dependency_management/\
+    test_dependency_lock_runtime.py
+  tests/devcovenant/core/test_execution.py
+
+- 2026-04-02:
   Change: added `devcovenant/core/README.md` to the packaged manifest and
           setuptools package-data contract.
   Why: fixed installed artifact proof so structure-validation can restore the
