@@ -10,10 +10,13 @@ from io import StringIO
 from pathlib import Path
 from unittest.mock import patch
 
+import yaml
+
 _INSTALLED_SEED_DIR: tempfile.TemporaryDirectory[str] | None = None
 _INSTALLED_SEED_ROOT: Path | None = None
 _REFRESHED_SEED_DIR: tempfile.TemporaryDirectory[str] | None = None
 _REFRESHED_SEED_ROOT: Path | None = None
+_REPO_ROOT = Path(__file__).resolve().parents[1]
 
 
 class MonkeyPatch:
@@ -108,3 +111,24 @@ def copy_refreshed_repo(repo_root: Path) -> None:
         dirs_exist_ok=True,
         copy_function=shutil.copy,
     )
+
+
+def current_project_version(repo_root: Path | None = None) -> str:
+    """Return the version from the repo's configured version file."""
+    root = repo_root or _REPO_ROOT
+    config_path = root / "devcovenant" / "config.yaml"
+    payload = yaml.safe_load(config_path.read_text(encoding="utf-8")) or {}
+    from devcovenant.core import refresh_runtime
+
+    relative_version_file = refresh_runtime._project_version_file_from_config(
+        payload
+    )
+    version_path = root / relative_version_file
+    return version_path.read_text(encoding="utf-8").strip()
+
+
+def current_devcovenant_version(repo_root: Path | None = None) -> str:
+    """Return the bundled DevCovenant package version for one repo root."""
+    root = repo_root or _REPO_ROOT
+    version_path = root / "devcovenant" / "VERSION"
+    return version_path.read_text(encoding="utf-8").strip()

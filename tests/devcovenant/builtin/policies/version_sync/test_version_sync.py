@@ -131,6 +131,7 @@ class TestVersionSyncPolicy(unittest.TestCase):
         """Module-level class alias should point at the policy class."""
         self.assertIs(VersionSyncCheck, version_sync.VersionSyncCheck)
         self.assertEqual(VersionSyncCheck().policy_id, "version-sync")
+        self.assertTrue(callable(version_sync.write_synced_target_version))
 
     def _write_changelog(self, root: Path, version: str) -> Path:
         """Write a changelog with the provided version."""
@@ -187,7 +188,7 @@ class TestVersionSyncPolicy(unittest.TestCase):
 
             self._write_readme(repo_root, "README.md", "2.0.0")
             self._write_readme(repo_root, "docs/README.md", "1.0.0")
-            self._write_pyproject(repo_root, "1.0.0")
+            self._write_pyproject(repo_root, "2.0.0")
             self._write_pyproject(repo_root, "1.0.0", "app/pyproject.toml")
             self._write_license(repo_root, "LICENSE", "1.0.0")
             self._write_license(repo_root, "app/license.txt", "1.0.0")
@@ -204,6 +205,22 @@ class TestVersionSyncPolicy(unittest.TestCase):
 
             mismatch = [v for v in violations if "does not match" in v.message]
             self.assertTrue(mismatch)
+            manifest_mismatch = next(
+                violation
+                for violation in mismatch
+                if violation.file_path is not None
+                and violation.file_path.resolve()
+                == (repo_root / "pyproject.toml").resolve()
+            )
+            self.assertTrue(manifest_mismatch.can_auto_fix)
+            self.assertEqual(
+                manifest_mismatch.context["extractor_name"],
+                "manifest_project_version",
+            )
+            self.assertEqual(
+                manifest_mismatch.context["tracked_version"],
+                "1.0.0",
+            )
 
     def test_requires_declared_targets_to_exist(self):
         """Declared role targets should be required when configured."""

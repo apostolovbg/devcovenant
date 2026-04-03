@@ -12,7 +12,9 @@ import yaml
 
 import devcovenant.core.refresh_runtime as refresh_flow
 from devcovenant import deploy, install
-from tests import copy_installed_repo
+from tests import copy_installed_repo, current_devcovenant_version
+
+CURRENT_DEVCOVENANT_VERSION = current_devcovenant_version()
 
 
 def _set_config_reviewed(repo_root: Path, enabled: bool) -> None:
@@ -73,7 +75,7 @@ def _unit_test_deploy_adopts_pre_authored_spec_doc() -> None:
             "**Doc ID:** SPEC\n"
             "**Doc Type:** specification\n"
             "**Project Version:** 9.9.9\n"
-            "**DevCovenant Version:** 1.0.1.dev1\n\n"
+            f"**DevCovenant Version:** {CURRENT_DEVCOVENANT_VERSION}\n\n"
             "Imported app specification body.\n",
             encoding="utf-8",
         )

@@ -201,9 +201,9 @@ class ProjectGovernanceTests(unittest.TestCase):
         rendered = render_identity_placeholders(
             "{{ PROJECT_NAME }} {{ PROJECT_VERSION }}",
             state,
-            project_version="1.0.1.dev1",
+            project_version="2.3.4",
         )
-        self.assertEqual(rendered, "devcovenant 1.0.1.dev1")
+        self.assertEqual(rendered, "devcovenant 2.3.4")
 
     def test_render_identity_placeholders_replaces_copyright_notice(self):
         """Identity placeholders should support copyright notice text."""

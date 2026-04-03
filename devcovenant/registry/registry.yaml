@@ -1,7 +1,7 @@
 metadata:
   schema_version: 1
   registry_layout: single-root
-  policy_registry_input_hash: b9c5cce5784c0bd672aa1ba284c2e87920c4fa6d0abdeb6aee0e36cd38803f09
+  policy_registry_input_hash: 4b6f3ce97312090fbab918a2d8d69f37040c08f450113c70ee6af731d575fab3
 project-governance:
   project_name: devcovenant
   project_description: devcovenant is a repository governance framework.
@@ -9932,11 +9932,12 @@ policies:
       use non-SemVer version formats. Optional `role_legality_schemes`
       entries add stricter ecosystem legality for selected roles without
       collapsing repo-level version governance back into one packaging-only
-      scheme.
+      scheme. Autofix repairs mismatched declared targets by rewriting the
+      target's version token to the current canonical version.
     metadata:
       id: version-sync
       severity: error
-      auto_fix: 'false'
+      auto_fix: 'true'
       enforcement: active
       enabled: 'true'
       custom: 'false'
@@ -10014,13 +10015,13 @@ policies:
       auto_fix:
         descriptor:
           values:
-          - 'false'
+          - 'true'
           behavior: base
           replaced_inherited_values:
           - ()
         effective:
           values:
-          - 'false'
+          - 'true'
       enforcement:
         descriptor:
           values:
@@ -10346,7 +10347,7 @@ policies:
     runtime_metadata_options:
       id: version-sync
       severity: error
-      auto_fix: false
+      auto_fix: true
       enforcement: active
       enabled: true
       custom: false
@@ -10398,7 +10399,7 @@ policies:
     runtime_effective_options:
       id: version-sync
       severity: error
-      auto_fix: false
+      auto_fix: true
       enforcement: active
       enabled: true
       custom: false
@@ -10439,7 +10440,7 @@ policies:
     - docs=>devcovenant/registry/README.md
     origin: builtin
     script_exists: true
-    hash: ee8edeb4f261ae144b4df6938fd5e4d2133e18755690adc937d34ebe3832bfe1
+    hash: c9057ad597fe794db8b885fe2276dc6d43138881ffc97f372a56c028a9603b32
     script_path: builtin/version_sync.py
   version-governance:
     enabled: true

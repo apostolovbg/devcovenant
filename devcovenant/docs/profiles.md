@@ -193,6 +193,13 @@ Examples include:
 6. reusable `ci_and_test` fragments for stack-specific CI jobs
 7. managed-environment roots that cleanup and other services need to respect
 
+Version ownership belongs here too.
+Profiles and overlays decide which file is the governed project version source
+through `version-governance.version_file` and `version-sync.version_file`.
+That lets one repository treat `VERSION` as canonical, another use a package
+subpath, and both still keep the rest of their declared version-bearing
+targets synchronized through the same policy contract.
+
 The CI boundary matters.
 The builtin `github` workflow template should stay generic.
 It should bootstrap DevCovenant from the shipped

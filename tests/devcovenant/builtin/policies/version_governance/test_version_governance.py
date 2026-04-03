@@ -466,8 +466,8 @@ def _unit_test_pep440_dev_review_line_can_follow_same_base_final_section(
     """PEP 440 review lines may reopen the same base version with `.devN`."""
     version_file, changelog, other_file = _write_version_files(
         tmp_path,
-        "1.0.1.dev1",
-        "1.0.1",
+        "2.0.0.dev1",
+        "2.0.0",
         "- 2026-03-16: reopen release for review",
     )
     context = CheckContext(

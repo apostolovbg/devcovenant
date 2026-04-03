@@ -60,6 +60,9 @@ The same applies to policy-resolved metadata such as
 surface declarations, the tracked registry records the new resolved lock
 paths, dependency selectors, artifact targets, and hash-target settings that
 later drive lock refresh behavior.
+The same rule applies to `version-sync`: the tracked registry records the
+resolved version source file, role extractors, and role targets that define
+which docs, changelog files, and package manifests must stay synchronized.
 Those dependency selectors stay repo-relative and exact in the tracked
 registry; DevCovenant does not silently widen a declared `requirements.in`
 entry into a basename match for profile asset templates or other same-name

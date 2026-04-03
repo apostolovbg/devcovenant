@@ -28,6 +28,11 @@ _PROJECT_VERSION_LINE_PATTERN = re.compile(
     r"(?P<version>.+?)\s*$",
     flags=re.MULTILINE,
 )
+_PROJECT_VERSION_LINE_EDIT_PATTERN = re.compile(
+    r"^(?P<prefix>\s*(?:\*\*Project Version:\*\*|Project Version:)\s*)"
+    r"(?P<version>.+?)(?P<suffix>\s*)$",
+    flags=re.MULTILINE,
+)
 _EXTRACTOR_NAMES = {
     "project_version_line",
     "changelog_header_version",
@@ -312,6 +317,13 @@ class VersionSyncCheck(PolicyCheck):
                                 f"{target_version} does not match "
                                 f"{version_file.name} ({tracked_version})"
                             ),
+                            can_auto_fix=extractor_name in _EXTRACTOR_NAMES,
+                            context=self._mismatch_fix_context(
+                                target=target,
+                                extractor_name=extractor_name,
+                                tracked_version=tracked_version,
+                                changelog_prefix=changelog_prefix,
+                            ),
                         )
                     )
 
@@ -385,9 +397,34 @@ class VersionSyncCheck(PolicyCheck):
                                         f"match {version_file.name} "
                                         f"({tracked_version})"
                                     ),
+                                    can_auto_fix=True,
+                                    context=self._mismatch_fix_context(
+                                        target=changelog_file,
+                                        extractor_name=(
+                                            "changelog_header_version"
+                                        ),
+                                        tracked_version=tracked_version,
+                                        changelog_prefix=changelog_prefix,
+                                    ),
                                 )
                             )
         return violations
+
+    @staticmethod
+    def _mismatch_fix_context(
+        *,
+        target: Path,
+        extractor_name: str,
+        tracked_version: str,
+        changelog_prefix: str,
+    ) -> dict[str, str]:
+        """Return stable autofix context for one synchronized target."""
+        return {
+            "target_path": str(target),
+            "extractor_name": extractor_name,
+            "tracked_version": tracked_version,
+            "changelog_prefix": changelog_prefix,
+        }
 
     @staticmethod
     def _versions_match(
@@ -844,3 +881,247 @@ class VersionSyncCheck(PolicyCheck):
             if stripped.startswith(prefix_text):
                 return stripped[len(prefix_text) :].strip() or None
         return None
+
+
+def write_synced_target_version(
+    target: Path,
+    *,
+    extractor_name: str,
+    tracked_version: str,
+    changelog_prefix: str,
+) -> bool:
+    """Write the tracked version into one declared synchronized target."""
+    if extractor_name == "project_version_line":
+        return _write_project_version_line(target, tracked_version)
+    if extractor_name == "changelog_header_version":
+        return _write_changelog_header_version(
+            target,
+            tracked_version,
+            changelog_prefix,
+        )
+    if extractor_name == "manifest_project_version":
+        return _write_manifest_project_version(target, tracked_version)
+    raise ValueError(f"Unsupported version extractor `{extractor_name}`.")
+
+
+def _write_project_version_line(target: Path, tracked_version: str) -> bool:
+    """Replace one existing Project Version line with the tracked version."""
+    text = target.read_text(encoding="utf-8")
+    if not _PROJECT_VERSION_LINE_EDIT_PATTERN.search(text):
+        raise ValueError(
+            f"Target lacks a Project Version line: {target.as_posix()}"
+        )
+    updated = _PROJECT_VERSION_LINE_EDIT_PATTERN.sub(
+        lambda match: (
+            f"{match.group('prefix')}{tracked_version}"
+            f"{match.group('suffix')}"
+        ),
+        text,
+        count=1,
+    )
+    if updated == text:
+        return False
+    target.write_text(updated, encoding="utf-8")
+    return True
+
+
+def _write_changelog_header_version(
+    target: Path,
+    tracked_version: str,
+    changelog_prefix: str,
+) -> bool:
+    """Replace the newest changelog header version with the tracked version."""
+    text = target.read_text(encoding="utf-8")
+    lines = text.splitlines(keepends=True)
+    marker = "## Log changes here"
+    prefix_text = changelog_prefix.strip()
+    start_idx = 0
+    for idx, line in enumerate(lines):
+        if line.strip() == marker:
+            start_idx = idx
+            break
+    for idx in range(start_idx, len(lines)):
+        stripped = lines[idx].strip()
+        if not stripped.startswith(prefix_text):
+            continue
+        line = lines[idx]
+        line_ending = "\n" if line.endswith("\n") else ""
+        leading = line[: len(line) - len(line.lstrip())]
+        replacement = f"{leading}{prefix_text} {tracked_version}{line_ending}"
+        if replacement == line:
+            return False
+        lines[idx] = replacement
+        target.write_text("".join(lines), encoding="utf-8")
+        return True
+    raise ValueError(
+        f"Target lacks a changelog header using `{prefix_text}`: "
+        f"{target.as_posix()}"
+    )
+
+
+def _write_manifest_project_version(
+    target: Path,
+    tracked_version: str,
+) -> bool:
+    """Replace one supported manifest version with the tracked version."""
+    suffix = target.suffix.lower()
+    if suffix == ".toml":
+        return _write_manifest_version_toml(target, tracked_version)
+    if suffix == ".json":
+        return _write_manifest_version_json(target, tracked_version)
+    if suffix in {".yaml", ".yml"}:
+        return _write_manifest_version_yaml(target, tracked_version)
+    raise ValueError(
+        "manifest_project_version supports only TOML/JSON/YAML files; "
+        f"got `{target.name}`."
+    )
+
+
+def _write_manifest_version_toml(target: Path, tracked_version: str) -> bool:
+    """Replace manifest version fields in TOML package manifests."""
+    text = target.read_text(encoding="utf-8")
+    payload = tomllib.loads(text)
+    updated = text
+    changed = False
+    found = False
+
+    project = payload.get("project")
+    if isinstance(project, dict):
+        found = True
+        rewritten = _replace_or_append_toml_section_field(
+            updated,
+            section_name="project",
+            field_name="version",
+            toml_value=json.dumps(tracked_version),
+        )
+        if rewritten != updated:
+            updated = rewritten
+            changed = True
+
+    tool = payload.get("tool")
+    if isinstance(tool, dict):
+        poetry = tool.get("poetry")
+        if isinstance(poetry, dict):
+            found = True
+            rewritten = _replace_or_append_toml_section_field(
+                updated,
+                section_name="tool.poetry",
+                field_name="version",
+                toml_value=json.dumps(tracked_version),
+            )
+            if rewritten != updated:
+                updated = rewritten
+                changed = True
+
+    if not found:
+        raise ValueError(
+            f"Target lacks a supported manifest version field: "
+            f"{target.as_posix()}"
+        )
+    if not changed:
+        return False
+    target.write_text(updated, encoding="utf-8")
+    return True
+
+
+def _replace_or_append_toml_section_field(
+    text: str,
+    *,
+    section_name: str,
+    field_name: str,
+    toml_value: str,
+) -> str:
+    """Replace or append one single-line field in a TOML section."""
+    section_re = re.compile(
+        rf"(?ms)^\[{re.escape(section_name)}\]\s*\n(?P<body>.*?)(?=^\[|\Z)"
+    )
+    match = section_re.search(text)
+    if match is None:
+        return text
+    body = match.group("body")
+    field_re = re.compile(rf"(?m)^{re.escape(field_name)}\s*=.*$")
+    replacement_line = f"{field_name} = {toml_value}"
+    if field_re.search(body):
+        updated_body = field_re.sub(replacement_line, body, count=1)
+    else:
+        separator = "" if not body or body.endswith("\n") else "\n"
+        updated_body = f"{body}{separator}{replacement_line}\n"
+    return (
+        text[: match.start("body")] + updated_body + text[match.end("body") :]
+    )
+
+
+def _write_manifest_version_json(target: Path, tracked_version: str) -> bool:
+    """Replace one JSON manifest version with the tracked version."""
+    payload = json.loads(target.read_text(encoding="utf-8"))
+    if not isinstance(payload, dict):
+        raise ValueError(
+            f"JSON manifest must contain a mapping: {target.as_posix()}"
+        )
+    changed = False
+    found = False
+    direct = payload.get("version")
+    if isinstance(direct, str):
+        found = True
+        if direct != tracked_version:
+            payload["version"] = tracked_version
+            changed = True
+    else:
+        project = payload.get("project")
+        if isinstance(project, dict):
+            project_version = project.get("version")
+            if isinstance(project_version, str):
+                found = True
+                if project_version != tracked_version:
+                    project["version"] = tracked_version
+                    changed = True
+    if not found:
+        raise ValueError(
+            f"Target lacks a supported manifest version field: "
+            f"{target.as_posix()}"
+        )
+    if not changed:
+        return False
+    target.write_text(
+        json.dumps(payload, indent=2, ensure_ascii=True) + "\n",
+        encoding="utf-8",
+    )
+    return True
+
+
+def _write_manifest_version_yaml(target: Path, tracked_version: str) -> bool:
+    """Replace one YAML manifest version with the tracked version."""
+    payload = yaml.safe_load(target.read_text(encoding="utf-8"))
+    if not isinstance(payload, dict):
+        raise ValueError(
+            f"YAML manifest must contain a mapping: {target.as_posix()}"
+        )
+    changed = False
+    found = False
+    direct = payload.get("version")
+    if isinstance(direct, str):
+        found = True
+        if direct != tracked_version:
+            payload["version"] = tracked_version
+            changed = True
+    else:
+        project = payload.get("project")
+        if isinstance(project, dict):
+            project_version = project.get("version")
+            if isinstance(project_version, str):
+                found = True
+                if project_version != tracked_version:
+                    project["version"] = tracked_version
+                    changed = True
+    if not found:
+        raise ValueError(
+            f"Target lacks a supported manifest version field: "
+            f"{target.as_posix()}"
+        )
+    if not changed:
+        return False
+    target.write_text(
+        yaml.safe_dump(payload, sort_keys=False),
+        encoding="utf-8",
+    )
+    return True

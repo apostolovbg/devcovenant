@@ -12,6 +12,10 @@ import yaml
 import devcovenant.core.managed_docs as managed_docs
 import devcovenant.core.project_governance as project_governance
 from devcovenant import install
+from tests import current_devcovenant_version, current_project_version
+
+CURRENT_PROJECT_VERSION = current_project_version()
+CURRENT_DEVCOVENANT_VERSION = current_devcovenant_version()
 
 
 def _read_yaml(path: Path) -> dict[str, object]:
@@ -271,7 +275,7 @@ class ManagedDocsTests(unittest.TestCase):
                 "**Doc ID:** SPEC\n"
                 "**Doc Type:** specification\n"
                 "**Project Version:** 0.1.0\n"
-                "**DevCovenant Version:** 1.0.1.dev1\n\n"
+                f"**DevCovenant Version:** {CURRENT_DEVCOVENANT_VERSION}\n\n"
                 "Imported spec body.\n",
                 encoding="utf-8",
             )
@@ -560,9 +564,9 @@ class ManagedDocsTests(unittest.TestCase):
                 "# Development Plan\n"
                 "**Doc ID:** PLAN\n"
                 "**Doc Type:** plan\n"
-                "**Project Version:** 1.0.1.dev1\n"
+                f"**Project Version:** {CURRENT_PROJECT_VERSION}\n"
                 "**Last Updated:** 2026-03-01\n"
-                "**DevCovenant Version:** 1.0.1.dev1\n\n"
+                f"**DevCovenant Version:** {CURRENT_DEVCOVENANT_VERSION}\n\n"
                 "This is the real planning body.\n\n"
                 "## Active Work\n"
                 "1. [not done] Preserve authored docs.\n",
@@ -674,13 +678,13 @@ class ManagedDocsTests(unittest.TestCase):
                 "# DevCovenant Development Guide\n"
                 "**Doc ID:** AGENTS\n"
                 "**Doc Type:** policy-source\n"
-                "**Project Version:** 1.0.1.dev1\n"
+                f"**Project Version:** {CURRENT_PROJECT_VERSION}\n"
                 "**Project Stage:** stable\n"
                 "**Maintenance Stance:** active\n"
                 "**Compatibility Policy:** breaking-allowed\n"
                 "**Versioning Mode:** versioned\n"
                 "**Last Updated:** 2026-03-01\n"
-                "**DevCovenant Version:** 1.0.1.dev1\n\n"
+                f"**DevCovenant Version:** {CURRENT_DEVCOVENANT_VERSION}\n\n"
                 "<!-- DEVCOV:BEGIN -->\n"
                 "old managed block\n"
                 "<!-- DEVCOV:END -->\n\n"

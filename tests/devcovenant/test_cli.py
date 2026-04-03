@@ -18,9 +18,10 @@ import devcovenant
 import devcovenant.core.execution as execution_runtime_module
 from devcovenant import cli
 from devcovenant.core.repository_paths import display_path
-from tests import MonkeyPatch
+from tests import MonkeyPatch, current_devcovenant_version
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
+CURRENT_DEVCOVENANT_VERSION = current_devcovenant_version()
 ROOT_COMMAND_MODULES = (
     "asset",
     "check",
@@ -181,7 +182,10 @@ def _unit_test_cli_version_flag_prints_version(monkeypatch) -> None:
             raise AssertionError("Expected SystemExit from cli.main().")
 
     assert code == 0
-    assert stdout_buffer.getvalue().strip() == "devcovenant 1.0.1.dev1"
+    assert (
+        stdout_buffer.getvalue().strip()
+        == f"devcovenant {CURRENT_DEVCOVENANT_VERSION}"
+    )
 
 
 def _unit_test_cli_reexecs_when_managed_env_differs(monkeypatch) -> None:
@@ -866,6 +870,10 @@ def _unit_test_source_checkout_import_disables_bytecode() -> None:
             "from devcovenant import __version__\n",
             encoding="utf-8",
         )
+        (package_dir / "VERSION").write_text(
+            CURRENT_DEVCOVENANT_VERSION + "\n",
+            encoding="utf-8",
+        )
         (package_dir / "cli.py").write_text(
             "__all__ = []\n",
             encoding="utf-8",
@@ -917,7 +925,7 @@ def _unit_test_source_checkout_import_cleans_repo_cache_on_exit() -> None:
         text=True,
     )
     assert result.returncode == 0, result.stderr
-    assert result.stdout.strip() == "1.0.1.dev1"
+    assert result.stdout.strip() == CURRENT_DEVCOVENANT_VERSION
     assert not cache_dir.exists()
 
 
@@ -932,6 +940,10 @@ def _unit_test_non_source_import_keeps_default_bytecode_mode() -> None:
         package_dir.mkdir(parents=True, exist_ok=True)
         (package_dir / "__init__.py").write_text(
             package_init,
+            encoding="utf-8",
+        )
+        (package_dir / "VERSION").write_text(
+            CURRENT_DEVCOVENANT_VERSION + "\n",
             encoding="utf-8",
         )
         env = os.environ.copy()
@@ -982,6 +994,10 @@ def _unit_test_test_mirror_import_disables_bytecode() -> None:
         )
         (package_dir / "__main__.py").write_text(
             "from devcovenant import __version__\n",
+            encoding="utf-8",
+        )
+        (package_dir / "VERSION").write_text(
+            CURRENT_DEVCOVENANT_VERSION + "\n",
             encoding="utf-8",
         )
         (package_dir / "cli.py").write_text(

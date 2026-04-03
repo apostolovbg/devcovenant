@@ -60,6 +60,44 @@ Example:
 
 ## Version 1.0.1.dev1
 
+- 2026-04-03:
+  Change: dehardcoded DevCovenant package version reads, enabled
+          `version-sync` autofix, updated package docs, and revised
+          version-sensitive tests to read governed versions from live
+          sources.
+  Why: removed literal current-version drift in runtime and test surfaces
+       and gave `version-sync` ownership of repairing declared doc,
+       changelog, and manifest mismatches while documenting how project and
+       package versions are sourced.
+  Impact: changing the configured version file now propagates through the
+          governed workflow to declared `version-sync` targets while
+          `devcovenant --version` reads the bundled package `VERSION`
+          file directly.
+  Files:
+  AGENTS.md
+  CHANGELOG.md
+  devcovenant/__init__.py
+  devcovenant/builtin/policies/version_sync/autofix/__init__.py
+  devcovenant/builtin/policies/version_sync/autofix/global.py
+  devcovenant/builtin/policies/version_sync/version_sync.py
+  devcovenant/builtin/policies/version_sync/version_sync.yaml
+  devcovenant/docs/installation.md
+  devcovenant/docs/policies.md
+  devcovenant/docs/profiles.md
+  devcovenant/docs/registry.md
+  devcovenant/registry/registry.yaml
+  tests/__init__.py
+  tests/devcovenant/builtin/policies/version_governance/\
+    test_version_governance.py
+  tests/devcovenant/builtin/policies/version_sync/autofix/\
+    test_global.py
+  tests/devcovenant/builtin/policies/version_sync/test_version_sync.py
+  tests/devcovenant/core/test_managed_docs.py
+  tests/devcovenant/core/test_project_governance.py
+  tests/devcovenant/test_cli.py
+  tests/devcovenant/test_deploy.py
+  tests/devcovenant/test_refresh.py
+
 
 - 2026-04-03:
   Change: optimized heavy lifecycle commands, added phase timing summaries,

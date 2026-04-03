@@ -56,6 +56,13 @@ pipx upgrade devcovenant
 pipx uninstall devcovenant
 ```
 
+`devcovenant --version` reports the bundled DevCovenant package version from
+the shipped `devcovenant/VERSION` file.
+That is separate from the governed project version inside a repository.
+The project version comes from the configured `version-sync.version_file`, and
+the `version-sync` policy repairs declared version-bearing targets so they
+follow that canonical project version during the normal workflow.
+
 That machine install is separate from repository activation.
 Installing the CLI makes `devcovenant` available on the machine.
 Running `devcovenant install` inside a repository adds DevCovenant to that

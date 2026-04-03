@@ -146,6 +146,14 @@ session. That command relaxes only the preserved-old-entry requirement for the
 active session. It does not relax the normal date, summary, or file-coverage
 rules.
 
+`version-sync` is a good example of that split.
+Its check path resolves the configured canonical version file and compares the
+declared role targets against that value.
+Its autofix path rewrites only those declared targets, such as
+Project Version headers, changelog version headers, and declared package
+manifest version fields.
+It does not widen the scope to same-name files elsewhere in the tree.
+
 ## Translators And Language-Aware Policies
 Policies do not need to embed a bespoke parser for every language they touch.
 Language profiles own translator declarations, and policies can ask the shared

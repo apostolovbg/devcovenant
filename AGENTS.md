@@ -2104,7 +2104,7 @@ metadata, then tune bump enforcement to match the selected scheme.
 ```policy-def
 id: version-sync
 severity: error
-auto_fix: 'false'
+auto_fix: 'true'
 enforcement: active
 enabled: 'true'
 custom: 'false'
@@ -2169,5 +2169,6 @@ and any opted-in legal text stay synchronized even when repositories
 use non-SemVer version formats. Optional `role_legality_schemes`
 entries add stricter ecosystem legality for selected roles without
 collapsing repo-level version governance back into one packaging-only
-scheme.
+scheme. Autofix repairs mismatched declared targets by rewriting the
+target's version token to the current canonical version.
 <!-- DEVCOV-POLICIES:END -->

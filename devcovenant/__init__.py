@@ -90,5 +90,16 @@ _SOURCE_CHECKOUT_IMPORT_CACHE_CLEANUP_REGISTERED = (
     _register_source_checkout_import_cleanup()
 )
 
-__version__ = "1.0.1.dev1"
+
+def _read_package_version() -> str:
+    """Read the packaged DevCovenant version from the bundled VERSION file."""
+    version_path = Path(__file__).with_name("VERSION")
+    try:
+        version_text = version_path.read_text(encoding="utf-8").strip()
+    except OSError:
+        return "0.0.0"
+    return version_text or "0.0.0"
+
+
+__version__ = _read_package_version()
 __all__ = ["__version__"]
