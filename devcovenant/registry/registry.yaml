@@ -1,7 +1,7 @@
 metadata:
   schema_version: 1
   registry_layout: single-root
-  policy_registry_input_hash: 42154dc5e9164d9ff5c91704f97e55d6e341514d286eb7d834887bfce00d0bfc
+  policy_registry_input_hash: c13586688e70f14d10c5b07c2103288f0fb24c74be5225bf8a44954bb22566d6
 project-governance:
   project_name: devcovenant
   project_description: devcovenant is a repository governance framework.
@@ -110,7 +110,7 @@ managed-docs:
       project_governance_headers: false
       import_seed: true
       authoritative_source: true
-      body_fingerprint: 3130e3d3782991a2ec2471151c05a62bdae4fc3cb404358822f3b51d843caa48
+      body_fingerprint: 8075c85afddadb2173207eec5587167f9a90cd36f2fb7c98b8c2194a647c6b41
     SECURITY.md:
       enabled: true
       descriptor_path: devcovenant/custom/profiles/devcovrepo/assets/SECURITY.yaml
@@ -5804,7 +5804,9 @@ policies:
       prepare it automatically. Command templates may reference `{current_python}`
       and `{current_bin}` for the currently running interpreter, and
       `{managed_python}`, `{managed_bin}`, `{managed_root}`, `{repo_root}` for the
-      selected target environment.
+      selected target environment. User-facing guidance renders those path tokens
+      with display-safe paths so local absolute roots do not leak into routine
+      messages.
       Active managed-environment policy reuses the current interpreter when it
       already satisfies the contract, re-executes CLI commands in the selected
       interpreter when needed, and only runs bootstrap commands when the target
@@ -6093,7 +6095,7 @@ policies:
     - .venv/bin/python
     origin: builtin
     script_exists: true
-    hash: 4d3f719413e8b62fa48ce28bbf8f0799213da0ee8913ff8a035ff9311630f292
+    hash: 60ac4af868f626c474a57acd0c1e99771632d2516565fb78543a36d4b01c6d5e
     script_path: builtin/managed_environment.py
   modules-need-tests:
     enabled: true
@@ -12876,18 +12878,18 @@ policies:
     - '{{ PROJECT_NAME_PATH }}/runtime-requirements.lock'
     origin: builtin
     script_exists: true
-    hash: 26eef9001ada3225ce4d509b838d3d26f3127f1878e980d41980dbebe42c2e69
+    hash: 007757ac511564ab81f01fb1e416ae6a7c90c3fc4323aac9f5a5d0920a2f5cf0
     script_path: builtin/dependency_management.py
     runtime_state:
       surfaces:
         devcovenant_runtime:
-          input_fingerprint: cb9ae2509b07a76a1361eaeb9d657eb90f8126588c16c3ef26d48e69e9f3ee41
+          input_fingerprint: 187d18dcaeb59d0d8669ef9848a538847c68f9577effb2e1cbb97e835d9c0809
           output_fingerprints:
             lock_file: d15044f8967ae94c97f8ff2ced7b2a8190281243948aae40cf4d2d5c3e911bcc
             third_party_file: 03710e4b9b1d4a694b7f319950a3ac27222743eb35b0409771f9df366a8e8368
             licenses_dir: 96af1bb880755dbfc4adf03d904e33e432446926fb2e04cf315c349d45897fee
         root_workspace:
-          input_fingerprint: f32cf324e3fb1e0f59c6d39667fefec8062556c4d7f2a5c3551a7ed6ec492477
+          input_fingerprint: 36e3311d241d21c6e39ecadb2f5687c9032ea8a8b4780ed9ba22695ad9dc9b9d
           output_fingerprints:
             lock_file: 1ffa0010221836adf150a7d57943660c12b741622e30574fed37634b7b16c24f
             third_party_file: 0c5b309147bb696e457e9a2b5c133dd5c5ce79b5ee4fdf2862f861bbd601219f
@@ -13685,6 +13687,9 @@ profiles:
         manual_commands:
         - '{current_python} -m venv .venv'
         - '{managed_python} -m pip install -r requirements.lock'
+        managed_commands:
+        - start=>{current_python} -m venv .venv
+        - start=>{managed_python} -m pip install -r requirements.lock
     project-governance:
       changelog_file: CHANGELOG.md
       unversioned_label: Unversioned

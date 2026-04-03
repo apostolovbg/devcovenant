@@ -6,7 +6,7 @@
 **Maintenance Stance:** active
 **Compatibility Policy:** forward-only
 **Versioning Mode:** versioned
-**Last Updated:** 2026-04-02
+**Last Updated:** 2026-04-03
 **DevCovenant Version:** 1.0.1.dev1
 
 <!-- DEVCOV:BEGIN -->
@@ -1531,7 +1531,9 @@ environment, and stage-scoped `managed_commands` define how DevCovenant may
 prepare it automatically. Command templates may reference `{current_python}`
 and `{current_bin}` for the currently running interpreter, and
 `{managed_python}`, `{managed_bin}`, `{managed_root}`, `{repo_root}` for the
-selected target environment.
+selected target environment. User-facing guidance renders those path tokens
+with display-safe paths so local absolute roots do not leak into routine
+messages.
 Active managed-environment policy reuses the current interpreter when it
 already satisfies the contract, re-executes CLI commands in the selected
 interpreter when needed, and only runs bootstrap commands when the target

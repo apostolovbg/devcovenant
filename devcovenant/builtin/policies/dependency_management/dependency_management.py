@@ -361,6 +361,10 @@ def resolve_dependency_surfaces(
             raw_entry.get("direct_dependency_files", []),
             label=f"surfaces[{surface_id}].direct_dependency_files",
         )
+        _validate_dependency_input_paths(
+            direct_dependency_files,
+            label=f"surfaces[{surface_id}].direct_dependency_files",
+        )
         dependency_roles = _normalize_dependency_roles(
             raw_entry.get(
                 "dependency_roles",
@@ -381,6 +385,10 @@ def resolve_dependency_surfaces(
         dependency_files = _normalize_surface_paths(
             repo_root,
             raw_entry.get("dependency_files", []),
+            label=f"surfaces[{surface_id}].dependency_files",
+        )
+        _validate_dependency_input_paths(
+            [*role_dependency_files, *dependency_files],
             label=f"surfaces[{surface_id}].dependency_files",
         )
         dependency_globs = _normalize_surface_globs(
@@ -530,6 +538,8 @@ def dependency_surface_matches(
     normalized = _normalized_rel(rel_path)
     if not normalized:
         return False
+    if _is_profile_asset_template_dependency_input(normalized):
+        return False
     if normalized == _normalized_rel(surface.lock_file):
         return True
     return _matches_dependency(
@@ -568,6 +578,38 @@ def _relative_posix(path: Path, repo_root: Path) -> str | None:
         return None
 
 
+def _is_profile_asset_template_dependency_input(rel_path: str) -> bool:
+    """Return True when a path points at a profile-asset `.in` template."""
+    normalized = _normalized_rel(rel_path)
+    if not normalized or Path(normalized).suffix != ".in":
+        return False
+    parts = Path(normalized).parts
+    return (
+        len(parts) >= 6
+        and parts[0] == "devcovenant"
+        and parts[1] in {"builtin", "custom"}
+        and parts[2] == "profiles"
+        and parts[4] == "assets"
+    )
+
+
+def _validate_dependency_input_paths(
+    values: Sequence[str],
+    *,
+    label: str,
+) -> None:
+    """Reject dependency inputs that point at profile-asset templates."""
+    for entry in values:
+        normalized = _normalized_rel(entry)
+        if not _is_profile_asset_template_dependency_input(normalized):
+            continue
+        raise ValueError(
+            "dependency-management "
+            f"`{label}` may not target DevCovenant profile asset templates: "
+            f"`{normalized}`."
+        )
+
+
 def _matches_dependency(
     rel_path: str,
     *,
@@ -576,16 +618,11 @@ def _matches_dependency(
     dependency_dirs: list[str],
 ) -> bool:
     """Return True when a path matches dependency selector metadata."""
-    rel_name = Path(rel_path).name
     for token in dependency_files:
         normalized = _normalized_rel(token)
         if not normalized:
             continue
-        if "/" in normalized:
-            if rel_path == normalized:
-                return True
-            continue
-        if rel_name == normalized:
+        if rel_path == normalized:
             return True
 
     for token in dependency_globs:

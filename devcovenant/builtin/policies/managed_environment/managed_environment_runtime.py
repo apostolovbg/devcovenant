@@ -349,26 +349,32 @@ def _guidance_token_value(
     managed_python: Path | None,
     managed_root: Path | None,
 ) -> str:
-    """Return rendered guidance token values with safe placeholders."""
+    """Return rendered guidance token values with safe display paths."""
     normalized = str(token or "").strip()
     if normalized == "repo_root":
-        return str(repo_root)
+        return display_path(repo_root, repo_root=repo_root)
     if normalized == "current_python":
-        return sys.executable
+        return display_path(Path(sys.executable), repo_root=repo_root)
     if normalized == "current_bin":
-        return str(Path(sys.executable).parent)
+        return display_path(
+            Path(sys.executable).parent,
+            repo_root=repo_root,
+        )
     if normalized == "managed_root":
         if managed_root is None:
             return "<managed_root>"
-        return str(managed_root)
+        return display_path(managed_root, repo_root=repo_root)
     if normalized == "managed_python":
         if managed_python is None:
             return "<managed_python>"
-        return str(managed_python)
+        return display_path(managed_python, repo_root=repo_root)
     if normalized == "managed_bin":
         if managed_python is None:
             return "<managed_bin>"
-        return str(managed_python.parent)
+        return display_path(
+            managed_python.parent,
+            repo_root=repo_root,
+        )
     if normalized:
         return f"<{normalized}>"
     return "<token>"

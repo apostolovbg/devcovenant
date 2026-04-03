@@ -1,5 +1,5 @@
 # Profiles
-**Last Updated:** 2026-04-02
+**Last Updated:** 2026-04-03
 
 **Project Version:** 1.0.1.dev1
 
@@ -87,6 +87,7 @@ The built-in `defaults` profile seeds a plain Python `.venv` starting point:
 - expected paths and interpreters
 - required commands for the target environment
 - manual guidance that uses `{current_python}` and `{managed_python}`
+- stage-scoped managed bootstrap commands for `gate --start`
 
 That is a starting point, not a promise that every repository should use
 `.venv`.

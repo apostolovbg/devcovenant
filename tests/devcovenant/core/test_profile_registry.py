@@ -730,6 +730,31 @@ def _profile_devcovrepo_managed_env_requires_runtime_tools() -> None:
     assert command_text == ["pre-commit", "pytest"]
 
 
+def _profile_defaults_managed_env_bootstraps_seeded_venv() -> None:
+    """Seeded defaults profile should carry managed bootstrap commands."""
+    manifest_path = (
+        REPO_ROOT
+        / "devcovenant"
+        / "builtin"
+        / "profiles"
+        / "defaults"
+        / "defaults.yaml"
+    )
+    payload = yaml.safe_load(manifest_path.read_text(encoding="utf-8"))
+    assert isinstance(payload, dict)
+    policy_overlays = payload.get("policy_overlays")
+    assert isinstance(policy_overlays, dict)
+    managed_environment = policy_overlays.get("managed-environment")
+    assert isinstance(managed_environment, dict)
+    managed_commands = managed_environment.get("managed_commands")
+    assert isinstance(managed_commands, list)
+    command_text = [str(command).strip() for command in managed_commands]
+    assert command_text == [
+        "start=>{current_python} -m venv .venv",
+        "start=>{managed_python} -m pip install -r requirements.lock",
+    ]
+
+
 def _profile_devcovuser_tests_scope_matches_normal_repo_contract() -> None:
     """Normal user profile should keep only custom modules in scope."""
     module = importlib.import_module(MODULE)
@@ -839,6 +864,10 @@ class ProfileRegistryTests(unittest.TestCase):
     def test_devcovrepo_managed_env_requires_runtime_tools(self):
         """Run repo managed-env runtime-tool assertions."""
         _profile_devcovrepo_managed_env_requires_runtime_tools()
+
+    def test_defaults_managed_env_bootstraps_seeded_venv(self):
+        """Run seeded-default managed bootstrap assertions."""
+        _profile_defaults_managed_env_bootstraps_seeded_venv()
 
     def test_devcovuser_tests_scope_matches_normal_repo_contract(self):
         """Run normal user profile test-scope assertions."""

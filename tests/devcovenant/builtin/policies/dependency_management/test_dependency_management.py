@@ -208,6 +208,59 @@ def _unit_test_third_party_path_is_exact_not_name_only(tmp_path: Path):
     )
 
 
+def _unit_test_dependency_file_selector_is_exact_repo_relative_path(
+    tmp_path: Path,
+):
+    """Bare dependency-files selectors should not match same-basename files."""
+    repo = _setup_repo(tmp_path)
+    asset_requirements = (
+        repo
+        / "devcovenant"
+        / "builtin"
+        / "profiles"
+        / "python"
+        / "assets"
+        / "requirements.in"
+    )
+    asset_requirements.parent.mkdir(parents=True, exist_ok=True)
+    asset_requirements.write_text("packaging>=26.0\n", encoding="utf-8")
+    checker = _build_checker()
+    context = CheckContext(
+        repo_root=repo,
+        changed_files=[asset_requirements],
+    )
+    violations = checker.check(context)
+    assert violations == []
+
+
+def _unit_test_profile_asset_dependency_input_is_rejected(tmp_path: Path):
+    """Profile-asset `requirements.in` should be rejected as input."""
+    repo = _setup_repo(tmp_path)
+    checker = _build_checker_with_options(
+        {
+            "surfaces": [
+                _surface_options(
+                    direct_dependency_files=[
+                        "devcovenant/builtin/profiles/python/assets/"
+                        "requirements.in"
+                    ],
+                    dependency_files=[
+                        "devcovenant/builtin/profiles/python/assets/"
+                        "requirements.in"
+                    ],
+                )
+            ]
+        }
+    )
+    context = CheckContext(
+        repo_root=repo,
+        changed_files=[repo / "requirements.in"],
+    )
+    violations = checker.check(context)
+    assert len(violations) == 1
+    assert "profile asset templates" in violations[0].message
+
+
 def _unit_test_refresh_materializes_generic_license_readme(tmp_path: Path):
     """refresh_license_artifacts should create licenses/README.md."""
     repo = _setup_repo(tmp_path)
@@ -563,6 +616,22 @@ class GeneratedUnittestCases(unittest.TestCase):
         with tempfile.TemporaryDirectory() as temp_dir:
             tmp_path = Path(temp_dir).resolve()
             _unit_test_third_party_path_is_exact_not_name_only(
+                tmp_path=tmp_path
+            )
+
+    def test_dependency_file_selector_is_exact_repo_relative_path(self):
+        """Run exact dependency-file selector regression assertions."""
+        with tempfile.TemporaryDirectory() as temp_dir:
+            tmp_path = Path(temp_dir).resolve()
+            _unit_test_dependency_file_selector_is_exact_repo_relative_path(
+                tmp_path=tmp_path
+            )
+
+    def test_profile_asset_dependency_input_is_rejected(self):
+        """Run profile-asset dependency-input rejection assertions."""
+        with tempfile.TemporaryDirectory() as temp_dir:
+            tmp_path = Path(temp_dir).resolve()
+            _unit_test_profile_asset_dependency_input_is_rejected(
                 tmp_path=tmp_path
             )
 

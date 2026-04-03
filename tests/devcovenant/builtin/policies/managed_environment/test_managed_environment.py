@@ -9,6 +9,7 @@ from devcovenant.builtin.policies.managed_environment import (
     managed_environment,
 )
 from devcovenant.core.policy_contract import CheckContext
+from devcovenant.core.repository_paths import display_path
 from tests import MonkeyPatch
 
 ManagedEnvironmentCheck = managed_environment.ManagedEnvironmentCheck
@@ -197,11 +198,12 @@ def _unit_test_manual_command_guidance_expands_tokens(
     violations = checker.check(context)
     assert violations
     message = " ".join(v.message for v in violations if v.severity == "error")
-    assert str(venv_bin) in message
-    assert str(venv_python) in message
-    assert str(managed) in message
-    assert str(tmp_path) in message
+    assert display_path(venv_bin, repo_root=tmp_path) in message
+    assert display_path(venv_python, repo_root=tmp_path) in message
+    assert display_path(managed, repo_root=tmp_path) in message
+    assert display_path(tmp_path, repo_root=tmp_path) in message
     assert "{managed_" not in message
+    assert str(external_python) not in message
 
 
 def _unit_test_runtime_action_resolve_stage_dispatches(monkeypatch) -> None:

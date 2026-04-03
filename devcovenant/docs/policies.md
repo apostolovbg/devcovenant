@@ -1,5 +1,5 @@
 # Policies
-**Last Updated:** 2026-04-02
+**Last Updated:** 2026-04-03
 
 **Project Version:** 1.0.1.dev1
 
@@ -185,6 +185,8 @@ console-script shim.
 Command templates may use `{current_python}` / `{current_bin}` for the running
 interpreter and `{managed_python}` / `{managed_bin}` / `{managed_root}` for the
 selected target environment.
+User-facing guidance renders those path tokens with display-safe paths, so
+routine messages stay explicit without leaking machine-local absolute roots.
 
 ## Policy Commands
 DevCovenant supports namespaced policy commands:
@@ -256,6 +258,12 @@ For example:
 
 There is no special root-versus-auxiliary split anymore.
 Repositories can declare additional surfaces the same way when they need them.
+Exact file selectors are repo-relative exact paths, not basename matches.
+Use globs or directory selectors when a surface intentionally owns a file
+family instead of one declared manifest path.
+Profile asset templates such as
+`devcovenant/builtin/profiles/python/assets/requirements.in` are starter
+assets, not live dependency inputs for lock refresh.
 
 When one surface enables `generate_hashes`, `dependency-management refresh-all`
 does not try to patch a host-local `pip-compile` result.

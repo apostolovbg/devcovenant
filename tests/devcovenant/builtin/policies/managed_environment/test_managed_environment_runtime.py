@@ -662,7 +662,7 @@ def _unit_test_command_stage_does_not_mask_declared_bootstrap_contract(
 
 
 def _unit_test_guidance_suffix_expands_tokens() -> None:
-    """Guidance suffix should expand known tokens with paths."""
+    """Guidance suffix should expand known tokens with display-safe paths."""
     module = importlib.import_module(MODULE)
     repo_root = Path("/tmp/repo")
     managed_root = repo_root / ".venv"
@@ -679,11 +679,19 @@ def _unit_test_guidance_suffix_expands_tokens() -> None:
         managed_python=managed_python,
         managed_root=managed_root,
     )
-    assert sys.executable in suffix
-    assert str(managed_python) in suffix
-    assert str(managed_root) in suffix
-    assert str(managed_root / "bin") in suffix
-    assert str(repo_root) in suffix
+    assert (
+        module.display_path(Path(sys.executable), repo_root=repo_root)
+        in suffix
+    )
+    assert module.display_path(managed_python, repo_root=repo_root) in suffix
+    assert module.display_path(managed_root, repo_root=repo_root) in suffix
+    assert (
+        module.display_path(managed_python.parent, repo_root=repo_root)
+        in suffix
+    )
+    assert module.display_path(repo_root, repo_root=repo_root) in suffix
+    assert sys.executable not in suffix
+    assert str(repo_root) not in suffix
     assert "{managed_python}" not in suffix
 
 
@@ -704,6 +712,28 @@ def _unit_test_guidance_suffix_uses_placeholders_when_missing() -> None:
     assert "<managed_root>" in suffix
     assert "<unknown_token>" in suffix
     assert "{managed_python}" not in suffix
+
+
+def _unit_test_guidance_suffix_redacts_external_runtime_paths() -> None:
+    """Guidance suffix should hide external runtime absolute paths."""
+    module = importlib.import_module(MODULE)
+    repo_root = Path("/tmp/repo")
+    managed_root = repo_root / ".venv"
+    managed_python = Path("/opt/homebrew/bin/python3")
+    suffix = module._managed_guidance_suffix(
+        [
+            "{current_python} -m venv .venv",
+            "{managed_python} -m pip install -r requirements.lock",
+            "cd {repo_root}",
+        ],
+        repo_root=repo_root,
+        managed_python=managed_python,
+        managed_root=managed_root,
+    )
+    assert "outside-repo/" in suffix
+    assert str(managed_python) not in suffix
+    assert sys.executable not in suffix
+    assert str(repo_root) not in suffix
 
 
 def _unit_test_load_policy_entry_requires_registry_or_config() -> None:
@@ -1028,6 +1058,10 @@ class GeneratedUnittestCases(unittest.TestCase):
     def test_guidance_suffix_uses_placeholders_when_missing(self):
         """Run managed guidance placeholder assertions."""
         _unit_test_guidance_suffix_uses_placeholders_when_missing()
+
+    def test_guidance_suffix_redacts_external_runtime_paths(self):
+        """Run managed guidance path-redaction assertions."""
+        _unit_test_guidance_suffix_redacts_external_runtime_paths()
 
     def test_load_policy_entry_requires_registry_or_config(self):
         """Run missing-registry-and-config explicit-failure assertions."""

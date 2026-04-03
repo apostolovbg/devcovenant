@@ -6,7 +6,7 @@
 **Maintenance Stance:** active
 **Compatibility Policy:** forward-only
 **Versioning Mode:** versioned
-**Last Updated:** 2026-04-02
+**Last Updated:** 2026-04-03
 **DevCovenant Version:** 1.0.1.dev1
 
 <!-- DEVCOV:BEGIN -->
@@ -60,6 +60,43 @@ Example:
 
 ## Version 1.0.1.dev1
 
+
+- 2026-04-03:
+  Change: tightened dependency-input matching, added seeded managed bootstrap
+          commands, updated managed guidance path rendering, and aligned the
+          related documentation surfaces.
+  Why: prevented profile-asset `requirements.in` templates from being treated
+       as live dependency manifests, matched the shipped defaults to the
+       documented bootstrap contract, and removed machine-local path leakage
+       from managed-environment guidance.
+  Impact: aligned dependency surfaces to honor only the stated repo-relative
+          inputs, enabled the seeded default stack to bootstrap `.venv` from
+          `gate --start`, and kept the source, generated, and live docs
+          truthful together.
+  Files:
+  AGENTS.md
+  CHANGELOG.md
+  devcovenant/builtin/policies/dependency_management/\
+    dependency_management.py
+  devcovenant/builtin/policies/managed_environment/\
+    managed_environment.yaml
+  devcovenant/builtin/policies/managed_environment/\
+    managed_environment_runtime.py
+  devcovenant/builtin/profiles/defaults/defaults.yaml
+  devcovenant/custom/profiles/devcovrepo/assets/docs/policies.md
+  devcovenant/custom/profiles/devcovrepo/assets/docs/profiles.md
+  devcovenant/custom/profiles/devcovrepo/assets/docs/registry.md
+  devcovenant/docs/policies.md
+  devcovenant/docs/profiles.md
+  devcovenant/docs/registry.md
+  devcovenant/registry/registry.yaml
+  tests/devcovenant/builtin/policies/dependency_management/\
+    test_dependency_management.py
+  tests/devcovenant/builtin/policies/managed_environment/\
+    test_managed_environment_runtime.py
+  tests/devcovenant/builtin/policies/managed_environment/\
+    test_managed_environment.py
+  tests/devcovenant/core/test_profile_registry.py
 
 - 2026-04-02:
   Change: audited documentation, comments, docstrings, and managed prose,

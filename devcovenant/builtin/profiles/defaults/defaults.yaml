@@ -476,6 +476,9 @@ policy_overlays:
     manual_commands:
       - '{current_python} -m venv .venv'
       - '{managed_python} -m pip install -r requirements.lock'
+    managed_commands:
+      - start=>{current_python} -m venv .venv
+      - start=>{managed_python} -m pip install -r requirements.lock
 project-governance:
   changelog_file: CHANGELOG.md
   unversioned_label: Unversioned

@@ -59,12 +59,19 @@ The same applies to policy-resolved metadata such as
 surface declarations, the tracked registry records the new resolved lock
 paths, dependency selectors, artifact targets, and hash-target settings that
 later drive lock refresh behavior.
+Those dependency selectors stay repo-relative and exact in the tracked
+registry; DevCovenant does not silently widen a declared `requirements.in`
+entry into a basename match for profile asset templates or other same-name
+files elsewhere in the tree.
 That includes non-hash surfaces too: the registry records the declared target
 matrix and composed surface inputs that the shared target-aware resolver uses
 in either lock mode.
 Those tracked surface definitions also explain why dependency-report and
 license-artifact refreshes can land next to a registry diff in the same slice:
 the registry is recording the dependency surface contract that generated them.
+The same tracked metadata can also capture stage-scoped managed-environment
+bootstrap commands, so registry diffs are the expected result when the seeded
+default stack changes how `gate --start` can prepare `.venv`.
 The tracked registry can also hold policy-owned runtime state when that state
 is deterministic and should travel with the repository.
 For `dependency-management`, that includes per-surface input and output
