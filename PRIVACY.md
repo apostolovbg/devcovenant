@@ -1,9 +1,9 @@
 # Privacy and Data Handling
 **Doc ID:** PRIVACY
 **Doc Type:** privacy-policy
-**Project Version:** 1.0.1.dev1
-**Last Updated:** 2026-04-02
-**DevCovenant Version:** 1.0.1.dev1
+**Project Version:** 1.0.1b1
+**Last Updated:** 2026-04-03
+**DevCovenant Version:** 1.0.1b1
 
 <!-- DEVCOV:BEGIN -->
 This opening section is managed by DevCovenant.

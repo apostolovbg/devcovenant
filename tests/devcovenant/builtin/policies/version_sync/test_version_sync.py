@@ -222,6 +222,69 @@ class TestVersionSyncPolicy(unittest.TestCase):
                 "1.0.0",
             )
 
+    def test_detects_manifest_release_url_version_mismatch(self):
+        """Tagged manifest URLs should stay synchronized with the version."""
+        with tempfile.TemporaryDirectory() as tmpdir:
+            repo_root = Path(tmpdir)
+            version_dir = repo_root / "project_lib"
+            version_dir.mkdir()
+            (version_dir / "VERSION").write_text("1.0.0\n")
+            self._write_readme(repo_root, "README.md", "1.0.0")
+            self._write_readme(repo_root, "docs/README.md", "1.0.0")
+            (repo_root / "pyproject.toml").write_text(
+                "[project]\n"
+                'version = "1.0.0"\n'
+                "[project.urls]\n"
+                'Documentation = "https://example.com/tree/v2.0.0/docs"\n'
+                'Changelog = "https://example.com/blob/v2.0.0/CHANGELOG.md"\n',
+                encoding="utf-8",
+            )
+            self._write_license(repo_root, "LICENSE", "1.0.0")
+            self._write_license(repo_root, "app/license.txt", "1.0.0")
+            self._write_changelog(repo_root, "1.0.0")
+
+            policy = VersionSyncCheck()
+            policy.set_options(
+                {
+                    "version_file": "project_lib/VERSION",
+                    "changelog_file": "CHANGELOG.md",
+                    "changelog_header_prefix": "## Version",
+                    "target_roles": ["docs", "changelog", "package_manifest"],
+                    "role_extractors": [
+                        "docs=>project_version_line",
+                        "changelog=>changelog_header_version",
+                        "package_manifest=>manifest_project_version",
+                    ],
+                    "target_role_files": [
+                        "docs=>README.md",
+                        "docs=>docs/README.md",
+                        "changelog=>CHANGELOG.md",
+                        "package_manifest=>pyproject.toml",
+                    ],
+                },
+                {},
+            )
+            with mock.patch.object(
+                version_sync.version_governance,
+                "resolve_runtime_scheme",
+                return_value=self._resolved_scheme("semver"),
+            ):
+                violations = policy.check(CheckContext(repo_root=repo_root))
+
+            messages = [violation.message for violation in violations]
+            self.assertTrue(
+                any(
+                    "Documentation URL version 2.0.0 does not match" in msg
+                    for msg in messages
+                )
+            )
+            self.assertTrue(
+                any(
+                    "Changelog URL version 2.0.0 does not match" in msg
+                    for msg in messages
+                )
+            )
+
     def test_requires_declared_targets_to_exist(self):
         """Declared role targets should be required when configured."""
         with tempfile.TemporaryDirectory() as tmpdir:

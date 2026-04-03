@@ -1,13 +1,13 @@
 # Changelog
 **Doc ID:** CHANGELOG
 **Doc Type:** changelog
-**Project Version:** 1.0.1.dev1
+**Project Version:** 1.0.1b1
 **Project Stage:** stable
 **Maintenance Stance:** active
 **Compatibility Policy:** forward-only
 **Versioning Mode:** versioned
 **Last Updated:** 2026-04-03
-**DevCovenant Version:** 1.0.1.dev1
+**DevCovenant Version:** 1.0.1b1
 
 <!-- DEVCOV:BEGIN -->
 ## DevCovenant Change Logging Rules
@@ -57,6 +57,59 @@ Example:
 <!-- DEVCOV:END -->
 
 ## Log changes here
+
+## Version 1.0.1b1
+
+- 2026-04-03:
+  Change: bumped the governed release line to `1.0.1b1`, completed the
+          remaining release-plan decisions, and completed the prerelease QA
+          pass for publish readiness.
+  Why: chose one explicit PyPI prerelease cut, preserved the burned
+       `1.0.0` history without reusing it, and froze the branch to
+       release-only work while the `1.0.1` line is being qualified with
+       build, packaging, smoke-install, and governed workflow validation.
+  Impact: the repository now targets `1.0.1b1` as its prerelease build,
+          keeps the previous `1.0.1.dev1` history intact below, closes the
+          remaining open decisions in the release plan, and carries passing
+          packaging and workflow evidence for the prerelease cut.
+  Files:
+  AGENTS.md
+  CHANGELOG.md
+  CONTRIBUTING.md
+  PLAN.md
+  POLICY_MAP.md
+  PRIVACY.md
+  PROFILE_MAP.md
+  README.md
+  SECURITY.md
+  SPEC.md
+  SUPPORT.md
+  devcovenant/README.md
+  devcovenant/VERSION
+  devcovenant/builtin/policies/README.md
+  devcovenant/builtin/policies/version_sync/version_sync.py
+  devcovenant/builtin/profiles/README.md
+  devcovenant/core/README.md
+  devcovenant/custom/README.md
+  devcovenant/custom/policies/README.md
+  devcovenant/custom/profiles/README.md
+  devcovenant/docs/architecture.md
+  devcovenant/docs/config.md
+  devcovenant/docs/contracts.md
+  devcovenant/docs/installation.md
+  devcovenant/docs/policies.md
+  devcovenant/docs/profiles.md
+  devcovenant/docs/project_governance.md
+  devcovenant/docs/refresh.md
+  devcovenant/docs/registry.md
+  devcovenant/docs/troubleshooting.md
+  devcovenant/docs/workflow.md
+  devcovenant/registry/README.md
+  devcovenant/registry/registry.yaml
+  pyproject.toml
+  tests/devcovenant/builtin/policies/version_sync/autofix/\
+    test_global.py
+  tests/devcovenant/builtin/policies/version_sync/test_version_sync.py
 
 ## Version 1.0.1.dev1
 

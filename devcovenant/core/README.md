@@ -1,6 +1,6 @@
 # Core Runtime
-**Last Updated:** 2026-04-02
-**Project Version:** 1.0.1.dev1
+**Last Updated:** 2026-04-03
+**Project Version:** 1.0.1b1
 
 ## Overview
 `devcovenant/core/` holds the runtime implementation for command behavior,

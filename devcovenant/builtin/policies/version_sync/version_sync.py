@@ -33,6 +33,9 @@ _PROJECT_VERSION_LINE_EDIT_PATTERN = re.compile(
     r"(?P<version>.+?)(?P<suffix>\s*)$",
     flags=re.MULTILINE,
 )
+_RELEASE_TAG_PATH_PATTERN = re.compile(
+    r"(?P<prefix>/(?:tree|blob)/v)(?P<version>[^/]+)(?P<suffix>/)"
+)
 _EXTRACTOR_NAMES = {
     "project_version_line",
     "changelog_header_version",
@@ -326,6 +329,61 @@ class VersionSyncCheck(PolicyCheck):
                             ),
                         )
                     )
+
+                manifest_url_versions = self._extract_manifest_url_versions(
+                    target
+                )
+                for label, url_version in manifest_url_versions:
+                    try:
+                        url_parsed = scheme.parse_version(
+                            url_version,
+                            governance_check,
+                            context.repo_root,
+                        )
+                    except ValueError as exc:
+                        violations.append(
+                            Violation(
+                                policy_id=self.policy_id,
+                                severity="error",
+                                file_path=target,
+                                message=(
+                                    f"Role `{role}` target {label} URL "
+                                    f"version `{url_version}` is not valid "
+                                    f"under scheme `{scheme_name}`: {exc}"
+                                ),
+                            )
+                        )
+                        continue
+                    matches_tracked = self._versions_match(
+                        scheme=scheme,
+                        left_parsed=url_parsed,
+                        right_parsed=tracked_parsed,
+                        left_text=url_version,
+                        right_text=tracked_version,
+                        governance_check=governance_check,
+                        repo_root=context.repo_root,
+                    )
+                    if not matches_tracked:
+                        violations.append(
+                            Violation(
+                                policy_id=self.policy_id,
+                                severity="error",
+                                file_path=target,
+                                message=(
+                                    f"Role `{role}` target {label} URL "
+                                    f"version {url_version} does not match "
+                                    f"{version_file.name} ({tracked_version})"
+                                ),
+                                can_auto_fix=extractor_name
+                                in _EXTRACTOR_NAMES,
+                                context=self._mismatch_fix_context(
+                                    target=target,
+                                    extractor_name=extractor_name,
+                                    tracked_version=tracked_version,
+                                    changelog_prefix=changelog_prefix,
+                                ),
+                            )
+                        )
 
         try:
             changelog_text = changelog_file.read_text(encoding="utf-8")
@@ -862,6 +920,32 @@ class VersionSyncCheck(PolicyCheck):
         return None
 
     @staticmethod
+    def _extract_manifest_url_versions(path: Path) -> list[tuple[str, str]]:
+        """Extract tagged release versions from recognized manifest URLs."""
+        if path.suffix.lower() != ".toml":
+            return []
+        raw = path.read_text(encoding="utf-8")
+        payload = tomllib.loads(raw)
+        project = payload.get("project")
+        if not isinstance(project, dict):
+            return []
+        urls = project.get("urls")
+        if not isinstance(urls, dict):
+            return []
+        extracted: list[tuple[str, str]] = []
+        for label in ("Documentation", "Changelog"):
+            raw_url = urls.get(label)
+            if not isinstance(raw_url, str):
+                continue
+            match = _RELEASE_TAG_PATH_PATTERN.search(raw_url.strip())
+            if match is None:
+                continue
+            version = match.group("version").strip()
+            if version:
+                extracted.append((label, version))
+        return extracted
+
+    @staticmethod
     def _latest_changelog_version(
         content: str,
         prefix: str,
@@ -1013,6 +1097,16 @@ def _write_manifest_version_toml(target: Path, tracked_version: str) -> bool:
                 updated = rewritten
                 changed = True
 
+    rewritten_urls, url_found = _rewrite_project_url_release_tags(
+        updated,
+        tracked_version,
+    )
+    if url_found:
+        found = True
+    if rewritten_urls != updated:
+        updated = rewritten_urls
+        changed = True
+
     if not found:
         raise ValueError(
             f"Target lacks a supported manifest version field: "
@@ -1022,6 +1116,61 @@ def _write_manifest_version_toml(target: Path, tracked_version: str) -> bool:
         return False
     target.write_text(updated, encoding="utf-8")
     return True
+
+
+def _rewrite_project_url_release_tags(
+    text: str,
+    tracked_version: str,
+) -> tuple[str, bool]:
+    """Rewrite tagged project URLs in `[project.urls]` when present."""
+    section_re = re.compile(
+        r"(?ms)^\[project\.urls\]\s*\n(?P<body>.*?)(?=^\[|\Z)"
+    )
+    match = section_re.search(text)
+    if match is None:
+        return text, False
+    body = match.group("body")
+    found = False
+
+    def _rewrite_field(body_text: str, field_name: str) -> str:
+        """Rewrite one tagged URL field inside `[project.urls]`."""
+        nonlocal found
+        field_re = re.compile(
+            rf'(?m)^(?P<prefix>{re.escape(field_name)}\s*=\s*")'
+            r"(?P<url>[^\"\n]+)"
+            r'(?P<suffix>")$'
+        )
+
+        def _replace(match_obj: re.Match[str]) -> str:
+            """Replace one release tag inside the matched URL field."""
+            nonlocal found
+            url = match_obj.group("url")
+            if _RELEASE_TAG_PATH_PATTERN.search(url) is None:
+                return match_obj.group(0)
+            found = True
+            rewritten_url = _RELEASE_TAG_PATH_PATTERN.sub(
+                lambda path_match: (
+                    f"{path_match.group('prefix')}{tracked_version}"
+                    f"{path_match.group('suffix')}"
+                ),
+                url,
+                count=1,
+            )
+            return (
+                f"{match_obj.group('prefix')}{rewritten_url}"
+                f"{match_obj.group('suffix')}"
+            )
+
+        return field_re.sub(_replace, body_text, count=1)
+
+    updated_body = _rewrite_field(body, "Documentation")
+    updated_body = _rewrite_field(updated_body, "Changelog")
+    if updated_body == body:
+        return text, found
+    return (
+        text[: match.start("body")] + updated_body + text[match.end("body") :],
+        True,
+    )
 
 
 def _replace_or_append_toml_section_field(

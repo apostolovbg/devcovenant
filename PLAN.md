@@ -1,13 +1,13 @@
 # Development Plan
 **Doc ID:** PLAN
 **Doc Type:** plan
-**Project Version:** 1.0.1.dev1
+**Project Version:** 1.0.1b1
 **Project Stage:** stable
 **Maintenance Stance:** active
 **Compatibility Policy:** forward-only
 **Versioning Mode:** versioned
 **Last Updated:** 2026-04-03
-**DevCovenant Version:** 1.0.1.dev1
+**DevCovenant Version:** 1.0.1b1
 
 <!-- DEVCOV:BEGIN -->
 This opening section is managed by DevCovenant.
@@ -31,6 +31,8 @@ open-ended cleanup.
   stream of loosely related audit reactions.
 - Treat `1.0.0` as burned on PyPI and use `1.0.1` as the maintained public
   line from here.
+- Use `1.0.1b1` as the explicit prerelease cut for the current release
+  qualification pass.
 - Keep package docs general to DevCovenant as a product. Keep repository
   operation notes in repository-owned docs only.
 - Remove forward-looking blockers, stale expectations, and false historical
@@ -76,16 +78,18 @@ open-ended cleanup.
    - setup-only lifecycle tests now prefer cached installed or refreshed seed
      repositories while keeping direct end-to-end lifecycle coverage where the
      command path itself is the contract under test
-6. [not done] Decide the `1.0.1` release form.
-   Work:
-   - choose `1.0.1b1` or `1.0.1rc1` when we want one more opt-in proving pass
-   - choose direct `1.0.1` when the release review says the stable line is
-     ready now
-   - keep the decision explicit in release notes and operator commands
-7. [not done] Freeze non-release work once blockers are cleared.
-   Work:
-   - accept only correctness bugs, packaging failures, CI failures, doc lies,
-     and release blockers until the `1.0.1` line ships
+6. [done] Decide the `1.0.1` release form.
+   Landed:
+   - chose `1.0.1b1` for one explicit opt-in prerelease pass on PyPI
+   - kept the stable `1.0.1` line reserved for the first maintained
+     non-prerelease release after the prerelease review
+   - kept the decision explicit in the release plan, changelog, and version
+     bump
+7. [done] Freeze non-release work once blockers are cleared.
+   Landed:
+   - accepted only release readiness work, correctness fixes, packaging
+     checks, and documented contract alignment in the release-cut slice
+   - treated unrelated cleanup as out of scope until the `1.0.1` line ships
 
 ## Documentation Review
 - Audit these package-facing surfaces first:

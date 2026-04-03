@@ -99,7 +99,10 @@ def _unit_test_fix_rewrites_toml_manifest_version() -> None:
     with tempfile.TemporaryDirectory() as temp_dir:
         target = Path(temp_dir) / "pyproject.toml"
         target.write_text(
-            '[project]\nname = "demo"\nversion = "0.1.0"\n',
+            '[project]\nname = "demo"\nversion = "0.1.0"\n'
+            "[project.urls]\n"
+            'Documentation = "https://example.com/tree/v0.1.0/docs"\n'
+            'Changelog = "https://example.com/blob/v0.1.0/CHANGELOG.md"\n',
             encoding="utf-8",
         )
         fixer = VersionSyncFixer()
@@ -107,7 +110,10 @@ def _unit_test_fix_rewrites_toml_manifest_version() -> None:
             _violation(target, extractor_name="manifest_project_version")
         )
         assert result.success is True
-        assert 'version = "2.3.4"' in target.read_text(encoding="utf-8")
+        content = target.read_text(encoding="utf-8")
+        assert 'version = "2.3.4"' in content
+        assert "/tree/v2.3.4/docs" in content
+        assert "/blob/v2.3.4/CHANGELOG.md" in content
 
 
 class GeneratedUnittestCases(unittest.TestCase):

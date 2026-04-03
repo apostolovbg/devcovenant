@@ -1,12 +1,12 @@
 metadata:
   schema_version: 1
   registry_layout: single-root
-  policy_registry_input_hash: 4b6f3ce97312090fbab918a2d8d69f37040c08f450113c70ee6af731d575fab3
+  policy_registry_input_hash: 061a19a02ace7054b39b53326e8c92477d61aa48c82a49d44cd84d853f58f6d8
 project-governance:
   project_name: devcovenant
   project_description: devcovenant is a repository governance framework.
   copyright_notice: 2026 Black Epsilon Ltd. and Apostol Apostolov
-  project_version: 1.0.1.dev1
+  project_version: 1.0.1b1
   stage: stable
   maintenance_stance: active
   compatibility_policy: forward-only
@@ -10440,7 +10440,7 @@ policies:
     - docs=>devcovenant/registry/README.md
     origin: builtin
     script_exists: true
-    hash: c9057ad597fe794db8b885fe2276dc6d43138881ffc97f372a56c028a9603b32
+    hash: 0fa8eba32b447355b354bffe7fd2146077cac99335517f0cd7f14108ce8c4a98
     script_path: builtin/version_sync.py
   version-governance:
     enabled: true
@@ -12891,7 +12891,7 @@ policies:
     runtime_state:
       surfaces:
         devcovenant_runtime:
-          input_fingerprint: 187d18dcaeb59d0d8669ef9848a538847c68f9577effb2e1cbb97e835d9c0809
+          input_fingerprint: 48bbb08171b1fbe0faea16e27c54a749e83c6ca29bde5f8aae8cf232482c310d
           output_fingerprints:
             lock_file: d15044f8967ae94c97f8ff2ced7b2a8190281243948aae40cf4d2d5c3e911bcc
             third_party_file: 03710e4b9b1d4a694b7f319950a3ac27222743eb35b0409771f9df366a8e8368

@@ -1,9 +1,9 @@
 # Policy Map
 **Doc ID:** POLICY_MAP
 **Doc Type:** reference-map
-**Project Version:** 1.0.1.dev1
-**Last Updated:** 2026-03-31
-**DevCovenant Version:** 1.0.1.dev1
+**Project Version:** 1.0.1b1
+**Last Updated:** 2026-04-03
+**DevCovenant Version:** 1.0.1b1
 
 <!-- DEVCOV:BEGIN -->
 This opening section is managed by DevCovenant.

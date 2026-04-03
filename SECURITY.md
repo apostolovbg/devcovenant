@@ -1,9 +1,9 @@
 # Security Policy
 **Doc ID:** SECURITY
 **Doc Type:** security-policy
-**Project Version:** 1.0.1.dev1
+**Project Version:** 1.0.1b1
 **Last Updated:** 2026-04-03
-**DevCovenant Version:** 1.0.1.dev1
+**DevCovenant Version:** 1.0.1b1
 
 <!-- DEVCOV:BEGIN -->
 This opening section is managed by DevCovenant.
