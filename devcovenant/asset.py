@@ -17,21 +17,18 @@ def _build_parser() -> argparse.ArgumentParser:
     """Build parser for the asset command."""
     parser = cli_args_module.build_command_parser(
         "asset",
-        "Materialize one reusable asset or managed doc.",
+        "Write one Desktop copy of a shipped profile asset or managed doc.",
     )
     parser.add_argument(
         "asset_name",
-        help=(
-            "Asset target filename or exact asset target path to "
-            "materialize."
-        ),
+        help=("Asset target filename or exact asset target path to render."),
     )
     parser.add_argument(
         "output_name",
         nargs="?",
         help=(
-            "Optional Desktop output filename. Defaults to the asset's "
-            "original filename."
+            "Optional Desktop filename override. Must be a filename only; "
+            "defaults to the asset's original filename."
         ),
     )
     parser.add_argument(

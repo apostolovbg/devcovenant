@@ -134,8 +134,18 @@ visible before you inspect the full logs.
 
 ### asset
 Writes a Desktop copy of a shipped profile asset or managed doc template.
-The optional second argument is a filename only, not a path.
-Use `--overwrite` when the Desktop target already exists.
+Use it when you want one rendered operator copy without writing the
+repository-managed target path.
+
+The practical rules are:
+- exact target-path matches beat basename matches
+- active profiles are considered first in active-profile order
+- the optional second argument must be a filename only, not a path
+- `--overwrite` is required when the Desktop target already exists
+
+If the winning profile still exposes more than one basename match, rerun the
+command with the exact target path.
+Use `devcovenant asset --help` for the command-scoped syntax.
 
 ### run
 Runs the declared workflow steps for the repository.

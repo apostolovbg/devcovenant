@@ -472,6 +472,27 @@ def _unit_test_run_help_is_command_scoped() -> None:
     assert "--verbose" in result.stdout
 
 
+def _unit_test_root_help_lists_command_summaries() -> None:
+    """`--help` should expose discoverable top-level command summaries."""
+    result = subprocess.run(
+        [sys.executable, "-m", "devcovenant", "--help"],
+        cwd=REPO_ROOT,
+        check=False,
+        capture_output=True,
+        text=True,
+    )
+    assert result.returncode == 0
+    assert "Command summary:" in result.stdout
+    assert (
+        "Write one Desktop copy of a shipped profile asset or managed doc."
+        in result.stdout
+    )
+    assert (
+        "Run `devcovenant <command> --help` for command-specific options."
+        in result.stdout
+    )
+
+
 def _unit_test_asset_help_is_command_scoped() -> None:
     """`asset --help` should expose only the asset-materialization surface."""
     result = subprocess.run(
@@ -482,7 +503,11 @@ def _unit_test_asset_help_is_command_scoped() -> None:
         text=True,
     )
     assert result.returncode == 0
-    assert "Materialize one reusable asset or managed doc" in result.stdout
+    assert (
+        "Write one Desktop copy of a shipped profile asset or managed doc."
+        in result.stdout
+    )
+    assert "Optional Desktop filename override." in result.stdout
     assert "--overwrite" in result.stdout
     assert "--start" not in result.stdout
     assert "--end" not in result.stdout
@@ -1146,6 +1171,10 @@ class GeneratedUnittestCases(unittest.TestCase):
     def test_run_help_is_command_scoped(self):
         """Run test_run_help_is_command_scoped."""
         _unit_test_run_help_is_command_scoped()
+
+    def test_root_help_lists_command_summaries(self):
+        """Run test_root_help_lists_command_summaries."""
+        _unit_test_root_help_lists_command_summaries()
 
     def test_asset_help_is_command_scoped(self):
         """Run test_asset_help_is_command_scoped."""

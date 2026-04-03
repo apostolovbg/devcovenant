@@ -61,6 +61,28 @@ Example:
 ## Version 1.0.1b1
 
 - 2026-04-03:
+  Change: improved the top-level CLI help and asset-command docs so the
+          Desktop materialization command is discoverable from operator
+          entrypoints and documented with its real resolution rules.
+  Why: investigated the missing `docs` expectation, confirmed the shipped
+       public surface is `devcovenant asset`, and found that the command
+       existed but was too easy to miss from root help and too scattered
+       across docs.
+  Impact: operators can now find `asset` from `devcovenant --help`, see the
+          Desktop-copy contract in `asset --help`, and read one clearer docs
+          path for exact-path matching, profile precedence, and filename-only
+          output overrides.
+  Files:
+  CHANGELOG.md
+  README.md
+  devcovenant/README.md
+  devcovenant/asset.py
+  devcovenant/cli.py
+  devcovenant/docs/installation.md
+  devcovenant/docs/profiles.md
+  tests/devcovenant/test_cli.py
+
+- 2026-04-03:
   Change: bumped the governed release line to `1.0.1b1`, completed the
           remaining release-plan decisions, and completed the prerelease QA
           pass for publish readiness.

@@ -222,6 +222,10 @@ used less often, but they follow the same logging model.
 shipped asset or managed doc template. When the optional second argument is
 omitted, DevCovenant keeps the asset's original filename on the Desktop.
 `--overwrite` replaces an existing Desktop target.
+Exact target-path matches win over basename matches, and an ambiguous basename
+inside the winning profile must be rerun as an exact target path.
+Use `devcovenant --help` to see the command list and
+`devcovenant asset --help` for the asset-specific syntax.
 `clean --all` removes disposable build, cache, log, and runtime-registry files;
 its `registry` scope cleans only `devcovenant/registry/runtime/`, not the
 tracked `devcovenant/registry/registry.yaml`.

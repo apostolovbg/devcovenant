@@ -137,6 +137,8 @@ Resolution works like this:
 
 The command writes Desktop copies only.
 It uses the same rendering code that refresh and deploy use.
+Use `devcovenant asset --help` for the operator-facing syntax; this page owns
+the profile-selection and ownership rules behind that command.
 
 Managed-doc descriptor ownership follows profile precedence by target path:
 - the global profile provides the baseline descriptor set

@@ -30,6 +30,27 @@ _COMMAND_MODULES = {
     "policy": "devcovenant.policy",
 }
 
+_COMMAND_SUMMARIES = {
+    "asset": (
+        "Write one Desktop copy of a shipped profile asset or managed doc."
+    ),
+    "check": "Run read-only DevCovenant audit checks.",
+    "clean": (
+        "Remove disposable build, cache, runtime-registry, or log artifacts."
+    ),
+    "deploy": "Deploy managed docs/assets in the current repository.",
+    "gate": "Run DevCovenant gate session lifecycle commands.",
+    "install": "Install DevCovenant into the current repository.",
+    "policy": (
+        "Run one explicit policy-born command declared by an enabled policy."
+    ),
+    "refresh": "Run a full refresh.",
+    "run": "Run all declared DevCovenant workflow runs.",
+    "undeploy": "Remove deployed managed artifacts and keep core files.",
+    "uninstall": "Remove DevCovenant from the current repository.",
+    "upgrade": "Upgrade DevCovenant core in the current repository.",
+}
+
 _MANAGED_REEXEC_GUARD_ENV = "DEVCOV_MANAGED_REEXEC_ACTIVE"
 _MANAGED_REEXEC_SOURCE_ENV = "DEVCOV_MANAGED_REEXEC_SOURCE"
 _RUN_LOG_HANDOFF_REPO_ENV = "DEVCOV_RUN_LOG_REPO_ROOT"
@@ -70,7 +91,9 @@ def _runtime_errors() -> ModuleType:
 def _build_parser() -> argparse.ArgumentParser:
     """Build the root dispatcher parser."""
     parser = cli_args_module.DevCovenantArgumentParser(
-        description="DevCovenant - Self-enforcing policy system"
+        description="DevCovenant - Self-enforcing policy system",
+        epilog=_render_command_help_epilog(),
+        formatter_class=argparse.RawDescriptionHelpFormatter,
     )
     cli_args_module.add_output_mode_override_arguments(parser)
     parser.add_argument(
@@ -79,6 +102,19 @@ def _build_parser() -> argparse.ArgumentParser:
         help="Command to run",
     )
     return parser
+
+
+def _render_command_help_epilog() -> str:
+    """Render one root-help command summary block."""
+    lines = ["Command summary:"]
+    for command in sorted(_COMMAND_MODULES):
+        summary = _COMMAND_SUMMARIES.get(command, "").strip()
+        lines.append(f"  {command:<10} {summary}")
+    lines.append("")
+    lines.append(
+        "Run `devcovenant <command> --help` for command-specific options."
+    )
+    return "\n".join(lines)
 
 
 def _load_command_module(command: str) -> ModuleType:
