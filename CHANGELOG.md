@@ -62,6 +62,52 @@ Example:
 
 
 - 2026-04-03:
+  Change: clarified the managed-environment contract for non-`.venv`
+          execution contexts, expanded the release-QA matrix, and added
+          external-environment coverage.
+  Why: documented that `.venv` is the seeded default rather than the only
+       supported shape and proved that declared managed roots may live
+       outside the repository tree.
+  Impact: aligned policy text, package docs, release planning, and managed
+          environment tests around the real support boundary for system,
+          bench-managed, container-managed, and other declared environments.
+  Files:
+  AGENTS.md
+  CHANGELOG.md
+  PLAN.md
+  README.md
+  devcovenant/README.md
+  devcovenant/builtin/policies/managed_environment/\
+    managed_environment.yaml
+  devcovenant/custom/profiles/devcovrepo/assets/docs/config.md
+  devcovenant/custom/profiles/devcovrepo/assets/docs/installation.md
+  devcovenant/custom/profiles/devcovrepo/assets/docs/policies.md
+  devcovenant/custom/profiles/devcovrepo/assets/docs/profiles.md
+  devcovenant/custom/profiles/devcovrepo/assets/docs/workflow.md
+  devcovenant/docs/config.md
+  devcovenant/docs/installation.md
+  devcovenant/docs/policies.md
+  devcovenant/docs/profiles.md
+  devcovenant/docs/workflow.md
+  devcovenant/registry/registry.yaml
+  tests/devcovenant/builtin/policies/managed_environment/\
+    test_managed_environment.py
+
+- 2026-04-03:
+  Change: fixed the stale CLI managed-path expectation and replaced
+          `PLAN.md` with a beta release-QA plan.
+  Why: aligned the remaining targeted test failure to the current
+       display-safe runtime contract and reset planning around one concrete
+       release-readiness review.
+  Impact: restored the disputed CLI test surface, clarified the release
+          routine, and focused the next work on industry-standard QA and
+          documentation review.
+  Files:
+  CHANGELOG.md
+  PLAN.md
+  tests/devcovenant/test_cli.py
+
+- 2026-04-03:
   Change: tightened dependency-input matching, added seeded managed bootstrap
           commands, updated managed guidance path rendering, and aligned the
           related documentation surfaces.

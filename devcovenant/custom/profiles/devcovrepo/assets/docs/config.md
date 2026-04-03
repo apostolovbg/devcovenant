@@ -89,9 +89,13 @@ actually exists.
 If you keep the seeded `defaults` + `python` stack, `deploy`/`refresh`
 materializes the workspace dependency artifacts and one manual realization is
 creating `.venv` and installing `requirements.lock`.
-If the repository uses a bench-managed or other custom environment, declare
-that environment in the profile stack or metadata overlays instead of relying
-on DevCovenant to guess an unknown layout.
+That seeded `.venv` flow is only one starting point.
+If the repository uses a system interpreter, bench-managed environment,
+container-managed environment, or other custom environment, declare that
+environment in the profile stack or metadata overlays instead of relying on
+DevCovenant to guess an unknown layout or hidden launcher hop.
+DevCovenant must either run from that declared managed context already or be
+able to resolve the declared interpreter path or environment root.
 
 The shipped user baseline keeps `github` active by default.
 That makes the generated GitHub Actions workflow available out of the box for

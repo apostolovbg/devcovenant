@@ -139,8 +139,12 @@ What those steps mean:
    `.venv` and installing `requirements.lock`.
    On Windows, use `.venv\\Scripts\\python.exe -m pip install -r \
    requirements.lock`.
-   If the repository uses bench or another environment layout, declare that
+   That seeded `.venv` flow is only one starting point.
+   If the repository uses a system interpreter, bench-managed environment,
+   container-managed environment, or another layout, declare that environment
    first through the profile stack or metadata overlays, then prepare it.
+   DevCovenant must either run from that declared managed context already or
+   be able to resolve the declared interpreter path or environment root.
 
 6. The first full gate cycle proves the reviewed setup actually works.
 

@@ -253,9 +253,12 @@ Use this as the practical first integration flow:
    environment is still missing.
    On Windows, use `.venv\\Scripts\\python.exe -m pip install -r \
    requirements.lock`.
-   If the repository uses bench or another environment layout, declare that
-   environment first through the profile stack or metadata overlays, then
-   prepare it.
+   That seeded `.venv` flow is only one starting point.
+   If the repository uses a system interpreter, bench-managed environment,
+   container-managed environment, or another layout, declare that environment
+   first through the profile stack or metadata overlays, then prepare it.
+   DevCovenant must either run from that declared managed context already or
+   be able to resolve the declared interpreter path or environment root.
 6. Prove the reviewed setup with the full gate cycle:
 
    ```bash
@@ -291,9 +294,10 @@ If not, it selects the configured interpreter or environment root and then runs
 any declared bootstrap commands.
 If the selected interpreter path exists but is not executable, DevCovenant
 stops with a clear error.
-If the repository uses a bench-managed or other custom environment, declare
-that environment through the profile stack or metadata overlays instead of
-expecting DevCovenant to guess an unknown layout.
+If the repository uses a bench-managed, container-managed, system, or other
+custom environment, declare that environment through the profile stack or
+metadata overlays instead of expecting DevCovenant to guess an unknown layout
+or hidden launcher hop.
 Tracked dependency and registry fingerprints should stay repo-relative and
 checkout-stable.
 Machine-local evidence belongs in `devcovenant/registry/runtime/`, not in the

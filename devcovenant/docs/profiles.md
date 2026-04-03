@@ -91,9 +91,12 @@ The built-in `defaults` profile seeds a plain Python `.venv` starting point:
 
 That is a starting point, not a promise that every repository should use
 `.venv`.
-Repositories that use bench or another environment should declare that
-environment through their active profile stack or metadata overlays instead of
-relying on the defaults to guess it.
+Repositories may instead declare a system interpreter, bench-managed
+environment, container-managed environment, or another execution layout
+through their active profile stack or metadata overlays.
+The important contract is that DevCovenant can run from that declared managed
+context or resolve the interpreter path or environment root it should use.
+The defaults do not try to guess hidden launcher hops.
 
 The built-in `devcovuser` profile is the normal user-repository layer.
 It keeps DevCovenant's own shipped runtime files out of ordinary app-code

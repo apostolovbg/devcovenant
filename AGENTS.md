@@ -1534,6 +1534,13 @@ and `{current_bin}` for the currently running interpreter, and
 selected target environment. User-facing guidance renders those path tokens
 with display-safe paths so local absolute roots do not leak into routine
 messages.
+The target environment may live inside the repository or outside it, as long
+as the metadata declares the interpreter path or environment root that
+DevCovenant should use. The seeded defaults describe a local `.venv`
+starting point, not the only supported shape. Repositories that use a
+bench-managed, container-managed, system, or other tool-owned environment
+should declare that environment explicitly instead of expecting DevCovenant
+to guess hidden wrapper hops.
 Active managed-environment policy reuses the current interpreter when it
 already satisfies the contract, re-executes CLI commands in the selected
 interpreter when needed, and only runs bootstrap commands when the target

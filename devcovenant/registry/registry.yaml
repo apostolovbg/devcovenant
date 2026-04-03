@@ -1,7 +1,7 @@
 metadata:
   schema_version: 1
   registry_layout: single-root
-  policy_registry_input_hash: c13586688e70f14d10c5b07c2103288f0fb24c74be5225bf8a44954bb22566d6
+  policy_registry_input_hash: b9c5cce5784c0bd672aa1ba284c2e87920c4fa6d0abdeb6aee0e36cd38803f09
 project-governance:
   project_name: devcovenant
   project_description: devcovenant is a repository governance framework.
@@ -5807,6 +5807,13 @@ policies:
       selected target environment. User-facing guidance renders those path tokens
       with display-safe paths so local absolute roots do not leak into routine
       messages.
+      The target environment may live inside the repository or outside it, as long
+      as the metadata declares the interpreter path or environment root that
+      DevCovenant should use. The seeded defaults describe a local `.venv`
+      starting point, not the only supported shape. Repositories that use a
+      bench-managed, container-managed, system, or other tool-owned environment
+      should declare that environment explicitly instead of expecting DevCovenant
+      to guess hidden wrapper hops.
       Active managed-environment policy reuses the current interpreter when it
       already satisfies the contract, re-executes CLI commands in the selected
       interpreter when needed, and only runs bootstrap commands when the target
@@ -6095,7 +6102,7 @@ policies:
     - .venv/bin/python
     origin: builtin
     script_exists: true
-    hash: 60ac4af868f626c474a57acd0c1e99771632d2516565fb78543a36d4b01c6d5e
+    hash: 7368213c67fc8b8720e85a16bc037e94bbcf5d7dea4fe3aa160aadca92c43273
     script_path: builtin/managed_environment.py
   modules-need-tests:
     enabled: true

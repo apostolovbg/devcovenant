@@ -17,6 +17,7 @@ from types import SimpleNamespace
 import devcovenant
 import devcovenant.core.execution as execution_runtime_module
 from devcovenant import cli
+from devcovenant.core.repository_paths import display_path
 from tests import MonkeyPatch
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
@@ -371,7 +372,7 @@ def _unit_test_cli_reports_non_executable_managed_python(
         raise AssertionError("Expected SystemExit from cli.main().")
 
     assert "not executable" in code
-    assert "outside-repo/python" in code
+    assert display_path(Path(managed_python), repo_root=repo_root) in code
     assert managed_python not in code
 
 

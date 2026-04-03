@@ -181,6 +181,11 @@ dependency artifacts, and `gate --start` can run the declared bootstrap
 commands when the target environment is still missing.
 If a repository uses a different environment shape, it should declare that
 shape explicitly instead of expecting DevCovenant to guess it.
+That includes system interpreters, bench-managed environments, and
+container-managed environments.
+DevCovenant either runs from that managed context already or resolves the
+declared interpreter path or environment root for re-exec.
+It does not infer hidden wrapper hops on its own.
 On a converged repository, repeated `check`, `gate`, and `run` startup paths do
 not intentionally rebuild current tracked registry content or current
 dependency surfaces.

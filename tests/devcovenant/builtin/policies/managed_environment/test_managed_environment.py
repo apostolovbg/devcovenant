@@ -70,6 +70,32 @@ def _unit_test_allows_managed_environment(tmp_path: Path, monkeypatch):
     assert checker.check(context) == []
 
 
+def _unit_test_allows_declared_external_environment(
+    tmp_path: Path, monkeypatch
+):
+    """Declared managed roots may live outside the repository tree."""
+    managed = tmp_path.parent / "bench-env"
+    managed.mkdir(parents=True, exist_ok=True)
+    managed_bin = managed / "bin"
+    managed_bin.mkdir(parents=True, exist_ok=True)
+    managed_python = managed_bin / "python"
+    managed_python.write_text("", encoding="utf-8")
+    monkeypatch.setenv("VIRTUAL_ENV", str(managed))
+    monkeypatch.setattr(sys, "executable", str(managed_python))
+
+    checker = ManagedEnvironmentCheck()
+    checker.set_options(
+        {
+            "expected_paths": [str(managed)],
+            "expected_interpreters": [str(managed_python)],
+            "required_commands": ["python3"],
+        },
+        {},
+    )
+    context = CheckContext(repo_root=tmp_path, changed_files=[])
+    assert checker.check(context) == []
+
+
 def _unit_test_warns_when_metadata_empty(tmp_path: Path):
     """Empty metadata should emit warning guidance."""
     checker = ManagedEnvironmentCheck()
@@ -286,6 +312,18 @@ class GeneratedUnittestCases(unittest.TestCase):
         with tempfile.TemporaryDirectory() as temp_dir:
             tmp_path = Path(temp_dir).resolve()
             _unit_test_warns_when_metadata_empty(tmp_path=tmp_path)
+
+    def test_allows_declared_external_environment(self):
+        """Run test_allows_declared_external_environment."""
+        monkeypatch = MonkeyPatch()
+        try:
+            with tempfile.TemporaryDirectory() as temp_dir:
+                tmp_path = Path(temp_dir).resolve()
+                _unit_test_allows_declared_external_environment(
+                    tmp_path=tmp_path, monkeypatch=monkeypatch
+                )
+        finally:
+            monkeypatch.undo()
 
     def test_required_commands_replace_hint_warning(self):
         """Run test_required_commands_replace_hint_warning."""
