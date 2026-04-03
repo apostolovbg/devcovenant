@@ -79,6 +79,7 @@ def _unit_test_execution_symbols_cover_runtime_helpers() -> None:
         "get_output_mode",
         "get_active_run_log_context",
         "merge_active_run_log_metadata",
+        "merge_active_run_phase_timings",
         "normal_mode_prefers_live_streaming_for_command",
         "print_banner",
         "print_step",
@@ -142,6 +143,7 @@ def _unit_test_execution_symbol_assertions_cover_public_api() -> None:
     assert module.get_output_mode
     assert module.get_active_run_log_context
     assert module.merge_active_run_log_metadata
+    assert module.merge_active_run_phase_timings
     assert module.normal_mode_prefers_live_streaming_for_command
     assert module.print_banner
     assert module.print_step
@@ -713,7 +715,7 @@ def _unit_test_custom_extension_docs_explain_baseline_first_activation():
     expectations = {
         "devcovenant/docs/installation.md": (
             "For a normal repository, do that first cycle before adding",
-            "Start from a clean working base, then add repository-specific",
+            "Start from a clean working base, then add custom extensions",
         ),
         "devcovenant/docs/profiles.md": (
             "keep `devcovuser` active for an ordinary repository",
@@ -721,7 +723,7 @@ def _unit_test_custom_extension_docs_explain_baseline_first_activation():
                 "keep `github` active when the repository wants the "
                 "generic generated GitHub"
             ),
-            "add a repository-specific custom profile on top",
+            "add a custom profile on top",
         ),
     }
 
@@ -1645,6 +1647,59 @@ def _unit_test_clean_summary_artifacts_include_command_details() -> None:
         assert '"removed_count": 2' in summary_json
 
 
+def _unit_test_phase_timing_artifacts_include_command_details() -> None:
+    """Run summaries should expose per-command phase timing details."""
+    module = importlib.import_module(MODULE)
+    logging_module = importlib.import_module("devcovenant.core.run_logs")
+    with tempfile.TemporaryDirectory() as tmpdir:
+        repo_root = Path(tmpdir)
+        context = logging_module.create_run_log_context(
+            repo_root=repo_root,
+            command_name="refresh",
+            argv=("devcovenant", "refresh"),
+        )
+        try:
+            module.set_active_run_log_context(context)
+            module.merge_active_run_phase_timings(
+                "refresh",
+                [
+                    {
+                        "phase": "bootstrap",
+                        "duration_seconds": 0.12,
+                        "changed": True,
+                    },
+                    {
+                        "phase": "gitignore",
+                        "duration_seconds": 0.03,
+                        "changed": False,
+                        "skipped": False,
+                    },
+                ],
+            )
+            module.finalize_active_run_log_context(
+                exit_code=0,
+                status="success",
+            )
+        finally:
+            module.clear_active_run_log_context()
+
+        summary_txt = context.require_paths().summary_txt.read_text(
+            encoding="utf-8"
+        )
+        summary_json = context.require_paths().summary_json.read_text(
+            encoding="utf-8"
+        )
+        assert "Phase Timings [refresh]:" in summary_txt
+        assert "bootstrap (duration=0.12, changed=True)" in summary_txt
+        assert (
+            "gitignore (duration=0.03, changed=False, skipped=False)"
+            in summary_txt
+        )
+        assert '"phase_timings": {' in summary_json
+        assert '"refresh": [' in summary_json
+        assert '"phase": "bootstrap"' in summary_json
+
+
 class ExecutionTests(unittest.TestCase):
     """unittest wrappers for layered module sanity checks."""
 
@@ -1857,3 +1912,7 @@ class ExecutionTests(unittest.TestCase):
     def test_clean_summary_artifacts_include_command_details(self):
         """Run clean-summary artifact detail assertions."""
         _unit_test_clean_summary_artifacts_include_command_details()
+
+    def test_phase_timing_artifacts_include_command_details(self):
+        """Run phase-timing artifact detail assertions."""
+        _unit_test_phase_timing_artifacts_include_command_details()

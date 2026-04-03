@@ -68,6 +68,26 @@ def _unit_test_undeploy_removes_generated_gitignore_fragments() -> None:
         assert "# --- End user entries ---" not in post
 
 
+def _unit_test_undeploy_skips_recovery_scan_when_declared_docs_are_valid() -> (
+    None
+):
+    """undeploy_repo should avoid a full markdown scan in the normal path."""
+    with tempfile.TemporaryDirectory() as temp_dir:
+        repo_root = Path(temp_dir)
+        copy_refreshed_repo(repo_root)
+
+        with patch.object(
+            undeploy,
+            "_discover_docs_with_managed_markers",
+            side_effect=AssertionError(
+                "recovery scan should stay out of the normal path"
+            ),
+        ):
+            result = undeploy.undeploy_repo(repo_root)
+
+        assert result == 0
+
+
 def _unit_test_undeploy_recovers_when_config_is_invalid() -> None:
     """undeploy_repo should still clean managed blocks with broken config."""
     with tempfile.TemporaryDirectory() as temp_dir:
@@ -147,6 +167,10 @@ class GeneratedUnittestCases(unittest.TestCase):
     def test_undeploy_removes_generated_gitignore_fragments(self):
         """Run test_undeploy_removes_generated_gitignore_fragments."""
         _unit_test_undeploy_removes_generated_gitignore_fragments()
+
+    def test_undeploy_skips_recovery_scan_when_declared_docs_are_valid(self):
+        """Run declared-doc undeploy assertions without recovery scanning."""
+        _unit_test_undeploy_skips_recovery_scan_when_declared_docs_are_valid()
 
     def test_undeploy_recovers_when_config_is_invalid(self):
         """Run test_undeploy_recovers_when_config_is_invalid."""

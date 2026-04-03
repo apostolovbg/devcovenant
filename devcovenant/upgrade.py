@@ -13,6 +13,7 @@ import argparse
 import importlib.metadata as importlib_metadata
 import shutil
 import tempfile
+import time
 from collections.abc import Callable
 from pathlib import Path
 
@@ -202,13 +203,18 @@ def _prune_repo_only_custom_payload(repo_root: Path) -> list[Path]:
 
 def upgrade_repo(repo_root: Path) -> int:
     """Upgrade DevCovenant core and run full refresh."""
-    from devcovenant.core.execution import print_step
+    from devcovenant.core.execution import (
+        merge_active_run_phase_timings,
+        print_step,
+    )
     from devcovenant.core.refresh_runtime import refresh_repo
     from devcovenant.core.repository_paths import display_path
 
+    phase_timings: list[dict[str, object]] = []
     source_version_path = Path(__file__).resolve().parent / "VERSION"
     target_version_path = repo_root / "devcovenant" / "VERSION"
 
+    version_started = time.perf_counter()
     source_version = _read_version(source_version_path)
     target_version = _read_version(target_version_path)
     print_step(
@@ -223,7 +229,29 @@ def upgrade_repo(repo_root: Path) -> int:
         target_key = _parse_version_for_compare(target_version)
     except ValueError as error:
         raise SystemExit(f"Upgrade blocked: {error}") from error
+    phase_timings.append(
+        {
+            "phase": "version_compare",
+            "duration_seconds": round(
+                time.perf_counter() - version_started, 6
+            ),
+            "changed": source_key != target_key,
+        }
+    )
+
+    replace_started = time.perf_counter()
     _replace_core_package_for_upgrade(repo_root)
+    phase_timings.append(
+        {
+            "phase": "replace_core_package",
+            "duration_seconds": round(
+                time.perf_counter() - replace_started, 6
+            ),
+            "changed": True,
+        }
+    )
+
+    prune_started = time.perf_counter()
     pruned_paths = _prune_repo_only_custom_payload(repo_root)
     if pruned_paths:
         formatted = ", ".join(
@@ -234,6 +262,13 @@ def upgrade_repo(repo_root: Path) -> int:
             "ℹ️",
         )
     target_version_path.write_text(f"{source_version}\n", encoding="utf-8")
+    phase_timings.append(
+        {
+            "phase": "prune_repo_only_payload",
+            "duration_seconds": round(time.perf_counter() - prune_started, 6),
+            "changed": bool(pruned_paths),
+        }
+    )
     if source_key > target_key:
         print_step("Core package replaced with newer version", "✅")
     elif source_key == target_key:
@@ -247,14 +282,33 @@ def upgrade_repo(repo_root: Path) -> int:
             "✅",
         )
 
+    config_started = time.perf_counter()
     _ensure_upgrade_config(repo_root)
+    phase_timings.append(
+        {
+            "phase": "ensure_config",
+            "duration_seconds": round(time.perf_counter() - config_started, 6),
+            "changed": True,
+        }
+    )
     print_step("Running full refresh after upgrade", "🔄")
+    refresh_started = time.perf_counter()
     result = refresh_repo(repo_root)
+    phase_timings.append(
+        {
+            "phase": "refresh",
+            "duration_seconds": round(
+                time.perf_counter() - refresh_started, 6
+            ),
+            "changed": result == 0,
+        }
+    )
     if result != 0:
         print_step(
             "Upgrade refresh failed; inspect run logs for details.",
             "🚫",
         )
+    merge_active_run_phase_timings("upgrade", phase_timings)
     return result
 
 

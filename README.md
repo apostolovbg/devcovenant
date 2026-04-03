@@ -2,7 +2,7 @@
 **Doc ID:** README
 **Doc Type:** repo-readme
 **Project Version:** 1.0.1.dev1
-**Last Updated:** 2026-04-02
+**Last Updated:** 2026-04-03
 **DevCovenant Version:** 1.0.1.dev1
 
 <!-- DEVCOV:BEGIN -->
@@ -30,8 +30,8 @@ In practice, DevCovenant gives a repository four things:
 
 2. Executable policy rules.
 
-   Policies are configured in the repo, shown in `AGENTS.md`, and enforced by
-   the CLI instead of living only as prose.
+   Policies are configured in project files, shown in `AGENTS.md`, and
+   enforced by the CLI instead of living only as prose.
 
 3. Managed documents and generated files.
 
@@ -51,8 +51,8 @@ A policy says one thing while the code does another.
 A changelog entry misses the files that actually changed.
 
 DevCovenant makes those failures visible and repeatable to fix.
-It does that by making the workflow explicit, storing the active rule set
-in the repo, and writing logs for each governed command.
+It does that by making the workflow explicit, storing the active rule set in
+project files, and writing logs for each governed command.
 
 ## Custom Governance
 Built-in policies and profiles are the shipped baseline, not the boundary.
@@ -124,8 +124,8 @@ What those steps mean:
 
    Start with `project-governance`, `developer_mode`, and `profiles.active`.
    For most repositories, keep the standard stack with `devcovuser` active and
-   add a repository-specific custom profile on top when the repository needs
-   its own rules, assets, or workflow additions.
+   add a custom profile on top when the repository needs its own rules,
+   assets, or workflow additions.
    Use direct overlays only for small local exceptions.
 
 4. `deploy` writes the managed docs, generated files, and other DevCovenant
@@ -193,6 +193,9 @@ Use the commands this way:
 
 When a command prints `Run logs: ...`, start with `summary.txt`.
 If that is not enough, inspect `tail.txt`, then `stdout.log` and `stderr.log`.
+For lifecycle commands such as `install`, `deploy`, `refresh`, `undeploy`,
+`uninstall`, and `upgrade`, the summary artifacts can also include phase
+timing details so you can see where time went before opening the full logs.
 
 In `engine.tests_output_mode: normal`, the declared `tests` run keeps console
 output short and leaves the full child output in the run logs.
@@ -245,9 +248,8 @@ The most important first-review settings in `devcovenant/config.yaml` are:
 
 3. `profiles.active`
 
-   For most repositories, keep `devcovuser` in the stack and layer a
-   repository-specific custom profile on top when the repository needs its own
-   behavior.
+   For most repositories, keep `devcovuser` in the stack and layer a custom
+   profile on top when the repository needs its own behavior.
 
 4. `paths`
 
@@ -347,6 +349,7 @@ the `github` and `devcovrepo` profiles plus repository-only policies and
 assets that ordinary user repositories do not need.
 
 ## Repository Release And Assurance
+- The current maintained public release line is `1.0.1`.
 - Root automation notes live here and in `AGENTS.md`, not in package docs.
 - The builtin `github` profile owns the generic GitHub Actions CI base and
   bootstraps DevCovenant from the shipped

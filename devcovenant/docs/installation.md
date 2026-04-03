@@ -1,5 +1,5 @@
 # Installation and Lifecycle
-**Last Updated:** 2026-04-02
+**Last Updated:** 2026-04-03
 
 **Project Version:** 1.0.1.dev1
 
@@ -71,8 +71,8 @@ The shortest accurate model is:
 2. config review is the checkpoint.
    Start with `project-governance`, `developer_mode`, and `profiles.active`.
    For most repositories, keep `devcovuser` active and add a
-   repository-specific custom profile on top when the repository needs its
-   own rules, assets, workflow additions, or dependency-surface overrides.
+   custom profile on top when the repository needs its own rules, assets,
+   workflow additions, or dependency-surface overrides.
    Keep `github` active when the repository wants the generic generated
    GitHub Actions workflow that ships in the default user stack; remove it
    when the repository does not want that workflow.
@@ -120,6 +120,10 @@ Runs the full refresh path and writes the active managed outputs.
 ### refresh
 Rebuilds tracked registry state, managed docs, generated config sections,
 generated workflow files, `.gitignore`, dependency locks, and related outputs.
+On a converged repository, it should avoid rewriting current tracked state
+when the effective inputs did not change.
+Its run summaries can also include per-phase timing details so slow steps are
+visible before you inspect the full logs.
 
 ### asset
 Writes a Desktop copy of a shipped profile asset or managed doc template.
@@ -146,10 +150,15 @@ Use it when DevCovenant is already present and you want the newer runtime.
 Removes managed outputs while keeping the installed core and config.
 Use it when you want to deactivate the managed outputs without uninstalling
 DevCovenant entirely.
+When tracked managed-doc routing is healthy, undeploy should use that declared
+routing first and reserve repository-wide recovery scans for broken-config
+paths.
 
 ### uninstall
 Removes the DevCovenant footprint from the repository.
 Use it only when you are truly removing DevCovenant from the repo.
+Like the other heavy lifecycle commands, it can record per-phase timing
+details in the summary artifacts.
 
 ## Command Startup Behavior
 DevCovenant does not treat every command path the same.
@@ -270,11 +279,9 @@ Use this as the practical first integration flow:
 
 For a normal repository, do that first cycle before adding custom policies or
 profiles under `devcovenant/custom/`.
-Start from a clean working base, then add repository-specific extensions
-on top.
+Start from a clean working base, then add custom extensions on top.
 That usually means:
-1. a repository-specific custom profile for repository-owned behavior such
-   as `root_workspace`
+1. a custom profile for project-owned behavior such as `root_workspace`
 2. an optional GitHub-specific custom profile only when the repository wants
    extra GitHub CI behavior beyond the builtin base
 

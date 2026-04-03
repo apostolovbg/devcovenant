@@ -11,6 +11,7 @@ if __package__ in {None, ""}:  # pragma: no cover
 
 import argparse
 import shutil
+import time
 from pathlib import Path
 
 import yaml
@@ -130,6 +131,31 @@ def _managed_docs_from_config(repo_root: Path) -> list[str]:
     return ordered
 
 
+def _managed_docs_from_registry(repo_root: Path) -> list[str]:
+    """Resolve enabled managed docs from the tracked registry when present."""
+    registry_path = repo_root / "devcovenant" / "registry" / "registry.yaml"
+    if not registry_path.exists():
+        return []
+    try:
+        payload = yaml_cache_service.load_yaml(registry_path)
+    except (yaml.YAMLError, OSError):
+        return []
+    if not isinstance(payload, dict):
+        return []
+    managed_docs = payload.get("managed-docs")
+    if not isinstance(managed_docs, dict):
+        return []
+    enabled_docs = managed_docs.get("enabled_docs")
+    if not isinstance(enabled_docs, list):
+        return []
+    ordered: list[str] = []
+    for entry in enabled_docs:
+        doc_name = _normalize_doc_name(str(entry or "").strip())
+        if doc_name and doc_name not in ordered:
+            ordered.append(doc_name)
+    return ordered
+
+
 def _discover_docs_with_managed_markers(repo_root: Path) -> list[str]:
     """Return text files that contain any known managed marker."""
     discovered: list[str] = []
@@ -196,19 +222,51 @@ def _remove_generated_gitignore(repo_root: Path) -> bool:
 
 def undeploy_repo(repo_root: Path) -> int:
     """Remove managed blocks and generated registry state."""
-    from devcovenant.core.execution import print_step
+    from devcovenant.core.execution import (
+        merge_active_run_phase_timings,
+        print_step,
+    )
 
+    phase_timings: list[dict[str, object]] = []
     docs: list[str]
+    registry_docs: list[str] = []
+    recovery_scan_required = False
+    doc_selection_started = time.perf_counter()
     try:
         docs = _managed_docs_from_config(repo_root)
     except ValueError as exc:
         docs = []
+        recovery_scan_required = True
         print_step(f"{exc} Continuing with recovery teardown.", "⚠️")
+    registry_docs = _managed_docs_from_registry(repo_root)
     doc_candidates = set(docs)
+    doc_candidates.update(registry_docs)
     doc_candidates.update(_RECOVERY_MANAGED_DOCS)
-    doc_candidates.update(_discover_docs_with_managed_markers(repo_root))
+    phase_timings.append(
+        {
+            "phase": "doc_selection",
+            "duration_seconds": round(
+                time.perf_counter() - doc_selection_started, 6
+            ),
+            "changed": bool(doc_candidates),
+        }
+    )
+    recovery_scan_started = time.perf_counter()
+    if recovery_scan_required:
+        doc_candidates.update(_discover_docs_with_managed_markers(repo_root))
+    phase_timings.append(
+        {
+            "phase": "recovery_doc_scan",
+            "duration_seconds": round(
+                time.perf_counter() - recovery_scan_started, 6
+            ),
+            "changed": recovery_scan_required,
+            "skipped": not recovery_scan_required,
+        }
+    )
     stripped_docs = []
 
+    strip_docs_started = time.perf_counter()
     for doc_name in sorted(doc_candidates):
         path = repo_root / doc_name
         if not path.exists():
@@ -237,7 +295,17 @@ def undeploy_repo(repo_root: Path) -> int:
             )
             continue
         stripped_docs.append(doc_name)
+    phase_timings.append(
+        {
+            "phase": "strip_managed_docs",
+            "duration_seconds": round(
+                time.perf_counter() - strip_docs_started, 6
+            ),
+            "changed": bool(stripped_docs),
+        }
+    )
 
+    cleanup_started = time.perf_counter()
     registry_runtime = repo_root / "devcovenant" / "registry" / "runtime"
     if registry_runtime.exists():
         shutil.rmtree(registry_runtime)
@@ -253,6 +321,16 @@ def undeploy_repo(repo_root: Path) -> int:
             f"Removed managed blocks from: {', '.join(stripped_docs)}",
             "✅",
         )
+    phase_timings.append(
+        {
+            "phase": "registry_cleanup",
+            "duration_seconds": round(
+                time.perf_counter() - cleanup_started, 6
+            ),
+            "changed": True,
+        }
+    )
+    merge_active_run_phase_timings("undeploy", phase_timings)
     return 0
 
 

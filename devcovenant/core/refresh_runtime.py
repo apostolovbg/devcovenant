@@ -9,6 +9,7 @@ import os
 import re
 import subprocess  # nosec B404
 import sys
+import time
 from datetime import datetime, timezone
 from pathlib import Path
 from typing import Dict, List
@@ -24,7 +25,11 @@ import devcovenant.core.profile_registry as profile_registry_service
 import devcovenant.core.project_governance as project_governance_service
 import devcovenant.core.repository_paths as yaml_cache_service
 import devcovenant.core.repository_validation as manifest_module
-from devcovenant.core.execution import print_step, runtime_print
+from devcovenant.core.execution import (
+    merge_active_run_phase_timings,
+    print_step,
+    runtime_print,
+)
 from devcovenant.core.policy_contract import CheckContext
 from devcovenant.core.policy_metadata import PolicyDefinition
 from devcovenant.core.policy_registry import (
@@ -263,6 +268,26 @@ def _write_text_if_changed(target: Path, content: str) -> bool:
     target.parent.mkdir(parents=True, exist_ok=True)
     target.write_text(content, encoding="utf-8")
     return True
+
+
+def _record_phase_timing(
+    phase_timings: list[dict[str, object]],
+    phase_name: str,
+    started_at: float,
+    *,
+    changed: bool | None = None,
+    skipped: bool | None = None,
+) -> None:
+    """Append one normalized phase timing row."""
+    entry: dict[str, object] = {
+        "phase": phase_name,
+        "duration_seconds": round(time.perf_counter() - started_at, 6),
+    }
+    if changed is not None:
+        entry["changed"] = changed
+    if skipped is not None:
+        entry["skipped"] = skipped
+    phase_timings.append(entry)
 
 
 def _materialize_profile_asset(
@@ -1943,225 +1968,294 @@ def _refresh_dependency_artifacts(repo_root: Path) -> list[str]:
 
 def refresh_repo(repo_root: Path) -> int:
     """Run full refresh for the repository."""
+    phase_timings: list[dict[str, object]] = []
     config_path = repo_root / "devcovenant" / "config.yaml"
     try:
-        config = _load_config_template(repo_root)
-        user_config = _read_yaml(config_path) if config_path.exists() else {}
-        _merge_user_config_values(config, user_config)
-        initial_active_profiles = _active_profiles(config)
-        preview_profile_registry = (
-            profile_registry_service.build_profile_registry(
-                repo_root,
-                initial_active_profiles,
+        bootstrap_started = time.perf_counter()
+        try:
+            config = _load_config_template(repo_root)
+            user_config = (
+                _read_yaml(config_path) if config_path.exists() else {}
             )
-        )
-        _apply_profile_aware_project_governance_defaults(
-            config,
-            user_config,
-            preview_profile_registry,
-            initial_active_profiles,
-        )
-        config["autogen_metadata_overlays"] = (
-            _config_autogen_metadata_overlays(
+            _merge_user_config_values(config, user_config)
+            active_profiles = _active_profiles(config)
+            profile_registry = profile_registry_service.build_profile_registry(
                 repo_root,
-                initial_active_profiles,
-                profile_registry=preview_profile_registry,
+                active_profiles,
             )
-        )
-        project_governance_state = (
-            project_governance_service.resolve_runtime_state(
-                repo_root,
-                config_payload=config,
+            _apply_profile_aware_project_governance_defaults(
+                config,
+                user_config,
+                profile_registry,
+                active_profiles,
             )
-        )
-        declared_project_version = _read_project_version(
-            repo_root,
-            config,
-            required=not project_governance_state.is_unversioned,
-        )
-        project_version = project_governance_state.displayed_project_version(
-            declared_project_version
-        )
-        devcovenant_version = _read_devcovenant_version(repo_root)
-        import_managed_docs = _install_import_managed_docs(config)
-        _sync_doc(
-            repo_root,
-            "AGENTS.md",
-            config_payload=config,
-            project_version=project_version,
-            devcovenant_version=devcovenant_version,
-            project_governance_state=project_governance_state,
-            import_managed_docs=import_managed_docs,
-        )
-    except ValueError as error:
-        print_step(f"Refresh failed: {error}", "🚫")
-        return 1
-
-    active_profiles = _active_profiles(config)
-    profile_registry = profile_registry_service.build_profile_registry(
-        repo_root, active_profiles
-    )
-
-    try:
-        refreshed_assets = _refresh_profile_assets(
-            repo_root,
-            profile_registry,
-            active_profiles,
-            project_governance_state,
-        )
-    except ValueError as error:
-        print_step(f"Profile asset refresh failed: {error}", "🚫")
-        return 1
-    if refreshed_assets:
-        print_step(
-            "Materialized profile assets: " + ", ".join(refreshed_assets),
-            "✅",
-        )
-
-    try:
-        config, config_changed = _refresh_config_generated(
-            repo_root,
-            config_path,
-            config,
-            user_config,
-            profile_registry,
-            active_profiles,
-        )
-    except ValueError as error:
-        print_step(f"Config refresh failed: {error}", "🚫")
-        return 1
-    if config_changed:
-        print_step("Refreshed config generated profile metadata", "✅")
-
-    profile_registry_service.write_profile_registry(
-        repo_root, profile_registry
-    )
-    registry_result = refresh_policy_registry(
-        repo_root,
-        config_payload=config,
-    )
-    if registry_result != 0:
-        return registry_result
-
-    agents_path = repo_root / "AGENTS.md"
-    try:
-        refresh_agents_policy_block(agents_path, None, repo_root=repo_root)
-    except ValueError as error:
-        print_step(f"AGENTS block refresh failed: {error}", "🚫")
-        return 1
-
-    try:
-        refreshed_dependency_artifacts = _refresh_dependency_artifacts(
-            repo_root
-        )
-    except ValueError as error:
-        print_step(str(error), "🚫")
-        return 1
-    if refreshed_dependency_artifacts:
-        print_step(
-            "Refreshed dependency artifacts: "
-            + ", ".join(refreshed_dependency_artifacts),
-            "✅",
-        )
-
-    try:
-        ci_and_test_changed = _refresh_ci_and_test(
-            repo_root,
-            config,
-            profile_registry,
-            active_profiles,
-        )
-    except ValueError as error:
-        print_step(f"CI-and-test workflow refresh failed: {error}", "🚫")
-        return 1
-    if ci_and_test_changed:
-        print_step("Regenerated CI workflow", "✅")
-
-    try:
-        pre_commit_changed = _refresh_pre_commit_config(
-            repo_root,
-            config,
-            profile_registry,
-            active_profiles,
-        )
-    except ValueError as error:
-        print_step(f"Pre-commit config refresh failed: {error}", "🚫")
-        return 1
-    if pre_commit_changed:
-        print_step(
-            "Regenerated .pre-commit-config.yaml from profile fragments",
-            "✅",
-        )
-
-    try:
-        gitignore_changed = _refresh_gitignore(
-            repo_root,
-            config,
-            profile_registry,
-            active_profiles,
-        )
-    except ValueError as error:
-        print_step(f"Gitignore refresh failed: {error}", "🚫")
-        return 1
-    if gitignore_changed:
-        print_step("Regenerated .gitignore from profile fragments", "✅")
-
-    try:
-        docs = _managed_docs_from_config(config)
-    except ValueError as error:
-        print_step(f"Managed doc routing refresh failed: {error}", "🚫")
-        return 1
-    try:
-        project_governance_state = (
-            project_governance_service.resolve_runtime_state(
-                repo_root,
-                config_payload=config,
+            config["autogen_metadata_overlays"] = (
+                _config_autogen_metadata_overlays(
+                    repo_root,
+                    active_profiles,
+                    profile_registry=profile_registry,
+                )
             )
-        )
-        declared_project_version = _read_project_version(
-            repo_root,
-            config,
-            required=not project_governance_state.is_unversioned,
-        )
-        project_version = project_governance_state.displayed_project_version(
-            declared_project_version
-        )
-    except ValueError as error:
-        print_step(f"Project version resolution failed: {error}", "🚫")
-        return 1
-    devcovenant_version = _read_devcovenant_version(repo_root)
-    import_managed_docs = _install_import_managed_docs(config)
-    try:
-        synced = [
-            doc
-            for doc in docs
-            if _sync_doc(
+            project_governance_state = (
+                project_governance_service.resolve_runtime_state(
+                    repo_root,
+                    config_payload=config,
+                )
+            )
+            declared_project_version = _read_project_version(
                 repo_root,
-                doc,
+                config,
+                required=not project_governance_state.is_unversioned,
+            )
+            project_version = (
+                project_governance_state.displayed_project_version(
+                    declared_project_version
+                )
+            )
+            devcovenant_version = _read_devcovenant_version(repo_root)
+            import_managed_docs = _install_import_managed_docs(config)
+            seeded_agents = _sync_doc(
+                repo_root,
+                "AGENTS.md",
                 config_payload=config,
                 project_version=project_version,
                 devcovenant_version=devcovenant_version,
                 project_governance_state=project_governance_state,
                 import_managed_docs=import_managed_docs,
             )
-        ]
-    except ValueError as error:
-        print_step(f"Managed doc refresh failed: {error}", "🚫")
-        return 1
-    if synced:
-        print_step(f"Synchronized managed docs: {', '.join(synced)}", "✅")
-
-    if _sync_project_pyproject_identity(
-        repo_root,
-        project_governance_state,
-    ):
-        print_step(
-            "Synchronized pyproject package identity from project governance",
-            "✅",
+        except ValueError as error:
+            print_step(f"Refresh failed: {error}", "🚫")
+            return 1
+        _record_phase_timing(
+            phase_timings,
+            "bootstrap",
+            bootstrap_started,
+            changed=seeded_agents,
         )
 
-    manifest_module.ensure_manifest(repo_root)
-    return 0
+        assets_started = time.perf_counter()
+        try:
+            refreshed_assets = _refresh_profile_assets(
+                repo_root,
+                profile_registry,
+                active_profiles,
+                project_governance_state,
+            )
+        except ValueError as error:
+            print_step(f"Profile asset refresh failed: {error}", "🚫")
+            return 1
+        _record_phase_timing(
+            phase_timings,
+            "profile_assets",
+            assets_started,
+            changed=bool(refreshed_assets),
+        )
+        if refreshed_assets:
+            print_step(
+                "Materialized profile assets: " + ", ".join(refreshed_assets),
+                "✅",
+            )
+
+        config_started = time.perf_counter()
+        try:
+            config, config_changed = _refresh_config_generated(
+                repo_root,
+                config_path,
+                config,
+                user_config,
+                profile_registry,
+                active_profiles,
+            )
+        except ValueError as error:
+            print_step(f"Config refresh failed: {error}", "🚫")
+            return 1
+        _record_phase_timing(
+            phase_timings,
+            "config",
+            config_started,
+            changed=config_changed,
+        )
+        if config_changed:
+            print_step("Refreshed config generated profile metadata", "✅")
+
+        profile_registry_started = time.perf_counter()
+        profile_registry_service.write_profile_registry(
+            repo_root, profile_registry
+        )
+        _record_phase_timing(
+            phase_timings,
+            "profile_registry",
+            profile_registry_started,
+        )
+
+        policy_registry_started = time.perf_counter()
+        registry_result = refresh_policy_registry(
+            repo_root,
+            config_payload=config,
+            profile_registry=profile_registry,
+        )
+        _record_phase_timing(
+            phase_timings,
+            "policy_registry",
+            policy_registry_started,
+            changed=registry_result == 0,
+        )
+        if registry_result != 0:
+            return registry_result
+
+        agents_block_started = time.perf_counter()
+        agents_path = repo_root / "AGENTS.md"
+        try:
+            refresh_agents_policy_block(agents_path, None, repo_root=repo_root)
+        except ValueError as error:
+            print_step(f"AGENTS block refresh failed: {error}", "🚫")
+            return 1
+        _record_phase_timing(
+            phase_timings,
+            "agents_block",
+            agents_block_started,
+        )
+
+        dependency_started = time.perf_counter()
+        try:
+            refreshed_dependency_artifacts = _refresh_dependency_artifacts(
+                repo_root
+            )
+        except ValueError as error:
+            print_step(str(error), "🚫")
+            return 1
+        _record_phase_timing(
+            phase_timings,
+            "dependency_artifacts",
+            dependency_started,
+            changed=bool(refreshed_dependency_artifacts),
+        )
+        if refreshed_dependency_artifacts:
+            print_step(
+                "Refreshed dependency artifacts: "
+                + ", ".join(refreshed_dependency_artifacts),
+                "✅",
+            )
+
+        ci_started = time.perf_counter()
+        try:
+            ci_and_test_changed = _refresh_ci_and_test(
+                repo_root,
+                config,
+                profile_registry,
+                active_profiles,
+            )
+        except ValueError as error:
+            print_step(f"CI-and-test workflow refresh failed: {error}", "🚫")
+            return 1
+        _record_phase_timing(
+            phase_timings,
+            "ci_and_test",
+            ci_started,
+            changed=ci_and_test_changed,
+        )
+        if ci_and_test_changed:
+            print_step("Regenerated CI workflow", "✅")
+
+        pre_commit_started = time.perf_counter()
+        try:
+            pre_commit_changed = _refresh_pre_commit_config(
+                repo_root,
+                config,
+                profile_registry,
+                active_profiles,
+            )
+        except ValueError as error:
+            print_step(f"Pre-commit config refresh failed: {error}", "🚫")
+            return 1
+        _record_phase_timing(
+            phase_timings,
+            "pre_commit",
+            pre_commit_started,
+            changed=pre_commit_changed,
+        )
+        if pre_commit_changed:
+            print_step(
+                "Regenerated .pre-commit-config.yaml from profile fragments",
+                "✅",
+            )
+
+        gitignore_started = time.perf_counter()
+        try:
+            gitignore_changed = _refresh_gitignore(
+                repo_root,
+                config,
+                profile_registry,
+                active_profiles,
+            )
+        except ValueError as error:
+            print_step(f"Gitignore refresh failed: {error}", "🚫")
+            return 1
+        _record_phase_timing(
+            phase_timings,
+            "gitignore",
+            gitignore_started,
+            changed=gitignore_changed,
+        )
+        if gitignore_changed:
+            print_step("Regenerated .gitignore from profile fragments", "✅")
+
+        managed_docs_started = time.perf_counter()
+        try:
+            docs = _managed_docs_from_config(config)
+        except ValueError as error:
+            print_step(f"Managed doc routing refresh failed: {error}", "🚫")
+            return 1
+        try:
+            synced = [
+                doc
+                for doc in docs
+                if _sync_doc(
+                    repo_root,
+                    doc,
+                    config_payload=config,
+                    project_version=project_version,
+                    devcovenant_version=devcovenant_version,
+                    project_governance_state=project_governance_state,
+                    import_managed_docs=import_managed_docs,
+                )
+            ]
+        except ValueError as error:
+            print_step(f"Managed doc refresh failed: {error}", "🚫")
+            return 1
+        _record_phase_timing(
+            phase_timings,
+            "managed_docs",
+            managed_docs_started,
+            changed=bool(synced),
+        )
+        if synced:
+            print_step(f"Synchronized managed docs: {', '.join(synced)}", "✅")
+
+        pyproject_started = time.perf_counter()
+        pyproject_changed = _sync_project_pyproject_identity(
+            repo_root,
+            project_governance_state,
+        )
+        _record_phase_timing(
+            phase_timings,
+            "pyproject_identity",
+            pyproject_started,
+            changed=pyproject_changed,
+        )
+        if pyproject_changed:
+            print_step(
+                "Synchronized pyproject package identity "
+                "from project governance",
+                "✅",
+            )
+
+        return 0
+    finally:
+        merge_active_run_phase_timings(
+            "refresh",
+            phase_timings,
+        )
 
 
 # ---- AGENTS policy block refresh ----
@@ -2310,6 +2404,7 @@ def refresh_policy_registry(
     repo_root: Path | None = None,
     *,
     config_payload: dict[str, object] | None = None,
+    profile_registry: dict[str, dict] | None = None,
 ) -> int:
     """Refresh policy hashes.
 
@@ -2512,11 +2607,13 @@ def refresh_policy_registry(
                 config_payload=config_payload,
             )
         )
-        registry.update_workflow_contract(
-            profile_registry_service.build_profile_registry(
+        if profile_registry is None:
+            profile_registry = profile_registry_service.build_profile_registry(
                 repo_root,
                 _active_profiles(config_payload),
-            ).get("workflow_contract", {})
+            )
+        registry.update_workflow_contract(
+            profile_registry.get("workflow_contract", {})
         )
     except ValueError as error:
         runtime_print(f"Error: {error}", file=sys.stderr)

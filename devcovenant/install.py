@@ -12,6 +12,7 @@ if __package__ in {None, ""}:  # pragma: no cover
 import argparse
 import shutil
 import tempfile
+import time
 from pathlib import Path
 
 import yaml
@@ -191,23 +192,77 @@ def _ensure_review_required_config(
 def install_repo(repo_root: Path) -> int:
     """Install DevCovenant core and review-required config in a repository."""
     import devcovenant.core.repository_validation as manifest_module
+    from devcovenant.core.execution import merge_active_run_phase_timings
 
+    phase_timings: list[dict[str, object]] = []
     source_dir = _source_package_dir()
+
+    detect_started = time.perf_counter()
     import_managed_docs = _detect_importable_managed_docs(
         repo_root,
         source_dir,
     )
+    phase_timings.append(
+        {
+            "phase": "detect_importable_docs",
+            "duration_seconds": round(time.perf_counter() - detect_started, 6),
+            "changed": bool(import_managed_docs),
+        }
+    )
+
+    replace_started = time.perf_counter()
     replace_core_package(repo_root, source_dir=source_dir)
+    phase_timings.append(
+        {
+            "phase": "replace_core_package",
+            "duration_seconds": round(
+                time.perf_counter() - replace_started, 6
+            ),
+            "changed": True,
+        }
+    )
 
+    cleanup_started = time.perf_counter()
     runtime_registry = repo_root / "devcovenant" / "registry" / "runtime"
-    if runtime_registry.exists():
+    runtime_registry_removed = runtime_registry.exists()
+    if runtime_registry_removed:
         shutil.rmtree(runtime_registry)
+    phase_timings.append(
+        {
+            "phase": "runtime_registry_cleanup",
+            "duration_seconds": round(
+                time.perf_counter() - cleanup_started, 6
+            ),
+            "changed": runtime_registry_removed,
+            "skipped": not runtime_registry_removed,
+        }
+    )
 
+    config_started = time.perf_counter()
     _ensure_review_required_config(
         repo_root,
         import_managed_docs=import_managed_docs,
     )
+    phase_timings.append(
+        {
+            "phase": "seed_review_required_config",
+            "duration_seconds": round(time.perf_counter() - config_started, 6),
+            "changed": True,
+        }
+    )
+
+    manifest_started = time.perf_counter()
     manifest_module.ensure_manifest(repo_root)
+    phase_timings.append(
+        {
+            "phase": "manifest_inventory",
+            "duration_seconds": round(
+                time.perf_counter() - manifest_started, 6
+            ),
+            "changed": True,
+        }
+    )
+    merge_active_run_phase_timings("install", phase_timings)
     return 0
 
 

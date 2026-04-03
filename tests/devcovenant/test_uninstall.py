@@ -8,15 +8,15 @@ from pathlib import Path
 from types import SimpleNamespace
 from unittest.mock import patch
 
-import devcovenant.core.refresh_runtime as refresh_flow
-from devcovenant import install, uninstall
+from devcovenant import uninstall
+from tests import copy_installed_repo, copy_refreshed_repo
 
 
 def _unit_test_uninstall_removes_devcovenant_package() -> None:
     """uninstall_repo should remove the repository devcovenant directory."""
     with tempfile.TemporaryDirectory() as temp_dir:
         repo_root = Path(temp_dir)
-        install.install_repo(repo_root)
+        copy_installed_repo(repo_root)
 
         package_dir = repo_root / "devcovenant"
         assert package_dir.exists()
@@ -30,8 +30,7 @@ def _unit_test_uninstall_recovers_when_config_is_invalid() -> None:
     """uninstall_repo should remove package even with invalid config."""
     with tempfile.TemporaryDirectory() as temp_dir:
         repo_root = Path(temp_dir)
-        install.install_repo(repo_root)
-        refresh_flow.refresh_repo(repo_root)
+        copy_refreshed_repo(repo_root)
 
         config_path = repo_root / "devcovenant" / "config.yaml"
         config_path.write_text(":\n", encoding="utf-8")

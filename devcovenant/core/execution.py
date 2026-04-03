@@ -235,6 +235,30 @@ def merge_active_run_log_metadata(updates: Mapping[str, Any]) -> None:
     context.metadata.update(dict(updates))
 
 
+def merge_active_run_phase_timings(
+    command_name: str,
+    phase_timings: Sequence[Mapping[str, Any]],
+) -> None:
+    """Merge per-command phase timing rows into the active run metadata."""
+    context = _ACTIVE_RUN_LOG_CONTEXT
+    if context is None:
+        return
+    normalized_name = str(command_name or "").strip()
+    if not normalized_name:
+        return
+    normalized_rows = [
+        dict(row)
+        for row in phase_timings
+        if isinstance(row, Mapping) and dict(row)
+    ]
+    if not normalized_rows:
+        return
+    existing = context.metadata.get("phase_timings")
+    merged = dict(existing) if isinstance(existing, Mapping) else {}
+    merged[normalized_name] = normalized_rows
+    context.metadata["phase_timings"] = merged
+
+
 def append_active_run_log_output(stream_name: str, text: str) -> None:
     """Append captured output text into the active run-log artifacts."""
     context = _ACTIVE_RUN_LOG_CONTEXT
@@ -434,6 +458,32 @@ def _build_active_run_summary_text(
             )
             if skipped_text:
                 lines.append(f"Skipped Protected Paths: {skipped_text}")
+    phase_timings = context.metadata.get("phase_timings")
+    if isinstance(phase_timings, Mapping):
+        for command_name, rows in phase_timings.items():
+            if not isinstance(rows, Sequence) or isinstance(rows, str):
+                continue
+            rendered_rows: list[str] = []
+            for row in rows:
+                if not isinstance(row, Mapping):
+                    continue
+                phase_name = str(row.get("phase", "")).strip()
+                duration = row.get("duration_seconds")
+                if not phase_name or duration is None:
+                    continue
+                extras: list[str] = [
+                    f"duration={duration}",
+                ]
+                if "changed" in row:
+                    extras.append(f"changed={bool(row.get('changed'))}")
+                if "skipped" in row:
+                    extras.append(f"skipped={bool(row.get('skipped'))}")
+                rendered_rows.append(f"{phase_name} ({', '.join(extras)})")
+            if rendered_rows:
+                lines.append(
+                    f"Phase Timings [{str(command_name).strip()}]: "
+                    + "; ".join(rendered_rows)
+                )
     return "\n".join(lines) + "\n"
 
 
@@ -483,6 +533,13 @@ def _build_active_run_summary_json(
     clean_summary = context.metadata.get("clean_summary")
     if isinstance(clean_summary, Mapping):
         payload["clean_summary"] = dict(clean_summary)
+    phase_timings = context.metadata.get("phase_timings")
+    if isinstance(phase_timings, Mapping):
+        payload["phase_timings"] = {
+            str(command_name): [dict(row) for row in rows]
+            for command_name, rows in phase_timings.items()
+            if isinstance(rows, Sequence) and not isinstance(rows, str)
+        }
     return payload
 
 

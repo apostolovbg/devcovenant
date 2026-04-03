@@ -2,7 +2,7 @@
 **Doc ID:** SECURITY
 **Doc Type:** security-policy
 **Project Version:** 1.0.1.dev1
-**Last Updated:** 2026-03-31
+**Last Updated:** 2026-04-03
 **DevCovenant Version:** 1.0.1.dev1
 
 <!-- DEVCOV:BEGIN -->
@@ -139,7 +139,7 @@ Use this document in the normal reporting flow:
 
 ## Supported Security Baseline
 Security fixes are handled against:
-- the maintained public `1.x` release line
+- the maintained public `1.0.1` release line
 - the main source tree in this repository
 
 If you report an issue against an older tree, reproduce it against the

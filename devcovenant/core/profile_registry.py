@@ -569,11 +569,20 @@ def write_profile_registry(repo_root: Path, registry: Dict[str, Dict]) -> Path:
     path = repo_root / REGISTRY_PROFILE
     payload = load_registry_document(path)
     profiles = registry.get("profiles")
-    payload["profiles"] = dict(profiles) if isinstance(profiles, dict) else {}
+    normalized_profiles = dict(profiles) if isinstance(profiles, dict) else {}
     workflow_contract = registry.get("workflow_contract")
-    payload["workflow_contract"] = (
+    normalized_workflow_contract = (
         dict(workflow_contract) if isinstance(workflow_contract, dict) else {}
     )
+    if path.exists():
+        if (
+            payload.get("profiles") == normalized_profiles
+            and payload.get("workflow_contract")
+            == normalized_workflow_contract
+        ):
+            return path
+    payload["profiles"] = normalized_profiles
+    payload["workflow_contract"] = normalized_workflow_contract
     write_registry_document(path, payload)
     return path
 

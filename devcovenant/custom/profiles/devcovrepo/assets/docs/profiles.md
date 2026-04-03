@@ -35,9 +35,8 @@ The normal pattern is:
    Actions workflow; remove it when the repository does not want that
    workflow
 4. add the needed language or stack profiles
-5. add a repository-specific custom profile on top when the repository needs
-   its own rules, assets, workflow additions, or dependency-surface
-   ownership
+5. add a custom profile on top when the repository needs its own rules,
+   assets, workflow additions, or dependency-surface ownership
 6. add an optional GitHub-specific custom profile when the repository needs
    reusable GitHub-only CI fragments that should not affect local behavior
 
@@ -46,9 +45,9 @@ Use a custom profile when the repository has real repeatable behavior of its
 own.
 
 ## Custom Profiles As Governance Packs
-A custom profile is the normal way to package repository-specific governance
-so it travels as one coherent stack instead of a pile of one-off config
-edits.
+A custom profile is the normal way to package governance for one repository
+family so it travels as one coherent stack instead of a pile of one-off
+config edits.
 
 A custom profile can contribute:
 - metadata overlays for builtin or custom policies
@@ -111,9 +110,9 @@ scan.
 Typical examples are temporary build directories, cache roots, or declared
 environment folders that should not count as user-owned source files.
 
-A repository-specific custom profile can then strengthen the standard stack.
+A custom profile can then strengthen the standard stack for one project shape.
 For example, it may add `managed_commands`, extra assets, CI steps, or
-surface overrides such as a repository-owned `root_workspace`.
+surface overrides such as a project-owned `root_workspace`.
 A separate GitHub-oriented custom profile is useful when a repository wants
 GitHub-only CI extensions without making those rules part of the local
 runtime model.
@@ -254,8 +253,8 @@ another just because the checkout root changed.
 The shipped defaults keep the Python dependency surfaces hash-locked:
 `root_workspace`, `devcovenant_runtime`, and `package_runtime` when a
 repository enables that optional package surface.
-A repository-specific custom profile can override those defaults per
-surface instead of inventing a second special-case dependency model.
+A custom profile can override those defaults per surface instead of inventing
+a second special-case dependency model.
 
 Profile ownership also includes the shipped translator maps.
 The builtin language translator set currently covers `csharp`, `dart`, `go`,

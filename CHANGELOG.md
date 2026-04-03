@@ -62,6 +62,82 @@ Example:
 
 
 - 2026-04-03:
+  Change: optimized heavy lifecycle commands, added phase timing summaries,
+          updated workflow docs, and amended `PLAN.md` to track the
+          performance-fidelity slice.
+  Why: reduced duplicate refresh work, narrowed expensive undeploy recovery
+       scans, reused cached setup baselines where the command path itself was
+       not under test, and documented where operators should look for timing
+       evidence.
+  Impact: improved heavy lifecycle command evidence, reduced avoidable
+          refresh-state rewrites, narrowed undeploy scans on healthy
+          repositories, and recorded performance readiness in the release
+          plan.
+  Files:
+  CHANGELOG.md
+  PLAN.md
+  README.md
+  devcovenant/README.md
+  devcovenant/custom/profiles/devcovrepo/assets/docs/installation.md
+  devcovenant/custom/profiles/devcovrepo/assets/docs/workflow.md
+  devcovenant/docs/installation.md
+  devcovenant/docs/workflow.md
+  devcovenant/core/execution.py
+  devcovenant/core/profile_registry.py
+  devcovenant/core/refresh_runtime.py
+  devcovenant/deploy.py
+  devcovenant/install.py
+  devcovenant/undeploy.py
+  devcovenant/uninstall.py
+  devcovenant/upgrade.py
+  tests/devcovenant/core/test_execution.py
+  tests/devcovenant/test_refresh.py
+  tests/devcovenant/test_undeploy.py
+  tests/devcovenant/test_uninstall.py
+
+- 2026-04-03:
+  Change: re-audited package and repository docs, simplified release-facing
+          wording, aligned stale doc-contract tests, and updated `PLAN.md`
+          to reflect the completed docs slice.
+  Why: removed ambiguous package-doc phrasing, reduced repeated custom-profile
+       jargon, aligned repository operator docs to the maintained
+       `1.0.1` public line, and aligned doc expectations to the revised
+       package wording.
+  Impact: aligned package docs to a more product-focused voice, aligned
+          repository docs to the maintained `1.0.1` line, aligned the
+          execution doc-contract slice to the revised wording, and marked
+          the remaining release work more clearly in the plan.
+  Files:
+  CHANGELOG.md
+  PLAN.md
+  README.md
+  SECURITY.md
+  SUPPORT.md
+  devcovenant/README.md
+  devcovenant/custom/profiles/devcovrepo/assets/docs/config.md
+  devcovenant/custom/profiles/devcovrepo/assets/docs/installation.md
+  devcovenant/custom/profiles/devcovrepo/assets/docs/profiles.md
+  devcovenant/custom/profiles/devcovrepo/assets/docs/workflow.md
+  devcovenant/docs/config.md
+  devcovenant/docs/installation.md
+  devcovenant/docs/profiles.md
+  devcovenant/docs/workflow.md
+  tests/devcovenant/core/test_execution.py
+
+- 2026-04-03:
+  Change: amended `PLAN.md` to target the `1.0.1` release line and record
+          the managed-environment contract work already landed.
+  Why: reflected the burned `1.0.0` history, the current `1.0.1` release
+       decision, and the shift from generic beta planning to explicit release
+       form selection.
+  Impact: kept release planning current, made the remaining publish decision
+          explicit, and aligned the plan with the release-readiness work
+          already completed.
+  Files:
+  CHANGELOG.md
+  PLAN.md
+
+- 2026-04-03:
   Change: clarified the managed-environment contract for non-`.venv`
           execution contexts, expanded the release-QA matrix, and added
           external-environment coverage.

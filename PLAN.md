@@ -13,7 +13,8 @@
 This opening section is managed by DevCovenant.
 Use `PLAN.md` to track active implementation work below this block.
 <!-- DEVCOV:END -->
-Use this plan to track the release-QA work needed to ship the next beta.
+Use this plan to track the release-QA work needed to ship the `1.0.1`
+release line.
 Keep items concrete, current, and focused on release readiness rather than
 open-ended cleanup.
 
@@ -25,38 +26,66 @@ open-ended cleanup.
 5. [Exit Criteria](#exit-criteria)
 
 ## Overview
-- Use this plan to drive one disciplined beta-release routine.
+- Use this plan to drive one disciplined `1.0.1` release routine.
 - Treat release readiness as a single go/no-go decision, not as an endless
   stream of loosely related audit reactions.
+- Treat `1.0.0` as burned on PyPI and use `1.0.1` as the maintained public
+  line from here.
 - Keep package docs general to DevCovenant as a product. Keep repository
   operation notes in repository-owned docs only.
 - Remove forward-looking blockers, stale expectations, and false historical
   narration encountered during the review.
+- Keep release-QA practical by reducing avoidable duplicate work in the heavy
+  lifecycle commands without weakening end-to-end coverage.
 - Record landed changes in `CHANGELOG.md` and use the governed gate workflow
   for every slice.
 
 ## Release Scope
 1. [done] Clear the remaining stale CLI test expectation so the targeted
    current-state audit aligns with the runtime contract.
-2. [not done] Re-audit package-facing docs for product scope and forward
-   wording.
+2. [done] Clarify and document the managed-environment contract.
+   Landed:
+   - `.venv` is documented as the seeded default, not the only supported shape
+   - the managed-environment policy and docs now describe a declared execution
+     context contract
+   - release QA now includes a managed-environment matrix instead of implying
+     `.venv` as the whole model
+3. [done] Re-audit package-facing docs for product scope and forward wording.
+   Landed:
+   - package docs use more product-facing wording and less repeated
+     repository-internal jargon
+   - ambiguous phrasing such as policy state living "in the repo" was replaced
+     with clearer project-file wording
+   - the package docs keep `.venv` as the seeded example without treating it as
+     the whole product story
+4. [done] Review repository-facing docs for operator accuracy.
+   Landed:
+   - root README release notes now call out the maintained public `1.0.1` line
+   - trust docs align support and security scope to the same `1.0.1` line
+   - repository notes stay in repository-owned docs instead of leaking into the
+     packaged docs
+5. [done] Tighten heavy lifecycle commands without reducing fidelity.
+   Landed:
+   - `refresh` now reuses one profile-registry build, avoids duplicate
+     manifest normalization, and records per-phase timing details in the run
+     summary artifacts
+   - `install`, `deploy`, `undeploy`, `uninstall`, and `upgrade` now record
+     phase timing details in the same summary artifacts
+   - `undeploy` now limits repository-wide managed-doc scanning to recovery
+     paths instead of using it as the normal path
+   - setup-only lifecycle tests now prefer cached installed or refreshed seed
+     repositories while keeping direct end-to-end lifecycle coverage where the
+     command path itself is the contract under test
+6. [not done] Decide the `1.0.1` release form.
    Work:
-   - remove repository-only narration from packaged docs
-   - remove unnecessary internal jargon where plain language is enough
-   - remove history-dependent phrasing such as `now`, `previously`, `used to`,
-     and other transition narration unless a migration surface explicitly
-     requires it
-   - remove `in this repo` language from package docs when the correct scope is
-     the general DevCovenant user experience
-3. [not done] Review repository-facing docs for operator accuracy.
-   Work:
-   - confirm `README.md`, `AGENTS.md`, and trust docs stay truthful for this
-     repository
-   - keep repository workflow notes separate from packaged-product guidance
-4. [not done] Freeze non-release work once blockers are cleared.
+   - choose `1.0.1b1` or `1.0.1rc1` when we want one more opt-in proving pass
+   - choose direct `1.0.1` when the release review says the stable line is
+     ready now
+   - keep the decision explicit in release notes and operator commands
+7. [not done] Freeze non-release work once blockers are cleared.
    Work:
    - accept only correctness bugs, packaging failures, CI failures, doc lies,
-     and release blockers until the beta ships
+     and release blockers until the `1.0.1` line ships
 
 ## Documentation Review
 - Audit these package-facing surfaces first:
@@ -80,6 +109,8 @@ open-ended cleanup.
 1. Functional QA
    - verify `install`, `refresh`, `gate`, `run`, `upgrade`, and managed
      bootstrap flows
+   - use summary phase timings to inspect heavy lifecycle commands before
+     treating a slow run as a vague test-suite problem
 2. Clean-room QA
    - test from a fresh clone with no pre-existing `.venv`
    - verify no ghost files or unintended generated artifacts appear
@@ -111,7 +142,11 @@ open-ended cleanup.
 - The managed-environment support boundary is documented and validated across
   the release QA matrix instead of being implied by the seeded `.venv`
   example alone.
+- Heavy lifecycle commands avoid duplicate no-op work where possible and leave
+  timing evidence in run summaries when more optimization is needed.
+- The chosen `1.0.1` release form, prerelease or direct stable, is explicit
+  before publish.
 - Repository docs remain truthful for repository operators.
 - Packaging, installation, and clean-room checks are complete.
-- The beta decision can end with a clear go/no-go recommendation and a short
-  residual-risk list.
+- The `1.0.1` release decision can end with a clear go/no-go recommendation
+  and a short residual-risk list.

@@ -2,7 +2,7 @@
 **Doc ID:** SUPPORT
 **Doc Type:** support-policy
 **Project Version:** 1.0.1.dev1
-**Last Updated:** 2026-03-31
+**Last Updated:** 2026-04-03
 **DevCovenant Version:** 1.0.1.dev1
 
 <!-- DEVCOV:BEGIN -->
@@ -57,7 +57,7 @@ excerpt are enough to unblock triage.
 
 ## Support Scope
 Reasonable support scope for this repository includes:
-- the maintained public release line
+- the maintained public `1.0.1` release line
 - the main source tree in this repository
 - built-in policies, profiles, translators, commands, and managed docs
 - the documented workflow, config, and runtime evidence model

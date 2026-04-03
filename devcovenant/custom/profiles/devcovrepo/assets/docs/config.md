@@ -75,9 +75,8 @@ For most repositories, the normal pattern is:
 - keep `github` active when the repository wants the generic generated GitHub
   Actions workflow; remove it when the repository does not want that workflow
 - add language or framework profiles as needed
-- add a repository-specific custom profile on top when the repository needs
-  its own rules, assets, workflow additions, or dependency-surface
-  ownership
+- add a custom profile on top when the repository needs its own rules,
+  assets, workflow additions, or dependency-surface ownership
 - add an optional GitHub-specific custom profile when the repository needs
   reusable GitHub-only CI fragments beyond the builtin base
 
@@ -243,9 +242,8 @@ If a repository needs to change dependency lock mode, do that by overriding the
 relevant `dependency-management.surfaces` entry.
 Those surface entries can turn `generate_hashes` on or off while still using
 the same declared target matrix and refresh engine.
-For example, a repository-specific custom profile may own workspace dependency
-surfaces while an optional GitHub-specific custom profile adds extra CI
-fragments.
+For example, a custom profile may own workspace dependency surfaces while an
+optional GitHub-specific custom profile adds extra CI fragments.
 
 ### clean
 Cleanup settings decide what DevCovenant may delete.
@@ -270,7 +268,7 @@ For a new repository, this is the shortest useful config review:
 5. keep `github` if the repository wants the generated GitHub Actions workflow
    that ships in the default stack, or remove it if the repository does not
    want that workflow
-6. add a repository-specific custom profile if the repository needs one
+6. add a custom profile if the repository needs one
 7. review `doc_assets`
 8. review `workflow` and `policy_state`
 9. review `engine.*`

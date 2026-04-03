@@ -11,6 +11,7 @@ if __package__ in {None, ""}:  # pragma: no cover
 
 import argparse
 import shutil
+import time
 from pathlib import Path
 
 import yaml
@@ -96,9 +97,14 @@ def _prune_repo_only_developer_paths(repo_root: Path) -> list[str]:
 
 def deploy_repo(repo_root: Path) -> int:
     """Deploy managed DevCovenant docs/assets to a repo."""
-    from devcovenant.core.execution import print_step
+    from devcovenant.core.execution import (
+        merge_active_run_phase_timings,
+        print_step,
+    )
     from devcovenant.core.refresh_runtime import refresh_repo
 
+    phase_timings: list[dict[str, object]] = []
+    config_started = time.perf_counter()
     config_path = repo_root / "devcovenant" / "config.yaml"
     config = _read_yaml(config_path)
     if not _is_config_reviewed(config):
@@ -106,7 +112,16 @@ def deploy_repo(repo_root: Path) -> int:
             "Deploy blocked: config review is not complete. Set "
             "`install.config_reviewed: true` first."
         )
+    phase_timings.append(
+        {
+            "phase": "config_validation",
+            "duration_seconds": round(time.perf_counter() - config_started, 6),
+            "changed": False,
+        }
+    )
 
+    prune_started = time.perf_counter()
+    removed: list[str] = []
     if not _is_developer_mode(config):
         removed = _prune_repo_only_developer_paths(repo_root)
         if removed:
@@ -114,8 +129,28 @@ def deploy_repo(repo_root: Path) -> int:
                 "Deploy cleanup removed: " + ", ".join(removed),
                 "🧹",
             )
+    phase_timings.append(
+        {
+            "phase": "repo_only_prune",
+            "duration_seconds": round(time.perf_counter() - prune_started, 6),
+            "changed": bool(removed),
+            "skipped": _is_developer_mode(config),
+        }
+    )
 
-    return refresh_repo(repo_root)
+    refresh_started = time.perf_counter()
+    result = refresh_repo(repo_root)
+    phase_timings.append(
+        {
+            "phase": "refresh",
+            "duration_seconds": round(
+                time.perf_counter() - refresh_started, 6
+            ),
+            "changed": result == 0,
+        }
+    )
+    merge_active_run_phase_timings("deploy", phase_timings)
+    return result
 
 
 def _build_parser() -> argparse.ArgumentParser:

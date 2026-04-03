@@ -83,6 +83,10 @@ When a command prints `Run logs: ...`, inspect files in this order:
 4. `stderr.log`
 
 The CLI can stream child output live, but the run logs are the stable record.
+For lifecycle commands such as `install`, `deploy`, `refresh`, `undeploy`,
+`uninstall`, and `upgrade`, `summary.txt` and `summary.json` can also include
+phase timing details so you can see where the command actually spent time
+before opening the full logs.
 
 ## Local Workflow State
 DevCovenant keeps two local workflow files:
@@ -137,8 +141,8 @@ If a repository needs extra project dependency setup, extra CI steps, or extra
 install validation, that extension should come from a profile-owned CI
 fragment instead of from the builtin base.
 That split usually looks like this:
-1. a repository-specific custom profile owns local behavior such as
-   `root_workspace`, managed environment details, and repository workflow runs
+1. a custom profile owns local behavior such as `root_workspace`,
+   managed environment details, and repository workflow runs
 2. an optional GitHub-specific custom profile owns reusable GitHub-only CI
    fragments when the repository wants more than the builtin base
 If a repository uses a hash-locked Python requirements file and also installs a

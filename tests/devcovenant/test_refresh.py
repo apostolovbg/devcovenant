@@ -111,7 +111,7 @@ def _unit_test_refresh_syncs_project_identity() -> None:
     """refresh_repo should render README and pyproject identity."""
     with tempfile.TemporaryDirectory() as temp_dir:
         repo_root = Path(temp_dir)
-        install.install_repo(repo_root)
+        copy_installed_repo(repo_root)
         config_path = repo_root / "devcovenant" / "config.yaml"
         payload = yaml.safe_load(config_path.read_text(encoding="utf-8"))
         governance = payload["project-governance"]
@@ -147,7 +147,7 @@ def _unit_test_refresh_rewrites_pyproject_identity() -> None:
     """refresh_repo should rewrite existing pyproject identity fields."""
     with tempfile.TemporaryDirectory() as temp_dir:
         repo_root = Path(temp_dir)
-        install.install_repo(repo_root)
+        copy_installed_repo(repo_root)
         config_path = repo_root / "devcovenant" / "config.yaml"
         payload = yaml.safe_load(config_path.read_text(encoding="utf-8"))
         governance = payload["project-governance"]
@@ -229,6 +229,58 @@ def _unit_test_refresh_calls_dependency_refresh_once() -> None:
     mock_refresh_dependencies.assert_called_once_with(repo_root)
 
 
+def _unit_test_refresh_builds_profile_registry_once() -> None:
+    """refresh_repo should reuse one profile-registry build per call."""
+    with tempfile.TemporaryDirectory() as temp_dir:
+        repo_root = Path(temp_dir)
+        copy_installed_repo(repo_root)
+        build_calls = 0
+        original_build = (
+            refresh_flow.profile_registry_service.build_profile_registry
+        )
+
+        def _counted_build(*args, **kwargs):
+            """Count registry builds while delegating to the real helper."""
+            nonlocal build_calls
+            build_calls += 1
+            return original_build(*args, **kwargs)
+
+        with patch.object(
+            refresh_flow.profile_registry_service,
+            "build_profile_registry",
+            side_effect=_counted_build,
+        ):
+            result = refresh_flow.refresh_repo(repo_root)
+
+    assert result == 0
+    assert build_calls == 1
+
+
+def _unit_test_refresh_ensures_manifest_once() -> None:
+    """refresh_repo should not duplicate manifest normalization work."""
+    with tempfile.TemporaryDirectory() as temp_dir:
+        repo_root = Path(temp_dir)
+        copy_installed_repo(repo_root)
+        ensure_calls = 0
+        original_ensure = refresh_flow.manifest_module.ensure_manifest
+
+        def _counted_ensure(*args, **kwargs):
+            """Count manifest ensures while delegating to the real helper."""
+            nonlocal ensure_calls
+            ensure_calls += 1
+            return original_ensure(*args, **kwargs)
+
+        with patch.object(
+            refresh_flow.manifest_module,
+            "ensure_manifest",
+            side_effect=_counted_ensure,
+        ):
+            result = refresh_flow.refresh_repo(repo_root)
+
+    assert result == 0
+    assert ensure_calls == 1
+
+
 def _unit_test_refresh_builds_registry_after_generated_config() -> None:
     """refresh_repo should build registry and AGENTS after config refresh."""
     with tempfile.TemporaryDirectory() as temp_dir:
@@ -248,8 +300,13 @@ def _unit_test_refresh_builds_registry_after_generated_config() -> None:
             order.append("config")
             return config, False
 
-        def _fake_refresh_policy_registry(repo_root_arg, config_payload=None):
+        def _fake_refresh_policy_registry(
+            repo_root_arg,
+            config_payload=None,
+            profile_registry=None,
+        ):
             """Record tracked-registry persistence after config refresh."""
+            del profile_registry
             order.append("registry")
             return 0
 
@@ -369,7 +426,7 @@ def _unit_test_deploy_compiles_workspace_lock_for_fresh_repo() -> None:
     """deploy should compile a usable root_workspace lock for fresh repos."""
     with tempfile.TemporaryDirectory() as temp_dir:
         repo_root = Path(temp_dir)
-        install.install_repo(repo_root)
+        copy_installed_repo(repo_root)
 
         config_path = repo_root / "devcovenant" / "config.yaml"
         payload = yaml.safe_load(config_path.read_text(encoding="utf-8"))
@@ -648,7 +705,7 @@ def _unit_test_refresh_supports_custom_managed_docs() -> None:
     """refresh_repo should resolve custom managed docs from active profiles."""
     with tempfile.TemporaryDirectory() as temp_dir:
         repo_root = Path(temp_dir)
-        install.install_repo(repo_root)
+        copy_installed_repo(repo_root)
 
         profile_root = (
             repo_root / "devcovenant" / "custom" / "profiles" / "mapsdemo"
@@ -756,7 +813,7 @@ def _unit_test_refresh_supports_custom_trust_docs() -> None:
     """refresh_repo should let an active profile override a trust doc."""
     with tempfile.TemporaryDirectory() as temp_dir:
         repo_root = Path(temp_dir)
-        install.install_repo(repo_root)
+        copy_installed_repo(repo_root)
 
         profile_root = (
             repo_root / "devcovenant" / "custom" / "profiles" / "trustdemo"
@@ -836,7 +893,7 @@ def _unit_test_refresh_supports_global_trust_docs() -> None:
     """refresh_repo should render global trust-doc templates when enabled."""
     with tempfile.TemporaryDirectory() as temp_dir:
         repo_root = Path(temp_dir)
-        install.install_repo(repo_root)
+        copy_installed_repo(repo_root)
 
         config_path = repo_root / "devcovenant" / "config.yaml"
         payload = yaml.safe_load(config_path.read_text(encoding="utf-8"))
@@ -1822,6 +1879,14 @@ class GeneratedUnittestCases(unittest.TestCase):
     def test_refresh_calls_dependency_refresh_once(self):
         """Run single dependency-refresh invocation assertions."""
         _unit_test_refresh_calls_dependency_refresh_once()
+
+    def test_refresh_builds_profile_registry_once(self):
+        """Run single profile-registry build assertions."""
+        _unit_test_refresh_builds_profile_registry_once()
+
+    def test_refresh_ensures_manifest_once(self):
+        """Run single manifest-normalization assertions."""
+        _unit_test_refresh_ensures_manifest_once()
 
     def test_refresh_builds_registry_after_generated_config(self):
         """Run registry/AGENTS refresh-order assertions."""
