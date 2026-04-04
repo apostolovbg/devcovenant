@@ -1,7 +1,9 @@
 # cyclonedx-bom 7.2.2
 
-This file aggregates the upstream license texts bundled with the
-installed distribution for `cyclonedx-bom==7.2.2`.
+This file aggregates the upstream license texts resolved for
+`cyclonedx-bom==7.2.2`.
+
+Resolved from: installed distribution metadata
 
 Included upstream files:
 - LICENSE

@@ -256,6 +256,17 @@ Each surface owns:
 - one `licenses_dir`
 - optional hash-lock targets
 
+When a direct dependency does not bundle upstream license files in installed
+distribution metadata, repositories may declare
+`license_source_overrides`.
+Override entries are keyed by normalized package name through their `id`
+field and are consulted only after installed metadata yields no license
+texts.
+The builtin override kind is `archive_url`, which resolves one templated
+`url` and matching `member_globs` to collect license files from a tagged
+source archive.
+Templates may use `{package_name}`, `{normalized_name}`, and `{version}`.
+
 That means the policy can own more than one dependency surface at once.
 For example:
 1. `root_workspace`

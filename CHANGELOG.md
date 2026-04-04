@@ -61,6 +61,73 @@ Example:
 ## Version 1.0.1b1
 
 - 2026-04-04:
+  Change: fixed builtin dependency-management fallback handling for direct
+          dependencies that ship no dist-info license files, and documented
+          the new `license_source_overrides` metadata in the policy docs.
+  Why: packages such as `flet` can be valid locked dependencies while still
+       omitting bundled license files from installed metadata, which caused
+       governed refresh runs to fail instead of allowing an explicit
+       repository-owned fallback source.
+  Impact: repositories can now declare normalized package-name archive
+          overrides with templated URLs and member globs, generated license
+          texts record their provenance, and the refreshed policy artifacts
+          describe the new builtin capability consistently.
+  Files:
+  AGENTS.md
+  CHANGELOG.md
+  devcovenant/builtin/policies/dependency_management/\
+    dependency_lock_runtime.py
+  devcovenant/builtin/policies/dependency_management/\
+    dependency_management.py
+  devcovenant/builtin/policies/dependency_management/\
+    dependency_management.yaml
+  devcovenant/custom/profiles/userproject/assets/docs/config.md
+  devcovenant/custom/profiles/userproject/assets/docs/policies.md
+  devcovenant/custom/profiles/userproject/assets/docs/registry.md
+  devcovenant/docs/config.md
+  devcovenant/docs/policies.md
+  devcovenant/docs/registry.md
+  devcovenant/licenses/PyYAML-6.0.3.txt
+  devcovenant/licenses/packaging-26.0.txt
+  devcovenant/licenses/pip-tools-7.5.3.txt
+  devcovenant/licenses/pre-commit-4.5.1.txt
+  devcovenant/licenses/pytest-9.0.2.txt
+  devcovenant/licenses/semver-3.0.4.txt
+  devcovenant/registry/registry.yaml
+  licenses/PyYAML-6.0.3.txt
+  licenses/Pygments-2.20.0.txt
+  licenses/bandit-1.9.4.txt
+  licenses/build-1.4.2.txt
+  licenses/cfgv-3.5.0.txt
+  licenses/click-8.3.2.txt
+  licenses/cyclonedx-bom-7.2.2.txt
+  licenses/distlib-0.4.0.txt
+  licenses/filelock-3.25.2.txt
+  licenses/identify-2.6.18.txt
+  licenses/iniconfig-2.3.0.txt
+  licenses/nodeenv-1.10.0.txt
+  licenses/packaging-26.0.txt
+  licenses/pip-26.0.1.txt
+  licenses/pip-audit-2.10.0.txt
+  licenses/pip-tools-7.5.3.txt
+  licenses/pipx-1.11.1.txt
+  licenses/platformdirs-4.9.4.txt
+  licenses/pluggy-1.6.0.txt
+  licenses/pre_commit-4.5.1.txt
+  licenses/pyproject_hooks-1.2.0.txt
+  licenses/pytest-9.0.2.txt
+  licenses/python-discovery-1.2.1.txt
+  licenses/semver-3.0.4.txt
+  licenses/setuptools-82.0.1.txt
+  licenses/twine-6.2.0.txt
+  licenses/virtualenv-21.2.0.txt
+  licenses/wheel-0.46.3.txt
+  tests/devcovenant/builtin/policies/dependency_management/\
+    test_dependency_lock_runtime.py
+  tests/devcovenant/builtin/policies/dependency_management/\
+    test_dependency_management.py
+
+- 2026-04-04:
   Change: fixed the build-proof bootstrap helper so wheel, sdist, and pipx
           artifact proofs set `install.config_reviewed` on the real YAML field
           line before running `deploy`.

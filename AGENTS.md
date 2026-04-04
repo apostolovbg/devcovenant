@@ -846,6 +846,7 @@ surfaces:
       implementation: cp
       python_version: '3.14'
       abi: cp314
+license_source_overrides: []
 selector_roles: dependency
 dependency_globs: []
 dependency_files: []
@@ -873,6 +874,10 @@ runtime actions manually. Remediation messaging may differ when autofix is
 enabled versus disabled. When one Python surface enables
 `generate_hashes`, DevCovenant resolves the full configured target closure
 from `hash_targets` and writes an all-target hash lock or fails explicitly.
+When a direct dependency does not bundle upstream license files in installed
+metadata, repositories may declare `license_source_overrides` keyed by
+normalized package name. Builtin overrides currently support `archive_url`
+sources with templated `url` and `member_globs` fields.
 Hash mode does not patch a host-local compile result or depend on
 GitHub-specific dependency logic. Artifact refresh remains
 deterministic/idempotent.

@@ -1,6 +1,8 @@
 """Tests for the dependency-management policy."""
 
 import importlib.metadata as importlib_metadata
+import io
+import tarfile
 import tempfile
 import unittest
 from pathlib import Path
@@ -86,6 +88,45 @@ def _surface_options(**overrides: object) -> dict[str, object]:
     }
     surface.update(overrides)
     return surface
+
+
+def _archive_bytes(members: dict[str, str]) -> bytes:
+    """Return one in-memory tar.gz archive for override tests."""
+
+    buffer = io.BytesIO()
+    with tarfile.open(fileobj=buffer, mode="w:gz") as archive:
+        for name, text in members.items():
+            payload = text.encode("utf-8")
+            info = tarfile.TarInfo(name=name)
+            info.size = len(payload)
+            archive.addfile(info, io.BytesIO(payload))
+    return buffer.getvalue()
+
+
+def _dist_without_license_files(name: str):
+    """Return one fake distribution with no dist-info license files."""
+
+    return type(
+        "FakeDistribution",
+        (),
+        {
+            "files": [],
+            "metadata": {"Name": name},
+        },
+    )()
+
+
+def _override_options(**overrides: object) -> list[dict[str, object]]:
+    """Return one archive-backed license-source override mapping."""
+
+    payload: dict[str, object] = {
+        "id": "flet",
+        "kind": "archive_url",
+        "url": "https://example.invalid/releases/v{version}.tar.gz",
+        "member_globs": ["*/sdk/python/packages/flet/LICENSE"],
+    }
+    payload.update(overrides)
+    return [payload]
 
 
 def _unit_test_requires_license_table_update(tmp_path: Path):
@@ -360,6 +401,108 @@ def _unit_test_inventory_uses_packages_from_included_lockfiles(
     ]
 
 
+def _unit_test_license_source_overrides_require_unique_package_ids():
+    """Fallback license overrides should reject duplicate package ids."""
+
+    try:
+        dependency_management.resolve_license_source_overrides(
+            [
+                *_override_options(id="Flet"),
+                *_override_options(id="flet"),
+            ]
+        )
+    except ValueError as error:
+        assert "duplicate id `flet`" in str(error)
+    else:
+        raise AssertionError("Duplicate override ids should fail.")
+
+
+def _unit_test_license_source_symbols_stay_public():
+    """License-source helper symbols should stay importable."""
+
+    assert (
+        dependency_management.DependencyLicenseSourceOverride.__name__
+        == "DependencyLicenseSourceOverride"
+    )
+    assert (
+        dependency_management.DependencyLicenseSourceBundle.__name__
+        == "DependencyLicenseSourceBundle"
+    )
+    assert callable(dependency_management.resolve_license_source_overrides)
+
+
+def _unit_test_archive_override_fills_missing_installed_license_files():
+    """Archive overrides should supply license texts when metadata is empty."""
+
+    fake_dist = _dist_without_license_files("flet")
+    overrides = dependency_management.resolve_license_source_overrides(
+        _override_options()
+    )
+    original_read_url_bytes = dependency_management._read_url_bytes
+    dependency_management._read_url_bytes = lambda _url: _archive_bytes(
+        {"flet-0.84.0/sdk/python/packages/flet/LICENSE": ("Apache License\n")}
+    )
+    try:
+        bundle = dependency_management._resolve_dependency_license_bundle(
+            package_name="flet",
+            version="0.84.0",
+            dist=fake_dist,
+            license_source_overrides=overrides,
+        )
+    finally:
+        dependency_management._read_url_bytes = original_read_url_bytes
+        dependency_management._read_url_bytes.cache_clear()
+
+    assert bundle.origin_description == (
+        "source archive " "`https://example.invalid/releases/v0.84.0.tar.gz`"
+    )
+    assert bundle.sources == [
+        (
+            "flet-0.84.0/sdk/python/packages/flet/LICENSE",
+            "Apache License\n",
+        )
+    ]
+
+
+def _unit_test_installed_metadata_wins_before_archive_override(tmp_path: Path):
+    """Installed dist-info licenses should win over configured fallbacks."""
+
+    license_path = tmp_path / "flet-0.84.0.dist-info" / "LICENSE"
+    license_path.parent.mkdir(parents=True, exist_ok=True)
+    license_path.write_text("Installed license\n", encoding="utf-8")
+
+    # The fake distribution keeps one dist-info license file on disk so
+    # the installed-metadata path wins before any archive fallback is used.
+    class _FakeDistribution:
+        files = ["flet-0.84.0.dist-info/LICENSE"]
+        metadata = {"Name": "flet"}
+
+        def locate_file(self, _entry):
+            """Return the on-disk path for the fake dist-info license."""
+            return license_path
+
+    overrides = dependency_management.resolve_license_source_overrides(
+        _override_options()
+    )
+    original_read_url_bytes = dependency_management._read_url_bytes
+    dependency_management._read_url_bytes = lambda _url: (_ for _ in ()).throw(
+        AssertionError("unexpected fetch")
+    )
+    try:
+        bundle = dependency_management._resolve_dependency_license_bundle(
+            package_name="flet",
+            version="0.84.0",
+            dist=_FakeDistribution(),
+            license_source_overrides=overrides,
+        )
+    finally:
+        dependency_management._read_url_bytes = original_read_url_bytes
+        dependency_management._read_url_bytes.cache_clear()
+
+    assert bundle.origin_description == "installed distribution metadata"
+    assert bundle.sources == [("LICENSE", "Installed license\n")]
+
+
 def _unit_test_refresh_materializes_generic_license_readme(tmp_path: Path):
     """refresh_license_artifacts should create licenses/README.md."""
     repo = _setup_repo(tmp_path)
@@ -553,6 +696,56 @@ def _unit_test_refresh_materializes_inventory_and_license_texts(
     assert f"`pytest=={pytest_version}`" in report
     assert "LICENSE.APACHE" in packaging_license.read_text(encoding="utf-8")
     assert "# pytest " in pytest_license.read_text(encoding="utf-8")
+
+
+def _unit_test_refresh_supports_archive_license_overrides(tmp_path: Path):
+    """Refresh should generate license texts from archive overrides."""
+
+    repo = tmp_path
+    repo.joinpath("licenses").mkdir(parents=True, exist_ok=True)
+    (repo / "requirements.in").write_text("flet>=0.84\n", encoding="utf-8")
+    (repo / "requirements.lock").write_text(
+        "flet==0.84.0\n",
+        encoding="utf-8",
+    )
+    (repo / "pyproject.toml").write_text(
+        "[project]\n" "name = 'demo'\n" "dependencies = ['flet>=0.84']\n",
+        encoding="utf-8",
+    )
+    fake_dist = _dist_without_license_files("flet")
+    overrides = dependency_management.resolve_license_source_overrides(
+        _override_options()
+    )
+    original_find_distribution = dependency_management._find_distribution
+    original_read_url_bytes = dependency_management._read_url_bytes
+    dependency_management._find_distribution = lambda _name: fake_dist
+    dependency_management._read_url_bytes = lambda _url: _archive_bytes(
+        {"flet-0.84.0/sdk/python/packages/flet/LICENSE": ("Apache License\n")}
+    )
+    try:
+        dependency_management.refresh_license_artifacts(
+            repo,
+            changed_dependency_files=["requirements.lock"],
+            third_party_file="licenses/THIRD_PARTY_LICENSES.md",
+            licenses_dir="licenses",
+            report_heading="## License Report",
+            license_source_overrides=overrides,
+        )
+    finally:
+        dependency_management._find_distribution = original_find_distribution
+        dependency_management._read_url_bytes = original_read_url_bytes
+        dependency_management._read_url_bytes.cache_clear()
+
+    license_text = (repo / "licenses" / "flet-0.84.0.txt").read_text(
+        encoding="utf-8"
+    )
+    report = (repo / "licenses" / "THIRD_PARTY_LICENSES.md").read_text(
+        encoding="utf-8"
+    )
+    assert "Resolved from: source archive" in license_text
+    assert "https://example.invalid/releases/v0.84.0.tar.gz" in license_text
+    assert "Apache License" in license_text
+    assert "`flet==0.84.0`" in report
 
 
 def _unit_test_invalid_artifact_paths_raise_configuration_error(

@@ -60,6 +60,9 @@ The same applies to policy-resolved metadata such as
 surface declarations, the tracked registry records the new resolved lock
 paths, dependency selectors, artifact targets, and hash-target settings that
 later drive lock refresh behavior.
+The same dependency-management registry section also records resolved
+`license_source_overrides`, so registry diffs are expected when a repository
+adds or changes an explicit fallback source for dependency license texts.
 The same rule applies to `version-sync`: the tracked registry records the
 resolved version source file, role extractors, and role targets that define
 which docs, changelog files, and package manifests must stay synchronized.

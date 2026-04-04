@@ -62,8 +62,11 @@ def _unit_test_runtime_resolves_structured_surfaces_from_repo_metadata() -> (
     module = importlib.import_module(MODULE)
     payload = module._resolve_dependency_metadata(REPO_ROOT)
     surfaces = payload.get("surfaces")
+    overrides = payload.get("license_source_overrides")
     assert isinstance(surfaces, list)
     assert surfaces
+    assert isinstance(overrides, dict)
+    assert overrides == {}
     assert all(
         isinstance(
             surface,

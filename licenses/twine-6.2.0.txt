@@ -1,7 +1,9 @@
 # twine 6.2.0
 
-This file aggregates the upstream license texts bundled with the
-installed distribution for `twine==6.2.0`.
+This file aggregates the upstream license texts resolved for
+`twine==6.2.0`.
+
+Resolved from: installed distribution metadata
 
 Included upstream files:
 - LICENSE

@@ -2093,12 +2093,21 @@ def _resolve_dependency_metadata(repo_root: Path) -> Dict[str, object]:
         context,
         custom_policy=custom_policy,
     )
+    options = bundle.decode_options()
     surfaces = dependency_management.resolve_dependency_surfaces(
         repo_root=repo_root,
-        raw_surfaces=bundle.decode_options().get("surfaces", []),
+        raw_surfaces=options.get("surfaces", []),
         include_inactive=True,
     )
-    return {"surfaces": surfaces}
+    license_source_overrides = (
+        dependency_management.resolve_license_source_overrides(
+            options.get("license_source_overrides", [])
+        )
+    )
+    return {
+        "surfaces": surfaces,
+        "license_source_overrides": license_source_overrides,
+    }
 
 
 def refresh_all(
@@ -2115,6 +2124,7 @@ def refresh_all(
         if isinstance(surface, dependency_management.DependencySurface)
         and surface.active
     ]
+    license_source_overrides = metadata.get("license_source_overrides", {})
     surfaces = _order_surfaces_for_refresh(surfaces)
     registry = PolicyRegistry(policy_registry_path(repo_root), repo_root)
     stored_runtime_state = registry.get_policy_runtime_state(POLICY_ID)
@@ -2219,6 +2229,7 @@ def refresh_all(
                 resolved_lock_file=surface.lock_file,
                 direct_dependency_files=surface.direct_dependency_files,
                 manage_licenses_readme=surface.manage_licenses_readme,
+                license_source_overrides=license_source_overrides,
             )
         )
         updated_surface_states[surface.surface_id] = (
