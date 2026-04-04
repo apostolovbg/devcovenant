@@ -163,6 +163,9 @@ If a repository documents a particular public install path, test that same
 public path in a project-owned CI extension.
 If a repository adds a separate release workflow, that workflow should publish
 validated CI artifacts instead of rebuilding a fresh distribution later.
+When CI bootstraps a proof repository and needs `deploy`, flip the actual
+`install.config_reviewed` field line in `devcovenant/config.yaml` rather than
+replacing the first plain-text match in the commented config template.
 
 If you intentionally rebuild or re-baseline the changelog during an open work
 session, run `devcovenant policy changelog-coverage reset-baseline` after

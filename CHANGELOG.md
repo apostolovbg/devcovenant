@@ -61,6 +61,27 @@ Example:
 ## Version 1.0.1b1
 
 - 2026-04-04:
+  Change: fixed the build-proof bootstrap helper so wheel, sdist, and pipx
+          artifact proofs set `install.config_reviewed` on the real YAML field
+          line before running `deploy`.
+  Why: GitHub build proofs were replacing the first plain-text
+       `config_reviewed: false` match, which now lives in the commented config
+       guidance before the actual `install.config_reviewed` field.
+  Impact: keeps artifact lifecycle proof on GitHub aligned with the real
+          install template and prevents `deploy` from failing inside proof
+          repositories after a successful package install.
+  Files:
+  CHANGELOG.md
+  devcovenant/custom/profiles/userproject/assets/docs/profiles.md
+  devcovenant/custom/profiles/userproject/assets/docs/workflow.md
+  devcovenant/custom/profiles/userproject/userproject.yaml
+  devcovenant/docs/profiles.md
+  devcovenant/docs/registry.md
+  devcovenant/docs/workflow.md
+  devcovenant/registry/registry.yaml
+  tests/devcovenant/core/test_profile_registry.py
+
+- 2026-04-04:
   Change: upgraded DevCovenant to a Python 3.11+ baseline, transferred the
           repository-local profile layer from `devcovrepo` to a copied
           same-name `userproject` shadow profile, and promoted

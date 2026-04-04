@@ -573,6 +573,8 @@ def _profile_ci_workflow_contains_build_job_artifact_proof() -> None:
     assert '"$PIPX_BIN_DIR/devcovenant" gate --end' in all_run_blocks
     assert '"$PIPX_BIN_DIR/devcovenant" check' in all_run_blocks
     assert "python -m devcovenant --version" in all_run_blocks
+    assert 'line.strip() == "config_reviewed: false"' in all_run_blocks
+    assert "config_reviewed field line not found" in all_run_blocks
     provenance_step = next(
         (
             step

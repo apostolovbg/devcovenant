@@ -246,6 +246,9 @@ instead of upgrading `pip` live first.
 If a repository needs extra project dependency setup or extra CI steps, that
 extension belongs in the relevant profile instead of in the builtin base
 workflow.
+Repository-owned artifact-proof bootstrap snippets should update the real
+`install.config_reviewed` field line in `devcovenant/config.yaml`, not a
+comment occurrence earlier in the template text.
 If a Python repository turns on hash-locked `requirements.lock`, keep any
 local-artifact install path split into two steps:
 1. install the locked requirements

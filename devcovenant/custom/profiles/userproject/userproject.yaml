@@ -136,16 +136,20 @@ ci_and_test:
             from pathlib import Path
 
             path = Path("devcovenant/config.yaml")
-            text = path.read_text(encoding="utf-8")
-            old = "config_reviewed: false"
-            if old not in text:
+            lines = path.read_text(encoding="utf-8").splitlines()
+            for index, line in enumerate(lines):
+                if line.strip() == "config_reviewed: false":
+                    indent = line[: len(line) - len(line.lstrip())]
+                    lines[index] = f"{indent}config_reviewed: true"
+                    path.write_text(
+                        "\n".join(lines) + "\n",
+                        encoding="utf-8",
+                    )
+                    break
+            else:
                 raise SystemExit(
-                    "config_reviewed flag not found in config.yaml"
+                    "config_reviewed field line not found in config.yaml"
                 )
-            path.write_text(
-                text.replace(old, "config_reviewed: true", 1),
-                encoding="utf-8",
-            )
             PY
             python -m devcovenant deploy
             mkdir -p tests
@@ -208,16 +212,20 @@ ci_and_test:
             from pathlib import Path
 
             path = Path("devcovenant/config.yaml")
-            text = path.read_text(encoding="utf-8")
-            old = "config_reviewed: false"
-            if old not in text:
+            lines = path.read_text(encoding="utf-8").splitlines()
+            for index, line in enumerate(lines):
+                if line.strip() == "config_reviewed: false":
+                    indent = line[: len(line) - len(line.lstrip())]
+                    lines[index] = f"{indent}config_reviewed: true"
+                    path.write_text(
+                        "\n".join(lines) + "\n",
+                        encoding="utf-8",
+                    )
+                    break
+            else:
                 raise SystemExit(
-                    "config_reviewed flag not found in config.yaml"
+                    "config_reviewed field line not found in config.yaml"
                 )
-            path.write_text(
-                text.replace(old, "config_reviewed: true", 1),
-                encoding="utf-8",
-            )
             PY
             python -m devcovenant deploy
             mkdir -p tests
@@ -285,16 +293,20 @@ ci_and_test:
             from pathlib import Path
 
             path = Path("devcovenant/config.yaml")
-            text = path.read_text(encoding="utf-8")
-            old = "config_reviewed: false"
-            if old not in text:
+            lines = path.read_text(encoding="utf-8").splitlines()
+            for index, line in enumerate(lines):
+                if line.strip() == "config_reviewed: false":
+                    indent = line[: len(line) - len(line.lstrip())]
+                    lines[index] = f"{indent}config_reviewed: true"
+                    path.write_text(
+                        "\n".join(lines) + "\n",
+                        encoding="utf-8",
+                    )
+                    break
+            else:
                 raise SystemExit(
-                    "config_reviewed flag not found in config.yaml"
+                    "config_reviewed field line not found in config.yaml"
                 )
-            path.write_text(
-                text.replace(old, "config_reviewed: true", 1),
-                encoding="utf-8",
-            )
             PY
             "$PIPX_BIN_DIR/devcovenant" deploy
             mkdir -p tests
