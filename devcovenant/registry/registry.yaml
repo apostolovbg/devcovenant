@@ -1,7 +1,7 @@
 metadata:
   schema_version: 1
   registry_layout: single-root
-  policy_registry_input_hash: 061a19a02ace7054b39b53326e8c92477d61aa48c82a49d44cd84d853f58f6d8
+  policy_registry_input_hash: 5bb7c9ce51ca9cd88c73c48aca545327ea5287aa69f78a5b05b36842332555dc
 project-governance:
   project_name: devcovenant
   project_description: devcovenant is a repository governance framework.
@@ -12886,22 +12886,22 @@ policies:
     - '{{ PROJECT_NAME_PATH }}/runtime-requirements.lock'
     origin: builtin
     script_exists: true
-    hash: 007757ac511564ab81f01fb1e416ae6a7c90c3fc4323aac9f5a5d0920a2f5cf0
+    hash: 8adc683fc8abb694edfb7e740173cd5357ea8bbe78cd3c1ed2ebf382c90119d7
     script_path: builtin/dependency_management.py
     runtime_state:
       surfaces:
         devcovenant_runtime:
-          input_fingerprint: 48bbb08171b1fbe0faea16e27c54a749e83c6ca29bde5f8aae8cf232482c310d
+          input_fingerprint: f9a96379ddff854ee091201b9d18b85d78eb99aa98e48b983a75c3e97af13a82
           output_fingerprints:
             lock_file: d15044f8967ae94c97f8ff2ced7b2a8190281243948aae40cf4d2d5c3e911bcc
             third_party_file: 03710e4b9b1d4a694b7f319950a3ac27222743eb35b0409771f9df366a8e8368
             licenses_dir: 96af1bb880755dbfc4adf03d904e33e432446926fb2e04cf315c349d45897fee
         root_workspace:
-          input_fingerprint: 36e3311d241d21c6e39ecadb2f5687c9032ea8a8b4780ed9ba22695ad9dc9b9d
+          input_fingerprint: 88f7e47bea4fec3a37a5fd7ba5c4a46094c9ed292e6aecc22f084125e4bc2115
           output_fingerprints:
-            lock_file: 1ffa0010221836adf150a7d57943660c12b741622e30574fed37634b7b16c24f
-            third_party_file: 0c5b309147bb696e457e9a2b5c133dd5c5ce79b5ee4fdf2862f861bbd601219f
-            licenses_dir: 73b4a7d61db762ac3a574fc7ed33306ca8f26baf4516b4062a0f9163483ebb0e
+            lock_file: b09b424581e2671b79c3eaeca8595f96a5238097049a9bffa953665f7fbc7360
+            third_party_file: c131f531c1d1356ad99fcdf5342517051a9cf898d9e8d8e8998681405041309c
+            licenses_dir: 1147d59a0099d4652549a6438cdda974463c277c0f76f3042c80ca544b63e0ed
   package-artifact-mirror:
     enabled: true
     custom: true
@@ -15849,6 +15849,18 @@ profiles:
     assets_available:
     - devcovenant/builtin/profiles/typescript/assets/package.json
     - devcovenant/builtin/profiles/typescript/assets/tsconfig.json
+    active: false
+  userproject:
+    version: 1
+    profile: userproject
+    category: application
+    suffixes: []
+    ignore_dirs: []
+    assets: []
+    policy_overlays: {}
+    source: builtin
+    path: devcovenant/builtin/profiles/userproject
+    assets_available: []
     active: false
   devcovrepo:
     version: 1

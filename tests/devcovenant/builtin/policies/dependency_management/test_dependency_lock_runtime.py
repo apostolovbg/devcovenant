@@ -1191,6 +1191,51 @@ def _unit_test_complete_target_report_filters_host_spurious_branches() -> None:
     assert "SecretStorage" not in names
 
 
+def _unit_test_surface_refresh_order_prioritizes_lock_providers() -> None:
+    """Refresh ordering should move surfaces behind included lockfiles."""
+
+    module = importlib.import_module(MODULE)
+    ordered = module._order_surfaces_for_refresh(
+        [
+            _surface(
+                module,
+                surface_id="root_workspace",
+                dependency_files=[
+                    "requirements.in",
+                    "devcovenant/runtime-requirements.lock",
+                    "package/runtime-requirements.lock",
+                ],
+            ),
+            _surface(
+                module,
+                surface_id="package_runtime",
+                lock_file="package/runtime-requirements.lock",
+                direct_dependency_files=["pyproject.toml"],
+                dependency_files=["pyproject.toml"],
+                third_party_file="package/licenses/THIRD_PARTY_LICENSES.md",
+                licenses_dir="package/licenses",
+            ),
+            _surface(
+                module,
+                surface_id="devcovenant_runtime",
+                lock_file="devcovenant/runtime-requirements.lock",
+                direct_dependency_files=["devcovenant/pyproject.toml"],
+                dependency_files=["devcovenant/pyproject.toml"],
+                third_party_file=(
+                    "devcovenant/licenses/THIRD_PARTY_LICENSES.md"
+                ),
+                licenses_dir="devcovenant/licenses",
+            ),
+        ]
+    )
+
+    assert [surface.surface_id for surface in ordered] == [
+        "package_runtime",
+        "devcovenant_runtime",
+        "root_workspace",
+    ]
+
+
 class GeneratedUnittestCases(unittest.TestCase):
     """unittest wrappers for layered module sanity checks."""
 
@@ -1285,3 +1330,7 @@ class GeneratedUnittestCases(unittest.TestCase):
     def test_complete_target_report_filters_host_spurious_branches(self):
         """Run target-reachability filtering assertions."""
         _unit_test_complete_target_report_filters_host_spurious_branches()
+
+    def test_surface_refresh_order_prioritizes_lock_providers(self):
+        """Run lock-provider refresh ordering assertions."""
+        _unit_test_surface_refresh_order_prioritizes_lock_providers()

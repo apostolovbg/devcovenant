@@ -61,6 +61,94 @@ Example:
 ## Version 1.0.1b1
 
 - 2026-04-03:
+  Change: fixed install-time config rendering so new repositories keep the
+          explanatory bootstrap comments, added a copy-ready builtin
+          `userproject` profile template, and documented the core custom
+          policy/profile override contract in the main docs.
+  Why: clarified the fresh-repo setup gaps after install stripped the seed
+       config comments while the docs still left too much profile ownership,
+       naming, and same-id/same-name override guidance implicit.
+  Impact: improved first-time repository bootstrap with a readable commented
+          config before deploy, a concrete custom-profile starting point, and
+          clearer docs about inherited values, override semantics,
+          `{{ PROJECT_NAME_PATH }}`, and `compatibility_policy`.
+  Files:
+  CHANGELOG.md
+  README.md
+  devcovenant/README.md
+  devcovenant/builtin/profiles/README.md
+  devcovenant/builtin/profiles/global/assets/config.yaml
+  devcovenant/builtin/profiles/userproject/userproject.yaml
+  devcovenant/config.yaml
+  devcovenant/core/refresh_runtime.py
+  devcovenant/docs/config.md
+  devcovenant/docs/installation.md
+  devcovenant/docs/policies.md
+  devcovenant/docs/profiles.md
+  devcovenant/docs/project_governance.md
+  devcovenant/docs/registry.md
+  devcovenant/install.py
+  devcovenant/registry/registry.yaml
+  tests/devcovenant/core/test_execution.py
+  tests/devcovenant/core/test_profile_registry.py
+  tests/devcovenant/test_install.py
+  tests/devcovenant/test_refresh.py
+
+- 2026-04-03:
+  Change: fixed builtin dependency-management inventory expansion and
+          surface refresh ordering for included requirement lock surfaces,
+          and corrected refresh metadata for same-id custom overrides.
+  Why: investigated missing dependency-license coverage from included lock
+       manifests and found that refresh still marked active same-id custom
+       overrides as non-custom in generated metadata.
+  Impact: enabled builtin dependency-management to surface included
+          lockfile dependencies in license inventories, keep dependent
+          surfaces ordered after lock providers, and record active same-id
+          custom overrides truthfully in refreshed policy metadata.
+  Files:
+  CHANGELOG.md
+  devcovenant/builtin/policies/dependency_management/\
+    dependency_lock_runtime.py
+  devcovenant/builtin/policies/dependency_management/\
+    dependency_management.py
+  devcovenant/core/refresh_runtime.py
+  devcovenant/docs/policies.md
+  devcovenant/docs/refresh.md
+  devcovenant/docs/registry.md
+  devcovenant/registry/registry.yaml
+  licenses/THIRD_PARTY_LICENSES.md
+  licenses/PyYAML-6.0.3.txt
+  licenses/Pygments-2.20.0.txt
+  licenses/build-1.4.2.txt
+  licenses/cfgv-3.5.0.txt
+  licenses/click-8.3.1.txt
+  licenses/distlib-0.4.0.txt
+  licenses/filelock-3.25.2.txt
+  licenses/identify-2.6.18.txt
+  licenses/iniconfig-2.3.0.txt
+  licenses/nodeenv-1.10.0.txt
+  licenses/packaging-26.0.txt
+  licenses/pip-26.0.1.txt
+  licenses/pip-tools-7.5.3.txt
+  licenses/platformdirs-4.9.4.txt
+  licenses/pluggy-1.6.0.txt
+  licenses/pre_commit-4.5.1.txt
+  licenses/pyproject_hooks-1.2.0.txt
+  licenses/pytest-9.0.2.txt
+  licenses/python-discovery-1.2.1.txt
+  licenses/semver-3.0.4.txt
+  licenses/setuptools-82.0.1.txt
+  licenses/tomli-2.4.1.txt
+  licenses/virtualenv-21.2.0.txt
+  licenses/wheel-0.46.3.txt
+  requirements.lock
+  tests/devcovenant/builtin/policies/dependency_management/\
+    test_dependency_lock_runtime.py
+  tests/devcovenant/builtin/policies/dependency_management/\
+    test_dependency_management.py
+  tests/devcovenant/core/test_refresh_runtime.py
+
+- 2026-04-03:
   Change: improved the top-level CLI help and asset-command docs so the
           Desktop materialization command is discoverable from operator
           entrypoints and documented with its real resolution rules.

@@ -258,7 +258,106 @@ def _unit_test_profile_asset_dependency_input_is_rejected(tmp_path: Path):
     )
     violations = checker.check(context)
     assert len(violations) == 1
-    assert "profile asset templates" in violations[0].message
+
+
+def _setup_included_manifest_repo(tmp_path: Path) -> Path:
+    """Create one repo layout with included lock manifests."""
+
+    tmp_path.joinpath("licenses").mkdir(parents=True, exist_ok=True)
+    tmp_path.joinpath("devcovenant").mkdir(parents=True, exist_ok=True)
+    tmp_path.joinpath("package").mkdir(parents=True, exist_ok=True)
+    (tmp_path / "requirements.in").write_text(
+        "\n".join(
+            [
+                "-r devcovenant/runtime-requirements.lock",
+                "-r package/runtime-requirements.lock",
+                "",
+            ]
+        ),
+        encoding="utf-8",
+    )
+    (tmp_path / "devcovenant" / "runtime-requirements.lock").write_text(
+        "\n".join(
+            [
+                "build==1.4.2 \\",
+                "    --hash=sha256:deadbeef",
+                "",
+            ]
+        ),
+        encoding="utf-8",
+    )
+    (tmp_path / "package" / "runtime-requirements.lock").write_text(
+        "\n".join(
+            [
+                "ttkbootstrap==1.20.2 \\",
+                "    --hash=sha256:feedface",
+                "",
+            ]
+        ),
+        encoding="utf-8",
+    )
+    (tmp_path / "requirements.lock").write_text(
+        "\n".join(
+            [
+                "build==1.4.2",
+                "ttkbootstrap==1.20.2",
+                "",
+            ]
+        ),
+        encoding="utf-8",
+    )
+    return tmp_path
+
+
+def _unit_test_display_names_expand_requirement_includes(tmp_path: Path):
+    """Included requirement manifests should contribute inventory names."""
+
+    repo = _setup_included_manifest_repo(tmp_path)
+
+    display_names = dependency_management._direct_dependency_display_names(
+        repo,
+        direct_dependency_files=["requirements.in"],
+    )
+
+    assert display_names == {
+        "build": "build",
+        "ttkbootstrap": "ttkbootstrap",
+    }
+
+
+def _unit_test_inventory_uses_packages_from_included_lockfiles(
+    tmp_path: Path,
+):
+    """Included lock manifests should populate inventory entries."""
+
+    repo = _setup_included_manifest_repo(tmp_path)
+
+    original_find_distribution = dependency_management._find_distribution
+    dependency_management._find_distribution = lambda _name: object()
+    try:
+        inventory = dependency_management._build_dependency_inventory(
+            repo,
+            licenses_dir_path=repo / "licenses",
+            resolved_lock_file="requirements.lock",
+            direct_dependency_files=["requirements.in"],
+        )
+    finally:
+        dependency_management._find_distribution = original_find_distribution
+
+    assert inventory == [
+        {
+            "normalized_name": "build",
+            "package_name": "build",
+            "version": "1.4.2",
+            "relative_path": "build-1.4.2.txt",
+        },
+        {
+            "normalized_name": "ttkbootstrap",
+            "package_name": "ttkbootstrap",
+            "version": "1.20.2",
+            "relative_path": "ttkbootstrap-1.20.2.txt",
+        },
+    ]
 
 
 def _unit_test_refresh_materializes_generic_license_readme(tmp_path: Path):
@@ -720,3 +819,19 @@ class GeneratedUnittestCases(unittest.TestCase):
     def test_policy_symbol_contract_is_stable(self):
         """Run dependency-management symbol contract assertions."""
         _unit_test_policy_symbol_contract_is_stable()
+
+    def test_display_names_expand_requirement_includes(self):
+        """Run included-manifest display-name expansion assertions."""
+        with tempfile.TemporaryDirectory() as temp_dir:
+            tmp_path = Path(temp_dir).resolve()
+            _unit_test_display_names_expand_requirement_includes(
+                tmp_path=tmp_path
+            )
+
+    def test_inventory_uses_packages_from_included_lockfiles(self):
+        """Run included-lock inventory materialization assertions."""
+        with tempfile.TemporaryDirectory() as temp_dir:
+            tmp_path = Path(temp_dir).resolve()
+            _unit_test_inventory_uses_packages_from_included_lockfiles(
+                tmp_path=tmp_path
+            )

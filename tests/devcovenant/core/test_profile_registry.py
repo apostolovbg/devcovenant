@@ -198,6 +198,53 @@ def _profile_discover_profiles_orders_profiles_deterministically() -> None:
     assert discovered_names == expected_names
 
 
+def _profile_same_name_custom_profile_overrides_builtin_profile() -> None:
+    """Same-name custom profiles should shadow builtin profiles."""
+    module = importlib.import_module(MODULE)
+    with tempfile.TemporaryDirectory() as tmpdir:
+        repo_root = Path(tmpdir)
+        builtin_root = repo_root / "devcovenant" / "builtin" / "profiles"
+        custom_root = repo_root / "devcovenant" / "custom" / "profiles"
+        builtin_profile_dir = builtin_root / "demo"
+        custom_profile_dir = custom_root / "demo"
+        builtin_profile_dir.mkdir(parents=True, exist_ok=True)
+        custom_profile_dir.mkdir(parents=True, exist_ok=True)
+        (builtin_profile_dir / "demo.yaml").write_text(
+            yaml.safe_dump(
+                {
+                    "version": 1,
+                    "profile": "demo",
+                    "category": "framework",
+                    "suffixes": [".builtin"],
+                },
+                sort_keys=False,
+            ),
+            encoding="utf-8",
+        )
+        (custom_profile_dir / "demo.yaml").write_text(
+            yaml.safe_dump(
+                {
+                    "version": 1,
+                    "profile": "demo",
+                    "category": "application",
+                    "suffixes": [".custom"],
+                },
+                sort_keys=False,
+            ),
+            encoding="utf-8",
+        )
+
+        registry = module.discover_profiles(
+            repo_root, builtin_root=builtin_root, custom_root=custom_root
+        )
+
+    demo = registry.get("demo", {})
+    assert isinstance(demo, dict)
+    assert demo.get("source") == "custom"
+    assert demo.get("path") == "devcovenant/custom/profiles/demo"
+    assert demo.get("suffixes") == [".custom"]
+
+
 def _profile_profile_registry_exports_workflow_contract() -> None:
     """Tracked profile registry should expose the workflow contract."""
     module = importlib.import_module(MODULE)
@@ -828,6 +875,10 @@ class ProfileRegistryTests(unittest.TestCase):
     def test_discover_profiles_orders_profiles_deterministically(self):
         """Run deterministic profile-discovery ordering assertions."""
         _profile_discover_profiles_orders_profiles_deterministically()
+
+    def test_same_name_custom_profile_overrides_builtin_profile(self):
+        """Run same-name builtin/custom profile precedence assertions."""
+        _profile_same_name_custom_profile_overrides_builtin_profile()
 
     def test_profile_registry_resolves_clean_overlays(self):
         """Run cleanup overlay resolution regression coverage."""

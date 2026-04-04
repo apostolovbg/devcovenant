@@ -606,6 +606,67 @@ def _unit_test_global_config_template_documents_quiet_mode() -> None:
     assert content.count("Allowed values: normal, quiet, verbose") >= 2
     assert "output_mode: verbose" in content
     assert "tests_output_mode: verbose" in content
+    assert "profiles/userproject/" in content
+    assert "cross-platform support" in content
+
+
+def _unit_test_bootstrap_docs_explain_profile_copy_and_name_rules() -> None:
+    """Bootstrap docs should explain template-copy and naming boundaries."""
+    docs = {
+        "README.md": _read_output_doc_contract_text("README.md"),
+        "devcovenant/README.md": _read_output_doc_contract_text(
+            "devcovenant/README.md"
+        ),
+        "devcovenant/docs/config.md": _read_output_doc_contract_text(
+            "devcovenant/docs/config.md"
+        ),
+        "devcovenant/docs/installation.md": _read_output_doc_contract_text(
+            "devcovenant/docs/installation.md"
+        ),
+        "devcovenant/docs/policies.md": _read_output_doc_contract_text(
+            "devcovenant/docs/policies.md"
+        ),
+        "devcovenant/docs/profiles.md": _read_output_doc_contract_text(
+            "devcovenant/docs/profiles.md"
+        ),
+        "devcovenant/docs/project_governance.md": (
+            _read_output_doc_contract_text(
+                "devcovenant/docs/project_governance.md"
+            )
+        ),
+    }
+
+    assert "profiles/userproject/" in docs["README.md"]
+    assert "profiles/userproject/" in docs["devcovenant/README.md"]
+    assert (
+        "Keep inherited values inherited."
+        in docs["devcovenant/docs/config.md"]
+    )
+    assert (
+        'Here, "inherited" means values from other active profiles.'
+        in docs["devcovenant/docs/config.md"]
+    )
+    assert (
+        "builtin profile with that name is ignored."
+        in docs["devcovenant/docs/profiles.md"]
+    )
+    assert "overrides the builtin one." in docs["devcovenant/docs/policies.md"]
+    assert (
+        "copy-ready bootstrap template"
+        in docs["devcovenant/docs/installation.md"]
+    )
+    assert (
+        "It is not meant to be activated directly."
+        in docs["devcovenant/docs/profiles.md"]
+    )
+    assert (
+        "{{ PROJECT_NAME_PATH }}"
+        in docs["devcovenant/docs/project_governance.md"]
+    )
+    assert (
+        "cross-platform support"
+        in docs["devcovenant/docs/project_governance.md"]
+    )
 
 
 def _unit_test_normal_mode_workflow_run_message_contract_is_stable() -> None:
@@ -1774,6 +1835,10 @@ class ExecutionTests(unittest.TestCase):
     def test_global_config_template_documents_quiet_mode(self):
         """Run quiet-mode selector comment assertions in config template."""
         _unit_test_global_config_template_documents_quiet_mode()
+
+    def test_bootstrap_docs_explain_profile_copy_and_name_rules(self):
+        """Run bootstrap-doc wording assertions for profile/name guidance."""
+        _unit_test_bootstrap_docs_explain_profile_copy_and_name_rules()
 
     def test_normal_mode_workflow_run_message_contract_is_stable(self):
         """Run normal-mode workflow-run message contract assertions."""

@@ -118,6 +118,25 @@ def _unit_test_install_writes_config_reviewed_and_manifest() -> None:
         assert manifest_path.exists()
 
 
+def _unit_test_install_preserves_review_config_comments() -> None:
+    """install_repo should keep first-review config comments intact."""
+    with tempfile.TemporaryDirectory() as temp_dir:
+        repo_root = Path(temp_dir)
+        with redirect_stderr(StringIO()):
+            result = install.install_repo(repo_root)
+        assert result == 0
+
+        config_text = (repo_root / "devcovenant" / "config.yaml").read_text(
+            encoding="utf-8"
+        )
+        assert "Typical first-time flow:" in config_text
+        assert "human-owned keys say what this repository wants" in config_text
+        assert "profiles/userproject/" in config_text
+        assert "{{ PROJECT_NAME_PATH }}" in config_text
+        assert "values from other active profiles" in config_text
+        assert "same-name custom profile" in config_text
+
+
 def _unit_test_install_seeds_current_devcov_core_paths() -> None:
     """install_repo should seed current core-scan exclusions in config."""
     with tempfile.TemporaryDirectory() as temp_dir:
@@ -149,6 +168,49 @@ def _unit_test_install_ships_packaged_runtime_lock() -> None:
         runtime_lock = repo_root / "devcovenant" / "runtime-requirements.lock"
         assert runtime_lock.exists()
         assert not (repo_root / "requirements.in").exists()
+
+
+def _unit_test_install_ships_operator_readme_descriptor() -> None:
+    """install_repo should ship the operator README managed-doc descriptor."""
+    with tempfile.TemporaryDirectory() as temp_dir:
+        repo_root = Path(temp_dir)
+        with redirect_stderr(StringIO()):
+            result = install.install_repo(repo_root)
+        assert result == 0
+
+        descriptor_path = (
+            repo_root
+            / "devcovenant"
+            / "builtin"
+            / "profiles"
+            / "global"
+            / "assets"
+            / "devcovenant"
+            / "README.yaml"
+        )
+        assert descriptor_path.exists()
+
+
+def _unit_test_install_ships_userproject_profile_template() -> None:
+    """install_repo should ship the copy-ready userproject profile template."""
+    with tempfile.TemporaryDirectory() as temp_dir:
+        repo_root = Path(temp_dir)
+        with redirect_stderr(StringIO()):
+            result = install.install_repo(repo_root)
+        assert result == 0
+
+        template_path = (
+            repo_root
+            / "devcovenant"
+            / "builtin"
+            / "profiles"
+            / "userproject"
+            / "userproject.yaml"
+        )
+        assert template_path.exists()
+        content = template_path.read_text(encoding="utf-8")
+        assert "profile: userproject" in content
+        assert "Keep inherited values inherited." in content
 
 
 def _unit_test_install_writes_tracked_registry_without_runtime_state() -> None:
@@ -736,9 +798,21 @@ class GeneratedUnittestCases(unittest.TestCase):
         """Run install core-path seed alignment assertions."""
         _unit_test_install_seeds_current_devcov_core_paths()
 
+    def test_install_preserves_review_config_comments(self):
+        """Run review-config comment preservation assertions."""
+        _unit_test_install_preserves_review_config_comments()
+
     def test_install_ships_packaged_runtime_lock(self):
         """Run packaged runtime bootstrap assertions for install."""
         _unit_test_install_ships_packaged_runtime_lock()
+
+    def test_install_ships_operator_readme_descriptor(self):
+        """Run operator-readme descriptor packaging assertions."""
+        _unit_test_install_ships_operator_readme_descriptor()
+
+    def test_install_ships_userproject_profile_template(self):
+        """Run userproject profile-template packaging assertions."""
+        _unit_test_install_ships_userproject_profile_template()
 
     def test_install_writes_tracked_registry_without_runtime_state(self):
         """Run test_install_writes_tracked_registry_without_runtime_state."""

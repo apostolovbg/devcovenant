@@ -1102,6 +1102,11 @@ def _unit_test_refresh_renders_config_ownership_comments() -> None:
             "# Set this to true after review to allow `devcovenant deploy`."
             in (config_text)
         )
+        assert "profiles/userproject/" in config_text
+        assert "{{ PROJECT_NAME_PATH }}" in config_text
+        assert "cross-platform support" in config_text
+        assert "values from other active profiles" in config_text
+        assert "same-name custom profile" in config_text
         assert "Set this to false after review" not in config_text
         assert "integrity:" in config_text
 
