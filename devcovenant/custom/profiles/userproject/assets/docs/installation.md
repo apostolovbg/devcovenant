@@ -76,6 +76,14 @@ The shortest accurate model is:
    when the repository does not want that workflow.
    Use an optional GitHub-specific custom profile when the
    repository needs reusable GitHub-only CI fragments beyond the builtin base.
+   A good bootstrap starting point is copying
+   `devcovenant/builtin/profiles/userproject/` to
+   `devcovenant/custom/profiles/userproject/`, then editing only the
+   repo-specific facts there.
+   When a custom profile and builtin profile share the same name, the custom
+   profile fully shadows the builtin one and the builtin profile is ignored.
+   Keep inherited values inherited from the other active profiles instead of
+   restating them in the copied same-name profile.
    Use direct overlays only for small local exceptions.
 
 3. `deploy` is activation.

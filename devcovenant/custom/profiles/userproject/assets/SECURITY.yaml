@@ -102,8 +102,8 @@ body: |-
   1. the builtin `github` profile supplies the generic source-tree `CI`
      workflow for GitHub Actions, including the bootstrap gate/run automation
      on Python `3.14`
-  2. the repository activates `github`, then its `devcovrepo` profile extends
-     the main `governance` job
+  2. the repository activates `github`, then its custom same-name
+     `userproject` profile extends the main `governance` job
      with `pip-audit -r requirements.lock` and
      `bandit -q -c bandit.yaml -r devcovenant`
   3. the repository-specific `Build` job inside `CI` owns

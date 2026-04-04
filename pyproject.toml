@@ -10,7 +10,7 @@ name = "devcovenant"
 version = "1.0.1b1"
 description = "devcovenant is a repository governance framework."
 readme = {file = "devcovenant/README.md", content-type = "text/markdown"}
-requires-python = ">=3.10"
+requires-python = ">=3.11"
 license = "MIT"
 license-files = [
   "LICENSE",
@@ -33,7 +33,6 @@ classifiers = [
   "Intended Audience :: Developers",
   "Programming Language :: Python :: 3",
   "Programming Language :: Python :: 3 :: Only",
-  "Programming Language :: Python :: 3.10",
   "Programming Language :: Python :: 3.11",
   "Programming Language :: Python :: 3.12",
   "Programming Language :: Python :: 3.13",
@@ -48,7 +47,6 @@ dependencies = [
   "PyYAML>=6.0.2",
   "pytest>=9.0.2",
   "semver>=3.0.2",
-  "tomli>=2.3.0; python_version < '3.11'",
 ]
 [project.urls]
 Homepage = "https://github.com/apostolovbg/devcovenant"

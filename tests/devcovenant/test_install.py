@@ -268,7 +268,7 @@ def _unit_test_install_does_not_copy_repo_custom_payload() -> None:
             / "devcov_raw_string_escapes"
         )
         leaked_profile = (
-            repo_root / "devcovenant" / "custom" / "profiles" / "devcovrepo"
+            repo_root / "devcovenant" / "custom" / "profiles" / "userproject"
         )
         assert not leaked_policy.exists()
         assert not leaked_profile.exists()

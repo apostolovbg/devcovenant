@@ -438,13 +438,17 @@ def _repository_validation_structure_seed_required_structure(
         path.write_text("#\n", encoding="utf-8")
 
 
-def _repository_validation_structure_write_active_profiles(
-    repo_root: Path, profiles: list[str]
+def _repository_validation_structure_write_config(
+    repo_root: Path,
+    profiles: list[str],
+    *,
+    developer_mode: bool = False,
 ) -> None:
-    """Write a minimal config with specified active profiles."""
+    """Write a minimal config with profiles and optional developer mode."""
     config_path = repo_root / "devcovenant" / "config.yaml"
     config_path.parent.mkdir(parents=True, exist_ok=True)
-    payload = "profiles:\n  active:\n"
+    payload = f"developer_mode: {'true' if developer_mode else 'false'}\n"
+    payload += "profiles:\n  active:\n"
     for profile in profiles:
         payload += f"  - {profile}\n"
     config_path.write_text(payload, encoding="utf-8")
@@ -497,12 +501,14 @@ def _structure_structure_check_uses_manifest_docs() -> None:
 
 
 def _structure_structure_check_reports_repo_bytecode() -> None:
-    """Structure check should flag repo-local bytecode for devcovrepo."""
+    """Structure check should flag repo-local bytecode in developer mode."""
     with tempfile.TemporaryDirectory() as tmpdir:
         repo_root = Path(tmpdir)
         _repository_validation_structure_seed_required_structure(repo_root)
-        _repository_validation_structure_write_active_profiles(
-            repo_root, ["devcovrepo"]
+        _repository_validation_structure_write_config(
+            repo_root,
+            ["userproject"],
+            developer_mode=True,
         )
         pycache = repo_root / "devcovenant" / "__pycache__"
         pycache.mkdir(parents=True, exist_ok=True)
@@ -514,13 +520,11 @@ def _structure_structure_check_reports_repo_bytecode() -> None:
 
 
 def _structure_structure_check_skips_repo_bytecode_without_profile() -> None:
-    """Structure check should ignore bytecode when devcovrepo is inactive."""
+    """Structure check should ignore bytecode when developer mode is off."""
     with tempfile.TemporaryDirectory() as tmpdir:
         repo_root = Path(tmpdir)
         _repository_validation_structure_seed_required_structure(repo_root)
-        _repository_validation_structure_write_active_profiles(
-            repo_root, ["global"]
-        )
+        _repository_validation_structure_write_config(repo_root, ["global"])
         pycache = repo_root / "devcovenant" / "__pycache__"
         pycache.mkdir(parents=True, exist_ok=True)
         (pycache / "demo.cpython-314.pyc").write_bytes(b"x")
@@ -588,7 +592,7 @@ class RepositoryValidationStructureTests(unittest.TestCase):
         _structure_structure_check_reports_repo_bytecode()
 
     def test_structure_check_skips_repo_bytecode_without_profile(self):
-        """Run non-devcovrepo bytecode assertions."""
+        """Run non-developer-mode bytecode assertions."""
         _structure_structure_check_skips_repo_bytecode_without_profile()
 
     def test_structure_check_requires_logs_readme(self):

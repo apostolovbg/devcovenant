@@ -75,7 +75,7 @@ profiles:
   - global
   - defaults
   - github
-  - devcovrepo
+  - userproject
   - docs
   - python
   generated:
@@ -418,9 +418,9 @@ policy_state:
   no-print-outside-output-runtime: true
   no-raw-errors: true
   package-artifact-mirror: true
+  package-doc-sync: true
   raw-string-escapes: false
   read-only-directories: true
-  readme-sync: true
   security-scanner: true
   tests-coverage: true
   version-governance: true
@@ -774,13 +774,6 @@ autogen_metadata_overlays:
       required_paths:
       - devcovenant/runtime-requirements.lock
       hash_targets:
-      - id: linux-py310
-        marker: sys_platform == "linux" and python_version == "3.10"
-        pip:
-          platform: manylinux2014_x86_64
-          implementation: cp
-          python_version: '3.10'
-          abi: cp310
       - id: linux-py311
         marker: sys_platform == "linux" and python_version == "3.11"
         pip:
@@ -809,13 +802,6 @@ autogen_metadata_overlays:
           implementation: cp
           python_version: '3.14'
           abi: cp314
-      - id: windows-py310
-        marker: sys_platform == "win32" and python_version == "3.10"
-        pip:
-          platform: win_amd64
-          implementation: cp
-          python_version: '3.10'
-          abi: cp310
       - id: windows-py311
         marker: sys_platform == "win32" and python_version == "3.11"
         pip:
@@ -844,13 +830,6 @@ autogen_metadata_overlays:
           implementation: cp
           python_version: '3.14'
           abi: cp314
-      - id: macos-py310
-        marker: sys_platform == "darwin" and python_version == "3.10"
-        pip:
-          platform: macosx_11_0_x86_64
-          implementation: cp
-          python_version: '3.10'
-          abi: cp310
       - id: macos-py311
         marker: sys_platform == "darwin" and python_version == "3.11"
         pip:
@@ -897,13 +876,6 @@ autogen_metadata_overlays:
       - requirements.in
       - devcovenant/runtime-requirements.lock
       hash_targets:
-      - id: linux-py310
-        marker: sys_platform == "linux" and python_version == "3.10"
-        pip:
-          platform: manylinux2014_x86_64
-          implementation: cp
-          python_version: '3.10'
-          abi: cp310
       - id: linux-py311
         marker: sys_platform == "linux" and python_version == "3.11"
         pip:
@@ -932,13 +904,6 @@ autogen_metadata_overlays:
           implementation: cp
           python_version: '3.14'
           abi: cp314
-      - id: windows-py310
-        marker: sys_platform == "win32" and python_version == "3.10"
-        pip:
-          platform: win_amd64
-          implementation: cp
-          python_version: '3.10'
-          abi: cp310
       - id: windows-py311
         marker: sys_platform == "win32" and python_version == "3.11"
         pip:
@@ -967,13 +932,6 @@ autogen_metadata_overlays:
           implementation: cp
           python_version: '3.14'
           abi: cp314
-      - id: macos-py310
-        marker: sys_platform == "darwin" and python_version == "3.10"
-        pip:
-          platform: macosx_11_0_x86_64
-          implementation: cp
-          python_version: '3.10'
-          abi: cp310
       - id: macos-py311
         marker: sys_platform == "darwin" and python_version == "3.11"
         pip:
@@ -1018,13 +976,6 @@ autogen_metadata_overlays:
       - pyproject.toml
       - '{{ PROJECT_NAME_PATH }}'
       hash_targets:
-      - id: linux-py310
-        marker: sys_platform == "linux" and python_version == "3.10"
-        pip:
-          platform: manylinux2014_x86_64
-          implementation: cp
-          python_version: '3.10'
-          abi: cp310
       - id: linux-py311
         marker: sys_platform == "linux" and python_version == "3.11"
         pip:
@@ -1053,13 +1004,6 @@ autogen_metadata_overlays:
           implementation: cp
           python_version: '3.14'
           abi: cp314
-      - id: windows-py310
-        marker: sys_platform == "win32" and python_version == "3.10"
-        pip:
-          platform: win_amd64
-          implementation: cp
-          python_version: '3.10'
-          abi: cp310
       - id: windows-py311
         marker: sys_platform == "win32" and python_version == "3.11"
         pip:
@@ -1088,13 +1032,6 @@ autogen_metadata_overlays:
           implementation: cp
           python_version: '3.14'
           abi: cp314
-      - id: macos-py310
-        marker: sys_platform == "darwin" and python_version == "3.10"
-        pip:
-          platform: macosx_11_0_x86_64
-          implementation: cp
-          python_version: '3.10'
-          abi: cp310
       - id: macos-py311
         marker: sys_platform == "darwin" and python_version == "3.11"
         pip:
@@ -1424,6 +1361,15 @@ autogen_metadata_overlays:
     - '*.py'
     include_suffixes:
     - .py
+  package-artifact-mirror:
+    file_mirrors:
+    - LICENSE=>devcovenant/licenses/LICENSE
+  package-doc-sync:
+    omit_block_pairs:
+    - <!-- REPO-ONLY:BEGIN -->=><!-- REPO-ONLY:END -->
+    rewrite_repo_relative_links: 'true'
+    sync_pairs:
+    - README.md=>devcovenant/README.md
   security-scanner:
     exclude_globs:
     - tests/**

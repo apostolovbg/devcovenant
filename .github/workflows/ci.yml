@@ -177,6 +177,7 @@ jobs:
         python3 -m venv .venv
         .venv/bin/python -m pip install -r requirements.lock
         .venv/bin/python -m pip install --no-deps "$WHEEL_PATH"
+        .venv/bin/python -m devcovenant --version
         .venv/bin/python -m devcovenant gate --start
         .venv/bin/python -m devcovenant gate --mid
         .venv/bin/python -m devcovenant run
@@ -248,6 +249,7 @@ jobs:
         python3 -m venv .venv
         .venv/bin/python -m pip install -r requirements.lock
         .venv/bin/python -m pip install --no-deps "$SDIST_PATH"
+        .venv/bin/python -m devcovenant --version
         .venv/bin/python -m devcovenant gate --start
         .venv/bin/python -m devcovenant gate --mid
         .venv/bin/python -m devcovenant run
@@ -330,38 +332,6 @@ jobs:
         "$PIPX_BIN_DIR/devcovenant" gate --end
         "$PIPX_BIN_DIR/devcovenant" check
         popd >/dev/null
-    - name: Set up Python support floor
-      uses: actions/setup-python@a309ff8b426b58ec0e2a45f0f869d46889d02405
-      with:
-        python-version: '3.10'
-    - name: Prove Python 3.10 support floor
-      run: |
-        set -euo pipefail
-        WHEEL_PATH="$(python - <<'PY'
-        from pathlib import Path
-
-        matches = sorted(Path("dist").glob("*.whl"))
-        if not matches:
-            raise SystemExit(1)
-        print(matches[0].resolve())
-        PY
-        )"
-        test -n "$WHEEL_PATH"
-        python -m venv .proof-py310
-        . .proof-py310/bin/activate
-        python -m pip install -r requirements.lock
-        python -m pip install --no-deps "$WHEEL_PATH"
-        python -m devcovenant --version
-        python - <<'PY'
-        import devcovenant
-        import devcovenant.core.cleanup
-        from devcovenant.builtin.policies.version_sync import (
-            version_sync,
-        )
-
-        assert version_sync is not None
-        print(devcovenant.__version__)
-        PY
     - name: Upload distributions
       uses: actions/upload-artifact@bbbca2ddaa5d8feaa63e36b76fdaad77386f024f
       with:

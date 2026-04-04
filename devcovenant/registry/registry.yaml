@@ -1,7 +1,7 @@
 metadata:
   schema_version: 1
   registry_layout: single-root
-  policy_registry_input_hash: 5bb7c9ce51ca9cd88c73c48aca545327ea5287aa69f78a5b05b36842332555dc
+  policy_registry_input_hash: 20ea9603a1d416cde843d901ec79ebeeb2fc34c9e54cf163fd5dceee38678a23
 project-governance:
   project_name: devcovenant
   project_description: devcovenant is a repository governance framework.
@@ -32,7 +32,7 @@ managed-docs:
   descriptor_roots:
   - devcovenant/builtin/profiles/global/assets
   - devcovenant/builtin/profiles/github/assets
-  - devcovenant/custom/profiles/devcovrepo/assets
+  - devcovenant/custom/profiles/userproject/assets
   - devcovenant/builtin/profiles/python/assets
   enabled_docs:
   - AGENTS.md
@@ -85,25 +85,25 @@ managed-docs:
       body_fingerprint: 2e05ec85c06b8c0a57421369ab32c001f63d6a9e5207f614e77d11f961cd12ec
     POLICY_MAP.md:
       enabled: true
-      descriptor_path: devcovenant/custom/profiles/devcovrepo/assets/POLICY_MAP.yaml
+      descriptor_path: devcovenant/custom/profiles/userproject/assets/POLICY_MAP.yaml
       project_governance_headers: false
       import_seed: true
       authoritative_source: true
-      body_fingerprint: 7141107d0e8be2c6e965344e46dfa72d8ac7312637e249f5331ab226c8e66b57
+      body_fingerprint: 35caaa929f690d9536dc8c2ba502bfab58b97cf79525789a47abd55d159ee9ba
     PRIVACY.md:
       enabled: true
-      descriptor_path: devcovenant/custom/profiles/devcovrepo/assets/PRIVACY.yaml
+      descriptor_path: devcovenant/custom/profiles/userproject/assets/PRIVACY.yaml
       project_governance_headers: false
       import_seed: true
       authoritative_source: true
       body_fingerprint: 625c1ef97e4c02795ae9ca73d9706ca62ec2b90cd24af96cafc8817cfeef4299
     PROFILE_MAP.md:
       enabled: true
-      descriptor_path: devcovenant/custom/profiles/devcovrepo/assets/PROFILE_MAP.yaml
+      descriptor_path: devcovenant/custom/profiles/userproject/assets/PROFILE_MAP.yaml
       project_governance_headers: false
       import_seed: true
       authoritative_source: true
-      body_fingerprint: 4cee3162ef6a2d2c69f4304dd08530a67b190328227767c52437b4e5c4d35cde
+      body_fingerprint: b4cba72659d10b28c1e47cbd5872441182425faffb03e28b06315fa641419f6f
     README.md:
       enabled: true
       descriptor_path: devcovenant/builtin/profiles/global/assets/README.yaml
@@ -113,11 +113,11 @@ managed-docs:
       body_fingerprint: 8075c85afddadb2173207eec5587167f9a90cd36f2fb7c98b8c2194a647c6b41
     SECURITY.md:
       enabled: true
-      descriptor_path: devcovenant/custom/profiles/devcovrepo/assets/SECURITY.yaml
+      descriptor_path: devcovenant/custom/profiles/userproject/assets/SECURITY.yaml
       project_governance_headers: false
       import_seed: true
       authoritative_source: true
-      body_fingerprint: 0cf19cd55fd6efc85c3c10c4f144fa9855ce37023934fc68d009d882d78bca5c
+      body_fingerprint: 7b0dde141529d9e2642acc2709348263f05f8769b5e7c48828b5a408202336d6
     SPEC.md:
       enabled: true
       descriptor_path: devcovenant/builtin/profiles/global/assets/SPEC.yaml
@@ -127,7 +127,7 @@ managed-docs:
       body_fingerprint: 158ad3987d5b81864b2c712e8fa6c580dda6beab2444bb122c7d31ac72ce64b5
     SUPPORT.md:
       enabled: true
-      descriptor_path: devcovenant/custom/profiles/devcovrepo/assets/SUPPORT.yaml
+      descriptor_path: devcovenant/custom/profiles/userproject/assets/SUPPORT.yaml
       project_governance_headers: false
       import_seed: true
       authoritative_source: true
@@ -184,7 +184,7 @@ workflow_contract:
   - global
   - defaults
   - github
-  - devcovrepo
+  - userproject
   - docs
   - python
 policies:
@@ -8819,121 +8819,6 @@ policies:
     script_exists: true
     hash: aa433f28fe2ee290de3be725967b537abacf83ff59241afe777e2f4a5223c249
     script_path: builtin/read_only_directories.py
-  readme-sync:
-    enabled: true
-    custom: true
-    description: Readme Sync
-    policy_text: |-
-      Ensure `devcovenant/README.md` stays synchronized with the authored root
-      `README.md` while removing repository-only sections via the
-      `<!-- REPO-ONLY:BEGIN -->` / `<!-- REPO-ONLY:END -->` markers and
-      rewriting repo-relative public links into package-safe repository URLs
-      resolved from `pyproject.toml`. Auto-fix rewrites the packaged guide from
-      the repo README.
-    metadata:
-      id: readme-sync
-      severity: error
-      auto_fix: 'true'
-      enforcement: active
-      enabled: 'true'
-      custom: 'true'
-    metadata_resolution:
-      id:
-        descriptor:
-          values:
-          - readme-sync
-          behavior: base
-          replaced_inherited_values:
-          - ()
-        runtime_identity:
-          values:
-          - readme-sync
-          behavior: replace
-          replaced_inherited_values:
-          - ()
-        effective:
-          values:
-          - readme-sync
-      severity:
-        descriptor:
-          values:
-          - error
-          behavior: base
-          replaced_inherited_values:
-          - ()
-        effective:
-          values:
-          - error
-      auto_fix:
-        descriptor:
-          values:
-          - 'true'
-          behavior: base
-          replaced_inherited_values:
-          - ()
-        effective:
-          values:
-          - 'true'
-      enforcement:
-        descriptor:
-          values:
-          - active
-          behavior: base
-          replaced_inherited_values:
-          - ()
-        effective:
-          values:
-          - active
-      custom:
-        runtime_custom_source:
-          values:
-          - 'true'
-          behavior: replace
-          replaced_inherited_values:
-          - ()
-          note: Resolved from active custom policy script.
-        effective:
-          values:
-          - 'true'
-      enabled:
-        runtime_defaults:
-          values:
-          - 'true'
-          behavior: default
-          replaced_inherited_values:
-          - ()
-        policy_state:
-          values:
-          - 'true'
-          behavior: replace
-          replaced_inherited_values:
-          - 'true'
-        effective:
-          values:
-          - 'true'
-    metadata_warnings: []
-    runtime_actions: []
-    commands: []
-    runtime_metadata_options:
-      id: readme-sync
-      severity: error
-      auto_fix: true
-      enforcement: active
-      enabled: true
-      custom: true
-    runtime_config_overrides: {}
-    runtime_effective_options:
-      id: readme-sync
-      severity: error
-      auto_fix: true
-      enforcement: active
-      enabled: true
-      custom: true
-    assets: []
-    origin: custom
-    script_exists: true
-    hash: e0e6738f503ee7b16f90bef7304fdf260b2495e5d598f20502d1f84677f7f1e6
-    script_path: custom/readme_sync.py
   security-scanner:
     enabled: true
     custom: false
@@ -10440,7 +10325,7 @@ policies:
     - docs=>devcovenant/registry/README.md
     origin: builtin
     script_exists: true
-    hash: 0fa8eba32b447355b354bffe7fd2146077cac99335517f0cd7f14108ce8c4a98
+    hash: b8d616439e1d68675c5cae456fe0f85fc29e9946076b8e531d5ff9c0825f7597
     script_path: builtin/version_sync.py
   version-governance:
     enabled: true
@@ -10930,13 +10815,6 @@ policies:
         required_paths:
         - devcovenant/runtime-requirements.lock
         hash_targets:
-        - id: linux-py310
-          marker: sys_platform == "linux" and python_version == "3.10"
-          pip:
-            platform: manylinux2014_x86_64
-            implementation: cp
-            python_version: '3.10'
-            abi: cp310
         - id: linux-py311
           marker: sys_platform == "linux" and python_version == "3.11"
           pip:
@@ -10965,13 +10843,6 @@ policies:
             implementation: cp
             python_version: '3.14'
             abi: cp314
-        - id: windows-py310
-          marker: sys_platform == "win32" and python_version == "3.10"
-          pip:
-            platform: win_amd64
-            implementation: cp
-            python_version: '3.10'
-            abi: cp310
         - id: windows-py311
           marker: sys_platform == "win32" and python_version == "3.11"
           pip:
@@ -11000,13 +10871,6 @@ policies:
             implementation: cp
             python_version: '3.14'
             abi: cp314
-        - id: macos-py310
-          marker: sys_platform == "darwin" and python_version == "3.10"
-          pip:
-            platform: macosx_11_0_x86_64
-            implementation: cp
-            python_version: '3.10'
-            abi: cp310
         - id: macos-py311
           marker: sys_platform == "darwin" and python_version == "3.11"
           pip:
@@ -11053,13 +10917,6 @@ policies:
         - requirements.in
         - devcovenant/runtime-requirements.lock
         hash_targets:
-        - id: linux-py310
-          marker: sys_platform == "linux" and python_version == "3.10"
-          pip:
-            platform: manylinux2014_x86_64
-            implementation: cp
-            python_version: '3.10'
-            abi: cp310
         - id: linux-py311
           marker: sys_platform == "linux" and python_version == "3.11"
           pip:
@@ -11088,13 +10945,6 @@ policies:
             implementation: cp
             python_version: '3.14'
             abi: cp314
-        - id: windows-py310
-          marker: sys_platform == "win32" and python_version == "3.10"
-          pip:
-            platform: win_amd64
-            implementation: cp
-            python_version: '3.10'
-            abi: cp310
         - id: windows-py311
           marker: sys_platform == "win32" and python_version == "3.11"
           pip:
@@ -11123,13 +10973,6 @@ policies:
             implementation: cp
             python_version: '3.14'
             abi: cp314
-        - id: macos-py310
-          marker: sys_platform == "darwin" and python_version == "3.10"
-          pip:
-            platform: macosx_11_0_x86_64
-            implementation: cp
-            python_version: '3.10'
-            abi: cp310
         - id: macos-py311
           marker: sys_platform == "darwin" and python_version == "3.11"
           pip:
@@ -11174,13 +11017,6 @@ policies:
         - pyproject.toml
         - '{{ PROJECT_NAME_PATH }}'
         hash_targets:
-        - id: linux-py310
-          marker: sys_platform == "linux" and python_version == "3.10"
-          pip:
-            platform: manylinux2014_x86_64
-            implementation: cp
-            python_version: '3.10'
-            abi: cp310
         - id: linux-py311
           marker: sys_platform == "linux" and python_version == "3.11"
           pip:
@@ -11209,13 +11045,6 @@ policies:
             implementation: cp
             python_version: '3.14'
             abi: cp314
-        - id: windows-py310
-          marker: sys_platform == "win32" and python_version == "3.10"
-          pip:
-            platform: win_amd64
-            implementation: cp
-            python_version: '3.10'
-            abi: cp310
         - id: windows-py311
           marker: sys_platform == "win32" and python_version == "3.11"
           pip:
@@ -11244,13 +11073,6 @@ policies:
             implementation: cp
             python_version: '3.14'
             abi: cp314
-        - id: macos-py310
-          marker: sys_platform == "darwin" and python_version == "3.10"
-          pip:
-            platform: macosx_11_0_x86_64
-            implementation: cp
-            python_version: '3.10'
-            abi: cp310
         - id: macos-py311
           marker: sys_platform == "darwin" and python_version == "3.11"
           pip:
@@ -11352,13 +11174,6 @@ policies:
               required_paths:
               - devcovenant/runtime-requirements.lock
               hash_targets:
-              - id: linux-py310
-                marker: sys_platform == "linux" and python_version == "3.10"
-                pip:
-                  platform: manylinux2014_x86_64
-                  implementation: cp
-                  python_version: '3.10'
-                  abi: cp310
               - id: linux-py311
                 marker: sys_platform == "linux" and python_version == "3.11"
                 pip:
@@ -11387,13 +11202,6 @@ policies:
                   implementation: cp
                   python_version: '3.14'
                   abi: cp314
-              - id: windows-py310
-                marker: sys_platform == "win32" and python_version == "3.10"
-                pip:
-                  platform: win_amd64
-                  implementation: cp
-                  python_version: '3.10'
-                  abi: cp310
               - id: windows-py311
                 marker: sys_platform == "win32" and python_version == "3.11"
                 pip:
@@ -11422,13 +11230,6 @@ policies:
                   implementation: cp
                   python_version: '3.14'
                   abi: cp314
-              - id: macos-py310
-                marker: sys_platform == "darwin" and python_version == "3.10"
-                pip:
-                  platform: macosx_11_0_x86_64
-                  implementation: cp
-                  python_version: '3.10'
-                  abi: cp310
               - id: macos-py311
                 marker: sys_platform == "darwin" and python_version == "3.11"
                 pip:
@@ -11475,13 +11276,6 @@ policies:
               - requirements.in
               - devcovenant/runtime-requirements.lock
               hash_targets:
-              - id: linux-py310
-                marker: sys_platform == "linux" and python_version == "3.10"
-                pip:
-                  platform: manylinux2014_x86_64
-                  implementation: cp
-                  python_version: '3.10'
-                  abi: cp310
               - id: linux-py311
                 marker: sys_platform == "linux" and python_version == "3.11"
                 pip:
@@ -11510,13 +11304,6 @@ policies:
                   implementation: cp
                   python_version: '3.14'
                   abi: cp314
-              - id: windows-py310
-                marker: sys_platform == "win32" and python_version == "3.10"
-                pip:
-                  platform: win_amd64
-                  implementation: cp
-                  python_version: '3.10'
-                  abi: cp310
               - id: windows-py311
                 marker: sys_platform == "win32" and python_version == "3.11"
                 pip:
@@ -11545,13 +11332,6 @@ policies:
                   implementation: cp
                   python_version: '3.14'
                   abi: cp314
-              - id: macos-py310
-                marker: sys_platform == "darwin" and python_version == "3.10"
-                pip:
-                  platform: macosx_11_0_x86_64
-                  implementation: cp
-                  python_version: '3.10'
-                  abi: cp310
               - id: macos-py311
                 marker: sys_platform == "darwin" and python_version == "3.11"
                 pip:
@@ -11596,13 +11376,6 @@ policies:
               - pyproject.toml
               - '{{ PROJECT_NAME_PATH }}'
               hash_targets:
-              - id: linux-py310
-                marker: sys_platform == "linux" and python_version == "3.10"
-                pip:
-                  platform: manylinux2014_x86_64
-                  implementation: cp
-                  python_version: '3.10'
-                  abi: cp310
               - id: linux-py311
                 marker: sys_platform == "linux" and python_version == "3.11"
                 pip:
@@ -11631,13 +11404,6 @@ policies:
                   implementation: cp
                   python_version: '3.14'
                   abi: cp314
-              - id: windows-py310
-                marker: sys_platform == "win32" and python_version == "3.10"
-                pip:
-                  platform: win_amd64
-                  implementation: cp
-                  python_version: '3.10'
-                  abi: cp310
               - id: windows-py311
                 marker: sys_platform == "win32" and python_version == "3.11"
                 pip:
@@ -11666,13 +11432,6 @@ policies:
                   implementation: cp
                   python_version: '3.14'
                   abi: cp314
-              - id: macos-py310
-                marker: sys_platform == "darwin" and python_version == "3.10"
-                pip:
-                  platform: macosx_11_0_x86_64
-                  implementation: cp
-                  python_version: '3.10'
-                  abi: cp310
               - id: macos-py311
                 marker: sys_platform == "darwin" and python_version == "3.11"
                 pip:
@@ -11719,13 +11478,6 @@ policies:
               required_paths:
               - devcovenant/runtime-requirements.lock
               hash_targets:
-              - id: linux-py310
-                marker: sys_platform == "linux" and python_version == "3.10"
-                pip:
-                  platform: manylinux2014_x86_64
-                  implementation: cp
-                  python_version: '3.10'
-                  abi: cp310
               - id: linux-py311
                 marker: sys_platform == "linux" and python_version == "3.11"
                 pip:
@@ -11754,13 +11506,6 @@ policies:
                   implementation: cp
                   python_version: '3.14'
                   abi: cp314
-              - id: windows-py310
-                marker: sys_platform == "win32" and python_version == "3.10"
-                pip:
-                  platform: win_amd64
-                  implementation: cp
-                  python_version: '3.10'
-                  abi: cp310
               - id: windows-py311
                 marker: sys_platform == "win32" and python_version == "3.11"
                 pip:
@@ -11789,13 +11534,6 @@ policies:
                   implementation: cp
                   python_version: '3.14'
                   abi: cp314
-              - id: macos-py310
-                marker: sys_platform == "darwin" and python_version == "3.10"
-                pip:
-                  platform: macosx_11_0_x86_64
-                  implementation: cp
-                  python_version: '3.10'
-                  abi: cp310
               - id: macos-py311
                 marker: sys_platform == "darwin" and python_version == "3.11"
                 pip:
@@ -11842,13 +11580,6 @@ policies:
               - requirements.in
               - devcovenant/runtime-requirements.lock
               hash_targets:
-              - id: linux-py310
-                marker: sys_platform == "linux" and python_version == "3.10"
-                pip:
-                  platform: manylinux2014_x86_64
-                  implementation: cp
-                  python_version: '3.10'
-                  abi: cp310
               - id: linux-py311
                 marker: sys_platform == "linux" and python_version == "3.11"
                 pip:
@@ -11877,13 +11608,6 @@ policies:
                   implementation: cp
                   python_version: '3.14'
                   abi: cp314
-              - id: windows-py310
-                marker: sys_platform == "win32" and python_version == "3.10"
-                pip:
-                  platform: win_amd64
-                  implementation: cp
-                  python_version: '3.10'
-                  abi: cp310
               - id: windows-py311
                 marker: sys_platform == "win32" and python_version == "3.11"
                 pip:
@@ -11912,13 +11636,6 @@ policies:
                   implementation: cp
                   python_version: '3.14'
                   abi: cp314
-              - id: macos-py310
-                marker: sys_platform == "darwin" and python_version == "3.10"
-                pip:
-                  platform: macosx_11_0_x86_64
-                  implementation: cp
-                  python_version: '3.10'
-                  abi: cp310
               - id: macos-py311
                 marker: sys_platform == "darwin" and python_version == "3.11"
                 pip:
@@ -11963,13 +11680,6 @@ policies:
               - pyproject.toml
               - '{{ PROJECT_NAME_PATH }}'
               hash_targets:
-              - id: linux-py310
-                marker: sys_platform == "linux" and python_version == "3.10"
-                pip:
-                  platform: manylinux2014_x86_64
-                  implementation: cp
-                  python_version: '3.10'
-                  abi: cp310
               - id: linux-py311
                 marker: sys_platform == "linux" and python_version == "3.11"
                 pip:
@@ -11998,13 +11708,6 @@ policies:
                   implementation: cp
                   python_version: '3.14'
                   abi: cp314
-              - id: windows-py310
-                marker: sys_platform == "win32" and python_version == "3.10"
-                pip:
-                  platform: win_amd64
-                  implementation: cp
-                  python_version: '3.10'
-                  abi: cp310
               - id: windows-py311
                 marker: sys_platform == "win32" and python_version == "3.11"
                 pip:
@@ -12033,13 +11736,6 @@ policies:
                   implementation: cp
                   python_version: '3.14'
                   abi: cp314
-              - id: macos-py310
-                marker: sys_platform == "darwin" and python_version == "3.10"
-                pip:
-                  platform: macosx_11_0_x86_64
-                  implementation: cp
-                  python_version: '3.10'
-                  abi: cp310
               - id: macos-py311
                 marker: sys_platform == "darwin" and python_version == "3.11"
                 pip:
@@ -12086,13 +11782,6 @@ policies:
               required_paths:
               - devcovenant/runtime-requirements.lock
               hash_targets:
-              - id: linux-py310
-                marker: sys_platform == "linux" and python_version == "3.10"
-                pip:
-                  platform: manylinux2014_x86_64
-                  implementation: cp
-                  python_version: '3.10'
-                  abi: cp310
               - id: linux-py311
                 marker: sys_platform == "linux" and python_version == "3.11"
                 pip:
@@ -12121,13 +11810,6 @@ policies:
                   implementation: cp
                   python_version: '3.14'
                   abi: cp314
-              - id: windows-py310
-                marker: sys_platform == "win32" and python_version == "3.10"
-                pip:
-                  platform: win_amd64
-                  implementation: cp
-                  python_version: '3.10'
-                  abi: cp310
               - id: windows-py311
                 marker: sys_platform == "win32" and python_version == "3.11"
                 pip:
@@ -12156,13 +11838,6 @@ policies:
                   implementation: cp
                   python_version: '3.14'
                   abi: cp314
-              - id: macos-py310
-                marker: sys_platform == "darwin" and python_version == "3.10"
-                pip:
-                  platform: macosx_11_0_x86_64
-                  implementation: cp
-                  python_version: '3.10'
-                  abi: cp310
               - id: macos-py311
                 marker: sys_platform == "darwin" and python_version == "3.11"
                 pip:
@@ -12209,13 +11884,6 @@ policies:
               - requirements.in
               - devcovenant/runtime-requirements.lock
               hash_targets:
-              - id: linux-py310
-                marker: sys_platform == "linux" and python_version == "3.10"
-                pip:
-                  platform: manylinux2014_x86_64
-                  implementation: cp
-                  python_version: '3.10'
-                  abi: cp310
               - id: linux-py311
                 marker: sys_platform == "linux" and python_version == "3.11"
                 pip:
@@ -12244,13 +11912,6 @@ policies:
                   implementation: cp
                   python_version: '3.14'
                   abi: cp314
-              - id: windows-py310
-                marker: sys_platform == "win32" and python_version == "3.10"
-                pip:
-                  platform: win_amd64
-                  implementation: cp
-                  python_version: '3.10'
-                  abi: cp310
               - id: windows-py311
                 marker: sys_platform == "win32" and python_version == "3.11"
                 pip:
@@ -12279,13 +11940,6 @@ policies:
                   implementation: cp
                   python_version: '3.14'
                   abi: cp314
-              - id: macos-py310
-                marker: sys_platform == "darwin" and python_version == "3.10"
-                pip:
-                  platform: macosx_11_0_x86_64
-                  implementation: cp
-                  python_version: '3.10'
-                  abi: cp310
               - id: macos-py311
                 marker: sys_platform == "darwin" and python_version == "3.11"
                 pip:
@@ -12330,13 +11984,6 @@ policies:
               - pyproject.toml
               - '{{ PROJECT_NAME_PATH }}'
               hash_targets:
-              - id: linux-py310
-                marker: sys_platform == "linux" and python_version == "3.10"
-                pip:
-                  platform: manylinux2014_x86_64
-                  implementation: cp
-                  python_version: '3.10'
-                  abi: cp310
               - id: linux-py311
                 marker: sys_platform == "linux" and python_version == "3.11"
                 pip:
@@ -12365,13 +12012,6 @@ policies:
                   implementation: cp
                   python_version: '3.14'
                   abi: cp314
-              - id: windows-py310
-                marker: sys_platform == "win32" and python_version == "3.10"
-                pip:
-                  platform: win_amd64
-                  implementation: cp
-                  python_version: '3.10'
-                  abi: cp310
               - id: windows-py311
                 marker: sys_platform == "win32" and python_version == "3.11"
                 pip:
@@ -12400,13 +12040,6 @@ policies:
                   implementation: cp
                   python_version: '3.14'
                   abi: cp314
-              - id: macos-py310
-                marker: sys_platform == "darwin" and python_version == "3.10"
-                pip:
-                  platform: macosx_11_0_x86_64
-                  implementation: cp
-                  python_version: '3.10'
-                  abi: cp310
               - id: macos-py311
                 marker: sys_platform == "darwin" and python_version == "3.11"
                 pip:
@@ -12513,13 +12146,6 @@ policies:
         required_paths:
         - devcovenant/runtime-requirements.lock
         hash_targets:
-        - id: linux-py310
-          marker: sys_platform == "linux" and python_version == "3.10"
-          pip:
-            platform: manylinux2014_x86_64
-            implementation: cp
-            python_version: 3.1
-            abi: cp310
         - id: linux-py311
           marker: sys_platform == "linux" and python_version == "3.11"
           pip:
@@ -12548,13 +12174,6 @@ policies:
             implementation: cp
             python_version: 3.14
             abi: cp314
-        - id: windows-py310
-          marker: sys_platform == "win32" and python_version == "3.10"
-          pip:
-            platform: win_amd64
-            implementation: cp
-            python_version: 3.1
-            abi: cp310
         - id: windows-py311
           marker: sys_platform == "win32" and python_version == "3.11"
           pip:
@@ -12583,13 +12202,6 @@ policies:
             implementation: cp
             python_version: 3.14
             abi: cp314
-        - id: macos-py310
-          marker: sys_platform == "darwin" and python_version == "3.10"
-          pip:
-            platform: macosx_11_0_x86_64
-            implementation: cp
-            python_version: 3.1
-            abi: cp310
         - id: macos-py311
           marker: sys_platform == "darwin" and python_version == "3.11"
           pip:
@@ -12636,13 +12248,6 @@ policies:
         - requirements.in
         - devcovenant/runtime-requirements.lock
         hash_targets:
-        - id: linux-py310
-          marker: sys_platform == "linux" and python_version == "3.10"
-          pip:
-            platform: manylinux2014_x86_64
-            implementation: cp
-            python_version: 3.1
-            abi: cp310
         - id: linux-py311
           marker: sys_platform == "linux" and python_version == "3.11"
           pip:
@@ -12671,13 +12276,6 @@ policies:
             implementation: cp
             python_version: 3.14
             abi: cp314
-        - id: windows-py310
-          marker: sys_platform == "win32" and python_version == "3.10"
-          pip:
-            platform: win_amd64
-            implementation: cp
-            python_version: 3.1
-            abi: cp310
         - id: windows-py311
           marker: sys_platform == "win32" and python_version == "3.11"
           pip:
@@ -12706,13 +12304,6 @@ policies:
             implementation: cp
             python_version: 3.14
             abi: cp314
-        - id: macos-py310
-          marker: sys_platform == "darwin" and python_version == "3.10"
-          pip:
-            platform: macosx_11_0_x86_64
-            implementation: cp
-            python_version: 3.1
-            abi: cp310
         - id: macos-py311
           marker: sys_platform == "darwin" and python_version == "3.11"
           pip:
@@ -12757,13 +12348,6 @@ policies:
         - pyproject.toml
         - '{{ PROJECT_NAME_PATH }}'
         hash_targets:
-        - id: linux-py310
-          marker: sys_platform == "linux" and python_version == "3.10"
-          pip:
-            platform: manylinux2014_x86_64
-            implementation: cp
-            python_version: 3.1
-            abi: cp310
         - id: linux-py311
           marker: sys_platform == "linux" and python_version == "3.11"
           pip:
@@ -12792,13 +12376,6 @@ policies:
             implementation: cp
             python_version: 3.14
             abi: cp314
-        - id: windows-py310
-          marker: sys_platform == "win32" and python_version == "3.10"
-          pip:
-            platform: win_amd64
-            implementation: cp
-            python_version: 3.1
-            abi: cp310
         - id: windows-py311
           marker: sys_platform == "win32" and python_version == "3.11"
           pip:
@@ -12827,13 +12404,6 @@ policies:
             implementation: cp
             python_version: 3.14
             abi: cp314
-        - id: macos-py310
-          marker: sys_platform == "darwin" and python_version == "3.10"
-          pip:
-            platform: macosx_11_0_x86_64
-            implementation: cp
-            python_version: 3.1
-            abi: cp310
         - id: macos-py311
           marker: sys_platform == "darwin" and python_version == "3.11"
           pip:
@@ -12886,44 +12456,43 @@ policies:
     - '{{ PROJECT_NAME_PATH }}/runtime-requirements.lock'
     origin: builtin
     script_exists: true
-    hash: 8adc683fc8abb694edfb7e740173cd5357ea8bbe78cd3c1ed2ebf382c90119d7
+    hash: b012a868fe76dd0d84f7d8cf3335f475860e1f7658950e3f5ea107ce00b772ce
     script_path: builtin/dependency_management.py
     runtime_state:
       surfaces:
         devcovenant_runtime:
-          input_fingerprint: f9a96379ddff854ee091201b9d18b85d78eb99aa98e48b983a75c3e97af13a82
+          input_fingerprint: 67a86505e0b705fa567ffd60ad9a277f847cbcef5d8a1a95b45083c84d7fdf8c
           output_fingerprints:
-            lock_file: d15044f8967ae94c97f8ff2ced7b2a8190281243948aae40cf4d2d5c3e911bcc
-            third_party_file: 03710e4b9b1d4a694b7f319950a3ac27222743eb35b0409771f9df366a8e8368
-            licenses_dir: 96af1bb880755dbfc4adf03d904e33e432446926fb2e04cf315c349d45897fee
+            lock_file: bbe9944a189e5747bd7777744d9c0c2a76c469a4da676be959e838b516586b2f
+            third_party_file: be50aeae63fcef04e11fff70d59ceec57d463efe869125e6a16d12cfb17eeea4
+            licenses_dir: 72012b1f719bea2891ea8715fd94da4744c32c3e25c0b89fb51de41f818b9843
         root_workspace:
-          input_fingerprint: 88f7e47bea4fec3a37a5fd7ba5c4a46094c9ed292e6aecc22f084125e4bc2115
+          input_fingerprint: 1c17f0093c446a4ed3f45a0db87000044141dff403debd4732d29bb7fcf8b681
           output_fingerprints:
-            lock_file: b09b424581e2671b79c3eaeca8595f96a5238097049a9bffa953665f7fbc7360
-            third_party_file: c131f531c1d1356ad99fcdf5342517051a9cf898d9e8d8e8998681405041309c
-            licenses_dir: 1147d59a0099d4652549a6438cdda974463c277c0f76f3042c80ca544b63e0ed
+            lock_file: 781dc97c72362b91502dd43a8c6d7b25beba2d221c4d785a8ba0dec2b61fb3bf
+            third_party_file: 745ddd29e4024aa23288ef11b0290ff4864db1fc8168d5a0e89e699ef2eebcbd
+            licenses_dir: 87b7604bacf4a0ba304d997d0aaccd04678cbd2b33d8c6748c2cbd417cd270f9
   package-artifact-mirror:
     enabled: true
-    custom: true
+    custom: false
     description: Package Artifact Mirror
     policy_text: |-
       Ensure package-shipped artifacts that are true mirrors stay in exact sync
-      with their canonical repository-root sources. This development repository
-      uses the policy only for `LICENSE => devcovenant/licenses/LICENSE`.
-      Dependency lockfiles and
-      third-party license inventories under `devcovenant/licenses/**` are not
-      mirrors; they are generated from the packaged runtime dependency surface by
-      dependency-management. Auto-fix rewrites the configured exact mirrors from
-      their source paths, preserves separately mirrored files that live inside
-      mirrored directories, preserves package-owned skipped paths, and removes
-      stale mirrored files.
+      with their canonical repository-root sources. `file_mirrors` and
+      `dir_mirrors` declare `source=>target` pairs. `dir_skip_paths` declares
+      repo-relative mirror exceptions in `source_dir=>relative/path` form.
+      Dependency lockfiles and third-party license inventories are not mirrors
+      unless the repository explicitly declares them here. Auto-fix rewrites the
+      configured exact mirrors from their source paths, preserves separately
+      mirrored files that live inside mirrored directories, preserves package-owned
+      skipped paths, and removes stale mirrored files.
     metadata:
       id: package-artifact-mirror
       severity: error
       auto_fix: 'true'
       enforcement: active
       enabled: 'true'
-      custom: 'true'
+      custom: 'false'
       file_mirrors:
       - LICENSE=>devcovenant/licenses/LICENSE
       dir_mirrors: []
@@ -12978,8 +12547,20 @@ policies:
       file_mirrors:
         descriptor:
           values:
-          - LICENSE=>devcovenant/licenses/LICENSE
+          - '[]'
           behavior: base
+          replaced_inherited_values:
+          - ()
+        profile_overlays:
+          values:
+          - LICENSE=>devcovenant/licenses/LICENSE
+          behavior: append
+          replaced_inherited_values:
+          - ()
+        autogen_overlays:
+          values:
+          - LICENSE=>devcovenant/licenses/LICENSE
+          behavior: append
           replaced_inherited_values:
           - ()
         effective:
@@ -12992,6 +12573,12 @@ policies:
           behavior: base
           replaced_inherited_values:
           - ()
+        profile_overlays:
+          values:
+          - '[]'
+          behavior: append
+          replaced_inherited_values:
+          - ()
         effective:
           values:
           - '[]'
@@ -13002,17 +12589,205 @@ policies:
           behavior: base
           replaced_inherited_values:
           - ()
+        profile_overlays:
+          values:
+          - '[]'
+          behavior: append
+          replaced_inherited_values:
+          - ()
         effective:
           values:
           - '[]'
-      custom:
-        runtime_custom_source:
+      enabled:
+        runtime_defaults:
+          values:
+          - 'true'
+          behavior: default
+          replaced_inherited_values:
+          - ()
+        policy_state:
           values:
           - 'true'
           behavior: replace
           replaced_inherited_values:
+          - 'true'
+        effective:
+          values:
+          - 'true'
+      custom:
+        runtime_defaults:
+          values:
+          - 'false'
+          behavior: default
+          replaced_inherited_values:
           - ()
-          note: Resolved from active custom policy script.
+        effective:
+          values:
+          - 'false'
+    metadata_warnings: []
+    runtime_actions: []
+    commands: []
+    runtime_metadata_options:
+      id: package-artifact-mirror
+      severity: error
+      auto_fix: true
+      enforcement: active
+      enabled: true
+      custom: false
+      file_mirrors: &id109
+      - LICENSE=>devcovenant/licenses/LICENSE
+      dir_mirrors: []
+      dir_skip_paths: []
+    runtime_config_overrides: {}
+    runtime_effective_options:
+      id: package-artifact-mirror
+      severity: error
+      auto_fix: true
+      enforcement: active
+      enabled: true
+      custom: false
+      file_mirrors: *id109
+    assets:
+    - LICENSE=>devcovenant/licenses/LICENSE
+    origin: builtin
+    script_exists: true
+    hash: 59d36e32a6377ae39fae5d4a131f860b75027e8bbb4f3a6c1bd04db0dbde0cf1
+    script_path: builtin/package_artifact_mirror.py
+  package-doc-sync:
+    enabled: true
+    custom: false
+    description: Package Doc Sync
+    policy_text: |-
+      Ensure package-facing documentation files stay synchronized with their
+      canonical repository-source docs. Configured `sync_pairs` map
+      `source=>target` doc paths. Configured `omit_block_pairs` remove
+      repo-only sections between paired begin/end markers before comparison.
+      When `rewrite_repo_relative_links` is true, repo-relative Markdown links
+      and images are rewritten to release-stable repository URLs resolved from
+      `pyproject.toml`. Auto-fix rewrites the configured package docs from
+      their source docs after those transforms.
+    metadata:
+      id: package-doc-sync
+      severity: error
+      auto_fix: 'true'
+      enforcement: active
+      enabled: 'true'
+      custom: 'false'
+      sync_pairs:
+      - README.md=>devcovenant/README.md
+      omit_block_pairs:
+      - <!-- REPO-ONLY:BEGIN -->=><!-- REPO-ONLY:END -->
+      rewrite_repo_relative_links: 'true'
+    metadata_resolution:
+      id:
+        descriptor:
+          values:
+          - package-doc-sync
+          behavior: base
+          replaced_inherited_values:
+          - ()
+        runtime_identity:
+          values:
+          - package-doc-sync
+          behavior: replace
+          replaced_inherited_values:
+          - ()
+        effective:
+          values:
+          - package-doc-sync
+      severity:
+        descriptor:
+          values:
+          - error
+          behavior: base
+          replaced_inherited_values:
+          - ()
+        effective:
+          values:
+          - error
+      auto_fix:
+        descriptor:
+          values:
+          - 'true'
+          behavior: base
+          replaced_inherited_values:
+          - ()
+        effective:
+          values:
+          - 'true'
+      enforcement:
+        descriptor:
+          values:
+          - active
+          behavior: base
+          replaced_inherited_values:
+          - ()
+        effective:
+          values:
+          - active
+      sync_pairs:
+        descriptor:
+          values:
+          - '[]'
+          behavior: base
+          replaced_inherited_values:
+          - ()
+        profile_overlays:
+          values:
+          - README.md=>devcovenant/README.md
+          behavior: append
+          replaced_inherited_values:
+          - ()
+        autogen_overlays:
+          values:
+          - README.md=>devcovenant/README.md
+          behavior: append
+          replaced_inherited_values:
+          - ()
+        effective:
+          values:
+          - README.md=>devcovenant/README.md
+      omit_block_pairs:
+        descriptor:
+          values:
+          - '[]'
+          behavior: base
+          replaced_inherited_values:
+          - ()
+        profile_overlays:
+          values:
+          - <!-- REPO-ONLY:BEGIN -->=><!-- REPO-ONLY:END -->
+          behavior: append
+          replaced_inherited_values:
+          - ()
+        autogen_overlays:
+          values:
+          - <!-- REPO-ONLY:BEGIN -->=><!-- REPO-ONLY:END -->
+          behavior: append
+          replaced_inherited_values:
+          - ()
+        effective:
+          values:
+          - <!-- REPO-ONLY:BEGIN -->=><!-- REPO-ONLY:END -->
+      rewrite_repo_relative_links:
+        descriptor:
+          values:
+          - 'true'
+          behavior: base
+          replaced_inherited_values:
+          - ()
+        profile_overlays:
+          values:
+          - 'true'
+          behavior: replace
+          replaced_inherited_values:
+          - 'true'
+        autogen_overlays:
+          values:
+          - 'true'
+          behavior: replace
+          replaced_inherited_values:
+          - 'true'
         effective:
           values:
           - 'true'
@@ -13032,35 +12807,48 @@ policies:
         effective:
           values:
           - 'true'
+      custom:
+        runtime_defaults:
+          values:
+          - 'false'
+          behavior: default
+          replaced_inherited_values:
+          - ()
+        effective:
+          values:
+          - 'false'
     metadata_warnings: []
     runtime_actions: []
     commands: []
     runtime_metadata_options:
-      id: package-artifact-mirror
+      id: package-doc-sync
       severity: error
       auto_fix: true
       enforcement: active
       enabled: true
-      custom: true
-      file_mirrors: &id109
-      - LICENSE=>devcovenant/licenses/LICENSE
-      dir_mirrors: []
-      dir_skip_paths: []
+      custom: false
+      sync_pairs: &id110
+      - README.md=>devcovenant/README.md
+      omit_block_pairs: &id111
+      - <!-- REPO-ONLY:BEGIN -->=><!-- REPO-ONLY:END -->
+      rewrite_repo_relative_links: true
     runtime_config_overrides: {}
     runtime_effective_options:
-      id: package-artifact-mirror
+      id: package-doc-sync
       severity: error
       auto_fix: true
       enforcement: active
       enabled: true
-      custom: true
-      file_mirrors: *id109
+      custom: false
+      sync_pairs: *id110
+      omit_block_pairs: *id111
+      rewrite_repo_relative_links: true
     assets:
-    - LICENSE=>devcovenant/licenses/LICENSE
-    origin: custom
+    - README.md=>devcovenant/README.md
+    origin: builtin
     script_exists: true
-    hash: 4ce8cdb98c160802b939e3874d6b24976e63a98a910b09a0b1cd6230a66e7acf
-    script_path: custom/package_artifact_mirror.py
+    hash: bf9b9bba626b20e52e65a847339aa51123383a9ebb29343eaf617b9e6108e0f8
+    script_path: builtin/package_doc_sync.py
 profiles:
   csharp:
     version: 1
@@ -14136,13 +13924,6 @@ profiles:
           required_paths:
           - devcovenant/runtime-requirements.lock
           hash_targets:
-          - id: linux-py310
-            marker: sys_platform == "linux" and python_version == "3.10"
-            pip:
-              platform: manylinux2014_x86_64
-              implementation: cp
-              python_version: '3.10'
-              abi: cp310
           - id: linux-py311
             marker: sys_platform == "linux" and python_version == "3.11"
             pip:
@@ -14171,13 +13952,6 @@ profiles:
               implementation: cp
               python_version: '3.14'
               abi: cp314
-          - id: windows-py310
-            marker: sys_platform == "win32" and python_version == "3.10"
-            pip:
-              platform: win_amd64
-              implementation: cp
-              python_version: '3.10'
-              abi: cp310
           - id: windows-py311
             marker: sys_platform == "win32" and python_version == "3.11"
             pip:
@@ -14206,13 +13980,6 @@ profiles:
               implementation: cp
               python_version: '3.14'
               abi: cp314
-          - id: macos-py310
-            marker: sys_platform == "darwin" and python_version == "3.10"
-            pip:
-              platform: macosx_11_0_x86_64
-              implementation: cp
-              python_version: '3.10'
-              abi: cp310
           - id: macos-py311
             marker: sys_platform == "darwin" and python_version == "3.11"
             pip:
@@ -15077,13 +14844,6 @@ profiles:
           - requirements.in
           - devcovenant/runtime-requirements.lock
           hash_targets:
-          - id: linux-py310
-            marker: sys_platform == "linux" and python_version == "3.10"
-            pip:
-              platform: manylinux2014_x86_64
-              implementation: cp
-              python_version: '3.10'
-              abi: cp310
           - id: linux-py311
             marker: sys_platform == "linux" and python_version == "3.11"
             pip:
@@ -15112,13 +14872,6 @@ profiles:
               implementation: cp
               python_version: '3.14'
               abi: cp314
-          - id: windows-py310
-            marker: sys_platform == "win32" and python_version == "3.10"
-            pip:
-              platform: win_amd64
-              implementation: cp
-              python_version: '3.10'
-              abi: cp310
           - id: windows-py311
             marker: sys_platform == "win32" and python_version == "3.11"
             pip:
@@ -15147,13 +14900,6 @@ profiles:
               implementation: cp
               python_version: '3.14'
               abi: cp314
-          - id: macos-py310
-            marker: sys_platform == "darwin" and python_version == "3.10"
-            pip:
-              platform: macosx_11_0_x86_64
-              implementation: cp
-              python_version: '3.10'
-              abi: cp310
           - id: macos-py311
             marker: sys_platform == "darwin" and python_version == "3.11"
             pip:
@@ -15197,13 +14943,6 @@ profiles:
           - pyproject.toml
           - '{{ PROJECT_NAME_PATH }}'
           hash_targets:
-          - id: linux-py310
-            marker: sys_platform == "linux" and python_version == "3.10"
-            pip:
-              platform: manylinux2014_x86_64
-              implementation: cp
-              python_version: '3.10'
-              abi: cp310
           - id: linux-py311
             marker: sys_platform == "linux" and python_version == "3.11"
             pip:
@@ -15232,13 +14971,6 @@ profiles:
               implementation: cp
               python_version: '3.14'
               abi: cp314
-          - id: windows-py310
-            marker: sys_platform == "win32" and python_version == "3.10"
-            pip:
-              platform: win_amd64
-              implementation: cp
-              python_version: '3.10'
-              abi: cp310
           - id: windows-py311
             marker: sys_platform == "win32" and python_version == "3.11"
             pip:
@@ -15267,13 +14999,6 @@ profiles:
               implementation: cp
               python_version: '3.14'
               abi: cp314
-          - id: macos-py310
-            marker: sys_platform == "darwin" and python_version == "3.10"
-            pip:
-              platform: macosx_11_0_x86_64
-              implementation: cp
-              python_version: '3.10'
-              abi: cp310
           - id: macos-py311
             marker: sys_platform == "darwin" and python_version == "3.11"
             pip:
@@ -15853,25 +15578,12 @@ profiles:
   userproject:
     version: 1
     profile: userproject
-    category: application
-    suffixes: []
-    ignore_dirs: []
-    assets: []
-    policy_overlays: {}
-    source: builtin
-    path: devcovenant/builtin/profiles/userproject
-    assets_available: []
-    active: false
-  devcovrepo:
-    version: 1
-    profile: devcovrepo
     category: repo
     suffixes: []
     ignore_dirs:
     - artifacts
     - .proof-wheel
     - .proof-sdist
-    - .proof-py310
     assets:
     - path: devcovenant/docs/installation.md
       template: docs/installation.md
@@ -16038,6 +15750,7 @@ profiles:
               python3 -m venv .venv
               .venv/bin/python -m pip install -r requirements.lock
               .venv/bin/python -m pip install --no-deps "$WHEEL_PATH"
+              .venv/bin/python -m devcovenant --version
               .venv/bin/python -m devcovenant gate --start
               .venv/bin/python -m devcovenant gate --mid
               .venv/bin/python -m devcovenant run
@@ -16109,6 +15822,7 @@ profiles:
               python3 -m venv .venv
               .venv/bin/python -m pip install -r requirements.lock
               .venv/bin/python -m pip install --no-deps "$SDIST_PATH"
+              .venv/bin/python -m devcovenant --version
               .venv/bin/python -m devcovenant gate --start
               .venv/bin/python -m devcovenant gate --mid
               .venv/bin/python -m devcovenant run
@@ -16191,38 +15905,6 @@ profiles:
               "$PIPX_BIN_DIR/devcovenant" gate --end
               "$PIPX_BIN_DIR/devcovenant" check
               popd >/dev/null
-          - name: Set up Python support floor
-            uses: actions/setup-python@a309ff8b426b58ec0e2a45f0f869d46889d02405
-            with:
-              python-version: '3.10'
-          - name: Prove Python 3.10 support floor
-            run: |
-              set -euo pipefail
-              WHEEL_PATH="$(python - <<'PY'
-              from pathlib import Path
-
-              matches = sorted(Path("dist").glob("*.whl"))
-              if not matches:
-                  raise SystemExit(1)
-              print(matches[0].resolve())
-              PY
-              )"
-              test -n "$WHEEL_PATH"
-              python -m venv .proof-py310
-              . .proof-py310/bin/activate
-              python -m pip install -r requirements.lock
-              python -m pip install --no-deps "$WHEEL_PATH"
-              python -m devcovenant --version
-              python - <<'PY'
-              import devcovenant
-              import devcovenant.core.cleanup
-              from devcovenant.builtin.policies.version_sync import (
-                  version_sync,
-              )
-
-              assert version_sync is not None
-              print(devcovenant.__version__)
-              PY
           - name: Upload distributions
             uses: actions/upload-artifact@bbbca2ddaa5d8feaa63e36b76fdaad77386f024f
             with:
@@ -16447,6 +16129,17 @@ profiles:
         canonical_versions_required: true
         scheme: pep440
         version_file: devcovenant/VERSION
+      package-artifact-mirror:
+        file_mirrors:
+        - LICENSE=>devcovenant/licenses/LICENSE
+        dir_mirrors: []
+        dir_skip_paths: []
+      package-doc-sync:
+        sync_pairs:
+        - README.md=>devcovenant/README.md
+        omit_block_pairs:
+        - <!-- REPO-ONLY:BEGIN -->=><!-- REPO-ONLY:END -->
+        rewrite_repo_relative_links: true
     project-governance:
       project_name: devcovenant
       project_description: devcovenant is a repository governance framework.
@@ -16455,22 +16148,22 @@ profiles:
       compatibility_policy: forward-only
       versioning_mode: versioned
     source: custom
-    path: devcovenant/custom/profiles/devcovrepo
+    path: devcovenant/custom/profiles/userproject
     assets_available:
-    - devcovenant/custom/profiles/devcovrepo/assets/POLICY_MAP.yaml
-    - devcovenant/custom/profiles/devcovrepo/assets/PRIVACY.yaml
-    - devcovenant/custom/profiles/devcovrepo/assets/PROFILE_MAP.yaml
-    - devcovenant/custom/profiles/devcovrepo/assets/SECURITY.yaml
-    - devcovenant/custom/profiles/devcovrepo/assets/SUPPORT.yaml
-    - devcovenant/custom/profiles/devcovrepo/assets/docs/README.md
-    - devcovenant/custom/profiles/devcovrepo/assets/docs/config.md
-    - devcovenant/custom/profiles/devcovrepo/assets/docs/installation.md
-    - devcovenant/custom/profiles/devcovrepo/assets/docs/policies.md
-    - devcovenant/custom/profiles/devcovrepo/assets/docs/profiles.md
-    - devcovenant/custom/profiles/devcovrepo/assets/docs/refresh.md
-    - devcovenant/custom/profiles/devcovrepo/assets/docs/registry.md
-    - devcovenant/custom/profiles/devcovrepo/assets/docs/troubleshooting.md
-    - devcovenant/custom/profiles/devcovrepo/assets/docs/workflow.md
+    - devcovenant/custom/profiles/userproject/assets/POLICY_MAP.yaml
+    - devcovenant/custom/profiles/userproject/assets/PRIVACY.yaml
+    - devcovenant/custom/profiles/userproject/assets/PROFILE_MAP.yaml
+    - devcovenant/custom/profiles/userproject/assets/SECURITY.yaml
+    - devcovenant/custom/profiles/userproject/assets/SUPPORT.yaml
+    - devcovenant/custom/profiles/userproject/assets/docs/README.md
+    - devcovenant/custom/profiles/userproject/assets/docs/config.md
+    - devcovenant/custom/profiles/userproject/assets/docs/installation.md
+    - devcovenant/custom/profiles/userproject/assets/docs/policies.md
+    - devcovenant/custom/profiles/userproject/assets/docs/profiles.md
+    - devcovenant/custom/profiles/userproject/assets/docs/refresh.md
+    - devcovenant/custom/profiles/userproject/assets/docs/registry.md
+    - devcovenant/custom/profiles/userproject/assets/docs/troubleshooting.md
+    - devcovenant/custom/profiles/userproject/assets/docs/workflow.md
     active: true
   restapi:
     version: 1
@@ -16700,7 +16393,7 @@ inventory:
     - global
     - defaults
     - github
-    - devcovrepo
+    - userproject
     - docs
     - python
     resolved_pre_commit_hooks:

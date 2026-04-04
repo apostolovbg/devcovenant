@@ -140,11 +140,11 @@ def _unit_test_upgrade_prunes_repo_only_custom_payload() -> None:
         )
 
         leaked_profile_dir = (
-            repo_root / "devcovenant" / "custom" / "profiles" / "devcovrepo"
+            repo_root / "devcovenant" / "custom" / "profiles" / "userproject"
         )
         leaked_profile_dir.mkdir(parents=True, exist_ok=True)
-        (leaked_profile_dir / "devcovrepo.yaml").write_text(
-            "profile: devcovrepo\n",
+        (leaked_profile_dir / "userproject.yaml").write_text(
+            "profile: userproject\n",
             encoding="utf-8",
         )
 

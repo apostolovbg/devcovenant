@@ -6,10 +6,10 @@ import tempfile
 import unittest
 from pathlib import Path
 
-from devcovenant.core.policy_contract import CheckContext
-from devcovenant.custom.policies.package_artifact_mirror import (
+from devcovenant.builtin.policies.package_artifact_mirror import (
     package_artifact_mirror as mirror_module,
 )
+from devcovenant.core.policy_contract import CheckContext
 
 PackageArtifactMirrorCheck = mirror_module.PackageArtifactMirrorCheck
 

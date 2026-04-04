@@ -185,15 +185,21 @@ def _profile_discover_profiles_orders_profiles_deterministically() -> None:
     discovered_names = list(registry.keys())
     builtin_root = REPO_ROOT / "devcovenant" / "builtin" / "profiles"
     custom_root = REPO_ROOT / "devcovenant" / "custom" / "profiles"
-    expected_names = [
+    custom_names = [
         module._normalize_profile_name(entry.name)
-        for entry in module._iter_profile_dirs(builtin_root)
+        for entry in module._iter_profile_dirs(custom_root)
     ]
+    custom_name_set = set(custom_names)
+    expected_names = []
+    for entry in module._iter_profile_dirs(builtin_root):
+        name = module._normalize_profile_name(entry.name)
+        if name in custom_name_set:
+            expected_names.append(name)
+            custom_name_set.remove(name)
+            continue
+        expected_names.append(name)
     expected_names.extend(
-        (
-            module._normalize_profile_name(entry.name)
-            for entry in module._iter_profile_dirs(custom_root)
-        )
+        name for name in custom_names if name in custom_name_set
     )
     assert discovered_names == expected_names
 
@@ -409,8 +415,8 @@ def _profile_global_profile_no_longer_owns_ci_template() -> None:
     assert "ci_and_test_template" not in payload
 
 
-def _profile_repo_workflow_includes_devcovrepo_jobs() -> None:
-    """Repo workflow should include devcovrepo-provided CI jobs."""
+def _profile_repo_workflow_includes_userproject_jobs() -> None:
+    """Repo workflow should include custom userproject-provided CI jobs."""
     repo_workflow = REPO_ROOT / ".github" / "workflows" / "ci.yml"
     payload = yaml.safe_load(repo_workflow.read_text(encoding="utf-8"))
     assert isinstance(payload, dict)
@@ -504,8 +510,6 @@ def _profile_ci_workflow_contains_build_job_artifact_proof() -> None:
     assert "Install DevCovenant with pipx" in step_names
     assert "Resolve pipx bin directory" in step_names
     assert "Prove pipx operator lifecycle" in step_names
-    assert "Set up Python support floor" in step_names
-    assert "Prove Python 3.10 support floor" in step_names
     assert "Configure Python cache root" in step_names
     upload_step = next(
         (
@@ -569,10 +573,6 @@ def _profile_ci_workflow_contains_build_job_artifact_proof() -> None:
     assert '"$PIPX_BIN_DIR/devcovenant" gate --end' in all_run_blocks
     assert '"$PIPX_BIN_DIR/devcovenant" check' in all_run_blocks
     assert "python -m devcovenant --version" in all_run_blocks
-    assert (
-        "from devcovenant.builtin.policies.version_sync import ("
-        in all_run_blocks
-    )
     provenance_step = next(
         (
             step
@@ -755,15 +755,15 @@ def _profile_python_family_profiles_do_not_double_run_pytest() -> None:
         assert "pytest" not in command_text
 
 
-def _profile_devcovrepo_managed_env_requires_runtime_tools() -> None:
+def _profile_userproject_managed_env_requires_runtime_tools() -> None:
     """Repo managed-env contract should require gate/runtime tools."""
     manifest_path = (
         REPO_ROOT
         / "devcovenant"
         / "custom"
         / "profiles"
-        / "devcovrepo"
-        / "devcovrepo.yaml"
+        / "userproject"
+        / "userproject.yaml"
     )
     payload = yaml.safe_load(manifest_path.read_text(encoding="utf-8"))
     assert isinstance(payload, dict)
@@ -896,9 +896,9 @@ class ProfileRegistryTests(unittest.TestCase):
         """Run global-profile CI ownership split assertions."""
         _profile_global_profile_no_longer_owns_ci_template()
 
-    def test_repo_workflow_includes_devcovrepo_jobs(self):
+    def test_repo_workflow_includes_userproject_jobs(self):
         """Run repo workflow extra-job assertions."""
-        _profile_repo_workflow_includes_devcovrepo_jobs()
+        _profile_repo_workflow_includes_userproject_jobs()
 
     def test_ci_workflow_contains_build_job_artifact_proof(self):
         """Run CI build-job provenance artifact assertions."""
@@ -912,9 +912,9 @@ class ProfileRegistryTests(unittest.TestCase):
         """Run Python-family workflow command assertions."""
         _profile_python_family_profiles_do_not_double_run_pytest()
 
-    def test_devcovrepo_managed_env_requires_runtime_tools(self):
+    def test_userproject_managed_env_requires_runtime_tools(self):
         """Run repo managed-env runtime-tool assertions."""
-        _profile_devcovrepo_managed_env_requires_runtime_tools()
+        _profile_userproject_managed_env_requires_runtime_tools()
 
     def test_defaults_managed_env_bootstraps_seeded_venv(self):
         """Run seeded-default managed bootstrap assertions."""

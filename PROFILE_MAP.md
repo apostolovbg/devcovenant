@@ -2,7 +2,7 @@
 **Doc ID:** PROFILE_MAP
 **Doc Type:** reference-map
 **Project Version:** 1.0.1b1
-**Last Updated:** 2026-04-03
+**Last Updated:** 2026-04-04
 **DevCovenant Version:** 1.0.1b1
 
 <!-- DEVCOV:BEGIN -->
@@ -28,7 +28,9 @@ This map lists the shipped profiles and who owns them.
 - Profiles provide overlays, selectors, assets, hooks, and translators.
 - Profiles do not activate policies.
 - Builtin/custom profile precedence is path-based.
-- Same-name custom profile overrides same-name builtin profile.
+- Same-name custom profile fully shadows the builtin profile with that name.
+- When a custom profile shadows a builtin one, the builtin profile is ignored
+  instead of being merged.
 
 ## Builtin Profile Inventory
 Baseline:
@@ -65,10 +67,10 @@ Ops/tooling profiles:
 - `kubernetes`
 
 ## Custom Profiles
-- `devcovrepo`: repository-specific profile for developing DevCovenant
-  itself, including documentation-route metadata, broader source-to-test
-  mirrors, and root trust docs such as `SECURITY.md`, `PRIVACY.md`, and
-  `SUPPORT.md`.
+- `userproject`: this repository's same-name custom override of the
+  builtin bootstrap template, carrying DevCovenant's repository-specific
+  CI, documentation routes, broader source-to-test mirrors, and root trust
+  docs such as `SECURITY.md`, `PRIVACY.md`, and `SUPPORT.md`.
 - `restapi`: reusable API (application programming interface) governance
   profile that tightens API-focused documentation routes, security scope,
   and test coverage expectations, and seeds `docs/api.md`, `docs/auth.md`,
@@ -98,11 +100,14 @@ by the shared translator runtime.
 - Profile overlays are materialized to `autogen_metadata_overlays`.
 - Repo-specific additive metadata belongs in `user_metadata_overlays`.
 - Repo-specific replacement metadata belongs in `user_metadata_overrides`.
+- Inherited values should stay inherited from the other active profiles.
+  Do not restate them in a copied same-name shadow profile.
 - `defaults` is the shipped baseline layout profile for common repo metadata.
   Repositories can disable it and activate a custom replacement profile.
 - For dependency licensing metadata: `defaults` provides generic output
   targets; language/framework profiles provide dependency selectors when
-  active; `devcovrepo` adds this repository's selectors only.
+  active; this repository's custom `userproject` profile adds only the
+  repo-specific deltas.
 - Any active profile category may contribute declared `workflow_runs`;
   core resolves them in deterministic order from the tracked workflow
   definition.

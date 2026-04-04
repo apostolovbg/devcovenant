@@ -6,7 +6,7 @@
 **Maintenance Stance:** active
 **Compatibility Policy:** forward-only
 **Versioning Mode:** versioned
-**Last Updated:** 2026-04-03
+**Last Updated:** 2026-04-04
 **DevCovenant Version:** 1.0.1b1
 
 <!-- DEVCOV:BEGIN -->
@@ -59,6 +59,132 @@ Example:
 ## Log changes here
 
 ## Version 1.0.1b1
+
+- 2026-04-04:
+  Change: upgraded DevCovenant to a Python 3.11+ baseline, transferred the
+          repository-local profile layer from `devcovrepo` to a copied
+          same-name `userproject` shadow profile, and promoted
+          `package-doc-sync` plus `package-artifact-mirror` into builtin
+          policies.
+  Why: removed stale Python 3.10 and `tomli` compatibility baggage, aligned
+       the repository with the shipped userproject bootstrap model, and moved
+       reusable package-facing sync behavior out of repo-only custom policy
+       code into the builtin policy library.
+  Impact: keeps normal repositories on the thinner builtin stack, makes
+          same-name policy/profile shadowing explicit in the live docs, and
+          lets future repositories use builtin package-doc and package-artifact
+          sync behavior through repo-specific `userproject` metadata.
+  Files:
+  AGENTS.md
+  CHANGELOG.md
+  README.md
+  PLAN.md
+  PROFILE_MAP.md
+  POLICY_MAP.md
+  SECURITY.md
+  SPEC.md
+  devcovenant/README.md
+  devcovenant/builtin/policies/dependency_management/\
+    dependency_management.py
+  devcovenant/builtin/policies/package_artifact_mirror/autofix/global.py
+  devcovenant/builtin/policies/package_artifact_mirror/\
+    package_artifact_mirror.py
+  devcovenant/builtin/policies/package_artifact_mirror/\
+    package_artifact_mirror.yaml
+  devcovenant/builtin/policies/package_doc_sync/autofix/global.py
+  devcovenant/builtin/policies/package_doc_sync/package_doc_sync.py
+  devcovenant/builtin/policies/package_doc_sync/package_doc_sync.yaml
+  devcovenant/builtin/policies/version_sync/version_sync.py
+  devcovenant/builtin/profiles/github/github.yaml
+  devcovenant/builtin/profiles/python/assets/pyproject.toml
+  devcovenant/builtin/profiles/python/python.yaml
+  devcovenant/config.yaml
+  devcovenant/core/cleanup.py
+  devcovenant/core/refresh_runtime.py
+  devcovenant/core/repository_validation.py
+  devcovenant/custom/policies/package_artifact_mirror/autofix/global.py
+  devcovenant/custom/policies/package_artifact_mirror/\
+    package_artifact_mirror.py
+  devcovenant/custom/policies/package_artifact_mirror/\
+    package_artifact_mirror.yaml
+  devcovenant/custom/policies/readme_sync/autofix/global.py
+  devcovenant/custom/policies/readme_sync/readme_sync.py
+  devcovenant/custom/policies/readme_sync/readme_sync.yaml
+  devcovenant/custom/profiles/devcovrepo/assets/POLICY_MAP.yaml
+  devcovenant/custom/profiles/devcovrepo/assets/PRIVACY.yaml
+  devcovenant/custom/profiles/devcovrepo/assets/PROFILE_MAP.yaml
+  devcovenant/custom/profiles/devcovrepo/assets/SECURITY.yaml
+  devcovenant/custom/profiles/devcovrepo/assets/SUPPORT.yaml
+  devcovenant/custom/profiles/devcovrepo/assets/docs/README.md
+  devcovenant/custom/profiles/devcovrepo/assets/docs/config.md
+  devcovenant/custom/profiles/devcovrepo/assets/docs/installation.md
+  devcovenant/custom/profiles/devcovrepo/assets/docs/policies.md
+  devcovenant/custom/profiles/devcovrepo/assets/docs/profiles.md
+  devcovenant/custom/profiles/devcovrepo/assets/docs/refresh.md
+  devcovenant/custom/profiles/devcovrepo/assets/docs/registry.md
+  devcovenant/custom/profiles/devcovrepo/assets/docs/troubleshooting.md
+  devcovenant/custom/profiles/devcovrepo/assets/docs/workflow.md
+  devcovenant/custom/profiles/devcovrepo/devcovrepo.yaml
+  devcovenant/custom/profiles/userproject/assets/POLICY_MAP.yaml
+  devcovenant/custom/profiles/userproject/assets/PRIVACY.yaml
+  devcovenant/custom/profiles/userproject/assets/PROFILE_MAP.yaml
+  devcovenant/custom/profiles/userproject/assets/SECURITY.yaml
+  devcovenant/custom/profiles/userproject/assets/SUPPORT.yaml
+  devcovenant/custom/profiles/userproject/assets/docs/README.md
+  devcovenant/custom/profiles/userproject/assets/docs/config.md
+  devcovenant/custom/profiles/userproject/assets/docs/installation.md
+  devcovenant/custom/profiles/userproject/assets/docs/policies.md
+  devcovenant/custom/profiles/userproject/assets/docs/profiles.md
+  devcovenant/custom/profiles/userproject/assets/docs/refresh.md
+  devcovenant/custom/profiles/userproject/assets/docs/registry.md
+  devcovenant/custom/profiles/userproject/assets/docs/troubleshooting.md
+  devcovenant/custom/profiles/userproject/assets/docs/workflow.md
+  devcovenant/custom/profiles/userproject/userproject.yaml
+  devcovenant/deploy.py
+  devcovenant/docs/config.md
+  devcovenant/docs/installation.md
+  devcovenant/docs/policies.md
+  devcovenant/docs/profiles.md
+  devcovenant/docs/registry.md
+  devcovenant/docs/workflow.md
+  devcovenant/licenses/THIRD_PARTY_LICENSES.md
+  devcovenant/licenses/tomli-2.4.1.txt
+  devcovenant/registry/registry.yaml
+  devcovenant/runtime-requirements.lock
+  devcovenant/upgrade.py
+  licenses/THIRD_PARTY_LICENSES.md
+  licenses/click-8.3.1.txt
+  licenses/click-8.3.2.txt
+  licenses/tomli-2.4.1.txt
+  pyproject.toml
+  requirements.lock
+  tests/devcovenant/builtin/policies/dependency_management/\
+    test_dependency_lock_runtime.py
+  tests/devcovenant/builtin/policies/package_doc_sync/__init__.py
+  tests/devcovenant/builtin/policies/package_artifact_mirror/autofix/\
+    test_global.py
+  tests/devcovenant/builtin/policies/package_artifact_mirror/\
+    test_package_artifact_mirror.py
+  tests/devcovenant/builtin/policies/package_doc_sync/autofix/__init__.py
+  tests/devcovenant/builtin/policies/package_doc_sync/autofix/\
+    test_global.py
+  tests/devcovenant/builtin/policies/package_doc_sync/\
+    test_package_doc_sync.py
+  tests/devcovenant/core/test_execution.py
+  tests/devcovenant/core/test_profile_registry.py
+  tests/devcovenant/core/test_repository_validation.py
+  tests/devcovenant/custom/policies/package_artifact_mirror/autofix/\
+    test_global.py
+  tests/devcovenant/custom/policies/package_artifact_mirror/\
+    test_package_artifact_mirror.py
+  tests/devcovenant/custom/policies/readme_sync/__init__.py
+  tests/devcovenant/custom/policies/readme_sync/autofix/__init__.py
+  tests/devcovenant/custom/policies/readme_sync/autofix/test_global.py
+  tests/devcovenant/custom/policies/readme_sync/test_readme_sync.py
+  tests/devcovenant/test_deploy.py
+  tests/devcovenant/test_install.py
+  tests/devcovenant/test_refresh.py
+  tests/devcovenant/test_upgrade.py
 
 - 2026-04-03:
   Change: fixed install-time config rendering so new repositories keep the

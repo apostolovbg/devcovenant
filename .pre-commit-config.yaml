@@ -62,7 +62,6 @@ exclude: |-
     | artifacts
     | \.proof\-wheel
     | \.proof\-sdist
-    | \.proof\-py310
     | _site
     | site
     | build

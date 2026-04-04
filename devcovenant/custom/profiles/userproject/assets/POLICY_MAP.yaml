@@ -29,7 +29,9 @@ body: |-
   - AGENTS policy block is compiled from resolved metadata and parsed at
     runtime.
   - Local registry stores synchronized hash and metadata diagnostics.
-  - Same-id custom policy overrides same-id builtin policy.
+  - Same-id custom policy fully shadows the builtin policy with that id.
+  - When a custom policy shadows a builtin one, the builtin policy is
+    ignored instead of being merged.
   - Engine-owned runtime checks such as workflow validation, integrity
     validation, and structure validation are documented in
     `devcovenant/docs/workflow.md` and `devcovenant/docs/architecture.md`,
@@ -84,8 +86,14 @@ body: |-
   - `devcov-raw-string-escapes`: development-repository-only raw-string
     warning guard.
   - `managed-doc-assets`: validates managed-doc descriptor/asset consistency.
-  - `readme-sync`: syncs packaged README from repository README and rewrites
-    package-facing public links from package metadata for PyPI-safe rendering.
+
+  ## Builtin Package-Facing Policies
+  - `package-doc-sync`: syncs package-facing docs from repository source
+    docs, strips configured repo-only marker blocks, and rewrites public
+    repo-relative links from package metadata for PyPI-safe rendering.
+  - `package-artifact-mirror`: keeps package-shipped exact mirrors such as
+    `LICENSE => devcovenant/licenses/LICENSE` synchronized from their
+    canonical repo-root sources.
 
   ## Language-Aware Policies
   Policies that may request translation through shared translator runtime:

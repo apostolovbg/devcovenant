@@ -6,7 +6,7 @@
 **Maintenance Stance:** active
 **Compatibility Policy:** forward-only
 **Versioning Mode:** versioned
-**Last Updated:** 2026-04-03
+**Last Updated:** 2026-04-04
 **DevCovenant Version:** 1.0.1b1
 
 <!-- DEVCOV:BEGIN -->
@@ -407,7 +407,7 @@ intentionally not trying to do.
   - `core/policy_contract.py` and `core/runtime_errors.py` for explicit typed
     runtime contracts
 - Dependencies:
-  - Python 3.10+
+  - Python 3.11+
   - `packaging`, `pre-commit`, `pip-tools`, `PyYAML`, `pytest`, and `semver`
   - a git repository and filesystem access sufficient to manage
     repository-owned files

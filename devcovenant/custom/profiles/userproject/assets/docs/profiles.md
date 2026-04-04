@@ -44,6 +44,21 @@ Use direct overlays when you only need a very small local tweak.
 Use a custom profile when the repository has real repeatable behavior of its
 own.
 
+## Same-Name Shadowing
+Same-name custom profiles are the supported way to replace shipped profile
+behavior without editing the builtin package files.
+
+The rule is strict:
+- if `devcovenant/custom/profiles/python/python.yaml` exists, that custom
+  `python` profile is the active `python` profile
+- the builtin `python` profile is ignored
+- DevCovenant does not merge the builtin profile into the custom one
+
+That is why copied same-name shadow profiles should stay thin.
+Keep inherited values inherited from the other active profiles instead of
+restating them in the copied profile, and copy only the owned assets,
+translators, helpers, or tests that the shadow profile now replaces.
+
 ## Custom Profiles As Governance Packs
 A custom profile is the normal way to package governance for one repository
 family so it travels as one coherent stack instead of a pile of one-off
@@ -238,12 +253,15 @@ For most repositories, the first two surfaces are the ones they actually own.
 `devcovenant_runtime` exists so the packaged DevCovenant bootstrap path can
 ship its own runtime contract; it is not usually a surface that ordinary
 adopters edit directly.
+When a repository needs repo-specific dependency-lock ownership, that usually
+belongs in its copied `userproject` custom profile instead of in a same-name
+shadow of the builtin language profile.
 
 In the default Python stack, `root_workspace` starts from `requirements.in`.
 That input inherits the shipped `devcovenant/runtime-requirements.lock`, and
 `dependency-management` then writes the real `requirements.lock` during
 `deploy`/`refresh`.
-The builtin Python surfaces resolve against the supported CPython 3.10 through
+The builtin Python surfaces resolve against the supported CPython 3.11 through
 3.14 matrix on Linux, Windows, and macOS so workspace locks do not depend on
 the machine that happened to run refresh.
 Tracked dependency fingerprints for those surfaces must stay repo-relative and

@@ -1,8 +1,4 @@
-"""
-Fixer: README Sync
-
-Auto-sync devcovenant/README.md from README.md (repo-only blocks removed).
-"""
+"""Fixer: package-doc sync."""
 
 from __future__ import annotations
 
@@ -11,17 +7,17 @@ from pathlib import Path
 from devcovenant.core.policy_contract import FixResult, PolicyFixer, Violation
 
 
-class ReadmeSyncFixer(PolicyFixer):
-    """Write the expected README text into devcovenant/README.md."""
+class PackageDocSyncFixer(PolicyFixer):
+    """Write the expected transformed doc text into the target path."""
 
-    policy_id = "readme-sync"
+    policy_id = "package-doc-sync"
 
     def can_fix(self, violation: Violation) -> bool:
-        """Return True when the violation targets readme-sync."""
+        """Return True when the violation targets package-doc-sync."""
         return violation.policy_id == self.policy_id
 
     def fix(self, violation: Violation) -> FixResult:
-        """Apply the expected text to the target README."""
+        """Apply the expected text to the target package-facing doc."""
         expected = violation.context.get("expected_text")
         target = violation.context.get("target_path")
         if not expected or not target:
@@ -34,6 +30,6 @@ class ReadmeSyncFixer(PolicyFixer):
         path.write_text(str(expected), encoding="utf-8")
         return FixResult(
             success=True,
-            message="Synced devcovenant/README.md from README.md.",
+            message=f"Synced {path} from the configured source doc.",
             files_modified=[path],
         )

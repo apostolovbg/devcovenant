@@ -6,7 +6,7 @@
 **Maintenance Stance:** active
 **Compatibility Policy:** forward-only
 **Versioning Mode:** versioned
-**Last Updated:** 2026-04-03
+**Last Updated:** 2026-04-04
 **DevCovenant Version:** 1.0.1b1
 
 <!-- DEVCOV:BEGIN -->
@@ -560,13 +560,6 @@ surfaces:
   required_paths:
   - devcovenant/runtime-requirements.lock
   hash_targets:
-  - id: linux-py310
-    marker: sys_platform == "linux" and python_version == "3.10"
-    pip:
-      platform: manylinux2014_x86_64
-      implementation: cp
-      python_version: '3.10'
-      abi: cp310
   - id: linux-py311
     marker: sys_platform == "linux" and python_version == "3.11"
     pip:
@@ -595,13 +588,6 @@ surfaces:
       implementation: cp
       python_version: '3.14'
       abi: cp314
-  - id: windows-py310
-    marker: sys_platform == "win32" and python_version == "3.10"
-    pip:
-      platform: win_amd64
-      implementation: cp
-      python_version: '3.10'
-      abi: cp310
   - id: windows-py311
     marker: sys_platform == "win32" and python_version == "3.11"
     pip:
@@ -630,13 +616,6 @@ surfaces:
       implementation: cp
       python_version: '3.14'
       abi: cp314
-  - id: macos-py310
-    marker: sys_platform == "darwin" and python_version == "3.10"
-    pip:
-      platform: macosx_11_0_x86_64
-      implementation: cp
-      python_version: '3.10'
-      abi: cp310
   - id: macos-py311
     marker: sys_platform == "darwin" and python_version == "3.11"
     pip:
@@ -683,13 +662,6 @@ surfaces:
   - requirements.in
   - devcovenant/runtime-requirements.lock
   hash_targets:
-  - id: linux-py310
-    marker: sys_platform == "linux" and python_version == "3.10"
-    pip:
-      platform: manylinux2014_x86_64
-      implementation: cp
-      python_version: '3.10'
-      abi: cp310
   - id: linux-py311
     marker: sys_platform == "linux" and python_version == "3.11"
     pip:
@@ -718,13 +690,6 @@ surfaces:
       implementation: cp
       python_version: '3.14'
       abi: cp314
-  - id: windows-py310
-    marker: sys_platform == "win32" and python_version == "3.10"
-    pip:
-      platform: win_amd64
-      implementation: cp
-      python_version: '3.10'
-      abi: cp310
   - id: windows-py311
     marker: sys_platform == "win32" and python_version == "3.11"
     pip:
@@ -753,13 +718,6 @@ surfaces:
       implementation: cp
       python_version: '3.14'
       abi: cp314
-  - id: macos-py310
-    marker: sys_platform == "darwin" and python_version == "3.10"
-    pip:
-      platform: macosx_11_0_x86_64
-      implementation: cp
-      python_version: '3.10'
-      abi: cp310
   - id: macos-py311
     marker: sys_platform == "darwin" and python_version == "3.11"
     pip:
@@ -804,13 +762,6 @@ surfaces:
   - pyproject.toml
   - '{{ PROJECT_NAME_PATH }}'
   hash_targets:
-  - id: linux-py310
-    marker: sys_platform == "linux" and python_version == "3.10"
-    pip:
-      platform: manylinux2014_x86_64
-      implementation: cp
-      python_version: '3.10'
-      abi: cp310
   - id: linux-py311
     marker: sys_platform == "linux" and python_version == "3.11"
     pip:
@@ -839,13 +790,6 @@ surfaces:
       implementation: cp
       python_version: '3.14'
       abi: cp314
-  - id: windows-py310
-    marker: sys_platform == "win32" and python_version == "3.10"
-    pip:
-      platform: win_amd64
-      implementation: cp
-      python_version: '3.10'
-      abi: cp310
   - id: windows-py311
     marker: sys_platform == "win32" and python_version == "3.11"
     pip:
@@ -874,13 +818,6 @@ surfaces:
       implementation: cp
       python_version: '3.14'
       abi: cp314
-  - id: macos-py310
-    marker: sys_platform == "darwin" and python_version == "3.10"
-    pip:
-      platform: macosx_11_0_x86_64
-      implementation: cp
-      python_version: '3.10'
-      abi: cp310
   - id: macos-py311
     marker: sys_platform == "darwin" and python_version == "3.11"
     pip:
@@ -1799,7 +1736,7 @@ severity: error
 auto_fix: 'true'
 enforcement: active
 enabled: 'true'
-custom: 'true'
+custom: 'false'
 file_mirrors:
 - LICENSE=>devcovenant/licenses/LICENSE
 dir_mirrors: []
@@ -1807,15 +1744,42 @@ dir_skip_paths: []
 ```
 
 Ensure package-shipped artifacts that are true mirrors stay in exact sync
-with their canonical repository-root sources. This development repository
-uses the policy only for `LICENSE => devcovenant/licenses/LICENSE`.
-Dependency lockfiles and
-third-party license inventories under `devcovenant/licenses/**` are not
-mirrors; they are generated from the packaged runtime dependency surface by
-dependency-management. Auto-fix rewrites the configured exact mirrors from
-their source paths, preserves separately mirrored files that live inside
-mirrored directories, preserves package-owned skipped paths, and removes
-stale mirrored files.
+with their canonical repository-root sources. `file_mirrors` and
+`dir_mirrors` declare `source=>target` pairs. `dir_skip_paths` declares
+repo-relative mirror exceptions in `source_dir=>relative/path` form.
+Dependency lockfiles and third-party license inventories are not mirrors
+unless the repository explicitly declares them here. Auto-fix rewrites the
+configured exact mirrors from their source paths, preserves separately
+mirrored files that live inside mirrored directories, preserves package-owned
+skipped paths, and removes stale mirrored files.
+
+
+---
+
+## Policy: Package Doc Sync
+
+```policy-def
+id: package-doc-sync
+severity: error
+auto_fix: 'true'
+enforcement: active
+enabled: 'true'
+custom: 'false'
+sync_pairs:
+- README.md=>devcovenant/README.md
+omit_block_pairs:
+- <!-- REPO-ONLY:BEGIN -->=><!-- REPO-ONLY:END -->
+rewrite_repo_relative_links: 'true'
+```
+
+Ensure package-facing documentation files stay synchronized with their
+canonical repository-source docs. Configured `sync_pairs` map
+`source=>target` doc paths. Configured `omit_block_pairs` remove
+repo-only sections between paired begin/end markers before comparison.
+When `rewrite_repo_relative_links` is true, repo-relative Markdown links
+and images are rewritten to release-stable repository URLs resolved from
+`pyproject.toml`. Auto-fix rewrites the configured package docs from
+their source docs after those transforms.
 
 
 ---
@@ -1919,27 +1883,6 @@ force_include_dirs: []
 
 Protect declared read-only directories from modification. If a directory must
 be editable, update this policy definition first.
-
-
----
-
-## Policy: Readme Sync
-
-```policy-def
-id: readme-sync
-severity: error
-auto_fix: 'true'
-enforcement: active
-enabled: 'true'
-custom: 'true'
-```
-
-Ensure `devcovenant/README.md` stays synchronized with the authored root
-`README.md` while removing repository-only sections via the
-`<!-- REPO-ONLY:BEGIN -->` / `<!-- REPO-ONLY:END -->` markers and
-rewriting repo-relative public links into package-safe repository URLs
-resolved from `pyproject.toml`. Auto-fix rewrites the packaged guide from
-the repo README.
 
 
 ---

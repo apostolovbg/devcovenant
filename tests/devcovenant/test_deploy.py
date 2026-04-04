@@ -152,7 +152,7 @@ def _unit_test_deploy_cleanup_is_deploy_only() -> None:
             / "devcovenant"
             / "custom"
             / "profiles"
-            / "devcovrepo"
+            / "userproject"
             / "demo.txt"
         )
         kept_profile_marker = (
@@ -182,7 +182,7 @@ def _unit_test_deploy_cleanup_is_deploy_only() -> None:
         assert not (repo_root / "devcovenant" / "custom" / "policies").exists()
         assert not (repo_root / "tests" / "devcovenant" / "core").exists()
         assert not (
-            repo_root / "devcovenant" / "custom" / "profiles" / "devcovrepo"
+            repo_root / "devcovenant" / "custom" / "profiles" / "userproject"
         ).exists()
         assert kept_profile_marker.exists()
 

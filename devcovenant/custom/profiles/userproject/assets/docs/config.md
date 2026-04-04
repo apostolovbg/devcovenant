@@ -83,6 +83,11 @@ For most repositories, the normal pattern is:
 Use direct overlays for small one-off tweaks.
 Use a custom profile when the repository has real repeatable behavior of its
 own.
+When a custom profile reuses the name of a builtin profile, the custom profile
+fully shadows it and the builtin profile is ignored.
+That is the supported way to replace shipped profile behavior.
+Keep inherited values inherited from the other active profiles instead of
+restating them in the copied same-name custom profile.
 Before the first gate cycle, make sure the environment declared by that stack
 actually exists.
 If you keep the seeded `defaults` + `python` stack, `deploy`/`refresh`

@@ -1,12 +1,11 @@
 version: 1
-profile: devcovrepo
+profile: userproject
 category: repo
 suffixes: []
 ignore_dirs:
   - artifacts
   - .proof-wheel
   - .proof-sdist
-  - .proof-py310
 assets:
   - path: devcovenant/docs/installation.md
     template: docs/installation.md
@@ -176,6 +175,7 @@ ci_and_test:
             python3 -m venv .venv
             .venv/bin/python -m pip install -r requirements.lock
             .venv/bin/python -m pip install --no-deps "$WHEEL_PATH"
+            .venv/bin/python -m devcovenant --version
             .venv/bin/python -m devcovenant gate --start
             .venv/bin/python -m devcovenant gate --mid
             .venv/bin/python -m devcovenant run
@@ -247,6 +247,7 @@ ci_and_test:
             python3 -m venv .venv
             .venv/bin/python -m pip install -r requirements.lock
             .venv/bin/python -m pip install --no-deps "$SDIST_PATH"
+            .venv/bin/python -m devcovenant --version
             .venv/bin/python -m devcovenant gate --start
             .venv/bin/python -m devcovenant gate --mid
             .venv/bin/python -m devcovenant run
@@ -329,39 +330,6 @@ ci_and_test:
             "$PIPX_BIN_DIR/devcovenant" gate --end
             "$PIPX_BIN_DIR/devcovenant" check
             popd >/dev/null
-        - name: Set up Python support floor
-          uses: actions/setup-python@a309ff8b426b58ec0e2a45f0f869d46889d02405
-          # v6
-          with:
-            python-version: '3.10'
-        - name: Prove Python 3.10 support floor
-          run: |
-            set -euo pipefail
-            WHEEL_PATH="$(python - <<'PY'
-            from pathlib import Path
-
-            matches = sorted(Path("dist").glob("*.whl"))
-            if not matches:
-                raise SystemExit(1)
-            print(matches[0].resolve())
-            PY
-            )"
-            test -n "$WHEEL_PATH"
-            python -m venv .proof-py310
-            . .proof-py310/bin/activate
-            python -m pip install -r requirements.lock
-            python -m pip install --no-deps "$WHEEL_PATH"
-            python -m devcovenant --version
-            python - <<'PY'
-            import devcovenant
-            import devcovenant.core.cleanup
-            from devcovenant.builtin.policies.version_sync import (
-                version_sync,
-            )
-
-            assert version_sync is not None
-            print(devcovenant.__version__)
-            PY
         - name: Upload distributions
           uses: "actions/upload-artifact@\
             bbbca2ddaa5d8feaa63e36b76fdaad77386f024f"
@@ -612,6 +580,17 @@ policy_overlays:
     canonical_versions_required: true
     scheme: pep440
     version_file: devcovenant/VERSION
+  package-artifact-mirror:
+    file_mirrors:
+      - LICENSE=>devcovenant/licenses/LICENSE
+    dir_mirrors: []
+    dir_skip_paths: []
+  package-doc-sync:
+    sync_pairs:
+      - README.md=>devcovenant/README.md
+    omit_block_pairs:
+      - "<!-- REPO-ONLY:BEGIN -->=><!-- REPO-ONLY:END -->"
+    rewrite_repo_relative_links: true
 project-governance:
   project_name: devcovenant
   project_description: devcovenant is a repository governance framework.

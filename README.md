@@ -2,7 +2,7 @@
 **Doc ID:** README
 **Doc Type:** repo-readme
 **Project Version:** 1.0.1b1
-**Last Updated:** 2026-04-03
+**Last Updated:** 2026-04-04
 **DevCovenant Version:** 1.0.1b1
 
 <!-- DEVCOV:BEGIN -->
@@ -84,8 +84,9 @@ The practical split is:
 - config tunes the active stack with local overlays and overrides
 
 Customization is override-based by design:
-- a same-id custom policy overrides the builtin policy with that id
-- a same-name custom profile overrides the builtin profile with that name
+- a same-id custom policy fully shadows the builtin policy with that id
+- a same-name custom profile fully shadows the builtin profile with that name
+- when a custom entry shadows a builtin one, the builtin entry is ignored
 
 For the deeper authoring model, go straight to
 [policies.md](devcovenant/docs/policies.md),
@@ -141,7 +142,7 @@ What those steps mean:
    Do not restate them in the copied profile.
    Here, "inherited" means values from other active profiles.
    When a custom and builtin profile share a profile name, the custom profile
-   is loaded and the builtin profile with that name is ignored.
+   fully shadows it and the builtin profile with that name is ignored.
    Use direct overlays only for small local exceptions.
 
 4. `deploy` writes the managed docs, generated files, and other DevCovenant
@@ -368,8 +369,9 @@ and support expectations.
 ## Repository Notes
 This repository is also the development repository for DevCovenant itself.
 That is why `developer_mode` is enabled here and why the repository includes
-the `github` and `devcovrepo` profiles plus repository-only policies and
-assets that ordinary user repositories do not need.
+the `github` profile plus a custom `userproject` profile with
+repository-specific assets and metadata that ordinary user repositories do not
+need.
 
 ## Repository Release And Assurance
 - The current maintained public release line is `1.0.1`.
@@ -380,9 +382,9 @@ assets that ordinary user repositories do not need.
 - The package ships `devcovenant/licenses/LICENSE` and
   `devcovenant/licenses/**` beside that lock so the bundled root license,
   dependency report, and third-party license set stay self-contained.
-- This repository activates `github`, and `devcovrepo` extends that workflow
-  with
-  repository-specific `Governance` and `Build` behavior.
+- This repository activates `github`, and its custom `userproject` profile
+  extends that workflow with repository-specific `Governance` and `Build`
+  behavior.
 - `.github/workflows/publish.yml` stays repo-maintained and publishes only the
   validated CI artifacts and provenance it downloads.
 - Repository release proof covers the declared Python support floor and keeps
@@ -392,7 +394,7 @@ assets that ordinary user repositories do not need.
 ## Repository Trust Docs
 - `SECURITY.md`, `PRIVACY.md`, and `SUPPORT.md` are repository-owned managed
   docs
-  supplied by the active `devcovrepo` profile.
+  supplied by the active custom `userproject` profile.
 - Those trust docs intentionally stay out of the project-governance header
   area.
 <!-- REPO-ONLY:END -->

@@ -50,6 +50,11 @@ That includes generated values such as `devcov_core_paths` and profile-owned
 CI fragments, plus declared policy runtime actions and policy commands such as
 `changelog-coverage reset-baseline`, so registry diffs often reflect real
 scan-boundary, command-surface, or workflow input changes.
+The tracked registry also records resolved profile and policy origins after
+precedence resolution.
+When a custom profile or custom policy shadows a builtin entry with the same
+name or id, the registry records the winning custom entry and the builtin one
+is ignored.
 Policy script and descriptor changes also refresh the tracked hash for the
 affected policy entry, so registry diffs can be the expected result of a
 policy implementation change even when the generated workflow shape stays the

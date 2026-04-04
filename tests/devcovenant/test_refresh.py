@@ -508,9 +508,12 @@ def _unit_test_release_metadata_keeps_support_floor_and_docs_truthful() -> (
     dependencies = [str(item) for item in project["dependencies"]]
     urls = project["urls"]
 
-    assert project["requires-python"] == ">=3.10"
-    assert "Programming Language :: Python :: 3.10" in project["classifiers"]
-    assert "tomli>=2.3.0; python_version < '3.11'" in dependencies
+    assert project["requires-python"] == ">=3.11"
+    assert (
+        "Programming Language :: Python :: 3.10" not in project["classifiers"]
+    )
+    assert "Programming Language :: Python :: 3.11" in project["classifiers"]
+    assert not any(("tomli" in dependency for dependency in dependencies))
 
     requirements_in = (REPO_ROOT / "requirements.in").read_text(
         encoding="utf-8"
@@ -549,7 +552,7 @@ def _unit_test_release_metadata_keeps_support_floor_and_docs_truthful() -> (
     assert "SecretStorage==3.5.0" in requirements_lock
     assert "backports.tarfile==1.2.0" in requirements_lock
     assert "typing_extensions==4.15.0" in requirements_lock
-    assert 'python_version == "3.10"' in requirements_lock
+    assert 'python_version == "3.10"' not in requirements_lock
     assert packaged_license_report != root_license_report
     assert "- `requirements.lock`" in root_license_report
     assert (
@@ -1217,7 +1220,7 @@ def _unit_test_refresh_renders_pre_commit_excludes_for_build_outputs() -> None:
                         "artifacts",
                         ".proof-wheel",
                         ".proof-sdist",
-                        ".proof-py310",
+                        ".proof-py311",
                     ],
                 },
                 sort_keys=False,
@@ -1246,7 +1249,7 @@ def _unit_test_refresh_renders_pre_commit_excludes_for_build_outputs() -> None:
         assert "artifacts" in pre_commit
         assert r"\.proof\-wheel" in pre_commit
         assert r"\.proof\-sdist" in pre_commit
-        assert r"\.proof\-py310" in pre_commit
+        assert r"\.proof\-py311" in pre_commit
 
 
 def _unit_test_refresh_adds_github_pre_commit_excludes() -> None:
@@ -1288,7 +1291,7 @@ def _unit_test_refresh_policy_registry_origin_metadata() -> None:
         payload = yaml.safe_load(policy_registry.read_text(encoding="utf-8"))
         policies = payload.get("policies", {})
         assert policies["changelog-coverage"]["origin"] == "builtin"
-        assert "readme-sync" not in policies
+        assert policies["package-doc-sync"]["origin"] == "builtin"
         assert "core" not in policies["changelog-coverage"]
 
 
@@ -1463,8 +1466,8 @@ def _unit_test_refresh_defaults_autofix_disabled_globally() -> None:
         assert payload["engine"]["pycache_prefix"] == ""
 
 
-def _unit_test_refresh_seeds_autofix_for_devcovrepo_when_unset() -> None:
-    """refresh_repo should seed autofix for active `devcovrepo` when unset."""
+def _unit_test_refresh_seeds_autofix_for_developer_mode_when_unset() -> None:
+    """refresh_repo should seed autofix for developer-mode repos when unset."""
     with tempfile.TemporaryDirectory() as temp_dir:
         repo_root = Path(temp_dir)
         copy_refreshed_repo(repo_root)
@@ -1474,11 +1477,12 @@ def _unit_test_refresh_seeds_autofix_for_devcovrepo_when_unset() -> None:
         payload["profiles"]["active"] = [
             "global",
             "defaults",
-            "devcovrepo",
+            "userproject",
             "devcovuser",
             "python",
             "docs",
         ]
+        payload["developer_mode"] = True
         payload.setdefault("engine", {})
         payload["engine"].pop("auto_fix_enabled", None)
         payload["engine"].pop("pycache_prefix_enabled", None)
@@ -2030,9 +2034,9 @@ class GeneratedUnittestCases(unittest.TestCase):
         """Run global autofix default-disabled refresh assertions."""
         _unit_test_refresh_defaults_autofix_disabled_globally()
 
-    def test_refresh_seeds_autofix_for_devcovrepo_when_unset(self):
-        """Run devcovrepo autofix seeding refresh assertions."""
-        _unit_test_refresh_seeds_autofix_for_devcovrepo_when_unset()
+    def test_refresh_seeds_autofix_for_developer_mode_when_unset(self):
+        """Run developer-mode autofix seeding refresh assertions."""
+        _unit_test_refresh_seeds_autofix_for_developer_mode_when_unset()
 
     def test_refresh_rejects_missing_version_for_versioned_repo(self):
         """Run missing-version explicit-failure refresh assertions."""

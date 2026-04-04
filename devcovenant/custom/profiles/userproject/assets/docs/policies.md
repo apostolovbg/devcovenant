@@ -31,6 +31,8 @@ They are not the limit of what DevCovenant can govern.
 
 A repository can define brand-new policy ids or replace builtin policies with
 custom ones under `devcovenant/custom/policies/<policy-id>/`.
+When a custom policy and builtin policy share the same id, the custom policy
+fully shadows the builtin policy and the builtin one is ignored.
 Custom policies run through the same engine surface as builtin policies:
 - the same metadata resolver
 - the same check context
@@ -295,7 +297,7 @@ For the seeded Python stack, `root_workspace` starts from
 `requirements.lock` and the matching license artifacts for that surface.
 Resolved locks are policy-owned outputs, not starter profile assets.
 For the builtin Python surfaces, the default target matrix covers supported
-CPython 3.10 through 3.14 on Linux, Windows, and macOS.
+CPython 3.11 through 3.14 on Linux, Windows, and macOS.
 Hash mode resolves against that same declared matrix and emits one
 all-target result with hashes.
 After a surface is converged, the policy stores tracked per-surface input and

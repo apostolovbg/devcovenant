@@ -635,6 +635,8 @@ def _unit_test_bootstrap_docs_explain_profile_copy_and_name_rules() -> None:
             )
         ),
     }
+    profiles_doc = " ".join(docs["devcovenant/docs/profiles.md"].split())
+    policies_doc = " ".join(docs["devcovenant/docs/policies.md"].split())
 
     assert "profiles/userproject/" in docs["README.md"]
     assert "profiles/userproject/" in docs["devcovenant/README.md"]
@@ -646,11 +648,9 @@ def _unit_test_bootstrap_docs_explain_profile_copy_and_name_rules() -> None:
         'Here, "inherited" means values from other active profiles.'
         in docs["devcovenant/docs/config.md"]
     )
-    assert (
-        "builtin profile with that name is ignored."
-        in docs["devcovenant/docs/profiles.md"]
-    )
-    assert "overrides the builtin one." in docs["devcovenant/docs/policies.md"]
+    assert "fully shadows the builtin profile" in profiles_doc
+    assert "builtin profile with that name is ignored." in profiles_doc
+    assert "fully shadows the builtin one" in policies_doc
     assert (
         "copy-ready bootstrap template"
         in docs["devcovenant/docs/installation.md"]
@@ -817,7 +817,8 @@ def _unit_test_repo_pycache_prefix_sets_env_and_runtime_prefix() -> None:
             config_path = repo_root / "devcovenant" / "config.yaml"
             config_path.parent.mkdir(parents=True, exist_ok=True)
             config_path.write_text(
-                "profiles:\n  active:\n  - devcovrepo\n"
+                "developer_mode: true\n"
+                "profiles:\n  active:\n  - userproject\n"
                 "engine:\n"
                 "  pycache_prefix_enabled: true\n"
                 "  pycache_prefix: ''\n",
@@ -856,7 +857,8 @@ def _unit_test_repo_pycache_prefix_requires_explicit_opt_in() -> None:
             config_path = repo_root / "devcovenant" / "config.yaml"
             config_path.parent.mkdir(parents=True, exist_ok=True)
             config_path.write_text(
-                "profiles:\n  active:\n  - devcovrepo\n",
+                "developer_mode: true\n"
+                "profiles:\n  active:\n  - userproject\n",
                 encoding="utf-8",
             )
             enabled = module.configure_repo_pycache_prefix(repo_root)
@@ -894,7 +896,8 @@ def _unit_test_repo_pycache_prefix_honors_custom_relative_path() -> None:
             config_path = repo_root / "devcovenant" / "config.yaml"
             config_path.parent.mkdir(parents=True, exist_ok=True)
             config_path.write_text(
-                "profiles:\n  active:\n  - devcovrepo\n"
+                "developer_mode: true\n"
+                "profiles:\n  active:\n  - userproject\n"
                 "engine:\n"
                 "  pycache_prefix_enabled: true\n"
                 "  pycache_prefix: .cache/pycache\n",
@@ -964,7 +967,7 @@ def _unit_test_repo_bytecode_cleanup_requires_explicit_opt_in() -> None:
         pyc_path.write_text("test", encoding="utf-8")
         config_path.parent.mkdir(parents=True, exist_ok=True)
         config_path.write_text(
-            "profiles:\n  active:\n  - devcovrepo\n",
+            "developer_mode: true\n" "profiles:\n  active:\n  - userproject\n",
             encoding="utf-8",
         )
         removed = module.cleanup_repo_bytecode_artifacts(repo_root)

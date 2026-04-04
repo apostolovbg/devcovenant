@@ -1,4 +1,4 @@
-"""Unit tests for readme-sync global fixer."""
+"""Unit tests for package-doc-sync global fixer."""
 
 from __future__ import annotations
 
@@ -9,9 +9,9 @@ from pathlib import Path
 
 from devcovenant.core.policy_contract import Violation
 
-ReadmeSyncFixer = import_module(
-    "devcovenant.custom.policies.readme_sync.autofix.global"
-).ReadmeSyncFixer
+PackageDocSyncFixer = import_module(
+    "devcovenant.builtin.policies.package_doc_sync.autofix.global"
+).PackageDocSyncFixer
 
 
 def _unit_test_syncs_expected_text_to_target() -> None:
@@ -20,9 +20,9 @@ def _unit_test_syncs_expected_text_to_target() -> None:
         repo_root = Path(temp_dir).resolve()
         target = repo_root / "devcovenant" / "README.md"
 
-        fixer = ReadmeSyncFixer()
+        fixer = PackageDocSyncFixer()
         violation = Violation(
-            policy_id="readme-sync",
+            policy_id="package-doc-sync",
             severity="error",
             message="sync",
             context={
@@ -49,5 +49,5 @@ class GeneratedSymbolCoverageTests(unittest.TestCase):
     """Direct symbol assertions for coverage tracking."""
 
     def test_symbol_level_assertions_cover_public_api(self):
-        """Readme-sync tests should assert the fixer symbol."""
-        self.assertIsNotNone(ReadmeSyncFixer)
+        """Package-doc-sync tests should assert the fixer symbol."""
+        self.assertIsNotNone(PackageDocSyncFixer)

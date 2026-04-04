@@ -6,7 +6,7 @@
 **Maintenance Stance:** active
 **Compatibility Policy:** forward-only
 **Versioning Mode:** versioned
-**Last Updated:** 2026-04-03
+**Last Updated:** 2026-04-04
 **DevCovenant Version:** 1.0.1b1
 
 <!-- DEVCOV:BEGIN -->
@@ -100,7 +100,7 @@ open-ended cleanup.
   - `devcovenant/docs/policies.md`
   - `devcovenant/docs/config.md`
 - Audit the managed documentation sources under
-  `devcovenant/custom/profiles/devcovrepo/assets/docs/` so source, generated,
+  `devcovenant/custom/profiles/userproject/assets/docs/` so source, generated,
   and live docs stay aligned.
 - For each doc surface, check:
   - product scope versus repository scope

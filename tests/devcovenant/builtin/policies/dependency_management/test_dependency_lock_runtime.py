@@ -622,12 +622,13 @@ def _unit_test_refresh_runtime_preserves_direct_conditional_requirements() -> (
         repo_root = Path(temp_dir)
         packaging_version = importlib_metadata.version("packaging")
         (repo_root / "requirements.in").write_text(
-            "packaging>=26.0\n" 'tomli==2.3.0; python_version < "3.11"\n',
+            "packaging>=26.0\n"
+            'typing_extensions==4.15.0; python_version < "3.13"\n',
             encoding="utf-8",
         )
         (repo_root / "requirements.lock").write_text(
             f"packaging=={packaging_version}\n\n"
-            'tomli==2.3.0 ; python_version < "3.11"\n'
+            'typing_extensions==4.15.0 ; python_version < "3.13"\n'
             "    # via -r requirements.in\n",
             encoding="utf-8",
         )
@@ -655,7 +656,7 @@ def _unit_test_refresh_runtime_preserves_direct_conditional_requirements() -> (
             encoding="utf-8"
         ) == (
             f"packaging=={packaging_version}\n\n"
-            'tomli==2.3.0 ; python_version < "3.11"\n'
+            'typing_extensions==4.15.0 ; python_version < "3.13"\n'
             "    # via -r requirements.in\n"
         )
 

@@ -2,7 +2,7 @@
 **Doc ID:** SECURITY
 **Doc Type:** security-policy
 **Project Version:** 1.0.1b1
-**Last Updated:** 2026-04-03
+**Last Updated:** 2026-04-04
 **DevCovenant Version:** 1.0.1b1
 
 <!-- DEVCOV:BEGIN -->
@@ -98,8 +98,8 @@ DevCovenant keeps release assurance visible in normal automation:
 1. the builtin `github` profile supplies the generic source-tree `CI`
    workflow for GitHub Actions, including the bootstrap gate/run automation
    on Python `3.14`
-2. this repository activates `github`, then its `devcovrepo` profile extends
-   the main `governance` job
+2. this repository activates `github`, then its custom same-name
+   `userproject` profile extends the main `governance` job
    with `pip-audit -r requirements.lock` and
    `bandit -q -c bandit.yaml -r devcovenant`
 3. the repo-specific `Build` job inside `CI` owns built-artifact proof for
