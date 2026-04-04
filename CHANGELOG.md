@@ -61,6 +61,29 @@ Example:
 ## Version 1.0.1b1
 
 - 2026-04-04:
+  Change: removed stale lifecycle pruning of repo-owned custom payload so
+          copied `userproject` profiles and other custom extensions survive
+          install/deploy/upgrade flows.
+  Why: removed package-side custom payload shipping, so normal repository
+       lifecycle commands should not delete `devcovenant/custom/**`
+       content that belongs to the governed repo.
+  Impact: copied custom profiles now remain intact across deploy and upgrade,
+          source-checkout install still avoids shipping package-side custom
+          payload, and the operator docs/tests now describe the preserved
+          behavior truthfully.
+  Files:
+  CHANGELOG.md
+  README.md
+  devcovenant/README.md
+  devcovenant/custom/profiles/userproject/assets/docs/installation.md
+  devcovenant/deploy.py
+  devcovenant/docs/installation.md
+  devcovenant/upgrade.py
+  tests/devcovenant/test_deploy.py
+  tests/devcovenant/test_install.py
+  tests/devcovenant/test_upgrade.py
+
+- 2026-04-04:
   Change: fixed flat dependency-surface composition so inherited managed
           runtime locks stay opaque during consuming-surface hash resolution
           while the emitted workspace lock still stays flat.

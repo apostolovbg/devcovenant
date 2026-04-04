@@ -234,7 +234,7 @@ def _unit_test_install_preserves_existing_custom_tree() -> None:
     """install_repo should preserve custom policy/profile content."""
     with tempfile.TemporaryDirectory() as temp_dir:
         repo_root = Path(temp_dir)
-        custom_file = (
+        custom_policy = (
             repo_root
             / "devcovenant"
             / "custom"
@@ -242,14 +242,31 @@ def _unit_test_install_preserves_existing_custom_tree() -> None:
             / "demo"
             / "demo.py"
         )
-        custom_file.parent.mkdir(parents=True, exist_ok=True)
-        custom_file.write_text("# custom\n", encoding="utf-8")
+        custom_profile = (
+            repo_root
+            / "devcovenant"
+            / "custom"
+            / "profiles"
+            / "userproject"
+            / "userproject.yaml"
+        )
+        custom_policy.parent.mkdir(parents=True, exist_ok=True)
+        custom_policy.write_text("# custom\n", encoding="utf-8")
+        custom_profile.parent.mkdir(parents=True, exist_ok=True)
+        custom_profile.write_text(
+            "version: 1\nprofile: userproject\ncategory: repo\n",
+            encoding="utf-8",
+        )
 
         with redirect_stderr(StringIO()):
             result = install.install_repo(repo_root)
         assert result == 0
-        assert custom_file.exists()
-        assert custom_file.read_text(encoding="utf-8") == "# custom\n"
+        assert custom_policy.exists()
+        assert custom_policy.read_text(encoding="utf-8") == "# custom\n"
+        assert custom_profile.exists()
+        assert "profile: userproject" in custom_profile.read_text(
+            encoding="utf-8"
+        )
 
 
 def _unit_test_install_does_not_copy_repo_custom_payload() -> None:

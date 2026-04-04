@@ -105,71 +105,69 @@ def _unit_test_upgrade_preserves_custom_tree() -> None:
             / "demo"
             / "demo.py"
         )
+        custom_profile = (
+            repo_root
+            / "devcovenant"
+            / "custom"
+            / "profiles"
+            / "userproject"
+            / "userproject.yaml"
+        )
         custom_file.parent.mkdir(parents=True, exist_ok=True)
         custom_file.write_text("# keep\n", encoding="utf-8")
         _write_policy_descriptor(custom_file)
+        custom_profile.parent.mkdir(parents=True, exist_ok=True)
+        custom_profile.write_text(
+            "version: 1\nprofile: userproject\ncategory: repo\n"
+            "suffixes: []\nignore_dirs: []\npolicy_overlays: {}\n",
+            encoding="utf-8",
+        )
 
         with redirect_stderr(StringIO()):
             result = upgrade.upgrade_repo(repo_root)
         assert result == 0
         assert custom_file.exists()
         assert custom_file.read_text(encoding="utf-8") == "# keep\n"
+        assert custom_profile.exists()
+        assert "profile: userproject" in custom_profile.read_text(
+            encoding="utf-8"
+        )
 
 
-def _unit_test_upgrade_prunes_repo_only_custom_payload() -> None:
-    """upgrade_repo should remove leaked repo-only custom payload paths."""
+def _unit_test_upgrade_preserves_old_custom_profile_names() -> None:
+    """upgrade_repo should not prune repo-owned custom profile names."""
     with tempfile.TemporaryDirectory() as temp_dir:
         repo_root = Path(temp_dir)
         copy_refreshed_repo(repo_root)
 
-        leaked_policy_dir = (
-            repo_root
-            / "devcovenant"
-            / "custom"
-            / "policies"
-            / "devcov_raw_string_escapes"
-        )
-        leaked_policy_dir.mkdir(parents=True, exist_ok=True)
-        (leaked_policy_dir / "__init__.py").write_text(
-            "__all__ = []\n",
-            encoding="utf-8",
-        )
-        (leaked_policy_dir / "devcov_raw_string_escapes.py").write_text(
-            "# leaked repo-only policy script\n",
-            encoding="utf-8",
-        )
-
-        leaked_profile_dir = (
+        old_profile_dir = (
             repo_root / "devcovenant" / "custom" / "profiles" / "userproject"
         )
-        leaked_profile_dir.mkdir(parents=True, exist_ok=True)
-        (leaked_profile_dir / "userproject.yaml").write_text(
-            "profile: userproject\n",
+        old_profile_dir.mkdir(parents=True, exist_ok=True)
+        (old_profile_dir / "userproject.yaml").write_text(
+            "version: 1\nprofile: userproject\ncategory: repo\n",
             encoding="utf-8",
         )
-
-        user_policy = (
+        legacy_profile_dir = (
             repo_root
             / "devcovenant"
             / "custom"
-            / "policies"
-            / "demo"
-            / "demo.py"
+            / "profiles"
+            / "devcovrepo"
+            / "devcovrepo.yaml"
         )
-        user_policy.parent.mkdir(parents=True, exist_ok=True)
-        user_policy.write_text("# keep-user-payload\n", encoding="utf-8")
-        _write_policy_descriptor(user_policy)
+        legacy_profile_dir.parent.mkdir(parents=True, exist_ok=True)
+        legacy_profile_dir.write_text(
+            "version: 1\nprofile: devcovrepo\ncategory: repo\n",
+            encoding="utf-8",
+        )
 
         with redirect_stderr(StringIO()):
             result = upgrade.upgrade_repo(repo_root)
         assert result == 0
 
-        assert not leaked_policy_dir.exists()
-        assert not leaked_profile_dir.exists()
-        assert user_policy.exists()
-        assert (
-            user_policy.read_text(encoding="utf-8") == "# keep-user-payload\n"
-        )
+        assert old_profile_dir.exists()
+        assert legacy_profile_dir.exists()
 
 
 def _unit_test_upgrade_runs_full_refresh() -> None:
@@ -371,9 +369,9 @@ class GeneratedUnittestCases(unittest.TestCase):
         """Run test_upgrade_preserves_custom_tree."""
         _unit_test_upgrade_preserves_custom_tree()
 
-    def test_upgrade_prunes_repo_only_custom_payload(self):
-        """Run repo-only custom payload prune assertions for upgrade."""
-        _unit_test_upgrade_prunes_repo_only_custom_payload()
+    def test_upgrade_preserves_old_custom_profile_names(self):
+        """Run preserved custom-profile name assertions for upgrade."""
+        _unit_test_upgrade_preserves_old_custom_profile_names()
 
     def test_upgrade_runs_full_refresh(self):
         """Run test_upgrade_runs_full_refresh."""

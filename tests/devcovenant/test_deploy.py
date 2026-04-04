@@ -122,7 +122,8 @@ def _write_profile_descriptor(profile_dir: Path) -> None:
 
 
 def _unit_test_deploy_cleanup_is_deploy_only() -> None:
-    """deploy_repo should prune repo-only DevCovenant paths.
+    """deploy_repo should prune test-only paths and keep repo-owned custom
+    payload.
 
     refresh should not.
     """
@@ -179,11 +180,9 @@ def _unit_test_deploy_cleanup_is_deploy_only() -> None:
 
         deploy_result = deploy.deploy_repo(repo_root)
         assert deploy_result == 0
-        assert not (repo_root / "devcovenant" / "custom" / "policies").exists()
         assert not (repo_root / "tests" / "devcovenant" / "core").exists()
-        assert not (
-            repo_root / "devcovenant" / "custom" / "profiles" / "userproject"
-        ).exists()
+        assert policy_marker.exists()
+        assert profile_marker.exists()
         assert kept_profile_marker.exists()
 
 
