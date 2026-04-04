@@ -103,6 +103,10 @@ surface moves, when a repository-specific custom profile overrides
 `root_workspace`, when a repository adds its own `package_runtime`, or when
 DevCovenant's bundled `devcovenant_runtime` surface changes its bootstrap lock
 behavior.
+The same runtime state also records per-surface fingerprints for composed
+dependency surfaces, so a source fix that changes how `root_workspace`
+inherits `devcovenant_runtime` or `package_runtime` is expected to refresh
+tracked registry state even when the flat lock output itself does not change.
 Tracked fingerprints must stay checkout-stable.
 They should be derived from repo-relative identity plus content, not from
 absolute machine-local checkout paths.

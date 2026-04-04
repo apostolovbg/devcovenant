@@ -85,6 +85,7 @@ def _unit_test_runtime_symbol_contract_is_stable() -> None:
     module = importlib.import_module(MODULE)
     assert hasattr(module, "LockFilePieces")
     assert hasattr(module, "LockHandlerResult")
+    assert hasattr(module, "SurfaceResolutionInputs")
     assert hasattr(module, "refresh_all")
 
 
@@ -899,9 +900,10 @@ def _unit_test_refresh_runtime_passes_hash_mode_from_metadata() -> None:
             ],
         }
 
-        def _fake_refresh(_repo_root, *, surface):
+        def _fake_refresh(_repo_root, *, surface, all_surfaces=None):
             """Capture the selected hash mode from refresh_all."""
 
+            del all_surfaces
             captured["generate_hashes"] = surface.generate_hashes
             return module.LockHandlerResult(
                 "requirements.lock",
@@ -990,6 +992,182 @@ def _unit_test_surface_dependency_strings_strip_inherited_hash_lines() -> None:
             "pyyaml==6.0.3",
             "bandit==1.9.4",
         ]
+
+
+def _unit_test_surface_resolution_inputs_preserve_inherited_surfaces() -> None:
+    """Provider lock surfaces should stay opaque during target resolution."""
+
+    module = importlib.import_module(MODULE)
+    with tempfile.TemporaryDirectory() as temp_dir:
+        repo_root = Path(temp_dir)
+        dev_lock = repo_root / "devcovenant" / "runtime-requirements.lock"
+        pkg_lock = repo_root / "package" / "runtime-requirements.lock"
+        dev_lock.parent.mkdir(parents=True, exist_ok=True)
+        pkg_lock.parent.mkdir(parents=True, exist_ok=True)
+        dev_lock.write_text("click==8.3.2\n", encoding="utf-8")
+        pkg_lock.write_text("PySide6==6.11.0\n", encoding="utf-8")
+        (repo_root / "requirements.in").write_text(
+            "-r devcovenant/runtime-requirements.lock\n" "bandit==1.9.4\n",
+            encoding="utf-8",
+        )
+
+        resolved = module._surface_resolution_inputs(
+            repo_root,
+            dependency_files=[
+                "requirements.in",
+                "package/runtime-requirements.lock",
+            ],
+            provider_lock_files=[
+                "devcovenant/runtime-requirements.lock",
+                "package/runtime-requirements.lock",
+            ],
+        )
+
+        assert resolved.dependency_lines == ["bandit==1.9.4"]
+        assert resolved.inherited_lock_files == [
+            "devcovenant/runtime-requirements.lock",
+            "package/runtime-requirements.lock",
+        ]
+
+
+def _unit_test_compile_target_surface_lock_flattens_inherited_surfaces() -> (
+    None
+):
+    """Inherited surfaces should flatten without re-entering target closure."""
+
+    module = importlib.import_module(MODULE)
+    target = module.dependency_management.DependencySurfaceTarget(
+        target_id="linux-py311",
+        marker='sys_platform == "linux" and python_version == "3.11"',
+        pip={
+            "platform": "manylinux2014_x86_64",
+            "implementation": "cp",
+            "python-version": "3.11",
+            "abi": "cp311",
+        },
+    )
+    original_resolver = module._resolve_complete_target_report
+    captured: dict[str, object] = {}
+
+    def _fake_resolver(_repo_root, *, dependency_lines, target):
+        """Return one synthetic report for root-only workspace extras."""
+
+        del target
+        captured["dependency_lines"] = list(dependency_lines)
+        return [
+            {
+                "metadata": {"name": "bandit", "version": "1.9.4"},
+                "download_info": {
+                    "archive_info": {"hashes": {"sha256": "bandit-1-9-4-hash"}}
+                },
+            }
+        ]
+
+    module._resolve_complete_target_report = _fake_resolver
+    try:
+        with tempfile.TemporaryDirectory() as temp_dir:
+            repo_root = Path(temp_dir)
+            dev_lock = repo_root / "devcovenant" / "runtime-requirements.lock"
+            pkg_lock = repo_root / "package" / "runtime-requirements.lock"
+            dev_lock.parent.mkdir(parents=True, exist_ok=True)
+            pkg_lock.parent.mkdir(parents=True, exist_ok=True)
+            dev_lock.write_text(
+                "click==8.3.2 \\\n"
+                "    --hash=sha256:click-hash\n"
+                "    # via -r requirements.in\n",
+                encoding="utf-8",
+            )
+            pkg_lock.write_text(
+                "PySide6==6.11.0 \\\n"
+                "    --hash=sha256:pyside6-hash\n"
+                "    # via -r requirements.in\n",
+                encoding="utf-8",
+            )
+            (repo_root / "requirements.in").write_text(
+                "-r devcovenant/runtime-requirements.lock\n" "bandit==1.9.4\n",
+                encoding="utf-8",
+            )
+
+            compiled = module._compile_target_surface_lock(
+                repo_root,
+                surface_id="root_workspace",
+                dependency_files=[
+                    "requirements.in",
+                    "package/runtime-requirements.lock",
+                ],
+                provider_lock_files=[
+                    "devcovenant/runtime-requirements.lock",
+                    "package/runtime-requirements.lock",
+                ],
+                hash_targets=[target],
+                source_display_name="requirements.in",
+                generate_hashes=True,
+            )
+    finally:
+        module._resolve_complete_target_report = original_resolver
+
+    body = "\n".join(compiled.body)
+    assert captured["dependency_lines"] == ["bandit==1.9.4"]
+    assert "click==8.3.2" in body
+    assert "PySide6==6.11.0" in body
+    assert "bandit==1.9.4" in body
+
+
+def _unit_test_inherited_surface_conflicts_are_rejected() -> None:
+    """Conflicting provider pins should fail flat-surface composition."""
+
+    module = importlib.import_module(MODULE)
+    target = module.dependency_management.DependencySurfaceTarget(
+        target_id="linux-py311",
+        marker='sys_platform == "linux" and python_version == "3.11"',
+        pip={
+            "platform": "manylinux2014_x86_64",
+            "implementation": "cp",
+            "python-version": "3.11",
+            "abi": "cp311",
+        },
+    )
+    with tempfile.TemporaryDirectory() as temp_dir:
+        repo_root = Path(temp_dir)
+        dev_lock = repo_root / "devcovenant" / "runtime-requirements.lock"
+        pkg_lock = repo_root / "package" / "runtime-requirements.lock"
+        dev_lock.parent.mkdir(parents=True, exist_ok=True)
+        pkg_lock.parent.mkdir(parents=True, exist_ok=True)
+        dev_lock.write_text(
+            "packaging==26.0 \\\n"
+            "    --hash=sha256:packaging-a\n"
+            "    # via -r requirements.in\n",
+            encoding="utf-8",
+        )
+        pkg_lock.write_text(
+            "packaging==25.0 \\\n"
+            "    --hash=sha256:packaging-b\n"
+            "    # via -r requirements.in\n",
+            encoding="utf-8",
+        )
+
+        try:
+            module._compile_target_surface_lock(
+                repo_root,
+                surface_id="root_workspace",
+                dependency_files=[
+                    "devcovenant/runtime-requirements.lock",
+                    "package/runtime-requirements.lock",
+                ],
+                provider_lock_files=[
+                    "devcovenant/runtime-requirements.lock",
+                    "package/runtime-requirements.lock",
+                ],
+                hash_targets=[target],
+                source_display_name="configured dependency inputs",
+                generate_hashes=True,
+            )
+        except RuntimeError as error:
+            assert "conflicting versions for `packaging`" in str(error)
+        else:
+            raise AssertionError(
+                "Inherited surface version conflicts must fail."
+            )
 
 
 def _unit_test_complete_target_report_closes_marker_only_gaps() -> None:
@@ -1326,6 +1504,18 @@ class GeneratedUnittestCases(unittest.TestCase):
     def test_surface_dependency_strings_strip_inherited_hash_lines(self):
         """Run inherited hash-block stripping assertions."""
         _unit_test_surface_dependency_strings_strip_inherited_hash_lines()
+
+    def test_surface_resolution_inputs_preserve_inherited_surfaces(self):
+        """Run inherited-surface preservation assertions."""
+        _unit_test_surface_resolution_inputs_preserve_inherited_surfaces()
+
+    def test_compile_target_surface_lock_flattens_inherited_surfaces(self):
+        """Run flat inherited-surface composition assertions."""
+        _unit_test_compile_target_surface_lock_flattens_inherited_surfaces()
+
+    def test_inherited_surface_conflicts_are_rejected(self):
+        """Run inherited-surface conflict rejection assertions."""
+        _unit_test_inherited_surface_conflicts_are_rejected()
 
     def test_complete_target_report_closes_marker_only_gaps(self):
         """Run target-closure completion assertions."""

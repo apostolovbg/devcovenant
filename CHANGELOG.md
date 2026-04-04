@@ -61,6 +61,31 @@ Example:
 ## Version 1.0.1b1
 
 - 2026-04-04:
+  Change: fixed flat dependency-surface composition so inherited managed
+          runtime locks stay opaque during consuming-surface hash resolution
+          while the emitted workspace lock still stays flat.
+  Why: multi-surface repositories can legitimately compose
+       `root_workspace`, `devcovenant_runtime`, and `package_runtime`, and
+       the old behavior wrongly re-solved inherited runtime surfaces as one
+       synthetic target closure.
+  Impact: governed repositories now flatten inherited surface locks without
+          re-validating those provider surfaces inside the consuming
+          surface, and refresh fails only for real same-target pin conflicts.
+  Files:
+  CHANGELOG.md
+  devcovenant/builtin/policies/dependency_management/\
+    dependency_lock_runtime.py
+  devcovenant/custom/profiles/userproject/assets/docs/policies.md
+  devcovenant/custom/profiles/userproject/assets/docs/profiles.md
+  devcovenant/custom/profiles/userproject/assets/docs/registry.md
+  devcovenant/docs/policies.md
+  devcovenant/docs/profiles.md
+  devcovenant/docs/registry.md
+  devcovenant/registry/registry.yaml
+  tests/devcovenant/builtin/policies/dependency_management/\
+    test_dependency_lock_runtime.py
+
+- 2026-04-04:
   Change: fixed builtin dependency-management fallback handling for direct
           dependencies that ship no dist-info license files, and documented
           the new `license_source_overrides` metadata in the policy docs.
