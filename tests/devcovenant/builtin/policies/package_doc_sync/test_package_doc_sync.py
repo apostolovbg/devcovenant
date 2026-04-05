@@ -161,6 +161,39 @@ def _unit_test_rewrites_repo_relative_images_to_release_stable_urls() -> None:
         assert violations == []
 
 
+def _unit_test_rewrites_absolute_main_images_to_release_stable_urls() -> None:
+    """Policy should rewrite same-repo absolute main image URLs."""
+    with tempfile.TemporaryDirectory() as temp_dir:
+        repo_root = Path(temp_dir).resolve()
+        packaged_readme = repo_root / "devcovenant" / "README.md"
+        packaged_readme.parent.mkdir(parents=True, exist_ok=True)
+        _write_pyproject(
+            repo_root,
+            "https://github.com/example/devcovenant-fork",
+        )
+
+        (repo_root / "README.md").write_text(
+            "# Root\n\n"
+            "![Banner]("
+            "https://raw.githubusercontent.com/example/devcovenant-fork/"
+            "main/devcovenant/docs/banner.png)\n\n"
+            "<!-- REPO-ONLY:BEGIN -->x<!-- REPO-ONLY:END -->\n",
+            encoding="utf-8",
+        )
+        packaged_readme.write_text(
+            "# Root\n\n"
+            "![Banner]("
+            "https://raw.githubusercontent.com/example/devcovenant-fork/"
+            "v0.0.0/devcovenant/docs/banner.png)\n",
+            encoding="utf-8",
+        )
+
+        check = _build_check()
+        violations = check.check(CheckContext(repo_root=repo_root))
+
+        assert violations == []
+
+
 def _unit_test_supports_multiple_sync_pairs() -> None:
     """Policy should handle more than one configured sync pair."""
     with tempfile.TemporaryDirectory() as temp_dir:
@@ -229,6 +262,10 @@ class GeneratedUnittestCases(unittest.TestCase):
     def test_rewrites_repo_relative_images_to_release_stable_urls(self):
         """Run repo-relative packaged image rewrite assertions."""
         _unit_test_rewrites_repo_relative_images_to_release_stable_urls()
+
+    def test_rewrites_absolute_main_images_to_release_stable_urls(self):
+        """Run absolute-main packaged image rewrite assertions."""
+        _unit_test_rewrites_absolute_main_images_to_release_stable_urls()
 
     def test_supports_multiple_sync_pairs(self):
         """Run multiple sync-pair assertions."""

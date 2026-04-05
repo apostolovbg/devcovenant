@@ -231,31 +231,74 @@ class PackageDocSyncCheck(PolicyCheck):
             self._is_repo_relative_target(match.group(2).strip())
             for match in self.MARKDOWN_IMAGE_PATTERN.finditer(text)
         )
-        if not has_repo_relative_links and not has_repo_relative_images:
+        (
+            repository_url,
+            blob_base,
+            raw_base,
+            error,
+        ) = self._resolve_repository_link_bases(repo_root)
+        if error and (has_repo_relative_links or has_repo_relative_images):
+            return None, error
+        if error:
             return text, None
 
-        blob_base, raw_base, error = self._resolve_repository_link_bases(
-            repo_root
+        normalized_repo_url = str(repository_url or "").rstrip("/")
+        has_same_repo_absolute_links = any(
+            self._normalize_packaged_target(
+                match.group(2).strip(),
+                repository_url=normalized_repo_url,
+                blob_base=str(blob_base or ""),
+                raw_base=str(raw_base or ""),
+            )
+            is not None
+            for match in self.MARKDOWN_LINK_PATTERN.finditer(text)
         )
-        if error:
-            return None, error
+        has_same_repo_absolute_images = any(
+            self._normalize_packaged_target(
+                match.group(2).strip(),
+                repository_url=normalized_repo_url,
+                blob_base=str(blob_base or ""),
+                raw_base=str(raw_base or ""),
+            )
+            is not None
+            for match in self.MARKDOWN_IMAGE_PATTERN.finditer(text)
+        )
+        if not any(
+            (
+                has_repo_relative_links,
+                has_repo_relative_images,
+                has_same_repo_absolute_links,
+                has_same_repo_absolute_images,
+            )
+        ):
+            return text, None
 
         # Keep image targets on the raw-content base so PyPI renders them.
         def _replace_image(match: re.Match[str]) -> str:
             label = match.group(1)
             target = match.group(2).strip()
-            if not self._is_repo_relative_target(target):
+            normalized = self._normalize_packaged_target(
+                target,
+                repository_url=normalized_repo_url,
+                blob_base=str(blob_base or ""),
+                raw_base=str(raw_base or ""),
+            )
+            if normalized is None:
                 return match.group(0)
-            normalized = target[2:] if target.startswith("./") else target
             return f"![{label}]({raw_base}{normalized})"
 
         # Keep document links on the blob base so package docs stay browsable.
         def _replace(match: re.Match[str]) -> str:
             label = match.group(1)
             target = match.group(2).strip()
-            if not self._is_repo_relative_target(target):
+            normalized = self._normalize_packaged_target(
+                target,
+                repository_url=normalized_repo_url,
+                blob_base=str(blob_base or ""),
+                raw_base=str(raw_base or ""),
+            )
+            if normalized is None:
                 return match.group(0)
-            normalized = target[2:] if target.startswith("./") else target
             return f"[{label}]({blob_base}{normalized})"
 
         rewritten = self.MARKDOWN_IMAGE_PATTERN.sub(_replace_image, text)
@@ -265,11 +308,12 @@ class PackageDocSyncCheck(PolicyCheck):
     def _resolve_repository_link_bases(
         self,
         repo_root: Path,
-    ) -> tuple[str | None, str | None, str | None]:
+    ) -> tuple[str | None, str | None, str | None, str | None]:
         """Resolve release-stable repo link bases from `pyproject.toml`."""
         pyproject_path = repo_root / "pyproject.toml"
         if not pyproject_path.exists():
             return (
+                None,
                 None,
                 None,
                 "Package-doc sync found repo-relative public links, but "
@@ -279,11 +323,12 @@ class PackageDocSyncCheck(PolicyCheck):
             with pyproject_path.open("rb") as handle:
                 payload = tomllib.load(handle)
         except OSError as exc:
-            return None, None, f"Failed to read `pyproject.toml`: {exc}."
+            return None, None, None, f"Failed to read `pyproject.toml`: {exc}."
 
         project = payload.get("project")
         if not isinstance(project, dict):
             return (
+                None,
                 None,
                 None,
                 "Package-doc sync found repo-relative public links, but "
@@ -292,6 +337,7 @@ class PackageDocSyncCheck(PolicyCheck):
         version = str(project.get("version") or "").strip()
         if not version:
             return (
+                None,
                 None,
                 None,
                 "Package-doc sync found repo-relative public links, but "
@@ -305,6 +351,7 @@ class PackageDocSyncCheck(PolicyCheck):
         ).strip()
         if not repository_url:
             return (
+                None,
                 None,
                 None,
                 "Package-doc sync found repo-relative public links, but "
@@ -322,7 +369,52 @@ class PackageDocSyncCheck(PolicyCheck):
             )
         else:
             raw_base = f"{normalized}/raw/{version_tag}/"
-        return blob_base, raw_base, None
+        return normalized, blob_base, raw_base, None
+
+    def _normalize_packaged_target(
+        self,
+        target: str,
+        *,
+        repository_url: str,
+        blob_base: str,
+        raw_base: str,
+    ) -> str | None:
+        """Normalize one target path for
+        release-stable package-doc rewriting."""
+        stripped = target.strip()
+        if self._is_repo_relative_target(stripped):
+            return stripped[2:] if stripped.startswith("./") else stripped
+
+        if not repository_url:
+            return None
+
+        raw_prefixes = (
+            f"{repository_url}/raw/main/",
+            f"{repository_url}/raw/master/",
+        )
+        if repository_url.startswith("https://github.com/"):
+            owner_repo = repository_url.removeprefix("https://github.com/")
+            raw_prefixes += (
+                f"https://raw.githubusercontent.com/{owner_repo}/main/",
+                f"https://raw.githubusercontent.com/{owner_repo}/master/",
+            )
+
+        for prefix in raw_prefixes:
+            if stripped.startswith(prefix):
+                return stripped[len(prefix) :]
+
+        for prefix in (
+            f"{repository_url}/blob/main/",
+            f"{repository_url}/blob/master/",
+            f"{repository_url}/tree/main/",
+            f"{repository_url}/tree/master/",
+            blob_base,
+            raw_base,
+        ):
+            if prefix and stripped.startswith(prefix):
+                return stripped[len(prefix) :]
+
+        return None
 
     def _is_repo_relative_target(self, target: str) -> bool:
         """Return True when one Markdown target is repo-relative."""

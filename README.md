@@ -2,14 +2,14 @@
 **Doc ID:** README
 **Doc Type:** repo-readme
 **Project Version:** 1.0.1b1
-**Last Updated:** 2026-04-04
+**Last Updated:** 2026-04-05
 **DevCovenant Version:** 1.0.1b1
 
 <!-- DEVCOV:BEGIN -->
 
 <!-- DEVCOV:END -->
 
-![DevCovenant banner](devcovenant/docs/banner.png)
+![DevCovenant banner](https://raw.githubusercontent.com/apostolovbg/devcovenant/main/devcovenant/docs/banner.png)
 
 DevCovenant is a repository governance framework.
 It keeps workflow rules, policy rules, generated files, and command logs in one

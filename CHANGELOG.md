@@ -6,7 +6,7 @@
 **Maintenance Stance:** active
 **Compatibility Policy:** forward-only
 **Versioning Mode:** versioned
-**Last Updated:** 2026-04-04
+**Last Updated:** 2026-04-05
 **DevCovenant Version:** 1.0.1b1
 
 <!-- DEVCOV:BEGIN -->
@@ -59,6 +59,27 @@ Example:
 ## Log changes here
 
 ## Version 1.0.1b1
+
+- 2026-04-05:
+  Change: replaced the shipped banner image and updated the repository
+          README to use an absolute banner URL.
+  Why: refreshed the visual banner asset, synced the package README mirror,
+       and removed the dropped source JPEG after replacing the shipped
+       banner path.
+  Impact: updated banner references now resolve through an absolute
+          repository README URL, and preserved the packaged
+          `devcovenant/docs/banner.png` path for shipped docs.
+  Files:
+  CHANGELOG.md
+  README.md
+  devcovenant/README.md
+  devcovenant/builtin/policies/package_doc_sync/package_doc_sync.py
+  devcovenant/docs/banner.png
+  devcovenant/docs/policies.md
+  devcovenant/docs/registry.md
+  devcovenant/registry/registry.yaml
+  m0ybz.jpg
+  tests/devcovenant/builtin/policies/package_doc_sync/test_package_doc_sync.py
 
 - 2026-04-04:
   Change: removed stale lifecycle pruning of repo-owned custom payload so

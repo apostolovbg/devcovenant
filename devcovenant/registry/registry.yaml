@@ -1,7 +1,7 @@
 metadata:
   schema_version: 1
   registry_layout: single-root
-  policy_registry_input_hash: 2c11447d473b7bda12ea7fe310a6f47547eb4e84eec37fd5a1188fd5b18794e8
+  policy_registry_input_hash: 68424891cc5c2ced71bea1dba324579f3edc94372749aa38b02eca420c819332
 project-governance:
   project_name: devcovenant
   project_description: devcovenant is a repository governance framework.
@@ -12863,7 +12863,7 @@ policies:
     - README.md=>devcovenant/README.md
     origin: builtin
     script_exists: true
-    hash: bf9b9bba626b20e52e65a847339aa51123383a9ebb29343eaf617b9e6108e0f8
+    hash: 8cf316089c465c80953d695035c2653cbe2f94a174778da7430b5620b2993b49
     script_path: builtin/package_doc_sync.py
 profiles:
   csharp:
