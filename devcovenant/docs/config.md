@@ -108,6 +108,9 @@ environment in the profile stack or metadata overlays instead of relying on
 DevCovenant to guess an unknown layout or hidden launcher hop.
 DevCovenant must either run from that declared managed context already or be
 able to resolve the declared interpreter path or environment root.
+If the environment needs extra executable locations, use
+`managed-environment.command_search_paths` to declare those PATH entries
+instead of depending on the host shell PATH.
 Those profile-level `ignore_dirs` also feed the startup snapshot walk used by
 `gate --start`, so disposable trees stay out of the recorded session state as
 well as generated `.gitignore` and pre-commit excludes.

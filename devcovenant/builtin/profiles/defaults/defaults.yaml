@@ -470,6 +470,7 @@ policy_overlays:
     expected_interpreters:
       - .venv/bin/python
       - .venv/Scripts/python.exe
+    command_search_paths: []
     required_commands:
       - pre-commit
       - pytest

@@ -6,7 +6,7 @@
 **Maintenance Stance:** active
 **Compatibility Policy:** forward-only
 **Versioning Mode:** versioned
-**Last Updated:** 2026-04-04
+**Last Updated:** 2026-04-06
 **DevCovenant Version:** 1.0.1b1
 
 <!-- DEVCOV:BEGIN -->
@@ -1451,6 +1451,7 @@ expected_paths:
 expected_interpreters:
 - .venv/bin/python
 - .venv/Scripts/python.exe
+command_search_paths: []
 cleanup_protected_paths: []
 required_commands:
 - pre-commit
@@ -1465,17 +1466,19 @@ managed_commands:
 
 DevCovenant must run from one execution environment described by this
 policy's metadata. `expected_paths` and `expected_interpreters` point to
-that target environment, while optional `cleanup_protected_paths` define
-extra roots that cleanup must never delete. `required_commands`
-declare the commands that must resolve once the target interpreter is
-selected. `manual_commands` document how a human can create or repair the
-environment, and stage-scoped `managed_commands` define how DevCovenant may
-prepare it automatically. Command templates may reference `{current_python}`
-and `{current_bin}` for the currently running interpreter, and
-`{managed_python}`, `{managed_bin}`, `{managed_root}`, `{repo_root}` for the
-selected target environment. User-facing guidance renders those path tokens
-with display-safe paths so local absolute roots do not leak into routine
-messages.
+that target environment, while optional `command_search_paths` add extra
+PATH entries for resolving required commands and optional
+`cleanup_protected_paths` define extra roots that cleanup must never delete.
+`required_commands` declare the commands that must resolve once the target
+interpreter is selected, using the managed PATH plus any declared command
+search paths. `manual_commands` document how a human can create or repair
+the environment, and stage-scoped `managed_commands` define how
+DevCovenant may prepare it automatically. Command templates may reference
+`{current_python}` and `{current_bin}` for the currently running
+interpreter, and `{managed_python}`, `{managed_bin}`, `{managed_root}`,
+`{repo_root}` for the selected target environment. User-facing guidance
+renders those path tokens with display-safe paths so local absolute roots do
+not leak into routine messages.
 The target environment may live inside the repository or outside it, as long
 as the metadata declares the interpreter path or environment root that
 DevCovenant should use. The seeded defaults describe a local `.venv`

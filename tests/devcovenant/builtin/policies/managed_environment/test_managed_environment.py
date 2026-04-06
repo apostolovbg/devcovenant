@@ -80,6 +80,9 @@ def _unit_test_allows_declared_external_environment(
     managed_bin.mkdir(parents=True, exist_ok=True)
     managed_python = managed_bin / "python"
     managed_python.write_text("", encoding="utf-8")
+    managed_python3 = managed_bin / "python3"
+    managed_python3.write_text("", encoding="utf-8")
+    managed_python3.chmod(0o755)
     monkeypatch.setenv("VIRTUAL_ENV", str(managed))
     monkeypatch.setattr(sys, "executable", str(managed_python))
 
@@ -119,6 +122,9 @@ def _unit_test_required_commands_replace_hint_warning(
     venv_python.mkdir()
     venv_executable = venv_python / "python"
     venv_executable.write_text("", encoding="utf-8")
+    venv_python3 = venv_python / "python3"
+    venv_python3.write_text("", encoding="utf-8")
+    venv_python3.chmod(0o755)
     monkeypatch.setenv("VIRTUAL_ENV", str(managed))
     monkeypatch.setattr(sys, "executable", str(venv_executable))
 
@@ -127,6 +133,39 @@ def _unit_test_required_commands_replace_hint_warning(
         {
             "expected_paths": [".venv"],
             "required_commands": ["python3"],
+        },
+        {},
+    )
+    context = CheckContext(repo_root=tmp_path, changed_files=[])
+    assert checker.check(context) == []
+
+
+def _unit_test_required_commands_use_command_search_paths(
+    tmp_path: Path, monkeypatch
+):
+    """Required commands should resolve from declared search paths."""
+    managed = tmp_path / ".venv"
+    managed.mkdir()
+    venv_bin = managed / "bin"
+    venv_bin.mkdir()
+    venv_executable = venv_bin / "python"
+    venv_executable.write_text("", encoding="utf-8")
+    venv_executable.chmod(0o755)
+    tool_bin = tmp_path / "tool-bin"
+    tool_bin.mkdir()
+    tool_command = tool_bin / "pre-commit"
+    tool_command.write_text("", encoding="utf-8")
+    tool_command.chmod(0o755)
+    monkeypatch.setenv("VIRTUAL_ENV", str(managed))
+    monkeypatch.setattr(sys, "executable", str(venv_executable))
+
+    checker = ManagedEnvironmentCheck()
+    checker.set_options(
+        {
+            "expected_paths": [".venv"],
+            "expected_interpreters": [".venv/bin/python"],
+            "command_search_paths": [str(tool_bin)],
+            "required_commands": ["pre-commit"],
         },
         {},
     )
@@ -174,7 +213,9 @@ def _unit_test_required_commands_accept_dash_underscore_variants(
     monkeypatch.setattr(
         managed_environment.shutil,
         "which",
-        lambda token: "/usr/bin/pre-commit" if token == "pre-commit" else None,
+        lambda token, path=None: (
+            "/usr/bin/pre-commit" if token == "pre-commit" else None
+        ),
     )
 
     checker = ManagedEnvironmentCheck()
@@ -332,6 +373,18 @@ class GeneratedUnittestCases(unittest.TestCase):
             with tempfile.TemporaryDirectory() as temp_dir:
                 tmp_path = Path(temp_dir).resolve()
                 _unit_test_required_commands_replace_hint_warning(
+                    tmp_path=tmp_path, monkeypatch=monkeypatch
+                )
+        finally:
+            monkeypatch.undo()
+
+    def test_required_commands_use_command_search_paths(self):
+        """Run test_required_commands_use_command_search_paths."""
+        monkeypatch = MonkeyPatch()
+        try:
+            with tempfile.TemporaryDirectory() as temp_dir:
+                tmp_path = Path(temp_dir).resolve()
+                _unit_test_required_commands_use_command_search_paths(
                     tmp_path=tmp_path, monkeypatch=monkeypatch
                 )
         finally:

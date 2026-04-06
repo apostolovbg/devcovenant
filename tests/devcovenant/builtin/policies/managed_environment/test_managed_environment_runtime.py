@@ -40,6 +40,7 @@ def _unit_test_runtime_symbol_contract_is_stable() -> None:
         "_load_policy_entry",
         "_normalize_metadata_tokens",
         "_resolve_metadata_paths",
+        "_resolve_command_search_paths",
         "_parse_managed_commands",
         "_detect_managed_python",
         "_apply_managed_env",
@@ -74,6 +75,58 @@ def _unit_test_resolve_stage_returns_none_when_disabled(
         Path("/tmp/repo"),
         "run",
     ) == (None, None)
+
+
+def _unit_test_start_prepends_command_search_paths(
+    monkeypatch: MonkeyPatch,
+) -> None:
+    """Managed environments should prepend declared command search paths."""
+    module = importlib.import_module(MODULE)
+    with tempfile.TemporaryDirectory() as temp_dir:
+        repo_root = Path(temp_dir)
+        managed_root = repo_root / ".venv"
+        managed_python = managed_root / "bin" / "python"
+        managed_python.parent.mkdir(parents=True, exist_ok=True)
+        managed_python.write_text("", encoding="utf-8")
+        managed_python.chmod(0o755)
+        tool_bin = repo_root / "tool-bin"
+        tool_bin.mkdir(parents=True, exist_ok=True)
+        tool_command = tool_bin / "pre-commit"
+        tool_command.write_text("", encoding="utf-8")
+        tool_command.chmod(0o755)
+
+        monkeypatch.setattr(
+            module,
+            "_load_policy_entry",
+            lambda repo_root: {
+                "enabled": True,
+                "metadata": {
+                    "expected_paths": [".venv"],
+                    "expected_interpreters": [".venv/bin/python"],
+                    "command_search_paths": [str(tool_bin)],
+                    "required_commands": ["pre-commit"],
+                },
+            },
+        )
+
+        resolved_env, resolved_python = (
+            module.resolve_managed_environment_for_stage(
+                repo_root,
+                "start",
+                base_env={"PATH": ""},
+            )
+        )
+
+    assert resolved_env is not None
+    assert resolved_python == str(managed_python)
+    assert resolved_env["DEVCOV_MANAGED_PYTHON"] == str(managed_python)
+    assert resolved_env["PATH"].split(os.pathsep) == [
+        str(managed_python.parent),
+        str(tool_bin),
+    ]
+    assert (
+        Path(resolved_env["VIRTUAL_ENV"]).resolve() == managed_root.resolve()
+    )
 
 
 def _unit_test_invalid_managed_command_stage_raises() -> None:
@@ -988,6 +1041,14 @@ class GeneratedUnittestCases(unittest.TestCase):
         monkeypatch = MonkeyPatch()
         try:
             _unit_test_resolve_stage_returns_none_when_disabled(monkeypatch)
+        finally:
+            monkeypatch.undo()
+
+    def test_start_prepends_command_search_paths(self):
+        """Run command search path prepending assertions."""
+        monkeypatch = MonkeyPatch()
+        try:
+            _unit_test_start_prepends_command_search_paths(monkeypatch)
         finally:
             monkeypatch.undo()
 

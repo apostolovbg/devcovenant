@@ -204,6 +204,9 @@ container-managed environments.
 DevCovenant either runs from that managed context already or resolves the
 declared interpreter path or environment root for re-exec.
 It does not infer hidden wrapper hops on its own.
+If the managed environment keeps executables in additional locations, declare
+`command_search_paths` so `required_commands` resolve against the managed
+environment paths instead of the outer shell PATH.
 On a converged repository, repeated `check`, `gate`, and `run` startup paths do
 not intentionally rebuild current tracked registry content or current
 dependency surfaces.

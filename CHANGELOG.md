@@ -6,7 +6,7 @@
 **Maintenance Stance:** active
 **Compatibility Policy:** forward-only
 **Versioning Mode:** versioned
-**Last Updated:** 2026-04-05
+**Last Updated:** 2026-04-06
 **DevCovenant Version:** 1.0.1b1
 
 <!-- DEVCOV:BEGIN -->
@@ -59,6 +59,38 @@ Example:
 ## Log changes here
 
 ## Version 1.0.1b1
+
+- 2026-04-06:
+  Change: added managed-environment `command_search_paths` support and taught
+          required-command checks plus stage re-exec to resolve commands from
+          the managed environment instead of the host PATH.
+  Why: bench, container, and other tool-owned environments can expose the
+       right executables without putting them on the shell PATH.
+  Impact: required commands now validate against declared managed search
+          roots, the active config/profile mirrors document the new key, and
+          managed-environment tests cover the new lookup path.
+  Files:
+  CHANGELOG.md
+  AGENTS.md
+  devcovenant/config.yaml
+  devcovenant/custom/profiles/userproject/userproject.yaml
+  devcovenant/builtin/policies/managed_environment/\
+    managed_environment.py
+  devcovenant/builtin/policies/managed_environment/\
+    managed_environment.yaml
+  devcovenant/builtin/policies/managed_environment/\
+    managed_environment_runtime.py
+  devcovenant/builtin/profiles/defaults/defaults.yaml
+  devcovenant/docs/config.md
+  devcovenant/docs/policies.md
+  devcovenant/docs/profiles.md
+  devcovenant/docs/registry.md
+  devcovenant/docs/workflow.md
+  devcovenant/registry/registry.yaml
+  tests/devcovenant/builtin/policies/managed_environment/\
+    test_managed_environment.py
+  tests/devcovenant/builtin/policies/managed_environment/\
+    test_managed_environment_runtime.py
 
 - 2026-04-06:
   Change: fixed gate-start snapshot scans to merge active profile ignore dirs

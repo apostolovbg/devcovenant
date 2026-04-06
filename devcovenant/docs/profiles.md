@@ -129,6 +129,9 @@ through their active profile stack or metadata overlays.
 The important contract is that DevCovenant can run from that declared managed
 context or resolve the interpreter path or environment root it should use.
 The defaults do not try to guess hidden launcher hops.
+If the managed environment keeps commands in extra PATH locations, declare
+`command_search_paths` alongside the environment root so `required_commands`
+resolve from the managed stack instead of the host shell PATH.
 
 The built-in `devcovuser` profile is the normal user-repository layer.
 It keeps DevCovenant's own shipped runtime files out of ordinary app-code
