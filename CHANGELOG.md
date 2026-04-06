@@ -60,6 +60,25 @@ Example:
 
 ## Version 1.0.1b1
 
+- 2026-04-06:
+  Change: fixed gate-start snapshot scans to merge active profile ignore dirs
+          before collecting filesystem paths.
+  Why: profile-scoped data directories were still being walked during
+       `gate --start`, which kept disposable trees in the startup snapshot.
+  Impact: startup snapshots now honor active-profile ignore dirs directly,
+          and the regression test and docs describe the new scan boundary.
+  Files:
+  CHANGELOG.md
+  README.md
+  devcovenant/core/gate_runtime.py
+  devcovenant/custom/profiles/userproject/assets/docs/config.md
+  devcovenant/custom/profiles/userproject/assets/docs/profiles.md
+  devcovenant/custom/profiles/userproject/assets/docs/workflow.md
+  devcovenant/docs/config.md
+  devcovenant/docs/profiles.md
+  devcovenant/docs/workflow.md
+  tests/devcovenant/core/test_gate_runtime.py
+
 - 2026-04-05:
   Change: replaced the shipped banner image and updated the repository
           README to use an absolute banner URL.

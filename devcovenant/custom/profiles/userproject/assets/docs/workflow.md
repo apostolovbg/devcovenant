@@ -32,7 +32,8 @@ matter for the work slice.
 
 ### gate --start
 Opens the tracked work session.
-It records the starting state that later checks compare against.
+It records the starting state that later checks compare against after
+honoring active-profile ignore dirs and the configured engine ignores.
 If `gate --start` fails, fix the reported problem before editing.
 
 ### gate --mid

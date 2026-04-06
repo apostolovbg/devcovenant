@@ -2127,6 +2127,61 @@ def _snapshot_public_session_snapshot_helpers_are_deterministic() -> None:
         assert baseline["README.md"]["non_exempt_content_sha256"]
 
 
+def _snapshot_active_profile_ignore_dirs_are_honored() -> None:
+    """Profile ignore dirs should affect gate-start snapshot collection."""
+    module = importlib.import_module(MODULE)
+    with tempfile.TemporaryDirectory() as tmpdir:
+        repo_root = Path(tmpdir)
+        config_path = repo_root / "devcovenant" / "config.yaml"
+        config_path.parent.mkdir(parents=True, exist_ok=True)
+        config_path.write_text(
+            "\n".join(
+                [
+                    "profiles:",
+                    "  active:",
+                    "  - userproject",
+                    "engine:",
+                    "  ignore_dirs: []",
+                    "",
+                ]
+            ),
+            encoding="utf-8",
+        )
+        profile_path = (
+            repo_root
+            / "devcovenant"
+            / "custom"
+            / "profiles"
+            / "userproject"
+            / "userproject.yaml"
+        )
+        profile_path.parent.mkdir(parents=True, exist_ok=True)
+        profile_path.write_text(
+            "\n".join(
+                [
+                    "version: 1",
+                    "profile: userproject",
+                    "category: custom",
+                    "ignore_dirs:",
+                    "  - data",
+                    "",
+                ]
+            ),
+            encoding="utf-8",
+        )
+        (repo_root / "README.md").write_text(
+            "snapshot root\n", encoding="utf-8"
+        )
+        ignored_file = repo_root / "data" / "research" / "paper.txt"
+        ignored_file.parent.mkdir(parents=True, exist_ok=True)
+        ignored_file.write_text("paper\n", encoding="utf-8")
+        current_paths = module.capture_current_snapshot_paths(repo_root)
+        current_snapshot = module.capture_current_numstat_snapshot(repo_root)
+        assert "README.md" in current_paths
+        assert "data/research/paper.txt" not in current_paths
+        assert "data/research/paper.txt" not in current_snapshot
+
+
 class GateRuntimeSnapshotTests(unittest.TestCase):
     """unittest wrappers for layered module sanity checks."""
 
@@ -2145,6 +2200,10 @@ class GateRuntimeSnapshotTests(unittest.TestCase):
     def test_public_session_snapshot_helpers_are_deterministic(self):
         """Run symbol-level assertions for public helper coverage."""
         _snapshot_public_session_snapshot_helpers_are_deterministic()
+
+    def test_active_profile_ignore_dirs_are_honored(self):
+        """Run active-profile ignore-dir regression assertions."""
+        _snapshot_active_profile_ignore_dirs_are_honored()
 
 
 MODULE = "devcovenant.core.gate_runtime"

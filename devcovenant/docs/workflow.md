@@ -1,5 +1,5 @@
 # Workflow
-**Last Updated:** 2026-04-04
+**Last Updated:** 2026-04-06
 
 **Project Version:** 1.0.1b1
 
@@ -36,7 +36,8 @@ gate or workflow run.
 
 ### gate --start
 Opens the tracked work session.
-It records the starting state that later checks compare against.
+It records the starting state that later checks compare against after
+honoring active-profile ignore dirs and the configured engine ignores.
 If `gate --start` fails, fix the reported problem before editing.
 
 ### gate --mid

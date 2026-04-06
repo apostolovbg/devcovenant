@@ -2,7 +2,7 @@
 **Doc ID:** README
 **Doc Type:** repo-readme
 **Project Version:** 1.0.1b1
-**Last Updated:** 2026-04-05
+**Last Updated:** 2026-04-06
 **DevCovenant Version:** 1.0.1b1
 
 <!-- DEVCOV:BEGIN -->
@@ -110,6 +110,7 @@ devcovenant deploy
 python3 -m venv .venv
 .venv/bin/python -m pip install -r requirements.lock
 # gate --start can also run the declared bootstrap commands
+# and honors active-profile ignore dirs before the snapshot
 devcovenant gate --start
 # make your edits
 devcovenant gate --mid
@@ -195,7 +196,8 @@ Use the commands this way:
 
 - `gate --start`
 
-  Opens a work session and records the starting state for the slice.
+  Opens a work session and records the starting state for the slice after
+  honoring active-profile ignore dirs and engine ignores.
 
 - `gate --mid`
 

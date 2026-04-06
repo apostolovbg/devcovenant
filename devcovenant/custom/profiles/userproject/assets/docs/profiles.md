@@ -13,8 +13,8 @@ A profile can contribute:
 5. suffix inventories
 6. translator declarations
 7. CI fragments through `ci_and_test`
-8. ignore-directory hints that feed generated `.gitignore` and pre-commit
-   excludes
+8. ignore-directory hints that feed generated `.gitignore`, pre-commit
+   excludes, and the `gate --start` snapshot walk
 
 Profiles do not directly turn policies on or off.
 Policy activation still lives in `policy_state`.
@@ -120,10 +120,11 @@ while still enforcing `devcovenant/custom/**` and
 `tests/devcovenant/custom/**`.
 
 Profiles may also contribute `ignore_dirs` for disposable local outputs that
-should stay out of generated `.gitignore` and out of pre-commit's all-files
-scan.
-Typical examples are temporary build directories, cache roots, or declared
-environment folders that should not count as user-owned source files.
+should stay out of generated `.gitignore`, out of pre-commit's all-files
+scan, and out of the startup snapshot walk used by `gate --start`.
+Typical examples are temporary build directories, cache roots, declared
+environment folders, or other data trees that should not count as
+user-owned source files during the gate session snapshot.
 
 A custom profile can then strengthen the standard stack for one project shape.
 For example, it may add `managed_commands`, extra assets, CI steps, or
