@@ -1,7 +1,7 @@
 metadata:
   schema_version: 1
   registry_layout: single-root
-  policy_registry_input_hash: 22a476d1916699b79897e389dafb565c524dedf6fa66c8e03a30ad265c71d03d
+  policy_registry_input_hash: 14624a88ed904f9aff6a08e3ce361313a40c29a432d61bdf4fcfdc0a421217e5
 project-governance:
   project_name: devcovenant
   project_description: devcovenant is a repository governance framework.
@@ -5811,11 +5811,11 @@ policies:
       not leak into routine messages.
       The target environment may live inside the repository or outside it, as long
       as the metadata declares the interpreter path or environment root that
-      DevCovenant should use. The seeded defaults describe a local `.venv`
-      starting point, not the only supported shape. Repositories that use a
-      bench-managed, container-managed, system, or other tool-owned environment
-      should declare that environment explicitly instead of expecting DevCovenant
-      to guess hidden wrapper hops.
+      DevCovenant should use. The policy itself is environment-neutral: a
+      repository may seed a local `.venv`, a bench-managed environment, a
+      container-managed environment, a system interpreter, or another tool-owned
+      layout in its active profile stack. DevCovenant should not assume the
+      builtin defaults profile picks one of those layouts for it.
       Active managed-environment policy reuses the current interpreter when it
       already satisfies the contract, re-executes CLI commands in the selected
       interpreter when needed, and only runs bootstrap commands when the target
@@ -6122,7 +6122,7 @@ policies:
     - .venv/bin/python
     origin: builtin
     script_exists: true
-    hash: a851cff044c55d3301279339d4330d94cf68641cd9f2e0b6253b4b0ffcc587d5
+    hash: 38d52167baf720350e510e60e14de91b78b27d60e35af97a3b2af929eb82b7ee
     script_path: builtin/managed_environment.py
   modules-need-tests:
     enabled: true
@@ -13507,22 +13507,6 @@ profiles:
         - tests
         tests_watch_dirs:
         - tests
-      managed-environment:
-        expected_paths:
-        - .venv
-        expected_interpreters:
-        - .venv/bin/python
-        - .venv/Scripts/python.exe
-        command_search_paths: []
-        required_commands:
-        - pre-commit
-        - pytest
-        manual_commands:
-        - '{current_python} -m venv .venv'
-        - '{managed_python} -m pip install -r requirements.lock'
-        managed_commands:
-        - start=>{current_python} -m venv .venv
-        - start=>{managed_python} -m pip install -r requirements.lock
     project-governance:
       changelog_file: CHANGELOG.md
       unversioned_label: Unversioned

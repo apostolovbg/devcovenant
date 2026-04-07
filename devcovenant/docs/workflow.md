@@ -1,5 +1,5 @@
 # Workflow
-**Last Updated:** 2026-04-06
+**Last Updated:** 2026-04-07
 
 **Project Version:** 1.0.1b1
 
@@ -194,9 +194,9 @@ That keeps `gate --start` non-destructive once a configured environment already
 exists.
 It also keeps the workflow portable across normal `.venv` repositories,
 bench-like environments, and other declared environment layouts.
-With the default Python stack, `deploy`/`refresh` materializes the workspace
-dependency artifacts, and `gate --start` can run the declared bootstrap
-commands when the target environment is still missing.
+With a stack that seeds a local `.venv`, `deploy`/`refresh` materializes the
+workspace dependency artifacts, and `gate --start` can run the declared
+bootstrap commands when the target environment is still missing.
 If a repository uses a different environment shape, it should declare that
 shape explicitly instead of expecting DevCovenant to guess it.
 That includes system interpreters, bench-managed environments, and

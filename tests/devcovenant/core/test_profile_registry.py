@@ -779,8 +779,8 @@ def _profile_userproject_managed_env_requires_runtime_tools() -> None:
     assert command_text == ["pre-commit", "pytest"]
 
 
-def _profile_defaults_managed_env_bootstraps_seeded_venv() -> None:
-    """Seeded defaults profile should carry managed bootstrap commands."""
+def _profile_defaults_profile_stays_environment_neutral() -> None:
+    """Defaults profile should stay environment-neutral."""
     manifest_path = (
         REPO_ROOT
         / "devcovenant"
@@ -794,14 +794,7 @@ def _profile_defaults_managed_env_bootstraps_seeded_venv() -> None:
     policy_overlays = payload.get("policy_overlays")
     assert isinstance(policy_overlays, dict)
     managed_environment = policy_overlays.get("managed-environment")
-    assert isinstance(managed_environment, dict)
-    managed_commands = managed_environment.get("managed_commands")
-    assert isinstance(managed_commands, list)
-    command_text = [str(command).strip() for command in managed_commands]
-    assert command_text == [
-        "start=>{current_python} -m venv .venv",
-        "start=>{managed_python} -m pip install -r requirements.lock",
-    ]
+    assert managed_environment is None
 
 
 def _profile_devcovuser_tests_scope_matches_normal_repo_contract() -> None:
@@ -918,9 +911,9 @@ class ProfileRegistryTests(unittest.TestCase):
         """Run repo managed-env runtime-tool assertions."""
         _profile_userproject_managed_env_requires_runtime_tools()
 
-    def test_defaults_managed_env_bootstraps_seeded_venv(self):
-        """Run seeded-default managed bootstrap assertions."""
-        _profile_defaults_managed_env_bootstraps_seeded_venv()
+    def test_defaults_profile_stays_environment_neutral(self):
+        """Run environment-neutral defaults assertions."""
+        _profile_defaults_profile_stays_environment_neutral()
 
     def test_devcovuser_tests_scope_matches_normal_repo_contract(self):
         """Run normal user profile test-scope assertions."""

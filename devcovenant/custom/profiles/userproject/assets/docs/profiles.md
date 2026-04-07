@@ -95,7 +95,9 @@ That includes:
 If the behavior should apply to more than one repository of the same shape, it
 probably belongs in a profile instead of local config.
 
-The built-in `defaults` profile seeds a plain Python `.venv` starting point:
+The built-in `defaults` profile stays environment-neutral.
+A repository-specific custom profile can seed a plain Python `.venv`
+starting point:
 - expected paths and interpreters
 - required commands for the target environment
 - manual guidance that uses `{current_python}` and `{managed_python}`

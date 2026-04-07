@@ -78,8 +78,9 @@ Those tracked surface definitions also explain why dependency-report and
 license-artifact refreshes can land next to a registry diff in the same slice:
 the registry is recording the dependency surface contract that generated them.
 The same tracked metadata can also capture stage-scoped managed-environment
-bootstrap commands, so registry diffs are the expected result when the seeded
-default stack changes how `gate --start` can prepare `.venv`.
+bootstrap commands, so registry diffs are the expected result when a
+repository's managed-environment stack changes how `gate --start` can prepare
+`.venv`.
 The tracked registry can also hold policy-owned runtime state when that state
 is deterministic and should travel with the repository.
 For `dependency-management`, that includes per-surface input and output

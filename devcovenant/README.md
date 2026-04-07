@@ -2,7 +2,7 @@
 **Doc ID:** README
 **Doc Type:** repo-readme
 **Project Version:** 1.0.1b1
-**Last Updated:** 2026-04-06
+**Last Updated:** 2026-04-07
 **DevCovenant Version:** 1.0.1b1
 
 <!-- DEVCOV:BEGIN -->
@@ -106,7 +106,7 @@ devcovenant install
 # set install.config_reviewed: true
 devcovenant deploy
 # prepare the environment declared by the active profile stack
-# for the seeded defaults + python stack, one manual equivalent is:
+# if the active stack seeds a local .venv, one manual equivalent is:
 python3 -m venv .venv
 .venv/bin/python -m pip install -r requirements.lock
 # gate --start can also run the declared bootstrap commands
@@ -155,8 +155,8 @@ What those steps mean:
 5. Prepare the environment declared by the active profile stack before the
    first gate cycle.
 
-   If you keep the seeded `defaults` + `python` stack, `deploy` materializes
-   the workspace dependency artifacts and one manual equivalent is creating
+   If the active stack seeds a local `.venv`, `deploy` materializes the
+   workspace dependency artifacts and one manual equivalent is creating
    `.venv` and installing `requirements.lock`.
    On Windows, use `.venv\\Scripts\\python.exe -m pip install -r \
    requirements.lock`.

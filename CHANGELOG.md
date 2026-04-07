@@ -6,7 +6,7 @@
 **Maintenance Stance:** active
 **Compatibility Policy:** forward-only
 **Versioning Mode:** versioned
-**Last Updated:** 2026-04-06
+**Last Updated:** 2026-04-07
 **DevCovenant Version:** 1.0.1b1
 
 <!-- DEVCOV:BEGIN -->
@@ -59,6 +59,38 @@ Example:
 ## Log changes here
 
 ## Version 1.0.1b1
+
+- 2026-04-07:
+  Change: removed the builtin defaults `.venv` seed and generalized the
+          managed-environment guidance.
+  Why: keep repository-specific profiles responsible for the chosen
+       environment layout instead of baking it into the builtin defaults
+       baseline.
+  Impact: aligned the source docs, mirrored package docs, and tracked
+          registry so `.venv` is described as a profile-owned option while
+          launcher parity stays unchanged.
+  Files:
+  AGENTS.md
+  CHANGELOG.md
+  README.md
+  devcovenant/README.md
+  devcovenant/builtin/profiles/defaults/defaults.yaml
+  devcovenant/builtin/policies/managed_environment/\
+    managed_environment.yaml
+  devcovenant/docs/config.md
+  devcovenant/docs/installation.md
+  devcovenant/docs/policies.md
+  devcovenant/docs/profiles.md
+  devcovenant/docs/registry.md
+  devcovenant/docs/workflow.md
+  devcovenant/custom/profiles/userproject/assets/docs/config.md
+  devcovenant/custom/profiles/userproject/assets/docs/installation.md
+  devcovenant/custom/profiles/userproject/assets/docs/policies.md
+  devcovenant/custom/profiles/userproject/assets/docs/profiles.md
+  devcovenant/custom/profiles/userproject/assets/docs/registry.md
+  devcovenant/custom/profiles/userproject/assets/docs/workflow.md
+  devcovenant/registry/registry.yaml
+  tests/devcovenant/core/test_profile_registry.py
 
 - 2026-04-06:
   Change: added managed-environment `command_search_paths` support and taught

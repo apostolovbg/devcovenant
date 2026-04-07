@@ -90,9 +90,9 @@ Keep inherited values inherited from the other active profiles instead of
 restating them in the copied same-name custom profile.
 Before the first gate cycle, make sure the environment declared by that stack
 actually exists.
-If you keep the seeded `defaults` + `python` stack, `deploy`/`refresh`
-materializes the workspace dependency artifacts and one manual realization is
-creating `.venv` and installing `requirements.lock`.
+If the active stack seeds a local `.venv`, `deploy`/`refresh` materializes the
+workspace dependency artifacts and one manual realization is creating `.venv`
+and installing `requirements.lock`.
 That seeded `.venv` flow is only one starting point.
 If the repository uses a system interpreter, bench-managed environment,
 container-managed environment, or other custom environment, declare that

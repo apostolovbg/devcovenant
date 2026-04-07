@@ -249,8 +249,8 @@ Use this as the practical first integration flow:
 4. Run `devcovenant deploy`.
 5. Prepare the environment declared by the active profile stack.
 
-   If you keep the seeded `defaults` + `python` stack, `deploy` materializes
-   the workspace dependency artifacts and one manual equivalent is creating
+   If the active stack seeds a local `.venv`, `deploy` materializes the
+   workspace dependency artifacts and one manual equivalent is creating
    `.venv` and installing `requirements.lock`.
    `gate --start` can also run the declared bootstrap commands when the target
    environment is still missing.
