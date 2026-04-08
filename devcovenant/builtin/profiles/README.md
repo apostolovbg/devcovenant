@@ -1,5 +1,5 @@
 # Builtin Profiles
-**Last Updated:** 2026-04-07
+**Last Updated:** 2026-04-08
 **Project Version:** 1.0.1b2
 
 ## Table of Contents
@@ -18,6 +18,14 @@ Policy activation authority is `config.policy_state`.
 This README documents folder contracts and ownership boundaries, not the
 current profile inventory. For the active builtin/custom profile catalog, use
 `PROFILE_MAP.md`.
+
+Builtin profiles can also carry a sibling `test_blueprints.yaml` descriptor
+when the shipped profile tests should remain package data instead of a live
+discoverable `tests/**` tree.
+Those blueprints are the packaged form of the shipped tests and are
+materialized into `tests/devcovenant/custom/profiles/<name>/` when a
+repository shadows the builtin profile with
+`devcovenant custom --profile <profile-name> --do`.
 
 ## Profile Responsibilities
 Profiles may provide:
@@ -60,6 +68,19 @@ Common keys include:
 
 Custom profiles with the same profile name override builtin profiles.
 
+## Blueprint Contract
+When a builtin profile ships tests, the directory may also include
+`test_blueprints.yaml`.
+That file stores repo-relative paths and serialized file contents for the
+checked-in builtin test tree so the package can ship a descriptor instead of
+the live tree itself.
+The checked-in builtin tests remain under
+`tests/devcovenant/builtin/profiles/<name>/` for verification.
+When the profile is copied into `devcovenant/custom/profiles/<name>/`,
+`devcovenant custom --profile <name> --do` materializes the mirrored tests
+under `tests/devcovenant/custom/profiles/<name>/`.
+`--undo` removes the repo-owned copy and its mirrored tests again.
+
 ## Translator Declarations
 Only language profiles declare translators.
 Declaration fields include:
@@ -93,9 +114,13 @@ ships `devcovenant/licenses/**`, which contains DevCovenant's packaged
 license files.
 
 ## Workflow
-1. Edit the profile manifest and assets.
-2. Run `devcovenant refresh`.
-3. Run `devcovenant gate --start`.
-4. Run `devcovenant gate --mid` until clean.
-5. Verify with `devcovenant run`.
-6. Finalize with `devcovenant gate --end`.
+1. Edit the profile manifest, assets, and `test_blueprints.yaml` together.
+2. Keep the checked-in builtin test tree aligned with the blueprint.
+3. Use `devcovenant custom --profile <name> --do` to create or refresh a
+   repo-owned shadow copy and mirrored tests.
+4. Use `--undo` to remove the copied profile tree and mirrored tests.
+5. Run `devcovenant refresh`.
+6. Run `devcovenant gate --start`.
+7. Run `devcovenant gate --mid` until clean.
+8. Verify with `devcovenant run`.
+9. Finalize with `devcovenant gate --end`.

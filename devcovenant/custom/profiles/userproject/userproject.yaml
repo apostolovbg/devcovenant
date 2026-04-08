@@ -487,10 +487,39 @@ policy_overlays:
     exclude_globs:
       - devcovenant/builtin/profiles/global/assets/*.yaml
       - devcovenant/builtin/profiles/global/assets/**/*.yaml
+      - devcovenant/licenses/**
       - devcovenant/registry/**
+      - tests/devcovenant/builtin/**
+    include_globs:
+      - devcovenant/**
+      - tests/**
     long_lines_between:
       - devcovenant/builtin/policies/=>.yaml
       - devcovenant/custom/policies/=>.yaml
+  name-clarity:
+    exclude_globs:
+      - tests/devcovenant/builtin/**
+    include_globs:
+      - devcovenant/**/*.py
+      - tests/**/*.py
+  docstring-and-comment-coverage:
+    exclude_globs:
+      - tests/devcovenant/builtin/**
+    include_globs:
+      - devcovenant/**/*.py
+      - tests/**/*.py
+  security-scanner:
+    exclude_globs:
+      - tests/devcovenant/builtin/**
+    include_globs:
+      - devcovenant/**/*.py
+      - tests/**/*.py
+  no-raw-errors:
+    exclude_globs:
+      - tests/devcovenant/builtin/**
+    include_globs:
+      - devcovenant/**/*.py
+      - tests/**/*.py
   no-print-outside-output-runtime:
     include_suffixes:
       - .py

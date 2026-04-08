@@ -779,6 +779,53 @@ def _profile_userproject_managed_env_requires_runtime_tools() -> None:
     assert command_text == ["pre-commit", "pytest"]
 
 
+def _profile_userproject_code_style_scope_matches_repo_contract() -> None:
+    """Repo userproject profile should widen code-style scope to the repo."""
+    manifest_path = (
+        REPO_ROOT
+        / "devcovenant"
+        / "custom"
+        / "profiles"
+        / "userproject"
+        / "userproject.yaml"
+    )
+    payload = yaml.safe_load(manifest_path.read_text(encoding="utf-8"))
+    assert isinstance(payload, dict)
+    policy_overlays = payload.get("policy_overlays")
+    assert isinstance(policy_overlays, dict)
+
+    line_length = policy_overlays.get("line-length-limit")
+    assert isinstance(line_length, dict)
+    assert line_length.get("include_globs") == [
+        "devcovenant/**",
+        "tests/**",
+    ]
+    assert line_length.get("exclude_globs") == [
+        "devcovenant/builtin/profiles/global/assets/*.yaml",
+        "devcovenant/builtin/profiles/global/assets/**/*.yaml",
+        "devcovenant/licenses/**",
+        "devcovenant/registry/**",
+        "tests/devcovenant/builtin/**",
+    ]
+
+    expected_python_scope = [
+        "devcovenant/**/*.py",
+        "tests/**/*.py",
+    ]
+    for policy_id in [
+        "name-clarity",
+        "docstring-and-comment-coverage",
+        "security-scanner",
+        "no-raw-errors",
+    ]:
+        overlay = policy_overlays.get(policy_id)
+        assert isinstance(overlay, dict)
+        assert overlay.get("include_globs") == expected_python_scope
+        assert overlay.get("exclude_globs") == [
+            "tests/devcovenant/builtin/**",
+        ]
+
+
 def _profile_defaults_profile_stays_environment_neutral() -> None:
     """Defaults profile should stay environment-neutral."""
     manifest_path = (
@@ -910,6 +957,10 @@ class ProfileRegistryTests(unittest.TestCase):
     def test_userproject_managed_env_requires_runtime_tools(self):
         """Run repo managed-env runtime-tool assertions."""
         _profile_userproject_managed_env_requires_runtime_tools()
+
+    def test_userproject_code_style_scope_matches_repo_contract(self):
+        """Run repo-wide code-style scope assertions."""
+        _profile_userproject_code_style_scope_matches_repo_contract()
 
     def test_defaults_profile_stays_environment_neutral(self):
         """Run environment-neutral defaults assertions."""

@@ -1,5 +1,5 @@
 # DevCovenant Architecture
-**Last Updated:** 2026-04-07
+**Last Updated:** 2026-04-08
 **Project Version:** 1.0.1b2
 
 ## Overview
@@ -58,6 +58,17 @@ rest of the runtime.
 - `devcovenant/core/policy_runtime_actions.py`
   policy-owned runtime-action loading and execution helpers
 
+### Customization Support
+These modules own the repo-to-custom shadow-copy flow and the shipped test
+blueprint descriptors that keep builtin tests package-friendly.
+
+- `devcovenant/core/customization.py`
+  builtin-to-custom path resolution, copy/remove helpers, and custom test
+  mirror materialization
+- `devcovenant/core/test_blueprints.py`
+  loading, serializing, materializing, and comparing `test_blueprints.yaml`
+  descriptors
+
 ### Command And Execution
 These modules own command parsing, console behavior, subprocess handling,
 and run evidence.
@@ -73,6 +84,9 @@ and run evidence.
   run log allocation, summary artifacts, and workflow profiling payloads
 - `devcovenant/core/cleanup.py`
   cleanup selection and the `clean` command implementation
+- `devcovenant/custom.py`
+  top-level `custom` command dispatcher for builtin shadow copies and test
+  mirror materialization
 
 ### Workflow And Repo State
 These modules own the gate lifecycle, refresh orchestration, workflow
@@ -101,6 +115,9 @@ translator-aware analysis.
   shared autofix contracts and autofix execution helpers
 - `devcovenant/core/translator.py`
   translator declarations, runtime resolution, and `LanguageUnit` support
+- `devcovenant/custom/policies/builtin_test_blueprint_sync/\
+builtin_test_blueprint_sync.py`
+  custom policy that keeps builtin test blueprints and custom mirrors in sync
 
 ### Managed Content
 These modules own generated AGENTS content, managed docs, and asset

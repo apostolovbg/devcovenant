@@ -20,6 +20,7 @@ _COMMAND_MODULES = {
     "check": "devcovenant.check",
     "clean": "devcovenant.clean",
     "gate": "devcovenant.gate",
+    "custom": "devcovenant.custom",
     "run": "devcovenant.run",
     "install": "devcovenant.install",
     "deploy": "devcovenant.deploy",
@@ -37,6 +38,10 @@ _COMMAND_SUMMARIES = {
     "check": "Run read-only DevCovenant audit checks.",
     "clean": (
         "Remove disposable build, cache, runtime-registry, or log artifacts."
+    ),
+    "custom": (
+        "Promote or retract builtin policy/profile custom copies and "
+        "mirrored tests."
     ),
     "deploy": "Deploy managed docs/assets in the current repository.",
     "gate": "Run DevCovenant gate session lifecycle commands.",

@@ -1,5 +1,5 @@
 # Custom Profiles
-**Last Updated:** 2026-04-07
+**Last Updated:** 2026-04-08
 **Project Version:** 1.0.1b2
 
 ## Table of Contents
@@ -17,10 +17,17 @@ Custom profile payloads are repository-owned and should not be documented as
 packaged builtin inventory.
 Package builds keep custom-folder scaffolding (`README.md`, `__init__.py`) but
 do not ship repository-specific custom profile payload directories.
+When a builtin profile is being shadowed, `devcovenant custom --profile
+<profile-name> --do` copies the builtin tree into this directory and
+materializes its mirrored tests under
+`tests/devcovenant/custom/profiles/<profile-name>/`.
+`--undo` removes that repo-owned copy and mirror again.
 
 ## Directory Layout
 A custom profile typically contains:
 - `<profile-name>.yaml` manifest
+- optional `test_blueprints.yaml` when the directory is a copied builtin
+  profile shadow and needs a packaged shipped-test descriptor
 - optional `assets/` templates
 - optional `<profile-name>_translator.py` for language profiles
 
@@ -40,9 +47,12 @@ Translator declarations should stay policy-agnostic and return normalized
 language units through shared translator runtime contracts.
 
 ## Workflow
-1. Edit custom profile manifest/assets.
-2. Refresh to regenerate registries and generated assets.
-3. Verify with full gate sequence:
+1. Edit custom profile manifest/assets, or use `devcovenant custom --profile
+   <profile-name> --do` to promote a builtin copy into this tree.
+2. Keep mirrored tests under `tests/devcovenant/custom/...` aligned when the
+   profile shadows a builtin source.
+3. Refresh to regenerate registries and generated assets.
+4. Verify with full gate sequence:
    `gate --start` -> `gate --mid` (rerun until clean) ->
    `run` -> `gate --end`.
-4. Keep `PROFILE_MAP.md` and docs aligned when adding new profiles.
+5. Keep `PROFILE_MAP.md` and docs aligned when adding new profiles.

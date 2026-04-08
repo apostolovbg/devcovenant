@@ -1,5 +1,5 @@
 # Policies
-**Last Updated:** 2026-04-07
+**Last Updated:** 2026-04-08
 
 **Project Version:** 1.0.1b2
 
@@ -127,6 +127,28 @@ That range is why DevCovenant can express governance routines as well as
 governance checks.
 The rule can stay read-only, repairable, command-driven, or some combination
 of those as long as the contract stays explicit.
+
+## Builtin Test Blueprints
+Builtin policy packages can ship a sibling `test_blueprints.yaml` file when
+the tests need to travel as package data instead of a live discoverable
+`tests/**` tree.
+That blueprint stores repo-relative paths and serialized file contents for
+the shipped tests.
+The repository keeps the actual builtin test tree under
+`tests/devcovenant/builtin/policies/<policy-id>/` for verification.
+When a repository shadows a builtin policy, `devcovenant custom --policy
+<policy-id> --do` copies the builtin tree into
+`devcovenant/custom/policies/<policy-id>/` and materializes the mirrored
+tests under `tests/devcovenant/custom/policies/<policy-id>/`.
+`--undo` removes that repo-owned copy and mirror again.
+The command follows the normal managed-environment resolution path, so it
+works from the repository's declared interpreter layout instead of assuming a
+repo-local `.venv`.
+The builtin `builtin-test-blueprint-sync` policy keeps the blueprint
+descriptor, builtin tree, and custom mirror aligned.
+It reads `mirror_roots`, `blueprint_directories`, and `blueprint_name`
+metadata from its descriptor instead of hardcoding source and mirror path
+families, so the sync surface stays declarative.
 
 ## Checks, Autofix, And Commands
 The boundary matters:

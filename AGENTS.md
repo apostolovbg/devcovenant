@@ -210,6 +210,65 @@ This block reflects the repository's active project-governance state.
 <!-- DEVCOV:END -->
 
 <!-- DEVCOV-POLICIES:BEGIN -->
+## Policy: Builtin Test Blueprint Sync
+
+```policy-def
+id: builtin-test-blueprint-sync
+severity: error
+auto_fix: 'false'
+enforcement: active
+enabled: 'true'
+custom: 'true'
+blueprint_name: test_blueprints.yaml
+mirror_roots:
+- devcovenant/builtin=>tests/devcovenant/builtin
+- devcovenant/custom=>tests/devcovenant/custom
+blueprint_directories:
+- policies/changelog_coverage
+- policies/dependency_management
+- policies/docstring_and_comment_coverage
+- policies/documentation_growth_tracking
+- policies/last_updated
+- policies/line_length_limit
+- policies/managed_environment
+- policies/modules_need_tests
+- policies/name_clarity
+- policies/no_future_dates
+- policies/no_print_outside_output_runtime
+- policies/no_raw_errors
+- policies/package_artifact_mirror
+- policies/package_doc_sync
+- policies/raw_string_escapes
+- policies/read_only_directories
+- policies/security_scanner
+- policies/tests_coverage
+- policies/version_governance
+- policies/version_sync
+- profiles/csharp
+- profiles/dart
+- profiles/go
+- profiles/java
+- profiles/javascript
+- profiles/objective_c
+- profiles/opencl
+- profiles/php
+- profiles/python
+- profiles/ruby
+- profiles/rust
+- profiles/sql
+- profiles/swift
+- profiles/typescript
+```
+
+Keep builtin test blueprints synchronized with the checked-in builtin test
+trees and any repo-owned custom mirrors. The blueprint descriptors live
+next to the shipped builtin policy and profile descriptors; the materialized
+mirrors live under `tests/devcovenant/custom/**` when a repository opts
+into a builtin shadow copy.
+
+
+---
+
 ## Policy: Changelog Coverage
 
 ```policy-def
@@ -933,12 +992,15 @@ exclude_prefixes:
 - node_modules
 include_prefixes: []
 include_globs:
+- devcovenant/**/*.py
+- tests/**/*.py
 - '*.py'
 exclude_suffixes: []
 exclude_globs:
 - build/**
 - dist/**
 - node_modules/**
+- tests/devcovenant/builtin/**
 force_include_globs: []
 selector_roles:
 - include
@@ -1365,7 +1427,9 @@ exclude_globs:
 - '**/*.egg-info/**'
 - devcovenant/builtin/profiles/global/assets/*.yaml
 - devcovenant/builtin/profiles/global/assets/**/*.yaml
+- devcovenant/licenses/**
 - devcovenant/registry/**
+- tests/devcovenant/builtin/**
 include_prefixes: []
 include_globs:
 - '*.py'
@@ -1377,6 +1441,8 @@ include_globs:
 - '*.json'
 - '*.toml'
 - '*.cff'
+- devcovenant/**
+- tests/**
 exclude_suffixes: []
 force_include_globs: []
 selector_roles:
@@ -1590,12 +1656,15 @@ include_suffixes:
 - .py
 include_prefixes: []
 include_globs:
+- devcovenant/**/*.py
+- tests/**/*.py
 - '*.py'
 exclude_suffixes: []
 exclude_globs:
 - build/**
 - dist/**
 - node_modules/**
+- tests/devcovenant/builtin/**
 force_include_globs: []
 selector_roles:
 - exclude
@@ -1702,6 +1771,8 @@ include_suffixes:
 include_prefixes: []
 include_globs:
 - '*.py'
+- devcovenant/**/*.py
+- tests/**/*.py
 exclude_suffixes: []
 exclude_prefixes:
 - build
@@ -1711,6 +1782,7 @@ exclude_globs:
 - build/**
 - dist/**
 - node_modules/**
+- tests/devcovenant/builtin/**
 force_include_globs: []
 include_files: []
 include_dirs: []
@@ -1908,10 +1980,13 @@ custom: 'false'
 exclude_globs:
 - tests/**
 - '**/tests/**'
+- tests/devcovenant/builtin/**
 include_suffixes:
 - .py
 include_prefixes: []
 include_globs:
+- devcovenant/**/*.py
+- tests/**/*.py
 - '*.py'
 exclude_suffixes: []
 exclude_prefixes: []

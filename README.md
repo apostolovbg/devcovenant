@@ -2,7 +2,7 @@
 **Doc ID:** README
 **Doc Type:** repo-readme
 **Project Version:** 1.0.1b2
-**Last Updated:** 2026-04-07
+**Last Updated:** 2026-04-08
 **DevCovenant Version:** 1.0.1b2
 
 <!-- DEVCOV:BEGIN -->
@@ -63,6 +63,12 @@ A custom governance stack can combine:
 
 - custom policies under `devcovenant/custom/policies/`
 - custom profiles under `devcovenant/custom/profiles/`
+- `devcovenant custom --policy <policy-id> --do|--undo` and
+  `devcovenant custom --profile <profile-name> --do|--undo` for repo-owned
+  shadow copies
+- shipped builtin tests stored as `test_blueprints.yaml` descriptors and
+  materialized into `tests/devcovenant/custom/**` only when a builtin copy is
+  shadowed
 - structured metadata overlays and overrides in `devcovenant/config.yaml`
 - selector-role scopes for different file families inside one policy
 - translators from language profiles for language-aware checks
@@ -87,6 +93,8 @@ Customization is override-based by design:
 - a same-id custom policy fully shadows the builtin policy with that id
 - a same-name custom profile fully shadows the builtin profile with that name
 - when a custom entry shadows a builtin one, the builtin entry is ignored
+- the `custom` command follows the same managed-environment resolution as
+  the other lifecycle commands, so it does not assume a repo-local `.venv`
 
 For the deeper authoring model, go straight to
 [policies.md](devcovenant/docs/policies.md),

@@ -1,5 +1,5 @@
 # Profiles
-**Last Updated:** 2026-04-07
+**Last Updated:** 2026-04-08
 
 **Project Version:** 1.0.1b2
 
@@ -73,6 +73,26 @@ Keep inherited values inherited from the other active profiles instead of
 restating them in the copied profile, and copy only the owned assets,
 translators, helpers, or tests that the shadow profile now replaces.
 
+## Builtin Profile Test Blueprints
+Builtin profile packages can ship a sibling `test_blueprints.yaml` file when
+the shipped tests should remain package data instead of a live discoverable
+`tests/**` tree.
+That blueprint stores repo-relative paths and serialized file contents for
+the shipped tests.
+The repository keeps the actual builtin test tree under
+`tests/devcovenant/builtin/profiles/<name>/` for verification.
+When a repository shadows a builtin profile, `devcovenant custom --profile
+<name> --do` copies the builtin tree into
+`devcovenant/custom/profiles/<name>/` and materializes the mirrored tests
+under `tests/devcovenant/custom/profiles/<name>/`.
+`--undo` removes the repo-owned copy and mirror again.
+The command follows the normal managed-environment resolution path, so it
+works from the repository's declared interpreter layout instead of assuming a
+repo-local `.venv`.
+The repo-local `builtin-test-blueprint-sync` policy reads the same
+`mirror_roots`, `blueprint_directories`, and `blueprint_name` metadata to
+keep builtin and custom profile mirrors declarative rather than hardcoded.
+
 ## Custom Profiles As Governance Packs
 A custom profile is the normal way to package governance for one repository
 family so it travels as one coherent stack instead of a pile of one-off
@@ -143,6 +163,13 @@ That same narrowing applies to mirrored test expectations and assertion
 coverage, so normal repositories keep DevCovenant internals out of scope
 while still enforcing `devcovenant/custom/**` and
 `tests/devcovenant/custom/**`.
+In this repository, the repo-owned `userproject` profile widens the same
+code-style policies, including `line-length-limit`, `name-clarity`,
+`docstring-and-comment-coverage`, `security-scanner`, and `no-raw-errors`,
+so they cover the full `devcovenant/**` tree and `tests/**` mirror instead of
+stopping at the custom shadow layer. The generated registry, bundled license
+dumps, and builtin test-blueprint verification tree stay out of that generic
+scan so the profile only governs repo-owned source and custom mirrors.
 
 Profiles may also contribute `ignore_dirs` for disposable local outputs that
 should stay out of generated `.gitignore`, out of pre-commit's all-files

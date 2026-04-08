@@ -6,7 +6,7 @@
 **Maintenance Stance:** active
 **Compatibility Policy:** forward-only
 **Versioning Mode:** versioned
-**Last Updated:** 2026-04-07
+**Last Updated:** 2026-04-08
 **DevCovenant Version:** 1.0.1b2
 
 <!-- DEVCOV:BEGIN -->
@@ -59,6 +59,201 @@ Example:
 ## Log changes here
 
 ## Version 1.0.1b2
+
+- 2026-04-09:
+  Change: Updated the repo-owned `userproject` profile to widen code-style
+          policy scope across `devcovenant/**` and `tests/**`, and marked the
+          matching plan item complete.
+  Why: Preserved the generic shipped baseline while making the DevCovenant
+       repo-specific shadow layer own the wider scope contract.
+  Impact: Aligned source, docs, generated registry output, and the plan so
+          the repo-wide scope is now tracked and verified by the
+          profile-registry test.
+  Files:
+  AGENTS.md
+  CHANGELOG.md
+  PLAN.md
+  devcovenant/config.yaml
+  devcovenant/custom/profiles/userproject/assets/docs/profiles.md
+  devcovenant/custom/profiles/userproject/userproject.yaml
+  devcovenant/docs/profiles.md
+  devcovenant/registry/registry.yaml
+  tests/devcovenant/core/test_profile_registry.py
+
+- 2026-04-09:
+  Change: Corrected the plan markers in `PLAN.md` so only the workstreams
+          that are actually backed by the current code and docs stay checked
+          off.
+  Why: A follow-up audit showed that the repo-specific policy-scope and
+       project-metadata items are not fully proven yet, so leaving them marked
+       done would misstate the backlog.
+  Impact: `PLAN.md` now distinguishes completed work from still-open items
+          more accurately, which keeps the backlog aligned with the current
+          repository state.
+  Files:
+  CHANGELOG.md
+  PLAN.md
+
+- 2026-04-09:
+  Change: Marked the completed plan workstreams as done in `PLAN.md` and
+          updated the plan status markers to distinguish the remaining open
+          items.
+  Why: The code and docs already implement the early backlog items, so the
+       plan needed to reflect the current repository state instead of leaving
+       finished work looking active.
+  Impact: `PLAN.md` now shows completed versus pending work more clearly, and
+          future comparisons against the backlog can stay aligned with the
+          shipped code and docs.
+  Files:
+  CHANGELOG.md
+  PLAN.md
+
+- 2026-04-08:
+  Change: Renamed the custom command entrypoint to `devcovenant/custom.py`,
+          kept the package-backed dispatcher in
+          `devcovenant/custom/__init__.py`, updated the root CLI and command
+          tests to load `devcovenant.custom`, and reworked the
+          builtin-test-blueprint sync policy to read `mirror_roots`,
+          `blueprint_directories`, and `blueprint_name` metadata instead of
+          hardcoded source and mirror paths.
+  Why: Updated the custom shadow-copy surface to the requested module and
+       test names while making the repo-local sync policy declarative rather
+       than path-coded.
+  Impact: Aligned custom-command execution, metadata-driven blueprint
+          validation, and the policy and docs references so builtin and
+          custom policy/profile mirrors stay declarative.
+  Files:
+  AGENTS.md
+  CHANGELOG.md
+  devcovenant/cli.py
+  devcovenant/custom.py
+  devcovenant/custom/__init__.py
+  devcovenant/custom/policies/README.md
+  devcovenant/custom/policies/builtin_test_blueprint_sync/\
+    builtin_test_blueprint_sync.py
+  devcovenant/custom/policies/builtin_test_blueprint_sync/\
+    builtin_test_blueprint_sync.yaml
+  devcovenant/core/test_blueprints.py
+  devcovenant/docs/architecture.md
+  devcovenant/docs/policies.md
+  devcovenant/docs/profiles.md
+  devcovenant/registry/registry.yaml
+  tests/devcovenant/custom/policies/builtin_test_blueprint_sync/\
+    test_builtin_test_blueprint_sync.py
+  tests/devcovenant/core/test_customization.py
+  tests/devcovenant/test_cli.py
+  tests/devcovenant/test_custom.py
+
+- 2026-04-08:
+  Change: implemented the `custom` shadow-copy command, added builtin test
+          blueprints plus the builtin-test-blueprint sync policy, corrected
+          the CLI test coverage for the new command-module map, and updated
+          the builtin, custom, architecture, lifecycle, and README docs to
+          describe the new model.
+  Why: keep shipped builtin tests as non-discoverable blueprint descriptors,
+       materialize repo-owned mirrors only on explicit `custom --do`, and
+       make the command follow the same managed-environment path as the other
+       lifecycle commands.
+  Impact: builtin policy and profile tests now ship as `test_blueprints.yaml`
+          descriptors, `custom --do/--undo` can copy or remove repo-owned
+          shadows and mirrored tests under `tests/devcovenant/custom/**`,
+          and the repo now has dedicated code and tests for keeping those
+          blueprints synchronized.
+  Files:
+  CHANGELOG.md
+  README.md
+  devcovenant/README.md
+  devcovenant/builtin/policies/README.md
+  devcovenant/builtin/policies/changelog_coverage/\
+    test_blueprints.yaml
+  devcovenant/builtin/policies/dependency_management/\
+    test_blueprints.yaml
+  devcovenant/builtin/policies/docstring_and_comment_coverage/\
+    test_blueprints.yaml
+  devcovenant/builtin/policies/documentation_growth_tracking/\
+    test_blueprints.yaml
+  devcovenant/builtin/policies/last_updated/test_blueprints.yaml
+  devcovenant/builtin/policies/line_length_limit/test_blueprints.yaml
+  devcovenant/builtin/policies/managed_environment/test_blueprints.yaml
+  devcovenant/builtin/policies/modules_need_tests/test_blueprints.yaml
+  devcovenant/builtin/policies/name_clarity/test_blueprints.yaml
+  devcovenant/builtin/policies/no_future_dates/test_blueprints.yaml
+  devcovenant/builtin/policies/no_print_outside_output_runtime/\
+    test_blueprints.yaml
+  devcovenant/builtin/policies/no_raw_errors/test_blueprints.yaml
+  devcovenant/builtin/policies/package_artifact_mirror/\
+    test_blueprints.yaml
+  devcovenant/builtin/policies/package_doc_sync/test_blueprints.yaml
+  devcovenant/builtin/policies/raw_string_escapes/test_blueprints.yaml
+  devcovenant/builtin/policies/read_only_directories/\
+    test_blueprints.yaml
+  devcovenant/builtin/policies/security_scanner/test_blueprints.yaml
+  devcovenant/builtin/policies/tests_coverage/test_blueprints.yaml
+  devcovenant/builtin/policies/version_governance/test_blueprints.yaml
+  devcovenant/builtin/policies/version_sync/test_blueprints.yaml
+  devcovenant/builtin/profiles/csharp/test_blueprints.yaml
+  devcovenant/builtin/profiles/dart/test_blueprints.yaml
+  devcovenant/builtin/profiles/go/test_blueprints.yaml
+  devcovenant/builtin/profiles/java/test_blueprints.yaml
+  devcovenant/builtin/profiles/javascript/test_blueprints.yaml
+  devcovenant/builtin/profiles/objective_c/test_blueprints.yaml
+  devcovenant/builtin/profiles/opencl/test_blueprints.yaml
+  devcovenant/builtin/profiles/php/test_blueprints.yaml
+  devcovenant/builtin/profiles/python/test_blueprints.yaml
+  devcovenant/builtin/profiles/ruby/test_blueprints.yaml
+  devcovenant/builtin/profiles/rust/test_blueprints.yaml
+  devcovenant/builtin/profiles/sql/test_blueprints.yaml
+  devcovenant/builtin/profiles/swift/test_blueprints.yaml
+  devcovenant/builtin/profiles/typescript/test_blueprints.yaml
+  devcovenant/custom/README.md
+  devcovenant/custom/policies/README.md
+  devcovenant/custom/policies/builtin_test_blueprint_sync/\
+    __init__.py
+  devcovenant/custom/policies/builtin_test_blueprint_sync/\
+    builtin_test_blueprint_sync.py
+  devcovenant/custom/policies/builtin_test_blueprint_sync/\
+    builtin_test_blueprint_sync.yaml
+  devcovenant/custom/profiles/README.md
+  devcovenant/core/customization.py
+  devcovenant/core/test_blueprints.py
+  devcovenant/custom_command.py
+  devcovenant/docs/architecture.md
+  devcovenant/docs/installation.md
+  devcovenant/docs/policies.md
+  devcovenant/docs/profiles.md
+  devcovenant/docs/workflow.md
+  tests/devcovenant/custom/policies/builtin_test_blueprint_sync/\
+    __init__.py
+  tests/devcovenant/custom/policies/builtin_test_blueprint_sync/\
+    test_builtin_test_blueprint_sync.py
+  tests/devcovenant/test_custom.py
+  tests/devcovenant/test_cli.py
+
+- 2026-04-08:
+  Change: clarified the intended builtin customization flow, defined the
+          `custom` do/undo command path, aligned SPEC and PLAN with
+          non-discoverable builtin test blueprints and repo-owned mirrors,
+          and marked `custom` as environment-neutral like the other
+          lifecycle commands.
+  Why: aligned the documented model with the intended shadowing,
+       test-materialization, and environment-neutral lifecycle flow so the
+       specification and backlog do not contradict the repository's
+       customization surface.
+  Impact: made repo-owned custom policy and profile copies explicit under
+          `tests/devcovenant/custom/**`, kept builtin blueprints
+          non-discoverable by default, documented that `custom` does not
+          depend on a repo-local venv, and synced Last Updated headers in the
+          root README, package README, installation docs, and CLI mirror
+          tests.
+  Files:
+  CHANGELOG.md
+  PLAN.md
+  README.md
+  SPEC.md
+  devcovenant/README.md
+  devcovenant/cli.py
+  devcovenant/docs/installation.md
+  tests/devcovenant/test_cli.py
 
 - 2026-04-07:
   Change: removed the bootstrap `.venv` seed from the config template,

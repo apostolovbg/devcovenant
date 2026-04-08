@@ -1,7 +1,7 @@
 metadata:
   schema_version: 1
   registry_layout: single-root
-  policy_registry_input_hash: 5570f8a917382a962b69e22fecad1871bfd93f5e7bc8c84ac6e0aab8ece4add2
+  policy_registry_input_hash: 1869b448e8849a6ebd62577dae4b0edb80ca5ca4c0dc6b5e64a12edcbb6750d3
 project-governance:
   project_name: devcovenant
   project_description: devcovenant is a repository governance framework.
@@ -2199,12 +2199,15 @@ policies:
       - node_modules
       include_prefixes: []
       include_globs:
+      - devcovenant/**/*.py
+      - tests/**/*.py
       - '*.py'
       exclude_suffixes: []
       exclude_globs:
       - build/**
       - dist/**
       - node_modules/**
+      - tests/devcovenant/builtin/**
       force_include_globs: []
       selector_roles:
       - include
@@ -2316,6 +2319,20 @@ policies:
           behavior: base
           replaced_inherited_values:
           - ()
+        profile_overlays:
+          values:
+          - devcovenant/**/*.py
+          - tests/**/*.py
+          behavior: append
+          replaced_inherited_values:
+          - ()
+        autogen_overlays:
+          values:
+          - devcovenant/**/*.py
+          - tests/**/*.py
+          behavior: append
+          replaced_inherited_values:
+          - ()
         derived_selectors:
           values:
           - '*.py'
@@ -2324,6 +2341,8 @@ policies:
           - ()
         effective:
           values:
+          - devcovenant/**/*.py
+          - tests/**/*.py
           - '*.py'
       exclude_suffixes:
         descriptor:
@@ -2344,11 +2363,24 @@ policies:
           behavior: base
           replaced_inherited_values:
           - ()
+        profile_overlays:
+          values:
+          - tests/devcovenant/builtin/**
+          behavior: append
+          replaced_inherited_values:
+          - ()
+        autogen_overlays:
+          values:
+          - tests/devcovenant/builtin/**
+          behavior: append
+          replaced_inherited_values:
+          - ()
         effective:
           values:
           - build/**
           - dist/**
           - node_modules/**
+          - tests/devcovenant/builtin/**
       force_include_globs:
         descriptor:
           values:
@@ -2477,12 +2509,15 @@ policies:
       - node_modules
       include_prefixes: []
       include_globs: &id016
+      - devcovenant/**/*.py
+      - tests/**/*.py
       - '*.py'
       exclude_suffixes: []
       exclude_globs: &id017
       - build/**
       - dist/**
       - node_modules/**
+      - tests/devcovenant/builtin/**
       force_include_globs: []
       selector_roles: &id018
       - include
@@ -2509,8 +2544,11 @@ policies:
       selector_roles: *id018
     assets:
     - build/**
+    - devcovenant/**/*.py
     - dist/**
     - node_modules/**
+    - tests/**/*.py
+    - tests/devcovenant/builtin/**
     origin: builtin
     script_exists: true
     hash: a9d49992c3e5fbdeea14a78aec2ef741d04e9ecee46a7bd9e4f7f2442fd65fa2
@@ -4824,7 +4862,9 @@ policies:
       - '**/*.egg-info/**'
       - devcovenant/builtin/profiles/global/assets/*.yaml
       - devcovenant/builtin/profiles/global/assets/**/*.yaml
+      - devcovenant/licenses/**
       - devcovenant/registry/**
+      - tests/devcovenant/builtin/**
       include_prefixes: []
       include_globs:
       - '*.py'
@@ -4836,6 +4876,8 @@ policies:
       - '*.json'
       - '*.toml'
       - '*.cff'
+      - devcovenant/**
+      - tests/**
       exclude_suffixes: []
       force_include_globs: []
       selector_roles:
@@ -5195,7 +5237,9 @@ policies:
           - '**/*.egg-info/**'
           - devcovenant/builtin/profiles/global/assets/*.yaml
           - devcovenant/builtin/profiles/global/assets/**/*.yaml
+          - devcovenant/licenses/**
           - devcovenant/registry/**
+          - tests/devcovenant/builtin/**
           behavior: append
           replaced_inherited_values:
           - ()
@@ -5209,7 +5253,9 @@ policies:
           - '**/*.egg-info/**'
           - devcovenant/builtin/profiles/global/assets/*.yaml
           - devcovenant/builtin/profiles/global/assets/**/*.yaml
+          - devcovenant/licenses/**
           - devcovenant/registry/**
+          - tests/devcovenant/builtin/**
           behavior: append
           replaced_inherited_values:
           - ()
@@ -5248,7 +5294,9 @@ policies:
           - '**/*.egg-info/**'
           - devcovenant/builtin/profiles/global/assets/*.yaml
           - devcovenant/builtin/profiles/global/assets/**/*.yaml
+          - devcovenant/licenses/**
           - devcovenant/registry/**
+          - tests/devcovenant/builtin/**
       include_prefixes:
         descriptor:
           values:
@@ -5277,6 +5325,8 @@ policies:
           - '*.json'
           - '*.toml'
           - '*.cff'
+          - devcovenant/**
+          - tests/**
           behavior: append
           replaced_inherited_values:
           - ()
@@ -5291,6 +5341,8 @@ policies:
           - '*.json'
           - '*.toml'
           - '*.cff'
+          - devcovenant/**
+          - tests/**
           behavior: append
           replaced_inherited_values:
           - ()
@@ -5305,6 +5357,8 @@ policies:
           - '*.json'
           - '*.toml'
           - '*.cff'
+          - devcovenant/**
+          - tests/**
       exclude_suffixes:
         descriptor:
           values:
@@ -5551,7 +5605,9 @@ policies:
       - '**/*.egg-info/**'
       - devcovenant/builtin/profiles/global/assets/*.yaml
       - devcovenant/builtin/profiles/global/assets/**/*.yaml
+      - devcovenant/licenses/**
       - devcovenant/registry/**
+      - tests/devcovenant/builtin/**
       include_prefixes: []
       include_globs: &id045
       - '*.py'
@@ -5563,6 +5619,8 @@ policies:
       - '*.json'
       - '*.toml'
       - '*.cff'
+      - devcovenant/**
+      - tests/**
       exclude_suffixes: []
       force_include_globs: []
       selector_roles: &id046
@@ -5638,10 +5696,12 @@ policies:
     - __pycache__/**
     - build/**
     - data:/**
+    - devcovenant/**
     - devcovenant/builtin/policies/=>.yaml
     - devcovenant/builtin/profiles/global/assets/**/*.yaml
     - devcovenant/builtin/profiles/global/assets/*.yaml
     - devcovenant/custom/policies/=>.yaml
+    - devcovenant/licenses/**
     - devcovenant/licenses/*.txt
     - devcovenant/logs/**
     - devcovenant/registry/**
@@ -5672,6 +5732,8 @@ policies:
     - svn:/**
     - svn://
     - tel:/**
+    - tests/**
+    - tests/devcovenant/builtin/**
     - torrent:/**
     - urn:/**
     - ws:/**
@@ -6714,12 +6776,15 @@ policies:
       - .py
       include_prefixes: []
       include_globs:
+      - devcovenant/**/*.py
+      - tests/**/*.py
       - '*.py'
       exclude_suffixes: []
       exclude_globs:
       - build/**
       - dist/**
       - node_modules/**
+      - tests/devcovenant/builtin/**
       force_include_globs: []
       selector_roles:
       - exclude
@@ -6845,6 +6910,20 @@ policies:
           behavior: base
           replaced_inherited_values:
           - ()
+        profile_overlays:
+          values:
+          - devcovenant/**/*.py
+          - tests/**/*.py
+          behavior: append
+          replaced_inherited_values:
+          - ()
+        autogen_overlays:
+          values:
+          - devcovenant/**/*.py
+          - tests/**/*.py
+          behavior: append
+          replaced_inherited_values:
+          - ()
         derived_selectors:
           values:
           - '*.py'
@@ -6853,6 +6932,8 @@ policies:
           - ()
         effective:
           values:
+          - devcovenant/**/*.py
+          - tests/**/*.py
           - '*.py'
       exclude_suffixes:
         descriptor:
@@ -6876,6 +6957,7 @@ policies:
           - build/**
           - dist/**
           - node_modules/**
+          - tests/devcovenant/builtin/**
           behavior: append
           replaced_inherited_values:
           - ()
@@ -6884,6 +6966,7 @@ policies:
           - build/**
           - dist/**
           - node_modules/**
+          - tests/devcovenant/builtin/**
           behavior: append
           replaced_inherited_values:
           - ()
@@ -6892,6 +6975,7 @@ policies:
           - build/**
           - dist/**
           - node_modules/**
+          - tests/devcovenant/builtin/**
       force_include_globs:
         descriptor:
           values:
@@ -7020,12 +7104,15 @@ policies:
       - .py
       include_prefixes: []
       include_globs: &id067
+      - devcovenant/**/*.py
+      - tests/**/*.py
       - '*.py'
       exclude_suffixes: []
       exclude_globs: &id068
       - build/**
       - dist/**
       - node_modules/**
+      - tests/devcovenant/builtin/**
       force_include_globs: []
       selector_roles: &id069
       - exclude
@@ -7052,8 +7139,11 @@ policies:
       selector_roles: *id069
     assets:
     - build/**
+    - devcovenant/**/*.py
     - dist/**
     - node_modules/**
+    - tests/**/*.py
+    - tests/devcovenant/builtin/**
     origin: builtin
     script_exists: true
     hash: cfc7fc1129a950c51c97b7cb941af6170ecf76c993f61d92667a099b34e8613d
@@ -7675,6 +7765,8 @@ policies:
       include_prefixes: []
       include_globs:
       - '*.py'
+      - devcovenant/**/*.py
+      - tests/**/*.py
       exclude_suffixes: []
       exclude_prefixes:
       - build
@@ -7684,6 +7776,7 @@ policies:
       - build/**
       - dist/**
       - node_modules/**
+      - tests/devcovenant/builtin/**
       force_include_globs: []
       include_files: []
       include_dirs: []
@@ -7828,18 +7921,24 @@ policies:
         profile_overlays:
           values:
           - '*.py'
+          - devcovenant/**/*.py
+          - tests/**/*.py
           behavior: append
           replaced_inherited_values:
           - ()
         autogen_overlays:
           values:
           - '*.py'
+          - devcovenant/**/*.py
+          - tests/**/*.py
           behavior: append
           replaced_inherited_values:
           - ()
         effective:
           values:
           - '*.py'
+          - devcovenant/**/*.py
+          - tests/**/*.py
       exclude_suffixes:
         descriptor:
           values:
@@ -7890,6 +7989,7 @@ policies:
           - build/**
           - dist/**
           - node_modules/**
+          - tests/devcovenant/builtin/**
           behavior: append
           replaced_inherited_values:
           - ()
@@ -7898,6 +7998,7 @@ policies:
           - build/**
           - dist/**
           - node_modules/**
+          - tests/devcovenant/builtin/**
           behavior: append
           replaced_inherited_values:
           - ()
@@ -7906,6 +8007,7 @@ policies:
           - build/**
           - dist/**
           - node_modules/**
+          - tests/devcovenant/builtin/**
       force_include_globs:
         descriptor:
           values:
@@ -8115,6 +8217,8 @@ policies:
       include_prefixes: []
       include_globs: &id078
       - '*.py'
+      - devcovenant/**/*.py
+      - tests/**/*.py
       exclude_suffixes: []
       exclude_prefixes: &id079
       - build
@@ -8124,6 +8228,7 @@ policies:
       - build/**
       - dist/**
       - node_modules/**
+      - tests/devcovenant/builtin/**
       force_include_globs: []
       include_files: []
       include_dirs: []
@@ -8160,8 +8265,11 @@ policies:
       broad_exception_waiver_between: *id082
     assets:
     - build/**
+    - devcovenant/**/*.py
     - dist/**
     - node_modules/**
+    - tests/**/*.py
+    - tests/devcovenant/builtin/**
     origin: builtin
     script_exists: true
     hash: 5104da9383a7702ce8cc10a0c81bf89e299c02b6f9da0f14244274ffa1a9a34d
@@ -8863,10 +8971,13 @@ policies:
       exclude_globs:
       - tests/**
       - '**/tests/**'
+      - tests/devcovenant/builtin/**
       include_suffixes:
       - .py
       include_prefixes: []
       include_globs:
+      - devcovenant/**/*.py
+      - tests/**/*.py
       - '*.py'
       exclude_suffixes: []
       exclude_prefixes: []
@@ -8929,6 +9040,7 @@ policies:
           values:
           - tests/**
           - '**/tests/**'
+          - tests/devcovenant/builtin/**
           behavior: append
           replaced_inherited_values:
           - ()
@@ -8936,6 +9048,7 @@ policies:
           values:
           - tests/**
           - '**/tests/**'
+          - tests/devcovenant/builtin/**
           behavior: append
           replaced_inherited_values:
           - ()
@@ -8943,6 +9056,7 @@ policies:
           values:
           - tests/**
           - '**/tests/**'
+          - tests/devcovenant/builtin/**
       enforcement:
         descriptor:
           values:
@@ -8992,6 +9106,20 @@ policies:
           behavior: base
           replaced_inherited_values:
           - ()
+        profile_overlays:
+          values:
+          - devcovenant/**/*.py
+          - tests/**/*.py
+          behavior: append
+          replaced_inherited_values:
+          - ()
+        autogen_overlays:
+          values:
+          - devcovenant/**/*.py
+          - tests/**/*.py
+          behavior: append
+          replaced_inherited_values:
+          - ()
         derived_selectors:
           values:
           - '*.py'
@@ -9000,6 +9128,8 @@ policies:
           - ()
         effective:
           values:
+          - devcovenant/**/*.py
+          - tests/**/*.py
           - '*.py'
       exclude_suffixes:
         descriptor:
@@ -9144,10 +9274,13 @@ policies:
       exclude_globs: &id087
       - tests/**
       - '**/tests/**'
+      - tests/devcovenant/builtin/**
       include_suffixes: &id088
       - .py
       include_prefixes: []
       include_globs: &id089
+      - devcovenant/**/*.py
+      - tests/**/*.py
       - '*.py'
       exclude_suffixes: []
       exclude_prefixes: []
@@ -9176,7 +9309,10 @@ policies:
       selector_roles: *id090
     assets:
     - '**/tests/**'
+    - devcovenant/**/*.py
     - tests/**
+    - tests/**/*.py
+    - tests/devcovenant/builtin/**
     origin: builtin
     script_exists: true
     hash: 42c0cc2468d3d2ba86510433af17ec136d5c3c421f01d0c533cd037026165081
@@ -12891,6 +13027,336 @@ policies:
     script_exists: true
     hash: 8cf316089c465c80953d695035c2653cbe2f94a174778da7430b5620b2993b49
     script_path: builtin/package_doc_sync.py
+  builtin-test-blueprint-sync:
+    enabled: true
+    custom: true
+    description: Builtin Test Blueprint Sync
+    policy_text: |-
+      Keep builtin test blueprints synchronized with the checked-in builtin test
+      trees and any repo-owned custom mirrors. The blueprint descriptors live
+      next to the shipped builtin policy and profile descriptors; the materialized
+      mirrors live under `tests/devcovenant/custom/**` when a repository opts
+      into a builtin shadow copy.
+    metadata:
+      id: builtin-test-blueprint-sync
+      severity: error
+      auto_fix: 'false'
+      enforcement: active
+      enabled: 'true'
+      custom: 'true'
+      blueprint_name: test_blueprints.yaml
+      mirror_roots:
+      - devcovenant/builtin=>tests/devcovenant/builtin
+      - devcovenant/custom=>tests/devcovenant/custom
+      blueprint_directories:
+      - policies/changelog_coverage
+      - policies/dependency_management
+      - policies/docstring_and_comment_coverage
+      - policies/documentation_growth_tracking
+      - policies/last_updated
+      - policies/line_length_limit
+      - policies/managed_environment
+      - policies/modules_need_tests
+      - policies/name_clarity
+      - policies/no_future_dates
+      - policies/no_print_outside_output_runtime
+      - policies/no_raw_errors
+      - policies/package_artifact_mirror
+      - policies/package_doc_sync
+      - policies/raw_string_escapes
+      - policies/read_only_directories
+      - policies/security_scanner
+      - policies/tests_coverage
+      - policies/version_governance
+      - policies/version_sync
+      - profiles/csharp
+      - profiles/dart
+      - profiles/go
+      - profiles/java
+      - profiles/javascript
+      - profiles/objective_c
+      - profiles/opencl
+      - profiles/php
+      - profiles/python
+      - profiles/ruby
+      - profiles/rust
+      - profiles/sql
+      - profiles/swift
+      - profiles/typescript
+    metadata_resolution:
+      id:
+        descriptor:
+          values:
+          - builtin-test-blueprint-sync
+          behavior: base
+          replaced_inherited_values:
+          - ()
+        runtime_identity:
+          values:
+          - builtin-test-blueprint-sync
+          behavior: replace
+          replaced_inherited_values:
+          - ()
+        effective:
+          values:
+          - builtin-test-blueprint-sync
+      severity:
+        descriptor:
+          values:
+          - error
+          behavior: base
+          replaced_inherited_values:
+          - ()
+        effective:
+          values:
+          - error
+      auto_fix:
+        descriptor:
+          values:
+          - 'false'
+          behavior: base
+          replaced_inherited_values:
+          - ()
+        effective:
+          values:
+          - 'false'
+      enforcement:
+        descriptor:
+          values:
+          - active
+          behavior: base
+          replaced_inherited_values:
+          - ()
+        effective:
+          values:
+          - active
+      blueprint_name:
+        descriptor:
+          values:
+          - test_blueprints.yaml
+          behavior: base
+          replaced_inherited_values:
+          - ()
+        effective:
+          values:
+          - test_blueprints.yaml
+      mirror_roots:
+        descriptor:
+          values:
+          - devcovenant/builtin=>tests/devcovenant/builtin
+          - devcovenant/custom=>tests/devcovenant/custom
+          behavior: base
+          replaced_inherited_values:
+          - ()
+        effective:
+          values:
+          - devcovenant/builtin=>tests/devcovenant/builtin
+          - devcovenant/custom=>tests/devcovenant/custom
+      blueprint_directories:
+        descriptor:
+          values:
+          - policies/changelog_coverage
+          - policies/dependency_management
+          - policies/docstring_and_comment_coverage
+          - policies/documentation_growth_tracking
+          - policies/last_updated
+          - policies/line_length_limit
+          - policies/managed_environment
+          - policies/modules_need_tests
+          - policies/name_clarity
+          - policies/no_future_dates
+          - policies/no_print_outside_output_runtime
+          - policies/no_raw_errors
+          - policies/package_artifact_mirror
+          - policies/package_doc_sync
+          - policies/raw_string_escapes
+          - policies/read_only_directories
+          - policies/security_scanner
+          - policies/tests_coverage
+          - policies/version_governance
+          - policies/version_sync
+          - profiles/csharp
+          - profiles/dart
+          - profiles/go
+          - profiles/java
+          - profiles/javascript
+          - profiles/objective_c
+          - profiles/opencl
+          - profiles/php
+          - profiles/python
+          - profiles/ruby
+          - profiles/rust
+          - profiles/sql
+          - profiles/swift
+          - profiles/typescript
+          behavior: base
+          replaced_inherited_values:
+          - ()
+        effective:
+          values:
+          - policies/changelog_coverage
+          - policies/dependency_management
+          - policies/docstring_and_comment_coverage
+          - policies/documentation_growth_tracking
+          - policies/last_updated
+          - policies/line_length_limit
+          - policies/managed_environment
+          - policies/modules_need_tests
+          - policies/name_clarity
+          - policies/no_future_dates
+          - policies/no_print_outside_output_runtime
+          - policies/no_raw_errors
+          - policies/package_artifact_mirror
+          - policies/package_doc_sync
+          - policies/raw_string_escapes
+          - policies/read_only_directories
+          - policies/security_scanner
+          - policies/tests_coverage
+          - policies/version_governance
+          - policies/version_sync
+          - profiles/csharp
+          - profiles/dart
+          - profiles/go
+          - profiles/java
+          - profiles/javascript
+          - profiles/objective_c
+          - profiles/opencl
+          - profiles/php
+          - profiles/python
+          - profiles/ruby
+          - profiles/rust
+          - profiles/sql
+          - profiles/swift
+          - profiles/typescript
+      custom:
+        runtime_custom_source:
+          values:
+          - 'true'
+          behavior: replace
+          replaced_inherited_values:
+          - ()
+          note: Resolved from active custom policy script.
+        effective:
+          values:
+          - 'true'
+      enabled:
+        runtime_defaults:
+          values:
+          - 'true'
+          behavior: default
+          replaced_inherited_values:
+          - ()
+        policy_state:
+          values:
+          - 'true'
+          behavior: replace
+          replaced_inherited_values:
+          - 'true'
+        effective:
+          values:
+          - 'true'
+    metadata_warnings: []
+    runtime_actions: []
+    commands: []
+    runtime_metadata_options:
+      id: builtin-test-blueprint-sync
+      severity: error
+      auto_fix: false
+      enforcement: active
+      enabled: true
+      custom: true
+      blueprint_name: test_blueprints.yaml
+      mirror_roots: &id112
+      - devcovenant/builtin=>tests/devcovenant/builtin
+      - devcovenant/custom=>tests/devcovenant/custom
+      blueprint_directories: &id113
+      - policies/changelog_coverage
+      - policies/dependency_management
+      - policies/docstring_and_comment_coverage
+      - policies/documentation_growth_tracking
+      - policies/last_updated
+      - policies/line_length_limit
+      - policies/managed_environment
+      - policies/modules_need_tests
+      - policies/name_clarity
+      - policies/no_future_dates
+      - policies/no_print_outside_output_runtime
+      - policies/no_raw_errors
+      - policies/package_artifact_mirror
+      - policies/package_doc_sync
+      - policies/raw_string_escapes
+      - policies/read_only_directories
+      - policies/security_scanner
+      - policies/tests_coverage
+      - policies/version_governance
+      - policies/version_sync
+      - profiles/csharp
+      - profiles/dart
+      - profiles/go
+      - profiles/java
+      - profiles/javascript
+      - profiles/objective_c
+      - profiles/opencl
+      - profiles/php
+      - profiles/python
+      - profiles/ruby
+      - profiles/rust
+      - profiles/sql
+      - profiles/swift
+      - profiles/typescript
+    runtime_config_overrides: {}
+    runtime_effective_options:
+      id: builtin-test-blueprint-sync
+      severity: error
+      auto_fix: false
+      enforcement: active
+      enabled: true
+      custom: true
+      blueprint_name: test_blueprints.yaml
+      mirror_roots: *id112
+      blueprint_directories: *id113
+    assets:
+    - devcovenant/builtin=>tests/devcovenant/builtin
+    - devcovenant/custom=>tests/devcovenant/custom
+    - policies/changelog_coverage
+    - policies/dependency_management
+    - policies/docstring_and_comment_coverage
+    - policies/documentation_growth_tracking
+    - policies/last_updated
+    - policies/line_length_limit
+    - policies/managed_environment
+    - policies/modules_need_tests
+    - policies/name_clarity
+    - policies/no_future_dates
+    - policies/no_print_outside_output_runtime
+    - policies/no_raw_errors
+    - policies/package_artifact_mirror
+    - policies/package_doc_sync
+    - policies/raw_string_escapes
+    - policies/read_only_directories
+    - policies/security_scanner
+    - policies/tests_coverage
+    - policies/version_governance
+    - policies/version_sync
+    - profiles/csharp
+    - profiles/dart
+    - profiles/go
+    - profiles/java
+    - profiles/javascript
+    - profiles/objective_c
+    - profiles/opencl
+    - profiles/php
+    - profiles/python
+    - profiles/ruby
+    - profiles/rust
+    - profiles/sql
+    - profiles/swift
+    - profiles/typescript
+    - test_blueprints.yaml
+    origin: custom
+    script_exists: true
+    hash: 46b5786c8af6467dfa5f01ac6ab4cd3452c554e3e69c5643c0d5b946a8e53b96
+    script_path: custom/builtin_test_blueprint_sync.py
 profiles:
   csharp:
     version: 1
@@ -14681,6 +15147,7 @@ profiles:
     path: devcovenant/builtin/profiles/opencl
     assets_available:
     - devcovenant/builtin/profiles/opencl/opencl_translator.py
+    - devcovenant/builtin/profiles/opencl/test_blueprints.yaml
     active: false
   php:
     version: 1
@@ -16064,10 +16531,39 @@ profiles:
         exclude_globs:
         - devcovenant/builtin/profiles/global/assets/*.yaml
         - devcovenant/builtin/profiles/global/assets/**/*.yaml
+        - devcovenant/licenses/**
         - devcovenant/registry/**
+        - tests/devcovenant/builtin/**
+        include_globs:
+        - devcovenant/**
+        - tests/**
         long_lines_between:
         - devcovenant/builtin/policies/=>.yaml
         - devcovenant/custom/policies/=>.yaml
+      name-clarity:
+        exclude_globs:
+        - tests/devcovenant/builtin/**
+        include_globs:
+        - devcovenant/**/*.py
+        - tests/**/*.py
+      docstring-and-comment-coverage:
+        exclude_globs:
+        - tests/devcovenant/builtin/**
+        include_globs:
+        - devcovenant/**/*.py
+        - tests/**/*.py
+      security-scanner:
+        exclude_globs:
+        - tests/devcovenant/builtin/**
+        include_globs:
+        - devcovenant/**/*.py
+        - tests/**/*.py
+      no-raw-errors:
+        exclude_globs:
+        - tests/devcovenant/builtin/**
+        include_globs:
+        - devcovenant/**/*.py
+        - tests/**/*.py
       no-print-outside-output-runtime:
         include_suffixes:
         - .py

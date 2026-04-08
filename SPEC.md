@@ -6,7 +6,7 @@
 **Maintenance Stance:** active
 **Compatibility Policy:** forward-only
 **Versioning Mode:** versioned
-**Last Updated:** 2026-04-07
+**Last Updated:** 2026-04-08
 **DevCovenant Version:** 1.0.1b2
 
 <!-- DEVCOV:BEGIN -->
@@ -86,8 +86,9 @@ state, and release proof that can be audited afterward.
 - Preserve a clear boundary between engine-owned runtime checks and
   repository-configurable policies.
 - Let ordinary repositories start from the shared base plus `devcovuser`,
-  then add a repository-specific custom profile when they need their own
-  reusable behavior.
+  then promote builtin policies and profiles into repo-owned custom copies
+  with explicit test materialization when they need their own reusable
+  behavior.
 - Keep operator-facing commands inspectable through stable run-log artifacts,
   concise summaries, and clear local state files.
 - Keep shipped package docs package-generic while leaving
@@ -167,7 +168,21 @@ intentionally not trying to do.
    - Result: managed outputs stay in sync, or a reusable asset is copied
      through the same rendering path that refresh uses.
 
-5. CI, build proof, and publish
+5. Builtin customization and test materialization
+   - Trigger: a repository wants to shadow a builtin policy or profile, or
+     to remove a repo-owned custom copy and return to the shipped default.
+   - Main path: `devcovenant custom --policy NAME --do` or
+     `devcovenant custom --profile NAME --do` copies the builtin descriptor
+     into `devcovenant/custom/...`, materializes the descriptor's shipped
+     test blueprint under `tests/devcovenant/custom/...`, and then runs
+     refresh; the matching `--undo` removes the repo-owned copy, removes the
+     materialized mirrors, restores the builtin default, and refreshes again.
+   - Result: the repository can promote a builtin policy or profile into a
+     repo-owned customization or retract it again without manual file
+     surgery, while the mirrored tests stay visible only where the custom
+     layer explicitly materializes them.
+
+6. CI, build proof, and publish
    - Trigger: source-tree CI, built-artifact proof, or manual release.
    - Main path: generated `CI` runs the `Governance` job and dependent
      `Build` proof, where wheel, sdist, and documented `pipx` install paths
@@ -180,7 +195,7 @@ intentionally not trying to do.
 ## Functional Requirements
 ### Command Surface And Lifecycle
 - DevCovenant shall expose the public top-level commands `asset`, `check`,
-  `clean`, `deploy`, `gate`, `install`, `policy`, `refresh`, `run`,
+  `clean`, `custom`, `deploy`, `gate`, `install`, `policy`, `refresh`, `run`,
   `undeploy`, `uninstall`, and `upgrade`.
 - Every public command shall accept `--quiet`, `--normal`, or `--verbose` as
   per-invocation output overrides.
@@ -190,6 +205,9 @@ intentionally not trying to do.
   setup by running the full refresh path.
 - `refresh` shall regenerate tracked registry state, managed docs, generated
   config sections, generated workflow files, and other refresh-owned files.
+- `custom` shall run from the interpreter or environment it is launched
+  from, act on the repository or bench it points at, and avoid any hidden
+  repo-local venv assumption.
 - `upgrade` shall reconcile the installed DevCovenant package from source and
   then run refresh.
 - `undeploy` shall remove managed outputs while preserving the installed core
@@ -203,6 +221,26 @@ intentionally not trying to do.
 - Ordinary repositories shall be able to keep `devcovuser` active and add a
   repository-specific custom profile on top when they need their own reusable
   rules, assets, or workflow additions.
+
+### Builtin Customization And Mirrors
+- `custom` shall expose `--policy <policy-id>` and
+  `--profile <profile-name>` selectors and shall require exactly one of
+  `--do` or `--undo`.
+- `custom --do` shall copy the selected builtin policy or profile into the
+  repo-owned custom tree, materialize any declared test blueprints into
+  `tests/devcovenant/custom/**`, and then run refresh so the resolved
+  registry and managed outputs reflect the new shadow layer.
+- `custom --undo` shall remove the repo-owned copy, remove the materialized
+  mirrors from `tests/devcovenant/custom/**`, and run refresh so the builtin
+  default becomes active again.
+- Builtin policy and profile packages shall ship test blueprints as
+  descriptor-owned metadata or YAML-managed declarations, not as ordinary
+  default-discoverable `tests/**` modules.
+- Same-id custom policies and same-name custom profiles shall fully shadow
+  the builtin entry and own the materialized mirrors that correspond to the
+  customized descriptors.
+- A repo-local custom policy shall verify that descriptor blueprints and
+  their materialized test mirrors stay in sync whenever either side changes.
 
 ### Workflow And Evidence
 - The governed work slice shall be `gate --start`, `gate --mid`, `run`,
@@ -272,6 +310,12 @@ intentionally not trying to do.
 - Profiles shall not directly enable or disable configurable policies.
 - The `asset` command and `refresh` shall reuse the same rendering machinery
   for plain profile assets and descriptor-backed managed docs.
+- Builtin policy and profile descriptors shall carry non-discoverable test
+  blueprints that are materialized into `tests/devcovenant/custom/**` only
+  when a repository opts into a repo-owned custom copy through `custom`.
+- Repo-owned custom copies are the authoritative downstream home for those
+  mirrored test scripts; the shipped builtin package keeps the blueprint
+  data, not a default-discoverable user-repo test tree.
 - Translator ownership shall stay with language profiles so policies can stay
   language-agnostic.
 - Profile resolution and generated outputs shall be deterministic across
@@ -288,6 +332,10 @@ intentionally not trying to do.
   `devcovenant policy <policy-id> <command>`.
 - Policy runtime actions shall be reusable operational surfaces callable by
   policy commands and autofixers.
+- A repo-local custom policy may validate that builtin descriptor blueprints
+  and the materialized custom mirror tests stay synchronized, but the
+  materialization itself shall remain owned by the `custom` command and the
+  refresh path.
 
 ### Registry, Runtime State, And Managed Docs
 - Tracked registry state shall live in `devcovenant/registry/registry.yaml`
@@ -304,11 +352,19 @@ intentionally not trying to do.
 - AGENTS shall remain a generated governance surface whose workflow block,
   project-governance block, and policy block stay synchronized with resolved
   runtime state.
+- Repo-owned custom policy and profile copies shall be tracked as durable
+  repository-owned configuration, while the mirrored tests under
+  `tests/devcovenant/custom/**` shall be treated as derived repo content that
+  is regenerated or removed by the `custom` workflow.
 
 ### Packaging, CI, And Publish
 - The published package shall ship the runtime-facing docs, built-in policies,
-  built-in profiles, translators, and managed assets required for install-time
-  and runtime behavior.
+  built-in profiles, translators, managed assets, and non-discoverable test
+  blueprint metadata required for install-time and runtime behavior.
+- The published package shall not ship default-discoverable builtin test
+  modules; the corresponding mirrors are materialized into
+  `tests/devcovenant/custom/**` only in repositories that opt into the custom
+  layer.
 - The published package shall ship the runtime lock that the builtin `github`
   profile uses to bootstrap DevCovenant itself in source-tree CI.
 - The published package shall not ship live repository state such as
@@ -356,6 +412,10 @@ intentionally not trying to do.
   - `AGENTS.md` as the enforced workflow and policy file
   - managed docs such as `README.md`, `SPEC.md`, `PLAN.md`, and
     `CHANGELOG.md`
+  - builtin policy and profile descriptors with non-discoverable test
+    blueprints
+  - repo-owned custom policy and profile copies under `devcovenant/custom/`
+  - materialized custom mirrors under `tests/devcovenant/custom/`
   - tracked registry state in `devcovenant/registry/registry.yaml`
   - runtime state in `devcovenant/registry/runtime/`
   - run-log folders under `devcovenant/logs/`
@@ -363,6 +423,10 @@ intentionally not trying to do.
 - Important state transitions:
   - uninstalled repository -> installed baseline -> reviewed config ->
     deployed governed repository
+  - builtin descriptor only -> repo-owned custom copy -> materialized custom
+    mirrors -> refreshed governed repository
+  - repo-owned custom copy removed -> materialized mirrors removed ->
+    builtin default visible again
   - no session -> open gate session -> mid-cleared session -> run-evidenced
     session -> closed session
   - stale workflow evidence -> fresh passing run evidence -> stale again when
@@ -384,6 +448,8 @@ intentionally not trying to do.
 ## Interfaces and Dependencies
 - External interfaces:
   - CLI commands under `devcovenant`
+  - `devcovenant custom` for repo-owned policy and profile promotion or
+    retraction, plus mirror materialization and cleanup
   - repository files such as `devcovenant/config.yaml`, `AGENTS.md`, managed
     docs, `.github/workflows/ci.yml`, and `.github/workflows/publish.yml`
   - Desktop asset materialization via `devcovenant asset`
@@ -441,6 +507,10 @@ intentionally not trying to do.
 - A contributor can complete a governed slice through `gate --start`,
   `gate --mid`, `run`, and `gate --end`, and the repository records usable
   run artifacts and closed session state.
+- A repository can run `devcovenant custom --policy|--profile <name> --do` to
+  materialize a repo-owned custom copy and its mirrored tests under
+  `tests/devcovenant/custom/**`, then run `--undo` to remove both and fall
+  back to the builtin default on refresh.
 - `check` and `gate --status` can explain current repository and lifecycle
   state without opening or closing a session.
 - Declared workflow runs execute in validated graph order, including `after`,
@@ -448,6 +518,9 @@ intentionally not trying to do.
 - Profiles, policies, managed docs, translators, and assets can extend the
   repository setup without breaking the ownership split between engine-owned
   runtime checks, configurable policies, and profile-owned stack behavior.
+- Builtin policy and profile test blueprints remain non-discoverable until a
+  repository explicitly materializes them into the repo-owned custom test
+  tree, and a repo-local custom policy keeps those mirrors synchronized.
 - The tracked registry reflects resolved durable repository setup, while the
   runtime registry reflects recent execution evidence.
 - Built wheel, sdist, and documented `pipx` install paths can all prove the

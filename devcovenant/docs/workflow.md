@@ -1,5 +1,5 @@
 # Workflow
-**Last Updated:** 2026-04-07
+**Last Updated:** 2026-04-08
 
 **Project Version:** 1.0.1b2
 
@@ -56,6 +56,17 @@ Runs the closing pre-commit pass and closes the session.
 If required workflow evidence is stale or failing, end-gate will tell you to
 refresh it before the session can close.
 
+### custom
+Copies or removes a repo-owned shadow copy of one builtin policy or profile.
+Use `--policy <policy-id>` or `--profile <profile-name>` to select the builtin
+source, then `--do` to copy that builtin tree into `devcovenant/custom/...`
+and materialize mirrored tests under `tests/devcovenant/custom/...`, or
+`--undo` to remove the repo-owned copy and mirrored tests.
+The command runs refresh automatically after the copy or removal.
+It follows the same managed-environment resolution as the other lifecycle
+commands, so it works from the repository's declared interpreter layout
+instead of assuming a local `.venv`.
+
 ## Required Order
 The public workflow has four stages:
 1. `gate --start`
@@ -88,10 +99,10 @@ When a command prints `Run logs: ...`, inspect files in this order:
 4. `stderr.log`
 
 The CLI can stream child output live, but the run logs are the stable record.
-For lifecycle commands such as `install`, `deploy`, `refresh`, `undeploy`,
-`uninstall`, and `upgrade`, `summary.txt` and `summary.json` can also include
-phase timing details so you can see where the command actually spent time
-before opening the full logs.
+For lifecycle commands such as `install`, `deploy`, `refresh`, `custom`,
+`undeploy`, `uninstall`, and `upgrade`, `summary.txt` and `summary.json` can
+also include phase timing details so you can see where the command actually
+spent time before opening the full logs.
 
 ## Local Workflow State
 DevCovenant keeps two local workflow files:
@@ -218,6 +229,9 @@ output or local session inspection.
 Workflow diagnostics should also stay repo-safe: when a gate or run reports a
 path, it should prefer repo-relative rendering over leaking absolute checkout
 roots.
+The same environment-neutral behavior applies to `custom`; it is a lifecycle
+command, not a special case that should assume a repo-local virtual
+environment.
 
 For Python-owned tools such as the pre-commit gate hook, execution runs
 `python -m pre_commit` through the selected interpreter instead of depending on

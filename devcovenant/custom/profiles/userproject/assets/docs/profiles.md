@@ -120,6 +120,13 @@ That same narrowing applies to mirrored test expectations and assertion
 coverage, so normal repositories keep DevCovenant internals out of scope
 while still enforcing `devcovenant/custom/**` and
 `tests/devcovenant/custom/**`.
+In this repository, the repo-owned `userproject` profile widens the same
+code-style policies, including `line-length-limit`, `name-clarity`,
+`docstring-and-comment-coverage`, `security-scanner`, and `no-raw-errors`,
+so they cover the full `devcovenant/**` tree and `tests/**` mirror instead of
+stopping at the custom shadow layer. The generated registry, bundled license
+dumps, and builtin test-blueprint verification tree stay out of that generic
+scan so the profile only governs repo-owned source and custom mirrors.
 
 Profiles may also contribute `ignore_dirs` for disposable local outputs that
 should stay out of generated `.gitignore`, out of pre-commit's all-files

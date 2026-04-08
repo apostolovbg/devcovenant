@@ -1,5 +1,5 @@
 # Custom Extensions
-**Last Updated:** 2026-04-07
+**Last Updated:** 2026-04-08
 **Project Version:** 1.0.1b2
 
 ## Table of Contents
@@ -14,6 +14,14 @@
 
 Use this directory to add or override behavior without editing shipped builtin
 files. Everything here is project-specific and stays under repository control.
+When the repository is shadowing a builtin policy or profile, use
+`devcovenant custom --policy <policy-id> --do` or
+`devcovenant custom --profile <profile-name> --do` to create the repo-owned
+copy and materialize its mirrored tests under `tests/devcovenant/custom/**`.
+Use `--undo` to remove that copied tree and return to the builtin default.
+The command follows the same managed-environment resolution as the other
+lifecycle commands, so it works from whichever interpreter layout the
+repository has declared.
 
 ## Policy Extensions
 Place custom policies under:
@@ -22,6 +30,8 @@ Place custom policies under:
 Typical custom policy files:
 - `<policy-id>.py` for check logic
 - `<policy-id>.yaml` for descriptor text and metadata defaults
+- `test_blueprints.yaml` when the policy was copied from a builtin source and
+  needs a packaged test blueprint mirror
 - optional `autofix/` modules
 - optional `assets/` templates referenced by profiles
 
@@ -31,6 +41,8 @@ Place custom profiles under:
 
 Typical profile files:
 - `<profile-name>.yaml` manifest
+- `test_blueprints.yaml` when the profile was copied from a builtin source
+  and needs a packaged test blueprint mirror
 - optional `assets/` templates
 - optional `<profile-name>_translator.py` when profile category is language
 
@@ -44,8 +56,12 @@ Custom changes should keep contract compatibility unless a contract change is
 intentional and documented in `SPEC.md`.
 
 ## Workflow
-1. Implement custom policy/profile changes in this directory.
-2. Update tests under mirrored `tests/devcovenant/custom/...` paths.
+1. Implement custom policy/profile changes in this directory, or use
+   `devcovenant custom --policy <policy-id> --do` or
+   `devcovenant custom --profile <profile-name> --do` to promote a builtin
+   copy into this tree.
+2. Keep mirrored tests under `tests/devcovenant/custom/...` aligned with the
+   copied builtin blueprint when a builtin source is shadowed.
 3. Update relevant docs and maps (`POLICY_MAP.md`, `PROFILE_MAP.md`).
 4. Run `devcovenant refresh` after manifest or descriptor changes.
 5. Run full gate sequence before handing off changes:

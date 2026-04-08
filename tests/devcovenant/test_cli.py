@@ -22,20 +22,28 @@ from tests import MonkeyPatch, current_devcovenant_version
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
 CURRENT_DEVCOVENANT_VERSION = current_devcovenant_version()
-ROOT_COMMAND_MODULES = (
-    "asset",
-    "check",
-    "clean",
-    "gate",
-    "run",
-    "install",
-    "deploy",
-    "upgrade",
-    "refresh",
-    "uninstall",
-    "undeploy",
-    "policy",
+ROOT_COMMANDS = (
+    ("asset", "asset"),
+    ("check", "check"),
+    ("clean", "clean"),
+    ("custom", "custom"),
+    ("gate", "gate"),
+    ("run", "run"),
+    ("install", "install"),
+    ("deploy", "deploy"),
+    ("upgrade", "upgrade"),
+    ("refresh", "refresh"),
+    ("uninstall", "uninstall"),
+    ("undeploy", "undeploy"),
+    ("policy", "policy"),
 )
+
+
+def _command_module_file(module_name: str) -> str:
+    """Return the file path used to launch one root command module."""
+    return f"{module_name}.py"
+
+
 ASSET_SCRIPT_ROOT = (
     REPO_ROOT
     / "devcovenant"
@@ -488,6 +496,10 @@ def _unit_test_root_help_lists_command_summaries() -> None:
         in result.stdout
     )
     assert (
+        "Promote or retract builtin policy/profile custom copies and "
+        "mirrored tests." in result.stdout
+    )
+    assert (
         "Run `devcovenant <command> --help` for command-specific options."
         in result.stdout
     )
@@ -549,9 +561,9 @@ def _unit_test_install_help_shows_command_scope() -> None:
 
 def _unit_test_all_command_help_uses_scoped_prog() -> None:
     """Every root command help surface should show scoped usage text."""
-    for module_name in ROOT_COMMAND_MODULES:
+    for command_name, _module_name in ROOT_COMMANDS:
         result = subprocess.run(
-            [sys.executable, "-m", "devcovenant", module_name, "--help"],
+            [sys.executable, "-m", "devcovenant", command_name, "--help"],
             cwd=REPO_ROOT,
             check=False,
             capture_output=True,
@@ -559,7 +571,7 @@ def _unit_test_all_command_help_uses_scoped_prog() -> None:
         )
         assert result.returncode == 0
         assert (
-            f"usage: devcovenant {module_name} [-h]" in result.stdout
+            f"usage: devcovenant {command_name} [-h]" in result.stdout
         ), result.stdout
 
 
@@ -584,17 +596,41 @@ def _unit_test_gate_help_is_command_scoped() -> None:
     assert "--verbose" in result.stdout
 
 
+def _unit_test_custom_help_is_command_scoped() -> None:
+    """`custom --help` should expose only the customization surface."""
+    result = subprocess.run(
+        [sys.executable, "-m", "devcovenant", "custom", "--help"],
+        cwd=REPO_ROOT,
+        check=False,
+        capture_output=True,
+        text=True,
+    )
+    assert result.returncode == 0
+    assert (
+        "Promote or retract builtin policy/profile custom copies"
+        in result.stdout
+    )
+    assert "--policy" in result.stdout
+    assert "--profile" in result.stdout
+    assert "--do" in result.stdout
+    assert "--undo" in result.stdout
+    assert "--start" not in result.stdout
+    assert "--end" not in result.stdout
+
+
 def _unit_test_root_command_modules_exist() -> None:
     """All CLI command modules should exist at package root."""
-    for module_name in ROOT_COMMAND_MODULES:
-        root_path = REPO_ROOT / "devcovenant" / f"{module_name}.py"
+    for _command_name, module_name in ROOT_COMMANDS:
+        root_path = (
+            REPO_ROOT / "devcovenant" / _command_module_file(module_name)
+        )
         assert root_path.exists(), str(root_path)
 
 
 def _unit_test_command_modules_not_duplicated_as_profile_assets() -> None:
     """Root command modules should not be duplicated in profile assets."""
-    for module_name in ROOT_COMMAND_MODULES:
-        duplicate_path = ASSET_SCRIPT_ROOT / f"{module_name}.py"
+    for _command_name, module_name in ROOT_COMMANDS:
+        duplicate_path = ASSET_SCRIPT_ROOT / _command_module_file(module_name)
         assert not duplicate_path.exists(), str(duplicate_path)
 
 
@@ -602,9 +638,13 @@ def _unit_test_command_modules_support_file_path_help() -> None:
     """File-path invocation should work without PYTHONPATH tweaks."""
     env = os.environ.copy()
     env.pop("PYTHONPATH", None)
-    for module_name in ROOT_COMMAND_MODULES:
+    for _command_name, module_name in ROOT_COMMANDS:
         result = subprocess.run(
-            [sys.executable, f"devcovenant/{module_name}.py", "--help"],
+            [
+                sys.executable,
+                f"devcovenant/{_command_module_file(module_name)}",
+                "--help",
+            ],
             cwd=REPO_ROOT,
             env=env,
             check=False,
@@ -1191,6 +1231,10 @@ class GeneratedUnittestCases(unittest.TestCase):
     def test_gate_help_is_command_scoped(self):
         """Run test_gate_help_is_command_scoped."""
         _unit_test_gate_help_is_command_scoped()
+
+    def test_custom_help_is_command_scoped(self):
+        """Run test_custom_help_is_command_scoped."""
+        _unit_test_custom_help_is_command_scoped()
 
     def test_all_command_help_uses_scoped_prog(self):
         """Run test_all_command_help_uses_scoped_prog."""

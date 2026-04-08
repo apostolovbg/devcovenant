@@ -403,6 +403,7 @@ project-governance:
 # Critical-severity policies remain enforced even when set to false here.
 
 policy_state:
+  builtin-test-blueprint-sync: true
   changelog-coverage: true
   dependency-management: true
   devcov-raw-string-escapes: true
@@ -1062,6 +1063,11 @@ autogen_metadata_overlays:
           python_version: '3.14'
           abi: cp314
   docstring-and-comment-coverage:
+    exclude_globs:
+    - tests/devcovenant/builtin/**
+    include_globs:
+    - devcovenant/**/*.py
+    - tests/**/*.py
     include_suffixes:
     - .py
   documentation-growth-tracking:
@@ -1235,7 +1241,9 @@ autogen_metadata_overlays:
     - '**/*.egg-info/**'
     - devcovenant/builtin/profiles/global/assets/*.yaml
     - devcovenant/builtin/profiles/global/assets/**/*.yaml
+    - devcovenant/licenses/**
     - devcovenant/registry/**
+    - tests/devcovenant/builtin/**
     exclude_prefixes:
     - build
     - dist
@@ -1250,6 +1258,8 @@ autogen_metadata_overlays:
     - '*.json'
     - '*.toml'
     - '*.cff'
+    - devcovenant/**
+    - tests/**
     include_suffixes:
     - .py
     - .md
@@ -1321,10 +1331,14 @@ autogen_metadata_overlays:
     - build/**
     - dist/**
     - node_modules/**
+    - tests/devcovenant/builtin/**
     exclude_prefixes:
     - build
     - dist
     - node_modules
+    include_globs:
+    - devcovenant/**/*.py
+    - tests/**/*.py
     include_suffixes:
     - .py
   no-print-outside-output-runtime:
@@ -1350,6 +1364,7 @@ autogen_metadata_overlays:
     - build/**
     - dist/**
     - node_modules/**
+    - tests/devcovenant/builtin/**
     exclude_prefixes:
     - build
     - dist
@@ -1360,6 +1375,8 @@ autogen_metadata_overlays:
     forbid_silent_exception_pass: 'true'
     include_globs:
     - '*.py'
+    - devcovenant/**/*.py
+    - tests/**/*.py
     include_suffixes:
     - .py
   package-artifact-mirror:
@@ -1375,6 +1392,10 @@ autogen_metadata_overlays:
     exclude_globs:
     - tests/**
     - '**/tests/**'
+    - tests/devcovenant/builtin/**
+    include_globs:
+    - devcovenant/**/*.py
+    - tests/**/*.py
     include_suffixes:
     - .py
   tests-coverage:

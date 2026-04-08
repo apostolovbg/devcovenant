@@ -1,5 +1,5 @@
 # Installation and Lifecycle
-**Last Updated:** 2026-04-07
+**Last Updated:** 2026-04-08
 
 **Project Version:** 1.0.1b2
 
@@ -178,6 +178,16 @@ The practical rules are:
 If the winning profile still exposes more than one basename match, rerun the
 command with the exact target path.
 Use `devcovenant asset --help` for the command-scoped syntax.
+
+### custom
+Copies or removes a repo-owned shadow copy of one builtin policy or profile.
+Use `--policy <policy-id> --do` or `--profile <profile-name> --do` to copy
+the builtin tree into `devcovenant/custom/...` and materialize mirrored tests
+under `tests/devcovenant/custom/...`.
+Use `--undo` to remove the repo-owned copy and its mirrored tests again.
+The command runs refresh automatically after the copy or removal.
+Like the other lifecycle commands, `custom` follows the repository's
+resolved managed environment instead of assuming a local `.venv`.
 
 ### run
 Runs the declared workflow steps for the repository.
