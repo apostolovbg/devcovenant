@@ -1,7 +1,7 @@
 metadata:
   schema_version: 1
   registry_layout: single-root
-  policy_registry_input_hash: 1869b448e8849a6ebd62577dae4b0edb80ca5ca4c0dc6b5e64a12edcbb6750d3
+  policy_registry_input_hash: 6e5f27023f77915dae3157a1b72cf2e8c5fd70cbb08dcf65d8595d42f5f633da
 project-governance:
   project_name: devcovenant
   project_description: devcovenant is a repository governance framework.
@@ -9970,17 +9970,18 @@ policies:
       (`target_role_files`, `target_role_globs`, `target_role_dirs`) with
       `role=>selector` entries. Version extraction is role-driven via
       `role_extractors` and explicit extractor names
-      (`project_version_line`, `changelog_header_version`,
-      `manifest_project_version`). Manifest extraction remains format-aware
-      (TOML/JSON/YAML) while selector routing stays role-based. Version-sync
-      validates and compares every extracted value through the active
-      `version-governance` scheme so canonical docs, changelog, manifests,
-      and any opted-in legal text stay synchronized even when repositories
-      use non-SemVer version formats. Optional `role_legality_schemes`
-      entries add stricter ecosystem legality for selected roles without
-      collapsing repo-level version governance back into one packaging-only
-      scheme. Autofix repairs mismatched declared targets by rewriting the
-      target's version token to the current canonical version.
+      (`project_version_line`, `devcovenant_version_line`,
+      `changelog_header_version`, `manifest_project_version`). Manifest
+      extraction remains format-aware (TOML/JSON/YAML) while selector routing
+      stays role-based. Version-sync validates and compares every extracted
+      value through the active `version-governance` scheme so canonical docs,
+      managed-doc `DevCovenant Version` headers, changelog entries, manifests,
+      and any opted-in legal text stay synchronized even when repositories use
+      non-SemVer version formats. Optional `role_legality_schemes` entries add
+      stricter ecosystem legality for selected roles without collapsing
+      repo-level version governance back into one packaging-only scheme.
+      Autofix repairs mismatched declared targets by rewriting the target's
+      version token to the current canonical version.
     metadata:
       id: version-sync
       severity: error
@@ -10487,7 +10488,7 @@ policies:
     - docs=>devcovenant/registry/README.md
     origin: builtin
     script_exists: true
-    hash: b8d616439e1d68675c5cae456fe0f85fc29e9946076b8e531d5ff9c0825f7597
+    hash: 448aa4815b6e01825b9efe0c91417bf8a3d7535c6011a53ead3f23165f1f5a90
     script_path: builtin/version_sync.py
   version-governance:
     enabled: true

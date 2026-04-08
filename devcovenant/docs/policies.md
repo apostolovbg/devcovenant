@@ -184,10 +184,11 @@ sources.
 
 `version-sync` is a good example of that split.
 Its check path resolves the configured canonical version file and compares the
-declared role targets against that value.
+declared role targets against that value, including managed-doc roles that
+carry `DevCovenant Version` headers.
 Its autofix path rewrites only those declared targets, such as
-Project Version headers, changelog version headers, and declared package
-manifest version fields.
+Project Version headers, DevCovenant Version headers, changelog version
+headers, and declared package manifest version fields.
 It does not widen the scope to same-name files elsewhere in the tree.
 
 ## Translators And Language-Aware Policies

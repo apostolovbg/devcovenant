@@ -296,6 +296,12 @@ intentionally not trying to do.
   compatibility policy, and versioning mode.
 - Managed docs, tracked registry outputs, and related rendered public surfaces
   shall derive their identity headers from `project-governance`.
+- `version-governance` shall keep the canonical version file authoritative.
+- `version-sync` shall propagate that canonical version to Project Version
+  headers, DevCovenant Version headers, changelog headers, package manifests,
+  and other declared version-bearing targets.
+- Managed docs shall render `DevCovenant Version` from the same canonical
+  version value during refresh.
 - Policy activation shall remain config-driven through `policy_state`.
 - Profiles shall be selected through `profiles.active`.
 - Engine behavior such as output mode, test output mode, autofix enablement,

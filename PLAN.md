@@ -67,16 +67,15 @@ changing in DevCovenant itself.
    - The bump flow should stay one move: change the canonical version file,
      then let `gate --mid` or refresh propagate the versioned outputs.
    - Make sure custom managed docs are included in the sync surface.
-5. [ ] Project metadata sync
-   - Add or define a `project-metadata-sync` policy if `version-sync` is not
-     the right home for non-version metadata.
-   - Sync project name and description into `pyproject.toml` and any other
-     manifests that expose matching keys.
-   - Keep the policy extensible for other canonical identity fields such as
-     homepage, repository, support, license, and authors where those keys
-     exist.
-   - Mirror the same canonical metadata into managed docs when a doc
-     descriptor exposes those fields.
+5. [x] Project metadata sync
+   - Keep the canonical version file as the source of truth and let
+     `version-sync` propagate it to project manifests, managed-doc
+     `DevCovenant Version` headers, changelog headers, and other declared
+     version-bearing targets.
+   - Keep project name and description synchronized through the existing
+     refresh and managed-doc rendering path, not a new policy surface.
+   - Leave the metadata model declarative so future repo-owned identity
+     fields stay configurable instead of hardcoded.
 6. [x] Builtin policy/profile customization and test blueprints
    - Ship builtin policy and profile test coverage as non-discoverable
      blueprint metadata in the packaged descriptor tree rather than as

@@ -62,6 +62,9 @@ That is separate from the governed project version inside a repository.
 The project version comes from the configured `version-sync.version_file`, and
 the `version-sync` policy repairs declared version-bearing targets so they
 follow that canonical project version during the normal workflow.
+Managed docs render `DevCovenant Version` headers from the same canonical
+version value during refresh, so package and repository-facing headers stay
+in step without a separate bump path.
 
 That machine install is separate from repository activation.
 Installing the CLI makes `devcovenant` available on the machine.

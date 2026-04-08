@@ -28,11 +28,23 @@ _PROJECT_VERSION_LINE_EDIT_PATTERN = re.compile(
     r"(?P<version>.+?)(?P<suffix>\s*)$",
     flags=re.MULTILINE,
 )
+_DEVCOV_VERSION_LINE_PATTERN = re.compile(
+    r"^\s*(?:\*\*DevCovenant Version:\*\*|DevCovenant Version:)\s*"
+    r"(?P<version>.+?)\s*$",
+    flags=re.MULTILINE,
+)
+_DEVCOV_VERSION_LINE_EDIT_PATTERN = re.compile(
+    r"^(?P<prefix>\s*"
+    r"(?:\*\*DevCovenant Version:\*\*|DevCovenant Version:)\s*)"
+    r"(?P<version>.+?)(?P<suffix>\s*)$",
+    flags=re.MULTILINE,
+)
 _RELEASE_TAG_PATH_PATTERN = re.compile(
     r"(?P<prefix>/(?:tree|blob)/v)(?P<version>[^/]+)(?P<suffix>/)"
 )
 _EXTRACTOR_NAMES = {
     "project_version_line",
+    "devcovenant_version_line",
     "changelog_header_version",
     "manifest_project_version",
 }
@@ -808,6 +820,8 @@ class VersionSyncCheck(PolicyCheck):
         """Extract one version value using the configured extractor."""
         if extractor_name == "project_version_line":
             return self._extract_project_version_line(target)
+        if extractor_name == "devcovenant_version_line":
+            return self._extract_devcovenant_version_line(target)
         if extractor_name == "changelog_header_version":
             return self._extract_changelog_header_version(
                 target,
@@ -824,6 +838,15 @@ class VersionSyncCheck(PolicyCheck):
         """Extract a `Project Version:` line from one text document."""
         text = path.read_text(encoding="utf-8")
         match = _PROJECT_VERSION_LINE_PATTERN.search(text)
+        if not match:
+            return None
+        return match.group("version").strip() or None
+
+    @staticmethod
+    def _extract_devcovenant_version_line(path: Path) -> Optional[str]:
+        """Extract a `DevCovenant Version:` line from one text document."""
+        text = path.read_text(encoding="utf-8")
+        match = _DEVCOV_VERSION_LINE_PATTERN.search(text)
         if not match:
             return None
         return match.group("version").strip() or None
@@ -972,6 +995,8 @@ def write_synced_target_version(
     """Write the tracked version into one declared synchronized target."""
     if extractor_name == "project_version_line":
         return _write_project_version_line(target, tracked_version)
+    if extractor_name == "devcovenant_version_line":
+        return _write_devcovenant_version_line(target, tracked_version)
     if extractor_name == "changelog_header_version":
         return _write_changelog_header_version(
             target,
@@ -991,6 +1016,29 @@ def _write_project_version_line(target: Path, tracked_version: str) -> bool:
             f"Target lacks a Project Version line: {target.as_posix()}"
         )
     updated = _PROJECT_VERSION_LINE_EDIT_PATTERN.sub(
+        lambda match: (
+            f"{match.group('prefix')}{tracked_version}"
+            f"{match.group('suffix')}"
+        ),
+        text,
+        count=1,
+    )
+    if updated == text:
+        return False
+    target.write_text(updated, encoding="utf-8")
+    return True
+
+
+def _write_devcovenant_version_line(
+    target: Path, tracked_version: str
+) -> bool:
+    """Replace one existing DevCovenant Version line with the tracked value."""
+    text = target.read_text(encoding="utf-8")
+    if not _DEVCOV_VERSION_LINE_EDIT_PATTERN.search(text):
+        raise ValueError(
+            f"Target lacks a DevCovenant Version line: {target.as_posix()}"
+        )
+    updated = _DEVCOV_VERSION_LINE_EDIT_PATTERN.sub(
         lambda match: (
             f"{match.group('prefix')}{tracked_version}"
             f"{match.group('suffix')}"

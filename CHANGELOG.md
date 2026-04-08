@@ -61,6 +61,34 @@ Example:
 ## Version 1.0.1b2
 
 - 2026-04-09:
+  Change: Added `devcovenant_docs` version-sync coverage for managed-doc
+          `DevCovenant Version` headers, regenerated the version-sync test
+          blueprint, and updated the version-sync metadata/config surface.
+  Why: Preserved the canonical version file as the source of truth while
+       extending the existing sync path to every documented version-bearing
+       target instead of introducing a new policy.
+  Impact: `version-sync`, managed docs, and the repo docs now describe and
+          verify the same canonical version flow for project manifests and
+          DevCovenant-facing headers.
+  Files:
+  AGENTS.md
+  CHANGELOG.md
+  PLAN.md
+  SPEC.md
+  devcovenant/builtin/policies/README.md
+  devcovenant/builtin/policies/version_sync/test_blueprints.yaml
+  devcovenant/builtin/policies/version_sync/version_sync.py
+  devcovenant/builtin/policies/version_sync/version_sync.yaml
+  devcovenant/config.yaml
+  devcovenant/docs/config.md
+  devcovenant/docs/installation.md
+  devcovenant/docs/policies.md
+  devcovenant/docs/registry.md
+  devcovenant/registry/registry.yaml
+  tests/devcovenant/builtin/policies/version_sync/autofix/test_global.py
+  tests/devcovenant/builtin/policies/version_sync/test_version_sync.py
+
+- 2026-04-09:
   Change: Updated the repo-owned `userproject` profile to widen code-style
           policy scope across `devcovenant/**` and `tests/**`, and marked the
           matching plan item complete.

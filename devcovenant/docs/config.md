@@ -1,5 +1,5 @@
 # Configuration
-**Last Updated:** 2026-04-07
+**Last Updated:** 2026-04-08
 
 **Project Version:** 1.0.1b2
 
@@ -156,6 +156,14 @@ For example, a project may keep `webcam-micro` as `project_name` while using
 `compatibility_policy` is only about compatibility promises.
 Do not overload it with free-form product notes such as cross-platform
 support; those belong in `project_description`, `README.md`, or `SPEC.md`.
+
+Version ownership splits across two config surfaces:
+- `version-governance.version_file` names the canonical version file.
+- `version-sync` fans that canonical value out to Project Version headers,
+  DevCovenant Version headers, changelog headers, and manifest version
+  fields.
+- Managed docs render those headers from the same canonical value during
+  refresh.
 
 ### paths
 This section chooses where DevCovenant keeps important local files such as:

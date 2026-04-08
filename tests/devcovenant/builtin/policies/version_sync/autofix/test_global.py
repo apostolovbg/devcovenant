@@ -78,6 +78,24 @@ def _unit_test_fix_rewrites_project_version_line() -> None:
         )
 
 
+def _unit_test_fix_rewrites_devcovenant_version_line() -> None:
+    """Fixer should rewrite DevCovenant Version headers."""
+    with tempfile.TemporaryDirectory() as temp_dir:
+        target = Path(temp_dir) / "README.md"
+        target.write_text(
+            "# Demo\n**DevCovenant Version:** 0.1.0\n",
+            encoding="utf-8",
+        )
+        fixer = VersionSyncFixer()
+        result = fixer.fix(
+            _violation(target, extractor_name="devcovenant_version_line")
+        )
+        assert result.success is True
+        assert "**DevCovenant Version:** 2.3.4" in target.read_text(
+            encoding="utf-8"
+        )
+
+
 def _unit_test_fix_rewrites_changelog_header() -> None:
     """Fixer should rewrite the latest changelog header version."""
     with tempfile.TemporaryDirectory() as temp_dir:
@@ -126,6 +144,10 @@ class GeneratedUnittestCases(unittest.TestCase):
     def test_fix_rewrites_project_version_line(self):
         """Run test_fix_rewrites_project_version_line."""
         _unit_test_fix_rewrites_project_version_line()
+
+    def test_fix_rewrites_devcovenant_version_line(self):
+        """Run test_fix_rewrites_devcovenant_version_line."""
+        _unit_test_fix_rewrites_devcovenant_version_line()
 
     def test_fix_rewrites_changelog_header(self):
         """Run test_fix_rewrites_changelog_header."""

@@ -139,11 +139,22 @@ class TestVersionSyncPolicy(unittest.TestCase):
         changelog.write_text(f"## Log changes here\n\n## Version {version}\n")
         return changelog
 
-    def _write_readme(self, root: Path, path: str, version: str) -> Path:
-        """Write a document carrying the Project Version header."""
+    def _write_readme(
+        self,
+        root: Path,
+        path: str,
+        version: str,
+        *,
+        devcovenant_version: str | None = None,
+    ) -> Path:
+        """Write a document carrying the managed version headers."""
         readme = root / path
         readme.parent.mkdir(parents=True, exist_ok=True)
-        readme.write_text(f"**Project Version:** {version}\n")
+        readme.write_text(
+            f"**Project Version:** {version}\n"
+            f"**DevCovenant Version:** "
+            f"{devcovenant_version or version}\n"
+        )
         return readme
 
     def _write_license(self, root: Path, path: str, version: str) -> Path:
@@ -221,6 +232,83 @@ class TestVersionSyncPolicy(unittest.TestCase):
                 manifest_mismatch.context["tracked_version"],
                 "1.0.0",
             )
+
+    def test_detects_devcovenant_version_mismatch(self):
+        """Policy should detect managed-doc DevCovenant version mismatches."""
+        with tempfile.TemporaryDirectory() as tmpdir:
+            repo_root = Path(tmpdir)
+
+            version_dir = repo_root / "project_lib"
+            version_dir.mkdir()
+            (version_dir / "VERSION").write_text("1.0.0\n")
+
+            self._write_readme(
+                repo_root,
+                "README.md",
+                "1.0.0",
+                devcovenant_version="2.0.0",
+            )
+            self._write_readme(repo_root, "docs/README.md", "1.0.0")
+            self._write_pyproject(repo_root, "1.0.0")
+            self._write_pyproject(repo_root, "1.0.0", "app/pyproject.toml")
+            self._write_license(repo_root, "LICENSE", "1.0.0")
+            self._write_license(repo_root, "app/license.txt", "1.0.0")
+            self._write_changelog(repo_root, "1.0.0")
+
+            policy = VersionSyncCheck()
+            policy.set_options(
+                {
+                    "version_file": "project_lib/VERSION",
+                    "changelog_file": "CHANGELOG.md",
+                    "changelog_header_prefix": "## Version",
+                    "target_roles": [
+                        "docs",
+                        "devcovenant_docs",
+                        "changelog",
+                        "package_manifest",
+                        "legal",
+                    ],
+                    "role_extractors": [
+                        "docs=>project_version_line",
+                        "devcovenant_docs=>devcovenant_version_line",
+                        "changelog=>changelog_header_version",
+                        "package_manifest=>manifest_project_version",
+                        "legal=>project_version_line",
+                    ],
+                    "target_role_files": [
+                        "docs=>README.md",
+                        "devcovenant_docs=>README.md",
+                        "docs=>docs/README.md",
+                        "devcovenant_docs=>docs/README.md",
+                        "changelog=>CHANGELOG.md",
+                        "package_manifest=>pyproject.toml",
+                        "package_manifest=>app/pyproject.toml",
+                        "legal=>LICENSE",
+                        "legal=>app/license.txt",
+                    ],
+                },
+                {},
+            )
+            with mock.patch.object(
+                version_sync.version_governance,
+                "resolve_runtime_scheme",
+                return_value=self._resolved_scheme("semver"),
+            ):
+                violations = policy.check(CheckContext(repo_root=repo_root))
+
+            mismatch = [
+                item
+                for item in violations
+                if item.context.get("extractor_name")
+                == "devcovenant_version_line"
+            ]
+            self.assertEqual(len(mismatch), 1)
+            self.assertEqual(
+                mismatch[0].file_path.resolve(),
+                (repo_root / "README.md").resolve(),
+            )
+            self.assertTrue(mismatch[0].can_auto_fix)
+            self.assertEqual(mismatch[0].context["tracked_version"], "1.0.0")
 
     def test_detects_manifest_release_url_version_mismatch(self):
         """Tagged manifest URLs should stay synchronized with the version."""

@@ -1,5 +1,5 @@
 # Registry
-**Last Updated:** 2026-04-07
+**Last Updated:** 2026-04-08
 **Project Version:** 1.0.1b2
 
 ## Overview
@@ -65,7 +65,8 @@ The same dependency-management registry section also records resolved
 adds or changes an explicit fallback source for dependency license texts.
 The same rule applies to `version-sync`: the tracked registry records the
 resolved version source file, role extractors, and role targets that define
-which docs, changelog files, and package manifests must stay synchronized.
+which docs, DevCovenant Version headers, changelog files, and package
+manifests must stay synchronized.
 The same tracked policy metadata also records sync-policy script hashes, so a
 source fix in `package-doc-sync` is expected to refresh
 `devcovenant/registry/registry.yaml` even when the visible doc set changes
