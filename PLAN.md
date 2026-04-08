@@ -1,156 +1,115 @@
 # Development Plan
 **Doc ID:** PLAN
 **Doc Type:** plan
-**Project Version:** 1.0.1b1
+**Project Version:** 1.0.1b2
 **Project Stage:** stable
 **Maintenance Stance:** active
 **Compatibility Policy:** forward-only
 **Versioning Mode:** versioned
-**Last Updated:** 2026-04-04
-**DevCovenant Version:** 1.0.1b1
+**Last Updated:** 2026-04-08
+**DevCovenant Version:** 1.0.1b2
 
 <!-- DEVCOV:BEGIN -->
 This opening section is managed by DevCovenant.
 Use `PLAN.md` to track active implementation work below this block.
 <!-- DEVCOV:END -->
-Use this plan to track the release-QA work needed to ship the `1.0.1`
-release line.
-Keep items concrete, current, and focused on release readiness rather than
-open-ended cleanup.
+Use this plan to track the upstream hardening backlog for DevCovenant.
+Keep items concrete, current, and tied to the canonical behavior we are
+changing in DevCovenant itself.
 
 ## Table of Contents
 1. [Overview](#overview)
-2. [Release Scope](#release-scope)
-3. [Documentation Review](#documentation-review)
-4. [QA Review](#qa-review)
-5. [Exit Criteria](#exit-criteria)
+2. [Active Workstreams](#active-workstreams)
+3. [Exit Criteria](#exit-criteria)
 
 ## Overview
-- Use this plan to drive one disciplined `1.0.1` release routine.
-- Treat release readiness as a single go/no-go decision, not as an endless
-  stream of loosely related audit reactions.
-- Treat `1.0.0` as burned on PyPI and use `1.0.1` as the maintained public
-  line from here.
-- Use `1.0.1b1` as the explicit prerelease cut for the current release
-  qualification pass.
-- Keep package docs general to DevCovenant as a product. Keep repository
-  operation notes in repository-owned docs only.
-- Remove forward-looking blockers, stale expectations, and false historical
-  narration encountered during the review.
-- Keep release-QA practical by reducing avoidable duplicate work in the heavy
-  lifecycle commands without weakening end-to-end coverage.
-- Record landed changes in `CHANGELOG.md` and use the governed gate workflow
-  for every slice.
+- Treat this plan as the reference backlog while we rewrite the environment,
+  policy, metadata, and documentation contracts.
+- Keep shipped builtin profiles and repo-owned custom profiles distinct.
+- We do not ship custom profiles.
+- Keep the plan focused on DevCovenant behavior, not on user-repo project
+  implementation details.
 
-## Release Scope
-1. [done] Clear the remaining stale CLI test expectation so the targeted
-   current-state audit aligns with the runtime contract.
-2. [done] Clarify and document the managed-environment contract.
-   Landed:
-   - `.venv` is documented as the seeded default, not the only supported shape
-   - the managed-environment policy and docs now describe a declared execution
-     context contract
-   - release QA now includes a managed-environment matrix instead of implying
-     `.venv` as the whole model
-3. [done] Re-audit package-facing docs for product scope and forward wording.
-   Landed:
-   - package docs use more product-facing wording and less repeated
-     repository-internal jargon
-   - ambiguous phrasing such as policy state living "in the repo" was replaced
-     with clearer project-file wording
-   - the package docs keep `.venv` as the seeded example without treating it as
-     the whole product story
-4. [done] Review repository-facing docs for operator accuracy.
-   Landed:
-   - root README release notes now call out the maintained public `1.0.1` line
-   - trust docs align support and security scope to the same `1.0.1` line
-   - repository notes stay in repository-owned docs instead of leaking into the
-     packaged docs
-5. [done] Tighten heavy lifecycle commands without reducing fidelity.
-   Landed:
-   - `refresh` now reuses one profile-registry build, avoids duplicate
-     manifest normalization, and records per-phase timing details in the run
-     summary artifacts
-   - `install`, `deploy`, `undeploy`, `uninstall`, and `upgrade` now record
-     phase timing details in the same summary artifacts
-   - `undeploy` now limits repository-wide managed-doc scanning to recovery
-     paths instead of using it as the normal path
-   - setup-only lifecycle tests now prefer cached installed or refreshed seed
-     repositories while keeping direct end-to-end lifecycle coverage where the
-     command path itself is the contract under test
-6. [done] Decide the `1.0.1` release form.
-   Landed:
-   - chose `1.0.1b1` for one explicit opt-in prerelease pass on PyPI
-   - kept the stable `1.0.1` line reserved for the first maintained
-     non-prerelease release after the prerelease review
-   - kept the decision explicit in the release plan, changelog, and version
-     bump
-7. [done] Freeze non-release work once blockers are cleared.
-   Landed:
-   - accepted only release readiness work, correctness fixes, packaging
-     checks, and documented contract alignment in the release-cut slice
-   - treated unrelated cleanup as out of scope until the `1.0.1` line ships
-
-## Documentation Review
-- Audit these package-facing surfaces first:
-  - `devcovenant/README.md`
-  - `devcovenant/docs/installation.md`
-  - `devcovenant/docs/workflow.md`
-  - `devcovenant/docs/profiles.md`
-  - `devcovenant/docs/policies.md`
-  - `devcovenant/docs/config.md`
-- Audit the managed documentation sources under
-  `devcovenant/custom/profiles/userproject/assets/docs/` so source, generated,
-  and live docs stay aligned.
-- For each doc surface, check:
-  - product scope versus repository scope
-  - unnecessary internal terminology
-  - stale history or transition phrasing
-  - forward-only wording
-  - runtime/prose contract alignment
-
-## QA Review
-1. Functional QA
-   - verify `install`, `refresh`, `gate`, `run`, `upgrade`, and managed
-     bootstrap flows
-   - use summary phase timings to inspect heavy lifecycle commands before
-     treating a slow run as a vague test-suite problem
-2. Clean-room QA
-   - test from a fresh clone with no pre-existing `.venv`
-   - verify no ghost files or unintended generated artifacts appear
-3. Managed-Environment Matrix QA
-   - verify the seeded local `.venv` path
-   - verify a declared non-venv local interpreter path
-   - verify a declared system/native interpreter repository
-   - verify one declared bench-managed or container-managed representative case
-4. Packaging QA
-   - build `sdist` and `wheel`
-   - install built artifacts into a clean environment
-   - smoke-test the installed CLI
-5. Compatibility QA
-   - confirm forward-only contract cleanup
-   - confirm no stale aliases, bridges, or tests pinned to obsolete wording
-6. Documentation QA
-   - verify packaged docs are user-facing, general, and present-tense
-   - verify generated mirrors match their sources
-7. Release QA
-   - verify changelog, version headers, CI status, and release evidence
-   - run `devcovenant gate --start`, `devcovenant gate --mid`,
-     `devcovenant run`, and `devcovenant gate --end`
+## Active Workstreams
+1. Environment-neutral admin commands
+   - `install`, `upgrade`, `refresh`, `undeploy`, and `uninstall` should run
+     from the interpreter or environment they are launched from and act on the
+     repository or bench they point at.
+   - `asset` should stay repo-bound: it must require a repository context, but
+     it should not depend on a repo-local venv assumption.
+   - Do not reintroduce a builtin `.venv` seed just to satisfy command wiring.
+2. Policy scope by repo type
+   - For normal user repos, `devcovuser` should apply `no-raw-errors` and the
+     code-style policies to `tests/**` and `devcovenant/custom/**`.
+   - In the DevCovenant repo itself, the repo-owned `userproject` profile
+     should widen the same policies to `tests/**` and `devcovenant/**`.
+   - Keep the shipped baseline generic; repo-specific scope belongs in the
+     repo-owned profile metadata.
+   - The code-style set under discussion is `line-length-limit`,
+     `name-clarity`, `docstring-and-comment-coverage`, `security-scanner`, and
+     `no-raw-errors`.
+3. Silence and workflow messaging
+   - Encode the silence rule in the managed AGENTS template and the repo
+     `AGENTS.md`.
+   - Make `gate --start` state that agents should work in silence and only
+     provide a summary after work finishes.
+   - After `gate --end`, stage all changes before any chat summary.
+   - Keep mid-work narration out of the workflow.
+4. Version and metadata sync
+   - Treat the canonical version file as the single source for both the project
+     version and the DevCovenant version.
+   - `version-governance` should validate only; `version-sync` should
+     propagate version headers and versioned manifest fields automatically.
+   - The bump flow should stay one move: change the canonical version file,
+     then let `gate --mid` or refresh propagate the versioned outputs.
+   - Make sure custom managed docs are included in the sync surface.
+5. Project metadata sync
+   - Add or define a `project-metadata-sync` policy if `version-sync` is not
+     the right home for non-version metadata.
+   - Sync project name and description into `pyproject.toml` and any other
+     manifests that expose matching keys.
+   - Keep the policy extensible for other canonical identity fields such as
+     homepage, repository, support, license, and authors where those keys
+     exist.
+   - Mirror the same canonical metadata into managed docs when a doc
+     descriptor exposes those fields.
+6. Builtin policy and profile scaffolding
+   - Make builtin policy or profile copies obtainable as repo-owned custom
+     copies with their corresponding test mirrors.
+   - Copy tests into `tests/devcovenant/custom/**` using a naming scheme that
+     keeps them out of default user-repo discovery unless explicitly mirrored.
+   - Keep builtin tests in the builtin tree and custom tests in the custom
+     tree; do not ship custom profiles.
+   - The goal is to make customization repeatable, not to duplicate the builtin
+     tree manually.
+7. Documentation growth tracking
+   - Document how `documentation-growth-tracking` wires keywords to documents
+     through `doc_routes`.
+   - Show a generalized example that maps a source change, its keywords, and
+     the target document set.
+   - Explain how to point one keyword set at multiple docs and how the policy
+     keeps documentation growth deliberate.
+   - Keep the example generic enough to apply outside the current repo.
+8. Gate-start reminder
+   - `gate --start` should print the silence reminder in normal and verbose
+     mode.
+   - The reminder should say that AI agents work in silence and only provide a
+     summary after work is complete.
 
 ## Exit Criteria
-- The blocker list is empty or explicitly accepted for beta.
-- The governed workflow passes on the release candidate tree.
-- Package docs are general to DevCovenant and free of repository-only or
-  history-dependent wording.
-- The managed-environment support boundary is documented and validated across
-  the release QA matrix instead of being implied by the seeded `.venv`
-  example alone.
-- Heavy lifecycle commands avoid duplicate no-op work where possible and leave
-  timing evidence in run summaries when more optimization is needed.
-- The chosen `1.0.1` release form, prerelease or direct stable, is explicit
-  before publish.
-- Repository docs remain truthful for repository operators.
-- Packaging, installation, and clean-room checks are complete.
-- The `1.0.1` release decision can end with a clear go/no-go recommendation
-  and a short residual-risk list.
+- Environment-sensitive admin commands no longer depend on a repo-local
+  managed-environment assumption, except for `asset`, which remains repo
+  bound.
+- Policy scope matches repo ownership: shipped user-repo profiles stay
+  generic, while the DevCovenant repo can widen scope locally through its
+  repo-owned profile.
+- Silence and work-summary rules are explicit in the managed template, the
+  repo `AGENTS.md`, and the start-gate output.
+- Version bumps remain one move: canonical version file first, sync output
+  second.
+- Project name and description propagate through the canonical metadata path
+  into manifests and managed docs.
+- Customization of builtin policies and profiles has a documented path that
+  also carries test mirrors into the custom tree.
+- Documentation-growth tracking has a generalized wiring example that points
+  real keywords at real docs.

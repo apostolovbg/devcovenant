@@ -1,15 +1,15 @@
 # devcovenant
 **Doc ID:** README
 **Doc Type:** repo-readme
-**Project Version:** 1.0.1b1
+**Project Version:** 1.0.1b2
 **Last Updated:** 2026-04-07
-**DevCovenant Version:** 1.0.1b1
+**DevCovenant Version:** 1.0.1b2
 
 <!-- DEVCOV:BEGIN -->
 
 <!-- DEVCOV:END -->
 
-![DevCovenant banner](https://raw.githubusercontent.com/apostolovbg/devcovenant/v1.0.1b1/devcovenant/docs/banner.png)
+![DevCovenant banner](https://raw.githubusercontent.com/apostolovbg/devcovenant/v1.0.1b2/devcovenant/docs/banner.png)
 
 DevCovenant is a repository governance framework.
 It keeps workflow rules, policy rules, generated files, and command logs in one
@@ -89,9 +89,9 @@ Customization is override-based by design:
 - when a custom entry shadows a builtin one, the builtin entry is ignored
 
 For the deeper authoring model, go straight to
-[policies.md](https://github.com/apostolovbg/devcovenant/blob/v1.0.1b1/devcovenant/docs/policies.md),
-[profiles.md](https://github.com/apostolovbg/devcovenant/blob/v1.0.1b1/devcovenant/docs/profiles.md), and
-[config.md](https://github.com/apostolovbg/devcovenant/blob/v1.0.1b1/devcovenant/docs/config.md).
+[policies.md](https://github.com/apostolovbg/devcovenant/blob/v1.0.1b2/devcovenant/docs/policies.md),
+[profiles.md](https://github.com/apostolovbg/devcovenant/blob/v1.0.1b2/devcovenant/docs/profiles.md), and
+[config.md](https://github.com/apostolovbg/devcovenant/blob/v1.0.1b2/devcovenant/docs/config.md).
 
 ## Quick Start
 For most users, the right start is an isolated machine install with `pipx`,
@@ -106,9 +106,9 @@ devcovenant install
 # set install.config_reviewed: true
 devcovenant deploy
 # prepare the environment declared by the active profile stack
-# if the active stack seeds a local .venv, one manual equivalent is:
-python3 -m venv .venv
-.venv/bin/python -m pip install -r requirements.lock
+# one manual equivalent is installing `requirements.lock` into that
+# declared environment
+python3 -m pip install -r requirements.lock
 # gate --start can also run the declared bootstrap commands
 # and honors active-profile ignore dirs before the snapshot
 devcovenant gate --start
@@ -320,49 +320,49 @@ otherwise DevCovenant should only touch managed headers and managed blocks.
 ## Docs Map
 Use the shorter map below instead of treating the README as the whole manual.
 
-- [installation.md](https://github.com/apostolovbg/devcovenant/blob/v1.0.1b1/devcovenant/docs/installation.md)
+- [installation.md](https://github.com/apostolovbg/devcovenant/blob/v1.0.1b2/devcovenant/docs/installation.md)
 
   Install, deploy, upgrade, clean, undeploy, uninstall, and first-time setup.
 
-- [workflow.md](https://github.com/apostolovbg/devcovenant/blob/v1.0.1b1/devcovenant/docs/workflow.md)
+- [workflow.md](https://github.com/apostolovbg/devcovenant/blob/v1.0.1b2/devcovenant/docs/workflow.md)
 
   Gate sequence, command order, logs, and recovery.
 
-- [config.md](https://github.com/apostolovbg/devcovenant/blob/v1.0.1b1/devcovenant/docs/config.md)
+- [config.md](https://github.com/apostolovbg/devcovenant/blob/v1.0.1b2/devcovenant/docs/config.md)
 
   How to read `devcovenant/config.yaml`, including project settings,
   profile stacks, workflow settings, policy activation, and metadata overlays
   and overrides.
 
-- [profiles.md](https://github.com/apostolovbg/devcovenant/blob/v1.0.1b1/devcovenant/docs/profiles.md)
+- [profiles.md](https://github.com/apostolovbg/devcovenant/blob/v1.0.1b2/devcovenant/docs/profiles.md)
 
   Built-in profiles, custom profiles, translators, workflow runs, CI
   fragments, and reusable governance stacks.
 
-- [policies.md](https://github.com/apostolovbg/devcovenant/blob/v1.0.1b1/devcovenant/docs/policies.md)
+- [policies.md](https://github.com/apostolovbg/devcovenant/blob/v1.0.1b2/devcovenant/docs/policies.md)
 
   Built-in and custom policy authoring, selector roles, runtime actions,
   autofixers, policy commands, and version-governance adapters.
 
-- [refresh.md](https://github.com/apostolovbg/devcovenant/blob/v1.0.1b1/devcovenant/docs/refresh.md)
+- [refresh.md](https://github.com/apostolovbg/devcovenant/blob/v1.0.1b2/devcovenant/docs/refresh.md)
 
   What refresh rebuilds and which files it owns.
 
-- [architecture.md](https://github.com/apostolovbg/devcovenant/blob/v1.0.1b1/devcovenant/docs/architecture.md)
+- [architecture.md](https://github.com/apostolovbg/devcovenant/blob/v1.0.1b2/devcovenant/docs/architecture.md)
 
   Internal structure and major code ownership boundaries.
 
-- [registry.md](https://github.com/apostolovbg/devcovenant/blob/v1.0.1b1/devcovenant/docs/registry.md)
+- [registry.md](https://github.com/apostolovbg/devcovenant/blob/v1.0.1b2/devcovenant/docs/registry.md)
 
   Tracked registry, runtime registry, and gate state.
 
-- [troubleshooting.md](https://github.com/apostolovbg/devcovenant/blob/v1.0.1b1/devcovenant/docs/troubleshooting.md)
+- [troubleshooting.md](https://github.com/apostolovbg/devcovenant/blob/v1.0.1b2/devcovenant/docs/troubleshooting.md)
 
   Fast recovery paths for common failures.
 
 ## License
 DevCovenant is released under the MIT License.
-See [LICENSE](https://github.com/apostolovbg/devcovenant/blob/v1.0.1b1/LICENSE) and
-[licenses/THIRD_PARTY_LICENSES.md](https://github.com/apostolovbg/devcovenant/blob/v1.0.1b1/licenses/THIRD_PARTY_LICENSES.md).
+See [LICENSE](https://github.com/apostolovbg/devcovenant/blob/v1.0.1b2/LICENSE) and
+[licenses/THIRD_PARTY_LICENSES.md](https://github.com/apostolovbg/devcovenant/blob/v1.0.1b2/licenses/THIRD_PARTY_LICENSES.md).
 The published package includes the same license and compliance files under
 `devcovenant/licenses/`.

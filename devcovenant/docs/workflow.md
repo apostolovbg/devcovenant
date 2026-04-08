@@ -1,7 +1,7 @@
 # Workflow
 **Last Updated:** 2026-04-07
 
-**Project Version:** 1.0.1b1
+**Project Version:** 1.0.1b2
 
 ## Overview
 Use this page for the required command order, the meaning of each gate stage,

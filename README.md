@@ -1,9 +1,9 @@
 # devcovenant
 **Doc ID:** README
 **Doc Type:** repo-readme
-**Project Version:** 1.0.1b1
+**Project Version:** 1.0.1b2
 **Last Updated:** 2026-04-07
-**DevCovenant Version:** 1.0.1b1
+**DevCovenant Version:** 1.0.1b2
 
 <!-- DEVCOV:BEGIN -->
 
@@ -106,9 +106,9 @@ devcovenant install
 # set install.config_reviewed: true
 devcovenant deploy
 # prepare the environment declared by the active profile stack
-# if the active stack seeds a local .venv, one manual equivalent is:
-python3 -m venv .venv
-.venv/bin/python -m pip install -r requirements.lock
+# one manual equivalent is installing `requirements.lock` into that
+# declared environment
+python3 -m pip install -r requirements.lock
 # gate --start can also run the declared bootstrap commands
 # and honors active-profile ignore dirs before the snapshot
 devcovenant gate --start

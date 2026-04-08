@@ -1,7 +1,7 @@
 # Configuration
 **Last Updated:** 2026-04-07
 
-**Project Version:** 1.0.1b1
+**Project Version:** 1.0.1b2
 
 ## Overview
 `devcovenant/config.yaml` is the main control file for a repository using

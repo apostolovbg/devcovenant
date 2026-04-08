@@ -1,6 +1,6 @@
 # Refresh Behavior
-**Last Updated:** 2026-04-03
-**Project Version:** 1.0.1b1
+**Last Updated:** 2026-04-07
+**Project Version:** 1.0.1b2
 
 ## Overview
 `refresh` rebuilds the DevCovenant-owned files that belong to the repository's

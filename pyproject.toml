@@ -7,7 +7,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "devcovenant"
-version = "1.0.1b1"
+version = "1.0.1b2"
 description = "devcovenant is a repository governance framework."
 readme = {file = "devcovenant/README.md", content-type = "text/markdown"}
 requires-python = ">=3.11"
@@ -50,10 +50,10 @@ dependencies = [
 ]
 [project.urls]
 Homepage = "https://github.com/apostolovbg/devcovenant"
-Documentation = "https://github.com/apostolovbg/devcovenant/tree/v1.0.1b1/devcovenant/docs"
+Documentation = "https://github.com/apostolovbg/devcovenant/tree/v1.0.1b2/devcovenant/docs"
 Repository = "https://github.com/apostolovbg/devcovenant"
 Issues = "https://github.com/apostolovbg/devcovenant/issues"
-Changelog = "https://github.com/apostolovbg/devcovenant/blob/v1.0.1b1/CHANGELOG.md"
+Changelog = "https://github.com/apostolovbg/devcovenant/blob/v1.0.1b2/CHANGELOG.md"
 
 [tool.setuptools]
 include-package-data = false

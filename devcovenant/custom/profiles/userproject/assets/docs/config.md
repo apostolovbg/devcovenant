@@ -1,5 +1,5 @@
 # Configuration
-**Project Version:** 1.0.1.dev1
+**Project Version:** 1.0.1b2
 
 ## Overview
 `devcovenant/config.yaml` is the main control file for a repository using
@@ -90,10 +90,10 @@ Keep inherited values inherited from the other active profiles instead of
 restating them in the copied same-name custom profile.
 Before the first gate cycle, make sure the environment declared by that stack
 actually exists.
-If the active stack seeds a local `.venv`, `deploy`/`refresh` materializes the
-workspace dependency artifacts and one manual realization is creating `.venv`
-and installing `requirements.lock`.
-That seeded `.venv` flow is only one starting point.
+If the active stack declares a local environment, `deploy`/`refresh`
+materializes the workspace dependency artifacts and one manual realization is
+installing `requirements.lock` into that declared environment.
+That declared-environment flow is only one starting point.
 If the repository uses a system interpreter, bench-managed environment,
 container-managed environment, or other custom environment, declare that
 environment in the profile stack or metadata overlays instead of relying on

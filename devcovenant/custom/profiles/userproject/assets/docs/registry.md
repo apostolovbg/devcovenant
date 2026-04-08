@@ -1,5 +1,5 @@
 # Registry
-**Project Version:** 1.0.1.dev1
+**Project Version:** 1.0.1b2
 
 ## Overview
 DevCovenant uses `devcovenant/registry/` for generated state.

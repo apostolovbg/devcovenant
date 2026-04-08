@@ -1,5 +1,5 @@
 # Installation and Lifecycle
-**Project Version:** 1.0.1.dev1
+**Project Version:** 1.0.1b2
 
 ## Overview
 This page explains how to install DevCovenant, when to use `pipx` versus a
@@ -249,14 +249,14 @@ Use this as the practical first integration flow:
 4. Run `devcovenant deploy`.
 5. Prepare the environment declared by the active profile stack.
 
-   If the active stack seeds a local `.venv`, `deploy` materializes the
-   workspace dependency artifacts and one manual equivalent is creating
-   `.venv` and installing `requirements.lock`.
+   If the active stack declares a local environment, `deploy` materializes the
+   workspace dependency artifacts and one manual equivalent is installing
+   `requirements.lock` into that declared environment.
    `gate --start` can also run the declared bootstrap commands when the target
    environment is still missing.
-   On Windows, use `.venv\\Scripts\\python.exe -m pip install -r \
-   requirements.lock`.
-   That seeded `.venv` flow is only one starting point.
+   On Windows, use the interpreter path declared by the active stack to
+   install `requirements.lock`.
+   That declared-environment flow is only one starting point.
    If the repository uses a system interpreter, bench-managed environment,
    container-managed environment, or another layout, declare that environment
    first through the profile stack or metadata overlays, then prepare it.

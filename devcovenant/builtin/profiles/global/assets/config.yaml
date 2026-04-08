@@ -21,13 +21,14 @@
 # 3) set `install.config_reviewed: true`
 # 4) run `devcovenant deploy`
 # 5) prepare the repository's declared environment
-#    if you keep the seeded `defaults` + `python` stack, deploy/refresh
+#    if you keep the `defaults` + `python` stack, deploy/refresh
 #    writes `requirements.lock` from `requirements.in`
-#    and that seeded `requirements.in` starts from the shipped
+#    and that `requirements.in` starts from the shipped
 #    `devcovenant/runtime-requirements.lock`
-#    and `gate --start` may bootstrap `.venv` from that lock automatically
-#    the manual equivalent is still creating `.venv` and installing
-#    `requirements.lock`
+#    and `gate --start` may bootstrap the declared environment from that
+#    lock automatically
+#    the manual equivalent is installing `requirements.lock` into the
+#    declared environment
 # 6) start normal work with
 #    `gate --start` -> `gate --mid` -> `run` -> `gate --end`
 #

@@ -1,6 +1,6 @@
 # DevCovenant Architecture
-**Last Updated:** 2026-04-03
-**Project Version:** 1.0.1b1
+**Last Updated:** 2026-04-07
+**Project Version:** 1.0.1b2
 
 ## Overview
 This document explains how DevCovenant is put together.

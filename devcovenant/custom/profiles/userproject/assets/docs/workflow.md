@@ -1,5 +1,5 @@
 # Workflow
-**Project Version:** 1.0.1.dev1
+**Project Version:** 1.0.1b2
 
 ## Overview
 Use this page for the required command order, the meaning of each gate stage,
@@ -182,11 +182,11 @@ any declared bootstrap commands.
 
 That keeps `gate --start` non-destructive once a configured environment already
 exists.
-It also keeps the workflow portable across normal `.venv` repositories,
-bench-like environments, and other declared environment layouts.
-With a stack that seeds a local `.venv`, `deploy`/`refresh` materializes the
-workspace dependency artifacts, and `gate --start` can run the declared
-bootstrap commands when the target environment is still missing.
+It also keeps the workflow portable across repositories that declare a local
+environment, bench-like environments, and other declared environment layouts.
+With a stack that declares a local environment, `deploy`/`refresh`
+materializes the workspace dependency artifacts, and `gate --start` can run
+the declared bootstrap commands when the target environment is still missing.
 If a repository uses a different environment shape, it should declare that
 shape explicitly instead of expecting DevCovenant to guess it.
 That includes system interpreters, bench-managed environments, and

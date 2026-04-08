@@ -1,13 +1,13 @@
 # Changelog
 **Doc ID:** CHANGELOG
 **Doc Type:** changelog
-**Project Version:** 1.0.1b1
+**Project Version:** 1.0.1b2
 **Project Stage:** stable
 **Maintenance Stance:** active
 **Compatibility Policy:** forward-only
 **Versioning Mode:** versioned
 **Last Updated:** 2026-04-07
-**DevCovenant Version:** 1.0.1b1
+**DevCovenant Version:** 1.0.1b2
 
 <!-- DEVCOV:BEGIN -->
 ## DevCovenant Change Logging Rules
@@ -57,6 +57,65 @@ Example:
 <!-- DEVCOV:END -->
 
 ## Log changes here
+
+## Version 1.0.1b2
+
+- 2026-04-07:
+  Change: removed the bootstrap `.venv` seed from the config template,
+          generalized the managed-environment guidance, and bumped the
+          release line to `1.0.1b2`.
+  Why: keep the shipped defaults environment-neutral, reduce registry
+       update churn, and publish the new release metadata consistently.
+  Impact: aligned the generated docs, package metadata, and tracked registry
+          on `1.0.1b2`, and removed changelog noise for
+          `devcovenant/registry/registry.yaml` refreshes.
+  Files:
+  AGENTS.md
+  CHANGELOG.md
+  CONTRIBUTING.md
+  PLAN.md
+  POLICY_MAP.md
+  PRIVACY.md
+  PROFILE_MAP.md
+  README.md
+  SECURITY.md
+  SPEC.md
+  SUPPORT.md
+  devcovenant/README.md
+  devcovenant/VERSION
+  devcovenant/builtin/policies/README.md
+  devcovenant/builtin/policies/managed_environment/\
+    managed_environment.yaml
+  devcovenant/builtin/profiles/README.md
+  devcovenant/builtin/profiles/defaults/defaults.yaml
+  devcovenant/builtin/profiles/global/assets/config.yaml
+  devcovenant/config.yaml
+  devcovenant/core/README.md
+  devcovenant/custom/README.md
+  devcovenant/custom/policies/README.md
+  devcovenant/custom/profiles/README.md
+  devcovenant/custom/profiles/userproject/assets/docs/config.md
+  devcovenant/custom/profiles/userproject/assets/docs/installation.md
+  devcovenant/custom/profiles/userproject/assets/docs/policies.md
+  devcovenant/custom/profiles/userproject/assets/docs/profiles.md
+  devcovenant/custom/profiles/userproject/assets/docs/refresh.md
+  devcovenant/custom/profiles/userproject/assets/docs/registry.md
+  devcovenant/custom/profiles/userproject/assets/docs/troubleshooting.md
+  devcovenant/custom/profiles/userproject/assets/docs/workflow.md
+  devcovenant/docs/architecture.md
+  devcovenant/docs/config.md
+  devcovenant/docs/contracts.md
+  devcovenant/docs/installation.md
+  devcovenant/docs/policies.md
+  devcovenant/docs/profiles.md
+  devcovenant/docs/project_governance.md
+  devcovenant/docs/refresh.md
+  devcovenant/docs/registry.md
+  devcovenant/docs/troubleshooting.md
+  devcovenant/docs/workflow.md
+  devcovenant/registry/README.md
+  devcovenant/registry/registry.yaml
+  pyproject.toml
 
 ## Version 1.0.1b1
 

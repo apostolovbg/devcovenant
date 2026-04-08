@@ -97,6 +97,7 @@ policy_overlays:
       - CHANGELOG.md
     skipped_files:
       - CHANGELOG.md
+      - devcovenant/registry/registry.yaml
       - .gitignore
       - .pre-commit-config.yaml
       - .github/workflows/ci.yml

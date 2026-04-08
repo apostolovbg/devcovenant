@@ -1,13 +1,13 @@
 # DevCovenant Development Guide
 **Doc ID:** AGENTS
 **Doc Type:** policy-source
-**Project Version:** 1.0.1b1
+**Project Version:** 1.0.1b2
 **Project Stage:** stable
 **Maintenance Stance:** active
 **Compatibility Policy:** forward-only
 **Versioning Mode:** versioned
 **Last Updated:** 2026-04-07
-**DevCovenant Version:** 1.0.1b1
+**DevCovenant Version:** 1.0.1b2
 
 <!-- DEVCOV:BEGIN -->
 # Message from DevCovenant's Human (Read First)
@@ -199,7 +199,7 @@ directly.
 <!-- DEVCOV:BEGIN -->
 ## Project Governance
 This block reflects the repository's active project-governance state.
-- Project Version: 1.0.1b1
+- Project Version: 1.0.1b2
 - Project Stage: stable
 - Maintenance Stance: active
 - Compatibility Policy: forward-only
@@ -224,6 +224,7 @@ main_changelog:
 skipped_files:
 - devcovenant/config.yaml
 - CHANGELOG.md
+- devcovenant/registry/registry.yaml
 - .gitignore
 - .pre-commit-config.yaml
 - .github/workflows/ci.yml
@@ -1482,7 +1483,7 @@ not leak into routine messages.
 The target environment may live inside the repository or outside it, as long
 as the metadata declares the interpreter path or environment root that
 DevCovenant should use. The policy itself is environment-neutral: a
-repository may seed a local `.venv`, a bench-managed environment, a
+repository may declare a local `.venv`, a bench-managed environment, a
 container-managed environment, a system interpreter, or another tool-owned
 layout in its active profile stack. DevCovenant should not assume the
 builtin defaults profile picks one of those layouts for it.

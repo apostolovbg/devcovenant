@@ -524,6 +524,7 @@ autogen_metadata_overlays:
     skipped_files:
     - devcovenant/config.yaml
     - CHANGELOG.md
+    - devcovenant/registry/registry.yaml
     - .gitignore
     - .pre-commit-config.yaml
     - .github/workflows/ci.yml

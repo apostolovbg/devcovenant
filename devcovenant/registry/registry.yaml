@@ -1,12 +1,12 @@
 metadata:
   schema_version: 1
   registry_layout: single-root
-  policy_registry_input_hash: 14624a88ed904f9aff6a08e3ce361313a40c29a432d61bdf4fcfdc0a421217e5
+  policy_registry_input_hash: 5570f8a917382a962b69e22fecad1871bfd93f5e7bc8c84ac6e0aab8ece4add2
 project-governance:
   project_name: devcovenant
   project_description: devcovenant is a repository governance framework.
   copyright_notice: 2026 Black Epsilon Ltd. and Apostol Apostolov
-  project_version: 1.0.1b1
+  project_version: 1.0.1b2
   stage: stable
   maintenance_stance: active
   compatibility_policy: forward-only
@@ -220,6 +220,7 @@ policies:
       skipped_files:
       - devcovenant/config.yaml
       - CHANGELOG.md
+      - devcovenant/registry/registry.yaml
       - .gitignore
       - .pre-commit-config.yaml
       - .github/workflows/ci.yml
@@ -593,6 +594,7 @@ policies:
           values:
           - devcovenant/config.yaml
           - CHANGELOG.md
+          - devcovenant/registry/registry.yaml
           - .gitignore
           - .pre-commit-config.yaml
           - .github/workflows/ci.yml
@@ -603,6 +605,7 @@ policies:
           values:
           - devcovenant/config.yaml
           - CHANGELOG.md
+          - devcovenant/registry/registry.yaml
           - .gitignore
           - .pre-commit-config.yaml
           - .github/workflows/ci.yml
@@ -613,6 +616,7 @@ policies:
           values:
           - devcovenant/config.yaml
           - CHANGELOG.md
+          - devcovenant/registry/registry.yaml
           - .gitignore
           - .pre-commit-config.yaml
           - .github/workflows/ci.yml
@@ -1635,6 +1639,7 @@ policies:
       skipped_files: &id002
       - devcovenant/config.yaml
       - CHANGELOG.md
+      - devcovenant/registry/registry.yaml
       - .gitignore
       - .pre-commit-config.yaml
       - .github/workflows/ci.yml
@@ -1976,6 +1981,7 @@ policies:
     - build/**
     - devcovenant/config.yaml
     - devcovenant/logs/**
+    - devcovenant/registry/registry.yaml
     - devcovenant/registry/runtime/**
     - devcovenant/registry/runtime/gate_status.json
     - dist/**
@@ -5812,7 +5818,7 @@ policies:
       The target environment may live inside the repository or outside it, as long
       as the metadata declares the interpreter path or environment root that
       DevCovenant should use. The policy itself is environment-neutral: a
-      repository may seed a local `.venv`, a bench-managed environment, a
+      repository may declare a local `.venv`, a bench-managed environment, a
       container-managed environment, a system interpreter, or another tool-owned
       layout in its active profile stack. DevCovenant should not assume the
       builtin defaults profile picks one of those layouts for it.
@@ -6122,7 +6128,7 @@ policies:
     - .venv/bin/python
     origin: builtin
     script_exists: true
-    hash: 38d52167baf720350e510e60e14de91b78b27d60e35af97a3b2af929eb82b7ee
+    hash: 9ee40d886fe5f68b2748924f419634d94923cad80885dcb73d460164361198a0
     script_path: builtin/managed_environment.py
   modules-need-tests:
     enabled: true
@@ -12497,7 +12503,7 @@ policies:
     runtime_state:
       surfaces:
         devcovenant_runtime:
-          input_fingerprint: 22bf23dfc95c519285a799bf535f89e0e2115cd6a888f35a4d0e90ed48fafa4a
+          input_fingerprint: 5a875b4b39e741c326507da23a3c8c3aaa404474af8997cd80beb7469090490e
           output_fingerprints:
             lock_file: bbe9944a189e5747bd7777744d9c0c2a76c469a4da676be959e838b516586b2f
             third_party_file: be50aeae63fcef04e11fff70d59ceec57d463efe869125e6a16d12cfb17eeea4
@@ -13140,6 +13146,7 @@ profiles:
         - CHANGELOG.md
         skipped_files:
         - CHANGELOG.md
+        - devcovenant/registry/registry.yaml
         - .gitignore
         - .pre-commit-config.yaml
         - .github/workflows/ci.yml
