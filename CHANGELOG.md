@@ -61,6 +61,17 @@ Example:
 ## Version 1.0.1b2
 
 - 2026-04-09:
+  Change: Adjusted the gate-start reminder test to verify the required
+          reminder without overfitting the rest of the gate output.
+  Why: Adjusted the assertion because `run_pre_commit_gate` emits
+       additional status calls beyond the reminder itself.
+  Impact: Updated the unit test to keep checking the silence reminder while
+          tolerating the remaining gate output.
+  Files:
+  CHANGELOG.md
+  tests/devcovenant/test_gate.py
+
+- 2026-04-09:
   Change: Added a gate-start silence reminder in the command path and
           switched changelog coverage to UTC-based date comparison.
   Why: Kept the start-gate message visible in normal and verbose mode while
@@ -75,7 +86,8 @@ Example:
   devcovenant/builtin/policies/changelog_coverage/test_blueprints.yaml
   devcovenant/docs/policies.md
   devcovenant/gate.py
-  tests/devcovenant/builtin/policies/changelog_coverage/test_changelog_coverage.py
+  tests/devcovenant/builtin/policies/changelog_coverage/\
+    test_changelog_coverage.py
   tests/devcovenant/test_gate.py
 
 - 2026-04-09:

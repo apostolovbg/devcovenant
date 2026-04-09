@@ -1,7 +1,7 @@
 metadata:
   schema_version: 1
   registry_layout: single-root
-  policy_registry_input_hash: 6e5f27023f77915dae3157a1b72cf2e8c5fd70cbb08dcf65d8595d42f5f633da
+  policy_registry_input_hash: cf8eccf663e100271dac0497b717a6a2918cb9a443ec129a77d5706aa0941122
 project-governance:
   project_name: devcovenant
   project_description: devcovenant is a repository governance framework.
@@ -1989,7 +1989,7 @@ policies:
     - pip-wheel-metadata/**
     origin: builtin
     script_exists: true
-    hash: 588252bf98b8a268ec70b51e297c40942650d3789fb0edd8ae9d5d4381445ccc
+    hash: 691f8a9ebc4758120422354bb230b8779f73434e15cbd723f8d8721f35bc1653
     script_path: builtin/changelog_coverage.py
   devcov-raw-string-escapes:
     enabled: true

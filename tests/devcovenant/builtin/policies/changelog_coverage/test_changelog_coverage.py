@@ -7,12 +7,12 @@ import json
 import subprocess
 import tempfile
 import unittest
-from devcovenant.core.managed_docs import utc_today
 from importlib import import_module
 from pathlib import Path
 from textwrap import dedent
 from types import SimpleNamespace
 
+from devcovenant.core.managed_docs import utc_today
 from devcovenant.core.policy_contract import ChangeState, CheckContext
 from tests import MonkeyPatch
 

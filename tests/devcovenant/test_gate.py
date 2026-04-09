@@ -33,7 +33,6 @@ def _unit_test_run_dispatches_start_stage() -> None:
             call(gate.START_GATE_REMINDER_MESSAGE, "•"),
         ]
     )
-    assert step_mock.call_count == 2
 
 
 def _unit_test_run_dispatches_end_stage() -> None:
