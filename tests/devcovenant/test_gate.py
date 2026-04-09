@@ -5,7 +5,7 @@ from __future__ import annotations
 import unittest
 from pathlib import Path
 from types import SimpleNamespace
-from unittest.mock import patch
+from unittest.mock import call, patch
 
 from devcovenant import gate
 
@@ -19,7 +19,7 @@ def _unit_test_run_dispatches_start_stage() -> None:
         return_value=repo_root,
     ):
         with patch("devcovenant.core.execution.print_banner"):
-            with patch("devcovenant.core.execution.print_step"):
+            with patch("devcovenant.core.execution.print_step") as step_mock:
                 with patch(
                     "devcovenant.core.gate_runtime.run_pre_commit_gate",
                     return_value=0,
@@ -27,6 +27,13 @@ def _unit_test_run_dispatches_start_stage() -> None:
                     exit_code = gate.run(args)
     assert exit_code == 0
     gate_mock.assert_called_once_with(repo_root, "start")
+    step_mock.assert_has_calls(
+        [
+            call("Running `start` pre-commit gate", "▶️"),
+            call(gate.START_GATE_REMINDER_MESSAGE, "•"),
+        ]
+    )
+    assert step_mock.call_count == 2
 
 
 def _unit_test_run_dispatches_end_stage() -> None:

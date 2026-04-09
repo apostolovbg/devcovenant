@@ -7,7 +7,7 @@ import json
 import subprocess
 import tempfile
 import unittest
-from datetime import date
+from devcovenant.core.managed_docs import utc_today
 from importlib import import_module
 from pathlib import Path
 from textwrap import dedent
@@ -389,7 +389,7 @@ def _unit_test_root_changelog_required(
 ):
     """Non-RNG files must be listed in the root changelog."""
 
-    today = date.today().isoformat()
+    today = utc_today()
     changelog_text = (
         "## Version 1.0.0\n"
         f"- {today}:\n"
@@ -440,7 +440,7 @@ def _unit_test_collections_disabled_route_to_root(
 ):
     """When collections are disabled, prefixed paths go to root."""
 
-    today = date.today().isoformat()
+    today = utc_today()
     (tmp_path / "CHANGELOG.md").write_text(
         f"## Version 1.0.0\n- {today}:\n{_summary_block()}",
         encoding="utf-8",
@@ -462,7 +462,7 @@ def _unit_test_changelog_requires_summary_labels(
 ):
     """Latest entry must include labeled summary lines."""
 
-    today = date.today().isoformat()
+    today = utc_today()
     changelog_text = (
         "## Version 1.0.0\n"
         f"- {today}:\n"
@@ -492,7 +492,7 @@ def _unit_test_summary_requires_action_verbs(
 ):
     """Summary lines must include an action verb from the list."""
 
-    today = date.today().isoformat()
+    today = utc_today()
     changelog_text = (
         "## Version 1.0.0\n"
         f"- {today}:\n"
@@ -521,7 +521,7 @@ def _unit_test_summary_root_matches_inflected_forms(
 ):
     """Configured verb roots should match word-start inflected forms."""
 
-    today = date.today().isoformat()
+    today = utc_today()
     changelog_text = (
         "## Version 1.0.0\n"
         f"- {today}:\n"
@@ -549,7 +549,7 @@ def _unit_test_summary_root_ignores_inner_substrings(
 ):
     """Verb roots should not match substrings inside other words."""
 
-    today = date.today().isoformat()
+    today = utc_today()
     changelog_text = (
         "## Version 1.0.0\n"
         f"- {today}:\n"
@@ -581,7 +581,7 @@ def _unit_test_rng_changelog_entry_found(
     (tmp_path / "CHANGELOG.md").write_text("", encoding="utf-8")
     rng_changelog = tmp_path / "rng_minigames" / "CHANGELOG.md"
     rng_changelog.parent.mkdir(parents=True, exist_ok=True)
-    today = date.today().isoformat()
+    today = utc_today()
     rng_text = (
         "## Version 1.0.0\n"
         f"- {today}:\n"
@@ -611,7 +611,7 @@ def _unit_test_rng_files_not_logged_in_root(
     """RNG files should not appear in the root changelog."""
 
     root_changelog = tmp_path / "CHANGELOG.md"
-    today = date.today().isoformat()
+    today = utc_today()
     rng_entry = (
         "## Version 1.0.0\n"
         f"- {today}:\n"
@@ -665,7 +665,7 @@ def _unit_test_rng_entries_ignore_old_root_sections(
     )
     rng_changelog = tmp_path / "rng_minigames" / "CHANGELOG.md"
     rng_changelog.parent.mkdir(parents=True, exist_ok=True)
-    today = date.today().isoformat()
+    today = utc_today()
     rng_changelog.write_text(
         (
             "## Version 2.0.0\n"
@@ -761,7 +761,7 @@ def _unit_test_line_continuation_paths(
     changelog = "\n".join(
         [
             "## Version 1.0.0",
-            f"- {date.today().isoformat()}:",
+            f"- {utc_today()}:",
             "  Change: Updated docs with extra guidance for coverage tests",
             "  Why: Clarified expectations for contributors",
             "  Impact: Users see updated coverage notes now",
@@ -830,7 +830,7 @@ def _unit_test_skipped_files_listed_in_entry_are_tolerated(
         "".join(
             [
                 "## Version 1.0.0\n",
-                f"- {date.today().isoformat()}:\n",
+                f"- {utc_today()}:\n",
                 _summary_block(),
                 "  Files:\n",
                 "  src/module.py\n",
@@ -1060,7 +1060,7 @@ def _unit_test_managed_block_only_files_listed_with_real_change_are_tolerated(
         "".join(
             [
                 "## Version 1.0.0\n",
-                f"- {date.today().isoformat()}:\n",
+                f"- {utc_today()}:\n",
                 _summary_block(),
                 "  Files:\n",
                 "  src/module.py\n",
@@ -1094,7 +1094,7 @@ def _unit_test_deleted_files_listed_in_changelog_are_tolerated(
     tmp_path: Path, monkeypatch: MonkeyPatch
 ):
     """Deleted files may remain listed as valid evidence in `Files:` blocks."""
-    today = date.today().isoformat()
+    today = utc_today()
     (tmp_path / "src").mkdir(parents=True, exist_ok=True)
     (tmp_path / "src" / "module.py").write_text("x = 1\n", encoding="utf-8")
     (tmp_path / "CHANGELOG.md").write_text(
@@ -1156,7 +1156,7 @@ def _unit_test_deleted_files_are_scoped_to_gate_start_snapshot(
     tmp_path: Path, monkeypatch: MonkeyPatch
 ):
     """Open-session deleted files should come from gate-start snapshot only."""
-    today = date.today().isoformat()
+    today = utc_today()
     (tmp_path / "src").mkdir(parents=True, exist_ok=True)
     (tmp_path / "src" / "module.py").write_text("x = 1\n", encoding="utf-8")
     (tmp_path / "CHANGELOG.md").write_text(
@@ -1384,7 +1384,7 @@ def _unit_test_gate_snapshot_requires_new_top_entry(
     tmp_path: Path, monkeypatch: MonkeyPatch
 ):
     """Current top entry must differ from the gate-start snapshot."""
-    today = date.today().isoformat()
+    today = utc_today()
     top_entry = (
         f"- {today}:\n" f"{_summary_block()}" "  Files:\n" "  src/module.py\n"
     )
@@ -1410,7 +1410,7 @@ def _unit_test_session_scope_ignores_preexisting_dirty_paths(
     monkeypatch: MonkeyPatch,
 ):
     """Session checks should ignore files already dirty at gate start."""
-    today = date.today().isoformat()
+    today = utc_today()
     new_top = (
         f"- {today}:\n"
         "  Change: Updated module behavior\n"
@@ -1446,7 +1446,7 @@ def _unit_test_gate_snapshot_requires_previous_entry_preserved(
     tmp_path: Path, monkeypatch: MonkeyPatch
 ):
     """Editing the previous top entry without prepending should fail."""
-    today = date.today().isoformat()
+    today = utc_today()
     old_entry = (
         f"- {today}:\n" f"{_summary_block()}" "  Files:\n" "  src/module.py\n"
     )
@@ -1476,7 +1476,7 @@ def _unit_test_gate_snapshot_allows_previous_entry_anywhere_below(
     tmp_path: Path, monkeypatch: MonkeyPatch
 ):
     """Gate-start entry may remain anywhere below the fresh top entry."""
-    today = date.today().isoformat()
+    today = utc_today()
     previous_top = (
         f"- {today}:\n"
         "  Change: Updated baseline entry for previous session\n"
@@ -1519,7 +1519,7 @@ def _unit_test_gate_snapshot_blocks_entry_checks_until_new_entry(
     tmp_path: Path, monkeypatch: MonkeyPatch
 ):
     """Defer entry-shape checks until a fresh top entry is added."""
-    today = date.today().isoformat()
+    today = utc_today()
     previous_top = (
         f"- {today}:\n"
         "  Change: Updated module behavior\n"
@@ -1548,7 +1548,7 @@ def _unit_test_gate_snapshot_ignores_changelog_only_sessions(
     tmp_path: Path, monkeypatch: MonkeyPatch
 ):
     """Changelog-only diffs should not require a prepended session entry."""
-    today = date.today().isoformat()
+    today = utc_today()
     top_entry = (
         f"- {today}:\n"
         "  Change: Updated changelog formatting only\n"
@@ -1575,7 +1575,7 @@ def _unit_test_gate_snapshot_allows_prepended_entry(
     tmp_path: Path, monkeypatch: MonkeyPatch
 ):
     """A prepended top entry should pass when previous top stays below."""
-    today = date.today().isoformat()
+    today = utc_today()
     previous_top = (
         f"- {today}:\n"
         "  Change: Updated baseline entry for previous session\n"
@@ -1612,7 +1612,7 @@ def _unit_test_version_bump_requires_previous_section_directly_below(
     """
     A version bump must keep the prior top version section below the new one.
     """
-    today = date.today().isoformat()
+    today = utc_today()
     previous_top = (
         f"- {today}:\n"
         "  Change: Updated baseline entry for previous session\n"
@@ -1671,7 +1671,7 @@ def _unit_test_version_bump_allows_previous_entry_in_previous_section(
     """
     A version bump passes when the preserved entry stays in its old section.
     """
-    today = date.today().isoformat()
+    today = utc_today()
     previous_top = (
         f"- {today}:\n"
         "  Change: Updated baseline entry for previous session\n"
@@ -1725,7 +1725,7 @@ def _unit_test_version_bump_requires_previous_entry_first_in_old_section(
     """
     A version bump must keep the preserved entry first in the old section.
     """
-    today = date.today().isoformat()
+    today = utc_today()
     previous_top = (
         f"- {today}:\n"
         "  Change: Updated baseline entry for previous session\n"
@@ -1781,7 +1781,7 @@ def _unit_test_version_bump_reset_baseline_allows_history_rebuild(
     tmp_path: Path, monkeypatch: MonkeyPatch
 ):
     """Explicit reset should relax preserved-entry enforcement only."""
-    today = date.today().isoformat()
+    today = utc_today()
     previous_top = (
         f"- {today}:\n"
         "  Change: Updated baseline entry for previous session\n"
@@ -1892,7 +1892,7 @@ def _unit_test_session_requires_start_numstat_snapshot(
     tmp_path: Path, monkeypatch: MonkeyPatch
 ):
     """Gate status no longer requires `changelog_start_diff_numstat`."""
-    today = date.today().isoformat()
+    today = utc_today()
     entry = (
         f"- {today}:\n"
         "  Change: Updated module behavior\n"
@@ -1924,7 +1924,7 @@ def _unit_test_session_rejects_invalid_start_numstat_payload(
     tmp_path: Path, monkeypatch: MonkeyPatch
 ):
     """Invalid unsupported start numstat payload should be ignored."""
-    today = date.today().isoformat()
+    today = utc_today()
     entry = (
         f"- {today}:\n"
         "  Change: Updated module behavior\n"
@@ -2599,7 +2599,7 @@ class GeneratedUnittestCases(unittest.TestCase):
         try:
             with tempfile.TemporaryDirectory() as temp_dir:
                 tmp_path = Path(temp_dir).resolve()
-                today = date.today().isoformat()
+                today = utc_today()
                 entry = (
                     f"- {today}:\n"
                     "  Change: Updated module behavior\n"

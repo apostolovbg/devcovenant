@@ -10,12 +10,13 @@ import hashlib
 import json
 import os
 import re
-from datetime import date, datetime, timezone
+from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any, List
 
 import devcovenant.core.document_exemptions as document_exemptions_lib
 import devcovenant.core.execution as execution_runtime_module
+import devcovenant.core.managed_docs as managed_docs_service
 import devcovenant.core.project_governance as project_governance_service
 import devcovenant.core.workflow_support as registry_runtime_module
 from devcovenant.core.document_exemptions import (
@@ -1165,7 +1166,7 @@ class ChangelogCoverageCheck(PolicyCheck):
                 ):
                     # Keep snapshot enforcement deterministic: defer
                     # entry-shape checks until a fresh top entry exists.
-                    today = date.today().isoformat()
+                    today = managed_docs_service.utc_today()
                     if first_date != today:
                         violations.append(
                             Violation(
@@ -1397,7 +1398,7 @@ class ChangelogCoverageCheck(PolicyCheck):
                         )
                     )
                 else:
-                    today = date.today().isoformat()
+                    today = managed_docs_service.utc_today()
                     prefix_label = entry.get("prefix", "") or "collection"
                     if entry_date != today:
                         violations.append(

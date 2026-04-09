@@ -6,7 +6,7 @@
 **Maintenance Stance:** active
 **Compatibility Policy:** forward-only
 **Versioning Mode:** versioned
-**Last Updated:** 2026-04-08
+**Last Updated:** 2026-04-09
 **DevCovenant Version:** 1.0.1b2
 
 <!-- DEVCOV:BEGIN -->
@@ -97,18 +97,17 @@ changing in DevCovenant itself.
    - Keep the materialized mirrors under `tests/devcovenant/custom/**` so they
      are discoverable in the repository only when the custom layer explicitly
      opts into them.
-7. [ ] Documentation growth tracking
-   - Document how `documentation-growth-tracking` wires keywords to documents
-     through `doc_routes`.
+7. [x] Documentation growth tracking
+   - Document how `documentation-growth-tracking` wires user-facing selectors
+     and `doc_routes` into the doc update contract.
    - Show a generalized example that maps a source change, its keywords, and
      the target document set.
    - Explain how to point one keyword set at multiple docs and how the policy
      keeps documentation growth deliberate.
    - Keep the example generic enough to apply outside the current repo.
-8. [ ] Gate-start reminder
-   - `gate --start` should print the silence reminder in normal and verbose
-     mode.
-   - The reminder should say that AI agents work in silence and only provide a
+8. [x] Gate-start reminder
+   - `gate --start` prints the silence reminder in normal and verbose mode.
+   - The reminder says that AI agents work in silence and only provide a
      summary after work is complete.
 
 ## Exit Criteria

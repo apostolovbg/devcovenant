@@ -1,5 +1,5 @@
 # Policies
-**Last Updated:** 2026-04-08
+**Last Updated:** 2026-04-09
 
 **Project Version:** 1.0.1b2
 
@@ -109,6 +109,56 @@ Custom policies can declare their own roles the same way.
 Examples might include `api_contract`, `release_docs`, `migration`,
 `seed_data`, `schema`, or `generated_payload`.
 
+## Documentation Growth Tracking
+`documentation-growth-tracking` watches user-facing changes through the
+selectors in its metadata:
+- `user_facing_prefixes`
+- `user_facing_globs`
+- `user_facing_suffixes`
+- `user_facing_keywords`
+- `user_facing_files`
+
+When one of those selectors matches a changed path, `doc_routes` turns that
+change into a documentation contract. Each entry uses
+`trigger => doc1, doc2, doc3` syntax. The trigger can be an exact path, a
+directory prefix, or a glob pattern. The docs list can contain one or many
+targets, so one trigger can fan out to several documents and several triggers
+can point at the same document set.
+
+That keeps documentation growth deliberate:
+- the trigger identifies the product surface that changed
+- the route names the docs that must move with that change
+- `user_visible_files` identifies the docs that are allowed to satisfy the
+  route
+- `doc_quality_files` identifies the docs that must keep headings, depth, and
+  word-count quality
+
+Example:
+
+```yaml
+user_facing_keywords:
+  - checkout
+  - invoice
+  - refund
+user_visible_files:
+  - docs/overview.md
+  - docs/payments.md
+  - docs/api.md
+doc_quality_files:
+  - docs/overview.md
+  - docs/payments.md
+  - docs/api.md
+doc_routes:
+  - src/payments/checkout.py => docs/overview.md, docs/payments.md, docs/api.md
+  - src/payments/refunds.py => docs/overview.md, docs/payments.md, docs/api.md
+```
+
+If `src/payments/checkout.py` changes, the route for `checkout.py` requires
+all three docs to move with it. If the same docs also need to change for
+`src/payments/refunds.py`, that is a separate route with the same doc set.
+The policy only sees deliberate documentation coverage, not vague "someone
+should update docs" intent.
+
 ## What Policies Can Actually Do
 A policy runtime is not limited to reporting a string.
 Through the standard contracts, a policy can:
@@ -190,6 +240,10 @@ Its autofix path rewrites only those declared targets, such as
 Project Version headers, DevCovenant Version headers, changelog version
 headers, and declared package manifest version fields.
 It does not widen the scope to same-name files elsewhere in the tree.
+
+`changelog-coverage` uses the current UTC date when it checks whether a new
+top-level entry is stamped correctly, so the repo's date-based rules stay
+aligned with the managed UTC timestamps recorded in gate and workflow state.
 
 ## Translators And Language-Aware Policies
 Policies do not need to embed a bespoke parser for every language they touch.

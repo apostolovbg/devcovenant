@@ -6,7 +6,7 @@
 **Maintenance Stance:** active
 **Compatibility Policy:** forward-only
 **Versioning Mode:** versioned
-**Last Updated:** 2026-04-08
+**Last Updated:** 2026-04-09
 **DevCovenant Version:** 1.0.1b2
 
 <!-- DEVCOV:BEGIN -->
@@ -59,6 +59,38 @@ Example:
 ## Log changes here
 
 ## Version 1.0.1b2
+
+- 2026-04-09:
+  Change: Added a gate-start silence reminder in the command path and
+          switched changelog coverage to UTC-based date comparison.
+  Why: Kept the start-gate message visible in normal and verbose mode while
+       eliminating local-time boundary mismatches in changelog checks.
+  Impact: `devcovenant gate --start` now prints the silence reminder, and
+          changelog coverage plus its generated tests compare against the UTC
+          date.
+  Files:
+  CHANGELOG.md
+  PLAN.md
+  devcovenant/builtin/policies/changelog_coverage/changelog_coverage.py
+  devcovenant/builtin/policies/changelog_coverage/test_blueprints.yaml
+  devcovenant/docs/policies.md
+  devcovenant/gate.py
+  tests/devcovenant/builtin/policies/changelog_coverage/test_changelog_coverage.py
+  tests/devcovenant/test_gate.py
+
+- 2026-04-09:
+  Change: Documented the generalized `documentation-growth-tracking`
+          `doc_routes` wiring example and marked the matching plan item
+          complete.
+  Why: Preserved a generic, reusable explanation of how keywords and routes
+       map user-facing changes to the required documentation set.
+  Impact: `docs/policies.md` now shows how one trigger can fan out to several
+          docs, and `PLAN.md` reflects that the documentation-growth item is
+          complete.
+  Files:
+  CHANGELOG.md
+  PLAN.md
+  devcovenant/docs/policies.md
 
 - 2026-04-09:
   Change: Added `devcovenant_docs` version-sync coverage for managed-doc

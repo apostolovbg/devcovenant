@@ -13,6 +13,11 @@ import argparse
 
 import devcovenant.core.cli_support as cli_args_module
 
+START_GATE_REMINDER_MESSAGE = (
+    "AI agents work in silence and only provide a summary after work is "
+    "complete."
+)
+
 
 def _build_parser() -> argparse.ArgumentParser:
     """Build parser for gate command."""
@@ -74,6 +79,8 @@ def run(args: argparse.Namespace) -> int:
 
     print_banner("Devflow gate", "🚦")
     print_step(f"Running `{stage}` pre-commit gate", "▶️")
+    if stage == "start":
+        print_step(START_GATE_REMINDER_MESSAGE, "•")
     exit_code = run_pre_commit_gate(repo_root, stage)
     if exit_code == 0:
         if stage == "mid":
