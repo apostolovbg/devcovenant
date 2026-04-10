@@ -67,6 +67,18 @@ class ManagedEnvironmentCheck(PolicyCheck):
         command_search_path_tokens = self._normalize_entries(
             self.get_option("command_search_paths", [])
         )
+        managed_commands = self._normalize_entries(
+            self.get_option("managed_commands", [])
+        )
+        allow_current_interpreter_fallback = (
+            managed_environment_runtime._allows_current_interpreter_fallback(
+                {
+                    "allow_current_interpreter_fallback": self.get_option(
+                        "allow_current_interpreter_fallback", False
+                    )
+                }
+            )
+        )
 
         warnings: list[Violation] = []
         if not expected_paths and not expected_interpreters:
@@ -129,6 +141,38 @@ class ManagedEnvironmentCheck(PolicyCheck):
                         f"{', '.join(missing)}.",
                     )
                 )
+        if not managed_commands:
+            if allow_current_interpreter_fallback:
+                return warnings
+            primary_path = resolved_paths[0] if resolved_paths else repo_root
+            guidance = managed_environment_runtime._managed_guidance_suffix(
+                manual_commands,
+                repo_root=repo_root,
+                managed_python=managed_python,
+                managed_root=managed_root,
+            )
+            return warnings + [
+                Violation(
+                    policy_id=self.policy_id,
+                    severity="error",
+                    file_path=primary_path,
+                    line_number=1,
+                    message=(
+                        "managed-environment is enabled, but no "
+                        "`managed_commands` are declared and command-stage "
+                        "fallback to the current interpreter is not "
+                        "explicitly enabled. Declare `managed_commands` or "
+                        "set `allow_current_interpreter_fallback: true`."
+                        + guidance
+                    ),
+                    suggestion=(
+                        "Add managed bootstrap commands for the target "
+                        "environment or set `allow_current_interpreter_"
+                        "fallback: true` when command-stage reuse is "
+                        "intentional."
+                    ),
+                )
+            ]
         guidance = managed_environment_runtime._managed_guidance_suffix(
             manual_commands,
             repo_root=repo_root,

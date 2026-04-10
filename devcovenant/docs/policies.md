@@ -278,6 +278,10 @@ The managed-environment policy also exposes the selected execution
 environment so other runtime code can use the same target interpreter.
 It resolves one target environment, reuses it when it already matches, and
 runs `managed_commands` only when the target environment is missing or invalid.
+If a repository intentionally wants `command` stage calls to keep using the
+current interpreter before the target environment exists, it must set
+`allow_current_interpreter_fallback: true`; otherwise the policy treats a
+missing bootstrap path as a real profile gap instead of an implicit shortcut.
 That target may be repo-local or external to the repository tree.
 The policy itself is environment-neutral. Repositories may still seed a local
 `.venv`, but they can also declare system, bench-managed, container-managed,

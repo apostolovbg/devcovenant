@@ -613,10 +613,60 @@ def _unit_test_run_bootstraps_when_environment_is_missing(
     assert stage_calls == ["start"]
 
 
-def _unit_test_command_stage_uses_current_interpreter_until_target_exists(
+def _unit_test_command_stage_uses_current_interpreter_with_flag(
     monkeypatch: MonkeyPatch,
 ) -> None:
-    """Command stage may use the current interpreter before target creation."""
+    """Command stage may use the current interpreter with explicit opt-in."""
+    module = importlib.import_module(MODULE)
+    with tempfile.TemporaryDirectory() as temp_dir:
+        repo_root = Path(temp_dir) / "repo"
+        repo_root.mkdir(parents=True, exist_ok=True)
+        tool_root = Path(temp_dir) / "toolenv"
+        tool_python = tool_root / "bin" / "python"
+        tool_python.parent.mkdir(parents=True, exist_ok=True)
+        tool_python.write_text("", encoding="utf-8")
+        tool_python.chmod(0o755)
+        (tool_root / "pyvenv.cfg").write_text("", encoding="utf-8")
+
+        monkeypatch.setattr(module.sys, "executable", str(tool_python))
+        monkeypatch.setattr(
+            module,
+            "_load_policy_entry",
+            lambda repo_root: {
+                "enabled": True,
+                "metadata": {
+                    "expected_paths": [".venv"],
+                    "expected_interpreters": [".venv/bin/python"],
+                    "required_commands": ["pre-commit", "pytest"],
+                    "allow_current_interpreter_fallback": True,
+                    "manual_commands": [
+                        "{current_python} -m venv .venv",
+                        "{managed_python} -m pip install -r requirements.lock",
+                    ],
+                    "managed_commands": [],
+                },
+            },
+        )
+
+        resolved_env, resolved_python = (
+            module.resolve_managed_environment_for_stage(
+                repo_root,
+                "command",
+                base_env={"PATH": "/usr/bin"},
+            )
+        )
+
+    assert resolved_env is not None
+    assert resolved_python == str(tool_python)
+    assert resolved_env["DEVCOV_MANAGED_PYTHON"] == str(tool_python)
+    assert resolved_env["PATH"].split(os.pathsep)[0] == str(tool_python.parent)
+    assert Path(resolved_env["VIRTUAL_ENV"]).resolve() == tool_root.resolve()
+
+
+def _unit_test_command_stage_requires_explicit_fallback_flag(
+    monkeypatch: MonkeyPatch,
+) -> None:
+    """Implicit command-stage fallback should fail without an explicit flag."""
     module = importlib.import_module(MODULE)
     with tempfile.TemporaryDirectory() as temp_dir:
         repo_root = Path(temp_dir) / "repo"
@@ -647,19 +697,20 @@ def _unit_test_command_stage_uses_current_interpreter_until_target_exists(
             },
         )
 
-        resolved_env, resolved_python = (
+        try:
             module.resolve_managed_environment_for_stage(
                 repo_root,
                 "command",
                 base_env={"PATH": "/usr/bin"},
             )
-        )
+        except ValueError as error:
+            message = str(error)
+        else:  # pragma: no cover - defensive
+            raise AssertionError(
+                "Expected ValueError when fallback flag is missing."
+            )
 
-    assert resolved_env is not None
-    assert resolved_python == str(tool_python)
-    assert resolved_env["DEVCOV_MANAGED_PYTHON"] == str(tool_python)
-    assert resolved_env["PATH"].split(os.pathsep)[0] == str(tool_python.parent)
-    assert Path(resolved_env["VIRTUAL_ENV"]).resolve() == tool_root.resolve()
+    assert "allow_current_interpreter_fallback" in message
 
 
 def _unit_test_command_stage_does_not_mask_declared_bootstrap_contract(
@@ -1109,6 +1160,27 @@ class GeneratedUnittestCases(unittest.TestCase):
         monkeypatch = MonkeyPatch()
         try:
             _unit_test_run_bootstraps_when_environment_is_missing(monkeypatch)
+        finally:
+            monkeypatch.undo()
+
+    def test_command_stage_uses_current_interpreter_with_explicit_flag(
+        self,
+    ):
+        """Run explicit command-stage fallback assertions."""
+        monkeypatch = MonkeyPatch()
+        try:
+            fn = _unit_test_command_stage_uses_current_interpreter_with_flag
+            fn(monkeypatch)
+        finally:
+            monkeypatch.undo()
+
+    def test_command_stage_requires_explicit_fallback_flag(self):
+        """Run implicit command-stage fallback rejection assertions."""
+        monkeypatch = MonkeyPatch()
+        try:
+            _unit_test_command_stage_requires_explicit_fallback_flag(
+                monkeypatch
+            )
         finally:
             monkeypatch.undo()
 

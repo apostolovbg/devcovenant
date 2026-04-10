@@ -1,7 +1,7 @@
 metadata:
   schema_version: 1
   registry_layout: single-root
-  policy_registry_input_hash: cf8eccf663e100271dac0497b717a6a2918cb9a443ec129a77d5706aa0941122
+  policy_registry_input_hash: bffced9df81c31234ea1f95cd38ed4eec0ae03a5e0e50e106c7658e99a11f794
 project-governance:
   project_name: devcovenant
   project_description: devcovenant is a repository governance framework.
@@ -5891,13 +5891,15 @@ policies:
       accept `start`, `run`, `end`, `command`, and `all` prefixes; non-start
       commands may still reuse `start` bootstrap commands once when the target
       environment is not ready. When no automatic bootstrap commands are
-      declared, non-gate `command` stage operations may keep using the current
-      interpreter until the target environment exists, while `start`, `run`, and
-      `end` remain strict about the target environment. If the resolved
-      interpreter is missing or not executable, DevCovenant fails explicitly
-      instead of falling through to wrapper adapters or alternate policy sources.
-      When enabled with empty metadata, the policy emits a warning so teams
-      fill the required context.
+      declared, `command` stage operations may keep using the current
+      interpreter only when `allow_current_interpreter_fallback` is explicitly
+      true; otherwise `start`, `run`, `end`, and `command` remain strict about
+      the target environment so incomplete profiles fail loudly instead of
+      falling through to wrapper adapters or alternate policy sources. If the
+      resolved interpreter is missing or not executable, DevCovenant fails
+      explicitly instead of falling through to wrapper adapters or alternate
+      policy sources. When enabled with empty metadata, the policy emits a
+      warning so teams fill the required context.
     metadata:
       id: managed-environment
       severity: error
@@ -5915,6 +5917,7 @@ policies:
       required_commands:
       - pre-commit
       - pytest
+      allow_current_interpreter_fallback: 'false'
       manual_commands:
       - '{current_python} -m venv .venv'
       - '{managed_python} -m pip install -r requirements.lock'
@@ -6082,6 +6085,16 @@ policies:
           values:
           - pre-commit
           - pytest
+      allow_current_interpreter_fallback:
+        descriptor:
+          values:
+          - 'false'
+          behavior: base
+          replaced_inherited_values:
+          - ()
+        effective:
+          values:
+          - 'false'
       manual_commands:
         descriptor:
           values:
@@ -6166,6 +6179,7 @@ policies:
       required_commands: &id050
       - pre-commit
       - pytest
+      allow_current_interpreter_fallback: false
       manual_commands: &id051
       - '{current_python} -m venv .venv'
       - '{managed_python} -m pip install -r requirements.lock'
@@ -6183,6 +6197,7 @@ policies:
       expected_paths: *id048
       expected_interpreters: *id049
       required_commands: *id050
+      allow_current_interpreter_fallback: false
       manual_commands: *id051
       managed_commands: *id052
     assets:
@@ -6190,7 +6205,7 @@ policies:
     - .venv/bin/python
     origin: builtin
     script_exists: true
-    hash: 9ee40d886fe5f68b2748924f419634d94923cad80885dcb73d460164361198a0
+    hash: 544209d9cd45d5c4405c915e7b48a31076df871f6632de37cfc1978647a479a9
     script_path: builtin/managed_environment.py
   modules-need-tests:
     enabled: true

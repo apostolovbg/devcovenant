@@ -1,5 +1,5 @@
 # Registry
-**Last Updated:** 2026-04-08
+**Last Updated:** 2026-04-09
 **Project Version:** 1.0.1b2
 
 ## Overview
@@ -85,6 +85,11 @@ The same tracked metadata can also capture stage-scoped managed-environment
 bootstrap commands, so registry diffs are the expected result when a
 repository's managed-environment stack changes how `gate --start` can prepare
 `.venv`.
+If a repository intentionally keeps `command` stage execution on the current
+interpreter until the target environment exists, that intent should appear in
+the tracked metadata as `allow_current_interpreter_fallback: true`; otherwise
+the registry should show explicit bootstrap commands instead of relying on an
+implicit fallback.
 The tracked registry can also hold policy-owned runtime state when that state
 is deterministic and should travel with the repository.
 For `dependency-management`, that includes per-surface input and output

@@ -229,6 +229,15 @@ def _parse_managed_commands(entries: list[str]) -> list[tuple[str, str]]:
     return parsed
 
 
+def _allows_current_interpreter_fallback(
+    metadata_map: Mapping[str, Any],
+) -> bool:
+    """Return True when current-interpreter fallback is explicitly enabled."""
+    return _is_enabled_token(
+        metadata_map.get("allow_current_interpreter_fallback")
+    )
+
+
 def _select_managed_command_for_stage(
     managed_commands: list[tuple[str, str]],
     *,
@@ -713,6 +722,9 @@ def resolve_managed_environment_for_stage(
         metadata_map.get("managed_commands")
     )
     managed_commands = _parse_managed_commands(managed_commands_raw)
+    allow_current_interpreter_fallback = _allows_current_interpreter_fallback(
+        metadata_map
+    )
 
     expected_paths = _resolve_metadata_paths(repo_root, expected_path_tokens)
     expected_interpreters = _resolve_metadata_paths(
@@ -828,20 +840,28 @@ def resolve_managed_environment_for_stage(
             and stage_token == "command"
             and not managed_commands
         ):
-            bootstrap_env, bootstrap_python = (
-                _resolve_current_interpreter_environment(
-                    env,
-                    command_search_paths=command_search_paths,
+            if allow_current_interpreter_fallback:
+                bootstrap_env, bootstrap_python = (
+                    _resolve_current_interpreter_environment(
+                        env,
+                        command_search_paths=command_search_paths,
+                    )
                 )
+                if bootstrap_env is not None and bootstrap_python is not None:
+                    return bootstrap_env, bootstrap_python
+            guidance = _managed_guidance_suffix(
+                manual_commands,
+                repo_root=repo_root,
+                managed_python=managed_python,
+                managed_root=managed_root,
             )
-            if bootstrap_env is not None and bootstrap_python is not None:
-                return bootstrap_env, bootstrap_python
-        guidance = _managed_guidance_suffix(
-            manual_commands,
-            repo_root=repo_root,
-            managed_python=managed_python,
-            managed_root=managed_root,
-        )
+            if not allow_current_interpreter_fallback:
+                raise ValueError(
+                    "managed-environment is enabled, but command-stage "
+                    "fallback to the current interpreter is disabled. "
+                    "Declare `managed_commands` or set "
+                    "`allow_current_interpreter_fallback: true`." + guidance
+                )
         if managed_python is None:
             raise ValueError(
                 "managed-environment is enabled, but no expected "

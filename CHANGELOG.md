@@ -61,6 +61,35 @@ Example:
 ## Version 1.0.1b2
 
 - 2026-04-09:
+  Change: Updated managed-environment command-stage fallback to require
+          explicit opt-in and regenerated the managed-environment test
+          blueprint.
+  Why: Prevented incomplete profiles from silently reusing the current
+       interpreter while keeping shipped test descriptors aligned with the
+       checked-in tests.
+  Impact: Enforced explicit fallback opt-in so the policy and runtime now
+          fail loudly unless `allow_current_interpreter_fallback: true` is
+          set, and the blueprint mirrors match the current test tree.
+  Files:
+  AGENTS.md
+  CHANGELOG.md
+  devcovenant/builtin/policies/managed_environment/managed_environment.py
+  devcovenant/builtin/policies/managed_environment/managed_environment.yaml
+  devcovenant/builtin/policies/managed_environment/\
+    managed_environment_runtime.py
+  devcovenant/builtin/policies/managed_environment/test_blueprints.yaml
+  devcovenant/docs/config.md
+  devcovenant/docs/installation.md
+  devcovenant/docs/policies.md
+  devcovenant/docs/registry.md
+  devcovenant/docs/workflow.md
+  devcovenant/registry/registry.yaml
+  tests/devcovenant/builtin/policies/managed_environment/\
+    test_managed_environment.py
+  tests/devcovenant/builtin/policies/managed_environment/\
+    test_managed_environment_runtime.py
+
+- 2026-04-09:
   Change: Adjusted the gate-start reminder test to verify the required
           reminder without overfitting the rest of the gate output.
   Why: Adjusted the assertion because `run_pre_commit_gate` emits

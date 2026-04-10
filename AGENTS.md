@@ -6,7 +6,7 @@
 **Maintenance Stance:** active
 **Compatibility Policy:** forward-only
 **Versioning Mode:** versioned
-**Last Updated:** 2026-04-08
+**Last Updated:** 2026-04-09
 **DevCovenant Version:** 1.0.1b2
 
 <!-- DEVCOV:BEGIN -->
@@ -1523,6 +1523,7 @@ cleanup_protected_paths: []
 required_commands:
 - pre-commit
 - pytest
+allow_current_interpreter_fallback: 'false'
 manual_commands:
 - '{current_python} -m venv .venv'
 - '{managed_python} -m pip install -r requirements.lock'
@@ -1560,13 +1561,15 @@ environment is still missing or invalid. Stage-scoped `managed_commands`
 accept `start`, `run`, `end`, `command`, and `all` prefixes; non-start
 commands may still reuse `start` bootstrap commands once when the target
 environment is not ready. When no automatic bootstrap commands are
-declared, non-gate `command` stage operations may keep using the current
-interpreter until the target environment exists, while `start`, `run`, and
-`end` remain strict about the target environment. If the resolved
-interpreter is missing or not executable, DevCovenant fails explicitly
-instead of falling through to wrapper adapters or alternate policy sources.
-When enabled with empty metadata, the policy emits a warning so teams
-fill the required context.
+declared, `command` stage operations may keep using the current
+interpreter only when `allow_current_interpreter_fallback` is explicitly
+true; otherwise `start`, `run`, `end`, and `command` remain strict about
+the target environment so incomplete profiles fail loudly instead of
+falling through to wrapper adapters or alternate policy sources. If the
+resolved interpreter is missing or not executable, DevCovenant fails
+explicitly instead of falling through to wrapper adapters or alternate
+policy sources. When enabled with empty metadata, the policy emits a
+warning so teams fill the required context.
 
 
 ---

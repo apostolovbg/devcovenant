@@ -1,5 +1,5 @@
 # Installation and Lifecycle
-**Last Updated:** 2026-04-08
+**Last Updated:** 2026-04-09
 
 **Project Version:** 1.0.1b2
 
@@ -127,6 +127,10 @@ profile:
 
 Use that copied profile for repo-specific identity, version paths, package
 paths, extra hooks, local workflow runs, or managed-environment details.
+If command-stage reuse of the current interpreter is intentional, set
+`allow_current_interpreter_fallback: true` in the managed-environment
+metadata; otherwise keep `managed_commands` populated so the profile does not
+silently rely on an incomplete environment declaration.
 If the repository later needs GitHub-only CI extensions, keep those in a
 separate optional custom profile instead of the repo-identity profile.
 

@@ -1,5 +1,5 @@
 # Workflow
-**Last Updated:** 2026-04-08
+**Last Updated:** 2026-04-09
 
 **Project Version:** 1.0.1b2
 
@@ -200,6 +200,10 @@ environment for each stage.
 If the current interpreter already matches that setup, DevCovenant reuses it.
 If not, it selects the configured interpreter or environment root and then runs
 any declared bootstrap commands.
+If a profile intentionally wants `command` stage calls to keep running on the
+current interpreter until the target environment exists, it must opt in with
+`allow_current_interpreter_fallback: true`; otherwise the fallback stays
+disabled so an incomplete profile does not get masked.
 
 That keeps `gate --start` non-destructive once a configured environment already
 exists.

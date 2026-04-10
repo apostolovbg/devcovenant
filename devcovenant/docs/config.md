@@ -1,5 +1,5 @@
 # Configuration
-**Last Updated:** 2026-04-08
+**Last Updated:** 2026-04-09
 
 **Project Version:** 1.0.1b2
 
@@ -111,6 +111,11 @@ able to resolve the declared interpreter path or environment root.
 If the environment needs extra executable locations, use
 `managed-environment.command_search_paths` to declare those PATH entries
 instead of depending on the host shell PATH.
+If a profile intentionally wants `command` stage operations to stay on the
+current interpreter until the target environment exists, set
+`allow_current_interpreter_fallback: true`. Otherwise the policy treats the
+missing target environment as an explicit failure instead of silently masking
+an incomplete profile.
 Those profile-level `ignore_dirs` also feed the startup snapshot walk used by
 `gate --start`, so disposable trees stay out of the recorded session state as
 well as generated `.gitignore` and pre-commit excludes.

@@ -198,6 +198,68 @@ def _unit_test_managed_commands_replace_manual_warning(
     assert checker.check(context) == []
 
 
+def _unit_test_command_fallback_requires_explicit_flag(
+    tmp_path: Path, monkeypatch
+):
+    """Missing fallback metadata should fail before runtime."""
+    managed = tmp_path / ".venv"
+    managed.mkdir()
+    venv_python = managed / "bin"
+    venv_python.mkdir()
+    venv_executable = venv_python / "python"
+    venv_executable.write_text("", encoding="utf-8")
+    external_python = tmp_path / "external" / "python"
+    external_python.parent.mkdir(parents=True, exist_ok=True)
+    external_python.write_text("", encoding="utf-8")
+    monkeypatch.setenv("VIRTUAL_ENV", str(external_python.parent))
+    monkeypatch.setattr(sys, "executable", str(external_python))
+
+    checker = ManagedEnvironmentCheck()
+    checker.set_options(
+        {
+            "expected_paths": [".venv"],
+            "expected_interpreters": [".venv/bin/python"],
+        },
+        {},
+    )
+    context = CheckContext(repo_root=tmp_path, changed_files=[])
+    violations = checker.check(context)
+    assert violations
+    assert any(v.severity == "error" for v in violations)
+    assert any(
+        "allow_current_interpreter_fallback" in v.message for v in violations
+    )
+
+
+def _unit_test_command_fallback_is_allowed_when_explicit(
+    tmp_path: Path, monkeypatch
+):
+    """Explicit fallback should avoid a managed-environment error."""
+    managed = tmp_path / ".venv"
+    managed.mkdir()
+    venv_python = managed / "bin"
+    venv_python.mkdir()
+    venv_executable = venv_python / "python"
+    venv_executable.write_text("", encoding="utf-8")
+    external_python = tmp_path / "external" / "python"
+    external_python.parent.mkdir(parents=True, exist_ok=True)
+    external_python.write_text("", encoding="utf-8")
+    monkeypatch.setenv("VIRTUAL_ENV", str(external_python.parent))
+    monkeypatch.setattr(sys, "executable", str(external_python))
+
+    checker = ManagedEnvironmentCheck()
+    checker.set_options(
+        {
+            "expected_paths": [".venv"],
+            "expected_interpreters": [".venv/bin/python"],
+            "allow_current_interpreter_fallback": True,
+        },
+        {},
+    )
+    context = CheckContext(repo_root=tmp_path, changed_files=[])
+    assert checker.check(context) == []
+
+
 def _unit_test_required_commands_accept_dash_underscore_variants(
     tmp_path: Path, monkeypatch
 ):
@@ -397,6 +459,30 @@ class GeneratedUnittestCases(unittest.TestCase):
             with tempfile.TemporaryDirectory() as temp_dir:
                 tmp_path = Path(temp_dir).resolve()
                 _unit_test_managed_commands_replace_manual_warning(
+                    tmp_path=tmp_path, monkeypatch=monkeypatch
+                )
+        finally:
+            monkeypatch.undo()
+
+    def test_command_fallback_requires_explicit_flag(self):
+        """Run test_command_fallback_requires_explicit_flag."""
+        monkeypatch = MonkeyPatch()
+        try:
+            with tempfile.TemporaryDirectory() as temp_dir:
+                tmp_path = Path(temp_dir).resolve()
+                _unit_test_command_fallback_requires_explicit_flag(
+                    tmp_path=tmp_path, monkeypatch=monkeypatch
+                )
+        finally:
+            monkeypatch.undo()
+
+    def test_command_fallback_is_allowed_when_explicit(self):
+        """Run test_command_fallback_is_allowed_when_explicit."""
+        monkeypatch = MonkeyPatch()
+        try:
+            with tempfile.TemporaryDirectory() as temp_dir:
+                tmp_path = Path(temp_dir).resolve()
+                _unit_test_command_fallback_is_allowed_when_explicit(
                     tmp_path=tmp_path, monkeypatch=monkeypatch
                 )
         finally:
