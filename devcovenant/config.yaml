@@ -773,6 +773,7 @@ autogen_metadata_overlays:
       report_heading: '## License Report'
       manage_licenses_readme: 'true'
       generate_hashes: 'true'
+      audit_service: pypi
       required_paths:
       - devcovenant/runtime-requirements.lock
       hash_targets:
@@ -874,6 +875,7 @@ autogen_metadata_overlays:
       licenses_dir: licenses
       report_heading: '## License Report'
       manage_licenses_readme: 'true'
+      audit_service: pypi
       required_paths:
       - requirements.in
       - devcovenant/runtime-requirements.lock
@@ -974,6 +976,7 @@ autogen_metadata_overlays:
       report_heading: '## License Report'
       manage_licenses_readme: 'true'
       generate_hashes: 'true'
+      audit_service: pypi
       required_paths:
       - pyproject.toml
       - '{{ PROJECT_NAME_PATH }}'

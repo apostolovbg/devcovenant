@@ -255,6 +255,8 @@ Each surface owns:
 - one `third_party_file`
 - one `licenses_dir`
 - optional hash-lock targets
+- optional vulnerability-audit metadata such as `audit_service` and
+  `audit_ignore_ids`
 
 When a direct dependency does not bundle upstream license files in installed
 distribution metadata, repositories may declare
@@ -300,6 +302,17 @@ union-resolution pass.
 If inherited managed surfaces pin conflicting versions for the same target,
 refresh fails explicitly because one flat composed lock cannot represent that
 conflict safely.
+When a surface declares `audit_service: pypi`, dependency-management also
+audits the frozen lock contents directly against PyPI vulnerability data.
+That audit uses the surface's declared target matrix rather than the current
+host, so Linux-only or Windows-only vulnerable pins do not disappear on a
+different workstation.
+`audit_ignore_ids` belongs to the same surface metadata, so reviewed
+exceptions travel with the owning lock surface instead of drifting into one
+CI-only shell command.
+Those advisory lookups use UTC-stamped runtime-local cache entries rather
+than tracked repository files, which keeps normal repeated gates fast without
+moving the audit contract out of dependency-management.
 
 The shipped defaults are:
 1. `root_workspace`: hash mode
@@ -311,6 +324,9 @@ when they ship their own Python package, `package_runtime`.
 `devcovenant_runtime` is DevCovenant's bundled bootstrap/runtime surface for
 the package-maintained GitHub bootstrap path rather than a surface ordinary
 adopters usually maintain themselves.
+Those same shipped surfaces also default to surface-local vulnerability
+auditing, so local gates, local `check`, and generated CI all see the same
+lock-health result.
 
 For the seeded Python stack, `root_workspace` starts from
 `requirements.in`, and that seeded file includes the shipped

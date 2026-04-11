@@ -35,6 +35,8 @@ def _surface(module, **overrides):
         generate_hashes=False,
         required_paths=[],
         hash_targets=[],
+        audit_service="",
+        audit_ignore_ids=[],
     )
     return module.dependency_management.DependencySurface(
         **{**surface.__dict__, **overrides}
@@ -86,7 +88,82 @@ def _unit_test_runtime_symbol_contract_is_stable() -> None:
     assert hasattr(module, "LockFilePieces")
     assert hasattr(module, "LockHandlerResult")
     assert hasattr(module, "SurfaceResolutionInputs")
+    assert hasattr(module, "DependencySurfaceVulnerability")
+    assert hasattr(module, "audit_surface_vulnerabilities")
     assert hasattr(module, "refresh_all")
+
+
+def _unit_test_audit_surface_vulnerabilities_uses_declared_targets() -> None:
+    """Vulnerability audit should report only the matching declared targets."""
+
+    module = importlib.import_module(MODULE)
+    with tempfile.TemporaryDirectory() as temp_dir:
+        repo_root = Path(temp_dir)
+        (repo_root / "requirements.lock").write_text(
+            'testauditpkg==1.2.3 ; sys_platform == "linux"\n',
+            encoding="utf-8",
+        )
+        surface = _surface(
+            module,
+            audit_service="pypi",
+            audit_ignore_ids=[],
+            hash_targets=[
+                module.dependency_management.DependencySurfaceTarget(
+                    target_id="linux-py311",
+                    marker=(
+                        'sys_platform == "linux" and python_version == '
+                        '"3.11"'
+                    ),
+                    pip={
+                        "platform": "manylinux2014_x86_64",
+                        "implementation": "cp",
+                        "python_version": "3.11",
+                        "abi": "cp311",
+                    },
+                ),
+                module.dependency_management.DependencySurfaceTarget(
+                    target_id="windows-py311",
+                    marker=(
+                        'sys_platform == "win32" and python_version == '
+                        '"3.11"'
+                    ),
+                    pip={
+                        "platform": "win_amd64",
+                        "implementation": "cp",
+                        "python_version": "3.11",
+                        "abi": "cp311",
+                    },
+                ),
+            ],
+        )
+        with patch.object(
+            module,
+            "_query_pypi_vulnerabilities",
+            return_value=[
+                {
+                    "id": "CVE-2026-39892",
+                    "aliases": [],
+                    "fixed_in": ["1.2.4"],
+                    "summary": "demo",
+                }
+            ],
+        ):
+            findings = module.audit_surface_vulnerabilities(
+                repo_root,
+                surface=surface,
+            )
+
+    assert findings == [
+        module.DependencySurfaceVulnerability(
+            package_name="testauditpkg",
+            version="1.2.3",
+            vulnerability_id="CVE-2026-39892",
+            aliases=(),
+            fix_versions=("1.2.4",),
+            summary="demo",
+            target_ids=("linux-py311",),
+        )
+    ]
 
 
 def _unit_test_engine_hash_is_checkout_path_insensitive() -> None:
@@ -1436,6 +1513,10 @@ class GeneratedUnittestCases(unittest.TestCase):
     def test_runtime_symbol_contract_is_stable(self):
         """Run dependency lock runtime symbol contract assertions."""
         _unit_test_runtime_symbol_contract_is_stable()
+
+    def test_audit_surface_vulnerabilities_uses_declared_targets(self):
+        """Run surface-audit target selection assertions."""
+        _unit_test_audit_surface_vulnerabilities_uses_declared_targets()
 
     def test_engine_hash_is_checkout_path_insensitive(self):
         """Run path-stable dependency engine hash assertions."""

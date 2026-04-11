@@ -75,6 +75,8 @@ class DependencySurface:
     generate_hashes: bool
     required_paths: List[str]
     hash_targets: List[DependencySurfaceTarget]
+    audit_service: str
+    audit_ignore_ids: List[str]
 
 
 @dataclass(frozen=True)
@@ -184,6 +186,42 @@ def _normalize_bool(
     if lowered in {"false", "0", "no", "n", "off"}:
         return False
     raise ValueError(f"dependency-management `{label}` must be boolean.")
+
+
+def _normalize_identifier_list(
+    value: object,
+    *,
+    label: str,
+) -> list[str]:
+    """Normalize one identifier list into unique uppercase tokens."""
+
+    del label
+    normalized: list[str] = []
+    seen: set[str] = set()
+    for raw_entry in _normalize_list(value):
+        token = str(raw_entry).strip().upper()
+        if not token or token in seen:
+            continue
+        seen.add(token)
+        normalized.append(token)
+    return normalized
+
+
+def _normalize_audit_service(
+    value: object,
+    *,
+    label: str,
+) -> str:
+    """Normalize one supported dependency vulnerability audit service."""
+
+    token = str(value or "").strip().lower().replace("_", "-")
+    if not token:
+        return ""
+    if token != "pypi":
+        raise ValueError(
+            f"dependency-management `{label}` must be `pypi` when set."
+        )
+    return token
 
 
 def _render_surface_template(
@@ -459,6 +497,14 @@ def resolve_dependency_surfaces(
             default=False,
             label=f"surfaces[{surface_id}].generate_hashes",
         )
+        audit_service = _normalize_audit_service(
+            raw_entry.get("audit_service"),
+            label=f"surfaces[{surface_id}].audit_service",
+        )
+        audit_ignore_ids = _normalize_identifier_list(
+            raw_entry.get("audit_ignore_ids", []),
+            label=f"surfaces[{surface_id}].audit_ignore_ids",
+        )
         raw_hash_targets = raw_entry.get("hash_targets", [])
         if raw_hash_targets in ("", None):
             raw_hash_targets = []
@@ -531,6 +577,8 @@ def resolve_dependency_surfaces(
             generate_hashes=generate_hashes,
             required_paths=required_paths,
             hash_targets=hash_targets,
+            audit_service=audit_service,
+            audit_ignore_ids=audit_ignore_ids,
         )
         if include_inactive or surface.active:
             surfaces.append(surface)
@@ -1967,6 +2015,75 @@ def _surface_violations(
     return violations
 
 
+def _surface_vulnerability_violations(
+    *,
+    context: CheckContext,
+    surface: DependencySurface,
+    findings: Sequence[object],
+) -> list[Violation]:
+    """Translate surface vulnerability findings into policy violations."""
+
+    violations: list[Violation] = []
+    lock_path = context.repo_root / surface.lock_file
+    for finding in findings:
+        package_name = str(getattr(finding, "package_name", "")).strip()
+        version = str(getattr(finding, "version", "")).strip()
+        vulnerability_id = str(
+            getattr(finding, "vulnerability_id", "")
+        ).strip()
+        fix_versions = [
+            str(entry).strip()
+            for entry in getattr(finding, "fix_versions", ())
+            if str(entry).strip()
+        ]
+        target_ids = [
+            str(entry).strip()
+            for entry in getattr(finding, "target_ids", ())
+            if str(entry).strip()
+        ]
+        scope_suffix = ""
+        if target_ids:
+            scope_suffix = (
+                " for targets `" + "`, `".join(sorted(target_ids)) + "`"
+            )
+        if fix_versions:
+            listed_versions = "`, `".join(sorted(fix_versions))
+            remediation = (
+                " Refresh the owning dependency surface so "
+                f"`{surface.lock_file}` reaches `{listed_versions}` or newer."
+            )
+        else:
+            remediation = (
+                " Refresh the owning dependency surface after an upstream "
+                "fix becomes available."
+            )
+        violations.append(
+            Violation(
+                policy_id="dependency-management",
+                severity="error",
+                file_path=lock_path,
+                message=(
+                    f"Dependency surface `{surface.surface_id}` locks "
+                    f"`{package_name}=={version}` with vulnerability "
+                    f"`{vulnerability_id}`{scope_suffix}.{remediation}"
+                ),
+                can_auto_fix=bool(fix_versions),
+                context={
+                    "changed_dependency_files": [surface.lock_file],
+                    "issue": "vulnerability_audit",
+                    "surface_id": surface.surface_id,
+                    "lock_file": surface.lock_file,
+                    "package_name": package_name,
+                    "version": version,
+                    "vulnerability_id": vulnerability_id,
+                    "fix_versions": sorted(fix_versions),
+                    "target_ids": sorted(target_ids),
+                },
+            )
+        )
+    return violations
+
+
 class DependencyManagementCheck(PolicyCheck):
     """Ensure dependency changes update lock and compliance artifacts."""
 
@@ -1998,8 +2115,6 @@ class DependencyManagementCheck(PolicyCheck):
     def check(self, context: CheckContext):
         """Verify dependency changes match the recorded license summary."""
         files = context.changed_files or []
-        if not files:
-            return []
 
         try:
             license_source_overrides = resolve_license_source_overrides(
@@ -2030,7 +2145,41 @@ class DependencyManagementCheck(PolicyCheck):
             changed_rel_paths.add(rel_path)
 
         violations: list[Violation] = []
+        from devcovenant.builtin.policies.dependency_management import (
+            dependency_lock_runtime,
+        )
+
+        audit_cache = context.runtime_cache_bucket(
+            "dependency_management_audit"
+        )
         for surface in surfaces:
+            if surface.audit_service:
+                try:
+                    findings = (
+                        dependency_lock_runtime.audit_surface_vulnerabilities(
+                            context.repo_root,
+                            surface=surface,
+                            runtime_cache=audit_cache,
+                        )
+                    )
+                except RuntimeError as error:
+                    violations.append(
+                        Violation(
+                            policy_id=self.policy_id,
+                            severity="error",
+                            file_path=context.repo_root / surface.lock_file,
+                            message=str(error),
+                            can_auto_fix=False,
+                        )
+                    )
+                else:
+                    violations.extend(
+                        _surface_vulnerability_violations(
+                            context=context,
+                            surface=surface,
+                            findings=findings,
+                        )
+                    )
             if not surface.direct_dependency_files:
                 continue
             surface_changed_files = sorted(

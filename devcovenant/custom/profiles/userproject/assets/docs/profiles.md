@@ -292,6 +292,9 @@ The shipped defaults keep the Python dependency surfaces hash-locked:
 repository enables that optional package surface.
 A custom profile can override those defaults per surface instead of inventing
 a second special-case dependency model.
+Those same builtin surfaces also seed surface-local vulnerability auditing, so
+the Python and GitHub profiles do not need a separate repository CI command to
+check locked dependencies on only one host platform.
 
 Profile ownership also includes the shipped translator maps.
 The builtin language translator set currently covers `csharp`, `dart`, `go`,

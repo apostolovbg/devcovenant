@@ -62,8 +62,8 @@ same.
 The same applies to policy-resolved metadata such as
 `dependency-management.surfaces`: when profile or config overlays change those
 surface declarations, the tracked registry records the new resolved lock
-paths, dependency selectors, artifact targets, and hash-target settings that
-later drive lock refresh behavior.
+paths, dependency selectors, artifact targets, hash-target settings, and
+surface-local audit settings that later drive lock refresh behavior.
 The same dependency-management registry section also records resolved
 `license_source_overrides`, so registry diffs are expected when a repository
 adds or changes an explicit fallback source for dependency license texts.
@@ -98,6 +98,9 @@ The same runtime state also records per-surface fingerprints for composed
 dependency surfaces, so a source fix that changes how `root_workspace`
 inherits `devcovenant_runtime` or `package_runtime` is expected to refresh
 tracked registry state even when the flat lock output itself does not change.
+Published vulnerability lookups themselves stay out of the tracked registry.
+They belong in UTC-stamped runtime-local cache entries because the advisories
+are external lookup data, not repository-owned contract state.
 Tracked fingerprints must stay checkout-stable.
 They should be derived from repo-relative identity plus content, not from
 absolute machine-local checkout paths.

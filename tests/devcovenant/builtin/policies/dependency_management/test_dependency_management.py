@@ -8,6 +8,7 @@ import unittest
 from pathlib import Path
 
 from devcovenant.builtin.policies.dependency_management import (
+    dependency_lock_runtime,
     dependency_management,
 )
 from devcovenant.core.policy_contract import CheckContext
@@ -88,6 +89,52 @@ def _surface_options(**overrides: object) -> dict[str, object]:
     }
     surface.update(overrides)
     return surface
+
+
+def _surface_hash_targets() -> list[dict[str, object]]:
+    """Return a small cross-platform target matrix for audit tests."""
+
+    return [
+        {
+            "id": "linux-py311",
+            "marker": 'sys_platform == "linux" and python_version == "3.11"',
+            "pip": {
+                "platform": "manylinux2014_x86_64",
+                "implementation": "cp",
+                "python_version": "3.11",
+                "abi": "cp311",
+            },
+        },
+        {
+            "id": "windows-py311",
+            "marker": 'sys_platform == "win32" and python_version == "3.11"',
+            "pip": {
+                "platform": "win_amd64",
+                "implementation": "cp",
+                "python_version": "3.11",
+                "abi": "cp311",
+            },
+        },
+    ]
+
+
+def _vulnerability_payload(
+    vulnerability_id: str,
+    *,
+    aliases: list[str] | None = None,
+    fixed_in: list[str] | None = None,
+    summary: str = "",
+) -> list[dict[str, object]]:
+    """Return one normalized vulnerability payload for audit tests."""
+
+    return [
+        {
+            "id": vulnerability_id,
+            "aliases": aliases or [],
+            "fixed_in": fixed_in or [],
+            "summary": summary,
+        }
+    ]
 
 
 def _archive_bytes(members: dict[str, str]) -> bytes:
@@ -856,6 +903,96 @@ def _unit_test_role_selector_invalid_role_reports_configuration_error(
     assert "outside configured `dependency_roles`" in violations[0].message
 
 
+def _unit_test_vulnerability_audit_runs_without_changed_files(
+    tmp_path: Path,
+):
+    """Surface-local vulnerability audit should run even without edits."""
+
+    repo = _setup_repo(tmp_path)
+    (repo / "requirements.lock").write_text(
+        'testlockedpkg==1.2.3 ; sys_platform == "linux"\n',
+        encoding="utf-8",
+    )
+    checker = _build_checker_with_options(
+        {
+            "surfaces": [
+                _surface_options(
+                    audit_service="pypi",
+                    audit_ignore_ids=[],
+                    hash_targets=_surface_hash_targets(),
+                )
+            ]
+        }
+    )
+    original_query = dependency_lock_runtime._query_pypi_vulnerabilities
+    dependency_lock_runtime._query_pypi_vulnerabilities = (
+        lambda _name, _version: _vulnerability_payload(
+            "CVE-2026-39892",
+            fixed_in=["1.2.4"],
+        )
+    )
+    try:
+        violations = checker.check(CheckContext(repo_root=repo))
+    finally:
+        dependency_lock_runtime._query_pypi_vulnerabilities = original_query
+    assert len(violations) == 1
+    violation = violations[0]
+    assert violation.can_auto_fix is True
+    assert violation.context["changed_dependency_files"] == [
+        "requirements.lock"
+    ]
+    assert violation.context["issue"] == "vulnerability_audit"
+    assert "linux-py311" in violation.message
+    assert "windows-py311" not in violation.message
+
+
+def _unit_test_vulnerability_audit_respects_ignore_ids(tmp_path: Path):
+    """Surface ignore ids should suppress matching advisories."""
+
+    repo = _setup_repo(tmp_path)
+    (repo / "requirements.lock").write_text(
+        "testignoredpkg==2.0.0\n",
+        encoding="utf-8",
+    )
+    checker = _build_checker_with_options(
+        {
+            "surfaces": [
+                _surface_options(
+                    audit_service="pypi",
+                    audit_ignore_ids=["GHSA-TEST-0001"],
+                )
+            ]
+        }
+    )
+    original_query = dependency_lock_runtime._query_pypi_vulnerabilities
+    dependency_lock_runtime._query_pypi_vulnerabilities = (
+        lambda _name, _version: _vulnerability_payload(
+            "PYSEC-2026-1",
+            aliases=["GHSA-test-0001"],
+            fixed_in=["2.0.1"],
+        )
+    )
+    try:
+        violations = checker.check(CheckContext(repo_root=repo))
+    finally:
+        dependency_lock_runtime._query_pypi_vulnerabilities = original_query
+    assert violations == []
+
+
+def _unit_test_invalid_audit_service_reports_configuration_error(
+    tmp_path: Path,
+):
+    """Unknown audit services should fail as configuration errors."""
+
+    repo = _setup_repo(tmp_path)
+    checker = _build_checker_with_options(
+        {"surfaces": [_surface_options(audit_service="osv")]}
+    )
+    violations = checker.check(CheckContext(repo_root=repo))
+    assert len(violations) == 1
+    assert "audit_service" in violations[0].message
+
+
 def _unit_test_policy_symbol_contract_is_stable():
     """Dependency-management symbol contract should stay stable."""
     module = dependency_management
@@ -1006,6 +1143,30 @@ class GeneratedUnittestCases(unittest.TestCase):
         with tempfile.TemporaryDirectory() as temp_dir:
             tmp_path = Path(temp_dir).resolve()
             _unit_test_role_selector_invalid_role_reports_configuration_error(
+                tmp_path=tmp_path
+            )
+
+    def test_vulnerability_audit_runs_without_changed_files(self):
+        """Run dependency vulnerability audit no-edit assertions."""
+        with tempfile.TemporaryDirectory() as temp_dir:
+            tmp_path = Path(temp_dir).resolve()
+            _unit_test_vulnerability_audit_runs_without_changed_files(
+                tmp_path=tmp_path
+            )
+
+    def test_vulnerability_audit_respects_ignore_ids(self):
+        """Run dependency vulnerability ignore-id assertions."""
+        with tempfile.TemporaryDirectory() as temp_dir:
+            tmp_path = Path(temp_dir).resolve()
+            _unit_test_vulnerability_audit_respects_ignore_ids(
+                tmp_path=tmp_path
+            )
+
+    def test_invalid_audit_service_reports_configuration_error(self):
+        """Run dependency vulnerability audit-service validation."""
+        with tempfile.TemporaryDirectory() as temp_dir:
+            tmp_path = Path(temp_dir).resolve()
+            _unit_test_invalid_audit_service_reports_configuration_error(
                 tmp_path=tmp_path
             )
 

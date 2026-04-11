@@ -6,6 +6,5 @@
 # Add repository-only workspace dependencies below.
 bandit==1.9.4
 cyclonedx-bom==7.2.2
-pip-audit==2.10.0
 pipx==1.11.1
 twine==6.2.0

@@ -2,7 +2,7 @@
 **Doc ID:** SECURITY
 **Doc Type:** security-policy
 **Project Version:** 1.0.1b2
-**Last Updated:** 2026-04-07
+**Last Updated:** 2026-04-11
 **DevCovenant Version:** 1.0.1b2
 
 <!-- DEVCOV:BEGIN -->
@@ -100,8 +100,9 @@ DevCovenant keeps release assurance visible in normal automation:
    on Python `3.14`
 2. this repository activates `github`, then its custom same-name
    `userproject` profile extends the main `governance` job
-   with `pip-audit -r requirements.lock` and
-   `bandit -q -c bandit.yaml -r devcovenant`
+   with `bandit -q -c bandit.yaml -r devcovenant`, while
+   dependency-management owns lock vulnerability auditing directly through
+   the normal local gate/check path
 3. the repo-specific `Build` job inside `CI` owns built-artifact proof for
    the wheel, sdist, and documented `pipx` install path, and each proof
    runs the full public workflow: `gate --start`, `gate --mid`, `run`,
@@ -119,12 +120,11 @@ infallible.
 When scanners disagree, DevCovenant's rule is to document the disagreement,
 keep the reviewed boundary explicit, and avoid silently suppressing the
 result.
-The repo-specific `pip-audit` invocation carries one documented temporary
-ignore for `CVE-2026-4539` in transitive `pygments`, because `pytest`
-requires `pygments`, the advisory currently has no published fix release,
-and the report describes local-only exploitation.
-That exception belongs in repo-specific CI only and should be removed as
-soon as upstream publishes a fixable release path.
+For dependency locks, reviewed exceptions belong on the owning
+`dependency-management` surface through `audit_ignore_ids`, not in a
+separate CI-only shell step.
+That keeps the exception visible to local gates, local `check`, and CI at
+the same time.
 
 ## Workflow
 Use this document in the normal reporting flow:

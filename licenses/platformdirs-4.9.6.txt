@@ -1,7 +1,7 @@
-# platformdirs 4.9.4
+# platformdirs 4.9.6
 
 This file aggregates the upstream license texts resolved for
-`platformdirs==4.9.4`.
+`platformdirs==4.9.6`.
 
 Resolved from: installed distribution metadata
 

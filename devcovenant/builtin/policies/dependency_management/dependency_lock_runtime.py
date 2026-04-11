@@ -16,8 +16,12 @@ import sys
 import tempfile
 import zipfile
 from dataclasses import dataclass
+from datetime import datetime, timedelta, timezone
 from pathlib import Path
 from typing import Callable, Dict, Iterable, List, Mapping, Sequence, Tuple
+from urllib import error as urllib_error
+from urllib import parse as urllib_parse
+from urllib import request as urllib_request
 
 from packaging.markers import default_environment
 from packaging.requirements import InvalidRequirement, Requirement
@@ -39,6 +43,9 @@ from devcovenant.core.tracked_registry import policy_registry_path
 
 POLICY_ID = "dependency-management"
 _TARGET_RESOLUTION_MAX_WORKERS = 4
+_VULNERABILITY_AUDIT_CACHE_TTL = timedelta(hours=1)
+_VULNERABILITY_AUDIT_MAX_WORKERS = 8
+_VULNERABILITY_AUDIT_TIMEOUT_SECONDS = 10
 _PYTHON_LOCK_OPTION_TOKENS = {
     "--cert",
     "--client-cert",
@@ -89,6 +96,19 @@ class SurfaceResolutionInputs:
 
     dependency_lines: List[str]
     inherited_lock_files: List[str]
+
+
+@dataclass(frozen=True)
+class DependencySurfaceVulnerability:
+    """One vulnerability finding for a locked dependency surface."""
+
+    package_name: str
+    version: str
+    vulnerability_id: str
+    aliases: Tuple[str, ...]
+    fix_versions: Tuple[str, ...]
+    summary: str
+    target_ids: Tuple[str, ...]
 
 
 def _compute_file_hash(path: Path) -> str:
@@ -913,6 +933,8 @@ def _refresh_python_requirements_lock(
             generate_hashes=generate_hashes,
             required_paths=[],
             hash_targets=[],
+            audit_service="",
+            audit_ignore_ids=[],
         ),
     )
 
@@ -1882,6 +1904,400 @@ def _parse_locked_requirements(
             index += 1
         parsed.append((requirement_line, hashes))
     return parsed
+
+
+def _utc_now() -> datetime:
+    """Return the current timezone-aware UTC timestamp."""
+
+    return datetime.now(timezone.utc)
+
+
+def _vulnerability_audit_cache_dir() -> Path:
+    """Return the machine-local cache root for vulnerability lookups."""
+
+    return (
+        Path(tempfile.gettempdir())
+        / "devcovenant"
+        / "dependency_vulnerability_cache"
+    )
+
+
+def _vulnerability_audit_cache_path(
+    *,
+    normalized_name: str,
+    version: str,
+) -> Path:
+    """Return one stable machine-local cache file path."""
+
+    digest = hashlib.sha256(
+        f"{normalized_name}=={version}".encode("utf-8")
+    ).hexdigest()
+    return _vulnerability_audit_cache_dir() / f"{digest}.json"
+
+
+def _parse_iso_utc(value: object) -> datetime | None:
+    """Parse one cached ISO-8601 timestamp into a UTC datetime."""
+
+    token = str(value or "").strip()
+    if not token:
+        return None
+    try:
+        parsed = datetime.fromisoformat(token.replace("Z", "+00:00"))
+    except ValueError:
+        return None
+    if parsed.tzinfo is None:
+        parsed = parsed.replace(tzinfo=timezone.utc)
+    return parsed.astimezone(timezone.utc)
+
+
+def _normalize_vulnerability_feed(
+    raw_entries: object,
+) -> List[Dict[str, object]]:
+    """Normalize one PyPI vulnerability payload into stable mappings."""
+
+    if not isinstance(raw_entries, list):
+        return []
+    normalized: List[Dict[str, object]] = []
+    for raw_entry in raw_entries:
+        if not isinstance(raw_entry, Mapping):
+            continue
+        vulnerability_id = str(raw_entry.get("id", "")).strip()
+        if not vulnerability_id:
+            continue
+        withdrawn = str(raw_entry.get("withdrawn", "")).strip()
+        if withdrawn:
+            continue
+        aliases = tuple(
+            sorted(
+                {
+                    str(alias).strip().upper()
+                    for alias in raw_entry.get("aliases", [])
+                    if str(alias).strip()
+                }
+            )
+        )
+        raw_fixed_in = raw_entry.get("fixed_in", [])
+        if isinstance(raw_fixed_in, list):
+            fixed_in = tuple(
+                sorted(
+                    {
+                        str(version).strip()
+                        for version in raw_fixed_in
+                        if str(version).strip()
+                    }
+                )
+            )
+        else:
+            fixed_in = tuple(
+                [str(raw_fixed_in).strip()]
+                if str(raw_fixed_in).strip()
+                else []
+            )
+        summary = str(
+            raw_entry.get("summary") or raw_entry.get("details") or ""
+        ).strip()
+        normalized.append(
+            {
+                "id": vulnerability_id.upper(),
+                "aliases": list(aliases),
+                "fixed_in": list(fixed_in),
+                "summary": summary,
+            }
+        )
+    return normalized
+
+
+def _load_cached_vulnerability_feed(
+    *,
+    normalized_name: str,
+    version: str,
+    now: datetime,
+) -> List[Dict[str, object]] | None:
+    """Return a fresh cached vulnerability payload when available."""
+
+    cache_path = _vulnerability_audit_cache_path(
+        normalized_name=normalized_name,
+        version=version,
+    )
+    if not cache_path.exists():
+        return None
+    try:
+        payload = json.loads(cache_path.read_text(encoding="utf-8"))
+    except (OSError, json.JSONDecodeError):
+        return None
+    checked_at = _parse_iso_utc(payload.get("checked_at_utc"))
+    if checked_at is None:
+        return None
+    if now - checked_at > _VULNERABILITY_AUDIT_CACHE_TTL:
+        return None
+    return _normalize_vulnerability_feed(payload.get("vulnerabilities", []))
+
+
+def _write_cached_vulnerability_feed(
+    *,
+    normalized_name: str,
+    version: str,
+    vulnerabilities: Sequence[Mapping[str, object]],
+    now: datetime,
+) -> None:
+    """Persist one vulnerability payload in the machine-local cache."""
+
+    cache_path = _vulnerability_audit_cache_path(
+        normalized_name=normalized_name,
+        version=version,
+    )
+    cache_path.parent.mkdir(parents=True, exist_ok=True)
+    payload = {
+        "checked_at_utc": now.isoformat(),
+        "name": normalized_name,
+        "version": version,
+        "vulnerabilities": list(vulnerabilities),
+    }
+    cache_path.write_text(
+        json.dumps(payload, indent=2, sort_keys=True) + "\n",
+        encoding="utf-8",
+    )
+
+
+def _query_pypi_vulnerabilities(
+    normalized_name: str,
+    version: str,
+) -> List[Dict[str, object]]:
+    """Query the PyPI JSON API for one exact package version."""
+
+    url = (
+        "https://pypi.org/pypi/"
+        f"{urllib_parse.quote(normalized_name)}/"
+        f"{urllib_parse.quote(version)}/json"
+    )
+    request = urllib_request.Request(
+        url,
+        headers={
+            "Accept": "application/json",
+            "User-Agent": "devcovenant/dependency-management",
+        },
+    )
+    try:
+        with urllib_request.urlopen(
+            request,
+            timeout=_VULNERABILITY_AUDIT_TIMEOUT_SECONDS,
+        ) as response:
+            payload = json.loads(response.read().decode("utf-8"))
+    except urllib_error.URLError as error:
+        raise RuntimeError(
+            "dependency-management vulnerability audit could not query "
+            f"PyPI for `{normalized_name}=={version}`: {error}."
+        ) from error
+    raw_entries = payload.get("vulnerabilities")
+    if raw_entries is None and isinstance(payload.get("info"), Mapping):
+        raw_entries = payload.get("info", {}).get("vulnerabilities", [])
+    return _normalize_vulnerability_feed(raw_entries)
+
+
+def _surface_vulnerability_feed(
+    *,
+    normalized_name: str,
+    version: str,
+    runtime_cache: Dict[str, object] | None = None,
+) -> List[Dict[str, object]]:
+    """Return vulnerability data for one exact package/version pair."""
+
+    cache_key = f"{normalized_name}=={version}"
+    cached_payloads: Dict[str, object] = {}
+    if isinstance(runtime_cache, dict):
+        payload_bucket = runtime_cache.get("pypi_vulnerabilities")
+        if not isinstance(payload_bucket, dict):
+            payload_bucket = {}
+            runtime_cache["pypi_vulnerabilities"] = payload_bucket
+        cached_payloads = payload_bucket
+        cached = cached_payloads.get(cache_key)
+        if isinstance(cached, list):
+            return cached
+    now = _utc_now()
+    cached = _load_cached_vulnerability_feed(
+        normalized_name=normalized_name,
+        version=version,
+        now=now,
+    )
+    if cached is not None:
+        if isinstance(runtime_cache, dict):
+            cached_payloads[cache_key] = cached
+        return cached
+    vulnerabilities = _query_pypi_vulnerabilities(
+        normalized_name,
+        version,
+    )
+    _write_cached_vulnerability_feed(
+        normalized_name=normalized_name,
+        version=version,
+        vulnerabilities=vulnerabilities,
+        now=now,
+    )
+    if isinstance(runtime_cache, dict):
+        cached_payloads[cache_key] = vulnerabilities
+    return vulnerabilities
+
+
+def _collect_surface_audit_targets(
+    requirement: Requirement,
+    *,
+    surface: dependency_management.DependencySurface,
+    target_environments: Mapping[str, Mapping[str, str]],
+) -> Tuple[str, ...]:
+    """Return declared target ids affected by one lock requirement."""
+
+    if not surface.hash_targets:
+        return ()
+    return tuple(
+        sorted(
+            target_id
+            for target_id, target_environment in (target_environments.items())
+            if _requirement_is_active_for_target(
+                requirement,
+                target_environment=target_environment,
+            )
+        )
+    )
+
+
+def _normalized_audit_ignore_ids(
+    ignore_ids: Sequence[str],
+) -> set[str]:
+    """Return the normalized ignore-id set for one audited surface."""
+
+    return {
+        str(entry).strip().upper()
+        for entry in ignore_ids
+        if str(entry).strip()
+    }
+
+
+def audit_surface_vulnerabilities(
+    repo_root: Path,
+    *,
+    surface: dependency_management.DependencySurface,
+    runtime_cache: Dict[str, object] | None = None,
+) -> List[DependencySurfaceVulnerability]:
+    """Audit one managed dependency surface for published vulnerabilities."""
+
+    if not surface.audit_service:
+        return []
+    lock_token = _normalize_repo_relative_path_token(surface.lock_file)
+    lock_path = repo_root / lock_token
+    if not lock_path.exists():
+        raise RuntimeError(
+            "dependency-management vulnerability audit requires the "
+            f"declared lock file for `{surface.surface_id}`, but "
+            f"`{lock_token}` is missing."
+        )
+    target_environments = {
+        target.target_id: _target_marker_environment(target)
+        for target in surface.hash_targets
+    }
+    grouped_requirements: Dict[Tuple[str, str], Dict[str, object]] = {}
+    for requirement_line, _ in _parse_locked_requirements(lock_path):
+        try:
+            requirement = Requirement(requirement_line)
+        except InvalidRequirement as error:
+            raise RuntimeError(
+                "dependency-management vulnerability audit found an invalid "
+                f"lock requirement in `{lock_token}`: `{requirement_line}`."
+            ) from error
+        match = dependency_management._PYTHON_LOCK_PIN_RE.match(
+            requirement_line
+        )
+        if match is None:
+            continue
+        package_name = str(match.group("name"))
+        version = str(match.group("version"))
+        normalized_name = dependency_management._normalize_distribution_name(
+            package_name
+        )
+        target_ids = _collect_surface_audit_targets(
+            requirement,
+            surface=surface,
+            target_environments=target_environments,
+        )
+        if surface.hash_targets and not target_ids:
+            continue
+        key = (normalized_name, version)
+        entry = grouped_requirements.setdefault(
+            key,
+            {
+                "package_name": package_name,
+                "version": version,
+                "target_ids": set(),
+            },
+        )
+        entry["target_ids"].update(target_ids)
+    if not grouped_requirements:
+        return []
+    ignore_ids = _normalized_audit_ignore_ids(surface.audit_ignore_ids)
+    findings: List[DependencySurfaceVulnerability] = []
+    package_entries = sorted(grouped_requirements.items())
+    max_workers = min(
+        len(package_entries),
+        max(1, _VULNERABILITY_AUDIT_MAX_WORKERS),
+    )
+    vulnerability_feeds: Dict[Tuple[str, str], List[Dict[str, object]]] = {}
+    if max_workers <= 1:
+        for (normalized_name, version), _entry in package_entries:
+            vulnerability_feeds[(normalized_name, version)] = (
+                _surface_vulnerability_feed(
+                    normalized_name=normalized_name,
+                    version=version,
+                    runtime_cache=runtime_cache,
+                )
+            )
+    else:
+        with concurrent.futures.ThreadPoolExecutor(
+            max_workers=max_workers
+        ) as executor:
+            submitted = {
+                executor.submit(
+                    _surface_vulnerability_feed,
+                    normalized_name=normalized_name,
+                    version=version,
+                    runtime_cache=None,
+                ): (normalized_name, version)
+                for (normalized_name, version), _entry in package_entries
+            }
+            for future, key in submitted.items():
+                vulnerability_feeds[key] = future.result()
+    for (normalized_name, version), entry in package_entries:
+        package_name = str(entry.get("package_name", "")).strip()
+        target_ids = tuple(sorted(set(entry.get("target_ids", set()))))
+        for vulnerability in vulnerability_feeds[(normalized_name, version)]:
+            candidate_ids = {str(vulnerability.get("id", "")).strip().upper()}
+            candidate_ids.update(
+                {
+                    str(alias).strip().upper()
+                    for alias in vulnerability.get("aliases", [])
+                    if str(alias).strip()
+                }
+            )
+            if candidate_ids & ignore_ids:
+                continue
+            findings.append(
+                DependencySurfaceVulnerability(
+                    package_name=package_name,
+                    version=version,
+                    vulnerability_id=str(vulnerability.get("id", "")).strip(),
+                    aliases=tuple(
+                        str(alias).strip()
+                        for alias in vulnerability.get("aliases", [])
+                        if str(alias).strip()
+                    ),
+                    fix_versions=tuple(
+                        str(item).strip()
+                        for item in vulnerability.get("fixed_in", [])
+                        if str(item).strip()
+                    ),
+                    summary=str(vulnerability.get("summary", "")).strip(),
+                    target_ids=target_ids,
+                )
+            )
+    return findings
 
 
 def _merge_grouped_target_entry(

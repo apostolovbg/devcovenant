@@ -96,6 +96,7 @@ policy_overlays:
         report_heading: '## License Report'
         manage_licenses_readme: true
         generate_hashes: true
+        audit_service: pypi
         required_paths:
           - requirements.in
           - devcovenant/runtime-requirements.lock
@@ -196,6 +197,7 @@ policy_overlays:
         report_heading: '## License Report'
         manage_licenses_readme: true
         generate_hashes: true
+        audit_service: pypi
         required_paths:
           - pyproject.toml
           - '{{ PROJECT_NAME_PATH }}'

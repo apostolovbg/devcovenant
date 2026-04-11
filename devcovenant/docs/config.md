@@ -1,5 +1,5 @@
 # Configuration
-**Last Updated:** 2026-04-09
+**Last Updated:** 2026-04-11
 
 **Project Version:** 1.0.1b2
 
@@ -248,6 +248,9 @@ special-case root-versus-extra keys.
 Surface overlays merge by `id`, so the normal pattern is:
 1. inherit the default surface ids
 2. override only the subkeys a repository needs to change
+3. keep per-surface vulnerability audit settings such as `audit_service`
+   and `audit_ignore_ids` on the owning surface instead of in separate
+   CI-only commands
 
 The same rule applies to
 `dependency-management.license_source_overrides`.
@@ -293,6 +296,10 @@ If a repository needs to change dependency lock mode, do that by overriding the
 relevant `dependency-management.surfaces` entry.
 Those surface entries can turn `generate_hashes` on or off while still using
 the same declared target matrix and refresh engine.
+The same surface entries also own vulnerability auditing for their lockfiles.
+If a repository wants that audit on or off, wants a reviewed exception, or
+wants to inherit the shipped defaults, change the owning surface metadata
+instead of adding a one-off `pip-audit` step to CI.
 For example, a custom profile may own workspace dependency surfaces while an
 optional GitHub-specific custom profile adds extra CI fragments.
 

@@ -6,7 +6,7 @@
 **Maintenance Stance:** active
 **Compatibility Policy:** forward-only
 **Versioning Mode:** versioned
-**Last Updated:** 2026-04-09
+**Last Updated:** 2026-04-11
 **DevCovenant Version:** 1.0.1b2
 
 <!-- DEVCOV:BEGIN -->
@@ -617,6 +617,7 @@ surfaces:
   report_heading: '## License Report'
   manage_licenses_readme: 'true'
   generate_hashes: 'true'
+  audit_service: pypi
   required_paths:
   - devcovenant/runtime-requirements.lock
   hash_targets:
@@ -718,6 +719,7 @@ surfaces:
   licenses_dir: licenses
   report_heading: '## License Report'
   manage_licenses_readme: 'true'
+  audit_service: pypi
   required_paths:
   - requirements.in
   - devcovenant/runtime-requirements.lock
@@ -818,6 +820,7 @@ surfaces:
   report_heading: '## License Report'
   manage_licenses_readme: 'true'
   generate_hashes: 'true'
+  audit_service: pypi
   required_paths:
   - pyproject.toml
   - '{{ PROJECT_NAME_PATH }}'
@@ -928,12 +931,20 @@ Each surface may declare nested selector keys:
 `dependency_role_dirs`.
 Surface selectors decide when checks and license/report refresh must react.
 Direct dependency inputs decide when a lock refresh must recompile.
+Surfaces may also declare `audit_service` and `audit_ignore_ids`.
+When audit is enabled, policy checks audit the frozen lock contents directly
+against published vulnerability data instead of trusting the current host's
+marker selection, so Linux-only or Windows-only vulnerable pins do not hide
+on another platform.
 Policy checks remain read-only. Autofixers may invoke declared policy
 runtime actions, and explicit policy-born CLI commands may invoke those same
 runtime actions manually. Remediation messaging may differ when autofix is
 enabled versus disabled. When one Python surface enables
 `generate_hashes`, DevCovenant resolves the full configured target closure
 from `hash_targets` and writes an all-target hash lock or fails explicitly.
+Advisory lookups use UTC-stamped runtime-local cache entries, not tracked
+repository files, so repeated gates reuse recent results without adding
+hidden CI-only audit logic.
 When a direct dependency does not bundle upstream license files in installed
 metadata, repositories may declare `license_source_overrides` keyed by
 normalized package name. Builtin overrides currently support `archive_url`

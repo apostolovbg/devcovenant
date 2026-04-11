@@ -438,19 +438,8 @@ def _profile_repo_workflow_includes_userproject_jobs() -> None:
         if isinstance(step, dict)
     ]
     assert "Install governance tooling" in step_names
-    assert "Audit locked dependencies" in step_names
     assert "Run Bandit" in step_names
-    audit_step = next(
-        (
-            step
-            for step in steps
-            if isinstance(step, dict)
-            and str(step.get("name") or "").strip()
-            == "Audit locked dependencies"
-        )
-    )
-    audit_run = str(audit_step.get("run") or "").strip()
-    assert "--ignore-vuln CVE-2026-4539" in audit_run
+    assert "Audit locked dependencies" not in step_names
 
 
 def _profile_ci_workflow_contains_build_job_artifact_proof() -> None:

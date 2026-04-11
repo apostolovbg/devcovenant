@@ -6,7 +6,7 @@
 **Maintenance Stance:** active
 **Compatibility Policy:** forward-only
 **Versioning Mode:** versioned
-**Last Updated:** 2026-04-09
+**Last Updated:** 2026-04-11
 **DevCovenant Version:** 1.0.1b2
 
 <!-- DEVCOV:BEGIN -->
@@ -59,6 +59,67 @@ Example:
 ## Log changes here
 
 ## Version 1.0.1b2
+
+- 2026-04-11:
+  Change: Integrated dependency vulnerability auditing into
+          dependency-management, removed the repo-only `pip-audit` CI step,
+          and documented the surface-owned audit model.
+  Why: Prevented host-specific hidden lock failures by auditing managed
+       dependency surfaces through the same local and CI policy path.
+  Impact: Surface-local audit metadata now drives lock vulnerability checks,
+          repeated lookups use UTC-stamped runtime cache entries, and the
+          repo no longer depends on a separate CI-only audit command.
+  Files:
+  .github/workflows/ci.yml
+  AGENTS.md
+  CHANGELOG.md
+  SECURITY.md
+  devcovenant/builtin/policies/dependency_management/dependency_management.py
+  devcovenant/builtin/policies/dependency_management/\
+    dependency_lock_runtime.py
+  devcovenant/builtin/policies/dependency_management/\
+    dependency_management.yaml
+  devcovenant/builtin/policies/dependency_management/test_blueprints.yaml
+  devcovenant/builtin/profiles/github/github.yaml
+  devcovenant/builtin/profiles/python/python.yaml
+  devcovenant/config.yaml
+  devcovenant/custom/profiles/userproject/assets/SECURITY.yaml
+  devcovenant/custom/profiles/userproject/assets/docs/config.md
+  devcovenant/custom/profiles/userproject/assets/docs/policies.md
+  devcovenant/custom/profiles/userproject/assets/docs/profiles.md
+  devcovenant/custom/profiles/userproject/assets/docs/registry.md
+  devcovenant/custom/profiles/userproject/assets/docs/workflow.md
+  devcovenant/custom/profiles/userproject/userproject.yaml
+  devcovenant/docs/config.md
+  devcovenant/docs/policies.md
+  devcovenant/docs/profiles.md
+  devcovenant/docs/registry.md
+  devcovenant/docs/workflow.md
+  devcovenant/licenses/THIRD_PARTY_LICENSES.md
+  devcovenant/licenses/pytest-9.0.2.txt
+  devcovenant/licenses/pytest-9.0.3.txt
+  devcovenant/registry/registry.yaml
+  devcovenant/runtime-requirements.lock
+  licenses/THIRD_PARTY_LICENSES.md
+  licenses/build-1.4.2.txt
+  licenses/build-1.4.3.txt
+  licenses/pip-audit-2.10.0.txt
+  licenses/platformdirs-4.9.4.txt
+  licenses/platformdirs-4.9.6.txt
+  licenses/pytest-9.0.2.txt
+  licenses/pytest-9.0.3.txt
+  licenses/python-discovery-1.2.1.txt
+  licenses/python-discovery-1.2.2.txt
+  licenses/virtualenv-21.2.0.txt
+  licenses/virtualenv-21.2.1.txt
+  requirements.in
+  requirements.lock
+  tests/devcovenant/builtin/policies/dependency_management/\
+    test_dependency_lock_runtime.py
+  tests/devcovenant/builtin/policies/dependency_management/\
+    test_dependency_management.py
+  tests/devcovenant/core/test_profile_registry.py
+  tests/devcovenant/test_refresh.py
 
 - 2026-04-09:
   Change: Updated managed-environment command-stage fallback to require

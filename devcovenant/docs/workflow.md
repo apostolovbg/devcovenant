@@ -1,5 +1,5 @@
 # Workflow
-**Last Updated:** 2026-04-09
+**Last Updated:** 2026-04-11
 
 **Project Version:** 1.0.1b2
 
@@ -156,6 +156,10 @@ the lock instead of upgrading `pip` live first.
 If a repository needs extra project dependency setup, extra CI steps, or extra
 install validation, that extension should come from a profile-owned CI
 fragment instead of from the builtin base.
+Dependency vulnerability auditing should stay in
+`dependency-management.surfaces`, not in a separate CI-only shell command.
+That keeps local gates, local `check`, and generated CI on the same lock
+health contract.
 That split usually looks like this:
 1. a custom profile owns local behavior such as `root_workspace`,
    managed environment details, and repository workflow runs
@@ -227,6 +231,9 @@ not intentionally rebuild current tracked registry content or current
 dependency surfaces.
 They compare tracked fingerprints first and only rebuild those artifacts when
 policy, config, or dependency inputs actually changed.
+Dependency vulnerability audits still need published advisory data, but the
+runtime keeps those lookups in UTC-stamped machine-local cache entries rather
+than writing tracked repo files or hiding the audit in CI-only glue.
 Help paths and command-status paths should stay lighter still:
 they should not initialize the full workflow runtime when they only need parser
 output or local session inspection.

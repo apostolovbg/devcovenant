@@ -1,5 +1,5 @@
 # Registry
-**Last Updated:** 2026-04-09
+**Last Updated:** 2026-04-11
 **Project Version:** 1.0.1b2
 
 ## Overview
@@ -58,8 +58,8 @@ same.
 The same applies to policy-resolved metadata such as
 `dependency-management.surfaces`: when profile or config overlays change those
 surface declarations, the tracked registry records the new resolved lock
-paths, dependency selectors, artifact targets, and hash-target settings that
-later drive lock refresh behavior.
+paths, dependency selectors, artifact targets, hash-target settings, and
+surface-local audit settings that later drive lock refresh behavior.
 The same dependency-management registry section also records resolved
 `license_source_overrides`, so registry diffs are expected when a repository
 adds or changes an explicit fallback source for dependency license texts.
@@ -95,6 +95,9 @@ is deterministic and should travel with the repository.
 For `dependency-management`, that includes per-surface input and output
 fingerprints used to prove that a converged surface is still current before
 DevCovenant rebuilds locks or license artifacts again.
+Published vulnerability lookups themselves stay out of the tracked registry.
+They belong in UTC-stamped runtime-local cache entries because the advisories
+are external lookup data, not repository-owned contract state.
 The registry metadata also records a policy-registry input fingerprint so
 startup commands can skip rebuilding the tracked policy section when the
 descriptors, scripts, and effective config are unchanged.
