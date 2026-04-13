@@ -61,6 +61,55 @@ Example:
 ## Version 1.0.1b2
 
 - 2026-04-11:
+  Change: Integrated the Python Bandit backend into `security-scanner`,
+          removed the standalone CI Bandit step, and documented the
+          policy-owned scanner model.
+  Why: Prevented CI-only security drift by keeping Python static analysis
+       on the same local gate, local `check`, installed-run, and generated
+       CI path.
+  Impact: Aligned Python security scanning with the normal DevCovenant
+          policy contract, shipped `bandit.yaml` with the Python profile,
+          and kept the lock/runtime surface responsible for the scanner.
+  Files:
+  .github/workflows/ci.yml
+  AGENTS.md
+  CHANGELOG.md
+  SECURITY.md
+  devcovenant/builtin/policies/dependency_management/\
+    dependency_lock_runtime.py
+  devcovenant/builtin/policies/security_scanner/security_scanner.py
+  devcovenant/builtin/policies/security_scanner/security_scanner.yaml
+  devcovenant/builtin/policies/security_scanner/test_blueprints.yaml
+  devcovenant/builtin/profiles/python/assets/bandit.yaml
+  devcovenant/builtin/profiles/python/python.yaml
+  devcovenant/config.yaml
+  devcovenant/custom/profiles/userproject/assets/SECURITY.yaml
+  devcovenant/custom/profiles/userproject/assets/docs/policies.md
+  devcovenant/custom/profiles/userproject/assets/docs/profiles.md
+  devcovenant/custom/profiles/userproject/assets/docs/workflow.md
+  devcovenant/custom/profiles/userproject/userproject.yaml
+  devcovenant/docs/installation.md
+  devcovenant/docs/policies.md
+  devcovenant/docs/profiles.md
+  devcovenant/docs/registry.md
+  devcovenant/docs/workflow.md
+  devcovenant/licenses/THIRD_PARTY_LICENSES.md
+  devcovenant/licenses/bandit-1.9.4.txt
+  devcovenant/registry/registry.yaml
+  devcovenant/runtime-requirements.lock
+  licenses/THIRD_PARTY_LICENSES.md
+  licenses/markdown-it-py-4.0.0.txt
+  licenses/mdurl-0.1.2.txt
+  licenses/rich-14.3.4.txt
+  licenses/stevedore-5.7.0.txt
+  pyproject.toml
+  requirements.in
+  tests/devcovenant/builtin/policies/security_scanner/\
+    test_security_scanner.py
+  tests/devcovenant/core/test_profile_registry.py
+  tests/devcovenant/test_refresh.py
+
+- 2026-04-11:
   Change: Integrated dependency vulnerability auditing into
           dependency-management, removed the repo-only `pip-audit` CI step,
           and documented the surface-owned audit model.

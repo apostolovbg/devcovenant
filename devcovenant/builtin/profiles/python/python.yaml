@@ -25,6 +25,8 @@ assets:
     template: requirements.in
   - path: .python-version
     template: .python-version
+  - path: bandit.yaml
+    template: bandit.yaml
   - path: pyproject.toml
     template: pyproject.toml
 workflow_runs:
@@ -304,6 +306,12 @@ policy_overlays:
   security-scanner:
     include_suffixes:
       - .py
+    scanners:
+      - id: bandit
+        kind: bandit
+        config_file: bandit.yaml
+        include_suffixes:
+          - .py
   modules-need-tests:
     include_suffixes:
       - .py

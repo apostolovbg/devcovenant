@@ -9,6 +9,7 @@ texts stored under `devcovenant/licenses/`.
 - `pyproject.toml`
 
 ## Dependency License Inventory
+- `bandit==1.9.4`: `devcovenant/licenses/bandit-1.9.4.txt`
 - `packaging==26.0`: `devcovenant/licenses/packaging-26.0.txt`
 - `pip-tools==7.5.3`: `devcovenant/licenses/pip-tools-7.5.3.txt`
 - `pre-commit==4.5.1`: `devcovenant/licenses/pre-commit-4.5.1.txt`

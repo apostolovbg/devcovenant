@@ -2015,11 +2015,22 @@ include_files: []
 include_dirs: []
 force_include_files: []
 force_include_dirs: []
+scanners:
+- id: bandit
+  kind: bandit
+  config_file: bandit.yaml
+  include_suffixes:
+  - .py
 ```
 
 Scan source files for risky constructs like `eval`, `exec`, or
-`shell=True`. Use the documented allow-comment only when a security
-review approves the exception.
+`shell=True`. Repositories may also attach reviewed external scanners
+through structured `scanners` metadata, so local gates, local `check`,
+and generated CI all use the same policy-owned security path instead of
+separate workflow glue. Use only documented reviewed allow markers such
+as translator `security-scanner: allow` comments or backend-native
+suppressions like `# nosec` when a security review approves the
+exception.
 
 
 ---

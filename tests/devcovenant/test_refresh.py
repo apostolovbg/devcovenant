@@ -541,7 +541,7 @@ def _unit_test_release_metadata_keeps_support_floor_and_docs_truthful() -> (
     assert "packaging>=26.0" not in requirements_in
     assert "pytest>=9.0.2" not in requirements_in
     assert "pip-tools>=7.5.3" not in requirements_in
-    assert "bandit==1.9.4" in requirements_in
+    assert "bandit==" not in requirements_in
     assert "pip-audit==2.10.0" not in requirements_in
     assert "twine==6.2.0" in requirements_in
     assert "SecretStorage==3.5.0" not in requirements_in
@@ -550,6 +550,7 @@ def _unit_test_release_metadata_keeps_support_floor_and_docs_truthful() -> (
     assert "pip_audit==" not in requirements_lock
     assert "pip_audit==" not in runtime_requirements_lock
     assert "bandit==" in requirements_lock
+    assert "bandit==" in runtime_requirements_lock
     assert "twine==" in requirements_lock
     assert "cryptography==46.0.6" not in requirements_lock
     assert 'python_version == "3.10"' not in requirements_lock

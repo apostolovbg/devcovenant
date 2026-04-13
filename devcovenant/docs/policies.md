@@ -263,6 +263,22 @@ When a repository needs a new language or a lighter-weight fact path, add or
 override the translator in a profile instead of duplicating parser logic
 across several policies.
 
+## External Scanner Backends
+Policies can also own reviewed external scanner backends when parser facts
+alone are not enough.
+That scanner ownership should stay inside policy metadata, not in raw CI
+commands or repo-only shell glue.
+
+The builtin `security-scanner` policy now supports structured `scanners`
+metadata.
+The builtin `python` profile uses that path to contribute a Bandit backend
+plus the default `bandit.yaml` asset.
+That keeps local gates, local `check`, installed-repo runs, and generated CI
+on the same security-scanner contract.
+If a repository needs a different backend or a narrower scope, it should
+override the policy metadata for that scanner rather than bolting another
+standalone command onto the workflow.
+
 ## Policy Runtime Actions
 A policy can expose reusable runtime actions.
 Those actions give policy commands and autofix flows a shared implementation

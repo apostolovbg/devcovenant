@@ -1,5 +1,5 @@
 # Installation and Lifecycle
-**Last Updated:** 2026-04-09
+**Last Updated:** 2026-04-11
 
 **Project Version:** 1.0.1b2
 
@@ -70,6 +70,10 @@ That machine install is separate from repository activation.
 Installing the CLI makes `devcovenant` available on the machine.
 Running `devcovenant install` inside a repository adds DevCovenant to that
 repository.
+The shipped runtime also includes policy-owned tool dependencies such as
+Bandit for the Python `security-scanner` backend, so installed repos and
+generated CI do not need a separate Bandit bootstrap step outside the normal
+DevCovenant runtime surface.
 
 ## Install Versus Deploy
 The shortest accurate model is:

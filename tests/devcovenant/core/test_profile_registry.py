@@ -437,8 +437,8 @@ def _profile_repo_workflow_includes_userproject_jobs() -> None:
         for step in steps
         if isinstance(step, dict)
     ]
-    assert "Install governance tooling" in step_names
-    assert "Run Bandit" in step_names
+    assert "Install governance tooling" not in step_names
+    assert "Run Bandit" not in step_names
     assert "Audit locked dependencies" not in step_names
 
 
@@ -950,6 +950,34 @@ class ProfileRegistryTests(unittest.TestCase):
     def test_userproject_code_style_scope_matches_repo_contract(self):
         """Run repo-wide code-style scope assertions."""
         _profile_userproject_code_style_scope_matches_repo_contract()
+
+    def test_python_profile_supplies_bandit_backend(self):
+        """Run the python-profile Bandit overlay assertions."""
+        manifest_path = (
+            REPO_ROOT
+            / "devcovenant"
+            / "builtin"
+            / "profiles"
+            / "python"
+            / "python.yaml"
+        )
+        payload = yaml.safe_load(manifest_path.read_text(encoding="utf-8"))
+        self.assertIsInstance(payload, dict)
+        policy_overlays = payload.get("policy_overlays")
+        self.assertIsInstance(policy_overlays, dict)
+        security_scanner = policy_overlays.get("security-scanner")
+        self.assertIsInstance(security_scanner, dict)
+        self.assertEqual(
+            security_scanner.get("scanners"),
+            [
+                {
+                    "id": "bandit",
+                    "kind": "bandit",
+                    "config_file": "bandit.yaml",
+                    "include_suffixes": [".py"],
+                }
+            ],
+        )
 
     def test_defaults_profile_stays_environment_neutral(self):
         """Run environment-neutral defaults assertions."""

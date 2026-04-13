@@ -26,12 +26,7 @@ assets:
 ci_and_test:
   jobs:
     governance:
-      steps:
-        - name: Install governance tooling
-          run: |
-            python -m pip install -r requirements.lock
-        - name: Run Bandit
-          run: bandit -q -c bandit.yaml -r devcovenant
+      steps: []
     build:
       name: Build
       needs: governance

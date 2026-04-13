@@ -19,6 +19,8 @@ texts stored under `licenses/`.
 - `filelock==3.25.2`: `licenses/filelock-3.25.2.txt`
 - `identify==2.6.18`: `licenses/identify-2.6.18.txt`
 - `iniconfig==2.3.0`: `licenses/iniconfig-2.3.0.txt`
+- `markdown-it-py==4.0.0`: `licenses/markdown-it-py-4.0.0.txt`
+- `mdurl==0.1.2`: `licenses/mdurl-0.1.2.txt`
 - `nodeenv==1.10.0`: `licenses/nodeenv-1.10.0.txt`
 - `packaging==26.0`: `licenses/packaging-26.0.txt`
 - `pip==26.0.1`: `licenses/pip-26.0.1.txt`
@@ -32,8 +34,10 @@ texts stored under `licenses/`.
 - `pytest==9.0.3`: `licenses/pytest-9.0.3.txt`
 - `python-discovery==1.2.2`: `licenses/python-discovery-1.2.2.txt`
 - `PyYAML==6.0.3`: `licenses/PyYAML-6.0.3.txt`
+- `rich==14.3.4`: `licenses/rich-14.3.4.txt`
 - `semver==3.0.4`: `licenses/semver-3.0.4.txt`
 - `setuptools==82.0.1`: `licenses/setuptools-82.0.1.txt`
+- `stevedore==5.7.0`: `licenses/stevedore-5.7.0.txt`
 - `twine==6.2.0`: `licenses/twine-6.2.0.txt`
 - `virtualenv==21.2.1`: `licenses/virtualenv-21.2.1.txt`
 - `wheel==0.46.3`: `licenses/wheel-0.46.3.txt`

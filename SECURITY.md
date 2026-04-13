@@ -98,11 +98,10 @@ DevCovenant keeps release assurance visible in normal automation:
 1. the builtin `github` profile supplies the generic source-tree `CI`
    workflow for GitHub Actions, including the bootstrap gate/run automation
    on Python `3.14`
-2. this repository activates `github`, then its custom same-name
-   `userproject` profile extends the main `governance` job
-   with `bandit -q -c bandit.yaml -r devcovenant`, while
-   dependency-management owns lock vulnerability auditing directly through
-   the normal local gate/check path
+2. the builtin `python` profile contributes Bandit to the
+   `security-scanner` policy through profile metadata and the shipped
+   `bandit.yaml` asset, while dependency-management owns lock
+   vulnerability auditing directly through the normal local gate/check path
 3. the repo-specific `Build` job inside `CI` owns built-artifact proof for
    the wheel, sdist, and documented `pipx` install path, and each proof
    runs the full public workflow: `gate --start`, `gate --mid`, `run`,
@@ -110,7 +109,8 @@ DevCovenant keeps release assurance visible in normal automation:
 4. repo-specific CI jobs use DevCovenant's managed-environment contract
    instead of hardcoding one environment type's shell-activation command
 5. `bandit.yaml` is the tracked Bandit configuration surface for this repo's
-   low-signal skip list
+   low-signal skip list, but the scanner itself now runs through
+   `security-scanner` instead of through a CI-only shell step
 6. the publish workflow uses PyPI trusted publishing instead of a long-lived
    upload token, and PyPI-side attestations are emitted through that publish
    path

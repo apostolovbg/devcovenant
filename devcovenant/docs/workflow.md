@@ -160,6 +160,9 @@ Dependency vulnerability auditing should stay in
 `dependency-management.surfaces`, not in a separate CI-only shell command.
 That keeps local gates, local `check`, and generated CI on the same lock
 health contract.
+The same rule now applies to Python security scanning: when the active
+profile stack contributes Bandit, `security-scanner` owns that backend
+through normal policy metadata instead of through a standalone workflow step.
 That split usually looks like this:
 1. a custom profile owns local behavior such as `root_workspace`,
    managed environment details, and repository workflow runs

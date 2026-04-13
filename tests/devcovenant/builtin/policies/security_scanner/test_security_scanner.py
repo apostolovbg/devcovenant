@@ -1,14 +1,19 @@
 """Tests for the security scanner policy."""
 
+import json
+import subprocess
+import sys
 import tempfile
 import unittest
 from pathlib import Path
+from unittest import mock
 
 from devcovenant.builtin.policies.security_scanner import security_scanner
 from devcovenant.core.policy_contract import CheckContext
 from devcovenant.core.translator import TranslatorRuntime
 
 SecurityScannerCheck = security_scanner.SecurityScannerCheck
+ExternalScannerConfig = security_scanner.ExternalScannerConfig
 
 
 def _runtime(profile: str, suffixes: list[str]) -> TranslatorRuntime:
@@ -42,15 +47,22 @@ def _runtime(profile: str, suffixes: list[str]) -> TranslatorRuntime:
 
 def _configured_policy() -> SecurityScannerCheck:
     """Return a policy instance scoped to the project_lib tree."""
+    return _configured_policy_with_scanners()
+
+
+def _configured_policy_with_scanners(
+    scanners: list[dict[str, object]] | None = None,
+) -> SecurityScannerCheck:
+    """Return one policy instance with optional external scanners."""
     policy = SecurityScannerCheck()
-    policy.set_options(
-        {
-            "include_suffixes": [".py"],
-            "exclude_globs": ["tests/**", "**/tests/**"],
-            "exclude_prefixes": ["project_lib/vendor"],
-        },
-        {},
-    )
+    options = {
+        "include_suffixes": [".py"],
+        "exclude_globs": ["tests/**", "**/tests/**"],
+        "exclude_prefixes": ["project_lib/vendor"],
+    }
+    if scanners is not None:
+        options["scanners"] = scanners
+    policy.set_options(options, {})
     return policy
 
 
@@ -197,6 +209,120 @@ def _unit_test_translators_flag_risky_patterns(tmp_path: Path):
         assert violations, f"expected violation for {suffix}"
 
 
+def _unit_test_bandit_backend_reports_findings(tmp_path: Path):
+    """Configured Bandit scanners should surface JSON findings."""
+    target = _write_module(
+        tmp_path,
+        "helper.py",
+        "def foo():\n    return 4\n",
+    )
+    (tmp_path / "bandit.yaml").write_text(
+        "skips:\n  - B105\n",
+        encoding="utf-8",
+    )
+    checker = _configured_policy_with_scanners(
+        [
+            {
+                "id": "bandit",
+                "kind": "bandit",
+                "config_file": "bandit.yaml",
+                "include_suffixes": [".py"],
+            }
+        ]
+    )
+    payload = {
+        "errors": [],
+        "results": [
+            {
+                "filename": "project_lib/helper.py",
+                "line_number": 2,
+                "issue_confidence": "HIGH",
+                "issue_severity": "MEDIUM",
+                "issue_text": "Audit url open for permitted schemes.",
+                "test_id": "B310",
+            }
+        ],
+    }
+    context = CheckContext(
+        repo_root=tmp_path,
+        changed_files=[target],
+        translator_runtime=_runtime("python", [".py"]),
+    )
+    completed = subprocess.CompletedProcess(
+        args=[],
+        returncode=1,
+        stdout=json.dumps(payload),
+        stderr="",
+    )
+    with mock.patch.object(
+        security_scanner.subprocess,
+        "run",
+        return_value=completed,
+    ) as run_mock:
+        violations = checker.check(context)
+    assert any("B310" in violation.message for violation in violations)
+    assert any(
+        violation.file_path == target.resolve() for violation in violations
+    )
+    command = run_mock.call_args.args[0]
+    assert command[:3] == [sys.executable, "-m", "bandit"]
+    assert "-c" in command
+
+
+def _unit_test_bandit_backend_requires_config_file(tmp_path: Path):
+    """Configured Bandit backends should fail clearly without config."""
+    target = _write_module(
+        tmp_path,
+        "helper.py",
+        "def foo():\n    return 4\n",
+    )
+    checker = _configured_policy_with_scanners(
+        [
+            {
+                "id": "bandit",
+                "kind": "bandit",
+                "config_file": "bandit.yaml",
+                "include_suffixes": [".py"],
+            }
+        ]
+    )
+    context = CheckContext(
+        repo_root=tmp_path,
+        changed_files=[target],
+        translator_runtime=_runtime("python", [".py"]),
+    )
+    violations = checker.check(context)
+
+    assert len(violations) == 1
+    assert "expects config `bandit.yaml`" in violations[0].message
+
+
+def _unit_test_invalid_scanner_configuration_reports_error(tmp_path: Path):
+    """Unknown external scanner kinds should raise configuration errors."""
+    target = _write_module(
+        tmp_path,
+        "helper.py",
+        "def foo():\n    return 4\n",
+    )
+    checker = _configured_policy_with_scanners(
+        [
+            {
+                "id": "custom-security",
+                "kind": "unsupported",
+            }
+        ]
+    )
+    context = CheckContext(
+        repo_root=tmp_path,
+        changed_files=[target],
+        translator_runtime=_runtime("python", [".py"]),
+    )
+    violations = checker.check(context)
+
+    assert len(violations) == 1
+    assert "Unsupported `security-scanner` backend" in violations[0].message
+
+
 class GeneratedUnittestCases(unittest.TestCase):
     """unittest wrappers for module-level tests."""
 
@@ -236,6 +362,26 @@ class GeneratedUnittestCases(unittest.TestCase):
             tmp_path = Path(temp_dir).resolve()
             _unit_test_translators_flag_risky_patterns(tmp_path=tmp_path)
 
+    def test_bandit_backend_reports_findings(self):
+        """Run test_bandit_backend_reports_findings."""
+        with tempfile.TemporaryDirectory() as temp_dir:
+            tmp_path = Path(temp_dir).resolve()
+            _unit_test_bandit_backend_reports_findings(tmp_path=tmp_path)
+
+    def test_bandit_backend_requires_config_file(self):
+        """Run test_bandit_backend_requires_config_file."""
+        with tempfile.TemporaryDirectory() as temp_dir:
+            tmp_path = Path(temp_dir).resolve()
+            _unit_test_bandit_backend_requires_config_file(tmp_path=tmp_path)
+
+    def test_invalid_scanner_configuration_reports_error(self):
+        """Run test_invalid_scanner_configuration_reports_error."""
+        with tempfile.TemporaryDirectory() as temp_dir:
+            tmp_path = Path(temp_dir).resolve()
+            _unit_test_invalid_scanner_configuration_reports_error(
+                tmp_path=tmp_path
+            )
+
 
 class GeneratedSymbolCoverageTests(unittest.TestCase):
     """Direct symbol assertions for coverage tracking."""
@@ -243,3 +389,4 @@ class GeneratedSymbolCoverageTests(unittest.TestCase):
     def test_symbol_level_assertions_cover_public_api(self):
         """Security-scanner tests should assert the policy symbol."""
         self.assertIsNotNone(SecurityScannerCheck)
+        self.assertIsNotNone(ExternalScannerConfig)

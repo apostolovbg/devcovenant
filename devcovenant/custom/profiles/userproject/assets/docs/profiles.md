@@ -216,6 +216,13 @@ Examples include:
 6. reusable `ci_and_test` fragments for stack-specific CI jobs
 7. managed-environment roots that cleanup and other services need to respect
 
+The builtin `python` profile also demonstrates policy-owned scanner metadata.
+It contributes the default Bandit backend to `security-scanner` and ships the
+matching `bandit.yaml` asset.
+That means the Python baseline gets the same scanner path in local gates,
+local `check`, installed-repo runs, and generated CI without adding a
+separate workflow command just for Bandit.
+
 The CI boundary matters.
 The builtin `github` workflow template should stay generic.
 It should bootstrap DevCovenant from the shipped

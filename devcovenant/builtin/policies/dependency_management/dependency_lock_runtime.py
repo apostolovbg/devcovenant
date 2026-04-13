@@ -2078,7 +2078,7 @@ def _query_pypi_vulnerabilities(
         },
     )
     try:
-        with urllib_request.urlopen(
+        with urllib_request.urlopen(  # nosec B310
             request,
             timeout=_VULNERABILITY_AUDIT_TIMEOUT_SECONDS,
         ) as response:

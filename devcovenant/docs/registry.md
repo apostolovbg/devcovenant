@@ -67,6 +67,10 @@ The same rule applies to `version-sync`: the tracked registry records the
 resolved version source file, role extractors, and role targets that define
 which docs, DevCovenant Version headers, changelog files, and package
 manifests must stay synchronized.
+The same tracked metadata also records reviewed scanner backends such as
+`security-scanner.scanners`, so registry diffs are expected when a profile
+moves Python security scanning from ad-hoc workflow glue into the normal
+policy contract.
 The same tracked policy metadata also records sync-policy script hashes, so a
 source fix in `package-doc-sync` is expected to refresh
 `devcovenant/registry/registry.yaml` even when the visible doc set changes

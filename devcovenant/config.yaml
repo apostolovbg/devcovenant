@@ -1401,6 +1401,12 @@ autogen_metadata_overlays:
     - tests/**/*.py
     include_suffixes:
     - .py
+    scanners:
+    - id: bandit
+      kind: bandit
+      config_file: bandit.yaml
+      include_suffixes:
+      - .py
   tests-coverage:
     assertion_signal_patterns:
     - python=>\bassert\b

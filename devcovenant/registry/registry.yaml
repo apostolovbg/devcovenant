@@ -1,7 +1,7 @@
 metadata:
   schema_version: 1
   registry_layout: single-root
-  policy_registry_input_hash: d6db7f84a213afd825bca07b69f423e6d2c1d64cec95b4786437aec6d50d0dff
+  policy_registry_input_hash: aef3a49bf6e27ac22c6b53e2473af4450b6b71fa2a8cd6dced100997402d832f
 project-governance:
   project_name: devcovenant
   project_description: devcovenant is a repository governance framework.
@@ -117,7 +117,7 @@ managed-docs:
       project_governance_headers: false
       import_seed: true
       authoritative_source: true
-      body_fingerprint: 2efd938ae948549824a4cf7a424f535690f262d4bc344f53131b4b2a8ab3d77b
+      body_fingerprint: 7a818fa9383af98d63009869f1de900a8d1af63108cd6b58e0e22c586640abc3
     SPEC.md:
       enabled: true
       descriptor_path: devcovenant/builtin/profiles/global/assets/SPEC.yaml
@@ -8974,8 +8974,13 @@ policies:
     description: Security Scanner
     policy_text: |-
       Scan source files for risky constructs like `eval`, `exec`, or
-      `shell=True`. Use the documented allow-comment only when a security
-      review approves the exception.
+      `shell=True`. Repositories may also attach reviewed external scanners
+      through structured `scanners` metadata, so local gates, local `check`,
+      and generated CI all use the same policy-owned security path instead of
+      separate workflow glue. Use only documented reviewed allow markers such
+      as translator `security-scanner: allow` comments or backend-native
+      suppressions like `# nosec` when a security review approves the
+      exception.
     metadata:
       id: security-scanner
       severity: error
@@ -9007,6 +9012,12 @@ policies:
       include_dirs: []
       force_include_files: []
       force_include_dirs: []
+      scanners:
+      - id: bandit
+        kind: bandit
+        config_file: bandit.yaml
+        include_suffixes:
+        - .py
     metadata_resolution:
       id:
         descriptor:
@@ -9250,6 +9261,43 @@ policies:
         effective:
           values:
           - '[]'
+      scanners:
+        descriptor:
+          values:
+          - '[]'
+          behavior: base
+          replaced_inherited_values:
+          - ()
+        profile_overlays:
+          values:
+          - |-
+            - id: bandit
+              kind: bandit
+              config_file: bandit.yaml
+              include_suffixes:
+              - .py
+          behavior: append
+          replaced_inherited_values:
+          - ()
+        autogen_overlays:
+          values:
+          - |-
+            - id: bandit
+              kind: bandit
+              config_file: bandit.yaml
+              include_suffixes:
+              - .py
+          behavior: append
+          replaced_inherited_values:
+          - ()
+        effective:
+          values:
+          - |-
+            - id: bandit
+              kind: bandit
+              config_file: bandit.yaml
+              include_suffixes:
+              - .py
       enabled:
         runtime_defaults:
           values:
@@ -9310,6 +9358,12 @@ policies:
       include_dirs: []
       force_include_files: []
       force_include_dirs: []
+      scanners: &id091
+      - id: bandit
+        kind: bandit
+        config_file: bandit.yaml
+        include_suffixes:
+        - .py
     runtime_config_overrides: {}
     runtime_effective_options:
       id: security-scanner
@@ -9322,15 +9376,17 @@ policies:
       include_suffixes: *id088
       include_globs: *id089
       selector_roles: *id090
+      scanners: *id091
     assets:
     - '**/tests/**'
+    - bandit.yaml
     - devcovenant/**/*.py
     - tests/**
     - tests/**/*.py
     - tests/devcovenant/builtin/**
     origin: builtin
     script_exists: true
-    hash: 42c0cc2468d3d2ba86510433af17ec136d5c3c421f01d0c533cd037026165081
+    hash: 498e1880169f13c1fa7147f17499eeb3fe200ac1cbd4568d2a4816c213792aab
     script_path: builtin/security_scanner.py
   tests-coverage:
     enabled: true
@@ -9885,47 +9941,47 @@ policies:
       enabled: true
       custom: false
       enforce_symbol_fidelity: true
-      symbol_kinds: &id091
+      symbol_kinds: &id092
       - function
       - class
       symbol_name_min_length: 3
       symbol_assertion_window: 2
       fixture_marker_pattern: \bDEVCOV_FIXTURE_OK:\s*(?P<reason>\S.*)
-      assertion_signal_patterns: &id092
+      assertion_signal_patterns: &id093
       - '*=>\bassert\b'
       - python=>\bassert\b
       - python=>\bself\.assert[A-Za-z_]*\s*\(
-      tautology_patterns: &id093
+      tautology_patterns: &id094
       - '*=>^\s*assert\s*\(\s*true\s*\)\s*;?\s*$'
       - '*=>^\s*assert\s+true\s*;?\s*$'
       - rust=>^\s*assert!\s*\(\s*true\s*\)\s*;?\s*$
       - python=>^\s*assert\s+True\s*$
       - python=>^\s*self\.assertTrue\s*\(\s*True\s*\)\s*$
-      include_suffixes: &id094
+      include_suffixes: &id095
       - .py
       include_prefixes: []
-      exclude_prefixes: &id095
+      exclude_prefixes: &id096
       - build
       - dist
       - node_modules
       - tests
-      exclude_globs: &id096
+      exclude_globs: &id097
       - devcovenant/core/*.py
       - devcovenant/custom/policies/**/fixers/**
       - build/**
       - dist/**
       - node_modules/**
       - tests/**
-      watch_dirs: &id097
+      watch_dirs: &id098
       - tests
-      tests_watch_dirs: &id098
+      tests_watch_dirs: &id099
       - tests
-      include_globs: &id099
+      include_globs: &id100
       - '*.py'
       exclude_suffixes: []
       force_include_globs: []
       watch_files: []
-      selector_roles: &id100
+      selector_roles: &id101
       - include
       - exclude
       - watch
@@ -9950,19 +10006,19 @@ policies:
       enabled: true
       custom: false
       enforce_symbol_fidelity: true
-      symbol_kinds: *id091
+      symbol_kinds: *id092
       symbol_name_min_length: 3
       symbol_assertion_window: 2
       fixture_marker_pattern: \bDEVCOV_FIXTURE_OK:\s*(?P<reason>\S.*)
-      assertion_signal_patterns: *id092
-      tautology_patterns: *id093
-      include_suffixes: *id094
-      exclude_prefixes: *id095
-      exclude_globs: *id096
-      watch_dirs: *id097
-      tests_watch_dirs: *id098
-      include_globs: *id099
-      selector_roles: *id100
+      assertion_signal_patterns: *id093
+      tautology_patterns: *id094
+      include_suffixes: *id095
+      exclude_prefixes: *id096
+      exclude_globs: *id097
+      watch_dirs: *id098
+      tests_watch_dirs: *id099
+      include_globs: *id100
+      selector_roles: *id101
     assets:
     - build/**
     - devcovenant/core/*.py
@@ -10415,17 +10471,17 @@ policies:
       enabled: true
       custom: false
       version_file: devcovenant/VERSION
-      target_roles: &id101
+      target_roles: &id102
       - docs
       - changelog
       - package_manifest
-      role_extractors: &id102
+      role_extractors: &id103
       - docs=>project_version_line
       - changelog=>changelog_header_version
       - package_manifest=>manifest_project_version
-      role_legality_schemes: &id103
+      role_legality_schemes: &id104
       - package_manifest=>pep440
-      target_role_files: &id104
+      target_role_files: &id105
       - docs=>README.md
       - docs=>AGENTS.md
       - docs=>CONTRIBUTING.md
@@ -10447,13 +10503,13 @@ policies:
       - docs=>devcovenant/custom/policies/README.md
       - docs=>devcovenant/custom/profiles/README.md
       - package_manifest=>pyproject.toml
-      target_role_globs: &id105
+      target_role_globs: &id106
       - docs=>devcovenant/docs/**/*.md
-      target_role_dirs: &id106
+      target_role_dirs: &id107
       - docs=>devcovenant/docs
       changelog_file: CHANGELOG.md
       changelog_header_prefix: '## Version'
-      selector_roles: &id107
+      selector_roles: &id108
       - target
       target_globs: []
       target_files: []
@@ -10467,15 +10523,15 @@ policies:
       enabled: true
       custom: false
       version_file: devcovenant/VERSION
-      target_roles: *id101
-      role_extractors: *id102
-      role_legality_schemes: *id103
-      target_role_files: *id104
-      target_role_globs: *id105
-      target_role_dirs: *id106
+      target_roles: *id102
+      role_extractors: *id103
+      role_legality_schemes: *id104
+      target_role_files: *id105
+      target_role_globs: *id106
+      target_role_dirs: *id107
       changelog_file: CHANGELOG.md
       changelog_header_prefix: '## Version'
-      selector_roles: *id107
+      selector_roles: *id108
     assets:
     - CHANGELOG.md
     - changelog=>CHANGELOG.md
@@ -12346,7 +12402,7 @@ policies:
       enforcement: active
       enabled: true
       custom: false
-      surfaces: &id108
+      surfaces: &id109
       - id: devcovenant_runtime
         lock_file: devcovenant/runtime-requirements.lock
         direct_dependency_files:
@@ -12661,7 +12717,7 @@ policies:
       enforcement: active
       enabled: true
       custom: false
-      surfaces: *id108
+      surfaces: *id109
       selector_roles: dependency
     assets:
     - devcovenant/licenses
@@ -12678,17 +12734,17 @@ policies:
     runtime_state:
       surfaces:
         devcovenant_runtime:
-          input_fingerprint: 992f835d35553809d1f742e69d46144664cc79e78cde1822b26721b8cf88ac8e
+          input_fingerprint: 0f6e17bcf9cdd1c7a2ab9cfbfcd46d4d12e277b93e93a09591a977abdac95fa5
           output_fingerprints:
-            lock_file: 71a0b654fbafa303dd1269e9f0fa9d929c11d083100a76598e1cb0ccb67ac76a
-            third_party_file: f45f401292c35e7f75a6617bc0ac9a95055e138585aed330ab55215065e94e0f
-            licenses_dir: 0c14f443d4961579a09615ef40a4a95befcdb784870ea4acd9de14388b5449e5
+            lock_file: 3e4fe23d7ed7ce59daf44d1974997e6cbd8cae8eca13912202c633f2083363a7
+            third_party_file: 5906ad40a2add5a3505788c10a2d65f7992e04e56cc2f77447406d52ddddf273
+            licenses_dir: d7960db504d2b4a7ed5c35c909341ef1e9bad28368464b40249c64e6d1219828
         root_workspace:
-          input_fingerprint: 560d978bf9f1408fd563d9fb68cb0f76bc13094ca05ee033a6f37c5d476a6965
+          input_fingerprint: 46b6eb8e218bd63c02e4ad160bd58f5d4dc37846b37555ec2ff626b62831fbe8
           output_fingerprints:
             lock_file: d8815c8db8ccb9fd83fd8a92ed1ad72e89e3d9c847286e11b5a2407ceb67e545
-            third_party_file: c69e07b773b1b0b7c1bc57c8d8067982c88881d1009211e1b4c73d1df48aa2e3
-            licenses_dir: 3cb8beb1cb2d1bb4108eb1178c012d326e38c0ea8d1888a4da4d037bfbd3a040
+            third_party_file: 482ba96df78110da355cde451b081ca32f10ace30dca25c7152116e5508a0610
+            licenses_dir: 2860852fb6d0b2bcaab3472df99cf300e49354f3f1d0d434e8253d09672368c5
   package-artifact-mirror:
     enabled: true
     custom: false
@@ -12851,7 +12907,7 @@ policies:
       enforcement: active
       enabled: true
       custom: false
-      file_mirrors: &id109
+      file_mirrors: &id110
       - LICENSE=>devcovenant/licenses/LICENSE
       dir_mirrors: []
       dir_skip_paths: []
@@ -12863,7 +12919,7 @@ policies:
       enforcement: active
       enabled: true
       custom: false
-      file_mirrors: *id109
+      file_mirrors: *id110
     assets:
     - LICENSE=>devcovenant/licenses/LICENSE
     origin: builtin
@@ -13044,9 +13100,9 @@ policies:
       enforcement: active
       enabled: true
       custom: false
-      sync_pairs: &id110
+      sync_pairs: &id111
       - README.md=>devcovenant/README.md
-      omit_block_pairs: &id111
+      omit_block_pairs: &id112
       - <!-- REPO-ONLY:BEGIN -->=><!-- REPO-ONLY:END -->
       rewrite_repo_relative_links: true
     runtime_config_overrides: {}
@@ -13057,8 +13113,8 @@ policies:
       enforcement: active
       enabled: true
       custom: false
-      sync_pairs: *id110
-      omit_block_pairs: *id111
+      sync_pairs: *id111
+      omit_block_pairs: *id112
       rewrite_repo_relative_links: true
     assets:
     - README.md=>devcovenant/README.md
@@ -13305,10 +13361,10 @@ policies:
       enabled: true
       custom: true
       blueprint_name: test_blueprints.yaml
-      mirror_roots: &id112
+      mirror_roots: &id113
       - devcovenant/builtin=>tests/devcovenant/builtin
       - devcovenant/custom=>tests/devcovenant/custom
-      blueprint_directories: &id113
+      blueprint_directories: &id114
       - policies/changelog_coverage
       - policies/dependency_management
       - policies/docstring_and_comment_coverage
@@ -13352,8 +13408,8 @@ policies:
       enabled: true
       custom: true
       blueprint_name: test_blueprints.yaml
-      mirror_roots: *id112
-      blueprint_directories: *id113
+      mirror_roots: *id113
+      blueprint_directories: *id114
     assets:
     - devcovenant/builtin=>tests/devcovenant/builtin
     - devcovenant/custom=>tests/devcovenant/custom
@@ -15290,6 +15346,8 @@ profiles:
       template: requirements.in
     - path: .python-version
       template: .python-version
+    - path: bandit.yaml
+      template: bandit.yaml
     - path: pyproject.toml
       template: pyproject.toml
     workflow_runs:
@@ -15582,6 +15640,12 @@ profiles:
       security-scanner:
         include_suffixes:
         - .py
+        scanners:
+        - id: bandit
+          kind: bandit
+          config_file: bandit.yaml
+          include_suffixes:
+          - .py
       modules-need-tests:
         include_suffixes:
         - .py
@@ -15629,6 +15693,7 @@ profiles:
     path: devcovenant/builtin/profiles/python
     assets_available:
     - devcovenant/builtin/profiles/python/assets/.python-version
+    - devcovenant/builtin/profiles/python/assets/bandit.yaml
     - devcovenant/builtin/profiles/python/assets/pyproject.toml
     - devcovenant/builtin/profiles/python/assets/requirements.in
     active: true
@@ -16141,12 +16206,7 @@ profiles:
     ci_and_test:
       jobs:
         governance:
-          steps:
-          - name: Install governance tooling
-            run: |
-              python -m pip install -r requirements.lock
-          - name: Run Bandit
-            run: bandit -q -c bandit.yaml -r devcovenant
+          steps: []
         build:
           name: Build
           needs: governance

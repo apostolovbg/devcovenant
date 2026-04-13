@@ -41,6 +41,7 @@ classifiers = [
   "Topic :: Software Development :: Quality Assurance",
 ]
 dependencies = [
+  "bandit>=1.9.4",
   "packaging>=26.0",
   "pre-commit>=4.5.1",
   "pip-tools>=7.5.3",
