@@ -286,19 +286,55 @@ ci_and_test:
 
             path = Path("devcovenant/config.yaml")
             lines = path.read_text(encoding="utf-8").splitlines()
+            reviewed = False
+            managed = False
+            inserted_profile = False
             for index, line in enumerate(lines):
-                if line.strip() == "config_reviewed: false":
+                stripped = line.strip()
+                if stripped == "config_reviewed: false":
                     indent = line[: len(line) - len(line.lstrip())]
                     lines[index] = f"{indent}config_reviewed: true"
-                    path.write_text(
-                        "\n".join(lines) + "\n",
-                        encoding="utf-8",
-                    )
-                    break
-            else:
+                    reviewed = True
+                    continue
+                if stripped == "managed-environment: false":
+                    indent = line[: len(line) - len(line.lstrip())]
+                    lines[index] = f"{indent}managed-environment: true"
+                    managed = True
+            for index, line in enumerate(lines):
+                if line.strip() != "active:":
+                    continue
+                item_indent = (
+                    line[: len(line) - len(line.lstrip())] + "  "
+                )
+                insert_at = index + 1
+                while (
+                    insert_at < len(lines)
+                    and lines[insert_at].startswith(f"{item_indent}- ")
+                ):
+                    if lines[insert_at].strip() == "- python_venv":
+                        inserted_profile = True
+                        break
+                    insert_at += 1
+                if not inserted_profile:
+                    lines.insert(insert_at, f"{item_indent}- python_venv")
+                    inserted_profile = True
+                break
+            if not reviewed:
                 raise SystemExit(
                     "config_reviewed field line not found in config.yaml"
                 )
+            if not managed:
+                raise SystemExit(
+                    "managed-environment field line not found in config.yaml"
+                )
+            if not inserted_profile:
+                raise SystemExit(
+                    "profiles.active block not found in config.yaml"
+                )
+            path.write_text(
+                "\n".join(lines) + "\n",
+                encoding="utf-8",
+            )
             PY
             "$PIPX_BIN_DIR/devcovenant" deploy
             mkdir -p tests
@@ -368,22 +404,6 @@ policy_overlays:
         dependency_files:
           - pyproject.toml
         generate_hashes: true
-  managed-environment:
-    expected_paths:
-      - .venv
-    expected_interpreters:
-      - .venv/bin/python
-      - .venv/Scripts/python.exe
-    command_search_paths: []
-    required_commands:
-      - pre-commit
-      - pytest
-    manual_commands:
-      - '{current_python} -m venv .venv'
-      - '{managed_python} -m pip install -r requirements.lock'
-    managed_commands:
-      - start=>{current_python} -m venv .venv
-      - start=>{managed_python} -m pip install -r requirements.lock
   documentation-growth-tracking:
     user_facing_files:
       - devcovenant/cli.py

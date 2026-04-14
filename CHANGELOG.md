@@ -6,7 +6,7 @@
 **Maintenance Stance:** active
 **Compatibility Policy:** forward-only
 **Versioning Mode:** versioned
-**Last Updated:** 2026-04-11
+**Last Updated:** 2026-04-14
 **DevCovenant Version:** 1.0.1b2
 
 <!-- DEVCOV:BEGIN -->
@@ -59,6 +59,42 @@ Example:
 ## Log changes here
 
 ## Version 1.0.1b2
+
+- 2026-04-14:
+  Change: Added the builtin `python_venv` opt-in profile, disabled
+          managed-environment in the shipped install baseline, and updated
+          proof/documentation flows to use explicit opt-in.
+  Why: Prevented normal installed repositories from inheriting an undeclared
+       `.venv` assumption while still proving the managed-environment
+       contract through one shipped optional profile.
+  Impact: Updated default installs to stay environment-neutral, moved the
+          packaged `.venv` contract out of the repo-local `userproject`
+          layer, and made the pipx artifact proof enable that contract
+          declaratively.
+  Files:
+  .github/workflows/ci.yml
+  AGENTS.md
+  CHANGELOG.md
+  devcovenant/builtin/profiles/global/assets/config.yaml
+  devcovenant/builtin/profiles/python_venv/python_venv.yaml
+  devcovenant/config.yaml
+  devcovenant/core/refresh_runtime.py
+  devcovenant/custom/profiles/userproject/assets/docs/config.md
+  devcovenant/custom/profiles/userproject/assets/docs/installation.md
+  devcovenant/custom/profiles/userproject/assets/docs/policies.md
+  devcovenant/custom/profiles/userproject/assets/docs/profiles.md
+  devcovenant/custom/profiles/userproject/assets/docs/registry.md
+  devcovenant/custom/profiles/userproject/assets/docs/workflow.md
+  devcovenant/custom/profiles/userproject/userproject.yaml
+  devcovenant/docs/config.md
+  devcovenant/docs/installation.md
+  devcovenant/docs/profiles.md
+  devcovenant/docs/registry.md
+  devcovenant/docs/workflow.md
+  devcovenant/registry/registry.yaml
+  tests/devcovenant/core/test_profile_registry.py
+  tests/devcovenant/test_install.py
+  tests/devcovenant/test_refresh.py
 
 - 2026-04-11:
   Change: Integrated the Python Bandit backend into `security-scanner`,

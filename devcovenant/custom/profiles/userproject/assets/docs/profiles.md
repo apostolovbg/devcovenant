@@ -25,6 +25,7 @@ The common profile categories are:
 - `devcovuser` as the normal user-repository layer
 - `github` as the optional but default-enabled GitHub Actions layer
 - language profiles
+- optional tooling profiles such as `python_venv`
 - framework or tooling profiles
 - custom profiles
 
@@ -96,12 +97,21 @@ If the behavior should apply to more than one repository of the same shape, it
 probably belongs in a profile instead of local config.
 
 The built-in `defaults` profile stays environment-neutral.
-A repository-specific custom profile can seed a plain Python `.venv`
-starting point:
+The built-in `python_venv` profile is the shipped opt-in profile for a plain
+Python `.venv` starting point:
 - expected paths and interpreters
-- required commands for the target environment
+- required commands for the standard gate/runtime surface
 - manual guidance that uses `{current_python}` and `{managed_python}`
-- stage-scoped managed bootstrap commands for `gate --start`
+- command-stage and start-stage bootstrap commands for lifecycle commands
+
+The normal installed repository baseline keeps
+`policy_state.managed-environment: false`.
+When a repository wants the `.venv` contract, it should:
+1. add `python_venv` to `profiles.active`
+2. set `policy_state.managed-environment: true`
+3. run `deploy`, `refresh`, `gate`, and `run` through any working launcher;
+   the declared `python_venv` bootstrap commands can create the missing
+   `.venv` before re-exec enters the managed interpreter
 
 That is a starting point, not a promise that every repository should use
 `.venv`.
@@ -110,7 +120,7 @@ environment, container-managed environment, or another execution layout
 through their active profile stack or metadata overlays.
 The important contract is that DevCovenant can run from that declared managed
 context or resolve the interpreter path or environment root it should use.
-The defaults do not try to guess hidden launcher hops.
+Builtin profiles such as `defaults` do not try to guess hidden launcher hops.
 
 The built-in `devcovuser` profile is the normal user-repository layer.
 It keeps DevCovenant's own shipped runtime files out of ordinary app-code

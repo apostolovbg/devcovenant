@@ -61,7 +61,7 @@ def _unit_test_refresh_builds_tracked_registry_and_agents() -> None:
         assert isinstance(policy_state, dict)
         assert policy_state["changelog-coverage"] is True
         assert policy_state["dependency-management"] is True
-        assert policy_state["managed-environment"] is True
+        assert policy_state["managed-environment"] is False
         assert policy_state["version-governance"] is False
         changelog_path = repo_root / "CHANGELOG.md"
         spec_path = repo_root / "SPEC.md"

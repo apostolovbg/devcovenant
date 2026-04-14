@@ -612,6 +612,10 @@ def _render_config_yaml(payload: dict[str, object]) -> str:
             "Actions workflow."
         ),
         (
+            "# Add `python_venv` only when the repository explicitly opts "
+            "into the builtin repo-local `.venv` contract."
+        ),
+        (
             "# Keep inherited values inherited. Add repo-specific behavior in "
             "a custom profile instead of recopied overlays."
         ),
@@ -865,6 +869,11 @@ def _render_config_yaml(payload: dict[str, object]) -> str:
         (
             "# Critical-severity policies remain enforced even when set "
             "to false here."
+        ),
+        (
+            "# The shipped install baseline keeps `managed-environment` "
+            "false until the repository enables a matching profile such as "
+            "`python_venv`."
         ),
         _yaml_block({"policy_state": payload.get("policy_state", {})}),
         comments["ignore"],

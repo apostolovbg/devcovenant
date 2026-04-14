@@ -181,7 +181,10 @@ same public lifecycle the CLI exposes locally:
 That CI file is part of the workflow contract, not a second workflow model.
 
 ## Managed Environment In Workflow Execution
-When the managed-environment policy is enabled, DevCovenant chooses one target
+The shipped install baseline keeps `managed-environment` off for a normal
+user repository.
+When a repository explicitly opts into `python_venv` and enables
+`policy_state.managed-environment`, DevCovenant chooses one target
 environment for each stage.
 If the current interpreter already matches that setup, DevCovenant reuses it.
 If not, it selects the configured interpreter or environment root and then runs
@@ -192,8 +195,9 @@ exists.
 It also keeps the workflow portable across repositories that declare a local
 environment, bench-like environments, and other declared environment layouts.
 With a stack that declares a local environment, `deploy`/`refresh`
-materializes the workspace dependency artifacts, and `gate --start` can run
-the declared bootstrap commands when the target environment is still missing.
+materializes the workspace dependency artifacts, and profiles such as
+`python_venv` can declare command-stage plus start-stage bootstrap commands
+when the target environment is still missing.
 If a repository uses a different environment shape, it should declare that
 shape explicitly instead of expecting DevCovenant to guess it.
 That includes system interpreters, bench-managed environments, and

@@ -1,5 +1,5 @@
 # Registry
-**Last Updated:** 2026-04-11
+**Last Updated:** 2026-04-14
 **Project Version:** 1.0.1b2
 
 ## Overview
@@ -87,8 +87,8 @@ license-artifact refreshes can land next to a registry diff in the same slice:
 the registry is recording the dependency surface contract that generated them.
 The same tracked metadata can also capture stage-scoped managed-environment
 bootstrap commands, so registry diffs are the expected result when a
-repository's managed-environment stack changes how `gate --start` can prepare
-`.venv`.
+repository's managed-environment stack changes how profiles such as
+`python_venv` can prepare `.venv` for `deploy`, `refresh`, or `gate --start`.
 If a repository intentionally keeps `command` stage execution on the current
 interpreter until the target environment exists, that intent should appear in
 the tracked metadata as `allow_current_interpreter_fallback: true`; otherwise

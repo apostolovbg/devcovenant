@@ -97,6 +97,8 @@ profiles:
   # The shipped user-repository baseline keeps `github` active by default so
   # GitHub-hosted repositories get the generic generated CI workflow out of
   # the box. Remove it only when this repository does not want that workflow.
+  # Optional runtime-layout profiles such as `python_venv` stay inactive
+  # until the repository explicitly opts into that environment model.
   # A repository-specific custom profile usually owns local behavior such as
   # `root_workspace`.
   # Keep GitHub-only CI extensions in a separate optional GitHub-specific
@@ -400,8 +402,10 @@ workflow:
 # Critical-severity policies remain enforced even if set to false here;
 # runtime emits a diagnostic instead of honoring the disable attempt.
 # Do not activate/deactivate policies through profile manifests.
+# The shipped install baseline keeps `managed-environment` off until the
+# repository enables a matching environment profile such as `python_venv`.
 policy_state:
-  managed-environment: true
+  managed-environment: false
   raw-string-escapes: false
   version-governance: false
   version-sync: false

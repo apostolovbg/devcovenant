@@ -67,7 +67,7 @@ def _unit_test_install_writes_config_reviewed_and_manifest() -> None:
         assert config.get("developer_mode") is False
         policy_state = config.get("policy_state", {})
         assert isinstance(policy_state, dict)
-        assert policy_state.get("managed-environment") is True
+        assert policy_state.get("managed-environment") is False
 
         profiles_block = config.get("profiles", {})
         assert isinstance(profiles_block, dict)
@@ -132,6 +132,7 @@ def _unit_test_install_preserves_review_config_comments() -> None:
         assert "Typical first-time flow:" in config_text
         assert "human-owned keys say what this repository wants" in config_text
         assert "profiles/userproject/" in config_text
+        assert "python_venv" in config_text
         assert "{{ PROJECT_NAME_PATH }}" in config_text
         assert "values from other active profiles" in config_text
         assert "same-name custom profile" in config_text

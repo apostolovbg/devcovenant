@@ -556,6 +556,10 @@ def _profile_ci_workflow_contains_build_job_artifact_proof() -> None:
     assert '"$PIPX_BIN_DIR/devcovenant" install' in all_run_blocks
     assert '"$PIPX_BIN_DIR/devcovenant" deploy' in all_run_blocks
     assert '"$PIPX_BIN_DIR/devcovenant" refresh' in all_run_blocks
+    assert "python_venv" in all_run_blocks
+    assert "managed-environment field line not found in config.yaml" in (
+        all_run_blocks
+    )
     assert '"$PIPX_BIN_DIR/devcovenant" gate --start' in all_run_blocks
     assert '"$PIPX_BIN_DIR/devcovenant" gate --mid' in all_run_blocks
     assert '"$PIPX_BIN_DIR/devcovenant" run' in all_run_blocks
@@ -746,8 +750,42 @@ def _profile_python_family_profiles_do_not_double_run_pytest() -> None:
         assert "pytest" not in command_text
 
 
-def _profile_userproject_managed_env_requires_runtime_tools() -> None:
-    """Repo managed-env contract should require gate/runtime tools."""
+def _profile_python_venv_declares_opt_in_managed_env_contract() -> None:
+    """Builtin python_venv profile should own the opt-in .venv contract."""
+    manifest_path = (
+        REPO_ROOT
+        / "devcovenant"
+        / "builtin"
+        / "profiles"
+        / "python_venv"
+        / "python_venv.yaml"
+    )
+    payload = yaml.safe_load(manifest_path.read_text(encoding="utf-8"))
+    assert isinstance(payload, dict)
+    policy_overlays = payload.get("policy_overlays")
+    assert isinstance(policy_overlays, dict)
+    managed_environment = policy_overlays.get("managed-environment")
+    assert isinstance(managed_environment, dict)
+    assert managed_environment.get("expected_paths") == [".venv"]
+    assert managed_environment.get("expected_interpreters") == [
+        ".venv/bin/python",
+        ".venv/Scripts/python.exe",
+    ]
+    required_commands = managed_environment.get("required_commands")
+    assert isinstance(required_commands, list)
+    command_text = [str(command).strip() for command in required_commands]
+    assert command_text == ["pre-commit"]
+    managed_commands = managed_environment.get("managed_commands")
+    assert managed_commands == [
+        "command=>{current_python} -m venv .venv",
+        "command=>{managed_python} -m pip install -r requirements.lock",
+        "start=>{current_python} -m venv .venv",
+        "start=>{managed_python} -m pip install -r requirements.lock",
+    ]
+
+
+def _profile_userproject_stays_free_of_managed_env_contract() -> None:
+    """Repo userproject profile should not own the shipped .venv contract."""
     manifest_path = (
         REPO_ROOT
         / "devcovenant"
@@ -760,12 +798,7 @@ def _profile_userproject_managed_env_requires_runtime_tools() -> None:
     assert isinstance(payload, dict)
     policy_overlays = payload.get("policy_overlays")
     assert isinstance(policy_overlays, dict)
-    managed_environment = policy_overlays.get("managed-environment")
-    assert isinstance(managed_environment, dict)
-    required_commands = managed_environment.get("required_commands")
-    assert isinstance(required_commands, list)
-    command_text = [str(command).strip() for command in required_commands]
-    assert command_text == ["pre-commit", "pytest"]
+    assert "managed-environment" not in policy_overlays
 
 
 def _profile_userproject_code_style_scope_matches_repo_contract() -> None:
@@ -943,9 +976,13 @@ class ProfileRegistryTests(unittest.TestCase):
         """Run Python-family workflow command assertions."""
         _profile_python_family_profiles_do_not_double_run_pytest()
 
-    def test_userproject_managed_env_requires_runtime_tools(self):
-        """Run repo managed-env runtime-tool assertions."""
-        _profile_userproject_managed_env_requires_runtime_tools()
+    def test_python_venv_declares_opt_in_managed_env_contract(self):
+        """Run builtin python_venv managed-environment assertions."""
+        _profile_python_venv_declares_opt_in_managed_env_contract()
+
+    def test_userproject_stays_free_of_managed_env_contract(self):
+        """Run repo userproject managed-environment ownership assertions."""
+        _profile_userproject_stays_free_of_managed_env_contract()
 
     def test_userproject_code_style_scope_matches_repo_contract(self):
         """Run repo-wide code-style scope assertions."""

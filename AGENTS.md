@@ -6,7 +6,7 @@
 **Maintenance Stance:** active
 **Compatibility Policy:** forward-only
 **Versioning Mode:** versioned
-**Last Updated:** 2026-04-11
+**Last Updated:** 2026-04-14
 **DevCovenant Version:** 1.0.1b2
 
 <!-- DEVCOV:BEGIN -->
@@ -1533,12 +1533,13 @@ command_search_paths: []
 cleanup_protected_paths: []
 required_commands:
 - pre-commit
-- pytest
 allow_current_interpreter_fallback: 'false'
 manual_commands:
 - '{current_python} -m venv .venv'
 - '{managed_python} -m pip install -r requirements.lock'
 managed_commands:
+- command=>{current_python} -m venv .venv
+- command=>{managed_python} -m pip install -r requirements.lock
 - start=>{current_python} -m venv .venv
 - start=>{managed_python} -m pip install -r requirements.lock
 ```

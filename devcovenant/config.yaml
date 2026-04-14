@@ -52,6 +52,8 @@ developer_mode: true
 
 # Add `github` when the repository wants a generated GitHub Actions workflow.
 
+# Add `python_venv` only when the repository explicitly opts into the builtin repo-local `.venv` contract.
+
 # Keep inherited values inherited. Add repo-specific behavior in a custom profile instead of recopied overlays.
 
 # Here, "inherited" means values from other active profiles.
@@ -78,6 +80,7 @@ profiles:
   - userproject
   - docs
   - python
+  - python_venv
   generated:
     file_suffixes:
     - .ipynb
@@ -401,6 +404,8 @@ project-governance:
 # Canonical policy activation map: {policy-id: true|false}.
 
 # Critical-severity policies remain enforced even when set to false here.
+
+# The shipped install baseline keeps `managed-environment` false until the repository enables a matching profile such as `python_venv`.
 
 policy_state:
   builtin-test-blueprint-sync: true
@@ -1302,6 +1307,8 @@ autogen_metadata_overlays:
     expected_paths:
     - .venv
     managed_commands:
+    - command=>{current_python} -m venv .venv
+    - command=>{managed_python} -m pip install -r requirements.lock
     - start=>{current_python} -m venv .venv
     - start=>{managed_python} -m pip install -r requirements.lock
     manual_commands:
@@ -1309,7 +1316,6 @@ autogen_metadata_overlays:
     - '{managed_python} -m pip install -r requirements.lock'
     required_commands:
     - pre-commit
-    - pytest
   modules-need-tests:
     exclude_prefixes:
     - build

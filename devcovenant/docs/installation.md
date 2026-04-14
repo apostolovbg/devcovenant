@@ -1,5 +1,5 @@
 # Installation and Lifecycle
-**Last Updated:** 2026-04-11
+**Last Updated:** 2026-04-14
 
 **Project Version:** 1.0.1b2
 
@@ -367,6 +367,11 @@ That enables development-only paths that ordinary user repositories should not
 keep.
 
 ## Managed Environment Notes
+The shipped install baseline keeps `managed-environment` disabled until the
+repository opts into a declared environment model such as `python_venv`.
+When a repository wants the builtin `.venv` contract, add `python_venv` to
+`profiles.active`, set `policy_state.managed-environment: true`, and rerun
+`deploy` or `refresh`.
 When the managed-environment policy is enabled, DevCovenant chooses one target
 environment for each command stage.
 If the current interpreter already matches that setup, DevCovenant reuses it.
@@ -374,6 +379,9 @@ If not, it selects the configured interpreter or environment root and then runs
 any declared bootstrap commands.
 If the selected interpreter path exists but is not executable, DevCovenant
 stops with a clear error.
+The shipped `python_venv` profile declares both command-stage and start-stage
+bootstrap commands, so `deploy`, `refresh`, `gate`, and `run` can all enter
+the repo-local `.venv` after the repository opts in.
 If the repository uses a bench-managed, container-managed, system, or other
 custom environment, declare that environment through the profile stack or
 metadata overlays instead of expecting DevCovenant to guess an unknown layout

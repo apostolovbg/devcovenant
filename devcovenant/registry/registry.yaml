@@ -1,7 +1,7 @@
 metadata:
   schema_version: 1
   registry_layout: single-root
-  policy_registry_input_hash: aef3a49bf6e27ac22c6b53e2473af4450b6b71fa2a8cd6dced100997402d832f
+  policy_registry_input_hash: d3c28524d602107158bf757df428d2b2340afc45fc977396d668ec26228decab
 project-governance:
   project_name: devcovenant
   project_description: devcovenant is a repository governance framework.
@@ -187,6 +187,7 @@ workflow_contract:
   - userproject
   - docs
   - python
+  - python_venv
 policies:
   changelog-coverage:
     enabled: true
@@ -5916,12 +5917,13 @@ policies:
       cleanup_protected_paths: []
       required_commands:
       - pre-commit
-      - pytest
       allow_current_interpreter_fallback: 'false'
       manual_commands:
       - '{current_python} -m venv .venv'
       - '{managed_python} -m pip install -r requirements.lock'
       managed_commands:
+      - command=>{current_python} -m venv .venv
+      - command=>{managed_python} -m pip install -r requirements.lock
       - start=>{current_python} -m venv .venv
       - start=>{managed_python} -m pip install -r requirements.lock
     metadata_resolution:
@@ -6070,21 +6072,18 @@ policies:
         profile_overlays:
           values:
           - pre-commit
-          - pytest
           behavior: append
           replaced_inherited_values:
           - ()
         autogen_overlays:
           values:
           - pre-commit
-          - pytest
           behavior: append
           replaced_inherited_values:
           - ()
         effective:
           values:
           - pre-commit
-          - pytest
       allow_current_interpreter_fallback:
         descriptor:
           values:
@@ -6129,6 +6128,8 @@ policies:
           - ()
         profile_overlays:
           values:
+          - command=>{current_python} -m venv .venv
+          - command=>{managed_python} -m pip install -r requirements.lock
           - start=>{current_python} -m venv .venv
           - start=>{managed_python} -m pip install -r requirements.lock
           behavior: append
@@ -6136,6 +6137,8 @@ policies:
           - ()
         autogen_overlays:
           values:
+          - command=>{current_python} -m venv .venv
+          - command=>{managed_python} -m pip install -r requirements.lock
           - start=>{current_python} -m venv .venv
           - start=>{managed_python} -m pip install -r requirements.lock
           behavior: append
@@ -6143,6 +6146,8 @@ policies:
           - ()
         effective:
           values:
+          - command=>{current_python} -m venv .venv
+          - command=>{managed_python} -m pip install -r requirements.lock
           - start=>{current_python} -m venv .venv
           - start=>{managed_python} -m pip install -r requirements.lock
       custom:
@@ -6178,12 +6183,13 @@ policies:
       cleanup_protected_paths: []
       required_commands: &id050
       - pre-commit
-      - pytest
       allow_current_interpreter_fallback: false
       manual_commands: &id051
       - '{current_python} -m venv .venv'
       - '{managed_python} -m pip install -r requirements.lock'
       managed_commands: &id052
+      - command=>{current_python} -m venv .venv
+      - command=>{managed_python} -m pip install -r requirements.lock
       - start=>{current_python} -m venv .venv
       - start=>{managed_python} -m pip install -r requirements.lock
     runtime_config_overrides: {}
@@ -15697,6 +15703,35 @@ profiles:
     - devcovenant/builtin/profiles/python/assets/pyproject.toml
     - devcovenant/builtin/profiles/python/assets/requirements.in
     active: true
+  python_venv:
+    version: 1
+    profile: python_venv
+    category: tooling
+    suffixes: []
+    ignore_dirs: []
+    assets: []
+    policy_overlays:
+      managed-environment:
+        expected_paths:
+        - .venv
+        expected_interpreters:
+        - .venv/bin/python
+        - .venv/Scripts/python.exe
+        command_search_paths: []
+        required_commands:
+        - pre-commit
+        manual_commands:
+        - '{current_python} -m venv .venv'
+        - '{managed_python} -m pip install -r requirements.lock'
+        managed_commands:
+        - command=>{current_python} -m venv .venv
+        - command=>{managed_python} -m pip install -r requirements.lock
+        - start=>{current_python} -m venv .venv
+        - start=>{managed_python} -m pip install -r requirements.lock
+    source: builtin
+    path: devcovenant/builtin/profiles/python_venv
+    assets_available: []
+    active: true
   ruby:
     version: 1
     profile: ruby
@@ -16464,19 +16499,55 @@ profiles:
 
               path = Path("devcovenant/config.yaml")
               lines = path.read_text(encoding="utf-8").splitlines()
+              reviewed = False
+              managed = False
+              inserted_profile = False
               for index, line in enumerate(lines):
-                  if line.strip() == "config_reviewed: false":
+                  stripped = line.strip()
+                  if stripped == "config_reviewed: false":
                       indent = line[: len(line) - len(line.lstrip())]
                       lines[index] = f"{indent}config_reviewed: true"
-                      path.write_text(
-                          "\n".join(lines) + "\n",
-                          encoding="utf-8",
-                      )
-                      break
-              else:
+                      reviewed = True
+                      continue
+                  if stripped == "managed-environment: false":
+                      indent = line[: len(line) - len(line.lstrip())]
+                      lines[index] = f"{indent}managed-environment: true"
+                      managed = True
+              for index, line in enumerate(lines):
+                  if line.strip() != "active:":
+                      continue
+                  item_indent = (
+                      line[: len(line) - len(line.lstrip())] + "  "
+                  )
+                  insert_at = index + 1
+                  while (
+                      insert_at < len(lines)
+                      and lines[insert_at].startswith(f"{item_indent}- ")
+                  ):
+                      if lines[insert_at].strip() == "- python_venv":
+                          inserted_profile = True
+                          break
+                      insert_at += 1
+                  if not inserted_profile:
+                      lines.insert(insert_at, f"{item_indent}- python_venv")
+                      inserted_profile = True
+                  break
+              if not reviewed:
                   raise SystemExit(
                       "config_reviewed field line not found in config.yaml"
                   )
+              if not managed:
+                  raise SystemExit(
+                      "managed-environment field line not found in config.yaml"
+                  )
+              if not inserted_profile:
+                  raise SystemExit(
+                      "profiles.active block not found in config.yaml"
+                  )
+              path.write_text(
+                  "\n".join(lines) + "\n",
+                  encoding="utf-8",
+              )
               PY
               "$PIPX_BIN_DIR/devcovenant" deploy
               mkdir -p tests
@@ -16540,22 +16611,6 @@ profiles:
           dependency_files:
           - pyproject.toml
           generate_hashes: true
-      managed-environment:
-        expected_paths:
-        - .venv
-        expected_interpreters:
-        - .venv/bin/python
-        - .venv/Scripts/python.exe
-        command_search_paths: []
-        required_commands:
-        - pre-commit
-        - pytest
-        manual_commands:
-        - '{current_python} -m venv .venv'
-        - '{managed_python} -m pip install -r requirements.lock'
-        managed_commands:
-        - start=>{current_python} -m venv .venv
-        - start=>{managed_python} -m pip install -r requirements.lock
       documentation-growth-tracking:
         user_facing_files:
         - devcovenant/cli.py
@@ -17033,6 +17088,7 @@ inventory:
     - userproject
     - docs
     - python
+    - python_venv
     resolved_pre_commit_hooks:
     - https://github.com/pre-commit/pre-commit-hooks:check-merge-conflict
     - https://github.com/pre-commit/pre-commit-hooks:check-yaml

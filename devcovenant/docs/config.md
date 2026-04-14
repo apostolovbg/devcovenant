@@ -1,5 +1,5 @@
 # Configuration
-**Last Updated:** 2026-04-11
+**Last Updated:** 2026-04-14
 
 **Project Version:** 1.0.1b2
 
@@ -196,6 +196,12 @@ This is the on/off map for configurable policies.
 Use it to decide which non-core policies are enabled.
 Critical policies can still remain enforced even if a config toggle tries to
 turn them off.
+The shipped install baseline keeps `managed-environment: false` until the
+repository enables a matching managed-environment profile such as
+`python_venv`.
+That separation keeps ordinary installed repositories environment-neutral by
+default while still allowing explicit opt-in stacks to own their own
+bootstrap commands and interpreter paths.
 
 ### user_metadata_overlays and user_metadata_overrides
 These sections are where nested policy metadata lives.
