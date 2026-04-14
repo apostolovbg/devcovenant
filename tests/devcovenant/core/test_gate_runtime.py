@@ -1453,7 +1453,7 @@ def _gate_mid_runs_without_status_mutation() -> None:
         ):
             exit_code = module.run_pre_commit_gate(repo_root, "mid")
         assert exit_code == 0
-        assert captured["managed_stage"] == "command"
+        assert captured["managed_stage"] == "managed"
         hook_env = captured["hook_env"]
         assert hook_env["DEVCOV_DEVFLOW_STAGE"] == ""
         assert hook_env["DEVCOV_CHECK_APPLY_FIXES"] == "0"

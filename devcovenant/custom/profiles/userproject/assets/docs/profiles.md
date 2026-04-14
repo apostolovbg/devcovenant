@@ -102,7 +102,7 @@ Python `.venv` starting point:
 - expected paths and interpreters
 - required commands for the standard gate/runtime surface
 - manual guidance that uses `{current_python}` and `{managed_python}`
-- command-stage and start-stage bootstrap commands for lifecycle commands
+- bootstrap-stage and start-stage bootstrap commands for lifecycle commands
 
 The normal installed repository baseline keeps
 `policy_state.managed-environment: false`.

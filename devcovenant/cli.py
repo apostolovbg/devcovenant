@@ -138,9 +138,13 @@ def _managed_stage_for_command(
             return "end"
         if "--start" in command_args:
             return "start"
+        if "--mid" in command_args:
+            return "managed"
+        if "--status" in command_args:
+            return "bootstrap"
     if command == "run":
         return "run"
-    return "command"
+    return "bootstrap"
 
 
 def _same_interpreter_path(current: str, expected: str) -> bool:

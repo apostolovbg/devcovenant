@@ -1721,7 +1721,7 @@ def run_pre_commit_gate(
     recovery_run_ids: list[str] = []
     recovery_status_active = False
     recovery_status_previous: bytes | None = None
-    managed_env_stage = "command" if is_mid else stage
+    managed_env_stage = "managed" if is_mid else stage
     try:
         managed_env, managed_python = (
             execution_runtime_module.resolve_managed_environment_for_stage(

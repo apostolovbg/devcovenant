@@ -61,6 +61,43 @@ Example:
 ## Version 1.0.1b2
 
 - 2026-04-14:
+  Change: Renamed the managed-environment bootstrap bucket from
+          `command` to `bootstrap`, kept the strict `managed` stage for
+          mid-gate validation, and regenerated the tracked registry and
+          blueprint artifacts.
+  Why: Clarified the naming split because every invocation is still a
+       command; `bootstrap` and `managed` make the execution split clearer
+       while keeping the shipped `python_venv` profile and docs aligned.
+  Impact: Updated the builtin `python_venv` profile, generated config and
+          registry, managed-environment docs, and managed test blueprint so
+          they all use the same bootstrap terminology.
+  Files:
+  AGENTS.md
+  devcovenant/builtin/policies/managed_environment/managed_environment.py
+  devcovenant/builtin/policies/managed_environment/managed_environment.yaml
+  devcovenant/builtin/policies/managed_environment/\
+    managed_environment_runtime.py
+  devcovenant/builtin/policies/managed_environment/test_blueprints.yaml
+  devcovenant/builtin/profiles/python_venv/python_venv.yaml
+  devcovenant/cli.py
+  devcovenant/config.yaml
+  devcovenant/core/gate_runtime.py
+  devcovenant/custom/profiles/userproject/assets/docs/installation.md
+  devcovenant/custom/profiles/userproject/assets/docs/profiles.md
+  devcovenant/custom/profiles/userproject/assets/docs/workflow.md
+  devcovenant/docs/config.md
+  devcovenant/docs/installation.md
+  devcovenant/docs/policies.md
+  devcovenant/docs/profiles.md
+  devcovenant/docs/registry.md
+  devcovenant/docs/workflow.md
+  devcovenant/registry/registry.yaml
+  tests/devcovenant/builtin/policies/managed_environment/\
+    test_managed_environment_runtime.py
+  tests/devcovenant/core/test_gate_runtime.py
+  tests/devcovenant/core/test_profile_registry.py
+
+- 2026-04-14:
   Change: Fixed the pipx proof bootstrap script to reuse the existing
           `profiles.active` list indentation when it inserts
           `python_venv`.

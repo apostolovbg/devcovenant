@@ -92,7 +92,7 @@ repository's managed-environment stack changes how profiles such as
 When a proof repository activates one of those profiles through text-mode
 config edits, the edit should preserve the existing YAML list indentation
 instead of inventing a new block shape.
-If a repository intentionally keeps `command` stage execution on the current
+If a repository intentionally keeps `bootstrap`-mode execution on the current
 interpreter until the target environment exists, that intent should appear in
 the tracked metadata as `allow_current_interpreter_fallback: true`; otherwise
 the registry should show explicit bootstrap commands instead of relying on an

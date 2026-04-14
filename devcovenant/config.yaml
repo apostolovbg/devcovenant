@@ -1307,8 +1307,8 @@ autogen_metadata_overlays:
     expected_paths:
     - .venv
     managed_commands:
-    - command=>{current_python} -m venv .venv
-    - command=>{managed_python} -m pip install -r requirements.lock
+    - bootstrap=>{current_python} -m venv .venv
+    - bootstrap=>{managed_python} -m pip install -r requirements.lock
     - start=>{current_python} -m venv .venv
     - start=>{managed_python} -m pip install -r requirements.lock
     manual_commands:

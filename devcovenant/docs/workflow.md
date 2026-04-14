@@ -209,11 +209,11 @@ The shipped install baseline keeps `managed-environment` off for a normal
 user repository.
 When a repository explicitly opts into `python_venv` and enables
 `policy_state.managed-environment`, DevCovenant chooses one target
-environment for each stage.
+environment for each stage and execution mode.
 If the current interpreter already matches that setup, DevCovenant reuses it.
 If not, it selects the configured interpreter or environment root and then runs
 any declared bootstrap commands.
-If a profile intentionally wants `command` stage calls to keep running on the
+If a profile intentionally wants `bootstrap`-mode calls to keep running on the
 current interpreter until the target environment exists, it must opt in with
 `allow_current_interpreter_fallback: true`; otherwise the fallback stays
 disabled so an incomplete profile does not get masked.
@@ -224,7 +224,7 @@ It also keeps the workflow portable across normal `.venv` repositories,
 bench-like environments, and other declared environment layouts.
 With a stack that seeds a local `.venv`, `deploy`/`refresh` materializes the
 workspace dependency artifacts, and profiles such as `python_venv` can
-declare command-stage plus start-stage bootstrap commands when the target
+declare bootstrap-stage plus start-stage bootstrap commands when the target
 environment is still missing.
 If a repository uses a different environment shape, it should declare that
 shape explicitly instead of expecting DevCovenant to guess it.

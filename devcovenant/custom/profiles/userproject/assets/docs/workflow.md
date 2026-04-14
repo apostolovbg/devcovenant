@@ -199,7 +199,7 @@ It also keeps the workflow portable across repositories that declare a local
 environment, bench-like environments, and other declared environment layouts.
 With a stack that declares a local environment, `deploy`/`refresh`
 materializes the workspace dependency artifacts, and profiles such as
-`python_venv` can declare command-stage plus start-stage bootstrap commands
+`python_venv` can declare bootstrap-stage plus start-stage bootstrap commands
 when the target environment is still missing.
 If a repository uses a different environment shape, it should declare that
 shape explicitly instead of expecting DevCovenant to guess it.

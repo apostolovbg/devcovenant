@@ -131,7 +131,7 @@ profile:
 
 Use that copied profile for repo-specific identity, version paths, package
 paths, extra hooks, local workflow runs, or managed-environment details.
-If command-stage reuse of the current interpreter is intentional, set
+If bootstrap-mode reuse of the current interpreter is intentional, set
 `allow_current_interpreter_fallback: true` in the managed-environment
 metadata; otherwise keep `managed_commands` populated so the profile does not
 silently rely on an incomplete environment declaration.
@@ -373,15 +373,15 @@ When a repository wants the builtin `.venv` contract, add `python_venv` to
 `profiles.active`, set `policy_state.managed-environment: true`, and rerun
 `deploy` or `refresh`.
 When the managed-environment policy is enabled, DevCovenant chooses one target
-environment for each command stage.
+environment for each stage and execution mode.
 If the current interpreter already matches that setup, DevCovenant reuses it.
 If not, it selects the configured interpreter or environment root and then runs
 any declared bootstrap commands.
 If the selected interpreter path exists but is not executable, DevCovenant
 stops with a clear error.
-The shipped `python_venv` profile declares both command-stage and start-stage
-bootstrap commands, so `deploy`, `refresh`, `gate`, and `run` can all enter
-the repo-local `.venv` after the repository opts in.
+The shipped `python_venv` profile declares both bootstrap-stage and
+start-stage bootstrap commands, so bootstrap-mode commands can enter the
+repo-local `.venv` after the repository opts in.
 If the repository uses a bench-managed, container-managed, system, or other
 custom environment, declare that environment through the profile stack or
 metadata overlays instead of expecting DevCovenant to guess an unknown layout

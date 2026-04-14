@@ -49,6 +49,9 @@ DevCovenant lifecycle and command behavior used by the project.
 ## Public Baseline Notes
 - Treat `devcovenant/VERSION` as the only version-defining file.
 - Preserve command/runtime contracts unless an explicit plan item changes them.
+- Managed-environment metadata uses `bootstrap` for bootstrap-capable
+  commands and `managed` for mid-gate validation; avoid the legacy
+  `command` token.
 - Keep implementation ownership in the flat `devcovenant/core/*.py`
   module surface.
 - Keep product-operation docs in `devcovenant/docs/*`.
@@ -1538,8 +1541,8 @@ manual_commands:
 - '{current_python} -m venv .venv'
 - '{managed_python} -m pip install -r requirements.lock'
 managed_commands:
-- command=>{current_python} -m venv .venv
-- command=>{managed_python} -m pip install -r requirements.lock
+- bootstrap=>{current_python} -m venv .venv
+- bootstrap=>{managed_python} -m pip install -r requirements.lock
 - start=>{current_python} -m venv .venv
 - start=>{managed_python} -m pip install -r requirements.lock
 ```
@@ -1570,18 +1573,18 @@ Active managed-environment policy reuses the current interpreter when it
 already satisfies the contract, re-executes CLI commands in the selected
 interpreter when needed, and only runs bootstrap commands when the target
 environment is still missing or invalid. Stage-scoped `managed_commands`
-accept `start`, `run`, `end`, `command`, and `all` prefixes; non-start
-commands may still reuse `start` bootstrap commands once when the target
-environment is not ready. When no automatic bootstrap commands are
-declared, `command` stage operations may keep using the current
-interpreter only when `allow_current_interpreter_fallback` is explicitly
-true; otherwise `start`, `run`, `end`, and `command` remain strict about
-the target environment so incomplete profiles fail loudly instead of
-falling through to wrapper adapters or alternate policy sources. If the
-resolved interpreter is missing or not executable, DevCovenant fails
-explicitly instead of falling through to wrapper adapters or alternate
-policy sources. When enabled with empty metadata, the policy emits a
-warning so teams fill the required context.
+accept `start`, `run`, `end`, `bootstrap`, `managed`, and `all` prefixes;
+bootstrap-mode commands may still reuse `start` bootstrap commands once
+when the target environment is not ready. When no automatic bootstrap
+commands are declared, `bootstrap` stage operations may keep using the
+current interpreter only when `allow_current_interpreter_fallback` is
+explicitly true; otherwise `start`, `run`, `end`, and `managed` remain
+strict about the target environment so incomplete profiles fail loudly
+instead of falling through to wrapper adapters or alternate policy
+sources. If the resolved interpreter is missing or not executable,
+DevCovenant fails explicitly instead of falling through to wrapper
+adapters or alternate policy sources. When enabled with empty metadata,
+the policy emits a warning so teams fill the required context.
 
 
 ---

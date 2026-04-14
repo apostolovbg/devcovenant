@@ -159,7 +159,7 @@ class ManagedEnvironmentCheck(PolicyCheck):
                     line_number=1,
                     message=(
                         "managed-environment is enabled, but no "
-                        "`managed_commands` are declared and command-stage "
+                        "`managed_commands` are declared and bootstrap-stage "
                         "fallback to the current interpreter is not "
                         "explicitly enabled. Declare `managed_commands` or "
                         "set `allow_current_interpreter_fallback: true`."
@@ -168,7 +168,7 @@ class ManagedEnvironmentCheck(PolicyCheck):
                     suggestion=(
                         "Add managed bootstrap commands for the target "
                         "environment or set `allow_current_interpreter_"
-                        "fallback: true` when command-stage reuse is "
+                        "fallback: true` when bootstrap-stage reuse is "
                         "intentional."
                     ),
                 )

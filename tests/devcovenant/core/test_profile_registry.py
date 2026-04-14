@@ -781,8 +781,8 @@ def _profile_python_venv_declares_opt_in_managed_env_contract() -> None:
     assert command_text == ["pre-commit"]
     managed_commands = managed_environment.get("managed_commands")
     assert managed_commands == [
-        "command=>{current_python} -m venv .venv",
-        "command=>{managed_python} -m pip install -r requirements.lock",
+        "bootstrap=>{current_python} -m venv .venv",
+        "bootstrap=>{managed_python} -m pip install -r requirements.lock",
         "start=>{current_python} -m venv .venv",
         "start=>{managed_python} -m pip install -r requirements.lock",
     ]

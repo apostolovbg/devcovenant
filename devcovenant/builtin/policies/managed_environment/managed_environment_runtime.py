@@ -24,7 +24,9 @@ from devcovenant.core.repository_paths import display_path
 
 POLICY_ID = "managed-environment"
 RUNTIME_ACTION_RESOLVE_STAGE = "resolve-stage"
-_MANAGED_ENV_STAGES = frozenset({"start", "run", "end", "command", "all"})
+_MANAGED_ENV_STAGES = frozenset(
+    {"start", "run", "end", "bootstrap", "managed", "all"}
+)
 _MANAGED_STAGE_RUNS_ENV = "DEVCOV_MANAGED_STAGE_RUNS"
 _GUIDANCE_TOKEN_PATTERN = re.compile(r"{([a-zA-Z0-9_]+)}")
 
@@ -220,7 +222,7 @@ def _parse_managed_commands(entries: list[str]) -> list[tuple[str, str]]:
         if stage not in _MANAGED_ENV_STAGES:
             allowed = ", ".join(sorted(_MANAGED_ENV_STAGES))
             raise ValueError(
-                "Invalid managed command stage "
+                "Invalid managed-environment stage "
                 f"`{stage}`. Allowed values: {allowed}."
             )
         if not command_text:
@@ -522,7 +524,7 @@ def _resolve_current_interpreter_environment(
     *,
     command_search_paths: Sequence[Path] | None = None,
 ) -> tuple[dict[str, str] | None, str | None]:
-    """Return the current interpreter env when it can host command setup."""
+    """Return the current interpreter env when it can host bootstrap setup."""
     current_python = Path(os.path.abspath(str(sys.executable)))
     if not current_python.exists():
         return None, None
@@ -555,7 +557,7 @@ def _write_managed_stage_runs(env: dict[str, str], stages: set[str]) -> None:
     """Persist prepared-stage set into process environment."""
     ordered = [
         stage
-        for stage in ("start", "run", "end", "command", "all")
+        for stage in ("start", "run", "end", "bootstrap", "managed", "all")
         if stage in stages
     ]
     env[_MANAGED_STAGE_RUNS_ENV] = ",".join(ordered)
@@ -685,10 +687,10 @@ def resolve_managed_environment_for_stage(
 ) -> tuple[dict[str, str] | None, str | None]:
     """Resolve and optionally prepare managed-environment execution state."""
     stage_token = str(stage or "").strip().lower()
-    if stage_token not in {"start", "run", "end", "command"}:
+    if stage_token not in {"start", "run", "end", "bootstrap", "managed"}:
         raise ValueError(
             "Invalid managed-environment stage "
-            f"`{stage}`. Allowed: start, run, end, command."
+            f"`{stage}`. Allowed: start, run, end, bootstrap, managed."
         )
     entry = _load_policy_entry(repo_root)
     if entry is None:
@@ -802,7 +804,7 @@ def resolve_managed_environment_for_stage(
 
     if (
         not environment_ready
-        and stage_token != "start"
+        and stage_token in {"bootstrap", "run"}
         and "start" not in prepared_stages
     ):
         env, ran_start_commands = _run_managed_commands_for_stage(
@@ -834,10 +836,16 @@ def resolve_managed_environment_for_stage(
             required_commands=required_commands,
             command_search_paths=command_search_paths,
         )
+    guidance = _managed_guidance_suffix(
+        manual_commands,
+        repo_root=repo_root,
+        managed_python=managed_python,
+        managed_root=managed_root,
+    )
     if not environment_ready or managed_python is None:
         if (
             managed_python is None
-            and stage_token == "command"
+            and stage_token == "bootstrap"
             and not managed_commands
         ):
             if allow_current_interpreter_fallback:
@@ -849,15 +857,9 @@ def resolve_managed_environment_for_stage(
                 )
                 if bootstrap_env is not None and bootstrap_python is not None:
                     return bootstrap_env, bootstrap_python
-            guidance = _managed_guidance_suffix(
-                manual_commands,
-                repo_root=repo_root,
-                managed_python=managed_python,
-                managed_root=managed_root,
-            )
             if not allow_current_interpreter_fallback:
                 raise ValueError(
-                    "managed-environment is enabled, but command-stage "
+                    "managed-environment is enabled, but bootstrap-stage "
                     "fallback to the current interpreter is disabled. "
                     "Declare `managed_commands` or set "
                     "`allow_current_interpreter_fallback: true`." + guidance

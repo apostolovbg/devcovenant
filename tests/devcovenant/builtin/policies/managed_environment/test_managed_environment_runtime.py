@@ -69,7 +69,11 @@ def _unit_test_resolve_stage_returns_none_when_disabled(
     )
     assert module.resolve_managed_environment_for_stage(
         Path("/tmp/repo"),
-        "command",
+        "bootstrap",
+    ) == (None, None)
+    assert module.resolve_managed_environment_for_stage(
+        Path("/tmp/repo"),
+        "managed",
     ) == (None, None)
     assert module.resolve_managed_environment_for_stage(
         Path("/tmp/repo"),
@@ -129,13 +133,13 @@ def _unit_test_start_prepends_command_search_paths(
     )
 
 
-def _unit_test_invalid_managed_command_stage_raises() -> None:
+def _unit_test_invalid_managed_stage_raises() -> None:
     """Managed command parser should reject unknown stage tokens."""
     module = importlib.import_module(MODULE)
     try:
         module._parse_managed_commands(["invalid=>echo hello"])
     except ValueError as error:
-        assert "Invalid managed command stage" in str(error)
+        assert "Invalid managed-environment stage" in str(error)
     else:
         raise AssertionError("Expected ValueError for invalid stage token.")
 
@@ -147,10 +151,12 @@ def _unit_test_write_managed_stage_runs_uses_run_token() -> None:
 
     module._write_managed_stage_runs(
         env,
-        {"start", "run", "end", "command", "all"},
+        {"start", "run", "end", "bootstrap", "managed", "all"},
     )
 
-    assert env[module._MANAGED_STAGE_RUNS_ENV] == ("start,run,end,command,all")
+    assert env[module._MANAGED_STAGE_RUNS_ENV] == (
+        "start,run,end,bootstrap,managed,all"
+    )
 
 
 def _unit_test_stage_bootstrap_dedupes_on_reexec(
@@ -613,10 +619,10 @@ def _unit_test_run_bootstraps_when_environment_is_missing(
     assert stage_calls == ["start"]
 
 
-def _unit_test_command_stage_uses_current_interpreter_with_flag(
+def _unit_test_bootstrap_stage_uses_current_interpreter_with_flag(
     monkeypatch: MonkeyPatch,
 ) -> None:
-    """Command stage may use the current interpreter with explicit opt-in."""
+    """Bootstrap stage may use the current interpreter with explicit opt-in."""
     module = importlib.import_module(MODULE)
     with tempfile.TemporaryDirectory() as temp_dir:
         repo_root = Path(temp_dir) / "repo"
@@ -651,7 +657,7 @@ def _unit_test_command_stage_uses_current_interpreter_with_flag(
         resolved_env, resolved_python = (
             module.resolve_managed_environment_for_stage(
                 repo_root,
-                "command",
+                "bootstrap",
                 base_env={"PATH": "/usr/bin"},
             )
         )
@@ -663,10 +669,10 @@ def _unit_test_command_stage_uses_current_interpreter_with_flag(
     assert Path(resolved_env["VIRTUAL_ENV"]).resolve() == tool_root.resolve()
 
 
-def _unit_test_command_stage_requires_explicit_fallback_flag(
+def _unit_test_bootstrap_stage_requires_explicit_fallback_flag(
     monkeypatch: MonkeyPatch,
 ) -> None:
-    """Implicit command-stage fallback should fail without an explicit flag."""
+    """Implicit bootstrap-stage fallback should fail without a flag."""
     module = importlib.import_module(MODULE)
     with tempfile.TemporaryDirectory() as temp_dir:
         repo_root = Path(temp_dir) / "repo"
@@ -700,7 +706,7 @@ def _unit_test_command_stage_requires_explicit_fallback_flag(
         try:
             module.resolve_managed_environment_for_stage(
                 repo_root,
-                "command",
+                "bootstrap",
                 base_env={"PATH": "/usr/bin"},
             )
         except ValueError as error:
@@ -713,10 +719,10 @@ def _unit_test_command_stage_requires_explicit_fallback_flag(
     assert "allow_current_interpreter_fallback" in message
 
 
-def _unit_test_command_stage_does_not_mask_declared_bootstrap_contract(
+def _unit_test_bootstrap_stage_does_not_mask_declared_bootstrap_contract(
     monkeypatch: MonkeyPatch,
 ) -> None:
-    """Command-stage reuse should not hide broken explicit bootstrap logic."""
+    """Bootstrap-stage reuse should not hide explicit bootstrap logic."""
     module = importlib.import_module(MODULE)
     with tempfile.TemporaryDirectory() as temp_dir:
         repo_root = Path(temp_dir)
@@ -754,7 +760,7 @@ def _unit_test_command_stage_does_not_mask_declared_bootstrap_contract(
         try:
             module.resolve_managed_environment_for_stage(
                 repo_root,
-                "command",
+                "bootstrap",
                 base_env={"PATH": "/usr/bin"},
             )
         except ValueError as error:
@@ -1103,9 +1109,9 @@ class GeneratedUnittestCases(unittest.TestCase):
         finally:
             monkeypatch.undo()
 
-    def test_invalid_managed_command_stage_raises(self):
+    def test_invalid_managed_stage_raises(self):
         """Run invalid-stage parser assertion."""
-        _unit_test_invalid_managed_command_stage_raises()
+        _unit_test_invalid_managed_stage_raises()
 
     def test_write_managed_stage_runs_uses_run_token(self):
         """Run managed-stage persistence assertions."""
@@ -1163,22 +1169,22 @@ class GeneratedUnittestCases(unittest.TestCase):
         finally:
             monkeypatch.undo()
 
-    def test_command_stage_uses_current_interpreter_with_explicit_flag(
+    def test_bootstrap_stage_uses_current_interpreter_with_explicit_flag(
         self,
     ):
-        """Run explicit command-stage fallback assertions."""
+        """Run explicit bootstrap-stage fallback assertions."""
         monkeypatch = MonkeyPatch()
         try:
-            fn = _unit_test_command_stage_uses_current_interpreter_with_flag
+            fn = _unit_test_bootstrap_stage_uses_current_interpreter_with_flag
             fn(monkeypatch)
         finally:
             monkeypatch.undo()
 
-    def test_command_stage_requires_explicit_fallback_flag(self):
-        """Run implicit command-stage fallback rejection assertions."""
+    def test_bootstrap_stage_requires_explicit_fallback_flag(self):
+        """Run implicit bootstrap-stage fallback rejection assertions."""
         monkeypatch = MonkeyPatch()
         try:
-            _unit_test_command_stage_requires_explicit_fallback_flag(
+            _unit_test_bootstrap_stage_requires_explicit_fallback_flag(
                 monkeypatch
             )
         finally:

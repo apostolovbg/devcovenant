@@ -1,7 +1,7 @@
 metadata:
   schema_version: 1
   registry_layout: single-root
-  policy_registry_input_hash: d3c28524d602107158bf757df428d2b2340afc45fc977396d668ec26228decab
+  policy_registry_input_hash: 3b027d75737cc970bba92bb5642ca55dde492891627b78bd76c33984d1e9f6fd
 project-governance:
   project_name: devcovenant
   project_description: devcovenant is a repository governance framework.
@@ -5889,18 +5889,18 @@ policies:
       already satisfies the contract, re-executes CLI commands in the selected
       interpreter when needed, and only runs bootstrap commands when the target
       environment is still missing or invalid. Stage-scoped `managed_commands`
-      accept `start`, `run`, `end`, `command`, and `all` prefixes; non-start
-      commands may still reuse `start` bootstrap commands once when the target
-      environment is not ready. When no automatic bootstrap commands are
-      declared, `command` stage operations may keep using the current
-      interpreter only when `allow_current_interpreter_fallback` is explicitly
-      true; otherwise `start`, `run`, `end`, and `command` remain strict about
-      the target environment so incomplete profiles fail loudly instead of
-      falling through to wrapper adapters or alternate policy sources. If the
-      resolved interpreter is missing or not executable, DevCovenant fails
-      explicitly instead of falling through to wrapper adapters or alternate
-      policy sources. When enabled with empty metadata, the policy emits a
-      warning so teams fill the required context.
+      accept `start`, `run`, `end`, `bootstrap`, `managed`, and `all` prefixes;
+      bootstrap-mode commands may still reuse `start` bootstrap commands once
+      when the target environment is not ready. When no automatic bootstrap
+      commands are declared, `bootstrap` stage operations may keep using the
+      current interpreter only when `allow_current_interpreter_fallback` is
+      explicitly true; otherwise `start`, `run`, `end`, and `managed` remain
+      strict about the target environment so incomplete profiles fail loudly
+      instead of falling through to wrapper adapters or alternate policy
+      sources. If the resolved interpreter is missing or not executable,
+      DevCovenant fails explicitly instead of falling through to wrapper
+      adapters or alternate policy sources. When enabled with empty metadata,
+      the policy emits a warning so teams fill the required context.
     metadata:
       id: managed-environment
       severity: error
@@ -5922,8 +5922,8 @@ policies:
       - '{current_python} -m venv .venv'
       - '{managed_python} -m pip install -r requirements.lock'
       managed_commands:
-      - command=>{current_python} -m venv .venv
-      - command=>{managed_python} -m pip install -r requirements.lock
+      - bootstrap=>{current_python} -m venv .venv
+      - bootstrap=>{managed_python} -m pip install -r requirements.lock
       - start=>{current_python} -m venv .venv
       - start=>{managed_python} -m pip install -r requirements.lock
     metadata_resolution:
@@ -6128,8 +6128,8 @@ policies:
           - ()
         profile_overlays:
           values:
-          - command=>{current_python} -m venv .venv
-          - command=>{managed_python} -m pip install -r requirements.lock
+          - bootstrap=>{current_python} -m venv .venv
+          - bootstrap=>{managed_python} -m pip install -r requirements.lock
           - start=>{current_python} -m venv .venv
           - start=>{managed_python} -m pip install -r requirements.lock
           behavior: append
@@ -6137,8 +6137,8 @@ policies:
           - ()
         autogen_overlays:
           values:
-          - command=>{current_python} -m venv .venv
-          - command=>{managed_python} -m pip install -r requirements.lock
+          - bootstrap=>{current_python} -m venv .venv
+          - bootstrap=>{managed_python} -m pip install -r requirements.lock
           - start=>{current_python} -m venv .venv
           - start=>{managed_python} -m pip install -r requirements.lock
           behavior: append
@@ -6146,8 +6146,8 @@ policies:
           - ()
         effective:
           values:
-          - command=>{current_python} -m venv .venv
-          - command=>{managed_python} -m pip install -r requirements.lock
+          - bootstrap=>{current_python} -m venv .venv
+          - bootstrap=>{managed_python} -m pip install -r requirements.lock
           - start=>{current_python} -m venv .venv
           - start=>{managed_python} -m pip install -r requirements.lock
       custom:
@@ -6163,8 +6163,8 @@ policies:
     metadata_warnings: []
     runtime_actions:
     - id: resolve-stage
-      description: Resolve the managed interpreter and bootstrap steps for one CLI
-        stage.
+      description: Resolve the managed interpreter and execution-stage handling for
+        one CLI invocation.
       mutates_repo: false
     commands: []
     runtime_metadata_options:
@@ -6188,8 +6188,8 @@ policies:
       - '{current_python} -m venv .venv'
       - '{managed_python} -m pip install -r requirements.lock'
       managed_commands: &id052
-      - command=>{current_python} -m venv .venv
-      - command=>{managed_python} -m pip install -r requirements.lock
+      - bootstrap=>{current_python} -m venv .venv
+      - bootstrap=>{managed_python} -m pip install -r requirements.lock
       - start=>{current_python} -m venv .venv
       - start=>{managed_python} -m pip install -r requirements.lock
     runtime_config_overrides: {}
@@ -6211,7 +6211,7 @@ policies:
     - .venv/bin/python
     origin: builtin
     script_exists: true
-    hash: 544209d9cd45d5c4405c915e7b48a31076df871f6632de37cfc1978647a479a9
+    hash: 92a8efad6be9fa73173e815bbd080bcb976916b8270316a014db364502b1a502
     script_path: builtin/managed_environment.py
   modules-need-tests:
     enabled: true
@@ -15724,8 +15724,8 @@ profiles:
         - '{current_python} -m venv .venv'
         - '{managed_python} -m pip install -r requirements.lock'
         managed_commands:
-        - command=>{current_python} -m venv .venv
-        - command=>{managed_python} -m pip install -r requirements.lock
+        - bootstrap=>{current_python} -m venv .venv
+        - bootstrap=>{managed_python} -m pip install -r requirements.lock
         - start=>{current_python} -m venv .venv
         - start=>{managed_python} -m pip install -r requirements.lock
     source: builtin

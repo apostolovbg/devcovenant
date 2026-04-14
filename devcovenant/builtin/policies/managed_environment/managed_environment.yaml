@@ -26,18 +26,18 @@ text: |
   already satisfies the contract, re-executes CLI commands in the selected
   interpreter when needed, and only runs bootstrap commands when the target
   environment is still missing or invalid. Stage-scoped `managed_commands`
-  accept `start`, `run`, `end`, `command`, and `all` prefixes; non-start
-  commands may still reuse `start` bootstrap commands once when the target
-  environment is not ready. When no automatic bootstrap commands are
-  declared, `command` stage operations may keep using the current
-  interpreter only when `allow_current_interpreter_fallback` is explicitly
-  true; otherwise `start`, `run`, `end`, and `command` remain strict about
-  the target environment so incomplete profiles fail loudly instead of
-  falling through to wrapper adapters or alternate policy sources. If the
-  resolved interpreter is missing or not executable, DevCovenant fails
-  explicitly instead of falling through to wrapper adapters or alternate
-  policy sources. When enabled with empty metadata, the policy emits a
-  warning so teams fill the required context.
+  accept `start`, `run`, `end`, `bootstrap`, `managed`, and `all` prefixes;
+  bootstrap-mode commands may still reuse `start` bootstrap commands once
+  when the target environment is not ready. When no automatic bootstrap
+  commands are declared, `bootstrap` stage operations may keep using the
+  current interpreter only when `allow_current_interpreter_fallback` is
+  explicitly true; otherwise `start`, `run`, `end`, and `managed` remain
+  strict about the target environment so incomplete profiles fail loudly
+  instead of falling through to wrapper adapters or alternate policy
+  sources. If the resolved interpreter is missing or not executable,
+  DevCovenant fails explicitly instead of falling through to wrapper
+  adapters or alternate policy sources. When enabled with empty metadata,
+  the policy emits a warning so teams fill the required context.
 metadata:
   id: managed-environment
   severity: error
@@ -55,5 +55,6 @@ metadata:
 runtime_actions:
   - id: resolve-stage
     description: >-
-      Resolve the managed interpreter and bootstrap steps for one CLI stage.
+      Resolve the managed interpreter and execution-stage handling for one
+      CLI invocation.
     mutates_repo: false
