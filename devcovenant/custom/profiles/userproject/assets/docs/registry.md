@@ -81,6 +81,9 @@ The same tracked metadata can also capture stage-scoped managed-environment
 bootstrap commands, so registry diffs are the expected result when a
 repository's managed-environment stack changes how profiles such as
 `python_venv` can prepare `.venv` for `deploy`, `refresh`, or `gate --start`.
+When a proof repository activates one of those profiles through text-mode
+config edits, the edit should preserve the existing YAML list indentation
+instead of inventing a new block shape.
 The tracked registry can also hold policy-owned runtime state when that state
 is deterministic and should travel with the repository.
 For `dependency-management`, that includes per-surface input and output

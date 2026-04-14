@@ -560,6 +560,9 @@ def _profile_ci_workflow_contains_build_job_artifact_proof() -> None:
     assert "managed-environment field line not found in config.yaml" in (
         all_run_blocks
     )
+    assert "existing_item_indent = None" in all_run_blocks
+    assert "profiles.active items not found in config.yaml" in all_run_blocks
+    assert 'candidate_stripped.startswith("- ")' in all_run_blocks
     assert '"$PIPX_BIN_DIR/devcovenant" gate --start' in all_run_blocks
     assert '"$PIPX_BIN_DIR/devcovenant" gate --mid' in all_run_blocks
     assert '"$PIPX_BIN_DIR/devcovenant" run' in all_run_blocks
@@ -568,6 +571,7 @@ def _profile_ci_workflow_contains_build_job_artifact_proof() -> None:
     assert "python -m devcovenant --version" in all_run_blocks
     assert 'line.strip() == "config_reviewed: false"' in all_run_blocks
     assert "config_reviewed field line not found" in all_run_blocks
+    assert 'f"{existing_item_indent}- python_venv"' in all_run_blocks
     provenance_step = next(
         (
             step

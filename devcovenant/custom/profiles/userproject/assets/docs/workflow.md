@@ -164,6 +164,9 @@ validated CI artifacts instead of rebuilding a fresh distribution later.
 When CI bootstraps a proof repository and needs `deploy`, flip the actual
 `install.config_reviewed` field line in `devcovenant/config.yaml` rather than
 replacing the first plain-text match in the commented config template.
+If the proof also activates an extra profile such as `python_venv`, reuse the
+existing `profiles.active` list-item indentation instead of reconstructing the
+YAML block shape from the `active:` key line.
 
 If you intentionally rebuild or re-baseline the changelog during an open work
 session, run `devcovenant policy changelog-coverage reset-baseline` after

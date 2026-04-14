@@ -303,20 +303,35 @@ ci_and_test:
             for index, line in enumerate(lines):
                 if line.strip() != "active:":
                     continue
-                item_indent = (
-                    line[: len(line) - len(line.lstrip())] + "  "
-                )
                 insert_at = index + 1
+                existing_item_indent = None
                 while (
                     insert_at < len(lines)
-                    and lines[insert_at].startswith(f"{item_indent}- ")
                 ):
-                    if lines[insert_at].strip() == "- python_venv":
+                    candidate = lines[insert_at]
+                    candidate_stripped = candidate.strip()
+                    if not candidate_stripped.startswith("- "):
+                        break
+                    candidate_indent = (
+                        candidate[: len(candidate) - len(candidate.lstrip())]
+                    )
+                    if existing_item_indent is None:
+                        existing_item_indent = candidate_indent
+                    if candidate_indent != existing_item_indent:
+                        break
+                    if candidate_stripped == "- python_venv":
                         inserted_profile = True
                         break
                     insert_at += 1
+                if existing_item_indent is None:
+                    raise SystemExit(
+                        "profiles.active items not found in config.yaml"
+                    )
                 if not inserted_profile:
-                    lines.insert(insert_at, f"{item_indent}- python_venv")
+                    lines.insert(
+                        insert_at,
+                        f"{existing_item_indent}- python_venv",
+                    )
                     inserted_profile = True
                 break
             if not reviewed:

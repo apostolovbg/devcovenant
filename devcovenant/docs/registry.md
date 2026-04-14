@@ -89,6 +89,9 @@ The same tracked metadata can also capture stage-scoped managed-environment
 bootstrap commands, so registry diffs are the expected result when a
 repository's managed-environment stack changes how profiles such as
 `python_venv` can prepare `.venv` for `deploy`, `refresh`, or `gate --start`.
+When a proof repository activates one of those profiles through text-mode
+config edits, the edit should preserve the existing YAML list indentation
+instead of inventing a new block shape.
 If a repository intentionally keeps `command` stage execution on the current
 interpreter until the target environment exists, that intent should appear in
 the tracked metadata as `allow_current_interpreter_fallback: true`; otherwise

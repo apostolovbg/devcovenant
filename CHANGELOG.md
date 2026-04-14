@@ -61,6 +61,27 @@ Example:
 ## Version 1.0.1b2
 
 - 2026-04-14:
+  Change: Fixed the pipx proof bootstrap script to reuse the existing
+          `profiles.active` list indentation when it inserts
+          `python_venv`.
+  Why: Prevented the proof repo from corrupting `devcovenant/config.yaml`
+       during text-mode config editing before `deploy`.
+  Impact: Kept the commented config valid, preserved its inline review
+          guidance, and repaired the pipx artifact lifecycle proof path.
+  Files:
+  .github/workflows/ci.yml
+  CHANGELOG.md
+  devcovenant/custom/profiles/userproject/assets/docs/profiles.md
+  devcovenant/custom/profiles/userproject/assets/docs/registry.md
+  devcovenant/custom/profiles/userproject/assets/docs/workflow.md
+  devcovenant/custom/profiles/userproject/userproject.yaml
+  devcovenant/docs/profiles.md
+  devcovenant/docs/registry.md
+  devcovenant/docs/workflow.md
+  devcovenant/registry/registry.yaml
+  tests/devcovenant/core/test_profile_registry.py
+
+- 2026-04-14:
   Change: Added the builtin `python_venv` opt-in profile, disabled
           managed-environment in the shipped install baseline, and updated
           proof/documentation flows to use explicit opt-in.
